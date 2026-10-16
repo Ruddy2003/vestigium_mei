@@ -96,8 +96,8 @@ private class Puntos : Overlay() {
     }
 }
 
-private data class Capa(val id: String, val nombre: String)
-private val CAPAS = listOf(Capa("animo", "ánimo"), Capa("calor", "dónde paso el tiempo"), Capa("ruta", "ruta del día"), Capa("lugares", "lugares"))
+private data class CapaMapa(val id: String, val nombre: String)
+private val CAPAS = listOf(CapaMapa("animo", "ánimo"), CapaMapa("calor", "dónde paso el tiempo"), CapaMapa("ruta", "ruta del día"), CapaMapa("lugares", "lugares"))
 private val PERIODOS = listOf(30 to "30 días", 90 to "90 días", 365 to "un año", 100_000 to "todo")
 
 @Composable

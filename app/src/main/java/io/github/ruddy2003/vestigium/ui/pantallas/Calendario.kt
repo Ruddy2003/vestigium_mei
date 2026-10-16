@@ -58,22 +58,22 @@ object Seleccion {
     fun abrir(nav: Nav, fecha: String) { pedida = fecha; ultimoMes = Fechas.mesDe(fecha); nav.pestana("dia") }
 }
 
-private data class Capa(val id: String, val nombre: String, val divergente: Boolean, val valor: (String) -> Double?, val rango: (List<Double>) -> Pair<Double, Double>, val texto: (Double) -> String)
+private data class CapaCal(val id: String, val nombre: String, val divergente: Boolean, val valor: (String) -> Double?, val rango: (List<Double>) -> Pair<Double, Double>, val texto: (Double) -> String)
 
-private fun capas(): List<Capa> {
+private fun capas(): List<CapaCal> {
     val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }
     val gastos = Repo.gastos.groupBy { it.fecha }.mapValues { e -> e.value.sumOf { it.monto } }
     val fijo = { a: Double, b: Double -> { _: List<Double> -> a to b } }
     val datos = { xs: List<Double> -> (xs.minOrNull() ?: 0.0) to (xs.maxOrNull()?.takeIf { it > 0 } ?: 1.0) }
     return listOf(
-        Capa("animo", "ánimo", true, { f -> Repo.dias[f]?.valencia?.toDouble() ?: mu[f]?.mapNotNull { it.valencia }?.average() }, fijo(1.0, 7.0)) { "%.1f".format(it) },
-        Capa("sueno", "sueño", true, { f -> Repo.salud[f]?.sueno_min?.let { it / 60.0 } }, fijo(5.0, 8.5)) { "%.1f h".format(it) },
-        Capa("pasos", "pasos", false, { f -> Repo.salud[f]?.pasos?.toDouble() }, datos) { "%,.0f".format(it) },
-        Capa("pantalla", "pantalla", false, { f -> Repo.pantalla[f]?.total_min?.toDouble() }, datos) { "${(it / 60).toInt()} h ${(it % 60).toInt()} m" },
-        Capa("gasto", "gasto", false, { f -> gastos[f] }, datos) { "$%,.0f".format(it) },
-        Capa("fotos", "fotos", false, { f -> Repo.fotos[f]?.fotos?.toDouble() }, datos) { "%.0f".format(it) },
-        Capa("momentos", "momentos", false, { f -> Repo.momentos.count { it.fecha == f && it.tipo != "muestreo" }.toDouble().takeIf { it > 0 } }, datos) { "%.0f".format(it) },
-        Capa("lluvia", "lluvia", false, { f -> Repo.entorno[f]?.precip_mm }, datos) { "%.1f mm".format(it) },
+        CapaCal("animo", "ánimo", true, { f -> Repo.dias[f]?.valencia?.toDouble() ?: mu[f]?.mapNotNull { it.valencia }?.average() }, fijo(1.0, 7.0)) { "%.1f".format(it) },
+        CapaCal("sueno", "sueño", true, { f -> Repo.salud[f]?.sueno_min?.let { it / 60.0 } }, fijo(5.0, 8.5)) { "%.1f h".format(it) },
+        CapaCal("pasos", "pasos", false, { f -> Repo.salud[f]?.pasos?.toDouble() }, datos) { "%,.0f".format(it) },
+        CapaCal("pantalla", "pantalla", false, { f -> Repo.pantalla[f]?.total_min?.toDouble() }, datos) { "${(it / 60).toInt()} h ${(it % 60).toInt()} m" },
+        CapaCal("gasto", "gasto", false, { f -> gastos[f] }, datos) { "$%,.0f".format(it) },
+        CapaCal("fotos", "fotos", false, { f -> Repo.fotos[f]?.fotos?.toDouble() }, datos) { "%.0f".format(it) },
+        CapaCal("momentos", "momentos", false, { f -> Repo.momentos.count { it.fecha == f && it.tipo != "muestreo" }.toDouble().takeIf { it > 0 } }, datos) { "%.0f".format(it) },
+        CapaCal("lluvia", "lluvia", false, { f -> Repo.entorno[f]?.precip_mm }, datos) { "%.1f mm".format(it) },
     )
 }
 
