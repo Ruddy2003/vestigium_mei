@@ -142,7 +142,7 @@ private val PESTANAS = listOf(
 )
 
 /** Navegación sencilla: una pestaña activa y una pila de pantallas secundarias encima. */
-class Nav(val ir: (String) -> Unit, val atras: () -> Unit)
+class Nav(val ir: (String) -> Unit, val atras: () -> Unit, val pestana: (String) -> Unit = {})
 
 @Composable
 private fun Raiz(pedida: String?, consumir: () -> Unit) {
@@ -155,7 +155,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         consumir()
     }
 
-    val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) })
+    val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() })
     BackHandler(enabled = pila.isNotEmpty()) { pila = pila.dropLast(1) }
 
     Scaffold(

@@ -32,7 +32,8 @@ object Avisos {
     }
 
     fun permitido(ctx: Context): Boolean =
-        ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        android.os.Build.VERSION.SDK_INT < 33 ||
+            ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
     private fun mostrar(ctx: Context, id: Int, b: NotificationCompat.Builder) {
         if (!permitido(ctx)) return

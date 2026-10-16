@@ -129,6 +129,3 @@ fun PantallaMomentos(nav: Nav) {
     }
 }
 
-@Composable
-@Suppress("unused")
-private fun Relleno() { Tarjeta { } }

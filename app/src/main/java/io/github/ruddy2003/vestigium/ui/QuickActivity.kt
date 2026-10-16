@@ -265,7 +265,6 @@ class QuickActivity : FragmentActivity() {
         var d by remember { mutableStateOf(Repo.dia(fecha)) }
         Encabezado("Día difícil", "Solo un número. Un día registrado así vale mucho más que un día vacío.")
         Escala(d.valencia, 1, 7, Catalogo.ANCLAS["valencia"]) { v -> d = d.copy(valencia = v, dia_dificil = true); Repo.guardarDia(d) }
-        LaunchedEffect(Unit) { }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) {
             Spacer(Modifier.width(1.dp))
             BotonPrincipal("Listo", habilitado = d.valencia != null) { terminar() }

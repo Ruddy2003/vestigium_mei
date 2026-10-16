@@ -178,7 +178,7 @@ object Exportar {
     }
 
     fun compartir(ctx: Context) {
-        val f = zip(ctx)
+        val f = java.io.File(java.io.File(ctx.cacheDir, "export"), "vestigium_${Fechas.hoyCalendario()}.zip").takeIf { it.exists() } ?: zip(ctx)
         val uri = FileProvider.getUriForFile(ctx, ctx.packageName + ".archivos", f)
         val i = Intent(Intent.ACTION_SEND).setType("application/zip").putExtra(Intent.EXTRA_STREAM, uri)
             .putExtra(Intent.EXTRA_SUBJECT, f.name).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -198,9 +198,4 @@ object Exportar {
         return true
     }
 
-    @Suppress("unused")
-    private fun bytes(b: (ByteArrayOutputStream) -> Unit): ByteArray = ByteArrayOutputStream().also(b).toByteArray()
-
-    @Suppress("unused")
-    private val listaDias = ListSerializer(Dia.serializer())
 }

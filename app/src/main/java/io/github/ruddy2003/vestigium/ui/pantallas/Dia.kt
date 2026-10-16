@@ -283,7 +283,3 @@ private fun Tok(t: String, nueva: Boolean) {
     }
 }
 
-@Suppress("unused")
-private val opcionVacia = Opcion("", "")
-@Suppress("unused")
-private fun espacio() = Modifier.size(1.dp).width(1.dp)

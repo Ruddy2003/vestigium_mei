@@ -301,5 +301,3 @@ private fun Dispersion(ps: List<Par>, nx: String, ny: String) {
     }
 }
 
-@Suppress("unused")
-private val transparente = Color.Transparent

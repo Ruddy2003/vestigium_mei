@@ -127,7 +127,7 @@ fun PantallaPermisos(nav: Nav) {
             BotonPrincipal("Empezar", Modifier.fillMaxWidth().padding(top = 20.dp)) {
                 Repo.cambiarConfig { it.copy(bienvenida_vista = true) }
                 Programador.ahora(ctx)
-                nav.atras()
+                nav.pestana("dia")
             }
             Ayuda("Después agrega los widgets: mantén presionada tu pantalla de inicio → Widgets → Vestigium Mei. Y el botón rápido: baja el panel de ajustes rápidos → lápiz → arrastra «Momento».", Modifier.padding(top = 10.dp))
         }

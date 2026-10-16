@@ -68,9 +68,8 @@ object Geocercas {
         if (!Ubicacion.tieneSegundoPlano(ctx)) return
         val cliente = LocationServices.getGeofencingClient(ctx)
         val pi = intent(ctx)
-        cliente.removeGeofences(pi)
         val lugares = Repo.lugares.take(95)
-        if (lugares.isEmpty()) return
+        if (lugares.isEmpty()) { cliente.removeGeofences(pi); return }
         val cercas = lugares.map {
             Geofence.Builder()
                 .setRequestId(it.id)
@@ -84,7 +83,10 @@ object Geocercas {
             .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
             .addGeofences(cercas)
             .build()
-        try { cliente.addGeofences(req, pi) } catch (e: SecurityException) { }
+        // Primero se quitan las anteriores y, al terminar, se agregan las nuevas.
+        cliente.removeGeofences(pi).addOnCompleteListener {
+            try { cliente.addGeofences(req, pi) } catch (e: SecurityException) { }
+        }
     }
 }
 
