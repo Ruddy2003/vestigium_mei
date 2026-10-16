@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/raiz_hoy" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="14dp" android:background="@drawable/widget_fondo">
+    <TextView android:id="@+id/hoy_fecha" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="DIES" android:textColor="@color/w_oro" android:textSize="15sp" android:fontFamily="serif" android:letterSpacing="0.12" android:maxLines="1" />
+    <TextView android:id="@+id/hoy_sub" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="" android:textColor="@color/w_tenue" android:textSize="10.5sp" android:fontFamily="monospace" android:maxLines="1" android:ellipsize="end" />
+    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="6dp" android:layout_marginBottom="6dp" android:background="@color/w_acento_borde" />
+    <TextView android:id="@+id/hoy_lineas" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:text="" android:textColor="@color/w_texto" android:textSize="11.5sp" android:fontFamily="monospace" android:lineSpacingExtra="2dp" />
+</LinearLayout>

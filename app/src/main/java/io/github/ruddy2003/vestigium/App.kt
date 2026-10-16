@@ -13,5 +13,11 @@ class App : Application() {
         Avisos.crearCanales(this)
         Programador.asegurar(this)
         runCatching { Geocercas.registrar(this) }
+        runCatching { io.github.ruddy2003.vestigium.sensores.Actividad.registrar(this) }
+        org.osmdroid.config.Configuration.getInstance().apply {
+            userAgentValue = io.github.ruddy2003.vestigium.data.Red.AGENTE
+            osmdroidBasePath = java.io.File(cacheDir, "osmdroid")
+            osmdroidTileCache = java.io.File(cacheDir, "osmdroid/mosaicos")
+        }
     }
 }

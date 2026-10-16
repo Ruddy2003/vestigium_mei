@@ -79,6 +79,18 @@ object Estadistica {
             Variable("personas", "Personas distintas mencionadas", "Social"), Variable("hitos_n", "Número de hitos", "Texto"),
             Variable("rt_media", "Tiempo de reacción (ms)", "Mente"), Variable("lugares_distintos", "Lugares distintos visitados", "Movilidad"),
             Variable("distancia_km", "Kilómetros recorridos (aprox.)", "Movilidad"),
+            Variable("t_max", "Temperatura máxima (°C)", "Entorno"), Variable("t_min", "Temperatura mínima (°C)", "Entorno"),
+            Variable("precip_mm", "Lluvia (mm)", "Entorno"), Variable("nubes_pct", "Nubosidad (%)", "Entorno"),
+            Variable("luz_horas", "Horas de luz del día", "Entorno"), Variable("sol_horas", "Horas de sol directo", "Entorno"),
+            Variable("presion_hpa", "Presión atmosférica (hPa)", "Entorno"), Variable("aqi_us", "Índice de calidad del aire", "Entorno"),
+            Variable("pm25", "Partículas PM2.5", "Entorno"), Variable("luna_ilum", "Luna iluminada (0 a 1)", "Entorno"),
+            Variable("fotos", "Fotos tomadas", "Teléfono"), Variable("notificaciones", "Notificaciones recibidas", "Teléfono"),
+            Variable("canciones", "Canciones escuchadas", "Teléfono"), Variable("primer_uso_h", "Hora del primer uso del teléfono", "Teléfono"),
+            Variable("ultimo_uso_h", "Hora del último uso del teléfono", "Teléfono"),
+            Variable("eventos", "Eventos en la agenda", "Agenda"), Variable("min_ocupado", "Minutos ocupados en agenda", "Agenda"),
+            Variable("a_pie_min", "Minutos a pie", "Movilidad"), Variable("vehiculo_min", "Minutos en vehículo", "Movilidad"),
+            Variable("ejercicio_min", "Minutos de ejercicio (reloj)", "Cuerpo"), Variable("escalada", "Escalé (0/1)", "Cuerpo"),
+            Variable("escalada_grado", "Grado máximo encadenado", "Cuerpo"),
         )
         if (Repo.config.seguimiento_privado) {
             v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
@@ -134,6 +146,34 @@ object Estadistica {
         Repo.reacciones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["rt_media"] = media(l.mapNotNull { it.media_ms }) }
         Repo.visitas.groupBy { it.entrada.take(10) }.forEach { (f, l) -> fila(f)["lugares_distintos"] = l.map { it.lugar }.toSet().size.toDouble() }
         Movilidad.kmPorDia().forEach { (f, km) -> fila(f)["distancia_km"] = km }
+        Repo.entorno.forEach { (f, e) ->
+            val r = fila(f)
+            r["t_max"] = e.t_max; r["t_min"] = e.t_min; r["precip_mm"] = e.precip_mm; r["nubes_pct"] = e.nubes_pct
+            r["luz_horas"] = e.luz_min?.let { it / 60.0 }; r["sol_horas"] = e.sol_min?.let { it / 60.0 }; r["presion_hpa"] = e.presion_hpa
+            r["aqi_us"] = e.aqi_us?.toDouble(); r["pm25"] = e.pm25
+        }
+        filas.keys.toList().forEach { f -> fila(f)["luna_ilum"] = io.github.ruddy2003.vestigium.data.Luna.iluminacion(io.github.ruddy2003.vestigium.data.Luna.fase(f)) }
+        Repo.fotos.forEach { (f, x) -> fila(f)["fotos"] = x.fotos.toDouble() }
+        Repo.notifs.forEach { (f, x) -> fila(f)["notificaciones"] = x.total.toDouble() }
+        Repo.agenda.forEach { (f, x) -> val r = fila(f); r["eventos"] = x.eventos.toDouble(); r["min_ocupado"] = x.min_ocupado.toDouble() }
+        Repo.actividad.forEach { (f, x) -> val r = fila(f); r["a_pie_min"] = (x.minutos["a_pie"] ?: 0).toDouble(); r["vehiculo_min"] = (x.minutos["vehiculo"] ?: 0).toDouble() }
+        Repo.sesiones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["ejercicio_min"] = l.sumOf { it.min }.toDouble() }
+        Repo.pantalla.forEach { (f, p) ->
+            val r = fila(f)
+            fun h(iso: String?): Double? = iso?.let { val t = java.time.OffsetDateTime.parse(it).atZoneSameInstant(java.time.ZoneId.systemDefault()); t.hour + t.minute / 60.0 }
+            r["primer_uso_h"] = runCatching { h(p.primer_uso) }.getOrNull()
+            r["ultimo_uso_h"] = runCatching { h(p.ultimo_uso)?.let { if (it < 5) it + 24 else it } }.getOrNull()
+        }
+        val diasEsc = Repo.ascensos.groupBy { it.fecha }
+        for (f in Repo.dias.keys) { fila(f)["escalada"] = if (diasEsc.containsKey(f)) 1.0 else 0.0 }
+        diasEsc.forEach { (f, l) ->
+            val r = fila(f); r["escalada"] = 1.0
+            r["escalada_grado"] = l.flatMap { it.bloques }.filter { io.github.ruddy2003.vestigium.data.Grados.encadenado(it.estilo) }.mapNotNull { io.github.ruddy2003.vestigium.data.Grados.valor(it.grado) }.maxOrNull()
+        }
+        runCatching {
+            val desde = filas.keys.firstOrNull() ?: return@runCatching
+            Repo.escuchas(desde, "9999-12-31").groupBy { it.fecha }.forEach { (f, l) -> fila(f)["canciones"] = l.size.toDouble() }
+        }
         return filas
     }
 
@@ -164,8 +204,12 @@ object Estadistica {
 
 object Movilidad {
     /** Suma de distancias entre muestras consecutivas del mismo día, ignorando saltos imposibles. */
-    fun kmPorDia(): Map<String, Double> {
-        val puntos = Repo.db().ubicaciones()
+    fun kmDe(fecha: String): Double? {
+        val a = Fechas.inicioDia(fecha) + 5 * 3_600_000L
+        return kmPorDia(Repo.db().ubicaciones(a, a + 86_400_000L))[fecha]
+    }
+
+    fun kmPorDia(puntos: List<io.github.ruddy2003.vestigium.data.Db.Punto> = Repo.db().ubicaciones()): Map<String, Double> {
         val out = HashMap<String, Double>()
         var prev: io.github.ruddy2003.vestigium.data.Db.Punto? = null
         for (p in puntos) {

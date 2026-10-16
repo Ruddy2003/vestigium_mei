@@ -39,6 +39,17 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 1) {
         return out
     }
 
+    fun porFecha(col: String, desde: String, hasta: String): List<String> {
+        val out = ArrayList<String>()
+        readableDatabase.rawQuery("SELECT json FROM docs WHERE col = ? AND fecha >= ? AND fecha <= ? ORDER BY fecha", arrayOf(col, desde, hasta)).use { c ->
+            while (c.moveToNext()) out.add(c.getString(0))
+        }
+        return out
+    }
+
+    fun contar(col: String): Long =
+        readableDatabase.rawQuery("SELECT COUNT(*) FROM docs WHERE col = ?", arrayOf(col)).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
+
     fun uno(col: String, id: String): String? =
         readableDatabase.rawQuery("SELECT json FROM docs WHERE col = ? AND id = ?", arrayOf(col, id)).use { c ->
             if (c.moveToFirst()) c.getString(0) else null

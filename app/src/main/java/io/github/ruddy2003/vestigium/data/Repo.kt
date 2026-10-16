@@ -30,6 +30,14 @@ object Repo {
     var cartas by mutableStateOf<List<Carta>>(emptyList()); private set
     var experimentos by mutableStateOf<List<Experimento>>(emptyList()); private set
     var config by mutableStateOf(Config()); private set
+    var entorno by mutableStateOf<Map<String, EntornoDia>>(emptyMap()); private set
+    var fotos by mutableStateOf<Map<String, FotosDia>>(emptyMap()); private set
+    var agenda by mutableStateOf<Map<String, AgendaDia>>(emptyMap()); private set
+    var notifs by mutableStateOf<Map<String, NotifDia>>(emptyMap()); private set
+    var actividad by mutableStateOf<Map<String, ActividadDia>>(emptyMap()); private set
+    var sesiones by mutableStateOf<List<Sesion>>(emptyList()); private set
+    var ascensos by mutableStateOf<List<Ascenso>>(emptyList()); private set
+    var obras by mutableStateOf<List<Obra>>(emptyList()); private set
 
     @Synchronized
     fun init(ctx: Context) {
@@ -47,6 +55,14 @@ object Repo {
         cartas = cargar("cartas", Carta.serializer())
         experimentos = cargar("experimentos", Experimento.serializer())
         config = db.uno("config", "config")?.let { runCatching { JSON.decodeFromString(Config.serializer(), it) }.getOrNull() } ?: Config()
+        entorno = cargar("entorno", EntornoDia.serializer()).associateBy { it.fecha }
+        fotos = cargar("fotos", FotosDia.serializer()).associateBy { it.fecha }
+        agenda = cargar("agenda", AgendaDia.serializer()).associateBy { it.fecha }
+        notifs = cargar("notifs", NotifDia.serializer()).associateBy { it.fecha }
+        actividad = cargar("actividad", ActividadDia.serializer()).associateBy { it.fecha }
+        sesiones = cargar("sesiones", Sesion.serializer()).sortedBy { it.inicio }
+        ascensos = cargar("ascensos", Ascenso.serializer()).sortedBy { it.fecha + (it.inicio ?: "") }
+        obras = cargar("obras", Obra.serializer())
         listo = true
     }
 
@@ -162,6 +178,75 @@ object Repo {
         db.poner("experimentos", e.id, e.inicio, JSON.encodeToString(Experimento.serializer(), e))
         enMain { experimentos = experimentos.filter { it.id != e.id } + e }
     }
+
+    // ---------- Entorno y fuentes automáticas ----------
+    fun guardarEntorno(e: EntornoDia) {
+        db.poner("entorno", e.fecha, e.fecha, JSON.encodeToString(EntornoDia.serializer(), e))
+        enMain { entorno = entorno + (e.fecha to e) }
+    }
+    fun guardarFotos(f: FotosDia) {
+        db.poner("fotos", f.fecha, f.fecha, JSON.encodeToString(FotosDia.serializer(), f))
+        enMain { fotos = fotos + (f.fecha to f) }
+    }
+    fun guardarAgenda(a: AgendaDia) {
+        db.poner("agenda", a.fecha, a.fecha, JSON.encodeToString(AgendaDia.serializer(), a))
+        enMain { agenda = agenda + (a.fecha to a) }
+    }
+    fun guardarSesion(s: Sesion) {
+        db.poner("sesiones", s.id, s.fecha, JSON.encodeToString(Sesion.serializer(), s))
+        enMain { sesiones = (sesiones.filter { it.id != s.id } + s).sortedBy { it.inicio } }
+    }
+
+    private val notifMem = HashMap<String, NotifDia>()
+    /** Suma una notificación al día. Se llama desde el servicio que escucha notificaciones. */
+    @Synchronized
+    fun contarNotif(fecha: String, app: String, hora: Int) {
+        val previo = notifMem[fecha] ?: notifs[fecha] ?: NotifDia(fecha)
+        val horas = previo.por_hora.toMutableList().also { while (it.size < 24) it.add(0) }
+        horas[hora.coerceIn(0, 23)]++
+        val n = previo.copy(total = previo.total + 1, por_app = previo.por_app + (app to ((previo.por_app[app] ?: 0) + 1)), por_hora = horas)
+        notifMem[fecha] = n
+        db.poner("notifs", fecha, fecha, JSON.encodeToString(NotifDia.serializer(), n))
+        enMain { notifs = notifs + (fecha to n) }
+    }
+
+    private val actMem = HashMap<String, ActividadDia>()
+    @Synchronized
+    fun sumarActividad(fecha: String, tipo: String, minutos: Int) {
+        if (minutos <= 0) return
+        val previo = actMem[fecha] ?: actividad[fecha] ?: ActividadDia(fecha)
+        val n = previo.copy(minutos = previo.minutos + (tipo to ((previo.minutos[tipo] ?: 0) + minutos)))
+        actMem[fecha] = n
+        db.poner("actividad", fecha, fecha, JSON.encodeToString(ActividadDia.serializer(), n))
+        enMain { actividad = actividad + (fecha to n) }
+    }
+
+    fun importarSensores(n: List<NotifDia>, a: List<ActividadDia>) {
+        db.transaccion {
+            n.filter { it.fecha !in notifs }.forEach { db.poner("notifs", it.fecha, it.fecha, JSON.encodeToString(NotifDia.serializer(), it)) }
+            a.filter { it.fecha !in actividad }.forEach { db.poner("actividad", it.fecha, it.fecha, JSON.encodeToString(ActividadDia.serializer(), it)) }
+        }
+        enMain {
+            notifs = n.filter { it.fecha !in notifs }.associateBy { it.fecha } + notifs
+            actividad = a.filter { it.fecha !in actividad }.associateBy { it.fecha } + actividad
+        }
+    }
+
+    fun guardarEscucha(e: Escucha) = db.poner("escuchas", e.id, e.fecha, JSON.encodeToString(Escucha.serializer(), e))
+    fun escuchas(desde: String, hasta: String): List<Escucha> =
+        db.porFecha("escuchas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Escucha.serializer(), it) }.getOrNull() }.sortedBy { it.ts }
+
+    // ---------- Escalada y biblioteca ----------
+    fun guardarAscenso(a: Ascenso) {
+        db.poner("ascensos", a.id, a.fecha, JSON.encodeToString(Ascenso.serializer(), a))
+        enMain { ascensos = (ascensos.filter { it.id != a.id } + a).sortedBy { it.fecha + (it.inicio ?: "") } }
+    }
+    fun borrarAscenso(id: String) { db.borrar("ascensos", id); enMain { ascensos = ascensos.filter { it.id != id } } }
+    fun guardarObra(o: Obra) {
+        db.poner("obras", o.id, o.fin ?: o.inicio ?: o.agregado, JSON.encodeToString(Obra.serializer(), o))
+        enMain { obras = obras.filter { it.id != o.id } + o }
+    }
+    fun borrarObra(id: String) { db.borrar("obras", id); enMain { obras = obras.filter { it.id != id } } }
 
     // ---------- Configuración ----------
     @Synchronized

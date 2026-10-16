@@ -188,7 +188,7 @@ fun PantallaReaccion(nav: Nav) {
         val fondo = MaterialTheme.colorScheme.surfaceVariant
         val acento = MaterialTheme.colorScheme.primary
         Box(
-            Modifier.fillMaxWidth().aspectRatio(1f).padding(top = 16.dp).clip(RoundedCornerShape(16.dp)).background(fondo)
+            Modifier.fillMaxWidth().aspectRatio(1f).padding(top = 16.dp).clip(RoundedCornerShape(6.dp)).background(fondo)
                 .pointerInput(Unit) { detectTapGestures(onPress = { toque() }) },
             contentAlignment = Alignment.Center,
         ) {
@@ -315,6 +315,6 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
         }
     }
     Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        lugares.take(6).forEach { Text(it.nombre, fontFamily = FontFamily.Monospace, fontSize = 11.sp, color = tenue) }
+        lugares.take(6).forEach { Text(it.nombre, fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = tenue) }
     }
 }

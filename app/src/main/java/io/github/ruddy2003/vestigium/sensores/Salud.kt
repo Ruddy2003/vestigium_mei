@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.sensores
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
@@ -15,6 +16,7 @@ import androidx.health.connect.client.time.TimeRangeFilter
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.SaludDia
+import io.github.ruddy2003.vestigium.data.Sesion
 import java.time.Instant
 import java.time.ZoneId
 
@@ -27,6 +29,7 @@ object Salud {
         HealthPermission.getReadPermission(RestingHeartRateRecord::class),
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(OxygenSaturationRecord::class),
+        HealthPermission.getReadPermission(ExerciseSessionRecord::class),
         "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND",
         "android.permission.health.READ_HEALTH_DATA_HISTORY",
     )
@@ -114,7 +117,45 @@ object Salud {
             s = s.copy(ts = Fechas.ahoraIso())
             Repo.guardarSalud(s); n++
         }
+        if (HealthPermission.getReadPermission(ExerciseSessionRecord::class) in ok) runCatching { ejercicio(cliente, dias + 1) }
         return n
+    }
+
+    val TIPOS_EJERCICIO: Map<Int, String> = mapOf(
+        ExerciseSessionRecord.EXERCISE_TYPE_ROCK_CLIMBING to "escalada",
+        ExerciseSessionRecord.EXERCISE_TYPE_WALKING to "caminata",
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING to "carrera",
+        ExerciseSessionRecord.EXERCISE_TYPE_RUNNING_TREADMILL to "caminadora",
+        ExerciseSessionRecord.EXERCISE_TYPE_BIKING to "bici",
+        ExerciseSessionRecord.EXERCISE_TYPE_BIKING_STATIONARY to "bici fija",
+        ExerciseSessionRecord.EXERCISE_TYPE_HIKING to "senderismo",
+        ExerciseSessionRecord.EXERCISE_TYPE_STRENGTH_TRAINING to "fuerza",
+        ExerciseSessionRecord.EXERCISE_TYPE_WEIGHTLIFTING to "pesas",
+        ExerciseSessionRecord.EXERCISE_TYPE_YOGA to "yoga",
+        ExerciseSessionRecord.EXERCISE_TYPE_PILATES to "pilates",
+        ExerciseSessionRecord.EXERCISE_TYPE_SWIMMING_POOL to "natación",
+        ExerciseSessionRecord.EXERCISE_TYPE_STRETCHING to "estiramiento",
+        ExerciseSessionRecord.EXERCISE_TYPE_HIGH_INTENSITY_INTERVAL_TRAINING to "HIIT",
+        ExerciseSessionRecord.EXERCISE_TYPE_OTHER_WORKOUT to "otro",
+    )
+
+    /** Sesiones de ejercicio del reloj, con la frecuencia cardiaca de cada una. */
+    private suspend fun ejercicio(cliente: HealthConnectClient, dias: Int) {
+        val zona = ZoneId.systemDefault()
+        val ini = Fechas.parse(Fechas.sumar(Fechas.hoyCalendario(), -dias.toLong())).atStartOfDay(zona).toInstant()
+        val r = cliente.readRecords(ReadRecordsRequest(recordType = ExerciseSessionRecord::class, timeRangeFilter = TimeRangeFilter.after(ini)))
+        for (e in r.records) {
+            val rango = TimeRangeFilter.between(e.startTime, e.endTime)
+            val fc = runCatching { cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG, HeartRateRecord.BPM_MAX), rango)) }.getOrNull()
+            val ms = e.startTime.toEpochMilli()
+            Repo.guardarSesion(Sesion(
+                id = e.metadata.id.ifEmpty { "hc_$ms" }, fecha = Fechas.diaLogicoDeMillis(ms),
+                inicio = Fechas.isoDeMillis(ms), fin = Fechas.isoDeMillis(e.endTime.toEpochMilli()),
+                tipo = e.exerciseType, tipo_nombre = TIPOS_EJERCICIO[e.exerciseType] ?: "tipo ${e.exerciseType}", titulo = e.title ?: "",
+                min = java.time.Duration.between(e.startTime, e.endTime).toMinutes().toInt(),
+                fc_media = fc?.get(HeartRateRecord.BPM_AVG)?.toDouble(), fc_max = fc?.get(HeartRateRecord.BPM_MAX)?.toDouble(),
+            ))
+        }
     }
 
     @Suppress("unused")

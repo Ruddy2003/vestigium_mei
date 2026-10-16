@@ -79,4 +79,6 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("androidx.health.connect:connect-client:1.1.0-alpha10")
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
 }

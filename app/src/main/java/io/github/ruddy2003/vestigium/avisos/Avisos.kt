@@ -117,4 +117,14 @@ object Avisos {
             .setAutoCancel(true)
         mostrar(ctx, 2006, b)
     }
+
+    fun drive(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("El respaldo en Drive necesita tu permiso")
+            .setContentText("Google pidió confirmar el acceso. Toca para volver a conectar.")
+            .setContentIntent(abrirApp(ctx, 2007, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2007, b)
+    }
 }

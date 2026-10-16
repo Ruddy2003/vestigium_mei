@@ -29,6 +29,15 @@ data class Respaldo(
     val cartas: List<Carta> = emptyList(),
     val experimentos: List<Experimento> = emptyList(),
     val config: Config = Config(),
+    val entorno: List<EntornoDia> = emptyList(),
+    val fotos: List<FotosDia> = emptyList(),
+    val agenda: List<AgendaDia> = emptyList(),
+    val notifs: List<NotifDia> = emptyList(),
+    val actividad: List<ActividadDia> = emptyList(),
+    val sesiones: List<Sesion> = emptyList(),
+    val ascensos: List<Ascenso> = emptyList(),
+    val obras: List<Obra> = emptyList(),
+    val escuchas: List<Escucha> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -124,6 +133,109 @@ object Exportar {
             "minutos" to v.salida?.let { (Fechas.millis(it) - Fechas.millis(v.entrada)) / 60000 })
     }
 
+    fun filasEntorno() = Repo.entorno.values.sortedBy { it.fecha }.map {
+        linkedMapOf<String, Any?>("fecha" to it.fecha, "t_max" to it.t_max, "t_min" to it.t_min, "t_media" to it.t_media, "sensacion_max" to it.sensacion_max,
+            "precip_mm" to it.precip_mm, "horas_lluvia" to it.horas_lluvia, "nubes_pct" to it.nubes_pct, "humedad_pct" to it.humedad_pct,
+            "presion_hpa" to it.presion_hpa, "viento_max" to it.viento_max, "uv_max" to it.uv_max, "codigo_wmo" to it.codigo,
+            "cielo" to it.codigo?.let { c -> Clima.descripcion(c) }, "amanecer" to it.amanecer, "atardecer" to it.atardecer,
+            "luz_min" to it.luz_min, "sol_min" to it.sol_min, "pm25" to it.pm25, "pm10" to it.pm10, "aqi_us" to it.aqi_us,
+            "luna_fase" to it.luna_fase, "luna_ilum" to it.luna_ilum, "lat_aprox" to it.lat, "lon_aprox" to it.lon)
+    }
+
+    fun filasFotos() = Repo.fotos.values.sortedBy { it.fecha }.map {
+        linkedMapOf<String, Any?>("fecha" to it.fecha, "fotos" to it.fotos, "capturas" to it.capturas, "otras" to it.otras, "videos" to it.videos,
+            "primera" to it.primera, "ultima" to it.ultima)
+    }
+
+    fun filasAgenda() = Repo.agenda.values.sortedBy { it.fecha }.map {
+        linkedMapOf<String, Any?>("fecha" to it.fecha, "eventos" to it.eventos, "todo_el_dia" to it.todo_el_dia, "min_ocupado" to it.min_ocupado,
+            "primero" to it.primero, "ultimo" to it.ultimo, "titulos" to it.titulos)
+    }
+
+    fun filasNotifs(): List<Map<String, Any?>> {
+        val apps = Repo.notifs.values.flatMap { it.por_app.entries }.groupBy({ it.key }, { it.value }).mapValues { it.value.sum() }
+            .entries.sortedByDescending { it.value }.take(12).map { it.key }
+        return Repo.notifs.values.sortedBy { it.fecha }.map { n ->
+            val m = linkedMapOf<String, Any?>("fecha" to n.fecha, "total" to n.total)
+            n.por_hora.forEachIndexed { h, v -> m["h%02d".format(h)] = v }
+            apps.forEach { a -> m["app_" + Texto.slug(a)] = n.por_app[a] ?: 0 }
+            m["por_app"] = n.por_app.entries.sortedByDescending { it.value }.map { "${it.key}:${it.value}" }
+            m
+        }
+    }
+
+    fun filasMusica() = Repo.escuchas("0000-01-01", "9999-12-31").map {
+        linkedMapOf<String, Any?>("ts" to it.ts, "fecha" to it.fecha, "hora" to Fechas.horaDe(it.ts), "titulo" to it.titulo, "artista" to it.artista,
+            "album" to it.album, "app" to it.app, "duracion_s" to it.duracion_s)
+    }
+
+    fun filasActividad() = Repo.actividad.values.sortedBy { it.fecha }.map { a ->
+        linkedMapOf<String, Any?>("fecha" to a.fecha, "a_pie_min" to (a.minutos["a_pie"] ?: 0), "corriendo_min" to (a.minutos["corriendo"] ?: 0),
+            "bici_min" to (a.minutos["bici"] ?: 0), "vehiculo_min" to (a.minutos["vehiculo"] ?: 0), "quieto_min" to (a.minutos["quieto"] ?: 0))
+    }
+
+    fun filasEjercicio() = Repo.sesiones.map {
+        linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "inicio" to it.inicio, "fin" to it.fin, "tipo" to it.tipo_nombre,
+            "tipo_hc" to it.tipo, "titulo" to it.titulo, "min" to it.min, "fc_media" to it.fc_media, "fc_max" to it.fc_max)
+    }
+
+    fun filasEscaladaSesiones() = Repo.ascensos.map { a ->
+        val g = a.bloques.filter { Grados.encadenado(it.estilo) }.mapNotNull { Grados.valor(it.grado) }
+        linkedMapOf<String, Any?>("id" to a.id, "fecha" to a.fecha, "lugar" to a.lugar, "modalidad" to a.modalidad, "inicio" to a.inicio, "min" to a.min,
+            "bloques" to a.bloques.size, "encadenados" to a.bloques.count { Grados.encadenado(it.estilo) },
+            "flashes" to a.bloques.count { it.estilo == "flash" || it.estilo == "a_vista" }, "intentos" to a.bloques.sumOf { it.intentos },
+            "grado_max" to g.maxOrNull()?.let { Grados.nombre(it, a.bloques.firstOrNull()?.grado) }, "grado_max_num" to g.maxOrNull(),
+            "grado_medio_num" to if (g.isEmpty()) null else g.average(), "energia" to a.energia, "piel" to a.piel, "esfuerzo" to a.esfuerzo,
+            "satisfaccion" to a.satisfaccion, "dolor" to a.dolor, "nota" to a.nota, "sesion_reloj" to a.sesion_reloj)
+    }
+
+    fun filasEscaladaBloques() = Repo.ascensos.flatMap { a ->
+        a.bloques.mapIndexed { i, b ->
+            linkedMapOf<String, Any?>("sesion" to a.id, "fecha" to a.fecha, "lugar" to a.lugar, "orden" to i + 1, "grado" to b.grado,
+                "grado_num" to Grados.valor(b.grado), "escala" to Grados.escala(b.grado), "estilo" to b.estilo, "encadenado" to Grados.encadenado(b.estilo),
+                "intentos" to b.intentos, "angulo" to b.angulo, "rasgos" to b.rasgos, "nota" to b.nota)
+        }
+    }
+
+    fun filasBiblioteca() = Repo.obras.sortedBy { it.agregado }.map {
+        linkedMapOf<String, Any?>("id" to it.id, "tipo" to it.tipo, "titulo" to it.titulo, "autor" to it.autor, "anio" to it.anio, "estado" to it.estado,
+            "inicio" to it.inicio, "fin" to it.fin, "calificacion" to it.calificacion, "progreso" to it.progreso, "total" to it.total,
+            "veces" to it.veces, "etiquetas" to it.etiquetas, "nota" to it.nota, "agregado" to it.agregado,
+            "dias" to if (it.inicio != null && it.fin != null) java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(it.inicio), Fechas.parse(it.fin)) + 1 else null)
+    }
+
+    /** Una fila por día con todo lo que se sabe de él: el archivo más cómodo para empezar en R. */
+    fun filasPanel(): List<Map<String, Any?>> {
+        val fechas = (Repo.dias.keys + Repo.salud.keys + Repo.pantalla.keys + Repo.entorno.keys + Repo.momentos.map { it.fecha } + Repo.gastos.map { it.fecha }).toSortedSet()
+        val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }
+        val mo = Repo.momentos.filter { it.tipo != "muestreo" }.groupBy { it.fecha }
+        val ga = Repo.gastos.groupBy { it.fecha }
+        val ej = Repo.sesiones.groupBy { it.fecha }
+        val es = Repo.ascensos.groupBy { it.fecha }
+        val km = runCatching { io.github.ruddy2003.vestigium.ciencia.Movilidad.kmPorDia() }.getOrDefault(emptyMap())
+        return fechas.map { f ->
+            val d = Repo.dias[f]; val s = Repo.salud[f]; val p = Repo.pantalla[f]; val e = Repo.entorno[f]
+            val ft = Repo.fotos[f]; val ag = Repo.agenda[f]; val nt = Repo.notifs[f]; val ac = Repo.actividad[f]
+            val r = linkedMapOf<String, Any?>("fecha" to f, "dia_semana" to Fechas.parse(f).dayOfWeek.value, "con_diario" to (d != null),
+                "valencia" to d?.valencia, "activacion" to d?.activacion, "dolor" to d?.dolor, "sueno_calidad" to d?.sueno_calidad,
+                "valencia_muestreo" to mu[f]?.mapNotNull { it.valencia }?.average(), "n_muestreos" to (mu[f]?.size ?: 0),
+                "n_momentos" to (mo[f]?.size ?: 0))
+            Catalogo.MOMENTOS.forEach { t -> r["m_${t.id}"] = mo[f]?.count { it.tipo == t.id } ?: 0 }
+            r["gasto_total"] = ga[f]?.sumOf { it.monto } ?: 0.0
+            r["palabras"] = d?.let { Texto.palabras(it.nota) }
+            r["sueno_min"] = s?.sueno_min; r["sueno_profundo_min"] = s?.sueno_profundo_min; r["sueno_rem_min"] = s?.sueno_rem_min
+            r["fc_reposo"] = s?.fc_reposo; r["hrv_rmssd"] = s?.hrv_rmssd; r["pasos"] = s?.pasos
+            r["pantalla_min"] = p?.total_min; r["desbloqueos"] = p?.desbloqueos; r["primer_uso"] = p?.primer_uso?.let { Fechas.horaDe(it) }; r["ultimo_uso"] = p?.ultimo_uso?.let { Fechas.horaDe(it) }
+            r["t_max"] = e?.t_max; r["t_min"] = e?.t_min; r["precip_mm"] = e?.precip_mm; r["nubes_pct"] = e?.nubes_pct; r["luz_min"] = e?.luz_min
+            r["sol_min"] = e?.sol_min; r["aqi_us"] = e?.aqi_us; r["pm25"] = e?.pm25; r["luna_ilum"] = e?.luna_ilum ?: Luna.iluminacion(Luna.fase(f))
+            r["fotos"] = ft?.fotos; r["eventos"] = ag?.eventos; r["min_ocupado"] = ag?.min_ocupado; r["notificaciones"] = nt?.total
+            r["a_pie_min"] = ac?.minutos?.get("a_pie"); r["vehiculo_min"] = ac?.minutos?.get("vehiculo")
+            r["ejercicio_min"] = ej[f]?.sumOf { it.min }; r["escalada"] = es[f] != null
+            r["km"] = km[f]
+            r
+        }
+    }
+
     fun csvUbicaciones(): String {
         val sb = StringBuilder("﻿ts,lat,lon,precision_m,fuente\n")
         Repo.db().ubicaciones().forEach { sb.append(Fechas.isoDeMillis(it.ms)).append(',').append(it.lat).append(',').append(it.lon).append(',')
@@ -135,9 +247,13 @@ object Exportar {
         exportado = Fechas.ahoraIso(), schema_v = SCHEMA_V, dias = Repo.dias.values.sortedBy { it.fecha }, momentos = Repo.momentos,
         gastos = Repo.gastos, respuestas = Repo.respuestas, reacciones = Repo.reacciones, lugares = Repo.lugares, visitas = Repo.visitas,
         salud = Repo.salud.values.toList(), pantalla = Repo.pantalla.values.toList(), cartas = Repo.cartas, experimentos = Repo.experimentos,
-        config = Repo.config.copy(disparos = emptyMap(), plan_muestreo = emptyMap())))
+        config = Repo.config.copy(disparos = emptyMap(), plan_muestreo = emptyMap()),
+        entorno = Repo.entorno.values.sortedBy { it.fecha }, fotos = Repo.fotos.values.sortedBy { it.fecha }, agenda = Repo.agenda.values.sortedBy { it.fecha },
+        notifs = Repo.notifs.values.sortedBy { it.fecha }, actividad = Repo.actividad.values.sortedBy { it.fecha }, sesiones = Repo.sesiones,
+        ascensos = Repo.ascensos, obras = Repo.obras, escuchas = Repo.escuchas("0000-01-01", "9999-12-31")))
 
     fun archivos(): List<Pair<String, String>> = listOf(
+        "vm_panel.csv" to csv(filasPanel()),
         "vm_dias.csv" to csv(filasDias()),
         "vm_momentos.csv" to csv(filasMomentos()),
         "vm_gastos.csv" to csv(filasGastos()),
@@ -147,6 +263,16 @@ object Exportar {
         "vm_pantalla.csv" to csv(filasPantalla()),
         "vm_visitas.csv" to csv(filasVisitas()),
         "vm_ubicaciones.csv" to csvUbicaciones(),
+        "vm_entorno.csv" to csv(filasEntorno()),
+        "vm_fotos.csv" to csv(filasFotos()),
+        "vm_agenda.csv" to csv(filasAgenda()),
+        "vm_notificaciones.csv" to csv(filasNotifs()),
+        "vm_musica.csv" to csv(filasMusica()),
+        "vm_actividad.csv" to csv(filasActividad()),
+        "vm_ejercicio.csv" to csv(filasEjercicio()),
+        "vm_escalada_sesiones.csv" to csv(filasEscaladaSesiones()),
+        "vm_escalada_bloques.csv" to csv(filasEscaladaBloques()),
+        "vm_biblioteca.csv" to csv(filasBiblioteca()),
         "vm_respaldo.json" to respaldoJson(),
         "LEEME.txt" to leeme(),
     )
@@ -157,10 +283,15 @@ object Exportar {
 
         En R:
           library(tidyverse)
-          dias <- read_csv("vm_dias.csv")
+          panel <- read_csv("vm_panel.csv")        # una fila por día con todo junto
+          dias <- read_csv("vm_dias.csv")          # diario completo
           momentos <- read_csv("vm_momentos.csv")
           salud <- read_csv("vm_salud.csv")
-          panel <- dias |> left_join(salud, by = "fecha")
+
+        Archivos: panel (resumen diario), dias, momentos, gastos, escalas, reaccion, salud, pantalla, visitas,
+        ubicaciones, entorno (clima, luz, aire y luna), fotos, agenda, notificaciones (solo conteos), musica,
+        actividad (minutos a pie, en vehículo...), ejercicio (sesiones del reloj), escalada_sesiones,
+        escalada_bloques (grado_num: V0 = 0, V1 = 1...; Fontainebleau convertido a V) y biblioteca.
 
         Convenciones: fechas AAAA-MM-DD en hora local; los días empiezan a las 5:00;
         booleanos 0/1; listas separadas por «|»; celda vacía = dato que no existe (nunca se rellenó con promedios).

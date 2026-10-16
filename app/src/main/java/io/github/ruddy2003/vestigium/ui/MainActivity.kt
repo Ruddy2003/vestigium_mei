@@ -43,6 +43,13 @@ import androidx.fragment.app.FragmentActivity
 import io.github.ruddy2003.vestigium.avisos.Programador
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaAjustes
+import io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnno
+import io.github.ruddy2003.vestigium.ui.pantallas.PantallaAscenso
+import io.github.ruddy2003.vestigium.ui.pantallas.PantallaBiblioteca
+import io.github.ruddy2003.vestigium.ui.pantallas.PantallaCalendario
+import io.github.ruddy2003.vestigium.ui.pantallas.PantallaEscalada
+import io.github.ruddy2003.vestigium.ui.pantallas.PantallaMapa
+import io.github.ruddy2003.vestigium.ui.pantallas.PantallaObra
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaCartas
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaDatos
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia
@@ -125,8 +132,9 @@ class MainActivity : FragmentActivity() {
 private fun Bloqueo(reintentar: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("Vestigium Mei", style = MaterialTheme.typography.headlineMedium)
-            Ayuda("Tu diario está bloqueado.")
+            Text("VESTIGIVM MEI", style = MaterialTheme.typography.headlineMedium)
+            Meandro(Modifier.padding(horizontal = 40.dp))
+            Ayuda("// tu diario está sellado")
             BotonPrincipal("Desbloquear") { reintentar() }
         }
     }
@@ -151,6 +159,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
 
     LaunchedEffect(pedida) {
         val p = pedida ?: return@LaunchedEffect
+        if (p == "dia") io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
         if (PESTANAS.any { it.id == p }) { pestana = p; pila = emptyList() } else { pestana = "mas"; pila = listOf(p) }
         consumir()
     }
@@ -161,14 +170,23 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                PESTANAS.forEach { p ->
-                    NavigationBarItem(
-                        selected = pestana == p.id && pila.isEmpty(),
-                        onClick = { pestana = p.id; pila = emptyList() },
-                        icon = { Icon(p.icono, contentDescription = null) },
-                        label = { Text(p.nombre) },
-                    )
+            Column {
+                androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.outline)
+                NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
+                    PESTANAS.forEachIndexed { i, p ->
+                        val activa = pestana == p.id && pila.isEmpty()
+                        NavigationBarItem(
+                            selected = activa,
+                            onClick = { pestana = p.id; pila = emptyList() },
+                            icon = { Icon(p.icono, contentDescription = p.nombre) },
+                            label = { Text((if (activa) Romano.de(i + 1) + "·" else "") + p.nombre.lowercase(), style = MaterialTheme.typography.labelSmall) },
+                            colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimary, indicatorColor = MaterialTheme.colorScheme.primary,
+                                selectedTextColor = MaterialTheme.colorScheme.primary, unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
+                        )
+                    }
                 }
             }
         },
@@ -191,6 +209,13 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                 "permisos" -> PantallaPermisos(nav)
                 "ajustes" -> PantallaAjustes(nav)
                 "guia" -> PantallaGuia(nav)
+                "calendario" -> PantallaCalendario(nav)
+                "escalada" -> PantallaEscalada(nav)
+                "ascenso" -> PantallaAscenso(nav)
+                "biblioteca" -> PantallaBiblioteca(nav)
+                "obra" -> PantallaObra(nav)
+                "anno" -> PantallaAnno(nav)
+                "mapa" -> PantallaMapa(nav)
                 else -> Text("Pantalla desconocida: $actual")
             }
         }

@@ -15,6 +15,11 @@ import io.github.ruddy2003.vestigium.data.Exportar
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.reportes.Reportes
+import io.github.ruddy2003.vestigium.data.Drive
+import io.github.ruddy2003.vestigium.sensores.Actividad
+import io.github.ruddy2003.vestigium.sensores.Agenda
+import io.github.ruddy2003.vestigium.sensores.Entorno
+import io.github.ruddy2003.vestigium.sensores.Galeria
 import io.github.ruddy2003.vestigium.sensores.Geocercas
 import io.github.ruddy2003.vestigium.sensores.Pantalla
 import io.github.ruddy2003.vestigium.sensores.Salud
@@ -129,12 +134,29 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             runCatching { Salud.sincronizar(ctx, 3) }
             runCatching { Pantalla.sincronizar(ctx, 2) }
             runCatching { Geocercas.registrar(ctx) }
+            runCatching { Actividad.registrar(ctx) }
+            runCatching { Galeria.sincronizar(ctx, 3) }
+            runCatching { Agenda.sincronizar(ctx) }
+            runCatching { Entorno.sincronizar(ctx) }
             runCatching { Exportar.respaldoAutomatico(ctx) }
+            if (Repo.config.drive && !Drive.automatico(ctx) && !yaFue("drive_aviso:${Fechas.lunesDe(hoy)}")) {
+                marcar("drive_aviso:${Fechas.lunesDe(hoy)}"); Avisos.drive(ctx)
+            }
             Repo.cambiarConfig { it.copy(ultimo_sync = Fechas.ahoraIso()) }
         } else if (ahora.hour >= 21 && !yaFue("sync2:$hoy")) {
             marcar("sync2:$hoy")
             runCatching { Pantalla.sincronizar(ctx, 1) }
             runCatching { Salud.sincronizar(ctx, 1) }
+            runCatching { Galeria.sincronizar(ctx, 1) }
+            runCatching { Agenda.sincronizar(ctx) }
+        }
+        // Una vez al mes se rellena la historia que guardan la galería y el calendario.
+        val mes = Fechas.mesDe(hoy)
+        if (ahora.hour >= 13 && !yaFue("historia:$mes")) {
+            marcar("historia:$mes")
+            runCatching { Galeria.historia(ctx) }
+            runCatching { Agenda.historia(ctx) }
+            runCatching { Entorno.sincronizar(ctx, maxPeticiones = 20) }
         }
         // Reporte semanal: lunes, de la semana anterior
         if (ahora.dayOfWeek == DayOfWeek.MONDAY && ahora.hour >= 8 && !yaFue("reporte_sem:$hoy")) {
@@ -155,6 +177,7 @@ class ArranqueReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Repo.init(context)
         runCatching { Geocercas.registrar(context) }
+        runCatching { Actividad.registrar(context) }
         Programador.asegurar(context)
     }
 }

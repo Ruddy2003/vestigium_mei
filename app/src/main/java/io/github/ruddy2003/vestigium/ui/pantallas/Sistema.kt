@@ -45,6 +45,13 @@ import io.github.ruddy2003.vestigium.data.Importar
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.reportes.Reportes
+import io.github.ruddy2003.vestigium.data.Drive
+import io.github.ruddy2003.vestigium.sensores.Actividad
+import io.github.ruddy2003.vestigium.sensores.Agenda
+import io.github.ruddy2003.vestigium.sensores.Entorno
+import io.github.ruddy2003.vestigium.sensores.Galeria
+import io.github.ruddy2003.vestigium.sensores.Oyente
+import io.github.ruddy2003.vestigium.sensores.Sincronizar
 import io.github.ruddy2003.vestigium.sensores.Geocercas
 import io.github.ruddy2003.vestigium.sensores.Pantalla
 import io.github.ruddy2003.vestigium.sensores.Salud
@@ -52,6 +59,8 @@ import io.github.ruddy2003.vestigium.sensores.Ubicacion
 import io.github.ruddy2003.vestigium.ui.Aviso
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
+import io.github.ruddy2003.vestigium.ui.BotonSecundario
+import io.github.ruddy2003.vestigium.ui.Clave
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
@@ -79,6 +88,11 @@ fun PantallaPermisos(nav: Nav) {
     val ubic = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refrescar++ }
     val fondo = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refrescar++; Geocercas.registrar(ctx) }
     val salud = rememberLauncherForActivityResult(PermissionController.createRequestPermissionResultContract()) { refrescar++; scope.launch { Salud.sincronizar(ctx, 30) } }
+    val fotos = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refrescar++; scope.launch(Dispatchers.IO) { Galeria.sincronizar(ctx, 7); Galeria.historia(ctx) } }
+    val agenda = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refrescar++; scope.launch(Dispatchers.IO) { Agenda.sincronizar(ctx); Agenda.historia(ctx) } }
+    val movimiento = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refrescar++; Actividad.registrar(ctx) }
+    var msgSync by remember { mutableStateOf<String?>(null) }
+    var sincronizando by remember { mutableStateOf(false) }
     @Suppress("UNUSED_VARIABLE") val k = refrescar
 
     val primera = !Repo.config.bienvenida_vista
@@ -109,12 +123,57 @@ fun PantallaPermisos(nav: Nav) {
         Seccion("Cuerpo") {
             Tarjeta {
                 val disp = Salud.disponible(ctx)
-                Estado("Health Connect", hc.isNotEmpty(), if (disp) "Sueño por etapas, frecuencia cardiaca, HRV, pasos y oxígeno de tu reloj. En Samsung Health activa también: Ajustes → Health Connect → permitir escribir." else "Health Connect no está disponible en este teléfono.", habilitado = disp) {
+                Estado("Health Connect", hc.isNotEmpty(), if (disp) "Sueño por etapas, frecuencia cardiaca, HRV, pasos, oxígeno y sesiones de ejercicio (incluida escalada) de tu reloj. En Samsung Health activa también: Ajustes → Health Connect → permitir escribir." else "Health Connect no está disponible en este teléfono.", habilitado = disp) {
                     salud.launch(Salud.PERMISOS)
                 }
-                if (hc.isNotEmpty()) TextButton(onClick = { scope.launch { val n = Salud.sincronizar(ctx, 30); android.widget.Toast.makeText(ctx, "Sincronicé $n días", android.widget.Toast.LENGTH_SHORT).show() } }) { Text("Sincronizar los últimos 30 días ahora") }
+                if (hc.isNotEmpty() && !hc.containsAll(Salud.PERMISOS.filter { it.startsWith("android.permission.health.READ_") && !it.endsWith("BACKGROUND") && !it.endsWith("HISTORY") }))
+                    TextButton(onClick = { salud.launch(Salud.PERMISOS) }) { Text("+ conceder los permisos nuevos (ejercicio)", style = MaterialTheme.typography.labelLarge) }
+                if (hc.isNotEmpty()) TextButton(onClick = { scope.launch { val n = Salud.sincronizar(ctx, 30); android.widget.Toast.makeText(ctx, "Sincronicé $n días", android.widget.Toast.LENGTH_SHORT).show() } }) { Text("↻ sincronizar los últimos 30 días", style = MaterialTheme.typography.labelLarge) }
+                HorizontalDivider()
+                Estado("Movimiento", Actividad.tienePermiso(ctx), "Minutos a pie, en bici, en vehículo o quieto, detectados por el teléfono. Casi no gasta batería.") {
+                    movimiento.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+                }
             }
         }
+        Seccion("Galería y agenda") {
+            Tarjeta {
+                Estado("Fotos", Galeria.tienePermiso(ctx), "Cuántas fotos tomaste cada día y verlas dentro del día. Las fotos no se copian ni salen del teléfono." +
+                    if (Galeria.parcial(ctx)) " Diste acceso solo a algunas: elige «Permitir todo» para que los conteos sean reales." else "") {
+                    fotos.launch(Galeria.permisos())
+                }
+                HorizontalDivider()
+                Estado("Calendario", Agenda.tienePermiso(ctx), "Cuántos eventos tuviste y cuánto tiempo ocupado: sirve para cruzar tu ánimo con la carga del día.") {
+                    agenda.launch(Manifest.permission.READ_CALENDAR)
+                }
+            }
+        }
+        Seccion("Notificaciones y música") {
+            Tarjeta {
+                Estado("Acceso a notificaciones", Oyente.activo(ctx), "Cuenta cuántas notificaciones recibes, de qué app y a qué hora (nunca lee su texto), y anota qué canción empieza a sonar.") {
+                    runCatching { ctx.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)) }
+                }
+                if (!Oyente.activo(ctx)) {
+                    Aviso("Si Android dice «ajuste restringido»: abre la información de la app, toca ⋮ arriba a la derecha → «Permitir ajustes restringidos», y vuelve a intentarlo. Pasa con las apps instaladas fuera de la tienda.")
+                    TextButton(onClick = { runCatching { ctx.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName))) } }) {
+                        Text("abrir información de la app →", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+            }
+        }
+        Seccion("Clima") {
+            Tarjeta {
+                Interruptor("Clima, luz y aire", Repo.config.clima, "Temperatura, lluvia, nubes, horas de luz, presión y calidad del aire de donde estuviste, de Open-Meteo (gratis, sin cuenta). Solo se envía tu zona aproximada (~1 km).") { v ->
+                    Repo.cambiarConfig { it.copy(clima = v) }
+                }
+                if (Repo.config.clima) TextButton(onClick = { scope.launch { val n = withContext(Dispatchers.IO) { runCatching { Entorno.sincronizar(ctx, 20) }.getOrDefault(0) }; msgSync = if (n > 0) "Clima de $n días." else "No pude traer el clima (¿hay internet y alguna ubicación guardada?)." } }) {
+                    Text("↻ traer clima de los días con registro", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        }
+        BotonPrincipal(if (sincronizando) "Sincronizando…" else "Sincronizar todo ahora", Modifier.fillMaxWidth().padding(top = 18.dp), habilitado = !sincronizando) {
+            scope.launch { sincronizando = true; msgSync = Sincronizar.todo(ctx, 7); sincronizando = false }
+        }
+        msgSync?.let { Ayuda(it, Modifier.padding(top = 6.dp)) }
         Seccion("Teléfono") {
             Tarjeta {
                 Estado("Tiempo en pantalla", Pantalla.tienePermiso(ctx), "Minutos por app y desbloqueos por día. Android te llevará a «Acceso a datos de uso»: busca Vestigium Mei y actívalo.") {
@@ -141,8 +200,8 @@ private fun Estado(titulo: String, ok: Boolean, detalle: String, habilitado: Boo
             Text(titulo, style = MaterialTheme.typography.bodyLarge)
             Ayuda(detalle)
         }
-        if (ok) Text("Activo", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 8.dp))
-        else OutlinedButton(onClick = accion, enabled = habilitado, modifier = Modifier.padding(start = 8.dp)) { Text("Activar") }
+        if (ok) Text("= on", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(start = 8.dp))
+        else BotonSecundario("activar", Modifier.padding(start = 8.dp), habilitado = habilitado) { accion() }
     }
 }
 
@@ -246,6 +305,9 @@ fun PantallaDatos(nav: Nav) {
                 }
             }
         }
+        Seccion("Google Drive", "Cada mañana reemplaza tus CSV en la carpeta «Vestigium Mei» de tu Drive y cada semana guarda una copia .zip fechada (se conservan las últimas 12). La app solo puede ver lo que ella misma sube.") {
+            DriveTarjeta { tarea(it) }
+        }
         Seccion("Importar") {
             Tarjeta {
                 OutlinedButton(onClick = { obsidian.launch(arrayOf("text/markdown", "text/plain", "application/octet-stream", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Notas diarias de Obsidian (.md)") }
@@ -261,9 +323,12 @@ fun PantallaDatos(nav: Nav) {
         Seccion("Categorías de gasto") { Categorias() }
         Seccion("Resumen") {
             Tarjeta {
-                Text("${Repo.dias.size} días · ${Repo.momentos.size} momentos · ${Repo.gastos.size} gastos · ${Repo.respuestas.size} cuestionarios · ${Repo.reacciones.size} pruebas · ${Repo.salud.size} días de salud · ${Repo.pantalla.size} días de pantalla",
-                    style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
-                Repo.config.ultimo_sync?.let { Ayuda("Última sincronización: ${Fechas.horaDe(it)} del ${it.take(10)}") }
+                Clave("dies", "${Repo.dias.size}"); Clave("momenta", "${Repo.momentos.size}"); Clave("svmptvs", "${Repo.gastos.size}")
+                Clave("quaestiones", "${Repo.respuestas.size}"); Clave("celeritas", "${Repo.reacciones.size}"); Clave("corpus", "${Repo.salud.size} días")
+                Clave("telephonum", "${Repo.pantalla.size} días"); Clave("caelum", "${Repo.entorno.size} días"); Clave("imagines", "${Repo.fotos.size} días")
+                Clave("fasti", "${Repo.agenda.size} días"); Clave("monita", "${Repo.notifs.size} días"); Clave("ascensvs", "${Repo.ascensos.size} sesiones")
+                Clave("bibliotheca", "${Repo.obras.size} obras"); Clave("loca", "${Repo.lugares.size} · ${Repo.visitas.size} visitas")
+                Repo.config.ultimo_sync?.let { Clave("synchronia", "${Fechas.horaDe(it)} del ${it.take(10)}") }
             }
         }
     }
@@ -298,7 +363,7 @@ private fun Equivalencias() {
         if (eq.isEmpty()) Ayuda("Ninguna.")
         eq.forEach { (k, v) ->
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("$k → $v", fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                Text("$k → $v", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f))
                 TextButton(onClick = { Repo.cambiarConfig { it.copy(equivalencias = it.equivalencias - k) } }) { Text("Quitar") }
             }
         }
@@ -325,5 +390,61 @@ private fun Categorias() {
             TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
         }
         Ayuda("Tocar una categoría la quita de la lista; los gastos ya registrados la conservan.", Modifier.padding(top = 6.dp))
+    }
+}
+
+
+/** Huella SHA-1 del certificado con que está firmada esta app (la que pide Google Cloud). */
+@Suppress("DEPRECATION")
+private fun huellaSha1(ctx: android.content.Context): String = runCatching {
+    val info = ctx.packageManager.getPackageInfo(ctx.packageName, android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES)
+    val firma = info.signingInfo?.apkContentsSigners?.firstOrNull() ?: return@runCatching "?"
+    java.security.MessageDigest.getInstance("SHA-1").digest(firma.toByteArray()).joinToString(":") { "%02X".format(it) }
+}.getOrDefault("?")
+
+@Composable
+private fun DriveTarjeta(tarea: (suspend () -> String) -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var msg by remember { mutableStateOf<String?>(null) }
+    var guia by remember { mutableStateOf(false) }
+    val permiso = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { r ->
+        val token = Drive.tokenDe(ctx, r.data)
+        if (token == null) msg = "No se concedió el acceso." else { Repo.cambiarConfig { it.copy(drive = true) }; tarea { Drive.subir(ctx, token) } }
+    }
+    fun conectar() {
+        scope.launch {
+            when (val a = Drive.acceso(ctx)) {
+                is Drive.Acceso.Listo -> { Repo.cambiarConfig { it.copy(drive = true) }; tarea { Drive.subir(ctx, a.token) } }
+                is Drive.Acceso.Permiso -> permiso.launch(androidx.activity.result.IntentSenderRequest.Builder(a.intent.intentSender).build())
+                is Drive.Acceso.Error -> { msg = a.mensaje; guia = true }
+            }
+        }
+    }
+    Tarjeta {
+        Interruptor("Respaldo diario en Drive", Repo.config.drive, Repo.config.drive_ultimo?.let { "Último: ${Fechas.horaDe(it)} del ${it.take(10)}" } ?: "Aún no se ha subido nada.") { v ->
+            if (v) conectar() else Repo.cambiarConfig { it.copy(drive = false) }
+        }
+        Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BotonSecundario("conectar y subir ahora") { conectar() }
+            BotonSecundario(if (guia) "ocultar guía" else "guía de configuración") { guia = !guia }
+        }
+        msg?.let { Aviso(it) }
+        if (guia) {
+            val sha = remember { huellaSha1(ctx) }
+            Etiqueta("una sola vez, en console.cloud.google.com")
+            Ayuda("1. Crea un proyecto (por ejemplo «Vestigium Mei»).\n" +
+                "2. APIs y servicios → Biblioteca → busca «Google Drive API» → Habilitar.\n" +
+                "3. Pantalla de consentimiento de OAuth → tipo Externo → nombre de la app y tu correo. En «Usuarios de prueba» agrega tu cuenta de Gmail; después toca «Publicar app» para que el permiso no caduque cada 7 días (drive.file no requiere verificación).\n" +
+                "4. Credenciales → Crear credenciales → ID de cliente de OAuth → tipo Android, con estos datos:")
+            Clave("paquete", ctx.packageName, ancho = 8)
+            Clave("sha-1", sha, ancho = 8)
+            TextButton(onClick = {
+                val cb = ctx.getSystemService(android.content.ClipboardManager::class.java)
+                cb?.setPrimaryClip(android.content.ClipData.newPlainText("SHA-1", sha))
+                msg = "SHA-1 copiada."
+            }) { Text("copiar SHA-1", style = MaterialTheme.typography.labelLarge) }
+            Ayuda("5. Vuelve aquí y toca «conectar y subir ahora». Google te pedirá elegir tu cuenta y aceptar el permiso para archivos creados por la app.")
+        }
     }
 }

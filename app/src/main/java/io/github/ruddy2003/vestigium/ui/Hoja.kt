@@ -17,18 +17,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
-/** Pantalla con título y, si es secundaria, botón para regresar. El contenido se desplaza verticalmente. */
+/**
+ * Pantalla: nombre latino grabado en capitales, el nombre en español como comentario de código,
+ * y una banda de meandro debajo. El contenido se desplaza verticalmente.
+ */
 @Composable
-fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null, content: @Composable ColumnScope.() -> Unit) {
+fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null, latin: String? = Romano.latin(titulo), encabezado: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (atras != null) TextButton(onClick = atras) { Text("‹ Atrás", fontSize = 15.sp) }
+        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (atras != null) TextButton(onClick = atras) { Text("← cd ..", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
-        Text(titulo, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = if (atras == null) 12.dp else 0.dp))
-        if (subtitulo != null) Ayuda(subtitulo, Modifier.padding(top = 4.dp))
+        if (encabezado != null) encabezado()
+        else {
+            Text(latin ?: titulo.uppercase(), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = if (atras == null) 14.dp else 2.dp))
+            if (latin != null) Text("// ${titulo.lowercase()}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Meandro(Modifier.padding(top = 10.dp, bottom = 4.dp))
+        if (subtitulo != null) Ayuda(subtitulo, Modifier.padding(top = 6.dp))
         content()
-        Spacer(Modifier.height(48.dp))
+        Spacer(Modifier.height(56.dp))
     }
 }

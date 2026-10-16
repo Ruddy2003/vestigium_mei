@@ -210,8 +210,8 @@ private fun Lista(titulo: String, conteo: Map<String, Int>, prefijo: String) {
         if (top.isEmpty()) Ayuda("Nada aún.")
         top.forEach { (k, v) ->
             Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
-                Text(prefijo + k, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                Text("$v ${if (v == 1) "día" else "días"}", fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                Text(prefijo + k, fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                Text("$v ${if (v == 1) "día" else "días"}", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp)
             }
         }
     }

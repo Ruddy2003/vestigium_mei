@@ -42,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -91,10 +92,12 @@ class QuickActivity : FragmentActivity() {
                     Surface(
                         modifier = Modifier.fillMaxWidth().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
                             .navigationBarsPadding().imePadding(),
-                        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+                        shape = RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp),
                         color = MaterialTheme.colorScheme.background,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     ) {
                         Column(Modifier.padding(18.dp).verticalScroll(rememberScrollState())) {
+                            Meandro(Modifier.padding(bottom = 12.dp))
                             when (modo) {
                                 M_ANIMO -> Animo(inicial, origen, avisoMs)
                                 M_MOMENTO, M_MENU -> MomentoCaptura(inicial, origen)
@@ -133,7 +136,8 @@ class QuickActivity : FragmentActivity() {
 
     @Composable
     private fun Encabezado(titulo: String, sub: String) {
-        Text(titulo, style = MaterialTheme.typography.headlineSmall)
+        Text(titulo, style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp))
+        Text("// " + Fechas.horaAhora() + " · " + Romano.fecha(Fechas.diaLogico()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         Ayuda(sub, Modifier.padding(top = 2.dp, bottom = 12.dp))
     }
 
@@ -175,7 +179,7 @@ class QuickActivity : FragmentActivity() {
                     Surface(
                         onClick = { m = crear(t.id, origen, null, null) },
                         modifier = Modifier.weight(1f).heightIn(min = 56.dp),
-                        shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.surface,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     ) { Box(contentAlignment = Alignment.Center) { Text(if (discreto) t.discreto else t.nombre, style = MaterialTheme.typography.titleMedium) } }
                 }

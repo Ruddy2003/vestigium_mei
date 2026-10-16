@@ -48,6 +48,14 @@ object Importar {
             r.pantalla.forEach { Repo.guardarPantalla(it) }
             r.cartas.forEach { Repo.guardarCarta(it) }
             r.experimentos.forEach { Repo.guardarExperimento(it) }
+            r.entorno.forEach { Repo.guardarEntorno(it) }
+            r.fotos.forEach { Repo.guardarFotos(it) }
+            r.agenda.forEach { Repo.guardarAgenda(it) }
+            r.sesiones.forEach { Repo.guardarSesion(it) }
+            r.ascensos.forEach { a -> if (Repo.ascensos.none { it.id == a.id }) Repo.guardarAscenso(a) }
+            r.obras.forEach { o -> if (Repo.obras.none { it.id == o.id }) Repo.guardarObra(o) }
+            r.escuchas.forEach { Repo.guardarEscucha(it) }
+            Repo.importarSensores(r.notifs, r.actividad)
             Repo.cambiarConfig { c -> c.copy(habitos = (c.habitos + r.config.habitos).distinctBy { it.id }, equivalencias = r.config.equivalencias + c.equivalencias) }
             return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos y ${r.gastos.size} gastos revisados.")
         }

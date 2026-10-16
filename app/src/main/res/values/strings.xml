@@ -3,6 +3,7 @@
     <string name="app_name">Vestigium Mei</string>
     <string name="widget_animo_desc">Registra qué tan agradable se siente este momento con un toque</string>
     <string name="widget_momento_desc">Guarda lo que piensas o sientes ahora, con hora y lugar</string>
+    <string name="widget_hoy_desc">Tu día de un vistazo: ánimo, sueño, pasos, momentos y clima</string>
     <string name="sc_momento">Momento</string>
     <string name="sc_momento_largo">Registrar un momento</string>
     <string name="sc_animo">Ánimo ahora</string>

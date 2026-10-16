@@ -5,9 +5,11 @@ package io.github.ruddy2003.vestigium.ui
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.speech.RecognizerIntent
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,15 +18,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -36,6 +41,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,41 +52,79 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.widget.Toast
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Opcion
 
+private val R4 = RoundedCornerShape(4.dp)
+
+/** Banda de meandro griego: el único ornamento de la app, bajo cada título. */
 @Composable
-fun Seccion(titulo: String, ayuda: String? = null, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(top = 22.dp)) {
-        Text(titulo, style = MaterialTheme.typography.titleLarge)
-        if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp, bottom = 10.dp))
-        else Spacer(Modifier.padding(top = 8.dp))
+fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)) {
+    Canvas(modifier.fillMaxWidth().height(9.dp)) {
+        val h = size.height; val u = h / 3f
+        val paso = u * 4
+        val p = Path()
+        var x = 0f
+        p.moveTo(0f, h)
+        while (x + paso <= size.width + paso) {
+            p.lineTo(x, 0f); p.lineTo(x + u * 3, 0f); p.lineTo(x + u * 3, u * 2); p.lineTo(x + u, u * 2); p.lineTo(x + u, u)
+            p.lineTo(x + u * 2, u); p.moveTo(x + u * 2, u); p.moveTo(x, h); p.lineTo(x + paso, h)
+            p.moveTo(x + paso, h)
+            x += paso
+        }
+        drawPath(p, color, style = Stroke(width = 1.4f, cap = StrokeCap.Square, join = StrokeJoin.Miter))
+    }
+}
+
+/** Encabezado de sección: numeral romano, nombre latino lapidario y comentario en español como en código. */
+@Composable
+fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), content: @Composable () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(top = 26.dp)) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            if (numero != null) {
+                Text(Romano.de(numero), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                Text("  ·  ", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline)
+            }
+            Text(latin ?: titulo.uppercase(), style = MaterialTheme.typography.titleLarge)
+        }
+        if (latin != null) Text("// ${titulo.lowercase()}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
+        if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))
+        else Spacer(Modifier.height(10.dp))
         content()
     }
 }
 
 @Composable
 fun Tarjeta(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-    ) { Column(Modifier.padding(14.dp)) { content() } }
+    Surface(modifier = modifier.fillMaxWidth(), shape = R4, color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+        Column(Modifier.padding(14.dp)) { content() }
+    }
 }
 
+/** Etiqueta de campo, como la clave de una línea de código. */
 @Composable
 fun Etiqueta(texto: String) {
-    Text(texto.uppercase(), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp, bottom = 8.dp))
+    Row(Modifier.padding(top = 14.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("› ", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+        Text(texto.lowercase(), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }
 
 @Composable
@@ -88,7 +132,16 @@ fun Ayuda(texto: String, modifier: Modifier = Modifier) {
     Text(texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = modifier)
 }
 
-/** Fila de números (1-7, 0-5…) con el ancla del valor elegido debajo. Tocar el elegido lo desmarca. */
+/** Línea `clave = valor` en monoespaciada, para datos automáticos. */
+@Composable
+fun Clave(clave: String, valor: String, ancho: Int = 14) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+        Text(clave.padEnd(ancho), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("= ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Text(valor, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+    }
+}
+
 @Composable
 fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null, onCambio: (Int?) -> Unit) {
     Column {
@@ -96,22 +149,20 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
             for (i in desde..hasta) {
                 val sel = valor == i
                 Box(
-                    Modifier.weight(1f).heightIn(min = 46.dp).clip(RoundedCornerShape(8.dp))
+                    Modifier.weight(1f).heightIn(min = 46.dp).clip(R4)
                         .background(if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
-                        .border(1.dp, if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+                        .border(1.dp, if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, R4)
                         .clickable { onCambio(if (sel) null else i) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("$i", fontFamily = FontFamily.Monospace, fontSize = 16.sp, fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal,
+                    Text("$i", style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal),
                         color = if (sel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
-        if (anclas != null) {
-            Text(
-                if (valor == null) "Sin marcar" else "$valor · ${anclas[valor] ?: ""}",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp),
-            )
+        if (anclas != null) Row(Modifier.padding(top = 7.dp)) {
+            Text(if (valor == null) "= null" else "= $valor", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            Text(if (valor == null) "  sin marcar" else "  ${anclas[valor] ?: ""}".lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -119,14 +170,13 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
 @Composable
 fun Ficha(texto: String, activa: Boolean, onClick: () -> Unit) {
     Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(50),
+        onClick = onClick, shape = R4,
         color = if (activa) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, if (activa) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
     ) {
-        Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (activa) { Box(Modifier.size(7.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)); Spacer(Modifier.width(7.dp)) }
-            Text(texto, style = MaterialTheme.typography.bodyMedium, fontWeight = if (activa) FontWeight.SemiBold else FontWeight.Normal)
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (activa) { Box(Modifier.size(6.dp).background(MaterialTheme.colorScheme.primary)); Spacer(Modifier.width(8.dp)) }
+            Text(texto, style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (activa) FontWeight.SemiBold else FontWeight.Normal))
         }
     }
 }
@@ -138,16 +188,13 @@ fun FilaFichas(opciones: List<Opcion>, valor: String?, onCambio: (String?) -> Un
     }
 }
 
-/** Opciones con explicación corta, para las categorías científicas. */
 @Composable
 fun Opciones(opciones: List<Opcion>, valor: String?, onCambio: (String?) -> Unit) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), maxItemsInEachRow = 2) {
         opciones.forEach { o ->
             val sel = valor == o.id
             Surface(
-                onClick = { onCambio(if (sel) null else o.id) },
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(10.dp),
+                onClick = { onCambio(if (sel) null else o.id) }, modifier = Modifier.weight(1f), shape = R4,
                 color = if (sel) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
                 border = BorderStroke(1.dp, if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
             ) {
@@ -167,11 +214,10 @@ fun Interruptor(texto: String, valor: Boolean, detalle: String? = null, onCambio
             Text(texto, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Ayuda(detalle)
         }
-        Switch(checked = valor, onCheckedChange = onCambio)
+        Switch(checked = valor, onCheckedChange = onCambio, colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary))
     }
 }
 
-/** Lista de etiquetas cortas que se pueden agregar y quitar (hitos, temas del sueño, medicamentos). */
 @Composable
 fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", normalizar: (String) -> String, onCambio: (List<String>) -> Unit) {
     var texto by remember { mutableStateOf("") }
@@ -180,12 +226,12 @@ fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", nor
         if (nuevos.isNotEmpty()) { onCambio(lista + nuevos); texto = "" }
     }
     Column {
-        if (lista.isEmpty()) Ayuda("Nada todavía.")
+        if (lista.isEmpty()) Text("[ ]", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             lista.forEachIndexed { i, t ->
-                Surface(shape = RoundedCornerShape(7.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
+                Surface(shape = R4, color = MaterialTheme.colorScheme.surfaceVariant) {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 10.dp)) {
-                        Text(prefijo + t, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                        Text(prefijo + t, style = MaterialTheme.typography.labelLarge)
                         TextButton(onClick = { onCambio(lista.filterIndexed { j, _ -> j != i }) }, contentPadding = PaddingValues(0.dp), modifier = Modifier.size(36.dp)) { Text("×", fontSize = 16.sp) }
                     }
                 }
@@ -194,17 +240,43 @@ fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", nor
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = texto, onValueChange = { texto = it }, modifier = Modifier.weight(1f), singleLine = true,
-                placeholder = { Text(pista) },
+                placeholder = { Text(pista, style = MaterialTheme.typography.labelLarge) }, textStyle = MaterialTheme.typography.labelLarge,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { agregar() }),
             )
             Spacer(Modifier.width(8.dp))
-            OutlinedButton(onClick = { agregar() }) { Text("Añadir") }
+            BotonSecundario("+ añadir") { agregar() }
         }
     }
 }
 
-/** Botón que abre el dictado por voz de Android y agrega el texto reconocido. */
+/** Campo de texto largo con barra superior como un archivo abierto en un editor. */
+@Composable
+fun Editor(valor: String, archivo: String, pista: String, minimo: Int = 200, pie: String? = null, onCambio: (String) -> Unit) {
+    Column(Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outline, R4)) {
+        Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(7.dp).background(MaterialTheme.colorScheme.primary))
+            Text("  $archivo", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+            if (pie != null) Text(pie, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Row(Modifier.height(IntrinsicSize.Min)) {
+            Box(Modifier.width(3.dp).fillMaxHeight().background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)))
+            androidx.compose.foundation.text.BasicTextField(
+                value = valor, onValueChange = onCambio,
+                modifier = Modifier.weight(1f).heightIn(min = minimo.dp).padding(12.dp),
+                textStyle = MaterialTheme.typography.labelLarge.copy(fontSize = 14.5.sp, lineHeight = 22.sp, letterSpacing = 0.sp, fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface),
+                cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                decorationBox = { campo ->
+                    Box {
+                        if (valor.isEmpty()) Text(pista, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.5.sp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                        campo()
+                    }
+                },
+            )
+        }
+    }
+}
+
 @Composable
 fun BotonDictado(onTexto: (String) -> Unit) {
     val ctx = LocalContext.current
@@ -212,54 +284,79 @@ fun BotonDictado(onTexto: (String) -> Unit) {
         val t = res.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
         if (!t.isNullOrBlank()) onTexto(t)
     }
-    OutlinedButton(onClick = {
+    BotonSecundario("● dictar") {
         val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE, "es-MX")
             .putExtra(RecognizerIntent.EXTRA_PROMPT, "Dicta")
         try { lanzar.launch(i) } catch (e: ActivityNotFoundException) { Toast.makeText(ctx, "Este teléfono no tiene dictado por voz disponible.", Toast.LENGTH_SHORT).show() }
-    }) { Text("Dictar") }
+    }
 }
 
 @Composable
 fun BotonPrincipal(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = habilitado, modifier = modifier.heightIn(min = 48.dp), shape = RoundedCornerShape(10.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) { Text(texto) }
+    Button(onClick = onClick, enabled = habilitado, modifier = modifier.heightIn(min = 48.dp), shape = R4,
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+        Text(texto.uppercase(), style = MaterialTheme.typography.titleLarge.copy(fontSize = 14.sp, letterSpacing = 2.sp))
+    }
+}
+
+@Composable
+fun BotonSecundario(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
+    OutlinedButton(onClick = onClick, enabled = habilitado, modifier = modifier, shape = R4, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
+        Text(texto, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
+    }
 }
 
 @Composable
 fun Cifra(valor: String, etiqueta: String, modifier: Modifier = Modifier) {
-    Surface(modifier = modifier, shape = RoundedCornerShape(10.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
+    Surface(modifier = modifier, shape = R4, color = MaterialTheme.colorScheme.surfaceVariant) {
         Column(Modifier.padding(10.dp)) {
-            Text(valor, fontFamily = FontFamily.Monospace, fontSize = 19.sp, fontWeight = FontWeight.Medium, maxLines = 1)
-            Text(etiqueta, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(valor, style = MaterialTheme.typography.labelLarge.copy(fontSize = 19.sp, letterSpacing = 0.sp), maxLines = 1)
+            Text(etiqueta.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
         }
     }
 }
 
 @Composable
 fun Vacio(texto: String) {
-    Box(Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp)).padding(18.dp), contentAlignment = Alignment.Center) {
-        Text(texto, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+    val linea = MaterialTheme.colorScheme.outline
+    Box(
+        Modifier.fillMaxWidth().drawBehind {
+            drawRoundRect(linea, cornerRadius = CornerRadius(4.dp.toPx()), style = Stroke(width = 1.5f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))))
+        }.padding(18.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("∅  $texto", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
     }
 }
 
 @Composable
 fun Aviso(texto: String) {
-    Surface(shape = RoundedCornerShape(8.dp), color = MaterialTheme.colorScheme.secondaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
+    Row(Modifier.fillMaxWidth().padding(top = 10.dp).height(IntrinsicSize.Min).background(MaterialTheme.colorScheme.secondaryContainer)) {
+        Box(Modifier.width(3.dp).fillMaxHeight().background(MaterialTheme.colorScheme.secondary))
         Text(texto, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(10.dp))
     }
 }
 
 @Composable
 fun FilaMenu(titulo: String, detalle: String? = null, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(titulo, style = MaterialTheme.typography.bodyLarge)
-            if (detalle != null) Ayuda(detalle)
+            if (detalle != null) Text(detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text("›", fontSize = 22.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("→", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+    }
+}
+
+@Composable
+fun Pastilla(texto: String, color: Color = MaterialTheme.colorScheme.primary) {
+    Box(Modifier.border(1.dp, color, R4).padding(horizontal = 6.dp, vertical = 1.dp).widthIn(min = 10.dp)) {
+        Text(texto, style = MaterialTheme.typography.labelSmall, color = color)
     }
 }
 
 fun tipoNombre(id: String, discreto: Boolean): String = Catalogo.tipo(id)?.let { if (discreto) it.discreto else it.nombre } ?: if (id == "muestreo") "Ánimo" else id
+

@@ -1,32 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:id="@+id/raiz_animo" android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_fondo">
-    <TextView android:id="@+id/titulo_animo" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="¿Qué tan agradable se siente ahora?" android:textColor="#18212A" android:textSize="14sp" android:textStyle="bold" />
-    <TextView android:id="@+id/sub_animo" android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:text="Toca un número" android:textColor="#58646F" android:textSize="12sp" android:layout_marginBottom="8dp" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/titulo_animo" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="ANIMVS" android:textColor="@color/w_oro" android:textSize="13sp" android:fontFamily="serif" android:letterSpacing="0.18" />
+        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:background="@color/w_acento_borde" />
+        <TextView android:id="@+id/sub_animo" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="" android:textColor="@color/w_tenue" android:textSize="10.5sp" android:fontFamily="monospace" />
+    </LinearLayout>
+    <TextView android:id="@+id/pregunta_animo" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="// ¿qué tan agradable se siente ahora?" android:textColor="@color/w_tenue" android:textSize="11sp" android:fontFamily="monospace"
+        android:layout_marginTop="2dp" android:layout_marginBottom="8dp" android:maxLines="1" android:ellipsize="end" />
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
         <TextView android:id="@+id/a1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:layout_marginStart="0dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="1" android:textColor="#18212A" android:textSize="18sp" android:textStyle="bold" />
+            android:text="1" android:textColor="@color/w_texto" android:textSize="18sp" android:textStyle="bold" android:fontFamily="monospace" />
         <TextView android:id="@+id/a2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:layout_marginStart="4dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="2" android:textColor="#18212A" android:textSize="18sp" android:textStyle="bold" />
+            android:text="2" android:textColor="@color/w_texto" android:textSize="18sp" android:textStyle="bold" android:fontFamily="monospace" />
         <TextView android:id="@+id/a3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:layout_marginStart="4dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="3" android:textColor="#18212A" android:textSize="18sp" android:textStyle="bold" />
+            android:text="3" android:textColor="@color/w_texto" android:textSize="18sp" android:textStyle="bold" android:fontFamily="monospace" />
         <TextView android:id="@+id/a4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:layout_marginStart="4dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="4" android:textColor="#18212A" android:textSize="18sp" android:textStyle="bold" />
+            android:text="4" android:textColor="@color/w_texto" android:textSize="18sp" android:textStyle="bold" android:fontFamily="monospace" />
         <TextView android:id="@+id/a5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:layout_marginStart="4dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="5" android:textColor="#18212A" android:textSize="18sp" android:textStyle="bold" />
+            android:text="5" android:textColor="@color/w_texto" android:textSize="18sp" android:textStyle="bold" android:fontFamily="monospace" />
         <TextView android:id="@+id/a6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:layout_marginStart="4dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="6" android:textColor="#18212A" android:textSize="18sp" android:textStyle="bold" />
+            android:text="6" android:textColor="@color/w_texto" android:textSize="18sp" android:textStyle="bold" android:fontFamily="monospace" />
         <TextView android:id="@+id/a7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:layout_marginStart="4dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="7" android:textColor="#18212A" android:textSize="18sp" android:textStyle="bold" />
+            android:text="7" android:textColor="@color/w_texto" android:textSize="18sp" android:textStyle="bold" android:fontFamily="monospace" />
     </LinearLayout>
 </LinearLayout>

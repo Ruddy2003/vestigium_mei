@@ -38,6 +38,7 @@ import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.FilaMenu
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
+import io.github.ruddy2003.vestigium.ui.Romano
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
@@ -50,19 +51,34 @@ fun PantallaMas(nav: Nav) {
         u == null || java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(u.fecha), java.time.LocalDate.now()) >= i.frecuenciaDias
     }
     Hoja("Más") {
-        Seccion("Medir") {
+        Seccion("Registrar", numero = 1, latin = "TABVLAE") {
+            Tarjeta {
+                FilaMenu("Calendario", "Elige cualquier día para abrirlo o corregirlo") { nav.ir("calendario") }
+                HorizontalDivider()
+                val ult = Repo.ascensos.maxByOrNull { it.fecha }
+                FilaMenu("Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${Repo.ascensos.size} sesiones · última ${Fechas.relativo(ult.fecha)}") { nav.ir("escalada") }
+                HorizontalDivider()
+                val leyendo = Repo.obras.count { it.estado == "en_curso" }
+                FilaMenu("Biblioteca", "Libros, películas, series y juegos" + if (leyendo > 0) " · $leyendo en curso" else "") { nav.ir("biblioteca") }
+                HorizontalDivider()
+                FilaMenu("Hábitos", "${Repo.config.habitos.count { it.activo }} activos") { nav.ir("habitos") }
+            }
+        }
+        Seccion("Medir", numero = 2) {
             Tarjeta {
                 FilaMenu("Cuestionarios", if (pendientes > 0) "$pendientes pendiente(s): bienestar, estrés, soledad, personalidad" else "Al día") { nav.ir("escalas") }
                 HorizontalDivider()
                 FilaMenu("Prueba de reacción", "30 segundos para medir tu estado mental") { nav.ir("reaccion") }
                 HorizontalDivider()
-                FilaMenu("Lugares y mapa emocional", "${Repo.lugares.size} lugares marcados") { nav.ir("lugares") }
+                FilaMenu("Mapa", "Calles con tu ánimo, tus rutas y dónde pasas el tiempo") { nav.ir("mapa") }
                 HorizontalDivider()
-                FilaMenu("Hábitos", "${Repo.config.habitos.count { it.activo }} activos") { nav.ir("habitos") }
+                FilaMenu("Lugares", "${Repo.lugares.size} lugares marcados") { nav.ir("lugares") }
             }
         }
-        Seccion("Entenderte") {
+        Seccion("Entenderte", numero = 3) {
             Tarjeta {
+                FilaMenu("Tu año", "El año en píxeles, mes por mes y lo más frecuente") { nav.ir("anno") }
+                HorizontalDivider()
                 FilaMenu("Experimentos personales", "Prueba si algo de verdad te cambia") { nav.ir("experimentos") }
                 HorizontalDivider()
                 FilaMenu("Cartas al futuro", "${Repo.cartas.count { !it.abierta }} esperando su fecha") { nav.ir("cartas") }
@@ -70,18 +86,18 @@ fun PantallaMas(nav: Nav) {
                 FilaMenu("Reportes", "Semanal en imagen, mensual en PDF") { nav.ir("reportes") }
             }
         }
-        Seccion("Sistema") {
+        Seccion("Sistema", numero = 4) {
             Tarjeta {
-                FilaMenu("Datos", "Exportar a R, respaldos, importar Obsidian y Maps") { nav.ir("datos") }
+                FilaMenu("Datos", "Exportar a R, Google Drive, respaldos, importar") { nav.ir("datos") }
                 HorizontalDivider()
-                FilaMenu("Permisos y sensores", "Ubicación, reloj, tiempo en pantalla, avisos") { nav.ir("permisos") }
+                FilaMenu("Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima") { nav.ir("permisos") }
                 HorizontalDivider()
                 FilaMenu("Ajustes", "Horarios de avisos, modo discreto, huella") { nav.ir("ajustes") }
                 HorizontalDivider()
                 FilaMenu("Guía científica", "Qué mide cada cosa y de dónde viene") { nav.ir("guia") }
             }
         }
-        Ayuda("Vestigium Mei · esquema de datos ${io.github.ruddy2003.vestigium.data.SCHEMA_V}", Modifier.padding(top = 16.dp))
+        Ayuda("vestigium mei · schema_v = ${io.github.ruddy2003.vestigium.data.SCHEMA_V} · ${Romano.fecha(Fechas.diaLogico())}", Modifier.padding(top = 16.dp))
     }
 }
 
