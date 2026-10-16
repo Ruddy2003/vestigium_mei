@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/raiz_gasto" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_fondo">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/titulo_gasto" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="SVMPTVS" android:textColor="@color/w_oro" android:textSize="13sp" android:fontFamily="serif" android:letterSpacing="0.18" />
+        <ImageView android:importantForAccessibility="no" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:background="@color/w_acento_borde" />
+        <TextView android:id="@+id/sub_gasto" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="" android:textColor="@color/w_tenue" android:textSize="10.5sp" android:fontFamily="monospace" />
+    </LinearLayout>
+    <TextView android:id="@+id/pregunta_gasto" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="// ¿en qué gastaste?" android:textColor="@color/w_tenue" android:textSize="11sp" android:fontFamily="monospace"
+        android:layout_marginTop="2dp" android:layout_marginBottom="8dp" android:maxLines="1" android:ellipsize="end" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="0dp">
+        <TextView android:id="@+id/g1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="0dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
+        <TextView android:id="@+id/g2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
+        <TextView android:id="@+id/g3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="5dp">
+        <TextView android:id="@+id/g4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="0dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
+        <TextView android:id="@+id/g5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
+        <TextView android:id="@+id/g6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.8" android:orientation="horizontal" android:layout_marginTop="5dp">
+        <TextView android:id="@+id/g_otro" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="0dp" android:background="@drawable/widget_boton_ambar" android:gravity="center" android:maxLines="2"
+            android:text="+ otro monto" android:textColor="@color/w_oro" android:textSize="12sp" android:fontFamily="monospace" />
+    </LinearLayout>
+</LinearLayout>

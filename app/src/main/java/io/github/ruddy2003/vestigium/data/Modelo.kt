@@ -217,6 +217,8 @@ data class Config(
     val medir_ruido: Boolean = false,
     val medir_luz: Boolean = true,
     val whatsapp_yo: String = "",
+    val escalas_hora: Int = 19,
+    val escalas_insistir: Boolean = true,
 )
 
 /** Llamadas y SMS del día: solo cuántos, cuánto duraron y con cuántas personas distintas. Nunca números, nombres ni textos. */
@@ -466,4 +468,60 @@ data class Obra(
     val nota: String = "",
     val agregado: String = "",
     val veces: Int = 1,
+)
+
+/** Nutrición del día exportada de MacroFactor (resumen «Quick Export»). Las claves son las columnas de MacroFactor. */
+@Serializable
+data class NutricionDia(
+    val fecha: String,
+    val valores: Map<String, Double> = emptyMap(),
+    val comidas: Int = 0,
+    val primera: String? = null,
+    val ultima: String? = null,
+    val cafeina_ultima: String? = null,
+)
+
+/** Un alimento registrado en MacroFactor («Food Log»). */
+@Serializable
+data class Comida(
+    val id: String,
+    val fecha: String,
+    val hora: String = "",
+    val alimento: String,
+    val porcion: String = "",
+    val cantidad: Double? = null,
+    val peso_porcion_g: Double? = null,
+    val valores: Map<String, Double> = emptyMap(),
+)
+
+/** Una serie de MacroFactor Workouts («Workout Log»). */
+@Serializable
+data class Serie(
+    val id: String,
+    val fecha: String,
+    val entreno: String = "",
+    val entreno_s: Double? = null,
+    val ejercicio: String,
+    val tipo: String = "",
+    val peso_kg: Double? = null,
+    val reps: Int? = null,
+    val rir: Double? = null,
+    val duracion_s: Double? = null,
+    val distancia_m: Double? = null,
+    val peso_base_kg: Double? = null,
+    val orden: Int = 0,
+)
+
+/** Resumen de entrenamiento del día: series y volumen total y por grupo muscular. */
+@Serializable
+data class EntrenoDia(
+    val fecha: String,
+    val entrenos: List<String> = emptyList(),
+    val minutos: Double? = null,
+    val series: Int = 0,
+    val series_efectivas: Int = 0,
+    val reps: Int = 0,
+    val volumen_kg: Double = 0.0,
+    val series_musculo: Map<String, Double> = emptyMap(),
+    val volumen_musculo: Map<String, Double> = emptyMap(),
 )

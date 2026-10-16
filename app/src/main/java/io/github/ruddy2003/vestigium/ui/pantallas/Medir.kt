@@ -81,9 +81,15 @@ fun PantallaEscalas(nav: Nav) {
             Tarjeta {
                 Escalas.TODAS.forEach { i ->
                     val u = Repo.ultimaRespuesta(i.id)
-                    val dias = u?.let { java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(it.fecha), java.time.LocalDate.now()) }
-                    val estado = when { u == null -> "Nunca respondido"; dias!! >= i.frecuenciaDias -> "Toca responder · último hace $dias días"; else -> "Al día · último el ${u.fecha}" }
-                    FilaMenu(i.nombre, "${i.mide} · $estado") { abierto = i }
+                    val atraso = Escalas.atraso(i)
+                    val cada = when (i.frecuenciaDias) { 7 -> "cada semana"; 30 -> "cada mes"; 365 -> "cada año"; else -> "cada ${i.frecuenciaDias} días" }
+                    val estado = when {
+                        u == null -> "nunca respondido · toca hoy"
+                        atraso > 0 -> "atrasado $atraso día${if (atraso > 1) "s" else ""}"
+                        atraso == 0L -> "toca hoy"
+                        else -> "próximo: ${Fechas.corto(Escalas.proxima(i))}"
+                    }
+                    FilaMenu(i.nombre, "${i.mide} · $cada · $estado") { abierto = i }
                 }
             }
         }

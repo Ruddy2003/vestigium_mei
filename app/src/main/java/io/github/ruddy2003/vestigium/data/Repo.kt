@@ -43,6 +43,8 @@ object Repo {
     var subrayados by mutableStateOf<List<Subrayado>>(emptyList()); private set
     var huellas by mutableStateOf<Map<String, HuellasDia>>(emptyMap()); private set
     var chats by mutableStateOf<List<ChatDia>>(emptyList()); private set
+    var nutricion by mutableStateOf<Map<String, NutricionDia>>(emptyMap()); private set
+    var entrenos by mutableStateOf<Map<String, EntrenoDia>>(emptyMap()); private set
 
     @Synchronized
     fun init(ctx: Context) {
@@ -73,6 +75,8 @@ object Repo {
         subrayados = cargar("subrayados", Subrayado.serializer()).sortedBy { it.ts ?: "" }
         huellas = cargar("huellas_dia", HuellasDia.serializer()).associateBy { it.fecha }
         chats = cargar("whatsapp", ChatDia.serializer()).sortedBy { it.fecha }
+        nutricion = cargar("nutricion", NutricionDia.serializer()).associateBy { it.fecha }
+        entrenos = cargar("entrenos", EntrenoDia.serializer()).associateBy { it.fecha }
         listo = true
     }
 
@@ -287,6 +291,22 @@ object Repo {
         val ids = lista.map { it.id }.toSet()
         enMain { chats = (chats.filter { it.id !in ids } + lista).sortedBy { it.fecha } }
     }
+
+    /** Reemplaza todo lo de MacroFactor entre dos fechas con lo recién importado (así reimportar no duplica). */
+    fun importarMacrofactor(desde: String, hasta: String, dias: List<NutricionDia>, comidas: List<Comida>, series: List<Serie>, entr: List<EntrenoDia>) {
+        db.transaccion {
+            db.borrarRango("comidas", desde, hasta); db.borrarRango("series", desde, hasta)
+            dias.forEach { db.poner("nutricion", it.fecha, it.fecha, JSON.encodeToString(NutricionDia.serializer(), it)) }
+            comidas.forEach { db.poner("comidas", it.id, it.fecha, JSON.encodeToString(Comida.serializer(), it)) }
+            series.forEach { db.poner("series", it.id, it.fecha, JSON.encodeToString(Serie.serializer(), it)) }
+            entr.forEach { db.poner("entrenos", it.fecha, it.fecha, JSON.encodeToString(EntrenoDia.serializer(), it)) }
+        }
+        enMain { nutricion = nutricion + dias.associateBy { it.fecha }; entrenos = entrenos + entr.associateBy { it.fecha } }
+    }
+    fun comidas(desde: String, hasta: String): List<Comida> =
+        db.porFecha("comidas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Comida.serializer(), it) }.getOrNull() }.sortedWith(compareBy({ it.fecha }, { it.hora }))
+    fun series(desde: String, hasta: String): List<Serie> =
+        db.porFecha("series", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Serie.serializer(), it) }.getOrNull() }.sortedWith(compareBy({ it.fecha }, { it.orden }))
 
     // ---------- Escalada y biblioteca ----------
     fun guardarAscenso(a: Ascenso) {

@@ -111,6 +111,28 @@ object Escalas {
 
     val TODAS = listOf(WHO5, PSS4, UCLA3, TIPI)
     fun por(id: String) = TODAS.firstOrNull { it.id == id }
+
+    /** Fecha en que toca responder: la última respuesta más la frecuencia; si nunca se ha respondido, hoy. */
+    fun proxima(i: Instrumento): String {
+        val u = io.github.ruddy2003.vestigium.data.Repo.ultimaRespuesta(i.id) ?: return io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        return io.github.ruddy2003.vestigium.data.Fechas.sumar(u.fecha, i.frecuenciaDias.toLong())
+    }
+
+    /** Días de atraso (0 = toca hoy; negativo = todavía no toca). */
+    fun atraso(i: Instrumento): Long = java.time.temporal.ChronoUnit.DAYS.between(
+        io.github.ruddy2003.vestigium.data.Fechas.parse(proxima(i)), io.github.ruddy2003.vestigium.data.Fechas.parse(io.github.ruddy2003.vestigium.data.Fechas.diaLogico()))
+
+    fun pendientes(): List<Pair<Instrumento, Long>> = TODAS.map { it to atraso(it) }.filter { it.second >= 0 }
+
+    /**
+     * Horas a las que se recuerda según el atraso: el día que toca, una vez; con 1 a 3 días de atraso, dos veces;
+     * con 4 o más, tres veces al día hasta que lo respondas.
+     */
+    fun horasAviso(atraso: Long, base: Int): List<Int> = when {
+        atraso <= 0 -> listOf(base)
+        atraso <= 3 -> listOf(12, base).distinct().sorted()
+        else -> listOf(10, 15, maxOf(base, 20)).distinct().sorted()
+    }
 }
 
 /** Referencias que sostienen el diseño de la app. */

@@ -62,6 +62,10 @@ object Importar {
             if (r.huellas.isNotEmpty()) Repo.importarHuellas(r.huellas)
             if (r.huellas_dia.isNotEmpty()) Repo.guardarHuellasDia(r.huellas_dia.filter { it.fecha !in Repo.huellas })
             if (r.chats.isNotEmpty()) Repo.importarChats(r.chats.filter { c -> Repo.chats.none { it.id == c.id } })
+            if (r.nutricion.isNotEmpty() || r.series.isNotEmpty()) {
+                val fs = r.nutricion.map { it.fecha } + r.comidas.map { it.fecha } + r.series.map { it.fecha } + r.entrenos.map { it.fecha }
+                if (fs.isNotEmpty() && Repo.nutricion.isEmpty() && Repo.entrenos.isEmpty()) Repo.importarMacrofactor(fs.min(), fs.max(), r.nutricion, r.comidas, r.series, r.entrenos)
+            }
             Repo.cambiarConfig { c -> c.copy(habitos = (c.habitos + r.config.habitos).distinctBy { it.id }, equivalencias = r.config.equivalencias + c.equivalencias) }
             return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos y ${r.gastos.size} gastos revisados.")
         }

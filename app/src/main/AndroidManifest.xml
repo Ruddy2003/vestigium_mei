@@ -123,6 +123,31 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_hoy_info" />
         </receiver>
 
+        <receiver android:name=".widget.WidgetGasto" android:exported="false" android:label="Gasto">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_gasto_info" />
+        </receiver>
+        <receiver android:name=".widget.WidgetSueno" android:exported="false" android:label="Sueño">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_sueno_info" />
+        </receiver>
+        <receiver android:name=".widget.WidgetHabitos" android:exported="false" android:label="Hábitos">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_habitos_info" />
+        </receiver>
+        <receiver android:name=".widget.WidgetMes" android:exported="false" android:label="Mes">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_mes_info" />
+        </receiver>
+        <receiver android:name=".widget.HabitoReceiver" android:exported="false" />
         <receiver android:name=".sensores.GeocercaReceiver" android:exported="false" />
         <receiver android:name=".sensores.ActividadReceiver" android:exported="false" />
 

@@ -65,6 +65,7 @@ class QuickActivity : FragmentActivity() {
         const val ORIGEN = "origen"; const val AVISO_MS = "aviso_ms"; const val NOTIF = "notif"
         const val M_ANIMO = "animo"; const val M_MOMENTO = "momento"; const val M_MENU = "menu"
         const val M_GASTO = "gasto"; const val M_SUENO = "sueno"; const val M_MINIMO = "minimo"
+        const val CATEGORIA = "categoria"; const val CALIDAD = "calidad"; const val RECORDADO = "recordado"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +83,16 @@ class QuickActivity : FragmentActivity() {
         if (modo == M_MOMENTO && tipo != null) inicial = crear(tipo, origen, null, null)
         val val0 = intent.getIntExtra(VALENCIA, 0).takeIf { it in 1..7 }
         if (modo == M_ANIMO && val0 != null) inicial = crear("muestreo", origen, val0, avisoMs)
+        // Desde el widget de sueño: la calidad se guarda con el toque.
+        if (modo == M_SUENO) {
+            val cal = intent.getIntExtra(CALIDAD, 0).takeIf { it in 1..5 }
+            val rec = intent.getBooleanExtra(RECORDADO, false)
+            if (cal != null || rec) {
+                val d = Repo.dia(Fechas.diaLogico())
+                Repo.guardarDia(d.copy(sueno_calidad = cal ?: d.sueno_calidad, sueno_recordado = rec || d.sueno_recordado))
+            }
+        }
+        val catInicial = intent.getStringExtra(CATEGORIA)
 
         setContent {
             TemaVestigium {
@@ -101,7 +112,7 @@ class QuickActivity : FragmentActivity() {
                             when (modo) {
                                 M_ANIMO -> Animo(inicial, origen, avisoMs)
                                 M_MOMENTO, M_MENU -> MomentoCaptura(inicial, origen)
-                                M_GASTO -> GastoRapido()
+                                M_GASTO -> GastoRapido(catInicial)
                                 M_SUENO -> SuenoRapido()
                                 M_MINIMO -> Minimo()
                                 else -> MomentoCaptura(null, origen)
@@ -212,9 +223,9 @@ class QuickActivity : FragmentActivity() {
     }
 
     @Composable
-    private fun GastoRapido() {
+    private fun GastoRapido(catInicial: String?) {
         var monto by remember { mutableStateOf("") }
-        var cat by remember { mutableStateOf<String?>(null) }
+        var cat by remember { mutableStateOf(catInicial) }
         var imprevisto by remember { mutableStateOf(false) }
         var nota by remember { mutableStateOf("") }
         var error by remember { mutableStateOf<String?>(null) }

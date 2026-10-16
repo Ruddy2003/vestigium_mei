@@ -86,12 +86,20 @@ object Avisos {
         mostrar(ctx, 2002, b)
     }
 
-    fun escalas(ctx: Context, nombres: String) {
+    fun escalas(ctx: Context, pendientes: List<Pair<io.github.ruddy2003.vestigium.ciencia.Instrumento, Long>>) {
+        val peor = pendientes.maxOf { it.second }
+        val nombres = pendientes.joinToString(", ") { it.first.nombre.substringBefore(" (") }
+        val titulo = when {
+            peor <= 0 -> "Hoy toca: $nombres"
+            peor <= 3 -> "Pendiente desde hace $peor día${if (peor > 1) "s" else ""}: $nombres"
+            else -> "Llevas $peor días de atraso: $nombres"
+        }
         val b = NotificationCompat.Builder(ctx, CANAL_ESCALAS)
             .setSmallIcon(R.drawable.ic_stat)
-            .setContentTitle("Cuestionarios pendientes")
-            .setContentText("$nombres · toma unos 2 minutos")
+            .setContentTitle(titulo)
+            .setContentText("Unos ${pendientes.size * 2} minutos. Mientras más regular, más comparables tus resultados.")
             .setContentIntent(abrirApp(ctx, 2004, "escalas"))
+            .setPriority(if (peor > 3) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
         mostrar(ctx, 2004, b)
     }

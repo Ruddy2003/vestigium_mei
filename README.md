@@ -30,6 +30,9 @@ App personal de Android para registrar, a lo largo de los años, el rastro de un
 - **Tu año**: el año en píxeles, mes por mes, lo más frecuente e imagen para compartir.
 - **Widgets** oscuros: ánimo, momentos y «Hoy».
 - **Más fuentes automáticas**: llamadas y SMS (solo conteos), wifi, audífonos/coche/bocina por Bluetooth, música sonando, carga nocturna, batería y luz ambiente cada 15 minutos; ruido y luz al registrar un momento; peso, temperatura de la piel, respiración, presión, calorías, distancia, pisos y agua desde Health Connect.
+- **MacroFactor**: importa el .xlsx de nutrición y Workouts (resumen diario, cada alimento, cada serie y series por grupo muscular). Pantalla de Gimnasio con 1RM estimado por ejercicio.
+- **Cuestionarios con recordatorio**: WHO-5 y PSS-4 cada semana, UCLA-3 cada mes y TIPI cada año; avisa el día que toca y más seguido si te atrasas.
+- **Widgets**: ánimo, momentos, gasto por categoría, sueño, hábitos, el mes coloreado por ánimo y «Hoy».
 - **Importaciones**: historial de Spotify, subrayados de Kindle, YouTube y búsquedas de Google Takeout, y actividad de chats de WhatsApp (solo conteos y tiempos de respuesta; el texto se descarta).
 - **Análisis en la app**: tendencias con medias móviles, día de la semana, qué acompaña tus mejores días (con corrección de Benjamini-Hochberg), modelo múltiple estandarizado controlando el día anterior, dinámica emocional (DE, MSSD, inercia), ritmo de sueño y jet lag social, palabras del diario y días atípicos.
 

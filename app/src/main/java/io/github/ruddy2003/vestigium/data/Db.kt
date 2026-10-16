@@ -47,6 +47,10 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 1) {
         return out
     }
 
+    fun borrarRango(col: String, desde: String, hasta: String) {
+        writableDatabase.delete("docs", "col = ? AND fecha >= ? AND fecha <= ?", arrayOf(col, desde, hasta))
+    }
+
     fun contar(col: String): Long =
         readableDatabase.rawQuery("SELECT COUNT(*) FROM docs WHERE col = ?", arrayOf(col)).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
 

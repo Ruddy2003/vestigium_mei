@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:id="@+id/raiz_momento" android:layout_width="match_parent" android:layout_height="match_parent"
     android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_fondo">
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
         <TextView android:id="@+id/titulo_momento" android:layout_width="wrap_content" android:layout_height="wrap_content"
@@ -11,39 +11,41 @@
     </LinearLayout>
     <TextView android:id="@+id/pregunta_momento" android:layout_width="match_parent" android:layout_height="wrap_content"
         android:text="// ahora mismo estoy…" android:textColor="@color/w_tenue" android:textSize="11sp" android:fontFamily="monospace"
-        android:layout_marginTop="2dp" android:layout_marginBottom="8dp" />
-    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
+        android:layout_marginTop="2dp" android:layout_marginBottom="8dp" android:maxLines="1" android:ellipsize="end" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="0dp">
         <TextView android:id="@+id/m1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginStart="0dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:maxLines="2" android:fontFamily="sans-serif" />
+            android:layout_marginStart="0dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
         <TextView android:id="@+id/m2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:maxLines="2" android:fontFamily="sans-serif" />
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
         <TextView android:id="@+id/m3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:maxLines="2" android:fontFamily="sans-serif" />
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
         <TextView android:id="@+id/m4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:maxLines="2" android:fontFamily="sans-serif" />
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal" android:layout_marginTop="5dp">
         <TextView android:id="@+id/m5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginStart="0dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:maxLines="2" android:fontFamily="sans-serif" />
+            android:layout_marginStart="0dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
         <TextView android:id="@+id/m6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:maxLines="2" android:fontFamily="sans-serif" />
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
         <TextView android:id="@+id/m7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:maxLines="2" android:fontFamily="sans-serif" />
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
         <TextView android:id="@+id/m8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center"
-            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:maxLines="2" android:fontFamily="sans-serif" />
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton" android:gravity="center" android:maxLines="2"
+            android:text="" android:textColor="@color/w_texto" android:textSize="12sp" android:fontFamily="sans-serif" />
     </LinearLayout>
     <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.8" android:orientation="horizontal" android:layout_marginTop="5dp">
-        <TextView android:id="@+id/m_gasto" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:background="@drawable/widget_boton_ambar" android:gravity="center" android:text="+ gasto" android:textColor="@color/w_oro" android:textSize="12sp" android:fontFamily="monospace" />
-        <TextView android:id="@+id/m_mas" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_marginStart="5dp"
-            android:background="@drawable/widget_boton_ambar" android:gravity="center" android:text="otro…" android:textColor="@color/w_oro" android:textSize="12sp" android:fontFamily="monospace" />
+        <TextView android:id="@+id/m_mas" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="0dp" android:background="@drawable/widget_boton_ambar" android:gravity="center" android:maxLines="2"
+            android:text="otro…" android:textColor="@color/w_oro" android:textSize="12sp" android:fontFamily="monospace" />
+        <TextView android:id="@+id/m_diario" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="5dp" android:background="@drawable/widget_boton_ambar" android:gravity="center" android:maxLines="2"
+            android:text="✎ diario" android:textColor="@color/w_oro" android:textSize="12sp" android:fontFamily="monospace" />
     </LinearLayout>
 </LinearLayout>

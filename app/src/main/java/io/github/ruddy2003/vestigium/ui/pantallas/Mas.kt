@@ -58,6 +58,8 @@ fun PantallaMas(nav: Nav) {
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
                 FilaMenu("Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${Repo.ascensos.size} sesiones · última ${Fechas.relativo(ult.fecha)}") { nav.ir("escalada") }
                 HorizontalDivider()
+                FilaMenu("Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados") { nav.ir("fuerza") }
+                HorizontalDivider()
                 val leyendo = Repo.obras.count { it.estado == "en_curso" }
                 FilaMenu("Biblioteca", "Libros, películas, series y juegos" + if (leyendo > 0) " · $leyendo en curso" else "") { nav.ir("biblioteca") }
                 HorizontalDivider()

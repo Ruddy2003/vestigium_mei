@@ -44,6 +44,10 @@ data class Respaldo(
     val huellas: List<Huella> = emptyList(),
     val huellas_dia: List<HuellasDia> = emptyList(),
     val chats: List<ChatDia> = emptyList(),
+    val nutricion: List<NutricionDia> = emptyList(),
+    val comidas: List<Comida> = emptyList(),
+    val series: List<Serie> = emptyList(),
+    val entrenos: List<EntrenoDia> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -224,6 +228,48 @@ object Exportar {
             "titulo" to it.titulo, "canal" to it.canal)
     }
 
+    fun filasNutricion(): List<Map<String, Any?>> {
+        val cols = Repo.nutricion.values.flatMap { it.valores.keys }.toSortedSet(compareBy<String> { orden(it) }.thenBy { it })
+        return Repo.nutricion.values.sortedBy { it.fecha }.map { n ->
+            val m = linkedMapOf<String, Any?>("fecha" to n.fecha)
+            cols.forEach { m[it] = n.valores[it] }
+            m["comidas"] = n.comidas; m["primera_comida"] = n.primera; m["ultima_comida"] = n.ultima; m["cafeina_ultima"] = n.cafeina_ultima
+            m
+        }
+    }
+    // Las columnas principales primero y los micronutrientes después.
+    private val PRINCIPALES = listOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "azucares_g", "sodio_mg", "agua_g",
+        "gasto_kcal", "peso_mf_kg", "peso_tendencia_kg", "pasos_mf", "objetivo_kcal", "objetivo_proteina_g", "objetivo_carbohidratos_g", "objetivo_grasa_g")
+    private fun orden(k: String) = PRINCIPALES.indexOf(k).let { if (it < 0) 999 else it }
+
+    fun filasComidas(): List<Map<String, Any?>> {
+        val l = Repo.comidas("0000-01-01", "9999-12-31")
+        val cols = l.flatMap { it.valores.keys }.toSortedSet(compareBy<String> { orden(it) }.thenBy { it })
+        return l.map { c ->
+            val m = linkedMapOf<String, Any?>("fecha" to c.fecha, "hora" to c.hora.takeIf { it.matches(Regex("\\d{2}:\\d{2}")) }, "alimento" to c.alimento,
+                "porcion" to c.porcion, "cantidad" to c.cantidad, "peso_porcion_g" to c.peso_porcion_g)
+            cols.forEach { m[it] = c.valores[it] }
+            m
+        }
+    }
+
+    fun filasEntrenos(): List<Map<String, Any?>> {
+        val mus = Repo.entrenos.values.flatMap { it.series_musculo.keys + it.volumen_musculo.keys }.toSortedSet()
+        return Repo.entrenos.values.sortedBy { it.fecha }.map { e ->
+            val m = linkedMapOf<String, Any?>("fecha" to e.fecha, "entrenos" to e.entrenos, "minutos" to e.minutos, "series" to e.series,
+                "series_efectivas" to e.series_efectivas, "reps" to e.reps, "volumen_kg" to e.volumen_kg)
+            mus.forEach { g -> m["series_$g"] = e.series_musculo[g] }
+            mus.forEach { g -> m["volumen_${g}_kg"] = e.volumen_musculo[g] }
+            m
+        }
+    }
+
+    fun filasSeries() = Repo.series("0000-01-01", "9999-12-31").map {
+        linkedMapOf<String, Any?>("fecha" to it.fecha, "orden" to it.orden, "entreno" to it.entreno, "entreno_min" to it.entreno_s?.let { s -> Math.round(s / 6.0) / 10.0 },
+            "ejercicio" to it.ejercicio, "tipo_serie" to it.tipo, "calentamiento" to it.tipo.contains("Warm", true), "peso_kg" to it.peso_kg, "reps" to it.reps,
+            "rir" to it.rir, "e1rm_kg" to Macrofactor.e1rm(it), "duracion_s" to it.duracion_s, "distancia_m" to it.distancia_m, "peso_base_kg" to it.peso_base_kg)
+    }
+
     fun filasWhatsapp() = Repo.chats.map {
         linkedMapOf<String, Any?>("fecha" to it.fecha, "chat" to it.chat, "grupo" to it.grupo, "mios" to it.mios, "otros" to it.otros,
             "palabras_mias" to it.palabras_mias, "palabras_otros" to it.palabras_otros, "multimedia" to it.multimedia, "primero" to it.primero,
@@ -267,7 +313,8 @@ object Exportar {
 
     /** Una fila por día con todo lo que se sabe de él: el archivo más cómodo para empezar en R. */
     fun filasPanel(): List<Map<String, Any?>> {
-        val fechas = (Repo.dias.keys + Repo.salud.keys + Repo.pantalla.keys + Repo.entorno.keys + Repo.momentos.map { it.fecha } + Repo.gastos.map { it.fecha }).toSortedSet()
+        val fechas = (Repo.dias.keys + Repo.salud.keys + Repo.pantalla.keys + Repo.entorno.keys + Repo.momentos.map { it.fecha } + Repo.gastos.map { it.fecha } +
+            Repo.nutricion.keys + Repo.entrenos.keys).toSortedSet()
         val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }
         val mo = Repo.momentos.filter { it.tipo != "muestreo" }.groupBy { it.fecha }
         val ga = Repo.gastos.groupBy { it.fecha }
@@ -312,6 +359,12 @@ object Exportar {
             r["subrayados"] = sub0[f]
             r["canciones"] = can0[f]
             r["ruido_db_medio"] = mo[f]?.mapNotNull { it.ruido_db }?.takeIf { it.isNotEmpty() }?.average()
+            val nu = Repo.nutricion[f]; val en = Repo.entrenos[f]
+            listOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "gasto_kcal", "peso_tendencia_kg").forEach { k -> r[k] = nu?.valores?.get(k) }
+            r["comidas"] = nu?.comidas?.takeIf { it > 0 }
+            r["primera_comida_h"] = nu?.primera?.let { horaTexto(it) }; r["ultima_comida_h"] = nu?.ultima?.let { horaTexto(it) }
+            r["cafeina_ultima_h"] = nu?.cafeina_ultima?.let { horaTexto(it) }
+            r["gimnasio"] = en != null && en.series > 0; r["gimnasio_min"] = en?.minutos; r["series_gimnasio"] = en?.series_efectivas; r["volumen_kg"] = en?.volumen_kg
             r
         }
     }
@@ -322,6 +375,8 @@ object Exportar {
         val h = t.hour + t.minute / 60.0
         Math.round((if (noche && h < 12) h + 24 else h) * 100) / 100.0
     }.getOrNull()
+
+    fun horaTexto(hhmm: String): Double? = runCatching { val (h, m) = hhmm.split(":").map { it.toInt() }; Math.round((h + m / 60.0) * 100) / 100.0 }.getOrNull()
 
     fun csvUbicaciones(): String {
         val sb = StringBuilder("﻿ts,lat,lon,precision_m,fuente\n")
@@ -340,7 +395,8 @@ object Exportar {
         ascensos = Repo.ascensos, obras = Repo.obras, escuchas = Repo.escuchas("0000-01-01", "9999-12-31"),
         comunicacion = Repo.comunicacion.values.sortedBy { it.fecha }, conexiones = Repo.conexiones.values.sortedBy { it.fecha },
         subrayados = Repo.subrayados, huellas = Repo.huellasDe("0000-01-01", "9999-12-31"), huellas_dia = Repo.huellas.values.sortedBy { it.fecha },
-        chats = Repo.chats))
+        chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
+        series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -370,6 +426,10 @@ object Exportar {
         Tabla("vm_google_dia.csv", "YouTube y búsquedas de Google por día", filasGoogleDia()),
         Tabla("vm_google.csv", "YouTube y búsquedas de Google, una por fila", filasGoogle()),
         Tabla("vm_whatsapp.csv", "WhatsApp: un chat por día por fila (solo conteos)", filasWhatsapp()),
+        Tabla("vm_nutricion.csv", "MacroFactor: nutrición, gasto energético y peso por día", filasNutricion()),
+        Tabla("vm_comidas.csv", "MacroFactor: cada alimento registrado", filasComidas()),
+        Tabla("vm_entrenos.csv", "MacroFactor Workouts: resumen por día y por grupo muscular", filasEntrenos()),
+        Tabla("vm_series.csv", "MacroFactor Workouts: cada serie", filasSeries()),
     )
 
     fun archivos(ctx: Context? = null): List<Pair<String, String>> {

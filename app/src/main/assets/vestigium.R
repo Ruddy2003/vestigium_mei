@@ -81,7 +81,8 @@ vm_archivos <- c(
   agenda = "vm_agenda.csv", notificaciones = "vm_notificaciones.csv", musica = "vm_musica.csv", actividad = "vm_actividad.csv",
   ejercicio = "vm_ejercicio.csv", escalada_sesiones = "vm_escalada_sesiones.csv", escalada_bloques = "vm_escalada_bloques.csv",
   biblioteca = "vm_biblioteca.csv", comunicacion = "vm_comunicacion.csv", conexiones = "vm_conexiones.csv",
-  subrayados = "vm_subrayados.csv", google_dia = "vm_google_dia.csv", google = "vm_google.csv", whatsapp = "vm_whatsapp.csv")
+  subrayados = "vm_subrayados.csv", google_dia = "vm_google_dia.csv", google = "vm_google.csv", whatsapp = "vm_whatsapp.csv",
+  nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv")
 
 vm <- compact(lapply(vm_archivos, vm_leer))
 
@@ -242,6 +243,15 @@ vm_atipicos <- function(vars = c("valencia", "sueno_h", "pasos", "pantalla_min",
     group_by(variable) |> mutate(z = (valor - median(valor)) / mad(valor)) |> ungroup() |> filter(is.finite(z), abs(z) >= !!z) |> arrange(desc(fecha))
 }
 
+#' Progreso de fuerza: 1RM estimado máximo por sesión para los ejercicios que más repites.
+vm_fuerza <- function(n = 6) {
+  if (is.null(vm$series)) stop("No hay series de MacroFactor Workouts.")
+  d <- vm$series |> filter(!is.na(e1rm_kg)) |> group_by(ejercicio, fecha) |> summarise(e1rm = max(e1rm_kg), .groups = "drop")
+  top <- d |> count(ejercicio, sort = TRUE) |> slice_head(n = n) |> pull(ejercicio)
+  ggplot(filter(d, ejercicio %in% top), aes(fecha, e1rm)) + geom_line(colour = "#7C2433") + geom_point(size = 1) +
+    facet_wrap(~ ejercicio, scales = "free_y") + labs(x = NULL, y = "1RM estimado (kg)") + theme_minimal()
+}
+
 #' Momentos con lugar, coloreados por valencia (sin mapa de fondo).
 vm_mapa_animo <- function() {
   if (is.null(vm$momentos)) stop("No hay momentos.")
@@ -261,6 +271,6 @@ vm_guardar_graficas <- function(carpeta = file.path(vm_carpeta, "graficas")) {
 
 vm_resumen()
 message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
-        "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_factores(), vm_modelo(), vm_modelo_ar1(),",
+        "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_factores(), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
         "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna')")

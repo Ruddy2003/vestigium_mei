@@ -111,14 +111,17 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             if (Repo.dias[diaLog]?.valencia == null) Avisos.diario(ctx)
         }
 
-        // Escalas: domingo en la noche y el día 1 de cada mes
-        if (ahora.dayOfWeek == DayOfWeek.SUNDAY && ahora.hour >= 19 && !yaFue("escalas:$hoy")) {
-            marcar("escalas:$hoy")
-            val pendientes = Escalas.TODAS.filter { inst ->
-                val u = Repo.ultimaRespuesta(inst.id)
-                u == null || java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(u.fecha), LocalDate.now()) >= inst.frecuenciaDias - 1
+        // Cuestionarios: aviso el día que toca y cada vez más seguido si se atrasan.
+        val pendientes = Escalas.pendientes()
+        if (pendientes.isNotEmpty()) {
+            val peor = pendientes.maxOf { it.second }
+            val horas = if (c.escalas_insistir) Escalas.horasAviso(peor, c.escalas_hora) else listOf(c.escalas_hora)
+            // Se toma el turno más reciente que ya pasó; si el teléfono estuvo apagado no se amontonan avisos.
+            val ultimo = horas.indices.lastOrNull { ahora.hour >= horas[it] }
+            if (ultimo != null && !yaFue("escalas:$hoy:$ultimo")) {
+                (0..ultimo).forEach { if (!yaFue("escalas:$hoy:$it")) marcar("escalas:$hoy:$it") }
+                Avisos.escalas(ctx, pendientes)
             }
-            if (pendientes.isNotEmpty()) Avisos.escalas(ctx, pendientes.joinToString(", ") { it.nombre })
         }
 
         // Cartas al futuro

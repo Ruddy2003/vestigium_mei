@@ -102,6 +102,13 @@ object Estadistica {
             Variable("yt_vistos", "Videos de YouTube vistos", "Teléfono"), Variable("busquedas", "Búsquedas en Google", "Teléfono"),
             Variable("subrayados", "Subrayados de Kindle", "Lectura"), Variable("ruido_db", "Ruido medio al registrar (dB)", "Entorno"),
             Variable("sueno_inicio_h", "Hora de dormir (reloj)", "Sueño"), Variable("sueno_fin_h", "Hora de despertar (reloj)", "Sueño"),
+            Variable("kcal", "Calorías consumidas", "Nutrición"), Variable("proteina_g", "Proteína (g)", "Nutrición"),
+            Variable("carbohidratos_g", "Carbohidratos (g)", "Nutrición"), Variable("grasa_g", "Grasa (g)", "Nutrición"), Variable("fibra_g", "Fibra (g)", "Nutrición"),
+            Variable("alcohol_g", "Alcohol (g)", "Nutrición"), Variable("cafeina_mg", "Cafeína (mg)", "Nutrición"), Variable("azucares_g", "Azúcares (g)", "Nutrición"),
+            Variable("balance_kcal", "Calorías menos gasto estimado", "Nutrición"), Variable("peso_tendencia_kg", "Peso de tendencia (MacroFactor)", "Cuerpo"),
+            Variable("primera_comida_h", "Hora del primer alimento", "Nutrición"), Variable("ultima_comida_h", "Hora del último alimento", "Nutrición"),
+            Variable("cafeina_ultima_h", "Hora de la última cafeína", "Nutrición"), Variable("gimnasio", "Entrené en el gimnasio (0/1)", "Cuerpo"),
+            Variable("volumen_kg", "Volumen del entrenamiento (kg)", "Cuerpo"), Variable("series_gimnasio", "Series efectivas de gimnasio", "Cuerpo"),
         )
         if (Repo.config.seguimiento_privado) {
             v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
@@ -194,6 +201,20 @@ object Estadistica {
             val r = fila(f)
             r["peso_kg"] = x.peso_kg; r["temp_piel"] = x.temp_piel_delta; r["resp_rpm"] = x.resp_rpm; r["cal_activas"] = x.cal_activas
             r["sueno_inicio_h"] = hd(x.sueno_inicio, true); r["sueno_fin_h"] = hd(x.sueno_fin, false)
+        }
+        Repo.nutricion.forEach { (f, n) ->
+            val r = fila(f)
+            listOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "azucares_g", "peso_tendencia_kg").forEach { k -> r[k] = n.valores[k] }
+            val k = n.valores["kcal"]; val g = n.valores["gasto_kcal"]
+            r["balance_kcal"] = if (k != null && g != null) k - g else null
+            r["primera_comida_h"] = n.primera?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
+            r["ultima_comida_h"] = n.ultima?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
+            r["cafeina_ultima_h"] = n.cafeina_ultima?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
+        }
+        Repo.entrenos.forEach { (f, e) -> val r = fila(f); r["volumen_kg"] = e.volumen_kg; r["series_gimnasio"] = e.series_efectivas.toDouble() }
+        if (Repo.entrenos.isNotEmpty()) {
+            val desdeG = Repo.entrenos.keys.min()
+            filas.keys.filter { it >= desdeG }.forEach { f -> fila(f)["gimnasio"] = if ((Repo.entrenos[f]?.series ?: 0) > 0) 1.0 else 0.0 }
         }
         Repo.huellas.forEach { (f, h) -> val r = fila(f); r["yt_vistos"] = h.yt_vistos.toDouble(); r["busquedas"] = (h.busquedas + h.yt_busquedas).toDouble() }
         Repo.subrayados.filter { it.fecha != null }.groupBy { it.fecha!! }.forEach { (f, l) -> fila(f)["subrayados"] = l.size.toDouble() }

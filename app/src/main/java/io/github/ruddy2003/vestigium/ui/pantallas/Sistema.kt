@@ -262,6 +262,15 @@ fun PantallaAjustes(nav: Nav) {
                 Slider(value = c.hora_diario.toFloat(), onValueChange = { v -> cambiar { it.copy(hora_diario = v.toInt()) } }, valueRange = 18f..23f, steps = 4)
             }
         }
+        Seccion("Cuestionarios", "WHO-5 y PSS-4 cada semana, UCLA-3 cada mes y TIPI cada año, contando desde tu última respuesta.") {
+            Tarjeta {
+                Etiqueta("Aviso el día que toca: ${c.escalas_hora}:00")
+                Slider(value = c.escalas_hora.toFloat(), onValueChange = { v -> cambiar { it.copy(escalas_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
+                Interruptor("Insistir si me atraso", c.escalas_insistir, "Con 1 a 3 días de atraso avisa dos veces al día (12:00 y tu hora); con 4 o más, tres veces (10:00, 15:00 y 20:00) hasta que respondas.") { v ->
+                    cambiar { it.copy(escalas_insistir = v) }
+                }
+            }
+        }
         Seccion("Privacidad") {
             Tarjeta {
                 Interruptor("Bloquear con huella", c.bloqueo, "Pide tu huella o PIN al abrir la app. Los widgets y botones rápidos siguen funcionando sin desbloquear.") { v -> cambiar { it.copy(bloqueo = v) } }
@@ -320,6 +329,7 @@ fun PantallaDatos(nav: Nav) {
     val maps = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importar.cronologia(ctx, uri).mensaje } }
     val spotify = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importaciones.spotify(ctx, uris) } }
     val kindle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importaciones.kindle(ctx, uri) } }
+    val macrofactor = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { io.github.ruddy2003.vestigium.data.Macrofactor.importar(ctx, uri) } }
     val google = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importaciones.google(ctx, uris) } }
     var chatsLeidos by remember { mutableStateOf<List<Importaciones.Chat>?>(null) }
     val whatsapp = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
@@ -365,7 +375,11 @@ fun PantallaDatos(nav: Nav) {
         }
         Seccion("Otros servicios", "Tu historia en otras apps. Se pueden importar varias veces: lo repetido no se duplica.", latin = "ALIENA") {
             Tarjeta {
-                OutlinedButton(onClick = { spotify.launch(arrayOf("application/json", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Spotify · historial de reproducción") }
+                OutlinedButton(onClick = { macrofactor.launch(arrayOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("MacroFactor · nutrición y Workouts (.xlsx)") }
+                Ayuda("En MacroFactor: Más → Data Management → Data Export. Elige el periodo e incluye nutrición y Workouts. Al reimportar, las fechas del archivo se reemplazan.")
+                if (Repo.nutricion.isNotEmpty() || Repo.entrenos.isNotEmpty()) Clave("macrofactor", "${Repo.nutricion.size} días de nutrición · ${Repo.entrenos.values.count { it.series > 0 }} entrenos" +
+                    (Repo.nutricion.keys.maxOrNull()?.let { " · hasta $it" } ?: ""))
+                OutlinedButton(onClick = { spotify.launch(arrayOf("application/json", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Spotify · historial de reproducción") }
                 Ayuda("spotify.com → Cuenta → Privacidad → Descargar tus datos → «Historial de reproducción ampliado». Tarda unos días; llega un .zip: elígelo completo o los Streaming_History…json.")
                 OutlinedButton(onClick = { kindle.launch(arrayOf("text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Kindle · subrayados (My Clippings.txt)") }
                 Ayuda("Conecta el Kindle a la computadora: el archivo está en la carpeta documents. Pásalo al teléfono y elígelo.")

@@ -133,6 +133,21 @@ object Diccionario {
         "wa_mios" to "Mensajes de WhatsApp enviados", "wa_otros" to "Mensajes de WhatsApp recibidos", "wa_chats" to "Chats de WhatsApp con actividad",
         "ruido_db_medio" to "Ruido ambiente medio de tus momentos del día (dB relativos)",
         "fuente_ubicacion" to "Origen de la ubicación",
+        // MacroFactor
+        "kcal" to "Calorías consumidas (kcal)", "proteina_g" to "Proteína (g)", "carbohidratos_g" to "Carbohidratos (g)", "grasa_g" to "Grasa (g)",
+        "fibra_g" to "Fibra (g)", "alcohol_g" to "Alcohol (g)", "cafeina_mg" to "Cafeína (mg)", "azucares_g" to "Azúcares (g)", "azucares_anadidos_g" to "Azúcares añadidos (g)",
+        "sodio_mg" to "Sodio (mg)", "agua_g" to "Agua de los alimentos (g)", "gasto_kcal" to "Gasto energético estimado por MacroFactor (kcal)",
+        "peso_mf_kg" to "Peso registrado en MacroFactor (kg)", "peso_tendencia_kg" to "Peso de tendencia de MacroFactor (kg)", "pasos_mf" to "Pasos según MacroFactor",
+        "objetivo_kcal" to "Objetivo de calorías", "objetivo_proteina_g" to "Objetivo de proteína (g)", "objetivo_carbohidratos_g" to "Objetivo de carbohidratos (g)",
+        "objetivo_grasa_g" to "Objetivo de grasa (g)", "comidas" to "Alimentos registrados", "primera_comida" to "Hora del primer alimento", "ultima_comida" to "Hora del último alimento",
+        "cafeina_ultima" to "Hora de la última cafeína", "primera_comida_h" to "Hora del primer alimento en decimal", "ultima_comida_h" to "Hora del último alimento en decimal",
+        "cafeina_ultima_h" to "Hora de la última cafeína en decimal", "alimento" to "Alimento", "porcion" to "Unidad de la porción", "cantidad" to "Cantidad de porciones",
+        "peso_porcion_g" to "Gramos por porción", "entrenos" to "Entrenamientos del día (lista)", "minutos" to "Minutos de entrenamiento",
+        "series" to "Series totales (con calentamiento)", "series_efectivas" to "Series sin contar calentamiento", "reps" to "Repeticiones", "volumen_kg" to "Volumen: peso × repeticiones (kg)",
+        "entreno" to "Nombre del entrenamiento", "entreno_min" to "Duración del entrenamiento (min)", "ejercicio" to "Ejercicio", "tipo_serie" to "Tipo de serie",
+        "calentamiento" to "Serie de calentamiento (0/1)", "peso_kg" to "Peso (kg)", "rir" to "Repeticiones en reserva", "e1rm_kg" to "1RM estimado con Epley (kg), series de hasta 12 reps",
+        "duracion_s" to "Duración (s)", "distancia_m" to "Distancia (m)", "peso_base_kg" to "Peso base del ejercicio (kg)",
+        "gimnasio" to "Entrenaste en el gimnasio (0/1)", "gimnasio_min" to "Minutos de gimnasio", "series_gimnasio" to "Series efectivas en el gimnasio",
     )
 
     private fun describir(archivo: String, col: String): String {
@@ -147,6 +162,9 @@ object Diccionario {
             col.startsWith("app_") -> "Notificaciones de ${col.removePrefix("app_").replace('_', ' ')}"
             col.startsWith("wifi_") -> "Minutos en la red ${col.removePrefix("wifi_").replace('_', ' ')}"
             col.startsWith("luz_h") -> "Luz ambiente media a las ${col.removePrefix("luz_h")}:00 (lux)"
+            col.startsWith("series_") -> "Series para ${col.removePrefix("series_").replace('_', ' ')}"
+            col.startsWith("volumen_") -> "Volumen para ${col.removePrefix("volumen_").removeSuffix("_kg").replace('_', ' ')} (kg)"
+            archivo == "vm_nutricion.csv" || archivo == "vm_comidas.csv" -> "Nutriente de MacroFactor: ${col.replace('_', ' ')}"
             Regex("^h\\d{2}$").matches(col) -> "Notificaciones a las ${col.drop(1)}:00"
             col.startsWith("flow_") || col.startsWith("sdt_necesidad_") || col.startsWith("apreciacion_") -> "Opción elegida (0/1)"
             else -> ""

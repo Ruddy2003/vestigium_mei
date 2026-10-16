@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/raiz_habitos" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:padding="12dp" android:background="@drawable/widget_fondo">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
+        <TextView android:id="@+id/titulo_habitos" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="CONSVETVDINES" android:textColor="@color/w_oro" android:textSize="13sp" android:fontFamily="serif" android:letterSpacing="0.18" />
+        <ImageView android:importantForAccessibility="no" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:background="@color/w_acento_borde" />
+        <TextView android:id="@+id/sub_habitos" android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:text="" android:textColor="@color/w_tenue" android:textSize="10.5sp" android:fontFamily="monospace" />
+    </LinearLayout>
+    <TextView android:id="@+id/pregunta_habitos" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="// toca para marcar hoy" android:textColor="@color/w_tenue" android:textSize="11sp" android:fontFamily="monospace"
+        android:layout_marginTop="2dp" android:layout_marginBottom="8dp" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/hb1" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="0dp" android:background="@drawable/widget_boton" android:gravity="center_vertical" android:paddingStart="10dp"
+        android:text="" android:textColor="@color/w_texto" android:textSize="12.5sp" android:fontFamily="monospace" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/hb2" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="3dp" android:background="@drawable/widget_boton" android:gravity="center_vertical" android:paddingStart="10dp"
+        android:text="" android:textColor="@color/w_texto" android:textSize="12.5sp" android:fontFamily="monospace" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/hb3" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="3dp" android:background="@drawable/widget_boton" android:gravity="center_vertical" android:paddingStart="10dp"
+        android:text="" android:textColor="@color/w_texto" android:textSize="12.5sp" android:fontFamily="monospace" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/hb4" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="3dp" android:background="@drawable/widget_boton" android:gravity="center_vertical" android:paddingStart="10dp"
+        android:text="" android:textColor="@color/w_texto" android:textSize="12.5sp" android:fontFamily="monospace" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/hb5" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="3dp" android:background="@drawable/widget_boton" android:gravity="center_vertical" android:paddingStart="10dp"
+        android:text="" android:textColor="@color/w_texto" android:textSize="12.5sp" android:fontFamily="monospace" android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/hb6" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1"
+        android:layout_marginTop="3dp" android:background="@drawable/widget_boton" android:gravity="center_vertical" android:paddingStart="10dp"
+        android:text="" android:textColor="@color/w_texto" android:textSize="12.5sp" android:fontFamily="monospace" android:maxLines="1" android:ellipsize="end" />
+</LinearLayout>

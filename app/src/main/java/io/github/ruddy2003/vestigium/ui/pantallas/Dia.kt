@@ -375,6 +375,23 @@ private fun Vestigios(fecha: String, nav: Nav) {
                 s.agua_ml?.let { "%.0f ml de agua".format(it) }, s.vo2max?.let { "vo₂max %.0f".format(it) })
             if (cuerpo.isNotEmpty()) { algo = true; Clave("corpus", cuerpo.joinToString(" · ")) }
         }
+        Repo.nutricion[fecha]?.let { nu ->
+            val v = nu.valores
+            if (v.isNotEmpty()) {
+                algo = true
+                Clave("nutritio", listOfNotNull(v["kcal"]?.let { "%.0f kcal".format(it) }, v["proteina_g"]?.let { "P %.0f".format(it) }, v["carbohidratos_g"]?.let { "C %.0f".format(it) },
+                    v["grasa_g"]?.let { "G %.0f".format(it) }, v["fibra_g"]?.let { "fibra %.0f".format(it) }).joinToString(" · "))
+                val extra = listOfNotNull(v["gasto_kcal"]?.let { g -> v["kcal"]?.let { k -> "balance %+.0f".format(k - g) } }, v["cafeina_mg"]?.takeIf { it > 0 }?.let { "cafeína %.0f mg".format(it) + (nu.cafeina_ultima?.let { h -> " (última $h)" } ?: "") },
+                    v["alcohol_g"]?.takeIf { it > 0 }?.let { "alcohol %.0f g".format(it) }, if (nu.primera != null) "comiste de ${nu.primera} a ${nu.ultima}" else null)
+                if (extra.isNotEmpty()) Clave("  cibus", extra.joinToString(" · "))
+            }
+        }
+        Repo.entrenos[fecha]?.takeIf { it.series > 0 }?.let { e ->
+            algo = true
+            Clave("robur", (e.entrenos.joinToString(", ").ifBlank { "gimnasio" }) + (e.minutos?.let { " · ${hm(it.toInt())}" } ?: "") +
+                " · ${e.series_efectivas} series · %,.0f kg".format(e.volumen_kg))
+            e.series_musculo.entries.sortedByDescending { it.value }.take(4).takeIf { it.isNotEmpty() }?.let { m -> Clave("  musculi", m.joinToString(" · ") { "${it.key.replace('_', ' ')} %.0f".format(it.value) }) }
+        }
         Repo.comunicacion[fecha]?.let { co ->
             val ll = co.entrantes + co.salientes
             if (ll + co.perdidas + co.sms_enviados + co.sms_recibidos > 0) {
