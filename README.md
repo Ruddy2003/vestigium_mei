@@ -29,6 +29,13 @@ App personal de Android para registrar, a lo largo de los años, el rastro de un
 - **Biblioteca**: libros, películas, series y juegos con fechas, calificación y notas.
 - **Tu año**: el año en píxeles, mes por mes, lo más frecuente e imagen para compartir.
 - **Widgets** oscuros: ánimo, momentos y «Hoy».
+- **Más fuentes automáticas**: llamadas y SMS (solo conteos), wifi, audífonos/coche/bocina por Bluetooth, música sonando, carga nocturna, batería y luz ambiente cada 15 minutos; ruido y luz al registrar un momento; peso, temperatura de la piel, respiración, presión, calorías, distancia, pisos y agua desde Health Connect.
+- **Importaciones**: historial de Spotify, subrayados de Kindle, YouTube y búsquedas de Google Takeout, y actividad de chats de WhatsApp (solo conteos y tiempos de respuesta; el texto se descarta).
+- **Análisis en la app**: tendencias con medias móviles, día de la semana, qué acompaña tus mejores días (con corrección de Benjamini-Hochberg), modelo múltiple estandarizado controlando el día anterior, dinámica emocional (DE, MSSD, inercia), ritmo de sueño y jet lag social, palabras del diario y días atípicos.
+
+## En R
+
+Cada exportación trae `vestigium.R` y `vm_diccionario.csv`. Con los CSV en una carpeta, `source("vestigium.R")` lee todas las tablas con el tipo correcto de cada columna y deja listas `vm_tendencia()`, `vm_semana()`, `vm_cruce()`, `vm_factores()`, `vm_modelo()`, `vm_modelo_ar1()` (con errores AR(1) vía nlme), `vm_dinamica()`, `vm_ritmo()`, `vm_palabras()`, `vm_atipicos()`, `vm_mapa_animo()` y `vm_guardar_graficas()`.
 
 ## Google Drive (opcional, una sola vez)
 
