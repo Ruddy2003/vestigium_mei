@@ -66,6 +66,7 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         val ctx = applicationContext
         Repo.init(ctx)
         runCatching { Ubicacion.muestrear(ctx) }
+        runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.muestrear(ctx) }
         runCatching { avisos(ctx) }
         runCatching { diario(ctx) }
         return Result.success()
@@ -137,6 +138,7 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             runCatching { Actividad.registrar(ctx) }
             runCatching { Galeria.sincronizar(ctx, 3) }
             runCatching { Agenda.sincronizar(ctx) }
+            runCatching { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
             runCatching { Entorno.sincronizar(ctx) }
             runCatching { Exportar.respaldoAutomatico(ctx) }
             if (Repo.config.drive && !Drive.automatico(ctx) && !yaFue("drive_aviso:${Fechas.lunesDe(hoy)}")) {
@@ -149,6 +151,7 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             runCatching { Salud.sincronizar(ctx, 1) }
             runCatching { Galeria.sincronizar(ctx, 1) }
             runCatching { Agenda.sincronizar(ctx) }
+            runCatching { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 1) }
         }
         // Una vez al mes se rellena la historia que guardan la galería y el calendario.
         val mes = Fechas.mesDe(hoy)
@@ -156,6 +159,7 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             marcar("historia:$mes")
             runCatching { Galeria.historia(ctx) }
             runCatching { Agenda.historia(ctx) }
+            runCatching { io.github.ruddy2003.vestigium.sensores.Comunicacion.historia(ctx) }
             runCatching { Entorno.sincronizar(ctx, maxPeticiones = 20) }
         }
         // Reporte semanal: lunes, de la semana anterior

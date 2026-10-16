@@ -15,6 +15,8 @@ object Sincronizar {
         runCatching { if (Pantalla.tienePermiso(ctx)) { Pantalla.sincronizar(ctx, dias); hechos += "pantalla" } }
         runCatching { if (Galeria.tienePermiso(ctx)) { Galeria.sincronizar(ctx, dias); hechos += "fotos" } }
         runCatching { if (Agenda.tienePermiso(ctx)) { Agenda.sincronizar(ctx); hechos += "agenda" } }
+        runCatching { if (Comunicacion.tienePermiso(ctx)) { Comunicacion.sincronizar(ctx, dias); hechos += "llamadas y SMS" } }
+        runCatching { Percepcion.muestrear(ctx) }
         runCatching { if (Entorno.sincronizar(ctx) > 0) hechos += "clima" }
         runCatching { Actividad.registrar(ctx) }
         runCatching { Widgets.actualizar(ctx) }

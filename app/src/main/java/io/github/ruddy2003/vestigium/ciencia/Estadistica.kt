@@ -91,6 +91,17 @@ object Estadistica {
             Variable("a_pie_min", "Minutos a pie", "Movilidad"), Variable("vehiculo_min", "Minutos en vehículo", "Movilidad"),
             Variable("ejercicio_min", "Minutos de ejercicio (reloj)", "Cuerpo"), Variable("escalada", "Escalé (0/1)", "Cuerpo"),
             Variable("escalada_grado", "Grado máximo encadenado", "Cuerpo"),
+            Variable("llamadas", "Llamadas (entrantes y salientes)", "Social"), Variable("min_hablado", "Minutos al teléfono", "Social"),
+            Variable("contactos", "Personas distintas por llamada o SMS", "Social"), Variable("wa_mios", "Mensajes de WhatsApp enviados", "Social"),
+            Variable("wa_otros", "Mensajes de WhatsApp recibidos", "Social"), Variable("wa_chats", "Chats de WhatsApp activos", "Social"),
+            Variable("audifonos_min", "Minutos con audífonos", "Teléfono"), Variable("coche_min", "Minutos en el coche (Bluetooth)", "Movilidad"),
+            Variable("musica_min", "Minutos con audio sonando", "Teléfono"), Variable("sin_wifi_min", "Minutos sin wifi (fuera)", "Movilidad"),
+            Variable("luz_alta_min", "Minutos con luz de exterior", "Entorno"), Variable("carga_noche_h", "Hora de conectar el teléfono de noche", "Sueño"),
+            Variable("peso_kg", "Peso (kg)", "Cuerpo"), Variable("temp_piel", "Variación de temperatura de la piel", "Cuerpo"),
+            Variable("resp_rpm", "Frecuencia respiratoria", "Cuerpo"), Variable("cal_activas", "Calorías activas", "Cuerpo"),
+            Variable("yt_vistos", "Videos de YouTube vistos", "Teléfono"), Variable("busquedas", "Búsquedas en Google", "Teléfono"),
+            Variable("subrayados", "Subrayados de Kindle", "Lectura"), Variable("ruido_db", "Ruido medio al registrar (dB)", "Entorno"),
+            Variable("sueno_inicio_h", "Hora de dormir (reloj)", "Sueño"), Variable("sueno_fin_h", "Hora de despertar (reloj)", "Sueño"),
         )
         if (Repo.config.seguimiento_privado) {
             v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
@@ -170,6 +181,23 @@ object Estadistica {
             val r = fila(f); r["escalada"] = 1.0
             r["escalada_grado"] = l.flatMap { it.bloques }.filter { io.github.ruddy2003.vestigium.data.Grados.encadenado(it.estilo) }.mapNotNull { io.github.ruddy2003.vestigium.data.Grados.valor(it.grado) }.maxOrNull()
         }
+        fun hd(iso: String?, noche: Boolean) = iso?.let { io.github.ruddy2003.vestigium.data.Exportar.horaDecimal(it, noche) }
+        Repo.comunicacion.forEach { (f, c) -> val r = fila(f); r["llamadas"] = (c.entrantes + c.salientes).toDouble(); r["min_hablado"] = c.min_hablado; r["contactos"] = c.contactos.toDouble() }
+        Repo.chats.groupBy { it.fecha }.forEach { (f, l) -> val r = fila(f); r["wa_mios"] = l.sumOf { it.mios }.toDouble(); r["wa_otros"] = l.sumOf { it.otros }.toDouble(); r["wa_chats"] = l.size.toDouble() }
+        Repo.conexiones.forEach { (f, c) ->
+            val r = fila(f)
+            r["audifonos_min"] = (c.audio_min["audifonos"] ?: 0).toDouble(); r["coche_min"] = (c.audio_min["coche"] ?: 0).toDouble()
+            r["musica_min"] = c.musica_min.toDouble(); r["sin_wifi_min"] = c.sin_wifi_min.toDouble(); r["luz_alta_min"] = c.luz_alta_min.toDouble()
+            r["carga_noche_h"] = hd(c.carga_noche_inicio, true)
+        }
+        Repo.salud.forEach { (f, x) ->
+            val r = fila(f)
+            r["peso_kg"] = x.peso_kg; r["temp_piel"] = x.temp_piel_delta; r["resp_rpm"] = x.resp_rpm; r["cal_activas"] = x.cal_activas
+            r["sueno_inicio_h"] = hd(x.sueno_inicio, true); r["sueno_fin_h"] = hd(x.sueno_fin, false)
+        }
+        Repo.huellas.forEach { (f, h) -> val r = fila(f); r["yt_vistos"] = h.yt_vistos.toDouble(); r["busquedas"] = (h.busquedas + h.yt_busquedas).toDouble() }
+        Repo.subrayados.filter { it.fecha != null }.groupBy { it.fecha!! }.forEach { (f, l) -> fila(f)["subrayados"] = l.size.toDouble() }
+        Repo.momentos.filter { it.ruido_db != null }.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["ruido_db"] = l.mapNotNull { it.ruido_db }.average() }
         runCatching {
             val desde = filas.keys.firstOrNull() ?: return@runCatching
             Repo.escuchas(desde, "9999-12-31").groupBy { it.fecha }.forEach { (f, l) -> fila(f)["canciones"] = l.size.toDouble() }

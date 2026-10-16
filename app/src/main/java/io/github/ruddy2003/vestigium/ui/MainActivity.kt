@@ -173,17 +173,18 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
             Column {
                 androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.outline)
                 NavigationBar(containerColor = MaterialTheme.colorScheme.surface, tonalElevation = 0.dp) {
-                    PESTANAS.forEachIndexed { i, p ->
+                    PESTANAS.forEach { p ->
                         val activa = pestana == p.id && pila.isEmpty()
                         NavigationBarItem(
                             selected = activa,
                             onClick = { pestana = p.id; pila = emptyList() },
                             icon = { Icon(p.icono, contentDescription = p.nombre) },
-                            label = { Text((if (activa) Romano.de(i + 1) + "·" else "") + p.nombre.lowercase(), style = MaterialTheme.typography.labelSmall) },
+                            label = { Text(p.nombre, style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (activa) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Medium)) },
                             colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.onPrimary, indicatorColor = MaterialTheme.colorScheme.primary,
-                                selectedTextColor = MaterialTheme.colorScheme.primary, unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                unselectedIconColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.72f),
+                                unselectedTextColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.72f),
                             ),
                         )
                     }
@@ -216,6 +217,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                 "obra" -> PantallaObra(nav)
                 "anno" -> PantallaAnno(nav)
                 "mapa" -> PantallaMapa(nav)
+                "analisis" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnalisis(nav)
                 else -> Text("Pantalla desconocida: $actual")
             }
         }

@@ -122,6 +122,14 @@ class QuickActivity : FragmentActivity() {
             origen = origen, aviso_ts = avisoMs?.let { Fechas.isoDeMillis(it) },
         )
         Repo.guardarMomento(m)
+        // Luz y, si lo activaste, ruido del ambiente en ese instante (no se guarda audio).
+        lifecycleScope.launch {
+            val ctx = this@QuickActivity
+            val luz = if (Repo.config.medir_luz) runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.lux(ctx) }.getOrNull() else null
+            kotlinx.coroutines.delay(250)
+            val ruido = if (Repo.config.medir_ruido) runCatching { io.github.ruddy2003.vestigium.sensores.Ambiente.ruido(ctx) }.getOrNull() else null
+            if (luz != null || ruido != null) actualizar(m.id) { it.copy(luz_lux = luz ?: it.luz_lux, ruido_db = ruido ?: it.ruido_db) }
+        }
         lifecycleScope.launch {
             val loc = Ubicacion.actual(this@QuickActivity) ?: return@launch
             val actual = Repo.momento(m.id) ?: m

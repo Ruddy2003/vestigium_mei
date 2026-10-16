@@ -56,6 +56,12 @@ object Importar {
             r.obras.forEach { o -> if (Repo.obras.none { it.id == o.id }) Repo.guardarObra(o) }
             r.escuchas.forEach { Repo.guardarEscucha(it) }
             Repo.importarSensores(r.notifs, r.actividad)
+            r.comunicacion.forEach { if (it.fecha !in Repo.comunicacion) Repo.guardarComunicacion(it) }
+            r.conexiones.forEach { c -> if (c.fecha !in Repo.conexiones) Repo.cambiarConexion(c.fecha) { c } }
+            if (r.subrayados.isNotEmpty()) Repo.importarSubrayados(r.subrayados)
+            if (r.huellas.isNotEmpty()) Repo.importarHuellas(r.huellas)
+            if (r.huellas_dia.isNotEmpty()) Repo.guardarHuellasDia(r.huellas_dia.filter { it.fecha !in Repo.huellas })
+            if (r.chats.isNotEmpty()) Repo.importarChats(r.chats.filter { c -> Repo.chats.none { it.id == c.id } })
             Repo.cambiarConfig { c -> c.copy(habitos = (c.habitos + r.config.habitos).distinctBy { it.id }, equivalencias = r.config.equivalencias + c.equivalencias) }
             return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos y ${r.gastos.size} gastos revisados.")
         }

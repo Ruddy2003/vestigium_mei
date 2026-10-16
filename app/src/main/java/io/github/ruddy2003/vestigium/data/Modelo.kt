@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 8
+const val SCHEMA_V = 9
 
 /** Un día. Los campos opcionales quedan en null cuando no se marcaron: nunca se rellenan con promedios. */
 @Serializable
@@ -68,6 +68,10 @@ data class Momento(
     val lugar: String? = null,
     val origen: String = "app",
     val aviso_ts: String? = null,
+    /** Nivel de ruido aproximado (dB, sin calibrar) medido 1.5 s al registrar; nunca se guarda audio. */
+    val ruido_db: Double? = null,
+    /** Luz ambiental (lux) al registrar. */
+    val luz_lux: Double? = null,
 )
 
 @Serializable
@@ -143,6 +147,19 @@ data class SaludDia(
     val hrv_rmssd: Double? = null,
     val pasos: Long? = null,
     val spo2: Double? = null,
+    val peso_kg: Double? = null,
+    val grasa_pct: Double? = null,
+    val resp_rpm: Double? = null,
+    val temp_c: Double? = null,
+    val temp_piel_delta: Double? = null,
+    val pa_sistolica: Double? = null,
+    val pa_diastolica: Double? = null,
+    val distancia_km: Double? = null,
+    val cal_activas: Double? = null,
+    val cal_totales: Double? = null,
+    val pisos: Double? = null,
+    val vo2max: Double? = null,
+    val agua_ml: Double? = null,
     val ts: String? = null,
 )
 
@@ -197,6 +214,106 @@ data class Config(
     val drive_ultimo: String? = null,
     val escalada_escala: String = "V",
     val gimnasios: List<String> = emptyList(),
+    val medir_ruido: Boolean = false,
+    val medir_luz: Boolean = true,
+    val whatsapp_yo: String = "",
+)
+
+/** Llamadas y SMS del día: solo cuántos, cuánto duraron y con cuántas personas distintas. Nunca números, nombres ni textos. */
+@Serializable
+data class ComunicacionDia(
+    val fecha: String,
+    val entrantes: Int = 0,
+    val salientes: Int = 0,
+    val perdidas: Int = 0,
+    val rechazadas: Int = 0,
+    val min_hablado: Double = 0.0,
+    val llamada_max_min: Double = 0.0,
+    val sms_recibidos: Int = 0,
+    val sms_enviados: Int = 0,
+    val contactos: Int = 0,
+    val primera: String? = null,
+    val ultima: String? = null,
+)
+
+/** Lo que el teléfono percibe cada 15 minutos: wifi, audio conectado, carga, batería y luz. */
+@Serializable
+data class ConexionDia(
+    val fecha: String,
+    val muestras: Int = 0,
+    val wifi_min: Map<String, Int> = emptyMap(),
+    val sin_wifi_min: Int = 0,
+    val audio_min: Map<String, Int> = emptyMap(),
+    val dispositivos_min: Map<String, Int> = emptyMap(),
+    val musica_min: Int = 0,
+    val cargando_min: Int = 0,
+    val carga_noche_inicio: String? = null,
+    val carga_noche_fin: String? = null,
+    val bateria_suma: Double = 0.0,
+    val bateria_min: Int? = null,
+    val luz_suma: List<Double> = List(24) { 0.0 },
+    val luz_n: List<Int> = List(24) { 0 },
+    val luz_max: Double? = null,
+    val luz_alta_min: Int = 0,
+)
+
+/** Subrayado o nota de Kindle (archivo My Clippings.txt). */
+@Serializable
+data class Subrayado(
+    val id: String,
+    val libro: String,
+    val autor: String = "",
+    val tipo: String = "subrayado",
+    val ubicacion: String = "",
+    val pagina: Int? = null,
+    val ts: String? = null,
+    val fecha: String? = null,
+    val texto: String = "",
+)
+
+/** Lo que hiciste en Google: videos vistos y búsquedas (Google Takeout, Mi actividad). */
+@Serializable
+data class Huella(
+    val id: String,
+    val ts: String,
+    val fecha: String,
+    val producto: String,
+    val accion: String,
+    val titulo: String = "",
+    val canal: String = "",
+)
+
+@Serializable
+data class HuellasDia(
+    val fecha: String,
+    val yt_vistos: Int = 0,
+    val yt_busquedas: Int = 0,
+    val busquedas: Int = 0,
+    val visitas: Int = 0,
+    val otras: Int = 0,
+    val primera: String? = null,
+    val ultima: String? = null,
+    val canales: Map<String, Int> = emptyMap(),
+)
+
+/** Un chat de WhatsApp en un día: solo conteos y tiempos, nunca el contenido. */
+@Serializable
+data class ChatDia(
+    val id: String,
+    val fecha: String,
+    val chat: String,
+    val grupo: Boolean = false,
+    val mios: Int = 0,
+    val otros: Int = 0,
+    val palabras_mias: Int = 0,
+    val palabras_otros: Int = 0,
+    val multimedia: Int = 0,
+    val primero: String? = null,
+    val ultimo: String? = null,
+    val resp_mia_min: Double? = null,
+    val resp_otros_min: Double? = null,
+    val inicie: Int = 0,
+    val conversaciones: Int = 0,
 )
 
 /** Lo que había afuera: clima, luz y aire del lugar donde estuviste (Open-Meteo), y la Luna, calculada en el teléfono. */
@@ -273,6 +390,11 @@ data class Escucha(
     val album: String = "",
     val app: String = "",
     val duracion_s: Int? = null,
+    /** Milisegundos realmente escuchados (solo en el historial importado de Spotify). */
+    val ms: Int? = null,
+    val saltada: Boolean? = null,
+    /** notificacion (lo que sonó en el teléfono) o spotify (historial importado). */
+    val fuente: String = "notificacion",
 )
 
 /** Minutos por tipo de movimiento que detecta el teléfono: a pie, corriendo, en bici, en vehículo, quieto. */

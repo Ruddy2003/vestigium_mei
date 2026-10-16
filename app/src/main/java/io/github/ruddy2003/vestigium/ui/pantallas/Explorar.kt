@@ -76,7 +76,7 @@ fun PantallaExplorar(nav: Nav) {
     var desfase by remember { mutableStateOf(false) }
     var eligiendo by remember { mutableStateOf<Char?>(null) }
 
-    Hoja("Explorar", subtitulo = "Cruces rápidos para tu curiosidad. El análisis serio, con modelos que respetan que los días se parecen a sus vecinos, sigue en R.") {
+    Hoja("Explorar", subtitulo = "Cruces rápidos y herramientas de análisis. Para modelos completos, exporta y abre vestigium.R.") {
         val nDias = Repo.dias.size
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra("$nDias", "días con diario", Modifier.weight(1f))
@@ -84,6 +84,15 @@ fun PantallaExplorar(nav: Nav) {
             Cifra("${Repo.momentos.count { it.tipo == "muestreo" }}", "avisos respondidos", Modifier.weight(1f))
         }
         Ayuda(if (nDias >= 90) "Con 90 días o más ya se pueden detectar relaciones moderadas." else "Faltan ${90 - nDias} días para tener potencia suficiente; antes de eso, todo es pista, no evidencia.", Modifier.padding(top = 8.dp))
+
+        Seccion("Herramientas", "Análisis más finos de tus datos.", latin = "INSTRVMENTA") {
+            Tarjeta {
+                HERRAMIENTAS.forEachIndexed { i, (id, n, d) ->
+                    if (i > 0) androidx.compose.material3.HorizontalDivider()
+                    io.github.ruddy2003.vestigium.ui.FilaMenu("${io.github.ruddy2003.vestigium.ui.Romano.de(i + 1)} · $n", d) { Herramienta.actual = id; nav.ir("analisis") }
+                }
+            }
+        }
 
         Seccion("Cobertura", "Últimas 16 semanas. Más intenso = mejor valencia. Hueco = sin registro.") { Tarjeta { Cobertura() } }
 

@@ -79,6 +79,8 @@ fun PantallaMas(nav: Nav) {
             Tarjeta {
                 FilaMenu("Tu año", "El año en píxeles, mes por mes y lo más frecuente") { nav.ir("anno") }
                 HorizontalDivider()
+                FilaMenu("Análisis", "Tendencias, factores, modelo, dinámica emocional, sueño, palabras") { nav.ir("analisis") }
+                HorizontalDivider()
                 FilaMenu("Experimentos personales", "Prueba si algo de verdad te cambia") { nav.ir("experimentos") }
                 HorizontalDivider()
                 FilaMenu("Cartas al futuro", "${Repo.cartas.count { !it.abierta }} esperando su fecha") { nav.ir("cartas") }

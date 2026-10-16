@@ -38,6 +38,11 @@ object Repo {
     var sesiones by mutableStateOf<List<Sesion>>(emptyList()); private set
     var ascensos by mutableStateOf<List<Ascenso>>(emptyList()); private set
     var obras by mutableStateOf<List<Obra>>(emptyList()); private set
+    var comunicacion by mutableStateOf<Map<String, ComunicacionDia>>(emptyMap()); private set
+    var conexiones by mutableStateOf<Map<String, ConexionDia>>(emptyMap()); private set
+    var subrayados by mutableStateOf<List<Subrayado>>(emptyList()); private set
+    var huellas by mutableStateOf<Map<String, HuellasDia>>(emptyMap()); private set
+    var chats by mutableStateOf<List<ChatDia>>(emptyList()); private set
 
     @Synchronized
     fun init(ctx: Context) {
@@ -63,6 +68,11 @@ object Repo {
         sesiones = cargar("sesiones", Sesion.serializer()).sortedBy { it.inicio }
         ascensos = cargar("ascensos", Ascenso.serializer()).sortedBy { it.fecha + (it.inicio ?: "") }
         obras = cargar("obras", Obra.serializer())
+        comunicacion = cargar("comunicacion", ComunicacionDia.serializer()).associateBy { it.fecha }
+        conexiones = cargar("conexiones", ConexionDia.serializer()).associateBy { it.fecha }
+        subrayados = cargar("subrayados", Subrayado.serializer()).sortedBy { it.ts ?: "" }
+        huellas = cargar("huellas_dia", HuellasDia.serializer()).associateBy { it.fecha }
+        chats = cargar("whatsapp", ChatDia.serializer()).sortedBy { it.fecha }
         listo = true
     }
 
@@ -235,6 +245,48 @@ object Repo {
     fun guardarEscucha(e: Escucha) = db.poner("escuchas", e.id, e.fecha, JSON.encodeToString(Escucha.serializer(), e))
     fun escuchas(desde: String, hasta: String): List<Escucha> =
         db.porFecha("escuchas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Escucha.serializer(), it) }.getOrNull() }.sortedBy { it.ts }
+
+    fun guardarComunicacion(c: ComunicacionDia) {
+        db.poner("comunicacion", c.fecha, c.fecha, JSON.encodeToString(ComunicacionDia.serializer(), c))
+        enMain { comunicacion = comunicacion + (c.fecha to c) }
+    }
+
+    private val conMem = HashMap<String, ConexionDia>()
+    /** Modifica la conexión del día y la guarda. Se llama desde el trabajo de fondo. */
+    @Synchronized
+    fun cambiarConexion(fecha: String, f: (ConexionDia) -> ConexionDia) {
+        val n = f(conMem[fecha] ?: conexiones[fecha] ?: ConexionDia(fecha))
+        conMem[fecha] = n
+        db.poner("conexiones", fecha, fecha, JSON.encodeToString(ConexionDia.serializer(), n))
+        enMain { conexiones = conexiones + (fecha to n) }
+    }
+
+    fun importarEscuchas(lista: List<Escucha>) {
+        db.transaccion { lista.forEach { db.poner("escuchas", it.id, it.fecha, JSON.encodeToString(Escucha.serializer(), it)) } }
+    }
+    fun borrarEscuchas(ids: Collection<String>) { db.transaccion { ids.forEach { db.borrar("escuchas", it) } } }
+
+    fun importarSubrayados(lista: List<Subrayado>) {
+        db.transaccion { lista.forEach { db.poner("subrayados", it.id, it.fecha, JSON.encodeToString(Subrayado.serializer(), it)) } }
+        val ids = lista.map { it.id }.toSet()
+        enMain { subrayados = (subrayados.filter { it.id !in ids } + lista).sortedBy { it.ts ?: "" } }
+    }
+
+    fun importarHuellas(lista: List<Huella>) {
+        db.transaccion { lista.forEach { db.poner("huellas", it.id, it.fecha, JSON.encodeToString(Huella.serializer(), it)) } }
+    }
+    fun huellasDe(desde: String, hasta: String): List<Huella> =
+        db.porFecha("huellas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Huella.serializer(), it) }.getOrNull() }
+    fun guardarHuellasDia(lista: List<HuellasDia>) {
+        db.transaccion { lista.forEach { db.poner("huellas_dia", it.fecha, it.fecha, JSON.encodeToString(HuellasDia.serializer(), it)) } }
+        enMain { huellas = huellas + lista.associateBy { it.fecha } }
+    }
+
+    fun importarChats(lista: List<ChatDia>) {
+        db.transaccion { lista.forEach { db.poner("whatsapp", it.id, it.fecha, JSON.encodeToString(ChatDia.serializer(), it)) } }
+        val ids = lista.map { it.id }.toSet()
+        enMain { chats = (chats.filter { it.id !in ids } + lista).sortedBy { it.fecha } }
+    }
 
     // ---------- Escalada y biblioteca ----------
     fun guardarAscenso(a: Ascenso) {

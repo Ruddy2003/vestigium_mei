@@ -95,7 +95,7 @@ object Drive {
     fun subir(ctx: Context, token: String): String {
         val dir = carpeta(token)
         val existentes = buscar(token, "'$dir' in parents and trashed = false").associate { it.second to it.first }
-        val archivos = Exportar.archivos()
+        val archivos = Exportar.archivos(ctx)
         var n = 0
         for ((nombre, cont) in archivos) {
             val datos = cont.toByteArray()

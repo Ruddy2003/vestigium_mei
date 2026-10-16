@@ -3,7 +3,19 @@ package io.github.ruddy2003.vestigium.sensores
 import android.content.Context
 import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.BloodPressureRecord
+import androidx.health.connect.client.records.BodyFatRecord
+import androidx.health.connect.client.records.BodyTemperatureRecord
+import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.FloorsClimbedRecord
+import androidx.health.connect.client.records.HydrationRecord
+import androidx.health.connect.client.records.RespiratoryRateRecord
+import androidx.health.connect.client.records.SkinTemperatureRecord
+import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
+import androidx.health.connect.client.records.Vo2MaxRecord
+import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
@@ -30,6 +42,18 @@ object Salud {
         HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class),
         HealthPermission.getReadPermission(OxygenSaturationRecord::class),
         HealthPermission.getReadPermission(ExerciseSessionRecord::class),
+        HealthPermission.getReadPermission(WeightRecord::class),
+        HealthPermission.getReadPermission(BodyFatRecord::class),
+        HealthPermission.getReadPermission(RespiratoryRateRecord::class),
+        HealthPermission.getReadPermission(BodyTemperatureRecord::class),
+        HealthPermission.getReadPermission(SkinTemperatureRecord::class),
+        HealthPermission.getReadPermission(BloodPressureRecord::class),
+        HealthPermission.getReadPermission(DistanceRecord::class),
+        HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
+        HealthPermission.getReadPermission(TotalCaloriesBurnedRecord::class),
+        HealthPermission.getReadPermission(FloorsClimbedRecord::class),
+        HealthPermission.getReadPermission(Vo2MaxRecord::class),
+        HealthPermission.getReadPermission(HydrationRecord::class),
         "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND",
         "android.permission.health.READ_HEALTH_DATA_HISTORY",
     )
@@ -114,11 +138,61 @@ object Salud {
                 val r = cliente.readRecords(ReadRecordsRequest(recordType = HeartRateVariabilityRmssdRecord::class, timeRangeFilter = noche))
                 if (r.records.isNotEmpty()) s = s.copy(hrv_rmssd = r.records.map { it.heartRateVariabilityMillis }.average())
             }
+            s = extras(cliente, ok, rango, s)
             s = s.copy(ts = Fechas.ahoraIso())
             Repo.guardarSalud(s); n++
         }
         if (HealthPermission.getReadPermission(ExerciseSessionRecord::class) in ok) runCatching { ejercicio(cliente, dias + 1) }
         return n
+    }
+
+    private fun r(x: Double?, d: Int = 1): Double? = x?.let { val f = Math.pow(10.0, d.toDouble()); Math.round(it * f) / f }
+
+    /** Peso, grasa, respiración, temperatura, presión, distancia, calorías, pisos, VO2 máx. y agua: lo que el reloj o la báscula escriban. */
+    private suspend fun extras(cliente: HealthConnectClient, ok: Set<String>, rango: TimeRangeFilter, base: SaludDia): SaludDia {
+        var s = base
+        fun tiene(k: kotlin.reflect.KClass<out androidx.health.connect.client.records.Record>) = HealthPermission.getReadPermission(k) in ok
+        if (tiene(WeightRecord::class)) runCatching {
+            cliente.readRecords(ReadRecordsRequest(WeightRecord::class, rango)).records.lastOrNull()?.let { s = s.copy(peso_kg = r(it.weight.inKilograms, 2)) }
+        }
+        if (tiene(BodyFatRecord::class)) runCatching {
+            cliente.readRecords(ReadRecordsRequest(BodyFatRecord::class, rango)).records.lastOrNull()?.let { s = s.copy(grasa_pct = r(it.percentage.value)) }
+        }
+        if (tiene(RespiratoryRateRecord::class)) runCatching {
+            val l = cliente.readRecords(ReadRecordsRequest(RespiratoryRateRecord::class, rango)).records
+            if (l.isNotEmpty()) s = s.copy(resp_rpm = r(l.map { it.rate }.average()))
+        }
+        if (tiene(BodyTemperatureRecord::class)) runCatching {
+            val l = cliente.readRecords(ReadRecordsRequest(BodyTemperatureRecord::class, rango)).records
+            if (l.isNotEmpty()) s = s.copy(temp_c = r(l.map { it.temperature.inCelsius }.average(), 2))
+        }
+        if (tiene(SkinTemperatureRecord::class)) runCatching {
+            val d = cliente.readRecords(ReadRecordsRequest(SkinTemperatureRecord::class, rango)).records.flatMap { it.deltas }.map { it.delta.inCelsius }
+            if (d.isNotEmpty()) s = s.copy(temp_piel_delta = r(d.average(), 2))
+        }
+        if (tiene(BloodPressureRecord::class)) runCatching {
+            val l = cliente.readRecords(ReadRecordsRequest(BloodPressureRecord::class, rango)).records
+            if (l.isNotEmpty()) s = s.copy(pa_sistolica = r(l.map { it.systolic.inMillimetersOfMercury }.average(), 0), pa_diastolica = r(l.map { it.diastolic.inMillimetersOfMercury }.average(), 0))
+        }
+        if (tiene(DistanceRecord::class)) runCatching {
+            cliente.aggregate(AggregateRequest(setOf(DistanceRecord.DISTANCE_TOTAL), rango))[DistanceRecord.DISTANCE_TOTAL]?.let { s = s.copy(distancia_km = r(it.inKilometers, 2)) }
+        }
+        if (tiene(ActiveCaloriesBurnedRecord::class)) runCatching {
+            cliente.aggregate(AggregateRequest(setOf(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL), rango))[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.let { s = s.copy(cal_activas = r(it.inKilocalories, 0)) }
+        }
+        if (tiene(TotalCaloriesBurnedRecord::class)) runCatching {
+            cliente.aggregate(AggregateRequest(setOf(TotalCaloriesBurnedRecord.ENERGY_TOTAL), rango))[TotalCaloriesBurnedRecord.ENERGY_TOTAL]?.let { s = s.copy(cal_totales = r(it.inKilocalories, 0)) }
+        }
+        if (tiene(FloorsClimbedRecord::class)) runCatching {
+            cliente.aggregate(AggregateRequest(setOf(FloorsClimbedRecord.FLOORS_CLIMBED_TOTAL), rango))[FloorsClimbedRecord.FLOORS_CLIMBED_TOTAL]?.let { s = s.copy(pisos = r(it, 0)) }
+        }
+        if (tiene(Vo2MaxRecord::class)) runCatching {
+            cliente.readRecords(ReadRecordsRequest(Vo2MaxRecord::class, rango)).records.lastOrNull()?.let { s = s.copy(vo2max = r(it.vo2MillilitersPerMinuteKilogram)) }
+        }
+        if (tiene(HydrationRecord::class)) runCatching {
+            cliente.aggregate(AggregateRequest(setOf(HydrationRecord.VOLUME_TOTAL), rango))[HydrationRecord.VOLUME_TOTAL]?.let { s = s.copy(agua_ml = r(it.inMilliliters, 0)) }
+        }
+        return s
     }
 
     val TIPOS_EJERCICIO: Map<Int, String> = mapOf(

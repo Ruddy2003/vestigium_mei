@@ -369,6 +369,40 @@ private fun Vestigios(fecha: String, nav: Nav) {
             if (it.luz_min != null) Clave("lux", "${it.amanecer ?: "?"} → ${it.atardecer ?: "?"} · ${hm(it.luz_min)} de luz" + (it.sol_min?.let { x -> " · ${hm(x)} de sol" } ?: ""))
             if (it.aqi_us != null) Clave("aer", "calidad del aire ${it.aqi_us} (${aqiTexto(it.aqi_us)})" + (it.pm25?.let { x -> " · pm2.5 %.0f".format(x) } ?: ""))
         }
+        if (s != null) {
+            val cuerpo = listOfNotNull(s.peso_kg?.let { "%.1f kg".format(it) }, s.temp_piel_delta?.let { "piel %+.2f °C".format(it) }, s.resp_rpm?.let { "resp %.0f rpm".format(it) },
+                s.pa_sistolica?.let { "pa %.0f/%.0f".format(it, s.pa_diastolica ?: 0.0) }, s.cal_activas?.let { "%.0f kcal activas".format(it) }, s.pisos?.let { "%.0f pisos".format(it) },
+                s.agua_ml?.let { "%.0f ml de agua".format(it) }, s.vo2max?.let { "vo₂max %.0f".format(it) })
+            if (cuerpo.isNotEmpty()) { algo = true; Clave("corpus", cuerpo.joinToString(" · ")) }
+        }
+        Repo.comunicacion[fecha]?.let { co ->
+            val ll = co.entrantes + co.salientes
+            if (ll + co.perdidas + co.sms_enviados + co.sms_recibidos > 0) {
+                algo = true
+                Clave("voces", "$ll llamadas · ${hm(co.min_hablado.toInt())}" + (if (co.perdidas > 0) " · ${co.perdidas} perdidas" else "") +
+                    (if (co.sms_enviados + co.sms_recibidos > 0) " · ${co.sms_enviados + co.sms_recibidos} sms" else "") + " · ${co.contactos} personas")
+            }
+        }
+        val wa = Repo.chats.filter { it.fecha == fecha }
+        if (wa.isNotEmpty()) {
+            algo = true
+            Clave("whatsapp", "${wa.sumOf { it.mios }} enviados · ${wa.sumOf { it.otros }} recibidos · ${wa.size} chats")
+        }
+        Repo.conexiones[fecha]?.let { cx ->
+            algo = true
+            val aud = listOfNotNull(cx.audio_min["audifonos"]?.let { "audífonos ${hm(it)}" }, cx.audio_min["coche"]?.let { "coche ${hm(it)}" },
+                cx.audio_min["bocina"]?.let { "bocina ${hm(it)}" }, cx.musica_min.takeIf { it > 0 }?.let { "sonando ${hm(it)}" })
+            if (aud.isNotEmpty()) Clave("soni", aud.joinToString(" · "))
+            cx.wifi_min.entries.sortedByDescending { it.value }.take(2).takeIf { it.isNotEmpty() }?.let { w -> Clave("retia", w.joinToString(" · ") { "${it.key} ${hm(it.value)}" } + " · sin wifi ${hm(cx.sin_wifi_min)}") }
+            val n = cx.luz_n.sum()
+            if (n > 0) Clave("lumen", "máx %.0f lux · %s con luz de exterior".format(cx.luz_max ?: 0.0, hm(cx.luz_alta_min)))
+            if (cx.carga_noche_inicio != null) Clave("vis", "conectado ${Fechas.horaDe(cx.carga_noche_inicio)} → ${cx.carga_noche_fin?.let { Fechas.horaDe(it) } ?: "?"}")
+        }
+        Repo.huellas[fecha]?.let { h -> algo = true; Clave("google", "${h.yt_vistos} videos · ${h.busquedas + h.yt_busquedas} búsquedas" + (h.canales.keys.firstOrNull()?.let { " · más: $it" } ?: "")) }
+        val sub = Repo.subrayados.filter { it.fecha == fecha }
+        if (sub.isNotEmpty()) { algo = true; Clave("lectio", "${sub.size} subrayados · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
+        val ruidos = Repo.momentos.filter { it.fecha == fecha }.mapNotNull { it.ruido_db }
+        if (ruidos.isNotEmpty()) Clave("strepitus", "%.0f dB de media al registrar".format(ruidos.average()))
         Clave("luna", "${Luna.nombre(fase)} · ${(Luna.iluminacion(fase) * 100).toInt()}% iluminada")
         if (!algo) Ayuda("Aún no hay datos automáticos de este día. Activa fuentes en Más → Permisos y sensores.", Modifier.padding(top = 8.dp))
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

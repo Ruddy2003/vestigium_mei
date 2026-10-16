@@ -31,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -164,6 +166,8 @@ fun PantallaMapa(nav: Nav) {
     val colorRuta = MaterialTheme.colorScheme.primary.toArgb()
 
     Column(Modifier.fillMaxSize()) {
+      // Controles arriba, siempre por encima del mapa y con fondo propio para que se puedan tocar.
+      Column(Modifier.fillMaxWidth().zIndex(2f).background(MaterialTheme.colorScheme.background)) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = nav.atras) { Text("← cd ..", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
@@ -182,11 +186,19 @@ fun PantallaMapa(nav: Nav) {
                 Ficha("›", false) { dia = Fechas.sumar(dia, 1) }
             } else if (capa != "lugares") PERIODOS.forEach { (n, t) -> Ficha(t, periodo == n) { periodo = n } }
         }
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+      }
+        // El mapa queda recortado a su recuadro: sin esto osmdroid dibuja encima de los menús al arrastrarlo.
+        Box(Modifier.weight(1f).fillMaxWidth().clipToBounds().zIndex(0f)) {
             AndroidView(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().clipToBounds(),
                 factory = { c ->
                     MapView(c).apply {
+                        addOnAttachStateChangeListener(object : android.view.View.OnAttachStateChangeListener {
+                            override fun onViewAttachedToWindow(v: android.view.View) {
+                                (v.parent as? android.view.ViewGroup)?.apply { clipChildren = true; clipToPadding = true }
+                            }
+                            override fun onViewDetachedFromWindow(v: android.view.View) {}
+                        })
                         setTileSource(TileSourceFactory.MAPNIK)
                         overlayManager.tilesOverlay.setColorFilter(filtroMapa(oscuro))
                         setMultiTouchControls(true)
@@ -218,7 +230,7 @@ fun PantallaMapa(nav: Nav) {
             )
             if (capa == "ruta" && puntos.isEmpty()) Ayuda("Sin ubicaciones ese día.", Modifier.align(Alignment.TopCenter).padding(10.dp).background(MaterialTheme.colorScheme.surface).padding(8.dp))
         }
-        Leyenda(capa, oscuro, datos.size, puntos.size)
+        Box(Modifier.fillMaxWidth().zIndex(2f).background(MaterialTheme.colorScheme.background)) { Leyenda(capa, oscuro, datos.size, puntos.size) }
     }
 
     nuevoLugar?.let { p ->

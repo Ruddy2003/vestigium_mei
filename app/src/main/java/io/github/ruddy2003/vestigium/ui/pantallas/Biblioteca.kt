@@ -3,6 +3,7 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
 import android.app.DatePickerDialog
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -95,6 +96,23 @@ fun PantallaBiblioteca(nav: Nav) {
         if (pendientes.isNotEmpty()) Seccion("Pendientes") { Lista(pendientes, nav) }
         val abandonadas = todas.filter { it.estado == "abandonado" }
         if (abandonadas.isNotEmpty()) Seccion("Archivados", latin = "RELICTA") { Lista(abandonadas, nav) }
+        if ((filtro == null || filtro == "libro") && Repo.subrayados.isNotEmpty()) Seccion("Subrayados de Kindle", "Toca un libro para ver lo que marcaste.", latin = "EXCERPTA") {
+            var abierto by remember { mutableStateOf<String?>(null) }
+            Tarjeta {
+                Repo.subrayados.groupBy { it.libro }.entries.sortedByDescending { e -> e.value.maxOfOrNull { it.ts ?: "" } }.forEachIndexed { i, (libro, l) ->
+                    if (i > 0) HorizontalDivider()
+                    Row(Modifier.fillMaxWidth().clickable { abierto = if (abierto == libro) null else libro }.padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(libro, style = MaterialTheme.typography.bodyLarge)
+                            Text(listOfNotNull(l.first().autor.ifBlank { null }, "${l.size} marcas", l.mapNotNull { it.fecha }.maxOrNull()?.let { Fechas.corto(it) }).joinToString(" · "),
+                                style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text(if (abierto == libro) "−" else "+", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    }
+                    if (abierto == libro) Subrayados(l)
+                }
+            }
+        }
     }
 }
 
@@ -193,8 +211,27 @@ fun PantallaObra(nav: Nav) {
                 Editor(o.nota, "notae.txt", "Ideas, citas, qué sentiste…", minimo = 120) { g(o.copy(nota = it)) }
             }
         }
+        val marcas = Repo.subrayados.filter { o.titulo.isNotBlank() && (it.libro.equals(o.titulo, true) || it.libro.contains(o.titulo, true) || o.titulo.contains(it.libro, true)) }
+        if (marcas.isNotEmpty()) Seccion("Subrayados de Kindle", numero = 4, latin = "EXCERPTA") { Tarjeta { Subrayados(marcas) } }
         TextButton(onClick = { if (confirmar) { Repo.borrarObra(o.id); nav.atras() } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
             Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
         }
+    }
+}
+
+@Composable
+private fun Subrayados(l: List<io.github.ruddy2003.vestigium.data.Subrayado>) {
+    Column(Modifier.padding(bottom = 8.dp)) {
+        l.sortedBy { it.ubicacion.substringBefore('-').toIntOrNull() ?: it.pagina ?: 0 }.take(80).forEach { s ->
+            Row(Modifier.padding(vertical = 5.dp)) {
+                androidx.compose.foundation.layout.Box(Modifier.padding(top = 3.dp).width(3.dp).height(16.dp).background(if (s.tipo == "nota") MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary))
+                Column(Modifier.padding(start = 8.dp)) {
+                    Text(s.texto, style = MaterialTheme.typography.bodyMedium)
+                    Text(listOfNotNull(s.tipo, s.pagina?.let { "p. $it" }, s.ubicacion.ifBlank { null }?.let { "pos. $it" }, s.fecha?.let { Fechas.corto(it) }).joinToString(" · "),
+                        style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        if (l.size > 80) io.github.ruddy2003.vestigium.ui.Ayuda("…y ${l.size - 80} más en vm_subrayados.csv.")
     }
 }

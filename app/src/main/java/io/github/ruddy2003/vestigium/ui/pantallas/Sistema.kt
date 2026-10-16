@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -42,11 +44,15 @@ import io.github.ruddy2003.vestigium.avisos.Programador
 import io.github.ruddy2003.vestigium.data.Exportar
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Importar
+import io.github.ruddy2003.vestigium.data.Importaciones
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.reportes.Reportes
 import io.github.ruddy2003.vestigium.data.Drive
 import io.github.ruddy2003.vestigium.sensores.Actividad
+import io.github.ruddy2003.vestigium.sensores.Ambiente
+import io.github.ruddy2003.vestigium.sensores.Comunicacion
+import io.github.ruddy2003.vestigium.sensores.Percepcion
 import io.github.ruddy2003.vestigium.sensores.Agenda
 import io.github.ruddy2003.vestigium.sensores.Entorno
 import io.github.ruddy2003.vestigium.sensores.Galeria
@@ -91,6 +97,9 @@ fun PantallaPermisos(nav: Nav) {
     val fotos = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refrescar++; scope.launch(Dispatchers.IO) { Galeria.sincronizar(ctx, 7); Galeria.historia(ctx) } }
     val agenda = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refrescar++; scope.launch(Dispatchers.IO) { Agenda.sincronizar(ctx); Agenda.historia(ctx) } }
     val movimiento = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refrescar++; Actividad.registrar(ctx) }
+    val comunicacion = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { refrescar++; scope.launch(Dispatchers.IO) { Comunicacion.sincronizar(ctx, 7); Comunicacion.historia(ctx) } }
+    val bt = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refrescar++ }
+    val microfono = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> refrescar++; if (ok) Repo.cambiarConfig { it.copy(medir_ruido = true) } }
     var msgSync by remember { mutableStateOf<String?>(null) }
     var sincronizando by remember { mutableStateOf(false) }
     @Suppress("UNUSED_VARIABLE") val k = refrescar
@@ -123,11 +132,11 @@ fun PantallaPermisos(nav: Nav) {
         Seccion("Cuerpo") {
             Tarjeta {
                 val disp = Salud.disponible(ctx)
-                Estado("Health Connect", hc.isNotEmpty(), if (disp) "Sueño por etapas, frecuencia cardiaca, HRV, pasos, oxígeno y sesiones de ejercicio (incluida escalada) de tu reloj. En Samsung Health activa también: Ajustes → Health Connect → permitir escribir." else "Health Connect no está disponible en este teléfono.", habilitado = disp) {
+                Estado("Health Connect", hc.isNotEmpty(), if (disp) "Sueño por etapas, frecuencia cardiaca, HRV, pasos, oxígeno, sesiones de ejercicio (incluida escalada), peso, temperatura de la piel, respiración, presión, calorías, distancia, pisos y agua: lo que tu reloj o báscula escriban. En Samsung Health activa también: Ajustes → Health Connect → permitir escribir." else "Health Connect no está disponible en este teléfono.", habilitado = disp) {
                     salud.launch(Salud.PERMISOS)
                 }
                 if (hc.isNotEmpty() && !hc.containsAll(Salud.PERMISOS.filter { it.startsWith("android.permission.health.READ_") && !it.endsWith("BACKGROUND") && !it.endsWith("HISTORY") }))
-                    TextButton(onClick = { salud.launch(Salud.PERMISOS) }) { Text("+ conceder los permisos nuevos (ejercicio)", style = MaterialTheme.typography.labelLarge) }
+                    TextButton(onClick = { salud.launch(Salud.PERMISOS) }) { Text("+ conceder los permisos nuevos", style = MaterialTheme.typography.labelLarge) }
                 if (hc.isNotEmpty()) TextButton(onClick = { scope.launch { val n = Salud.sincronizar(ctx, 30); android.widget.Toast.makeText(ctx, "Sincronicé $n días", android.widget.Toast.LENGTH_SHORT).show() } }) { Text("↻ sincronizar los últimos 30 días", style = MaterialTheme.typography.labelLarge) }
                 HorizontalDivider()
                 Estado("Movimiento", Actividad.tienePermiso(ctx), "Minutos a pie, en bici, en vehículo o quieto, detectados por el teléfono. Casi no gasta batería.") {
@@ -157,6 +166,26 @@ fun PantallaPermisos(nav: Nav) {
                     TextButton(onClick = { runCatching { ctx.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName))) } }) {
                         Text("abrir información de la app →", style = MaterialTheme.typography.labelLarge)
                     }
+                }
+            }
+        }
+        Seccion("Llamadas y mensajes", latin = "VOCES") {
+            Tarjeta {
+                Estado("Llamadas y SMS", Comunicacion.llamadas(ctx) && Comunicacion.sms(ctx), "Cuántas llamadas y SMS, cuántos minutos y con cuántas personas distintas. Nunca se guardan números, nombres ni textos.") {
+                    comunicacion.launch(Comunicacion.permisos())
+                }
+            }
+        }
+        Seccion("Alrededor", "Cada 15 minutos el teléfono anota su wifi, si hay audífonos, coche o bocina conectados, si suena algo, la carga y la luz.", latin = "CIRCVMSTANTIA") {
+            Tarjeta {
+                Estado("Dispositivos Bluetooth", Percepcion.bluetooth(ctx), "Para distinguir el coche de los audífonos o una bocina. Sin esto, todo cuenta como «bluetooth».") {
+                    if (android.os.Build.VERSION.SDK_INT >= 31) bt.launch(Manifest.permission.BLUETOOTH_CONNECT)
+                }
+                Ayuda("El nombre de tu wifi solo se puede leer con la ubicación activada; si no, se anota como «wifi (sin nombre)».", Modifier.padding(top = 4.dp))
+                HorizontalDivider(Modifier.padding(vertical = 6.dp))
+                Interruptor("Luz del ambiente", Repo.config.medir_luz, "Lee el sensor de luz cada 15 minutos y al registrar un momento: cuánta luz de exterior recibes al día.") { v -> Repo.cambiarConfig { it.copy(medir_luz = v) } }
+                Interruptor("Ruido al registrar", Repo.config.medir_ruido && Ambiente.tienePermiso(ctx), "Al guardar un momento escucha 1.5 segundos y anota solo el nivel de ruido; el audio se descarta. Verás el aviso del micrófono un instante.") { v ->
+                    if (v && !Ambiente.tienePermiso(ctx)) microfono.launch(Manifest.permission.RECORD_AUDIO) else Repo.cambiarConfig { it.copy(medir_ruido = v) }
                 }
             }
         }
@@ -289,6 +318,23 @@ fun PantallaDatos(nav: Nav) {
     val respaldo = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importar.respaldo(ctx, uri).mensaje } }
     val obsidian = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importar.obsidian(ctx, uris).mensaje } }
     val maps = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importar.cronologia(ctx, uri).mensaje } }
+    val spotify = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importaciones.spotify(ctx, uris) } }
+    val kindle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importaciones.kindle(ctx, uri) } }
+    val google = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importaciones.google(ctx, uris) } }
+    var chatsLeidos by remember { mutableStateOf<List<Importaciones.Chat>?>(null) }
+    val whatsapp = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) scope.launch {
+            ocupado = true
+            val l = withContext(Dispatchers.IO) { runCatching { Importaciones.whatsappLeer(ctx, uris) }.getOrDefault(emptyList()) }
+            ocupado = false
+            if (l.isEmpty() || l.all { it.mensajes.isEmpty() }) msg = "No reconocí mensajes. En WhatsApp abre el chat → ⋮ → Más → Exportar chat → Sin archivos, y elige el .txt."
+            else {
+                val yo = Repo.config.whatsapp_yo
+                // Si ya sé cuál autor eres y aparece en todos los chats, se guarda directo; si no, se pregunta.
+                if (yo.isNotBlank() && l.all { c -> yo in c.autores }) tarea { Importaciones.whatsappGuardar(l, yo) } else chatsLeidos = l
+            }
+        }
+    }
 
     Hoja("Datos", nav.atras, "Todo lo que guarda la app, listo para R.") {
         msg?.let { Aviso(it) }
@@ -317,6 +363,26 @@ fun PantallaDatos(nav: Nav) {
                 Ayuda("En Google Maps: tu perfil → Tu cronología → ⋮ → Configuración → Exportar datos de Cronología.")
             }
         }
+        Seccion("Otros servicios", "Tu historia en otras apps. Se pueden importar varias veces: lo repetido no se duplica.", latin = "ALIENA") {
+            Tarjeta {
+                OutlinedButton(onClick = { spotify.launch(arrayOf("application/json", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Spotify · historial de reproducción") }
+                Ayuda("spotify.com → Cuenta → Privacidad → Descargar tus datos → «Historial de reproducción ampliado». Tarda unos días; llega un .zip: elígelo completo o los Streaming_History…json.")
+                OutlinedButton(onClick = { kindle.launch(arrayOf("text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Kindle · subrayados (My Clippings.txt)") }
+                Ayuda("Conecta el Kindle a la computadora: el archivo está en la carpeta documents. Pásalo al teléfono y elígelo.")
+                OutlinedButton(onClick = { google.launch(arrayOf("application/json", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Google · YouTube y búsquedas") }
+                Ayuda("takeout.google.com → elige «YouTube y YouTube Music» (historial) y «Mi actividad» → formato JSON (no HTML). Elige el .zip o los archivos watch-history.json, search-history.json y MyActivity.json.")
+                OutlinedButton(onClick = { whatsapp.launch(arrayOf("text/plain", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("WhatsApp · actividad de chats") }
+                Ayuda("En cada chat: ⋮ → Más → Exportar chat → Sin archivos. Solo se guardan conteos (mensajes, palabras, horas y tiempos de respuesta); el texto se descarta al leerlo y nunca se guarda.")
+                val nMusica = remember(msg) { runCatching { Repo.db().contar("escuchas") }.getOrDefault(0L) }
+                if (nMusica > 0 || Repo.subrayados.isNotEmpty() || Repo.huellas.isNotEmpty() || Repo.chats.isNotEmpty()) {
+                    Spacer(Modifier.height(8.dp))
+                    if (nMusica > 0) Clave("musica", "$nMusica reproducciones")
+                    if (Repo.subrayados.isNotEmpty()) Clave("kindle", "${Repo.subrayados.size} subrayados de ${Repo.subrayados.map { it.libro }.distinct().size} libros")
+                    if (Repo.huellas.isNotEmpty()) Clave("google", "${Repo.huellas.size} días · ${Repo.huellas.values.sumOf { it.yt_vistos }} videos")
+                    if (Repo.chats.isNotEmpty()) Clave("whatsapp", "${Repo.chats.map { it.chat }.distinct().size} chats · ${Repo.chats.size} días")
+                }
+            }
+        }
         Seccion("Etiquetas equivalentes", "Unifica variantes de una misma persona o tema (tianita → tia_anita). Se aplica en Explorar, reportes y exportación; tus textos no cambian.") {
             Equivalencias()
         }
@@ -331,6 +397,22 @@ fun PantallaDatos(nav: Nav) {
                 Repo.config.ultimo_sync?.let { Clave("synchronia", "${Fechas.horaDe(it)} del ${it.take(10)}") }
             }
         }
+    }
+    chatsLeidos?.let { l ->
+        val autores = l.flatMap { it.autores }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { chatsLeidos = null },
+            title = { Text("¿Cuál eres tú?", style = MaterialTheme.typography.titleLarge) },
+            text = {
+                Column {
+                    Ayuda("Leí ${l.size} chat(s) con ${l.sumOf { it.mensajes.size }} mensajes. Elige tu nombre tal como aparece en el chat para separar tus mensajes de los de los demás.")
+                    FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        autores.take(12).forEach { a -> Ficha(a, false) { chatsLeidos = null; tarea { Importaciones.whatsappGuardar(l, a) } } }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { chatsLeidos = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
+        )
     }
 }
 
