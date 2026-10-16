@@ -83,7 +83,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         val p = Path()
         var x = 0f
         p.moveTo(0f, h)
-        while (x + paso <= size.width + paso) {
+        while (x + paso <= size.width) {
             p.lineTo(x, 0f); p.lineTo(x + u * 3, 0f); p.lineTo(x + u * 3, u * 2); p.lineTo(x + u, u * 2); p.lineTo(x + u, u)
             p.lineTo(x + u * 2, u); p.moveTo(x + u * 2, u); p.moveTo(x, h); p.lineTo(x + paso, h)
             p.moveTo(x + paso, h)

@@ -237,6 +237,7 @@ fun PantallaLugares(nav: Nav) {
         if (!Ubicacion.tieneSegundoPlano(ctx)) Aviso("Para registrar llegadas y salidas automáticamente necesitas permitir la ubicación «todo el tiempo» en Más → Permisos y sensores.")
         Seccion("Mapa emocional", "Últimos 60 días. Cada punto gris es una muestra de ubicación; los círculos son tus lugares, en verde si ahí sueles sentirte mejor que tu promedio y en rojo si peor.") {
             Tarjeta { Mapa(puntos, Repo.lugares, muestreos) }
+            io.github.ruddy2003.vestigium.ui.BotonSecundario("ver con calles →", Modifier.padding(top = 8.dp)) { nav.ir("mapa") }
         }
         Seccion("Marcar dónde estoy ahora") {
             Tarjeta {

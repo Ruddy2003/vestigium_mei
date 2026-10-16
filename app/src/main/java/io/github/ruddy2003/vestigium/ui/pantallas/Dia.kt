@@ -112,8 +112,6 @@ fun PantallaDia(nav: Nav) {
 
     val c = Repo.config
     val hoy = Fechas.diaLogico()
-    var k = 0
-    fun n() = ++k
 
     Hoja("Día", encabezado = {
         Row(Modifier.padding(top = 14.dp), verticalAlignment = Alignment.Bottom) {
@@ -123,6 +121,9 @@ fun PantallaDia(nav: Nav) {
         val fase = Luna.fase(fecha)
         Text("// ${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }) {
+        // El contador vive dentro del bloque para que la numeración se reinicie en cada recomposición.
+        var k = 0
+        fun n() = ++k
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             BotonSecundario("‹") { irA(Fechas.sumar(fecha, -1)) }
             BotonSecundario("▦ calendarium", Modifier.weight(1f)) { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
