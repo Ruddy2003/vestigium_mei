@@ -24,7 +24,7 @@ App personal de Android para registrar, a lo largo de los años, el rastro de un
 - **Datos**: exportación .zip con CSV por tabla (incluye `vm_panel.csv`, una fila por día con todo junto), respaldo automático en una carpeta y en Google Drive, importación de Obsidian, del respaldo de la versión web y de la Cronología de Google Maps.
 - **Calendario**: mes con capas de color (ánimo, sueño, pasos, pantalla, gasto, fotos, momentos, lluvia), calendas, nonas e idus; toca un día para editarlo.
 - **Fuentes automáticas**: clima, horas de luz, presión y calidad del aire (Open-Meteo, solo zona aproximada), fase lunar, fotos del día, agenda, notificaciones (solo conteos), música que suena, movimiento (a pie, vehículo…) y sesiones de ejercicio del reloj.
-- **Mapa** con calles (OpenStreetMap/CARTO): ánimo por lugar, dónde pasas el tiempo, ruta del día y lugares; mantén presionado para marcar uno.
+- **Mapa** con calles (OpenStreetMap, teñido según el tema): ánimo por lugar, dónde pasas el tiempo, ruta del día y lugares; mantén presionado para marcar uno.
 - **Escalada**: sesiones con cada bloque (grado V, Font o YDS; estilo; intentos; ángulo y rasgos), progreso, pirámide y enlace con la sesión del reloj.
 - **Biblioteca**: libros, películas, series y juegos con fechas, calificación y notas.
 - **Tu año**: el año en píxeles, mes por mes, lo más frecuente e imagen para compartir.

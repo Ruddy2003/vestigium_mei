@@ -1,6 +1,8 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
 import android.graphics.Canvas
+import android.graphics.ColorMatrix
+import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.Point
 import androidx.compose.foundation.background
@@ -49,7 +51,7 @@ import io.github.ruddy2003.vestigium.ui.esOscuro
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.osmdroid.events.MapEventsReceiver
-import org.osmdroid.tileprovider.tilesource.XYTileSource
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
 import org.osmdroid.views.MapView
@@ -58,12 +60,20 @@ import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Overlay
 import kotlin.math.max
 
-/** Mosaicos de CARTO sobre OpenStreetMap: claros con el tema de mármol, oscuros con el de basalto. */
-private fun mosaicos(oscuro: Boolean) = XYTileSource(
-    if (oscuro) "CartoOscuro" else "CartoClaro", 1, 19, 256, ".png",
-    arrayOf("a", "b", "c").map { "https://$it.basemaps.cartocdn.com/${if (oscuro) "dark_all" else "light_all"}/" }.toTypedArray(),
-    "© OpenStreetMap · © CARTO",
-)
+/**
+ * Mosaicos estándar de OpenStreetMap (no piden clave). Para que combinen con la app se tiñen en el teléfono:
+ * de día, mármol desaturado; de noche, invertidos hacia basalto.
+ */
+private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
+    val m = ColorMatrix().apply { setSaturation(if (oscuro) 0.2f else 0.45f) }
+    if (oscuro) {
+        m.postConcat(ColorMatrix(floatArrayOf(-1f, 0f, 0f, 0f, 255f, 0f, -1f, 0f, 0f, 255f, 0f, 0f, -1f, 0f, 255f, 0f, 0f, 0f, 1f, 0f)))
+        m.postConcat(ColorMatrix(floatArrayOf(0.80f, 0f, 0f, 0f, 8f, 0f, 0.82f, 0f, 0f, 10f, 0f, 0f, 0.85f, 0f, 12f, 0f, 0f, 0f, 1f, 0f)))
+    } else {
+        m.postConcat(ColorMatrix(floatArrayOf(0.97f, 0f, 0f, 0f, 6f, 0f, 0.97f, 0f, 0f, 6f, 0f, 0f, 0.95f, 0f, 4f, 0f, 0f, 0f, 1f, 0f)))
+    }
+    return ColorMatrixColorFilter(m)
+}
 
 /** Dibuja círculos en coordenadas del mapa. Mucho más rápido que un marcador por punto. */
 private class Puntos : Overlay() {
@@ -177,7 +187,8 @@ fun PantallaMapa(nav: Nav) {
                 modifier = Modifier.fillMaxSize(),
                 factory = { c ->
                     MapView(c).apply {
-                        setTileSource(mosaicos(oscuro))
+                        setTileSource(TileSourceFactory.MAPNIK)
+                        overlayManager.tilesOverlay.setColorFilter(filtroMapa(oscuro))
                         setMultiTouchControls(true)
                         isTilesScaledToDpi = true
                         zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
