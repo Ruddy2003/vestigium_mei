@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Vestigium Mei</string>
+    <string name="widget_animo_desc">Registra qué tan agradable se siente este momento con un toque</string>
+    <string name="widget_momento_desc">Guarda lo que piensas o sientes ahora, con hora y lugar</string>
+    <string name="sc_momento">Momento</string>
+    <string name="sc_momento_largo">Registrar un momento</string>
+    <string name="sc_animo">Ánimo ahora</string>
+    <string name="sc_gasto">Gasto</string>
+    <string name="sc_sueno">Sueño</string>
+    <string name="tile_momento">Momento</string>
+    <string name="tile_gasto">Gasto</string>
+    <string name="tile_animo">Ánimo</string>
+</resources>

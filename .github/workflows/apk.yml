@@ -27,8 +27,21 @@ jobs:
 
       - name: Compilar
         run: |
+          set -o pipefail
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Guardar errores para revisión
+        if: failure()
+        run: |
+          mkdir -p /tmp/ci && cd /tmp/ci
+          grep -E "^e: |error:|What went wrong|Could not|> Could|FAILED|Unresolved|AAPT|resource .* not found|Manifest merger" "$GITHUB_WORKSPACE/build.log" | head -300 > errores.txt || true
+          tail -200 "$GITHUB_WORKSPACE/build.log" > final.txt
+          git init -q && git checkout -q -b ci-log
+          git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
+          echo "${{ github.sha }} run ${{ github.run_number }}" > commit.txt
+          git add . && git commit -qm "log ${{ github.run_number }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-log
 
       - name: Preparar archivo
         run: cp app/build/outputs/apk/release/app-release.apk "vestigium-mei-${{ github.run_number }}.apk"
