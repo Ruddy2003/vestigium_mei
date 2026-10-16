@@ -5,7 +5,7 @@
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical">
         <TextView android:id="@+id/titulo_momento" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="MOMENTA" android:textColor="@color/w_oro" android:textSize="13sp" android:fontFamily="serif" android:letterSpacing="0.18" />
-        <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:background="@color/w_acento_borde" />
+        <ImageView android:importantForAccessibility="no" android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" android:layout_marginStart="8dp" android:layout_marginEnd="8dp" android:background="@color/w_acento_borde" />
         <TextView android:id="@+id/sub_momento" android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="" android:textColor="@color/w_tenue" android:textSize="10.5sp" android:fontFamily="monospace" />
     </LinearLayout>

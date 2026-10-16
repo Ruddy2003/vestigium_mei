@@ -122,6 +122,7 @@ fun PantallaMapa(nav: Nav) {
     }
     val mapa = remember { mutableStateOf<MapView?>(null) }
     val capaPuntos = remember { Puntos() }
+    val enfoque = remember { arrayOfNulls<String>(1) }
     val ciclo = LocalLifecycleOwner.current
     DisposableEffect(ciclo) {
         val obs = LifecycleEventObserver { _, e ->
@@ -149,9 +150,8 @@ fun PantallaMapa(nav: Nav) {
         "lugares" -> Repo.lugares.map { l -> Puntos.P(l.lat, l.lon, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f).toArgb(), 18f, borde = true) }
         else -> momentos.filter { it.fecha == dia }.map { m -> Puntos.P(m.lat!!, m.lon!!, MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f).toArgb(), 12f, borde = true) }
     }
-    capaPuntos.datos = datos
-    capaPuntos.ruta = if (capa == "ruta") puntos.filter { (it.precision ?: 0.0) < 150 }.map { GeoPoint(it.lat, it.lon) } else emptyList()
-    capaPuntos.colorRuta = MaterialTheme.colorScheme.primary.toArgb()
+    val ruta = if (capa == "ruta") puntos.filter { (it.precision ?: 0.0) < 150 }.map { GeoPoint(it.lat, it.lon) } else emptyList()
+    val colorRuta = MaterialTheme.colorScheme.primary.toArgb()
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -194,7 +194,16 @@ fun PantallaMapa(nav: Nav) {
                         mapa.value = this
                     }
                 },
-                update = { m -> m.invalidate() },
+                update = { m ->
+                    capaPuntos.datos = datos; capaPuntos.ruta = ruta; capaPuntos.colorRuta = colorRuta
+                    // Al cambiar al recorrido de un día, centra el mapa en él.
+                    val clave = "$capa|$dia|${ruta.size}"
+                    if (ruta.size > 1 && enfoque[0] != clave) {
+                        enfoque[0] = clave
+                        runCatching { m.zoomToBoundingBox(org.osmdroid.util.BoundingBox.fromGeoPointsSafe(ruta).increaseByScale(1.3f), false) }
+                    }
+                    m.invalidate()
+                },
             )
             if (capa == "ruta" && puntos.isEmpty()) Ayuda("Sin ubicaciones ese día.", Modifier.align(Alignment.TopCenter).padding(10.dp).background(MaterialTheme.colorScheme.surface).padding(8.dp))
         }
