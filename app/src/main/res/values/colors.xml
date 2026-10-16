@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="fondo">#ECEEEF</color>
+    <color name="tinta">#18212A</color>
+    <color name="acento">#1E6E68</color>
+    <color name="acento_suave">#D3E8E5</color>
+    <color name="superficie">#F8F9F9</color>
+    <color name="icono_fondo">#1E6E68</color>
+</resources>
