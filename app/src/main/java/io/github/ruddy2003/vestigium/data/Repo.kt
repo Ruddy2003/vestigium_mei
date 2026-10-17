@@ -325,6 +325,14 @@ object Repo {
     /** Solo para las capturas de diseño: cambia la configuración en memoria, sin base de datos. */
     fun configEnMemoria(c: Config) { config = c }
 
+    /** Solo para las capturas de diseño: datos de ejemplo en memoria. */
+    fun ejemploEnMemoria(dias: Map<String, Dia>, salud: Map<String, SaludDia>, pantalla: Map<String, PantallaDia>, gastos: List<Gasto>,
+                         momentos: List<Momento>, notifs: Map<String, NotifDia>, entorno: Map<String, EntornoDia>, nutricion: Map<String, NutricionDia>,
+                         lugares: List<Lugar>, visitas: List<Visita>, sesiones: List<Sesion>) {
+        this.dias = dias; this.salud = salud; this.pantalla = pantalla; this.gastos = gastos; this.momentos = momentos
+        this.notifs = notifs; this.entorno = entorno; this.nutricion = nutricion; this.lugares = lugares; this.visitas = visitas; this.sesiones = sesiones
+    }
+
     fun cambiarConfig(f: (Config) -> Config) {
         val n = f(config)
         db.poner("config", "config", null, JSON.encodeToString(Config.serializer(), n))
