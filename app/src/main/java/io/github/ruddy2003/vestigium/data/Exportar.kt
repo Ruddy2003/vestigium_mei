@@ -109,7 +109,7 @@ object Exportar {
     }
 
     fun filasGastos() = Repo.gastos.map {
-        linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "monto" to it.monto, "categoria" to it.categoria,
+        linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "dia_logico" to it.dia, "monto" to it.monto, "categoria" to it.categoria,
             "imprevisto" to it.imprevisto, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon)
     }
 
@@ -326,7 +326,7 @@ object Exportar {
             Repo.nutricion.keys + Repo.entrenos.keys).toSortedSet()
         val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }
         val mo = Repo.momentos.filter { it.tipo != "muestreo" }.groupBy { it.fecha }
-        val ga = Repo.gastos.groupBy { it.fecha }
+        val ga = Repo.gastos.groupBy { it.dia }
         val ej = Repo.sesiones.groupBy { it.fecha }
         val es = Repo.ascensos.groupBy { it.fecha }
         val km = runCatching { io.github.ruddy2003.vestigium.ciencia.Movilidad.kmPorDia() }.getOrDefault(emptyMap())

@@ -62,7 +62,7 @@ private data class CapaCal(val id: String, val nombre: String, val divergente: B
 
 private fun capas(): List<CapaCal> {
     val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }
-    val gastos = Repo.gastos.groupBy { it.fecha }.mapValues { e -> e.value.sumOf { it.monto } }
+    val gastos = Repo.gastos.groupBy { it.dia }.mapValues { e -> e.value.sumOf { it.monto } }
     val fijo = { a: Double, b: Double -> { _: List<Double> -> a to b } }
     val datos = { xs: List<Double> -> (xs.minOrNull() ?: 0.0) to (xs.maxOrNull()?.takeIf { it > 0 } ?: 1.0) }
     return listOf(

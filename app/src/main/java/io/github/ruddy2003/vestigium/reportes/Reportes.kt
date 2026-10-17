@@ -87,7 +87,7 @@ object Reportes {
         val salud = fechas.mapNotNull { Repo.salud[it] }
         val pant = fechas.mapNotNull { Repo.pantalla[it] }
         val ent = fechas.mapNotNull { Repo.entorno[it] }
-        val gastos = Repo.gastos.filter { it.fecha in conjunto }
+        val gastos = Repo.gastos.filter { it.dia in conjunto }
         val escalas = Repo.respuestas.filter { it.fecha in conjunto }.map { r ->
             val inst = io.github.ruddy2003.vestigium.ciencia.Escalas.por(r.instrumento)
             (inst?.nombre ?: r.instrumento) + ": " + r.puntajes.entries.joinToString(" · ") { "${it.key} ${"%.0f".format(it.value)}" }

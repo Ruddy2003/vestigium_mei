@@ -165,7 +165,7 @@ object Estadistica {
             r["muestreo_activacion"] = media(mu.mapNotNull { it.activacion?.toDouble() })
             Catalogo.MOMENTOS.forEach { t -> r["n_${t.id}"] = lista.count { it.tipo == t.id }.toDouble() }
         }
-        Repo.gastos.groupBy { it.fecha }.forEach { (f, lista) ->
+        Repo.gastos.groupBy { it.dia }.forEach { (f, lista) ->
             val r = fila(f); r["gasto_total"] = lista.sumOf { it.monto }; r["gasto_imprevisto"] = b(lista.any { it.imprevisto })
         }
         Repo.salud.forEach { (f, s) ->

@@ -2,7 +2,19 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import io.github.ruddy2003.vestigium.ui.Ayuda
+import java.time.LocalDateTime
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,9 +75,20 @@ fun PantallaGastos() {
     var error by remember { mutableStateOf<String?>(null) }
     var mes by remember { mutableStateOf(Fechas.mesDe(Fechas.hoyCalendario())) }
     var armado by remember { mutableStateOf<String?>(null) }
+    // null = ahora. Si se elige otra fecha u hora, se guarda tal cual y sin ubicación (la de ahora no sería la del pago).
+    var cuando by remember { mutableStateOf<LocalDateTime?>(null) }
+    var editando by remember { mutableStateOf<Gasto?>(null) }
+
+    fun limpiar() { monto = ""; nota = ""; imprevisto = false; cuando = null; editando = null; error = null }
+    fun elegirCuando() {
+        val base = cuando ?: LocalDateTime.now()
+        DatePickerDialog(ctx, { _, y, m, d ->
+            TimePickerDialog(ctx, { _, h, min -> cuando = LocalDateTime.of(y, m + 1, d, h, min) }, base.hour, base.minute, true).show()
+        }, base.year, base.monthValue - 1, base.dayOfMonth).apply { datePicker.maxDate = System.currentTimeMillis() }.show()
+    }
 
     Hoja("Gastos", subtitulo = "Registra en el momento de pagar. Lo que se cuadra después ya no dice en qué gastaste.") {
-        Seccion("Registrar") {
+        Seccion(if (editando != null) "Corregir gasto" else "Registrar", latin = if (editando != null) "CORRIGERE" else io.github.ruddy2003.vestigium.ui.Romano.latin("Registrar")) {
             Tarjeta {
                 OutlinedTextField(value = monto, onValueChange = { monto = it.filter { c -> c.isDigit() || c == '.' }; error = null }, modifier = Modifier.fillMaxWidth(),
                     prefix = { Text("$ ") }, placeholder = { Text("0") }, singleLine = true,
@@ -74,26 +97,41 @@ fun PantallaGastos() {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Repo.config.categorias.forEach { c -> Ficha(c, cat == c) { cat = if (cat == c) null else c; error = null } }
                 }
+                Etiqueta("Cuándo")
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("ahora", cuando == null) { cuando = null }
+                    val c = cuando
+                    Ficha(if (c == null) "otra fecha u hora…" else "${Fechas.corto(Fechas.iso(c.toLocalDate()))} · ${"%02d:%02d".format(c.hour, c.minute)}", c != null) { elegirCuando() }
+                }
+                cuando?.takeIf { it.hour < 5 }?.let {
+                    Ayuda("De madrugada: en tu diario y en R cuenta para el ${Fechas.corto(Fechas.iso(it.toLocalDate().minusDays(1)))}, como los momentos.", Modifier.padding(top = 4.dp))
+                }
                 Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
                 OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, singleLine = true)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
-                BotonPrincipal("Registrar", Modifier.fillMaxWidth().padding(top = 10.dp)) {
+                BotonPrincipal(if (editando != null) "Guardar cambios" else "Registrar", Modifier.fillMaxWidth().padding(top = 10.dp)) {
                     val v = monto.toDoubleOrNull()
                     when {
                         v == null || v <= 0 -> error = "Escribe un monto mayor a cero."
                         cat == null -> error = "Elige una categoría."
                         else -> {
-                            val g = Gasto(Repo.nuevoId(), Fechas.hoyCalendario(), Fechas.horaAhora(), Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim())
+                            val c = cuando
+                            val fecha = c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario()
+                            val hora = c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora()
+                            val previo = editando
+                            val g = previo?.copy(fecha = fecha, hora = hora, monto = Math.round(v * 100) / 100.0, categoria = cat!!, imprevisto = imprevisto, nota = nota.trim())
+                                ?: Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim())
                             Repo.guardarGasto(g)
-                            scope.launch { Ubicacion.ultima(ctx)?.let { Repo.guardarGasto(g.copy(lat = it.latitude, lon = it.longitude)) } }
-                            monto = ""; nota = ""; imprevisto = false; mes = Fechas.mesDe(g.fecha)
+                            if (previo == null && c == null) scope.launch { Ubicacion.ultima(ctx)?.let { Repo.guardarGasto(g.copy(lat = it.latitude, lon = it.longitude)) } }
+                            limpiar(); mes = Fechas.mesDe(g.fecha)
                         }
                     }
                 }
+                if (editando != null) TextButton(onClick = { limpiar(); cat = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) }
             }
         }
 
-        val items = Repo.gastos.filter { it.fecha.startsWith(mes) }.sortedByDescending { it.fecha + it.hora }
+        val items = Repo.gastos.filter { it.dia.startsWith(mes) }.sortedByDescending { it.dia + (if (it.dia != it.fecha) "2" else "1") + it.hora }
         val total = items.sumOf { it.monto }
         val imp = items.filter { it.imprevisto }.sumOf { it.monto }
         Row(Modifier.fillMaxWidth().padding(top = 22.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -106,6 +144,7 @@ fun PantallaGastos() {
         }
         if (items.isEmpty()) { Box(Modifier.padding(top = 12.dp)) { Vacio("Sin gastos registrados este mes.") } }
         else {
+            Box(Modifier.padding(top = 12.dp)) { Tarjeta { GastoPorDia(mes, items) } }
             val porCat = items.groupBy { it.categoria }.mapValues { e -> e.value.sumOf { it.monto } }.entries.sortedByDescending { it.value }
             val max = porCat.first().value
             Box(Modifier.padding(top = 12.dp)) {
@@ -123,14 +162,20 @@ fun PantallaGastos() {
             }
             var ultimo = ""
             items.forEach { g ->
-                if (g.fecha != ultimo) {
-                    ultimo = g.fecha
-                    Text(Fechas.corto(g.fecha).uppercase(), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp, bottom = 2.dp))
+                if (g.dia != ultimo) {
+                    ultimo = g.dia
+                    Text(Fechas.corto(g.dia).uppercase(), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp, bottom = 2.dp))
                 }
                 Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
+                    // Tocar un gasto lo carga arriba para corregir monto, categoría, fecha u hora.
+                    Column(Modifier.weight(1f).clickable {
+                        editando = g; monto = if (g.monto % 1.0 == 0.0) g.monto.toLong().toString() else g.monto.toString(); cat = g.categoria
+                        imprevisto = g.imprevisto; nota = g.nota; error = null
+                        cuando = runCatching { LocalDateTime.of(Fechas.parse(g.fecha), java.time.LocalTime.parse(g.hora.take(5))) }.getOrNull()
+                    }) {
                         Text(g.categoria + if (g.imprevisto) " · imprevisto" else "", style = MaterialTheme.typography.bodyLarge)
-                        Text(g.hora + if (g.nota.isNotBlank()) " · ${g.nota}" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text((if (g.dia != g.fecha) "${g.hora} de la madrugada" else g.hora) + if (g.nota.isNotBlank()) " · ${g.nota}" else "",
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text(dinero(g.monto), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo)
                     TextButton(onClick = { if (armado == g.id) { Repo.borrarGasto(g.id); armado = null } else armado = g.id }) {
@@ -140,4 +185,32 @@ fun PantallaGastos() {
             }
         }
     }
+}
+
+/** Barras del gasto de cada día del mes; los imprevistos en otro tono encima. */
+@Composable
+private fun GastoPorDia(mes: String, items: List<Gasto>) {
+    val dias = Fechas.parse("$mes-01").lengthOfMonth()
+    val porDia = DoubleArray(dias); val imp = DoubleArray(dias)
+    items.forEach { g -> val d = g.dia.takeLast(2).toInt() - 1; if (d in 0 until dias) { porDia[d] += g.monto; if (g.imprevisto) imp[d] += g.monto } }
+    val max = porDia.maxOrNull()?.takeIf { it > 0 } ?: return
+    val diasConGasto = porDia.count { it > 0 }
+    val barra = MaterialTheme.colorScheme.primary
+    val alerta = MaterialTheme.colorScheme.error
+    val texto = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    Etiqueta("por día")
+    Canvas(Modifier.fillMaxWidth().aspectRatio(2.8f)) {
+        val abajo = 26f
+        val w = size.width / dias
+        val pincel = android.graphics.Paint().apply { color = texto; textSize = 22f; isAntiAlias = true; textAlign = android.graphics.Paint.Align.CENTER }
+        for (k in 0 until dias) {
+            val h = (size.height - abajo) * (porDia[k] / max).toFloat()
+            if (h > 0) drawRoundRect(barra, Offset(k * w + w * 0.15f, size.height - abajo - h), Size(w * 0.7f, h), CornerRadius(2f, 2f))
+            val hi = (size.height - abajo) * (imp[k] / max).toFloat()
+            if (hi > 0) drawRoundRect(alerta, Offset(k * w + w * 0.15f, size.height - abajo - hi), Size(w * 0.7f, hi), CornerRadius(2f, 2f))
+            if (k == 0 || (k + 1) % 5 == 0) drawContext.canvas.nativeCanvas.drawText("${k + 1}", k * w + w / 2, size.height - 4f, pincel)
+        }
+    }
+    val top = porDia.indices.maxBy { porDia[it] }
+    Ayuda("Día más alto: el ${top + 1} con ${dinero(porDia[top])} · gastaste en $diasConGasto de $dias días · en rojo, imprevistos.")
 }

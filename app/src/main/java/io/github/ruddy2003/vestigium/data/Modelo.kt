@@ -85,7 +85,10 @@ data class Gasto(
     val nota: String = "",
     val lat: Double? = null,
     val lon: Double? = null,
-)
+) {
+    /** Día del diario al que pertenece: un gasto de madrugada (antes de las 5:00) cuenta para el día anterior, como los momentos. */
+    val dia: String get() = if (hora.length >= 2 && (hora.take(2).toIntOrNull() ?: 12) < 5) Fechas.sumar(fecha, -1) else fecha
+}
 
 @Serializable
 data class Respuesta(
