@@ -54,7 +54,10 @@ object Widgets {
     private val BOTONES_ANIMO = intArrayOf(R.id.a1, R.id.a2, R.id.a3, R.id.a4, R.id.a5, R.id.a6, R.id.a7)
     private val BOTONES_MOMENTO = intArrayOf(R.id.m1, R.id.m2, R.id.m3, R.id.m4, R.id.m5, R.id.m6, R.id.m7, R.id.m8)
 
-    private fun pi(ctx: Context, req: Int, i: Intent): PendingIntent =
+    /** Puede ser nulo fuera de un teléfono (en las capturas de diseño). */
+    private fun clic(v: RemoteViews, id: Int, p: PendingIntent?) { if (p != null) v.setOnClickPendingIntent(id, p) }
+
+    private fun pi(ctx: Context, req: Int, i: Intent): PendingIntent? =
         PendingIntent.getActivity(ctx, req, i, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
     private fun quick(ctx: Context, modo: String) = Intent(ctx, QuickActivity::class.java)
@@ -71,7 +74,7 @@ object Widgets {
         v.setTextViewText(R.id.sub_animo, if (hoy == 0) Estilo.fecha(Fechas.diaLogico()) else "$hoy hoy")
         BOTONES_ANIMO.forEachIndexed { i, id ->
             v.setTextColor(id, colores().animo[i])
-            v.setOnClickPendingIntent(id, pi(ctx, 3100 + i, quick(ctx, QuickActivity.M_ANIMO).putExtra(QuickActivity.VALENCIA, i + 1)))
+            clic(v, id, pi(ctx, 3100 + i, quick(ctx, QuickActivity.M_ANIMO).putExtra(QuickActivity.VALENCIA, i + 1)))
         }
         return v
     }
@@ -87,10 +90,10 @@ object Widgets {
         Catalogo.MOMENTOS_WIDGET.forEachIndexed { i, tipo ->
             val t = Catalogo.tipo(tipo) ?: return@forEachIndexed
             v.setTextViewText(BOTONES_MOMENTO[i], if (discreto) t.discreto else t.nombre)
-            v.setOnClickPendingIntent(BOTONES_MOMENTO[i], pi(ctx, 3200 + i, quick(ctx, QuickActivity.M_MOMENTO).putExtra(QuickActivity.TIPO, tipo)))
+            clic(v, BOTONES_MOMENTO[i], pi(ctx, 3200 + i, quick(ctx, QuickActivity.M_MOMENTO).putExtra(QuickActivity.TIPO, tipo)))
         }
-        v.setOnClickPendingIntent(R.id.m_mas, pi(ctx, 3301, quick(ctx, QuickActivity.M_MENU)))
-        v.setOnClickPendingIntent(R.id.m_diario, pi(ctx, 3302, abrir(ctx, "dia")))
+        clic(v, R.id.m_mas, pi(ctx, 3301, quick(ctx, QuickActivity.M_MENU)))
+        clic(v, R.id.m_diario, pi(ctx, 3302, abrir(ctx, "dia")))
         return v
     }
 
@@ -117,10 +120,10 @@ object Widgets {
             else {
                 v.setViewVisibility(id, android.view.View.VISIBLE)
                 v.setTextViewText(id, c)
-                v.setOnClickPendingIntent(id, pi(ctx, 3500 + i, quick(ctx, QuickActivity.M_GASTO).putExtra(QuickActivity.CATEGORIA, c)))
+                clic(v, id, pi(ctx, 3500 + i, quick(ctx, QuickActivity.M_GASTO).putExtra(QuickActivity.CATEGORIA, c)))
             }
         }
-        v.setOnClickPendingIntent(R.id.g_otro, pi(ctx, 3510, quick(ctx, QuickActivity.M_GASTO)))
+        clic(v, R.id.g_otro, pi(ctx, 3510, quick(ctx, QuickActivity.M_GASTO)))
         return v
     }
 
@@ -139,9 +142,9 @@ object Widgets {
         BOTONES_SUENO.forEachIndexed { i, id ->
             v.setTextColor(id, if (d?.sueno_calidad == i + 1) col.sobreActivo else tonos[i])
             v.setInt(id, "setBackgroundResource", if (d?.sueno_calidad == i + 1) col.activo else col.boton)
-            v.setOnClickPendingIntent(id, pi(ctx, 3600 + i, quick(ctx, QuickActivity.M_SUENO).putExtra(QuickActivity.CALIDAD, i + 1)))
+            clic(v, id, pi(ctx, 3600 + i, quick(ctx, QuickActivity.M_SUENO).putExtra(QuickActivity.CALIDAD, i + 1)))
         }
-        v.setOnClickPendingIntent(R.id.s_sueno, pi(ctx, 3610, quick(ctx, QuickActivity.M_SUENO).putExtra(QuickActivity.RECORDADO, true)))
+        clic(v, R.id.s_sueno, pi(ctx, 3610, quick(ctx, QuickActivity.M_SUENO).putExtra(QuickActivity.RECORDADO, true)))
         return v
     }
 
@@ -164,9 +167,9 @@ object Widgets {
             v.setTextViewText(id, (if (hecho) "▣  " else "□  ") + h.nombre)
             v.setTextColor(id, if (hecho) colores().oro else colores().texto)
             val toque = Intent(ctx, HabitoReceiver::class.java).putExtra("habito", h.id)
-            v.setOnClickPendingIntent(id, PendingIntent.getBroadcast(ctx, 3700 + i, toque, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+            clic(v, id, PendingIntent.getBroadcast(ctx, 3700 + i, toque, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
         }
-        if (hs.isEmpty()) v.setOnClickPendingIntent(R.id.raiz_habitos, pi(ctx, 3710, abrir(ctx, "habitos")))
+        if (hs.isEmpty()) clic(v, R.id.raiz_habitos, pi(ctx, 3710, abrir(ctx, "habitos")))
         return v
     }
 
@@ -203,7 +206,7 @@ object Widgets {
             c.drawText("${d.dayOfMonth}", (x + celda / 2).toFloat(), (y + celda / 2 + 8).toFloat(), t)
         }
         v.setImageViewBitmap(R.id.img_mes, bmp)
-        v.setOnClickPendingIntent(R.id.raiz_mes, pi(ctx, 3800, abrir(ctx, "calendario")))
+        clic(v, R.id.raiz_mes, pi(ctx, 3800, abrir(ctx, "calendario")))
         return v
     }
 
@@ -242,7 +245,7 @@ object Widgets {
         if (Repo.config.discreto) l.retainAll { k -> listOf("animus", "somnus", "passus").any { k.startsWith(Estilo.clave(it)) } }
         v.setTextViewText(R.id.hoy_lineas, l.joinToString("\n"))
         val abrir = Intent(ctx, MainActivity::class.java).putExtra(MainActivity.PANTALLA, "dia").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        v.setOnClickPendingIntent(R.id.raiz_hoy, pi(ctx, 3400, abrir))
+        clic(v, R.id.raiz_hoy, pi(ctx, 3400, abrir))
         return v
     }
 
@@ -278,7 +281,7 @@ object Widgets {
             c.drawText(nombre, cx, cy + 140f, etq)
         }
         v.setImageViewBitmap(R.id.img_anillos, bmp)
-        v.setOnClickPendingIntent(R.id.raiz_anillos, pi(ctx, 3900, abrir(ctx, "dia")))
+        clic(v, R.id.raiz_anillos, pi(ctx, 3900, abrir(ctx, "dia")))
         return v
     }
 
@@ -301,12 +304,12 @@ object Widgets {
             v.setImageViewBitmap(R.id.img_foto, bmp)
             v.setTextViewText(R.id.sub_foto, rotulo)
             v.setTextViewText(R.id.pie_foto, Fechas.titulo(fecha).lowercase() + if (fecha != hoy) " · ${fecha.take(4)}" else "")
-            v.setOnClickPendingIntent(R.id.raiz_foto, pi(ctx, 3910, abrir(ctx, "dia:$fecha")))
+            clic(v, R.id.raiz_foto, pi(ctx, 3910, abrir(ctx, "dia:$fecha")))
         } else {
             v.setImageViewBitmap(R.id.img_foto, android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888))
             v.setTextViewText(R.id.sub_foto, "")
             v.setTextViewText(R.id.pie_foto, "En Día, mantén presionada una foto para elegirla como la del día.")
-            v.setOnClickPendingIntent(R.id.raiz_foto, pi(ctx, 3910, abrir(ctx, "dia")))
+            clic(v, R.id.raiz_foto, pi(ctx, 3910, abrir(ctx, "dia")))
         }
         return v
     }
@@ -337,7 +340,7 @@ object Widgets {
         v.setTextViewText(R.id.etiqueta_cifra, etiqueta)
         v.setTextViewText(R.id.sub_cifra, "${CIFRAS.indexOf(id) + 1}/${CIFRAS.size}")
         // Tocar el widget pasa a la siguiente cifra.
-        v.setOnClickPendingIntent(R.id.raiz_cifra, PendingIntent.getBroadcast(ctx, 3920, Intent(ctx, CifraReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+        clic(v, R.id.raiz_cifra, PendingIntent.getBroadcast(ctx, 3920, Intent(ctx, CifraReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
         return v
     }
 
