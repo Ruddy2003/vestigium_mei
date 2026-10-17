@@ -147,7 +147,26 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_mes_info" />
         </receiver>
+        <receiver android:name=".widget.WidgetAnillos" android:exported="false" android:label="Hoy en anillos">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_anillos_info" />
+        </receiver>
+        <receiver android:name=".widget.WidgetFoto" android:exported="false" android:label="Foto del día">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_foto_info" />
+        </receiver>
+        <receiver android:name=".widget.WidgetCifra" android:exported="false" android:label="Una cifra">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_cifra_info" />
+        </receiver>
         <receiver android:name=".widget.HabitoReceiver" android:exported="false" />
+        <receiver android:name=".widget.CifraReceiver" android:exported="false" />
         <receiver android:name=".sensores.GeocercaReceiver" android:exported="false" />
         <receiver android:name=".sensores.ActividadReceiver" android:exported="false" />
 

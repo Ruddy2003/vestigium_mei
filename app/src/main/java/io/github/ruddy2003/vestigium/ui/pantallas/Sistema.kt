@@ -256,6 +256,7 @@ fun PantallaAjustes(nav: Nav) {
                 Etiqueta("Tamaño del texto: ${(c.letra * 100).toInt()}%")
                 Slider(value = c.letra, onValueChange = { v -> cambiar { it.copy(letra = (Math.round(v * 20) / 20f)) } }, valueRange = 0.8f..1.4f, steps = 11)
                 Text("Así se lee un renglón del diario con este tamaño.", style = MaterialTheme.typography.bodyLarge)
+                Interruptor("Modo nocturno cálido", c.nocturno, "De 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo, para escribir el diario sin despabilarte.") { v -> cambiar { it.copy(nocturno = v) } }
             }
         }
         Seccion("Avisos de ánimo durante el día", "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {

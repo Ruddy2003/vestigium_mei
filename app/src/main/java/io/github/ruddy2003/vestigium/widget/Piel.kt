@@ -14,3 +14,9 @@ internal object Piel {
     val MOMENTO = Partes(intArrayOf(R.id.raiz_momento), intArrayOf(R.id.titulo_momento, R.id.m_mas, R.id.m_diario), intArrayOf(R.id.m1, R.id.m2, R.id.m3, R.id.m4, R.id.m5, R.id.m6, R.id.m7, R.id.m8), intArrayOf(R.id.sub_momento, R.id.pregunta_momento), intArrayOf(R.id.m1, R.id.m2, R.id.m3, R.id.m4, R.id.m5, R.id.m6, R.id.m7, R.id.m8), intArrayOf(R.id.m_mas, R.id.m_diario), intArrayOf(R.id.p_momento_1))
     val SUENO = Partes(intArrayOf(R.id.raiz_sueno), intArrayOf(R.id.titulo_sueno, R.id.s_sueno), intArrayOf(R.id.s1, R.id.s2, R.id.s3, R.id.s4, R.id.s5), intArrayOf(R.id.sub_sueno, R.id.pregunta_sueno), intArrayOf(R.id.s1, R.id.s2, R.id.s3, R.id.s4, R.id.s5), intArrayOf(R.id.s_sueno), intArrayOf(R.id.p_sueno_1))
 }
+
+internal object PielNuevos {
+    val ANILLOS = Partes(intArrayOf(R.id.raiz_anillos), intArrayOf(R.id.titulo_anillos), intArrayOf(), intArrayOf(R.id.sub_anillos), intArrayOf(), intArrayOf(), intArrayOf(R.id.p_anillos_1))
+    val FOTO = Partes(intArrayOf(R.id.raiz_foto), intArrayOf(R.id.titulo_foto), intArrayOf(), intArrayOf(R.id.sub_foto, R.id.pie_foto), intArrayOf(), intArrayOf(), intArrayOf(R.id.p_foto_1))
+    val CIFRA = Partes(intArrayOf(R.id.raiz_cifra), intArrayOf(R.id.titulo_cifra), intArrayOf(R.id.valor_cifra), intArrayOf(R.id.sub_cifra, R.id.etiqueta_cifra), intArrayOf(), intArrayOf(), intArrayOf(R.id.p_cifra_1))
+}

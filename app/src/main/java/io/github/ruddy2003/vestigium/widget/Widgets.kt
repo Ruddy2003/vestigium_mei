@@ -246,6 +246,101 @@ object Widgets {
         return v
     }
 
+    // ---------- Hoy en anillos ----------
+    fun vistaAnillos(ctx: Context): RemoteViews {
+        val v = RemoteViews(ctx.packageName, R.layout.widget_anillos)
+        pintar(v, PielNuevos.ANILLOS)
+        val col = colores()
+        val f = Fechas.diaLogico()
+        v.setTextViewText(R.id.titulo_anillos, Estilo.widget("hoy"))
+        val d = Repo.dias[f]
+        val diario = listOf(d?.valencia != null, d?.nota?.isNotBlank() == true, d?.prediccion_manana != null).count { it } / 3.0
+        val sueno = listOf(d?.sueno_calidad != null, Repo.salud[f]?.sueno_min != null).count { it } / 2.0
+        val plan = Repo.config.plan_muestreo[Fechas.hoyCalendario()].orEmpty().size
+        val hechos = Repo.momentos.count { it.fecha == f && it.tipo == "muestreo" }
+        val avisos = if (plan == 0) (if (hechos > 0) 1.0 else 0.0) else (hechos.toDouble() / plan).coerceAtMost(1.0)
+        val pasos = (Repo.salud[f]?.pasos ?: 0L).toDouble()
+        val anillos = listOf("diario" to diario, "sueño" to sueno, "avisos" to avisos, "pasos" to (pasos / 8000).coerceAtMost(1.0))
+        val total = anillos.sumOf { it.second } / anillos.size
+        v.setTextViewText(R.id.sub_anillos, "%.0f%%".format(total * 100))
+        val lado = 300; val bmp = android.graphics.Bitmap.createBitmap(lado * 2, lado * 2, android.graphics.Bitmap.Config.ARGB_8888)
+        val c = android.graphics.Canvas(bmp)
+        val pista = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 26f; color = col.vacio }
+        val arco = android.graphics.Paint(pista).apply { color = col.oro; strokeCap = android.graphics.Paint.Cap.ROUND }
+        val num = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = col.texto; textSize = 52f; typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER }
+        val etq = android.graphics.Paint(num).apply { color = col.tenue; textSize = 30f }
+        anillos.forEachIndexed { i, (nombre, p) ->
+            val cx = (i % 2) * lado + lado / 2f; val cy = (i / 2) * lado + lado / 2f - 14f
+            val r = android.graphics.RectF(cx - 92f, cy - 92f, cx + 92f, cy + 92f)
+            c.drawArc(r, 0f, 360f, false, pista)
+            if (p > 0) c.drawArc(r, -90f, (360 * p).toFloat(), false, arco)
+            c.drawText(if (p >= 1.0) "✓" else "%.0f".format(p * 100), cx, cy + 18f, num)
+            c.drawText(nombre, cx, cy + 140f, etq)
+        }
+        v.setImageViewBitmap(R.id.img_anillos, bmp)
+        v.setOnClickPendingIntent(R.id.raiz_anillos, pi(ctx, 3900, abrir(ctx, "dia")))
+        return v
+    }
+
+    // ---------- Foto del día ----------
+    fun vistaFoto(ctx: Context): RemoteViews {
+        val v = RemoteViews(ctx.packageName, R.layout.widget_foto)
+        pintar(v, PielNuevos.FOTO)
+        v.setTextViewText(R.id.titulo_foto, Estilo.widget("foto"))
+        val hoy = Fechas.diaLogico()
+        val haceUnAnio = Fechas.iso(Fechas.parse(hoy).minusYears(1))
+        // Hoy si ya elegiste; si no, la de hace un año; si tampoco, la más reciente que hayas elegido.
+        val (fecha, rotulo) = when {
+            Repo.dias[hoy]?.foto != null -> hoy to "hoy"
+            Repo.dias[haceUnAnio]?.foto != null -> haceUnAnio to "hace un año"
+            else -> (Repo.dias.values.filter { it.foto != null }.maxByOrNull { it.fecha }?.fecha ?: "") to "la más reciente"
+        }
+        val uri = Repo.dias[fecha]?.foto
+        val bmp = uri?.let { runCatching { io.github.ruddy2003.vestigium.sensores.Galeria.miniatura(ctx, android.net.Uri.parse(it), 640) }.getOrNull() }
+        if (bmp != null) {
+            v.setImageViewBitmap(R.id.img_foto, bmp)
+            v.setTextViewText(R.id.sub_foto, rotulo)
+            v.setTextViewText(R.id.pie_foto, Fechas.titulo(fecha).lowercase() + if (fecha != hoy) " · ${fecha.take(4)}" else "")
+            v.setOnClickPendingIntent(R.id.raiz_foto, pi(ctx, 3910, abrir(ctx, "dia:$fecha")))
+        } else {
+            v.setImageViewBitmap(R.id.img_foto, android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888))
+            v.setTextViewText(R.id.sub_foto, "")
+            v.setTextViewText(R.id.pie_foto, "En Día, mantén presionada una foto para elegirla como la del día.")
+            v.setOnClickPendingIntent(R.id.raiz_foto, pi(ctx, 3910, abrir(ctx, "dia")))
+        }
+        return v
+    }
+
+    // ---------- Una cifra ----------
+    val CIFRAS = listOf("racha", "dias", "pasos", "km", "gasto", "canciones", "pantalla")
+
+    fun cifra(id: String): Pair<String, String> {
+        val hoy = Fechas.diaLogico()
+        return when (id) {
+            "racha" -> "${io.github.ruddy2003.vestigium.ui.pantallas.racha(hoy)}" to "días seguidos con diario"
+            "dias" -> "${Repo.dias.values.count { it.valencia != null || it.nota.isNotBlank() }}" to "días con diario en total"
+            "pasos" -> "%,d".format(Repo.salud[hoy]?.pasos ?: 0L) to "pasos hoy"
+            "km" -> "%.1f".format(runCatching { io.github.ruddy2003.vestigium.ciencia.Movilidad.kmEntre(Fechas.lunesDe(hoy), hoy).values.sum() }.getOrDefault(0.0)) to "km esta semana"
+            "gasto" -> "$%,.0f".format(Repo.gastos.filter { it.dia.startsWith(hoy.take(7)) }.sumOf { it.monto }) to "gastado este mes"
+            "canciones" -> "${runCatching { Repo.escuchas(hoy, hoy).size }.getOrDefault(0)}" to "canciones hoy"
+            else -> (Repo.pantalla[hoy]?.total_min?.let { "%d:%02d".format(it / 60, it % 60) } ?: "—") to "horas de pantalla hoy"
+        }
+    }
+
+    fun vistaCifra(ctx: Context): RemoteViews {
+        val v = RemoteViews(ctx.packageName, R.layout.widget_cifra)
+        pintar(v, PielNuevos.CIFRA)
+        v.setTextViewText(R.id.titulo_cifra, Estilo.widget("cifra"))
+        val id = Repo.config.widget_cifra.takeIf { it in CIFRAS } ?: "racha"
+        val (valor, etiqueta) = cifra(id)
+        v.setTextViewText(R.id.valor_cifra, valor)
+        v.setTextViewText(R.id.etiqueta_cifra, etiqueta)
+        v.setTextViewText(R.id.sub_cifra, "${CIFRAS.indexOf(id) + 1}/${CIFRAS.size}")
+        // Tocar el widget pasa a la siguiente cifra.
+        v.setOnClickPendingIntent(R.id.raiz_cifra, PendingIntent.getBroadcast(ctx, 3920, Intent(ctx, CifraReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
+        return v
+    }
+
     fun actualizar(ctx: Context) {
         val m = AppWidgetManager.getInstance(ctx)
         m.getAppWidgetIds(ComponentName(ctx, WidgetAnimo::class.java)).forEach { m.updateAppWidget(it, vistaAnimo(ctx)) }
@@ -255,6 +350,9 @@ object Widgets {
         m.getAppWidgetIds(ComponentName(ctx, WidgetSueno::class.java)).forEach { m.updateAppWidget(it, vistaSueno(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, WidgetHabitos::class.java)).forEach { m.updateAppWidget(it, vistaHabitos(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, WidgetMes::class.java)).forEach { m.updateAppWidget(it, vistaMes(ctx)) }
+        m.getAppWidgetIds(ComponentName(ctx, WidgetAnillos::class.java)).forEach { m.updateAppWidget(it, vistaAnillos(ctx)) }
+        m.getAppWidgetIds(ComponentName(ctx, WidgetFoto::class.java)).forEach { m.updateAppWidget(it, vistaFoto(ctx)) }
+        m.getAppWidgetIds(ComponentName(ctx, WidgetCifra::class.java)).forEach { m.updateAppWidget(it, vistaCifra(ctx)) }
     }
 }
 
@@ -312,6 +410,35 @@ class HabitoReceiver : android.content.BroadcastReceiver() {
         val hecho = d.habitos[id] == true
         Repo.guardarDia(d.copy(habitos = if (hecho) d.habitos - id else d.habitos + (id to true)))
         // Repo publica el cambio en el hilo principal; el widget se redibuja justo después.
+        android.os.Handler(android.os.Looper.getMainLooper()).post { runCatching { Widgets.actualizar(context) } }
+    }
+}
+
+class WidgetAnillos : AppWidgetProvider() {
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        Repo.init(context); appWidgetIds.forEach { appWidgetManager.updateAppWidget(it, Widgets.vistaAnillos(context)) }
+    }
+}
+
+class WidgetFoto : AppWidgetProvider() {
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        Repo.init(context); appWidgetIds.forEach { appWidgetManager.updateAppWidget(it, Widgets.vistaFoto(context)) }
+    }
+}
+
+class WidgetCifra : AppWidgetProvider() {
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        Repo.init(context); appWidgetIds.forEach { appWidgetManager.updateAppWidget(it, Widgets.vistaCifra(context)) }
+    }
+}
+
+/** Pasa el widget de una cifra a la siguiente. */
+class CifraReceiver : android.content.BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        Repo.init(context)
+        val l = Widgets.CIFRAS
+        val sig = l[(l.indexOf(Repo.config.widget_cifra).coerceAtLeast(0) + 1) % l.size]
+        Repo.cambiarConfig { it.copy(widget_cifra = sig) }
         android.os.Handler(android.os.Looper.getMainLooper()).post { runCatching { Widgets.actualizar(context) } }
     }
 }

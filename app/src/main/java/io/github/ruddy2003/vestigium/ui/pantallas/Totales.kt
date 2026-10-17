@@ -36,6 +36,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.ciencia.Totales
@@ -55,7 +56,7 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
 @Composable
-fun PantallaTotales(nav: Nav) {
+fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
     val ctx = LocalContext.current
     val hoy = Fechas.diaLogico()
     var periodo by remember { mutableStateOf("todo") }
@@ -77,7 +78,9 @@ fun PantallaTotales(nav: Nav) {
     var todos by remember { mutableStateOf(false) }
     var abierta by remember { mutableStateOf<Pair<Totales.Indice, Totales.Entrada>?>(null) }
 
-    Hoja("Totales", nav.atras, "Todo lo acumulado: cuánto, cuántas veces y desde cuándo. Cada fuente empezó en una fecha distinta, así que cada cifra dice desde cuándo cuenta.", latin = "SVMMA OMNIVM") {
+    val foco = remember { androidx.compose.ui.focus.FocusRequester() }
+    if (buscar) androidx.compose.runtime.LaunchedEffect(Unit) { kotlinx.coroutines.delay(150); runCatching { foco.requestFocus() } }
+    Hoja(if (buscar) "Buscar" else "Totales", nav.atras, "Todo lo acumulado: cuánto, cuántas veces y desde cuándo. Cada fuente empezó en una fecha distinta, así que cada cifra dice desde cuándo cuenta.", latin = if (buscar) "QVAERERE" else "SVMMA OMNIVM") {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("todo", periodo == "todo") { periodo = "todo" }
             Ficha("este año", periodo == "anio") { periodo = "anio" }
@@ -90,14 +93,17 @@ fun PantallaTotales(nav: Nav) {
         }
         Ayuda(if (periodo == "todo") "Desde el primer dato que tengas hasta hoy." else "Del ${Totales.fecha(desde)} a hoy.", Modifier.padding(top = 4.dp))
         OutlinedTextField(
-            busqueda, { busqueda = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
-            placeholder = { Text("Buscar: plátano, @persona, artista, lugar, ejercicio…") },
+            busqueda, { busqueda = it }, Modifier.fillMaxWidth().padding(top = 8.dp).focusRequester(foco), singleLine = true,
+            placeholder = { Text("Buscar en todo: diario, plátano, @persona, artista, lugar…") },
             trailingIcon = if (busqueda.isNotEmpty()) ({ TextButton(onClick = { busqueda = "" }) { Text("×") } }) else null,
         )
         val r = res
         when {
             r == null -> Ayuda("Sumando…", Modifier.padding(top = 12.dp))
-            busqueda.isNotBlank() -> Resultados(r, busqueda) { i, e -> abierta = i to e }
+            busqueda.isNotBlank() -> {
+                EnDiario(busqueda, desde, hoy) { f -> Seleccion.abrir(nav, f) }
+                Resultados(r, busqueda) { i, e -> abierta = i to e }
+            }
             r.grupos.isEmpty() && r.indices.isEmpty() -> Vacio("Nada registrado en este periodo.")
             else -> {
                 r.grupos.forEach { g ->
@@ -226,4 +232,34 @@ private fun Meses(porMes: Map<String, Double>, unidad: String) {
         }
     }
     Ayuda("${Fechas.mesTitulo(meses.first().first)} a ${Fechas.mesTitulo(meses.last().first)} · más alto: ${Totales.formato(pico.second, unidad)} en ${Fechas.mesTitulo(pico.first).lowercase()}")
+}
+
+/** Días cuyo diario, sueño, mejor/peor momento o momentos mencionan el texto. Toca uno para abrirlo. */
+@Composable
+private fun EnDiario(q: String, desde: String, hasta: String, abrir: (String) -> Unit) {
+    val nq = Totales.normal(q.trim())
+    if (nq.length < 2) return
+    val hallados = remember(nq, desde, hasta, Repo.dias.size, Repo.momentos.size) {
+        val porDia = LinkedHashMap<String, String>()
+        Repo.dias.values.filter { it.fecha in desde..hasta }.sortedByDescending { it.fecha }.forEach { d ->
+            listOf(d.nota, d.sueno_texto, d.mejor_momento, d.peor_momento).firstOrNull { Totales.normal(it).contains(nq) }?.let { porDia[d.fecha] = it }
+        }
+        Repo.momentos.filter { it.fecha in desde..hasta && Totales.normal(it.texto).contains(nq) }.forEach { m -> porDia.putIfAbsent(m.fecha, m.texto) }
+        porDia.entries.sortedByDescending { it.key }.map { it.key to it.value }
+    }
+    if (hallados.isEmpty()) return
+    Etiqueta("en tu diario · ${hallados.size} ${if (hallados.size == 1) "día" else "días"}")
+    Tarjeta {
+        hallados.take(20).forEachIndexed { k, (f, t) ->
+            if (k > 0) HorizontalDivider()
+            Column(Modifier.fillMaxWidth().clickable { abrir(f) }.padding(vertical = 8.dp)) {
+                Text(Totales.fecha(f), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                // Un fragmento alrededor de lo que buscaste.
+                val n = Totales.normal(t); val i = n.indexOf(nq).coerceAtLeast(0)
+                val a = (i - 50).coerceAtLeast(0); val b = (i + nq.length + 70).coerceAtMost(t.length)
+                Text((if (a > 0) "…" else "") + t.substring(a, b).replace("\n", " ") + (if (b < t.length) "…" else ""), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        if (hallados.size > 20) Ayuda("y ${hallados.size - 20} días más.")
+    }
 }

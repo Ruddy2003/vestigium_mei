@@ -62,6 +62,12 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -191,10 +197,12 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
             if (plegable) Text(if (plegada) "▸" else "▾", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
-        if (!plegada) {
-            if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))
-            else Spacer(Modifier.height(10.dp))
-            content()
+        androidx.compose.animation.AnimatedVisibility(!plegada) {
+            Column {
+                if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))
+                else Spacer(Modifier.height(10.dp))
+                content()
+            }
         }
     }
 }
@@ -236,33 +244,53 @@ fun Clave(clave: String, valor: String, ancho: Int = 14) {
 
 @Composable
 fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null, onCambio: (Int?) -> Unit) {
+    val vibra = LocalHapticFeedback.current
+    val oscuro = esOscuro()
+    val n = hasta - desde + 1
+    // Las escalas desde 0 son de intensidad (dolor, impulso); las demás van de desagradable a agradable.
+    fun tono(i: Int): Color = if (desde == 0) Tonos.secuencial((i - desde).toFloat() / (n - 1), oscuro) else Tonos.divergente((i - desde).toFloat() / (n - 1), oscuro)
+    val actual by androidx.compose.runtime.rememberUpdatedState(valor)
     Column {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        // Se puede tocar un número o deslizar el dedo sobre la fila.
+        Row(
+            Modifier.fillMaxWidth().pointerInput(desde, hasta) {
+                detectHorizontalDragGestures { change, _ ->
+                    val i = (desde + (change.position.x / size.width * n).toInt()).coerceIn(desde, hasta)
+                    if (i != actual) { onCambio(i); vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
+                    change.consume()
+                }
+            },
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
             for (i in desde..hasta) {
                 val sel = valor == i
+                val c = tono(i)
                 Box(
-                    Modifier.weight(1f).heightIn(min = 46.dp).clip(R4)
-                        .background(if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
-                        .border(1.dp, if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, R4)
-                        .clickable { onCambio(if (sel) null else i) },
+                    Modifier.weight(1f).heightIn(min = 52.dp).clip(R4)
+                        .background(if (sel) c else MaterialTheme.colorScheme.surface)
+                        .border(if (sel) 2.dp else 1.dp, if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, R4)
+                        .clickable { onCambio(if (sel) null else i); vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("$i", style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal),
-                        color = if (sel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+                    // Una franja del color de cada valor, para leer la escala sin depender solo del número.
+                    if (!sel) Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(4.dp).background(c))
+                    Text("$i", style = MaterialTheme.typography.labelLarge.copy(fontSize = 17.sp, fontWeight = if (sel) FontWeight.SemiBold else FontWeight.Normal),
+                        color = if (sel) Tonos.sobre(c) else MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
         if (anclas != null) Row(Modifier.padding(top = 7.dp)) {
             Text(if (valor == null) "= null" else "= $valor", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-            Text(if (valor == null) "  sin marcar" else "  ${anclas[valor] ?: ""}".lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(if (valor == null) "  sin marcar · toca o desliza" else "  ${anclas[valor] ?: ""}".lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
 
 @Composable
 fun Ficha(texto: String, activa: Boolean, onClick: () -> Unit) {
+    val vibra = LocalHapticFeedback.current
     Surface(
-        onClick = onClick, shape = R4,
+        onClick = { vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClick() }, shape = R4,
         color = if (activa) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, if (activa) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
     ) {
@@ -301,12 +329,13 @@ fun Opciones(opciones: List<Opcion>, valor: String?, onCambio: (String?) -> Unit
 
 @Composable
 fun Interruptor(texto: String, valor: Boolean, detalle: String? = null, onCambio: (Boolean) -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable { onCambio(!valor) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    val vibra = LocalHapticFeedback.current
+    Row(Modifier.fillMaxWidth().clickable { vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove); onCambio(!valor) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(texto, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Ayuda(detalle)
         }
-        Switch(checked = valor, onCheckedChange = onCambio, colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary))
+        Switch(checked = valor, onCheckedChange = { vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove); onCambio(it) }, colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary))
     }
 }
 
@@ -345,6 +374,16 @@ fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", nor
 /** Campo de texto largo con barra superior como un archivo abierto en un editor. */
 @Composable
 fun Editor(valor: String, archivo: String, pista: String, minimo: Int = 200, pie: String? = null, onCambio: (String) -> Unit) {
+    // Se lleva el cursor para saber qué palabra se está escribiendo y sugerir @personas y #temas.
+    var campo by remember { mutableStateOf(TextFieldValue(valor, TextRange(valor.length))) }
+    if (campo.text != valor) campo = TextFieldValue(valor, TextRange(valor.length))
+    val etiquetas = remember(io.github.ruddy2003.vestigium.data.Repo.dias.size, io.github.ruddy2003.vestigium.data.Repo.momentos.size) { Etiquetas.frecuentes() }
+    val antes = campo.text.substring(0, campo.selection.start.coerceIn(0, campo.text.length))
+    val token = Regex("[@#][\\p{L}\\d_]*$").find(antes)?.value
+    val sugerencias = if (token == null) emptyList() else {
+        val pre = token.first(); val q = token.drop(1).lowercase()
+        (if (pre == '@') etiquetas.first else etiquetas.second).filter { it.startsWith(q) && it != q }.take(6).map { "$pre$it" }
+    }
     Column(Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.outline, R4)) {
         Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 10.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(7.dp).background(MaterialTheme.colorScheme.primary))
@@ -354,18 +393,42 @@ fun Editor(valor: String, archivo: String, pista: String, minimo: Int = 200, pie
         Row(Modifier.height(IntrinsicSize.Min)) {
             Box(Modifier.width(3.dp).fillMaxHeight().background(MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)))
             androidx.compose.foundation.text.BasicTextField(
-                value = valor, onValueChange = onCambio,
+                value = campo, onValueChange = { campo = it; if (it.text != valor) onCambio(it.text) },
                 modifier = Modifier.weight(1f).heightIn(min = minimo.dp).padding(12.dp),
                 textStyle = MaterialTheme.typography.labelLarge.copy(fontSize = 14.5.sp, lineHeight = 22.sp, letterSpacing = 0.sp, fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
-                decorationBox = { campo ->
+                decorationBox = { campoTexto ->
                     Box {
-                        if (valor.isEmpty()) Text(pista, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.5.sp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
-                        campo()
+                        if (campo.text.isEmpty()) Text(pista, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.5.sp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))
+                        campoTexto()
                     }
                 },
             )
         }
+        if (sugerencias.isNotEmpty()) FlowRow(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant).padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            sugerencias.forEach { s ->
+                Ficha(s, false) {
+                    val ini = antes.length - token!!.length
+                    val nuevo = campo.text.substring(0, ini) + s + " " + campo.text.substring(antes.length)
+                    campo = TextFieldValue(nuevo, TextRange(ini + s.length + 1))
+                    onCambio(nuevo)
+                }
+            }
+        }
+    }
+}
+
+/** Personas y temas que ya usaste, de más a menos frecuentes, para sugerirlos al escribir. */
+object Etiquetas {
+    fun frecuentes(): Pair<List<String>, List<String>> {
+        val p = HashMap<String, Int>(); val t = HashMap<String, Int>()
+        val textos = io.github.ruddy2003.vestigium.data.Repo.dias.values.map { it.nota } + io.github.ruddy2003.vestigium.data.Repo.momentos.map { it.texto }
+        textos.forEach { x ->
+            io.github.ruddy2003.vestigium.data.Texto.personas(x).distinct().forEach { p.merge(it, 1, Int::plus) }
+            io.github.ruddy2003.vestigium.data.Texto.temas(x).distinct().forEach { t.merge(it, 1, Int::plus) }
+        }
+        return p.entries.sortedByDescending { it.value }.map { it.key } to t.entries.sortedByDescending { it.value }.map { it.key }
     }
 }
 
@@ -387,7 +450,8 @@ fun BotonDictado(onTexto: (String) -> Unit) {
 
 @Composable
 fun BotonPrincipal(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = habilitado, modifier = modifier.heightIn(min = 48.dp), shape = R4,
+    val vibra = LocalHapticFeedback.current
+    Button(onClick = { vibra.performHapticFeedback(HapticFeedbackType.LongPress); onClick() }, enabled = habilitado, modifier = modifier.heightIn(min = 48.dp), shape = R4,
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
         Text(texto.uppercase(), style = MaterialTheme.typography.titleLarge.copy(fontSize = 14.sp, letterSpacing = 2.sp))
     }

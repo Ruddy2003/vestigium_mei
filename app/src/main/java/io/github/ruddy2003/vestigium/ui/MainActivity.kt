@@ -36,6 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -159,16 +161,56 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
 
     LaunchedEffect(pedida) {
         val p = pedida ?: return@LaunchedEffect
-        if (p == "dia") io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
-        if (PESTANAS.any { it.id == p }) { pestana = p; pila = emptyList() } else { pestana = "mas"; pila = listOf(p) }
+        if (p == "dia" || p == "diario") io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        if (p == "diario") { io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.seccion = "Ánimo y cuerpo"; pestana = "dia"; pila = emptyList() }
+        else if (p.startsWith("dia:")) { io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.pedida = p.drop(4); pestana = "dia"; pila = emptyList() }
+        else if (PESTANAS.any { it.id == p }) { pestana = p; pila = emptyList() } else { pestana = "mas"; pila = listOf(p) }
         consumir()
     }
 
     val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() })
     BackHandler(enabled = pila.isNotEmpty()) { pila = pila.dropLast(1) }
 
+    // Modo nocturno cálido: de 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo.
+    val hora by produceState(java.time.LocalTime.now().hour) { while (true) { kotlinx.coroutines.delay(60_000); value = java.time.LocalTime.now().hour } }
+    val noche = Repo.config.nocturno && (hora >= 22 || hora < 5)
+    var menu by remember { mutableStateOf(false) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    fun rapido(modo: String) = ctx.startActivity(android.content.Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, modo).putExtra(QuickActivity.ORIGEN, "app"))
     Scaffold(
+        modifier = Modifier.drawWithContent {
+            drawContent()
+            if (noche) {
+                drawRect(androidx.compose.ui.graphics.Color(0xFFFFB566), blendMode = androidx.compose.ui.graphics.BlendMode.Multiply, alpha = 0.55f)
+                drawRect(androidx.compose.ui.graphics.Color.Black, alpha = 0.12f)
+            }
+        },
         containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = {
+            // Botón + para registrar desde cualquier pestaña.
+            if (pila.isEmpty() && pestana != "gastos") Box {
+                androidx.compose.material3.FloatingActionButton(
+                    onClick = { menu = true }, containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = MaterialTheme.shapes.medium,
+                ) { Text("+", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimary) }
+                androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = MaterialTheme.colorScheme.surface) {
+                    listOf(
+                        "Ánimo ahora" to { rapido(QuickActivity.M_ANIMO) },
+                        "Momento" to { rapido(QuickActivity.M_MENU) },
+                        "Gasto" to { rapido(QuickActivity.M_GASTO) },
+                        "Sueño" to { rapido(QuickActivity.M_SUENO) },
+                        "Diario de hoy" to {
+                            io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+                            io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.seccion = "Ánimo y cuerpo"
+                            pestana = "dia"; pila = emptyList()
+                        },
+                        "Buscar" to { pila = pila + "buscar" },
+                    ).forEach { (t, f) ->
+                        androidx.compose.material3.DropdownMenuItem(text = { Text(t, style = MaterialTheme.typography.bodyLarge) }, onClick = { menu = false; f() })
+                    }
+                }
+            }
+        },
         bottomBar = {
             Column {
                 androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.outline)
@@ -220,6 +262,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                 "analisis" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnalisis(nav)
                 "fuerza" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFuerza(nav)
                 "totales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav)
+                "buscar" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav, buscar = true)
+                "semana" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(nav)
                 else -> Text("Pantalla desconocida: $actual")
             }
         }

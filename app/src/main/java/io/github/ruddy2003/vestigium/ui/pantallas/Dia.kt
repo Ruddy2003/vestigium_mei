@@ -128,6 +128,13 @@ fun PantallaDia(nav: Nav) {
         if (titulo in Repo.config.plegadas) Repo.cambiarConfig { cc -> cc.copy(plegadas = cc.plegadas - titulo) }
         scope.launch { kotlinx.coroutines.delay(120); r.bringIntoView() }
     }
+    // Si se llegó desde «Diario de hoy» (botón + o atajo del ícono), baja directo a esa sección.
+    LaunchedEffect(Seleccion.seccion, fecha) {
+        val sec = Seleccion.seccion ?: return@LaunchedEffect
+        Seleccion.seccion = null
+        kotlinx.coroutines.delay(250)
+        mostrar(sec, when (sec) { "Sueño" -> reqSueno; "Diario" -> reqDiario; "Predicción" -> reqPred; else -> reqAnimo })
+    }
     val umbral = with(LocalDensity.current) { 120.dp.toPx() }
     // Deslizar a los lados cambia de día: a la derecha, el anterior; a la izquierda, el siguiente.
     val deslizar = Modifier.pointerInput(fecha) {

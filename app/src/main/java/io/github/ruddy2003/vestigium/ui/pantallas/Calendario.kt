@@ -55,6 +55,8 @@ import java.time.LocalDate
 object Seleccion {
     var pedida by mutableStateOf<String?>(null)
     var ultimoMes by mutableStateOf<String?>(null)
+    /** Sección de Día a la que hay que llevar al abrirlo (por ejemplo, desde el atajo «Diario de hoy»). */
+    var seccion by mutableStateOf<String?>(null)
     fun abrir(nav: Nav, fecha: String) { pedida = fecha; ultimoMes = Fechas.mesDe(fecha); nav.pestana("dia") }
 }
 
@@ -82,6 +84,7 @@ fun PantallaCalendario(nav: Nav) {
     val ctx = LocalContext.current
     var mes by remember { mutableStateOf(Seleccion.ultimoMes ?: Fechas.mesDe(Fechas.diaLogico())) }
     var capaId by remember { mutableStateOf("animo") }
+    var verFotos by remember { mutableStateOf(false) }
     val oscuro = esOscuro()
     val todas = capas()
     val capa = todas.first { it.id == capaId }
@@ -120,7 +123,7 @@ fun PantallaCalendario(nav: Nav) {
                         capa.divergente -> Tonos.divergente(t, oscuro)
                         else -> Tonos.secuencial(t, oscuro)
                     }
-                    Celda(Modifier.weight(1f), f, fondo, f == hoy, f > hoy) { ir(f) }
+                    Celda(Modifier.weight(1f), f, fondo, f == hoy, f > hoy, verFotos) { ir(f) }
                 }
             }
         }
@@ -133,6 +136,7 @@ fun PantallaCalendario(nav: Nav) {
             Text(capa.texto(hi), style = MaterialTheme.typography.labelSmall)
         }
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Ficha("▣ fotos", verFotos) { verFotos = !verFotos }
             todas.forEach { c -> Ficha(c.nombre, c.id == capaId) { capaId = c.id } }
         }
         Ayuda("▪ diario escrito · • momentos · ✦ hito · KAL, NON, ID: calendas, nonas e idus del calendario romano.", Modifier.padding(top = 8.dp))
@@ -168,16 +172,23 @@ fun PantallaCalendario(nav: Nav) {
 }
 
 @Composable
-private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean, futuro: Boolean, onClick: () -> Unit) {
+private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean, futuro: Boolean, verFotos: Boolean, onClick: () -> Unit) {
     val d = Repo.dias[fecha]
-    val tinta = Tonos.sobre(fondo)
+    // Con «fotos», los días con foto del día la muestran de fondo (las letras van en blanco sobre una sombra).
+    val conFoto = verFotos && d?.foto != null
+    val tinta = if (conFoto) Color.White else Tonos.sobre(fondo)
     val nMom = Repo.momentos.count { it.fecha == fecha && it.tipo != "muestreo" }
     val marca = io.github.ruddy2003.vestigium.ui.Estilo.marca(fecha)
     Box(
         modifier.aspectRatio(0.78f).clip(RoundedCornerShape(3.dp)).background(fondo)
             .border(if (hoy) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline), RoundedCornerShape(3.dp))
-            .clickable(onClick = onClick).padding(3.dp),
+            .clickable(onClick = onClick),
     ) {
+        if (conFoto) {
+            Miniatura(android.net.Uri.parse(d!!.foto), 200, Modifier.matchParentSize())
+            Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.28f)))
+        }
+        Box(Modifier.matchParentSize().padding(3.dp)) {
         Text(fecha.takeLast(2).trimStart('0'), style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp), color = if (futuro) tinta.copy(alpha = 0.4f) else tinta,
             modifier = Modifier.align(Alignment.TopStart))
         if (marca != null) Text(marca, style = MaterialTheme.typography.titleLarge.copy(fontSize = 7.sp, letterSpacing = 0.5.sp), color = tinta.copy(alpha = 0.7f), modifier = Modifier.align(Alignment.TopEnd))
@@ -186,7 +197,8 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
             if (d != null && d.hitos.isNotEmpty()) Text("✦", fontSize = 8.sp, color = tinta, modifier = Modifier.padding(start = 2.dp))
             if (nMom > 0) Text("•".repeat(minOf(nMom, 3)), fontSize = 9.sp, color = tinta, modifier = Modifier.padding(start = 2.dp))
         }
-        if (d?.foto != null) Box(Modifier.align(Alignment.BottomEnd).size(4.dp).background(MaterialTheme.colorScheme.primary))
+        if (d?.foto != null && !conFoto) Box(Modifier.align(Alignment.BottomEnd).size(4.dp).background(MaterialTheme.colorScheme.primary))
+        }
     }
 }
 

@@ -79,6 +79,10 @@ fun PantallaMas(nav: Nav) {
         }
         Seccion("Entenderte", numero = 3) {
             Tarjeta {
+                FilaMenu("Buscar", "En todo: tu diario, comida, personas, música, lugares…") { nav.ir("buscar") }
+                HorizontalDivider()
+                FilaMenu("Resumen semanal", "Tu semana de un vistazo y contra la anterior") { nav.ir("semana") }
+                HorizontalDivider()
                 FilaMenu("Totales", "Cuánto de todo desde la fecha que elijas: comida, kilómetros, personas, música…") { nav.ir("totales") }
                 HorizontalDivider()
                 FilaMenu("Tu año", "El año en píxeles, mes por mes y lo más frecuente") { nav.ir("anno") }

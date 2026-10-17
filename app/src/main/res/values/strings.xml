@@ -8,11 +8,15 @@
     <string name="widget_sueno_desc">Califica tu sueño con un toque al despertar</string>
     <string name="widget_habitos_desc">Marca los hábitos de hoy sin abrir la app</string>
     <string name="widget_mes_desc">El mes coloreado por tu ánimo</string>
+    <string name="widget_anillos_desc">Anillos de hoy: diario, sueño, avisos y pasos</string>
+    <string name="widget_foto_desc">La foto del día, o la de hace un año</string>
+    <string name="widget_cifra_desc">Una cifra grande; tócala para cambiarla</string>
     <string name="sc_momento">Momento</string>
     <string name="sc_momento_largo">Registrar un momento</string>
     <string name="sc_animo">Ánimo ahora</string>
     <string name="sc_gasto">Gasto</string>
     <string name="sc_sueno">Sueño</string>
+    <string name="sc_diario">Diario de hoy</string>
     <string name="tile_momento">Momento</string>
     <string name="tile_gasto">Gasto</string>
     <string name="tile_animo">Ánimo</string>

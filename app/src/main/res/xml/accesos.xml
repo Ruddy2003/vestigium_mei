@@ -7,18 +7,25 @@
             <extra android:name="modo" android:value="menu" />
         </intent>
     </shortcut>
-    <shortcut android:shortcutId="animo" android:enabled="true" android:icon="@drawable/ic_sc_animo"
-        android:shortcutShortLabel="@string/sc_animo" android:shortcutLongLabel="@string/sc_animo">
-        <intent android:action="android.intent.action.VIEW" android:targetPackage="io.github.ruddy2003.vestigium"
-            android:targetClass="io.github.ruddy2003.vestigium.ui.QuickActivity">
-            <extra android:name="modo" android:value="animo" />
-        </intent>
-    </shortcut>
     <shortcut android:shortcutId="gasto" android:enabled="true" android:icon="@drawable/ic_sc_gasto"
         android:shortcutShortLabel="@string/sc_gasto" android:shortcutLongLabel="@string/sc_gasto">
         <intent android:action="android.intent.action.VIEW" android:targetPackage="io.github.ruddy2003.vestigium"
             android:targetClass="io.github.ruddy2003.vestigium.ui.QuickActivity">
             <extra android:name="modo" android:value="gasto" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="diario" android:enabled="true" android:icon="@drawable/ic_sc_diario"
+        android:shortcutShortLabel="@string/sc_diario" android:shortcutLongLabel="@string/sc_diario">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="io.github.ruddy2003.vestigium"
+            android:targetClass="io.github.ruddy2003.vestigium.ui.MainActivity">
+            <extra android:name="pantalla" android:value="diario" />
+        </intent>
+    </shortcut>
+    <shortcut android:shortcutId="animo" android:enabled="true" android:icon="@drawable/ic_sc_animo"
+        android:shortcutShortLabel="@string/sc_animo" android:shortcutLongLabel="@string/sc_animo">
+        <intent android:action="android.intent.action.VIEW" android:targetPackage="io.github.ruddy2003.vestigium"
+            android:targetClass="io.github.ruddy2003.vestigium.ui.QuickActivity">
+            <extra android:name="modo" android:value="animo" />
         </intent>
     </shortcut>
     <shortcut android:shortcutId="sueno" android:enabled="true" android:icon="@drawable/ic_sc_sueno"
