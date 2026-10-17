@@ -6,6 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -468,14 +469,15 @@ fun BotonModo(modifier: Modifier = Modifier) {
     val sentir = rememberSentir()
     val color = MaterialTheme.colorScheme.primary
     val fondo = MaterialTheme.colorScheme.background
+    val borde = MaterialTheme.colorScheme.outline
     Box(
-        modifier.size(40.dp).clip(CircleShape).clickable {
+        modifier.size(40.dp).clip(CircleShape).border(1.dp, borde, CircleShape).clickable {
             sentir(Sentidos.Evento.CAMBIO)
             Repo.cambiarConfig { c -> c.copy(modo = if (oscuro) "claro" else "oscuro") }
         }.semantics { contentDescription = if (oscuro) "Cambiar a modo claro" else "Cambiar a modo oscuro" },
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(20.dp)) {
+        Canvas(Modifier.size(18.dp)) {
             val c = center; val r = size.minDimension / 2
             if (oscuro) {
                 // En oscuro se ofrece el sol.

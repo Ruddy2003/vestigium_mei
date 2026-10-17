@@ -346,7 +346,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val t = tipoDe(tema, o)
     val titulo = when (tema) {
         TemaId.ROMANO -> "DIES"; TemaId.CIBER -> "DÍA_"; TemaId.HELENO -> "ΗΜΕΡΑ"; TemaId.MEDIEVAL -> "Del día"
-        TemaId.DISTOPIA -> "PARTE"; TemaId.REFUGIO -> "BITÁCORA"; TemaId.ORDEN -> "CAMPAÑA"; TemaId.LABORATORIO -> "SESIÓN"; TemaId.COLONOS -> "Jornada"
+        TemaId.DISTOPIA -> "PARTE"; TemaId.REFUGIO -> "DIARIO"; TemaId.ORDEN -> "CAMPO"; TemaId.LABORATORIO -> "SESIÓN"; TemaId.COLONOS -> "Jornada"
     }
     val linea = when (tema) {
         TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."; TemaId.MEDIEVAL -> "xvij de otubre"

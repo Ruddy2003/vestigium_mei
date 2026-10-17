@@ -139,7 +139,7 @@ object Frases {
         f(null, "Recuerde el alma dormida, / avive el seso y despierte / contemplando / cómo se pasa la vida, / cómo se viene la muerte / tan callando.", "Jorge Manrique, Coplas por la muerte de su padre"),
         f(null, "Nuestras vidas son los ríos / que van a dar en la mar, / que es el morir.", "Jorge Manrique, Coplas por la muerte de su padre"),
         f("Nel mezzo del cammin di nostra vita / mi ritrovai per una selva oscura.", "A mitad del camino de nuestra vida me encontré en una selva oscura.", "Dante, Infierno I"),
-        f("Fatti non foste a viver come bruti, / ma per seguir virtute e canoscenza.", "No fuisteis hechos para vivir como bestias, sino para seguir la virtud y el saber.", "Dante, Infierno XXVI"),
+        f("Fatti non foste a viver come bruti, / ma per seguir virtute e canoscenza.", "No fueron hechos para vivir como bestias, sino para seguir la virtud y el saber.", "Dante, Infierno XXVI"),
         f(null, "La vida es como un gorrión que en invierno cruza volando la sala del banquete: entra por una puerta, siente un instante el calor y sale por la otra.",
             "Beda el Venerable, Historia eclesiástica II, 13"),
     )
@@ -167,7 +167,7 @@ object Frases {
             "Un nuevo modo de obtener poder de la mente sobre la mente, en una cantidad sin precedentes.", "Jeremy Bentham, El panóptico, 1791"),
         f("Those who would give up essential Liberty, to purchase a little temporary Safety, deserve neither Liberty nor Safety.",
             "Quienes renuncian a la libertad esencial para obtener un poco de seguridad pasajera no merecen ni libertad ni seguridad.", "Benjamin Franklin, 1755"),
-        f("Soyez résolus de ne servir plus, et vous voilà libres.", "Decidíos a no servir más, y seréis libres.", "Étienne de La Boétie, Discurso de la servidumbre voluntaria"),
+        f("Soyez résolus de ne servir plus, et vous voilà libres.", "Decídanse a no servir más, y serán libres.", "Étienne de La Boétie, Discurso de la servidumbre voluntaria"),
         f(null, "Alguien debió de calumniar a Josef K., porque sin haber hecho nada malo fue detenido una mañana.", "Franz Kafka, El proceso (1925)"),
         f(null, "Les juro, señores, que tener demasiada conciencia es una enfermedad, una verdadera enfermedad.", "Fiódor Dostoievski, Memorias del subsuelo"),
     )

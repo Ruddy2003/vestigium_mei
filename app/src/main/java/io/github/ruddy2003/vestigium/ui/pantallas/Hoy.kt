@@ -260,7 +260,8 @@ fun FraseDelDia(fecha: String) {
     val contenido: @Composable () -> Unit = {
         Column(Modifier.padding(if (marco) 12.dp else 0.dp)) {
             Text(Frases.rotulo(tema), style = ty.labelMedium, color = cs.primary)
-            f.original?.let { Text(it, style = ty.bodyLarge, color = cs.primary, fontStyle = FontStyle.Italic, modifier = Modifier.padding(top = 2.dp)) }
+            // Los originales cortos (griego, latín) se lucen grandes; los largos van chicos y la traducción manda.
+            f.original?.let { Text(it, style = if (it.length > 60) ty.bodySmall else ty.bodyLarge, color = cs.primary, fontStyle = FontStyle.Italic, modifier = Modifier.padding(top = 2.dp)) }
             if (tema == TemaId.MEDIEVAL) {
                 // Capitular iluminada: la primera letra grande, en gótica y en rojo.
                 Text(androidx.compose.ui.text.buildAnnotatedString {
