@@ -91,6 +91,8 @@ object Diccionario {
         "titulo" to "Título", "artista" to "Artista o programa", "album" to "Álbum («podcast» si es un episodio)", "app" to "App que lo reprodujo",
         "duracion_s" to "Duración de la pista (s)", "ms_escuchado" to "Milisegundos realmente escuchados (historial de Spotify)", "saltada" to "Se saltó (0/1)",
         "fuente" to "notificacion = lo que sonó en el teléfono; spotify = historial importado; spotify_api = conexión directa con tu cuenta",
+        "gramos" to "Gramos del alimento (cantidad × peso de la porción); vacío si se registró en ml",
+        "mililitros" to "Mililitros, cuando el alimento se registró en ml",
         "contexto" to "Desde dónde sonó (conexión directa): playlist, album, artist o collection = tus «me gusta»", "canciones" to "Canciones escuchadas (30 s o más)",
         // Actividad y ejercicio
         "a_pie_min" to "Minutos a pie", "corriendo_min" to "Minutos corriendo", "bici_min" to "Minutos en bici", "vehiculo_min" to "Minutos en vehículo", "quieto_min" to "Minutos quieto",

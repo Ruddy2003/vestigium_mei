@@ -219,6 +219,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                 "mapa" -> PantallaMapa(nav)
                 "analisis" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnalisis(nav)
                 "fuerza" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFuerza(nav)
+                "totales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav)
                 else -> Text("Pantalla desconocida: $actual")
             }
         }

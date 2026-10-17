@@ -79,6 +79,8 @@ fun PantallaMas(nav: Nav) {
         }
         Seccion("Entenderte", numero = 3) {
             Tarjeta {
+                FilaMenu("Totales", "Cuánto de todo desde la fecha que elijas: comida, kilómetros, personas, música…") { nav.ir("totales") }
+                HorizontalDivider()
                 FilaMenu("Tu año", "El año en píxeles, mes por mes y lo más frecuente") { nav.ir("anno") }
                 HorizontalDivider()
                 FilaMenu("Análisis", "Tendencias, factores, modelo, dinámica emocional, sueño, palabras") { nav.ir("analisis") }

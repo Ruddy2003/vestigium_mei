@@ -215,6 +215,7 @@ fun PantallaExplorar(nav: Nav) {
             val t = Repo.dias.values.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount()
             val h = Repo.dias.values.flatMap { it.hitos }.groupingBy { it }.eachCount()
             Lista("Personas", p, "@"); Lista("Temas", t, "#"); Lista("Hitos", h, "")
+            TextButton(onClick = { nav.ir("totales") }) { Text("Ver menciones con fechas y por mes en Totales ›") }
         }
 
         Seccion("Lugares y ánimo") {

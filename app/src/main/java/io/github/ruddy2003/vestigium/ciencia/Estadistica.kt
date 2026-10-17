@@ -380,6 +380,26 @@ object Movilidad {
         return kmPorDia(Repo.db().ubicaciones(a, a + 86_400_000L))[fecha]
     }
 
+    /** Lo mismo que [kmPorDia] entre dos días lógicos, recorriendo la base sin cargar todos los puntos a memoria. */
+    fun kmEntre(desde: String, hasta: String): Map<String, Double> {
+        val out = HashMap<String, Double>()
+        var pMs = -1L; var pLat = 0.0; var pLon = 0.0
+        val ini = if (desde <= "1971-01-01") 0L else Fechas.inicioDia(desde)
+        val fin = if (hasta >= "9999-01-01") Long.MAX_VALUE else Fechas.finDia(hasta) + 5 * 3_600_000L
+        Repo.db().recorrerUbicaciones(ini, fin) { ms, lat, lon, _ ->
+            if (pMs >= 0) {
+                val dt = (ms - pMs) / 1000.0
+                val d = io.github.ruddy2003.vestigium.data.Geo.distanciaM(pLat, pLon, lat, lon)
+                if (dt in 1.0..7200.0 && d / dt < 70 && d > 30) {
+                    val f = Fechas.diaLogicoDeMillis(ms)
+                    if (f in desde..hasta) out[f] = (out[f] ?: 0.0) + d / 1000
+                }
+            }
+            pMs = ms; pLat = lat; pLon = lon
+        }
+        return out
+    }
+
     fun kmPorDia(puntos: List<io.github.ruddy2003.vestigium.data.Db.Punto> = Repo.db().ubicaciones()): Map<String, Double> {
         val out = HashMap<String, Double>()
         var prev: io.github.ruddy2003.vestigium.data.Db.Punto? = null

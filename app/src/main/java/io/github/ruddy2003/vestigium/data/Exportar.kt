@@ -242,12 +242,21 @@ object Exportar {
         "gasto_kcal", "peso_mf_kg", "peso_tendencia_kg", "pasos_mf", "objetivo_kcal", "objetivo_proteina_g", "objetivo_carbohidratos_g", "objetivo_grasa_g")
     private fun orden(k: String) = PRINCIPALES.indexOf(k).let { if (it < 0) 999 else it }
 
+    /** Gramos de un alimento: la cantidad si la porción es «g»; si no, cantidad × peso de la porción. Null si se registró en ml. */
+    fun gramos(c: Comida): Double? = when {
+        c.porcion.equals("ml", true) -> null
+        c.porcion.equals("g", true) -> c.cantidad
+        c.cantidad != null && c.peso_porcion_g != null -> Math.round(c.cantidad * c.peso_porcion_g * 10) / 10.0
+        else -> c.peso_porcion_g
+    }
+
     fun filasComidas(): List<Map<String, Any?>> {
         val l = Repo.comidas("0000-01-01", "9999-12-31")
         val cols = l.flatMap { it.valores.keys }.toSortedSet(compareBy<String> { orden(it) }.thenBy { it })
         return l.map { c ->
             val m = linkedMapOf<String, Any?>("fecha" to c.fecha, "hora" to c.hora.takeIf { it.matches(Regex("\\d{2}:\\d{2}")) }, "alimento" to c.alimento,
-                "porcion" to c.porcion, "cantidad" to c.cantidad, "peso_porcion_g" to c.peso_porcion_g)
+                "porcion" to c.porcion, "cantidad" to c.cantidad, "peso_porcion_g" to c.peso_porcion_g,
+                "gramos" to gramos(c), "mililitros" to if (c.porcion.equals("ml", true)) c.cantidad else null)
             cols.forEach { m[it] = c.valores[it] }
             m
         }

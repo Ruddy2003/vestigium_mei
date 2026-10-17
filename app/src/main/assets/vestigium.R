@@ -328,6 +328,89 @@ vm_atipicos <- function(vars = c("valencia", "sueno_h", "pasos", "pantalla_min",
     group_by(variable) |> mutate(z = (valor - median(valor)) / mad(valor)) |> ungroup() |> filter(is.finite(z), abs(z) >= !!z) |> arrange(desc(fecha))
 }
 
+# ---- Totales y búsqueda (como la pantalla Totales de la app) ------------------
+.vm_norm <- function(x) tolower(stringi::stri_trans_general(coalesce(as.character(x), ""), "Latin-ASCII"))
+.vm_rango <- function(d, desde = NULL, hasta = NULL, col = "fecha") {
+  if (is.null(d) || !nrow(d) || !col %in% names(d)) return(d)
+  f <- as.Date(d[[col]]); ok <- !is.na(f)
+  if (!is.null(desde)) ok <- ok & f >= as.Date(desde)
+  if (!is.null(hasta)) ok <- ok & f <= as.Date(hasta)
+  d[ok, ]
+}
+
+#' Suma de cada medida diaria del periodo: total, días con dato, desde y hasta cuándo hay datos y promedio por día con dato.
+#' Ejemplo: vm_totales("2026-01-01") |> filter(variable %in% c("km", "pasos", "kcal"))
+vm_totales <- function(desde = NULL, hasta = NULL, datos = panel) {
+  sumables <- c("km", "pasos", "a_pie_min", "vehiculo_min", "ejercicio_min", "sueno_min", "cal_activas", "kcal", "proteina_g",
+                "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "comidas", "volumen_kg", "series_gimnasio",
+                "gasto_total", "palabras", "n_momentos", "n_muestreos", "pantalla_min", "desbloqueos", "notificaciones", "fotos",
+                "canciones", "musica_min", "audifonos_min", "yt_vistos", "busquedas", "llamadas", "min_hablado", "sms", "wa_mios",
+                "wa_otros", "eventos", "min_ocupado", "subrayados", "precip_mm", "sol_min")
+  d <- .vm_rango(datos, desde, hasta)
+  map_dfr(intersect(sumables, names(d)), function(v) {
+    x <- as.numeric(d[[v]]); hay <- !is.na(x) & x > 0
+    if (!any(hay)) return(NULL)
+    tibble(variable = v, total = sum(x, na.rm = TRUE), dias = sum(!is.na(x)), desde = min(d$fecha[hay]), hasta = max(d$fecha[hay]),
+           por_dia = mean(x, na.rm = TRUE))
+  }) |> left_join(vm_dic |> filter(archivo == "vm_panel.csv") |> select(variable = columna, descripcion), by = "variable")
+}
+
+#' Busca un texto (sin importar acentos ni mayúsculas) en alimentos, personas, temas, artistas, canciones, lugares,
+#' ejercicios, canales de YouTube, búsquedas, gastos, libros y chats. Una fila por coincidencia, con total, veces,
+#' días y primera/última fecha. Los alimentos de MacroFactor vienen en inglés: vm_buscar("banana").
+vm_buscar <- function(texto, desde = NULL, hasta = NULL) {
+  q <- .vm_norm(sub("^[@#]", "", texto))
+  hay <- function(x) str_detect(.vm_norm(x), fixed(q))
+  # «@ana» busca solo personas y «#viaje» solo temas.
+  solo <- if (startsWith(texto, "@")) "personas" else if (startsWith(texto, "#")) "temas" else NULL
+  junta <- function(d, indice, unidad, total, ...) {
+    if (is.null(d) || !nrow(d)) return(NULL)
+    d |> mutate(.uno = 1) |> summarise(indice = indice, total = sum({{ total }}, na.rm = TRUE), unidad = unidad, veces = n(), dias = n_distinct(fecha),
+                   primera = min(fecha), ultima = max(fecha), ..., .groups = "drop")
+  }
+  out <- list()
+  if (!is.null(vm$comidas)) {
+    d <- .vm_rango(vm$comidas, desde, hasta) |> filter(hay(alimento))
+    if (!"kcal" %in% names(d)) d$kcal <- NA_real_
+    out$a <- junta(group_by(d, nombre = alimento), "alimentos", if (all(is.na(d$gramos))) "ml" else "g", coalesce(gramos, mililitros),
+                   kcal = sum(kcal, na.rm = TRUE))
+  }
+  for (col in c("personas", "temas")) {
+    m <- bind_rows(lapply(list(vm$dias, vm$momentos), function(t) {
+      if (is.null(t) || !col %in% names(t)) return(NULL)
+      .vm_rango(t, desde, hasta) |> transmute(fecha, x = vm_lista(.data[[col]])) |> unnest(x)
+    }))
+    if (nrow(m)) out[[col]] <- junta(m |> filter(hay(x)) |> group_by(nombre = paste0(if (col == "personas") "@" else "#", x)), col, "menciones", .uno)
+  }
+  if (!is.null(vm$musica)) {
+    d <- .vm_rango(vm$musica, desde, hasta) |> filter(is.na(ms_escuchado) | ms_escuchado >= 30000) |>
+      mutate(min = coalesce(ms_escuchado / 60000, duracion_s / 60))
+    out$art <- junta(d |> filter(hay(artista)) |> group_by(nombre = artista), "artistas", "reproducciones", .uno, minutos = sum(min, na.rm = TRUE))
+    out$can <- junta(d |> filter(hay(titulo)) |> group_by(nombre = paste(titulo, "—", artista)), "canciones", "reproducciones", .uno, minutos = sum(min, na.rm = TRUE))
+  }
+  if (!is.null(vm$visitas)) {
+    d <- vm$visitas |> mutate(fecha = as.Date(format(entrada, tz = vm_zona))) |> .vm_rango(desde, hasta) |> filter(hay(lugar))
+    out$lug <- junta(group_by(d, nombre = lugar), "lugares", "h", minutos / 60)
+  }
+  if (!is.null(vm$series)) {
+    d <- .vm_rango(vm$series, desde, hasta) |> filter(hay(ejercicio), !coalesce(as.logical(calentamiento), FALSE))
+    out$ej <- junta(group_by(d, nombre = ejercicio), "ejercicios", "series", .uno, volumen_kg = sum(peso_kg * reps, na.rm = TRUE),
+                    e1rm_kg = suppressWarnings(max(e1rm_kg, na.rm = TRUE)))
+  }
+  if (!is.null(vm$google)) {
+    d <- .vm_rango(vm$google, desde, hasta)
+    out$can_yt <- junta(d |> filter(producto == "youtube", accion == "visto", hay(canal)) |> group_by(nombre = canal), "canales", "videos", .uno)
+    out$bus <- junta(d |> filter(accion == "buscado", hay(titulo)) |> group_by(nombre = titulo), "busquedas", "veces", .uno)
+  }
+  if (!is.null(vm$gastos)) out$gas <- junta(.vm_rango(vm$gastos, desde, hasta) |> filter(hay(categoria) | hay(nota)) |> group_by(nombre = categoria), "gastos", "$", monto)
+  if (!is.null(vm$subrayados)) out$lib <- junta(.vm_rango(vm$subrayados, desde, hasta) |> filter(hay(libro)) |> group_by(nombre = libro), "libros", "subrayados", .uno)
+  if (!is.null(vm$whatsapp)) out$wa <- junta(.vm_rango(vm$whatsapp, desde, hasta) |> filter(hay(chat)) |> group_by(nombre = chat), "chats", "mensajes", mios + otros)
+  res <- bind_rows(compact(out))
+  if (!is.null(solo) && nrow(res)) res <- filter(res, indice == solo)
+  if (!nrow(res)) { message("Nada con «", texto, "» en ese periodo."); return(res) }
+  res |> relocate(indice, nombre) |> arrange(indice, desc(veces))
+}
+
 #' Progreso de fuerza: 1RM estimado máximo por sesión para los ejercicios que más repites.
 vm_fuerza <- function(n = 6) {
   if (is.null(vm$series)) stop("No hay series de MacroFactor Workouts.")
@@ -356,6 +439,6 @@ vm_guardar_graficas <- function(carpeta = file.path(vm_carpeta, "graficas")) {
 
 vm_resumen()
 message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
-        "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
+        "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_totales(), vm_buscar('texto'), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
         "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna')")
