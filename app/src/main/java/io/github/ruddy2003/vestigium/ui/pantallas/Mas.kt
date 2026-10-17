@@ -103,7 +103,7 @@ fun PantallaMas(nav: Nav) {
                 FilaMenu("Guía científica", "Qué mide cada cosa y de dónde viene") { nav.ir("guia") }
             }
         }
-        Ayuda("vestigium mei · schema_v = ${io.github.ruddy2003.vestigium.data.SCHEMA_V} · ${Romano.fecha(Fechas.diaLogico())}", Modifier.padding(top = 16.dp))
+        Ayuda("vestigium mei · schema_v = ${io.github.ruddy2003.vestigium.data.SCHEMA_V} · ${io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico())}", Modifier.padding(top = 16.dp))
     }
 }
 

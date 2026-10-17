@@ -68,7 +68,7 @@ fun PantallaAnno(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = { anio-- }, shape = RoundedCornerShape(4.dp)) { Text("‹", fontSize = 18.sp) }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("ANNVS ${Romano.de(anio)}", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+                Text("${io.github.ruddy2003.vestigium.ui.Estilo.pantalla("Tu año", "ANNVS").first} ${io.github.ruddy2003.vestigium.ui.Estilo.numeral(anio)}", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
                 Text("// $anio", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             OutlinedButton(onClick = { anio++ }, shape = RoundedCornerShape(4.dp)) { Text("›", fontSize = 18.sp) }
@@ -80,7 +80,7 @@ fun PantallaAnno(nav: Nav) {
                 Row {
                     Column(Modifier.width(30.dp)) {
                         for (m in 1..12) androidx.compose.foundation.layout.Box(Modifier.height(celda), contentAlignment = Alignment.CenterStart) {
-                            Text(Romano.de(m), style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(io.github.ruddy2003.vestigium.ui.Estilo.numeral(m), style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     Canvas(Modifier.weight(1f).height(celda * 12).pointerInput(anio) {
@@ -116,7 +116,7 @@ fun PantallaAnno(nav: Nav) {
                     drawRect(Tonos.valencia(v, oscuro) ?: color, Offset(i * w + 4f, size.height - h), Size(w - 8f, h))
                 }
             }
-            Row(Modifier.fillMaxWidth()) { for (m in 1..12) Text(Romano.de(m), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), textAlign = TextAlign.Center) }
+            Row(Modifier.fillMaxWidth()) { for (m in 1..12) Text(io.github.ruddy2003.vestigium.ui.Estilo.numeral(m), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), textAlign = TextAlign.Center) }
             val conDatos = medias.mapIndexedNotNull { i, l -> if (l.isEmpty()) null else (i + 1) to l.average() }
             if (conDatos.size >= 2) {
                 val mejor = conDatos.maxBy { it.second }; val peor = conDatos.minBy { it.second }

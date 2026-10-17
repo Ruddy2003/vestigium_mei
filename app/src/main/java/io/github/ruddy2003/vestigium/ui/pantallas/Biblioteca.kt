@@ -124,7 +124,7 @@ private fun Lista(obras: List<Obra>, nav: Nav, porAnio: Boolean = false) {
             val anio = (o.fin ?: o.agregado).take(4)
             if (porAnio && anio != anioPrevio) {
                 anioPrevio = anio
-                Text(io.github.ruddy2003.vestigium.ui.Romano.de(anio.toIntOrNull() ?: 0) + " · $anio", style = MaterialTheme.typography.titleSmall,
+                Text(io.github.ruddy2003.vestigium.ui.Estilo.numeral(anio.toIntOrNull() ?: 0) + " · $anio", style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = if (i == 0) 0.dp else 12.dp, bottom = 4.dp))
             } else if (i > 0) HorizontalDivider()
             Row(Modifier.fillMaxWidth().clickable { EdicionObra.id = o.id; nav.ir("obra") }.padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {

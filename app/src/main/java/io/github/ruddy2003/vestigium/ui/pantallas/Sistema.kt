@@ -244,6 +244,20 @@ fun PantallaAjustes(nav: Nav) {
         Repo.cambiarConfig(f); runCatching { Widgets.actualizar(ctx) }
     }
     Hoja("Ajustes", nav.atras) {
+        Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
+            val oscuroSistema = androidx.compose.foundation.isSystemInDarkTheme()
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                io.github.ruddy2003.vestigium.ui.TemaId.entries.forEach { t ->
+                    io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, oscuroSistema, c.tema == t.id, Modifier.weight(1f)) { cambiar { it.copy(tema = t.id) } }
+                }
+            }
+            Ayuda(io.github.ruddy2003.vestigium.ui.Estilo.tema.descripcion + if (io.github.ruddy2003.vestigium.ui.Estilo.tema.soloOscuro) "" else " Sigue el modo claro u oscuro del teléfono.", Modifier.padding(top = 8.dp))
+            Tarjeta(Modifier.padding(top = 10.dp)) {
+                Etiqueta("Tamaño del texto: ${(c.letra * 100).toInt()}%")
+                Slider(value = c.letra, onValueChange = { v -> cambiar { it.copy(letra = (Math.round(v * 20) / 20f)) } }, valueRange = 0.8f..1.4f, steps = 11)
+                Text("Así se lee un renglón del diario con este tamaño.", style = MaterialTheme.typography.bodyLarge)
+            }
+        }
         Seccion("Avisos de ánimo durante el día", "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {
             Tarjeta {
                 Interruptor("Avisos activos", c.avisos) { v -> cambiar { it.copy(avisos = v) } }

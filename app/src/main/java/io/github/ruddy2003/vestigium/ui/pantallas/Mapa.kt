@@ -71,12 +71,19 @@ import org.osmdroid.views.overlay.Overlay
  * de día, mármol desaturado; de noche, invertidos hacia basalto.
  */
 private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
-    val m = ColorMatrix().apply { setSaturation(if (oscuro) 0.2f else 0.45f) }
-    if (oscuro) {
-        m.postConcat(ColorMatrix(floatArrayOf(-1f, 0f, 0f, 0f, 255f, 0f, -1f, 0f, 0f, 255f, 0f, 0f, -1f, 0f, 255f, 0f, 0f, 0f, 1f, 0f)))
-        m.postConcat(ColorMatrix(floatArrayOf(0.80f, 0f, 0f, 0f, 8f, 0f, 0.82f, 0f, 0f, 10f, 0f, 0f, 0.85f, 0f, 12f, 0f, 0f, 0f, 1f, 0f)))
-    } else {
-        m.postConcat(ColorMatrix(floatArrayOf(0.97f, 0f, 0f, 0f, 6f, 0f, 0.97f, 0f, 0f, 6f, 0f, 0f, 0.95f, 0f, 4f, 0f, 0f, 0f, 1f, 0f)))
+    val tema = io.github.ruddy2003.vestigium.ui.Estilo.tema
+    val invertir = ColorMatrix(floatArrayOf(-1f, 0f, 0f, 0f, 255f, 0f, -1f, 0f, 0f, 255f, 0f, 0f, -1f, 0f, 255f, 0f, 0f, 0f, 1f, 0f))
+    fun tinte(r: Float, g: Float, b: Float, or: Float, og: Float, ob: Float) = ColorMatrix(floatArrayOf(r, 0f, 0f, 0f, or, 0f, g, 0f, 0f, og, 0f, 0f, b, 0f, ob, 0f, 0f, 0f, 1f, 0f))
+    val m = ColorMatrix()
+    when {
+        // Cyberpunk: plano nocturno en azul eléctrico.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.30f, 0.62f, 0.80f, 0f, 4f, 10f)) }
+        // Helénico: pergamino de día, noche púrpura de noche.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO && oscuro -> { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.78f, 0.70f, 0.92f, 6f, 4f, 14f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO -> { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.95f, 0.84f, 4f, 2f, 0f)) }
+        // Romano: mármol desaturado de día, basalto de noche.
+        oscuro -> { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.80f, 0.82f, 0.85f, 8f, 10f, 12f)) }
+        else -> { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }
     }
     return ColorMatrixColorFilter(m)
 }
@@ -147,9 +154,7 @@ private fun celdasDeTiempo(desde: Long, hasta: Long = Long.MAX_VALUE): Pair<List
 /** Escala de calor: verde azulado (poco) → oro → vino (mucho). */
 private fun colorCalor(t: Float, oscuro: Boolean): Int {
     val x = t.coerceIn(0f, 1f)
-    val (a, b, c) = if (oscuro) Triple(Color(0xFF3FA393), Color(0xFFD2AE5A), Color(0xFFE0604F)) else Triple(Color(0xFF2D7A6F), Color(0xFFB8892B), Color(0xFF9E3445))
-    val col = if (x < 0.5f) lerp(a, b, x * 2) else lerp(b, c, (x - 0.5f) * 2)
-    return col.copy(alpha = 0.38f + 0.47f * x).toArgb()
+    return Tonos.calor(x, oscuro).copy(alpha = 0.38f + 0.47f * x).toArgb()
 }
 
 /**
@@ -294,9 +299,9 @@ fun PantallaMapa(nav: Nav) {
       // Controles arriba, siempre por encima del mapa y con fondo propio para que se puedan tocar.
       Column(Modifier.fillMaxWidth().zIndex(2f).background(MaterialTheme.colorScheme.background)) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = nav.atras) { Text("← cd ..", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            TextButton(onClick = nav.atras) { Text(io.github.ruddy2003.vestigium.ui.Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
-                Text("MAPPA", style = MaterialTheme.typography.headlineSmall)
+                Text(io.github.ruddy2003.vestigium.ui.Estilo.pantalla("Mapa", "MAPPA").first, style = MaterialTheme.typography.headlineSmall)
                 Text("// mapa · mantén presionado para marcar un lugar", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

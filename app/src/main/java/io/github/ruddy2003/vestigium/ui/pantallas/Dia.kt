@@ -114,19 +114,25 @@ fun PantallaDia(nav: Nav) {
     val hoy = Fechas.diaLogico()
 
     Hoja("Día", encabezado = {
-        Row(Modifier.padding(top = 14.dp), verticalAlignment = Alignment.Bottom) {
-            Text("DIES", style = MaterialTheme.typography.headlineMedium)
-            Text("  ${Romano.fecha(fecha)}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+        val est = io.github.ruddy2003.vestigium.ui.Estilo
+        val tema = est.tema
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.Bottom) {
+            Text(est.pantalla("Día", "DIES").first + if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) "_" else "", style = MaterialTheme.typography.headlineMedium)
+            if (tema == io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) Text("  ${est.fecha(fecha)}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+            else Spacer(Modifier.weight(1f))
+            if (tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO) io.github.ruddy2003.vestigium.ui.SolVergina()
         }
+        if (tema != io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) Text(est.fecha(fecha), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
         val fase = Luna.fase(fecha)
-        Text("// ${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text((if (tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO) "— " else "// ") + "${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}",
+            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }) {
         // El contador vive dentro del bloque para que la numeración se reinicie en cada recomposición.
         var k = 0
         fun n() = ++k
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             BotonSecundario("‹") { irA(Fechas.sumar(fecha, -1)) }
-            BotonSecundario("▦ calendarium", Modifier.weight(1f)) { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
+            BotonSecundario(when (io.github.ruddy2003.vestigium.ui.Estilo.tema) { io.github.ruddy2003.vestigium.ui.TemaId.ROMANO -> "▦ calendarium"; io.github.ruddy2003.vestigium.ui.TemaId.CIBER -> "▦ calendar"; else -> "▦ ἡμερολόγιον" }, Modifier.weight(1f)) { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
             if (fecha != hoy) BotonSecundario("hoy") { irA(hoy) }
             BotonSecundario("›") { irA(Fechas.sumar(fecha, 1)) }
         }

@@ -204,9 +204,9 @@ private fun Semana(panel: Map<String, Map<String, Double?>>, vars: List<Variable
             }
         }
     }
-    Row(Modifier.fillMaxWidth()) { Romano.SEMANA.forEach { Text(it, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, textAlign = androidx.compose.ui.text.style.TextAlign.Center) } }
+    Row(Modifier.fillMaxWidth()) { io.github.ruddy2003.vestigium.ui.Estilo.semana.forEach { Text(it, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, textAlign = androidx.compose.ui.text.style.TextAlign.Center) } }
     val mejor = g.withIndex().filter { it.value != null }.maxByOrNull { it.value!!.media }; val peor = g.withIndex().filter { it.value != null }.minByOrNull { it.value!!.media }
-    if (mejor != null && peor != null) Ayuda("Más alto: ${Romano.SEMANA[mejor.index]} (${fmt(mejor.value!!.media)}); más bajo: ${Romano.SEMANA[peor.index]} (${fmt(peor.value!!.media)}). " +
+    if (mejor != null && peor != null) Ayuda("Más alto: ${io.github.ruddy2003.vestigium.ui.Estilo.semana[mejor.index]} (${fmt(mejor.value!!.media)}); más bajo: ${io.github.ruddy2003.vestigium.ui.Estilo.semana[peor.index]} (${fmt(peor.value!!.media)}). " +
         if (mejor.value!!.lo > peor.value!!.hi) "Los intervalos no se enciman: la diferencia parece real." else "Los intervalos se enciman: podría ser azar.", Modifier.padding(top = 8.dp))
 }
 

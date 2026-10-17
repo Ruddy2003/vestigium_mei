@@ -97,14 +97,14 @@ fun PantallaCalendario(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = { mes = Fechas.mesDe(Fechas.iso(primero.minusMonths(1))) }, shape = RoundedCornerShape(4.dp)) { Text("‹", fontSize = 18.sp) }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("${Romano.mes(primero.monthValue)} · ${Romano.de(primero.year)}", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
+                Text("${io.github.ruddy2003.vestigium.ui.Estilo.mes(primero.monthValue)} · ${io.github.ruddy2003.vestigium.ui.Estilo.numeral(primero.year)}", style = MaterialTheme.typography.titleLarge, textAlign = TextAlign.Center)
                 Text("// ${Fechas.mesTitulo(mes).lowercase()}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             OutlinedButton(onClick = { mes = Fechas.mesDe(Fechas.iso(primero.plusMonths(1))) }, shape = RoundedCornerShape(4.dp)) { Text("›", fontSize = 18.sp) }
         }
 
         Row(Modifier.fillMaxWidth().padding(top = 14.dp)) {
-            Romano.SEMANA.forEach { d -> Text(d, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            io.github.ruddy2003.vestigium.ui.Estilo.semana.forEach { d -> Text(d, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         val desfase = primero.dayOfWeek.value - 1
         val celdas = List(desfase) { null } + dias
@@ -172,7 +172,7 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
     val d = Repo.dias[fecha]
     val tinta = Tonos.sobre(fondo)
     val nMom = Repo.momentos.count { it.fecha == fecha && it.tipo != "muestreo" }
-    val marca = Romano.marca(fecha)
+    val marca = io.github.ruddy2003.vestigium.ui.Estilo.marca(fecha)
     Box(
         modifier.aspectRatio(0.78f).clip(RoundedCornerShape(3.dp)).background(fondo)
             .border(if (hoy) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline), RoundedCornerShape(3.dp))

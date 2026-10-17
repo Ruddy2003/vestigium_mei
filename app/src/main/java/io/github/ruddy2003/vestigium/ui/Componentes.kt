@@ -62,6 +62,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -72,39 +74,113 @@ import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Opcion
 
-private val R4 = RoundedCornerShape(4.dp)
+/** Esquinas según el tema (rectas en cyberpunk, suaves en helénico). */
+private val R4 @Composable get() = MaterialTheme.shapes.small
 
-/** Banda de meandro griego: el único ornamento de la app, bajo cada título. */
+/** Banda ornamental bajo cada título: meandro (romano), greca enmarcada (helénico) o pista de circuito (cyberpunk). */
 @Composable
 fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)) {
-    Canvas(modifier.fillMaxWidth().height(9.dp)) {
-        val h = size.height; val u = h / 3f
-        val paso = u * 4
-        val p = Path()
-        var x = 0f
-        p.moveTo(0f, h)
-        while (x + paso <= size.width) {
-            p.lineTo(x, 0f); p.lineTo(x + u * 3, 0f); p.lineTo(x + u * 3, u * 2); p.lineTo(x + u, u * 2); p.lineTo(x + u, u)
-            p.lineTo(x + u * 2, u); p.moveTo(x + u * 2, u); p.moveTo(x, h); p.lineTo(x + paso, h)
-            p.moveTo(x + paso, h)
-            x += paso
+    when (Estilo.tema) {
+        TemaId.CIBER -> Circuito(modifier)
+        TemaId.HELENO -> Greca(modifier, color)
+        TemaId.ROMANO -> Canvas(modifier.fillMaxWidth().height(9.dp)) {
+            val h = size.height; val u = h / 3f
+            val paso = u * 4
+            val p = Path()
+            var x = 0f
+            p.moveTo(0f, h)
+            while (x + paso <= size.width) {
+                p.lineTo(x, 0f); p.lineTo(x + u * 3, 0f); p.lineTo(x + u * 3, u * 2); p.lineTo(x + u, u * 2); p.lineTo(x + u, u)
+                p.lineTo(x + u * 2, u); p.moveTo(x + u * 2, u); p.moveTo(x, h); p.lineTo(x + paso, h)
+                p.moveTo(x + paso, h)
+                x += paso
+            }
+            drawPath(p, color, style = Stroke(width = 1.4f, cap = StrokeCap.Square, join = StrokeJoin.Miter))
         }
-        drawPath(p, color, style = Stroke(width = 1.4f, cap = StrokeCap.Square, join = StrokeJoin.Miter))
     }
 }
 
-/** Encabezado de sección: numeral romano, nombre latino lapidario y comentario en español como en código. */
+/** Greca griega entre dos filetes, como en el borde de un vaso ático. */
+@Composable
+private fun Greca(modifier: Modifier, color: Color) {
+    Canvas(modifier.fillMaxWidth().height(15.dp)) {
+        val m = size.height * 0.22f
+        val h = size.height - 2 * m
+        val u = h / 3f
+        val paso = u * 4
+        drawLine(color, Offset(0f, 0.6f), Offset(size.width, 0.6f), 1.1f)
+        drawLine(color, Offset(0f, size.height - 0.6f), Offset(size.width, size.height - 0.6f), 1.1f)
+        val p = Path()
+        var x = (size.width % paso) / 2
+        val b = m + h
+        p.moveTo(0f, b); p.lineTo(x, b)
+        while (x + paso <= size.width) {
+            p.lineTo(x, m); p.lineTo(x + u * 3, m); p.lineTo(x + u * 3, m + u * 2); p.lineTo(x + u, m + u * 2); p.lineTo(x + u, m + u); p.lineTo(x + u * 2, m + u)
+            p.moveTo(x, b); p.lineTo(x + paso, b)
+            x += paso
+        }
+        p.lineTo(size.width, b)
+        drawPath(p, color, style = Stroke(width = 1.5f, cap = StrokeCap.Square, join = StrokeJoin.Miter))
+    }
+}
+
+/** Pista de circuito: línea fina con nodos y un tramo encendido en magenta. */
+@Composable
+private fun Circuito(modifier: Modifier) {
+    val cian = MaterialTheme.colorScheme.primary
+    val magenta = MaterialTheme.colorScheme.secondary
+    Canvas(modifier.fillMaxWidth().height(10.dp)) {
+        val y = size.height / 2
+        drawLine(cian.copy(alpha = 0.35f), Offset(0f, y), Offset(size.width, y), 1.5f)
+        drawLine(magenta, Offset(0f, y), Offset(size.width * 0.16f, y), 2.5f)
+        drawLine(cian, Offset(size.width * 0.16f, y), Offset(size.width * 0.22f, y), 2.5f)
+        val paso = 46.dp.toPx()
+        var x = size.width * 0.28f
+        var k = 0
+        while (x < size.width) {
+            val lado = if (k % 3 == 0) 6f else 3.5f
+            drawRect(cian.copy(alpha = if (k % 3 == 0) 0.9f else 0.5f), Offset(x - lado / 2, y - lado / 2), androidx.compose.ui.geometry.Size(lado, lado))
+            if (k % 4 == 1) drawLine(cian.copy(alpha = 0.4f), Offset(x, y), Offset(x + 10f, y - size.height / 2), 1.2f)
+            x += paso; k++
+        }
+    }
+}
+
+/** El sol de Vergina: la estrella de dieciséis rayos de la casa real macedonia, la de Alejandro. */
+@Composable
+fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
+    Canvas(modifier.size(30.dp)) {
+        val c = Offset(size.width / 2, size.height / 2)
+        val r = size.minDimension / 2
+        for (i in 0 until 16) {
+            val ang = Math.toRadians(i * 22.5 - 90).toFloat()
+            val largo = if (i % 2 == 0) r else r * 0.72f
+            val ancho = Math.toRadians(if (i % 2 == 0) 5.5 else 4.5).toFloat()
+            val base = r * 0.22f
+            val p = Path()
+            p.moveTo(c.x + base * kotlin.math.cos(ang - ancho * 2.2f), c.y + base * kotlin.math.sin(ang - ancho * 2.2f))
+            p.lineTo(c.x + largo * kotlin.math.cos(ang), c.y + largo * kotlin.math.sin(ang))
+            p.lineTo(c.x + base * kotlin.math.cos(ang + ancho * 2.2f), c.y + base * kotlin.math.sin(ang + ancho * 2.2f))
+            p.close()
+            drawPath(p, color)
+        }
+        drawCircle(color, r * 0.2f, c)
+    }
+}
+
+/** Encabezado de sección: numeral y nombre según el tema, con el nombre en español como comentario. */
 @Composable
 fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), content: @Composable () -> Unit) {
+    val (nombre, comentario) = Estilo.seccion(titulo, latin)
     Column(Modifier.fillMaxWidth().padding(top = 26.dp)) {
         Row(verticalAlignment = Alignment.Bottom) {
             if (numero != null) {
-                Text(Romano.de(numero), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+                Text(Estilo.numeral(numero), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
                 Text("  ·  ", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline)
             }
-            Text(latin ?: titulo.uppercase(), style = MaterialTheme.typography.titleLarge)
+            Text(nombre, style = MaterialTheme.typography.titleLarge, color = if (Estilo.tema == TemaId.CIBER) MaterialTheme.colorScheme.primary else Color.Unspecified)
         }
-        if (latin != null) Text("// ${titulo.lowercase()}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
+        if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
         if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))
         else Spacer(Modifier.height(10.dp))
         content()
@@ -122,7 +198,7 @@ fun Tarjeta(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
 @Composable
 fun Etiqueta(texto: String) {
     Row(Modifier.padding(top = 14.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("› ", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+        Text(Estilo.prefijo, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
         Text(texto.lowercase(), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
@@ -136,7 +212,11 @@ fun Ayuda(texto: String, modifier: Modifier = Modifier) {
 @Composable
 fun Clave(clave: String, valor: String, ancho: Int = 14) {
     Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
-        Text(clave.padEnd(ancho), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // Ancho fijo medido con la letra del tema: así las columnas se alinean aunque no sea monoespaciada.
+        val medidor = rememberTextMeasurer()
+        val estilo = MaterialTheme.typography.labelLarge
+        val anchoDp = with(LocalDensity.current) { medidor.measure("0".repeat(ancho), estilo).size.width.toDp() }
+        Text(clave, style = estilo, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(anchoDp), maxLines = 1)
         Text("= ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         Text(valor, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
     }

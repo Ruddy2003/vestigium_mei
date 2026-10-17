@@ -96,7 +96,7 @@ fun PantallaExplorar(nav: Nav) {
             Tarjeta {
                 HERRAMIENTAS.forEachIndexed { i, (id, n, d) ->
                     if (i > 0) androidx.compose.material3.HorizontalDivider()
-                    io.github.ruddy2003.vestigium.ui.FilaMenu("${io.github.ruddy2003.vestigium.ui.Romano.de(i + 1)} · $n", d) { Herramienta.actual = id; nav.ir("analisis") }
+                    io.github.ruddy2003.vestigium.ui.FilaMenu("${io.github.ruddy2003.vestigium.ui.Estilo.numeral(i + 1)} · $n", d) { Herramienta.actual = id; nav.ir("analisis") }
                 }
             }
         }

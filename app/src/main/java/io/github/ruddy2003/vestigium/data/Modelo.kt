@@ -222,6 +222,20 @@ data class Config(
     val whatsapp_yo: String = "",
     val escalas_hora: Int = 19,
     val escalas_insistir: Boolean = true,
+    /** romano, ciber o heleno. */
+    val tema: String = "romano",
+    /** Escala del texto (1 = normal). */
+    val letra: Float = 1f,
+    /** Después de las 22:00 la app baja el brillo y entibia los colores. */
+    val nocturno: Boolean = true,
+    /** Avisos de datos que faltan que se ignoraron: clave → fecha del día ignorado, o «siempre». */
+    val avisos_ignorados: Map<String, String> = emptyMap(),
+    /** Tarjetas del tablero de Día, en orden. Vacío = el orden de siempre. */
+    val tablero: List<String> = emptyList(),
+    /** Secciones de Día plegadas. */
+    val plegadas: List<String> = emptyList(),
+    /** Qué cifra muestra el widget de una cifra. */
+    val widget_cifra: String = "racha",
 )
 
 /** Llamadas y SMS del día: solo cuántos, cuánto duraron y con cuántas personas distintas. Nunca números, nombres ni textos. */

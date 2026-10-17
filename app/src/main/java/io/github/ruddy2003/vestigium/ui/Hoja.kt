@@ -16,6 +16,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 
 /**
@@ -26,12 +29,23 @@ import androidx.compose.ui.unit.dp
 fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null, latin: String? = Romano.latin(titulo), encabezado: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (atras != null) TextButton(onClick = atras) { Text("← cd ..", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            if (atras != null) TextButton(onClick = atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
         if (encabezado != null) encabezado()
         else {
-            Text(latin ?: titulo.uppercase(), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(top = if (atras == null) 14.dp else 2.dp))
-            if (latin != null) Text("// ${titulo.lowercase()}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            val (nombre, comentario) = Estilo.pantalla(titulo, latin)
+            Row(Modifier.fillMaxWidth().padding(top = if (atras == null) 14.dp else 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    buildAnnotatedString {
+                        append(nombre)
+                        // En cyberpunk el título termina con un cursor de terminal.
+                        if (Estilo.tema == TemaId.CIBER) withStyle(SpanStyle(color = MaterialTheme.colorScheme.secondary)) { append("_") }
+                    },
+                    style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f),
+                )
+                if (Estilo.tema == TemaId.HELENO) SolVergina(Modifier.padding(start = 8.dp))
+            }
+            if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Meandro(Modifier.padding(top = 10.dp, bottom = 4.dp))
         if (subtitulo != null) Ayuda(subtitulo, Modifier.padding(top = 6.dp))
