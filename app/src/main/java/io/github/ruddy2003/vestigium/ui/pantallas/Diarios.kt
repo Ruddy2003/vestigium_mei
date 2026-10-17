@@ -122,7 +122,8 @@ fun PantallaDiarios(nav: Nav) {
                 val mes = d.fecha.take(7)
                 if (mes != mesAnterior) {
                     mesAnterior = mes
-                    Text(Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()) + if (Estilo.tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) "" else " · ${mes.take(4)}",
+                    val rotulo = Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) }
+                    Text(rotulo,
                         style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 14.dp, bottom = 6.dp))
                 }
                 FichaEntrada(d) { Seleccion.entrada = d.fecha; nav.ir("entrada") }
