@@ -54,6 +54,9 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 1) {
     fun contar(col: String): Long =
         readableDatabase.rawQuery("SELECT COUNT(*) FROM docs WHERE col = ?", arrayOf(col)).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
 
+    fun contarPrefijo(col: String, prefijo: String): Long =
+        readableDatabase.rawQuery("SELECT COUNT(*) FROM docs WHERE col = ? AND id LIKE ?", arrayOf(col, "$prefijo%")).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
+
     fun uno(col: String, id: String): String? =
         readableDatabase.rawQuery("SELECT json FROM docs WHERE col = ? AND id = ?", arrayOf(col, id)).use { c ->
             if (c.moveToFirst()) c.getString(0) else null
@@ -77,6 +80,14 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 1) {
             while (c.moveToNext()) out.add(Punto(c.getLong(0), c.getDouble(1), c.getDouble(2), if (c.isNull(3)) null else c.getDouble(3), c.getString(4)))
         }
         return out
+    }
+
+    /** Recorre las ubicaciones en orden sin crear un objeto por punto (para años de historial). */
+    fun recorrerUbicaciones(desde: Long, hasta: Long = Long.MAX_VALUE, f: (ms: Long, lat: Double, lon: Double, precision: Double) -> Unit) {
+        readableDatabase.rawQuery(
+            "SELECT ms, lat, lon, COALESCE(precision, 0) FROM ubicaciones WHERE ms >= ? AND ms < ? ORDER BY ms",
+            arrayOf(desde.toString(), hasta.toString())
+        ).use { c -> while (c.moveToNext()) f(c.getLong(0), c.getDouble(1), c.getDouble(2), c.getDouble(3)) }
     }
 
     fun contarUbicaciones(): Long =

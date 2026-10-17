@@ -49,6 +49,7 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.reportes.Reportes
 import io.github.ruddy2003.vestigium.data.Drive
+import io.github.ruddy2003.vestigium.data.Spotify
 import io.github.ruddy2003.vestigium.sensores.Actividad
 import io.github.ruddy2003.vestigium.sensores.Ambiente
 import io.github.ruddy2003.vestigium.sensores.Comunicacion
@@ -364,6 +365,9 @@ fun PantallaDatos(nav: Nav) {
         Seccion("Google Drive", "Cada mañana reemplaza tus CSV en la carpeta «Vestigium Mei» de tu Drive y cada semana guarda una copia .zip fechada (se conservan las últimas 12). La app solo puede ver lo que ella misma sube.") {
             DriveTarjeta { tarea(it) }
         }
+        Seccion("Spotify en vivo", "Conexión directa con tu cuenta: lo que escuchas en cualquier aparato (compu, bocina, coche), con artista, álbum y si venía de una playlist.", latin = "MVSICA") {
+            SpotifyTarjeta { tarea(it) }
+        }
         Seccion("Importar") {
             Tarjeta {
                 OutlinedButton(onClick = { obsidian.launch(arrayOf("text/markdown", "text/plain", "application/octet-stream", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Notas diarias de Obsidian (.md)") }
@@ -497,6 +501,57 @@ private fun huellaSha1(ctx: android.content.Context): String = runCatching {
     val firma = info.signingInfo?.apkContentsSigners?.firstOrNull() ?: return@runCatching "?"
     java.security.MessageDigest.getInstance("SHA-1").digest(firma.toByteArray()).joinToString(":") { "%02X".format(it) }
 }.getOrDefault("?")
+
+@Composable
+private fun SpotifyTarjeta(tarea: (suspend () -> String) -> Unit) {
+    val ctx = LocalContext.current
+    val version by Spotify.version
+    val msg by Spotify.mensaje
+    val esperando by Spotify.esperando
+    var clientId by remember { mutableStateOf(Spotify.clientId(ctx)) }
+    var pegada by remember { mutableStateOf("") }
+    val conectado = remember(version) { Spotify.conectado(ctx) }
+    val n by androidx.compose.runtime.produceState(0L, version) { value = withContext(Dispatchers.IO) { Spotify.contar() } }
+    fun copiar(texto: String) {
+        ctx.getSystemService(android.content.ClipboardManager::class.java)?.setPrimaryClip(android.content.ClipData.newPlainText("Spotify", texto))
+        Spotify.mensaje.value = "Copiado."
+    }
+    Tarjeta {
+        if (conectado) {
+            Clave("estado", "conectado · $n canciones por esta vía", ancho = 8)
+            val u = remember(version) { Spotify.ultimo(ctx) }
+            Clave("lectura", if (u > 0) Fechas.isoDeMillis(u).let { "${Fechas.horaDe(it)} del ${it.take(10)}" } else "aún no", ancho = 8)
+            remember(version) { Spotify.error(ctx) }?.let { Aviso(it) }
+            Ayuda("Se lee sola cada media hora. Spotify solo guarda tus últimas 50 canciones: si el teléfono pasa apagado una tarde entera de música, esas se pierden (el historial importado las recupera).", Modifier.padding(top = 6.dp))
+            Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotonSecundario("leer ahora") { tarea { "Spotify: ${Spotify.sincronizar(ctx)} canciones nuevas." } }
+                BotonSecundario("desconectar") { Spotify.desconectar(ctx) }
+            }
+        } else {
+            Etiqueta("una sola vez, en developer.spotify.com/dashboard")
+            Ayuda("1. Entra con tu cuenta de Spotify y toca «Create app».\n" +
+                "2. Nombre y descripción: los que quieras (p. ej. Vestigium Mei). Website: déjalo vacío.\n" +
+                "3. En «Redirect URIs» escribe exactamente esta dirección y toca «Add»:")
+            Clave("redirect", Spotify.REDIRECCION, ancho = 8)
+            TextButton(onClick = { copiar(Spotify.REDIRECCION) }) { Text("copiar dirección", style = MaterialTheme.typography.labelLarge) }
+            Ayuda("4. En «Which API/SDKs…» marca «Web API», acepta los términos y guarda.\n" +
+                "5. En la app recién creada abre «Settings», copia el Client ID y pégalo aquí:")
+            OutlinedTextField(clientId, { clientId = it.trim() }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Client ID") })
+            BotonPrincipal(if (esperando) "esperando al navegador…" else "Conectar con Spotify", Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                if (clientId.length < 20) Spotify.mensaje.value = "Ese Client ID se ve incompleto: son 32 letras y números."
+                else runCatching {
+                    ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(Spotify.iniciar(ctx, clientId))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }.onFailure { Spotify.mensaje.value = "No pude abrir el navegador." }
+            }
+            Ayuda("Requisito de Spotify desde 2026: el dueño de la app de desarrollador necesita Premium. Sin Premium, usa la importación del historial en «Otros servicios»: da lo mismo, solo que no al momento.", Modifier.padding(top = 6.dp))
+            Etiqueta("si al volver el navegador muestra un error")
+            Ayuda("Copia la dirección completa de esa página (empieza con http://127.0.0.1) y pégala aquí:")
+            OutlinedTextField(pegada, { pegada = it.trim() }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, placeholder = { Text("http://127.0.0.1:43117/callback?code=…") })
+            if (pegada.isNotBlank()) BotonSecundario("usar dirección") { val d = pegada; pegada = ""; tarea { Spotify.canjearPegada(ctx, d) } }
+        }
+        msg?.let { Aviso(it) }
+    }
+}
 
 @Composable
 private fun DriveTarjeta(tarea: (suspend () -> String) -> Unit) {

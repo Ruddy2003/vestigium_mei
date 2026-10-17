@@ -180,7 +180,7 @@ object Exportar {
 
     fun filasMusica() = Repo.escuchas("0000-01-01", "9999-12-31").map {
         linkedMapOf<String, Any?>("ts" to it.ts, "fecha" to it.fecha, "hora" to Fechas.horaDe(it.ts), "titulo" to it.titulo, "artista" to it.artista,
-            "album" to it.album, "app" to it.app, "duracion_s" to it.duracion_s, "ms_escuchado" to it.ms, "saltada" to it.saltada, "fuente" to it.fuente)
+            "album" to it.album, "app" to it.app, "duracion_s" to it.duracion_s, "ms_escuchado" to it.ms, "saltada" to it.saltada, "fuente" to it.fuente, "contexto" to it.contexto)
     }
 
     fun filasComunicacion() = Repo.comunicacion.values.sortedBy { it.fecha }.map {

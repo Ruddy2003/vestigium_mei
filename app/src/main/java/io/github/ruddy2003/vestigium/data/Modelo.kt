@@ -395,8 +395,10 @@ data class Escucha(
     /** Milisegundos realmente escuchados (solo en el historial importado de Spotify). */
     val ms: Int? = null,
     val saltada: Boolean? = null,
-    /** notificacion (lo que sonó en el teléfono) o spotify (historial importado). */
+    /** notificacion (lo que sonó en el teléfono), spotify (historial importado) o spotify_api (conexión directa). */
     val fuente: String = "notificacion",
+    /** Desde dónde sonó, solo con la conexión directa: playlist, album, artist o collection (tus «me gusta»). */
+    val contexto: String = "",
 )
 
 /** Minutos por tipo de movimiento que detecta el teléfono: a pie, corriendo, en bici, en vehículo, quieto. */

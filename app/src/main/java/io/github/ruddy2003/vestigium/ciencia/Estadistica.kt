@@ -11,7 +11,20 @@ import kotlin.math.tanh
 
 data class Variable(val id: String, val nombre: String, val grupo: String)
 data class Par(val x: Double, val y: Double, val fecha: String)
-data class Correlacion(val a: Variable, val b: Variable, val r: Double, val n: Int, val ic: Pair<Double, Double>?)
+/**
+ * [r] es la correlación que se muestra (sin tendencia o bruta, según el modo); [bruta] la de los valores tal cual.
+ * [nEf] son los días «independientes» una vez descontado que un día se parece al anterior; el intervalo y [q] se calculan con ellos.
+ */
+data class Correlacion(
+    val a: Variable, val b: Variable, val r: Double, val n: Int, val ic: Pair<Double, Double>?,
+    val bruta: Double = r, val nEf: Double = n.toDouble(), val p: Double = 1.0,
+    var q: Double = 1.0, var qConObvias: Double = 1.0, val obvia: Boolean = false,
+)
+
+/** Resultado de revisar todos los pares. [lentas]: variables que casi solo cambian con las semanas (se omiten al quitar tendencias). */
+data class Relaciones(val lista: List<Correlacion>, val obvias: Int, val lentas: List<Variable>, val sinTendencia: Boolean) {
+    val probadas get() = lista.size - obvias
+}
 
 object Estadistica {
 
@@ -237,17 +250,126 @@ object Estadistica {
         return out
     }
 
-    fun mejores(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, minN: Int = 14): Pair<List<Correlacion>, Int> {
-        val res = ArrayList<Correlacion>()
-        for (i in vars.indices) for (j in i + 1 until vars.size) {
-            val a = vars[i]; val b = vars[j]
-            if (a.grupo == b.grupo && (a.grupo == "Lectura del día" || a.grupo == "Momentos")) continue
-            val ps = pares(panel, a.id, b.id, false)
-            if (ps.size < minN) continue
-            val r = pearson(ps.map { it.x }, ps.map { it.y }) ?: continue
-            res.add(Correlacion(a, b, r, ps.size, ic95(r, ps.size)))
+    // ---------- Relaciones entre todas las variables ----------
+
+    /**
+     * Variables que salen de la misma fuente o se calculan una de otra. Entre ellas la correlación es casi segura
+     * y no dice nada de ti (las calorías suben con la proteína; los eventos, con los minutos de agenda).
+     * Una variable puede estar en varias familias.
+     */
+    val FAMILIAS: List<Set<String>> = listOf(
+        setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "azucares_g", "cafeina_mg", "balance_kcal", "primera_comida_h", "ultima_comida_h", "cafeina_ultima_h"),
+        setOf("peso_kg", "peso_tendencia_kg"),
+        setOf("eventos", "min_ocupado"),
+        setOf("sueno_horas", "sueno_profundo", "sueno_rem", "sueno_inicio_h", "sueno_fin_h"),
+        setOf("sueno_recordado", "sueno_valencia"),
+        setOf("valencia", "muestreo_valencia"), setOf("activacion", "muestreo_activacion"),
+        setOf("hrv", "fc_reposo"),
+        setOf("pasos", "a_pie_min", "cal_activas", "ejercicio_min", "distancia_km"),
+        setOf("distancia_km", "vehiculo_min", "coche_min", "sin_wifi_min", "lugares_distintos"),
+        setOf("gimnasio", "volumen_kg", "series_gimnasio", "ejercicio_min", "cal_activas"),
+        setOf("escalada", "escalada_grado", "ejercicio_min", "cal_activas"),
+        setOf("pantalla_min", "desbloqueos", "notificaciones", "primer_uso_h", "ultimo_uso_h"),
+        setOf("ultimo_uso_h", "carga_noche_h", "sueno_inicio_h"),
+        setOf("primer_uso_h", "sueno_fin_h"),
+        setOf("llamadas", "min_hablado", "contactos"),
+        setOf("wa_mios", "wa_otros", "wa_chats"),
+        setOf("canciones", "musica_min", "audifonos_min", "coche_min"),
+        setOf("palabras", "personas", "hitos_n"),
+        setOf("yt_vistos", "busquedas"),
+        setOf("t_max", "t_min", "precip_mm", "nubes_pct", "luz_horas", "sol_horas", "presion_hpa"),
+        setOf("aqi_us", "pm25"),
+        setOf("gasto_total", "gasto_imprevisto"),
+        setOf("impulso", "recaida"),
+    )
+
+    fun obvia(a: Variable, b: Variable): Boolean =
+        (a.grupo == b.grupo && (a.grupo == "Lectura del día" || a.grupo == "Momentos")) ||
+            FAMILIAS.any { a.id in it && b.id in it }
+
+    /** Días hacia cada lado con los que se compara cada día al quitar la tendencia. */
+    private const val VENTANA = 10
+
+    /** Una variable alineada a las fechas del panel (NaN = sin dato), con su versión sin tendencia y su autocorrelación. */
+    private class Serie(val crudo: DoubleArray, val resto: DoubleArray, val r1Crudo: Double, val r1Resto: Double, val lenta: Boolean, val binaria: Boolean)
+
+    private fun autocorr(x: DoubleArray, dia: LongArray): Double {
+        val a = ArrayList<Double>(); val b = ArrayList<Double>()
+        for (i in 0 until x.size - 1) if (!x[i].isNaN() && !x[i + 1].isNaN() && dia[i + 1] - dia[i] == 1L) { a.add(x[i]); b.add(x[i + 1]) }
+        if (a.size < 10) return 0.0
+        return pearson(a, b) ?: 0.0
+    }
+
+    private fun varianza(v: DoubleArray): Double {
+        val l = v.filter { !it.isNaN() }; if (l.size < 2) return 0.0
+        val m = l.average(); return l.sumOf { (it - m) * (it - m) } / (l.size - 1)
+    }
+
+    private fun series(panel: Map<String, Map<String, Double?>>, vars: List<Variable>): Map<String, Serie> {
+        val fechas = panel.keys.sorted()
+        val dia = LongArray(fechas.size) { Fechas.parse(fechas[it]).toEpochDay() }
+        val out = HashMap<String, Serie>()
+        for (v in vars) {
+            val x = DoubleArray(fechas.size) { panel[fechas[it]]?.get(v.id) ?: Double.NaN }
+            val idx = x.indices.filter { !x[it].isNaN() }
+            if (idx.size < 3) continue
+            // Cada día menos el promedio de sus vecinos (±VENTANA días de calendario): queda lo que ese día tuvo de distinto.
+            val resto = DoubleArray(x.size) { Double.NaN }
+            var lo = 0; var hi = 0; var suma = 0.0; var cnt = 0
+            for (i in idx) {
+                while (hi < idx.size && dia[idx[hi]] <= dia[i] + VENTANA) { suma += x[idx[hi]]; cnt++; hi++ }
+                while (dia[idx[lo]] < dia[i] - VENTANA) { suma -= x[idx[lo]]; cnt--; lo++ }
+                if (cnt >= 3) resto[i] = x[i] - suma / cnt
+            }
+            val vc = varianza(x); val vr = varianza(resto)
+            val binaria = idx.all { x[it] == 0.0 || x[it] == 1.0 }
+            // «Lenta»: casi toda su variación es de semanas a meses (horas de luz, peso suavizado). Las constantes no cuentan.
+            val lenta = vc > 0.0 && resto.count { !it.isNaN() } >= 14 && vr / vc < 0.12
+            out[v.id] = Serie(x, resto, autocorr(x, dia), autocorr(resto, dia), lenta, binaria)
         }
-        return res.sortedByDescending { abs(it.r) } to res.size
+        return out
+    }
+
+    /**
+     * Revisa todos los pares de variables. Con [sinTendencia], cada día se compara con sus semanas cercanas, así que
+     * dos cosas que solo cambiaron con el tiempo (días más cortos mientras bajabas de peso) dejan de parecer relacionadas.
+     * El intervalo usa días efectivos: si hoy se parece a ayer, dos días seguidos no cuentan como dos pruebas.
+     * [q] es el valor corregido por comparaciones múltiples (Benjamini-Hochberg) entre los pares no obvios.
+     */
+    fun relaciones(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, sinTendencia: Boolean, minN: Int = 14): Relaciones {
+        val s = series(panel, vars)
+        val usables = vars.filter { it.id in s }
+        val lentas = if (sinTendencia) usables.filter { s[it.id]!!.lenta } else emptyList()
+        val res = ArrayList<Correlacion>()
+        val xs = ArrayList<Double>(); val ys = ArrayList<Double>(); val cx = ArrayList<Double>(); val cy = ArrayList<Double>()
+        for (i in usables.indices) for (j in i + 1 until usables.size) {
+            val a = usables[i]; val b = usables[j]
+            val sa = s[a.id]!!; val sb = s[b.id]!!
+            if (sinTendencia && (sa.lenta || sb.lenta)) continue
+            val va = if (sinTendencia) sa.resto else sa.crudo; val vb = if (sinTendencia) sb.resto else sb.crudo
+            xs.clear(); ys.clear(); cx.clear(); cy.clear()
+            for (k in va.indices) if (!va[k].isNaN() && !vb[k].isNaN()) { xs.add(va[k]); ys.add(vb[k]); cx.add(sa.crudo[k]); cy.add(sb.crudo[k]) }
+            val n = xs.size
+            if (n < minN) continue
+            // Una variable 0/1 necesita algunos días de cada tipo para decir algo.
+            if (sa.binaria && minOf(cx.count { it == 1.0 }, cx.count { it == 0.0 }) < 4) continue
+            if (sb.binaria && minOf(cy.count { it == 1.0 }, cy.count { it == 0.0 }) < 4) continue
+            val r = pearson(xs, ys) ?: continue
+            val bruta = pearson(cx, cy) ?: r
+            val ra = (if (sinTendencia) sa.r1Resto else sa.r1Crudo).coerceIn(-0.5, 0.97)
+            val rb = (if (sinTendencia) sb.r1Resto else sb.r1Crudo).coerceIn(-0.5, 0.97)
+            val nEf = (n * (1 - ra * rb) / (1 + ra * rb)).coerceIn(4.0, n.toDouble())
+            val z = atanh(r.coerceIn(-0.9999, 0.9999)); val se = 1 / sqrt(nEf - 3)
+            val p = Analisis.pBilateral(z / se)
+            res.add(Correlacion(a, b, r, n, tanh(z - 1.96 * se) to tanh(z + 1.96 * se), bruta, nEf, p, obvia = obvia(a, b)))
+        }
+        val limpias = res.filter { !it.obvia }
+        Analisis.bh(limpias.map { it.p }).forEachIndexed { i, q -> limpias[i].q = q }
+        Analisis.bh(res.map { it.p }).forEachIndexed { i, q -> res[i].qConObvias = q }
+        // Primero lo que se sostiene aun en el peor caso del intervalo; luego, por fuerza.
+        fun seguro(c: Correlacion) = c.ic?.let { if (it.first > 0) it.first else if (it.second < 0) -it.second else 0.0 } ?: 0.0
+        val orden = res.sortedWith(compareByDescending<Correlacion> { seguro(it) }.thenByDescending { abs(it.r) })
+        return Relaciones(orden, res.count { it.obvia }, lentas, sinTendencia)
     }
 }
 

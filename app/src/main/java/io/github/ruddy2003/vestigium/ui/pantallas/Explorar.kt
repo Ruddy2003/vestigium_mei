@@ -2,6 +2,8 @@ package io.github.ruddy2003.vestigium.ui.pantallas
 
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.ciencia.Correlacion
 import io.github.ruddy2003.vestigium.ciencia.Estadistica
 import io.github.ruddy2003.vestigium.ciencia.Par
+import io.github.ruddy2003.vestigium.ciencia.Relaciones
 import io.github.ruddy2003.vestigium.ciencia.Variable
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
@@ -44,6 +47,7 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.Cifra
+import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Interruptor
 import io.github.ruddy2003.vestigium.ui.Nav
@@ -63,14 +67,17 @@ fun PantallaExplorar(nav: Nav) {
     val version = Repo.dias.size + Repo.momentos.size + Repo.salud.size + Repo.pantalla.size + Repo.gastos.size
     var panel by remember { mutableStateOf<Map<String, Map<String, Double?>>>(emptyMap()) }
     var vars by remember { mutableStateOf<List<Variable>>(emptyList()) }
-    var mejores by remember { mutableStateOf<Pair<List<Correlacion>, Int>?>(null) }
+    var mejores by remember { mutableStateOf<Map<Boolean, Relaciones>?>(null) }
     LaunchedEffect(version) {
         withContext(Dispatchers.Default) {
             val p = Estadistica.panel(); val v = Estadistica.variables()
-            val m = Estadistica.mejores(p, v)
+            val m = mapOf(true to Estadistica.relaciones(p, v, true), false to Estadistica.relaciones(p, v, false))
             withContext(Dispatchers.Main) { panel = p; vars = v; mejores = m }
         }
     }
+    var foco by remember { mutableStateOf("todas") }
+    var sinTendencia by remember { mutableStateOf(true) }
+    var verObvias by remember { mutableStateOf(false) }
     var x by remember { mutableStateOf("valencia") }
     var y by remember { mutableStateOf("sueno_horas") }
     var desfase by remember { mutableStateOf(false) }
@@ -129,18 +136,43 @@ fun PantallaExplorar(nav: Nav) {
         }
 
         Seccion("Las relaciones más marcadas") {
-            val m = mejores
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FOCOS.forEach { (id, n) -> Ficha(n, foco == id) { foco = id } }
+            }
+            Interruptor("Quitar tendencias", sinTendencia, "Compara cada día con sus ~3 semanas alrededor. Así, dos cosas que solo cambiaron con el tiempo (los días se acortan mientras bajas de peso) dejan de parecer relacionadas.") { sinTendencia = it }
+            Interruptor("Mostrar también las obvias", verObvias, "Pares de la misma fuente o calculados uno del otro: calorías y proteína, eventos y minutos de agenda, pasos y minutos a pie.") { verObvias = it }
+            val m = mejores?.get(sinTendencia)
             if (m == null) Ayuda("Calculando…")
-            else if (m.first.isEmpty()) Vacio("Aparecerán cuando tengas al menos 14 días con datos en común.")
+            else if (m.lista.isEmpty()) Vacio("Aparecerán cuando tengas al menos 14 días con datos en común.")
             else {
-                val solidas = m.first.count { c -> c.ic?.let { it.first > 0 || it.second < 0 } == true }
-                Ayuda("Revisé ${m.second} combinaciones. Por azar, unas ${(m.second * 0.05).toInt()} saldrían «significativas» sin significar nada; aquí $solidas tienen un intervalo que no toca el cero. Desconfía de las que no puedas explicar.")
-                Tarjeta {
-                    m.first.take(12).forEach { c ->
+                val lista = remember(m, verObvias, foco) { m.lista.filter { (verObvias || !it.obvia) && enFoco(foco, it) } }
+                val q = { c: Correlacion -> if (verObvias) c.qConObvias else c.q }
+                val firmes = m.lista.count { (verObvias || !it.obvia) && q(it) < 0.10 }
+                Ayuda(buildString {
+                    append("Revisé ${if (verObvias) m.lista.size else m.probadas} combinaciones")
+                    if (!verObvias && m.obvias > 0) append(" (dejé fuera ${m.obvias} obvias)")
+                    append(". Al revisar tantas, algunas salen por puro azar; ya corregido eso, $firmes se sostienen. ")
+                    if (m.lentas.isNotEmpty()) append("Sin tendencia no entran ${m.lentas.joinToString(", ") { "«" + it.nombre.lowercase() + "»" }}: casi solo cambian con las semanas. ")
+                    if (firmes == 0) append("Con pocos días es normal que nada se sostenga; las de abajo son pistas, no hallazgos.")
+                })
+                val grupos = remember(lista) { agrupar(lista, 15) }
+                if (lista.isEmpty()) Vacio("Nada en este filtro todavía.")
+                else Tarjeta {
+                    grupos.forEach { (c, parecidas) ->
                         Column(Modifier.padding(vertical = 6.dp)) {
                             Text("${c.a.nombre}  ↔  ${c.b.nombre}", style = MaterialTheme.typography.bodyMedium)
-                            val firme = c.ic?.let { it.first > 0 || it.second < 0 } == true
-                            Ayuda("r = ${"%+.2f".format(c.r)} · ${c.n} días · ${Estadistica.fuerza(c.r)}" + if (!firme) " · podría ser azar" else "")
+                            Ayuda(buildString {
+                                append("r = ${"%+.2f".format(c.r)} · ${c.n} días")
+                                if (c.nEf < c.n * 0.8) append(" (≈ ${c.nEf.toInt()} independientes)")
+                                append(" · ${Estadistica.fuerza(c.r)}")
+                                if (sinTendencia && abs(c.bruta - c.r) >= 0.2) append(" · con tendencia: ${"%+.2f".format(c.bruta)}")
+                                if (c.obvia) append(" · obvia")
+                                if (q(c) >= 0.10) append(" · podría ser azar")
+                            })
+                            if (parecidas.isNotEmpty()) Ayuda("También con " + parecidas.take(3).joinToString(", ") { p ->
+                                val otra = if (p.a.id == c.a.id || p.a.id == c.b.id) p.b else p.a
+                                "«${otra.nombre.lowercase()}» (${"%+.2f".format(p.r)})"
+                            } + if (parecidas.size > 3) " y ${parecidas.size - 3} más" else "")
                         }
                     }
                 }
@@ -209,6 +241,37 @@ fun PantallaExplorar(nav: Nav) {
             confirmButton = { TextButton(onClick = { eligiendo = null }) { Text("Cerrar") } },
         )
     }
+}
+
+private val FOCOS = listOf("todas" to "todas", "animo" to "con tu ánimo", "sueno" to "con tu sueño", "cuerpo" to "cuerpo y comida", "telefono" to "teléfono y social")
+
+/**
+ * Junta los pares casi repetidos: la misma variable con dos de la misma familia
+ * (ánimo ↔ horas de sueño y ánimo ↔ sueño REM). Se queda con el más sólido y anota los demás.
+ */
+private fun agrupar(l: List<Correlacion>, cuantos: Int): List<Pair<Correlacion, List<Correlacion>>> {
+    fun fam(x: String, y: String) = x == y || Estadistica.FAMILIAS.any { x in it && y in it }
+    fun parecida(k: Correlacion, c: Correlacion) =
+        (k.a.id == c.a.id && fam(k.b.id, c.b.id)) || (k.a.id == c.b.id && fam(k.b.id, c.a.id)) ||
+            (k.b.id == c.a.id && fam(k.a.id, c.b.id)) || (k.b.id == c.b.id && fam(k.a.id, c.a.id))
+    val out = ArrayList<Pair<Correlacion, MutableList<Correlacion>>>()
+    for ((i, c) in l.withIndex()) {
+        if (out.size >= cuantos && i > 400) break
+        val rep = out.firstOrNull { parecida(it.first, c) }
+        if (rep != null) rep.second.add(c) else if (out.size < cuantos) out.add(c to mutableListOf())
+    }
+    return out
+}
+
+private fun enFoco(foco: String, c: Correlacion): Boolean {
+    fun es(v: io.github.ruddy2003.vestigium.ciencia.Variable) = when (foco) {
+        "animo" -> v.grupo in setOf("Ánimo", "Momentos", "Privado", "Lectura del día") || v.id == "dolor"
+        "sueno" -> v.grupo == "Sueño"
+        "cuerpo" -> v.grupo in setOf("Cuerpo", "Nutrición")
+        "telefono" -> v.grupo in setOf("Teléfono", "Social")
+        else -> true
+    }
+    return es(c.a) || es(c.b)
 }
 
 @Composable

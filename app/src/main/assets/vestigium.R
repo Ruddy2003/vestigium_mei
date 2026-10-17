@@ -155,11 +155,96 @@ vm_cruce <- function(x, y, desfase = 0, datos = panel, metodo = "spearman") {
     labs(x = x, y = if (desfase) paste0(y, " (", desfase, " día después)") else y) + theme_minimal()
 }
 
+#' Columnas de la misma fuente o calculadas una de otra: su correlación es casi segura y no dice nada de ti.
+#' (Las m_* de momentos también son familia entre sí y con n_momentos.)
+vm_familias <- list(
+  c("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "gasto_kcal", "comidas",
+    "primera_comida_h", "ultima_comida_h", "cafeina_ultima_h"),
+  c("peso_kg", "peso_tendencia_kg"),
+  c("eventos", "min_ocupado"),
+  c("sueno_min", "sueno_h", "sueno_profundo_min", "sueno_rem_min", "sueno_inicio_h", "sueno_fin_h"),
+  c("valencia", "valencia_muestreo"),
+  c("hrv_rmssd", "fc_reposo"),
+  c("pasos", "a_pie_min", "cal_activas", "ejercicio_min", "km"),
+  c("km", "vehiculo_min", "coche_min", "sin_wifi_min"),
+  c("gimnasio", "gimnasio_min", "series_gimnasio", "volumen_kg", "ejercicio_min", "cal_activas"),
+  c("escalada", "ejercicio_min", "cal_activas"),
+  c("pantalla_min", "desbloqueos", "notificaciones", "primer_uso_h", "ultimo_uso_h"),
+  c("ultimo_uso_h", "carga_noche_inicio_h", "sueno_inicio_h"),
+  c("primer_uso_h", "sueno_fin_h"),
+  c("llamadas", "min_hablado", "sms", "contactos"),
+  c("wa_mios", "wa_otros", "wa_chats"),
+  c("canciones", "musica_min", "audifonos_min", "coche_min"),
+  c("yt_vistos", "busquedas"),
+  c("t_max", "t_min", "precip_mm", "nubes_pct", "luz_dia_min", "sol_min"),
+  c("aqi_us", "pm25")
+)
+vm_obvia <- function(a, b) {
+  mom <- function(v) startsWith(v, "m_") || v == "n_momentos"
+  (mom(a) && mom(b)) || any(map_lgl(vm_familias, ~ a %in% .x && b %in% .x))
+}
+
+#' Todas las parejas de variables del panel, como «Las relaciones más marcadas» de la app.
+#' sin_tendencia: cada día menos el promedio de sus ±`ventana` días, para que dos cosas que solo cambian con las semanas
+#'   (horas de luz y peso, por ejemplo) no parezcan relacionadas. Las variables casi puramente lentas se omiten.
+#' n_ef: días efectivos descontando que un día se parece al anterior (Bartlett); lo y hi usan n_ef; q: corrección BH.
+#' obvias = FALSE deja fuera las parejas de la misma familia (vm_familias).
+vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, ventana = 10, datos = panel) {
+  datos <- arrange(datos, fecha)
+  excluir <- c("fecha", "semana", "mes", "dia_semana", "valencia_ayer", "valencia_manana", "con_diario", "n_muestreos")
+  cand <- names(datos)[map_lgl(datos, ~ is.numeric(.x) || is.logical(.x)) & !names(datos) %in% excluir]
+  dias <- as.numeric(datos$fecha)
+  quitar <- function(x) {
+    out <- rep(NA_real_, length(x)); ok <- which(!is.na(x))
+    for (i in ok) { w <- ok[abs(dias[ok] - dias[i]) <= ventana]; if (length(w) >= 3) out[i] <- x[i] - mean(x[w]) }
+    out
+  }
+  ac1 <- function(x) {
+    a <- x[-length(x)]; b <- x[-1]; ok <- !is.na(a) & !is.na(b) & diff(dias) == 1
+    if (sum(ok) < 10) return(0)
+    r <- suppressWarnings(cor(a[ok], b[ok])); if (is.na(r)) 0 else min(max(r, -.5), .97)
+  }
+  S <- map(set_names(cand), function(v) {
+    x <- as.numeric(datos[[v]]); if (sum(!is.na(x)) < 3) return(NULL)
+    r <- quitar(x); vx <- var(x, na.rm = TRUE); vr <- var(r, na.rm = TRUE)
+    list(x = x, r = r, ac_x = ac1(x), ac_r = ac1(r), binaria = all(x %in% c(0, 1, NA)),
+         lenta = !is.na(vx) && vx > 0 && sum(!is.na(r)) >= min_n && !is.na(vr) && vr / vx < .12)
+  }) |> compact()
+  if (sin_tendencia) {
+    lentas <- names(keep(S, ~ .x$lenta))
+    if (length(lentas)) message("Sin tendencia se omiten (casi solo cambian con las semanas): ", paste(lentas, collapse = ", "))
+  }
+  vs <- names(S); if (length(vs) < 2) return(tibble())
+  pares <- combn(vs, 2)
+  res <- map_dfr(seq_len(ncol(pares)), function(k) {
+    a <- pares[1, k]; b <- pares[2, k]; sa <- S[[a]]; sb <- S[[b]]
+    ob <- vm_obvia(a, b)
+    if (ob && !obvias) return(NULL)
+    if (sin_tendencia && (sa$lenta || sb$lenta)) return(NULL)
+    xa <- if (sin_tendencia) sa$r else sa$x; xb <- if (sin_tendencia) sb$r else sb$x
+    ok <- !is.na(xa) & !is.na(xb); n <- sum(ok)
+    if (n < min_n) return(NULL)
+    if (sa$binaria && min(sum(sa$x[ok] == 1), sum(sa$x[ok] == 0)) < 4) return(NULL)
+    if (sb$binaria && min(sum(sb$x[ok] == 1), sum(sb$x[ok] == 0)) < 4) return(NULL)
+    r <- suppressWarnings(cor(xa[ok], xb[ok])); if (is.na(r)) return(NULL)
+    ra <- if (sin_tendencia) sa$ac_r else sa$ac_x; rb <- if (sin_tendencia) sb$ac_r else sb$ac_x
+    n_ef <- min(max(n * (1 - ra * rb) / (1 + ra * rb), 4), n)
+    z <- atanh(min(max(r, -.9999), .9999)); se <- 1 / sqrt(n_ef - 3)
+    tibble(a = a, b = b, r = r, bruta = suppressWarnings(cor(sa$x[ok], sb$x[ok])), n = n, n_ef = round(n_ef, 1),
+           lo = tanh(z - 1.96 * se), hi = tanh(z + 1.96 * se), p = 2 * pnorm(-abs(z / se)), obvia = ob)
+  })
+  if (!nrow(res)) return(res)
+  res |> mutate(q = p.adjust(p, "BH"), firme = q < .1, seguro = pmax(lo, -hi, 0)) |>
+    arrange(desc(seguro), desc(abs(r))) |> select(-seguro)
+}
+
 #' Todo lo que se asocia con un objetivo: diferencias (variables 0/1) o correlación de Spearman, con corrección BH.
+#' Se omiten las variables de la misma familia que el objetivo (la misma medida por otra vía).
 vm_factores <- function(objetivo = "valencia", desfase = 0, min_n = 14, datos = panel) {
   datos <- arrange(datos, fecha)
   yv <- lead(.vm_dato(datos, objetivo), desfase)
-  excluir <- c("fecha", "semana", "mes", "dia_semana", objetivo, "valencia_ayer", "valencia_manana")
+  excluir <- c("fecha", "semana", "mes", "dia_semana", objetivo, "valencia_ayer", "valencia_manana",
+               unlist(keep(vm_familias, ~ objetivo %in% .x)))
   cand <- names(datos)[map_lgl(datos, ~ is.numeric(.x) || is.logical(.x)) & !names(datos) %in% excluir]
   res <- map_dfr(cand, function(v) {
     x <- datos[[v]]; ok <- !is.na(x) & !is.na(yv)
@@ -271,6 +356,6 @@ vm_guardar_graficas <- function(carpeta = file.path(vm_carpeta, "graficas")) {
 
 vm_resumen()
 message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
-        "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_factores(), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
+        "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
         "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna')")

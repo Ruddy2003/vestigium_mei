@@ -67,6 +67,7 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         Repo.init(ctx)
         runCatching { Ubicacion.muestrear(ctx) }
         runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.muestrear(ctx) }
+        runCatching { io.github.ruddy2003.vestigium.data.Spotify.quizaSincronizar(ctx) }
         runCatching { avisos(ctx) }
         runCatching { diario(ctx) }
         return Result.success()

@@ -100,7 +100,8 @@ object Importaciones {
         if (lista.isEmpty()) return "No encontré reproducciones. Elige los archivos Streaming_History…json (o el .zip completo que te mandó Spotify)."
         // Lo que se anotó desde las notificaciones de Spotify en esos días queda reemplazado por el historial, que es más preciso.
         val desde = lista.minOf { it.fecha }; val hasta = lista.maxOf { it.fecha }
-        val viejas = Repo.escuchas(desde, hasta).filter { it.fuente == "notificacion" && it.app.contains("Spotify", true) }.map { it.id }
+        // También lo leído por la conexión directa: el historial trae además cuánto escuchaste y si la saltaste.
+        val viejas = Repo.escuchas(desde, hasta).filter { (it.fuente == "notificacion" && it.app.contains("Spotify", true)) || it.fuente == "spotify_api" }.map { it.id }
         Repo.borrarEscuchas(viejas)
         Repo.importarEscuchas(lista)
         val reales = lista.count { (it.ms ?: 0) >= 30_000 }

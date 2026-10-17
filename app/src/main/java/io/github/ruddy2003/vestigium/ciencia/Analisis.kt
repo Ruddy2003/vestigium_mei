@@ -79,6 +79,8 @@ object Analisis {
         val out = ArrayList<Factor>()
         for (v in vars) {
             if (v.id == objetivo) continue
+            // La misma medida por otra vía (valencia del día y en avisos) no es un «factor».
+            if (Estadistica.FAMILIAS.any { v.id in it && objetivo in it }) continue
             val ps = Estadistica.pares(panel, v.id, objetivo, desfase)
             if (ps.size < 10) continue
             val bin = ps.all { it.x == 0.0 || it.x == 1.0 }
