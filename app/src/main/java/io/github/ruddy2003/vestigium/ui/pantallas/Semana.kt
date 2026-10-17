@@ -91,24 +91,14 @@ fun PantallaSemana(nav: Nav) {
 
         Seccion("Cifras") {
             Tarjeta {
-                fun fila(nombre: String, v: Double?, a: Double?, f: (Double) -> String) {
-                    if (v == null) return
-                    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                        Text(f(v), style = MaterialTheme.typography.titleMedium)
-                        val d = if (a != null && a != 0.0) (v - a) / abs(a) else null
-                        Text(if (d == null) "" else if (abs(d) < 0.05) "  =" else "  ${if (d > 0) "↑" else "↓"}${"%.0f".format(abs(d) * 100)}%",
-                            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
-                    }
-                }
-                fila("Días con diario", r.diario.toDouble(), antes.diario.toDouble()) { "${it.toInt()} de 7" }
-                fila("Ánimo promedio", r.animo, antes.animo) { "%.1f / 7".format(it) }
-                fila("Sueño por noche", r.sueno, antes.sueno) { "%.1f h".format(it) }
-                fila("Pasos en la semana", r.pasos?.toDouble(), antes.pasos?.toDouble()) { "%,.0f".format(it) }
-                fila("Pantalla al día", r.pantalla, antes.pantalla) { "%d h %02d".format((it / 60).toInt(), (it % 60).toInt()) }
-                fila("Gasto", r.gasto.takeIf { it > 0 }, antes.gasto) { "$%,.0f".format(it) }
-                fila("Calorías al día", r.kcal, antes.kcal) { "%,.0f".format(it) }
-                fila("Entrenamientos", r.entrenos.toDouble().takeIf { it > 0 }, antes.entrenos.toDouble()) { "%.0f".format(it) }
+                FilaSemana("Días con diario", r.diario.toDouble(), antes.diario.toDouble()) { "${it.toInt()} de 7" }
+                FilaSemana("Ánimo promedio", r.animo, antes.animo) { "%.1f / 7".format(it) }
+                FilaSemana("Sueño por noche", r.sueno, antes.sueno) { "%.1f h".format(it) }
+                FilaSemana("Pasos en la semana", r.pasos?.toDouble(), antes.pasos?.toDouble()) { "%,.0f".format(it) }
+                FilaSemana("Pantalla al día", r.pantalla, antes.pantalla) { "%d h %02d".format((it / 60).toInt(), (it % 60).toInt()) }
+                FilaSemana("Gasto", r.gasto.takeIf { it > 0 }, antes.gasto) { "$%,.0f".format(it) }
+                FilaSemana("Calorías al día", r.kcal, antes.kcal) { "%,.0f".format(it) }
+                FilaSemana("Entrenamientos", r.entrenos.toDouble().takeIf { it > 0 }, antes.entrenos.toDouble()) { "%.0f".format(it) }
                 Ayuda("Las flechas comparan con la semana anterior.", Modifier.padding(top = 4.dp))
             }
         }
@@ -151,5 +141,18 @@ fun PantallaSemana(nav: Nav) {
             }
         }
         if (r.diario == 0 && r.animo == null) Vacio("Esta semana todavía no tiene registros.")
+    }
+}
+
+/** Una cifra de la semana con su cambio contra la semana anterior (no se muestra si no hay dato). */
+@Composable
+private fun FilaSemana(nombre: String, v: Double?, a: Double?, f: (Double) -> String) {
+    if (v == null) return
+    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+        Text(f(v), style = MaterialTheme.typography.titleMedium)
+        val d = if (a != null && a != 0.0) (v - a) / abs(a) else null
+        Text(if (d == null) "" else if (abs(d) < 0.05) "  =" else "  ${if (d > 0) "↑" else "↓"}${"%.0f".format(abs(d) * 100)}%",
+            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
     }
 }
