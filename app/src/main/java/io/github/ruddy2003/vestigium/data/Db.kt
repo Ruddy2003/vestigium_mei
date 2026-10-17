@@ -90,6 +90,9 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 1) {
         ).use { c -> while (c.moveToNext()) f(c.getLong(0), c.getDouble(1), c.getDouble(2), c.getDouble(3)) }
     }
 
+    fun ultimaUbicacion(): Long? =
+        readableDatabase.rawQuery("SELECT MAX(ms) FROM ubicaciones", null).use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getLong(0) else null }
+
     fun contarUbicaciones(): Long =
         readableDatabase.rawQuery("SELECT COUNT(*) FROM ubicaciones", null).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
 

@@ -323,7 +323,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     }
     val t = when (tema) { TemaId.ROMANO -> tipoRomano; TemaId.CIBER -> tipoCiber; TemaId.HELENO -> tipoHeleno }
     val titulo = when (tema) { TemaId.ROMANO -> "DIES"; TemaId.CIBER -> "DÍA_"; TemaId.HELENO -> "ΗΜΕΡΑ" }
-    val linea = when (tema) { TemaId.ROMANO -> "XVII · X · MMXXVI"; TemaId.CIBER -> "2026.10.17 // SÁB"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒΕΡΕΤΑΙΟΥ" }
+    val linea = when (tema) { TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ." }
     androidx.compose.material3.Surface(
         onClick = onClick, modifier = modifier, color = e.background, shape = RoundedCornerShape(6.dp),
         border = androidx.compose.foundation.BorderStroke(if (elegido) 2.dp else 1.dp, if (elegido) e.primary else e.outline),

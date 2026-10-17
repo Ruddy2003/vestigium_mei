@@ -45,7 +45,7 @@ class Capturas {
     private fun captura(tema: TemaId, oscuro: Boolean, contenido: @Composable () -> Unit = { Muestra() }) {
         Repo.configEnMemoria(Config(tema = tema.id))
         paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
-        paparazzi.snapshot { TemaVestigium { Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) { contenido() } } }
+        paparazzi.snapshot { TemaVestigium { androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { contenido() } } }
     }
 
     @Test fun romanoClaro() = captura(TemaId.ROMANO, false)

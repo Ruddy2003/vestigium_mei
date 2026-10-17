@@ -170,20 +170,32 @@ fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.color
 
 /** Encabezado de sección: numeral y nombre según el tema, con el nombre en español como comentario. */
 @Composable
-fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), content: @Composable () -> Unit) {
+fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), modifier: Modifier = Modifier,
+            plegable: Boolean = false, content: @Composable () -> Unit) {
     val (nombre, comentario) = Estilo.seccion(titulo, latin)
-    Column(Modifier.fillMaxWidth().padding(top = 26.dp)) {
-        Row(verticalAlignment = Alignment.Bottom) {
+    // Las secciones plegables recuerdan si las cerraste (se guarda en tu configuración).
+    val plegada = plegable && titulo in io.github.ruddy2003.vestigium.data.Repo.config.plegadas
+    Column(modifier.fillMaxWidth().padding(top = 26.dp)) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            modifier = if (!plegable) Modifier else Modifier.fillMaxWidth().clickable {
+                io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c -> c.copy(plegadas = if (plegada) c.plegadas - titulo else c.plegadas + titulo) }
+            },
+        ) {
             if (numero != null) {
-                Text(Estilo.numeral(numero), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
-                Text("  ·  ", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline)
+                Text(Estilo.numeral(numero), style = MaterialTheme.typography.titleLarge, color = if (Estilo.tema == TemaId.CIBER) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary)
+                Text(if (Estilo.tema == TemaId.CIBER) " " else "  ·  ", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline)
             }
-            Text(nombre, style = MaterialTheme.typography.titleLarge, color = if (Estilo.tema == TemaId.CIBER) MaterialTheme.colorScheme.primary else Color.Unspecified)
+            Text(nombre, style = MaterialTheme.typography.titleLarge, color = if (Estilo.tema == TemaId.CIBER) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                modifier = if (plegable) Modifier.weight(1f) else Modifier)
+            if (plegable) Text(if (plegada) "▸" else "▾", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
-        if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))
-        else Spacer(Modifier.height(10.dp))
-        content()
+        if (!plegada) {
+            if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))
+            else Spacer(Modifier.height(10.dp))
+            content()
+        }
     }
 }
 

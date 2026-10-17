@@ -11,7 +11,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -112,8 +117,28 @@ fun PantallaDia(nav: Nav) {
 
     val c = Repo.config
     val hoy = Fechas.diaLogico()
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val reqSueno = remember { BringIntoViewRequester() }
+    val reqAnimo = remember { BringIntoViewRequester() }
+    val reqDiario = remember { BringIntoViewRequester() }
+    val reqPred = remember { BringIntoViewRequester() }
+    /** Abre una sección (si estaba plegada) y la trae a la vista. */
+    fun mostrar(titulo: String, r: BringIntoViewRequester) {
+        if (titulo in Repo.config.plegadas) Repo.cambiarConfig { cc -> cc.copy(plegadas = cc.plegadas - titulo) }
+        scope.launch { kotlinx.coroutines.delay(120); r.bringIntoView() }
+    }
+    val umbral = with(LocalDensity.current) { 120.dp.toPx() }
+    // Deslizar a los lados cambia de día: a la derecha, el anterior; a la izquierda, el siguiente.
+    val deslizar = Modifier.pointerInput(fecha) {
+        var total = 0f
+        detectHorizontalDragGestures(
+            onDragStart = { total = 0f },
+            onDragEnd = { if (total > umbral) irA(Fechas.sumar(fecha, -1)) else if (total < -umbral) irA(Fechas.sumar(fecha, 1)) },
+        ) { _, dx -> total += dx }
+    }
 
-    Hoja("Día", encabezado = {
+    Hoja("Día", modifier = deslizar, encabezado = {
         val est = io.github.ruddy2003.vestigium.ui.Estilo
         val tema = est.tema
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.Bottom) {
@@ -140,7 +165,27 @@ fun PantallaDia(nav: Nav) {
             Text("estado = ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(when { sucio -> "guardando…"; guardado != null -> "guardado"; else -> "vacío" } + (if (guardado?.retroactivo == true) " · retroactivo" else ""),
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            val r = remember(fecha, Repo.dias.size) { racha(fecha) }
+            if (r >= 2) Text("  ·  racha $r días", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        Portada(d.foto)
+        FraseDelDia(fecha)
+        if (fecha == hoy) {
+            TeFaltaHoy(d, hoy) { a ->
+                when (a) {
+                    "ayer" -> irA(Fechas.sumar(hoy, -1))
+                    "sueno" -> mostrar("Sueño", reqSueno)
+                    "diario" -> mostrar("Ánimo y cuerpo", reqAnimo)
+                    "prediccion" -> mostrar("Predicción", reqPred)
+                    "aviso" -> abrirAviso(ctx)
+                    "escalas" -> nav.ir("escalas")
+                    "gasto" -> nav.pestana("gastos")
+                }
+            }
+            DatosQueFaltan(nav)
+        }
+        Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores.", plegable = true) { Tablero(fecha) }
+        Seccion("Tu día en 24 horas", plegable = true) { LineaDelTiempo(fecha) }
         if (fecha == hoy && java.time.LocalTime.now().hour < 5) Aviso("Pasa de medianoche: sigues llenando el día $fecha. Los días empiezan a las 5:00.")
         if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas, pero se marcará como escrito por adelantado.")
 
@@ -155,7 +200,7 @@ fun PantallaDia(nav: Nav) {
             if (semana in e.plan.indices) Aviso("Experimento «${e.nombre}», semana ${semana + 1} de ${e.semanas}: " + if (e.plan[semana]) "esta semana SÍ: ${e.accion}." else "esta semana NO hagas: ${e.accion}.")
         }
 
-        Seccion("Sueño", "Llénalo apenas despiertes. El resto, en la noche.", numero = n()) {
+        Seccion("Sueño", "Llénalo apenas despiertes. El resto, en la noche.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqSueno), plegable = true) {
             Tarjeta {
                 Etiqueta("Calidad del sueño, como la sentiste")
                 Escala(d.sueno_calidad, 1, 5, Catalogo.ANCLAS["sueno_calidad"]) { cambiar(d.copy(sueno_calidad = it)) }
@@ -178,7 +223,7 @@ fun PantallaDia(nav: Nav) {
             }
         }
 
-        Seccion("Contexto", "Activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n()) {
+        Seccion("Contexto", "Activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n(), plegable = true) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Catalogo.CONTEXTOS.forEach { o ->
                     val activo = d.ctx[o.id] == true
@@ -187,11 +232,11 @@ fun PantallaDia(nav: Nav) {
             }
         }
 
-        Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n()) {
+        Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true) {
             ListaEtiquetas(d.hitos, "vuelo, beso, decision_importante", normalizar = { Texto.slug(it) }) { cambiar(d.copy(hitos = it)) }
         }
 
-        Seccion("Ánimo y cuerpo", numero = n()) {
+        Seccion("Ánimo y cuerpo", numero = n(), modifier = Modifier.bringIntoViewRequester(reqAnimo), plegable = true) {
             Tarjeta {
                 Etiqueta("Valencia · qué tan agradable fue el día")
                 Escala(d.valencia, 1, 7, Catalogo.ANCLAS["valencia"]) { cambiar(d.copy(valencia = it)) }
@@ -204,7 +249,7 @@ fun PantallaDia(nav: Nav) {
             }
         }
 
-        Seccion("Lectura del día", "Tres preguntas de marcos científicos. Toca «cómo elegir» si dudas.", numero = n()) {
+        Seccion("Lectura del día", "Tres preguntas de marcos científicos. Toca «cómo elegir» si dudas.", numero = n(), plegable = true) {
             Tarjeta {
                 Catalogo.CIENTIFICAS.forEachIndexed { i, p ->
                     var abierta by remember { mutableStateOf(false) }
@@ -222,7 +267,7 @@ fun PantallaDia(nav: Nav) {
             }
         }
 
-        Seccion("Lo mejor y lo peor", "Una línea cada uno.", numero = n()) {
+        Seccion("Lo mejor y lo peor", "Una línea cada uno.", numero = n(), plegable = true) {
             OutlinedTextField(value = d.mejor_momento, onValueChange = { cambiar(d.copy(mejor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
                 label = { Text("optimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
             Spacer(Modifier.padding(top = 8.dp))
@@ -230,7 +275,7 @@ fun PantallaDia(nav: Nav) {
                 label = { Text("pessimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         }
 
-        Seccion("Hábitos", numero = n()) {
+        Seccion("Hábitos", numero = n(), plegable = true) {
             val activos = c.habitos.filter { it.activo }
             if (activos.isEmpty()) {
                 Tarjeta {
@@ -250,7 +295,7 @@ fun PantallaDia(nav: Nav) {
             }
         }
 
-        Seccion("Medicamentos", "Lo que tomaste hoy, si aplica.", numero = n()) {
+        Seccion("Medicamentos", "Lo que tomaste hoy, si aplica.", numero = n(), plegable = true) {
             ListaEtiquetas(d.medicamentos, "nombre del medicamento", normalizar = { Texto.slug(it) }) { cambiar(d.copy(medicamentos = it)) }
         }
 
@@ -273,7 +318,7 @@ fun PantallaDia(nav: Nav) {
             }
         }
 
-        Seccion("Diario", "Escribe libre. Usa @persona y #tema; abajo ves lo que se detecta y si alguna etiqueta parece error de dedo.", numero = n()) {
+        Seccion("Diario", "Escribe libre. Usa @persona y #tema; abajo ves lo que se detecta y si alguna etiqueta parece error de dedo.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqDiario), plegable = true) {
             Editor(d.nota, "diarium_$fecha.txt", "¿Cómo fue el día?", pie = "${Texto.palabras(d.nota)} verba") { cambiar(d.copy(nota = it)) }
             Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 BotonDictado { t -> cambiar(d.copy(nota = (d.nota + " " + t).trim())) }
@@ -281,20 +326,20 @@ fun PantallaDia(nav: Nav) {
             Detectados(d.nota, fecha) { nuevo -> cambiar(d.copy(nota = nuevo)) }
         }
 
-        Seccion("Predicción", "¿Cómo crees que estará tu ánimo mañana? La app medirá qué tan bien te conoces.", numero = n()) {
+        Seccion("Predicción", "¿Cómo crees que estará tu ánimo mañana? La app medirá qué tan bien te conoces.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqPred), plegable = true) {
             Escala(d.prediccion_manana, 1, 7, Catalogo.ANCLAS["prediccion_manana"]) { cambiar(d.copy(prediccion_manana = it)) }
         }
 
-        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n()) {
+        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), plegable = true) {
             Vestigios(fecha, nav)
         }
 
-        Seccion("Fotos del día", "Toca una para verla; mantén presionada para elegirla como la imagen del día.", numero = n()) {
+        Seccion("Fotos del día", "Toca una para verla; mantén presionada para elegirla como la imagen del día (sale arriba, de portada).", numero = n(), plegable = true) {
             Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
         }
 
         val delDia = Repo.momentos.filter { it.fecha == fecha }
-        if (delDia.isNotEmpty()) Seccion("Momentos de este día", numero = n()) {
+        if (delDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
             Tarjeta {
                 delDia.forEach { m ->
                     Row(Modifier.padding(vertical = 3.dp)) {

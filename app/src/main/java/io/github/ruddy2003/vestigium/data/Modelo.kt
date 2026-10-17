@@ -236,6 +236,8 @@ data class Config(
     val plegadas: List<String> = emptyList(),
     /** Qué cifra muestra el widget de una cifra. */
     val widget_cifra: String = "racha",
+    /** Última vez que se escribió el respaldo en la carpeta elegida. */
+    val respaldo_ultimo: String? = null,
 )
 
 /** Llamadas y SMS del día: solo cuántos, cuánto duraron y con cuántas personas distintas. Nunca números, nombres ni textos. */

@@ -25,7 +25,7 @@ object Estilo {
     /** Título y comentario de una sección. */
     fun seccion(titulo: String, latin: String?): Pair<String, String?> = when (tema) {
         TemaId.ROMANO -> (latin ?: titulo.uppercase()) to (if (latin != null) "// ${titulo.lowercase()}" else null)
-        TemaId.CIBER -> "> ${slug(titulo)}" to null
+        TemaId.CIBER -> "> ${titulo.lowercase()}" to null
         TemaId.HELENO -> Griego.nombre(titulo)?.let { it to "— ${titulo.lowercase()}" } ?: (titulo.uppercase() to null)
     }
 

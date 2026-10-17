@@ -506,6 +506,7 @@ object Exportar {
             val f = dir.findFile(nombre) ?: dir.createFile(mime, nombre) ?: return@forEach
             ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { it.write(cont.toByteArray()) }
         }
+        Repo.cambiarConfig { it.copy(respaldo_ultimo = Fechas.ahoraIso()) }
         return true
     }
 

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -26,8 +27,9 @@ import androidx.compose.ui.unit.dp
  * y una banda de meandro debajo. El contenido se desplaza verticalmente.
  */
 @Composable
-fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null, latin: String? = Romano.latin(titulo), encabezado: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null, latin: String? = Romano.latin(titulo), encabezado: (@Composable () -> Unit)? = null,
+         modifier: Modifier = Modifier, scroll: ScrollState = rememberScrollState(), content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             if (atras != null) TextButton(onClick = atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
