@@ -245,13 +245,41 @@ fun PantallaAjustes(nav: Nav) {
     }
     Hoja("Ajustes", nav.atras) {
         Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
-            val oscuroSistema = androidx.compose.foundation.isSystemInDarkTheme()
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                io.github.ruddy2003.vestigium.ui.TemaId.entries.forEach { t ->
-                    io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, oscuroSistema, c.tema == t.id, Modifier.weight(1f)) { cambiar { it.copy(tema = t.id) } }
+            val oscuroAhora = io.github.ruddy2003.vestigium.ui.modoOscuro(io.github.ruddy2003.vestigium.ui.TemaId.ROMANO)
+            // Nueve temas en una cuadrícula de tres por fila.
+            io.github.ruddy2003.vestigium.ui.TemaId.entries.chunked(3).forEach { fila ->
+                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    fila.forEach { t ->
+                        io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, oscuroAhora, c.tema == t.id, Modifier.weight(1f)) { cambiar { it.copy(tema = t.id) } }
+                    }
                 }
             }
-            Ayuda(io.github.ruddy2003.vestigium.ui.Estilo.tema.descripcion + if (io.github.ruddy2003.vestigium.ui.Estilo.tema.soloOscuro) "" else " Sigue el modo claro u oscuro del teléfono.", Modifier.padding(top = 8.dp))
+            Ayuda(io.github.ruddy2003.vestigium.ui.Estilo.tema.descripcion, Modifier.padding(top = 2.dp))
+            Etiqueta("Claro u oscuro")
+            if (io.github.ruddy2003.vestigium.ui.Estilo.tema.soloOscuro) Ayuda("El cyberpunk solo existe en oscuro.")
+            else Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro").forEach { (id, nombre) ->
+                    Ficha(nombre, c.modo == id) { cambiar { it.copy(modo = id) } }
+                }
+            }
+            Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
+            Tarjeta(Modifier.padding(top = 10.dp)) {
+                Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
+                Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
+                Interruptor("Sonidos", c.sonidos, "Sonidos cortos del tema al guardar, al cambiar de pestaña y al completar el día. No suenan con el teléfono en silencio o en vibración.") { v ->
+                    cambiar { it.copy(sonidos = v) }
+                    if (v) io.github.ruddy2003.vestigium.ui.Sentidos.preparar(ctx)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    listOf("toque" to io.github.ruddy2003.vestigium.ui.Sentidos.Evento.TOQUE, "guardar" to io.github.ruddy2003.vestigium.ui.Sentidos.Evento.GUARDAR,
+                        "logro" to io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO).forEach { (n, e) ->
+                        BotonSecundario("probar $n") {
+                            io.github.ruddy2003.vestigium.ui.Sentidos.sentir(ctx, e)
+                            if (e == io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) io.github.ruddy2003.vestigium.ui.Fiesta.lanzar()
+                        }
+                    }
+                }
+            }
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 Etiqueta("Tamaño del texto: ${(c.letra * 100).toInt()}%")
                 Slider(value = c.letra, onValueChange = { v -> cambiar { it.copy(letra = (Math.round(v * 20) / 20f)) } }, valueRange = 0.8f..1.4f, steps = 11)

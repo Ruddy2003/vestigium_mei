@@ -45,7 +45,8 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
                     },
                     style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f),
                 )
-                if (Estilo.tema == TemaId.HELENO) SolVergina(Modifier.padding(start = 8.dp))
+                BotonModo()
+                Emblema(modifier = Modifier.padding(start = 4.dp))
             }
             if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

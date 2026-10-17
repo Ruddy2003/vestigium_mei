@@ -136,27 +136,32 @@ fun PantallaDia(nav: Nav) {
         mostrar(sec, when (sec) { "Sueño" -> reqSueno; "Diario" -> reqDiario; "Predicción" -> reqPred; else -> reqAnimo })
     }
     val umbral = with(LocalDensity.current) { 120.dp.toPx() }
+    val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
     // Deslizar a los lados cambia de día: a la derecha, el anterior; a la izquierda, el siguiente.
     val deslizar = Modifier.pointerInput(fecha) {
         var total = 0f
         detectHorizontalDragGestures(
             onDragStart = { total = 0f },
-            onDragEnd = { if (total > umbral) irA(Fechas.sumar(fecha, -1)) else if (total < -umbral) irA(Fechas.sumar(fecha, 1)) },
+            onDragEnd = {
+                if (total > umbral) { sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.PASAR); irA(Fechas.sumar(fecha, -1)) }
+                else if (total < -umbral) { sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.PASAR); irA(Fechas.sumar(fecha, 1)) }
+            },
         ) { _, dx -> total += dx }
     }
 
     Hoja("Día", modifier = deslizar, encabezado = {
         val est = io.github.ruddy2003.vestigium.ui.Estilo
         val tema = est.tema
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.Bottom) {
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(est.pantalla("Día", "DIES").first + if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) "_" else "", style = MaterialTheme.typography.headlineMedium)
-            if (tema == io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) Text("  ${est.fecha(fecha)}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary)
+            if (tema == io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) Text("  ${est.fecha(fecha)}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
             else Spacer(Modifier.weight(1f))
-            if (tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO) io.github.ruddy2003.vestigium.ui.SolVergina()
+            io.github.ruddy2003.vestigium.ui.BotonModo()
+            io.github.ruddy2003.vestigium.ui.Emblema(tam = 34.dp, modifier = Modifier.padding(start = 2.dp))
         }
         if (tema != io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) Text(est.fecha(fecha), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
         val fase = Luna.fase(fecha)
-        Text((if (tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO) "— " else "// ") + "${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}",
+        Text(est.comentario + "${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}",
             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }) {
         // El contador vive dentro del bloque para que la numeración se reinicie en cada recomposición.
@@ -164,7 +169,12 @@ fun PantallaDia(nav: Nav) {
         fun n() = ++k
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
             BotonSecundario("‹") { irA(Fechas.sumar(fecha, -1)) }
-            BotonSecundario(when (io.github.ruddy2003.vestigium.ui.Estilo.tema) { io.github.ruddy2003.vestigium.ui.TemaId.ROMANO -> "▦ calendarium"; io.github.ruddy2003.vestigium.ui.TemaId.CIBER -> "▦ calendar"; else -> "▦ ἡμερολόγιον" }, Modifier.weight(1f)) { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
+            BotonSecundario(when (io.github.ruddy2003.vestigium.ui.Estilo.tema) {
+                io.github.ruddy2003.vestigium.ui.TemaId.ROMANO -> "▦ calendarium"; io.github.ruddy2003.vestigium.ui.TemaId.CIBER -> "▦ calendar"
+                io.github.ruddy2003.vestigium.ui.TemaId.HELENO -> "▦ ἡμερολόγιον"; io.github.ruddy2003.vestigium.ui.TemaId.DISTOPIA -> "▦ PLAN"
+                io.github.ruddy2003.vestigium.ui.TemaId.ORDEN -> "▦ CAMPAÑA"; io.github.ruddy2003.vestigium.ui.TemaId.COLONOS -> "▦ almanaque"
+                io.github.ruddy2003.vestigium.ui.TemaId.REFUGIO -> "▦ CALENDARIO"; else -> "▦ calendario"
+            }, Modifier.weight(1f)) { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
             if (fecha != hoy) BotonSecundario("hoy") { irA(hoy) }
             BotonSecundario("›") { irA(Fechas.sumar(fecha, 1)) }
         }
@@ -173,6 +183,13 @@ fun PantallaDia(nav: Nav) {
             Text(when { sucio -> "guardando…"; guardado != null -> "guardado"; else -> "vacío" } + (if (guardado?.retroactivo == true) " · retroactivo" else ""),
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
             val r = remember(fecha, Repo.dias.size) { racha(fecha) }
+            // Cada semana completa de racha se celebra (solo al llegar, no al abrir el día).
+            var rachaAntes by remember(fecha) { mutableStateOf<Int?>(null) }
+            LaunchedEffect(r) {
+                val antes = rachaAntes
+                if (antes != null && r > antes && r % 7 == 0) { io.github.ruddy2003.vestigium.ui.Fiesta.lanzar(); sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) }
+                rachaAntes = r
+            }
             if (r >= 2) Text("  ·  racha $r días", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Portada(d.foto)

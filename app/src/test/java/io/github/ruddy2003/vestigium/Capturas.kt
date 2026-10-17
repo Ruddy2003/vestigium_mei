@@ -34,6 +34,7 @@ import io.github.ruddy2003.vestigium.ui.TemaVestigium
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.VistaPreviaTema
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.fondoTema
 import org.junit.Rule
 import org.junit.Test
 
@@ -42,10 +43,23 @@ class Capturas {
     @get:Rule
     val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_6, theme = "android:Theme.Material.NoActionBar", showSystemUi = false, useDeviceResolution = true)
 
-    private fun captura(tema: TemaId, oscuro: Boolean, contenido: @Composable () -> Unit = { Muestra() }) {
-        Repo.configEnMemoria(Config(tema = tema.id))
-        paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
-        paparazzi.snapshot { TemaVestigium { androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) { contenido() } } }
+    /** Fondo del tema con su textura, como en la app. */
+    @Composable
+    private fun Lienzo(contenido: @Composable () -> Unit) {
+        TemaVestigium {
+            androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Box(Modifier.fillMaxSize().fondoTema(io.github.ruddy2003.vestigium.ui.Estilo.tema, MaterialTheme.colorScheme)) { contenido() }
+            }
+        }
+    }
+
+    private fun config(tema: TemaId, oscuro: Boolean) =
+        Config(tema = tema.id, modo = if (oscuro) "oscuro" else "claro", animaciones = false, bienvenida_vista = true, widget_cifra = "racha")
+
+    private fun captura(tema: TemaId, oscuro: Boolean, alto: Int = 2400, contenido: @Composable () -> Unit = { Muestra() }) {
+        Repo.configEnMemoria(config(tema, oscuro))
+        paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = alto, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
+        paparazzi.snapshot { Lienzo(contenido) }
     }
 
     @Test fun romanoClaro() = captura(TemaId.ROMANO, false)
@@ -53,12 +67,25 @@ class Capturas {
     @Test fun ciber() = captura(TemaId.CIBER, true)
     @Test fun helenoClaro() = captura(TemaId.HELENO, false)
     @Test fun helenoOscuro() = captura(TemaId.HELENO, true)
+    @Test fun medievalClaro() = captura(TemaId.MEDIEVAL, false)
+    @Test fun medievalOscuro() = captura(TemaId.MEDIEVAL, true)
+    @Test fun distopiaClaro() = captura(TemaId.DISTOPIA, false)
+    @Test fun distopiaOscuro() = captura(TemaId.DISTOPIA, true)
+    @Test fun refugioClaro() = captura(TemaId.REFUGIO, false)
+    @Test fun refugioOscuro() = captura(TemaId.REFUGIO, true)
+    @Test fun ordenClaro() = captura(TemaId.ORDEN, false)
+    @Test fun ordenOscuro() = captura(TemaId.ORDEN, true)
+    @Test fun laboratorioClaro() = captura(TemaId.LABORATORIO, false)
+    @Test fun laboratorioOscuro() = captura(TemaId.LABORATORIO, true)
+    @Test fun colonosClaro() = captura(TemaId.COLONOS, false)
+    @Test fun colonosOscuro() = captura(TemaId.COLONOS, true)
+
     private fun dia(tema: TemaId, oscuro: Boolean) {
         Ejemplo.cargar()
-        Repo.configEnMemoria(Config(tema = tema.id, bienvenida_vista = true))
+        Repo.configEnMemoria(config(tema, oscuro))
         paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = 6200, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
         paparazzi.snapshot {
-            TemaVestigium { androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Lienzo {
                 // Las pantallas reales piden lanzadores de actividades; en la captura basta uno vacío.
                 val registro = object : androidx.activity.result.ActivityResultRegistryOwner {
                     override val activityResultRegistry = object : androidx.activity.result.ActivityResultRegistry() {
@@ -68,26 +95,30 @@ class Capturas {
                 androidx.compose.runtime.CompositionLocalProvider(androidx.activity.compose.LocalActivityResultRegistryOwner provides registro) {
                     io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(io.github.ruddy2003.vestigium.ui.Nav(ir = {}, atras = {}))
                 }
-            } }
+            }
         }
     }
     @Test fun diaRomano() = dia(TemaId.ROMANO, false)
     @Test fun diaCiber() = dia(TemaId.CIBER, true)
     @Test fun diaHeleno() = dia(TemaId.HELENO, true)
+    @Test fun diaMedieval() = dia(TemaId.MEDIEVAL, false)
+    @Test fun diaDistopia() = dia(TemaId.DISTOPIA, false)
+    @Test fun diaRefugio() = dia(TemaId.REFUGIO, true)
+    @Test fun diaOrden() = dia(TemaId.ORDEN, true)
+    @Test fun diaLaboratorio() = dia(TemaId.LABORATORIO, false)
+    @Test fun diaColonos() = dia(TemaId.COLONOS, true)
 
     @Test fun semanaHeleno() {
         Ejemplo.cargar()
-        Repo.configEnMemoria(Config(tema = TemaId.HELENO.id))
+        Repo.configEnMemoria(config(TemaId.HELENO, false))
         paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = 3600, nightMode = NightMode.NOTNIGHT))
-        paparazzi.snapshot { TemaVestigium { androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(io.github.ruddy2003.vestigium.ui.Nav(ir = {}, atras = {}))
-        } } }
+        paparazzi.snapshot { Lienzo { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(io.github.ruddy2003.vestigium.ui.Nav(ir = {}, atras = {})) } }
     }
 
     /** Los widgets se arman con RemoteViews y se pegan en una columna para verlos con cada tema. */
     private fun widgets(tema: TemaId) {
         Ejemplo.cargar()
-        Repo.configEnMemoria(Config(tema = tema.id, widget_cifra = "racha"))
+        Repo.configEnMemoria(config(tema, true))
         paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = 2600, nightMode = NightMode.NOTNIGHT))
         val ctx = paparazzi.context
         val col = android.widget.LinearLayout(ctx).apply { orientation = android.widget.LinearLayout.VERTICAL; setBackgroundColor(0xFF5A6B7A.toInt()); setPadding(30, 30, 30, 30) }
@@ -106,10 +137,29 @@ class Capturas {
     @Test fun widgetsRomano() = widgets(TemaId.ROMANO)
     @Test fun widgetsCiber() = widgets(TemaId.CIBER)
     @Test fun widgetsHeleno() = widgets(TemaId.HELENO)
+    @Test fun widgetsMedieval() = widgets(TemaId.MEDIEVAL)
+    @Test fun widgetsDistopia() = widgets(TemaId.DISTOPIA)
+    @Test fun widgetsRefugio() = widgets(TemaId.REFUGIO)
+    @Test fun widgetsOrden() = widgets(TemaId.ORDEN)
+    @Test fun widgetsLaboratorio() = widgets(TemaId.LABORATORIO)
+    @Test fun widgetsColonos() = widgets(TemaId.COLONOS)
 
-    @Test fun selectorTemas() = captura(TemaId.ROMANO, false) {
-        Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TemaId.entries.forEach { VistaPreviaTema(it, false, it == TemaId.ROMANO, Modifier.weight(1f)) {} }
+    /** Los nueve temas en claro y en oscuro, con sus emblemas grandes. */
+    @Test fun selectorTemas() = captura(TemaId.ROMANO, false, alto = 2600) {
+        Column(Modifier.padding(16.dp)) {
+            listOf(false, true).forEach { o ->
+                TemaId.entries.chunked(3).forEach { fila ->
+                    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        fila.forEach { VistaPreviaTema(it, o, it == TemaId.ROMANO, Modifier.weight(1f)) {} }
+                    }
+                }
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                TemaId.entries.forEach { t ->
+                    val e = io.github.ruddy2003.vestigium.ui.esquemaDe(t, true)
+                    Box(Modifier.weight(1f).background(e.background).padding(4.dp)) { io.github.ruddy2003.vestigium.ui.Emblema(t, 30.dp, e, animado = false) }
+                }
+            }
         }
     }
 }

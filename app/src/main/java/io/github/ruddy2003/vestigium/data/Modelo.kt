@@ -222,7 +222,7 @@ data class Config(
     val whatsapp_yo: String = "",
     val escalas_hora: Int = 19,
     val escalas_insistir: Boolean = true,
-    /** romano, ciber o heleno. */
+    /** romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio o colonos. */
     val tema: String = "romano",
     /** Escala del texto (1 = normal). */
     val letra: Float = 1f,
@@ -238,6 +238,14 @@ data class Config(
     val widget_cifra: String = "racha",
     /** Última vez que se escribió el respaldo en la carpeta elegida. */
     val respaldo_ultimo: String? = null,
+    /** Claro u oscuro: «sistema» sigue al teléfono, «claro» u «oscuro» lo fijan dentro de la app. */
+    val modo: String = "sistema",
+    /** Emblemas que se mueven, transiciones y barras que crecen. */
+    val animaciones: Boolean = true,
+    /** Vibraciones al tocar y al guardar. */
+    val vibracion: Boolean = true,
+    /** Sonidos del tema al guardar y al cambiar de pantalla (respetan el modo silencio). */
+    val sonidos: Boolean = false,
 )
 
 /** Llamadas y SMS del día: solo cuántos, cuánto duraron y con cuántas personas distintas. Nunca números, nombres ni textos. */

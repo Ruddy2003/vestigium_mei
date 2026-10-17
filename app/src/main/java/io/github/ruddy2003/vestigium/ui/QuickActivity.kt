@@ -156,7 +156,7 @@ class QuickActivity : FragmentActivity() {
     @Composable
     private fun Encabezado(titulo: String, sub: String) {
         Text(titulo, style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp))
-        Text("// " + Fechas.horaAhora() + " · " + io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        Text(io.github.ruddy2003.vestigium.ui.Estilo.comentario + Fechas.horaAhora() + " · " + io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         Ayuda(sub, Modifier.padding(top = 2.dp, bottom = 12.dp))
     }
 

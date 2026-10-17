@@ -62,8 +62,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.text.TextRange
@@ -89,6 +90,12 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
     when (Estilo.tema) {
         TemaId.CIBER -> Circuito(modifier)
         TemaId.HELENO -> Greca(modifier, color)
+        TemaId.MEDIEVAL -> Zarcillo(modifier)
+        TemaId.DISTOPIA -> Filete(modifier)
+        TemaId.REFUGIO -> Destellos(modifier)
+        TemaId.ORDEN -> Galones(modifier)
+        TemaId.LABORATORIO -> Regla(modifier)
+        TemaId.COLONOS -> Vineta(modifier)
         TemaId.ROMANO -> Canvas(modifier.fillMaxWidth().height(9.dp)) {
             val h = size.height; val u = h / 3f
             val paso = u * 4
@@ -155,23 +162,7 @@ private fun Circuito(modifier: Modifier) {
 /** El sol de Vergina: la estrella de dieciséis rayos de la casa real macedonia, la de Alejandro. */
 @Composable
 fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.primary) {
-    Canvas(modifier.size(30.dp)) {
-        val c = Offset(size.width / 2, size.height / 2)
-        val r = size.minDimension / 2
-        for (i in 0 until 16) {
-            val ang = Math.toRadians(i * 22.5 - 90).toFloat()
-            val largo = if (i % 2 == 0) r else r * 0.72f
-            val ancho = Math.toRadians(if (i % 2 == 0) 5.5 else 4.5).toFloat()
-            val base = r * 0.22f
-            val p = Path()
-            p.moveTo(c.x + base * kotlin.math.cos(ang - ancho * 2.2f), c.y + base * kotlin.math.sin(ang - ancho * 2.2f))
-            p.lineTo(c.x + largo * kotlin.math.cos(ang), c.y + largo * kotlin.math.sin(ang))
-            p.lineTo(c.x + base * kotlin.math.cos(ang + ancho * 2.2f), c.y + base * kotlin.math.sin(ang + ancho * 2.2f))
-            p.close()
-            drawPath(p, color)
-        }
-        drawCircle(color, r * 0.2f, c)
-    }
+    Canvas(modifier.size(30.dp)) { sol(Offset(size.width / 2, size.height / 2), size.minDimension / 2, color) }
 }
 
 /** Encabezado de sección: numeral y nombre según el tema, con el nombre en español como comentario. */
@@ -183,17 +174,32 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
     val plegada = plegable && titulo in io.github.ruddy2003.vestigium.data.Repo.config.plegadas
     Column(modifier.fillMaxWidth().padding(top = 26.dp)) {
         Row(
-            verticalAlignment = Alignment.Bottom,
+            verticalAlignment = if (Estilo.tema == TemaId.MEDIEVAL || Estilo.tema == TemaId.DISTOPIA) Alignment.CenterVertically else Alignment.Bottom,
             modifier = if (!plegable) Modifier else Modifier.fillMaxWidth().clickable {
                 io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c -> c.copy(plegadas = if (plegada) c.plegadas - titulo else c.plegadas + titulo) }
             },
         ) {
+            val tema = Estilo.tema
             if (numero != null) {
-                Text(Estilo.numeral(numero), style = MaterialTheme.typography.titleLarge, color = if (Estilo.tema == TemaId.CIBER) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary)
-                Text(if (Estilo.tema == TemaId.CIBER) " " else "  ·  ", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline)
+                Text(Estilo.numeral(numero), style = MaterialTheme.typography.titleLarge, color = if (tema == TemaId.CIBER) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary)
+                Text(when (tema) { TemaId.CIBER, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.LABORATORIO, TemaId.ORDEN -> " "; else -> "  ·  " },
+                    style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.outline)
             }
-            Text(nombre, style = MaterialTheme.typography.titleLarge, color = if (Estilo.tema == TemaId.CIBER) MaterialTheme.colorScheme.primary else Color.Unspecified,
-                modifier = if (plegable) Modifier.weight(1f) else Modifier)
+            val estilo = MaterialTheme.typography.titleLarge
+            val peso = if (plegable) Modifier.weight(1f, fill = tema != TemaId.DISTOPIA) else Modifier
+            when (tema) {
+                // Capitular en rojo, como las rúbricas de los manuscritos.
+                TemaId.MEDIEVAL -> Text(buildAnnotatedString {
+                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontSize = estilo.fontSize * 1.55f)) { append(nombre.take(1)) }
+                    append(nombre.drop(1))
+                }, style = estilo, modifier = peso)
+                // Rótulo de expediente: blanco sobre negro.
+                TemaId.DISTOPIA -> Text(nombre, style = estilo, color = MaterialTheme.colorScheme.background,
+                    modifier = peso.background(MaterialTheme.colorScheme.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
+                TemaId.REFUGIO -> Text("▸ $nombre", style = estilo, modifier = peso)
+                else -> Text(nombre, style = estilo, color = if (tema == TemaId.CIBER) MaterialTheme.colorScheme.primary else Color.Unspecified, modifier = peso)
+            }
+            if (plegable && tema == TemaId.DISTOPIA) Spacer(Modifier.weight(1f))
             if (plegable) Text(if (plegada) "▸" else "▾", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
@@ -244,7 +250,7 @@ fun Clave(clave: String, valor: String, ancho: Int = 14) {
 
 @Composable
 fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null, onCambio: (Int?) -> Unit) {
-    val vibra = LocalHapticFeedback.current
+    val sentir = rememberSentir()
     val oscuro = esOscuro()
     val n = hasta - desde + 1
     // Las escalas desde 0 son de intensidad (dolor, impulso); las demás van de desagradable a agradable.
@@ -256,7 +262,7 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
             Modifier.fillMaxWidth().pointerInput(desde, hasta) {
                 detectHorizontalDragGestures { change, _ ->
                     val i = (desde + (change.position.x / size.width * n).toInt()).coerceIn(desde, hasta)
-                    if (i != actual) { onCambio(i); vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
+                    if (i != actual) { onCambio(i); sentir(Sentidos.Evento.ELEGIR) }
                     change.consume()
                 }
             },
@@ -269,7 +275,7 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
                     Modifier.weight(1f).heightIn(min = 52.dp).clip(R4)
                         .background(if (sel) c else MaterialTheme.colorScheme.surface)
                         .border(if (sel) 2.dp else 1.dp, if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, R4)
-                        .clickable { onCambio(if (sel) null else i); vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove) },
+                        .clickable { onCambio(if (sel) null else i); sentir(Sentidos.Evento.ELEGIR) },
                     contentAlignment = Alignment.Center,
                 ) {
                     // Una franja del color de cada valor, para leer la escala sin depender solo del número.
@@ -288,9 +294,9 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
 
 @Composable
 fun Ficha(texto: String, activa: Boolean, onClick: () -> Unit) {
-    val vibra = LocalHapticFeedback.current
+    val sentir = rememberSentir()
     Surface(
-        onClick = { vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove); onClick() }, shape = R4,
+        onClick = { sentir(Sentidos.Evento.ELEGIR); onClick() }, shape = R4,
         color = if (activa) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, if (activa) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
     ) {
@@ -329,13 +335,13 @@ fun Opciones(opciones: List<Opcion>, valor: String?, onCambio: (String?) -> Unit
 
 @Composable
 fun Interruptor(texto: String, valor: Boolean, detalle: String? = null, onCambio: (Boolean) -> Unit) {
-    val vibra = LocalHapticFeedback.current
-    Row(Modifier.fillMaxWidth().clickable { vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove); onCambio(!valor) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    val sentir = rememberSentir()
+    Row(Modifier.fillMaxWidth().clickable { sentir(Sentidos.Evento.ELEGIR); onCambio(!valor) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(texto, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Ayuda(detalle)
         }
-        Switch(checked = valor, onCheckedChange = { vibra.performHapticFeedback(HapticFeedbackType.TextHandleMove); onCambio(it) }, colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary))
+        Switch(checked = valor, onCheckedChange = { sentir(Sentidos.Evento.ELEGIR); onCambio(it) }, colors = SwitchDefaults.colors(checkedTrackColor = MaterialTheme.colorScheme.primary))
     }
 }
 
@@ -450,16 +456,17 @@ fun BotonDictado(onTexto: (String) -> Unit) {
 
 @Composable
 fun BotonPrincipal(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
-    val vibra = LocalHapticFeedback.current
-    Button(onClick = { vibra.performHapticFeedback(HapticFeedbackType.LongPress); onClick() }, enabled = habilitado, modifier = modifier.heightIn(min = 48.dp), shape = R4,
+    val sentir = rememberSentir()
+    Button(onClick = { sentir(Sentidos.Evento.GUARDAR); onClick() }, enabled = habilitado, modifier = modifier.heightIn(min = 48.dp), shape = R4,
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-        Text(texto.uppercase(), style = MaterialTheme.typography.titleLarge.copy(fontSize = 14.sp, letterSpacing = 2.sp))
+        Text(if (Estilo.mayusculas) texto.uppercase() else texto, style = MaterialTheme.typography.titleLarge.copy(fontSize = if (Estilo.tema == TemaId.MEDIEVAL) 17.sp else 14.sp, letterSpacing = if (Estilo.mayusculas) 2.sp else 0.5.sp))
     }
 }
 
 @Composable
 fun BotonSecundario(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, enabled = habilitado, modifier = modifier, shape = R4, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+    val sentir = rememberSentir()
+    OutlinedButton(onClick = { sentir(Sentidos.Evento.TOQUE); onClick() }, enabled = habilitado, modifier = modifier, shape = R4, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
         Text(texto, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
     }

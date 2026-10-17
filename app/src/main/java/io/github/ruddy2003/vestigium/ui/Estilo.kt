@@ -15,11 +15,48 @@ object Estilo {
     private fun slug(s: String) = Normalizer.normalize(s.lowercase(), Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
         .replace(Regex("[^a-z0-9]+"), "_").trim('_')
 
+    /** Número de expediente o de protocolo estable para cada pantalla (no cambia entre aperturas). */
+    private fun folio(s: String, desde: Int, rango: Int) = (s.hashCode() and 0x7fffffff) % rango + desde
+
+    /** Prefijo de los comentarios (la línea pequeña bajo los títulos). */
+    val comentario: String get() = when (tema) {
+        TemaId.ROMANO, TemaId.CIBER, TemaId.ORDEN -> "// "
+        TemaId.HELENO -> "— "
+        TemaId.MEDIEVAL -> "¶ "
+        TemaId.DISTOPIA -> "▪ "
+        TemaId.REFUGIO -> "> "
+        TemaId.LABORATORIO -> "· "
+        TemaId.COLONOS -> "~ "
+    }
+
+    /** ¿Los títulos van en mayúsculas? La gótica y la letra de imprenta antigua se leen mejor en minúsculas. */
+    val mayusculas: Boolean get() = tema != TemaId.MEDIEVAL && tema != TemaId.COLONOS
+
+    /** Nombre del tema para un título en español, o null si ese tema no lo renombra. */
+    private fun nombreNuevo(titulo: String): String? = Temas.nombre(tema, titulo)
+
+    private fun comentarioNuevo(titulo: String, nombre: String, pantalla: Boolean): String? {
+        val t = titulo.lowercase()
+        return when (tema) {
+            TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (nombre.equals(titulo, true)) null else "▪ $t"
+            TemaId.LABORATORIO -> if (pantalla) "protocolo VM-%03d · %s".format(folio(titulo, 100, 900), t) else if (nombre.equals(titulo, true)) null else "· $t"
+            TemaId.REFUGIO -> if (nombre.equals(titulo, true)) null else "[ $t ]"
+            TemaId.ORDEN -> if (nombre.equals(titulo, true)) null else "— $t —"
+            TemaId.COLONOS -> if (nombre.equals(titulo, true)) null else "~ $t ~"
+            TemaId.MEDIEVAL -> if (nombre.equals(titulo, true)) null else "¶ $t"
+            else -> null
+        }
+    }
+
     /** Título grande y comentario de una pantalla. */
     fun pantalla(titulo: String, latin: String?): Pair<String, String?> = when (tema) {
         TemaId.ROMANO -> (latin ?: titulo.uppercase()) to (if (latin != null) "// ${titulo.lowercase()}" else null)
         TemaId.CIBER -> titulo.uppercase() to "// sys.${slug(latin ?: titulo)}"
         TemaId.HELENO -> Griego.nombre(titulo)?.let { it to "— ${titulo.lowercase()}" } ?: (titulo.uppercase() to null)
+        else -> {
+            val n = nombreNuevo(titulo) ?: if (mayusculas) titulo.uppercase() else titulo
+            n to comentarioNuevo(titulo, n, true)
+        }
     }
 
     /** Título y comentario de una sección. */
@@ -27,49 +64,110 @@ object Estilo {
         TemaId.ROMANO -> (latin ?: titulo.uppercase()) to (if (latin != null) "// ${titulo.lowercase()}" else null)
         TemaId.CIBER -> "> ${titulo.lowercase()}" to null
         TemaId.HELENO -> Griego.nombre(titulo)?.let { it to "— ${titulo.lowercase()}" } ?: (titulo.uppercase() to null)
+        else -> {
+            val n = nombreNuevo(titulo) ?: if (mayusculas) titulo.uppercase() else titulo
+            n to comentarioNuevo(titulo, n, false)
+        }
     }
 
     fun numeral(n: Int): String = when (tema) {
         TemaId.ROMANO -> Romano.de(n)
         TemaId.CIBER -> if (n < 100) "[%02d]".format(n) else "0x%X".format(n)
         TemaId.HELENO -> Griego.numeral(n)
+        TemaId.MEDIEVAL -> Temas.copista(n)
+        TemaId.DISTOPIA -> if (n < 100) "Nº%02d".format(n) else "Nº$n"
+        TemaId.REFUGIO -> if (n < 100) "#%02d".format(n) else "#$n"
+        TemaId.ORDEN -> if (n < 100) "%02d".format(n) else "$n"
+        TemaId.LABORATORIO -> if (n < 100) "%02d".format(n) else "$n"
+        TemaId.COLONOS -> if (n < 100) "§ $n" else "$n"
     }
+
+    /** Días desde el primer registro: «día N en el refugio», «T+N» en el laboratorio. */
+    private fun diasDesdeInicio(iso: String): Long? = runCatching {
+        val primero = Repo.dias.keys.minOrNull() ?: return null
+        Fechas.parse(iso).toEpochDay() - Fechas.parse(primero).toEpochDay() + 1
+    }.getOrNull()
 
     /** Fecha solemne del encabezado. */
     fun fecha(iso: String): String = when (tema) {
         TemaId.ROMANO -> Romano.fecha(iso)
         TemaId.CIBER -> runCatching { val d = Fechas.parse(iso); "%04d.%02d.%02d // %s".format(d.year, d.monthValue, d.dayOfMonth, SEMANA_ES[d.dayOfWeek.value - 1]) }.getOrDefault(iso)
         TemaId.HELENO -> Griego.fecha(iso)
+        TemaId.MEDIEVAL -> runCatching { val d = Fechas.parse(iso); "${Temas.copista(d.dayOfMonth)} de ${Temas.MESES_MEDIEVALES[d.monthValue - 1]} de ${Temas.copista(d.year)}" }.getOrDefault(iso)
+        TemaId.DISTOPIA -> runCatching { val d = Fechas.parse(iso); "JORNADA %03d · AÑO %d".format(d.dayOfYear, d.year) }.getOrDefault(iso)
+        TemaId.REFUGIO -> runCatching {
+            val d = Fechas.parse(iso)
+            "%02d.%s.%d".format(d.dayOfMonth, MESES_ES[d.monthValue - 1], d.year) + (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { " · DÍA $it" } ?: "")
+        }.getOrDefault(iso)
+        TemaId.ORDEN -> runCatching { val d = Fechas.parse(iso); "%02d %s %02d // %s".format(d.dayOfMonth, MESES_ES[d.monthValue - 1], d.year % 100, SEMANA_LARGA[d.dayOfWeek.value - 1].uppercase()) }.getOrDefault(iso)
+        TemaId.LABORATORIO -> iso + (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { " · T+$it" } ?: "")
+        TemaId.COLONOS -> runCatching { val d = Fechas.parse(iso); "${SEMANA_LARGA[d.dayOfWeek.value - 1]}, ${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} de ${d.year}" }.getOrDefault(iso)
     }
 
-    fun mes(n: Int, anio: Int? = null): String = when (tema) {
-        TemaId.ROMANO -> Romano.mes(n)
-        TemaId.CIBER -> MESES_ES[(n - 1).coerceIn(0, 11)] + (anio?.let { ".$it" } ?: "")
-        TemaId.HELENO -> Griego.MESES[(n - 1).coerceIn(0, 11)]
+    fun mes(n: Int, anio: Int? = null): String {
+        val i = (n - 1).coerceIn(0, 11)
+        return when (tema) {
+            TemaId.ROMANO -> Romano.mes(n)
+            TemaId.CIBER -> MESES_ES[i] + (anio?.let { ".$it" } ?: "")
+            TemaId.HELENO -> Griego.MESES[i]
+            TemaId.MEDIEVAL -> Temas.MESES_MEDIEVALES[i]
+            TemaId.DISTOPIA -> "MES %02d".format(n) + (anio?.let { " · $it" } ?: "")
+            TemaId.REFUGIO, TemaId.ORDEN -> MESES_ES[i] + (anio?.let { " $it" } ?: "")
+            TemaId.LABORATORIO -> MESES_LARGOS[i].uppercase() + (anio?.let { " $it" } ?: "")
+            TemaId.COLONOS -> MESES_LARGOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " de $it" } ?: "")
+        }
     }
 
-    val semana: List<String> get() = when (tema) { TemaId.ROMANO -> Romano.SEMANA; TemaId.CIBER -> SEMANA_ES; TemaId.HELENO -> Griego.SEMANA }
+    val semana: List<String> get() = when (tema) {
+        TemaId.ROMANO -> Romano.SEMANA; TemaId.CIBER, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.ORDEN -> SEMANA_ES; TemaId.HELENO -> Griego.SEMANA
+        // Los monjes contaban «ferias»: el lunes es la segunda, el martes la tercera…
+        TemaId.MEDIEVAL -> listOf("ij", "iij", "iiij", "v", "vj", "Sab", "Dom")
+        TemaId.LABORATORIO -> listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do")
+        TemaId.COLONOS -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+    }
 
-    /** Marcas del calendario romano (calendas, nonas, idus); en los otros temas no hay. */
-    fun marca(fecha: String): String? = if (tema == TemaId.ROMANO) Romano.marca(fecha) else null
+    /** Dos letras por día, para el widget del mes. */
+    val semanaCorta: List<String> get() = when (tema) {
+        TemaId.ROMANO, TemaId.CIBER, TemaId.HELENO -> semana.map { it.take(2) }
+        else -> listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do").let { l -> if (mayusculas) l.map { it.uppercase() } else l }
+    }
 
-    val atras: String get() = when (tema) { TemaId.ROMANO -> "← cd .."; TemaId.CIBER -> "<< cd .."; TemaId.HELENO -> "← ὀπίσω" }
-    val prefijo: String get() = when (tema) { TemaId.ROMANO -> "› "; TemaId.CIBER -> "$ "; TemaId.HELENO -> "· " }
+    /** Marcas del calendario: calendas, nonas e idus (romano); las fiestas que dividían el año (medieval). */
+    fun marca(fecha: String): String? = when (tema) {
+        TemaId.ROMANO -> Romano.marca(fecha)
+        TemaId.MEDIEVAL -> Temas.FIESTAS[fecha.takeLast(5)]
+        else -> null
+    }
+
+    val atras: String get() = when (tema) {
+        TemaId.ROMANO -> "← cd .."; TemaId.CIBER -> "<< cd .."; TemaId.HELENO -> "← ὀπίσω"; TemaId.MEDIEVAL -> "← tornar"
+        TemaId.DISTOPIA -> "◄ RETROCEDER"; TemaId.REFUGIO -> "< SALIR"; TemaId.ORDEN -> "« REPLEGARSE"; TemaId.LABORATORIO -> "← volver"; TemaId.COLONOS -> "← volver"
+    }
+    val prefijo: String get() = when (tema) {
+        TemaId.ROMANO -> "› "; TemaId.CIBER -> "$ "; TemaId.HELENO -> "· "; TemaId.MEDIEVAL -> "¶ "; TemaId.DISTOPIA -> "▪ "
+        TemaId.REFUGIO -> "> "; TemaId.ORDEN -> "▸ "; TemaId.LABORATORIO -> "○ "; TemaId.COLONOS -> "☞ "
+    }
 
     /** Rótulos de los widgets. */
     fun widget(clave: String): String = when (tema) {
         TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO")[clave] ?: clave.uppercase()
         TemaId.CIBER -> "> " + (mapOf("sueno" to "sueño", "habitos" to "hábitos", "animo" to "ánimo")[clave] ?: clave)
         TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ")[clave] ?: clave.uppercase()
+        else -> Temas.widget(tema, clave)
     }
 
     /** Claves en latín de las líneas «clave = valor» (Día, widget «hoy»), traducidas al tema. */
     fun clave(c: String): String {
-        if (tema == TemaId.ROMANO) return c
+        if (tema == TemaId.ROMANO || tema == TemaId.MEDIEVAL) return c  // en el scriptorium también se escribía en latín
         val sangria = c.takeWhile { it == ' ' }
         val k = c.trim()
-        val m = if (tema == TemaId.CIBER) CLAVES_CIBER else CLAVES_GRIEGO
-        return sangria + (m[k] ?: k)
+        val v = when (tema) {
+            TemaId.CIBER -> CLAVES_CIBER[k]
+            TemaId.HELENO -> CLAVES_GRIEGO[k]
+            TemaId.DISTOPIA, TemaId.ORDEN -> CLAVES_ES[k]?.uppercase()
+            else -> CLAVES_ES[k]
+        }
+        return sangria + (v ?: k)
     }
 
     private val CLAVES_CIBER = mapOf(
@@ -90,9 +188,20 @@ object Estilo {
         "strepitus" to "θόρυβος", "luna" to "σελήνη", "dias" to "ἡμέραι", "animus" to "θυμός", "optimus" to "ἄριστος", "momenta" to "καιροί",
         "svmptvs" to "δαπάνη", "memorabilia" to "μνημεῖα", "ascensvs" to "ἀνάβασις",
     )
+    private val CLAVES_ES = mapOf(
+        "horologium" to "reloj", "somnus" to "sueño", "stadia" to "fases", "cor" to "corazón", "passus" to "pasos", "motus" to "movimiento",
+        "iter" to "ruta", "exercitatio" to "ejercicio", "loca" to "lugares", "telephonum" to "pantalla", "telephon" to "pantalla", "usus" to "uso",
+        "monita" to "avisos", "musica" to "música", "imagines" to "fotos", "fasti" to "agenda", "caelum" to "clima", "lux" to "luz_día",
+        "aer" to "aire", "corpus" to "cuerpo", "nutritio" to "nutrición", "cibus" to "comidas", "robur" to "gimnasio", "musculi" to "músculos",
+        "voces" to "llamadas", "soni" to "audio", "retia" to "wifi", "lumen" to "luz", "vis" to "carga", "lectio" to "lectura",
+        "strepitus" to "ruido", "luna" to "luna", "dias" to "días", "animus" to "ánimo", "optimus" to "mejor", "momenta" to "momentos",
+        "svmptvs" to "gasto", "memorabilia" to "hitos", "ascensvs" to "escalada",
+    )
 
     private val SEMANA_ES = listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")
+    private val SEMANA_LARGA = listOf("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
     private val MESES_ES = listOf("ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC")
+    private val MESES_LARGOS = listOf("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre")
 }
 
 /** Griego antiguo: nombres de secciones, numerales jónicos y el calendario macedonio de Alejandro. */
@@ -150,56 +259,4 @@ object Griego {
         "Tablero" to "ΠΙΝΑΞ", "Buscar" to "ΖΗΤΗΣΙΣ", "Cifras" to "ΑΡΙΘΜΟΙ", "Momentos de la semana" to "ΚΑΙΡΟΙ ΤΗΣ ΕΒΔΟΜΑΔΟΣ", "Tu día en 24 horas" to "ΤΟ ΗΜΕΡΟΝΥΚΤΙΟΝ", "Resumen semanal" to "ΕΒΔΟΜΑΣ",
     )
     fun nombre(titulo: String): String? = NOMBRES[titulo]
-}
-
-/**
- * Una frase griega por día para el tema helénico. Original en griego y traducción propia;
- * casi todas son de textos clásicos que se conservan (se indica la fuente).
- */
-object Frases {
-    data class Frase(val griego: String?, val texto: String, val autor: String)
-
-    val TODAS = listOf(
-        Frase("ὁ δὲ ἀνεξέταστος βίος οὐ βιωτὸς ἀνθρώπῳ", "Una vida sin examen no merece ser vivida.", "Sócrates, en la Apología de Platón"),
-        Frase("γνῶθι σεαυτόν", "Conócete a ti mismo.", "Inscripción del templo de Delfos"),
-        Frase("μηδὲν ἄγαν", "Nada en exceso.", "Inscripción del templo de Delfos"),
-        Frase("ἦθος ἀνθρώπῳ δαίμων", "El carácter de cada quien es su destino.", "Heráclito, fragmento 119"),
-        Frase("ποταμῷ γὰρ οὐκ ἔστιν ἐμβῆναι δὶς τῷ αὐτῷ", "No es posible entrar dos veces en el mismo río.", "Heráclito, fragmento 91"),
-        Frase("φύσις κρύπτεσθαι φιλεῖ", "A la naturaleza le gusta ocultarse.", "Heráclito, fragmento 123"),
-        Frase("ἐδιζησάμην ἐμεωυτόν", "Me he buscado a mí mismo.", "Heráclito, fragmento 101"),
-        Frase("μία γὰρ χελιδὼν ἔαρ οὐ ποιεῖ, οὐδὲ μία ἡμέρα", "Una golondrina no hace la primavera, ni tampoco un solo día.", "Aristóteles, Ética a Nicómaco I"),
-        Frase("τὰ μὲν δίκαια πράττοντες δίκαιοι γινόμεθα", "Nos volvemos justos haciendo cosas justas: lo que repetimos nos forma.", "Aristóteles, Ética a Nicómaco II"),
-        Frase("πάντες ἄνθρωποι τοῦ εἰδέναι ὀρέγονται φύσει", "Todos los seres humanos desean por naturaleza saber.", "Aristóteles, Metafísica I"),
-        Frase("ἄνθρωπος φύσει πολιτικὸν ζῷον", "El ser humano es por naturaleza un animal político.", "Aristóteles, Política I"),
-        Frase("ὁ βίος βραχύς, ἡ δὲ τέχνη μακρή", "La vida es breve; el arte, largo.", "Hipócrates, Aforismos"),
-        Frase("γένοι᾽ οἷος ἐσσὶ μαθών", "Llega a ser el que eres, una vez que lo hayas aprendido.", "Píndaro, Pítica II"),
-        Frase("ταράσσει τοὺς ἀνθρώπους οὐ τὰ πράγματα, ἀλλὰ τὰ περὶ τῶν πραγμάτων δόγματα", "No nos perturban las cosas, sino lo que opinamos de ellas.", "Epicteto, Enquiridión 5"),
-        Frase("τῶν ὄντων τὰ μέν ἐστιν ἐφ᾽ ἡμῖν, τὰ δὲ οὐκ ἐφ᾽ ἡμῖν", "De las cosas, unas dependen de nosotros y otras no.", "Epicteto, Enquiridión 1"),
-        Frase("ὁ κόσμος ἀλλοίωσις, ὁ βίος ὑπόληψις", "El mundo es cambio; la vida, opinión.", "Marco Aurelio, Meditaciones IV"),
-        Frase("μὴ ὡς μύρια μέλλων ἔτη ζῆν", "No vivas como si te quedaran diez mil años.", "Marco Aurelio, Meditaciones IV"),
-        Frase("κτῆμά τε ἐς αἰεὶ", "Lo escribí como una adquisición para siempre.", "Tucídides, Historia I"),
-        Frase("πάντων χρημάτων μέτρον ἐστὶν ἄνθρωπος", "El ser humano es la medida de todas las cosas.", "Protágoras"),
-        Frase("χαλεπὸν τὸ ἑαυτὸν γνῶναι", "Lo más difícil es conocerse a uno mismo.", "Tales de Mileto, según Diógenes Laercio"),
-        Frase("εἰ μὴ Ἀλέξανδρος ἤμην, Διογένης ἂν ἤμην", "Si no fuera Alejandro, sería Diógenes.", "Alejandro Magno, según Plutarco"),
-        Frase("μικρὸν ἀπὸ τοῦ ἡλίου μετάστηθι", "Apártate un poco, que me tapas el sol.", "Diógenes a Alejandro, según Plutarco"),
-        Frase("τὰς ἐλπίδας", "«La esperanza»: lo que Alejandro guardó para sí al repartir sus bienes antes de partir a Asia.", "Plutarco, Vida de Alejandro 15"),
-        Frase("τῷ κρατίστῳ", "«Al más fuerte»: la respuesta de Alejandro, ya moribundo, cuando le preguntaron a quién dejaba su reino.", "Arriano, Anábasis VII"),
-        Frase("οὔτε γὰρ ἱστορίας γράφομεν, ἀλλὰ βίους", "No escribimos historias, sino vidas.", "Plutarco, Vida de Alejandro 1"),
-        Frase(null, "Un hecho pequeño, una frase o una broma revelan mejor el carácter que batallas con miles de muertos.", "Plutarco, Vida de Alejandro 1"),
-        Frase("ἄνθρωπος μικρὸς κόσμος", "El ser humano es un pequeño cosmos.", "Demócrito"),
-        Frase("πολλὰ τὰ δεινὰ κοὐδὲν ἀνθρώπου δεινότερον πέλει", "Muchas cosas son asombrosas, pero ninguna más que el ser humano.", "Sófocles, Antígona"),
-        Frase("οἵη περ φύλλων γενεὴ τοίη δὲ καὶ ἀνδρῶν", "Como la generación de las hojas, así la de los seres humanos.", "Homero, Ilíada VI"),
-        Frase("ἄνδρα μοι ἔννεπε, Μοῦσα, πολύτροπον", "Háblame, Musa, del hombre de muchos caminos.", "Homero, Odisea I"),
-        Frase("κλέος ἄφθιτον", "Gloria imperecedera: lo que eligió Aquiles, el héroe que Alejandro quiso imitar.", "Homero, Ilíada IX"),
-        Frase("τῆς δ᾽ ἀρετῆς ἱδρῶτα θεοὶ προπάροιθεν ἔθηκαν", "Delante de la excelencia, los dioses pusieron el sudor.", "Hesíodo, Trabajos y días"),
-        Frase("καιρὸν γνῶθι", "Conoce el momento oportuno.", "Pítaco de Mitilene"),
-        Frase("ἀρχὴ παντὸς ἔργου μέγιστον", "El comienzo es lo más importante de toda obra.", "Platón, República II"),
-        Frase("πόλλ᾽ οἶδ᾽ ἀλώπηξ, ἀλλ᾽ ἐχῖνος ἓν μέγα", "La zorra sabe muchas cosas; el erizo, una sola y grande.", "Arquíloco"),
-        Frase("μέγα βιβλίον μέγα κακόν", "Libro grande, gran mal.", "Calímaco"),
-        Frase("ὁ θάνατος οὐδὲν πρὸς ἡμᾶς", "La muerte no es nada para nosotros.", "Epicuro, Máximas capitales II"),
-        Frase("χαλεπὸν ἐσθλὸν ἔμμεναι", "Es difícil ser bueno.", "Pítaco, citado por Simónides"),
-    )
-
-    /** La del día: cambia cada día y recorre todas antes de repetir. */
-    fun del(fecha: String): Frase = TODAS[Math.floorMod(Fechas.parse(fecha).toEpochDay(), TODAS.size.toLong()).toInt()]
 }

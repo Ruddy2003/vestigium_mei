@@ -7,6 +7,9 @@ import android.content.Context
 import android.content.Intent
 import android.service.notification.NotificationListenerService
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -116,6 +119,13 @@ object Pendientes {
 fun TeFaltaHoy(d: Dia, hoy: String, accion: (String) -> Unit) {
     val l = Pendientes.deHoy(d, hoy)
     val tarde = LocalTime.now().hour >= 21
+    // Cuando se completa lo pendiente, una pequeña celebración con el sonido y la vibración del tema.
+    val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
+    var antes by remember(hoy) { mutableStateOf<Boolean?>(null) }
+    androidx.compose.runtime.LaunchedEffect(l.isEmpty()) {
+        if (antes == false && l.isEmpty()) { io.github.ruddy2003.vestigium.ui.Fiesta.lanzar(); sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) }
+        antes = l.isEmpty()
+    }
     if (l.isEmpty()) {
         if (tarde && d.valencia != null) Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
             Text("✓ Hoy completo. Buenas noches.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -222,17 +232,50 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav) {
 }
 
 // =====================================================================
-//  Frase griega del día (tema helénico)
+//  Frase del día (cada tema la suya)
 // =====================================================================
 
 @Composable
 fun FraseDelDia(fecha: String) {
-    if (Estilo.tema != TemaId.HELENO) return
-    val f = Frases.del(fecha)
-    Column(Modifier.fillMaxWidth().padding(top = 10.dp)) {
-        f.griego?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary, fontStyle = FontStyle.Italic) }
-        Text("«${f.texto}»", style = MaterialTheme.typography.bodyMedium)
-        Text("— ${f.autor}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    val tema = Estilo.tema
+    val f = Frases.del(fecha, tema)
+    val cs = MaterialTheme.colorScheme
+    val ty = MaterialTheme.typography
+    if (tema == TemaId.DISTOPIA) {
+        // Cartel de propaganda: fondo negro, letras claras y una franja roja.
+        Surface(color = cs.onBackground, shape = androidx.compose.ui.graphics.RectangleShape, modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+            Row(Modifier.height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
+                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
+                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                    Text(Frases.rotulo(tema), style = ty.labelMedium, color = cs.primary)
+                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
+                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
+                    Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f))
+                }
+            }
+        }
+        return
+    }
+    val marco = tema == TemaId.REFUGIO || tema == TemaId.ORDEN || tema == TemaId.LABORATORIO || tema == TemaId.CIBER
+    val contenido: @Composable () -> Unit = {
+        Column(Modifier.padding(if (marco) 12.dp else 0.dp)) {
+            Text(Frases.rotulo(tema), style = ty.labelMedium, color = cs.primary)
+            f.original?.let { Text(it, style = ty.bodyLarge, color = cs.primary, fontStyle = FontStyle.Italic, modifier = Modifier.padding(top = 2.dp)) }
+            if (tema == TemaId.MEDIEVAL) {
+                // Capitular iluminada: la primera letra grande, en gótica y en rojo.
+                Text(androidx.compose.ui.text.buildAnnotatedString {
+                    withStyle(androidx.compose.ui.text.SpanStyle(fontFamily = io.github.ruddy2003.vestigium.ui.LetraExtra.gotica, color = cs.primary, fontSize = ty.bodyMedium.fontSize * 2.2f)) { append(f.texto.take(1)) }
+                    append(f.texto.drop(1))
+                }, style = ty.bodyMedium)
+            } else Text(if (tema == TemaId.CIBER) f.texto else "«${f.texto}»", style = ty.bodyMedium)
+            Text("— ${f.autor}", style = ty.labelMedium, color = cs.onSurfaceVariant)
+        }
+    }
+    if (marco) Surface(shape = MaterialTheme.shapes.small, color = cs.surface, border = androidx.compose.foundation.BorderStroke(1.dp, cs.primary.copy(alpha = 0.5f)),
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) { contenido() }
+    else Row(Modifier.fillMaxWidth().padding(top = 12.dp).height(androidx.compose.foundation.layout.IntrinsicSize.Min)) {
+        Box(Modifier.width(2.dp).fillMaxHeight().background(cs.primary.copy(alpha = 0.6f)))
+        Box(Modifier.padding(start = 10.dp)) { contenido() }
     }
 }
 
@@ -336,6 +379,11 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
     val normal = if (previos.size >= 5) previos.average() else null
     val color = MaterialTheme.colorScheme.primary
     val tenue = MaterialTheme.colorScheme.outline
+    // Las barras crecen al abrir el día.
+    val crecer = remember(fecha, m.id) { androidx.compose.animation.core.Animatable(if (Repo.config.animaciones) 0f else 1f) }
+    androidx.compose.runtime.LaunchedEffect(fecha, m.id) {
+        crecer.animateTo(1f, androidx.compose.animation.core.tween(700, delayMillis = 60, easing = androidx.compose.animation.core.FastOutSlowInEasing))
+    }
     Surface(modifier, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
         Column(Modifier.padding(10.dp)) {
@@ -359,7 +407,7 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
                 semana.forEachIndexed { i, x ->
                     if (x == null) drawCircle(tenue, 2f, Offset(i * w + w / 2, size.height - 2f))
                     else {
-                        val h = (size.height * (x / max)).toFloat().coerceAtLeast(2f)
+                        val h = (size.height * (x / max) * crecer.value).toFloat().coerceAtLeast(2f)
                         drawRoundRect(if (i == 6) color else color.copy(alpha = 0.35f), Offset(i * w + w * 0.2f, size.height - h), Size(w * 0.6f, h), CornerRadius(2f, 2f))
                     }
                 }
@@ -373,6 +421,9 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
 @Composable
 fun estiloCifra(): androidx.compose.ui.text.TextStyle = when (Estilo.tema) {
     TemaId.ROMANO -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = androidx.compose.ui.unit.TextUnit(21f, androidx.compose.ui.unit.TextUnitType.Sp), letterSpacing = androidx.compose.ui.unit.TextUnit(0f, androidx.compose.ui.unit.TextUnitType.Sp))
+    // La gótica es para títulos; las cifras se leen mejor en Garamond.
+    TemaId.MEDIEVAL -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.garamond, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+        fontSize = androidx.compose.ui.unit.TextUnit(23f, androidx.compose.ui.unit.TextUnitType.Sp), letterSpacing = androidx.compose.ui.unit.TextUnit(0f, androidx.compose.ui.unit.TextUnitType.Sp), fontFeatureSettings = "lnum, tnum")
     else -> MaterialTheme.typography.headlineSmall
 }
 

@@ -18,7 +18,7 @@ import io.github.ruddy2003.vestigium.ui.QuickActivity
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.TemaId
 
-/** Widgets siempre oscuros, con los colores y rótulos del tema elegido (basalto y oro, neón, o noche púrpura y oro). */
+/** Widgets siempre oscuros, con los colores y rótulos del tema elegido. */
 object Widgets {
     private class Colores(val fondo: Int, val boton: Int, val activo: Int, val ambar: Int, val oro: Int, val texto: Int, val tenue: Int,
                           val linea: Int, val animo: IntArray, val vacio: Int, val sobreActivo: Int)
@@ -36,6 +36,30 @@ object Widgets {
             0xFFD8B45C.toInt(), 0xFFEFE9DC.toInt(), 0xFFA69EBB.toInt(), 0xFF4A3D6E.toInt(),
             intArrayOf(0xFFC25A7A.toInt(), 0xFFCF8597.toInt(), 0xFFDDB3B7.toInt(), 0xFFEFE9DC.toInt(), 0xFFB5D2E8.toInt(), 0xFF8DBDE0.toInt(), 0xFF5FA8D8.toInt()),
             0xFF1D1830.toInt(), 0xFF1C1405.toInt())
+        TemaId.MEDIEVAL -> Colores(R.drawable.widget_fondo_medieval, R.drawable.widget_boton_medieval, R.drawable.widget_boton_activo_medieval, R.drawable.widget_boton_ambar_medieval,
+            0xFFD5A84A.toInt(), 0xFFEDDFC2.toInt(), 0xFFB7A587.toInt(), 0xFF5A4630.toInt(),
+            intArrayOf(0xFFC9473B.toInt(), 0xFFD27A62.toInt(), 0xFFD9AE8E.toInt(), 0xFFEDDFC2.toInt(), 0xFFB9C4E6.toInt(), 0xFF9AB0E8.toInt(), 0xFF8DA5E0.toInt()),
+            0xFF2A2016.toInt(), 0xFF1C1405.toInt())
+        TemaId.DISTOPIA -> Colores(R.drawable.widget_fondo_distopia, R.drawable.widget_boton_distopia, R.drawable.widget_boton_activo_distopia, R.drawable.widget_boton_ambar_distopia,
+            0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
+            intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
+            0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+        TemaId.REFUGIO -> Colores(R.drawable.widget_fondo_refugio, R.drawable.widget_boton_refugio, R.drawable.widget_boton_activo_refugio, R.drawable.widget_boton_ambar_refugio,
+            0xFF3DFF7F.toInt(), 0xFF9CF5B0.toInt(), 0xFF55B872.toInt(), 0xFF1C3A24.toInt(),
+            intArrayOf(0xFFFFB23F.toInt(), 0xFFE0B04A.toInt(), 0xFFB8C060.toInt(), 0xFF9CF5B0.toInt(), 0xFF7CF098.toInt(), 0xFF5CF88A.toInt(), 0xFF3DFF7F.toInt()),
+            0xFF112016.toInt(), 0xFF021407.toInt())
+        TemaId.ORDEN -> Colores(R.drawable.widget_fondo_orden, R.drawable.widget_boton_orden, R.drawable.widget_boton_activo_orden, R.drawable.widget_boton_ambar_orden,
+            0xFFD6B25A.toInt(), 0xFFDDE2E7.toInt(), 0xFF9DA6B0.toInt(), 0xFF4A3F22.toInt(),
+            intArrayOf(0xFFD0333B.toInt(), 0xFFD06A6E.toInt(), 0xFFC9A5A7.toInt(), 0xFFDDE2E7.toInt(), 0xFFB4CBD8.toInt(), 0xFF9FBFD0.toInt(), 0xFF8FB3C8.toInt()),
+            0xFF22262B.toInt(), 0xFF1C1405.toInt())
+        TemaId.LABORATORIO -> Colores(R.drawable.widget_fondo_laboratorio, R.drawable.widget_boton_laboratorio, R.drawable.widget_boton_activo_laboratorio, R.drawable.widget_boton_ambar_laboratorio,
+            0xFF3CD2E5.toInt(), 0xFFE3ECF3.toInt(), 0xFF97A8B9.toInt(), 0xFF263447.toInt(),
+            intArrayOf(0xFFFF7A9A.toInt(), 0xFFF29DB3.toInt(), 0xFFE9C6D2.toInt(), 0xFFE3ECF3.toInt(), 0xFFAEE6EE.toInt(), 0xFF78DCEA.toInt(), 0xFF3CD2E5.toInt()),
+            0xFF18222F.toInt(), 0xFF00191D.toInt())
+        TemaId.COLONOS -> Colores(R.drawable.widget_fondo_colonos, R.drawable.widget_boton_colonos, R.drawable.widget_boton_activo_colonos, R.drawable.widget_boton_ambar_colonos,
+            0xFFE3C27A.toInt(), 0xFFEEE7D7.toInt(), 0xFFA9B0BC.toInt(), 0xFF3E4B60.toInt(),
+            intArrayOf(0xFFE07A62.toInt(), 0xFFE29A86.toInt(), 0xFFE8C2B0.toInt(), 0xFFEEE7D7.toInt(), 0xFFC0D2EA.toInt(), 0xFFA6C2E6.toInt(), 0xFF8FB3E0.toInt()),
+            0xFF1E2838.toInt(), 0xFF1C1405.toInt())
     }
 
     /** Pinta fondo, botones, líneas y textos según el tema. Va primero: lo que se pinta después (estado activo, colores de ánimo) lo sobrescribe. */
@@ -49,7 +73,7 @@ object Widgets {
         p.tenue.forEach { v.setTextColor(it, c.tenue) }
         p.oro.forEach { v.setTextColor(it, c.oro) }
     }
-    private val com get() = if (Estilo.tema == TemaId.HELENO) "— " else "// "
+    private val com get() = Estilo.comentario
 
     private val BOTONES_ANIMO = intArrayOf(R.id.a1, R.id.a2, R.id.a3, R.id.a4, R.id.a5, R.id.a6, R.id.a7)
     private val BOTONES_MOMENTO = intArrayOf(R.id.m1, R.id.m2, R.id.m3, R.id.m4, R.id.m5, R.id.m6, R.id.m7, R.id.m8)
@@ -192,7 +216,7 @@ object Widgets {
         val c = android.graphics.Canvas(bmp)
         val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
         val t = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { textSize = 22f; typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER }
-        Estilo.semana.forEachIndexed { i, s -> t.color = col.tenue; c.drawText(s.take(2), (i * (celda + sep) + celda / 2).toFloat(), 24f, t) }
+        Estilo.semanaCorta.forEachIndexed { i, s -> t.color = col.tenue; c.drawText(s, (i * (celda + sep) + celda / 2).toFloat(), 24f, t) }
         dias.forEachIndexed { k, d ->
             val pos = ini.dayOfWeek.value - 1 + k
             val x = (pos % 7) * (celda + sep); val y = cab + (pos / 7) * (celda + sep)

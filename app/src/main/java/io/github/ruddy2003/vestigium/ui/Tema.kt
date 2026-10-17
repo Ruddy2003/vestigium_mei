@@ -59,14 +59,20 @@ object Paleta {
     val bronceClaro = Color(0xFF67BBAE); val bronceNoche = Color(0xFF1E3633)
 }
 
-/** Los tres temas. El cyberpunk solo existe en oscuro. */
+/** Los temas. El cyberpunk solo existe en oscuro. */
 enum class TemaId(val id: String, val nombre: String, val descripcion: String, val soloOscuro: Boolean = false) {
-    ROMANO("romano", "Romano", "Mármol, pórfido y oro. Títulos en latín, fechas romanas."),
+    ROMANO("romano", "Romano", "Mármol, pórfido y oro. Títulos en latín, fechas romanas, corona de laurel."),
     CIBER("ciber", "Cyberpunk", "Terminal de neón sobre negro. Todo en código. Solo oscuro.", soloOscuro = true),
     HELENO("heleno", "Helénico", "Púrpura macedonio, oro y azul del Egeo. Títulos en griego, el sol de Vergina."),
+    MEDIEVAL("medieval", "Scriptorium", "Pergamino, tinta y pan de oro. Letra gótica, capitulares en rojo, numerales de copista."),
+    DISTOPIA("distopia", "Distopía", "Gris de ministerio y rojo de cartel. Cada día es un expediente y un ojo lo mira todo."),
+    REFUGIO("refugio", "Refugio", "Optimismo atómico de día, fósforo verde de noche. La vida bajo tierra, en orden."),
+    ORDEN("orden", "Orden", "Acero, carmesí y latón. Caballeros que custodian el saber técnico. Letra de estarcido."),
+    LABORATORIO("laboratorio", "Laboratorio", "Blanco clínico, cian y violeta. Un laboratorio silencioso donde todo se mide."),
+    COLONOS("colonos", "Colonos", "Papel de gaceta, azul marino y ladrillo. Vecinos que reconstruyen su pueblo."),
 }
 
-private val romanoClaro = lightColorScheme(
+internal val romanoClaro = lightColorScheme(
     primary = Paleta.porfido, onPrimary = Color(0xFFFFF8F3), primaryContainer = Paleta.porfidoSuave, onPrimaryContainer = Paleta.tinta,
     secondary = Paleta.bronce, onSecondary = Color.White, secondaryContainer = Paleta.bronceSuave, onSecondaryContainer = Paleta.tinta,
     tertiary = Paleta.oroOscuro,
@@ -77,7 +83,7 @@ private val romanoClaro = lightColorScheme(
     surfaceContainerLow = Paleta.marmolClaro, surfaceContainerLowest = Paleta.marmolClaro,
 )
 
-private val romanoOscuro = darkColorScheme(
+internal val romanoOscuro = darkColorScheme(
     primary = Paleta.oro, onPrimary = Color(0xFF1A1405), primaryContainer = Paleta.oroSuave, onPrimaryContainer = Paleta.marfil,
     secondary = Paleta.bronceClaro, onSecondary = Color(0xFF07211D), secondaryContainer = Paleta.bronceNoche, onSecondaryContainer = Paleta.marfil,
     tertiary = Paleta.oro,
@@ -89,7 +95,7 @@ private val romanoOscuro = darkColorScheme(
 )
 
 /** Neón cian y magenta sobre negro azulado. */
-private val ciber = darkColorScheme(
+internal val ciber = darkColorScheme(
     primary = Color(0xFF00E5FF), onPrimary = Color(0xFF00161A), primaryContainer = Color(0xFF06282F), onPrimaryContainer = Color(0xFFBFF8FF),
     secondary = Color(0xFFFF2E88), onSecondary = Color(0xFF1A0010), secondaryContainer = Color(0xFF2B0A1C), onSecondaryContainer = Color(0xFFFFD0E4),
     tertiary = Color(0xFFE8FF3A),
@@ -101,7 +107,7 @@ private val ciber = darkColorScheme(
 )
 
 /** Pergamino y mármol con púrpura macedonio y azul del Egeo. */
-private val helenoClaro = lightColorScheme(
+internal val helenoClaro = lightColorScheme(
     primary = Color(0xFF5A2A82), onPrimary = Color.White, primaryContainer = Color(0xFFEADCF5), onPrimaryContainer = Color(0xFF1E1A2B),
     secondary = Color(0xFF1E5F8C), onSecondary = Color.White, secondaryContainer = Color(0xFFD7E7F3), onSecondaryContainer = Color(0xFF1E1A2B),
     tertiary = Color(0xFFA27B22),
@@ -113,7 +119,7 @@ private val helenoClaro = lightColorScheme(
 )
 
 /** Noche púrpura con el oro del sol de Vergina. */
-private val helenoOscuro = darkColorScheme(
+internal val helenoOscuro = darkColorScheme(
     primary = Color(0xFFD8B45C), onPrimary = Color(0xFF1C1405), primaryContainer = Color(0xFF2B2245), onPrimaryContainer = Color(0xFFEFE9DC),
     secondary = Color(0xFF73B4E2), onSecondary = Color(0xFF04192A), secondaryContainer = Color(0xFF13324A), onSecondaryContainer = Color(0xFFEFE9DC),
     tertiary = Color(0xFFB992EA),
@@ -124,7 +130,7 @@ private val helenoOscuro = darkColorScheme(
     surfaceContainerLow = Color(0xFF161222), surfaceContainerLowest = Color(0xFF0E0B17),
 )
 
-private val tipoRomano = Typography(
+internal val tipoRomano = Typography(
     displaySmall = TextStyle(fontFamily = Letra.inscripcion, fontWeight = FontWeight.Normal, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 2.sp),
     headlineMedium = TextStyle(fontFamily = Letra.inscripcion, fontWeight = FontWeight.Normal, fontSize = 27.sp, lineHeight = 33.sp, letterSpacing = 2.4.sp),
     headlineSmall = TextStyle(fontFamily = Letra.inscripcion, fontWeight = FontWeight.Normal, fontSize = 21.sp, lineHeight = 27.sp, letterSpacing = 1.6.sp),
@@ -140,7 +146,7 @@ private val tipoRomano = Typography(
 )
 
 /** Todo en monoespaciada: rótulos de terminal y texto de código. */
-private val tipoCiber = Typography(
+internal val tipoCiber = Typography(
     displaySmall = TextStyle(fontFamily = Letra.terminal, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 1.5.sp),
     headlineMedium = TextStyle(fontFamily = Letra.terminal, fontSize = 28.sp, lineHeight = 34.sp, letterSpacing = 1.6.sp),
     headlineSmall = TextStyle(fontFamily = Letra.terminal, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = 1.2.sp),
@@ -156,7 +162,7 @@ private val tipoCiber = Typography(
 )
 
 /** Garamond en todo: capitales griegas espaciadas en títulos, cifras alineadas en datos. */
-private val tipoHeleno = Typography(
+internal val tipoHeleno = Typography(
     displaySmall = TextStyle(fontFamily = Letra.garamond, fontWeight = FontWeight.Medium, fontSize = 32.sp, lineHeight = 38.sp, letterSpacing = 3.sp),
     headlineMedium = TextStyle(fontFamily = Letra.garamond, fontWeight = FontWeight.Medium, fontSize = 29.sp, lineHeight = 35.sp, letterSpacing = 3.2.sp),
     headlineSmall = TextStyle(fontFamily = Letra.garamond, fontWeight = FontWeight.Medium, fontSize = 23.sp, lineHeight = 29.sp, letterSpacing = 2.sp),
@@ -176,17 +182,44 @@ private fun formas(r: Int) = Shapes(
     large = RoundedCornerShape((r * 2).dp), extraLarge = RoundedCornerShape((r * 2.5f).dp),
 )
 
+/** Colores, letra y redondez de cada tema. */
+internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
+    TemaId.ROMANO -> if (oscuro) romanoOscuro else romanoClaro
+    TemaId.CIBER -> ciber
+    TemaId.HELENO -> if (oscuro) helenoOscuro else helenoClaro
+    TemaId.MEDIEVAL -> if (oscuro) medievalOscuro else medievalClaro
+    TemaId.DISTOPIA -> if (oscuro) distopiaOscuro else distopiaClaro
+    TemaId.REFUGIO -> if (oscuro) refugioOscuro else refugioClaro
+    TemaId.ORDEN -> if (oscuro) ordenOscuro else ordenClaro
+    TemaId.LABORATORIO -> if (oscuro) laboratorioOscuro else laboratorioClaro
+    TemaId.COLONOS -> if (oscuro) colonosOscuro else colonosClaro
+}
+
+internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
+    TemaId.ROMANO -> tipoRomano; TemaId.CIBER -> tipoCiber; TemaId.HELENO -> tipoHeleno
+    TemaId.MEDIEVAL -> tipoMedieval; TemaId.DISTOPIA -> tipoDistopia
+    TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
+    TemaId.ORDEN -> tipoOrden; TemaId.LABORATORIO -> tipoLaboratorio; TemaId.COLONOS -> tipoColonos
+}
+
+internal fun radioDe(tema: TemaId) = when (tema) {
+    TemaId.ROMANO -> 4; TemaId.CIBER -> 1; TemaId.HELENO -> 6; TemaId.MEDIEVAL -> 3; TemaId.DISTOPIA -> 0
+    TemaId.REFUGIO -> 10; TemaId.ORDEN -> 2; TemaId.LABORATORIO -> 14; TemaId.COLONOS -> 5
+}
+
+/** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); el cyberpunk siempre es oscuro. */
+@Composable
+fun modoOscuro(tema: TemaId = Estilo.tema): Boolean = tema.soloOscuro || when (Repo.config.modo) {
+    "claro" -> false
+    "oscuro" -> true
+    else -> isSystemInDarkTheme()
+}
+
 @Composable
 fun TemaVestigium(content: @Composable () -> Unit) {
     val tema = Estilo.tema
-    val oscuro = tema.soloOscuro || isSystemInDarkTheme()
-    val esquema = when (tema) {
-        TemaId.ROMANO -> if (oscuro) romanoOscuro else romanoClaro
-        TemaId.CIBER -> ciber
-        TemaId.HELENO -> if (oscuro) helenoOscuro else helenoClaro
-    }
-    val tipo = when (tema) { TemaId.ROMANO -> tipoRomano; TemaId.CIBER -> tipoCiber; TemaId.HELENO -> tipoHeleno }
-    val radio = when (tema) { TemaId.ROMANO -> 4; TemaId.CIBER -> 1; TemaId.HELENO -> 6 }
+    val oscuro = modoOscuro(tema)
+    val esquema = esquemaDe(tema, oscuro)
     // Íconos de la barra de estado legibles aunque el teléfono esté en modo claro y el tema sea oscuro.
     val vista = LocalView.current
     if (!vista.isInEditMode) SideEffect {
@@ -197,7 +230,7 @@ fun TemaVestigium(content: @Composable () -> Unit) {
     val d = LocalDensity.current
     val escala = Repo.config.letra.coerceIn(0.8f, 1.4f)
     CompositionLocalProvider(LocalDensity provides Density(d.density, d.fontScale * escala)) {
-        MaterialTheme(colorScheme = esquema, typography = tipo, shapes = formas(radio), content = content)
+        MaterialTheme(colorScheme = esquema, typography = tipoDe(tema, oscuro), shapes = formas(radioDe(tema)), content = content)
     }
 }
 
@@ -207,13 +240,7 @@ fun esOscuro(): Boolean = MaterialTheme.colorScheme.background.luminance() < 0.5
 /** Escalas de color para mapas de calor y gráficas, según el tema: bajo → medio → alto. */
 object Tonos {
     private class Juego(val bajo: Color, val medio: Color, val alto: Color, val oro: Color)
-    private fun juego(oscuro: Boolean): Juego = when (Estilo.tema) {
-        TemaId.ROMANO -> if (oscuro) Juego(Color(0xFFA63A4D), Color(0xFF2A2F34), Color(0xFF3FA393), Color(0xFFD2AE5A))
-            else Juego(Color(0xFF9E3445), Color(0xFFE4E2DA), Color(0xFF2D7A6F), Color(0xFFB8892B))
-        TemaId.CIBER -> Juego(Color(0xFFFF2E88), Color(0xFF1A2232), Color(0xFF00E5FF), Color(0xFF00E5FF))
-        TemaId.HELENO -> if (oscuro) Juego(Color(0xFFB04A6A), Color(0xFF2A2440), Color(0xFF5FA8D8), Color(0xFFD8B45C))
-            else Juego(Color(0xFF8E2C48), Color(0xFFE9E3D6), Color(0xFF1F6E9C), Color(0xFFA27B22))
-    }
+    private fun juego(oscuro: Boolean): Juego = juegoTonos(Estilo.tema, oscuro).let { Juego(it[0], it[1], it[2], it[3]) }
 
     /** t entre 0 y 1. */
     fun divergente(t: Float, oscuro: Boolean): Color {
@@ -230,11 +257,7 @@ object Tonos {
     /** Escala de calor del mapa: poco → mucho. */
     fun calor(t: Float, oscuro: Boolean): Color {
         val x = t.coerceIn(0f, 1f)
-        val (a, b, c) = when (Estilo.tema) {
-            TemaId.ROMANO -> if (oscuro) Triple(Color(0xFF3FA393), Color(0xFFD2AE5A), Color(0xFFE0604F)) else Triple(Color(0xFF2D7A6F), Color(0xFFB8892B), Color(0xFF9E3445))
-            TemaId.CIBER -> Triple(Color(0xFF00E5FF), Color(0xFFE8FF3A), Color(0xFFFF2E88))
-            TemaId.HELENO -> if (oscuro) Triple(Color(0xFF5FA8D8), Color(0xFFD8B45C), Color(0xFFB992EA)) else Triple(Color(0xFF1F6E9C), Color(0xFFA27B22), Color(0xFF5A2A82))
-        }
+        val (a, b, c) = juegoCalor(Estilo.tema, oscuro)
         return if (x < 0.5f) lerp(a, b, x * 2) else lerp(b, c, (x - 0.5f) * 2)
     }
 
@@ -315,31 +338,36 @@ object Romano {
     }
 }
 
-/** Muestra de un tema para elegirlo en Ajustes: fondo, título en su letra y sus colores. */
+/** Muestra de un tema para elegirlo en Ajustes: fondo, emblema, título en su letra y sus colores. */
 @Composable
 fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier, onClick: () -> Unit) {
     val o = tema.soloOscuro || oscuro
-    val e = when (tema) {
-        TemaId.ROMANO -> if (o) romanoOscuro else romanoClaro
-        TemaId.CIBER -> ciber
-        TemaId.HELENO -> if (o) helenoOscuro else helenoClaro
+    val e = esquemaDe(tema, o)
+    val t = tipoDe(tema, o)
+    val titulo = when (tema) {
+        TemaId.ROMANO -> "DIES"; TemaId.CIBER -> "DÍA_"; TemaId.HELENO -> "ΗΜΕΡΑ"; TemaId.MEDIEVAL -> "Del día"
+        TemaId.DISTOPIA -> "PARTE"; TemaId.REFUGIO -> "BITÁCORA"; TemaId.ORDEN -> "CAMPAÑA"; TemaId.LABORATORIO -> "SESIÓN"; TemaId.COLONOS -> "Jornada"
     }
-    val t = when (tema) { TemaId.ROMANO -> tipoRomano; TemaId.CIBER -> tipoCiber; TemaId.HELENO -> tipoHeleno }
-    val titulo = when (tema) { TemaId.ROMANO -> "DIES"; TemaId.CIBER -> "DÍA_"; TemaId.HELENO -> "ΗΜΕΡΑ" }
-    val linea = when (tema) { TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ." }
+    val linea = when (tema) {
+        TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."; TemaId.MEDIEVAL -> "xvij de otubre"
+        TemaId.DISTOPIA -> "EXP. 0290"; TemaId.REFUGIO -> "DÍA 290"; TemaId.ORDEN -> "17 OCT 26"; TemaId.LABORATORIO -> "T+290"; TemaId.COLONOS -> "17 de octubre"
+    }
     androidx.compose.material3.Surface(
         onClick = onClick, modifier = modifier, color = e.background, shape = RoundedCornerShape(6.dp),
         border = androidx.compose.foundation.BorderStroke(if (elegido) 2.dp else 1.dp, if (elegido) e.primary else e.outline),
     ) {
         androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(10.dp)) {
-            androidx.compose.material3.Text(titulo, style = t.headlineSmall, color = e.onBackground, maxLines = 1)
+            androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                androidx.compose.material3.Text(titulo, style = t.headlineSmall.copy(fontSize = t.headlineSmall.fontSize * 0.82f), color = e.onBackground, maxLines = 1, modifier = androidx.compose.ui.Modifier.weight(1f))
+                Emblema(tema, 22.dp, e, animado = false)
+            }
             androidx.compose.material3.Text(linea, style = t.labelSmall, color = e.primary, maxLines = 1)
             androidx.compose.foundation.layout.Row(androidx.compose.ui.Modifier.padding(top = 8.dp)) {
                 listOf(e.primary, e.secondary, e.tertiary, e.surfaceVariant).forEach { c ->
-                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(end = 4.dp).size(14.dp).background(c, RoundedCornerShape(3.dp)))
+                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(end = 4.dp).size(12.dp).background(c, RoundedCornerShape(3.dp)))
                 }
             }
-            androidx.compose.material3.Text(tema.nombre + if (elegido) "  ✓" else "", style = t.titleSmall, color = e.onSurfaceVariant, modifier = androidx.compose.ui.Modifier.padding(top = 6.dp))
+            androidx.compose.material3.Text(tema.nombre + if (elegido) "  ✓" else "", style = t.titleSmall, color = e.onSurfaceVariant, maxLines = 1, modifier = androidx.compose.ui.Modifier.padding(top = 6.dp))
         }
     }
 }

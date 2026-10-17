@@ -81,6 +81,24 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Helénico: pergamino de día, noche púrpura de noche.
         tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO && oscuro -> { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.78f, 0.70f, 0.92f, 6f, 4f, 14f)) }
         tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO -> { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.95f, 0.84f, 4f, 2f, 0f)) }
+        // Scriptorium: mapa en sepia sobre pergamino; de noche, tinta parda.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.MEDIEVAL && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.72f, 0.55f, 6f, 3f, 0f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.MEDIEVAL -> { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.92f, 0.76f, 0f, 0f, 0f)) }
+        // Distopía: gris de expediente, sin color.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.DISTOPIA && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.DISTOPIA -> { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        // Refugio: fósforo verde de noche; papel de folleto de día.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.REFUGIO && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.18f, 0.9f, 0.38f, 0f, 6f, 0f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.REFUGIO -> { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 0.96f, 0.88f, 4f, 4f, 0f)) }
+        // Orden: acero.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.ORDEN && oscuro -> { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.76f, 0.8f, 0.86f, 6f, 8f, 10f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.ORDEN -> { m.setSaturation(0.1f); m.postConcat(tinte(0.9f, 0.92f, 0.95f, 0f, 0f, 2f)) }
+        // Laboratorio: blanco clínico con un toque cian; de noche, azul de monitor.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.LABORATORIO && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.58f, 0.8f, 0.95f, 2f, 6f, 12f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.LABORATORIO -> { m.setSaturation(0.2f); m.postConcat(tinte(0.94f, 0.98f, 1.0f, 2f, 4f, 6f)) }
+        // Colonos: mapa viejo de gaceta; de noche, azul marino.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.COLONOS && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.7f, 0.86f, 4f, 6f, 14f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.COLONOS -> { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.95f, 0.86f, 2f, 0f, 0f)) }
         // Romano: mármol desaturado de día, basalto de noche.
         oscuro -> { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.80f, 0.82f, 0.85f, 8f, 10f, 12f)) }
         else -> { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }

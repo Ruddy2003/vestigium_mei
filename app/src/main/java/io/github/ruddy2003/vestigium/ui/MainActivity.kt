@@ -40,6 +40,16 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.core.tween
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import io.github.ruddy2003.vestigium.avisos.Programador
@@ -84,6 +94,7 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         Repo.init(this)
         Programador.asegurar(this)
+        Sentidos.preparar(this)
         pedida = intent?.getStringExtra(PANTALLA)
         desbloqueado = !Repo.config.bloqueo
         setContent {
@@ -176,6 +187,9 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     val noche = Repo.config.nocturno && (hora >= 22 || hora < 5)
     var menu by remember { mutableStateOf(false) }
     val ctx = androidx.compose.ui.platform.LocalContext.current
+    val sentir = rememberSentir()
+    val tema = Estilo.tema
+    LaunchedEffect(tema, Repo.config.sonidos) { Sentidos.preparar(ctx) }
     fun rapido(modo: String) = ctx.startActivity(android.content.Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, modo).putExtra(QuickActivity.ORIGEN, "app"))
     Scaffold(
         modifier = Modifier.drawWithContent {
@@ -190,7 +204,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
             // Botón + para registrar desde cualquier pestaña.
             if (pila.isEmpty() && pestana != "gastos") Box {
                 androidx.compose.material3.FloatingActionButton(
-                    onClick = { menu = true }, containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary,
+                    onClick = { sentir(Sentidos.Evento.TOQUE); menu = true }, containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = MaterialTheme.shapes.medium,
                 ) { Text("+", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimary) }
                 androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = MaterialTheme.colorScheme.surface) {
@@ -206,7 +220,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                         },
                         "Buscar" to { pila = pila + "buscar" },
                     ).forEach { (t, f) ->
-                        androidx.compose.material3.DropdownMenuItem(text = { Text(t, style = MaterialTheme.typography.bodyLarge) }, onClick = { menu = false; f() })
+                        androidx.compose.material3.DropdownMenuItem(text = { Text(t, style = MaterialTheme.typography.bodyLarge) }, onClick = { sentir(Sentidos.Evento.ELEGIR); menu = false; f() })
                     }
                 }
             }
@@ -219,7 +233,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                         val activa = pestana == p.id && pila.isEmpty()
                         NavigationBarItem(
                             selected = activa,
-                            onClick = { pestana = p.id; pila = emptyList() },
+                            onClick = { if (!activa) sentir(Sentidos.Evento.TOQUE); pestana = p.id; pila = emptyList() },
                             icon = { Icon(p.icono, contentDescription = p.nombre) },
                             label = { Text(p.nombre, style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (activa) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Medium)) },
                             colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
@@ -234,38 +248,78 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
             }
         },
     ) { pad ->
-        Box(Modifier.padding(pad).fillMaxSize()) {
-            when (val actual = pila.lastOrNull() ?: pestana) {
-                "dia" -> PantallaDia(nav)
-                "momentos" -> PantallaMomentos(nav)
-                "gastos" -> PantallaGastos()
-                "explorar" -> PantallaExplorar(nav)
-                "mas" -> PantallaMas(nav)
-                "escalas" -> PantallaEscalas(nav)
-                "reaccion" -> PantallaReaccion(nav)
-                "lugares" -> PantallaLugares(nav)
-                "habitos" -> PantallaHabitos(nav)
-                "experimentos" -> PantallaExperimentos(nav)
-                "cartas" -> PantallaCartas(nav)
-                "reportes" -> PantallaReportes(nav)
-                "datos" -> PantallaDatos(nav)
-                "permisos" -> PantallaPermisos(nav)
-                "ajustes" -> PantallaAjustes(nav)
-                "guia" -> PantallaGuia(nav)
-                "calendario" -> PantallaCalendario(nav)
-                "escalada" -> PantallaEscalada(nav)
-                "ascenso" -> PantallaAscenso(nav)
-                "biblioteca" -> PantallaBiblioteca(nav)
-                "obra" -> PantallaObra(nav)
-                "anno" -> PantallaAnno(nav)
-                "mapa" -> PantallaMapa(nav)
-                "analisis" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnalisis(nav)
-                "fuerza" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFuerza(nav)
-                "totales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav)
-                "buscar" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav, buscar = true)
-                "semana" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(nav)
-                else -> Text("Pantalla desconocida: $actual")
+        val esquema = MaterialTheme.colorScheme
+        Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
+            // Cada tema cambia de pantalla a su manera; hacia adentro y hacia atrás se mueven en sentidos opuestos.
+            androidx.compose.animation.AnimatedContent(
+                targetState = Destino(pila.lastOrNull() ?: pestana, pila.size),
+                transitionSpec = { transicion(tema, initialState, targetState, Repo.config.animaciones) },
+                contentKey = { it.ruta }, label = "pantallas",
+            ) { destino ->
+                when (val actual = destino.ruta) {
+                    "dia" -> PantallaDia(nav)
+                    "momentos" -> PantallaMomentos(nav)
+                    "gastos" -> PantallaGastos()
+                    "explorar" -> PantallaExplorar(nav)
+                    "mas" -> PantallaMas(nav)
+                    "escalas" -> PantallaEscalas(nav)
+                    "reaccion" -> PantallaReaccion(nav)
+                    "lugares" -> PantallaLugares(nav)
+                    "habitos" -> PantallaHabitos(nav)
+                    "experimentos" -> PantallaExperimentos(nav)
+                    "cartas" -> PantallaCartas(nav)
+                    "reportes" -> PantallaReportes(nav)
+                    "datos" -> PantallaDatos(nav)
+                    "permisos" -> PantallaPermisos(nav)
+                    "ajustes" -> PantallaAjustes(nav)
+                    "guia" -> PantallaGuia(nav)
+                    "calendario" -> PantallaCalendario(nav)
+                    "escalada" -> PantallaEscalada(nav)
+                    "ascenso" -> PantallaAscenso(nav)
+                    "biblioteca" -> PantallaBiblioteca(nav)
+                    "obra" -> PantallaObra(nav)
+                    "anno" -> PantallaAnno(nav)
+                    "mapa" -> PantallaMapa(nav)
+                    "analisis" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnalisis(nav)
+                    "fuerza" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFuerza(nav)
+                    "totales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav)
+                    "buscar" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav, buscar = true)
+                    "semana" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(nav)
+                    else -> Text("Pantalla desconocida: $actual")
+                }
             }
+            CapaFiesta()
         }
+    }
+}
+
+private data class Destino(val ruta: String, val nivel: Int)
+
+/** Transición entre pantallas según el tema. */
+private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): androidx.compose.animation.ContentTransform {
+    if (!animar) return androidx.compose.animation.EnterTransition.None togetherWith androidx.compose.animation.ExitTransition.None
+    val adelante = a.nivel > de.nivel
+    val atras = a.nivel < de.nivel
+    val dir = if (atras) -1 else 1
+    val suave = androidx.compose.animation.core.FastOutSlowInEasing
+    fun <T> t(ms: Int, e: androidx.compose.animation.core.Easing = suave) = tween<T>(ms, easing = e)
+    return when (tema) {
+        // Inscripción que aparece: sube apenas y se aclara.
+        TemaId.ROMANO -> (fadeIn(t(260)) + slideInVertically(t(260)) { it / 24 }) togetherWith fadeOut(t(140))
+        // Terminal: barrido rápido.
+        TemaId.CIBER -> (fadeIn(t(140, androidx.compose.animation.core.LinearEasing)) + slideInHorizontally(t(160)) { dir * it / 8 }) togetherWith fadeOut(t(90))
+        TemaId.HELENO -> (fadeIn(t(300)) + scaleIn(t(300), initialScale = 0.97f)) togetherWith fadeOut(t(160))
+        // Hoja de pergamino que se desliza sobre la anterior.
+        TemaId.MEDIEVAL -> if (adelante || atras) (slideInHorizontally(t(320)) { dir * it } + fadeIn(t(200))) togetherWith (slideOutHorizontally(t(320)) { -dir * it / 4 } + fadeOut(t(320)))
+            else fadeIn(t(260)) togetherWith fadeOut(t(160))
+        // Cajón de archivo: cae de golpe desde arriba.
+        TemaId.DISTOPIA -> (slideInVertically(t(170, androidx.compose.animation.core.LinearEasing)) { -it / 10 } + fadeIn(t(120))) togetherWith fadeOut(t(80))
+        // Pantalla de tubo que se enciende desde una línea horizontal.
+        TemaId.REFUGIO -> (expandVertically(t(260), expandFrom = Alignment.CenterVertically) { it / 14 } + fadeIn(t(200))) togetherWith fadeOut(t(120))
+        // Avance de flanco.
+        TemaId.ORDEN -> (slideInHorizontally(t(240)) { dir * it / 3 } + fadeIn(t(200))) togetherWith (slideOutHorizontally(t(240)) { -dir * it / 6 } + fadeOut(t(160)))
+        TemaId.LABORATORIO -> (fadeIn(t(260)) + scaleIn(t(260), initialScale = 0.95f)) togetherWith (fadeOut(t(140)) + scaleOut(t(140), targetScale = 1.02f))
+        // Papel de gaceta: aparece despacio.
+        TemaId.COLONOS -> (fadeIn(t(340)) + slideInVertically(t(340)) { it / 30 }) togetherWith fadeOut(t(200))
     }
 }
