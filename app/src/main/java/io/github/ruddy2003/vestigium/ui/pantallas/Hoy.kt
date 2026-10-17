@@ -116,8 +116,8 @@ object Pendientes {
 }
 
 @Composable
-fun TeFaltaHoy(d: Dia, hoy: String, accion: (String) -> Unit) {
-    val l = Pendientes.deHoy(d, hoy)
+fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (String) -> Unit) {
+    val l = Pendientes.deHoy(d, hoy).filter { it.clave !in ocultar }
     val tarde = LocalTime.now().hour >= 21
     // Cuando se completa lo pendiente, una pequeña celebración con el sonido y la vibración del tema.
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()

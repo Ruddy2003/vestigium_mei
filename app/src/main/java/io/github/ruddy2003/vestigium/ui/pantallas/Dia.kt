@@ -245,7 +245,8 @@ fun PantallaDia(nav: Nav) {
         }
         val pendientes: @Composable () -> Unit = {
             if (esHoy) {
-                TeFaltaHoy(d, hoy) { a ->
+                // Diario y predicción ya los muestra la tarjeta de la noche; aquí no se repiten.
+                TeFaltaHoy(d, hoy, setOf("p:diario", "p:prediccion")) { a ->
                     when (a) {
                         "ayer" -> irA(Fechas.sumar(hoy, -1))
                         "sueno" -> mostrar("Sueño", reqSueno)

@@ -117,7 +117,7 @@ fun PantallaDiario(nav: Nav) {
     Hoja("Diario", buscar = { nav.ir("buscar") }) {
         // Registrar ahora mismo, sin salir de aquí.
         Row(Modifier.fillMaxWidth().padding(top = 12.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Ficha("◉ ánimo ahora", true) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_ANIMO) }
+            Ficha("ánimo ahora", true) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_ANIMO) }
             io.github.ruddy2003.vestigium.data.Catalogo.MOMENTOS.forEach { t -> Ficha(if (discreto) t.discreto else t.nombre, false) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO, t.id) } }
         }
         io.github.ruddy2003.vestigium.ui.BotonPrincipal("✎ escribir el diario de hoy", Modifier.fillMaxWidth().padding(top = 10.dp)) {
