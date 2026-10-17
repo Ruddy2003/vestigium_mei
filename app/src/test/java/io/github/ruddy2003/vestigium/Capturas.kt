@@ -40,7 +40,7 @@ import org.junit.Test
 /** Capturas de una pantalla de muestra en cada tema, para revisar el diseño sin teléfono. */
 class Capturas {
     @get:Rule
-    val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_6, theme = "android:Theme.Material.NoActionBar", showSystemUi = false)
+    val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_6, theme = "android:Theme.Material.NoActionBar", showSystemUi = false, useDeviceResolution = true)
 
     private fun captura(tema: TemaId, oscuro: Boolean, contenido: @Composable () -> Unit = { Muestra() }) {
         Repo.configEnMemoria(Config(tema = tema.id))
