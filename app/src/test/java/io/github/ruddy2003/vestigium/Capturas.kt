@@ -75,6 +75,38 @@ class Capturas {
     @Test fun diaCiber() = dia(TemaId.CIBER, true)
     @Test fun diaHeleno() = dia(TemaId.HELENO, true)
 
+    @Test fun semanaHeleno() {
+        Ejemplo.cargar()
+        Repo.configEnMemoria(Config(tema = TemaId.HELENO.id))
+        paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = 3600, nightMode = NightMode.NOTNIGHT))
+        paparazzi.snapshot { TemaVestigium { androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(io.github.ruddy2003.vestigium.ui.Nav(ir = {}, atras = {}))
+        } } }
+    }
+
+    /** Los widgets se arman con RemoteViews y se pegan en una columna para verlos con cada tema. */
+    private fun widgets(tema: TemaId) {
+        Ejemplo.cargar()
+        Repo.configEnMemoria(Config(tema = tema.id, widget_cifra = "racha"))
+        paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = 2600, nightMode = NightMode.NOTNIGHT))
+        val ctx = paparazzi.context
+        val col = android.widget.LinearLayout(ctx).apply { orientation = android.widget.LinearLayout.VERTICAL; setBackgroundColor(0xFF5A6B7A.toInt()); setPadding(30, 30, 30, 30) }
+        fun agregar(rv: android.widget.RemoteViews, alto: Int) {
+            val v = rv.apply(ctx, col)
+            col.addView(v, android.widget.LinearLayout.LayoutParams(android.widget.LinearLayout.LayoutParams.MATCH_PARENT, alto).apply { bottomMargin = 24 })
+        }
+        val W = io.github.ruddy2003.vestigium.widget.Widgets
+        agregar(W.vistaAnimo(ctx), 330)
+        agregar(W.vistaSueno(ctx), 330)
+        agregar(W.vistaAnillos(ctx), 640)
+        agregar(W.vistaCifra(ctx), 360)
+        agregar(W.vistaHoy(ctx), 520)
+        paparazzi.snapshot(col)
+    }
+    @Test fun widgetsRomano() = widgets(TemaId.ROMANO)
+    @Test fun widgetsCiber() = widgets(TemaId.CIBER)
+    @Test fun widgetsHeleno() = widgets(TemaId.HELENO)
+
     @Test fun selectorTemas() = captura(TemaId.ROMANO, false) {
         Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TemaId.entries.forEach { VistaPreviaTema(it, false, it == TemaId.ROMANO, Modifier.weight(1f)) {} }
