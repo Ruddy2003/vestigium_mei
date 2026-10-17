@@ -210,7 +210,7 @@ private fun Meses(porMes: Map<String, Double>, unidad: String) {
         while (!d.isAfter(fin)) { val k = d.toString().take(7); l.add(k to (porMes[k] ?: 0.0)); d = d.plusMonths(1) }
         l.takeLast(24)
     }
-    val color = MaterialTheme.colorScheme.primary
+    val barra = MaterialTheme.colorScheme.primary
     val texto = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val max = meses.maxOf { it.second }.coerceAtLeast(1e-9)
     val pico = meses.maxBy { it.second }
@@ -221,7 +221,7 @@ private fun Meses(porMes: Map<String, Double>, unidad: String) {
         val pincel = Paint().apply { color = texto; textSize = 22f; isAntiAlias = true; textAlign = Paint.Align.CENTER }
         meses.forEachIndexed { k, (m, v) ->
             val h = (size.height - abajo) * (v / max).toFloat()
-            if (v > 0) drawRoundRect(color, Offset(k * w + w * 0.15f, size.height - abajo - h), Size(w * 0.7f, h), CornerRadius(3f, 3f))
+            if (v > 0) drawRoundRect(barra, Offset(k * w + w * 0.15f, size.height - abajo - h), Size(w * 0.7f, h), CornerRadius(3f, 3f))
             if (meses.size <= 12 || k % 2 == 0) drawContext.canvas.nativeCanvas.drawText("EFMAMJJASOND"[m.takeLast(2).toInt() - 1].toString(), k * w + w / 2, size.height - 6f, pincel)
         }
     }
