@@ -31,6 +31,7 @@ jobs:
         run: |
           mkdir -p /tmp/cap && cd /tmp/cap
           cp "$GITHUB_WORKSPACE"/app/src/test/snapshots/images/*.png . 2>/dev/null || true
+          for f in "$GITHUB_WORKSPACE"/app/build/test-results/testDebugUnitTest/*.xml; do grep -A 25 "<failure" "$f" | head -60; done > fallas.txt 2>/dev/null || true
           grep -E "^e: |FAILED|Exception|error:|What went wrong" "$GITHUB_WORKSPACE/capturas.log" | head -100 > errores.txt || true
           tail -80 "$GITHUB_WORKSPACE/capturas.log" > final.txt
           echo "${{ github.sha }} run ${{ github.run_number }}" > commit.txt
