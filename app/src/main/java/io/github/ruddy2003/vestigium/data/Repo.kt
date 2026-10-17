@@ -322,6 +322,9 @@ object Repo {
 
     // ---------- Configuración ----------
     @Synchronized
+    /** Solo para las capturas de diseño: cambia la configuración en memoria, sin base de datos. */
+    fun configEnMemoria(c: Config) { config = c }
+
     fun cambiarConfig(f: (Config) -> Config) {
         val n = f(config)
         db.poner("config", "config", null, JSON.encodeToString(Config.serializer(), n))

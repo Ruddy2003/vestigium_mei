@@ -3,6 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.plugin.serialization")
+    // Capturas de pantalla en la computadora (sin teléfono) para revisar el diseño de cada tema.
+    id("app.cash.paparazzi")
 }
 
 android {
@@ -81,4 +83,6 @@ dependencies {
     implementation("androidx.health.connect:connect-client:1.1.0-alpha10")
     implementation("com.google.android.gms:play-services-auth:21.2.0")
     implementation("org.osmdroid:osmdroid-android:6.1.20")
+
+    testImplementation("junit:junit:4.13.2")
 }

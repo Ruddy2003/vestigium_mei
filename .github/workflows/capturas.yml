@@ -1,0 +1,40 @@
+name: Capturas de diseño
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: capturas
+  cancel-in-progress: true
+
+jobs:
+  capturas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Generar capturas
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:recordPaparazziDebug --no-daemon 2>&1 | tee capturas.log || true
+      - name: Publicar en la rama capturas
+        if: always()
+        run: |
+          mkdir -p /tmp/cap && cd /tmp/cap
+          cp "$GITHUB_WORKSPACE"/app/src/test/snapshots/images/*.png . 2>/dev/null || true
+          grep -E "^e: |FAILED|Exception|error:|What went wrong" "$GITHUB_WORKSPACE/capturas.log" | head -100 > errores.txt || true
+          tail -80 "$GITHUB_WORKSPACE/capturas.log" > final.txt
+          echo "${{ github.sha }} run ${{ github.run_number }}" > commit.txt
+          git init -q && git checkout -q -b capturas
+          git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
+          git add . && git commit -qm "capturas ${{ github.run_number }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" capturas
