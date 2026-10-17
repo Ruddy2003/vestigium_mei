@@ -42,6 +42,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.ciencia.Escalas
 import io.github.ruddy2003.vestigium.ciencia.Movilidad
