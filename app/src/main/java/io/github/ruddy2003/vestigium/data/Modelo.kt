@@ -246,6 +246,8 @@ data class Config(
     val vibracion: Boolean = true,
     /** Sonidos del tema al guardar y al cambiar de pantalla (respetan el modo silencio). */
     val sonidos: Boolean = false,
+    /** El ícono de la app en el teléfono cambia con el tema. */
+    val icono_tema: Boolean = false,
 )
 
 /** Llamadas y SMS del día: solo cuántos, cuánto duraron y con cuántas personas distintas. Nunca números, nombres ni textos. */

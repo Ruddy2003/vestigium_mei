@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Favorite
@@ -115,6 +116,7 @@ class MainActivity : FragmentActivity() {
         super.onStop()
         enFondoDesde = System.currentTimeMillis()
         runCatching { Widgets.actualizar(this) }
+        if (!isChangingConfigurations) IconoApp.aplicar(this)
     }
 
     override fun onStart() {
@@ -145,6 +147,8 @@ class MainActivity : FragmentActivity() {
 private fun Bloqueo(reintentar: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(io.github.ruddy2003.vestigium.R.drawable.logo_blanco), null,
+                Modifier.padding(bottom = 4.dp).size(140.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.primary))
             Text("VESTIGIVM MEI", style = MaterialTheme.typography.headlineMedium)
             Meandro(Modifier.padding(horizontal = 40.dp))
             Ayuda("// tu diario está sellado")
@@ -191,6 +195,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     val tema = Estilo.tema
     LaunchedEffect(tema, Repo.config.sonidos) { Sentidos.preparar(ctx) }
     fun rapido(modo: String) = ctx.startActivity(android.content.Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, modo).putExtra(QuickActivity.ORIGEN, "app"))
+    Box(Modifier.fillMaxSize()) {
     Scaffold(
         modifier = Modifier.drawWithContent {
             drawContent()
@@ -234,7 +239,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                         NavigationBarItem(
                             selected = activa,
                             onClick = { if (!activa) sentir(Sentidos.Evento.TOQUE); pestana = p.id; pila = emptyList() },
-                            icon = { Icon(p.icono, contentDescription = p.nombre) },
+                            icon = { IconoPestana(p.id, tema, p.nombre) },
                             label = { Text(p.nombre, style = MaterialTheme.typography.labelMedium.copy(fontWeight = if (activa) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Medium)) },
                             colors = androidx.compose.material3.NavigationBarItemDefaults.colors(
                                 selectedIconColor = MaterialTheme.colorScheme.onPrimary, indicatorColor = MaterialTheme.colorScheme.primary,
@@ -285,11 +290,17 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "totales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav)
                     "buscar" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav, buscar = true)
                     "semana" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(nav)
+                    "noche" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(nav)
+                    "diarios" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiarios(nav)
+                    "entrada" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(nav)
                     else -> Text("Pantalla desconocida: $actual")
                 }
             }
             CapaFiesta()
         }
+    }
+    // Encima de todo (también de la barra inferior): la huella al sellar el día.
+    CapaHuella()
     }
 }
 

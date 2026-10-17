@@ -57,6 +57,11 @@ object Seleccion {
     var ultimoMes by mutableStateOf<String?>(null)
     /** Sección de Día a la que hay que llevar al abrirlo (por ejemplo, desde el atajo «Diario de hoy»). */
     var seccion by mutableStateOf<String?>(null)
+    /** Día que se está llenando en la hoja de la noche, y día al que vuelve Día al cerrarla. */
+    var noche by mutableStateOf<String?>(null)
+    var volverA by mutableStateOf<String?>(null)
+    /** Entrada abierta en la biblioteca del diario. */
+    var entrada by mutableStateOf<String?>(null)
     fun abrir(nav: Nav, fecha: String) { pedida = fecha; ultimoMes = Fechas.mesDe(fecha); nav.pestana("dia") }
 }
 

@@ -6,7 +6,7 @@ data class Pregunta(val clave: String, val pregunta: String, val autor: String, 
 
 object Catalogo {
     val CONTEXTOS = listOf(
-        Opcion("gym", "Gym"), Opcion("viaje", "Viaje"), Opcion("enfermo", "Enfermo"),
+        Opcion("trabajo", "Trabajo"), Opcion("gym", "Gym"), Opcion("viaje", "Viaje"), Opcion("enfermo", "Enfermo"),
         Opcion("academico", "Académico"), Opcion("ocio_inmersivo", "Ocio inmersivo"),
         Opcion("naturaleza", "Naturaleza"), Opcion("amigos", "Amigos"),
         Opcion("romantico", "Romántico"), Opcion("familia", "Familia"),

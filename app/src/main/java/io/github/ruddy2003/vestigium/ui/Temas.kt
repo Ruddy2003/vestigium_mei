@@ -46,6 +46,7 @@ object Temas {
     }
 
     private val MEDIEVAL = mapOf(
+        "Llenar el día" to "Completas", "Biblioteca del diario" to "Libro de los días", "Entrada" to "Folio",
         "Día" to "Del día", "Momentos" to "Crónica", "Gastos" to "Libro de cuentas", "Explorar" to "Glosas", "Más" to "Otros folios",
         "Hábitos" to "Regla", "Cartas al futuro" to "Epístolas", "Experimentos personales" to "Pruebas", "Guía científica" to "Tratado",
         "Cuestionarios" to "Cuestiones", "Prueba de reacción" to "Presteza", "Datos" to "Archivo", "Permisos y sensores" to "Sentidos",
@@ -64,6 +65,7 @@ object Temas {
     )
 
     private val DISTOPIA = mapOf(
+        "Llenar el día" to "DECLARACIÓN NOCTURNA", "Biblioteca del diario" to "ARCHIVO DE DECLARACIONES", "Entrada" to "DECLARACIÓN",
         "Día" to "PARTE DIARIO", "Momentos" to "INCIDENCIAS", "Gastos" to "RACIONAMIENTO", "Explorar" to "VIGILANCIA", "Más" to "MINISTERIOS",
         "Hábitos" to "CUOTAS", "Cartas al futuro" to "CORRESPONDENCIA SELLADA", "Experimentos personales" to "PRUEBAS AUTORIZADAS",
         "Guía científica" to "DOCTRINA", "Cuestionarios" to "INTERROGATORIOS", "Prueba de reacción" to "PRUEBA DE REFLEJOS", "Lugares" to "ZONAS",
@@ -81,6 +83,7 @@ object Temas {
     )
 
     private val REFUGIO = mapOf(
+        "Llenar el día" to "INFORME DE CIERRE", "Biblioteca del diario" to "DIARIOS DEL RESIDENTE", "Entrada" to "REGISTRO",
         "Día" to "BITÁCORA", "Momentos" to "SUCESOS", "Gastos" to "SUMINISTROS", "Explorar" to "SUPERFICIE", "Más" to "TERMINAL",
         "Hábitos" to "PROTOCOLOS", "Cartas al futuro" to "CÁPSULA DEL TIEMPO", "Experimentos personales" to "PRUEBAS", "Guía científica" to "MANUAL",
         "Cuestionarios" to "EVALUACIONES", "Prueba de reacción" to "REFLEJOS", "Lugares" to "SECTORES", "Datos" to "ARCHIVO",
@@ -95,6 +98,7 @@ object Temas {
     )
 
     private val ORDEN = mapOf(
+        "Llenar el día" to "PARTE DE CIERRE", "Biblioteca del diario" to "CRÓNICAS", "Entrada" to "CRÓNICA",
         "Día" to "PARTE DE CAMPO", "Momentos" to "BITÁCORA", "Gastos" to "INTENDENCIA", "Explorar" to "RECONOCIMIENTO", "Más" to "ARSENAL",
         "Hábitos" to "DISCIPLINA", "Cartas al futuro" to "ÓRDENES SELLADAS", "Experimentos personales" to "ENSAYOS", "Guía científica" to "CÓDICE",
         "Cuestionarios" to "EVALUACIÓN", "Prueba de reacción" to "REFLEJOS", "Lugares" to "TERRITORIO", "Datos" to "ARCHIVO",
@@ -109,6 +113,7 @@ object Temas {
     )
 
     private val LABORATORIO = mapOf(
+        "Llenar el día" to "CIERRE DE SESIÓN", "Biblioteca del diario" to "CUADERNOS", "Entrada" to "REGISTRO",
         "Día" to "SESIÓN", "Momentos" to "OBSERVACIONES", "Gastos" to "RECURSOS", "Explorar" to "HALLAZGOS", "Más" to "DIVISIONES",
         "Hábitos" to "VARIABLES", "Cartas al futuro" to "MUESTRAS SELLADAS", "Experimentos personales" to "EXPERIMENTOS", "Guía científica" to "MÉTODO",
         "Cuestionarios" to "INSTRUMENTOS", "Prueba de reacción" to "TIEMPO DE REACCIÓN", "Lugares" to "COORDENADAS", "Datos" to "REPOSITORIO",
@@ -122,6 +127,7 @@ object Temas {
     )
 
     private val COLONOS = mapOf(
+        "Llenar el día" to "Al caer la noche", "Biblioteca del diario" to "Gacetas del vecino", "Entrada" to "Gaceta",
         "Día" to "Jornada", "Momentos" to "Sucesos", "Gastos" to "Cuentas", "Explorar" to "Patrulla", "Más" to "Cabildo", "Hábitos" to "Faenas",
         "Cartas al futuro" to "Cartas al porvenir", "Experimentos personales" to "Ensayos", "Guía científica" to "Almanaque", "Cuestionarios" to "Encuestas",
         "Prueba de reacción" to "Reflejos", "Lugares" to "Asentamientos", "Datos" to "Archivo del pueblo", "Permisos y sensores" to "Vigías",

@@ -55,6 +55,8 @@ fun PantallaMas(nav: Nav) {
             Tarjeta {
                 FilaMenu("Calendario", "Elige cualquier día para abrirlo o corregirlo") { nav.ir("calendario") }
                 HorizontalDivider()
+                FilaMenu("Biblioteca del diario", "${io.github.ruddy2003.vestigium.ui.LibroDiario.entradas().size} entradas para leer, buscar y exportar (PDF, HTML, Markdown, Obsidian)") { nav.ir("diarios") }
+                HorizontalDivider()
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
                 FilaMenu("Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${Repo.ascensos.size} sesiones · última ${Fechas.relativo(ult.fecha)}") { nav.ir("escalada") }
                 HorizontalDivider()

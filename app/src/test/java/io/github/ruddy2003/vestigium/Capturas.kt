@@ -144,6 +144,36 @@ class Capturas {
     @Test fun widgetsLaboratorio() = widgets(TemaId.LABORATORIO)
     @Test fun widgetsColonos() = widgets(TemaId.COLONOS)
 
+    private fun pantalla(tema: TemaId, oscuro: Boolean, alto: Int, cont: @Composable () -> Unit) {
+        Ejemplo.cargar()
+        Repo.configEnMemoria(config(tema, oscuro).copy(habitos = listOf(io.github.ruddy2003.vestigium.data.Habito("h1", "Leer 20 min"), io.github.ruddy2003.vestigium.data.Habito("h2", "Sin pantalla después de las 23"))))
+        paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = alto, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
+        paparazzi.snapshot { Lienzo(cont) }
+    }
+    private val navVacia = io.github.ruddy2003.vestigium.ui.Nav(ir = {}, atras = {})
+    @Test fun nocheMedieval() = pantalla(TemaId.MEDIEVAL, false, 5200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
+    @Test fun diariosColonos() = pantalla(TemaId.COLONOS, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiarios(navVacia) }
+    @Test fun entradaDistopia() = pantalla(TemaId.DISTOPIA, true, 2400) {
+        io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.entrada = null
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(navVacia)
+    }
+    @Test fun huellaRefugio() = pantalla(TemaId.REFUGIO, true, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(0.45f, "") }
+    @Test fun huellaRomano() = pantalla(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
+
+    /** Los íconos de la barra inferior en cada tema. */
+    @Test fun iconos() = captura(TemaId.ROMANO, false, alto = 1500) {
+        Column(Modifier.padding(16.dp)) {
+            TemaId.entries.forEach { t ->
+                val e = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro)
+                Row(Modifier.fillMaxWidth().background(e.surface).padding(10.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides e.primary) {
+                        listOf("dia", "momentos", "gastos", "explorar", "mas").forEach { io.github.ruddy2003.vestigium.ui.IconoPestana(it, t) }
+                    }
+                }
+            }
+        }
+    }
+
     /** Los nueve temas en claro y en oscuro, con sus emblemas grandes. */
     @Test fun selectorTemas() = captura(TemaId.ROMANO, false, alto = 2600) {
         Column(Modifier.padding(16.dp)) {
@@ -204,7 +234,13 @@ object Ejemplo {
         val r = java.util.Random(7)
         val fechas = (0..35).map { io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -it.toLong()) }
         fun iso(f: String, h: Int, m: Int = 0) = java.time.LocalDate.parse(f).atTime(h, m).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime().withNano(0).toString()
-        val dias = fechas.drop(1).associateWith { f -> io.github.ruddy2003.vestigium.data.Dia(fecha = f, valencia = 3 + r.nextInt(4), nota = "Día normal con @ana.", sueno_calidad = 3) } +
+        val notas = listOf(
+            "Día normal con @ana. Avancé el capítulo dos de la #tesis y en la tarde fui a escalar; los bloques del muro nuevo están más duros de lo que parecen.",
+            "Me desperté tarde y me costó arrancar. Comida con mi abuelo, que contó otra vez la historia del viaje a Zacatecas. En la noche leí un rato.",
+            "Clase de chino a las nueve. Escribí 300 palabras del #protocolo y por fin entendí qué quiere el director con el marco teórico.",
+            "Salí a correr temprano, hacía frío. Café con @luis en el centro; hablamos de trabajo y de si vale la pena irse a China en 2028.",
+        )
+        val dias = fechas.drop(1).associateWith { f -> io.github.ruddy2003.vestigium.data.Dia(fecha = f, valencia = 3 + r.nextInt(4), nota = notas[r.nextInt(notas.size)], sueno_calidad = 3, mejor_momento = "el café de la tarde") } +
             (hoy to io.github.ruddy2003.vestigium.data.Dia(fecha = hoy, sueno_calidad = null, valencia = null))
         val salud = fechas.associateWith { f -> io.github.ruddy2003.vestigium.data.SaludDia(fecha = f, sueno_min = 380 + r.nextInt(90), pasos = 6000L + r.nextInt(6000),
             sueno_inicio = iso(io.github.ruddy2003.vestigium.data.Fechas.sumar(f, -1), 23, 40), sueno_fin = iso(f, 7, 10), hrv_rmssd = 40.0 + r.nextInt(15)) }

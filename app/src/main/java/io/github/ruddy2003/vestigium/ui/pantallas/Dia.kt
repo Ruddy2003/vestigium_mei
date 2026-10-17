@@ -95,7 +95,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun PantallaDia(nav: Nav) {
-    var fecha by remember { mutableStateOf(Seleccion.pedida ?: Fechas.diaLogico()) }
+    var fecha by remember { mutableStateOf(Seleccion.pedida ?: Seleccion.volverA?.also { Seleccion.volverA = null } ?: Fechas.diaLogico()) }
     val guardado = Repo.dias[fecha]
     var d by remember(fecha) { mutableStateOf(guardado ?: Dia(fecha = fecha)) }
     var sucio by remember(fecha) { mutableStateOf(false) }
@@ -120,20 +120,25 @@ fun PantallaDia(nav: Nav) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val reqSueno = remember { BringIntoViewRequester() }
-    val reqAnimo = remember { BringIntoViewRequester() }
-    val reqDiario = remember { BringIntoViewRequester() }
-    val reqPred = remember { BringIntoViewRequester() }
     /** Abre una sección (si estaba plegada) y la trae a la vista. */
     fun mostrar(titulo: String, r: BringIntoViewRequester) {
         if (titulo in Repo.config.plegadas) Repo.cambiarConfig { cc -> cc.copy(plegadas = cc.plegadas - titulo) }
         scope.launch { kotlinx.coroutines.delay(120); r.bringIntoView() }
     }
-    // Si se llegó desde «Diario de hoy» (botón + o atajo del ícono), baja directo a esa sección.
+    /** Abre la hoja de la noche de este día, opcionalmente en una sección. */
+    fun abrirNoche(sec: String? = null) {
+        if (sucio) { Repo.guardarDia(d); sucio = false }
+        Seleccion.noche = fecha; Seleccion.volverA = fecha; Seleccion.seccion = sec
+        nav.ir("noche")
+    }
+    // Si se llegó desde «Diario de hoy» (botón + o atajo del ícono): el sueño está aquí; lo demás, en la hoja de la noche.
     LaunchedEffect(Seleccion.seccion, fecha) {
         val sec = Seleccion.seccion ?: return@LaunchedEffect
-        Seleccion.seccion = null
-        kotlinx.coroutines.delay(250)
-        mostrar(sec, when (sec) { "Sueño" -> reqSueno; "Diario" -> reqDiario; "Predicción" -> reqPred; else -> reqAnimo })
+        if (sec == "Sueño") {
+            Seleccion.seccion = null
+            kotlinx.coroutines.delay(250)
+            mostrar(sec, reqSueno)
+        } else abrirNoche(sec)
     }
     val umbral = with(LocalDensity.current) { 120.dp.toPx() }
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
@@ -199,8 +204,8 @@ fun PantallaDia(nav: Nav) {
                 when (a) {
                     "ayer" -> irA(Fechas.sumar(hoy, -1))
                     "sueno" -> mostrar("Sueño", reqSueno)
-                    "diario" -> mostrar("Ánimo y cuerpo", reqAnimo)
-                    "prediccion" -> mostrar("Predicción", reqPred)
+                    "diario" -> abrirNoche("Ánimo y cuerpo")
+                    "prediccion" -> abrirNoche("Predicción")
                     "aviso" -> abrirAviso(ctx)
                     "escalas" -> nav.ir("escalas")
                     "gasto" -> nav.pestana("gastos")
@@ -208,7 +213,14 @@ fun PantallaDia(nav: Nav) {
             }
             DatosQueFaltan(nav)
         }
-        Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores.", plegable = true) { Tablero(fecha) }
+        Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores.") { Tablero(fecha) }
+        TarjetaNoche(d, fecha, c) { abrirNoche() }
+        // Accesos directos a lo que se mide de vez en cuando.
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BotonSecundario("✎ cuestionarios", Modifier.weight(1f)) { nav.ir("escalas") }
+            BotonSecundario("⚡ reacción", Modifier.weight(1f)) { nav.ir("reaccion") }
+            BotonSecundario("❦ diario", Modifier.weight(1f)) { nav.ir("diarios") }
+        }
         Seccion("Tu día en 24 horas", plegable = true) { LineaDelTiempo(fecha) }
         if (fecha == hoy && java.time.LocalTime.now().hour < 5) Aviso("Pasa de medianoche: sigues llenando el día $fecha. Los días empiezan a las 5:00.")
         if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas, pero se marcará como escrito por adelantado.")
@@ -247,6 +259,86 @@ fun PantallaDia(nav: Nav) {
             }
         }
 
+        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), plegable = true) {
+            Vestigios(fecha, nav)
+        }
+
+        Seccion("Fotos del día", "Toca una para verla; mantén presionada para elegirla como la imagen del día (sale arriba, de portada).", numero = n(), plegable = true) {
+            Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
+        }
+
+        val delDia = Repo.momentos.filter { it.fecha == fecha }
+        if (delDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
+            Tarjeta {
+                delDia.forEach { m ->
+                    Row(Modifier.padding(vertical = 3.dp)) {
+                        Text(Fechas.horaDe(m.ts) + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        Text(tipoNombre(m.tipo, c.discreto) + (m.valencia?.let { " · $it" } ?: "") + (if (m.texto.isNotBlank()) " · ${m.texto}" else ""),
+                            style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Resumen de la noche en Día: qué falta y el botón para abrir la hoja. */
+@Composable
+private fun TarjetaNoche(d: Dia, fecha: String, c: io.github.ruddy2003.vestigium.data.Config, abrir: () -> Unit) {
+    val activos = c.habitos.filter { it.activo }
+    val hechos = activos.count { d.habitos[it.id] == true }
+    val partes = listOf(
+        "ánimo" to (d.valencia != null), "diario" to d.nota.isNotBlank(), "predicción" to (d.prediccion_manana != null),
+    ) + (if (activos.isNotEmpty()) listOf("hábitos $hechos/${activos.size}" to (hechos == activos.size)) else emptyList())
+    val listo = d.valencia != null && d.nota.isNotBlank()
+    Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, if (listo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
+        modifier = Modifier.fillMaxWidth().padding(top = 18.dp)) {
+        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(io.github.ruddy2003.vestigium.ui.Estilo.seccion("Llenar el día", Romano.latin("Llenar el día")).first, style = MaterialTheme.typography.titleLarge)
+                Text(partes.joinToString("  ") { (t, ok) -> (if (ok) "✓ " else "○ ") + t }, style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                if (listo) Text("día sellado", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            }
+            io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (listo) "abrir" else "llenar") { abrir() }
+        }
+    }
+}
+
+/**
+ * La hoja de la noche: todo lo que se llena al cerrar el día, en una sola página.
+ * Se guarda sola mientras escribes; al terminar, «sellar el día» la cierra con la huella.
+ */
+@Composable
+fun PantallaNoche(nav: Nav) {
+    val fecha = remember { Seleccion.noche ?: Fechas.diaLogico() }
+    val guardado = Repo.dias[fecha]
+    var d by remember(fecha) { mutableStateOf(guardado ?: Dia(fecha = fecha)) }
+    var sucio by remember(fecha) { mutableStateOf(false) }
+    val dActual by rememberUpdatedState(d)
+    val sucioActual by rememberUpdatedState(sucio)
+    LaunchedEffect(guardado) { if (!sucio && guardado != null) d = guardado }
+    LaunchedEffect(d, sucio) { if (sucio) { delay(700); Repo.guardarDia(d); sucio = false } }
+    DisposableEffect(fecha) { onDispose { if (sucioActual) Repo.guardarDia(dActual) } }
+    fun cambiar(n: Dia) { d = n; sucio = true }
+    val c = Repo.config
+    val scope = rememberCoroutineScope()
+    val reqAnimo = remember { BringIntoViewRequester() }
+    val reqDiario = remember { BringIntoViewRequester() }
+    val reqPred = remember { BringIntoViewRequester() }
+    LaunchedEffect(Seleccion.seccion) {
+        val sec = Seleccion.seccion ?: return@LaunchedEffect
+        Seleccion.seccion = null
+        if (sec in Repo.config.plegadas) Repo.cambiarConfig { cc -> cc.copy(plegadas = cc.plegadas - sec) }
+        delay(300)
+        when (sec) { "Diario" -> reqDiario; "Predicción" -> reqPred; else -> reqAnimo }.bringIntoView()
+    }
+    val est = io.github.ruddy2003.vestigium.ui.Estilo
+    Hoja("Llenar el día", { Seleccion.volverA = fecha; nav.atras() },
+        est.fecha(fecha) + " · " + Fechas.titulo(fecha).lowercase() + " · " + Fechas.relativo(fecha) + ". Se guarda solo mientras escribes.") {
+        var k = 0
+        fun n() = ++k
         Seccion("Contexto", "Activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n(), plegable = true) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Catalogo.CONTEXTOS.forEach { o ->
@@ -260,7 +352,7 @@ fun PantallaDia(nav: Nav) {
             ListaEtiquetas(d.hitos, "vuelo, beso, decision_importante", normalizar = { Texto.slug(it) }) { cambiar(d.copy(hitos = it)) }
         }
 
-        Seccion("Ánimo y cuerpo", numero = n(), modifier = Modifier.bringIntoViewRequester(reqAnimo), plegable = true) {
+        Seccion("Ánimo y cuerpo", numero = n(), modifier = Modifier.bringIntoViewRequester(reqAnimo)) {
             Tarjeta {
                 Etiqueta("Valencia · qué tan agradable fue el día")
                 Escala(d.valencia, 1, 7, Catalogo.ANCLAS["valencia"]) { cambiar(d.copy(valencia = it)) }
@@ -299,7 +391,7 @@ fun PantallaDia(nav: Nav) {
                 label = { Text("pessimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         }
 
-        Seccion("Hábitos", numero = n(), plegable = true) {
+        Seccion("Hábitos", "Siempre aquí, para marcarlos al cerrar el día.", numero = n()) {
             val activos = c.habitos.filter { it.activo }
             if (activos.isEmpty()) {
                 Tarjeta {
@@ -348,32 +440,25 @@ fun PantallaDia(nav: Nav) {
                 BotonDictado { t -> cambiar(d.copy(nota = (d.nota + " " + t).trim())) }
             }
             Detectados(d.nota, fecha) { nuevo -> cambiar(d.copy(nota = nuevo)) }
+            TextButton(onClick = { nav.ir("diarios") }) { Text("ver todas tus entradas →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
 
         Seccion("Predicción", "¿Cómo crees que estará tu ánimo mañana? La app medirá qué tan bien te conoces.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqPred), plegable = true) {
             Escala(d.prediccion_manana, 1, 7, Catalogo.ANCLAS["prediccion_manana"]) { cambiar(d.copy(prediccion_manana = it)) }
         }
 
-        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), plegable = true) {
-            Vestigios(fecha, nav)
-        }
 
-        Seccion("Fotos del día", "Toca una para verla; mantén presionada para elegirla como la imagen del día (sale arriba, de portada).", numero = n(), plegable = true) {
-            Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
+        // Cerrar el día: guarda y, si está completo, lo sella con la huella.
+        val completo = d.valencia != null && d.nota.isNotBlank()
+        val faltan = listOfNotNull(if (d.valencia == null) "la valencia" else null, if (d.nota.isBlank()) "la nota del diario" else null)
+        Spacer(Modifier.height(24.dp))
+        io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (completo) "Sellar el día" else "Guardar y volver", Modifier.fillMaxWidth()) {
+            Repo.guardarDia(d); sucio = false
+            if (completo) io.github.ruddy2003.vestigium.ui.Sello.lanzar(fecha)
+            Seleccion.volverA = fecha
+            nav.atras()
         }
-
-        val delDia = Repo.momentos.filter { it.fecha == fecha }
-        if (delDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
-            Tarjeta {
-                delDia.forEach { m ->
-                    Row(Modifier.padding(vertical = 3.dp)) {
-                        Text(Fechas.horaDe(m.ts) + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                        Text(tipoNombre(m.tipo, c.discreto) + (m.valencia?.let { " · $it" } ?: "") + (if (m.texto.isNotBlank()) " · ${m.texto}" else ""),
-                            style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
-        }
+        if (!completo) Ayuda("Para sellar el día con tu huella falta " + faltan.joinToString(" y ") + ".", Modifier.padding(top = 6.dp))
     }
 }
 

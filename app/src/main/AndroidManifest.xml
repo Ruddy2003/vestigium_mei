@@ -69,13 +69,126 @@
             android:name=".ui.MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Un ícono por tema: solo uno está activo; la app cambia cuál cuando cambias de tema (si lo permites en Ajustes). -->
+        <activity-alias
+            android:name=".IconoRomano"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_romano"
+            android:roundIcon="@mipmap/ic_launcher_romano"
+            android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoCiber"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_ciber"
+            android:roundIcon="@mipmap/ic_launcher_ciber"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoHeleno"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_heleno"
+            android:roundIcon="@mipmap/ic_launcher_heleno"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoMedieval"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_medieval"
+            android:roundIcon="@mipmap/ic_launcher_medieval"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoDistopia"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_distopia"
+            android:roundIcon="@mipmap/ic_launcher_distopia"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoRefugio"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_refugio"
+            android:roundIcon="@mipmap/ic_launcher_refugio"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoOrden"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_orden"
+            android:roundIcon="@mipmap/ic_launcher_orden"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoLaboratorio"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_laboratorio"
+            android:roundIcon="@mipmap/ic_launcher_laboratorio"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoColonos"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_colonos"
+            android:roundIcon="@mipmap/ic_launcher_colonos"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
 
         <activity
             android:name=".ui.QuickActivity"

@@ -264,6 +264,7 @@ fun PantallaAjustes(nav: Nav) {
             }
             Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
             Tarjeta(Modifier.padding(top = 10.dp)) {
+                Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La V de huella toma los colores del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
                 Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
                 Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
                 Interruptor("Sonidos", c.sonidos, "Sonidos cortos del tema al guardar, al cambiar de pestaña y al completar el día. No suenan con el teléfono en silencio o en vibración.") { v ->

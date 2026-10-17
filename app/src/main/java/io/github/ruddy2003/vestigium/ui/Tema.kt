@@ -315,6 +315,7 @@ object Romano {
         "Tablero" to "TABVLA", "Tu día en 24 horas" to "HORAE DIEI", "Te falta hoy" to "RELIQVA", "Datos que faltan" to "LACVNAE",
         "Tema" to "SPECIES", "Recordatorios" to "MONITIONES", "Resumen semanal" to "HEBDOMAS", "Totales" to "SVMMA OMNIVM",
         "Gimnasio" to "ROBVR", "Análisis" to "ANALYSIS", "Buscar" to "QVAERERE", "Cifras" to "NVMERI", "Momentos de la semana" to "MOMENTA HEBDOMADIS",
+        "Llenar el día" to "VESPERA", "Biblioteca del diario" to "LIBRI DIERVM", "Entrada" to "PAGINA",
     )
     fun latin(titulo: String): String? = LATIN[titulo]
 
