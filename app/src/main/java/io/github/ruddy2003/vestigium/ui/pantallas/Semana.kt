@@ -64,7 +64,9 @@ fun PantallaSemana(nav: Nav) {
     var lunes by remember { mutableStateOf(Fechas.lunesDe(hoy)) }
     val dias = (0..6).map { Fechas.sumar(lunes, it.toLong()) }
     val r = remember(lunes, Repo.dias.size, Repo.momentos.size, Repo.gastos.size) { ResumenSemana(dias) }
-    val antes = remember(lunes, Repo.dias.size) { ResumenSemana(dias.map { Fechas.sumar(it, -7) }) }
+    // En la semana en curso se compara con los mismos días de la anterior (de lunes a hoy), no con la semana completa.
+    val transcurridos = dias.count { it <= hoy }.coerceAtLeast(1)
+    val antes = remember(lunes, Repo.dias.size) { ResumenSemana(dias.take(transcurridos).map { Fechas.sumar(it, -7) }) }
     val oscuro = esOscuro()
 
     Hoja("Resumen semanal", nav.atras, "Tu semana de un vistazo, comparada con la anterior. Toca un día para abrirlo.") {
@@ -99,7 +101,7 @@ fun PantallaSemana(nav: Nav) {
                 FilaSemana("Gasto", r.gasto.takeIf { it > 0 }, antes.gasto) { "$%,.0f".format(it) }
                 FilaSemana("Calorías al día", r.kcal, antes.kcal) { "%,.0f".format(it) }
                 FilaSemana("Entrenamientos", r.entrenos.toDouble().takeIf { it > 0 }, antes.entrenos.toDouble()) { "%.0f".format(it) }
-                Ayuda("Las flechas comparan con la semana anterior.", Modifier.padding(top = 4.dp))
+                Ayuda(if (transcurridos < 7) "Las flechas comparan con los mismos $transcurridos días de la semana anterior." else "Las flechas comparan con la semana anterior.", Modifier.padding(top = 4.dp))
             }
         }
 

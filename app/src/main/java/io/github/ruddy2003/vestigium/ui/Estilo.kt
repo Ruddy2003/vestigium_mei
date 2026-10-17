@@ -63,12 +63,33 @@ object Estilo {
         TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ")[clave] ?: clave.uppercase()
     }
 
-    /** Claves de las líneas de datos del widget «hoy» y del tablero. */
-    fun clave(c: String): String = when (tema) {
-        TemaId.ROMANO -> c
-        TemaId.CIBER -> mapOf("animus" to "mood", "somnus" to "sleep", "passus" to "steps", "momenta" to "events", "telephon" to "screen", "caelum" to "sky")[c] ?: c
-        TemaId.HELENO -> mapOf("animus" to "θυμός", "somnus" to "ὕπνος", "passus" to "βήματα", "momenta" to "καιροί", "telephon" to "ὀθόνη", "caelum" to "οὐρανός")[c] ?: c
+    /** Claves en latín de las líneas «clave = valor» (Día, widget «hoy»), traducidas al tema. */
+    fun clave(c: String): String {
+        if (tema == TemaId.ROMANO) return c
+        val sangria = c.takeWhile { it == ' ' }
+        val k = c.trim()
+        val m = if (tema == TemaId.CIBER) CLAVES_CIBER else CLAVES_GRIEGO
+        return sangria + (m[k] ?: k)
     }
+
+    private val CLAVES_CIBER = mapOf(
+        "horologium" to "watch", "somnus" to "sleep", "stadia" to "stages", "cor" to "heart", "passus" to "steps", "motus" to "motion",
+        "iter" to "route", "exercitatio" to "workout", "loca" to "places", "telephonum" to "screen", "telephon" to "screen", "usus" to "usage",
+        "monita" to "notifs", "musica" to "music", "imagines" to "photos", "fasti" to "agenda", "caelum" to "sky", "lux" to "daylight",
+        "aer" to "air", "corpus" to "body", "nutritio" to "food", "cibus" to "meals", "robur" to "gym", "musculi" to "muscles",
+        "voces" to "calls", "soni" to "audio", "retia" to "wifi", "lumen" to "light", "vis" to "charge", "lectio" to "kindle",
+        "strepitus" to "noise", "luna" to "moon", "dias" to "days", "animus" to "mood", "optimus" to "best", "momenta" to "events",
+        "svmptvs" to "spent", "memorabilia" to "milestones", "ascensvs" to "climbing",
+    )
+    private val CLAVES_GRIEGO = mapOf(
+        "horologium" to "ὡρολόγιον", "somnus" to "ὕπνος", "stadia" to "στάδια", "cor" to "καρδία", "passus" to "βήματα", "motus" to "κίνησις",
+        "iter" to "ὁδός", "exercitatio" to "ἄσκησις", "loca" to "τόποι", "telephonum" to "ὀθόνη", "telephon" to "ὀθόνη", "usus" to "χρῆσις",
+        "monita" to "σήματα", "musica" to "μουσική", "imagines" to "εἰκόνες", "fasti" to "ἔργα", "caelum" to "οὐρανός", "lux" to "φῶς",
+        "aer" to "ἀήρ", "corpus" to "σῶμα", "nutritio" to "τροφή", "cibus" to "σιτία", "robur" to "ῥώμη", "musculi" to "μύες",
+        "voces" to "φωναί", "soni" to "ἦχοι", "retia" to "δίκτυα", "lumen" to "φέγγος", "vis" to "δύναμις", "lectio" to "ἀνάγνωσις",
+        "strepitus" to "θόρυβος", "luna" to "σελήνη", "dias" to "ἡμέραι", "animus" to "θυμός", "optimus" to "ἄριστος", "momenta" to "καιροί",
+        "svmptvs" to "δαπάνη", "memorabilia" to "μνημεῖα", "ascensvs" to "ἀνάβασις",
+    )
 
     private val SEMANA_ES = listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")
     private val MESES_ES = listOf("ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC")

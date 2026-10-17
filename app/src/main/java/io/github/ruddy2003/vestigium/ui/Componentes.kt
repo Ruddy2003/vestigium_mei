@@ -236,7 +236,7 @@ fun Clave(clave: String, valor: String, ancho: Int = 14) {
         val medidor = rememberTextMeasurer()
         val estilo = MaterialTheme.typography.labelLarge
         val anchoDp = with(LocalDensity.current) { medidor.measure("0".repeat(ancho), estilo).size.width.toDp() }
-        Text(clave, style = estilo, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(anchoDp), maxLines = 1)
+        Text(Estilo.clave(clave), style = estilo, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(anchoDp), maxLines = 1)
         Text("= ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         Text(valor, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
     }
