@@ -114,7 +114,7 @@ private val helenoClaro = lightColorScheme(
 
 /** Noche púrpura con el oro del sol de Vergina. */
 private val helenoOscuro = darkColorScheme(
-    primary = Color(0xFFD8B45C), onPrimary = Color(0xFF1C1405), primaryContainer = Color(0xFF3A2E14), onPrimaryContainer = Color(0xFFEFE9DC),
+    primary = Color(0xFFD8B45C), onPrimary = Color(0xFF1C1405), primaryContainer = Color(0xFF2B2245), onPrimaryContainer = Color(0xFFEFE9DC),
     secondary = Color(0xFF73B4E2), onSecondary = Color(0xFF04192A), secondaryContainer = Color(0xFF13324A), onSecondaryContainer = Color(0xFFEFE9DC),
     tertiary = Color(0xFFB992EA),
     background = Color(0xFF0E0B17), onBackground = Color(0xFFEFE9DC), surface = Color(0xFF161222), onSurface = Color(0xFFEFE9DC),
@@ -289,6 +289,9 @@ object Romano {
         "Ir a una fecha" to "SALTVS", "Sincronizar" to "SYNCHRONIA", "Notificaciones y música" to "SONI", "Galería y agenda" to "IMAGINES ET FASTI",
         "Movimiento" to "MOTVS", "Música" to "MVSICA", "Agenda" to "FASTI", "Escuchado hoy" to "AVDITA", "Capas" to "STRATA",
         "Rutas del día" to "ITINERA", "Widgets" to "TABELLAE",
+        "Tablero" to "TABVLA", "Tu día en 24 horas" to "HORAE DIEI", "Te falta hoy" to "RELIQVA", "Datos que faltan" to "LACVNAE",
+        "Tema" to "SPECIES", "Recordatorios" to "MONITIONES", "Resumen semanal" to "HEBDOMAS", "Totales" to "SVMMA OMNIVM",
+        "Gimnasio" to "ROBVR", "Análisis" to "ANALYSIS",
     )
     fun latin(titulo: String): String? = LATIN[titulo]
 

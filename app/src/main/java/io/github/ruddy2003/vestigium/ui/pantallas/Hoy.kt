@@ -340,7 +340,7 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
         Column(Modifier.padding(10.dp)) {
             Text(m.nombre.lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-            Text(v?.let(m.formato) ?: "—", style = MaterialTheme.typography.headlineSmall, maxLines = 1)
+            Text(v?.let(m.formato) ?: "—", style = estiloCifra(), maxLines = 1)
             val dif = if (v != null && normal != null && normal != 0.0) (v - normal) / abs(normal) else null
             Text(
                 when {
@@ -367,6 +367,13 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
             }
         }
     }
+}
+
+/** Letra de las cifras grandes: la capitular romana no tiene minúsculas, así que ahí se usa la monoespaciada. */
+@Composable
+fun estiloCifra(): androidx.compose.ui.text.TextStyle = when (Estilo.tema) {
+    TemaId.ROMANO -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = androidx.compose.ui.unit.TextUnit(21f, androidx.compose.ui.unit.TextUnitType.Sp), letterSpacing = androidx.compose.ui.unit.TextUnit(0f, androidx.compose.ui.unit.TextUnitType.Sp))
+    else -> MaterialTheme.typography.headlineSmall
 }
 
 // =====================================================================
