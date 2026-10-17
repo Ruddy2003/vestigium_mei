@@ -10,6 +10,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -95,7 +97,9 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun PantallaDia(nav: Nav) {
-    var fecha by remember { mutableStateOf(Seleccion.pedida ?: Seleccion.volverA?.also { Seleccion.volverA = null } ?: Fechas.diaLogico()) }
+    var fecha by remember { mutableStateOf(Seleccion.pedida ?: Seleccion.diaAbierto ?: Fechas.diaLogico()) }
+    // Día recuerda la fecha abierta aunque cambies de pestaña o vayas a la hoja de la noche.
+    LaunchedEffect(fecha) { Seleccion.diaAbierto = fecha }
     val guardado = Repo.dias[fecha]
     var d by remember(fecha) { mutableStateOf(guardado ?: Dia(fecha = fecha)) }
     var sucio by remember(fecha) { mutableStateOf(false) }
@@ -128,7 +132,7 @@ fun PantallaDia(nav: Nav) {
     /** Abre la hoja de la noche de este día, opcionalmente en una sección. */
     fun abrirNoche(sec: String? = null) {
         if (sucio) { Repo.guardarDia(d); sucio = false }
-        Seleccion.noche = fecha; Seleccion.volverA = fecha; Seleccion.seccion = sec
+        Seleccion.noche = fecha; Seleccion.seccion = sec
         nav.ir("noche")
     }
     // Si se llegó desde «Diario de hoy» (botón + o atajo del ícono): el sueño está aquí; lo demás, en la hoja de la noche.
@@ -157,14 +161,17 @@ fun PantallaDia(nav: Nav) {
     Hoja("Día", modifier = deslizar, encabezado = {
         val est = io.github.ruddy2003.vestigium.ui.Estilo
         val tema = est.tema
+        fun abrirCalendario() { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(est.pantalla("Día", "DIES").first + if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) "_" else "", style = MaterialTheme.typography.headlineMedium)
-            if (tema == io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) Text("  ${est.fecha(fecha)}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
-            else Spacer(Modifier.weight(1f))
+            Text(est.pantalla("Día", "DIES").first + if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) "_" else "", style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.weight(1f))
+            io.github.ruddy2003.vestigium.ui.BotonBuscar { nav.ir("buscar") }
             io.github.ruddy2003.vestigium.ui.BotonModo()
-            io.github.ruddy2003.vestigium.ui.Emblema(tam = 34.dp, modifier = Modifier.padding(start = 2.dp))
+            io.github.ruddy2003.vestigium.ui.Emblema(tam = 34.dp, modifier = Modifier.padding(start = 4.dp))
         }
-        if (tema != io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) Text(est.fecha(fecha), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
+        // La fecha grande abre el calendario.
+        Text(est.fecha(fecha) + "  ▾", style = if (tema == io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { abrirCalendario() })
         val fase = Luna.fase(fecha)
         Text(est.comentario + "${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}",
             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -172,18 +179,15 @@ fun PantallaDia(nav: Nav) {
         // El contador vive dentro del bloque para que la numeración se reinicie en cada recomposición.
         var k = 0
         fun n() = ++k
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-            BotonSecundario("‹") { irA(Fechas.sumar(fecha, -1)) }
-            BotonSecundario(when (io.github.ruddy2003.vestigium.ui.Estilo.tema) {
-                io.github.ruddy2003.vestigium.ui.TemaId.ROMANO -> "▦ calendarium"; io.github.ruddy2003.vestigium.ui.TemaId.CIBER -> "▦ calendar"
-                io.github.ruddy2003.vestigium.ui.TemaId.HELENO -> "▦ ἡμερολόγιον"; io.github.ruddy2003.vestigium.ui.TemaId.DISTOPIA -> "▦ PLAN"
-                io.github.ruddy2003.vestigium.ui.TemaId.ORDEN -> "▦ CAMPAÑA"; io.github.ruddy2003.vestigium.ui.TemaId.COLONOS -> "▦ almanaque"
-                io.github.ruddy2003.vestigium.ui.TemaId.REFUGIO -> "▦ CALENDARIO"; else -> "▦ calendario"
-            }, Modifier.weight(1f)) { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
-            if (fecha != hoy) BotonSecundario("hoy") { irA(hoy) }
-            BotonSecundario("›") { irA(Fechas.sumar(fecha, 1)) }
-        }
-        Row(Modifier.padding(top = 6.dp)) {
+        val ahora = java.time.LocalTime.now().hour
+        val esHoy = fecha == hoy
+        // El día se ordena según la hora: en la mañana manda el sueño; desde unas horas antes de tu diario, la hoja de la noche.
+        val manana = esHoy && ahora in 5..11
+        val nocheYa = !esHoy && fecha < hoy || esHoy && (ahora >= (c.hora_diario - 4).coerceAtLeast(14) || ahora < 5)
+
+        // Estado del día, con flechas pequeñas (también se cambia de día deslizando a los lados).
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { irA(Fechas.sumar(fecha, -1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) { Text("‹", style = MaterialTheme.typography.titleLarge) }
             Text("estado = ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(when { sucio -> "guardando…"; guardado != null -> "guardado"; else -> "vacío" } + (if (guardado?.retroactivo == true) " · retroactivo" else ""),
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
@@ -195,37 +199,90 @@ fun PantallaDia(nav: Nav) {
                 if (antes != null && r > antes && r % 7 == 0) { io.github.ruddy2003.vestigium.ui.Fiesta.lanzar(); sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) }
                 rachaAntes = r
             }
-            if (r >= 2) Text("  ·  racha $r días", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (r >= 2) Text("  ·  racha $r", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.weight(1f))
+            if (!esHoy) TextButton(onClick = { irA(hoy) }) { Text("hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            TextButton(onClick = { irA(Fechas.sumar(fecha, 1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) { Text("›", style = MaterialTheme.typography.titleLarge) }
         }
-        Portada(d.foto)
-        FraseDelDia(fecha)
-        if (fecha == hoy) {
-            TeFaltaHoy(d, hoy) { a ->
-                when (a) {
-                    "ayer" -> irA(Fechas.sumar(hoy, -1))
-                    "sueno" -> mostrar("Sueño", reqSueno)
-                    "diario" -> abrirNoche("Ánimo y cuerpo")
-                    "prediccion" -> abrirNoche("Predicción")
-                    "aviso" -> abrirAviso(ctx)
-                    "escalas" -> nav.ir("escalas")
-                    "gasto" -> nav.pestana("gastos")
+
+        val bloqueSueno: @Composable () -> Unit = {
+        Seccion("Sueño", "Llénalo apenas despiertes. El resto, en la noche.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqSueno), plegable = true) {
+                Tarjeta {
+                    Etiqueta("Calidad del sueño, como la sentiste")
+                    Escala(d.sueno_calidad, 1, 5, Catalogo.ANCLAS["sueno_calidad"]) { cambiar(d.copy(sueno_calidad = it)) }
+                    Interruptor("¿Recordaste un sueño?", d.sueno_recordado) { cambiar(d.copy(sueno_recordado = it)) }
+                    AnimatedVisibility(d.sueno_recordado) {
+                        Column {
+                            Etiqueta("Qué tan agradable fue")
+                            Escala(d.sueno_valencia, 1, 7, Catalogo.ANCLAS["sueno_valencia"]) { cambiar(d.copy(sueno_valencia = it)) }
+                            Etiqueta("Lucidez: ¿sabías que soñabas?"); FilaFichas(Catalogo.SUENO_LUCIDEZ, d.sueno_lucidez) { cambiar(d.copy(sueno_lucidez = it)) }
+                            Etiqueta("Vividez del recuerdo"); FilaFichas(Catalogo.SUENO_VIVIDEZ, d.sueno_vividez) { cambiar(d.copy(sueno_vividez = it)) }
+                            Etiqueta("Tipo"); FilaFichas(Catalogo.SUENO_TIPO, d.sueno_tipo) { cambiar(d.copy(sueno_tipo = it)) }
+                            Etiqueta("Personas y temas del sueño")
+                            ListaEtiquetas(d.sueno_temas, "@persona o #tema", normalizar = { Texto.etiqueta(it) }) { cambiar(d.copy(sueno_temas = it)) }
+                            Etiqueta("Narración")
+                            Editor(d.sueno_texto, "somnium.txt", "Lo que recuerdes, aunque sean fragmentos.", minimo = 110, pie = "${Texto.palabras(d.sueno_texto)} verba") { cambiar(d.copy(sueno_texto = it)) }
+                            Row(Modifier.padding(top = 6.dp)) { BotonDictado { t -> cambiar(d.copy(sueno_texto = (d.sueno_texto + " " + t).trim())) } }
+                        }
+                    }
+                    Repo.salud[fecha]?.sueno_min?.let { m -> Clave("horologium", "${m / 60} h ${m % 60} min dormido según tu reloj") }
                 }
             }
-            DatosQueFaltan(nav)
         }
+        val bloqueMomentos: @Composable () -> Unit = {
+        val delDia = Repo.momentos.filter { it.fecha == fecha }
+            if (delDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
+                Tarjeta {
+                    delDia.forEach { m ->
+                        Row(Modifier.padding(vertical = 3.dp)) {
+                            Text(Fechas.horaDe(m.ts) + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            Text(tipoNombre(m.tipo, c.discreto) + (m.valencia?.let { " · $it" } ?: "") + (if (m.texto.isNotBlank()) " · ${m.texto}" else ""),
+                                style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                }
+            }
+        }
+        val pendientes: @Composable () -> Unit = {
+            if (esHoy) {
+                TeFaltaHoy(d, hoy) { a ->
+                    when (a) {
+                        "ayer" -> irA(Fechas.sumar(hoy, -1))
+                        "sueno" -> mostrar("Sueño", reqSueno)
+                        "diario" -> abrirNoche("Ánimo y cuerpo")
+                        "prediccion" -> abrirNoche("Predicción")
+                        "aviso" -> abrirAviso(ctx)
+                        "escalas" -> nav.ir("escalas")
+                        "gasto" -> nav.pestana("gastos")
+                    }
+                }
+                DatosQueFaltan(nav)
+            }
+        }
+
+        if (esHoy && ahora < 5) Aviso("Pasa de medianoche: sigues llenando el día $fecha. Los días empiezan a las 5:00.")
+        if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas, pero se marcará como escrito por adelantado.")
+        Portada(d.foto)
+
+        // 1. Lo de este momento del día.
+        if (manana) { bloqueSueno(); pendientes(); FraseDelDia(fecha) }
+        else if (nocheYa) { TarjetaNoche(d, fecha, c) { abrirNoche() }; pendientes(); FraseDelDia(fecha) }
+        else { FraseDelDia(fecha); pendientes() }
+
+        // 2. El tablero siempre a la vista, con los accesos de lo que se mide de vez en cuando.
         Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores.") { Tablero(fecha) }
-        TarjetaNoche(d, fecha, c) { abrirNoche() }
-        // Accesos directos a lo que se mide de vez en cuando.
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonSecundario("✎ cuestionarios", Modifier.weight(1f)) { nav.ir("escalas") }
             BotonSecundario("⚡ reacción", Modifier.weight(1f)) { nav.ir("reaccion") }
-            BotonSecundario("❦ diario", Modifier.weight(1f)) { nav.ir("diarios") }
         }
-        Seccion("Tu día en 24 horas", plegable = true) { LineaDelTiempo(fecha) }
-        if (fecha == hoy && java.time.LocalTime.now().hour < 5) Aviso("Pasa de medianoche: sigues llenando el día $fecha. Los días empiezan a las 5:00.")
-        if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas, pero se marcará como escrito por adelantado.")
+        if (!nocheYa) TarjetaNoche(d, fecha, c) { abrirNoche() }
 
-        // Hace un año
+        // 3. Lo que va pasando.
+        Seccion("Tu día en 24 horas", plegable = true) { LineaDelTiempo(fecha) }
+        bloqueMomentos()
+        if (!manana) bloqueSueno()
+
+        // 4. Recuerdos y experimentos.
         Repo.dias[Fechas.iso(Fechas.parse(fecha).minusYears(1))]?.let { viejo ->
             if (viejo.nota.isNotBlank()) Seccion("Este día hace un año") {
                 Tarjeta { Text(viejo.nota.take(280) + if (viejo.nota.length > 280) "…" else "", style = MaterialTheme.typography.bodyMedium) }
@@ -236,48 +293,13 @@ fun PantallaDia(nav: Nav) {
             if (semana in e.plan.indices) Aviso("Experimento «${e.nombre}», semana ${semana + 1} de ${e.semanas}: " + if (e.plan[semana]) "esta semana SÍ: ${e.accion}." else "esta semana NO hagas: ${e.accion}.")
         }
 
-        Seccion("Sueño", "Llénalo apenas despiertes. El resto, en la noche.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqSueno), plegable = true) {
-            Tarjeta {
-                Etiqueta("Calidad del sueño, como la sentiste")
-                Escala(d.sueno_calidad, 1, 5, Catalogo.ANCLAS["sueno_calidad"]) { cambiar(d.copy(sueno_calidad = it)) }
-                Interruptor("¿Recordaste un sueño?", d.sueno_recordado) { cambiar(d.copy(sueno_recordado = it)) }
-                AnimatedVisibility(d.sueno_recordado) {
-                    Column {
-                        Etiqueta("Qué tan agradable fue")
-                        Escala(d.sueno_valencia, 1, 7, Catalogo.ANCLAS["sueno_valencia"]) { cambiar(d.copy(sueno_valencia = it)) }
-                        Etiqueta("Lucidez: ¿sabías que soñabas?"); FilaFichas(Catalogo.SUENO_LUCIDEZ, d.sueno_lucidez) { cambiar(d.copy(sueno_lucidez = it)) }
-                        Etiqueta("Vividez del recuerdo"); FilaFichas(Catalogo.SUENO_VIVIDEZ, d.sueno_vividez) { cambiar(d.copy(sueno_vividez = it)) }
-                        Etiqueta("Tipo"); FilaFichas(Catalogo.SUENO_TIPO, d.sueno_tipo) { cambiar(d.copy(sueno_tipo = it)) }
-                        Etiqueta("Personas y temas del sueño")
-                        ListaEtiquetas(d.sueno_temas, "@persona o #tema", normalizar = { Texto.etiqueta(it) }) { cambiar(d.copy(sueno_temas = it)) }
-                        Etiqueta("Narración")
-                        Editor(d.sueno_texto, "somnium.txt", "Lo que recuerdes, aunque sean fragmentos.", minimo = 110, pie = "${Texto.palabras(d.sueno_texto)} verba") { cambiar(d.copy(sueno_texto = it)) }
-                        Row(Modifier.padding(top = 6.dp)) { BotonDictado { t -> cambiar(d.copy(sueno_texto = (d.sueno_texto + " " + t).trim())) } }
-                    }
-                }
-                Repo.salud[fecha]?.sueno_min?.let { m -> Clave("horologium", "${m / 60} h ${m % 60} min dormido según tu reloj") }
-            }
-        }
-
+        // 5. Lo automático, al fondo.
         Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), plegable = true) {
             Vestigios(fecha, nav)
         }
 
         Seccion("Fotos del día", "Toca una para verla; mantén presionada para elegirla como la imagen del día (sale arriba, de portada).", numero = n(), plegable = true) {
             Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
-        }
-
-        val delDia = Repo.momentos.filter { it.fecha == fecha }
-        if (delDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
-            Tarjeta {
-                delDia.forEach { m ->
-                    Row(Modifier.padding(vertical = 3.dp)) {
-                        Text(Fechas.horaDe(m.ts) + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                        Text(tipoNombre(m.tipo, c.discreto) + (m.valencia?.let { " · $it" } ?: "") + (if (m.texto.isNotBlank()) " · ${m.texto}" else ""),
-                            style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
         }
     }
 }
@@ -327,6 +349,8 @@ fun PantallaNoche(nav: Nav) {
     val reqAnimo = remember { BringIntoViewRequester() }
     val reqDiario = remember { BringIntoViewRequester() }
     val reqPred = remember { BringIntoViewRequester() }
+    val reqHabitos = remember { BringIntoViewRequester() }
+    val reqSellar = remember { BringIntoViewRequester() }
     LaunchedEffect(Seleccion.seccion) {
         val sec = Seleccion.seccion ?: return@LaunchedEffect
         Seleccion.seccion = null
@@ -335,23 +359,24 @@ fun PantallaNoche(nav: Nav) {
         when (sec) { "Diario" -> reqDiario; "Predicción" -> reqPred; else -> reqAnimo }.bringIntoView()
     }
     val est = io.github.ruddy2003.vestigium.ui.Estilo
-    Hoja("Llenar el día", { Seleccion.volverA = fecha; nav.atras() },
+    val completo = d.valencia != null && d.nota.isNotBlank()
+    fun sellar() {
+        Repo.guardarDia(d); sucio = false
+        if (completo) io.github.ruddy2003.vestigium.ui.Sello.lanzar(fecha)
+        nav.atras()
+    }
+    // Lo esencial, en orden: lo que falta se puede saltar con «siguiente».
+    val habitosActivos = c.habitos.filter { it.activo }
+    val pasos = listOfNotNull(
+        Triple("ánimo", d.valencia != null, reqAnimo), Triple("diario", d.nota.isNotBlank(), reqDiario),
+        if (habitosActivos.isNotEmpty()) Triple("hábitos", habitosActivos.all { d.habitos[it.id] == true }, reqHabitos) else null,
+        Triple("predicción", d.prediccion_manana != null, reqPred),
+    )
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+    Hoja("Llenar el día", nav.atras,
         est.fecha(fecha) + " · " + Fechas.titulo(fecha).lowercase() + " · " + Fechas.relativo(fecha) + ". Se guarda solo mientras escribes.") {
         var k = 0
         fun n() = ++k
-        Seccion("Contexto", "Activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n(), plegable = true) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Catalogo.CONTEXTOS.forEach { o ->
-                    val activo = d.ctx[o.id] == true
-                    Ficha(o.nombre, activo) { cambiar(d.copy(ctx = if (activo) d.ctx - o.id else d.ctx + (o.id to true))) }
-                }
-            }
-        }
-
-        Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true) {
-            ListaEtiquetas(d.hitos, "vuelo, beso, decision_importante", normalizar = { Texto.slug(it) }) { cambiar(d.copy(hitos = it)) }
-        }
-
         Seccion("Ánimo y cuerpo", numero = n(), modifier = Modifier.bringIntoViewRequester(reqAnimo)) {
             Tarjeta {
                 Etiqueta("Valencia · qué tan agradable fue el día")
@@ -364,34 +389,23 @@ fun PantallaNoche(nav: Nav) {
                 if (mu.isNotEmpty()) Clave("avisos", mu.joinToString("  ") { "${Fechas.horaDe(it.ts)}→${it.valencia}" })
             }
         }
-
-        Seccion("Lectura del día", "Tres preguntas de marcos científicos. Toca «cómo elegir» si dudas.", numero = n(), plegable = true) {
-            Tarjeta {
-                Catalogo.CIENTIFICAS.forEachIndexed { i, p ->
-                    var abierta by remember { mutableStateOf(false) }
-                    if (i > 0) Spacer(Modifier.padding(top = 14.dp))
-                    Text(p.pregunta, style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = { abierta = !abierta }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                        Text(if (abierta) "− ocultar guía" else "+ cómo elegir · ${p.autor}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    }
-                    if (abierta) Ayuda(p.guia, Modifier.padding(bottom = 8.dp))
-                    val valor = when (p.clave) { "flow" -> d.flow; "sdt_necesidad" -> d.sdt_necesidad; else -> d.apreciacion }
-                    Opciones(p.opciones, valor) { v ->
-                        cambiar(when (p.clave) { "flow" -> d.copy(flow = v); "sdt_necesidad" -> d.copy(sdt_necesidad = v); else -> d.copy(apreciacion = v) })
-                    }
+        Seccion("Contexto", "Activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Catalogo.CONTEXTOS.forEach { o ->
+                    val activo = d.ctx[o.id] == true
+                    Ficha(o.nombre, activo) { cambiar(d.copy(ctx = if (activo) d.ctx - o.id else d.ctx + (o.id to true))) }
                 }
             }
         }
-
-        Seccion("Lo mejor y lo peor", "Una línea cada uno.", numero = n(), plegable = true) {
-            OutlinedTextField(value = d.mejor_momento, onValueChange = { cambiar(d.copy(mejor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
-                label = { Text("optimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
-            Spacer(Modifier.padding(top = 8.dp))
-            OutlinedTextField(value = d.peor_momento, onValueChange = { cambiar(d.copy(peor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
-                label = { Text("pessimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+        Seccion("Diario", "Escribe libre. Usa @persona y #tema; abajo ves lo que se detecta y si alguna etiqueta parece error de dedo.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqDiario)) {
+            Editor(d.nota, "diarium_$fecha.txt", "¿Cómo fue el día?", pie = "${Texto.palabras(d.nota)} verba") { cambiar(d.copy(nota = it)) }
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                BotonDictado { t -> cambiar(d.copy(nota = (d.nota + " " + t).trim())) }
+            }
+            Detectados(d.nota, fecha) { nuevo -> cambiar(d.copy(nota = nuevo)) }
+            TextButton(onClick = { nav.pestana("diario") }) { Text("ver todas tus entradas →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
-
-        Seccion("Hábitos", "Siempre aquí, para marcarlos al cerrar el día.", numero = n()) {
+        Seccion("Hábitos", "Siempre aquí, para marcarlos al cerrar el día.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqHabitos)) {
             val activos = c.habitos.filter { it.activo }
             if (activos.isEmpty()) {
                 Tarjeta {
@@ -410,12 +424,43 @@ fun PantallaNoche(nav: Nav) {
                 }
             }
         }
-
-        Seccion("Medicamentos", "Lo que tomaste hoy, si aplica.", numero = n(), plegable = true) {
-            ListaEtiquetas(d.medicamentos, "nombre del medicamento", normalizar = { Texto.slug(it) }) { cambiar(d.copy(medicamentos = it)) }
+        Seccion("Predicción", "¿Cómo crees que estará tu ánimo mañana? La app medirá qué tan bien te conoces.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqPred)) {
+            Escala(d.prediccion_manana, 1, 7, Catalogo.ANCLAS["prediccion_manana"]) { cambiar(d.copy(prediccion_manana = it)) }
         }
 
-        if (c.seguimiento_privado) Seccion("Seguimiento privado", "Solo para ti. Sirve para ver qué días y contextos lo hacen más difícil.", numero = n()) {
+        // Lo opcional: plegado hasta que lo abras.
+        Text("opcional", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 28.dp))
+        Seccion("Lectura del día", "Tres preguntas de marcos científicos. Toca «cómo elegir» si dudas.", numero = n(), plegable = true, plegadaPorDefecto = true) {
+            Tarjeta {
+                Catalogo.CIENTIFICAS.forEachIndexed { i, p ->
+                    var abierta by remember { mutableStateOf(false) }
+                    if (i > 0) Spacer(Modifier.padding(top = 14.dp))
+                    Text(p.pregunta, style = MaterialTheme.typography.titleMedium)
+                    TextButton(onClick = { abierta = !abierta }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                        Text(if (abierta) "− ocultar guía" else "+ cómo elegir · ${p.autor}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                    }
+                    if (abierta) Ayuda(p.guia, Modifier.padding(bottom = 8.dp))
+                    val valor = when (p.clave) { "flow" -> d.flow; "sdt_necesidad" -> d.sdt_necesidad; else -> d.apreciacion }
+                    Opciones(p.opciones, valor) { v ->
+                        cambiar(when (p.clave) { "flow" -> d.copy(flow = v); "sdt_necesidad" -> d.copy(sdt_necesidad = v); else -> d.copy(apreciacion = v) })
+                    }
+                }
+            }
+        }
+        Seccion("Lo mejor y lo peor", "Una línea cada uno.", numero = n(), plegable = true, plegadaPorDefecto = true) {
+            OutlinedTextField(value = d.mejor_momento, onValueChange = { cambiar(d.copy(mejor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
+                label = { Text("optimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.padding(top = 8.dp))
+            OutlinedTextField(value = d.peor_momento, onValueChange = { cambiar(d.copy(peor_momento = it)) }, modifier = Modifier.fillMaxWidth(),
+                label = { Text("pessimum", style = MaterialTheme.typography.labelMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+        }
+        Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true, plegadaPorDefecto = true) {
+            ListaEtiquetas(d.hitos, "vuelo, beso, decision_importante", normalizar = { Texto.slug(it) }) { cambiar(d.copy(hitos = it)) }
+        }
+        Seccion("Medicamentos", "Lo que tomaste hoy, si aplica.", numero = n(), plegable = true, plegadaPorDefecto = true) {
+            ListaEtiquetas(d.medicamentos, "nombre del medicamento", normalizar = { Texto.slug(it) }) { cambiar(d.copy(medicamentos = it)) }
+        }
+        if (c.seguimiento_privado) Seccion("Seguimiento privado", "Solo para ti. Sirve para ver qué días y contextos lo hacen más difícil.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             Tarjeta {
                 Etiqueta("Intensidad del impulso")
                 Escala(d.impulso, 0, 5, Catalogo.ANCLAS["impulso"]) { cambiar(d.copy(impulso = it)) }
@@ -433,32 +478,39 @@ fun PantallaNoche(nav: Nav) {
                 }
             }
         }
-
-        Seccion("Diario", "Escribe libre. Usa @persona y #tema; abajo ves lo que se detecta y si alguna etiqueta parece error de dedo.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqDiario), plegable = true) {
-            Editor(d.nota, "diarium_$fecha.txt", "¿Cómo fue el día?", pie = "${Texto.palabras(d.nota)} verba") { cambiar(d.copy(nota = it)) }
-            Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                BotonDictado { t -> cambiar(d.copy(nota = (d.nota + " " + t).trim())) }
-            }
-            Detectados(d.nota, fecha) { nuevo -> cambiar(d.copy(nota = nuevo)) }
-            TextButton(onClick = { nav.ir("diarios") }) { Text("ver todas tus entradas →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-        }
-
-        Seccion("Predicción", "¿Cómo crees que estará tu ánimo mañana? La app medirá qué tan bien te conoces.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqPred), plegable = true) {
-            Escala(d.prediccion_manana, 1, 7, Catalogo.ANCLAS["prediccion_manana"]) { cambiar(d.copy(prediccion_manana = it)) }
-        }
-
-
         // Cerrar el día: guarda y, si está completo, lo sella con la huella.
-        val completo = d.valencia != null && d.nota.isNotBlank()
         val faltan = listOfNotNull(if (d.valencia == null) "la valencia" else null, if (d.nota.isBlank()) "la nota del diario" else null)
         Spacer(Modifier.height(24.dp))
-        io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (completo) "Sellar el día" else "Guardar y volver", Modifier.fillMaxWidth()) {
-            Repo.guardarDia(d); sucio = false
-            if (completo) io.github.ruddy2003.vestigium.ui.Sello.lanzar(fecha)
-            Seleccion.volverA = fecha
-            nav.atras()
-        }
+        io.github.ruddy2003.vestigium.ui.BotonPrincipal(if (completo) "Sellar el día" else "Guardar y volver", Modifier.fillMaxWidth().bringIntoViewRequester(reqSellar)) { sellar() }
         if (!completo) Ayuda("Para sellar el día con tu huella falta " + faltan.joinToString(" y ") + ".", Modifier.padding(top = 6.dp))
+        Spacer(Modifier.height(72.dp))
+    }
+    // Barra fija abajo: cuánto llevas y un salto a lo siguiente que falta.
+    BarraNoche(pasos.map { it.first to it.second }, completo, Modifier.align(Alignment.BottomCenter)) {
+        val sig = pasos.firstOrNull { !it.second }
+        scope.launch { (sig?.third ?: reqSellar).bringIntoView() }
+    }
+    }
+}
+
+@Composable
+private fun BarraNoche(pasos: List<Pair<String, Boolean>>, completo: Boolean, modifier: Modifier, siguiente: () -> Unit) {
+    val hechos = pasos.count { it.second }
+    val cs = MaterialTheme.colorScheme
+    Surface(modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), shape = MaterialTheme.shapes.medium, color = cs.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, cs.primary.copy(alpha = 0.6f)), shadowElevation = 6.dp) {
+        Row(Modifier.padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    pasos.forEach { (_, ok) -> Box(Modifier.weight(1f).height(5.dp).clip(RoundedCornerShape(3.dp)).background(if (ok) cs.primary else cs.outline)) }
+                }
+                Text("$hechos de ${pasos.size} · " + (pasos.firstOrNull { !it.second }?.let { "falta ${it.first}" } ?: "todo listo"),
+                    style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+            }
+            TextButton(onClick = siguiente) {
+                Text(if (hechos < pasos.size) "siguiente →" else if (completo) "sellar ↓" else "guardar ↓", style = MaterialTheme.typography.labelLarge, color = cs.primary)
+            }
+        }
     }
 }
 

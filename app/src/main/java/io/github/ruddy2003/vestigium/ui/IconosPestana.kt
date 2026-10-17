@@ -52,9 +52,21 @@ private class Trazo(val s: DrawScope, val c: Color) {
         }
     }
 
+    /** Día es «el día» (sol, terminal, ojo…); Diario es «escribir» (tablilla, códice, expediente…). */
     fun dibujar(id: String, tm: TemaId) = when (id) {
-        "dia" -> dia(tm); "momentos" -> momentos(tm); "gastos" -> gastos(tm); "explorar" -> explorar(tm); else -> mas(tm)
+        "dia" -> when (tm) { TemaId.ROMANO -> sol(); TemaId.MEDIEVAL -> vela(); TemaId.DISTOPIA -> momentos(TemaId.DISTOPIA); else -> dia(tm) }
+        "diario" -> when (tm) { TemaId.ROMANO, TemaId.MEDIEVAL, TemaId.DISTOPIA -> dia(tm); TemaId.CIBER -> documento(); else -> momentos(tm) }
+        "momentos" -> momentos(tm)
+        "gastos" -> gastos(tm)
+        "entender", "explorar" -> explorar(tm)
+        else -> mas(tm)
     }
+
+    private fun sol() { ci(12f, 12f, 4f); rayos(12f, 12f, 8, 6.6f, 9.6f) }
+    private fun vela() { r(9f, 10f, 6f, 10.5f, 0.8f); l(12f, 10f, 12f, 8.6f, 1.1f); l(6.5f, 21f, 17.5f, 21f)
+        p(relleno = true) { m(12f, 2.8f); q(14.6f, 5.8f, 12f, 8f); q(9.4f, 5.8f, 12f, 2.8f); close() } }
+    private fun documento() { p { m(6f, 3f); t(14f, 3f); t(18f, 7f); t(18f, 21f); t(6f, 21f); close() }; p(st = fino) { m(14f, 3f); t(14f, 7f); t(18f, 7f) }
+        l(8.5f, 11f, 15.5f, 11f, 1.1f); l(8.5f, 14f, 15.5f, 14f, 1.1f); l(8.5f, 17f, 13f, 17f, 1.1f) }
 
     // ------------------------------------------------------------ Día
     private fun dia(tm: TemaId) { when (tm) {

@@ -168,15 +168,21 @@ fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.color
 /** Encabezado de sección: numeral y nombre según el tema, con el nombre en español como comentario. */
 @Composable
 fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), modifier: Modifier = Modifier,
-            plegable: Boolean = false, content: @Composable () -> Unit) {
+            plegable: Boolean = false, plegadaPorDefecto: Boolean = false, content: @Composable () -> Unit) {
     val (nombre, comentario) = Estilo.seccion(titulo, latin)
-    // Las secciones plegables recuerdan si las cerraste (se guarda en tu configuración).
-    val plegada = plegable && titulo in io.github.ruddy2003.vestigium.data.Repo.config.plegadas
+    // Las secciones plegables recuerdan si las cerraste (se guarda en tu configuración). Las que empiezan plegadas
+    // guardan «+título» cuando las abres.
+    val plegadas = io.github.ruddy2003.vestigium.data.Repo.config.plegadas
+    val plegada = plegable && if (plegadaPorDefecto) "+$titulo" !in plegadas else titulo in plegadas
     Column(modifier.fillMaxWidth().padding(top = 26.dp)) {
         Row(
             verticalAlignment = if (Estilo.tema == TemaId.MEDIEVAL || Estilo.tema == TemaId.DISTOPIA) Alignment.CenterVertically else Alignment.Bottom,
             modifier = if (!plegable) Modifier else Modifier.fillMaxWidth().clickable {
-                io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c -> c.copy(plegadas = if (plegada) c.plegadas - titulo else c.plegadas + titulo) }
+                io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c ->
+                    val clave = if (plegadaPorDefecto) "+$titulo" else titulo
+                    val quitar = if (plegadaPorDefecto) !plegada else plegada
+                    c.copy(plegadas = if (quitar) c.plegadas - clave else c.plegadas + clave)
+                }
             },
         ) {
             val tema = Estilo.tema

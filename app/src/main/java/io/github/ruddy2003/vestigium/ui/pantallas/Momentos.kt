@@ -104,28 +104,34 @@ fun PantallaMomentos(nav: Nav) {
         }
     }
 
-    editando?.let { m ->
-        var texto by remember(m.id) { mutableStateOf(m.texto) }
-        var intensidad by remember(m.id) { mutableStateOf(m.intensidad) }
-        var valencia by remember(m.id) { mutableStateOf(m.valencia) }
-        var confirmar by remember(m.id) { mutableStateOf(false) }
-        AlertDialog(
-            onDismissRequest = { editando = null },
-            title = { Text("${tipoNombre(m.tipo, discreto)} · ${Fechas.horaDe(m.ts)}") },
-            text = {
-                Column {
-                    OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2)
-                    if (m.tipo == "muestreo") { Etiqueta("Valencia"); Escala(valencia, 1, 7) { valencia = it } }
-                    else { Etiqueta("Intensidad"); Escala(intensidad, 1, 5) { intensidad = it } }
-                }
-            },
-            confirmButton = { TextButton(onClick = { Repo.guardarMomento(m.copy(texto = texto, intensidad = intensidad, valencia = valencia)); editando = null }) { Text("Guardar") } },
-            dismissButton = {
-                TextButton(onClick = { if (confirmar) { Repo.borrarMomento(m.id); editando = null } else confirmar = true }) {
-                    Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)
-                }
-            },
-        )
-    }
+    editando?.let { m -> DialogoMomento(m) { editando = null } }
 }
 
+
+
+/** Editar o borrar un momento (desde Momentos o desde la línea de tiempo del Diario). */
+@Composable
+fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
+    val discreto = Repo.config.discreto
+    var texto by remember(m.id) { mutableStateOf(m.texto) }
+    var intensidad by remember(m.id) { mutableStateOf(m.intensidad) }
+    var valencia by remember(m.id) { mutableStateOf(m.valencia) }
+    var confirmar by remember(m.id) { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = { cerrar() },
+        title = { Text("${tipoNombre(m.tipo, discreto)} · ${Fechas.horaDe(m.ts)}") },
+        text = {
+        Column {
+            OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+            if (m.tipo == "muestreo") { Etiqueta("Valencia"); Escala(valencia, 1, 7) { valencia = it } }
+            else { Etiqueta("Intensidad"); Escala(intensidad, 1, 5) { intensidad = it } }
+        }
+        },
+        confirmButton = { TextButton(onClick = { Repo.guardarMomento(m.copy(texto = texto, intensidad = intensidad, valencia = valencia)); cerrar() }) { Text("Guardar") } },
+        dismissButton = {
+        TextButton(onClick = { if (confirmar) { Repo.borrarMomento(m.id); cerrar() } else confirmar = true }) {
+            Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)
+        }
+        },
+    )
+}

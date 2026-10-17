@@ -76,7 +76,7 @@ fun PantallaBiblioteca(nav: Nav) {
         Repo.guardarObra(o); EdicionObra.id = o.id; nav.ir("obra")
     }
 
-    Hoja("Biblioteca", nav.atras, "Libros, películas, series y juegos: qué empezaste, qué terminaste y qué te dejó.") {
+    Hoja("Obras", nav.atras, "Libros, películas, series y juegos: qué empezaste, qué terminaste y qué te dejó.") {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("todo", filtro == null) { filtro = null }
             TIPOS_OBRA.forEach { t -> Ficha(t.nombre.lowercase(), filtro == t.id) { filtro = if (filtro == t.id) null else t.id } }
@@ -147,7 +147,7 @@ private fun Lista(obras: List<Obra>, nav: Nav, porAnio: Boolean = false) {
 fun PantallaObra(nav: Nav) {
     val ctx = LocalContext.current
     val o = Repo.obras.firstOrNull { it.id == EdicionObra.id }
-    if (o == null) { Hoja("Biblioteca", nav.atras) { Vacio("No encontré esa obra.") }; return }
+    if (o == null) { Hoja("Obras", nav.atras) { Vacio("No encontré esa obra.") }; return }
     fun g(n: Obra) = Repo.guardarObra(n)
     var confirmar by remember(o.id) { mutableStateOf(false) }
     val hoy = Fechas.diaLogico()

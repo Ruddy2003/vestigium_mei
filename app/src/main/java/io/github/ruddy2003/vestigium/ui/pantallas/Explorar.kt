@@ -83,7 +83,9 @@ fun PantallaExplorar(nav: Nav) {
     var desfase by remember { mutableStateOf(false) }
     var eligiendo by remember { mutableStateOf<Char?>(null) }
 
-    Hoja("Explorar", subtitulo = "Cruces rápidos y herramientas de análisis. Para modelos completos, exporta y abre vestigium.R.") {
+    Hoja("Entender", subtitulo = "Tus datos vistos de lejos: la semana, el año, el mapa y las relaciones. Para modelos completos, exporta y abre vestigium.R.",
+        buscar = { nav.ir("buscar") }) {
+        CentroEntender(nav)
         val nDias = Repo.dias.size
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra("$nDias", "días con diario", Modifier.weight(1f))
@@ -374,3 +376,48 @@ private fun Dispersion(ps: List<Par>, nx: String, ny: String) {
     }
 }
 
+
+
+/** Promedio de la valencia en un rango de días (diario o, si no hay, avisos de ánimo). */
+private fun animoEntre(dias: List<String>): Double? = dias.mapNotNull { f ->
+    Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average()
+}.takeIf { it.isNotEmpty() }?.average()
+
+/** Las vistas de Entender como tarjetas con una cifra viva cada una. */
+@Composable
+private fun CentroEntender(nav: Nav) {
+    val hoy = Fechas.diaLogico()
+    val lunes = Fechas.lunesDe(hoy)
+    val transcurridos = (java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(lunes), Fechas.parse(hoy)) + 1).toInt()
+    val semana = (0 until transcurridos).map { Fechas.sumar(lunes, it.toLong()) }
+    val antes = semana.map { Fechas.sumar(it, -7) }
+    val a = animoEntre(semana); val b = animoEntre(antes)
+    val flecha = if (a != null && b != null) (if (a - b > 0.15) " ↑" else if (b - a > 0.15) " ↓" else " =") else ""
+    val mes = hoy.take(7)
+    val diasMes = Repo.dias.keys.count { it.startsWith(mes) && Repo.dias[it]?.let { d -> d.valencia != null || d.nota.isNotBlank() } == true }
+    val anio = hoy.take(4)
+    val tarjetas = listOf(
+        Triple("Resumen semanal", a?.let { "%.1f".format(it) + flecha } ?: "—", "ánimo de esta semana") to "semana",
+        Triple("Calendario", "$diasMes / ${hoy.takeLast(2).toInt()}", "días con diario este mes") to "calendario",
+        Triple("Tu año", "${Repo.dias.keys.count { it.startsWith(anio) }}", "días registrados en $anio") to "anno",
+        Triple("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: "")) to "totales",
+        Triple("Mapa", "${Repo.lugares.size}", "lugares marcados") to "mapa",
+        Triple("Experimentos personales", "${Repo.experimentos.count { it.activo }}", "en curso") to "experimentos",
+    )
+    tarjetas.chunked(2).forEach { fila ->
+        androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            fila.forEach { (t, ruta) ->
+                androidx.compose.material3.Surface(onClick = { nav.ir(ruta) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surface, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+                    Column(Modifier.padding(12.dp)) {
+                        Text(io.github.ruddy2003.vestigium.ui.Estilo.seccion(t.first, io.github.ruddy2003.vestigium.ui.Romano.latin(t.first)).first, style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Text(t.second, style = estiloCifra(), maxLines = 1)
+                        Text(t.third, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+                    }
+                }
+            }
+            if (fila.size == 1) androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+        }
+    }
+}

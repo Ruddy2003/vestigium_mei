@@ -26,9 +26,13 @@ import androidx.compose.ui.unit.dp
  * Pantalla: nombre latino grabado en capitales, el nombre en español como comentario de código,
  * y una banda de meandro debajo. El contenido se desplaza verticalmente.
  */
+/** Desplazamiento de la pestaña abierta: cada pestaña recuerda dónde ibas aunque cambies a otra. */
+val LocalScrollPestana = androidx.compose.runtime.staticCompositionLocalOf<ScrollState?> { null }
+
 @Composable
 fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null, latin: String? = Romano.latin(titulo), encabezado: (@Composable () -> Unit)? = null,
-         modifier: Modifier = Modifier, scroll: ScrollState = rememberScrollState(), content: @Composable ColumnScope.() -> Unit) {
+         modifier: Modifier = Modifier, scroll: ScrollState = LocalScrollPestana.current ?: rememberScrollState(), buscar: (() -> Unit)? = null,
+         content: @Composable ColumnScope.() -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             if (atras != null) TextButton(onClick = atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
@@ -45,6 +49,7 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
                     },
                     style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f),
                 )
+                if (buscar != null) BotonBuscar(onClick = buscar)
                 BotonModo()
                 Emblema(modifier = Modifier.padding(start = 4.dp))
             }

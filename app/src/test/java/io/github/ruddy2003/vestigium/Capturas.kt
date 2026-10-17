@@ -159,7 +159,20 @@ class Capturas {
     }
     private val navVacia = io.github.ruddy2003.vestigium.ui.Nav(ir = {}, atras = {})
     @Test fun nocheMedieval() = pantalla(TemaId.MEDIEVAL, false, 5200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
-    @Test fun diariosColonos() = pantalla(TemaId.COLONOS, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiarios(navVacia) }
+    @Test fun diariosColonos() = pantalla(TemaId.COLONOS, false, 3400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+    @Test fun entenderRomano() = pantalla(TemaId.ROMANO, true, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExplorar(navVacia) }
+    @Test fun masLaboratorio() = pantalla(TemaId.LABORATORIO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    @Test fun aparienciaOrden() = pantalla(TemaId.ORDEN, true, 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaAjustes(navVacia, "apariencia") }
+    /** La barra inferior en cada tema, con «Día» activa. */
+    @Test fun barras() = captura(TemaId.ROMANO, false, alto = 1700) {
+        Column(Modifier.padding(vertical = 16.dp)) {
+            TemaId.entries.forEach { t ->
+                androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
+                    Box(Modifier.padding(bottom = 10.dp)) { io.github.ruddy2003.vestigium.ui.BarraPestanas(if (t.ordinal % 2 == 0) "dia" else "diario", t, {}, {}) }
+                }
+            }
+        }
+    }
     @Test fun entradaDistopia() = pantalla(TemaId.DISTOPIA, true, 2400) {
         io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.entrada = null
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(navVacia)

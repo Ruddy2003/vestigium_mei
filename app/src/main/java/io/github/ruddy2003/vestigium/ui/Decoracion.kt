@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ColorScheme
@@ -471,7 +472,7 @@ fun BotonModo(modifier: Modifier = Modifier) {
     val fondo = MaterialTheme.colorScheme.background
     val borde = MaterialTheme.colorScheme.outline
     Box(
-        modifier.size(40.dp).clip(CircleShape).border(1.dp, borde, CircleShape).clickable {
+        modifier.padding(start = 4.dp).size(36.dp).clip(CircleShape).border(1.dp, borde, CircleShape).clickable {
             sentir(Sentidos.Evento.CAMBIO)
             Repo.cambiarConfig { c -> c.copy(modo = if (oscuro) "claro" else "oscuro") }
         }.semantics { contentDescription = if (oscuro) "Cambiar a modo claro" else "Cambiar a modo oscuro" },
@@ -487,6 +488,25 @@ fun BotonModo(modifier: Modifier = Modifier) {
                 drawCircle(color, r * 0.8f, c)
                 drawCircle(fondo, r * 0.68f, c + Offset(r * 0.38f, -r * 0.3f))
             }
+        }
+    }
+}
+
+/** Lupa para buscar en todo, junto al título de las pestañas principales. */
+@Composable
+fun BotonBuscar(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val color = MaterialTheme.colorScheme.primary
+    val borde = MaterialTheme.colorScheme.outline
+    val sentir = rememberSentir()
+    Box(
+        modifier.size(36.dp).clip(CircleShape).border(1.dp, borde, CircleShape).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
+            .semantics { contentDescription = "Buscar en todo" },
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(17.dp)) {
+            val r = size.minDimension
+            drawCircle(color, r * 0.3f, Offset(r * 0.42f, r * 0.42f), style = Stroke(r * 0.12f))
+            drawLine(color, Offset(r * 0.64f, r * 0.64f), Offset(r * 0.92f, r * 0.92f), r * 0.14f, StrokeCap.Round)
         }
     }
 }

@@ -288,7 +288,7 @@ object Romano {
         "Guía científica" to "DOCTRINA", "Cuestionarios" to "QVAESTIONES", "Prueba de reacción" to "CELERITAS",
         "Lugares" to "LOCA", "Datos" to "TABVLARIVM", "Permisos y sensores" to "SENSVS", "Ajustes" to "ORDINATIO",
         "Reportes" to "RELATIONES", "Bienvenido" to "SALVE", "Calendario" to "CALENDARIVM", "Escalada" to "ASCENSVS",
-        "Biblioteca" to "BIBLIOTHECA", "Tu año" to "ANNVS", "Privacidad" to "SECRETVM",
+        "Obras" to "OPERA", "Tu año" to "ANNVS", "Privacidad" to "SECRETVM",
         // Secciones
         "Sueño" to "SOMNVS", "Contexto" to "CONTEXTVS", "Hitos" to "MEMORABILIA", "Ánimo y cuerpo" to "ANIMVS ET CORPVS",
         "Lectura del día" to "LECTIO DIEI", "Lo mejor y lo peor" to "OPTIMVM ET PESSIMVM", "Medicamentos" to "MEDICAMENTA",
@@ -315,7 +315,7 @@ object Romano {
         "Tablero" to "TABVLA", "Tu día en 24 horas" to "HORAE DIEI", "Te falta hoy" to "RELIQVA", "Datos que faltan" to "LACVNAE",
         "Tema" to "SPECIES", "Recordatorios" to "MONITIONES", "Resumen semanal" to "HEBDOMAS", "Totales" to "SVMMA OMNIVM",
         "Gimnasio" to "ROBVR", "Análisis" to "ANALYSIS", "Buscar" to "QVAERERE", "Cifras" to "NVMERI", "Momentos de la semana" to "MOMENTA HEBDOMADIS",
-        "Llenar el día" to "VESPERA", "Biblioteca del diario" to "LIBRI DIERVM", "Entrada" to "PAGINA",
+        "Llenar el día" to "VESPERA", "Entender" to "INTELLEGERE", "Registros especiales" to "TABVLAE", "Apariencia" to "SPECIES", "Avisos y recordatorios" to "MONITIONES", "Biblioteca del diario" to "LIBRI DIERVM", "Entrada" to "PAGINA",
     )
     fun latin(titulo: String): String? = LATIN[titulo]
 

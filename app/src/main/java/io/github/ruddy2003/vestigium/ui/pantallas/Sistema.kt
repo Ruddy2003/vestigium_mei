@@ -237,14 +237,15 @@ private fun Estado(titulo: String, ok: Boolean, detalle: String, habilitado: Boo
 
 // ---------------- Ajustes ----------------
 @Composable
-fun PantallaAjustes(nav: Nav) {
+fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
     val ctx = LocalContext.current
     val c = Repo.config
     fun cambiar(f: (io.github.ruddy2003.vestigium.data.Config) -> io.github.ruddy2003.vestigium.data.Config) {
         Repo.cambiarConfig(f); runCatching { Widgets.actualizar(ctx) }
     }
-    Hoja("Ajustes", nav.atras) {
-        Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
+    val titulo = when (parte) { "avisos" -> "Avisos y recordatorios"; "privacidad" -> "Privacidad"; else -> "Apariencia" }
+    Hoja(titulo, nav.atras) {
+        if (parte == "apariencia") Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
             val oscuroAhora = io.github.ruddy2003.vestigium.ui.modoOscuro(io.github.ruddy2003.vestigium.ui.TemaId.ROMANO)
             // Nueve temas en una cuadrícula de tres por fila.
             io.github.ruddy2003.vestigium.ui.TemaId.entries.chunked(3).forEach { fila ->
@@ -288,7 +289,7 @@ fun PantallaAjustes(nav: Nav) {
                 Interruptor("Modo nocturno cálido", c.nocturno, "De 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo, para escribir el diario sin despabilarte.") { v -> cambiar { it.copy(nocturno = v) } }
             }
         }
-        Seccion("Avisos de ánimo durante el día", "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {
+        if (parte == "avisos") Seccion("Avisos de ánimo durante el día", "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {
             Tarjeta {
                 Interruptor("Avisos activos", c.avisos) { v -> cambiar { it.copy(avisos = v) } }
                 Etiqueta("Avisos por día: ${c.muestreos_por_dia}")
@@ -299,7 +300,7 @@ fun PantallaAjustes(nav: Nav) {
                 Ayuda("Los cambios aplican desde mañana, o desde hoy si todavía no te llegó ningún aviso.")
             }
         }
-        Seccion("Recordatorios") {
+        if (parte == "avisos") Seccion("Recordatorios") {
             Tarjeta {
                 Etiqueta("Sueños por la mañana: ${c.hora_sueno}:00")
                 Slider(value = c.hora_sueno.toFloat(), onValueChange = { v -> cambiar { it.copy(hora_sueno = v.toInt()) } }, valueRange = 5f..12f, steps = 6)
@@ -307,7 +308,7 @@ fun PantallaAjustes(nav: Nav) {
                 Slider(value = c.hora_diario.toFloat(), onValueChange = { v -> cambiar { it.copy(hora_diario = v.toInt()) } }, valueRange = 18f..23f, steps = 4)
             }
         }
-        Seccion("Cuestionarios", "WHO-5 y PSS-4 cada semana, UCLA-3 cada mes y TIPI cada año, contando desde tu última respuesta.") {
+        if (parte == "avisos") Seccion("Cuestionarios", "WHO-5 y PSS-4 cada semana, UCLA-3 cada mes y TIPI cada año, contando desde tu última respuesta.") {
             Tarjeta {
                 Etiqueta("Aviso el día que toca: ${c.escalas_hora}:00")
                 Slider(value = c.escalas_hora.toFloat(), onValueChange = { v -> cambiar { it.copy(escalas_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
@@ -316,7 +317,7 @@ fun PantallaAjustes(nav: Nav) {
                 }
             }
         }
-        Seccion("Privacidad") {
+        if (parte == "privacidad") Seccion("Protección") {
             Tarjeta {
                 Interruptor("Bloquear con huella", c.bloqueo, "Pide tu huella o PIN al abrir la app. Los widgets y botones rápidos siguen funcionando sin desbloquear.") { v -> cambiar { it.copy(bloqueo = v) } }
                 Interruptor("Modo discreto", c.discreto, "Los widgets y reportes muestran letras en vez de nombres de emociones.") { v -> cambiar { it.copy(discreto = v) } }

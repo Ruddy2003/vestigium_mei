@@ -56,6 +56,7 @@ import io.github.ruddy2003.vestigium.ui.Cifra
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
+import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Interruptor
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
@@ -65,7 +66,7 @@ import kotlinx.coroutines.launch
 fun dinero(v: Double): String = "$" + String.format(java.util.Locale.US, "%,.2f", v).removeSuffix(".00")
 
 @Composable
-fun PantallaGastos() {
+fun PantallaGastos(nav: Nav? = null) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var monto by remember { mutableStateOf("") }
@@ -87,7 +88,7 @@ fun PantallaGastos() {
         }, base.year, base.monthValue - 1, base.dayOfMonth).apply { datePicker.maxDate = System.currentTimeMillis() }.show()
     }
 
-    Hoja("Gastos", subtitulo = "Registra en el momento de pagar. Lo que se cuadra después ya no dice en qué gastaste.") {
+    Hoja("Gastos", subtitulo = "Registra en el momento de pagar. Lo que se cuadra después ya no dice en qué gastaste.", buscar = nav?.let { n -> { n.ir("buscar") } }) {
         Seccion(if (editando != null) "Corregir gasto" else "Registrar", latin = if (editando != null) "CORRIGERE" else io.github.ruddy2003.vestigium.ui.Romano.latin("Registrar")) {
             Tarjeta {
                 OutlinedTextField(value = monto, onValueChange = { monto = it.filter { c -> c.isDigit() || c == '.' }; error = null }, modifier = Modifier.fillMaxWidth(),

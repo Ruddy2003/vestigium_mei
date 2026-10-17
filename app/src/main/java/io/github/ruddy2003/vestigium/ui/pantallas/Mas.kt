@@ -50,65 +50,50 @@ fun PantallaMas(nav: Nav) {
         val u = Repo.ultimaRespuesta(i.id)
         u == null || java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(u.fecha), java.time.LocalDate.now()) >= i.frecuenciaDias
     }
-    Hoja("Más") {
-        Seccion("Registrar", numero = 1, latin = "TABVLAE") {
+    Hoja("Más", buscar = { nav.ir("buscar") }) {
+        Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1) {
             Tarjeta {
-                FilaMenu("Calendario", "Elige cualquier día para abrirlo o corregirlo") { nav.ir("calendario") }
-                HorizontalDivider()
-                FilaMenu("Biblioteca del diario", "${io.github.ruddy2003.vestigium.ui.LibroDiario.entradas().size} entradas para leer, buscar y exportar (PDF, HTML, Markdown, Obsidian)") { nav.ir("diarios") }
-                HorizontalDivider()
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
                 FilaMenu("Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${Repo.ascensos.size} sesiones · última ${Fechas.relativo(ult.fecha)}") { nav.ir("escalada") }
                 HorizontalDivider()
                 FilaMenu("Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados") { nav.ir("fuerza") }
                 HorizontalDivider()
                 val leyendo = Repo.obras.count { it.estado == "en_curso" }
-                FilaMenu("Biblioteca", "Libros, películas, series y juegos" + if (leyendo > 0) " · $leyendo en curso" else "") { nav.ir("biblioteca") }
+                FilaMenu("Obras", "Libros, películas, series y juegos" + if (leyendo > 0) " · $leyendo en curso" else "") { nav.ir("biblioteca") }
                 HorizontalDivider()
-                FilaMenu("Hábitos", "${Repo.config.habitos.count { it.activo }} activos") { nav.ir("habitos") }
+                FilaMenu("Hábitos", "${Repo.config.habitos.count { it.activo }} activos · se marcan en la hoja de la noche") { nav.ir("habitos") }
+                HorizontalDivider()
+                FilaMenu("Cartas al futuro", "${Repo.cartas.count { !it.abierta }} esperando su fecha") { nav.ir("cartas") }
             }
         }
-        Seccion("Medir", numero = 2) {
+        Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 2) {
             Tarjeta {
                 FilaMenu("Cuestionarios", if (pendientes > 0) "$pendientes pendiente(s): bienestar, estrés, soledad, personalidad" else "Al día") { nav.ir("escalas") }
                 HorizontalDivider()
                 FilaMenu("Prueba de reacción", "30 segundos para medir tu estado mental") { nav.ir("reaccion") }
                 HorizontalDivider()
-                FilaMenu("Mapa", "Calles con tu ánimo, tus rutas y dónde pasas el tiempo") { nav.ir("mapa") }
-                HorizontalDivider()
                 FilaMenu("Lugares", "${Repo.lugares.size} lugares marcados") { nav.ir("lugares") }
             }
         }
-        Seccion("Entenderte", numero = 3) {
+        Seccion("Sistema", numero = 3) {
             Tarjeta {
-                FilaMenu("Buscar", "En todo: tu diario, comida, personas, música, lugares…") { nav.ir("buscar") }
+                FilaMenu("Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, vibraciones y sonidos") { nav.ir("apariencia") }
                 HorizontalDivider()
-                FilaMenu("Resumen semanal", "Tu semana de un vistazo y contra la anterior") { nav.ir("semana") }
+                FilaMenu("Avisos y recordatorios", "Avisos de ánimo, horas del diario y del sueño, cuestionarios") { nav.ir("avisos") }
                 HorizontalDivider()
-                FilaMenu("Totales", "Cuánto de todo desde la fecha que elijas: comida, kilómetros, personas, música…") { nav.ir("totales") }
+                FilaMenu("Privacidad", "Huella, modo discreto, seguimiento privado, ubicación") { nav.ir("privacidad") }
                 HorizontalDivider()
-                FilaMenu("Tu año", "El año en píxeles, mes por mes y lo más frecuente") { nav.ir("anno") }
-                HorizontalDivider()
-                FilaMenu("Análisis", "Tendencias, factores, modelo, dinámica emocional, sueño, palabras") { nav.ir("analisis") }
-                HorizontalDivider()
-                FilaMenu("Experimentos personales", "Prueba si algo de verdad te cambia") { nav.ir("experimentos") }
-                HorizontalDivider()
-                FilaMenu("Cartas al futuro", "${Repo.cartas.count { !it.abierta }} esperando su fecha") { nav.ir("cartas") }
-                HorizontalDivider()
-                FilaMenu("Reportes", "Semanal en imagen, mensual en PDF") { nav.ir("reportes") }
-            }
-        }
-        Seccion("Sistema", numero = 4) {
-            Tarjeta {
                 FilaMenu("Datos", "Exportar a R, Google Drive, respaldos, importar") { nav.ir("datos") }
                 HorizontalDivider()
-                FilaMenu("Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima") { nav.ir("permisos") }
+                FilaMenu("Reportes", "Semanal en imagen, mensual en PDF") { nav.ir("reportes") }
                 HorizontalDivider()
-                FilaMenu("Ajustes", "Horarios de avisos, modo discreto, huella") { nav.ir("ajustes") }
+                FilaMenu("Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima") { nav.ir("permisos") }
                 HorizontalDivider()
                 FilaMenu("Guía científica", "Qué mide cada cosa y de dónde viene") { nav.ir("guia") }
             }
         }
+        Ayuda("Atajo: mantén presionada una pestaña. Día abre la hoja de la noche; Diario, un momento; Gastos, un gasto nuevo; Entender, el resumen semanal; Más, el buscador. " +
+            "Tocar la pestaña en la que ya estás te sube al inicio (en Día, además, te regresa a hoy).", Modifier.padding(top = 16.dp))
         Ayuda("vestigium mei · schema_v = ${io.github.ruddy2003.vestigium.data.SCHEMA_V} · ${io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico())}", Modifier.padding(top = 16.dp))
     }
 }
