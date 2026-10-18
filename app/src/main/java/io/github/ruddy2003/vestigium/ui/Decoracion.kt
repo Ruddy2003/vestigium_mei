@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -253,20 +254,20 @@ private fun DrawScope.toono(c: Offset, r: Float, cielo: Color, rojo: Color, oro:
 
 /** Cuaderno de Leonardo: un círculo y un cuadrado de proporciones, y un compás que va trazando el arco. */
 private fun DrawScope.compas(c: Offset, r: Float, sanguina: Color, tinta: Color, azul: Color, t: Float) {
-    val s = r * 0.78f
-    drawRect(tinta.copy(alpha = 0.6f), Offset(c.x - s, c.y - s * 0.86f), Size(s * 2, s * 1.86f), style = Stroke(r * 0.03f))
-    drawCircle(tinta.copy(alpha = 0.25f), r * 0.86f, c + Offset(0f, r * 0.05f), style = Stroke(r * 0.02f))
+    val s = r * 0.7f
+    drawRect(tinta.copy(alpha = 0.75f), Offset(c.x - s, c.y - s * 0.8f), Size(s * 2, s * 1.8f), style = Stroke(r * 0.045f))
+    drawCircle(tinta.copy(alpha = 0.5f), r * 0.86f, c + Offset(0f, r * 0.05f), style = Stroke(r * 0.035f))
     drawLine(tinta.copy(alpha = 0.3f), Offset(c.x - s, c.y - s * 0.86f), Offset(c.x + s, c.y + s), r * 0.015f)
     drawLine(tinta.copy(alpha = 0.3f), Offset(c.x + s, c.y - s * 0.86f), Offset(c.x - s, c.y + s), r * 0.015f)
     val barrido = 360f * t
-    drawArc(sanguina, -90f, barrido, false, Offset(c.x - r * 0.86f, c.y - r * 0.81f), Size(r * 1.72f, r * 1.72f), style = Stroke(r * 0.05f, cap = StrokeCap.Round))
+    drawArc(sanguina, -90f, barrido, false, Offset(c.x - r * 0.86f, c.y - r * 0.81f), Size(r * 1.72f, r * 1.72f), style = Stroke(r * 0.09f, cap = StrokeCap.Round))
     // Compás: una pata clavada en el centro y la otra sobre el arco.
     val centro = c + Offset(0f, r * 0.05f)
     val punta = centro.mas(r * 0.86f, rad(-90.0 + barrido))
     val bisagra = centro + (punta - centro) * 0.5f + Offset(0f, -r * 0.45f).let { o -> val a = rad(barrido.toDouble()); Offset(o.x * cos(a) - o.y * sin(a), o.x * sin(a) + o.y * cos(a)) }
-    drawLine(tinta, centro, bisagra, r * 0.05f, StrokeCap.Round)
-    drawLine(tinta, bisagra, punta, r * 0.05f, StrokeCap.Round)
-    drawCircle(azul, r * 0.06f, bisagra)
+    drawLine(tinta, centro, bisagra, r * 0.08f, StrokeCap.Round)
+    drawLine(tinta, bisagra, punta, r * 0.08f, StrokeCap.Round)
+    drawCircle(azul, r * 0.1f, bisagra)
     drawCircle(sanguina, r * 0.04f, punta)
 }
 
@@ -718,7 +719,7 @@ internal fun Arqueria(modifier: Modifier) {
 @Composable
 internal fun Orbita(modifier: Modifier) {
     val e = MaterialTheme.colorScheme
-    Canvas(modifier.fillMaxWidth().height(14.dp)) {
+    Canvas(modifier.fillMaxWidth().height(14.dp).clipToBounds()) {
         val y = size.height / 2
         var x = 0f
         while (x < size.width) { drawCircle(e.primary.copy(alpha = 0.55f), 0.9f, Offset(x, y)); x += 5.dp.toPx() }
@@ -742,7 +743,7 @@ internal fun Lazo(modifier: Modifier) {
     val e = MaterialTheme.colorScheme
     val oscuro = e.background.luminance() < 0.5f
     val oro = if (oscuro) e.primary else e.tertiary
-    Canvas(modifier.fillMaxWidth().height(14.dp)) {
+    Canvas(modifier.fillMaxWidth().height(14.dp).clipToBounds()) {
         val h = size.height; val p = h * 1.2f
         val a = Path(); val b = Path(); var x = 0f; var arriba = true
         a.moveTo(0f, 1.5f); b.moveTo(0f, h - 1.5f)
@@ -783,7 +784,7 @@ internal fun Alhan(modifier: Modifier) {
 internal fun Trazo(modifier: Modifier) {
     val e = MaterialTheme.colorScheme
     val tinta = e.onBackground.copy(alpha = 0.6f)
-    Canvas(modifier.fillMaxWidth().height(14.dp)) {
+    Canvas(modifier.fillMaxWidth().height(14.dp).clipToBounds()) {
         val y = size.height * 0.6f
         val azar = java.util.Random(5)
         val p = Path(); var x = 0f; p.moveTo(0f, y)

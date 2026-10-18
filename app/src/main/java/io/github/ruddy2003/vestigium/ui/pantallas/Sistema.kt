@@ -247,12 +247,13 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
     Hoja(titulo, nav.atras) {
         if (parte == "apariencia") Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
             val oscuroAhora = io.github.ruddy2003.vestigium.ui.modoOscuro(io.github.ruddy2003.vestigium.ui.TemaId.ROMANO)
-            // Nueve temas en una cuadrícula de tres por fila.
+            // Los temas en una cuadrícula de tres por fila.
             io.github.ruddy2003.vestigium.ui.TemaId.entries.chunked(3).forEach { fila ->
                 Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     fila.forEach { t ->
                         io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, oscuroAhora, c.tema == t.id, Modifier.weight(1f)) { cambiar { it.copy(tema = t.id) } }
                     }
+                    repeat(3 - fila.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
                 }
             }
             Ayuda(io.github.ruddy2003.vestigium.ui.Estilo.tema.descripcion, Modifier.padding(top = 2.dp))

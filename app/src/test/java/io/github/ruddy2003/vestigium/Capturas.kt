@@ -242,6 +242,7 @@ class Capturas {
                 TemaId.entries.chunked(3).forEach { fila ->
                     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         fila.forEach { VistaPreviaTema(it, o, it == TemaId.ROMANO, Modifier.weight(1f)) {} }
+                        repeat(3 - fila.size) { Box(Modifier.weight(1f)) }
                     }
                 }
             }
@@ -400,7 +401,7 @@ object Ejemplo {
             io.github.ruddy2003.vestigium.data.Momento("m2", iso(hoy, 16, 20), hoy, "preocupacion", texto = "entrega", valencia = 3),
         )
         val sesiones = listOf(io.github.ruddy2003.vestigium.data.Sesion("s1", hoy, iso(hoy, 18, 30), iso(hoy, 19, 40), 1, "Pesas", min = 70))
-        val mesActual = fechas.last().take(7)
+        val mesActual = io.github.ruddy2003.vestigium.data.Fechas.hoyCalendario().take(7)
         val ingresos = listOf(
             io.github.ruddy2003.vestigium.data.Ingreso("i1", "$mesActual-01", "09:00", 9500.0, "Sueldo", "quincena", true),
             io.github.ruddy2003.vestigium.data.Ingreso("i2", "$mesActual-15", "09:00", 9500.0, "Sueldo", "quincena", true),

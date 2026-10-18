@@ -638,6 +638,7 @@ private fun Expedientes(entradas: List<Dia>, m: Materia, abrir: (String) -> Unit
 @Composable
 private fun Logs(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String) -> Unit) {
     val refugio = tema == TemaId.REFUGIO
+    if (tema == TemaId.ESPACIO) { RegistroDeVuelo(entradas, m, abrir); return }
     val fuente = if (refugio) LetraExtra.vt323 else Letra.codigo
     val tam = if (refugio) 17.sp else 11.5.sp
     val fondo = if (refugio) m.hoja else m.cuerpo
@@ -657,6 +658,24 @@ private fun Logs(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String) 
                     Text("${d.fecha}.log", fontFamily = fuente, fontSize = tam, color = m.acento)
                     Text("  " + d.nota.trim().replace(Regex("\\s+"), " "), fontFamily = fuente, fontSize = tam, color = m.tinta.copy(alpha = 0.6f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 }
+            }
+        }
+    }
+}
+
+/** Bitácora de vuelo: cada día es un registro con su día juliano, como en la consola de una misión. */
+@Composable
+private fun RegistroDeVuelo(entradas: List<Dia>, m: Materia, abrir: (String) -> Unit) {
+    Column(Modifier.fillMaxWidth().background(m.cuerpo, RoundedCornerShape(14.dp)).border(1.dp, m.acento.copy(alpha = 0.45f), RoundedCornerShape(14.dp)).padding(12.dp)) {
+        Text("REGISTRO DE VUELO · ${entradas.size} TRANSMISIONES", fontFamily = LetraExtra.orbita, fontSize = 11.sp, color = m.detalle, modifier = Modifier.padding(bottom = 8.dp))
+        entradas.forEach { d ->
+            val jd = runCatching { Temas.diaJuliano(Fechas.parse(d.fecha)) }.getOrNull()
+            Row(Modifier.fillMaxWidth().clickable { abrir(d.fecha) }.padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(7.dp).background(m.acento, androidx.compose.foundation.shape.CircleShape))
+                Text("JD ${jd ?: "—"}", fontFamily = Letra.codigo, fontSize = 11.sp, color = m.acento, modifier = Modifier.padding(start = 8.dp).width(92.dp), maxLines = 1)
+                Text(d.nota.trim().replace(Regex("\\s+"), " "), fontFamily = LetraExtra.grotesk, fontSize = 12.sp, color = m.tinta.copy(alpha = 0.8f),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text("${Texto.palabras(d.nota)}w", fontFamily = Letra.codigo, fontSize = 10.sp, color = m.extra, modifier = Modifier.padding(start = 6.dp))
             }
         }
     }
