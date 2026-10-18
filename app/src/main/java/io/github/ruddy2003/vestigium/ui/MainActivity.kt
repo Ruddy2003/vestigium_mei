@@ -156,7 +156,7 @@ class MainActivity : FragmentActivity() {
 private fun Bloqueo(reintentar: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(io.github.ruddy2003.vestigium.R.drawable.logo_blanco), null,
+            androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(io.github.ruddy2003.vestigium.R.drawable.huella), null,
                 Modifier.padding(bottom = 4.dp).size(140.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.primary))
             Text("VESTIGIVM MEI", style = MaterialTheme.typography.headlineMedium)
             Meandro(Modifier.padding(horizontal = 40.dp))
@@ -234,6 +234,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     val sentir = rememberSentir()
     val tema = Estilo.tema
     LaunchedEffect(tema, Repo.config.sonidos) { Sentidos.preparar(ctx) }
+    // Las notificaciones toman el sonido del tema nuevo.
+    LaunchedEffect(tema, Repo.config.sonido_avisos) { runCatching { io.github.ruddy2003.vestigium.avisos.Avisos.crearCanales(ctx) } }
     fun rapido(modo: String) = ctx.startActivity(android.content.Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, modo).putExtra(QuickActivity.ORIGEN, "app"))
     fun abrirNoche() {
         val S = io.github.ruddy2003.vestigium.ui.pantallas.Seleccion

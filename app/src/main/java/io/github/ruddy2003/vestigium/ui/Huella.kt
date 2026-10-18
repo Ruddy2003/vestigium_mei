@@ -82,7 +82,7 @@ fun VistaHuella(progreso: Float, fecha: String, modifier: Modifier = Modifier) {
     val destello = ((progreso - 0.62f) / 0.13f).coerceIn(0f, 1f)
     val texto = ((progreso - 0.7f) / 0.2f).coerceIn(0f, 1f)
     val escala = 1f + 0.05f * kotlin.math.sin(Math.PI * destello).toFloat()
-    val logo = painterResource(R.drawable.logo_blanco)
+    val logo = painterResource(R.drawable.huella)
     Box(modifier.fillMaxSize().background(cs.background.copy(alpha = 0.97f)), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.size(260.dp).graphicsLayer { scaleX = escala; scaleY = escala }) {

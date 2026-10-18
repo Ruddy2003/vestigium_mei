@@ -2,5 +2,5 @@
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/logo_fondo_laboratorio" />
     <foreground android:drawable="@drawable/logo_laboratorio" />
-    <monochrome android:drawable="@drawable/logo_blanco" />
+    <monochrome android:drawable="@drawable/logo_mono" />
 </adaptive-icon>

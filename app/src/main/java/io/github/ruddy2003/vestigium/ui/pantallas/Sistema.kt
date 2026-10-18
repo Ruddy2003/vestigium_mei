@@ -289,6 +289,28 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Interruptor("Modo nocturno cálido", c.nocturno, "De 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo, para escribir el diario sin despabilarte.") { v -> cambiar { it.copy(nocturno = v) } }
             }
         }
+        if (parte == "avisos") Seccion("Sonido de las notificaciones", "Cada tema suena a su manera, siempre grave y solemne: campanas, órgano, coros, synthwave. " +
+            "Los avisos de ánimo usan un sonido corto; el diario, los sueños, las cartas y los cuestionarios, uno más largo.") {
+            Tarjeta {
+                Interruptor("Usar el sonido del tema", c.sonido_avisos, "Si lo apagas, suenan con el sonido normal del teléfono. Si silencias un tipo de aviso en los ajustes de Android, sigue en silencio aunque cambies de tema.") { v ->
+                    cambiar { it.copy(sonido_avisos = v) }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    listOf("probar aviso" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_ANIMO, "probar solemne" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_DIARIO).forEach { (n, canal) ->
+                        BotonSecundario(n) {
+                            io.github.ruddy2003.vestigium.avisos.Avisos.sonido(canal)?.let { r ->
+                                runCatching {
+                                    android.media.RingtoneManager.getRingtone(ctx, io.github.ruddy2003.vestigium.avisos.Avisos.uriSonido(ctx, r))?.apply {
+                                        audioAttributes = android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION).build()
+                                    }?.play()
+                                }
+                            }
+                        }
+                    }
+                }
+                Ayuda("Suenan al volumen de notificaciones y no suenan con el teléfono en silencio, vibración o No molestar.", Modifier.padding(top = 4.dp))
+            }
+        }
         if (parte == "avisos") Seccion("Avisos de ánimo durante el día", "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {
             Tarjeta {
                 Interruptor("Avisos activos", c.avisos) { v -> cambiar { it.copy(avisos = v) } }

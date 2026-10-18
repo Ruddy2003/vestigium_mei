@@ -248,6 +248,8 @@ data class Config(
     val sonidos: Boolean = false,
     /** El ícono de la app en el teléfono cambia con el tema. */
     val icono_tema: Boolean = false,
+    /** Las notificaciones suenan con el sonido solemne del tema (campanas, órgano, synthwave…). */
+    val sonido_avisos: Boolean = true,
 )
 
 /** Llamadas y SMS del día: solo cuántos, cuánto duraron y con cuántas personas distintas. Nunca números, nombres ni textos. */

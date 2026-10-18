@@ -21,14 +21,64 @@ object Avisos {
     const val CANAL_ESCALAS = "escalas"
     const val CANAL_REPORTES = "reportes"
 
+    /** Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). */
+    private val SONIDOS = mapOf(
+        "romano" to (R.raw.n_romano_aviso to R.raw.n_romano_solemne), "ciber" to (R.raw.n_ciber_aviso to R.raw.n_ciber_solemne),
+        "heleno" to (R.raw.n_heleno_aviso to R.raw.n_heleno_solemne), "medieval" to (R.raw.n_medieval_aviso to R.raw.n_medieval_solemne),
+        "distopia" to (R.raw.n_distopia_aviso to R.raw.n_distopia_solemne), "refugio" to (R.raw.n_refugio_aviso to R.raw.n_refugio_solemne),
+        "orden" to (R.raw.n_orden_aviso to R.raw.n_orden_solemne), "laboratorio" to (R.raw.n_laboratorio_aviso to R.raw.n_laboratorio_solemne),
+        "colonos" to (R.raw.n_colonos_aviso to R.raw.n_colonos_solemne),
+    )
+
+    private fun nombreCanal(base: String) = when (base) {
+        CANAL_ANIMO -> "Ánimo durante el día"; CANAL_DIARIO -> "Diario y sueños"; CANAL_ESCALAS -> "Escalas periódicas"; else -> "Reportes"
+    }
+    private fun importancia(base: String) = when (base) {
+        CANAL_ANIMO -> NotificationManager.IMPORTANCE_HIGH; CANAL_REPORTES -> NotificationManager.IMPORTANCE_LOW; else -> NotificationManager.IMPORTANCE_DEFAULT
+    }
+
+    /** Recurso de sonido para un canal según el tema elegido (null = sonido normal del teléfono). */
+    fun sonido(base: String, tema: String = runCatching { io.github.ruddy2003.vestigium.data.Repo.config.tema }.getOrDefault("romano")): Int? {
+        val par = SONIDOS[tema] ?: SONIDOS.getValue("romano")
+        return when (base) { CANAL_ANIMO -> par.first; CANAL_DIARIO, CANAL_ESCALAS -> par.second; else -> null }
+    }
+
+    fun uriSonido(ctx: Context, res: Int): Uri = Uri.parse("android.resource://${ctx.packageName}/$res")
+
+    /**
+     * Android no deja cambiar el sonido de un canal ya creado, así que hay un canal por tema («animo_medieval»…).
+     * Al cambiar de tema se crea el nuevo copiando lo que hayas decidido en el anterior (silencio, importancia, vibración)
+     * y se borra el viejo.
+     */
+    fun canal(ctx: Context, base: String): String {
+        if (base == CANAL_REPORTES) return base
+        val nm = ctx.getSystemService(NotificationManager::class.java)
+        val c = runCatching { io.github.ruddy2003.vestigium.data.Repo.config }.getOrNull()
+        val propio = c?.sonido_avisos ?: true
+        val tema = c?.tema ?: "romano"
+        val id = base + "_" + if (propio) tema else "sistema"
+        if (nm.getNotificationChannel(id) != null) return id
+        val viejos = nm.notificationChannels.filter { it.id == base || it.id.startsWith(base + "_") }
+        val previo = viejos.firstOrNull()
+        val ch = NotificationChannel(id, nombreCanal(base), previo?.importance ?: importancia(base)).apply {
+            description = when (base) { CANAL_ANIMO -> "Avisos breves para registrar cómo te sientes"; CANAL_DIARIO -> "Recordatorio de la mañana y de la noche"; else -> "Cuestionarios que tocan" }
+            val atributos = android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
+            when {
+                previo != null && previo.sound == null -> setSound(null, null)          // lo habías silenciado: sigue en silencio
+                propio -> sonido(base, tema)?.let { setSound(uriSonido(ctx, it), atributos) }
+            }
+            previo?.let { enableVibration(it.shouldVibrate()); setShowBadge(it.canShowBadge()) }
+        }
+        nm.createNotificationChannel(ch)
+        viejos.forEach { nm.deleteNotificationChannel(it.id) }
+        return id
+    }
+
     fun crearCanales(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
-        listOf(
-            NotificationChannel(CANAL_ANIMO, "Ánimo durante el día", NotificationManager.IMPORTANCE_HIGH).apply { description = "Avisos breves para registrar cómo te sientes" },
-            NotificationChannel(CANAL_DIARIO, "Diario y sueños", NotificationManager.IMPORTANCE_DEFAULT).apply { description = "Recordatorio de la mañana y de la noche" },
-            NotificationChannel(CANAL_ESCALAS, "Escalas periódicas", NotificationManager.IMPORTANCE_DEFAULT),
-            NotificationChannel(CANAL_REPORTES, "Reportes", NotificationManager.IMPORTANCE_LOW),
-        ).forEach { nm.createNotificationChannel(it) }
+        nm.createNotificationChannel(NotificationChannel(CANAL_REPORTES, nombreCanal(CANAL_REPORTES), importancia(CANAL_REPORTES)))
+        listOf(CANAL_ANIMO, CANAL_DIARIO, CANAL_ESCALAS).forEach { runCatching { canal(ctx, it) } }
     }
 
     fun permitido(ctx: Context): Boolean =
@@ -53,7 +103,7 @@ object Avisos {
 
     fun muestreo(ctx: Context, indice: Int, programadoMs: Long) {
         val id = 1000 + indice
-        val b = NotificationCompat.Builder(ctx, CANAL_ANIMO)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_ANIMO))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("¿Cómo te sientes ahora?")
             .setContentText("Dos toques: qué tan agradable y cuánta energía.")
@@ -65,7 +115,7 @@ object Avisos {
     }
 
     fun sueno(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_DIARIO)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("¿Recuerdas lo que soñaste?")
             .setContentText("Anótalo antes de levantarte; el recuerdo se borra en minutos.")
@@ -76,7 +126,7 @@ object Avisos {
     }
 
     fun diario(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_DIARIO)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("¿Cómo estuvo tu día?")
             .setContentText("Llena tu diario. Si fue un día difícil, basta con un número.")
@@ -94,7 +144,7 @@ object Avisos {
             peor <= 3 -> "Pendiente desde hace $peor día${if (peor > 1) "s" else ""}: $nombres"
             else -> "Llevas $peor días de atraso: $nombres"
         }
-        val b = NotificationCompat.Builder(ctx, CANAL_ESCALAS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_ESCALAS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(titulo)
             .setContentText("Unos ${pendientes.size * 2} minutos. Mientras más regular, más comparables tus resultados.")
@@ -105,7 +155,7 @@ object Avisos {
     }
 
     fun carta(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_DIARIO)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Tienes una carta de tu yo del pasado")
             .setContentText("Llegó la fecha que elegiste para abrirla.")
