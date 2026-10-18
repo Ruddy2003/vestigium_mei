@@ -525,7 +525,24 @@ data class Obra(
     val nota: String = "",
     val agregado: String = "",
     val veces: Int = 1,
+    /** Archivo de la portada guardado en el teléfono (carpeta «portadas»). */
+    val portada: String? = null,
+    /** De dónde salió la portada, para volver a bajarla si el archivo se pierde. */
+    val portada_url: String? = null,
+    /** Ficha en el buscador de donde salió (openlibrary:…, tmdb:movie:…, rawg:…, crossref:doi…). */
+    val fuente: String? = null,
+    /** Artículos académicos: revista y DOI. */
+    val revista: String = "",
+    val doi: String = "",
+    /** Días en que leíste, viste o jugaste esto (AAAA-MM-DD). */
+    val dias: List<String> = emptyList(),
+    /** Citas que copiaste de la obra. */
+    val citas: List<Cita> = emptyList(),
 )
+
+/** Una cita copiada de un libro, una película o un artículo. Las que tienen ♥ salen en «Frases guardadas». */
+@Serializable
+data class Cita(val id: String, val texto: String, val pagina: String = "", val fecha: String = "", val favorita: Boolean = true)
 
 /** Nutrición del día exportada de MacroFactor (resumen «Quick Export»). Las claves son las columnas de MacroFactor. */
 @Serializable

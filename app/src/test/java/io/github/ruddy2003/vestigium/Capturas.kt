@@ -333,6 +333,67 @@ class Capturas {
     @Test fun diarioNapoleon() = pantalla(TemaId.NAPOLEON, false, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
     @Test fun huellaMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(0.5f, "") }
     @Test fun huellaNapoleon() = pantalla(TemaId.NAPOLEON, true, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
+
+    // ------------------------------------------------------------ obras y relaciones
+
+    private fun obrasEjemplo() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun d(k: Long) = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -k)
+        Repo.obrasEnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.Obra("o1", "libro", "Don Quijote de la Mancha", "Miguel de Cervantes", 1605, "en_curso", inicio = d(20), progreso = 412, total = 1056,
+                agregado = d(30), dias = listOf(d(0), d(1), d(3)), citas = listOf(
+                    io.github.ruddy2003.vestigium.data.Cita("c1", "La libertad, Sancho, es uno de los más preciosos dones que a los hombres dieron los cielos.", "II, 58", d(2)),
+                    io.github.ruddy2003.vestigium.data.Cita("c2", "Cada uno es artífice de su ventura.", "II, 66", d(1), favorita = false))),
+            io.github.ruddy2003.vestigium.data.Obra("o2", "serie", "Una serie larga", "Showrunner inventado", 2019, "en_curso", inicio = d(9), progreso = 14, total = 40, agregado = d(9), dias = listOf(d(1))),
+            io.github.ruddy2003.vestigium.data.Obra("o3", "pelicula", "Una película de domingo", "Directora inventada", 2023, "terminado", inicio = d(5), fin = d(5), calificacion = 4, agregado = d(6)),
+            io.github.ruddy2003.vestigium.data.Obra("o4", "juego", "Un juego de exploración", "Estudio inventado", 2021, "quiero", agregado = d(12)),
+            io.github.ruddy2003.vestigium.data.Obra("o5", "articulo", "Sleep and affect: a daily diary study", "A. Autora; B. Autor", 2022, "en_curso", inicio = d(3), agregado = d(3),
+                revista = "Journal of Sleep Research", doi = "10.1111/jsr.00000"),
+            io.github.ruddy2003.vestigium.data.Obra("o6", "libro", "Pedro Páramo", "Juan Rulfo", 1955, "terminado", inicio = d(60), fin = d(41), calificacion = 5, agregado = d(70)),
+        ))
+    }
+    private fun obras(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 4200) { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaBiblioteca(navVacia) }
+    @Test fun obrasBotanico() = obras(TemaId.BOTANICO, true)
+    @Test fun obrasMedieval() = obras(TemaId.MEDIEVAL, false)
+    @Test fun obrasCiber() = obras(TemaId.CIBER, true)
+    @Test fun obraRenacimiento() = pantalla(TemaId.RENACIMIENTO, false, 3400) {
+        obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.EdicionObra.id = "o1"
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaObra(navVacia)
+    }
+    @Test fun obraArticuloEspacio() = pantalla(TemaId.ESPACIO, true, 3000) {
+        obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.EdicionObra.id = "o5"
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaObra(navVacia)
+    }
+    @Test fun buscarObraAndalus() = pantalla(TemaId.ANDALUS, false, 2000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBuscarObra(navVacia) }
+    @Test fun leidoHoyMongol() = pantalla(TemaId.MONGOL, false, 1400) {
+        obrasEjemplo()
+        Column(Modifier.padding(16.dp)) { io.github.ruddy2003.vestigium.ui.pantallas.ObrasDeHoy(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), navVacia) }
+    }
+    @Test fun frasesConCitas() = pantalla(TemaId.GOTICO, false, 2400) { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaFrasesGuardadas(navVacia) }
+
+    private fun relaciones(tema: TemaId, oscuro: Boolean) = captura(tema, oscuro, alto = 1500) {
+        fun V(id: String, n: String, g: String) = io.github.ruddy2003.vestigium.ciencia.Variable(id, n, g)
+        Hoja("Relaciones", subtitulo = null) {
+            Seccion("Las relaciones más marcadas") {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    io.github.ruddy2003.vestigium.ui.TarjetaRelacion(V("pasos", "Pasos", "Cuerpo"), V("personas", "Personas distintas por llamada o SMS", "Social"), 0.62, "31 días · fuerte", false,
+                        "También con «minutos de llamadas» (+0.48)")
+                    io.github.ruddy2003.vestigium.ui.TarjetaRelacion(V("pantalla", "Minutos de pantalla", "Teléfono"), V("sueno", "Horas de sueño (reloj)", "Sueño"), -0.41, "58 días · moderada", false, null)
+                    io.github.ruddy2003.vestigium.ui.TarjetaRelacion(V("cafe", "Café", "Hábitos"), V("valencia", "Valencia del día", "Ánimo"), 0.18, "22 días · débil · podría ser azar", true, null)
+                }
+            }
+        }
+    }
+    @Test fun relacionesBotanico() = relaciones(TemaId.BOTANICO, true)
+    @Test fun relacionesCiber() = relaciones(TemaId.CIBER, true)
+    @Test fun relacionesMedieval() = relaciones(TemaId.MEDIEVAL, false)
+    @Test fun relacionesAndalus() = relaciones(TemaId.ANDALUS, false)
+    @Test fun relacionesMongol() = relaciones(TemaId.MONGOL, false)
+    @Test fun relacionesSeda() = relaciones(TemaId.SEDA, true)
+    @Test fun relacionesUrss() = relaciones(TemaId.URSS, false)
+    @Test fun relacionesGotico() = relaciones(TemaId.GOTICO, true)
+    @Test fun relacionesRomano() = relaciones(TemaId.ROMANO, false)
+    @Test fun relacionesNavidad() = relaciones(TemaId.NAVIDAD, false)
 }
 
 @Composable

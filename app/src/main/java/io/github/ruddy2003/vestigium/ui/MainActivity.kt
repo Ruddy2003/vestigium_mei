@@ -336,6 +336,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "ascenso" -> PantallaAscenso(nav)
                     "biblioteca" -> PantallaBiblioteca(nav)
                     "obra" -> PantallaObra(nav)
+                    "buscar_obra" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBuscarObra(nav)
                     "anno" -> PantallaAnno(nav)
                     "mapa" -> PantallaMapa(nav)
                     "analisis" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnalisis(nav)

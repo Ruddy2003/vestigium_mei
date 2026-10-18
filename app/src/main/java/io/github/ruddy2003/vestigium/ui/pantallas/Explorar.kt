@@ -159,22 +159,29 @@ fun PantallaExplorar(nav: Nav) {
                 })
                 val grupos = remember(lista) { agrupar(lista, 15) }
                 if (lista.isEmpty()) Vacio("Nada en este filtro todavía.")
-                else Tarjeta {
-                    grupos.forEach { (c, parecidas) ->
-                        Column(Modifier.padding(vertical = 6.dp)) {
-                            Text("${c.a.nombre}  ↔  ${c.b.nombre}", style = MaterialTheme.typography.bodyMedium)
-                            Ayuda(buildString {
-                                append("r = ${"%+.2f".format(c.r)} · ${c.n} días")
+                else {
+                    // Cómo leer los recuadros, una sola vez arriba.
+                    Row(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+                        Text("● suben juntas", style = MaterialTheme.typography.labelSmall, color = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(oscuro))
+                        Text("● una sube, la otra baja", style = MaterialTheme.typography.labelSmall, color = io.github.ruddy2003.vestigium.ui.Tonos.gasto(oscuro))
+                    }
+                    Ayuda("Más gruesa la unión, más fuerte la relación; punteada, podría ser azar.", Modifier.padding(bottom = 8.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        grupos.forEach { (c, parecidas) ->
+                            val detalle = buildString {
+                                append("${c.n} días")
                                 if (c.nEf < c.n * 0.8) append(" (≈ ${c.nEf.toInt()} independientes)")
                                 append(" · ${Estadistica.fuerza(c.r)}")
                                 if (sinTendencia && abs(c.bruta - c.r) >= 0.2) append(" · con tendencia: ${"%+.2f".format(c.bruta)}")
                                 if (c.obvia) append(" · obvia")
                                 if (q(c) >= 0.10) append(" · podría ser azar")
-                            })
-                            if (parecidas.isNotEmpty()) Ayuda("También con " + parecidas.take(3).joinToString(", ") { p ->
+                            }
+                            val tambien = if (parecidas.isEmpty()) null else "También con " + parecidas.take(3).joinToString(", ") { p ->
                                 val otra = if (p.a.id == c.a.id || p.a.id == c.b.id) p.b else p.a
                                 "«${otra.nombre.lowercase()}» (${"%+.2f".format(p.r)})"
-                            } + if (parecidas.size > 3) " y ${parecidas.size - 3} más" else "")
+                            } + if (parecidas.size > 3) " y ${parecidas.size - 3} más" else ""
+                            io.github.ruddy2003.vestigium.ui.TarjetaRelacion(c.a, c.b, c.r, detalle, q(c) >= 0.10, tambien)
                         }
                     }
                 }

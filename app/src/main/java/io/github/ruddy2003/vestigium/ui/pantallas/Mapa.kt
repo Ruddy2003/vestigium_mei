@@ -55,6 +55,8 @@ import io.github.ruddy2003.vestigium.ui.Meandro
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.TemaId
+import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.osmdroid.events.MapEventsReceiver
@@ -136,14 +138,78 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
     return ColorMatrixColorFilter(m)
 }
 
-/** Dibuja círculos en coordenadas del mapa. Mucho más rápido que un marcador por punto. */
+/**
+ * La forma de los marcadores en cada tema: sello de cera, hexágono de neón, hoja, vitral, estrella de ocho puntas,
+ * destello, corona de yurta, compás… Se dibujan directo en el lienzo del mapa (rápido aunque sean miles).
+ */
+private object Formas {
+    private val p = android.graphics.Path()
+    private fun poligono(x: Float, y: Float, r: Float, n: Int, giro: Double = -90.0, interior: Float? = null) {
+        p.reset()
+        val pasos = if (interior != null) n * 2 else n
+        for (i in 0 until pasos) {
+            val rr = if (interior != null && i % 2 == 1) r * interior else r
+            val a = Math.toRadians(giro + 360.0 * i / pasos)
+            val px = x + rr * kotlin.math.cos(a).toFloat(); val py = y + rr * kotlin.math.sin(a).toFloat()
+            if (i == 0) p.moveTo(px, py) else p.lineTo(px, py)
+        }
+        p.close()
+    }
+
+    fun dibujar(c: Canvas, tema: TemaId, x: Float, y: Float, r: Float, relleno: Paint, borde: Paint?) {
+        when (tema) {
+            TemaId.ROMANO -> { p.reset(); p.addRoundRect(x - r, y - r * 0.8f, x + r, y + r * 0.8f, r * 0.2f, r * 0.2f, android.graphics.Path.Direction.CW) }
+            TemaId.CIBER, TemaId.LABORATORIO -> poligono(x, y, r, 6, -90.0)
+            TemaId.HELENO -> poligono(x, y, r * 1.15f, 8, -90.0, 0.55f)
+            TemaId.MEDIEVAL, TemaId.NAPOLEON -> {   // sello de cera de borde ondulado
+                p.reset()
+                for (i in 0..36) { val a = 2 * Math.PI * i / 36; val rr = r * (1f + 0.09f * kotlin.math.sin(a * 7).toFloat())
+                    val px = x + rr * kotlin.math.cos(a).toFloat(); val py = y + rr * kotlin.math.sin(a).toFloat(); if (i == 0) p.moveTo(px, py) else p.lineTo(px, py) }
+                p.close()
+            }
+            TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            TemaId.REFUGIO -> poligono(x, y, r * 1.1f, 4, -90.0)
+            TemaId.ORDEN -> { p.reset(); p.moveTo(x - r, y - r); p.lineTo(x + r, y - r); p.lineTo(x + r, y - r * 0.1f); p.quadTo(x + r, y + r * 0.7f, x, y + r * 1.2f)
+                p.quadTo(x - r, y + r * 0.7f, x - r, y - r * 0.1f); p.close() }
+            TemaId.COLONOS -> { p.reset(); p.moveTo(x, y - r * 1.1f); p.lineTo(x + r, y - r * 0.2f); p.lineTo(x + r, y + r); p.lineTo(x - r, y + r); p.lineTo(x - r, y - r * 0.2f); p.close() }
+            TemaId.BOTANICO -> { p.reset(); p.moveTo(x, y + r * 1.2f); p.quadTo(x + r * 1.3f, y, x, y - r * 1.2f); p.quadTo(x - r * 1.3f, y, x, y + r * 1.2f); p.close() }
+            TemaId.NAVIDAD, TemaId.URSS -> poligono(x, y, r * 1.25f, 5, -90.0, 0.42f)
+            TemaId.SEDA -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW); p.addRect(x - r * 0.32f, y - r * 0.32f, x + r * 0.32f, y + r * 0.32f, android.graphics.Path.Direction.CCW) }
+            TemaId.GOTICO -> { p.reset(); p.moveTo(x - r * 0.8f, y + r); p.lineTo(x - r * 0.8f, y - r * 0.1f); p.quadTo(x - r * 0.8f, y - r * 0.9f, x, y - r * 1.3f)
+                p.quadTo(x + r * 0.8f, y - r * 0.9f, x + r * 0.8f, y - r * 0.1f); p.lineTo(x + r * 0.8f, y + r); p.close() }
+            TemaId.ESPACIO -> { p.reset(); val k = r * 1.3f; p.moveTo(x, y - k); p.quadTo(x, y, x + k, y); p.quadTo(x, y, x, y + k); p.quadTo(x, y, x - k, y); p.quadTo(x, y, x, y - k); p.close() }
+            TemaId.ANDALUS -> poligono(x, y, r * 1.2f, 8, -90.0, 0.62f)
+            TemaId.MONGOL -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW) }
+            TemaId.RENACIMIENTO -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW) }
+        }
+        c.drawPath(p, relleno)
+        borde?.let { b -> c.drawPath(p, b) }
+        // Detalles que van encima de la forma.
+        val d = borde ?: return
+        when (tema) {
+            TemaId.MONGOL -> { c.drawLine(x - r * 0.7f, y, x + r * 0.7f, y, d); c.drawLine(x, y - r * 0.7f, x, y + r * 0.7f, d) }   // las varas del toono
+            TemaId.RENACIMIENTO -> { c.drawLine(x - r * 1.4f, y, x + r * 1.4f, y, d); c.drawLine(x, y - r * 1.4f, x, y + r * 1.4f, d) }  // retícula de dibujo
+            TemaId.GOTICO -> c.drawLine(x, y - r * 0.5f, x, y + r, d)
+            TemaId.BOTANICO -> c.drawLine(x, y + r * 1.2f, x, y - r * 0.8f, d)
+            else -> {}
+        }
+    }
+}
+
+/** Dibuja marcadores en coordenadas del mapa, con la forma del tema. Mucho más rápido que un marcador por punto. */
 private class Puntos : Overlay() {
-    data class P(val lat: Double, val lon: Double, val color: Int, val radio: Float, val borde: Boolean = false)
+    data class P(val lat: Double, val lon: Double, val color: Int, val radio: Float, val borde: Boolean = false, val nombre: String? = null)
+    var tema: TemaId = TemaId.ROMANO
+    var colorBorde: Int = 0xFF000000.toInt()
+    var colorTexto: Int = 0xFF000000.toInt()
+    var fondoTexto: Int = 0xFFFFFFFF.toInt()
     var datos: List<P> = emptyList()
     var ruta: List<GeoPoint> = emptyList()
     var colorRuta: Int = 0xFFD2AE5A.toInt()
     private val relleno = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val linea = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f }
+    private val linea = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f; strokeJoin = Paint.Join.ROUND }
+    private val letra = Paint(Paint.ANTI_ALIAS_FLAG).apply { textAlign = Paint.Align.CENTER; isFakeBoldText = true }
+    private val fondoLetra = Paint(Paint.ANTI_ALIAS_FLAG)
     private val trazo = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 6f; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
     private val pt = Point(); private val pt2 = Point()
 
@@ -158,11 +224,30 @@ private class Puntos : Overlay() {
             }
         }
         val escala = (mapView.zoomLevelDouble / 14.0).toFloat().coerceIn(0.5f, 1.6f)
+        val dens = mapView.resources.displayMetrics.density
+        // Inicio y fin del recorrido, con la forma del tema.
+        if (ruta.size > 1) listOf(ruta.first(), ruta.last()).forEachIndexed { i, g ->
+            pr.toPixels(g, pt)
+            relleno.color = if (i == 0) colorBorde else colorRuta; linea.color = fondoTexto; linea.strokeWidth = 2.5f
+            Formas.dibujar(c, tema, pt.x.toFloat(), pt.y.toFloat(), 9f * dens, relleno, linea)
+        }
         for (p in datos) {
             pr.toPixels(GeoPoint(p.lat, p.lon), pt)
             relleno.color = p.color
-            c.drawCircle(pt.x.toFloat(), pt.y.toFloat(), p.radio * escala, relleno)
-            if (p.borde) { linea.color = p.color or (0xFF shl 24); c.drawCircle(pt.x.toFloat(), pt.y.toFloat(), p.radio * escala, linea) }
+            linea.color = p.color or (0xFF shl 24); linea.strokeWidth = 3f
+            val x = pt.x.toFloat(); val y = pt.y.toFloat(); val r = p.radio * escala
+            Formas.dibujar(c, tema, x, y, r, relleno, if (p.borde) linea else null)
+            p.nombre?.let { n ->
+                // Etiqueta del lugar, en una cinta con el color del tema.
+                letra.textSize = 11.5f * dens; letra.color = colorTexto
+                val ancho = letra.measureText(n) / 2 + 6 * dens
+                val top = y + r + 5 * dens
+                fondoLetra.color = fondoTexto
+                c.drawRoundRect(x - ancho, top, x + ancho, top + 17 * dens, 4 * dens, 4 * dens, fondoLetra)
+                linea.color = colorBorde; linea.strokeWidth = 1.5f
+                c.drawRoundRect(x - ancho, top, x + ancho, top + 17 * dens, 4 * dens, 4 * dens, linea)
+                c.drawText(n, x, top + 12.5f * dens, letra)
+            }
         }
     }
 }
@@ -337,11 +422,13 @@ fun PantallaMapa(nav: Nav) {
             Puntos.P(m.lat!!, m.lon!!, Tonos.divergente(((v - 1) / 6).toFloat(), oscuro).copy(alpha = 0.75f).toArgb(), 14f, borde = true)
         }
         "calor" -> emptyList()
-        "lugares" -> Repo.lugares.map { l -> Puntos.P(l.lat, l.lon, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f).toArgb(), 18f, borde = true) }
+        "lugares" -> Repo.lugares.map { l -> Puntos.P(l.lat, l.lon, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f).toArgb(), 18f, borde = true, nombre = l.nombre) }
         else -> momentos.filter { it.fecha == dia }.map { m -> Puntos.P(m.lat!!, m.lon!!, MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f).toArgb(), 12f, borde = true) }
     }
     val ruta = if (capa == "ruta") puntos.filter { (it.precision ?: 0.0) < 150 }.map { GeoPoint(it.lat, it.lon) } else emptyList()
     val colorRuta = MaterialTheme.colorScheme.primary.toArgb()
+    val tema = io.github.ruddy2003.vestigium.ui.Estilo.tema
+    val cs = MaterialTheme.colorScheme
 
     Column(Modifier.fillMaxSize()) {
       // Controles arriba, siempre por encima del mapa y con fondo propio para que se puedan tocar.
@@ -401,6 +488,7 @@ fun PantallaMapa(nav: Nav) {
                 },
                 update = { m ->
                     capaPuntos.datos = datos; capaPuntos.ruta = ruta; capaPuntos.colorRuta = colorRuta
+                    capaPuntos.tema = tema; capaPuntos.colorBorde = cs.secondary.toArgb(); capaPuntos.colorTexto = cs.onSurface.toArgb(); capaPuntos.fondoTexto = cs.surface.toArgb()
                     val celdas = calor?.first ?: emptyList()
                     if (capaCalor.base !== celdas) capaCalor.base = celdas
                     // Al cambiar al recorrido de un día, centra el mapa en él.
@@ -412,6 +500,8 @@ fun PantallaMapa(nav: Nav) {
                     m.invalidate()
                 },
             )
+            // Marco y rosa de los vientos con el estilo del tema (no estorban al tocar el mapa).
+            MarcoMapa(tema, Modifier.fillMaxSize())
             if (capa == "calor" && calor?.first?.isEmpty() == true) Ayuda("Sin ubicaciones en este periodo.", Modifier.align(Alignment.TopCenter).padding(10.dp).background(MaterialTheme.colorScheme.surface).padding(8.dp))
             if (capa == "ruta" && puntos.isEmpty()) Ayuda("Sin ubicaciones ese día.", Modifier.align(Alignment.TopCenter).padding(10.dp).background(MaterialTheme.colorScheme.surface).padding(8.dp))
         }
@@ -442,6 +532,48 @@ fun PantallaMapa(nav: Nav) {
             },
             dismissButton = { TextButton(onClick = { nuevoLugar = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
         )
+    }
+}
+
+/** Marco del mapa y rosa de los vientos, dibujados con los colores y adornos del tema. */
+@Composable
+private fun MarcoMapa(tema: TemaId, modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    val oscuro = esOscuro()
+    androidx.compose.foundation.Canvas(modifier) {
+        val w = size.width; val h = size.height; val u = 1.dp.toPx()
+        val tinta = if (oscuro) e.primary else e.onBackground
+        // Marco: doble filete en los temas de papel, esquinas de mira en los de pantalla.
+        when (tema) {
+            TemaId.CIBER, TemaId.ESPACIO, TemaId.REFUGIO, TemaId.LABORATORIO, TemaId.ORDEN -> {
+                val k = 22 * u; val m = 8 * u
+                listOf(Offset(m, m) to Offset(1f, 1f), Offset(w - m, m) to Offset(-1f, 1f), Offset(m, h - m) to Offset(1f, -1f), Offset(w - m, h - m) to Offset(-1f, -1f)).forEach { (o, d) ->
+                    drawLine(e.primary, o, o + Offset(d.x * k, 0f), 2 * u); drawLine(e.primary, o, o + Offset(0f, d.y * k), 2 * u)
+                }
+            }
+            else -> {
+                drawRect(tinta.copy(alpha = 0.55f), Offset(4 * u, 4 * u), androidx.compose.ui.geometry.Size(w - 8 * u, h - 8 * u), style = androidx.compose.ui.graphics.drawscope.Stroke(2 * u))
+                drawRect(tinta.copy(alpha = 0.35f), Offset(8 * u, 8 * u), androidx.compose.ui.geometry.Size(w - 16 * u, h - 16 * u), style = androidx.compose.ui.graphics.drawscope.Stroke(1 * u))
+            }
+        }
+        // Rosa de los vientos arriba a la derecha.
+        val c = Offset(w - 40 * u, 44 * u); val r = 24 * u
+        drawCircle(e.surface.copy(alpha = 0.82f), r * 1.05f, c)
+        drawCircle(tinta.copy(alpha = 0.6f), r * 1.05f, c, style = androidx.compose.ui.graphics.drawscope.Stroke(1.2f * u))
+        val puntas = if (tema == TemaId.ANDALUS) 8 else 4
+        for (i in 0 until puntas * 2) {
+            val a = Math.toRadians(-90.0 + 360.0 * i / (puntas * 2)).toFloat()
+            val larga = i % 2 == 0
+            val rr = if (larga) r * 0.95f else r * 0.55f
+            val lado = Math.toRadians(90.0).toFloat()
+            val punta = c + Offset(kotlin.math.cos(a) * rr, kotlin.math.sin(a) * rr)
+            val b1 = c + Offset(kotlin.math.cos(a + lado) * r * 0.13f, kotlin.math.sin(a + lado) * r * 0.13f)
+            val b2 = c + Offset(kotlin.math.cos(a - lado) * r * 0.13f, kotlin.math.sin(a - lado) * r * 0.13f)
+            val norte = i == 0
+            drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(punta.x, punta.y); lineTo(b1.x, b1.y); lineTo(c.x, c.y); close() }, if (norte) e.primary else tinta.copy(alpha = 0.8f))
+            drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(punta.x, punta.y); lineTo(b2.x, b2.y); lineTo(c.x, c.y); close() }, if (norte) e.primary.copy(alpha = 0.6f) else tinta.copy(alpha = 0.4f))
+        }
+        drawCircle(e.secondary, r * 0.1f, c)
     }
 }
 

@@ -114,6 +114,14 @@ object Exportar {
             "imprevisto" to it.imprevisto, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon)
     }
 
+    fun filasCitas() = Repo.obras.flatMap { o -> o.citas.map { c ->
+        linkedMapOf<String, Any?>("id" to c.id, "obra_id" to o.id, "tipo" to o.tipo, "titulo" to o.titulo, "autor" to o.autor, "texto" to c.texto,
+            "pagina" to c.pagina.ifBlank { null }, "fecha" to c.fecha.ifBlank { null }, "favorita" to c.favorita)
+    } } + Repo.config.frases_guardadas.map { f ->
+        linkedMapOf<String, Any?>("id" to null, "obra_id" to null, "tipo" to if (f.tema == "kindle") "kindle" else "frase_del_dia", "titulo" to null, "autor" to f.autor,
+            "texto" to f.texto, "pagina" to null, "fecha" to f.fecha, "favorita" to true)
+    }
+
     fun filasIngresos() = Repo.ingresos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "dia_logico" to it.dia, "monto" to it.monto, "categoria" to it.categoria,
             "fijo" to it.fijo, "nota" to it.nota)
@@ -323,6 +331,8 @@ object Exportar {
         linkedMapOf<String, Any?>("id" to it.id, "tipo" to it.tipo, "titulo" to it.titulo, "autor" to it.autor, "anio" to it.anio, "estado" to it.estado,
             "inicio" to it.inicio, "fin" to it.fin, "calificacion" to it.calificacion, "progreso" to it.progreso, "total" to it.total,
             "veces" to it.veces, "etiquetas" to it.etiquetas, "nota" to it.nota, "agregado" to it.agregado,
+            "revista" to it.revista.ifBlank { null }, "doi" to it.doi.ifBlank { null }, "fuente" to it.fuente, "dias_marcados" to it.dias.size, "fechas_marcadas" to it.dias,
+            "citas" to it.citas.size,
             "dias" to if (it.inicio != null && it.fin != null) java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(it.inicio), Fechas.parse(it.fin)) + 1 else null)
     }
 
@@ -437,7 +447,8 @@ object Exportar {
         Tabla("vm_ejercicio.csv", "Sesiones de ejercicio del reloj", filasEjercicio()),
         Tabla("vm_escalada_sesiones.csv", "Sesiones de escalada", filasEscaladaSesiones()),
         Tabla("vm_escalada_bloques.csv", "Bloques o vías de cada sesión", filasEscaladaBloques()),
-        Tabla("vm_biblioteca.csv", "Libros, películas, series y juegos", filasBiblioteca()),
+        Tabla("vm_biblioteca.csv", "Libros, películas, series, juegos y artículos", filasBiblioteca()),
+        Tabla("vm_citas.csv", "Citas de tus obras y frases guardadas con ♥", filasCitas()),
         Tabla("vm_comunicacion.csv", "Llamadas y SMS por día (solo conteos)", filasComunicacion()),
         Tabla("vm_conexiones.csv", "Wifi, audio, carga, batería y luz por día", filasConexiones()),
         Tabla("vm_subrayados.csv", "Subrayados y notas de Kindle", filasSubrayados()),
@@ -492,6 +503,8 @@ object Exportar {
         val f = File(dir, "vestigium_${Fechas.hoyCalendario()}.zip")
         ZipOutputStream(f.outputStream()).use { z ->
             archivos(ctx).forEach { (nombre, cont) -> z.putNextEntry(ZipEntry(nombre)); z.write(cont.toByteArray()); z.closeEntry() }
+            // Las portadas también van, para no perder las fotos que pusiste a mano.
+            Portadas.carpeta(ctx).listFiles()?.forEach { p -> z.putNextEntry(ZipEntry("portadas/" + p.name)); p.inputStream().use { it.copyTo(z) }; z.closeEntry() }
         }
         return f
     }

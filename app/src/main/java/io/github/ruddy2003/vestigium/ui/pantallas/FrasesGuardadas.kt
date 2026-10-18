@@ -5,6 +5,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Frases
+import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Sentidos
@@ -87,32 +89,50 @@ fun CorazonFrase(f: Frases.Frase, color: Color, modifier: Modifier = Modifier) {
     }
 }
 
-/** Las frases del día que guardaste con el corazón, de todos los temas. */
+/** Una frase en la lista: del día, de Kindle o copiada de una obra. [quitar] la saca de la lista. */
+private class ItemFrase(val clave: String, val original: String?, val texto: String, val autor: String, val origen: String, val fecha: String, val obra: String?, val quitar: () -> Unit)
+
+/** Las frases que guardaste con el corazón: las del día (de todos los temas), los subrayados de Kindle y las citas de tus obras. */
 @Composable
 fun PantallaFrasesGuardadas(nav: Nav) {
-    val lista = Repo.config.frases_guardadas.reversed()
+    val delDia = Repo.config.frases_guardadas.map { g ->
+        ItemFrase("f" + g.texto + g.autor, g.original, g.texto, g.autor,
+            if (g.tema == "kindle") "Subrayado de Kindle" else "Frase del día · " + (TemaId.entries.firstOrNull { it.id == g.tema }?.nombre ?: g.tema), g.fecha, null) {
+            Repo.cambiarConfig { c -> c.copy(frases_guardadas = c.frases_guardadas.filterNot { it.texto == g.texto && it.autor == g.autor }) }
+        }
+    }
+    val deObras = Repo.obras.flatMap { o -> o.citas.filter { it.favorita }.map { c ->
+        ItemFrase("c" + c.id, null, c.texto, listOfNotNull(o.autor.ifBlank { null }, o.titulo).joinToString(", ") + (c.pagina.ifBlank { null }?.let { if (it.all { ch -> ch.isDigit() }) ", p. $it" else ", $it" } ?: ""),
+            "Cita de " + (TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre?.lowercase() ?: "obra"), c.fecha.ifBlank { o.agregado }, o.id) {
+            Repo.obras.firstOrNull { it.id == o.id }?.let { x -> Repo.guardarObra(x.copy(citas = x.citas.map { if (it.id == c.id) it.copy(favorita = false) else it })) }
+        }
+    } }
+    val todas = (delDia + deObras).sortedByDescending { it.fecha }
+    var filtro by remember { mutableStateOf<String?>(null) }
+    val lista = todas.filter { filtro == null || it.origen.startsWith(filtro!!) }
     var armado by remember { mutableStateOf<String?>(null) }
     val sentir = rememberSentir()
-    Hoja("Frases guardadas", nav.atras, "Las frases del día a las que les diste ♥. Todas son citas reales, con su autor y su fuente.") {
-        if (lista.isEmpty()) Box(Modifier.padding(top = 16.dp)) { Vacio("Todavía no guardas ninguna. Toca el corazón junto a la frase del día, en la pestaña Día.") }
+    Hoja("Frases guardadas", nav.atras, "Las frases a las que les diste ♥: las del día, tus subrayados de Kindle y las citas que copias de tus libros, películas y artículos.") {
+        if (todas.isNotEmpty()) Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Ficha("todas", filtro == null) { filtro = null }
+            if (delDia.any { it.origen.startsWith("Frase") }) Ficha("del día", filtro == "Frase") { filtro = "Frase" }
+            if (deObras.isNotEmpty()) Ficha("de mis obras", filtro == "Cita") { filtro = "Cita" }
+            if (delDia.any { it.origen.startsWith("Subrayado") }) Ficha("Kindle", filtro == "Subrayado") { filtro = "Subrayado" }
+        }
+        if (todas.isEmpty()) Box(Modifier.padding(top = 16.dp)) { Vacio("Todavía no guardas ninguna. Toca el corazón junto a la frase del día, o guarda citas dentro de un libro en Obras.") }
         lista.forEach { g ->
-            val clave = g.texto + g.autor
             Box(Modifier.padding(top = 12.dp)) {
                 Tarjeta {
                     g.original?.let { Text(it, style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.primary) }
                     Text("«${g.texto}»", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 4.dp))
-                    Text("— ${g.autor}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                    Text("— ${g.autor}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp).then(if (g.obra != null) Modifier.clickable { EdicionObra.id = g.obra; nav.ir("obra") } else Modifier))
                     Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                        val tema = TemaId.entries.firstOrNull { it.id == g.tema }?.nombre ?: g.tema
-                        Text("$tema · guardada ${Fechas.relativo(g.fecha)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                        Text("${g.origen} · ${Fechas.relativo(g.fecha)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                         TextButton(onClick = {
-                            if (armado == clave) {
-                                sentir(Sentidos.Evento.TOQUE)
-                                Repo.cambiarConfig { c -> c.copy(frases_guardadas = c.frases_guardadas.filterNot { it.texto == g.texto && it.autor == g.autor }) }
-                                armado = null
-                            } else armado = clave
+                            if (armado == g.clave) { sentir(Sentidos.Evento.TOQUE); g.quitar(); armado = null } else armado = g.clave
                         }) {
-                            Text(if (armado == clave) "¿Quitar?" else "Quitar", color = if (armado == clave) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(if (armado == g.clave) "¿Quitar?" else "Quitar", color = if (armado == g.clave) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }

@@ -59,13 +59,13 @@ fun PantallaMas(nav: Nav) {
                 FilaMenu("Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados") { nav.ir("fuerza") }
                 HorizontalDivider()
                 val leyendo = Repo.obras.count { it.estado == "en_curso" }
-                FilaMenu("Obras", "Libros, películas, series y juegos" + if (leyendo > 0) " · $leyendo en curso" else "") { nav.ir("biblioteca") }
+                FilaMenu("Obras", "Libros, películas, series, juegos y artículos, con portada" + if (leyendo > 0) " · $leyendo en curso" else "") { nav.ir("biblioteca") }
                 HorizontalDivider()
                 FilaMenu("Hábitos", "${Repo.config.habitos.count { it.activo }} activos · se marcan en la hoja de la noche") { nav.ir("habitos") }
                 HorizontalDivider()
                 FilaMenu("Cartas al futuro", "${Repo.cartas.count { !it.abierta }} esperando su fecha") { nav.ir("cartas") }
                 HorizontalDivider()
-                FilaMenu("Frases guardadas", Repo.config.frases_guardadas.size.let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }) { nav.ir("frases") }
+                FilaMenu("Frases guardadas", (Repo.config.frases_guardadas.size + Repo.obras.sumOf { o -> o.citas.count { it.favorita } }).let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }) { nav.ir("frases") }
             }
         }
         Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 2) {
