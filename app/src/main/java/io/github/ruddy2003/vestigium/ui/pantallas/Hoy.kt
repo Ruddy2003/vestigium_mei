@@ -422,8 +422,8 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
 @Composable
 fun estiloCifra(): androidx.compose.ui.text.TextStyle = when (Estilo.tema) {
     TemaId.ROMANO -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = androidx.compose.ui.unit.TextUnit(21f, androidx.compose.ui.unit.TextUnitType.Sp), letterSpacing = androidx.compose.ui.unit.TextUnit(0f, androidx.compose.ui.unit.TextUnitType.Sp))
-    // La gótica es para títulos; las cifras se leen mejor en Garamond.
-    TemaId.MEDIEVAL -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.garamond, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+    // La gótica y las capitulares navideñas son para títulos; las cifras se leen mejor en Garamond.
+    TemaId.MEDIEVAL, TemaId.NAVIDAD -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.garamond, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
         fontSize = androidx.compose.ui.unit.TextUnit(23f, androidx.compose.ui.unit.TextUnitType.Sp), letterSpacing = androidx.compose.ui.unit.TextUnit(0f, androidx.compose.ui.unit.TextUnitType.Sp), fontFeatureSettings = "lnum, tnum")
     else -> MaterialTheme.typography.headlineSmall
 }

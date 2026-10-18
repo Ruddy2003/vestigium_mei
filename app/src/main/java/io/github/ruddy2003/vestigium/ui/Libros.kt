@@ -651,18 +651,31 @@ private fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier) {
                     var y = 0f; while (y < h) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(0f, y), Offset(w, y), 1.5f); y += 4.dp.toPx() }
                 }
                 TemaId.CIBER -> { var y = 0f; while (y < h) { drawLine(p.acento.copy(alpha = 0.03f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() } }
-                TemaId.MUERTOS -> {
-                    val colores = listOf(p.acento, p.detalle, Color(0xFF26C6DA), Color(0xFF6A1B9A), Color(0xFFFDD835))
-                    val ancho = 36.dp.toPx(); var x = 0f; var k = 0
-                    while (x < w) {
-                        val q = Path().apply { moveTo(x + 2f, 0f); lineTo(x + ancho - 2f, 0f); lineTo(x + ancho - 2f, 34.dp.toPx()); for (i in 4 downTo 0) lineTo(x + 2f + (ancho - 4f) * i / 4, if (i % 2 == 0) 34.dp.toPx() else 40.dp.toPx()); close() }
-                        drawPath(q, colores[k % colores.size].copy(alpha = 0.85f)); x += ancho; k++
-                    }
-                }
                 else -> {}
             }
         }
         if (oscuroApp && !p.oscura) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.22f)))
+    }
+}
+
+/** Tira de papel picado arriba de la página de Día de Muertos: banderitas de colores con su calado. */
+@Composable
+private fun PapelPicado(p: Pagina) {
+    val colores = listOf(p.acento, p.detalle, Color(0xFF26C6DA), Color(0xFF6A1B9A), Color(0xFFFDD835))
+    Canvas(Modifier.fillMaxWidth().height(44.dp)) {
+        val w = size.width; val ancho = 36.dp.toPx(); val alto = 34.dp.toPx(); val pico = 40.dp.toPx()
+        drawLine(p.tinta.copy(alpha = 0.35f), Offset(0f, 1.5f), Offset(w, 1.5f), 2f)
+        var x = 0f; var k = 0
+        while (x < w) {
+            val q = Path().apply { moveTo(x + 2f, 0f); lineTo(x + ancho - 2f, 0f); lineTo(x + ancho - 2f, alto); for (i in 4 downTo 0) lineTo(x + 2f + (ancho - 4f) * i / 4, if (i % 2 == 0) alto else pico); close() }
+            drawPath(q, colores[k % colores.size].copy(alpha = 0.9f))
+            // Calado: una flor de cuatro pétalos y dos rombos, del color del papel.
+            val cx = x + ancho / 2; val cy = alto * 0.45f; val r = ancho * 0.13f
+            for (j in 0 until 4) { val a = Math.toRadians(45.0 + 90.0 * j); drawCircle(p.color, r * 0.75f, Offset(cx + r * kotlin.math.cos(a).toFloat(), cy + r * kotlin.math.sin(a).toFloat())) }
+            drawCircle(colores[k % colores.size], r * 0.55f, Offset(cx, cy))
+            listOf(alto * 0.15f, alto * 0.8f).forEach { yy -> drawPath(Path().apply { moveTo(cx, yy - 3f); lineTo(cx + 3f, yy); lineTo(cx, yy + 3f); lineTo(cx - 3f, yy); close() }, p.color) }
+            x += ancho; k++
+        }
     }
 }
 
@@ -681,13 +694,14 @@ private fun conCapitular(text: AnnotatedString, familia: FontFamily, color: Colo
 @Composable
 private fun Modifier.rayado(p: Pagina, layout: TextLayoutResult?): Modifier {
     if (p.rayas == Rayas.NADA) return this
-    val medidor = rememberTextMeasurer()
+    val medidor = rememberTextMeasurer(cacheSize = 64)
     val estiloNum = TextStyle(fontFamily = Letra.codigo, fontSize = 11.sp, color = p.tenue)
     return this.drawBehind {
-        val paso = layout?.takeIf { it.lineCount > 1 }?.let { (it.getLineBottom(it.lineCount - 1) - it.getLineTop(0)) / it.lineCount } ?: (p.interlinea.sp.toPx())
+        val paso = (layout?.takeIf { it.lineCount > 1 }?.let { (it.getLineBottom(it.lineCount - 1) - it.getLineTop(0)) / it.lineCount } ?: p.interlinea.sp.toPx())
+            .coerceAtLeast(8.dp.toPx())
         val lineas = layout?.lineCount ?: 0
         fun fondoDe(i: Int) = if (layout != null && i < lineas) layout.getLineBottom(i) else (if (lineas > 0) layout!!.getLineBottom(lineas - 1) else 0f) + paso * (i - lineas + 1)
-        val total = (size.height / paso).toInt() + 1
+        val total = ((size.height / paso).toInt() + 1).coerceIn(0, 2000)
         when (p.rayas) {
             Rayas.RENGLONES -> for (i in 0 until total) { val y = fondoDe(i) - paso * 0.12f; if (y < size.height) drawLine(p.tenue.copy(alpha = 0.3f), Offset(-12.dp.toPx(), y), Offset(size.width + 12.dp.toPx(), y), 1f) }
             Rayas.CUADRICULA -> {
@@ -698,7 +712,8 @@ private fun Modifier.rayado(p: Pagina, layout: TextLayoutResult?): Modifier {
             Rayas.NUMEROS -> for (i in 0 until minOf(total, 999)) {
                 val top = if (layout != null && i < lineas) layout.getLineTop(i) else fondoDe(i) - paso
                 if (top > size.height) break
-                drawText(medidor, "%3d".format(i + 1), Offset(-40.dp.toPx(), top + paso * 0.18f), estiloNum)
+                // Se mide aparte: así no depende del espacio que queda abajo (con drawText(medidor, …) fallaba en el último renglón).
+                drawText(medidor.measure("%3d".format(i + 1), estiloNum), topLeft = Offset(-40.dp.toPx(), top + paso * 0.18f))
             }
             else -> {}
         }
@@ -709,7 +724,7 @@ private fun Modifier.rayado(p: Pagina, layout: TextLayoutResult?): Modifier {
 @Composable
 private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String) {
     val ty = MaterialTheme.typography
-    Column(Modifier.fillMaxWidth().padding(top = if (t == TemaId.MUERTOS) 34.dp else 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         when (t) {
             TemaId.CIBER -> Text("~/vestigium/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 12.sp, color = p.tenue, modifier = Modifier.fillMaxWidth())
             TemaId.DISTOPIA -> Row(Modifier.fillMaxWidth().border(1.5.dp, p.tinta)) {
@@ -750,6 +765,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
         Box(Modifier.fillMaxSize()) {
             FondoPagina(tema, p)
             Column(Modifier.fillMaxSize()) {
+                if (tema == TemaId.MUERTOS) PapelPicado(p)
                 BarraPagina(p, volver, d?.let { "${Texto.palabras(it.nota)} palabras" } ?: "") {
                     Text("‹", fontSize = 24.sp, color = if (anterior != null) p.acento else p.tenue.copy(alpha = 0.3f),
                         modifier = Modifier.clickable(enabled = anterior != null) { anterior?.invoke() }.padding(horizontal = 10.dp))
@@ -807,6 +823,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
         Box(Modifier.fillMaxSize()) {
             FondoPagina(tema, p)
             Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
+                if (tema == TemaId.MUERTOS) PapelPicado(p)
                 BarraPagina(p, guardar, "${Texto.palabras(campo.text)} palabras") {
                     Text(textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
                         modifier = Modifier.padding(end = 6.dp).background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }
