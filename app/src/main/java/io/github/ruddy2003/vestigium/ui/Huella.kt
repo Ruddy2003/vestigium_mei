@@ -54,8 +54,10 @@ fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.ROMANO -> "DIES SIGNATVS"; TemaId.CIBER -> "> día.commit() ✓"; TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
     TemaId.MEDIEVAL -> "Sellado y asentado"; TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"; TemaId.REFUGIO -> "BITÁCORA GUARDADA"
     TemaId.ORDEN -> "PARTE ENTREGADO"; TemaId.LABORATORIO -> "SESIÓN REGISTRADA"; TemaId.COLONOS -> "Jornada asentada"
-    TemaId.NAPOLEON -> "BOLETÍN ENVIADO"; TemaId.MUERTOS -> "VELADORA ENCENDIDA"; TemaId.NAVIDAD -> "Guardado bajo el árbol"
+    TemaId.NAPOLEON -> "BOLETÍN ENVIADO"; TemaId.BOTANICO -> "Ejemplar prensado"; TemaId.NAVIDAD -> "Guardado bajo el árbol"
     TemaId.SEDA -> "Rollo sellado"; TemaId.URSS -> "PLAN CUMPLIDO"
+    TemaId.GOTICO -> "Signatum et lucet"; TemaId.ESPACIO -> "TRANSMISIÓN COMPLETA"; TemaId.ANDALUS -> "Sellado · خُتِم"
+    TemaId.MONGOL -> "ТАМГА ДАРАВ · sellado"; TemaId.RENACIMIENTO -> "Fatto."
 }
 
 /** Pantalla completa: la huella del tema se va formando desde el centro, como en un lector, y luego se sella. Toca para cerrar. */
@@ -89,10 +91,15 @@ fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.LABORATORIO -> R.drawable.huella_fondo_laboratorio to R.drawable.huella_laboratorio
     TemaId.COLONOS -> R.drawable.huella_fondo_colonos to R.drawable.huella_colonos
     TemaId.NAPOLEON -> R.drawable.huella_fondo_napoleon to R.drawable.huella_napoleon
-    TemaId.MUERTOS -> R.drawable.huella_fondo_muertos to R.drawable.huella_muertos
+    TemaId.BOTANICO -> R.drawable.huella_fondo_botanico to R.drawable.huella_botanico
     TemaId.NAVIDAD -> R.drawable.huella_fondo_navidad to R.drawable.huella_navidad
     TemaId.SEDA -> R.drawable.huella_fondo_seda to R.drawable.huella_seda
     TemaId.URSS -> R.drawable.huella_fondo_urss to R.drawable.huella_urss
+    TemaId.GOTICO -> R.drawable.huella_fondo_gotico to R.drawable.huella_gotico
+    TemaId.ESPACIO -> R.drawable.huella_fondo_espacio to R.drawable.huella_espacio
+    TemaId.ANDALUS -> R.drawable.huella_fondo_andalus to R.drawable.huella_andalus
+    TemaId.MONGOL -> R.drawable.huella_fondo_mongol to R.drawable.huella_mongol
+    TemaId.RENACIMIENTO -> R.drawable.huella_fondo_renacimiento to R.drawable.huella_renacimiento
 }
 
 /** El sello del tema en un círculo: fondo con textura y huella. [revela] (0–1) la descubre desde el núcleo, como un lector. */

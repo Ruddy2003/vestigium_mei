@@ -39,6 +39,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,11 +99,11 @@ import kotlin.math.sin
 enum class Soporte { ROLLO, LIBRO, SOBRE, CARPETA, PANTALLA }
 
 fun soporte(t: TemaId): Soporte = when (t) {
-    TemaId.ROMANO, TemaId.HELENO, TemaId.SEDA -> Soporte.ROLLO
-    TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.ORDEN, TemaId.MUERTOS, TemaId.URSS, TemaId.LABORATORIO -> Soporte.LIBRO
+    TemaId.ROMANO, TemaId.HELENO, TemaId.SEDA, TemaId.MONGOL -> Soporte.ROLLO
+    TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.ORDEN, TemaId.BOTANICO, TemaId.URSS, TemaId.LABORATORIO, TemaId.GOTICO, TemaId.ANDALUS, TemaId.RENACIMIENTO -> Soporte.LIBRO
     TemaId.NAPOLEON, TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
-    TemaId.CIBER, TemaId.REFUGIO -> Soporte.PANTALLA
+    TemaId.CIBER, TemaId.REFUGIO, TemaId.ESPACIO -> Soporte.PANTALLA
 }
 
 /** Colores del objeto físico (cuero, papiro, lacre…); no cambian con el modo claro u oscuro. */
@@ -117,7 +119,12 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.MEDIEVAL -> Materia(c(0xFF6B2E1A), c(0xFF3E190D), c(0xFF8A4429), c(0xFFD4A93C), c(0xFFB08D57), c(0xFFEFE3C2), c(0xFF2B1D12), extra = c(0xFFB3261E))
     TemaId.COLONOS -> Materia(c(0xFF4A3423), c(0xFF2B1D12), c(0xFF6A4D35), c(0xFFB8893A), c(0xFF2E2016), c(0xFFF1E6CC), c(0xFF1E1A16), extra = c(0xFF9E2B25))
     TemaId.ORDEN -> Materia(c(0xFF4A525C), c(0xFF2A2F35), c(0xFF6E7883), c(0xFFC9A54A), c(0xFFA3172E), c(0xFFD6D9DC), c(0xFF1C2127))
-    TemaId.MUERTOS -> Materia(c(0xFFC2185B), c(0xFF7B0F3A), c(0xFFE24A86), c(0xFFFFA726), c(0xFF6A1B9A), c(0xFFFFF4E2), c(0xFF2A1033), extra = c(0xFF26C6DA))
+    TemaId.BOTANICO -> Materia(c(0xFF2F5D3A), c(0xFF1A3822), c(0xFF4E8A5A), c(0xFFC9A54A), c(0xFF7A2E45), c(0xFFF6F1DE), c(0xFF1C2A1C), extra = c(0xFFB24A6C))
+    TemaId.GOTICO -> Materia(c(0xFF1F2F7A), c(0xFF0E1640), c(0xFF3B4FA8), c(0xFFE2B34A), c(0xFFB3122E), c(0xFFF3EBD6), c(0xFF1A1630), extra = c(0xFFB3122E))
+    TemaId.ANDALUS -> Materia(c(0xFF7A3B1E), c(0xFF45200F), c(0xFF9C5530), c(0xFFD9B25B), c(0xFF1E6B5C), c(0xFFF3E7CC), c(0xFF2A1A12), extra = c(0xFF1E6B5C))
+    TemaId.RENACIMIENTO -> Materia(c(0xFF9A7A50), c(0xFF5E462B), c(0xFFB89466), c(0xFF8C3B1E), c(0xFF3A2614), c(0xFFF0E4C6), c(0xFF3A2614), extra = c(0xFF8C3B1E))
+    TemaId.MONGOL -> Materia(c(0xFF1F5FA8), c(0xFF0F3566), c(0xFF4A86CC), c(0xFFC48A1E), c(0xFFC2412D), c(0xFFF4EEDC), c(0xFF18202E), extra = c(0xFFC2412D))
+    TemaId.ESPACIO -> Materia(c(0xFF0A1022), c(0xFF040814), c(0xFF17213D), c(0xFF8AB4FF), c(0xFFFFB86B), c(0xFF040814), c(0xFFE8ECF8), extra = c(0xFFC59BFF))
     TemaId.URSS -> Materia(c(0xFFB71C1C), c(0xFF6E0F0F), c(0xFFD84343), c(0xFFE8B923), c(0xFF161414), c(0xFFEFE6D2), c(0xFF161414))
     TemaId.LABORATORIO -> Materia(c(0xFF20323F), c(0xFF101B23), c(0xFF3A5363), c(0xFF3CD2E5), c(0xFFFFFFFF), c(0xFFF7FBFC), c(0xFF1B2733))
     TemaId.NAPOLEON -> Materia(c(0xFFF1E6CC), c(0xFFC9B48A), c(0xFFFBF5E6), c(0xFFA3172E), c(0xFF1E3A8A), c(0xFFF6F0E0), c(0xFF14213D), extra = c(0xFFD9B25B))
@@ -131,16 +138,20 @@ fun materia(t: TemaId): Materia = when (t) {
 fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "SIGNARE"; TemaId.CIBER -> "git commit"; TemaId.HELENO -> "guardar"; TemaId.MEDIEVAL -> "asentar"
     TemaId.DISTOPIA -> "ARCHIVAR"; TemaId.REFUGIO -> "GUARDAR"; TemaId.ORDEN -> "REGISTRAR"; TemaId.LABORATORIO -> "guardar registro"
-    TemaId.COLONOS -> "asentar"; TemaId.NAPOLEON -> "SELLAR"; TemaId.MUERTOS -> "guardar"; TemaId.NAVIDAD -> "guardar carta"
+    TemaId.COLONOS -> "asentar"; TemaId.NAPOLEON -> "SELLAR"; TemaId.BOTANICO -> "guardar"; TemaId.NAVIDAD -> "guardar carta"
     TemaId.SEDA -> "sellar el rollo"; TemaId.URSS -> "ENTREGAR"
+    TemaId.GOTICO -> "sellar el folio"; TemaId.ESPACIO -> "TRANSMITIR"; TemaId.ANDALUS -> "guardar · حفظ"; TemaId.MONGOL -> "ТАМГА · sellar"
+    TemaId.RENACIMIENTO -> "annotare"
 }
 
 /** Lo que cierra cada página al leerla. */
 fun colofon(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "· FINIS ·"; TemaId.CIBER -> "-- EOF --"; TemaId.HELENO -> "ΤΕΛΟΣ"; TemaId.MEDIEVAL -> "Aquí se acaba el folio."
     TemaId.DISTOPIA -> "FIN DE LA DECLARACIÓN"; TemaId.REFUGIO -> "FIN DE LA ENTRADA"; TemaId.ORDEN -> "FIN DEL PARTE"; TemaId.LABORATORIO -> "fin del registro"
-    TemaId.COLONOS -> "Asentado."; TemaId.NAPOLEON -> "Dado en el cuartel general."; TemaId.MUERTOS -> "✿ que no se olvide ✿"
+    TemaId.COLONOS -> "Asentado."; TemaId.NAPOLEON -> "Dado en el cuartel general."; TemaId.BOTANICO -> "Ex herbario."
     TemaId.NAVIDAD -> "Con cariño, junto al fuego."; TemaId.SEDA -> "Fin del rollo."; TemaId.URSS -> "INFORME ENTREGADO"
+    TemaId.GOTICO -> "Explicit. Deo gratias."; TemaId.ESPACIO -> "FIN DE TRANSMISIÓN"; TemaId.ANDALUS -> "تمّ · Se acabó."
+    TemaId.MONGOL -> "Ингэж бичив · Así quedó escrito."; TemaId.RENACIMIENTO -> "Finito."
 }
 
 private fun pista(s: Soporte) = when (s) {
@@ -176,7 +187,19 @@ fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, te
     val palabras = Texto.palabras(texto)
     val vista = texto.trim().replace(Regex("\\s+"), " ").take(140)
     val alto = when (s) { Soporte.LIBRO -> 176.dp; Soporte.SOBRE -> 176.dp; else -> 168.dp }
-    BoxWithConstraints(modifier.fillMaxWidth().height(alto).clickable { sentir(Sentidos.Evento.PASAR); onClick() }) {
+    // Al tocarlo, el objeto se abre un instante (la tapa gira, el rollo se acerca) antes de pasar a pantalla completa.
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val abre = remember { androidx.compose.animation.core.Animatable(0f) }
+    val animar = Repo.config.animaciones
+    BoxWithConstraints(modifier.fillMaxWidth().height(alto).graphicsLayer {
+        val k = abre.value
+        scaleX = 1f + 0.05f * k; scaleY = 1f + 0.05f * k
+        if (s == Soporte.LIBRO || s == Soporte.SOBRE) { rotationY = -22f * k; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f); cameraDistance = 14f * density }
+        alpha = 1f - 0.25f * k
+    }.clickable {
+        sentir(Sentidos.Evento.ABRIR)
+        if (animar) scope.launch { abre.animateTo(1f, androidx.compose.animation.core.tween(230)); onClick(); abre.snapTo(0f) } else onClick()
+    }) {
         Canvas(Modifier.fillMaxSize()) {
             when (s) {
                 Soporte.ROLLO -> rolloAbierto(tema, m)
@@ -236,6 +259,11 @@ private fun DrawScope.rolloAbierto(t: TemaId, m: Materia) {
     }
     when (t) {
         TemaId.SEDA -> listOf(arr + h * 0.06f, aba - h * 0.06f).forEach { y -> drawLine(m.detalle, Offset(x0, y), Offset(x1, y), 3f) }
+        // Franjas azules como un jadag, con greca de martillos.
+        TemaId.MONGOL -> listOf(arr + h * 0.07f, aba - h * 0.07f).forEach { y ->
+            drawRect(m.cuerpo.copy(alpha = 0.85f), Offset(x0, y - h * 0.035f), Size(x1 - x0, h * 0.07f))
+            grecaPequena(Offset(x0 + r, y), x1 - x0 - 2 * r, h * 0.045f, m.acento)
+        }
         TemaId.HELENO -> listOf(arr + h * 0.075f, aba - h * 0.075f).forEach { y -> grecaPequena(Offset(x0 + r, y), x1 - x0 - 2 * r, h * 0.05f, m.extra) }
         else -> {}
     }
@@ -319,14 +347,41 @@ private fun DrawScope.libroCerrado(t: TemaId, m: Materia) {
                 .forEach { (x, y, s) -> drawPath(Path().apply { moveTo(x, y); lineTo(x + s.first * k, y); lineTo(x, y + s.second * k); close() }, m.acento) }
             drawRect(m.detalle, Offset(ini.x + tam.width * 0.72f, ini.y + tam.height - 4f), Size(w * 0.03f, h * 0.1f))
         }
-        TemaId.MUERTOS -> {
-            val colores = listOf(m.acento, m.extra, Color(0xFFFFEB3B), m.detalle, Color(0xFF66BB6A))
-            var x = ini.x + lomo + 4f; var k = 0
-            while (x < ini.x + tam.width - 16f) {
-                drawPath(Path().apply { moveTo(x, ini.y + 3f); lineTo(x + 16f, ini.y + 3f); lineTo(x + 8f, ini.y + 15f); close() }, colores[k % colores.size])
-                drawPath(Path().apply { moveTo(x, ini.y + tam.height - 3f); lineTo(x + 16f, ini.y + tam.height - 3f); lineTo(x + 8f, ini.y + tam.height - 15f); close() }, colores[(k + 2) % colores.size])
-                x += 18f; k++
+        TemaId.BOTANICO -> {
+            // Tela verde con hojitas doradas estampadas en los bordes.
+            var x = ini.x + lomo + 8f; var k = 0
+            while (x < ini.x + tam.width - 14f) {
+                listOf(ini.y + 6f, ini.y + tam.height - 6f).forEachIndexed { i, y ->
+                    rotate(if ((k + i) % 2 == 0) -30f else 30f, Offset(x, y)) {
+                        drawPath(Path().apply { moveTo(x - 7f, y); quadraticTo(x, y - 5f, x + 7f, y); quadraticTo(x, y + 5f, x - 7f, y); close() }, m.acento.copy(alpha = 0.85f))
+                    }
+                }
+                x += 20f; k++
             }
+        }
+        TemaId.GOTICO -> {
+            // Terciopelo azul sembrado de flores de lis y broches de oro.
+            var y = ini.y + 10f; var fila = 0
+            while (y < ini.y + tam.height - 6f) {
+                var x = ini.x + lomo + (if (fila % 2 == 0) 10f else 22f)
+                while (x < ini.x + tam.width - 6f) { drawCircle(m.acento.copy(alpha = 0.55f), 2.4f, Offset(x, y)); drawCircle(m.acento.copy(alpha = 0.55f), 1.4f, Offset(x - 3f, y + 3f)); drawCircle(m.acento.copy(alpha = 0.55f), 1.4f, Offset(x + 3f, y + 3f)); x += 24f }
+                y += 14f; fila++
+            }
+            esquinas.forEach { drawCircle(m.acento, 7f, it); drawCircle(m.extra, 3f, it) }
+            listOf(0.3f, 0.7f).forEach { f -> drawRoundRect(m.acento, Offset(ini.x + tam.width - w * 0.05f, ini.y + tam.height * f - h * 0.045f), Size(w * 0.075f, h * 0.09f), CornerRadius(3f)) }
+        }
+        TemaId.ANDALUS -> {
+            // Encuadernación andalusí: la solapa (lisán) que cierra por delante y una estrella de lacería al centro.
+            val solapa = Path().apply { moveTo(ini.x + tam.width, ini.y + tam.height * 0.18f); lineTo(ini.x + tam.width + w * 0.035f, ini.y + tam.height * 0.5f); lineTo(ini.x + tam.width, ini.y + tam.height * 0.82f); close() }
+            drawPath(solapa, m.sombra)
+            esquinas.forEach { o -> for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento.copy(alpha = 0.8f), o, Offset(o.x + 9f * cos(a).toFloat(), o.y + 9f * sin(a).toFloat()), 1.5f) } }
+        }
+        TemaId.RENACIMIENTO -> {
+            // Cuaderno de vitela flexible atado con una correa; un círculo de sanguina en la tapa.
+            val x = ini.x + tam.width * 0.93f
+            drawRect(m.detalle.copy(alpha = 0.8f), Offset(ini.x + lomo, ini.y + tam.height * 0.47f), Size(tam.width - lomo + w * 0.03f, h * 0.035f))
+            drawCircle(m.detalle, 5f, Offset(x, ini.y + tam.height * 0.485f))
+            drawCircle(m.acento.copy(alpha = 0.4f), h * 0.16f, Offset(ini.x + tam.width * 0.8f, ini.y + tam.height * 0.24f), style = Stroke(1.5f))
         }
         TemaId.URSS -> {
             val c = Offset(ini.x + lomo + w * 0.08f, ini.y + tam.height * 0.5f)
@@ -421,12 +476,14 @@ private fun DrawScope.pantalla(t: TemaId, m: Materia) {
 fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, abrir: (String) -> Unit) {
     if (entradas.isEmpty()) return
     val m = materia(tema)
+    val sentir = rememberSentir()
+    val conSonido: (String) -> Unit = { f -> sentir(Sentidos.Evento.ABRIR); abrir(f) }
     when (soporte(tema)) {
-        Soporte.LIBRO -> Lomos(entradas, tema, m, abrir)
-        Soporte.ROLLO -> Rollos(entradas, tema, m, abrir)
-        Soporte.SOBRE -> Cartas(entradas, tema, m, abrir)
-        Soporte.CARPETA -> Expedientes(entradas, m, abrir)
-        Soporte.PANTALLA -> Logs(entradas, tema, m, abrir)
+        Soporte.LIBRO -> Lomos(entradas, tema, m, conSonido)
+        Soporte.ROLLO -> Rollos(entradas, tema, m, conSonido)
+        Soporte.SOBRE -> Cartas(entradas, tema, m, conSonido)
+        Soporte.CARPETA -> Expedientes(entradas, m, conSonido)
+        Soporte.PANTALLA -> Logs(entradas, tema, m, conSonido)
     }
 }
 
@@ -434,7 +491,10 @@ private fun madera(t: TemaId): Pair<Color, Color> = when (t) {
     TemaId.ORDEN -> Color(0xFF6E7883) to Color(0xFF2A2F35)
     TemaId.LABORATORIO -> Color(0xFFE3ECF3) to Color(0xFF97A8B9)
     TemaId.SEDA -> Color(0xFF8E2B1F) to Color(0xFF4A120C)
-    TemaId.MUERTOS -> Color(0xFF6A1B9A) to Color(0xFF3A0F55)
+    TemaId.BOTANICO -> Color(0xFF8A6A3E) to Color(0xFF4A3820)
+    TemaId.GOTICO -> Color(0xFFBDB4A0) to Color(0xFF7E7563)
+    TemaId.RENACIMIENTO -> Color(0xFF5A3A22) to Color(0xFF2E1D10)
+    TemaId.MONGOL -> Color(0xFFC2412D) to Color(0xFF7A2418)
     else -> Color(0xFF7A5230) to Color(0xFF3E2716)
 }
 
@@ -481,7 +541,10 @@ private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Ma
             listOf(0.07f, 0.11f, 0.89f, 0.93f).forEach { f -> drawLine(m.acento.copy(alpha = 0.85f), Offset(2f, hh * f), Offset(w - 2f, hh * f), 2.2f) }
             drawRoundRect(m.hoja.copy(alpha = 0.92f), Offset(w * 0.14f, hh * 0.2f), Size(w * 0.72f, hh * 0.27f), CornerRadius(2f))
             if (tema == TemaId.URSS) { drawCircle(m.acento, w * 0.16f, Offset(w / 2, hh * 0.66f)) }
-            if (tema == TemaId.MUERTOS) for (i in 0..2) drawCircle(listOf(m.acento, m.extra, Color(0xFFFFEB3B))[i], w * 0.08f, Offset(w / 2, hh * (0.6f + i * 0.08f)))
+            if (tema == TemaId.BOTANICO) drawPath(Path().apply { val cx = w / 2; val y0 = hh * 0.58f; moveTo(cx, y0); quadraticTo(cx + w * 0.3f, y0 + hh * 0.08f, cx, y0 + hh * 0.18f); quadraticTo(cx - w * 0.3f, y0 + hh * 0.08f, cx, y0); close() }, m.acento)
+            if (tema == TemaId.GOTICO) { drawCircle(m.acento, w * 0.12f, Offset(w / 2, hh * 0.64f)); drawCircle(m.extra, w * 0.06f, Offset(w / 2, hh * 0.64f)) }
+            if (tema == TemaId.ANDALUS) for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento, Offset(w / 2, hh * 0.66f), Offset(w / 2 + w * 0.22f * cos(a).toFloat(), hh * 0.66f + w * 0.22f * sin(a).toFloat()), 1.5f) }
+            if (tema == TemaId.RENACIMIENTO) drawRect(m.detalle.copy(alpha = 0.7f), Offset(0f, hh * 0.62f), Size(w, hh * 0.03f))
         }
         Column(Modifier.padding(top = h * 0.205f), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(dia, color = m.tinta, fontSize = 13.sp, fontFamily = Letra.garamond, lineHeight = 13.sp, maxLines = 1)
@@ -508,6 +571,7 @@ private fun Rollos(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String
                             listOf(x0 - h * 0.1f, x0 + largo + h * 0.08f).forEach { x -> drawCircle(m.detalle, h * 0.13f, Offset(x, h * 0.5f)) }
                             if (tema == TemaId.SEDA) { drawRect(m.detalle, Offset(x0 + largo * 0.12f, h * 0.2f), Size(largo * 0.05f, h * 0.6f)); drawRect(m.extra, Offset(x0 + largo * 0.5f, h * 0.2f), Size(largo * 0.04f, h * 0.75f)) }
                             if (tema == TemaId.HELENO) drawRect(m.extra, Offset(x0 + largo * 0.3f, h * 0.2f), Size(largo * 0.4f, h * 0.6f), style = Stroke(1.5f))
+                            if (tema == TemaId.MONGOL) { drawRect(m.acento, Offset(x0 + largo * 0.2f, h * 0.2f), Size(largo * 0.04f, h * 0.6f)); drawRect(m.extra, Offset(x0 + largo * 0.55f, h * 0.2f), Size(largo * 0.05f, h * 0.75f)) }
                             drawLine(m.acento, Offset(w / 2, h * 0.8f), Offset(w / 2, h), 1.5f)
                         }
                         val dia = d.fecha.takeLast(2).trimStart('0'); val mes = MESES3[(d.fecha.substring(5, 7).toIntOrNull() ?: 1) - 1]
@@ -616,7 +680,12 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.MEDIEVAL -> Pagina(R.drawable.papel_pergamino, c(0xFFEDDDB8), c(0xFF2B1D12), c(0xFF6E5639), c(0xFFB3261E), c(0xFF1F3A93), Letra.garamond, 18.5f, 27f, false, capitular = LetraExtra.gotica)
     TemaId.COLONOS -> Pagina(null, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), Letra.garamond, 18f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
     TemaId.ORDEN -> Pagina(null, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), Letra.texto, 16.5f, 25f, true, Rayas.NADA)
-    TemaId.MUERTOS -> Pagina(null, c(0xFFFFF1E0), c(0xFF2A1033), c(0xFF6B4A6E), c(0xFFC2185B), c(0xFFE67E00), Letra.texto, 16.5f, 25f, false, Rayas.NADA, LetraExtra.rye)
+    TemaId.BOTANICO -> Pagina(R.drawable.papel_lamina, c(0xFFF4EFDC), c(0xFF1C2A1C), c(0xFF5E6B55), c(0xFF2F6B3A), c(0xFFB24A6C), Letra.garamond, 18.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
+    TemaId.GOTICO -> Pagina(R.drawable.papel_vitela, c(0xFFF1E8D2), c(0xFF1A1630), c(0xFF5E5870), c(0xFFB3122E), c(0xFF1F3A9E), Letra.garamond, 18.5f, 27f, false, capitular = LetraExtra.textura)
+    TemaId.ESPACIO -> Pagina(null, c(0xFF050A18), c(0xFFE8ECF8), c(0xFF6E7BA0), c(0xFF8AB4FF), c(0xFFFFB86B), LetraExtra.grotesk, 16f, 25f, true, Rayas.RENGLONES)
+    TemaId.ANDALUS -> Pagina(R.drawable.papel_xativa, c(0xFFF2E6C8), c(0xFF2A1A12), c(0xFF6A5640), c(0xFF1E6B5C), c(0xFFB5432A), LetraExtra.amiri, 18.5f, 28f, false, capitular = LetraExtra.kufi)
+    TemaId.MONGOL -> Pagina(R.drawable.papel_estepa, c(0xFFF1EBDC), c(0xFF18202E), c(0xFF5C6577), c(0xFF1F5FA8), c(0xFFC2412D), LetraExtra.filosofo, 17.5f, 27f, false)
+    TemaId.RENACIMIENTO -> Pagina(R.drawable.papel_leonardo, c(0xFFEEDFBC), c(0xFF3A2614), c(0xFF7A6040), c(0xFF8C3B1E), c(0xFF2F4F6F), LetraExtra.cormorant, 19.5f, 28f, false, capitular = LetraExtra.italianno)
     TemaId.URSS -> Pagina(null, c(0xFFEFE6D2), c(0xFF161414), c(0xFF6A625A), c(0xFFC1121F), c(0xFF161414), Letra.codigo, 15f, 26f, false, Rayas.RENGLONES)
     TemaId.LABORATORIO -> Pagina(null, c(0xFFF7FBFC), c(0xFF1B2733), c(0xFF5D6F80), c(0xFF0B8FA3), c(0xFFE0557A), LetraExtra.jost, 16.5f, 26f, false, Rayas.CUADRICULA)
     TemaId.NAPOLEON -> Pagina(null, c(0xFFF6F0E0), c(0xFF14213D), c(0xFF5A6278), c(0xFF1E3A8A), c(0xFFA3172E), LetraExtra.bodoni, 18f, 27f, false, Rayas.NADA, LetraExtra.bodoniTitulo)
@@ -651,31 +720,43 @@ private fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier) {
                     var y = 0f; while (y < h) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(0f, y), Offset(w, y), 1.5f); y += 4.dp.toPx() }
                 }
                 TemaId.CIBER -> { var y = 0f; while (y < h) { drawLine(p.acento.copy(alpha = 0.03f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() } }
+                TemaId.BOTANICO -> {
+                    // Marco de lámina y el número de la tabla.
+                    drawRect(p.tinta.copy(alpha = 0.35f), Offset(12.dp.toPx(), 12.dp.toPx()), Size(w - 24.dp.toPx(), h - 24.dp.toPx()), style = Stroke(1.2f))
+                    drawRect(p.tinta.copy(alpha = 0.2f), Offset(16.dp.toPx(), 16.dp.toPx()), Size(w - 32.dp.toPx(), h - 32.dp.toPx()), style = Stroke(0.8f))
+                }
+                TemaId.GOTICO -> {
+                    // Margen de libro de horas: filete azul y rojo con bolitas de oro.
+                    listOf(18.dp.toPx() to p.detalle, 22.dp.toPx() to p.acento).forEach { (x, col) -> drawLine(col.copy(alpha = 0.5f), Offset(x, 0f), Offset(x, h), 2f) }
+                    var y = 30.dp.toPx(); while (y < h) { drawCircle(Color(0xFFC9A227).copy(alpha = 0.7f), 2.2.dp.toPx(), Offset(20.dp.toPx(), y)); y += 46.dp.toPx() }
+                }
+                TemaId.ESPACIO -> {
+                    val az = java.util.Random(77)
+                    repeat(160) { val x = az.nextFloat() * w; val y = az.nextFloat() * h; drawCircle(Color.White.copy(alpha = 0.15f + az.nextFloat() * 0.35f), 0.6f + az.nextFloat() * 1.2f, Offset(x, y)) }
+                    val k = 18.dp.toPx(); val m0 = 10.dp.toPx()
+                    listOf(Offset(m0, m0) to Offset(1f, 1f), Offset(w - m0, m0) to Offset(-1f, 1f), Offset(m0, h - m0) to Offset(1f, -1f), Offset(w - m0, h - m0) to Offset(-1f, -1f)).forEach { (o, d) ->
+                        drawLine(p.acento.copy(alpha = 0.55f), o, o + Offset(d.x * k, 0f), 1.5f); drawLine(p.acento.copy(alpha = 0.55f), o, o + Offset(0f, d.y * k), 1.5f)
+                    }
+                }
+                TemaId.ANDALUS -> {
+                    drawRect(p.acento.copy(alpha = 0.45f), Offset(10.dp.toPx(), 10.dp.toPx()), Size(w - 20.dp.toPx(), h - 20.dp.toPx()), style = Stroke(1.5f))
+                    drawRect(p.detalle.copy(alpha = 0.35f), Offset(14.dp.toPx(), 14.dp.toPx()), Size(w - 28.dp.toPx(), h - 28.dp.toPx()), style = Stroke(1f))
+                }
+                TemaId.MONGOL -> listOf(0f, h - 10.dp.toPx()).forEach { y ->
+                    drawRect(p.acento.copy(alpha = 0.8f), Offset(0f, y), Size(w, 10.dp.toPx()))
+                    grecaPequena(Offset(6.dp.toPx(), y + 5.dp.toPx()), w - 12.dp.toPx(), 6.dp.toPx(), Color(0xFFF2C14E))
+                }
+                TemaId.RENACIMIENTO -> {
+                    // Trazos de construcción en un rincón, como en los folios de Leonardo.
+                    val o = Offset(w * 0.82f, h * 0.84f)
+                    drawCircle(p.tinta.copy(alpha = 0.08f), w * 0.22f, o, style = Stroke(1f))
+                    drawRect(p.tinta.copy(alpha = 0.08f), Offset(o.x - w * 0.2f, o.y - w * 0.2f), Size(w * 0.4f, w * 0.4f), style = Stroke(1f))
+                    drawLine(p.tinta.copy(alpha = 0.08f), Offset(o.x - w * 0.24f, o.y), Offset(o.x + w * 0.24f, o.y), 1f)
+                }
                 else -> {}
             }
         }
         if (oscuroApp && !p.oscura) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.22f)))
-    }
-}
-
-/** Tira de papel picado arriba de la página de Día de Muertos: banderitas de colores con su calado. */
-@Composable
-private fun PapelPicado(p: Pagina) {
-    val colores = listOf(p.acento, p.detalle, Color(0xFF26C6DA), Color(0xFF6A1B9A), Color(0xFFFDD835))
-    Canvas(Modifier.fillMaxWidth().height(44.dp)) {
-        val w = size.width; val ancho = 36.dp.toPx(); val alto = 34.dp.toPx(); val pico = 40.dp.toPx()
-        drawLine(p.tinta.copy(alpha = 0.35f), Offset(0f, 1.5f), Offset(w, 1.5f), 2f)
-        var x = 0f; var k = 0
-        while (x < w) {
-            val q = Path().apply { moveTo(x + 2f, 0f); lineTo(x + ancho - 2f, 0f); lineTo(x + ancho - 2f, alto); for (i in 4 downTo 0) lineTo(x + 2f + (ancho - 4f) * i / 4, if (i % 2 == 0) alto else pico); close() }
-            drawPath(q, colores[k % colores.size].copy(alpha = 0.9f))
-            // Calado: una flor de cuatro pétalos y dos rombos, del color del papel.
-            val cx = x + ancho / 2; val cy = alto * 0.45f; val r = ancho * 0.13f
-            for (j in 0 until 4) { val a = Math.toRadians(45.0 + 90.0 * j); drawCircle(p.color, r * 0.75f, Offset(cx + r * kotlin.math.cos(a).toFloat(), cy + r * kotlin.math.sin(a).toFloat())) }
-            drawCircle(colores[k % colores.size], r * 0.55f, Offset(cx, cy))
-            listOf(alto * 0.15f, alto * 0.8f).forEach { yy -> drawPath(Path().apply { moveTo(cx, yy - 3f); lineTo(cx + 3f, yy); lineTo(cx, yy + 3f); lineTo(cx - 3f, yy); close() }, p.color) }
-            x += ancho; k++
-        }
     }
 }
 
@@ -760,17 +841,17 @@ private fun BarraPagina(p: Pagina, volver: () -> Unit, centro: String, derecha: 
 fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Unit)?, siguiente: (() -> Unit)?, acciones: List<Pair<String, () -> Unit>>,
                 tema: TemaId = Estilo.tema) {
     val p = pagina(tema)
+    val sentirPagina = rememberSentir()
     var menu by remember { mutableStateOf(false) }
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
             FondoPagina(tema, p)
             Column(Modifier.fillMaxSize()) {
-                if (tema == TemaId.MUERTOS) PapelPicado(p)
                 BarraPagina(p, volver, d?.let { "${Texto.palabras(it.nota)} palabras" } ?: "") {
                     Text("‹", fontSize = 24.sp, color = if (anterior != null) p.acento else p.tenue.copy(alpha = 0.3f),
-                        modifier = Modifier.clickable(enabled = anterior != null) { anterior?.invoke() }.padding(horizontal = 10.dp))
+                        modifier = Modifier.clickable(enabled = anterior != null) { sentirPagina(Sentidos.Evento.PASAR); anterior?.invoke() }.padding(horizontal = 10.dp))
                     Text("›", fontSize = 24.sp, color = if (siguiente != null) p.acento else p.tenue.copy(alpha = 0.3f),
-                        modifier = Modifier.clickable(enabled = siguiente != null) { siguiente?.invoke() }.padding(horizontal = 10.dp))
+                        modifier = Modifier.clickable(enabled = siguiente != null) { sentirPagina(Sentidos.Evento.PASAR); siguiente?.invoke() }.padding(horizontal = 10.dp))
                     Box {
                         Text("⋯", fontSize = 22.sp, color = p.acento, modifier = Modifier.clickable { menu = true }.padding(horizontal = 10.dp))
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = p.color) {
@@ -823,7 +904,6 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
         Box(Modifier.fillMaxSize()) {
             FondoPagina(tema, p)
             Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
-                if (tema == TemaId.MUERTOS) PapelPicado(p)
                 BarraPagina(p, guardar, "${Texto.palabras(campo.text)} palabras") {
                     Text(textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
                         modifier = Modifier.padding(end = 6.dp).background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }

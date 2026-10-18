@@ -75,6 +75,20 @@ data class Momento(
 )
 
 @Serializable
+data class Ingreso(
+    val id: String,
+    val fecha: String,
+    val hora: String,
+    val monto: Double,
+    val categoria: String,
+    val nota: String = "",
+    /** Ingreso que se repite (sueldo, beca, renta): solo informativo, no se duplica solo. */
+    val fijo: Boolean = false,
+) {
+    val dia: String get() = if (hora.length >= 2 && (hora.take(2).toIntOrNull() ?: 12) < 5) Fechas.sumar(fecha, -1) else fecha
+}
+
+@Serializable
 data class Gasto(
     val id: String,
     val fecha: String,
@@ -222,7 +236,7 @@ data class Config(
     val whatsapp_yo: String = "",
     val escalas_hora: Int = 19,
     val escalas_insistir: Boolean = true,
-    /** romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio o colonos. */
+    /** Id del tema (ver TemaId): romano, ciber, heleno, medieval, gotico, espacio, andalus, botanico… */
     val tema: String = "romano",
     /** Escala del texto (1 = normal). */
     val letra: Float = 1f,
@@ -242,6 +256,8 @@ data class Config(
     val modo: String = "sistema",
     /** Emblemas que se mueven, transiciones y barras que crecen. */
     val animaciones: Boolean = true,
+    /** Una capa tenue que se mueve detrás de todo: estrellas, nieve, polvo de vitral, luciérnagas… */
+    val fondo_vivo: Boolean = true,
     /** Vibraciones al tocar y al guardar. */
     val vibracion: Boolean = true,
     /** Sonidos del tema al guardar y al cambiar de pantalla (respetan el modo silencio). */
@@ -250,7 +266,15 @@ data class Config(
     val icono_tema: Boolean = false,
     /** Las notificaciones suenan con el sonido solemne del tema (campanas, órgano, synthwave…). */
     val sonido_avisos: Boolean = true,
+    /** Frases del día a las que se les dio «me gusta». */
+    val frases_guardadas: List<FraseGuardada> = emptyList(),
+    /** Categorías de ingreso. */
+    val categorias_ingreso: List<String> = Catalogo.CATEGORIAS_INGRESO,
 )
+
+/** Una frase del día guardada: el texto tal como se mostró, el tema donde apareció y cuándo se guardó. */
+@Serializable
+data class FraseGuardada(val texto: String, val original: String? = null, val autor: String, val tema: String, val fecha: String)
 
 /** Llamadas y SMS del día: solo cuántos, cuánto duraron y con cuántas personas distintas. Nunca números, nombres ni textos. */
 @Serializable

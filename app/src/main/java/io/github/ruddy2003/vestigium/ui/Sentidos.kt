@@ -22,7 +22,7 @@ import io.github.ruddy2003.vestigium.data.Repo
  * Los sonidos están sintetizados para esta app y solo suenan con el teléfono en modo normal (no en silencio ni vibración).
  */
 object Sentidos {
-    enum class Evento { TOQUE, ELEGIR, GUARDAR, LOGRO, PASAR, CAMBIO, ERROR }
+    enum class Evento { TOQUE, ELEGIR, GUARDAR, LOGRO, PASAR, CAMBIO, ERROR, ABRIR }
 
     /** Un golpe de vibración: primitiva, intensidad (0–1) y espera en ms antes de él. */
     private class Golpe(val prim: Int, val fuerza: Float, val espera: Int = 0)
@@ -46,6 +46,11 @@ object Sentidos {
             else -> listOf(g(TICK, 0.5f))
         }
         Evento.ERROR -> listOf(g(BAJA, 0.8f), g(CLICK, 0.6f, 60))
+        Evento.ABRIR -> when (tema) {
+            TemaId.CIBER, TemaId.ESPACIO, TemaId.LABORATORIO -> listOf(g(SUBE, 0.5f), g(TICK, 0.7f, 30))
+            TemaId.DISTOPIA, TemaId.URSS, TemaId.ORDEN -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
+            else -> listOf(g(SUBE_LENTO, 0.45f), g(TICK_GRAVE, 0.6f, 20))
+        }
         Evento.CAMBIO -> when (tema) {
             TemaId.HELENO -> listOf(g(SPIN, 0.6f))
             TemaId.REFUGIO -> listOf(g(CLICK, 0.7f), g(SUBE_LENTO, 0.5f, 30))
@@ -112,11 +117,41 @@ object Sentidos {
                 Evento.GUARDAR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 60), g(THUD, 1f, 60))
                 else -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(THUD, 1f, 160), g(THUD, 0.6f, 240))
             }
-            // Latido suave y campanas lejanas.
-            TemaId.MUERTOS -> when (e) {
-                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.6f)); Evento.PASAR -> listOf(g(TICK, 0.4f))
-                Evento.GUARDAR -> listOf(g(THUD, 0.7f), g(THUD, 0.45f, 140))
-                else -> listOf(g(THUD, 0.8f), g(THUD, 0.5f, 140), g(SUBE_LENTO, 0.5f, 220), g(BAJA, 0.4f, 40))
+            // Hojas que se rozan y un pájaro que canta.
+            TemaId.BOTANICO -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.5f)); Evento.PASAR -> listOf(g(SUBE, 0.3f), g(BAJA, 0.3f, 20))
+                Evento.GUARDAR -> listOf(g(SUBE_LENTO, 0.5f), g(CLICK, 0.4f, 30))
+                else -> listOf(g(TICK, 0.6f), g(TICK, 0.8f, 70), g(TICK, 0.6f, 50), g(SUBE, 0.5f, 60))
+            }
+            // Órgano y campanas de la capilla.
+            TemaId.GOTICO -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.6f)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.35f))
+                Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(SUBE_LENTO, 0.5f, 40))
+                else -> listOf(g(THUD, 0.9f), g(THUD, 0.6f, 260), g(THUD, 0.4f, 260))
+            }
+            // Pitidos de la sala de control.
+            TemaId.ESPACIO -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK, 0.8f)); Evento.PASAR -> listOf(g(SUBE, 0.5f))
+                Evento.GUARDAR -> listOf(g(TICK, 0.9f), g(TICK, 0.9f, 60), g(SUBE_LENTO, 0.6f, 40))
+                else -> listOf(g(SUBE_LENTO, 0.9f), g(CLICK, 1f, 10), g(SPIN, 0.5f, 60))
+            }
+            // Laúd y darbuka: dum, tek, tek.
+            TemaId.ANDALUS -> when (e) {
+                Evento.TOQUE -> listOf(g(CLICK, 0.5f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK_GRAVE, 0.5f, 60))
+                Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(TICK, 0.6f, 90), g(TICK, 0.6f, 90))
+                else -> listOf(g(THUD, 0.9f), g(TICK, 0.7f, 120), g(TICK, 0.7f, 60), g(THUD, 0.8f, 120), g(SPIN, 0.4f, 80))
+            }
+            // Cascos al galope y el tambor de la horda.
+            TemaId.MONGOL -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.8f)); Evento.PASAR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50))
+                Evento.GUARDAR -> listOf(g(THUD, 0.9f), g(THUD, 0.5f, 70))
+                else -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50), g(CLICK, 0.6f, 140), g(CLICK, 0.6f, 50), g(CLICK, 0.8f, 50), g(THUD, 1f, 140))
+            }
+            // Pluma que raspa el papel y un laúd.
+            TemaId.RENACIMIENTO -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK, 0.5f)); Evento.PASAR -> listOf(g(BAJA, 0.4f))
+                Evento.GUARDAR -> listOf(g(SUBE, 0.3f), g(CLICK, 0.6f, 30))
+                else -> listOf(g(SUBE_LENTO, 0.5f), g(TICK, 0.7f, 40), g(TICK, 0.7f, 80), g(TICK, 0.9f, 80))
             }
             // Cascabeles.
             TemaId.NAVIDAD -> when (e) {
@@ -185,30 +220,37 @@ object Sentidos {
 
     // ---------------------------------------------------------------- sonido
 
+    /** Por tema: toque, guardar, logro, pasar (cambiar de pantalla), elegir y abrir. */
     private val SONIDOS = mapOf(
-        "romano" to intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro),
-        "ciber" to intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro),
-        "heleno" to intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro),
-        "medieval" to intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro),
-        "distopia" to intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro),
-        "refugio" to intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro),
-        "orden" to intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro),
-        "laboratorio" to intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro),
-        "colonos" to intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro),
-        "napoleon" to intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro),
-        "muertos" to intArrayOf(R.raw.s_muertos_toque, R.raw.s_muertos_guardar, R.raw.s_muertos_logro),
-        "navidad" to intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro),
-        "seda" to intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro),
-        "urss" to intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro),
+        "romano" to intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir),
+        "ciber" to intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir),
+        "heleno" to intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir),
+        "medieval" to intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir),
+        "distopia" to intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir),
+        "refugio" to intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir),
+        "orden" to intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir),
+        "laboratorio" to intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro, R.raw.s_laboratorio_pasar, R.raw.s_laboratorio_elegir, R.raw.s_laboratorio_abrir),
+        "colonos" to intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro, R.raw.s_colonos_pasar, R.raw.s_colonos_elegir, R.raw.s_colonos_abrir),
+        "napoleon" to intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro, R.raw.s_napoleon_pasar, R.raw.s_napoleon_elegir, R.raw.s_napoleon_abrir),
+        "botanico" to intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir),
+        "navidad" to intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro, R.raw.s_navidad_pasar, R.raw.s_navidad_elegir, R.raw.s_navidad_abrir),
+        "seda" to intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro, R.raw.s_seda_pasar, R.raw.s_seda_elegir, R.raw.s_seda_abrir),
+        "urss" to intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir),
+        "gotico" to intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir),
+        "espacio" to intArrayOf(R.raw.s_espacio_toque, R.raw.s_espacio_guardar, R.raw.s_espacio_logro, R.raw.s_espacio_pasar, R.raw.s_espacio_elegir, R.raw.s_espacio_abrir),
+        "andalus" to intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir),
+        "mongol" to intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir),
+        "renacimiento" to intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir),
     )
 
     private var pool: SoundPool? = null
+    private val azar = java.util.Random()
     private val cargados = HashMap<Int, Int>()      // recurso → id en el pool
     private val listos = HashSet<Int>()             // ids ya decodificados
     private val pendientes = HashMap<Int, Float>()  // ids que se pidieron antes de estar listos → volumen
 
     @Synchronized
-    private fun pool(): SoundPool = pool ?: SoundPool.Builder().setMaxStreams(3)
+    private fun pool(): SoundPool = pool ?: SoundPool.Builder().setMaxStreams(4)
         .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
         .build().also { p ->
             p.setOnLoadCompleteListener { sp, id, estado ->
@@ -224,14 +266,16 @@ object Sentidos {
     }
 
     private fun sonar(ctx: Context, tema: TemaId, e: Evento) {
-        val i = when (e) { Evento.TOQUE, Evento.PASAR, Evento.CAMBIO -> 0; Evento.GUARDAR -> 1; Evento.LOGRO -> 2; else -> return }
+        val i = when (e) { Evento.TOQUE -> 0; Evento.GUARDAR -> 1; Evento.LOGRO -> 2; Evento.PASAR -> 3; Evento.ELEGIR -> 4; Evento.ABRIR, Evento.CAMBIO -> 5; else -> return }
         val audio = ctx.getSystemService(AudioManager::class.java)
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
         val r = SONIDOS[tema.id]?.get(i) ?: return
-        val vol = if (i == 0) 0.45f else 0.8f
+        val vol = when (i) { 0, 4 -> 0.45f; 3 -> 0.38f; 5 -> 0.6f; else -> 0.8f }
+        // Los sonidos cortos cambian un poco de altura cada vez, para que tocar varias veces no suene a máquina.
+        val tono = if (i == 0 || i == 3 || i == 4) 0.94f + azar.nextFloat() * 0.12f else 1f
         val p = pool()
         val id = cargados.getOrPut(r) { p.load(ctx.applicationContext, r, 1) }
-        if (id in listos) p.play(id, vol, vol, 1, 0, 1f) else pendientes[id] = vol
+        if (id in listos) p.play(id, vol, vol, 1, 0, tono) else pendientes[id] = vol
     }
 }
 

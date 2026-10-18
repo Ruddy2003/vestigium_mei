@@ -39,7 +39,7 @@ object Diccionario {
         "valencia" to "Qué tan agradable fue (1 muy desagradable a 7 muy agradable; Russell)", "activacion" to "Energía (1 muy baja a 7 muy alta)",
         "dolor" to "Dolor o molestia física (0 nada a 5 muy fuerte)", "sueno_calidad" to "Calidad del sueño percibida (1 a 5)",
         "valencia_muestreo" to "Promedio de la valencia en los avisos del día", "n_muestreos" to "Avisos de ánimo respondidos", "n_momentos" to "Momentos registrados (sin contar avisos)",
-        "gasto_total" to "Gasto del día (tu moneda)", "schema_v" to "Versión del esquema de datos", "origen" to "De dónde vino el registro (app, web, obsidian, widget…)",
+        "gasto_total" to "Gasto del día (tu moneda)", "ingreso_total" to "Ingresos del día (tu moneda)", "fijo" to "Ingreso que se repite, como sueldo o beca (0/1)", "schema_v" to "Versión del esquema de datos", "origen" to "De dónde vino el registro (app, web, obsidian, widget…)",
         "retroactivo" to "Se llenó después de ese día (0/1)", "dia_dificil" to "Marcado como día difícil (0/1)",
         "ts_creado" to "Cuándo se creó el registro", "ts_editado" to "Última edición",
         "hitos" to "Hitos del día (lista)", "flow" to "Experiencia de flujo (Csikszentmihalyi)", "sdt_necesidad" to "Necesidad psicológica más presente (Deci y Ryan)",

@@ -64,6 +64,8 @@ fun PantallaMas(nav: Nav) {
                 FilaMenu("Hábitos", "${Repo.config.habitos.count { it.activo }} activos · se marcan en la hoja de la noche") { nav.ir("habitos") }
                 HorizontalDivider()
                 FilaMenu("Cartas al futuro", "${Repo.cartas.count { !it.abierta }} esperando su fecha") { nav.ir("cartas") }
+                HorizontalDivider()
+                FilaMenu("Frases guardadas", Repo.config.frases_guardadas.size.let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }) { nav.ir("frases") }
             }
         }
         Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 2) {

@@ -102,9 +102,24 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Napoleónico: carta de estado mayor sepia; de noche, azul imperial.
         tema == io.github.ruddy2003.vestigium.ui.TemaId.NAPOLEON && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.68f, 0.92f, 2f, 4f, 16f)) }
         tema == io.github.ruddy2003.vestigium.ui.TemaId.NAPOLEON -> { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 2f, 0f, 0f)) }
-        // Día de Muertos: papel de china cálido; de noche, morado de panteón.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.MUERTOS && oscuro -> { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.66f, 0.95f, 8f, 2f, 12f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.MUERTOS -> { m.setSaturation(0.5f); m.postConcat(tinte(1.0f, 0.93f, 0.85f, 4f, 0f, 0f)) }
+        // Botánico: lámina de atlas en crema y verde; de noche, el bosque.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.BOTANICO && oscuro -> { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.86f, 0.66f, 2f, 8f, 2f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.BOTANICO -> { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.86f, 2f, 4f, 0f)) }
+        // Gótico: piedra caliza; de noche, el azul de la bóveda.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.GOTICO && oscuro -> { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.56f, 0.6f, 0.95f, 2f, 4f, 22f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.GOTICO -> { m.setSaturation(0.2f); m.postConcat(tinte(0.98f, 0.95f, 0.88f, 2f, 2f, 0f)) }
+        // Espacio: carta de navegación; de noche, como vista desde la órbita.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.ESPACIO && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.42f, 0.55f, 0.85f, 0f, 2f, 8f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.ESPACIO -> { m.setSaturation(0.15f); m.postConcat(tinte(0.93f, 0.96f, 1.0f, 0f, 2f, 6f)) }
+        // Al-Ándalus: arena y yeso; de noche, el jardín en verde azulado.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.ANDALUS && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.82f, 0.78f, 2f, 8f, 6f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.ANDALUS -> { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 4f, 2f, 0f)) }
+        // Mongol: la estepa bajo el cielo azul; de noche, el azul profundo.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.MONGOL && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.55f, 0.68f, 0.95f, 2f, 6f, 18f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.MONGOL -> { m.setSaturation(0.4f); m.postConcat(tinte(0.97f, 0.97f, 0.92f, 2f, 2f, 4f)) }
+        // Renacimiento: mapa dibujado a sanguina; de noche, nogal.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.RENACIMIENTO && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.85f, 0.68f, 0.5f, 6f, 2f, 0f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.RENACIMIENTO -> { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.88f, 0.7f, 0f, 0f, 0f)) }
         // Navidad: nieve; de noche, bosque.
         tema == io.github.ruddy2003.vestigium.ui.TemaId.NAVIDAD && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.86f, 0.7f, 2f, 8f, 4f)) }
         tema == io.github.ruddy2003.vestigium.ui.TemaId.NAVIDAD -> { m.setSaturation(0.35f); m.postConcat(tinte(0.98f, 0.97f, 0.94f, 4f, 4f, 2f)) }

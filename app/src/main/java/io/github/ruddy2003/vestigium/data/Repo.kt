@@ -21,6 +21,7 @@ object Repo {
     var dias by mutableStateOf<Map<String, Dia>>(emptyMap()); private set
     var momentos by mutableStateOf<List<Momento>>(emptyList()); private set
     var gastos by mutableStateOf<List<Gasto>>(emptyList()); private set
+    var ingresos by mutableStateOf<List<Ingreso>>(emptyList()); private set
     var respuestas by mutableStateOf<List<Respuesta>>(emptyList()); private set
     var reacciones by mutableStateOf<List<Reaccion>>(emptyList()); private set
     var lugares by mutableStateOf<List<Lugar>>(emptyList()); private set
@@ -53,6 +54,7 @@ object Repo {
         dias = cargar("dias", Dia.serializer()).associateBy { it.fecha }
         momentos = cargar("momentos", Momento.serializer()).sortedBy { it.ts }
         gastos = cargar("gastos", Gasto.serializer()).sortedBy { it.fecha + it.hora }
+        ingresos = cargar("ingresos", Ingreso.serializer()).sortedBy { it.fecha + it.hora }
         respuestas = cargar("respuestas", Respuesta.serializer()).sortedBy { it.ts }
         reacciones = cargar("reacciones", Reaccion.serializer()).sortedBy { it.ts }
         lugares = cargar("lugares", Lugar.serializer())
@@ -62,6 +64,8 @@ object Repo {
         cartas = cargar("cartas", Carta.serializer())
         experimentos = cargar("experimentos", Experimento.serializer())
         config = db.uno("config", "config")?.let { runCatching { JSON.decodeFromString(Config.serializer(), it) }.getOrNull() } ?: Config()
+        // El tema «Día de Muertos» se convirtió en «Botánico»: quien lo tenía elegido pasa al nuevo.
+        if (config.tema == "muertos") { config = config.copy(tema = "botanico"); db.poner("config", "config", null, JSON.encodeToString(Config.serializer(), config)) }
         entorno = cargar("entorno", EntornoDia.serializer()).associateBy { it.fecha }
         fotos = cargar("fotos", FotosDia.serializer()).associateBy { it.fecha }
         agenda = cargar("agenda", AgendaDia.serializer()).associateBy { it.fecha }
@@ -135,6 +139,18 @@ object Repo {
         db.transaccion { lista.forEach { db.poner("gastos", it.id, it.fecha, JSON.encodeToString(Gasto.serializer(), it)) } }
         val ids = gastos.map { it.id }.toSet()
         enMain { gastos = (gastos + lista.filter { it.id !in ids }).sortedBy { it.fecha + it.hora } }
+    }
+
+    // ---------- Ingresos ----------
+    fun guardarIngreso(i: Ingreso) {
+        db.poner("ingresos", i.id, i.fecha, JSON.encodeToString(Ingreso.serializer(), i))
+        enMain { ingresos = (ingresos.filter { it.id != i.id } + i).sortedBy { it.fecha + it.hora } }
+    }
+    fun borrarIngreso(id: String) { db.borrar("ingresos", id); enMain { ingresos = ingresos.filter { it.id != id } } }
+    fun importarIngresos(lista: List<Ingreso>) {
+        db.transaccion { lista.forEach { db.poner("ingresos", it.id, it.fecha, JSON.encodeToString(Ingreso.serializer(), it)) } }
+        val ids = ingresos.map { it.id }.toSet()
+        enMain { ingresos = (ingresos + lista.filter { it.id !in ids }).sortedBy { it.fecha + it.hora } }
     }
 
     // ---------- Escalas y reacción ----------
@@ -328,7 +344,8 @@ object Repo {
     /** Solo para las capturas de diseño: datos de ejemplo en memoria. */
     fun ejemploEnMemoria(dias: Map<String, Dia>, salud: Map<String, SaludDia>, pantalla: Map<String, PantallaDia>, gastos: List<Gasto>,
                          momentos: List<Momento>, notifs: Map<String, NotifDia>, entorno: Map<String, EntornoDia>, nutricion: Map<String, NutricionDia>,
-                         lugares: List<Lugar>, visitas: List<Visita>, sesiones: List<Sesion>) {
+                         lugares: List<Lugar>, visitas: List<Visita>, sesiones: List<Sesion>, ingresos: List<Ingreso> = emptyList()) {
+        this.ingresos = ingresos
         this.dias = dias; this.salud = salud; this.pantalla = pantalla; this.gastos = gastos; this.momentos = momentos
         this.notifs = notifs; this.entorno = entorno; this.nutricion = nutricion; this.lugares = lugares; this.visitas = visitas; this.sesiones = sesiones
     }

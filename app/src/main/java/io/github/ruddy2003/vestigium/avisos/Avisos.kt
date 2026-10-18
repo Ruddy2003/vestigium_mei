@@ -28,9 +28,12 @@ object Avisos {
         "distopia" to (R.raw.n_distopia_aviso to R.raw.n_distopia_solemne), "refugio" to (R.raw.n_refugio_aviso to R.raw.n_refugio_solemne),
         "orden" to (R.raw.n_orden_aviso to R.raw.n_orden_solemne), "laboratorio" to (R.raw.n_laboratorio_aviso to R.raw.n_laboratorio_solemne),
         "colonos" to (R.raw.n_colonos_aviso to R.raw.n_colonos_solemne),
-        "napoleon" to (R.raw.n_napoleon_aviso to R.raw.n_napoleon_solemne), "muertos" to (R.raw.n_muertos_aviso to R.raw.n_muertos_solemne),
+        "napoleon" to (R.raw.n_napoleon_aviso to R.raw.n_napoleon_solemne), "botanico" to (R.raw.n_botanico_aviso to R.raw.n_botanico_solemne),
         "navidad" to (R.raw.n_navidad_aviso to R.raw.n_navidad_solemne), "seda" to (R.raw.n_seda_aviso to R.raw.n_seda_solemne),
         "urss" to (R.raw.n_urss_aviso to R.raw.n_urss_solemne),
+        "gotico" to (R.raw.n_gotico_aviso to R.raw.n_gotico_solemne), "espacio" to (R.raw.n_espacio_aviso to R.raw.n_espacio_solemne),
+        "andalus" to (R.raw.n_andalus_aviso to R.raw.n_andalus_solemne), "mongol" to (R.raw.n_mongol_aviso to R.raw.n_mongol_solemne),
+        "renacimiento" to (R.raw.n_renacimiento_aviso to R.raw.n_renacimiento_solemne),
     )
 
     private fun nombreCanal(base: String) = when (base) {

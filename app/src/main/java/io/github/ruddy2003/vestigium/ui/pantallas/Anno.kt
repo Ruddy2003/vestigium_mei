@@ -136,6 +136,7 @@ fun PantallaAnno(nav: Nav) {
                 Cifra(salud.mapNotNull { it.sueno_min }.takeIf { it.isNotEmpty() }?.average()?.let { "%.1f h".format(it / 60) } ?: "—", "sueño", Modifier.weight(1f))
                 Cifra(salud.mapNotNull { it.pasos }.takeIf { it.isNotEmpty() }?.average()?.let { "%,.0f".format(it) } ?: "—", "pasos/día", Modifier.weight(1f))
                 Cifra("$" + "%,.0f".format(Repo.gastos.filter { it.fecha.startsWith(pre) }.sumOf { it.monto }), "gasto", Modifier.weight(1f))
+                Repo.ingresos.filter { it.fecha.startsWith(pre) }.sumOf { it.monto }.takeIf { it > 0 }?.let { Cifra("$" + "%,.0f".format(it), "ingresos", Modifier.weight(1f)) }
             }
         }
 

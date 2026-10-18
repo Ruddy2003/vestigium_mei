@@ -75,7 +75,7 @@ vm_leer <- function(archivo) {
 }
 
 vm_archivos <- c(
-  panel = "vm_panel.csv", dias = "vm_dias.csv", momentos = "vm_momentos.csv", gastos = "vm_gastos.csv",
+  panel = "vm_panel.csv", dias = "vm_dias.csv", momentos = "vm_momentos.csv", gastos = "vm_gastos.csv", ingresos = "vm_ingresos.csv",
   escalas = "vm_escalas.csv", reaccion = "vm_reaccion.csv", salud = "vm_salud.csv", pantalla = "vm_pantalla.csv",
   visitas = "vm_visitas.csv", ubicaciones = "vm_ubicaciones.csv", entorno = "vm_entorno.csv", fotos = "vm_fotos.csv",
   agenda = "vm_agenda.csv", notificaciones = "vm_notificaciones.csv", musica = "vm_musica.csv", actividad = "vm_actividad.csv",

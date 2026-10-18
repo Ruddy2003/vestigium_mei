@@ -250,7 +250,10 @@ fun FraseDelDia(fecha: String) {
                     Text(Frases.rotulo(tema), style = ty.labelMedium, color = cs.primary)
                     f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
                     Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
-                    Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
+                        CorazonFrase(f, cs.primary)
+                    }
                 }
             }
         }
@@ -269,7 +272,10 @@ fun FraseDelDia(fecha: String) {
                     append(f.texto.drop(1))
                 }, style = ty.bodyMedium)
             } else Text(if (tema == TemaId.CIBER) f.texto else "«${f.texto}»", style = ty.bodyMedium)
-            Text("— ${f.autor}", style = ty.labelMedium, color = cs.onSurfaceVariant)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("— ${f.autor}", style = ty.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+                CorazonFrase(f, cs.primary)
+            }
         }
     }
     if (marco) Surface(shape = MaterialTheme.shapes.small, color = cs.surface, border = androidx.compose.foundation.BorderStroke(1.dp, cs.primary.copy(alpha = 0.5f)),
@@ -423,7 +429,9 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
 fun estiloCifra(): androidx.compose.ui.text.TextStyle = when (Estilo.tema) {
     TemaId.ROMANO -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = androidx.compose.ui.unit.TextUnit(21f, androidx.compose.ui.unit.TextUnitType.Sp), letterSpacing = androidx.compose.ui.unit.TextUnit(0f, androidx.compose.ui.unit.TextUnitType.Sp))
     // La gótica y las capitulares navideñas son para títulos; las cifras se leen mejor en Garamond.
-    TemaId.MEDIEVAL, TemaId.NAVIDAD -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.garamond, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+    TemaId.RENACIMIENTO -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.LetraExtra.cormorant, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+        fontSize = androidx.compose.ui.unit.TextUnit(25f, androidx.compose.ui.unit.TextUnitType.Sp), letterSpacing = androidx.compose.ui.unit.TextUnit(0f, androidx.compose.ui.unit.TextUnitType.Sp), fontFeatureSettings = "lnum")
+    TemaId.MEDIEVAL, TemaId.NAVIDAD, TemaId.GOTICO -> MaterialTheme.typography.titleLarge.copy(fontFamily = io.github.ruddy2003.vestigium.ui.Letra.garamond, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
         fontSize = androidx.compose.ui.unit.TextUnit(23f, androidx.compose.ui.unit.TextUnitType.Sp), letterSpacing = androidx.compose.ui.unit.TextUnit(0f, androidx.compose.ui.unit.TextUnitType.Sp), fontFeatureSettings = "lnum, tnum")
     else -> MaterialTheme.typography.headlineSmall
 }

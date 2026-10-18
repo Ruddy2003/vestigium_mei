@@ -127,6 +127,7 @@ object Totales {
         val nutricion = Repo.nutricion.values.filter { en(it.fecha) }
         val entrenos = Repo.entrenos.values.filter { en(it.fecha) && it.series > 0 }
         val gastos = Repo.gastos.filter { en(it.fecha) }
+        val ingresos = Repo.ingresos.filter { en(it.fecha) }
         val visitas = Repo.visitas.filter { en(Fechas.diaLogicoDeMillis(Fechas.millis(it.entrada))) }
         val comidas = runCatching { Repo.comidas(desde, hasta) }.getOrDefault(emptyList())
         val series = runCatching { Repo.series(desde, hasta) }.getOrDefault(emptyList())
@@ -198,14 +199,23 @@ object Totales {
             if (c.isNotEmpty()) grupos.add(Grupo("Diario y mente", "ANIMVS", c))
         }
         // ----- Dinero -----
-        if (gastos.isNotEmpty()) {
+        if (gastos.isNotEmpty() || ingresos.isNotEmpty()) {
             val c = ArrayList<Cifra>()
-            val g0 = gastos.minOf { it.fecha }
-            val porDia = gastos.groupBy { it.fecha }.mapValues { e -> e.value.sumOf { it.monto } }
-            val top = porDia.maxByOrNull { it.value }!!
-            c.add(Cifra("Gasto total", dinero(gastos.sumOf { it.monto }), g0, "${gastos.size} gastos · día más caro: ${dinero(top.value)} el ${fecha(top.key)}"))
-            val imp = gastos.filter { it.imprevisto }
-            if (imp.isNotEmpty()) c.add(Cifra("Imprevistos", dinero(imp.sumOf { it.monto }), imp.minOf { it.fecha }, "${imp.size} gastos"))
+            if (gastos.isNotEmpty()) {
+                val g0 = gastos.minOf { it.fecha }
+                val porDia = gastos.groupBy { it.fecha }.mapValues { e -> e.value.sumOf { it.monto } }
+                val top = porDia.maxByOrNull { it.value }!!
+                c.add(Cifra("Gasto total", dinero(gastos.sumOf { it.monto }), g0, "${gastos.size} gastos · día más caro: ${dinero(top.value)} el ${fecha(top.key)}"))
+                val imp = gastos.filter { it.imprevisto }
+                if (imp.isNotEmpty()) c.add(Cifra("Imprevistos", dinero(imp.sumOf { it.monto }), imp.minOf { it.fecha }, "${imp.size} gastos"))
+            }
+            if (ingresos.isNotEmpty()) {
+                val total = ingresos.sumOf { it.monto }
+                val principal = ingresos.groupBy { it.categoria }.mapValues { e -> e.value.sumOf { it.monto } }.maxBy { it.value }.key
+                c.add(Cifra("Ingresos", dinero(total), ingresos.minOf { it.fecha }, "${ingresos.size} ingresos · lo que más aporta: ${principal.lowercase()}"))
+                val saldo = total - gastos.sumOf { it.monto }
+                c.add(Cifra("Saldo", (if (saldo < 0) "−" else "") + dinero(kotlin.math.abs(saldo)), ingresos.minOf { it.fecha }, "ingresos menos gastos"))
+            }
             grupos.add(Grupo("Dinero", "PECVNIA", c))
         }
         // ----- Teléfono -----

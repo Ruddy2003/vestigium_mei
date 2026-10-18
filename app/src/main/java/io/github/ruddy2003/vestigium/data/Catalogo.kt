@@ -81,6 +81,7 @@ object Catalogo {
     fun nombreTipo(id: String): String = if (id == "muestreo") "Ánimo" else tipo(id)?.nombre ?: id
 
     val CATEGORIAS = listOf("Comida", "Transporte", "Salud", "Ocio", "Social", "Suscripciones", "Escuela", "Ropa", "Regalos", "Otro")
+    val CATEGORIAS_INGRESO = listOf("Sueldo", "Beca", "Trabajo extra", "Mesada", "Regalo", "Venta", "Reembolso", "Intereses", "Otro")
     val DETONANTES = listOf("aburrimiento", "soledad", "estres", "tristeza", "ansiedad", "noche_insomnio", "redes_sociales", "cansancio", "otro")
     val HABITOS_SUGERIDOS = listOf("Meditar", "Leer", "Estudiar chino", "Escribir a mano", "Dormir antes de 00:00", "Sin pantalla al despertar")
     val TIPOS_LUGAR = listOf(Opcion("casa", "Casa"), Opcion("familia", "Familia"), Opcion("trabajo", "Trabajo"),

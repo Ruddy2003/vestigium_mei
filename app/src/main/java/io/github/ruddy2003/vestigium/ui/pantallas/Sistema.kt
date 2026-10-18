@@ -265,17 +265,18 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
             Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
             Tarjeta(Modifier.padding(top = 10.dp)) {
-                Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La V de huella toma los colores del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
-                Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
+                Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
+                Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
+                if (c.animaciones) Interruptor("Fondo vivo", c.fondo_vivo, "Algo se mueve muy despacio detrás de todo: estrellas que titilan, luz de vitral, luciérnagas, nieve, nubes de la estepa, reflejos de agua. Gasta un poco más de batería.") { v -> cambiar { it.copy(fondo_vivo = v) } }
                 Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
-                Interruptor("Sonidos", c.sonidos, "Sonidos cortos del tema al guardar, al cambiar de pestaña y al completar el día. No suenan con el teléfono en silencio o en vibración.") { v ->
+                Interruptor("Sonidos", c.sonidos, "Sonidos del tema al tocar, elegir, pasar de pantalla, abrir el diario, guardar y completar el día. Cambian un poco cada vez. No suenan con el teléfono en silencio o en vibración.") { v ->
                     cambiar { it.copy(sonidos = v) }
                     if (v) io.github.ruddy2003.vestigium.ui.Sentidos.preparar(ctx)
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    listOf("toque" to io.github.ruddy2003.vestigium.ui.Sentidos.Evento.TOQUE, "guardar" to io.github.ruddy2003.vestigium.ui.Sentidos.Evento.GUARDAR,
-                        "logro" to io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO).forEach { (n, e) ->
-                        BotonSecundario("probar $n") {
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    val E = io.github.ruddy2003.vestigium.ui.Sentidos.Evento
+                    listOf("toque" to E.TOQUE, "elegir" to E.ELEGIR, "pasar" to E.PASAR, "abrir" to E.ABRIR, "guardar" to E.GUARDAR, "logro" to E.LOGRO).forEach { (n, e) ->
+                        BotonSecundario(n) {
                             io.github.ruddy2003.vestigium.ui.Sentidos.sentir(ctx, e)
                             if (e == io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) io.github.ruddy2003.vestigium.ui.Fiesta.lanzar()
                         }

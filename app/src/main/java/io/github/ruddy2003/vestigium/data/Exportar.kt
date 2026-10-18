@@ -48,6 +48,7 @@ data class Respaldo(
     val comidas: List<Comida> = emptyList(),
     val series: List<Serie> = emptyList(),
     val entrenos: List<EntrenoDia> = emptyList(),
+    val ingresos: List<Ingreso> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -111,6 +112,11 @@ object Exportar {
     fun filasGastos() = Repo.gastos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "dia_logico" to it.dia, "monto" to it.monto, "categoria" to it.categoria,
             "imprevisto" to it.imprevisto, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon)
+    }
+
+    fun filasIngresos() = Repo.ingresos.map {
+        linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "dia_logico" to it.dia, "monto" to it.monto, "categoria" to it.categoria,
+            "fijo" to it.fijo, "nota" to it.nota)
     }
 
     fun filasEscalas() = Repo.respuestas.map { r ->
@@ -322,11 +328,12 @@ object Exportar {
 
     /** Una fila por día con todo lo que se sabe de él: el archivo más cómodo para empezar en R. */
     fun filasPanel(): List<Map<String, Any?>> {
-        val fechas = (Repo.dias.keys + Repo.salud.keys + Repo.pantalla.keys + Repo.entorno.keys + Repo.momentos.map { it.fecha } + Repo.gastos.map { it.fecha } +
+        val fechas = (Repo.dias.keys + Repo.salud.keys + Repo.pantalla.keys + Repo.entorno.keys + Repo.momentos.map { it.fecha } + Repo.gastos.map { it.fecha } + Repo.ingresos.map { it.dia } +
             Repo.nutricion.keys + Repo.entrenos.keys).toSortedSet()
         val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }
         val mo = Repo.momentos.filter { it.tipo != "muestreo" }.groupBy { it.fecha }
         val ga = Repo.gastos.groupBy { it.dia }
+        val ing = Repo.ingresos.groupBy { it.dia }
         val ej = Repo.sesiones.groupBy { it.fecha }
         val es = Repo.ascensos.groupBy { it.fecha }
         val km = runCatching { io.github.ruddy2003.vestigium.ciencia.Movilidad.kmPorDia() }.getOrDefault(emptyMap())
@@ -342,6 +349,7 @@ object Exportar {
                 "n_momentos" to (mo[f]?.size ?: 0))
             Catalogo.MOMENTOS.forEach { t -> r["m_${t.id}"] = mo[f]?.count { it.tipo == t.id } ?: 0 }
             r["gasto_total"] = ga[f]?.sumOf { it.monto } ?: 0.0
+            r["ingreso_total"] = ing[f]?.sumOf { it.monto } ?: 0.0
             r["palabras"] = d?.let { Texto.palabras(it.nota) }
             r["sueno_min"] = s?.sueno_min; r["sueno_profundo_min"] = s?.sueno_profundo_min; r["sueno_rem_min"] = s?.sueno_rem_min
             r["fc_reposo"] = s?.fc_reposo; r["hrv_rmssd"] = s?.hrv_rmssd; r["pasos"] = s?.pasos
@@ -405,7 +413,7 @@ object Exportar {
         comunicacion = Repo.comunicacion.values.sortedBy { it.fecha }, conexiones = Repo.conexiones.values.sortedBy { it.fecha },
         subrayados = Repo.subrayados, huellas = Repo.huellasDe("0000-01-01", "9999-12-31"), huellas_dia = Repo.huellas.values.sortedBy { it.fecha },
         chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
-        series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }))
+        series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -414,6 +422,7 @@ object Exportar {
         Tabla("vm_dias.csv", "Diario: lo que llenaste cada día", filasDias()),
         Tabla("vm_momentos.csv", "Momentos y avisos de ánimo, uno por fila", filasMomentos()),
         Tabla("vm_gastos.csv", "Gastos, uno por fila", filasGastos()),
+        Tabla("vm_ingresos.csv", "Ingresos, uno por fila", filasIngresos()),
         Tabla("vm_escalas.csv", "Cuestionarios validados (WHO-5, PSS-4, UCLA-3, TIPI)", filasEscalas()),
         Tabla("vm_reaccion.csv", "Pruebas de reacción", filasReaccion()),
         Tabla("vm_salud.csv", "Health Connect por día (reloj y báscula)", filasSalud()),

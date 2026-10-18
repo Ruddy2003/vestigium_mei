@@ -49,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.fadeIn
@@ -184,11 +185,14 @@ internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Uni
             PESTANAS.forEach { p ->
                 val sel = activa == p.id
                 val fondo by androidx.compose.animation.animateColorAsState(if (sel) cs.primary else cs.primary.copy(alpha = 0f), label = "indicador")
+                // El ícono elegido da un saltito.
+                val salto by androidx.compose.animation.core.animateFloatAsState(if (sel && Repo.config.animaciones) 1.12f else 1f,
+                    androidx.compose.animation.core.spring(dampingRatio = 0.4f, stiffness = 500f), label = "salto")
                 Column(
                     Modifier.weight(1f).fillMaxHeight().combinedClickable(onClick = { tocar(p.id) }, onLongClick = { largo(p.id) }, onLongClickLabel = "atajo de ${p.nombre}"),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
                 ) {
-                    Box(Modifier.size(width = 58.dp, height = 30.dp).clip(MaterialTheme.shapes.large).background(fondo), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(width = 58.dp, height = 30.dp).then(androidx.compose.ui.Modifier.graphicsLayer { scaleX = salto; scaleY = salto }).clip(MaterialTheme.shapes.large).background(fondo), contentAlignment = Alignment.Center) {
                         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides if (sel) cs.onPrimary else cs.primary.copy(alpha = 0.72f)) {
                             IconoPestana(p.id, tema, p.nombre)
                         }
@@ -251,7 +255,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
             // Tocar la pestaña en la que ya estás: arriba (y en Día, a hoy).
             alcance.launch { scrolls[id]?.animateScrollTo(0) }
             if (id == "dia") io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
-        } else { sentir(Sentidos.Evento.TOQUE); pestana = id; pila = emptyList() }
+        } else { sentir(Sentidos.Evento.PASAR); pestana = id; pila = emptyList() }
     }
     fun largo(id: String) {
         sentir(Sentidos.Evento.CAMBIO)
@@ -298,6 +302,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
         Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
+            FondoVivo(tema)
             // Cada tema cambia de pantalla a su manera; hacia adentro y hacia atrás se mueven en sentidos opuestos.
             androidx.compose.animation.AnimatedContent(
                 targetState = Destino(pila.lastOrNull() ?: pestana, pila.size),
@@ -338,6 +343,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "totales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav)
                     "buscar" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav, buscar = true)
                     "semana" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(nav)
+                    "frases" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFrasesGuardadas(nav)
                     "noche" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(nav)
                     "entrada" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(nav)
                     "biblioteca_diario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecaDiario(nav)
@@ -383,8 +389,18 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.COLONOS -> (fadeIn(t(340)) + slideInVertically(t(340)) { it / 30 }) togetherWith fadeOut(t(200))
         // Despacho que llega a caballo: entra decidido de lado.
         TemaId.NAPOLEON -> (slideInHorizontally(t(280)) { dir * it / 2 } + fadeIn(t(220))) togetherWith (fadeOut(t(160)) + scaleOut(t(160), targetScale = 0.97f))
-        // Papel picado que cae suave desde arriba.
-        TemaId.MUERTOS -> (slideInVertically(t(360)) { -it / 16 } + fadeIn(t(300))) togetherWith fadeOut(t(180))
+        // Una hoja que crece desde abajo, como un brote.
+        TemaId.BOTANICO -> (scaleIn(t(380), initialScale = 0.96f, transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)) + fadeIn(t(320))) togetherWith fadeOut(t(180))
+        // La luz atraviesa el vitral: aparece despacio, como cuando sale el sol detrás de la ventana.
+        TemaId.GOTICO -> (fadeIn(t(460)) + expandVertically(t(420), expandFrom = Alignment.Bottom) { it / 4 * 3 }) togetherWith fadeOut(t(220))
+        // Acoplamiento: entra desde lejos, pequeña, y se ajusta.
+        TemaId.ESPACIO -> (scaleIn(t(320, androidx.compose.animation.core.LinearOutSlowInEasing), initialScale = 0.86f) + fadeIn(t(260))) togetherWith (scaleOut(t(200), targetScale = 1.08f) + fadeOut(t(200)))
+        // Puerta de arco que se abre desde el centro.
+        TemaId.ANDALUS -> (androidx.compose.animation.expandHorizontally(t(360), expandFrom = Alignment.CenterHorizontally) { it / 3 } + fadeIn(t(300))) togetherWith fadeOut(t(180))
+        // Jinete de la estepa: galopa de lado, rápido.
+        TemaId.MONGOL -> (slideInHorizontally(t(220, androidx.compose.animation.core.LinearOutSlowInEasing)) { dir * it * 2 / 3 } + fadeIn(t(160))) togetherWith (slideOutHorizontally(t(220)) { -dir * it / 3 } + fadeOut(t(160)))
+        // Hoja de cuaderno que se pasa: entra girando apenas.
+        TemaId.RENACIMIENTO -> (slideInHorizontally(t(360)) { dir * it / 5 } + fadeIn(t(300)) + scaleIn(t(360), initialScale = 0.98f)) togetherWith fadeOut(t(200))
         // Regalo que se abre.
         TemaId.NAVIDAD -> (scaleIn(t(340), initialScale = 0.92f) + fadeIn(t(280))) togetherWith fadeOut(t(160))
         // Rollo de seda que se desenrolla hacia abajo.

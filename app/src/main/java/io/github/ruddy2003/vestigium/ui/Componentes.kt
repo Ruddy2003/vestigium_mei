@@ -97,7 +97,12 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.LABORATORIO -> Regla(modifier)
         TemaId.COLONOS -> Vineta(modifier)
         TemaId.NAPOLEON -> Laureles(modifier)
-        TemaId.MUERTOS -> PapelPicado(modifier)
+        TemaId.BOTANICO -> Enredadera(modifier)
+        TemaId.GOTICO -> Arqueria(modifier)
+        TemaId.ESPACIO -> Orbita(modifier)
+        TemaId.ANDALUS -> Lazo(modifier)
+        TemaId.MONGOL -> Alhan(modifier)
+        TemaId.RENACIMIENTO -> Trazo(modifier)
         TemaId.NAVIDAD -> Guirnalda(modifier)
         TemaId.SEDA -> Monedas(modifier)
         TemaId.URSS -> Barra(modifier)
@@ -179,7 +184,7 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
     // guardan «+título» cuando las abres.
     val plegadas = io.github.ruddy2003.vestigium.data.Repo.config.plegadas
     val plegada = plegable && if (plegadaPorDefecto) "+$titulo" !in plegadas else titulo in plegadas
-    Column(modifier.fillMaxWidth().padding(top = 26.dp)) {
+    Column(modifier.fillMaxWidth().padding(top = 26.dp).entrada(numero ?: 0)) {
         Row(
             verticalAlignment = if (Estilo.tema == TemaId.MEDIEVAL || Estilo.tema == TemaId.DISTOPIA) Alignment.CenterVertically else Alignment.Bottom,
             modifier = if (!plegable) Modifier else Modifier.fillMaxWidth().clickable {
@@ -306,8 +311,9 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
 @Composable
 fun Ficha(texto: String, activa: Boolean, onClick: () -> Unit) {
     val sentir = rememberSentir()
+    val toque = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Surface(
-        onClick = { sentir(Sentidos.Evento.ELEGIR); onClick() }, shape = R4,
+        onClick = { sentir(Sentidos.Evento.ELEGIR); onClick() }, shape = R4, interactionSource = toque, modifier = Modifier.presion(toque, 0.93f),
         color = if (activa) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, if (activa) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
     ) {
@@ -468,16 +474,23 @@ fun BotonDictado(onTexto: (String) -> Unit) {
 @Composable
 fun BotonPrincipal(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
     val sentir = rememberSentir()
-    Button(onClick = { sentir(Sentidos.Evento.GUARDAR); onClick() }, enabled = habilitado, modifier = modifier.heightIn(min = 48.dp), shape = R4,
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-        Text(if (Estilo.mayusculas) texto.uppercase() else texto, style = MaterialTheme.typography.titleLarge.copy(fontSize = if (Estilo.tema == TemaId.MEDIEVAL) 17.sp else 14.sp, letterSpacing = if (Estilo.mayusculas) 2.sp else 0.5.sp))
+    val toque = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    Button(onClick = { sentir(Sentidos.Evento.GUARDAR); onClick() }, enabled = habilitado, modifier = modifier.heightIn(min = 48.dp).presion(toque), shape = R4,
+        interactionSource = toque, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+        val tema = Estilo.tema
+        val base = MaterialTheme.typography.titleLarge
+        // La letra de Leonardo es caligráfica y muy fina: en botones va la Cormorant, que se lee mejor chica.
+        val estilo = if (tema == TemaId.RENACIMIENTO) base.copy(fontFamily = LetraExtra.cormorant, fontWeight = FontWeight.SemiBold, fontSize = 17.sp, letterSpacing = 0.5.sp)
+            else base.copy(fontSize = if (tema == TemaId.MEDIEVAL || tema == TemaId.GOTICO) 17.sp else 14.sp, letterSpacing = if (Estilo.mayusculas) 2.sp else 0.5.sp)
+        Text(if (Estilo.mayusculas) texto.uppercase() else texto, style = estilo)
     }
 }
 
 @Composable
 fun BotonSecundario(texto: String, modifier: Modifier = Modifier, habilitado: Boolean = true, onClick: () -> Unit) {
     val sentir = rememberSentir()
-    OutlinedButton(onClick = { sentir(Sentidos.Evento.TOQUE); onClick() }, enabled = habilitado, modifier = modifier, shape = R4, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+    val toque = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    OutlinedButton(onClick = { sentir(Sentidos.Evento.TOQUE); onClick() }, enabled = habilitado, modifier = modifier.presion(toque), shape = R4, interactionSource = toque, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)) {
         Text(texto, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
     }
@@ -487,7 +500,7 @@ fun BotonSecundario(texto: String, modifier: Modifier = Modifier, habilitado: Bo
 fun Cifra(valor: String, etiqueta: String, modifier: Modifier = Modifier) {
     Surface(modifier = modifier, shape = R4, color = MaterialTheme.colorScheme.surfaceVariant) {
         Column(Modifier.padding(10.dp)) {
-            Text(valor, style = MaterialTheme.typography.labelLarge.copy(fontSize = 19.sp, letterSpacing = 0.sp), maxLines = 1)
+            Text(contando(valor), style = MaterialTheme.typography.labelLarge.copy(fontSize = 19.sp, letterSpacing = 0.sp), maxLines = 1)
             Text(etiqueta.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
         }
     }

@@ -202,12 +202,91 @@
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
+        <!-- Alias de Día de Muertos, tema retirado: se conserva apagado (con el ícono botánico) para no dejar la app sin ícono al actualizar. -->
         <activity-alias
             android:name=".IconoMuertos"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/ic_launcher_muertos"
-            android:roundIcon="@mipmap/ic_launcher_muertos"
+            android:icon="@mipmap/ic_launcher_botanico"
+            android:roundIcon="@mipmap/ic_launcher_botanico"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoBotanico"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_botanico"
+            android:roundIcon="@mipmap/ic_launcher_botanico"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoGotico"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_gotico"
+            android:roundIcon="@mipmap/ic_launcher_gotico"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoEspacio"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_espacio"
+            android:roundIcon="@mipmap/ic_launcher_espacio"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoAndalus"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_andalus"
+            android:roundIcon="@mipmap/ic_launcher_andalus"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoMongol"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_mongol"
+            android:roundIcon="@mipmap/ic_launcher_mongol"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoRenacimiento"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_renacimiento"
+            android:roundIcon="@mipmap/ic_launcher_renacimiento"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

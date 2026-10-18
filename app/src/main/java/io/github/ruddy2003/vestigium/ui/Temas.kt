@@ -74,12 +74,88 @@ object Temas {
 
     private val MARCAS = mapOf(
         TemaId.NAPOLEON to mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "07-14" to "Bastilla"),
-        TemaId.MUERTOS to mapOf("10-31" to "Altar", "11-01" to "Angelitos", "11-02" to "Muertos"),
+        TemaId.BOTANICO to mapOf("05-23" to "Linneo", "02-12" to "Darwin", "09-14" to "Humboldt", "04-22" to "Tierra", "03-20" to "Equinoccio",
+            "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "07-20" to "Mendel"),
+        TemaId.GOTICO to mapOf("04-26" to "Consagr.", "08-25" to "S. Luis", "08-15" to "Asunción", "12-25" to "Navidad", "01-06" to "Epifanía", "11-01" to "Todos Santos", "09-29" to "S. Miguel"),
+        TemaId.ESPACIO to mapOf("04-12" to "Gagarin", "07-20" to "Apolo 11", "10-04" to "Sputnik", "02-18" to "Plutón", "12-24" to "Earthrise",
+            "03-20" to "Equinoccio", "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "04-24" to "Hubble"),
+        TemaId.ANDALUS to mapOf("01-02" to "Granada", "04-30" to "Tariq", "03-30" to "Alhambra"),
+        TemaId.MONGOL to mapOf("07-11" to "Naadam", "07-12" to "Naadam", "07-13" to "Naadam", "12-29" to "Independ.", "11-26" to "Repúbl."),
+        TemaId.RENACIMIENTO to mapOf("04-15" to "Leonardo", "05-02" to "Leonardo †", "03-06" to "Michelangelo", "03-25" to "Capodanno", "06-24" to "S. Giovanni", "04-06" to "Rafael"),
         TemaId.NAVIDAD to mapOf("12-12" to "Guadalupe", "12-16" to "Posadas", "12-24" to "Nochebuena", "12-25" to "Navidad", "12-28" to "Inocentes", "12-31" to "Año nuevo", "01-06" to "Reyes"),
         TemaId.SEDA to mapOf("03-21" to "Nowruz", "09-21" to "Luna"),
         TemaId.URSS to mapOf("05-01" to "1º mayo", "04-12" to "Cosmos", "05-09" to "Victoria", "11-07" to "Octubre", "03-08" to "Mujer"),
     )
-    fun marca(tema: TemaId, fecha: String): String? = MARCAS[tema]?.get(fecha.takeLast(5))
+    fun marca(tema: TemaId, fecha: String): String? = MARCAS[tema]?.get(fecha.takeLast(5)) ?: if (tema == TemaId.ANDALUS) fiestaHegira(fecha) else null
+
+    // ------------------------------------------------------------ calendarios de los temas gótico, espacio, Al-Ándalus, mongol, Renacimiento y botánico
+
+    private val MESES_LATINOS_GEN = listOf("ianuarii", "februarii", "martii", "aprilis", "maii", "iunii", "iulii", "augusti", "septembris", "octobris", "novembris", "decembris")
+    val MESES_LATINOS = listOf("Ianuarius", "Februarius", "Martius", "Aprilis", "Maius", "Iunius", "Iulius", "Augustus", "September", "October", "November", "December")
+
+    /** «die XVII octobris · A.D. MMXXVI», como en los cartularios. */
+    fun fechaLatina(d: java.time.LocalDate) = "die ${Romano.de(d.dayOfMonth)} ${MESES_LATINOS_GEN[d.monthValue - 1]} · A.D. ${Romano.de(d.year)}"
+
+    /** Hora canónica según la hora del reloj: maitines, laudes, prima, tercia, sexta, nona, vísperas, completas. */
+    fun horaCanonica(h: Int): String = when (h) {
+        in 0..2 -> "maitines"; in 3..5 -> "laudes"; in 6..8 -> "prima"; in 9..11 -> "tercia"; in 12..14 -> "sexta"; in 15..16 -> "nona"; in 17..19 -> "vísperas"; else -> "completas"
+    }
+
+    /** Día juliano al mediodía, el número con que los astrónomos cuentan los días sin calendario. */
+    fun diaJuliano(d: java.time.LocalDate): Long = d.toEpochDay() + 2440588L
+
+    private val MESES_HEGIRA = listOf("muharram", "safar", "rabi al-awwal", "rabi al-ajir", "yumada al-ula", "yumada al-ajira",
+        "rayab", "shaabán", "ramadán", "shawwal", "du l-qada", "du l-hiyya")
+
+    /** Fecha del calendario hégira (lunar, el de al-Ándalus) según el cálculo de Umm al-Qura. */
+    fun hegira(d: java.time.LocalDate): Triple<Int, Int, Int>? = runCatching {
+        val h = java.time.chrono.HijrahDate.from(d)
+        Triple(h.get(java.time.temporal.ChronoField.DAY_OF_MONTH), h.get(java.time.temporal.ChronoField.MONTH_OF_YEAR), h.get(java.time.temporal.ChronoField.YEAR))
+    }.getOrNull()
+
+    fun fechaHegira(d: java.time.LocalDate): String = hegira(d)?.let { (dd, m, a) -> "$dd de ${MESES_HEGIRA[m - 1]} de $a H" } ?: Fechas.titulo(d.toString())
+
+    /** Fiestas del calendario hégira: año nuevo, inicio de ramadán y las dos fiestas grandes. */
+    private fun fiestaHegira(fecha: String): String? = runCatching { hegira(Fechas.parse(fecha)) }.getOrNull()?.let { (dd, m, _) ->
+        when { m == 1 && dd == 1 -> "Año nuevo"; m == 9 && dd == 1 -> "Ramadán"; m == 10 && dd == 1 -> "Fitr"; m == 12 && dd == 10 -> "Adha"; else -> null }
+    }
+
+    private val CIFRAS_ARABES = "٠١٢٣٤٥٦٧٨٩"
+    fun arabe(n: Int): String = n.toString().map { if (it.isDigit()) CIFRAS_ARABES[it - '0'] else it }.joinToString("")
+
+    private val CIFRAS_MONGOLAS = "᠐᠑᠒᠓᠔᠕᠖᠗᠘᠙"
+    fun mongol(n: Int): String = n.toString().map { if (it.isDigit()) CIFRAS_MONGOLAS[it - '0'] else it }.joinToString("")
+
+    private val ANIMALES = listOf("хулгана", "үхэр", "бар", "туулай", "луу", "могой", "морин", "хонин", "бичин", "тахиа", "нохой", "гахай")
+    private val COLOR_MACHO = listOf("цагаан", "хар", "хөх", "улаан", "шар")
+    private val COLOR_HEMBRA = listOf("цагаагчин", "харагчин", "хөхөгчин", "улаагчин", "шарагчин")
+
+    /** Año del calendario mongol: color del elemento y animal («улаан морин жил», año del caballo rojo). Cambia, aproximadamente, a inicios de febrero. */
+    fun anioMongol(d: java.time.LocalDate): String {
+        val a = if (d.monthValue == 1 || (d.monthValue == 2 && d.dayOfMonth < 4)) d.year - 1 else d.year
+        val animal = ANIMALES[Math.floorMod(a - 2020, 12)]
+        val elemento = (Math.floorMod(a, 10)) / 2
+        val color = if (a % 2 == 0) COLOR_MACHO[elemento] else COLOR_HEMBRA[elemento]
+        return "$color $animal жил".replaceFirstChar { it.uppercase() }
+    }
+
+    fun fechaMongol(d: java.time.LocalDate) = "${d.year} оны ${d.monthValue}-р сарын ${d.dayOfMonth}"
+
+    val MESES_ITALIANOS = listOf("gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre")
+    /** «a dì 17 d'ottobre 2026», como fechaba Leonardo sus apuntes. */
+    fun fechaItaliana(d: java.time.LocalDate): String {
+        val m = MESES_ITALIANOS[d.monthValue - 1]
+        return "a dì ${d.dayOfMonth} " + (if (m.first() in "aeiou") "d'$m" else "di $m") + " ${d.year}"
+    }
+
+    /** Estación astronómica del hemisferio norte y cuántos días lleva: «otoño, día 26». */
+    fun estacion(d: java.time.LocalDate): String {
+        val y = d.year
+        val inicios = listOf(java.time.LocalDate.of(y - 1, 12, 21) to "invierno", java.time.LocalDate.of(y, 3, 20) to "primavera",
+            java.time.LocalDate.of(y, 6, 21) to "verano", java.time.LocalDate.of(y, 9, 22) to "otoño", java.time.LocalDate.of(y, 12, 21) to "invierno")
+        val (ini, nombre) = inicios.last { !d.isBefore(it.first) }
+        return "$nombre, día ${java.time.temporal.ChronoUnit.DAYS.between(ini, d) + 1}"
+    }
 
     fun nombre(tema: TemaId, titulo: String): String? = when (tema) {
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
@@ -89,7 +165,12 @@ object Temas {
         TemaId.LABORATORIO -> LABORATORIO[titulo]
         TemaId.COLONOS -> COLONOS[titulo]
         TemaId.NAPOLEON -> NAPOLEON[titulo]
-        TemaId.MUERTOS -> MUERTOS[titulo]
+        TemaId.BOTANICO -> BOTANICO[titulo]
+        TemaId.GOTICO -> GOTICO[titulo]
+        TemaId.ESPACIO -> ESPACIO[titulo]
+        TemaId.ANDALUS -> ANDALUS[titulo]
+        TemaId.MONGOL -> MONGOL[titulo]
+        TemaId.RENACIMIENTO -> RENACIMIENTO[titulo]
         TemaId.NAVIDAD -> NAVIDAD[titulo]
         TemaId.SEDA -> SEDA[titulo]
         TemaId.URSS -> URSS[titulo]
@@ -105,7 +186,12 @@ object Temas {
             TemaId.LABORATORIO -> mapOf("animo" to "ESTADO", "momento" to "OBSERVACIÓN", "gasto" to "RECURSOS", "sueno" to "SUEÑO", "habitos" to "VARIABLES", "hoy" to "SESIÓN", "cifra" to "MEDIDA", "foto" to "MUESTRA")
             TemaId.COLONOS -> mapOf("animo" to "Ánimo", "momento" to "Sucesos", "gasto" to "Cuentas", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Jornada", "cifra" to "Número", "foto" to "Estampa")
             TemaId.NAPOLEON -> mapOf("animo" to "MORAL", "momento" to "DESPACHO", "gasto" to "TESORERÍA", "sueno" to "VIVAC", "habitos" to "CÓDIGO", "hoy" to "BOLETÍN", "cifra" to "CIFRA", "foto" to "RETRATO")
-            TemaId.MUERTOS -> mapOf("animo" to "ÁNIMO", "momento" to "RECUERDO", "gasto" to "MERCADO", "sueno" to "DESCANSO", "habitos" to "COSTUMBRES", "hoy" to "OFRENDA", "cifra" to "CUENTA", "foto" to "RETRATO")
+            TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina")
+            TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera")
+            TemaId.ESPACIO -> mapOf("animo" to "ESTADO", "momento" to "EVENTO", "gasto" to "COMBUSTIBLE", "sueno" to "SUEÑO", "habitos" to "RUTINAS", "hoy" to "ÓRBITA", "cifra" to "TELEMETRÍA", "foto" to "IMAGEN")
+            TemaId.ANDALUS -> mapOf("animo" to "الروح", "momento" to "لحظة", "gasto" to "النفقات", "sueno" to "النوم", "habitos" to "العادات", "hoy" to "النهار", "cifra" to "الحساب", "foto" to "صورة")
+            TemaId.MONGOL -> mapOf("animo" to "СЭТГЭЛ", "momento" to "АГШИН", "gasto" to "ЗАРДАЛ", "sueno" to "НОЙР", "habitos" to "ЗАНШИЛ", "hoy" to "ӨДӨР", "cifra" to "ТОО", "foto" to "ЗУРАГ")
+            TemaId.RENACIMIENTO -> mapOf("animo" to "Animo", "momento" to "Nota", "gasto" to "Conti", "sueno" to "Sonno", "habitos" to "Esercizi", "hoy" to "Giornata", "cifra" to "Misura", "foto" to "Ritratto")
             TemaId.NAVIDAD -> mapOf("animo" to "Ánimo", "momento" to "Momento", "gasto" to "Regalos", "sueno" to "Noche de paz", "habitos" to "Propósitos", "hoy" to "El día", "cifra" to "Número", "foto" to "Postal")
             TemaId.SEDA -> mapOf("animo" to "Espíritu", "momento" to "Relato", "gasto" to "Mercancías", "sueno" to "Reposo", "habitos" to "Ritos", "hoy" to "Jornada", "cifra" to "Cuenta", "foto" to "Estampa")
             TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO")
@@ -230,13 +316,56 @@ object Temas {
         "Momentos de este día" to "DESPACHOS DEL DÍA", "Resumen semanal" to "BOLETÍN SEMANAL", "Tu día en 24 horas" to "LAS VEINTICUATRO HORAS",
         "Registros especiales" to "CAMPAÑAS ESPECIALES", "Avisos y recordatorios" to "TOQUES DE TAMBOR", "Contexto" to "CIRCUNSTANCIAS",
     )
-    private val MUERTOS = mapOf(
-        "Hoy" to "LA OFRENDA DE HOY", "Línea de tiempo" to "LO VIVIDO", "Ahora mismo estoy…" to "AHORITA ESTOY…",
-        "Día" to "OFRENDA", "Diario" to "CALAVERITAS", "Gastos" to "MERCADO", "Entender" to "MEMORIA", "Más" to "ALTAR",
-        "Llenar el día" to "VELADA", "Biblioteca del diario" to "PANTEÓN DE RECUERDOS", "Entrada" to "CALAVERITA", "Tablero" to "VELADORAS",
-        "Te falta hoy" to "FALTA EN EL ALTAR", "Hábitos" to "COSTUMBRES", "Sueño" to "DESCANSO", "Ánimo y cuerpo" to "ALMA Y HUESOS", "Hitos" to "RECUERDOS",
-        "Apariencia" to "PAPEL PICADO", "Obras" to "LECTURAS", "Mapa" to "CAMINOS", "Totales" to "TODO JUNTO", "Momentos de este día" to "RECUERDOS DEL DÍA",
-        "Datos que faltan" to "LO QUE FALTA", "Resumen semanal" to "LA SEMANA", "Avisos y recordatorios" to "CAMPANADAS",
+    private val BOTANICO = mapOf(
+        "Hoy" to "La lámina de hoy", "Línea de tiempo" to "Diario de campo", "Ahora mismo estoy…" to "Observación inmediata",
+        "Día" to "Herbario del día", "Diario" to "Cuaderno de campo", "Gastos" to "Semillas y cosecha", "Entender" to "Taxonomía", "Más" to "Invernadero",
+        "Llenar el día" to "Al anochecer", "Biblioteca del diario" to "El herbario", "Entrada" to "Lámina", "Tablero" to "Mediciones del jardín",
+        "Te falta hoy" to "Por observar", "Hábitos" to "Cuidados", "Sueño" to "Latencia", "Ánimo y cuerpo" to "Ánimo y organismo", "Hitos" to "Floraciones",
+        "Apariencia" to "Láminas", "Obras" to "Biblioteca natural", "Mapa" to "Hábitats", "Lugares" to "Hábitats", "Totales" to "Inventario de especies",
+        "Momentos de este día" to "Observaciones del día", "Datos que faltan" to "Ejemplares perdidos", "Resumen semanal" to "La semana en el jardín",
+        "Avisos y recordatorios" to "Cantos de pájaro", "Contexto" to "Condiciones", "Calendario" to "Fenología", "Tu año" to "Las estaciones",
+    )
+    private val GOTICO = mapOf(
+        "Hoy" to "La vidriera de hoy", "Línea de tiempo" to "Crónica de la capilla", "Ahora mismo estoy…" to "En esta hora…",
+        "Día" to "Laudes", "Diario" to "Breviario", "Gastos" to "Tesoro", "Entender" to "Vitrales", "Más" to "Sacristía",
+        "Llenar el día" to "Vísperas", "Biblioteca del diario" to "Cartulario", "Entrada" to "Folio", "Tablero" to "Rosetón",
+        "Te falta hoy" to "Oficio pendiente", "Hábitos" to "Regla", "Sueño" to "Maitines", "Ánimo y cuerpo" to "Alma y cuerpo", "Hitos" to "Milagros",
+        "Apariencia" to "Vidrieras", "Obras" to "Librería", "Mapa" to "Peregrinaciones", "Lugares" to "Santuarios", "Totales" to "Tesoro de la capilla",
+        "Momentos de este día" to "Horas del día", "Datos que faltan" to "Vidrios rotos", "Resumen semanal" to "La semana",
+        "Avisos y recordatorios" to "Campanas", "Contexto" to "Circunstancias", "Calendario" to "Santoral", "Tu año" to "Año litúrgico",
+    )
+    private val ESPACIO = mapOf(
+        "Hoy" to "Bitácora de hoy", "Línea de tiempo" to "Registro de la misión", "Ahora mismo estoy…" to "Telemetría inmediata",
+        "Día" to "ÓRBITA DEL DÍA", "Diario" to "BITÁCORA", "Gastos" to "COMBUSTIBLE", "Entender" to "OBSERVATORIO", "Más" to "BASE",
+        "Llenar el día" to "REPORTE DE MISIÓN", "Biblioteca del diario" to "ARCHIVO DE VUELO", "Entrada" to "REGISTRO", "Tablero" to "TELEMETRÍA",
+        "Te falta hoy" to "SECUENCIA PENDIENTE", "Hábitos" to "RUTINAS", "Sueño" to "PERIODO DE SUEÑO", "Ánimo y cuerpo" to "SIGNOS VITALES", "Hitos" to "HITOS DE MISIÓN",
+        "Apariencia" to "CONSOLA", "Obras" to "BIBLIOTECA DE A BORDO", "Mapa" to "CARTA ESTELAR", "Lugares" to "ESTACIONES", "Totales" to "ODÓMETRO",
+        "Momentos de este día" to "EVENTOS DEL DÍA", "Datos que faltan" to "SEÑAL PERDIDA", "Resumen semanal" to "INFORME SEMANAL",
+        "Avisos y recordatorios" to "ALERTAS", "Contexto" to "CONDICIONES", "Calendario" to "EFEMÉRIDES", "Tu año" to "LA ÓRBITA",
+    )
+    private val ANDALUS = mapOf(
+        "Día" to "النهار", "Diario" to "اليوميات", "Gastos" to "بيت المال", "Entender" to "الحكمة", "Más" to "الديوان",
+        "Llenar el día" to "المساء", "Biblioteca del diario" to "خزانة الكتب", "Entrada" to "صحيفة", "Tablero" to "الميزان",
+        "Te falta hoy" to "ما بقي", "Hábitos" to "العادات", "Sueño" to "النوم", "Ánimo y cuerpo" to "الروح والجسد", "Hitos" to "الأيام",
+        "Hoy" to "اليوم", "Línea de tiempo" to "التاريخ", "Ahora mismo estoy…" to "الآن", "Apariencia" to "الزخرفة", "Obras" to "الكتب",
+        "Mapa" to "الأطلس", "Totales" to "الحساب", "Calendario" to "التقويم", "Resumen semanal" to "الأسبوع", "Avisos y recordatorios" to "النداء",
+    )
+    private val MONGOL = mapOf(
+        "Día" to "ӨДӨР", "Diario" to "ТЭМДЭГЛЭЛ", "Gastos" to "ЗАРДАЛ", "Entender" to "МЭДЛЭГ", "Más" to "ӨРГӨӨ",
+        "Llenar el día" to "ОРОЙ", "Biblioteca del diario" to "СУДАР", "Entrada" to "ХУУДАС", "Tablero" to "ХЭМЖҮҮР",
+        "Te falta hoy" to "ҮЛДСЭН АЖИЛ", "Hábitos" to "ЗАН ЗАНШИЛ", "Sueño" to "НОЙР", "Ánimo y cuerpo" to "СЭТГЭЛ, БИЕ", "Hitos" to "ГАВЬЯА",
+        "Hoy" to "ӨНӨӨДӨР", "Línea de tiempo" to "ШАСТИР", "Ahora mismo estoy…" to "ОДОО", "Apariencia" to "ХЭЭ", "Obras" to "НОМ",
+        "Mapa" to "ГАЗРЫН ЗУРАГ", "Totales" to "НИЙТ", "Calendario" to "ЛИТ", "Resumen semanal" to "ДОЛОО ХОНОГ", "Avisos y recordatorios" to "БҮРЭЭ",
+        "Lugares" to "НУТАГ", "Contexto" to "НӨХЦӨЛ",
+    )
+    private val RENACIMIENTO = mapOf(
+        "Hoy" to "Il foglio d'oggi", "Línea de tiempo" to "Ricordanze", "Ahora mismo estoy…" to "In questo momento…",
+        "Día" to "Giornata", "Diario" to "Taccuino", "Gastos" to "Libro dei conti", "Entender" to "Studio", "Más" to "Bottega",
+        "Llenar el día" to "A sera", "Biblioteca del diario" to "I codici", "Entrada" to "Foglio", "Tablero" to "Misure",
+        "Te falta hoy" to "Da fare", "Hábitos" to "Esercizi", "Sueño" to "Il sonno", "Ánimo y cuerpo" to "Animo e corpo", "Hitos" to "Invenzioni",
+        "Apariencia" to "Disegno", "Obras" to "Libreria", "Mapa" to "Mappa", "Lugares" to "Luoghi", "Totales" to "Inventario",
+        "Momentos de este día" to "Note del giorno", "Datos que faltan" to "Lacune", "Resumen semanal" to "La settimana",
+        "Avisos y recordatorios" to "Campane", "Contexto" to "Circostanze", "Calendario" to "Calendario", "Tu año" to "L'anno",
     )
     private val NAVIDAD = mapOf(
         "Hoy" to "La carta de hoy", "Línea de tiempo" to "Los días del año", "Ahora mismo estoy…" to "Ahora mismo estoy…",

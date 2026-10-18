@@ -64,10 +64,10 @@ object Widgets {
             0xFFD9B25B.toInt(), 0xFFF1E9D2.toInt(), 0xFFB3AE9C.toInt(), 0xFF2C3970.toInt(),
             intArrayOf(0xFFE05A6A.toInt(), 0xFFD98590.toInt(), 0xFFD9B8B0.toInt(), 0xFFF1E9D2.toInt(), 0xFFB9C6EE.toInt(), 0xFF9DB4FF.toInt(), 0xFF7F9BFF.toInt()),
             0xFF121A3D.toInt(), 0xFF1A1405.toInt())
-        TemaId.MUERTOS -> Colores(R.drawable.widget_fondo_muertos, R.drawable.widget_boton_muertos, R.drawable.widget_boton_activo_muertos, R.drawable.widget_boton_ambar_muertos,
-            0xFFFFA726.toInt(), 0xFFFBEFFF.toInt(), 0xFFC6A9D3.toInt(), 0xFF44275A.toInt(),
-            intArrayOf(0xFFFF4FA3.toInt(), 0xFFF07AB6.toInt(), 0xFFDDA8CF.toInt(), 0xFFFBEFFF.toInt(), 0xFFD3B8FF.toInt(), 0xFFC3A0FF.toInt(), 0xFFB388FF.toInt()),
-            0xFF1E1029.toInt(), 0xFF2A0016.toInt())
+        TemaId.BOTANICO -> Colores(R.drawable.widget_fondo_botanico, R.drawable.widget_boton_botanico, R.drawable.widget_boton_activo_botanico, R.drawable.widget_boton_ambar_botanico,
+            0xFFB8E06A.toInt(), 0xFFEAF0E2.toInt(), 0xFFA9B8A4.toInt(), 0xFF2D442F.toInt(),
+            intArrayOf(0xFFF29BB8.toInt(), 0xFFE7A9BE.toInt(), 0xFFD9C3C0.toInt(), 0xFFEAF0E2.toInt(), 0xFFC8E3A8.toInt(), 0xFFA9DC80.toInt(), 0xFF8FD06A.toInt()),
+            0xFF121D15.toInt(), 0xFF121A04.toInt())
         TemaId.NAVIDAD -> Colores(R.drawable.widget_fondo_navidad, R.drawable.widget_boton_navidad, R.drawable.widget_boton_activo_navidad, R.drawable.widget_boton_ambar_navidad,
             0xFFF2C94C.toInt(), 0xFFF3EFE6.toInt(), 0xFFB5C2B8.toInt(), 0xFF2E4A39.toInt(),
             intArrayOf(0xFFE5484D.toInt(), 0xFFE77B7A.toInt(), 0xFFE9B2A8.toInt(), 0xFFF3EFE6.toInt(), 0xFFB5DDB7.toInt(), 0xFF8CCF8F.toInt(), 0xFF66BB6A.toInt()),
@@ -80,6 +80,26 @@ object Widgets {
             0xFFE8B923.toInt(), 0xFFF1E7D2.toInt(), 0xFFB7AA95.toInt(), 0xFF3D3333.toInt(),
             intArrayOf(0xFF6E7C8C.toInt(), 0xFF98A1AA.toInt(), 0xFFC4C3BC.toInt(), 0xFFF1E7D2.toInt(), 0xFFEBC9A6.toInt(), 0xFFE8806A.toInt(), 0xFFE5252F.toInt()),
             0xFF1B1717.toInt(), 0xFFFFFFFF.toInt())
+        TemaId.GOTICO -> Colores(R.drawable.widget_fondo_gotico, R.drawable.widget_boton_gotico, R.drawable.widget_boton_activo_gotico, R.drawable.widget_boton_ambar_gotico,
+            0xFFE2B34A.toInt(), 0xFFF0E9D8.toInt(), 0xFFB0AFC8.toInt(), 0xFF2E3A7A.toInt(),
+            intArrayOf(0xFFE0405E.toInt(), 0xFFD9708A.toInt(), 0xFFD2A6B4.toInt(), 0xFFF0E9D8.toInt(), 0xFFB8C8F2.toInt(), 0xFF8DA8FF.toInt(), 0xFF5C8DFF.toInt()),
+            0xFF111842.toInt(), 0xFF1A1405.toInt())
+        TemaId.ESPACIO -> Colores(R.drawable.widget_fondo_espacio, R.drawable.widget_boton_espacio, R.drawable.widget_boton_activo_espacio, R.drawable.widget_boton_ambar_espacio,
+            0xFFFFB86B.toInt(), 0xFFE8ECF8.toInt(), 0xFF8E9AB8.toInt(), 0xFF26324F.toInt(),
+            intArrayOf(0xFFFF8A6B.toInt(), 0xFFF5A98A.toInt(), 0xFFE0C6B8.toInt(), 0xFFE8ECF8.toInt(), 0xFFB9CCF5.toInt(), 0xFFA0C0FF.toInt(), 0xFF8AB4FF.toInt()),
+            0xFF0A0F1E.toInt(), 0xFF020818.toInt())
+        TemaId.ANDALUS -> Colores(R.drawable.widget_fondo_andalus, R.drawable.widget_boton_andalus, R.drawable.widget_boton_activo_andalus, R.drawable.widget_boton_ambar_andalus,
+            0xFFE0B65A.toInt(), 0xFFF3EAD6.toInt(), 0xFFB4AE9B.toInt(), 0xFF2B4A45.toInt(),
+            intArrayOf(0xFFE07A5F.toInt(), 0xFFE39A82.toInt(), 0xFFE5C2AE.toInt(), 0xFFF3EAD6.toInt(), 0xFFA9DCCD.toInt(), 0xFF7CCFB8.toInt(), 0xFF4FC1A6.toInt()),
+            0xFF112220.toInt(), 0xFF1A1405.toInt())
+        TemaId.MONGOL -> Colores(R.drawable.widget_fondo_mongol, R.drawable.widget_boton_mongol, R.drawable.widget_boton_activo_mongol, R.drawable.widget_boton_ambar_mongol,
+            0xFFF2C14E.toInt(), 0xFFF0EBDD.toInt(), 0xFFAAB0BD.toInt(), 0xFF2B3E5E.toInt(),
+            intArrayOf(0xFFFF7A59.toInt(), 0xFFF09A80.toInt(), 0xFFE2C3B4.toInt(), 0xFFF0EBDD.toInt(), 0xFFB8D6F5.toInt(), 0xFF93C3FA.toInt(), 0xFF6FB1FF.toInt()),
+            0xFF101B2E.toInt(), 0xFF041427.toInt())
+        TemaId.RENACIMIENTO -> Colores(R.drawable.widget_fondo_renacimiento, R.drawable.widget_boton_renacimiento, R.drawable.widget_boton_activo_renacimiento, R.drawable.widget_boton_ambar_renacimiento,
+            0xFFD9B566.toInt(), 0xFFEFE0BE.toInt(), 0xFFBCA884.toInt(), 0xFF4A3826.toInt(),
+            intArrayOf(0xFF6E8CA8.toInt(), 0xFF8DA2B5.toInt(), 0xFFB8B3A6.toInt(), 0xFFEFE0BE.toInt(), 0xFFE8C79A.toInt(), 0xFFE4A877.toInt(), 0xFFE08A5E.toInt()),
+            0xFF241A11.toInt(), 0xFF2A1006.toInt())
     }
 
     /** Pinta fondo, botones, líneas y textos según el tema. Va primero: lo que se pinta después (estado activo, colores de ánimo) lo sobrescribe. */

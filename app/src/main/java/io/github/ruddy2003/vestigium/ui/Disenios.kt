@@ -23,7 +23,15 @@ object LetraExtra {
     val fell = FontFamily(Font(R.font.fell, FontWeight.Normal))
     val bodoniTitulo = FontFamily(Font(R.font.bodoni_titulo, FontWeight.Normal), Font(R.font.bodoni_titulo, FontWeight.SemiBold))
     val bodoni = FontFamily(Font(R.font.bodoni_texto, FontWeight.Normal), Font(R.font.bodoni_titulo, FontWeight.SemiBold))
-    val rye = FontFamily(Font(R.font.rye, FontWeight.Normal))
+    val textura = FontFamily(Font(R.font.gotica_textura, FontWeight.Normal))
+    val orbita = FontFamily(Font(R.font.orbitron_medium, FontWeight.Normal), Font(R.font.orbitron_medium, FontWeight.Medium), Font(R.font.orbitron_bold, FontWeight.Bold), Font(R.font.orbitron_bold, FontWeight.SemiBold))
+    val grotesk = FontFamily(Font(R.font.grotesk_regular, FontWeight.Normal), Font(R.font.grotesk_medium, FontWeight.Medium), Font(R.font.grotesk_medium, FontWeight.SemiBold))
+    val kufi = FontFamily(Font(R.font.kufi_medium, FontWeight.Normal), Font(R.font.kufi_medium, FontWeight.Medium), Font(R.font.kufi_bold, FontWeight.Bold), Font(R.font.kufi_bold, FontWeight.SemiBold))
+    val amiri = FontFamily(Font(R.font.amiri_regular, FontWeight.Normal))
+    val filosofo = FontFamily(Font(R.font.philosopher_regular, FontWeight.Normal), Font(R.font.philosopher_bold, FontWeight.Bold), Font(R.font.philosopher_bold, FontWeight.SemiBold))
+    val italianno = FontFamily(Font(R.font.italianno, FontWeight.Normal))
+    val cormorant = FontFamily(Font(R.font.cormorant_regular, FontWeight.Normal), Font(R.font.cormorant_medium, FontWeight.Medium), Font(R.font.cormorant_medium, FontWeight.SemiBold))
+    val fraunces = FontFamily(Font(R.font.fraunces_titulo, FontWeight.Normal), Font(R.font.fraunces_titulo, FontWeight.Medium), Font(R.font.fraunces_negrita, FontWeight.SemiBold), Font(R.font.fraunces_negrita, FontWeight.Bold))
     val cinzelDeco = FontFamily(Font(R.font.cinzel_deco_regular, FontWeight.Normal), Font(R.font.cinzel_deco_bold, FontWeight.Bold))
     val almendra = FontFamily(Font(R.font.almendra_regular, FontWeight.Normal), Font(R.font.almendra_bold, FontWeight.Bold))
     val russo = FontFamily(Font(R.font.russo, FontWeight.Normal))
@@ -141,13 +149,13 @@ internal val napoleonOscuro = esquema(true, 0xFF0B1230, 0xFF121A3D, 0xFF1B2550, 
 internal val tipoNapoleon = tipografia(LetraExtra.bodoniTitulo, FontWeight.Normal, 1.06f, 1.7f, LetraExtra.bodoni, 1.06f, LetraExtra.bodoni, 1.08f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
-//  Día de Muertos: papel de china, rosa mexicano, cempasúchil y morado; de noche, el panteón con velas.
+//  Botánico: lámina de historia natural en papel crema, verde hoja y rosa de pétalo; de noche, el bosque con luciérnagas.
 // ---------------------------------------------------------------------
-internal val muertosClaro = esquema(false, 0xFFFFF4E2, 0xFFFFFAF0, 0xFFF8E3C4, 0xFFE9C48F, 0xFF2A1033, 0xFF6B4A6E,
-    0xFFC2185B, 0xFFFFFFFF, 0xFFF9D3E2, 0xFF2A1033, 0xFFE67E00, 0xFFFFE0B2, 0xFF6A1B9A, 0xFFB71C1C)
-internal val muertosOscuro = esquema(true, 0xFF140A1C, 0xFF1E1029, 0xFF2A1838, 0xFF44275A, 0xFFFBEFFF, 0xFFC6A9D3,
-    0xFFFF4FA3, 0xFF2A0016, 0xFF4A1236, 0xFFFBEFFF, 0xFFFFA726, 0xFF3D2A0A, 0xFFB388FF, 0xFFFF8A80)
-internal val tipoMuertos = tipografia(LetraExtra.rye, FontWeight.Normal, 0.98f, 0.8f, Letra.texto, 1f, Letra.codigo, 1f)
+internal val botanicoClaro = esquema(false, 0xFFF2EFE2, 0xFFFAF8EE, 0xFFE5E2CF, 0xFFC8C3A4, 0xFF1C2A1C, 0xFF56634F,
+    0xFF2F6B3A, 0xFFFFFFFF, 0xFFD6EAD5, 0xFF1C2A1C, 0xFFB24A6C, 0xFFF3D6E0, 0xFF2E7F86, 0xFF8A1A1A)
+internal val botanicoOscuro = esquema(true, 0xFF0C140E, 0xFF121D15, 0xFF1A291D, 0xFF2D442F, 0xFFEAF0E2, 0xFFA9B8A4,
+    0xFFB8E06A, 0xFF121A04, 0xFF26401F, 0xFFEAF0E2, 0xFFF29BB8, 0xFF3E1E2A, 0xFF5FC8C4, 0xFFFF8A80)
+internal val tipoBotanico = tipografia(LetraExtra.fraunces, FontWeight.Medium, 1.04f, 0.2f, Letra.garamond, 1.12f, Letra.garamond, 1.14f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Navidad: nieve y crema, rojo, verde pino y oro; de noche, el bosque nevado.
@@ -176,6 +184,52 @@ internal val urssOscuro = esquema(true, 0xFF121010, 0xFF1B1717, 0xFF262020, 0xFF
     0xFFE5252F, 0xFFFFFFFF, 0xFF4A1013, 0xFFF1E7D2, 0xFFE8D9B5, 0xFF3A3328, 0xFFE8B923, 0xFFFF6B6B)
 internal val tipoUrss = tipografia(LetraExtra.russo, FontWeight.Normal, 1.0f, 1.0f, Letra.texto, 1f, Letra.codigo, 1f)
 
+// ---------------------------------------------------------------------
+//  Gótico: una capilla de vitrales. De día, piedra caliza con cristal zafiro y rubí; de noche, la bóveda azul con estrellas de oro.
+// ---------------------------------------------------------------------
+internal val goticoClaro = esquema(false, 0xFFEDE7DA, 0xFFF7F3EA, 0xFFE2D9C6, 0xFFC9BC9F, 0xFF141A33, 0xFF4F5570,
+    0xFF1F3A9E, 0xFFFFFFFF, 0xFFDCE2F6, 0xFF141A33, 0xFFB3122E, 0xFFF4D3D8, 0xFFB8892B, 0xFF8A1A1A)
+internal val goticoOscuro = esquema(true, 0xFF0A0F2A, 0xFF111842, 0xFF1A2356, 0xFF2E3A7A, 0xFFF0E9D8, 0xFFB0AFC8,
+    0xFFE2B34A, 0xFF1A1405, 0xFF26306E, 0xFFF0E9D8, 0xFFE0405E, 0xFF3A1222, 0xFF5C8DFF, 0xFFFF8A80)
+internal val tipoGotico = tipografia(LetraExtra.textura, FontWeight.Normal, 1.16f, 0.3f, Letra.garamond, 1.12f, Letra.garamond, 1.15f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Espacio: de día, la sala de control (blanco, azul marino y naranja); de noche, estrellas y nebulosas.
+// ---------------------------------------------------------------------
+internal val espacioClaro = esquema(false, 0xFFEEF1F6, 0xFFFFFFFF, 0xFFE1E6EF, 0xFFC3CCDA, 0xFF0D1526, 0xFF4E5A70,
+    0xFF1B3A8C, 0xFFFFFFFF, 0xFFD7E0F5, 0xFF0D1526, 0xFFE8601C, 0xFFFBDCCB, 0xFF6B4FD6, 0xFFB3261E)
+internal val espacioOscuro = esquema(true, 0xFF03050C, 0xFF0A0F1E, 0xFF121A31, 0xFF26324F, 0xFFE8ECF8, 0xFF8E9AB8,
+    0xFF8AB4FF, 0xFF020818, 0xFF18264D, 0xFFE8ECF8, 0xFFFFB86B, 0xFF3A2410, 0xFFC59BFF, 0xFFFF8A80)
+internal val tipoEspacio = tipografia(LetraExtra.orbita, FontWeight.Bold, 0.96f, 2.0f, LetraExtra.grotesk, 1.02f, Letra.codigo, 1f)
+internal val tipoEspacioOscuro = tipografia(LetraExtra.orbita, FontWeight.Bold, 0.96f, 2.0f, LetraExtra.grotesk, 1.02f, Letra.codigo, 1f, brillo = Color(0xFF8AB4FF))
+
+// ---------------------------------------------------------------------
+//  Al-Ándalus: yeso tallado, azulejo verde y almagre; de noche, el jardín del Generalife con oro y turquesa.
+// ---------------------------------------------------------------------
+internal val andalusClaro = esquema(false, 0xFFF3EBDA, 0xFFFBF6EA, 0xFFE9DEC6, 0xFFD2C29E, 0xFF2A1A12, 0xFF6A5640,
+    0xFF1E6B5C, 0xFFFFFFFF, 0xFFD3EBE4, 0xFF2A1A12, 0xFFB5432A, 0xFFF4D9CE, 0xFF2A4F9E, 0xFF8A1A1A)
+internal val andalusOscuro = esquema(true, 0xFF0B1716, 0xFF112220, 0xFF18302D, 0xFF2B4A45, 0xFFF3EAD6, 0xFFB4AE9B,
+    0xFFE0B65A, 0xFF1A1405, 0xFF1E3D38, 0xFFF3EAD6, 0xFF4FC1A6, 0xFF123A33, 0xFFE07A5F, 0xFFFF8A80)
+internal val tipoAndalus = tipografia(LetraExtra.kufi, FontWeight.Medium, 1.06f, 0.5f, LetraExtra.amiri, 1.08f, LetraExtra.amiri, 1.1f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Mongol: el Cielo Azul Eterno, fieltro blanco, rojo y oro; de noche, la estepa bajo las estrellas.
+// ---------------------------------------------------------------------
+internal val mongolClaro = esquema(false, 0xFFF1EDE3, 0xFFFAF7F0, 0xFFE6DFCF, 0xFFCCC0A6, 0xFF18202E, 0xFF555D6D,
+    0xFF1F5FA8, 0xFFFFFFFF, 0xFFD5E4F5, 0xFF18202E, 0xFFC2412D, 0xFFF5D6CF, 0xFFC48A1E, 0xFF8A1A1A)
+internal val mongolOscuro = esquema(true, 0xFF0A1220, 0xFF101B2E, 0xFF18263F, 0xFF2B3E5E, 0xFFF0EBDD, 0xFFAAB0BD,
+    0xFF6FB1FF, 0xFF041427, 0xFF1B3456, 0xFFF0EBDD, 0xFFFF7A59, 0xFF3E1E16, 0xFFF2C14E, 0xFFFF8A80)
+internal val tipoMongol = tipografia(LetraExtra.filosofo, FontWeight.Bold, 1.04f, 1.2f, Letra.texto, 1f, LetraExtra.filosofo, 1.06f)
+
+// ---------------------------------------------------------------------
+//  Renacimiento: los cuadernos de Leonardo. Papel envejecido, tinta sepia y sanguina; de noche, nogal y pergamino.
+// ---------------------------------------------------------------------
+internal val renacimientoClaro = esquema(false, 0xFFF0E4C6, 0xFFF7EDD4, 0xFFE6D6B0, 0xFFCBB687, 0xFF3A2614, 0xFF6E5638,
+    0xFF8C3B1E, 0xFFFFFFFF, 0xFFF2D6C6, 0xFF3A2614, 0xFF2F4F6F, 0xFFD6E0EA, 0xFF9C7A2E, 0xFF8A1A1A)
+internal val renacimientoOscuro = esquema(true, 0xFF1A130C, 0xFF241A11, 0xFF302318, 0xFF4A3826, 0xFFEFE0BE, 0xFFBCA884,
+    0xFFE08A5E, 0xFF2A1006, 0xFF4A2A18, 0xFFEFE0BE, 0xFF9EC0E0, 0xFF22303E, 0xFFD9B566, 0xFFFF8A80)
+internal val tipoRenacimiento = tipografia(LetraExtra.italianno, FontWeight.Normal, 1.78f, 0f, LetraExtra.cormorant, 1.2f, LetraExtra.cormorant, 1.22f, cifrasAlineadas = true)
+
 /** Juegos de color para gráficas: bajo, medio, alto y el color fuerte (secuencial). */
 internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema) {
     TemaId.ROMANO -> if (oscuro) listOf(0xFFA63A4D, 0xFF2A2F34, 0xFF3FA393, 0xFFD2AE5A) else listOf(0xFF9E3445, 0xFFE4E2DA, 0xFF2D7A6F, 0xFFB8892B)
@@ -188,10 +242,15 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFFFF7A9A, 0xFF18222F, 0xFF3CD2E5, 0xFF3CD2E5) else listOf(0xFFC0466A, 0xFFE6EDF2, 0xFF0B8FA1, 0xFF0B8FA1)
     TemaId.COLONOS -> if (oscuro) listOf(0xFFE07A62, 0xFF1E2838, 0xFF8FB3E0, 0xFFE3C27A) else listOf(0xFFA23B2A, 0xFFE7DDC8, 0xFF1F3A5F, 0xFF7A5A2E)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFFE05A6A, 0xFF1B2550, 0xFF9DB4FF, 0xFFD9B25B) else listOf(0xFFA3172E, 0xFFEAE1CB, 0xFF1E3A8A, 0xFFB8892B)
-    TemaId.MUERTOS -> if (oscuro) listOf(0xFFB388FF, 0xFF2A1838, 0xFFFFA726, 0xFFFF4FA3) else listOf(0xFF6A1B9A, 0xFFF8E3C4, 0xFFE67E00, 0xFFC2185B)
+    TemaId.BOTANICO -> if (oscuro) listOf(0xFFF29BB8, 0xFF1A291D, 0xFFB8E06A, 0xFF5FC8C4) else listOf(0xFFB24A6C, 0xFFE5E2CF, 0xFF2F6B3A, 0xFF2E7F86)
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFFE5484D, 0xFF1C3125, 0xFF66BB6A, 0xFFF2C94C) else listOf(0xFFB71C1C, 0xFFECE4D6, 0xFF1B5E20, 0xFFC9A227)
     TemaId.SEDA -> if (oscuro) listOf(0xFFE26A50, 0xFF1F2846, 0xFF4FC3C3, 0xFFE0B04F) else listOf(0xFFC0392B, 0xFFEADFC3, 0xFF23408E, 0xFF1A8C8C)
     TemaId.URSS -> if (oscuro) listOf(0xFFE5252F, 0xFF262020, 0xFFE8D9B5, 0xFFE5252F) else listOf(0xFFC1121F, 0xFFE3D6B8, 0xFF1D1D1B, 0xFFC1121F)
+    TemaId.GOTICO -> if (oscuro) listOf(0xFFE0405E, 0xFF1A2356, 0xFF5C8DFF, 0xFFE2B34A) else listOf(0xFFB3122E, 0xFFE2D9C6, 0xFF1F3A9E, 0xFFB8892B)
+    TemaId.ESPACIO -> if (oscuro) listOf(0xFFFF8A65, 0xFF121A31, 0xFF8AB4FF, 0xFFC59BFF) else listOf(0xFFE8601C, 0xFFE1E6EF, 0xFF1B3A8C, 0xFF6B4FD6)
+    TemaId.ANDALUS -> if (oscuro) listOf(0xFFE07A5F, 0xFF18302D, 0xFF4FC1A6, 0xFFE0B65A) else listOf(0xFFB5432A, 0xFFE9DEC6, 0xFF1E6B5C, 0xFF2A4F9E)
+    TemaId.MONGOL -> if (oscuro) listOf(0xFFFF7A59, 0xFF18263F, 0xFF6FB1FF, 0xFFF2C14E) else listOf(0xFFC2412D, 0xFFE6DFCF, 0xFF1F5FA8, 0xFFC48A1E)
+    TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFFE08A5E, 0xFF302318, 0xFF9EC0E0, 0xFFD9B566) else listOf(0xFF8C3B1E, 0xFFE6D6B0, 0xFF2F4F6F, 0xFF9C7A2E)
 }.map { Color(it) }
 
 /** Escala de calor del mapa: poco, medio, mucho. */
@@ -206,8 +265,13 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFF3CD2E5, 0xFF9D93FF, 0xFFFF7A9A) else listOf(0xFF0B8FA1, 0xFF5E4FD1, 0xFFC0466A)
     TemaId.COLONOS -> if (oscuro) listOf(0xFF8FB3E0, 0xFFE3C27A, 0xFFE07A62) else listOf(0xFF1F3A5F, 0xFF7A5A2E, 0xFFA23B2A)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFF9DB4FF, 0xFFD9B25B, 0xFFE05A6A) else listOf(0xFF1E3A8A, 0xFFB8892B, 0xFFA3172E)
-    TemaId.MUERTOS -> if (oscuro) listOf(0xFFB388FF, 0xFFFF4FA3, 0xFFFFA726) else listOf(0xFF6A1B9A, 0xFFC2185B, 0xFFE67E00)
+    TemaId.BOTANICO -> if (oscuro) listOf(0xFF5FC8C4, 0xFFB8E06A, 0xFFF29BB8) else listOf(0xFF2E7F86, 0xFF2F6B3A, 0xFFB24A6C)
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFF66BB6A, 0xFFF2C94C, 0xFFE5484D) else listOf(0xFF1B5E20, 0xFFC9A227, 0xFFB71C1C)
     TemaId.SEDA -> if (oscuro) listOf(0xFF4FC3C3, 0xFFE0B04F, 0xFFE26A50) else listOf(0xFF23408E, 0xFF1A8C8C, 0xFFC0392B)
     TemaId.URSS -> if (oscuro) listOf(0xFFE8D9B5, 0xFFE8B923, 0xFFE5252F) else listOf(0xFF1D1D1B, 0xFFD4A017, 0xFFC1121F)
+    TemaId.GOTICO -> if (oscuro) listOf(0xFF5C8DFF, 0xFFE2B34A, 0xFFE0405E) else listOf(0xFF1F3A9E, 0xFFB8892B, 0xFFB3122E)
+    TemaId.ESPACIO -> if (oscuro) listOf(0xFF8AB4FF, 0xFFC59BFF, 0xFFFFB86B) else listOf(0xFF1B3A8C, 0xFF6B4FD6, 0xFFE8601C)
+    TemaId.ANDALUS -> if (oscuro) listOf(0xFF4FC1A6, 0xFFE0B65A, 0xFFE07A5F) else listOf(0xFF1E6B5C, 0xFF2A4F9E, 0xFFB5432A)
+    TemaId.MONGOL -> if (oscuro) listOf(0xFF6FB1FF, 0xFFF2C14E, 0xFFFF7A59) else listOf(0xFF1F5FA8, 0xFFC48A1E, 0xFFC2412D)
+    TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFF9EC0E0, 0xFFD9B566, 0xFFE08A5E) else listOf(0xFF2F4F6F, 0xFF9C7A2E, 0xFF8C3B1E)
 }.map { Color(it) }

@@ -41,6 +41,7 @@ object Importar {
             val n = Repo.importarDias(r.dias, sobrescribir = false)
             r.momentos.filter { m -> Repo.momentos.none { it.id == m.id } }.forEach { Repo.guardarMomento(it) }
             Repo.importarGastos(r.gastos)
+            if (r.ingresos.isNotEmpty()) Repo.importarIngresos(r.ingresos)
             r.respuestas.forEach { Repo.guardarRespuesta(it) }
             r.reacciones.forEach { rr -> if (Repo.reacciones.none { it.id == rr.id }) Repo.guardarReaccion(rr) }
             r.lugares.forEach { Repo.guardarLugar(it) }
@@ -66,7 +67,9 @@ object Importar {
                 val fs = r.nutricion.map { it.fecha } + r.comidas.map { it.fecha } + r.series.map { it.fecha } + r.entrenos.map { it.fecha }
                 if (fs.isNotEmpty() && Repo.nutricion.isEmpty() && Repo.entrenos.isEmpty()) Repo.importarMacrofactor(fs.min(), fs.max(), r.nutricion, r.comidas, r.series, r.entrenos)
             }
-            Repo.cambiarConfig { c -> c.copy(habitos = (c.habitos + r.config.habitos).distinctBy { it.id }, equivalencias = r.config.equivalencias + c.equivalencias) }
+            Repo.cambiarConfig { c -> c.copy(habitos = (c.habitos + r.config.habitos).distinctBy { it.id }, equivalencias = r.config.equivalencias + c.equivalencias,
+                frases_guardadas = (c.frases_guardadas + r.config.frases_guardadas).distinctBy { it.texto + it.autor },
+                categorias_ingreso = (c.categorias_ingreso + r.config.categorias_ingreso).distinct()) }
             return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos y ${r.gastos.size} gastos revisados.")
         }
         // Versión web
