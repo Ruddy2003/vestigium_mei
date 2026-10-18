@@ -100,8 +100,8 @@ fun PantallaDiario(nav: Nav) {
         if (t != null) i.putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, t)
         ctx.startActivity(i)
     }
-    val porDia = remember(Repo.momentos.size) { Repo.momentos.groupBy { it.fecha } }
-    val fechas = remember(Repo.dias.size, Repo.momentos.size) {
+    val porDia = remember(Repo.momentos) { Repo.momentos.groupBy { it.fecha } }
+    val fechas = remember(Repo.dias, Repo.momentos) {
         (Repo.dias.values.filter { it.nota.isNotBlank() || it.sueno_texto.isNotBlank() }.map { it.fecha } + Repo.momentos.map { it.fecha }).distinct().sortedDescending()
     }
     val q = normal(busca.trim())
@@ -114,7 +114,7 @@ fun PantallaDiario(nav: Nav) {
                 ms.joinToString(" ") { it.texto + " " + io.github.ruddy2003.vestigium.ui.tipoNombre(it.tipo, false) }).contains(q))
     }
     val entradas = visibles.mapNotNull { Repo.dias[it]?.takeIf { d -> d.nota.isNotBlank() } }
-    val palabras = remember(Repo.dias.size) { Repo.dias.values.sumOf { Texto.palabras(it.nota) } }
+    val palabras = remember(Repo.dias) { Repo.dias.values.sumOf { Texto.palabras(it.nota) } }
 
     Hoja("Diario", buscar = { nav.ir("buscar") }) {
         // Registrar ahora mismo, sin salir de aquí: todos los momentos a la vista, en un recuadro.
@@ -137,7 +137,7 @@ fun PantallaDiario(nav: Nav) {
             io.github.ruddy2003.vestigium.ui.ObjetoDiario(hoy, Repo.dias[hoy]?.nota.orEmpty()) { escribiendo = hoy }
         }
         // La biblioteca: las últimas entradas en su estante, y la puerta para entrar.
-        val ultimas = remember(Repo.dias.size) { LibroDiario.entradas().take(9) }
+        val ultimas = remember(Repo.dias) { LibroDiario.entradas().take(9) }
         Seccion("Biblioteca del diario", "${Repo.dias.values.count { it.nota.isNotBlank() }} entradas · %,d palabras".format(palabras)) {
             if (ultimas.isEmpty()) Vacio("Aquí se irán guardando tus entradas.")
             else io.github.ruddy2003.vestigium.ui.EstanteDiario(ultimas) { f -> Seleccion.entrada = f; nav.ir("entrada") }
@@ -189,14 +189,14 @@ fun PantallaDiario(nav: Nav) {
 /** La biblioteca del diario: todas las entradas como objetos del tema (libros, rollos, cartas, expedientes, logs), por mes. */
 @Composable
 fun PantallaBibliotecaDiario(nav: Nav) {
-    val todas = remember(Repo.dias.size) { LibroDiario.entradas() }
+    val todas = remember(Repo.dias) { LibroDiario.entradas() }
     var busca by remember { mutableStateOf("") }
     var anio by remember { mutableStateOf<String?>(null) }
     var meses by remember { mutableIntStateOf(6) }
     val q = normal(busca.trim())
     val visibles = todas.filter { d -> (anio == null || d.fecha.startsWith(anio!!)) && (q.isBlank() || normal(d.nota + " " + d.mejor_momento + " " + d.peor_momento).contains(q)) }
     val porMes = visibles.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
-    val palabras = remember(Repo.dias.size) { todas.sumOf { Texto.palabras(it.nota) } }
+    val palabras = remember(Repo.dias) { todas.sumOf { Texto.palabras(it.nota) } }
     Hoja("Biblioteca del diario", nav.atras, "${todas.size} entradas · %,d palabras. Toca una para abrirla.".format(palabras)) {
         OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
             placeholder = { Text("buscar en las entradas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
@@ -274,7 +274,7 @@ private fun FichaEntrada(d: Dia, abrir: () -> Unit) {
 @Composable
 fun PantallaEntrada(nav: Nav) {
     val ctx = LocalContext.current
-    val todas = remember(Repo.dias.size) { LibroDiario.entradas() }
+    val todas = remember(Repo.dias) { LibroDiario.entradas() }
     var fecha by remember { mutableStateOf(Seleccion.entrada ?: todas.firstOrNull()?.fecha ?: Fechas.diaLogico()) }
     var escribiendo by remember { mutableStateOf(false) }
     val d = Repo.dias[fecha]
