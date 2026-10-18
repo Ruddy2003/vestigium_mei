@@ -2,6 +2,8 @@ package io.github.ruddy2003.vestigium.data
 
 import android.content.Context
 import kotlinx.serialization.Serializable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import kotlinx.serialization.builtins.ListSerializer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -291,8 +293,11 @@ object Mundo {
     /** Solo para las capturas de diseño: un resumen ya hecho, sin leer ubicaciones. */
     @Volatile var resumenFijo: Resumen? = null
 
+    /** Sube cada vez que cambian las ubicaciones, para que las pantallas vuelvan a calcular. */
+    var version by androidx.compose.runtime.mutableIntStateOf(0)
+
     /** Olvida lo calculado (tras importar ubicaciones, por ejemplo). */
-    fun invalidar() { bruto = null }
+    fun invalidar() { bruto = null; android.os.Handler(android.os.Looper.getMainLooper()).post { version++ } }
 
     /**
      * Resume dónde has estado. [desdeDia] limita a un periodo (epochDay). Un país o ciudad entra con al menos media hora

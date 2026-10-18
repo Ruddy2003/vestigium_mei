@@ -362,7 +362,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     }
     // Encima de todo (también de la barra inferior): la huella al sellar el día.
     CapaHuella()
-    // Y encima de todo, el tema anterior abriéndose en círculo cuando eliges otro.
+    // La presentación del tema nuevo (emblema, frase y música), y encima el tema anterior abriéndose en círculo.
+    CapaPresentacionTema()
     CapaTransicionTema()
     // Sin verse: prepara el fondo del teléfono del tema nuevo (fondo vivo o fondo fijo que cambia con el tema).
     CapturaFondoTelefono()

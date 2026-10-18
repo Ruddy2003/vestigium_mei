@@ -96,6 +96,13 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 1) {
     fun contarUbicaciones(): Long =
         readableDatabase.rawQuery("SELECT COUNT(*) FROM ubicaciones", null).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
 
+    /** Varias escrituras de una vez (mucho más rápido para miles de puntos). */
+    fun enTransaccion(f: () -> Unit) {
+        val w = writableDatabase
+        w.beginTransaction()
+        try { f(); w.setTransactionSuccessful() } finally { w.endTransaction() }
+    }
+
     fun existeUbicacion(ms: Long): Boolean =
         readableDatabase.rawQuery("SELECT 1 FROM ubicaciones WHERE ms = ? LIMIT 1", arrayOf(ms.toString())).use { it.moveToFirst() }
 

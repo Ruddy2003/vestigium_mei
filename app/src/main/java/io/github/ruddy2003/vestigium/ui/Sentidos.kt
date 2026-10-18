@@ -182,6 +182,11 @@ object Sentidos {
         if (c.sonidos) runCatching { sonar(ctx, tema, e) }
     }
 
+    /** Solo la vibración del evento (para cuando el sonido lo pone otra cosa, como la música al cambiar de tema). */
+    fun vibrarEvento(ctx: Context, e: Evento) {
+        if (Repo.config.vibracion) runCatching { vibrar(ctx, patron(Estilo.tema, e)) }
+    }
+
     // ---------------------------------------------------------------- vibración
 
     private fun vibrador(ctx: Context): Vibrator? =

@@ -46,6 +46,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.rememberGraphicsLayer
@@ -70,23 +71,24 @@ import kotlin.math.sin
  * Fijo (se pone con un toque en inicio, bloqueo o ambas) o vivo (estrellas que titilan, luciérnagas, nieve… y cambia solo con el tema).
  */
 object FondosTelefono {
-    private const val VERSION = 1
+    private const val VERSION = 2
 
-    fun archivo(ctx: Context, tema: TemaId, oscuro: Boolean): File =
-        File(File(ctx.filesDir, "fondos").apply { mkdirs() }, "fondo_v${VERSION}_${tema.id}_${if (oscuro) "o" else "c"}.png")
+    /** [variante]: «bloqueo» (con emblema, nombre y marco) o «inicio» (limpio, para que no compita con las apps). */
+    fun archivo(ctx: Context, tema: TemaId, oscuro: Boolean, variante: String = "inicio"): File =
+        File(File(ctx.filesDir, "fondos").apply { mkdirs() }, "fondo_v${VERSION}_${tema.id}_${if (oscuro) "o" else "c"}_$variante.png")
 
-    fun guardar(ctx: Context, bmp: Bitmap, tema: TemaId, oscuro: Boolean) {
-        val f = archivo(ctx, tema, oscuro)
+    fun guardar(ctx: Context, bmp: Bitmap, tema: TemaId, oscuro: Boolean, variante: String) {
+        val f = archivo(ctx, tema, oscuro, variante)
         val tmp = File(f.parentFile, f.name + ".tmp")
         tmp.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
         tmp.renameTo(f)
     }
 
-    /** Pone una imagen como fondo. [donde]: «inicio», «bloqueo» o «ambas». */
-    fun poner(ctx: Context, bmp: Bitmap, donde: String): Boolean = runCatching {
+    /** Pone los fondos: el limpio en inicio y el completo en bloqueo. [donde]: «inicio», «bloqueo» o «ambas». */
+    fun poner(ctx: Context, inicio: Bitmap?, bloqueo: Bitmap?, donde: String): Boolean = runCatching {
         val wm = WallpaperManager.getInstance(ctx)
-        val banderas = when (donde) { "inicio" -> WallpaperManager.FLAG_SYSTEM; "bloqueo" -> WallpaperManager.FLAG_LOCK; else -> WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK }
-        wm.setBitmap(bmp, null, true, banderas)
+        if (donde != "bloqueo" && inicio != null) wm.setBitmap(inicio, null, true, WallpaperManager.FLAG_SYSTEM)
+        if (donde != "inicio" && bloqueo != null) wm.setBitmap(bloqueo, null, true, WallpaperManager.FLAG_LOCK)
         true
     }.getOrDefault(false)
 
@@ -116,23 +118,30 @@ object FondosTelefono {
     }
 }
 
-/** El fondo tal como queda en el teléfono: papel o pantalla del tema, su emblema grande y la banda de adorno. */
+/**
+ * El fondo tal como queda en el teléfono. «bloqueo»: papel o pantalla del tema, emblema grande, nombre, adorno y marco.
+ * «inicio»: solo el papel, lo que se mueve y el emblema muy tenue en grande, para que las apps y los widgets se lean bien encima.
+ */
 @Composable
-fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modifier) {
+fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modifier, variante: String = "bloqueo") {
     val o = oscuro || tema.soloOscuro
     val e = esquemaDe(tema, o)
+    val limpio = variante == "inicio"
     MaterialTheme(colorScheme = e, typography = tipoDe(tema, o)) {
         Box(modifier.background(e.background).fondoTema(tema, e)) {
-            // Lo que se mueve en la app, aquí quieto y un poco más visible (se dibuja dos veces).
-            FondoVivo(tema, fijo = 0.37f); FondoVivo(tema, fijo = 0.37f)
-            MarcoFondo(tema, e)
-            // Una luz suave detrás del emblema y las orillas un poco más oscuras.
+            // Lo que se mueve en la app, aquí quieto y un poco más visible (se dibuja dos veces en el de bloqueo).
+            FondoVivo(tema, fijo = 0.37f)
+            if (!limpio) { FondoVivo(tema, fijo = 0.37f); MarcoFondo(tema, e) }
+            // Una luz suave al centro y las orillas un poco más oscuras.
             Canvas(Modifier.fillMaxSize()) {
                 val c = Offset(size.width / 2, size.height * 0.42f)
-                drawRect(Brush.radialGradient(listOf(e.primary.copy(alpha = if (o) 0.10f else 0.06f), Color.Transparent), c, size.width * 0.7f))
+                if (!limpio) drawRect(Brush.radialGradient(listOf(e.primary.copy(alpha = if (o) 0.10f else 0.06f), Color.Transparent), c, size.width * 0.7f))
                 drawRect(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = if (o) 0.35f else 0.10f)), Offset(size.width / 2, size.height / 2), size.height * 0.75f))
             }
-            Column(Modifier.align(BiasAlignment(0f, -0.18f)), horizontalAlignment = Alignment.CenterHorizontally) {
+            if (limpio) {
+                // El emblema como marca de agua: grande, apenas visible, abajo del centro donde suelen quedar menos íconos.
+                Box(Modifier.align(BiasAlignment(0f, 0.28f)).graphicsLayer { alpha = if (o) 0.10f else 0.08f }) { Emblema(tema, 300.dp, e, animado = false) }
+            } else Column(Modifier.align(BiasAlignment(0f, -0.18f)), horizontalAlignment = Alignment.CenterHorizontally) {
                 Emblema(tema, 176.dp, e, animado = false)
                 Text(FondosTelefono.marca(tema), style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 3.sp), color = e.primary, textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 22.dp))
@@ -167,7 +176,18 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
     }
 }
 
-/** Pantalla para ver el fondo a tamaño real y ponerlo. */
+/** Las dos variantes dibujadas a tamaño de pantalla: se ve una, la otra se graba sin mostrarse. */
+@Composable
+private fun DosFondos(tema: TemaId, oscuro: Boolean, visible: String?, inicio: androidx.compose.ui.graphics.layer.GraphicsLayer, bloqueo: androidx.compose.ui.graphics.layer.GraphicsLayer) {
+    listOf("inicio" to inicio, "bloqueo" to bloqueo).forEach { (v, capa) ->
+        FondoTelefonoVista(tema, oscuro, Modifier.fillMaxSize().drawWithContent { capa.record { this@drawWithContent.drawContent() }; if (v == visible) drawLayer(capa) }, v)
+    }
+}
+
+private suspend fun foto(capa: androidx.compose.ui.graphics.layer.GraphicsLayer): Bitmap? =
+    runCatching { capa.toImageBitmap().asAndroidBitmap().copy(Bitmap.Config.ARGB_8888, false) }.getOrNull()
+
+/** Pantalla para ver los fondos a tamaño real y ponerlos. */
 @Composable
 fun PantallaFondoTelefono(nav: Nav) {
     val ctx = LocalContext.current
@@ -175,15 +195,15 @@ fun PantallaFondoTelefono(nav: Nav) {
     val tema = Estilo.tema
     val oscuroInicial = modoOscuro(tema)
     var oscuro by remember { mutableStateOf(oscuroInicial) }
+    var ver by remember { mutableStateOf("bloqueo") }
     var mensaje by remember { mutableStateOf<String?>(null) }
     var ocupado by remember { mutableStateOf(false) }
-    val capa = rememberGraphicsLayer()
+    val capaInicio = rememberGraphicsLayer()
+    val capaBloqueo = rememberGraphicsLayer()
     val sentir = rememberSentir()
 
-    suspend fun foto(): Bitmap? = runCatching { capa.toImageBitmap().asAndroidBitmap().copy(Bitmap.Config.ARGB_8888, false) }.getOrNull()
-
     Box(Modifier.fillMaxSize()) {
-        FondoTelefonoVista(tema, oscuro, Modifier.fillMaxSize().drawWithContent { capa.record { this@drawWithContent.drawContent() }; drawLayer(capa) })
+        DosFondos(tema, oscuro, ver, capaInicio, capaBloqueo)
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)) {
                 TextButton(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
@@ -193,19 +213,23 @@ fun PantallaFondoTelefono(nav: Nav) {
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Fondo del teléfono", style = MaterialTheme.typography.titleMedium)
-                Ayuda(mensaje ?: "Así se ve con el tema ${tema.nombre}. El fijo se queda así; el vivo se mueve despacio y cambia solo cuando cambias de tema en la app.")
-                if (!tema.soloOscuro) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Ficha("claro", !oscuro) { oscuro = false }; Ficha("oscuro", oscuro) { oscuro = true }
+                Ayuda(mensaje ?: "Dos fondos del tema ${tema.nombre}: el de bloqueo con el emblema y el marco, y uno más limpio para la pantalla de inicio, para que no se sature con las apps.")
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("bloqueo", ver == "bloqueo") { ver = "bloqueo" }; Ficha("inicio", ver == "inicio") { ver = "inicio" }
+                    if (!tema.soloOscuro) { Ficha("claro", !oscuro) { oscuro = false }; Ficha("oscuro", oscuro) { oscuro = true } }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("inicio" to "inicio", "bloqueo" to "bloqueo", "ambas" to "las dos").forEach { (id, n) ->
+                    listOf("inicio" to "poner en inicio", "bloqueo" to "en bloqueo", "ambas" to "en los dos").forEach { (id, n) ->
                         BotonSecundario(n, Modifier.weight(1f), habilitado = !ocupado) {
                             ocupado = true
                             scope.launch {
-                                val b = foto()
-                                val ok = b != null && withContext(Dispatchers.IO) { FondosTelefono.guardar(ctx, b, tema, oscuro); FondosTelefono.poner(ctx, b, id) }
+                                val bi = foto(capaInicio); val bb = foto(capaBloqueo)
+                                val ok = (bi != null || bb != null) && withContext(Dispatchers.IO) {
+                                    bi?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "inicio") }; bb?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "bloqueo") }
+                                    FondosTelefono.poner(ctx, bi, bb, id)
+                                }
                                 if (ok) { FondosTelefono.marcarUltimo(ctx, "${tema.id}/$oscuro"); Repo.cambiarConfig { it.copy(fondo_telefono_donde = id) }; sentir(Sentidos.Evento.GUARDAR) }
-                                mensaje = if (ok) "Listo: ya es tu fondo de ${if (id == "ambas") "inicio y bloqueo" else id}." else "El teléfono no dejó cambiar el fondo."
+                                mensaje = if (ok) "Listo: " + when (id) { "inicio" -> "el limpio ya es tu fondo de inicio."; "bloqueo" -> "ya es tu fondo de bloqueo."; else -> "el limpio en inicio y el completo en bloqueo." } else "El teléfono no dejó cambiar el fondo."
                                 ocupado = false
                             }
                         }
@@ -214,22 +238,26 @@ fun PantallaFondoTelefono(nav: Nav) {
                 BotonPrincipal("Fondo vivo", Modifier.fillMaxWidth(), habilitado = !ocupado) {
                     ocupado = true
                     scope.launch {
-                        // El fondo vivo dibuja encima de esta misma imagen; se guarda la del tema en claro y en oscuro de una vez.
-                        foto()?.let { b -> withContext(Dispatchers.IO) { FondosTelefono.guardar(ctx, b, tema, oscuro) } }
-                        if (!tema.soloOscuro) { oscuro = !oscuro; delay(350); foto()?.let { b -> withContext(Dispatchers.IO) { FondosTelefono.guardar(ctx, b, tema, oscuro) } }; oscuro = !oscuro }
+                        // El fondo vivo dibuja encima de estas mismas imágenes; se guardan en claro y en oscuro de una vez.
+                        suspend fun guardarAmbas() {
+                            foto(capaInicio)?.let { b -> withContext(Dispatchers.IO) { FondosTelefono.guardar(ctx, b, tema, oscuro, "inicio") } }
+                            foto(capaBloqueo)?.let { b -> withContext(Dispatchers.IO) { FondosTelefono.guardar(ctx, b, tema, oscuro, "bloqueo") } }
+                        }
+                        guardarAmbas()
+                        if (!tema.soloOscuro) { oscuro = !oscuro; delay(400); guardarAmbas(); oscuro = !oscuro }
                         ocupado = false
                         FondosTelefono.elegirVivo(ctx)
                     }
                 }
-                Interruptor("Cambiar el fondo fijo al cambiar de tema", Repo.config.fondo_telefono_auto, "Cuando elijas otro tema en la app, tu fondo fijo cambia también.") { v -> Repo.cambiarConfig { it.copy(fondo_telefono_auto = v) } }
+                Interruptor("Cambiar el fondo fijo al cambiar de tema", Repo.config.fondo_telefono_auto, "Cuando elijas otro tema en la app, tus fondos de inicio y bloqueo cambian también.") { v -> Repo.cambiarConfig { it.copy(fondo_telefono_auto = v) } }
             }
         }
     }
 }
 
 /**
- * Detrás de todo, sin verse: cuando cambias de tema prepara la imagen del fondo nuevo para el fondo vivo
- * y, si lo pediste, cambia también el fondo fijo.
+ * Detrás de todo, sin verse: cuando cambias de tema prepara las imágenes del fondo nuevo para el fondo vivo
+ * y, si lo pediste, cambia también los fondos fijos.
  */
 @Composable
 fun CapturaFondoTelefono() {
@@ -239,20 +267,21 @@ fun CapturaFondoTelefono() {
     val auto = Repo.config.fondo_telefono_auto
     val vivo = remember(tema, oscuro) { FondosTelefono.vivoActivo(ctx) }
     val clave = "${tema.id}/$oscuro"
-    val falta = remember(tema, oscuro, auto, vivo) { (vivo && !FondosTelefono.archivo(ctx, tema, oscuro).exists()) || (auto && FondosTelefono.ultimo(ctx) != null && FondosTelefono.ultimo(ctx) != clave) }
+    val falta = remember(tema, oscuro, auto, vivo) {
+        (vivo && !FondosTelefono.archivo(ctx, tema, oscuro, "inicio").exists()) || (auto && FondosTelefono.ultimo(ctx) != null && FondosTelefono.ultimo(ctx) != clave)
+    }
     if (!falta) return
-    val capa = rememberGraphicsLayer()
+    val capaInicio = rememberGraphicsLayer()
+    val capaBloqueo = rememberGraphicsLayer()
     var hecho by remember(clave) { mutableStateOf(false) }
     if (hecho) return
-    Box(Modifier.fillMaxSize().drawWithContent { capa.record { this@drawWithContent.drawContent() } }) {
-        FondoTelefonoVista(tema, oscuro, Modifier.fillMaxSize())
-    }
+    Box(Modifier.fillMaxSize()) { DosFondos(tema, oscuro, null, capaInicio, capaBloqueo) }
     LaunchedEffect(clave) {
         delay(600)
-        val b = runCatching { capa.toImageBitmap().asAndroidBitmap().copy(Bitmap.Config.ARGB_8888, false) }.getOrNull()
-        if (b != null) withContext(Dispatchers.IO) {
-            runCatching { FondosTelefono.guardar(ctx, b, tema, oscuro) }
-            if (auto && FondosTelefono.poner(ctx, b, Repo.config.fondo_telefono_donde)) FondosTelefono.marcarUltimo(ctx, clave)
+        val bi = foto(capaInicio); val bb = foto(capaBloqueo)
+        withContext(Dispatchers.IO) {
+            runCatching { bi?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "inicio") }; bb?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "bloqueo") } }
+            if (auto && FondosTelefono.poner(ctx, bi, bb, Repo.config.fondo_telefono_donde)) FondosTelefono.marcarUltimo(ctx, clave)
         }
         hecho = true
     }
@@ -297,8 +326,13 @@ class FondoVivoServicio : WallpaperService() {
             else -> (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         }
 
+        /** En la pantalla de bloqueo (Android 14+ lo dice) va el completo; en inicio, el limpio. */
+        private fun variante(): String = runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= 34 && (wallpaperFlags and WallpaperManager.FLAG_SYSTEM) == 0 && (wallpaperFlags and WallpaperManager.FLAG_LOCK) != 0) "bloqueo" else "inicio"
+        }.getOrDefault("inicio")
+
         private fun cargar(t: TemaId, o: Boolean, w: Int, h: Int) {
-            val f = FondosTelefono.archivo(applicationContext, t, o)
+            val f = FondosTelefono.archivo(applicationContext, t, o, variante())
             val clave = "${t.id}/$o/${f.lastModified()}/$w/$h"
             if (clave == claveBase) return
             claveBase = clave

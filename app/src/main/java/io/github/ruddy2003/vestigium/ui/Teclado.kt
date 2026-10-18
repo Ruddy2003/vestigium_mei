@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -140,7 +141,8 @@ fun TecladoTema(tema: TemaId, p: Pagina, valor: TextFieldValue, onCambio: (TextF
         if (mayus == 1) mayus = 0
     }
 
-    Column(Modifier.fillMaxWidth().background(e.fondo).padding(horizontal = 3.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+    // Más arriba que el borde de la pantalla: abajo queda la barra de gestos y la última fila se alcanza sin estirar el dedo.
+    Column(Modifier.fillMaxWidth().background(e.fondo).navigationBarsPadding().padding(start = 3.dp, end = 3.dp, top = 6.dp, bottom = 26.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
         val filas = if (simbolos) SIMBOLOS else FILAS
         filas.forEachIndexed { i, fila ->
             Row(Modifier.fillMaxWidth().height(46.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {

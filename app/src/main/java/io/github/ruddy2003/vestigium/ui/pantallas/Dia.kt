@@ -263,7 +263,6 @@ fun PantallaDia(nav: Nav) {
 
         if (esHoy && ahora < 5) Aviso("Pasa de medianoche: sigues llenando el día $fecha. Los días empiezan a las 5:00.")
         if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas, pero se marcará como escrito por adelantado.")
-        Portada(d.foto)
 
         // 1. Lo de este momento del día.
         if (manana) { bloqueSueno(); pendientes(); FraseDelDia(fecha) }
@@ -299,9 +298,6 @@ fun PantallaDia(nav: Nav) {
             Vestigios(fecha, nav)
         }
 
-        Seccion("Fotos del día", "Toca una para verla; mantén presionada para elegirla como la imagen del día (sale arriba, de portada).", numero = n(), plegable = true) {
-            Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
-        }
     }
 }
 
@@ -432,6 +428,9 @@ fun PantallaNoche(nav: Nav) {
         }
         Seccion("Lo que leí o vi hoy", "Toca la portada de lo que le dedicaste tiempo hoy: libro, serie, película, juego o artículo.", numero = n(), plegable = true) {
             ObrasDeHoy(fecha, nav)
+        }
+        Seccion("Foto del día", "Mantén presionada una foto para elegirla como la foto del día: sale en el calendario, en la biblioteca del diario y en el widget. Tócala para verla.", numero = n(), plegable = true) {
+            Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
         }
         Seccion("Predicción", "¿Cómo crees que estará tu ánimo mañana? La app medirá qué tan bien te conoces.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqPred)) {
             Escala(d.prediccion_manana, 1, 7, Catalogo.ANCLAS["prediccion_manana"]) { cambiar(d.copy(prediccion_manana = it)) }

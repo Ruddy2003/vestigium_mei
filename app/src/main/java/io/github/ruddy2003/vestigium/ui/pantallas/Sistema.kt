@@ -261,7 +261,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                                 // Foto del tema de ahora, cambio de tema, y el nuevo se abre en círculo desde la tarjeta con su propio sonido.
                                 io.github.ruddy2003.vestigium.ui.TransicionTema.preparar(vista, centros[t.id] ?: androidx.compose.ui.geometry.Offset.Zero)
                                 cambiar { it.copy(tema = t.id) }
-                                io.github.ruddy2003.vestigium.ui.Sentidos.sentir(ctx, io.github.ruddy2003.vestigium.ui.Sentidos.Evento.TEMA)
+                                io.github.ruddy2003.vestigium.ui.PresentacionTema.mostrar(ctx, t)
                             }
                         }
                     }
@@ -296,7 +296,22 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                             if (e == io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) io.github.ruddy2003.vestigium.ui.Fiesta.lanzar()
                         }
                     }
+                    BotonSecundario("música del tema") { io.github.ruddy2003.vestigium.ui.Musica.tocar(ctx, io.github.ruddy2003.vestigium.ui.Musica.presentacion(io.github.ruddy2003.vestigium.ui.Estilo.tema), forzar = true) }
                 }
+                Etiqueta("Tonos del teléfono")
+                Ayuda("Tono de llamada y de notificaciones para todo el teléfono, con la música de este tema. Las notificaciones de Vestigium Mei suenan siempre con su propio sonido, distinto de estos, para que sepas que son de la app.")
+                var mensajeTono by remember { mutableStateOf<String?>(null) }
+                val temaAhora = io.github.ruddy2003.vestigium.ui.Estilo.tema
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 6.dp)) {
+                    BotonSecundario("▶ llamada") { io.github.ruddy2003.vestigium.ui.Musica.tocar(ctx, io.github.ruddy2003.vestigium.ui.Musica.llamada(temaAhora), forzar = true) }
+                    BotonSecundario("▶ notificación") { io.github.ruddy2003.vestigium.ui.Musica.tocar(ctx, io.github.ruddy2003.vestigium.ui.Musica.notificacion(temaAhora), forzar = true) }
+                    BotonSecundario("■") { io.github.ruddy2003.vestigium.ui.Musica.detener() }
+                }
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 6.dp)) {
+                    BotonPrincipal("poner tono de llamada") { mensajeTono = io.github.ruddy2003.vestigium.ui.TonosTelefono.poner(ctx, temaAhora, true) }
+                    BotonPrincipal("poner tono de notificaciones") { mensajeTono = io.github.ruddy2003.vestigium.ui.TonosTelefono.poner(ctx, temaAhora, false) }
+                }
+                mensajeTono?.let { Ayuda(it, Modifier.padding(top = 6.dp)) }
             }
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 Etiqueta("Tamaño del texto: ${(c.letra * 100).toInt()}%")

@@ -316,7 +316,7 @@ private fun rememberResumen(periodo: String): Mundo.Resumen? {
     Mundo.resumenFijo?.let { return it }
     val ctx = LocalContext.current
     val c = Repo.config
-    val clave = listOf(c.ciudades_visitadas, c.paises_rascados, c.paises_tapados, c.unesco_marcados, c.unesco_descartados)
+    val clave = listOf(c.ciudades_visitadas, c.paises_rascados, c.paises_tapados, c.unesco_marcados, c.unesco_descartados, Mundo.version)
     val r by produceState<Mundo.Resumen?>(null, periodo, clave) {
         value = withContext(Dispatchers.IO) { runCatching { Mundo.resumen(ctx, desdeDe(periodo)) }.getOrNull() }
     }
@@ -415,7 +415,11 @@ fun PantallaMundo(nav: Nav) {
             }
         }
 
-        Seccion("Patrimonio Mundial", "Los sitios de la lista de la UNESCO. Se marcan solos cuando tu ubicación pasa cerca; también puedes marcarlos a mano.", numero = 4) {
+        Seccion("Lugares de tus fotos", "Casi todas las fotos de la cámara guardan dónde y cuándo se tomaron. Con eso se llenan tus viajes de antes de usar la app. De cada foto se guarda solo el lugar y la hora; la imagen nunca se copia.", numero = 4, plegable = true) {
+            FotosConLugar()
+        }
+
+        Seccion("Patrimonio Mundial", "Los sitios de la lista de la UNESCO. Se marcan solos cuando tu ubicación (o una foto) pasa cerca; también puedes marcarlos a mano.", numero = 5) {
             val vistos = t.sitios
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Cifra("${vistos.size}", "de ${"%,d".format(sitios.size)} sitios", Modifier.weight(1f))
@@ -434,6 +438,60 @@ fun PantallaMundo(nav: Nav) {
             BotonSecundario("ver los ${"%,d".format(sitios.size)} sitios", Modifier.padding(top = 8.dp)) { nav.ir("unesco") }
         }
         Ayuda(Mundo.CREDITOS, Modifier.padding(top = 20.dp, bottom = 30.dp))
+    }
+}
+
+/** Revisar las fotos del teléfono e importar el Takeout de Google Fotos. */
+@Composable
+private fun FotosConLugar() {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val sentir = rememberSentir()
+    var estado by remember { mutableStateOf<String?>(null) }
+    var ocupado by remember { mutableStateOf(false) }
+    var cuenta by remember { mutableIntStateOf(io.github.ruddy2003.vestigium.sensores.FotosLugar.conLugar(ctx)) }
+    fun revisar() {
+        if (ocupado) return
+        ocupado = true
+        scope.launch {
+            val r = withContext(Dispatchers.IO) {
+                io.github.ruddy2003.vestigium.sensores.FotosLugar.revisar(ctx) { i, n -> scope.launch { estado = "Revisando ${"%,d".format(i)} de ${"%,d".format(n)} fotos…" } }
+            }
+            estado = r.toString(); cuenta = io.github.ruddy2003.vestigium.sensores.FotosLugar.conLugar(ctx); ocupado = false
+            if (r.nuevas > 0) sentir(Sentidos.Evento.GUARDAR)
+        }
+    }
+    val permisos = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { revisar() }
+    val zips = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isEmpty() || ocupado) return@rememberLauncherForActivityResult
+        ocupado = true
+        scope.launch {
+            val r = withContext(Dispatchers.IO) { io.github.ruddy2003.vestigium.sensores.FotosLugar.importarTakeout(ctx, uris) { t -> scope.launch { estado = t } } }
+            estado = if (r.revisadas == 0) "No encontré datos de fotos en ese archivo. ¿Es el Takeout de Google Fotos?" else "Takeout: ${"%,d".format(r.conLugar)} fotos con lugar, ${"%,d".format(r.nuevas)} nuevas en tu mapa."
+            cuenta = io.github.ruddy2003.vestigium.sensores.FotosLugar.conLugar(ctx); ocupado = false
+            if (r.nuevas > 0) sentir(Sentidos.Evento.GUARDAR)
+        }
+    }
+    // Las fotos nuevas se revisan solas cada vez que abres esta pantalla (si ya diste permiso).
+    LaunchedEffect(Unit) {
+        if (io.github.ruddy2003.vestigium.sensores.Galeria.tienePermiso(ctx) && io.github.ruddy2003.vestigium.sensores.FotosLugar.ultimaRevision(ctx) > 0) {
+            val r = withContext(Dispatchers.IO) { io.github.ruddy2003.vestigium.sensores.FotosLugar.revisar(ctx) }
+            if (r.revisadas > 0) { estado = r.toString(); cuenta = io.github.ruddy2003.vestigium.sensores.FotosLugar.conLugar(ctx) }
+        }
+    }
+    Tarjeta {
+        Text(if (cuenta > 0) "${"%,d".format(cuenta)} fotos con lugar en tu mapa" else "Todavía no se han revisado tus fotos", style = MaterialTheme.typography.bodyLarge)
+        io.github.ruddy2003.vestigium.sensores.FotosLugar.ultimaRevision(ctx).takeIf { it > 0 }?.let { Ayuda("Última revisión: " + Fechas.relativo(Fechas.diaDeMillis(it))) }
+        estado?.let { Ayuda(it, Modifier.padding(top = 6.dp)) }
+        Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BotonPrincipal(if (ocupado) "revisando…" else "Revisar mis fotos", Modifier.weight(1f), habilitado = !ocupado) {
+                val faltan = (io.github.ruddy2003.vestigium.sensores.Galeria.permisos().toList() + io.github.ruddy2003.vestigium.sensores.FotosLugar.PERMISO)
+                    .filter { ctx.checkSelfPermission(it) != android.content.pm.PackageManager.PERMISSION_GRANTED }
+                if (faltan.isEmpty()) revisar() else permisos.launch(faltan.toTypedArray())
+            }
+        }
+        BotonSecundario("importar Takeout de Google Fotos (.zip)", Modifier.padding(top = 8.dp), habilitado = !ocupado) { zips.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) }
+        Ayuda("Para las fotos que solo están en la nube: en takeout.google.com elige solo «Google Fotos», archivos .zip de 2 GB, y aquí elige uno o varios. Se leen solo los datos de fecha y lugar; puedes borrar el .zip después.", Modifier.padding(top = 8.dp))
     }
 }
 

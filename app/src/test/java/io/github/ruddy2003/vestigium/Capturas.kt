@@ -434,6 +434,20 @@ class Capturas {
     @Test fun fondoAndalus() = fondo(TemaId.ANDALUS, false)
     @Test fun fondoMongol() = fondo(TemaId.MONGOL, false)
     @Test fun fondoNavidad() = fondo(TemaId.NAVIDAD, true)
+    private fun fondoInicio(tema: TemaId, oscuro: Boolean) = captura(tema, oscuro, alto = 2400) { io.github.ruddy2003.vestigium.ui.FondoTelefonoVista(tema, oscuro, Modifier.fillMaxSize(), "inicio") }
+    @Test fun inicioGotico() = fondoInicio(TemaId.GOTICO, true)
+    @Test fun inicioBotanico() = fondoInicio(TemaId.BOTANICO, false)
+    @Test fun inicioEspacio() = fondoInicio(TemaId.ESPACIO, true)
+    @Test fun inicioRomano() = fondoInicio(TemaId.ROMANO, false)
+
+    private fun presentacion(tema: TemaId, oscuro: Boolean) = captura(tema, oscuro, alto = 2400) {
+        io.github.ruddy2003.vestigium.ui.PresentacionTema.frase = io.github.ruddy2003.vestigium.ui.Frases.de(tema).first()
+        io.github.ruddy2003.vestigium.ui.PresentacionTema.tema = tema
+        io.github.ruddy2003.vestigium.ui.CapaPresentacionTema()
+    }
+    @Test fun presentacionGotico() = presentacion(TemaId.GOTICO, false)
+    @Test fun presentacionCiber() = presentacion(TemaId.CIBER, true)
+    @Test fun presentacionAndalus() = presentacion(TemaId.ANDALUS, false)
 }
 
 @Composable
