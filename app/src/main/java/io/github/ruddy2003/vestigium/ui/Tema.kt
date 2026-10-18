@@ -291,6 +291,9 @@ object Tonos {
     /** Color de los ingresos: el extremo «bueno» de la escala del tema, para que se distinga del gasto. */
     fun ingreso(oscuro: Boolean): Color = juego(oscuro).alto
 
+    /** Color de lo que sale: el otro extremo de la escala. */
+    fun gasto(oscuro: Boolean): Color = juego(oscuro).bajo
+
     /** Texto legible encima de un color de fondo. */
     fun sobre(c: Color): Color = if (c.luminance() > 0.45f) Color(0xFF17191C) else Color(0xFFF2EFE8)
 }

@@ -102,7 +102,7 @@ fun PantallaGastos(nav: Nav? = null) {
                 Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(false to "− Gasto", true to "+ Ingreso").forEach { (v, t) ->
                         val sel = entra == v
-                        val color = if (v) io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()) else MaterialTheme.colorScheme.primary
+                        val color = if (v) io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()) else io.github.ruddy2003.vestigium.ui.Tonos.gasto(io.github.ruddy2003.vestigium.ui.esOscuro())
                         androidx.compose.material3.Surface(
                             onClick = { if (!corrigiendo && entra != v) { entra = v; cat = null; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } },
                             shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f),
@@ -257,7 +257,7 @@ private fun Balanza(ingresos: Double, gastos: Double) {
     val max = maxOf(ingresos, gastos).takeIf { it > 0 } ?: 1.0
     val verde = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro())
     Etiqueta("balance del mes")
-    listOf(Triple("entró", ingresos, verde), Triple("salió", gastos, MaterialTheme.colorScheme.primary)).forEach { (t, v, c) ->
+    listOf(Triple("entró", ingresos, verde), Triple("salió", gastos, io.github.ruddy2003.vestigium.ui.Tonos.gasto(io.github.ruddy2003.vestigium.ui.esOscuro()))).forEach { (t, v, c) ->
         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(t, style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(56.dp))
             Box(Modifier.weight(1f)) {
