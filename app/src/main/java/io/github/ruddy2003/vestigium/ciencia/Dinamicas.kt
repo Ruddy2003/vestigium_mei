@@ -64,6 +64,7 @@ object Dinamicas {
     private fun slug(s: String): String = Texto.slug(s).take(40).ifEmpty { "x" + (s.hashCode() and 0xffff).toString(16) }
 
     private fun construir(ext: Boolean): Resultado {
+        val hoy = Fechas.diaLogico()
         val vars = ArrayList<Variable>()
         val out = HashMap<String, HashMap<String, Double>>()
         val usados = HashSet<String>()
@@ -206,7 +207,7 @@ object Dinamicas {
                     val v = r.puntajes[p] ?: return@forEachIndexed
                     if (ventana > 0) for (k in 0 until ventana) pon(Fechas.sumar(r.fecha, -k), id, v)
                     else {
-                        val hasta = resp.getOrNull(i + 1)?.fecha ?: Fechas.sumar(r.fecha, 365)
+                        val hasta = minOf(resp.getOrNull(i + 1)?.fecha ?: Fechas.sumar(r.fecha, 365), Fechas.sumar(hoy, 1))
                         var f = r.fecha; var g = 0
                         while (f < hasta && g < 800) { pon(f, id, v); f = Fechas.sumar(f, 1); g++ }
                     }
@@ -254,7 +255,7 @@ object Dinamicas {
                 vars += Variable(id, "Brújula: ${e.nombre.lowercase()} (−100 ${e.menos}, +100 ${e.mas})", "Política"); usados += id
                 tests.forEachIndexed { i, t ->
                     val v = t.ejes[e.id] ?: return@forEachIndexed
-                    val hasta = tests.getOrNull(i + 1)?.fecha ?: Fechas.sumar(t.fecha, 400)
+                    val hasta = minOf(tests.getOrNull(i + 1)?.fecha ?: Fechas.sumar(t.fecha, 400), Fechas.sumar(hoy, 1))
                     var f = t.fecha; var g = 0
                     while (f < hasta && g < 1200) { pon(f, id, v); f = Fechas.sumar(f, 1); g++ }
                 }
