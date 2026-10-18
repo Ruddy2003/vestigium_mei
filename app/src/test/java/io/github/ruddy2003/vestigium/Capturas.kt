@@ -356,7 +356,7 @@ class Capturas {
     @Test fun obrasBotanico() = obras(TemaId.BOTANICO, true)
     @Test fun obrasMedieval() = obras(TemaId.MEDIEVAL, false)
     @Test fun obrasCiber() = obras(TemaId.CIBER, true)
-    @Test fun obraRenacimiento() = pantalla(TemaId.RENACIMIENTO, false, 3400) {
+    @Test fun obraRenacimiento() = pantalla(TemaId.RENACIMIENTO, false, 5600) {
         obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.EdicionObra.id = "o1"
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaObra(navVacia)
     }

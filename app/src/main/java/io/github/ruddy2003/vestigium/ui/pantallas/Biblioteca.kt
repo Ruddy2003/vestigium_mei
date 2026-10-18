@@ -47,6 +47,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -90,6 +92,7 @@ import io.github.ruddy2003.vestigium.ui.rememberSentir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.abs
 import java.time.LocalDate
 
 object EdicionObra { var id by mutableStateOf<String?>(null) }
@@ -148,14 +151,23 @@ fun PortadaObra(o: Obra, modifier: Modifier = Modifier, lado: Int = 360) {
     Box(modifier.clip(RoundedCornerShape(4.dp))) {
         val b = bmp
         if (b != null) Image(b.asImageBitmap(), o.titulo, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        else Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra))).padding(5.dp)) {
-            Box(Modifier.fillMaxSize().border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)).padding(5.dp)) {
+        else androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra)))) {
+            // Letra que se lea sobre la tapa: la tinta del tema si contrasta, si no crema o tinta oscura.
+            val fondo = m.cuerpo.luminance()
+            val letra = if (abs(m.textoCuerpo.luminance() - fondo) > 0.3f) m.textoCuerpo else if (fondo < 0.4f) Color(0xFFF4ECD8) else Color(0xFF231A12)
+            if (maxWidth < 64.dp) {
+                // Miniatura de lista: solo la inicial, grande, dentro del filete.
+                Box(Modifier.fillMaxSize().padding(3.dp).border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)), contentAlignment = Alignment.Center) {
+                    Text(o.titulo.trim().firstOrNull()?.uppercase() ?: "·", fontFamily = Letra.garamond, fontSize = (maxWidth.value * 0.45f).sp, color = letra)
+                }
+            } else Box(Modifier.fillMaxSize().padding(5.dp).border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)).padding(5.dp)) {
+                val escala = (maxWidth.value / 78f).coerceIn(1f, 1.6f)
                 Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text((TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre ?: "").uppercase(), fontSize = 7.sp, color = m.acento, letterSpacing = 1.sp, maxLines = 1)
-                    Text(o.titulo.ifBlank { "—" }, fontFamily = Letra.garamond, fontSize = 11.sp, lineHeight = 12.sp, color = m.textoCuerpo, textAlign = TextAlign.Center,
+                    Text((TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre ?: "").uppercase(), fontSize = (7 * escala).sp, color = m.acento, letterSpacing = 1.sp, maxLines = 1)
+                    Text(o.titulo.ifBlank { "—" }, fontFamily = Letra.garamond, fontSize = (11 * escala).sp, lineHeight = (12 * escala).sp, color = letra, textAlign = TextAlign.Center,
                         maxLines = 5, overflow = TextOverflow.Ellipsis)
                     Text(listOfNotNull(o.revista.ifBlank { null } ?: o.autor.substringBefore(",").ifBlank { null }, o.anio?.toString()).joinToString(" · "),
-                        fontSize = 7.sp, color = m.textoCuerpo.copy(alpha = 0.75f), maxLines = 2, textAlign = TextAlign.Center, lineHeight = 8.sp)
+                        fontSize = (7 * escala).sp, color = letra.copy(alpha = 0.8f), maxLines = 2, textAlign = TextAlign.Center, lineHeight = (8 * escala).sp)
                 }
             }
         }
@@ -280,7 +292,7 @@ private fun Lista(obras: List<Obra>, nav: Nav, porAnio: Boolean = false) {
             val anio = (o.fin ?: o.agregado).take(4)
             if (porAnio && anio != anioPrevio) {
                 anioPrevio = anio
-                Text(Estilo.numeral(anio.toIntOrNull() ?: 0) + " · $anio", style = MaterialTheme.typography.titleSmall,
+                Text(Estilo.numeral(anio.toIntOrNull() ?: 0).let { if (it == anio) anio else "$it · $anio" }, style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = if (i == 0) 0.dp else 12.dp, bottom = 4.dp))
             } else if (i > 0) HorizontalDivider()
             Row(Modifier.fillMaxWidth().clickable { EdicionObra.id = o.id; nav.ir("obra") }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -426,7 +438,7 @@ fun PantallaObra(nav: Nav) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
                 val marcadoHoy = hoy in o.dias
                 Box(Modifier.padding(top = 10.dp)) {
-                    Ficha(if (marcadoHoy) "✓ " + hoyHice(o.tipo).lowercase() else hoyHice(o.tipo), marcadoHoy) {
+                    Ficha(hoyHice(o.tipo).lowercase(), marcadoHoy) {
                         g(o.copy(dias = if (marcadoHoy) o.dias - hoy else (o.dias + hoy).sorted(),
                             estado = if (!marcadoHoy && o.estado == "quiero") "en_curso" else o.estado, inicio = o.inicio ?: if (!marcadoHoy) hoy else null))
                     }

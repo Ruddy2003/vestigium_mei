@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -53,12 +54,13 @@ fun TarjetaRelacion(a: Variable, b: Variable, r: Double, detalle: String, azar: 
         Column(Modifier.padding(12.dp)) {
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
                 Recuadro(a, tema, Modifier.weight(1f).fillMaxHeight())
-                Box(Modifier.width(76.dp).fillMaxHeight().heightIn(min = 58.dp), contentAlignment = Alignment.Center) {
-                    Canvas(Modifier.fillMaxSize()) { lazo(tema, color, abs(r).toFloat(), azar) }
-                    // El valor de r en una placa sobre el lazo.
-                    Text("%+.2f".format(r), style = MaterialTheme.typography.labelLarge, color = color,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
-                            .border(1.5.dp, color.copy(alpha = if (azar) 0.5f else 1f), RoundedCornerShape(10.dp)).padding(horizontal = 7.dp, vertical = 2.dp))
+                Box(Modifier.width(80.dp).fillMaxHeight().heightIn(min = 64.dp), contentAlignment = Alignment.Center) {
+                    val fondo = MaterialTheme.colorScheme.surface
+                    Canvas(Modifier.fillMaxSize()) { lazo(tema, color, abs(r).toFloat(), azar, fondo) }
+                    // El valor de r en una placa encima del lazo, para que el lazo se vea completo.
+                    Text("%+.2f".format(r), style = MaterialTheme.typography.labelMedium, color = color,
+                        modifier = Modifier.offset(y = (-17).dp).background(MaterialTheme.colorScheme.surface, RoundedCornerShape(9.dp))
+                            .border(1.dp, color.copy(alpha = if (azar) 0.5f else 0.9f), RoundedCornerShape(9.dp)).padding(horizontal = 6.dp, vertical = 1.dp))
                 }
                 Recuadro(b, tema, Modifier.weight(1f).fillMaxHeight())
             }
@@ -103,7 +105,7 @@ private fun DrawScope.adorno(tema: TemaId, c: Color) {
 }
 
 /** El lazo entre los dos recuadros. [fuerza] es |r| (0–1). */
-private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Boolean) {
+private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Boolean, fondo: Color) {
     val u = 1.dp.toPx(); val y = size.height / 2; val w = size.width
     val grosor = (1.2f + 4.5f * fuerza) * u
     val punteado = if (azar) PathEffect.dashPathEffect(floatArrayOf(5 * u, 4 * u)) else null
@@ -114,9 +116,20 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
     }
     when (tema) {
         // Enredadera con una hoja; guirnalda en Navidad.
-        TemaId.BOTANICO, TemaId.NAVIDAD -> {
-            drawPath(onda(5 * u, 1.5f), col, style = Stroke(grosor, cap = StrokeCap.Round, pathEffect = punteado))
-            listOf(0.18f, 0.82f).forEach { f -> val x = w * f; drawCircle(col, grosor * 0.9f + 1.5f * u, Offset(x, y + 5 * u * sin(2 * PI * f * 1.5).toFloat())) }
+        TemaId.BOTANICO -> {
+            drawPath(onda(4 * u, 1.5f), col, style = Stroke(grosor, cap = StrokeCap.Round, pathEffect = punteado))
+            // Hojitas que salen del tallo, una arriba y una abajo.
+            listOf(0.3f to -1f, 0.7f to 1f).forEach { (f, lado) ->
+                val x = w * f; val y0 = y + 4 * u * sin(2 * PI * f * 1.5).toFloat(); val l = 7 * u + grosor
+                drawPath(Path().apply { moveTo(x, y0); quadraticTo(x + l * 0.2f, y0 + lado * l * 0.9f, x + l * 0.9f, y0 + lado * l); quadraticTo(x + l * 0.8f, y0 + lado * l * 0.2f, x, y0); close() }, col)
+            }
+        }
+        // Guirnalda con dos esferas colgando.
+        TemaId.NAVIDAD -> {
+            val p = Path().apply { moveTo(0f, y - 3 * u); quadraticTo(w / 2, y + 9 * u, w, y - 3 * u) }
+            drawPath(p, col, style = Stroke(grosor, cap = StrokeCap.Round, pathEffect = punteado))
+            listOf(0.33f, 0.67f).forEach { f -> val x = w * f; val y0 = y + 3.4f * u
+                drawLine(col, Offset(x, y0), Offset(x, y0 + 5 * u), u); drawCircle(col, 2.5f * u + grosor * 0.4f, Offset(x, y0 + 7 * u + grosor * 0.4f)) }
         }
         // Cuerda trenzada de crin.
         TemaId.MONGOL -> {
@@ -141,7 +154,9 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
         }
         // Camino de caravana: puntos y una moneda en cada extremo.
         TemaId.SEDA -> {
-            var x = 4 * u; while (x < w) { drawCircle(col, grosor * 0.45f + u, Offset(x, y)); x += 7 * u }
+            var x = 12 * u; while (x < w - 10 * u) { drawCircle(col, grosor * 0.45f + u, Offset(x, y)); x += 7 * u }
+            // Monedas con agujero cuadrado en los extremos.
+            listOf(5 * u, w - 5 * u).forEach { cx -> drawCircle(col, 5 * u, Offset(cx, y)); drawRect(fondo, Offset(cx - 1.6f * u, y - 1.6f * u), androidx.compose.ui.geometry.Size(3.2f * u, 3.2f * u)) }
         }
         // Tinta: un trazo con un rombo en cada punta (scriptorium, gótico, napoleónico, Renacimiento, colonos…).
         else -> {
