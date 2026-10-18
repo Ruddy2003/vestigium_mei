@@ -315,6 +315,7 @@ object Romano {
 
     private val LATIN = mapOf(
         "Mundo" to "ORBIS TERRARVM", "Patrimonio Mundial" to "MIRABILIA MVNDI", "Mapa para rascar" to "ORBIS PICTVS", "Ciudades visitadas" to "CIVITATES",
+        "Biblioteca de sueños" to "LIBRI SOMNIORVM", "Cartas" to "EPISTVLAE", "Carta" to "EPISTVLA", "Conocerte" to "DE TE", "Brújula política" to "RES PVBLICA", "Mapas" to "TABVLAE ORBIS", "Anoche" to "HAC NOCTE", "Listas para abrir" to "APERIENDAE", "A otras personas" to "AD ALIOS", "Del pasado" to "EX PRAETERITO", "Tus mapas" to "TABVLAE", "Tus calles" to "VIAE", "Tú" to "TV", "Con quién vives" to "CONTVBERNIVM", "A quién ves más" to "FAMILIARES", "Pareja" to "CONIVX", "A qué te dedicas" to "OPVS", "Tus costumbres" to "MORES", "Lo que está pasando en tu vida" to "TEMPVS PRAESENS", "Cómo ha cambiado" to "MVTATIONES", "Tu brújula" to "PYXIS", "Los cinco ejes" to "QVINQVE AXES", "Qué cambió" to "QVID MVTATVM", "Lo que viviste cada año" to "ANNALES", "¿Para quién?" to "CVI?", "La carta" to "EPISTVLA", "Donde más has estado" to "VBI MAXIME",
         "Día" to "DIES", "Momentos" to "MOMENTA", "Gastos" to "SVMPTVS", "Explorar" to "EXPLORATIO", "Más" to "CETERA",
         "Hábitos" to "CONSVETVDINES", "Cartas al futuro" to "EPISTVLAE", "Experimentos personales" to "EXPERIMENTA",
         "Guía científica" to "DOCTRINA", "Cuestionarios" to "QVAESTIONES", "Prueba de reacción" to "CELERITAS",

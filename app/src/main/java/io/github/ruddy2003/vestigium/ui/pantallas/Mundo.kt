@@ -193,7 +193,7 @@ private fun lamina(t: TemaId): Lamina = when (t) {
  * [rascando] es el país que se está descubriendo ahora (se rasca con trazos en zigzag, como con una moneda).
  */
 @Composable
-private fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, rascando: String? = null, avance: Float = 1f, elegido: String? = null,
+internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, rascando: String? = null, avance: Float = 1f, elegido: String? = null,
                        zoom: Float = 1f, pan: Offset = Offset.Zero) {
     val ctx = LocalContext.current
     val formas = remember { GeoMapa.formas(ctx) }
@@ -312,7 +312,7 @@ private fun desdeDe(periodo: String): Int? = when (periodo) {
 
 /** Resumen calculado fuera del hilo principal y vuelto a calcular cuando cambian las ciudades o los países marcados. */
 @Composable
-private fun rememberResumen(periodo: String): Mundo.Resumen? {
+internal fun rememberResumen(periodo: String): Mundo.Resumen? {
     Mundo.resumenFijo?.let { return it }
     val ctx = LocalContext.current
     val c = Repo.config

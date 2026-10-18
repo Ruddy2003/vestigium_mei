@@ -111,6 +111,9 @@ object Pendientes {
         if (tarde && (d.valencia == null || d.nota.isBlank())) l += Pendiente("p:diario", if (d.valencia == null) "Diario de hoy" else "Escribir la nota del día", "diario")
         if (tarde && d.prediccion_manana == null && !ignorado("p:prediccion")) l += Pendiente("p:prediccion", "Predicción para mañana", "prediccion")
         if (ahora.hour >= 20 && Repo.gastos.none { it.dia == hoy } && !ignorado("p:gasto")) l += Pendiente("p:gasto", "¿Gastaste algo hoy?", "gasto")
+        // Una vez al año, la brújula política (se puede dejar para otro día).
+        if (io.github.ruddy2003.vestigium.data.Politica.toca(hoy) && c.avisos_ignorados["p:politica"]?.let { it >= Fechas.sumar(hoy, -6) } != true)
+            l += Pendiente("p:politica", "Brújula política del año", "politica")
         return l
     }
 }
@@ -139,7 +142,7 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
                 l.forEach { p -> Ficha("${p.texto} →", false) { accion(p.accion) } }
             }
             // Lo opcional se puede descartar por hoy.
-            val opcionales = l.filter { it.clave in setOf("p:gasto", "p:prediccion", "p:ayer") }
+            val opcionales = l.filter { it.clave in setOf("p:gasto", "p:prediccion", "p:ayer", "p:politica") }
             if (opcionales.isNotEmpty()) TextButton(onClick = {
                 Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + opcionales.associate { it.clave to hoy }) }
             }) { Text("no hace falta: " + opcionales.joinToString(", ") { it.texto.lowercase().removePrefix("¿").removeSuffix("?") }, style = MaterialTheme.typography.labelMedium) }
@@ -252,7 +255,7 @@ fun FraseDelDia(fecha: String) {
                     Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
-                        CorazonFrase(f, cs.primary)
+                        CorazonFrase(f, cs.primary, fecha = fecha)
                     }
                 }
             }
@@ -274,7 +277,7 @@ fun FraseDelDia(fecha: String) {
             } else Text(if (tema == TemaId.CIBER) f.texto else "«${f.texto}»", style = ty.bodyMedium)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("— ${f.autor}", style = ty.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-                CorazonFrase(f, cs.primary)
+                CorazonFrase(f, cs.primary, fecha = fecha)
             }
         }
     }

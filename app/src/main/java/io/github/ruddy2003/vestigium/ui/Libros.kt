@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.focusRequester
@@ -51,6 +52,8 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -137,6 +140,103 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.REFUGIO -> Materia(c(0xFFC9C2A6), c(0xFF8E886F), c(0xFFE2DCC4), c(0xFF3DFF7F), c(0xFF2F8F4E), c(0xFF031A0B), c(0xFF7CF098))
 }
 
+// =====================================================================
+//  De noche: los sueños con el mismo objeto del tema, teñido de medianoche
+// =====================================================================
+
+/** Qué se escribe en la página: el diario del día, un sueño o una carta. */
+enum class Escrito { DIARIO, SUENO, CARTA }
+
+internal val NOCHE = Color(0xFF111833)
+internal val NOCHE_ALTA = Color(0xFF261C4C)
+internal val LUNA = Color(0xFFEDE6C8)
+
+/** La materia del tema de noche: el cuero, el papiro o la pantalla en azul de medianoche, y el oro vuelto plata de luna. */
+fun materiaNoche(t: TemaId): Materia {
+    val m = materia(t)
+    return when (t) {
+        // El fósforo verde se vuelve ámbar, como una pantalla en reposo.
+        TemaId.REFUGIO -> Materia(c(0xFF6E6A58), c(0xFF3E3B30), c(0xFF8E886F), c(0xFFFFB23F), c(0xFFB3741E), c(0xFF1A1003), c(0xFFFFC870))
+        TemaId.CIBER -> Materia(c(0xFF120B1F), c(0xFF07040D), c(0xFF22163A), c(0xFFFF2E88), c(0xFF9B5CFF), c(0xFF07040D), c(0xFFF0DAF7), extra = c(0xFF00E5FF))
+        TemaId.ESPACIO -> Materia(c(0xFF120A2A), c(0xFF06040F), c(0xFF241645), c(0xFFC59BFF), c(0xFF8AB4FF), c(0xFF06040F), c(0xFFECE6FA), extra = c(0xFFFF8AD8))
+        else -> {
+            fun n(x: Color, k: Float) = lerp(x, NOCHE, k)
+            Materia(cuerpo = n(m.cuerpo, 0.55f), sombra = n(m.sombra, 0.65f), brillo = n(m.brillo, 0.45f),
+                acento = lerp(m.acento, LUNA, 0.3f), detalle = lerp(m.detalle, Color(0xFFAFC0EE), 0.45f),
+                hoja = n(m.hoja, 0.74f), tinta = Color(0xFFE8E6F2), extra = lerp(m.extra, Color(0xFF8FA6F0), 0.35f), textoCuerpo = Color(0xFFE8E6F2))
+        }
+    }
+}
+
+/** La página de un sueño: el papel del tema bajo un cielo de noche. */
+fun paginaNoche(t: TemaId): Pagina {
+    val p = pagina(t)
+    return when (t) {
+        TemaId.REFUGIO -> Pagina(null, c(0xFF1A1003), c(0xFFFFC870), c(0xFFB3741E), c(0xFFFFB23F), c(0xFF7CF098), p.texto, p.tam, p.interlinea, true, p.rayas)
+        TemaId.CIBER -> Pagina(null, c(0xFF0A0614), c(0xFFF0DAF7), c(0xFF7A5B8C), c(0xFFFF2E88), c(0xFF00E5FF), p.texto, p.tam, p.interlinea, true, p.rayas)
+        TemaId.ESPACIO -> Pagina(null, c(0xFF07041A), c(0xFFECE6FA), c(0xFF8A7BB0), c(0xFFC59BFF), c(0xFFFF8AD8), p.texto, p.tam, p.interlinea, true, p.rayas)
+        else -> Pagina(p.fondo, lerp(p.color, NOCHE, 0.84f), c(0xFFE6E4F0), c(0xFFA2AACB), lerp(p.acento, LUNA, 0.45f), lerp(p.detalle, Color(0xFFAFC0EE), 0.5f),
+            p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
+    }
+}
+
+/** El rótulo de la página de un sueño en cada tema. */
+fun rotuloSueno(t: TemaId): String = when (t) {
+    TemaId.ROMANO -> "SOMNIVM"; TemaId.CIBER -> "~/suenos/"; TemaId.HELENO -> "ΟΝΕΙΡΟΣ · sueño"; TemaId.MEDIEVAL -> "Visión de la noche"
+    TemaId.DISTOPIA -> "INFORME DE ACTIVIDAD ONÍRICA"; TemaId.REFUGIO -> "REGISTRO ONÍRICO · TERMINAL 03"; TemaId.ORDEN -> "PARTE NOCTURNO"
+    TemaId.LABORATORIO -> "REGISTRO DE SUEÑO"; TemaId.COLONOS -> "Lo soñado"; TemaId.NAPOLEON -> "SONGE · sueño"; TemaId.BOTANICO -> "Flora nocturna"
+    TemaId.NAVIDAD -> "Sueños junto al fuego"; TemaId.SEDA -> "梦 · sueño"; TemaId.URSS -> "СОН · SUEÑO"; TemaId.GOTICO -> "Visio nocturna"
+    TemaId.ESPACIO -> "TRANSMISIÓN NOCTURNA"; TemaId.ANDALUS -> "حلم · sueño"; TemaId.MONGOL -> "ЗҮҮД · sueño"; TemaId.RENACIMIENTO -> "Sogno"
+}
+
+/** Lo que cierra la página de un sueño: el despertar, en cada tema. */
+fun colofonSueno(t: TemaId): String = when (t) {
+    TemaId.ROMANO -> "· EVIGILAVI ·"; TemaId.CIBER -> "-- wake --"; TemaId.HELENO -> "ἐξηγέρθην · desperté"; TemaId.MEDIEVAL -> "Y en esto desperté."
+    TemaId.DISTOPIA -> "FIN DEL INFORME NOCTURNO"; TemaId.REFUGIO -> "FIN DEL REGISTRO"; TemaId.ORDEN -> "TOQUE DE DIANA"; TemaId.LABORATORIO -> "fin del registro onírico"
+    TemaId.COLONOS -> "Y amaneció."; TemaId.NAPOLEON -> "Réveil."; TemaId.BOTANICO -> "Se cerraron las flores de la noche."; TemaId.NAVIDAD -> "Y llegó la mañana."
+    TemaId.SEDA -> "Despertar en la caravana."; TemaId.URSS -> "ПОДЪЁМ · DE PIE"; TemaId.GOTICO -> "Et evigilavi."; TemaId.ESPACIO -> "FIN DE LA TRANSMISIÓN NOCTURNA"
+    TemaId.ANDALUS -> "واستيقظت · y desperté"; TemaId.MONGOL -> "Сэрлээ · desperté"; TemaId.RENACIMIENTO -> "E mi destai."
+}
+
+/** Media luna: un círculo menos otro corrido hacia un lado. */
+internal fun DrawScope.mediaLuna(c: Offset, r: Float, color: Color) {
+    val a = Path().apply { addOval(Rect(c, r)) }
+    val b = Path().apply { addOval(Rect(Offset(c.x + r * 0.48f, c.y - r * 0.22f), r * 0.88f)) }
+    drawPath(Path.combine(androidx.compose.ui.graphics.PathOperation.Difference, a, b), color)
+}
+
+/** Estrellas fijas: la misma semilla da siempre el mismo cielo. Las más grandes llevan destello en cruz. */
+internal fun DrawScope.estrellas(semilla: Int, n: Int, color: Color, area: Rect = size.toRect(), max: Float = 1.6f) {
+    val az = java.util.Random(semilla.toLong())
+    repeat(n) {
+        val x = area.left + az.nextFloat() * area.width; val y = area.top + az.nextFloat() * area.height
+        val r = 0.45f + az.nextFloat() * max
+        drawCircle(color.copy(alpha = 0.25f + az.nextFloat() * 0.6f), r, Offset(x, y))
+        if (r > max * 0.92f) {
+            drawLine(color.copy(alpha = 0.45f), Offset(x - r * 2.8f, y), Offset(x + r * 2.8f, y), 0.8f)
+            drawLine(color.copy(alpha = 0.45f), Offset(x, y - r * 2.8f), Offset(x, y + r * 2.8f), 0.8f)
+        }
+    }
+}
+
+/** Un cielo de noche con el tono del tema, para los estantes de los sueños. */
+@Composable
+fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, content: @Composable () -> Unit) {
+    val m = materiaNoche(tema)
+    val alto = lerp(NOCHE_ALTA, m.acento, 0.14f)
+    val forma = RoundedCornerShape(10.dp)
+    val e = MaterialTheme.colorScheme.copy(onSurfaceVariant = Color(0xFFB8BEDA), onSurface = Color(0xFFE8E6F2), onBackground = Color(0xFFE8E6F2), primary = m.acento)
+    Box(modifier.fillMaxWidth().clip(forma).background(Brush.verticalGradient(listOf(NOCHE, alto))).border(1.dp, m.acento.copy(alpha = 0.35f), forma)) {
+        Canvas(Modifier.matchParentSize()) {
+            estrellas(tema.ordinal * 31 + 5, (size.width * size.height / 9000f).toInt().coerceIn(20, 140), LUNA)
+            mediaLuna(Offset(size.width - 24.dp.toPx(), 22.dp.toPx()), 10.dp.toPx(), LUNA.copy(alpha = 0.9f))
+        }
+        MaterialTheme(colorScheme = e, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+            Box(Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) { content() }
+        }
+    }
+}
+
 /** Lo que dice el botón de guardar en cada tema. */
 fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.ROMANO -> "SIGNARE"; TemaId.CIBER -> "git commit"; TemaId.HELENO -> "guardar"; TemaId.MEDIEVAL -> "asentar"
@@ -157,6 +257,12 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.MONGOL -> "Ингэж бичив · Así quedó escrito."; TemaId.RENACIMIENTO -> "Finito."
 }
 
+private fun pistaSueno(s: Soporte) = when (s) {
+    Soporte.CARPETA -> "TOCA PARA DECLARAR LO SOÑADO"
+    Soporte.PANTALLA -> "> toca para registrar el sueño_"
+    else -> "toca para contar lo que soñaste"
+}
+
 private fun pista(s: Soporte) = when (s) {
     Soporte.ROLLO -> "toca para desenrollar y escribir"
     Soporte.LIBRO -> "toca para abrir el libro"
@@ -167,7 +273,7 @@ private fun pista(s: Soporte) = when (s) {
 
 /** Un esquema de color con los colores del objeto, para que bandas, botones y fichas combinen con la página. */
 @Composable
-private fun esquemaPagina(p: Pagina): ColorScheme {
+internal fun esquemaPagina(p: Pagina): ColorScheme {
     val b = MaterialTheme.colorScheme
     return b.copy(
         primary = p.acento, onPrimary = if (p.oscura) Color(0xFF05080E) else Color.White, secondary = p.detalle, tertiary = p.detalle,
@@ -183,8 +289,8 @@ private fun esquemaPagina(p: Pagina): ColorScheme {
 
 /** El diario de un día como objeto del tema (rollo, libro, carta, expediente o terminal). Al tocarlo se abre a pantalla completa. */
 @Composable
-fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, onClick: () -> Unit) {
-    val m = materia(tema); val s = soporte(tema)
+fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, noche: Boolean = false, onClick: () -> Unit) {
+    val m = if (noche) materiaNoche(tema) else materia(tema); val s = soporte(tema)
     val sentir = rememberSentir()
     val esquemaEmblema = MaterialTheme.colorScheme.copy(primary = m.brillo, secondary = m.detalle, tertiary = m.brillo, background = m.acento, onBackground = m.brillo)
     val palabras = Texto.palabras(texto)
@@ -207,9 +313,14 @@ fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, te
             when (s) {
                 Soporte.ROLLO -> rolloAbierto(tema, m)
                 Soporte.LIBRO -> libroCerrado(tema, m)
-                Soporte.SOBRE -> sobre(tema, m, esquemaEmblema)
+                Soporte.SOBRE -> sobre(tema, m, esquemaEmblema, luna = noche)
                 Soporte.CARPETA -> carpeta(m)
                 Soporte.PANTALLA -> pantalla(tema, m)
+            }
+            if (noche) {
+                // Un poco de cielo sobre el objeto: estrellas y la luna en una esquina.
+                estrellas(fecha.hashCode(), 26, LUNA, Rect(0f, 0f, size.width, size.height * 0.5f), 1.3f)
+                mediaLuna(Offset(size.width * 0.93f, size.height * 0.16f), size.height * 0.07f, LUNA)
             }
         }
         val w = maxWidth; val h = maxHeight
@@ -231,7 +342,7 @@ fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, te
             if (tema == TemaId.CIBER) Text("$ nano ~/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 11.sp, color = m.acento, maxLines = 1)
             Text(Estilo.fecha(fecha), style = ty.titleSmall, color = acento, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 fontFamily = fuente ?: ty.titleSmall.fontFamily, textAlign = if (s == Soporte.LIBRO) TextAlign.Center else TextAlign.Start)
-            Text(if (vista.isBlank()) pista(s) else vista, color = tinta.copy(alpha = if (vista.isBlank()) 0.65f else 0.9f),
+            Text(if (vista.isBlank()) (if (noche) pistaSueno(s) else pista(s)) else vista, color = tinta.copy(alpha = if (vista.isBlank()) 0.65f else 0.9f),
                 fontFamily = fuente ?: if (s == Soporte.LIBRO || s == Soporte.ROLLO || s == Soporte.SOBRE) Letra.garamond else Letra.texto,
                 fontSize = if (tema == TemaId.REFUGIO) 17.sp else 13.5.sp, lineHeight = if (tema == TemaId.REFUGIO) 18.sp else 17.sp,
                 maxLines = if (s == Soporte.SOBRE) 2 else 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp),
@@ -239,7 +350,7 @@ fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, te
             if (palabras > 0) Text(if (s == Soporte.PANTALLA) "[$palabras palabras]" else "$palabras palabras",
                 fontSize = 10.5.sp, color = tinta.copy(alpha = 0.6f), fontFamily = fuente ?: Letra.texto, modifier = Modifier.padding(top = 3.dp))
         }
-        if (s == Soporte.CARPETA) Text("ARCHIVO", color = m.acento.copy(alpha = 0.75f), fontFamily = LetraExtra.oswald, fontSize = 15.sp,
+        if (s == Soporte.CARPETA) Text(if (noche) "SUEÑO" else "ARCHIVO", color = m.acento.copy(alpha = 0.75f), fontFamily = LetraExtra.oswald, fontSize = 15.sp,
             modifier = Modifier.align(Alignment.TopEnd).padding(top = h * 0.36f, end = w * 0.06f).rotate(-10f)
                 .border(2.dp, m.acento.copy(alpha = 0.7f)).padding(horizontal = 6.dp, vertical = 1.dp))
         if (s == Soporte.CARPETA) Text("EXPEDIENTE", color = m.detalle, fontFamily = LetraExtra.oswald, fontSize = 11.sp,
@@ -402,7 +513,7 @@ private fun DrawScope.libroCerrado(t: TemaId, m: Materia) {
 }
 
 /** Carta con solapa, lacre y un adorno (cinta, acebo). */
-private fun DrawScope.sobre(t: TemaId, m: Materia, e: ColorScheme) {
+internal fun DrawScope.sobre(t: TemaId, m: Materia, e: ColorScheme, luna: Boolean = false) {
     val w = size.width; val h = size.height
     val ini = Offset(w * 0.02f, h * 0.05f); val tam = Size(w * 0.96f, h * 0.9f)
     drawRoundRect(Color.Black.copy(alpha = 0.12f), ini + Offset(4f, 6f), tam, CornerRadius(6f))
@@ -432,7 +543,8 @@ private fun DrawScope.sobre(t: TemaId, m: Materia, e: ColorScheme) {
     drawPath(borde, m.acento)
     drawCircle(Color.Black.copy(alpha = 0.18f), r * 0.78f, c, style = Stroke(r * 0.08f))
     val k = r * 0.62f
-    inset(c.x - k, c.y - k, w - (c.x + k), h - (c.y + k)) { dibujarEmblema(t, 0.3f, e, true) }
+    if (luna) mediaLuna(c, r * 0.5f, m.brillo.copy(alpha = 0.95f))
+    else inset(c.x - k, c.y - k, w - (c.x + k), h - (c.y + k)) { dibujarEmblema(t, 0.3f, e, true) }
 }
 
 /** Carpeta de archivo color manila con su pestaña y una hoja asomando. */
@@ -476,17 +588,19 @@ private fun DrawScope.pantalla(t: TemaId, m: Materia) {
 
 /** Las entradas del diario como objetos del tema. [abrir] recibe la fecha. */
 @Composable
-fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, abrir: (String) -> Unit) {
+fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolean = false, abrir: (String) -> Unit) {
     if (entradas.isEmpty()) return
-    val m = materia(tema)
+    val m = if (noche) materiaNoche(tema) else materia(tema)
     val sentir = rememberSentir()
     val conSonido: (String) -> Unit = { f -> sentir(Sentidos.Evento.ABRIR); abrir(f) }
+    // De noche el objeto guarda el sueño; de día, la entrada.
+    val texto: (Dia) -> String = if (noche) { d -> d.sueno_texto } else { d -> d.nota }
     when (soporte(tema)) {
-        Soporte.LIBRO -> Lomos(entradas, tema, m, conSonido)
-        Soporte.ROLLO -> Rollos(entradas, tema, m, conSonido)
-        Soporte.SOBRE -> Cartas(entradas, tema, m, conSonido)
-        Soporte.CARPETA -> Expedientes(entradas, m, conSonido)
-        Soporte.PANTALLA -> Logs(entradas, tema, m, conSonido)
+        Soporte.LIBRO -> Lomos(entradas, tema, m, noche, texto, conSonido)
+        Soporte.ROLLO -> Rollos(entradas, tema, m, noche, texto, conSonido)
+        Soporte.SOBRE -> Cartas(entradas, tema, m, noche, texto, conSonido)
+        Soporte.CARPETA -> Expedientes(entradas, m, noche, texto, conSonido)
+        Soporte.PANTALLA -> Logs(entradas, tema, m, noche, texto, conSonido)
     }
 }
 
@@ -502,8 +616,8 @@ private fun madera(t: TemaId): Pair<Color, Color> = when (t) {
 }
 
 @Composable
-private fun Tabla(tema: TemaId) {
-    val (a, b) = madera(tema)
+private fun Tabla(tema: TemaId, noche: Boolean = false) {
+    val (a, b) = madera(tema).let { (x, y) -> if (noche) lerp(x, NOCHE, 0.5f) to lerp(y, NOCHE, 0.55f) else x to y }
     Box(Modifier.fillMaxWidth().height(11.dp).background(Brush.verticalGradient(listOf(a, b))))
     Box(Modifier.fillMaxWidth().height(6.dp).background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent))))
 }
@@ -512,29 +626,30 @@ private val MESES3 = listOf("ene", "feb", "mar", "abr", "may", "jun", "jul", "ag
 
 /** Libros de pie en estantes: el grosor depende de cuánto escribiste y el color del ánimo del día. */
 @Composable
-private fun Lomos(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String) -> Unit) {
+private fun Lomos(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
     val oscuro = esOscuro()
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val ancho = maxWidth
-        val lomos = entradas.map { d -> d to (24 + (Texto.palabras(d.nota) / 40).coerceAtMost(22)).dp }
+        val lomos = entradas.map { d -> d to (24 + (Texto.palabras(texto(d)) / 40).coerceAtMost(22)).dp }
         val filas = mutableListOf<MutableList<Pair<Dia, androidx.compose.ui.unit.Dp>>>(mutableListOf())
         var usado = 0.dp
         lomos.forEach { l -> if (usado + l.second + 3.dp > ancho && filas.last().isNotEmpty()) { filas.add(mutableListOf()); usado = 0.dp }; filas.last().add(l); usado += l.second + 3.dp }
         Column {
             filas.forEach { fila ->
                 Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
-                    fila.forEach { (d, w) -> Lomo(d, w, tema, m, oscuro) { abrir(d.fecha) } }
+                    fila.forEach { (d, w) -> Lomo(d, w, tema, m, oscuro, noche) { abrir(d.fecha) } }
                 }
-                Tabla(tema)
+                Tabla(tema, noche)
             }
         }
     }
 }
 
 @Composable
-private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Materia, oscuro: Boolean, abrir: () -> Unit) {
+private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Materia, oscuro: Boolean, noche: Boolean = false, abrir: () -> Unit) {
     val h = (118 + (d.fecha.hashCode() and 0x7fffffff) % 34).dp
-    val tono = Tonos.valencia(d.valencia?.toDouble(), oscuro)
+    // De noche, el color del lomo es el del sueño (qué tan agradable fue); de día, el ánimo del día.
+    val tono = Tonos.valencia((if (noche) d.sueno_valencia else d.valencia)?.toDouble(), oscuro)
     val cuerpo = if (tono != null) lerp(m.cuerpo, tono, 0.28f) else m.cuerpo
     val dia = d.fecha.takeLast(2).trimStart('0'); val mes = MESES3[(d.fecha.substring(5, 7).toIntOrNull() ?: 1) - 1]
     Box(Modifier.width(ancho).height(h).clickable(onClick = abrir), contentAlignment = Alignment.TopCenter) {
@@ -543,11 +658,14 @@ private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Ma
             drawRoundRect(Brush.horizontalGradient(listOf(lerp(cuerpo, Color.Black, 0.35f), lerp(cuerpo, Color.White, 0.18f), cuerpo, lerp(cuerpo, Color.Black, 0.4f))), Offset.Zero, size, CornerRadius(3f))
             listOf(0.07f, 0.11f, 0.89f, 0.93f).forEach { f -> drawLine(m.acento.copy(alpha = 0.85f), Offset(2f, hh * f), Offset(w - 2f, hh * f), 2.2f) }
             drawRoundRect(m.hoja.copy(alpha = 0.92f), Offset(w * 0.14f, hh * 0.2f), Size(w * 0.72f, hh * 0.27f), CornerRadius(2f))
-            if (tema == TemaId.URSS) { drawCircle(m.acento, w * 0.16f, Offset(w / 2, hh * 0.66f)) }
-            if (tema == TemaId.BOTANICO) drawPath(Path().apply { val cx = w / 2; val y0 = hh * 0.58f; moveTo(cx, y0); quadraticTo(cx + w * 0.3f, y0 + hh * 0.08f, cx, y0 + hh * 0.18f); quadraticTo(cx - w * 0.3f, y0 + hh * 0.08f, cx, y0); close() }, m.acento)
-            if (tema == TemaId.GOTICO) { drawCircle(m.acento, w * 0.12f, Offset(w / 2, hh * 0.64f)); drawCircle(m.extra, w * 0.06f, Offset(w / 2, hh * 0.64f)) }
-            if (tema == TemaId.ANDALUS) for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento, Offset(w / 2, hh * 0.66f), Offset(w / 2 + w * 0.22f * cos(a).toFloat(), hh * 0.66f + w * 0.22f * sin(a).toFloat()), 1.5f) }
-            if (tema == TemaId.RENACIMIENTO) drawRect(m.detalle.copy(alpha = 0.7f), Offset(0f, hh * 0.62f), Size(w, hh * 0.03f))
+            if (noche) {
+                mediaLuna(Offset(w / 2, hh * 0.64f), w * 0.2f, LUNA.copy(alpha = 0.9f))
+                estrellas(d.fecha.hashCode(), 4, LUNA, Rect(w * 0.15f, hh * 0.72f, w * 0.85f, hh * 0.86f), 1.1f)
+            } else if (tema == TemaId.URSS) { drawCircle(m.acento, w * 0.16f, Offset(w / 2, hh * 0.66f)) }
+            if (!noche && tema == TemaId.BOTANICO) drawPath(Path().apply { val cx = w / 2; val y0 = hh * 0.58f; moveTo(cx, y0); quadraticTo(cx + w * 0.3f, y0 + hh * 0.08f, cx, y0 + hh * 0.18f); quadraticTo(cx - w * 0.3f, y0 + hh * 0.08f, cx, y0); close() }, m.acento)
+            if (!noche && tema == TemaId.GOTICO) { drawCircle(m.acento, w * 0.12f, Offset(w / 2, hh * 0.64f)); drawCircle(m.extra, w * 0.06f, Offset(w / 2, hh * 0.64f)) }
+            if (!noche && tema == TemaId.ANDALUS) for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento, Offset(w / 2, hh * 0.66f), Offset(w / 2 + w * 0.22f * cos(a).toFloat(), hh * 0.66f + w * 0.22f * sin(a).toFloat()), 1.5f) }
+            if (!noche && tema == TemaId.RENACIMIENTO) drawRect(m.detalle.copy(alpha = 0.7f), Offset(0f, hh * 0.62f), Size(w, hh * 0.03f))
         }
         Column(Modifier.padding(top = h * 0.205f), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(dia, color = m.tinta, fontSize = 13.sp, fontFamily = Letra.garamond, lineHeight = 13.sp, maxLines = 1)
@@ -558,7 +676,7 @@ private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Ma
 
 /** Rollos tumbados en un estante, con su etiqueta colgando. */
 @Composable
-private fun Rollos(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String) -> Unit) {
+private fun Rollos(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
     Column {
         entradas.chunked(3).forEach { fila ->
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
@@ -576,33 +694,34 @@ private fun Rollos(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String
                             if (tema == TemaId.HELENO) drawRect(m.extra, Offset(x0 + largo * 0.3f, h * 0.2f), Size(largo * 0.4f, h * 0.6f), style = Stroke(1.5f))
                             if (tema == TemaId.MONGOL) { drawRect(m.acento, Offset(x0 + largo * 0.2f, h * 0.2f), Size(largo * 0.04f, h * 0.6f)); drawRect(m.extra, Offset(x0 + largo * 0.55f, h * 0.2f), Size(largo * 0.05f, h * 0.75f)) }
                             drawLine(m.acento, Offset(w / 2, h * 0.8f), Offset(w / 2, h), 1.5f)
+                            if (noche) estrellas(d.fecha.hashCode(), 7, LUNA, Rect(x0 + largo * 0.1f, h * 0.28f, x0 + largo * 0.85f, h * 0.72f), 1.2f)
                         }
                         val dia = d.fecha.takeLast(2).trimStart('0'); val mes = MESES3[(d.fecha.substring(5, 7).toIntOrNull() ?: 1) - 1]
-                        Text("$dia $mes", color = m.hoja, fontSize = 11.sp, fontFamily = Letra.garamond, maxLines = 1,
-                            modifier = Modifier.background(m.extra, RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 1.dp))
-                        Text("${Texto.palabras(d.nota)} pal.", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
+                        Text((if (noche) "☾ " else "") + "$dia $mes", color = if (noche) LUNA else m.hoja, fontSize = 11.sp, fontFamily = Letra.garamond, maxLines = 1,
+                            modifier = Modifier.background(if (noche) lerp(m.extra, NOCHE, 0.45f) else m.extra, RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 1.dp))
+                        Text("${Texto.palabras(texto(d))} pal.", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
                     }
                 }
                 repeat(3 - fila.size) { Spacer(Modifier.weight(1f)) }
             }
-            Tabla(tema)
+            Tabla(tema, noche)
         }
     }
 }
 
 /** Cartas selladas, de dos en dos. */
 @Composable
-private fun Cartas(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String) -> Unit) {
+private fun Cartas(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
     val e = MaterialTheme.colorScheme.copy(primary = m.brillo, secondary = m.detalle, tertiary = m.brillo, background = m.acento, onBackground = m.brillo)
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 6.dp)) {
         entradas.chunked(2).forEach { fila ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 fila.forEach { d ->
                     Box(Modifier.weight(1f).height(104.dp).clickable { abrir(d.fecha) }) {
-                        Canvas(Modifier.fillMaxSize()) { sobre(tema, m, e) }
+                        Canvas(Modifier.fillMaxSize()) { sobre(tema, m, e, luna = noche); if (noche) estrellas(d.fecha.hashCode(), 12, LUNA, Rect(0f, 0f, size.width, size.height * 0.4f), 1.2f) }
                         Column(Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 8.dp, end = 10.dp)) {
                             Text(Fechas.corto(d.fecha), fontSize = 12.sp, color = m.textoCuerpo, fontFamily = Letra.garamond, maxLines = 1)
-                            Text("${Texto.palabras(d.nota)} palabras", fontSize = 9.5.sp, color = m.textoCuerpo.copy(alpha = 0.7f), maxLines = 1)
+                            Text("${Texto.palabras(texto(d))} palabras", fontSize = 9.5.sp, color = m.textoCuerpo.copy(alpha = 0.7f), maxLines = 1)
                         }
                     }
                 }
@@ -614,7 +733,7 @@ private fun Cartas(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String
 
 /** Pestañas de expedientes en un cajón de archivo. */
 @Composable
-private fun Expedientes(entradas: List<Dia>, m: Materia, abrir: (String) -> Unit) {
+private fun Expedientes(entradas: List<Dia>, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
     Column(Modifier.fillMaxWidth().background(Color(0xFF3A3D40), RoundedCornerShape(4.dp)).padding(8.dp)) {
         entradas.forEachIndexed { i, d ->
             BoxWithConstraints(Modifier.fillMaxWidth().padding(top = if (i == 0) 0.dp else 3.dp).clickable { abrir(d.fecha) }) {
@@ -625,11 +744,11 @@ private fun Expedientes(entradas: List<Dia>, m: Materia, abrir: (String) -> Unit
                     drawRoundRect(m.sombra, Offset(tx, 0f), Size(w * 0.24f, h * 0.36f), CornerRadius(6f))
                     drawRoundRect(Brush.verticalGradient(listOf(m.brillo, m.cuerpo)), Offset(0f, h * 0.28f), Size(w, h * 0.72f), CornerRadius(3f))
                 }
-                Text("EXP. ${d.fecha}", fontSize = 9.sp, fontFamily = LetraExtra.oswald, color = m.detalle,
+                Text((if (noche) "SUEÑO " else "EXP. ") + d.fecha, fontSize = 9.sp, fontFamily = LetraExtra.oswald, color = m.detalle,
                     modifier = Modifier.padding(start = pestana + 8.dp, top = 3.dp))
                 Row(Modifier.padding(start = 10.dp, top = 22.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(Fechas.corto(d.fecha).uppercase(), fontSize = 11.sp, fontFamily = Letra.codigo, color = m.detalle, modifier = Modifier.width(96.dp), maxLines = 1)
-                    Text(d.nota.trim().replace(Regex("\\s+"), " "), fontSize = 11.sp, fontFamily = Letra.codigo, color = m.detalle.copy(alpha = 0.8f),
+                    Text(texto(d).trim().replace(Regex("\\s+"), " "), fontSize = 11.sp, fontFamily = Letra.codigo, color = m.detalle.copy(alpha = 0.8f),
                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 }
             }
@@ -639,27 +758,28 @@ private fun Expedientes(entradas: List<Dia>, m: Materia, abrir: (String) -> Unit
 
 /** El directorio de logs (cyberpunk) o la lista de cintas de bitácora (refugio). */
 @Composable
-private fun Logs(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String) -> Unit) {
+private fun Logs(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
     val refugio = tema == TemaId.REFUGIO
-    if (tema == TemaId.ESPACIO) { RegistroDeVuelo(entradas, m, abrir); return }
+    if (tema == TemaId.ESPACIO) { RegistroDeVuelo(entradas, m, noche, texto, abrir); return }
     val fuente = if (refugio) LetraExtra.vt323 else Letra.codigo
     val tam = if (refugio) 17.sp else 11.5.sp
     val fondo = if (refugio) m.hoja else m.cuerpo
     Column(Modifier.fillMaxWidth().background(fondo, RoundedCornerShape(if (refugio) 14.dp else 6.dp))
         .border(1.5.dp, m.acento.copy(alpha = 0.5f), RoundedCornerShape(if (refugio) 14.dp else 6.dp)).padding(12.dp)) {
-        Text(if (refugio) "BITÁCORA PERSONAL — ${entradas.size} ENTRADAS" else "$ ls -lt ~/diario/  # ${entradas.size} archivos", fontFamily = fuente, fontSize = tam,
+        Text(if (refugio) (if (noche) "REGISTRO ONÍRICO — ${entradas.size} SUEÑOS" else "BITÁCORA PERSONAL — ${entradas.size} ENTRADAS")
+            else "$ ls -lt ~/${if (noche) "suenos" else "diario"}/  # ${entradas.size} archivos", fontFamily = fuente, fontSize = tam,
             color = if (refugio) m.acento else m.detalle, modifier = Modifier.padding(bottom = 6.dp))
         entradas.forEach { d ->
-            val p = Texto.palabras(d.nota)
+            val p = Texto.palabras(texto(d))
             Row(Modifier.fillMaxWidth().clickable { abrir(d.fecha) }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (refugio) {
                     Text("▸ ${Estilo.fecha(d.fecha).substringBefore(" ·")}", fontFamily = fuente, fontSize = tam, color = m.acento, modifier = Modifier.width(140.dp), maxLines = 1)
-                    Text(d.nota.trim().replace(Regex("\\s+"), " ").uppercase(), fontFamily = fuente, fontSize = tam, color = m.tinta.copy(alpha = 0.8f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text(texto(d).trim().replace(Regex("\\s+"), " ").uppercase(), fontFamily = fuente, fontSize = tam, color = m.tinta.copy(alpha = 0.8f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 } else {
                     Text("-rw-", fontFamily = fuente, fontSize = tam, color = m.tinta.copy(alpha = 0.45f))
                     Text("%5dw".format(p), fontFamily = fuente, fontSize = tam, color = m.extra, modifier = Modifier.padding(horizontal = 6.dp))
-                    Text("${d.fecha}.log", fontFamily = fuente, fontSize = tam, color = m.acento)
-                    Text("  " + d.nota.trim().replace(Regex("\\s+"), " "), fontFamily = fuente, fontSize = tam, color = m.tinta.copy(alpha = 0.6f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text("${d.fecha}.${if (noche) "dream" else "log"}", fontFamily = fuente, fontSize = tam, color = m.acento)
+                    Text("  " + texto(d).trim().replace(Regex("\\s+"), " "), fontFamily = fuente, fontSize = tam, color = m.tinta.copy(alpha = 0.6f), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -668,17 +788,17 @@ private fun Logs(entradas: List<Dia>, tema: TemaId, m: Materia, abrir: (String) 
 
 /** Bitácora de vuelo: cada día es un registro con su día juliano, como en la consola de una misión. */
 @Composable
-private fun RegistroDeVuelo(entradas: List<Dia>, m: Materia, abrir: (String) -> Unit) {
+private fun RegistroDeVuelo(entradas: List<Dia>, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
     Column(Modifier.fillMaxWidth().background(m.cuerpo, RoundedCornerShape(14.dp)).border(1.dp, m.acento.copy(alpha = 0.45f), RoundedCornerShape(14.dp)).padding(12.dp)) {
-        Text("REGISTRO DE VUELO · ${entradas.size} TRANSMISIONES", fontFamily = LetraExtra.orbita, fontSize = 11.sp, color = m.detalle, modifier = Modifier.padding(bottom = 8.dp))
+        Text(if (noche) "SUEÑOS EN ÓRBITA · ${entradas.size} TRANSMISIONES NOCTURNAS" else "REGISTRO DE VUELO · ${entradas.size} TRANSMISIONES", fontFamily = LetraExtra.orbita, fontSize = 11.sp, color = m.detalle, modifier = Modifier.padding(bottom = 8.dp))
         entradas.forEach { d ->
             val jd = runCatching { Temas.diaJuliano(Fechas.parse(d.fecha)) }.getOrNull()
             Row(Modifier.fillMaxWidth().clickable { abrir(d.fecha) }.padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(7.dp).background(m.acento, androidx.compose.foundation.shape.CircleShape))
                 Text("JD ${jd ?: "—"}", fontFamily = Letra.codigo, fontSize = 11.sp, color = m.acento, modifier = Modifier.padding(start = 8.dp).width(92.dp), maxLines = 1)
-                Text(d.nota.trim().replace(Regex("\\s+"), " "), fontFamily = LetraExtra.grotesk, fontSize = 12.sp, color = m.tinta.copy(alpha = 0.8f),
+                Text(texto(d).trim().replace(Regex("\\s+"), " "), fontFamily = LetraExtra.grotesk, fontSize = 12.sp, color = m.tinta.copy(alpha = 0.8f),
                     maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Text("${Texto.palabras(d.nota)}w", fontFamily = Letra.codigo, fontSize = 10.sp, color = m.extra, modifier = Modifier.padding(start = 6.dp))
+                Text("${Texto.palabras(texto(d))}w", fontFamily = Letra.codigo, fontSize = 10.sp, color = m.extra, modifier = Modifier.padding(start = 6.dp))
             }
         }
     }
@@ -719,10 +839,13 @@ fun pagina(t: TemaId): Pagina = when (t) {
 
 /** Fondo de la página: papel, papiro, seda, pantalla… En modo oscuro, el papel claro se atenúa un poco para no deslumbrar. */
 @Composable
-private fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier) {
+internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, noche: Boolean = false) {
     val oscuroApp = esOscuro()
     Box(modifier.fillMaxSize().background(p.color)) {
         p.fondo?.let { Image(painterResource(it), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
+        // De noche el papel queda debajo de un cielo: se adivina la textura, pero manda el azul de medianoche.
+        if (noche) Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(lerp(p.color, NOCHE, 0.4f).copy(alpha = if (p.fondo != null) 0.9f else 0.7f),
+            lerp(NOCHE_ALTA, p.acento, 0.12f).copy(alpha = if (p.fondo != null) 0.88f else 0.6f)))))
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width; val h = size.height
             when (t) {
@@ -777,6 +900,10 @@ private fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier) {
                 }
                 else -> {}
             }
+            if (noche) {
+                estrellas(t.ordinal * 17 + 3, (w * h / 5200f).toInt().coerceIn(60, 260), LUNA, max = 1.5f)
+                mediaLuna(Offset(w - 46.dp.toPx(), 70.dp.toPx()), 15.dp.toPx(), LUNA.copy(alpha = 0.85f))
+            }
         }
         if (oscuroApp && !p.oscura) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.22f)))
     }
@@ -787,7 +914,7 @@ private class Capitular(val familia: FontFamily, val color: Color) : VisualTrans
     override fun filter(text: AnnotatedString): TransformedText = TransformedText(conCapitular(text, familia, color), OffsetMapping.Identity)
 }
 
-private fun conCapitular(text: AnnotatedString, familia: FontFamily, color: Color): AnnotatedString = buildAnnotatedString {
+internal fun conCapitular(text: AnnotatedString, familia: FontFamily, color: Color): AnnotatedString = buildAnnotatedString {
     append(text)
     val i = text.text.indexOfFirst { it.isLetterOrDigit() }
     if (i >= 0) addStyle(SpanStyle(fontFamily = familia, color = color, fontSize = 2.1.em), i, i + 1)
@@ -795,7 +922,7 @@ private fun conCapitular(text: AnnotatedString, familia: FontFamily, color: Colo
 
 /** Dibuja renglones, cuadrícula o números de línea detrás del texto, alineados con sus líneas. */
 @Composable
-private fun Modifier.rayado(p: Pagina, layout: TextLayoutResult?): Modifier {
+internal fun Modifier.rayado(p: Pagina, layout: TextLayoutResult?): Modifier {
     if (p.rayas == Rayas.NADA) return this
     val medidor = rememberTextMeasurer(cacheSize = 64)
     val estiloNum = TextStyle(fontFamily = Letra.codigo, fontSize = 11.sp, color = p.tenue)
@@ -825,8 +952,9 @@ private fun Modifier.rayado(p: Pagina, layout: TextLayoutResult?): Modifier {
 
 /** Encabezado de la página: emblema, fecha del tema y una banda. */
 @Composable
-private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String) {
+private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito = Escrito.DIARIO) {
     val ty = MaterialTheme.typography
+    if (modo == Escrito.SUENO) { EncabezadoSueno(t, p, fecha); return }
     Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         when (t) {
             TemaId.CIBER -> Text("~/vestigium/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 12.sp, color = p.tenue, modifier = Modifier.fillMaxWidth())
@@ -846,9 +974,45 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String) {
     }
 }
 
+/** Encabezado de la página de un sueño: la luna, el rótulo del tema y la noche en que se soñó. */
+@Composable
+private fun EncabezadoSueno(t: TemaId, p: Pagina, fecha: String) {
+    val ty = MaterialTheme.typography
+    val antes = runCatching { Fechas.parse(fecha).minusDays(1) }.getOrNull()
+    Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Canvas(Modifier.size(width = 120.dp, height = 46.dp)) {
+            estrellas(fecha.hashCode(), 14, LUNA, max = 1.4f)
+            mediaLuna(Offset(size.width / 2, size.height / 2), size.height * 0.36f, p.acento)
+        }
+        Text(rotuloSueno(t), fontFamily = if (t == TemaId.REFUGIO) LetraExtra.vt323 else if (t == TemaId.CIBER) Letra.codigo else ty.labelLarge.fontFamily,
+            fontSize = if (t == TemaId.REFUGIO) 18.sp else 12.sp, letterSpacing = 1.5.sp, color = p.acento, textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 4.dp))
+        Text(Estilo.fecha(fecha), style = ty.headlineSmall, color = p.tinta, textAlign = TextAlign.Center,
+            fontFamily = if (t == TemaId.REFUGIO) LetraExtra.vt323 else ty.headlineSmall.fontFamily, modifier = Modifier.padding(top = 6.dp))
+        Text((if (antes != null) "la noche del ${antes.dayOfMonth} al " else "la noche antes del ") + Fechas.titulo(fecha).lowercase() + " · " + Fechas.relativo(fecha),
+            style = ty.labelMedium, color = p.tenue, textAlign = TextAlign.Center)
+        Meandro(Modifier.padding(top = 10.dp, bottom = 12.dp), color = p.acento.copy(alpha = 0.5f))
+    }
+}
+
+/** Las frases con ♥ del día, como epígrafe arriba de la hoja: se ven ahí, pero no se guardan en el diario. */
+@Composable
+private fun Epigrafe(fecha: String, p: Pagina) {
+    val frases = remember(fecha, Repo.config.frases_guardadas, Repo.obras) { Frases.deLaHoja(fecha) }
+    frases.forEach { f ->
+        Column(Modifier.fillMaxWidth().padding(start = 44.dp, bottom = 16.dp), horizontalAlignment = Alignment.End) {
+            f.original?.let { Text(it, fontFamily = p.texto, fontSize = (p.tam - 5).sp, lineHeight = (p.tam - 2).sp, color = p.tenue,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, textAlign = TextAlign.End) }
+            Text("«${f.texto}»", fontFamily = p.texto, fontSize = (p.tam - 3).sp, lineHeight = (p.tam + 1).sp, color = p.tinta.copy(alpha = 0.82f),
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, textAlign = TextAlign.End)
+            Text("— ${f.autor}  ♥", style = MaterialTheme.typography.labelSmall, color = p.acento, textAlign = TextAlign.End, modifier = Modifier.padding(top = 2.dp))
+        }
+    }
+}
+
 /** Barra superior de lectura o escritura. */
 @Composable
-private fun BarraPagina(p: Pagina, volver: () -> Unit, centro: String, derecha: @Composable () -> Unit) {
+internal fun BarraPagina(p: Pagina, volver: () -> Unit, centro: String, derecha: @Composable () -> Unit) {
     val sentir = rememberSentir()
     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = p.acento,
@@ -861,15 +1025,17 @@ private fun BarraPagina(p: Pagina, volver: () -> Unit, centro: String, derecha: 
 /** Una entrada abierta a pantalla completa con el diseño del tema. */
 @Composable
 fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Unit)?, siguiente: (() -> Unit)?, acciones: List<Pair<String, () -> Unit>>,
-                tema: TemaId = Estilo.tema) {
-    val p = pagina(tema)
+                tema: TemaId = Estilo.tema, modo: Escrito = Escrito.DIARIO) {
+    val sueno = modo == Escrito.SUENO
+    val p = if (sueno) paginaNoche(tema) else pagina(tema)
+    val cuerpo = if (sueno) d?.sueno_texto.orEmpty() else d?.nota.orEmpty()
     val sentirPagina = rememberSentir()
     var menu by remember { mutableStateOf(false) }
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
-            FondoPagina(tema, p)
+            FondoPagina(tema, p, noche = sueno)
             Column(Modifier.fillMaxSize()) {
-                BarraPagina(p, volver, d?.let { "${Texto.palabras(it.nota)} palabras" } ?: "") {
+                BarraPagina(p, volver, if (d != null) "${Texto.palabras(cuerpo)} palabras" else "") {
                     Text("‹", fontSize = 24.sp, color = if (anterior != null) p.acento else p.tenue.copy(alpha = 0.3f),
                         modifier = Modifier.clickable(enabled = anterior != null) { sentirPagina(Sentidos.Evento.PASAR); anterior?.invoke() }.padding(horizontal = 10.dp))
                     Text("›", fontSize = 24.sp, color = if (siguiente != null) p.acento else p.tenue.copy(alpha = 0.3f),
@@ -882,9 +1048,18 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                     }
                 }
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = if (p.rayas == Rayas.NUMEROS) 52.dp else 30.dp, end = 26.dp, bottom = 40.dp)) {
-                    EncabezadoPagina(tema, p, fecha)
-                    if (d == null || d.nota.isBlank()) {
-                        Text("No hay nada escrito este día.", color = p.tenue, fontFamily = p.texto, fontSize = p.tam.sp)
+                    EncabezadoPagina(tema, p, fecha, modo)
+                    if (!sueno) Epigrafe(fecha, p)
+                    if (d == null || cuerpo.isBlank()) {
+                        Text(if (sueno) "No anotaste ningún sueño esa noche." else "No hay nada escrito este día.", color = p.tenue, fontFamily = p.texto, fontSize = p.tam.sp)
+                    } else if (sueno) {
+                        var layout by remember(cuerpo) { mutableStateOf<TextLayoutResult?>(null) }
+                        val texto = AnnotatedString(cuerpo.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }
+                        SelectionContainer {
+                            Text(texto, color = p.tinta, fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, onTextLayout = { layout = it },
+                                modifier = Modifier.fillMaxWidth().rayado(p, layout))
+                        }
+                        LibroDiario.metaSueno(d).takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = p.tenue, modifier = Modifier.padding(top = 22.dp)) }
                     } else {
                         var layout by remember(d.nota) { mutableStateOf<TextLayoutResult?>(null) }
                         val texto = AnnotatedString(d.nota.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }
@@ -900,7 +1075,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, modifier = Modifier.padding(top = 18.dp))
                         LibroDiario.meta(d).takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = p.tenue, modifier = Modifier.padding(top = 22.dp)) }
                     }
-                    Text(colofon(tema), color = p.acento, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 26.dp))
+                    Text(if (sueno) colofonSueno(tema) else colofon(tema), color = p.acento, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 26.dp))
                 }
             }
         }
@@ -909,8 +1084,9 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
 
 /** Escribir el diario a pantalla completa, sobre el papel del tema. Se guarda solo; el botón guarda y vuelve. */
 @Composable
-fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guardar: () -> Unit, tema: TemaId = Estilo.tema, dictado: Boolean = true) {
-    val p = pagina(tema)
+fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guardar: () -> Unit, tema: TemaId = Estilo.tema, dictado: Boolean = true,
+                 modo: Escrito = Escrito.DIARIO, encabezado: (@Composable (Pagina) -> Unit)? = null, pista: String? = null, textoBoton: String? = null) {
+    val p = if (modo == Escrito.SUENO) paginaNoche(tema) else pagina(tema)
     val sentir = rememberSentir()
     var campo by remember { mutableStateOf(TextFieldValue(valor, TextRange(valor.length))) }
     if (campo.text != valor) campo = TextFieldValue(valor, TextRange(valor.length))
@@ -943,15 +1119,16 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
     }
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
-            FondoPagina(tema, p)
+            FondoPagina(tema, p, noche = modo == Escrito.SUENO)
             Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
                 BarraPagina(p, guardar, "${Texto.palabras(campo.text)} palabras") {
-                    Text(textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
+                    Text(textoBoton ?: textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
                         modifier = Modifier.padding(end = 6.dp).background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }
                             .padding(horizontal = 14.dp, vertical = 8.dp))
                 }
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = if (p.rayas == Rayas.NUMEROS) 52.dp else 30.dp, end = 26.dp, bottom = 24.dp)) {
-                    EncabezadoPagina(tema, p, fecha)
+                    if (encabezado != null) encabezado(p) else EncabezadoPagina(tema, p, fecha, modo)
+                    if (modo == Escrito.DIARIO) Epigrafe(fecha, p)
                     val estilo = TextStyle(fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, color = p.tinta)
                     androidx.compose.runtime.key(propio) {
                     androidx.compose.ui.platform.InterceptPlatformTextInput(interceptor = object : androidx.compose.ui.platform.PlatformTextInputInterceptor {
@@ -967,7 +1144,11 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                         visualTransformation = p.capitular?.let { Capitular(it, p.acento) } ?: VisualTransformation.None,
                         decorationBox = { interior ->
                             Box {
-                                if (campo.text.isEmpty()) Text(if (tema == TemaId.CIBER) "// ¿cómo fue el día?" else "¿Cómo fue el día?", style = estilo.copy(color = p.tenue.copy(alpha = 0.7f)))
+                                if (campo.text.isEmpty()) Text(pista ?: when {
+                                    modo == Escrito.SUENO -> if (tema == TemaId.CIBER) "// ¿qué soñaste?" else "¿Qué soñaste? Aunque sean fragmentos."
+                                    tema == TemaId.CIBER -> "// ¿cómo fue el día?"
+                                    else -> "¿Cómo fue el día?"
+                                }, style = estilo.copy(color = p.tenue.copy(alpha = 0.7f)))
                                 interior()
                             }
                         },
@@ -1000,9 +1181,20 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
 
 /** El escritor en una ventana que tapa toda la pantalla (también la barra de abajo). */
 @Composable
-fun DialogoEscritor(fecha: String, valor: String, onCambio: (String) -> Unit, cerrar: () -> Unit) {
+fun DialogoEscritor(fecha: String, valor: String, onCambio: (String) -> Unit, modo: Escrito = Escrito.DIARIO, cerrar: () -> Unit) {
     Dialog(onDismissRequest = cerrar, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        EscritorTema(fecha, valor, onCambio, cerrar)
+        EscritorTema(fecha, valor, onCambio, cerrar, modo = modo)
+    }
+}
+
+/** Escribir el sueño de una noche sobre la página nocturna del tema. Se guarda mientras escribes y al cerrar. */
+@Composable
+fun EscribirSueno(fecha: String, cerrar: () -> Unit) {
+    var d by remember(fecha) { mutableStateOf(Repo.dia(fecha)) }
+    var sucio by remember(fecha) { mutableStateOf(false) }
+    LaunchedEffect(d, sucio) { if (sucio) { delay(800); Repo.guardarDia(d); sucio = false } }
+    DialogoEscritor(fecha, d.sueno_texto, { d = d.copy(sueno_texto = it, sueno_recordado = d.sueno_recordado || it.isNotBlank()); sucio = true }, Escrito.SUENO) {
+        if (sucio) { Repo.guardarDia(d); sucio = false }; cerrar()
     }
 }
 

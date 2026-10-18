@@ -255,6 +255,7 @@ fun PantallaDia(nav: Nav) {
                         "aviso" -> abrirAviso(ctx)
                         "escalas" -> nav.ir("escalas")
                         "gasto" -> nav.pestana("gastos")
+                        "politica" -> nav.ir("politica")
                     }
                 }
                 DatosQueFaltan(nav)
@@ -540,6 +541,9 @@ private fun Vestigios(fecha: String, nav: Nav) {
         value = withContext(Dispatchers.IO) { runCatching { Repo.escuchas(fecha, fecha) }.getOrDefault(emptyList()) }
     }
     val fase = Luna.fase(fecha)
+    val mundo by produceState<io.github.ruddy2003.vestigium.data.Mundo.DiaMundo?>(null, fecha, io.github.ruddy2003.vestigium.data.Mundo.version) {
+        value = withContext(Dispatchers.IO) { runCatching { io.github.ruddy2003.vestigium.data.Mundo.delDia(ctx, fecha) }.getOrNull() }
+    }
 
     Tarjeta {
         var algo = false
@@ -640,6 +644,37 @@ private fun Vestigios(fecha: String, nav: Nav) {
         if (sub.isNotEmpty()) { algo = true; Clave("lectio", "${sub.size} subrayados · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
         val ruidos = Repo.momentos.filter { it.fecha == fecha }.mapNotNull { it.ruido_db }
         if (ruidos.isNotEmpty()) Clave("strepitus", "%.0f dB de media al registrar".format(ruidos.average()))
+        // Lo que leíste, viste o jugaste; si lo terminaste ese día, tu calificación y lo que opinaste.
+        val obras = Repo.obras.filter { it.titulo.isNotBlank() && (fecha in it.dias || (it.estado == "terminado" && it.fin == fecha)) }
+        if (obras.isNotEmpty()) {
+            algo = true
+            Clave("opera", obras.joinToString(" · ") { o ->
+                o.titulo + " (" + (TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre?.lowercase() ?: o.tipo) + ")" +
+                    (if (o.estado == "terminado" && o.fin == fecha) " terminado" + (o.calificacion?.let { " · $it/10" } ?: "") else "")
+            })
+            obras.filter { it.estado == "terminado" && it.fin == fecha && it.nota.isNotBlank() }.forEach { o ->
+                Clave("  iudicium", "«" + o.nota.trim().replace(Regex("\\s+"), " ").let { if (it.length > 160) it.take(160) + "…" else it } + "»")
+            }
+        }
+        val citasDia = Repo.obras.flatMap { o -> o.citas.filter { it.fecha == fecha }.map { o to it } }
+        if (citasDia.isNotEmpty()) { algo = true; Clave("citatio", "«${citasDia.first().second.texto.take(110)}» — ${citasDia.first().first.titulo}" + if (citasDia.size > 1) " (+${citasDia.size - 1})" else "") }
+        Repo.config.frases_guardadas.filter { it.fecha == fecha }.forEach { f -> algo = true; Clave("sententia", "♥ «${f.texto.take(110)}» — ${f.autor}") }
+        // Dónde estuviste: ciudades, lo que fue primera vez y el Patrimonio Mundial.
+        mundo?.let { m ->
+            val c = m.ciudades.filter { it.second >= 0.25 || it.second == 0.0 }
+            if (c.isNotEmpty()) { algo = true; Clave("orbis", c.take(4).joinToString(" · ") { (e, h) -> "${io.github.ruddy2003.vestigium.data.Mundo.bandera(e.pais)} ${e.nombre}" + if (h > 0) " ${hm((h * 60).toInt())}" else "" }) }
+            val nuevas = (m.paisesNuevos.map { it.nombre } + m.ciudadesNuevas.map { it.nombre }).distinct()
+            if (nuevas.isNotEmpty()) Clave("  nova", "primera vez en " + nuevas.joinToString(", "))
+            if (m.sitios.isNotEmpty()) { algo = true; Clave("mirabilia", m.sitios.joinToString(" · ") { s -> s.n + " (Patrimonio Mundial, " + s.categoria.lowercase() + (if (s.i in m.sitiosNuevos) ", primera vez" else "") + ")" }) }
+        }
+        // El sueño de esa noche y las cartas.
+        Repo.dias[fecha]?.takeIf { it.sueno_texto.isNotBlank() }?.let { d ->
+            algo = true
+            Clave("somnium", (io.github.ruddy2003.vestigium.ui.LibroDiario.metaSueno(d).ifBlank { "soñaste" }) + " · «" + d.sueno_texto.trim().replace(Regex("\\s+"), " ").take(90) + "…»")
+        }
+        val cartas = Repo.cartas.filter { it.escrita == fecha }
+        if (cartas.isNotEmpty()) { algo = true; Clave("epistulae", cartas.joinToString(" · ") { if (it.para.isBlank()) "sellaste una carta hasta el ${Fechas.corto(it.abrir_en)} ${it.abrir_en.take(4)}" else "carta a @${it.para}" }) }
+        Repo.cartas.filter { it.para.isBlank() && it.abierta_el == fecha }.forEach { Clave("  aperta", "abriste la carta que te escribiste el ${Fechas.larga(it.escrita)}") }
         Clave("luna", "${Luna.nombre(fase)} · ${(Luna.iluminacion(fase) * 100).toInt()}% iluminada")
         if (!algo) Ayuda("Aún no hay datos automáticos de este día. Activa fuentes en Más → Permisos y sensores.", Modifier.padding(top = 8.dp))
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

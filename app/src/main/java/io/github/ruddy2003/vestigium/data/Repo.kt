@@ -204,6 +204,7 @@ object Repo {
         db.poner("cartas", c.id, c.abrir_en, JSON.encodeToString(Carta.serializer(), c))
         enMain { cartas = cartas.filter { it.id != c.id } + c }
     }
+    fun borrarCarta(id: String) { db.borrar("cartas", id); enMain { cartas = cartas.filter { it.id != id } } }
     fun guardarExperimento(e: Experimento) {
         db.poner("experimentos", e.id, e.inicio, JSON.encodeToString(Experimento.serializer(), e))
         enMain { experimentos = experimentos.filter { it.id != e.id } + e }
@@ -343,6 +344,12 @@ object Repo {
 
     /** Solo para las capturas de diseño: obras de ejemplo en memoria. */
     fun obrasEnMemoria(l: List<Obra>) { obras = l }
+
+    /** Solo para las capturas de diseño: días de ejemplo en memoria. */
+    fun diasEnMemoria(d: Map<String, Dia>) { dias = d }
+
+    /** Solo para las capturas de diseño: cartas de ejemplo en memoria. */
+    fun cartasEnMemoria(l: List<Carta>) { cartas = l }
 
     /** Solo para las capturas de diseño: datos de ejemplo en memoria. */
     fun ejemploEnMemoria(dias: Map<String, Dia>, salud: Map<String, SaludDia>, pantalla: Map<String, PantallaDia>, gastos: List<Gasto>,

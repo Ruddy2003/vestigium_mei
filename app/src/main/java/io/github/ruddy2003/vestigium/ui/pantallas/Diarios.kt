@@ -142,6 +142,10 @@ fun PantallaDiario(nav: Nav) {
             if (ultimas.isEmpty()) Vacio("Aquí se irán guardando tus entradas.")
             else io.github.ruddy2003.vestigium.ui.EstanteDiario(ultimas) { f -> Seleccion.entrada = f; nav.ir("entrada") }
             io.github.ruddy2003.vestigium.ui.BotonPrincipal("entrar a la biblioteca →", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.ir("biblioteca_diario") }
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotonSecundario("☾  sueños", Modifier.weight(1f)) { nav.ir("biblioteca_suenos") }
+                BotonSecundario("✉  cartas", Modifier.weight(1f)) { nav.ir("cartas") }
+            }
         }
         Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día.") {}
         Text("${Repo.momentos.count { it.tipo != "muestreo" }} momentos registrados", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
@@ -184,34 +188,6 @@ fun PantallaDiario(nav: Nav) {
     }
     editando?.let { m -> DialogoMomento(m) { editando = null } }
     escribiendo?.let { f -> io.github.ruddy2003.vestigium.ui.EscribirDia(f) { escribiendo = null } }
-}
-
-/** La biblioteca del diario: todas las entradas como objetos del tema (libros, rollos, cartas, expedientes, logs), por mes. */
-@Composable
-fun PantallaBibliotecaDiario(nav: Nav) {
-    val todas = remember(Repo.dias) { LibroDiario.entradas() }
-    var busca by remember { mutableStateOf("") }
-    var anio by remember { mutableStateOf<String?>(null) }
-    var meses by remember { mutableIntStateOf(6) }
-    val q = normal(busca.trim())
-    val visibles = todas.filter { d -> (anio == null || d.fecha.startsWith(anio!!)) && (q.isBlank() || normal(d.nota + " " + d.mejor_momento + " " + d.peor_momento).contains(q)) }
-    val porMes = visibles.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
-    val palabras = remember(Repo.dias) { todas.sumOf { Texto.palabras(it.nota) } }
-    Hoja("Biblioteca del diario", nav.atras, "${todas.size} entradas · %,d palabras. Toca una para abrirla.".format(palabras)) {
-        OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
-            placeholder = { Text("buscar en las entradas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
-        FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            todas.map { it.fecha.take(4) }.distinct().forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }
-        }
-        if (todas.isEmpty()) Vacio("Todavía no hay entradas. Escribe la de hoy desde la pestaña Diario o al llenar el día.")
-        else if (visibles.isEmpty()) Vacio("Nada coincide con la búsqueda.")
-        porMes.entries.take(meses).forEach { (mes, lista) ->
-            val rotulo = Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) }
-            Text(rotulo, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
-            io.github.ruddy2003.vestigium.ui.EstanteDiario(lista) { f -> Seleccion.entrada = f; nav.ir("entrada") }
-        }
-        if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
-    }
 }
 
 /** Un día en la línea de tiempo: la entrada, el sueño y los momentos, cada cosa tocable. */

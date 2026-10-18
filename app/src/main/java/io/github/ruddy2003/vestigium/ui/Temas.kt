@@ -202,6 +202,7 @@ object Temas {
 
     private val MEDIEVAL = mapOf(
         "Mundo" to "Orbe", "Patrimonio Mundial" to "Maravillas del orbe", "Mapa para rascar" to "Mapamundi de oro", "Ciudades visitadas" to "Ciudades",
+        "Biblioteca de sueños" to "Libro de las visiones", "Cartas" to "Epístolas", "Escribir una carta" to "Escribir epístola", "Carta" to "Epístola", "Conocerte" to "De ti mismo", "Brújula política" to "Del buen gobierno", "Mapas" to "Mapamundis", "Anoche" to "Esta noche pasada", "Selladas" to "Selladas con lacre", "Listas para abrir" to "Prestas a abrirse", "A otras personas" to "A otras gentes", "Del pasado" to "De antaño",
         "Hoy" to "El folio de hoy", "Línea de tiempo" to "Crónica", "Ahora mismo estoy…" to "En este instante…",
         "Entender" to "Glosas", "Registros especiales" to "Otros libros", "Apariencia" to "Estilo", "Avisos y recordatorios" to "Campanas",
         "Llenar el día" to "Completas", "Biblioteca del diario" to "Libro de los días", "Entrada" to "Folio",
@@ -224,6 +225,7 @@ object Temas {
 
     private val DISTOPIA = mapOf(
         "Mundo" to "DESPLAZAMIENTOS", "Patrimonio Mundial" to "SITIOS AUTORIZADOS", "Mapa para rascar" to "TERRITORIOS VISITADOS", "Ciudades visitadas" to "JURISDICCIONES",
+        "Biblioteca de sueños" to "ARCHIVO ONÍRICO", "Cartas" to "CORRESPONDENCIA", "Escribir una carta" to "REDACTAR CORRESPONDENCIA", "Carta" to "MISIVA", "Conocerte" to "FICHA DEL CIUDADANO", "Brújula política" to "EVALUACIÓN IDEOLÓGICA", "Mapas" to "CARTOGRAFÍA OFICIAL", "Anoche" to "ÚLTIMO TURNO NOCTURNO", "Selladas" to "CLASIFICADAS", "Listas para abrir" to "DESCLASIFICADAS", "A otras personas" to "A OTROS CIUDADANOS", "Del pasado" to "ARCHIVO HISTÓRICO",
         "Hoy" to "DECLARACIÓN DE HOY", "Línea de tiempo" to "REGISTRO CRONOLÓGICO", "Ahora mismo estoy…" to "ESTADO ACTUAL DEL CIUDADANO",
         "Entender" to "INTELIGENCIA", "Registros especiales" to "REGISTROS ESPECIALES", "Apariencia" to "APARIENCIA", "Avisos y recordatorios" to "CITACIONES",
         "Llenar el día" to "DECLARACIÓN NOCTURNA", "Biblioteca del diario" to "ARCHIVO DE DECLARACIONES", "Entrada" to "DECLARACIÓN",
@@ -245,6 +247,7 @@ object Temas {
 
     private val REFUGIO = mapOf(
         "Mundo" to "SUPERFICIE", "Patrimonio Mundial" to "MONUMENTOS EN PIE", "Mapa para rascar" to "MAPA DE EXPLORACIÓN", "Ciudades visitadas" to "ASENTAMIENTOS",
+        "Biblioteca de sueños" to "REGISTRO DE SUEÑOS", "Cartas" to "CORREO DEL REFUGIO", "Escribir una carta" to "NUEVO MENSAJE", "Carta" to "MENSAJE", "Conocerte" to "FICHA DEL RESIDENTE", "Brújula política" to "ENCUESTA CÍVICA", "Mapas" to "MAPAS DE LA SUPERFICIE", "Anoche" to "ÚLTIMA NOCHE", "Selladas" to "CÁPSULAS SELLADAS", "Listas para abrir" to "CÁPSULAS LISTAS", "A otras personas" to "A OTROS RESIDENTES", "Del pasado" to "CÁPSULAS ABIERTAS",
         "Hoy" to "ENTRADA DE HOY", "Línea de tiempo" to "REGISTRO", "Ahora mismo estoy…" to "ESTADO ACTUAL",
         "Entender" to "ANÁLISIS", "Registros especiales" to "REGISTROS ESPECIALES", "Apariencia" to "APARIENCIA", "Avisos y recordatorios" to "ALARMAS",
         "Llenar el día" to "INFORME DE CIERRE", "Biblioteca del diario" to "DIARIOS DEL RESIDENTE", "Entrada" to "REGISTRO",
@@ -263,6 +266,7 @@ object Temas {
 
     private val ORDEN = mapOf(
         "Mundo" to "CAMPAÑAS", "Patrimonio Mundial" to "RELIQUIAS DEL VIEJO MUNDO", "Mapa para rascar" to "TERRITORIO RECONOCIDO", "Ciudades visitadas" to "PLAZAS",
+        "Biblioteca de sueños" to "VIGILIAS", "Cartas" to "DESPACHOS", "Escribir una carta" to "REDACTAR DESPACHO", "Carta" to "DESPACHO", "Conocerte" to "HOJA DE SERVICIO", "Brújula política" to "DOCTRINA", "Mapas" to "CARTOGRAFÍA", "Anoche" to "VIGILIA DE ANOCHE", "Selladas" to "SELLADOS", "Listas para abrir" to "LISTOS PARA ABRIR", "A otras personas" to "A OTROS HERMANOS", "Del pasado" to "ARCHIVO",
         "Hoy" to "PARTE DE HOY", "Línea de tiempo" to "CRONOLOGÍA", "Ahora mismo estoy…" to "ESTADO DEL OPERATIVO",
         "Entender" to "INTELIGENCIA", "Registros especiales" to "OPERACIONES ESPECIALES", "Apariencia" to "BLASÓN", "Avisos y recordatorios" to "TOQUES DE CORNETA",
         "Llenar el día" to "PARTE DE CIERRE", "Biblioteca del diario" to "CRÓNICAS", "Entrada" to "CRÓNICA",
@@ -281,6 +285,7 @@ object Temas {
 
     private val LABORATORIO = mapOf(
         "Mundo" to "DISPERSIÓN GEOGRÁFICA", "Patrimonio Mundial" to "MUESTRAS DE REFERENCIA", "Mapa para rascar" to "COBERTURA", "Ciudades visitadas" to "LOCALIDADES",
+        "Biblioteca de sueños" to "REGISTRO DE SUEÑOS", "Cartas" to "CORRESPONDENCIA", "Escribir una carta" to "NUEVA CARTA", "Carta" to "CARTA", "Conocerte" to "DATOS DEL SUJETO", "Brújula política" to "ESCALA POLÍTICA", "Mapas" to "MAPAS", "Anoche" to "ÚLTIMA NOCHE", "Selladas" to "MUESTRAS SELLADAS", "Listas para abrir" to "LISTAS PARA ABRIR", "A otras personas" to "A OTRAS PERSONAS", "Del pasado" to "ABIERTAS",
         "Hoy" to "Registro de hoy", "Línea de tiempo" to "Serie temporal", "Ahora mismo estoy…" to "Observación inmediata",
         "Entender" to "RESULTADOS", "Registros especiales" to "PROTOCOLOS ESPECIALES", "Apariencia" to "INTERFAZ", "Avisos y recordatorios" to "ALERTAS",
         "Llenar el día" to "CIERRE DE SESIÓN", "Biblioteca del diario" to "CUADERNOS", "Entrada" to "REGISTRO",
@@ -298,6 +303,7 @@ object Temas {
 
     private val COLONOS = mapOf(
         "Mundo" to "Tierras recorridas", "Patrimonio Mundial" to "Maravillas del camino", "Mapa para rascar" to "Mapa del explorador", "Ciudades visitadas" to "Poblados",
+        "Biblioteca de sueños" to "Lo que soñé", "Cartas" to "Correo del pueblo", "Escribir una carta" to "Escribir una carta", "Carta" to "Carta", "Conocerte" to "Del vecino", "Brújula política" to "Asamblea del pueblo", "Mapas" to "Mapas de la comarca", "Anoche" to "Anoche", "Selladas" to "Selladas", "Listas para abrir" to "Listas para abrir", "A otras personas" to "A los vecinos", "Del pasado" to "Del pasado",
         "Hoy" to "La jornada de hoy", "Línea de tiempo" to "Crónica del pueblo", "Ahora mismo estoy…" to "En este momento…",
         "Entender" to "El almanaque", "Registros especiales" to "Otras faenas", "Apariencia" to "Estilo", "Avisos y recordatorios" to "Campanadas",
         "Llenar el día" to "Al caer la noche", "Biblioteca del diario" to "Gacetas del vecino", "Entrada" to "Gaceta",
@@ -314,6 +320,7 @@ object Temas {
 
     private val NAPOLEON = mapOf(
         "Mundo" to "CAMPAÑAS", "Patrimonio Mundial" to "MONUMENTOS", "Mapa para rascar" to "CONQUISTAS", "Ciudades visitadas" to "GUARNICIONES",
+        "Biblioteca de sueños" to "SONGES", "Cartas" to "CORRESPONDANCE", "Escribir una carta" to "DICTAR UN DESPACHO", "Carta" to "DESPACHO", "Conocerte" to "HOJA DE SERVICIOS", "Brújula política" to "CONSEJO DE ESTADO", "Mapas" to "ATLAS DE CAMPAÑA", "Anoche" to "LA NOCHE PASADA", "Selladas" to "SELLADAS", "Listas para abrir" to "LISTAS PARA ABRIR", "A otras personas" to "A OTROS", "Del pasado" to "ARCHIVO",
         "Hoy" to "DESPACHO DE HOY", "Línea de tiempo" to "DIARIO DE CAMPAÑA", "Ahora mismo estoy…" to "PARTE INMEDIATO",
         "Día" to "BOLETÍN DEL DÍA", "Diario" to "MEMORIAS", "Gastos" to "TESORERÍA", "Entender" to "ESTADO MAYOR", "Más" to "GABINETE",
         "Llenar el día" to "DESPACHO NOCTURNO", "Biblioteca del diario" to "MEMORIAL", "Entrada" to "MEMORIA", "Tablero" to "PARTE DE CAMPAÑA",
@@ -325,6 +332,7 @@ object Temas {
     )
     private val BOTANICO = mapOf(
         "Mundo" to "Expediciones", "Patrimonio Mundial" to "Maravillas del mundo", "Mapa para rascar" to "Mapa de expediciones", "Ciudades visitadas" to "Estaciones",
+        "Biblioteca de sueños" to "Herbario de sueños", "Cartas" to "Correspondencia del naturalista", "Escribir una carta" to "Escribir una carta", "Carta" to "Carta", "Conocerte" to "Ficha del naturalista", "Brújula política" to "Brújula del naturalista", "Mapas" to "Atlas", "Anoche" to "Flora de anoche", "Selladas" to "Semillas guardadas", "Listas para abrir" to "Listas para brotar", "A otras personas" to "Cartas a otros", "Del pasado" to "Prensadas",
         "Hoy" to "La lámina de hoy", "Línea de tiempo" to "Diario de campo", "Ahora mismo estoy…" to "Observación inmediata",
         "Día" to "Herbario del día", "Diario" to "Cuaderno de campo", "Gastos" to "Semillas y cosecha", "Entender" to "Taxonomía", "Más" to "Invernadero",
         "Llenar el día" to "Al anochecer", "Biblioteca del diario" to "El herbario", "Entrada" to "Lámina", "Tablero" to "Mediciones del jardín",
@@ -335,6 +343,7 @@ object Temas {
     )
     private val GOTICO = mapOf(
         "Mundo" to "El orbe", "Patrimonio Mundial" to "Catedrales y maravillas", "Mapa para rascar" to "Mapa dorado", "Ciudades visitadas" to "Ciudades santas",
+        "Biblioteca de sueños" to "Visiones", "Cartas" to "Epístolas", "Escribir una carta" to "Escribir una epístola", "Carta" to "Epístola", "Conocerte" to "Examen de vida", "Brújula política" to "Del gobierno", "Mapas" to "Mapamundi", "Anoche" to "Maitines", "Selladas" to "Selladas", "Listas para abrir" to "Listas para abrir", "A otras personas" to "A otras almas", "Del pasado" to "Reliquias",
         "Hoy" to "La vidriera de hoy", "Línea de tiempo" to "Crónica de la capilla", "Ahora mismo estoy…" to "En esta hora…",
         "Día" to "Laudes", "Diario" to "Breviario", "Gastos" to "Tesoro", "Entender" to "Vitrales", "Más" to "Sacristía",
         "Llenar el día" to "Vísperas", "Biblioteca del diario" to "Cartulario", "Entrada" to "Folio", "Tablero" to "Rosetón",
@@ -345,6 +354,7 @@ object Temas {
     )
     private val ESPACIO = mapOf(
         "Mundo" to "ÓRBITA TERRESTRE", "Patrimonio Mundial" to "PUNTOS DE INTERÉS", "Mapa para rascar" to "PLANETA EXPLORADO", "Ciudades visitadas" to "BASES",
+        "Biblioteca de sueños" to "SUEÑOS EN ÓRBITA", "Cartas" to "TRANSMISIONES", "Escribir una carta" to "NUEVA TRANSMISIÓN", "Carta" to "TRANSMISIÓN", "Conocerte" to "PERFIL DE LA TRIPULACIÓN", "Brújula política" to "COORDENADAS POLÍTICAS", "Mapas" to "CARTAS ESTELARES", "Anoche" to "ÚLTIMA NOCHE", "Selladas" to "CÁPSULAS SELLADAS", "Listas para abrir" to "LISTAS PARA ABRIR", "A otras personas" to "A OTRAS ESTACIONES", "Del pasado" to "RECIBIDAS",
         "Hoy" to "Bitácora de hoy", "Línea de tiempo" to "Registro de la misión", "Ahora mismo estoy…" to "Telemetría inmediata",
         "Día" to "ÓRBITA DEL DÍA", "Diario" to "BITÁCORA", "Gastos" to "COMBUSTIBLE", "Entender" to "OBSERVATORIO", "Más" to "BASE",
         "Llenar el día" to "REPORTE DE MISIÓN", "Biblioteca del diario" to "ARCHIVO DE VUELO", "Entrada" to "REGISTRO", "Tablero" to "TELEMETRÍA",
@@ -355,6 +365,7 @@ object Temas {
     )
     private val ANDALUS = mapOf(
         "Mundo" to "الرحلة", "Patrimonio Mundial" to "العجائب", "Mapa para rascar" to "خريطة الرحلة", "Ciudades visitadas" to "المدن",
+        "Biblioteca de sueños" to "الأحلام", "Cartas" to "الرسائل", "Escribir una carta" to "كتابة رسالة", "Carta" to "رسالة", "Conocerte" to "اعرف نفسك", "Brújula política" to "السياسة", "Mapas" to "الخرائط", "Anoche" to "البارحة", "Selladas" to "المختومة", "Listas para abrir" to "جاهزة للفتح", "A otras personas" to "إلى الآخرين", "Del pasado" to "من الماضي",
         "Día" to "النهار", "Diario" to "اليوميات", "Gastos" to "بيت المال", "Entender" to "الحكمة", "Más" to "الديوان",
         "Llenar el día" to "المساء", "Biblioteca del diario" to "خزانة الكتب", "Entrada" to "صحيفة", "Tablero" to "الميزان",
         "Te falta hoy" to "ما بقي", "Hábitos" to "العادات", "Sueño" to "النوم", "Ánimo y cuerpo" to "الروح والجسد", "Hitos" to "الأيام",
@@ -363,6 +374,7 @@ object Temas {
     )
     private val MONGOL = mapOf(
         "Mundo" to "ДЭЛХИЙ", "Patrimonio Mundial" to "ДЭЛХИЙН ӨВ", "Mapa para rascar" to "АЯЛЛЫН ЗУРАГ", "Ciudades visitadas" to "ХОТУУД",
+        "Biblioteca de sueños" to "ЗҮҮД", "Cartas" to "ЗАХИА", "Escribir una carta" to "ЗАХИА БИЧИХ", "Carta" to "ЗАХИА", "Conocerte" to "ӨӨРИЙГӨӨ ТАНИХ", "Brújula política" to "УЛС ТӨР", "Mapas" to "ГАЗРЫН ЗУРАГ", "Anoche" to "ӨЧИГДӨР ШӨНӨ", "Selladas" to "ЛАЦТАЙ", "Listas para abrir" to "НЭЭХЭД БЭЛЭН", "A otras personas" to "БУСАДАД", "Del pasado" to "ӨНГӨРСӨНӨӨС",
         "Día" to "ӨДӨР", "Diario" to "ТЭМДЭГЛЭЛ", "Gastos" to "ЗАРДАЛ", "Entender" to "МЭДЛЭГ", "Más" to "ӨРГӨӨ",
         "Llenar el día" to "ОРОЙ", "Biblioteca del diario" to "СУДАР", "Entrada" to "ХУУДАС", "Tablero" to "ХЭМЖҮҮР",
         "Te falta hoy" to "ҮЛДСЭН АЖИЛ", "Hábitos" to "ЗАН ЗАНШИЛ", "Sueño" to "НОЙР", "Ánimo y cuerpo" to "СЭТГЭЛ, БИЕ", "Hitos" to "ГАВЬЯА",
@@ -372,6 +384,7 @@ object Temas {
     )
     private val RENACIMIENTO = mapOf(
         "Mundo" to "Il mondo", "Patrimonio Mundial" to "Meraviglie", "Mapa para rascar" to "Mappamondo", "Ciudades visitadas" to "Città",
+        "Biblioteca de sueños" to "Sogni", "Cartas" to "Lettere", "Escribir una carta" to "Scrivere una lettera", "Carta" to "Lettera", "Conocerte" to "Conosci te stesso", "Brújula política" to "Bussola politica", "Mapas" to "Mappe", "Anoche" to "Stanotte", "Selladas" to "Sigillate", "Listas para abrir" to "Pronte da aprire", "A otras personas" to "Ad altri", "Del pasado" to "Dal passato",
         "Hoy" to "Il foglio d'oggi", "Línea de tiempo" to "Ricordanze", "Ahora mismo estoy…" to "In questo momento…",
         "Día" to "Giornata", "Diario" to "Taccuino", "Gastos" to "Libro dei conti", "Entender" to "Studio", "Más" to "Bottega",
         "Llenar el día" to "A sera", "Biblioteca del diario" to "I codici", "Entrada" to "Foglio", "Tablero" to "Misure",
@@ -382,6 +395,7 @@ object Temas {
     )
     private val NAVIDAD = mapOf(
         "Mundo" to "Viajes", "Patrimonio Mundial" to "Maravillas", "Mapa para rascar" to "Mapa de los viajes", "Ciudades visitadas" to "Ciudades",
+        "Biblioteca de sueños" to "Sueños de Nochebuena", "Cartas" to "Cartas", "Escribir una carta" to "Escribir una carta", "Carta" to "Carta", "Conocerte" to "Quién eres", "Brújula política" to "Brújula política", "Mapas" to "Mapas del viaje", "Anoche" to "Anoche", "Selladas" to "Envueltas para después", "Listas para abrir" to "Listas para abrir", "A otras personas" to "Para los seres queridos", "Del pasado" to "Navidades pasadas",
         "Hoy" to "La carta de hoy", "Línea de tiempo" to "Los días del año", "Ahora mismo estoy…" to "Ahora mismo estoy…",
         "Día" to "El día", "Diario" to "Cartas", "Gastos" to "Regalos y gastos", "Entender" to "Balance del año", "Más" to "El taller",
         "Llenar el día" to "Junto al fuego", "Biblioteca del diario" to "Cartas guardadas", "Entrada" to "Carta", "Tablero" to "El árbol",
@@ -391,6 +405,7 @@ object Temas {
     )
     private val SEDA = mapOf(
         "Mundo" to "Caravanas", "Patrimonio Mundial" to "Maravillas de la ruta", "Mapa para rascar" to "Mapa del mercader", "Ciudades visitadas" to "Ciudades de paso",
+        "Biblioteca de sueños" to "Sueños de la caravana", "Cartas" to "Cartas de la ruta", "Escribir una carta" to "Escribir una carta", "Carta" to "Carta", "Conocerte" to "El viajero", "Brújula política" to "Consejo del caravasar", "Mapas" to "Mapas de la ruta", "Anoche" to "Anoche", "Selladas" to "Selladas", "Listas para abrir" to "Listas para abrir", "A otras personas" to "A otros viajeros", "Del pasado" to "Del pasado",
         "Hoy" to "El rollo de hoy", "Línea de tiempo" to "El camino recorrido", "Ahora mismo estoy…" to "En esta etapa…",
         "Día" to "Jornada de caravana", "Diario" to "Bitácora del viajero", "Gastos" to "Mercaderías", "Entender" to "El astrolabio", "Más" to "El caravasar",
         "Llenar el día" to "Bajo las estrellas", "Biblioteca del diario" to "Rollos de seda", "Entrada" to "Rollo", "Tablero" to "Carga de la caravana",
@@ -400,6 +415,7 @@ object Temas {
     )
     private val URSS = mapOf(
         "Mundo" to "INTERNACIONAL", "Patrimonio Mundial" to "PATRIMONIO DE LOS PUEBLOS", "Mapa para rascar" to "MAPA DE LA AMISTAD", "Ciudades visitadas" to "CIUDADES",
+        "Biblioteca de sueños" to "СНЫ · SUEÑOS", "Cartas" to "CORRESPONDENCIA", "Escribir una carta" to "ESCRIBIR UNA CARTA", "Carta" to "CARTA", "Conocerte" to "EXPEDIENTE PERSONAL", "Brújula política" to "CONCIENCIA POLÍTICA", "Mapas" to "MAPAS", "Anoche" to "ANOCHE", "Selladas" to "SELLADAS", "Listas para abrir" to "LISTAS PARA ABRIR", "A otras personas" to "A LOS CAMARADAS", "Del pasado" to "DEL PASADO",
         "Hoy" to "INFORME DE HOY", "Línea de tiempo" to "CRÓNICA DEL PLAN", "Ahora mismo estoy…" to "ESTADO DEL CAMARADA",
         "Día" to "PLAN DEL DÍA", "Diario" to "DIARIO DEL CAMARADA", "Gastos" to "ECONOMÍA PLANIFICADA", "Entender" to "ESTADÍSTICA", "Más" to "COMISARIADO",
         "Llenar el día" to "INFORME DE JORNADA", "Biblioteca del diario" to "ARCHIVO DEL PUEBLO", "Entrada" to "INFORME", "Tablero" to "CUMPLIMIENTO DEL PLAN",

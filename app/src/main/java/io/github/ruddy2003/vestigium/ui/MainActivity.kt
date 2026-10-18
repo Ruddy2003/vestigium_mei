@@ -74,7 +74,6 @@ import io.github.ruddy2003.vestigium.ui.pantallas.PantallaCalendario
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaEscalada
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaMapa
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaObra
-import io.github.ruddy2003.vestigium.ui.pantallas.PantallaCartas
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaDatos
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia
 import io.github.ruddy2003.vestigium.ui.pantallas.PantallaEscalas
@@ -206,12 +205,16 @@ internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Uni
 }
 
 /** Navegación sencilla: una pestaña activa y una pila de pantallas secundarias encima. */
-class Nav(val ir: (String) -> Unit, val atras: () -> Unit, val pestana: (String) -> Unit = {})
+class Nav(val ir: (String) -> Unit, val atras: () -> Unit, val pestana: (String) -> Unit = {}, val reemplazar: (String) -> Unit = {})
 
 @Composable
 private fun Raiz(pedida: String?, consumir: () -> Unit) {
     var pestana by remember { mutableStateOf(if (Repo.config.bienvenida_vista) "dia" else "mas") }
-    var pila by remember { mutableStateOf(if (Repo.config.bienvenida_vista) emptyList() else listOf("permisos")) }
+    // Al instalar: primero «Conocerte» (se puede omitir) y luego los permisos. Si ya se llenó o se omitió, no vuelve a salir.
+    var pila by remember {
+        val conocer = !Repo.config.conocer_visto && io.github.ruddy2003.vestigium.data.Perfiles.vacio(Repo.config.perfil)
+        mutableStateOf((if (Repo.config.bienvenida_vista) emptyList() else listOf("permisos")) + (if (conocer) listOf("conocer") else emptyList()))
+    }
 
     LaunchedEffect(pedida) {
         val p = pedida ?: return@LaunchedEffect
@@ -228,7 +231,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         consumir()
     }
 
-    val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() })
+    val nav = Nav(ir = { pila = pila + it }, atras = { pila = pila.dropLast(1) }, pestana = { pestana = it; pila = emptyList() },
+        reemplazar = { pila = if (pila.isEmpty()) listOf(it) else pila.dropLast(1) + it })
     BackHandler(enabled = pila.isNotEmpty()) { pila = pila.dropLast(1) }
 
     // Modo nocturno cálido: de 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo.
@@ -298,7 +302,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
             }
         },
         // Al leer una entrada, la página ocupa toda la pantalla.
-        bottomBar = { if (pila.lastOrNull() != "entrada") BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
+        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
         Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
@@ -323,7 +327,15 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "lugares" -> PantallaLugares(nav)
                     "habitos" -> PantallaHabitos(nav)
                     "experimentos" -> PantallaExperimentos(nav)
-                    "cartas" -> PantallaCartas(nav)
+                    "cartas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "cartas")
+                    "carta_nueva" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCartaNueva(nav)
+                    "conocer" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaConocer(nav)
+                    "politica" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaPolitica(nav)
+                    "mapas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaMapas(nav)
+                    "obras" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(nav)
+                    "carta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(nav)
+                    "sueno" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSueno(nav)
+                    "biblioteca_suenos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "suenos")
                     "reportes" -> PantallaReportes(nav)
                     "datos" -> PantallaDatos(nav)
                     "permisos" -> PantallaPermisos(nav)
@@ -352,7 +364,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "frases" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFrasesGuardadas(nav)
                     "noche" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(nav)
                     "entrada" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(nav)
-                    "biblioteca_diario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecaDiario(nav)
+                    "biblioteca_diario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "diario")
                     else -> Text("Pantalla desconocida: $actual")
                 }
                 }

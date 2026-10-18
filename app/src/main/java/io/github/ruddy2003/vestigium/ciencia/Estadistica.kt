@@ -122,7 +122,20 @@ object Estadistica {
             Variable("primera_comida_h", "Hora del primer alimento", "Nutrición"), Variable("ultima_comida_h", "Hora del último alimento", "Nutrición"),
             Variable("cafeina_ultima_h", "Hora de la última cafeína", "Nutrición"), Variable("gimnasio", "Entrené en el gimnasio (0/1)", "Cuerpo"),
             Variable("volumen_kg", "Volumen del entrenamiento (kg)", "Cuerpo"), Variable("series_gimnasio", "Series efectivas de gimnasio", "Cuerpo"),
+            Variable("obras_dia", "Obras a las que les dediqué tiempo", "Cultura"), Variable("lectura", "Leí un libro o artículo (0/1)", "Cultura"),
+            Variable("vi_pelicula_serie", "Vi una película o serie (0/1)", "Cultura"), Variable("jugue", "Jugué un videojuego (0/1)", "Cultura"),
+            Variable("obra_terminada", "Terminé un libro, película, serie o juego (0/1)", "Cultura"), Variable("calificacion_obra", "Calificación de lo que terminé (1 a 10)", "Cultura"),
+            Variable("citas_dia", "Citas y frases guardadas", "Cultura"),
+            Variable("ciudades_dia", "Ciudades distintas en el día", "Mundo"), Variable("fuera_de_casa", "Fuera de mi ciudad (0/1)", "Mundo"),
+            Variable("extranjero", "En otro país (0/1)", "Mundo"), Variable("ciudad_nueva", "Primera vez en una ciudad (0/1)", "Mundo"),
+            Variable("unesco", "Pasé por un sitio del Patrimonio Mundial (0/1)", "Mundo"),
+            Variable("carta_escrita", "Escribí una carta (0/1)", "Texto"), Variable("sueno_palabras", "Palabras del sueño escrito", "Sueño"),
         )
+        if (Repo.config.perfil.cercanas.isNotEmpty() || Repo.config.perfil.convivientes.isNotEmpty()) {
+            v += Variable("cercanos", "Personas cercanas mencionadas", "Social"); v += Variable("vi_familia", "Mencioné a mi familia (0/1)", "Social")
+            v += Variable("vi_pareja", "Mencioné a mi pareja (0/1)", "Social"); v += Variable("vi_amistades", "Mencioné a una amistad (0/1)", "Social")
+            v += Variable("vi_convivientes", "Mencioné a quien vive conmigo (0/1)", "Social")
+        }
         if (Repo.config.seguimiento_privado) {
             v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
         }
@@ -236,6 +249,69 @@ object Estadistica {
             val desde = filas.keys.firstOrNull() ?: return@runCatching
             Repo.escuchas(desde, "9999-12-31").groupBy { it.fecha }.forEach { (f, l) -> fila(f)["canciones"] = l.size.toDouble() }
         }
+        // Lo que leíste, viste y jugaste: desde el primer día con una obra marcada, los días sin nada cuentan como 0.
+        val obrasPorDia = HashMap<String, MutableList<io.github.ruddy2003.vestigium.data.Obra>>()
+        Repo.obras.forEach { o -> o.dias.forEach { f -> obrasPorDia.getOrPut(f) { ArrayList() }.add(o) } }
+        val terminadas = Repo.obras.filter { it.estado == "terminado" && it.fin != null }.groupBy { it.fin!! }
+        val primeraObra = (obrasPorDia.keys + terminadas.keys).minOrNull()
+        if (primeraObra != null) {
+            (Repo.dias.keys.filter { it >= primeraObra } + obrasPorDia.keys + terminadas.keys).toSet().forEach { f ->
+                val l = obrasPorDia[f].orEmpty(); val t = terminadas[f].orEmpty()
+                val r = fila(f)
+                r["obras_dia"] = l.size.toDouble()
+                r["lectura"] = b(l.any { it.tipo == "libro" || it.tipo == "articulo" } || t.any { it.tipo == "libro" || it.tipo == "articulo" })
+                r["vi_pelicula_serie"] = b(l.any { it.tipo == "pelicula" || it.tipo == "serie" } || t.any { it.tipo == "pelicula" || it.tipo == "serie" })
+                r["jugue"] = b(l.any { it.tipo == "juego" } || t.any { it.tipo == "juego" })
+                r["obra_terminada"] = b(t.isNotEmpty())
+                r["calificacion_obra"] = media(t.mapNotNull { it.calificacion?.toDouble() })
+            }
+        }
+        val citas = HashMap<String, Int>()
+        Repo.obras.forEach { o -> o.citas.forEach { c -> if (c.fecha.isNotBlank()) citas.merge(c.fecha, 1, Int::plus) } }
+        Repo.config.frases_guardadas.forEach { citas.merge(it.fecha, 1, Int::plus) }
+        citas.forEach { (f, n) -> fila(f)["citas_dia"] = n.toDouble() }
+        // Cartas y sueños escritos.
+        val cartas = Repo.cartas.groupingBy { it.escrita }.eachCount()
+        val primeraCarta = cartas.keys.minOrNull()
+        if (primeraCarta != null) Repo.dias.keys.filter { it >= primeraCarta }.forEach { f -> fila(f)["carta_escrita"] = b((cartas[f] ?: 0) > 0) }
+        cartas.forEach { (f, _) -> fila(f)["carta_escrita"] = 1.0 }
+        for ((f, d) in Repo.dias) if (d.sueno_recordado || d.sueno_texto.isNotBlank()) fila(f)["sueno_palabras"] = Texto.palabras(d.sueno_texto).toDouble()
+        // Las personas cercanas que dijiste en «Conocerte», cuando aparecen en el diario o en los momentos.
+        val perfil = Repo.config.perfil
+        if (perfil.cercanas.isNotEmpty() || perfil.convivientes.isNotEmpty()) {
+            val textos = HashMap<String, StringBuilder>()
+            Repo.dias.forEach { (f, d) -> textos.getOrPut(f) { StringBuilder() }.append(d.nota).append(' ') }
+            Repo.momentos.forEach { m -> textos.getOrPut(m.fecha) { StringBuilder() }.append(m.texto).append(' ') }
+            for ((f, t) in textos) {
+                val rel = Texto.personas(t.toString()).map { Texto.canon(it, eq) }.distinct().mapNotNull { io.github.ruddy2003.vestigium.data.Perfiles.relacion(it, perfil)?.let { r -> it to r } }
+                val r = fila(f)
+                r["cercanos"] = rel.size.toDouble()
+                r["vi_familia"] = b(rel.any { it.second == "familia" }); r["vi_pareja"] = b(rel.any { it.second == "pareja" })
+                r["vi_amistades"] = b(rel.any { it.second == "amistad" }); r["vi_convivientes"] = b(rel.any { it.first in perfil.convivientes })
+            }
+        }
+        // Dónde estuviste: ciudades, fuera de casa, otro país, primera vez y Patrimonio Mundial (de tus ubicaciones).
+        runCatching {
+            val ctx = io.github.ruddy2003.vestigium.data.Mundo.app ?: return@runCatching
+            // En el hilo principal solo se usa lo ya calculado: recorrer todas las ubicaciones tarda.
+            val enMain = android.os.Looper.myLooper() == android.os.Looper.getMainLooper()
+            val diario = (if (enMain) io.github.ruddy2003.vestigium.data.Mundo.diarioListo() else io.github.ruddy2003.vestigium.data.Mundo.diario(ctx)) ?: return@runCatching
+            if (diario.isEmpty()) return@runCatching
+            val r0 = io.github.ruddy2003.vestigium.data.Mundo.resumenFijo ?: (if (enMain) null else io.github.ruddy2003.vestigium.data.Mundo.resumen(ctx))
+            val casa = io.github.ruddy2003.vestigium.data.Perfiles.casa(perfil) ?: r0?.ciudades?.firstOrNull()?.let { it.lat to it.lon }
+            val paisCasa = perfil.pais.ifBlank { r0?.paises?.firstOrNull()?.clave.orEmpty() }
+            for ((d, m) in diario) {
+                val f = Fechas.iso(java.time.LocalDate.ofEpochDay(d.toLong()))
+                val ciudades = m.ciudades.filter { it.second >= 0.5 || it.second == 0.0 }.map { it.first }
+                val paises = m.paises.filter { it.second >= 0.5 || it.second == 0.0 }.map { it.first }
+                val r = fila(f)
+                r["ciudades_dia"] = ciudades.size.toDouble()
+                if (casa != null && ciudades.isNotEmpty()) r["fuera_de_casa"] = b(ciudades.none { io.github.ruddy2003.vestigium.data.Geo.distanciaM(it.lat, it.lon, casa.first, casa.second) < 40_000 })
+                if (paisCasa.isNotBlank() && paises.isNotEmpty()) r["extranjero"] = b(paises.any { it.clave != paisCasa })
+                r["ciudad_nueva"] = b(m.ciudadesNuevas.isNotEmpty())
+                r["unesco"] = b(m.sitios.isNotEmpty())
+            }
+        }
         return filas
     }
 
@@ -281,6 +357,11 @@ object Estadistica {
         setOf("aqi_us", "pm25"),
         setOf("gasto_total", "gasto_imprevisto"),
         setOf("impulso", "recaida"),
+        setOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada", "calificacion_obra"),
+        setOf("ciudades_dia", "fuera_de_casa", "extranjero", "ciudad_nueva", "unesco", "distancia_km", "vehiculo_min"),
+        setOf("cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes", "personas", "palabras"),
+        setOf("sueno_palabras", "sueno_recordado", "sueno_valencia"),
+        setOf("carta_escrita", "palabras"),
     )
 
     fun obvia(a: Variable, b: Variable): Boolean =

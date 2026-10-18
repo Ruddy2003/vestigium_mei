@@ -190,8 +190,87 @@ data class PantallaDia(
     val por_app_min: Map<String, Int> = emptyMap(),
 )
 
+/**
+ * Una carta. Sin destinatario es para ti en el futuro: queda sellada hasta [abrir_en] y no se puede leer antes.
+ * Con destinatario ([para], una @persona) es una carta a alguien: se guarda abierta en la biblioteca de cartas.
+ */
 @Serializable
-data class Carta(val id: String, val escrita: String, val abrir_en: String, val texto: String, val abierta: Boolean = false)
+data class Carta(
+    val id: String,
+    val escrita: String,
+    val abrir_en: String,
+    val texto: String,
+    val abierta: Boolean = false,
+    /** A quién va, sin @ («ana»). Vacío: a ti mismo, en el futuro. */
+    val para: String = "",
+    /** Hora a la que se escribió (HH:mm). */
+    val hora: String = "",
+    /** Tema con el que se escribió. */
+    val tema: String = "",
+    /** Ciudad donde se escribió, si se sabía. */
+    val lugar: String = "",
+    /** Día en que se abrió (AAAA-MM-DD). */
+    val abierta_el: String? = null,
+)
+
+/** Para ti en el futuro (la que se sella). */
+val Carta.alFuturo: Boolean get() = para.isBlank()
+/** Sellada: para ti, sin abrir y todavía no llega su fecha. No se puede leer ni aparece en búsquedas. */
+fun Carta.sellada(hoy: String = Fechas.diaLogico()): Boolean = alFuturo && !abierta && abrir_en > hoy
+/** Ya llegó su fecha pero no la has abierto. */
+fun Carta.lista(hoy: String = Fechas.diaLogico()): Boolean = alFuturo && !abierta && abrir_en <= hoy
+/** Se puede leer: las de otras personas siempre; las tuyas, ya abiertas. */
+val Carta.legible: Boolean get() = !alFuturo || abierta
+
+/** Una mascota con la que vives o que es tuya. */
+@Serializable
+data class Mascota(val nombre: String, val especie: String = "")
+
+/** Alguien a quien ves seguido: [nombre] como lo etiquetas en el diario (sin @), y qué es para ti. */
+@Serializable
+data class PersonaCercana(val nombre: String, val relacion: String = "")
+
+/**
+ * Lo grande de tu vida, de la pantalla «Conocerte»: con quién vives, a quién ves, a qué te dedicas.
+ * Sirve para los análisis (los días que ves a tu familia, los que pasas fuera de tu ciudad…). Vacío = no lo dijiste.
+ */
+@Serializable
+data class Perfil(
+    val nombre: String = "",
+    /** AAAA-MM-DD. */
+    val nacimiento: String = "",
+    /** Ciudad donde vives, con su país (código de dos letras) y su punto en el mapa. */
+    val ciudad: String = "",
+    val pais: String = "",
+    val ciudad_lat: Double? = null,
+    val ciudad_lon: Double? = null,
+    /** Con quién vives: solo, pareja, hijos, padres, hermanos, abuelos, familia, companeros, amistades. */
+    val vive_con: List<String> = emptyList(),
+    /** Nombres (como @etiquetas) de quienes viven contigo. */
+    val convivientes: List<String> = emptyList(),
+    val mascotas: List<Mascota> = emptyList(),
+    /** Las personas que más ves. */
+    val cercanas: List<PersonaCercana> = emptyList(),
+    val pareja: String = "",
+    val ocupacion: List<String> = emptyList(),
+    val ocupacion_detalle: String = "",
+    val horario: String = "",
+    val cronotipo: String = "",
+    val ejercicio: String = "",
+    val alcohol: String = "",
+    val tabaco: String = "",
+    val cafe: String = "",
+    /** Lo que esté pasando en tu vida ahora (una mudanza, un trabajo nuevo, un duelo…). */
+    val momento: String = "",
+)
+
+/** Un cambio en «Conocerte»: qué campo, cómo estaba y cómo quedó, y cuándo. */
+@Serializable
+data class CambioPerfil(val fecha: String, val campo: String, val antes: String, val despues: String)
+
+/** Un test político: las respuestas (1 a 5) y la posición en cada eje (−100 a 100). */
+@Serializable
+data class TestPolitico(val fecha: String, val respuestas: Map<String, Int>, val ejes: Map<String, Double>)
 
 @Serializable
 data class Experimento(
@@ -284,6 +363,13 @@ data class Config(
     val fondo_telefono_auto: Boolean = false,
     /** Dónde poner el fondo del teléfono: «ambas», «inicio» o «bloqueo». */
     val fondo_telefono_donde: String = "ambas",
+    /** «Conocerte»: lo grande de tu vida, y la historia de sus cambios. */
+    val perfil: Perfil = Perfil(),
+    val perfil_historial: List<CambioPerfil> = emptyList(),
+    /** Ya se mostró «Conocerte» (llenado u omitido). */
+    val conocer_visto: Boolean = false,
+    /** Tests políticos, uno por año. */
+    val politica: List<TestPolitico> = emptyList(),
 )
 
 /** Una frase del día guardada: el texto tal como se mostró, el tema donde apareció y cuándo se guardó. */

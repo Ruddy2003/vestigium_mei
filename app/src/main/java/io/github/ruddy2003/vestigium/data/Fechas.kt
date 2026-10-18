@@ -48,6 +48,11 @@ object Fechas {
         val mes = d.month.getDisplayName(TextStyle.FULL, ES)
         return "$dia, ${d.dayOfMonth} de $mes"
     }
+    /** «18 de octubre de 2026». */
+    fun larga(s: String): String {
+        val d = parse(s)
+        return "${d.dayOfMonth} de ${d.month.getDisplayName(TextStyle.FULL, ES)} de ${d.year}"
+    }
     fun corto(s: String): String {
         val d = parse(s)
         return d.dayOfWeek.getDisplayName(TextStyle.SHORT, ES).replace(".", "") + " " + d.dayOfMonth + " " +

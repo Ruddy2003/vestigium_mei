@@ -51,6 +51,10 @@ fun PantallaMas(nav: Nav) {
         u == null || java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(u.fecha), java.time.LocalDate.now()) >= i.frecuenciaDias
     }
     Hoja("Más", buscar = { nav.ir("buscar") }) {
+        Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            RecuadroMapas(nav)
+            RecuadroObras(nav)
+        }
         Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1) {
             Tarjeta {
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
@@ -58,12 +62,11 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMenu("Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados") { nav.ir("fuerza") }
                 HorizontalDivider()
-                val leyendo = Repo.obras.count { it.estado == "en_curso" }
-                FilaMenu("Obras", "Libros, películas, series, juegos y artículos, con portada" + if (leyendo > 0) " · $leyendo en curso" else "") { nav.ir("biblioteca") }
-                HorizontalDivider()
                 FilaMenu("Hábitos", "${Repo.config.habitos.count { it.activo }} activos · se marcan en la hoja de la noche") { nav.ir("habitos") }
                 HorizontalDivider()
-                FilaMenu("Cartas al futuro", "${Repo.cartas.count { !it.abierta }} esperando su fecha") { nav.ir("cartas") }
+                FilaMenu("Cartas", "${Repo.cartas.count { !it.abierta }} selladas para tu yo del futuro · ${Repo.cartas.count { it.para.isNotBlank() }} a otras personas") { nav.ir("cartas") }
+                HorizontalDivider()
+                FilaMenu("Biblioteca de sueños", "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos") { nav.ir("biblioteca_suenos") }
                 HorizontalDivider()
                 FilaMenu("Frases guardadas", (Repo.config.frases_guardadas.size + Repo.obras.sumOf { o -> o.citas.count { it.favorita } }).let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }) { nav.ir("frases") }
             }
@@ -74,9 +77,12 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMenu("Prueba de reacción", "30 segundos para medir tu estado mental") { nav.ir("reaccion") }
                 HorizontalDivider()
-                FilaMenu("Lugares", "${Repo.lugares.size} lugares marcados") { nav.ir("lugares") }
+                val u = io.github.ruddy2003.vestigium.data.Politica.ultimo()
+                FilaMenu("Brújula política", if (u == null) "Un test al año para ver cómo cambian tus posiciones" else "Último: ${Fechas.corto(u.fecha)} ${u.fecha.take(4)}" +
+                    if (io.github.ruddy2003.vestigium.data.Politica.toca()) " · toca el de este año" else "") { nav.ir("politica") }
                 HorizontalDivider()
-                FilaMenu("Mundo", "Ciudades y países donde has estado, mapa para rascar y Patrimonio Mundial") { nav.ir("mundo") }
+                FilaMenu("Conocerte", if (io.github.ruddy2003.vestigium.data.Perfiles.vacio(Repo.config.perfil)) "Con quién vives, a quién ves, a qué te dedicas" else
+                    "Lo grande de tu vida · ${Repo.config.perfil_historial.size} cambios guardados") { nav.ir("conocer") }
             }
         }
         Seccion("Sistema", numero = 3) {
@@ -144,44 +150,6 @@ fun PantallaHabitos(nav: Nav) {
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun PantallaCartas(nav: Nav) {
-    var texto by remember { mutableStateOf("") }
-    var plazo by remember { mutableStateOf(365L) }
-    var leyendo by remember { mutableStateOf<Carta?>(null) }
-    val hoy = Fechas.diaLogico()
-    Hoja("Cartas al futuro", nav.atras, "Escribe algo para tu yo de dentro de un tiempo. Queda sellado hasta la fecha que elijas.") {
-        val listas = Repo.cartas.filter { !it.abierta && it.abrir_en <= hoy }
-        if (listas.isNotEmpty()) Seccion("Listas para abrir") {
-            listas.forEach { c ->
-                Tarjeta(Modifier.padding(bottom = 8.dp)) {
-                    Text("Escrita el ${Fechas.titulo(c.escrita)}", style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = { Repo.guardarCarta(c.copy(abierta = true)); leyendo = c.copy(abierta = true) }) { Text("Abrir") }
-                }
-            }
-        }
-        leyendo?.let { c -> Seccion("Carta del ${Fechas.titulo(c.escrita)}") { Tarjeta { Text(c.texto, style = MaterialTheme.typography.bodyLarge) } } }
-        Seccion("Escribir una carta") {
-            OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 6, placeholder = { Text("Querido yo del futuro…") })
-            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf(30L to "1 mes", 182L to "6 meses", 365L to "1 año", 1826L to "5 años").forEach { (d, n) -> Ficha(n, plazo == d) { plazo = d } }
-            }
-            BotonPrincipal("Sellar carta", Modifier.fillMaxWidth().padding(top = 10.dp), habilitado = texto.isNotBlank()) {
-                Repo.guardarCarta(Carta(Repo.nuevoId(), hoy, Fechas.sumar(hoy, plazo), texto.trim())); texto = ""
-            }
-        }
-        val selladas = Repo.cartas.filter { !it.abierta && it.abrir_en > hoy }.sortedBy { it.abrir_en }
-        Seccion("Selladas") {
-            if (selladas.isEmpty()) Vacio("Ninguna por ahora.")
-            selladas.forEach { Ayuda("Escrita el ${it.escrita} · se abre el ${it.abrir_en}", Modifier.padding(vertical = 4.dp)) }
-        }
-        val abiertas = Repo.cartas.filter { it.abierta }.sortedByDescending { it.escrita }
-        if (abiertas.isNotEmpty()) Seccion("Ya abiertas") {
-            abiertas.forEach { c -> TextButton(onClick = { leyendo = c }) { Text("Del ${c.escrita}") } }
         }
     }
 }

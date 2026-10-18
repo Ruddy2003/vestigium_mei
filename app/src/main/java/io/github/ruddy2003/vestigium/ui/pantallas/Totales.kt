@@ -54,6 +54,8 @@ import io.github.ruddy2003.vestigium.ui.Vacio
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.data.alFuturo
+import io.github.ruddy2003.vestigium.data.legible
 
 @Composable
 fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
@@ -102,6 +104,7 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
             r == null -> Ayuda("Sumando…", Modifier.padding(top = 12.dp))
             busqueda.isNotBlank() -> {
                 EnDiario(busqueda, desde, hoy) { f -> Seleccion.abrir(nav, f) }
+                EnCartas(busqueda, desde, hoy) { id -> Seleccion.carta = id; nav.ir("carta") }
                 Resultados(r, busqueda) { i, e -> abierta = i to e }
             }
             r.grupos.isEmpty() && r.indices.isEmpty() -> Vacio("Nada registrado en este periodo.")
@@ -261,5 +264,29 @@ private fun EnDiario(q: String, desde: String, hasta: String, abrir: (String) ->
             }
         }
         if (hallados.size > 20) Ayuda("y ${hallados.size - 20} días más.")
+    }
+}
+
+/** Las cartas que se pueden leer (a otras personas, o tuyas ya abiertas). Las selladas nunca salen aquí. */
+@Composable
+private fun EnCartas(q: String, desde: String, hasta: String, abrir: (String) -> Unit) {
+    val nq = Totales.normal(q.trim())
+    if (nq.length < 2) return
+    val hallados = remember(nq, desde, hasta, Repo.cartas) {
+        Repo.cartas.filter { it.legible && it.escrita in desde..hasta && (Totales.normal(it.texto).contains(nq) || Totales.normal("@" + it.para).contains(nq)) }
+            .sortedByDescending { it.escrita }
+    }
+    if (hallados.isEmpty()) return
+    Etiqueta("en tus cartas · ${hallados.size}")
+    Tarjeta {
+        hallados.take(12).forEachIndexed { k, c ->
+            if (k > 0) HorizontalDivider()
+            Column(Modifier.fillMaxWidth().clickable { abrir(c.id) }.padding(vertical = 8.dp)) {
+                Text((if (c.alFuturo) "A mi yo del futuro" else "Para @${c.para}") + " · " + Totales.fecha(c.escrita), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                val t = c.texto; val n = Totales.normal(t); val i = n.indexOf(nq).coerceAtLeast(0)
+                val a = (i - 50).coerceAtLeast(0); val b = (i + nq.length + 70).coerceAtMost(t.length)
+                Text((if (a > 0) "…" else "") + t.substring(a, b).replace("\n", " ") + (if (b < t.length) "…" else ""), style = MaterialTheme.typography.bodySmall)
+            }
+        }
     }
 }

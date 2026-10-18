@@ -307,7 +307,7 @@ private fun Lista(obras: List<Obra>, nav: Nav, porAnio: Boolean = false) {
                     ).joinToString(" · ")
                     Text(detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                o.calificacion?.let { Text("$it/10", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) }
+                o.calificacion?.let { Calificacion(it, tam = 12.dp) }
             }
         }
     }
@@ -511,6 +511,7 @@ fun PantallaObra(nav: Nav) {
         Seccion("Qué te dejó", numero = 4, latin = "IVDICIVM") {
             Tarjeta {
                 Etiqueta("Calificación")
+                Calificacion(o.calificacion, Modifier.padding(bottom = 10.dp), tam = 24.dp)
                 Escala(o.calificacion, 1, 10, mapOf(1 to "pésimo", 4 to "flojo", 6 to "bueno", 8 to "excelente", 10 to "de mis favoritos")) { g(o.copy(calificacion = it)) }
                 Etiqueta("Etiquetas")
                 ListaEtiquetas(o.etiquetas, "ciencia_ficcion, ensayo, recomendado_por_ana", normalizar = { Texto.slug(it) }) { g(o.copy(etiquetas = it)) }

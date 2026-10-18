@@ -10,6 +10,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         Repo.init(this)
+        io.github.ruddy2003.vestigium.data.Mundo.app = this
         Avisos.crearCanales(this)
         Programador.asegurar(this)
         runCatching { Geocercas.registrar(this) }

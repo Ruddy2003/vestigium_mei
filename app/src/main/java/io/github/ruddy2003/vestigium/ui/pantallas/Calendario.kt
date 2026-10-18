@@ -62,6 +62,11 @@ object Seleccion {
     var diaAbierto by mutableStateOf<String?>(null)
     /** Entrada abierta en la biblioteca del diario. */
     var entrada by mutableStateOf<String?>(null)
+    /** Sueño abierto en la biblioteca de sueños, y carta abierta en la de cartas. */
+    var sueno by mutableStateOf<String?>(null)
+    var carta by mutableStateOf<String?>(null)
+    /** Pestaña de la biblioteca: «diario», «suenos» o «cartas». */
+    var biblioteca by mutableStateOf("diario")
     fun abrir(nav: Nav, fecha: String) { pedida = fecha; ultimoMes = Fechas.mesDe(fecha); nav.pestana("dia") }
 }
 

@@ -517,13 +517,27 @@ object Frases {
 
     fun guardada(f: Frase): Boolean = Repo.config.frases_guardadas.any { it.texto == f.texto && it.autor == f.autor }
 
-    /** Guarda o quita la frase de la lista de favoritas. Devuelve true si quedó guardada. */
-    fun alternar(f: Frase, tema: TemaId = Estilo.tema): Boolean {
+    /** Guarda o quita la frase de la lista de favoritas. [fecha] es el día al que pertenece la frase. Devuelve true si quedó guardada. */
+    fun alternar(f: Frase, tema: TemaId = Estilo.tema, fecha: String = Fechas.diaLogico()): Boolean {
         val ya = guardada(f)
         Repo.cambiarConfig { c ->
             c.copy(frases_guardadas = if (ya) c.frases_guardadas.filterNot { it.texto == f.texto && it.autor == f.autor }
-                else c.frases_guardadas + FraseGuardada(f.texto, f.original, f.autor, tema.id, Fechas.diaLogico()))
+                else c.frases_guardadas + FraseGuardada(f.texto, f.original, f.autor, tema.id, fecha))
         }
         return !ya
+    }
+
+    /**
+     * Las frases con ♥ de un día, para la hoja del diario: la frase del día que guardaste y las citas que marcaste ese día.
+     * Se muestran como epígrafe; no se guardan en el texto del diario.
+     */
+    fun deLaHoja(fecha: String): List<Frase> {
+        val delDia = Repo.config.frases_guardadas.filter { it.fecha == fecha && it.tema != "kindle" }.map { Frase(it.original, it.texto, it.autor) }
+        val citas = Repo.obras.flatMap { o ->
+            o.citas.filter { it.favorita && it.fecha == fecha }.map { c ->
+                Frase(null, c.texto, listOfNotNull(o.autor.substringBefore(",").substringBefore(";").trim().ifBlank { null }, o.titulo.ifBlank { null }).joinToString(", "))
+            }
+        }
+        return (delDia + citas).distinctBy { it.texto }.take(3)
     }
 }

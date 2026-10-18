@@ -50,7 +50,7 @@ import kotlin.math.sin
 
 /** El corazón de la frase del día: late al tocarlo y suelta una chispa de puntos cuando se guarda. */
 @Composable
-fun CorazonFrase(f: Frases.Frase, color: Color, modifier: Modifier = Modifier) {
+fun CorazonFrase(f: Frases.Frase, color: Color, modifier: Modifier = Modifier, fecha: String = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) {
     val guardada = Frases.guardada(f)
     val sentir = rememberSentir()
     val scope = rememberCoroutineScope()
@@ -59,7 +59,7 @@ fun CorazonFrase(f: Frases.Frase, color: Color, modifier: Modifier = Modifier) {
     val animar = Repo.config.animaciones
     Box(
         modifier.size(40.dp).clip(CircleShape).clickable {
-            val ahora = Frases.alternar(f)
+            val ahora = Frases.alternar(f, fecha = fecha)
             sentir(if (ahora) Sentidos.Evento.ELEGIR else Sentidos.Evento.TOQUE)
             if (animar) scope.launch { escala.snapTo(0.55f); escala.animateTo(1f, spring(dampingRatio = 0.32f, stiffness = 420f)) }
             if (animar && ahora) scope.launch { brote.snapTo(0f); brote.animateTo(1f, tween(520)) }

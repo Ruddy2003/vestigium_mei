@@ -27,6 +27,7 @@ import io.github.ruddy2003.vestigium.data.Dia
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
+import io.github.ruddy2003.vestigium.data.alFuturo
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -38,6 +39,20 @@ import java.util.zip.ZipOutputStream
 object LibroDiario {
     /** Entradas con texto, de la más reciente a la más antigua. */
     fun entradas(): List<Dia> = Repo.dias.values.filter { it.nota.isNotBlank() }.sortedByDescending { it.fecha }
+
+    /** Noches con un sueño escrito, de la más reciente a la más antigua. */
+    fun suenos(): List<Dia> = Repo.dias.values.filter { it.sueno_texto.isNotBlank() }.sortedByDescending { it.fecha }
+
+    /** Una línea con lo que se anotó del sueño: qué tan agradable, lucidez, vividez, tipo, temas y cómo dormiste. */
+    fun metaSueno(d: Dia): String = listOfNotNull(
+        d.sueno_valencia?.let { "agradable $it/7" },
+        d.sueno_lucidez?.let { id -> Catalogo.SUENO_LUCIDEZ.firstOrNull { it.id == id }?.let { "lucidez " + it.nombre.lowercase() } },
+        d.sueno_vividez?.let { id -> Catalogo.SUENO_VIVIDEZ.firstOrNull { it.id == id }?.nombre?.lowercase() },
+        d.sueno_tipo?.let { id -> Catalogo.SUENO_TIPO.firstOrNull { it.id == id }?.nombre?.lowercase() },
+        d.sueno_temas.takeIf { it.isNotEmpty() }?.joinToString(", "),
+        d.sueno_calidad?.let { "dormiste $it/5" },
+        Repo.salud[d.fecha]?.sueno_min?.let { "${it / 60} h ${"%02d".format(it % 60)} según el reloj" },
+    ).joinToString(" · ")
 
     /** Una línea con lo medido ese día: ánimo, energía, sueño, contexto, hitos. */
     fun meta(d: Dia): String = listOfNotNull(
@@ -269,6 +284,132 @@ object LibroDiario {
         }
         pagina?.let { doc.finishPage(it) }
         val f = File(carpeta(ctx), nombre(lista, "pdf"))
+        f.outputStream().use { doc.writeTo(it) }
+        doc.close()
+        return f
+    }
+
+    // ------------------------------------------------------------------ una carta en PDF
+
+    /**
+     * Una carta en PDF con el papel del tema: el lugar, la fecha y la hora arriba, a quién va, el texto, la firma
+     * y el lacre con el emblema al final.
+     */
+    fun cartaPdf(ctx: Context, c: io.github.ruddy2003.vestigium.data.Carta): File {
+        val tema = Estilo.tema
+        val p = pagina(tema)
+        val e = esquemaDe(tema, tema.soloOscuro)
+        val fu = fuentes(tema)
+        val tfTitulo = runCatching { ResourcesCompat.getFont(ctx, fu.titulo) }.getOrNull() ?: Typeface.SERIF
+        val tfTexto = runCatching { ResourcesCompat.getFont(ctx, fu.texto) }.getOrNull() ?: Typeface.SERIF
+        val fondo = p.color.toArgb(); val tinta = p.tinta.toArgb(); val tenue = p.tenue.toArgb(); val acento = p.acento.toArgb()
+        val papel = p.fondo?.let { runCatching { android.graphics.BitmapFactory.decodeResource(ctx.resources, it) }.getOrNull() }
+        val doc = PdfDocument()
+        val margen = 64f
+        val ancho = (ANCHO - 2 * margen).toInt()
+        var pagina: PdfDocument.Page? = null
+        var num = 0
+        var y = margen
+        val pie = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 8f; color = tenue }
+        val marco = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = acento; style = Paint.Style.STROKE; strokeWidth = 1.2f; alpha = 150 }
+        fun nueva() {
+            pagina?.let { doc.finishPage(it) }
+            num++
+            val pg = doc.startPage(PdfDocument.PageInfo.Builder(ANCHO, ALTO, num).create())
+            val cv = pg.canvas
+            cv.drawColor(fondo)
+            // El papel del tema recortado para cubrir la hoja.
+            papel?.let { b ->
+                val k = maxOf(ANCHO.toFloat() / b.width, ALTO.toFloat() / b.height)
+                val w = b.width * k; val h = b.height * k
+                cv.drawBitmap(b, null, android.graphics.RectF((ANCHO - w) / 2, (ALTO - h) / 2, (ANCHO + w) / 2, (ALTO + h) / 2), Paint(Paint.FILTER_BITMAP_FLAG))
+            }
+            cv.drawRect(22f, 22f, ANCHO - 22f, ALTO - 22f, marco)
+            cv.drawRect(27f, 27f, ANCHO - 27f, ALTO - 27f, Paint(marco).apply { strokeWidth = 0.6f; alpha = 90 })
+            cv.drawText("Vestigium Mei · carta", margen, ALTO - 36f, pie)
+            val n = Estilo.numeral(num)
+            cv.drawText(n, ANCHO - margen - pie.measureText(n), ALTO - 36f, pie)
+            pagina = pg; y = margen
+        }
+        fun lienzo() = pagina!!.canvas
+        fun layout(t: CharSequence, paint: TextPaint, interlineado: Float = 1.3f, alineado: Layout.Alignment = Layout.Alignment.ALIGN_NORMAL) =
+            StaticLayout.Builder.obtain(t, 0, t.length, paint, ancho).setAlignment(alineado).setLineSpacing(0f, interlineado).setIncludePad(false).build()
+        fun bloque(l: StaticLayout) {
+            var linea = 0
+            while (linea < l.lineCount) {
+                val disponible = ALTO - margen - 24 - y
+                var fin = linea
+                while (fin < l.lineCount && l.getLineBottom(fin) - l.getLineTop(linea) <= disponible) fin++
+                if (fin == linea) { nueva(); continue }
+                val cv = lienzo()
+                cv.save(); cv.translate(margen, y - l.getLineTop(linea))
+                cv.clipRect(0f, l.getLineTop(linea).toFloat(), ancho.toFloat(), l.getLineBottom(fin - 1).toFloat())
+                l.draw(cv); cv.restore()
+                y += l.getLineBottom(fin - 1) - l.getLineTop(linea)
+                linea = fin
+                if (linea < l.lineCount) nueva()
+            }
+        }
+        val pFecha = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 10.5f; color = tinta; textSkewX = -0.12f }
+        val pSolemne = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 9f; color = acento; letterSpacing = 0.08f }
+        val pPara = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 17f; color = acento }
+        val pNota = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 9f; color = tenue }
+        val clasica = tema in setOf(TemaId.HELENO, TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.NAPOLEON, TemaId.NAVIDAD, TemaId.SEDA, TemaId.BOTANICO, TemaId.GOTICO, TemaId.ANDALUS, TemaId.RENACIMIENTO, TemaId.ROMANO)
+        val pTexto = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = if (clasica) 12.5f else 11f; color = tinta }
+        val pFirma = TextPaint(pTexto).apply { typeface = tfTitulo; textSize = pTexto.textSize * 1.35f; color = tinta }
+
+        nueva()
+        // Emblema a la izquierda; lugar, fecha y hora a la derecha.
+        val emb = 40f
+        lienzo().save(); lienzo().translate(margen, y)
+        CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(lienzo()), Size(emb, emb)) { dibujarEmblema(tema, 0.3f, e, tema.soloOscuro) }
+        lienzo().restore()
+        val lugarFecha = listOfNotNull(c.lugar.ifBlank { null }, Fechas.larga(c.escrita)).joinToString(", ")
+        val l1 = layout(lugarFecha + (if (c.hora.isNotBlank()) " · ${c.hora}" else ""), pFecha, 1.2f, Layout.Alignment.ALIGN_OPPOSITE)
+        lienzo().save(); lienzo().translate(margen, y + 4f); l1.draw(lienzo()); lienzo().restore()
+        val l2 = layout(Estilo.fecha(c.escrita), pSolemne, 1.2f, Layout.Alignment.ALIGN_OPPOSITE)
+        lienzo().save(); lienzo().translate(margen, y + 8f + l1.height); l2.draw(lienzo()); lienzo().restore()
+        y += maxOf(emb, 8f + l1.height + l2.height) + 28f
+        // A quién va.
+        bloque(layout(if (c.alFuturo) "Para mi yo del ${Fechas.larga(c.abrir_en)}" else "Para @${c.para}", pPara, 1.15f))
+        if (c.alFuturo) { y += 2f; bloque(layout("Sellada el ${Fechas.larga(c.escrita)}" + (c.abierta_el?.let { " · abierta el ${Fechas.larga(it)}" } ?: ""), pNota)) }
+        y += 16f
+        val cx = ANCHO / 2f
+        val linea = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = acento; strokeWidth = 0.9f }
+        lienzo().drawLine(margen, y, cx - 8f, y, linea); lienzo().drawLine(cx + 8f, y, ANCHO - margen, y, linea)
+        lienzo().drawPath(android.graphics.Path().apply { moveTo(cx, y - 4f); lineTo(cx + 4f, y); lineTo(cx, y + 4f); lineTo(cx - 4f, y); close() }, Paint(linea).apply { style = Paint.Style.FILL })
+        y += 20f
+        // El texto, con capitular en el scriptorium y el gótico.
+        val t = c.texto.trim()
+        val cuerpo: CharSequence = if ((tema == TemaId.MEDIEVAL || tema == TemaId.GOTICO) && t.isNotEmpty()) SpannableString(t).apply {
+            setSpan(ForegroundColorSpan(acento), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(RelativeSizeSpan(2.2f), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(TypefaceSpan(tfTitulo), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        } else t
+        bloque(layout(cuerpo, pTexto, if (tema == TemaId.CIBER || tema == TemaId.REFUGIO) 1.35f else 1.45f))
+        // Firma y lacre.
+        y += 26f
+        val nombre = Repo.config.perfil.nombre.ifBlank { "yo" }
+        bloque(layout("— $nombre", pFirma, 1.1f, Layout.Alignment.ALIGN_OPPOSITE))
+        if (y + 90f > ALTO - margen - 24) nueva()
+        y += 18f
+        val r = 30f
+        val cv = lienzo()
+        val lacre = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = acento }
+        val borde = android.graphics.Path()
+        for (i in 0..36) { val a = 2 * Math.PI * i / 36; val rr = r * (1f + 0.07f * kotlin.math.sin(a * 5 + 1).toFloat()); val px = cx + rr * kotlin.math.cos(a).toFloat(); val py = y + r + rr * kotlin.math.sin(a).toFloat(); if (i == 0) borde.moveTo(px, py) else borde.lineTo(px, py) }
+        borde.close()
+        cv.drawPath(borde, lacre)
+        cv.drawCircle(cx, y + r, r * 0.78f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.BLACK; alpha = 45; style = Paint.Style.STROKE; strokeWidth = r * 0.08f })
+        val k = r * 0.62f
+        cv.save(); cv.translate(cx - k, y + r - k)
+        CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(cv), Size(2 * k, 2 * k)) { dibujarEmblema(tema, 0.3f, e.copy(primary = Color.White.copy(alpha = 0.9f), secondary = Color.White.copy(alpha = 0.7f)), true) }
+        cv.restore()
+        y += 2 * r + 14f
+        bloque(layout(colofon(tema), pNota.apply { color = acento }, 1.2f, Layout.Alignment.ALIGN_CENTER))
+        pagina?.let { doc.finishPage(it) }
+        val quien = if (c.alFuturo) "futuro" else Texto.slug(c.para)
+        val f = File(carpeta(ctx), "carta_${c.escrita}_$quien.pdf")
         f.outputStream().use { doc.writeTo(it) }
         doc.close()
         return f

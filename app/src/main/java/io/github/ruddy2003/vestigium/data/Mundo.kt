@@ -213,6 +213,8 @@ object Mundo {
     class Estancia(val clave: String, val nombre: String, val pais: String, val lat: Double, val lon: Double) {
         var horas = 0.0
         val dias = HashSet<Int>()
+        /** Horas registradas cada día (epochDay → horas). */
+        val horasDia = HashMap<Int, Double>()
         var diasManuales = 0
         var manual = false
         val totalDias: Int get() = dias.size + diasManuales
@@ -225,7 +227,8 @@ object Mundo {
     }
 
     /** Horas por cuadro de ~1 km y por día; se calcula una vez y se reutiliza para cualquier periodo. */
-    private class Bruto(val celdas: HashMap<Long, HashMap<Int, Float>>, val centro: HashMap<Long, DoubleArray>, val sitios: HashMap<Int, Int>, val muestras: Int, val hasta: Long)
+    private class Bruto(val celdas: HashMap<Long, HashMap<Int, Float>>, val centro: HashMap<Long, DoubleArray>, val sitios: HashMap<Int, Int>, val muestras: Int, val hasta: Long,
+                        val diasSitio: HashMap<Int, HashSet<Int>> = HashMap())
 
     @Volatile private var bruto: Bruto? = null
     private val ubicacionCelda = HashMap<Long, Pair<Int, String?>>()
@@ -249,6 +252,7 @@ object Mundo {
         val celdas = HashMap<Long, HashMap<Int, Float>>()
         val centro = HashMap<Long, DoubleArray>()
         val vistos = HashMap<Int, Int>()
+        val diasSitio = HashMap<Int, HashSet<Int>>()
         // Rejilla de 0.1° con los sitios cercanos a cada cuadro, para revisar cada ubicación en un instante.
         val sitios = sitios(ctx)
         val porCuadro = HashMap<Long, MutableList<Sitio>>()
@@ -283,11 +287,15 @@ object Mundo {
             }
             pMs = ms; pLat = lat; pLon = lon
             if (prec <= 500) porCuadro[floor(lat * 10).toLong() * 10_000 + floor(lon * 10).toLong()]?.forEach { s ->
-                if (s.i !in vistos && Geo.distanciaM(lat, lon, s.la, s.lo) <= s.radioM) vistos[s.i] = cal.dia(ms)
+                if (Geo.distanciaM(lat, lon, s.la, s.lo) <= s.radioM) {
+                    val d = cal.dia(ms)
+                    if (s.i !in vistos) vistos[s.i] = d
+                    diasSitio.getOrPut(s.i) { HashSet() }.add(d)
+                }
             }
         }
         if (pMs >= 0) sumar(pMs, pLat, pLon, 0.25)
-        return Bruto(celdas, centro, vistos, n, System.currentTimeMillis()).also { bruto = it }
+        return Bruto(celdas, centro, vistos, n, System.currentTimeMillis(), diasSitio).also { bruto = it }
     }
 
     /** Solo para las capturas de diseño: un resumen ya hecho, sin leer ubicaciones. */
@@ -309,8 +317,8 @@ object Mundo {
         val porCiudad = LinkedHashMap<String, Estancia>()
         val porPais = LinkedHashMap<String, Estancia>()
         for ((k, porDia) in b.celdas) {
-            var h = 0.0; val dias = ArrayList<Int>()
-            for ((d, hh) in porDia) if (desdeDia == null || d >= desdeDia) { h += hh; dias += d }
+            var h = 0.0; val dias = ArrayList<Int>(); val enDia = ArrayList<Pair<Int, Float>>()
+            for ((d, hh) in porDia) if (desdeDia == null || d >= desdeDia) { h += hh; dias += d; enDia += d to hh }
             if (h <= 0) continue
             val c = b.centro[k]!!
             val lat = c[0] / c[2]; val lon = c[1] / c[2]
@@ -321,8 +329,8 @@ object Mundo {
                 synchronized(ubicacionCelda) { ubicacionCelda[k] = r }
                 r
             }
-            if (pa != null) porPais.getOrPut(pa) { Estancia(pa, pais(ctx, pa)?.nombre ?: pa, pa, lat, lon) }.let { it.horas += h; it.dias.addAll(dias) }
-            if (ci >= 0) porCiudad.getOrPut("c$ci") { Estancia("c$ci", cs.nombre(ci), pa ?: cs.pais(ci), cs.lat[ci] / 1e5, cs.lon[ci] / 1e5) }.let { it.horas += h; it.dias.addAll(dias) }
+            if (pa != null) porPais.getOrPut(pa) { Estancia(pa, pais(ctx, pa)?.nombre ?: pa, pa, lat, lon) }.let { it.horas += h; it.dias.addAll(dias); enDia.forEach { (d, hh) -> it.horasDia.merge(d, hh.toDouble(), Double::plus) } }
+            if (ci >= 0) porCiudad.getOrPut("c$ci") { Estancia("c$ci", cs.nombre(ci), pa ?: cs.pais(ci), cs.lat[ci] / 1e5, cs.lon[ci] / 1e5) }.let { it.horas += h; it.dias.addAll(dias); enDia.forEach { (d, hh) -> it.horasDia.merge(d, hh.toDouble(), Double::plus) } }
         }
         // Las que añadiste a mano.
         for (m in Repo.config.ciudades_visitadas) {
@@ -332,11 +340,11 @@ object Mundo {
             e.manual = true
             val diasRango = rango(m.desde, m.hasta)
             val enPeriodo = diasRango.filter { desdeDia == null || it >= desdeDia }
-            if (diasRango.isNotEmpty()) e.dias.addAll(enPeriodo)
+            if (diasRango.isNotEmpty()) { e.dias.addAll(enPeriodo); enPeriodo.forEach { e.horasDia.putIfAbsent(it, 0.0) } }
             else if (desdeDia == null) e.diasManuales += (m.dias ?: 1)
             val pe = porPais.getOrPut(m.pais) { Estancia(m.pais, pais(ctx, m.pais)?.nombre ?: m.pais, m.pais, m.lat, m.lon) }
             pe.manual = true
-            if (diasRango.isNotEmpty()) pe.dias.addAll(enPeriodo) else if (desdeDia == null) pe.diasManuales += (m.dias ?: 1)
+            if (diasRango.isNotEmpty()) { pe.dias.addAll(enPeriodo); enPeriodo.forEach { pe.horasDia.putIfAbsent(it, 0.0) } } else if (desdeDia == null) pe.diasManuales += (m.dias ?: 1)
         }
         for (cod in Repo.config.paises_rascados) porPais.getOrPut(cod) { Estancia(cod, pais(ctx, cod)?.nombre ?: cod, cod, 0.0, 0.0) }.manual = true
         val tapados = Repo.config.paises_tapados.toSet()
@@ -348,6 +356,50 @@ object Mundo {
         Repo.config.unesco_marcados.forEach { m -> val d = runCatching { Fechas.parse(m.fecha).toEpochDay().toInt() }.getOrNull() ?: 0; if (desdeDia == null || d >= desdeDia) sitios.putIfAbsent(m.id, d) }
         return Resumen(ciudades, paises, sitios, b.muestras, desdeDia)
     }
+
+    // =====================================================================
+    //  Un día en el mundo: para los análisis del día
+    // =====================================================================
+
+    /** Contexto de la app para los cálculos que no reciben uno (el panel de análisis). Se pone al arrancar. */
+    @Volatile var app: Context? = null
+
+    /** Dónde estuviste un día: ciudades y países con sus horas, lo que fue primera vez y los sitios del Patrimonio Mundial. */
+    class DiaMundo(val ciudades: List<Pair<Estancia, Double>>, val paises: List<Pair<Estancia, Double>>, val ciudadesNuevas: List<Estancia>,
+                   val paisesNuevos: List<Estancia>, val sitios: List<Sitio>, val sitiosNuevos: Set<Int>)
+
+    /** Todos los días con ubicación, ya resumidos (epochDay → día). Se recalcula cuando cambian las ubicaciones. */
+    @Volatile private var diarioCache: Pair<Long, Map<Int, DiaMundo>>? = null
+
+    fun diario(ctx: Context): Map<Int, DiaMundo> {
+        val b = recorrer(ctx)
+        diarioCache?.let { if (it.first == b.hasta) return it.second }
+        val r = resumen(ctx)
+        val sitiosPorId = sitios(ctx).associateBy { it.i }
+        val ciu = HashMap<Int, MutableList<Pair<Estancia, Double>>>(); val pai = HashMap<Int, MutableList<Pair<Estancia, Double>>>()
+        r.ciudades.forEach { e -> e.horasDia.forEach { (d, h) -> ciu.getOrPut(d) { ArrayList() }.add(e to h) } }
+        r.paises.forEach { e -> e.horasDia.forEach { (d, h) -> pai.getOrPut(d) { ArrayList() }.add(e to h) } }
+        val sit = HashMap<Int, MutableList<Sitio>>()
+        val descartados = Repo.config.unesco_descartados.toSet()
+        b.diasSitio.forEach { (id, dias) -> if (id !in descartados) sitiosPorId[id]?.let { s -> dias.forEach { d -> sit.getOrPut(d) { ArrayList() }.add(s) } } }
+        Repo.config.unesco_marcados.forEach { m -> runCatching { Fechas.parse(m.fecha).toEpochDay().toInt() }.getOrNull()?.let { d -> sitiosPorId[m.id]?.let { s -> sit.getOrPut(d) { ArrayList() }.let { l -> if (l.none { it.i == s.i }) l.add(s) } } } }
+        val dias = ciu.keys + pai.keys + sit.keys
+        val res = HashMap<Int, DiaMundo>()
+        for (d in dias) {
+            val c = ciu[d].orEmpty().sortedByDescending { it.second }; val p = pai[d].orEmpty().sortedByDescending { it.second }
+            val s = sit[d].orEmpty()
+            res[d] = DiaMundo(c, p, c.map { it.first }.filter { it.primero == d }, p.map { it.first }.filter { it.primero == d }, s,
+                s.filter { r.sitios[it.i] == d }.map { it.i }.toSet())
+        }
+        diarioCache = b.hasta to res
+        return res
+    }
+
+    /** Lo ya calculado, sin leer ubicaciones (para el hilo principal). */
+    fun diarioListo(): Map<Int, DiaMundo>? = diarioCache?.second
+
+    /** Un día (AAAA-MM-DD). */
+    fun delDia(ctx: Context, fecha: String): DiaMundo? = runCatching { diario(ctx)[Fechas.parse(fecha).toEpochDay().toInt()] }.getOrNull()
 
     private fun rango(desde: String?, hasta: String?): List<Int> {
         val a = desde?.let { runCatching { Fechas.parse(it).toEpochDay().toInt() }.getOrNull() } ?: return emptyList()

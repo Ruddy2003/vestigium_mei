@@ -281,7 +281,7 @@ class Capturas {
     @Test fun objetos2() = objetos(listOf(TemaId.CIBER, TemaId.URSS, TemaId.LABORATORIO, TemaId.NAPOLEON, TemaId.NAVIDAD, TemaId.DISTOPIA, TemaId.REFUGIO))
     @Test fun objetos3() = objetos(listOf(TemaId.GOTICO, TemaId.ESPACIO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.BOTANICO))
 
-    private fun biblioteca(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecaDiario(navVacia) }
+    private fun biblioteca(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") }
     @Test fun bibliotecaMedieval() = biblioteca(TemaId.MEDIEVAL, false)
     @Test fun bibliotecaRomano() = biblioteca(TemaId.ROMANO, true)
     @Test fun bibliotecaCiber() = biblioteca(TemaId.CIBER, true)
@@ -448,6 +448,163 @@ class Capturas {
     @Test fun presentacionGotico() = presentacion(TemaId.GOTICO, false)
     @Test fun presentacionCiber() = presentacion(TemaId.CIBER, true)
     @Test fun presentacionAndalus() = presentacion(TemaId.ANDALUS, false)
+
+    // ------------------------------------------------------------ sueños, cartas, conocerte, brújula, mapas y obras
+
+    private fun suenosEjemplo() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        val textos = listOf(
+            "Estaba en una estación de tren que también era la casa de mis abuelos. @ana me decía que el tren salía por la ventana y no me sorprendía.",
+            "Volaba bajito sobre un mar verde. Sabía que era un sueño y traté de subir más, pero el cielo era de tela.",
+            "Llegaba tarde a un examen de una materia que nunca había cursado. Las preguntas estaban en un idioma inventado. #escuela",
+            "Una ciudad de noche llena de faroles; caminaba con @luis buscando una librería que cambiaba de calle.",
+            "Un perro enorme me acompañaba por el bosque y me enseñaba un camino de piedras blancas.",
+        )
+        val lucidez = listOf("no", "total", "no", "parcial", "no")
+        val tipo = listOf("mundano", "bizarro_surreal", "ansioso_pesadilla", "recurrente", "mundano")
+        val d = Repo.dias.toMutableMap()
+        (0 until 14).forEach { k ->
+            val f = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -(k * 2L + 1))
+            val base = d[f] ?: io.github.ruddy2003.vestigium.data.Dia(fecha = f)
+            d[f] = base.copy(sueno_recordado = true, sueno_texto = textos[k % textos.size], sueno_valencia = 2 + (k * 3) % 6, sueno_lucidez = lucidez[k % 5],
+                sueno_tipo = tipo[k % 5], sueno_vividez = if (k % 2 == 0) "muy_vivido" else "moderado", sueno_temas = if (k % 3 == 0) listOf("@ana", "#casa") else emptyList())
+        }
+        Repo.diasEnMemoria(d)
+    }
+    private fun suenos(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3400) { suenosEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "suenos") }
+    @Test fun suenosGotico() = suenos(TemaId.GOTICO, false)
+    @Test fun suenosRomano() = suenos(TemaId.ROMANO, false)
+    @Test fun suenosNapoleon() = suenos(TemaId.NAPOLEON, false)
+    @Test fun suenosCiber() = suenos(TemaId.CIBER, true)
+    @Test fun suenosDistopia() = suenos(TemaId.DISTOPIA, false)
+    @Test fun suenosBotanico() = suenos(TemaId.BOTANICO, true)
+    private fun suenoLectura(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 2400) {
+        suenosEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.sueno = null
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaSueno(navVacia)
+    }
+    @Test fun suenoLecturaMedieval() = suenoLectura(TemaId.MEDIEVAL, false)
+    @Test fun suenoLecturaEspacio() = suenoLectura(TemaId.ESPACIO, true)
+    @Test fun suenoLecturaRefugio() = suenoLectura(TemaId.REFUGIO, true)
+    @Test fun suenoLecturaAndalus() = suenoLectura(TemaId.ANDALUS, false)
+    @Test fun escritorSuenoRenacimiento() = pantalla(TemaId.RENACIMIENTO, false, 2400) {
+        io.github.ruddy2003.vestigium.ui.EscritorTema("2026-10-16", "Caminaba por un taller lleno de máquinas de madera que se movían solas.", {}, {}, TemaId.RENACIMIENTO,
+            modo = io.github.ruddy2003.vestigium.ui.Escrito.SUENO)
+    }
+
+    private fun cartasEjemplo() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun d(k: Long) = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, k)
+        Repo.cartasEnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.Carta("k1", d(-30), d(335), "Querido yo de dentro de un año: ojalá ya hayas terminado la tesis.", hora = "22:14", lugar = "San Luis Potosí"),
+            io.github.ruddy2003.vestigium.data.Carta("k2", d(-400), d(-2), "Hace más de un año te escribo desde la mesa de la cocina.", hora = "07:40", lugar = "Rennes"),
+            io.github.ruddy2003.vestigium.data.Carta("k3", d(-800), d(-70), "Si estás leyendo esto, ya pasaron dos años. Espero que sigas escalando.", abierta = true, abierta_el = d(-70), hora = "23:02"),
+            io.github.ruddy2003.vestigium.data.Carta("k4", d(-5), d(-5), "Ana: gracias por la tarde de ayer. Me acordé de cuando nos perdimos buscando la librería.", abierta = true, para = "ana", hora = "21:40", lugar = "San Luis Potosí", abierta_el = d(-5)),
+            io.github.ruddy2003.vestigium.data.Carta("k5", d(-60), d(-60), "Luis: te debo el café y la conversación de los planes.", abierta = true, para = "luis", hora = "18:05", abierta_el = d(-60)),
+            io.github.ruddy2003.vestigium.data.Carta("k6", d(-3), d(1826), "Para dentro de cinco años: ¿dónde vives?", hora = "10:12"),
+        ))
+    }
+    private fun cartas(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3400) { cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "cartas") }
+    @Test fun cartasMedieval() = cartas(TemaId.MEDIEVAL, false)
+    @Test fun cartasCiber() = cartas(TemaId.CIBER, true)
+    @Test fun cartasNavidad() = cartas(TemaId.NAVIDAD, false)
+    @Test fun cartasBotanico() = cartas(TemaId.BOTANICO, false)
+    @Test fun cartasDistopia() = cartas(TemaId.DISTOPIA, false)
+    @Test fun cartasSeda() = cartas(TemaId.SEDA, true)
+
+    private fun sobres(temas: List<TemaId>) = captura(TemaId.ROMANO, false, alto = 3000) {
+        cartasEjemplo()
+        val l = Repo.cartas
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            temas.forEach { t ->
+                androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
+                    Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf(l[0], l[1], l[3]).forEach { c ->
+                            io.github.ruddy2003.vestigium.ui.SobreCarta(c, Modifier.weight(1f).aspectRatio(if (c.abierta) 1.05f else 1.5f), tema = t) {}
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @Test fun sobres1() = sobres(listOf(TemaId.ROMANO, TemaId.HELENO, TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.ORDEN, TemaId.LABORATORIO))
+    @Test fun sobres2() = sobres(listOf(TemaId.COLONOS, TemaId.NAPOLEON, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.SEDA, TemaId.URSS))
+    @Test fun sobres3() = sobres(listOf(TemaId.GOTICO, TemaId.ESPACIO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.CIBER))
+
+    private fun cartaLectura(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 2400) {
+        Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Javier")))
+        cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.carta = "k4"
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(navVacia)
+    }
+    @Test fun cartaLecturaGotico() = cartaLectura(TemaId.GOTICO, false)
+    @Test fun cartaLecturaSeda() = cartaLectura(TemaId.SEDA, true)
+    @Test fun cartaLecturaUrss() = cartaLectura(TemaId.URSS, false)
+    @Test fun cartaLecturaCiber() = cartaLectura(TemaId.CIBER, true)
+    private fun cartaNueva(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 2600) {
+        io.github.ruddy2003.vestigium.ui.BorradorCarta.texto = "Querido yo del futuro: hoy fue un buen día. Escribí, escalé y cené con amigos."
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaCartaNueva(navVacia)
+    }
+    @Test fun cartaNuevaBotanico() = cartaNueva(TemaId.BOTANICO, false)
+    @Test fun cartaNuevaEspacio() = cartaNueva(TemaId.ESPACIO, true)
+    @Test fun escritorCartaNapoleon() = pantalla(TemaId.NAPOLEON, false, 2400) {
+        io.github.ruddy2003.vestigium.ui.EscritorTema("2026-10-18", "Querido yo del futuro: te escribo desde la mesa de siempre.", {}, {}, TemaId.NAPOLEON, modo = io.github.ruddy2003.vestigium.ui.Escrito.CARTA,
+            encabezado = { p -> io.github.ruddy2003.vestigium.ui.EncabezadoCarta(TemaId.NAPOLEON, p, "2026-10-18", "11:33", "San Luis Potosí", "", "2027-10-18") }, textoBoton = "listo")
+    }
+
+    private val perfilEjemplo = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Javier", nacimiento = "1998-05-12", ciudad = "San Luis Potosí", pais = "MX",
+        vive_con = listOf("padres", "hermanos"), convivientes = listOf("mama", "pedro"), mascotas = listOf(io.github.ruddy2003.vestigium.data.Mascota("Canela", "perro")),
+        cercanas = listOf(io.github.ruddy2003.vestigium.data.PersonaCercana("ana", "pareja"), io.github.ruddy2003.vestigium.data.PersonaCercana("luis", "amistad")),
+        pareja = "pareja", ocupacion = listOf("estudio", "trabajo"), ocupacion_detalle = "doctorado en psicología", horario = "flexible", cronotipo = "noche",
+        ejercicio = "3_4", alcohol = "ocasional", tabaco = "no", cafe = "2_3", momento = "Terminando la tesis.")
+    @Test fun conocerRomano() = pantalla(TemaId.ROMANO, false, 5200) {
+        Repo.configEnMemoria(Repo.config.copy(conocer_visto = false))
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaConocer(navVacia)
+    }
+    @Test fun conocerLaboratorio() = pantalla(TemaId.LABORATORIO, false, 5600) {
+        Repo.configEnMemoria(Repo.config.copy(conocer_visto = true, perfil = perfilEjemplo, perfil_historial = listOf(
+            io.github.ruddy2003.vestigium.data.CambioPerfil("2026-09-01", "pareja", "Sin pareja", "En pareja"),
+            io.github.ruddy2003.vestigium.data.CambioPerfil("2026-06-15", "ciudad", "Rennes, FR", "San Luis Potosí, MX"))))
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaConocer(navVacia)
+    }
+
+    private fun testsEjemplo(): List<io.github.ruddy2003.vestigium.data.TestPolitico> {
+        val P = io.github.ruddy2003.vestigium.data.Politica
+        fun t(f: String, k: Int) = P.AFIRMACIONES.associate { a -> a.id to (((a.id.hashCode() + k * 7) and 0x7fffffff) % 5 + 1) }.let { r -> io.github.ruddy2003.vestigium.data.TestPolitico(f, r, P.ejes(r)) }
+        return listOf(t("2023-10-20", 1), t("2024-10-11", 2), t("2025-10-15", 4))
+    }
+    @Test fun politicaUrss() = pantalla(TemaId.URSS, false, 4200) {
+        obrasEjemplo(); Repo.configEnMemoria(Repo.config.copy(politica = testsEjemplo()))
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaPolitica(navVacia)
+    }
+    @Test fun politicaHeleno() = pantalla(TemaId.HELENO, true, 4200) {
+        Repo.configEnMemoria(Repo.config.copy(politica = testsEjemplo()))
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaPolitica(navVacia)
+    }
+    @Test fun politicaVaciaMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaPolitica(navVacia) }
+
+    @Test fun mapasBotanico() = pantalla(TemaId.BOTANICO, false, 3400) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMapas(navVacia) }
+    @Test fun mapasEspacio() = pantalla(TemaId.ESPACIO, true, 3400) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMapas(navVacia) }
+    @Test fun masGotico() = pantalla(TemaId.GOTICO, false, 3600) { mundoEjemplo(); obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    @Test fun obrasGaleriaMedieval() = pantalla(TemaId.MEDIEVAL, false, 3000) { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(navVacia) }
+    @Test fun obrasGaleriaCiber() = pantalla(TemaId.CIBER, true, 3000) { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(navVacia) }
+    @Test fun calificaciones() = captura(TemaId.ROMANO, false, alto = 2000) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            TemaId.entries.forEach { t ->
+                androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
+                    Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Text(t.nombre, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.weight(1f))
+                        io.github.ruddy2003.vestigium.ui.pantallas.Calificacion(7, tam = 18.dp, tema = t)
+                        io.github.ruddy2003.vestigium.ui.pantallas.Calificacion(10, tam = 18.dp, tema = t)
+                    }
+                }
+            }
+        }
+    }
+    @Test fun epigrafeMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) {
+        val ayer = io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1)
+        Repo.configEnMemoria(Repo.config.copy(frases_guardadas = listOf(io.github.ruddy2003.vestigium.data.FraseGuardada("Quien no sabe callar, no sabe hablar.", null, "Refrán castellano", "medieval", ayer))))
+        io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.entrada = null
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(navVacia)
+    }
 }
 
 @Composable

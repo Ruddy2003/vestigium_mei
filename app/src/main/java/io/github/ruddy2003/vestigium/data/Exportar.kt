@@ -126,6 +126,26 @@ object Exportar {
             c.unesco_descartados.map { linkedMapOf<String, Any?>("tipo" to "unesco_no_cuenta", "id" to it.toString(), "nombre" to null, "pais" to null, "lat" to null, "lon" to null, "desde" to null, "hasta" to null, "dias" to null, "nota" to null) }
     }
 
+    /** Las cartas. Las que siguen selladas van sin texto: no se pueden leer antes de su fecha. */
+    fun filasCartas(): List<Map<String, Any?>> = Repo.cartas.sortedBy { it.escrita + it.hora }.map { c ->
+        linkedMapOf<String, Any?>("id" to c.id, "escrita" to c.escrita, "hora" to c.hora.ifBlank { null }, "para" to c.para.ifBlank { null }, "abrir_en" to c.abrir_en,
+            "abierta" to c.abierta, "abierta_el" to c.abierta_el, "lugar" to c.lugar.ifBlank { null }, "tema" to c.tema.ifBlank { null },
+            "palabras" to Texto.palabras(c.texto), "texto" to if (c.legible) c.texto else null)
+    }
+
+    fun filasPerfil(): List<Map<String, Any?>> {
+        val hoy = Fechas.diaLogico()
+        return Perfiles.campos(Repo.config.perfil).map { (k, v) -> linkedMapOf<String, Any?>("tipo" to "actual", "fecha" to hoy, "campo" to k, "valor" to v.ifBlank { null }, "antes" to null, "despues" to null) } +
+            Repo.config.perfil_historial.map { c -> linkedMapOf<String, Any?>("tipo" to "cambio", "fecha" to c.fecha, "campo" to c.campo, "valor" to null, "antes" to c.antes.ifBlank { null }, "despues" to c.despues.ifBlank { null }) }
+    }
+
+    fun filasPolitica(): List<Map<String, Any?>> = Repo.config.politica.sortedBy { it.fecha }.map { t ->
+        val r = linkedMapOf<String, Any?>("fecha" to t.fecha)
+        Politica.EJES.forEach { e -> r[e.id] = t.ejes[e.id] }
+        Politica.AFIRMACIONES.forEach { a -> r["r_${a.id}"] = t.respuestas[a.id] }
+        r
+    }
+
     fun filasCitas() = Repo.obras.flatMap { o -> o.citas.map { c ->
         linkedMapOf<String, Any?>("id" to c.id, "obra_id" to o.id, "tipo" to o.tipo, "titulo" to o.titulo, "autor" to o.autor, "texto" to c.texto,
             "pagina" to c.pagina.ifBlank { null }, "fecha" to c.fecha.ifBlank { null }, "favorita" to c.favorita)
@@ -362,6 +382,10 @@ object Exportar {
         val wa0 = Repo.chats.groupBy { it.fecha }
         val sub0 = Repo.subrayados.filter { it.fecha != null }.groupingBy { it.fecha!! }.eachCount()
         val can0 = runCatching { Repo.escuchas("0000-01-01", "9999-12-31").filter { (it.ms ?: 30_000) >= 30_000 }.groupingBy { it.fecha }.eachCount() }.getOrDefault(emptyMap())
+        // Cultura, mundo, cartas y cercanos: se calculan igual que en los análisis.
+        val nuevas = listOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada", "calificacion_obra", "citas_dia", "ciudades_dia", "fuera_de_casa",
+            "extranjero", "ciudad_nueva", "unesco", "carta_escrita", "sueno_palabras", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes")
+        val est = runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel() }.getOrDefault(emptyMap())
         return fechas.map { f ->
             val d = Repo.dias[f]; val s = Repo.salud[f]; val p = Repo.pantalla[f]; val e = Repo.entorno[f]
             val ft = Repo.fotos[f]; val ag = Repo.agenda[f]; val nt = Repo.notifs[f]; val ac = Repo.actividad[f]
@@ -404,6 +428,8 @@ object Exportar {
             r["primera_comida_h"] = nu?.primera?.let { horaTexto(it) }; r["ultima_comida_h"] = nu?.ultima?.let { horaTexto(it) }
             r["cafeina_ultima_h"] = nu?.cafeina_ultima?.let { horaTexto(it) }
             r["gimnasio"] = en != null && en.series > 0; r["gimnasio_min"] = en?.minutos; r["series_gimnasio"] = en?.series_efectivas; r["volumen_kg"] = en?.volumen_kg
+            val x = est[f]
+            nuevas.forEach { k -> r[k] = x?.get(k) }
             r
         }
     }
@@ -462,6 +488,9 @@ object Exportar {
         Tabla("vm_biblioteca.csv", "Libros, películas, series, juegos y artículos", filasBiblioteca()),
         Tabla("vm_citas.csv", "Citas de tus obras y frases guardadas con ♥", filasCitas()),
         Tabla("vm_mundo.csv", "Ciudades añadidas a mano, países rascados y sitios del Patrimonio Mundial marcados", filasMundo()),
+        Tabla("vm_cartas.csv", "Cartas: a tu yo del futuro y a otras personas (las selladas, sin su texto)", filasCartas()),
+        Tabla("vm_perfil.csv", "Conocerte: cómo está ahora y cada cambio con su fecha", filasPerfil()),
+        Tabla("vm_politica.csv", "Brújula política: un test por año, ejes y respuestas", filasPolitica()),
         Tabla("vm_comunicacion.csv", "Llamadas y SMS por día (solo conteos)", filasComunicacion()),
         Tabla("vm_conexiones.csv", "Wifi, audio, carga, batería y luz por día", filasConexiones()),
         Tabla("vm_subrayados.csv", "Subrayados y notas de Kindle", filasSubrayados()),

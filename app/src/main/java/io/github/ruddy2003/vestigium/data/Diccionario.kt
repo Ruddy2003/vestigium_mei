@@ -155,6 +155,24 @@ object Diccionario {
         "calentamiento" to "Serie de calentamiento (0/1)", "peso_kg" to "Peso (kg)", "rir" to "Repeticiones en reserva", "e1rm_kg" to "1RM estimado con Epley (kg), series de hasta 12 reps",
         "duracion_s" to "Duración (s)", "distancia_m" to "Distancia (m)", "peso_base_kg" to "Peso base del ejercicio (kg)",
         "gimnasio" to "Entrenaste en el gimnasio (0/1)", "gimnasio_min" to "Minutos de gimnasio", "series_gimnasio" to "Series efectivas en el gimnasio",
+        // Cultura, mundo, cartas y personas cercanas (panel)
+        "obras_dia" to "Obras a las que les dedicaste tiempo ese día", "lectura" to "Leíste un libro o artículo (0/1)", "vi_pelicula_serie" to "Viste una película o serie (0/1)",
+        "jugue" to "Jugaste un videojuego (0/1)", "obra_terminada" to "Terminaste una obra ese día (0/1)", "calificacion_obra" to "Calificación media de lo que terminaste (1 a 10)",
+        "citas_dia" to "Citas copiadas y frases guardadas ese día", "ciudades_dia" to "Ciudades distintas con al menos media hora", "fuera_de_casa" to "Fuera de tu ciudad (a más de 40 km) (0/1)",
+        "extranjero" to "En un país distinto al tuyo (0/1)", "ciudad_nueva" to "Primera vez en una ciudad (0/1)", "unesco" to "Pasaste por un sitio del Patrimonio Mundial (0/1)",
+        "carta_escrita" to "Escribiste una carta ese día (0/1)", "sueno_palabras" to "Palabras del sueño escrito", "cercanos" to "Personas cercanas (de «Conocerte») mencionadas",
+        "vi_familia" to "Mencionaste a tu familia (0/1)", "vi_pareja" to "Mencionaste a tu pareja (0/1)", "vi_amistades" to "Mencionaste a una amistad (0/1)",
+        "vi_convivientes" to "Mencionaste a quien vive contigo (0/1)",
+        // Cartas
+        "vm_cartas.csv:para" to "A quién va (sin @); vacío = a ti en el futuro", "escrita" to "Día en que se escribió", "abrir_en" to "Día desde el que se puede abrir",
+        "abierta" to "Ya se abrió (0/1)", "abierta_el" to "Día en que se abrió", "vm_cartas.csv:lugar" to "Ciudad donde se escribió", "vm_cartas.csv:tema" to "Tema de la app al escribirla",
+        "vm_cartas.csv:texto" to "Texto de la carta (vacío mientras siga sellada)",
+        // Conocerte
+        "campo" to "Qué dato de «Conocerte»", "valor" to "Cómo está ahora", "antes" to "Cómo estaba", "despues" to "Cómo quedó",
+        // Brújula política
+        "vm_politica.csv:economia" to "Eje economía: −100 igualdad y Estado, +100 mercado y empresa", "vm_politica.csv:autoridad" to "Eje autoridad: −100 libertad individual, +100 orden y autoridad",
+        "vm_politica.csv:valores" to "Eje valores: −100 cambio, +100 tradición", "vm_politica.csv:mundo" to "Eje mundo: −100 apertura, +100 soberanía",
+        "vm_politica.csv:ambiente" to "Eje ambiente: −100 proteger el ambiente, +100 crecimiento primero",
     )
 
     private fun describir(archivo: String, col: String): String {
@@ -165,6 +183,7 @@ object Diccionario {
             col.startsWith("hab_") -> "Hábito cumplido: ${Repo.config.habitos.firstOrNull { it.id == col.removePrefix("hab_") }?.nombre ?: col.removePrefix("hab_")} (0/1)"
             col.startsWith("m_") -> "Momentos de tipo ${col.removePrefix("m_")}"
             col.startsWith("item_") -> "Respuesta al ítem ${col.removePrefix("item_")}"
+            archivo == "vm_politica.csv" && col.startsWith("r_") -> Politica.AFIRMACIONES.firstOrNull { it.id == col.removePrefix("r_") }?.let { "«${it.texto}» (1 muy en desacuerdo a 5 muy de acuerdo)" } ?: col
             col.startsWith("puntaje_") -> "Puntaje ${col.removePrefix("puntaje_")}"
             col.startsWith("app_") -> "Notificaciones de ${col.removePrefix("app_").replace('_', ' ')}"
             col.startsWith("wifi_") -> "Minutos en la red ${col.removePrefix("wifi_").replace('_', ' ')}"
