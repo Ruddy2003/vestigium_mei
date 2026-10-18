@@ -81,7 +81,8 @@ object FotosLugar {
             runCatching {
                 ctx.contentResolver.openInputStream(uri)?.use { s ->
                     val exif = ExifInterface(s)
-                    val ll = exif.latLong
+                    val f = FloatArray(2)
+                    val ll = if (exif.getLatLong(f)) doubleArrayOf(f[0].toDouble(), f[1].toDouble()) else null
                     if (ll != null && valido(ll[0], ll[1])) {
                         val ms = if (tomada > 0) tomada else fechaExif(exif) ?: agregada * 1000
                         lote += Triple(ms, ll[0], ll[1]); con++
