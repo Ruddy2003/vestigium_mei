@@ -160,13 +160,13 @@ fun PantallaExperimentos(nav: Nav) {
     var accion by remember { mutableStateOf("") }
     var resultado by remember { mutableStateOf("valencia") }
     var semanas by remember { mutableStateOf(6) }
-    val vars = remember { Estadistica.variables() }
+    val vars = remember { Estadistica.variables(dinamicas = false) }
     Hoja("Experimentos personales", nav.atras,
         "Eliges algo que probar y la app sortea qué semanas lo haces y cuáles no. Al final compara tu resultado entre unas y otras. Sortear evita que lo hagas justo en las semanas en que ya ibas a estar bien.") {
         Repo.experimentos.sortedByDescending { it.inicio }.forEach { e ->
             Seccion(e.nombre) {
                 Tarjeta {
-                    val panel = remember(e.id, Repo.dias.size) { Estadistica.panel() }
+                    val panel = remember(e.id, Repo.dias.size) { Estadistica.panel(dinamicas = false) }
                     val si = ArrayList<Double>(); val no = ArrayList<Double>()
                     e.plan.forEachIndexed { s, toca ->
                         for (d in 0 until 7) {

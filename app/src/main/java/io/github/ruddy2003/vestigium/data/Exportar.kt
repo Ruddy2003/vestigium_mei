@@ -434,6 +434,55 @@ object Exportar {
         }
     }
 
+    /**
+     * El panel extendido: todo lo del panel, más una columna por cada persona, tema, lugar, app, categoría, artista, canal,
+     * obra, ciudad, país, músculo, alimento y nutriente (vitaminas y minerales incluidos), los cuestionarios en los días que
+     * cubren, las etapas de vida, la brújula política, y todas las columnas de las tablas diarias (reloj, clima, pantalla,
+     * notificaciones, conexiones, Google, nutrición, gimnasio…). Las columnas repetidas se dejan una sola vez.
+     */
+    fun filasPanelExtendido(): List<Map<String, Any?>> {
+        val filas = java.util.TreeMap<String, LinkedHashMap<String, Any?>>()
+        filasPanel().forEach { r -> filas[r["fecha"] as String] = LinkedHashMap(r) }
+        val est = runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel(dinamicas = true, extendido = true) }.getOrDefault(emptyMap())
+        for ((f, r) in est) {
+            val fila = filas.getOrPut(f) { linkedMapOf<String, Any?>("fecha" to f) }
+            // Los nutrientes, los minutos por app y por movimiento vienen completos de sus tablas (abajo).
+            r.forEach { (k, v) -> if (k !in fila && !k.startsWith("nut_") && !k.startsWith("act_") && !k.startsWith("app_")) fila[k] = v }
+        }
+        fun igual(a: Any?, b: Any?): Boolean = when {
+            a == null || b == null -> a == b
+            a is Number && b is Number -> kotlin.math.abs(a.toDouble() - b.toDouble()) < 1e-6
+            a is Boolean && b is Number -> (if (a) 1.0 else 0.0) == b.toDouble()
+            b is Boolean && a is Number -> (if (b) 1.0 else 0.0) == a.toDouble()
+            else -> a.toString() == b.toString()
+        }
+        val tablas = listOf("salud_" to filasSalud(), "pant_" to filasPantalla(), "clima_" to filasEntorno(), "fotos_" to filasFotos(), "agenda_" to filasAgenda(),
+            "notif_" to filasNotifs(), "mov_" to filasActividad(), "com_" to filasComunicacion(), "cx_" to filasConexiones(), "google_" to filasGoogleDia(),
+            "nutr_" to filasNutricion(), "gym_" to filasEntrenos())
+        for ((pre, t) in tablas) {
+            if (t.isEmpty()) continue
+            val usados = HashSet<String>(); filas.values.forEach { usados.addAll(it.keys) }
+            val cols = LinkedHashSet<String>(); t.forEach { cols.addAll(it.keys) }; cols.remove("fecha")
+            for (c in cols) {
+                // Ya está con el mismo nombre y los mismos valores: no se repite.
+                if (c in usados && t.all { fr -> igual(filas[fr["fecha"] as String]?.get(c), fr[c]) }) continue
+                val forzar = pre == "notif_" && (c.startsWith("app_") || Regex("^h\\d{2}$").matches(c))
+                val nombre = if (forzar || c in usados || c in setOf("total", "primera", "ultima", "primero", "ultimo", "otras", "visitas", "muestras", "series", "reps", "minutos")) pre + c else c
+                for (fr in t) {
+                    val f = fr["fecha"] as String
+                    filas.getOrPut(f) { linkedMapOf<String, Any?>("fecha" to f) }[nombre] = fr[c]
+                }
+            }
+        }
+        // Minutos en cada app (todas las que pasan de una hora en total), además de las principales.
+        val apps = Repo.pantalla.values.flatMap { it.por_app_min.entries }.groupBy({ it.key }, { it.value }).mapValues { it.value.sum() }.filter { it.value >= 60 }.keys
+        for ((f, p) in Repo.pantalla) {
+            val fila = filas.getOrPut(f) { linkedMapOf<String, Any?>("fecha" to f) }
+            apps.forEach { a -> val k = "app_min_" + Texto.slug(a).ifEmpty { "app" }; if (k !in fila) fila[k] = p.por_app_min[a] ?: 0 }
+        }
+        return filas.values.toList()
+    }
+
     /** Hora como número (7.5 = 7:30). Para horas de dormir, la madrugada cuenta como 24+ (1:00 = 25). */
     fun horaDecimal(iso: String, noche: Boolean): Double? = runCatching {
         val t = java.time.OffsetDateTime.parse(iso).atZoneSameInstant(Fechas.zona())
@@ -467,6 +516,7 @@ object Exportar {
 
     fun tablas(): List<Tabla> = listOf(
         Tabla("vm_panel.csv", "Una fila por día con lo principal de todas las fuentes", filasPanel()),
+        Tabla("vm_panel_extendido.csv", "Una fila por día con todas las variables: cada persona, lugar, app, categoría, artista, obra, ciudad, nutriente y más", filasPanelExtendido()),
         Tabla("vm_dias.csv", "Diario: lo que llenaste cada día", filasDias()),
         Tabla("vm_momentos.csv", "Momentos y avisos de ánimo, uno por fila", filasMomentos()),
         Tabla("vm_gastos.csv", "Gastos, uno por fila", filasGastos()),
@@ -528,6 +578,7 @@ object Exportar {
         Si prefieres hacerlo a mano:
           library(tidyverse)
           panel <- read_csv("vm_panel.csv")        # una fila por día con lo principal de todo
+          ext   <- read_csv("vm_panel_extendido.csv")  # una fila por día con TODAS las variables (personas, apps, nutrientes…)
 
         vm_diccionario.csv describe cada columna de cada archivo: tipo (fecha, fecha_hora, hora, entero, numero,
         logico, texto, lista), unidad y significado.
@@ -538,6 +589,23 @@ object Exportar {
         Horas decimales (*_h): 7.5 = 7:30; en horas de dormir la madrugada suma 24 (1:00 = 25) para que el promedio tenga sentido.
         Escalas: ${Escalas.TODAS.joinToString("; ") { it.nombre + " — " + it.adaptacion }}
     """.trimIndent()
+
+    /**
+     * Exportación resumida: solo el panel diario con lo principal, su diccionario, el LEEME y el script de R.
+     * Para abrirlo rápido y empezar.
+     */
+    fun zipResumido(ctx: Context): File {
+        val dir = File(ctx.cacheDir, "export").apply { mkdirs() }
+        dir.listFiles()?.forEach { it.delete() }
+        val f = File(dir, "vestigium_resumido_${Fechas.hoyCalendario()}.zip")
+        val panel = Tabla("vm_panel.csv", "Una fila por día con lo principal de todas las fuentes", filasPanel())
+        ZipOutputStream(f.outputStream()).use { z ->
+            val archivos = listOfNotNull("vm_panel.csv" to csv(panel.filas), "vm_diccionario.csv" to Diccionario.csv(listOf(panel)), "LEEME.txt" to leeme(),
+                runCatching { ctx.assets.open("vestigium.R").use { it.readBytes().toString(Charsets.UTF_8) } }.getOrNull()?.let { "vestigium.R" to it })
+            archivos.forEach { (nombre, cont) -> z.putNextEntry(ZipEntry(nombre)); z.write(cont.toByteArray()); z.closeEntry() }
+        }
+        return f
+    }
 
     fun zip(ctx: Context): File {
         val dir = File(ctx.cacheDir, "export").apply { mkdirs() }
@@ -551,8 +619,8 @@ object Exportar {
         return f
     }
 
-    fun compartir(ctx: Context) {
-        val f = java.io.File(java.io.File(ctx.cacheDir, "export"), "vestigium_${Fechas.hoyCalendario()}.zip").takeIf { it.exists() } ?: zip(ctx)
+    fun compartir(ctx: Context, archivo: File? = null) {
+        val f = archivo ?: java.io.File(java.io.File(ctx.cacheDir, "export"), "vestigium_${Fechas.hoyCalendario()}.zip").takeIf { it.exists() } ?: zip(ctx)
         val uri = FileProvider.getUriForFile(ctx, ctx.packageName + ".archivos", f)
         val i = Intent(Intent.ACTION_SEND).setType("application/zip").putExtra(Intent.EXTRA_STREAM, uri)
             .putExtra(Intent.EXTRA_SUBJECT, f.name).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

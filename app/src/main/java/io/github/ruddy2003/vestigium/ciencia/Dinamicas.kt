@@ -1,0 +1,274 @@
+package io.github.ruddy2003.vestigium.ciencia
+
+import io.github.ruddy2003.vestigium.data.Fechas
+import io.github.ruddy2003.vestigium.data.Mundo
+import io.github.ruddy2003.vestigium.data.Perfiles
+import io.github.ruddy2003.vestigium.data.Politica
+import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.data.Texto
+
+/**
+ * Variables que dependen de lo que registraste: una por cada persona, tema, hito, lugar, app, categoría de gasto,
+ * artista, canal, obra, género, medicamento, ciudad, país, músculo, nutriente, alimento… Así todo se puede cruzar con todo.
+ *
+ * En los análisis entran las más frecuentes de cada familia (para no ahogar los resultados en casos raros);
+ * en la exportación extendida entran todas las que aparecen al menos dos días.
+ */
+object Dinamicas {
+    class Resultado(val variables: List<Variable>, val valores: Map<String, Map<String, Double>>)
+
+    /** Prefijo de cada familia → variables fijas que la resumen (pares obvios: «minutos en Instagram» con «minutos de pantalla»). */
+    val AGREGADOS: Map<String, Set<String>> = mapOf(
+        "per_" to setOf("personas", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes", "palabras", "cartas_otros"),
+        "tema_" to setOf("palabras"), "hito_" to setOf("hitos_n"),
+        "lug_" to setOf("lugares_distintos", "distancia_km"),
+        "app_" to setOf("pantalla_min", "desbloqueos"), "ntf_" to setOf("notificaciones"),
+        "gcat_" to setOf("gasto_total", "gasto_imprevisto", "balance_dinero"), "icat_" to setOf("ingreso_total", "balance_dinero"),
+        "art_" to setOf("canciones", "musica_min", "audifonos_min"), "ytc_" to setOf("yt_vistos", "busquedas"),
+        "gen_" to setOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada"), "obr_" to setOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada", "calificacion_obra"),
+        "med_" to setOf("medicamentos_n"), "det_" to setOf("impulso", "recaida"),
+        "ciu_" to setOf("ciudades_dia", "fuera_de_casa", "extranjero", "ciudad_nueva", "distancia_km", "vehiculo_min", "unesco"),
+        "pais_" to setOf("ciudades_dia", "fuera_de_casa", "extranjero", "ciudad_nueva", "distancia_km", "vehiculo_min", "unesco"),
+        "musc_" to setOf("gimnasio", "volumen_kg", "series_gimnasio", "ejercicio_min", "cal_activas"),
+        "act_" to setOf("ejercicio_min", "pasos", "cal_activas", "a_pie_min", "distancia_km"),
+        "nut_" to setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "azucares_g", "cafeina_mg", "balance_kcal"),
+        "ali_" to setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "azucares_g", "cafeina_mg", "comidas"),
+        "suenot_" to setOf("sueno_recordado", "sueno_valencia", "sueno_palabras", "sueno_lucidez", "sueno_vividez"),
+    )
+
+    /** Familias cuyas variables, entre ellas, también son obvias (dos nutrientes del mismo plato, una ciudad y su país). */
+    val ENTRE_SI: List<Set<String>> = listOf(setOf("nut_", "ali_"), setOf("ciu_", "pais_"), setOf("gen_", "obr_"), setOf("pol_"), setOf("vida_"), setOf("suenot_"))
+
+    fun prefijo(id: String): String? = (AGREGADOS.keys + listOf("esc_", "pol_", "vida_")).firstOrNull { id.startsWith(it) }
+
+    /** Lo que significa cada columna dinámica, para el diccionario de la exportación. */
+    @Volatile var nombres: Map<String, String> = emptyMap(); private set
+
+    @Volatile private var cache: Pair<List<Any?>, Resultado>? = null
+    @Volatile private var cacheExt: Pair<List<Any?>, Resultado>? = null
+
+    private fun clave(): List<Any?> = listOf(Repo.dias, Repo.momentos, Repo.obras, Repo.cartas, Repo.gastos, Repo.ingresos, Repo.pantalla, Repo.notifs,
+        Repo.huellas, Repo.nutricion, Repo.entrenos, Repo.actividad, Repo.visitas, Repo.lugares, Repo.respuestas, Repo.config, Mundo.version, Fechas.diaLogico())
+
+    private fun igual(a: List<Any?>, b: List<Any?>) = a.size == b.size && a.indices.all { a[it] === b[it] || a[it] == b[it] && a[it] !is Collection<*> && a[it] !is Map<*, *> }
+
+    fun calcular(extendido: Boolean = false): Resultado {
+        val k = clave()
+        (if (extendido) cacheExt else cache)?.let { if (igual(it.first, k)) return it.second }
+        val r = construir(extendido)
+        if (extendido) cacheExt = k to r else cache = k to r
+        nombres = nombres + r.variables.associate { it.id to it.nombre }
+        return r
+    }
+
+    private fun slug(s: String): String = Texto.slug(s).take(40).ifEmpty { "x" + (s.hashCode() and 0xffff).toString(16) }
+
+    private fun construir(ext: Boolean): Resultado {
+        val vars = ArrayList<Variable>()
+        val out = HashMap<String, HashMap<String, Double>>()
+        val usados = HashSet<String>()
+        fun pon(f: String, id: String, v: Double) { out.getOrPut(f) { HashMap() }[id] = v }
+
+        /**
+         * Una familia: [porDia] es fecha → (cosa → valor). En los días de [base] lo que no aparece vale 0.
+         * Se quedan las cosas que aparecen al menos [minDias] días, ordenadas por días (o por [peso]), hasta [max].
+         */
+        fun familia(prefijo: String, grupo: String, porDia: Map<String, Map<String, Double>>, base: Collection<String>, max: Int, minDias: Int,
+                    nombre: (String) -> String, porPeso: Boolean = false) {
+            val dias = HashMap<String, Int>(); val peso = HashMap<String, Double>()
+            porDia.values.forEach { m -> m.forEach { (c, v) -> if (v != 0.0) { dias.merge(c, 1, Int::plus); peso.merge(c, v, Double::plus) } } }
+            val minimo = if (ext) 2 else minDias
+            val elegidas = dias.filter { it.value >= minimo }.keys
+                .sortedWith(if (porPeso) compareByDescending<String> { peso[it] ?: 0.0 } else compareByDescending<String> { dias[it] ?: 0 }.thenByDescending { peso[it] ?: 0.0 })
+                .take(if (ext) 400 else max)
+            val fechas = (base + porDia.keys).toSet()
+            for (c in elegidas) {
+                var id = prefijo + slug(c); var n = 2
+                while (id in usados) { id = prefijo + slug(c) + "_" + n; n++ }
+                usados += id
+                vars += Variable(id, nombre(c), grupo)
+                for (f in fechas) pon(f, id, porDia[f]?.get(c) ?: 0.0)
+            }
+        }
+        fun cobertura(fechas: Collection<String>): List<String> {
+            val a = fechas.minOrNull() ?: return emptyList(); val z = fechas.maxOrNull() ?: return emptyList()
+            return Repo.dias.keys.filter { it in a..z } + fechas
+        }
+        val eq = Repo.equivalencias()
+        val diasDiario = Repo.dias.keys + Repo.momentos.map { it.fecha }
+
+        // ---- Personas: el diario, los momentos, los sueños y las cartas que les escribiste.
+        val personas = HashMap<String, HashMap<String, Double>>(); val temas = HashMap<String, HashMap<String, Double>>()
+        fun texto(f: String, t: String) {
+            Texto.personas(t).forEach { personas.getOrPut(f) { HashMap() }[Texto.canon(it, eq)] = 1.0 }
+            Texto.temas(t).forEach { temas.getOrPut(f) { HashMap() }[Texto.canon(it, eq)] = 1.0 }
+        }
+        Repo.dias.forEach { (f, d) ->
+            texto(f, d.nota); texto(f, d.sueno_texto); texto(f, d.mejor_momento + " " + d.peor_momento)
+            d.sueno_temas.forEach { t -> val x = Texto.etiqueta(t); if (t.trim().startsWith("#")) temas.getOrPut(f) { HashMap() }[Texto.canon(x, eq)] = 1.0 else personas.getOrPut(f) { HashMap() }[Texto.canon(x, eq)] = 1.0 }
+        }
+        Repo.momentos.forEach { m -> texto(m.fecha, m.texto) }
+        Repo.cartas.filter { it.para.isNotBlank() }.forEach { c -> personas.getOrPut(c.escrita) { HashMap() }[Texto.canon(c.para, eq)] = 1.0; texto(c.escrita, c.texto) }
+        familia("per_", "Personas", personas, diasDiario, 15, 5, { "Aparece @$it (diario, momentos, sueños o cartas) (0/1)" })
+        familia("tema_", "Temas", temas, diasDiario, 12, 5, { "Aparece #$it (0/1)" })
+        familia("hito_", "Hitos", Repo.dias.mapValues { (_, d) -> d.hitos.associateWith { 1.0 } }, Repo.dias.keys, 10, 3, { "Hito: ${it.replace('_', ' ')} (0/1)" })
+
+        // ---- Lugares marcados: horas en cada uno.
+        val lugares = HashMap<String, HashMap<String, Double>>()
+        Repo.visitas.forEach { v ->
+            val l = Repo.lugares.firstOrNull { it.id == v.lugar } ?: return@forEach
+            val h = ((Fechas.millis(v.salida ?: return@forEach) - Fechas.millis(v.entrada)) / 3_600_000.0).coerceIn(0.0, 24.0)
+            lugares.getOrPut(Fechas.diaLogicoDeMillis(Fechas.millis(v.entrada))) { HashMap() }.merge(l.nombre, h, Double::plus)
+        }
+        familia("lug_", "Lugares", lugares, cobertura(lugares.keys), 15, 3, { "Horas en «$it»" }, porPeso = true)
+
+        // ---- Teléfono: minutos por app, notificaciones por app, YouTube por canal.
+        familia("app_", "Apps", Repo.pantalla.mapValues { (_, p) -> p.por_app_min.mapValues { it.value.toDouble() } }, Repo.pantalla.keys, 12, 5, { "Minutos en $it" }, porPeso = true)
+        familia("ntf_", "Notificaciones", Repo.notifs.mapValues { (_, n) -> n.por_app.mapValues { it.value.toDouble() } }, Repo.notifs.keys, 8, 5, { "Notificaciones de $it" }, porPeso = true)
+        familia("ytc_", "YouTube", Repo.huellas.mapValues { (_, h) -> h.canales.mapValues { it.value.toDouble() } }, Repo.huellas.keys, 8, 5, { "Videos de $it en YouTube" })
+
+        // ---- Dinero por categoría.
+        val gcat = HashMap<String, HashMap<String, Double>>(); Repo.gastos.forEach { g -> gcat.getOrPut(g.dia) { HashMap() }.merge(g.categoria, g.monto, Double::plus) }
+        familia("gcat_", "Dinero", gcat, cobertura(gcat.keys), 15, 5, { "Gasto en ${it.lowercase()}" }, porPeso = true)
+        val icat = HashMap<String, HashMap<String, Double>>(); Repo.ingresos.forEach { g -> icat.getOrPut(g.dia) { HashMap() }.merge(g.categoria, g.monto, Double::plus) }
+        familia("icat_", "Dinero", icat, cobertura(icat.keys), 8, 3, { "Ingreso de ${it.lowercase()}" }, porPeso = true)
+
+        // ---- Música: canciones por artista.
+        runCatching {
+            val desde = Repo.dias.keys.minOrNull() ?: "0000-01-01"
+            val art = HashMap<String, HashMap<String, Double>>()
+            Repo.escuchas(desde, "9999-12-31").forEach { e -> if (e.artista.isNotBlank() && (e.ms ?: 30_000) >= 30_000) art.getOrPut(e.fecha) { HashMap() }.merge(e.artista, 1.0, Double::plus) }
+            familia("art_", "Música", art, cobertura(art.keys), 10, 5, { "Canciones de $it" })
+        }
+
+        // ---- Lo que leíste, viste y jugaste: cada obra y cada género (etiqueta).
+        val obras = HashMap<String, HashMap<String, Double>>(); val generos = HashMap<String, HashMap<String, Double>>()
+        Repo.obras.filter { it.titulo.isNotBlank() }.forEach { o ->
+            (o.dias + listOfNotNull(o.fin.takeIf { o.estado == "terminado" })).distinct().forEach { f ->
+                obras.getOrPut(f) { HashMap() }[o.titulo] = 1.0
+                o.etiquetas.forEach { g -> generos.getOrPut(f) { HashMap() }[g] = 1.0 }
+            }
+        }
+        familia("obr_", "Cultura", obras, cobertura(obras.keys), 10, 5, { "Le dediqué tiempo a «$it» (0/1)" })
+        familia("gen_", "Cultura", generos, cobertura(generos.keys), 10, 5, { "Leí, vi o jugué algo de ${it.replace('_', ' ')} (0/1)" })
+
+        // ---- Medicamentos y detonantes.
+        familia("med_", "Salud", Repo.dias.mapValues { (_, d) -> d.medicamentos.associateWith { 1.0 } }, cobertura(Repo.dias.filterValues { it.medicamentos.isNotEmpty() }.keys), 15, 3, { "Tomé $it (0/1)" })
+        if (Repo.config.seguimiento_privado)
+            familia("det_", "Privado", Repo.dias.mapValues { (_, d) -> d.detonantes.associateWith { 1.0 } }, cobertura(Repo.dias.filterValues { it.detonantes.isNotEmpty() }.keys), 10, 3, { "Detonante: ${it.replace('_', ' ')} (0/1)" })
+
+        // ---- El sueño de la noche: tipo.
+        familia("suenot_", "Sueño", Repo.dias.filterValues { it.sueno_recordado }.mapValues { (_, d) -> listOfNotNull(d.sueno_tipo).associateWith { 1.0 } },
+            Repo.dias.filterValues { it.sueno_recordado }.keys, 6, 3, { "Sueño de tipo ${it.replace('_', ' ')} (0/1)" })
+
+        // ---- Mundo: horas en cada ciudad y país.
+        runCatching {
+            val ctx = Mundo.app ?: return@runCatching
+            val enMain = android.os.Looper.myLooper() == android.os.Looper.getMainLooper()
+            val diario = (if (enMain) Mundo.diarioListo() else Mundo.diario(ctx)) ?: return@runCatching
+            val ciu = HashMap<String, HashMap<String, Double>>(); val pai = HashMap<String, HashMap<String, Double>>()
+            diario.forEach { (d, m) ->
+                val f = Fechas.iso(java.time.LocalDate.ofEpochDay(d.toLong()))
+                m.ciudades.forEach { (e, h) -> ciu.getOrPut(f) { HashMap() }[e.nombre + " (" + e.pais + ")"] = if (h == 0.0) 1.0 else h }
+                m.paises.forEach { (e, h) -> pai.getOrPut(f) { HashMap() }[e.nombre] = if (h == 0.0) 1.0 else h }
+            }
+            familia("ciu_", "Mundo", ciu, ciu.keys, 8, 3, { "Horas en $it" })
+            familia("pais_", "Mundo", pai, pai.keys, 6, 3, { "Horas en $it" })
+        }
+
+        // ---- Cuerpo: series por grupo muscular y minutos por tipo de movimiento.
+        familia("musc_", "Cuerpo", Repo.entrenos.mapValues { (_, e) -> e.series_musculo }, cobertura(Repo.entrenos.keys), 12, 3, { "Series de ${it.replace('_', ' ')}" })
+        familia("act_", "Cuerpo", Repo.actividad.mapValues { (_, a) -> a.minutos.filterKeys { it !in setOf("a_pie", "vehiculo", "quieto") }.mapValues { it.value.toDouble() } },
+            Repo.actividad.keys, 6, 3, { "Minutos ${it.replace('_', ' ')}" })
+
+        // ---- Nutrición: todos los nutrientes de MacroFactor que no son ya variables fijas (vitaminas, minerales…), y los alimentos más frecuentes.
+        val fijas = setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "azucares_g", "gasto_kcal", "peso_tendencia_kg")
+        familia("nut_", "Nutrición", Repo.nutricion.mapValues { (_, n) -> n.valores.filterKeys { it !in fijas } }, Repo.nutricion.keys, 60, 14, { nutriente(it) })
+        runCatching {
+            val desde = Repo.nutricion.keys.minOrNull() ?: return@runCatching
+            val ali = HashMap<String, HashMap<String, Double>>()
+            Repo.comidas(desde, "9999-12-31").forEach { c -> ali.getOrPut(c.fecha) { HashMap() }[c.alimento.trim()] = 1.0 }
+            familia("ali_", "Nutrición", ali, Repo.nutricion.keys, 12, 5, { "Comí $it (0/1)" })
+        }
+
+        // ---- Cuestionarios: cada puntaje vale para el periodo que pregunta (dos semanas, un mes) o hasta el siguiente (personalidad).
+        Escalas.TODAS.forEach { ins ->
+            val resp = Repo.respuestas.filter { it.instrumento == ins.id }.sortedBy { it.fecha }
+            if (resp.isEmpty()) return@forEach
+            val ventana = when (ins.id) { "who5" -> 14L; "pss4", "ucla3" -> 30L; else -> 0L }
+            val claves = resp.flatMap { it.puntajes.keys }.distinct()
+            claves.forEach { p ->
+                val id = "esc_${ins.id}_${slug(p)}"
+                if (id in usados) return@forEach
+                usados += id
+                vars += Variable(id, "${ins.nombre}: ${p.replace('_', ' ')}", "Cuestionarios")
+                resp.forEachIndexed { i, r ->
+                    val v = r.puntajes[p] ?: return@forEachIndexed
+                    if (ventana > 0) for (k in 0 until ventana) pon(Fechas.sumar(r.fecha, -k), id, v)
+                    else {
+                        val hasta = resp.getOrNull(i + 1)?.fecha ?: Fechas.sumar(r.fecha, 365)
+                        var f = r.fecha; var g = 0
+                        while (f < hasta && g < 800) { pon(f, id, v); f = Fechas.sumar(f, 1); g++ }
+                    }
+                }
+            }
+        }
+
+        // ---- Etapas de vida (de «Conocerte» y sus cambios): cada día sabe si vivías con tu pareja, si trabajabas, etc.
+        val perfil = Repo.config.perfil
+        if (!Perfiles.vacio(perfil)) {
+            val actual = Perfiles.campos(perfil)
+            val hist = Repo.config.perfil_historial.sortedBy { it.fecha }
+            fun valorEn(campo: String, f: String): String =
+                hist.lastOrNull { it.campo == campo && it.fecha <= f }?.despues ?: hist.firstOrNull { it.campo == campo && it.fecha > f }?.antes ?: actual[campo].orEmpty()
+            val etapas = listOf<Triple<String, String, (String) -> Double?>>(
+                Triple("vida_en_pareja", "Etapa: en pareja (0/1)", { f: String -> valorEn("pareja", f).takeIf { it.isNotBlank() && it != "Prefiero no decir" }?.let { if (it in setOf("En pareja", "Casado o en unión", "Saliendo con alguien")) 1.0 else 0.0 } }),
+                Triple("vida_vive_solo", "Etapa: vivía solo (0/1)", { f: String -> valorEn("vive con", f).takeIf { it.isNotBlank() }?.let { if ("solo" in it) 1.0 else 0.0 } }),
+                Triple("vida_vive_con_pareja", "Etapa: vivía con mi pareja (0/1)", { f: String -> valorEn("vive con", f).takeIf { it.isNotBlank() }?.let { if ("pareja" in it) 1.0 else 0.0 } }),
+                Triple("vida_vive_con_familia", "Etapa: vivía con familia (0/1)", { f: String -> valorEn("vive con", f).takeIf { it.isNotBlank() }?.let { v -> if (listOf("mamá", "hermanos", "hijos", "abuelos", "familiares").any { it in v }) 1.0 else 0.0 } }),
+                Triple("vida_trabaja", "Etapa: trabajaba (0/1)", { f: String -> valorEn("a qué te dedicas", f).takeIf { it.isNotBlank() }?.let { if ("trabajo" in it || "por mi cuenta" in it) 1.0 else 0.0 } }),
+                Triple("vida_estudia", "Etapa: estudiaba (0/1)", { f: String -> valorEn("a qué te dedicas", f).takeIf { it.isNotBlank() }?.let { if ("estudio" in it) 1.0 else 0.0 } }),
+                Triple("vida_mascota", "Etapa: tenía mascota (0/1)", { f: String -> if (actual["mascotas"].isNullOrBlank() && hist.none { it.campo == "mascotas" }) null else if (valorEn("mascotas", f).isNotBlank()) 1.0 else 0.0 }),
+            )
+            val fechas = Repo.dias.keys
+            etapas.forEach { (id, nombre, fn) ->
+                var alguno = false
+                fechas.forEach { f -> fn(f)?.let { pon(f, id, it); alguno = true } }
+                if (alguno) { vars += Variable(id, nombre, "Etapas de vida"); usados += id }
+            }
+            // La ciudad donde vivías, si cambió.
+            val ciudades = (hist.filter { it.campo == "ciudad" }.flatMap { listOf(it.antes, it.despues) } + listOfNotNull(actual["ciudad"])).filter { it.isNotBlank() }.distinct()
+            if (ciudades.size >= 2) ciudades.forEach { c ->
+                val id = "vida_ciudad_" + slug(c)
+                if (id in usados) return@forEach
+                usados += id; vars += Variable(id, "Etapa: vivía en $c (0/1)", "Etapas de vida")
+                fechas.forEach { f -> pon(f, id, if (valorEn("ciudad", f) == c) 1.0 else 0.0) }
+            }
+        }
+
+        // ---- Brújula política: la posición de cada año vale hasta el test siguiente.
+        val tests = Repo.config.politica.sortedBy { it.fecha }
+        if (tests.isNotEmpty()) {
+            Politica.EJES.forEach { e ->
+                val id = "pol_${e.id}"
+                vars += Variable(id, "Brújula: ${e.nombre.lowercase()} (−100 ${e.menos}, +100 ${e.mas})", "Política"); usados += id
+                tests.forEachIndexed { i, t ->
+                    val v = t.ejes[e.id] ?: return@forEachIndexed
+                    val hasta = tests.getOrNull(i + 1)?.fecha ?: Fechas.sumar(t.fecha, 400)
+                    var f = t.fecha; var g = 0
+                    while (f < hasta && g < 1200) { pon(f, id, v); f = Fechas.sumar(f, 1); g++ }
+                }
+            }
+        }
+        return Resultado(vars, out)
+    }
+
+    /** «vitamin_c_mg» → «Vitamin c (mg)». */
+    fun nutriente(k: String): String {
+        val unidades = listOf("mcg", "mg", "kcal", "g", "iu", "ml", "kg")
+        val partes = k.split('_')
+        val u = partes.lastOrNull()?.takeIf { it in unidades }
+        val n = (if (u != null) partes.dropLast(1) else partes).joinToString(" ").replaceFirstChar { it.uppercase() }
+        return if (u != null) "$n ($u)" else n
+    }
+}

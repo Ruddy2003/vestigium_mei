@@ -599,6 +599,7 @@ class Capturas {
             }
         }
     }
+    @Test fun datosGotico() = pantalla(TemaId.GOTICO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDatos(navVacia) }
     @Test fun epigrafeMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) {
         val ayer = io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1)
         Repo.configEnMemoria(Repo.config.copy(frases_guardadas = listOf(io.github.ruddy2003.vestigium.data.FraseGuardada("Quien no sabe callar, no sabe hablar.", null, "Refrán castellano", "medieval", ayer))))

@@ -77,7 +77,8 @@ object Estadistica {
     }
 
     // ---------- Variables diarias para cruzar ----------
-    fun variables(): List<Variable> {
+    /** Todas las variables. Con [dinamicas], también una por persona, lugar, app, categoría, artista, nutriente… (ver [Dinamicas]). */
+    fun variables(dinamicas: Boolean = true): List<Variable> {
         val v = mutableListOf(
             Variable("valencia", "Valencia del día", "Ánimo"), Variable("activacion", "Activación del día", "Ánimo"),
             Variable("muestreo_valencia", "Valencia promedio en avisos", "Ánimo"), Variable("muestreo_activacion", "Activación promedio en avisos", "Ánimo"),
@@ -130,6 +131,14 @@ object Estadistica {
             Variable("extranjero", "En otro país (0/1)", "Mundo"), Variable("ciudad_nueva", "Primera vez en una ciudad (0/1)", "Mundo"),
             Variable("unesco", "Pasé por un sitio del Patrimonio Mundial (0/1)", "Mundo"),
             Variable("carta_escrita", "Escribí una carta (0/1)", "Texto"), Variable("sueno_palabras", "Palabras del sueño escrito", "Sueño"),
+            Variable("cartas_otros", "Cartas escritas a otras personas", "Social"),
+            Variable("ingreso_total", "Ingresos del día", "Dinero"), Variable("balance_dinero", "Ingresos menos gastos del día", "Dinero"),
+            Variable("dia_dificil", "Día difícil (0/1)", "Ánimo"), Variable("prediccion", "Predicción para mañana (1 a 7)", "Ánimo"),
+            Variable("error_prediccion", "Cuánto falló la predicción de anoche", "Ánimo"), Variable("medicamentos_n", "Medicamentos tomados", "Salud"),
+            Variable("sueno_lucidez", "Lucidez del sueño (0 no, 1 parcial, 2 total)", "Sueño"), Variable("sueno_vividez", "Vividez del sueño (0 vago, 1 moderado, 2 muy vívido)", "Sueño"),
+            Variable("n_madrugada", "Momentos de madrugada (antes de las 5)", "Momentos"), Variable("n_manana", "Momentos en la mañana (5 a 12)", "Momentos"),
+            Variable("n_tarde", "Momentos en la tarde (12 a 19)", "Momentos"), Variable("n_noche", "Momentos en la noche (19 a 24)", "Momentos"),
+            Variable("momentos_intensidad", "Intensidad media de los momentos (1 a 5)", "Momentos"), Variable("momentos_valencia", "Valencia media de los momentos", "Momentos"),
         )
         if (Repo.config.perfil.cercanas.isNotEmpty() || Repo.config.perfil.convivientes.isNotEmpty()) {
             v += Variable("cercanos", "Personas cercanas mencionadas", "Social"); v += Variable("vi_familia", "Mencioné a mi familia (0/1)", "Social")
@@ -143,11 +152,15 @@ object Estadistica {
         Catalogo.CIENTIFICAS.forEach { p -> p.opciones.filter { it.id != "no_aplica" }.forEach { o -> v += Variable("${p.clave}_${o.id}", "${o.nombre} (0/1)", "Lectura del día") } }
         Catalogo.MOMENTOS.forEach { v += Variable("n_${it.id}", "Momentos de ${it.nombre.lowercase()}", "Momentos") }
         Repo.config.habitos.forEach { v += Variable("hab_${it.id}", "Hábito: ${it.nombre} (0/1)", "Hábitos") }
+        if (dinamicas) v += Dinamicas.calcular(false).variables
         return v
     }
 
-    /** Una fila por día con todas las variables numéricas. Lo que no existe queda en null. */
-    fun panel(): Map<String, Map<String, Double?>> {
+    /**
+     * Una fila por día con todas las variables numéricas. Lo que no existe queda en null. Con [dinamicas] incluye las de
+     * cada persona, lugar, app…; con [extendido], todas las que aparecen al menos dos días (para la exportación).
+     */
+    fun panel(dinamicas: Boolean = true, extendido: Boolean = false): Map<String, Map<String, Double?>> {
         val eq = Repo.equivalencias()
         val filas = sortedMapOf<String, MutableMap<String, Double?>>()
         fun fila(f: String) = filas.getOrPut(f) { mutableMapOf() }
@@ -290,6 +303,44 @@ object Estadistica {
                 r["vi_amistades"] = b(rel.any { it.second == "amistad" }); r["vi_convivientes"] = b(rel.any { it.first in perfil.convivientes })
             }
         }
+        // Dinero que entra, y el balance del día.
+        val ingresos = Repo.ingresos.groupBy { it.dia }.mapValues { (_, l) -> l.sumOf { it.monto } }
+        val primerIngreso = ingresos.keys.minOrNull()
+        if (primerIngreso != null) {
+            (Repo.dias.keys.filter { it >= primerIngreso } + ingresos.keys).toSet().forEach { f ->
+                val r = fila(f); val i = ingresos[f] ?: 0.0
+                r["ingreso_total"] = i; r["balance_dinero"] = i - (r["gasto_total"] ?: Repo.gastos.filter { it.dia == f }.sumOf { it.monto })
+            }
+        }
+        // Lo demás del diario: día difícil, predicción y su error, medicamentos, detalle del sueño.
+        val conMedicamentos = Repo.dias.values.filter { it.medicamentos.isNotEmpty() }.minOfOrNull { it.fecha }
+        for ((f, d) in Repo.dias) {
+            val r = fila(f)
+            r["dia_dificil"] = b(d.dia_dificil)
+            r["prediccion"] = d.prediccion_manana?.toDouble()
+            Repo.dias[Fechas.sumar(f, -1)]?.prediccion_manana?.let { p -> d.valencia?.let { r["error_prediccion"] = abs(p - it).toDouble() } }
+            if (conMedicamentos != null && f >= conMedicamentos) r["medicamentos_n"] = d.medicamentos.size.toDouble()
+            if (d.sueno_recordado) {
+                r["sueno_lucidez"] = when (d.sueno_lucidez) { "no" -> 0.0; "parcial" -> 1.0; "total" -> 2.0; else -> null }
+                r["sueno_vividez"] = when (d.sueno_vividez) { "vago" -> 0.0; "moderado" -> 1.0; "muy_vivido" -> 2.0; else -> null }
+            }
+            listOf("n_madrugada", "n_manana", "n_tarde", "n_noche").forEach { r[it] = 0.0 }
+        }
+        // Momentos según la hora, su intensidad y su valencia.
+        Repo.momentos.filter { it.tipo != "muestreo" }.groupBy { it.fecha }.forEach { (f, l) ->
+            val r = fila(f)
+            val horas = l.mapNotNull { Fechas.horaDe(it.ts).take(2).toIntOrNull() }
+            r["n_madrugada"] = horas.count { it < 5 }.toDouble(); r["n_manana"] = horas.count { it in 5..11 }.toDouble()
+            r["n_tarde"] = horas.count { it in 12..18 }.toDouble(); r["n_noche"] = horas.count { it >= 19 }.toDouble()
+            r["momentos_intensidad"] = media(l.mapNotNull { it.intensidad?.toDouble() })
+            r["momentos_valencia"] = media(l.mapNotNull { it.valencia?.toDouble() })
+        }
+        // Cartas a otras personas.
+        val aOtros = Repo.cartas.filter { it.para.isNotBlank() }.groupingBy { it.escrita }.eachCount()
+        aOtros.keys.minOrNull()?.let { a -> Repo.dias.keys.filter { it >= a }.forEach { f -> fila(f)["cartas_otros"] = (aOtros[f] ?: 0).toDouble() } }
+        aOtros.forEach { (f, n) -> fila(f)["cartas_otros"] = n.toDouble() }
+        // Una variable por cada persona, tema, lugar, app, categoría, artista, obra, ciudad, nutriente, cuestionario, etapa de vida…
+        if (dinamicas) runCatching { Dinamicas.calcular(extendido).valores.forEach { (f, m) -> val r = fila(f); m.forEach { (k, x) -> r[k] = x } } }
         // Dónde estuviste: ciudades, fuera de casa, otro país, primera vez y Patrimonio Mundial (de tus ubicaciones).
         runCatching {
             val ctx = io.github.ruddy2003.vestigium.data.Mundo.app ?: return@runCatching
@@ -315,10 +366,26 @@ object Estadistica {
         return filas
     }
 
-    fun pares(panel: Map<String, Map<String, Double?>>, x: String, y: String, desfase: Boolean): List<Par> {
+    /**
+     * El panel por semanas (de lunes a domingo): cada variable es el promedio de los días que tienen dato (en las 0/1, la
+     * proporción de días). Una semana entra si tiene al menos [minDias] días con dato de esa variable.
+     */
+    fun semanal(panel: Map<String, Map<String, Double?>>, minDias: Int = 3): Map<String, Map<String, Double?>> {
+        val suma = sortedMapOf<String, HashMap<String, DoubleArray>>()
+        for ((f, r) in panel) {
+            val lunes = Fechas.lunesDe(f)
+            val m = suma.getOrPut(lunes) { HashMap() }
+            for ((k, v) in r) if (v != null && !v.isNaN()) { val a = m.getOrPut(k) { DoubleArray(2) }; a[0] += v; a[1] += 1.0 }
+        }
+        val out = sortedMapOf<String, Map<String, Double?>>()
+        for ((l, m) in suma) out[l] = m.filterValues { it[1] >= minDias }.mapValues { it.value[0] / it.value[1] }
+        return out
+    }
+
+    fun pares(panel: Map<String, Map<String, Double?>>, x: String, y: String, desfase: Boolean, paso: Long = 1L): List<Par> {
         val out = ArrayList<Par>()
         for ((f, r) in panel) {
-            val ry = if (desfase) panel[Fechas.sumar(f, 1)] else r
+            val ry = if (desfase) panel[Fechas.sumar(f, paso)] else r
             val a = r[x] ?: continue
             val bb = ry?.get(y) ?: continue
             out.add(Par(a, bb, f))
@@ -364,9 +431,17 @@ object Estadistica {
         setOf("carta_escrita", "palabras"),
     )
 
-    fun obvia(a: Variable, b: Variable): Boolean =
-        (a.grupo == b.grupo && (a.grupo == "Lectura del día" || a.grupo == "Momentos")) ||
-            FAMILIAS.any { a.id in it && b.id in it }
+    fun obvia(a: Variable, b: Variable): Boolean {
+        if ((a.grupo == b.grupo && (a.grupo == "Lectura del día" || a.grupo == "Momentos")) || FAMILIAS.any { a.id in it && b.id in it }) return true
+        // Las variables de cada persona, app o categoría con su total (minutos en una app y minutos de pantalla).
+        val pa = Dinamicas.prefijo(a.id); val pb = Dinamicas.prefijo(b.id)
+        if (pa != null && Dinamicas.AGREGADOS[pa]?.contains(b.id) == true) return true
+        if (pb != null && Dinamicas.AGREGADOS[pb]?.contains(a.id) == true) return true
+        if (pa != null && pb != null && Dinamicas.ENTRE_SI.any { pa in it && pb in it }) return true
+        // Dos puntajes del mismo cuestionario salen de las mismas respuestas.
+        if (pa == "esc_" && pb == "esc_" && a.id.split('_').getOrNull(1) == b.id.split('_').getOrNull(1)) return true
+        return false
+    }
 
     /** Días hacia cada lado con los que se compara cada día al quitar la tendencia. */
     private const val VENTANA = 10
@@ -374,9 +449,9 @@ object Estadistica {
     /** Una variable alineada a las fechas del panel (NaN = sin dato), con su versión sin tendencia y su autocorrelación. */
     private class Serie(val crudo: DoubleArray, val resto: DoubleArray, val r1Crudo: Double, val r1Resto: Double, val lenta: Boolean, val binaria: Boolean)
 
-    private fun autocorr(x: DoubleArray, dia: LongArray): Double {
+    private fun autocorr(x: DoubleArray, dia: LongArray, paso: Long = 1L): Double {
         val a = ArrayList<Double>(); val b = ArrayList<Double>()
-        for (i in 0 until x.size - 1) if (!x[i].isNaN() && !x[i + 1].isNaN() && dia[i + 1] - dia[i] == 1L) { a.add(x[i]); b.add(x[i + 1]) }
+        for (i in 0 until x.size - 1) if (!x[i].isNaN() && !x[i + 1].isNaN() && dia[i + 1] - dia[i] == paso) { a.add(x[i]); b.add(x[i + 1]) }
         if (a.size < 10) return 0.0
         return pearson(a, b) ?: 0.0
     }
@@ -386,7 +461,7 @@ object Estadistica {
         val m = l.average(); return l.sumOf { (it - m) * (it - m) } / (l.size - 1)
     }
 
-    private fun series(panel: Map<String, Map<String, Double?>>, vars: List<Variable>): Map<String, Serie> {
+    private fun series(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, paso: Long = 1L, ventana: Int = VENTANA): Map<String, Serie> {
         val fechas = panel.keys.sorted()
         val dia = LongArray(fechas.size) { Fechas.parse(fechas[it]).toEpochDay() }
         val out = HashMap<String, Serie>()
@@ -398,15 +473,15 @@ object Estadistica {
             val resto = DoubleArray(x.size) { Double.NaN }
             var lo = 0; var hi = 0; var suma = 0.0; var cnt = 0
             for (i in idx) {
-                while (hi < idx.size && dia[idx[hi]] <= dia[i] + VENTANA) { suma += x[idx[hi]]; cnt++; hi++ }
-                while (dia[idx[lo]] < dia[i] - VENTANA) { suma -= x[idx[lo]]; cnt--; lo++ }
+                while (hi < idx.size && dia[idx[hi]] <= dia[i] + ventana) { suma += x[idx[hi]]; cnt++; hi++ }
+                while (dia[idx[lo]] < dia[i] - ventana) { suma -= x[idx[lo]]; cnt--; lo++ }
                 if (cnt >= 3) resto[i] = x[i] - suma / cnt
             }
             val vc = varianza(x); val vr = varianza(resto)
             val binaria = idx.all { x[it] == 0.0 || x[it] == 1.0 }
             // «Lenta»: casi toda su variación es de semanas a meses (horas de luz, peso suavizado). Las constantes no cuentan.
-            val lenta = vc > 0.0 && resto.count { !it.isNaN() } >= 14 && vr / vc < 0.12
-            out[v.id] = Serie(x, resto, autocorr(x, dia), autocorr(resto, dia), lenta, binaria)
+            val lenta = vc > 0.0 && resto.count { !it.isNaN() } >= (if (paso > 1) 8 else 14) && vr / vc < 0.12
+            out[v.id] = Serie(x, resto, autocorr(x, dia, paso), autocorr(resto, dia, paso), lenta, binaria)
         }
         return out
     }
@@ -417,32 +492,41 @@ object Estadistica {
      * El intervalo usa días efectivos: si hoy se parece a ayer, dos días seguidos no cuentan como dos pruebas.
      * [q] es el valor corregido por comparaciones múltiples (Benjamini-Hochberg) entre los pares no obvios.
      */
-    fun relaciones(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, sinTendencia: Boolean, minN: Int = 14): Relaciones {
-        val s = series(panel, vars)
+    fun relaciones(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, sinTendencia: Boolean, minN: Int = 14,
+                   paso: Long = 1L, ventana: Int = VENTANA): Relaciones {
+        val s = series(panel, vars, paso, ventana)
         val usables = vars.filter { it.id in s }
         val lentas = if (sinTendencia) usables.filter { s[it.id]!!.lenta } else emptyList()
         val res = ArrayList<Correlacion>()
-        val xs = ArrayList<Double>(); val ys = ArrayList<Double>(); val cx = ArrayList<Double>(); val cy = ArrayList<Double>()
+        val largo = s.values.firstOrNull()?.crudo?.size ?: 0
+        val xs = DoubleArray(largo); val ys = DoubleArray(largo); val cx = DoubleArray(largo); val cy = DoubleArray(largo)
+        fun r(a: DoubleArray, b: DoubleArray, n: Int): Double? {
+            var ma = 0.0; var mb = 0.0
+            for (i in 0 until n) { ma += a[i]; mb += b[i] }
+            ma /= n; mb /= n
+            var sab = 0.0; var saa = 0.0; var sbb = 0.0
+            for (i in 0 until n) { val da = a[i] - ma; val db = b[i] - mb; sab += da * db; saa += da * da; sbb += db * db }
+            return if (saa == 0.0 || sbb == 0.0) null else sab / sqrt(saa * sbb)
+        }
         for (i in usables.indices) for (j in i + 1 until usables.size) {
             val a = usables[i]; val b = usables[j]
             val sa = s[a.id]!!; val sb = s[b.id]!!
             if (sinTendencia && (sa.lenta || sb.lenta)) continue
             val va = if (sinTendencia) sa.resto else sa.crudo; val vb = if (sinTendencia) sb.resto else sb.crudo
-            xs.clear(); ys.clear(); cx.clear(); cy.clear()
-            for (k in va.indices) if (!va[k].isNaN() && !vb[k].isNaN()) { xs.add(va[k]); ys.add(vb[k]); cx.add(sa.crudo[k]); cy.add(sb.crudo[k]) }
-            val n = xs.size
+            var n = 0
+            for (k in va.indices) { val p = va[k]; val q = vb[k]; if (!p.isNaN() && !q.isNaN()) { xs[n] = p; ys[n] = q; cx[n] = sa.crudo[k]; cy[n] = sb.crudo[k]; n++ } }
             if (n < minN) continue
             // Una variable 0/1 necesita algunos días de cada tipo para decir algo.
-            if (sa.binaria && minOf(cx.count { it == 1.0 }, cx.count { it == 0.0 }) < 4) continue
-            if (sb.binaria && minOf(cy.count { it == 1.0 }, cy.count { it == 0.0 }) < 4) continue
-            val r = pearson(xs, ys) ?: continue
-            val bruta = pearson(cx, cy) ?: r
+            if (sa.binaria) { var unos = 0; for (k in 0 until n) if (cx[k] == 1.0) unos++; if (minOf(unos, n - unos) < 4) continue }
+            if (sb.binaria) { var unos = 0; for (k in 0 until n) if (cy[k] == 1.0) unos++; if (minOf(unos, n - unos) < 4) continue }
+            val rr = r(xs, ys, n) ?: continue
+            val bruta = r(cx, cy, n) ?: rr
             val ra = (if (sinTendencia) sa.r1Resto else sa.r1Crudo).coerceIn(-0.5, 0.97)
             val rb = (if (sinTendencia) sb.r1Resto else sb.r1Crudo).coerceIn(-0.5, 0.97)
             val nEf = (n * (1 - ra * rb) / (1 + ra * rb)).coerceIn(4.0, n.toDouble())
-            val z = atanh(r.coerceIn(-0.9999, 0.9999)); val se = 1 / sqrt(nEf - 3)
+            val z = atanh(rr.coerceIn(-0.9999, 0.9999)); val se = 1 / sqrt(nEf - 3)
             val p = Analisis.pBilateral(z / se)
-            res.add(Correlacion(a, b, r, n, tanh(z - 1.96 * se) to tanh(z + 1.96 * se), bruta, nEf, p, obvia = obvia(a, b)))
+            res.add(Correlacion(a, b, rr, n, tanh(z - 1.96 * se) to tanh(z + 1.96 * se), bruta, nEf, p, obvia = obvia(a, b)))
         }
         val limpias = res.filter { !it.obvia }
         Analisis.bh(limpias.map { it.p }).forEachIndexed { i, q -> limpias[i].q = q }

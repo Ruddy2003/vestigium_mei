@@ -448,8 +448,22 @@ fun PantallaDatos(nav: Nav) {
     Hoja("Datos", nav.atras, "Todo lo que guarda la app, listo para R.") {
         msg?.let { Aviso(it) }
         if (ocupado) Ayuda("Trabajando…", Modifier.padding(top = 8.dp))
-        Seccion("Exportar", "Un .zip con un CSV por tabla, un respaldo completo en JSON y un archivo LEEME con las convenciones. Desde el menú de compartir puedes guardarlo directo en tu Drive.") {
-            BotonPrincipal("Exportar y compartir", Modifier.fillMaxWidth()) { scope.launch { ocupado = true; withContext(Dispatchers.IO) { Exportar.zip(ctx) }; Exportar.compartir(ctx); ocupado = false } }
+        Seccion("Exportar", "Desde el menú de compartir puedes guardarlo directo en tu Drive. Los dos traen un diccionario con lo que significa cada columna.") {
+            Tarjeta {
+                Text("Resumido", style = MaterialTheme.typography.titleMedium)
+                Ayuda("Un solo CSV, una fila por día, con lo principal de cada fuente (ánimo, sueño, cuerpo, teléfono, dinero, clima, comida, lugares, cultura). Para empezar rápido.")
+                BotonPrincipal("Exportar resumido", Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    scope.launch { ocupado = true; val f = withContext(Dispatchers.IO) { runCatching { Exportar.zipResumido(ctx) }.getOrNull() }; f?.let { Exportar.compartir(ctx, it) }; ocupado = false }
+                }
+                androidx.compose.material3.HorizontalDivider(Modifier.padding(vertical = 14.dp))
+                Text("Extendido", style = MaterialTheme.typography.titleMedium)
+                Ayuda("Todo: el panel extendido con una columna por cada persona, tema, lugar, app, categoría de gasto, artista, canal, obra, ciudad, alimento y nutriente " +
+                    "(vitaminas y minerales incluidos), los cuestionarios, las etapas de vida y la brújula; además, un CSV por cada tabla (cada gasto, cada canción, cada serie del gimnasio…), " +
+                    "las ubicaciones, un respaldo completo en JSON y las portadas.")
+                BotonPrincipal("Exportar extendido", Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                    scope.launch { ocupado = true; val f = withContext(Dispatchers.IO) { runCatching { Exportar.zip(ctx) }.getOrNull() }; f?.let { Exportar.compartir(ctx, it) }; ocupado = false }
+                }
+            }
         }
         Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí todos los CSV actualizados. Si eliges una carpeta que sincronizas con la computadora, R siempre tendrá los datos frescos.") {
             Tarjeta {

@@ -62,12 +62,16 @@ import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 /** Herramienta que se abre (la elige Explorar). */
-object Herramienta { var actual by mutableStateOf("tendencia") }
+object Herramienta {
+    var actual by mutableStateOf("tendencia")
+    /** Con qué abrir «Todo lo que se mueve con algo» (una persona, un lugar…), si se llega desde otra pantalla. */
+    var objetivo by mutableStateOf<String?>(null)
+}
 
 val HERRAMIENTAS = listOf(
     Triple("tendencia", "Tendencia", "Cómo cambia algo con el tiempo, con medias móviles"),
     Triple("semana", "Día de la semana", "Si una variable cambia según el día"),
-    Triple("factores", "Qué acompaña tus mejores días", "Todo lo que se asocia con tu ánimo, con corrección por comparaciones múltiples"),
+    Triple("factores", "Todo lo que se mueve con algo", "Elige cualquier cosa (tu ánimo, una persona, un lugar, una app, un nutriente, una etapa de tu vida) y ve qué la acompaña"),
     Triple("modelo", "Modelo múltiple", "Varias causas posibles a la vez, controlando el día anterior"),
     Triple("dinamica", "Dinámica emocional", "Variabilidad, inestabilidad e inercia de tu ánimo"),
     Triple("ritmo", "Ritmo de sueño", "Horarios, regularidad y jet lag social"),
@@ -114,23 +118,39 @@ fun PantallaAnalisis(nav: Nav) {
         }
     }
 
-    eligiendo?.let { cb ->
-        AlertDialog(
-            onDismissRequest = { eligiendo = null },
-            title = { Text("Variable", style = MaterialTheme.typography.titleLarge) },
-            text = {
-                LazyColumn(Modifier.heightIn(max = 460.dp)) {
-                    items(vars) { v ->
-                        Column(Modifier.fillMaxWidth().clickable { cb(v.id); eligiendo = null }.padding(vertical = 8.dp)) {
+    eligiendo?.let { cb -> ElegirVariable(vars, { eligiendo = null }) { cb(it); eligiendo = null } }
+}
+
+/** Elegir una variable entre cientos: buscador y grupos. */
+@Composable
+internal fun ElegirVariable(vars: List<Variable>, cerrar: () -> Unit, elegir: (String) -> Unit) {
+    var q by remember { mutableStateOf("") }
+    var grupo by remember { mutableStateOf<String?>(null) }
+    fun normal(x: String) = java.text.Normalizer.normalize(x.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
+    val grupos = remember(vars) { vars.map { it.grupo }.distinct() }
+    val lista = vars.filter { (grupo == null || it.grupo == grupo) && (q.isBlank() || normal(it.nombre + " " + it.grupo + " " + it.id).contains(normal(q.trim()))) }
+    AlertDialog(
+        onDismissRequest = cerrar,
+        title = { Text("Variable · ${vars.size}", style = MaterialTheme.typography.titleLarge) },
+        text = {
+            Column {
+                androidx.compose.material3.OutlinedTextField(q, { q = it }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("buscar: @ana, sueño, instagram, hierro…") })
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("todas", grupo == null) { grupo = null }
+                    grupos.forEach { g -> Ficha(g.lowercase(), grupo == g) { grupo = if (grupo == g) null else g } }
+                }
+                LazyColumn(Modifier.heightIn(max = 400.dp)) {
+                    items(lista) { v ->
+                        Column(Modifier.fillMaxWidth().clickable { elegir(v.id) }.padding(vertical = 8.dp)) {
                             Text(v.nombre, style = MaterialTheme.typography.bodyMedium)
                             Text(v.grupo.lowercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
-            },
-            confirmButton = { TextButton(onClick = { eligiendo = null }) { Text("cerrar", style = MaterialTheme.typography.labelLarge) } },
-        )
-    }
+            }
+        },
+        confirmButton = { TextButton(onClick = cerrar) { Text("cerrar", style = MaterialTheme.typography.labelLarge) } },
+    )
 }
 
 @Composable
@@ -213,7 +233,7 @@ private fun Semana(panel: Map<String, Map<String, Double?>>, vars: List<Variable
 // ---------------- Factores ----------------
 @Composable
 private fun Factores(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, elegir: (((String) -> Unit)) -> Unit) {
-    var objetivo by remember { mutableStateOf("valencia") }
+    var objetivo by remember { mutableStateOf(Herramienta.objetivo?.takeIf { o -> vars.any { it.id == o } } ?: "valencia") }
     var desfase by remember { mutableStateOf(false) }
     var lista by remember { mutableStateOf<List<Analisis.Factor>?>(null) }
     LaunchedEffect(objetivo, desfase, panel) { lista = withContext(Dispatchers.Default) { Analisis.factores(panel, vars, objetivo, desfase) } }

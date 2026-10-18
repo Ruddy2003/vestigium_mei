@@ -2,6 +2,7 @@ package io.github.ruddy2003.vestigium.ui.pantallas
 
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
@@ -82,6 +83,18 @@ fun PantallaExplorar(nav: Nav) {
     var y by remember { mutableStateOf("sueno_horas") }
     var desfase by remember { mutableStateOf(false) }
     var eligiendo by remember { mutableStateOf<Char?>(null) }
+    // Por semana: cada semana es el promedio de sus días; sirve para lo que pasa poco (escalar, viajar, escribir cartas).
+    var porSemana by remember { mutableStateOf(false) }
+    var semanales by remember { mutableStateOf<Map<Boolean, Relaciones>?>(null) }
+    var panelSemanal by remember { mutableStateOf<Map<String, Map<String, Double?>>>(emptyMap()) }
+    LaunchedEffect(porSemana, panel) {
+        if (porSemana && panel.isNotEmpty()) withContext(Dispatchers.Default) {
+            val ps = Estadistica.semanal(panel)
+            val m = mapOf(true to Estadistica.relaciones(ps, vars, true, minN = 8, paso = 7, ventana = 35), false to Estadistica.relaciones(ps, vars, false, minN = 8, paso = 7))
+            withContext(Dispatchers.Main) { panelSemanal = ps; semanales = m }
+        }
+    }
+    fun abrirFicha(id: String) { Herramienta.actual = "factores"; Herramienta.objetivo = id; nav.ir("analisis") }
 
     Hoja("Entender", subtitulo = "Tus datos vistos de lejos: la semana, el año, el mapa y las relaciones. Para modelos completos, exporta y abre vestigium.R.",
         buscar = { nav.ir("buscar") }) {
@@ -105,16 +118,24 @@ fun PantallaExplorar(nav: Nav) {
 
         Seccion("Cobertura", "Últimas 16 semanas. Más intenso = mejor valencia. Hueco = sin registro.") { Tarjeta { Cobertura() } }
 
+        Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Ficha("por día", !porSemana) { porSemana = false }
+            Ficha("por semana", porSemana) { porSemana = true }
+        }
+        Ayuda(if (porSemana) "Cada semana es el promedio de sus días (en lo que es sí/no, la proporción de días). Sirve para lo que pasa pocas veces." else
+            "Cada día contra cada día. ${vars.size} variables: tus personas, temas, lugares, apps, categorías de gasto, artistas, obras, ciudades, nutrientes, cuestionarios y etapas de vida, además de lo de siempre.",
+            Modifier.padding(top = 4.dp))
+
         Seccion("Cruzar dos variables") {
             Tarjeta {
                 val nx = vars.firstOrNull { it.id == x }?.nombre ?: x
                 val ny = vars.firstOrNull { it.id == y }?.nombre ?: y
                 OutlinedButton(onClick = { eligiendo = 'x' }, modifier = Modifier.fillMaxWidth()) { Text("Eje X: $nx") }
                 OutlinedButton(onClick = { eligiendo = 'y' }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Eje Y: $ny") }
-                Interruptor("Medir Y al día siguiente", desfase, "Ejemplo: ¿lo que dormí hoy predice mi ánimo de mañana?") { desfase = it }
-                val ps = Estadistica.pares(panel, x, y, desfase)
+                Interruptor(if (porSemana) "Medir Y la semana siguiente" else "Medir Y al día siguiente", desfase, "Ejemplo: ¿lo que dormí hoy predice mi ánimo de mañana?") { desfase = it }
+                val ps = if (porSemana) Estadistica.pares(panelSemanal, x, y, desfase, 7) else Estadistica.pares(panel, x, y, desfase)
                 if (x == y && !desfase) Ayuda("Elige dos variables distintas.")
-                else if (ps.size < 3) Vacio("Hay ${ps.size} días con ambos datos. Hacen falta al menos 3 para dibujar algo, y unos 30 para empezar a creerle.")
+                else if (ps.size < 3) Vacio("Hay ${ps.size} ${if (porSemana) "semanas" else "días"} con ambos datos. Hacen falta al menos 3 para dibujar algo, y unos 30 para empezar a creerle.")
                 else {
                     val r = Estadistica.pearson(ps.map { it.x }, ps.map { it.y })
                     val rho = Estadistica.spearman(ps.map { it.x }, ps.map { it.y })
@@ -123,7 +144,7 @@ fun PantallaExplorar(nav: Nav) {
                     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Cifra(r?.let { "%.2f".format(it) } ?: "—", "Pearson r", Modifier.weight(1f))
                         Cifra(rho?.let { "%.2f".format(it) } ?: "—", "Spearman ρ", Modifier.weight(1f))
-                        Cifra("${ps.size}", "días", Modifier.weight(1f))
+                        Cifra("${ps.size}", if (porSemana) "semanas" else "días", Modifier.weight(1f))
                     }
                     val txt = if (r == null) "Una de las dos variables no cambia en estos días, así que no se puede calcular relación." else buildString {
                         append("Relación ${Estadistica.fuerza(r)} y ${if (r >= 0) "positiva" else "negativa"}: cuando sube «$nx», «$ny» tiende a ${if (r >= 0) "subir" else "bajar"}${if (desfase) " al día siguiente" else ""}. ")
@@ -143,7 +164,7 @@ fun PantallaExplorar(nav: Nav) {
             }
             Interruptor("Quitar tendencias", sinTendencia, "Compara cada día con sus ~3 semanas alrededor. Así, dos cosas que solo cambiaron con el tiempo (los días se acortan mientras bajas de peso) dejan de parecer relacionadas.") { sinTendencia = it }
             Interruptor("Mostrar también las obvias", verObvias, "Pares de la misma fuente o calculados uno del otro: calorías y proteína, eventos y minutos de agenda, pasos y minutos a pie.") { verObvias = it }
-            val m = mejores?.get(sinTendencia)
+            val m = (if (porSemana) semanales else mejores)?.get(sinTendencia)
             if (m == null) Ayuda("Calculando…")
             else if (m.lista.isEmpty()) Vacio("Aparecerán cuando tengas al menos 14 días con datos en común.")
             else {
@@ -170,7 +191,7 @@ fun PantallaExplorar(nav: Nav) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         grupos.forEach { (c, parecidas) ->
                             val detalle = buildString {
-                                append("${c.n} días")
+                                append("${c.n} ${if (porSemana) "semanas" else "días"}")
                                 if (c.nEf < c.n * 0.8) append(" (≈ ${c.nEf.toInt()} independientes)")
                                 append(" · ${Estadistica.fuerza(c.r)}")
                                 if (sinTendencia && abs(c.bruta - c.r) >= 0.2) append(" · con tendencia: ${"%+.2f".format(c.bruta)}")
@@ -181,7 +202,8 @@ fun PantallaExplorar(nav: Nav) {
                                 val otra = if (p.a.id == c.a.id || p.a.id == c.b.id) p.b else p.a
                                 "«${otra.nombre.lowercase()}» (${"%+.2f".format(p.r)})"
                             } + if (parecidas.size > 3) " y ${parecidas.size - 3} más" else ""
-                            io.github.ruddy2003.vestigium.ui.TarjetaRelacion(c.a, c.b, c.r, detalle, q(c) >= 0.10, tambien)
+                            io.github.ruddy2003.vestigium.ui.TarjetaRelacion(c.a, c.b, c.r, detalle, q(c) >= 0.10, tambien,
+                                Modifier.clickable { abrirFicha(if (c.a.id == "valencia") c.b.id else c.a.id) })
                         }
                     }
                 }
@@ -223,37 +245,36 @@ fun PantallaExplorar(nav: Nav) {
             val p = Repo.dias.values.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount()
             val t = Repo.dias.values.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount()
             val h = Repo.dias.values.flatMap { it.hitos }.groupingBy { it }.eachCount()
-            Lista("Personas", p, "@"); Lista("Temas", t, "#"); Lista("Hitos", h, "")
+            val ids = vars.map { it.id }.toSet()
+            fun id(pre: String, k: String): String? = (pre + Texto.slug(k).take(40)).takeIf { it in ids }
+            Ayuda("Toca una para ver todo lo que se mueve con ella.", Modifier.padding(bottom = 6.dp))
+            Lista("Personas", p, "@", { id("per_", it) }, ::abrirFicha); Lista("Temas", t, "#", { id("tema_", it) }, ::abrirFicha); Lista("Hitos", h, "", { id("hito_", it) }, ::abrirFicha)
             TextButton(onClick = { nav.ir("totales") }) { Text("Ver menciones con fechas y por mes en Totales ›") }
         }
 
         Seccion("Lugares y ánimo") {
+            val lugares = vars.filter { it.id.startsWith("lug_") || it.id.startsWith("ciu_") }
+            if (lugares.isNotEmpty()) Tarjeta(Modifier.padding(bottom = 8.dp)) {
+                lugares.forEach { v ->
+                    Row(Modifier.fillMaxWidth().clickable { abrirFicha(v.id) }.padding(vertical = 6.dp)) {
+                        Text(v.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                        Text("›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
             TextButton(onClick = { nav.ir("lugares") }) { Text("Ver el mapa emocional de tus lugares ›") }
         }
+
+        EtapasDeVida(panel)
     }
 
     eligiendo?.let { eje ->
-        AlertDialog(
-            onDismissRequest = { eligiendo = null },
-            title = { Text(if (eje == 'x') "Eje X" else "Eje Y") },
-            text = {
-                LazyColumn(Modifier.heightIn(max = 460.dp)) {
-                    items(vars) { v ->
-                        TextButton(onClick = { if (eje == 'x') x = v.id else y = v.id; eligiendo = null }, modifier = Modifier.fillMaxWidth()) {
-                            Column(Modifier.fillMaxWidth()) {
-                                Text(v.nombre, style = MaterialTheme.typography.bodyMedium)
-                                Text(v.grupo, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { eligiendo = null }) { Text("Cerrar") } },
-        )
+        ElegirVariable(vars, { eligiendo = null }) { id -> if (eje == 'x') x = id else y = id; eligiendo = null }
     }
 }
 
-private val FOCOS = listOf("todas" to "todas", "animo" to "con tu ánimo", "sueno" to "con tu sueño", "cuerpo" to "cuerpo y comida", "telefono" to "teléfono y social")
+private val FOCOS = listOf("todas" to "todas", "animo" to "con tu ánimo", "sueno" to "con tu sueño", "personas" to "personas y vida", "lugares" to "lugares y viajes",
+    "cuerpo" to "cuerpo y comida", "telefono" to "teléfono y social", "cultura" to "lo que lees, ves y escuchas", "dinero" to "dinero")
 
 /**
  * Junta los pares casi repetidos: la misma variable con dos de la misma familia
@@ -277,22 +298,28 @@ private fun enFoco(foco: String, c: Correlacion): Boolean {
     fun es(v: io.github.ruddy2003.vestigium.ciencia.Variable) = when (foco) {
         "animo" -> v.grupo in setOf("Ánimo", "Momentos", "Privado", "Lectura del día") || v.id == "dolor"
         "sueno" -> v.grupo == "Sueño"
-        "cuerpo" -> v.grupo in setOf("Cuerpo", "Nutrición")
-        "telefono" -> v.grupo in setOf("Teléfono", "Social")
+        "cuerpo" -> v.grupo in setOf("Cuerpo", "Nutrición", "Salud")
+        "telefono" -> v.grupo in setOf("Teléfono", "Social", "Apps", "Notificaciones")
+        "personas" -> v.grupo in setOf("Personas", "Social", "Etapas de vida", "Temas", "Hitos")
+        "lugares" -> v.grupo in setOf("Lugares", "Mundo", "Movilidad")
+        "cultura" -> v.grupo in setOf("Cultura", "Música", "YouTube", "Lectura", "Texto")
+        "dinero" -> v.grupo == "Dinero"
         else -> true
     }
     return es(c.a) || es(c.b)
 }
 
 @Composable
-private fun Lista(titulo: String, conteo: Map<String, Int>, prefijo: String) {
+private fun Lista(titulo: String, conteo: Map<String, Int>, prefijo: String, id: (String) -> String? = { null }, abrir: (String) -> Unit = {}) {
     Tarjeta(Modifier.padding(bottom = 8.dp)) {
         Text(titulo, style = MaterialTheme.typography.titleMedium)
         val top = conteo.entries.sortedByDescending { it.value }.take(12)
         if (top.isEmpty()) Ayuda("Nada aún.")
         top.forEach { (k, v) ->
-            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
-                Text(prefijo + k, fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f))
+            val v = id(k)
+            Row(Modifier.fillMaxWidth().then(if (v != null) Modifier.clickable { abrir(v) } else Modifier).padding(vertical = 3.dp)) {
+                Text(prefijo + k + if (v != null) "  ›" else "", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f),
+                    color = if (v != null) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Unspecified)
                 Text("$v ${if (v == 1) "día" else "días"}", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp)
             }
         }
@@ -428,3 +455,35 @@ private fun CentroEntender(nav: Nav) {
         }
     }
 }
+
+/**
+ * Antes y después de cada cambio grande de «Conocerte» (mudanza, pareja, trabajo): tu ánimo, sueño, pantalla, pasos,
+ * gasto y vida social en los 60 días anteriores contra los 60 siguientes.
+ */
+@Composable
+private fun EtapasDeVida(panel: Map<String, Map<String, Double?>>) {
+    val cambios = Repo.config.perfil_historial.sortedByDescending { it.fecha }.take(8)
+    if (cambios.isEmpty() || panel.isEmpty()) return
+    val claves = listOf("valencia" to "ánimo", "sueno_horas" to "sueño (h)", "pantalla_min" to "pantalla (min)", "pasos" to "pasos",
+        "gasto_total" to "gasto", "personas" to "personas mencionadas", "palabras" to "palabras escritas")
+    Seccion("Antes y después", "Cada cambio que guardaste en «Conocerte»: los 60 días anteriores contra los 60 siguientes. Muchas cosas cambian a la vez; tómalo como una pista.") {
+        cambios.forEach { c ->
+            Tarjeta(Modifier.padding(bottom = 8.dp)) {
+                Text("${Fechas.corto(c.fecha)} ${c.fecha.take(4)} · ${c.campo}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                Ayuda("${c.antes.ifBlank { "(vacío)" }}  →  ${c.despues.ifBlank { "(vacío)" }}")
+                var alguno = false
+                claves.forEach { (k, n) ->
+                    val antes = (1..60).mapNotNull { panel[Fechas.sumar(c.fecha, -it.toLong())]?.get(k) }
+                    val despues = (0 until 60).mapNotNull { panel[Fechas.sumar(c.fecha, it.toLong())]?.get(k) }
+                    val d = Estadistica.diferencia(despues, antes) ?: return@forEach
+                    alguno = true
+                    val claro = d.second > 0 || d.third < 0
+                    io.github.ruddy2003.vestigium.ui.Clave(n, "%s → %s (%+.1f%s)".format(fmtCorto(antes.average()), fmtCorto(despues.average()), d.first, if (claro) "" else ", podría ser azar"), ancho = 12)
+                }
+                if (!alguno) Ayuda("Todavía no hay suficientes días a ambos lados del cambio.", Modifier.padding(top = 6.dp))
+            }
+        }
+    }
+}
+
+private fun fmtCorto(v: Double) = if (kotlin.math.abs(v) >= 100) "%,.0f".format(v) else "%.1f".format(v)

@@ -175,8 +175,20 @@ object Diccionario {
         "vm_politica.csv:ambiente" to "Eje ambiente: −100 proteger el ambiente, +100 crecimiento primero",
     )
 
+    /** De qué tabla salió cada prefijo del panel extendido. */
+    private val PREFIJOS_EXT = mapOf("salud_" to "vm_salud.csv", "pant_" to "vm_pantalla.csv", "clima_" to "vm_entorno.csv", "fotos_" to "vm_fotos.csv",
+        "agenda_" to "vm_agenda.csv", "notif_" to "vm_notificaciones.csv", "mov_" to "vm_actividad.csv", "com_" to "vm_comunicacion.csv",
+        "cx_" to "vm_conexiones.csv", "google_" to "vm_google_dia.csv", "nutr_" to "vm_nutricion.csv", "gym_" to "vm_entrenos.csv")
+
     private fun describir(archivo: String, col: String): String {
         D["$archivo:$col"]?.let { return it }
+        if (archivo == "vm_panel_extendido.csv") {
+            D["vm_panel.csv:$col"]?.let { return it }
+            io.github.ruddy2003.vestigium.ciencia.Dinamicas.nombres[col]?.let { return it }
+            PREFIJOS_EXT.entries.firstOrNull { col.startsWith(it.key) }?.let { (p, a) -> return describir(a, col.removePrefix(p)) + " (de ${a.removePrefix("vm_").removeSuffix(".csv")})" }
+            D[col]?.let { return it }
+            io.github.ruddy2003.vestigium.ciencia.Estadistica.variables(dinamicas = false).firstOrNull { it.id == col }?.let { return it.nombre }
+        }
         D[col]?.let { return it }
         return when {
             col.startsWith("ctx_") -> "Contexto del día: ${col.removePrefix("ctx_").replace('_', ' ')} (0/1)"
