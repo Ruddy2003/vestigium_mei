@@ -599,6 +599,31 @@ class Capturas {
             }
         }
     }
+    /** Revisa que todo se conecte: variables, panel, relaciones por día y por semana, panel extendido y diccionario. */
+    @Test fun conexiones() = pantalla(TemaId.LABORATORIO, false, 3600) {
+        suenosEjemplo(); cartasEjemplo(); obrasEjemplo()
+        Repo.configEnMemoria(Repo.config.copy(perfil = perfilEjemplo, politica = testsEjemplo(), perfil_historial = listOf(
+            io.github.ruddy2003.vestigium.data.CambioPerfil(io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -15), "pareja", "Sin pareja", "En pareja"))))
+        val E = io.github.ruddy2003.vestigium.ciencia.Estadistica
+        val v = E.variables(); val p = E.panel()
+        val rel = E.relaciones(p, v, false)
+        val sem = E.semanal(p)
+        val relSem = E.relaciones(sem, v, false, minN = 3, paso = 7)
+        val ext = io.github.ruddy2003.vestigium.data.Exportar.filasPanelExtendido()
+        val cols = LinkedHashSet<String>(); ext.forEach { cols.addAll(it.keys) }
+        val dic = io.github.ruddy2003.vestigium.data.Diccionario.csv(listOf(io.github.ruddy2003.vestigium.data.Exportar.Tabla("vm_panel_extendido.csv", "", ext)))
+        val sinDescripcion = dic.lines().drop(1).filter { it.isNotBlank() && it.split(",").getOrNull(3).isNullOrBlank() }.map { it.split(",").getOrNull(1) }
+        val dinamicas = v.filter { io.github.ruddy2003.vestigium.ciencia.Dinamicas.prefijo(it.id) != null }
+        Column(Modifier.padding(16.dp)) {
+            Text("variables: ${v.size} (dinámicas ${dinamicas.size})", style = MaterialTheme.typography.titleMedium)
+            Text(dinamicas.joinToString(" · ") { it.id }, style = MaterialTheme.typography.bodySmall)
+            Text("panel: ${p.size} días · relaciones por día: ${rel.lista.size} · por semana: ${sem.size} semanas, ${relSem.lista.size} relaciones", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text("extendido: ${ext.size} filas · ${cols.size} columnas", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(cols.joinToString(" · "), style = MaterialTheme.typography.bodySmall)
+            Text("sin descripción (${sinDescripcion.size}): " + sinDescripcion.take(60).joinToString(", "), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+            Text("ejemplo: " + rel.lista.take(5).joinToString(" | ") { "${it.a.id}~${it.b.id} ${"%.2f".format(it.r)}" }, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+        }
+    }
     @Test fun datosGotico() = pantalla(TemaId.GOTICO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDatos(navVacia) }
     @Test fun epigrafeMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) {
         val ayer = io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1)

@@ -202,7 +202,7 @@ object Estadistica {
         Repo.pantalla.forEach { (f, p) -> val r = fila(f); r["pantalla_min"] = p.total_min.toDouble(); r["desbloqueos"] = p.desbloqueos.toDouble() }
         Repo.reacciones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["rt_media"] = media(l.mapNotNull { it.media_ms }) }
         Repo.visitas.groupBy { it.entrada.take(10) }.forEach { (f, l) -> fila(f)["lugares_distintos"] = l.map { it.lugar }.toSet().size.toDouble() }
-        Movilidad.kmPorDia().forEach { (f, km) -> fila(f)["distancia_km"] = km }
+        runCatching { Movilidad.kmPorDia() }.getOrDefault(emptyMap()).forEach { (f, km) -> fila(f)["distancia_km"] = km }
         Repo.entorno.forEach { (f, e) ->
             val r = fila(f)
             r["t_max"] = e.t_max; r["t_min"] = e.t_min; r["precip_mm"] = e.precip_mm; r["nubes_pct"] = e.nubes_pct
