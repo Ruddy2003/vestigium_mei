@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -237,7 +238,7 @@ private fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, ra
         c.drawPath(GeoMapa.reticula, pinceles.reticula)
         pinceles.borde.strokeWidth = 0.6f * dens * px
         pinceles.bordeLamina.strokeWidth = 0.5f * dens * px
-        val r = 3.2f * dens * px
+        val r = 2.4f * dens * px
         for (f in formas) {
             val codigo = f.pais.codigo
             val visto = codigo in visitados
@@ -346,8 +347,10 @@ fun PantallaMundo(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra("${t.paises.size}", "países", Modifier.weight(1f))
             Cifra("${t.ciudades.size}", "ciudades", Modifier.weight(1f))
-            Cifra("$continentes/6", "continentes", Modifier.weight(1f))
-            Cifra(if (pct < 10) "%.1f%%".format(pct) else "%.0f%%".format(pct), "de la tierra", Modifier.weight(1f))
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Cifra("$continentes de 6", "continentes", Modifier.weight(1f))
+            Cifra(if (pct < 10) "%.1f%%".format(pct) else "%.0f%%".format(pct), "de la tierra firme", Modifier.weight(1f))
         }
 
         Seccion("Mapa para rascar", "Cada país donde estuviste queda descubierto. Ábrelo para acercarte y rascar a mano los que visitaste antes de usar la app.", numero = 1) {
@@ -474,6 +477,28 @@ fun PantallaRascar(nav: Nav) {
     var tam by remember { mutableStateOf(Offset(1f, 1f)) }
     val dens = LocalDensity.current.density
     val visitados = r?.codigosPaises ?: emptySet()
+    var area by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    var iniciado by remember { mutableStateOf(false) }
+    /** Acerca el mapa a un país (lo deja al centro). */
+    fun centrar(p: Mundo.Pais, z: Float) {
+        val f = GeoMapa.formas(ctx).firstOrNull { it.pais.codigo == p.codigo } ?: return
+        val w = area.width.toFloat(); val h = area.height.toFloat()
+        if (w <= 0f || h <= 0f) return
+        val L = GeoMapa.limites
+        val s = min(w / L.width(), h / L.height())
+        val bx = (w - L.width() * s) / 2 - L.left * s; val by = (h - L.height() * s) / 2 - L.top * s
+        val base = Offset(bx + f.etiqueta.x * s, by + f.etiqueta.y * s)
+        zoom = z
+        val lim = Offset(w * (z - 1) / 2 + w * 0.2f, h * (z - 1) / 2 + h * 0.2f)
+        pan = Offset((-z * (base.x - w / 2)).coerceIn(-lim.x, lim.x), (-z * (base.y - h / 2)).coerceIn(-lim.y, lim.y))
+    }
+    // Al abrir: acercado a tu región (el país donde más días has pasado), para que el mapa llene la pantalla.
+    LaunchedEffect(r, area) {
+        if (!iniciado && r != null && area.width > 0) {
+            iniciado = true
+            r.paises.firstOrNull()?.let { e -> Mundo.pais(ctx, e.clave)?.let { centrar(it, 2.2f) } }
+        }
+    }
 
     fun rascar(p: Mundo.Pais) {
         Repo.cambiarConfig { c -> c.copy(paises_rascados = (c.paises_rascados + p.codigo).distinct(), paises_tapados = c.paises_tapados - p.codigo) }
@@ -494,7 +519,7 @@ fun PantallaRascar(nav: Nav) {
                 Ayuda("${visitados.size} países · toca un país para verlo; pellizca para acercarte")
             }
         }
-        Box(Modifier.weight(1f).fillMaxWidth()
+        Box(Modifier.weight(1f).fillMaxWidth().onSizeChanged { area = it }
             .pointerInput(Unit) {
                 detectTransformGestures { centroide, desplazamiento, factor, _ ->
                     val nz = (zoom * factor).coerceIn(1f, 16f)
@@ -523,7 +548,13 @@ fun PantallaRascar(nav: Nav) {
         val p = elegido
         Surface(Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
             Column(Modifier.padding(16.dp)) {
-                if (p == null) Ayuda("Los países que descubren tus ubicaciones necesitan al menos media hora ahí, para que no cuenten los que solo sobrevolaste. Toca dos veces para volver a ver todo el mundo.")
+                if (p == null) {
+                    Ayuda("Toca un país para verlo y rascarlo. Los que salen de tus ubicaciones necesitan al menos media hora ahí, para que no cuenten los que solo sobrevolaste. Dos toques: todo el mundo.")
+                    val mios = r?.paises.orEmpty().mapNotNull { Mundo.pais(ctx, it.clave) }
+                    if (mios.isNotEmpty()) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        mios.forEach { m -> Ficha("${m.bandera} ${m.nombre}", false) { elegido = m; centrar(m, max(zoom, 3f)) } }
+                    }
+                }
                 else {
                     val e = r?.paises?.firstOrNull { it.clave == p.codigo }
                     val cuantas = r?.ciudades?.count { it.pais == p.codigo } ?: 0

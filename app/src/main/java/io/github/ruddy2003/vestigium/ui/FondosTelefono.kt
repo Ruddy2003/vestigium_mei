@@ -123,7 +123,9 @@ fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modif
     val e = esquemaDe(tema, o)
     MaterialTheme(colorScheme = e, typography = tipoDe(tema, o)) {
         Box(modifier.background(e.background).fondoTema(tema, e)) {
-            FondoVivo(tema, fijo = 0.37f)
+            // Lo que se mueve en la app, aquí quieto y un poco más visible (se dibuja dos veces).
+            FondoVivo(tema, fijo = 0.37f); FondoVivo(tema, fijo = 0.37f)
+            MarcoFondo(tema, e)
             // Una luz suave detrás del emblema y las orillas un poco más oscuras.
             Canvas(Modifier.fillMaxSize()) {
                 val c = Offset(size.width / 2, size.height * 0.42f)
@@ -131,10 +133,35 @@ fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modif
                 drawRect(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = if (o) 0.35f else 0.10f)), Offset(size.width / 2, size.height / 2), size.height * 0.75f))
             }
             Column(Modifier.align(BiasAlignment(0f, -0.18f)), horizontalAlignment = Alignment.CenterHorizontally) {
-                Emblema(tema, 150.dp, e, animado = false)
+                Emblema(tema, 176.dp, e, animado = false)
                 Text(FondosTelefono.marca(tema), style = MaterialTheme.typography.titleLarge.copy(letterSpacing = 3.sp), color = e.primary, textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 22.dp))
                 Meandro(Modifier.width(210.dp).padding(top = 10.dp))
+            }
+        }
+    }
+}
+
+/** Un marco fino a todo el borde: doble filete con rombos en las esquinas (papel) o escuadras de luz (pantallas). */
+@Composable
+private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) {
+    val pantalla = tema in setOf(TemaId.CIBER, TemaId.ESPACIO, TemaId.LABORATORIO, TemaId.REFUGIO, TemaId.ORDEN)
+    Canvas(Modifier.fillMaxSize()) {
+        val u = 1.dp.toPx(); val m = 22 * u
+        val col = e.primary.copy(alpha = if (pantalla) 0.55f else 0.38f)
+        val izq = m; val der = size.width - m; val arr = m + 26 * u; val aba = size.height - m - 10 * u
+        if (pantalla) {
+            val l = 34 * u
+            listOf(Offset(izq, arr) to Offset(1f, 1f), Offset(der, arr) to Offset(-1f, 1f), Offset(izq, aba) to Offset(1f, -1f), Offset(der, aba) to Offset(-1f, -1f)).forEach { (o, d) ->
+                drawLine(col, o, o + Offset(d.x * l, 0f), 2 * u); drawLine(col, o, o + Offset(0f, d.y * l), 2 * u)
+            }
+        } else {
+            val est = androidx.compose.ui.graphics.drawscope.Stroke(1.2f * u)
+            drawRect(col, Offset(izq, arr), androidx.compose.ui.geometry.Size(der - izq, aba - arr), style = est)
+            drawRect(col.copy(alpha = col.alpha * 0.6f), Offset(izq + 6 * u, arr + 6 * u), androidx.compose.ui.geometry.Size(der - izq - 12 * u, aba - arr - 12 * u), style = androidx.compose.ui.graphics.drawscope.Stroke(0.7f * u))
+            listOf(Offset(izq, arr), Offset(der, arr), Offset(izq, aba), Offset(der, aba)).forEach { c ->
+                val k = 7 * u
+                drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(c.x - k, c.y); lineTo(c.x, c.y - k); lineTo(c.x + k, c.y); lineTo(c.x, c.y + k); close() }, e.primary.copy(alpha = 0.6f))
             }
         }
     }

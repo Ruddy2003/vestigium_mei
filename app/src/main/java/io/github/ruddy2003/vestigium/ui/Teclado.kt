@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -180,6 +181,12 @@ fun TecladoTema(tema: TemaId, p: Pagina, valor: TextFieldValue, onCambio: (TextF
     }
 }
 
+/** Lo que dice la barra espaciadora en cada tema. */
+private val etiquetaEspacio: String get() = when (Estilo.tema) {
+    TemaId.ROMANO -> "SPATIVM"; TemaId.HELENO -> "ΔΙΑΣΤΗΜΑ"; TemaId.CIBER -> "[ space ]"; TemaId.ANDALUS -> "فراغ"; TemaId.MONGOL -> "зай"
+    TemaId.RENACIMIENTO -> "spazio"; TemaId.DISTOPIA, TemaId.URSS -> "ESPACIO"; TemaId.REFUGIO -> "> espacio"; else -> "espacio"
+}
+
 @Composable
 private fun Tecla(texto: String, e: EstiloTeclado, fuente: androidx.compose.ui.text.font.FontFamily, modifier: Modifier, especial: Boolean = false, resaltada: Boolean = false,
                   alternas: List<String> = emptyList(), onAlterna: (String) -> Unit = {}, onLargo: (() -> Unit)? = null, onTap: () -> Unit) {
@@ -191,7 +198,7 @@ private fun Tecla(texto: String, e: EstiloTeclado, fuente: androidx.compose.ui.t
     val largo by rememberUpdatedState(onLargo)
     val fondo = when { resaltada -> e.letraEspecial; especial -> e.especial; else -> e.tecla }
     val color = when { resaltada -> e.tecla; especial -> e.letraEspecial; else -> e.letra }
-    Box(modifier
+    Box(modifier.fillMaxHeight()
         .graphicsLayer { val s = if (apretada) 0.92f else 1f; scaleX = s; scaleY = s }
         .then(if (e.sombra) Modifier.shadow(if (apretada) 0.dp else 1.5.dp, e.forma, clip = false) else Modifier)
         .background(if (apretada) lerp(fondo, e.letraEspecial, 0.25f) else fondo, e.forma)
@@ -203,7 +210,8 @@ private fun Tecla(texto: String, e: EstiloTeclado, fuente: androidx.compose.ui.t
                 onTap = { tap() },
             )
         }, contentAlignment = Alignment.Center) {
-        Text(texto, style = TextStyle(fontFamily = if (texto.length == 1 && texto[0].isLetterOrDigit()) fuente else null, fontSize = if (texto.length > 2) 13.sp else 19.sp,
+        if (texto == " ") Text(etiquetaEspacio, style = TextStyle(fontFamily = fuente, fontSize = 12.sp, color = color.copy(alpha = 0.45f)))
+        else Text(texto, style = TextStyle(fontFamily = if (texto.length == 1 && texto[0].isLetterOrDigit()) fuente else null, fontSize = if (texto.length > 2) 13.sp else 19.sp,
             color = color, textAlign = TextAlign.Center))
         if (alternas.isNotEmpty() && !especial) Text("·", style = TextStyle(fontSize = 10.sp, color = color.copy(alpha = 0.45f)), modifier = Modifier.align(Alignment.TopEnd).padding(end = 3.dp))
         if (abiertas) Popup(alignment = Alignment.BottomCenter, offset = IntOffset(0, -150), onDismissRequest = { abiertas = false }) {
@@ -230,7 +238,7 @@ private fun TeclaBorrar(e: EstiloTeclado, fuente: androidx.compose.ui.text.font.
     val uno by rememberUpdatedState(borrar)
     val palabra by rememberUpdatedState(borrarPalabra)
     val sentir by rememberUpdatedState(toque)
-    Box(modifier
+    Box(modifier.fillMaxHeight()
         .graphicsLayer { val s = if (apretada) 0.92f else 1f; scaleX = s; scaleY = s }
         .background(if (apretada) lerp(e.especial, e.letraEspecial, 0.25f) else e.especial, e.forma)
         .then(if (e.borde != null) Modifier.border(1.dp, e.borde, e.forma) else Modifier)
