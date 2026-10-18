@@ -424,7 +424,7 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
                         modifier = Modifier.fillMaxWidth().padding(top = 22.dp))
                     Canvas(Modifier.fillMaxWidth().padding(top = 18.dp).size(64.dp)) { lacre(tema, Offset(size.width / 2, size.height / 2), size.height * 0.42f, pa.lacre, e) }
                     Text(listOfNotNull(if (c.alFuturo) "sellada el ${Fechas.larga(c.escrita)}" else "escrita el ${Fechas.larga(c.escrita)}",
-                        c.abierta_el?.let { "abierta el ${Fechas.larga(it)}" }).joinToString(" · "),
+                        c.abierta_el?.takeIf { c.alFuturo }?.let { "abierta el ${Fechas.larga(it)}" }).joinToString(" · "),
                         style = MaterialTheme.typography.labelMedium, color = p.tenue, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
                     Text(colofon(tema), color = p.acento, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 18.dp))
                 }

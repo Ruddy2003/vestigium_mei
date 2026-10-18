@@ -161,7 +161,7 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.ESPACIO -> Materia(c(0xFF120A2A), c(0xFF06040F), c(0xFF241645), c(0xFFC59BFF), c(0xFF8AB4FF), c(0xFF06040F), c(0xFFECE6FA), extra = c(0xFFFF8AD8))
         else -> {
             fun n(x: Color, k: Float) = lerp(x, NOCHE, k)
-            Materia(cuerpo = n(m.cuerpo, 0.55f), sombra = n(m.sombra, 0.65f), brillo = n(m.brillo, 0.45f),
+            Materia(cuerpo = n(m.cuerpo, 0.68f), sombra = n(m.sombra, 0.76f), brillo = n(m.brillo, 0.6f),
                 acento = lerp(m.acento, LUNA, 0.3f), detalle = lerp(m.detalle, Color(0xFFAFC0EE), 0.45f),
                 hoja = n(m.hoja, 0.74f), tinta = Color(0xFFE8E6F2), extra = lerp(m.extra, Color(0xFF8FA6F0), 0.35f), textoCuerpo = Color(0xFFE8E6F2))
         }
@@ -333,13 +333,14 @@ fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, te
             Soporte.PANTALLA -> if (tema == TemaId.REFUGIO) listOf(w * 0.1f, h * 0.13f, w * 0.1f, h * 0.2f) else listOf(w * 0.05f, h * 0.22f, w * 0.05f, h * 0.06f)
         }
         val tinta = when (s) { Soporte.SOBRE, Soporte.CARPETA -> m.textoCuerpo; Soporte.PANTALLA -> m.tinta; else -> m.tinta }
-        val acento = when (s) { Soporte.PANTALLA -> m.acento; Soporte.SOBRE -> if (tema == TemaId.NAVIDAD) m.acento else m.detalle; Soporte.CARPETA -> m.acento; else -> m.extra }
+        // De noche, la fecha va en luz de luna (salvo en las pantallas, que ya brillan).
+        val acento = if (noche && s != Soporte.PANTALLA) LUNA else when (s) { Soporte.PANTALLA -> m.acento; Soporte.SOBRE -> if (tema == TemaId.NAVIDAD) m.acento else m.detalle; Soporte.CARPETA -> m.acento; else -> m.extra }
         val ty = MaterialTheme.typography
         val mono = s == Soporte.PANTALLA || s == Soporte.CARPETA
         val fuente = when { tema == TemaId.REFUGIO -> LetraExtra.vt323; mono -> Letra.codigo; else -> null }
         Column(Modifier.fillMaxSize().padding(start = izq, top = arr, end = der, bottom = aba), verticalArrangement = Arrangement.Center,
             horizontalAlignment = if (s == Soporte.LIBRO) Alignment.CenterHorizontally else Alignment.Start) {
-            if (tema == TemaId.CIBER) Text("$ nano ~/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 11.sp, color = m.acento, maxLines = 1)
+            if (tema == TemaId.CIBER) Text(if (noche) "$ nano ~/suenos/$fecha.dream" else "$ nano ~/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 11.sp, color = m.acento, maxLines = 1)
             Text(Estilo.fecha(fecha), style = ty.titleSmall, color = acento, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 fontFamily = fuente ?: ty.titleSmall.fontFamily, textAlign = if (s == Soporte.LIBRO) TextAlign.Center else TextAlign.Start)
             Text(if (vista.isBlank()) (if (noche) pistaSueno(s) else pista(s)) else vista, color = tinta.copy(alpha = if (vista.isBlank()) 0.65f else 0.9f),
@@ -353,7 +354,7 @@ fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, te
         if (s == Soporte.CARPETA) Text(if (noche) "SUEÑO" else "ARCHIVO", color = m.acento.copy(alpha = 0.75f), fontFamily = LetraExtra.oswald, fontSize = 15.sp,
             modifier = Modifier.align(Alignment.TopEnd).padding(top = h * 0.36f, end = w * 0.06f).rotate(-10f)
                 .border(2.dp, m.acento.copy(alpha = 0.7f)).padding(horizontal = 6.dp, vertical = 1.dp))
-        if (s == Soporte.CARPETA) Text("EXPEDIENTE", color = m.detalle, fontFamily = LetraExtra.oswald, fontSize = 11.sp,
+        if (s == Soporte.CARPETA) Text("EXPEDIENTE", color = if (noche) LUNA else m.detalle, fontFamily = LetraExtra.oswald, fontSize = 11.sp,
             modifier = Modifier.padding(start = w * 0.07f, top = h * 0.035f))
     }
 }
@@ -744,11 +745,11 @@ private fun Expedientes(entradas: List<Dia>, m: Materia, noche: Boolean, texto: 
                     drawRoundRect(m.sombra, Offset(tx, 0f), Size(w * 0.24f, h * 0.36f), CornerRadius(6f))
                     drawRoundRect(Brush.verticalGradient(listOf(m.brillo, m.cuerpo)), Offset(0f, h * 0.28f), Size(w, h * 0.72f), CornerRadius(3f))
                 }
-                Text((if (noche) "SUEÑO " else "EXP. ") + d.fecha, fontSize = 9.sp, fontFamily = LetraExtra.oswald, color = m.detalle,
+                Text((if (noche) "SUEÑO " else "EXP. ") + d.fecha, fontSize = 9.sp, fontFamily = LetraExtra.oswald, color = if (noche) LUNA else m.detalle,
                     modifier = Modifier.padding(start = pestana + 8.dp, top = 3.dp))
                 Row(Modifier.padding(start = 10.dp, top = 22.dp, end = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(Fechas.corto(d.fecha).uppercase(), fontSize = 11.sp, fontFamily = Letra.codigo, color = m.detalle, modifier = Modifier.width(96.dp), maxLines = 1)
-                    Text(texto(d).trim().replace(Regex("\\s+"), " "), fontSize = 11.sp, fontFamily = Letra.codigo, color = m.detalle.copy(alpha = 0.8f),
+                    Text(Fechas.corto(d.fecha).uppercase(), fontSize = 11.sp, fontFamily = Letra.codigo, color = if (noche) LUNA else m.detalle, modifier = Modifier.width(96.dp), maxLines = 1)
+                    Text(texto(d).trim().replace(Regex("\\s+"), " "), fontSize = 11.sp, fontFamily = Letra.codigo, color = (if (noche) LUNA else m.detalle).copy(alpha = 0.8f),
                         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 }
             }
@@ -902,7 +903,6 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
             }
             if (noche) {
                 estrellas(t.ordinal * 17 + 3, (w * h / 5200f).toInt().coerceIn(60, 260), LUNA, max = 1.5f)
-                mediaLuna(Offset(w - 46.dp.toPx(), 70.dp.toPx()), 15.dp.toPx(), LUNA.copy(alpha = 0.85f))
             }
         }
         if (oscuroApp && !p.oscura) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.22f)))
@@ -989,7 +989,10 @@ private fun EncabezadoSueno(t: TemaId, p: Pagina, fecha: String) {
             modifier = Modifier.padding(top = 4.dp))
         Text(Estilo.fecha(fecha), style = ty.headlineSmall, color = p.tinta, textAlign = TextAlign.Center,
             fontFamily = if (t == TemaId.REFUGIO) LetraExtra.vt323 else ty.headlineSmall.fontFamily, modifier = Modifier.padding(top = 6.dp))
-        Text((if (antes != null) "la noche del ${antes.dayOfMonth} al " else "la noche antes del ") + Fechas.titulo(fecha).lowercase() + " · " + Fechas.relativo(fecha),
+        val dia = runCatching { Fechas.parse(fecha) }.getOrNull()
+        fun sem(d: java.time.LocalDate) = d.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)
+        Text((if (antes != null && dia != null) "la noche del ${sem(antes)} ${antes.dayOfMonth} al ${sem(dia)} ${dia.dayOfMonth} de ${dia.month.getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)}"
+            else "la noche antes del " + Fechas.titulo(fecha).lowercase()) + " · " + Fechas.relativo(fecha),
             style = ty.labelMedium, color = p.tenue, textAlign = TextAlign.Center)
         Meandro(Modifier.padding(top = 10.dp, bottom = 12.dp), color = p.acento.copy(alpha = 0.5f))
     }

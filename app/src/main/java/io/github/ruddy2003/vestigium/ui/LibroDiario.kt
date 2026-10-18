@@ -266,6 +266,12 @@ object LibroDiario {
             c.drawPath(rombo, Paint(linea).apply { style = Paint.Style.FILL })
             y += 12f
             meta(d).takeIf { it.isNotBlank() }?.let { bloque(layout(it, pMeta)); y += 8f }
+            // Las frases con ♥ de ese día, como epígrafe a la derecha (no son parte del texto del diario).
+            Frases.deLaHoja(d.fecha).forEach { f ->
+                val l = StaticLayout.Builder.obtain("«${f.texto}»\n— ${f.autor}", 0, "«${f.texto}»\n— ${f.autor}".length, pExtra, ancho).setAlignment(Layout.Alignment.ALIGN_OPPOSITE)
+                    .setLineSpacing(0f, 1.25f).setIncludePad(false).build()
+                bloque(l); y += 8f
+            }
             // Texto: en el scriptorium, la primera letra va como capitular roja.
             val t = d.nota.trim()
             val cuerpo: CharSequence = if (tema == TemaId.MEDIEVAL && t.isNotEmpty()) SpannableString(t).apply {
