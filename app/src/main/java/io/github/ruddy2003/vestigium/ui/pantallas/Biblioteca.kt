@@ -153,15 +153,16 @@ fun PortadaObra(o: Obra, modifier: Modifier = Modifier, lado: Int = 360) {
         if (b != null) Image(b.asImageBitmap(), o.titulo, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         else androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra)))) {
             // Letra que se lea sobre la tapa: la tinta del tema si contrasta, si no crema o tinta oscura.
+            val ancho = maxWidth
             val fondo = m.cuerpo.luminance()
             val letra = if (abs(m.textoCuerpo.luminance() - fondo) > 0.3f) m.textoCuerpo else if (fondo < 0.4f) Color(0xFFF4ECD8) else Color(0xFF231A12)
-            if (maxWidth < 64.dp) {
+            if (ancho < 64.dp) {
                 // Miniatura de lista: solo la inicial, grande, dentro del filete.
                 Box(Modifier.fillMaxSize().padding(3.dp).border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)), contentAlignment = Alignment.Center) {
-                    Text(o.titulo.trim().firstOrNull()?.uppercase() ?: "·", fontFamily = Letra.garamond, fontSize = (maxWidth.value * 0.45f).sp, color = letra)
+                    Text(o.titulo.trim().firstOrNull()?.uppercase() ?: "·", fontFamily = Letra.garamond, fontSize = (ancho.value * 0.45f).sp, color = letra)
                 }
             } else Box(Modifier.fillMaxSize().padding(5.dp).border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)).padding(5.dp)) {
-                val escala = (maxWidth.value / 78f).coerceIn(1f, 1.6f)
+                val escala = (ancho.value / 78f).coerceIn(1f, 1.6f)
                 Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
                     Text((TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre ?: "").uppercase(), fontSize = (7 * escala).sp, color = m.acento, letterSpacing = 1.sp, maxLines = 1)
                     Text(o.titulo.ifBlank { "—" }, fontFamily = Letra.garamond, fontSize = (11 * escala).sp, lineHeight = (12 * escala).sp, color = letra, textAlign = TextAlign.Center,
