@@ -523,7 +523,8 @@ object Estadistica {
             val bruta = r(cx, cy, n) ?: rr
             val ra = (if (sinTendencia) sa.r1Resto else sa.r1Crudo).coerceIn(-0.5, 0.97)
             val rb = (if (sinTendencia) sb.r1Resto else sb.r1Crudo).coerceIn(-0.5, 0.97)
-            val nEf = (n * (1 - ra * rb) / (1 + ra * rb)).coerceIn(4.0, n.toDouble())
+            val nEf = (n * (1 - ra * rb) / (1 + ra * rb)).coerceIn(minOf(4.0, n.toDouble()), n.toDouble())
+            if (nEf <= 3.0) continue
             val z = atanh(rr.coerceIn(-0.9999, 0.9999)); val se = 1 / sqrt(nEf - 3)
             val p = Analisis.pBilateral(z / se)
             res.add(Correlacion(a, b, rr, n, tanh(z - 1.96 * se) to tanh(z + 1.96 * se), bruta, nEf, p, obvia = obvia(a, b)))
