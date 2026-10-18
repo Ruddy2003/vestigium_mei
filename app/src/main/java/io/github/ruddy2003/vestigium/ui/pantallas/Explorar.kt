@@ -316,10 +316,10 @@ private fun Lista(titulo: String, conteo: Map<String, Int>, prefijo: String, id:
         val top = conteo.entries.sortedByDescending { it.value }.take(12)
         if (top.isEmpty()) Ayuda("Nada aún.")
         top.forEach { (k, v) ->
-            val v = id(k)
-            Row(Modifier.fillMaxWidth().then(if (v != null) Modifier.clickable { abrir(v) } else Modifier).padding(vertical = 3.dp)) {
-                Text(prefijo + k + if (v != null) "  ›" else "", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f),
-                    color = if (v != null) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Unspecified)
+            val vid = id(k)
+            Row(Modifier.fillMaxWidth().then(if (vid != null) Modifier.clickable { abrir(vid) } else Modifier).padding(vertical = 3.dp)) {
+                Text(prefijo + k + if (vid != null) "  ›" else "", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f),
+                    color = if (vid != null) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Unspecified)
                 Text("$v ${if (v == 1) "día" else "días"}", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp)
             }
         }
