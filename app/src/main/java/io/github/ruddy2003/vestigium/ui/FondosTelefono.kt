@@ -146,7 +146,8 @@ fun PantallaFondoTelefono(nav: Nav) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val tema = Estilo.tema
-    var oscuro by remember { mutableStateOf(modoOscuro(tema)) }
+    val oscuroInicial = modoOscuro(tema)
+    var oscuro by remember { mutableStateOf(oscuroInicial) }
     var mensaje by remember { mutableStateOf<String?>(null) }
     var ocupado by remember { mutableStateOf(false) }
     val capa = rememberGraphicsLayer()

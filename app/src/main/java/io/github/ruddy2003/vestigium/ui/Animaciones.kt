@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Repo
@@ -227,7 +228,7 @@ fun CapaTransicionTema() {
         val r = listOf(Offset(0f, 0f), Offset(size.width, 0f), Offset(0f, size.height), Offset(size.width, size.height)).maxOf { (it - c).getDistance() }
         val radio = r * p.value
         val agujero = androidx.compose.ui.graphics.Path().apply { addOval(androidx.compose.ui.geometry.Rect(c, radio)) }
-        androidx.compose.ui.graphics.drawscope.clipPath(agujero, androidx.compose.ui.graphics.ClipOp.Difference) {
+        clipPath(agujero, androidx.compose.ui.graphics.ClipOp.Difference) {
             drawImage(foto, topLeft = -origen)
         }
         // El borde del círculo con el color del tema nuevo.
