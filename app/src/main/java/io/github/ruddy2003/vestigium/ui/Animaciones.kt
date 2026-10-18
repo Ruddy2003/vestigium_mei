@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -25,6 +26,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.material3.MaterialTheme
@@ -87,9 +91,10 @@ private class Mota(val x: Float, val y: Float, val v: Float, val fase: Float, va
 
 /** Lo que flota en el fondo de cada tema. Si el tema no tiene nada que mover, no dibuja nada (ni gasta batería). */
 @Composable
-fun FondoVivo(tema: TemaId = Estilo.tema) {
+fun FondoVivo(tema: TemaId = Estilo.tema, fijo: Float? = null) {
     val c = Repo.config
-    if (!c.animaciones || !c.fondo_vivo) return
+    // [fijo]: un instante quieto (para el fondo del teléfono), aunque las animaciones estén apagadas.
+    if (fijo == null && (!c.animaciones || !c.fondo_vivo)) return
     val e = MaterialTheme.colorScheme
     val oscuro = e.background.luminance() < 0.5f
     val tipo = when (tema) {
@@ -111,7 +116,10 @@ fun FondoVivo(tema: TemaId = Estilo.tema) {
         List(if (tipo == "lluvia") 34 else 26) { Mota(r.nextFloat(), r.nextFloat(), 0.4f + r.nextFloat() * 0.6f, r.nextFloat(), 0.5f + r.nextFloat(), r.nextInt(3)) }
     }
     val periodo = when (tipo) { "nubes" -> 90000; "agua" -> 14000; "estrellas", "luciernagas" -> 9000; "lluvia" -> 4000; "barrido" -> 7000; else -> 24000 }
-    val t by rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(periodo, easing = LinearEasing)), label = "t")
+    val t = if (fijo != null) fijo else {
+        val v by rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(periodo, easing = LinearEasing)), label = "t")
+        v
+    }
     val tonos = listOf(e.primary, e.secondary, e.tertiary)
     Canvas(Modifier.fillMaxSize()) {
         val w = size.width; val h = size.height; val u = 1.dp.toPx()
@@ -175,5 +183,54 @@ fun FondoVivo(tema: TemaId = Estilo.tema) {
             }
             "barrido" -> drawRect(e.primary.copy(alpha = 0.035f), Offset(0f, t * h), Size(w, 26f * u))
         }
+    }
+}
+
+// =====================================================================
+//  Al cambiar de tema: el tema nuevo se abre en círculo desde donde tocaste
+// =====================================================================
+
+/** La pantalla tal como estaba con el tema anterior, y desde dónde se abre el nuevo. */
+object TransicionTema {
+    var foto by androidx.compose.runtime.mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+    var centro by androidx.compose.runtime.mutableStateOf(Offset.Zero)
+    var vuelta by androidx.compose.runtime.mutableIntStateOf(0)
+
+    /** Toma la foto de la pantalla antes de cambiar el tema. Si no se puede (o no hay animaciones), simplemente no hay transición. */
+    fun preparar(vista: android.view.View, centroEnVentana: Offset) {
+        if (!Repo.config.animaciones) return
+        runCatching {
+            val raiz = vista.rootView
+            if (raiz.width <= 0 || raiz.height <= 0) return
+            val bmp = android.graphics.Bitmap.createBitmap(raiz.width, raiz.height, android.graphics.Bitmap.Config.ARGB_8888)
+            raiz.draw(android.graphics.Canvas(bmp))
+            foto = bmp.asImageBitmap()
+            centro = centroEnVentana
+            vuelta++
+        }
+    }
+}
+
+@Composable
+fun CapaTransicionTema() {
+    val foto = TransicionTema.foto ?: return
+    val vuelta = TransicionTema.vuelta
+    val p = remember(vuelta) { Animatable(0f) }
+    val color = MaterialTheme.colorScheme.primary
+    var origen by remember { androidx.compose.runtime.mutableStateOf(Offset.Zero) }
+    LaunchedEffect(vuelta) {
+        p.animateTo(1f, tween(720, easing = FastOutSlowInEasing))
+        if (TransicionTema.vuelta == vuelta) TransicionTema.foto = null
+    }
+    Canvas(Modifier.fillMaxSize().onGloballyPositioned { origen = it.positionInWindow() }) {
+        val c = TransicionTema.centro - origen
+        val r = listOf(Offset(0f, 0f), Offset(size.width, 0f), Offset(0f, size.height), Offset(size.width, size.height)).maxOf { (it - c).getDistance() }
+        val radio = r * p.value
+        val agujero = androidx.compose.ui.graphics.Path().apply { addOval(androidx.compose.ui.geometry.Rect(c, radio)) }
+        androidx.compose.ui.graphics.drawscope.clipPath(agujero, androidx.compose.ui.graphics.ClipOp.Difference) {
+            drawImage(foto, topLeft = -origen)
+        }
+        // El borde del círculo con el color del tema nuevo.
+        drawCircle(color.copy(alpha = 0.9f * (1f - p.value)), radio, c, style = androidx.compose.ui.graphics.drawscope.Stroke(6.dp.toPx() * (1f - p.value * 0.6f)))
     }
 }

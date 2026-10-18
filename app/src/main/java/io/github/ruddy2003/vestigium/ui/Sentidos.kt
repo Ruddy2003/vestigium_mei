@@ -22,7 +22,7 @@ import io.github.ruddy2003.vestigium.data.Repo
  * Los sonidos están sintetizados para esta app y solo suenan con el teléfono en modo normal (no en silencio ni vibración).
  */
 object Sentidos {
-    enum class Evento { TOQUE, ELEGIR, GUARDAR, LOGRO, PASAR, CAMBIO, ERROR, ABRIR }
+    enum class Evento { TOQUE, ELEGIR, GUARDAR, LOGRO, PASAR, CAMBIO, ERROR, ABRIR, TEMA }
 
     /** Un golpe de vibración: primitiva, intensidad (0–1) y espera en ms antes de él. */
     private class Golpe(val prim: Int, val fuerza: Float, val espera: Int = 0)
@@ -220,27 +220,27 @@ object Sentidos {
 
     // ---------------------------------------------------------------- sonido
 
-    /** Por tema: toque, guardar, logro, pasar (cambiar de pantalla), elegir y abrir. */
+    /** Por tema: toque, guardar, logro, pasar (cambiar de pantalla), elegir, abrir y el sonido del propio tema (al elegirlo). */
     private val SONIDOS = mapOf(
-        "romano" to intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir),
-        "ciber" to intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir),
-        "heleno" to intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir),
-        "medieval" to intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir),
-        "distopia" to intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir),
-        "refugio" to intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir),
-        "orden" to intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir),
-        "laboratorio" to intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro, R.raw.s_laboratorio_pasar, R.raw.s_laboratorio_elegir, R.raw.s_laboratorio_abrir),
-        "colonos" to intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro, R.raw.s_colonos_pasar, R.raw.s_colonos_elegir, R.raw.s_colonos_abrir),
-        "napoleon" to intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro, R.raw.s_napoleon_pasar, R.raw.s_napoleon_elegir, R.raw.s_napoleon_abrir),
-        "botanico" to intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir),
-        "navidad" to intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro, R.raw.s_navidad_pasar, R.raw.s_navidad_elegir, R.raw.s_navidad_abrir),
-        "seda" to intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro, R.raw.s_seda_pasar, R.raw.s_seda_elegir, R.raw.s_seda_abrir),
-        "urss" to intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir),
-        "gotico" to intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir),
-        "espacio" to intArrayOf(R.raw.s_espacio_toque, R.raw.s_espacio_guardar, R.raw.s_espacio_logro, R.raw.s_espacio_pasar, R.raw.s_espacio_elegir, R.raw.s_espacio_abrir),
-        "andalus" to intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir),
-        "mongol" to intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir),
-        "renacimiento" to intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir),
+        "romano" to intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir, R.raw.s_romano_tema),
+        "ciber" to intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir, R.raw.s_ciber_tema),
+        "heleno" to intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir, R.raw.s_heleno_tema),
+        "medieval" to intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema),
+        "distopia" to intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema),
+        "refugio" to intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir, R.raw.s_refugio_tema),
+        "orden" to intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir, R.raw.s_orden_tema),
+        "laboratorio" to intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro, R.raw.s_laboratorio_pasar, R.raw.s_laboratorio_elegir, R.raw.s_laboratorio_abrir, R.raw.s_laboratorio_tema),
+        "colonos" to intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro, R.raw.s_colonos_pasar, R.raw.s_colonos_elegir, R.raw.s_colonos_abrir, R.raw.s_colonos_tema),
+        "napoleon" to intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro, R.raw.s_napoleon_pasar, R.raw.s_napoleon_elegir, R.raw.s_napoleon_abrir, R.raw.s_napoleon_tema),
+        "botanico" to intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir, R.raw.s_botanico_tema),
+        "navidad" to intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro, R.raw.s_navidad_pasar, R.raw.s_navidad_elegir, R.raw.s_navidad_abrir, R.raw.s_navidad_tema),
+        "seda" to intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro, R.raw.s_seda_pasar, R.raw.s_seda_elegir, R.raw.s_seda_abrir, R.raw.s_seda_tema),
+        "urss" to intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir, R.raw.s_urss_tema),
+        "gotico" to intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir, R.raw.s_gotico_tema),
+        "espacio" to intArrayOf(R.raw.s_espacio_toque, R.raw.s_espacio_guardar, R.raw.s_espacio_logro, R.raw.s_espacio_pasar, R.raw.s_espacio_elegir, R.raw.s_espacio_abrir, R.raw.s_espacio_tema),
+        "andalus" to intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir, R.raw.s_andalus_tema),
+        "mongol" to intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir, R.raw.s_mongol_tema),
+        "renacimiento" to intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir, R.raw.s_renacimiento_tema),
     )
 
     private var pool: SoundPool? = null
@@ -265,17 +265,71 @@ object Sentidos {
         runCatching { SONIDOS[Estilo.tema.id]?.forEach { r -> if (r !in cargados) cargados[r] = pool().load(ctx.applicationContext, r, 1) } }
     }
 
+    /**
+     * Afinación: los sonidos con nota (laúd, lira, campanas, pitidos…) nunca se desafinan. El toque, si tiene nota,
+     * cambia entre las notas del acorde del tema (tónica, tercera, quinta), así tocar varias veces suena a música y no a máquina.
+     * Los que son puro ruido (papel, pluma, madera, teclas) varían un poco de altura al azar.
+     */
+    private val MAYOR = floatArrayOf(1f, 1.2599f, 1.4983f)
+    private val MENOR = floatArrayOf(1f, 1.1892f, 1.4983f)
+    private val PENTA = floatArrayOf(1f, 1.1225f, 1.2599f, 1.4983f, 1.6818f)
+    private fun acordeToque(tema: TemaId): FloatArray? = when (tema) {
+        TemaId.ROMANO, TemaId.LABORATORIO -> MAYOR
+        TemaId.CIBER, TemaId.GOTICO -> MENOR
+        TemaId.HELENO, TemaId.COLONOS, TemaId.BOTANICO -> PENTA
+        TemaId.ESPACIO, TemaId.ANDALUS -> MAYOR
+        else -> null
+    }
+    /** ¿Ese sonido de ese tema es ruido sin nota? */
+    private fun ruidoso(tema: TemaId, i: Int): Boolean = when (i) {
+        0 -> acordeToque(tema) == null
+        3 -> tema in setOf(TemaId.ROMANO, TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.NAPOLEON, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.SEDA, TemaId.URSS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.ESPACIO)
+        4 -> tema in setOf(TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.NAPOLEON, TemaId.ANDALUS)
+        else -> false
+    }
+
     private fun sonar(ctx: Context, tema: TemaId, e: Evento) {
-        val i = when (e) { Evento.TOQUE -> 0; Evento.GUARDAR -> 1; Evento.LOGRO -> 2; Evento.PASAR -> 3; Evento.ELEGIR -> 4; Evento.ABRIR, Evento.CAMBIO -> 5; else -> return }
+        val i = when (e) { Evento.TOQUE -> 0; Evento.GUARDAR -> 1; Evento.LOGRO -> 2; Evento.PASAR -> 3; Evento.ELEGIR -> 4; Evento.ABRIR, Evento.CAMBIO -> 5; Evento.TEMA -> 6; else -> return }
         val audio = ctx.getSystemService(AudioManager::class.java)
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
         val r = SONIDOS[tema.id]?.get(i) ?: return
-        val vol = when (i) { 0, 4 -> 0.45f; 3 -> 0.38f; 5 -> 0.6f; else -> 0.8f }
-        // Los sonidos cortos cambian un poco de altura cada vez, para que tocar varias veces no suene a máquina.
-        val tono = if (i == 0 || i == 3 || i == 4) 0.94f + azar.nextFloat() * 0.12f else 1f
+        val vol = when (i) { 0, 4 -> 0.45f; 3 -> 0.38f; 5 -> 0.6f; 6 -> 0.75f; else -> 0.8f }
+        val tono = when {
+            i == 0 && acordeToque(tema) != null -> acordeToque(tema)!!.let { it[azar.nextInt(it.size)] }
+            (i == 0 || i == 3 || i == 4) && ruidoso(tema, i) -> 0.94f + azar.nextFloat() * 0.12f
+            else -> 1f
+        }
+        tocar(ctx, r, vol, tono)
+    }
+
+    private fun tocar(ctx: Context, r: Int, vol: Float, tono: Float = 1f) {
         val p = pool()
         val id = cargados.getOrPut(r) { p.load(ctx.applicationContext, r, 1) }
         if (id in listos) p.play(id, vol, vol, 1, 0, tono) else pendientes[id] = vol
+    }
+
+    private fun puedeSonar(ctx: Context): Boolean {
+        if (!Repo.config.sonidos) return false
+        val audio = ctx.getSystemService(AudioManager::class.java)
+        return audio == null || audio.ringerMode == AudioManager.RINGER_MODE_NORMAL
+    }
+
+    /** Una tecla del diario: máquina de escribir, pluma, madera suave o pantalla, según el tema. */
+    fun tecla(ctx: Context, tema: TemaId) {
+        if (!puedeSonar(ctx)) return
+        val r = when (tema) {
+            TemaId.DISTOPIA, TemaId.URSS, TemaId.NAPOLEON, TemaId.COLONOS -> R.raw.s_tecla_maquina
+            TemaId.MEDIEVAL, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.ROMANO, TemaId.HELENO, TemaId.ANDALUS, TemaId.SEDA -> R.raw.s_tecla_pluma
+            TemaId.CIBER, TemaId.REFUGIO, TemaId.ESPACIO, TemaId.ORDEN, TemaId.LABORATORIO -> R.raw.s_tecla_digital
+            else -> R.raw.s_tecla_suave
+        }
+        runCatching { tocar(ctx, r, 0.32f, 0.95f + azar.nextFloat() * 0.1f) }
+    }
+
+    /** Una moneda que raspa la lámina del mapa. */
+    fun rascar(ctx: Context) {
+        if (Repo.config.vibracion) runCatching { vibrar(ctx, listOf(g(TICK, 0.5f), g(TICK, 0.6f, 60), g(TICK, 0.5f, 60), g(TICK, 0.7f, 120), g(TICK, 0.5f, 60), g(TICK, 0.6f, 60), g(TICK, 0.7f, 120), g(TICK, 0.5f, 60))) }
+        if (puedeSonar(ctx)) runCatching { tocar(ctx, R.raw.s_rascar, 0.7f) }
     }
 }
 

@@ -339,6 +339,11 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "buscar_obra" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBuscarObra(nav)
                     "anno" -> PantallaAnno(nav)
                     "mapa" -> PantallaMapa(nav)
+                    "mundo" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaMundo(nav)
+                    "fondo_telefono" -> PantallaFondoTelefono(nav)
+                    "rascar" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaRascar(nav)
+                    "unesco" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaUnesco(nav)
+                    "ciudad_nueva" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCiudadNueva(nav)
                     "analisis" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnalisis(nav)
                     "fuerza" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaFuerza(nav)
                     "totales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTotales(nav)
@@ -357,6 +362,10 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     }
     // Encima de todo (también de la barra inferior): la huella al sellar el día.
     CapaHuella()
+    // Y encima de todo, el tema anterior abriéndose en círculo cuando eliges otro.
+    CapaTransicionTema()
+    // Sin verse: prepara el fondo del teléfono del tema nuevo (fondo vivo o fondo fijo que cambia con el tema).
+    CapturaFondoTelefono()
     }
 }
 

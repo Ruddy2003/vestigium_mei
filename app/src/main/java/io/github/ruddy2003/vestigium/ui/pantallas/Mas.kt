@@ -75,6 +75,8 @@ fun PantallaMas(nav: Nav) {
                 FilaMenu("Prueba de reacción", "30 segundos para medir tu estado mental") { nav.ir("reaccion") }
                 HorizontalDivider()
                 FilaMenu("Lugares", "${Repo.lugares.size} lugares marcados") { nav.ir("lugares") }
+                HorizontalDivider()
+                FilaMenu("Mundo", "Ciudades y países donde has estado, mapa para rascar y Patrimonio Mundial") { nav.ir("mundo") }
             }
         }
         Seccion("Sistema", numero = 3) {

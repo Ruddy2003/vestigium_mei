@@ -314,6 +314,7 @@ object Romano {
     }
 
     private val LATIN = mapOf(
+        "Mundo" to "ORBIS TERRARVM", "Patrimonio Mundial" to "MIRABILIA MVNDI", "Mapa para rascar" to "ORBIS PICTVS", "Ciudades visitadas" to "CIVITATES",
         "Día" to "DIES", "Momentos" to "MOMENTA", "Gastos" to "SVMPTVS", "Explorar" to "EXPLORATIO", "Más" to "CETERA",
         "Hábitos" to "CONSVETVDINES", "Cartas al futuro" to "EPISTVLAE", "Experimentos personales" to "EXPERIMENTA",
         "Guía científica" to "DOCTRINA", "Cuestionarios" to "QVAESTIONES", "Prueba de reacción" to "CELERITAS",

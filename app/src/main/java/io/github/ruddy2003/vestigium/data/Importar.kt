@@ -249,6 +249,7 @@ object Importar {
                 }
             }
         }
+        Mundo.invalidar()
         return ResultadoImport("Importé $puntos puntos de ubicación de tu Cronología ($visitas visitas a lugares).")
     }
 }

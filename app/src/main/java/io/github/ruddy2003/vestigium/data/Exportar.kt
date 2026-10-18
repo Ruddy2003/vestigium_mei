@@ -114,6 +114,18 @@ object Exportar {
             "imprevisto" to it.imprevisto, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon)
     }
 
+    /** Lo marcado a mano en «Mundo»: ciudades añadidas, países rascados o tapados y sitios del Patrimonio Mundial. */
+    fun filasMundo(): List<Map<String, Any?>> {
+        val c = Repo.config
+        return c.ciudades_visitadas.map { m ->
+            linkedMapOf<String, Any?>("tipo" to "ciudad", "id" to m.id, "nombre" to m.nombre, "pais" to m.pais, "lat" to m.lat, "lon" to m.lon,
+                "desde" to m.desde, "hasta" to m.hasta, "dias" to m.dias, "nota" to m.nota.ifBlank { null })
+        } + c.paises_rascados.map { linkedMapOf<String, Any?>("tipo" to "pais_rascado", "id" to it, "nombre" to null, "pais" to it, "lat" to null, "lon" to null, "desde" to null, "hasta" to null, "dias" to null, "nota" to null) } +
+            c.paises_tapados.map { linkedMapOf<String, Any?>("tipo" to "pais_tapado", "id" to it, "nombre" to null, "pais" to it, "lat" to null, "lon" to null, "desde" to null, "hasta" to null, "dias" to null, "nota" to null) } +
+            c.unesco_marcados.map { linkedMapOf<String, Any?>("tipo" to "unesco", "id" to it.id.toString(), "nombre" to null, "pais" to null, "lat" to null, "lon" to null, "desde" to it.fecha, "hasta" to null, "dias" to null, "nota" to null) } +
+            c.unesco_descartados.map { linkedMapOf<String, Any?>("tipo" to "unesco_no_cuenta", "id" to it.toString(), "nombre" to null, "pais" to null, "lat" to null, "lon" to null, "desde" to null, "hasta" to null, "dias" to null, "nota" to null) }
+    }
+
     fun filasCitas() = Repo.obras.flatMap { o -> o.citas.map { c ->
         linkedMapOf<String, Any?>("id" to c.id, "obra_id" to o.id, "tipo" to o.tipo, "titulo" to o.titulo, "autor" to o.autor, "texto" to c.texto,
             "pagina" to c.pagina.ifBlank { null }, "fecha" to c.fecha.ifBlank { null }, "favorita" to c.favorita)
@@ -449,6 +461,7 @@ object Exportar {
         Tabla("vm_escalada_bloques.csv", "Bloques o vías de cada sesión", filasEscaladaBloques()),
         Tabla("vm_biblioteca.csv", "Libros, películas, series, juegos y artículos", filasBiblioteca()),
         Tabla("vm_citas.csv", "Citas de tus obras y frases guardadas con ♥", filasCitas()),
+        Tabla("vm_mundo.csv", "Ciudades añadidas a mano, países rascados y sitios del Patrimonio Mundial marcados", filasMundo()),
         Tabla("vm_comunicacion.csv", "Llamadas y SMS por día (solo conteos)", filasComunicacion()),
         Tabla("vm_conexiones.csv", "Wifi, audio, carga, batería y luz por día", filasConexiones()),
         Tabla("vm_subrayados.csv", "Subrayados y notas de Kindle", filasSubrayados()),

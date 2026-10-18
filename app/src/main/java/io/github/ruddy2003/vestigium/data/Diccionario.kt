@@ -127,7 +127,7 @@ object Diccionario {
         "libro" to "Libro", "ubicacion" to "Posición en el Kindle", "pagina" to "Página",
         // Obras y citas
         "revista" to "Revista donde salió el artículo", "doi" to "DOI del artículo", "dias_marcados" to "Días que marcaste que leíste, viste o jugaste la obra",
-        "fechas_marcadas" to "Esos días (lista)", "citas" to "Citas guardadas de la obra", "obra_id" to "Obra de la que es la cita", "favorita" to "Cita con ♥ (0/1)",
+        "fechas_marcadas" to "Esos días (lista)", "pais" to "País (código ISO de dos letras)", "desde" to "Desde (fecha)", "hasta" to "Hasta (fecha)", "citas" to "Citas guardadas de la obra", "obra_id" to "Obra de la que es la cita", "favorita" to "Cita con ♥ (0/1)",
         // Google
         "yt_vistos" to "Videos de YouTube vistos", "yt_busquedas" to "Búsquedas en YouTube", "busquedas" to "Búsquedas en Google", "visitas" to "Páginas visitadas desde la búsqueda",
         "canales" to "Canales más vistos, canal:n (lista)", "producto" to "youtube, busqueda u otro", "accion" to "visto, buscado, visitado u otro", "canal" to "Canal de YouTube",

@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class, androidx.compose.ui.ExperimentalComposeUiApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 
 package io.github.ruddy2003.vestigium.ui
 
@@ -46,6 +46,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -912,6 +915,25 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
     var campo by remember { mutableStateOf(TextFieldValue(valor, TextRange(valor.length))) }
     if (campo.text != valor) campo = TextFieldValue(valor, TextRange(valor.length))
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    // El teclado del tema: aparece al tocar la hoja; el del teléfono queda a un toque (⌨) para dictar o usar el autocorrector.
+    var propio by remember { mutableStateOf(io.github.ruddy2003.vestigium.data.Repo.config.teclado_tema) }
+    var enfocado by remember { mutableStateOf(false) }
+    val foco = remember { androidx.compose.ui.focus.FocusRequester() }
+    val gestorFoco = androidx.compose.ui.platform.LocalFocusManager.current
+    val tecladoSistema = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val alcance = androidx.compose.runtime.rememberCoroutineScope()
+    val traer = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+    var cambioPropio by remember { mutableStateOf(0) }
+    var reenfocar by remember { mutableStateOf(false) }
+    LaunchedEffect(propio) {
+        if (reenfocar) { kotlinx.coroutines.delay(60); runCatching { foco.requestFocus() }; if (!propio) tecladoSistema?.show(); reenfocar = false }
+    }
+    // Tras cada tecla, el renglón del cursor se mantiene a la vista (el teclado del teléfono lo haría solo).
+    LaunchedEffect(cambioPropio) {
+        if (cambioPropio == 0) return@LaunchedEffect
+        kotlinx.coroutines.delay(16)
+        layout?.let { l -> runCatching { val r = l.getCursorRect(campo.selection.end.coerceIn(0, l.layoutInput.text.length)); traer.bringIntoView(r.copy(bottom = r.bottom + 60f)) } }
+    }
     val etiquetas = remember { Etiquetas.frecuentes() }
     val antes = campo.text.substring(0, campo.selection.start.coerceIn(0, campo.text.length))
     val token = Regex("[@#][\\p{L}\\d_]*$").find(antes)?.value
@@ -931,9 +953,16 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = if (p.rayas == Rayas.NUMEROS) 52.dp else 30.dp, end = 26.dp, bottom = 24.dp)) {
                     EncabezadoPagina(tema, p, fecha)
                     val estilo = TextStyle(fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, color = p.tinta)
+                    androidx.compose.runtime.key(propio) {
+                    androidx.compose.ui.platform.InterceptPlatformTextInput(interceptor = object : androidx.compose.ui.platform.PlatformTextInputInterceptor {
+                        override suspend fun interceptStartInputMethod(request: androidx.compose.ui.platform.PlatformTextInputMethodRequest,
+                                                                       nextHandler: androidx.compose.ui.platform.PlatformTextInputSession): Nothing =
+                            if (propio) kotlinx.coroutines.awaitCancellation() else nextHandler.startInputMethod(request)
+                    }) {
                     BasicTextField(
                         value = campo, onValueChange = { campo = it; if (it.text != valor) onCambio(it.text) },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 420.dp).rayado(p, layout),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 420.dp).rayado(p, layout)
+                            .focusRequester(foco).onFocusChanged { enfocado = it.isFocused }.bringIntoViewRequester(traer),
                         textStyle = estilo, cursorBrush = SolidColor(p.acento), onTextLayout = { layout = it },
                         visualTransformation = p.capitular?.let { Capitular(it, p.acento) } ?: VisualTransformation.None,
                         decorationBox = { interior ->
@@ -943,10 +972,15 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                             }
                         },
                     )
+                    }
+                    }
                 }
-                if (sugerencias.isNotEmpty() || dictado) FlowRow(Modifier.fillMaxWidth().background(p.color.copy(alpha = 0.92f)).padding(horizontal = 12.dp, vertical = 6.dp),
+                if (sugerencias.isNotEmpty() || dictado || (!propio && enfocado)) FlowRow(Modifier.fillMaxWidth().background(p.color.copy(alpha = 0.92f)).padding(horizontal = 12.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (dictado) BotonDictado { t -> val nuevo = (campo.text + " " + t).trim(); campo = TextFieldValue(nuevo, TextRange(nuevo.length)); onCambio(nuevo) }
+                    if (!propio && io.github.ruddy2003.vestigium.data.Repo.config.teclado_tema) Ficha("teclado del tema", false) {
+                        tecladoSistema?.hide(); reenfocar = true; propio = true
+                    }
                     sugerencias.forEach { s ->
                         Ficha(s, false) {
                             val ini = antes.length - token!!.length
@@ -955,6 +989,10 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                         }
                     }
                 }
+                if (propio && enfocado) TecladoTema(tema, p, campo,
+                    onCambio = { v -> campo = v; if (v.text != valor) onCambio(v.text); cambioPropio++ },
+                    sistema = { reenfocar = true; propio = false },
+                    ocultar = { gestorFoco.clearFocus() })
             }
         }
     }

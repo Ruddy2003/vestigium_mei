@@ -270,6 +270,20 @@ data class Config(
     val frases_guardadas: List<FraseGuardada> = emptyList(),
     /** Categorías de ingreso. */
     val categorias_ingreso: List<String> = Catalogo.CATEGORIAS_INGRESO,
+    /** Ciudades que añadiste a mano (las de tus ubicaciones se calculan solas). */
+    val ciudades_visitadas: List<CiudadVisitada> = emptyList(),
+    /** Países rascados a mano en el mapa, y los que tapaste aunque tus ubicaciones digan que estuviste (un vuelo, una frontera). */
+    val paises_rascados: List<String> = emptyList(),
+    val paises_tapados: List<String> = emptyList(),
+    /** Patrimonio Mundial: los que marcaste a mano y los que quitaste aunque pasaste cerca. */
+    val unesco_marcados: List<SitioMarcado> = emptyList(),
+    val unesco_descartados: List<Int> = emptyList(),
+    /** Al escribir el diario aparece el teclado del tema en lugar del del teléfono. */
+    val teclado_tema: Boolean = true,
+    /** Al cambiar de tema, el fondo de pantalla del teléfono cambia también. */
+    val fondo_telefono_auto: Boolean = false,
+    /** Dónde poner el fondo del teléfono: «ambas», «inicio» o «bloqueo». */
+    val fondo_telefono_donde: String = "ambas",
 )
 
 /** Una frase del día guardada: el texto tal como se mostró, el tema donde apareció y cuándo se guardó. */

@@ -34,6 +34,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -248,15 +250,26 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
         if (parte == "apariencia") Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
             val oscuroAhora = io.github.ruddy2003.vestigium.ui.modoOscuro(io.github.ruddy2003.vestigium.ui.TemaId.ROMANO)
             // Los temas en una cuadrícula de tres por fila.
+            val vista = androidx.compose.ui.platform.LocalView.current
+            val centros = remember { HashMap<String, androidx.compose.ui.geometry.Offset>() }
             io.github.ruddy2003.vestigium.ui.TemaId.entries.chunked(3).forEach { fila ->
                 Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     fila.forEach { t ->
-                        io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, oscuroAhora, c.tema == t.id, Modifier.weight(1f)) { cambiar { it.copy(tema = t.id) } }
+                        io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, oscuroAhora, c.tema == t.id,
+                            Modifier.weight(1f).onGloballyPositioned { centros[t.id] = it.boundsInWindow().center }) {
+                            if (c.tema != t.id) {
+                                // Foto del tema de ahora, cambio de tema, y el nuevo se abre en círculo desde la tarjeta con su propio sonido.
+                                io.github.ruddy2003.vestigium.ui.TransicionTema.preparar(vista, centros[t.id] ?: androidx.compose.ui.geometry.Offset.Zero)
+                                cambiar { it.copy(tema = t.id) }
+                                io.github.ruddy2003.vestigium.ui.Sentidos.sentir(ctx, io.github.ruddy2003.vestigium.ui.Sentidos.Evento.TEMA)
+                            }
+                        }
                     }
                     repeat(3 - fila.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
                 }
             }
             Ayuda(io.github.ruddy2003.vestigium.ui.Estilo.tema.descripcion, Modifier.padding(top = 2.dp))
+            BotonSecundario("fondo del teléfono con este tema →", Modifier.padding(top = 8.dp)) { nav.ir("fondo_telefono") }
             Etiqueta("Claro u oscuro")
             if (io.github.ruddy2003.vestigium.ui.Estilo.tema.soloOscuro) Ayuda("El cyberpunk solo existe en oscuro.")
             else Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -269,6 +282,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
                 Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
                 if (c.animaciones) Interruptor("Fondo vivo", c.fondo_vivo, "Algo se mueve muy despacio detrás de todo: estrellas que titilan, luz de vitral, luciérnagas, nieve, nubes de la estepa, reflejos de agua. Gasta un poco más de batería.") { v -> cambiar { it.copy(fondo_vivo = v) } }
+                Interruptor("Teclado del tema en el diario", c.teclado_tema, "Al escribir el diario aparece un teclado con el papel y la letra del tema (ñ, acentos al dejar presionada la vocal, @ y # a la mano). Con ⌨ cambias al del teléfono para dictar o usar el autocorrector.") { v -> cambiar { it.copy(teclado_tema = v) } }
                 Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
                 Interruptor("Sonidos", c.sonidos, "Sonidos del tema al tocar, elegir, pasar de pantalla, abrir el diario, guardar y completar el día. Cambian un poco cada vez. No suenan con el teléfono en silencio o en vibración.") { v ->
                     cambiar { it.copy(sonidos = v) }

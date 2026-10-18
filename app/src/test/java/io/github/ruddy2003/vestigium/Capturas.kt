@@ -394,6 +394,46 @@ class Capturas {
     @Test fun relacionesGotico() = relaciones(TemaId.GOTICO, true)
     @Test fun relacionesRomano() = relaciones(TemaId.ROMANO, false)
     @Test fun relacionesNavidad() = relaciones(TemaId.NAVIDAD, false)
+
+    // ------------------------------------------------------------ mundo, teclado y fondos del teléfono
+
+    private fun mundoEjemplo() {
+        val hoy = java.time.LocalDate.now().toEpochDay().toInt()
+        fun e(clave: String, nombre: String, pais: String, dias: Int, horas: Double) =
+            io.github.ruddy2003.vestigium.data.Mundo.Estancia(clave, nombre, pais, 0.0, 0.0).apply { this.horas = horas; (0 until dias).forEach { this.dias.add(hoy - it * 2) } }
+        io.github.ruddy2003.vestigium.data.Mundo.resumenFijo = io.github.ruddy2003.vestigium.data.Mundo.Resumen(
+            ciudades = listOf(e("c1", "San Luis Potosí", "MX", 420, 6800.0), e("c2", "Rennes", "FR", 150, 3100.0), e("c3", "Ciudad de México", "MX", 38, 610.0),
+                e("c4", "París", "FR", 9, 120.0), e("c5", "Lisboa", "PT", 4, 60.0), e("c6", "Londres", "GB", 3, 45.0)),
+            paises = listOf(e("MX", "México", "MX", 470, 7500.0), e("FR", "Francia", "FR", 165, 3300.0), e("ES", "España", "ES", 6, 90.0), e("PT", "Portugal", "PT", 4, 60.0),
+                e("GB", "Reino Unido", "GB", 3, 45.0), e("BE", "Bélgica", "BE", 2, 20.0), e("US", "Estados Unidos", "US", 3, 40.0), e("VA", "Ciudad del Vaticano", "VA", 1, 3.0)),
+            sitios = mapOf(414 to hoy - 40, 412 to hoy - 60, 80 to hoy - 200, 600 to hoy - 210), muestras = 12000, desde = null)
+    }
+    @Test fun mundoBotanico() = pantalla(TemaId.BOTANICO, true, 4200) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMundo(navVacia) }
+    @Test fun mundoMedieval() = pantalla(TemaId.MEDIEVAL, false, 4200) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMundo(navVacia) }
+    @Test fun rascarCiber() = pantalla(TemaId.CIBER, true, 2400) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaRascar(navVacia) }
+    @Test fun rascarRomano() = pantalla(TemaId.ROMANO, false, 2400) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaRascar(navVacia) }
+    @Test fun unescoGotico() = pantalla(TemaId.GOTICO, false, 3200) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaUnesco(navVacia) }
+
+    private fun teclados(temas: List<Pair<TemaId, Boolean>>) = captura(temas.first().first, temas.first().second, alto = 2600) {
+        Column {
+            temas.forEach { (t, _) ->
+                io.github.ruddy2003.vestigium.ui.TecladoTema(t, io.github.ruddy2003.vestigium.ui.pagina(t), androidx.compose.ui.text.input.TextFieldValue("Hoy fui"), {}, {}, {})
+                Box(Modifier.padding(4.dp))
+            }
+        }
+    }
+    @Test fun teclados1() = teclados(listOf(TemaId.MEDIEVAL to false, TemaId.DISTOPIA to false, TemaId.CIBER to true, TemaId.BOTANICO to false, TemaId.ESPACIO to true))
+    @Test fun teclados2() = teclados(listOf(TemaId.GOTICO to false, TemaId.SEDA to true, TemaId.LABORATORIO to false, TemaId.REFUGIO to true, TemaId.ANDALUS to false))
+
+    private fun fondo(tema: TemaId, oscuro: Boolean) = captura(tema, oscuro, alto = 2400) { io.github.ruddy2003.vestigium.ui.FondoTelefonoVista(tema, oscuro, Modifier.fillMaxSize()) }
+    @Test fun fondoEspacio() = fondo(TemaId.ESPACIO, true)
+    @Test fun fondoBotanico() = fondo(TemaId.BOTANICO, false)
+    @Test fun fondoGotico() = fondo(TemaId.GOTICO, true)
+    @Test fun fondoRomano() = fondo(TemaId.ROMANO, false)
+    @Test fun fondoCiber() = fondo(TemaId.CIBER, true)
+    @Test fun fondoAndalus() = fondo(TemaId.ANDALUS, false)
+    @Test fun fondoMongol() = fondo(TemaId.MONGOL, false)
+    @Test fun fondoNavidad() = fondo(TemaId.NAVIDAD, true)
 }
 
 @Composable
