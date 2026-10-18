@@ -6,6 +6,8 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -24,13 +26,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,9 +54,11 @@ fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.ROMANO -> "DIES SIGNATVS"; TemaId.CIBER -> "> día.commit() ✓"; TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
     TemaId.MEDIEVAL -> "Sellado y asentado"; TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"; TemaId.REFUGIO -> "BITÁCORA GUARDADA"
     TemaId.ORDEN -> "PARTE ENTREGADO"; TemaId.LABORATORIO -> "SESIÓN REGISTRADA"; TemaId.COLONOS -> "Jornada asentada"
+    TemaId.NAPOLEON -> "BOLETÍN ENVIADO"; TemaId.MUERTOS -> "VELADORA ENCENDIDA"; TemaId.NAVIDAD -> "Guardado bajo el árbol"
+    TemaId.SEDA -> "Rollo sellado"; TemaId.URSS -> "PLAN CUMPLIDO"
 }
 
-/** Pantalla completa: la huella en V se va formando desde el centro, como en un lector, y luego se sella. Toca para cerrar. */
+/** Pantalla completa: la huella del tema se va formando desde el centro, como en un lector, y luego se sella. Toca para cerrar. */
 @Composable
 fun CapaHuella() {
     val n = Sello.n
@@ -72,32 +77,61 @@ fun CapaHuella() {
     VistaHuella(prog.value, Sello.fecha, Modifier.clickable(remember { MutableInteractionSource() }, null) { visible = false })
 }
 
+/** La huella de cada tema: el fondo con su textura (papiro, terminal, lacre, cartel…) y la huella entintada encima. */
+fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
+    TemaId.ROMANO -> R.drawable.huella_fondo_romano to R.drawable.huella_romano
+    TemaId.CIBER -> R.drawable.huella_fondo_ciber to R.drawable.huella_ciber
+    TemaId.HELENO -> R.drawable.huella_fondo_heleno to R.drawable.huella_heleno
+    TemaId.MEDIEVAL -> R.drawable.huella_fondo_medieval to R.drawable.huella_medieval
+    TemaId.DISTOPIA -> R.drawable.huella_fondo_distopia to R.drawable.huella_distopia
+    TemaId.REFUGIO -> R.drawable.huella_fondo_refugio to R.drawable.huella_refugio
+    TemaId.ORDEN -> R.drawable.huella_fondo_orden to R.drawable.huella_orden
+    TemaId.LABORATORIO -> R.drawable.huella_fondo_laboratorio to R.drawable.huella_laboratorio
+    TemaId.COLONOS -> R.drawable.huella_fondo_colonos to R.drawable.huella_colonos
+    TemaId.NAPOLEON -> R.drawable.huella_fondo_napoleon to R.drawable.huella_napoleon
+    TemaId.MUERTOS -> R.drawable.huella_fondo_muertos to R.drawable.huella_muertos
+    TemaId.NAVIDAD -> R.drawable.huella_fondo_navidad to R.drawable.huella_navidad
+    TemaId.SEDA -> R.drawable.huella_fondo_seda to R.drawable.huella_seda
+    TemaId.URSS -> R.drawable.huella_fondo_urss to R.drawable.huella_urss
+}
+
+/** El sello del tema en un círculo: fondo con textura y huella. [revela] (0–1) la descubre desde el núcleo, como un lector. */
+@Composable
+fun SelloHuella(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, revela: Float = 1f, fondo: Float = 1f) {
+    val cs = MaterialTheme.colorScheme
+    val (rf, rh) = recursosHuella(tema)
+    val pf = painterResource(rf); val ph = painterResource(rh)
+    Box(modifier.clip(CircleShape).border(2.dp, cs.primary.copy(alpha = 0.6f), CircleShape)) {
+        Image(pf, null, Modifier.fillMaxSize().graphicsLayer { alpha = fondo }, contentScale = ContentScale.Crop)
+        if (revela < 1f) Image(ph, null, Modifier.fillMaxSize().graphicsLayer { alpha = 0.16f * fondo }, contentScale = ContentScale.Crop)
+        if (revela > 0f) Image(ph, null, Modifier.fillMaxSize().drawWithContent {
+            val nucleo = Offset(size.width * 0.5f, size.height * 0.49f)
+            val r = size.minDimension * 0.62f * revela
+            clipPath(Path().apply { addOval(androidx.compose.ui.geometry.Rect(nucleo, r)) }) { this@drawWithContent.drawContent() }
+            if (revela in 0.01f..0.99f) {
+                drawCircle(cs.secondary.copy(alpha = 0.7f), r, nucleo, style = Stroke(3.dp.toPx()))
+                drawCircle(cs.secondary.copy(alpha = 0.25f), r, nucleo, style = Stroke(10.dp.toPx()))
+            }
+        }, contentScale = ContentScale.Crop)
+    }
+}
+
 /** La huella en un punto de la animación (0 = vacía, 1 = sellada). Separada para poder verla en las capturas. */
 @Composable
 fun VistaHuella(progreso: Float, fecha: String, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val tema = Estilo.tema
-    // 0–0.62: la huella se revela desde el núcleo; 0.62–0.75: destello del sello; después, el texto.
-    val revela = FastOutSlowInEasing.transform((progreso / 0.62f).coerceIn(0f, 1f))
+    // 0–0.15: aparece el fondo; 0.1–0.62: la huella se revela desde el núcleo; 0.62–0.75: destello del sello; después, el texto.
+    val fondo = (progreso / 0.15f).coerceIn(0f, 1f)
+    val revela = FastOutSlowInEasing.transform(((progreso - 0.1f) / 0.52f).coerceIn(0f, 1f))
     val destello = ((progreso - 0.62f) / 0.13f).coerceIn(0f, 1f)
     val texto = ((progreso - 0.7f) / 0.2f).coerceIn(0f, 1f)
     val escala = 1f + 0.05f * kotlin.math.sin(Math.PI * destello).toFloat()
-    val logo = painterResource(R.drawable.huella)
     Box(modifier.fillMaxSize().background(cs.background.copy(alpha = 0.97f)), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(Modifier.size(260.dp).graphicsLayer { scaleX = escala; scaleY = escala }) {
-                // La silueta tenue de lo que falta…
-                Image(logo, null, Modifier.fillMaxSize(), colorFilter = ColorFilter.tint(cs.primary.copy(alpha = 0.12f)))
-                // …y lo ya leído, que crece desde el núcleo de la huella con un anillo de lectura.
-                Image(logo, null, Modifier.fillMaxSize().drawWithContent {
-                    val nucleo = Offset(size.width * 0.5f, size.height * 0.6f)
-                    val r = size.minDimension * 0.47f * revela
-                    clipPath(Path().apply { addOval(androidx.compose.ui.geometry.Rect(nucleo, r)) }) { this@drawWithContent.drawContent() }
-                    if (revela in 0.01f..0.99f) drawCircle(cs.secondary.copy(alpha = 0.55f), r, nucleo, style = Stroke(2.dp.toPx()))
-                }, colorFilter = ColorFilter.tint(cs.primary))
-            }
+            SelloHuella(Modifier.size(280.dp).graphicsLayer { scaleX = escala; scaleY = escala; alpha = 0.3f + 0.7f * fondo }, tema, revela, fondo)
             Text(textoSello(tema), style = MaterialTheme.typography.headlineMedium, color = cs.onBackground, textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 18.dp).graphicsLayer { alpha = texto; translationY = (1 - texto) * 24f })
+                modifier = Modifier.padding(top = 22.dp).graphicsLayer { alpha = texto; translationY = (1 - texto) * 24f })
             if (fecha.isNotBlank()) {
                 val r = racha(fecha)
                 Text(Estilo.fecha(fecha) + if (r >= 2) "\nracha de $r días" else "", style = MaterialTheme.typography.labelLarge, color = cs.primary,

@@ -106,6 +106,36 @@ object Sentidos {
                 Evento.GUARDAR -> listOf(g(THUD, 0.9f), g(THUD, 0.9f, 110))
                 else -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 90), g(CLICK, 0.5f, 90), g(THUD, 0.9f, 120))
             }
+            // Tambor de marcha y cañonazo lejano.
+            TemaId.NAPOLEON -> when (e) {
+                Evento.TOQUE -> listOf(g(CLICK, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 50))
+                Evento.GUARDAR -> listOf(g(CLICK, 0.6f), g(CLICK, 0.6f, 60), g(THUD, 1f, 60))
+                else -> listOf(g(CLICK, 0.5f), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(CLICK, 0.5f, 50), g(THUD, 1f, 160), g(THUD, 0.6f, 240))
+            }
+            // Latido suave y campanas lejanas.
+            TemaId.MUERTOS -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.6f)); Evento.PASAR -> listOf(g(TICK, 0.4f))
+                Evento.GUARDAR -> listOf(g(THUD, 0.7f), g(THUD, 0.45f, 140))
+                else -> listOf(g(THUD, 0.8f), g(THUD, 0.5f, 140), g(SUBE_LENTO, 0.5f, 220), g(BAJA, 0.4f, 40))
+            }
+            // Cascabeles.
+            TemaId.NAVIDAD -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.4f, 30))
+                Evento.GUARDAR -> listOf(g(TICK, 0.8f), g(TICK, 0.7f, 35), g(TICK, 0.8f, 35), g(CLICK, 0.6f, 50))
+                else -> listOf(g(SUBE, 0.6f), g(TICK, 0.9f, 30), g(TICK, 0.8f, 40), g(TICK, 0.9f, 40), g(TICK, 0.8f, 40), g(CLICK, 0.7f, 60))
+            }
+            // Gong y pasos de camello.
+            TemaId.SEDA -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.7f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.5f), g(TICK_GRAVE, 0.4f, 160))
+                Evento.GUARDAR -> listOf(g(THUD, 0.8f), g(SPIN, 0.35f, 30))
+                else -> listOf(g(THUD, 1f), g(SPIN, 0.5f, 40), g(SUBE_LENTO, 0.4f, 200))
+            }
+            // Prensa de fábrica y sirena.
+            TemaId.URSS -> when (e) {
+                Evento.TOQUE -> listOf(g(CLICK, 0.9f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.9f))
+                Evento.GUARDAR -> listOf(g(THUD, 1f), g(THUD, 1f, 90))
+                else -> listOf(g(THUD, 1f), g(THUD, 1f, 120), g(THUD, 1f, 120), g(SUBE_LENTO, 0.8f, 120))
+            }
         }
     }
 
@@ -165,6 +195,11 @@ object Sentidos {
         "orden" to intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro),
         "laboratorio" to intArrayOf(R.raw.s_laboratorio_toque, R.raw.s_laboratorio_guardar, R.raw.s_laboratorio_logro),
         "colonos" to intArrayOf(R.raw.s_colonos_toque, R.raw.s_colonos_guardar, R.raw.s_colonos_logro),
+        "napoleon" to intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro),
+        "muertos" to intArrayOf(R.raw.s_muertos_toque, R.raw.s_muertos_guardar, R.raw.s_muertos_logro),
+        "navidad" to intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro),
+        "seda" to intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro),
+        "urss" to intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro),
     )
 
     private var pool: SoundPool? = null

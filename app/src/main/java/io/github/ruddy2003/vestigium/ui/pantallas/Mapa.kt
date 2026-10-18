@@ -99,6 +99,21 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Colonos: mapa viejo de gaceta; de noche, azul marino.
         tema == io.github.ruddy2003.vestigium.ui.TemaId.COLONOS && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.7f, 0.86f, 4f, 6f, 14f)) }
         tema == io.github.ruddy2003.vestigium.ui.TemaId.COLONOS -> { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.95f, 0.86f, 2f, 0f, 0f)) }
+        // Napoleónico: carta de estado mayor sepia; de noche, azul imperial.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.NAPOLEON && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.68f, 0.92f, 2f, 4f, 16f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.NAPOLEON -> { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 2f, 0f, 0f)) }
+        // Día de Muertos: papel de china cálido; de noche, morado de panteón.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.MUERTOS && oscuro -> { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.66f, 0.95f, 8f, 2f, 12f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.MUERTOS -> { m.setSaturation(0.5f); m.postConcat(tinte(1.0f, 0.93f, 0.85f, 4f, 0f, 0f)) }
+        // Navidad: nieve; de noche, bosque.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.NAVIDAD && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.86f, 0.7f, 2f, 8f, 4f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.NAVIDAD -> { m.setSaturation(0.35f); m.postConcat(tinte(0.98f, 0.97f, 0.94f, 4f, 4f, 2f)) }
+        // Ruta de la Seda: arena; de noche, desierto bajo las estrellas.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.SEDA && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.7f, 0.92f, 4f, 6f, 16f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.SEDA -> { m.setSaturation(0.3f); m.postConcat(tinte(1.0f, 0.93f, 0.78f, 4f, 2f, 0f)) }
+        // Soviético: papel de cartel en blanco y negro con un toque rojo.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.URSS && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.95f, 0.78f, 0.74f, 6f, 0f, 0f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.URSS -> { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.93f, 0.84f, 4f, 0f, 0f)) }
         // Romano: mármol desaturado de día, basalto de noche.
         oscuro -> { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.80f, 0.82f, 0.85f, 8f, 10f, 12f)) }
         else -> { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }

@@ -27,10 +27,15 @@ object Estilo {
         TemaId.REFUGIO -> "> "
         TemaId.LABORATORIO -> "· "
         TemaId.COLONOS -> "~ "
+        TemaId.NAPOLEON -> "— "
+        TemaId.MUERTOS -> "❀ "
+        TemaId.NAVIDAD -> "✦ "
+        TemaId.SEDA -> "◇ "
+        TemaId.URSS -> "★ "
     }
 
     /** ¿Los títulos van en mayúsculas? La gótica y la letra de imprenta antigua se leen mejor en minúsculas. */
-    val mayusculas: Boolean get() = tema != TemaId.MEDIEVAL && tema != TemaId.COLONOS
+    val mayusculas: Boolean get() = tema !in setOf(TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.NAVIDAD, TemaId.SEDA)
 
     /** Nombre del tema para un título en español, o null si ese tema no lo renombra. */
     private fun nombreNuevo(titulo: String): String? = Temas.nombre(tema, titulo)
@@ -44,7 +49,8 @@ object Estilo {
             TemaId.ORDEN -> if (nombre.equals(titulo, true)) null else "— $t —"
             TemaId.COLONOS -> if (nombre.equals(titulo, true)) null else "~ $t ~"
             TemaId.MEDIEVAL -> if (nombre.equals(titulo, true)) null else "¶ $t"
-            else -> null
+            TemaId.ROMANO, TemaId.CIBER, TemaId.HELENO -> null
+            else -> if (nombre.equals(titulo, true)) null else comentario + t
         }
     }
 
@@ -80,6 +86,10 @@ object Estilo {
         TemaId.ORDEN -> if (n < 100) "%02d".format(n) else "$n"
         TemaId.LABORATORIO -> if (n < 100) "%02d".format(n) else "$n"
         TemaId.COLONOS -> if (n < 100) "§ $n" else "$n"
+        TemaId.NAPOLEON -> Romano.de(n)
+        TemaId.MUERTOS, TemaId.NAVIDAD -> "$n"
+        TemaId.SEDA -> Temas.chino(n)
+        TemaId.URSS -> "№ $n"
     }
 
     /** Días desde el primer registro: «día N en el refugio», «T+N» en el laboratorio. */
@@ -102,6 +112,14 @@ object Estilo {
         TemaId.ORDEN -> runCatching { val d = Fechas.parse(iso); "%02d %s %02d // %s".format(d.dayOfMonth, MESES_ES[d.monthValue - 1], d.year % 100, SEMANA_LARGA[d.dayOfWeek.value - 1].uppercase()) }.getOrDefault(iso)
         TemaId.LABORATORIO -> iso + (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { " · T+$it" } ?: "")
         TemaId.COLONOS -> runCatching { val d = Fechas.parse(iso); "${SEMANA_LARGA[d.dayOfWeek.value - 1]}, ${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} de ${d.year}" }.getOrDefault(iso)
+        TemaId.NAPOLEON -> Temas.republicano(iso)
+        TemaId.MUERTOS -> runCatching { val d = Fechas.parse(iso); "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} · " + Temas.cuentaAtras(d, 11, 2, "Día de Muertos", "Muertos") }.getOrDefault(iso)
+        TemaId.NAVIDAD -> runCatching { val d = Fechas.parse(iso); "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} · " + Temas.cuentaAtras(d, 12, 25, "Navidad", "Navidad") }.getOrDefault(iso)
+        TemaId.SEDA -> runCatching { val d = Fechas.parse(iso); Temas.fechaChina(d.year, d.monthValue, d.dayOfMonth) }.getOrDefault(iso)
+        TemaId.URSS -> runCatching {
+            val d = Fechas.parse(iso)
+            "%d.%s.%d".format(d.dayOfMonth, Romano.de(d.monthValue), d.year) + (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { " · PLAN QUINQUENAL, AÑO ${((it - 1) / 365) % 5 + 1}" } ?: "")
+        }.getOrDefault(iso)
     }
 
     fun mes(n: Int, anio: Int? = null): String {
@@ -115,6 +133,10 @@ object Estilo {
             TemaId.REFUGIO, TemaId.ORDEN -> MESES_ES[i] + (anio?.let { " $it" } ?: "")
             TemaId.LABORATORIO -> MESES_LARGOS[i].uppercase() + (anio?.let { " $it" } ?: "")
             TemaId.COLONOS -> MESES_LARGOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " de $it" } ?: "")
+            TemaId.NAPOLEON -> Temas.MESES_FRANCESES[i].uppercase() + (anio?.let { " $it" } ?: "")
+            TemaId.MUERTOS, TemaId.NAVIDAD -> MESES_LARGOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " $it" } ?: "")
+            TemaId.SEDA -> (anio?.let { Temas.anioChino(it) + " " } ?: "") + Temas.chino(n) + "月"
+            TemaId.URSS -> Temas.MESES_RUSOS[i] + (anio?.let { " $it" } ?: "")
         }
     }
 
@@ -123,7 +145,10 @@ object Estilo {
         // Los monjes contaban «ferias»: el lunes es la segunda, el martes la tercera…
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iiij", "v", "vj", "Sab", "Dom")
         TemaId.LABORATORIO -> listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do")
-        TemaId.COLONOS -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+        TemaId.COLONOS, TemaId.MUERTOS, TemaId.NAVIDAD -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
+        TemaId.NAPOLEON -> listOf("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM")
+        TemaId.SEDA -> listOf("一", "二", "三", "四", "五", "六", "日")
+        TemaId.URSS -> listOf("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС")
     }
 
     /** Dos letras por día, para el widget del mes. */
@@ -136,16 +161,19 @@ object Estilo {
     fun marca(fecha: String): String? = when (tema) {
         TemaId.ROMANO -> Romano.marca(fecha)
         TemaId.MEDIEVAL -> Temas.FIESTAS[fecha.takeLast(5)]
+        TemaId.NAPOLEON, TemaId.MUERTOS, TemaId.NAVIDAD, TemaId.SEDA, TemaId.URSS -> Temas.marca(tema, fecha)
         else -> null
     }
 
     val atras: String get() = when (tema) {
         TemaId.ROMANO -> "← cd .."; TemaId.CIBER -> "<< cd .."; TemaId.HELENO -> "← ὀπίσω"; TemaId.MEDIEVAL -> "← tornar"
         TemaId.DISTOPIA -> "◄ RETROCEDER"; TemaId.REFUGIO -> "< SALIR"; TemaId.ORDEN -> "« REPLEGARSE"; TemaId.LABORATORIO -> "← volver"; TemaId.COLONOS -> "← volver"
+        TemaId.NAPOLEON -> "← retirada"; TemaId.MUERTOS -> "← regresar"; TemaId.NAVIDAD -> "← volver"; TemaId.SEDA -> "← regresar"; TemaId.URSS -> "◄ НАЗАД"
     }
     val prefijo: String get() = when (tema) {
         TemaId.ROMANO -> "› "; TemaId.CIBER -> "$ "; TemaId.HELENO -> "· "; TemaId.MEDIEVAL -> "¶ "; TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "; TemaId.ORDEN -> "▸ "; TemaId.LABORATORIO -> "○ "; TemaId.COLONOS -> "☞ "
+        TemaId.NAPOLEON -> "» "; TemaId.MUERTOS -> "✿ "; TemaId.NAVIDAD -> "✦ "; TemaId.SEDA -> "◇ "; TemaId.URSS -> "▶ "
     }
 
     /** Rótulos de los widgets. */
@@ -164,7 +192,7 @@ object Estilo {
         val v = when (tema) {
             TemaId.CIBER -> CLAVES_CIBER[k]
             TemaId.HELENO -> CLAVES_GRIEGO[k]
-            TemaId.DISTOPIA, TemaId.ORDEN -> CLAVES_ES[k]?.uppercase()
+            TemaId.DISTOPIA, TemaId.ORDEN, TemaId.URSS -> CLAVES_ES[k]?.uppercase()
             else -> CLAVES_ES[k]
         }
         return sangria + (v ?: k)
@@ -257,7 +285,7 @@ object Griego {
         "Capas" to "ΣΤΡΩΜΑΤΑ", "Rutas del día" to "ΟΔΟΙ", "Widgets" to "ΠΙΝΑΚΙΔΙΑ", "Tema" to "ΚΟΣΜΟΣ", "Fotos del día" to "ΕΙΚΟΝΕΣ",
         "Corregir gasto" to "ΕΠΑΝΟΡΘΩΣΙΣ", "Recordatorios" to "ΥΠΟΜΝΗΣΕΙΣ", "Te falta hoy" to "ΤΑ ΛΕΙΠΟΝΤΑ", "Datos que faltan" to "ΚΕΝΑ",
         "Tablero" to "ΠΙΝΑΞ", "Buscar" to "ΖΗΤΗΣΙΣ", "Cifras" to "ΑΡΙΘΜΟΙ", "Momentos de la semana" to "ΚΑΙΡΟΙ ΤΗΣ ΕΒΔΟΜΑΔΟΣ", "Tu día en 24 horas" to "ΤΟ ΗΜΕΡΟΝΥΚΤΙΟΝ", "Resumen semanal" to "ΕΒΔΟΜΑΣ",
-        "Llenar el día" to "ΕΣΠΕΡΑ", "Entender" to "ΓΙΓΝΩΣΚΕΙΝ", "Registros especiales" to "ΑΝΑΓΡΑΦΑΙ", "Apariencia" to "ΚΟΣΜΟΣ", "Avisos y recordatorios" to "ΣΗΜΕΙΑ", "Biblioteca del diario" to "ΒΙΒΛΟΣ ΗΜΕΡΩΝ", "Entrada" to "ΣΕΛΙΣ",
+        "Llenar el día" to "ΕΣΠΕΡΑ", "Entender" to "ΓΙΓΝΩΣΚΕΙΝ", "Registros especiales" to "ΑΝΑΓΡΑΦΑΙ", "Apariencia" to "ΚΟΣΜΟΣ", "Avisos y recordatorios" to "ΣΗΜΕΙΑ", "Biblioteca del diario" to "ΒΙΒΛΟΣ ΗΜΕΡΩΝ", "Entrada" to "ΣΕΛΙΣ", "Hoy" to "ΣΗΜΕΡΟΝ", "Línea de tiempo" to "ΧΡΟΝΟΣ", "Ahora mismo estoy…" to "ΝΥΝ",
     )
     fun nombre(titulo: String): String? = NOMBRES[titulo]
 }

@@ -28,6 +28,9 @@ object Avisos {
         "distopia" to (R.raw.n_distopia_aviso to R.raw.n_distopia_solemne), "refugio" to (R.raw.n_refugio_aviso to R.raw.n_refugio_solemne),
         "orden" to (R.raw.n_orden_aviso to R.raw.n_orden_solemne), "laboratorio" to (R.raw.n_laboratorio_aviso to R.raw.n_laboratorio_solemne),
         "colonos" to (R.raw.n_colonos_aviso to R.raw.n_colonos_solemne),
+        "napoleon" to (R.raw.n_napoleon_aviso to R.raw.n_napoleon_solemne), "muertos" to (R.raw.n_muertos_aviso to R.raw.n_muertos_solemne),
+        "navidad" to (R.raw.n_navidad_aviso to R.raw.n_navidad_solemne), "seda" to (R.raw.n_seda_aviso to R.raw.n_seda_solemne),
+        "urss" to (R.raw.n_urss_aviso to R.raw.n_urss_solemne),
     )
 
     private fun nombreCanal(base: String) = when (base) {

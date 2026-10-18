@@ -60,6 +60,26 @@ object Widgets {
             0xFFE3C27A.toInt(), 0xFFEEE7D7.toInt(), 0xFFA9B0BC.toInt(), 0xFF3E4B60.toInt(),
             intArrayOf(0xFFE07A62.toInt(), 0xFFE29A86.toInt(), 0xFFE8C2B0.toInt(), 0xFFEEE7D7.toInt(), 0xFFC0D2EA.toInt(), 0xFFA6C2E6.toInt(), 0xFF8FB3E0.toInt()),
             0xFF1E2838.toInt(), 0xFF1C1405.toInt())
+        TemaId.NAPOLEON -> Colores(R.drawable.widget_fondo_napoleon, R.drawable.widget_boton_napoleon, R.drawable.widget_boton_activo_napoleon, R.drawable.widget_boton_ambar_napoleon,
+            0xFFD9B25B.toInt(), 0xFFF1E9D2.toInt(), 0xFFB3AE9C.toInt(), 0xFF2C3970.toInt(),
+            intArrayOf(0xFFE05A6A.toInt(), 0xFFD98590.toInt(), 0xFFD9B8B0.toInt(), 0xFFF1E9D2.toInt(), 0xFFB9C6EE.toInt(), 0xFF9DB4FF.toInt(), 0xFF7F9BFF.toInt()),
+            0xFF121A3D.toInt(), 0xFF1A1405.toInt())
+        TemaId.MUERTOS -> Colores(R.drawable.widget_fondo_muertos, R.drawable.widget_boton_muertos, R.drawable.widget_boton_activo_muertos, R.drawable.widget_boton_ambar_muertos,
+            0xFFFFA726.toInt(), 0xFFFBEFFF.toInt(), 0xFFC6A9D3.toInt(), 0xFF44275A.toInt(),
+            intArrayOf(0xFFFF4FA3.toInt(), 0xFFF07AB6.toInt(), 0xFFDDA8CF.toInt(), 0xFFFBEFFF.toInt(), 0xFFD3B8FF.toInt(), 0xFFC3A0FF.toInt(), 0xFFB388FF.toInt()),
+            0xFF1E1029.toInt(), 0xFF2A0016.toInt())
+        TemaId.NAVIDAD -> Colores(R.drawable.widget_fondo_navidad, R.drawable.widget_boton_navidad, R.drawable.widget_boton_activo_navidad, R.drawable.widget_boton_ambar_navidad,
+            0xFFF2C94C.toInt(), 0xFFF3EFE6.toInt(), 0xFFB5C2B8.toInt(), 0xFF2E4A39.toInt(),
+            intArrayOf(0xFFE5484D.toInt(), 0xFFE77B7A.toInt(), 0xFFE9B2A8.toInt(), 0xFFF3EFE6.toInt(), 0xFFB5DDB7.toInt(), 0xFF8CCF8F.toInt(), 0xFF66BB6A.toInt()),
+            0xFF14241B.toInt(), 0xFF1A1405.toInt())
+        TemaId.SEDA -> Colores(R.drawable.widget_fondo_seda, R.drawable.widget_boton_seda, R.drawable.widget_boton_activo_seda, R.drawable.widget_boton_ambar_seda,
+            0xFFE0B04F.toInt(), 0xFFF2EAD3.toInt(), 0xFFB9B29F.toInt(), 0xFF33406A.toInt(),
+            intArrayOf(0xFFE26A50.toInt(), 0xFFE5907B.toInt(), 0xFFE8BFAA.toInt(), 0xFFF2EAD3.toInt(), 0xFFA8DEDE.toInt(), 0xFF7CD0D0.toInt(), 0xFF4FC3C3.toInt()),
+            0xFF161D35.toInt(), 0xFF1A1405.toInt())
+        TemaId.URSS -> Colores(R.drawable.widget_fondo_urss, R.drawable.widget_boton_urss, R.drawable.widget_boton_activo_urss, R.drawable.widget_boton_ambar_urss,
+            0xFFE8B923.toInt(), 0xFFF1E7D2.toInt(), 0xFFB7AA95.toInt(), 0xFF3D3333.toInt(),
+            intArrayOf(0xFF6E7C8C.toInt(), 0xFF98A1AA.toInt(), 0xFFC4C3BC.toInt(), 0xFFF1E7D2.toInt(), 0xFFEBC9A6.toInt(), 0xFFE8806A.toInt(), 0xFFE5252F.toInt()),
+            0xFF1B1717.toInt(), 0xFFFFFFFF.toInt())
     }
 
     /** Pinta fondo, botones, líneas y textos según el tema. Va primero: lo que se pinta después (estado activo, colores de ánimo) lo sobrescribe. */

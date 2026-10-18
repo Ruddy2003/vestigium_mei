@@ -96,6 +96,11 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.ORDEN -> Galones(modifier)
         TemaId.LABORATORIO -> Regla(modifier)
         TemaId.COLONOS -> Vineta(modifier)
+        TemaId.NAPOLEON -> Laureles(modifier)
+        TemaId.MUERTOS -> PapelPicado(modifier)
+        TemaId.NAVIDAD -> Guirnalda(modifier)
+        TemaId.SEDA -> Monedas(modifier)
+        TemaId.URSS -> Barra(modifier)
         TemaId.ROMANO -> Canvas(modifier.fillMaxWidth().height(9.dp)) {
             val h = size.height; val u = h / 3f
             val paso = u * 4

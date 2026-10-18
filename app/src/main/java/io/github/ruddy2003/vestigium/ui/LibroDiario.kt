@@ -122,6 +122,11 @@ object LibroDiario {
         TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.plex_sans_regular)
         TemaId.LABORATORIO -> Fuentes(R.font.jost_medium, R.font.jost_regular)
         TemaId.COLONOS -> Fuentes(R.font.fell, R.font.garamond_regular)
+        TemaId.NAPOLEON -> Fuentes(R.font.bodoni_titulo, R.font.bodoni_texto)
+        TemaId.MUERTOS -> Fuentes(R.font.rye, R.font.plex_sans_regular)
+        TemaId.NAVIDAD -> Fuentes(R.font.cinzel_deco_regular, R.font.garamond_regular)
+        TemaId.SEDA -> Fuentes(R.font.almendra_regular, R.font.garamond_regular)
+        TemaId.URSS -> Fuentes(R.font.russo, R.font.plex_sans_regular)
     }
 
     private fun hex(c: Color) = "#%06X".format(c.toArgb() and 0xFFFFFF)
@@ -215,7 +220,7 @@ object LibroDiario {
         val pEtiqueta = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTitulo; textSize = 9f; color = primario; letterSpacing = 0.12f }
         val pDia = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 9.5f; color = tenue }
         val pMeta = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = 9f; color = primario }
-        val pTexto = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = if (tema == TemaId.HELENO || tema == TemaId.MEDIEVAL || tema == TemaId.COLONOS) 12.5f else 11f; color = tinta }
+        val pTexto = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = if (tema in setOf(TemaId.HELENO, TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.NAPOLEON, TemaId.NAVIDAD, TemaId.SEDA)) 12.5f else 11f; color = tinta }
         val pExtra = TextPaint(pTexto).apply { textSize = pTexto.textSize * 0.88f; color = tenue; textSkewX = -0.15f }
         val linea = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = primario; strokeWidth = 0.9f }
         val etiqueta = Estilo.seccion("Diario", Romano.latin("Diario")).first.let { if (Estilo.mayusculas) it.uppercase() else it }

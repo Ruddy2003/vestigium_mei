@@ -55,6 +55,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideInVertically
@@ -156,8 +157,7 @@ class MainActivity : FragmentActivity() {
 private fun Bloqueo(reintentar: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(io.github.ruddy2003.vestigium.R.drawable.huella), null,
-                Modifier.padding(bottom = 4.dp).size(140.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(MaterialTheme.colorScheme.primary))
+            SelloHuella(Modifier.padding(bottom = 4.dp).size(170.dp))
             Text("VESTIGIVM MEI", style = MaterialTheme.typography.headlineMedium)
             Meandro(Modifier.padding(horizontal = 40.dp))
             Ayuda("// tu diario está sellado")
@@ -217,7 +217,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         // «diario» (atajo del ícono y avisos de la noche) abre la hoja de la noche de hoy.
         if (p == "diario") { S.pedida = hoyL; S.noche = hoyL; S.seccion = "Ánimo y cuerpo"; pestana = "dia"; pila = listOf("noche") }
         else if (p.startsWith("dia:")) { S.pedida = p.drop(4); pestana = "dia"; pila = emptyList() }
-        else if (p == "momentos" || p == "diarios") { pestana = "diario"; pila = emptyList() }
+        else if (p == "momentos") { pestana = "diario"; pila = emptyList() }
+        else if (p == "diarios") { pestana = "diario"; pila = listOf("biblioteca_diario") }
         else if (p == "explorar") { pestana = "entender"; pila = emptyList() }
         else if (PESTANAS.any { it.id == p }) { pestana = p; pila = emptyList() } else { pestana = "mas"; pila = listOf(p) }
         consumir()
@@ -292,7 +293,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                 }
             }
         },
-        bottomBar = { BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
+        // Al leer una entrada, la página ocupa toda la pantalla.
+        bottomBar = { if (pila.lastOrNull() != "entrada") BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
         Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {
@@ -338,6 +340,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "semana" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSemana(nav)
                     "noche" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(nav)
                     "entrada" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(nav)
+                    "biblioteca_diario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecaDiario(nav)
                     else -> Text("Pantalla desconocida: $actual")
                 }
                 }
@@ -378,5 +381,15 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.LABORATORIO -> (fadeIn(t(260)) + scaleIn(t(260), initialScale = 0.95f)) togetherWith (fadeOut(t(140)) + scaleOut(t(140), targetScale = 1.02f))
         // Papel de gaceta: aparece despacio.
         TemaId.COLONOS -> (fadeIn(t(340)) + slideInVertically(t(340)) { it / 30 }) togetherWith fadeOut(t(200))
+        // Despacho que llega a caballo: entra decidido de lado.
+        TemaId.NAPOLEON -> (slideInHorizontally(t(280)) { dir * it / 2 } + fadeIn(t(220))) togetherWith (fadeOut(t(160)) + scaleOut(t(160), targetScale = 0.97f))
+        // Papel picado que cae suave desde arriba.
+        TemaId.MUERTOS -> (slideInVertically(t(360)) { -it / 16 } + fadeIn(t(300))) togetherWith fadeOut(t(180))
+        // Regalo que se abre.
+        TemaId.NAVIDAD -> (scaleIn(t(340), initialScale = 0.92f) + fadeIn(t(280))) togetherWith fadeOut(t(160))
+        // Rollo de seda que se desenrolla hacia abajo.
+        TemaId.SEDA -> (expandVertically(t(340), expandFrom = Alignment.Top) + fadeIn(t(280))) togetherWith fadeOut(t(160))
+        // Cartel que entra en diagonal.
+        TemaId.URSS -> (slideIn(t(220)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 6, it.height / 12) } + fadeIn(t(160))) togetherWith fadeOut(t(100))
     }
 }

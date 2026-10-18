@@ -70,6 +70,11 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     ORDEN("orden", "Orden", "Acero, carmesí y latón. Caballeros que custodian el saber técnico. Letra de estarcido."),
     LABORATORIO("laboratorio", "Laboratorio", "Blanco clínico, cian y violeta. Un laboratorio silencioso donde todo se mide."),
     COLONOS("colonos", "Colonos", "Papel de gaceta, azul marino y ladrillo. Vecinos que reconstruyen su pueblo."),
+    NAPOLEON("napoleon", "Napoleónico", "Azul imperial, oro y carmesí; letra Didot. Boletines de campaña y el calendario republicano."),
+    MUERTOS("muertos", "Día de Muertos", "Rosa mexicano, cempasúchil y morado. Papel picado, calaveritas y la cuenta hacia el 2 de noviembre."),
+    NAVIDAD("navidad", "Navidad", "Rojo, verde pino y oro, con nieve. Cartas junto al fuego y la cuenta hacia el 25 de diciembre."),
+    SEDA("seda", "Ruta de la Seda", "Seda, lapislázuli, cinabrio y oro. Monedas con agujero, caravanas y números chinos."),
+    URSS("urss", "Soviético", "Rojo, negro y papel de cartel, en estilo constructivista. Planes quinquenales y meses en ruso."),
 }
 
 internal val romanoClaro = lightColorScheme(
@@ -193,6 +198,11 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ORDEN -> if (oscuro) ordenOscuro else ordenClaro
     TemaId.LABORATORIO -> if (oscuro) laboratorioOscuro else laboratorioClaro
     TemaId.COLONOS -> if (oscuro) colonosOscuro else colonosClaro
+    TemaId.NAPOLEON -> if (oscuro) napoleonOscuro else napoleonClaro
+    TemaId.MUERTOS -> if (oscuro) muertosOscuro else muertosClaro
+    TemaId.NAVIDAD -> if (oscuro) navidadOscuro else navidadClaro
+    TemaId.SEDA -> if (oscuro) sedaOscuro else sedaClaro
+    TemaId.URSS -> if (oscuro) urssOscuro else urssClaro
 }
 
 internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
@@ -200,11 +210,13 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.MEDIEVAL -> tipoMedieval; TemaId.DISTOPIA -> tipoDistopia
     TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
     TemaId.ORDEN -> tipoOrden; TemaId.LABORATORIO -> tipoLaboratorio; TemaId.COLONOS -> tipoColonos
+    TemaId.NAPOLEON -> tipoNapoleon; TemaId.MUERTOS -> tipoMuertos; TemaId.NAVIDAD -> tipoNavidad; TemaId.SEDA -> tipoSeda; TemaId.URSS -> tipoUrss
 }
 
 internal fun radioDe(tema: TemaId) = when (tema) {
     TemaId.ROMANO -> 4; TemaId.CIBER -> 1; TemaId.HELENO -> 6; TemaId.MEDIEVAL -> 3; TemaId.DISTOPIA -> 0
     TemaId.REFUGIO -> 10; TemaId.ORDEN -> 2; TemaId.LABORATORIO -> 14; TemaId.COLONOS -> 5
+    TemaId.NAPOLEON -> 3; TemaId.MUERTOS -> 12; TemaId.NAVIDAD -> 8; TemaId.SEDA -> 6; TemaId.URSS -> 0
 }
 
 /** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); el cyberpunk siempre es oscuro. */
@@ -315,7 +327,7 @@ object Romano {
         "Tablero" to "TABVLA", "Tu día en 24 horas" to "HORAE DIEI", "Te falta hoy" to "RELIQVA", "Datos que faltan" to "LACVNAE",
         "Tema" to "SPECIES", "Recordatorios" to "MONITIONES", "Resumen semanal" to "HEBDOMAS", "Totales" to "SVMMA OMNIVM",
         "Gimnasio" to "ROBVR", "Análisis" to "ANALYSIS", "Buscar" to "QVAERERE", "Cifras" to "NVMERI", "Momentos de la semana" to "MOMENTA HEBDOMADIS",
-        "Llenar el día" to "VESPERA", "Entender" to "INTELLEGERE", "Registros especiales" to "TABVLAE", "Apariencia" to "SPECIES", "Avisos y recordatorios" to "MONITIONES", "Biblioteca del diario" to "LIBRI DIERVM", "Entrada" to "PAGINA",
+        "Llenar el día" to "VESPERA", "Entender" to "INTELLEGERE", "Registros especiales" to "TABVLAE", "Apariencia" to "SPECIES", "Avisos y recordatorios" to "MONITIONES", "Biblioteca del diario" to "LIBRI DIERVM", "Entrada" to "PAGINA", "Hoy" to "HODIE", "Línea de tiempo" to "ORDO TEMPORVM", "Ahora mismo estoy…" to "NVNC",
     )
     fun latin(titulo: String): String? = LATIN[titulo]
 
@@ -348,10 +360,12 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val titulo = when (tema) {
         TemaId.ROMANO -> "DIES"; TemaId.CIBER -> "DÍA_"; TemaId.HELENO -> "ΗΜΕΡΑ"; TemaId.MEDIEVAL -> "Del día"
         TemaId.DISTOPIA -> "PARTE"; TemaId.REFUGIO -> "DIARIO"; TemaId.ORDEN -> "CAMPO"; TemaId.LABORATORIO -> "SESIÓN"; TemaId.COLONOS -> "Jornada"
+        TemaId.NAPOLEON -> "BOLETÍN"; TemaId.MUERTOS -> "OFRENDA"; TemaId.NAVIDAD -> "El día"; TemaId.SEDA -> "Jornada"; TemaId.URSS -> "PLAN"
     }
     val linea = when (tema) {
         TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."; TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.DISTOPIA -> "EXP. 0290"; TemaId.REFUGIO -> "DÍA 290"; TemaId.ORDEN -> "17 OCT 26"; TemaId.LABORATORIO -> "T+290"; TemaId.COLONOS -> "17 de octubre"
+        TemaId.NAPOLEON -> "26 vendémiaire"; TemaId.MUERTOS -> "faltan 16 días"; TemaId.NAVIDAD -> "faltan 69 días"; TemaId.SEDA -> "十月十七日"; TemaId.URSS -> "ОКТЯБРЬ"
     }
     androidx.compose.material3.Surface(
         onClick = onClick, modifier = modifier, color = e.background, shape = RoundedCornerShape(6.dp),

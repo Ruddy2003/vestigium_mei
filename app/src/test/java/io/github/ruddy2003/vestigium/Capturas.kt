@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -86,6 +87,16 @@ class Capturas {
     @Test fun laboratorioOscuro() = captura(TemaId.LABORATORIO, true)
     @Test fun colonosClaro() = captura(TemaId.COLONOS, false)
     @Test fun colonosOscuro() = captura(TemaId.COLONOS, true)
+    @Test fun napoleonClaro() = captura(TemaId.NAPOLEON, false)
+    @Test fun napoleonOscuro() = captura(TemaId.NAPOLEON, true)
+    @Test fun muertosClaro() = captura(TemaId.MUERTOS, false)
+    @Test fun muertosOscuro() = captura(TemaId.MUERTOS, true)
+    @Test fun navidadClaro() = captura(TemaId.NAVIDAD, false)
+    @Test fun navidadOscuro() = captura(TemaId.NAVIDAD, true)
+    @Test fun sedaClaro() = captura(TemaId.SEDA, false)
+    @Test fun sedaOscuro() = captura(TemaId.SEDA, true)
+    @Test fun urssClaro() = captura(TemaId.URSS, false)
+    @Test fun urssOscuro() = captura(TemaId.URSS, true)
 
     private fun dia(tema: TemaId, oscuro: Boolean) {
         Ejemplo.cargar()
@@ -114,6 +125,11 @@ class Capturas {
     @Test fun diaOrden() = dia(TemaId.ORDEN, true)
     @Test fun diaLaboratorio() = dia(TemaId.LABORATORIO, false)
     @Test fun diaColonos() = dia(TemaId.COLONOS, true)
+    @Test fun diaNapoleon() = dia(TemaId.NAPOLEON, false)
+    @Test fun diaMuertos() = dia(TemaId.MUERTOS, true)
+    @Test fun diaNavidad() = dia(TemaId.NAVIDAD, false)
+    @Test fun diaSeda() = dia(TemaId.SEDA, true)
+    @Test fun diaUrss() = dia(TemaId.URSS, false)
 
     @Test fun semanaHeleno() {
         Ejemplo.cargar()
@@ -150,6 +166,11 @@ class Capturas {
     @Test fun widgetsOrden() = widgets(TemaId.ORDEN)
     @Test fun widgetsLaboratorio() = widgets(TemaId.LABORATORIO)
     @Test fun widgetsColonos() = widgets(TemaId.COLONOS)
+    @Test fun widgetsNapoleon() = widgets(TemaId.NAPOLEON)
+    @Test fun widgetsMuertos() = widgets(TemaId.MUERTOS)
+    @Test fun widgetsNavidad() = widgets(TemaId.NAVIDAD)
+    @Test fun widgetsSeda() = widgets(TemaId.SEDA)
+    @Test fun widgetsUrss() = widgets(TemaId.URSS)
 
     private fun pantalla(tema: TemaId, oscuro: Boolean, alto: Int, cont: @Composable () -> Unit) {
         Ejemplo.cargar()
@@ -164,7 +185,7 @@ class Capturas {
     @Test fun masLaboratorio() = pantalla(TemaId.LABORATORIO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
     @Test fun aparienciaOrden() = pantalla(TemaId.ORDEN, true, 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaAjustes(navVacia, "apariencia") }
     /** La barra inferior en cada tema, con «Día» activa. */
-    @Test fun barras() = captura(TemaId.ROMANO, false, alto = 1700) {
+    @Test fun barras() = captura(TemaId.ROMANO, false, alto = 2600) {
         Column(Modifier.padding(vertical = 16.dp)) {
             TemaId.entries.forEach { t ->
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
@@ -181,7 +202,7 @@ class Capturas {
     @Test fun huellaRomano() = pantalla(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
 
     /** Los íconos de la barra inferior en cada tema. */
-    @Test fun iconos() = captura(TemaId.ROMANO, false, alto = 1500) {
+    @Test fun iconos() = captura(TemaId.ROMANO, false, alto = 2100) {
         Column(Modifier.padding(16.dp)) {
             TemaId.entries.forEach { t ->
                 val e = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro)
@@ -195,7 +216,7 @@ class Capturas {
     }
 
     /** Los nueve temas en claro y en oscuro, con sus emblemas grandes. */
-    @Test fun selectorTemas() = captura(TemaId.ROMANO, false, alto = 2600) {
+    @Test fun selectorTemas() = captura(TemaId.ROMANO, false, alto = 4200) {
         Column(Modifier.padding(16.dp)) {
             listOf(false, true).forEach { o ->
                 TemaId.entries.chunked(3).forEach { fila ->
@@ -204,14 +225,71 @@ class Capturas {
                     }
                 }
             }
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TemaId.entries.forEach { t ->
+            TemaId.entries.chunked(7).forEach { fila -> Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                fila.forEach { t ->
                     val e = io.github.ruddy2003.vestigium.ui.esquemaDe(t, true)
-                    Box(Modifier.weight(1f).background(e.background).padding(4.dp)) { io.github.ruddy2003.vestigium.ui.Emblema(t, 30.dp, e, animado = false) }
+                    Box(Modifier.weight(1f).background(e.background).padding(4.dp)) { io.github.ruddy2003.vestigium.ui.Emblema(t, 40.dp, e, animado = false) }
+                }
+            } }
+        }
+    }
+
+    // ------------------------------------------------------------ huellas, diario y biblioteca con el diseño de cada tema
+
+    /** Los catorce sellos de huella. */
+    @Test fun sellos() = captura(TemaId.ROMANO, false, alto = 1900) {
+        Column(Modifier.padding(12.dp)) {
+            TemaId.entries.chunked(4).forEach { fila ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
+                    fila.forEach { t -> io.github.ruddy2003.vestigium.ui.SelloHuella(Modifier.weight(1f).aspectRatio(1f), t) }
+                    repeat(4 - fila.size) { Box(Modifier.weight(1f)) }
                 }
             }
         }
     }
+
+    private val TEXTO = "Hoy fue un día largo pero bueno. En la mañana salí a caminar con @ana por el parque y hablamos de los planes para el viaje. " +
+        "Después trabajé casi toda la tarde en el proyecto; avancé más de lo que esperaba. En la noche leí un rato antes de dormir. #lectura #trabajo"
+
+    private fun objetos(temas: List<TemaId>) = captura(temas.first(), false, alto = 2800) {
+        Column(Modifier.padding(16.dp)) {
+            temas.forEachIndexed { i, t -> io.github.ruddy2003.vestigium.ui.ObjetoDiario("2026-10-16", if (i == 1) "" else TEXTO, Modifier.padding(bottom = 14.dp), t) {} }
+        }
+    }
+    @Test fun objetos1() = objetos(listOf(TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.HELENO, TemaId.SEDA, TemaId.COLONOS, TemaId.ORDEN, TemaId.MUERTOS))
+    @Test fun objetos2() = objetos(listOf(TemaId.CIBER, TemaId.URSS, TemaId.LABORATORIO, TemaId.NAPOLEON, TemaId.NAVIDAD, TemaId.DISTOPIA, TemaId.REFUGIO))
+
+    private fun biblioteca(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecaDiario(navVacia) }
+    @Test fun bibliotecaMedieval() = biblioteca(TemaId.MEDIEVAL, false)
+    @Test fun bibliotecaRomano() = biblioteca(TemaId.ROMANO, true)
+    @Test fun bibliotecaCiber() = biblioteca(TemaId.CIBER, true)
+    @Test fun bibliotecaDistopia() = biblioteca(TemaId.DISTOPIA, false)
+    @Test fun bibliotecaNapoleon() = biblioteca(TemaId.NAPOLEON, false)
+    @Test fun bibliotecaRefugio() = biblioteca(TemaId.REFUGIO, true)
+
+    private fun lectura(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 2400) {
+        io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.entrada = null
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(navVacia)
+    }
+    @Test fun lecturaMedieval() = lectura(TemaId.MEDIEVAL, false)
+    @Test fun lecturaCiber() = lectura(TemaId.CIBER, true)
+    @Test fun lecturaRomano() = lectura(TemaId.ROMANO, false)
+    @Test fun lecturaUrss() = lectura(TemaId.URSS, false)
+    @Test fun lecturaNavidad() = lectura(TemaId.NAVIDAD, false)
+    @Test fun lecturaSeda() = lectura(TemaId.SEDA, true)
+    @Test fun lecturaRefugio() = lectura(TemaId.REFUGIO, true)
+    @Test fun lecturaLaboratorio() = lectura(TemaId.LABORATORIO, false)
+
+    private fun escritor(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 2400) {
+        io.github.ruddy2003.vestigium.ui.EscritorTema("2026-10-16", TEXTO, {}, {}, tema)
+    }
+    @Test fun escritorMedieval() = escritor(TemaId.MEDIEVAL, false)
+    @Test fun escritorCiber() = escritor(TemaId.CIBER, true)
+    @Test fun escritorColonos() = escritor(TemaId.COLONOS, false)
+    @Test fun escritorMuertos() = escritor(TemaId.MUERTOS, false)
+    @Test fun diarioNapoleon() = pantalla(TemaId.NAPOLEON, false, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+    @Test fun huellaMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(0.5f, "") }
+    @Test fun huellaNapoleon() = pantalla(TemaId.NAPOLEON, true, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
 }
 
 @Composable

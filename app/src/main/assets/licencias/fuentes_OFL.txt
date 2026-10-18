@@ -8,6 +8,11 @@ VT323 — Copyright 2011, The VT323 Project Authors (peter.hull@oikoi.com)
 Saira Stencil One — Copyright 2019 The Saira Stencil Project Authors (https://github.com/Omnibus-Type/Saira)
 Jost — Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type/Jost)
 Gaceta Vestigium — versión reducida y renombrada de IM FELL English: © 2007 Igino Marini (www.iginomarini.com), with Reserved Font Name IM FELL English Roman
+Bodoni Moda (instancias estáticas de la fuente variable) — Copyright 2020 The Bodoni Moda Project Authors (https://github.com/indestructible-type/Bodoni)
+Rye (sin modificar) — Copyright (c) 2010 by Sorkin Type Co with Reserved Font Name Rye
+Almendra (sin modificar) — Copyright (c) 2011-2012, Ana Sanfelippo (anasanfe@gmail.com), with Reserved Font Name 'Almendra'
+Russo One (sin modificar) — Copyright (c) 2011-2012, Jovanny Lemonad (jovanny.ru), with Reserved Font Name "Russo"
+Cinzel Decorative (sin modificar) — Copyright © 2012 Natanael Gama (info@ndiscovered.com), with Reserved Font Name 'Cinzel'
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 

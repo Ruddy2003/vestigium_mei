@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
@@ -85,6 +86,7 @@ fun PantallaDiario(nav: Nav) {
     val ctx = LocalContext.current
     val discreto = Repo.config.discreto
     var editando by remember { mutableStateOf<io.github.ruddy2003.vestigium.data.Momento?>(null) }
+    var escribiendo by remember { mutableStateOf<String?>(null) }
     var busca by remember { mutableStateOf("") }
     var tipo by remember { mutableStateOf("todo") }
     var anio by remember { mutableStateOf<String?>(null) }
@@ -115,16 +117,34 @@ fun PantallaDiario(nav: Nav) {
     val palabras = remember(Repo.dias.size) { Repo.dias.values.sumOf { Texto.palabras(it.nota) } }
 
     Hoja("Diario", buscar = { nav.ir("buscar") }) {
-        // Registrar ahora mismo, sin salir de aquí.
-        Row(Modifier.fillMaxWidth().padding(top = 12.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Ficha("ánimo ahora", true) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_ANIMO) }
-            io.github.ruddy2003.vestigium.data.Catalogo.MOMENTOS.forEach { t -> Ficha(if (discreto) t.discreto else t.nombre, false) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO, t.id) } }
+        // Registrar ahora mismo, sin salir de aquí: todos los momentos a la vista, en un recuadro.
+        Seccion("Ahora mismo estoy…") {
+            Tarjeta {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
+                    io.github.ruddy2003.vestigium.data.Catalogo.MOMENTOS.forEach { t ->
+                        Surface(onClick = { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO, t.id) }, modifier = Modifier.weight(1f).heightIn(min = 46.dp),
+                            shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.background, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+                            Box(contentAlignment = Alignment.Center) { Text(if (discreto) t.discreto else t.nombre, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(6.dp)) }
+                        }
+                    }
+                }
+                io.github.ruddy2003.vestigium.ui.BotonPrincipal("Registrar mi ánimo ahora", Modifier.fillMaxWidth().padding(top = 10.dp)) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_ANIMO) }
+            }
         }
-        io.github.ruddy2003.vestigium.ui.BotonPrincipal("✎ escribir el diario de hoy", Modifier.fillMaxWidth().padding(top = 10.dp)) {
-            Seleccion.noche = Fechas.diaLogico(); Seleccion.seccion = "Diario"; nav.ir("noche")
+        // El diario de hoy, como objeto del tema: al tocarlo se abre a pantalla completa.
+        val hoy = Fechas.diaLogico()
+        Seccion("Hoy", "Toca para escribir. Se guarda mientras escribes.") {
+            io.github.ruddy2003.vestigium.ui.ObjetoDiario(hoy, Repo.dias[hoy]?.nota.orEmpty()) { escribiendo = hoy }
         }
-        Text("${Repo.dias.values.count { it.nota.isNotBlank() }} entradas · %,d palabras · ${Repo.momentos.count { it.tipo != "muestreo" }} momentos".format(palabras),
-            style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 14.dp))
+        // La biblioteca: las últimas entradas en su estante, y la puerta para entrar.
+        val ultimas = remember(Repo.dias.size) { LibroDiario.entradas().take(9) }
+        Seccion("Biblioteca del diario", "${Repo.dias.values.count { it.nota.isNotBlank() }} entradas · %,d palabras".format(palabras)) {
+            if (ultimas.isEmpty()) Vacio("Aquí se irán guardando tus entradas.")
+            else io.github.ruddy2003.vestigium.ui.EstanteDiario(ultimas) { f -> Seleccion.entrada = f; nav.ir("entrada") }
+            io.github.ruddy2003.vestigium.ui.BotonPrincipal("entrar a la biblioteca →", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.ir("biblioteca_diario") }
+        }
+        Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día.") {}
+        Text("${Repo.momentos.count { it.tipo != "muestreo" }} momentos registrados", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         OutlinedTextField(busca, { busca = it; mostrar = 30 }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
             placeholder = { Text("buscar en tu diario, @personas, #temas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -163,6 +183,35 @@ fun PantallaDiario(nav: Nav) {
         }
     }
     editando?.let { m -> DialogoMomento(m) { editando = null } }
+    escribiendo?.let { f -> io.github.ruddy2003.vestigium.ui.EscribirDia(f) { escribiendo = null } }
+}
+
+/** La biblioteca del diario: todas las entradas como objetos del tema (libros, rollos, cartas, expedientes, logs), por mes. */
+@Composable
+fun PantallaBibliotecaDiario(nav: Nav) {
+    val todas = remember(Repo.dias.size) { LibroDiario.entradas() }
+    var busca by remember { mutableStateOf("") }
+    var anio by remember { mutableStateOf<String?>(null) }
+    var meses by remember { mutableIntStateOf(6) }
+    val q = normal(busca.trim())
+    val visibles = todas.filter { d -> (anio == null || d.fecha.startsWith(anio!!)) && (q.isBlank() || normal(d.nota + " " + d.mejor_momento + " " + d.peor_momento).contains(q)) }
+    val porMes = visibles.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
+    val palabras = remember(Repo.dias.size) { todas.sumOf { Texto.palabras(it.nota) } }
+    Hoja("Biblioteca del diario", nav.atras, "${todas.size} entradas · %,d palabras. Toca una para abrirla.".format(palabras)) {
+        OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
+            placeholder = { Text("buscar en las entradas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+        FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            todas.map { it.fecha.take(4) }.distinct().forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }
+        }
+        if (todas.isEmpty()) Vacio("Todavía no hay entradas. Escribe la de hoy desde la pestaña Diario o al llenar el día.")
+        else if (visibles.isEmpty()) Vacio("Nada coincide con la búsqueda.")
+        porMes.entries.take(meses).forEach { (mes, lista) ->
+            val rotulo = Estilo.mes(mes.drop(5).toInt(), mes.take(4).toInt()).let { if (it.contains(mes.take(4))) it else it + " · " + mes.take(4) }
+            Text(rotulo, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
+            io.github.ruddy2003.vestigium.ui.EstanteDiario(lista) { f -> Seleccion.entrada = f; nav.ir("entrada") }
+        }
+        if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
+    }
 }
 
 /** Un día en la línea de tiempo: la entrada, el sueño y los momentos, cada cosa tocable. */
@@ -221,46 +270,30 @@ private fun FichaEntrada(d: Dia, abrir: () -> Unit) {
     }
 }
 
-/** Una entrada para leer completa, con flechas a la anterior y la siguiente, y su PDF. */
+/** Una entrada abierta a pantalla completa, con el diseño del tema: anterior y siguiente, editar, PDF y compartir. */
 @Composable
 fun PantallaEntrada(nav: Nav) {
     val ctx = LocalContext.current
     val todas = remember(Repo.dias.size) { LibroDiario.entradas() }
     var fecha by remember { mutableStateOf(Seleccion.entrada ?: todas.firstOrNull()?.fecha ?: Fechas.diaLogico()) }
+    var escribiendo by remember { mutableStateOf(false) }
     val d = Repo.dias[fecha]
     val exportar = rememberExportar()
     val i = todas.indexOfFirst { it.fecha == fecha }
-    Hoja("Entrada", nav.atras, encabezado = {
-        Text(Estilo.fecha(fecha), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(top = 10.dp))
-        Text(Estilo.comentario + Fechas.titulo(fecha).lowercase() + " · " + Fechas.relativo(fecha), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }) {
-        if (d == null) { Vacio("No encontré esa entrada."); return@Hoja }
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            // La lista va de la más reciente a la más antigua: «anterior» en el tiempo es el índice siguiente.
-            BotonSecundario("‹ anterior", habilitado = i in 0 until todas.size - 1) { fecha = todas[i + 1].fecha }
-            BotonSecundario("siguiente ›", habilitado = i > 0, modifier = Modifier.weight(1f)) { fecha = todas[i - 1].fecha }
-        }
-        Portada(d.foto)
-        LibroDiario.meta(d).takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 12.dp)) }
-        Tarjeta(Modifier.padding(top = 10.dp)) {
-            androidx.compose.foundation.text.selection.SelectionContainer {
-                Text(d.nota.trim(), style = MaterialTheme.typography.bodyLarge)
-            }
-        }
-        if (d.mejor_momento.isNotBlank() || d.peor_momento.isNotBlank()) Tarjeta(Modifier.padding(top = 8.dp)) {
-            if (d.mejor_momento.isNotBlank()) Text("Lo mejor: " + d.mejor_momento, style = MaterialTheme.typography.bodyMedium)
-            if (d.peor_momento.isNotBlank()) Text("Lo peor: " + d.peor_momento, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
-        }
-        if (d.sueno_texto.isNotBlank()) Seccion("Sueño") { Tarjeta { Text(d.sueno_texto.trim(), style = MaterialTheme.typography.bodyMedium) } }
-        FraseDelDia(fecha)
-        FlowRow(Modifier.padding(top = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            BotonSecundario("PDF de esta entrada") { exportar("pdf", { LibroDiario.pdf(ctx, listOf(d)) }, "application/pdf") }
-            BotonSecundario("compartir texto") {
-                val t = Fechas.titulo(fecha) + "\n\n" + d.nota.trim()
-                ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t), "Compartir").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            }
-            BotonSecundario("abrir el día") { Seleccion.abrir(nav, fecha) }
-        }
-        Ayuda("El PDF lleva los colores, letras y el emblema del tema que tengas puesto.", Modifier.padding(top = 6.dp))
-    }
+    // La lista va de la más reciente a la más antigua: «anterior» en el tiempo es el índice siguiente.
+    io.github.ruddy2003.vestigium.ui.LecturaTema(fecha, d, volver = nav.atras,
+        anterior = if (i in 0 until todas.size - 1) ({ fecha = todas[i + 1].fecha; Seleccion.entrada = fecha }) else null,
+        siguiente = if (i > 0) ({ fecha = todas[i - 1].fecha; Seleccion.entrada = fecha }) else null,
+        acciones = listOf(
+            "Editar" to { escribiendo = true },
+            "PDF de esta entrada" to { if (d != null) exportar("pdf", { LibroDiario.pdf(ctx, listOf(d)) }, "application/pdf") },
+            "Compartir texto" to {
+                if (d != null) {
+                    val t = Fechas.titulo(fecha) + "\n\n" + d.nota.trim()
+                    ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t), "Compartir").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                }
+            },
+            "Abrir el día" to { Seleccion.abrir(nav, fecha) },
+        ))
+    if (escribiendo) io.github.ruddy2003.vestigium.ui.EscribirDia(fecha) { escribiendo = false }
 }

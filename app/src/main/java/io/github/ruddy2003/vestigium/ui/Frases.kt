@@ -258,9 +258,110 @@ object Frases {
         f("Finish each day and be done with it. You have done what you could.", "Termina cada día y déjalo atrás. Hiciste lo que pudiste.", "Ralph Waldo Emerson"),
     )
 
+
+    val NAPOLEON = listOf(
+        f("Impossible n'est pas français.", "Imposible no es francés.", "Atribuida a Napoleón, a partir de una carta al general Lemarois, 1813"),
+        f("Demandez-moi tout, excepté du temps.", "Pídanme lo que quieran, menos tiempo.", "Atribuida a Napoleón"),
+        f("Je puis perdre des batailles, mais on ne me verra jamais perdre une minute.", "Puedo perder batallas, pero nadie me verá perder un minuto.", "Atribuida a Napoleón"),
+        f("La victoire appartient au plus persévérant.", "La victoria pertenece al más perseverante.", "Atribuida a Napoleón"),
+        f("Un bon croquis vaut mieux qu'un long discours.", "Un buen croquis vale más que un largo discurso.", "Atribuida a Napoleón"),
+        f("Rien n'est plus difficile, et donc plus précieux, que d'être capable de décider.", "Nada es más difícil, y por eso más valioso, que ser capaz de decidir.", "Atribuida a Napoleón"),
+        f("Alles im Kriege ist sehr einfach, aber das Einfachste ist schwierig.", "En la guerra todo es muy sencillo, pero lo más sencillo es difícil.", "Carl von Clausewitz, De la guerra I, 7"),
+        f("Surtout, pas trop de zèle.", "Sobre todo, no demasiado celo.", "Atribuida a Talleyrand"),
+        f(null, "El sueño de la razón produce monstruos.", "Francisco de Goya, Los caprichos 43, 1799"),
+        f("Un roman est un miroir qui se promène sur une grande route.", "Una novela es un espejo que se pasea por un camino real.", "Stendhal, Rojo y negro, 1830"),
+        f("Wer nicht von dreitausend Jahren sich weiß Rechenschaft zu geben, bleib im Dunkeln unerfahren, mag von Tag zu Tage leben.",
+            "Quien no sabe dar cuenta de tres mil años se queda a oscuras, sin experiencia, viviendo al día.", "Goethe, Diván de Oriente y Occidente, 1819"),
+        f("Le génie n'est qu'une plus grande aptitude à la patience.", "El genio no es más que una mayor aptitud para la paciencia.", "Atribuida a Buffon"),
+        f(null, "Cada noche, un boletín; cada boletín, una pequeña victoria.", "Ordenanza del cuartel general"),
+        f(null, "Quien redacta el parte diario no pierde la campaña.", "Memorial de campaña"),
+        f(null, "Una jornada sin anotar es una batalla sin mapa.", "Memorial de campaña"),
+        f(null, "El ejército marcha sobre su estómago y el soldado, sobre su sueño: anota los dos.", "Ordenanza del vivac, a partir de un dicho atribuido a Napoleón"),
+        f(null, "Revista de tropas al anochecer: ánimo, cuerpo, gastos, hábitos. Nada sin pasar lista.", "Ordenanza del cuartel general"),
+    )
+
+    val MUERTOS = listOf(
+        f(null, "Polvo serán, mas polvo enamorado.", "Francisco de Quevedo, «Amor constante más allá de la muerte»"),
+        f(null, "Ayer se fue; mañana no ha llegado; hoy se está yendo sin parar un punto.", "Francisco de Quevedo, soneto «¡Ah de la vida!»"),
+        f(null, "Es cadáver, es polvo, es sombra, es nada.", "Sor Juana Inés de la Cruz, soneto «Este que ves, engaño colorido»"),
+        f(null, "Nuestras vidas son los ríos que van a dar en la mar, que es el morir.", "Jorge Manrique, Coplas por la muerte de su padre, 1476"),
+        f(null, "Cómo se pasa la vida, cómo se viene la muerte tan callando.", "Jorge Manrique, Coplas por la muerte de su padre, 1476"),
+        f(null, "Porque veo al final de mi rudo camino que yo fui el arquitecto de mi propio destino.", "Amado Nervo, «En paz», 1915"),
+        f(null, "¿Acaso de verdad se vive en la tierra? No para siempre aquí: solo un poco.", "Atribuido a Nezahualcóyotl, Cantares mexicanos"),
+        f("Pulvis et umbra sumus.", "Somos polvo y sombra.", "Horacio, Odas IV, 7"),
+        f("Memento mori.", "Recuerda que morirás.", "Locución latina"),
+        f(null, "El muerto al pozo y el vivo al gozo.", "Refrán popular"),
+        f(null, "Al que madruga, Dios lo ayuda; pero no por mucho madrugar amanece más temprano.", "Refranes populares"),
+        f(null, "Pon en el altar lo que hiciste hoy: también se recuerda lo vivido.", "Calaverita de la casa"),
+        f(null, "Cada día que anotas es una veladora que no se apaga.", "Dicho de la ofrenda"),
+        f(null, "Los que se fueron siguen en lo que recordamos; escribe lo que no quieras perder.", "Dicho de la ofrenda"),
+        f(null, "La Catrina no lleva cuentas, pero tú sí: que te encuentre con el diario al día.", "Calaverita de la casa"),
+        f(null, "Flor de cempasúchil para el camino, pan de muerto para la mesa, una línea para la memoria.", "Receta de la ofrenda"),
+    )
+
+    val NAVIDAD = listOf(
+        f("I will honour Christmas in my heart, and try to keep it all the year.", "Honraré la Navidad en mi corazón y procuraré guardarla todo el año.", "Charles Dickens, Canción de Navidad, 1843"),
+        f("I will live in the Past, the Present, and the Future. The Spirits of all Three shall strive within me.",
+            "Viviré en el Pasado, el Presente y el Futuro. Los Espíritus de los tres lucharán dentro de mí.", "Charles Dickens, Canción de Navidad, 1843"),
+        f("No space of regret can make amends for one life's opportunity misused.", "Ningún arrepentimiento compensa una oportunidad de la vida mal aprovechada.", "Charles Dickens, Canción de Navidad, 1843"),
+        f("There is nothing in the world so irresistibly contagious as laughter and good humour.", "No hay nada en el mundo tan irresistiblemente contagioso como la risa y el buen humor.", "Charles Dickens, Canción de Navidad, 1843"),
+        f("Reflect upon your present blessings, of which every man has plenty; not on your past misfortunes, of which all men have some.",
+            "Piensa en las bendiciones que tienes, que todos tenemos muchas, y no en las desgracias pasadas, que todos tenemos algunas.", "Charles Dickens, «Una cena de Navidad», 1835"),
+        f(null, "Mas María guardaba todas estas cosas, confiriéndolas en su corazón.", "Lucas 2, 19 (Reina-Valera 1909)"),
+        f(null, "Gloria en las alturas a Dios, y en la tierra paz, buena voluntad para con los hombres.", "Lucas 2, 14 (Reina-Valera 1909)"),
+        f(null, "Noche de paz, noche de amor, todo duerme en derredor.", "«Noche de paz», de Joseph Mohr (1816), versión de Federico Fliedner"),
+        f("Happy Christmas to all, and to all a good-night!", "¡Feliz Navidad a todos, y a todos buenas noches!", "Clement Clarke Moore, «Una visita de San Nicolás», 1823"),
+        f("Christmas is not a time nor a season, but a state of mind.", "La Navidad no es una fecha ni una temporada, sino un estado de ánimo.", "Calvin Coolidge, mensaje de Navidad, 1927"),
+        f("Of all the old festivals, that of Christmas awakens the strongest and most heartfelt associations.",
+            "De todas las fiestas antiguas, la Navidad es la que despierta los recuerdos más fuertes y sentidos.", "Washington Irving, «La Navidad», 1819"),
+        f(null, "Una carta cada noche: el regalo que te haces para dentro de un año.", "Nota del taller"),
+        f(null, "Enciende una luz por cada día cumplido; en diciembre, el árbol entero brilla.", "Calendario de Adviento"),
+        f(null, "El mejor regalo cabe en una línea: lo que hoy te hizo bien.", "Nota del taller"),
+        f(null, "Que la noche te encuentre con la chimenea encendida y el día bien contado.", "Felicitación de la casa"),
+    )
+
+    val SEDA = listOf(
+        f("The Moving Finger writes; and, having writ, moves on: nor all thy Piety nor Wit shall lure it back to cancel half a Line.",
+            "El dedo escribe y, una vez escrito, sigue adelante: ni toda tu piedad ni tu ingenio lo harán volver para borrar media línea.", "Rubaiyat de Omar Jayam, versión de Edward FitzGerald, 1859"),
+        f("吾日三省吾身。", "Cada día me examino a mí mismo tres veces.", "Zengzi, en las Analectas de Confucio I, 4"),
+        f("知之為知之，不知為不知，是知也。", "Saber que sabes lo que sabes y que no sabes lo que no sabes: eso es saber.", "Confucio, Analectas II, 17"),
+        f("千里之行，始於足下。", "Un viaje de mil li empieza bajo tus pies.", "Laozi, Tao Te Ching 64"),
+        f("知人者智，自知者明。", "Quien conoce a los otros es sabio; quien se conoce a sí mismo es lúcido.", "Laozi, Tao Te Ching 33"),
+        f("知彼知己，百戰不殆。", "Conoce al otro y conócete a ti mismo, y en cien batallas no correrás peligro.", "Sunzi, El arte de la guerra III"),
+        f("好記性不如爛筆頭。", "La mejor memoria no vale lo que un pincel gastado.", "Proverbio chino"),
+        f("學而不思則罔，思而不學則殆。", "Aprender sin pensar es inútil; pensar sin aprender es peligroso.", "Confucio, Analectas II, 15"),
+        f("بنی‌آدم اعضای یکدیگرند", "Los hijos de Adán son miembros de un mismo cuerpo.", "Saadi, Gulistán I, 10"),
+        f("Non ho scritto la metà di quello che ho visto.", "No he contado ni la mitad de lo que vi.", "Atribuida a Marco Polo por Jacopo d'Acqui"),
+        f(null, "Cada caravasar anota quién llegó y qué traía; haz lo mismo con tu día.", "Registro del caravasar"),
+        f(null, "Seda, especias y días: todo se pesa antes de seguir el camino.", "Libro del mercader"),
+        f(null, "El camello no apura el paso por mucho que mires el horizonte; cuenta las jornadas, no las dunas.", "Dicho de los camelleros"),
+        f(null, "Un rollo por noche, y al cabo del año tendrás una biblioteca de Samarcanda.", "Libro del mercader"),
+        f(null, "El oasis no se encuentra: se anota en el mapa la primera vez y se vuelve.", "Dicho de los camelleros"),
+    )
+
+    val URSS = listOf(
+        f("Планета есть колыбель разума, но нельзя вечно жить в колыбели.", "La Tierra es la cuna de la razón, pero no se puede vivir siempre en la cuna.", "Konstantín Tsiolkovski, carta de 1911"),
+        f("Поехали!", "¡Vámonos!", "Yuri Gagarin, 12 de abril de 1961"),
+        f("Светить всегда, светить везде.", "Brillar siempre, brillar en todas partes.", "Vladímir Maiakovski, 1920"),
+        f("Краткость — сестра таланта.", "La brevedad es hermana del talento.", "Antón Chéjov, carta a su hermano Alexandr, 1889"),
+        f("В человеке должно быть всё прекрасно: и лицо, и одежда, и душа, и мысли.", "En una persona todo debe ser hermoso: la cara, la ropa, el alma y los pensamientos.", "Antón Chéjov, Tío Vania, 1897"),
+        f("Лучше меньше, да лучше.", "Mejor menos, pero mejor.", "Lenin, artículo de 1923"),
+        f("Учиться, учиться и учиться.", "Estudiar, estudiar y estudiar.", "Lenin, 1899"),
+        f("Постепенность, постепенность и постепенность.", "Gradualidad, gradualidad y gradualidad.", "Iván Pávlov, Carta a la juventud, 1936"),
+        f("Хочешь быть счастливым, будь им.", "Si quieres ser feliz, sélo.", "Kozmá Prutkov, Frutos de la meditación"),
+        f("Никто не обнимет необъятного.", "Nadie abarca lo inabarcable.", "Kozmá Prutkov, Frutos de la meditación"),
+        f("Знать — значит предсказывать.", "Saber es predecir.", "Atribuida a Dmitri Mendeléyev"),
+        f(null, "Cumple la norma de hoy; el plan de cinco años se cumple solo.", "Cartel del taller"),
+        f(null, "Camarada: el día que no se anota no entra en la estadística.", "Mural de la fábrica"),
+        f(null, "Cada jornada es un ladrillo del plan.", "Consigna del taller"),
+        f(null, "Sueño de ocho horas, trabajo de ocho horas, ocho horas para lo que quieras.", "Consigna obrera del siglo XIX"),
+        f(null, "El informe de hoy es la estadística de mañana.", "Cartel del comisariado"),
+    )
+
     fun de(tema: TemaId): List<Frase> = when (tema) {
         TemaId.ROMANO -> ROMANO; TemaId.CIBER -> CIBER; TemaId.HELENO -> HELENO; TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.DISTOPIA -> DISTOPIA; TemaId.REFUGIO -> REFUGIO; TemaId.ORDEN -> ORDEN; TemaId.LABORATORIO -> LABORATORIO; TemaId.COLONOS -> COLONOS
+        TemaId.NAPOLEON -> NAPOLEON; TemaId.MUERTOS -> MUERTOS; TemaId.NAVIDAD -> NAVIDAD; TemaId.SEDA -> SEDA; TemaId.URSS -> URSS
     }
 
     /** La del día para el tema elegido: cambia cada día y recorre todas antes de repetir. */
@@ -274,5 +375,7 @@ object Frases {
         TemaId.ROMANO -> "SENTENTIA DIEI"; TemaId.CIBER -> "> motd"; TemaId.HELENO -> "ΓΝΩΜΗ ΤΗΣ ΗΜΕΡΑΣ"; TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"; TemaId.REFUGIO -> "MENSAJE DEL DÍA"; TemaId.ORDEN -> "ORDEN DEL DÍA"; TemaId.LABORATORIO -> "NOTA DEL DÍA"
         TemaId.COLONOS -> "Del almanaque"
+        TemaId.NAPOLEON -> "BOLETÍN DEL EJÉRCITO"; TemaId.MUERTOS -> "CALAVERITA DEL DÍA"; TemaId.NAVIDAD -> "Junto a la chimenea"
+        TemaId.SEDA -> "Dicho de la caravana"; TemaId.URSS -> "LEMA DEL DÍA"
     }
 }

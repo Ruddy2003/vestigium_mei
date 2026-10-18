@@ -345,6 +345,10 @@ fun PantallaNoche(nav: Nav) {
     LaunchedEffect(d, sucio) { if (sucio) { delay(700); Repo.guardarDia(d); sucio = false } }
     DisposableEffect(fecha) { onDispose { if (sucioActual) Repo.guardarDia(dActual) } }
     fun cambiar(n: Dia) { d = n; sucio = true }
+    var escribiendo by remember(fecha) { mutableStateOf(false) }
+    if (escribiendo) io.github.ruddy2003.vestigium.ui.DialogoEscritor(fecha, d.nota, { cambiar(d.copy(nota = it)) }) {
+        Repo.guardarDia(dActual); sucio = false; escribiendo = false
+    }
     val c = Repo.config
     val scope = rememberCoroutineScope()
     val reqAnimo = remember { BringIntoViewRequester() }
@@ -399,12 +403,13 @@ fun PantallaNoche(nav: Nav) {
             }
         }
         Seccion("Diario", "Escribe libre. Usa @persona y #tema; abajo ves lo que se detecta y si alguna etiqueta parece error de dedo.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqDiario)) {
-            Editor(d.nota, "diarium_$fecha.txt", "¿Cómo fue el día?", pie = "${Texto.palabras(d.nota)} verba") { cambiar(d.copy(nota = it)) }
+            // El diario es un objeto del tema (rollo, libro, carta…): al tocarlo se abre a pantalla completa para escribir.
+            io.github.ruddy2003.vestigium.ui.ObjetoDiario(fecha, d.nota) { Repo.guardarDia(d); sucio = false; escribiendo = true }
             Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 BotonDictado { t -> cambiar(d.copy(nota = (d.nota + " " + t).trim())) }
             }
             Detectados(d.nota, fecha) { nuevo -> cambiar(d.copy(nota = nuevo)) }
-            TextButton(onClick = { nav.pestana("diario") }) { Text("ver todas tus entradas →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            TextButton(onClick = { nav.ir("biblioteca_diario") }) { Text("abrir la biblioteca del diario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
         Seccion("Hábitos", "Siempre aquí, para marcarlos al cerrar el día.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqHabitos)) {
             val activos = c.habitos.filter { it.activo }

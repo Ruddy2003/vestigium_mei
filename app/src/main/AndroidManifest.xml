@@ -189,6 +189,71 @@
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
+        <activity-alias
+            android:name=".IconoNapoleon"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_napoleon"
+            android:roundIcon="@mipmap/ic_launcher_napoleon"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoMuertos"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_muertos"
+            android:roundIcon="@mipmap/ic_launcher_muertos"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoNavidad"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_navidad"
+            android:roundIcon="@mipmap/ic_launcher_navidad"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoSeda"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_seda"
+            android:roundIcon="@mipmap/ic_launcher_seda"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoUrss"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_urss"
+            android:roundIcon="@mipmap/ic_launcher_urss"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
 
         <activity
             android:name=".ui.QuickActivity"
