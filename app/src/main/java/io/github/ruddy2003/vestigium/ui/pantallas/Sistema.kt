@@ -274,8 +274,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     if (v) io.github.ruddy2003.vestigium.ui.Sentidos.preparar(ctx)
                 }
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    val E = io.github.ruddy2003.vestigium.ui.Sentidos.Evento
-                    listOf("toque" to E.TOQUE, "elegir" to E.ELEGIR, "pasar" to E.PASAR, "abrir" to E.ABRIR, "guardar" to E.GUARDAR, "logro" to E.LOGRO).forEach { (n, e) ->
+                    io.github.ruddy2003.vestigium.ui.Sentidos.Evento.entries.filter { it.name in setOf("TOQUE", "ELEGIR", "PASAR", "ABRIR", "GUARDAR", "LOGRO") }
+                        .map { it.name.lowercase() to it }.forEach { (n, e) ->
                         BotonSecundario(n) {
                             io.github.ruddy2003.vestigium.ui.Sentidos.sentir(ctx, e)
                             if (e == io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) io.github.ruddy2003.vestigium.ui.Fiesta.lanzar()
