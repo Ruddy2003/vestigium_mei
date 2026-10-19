@@ -624,6 +624,71 @@ class Capturas {
         }
     }
     @Test fun datosGotico() = pantalla(TemaId.GOTICO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDatos(navVacia) }
+
+    // ------------------------------------------------------------ salud, tus apps y otras vidas
+    /** Treinta días de MacroFactor con micronutrientes, entrenos y chats inventados. */
+    private fun saludEjemplo() {
+        io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
+        val D = io.github.ruddy2003.vestigium.data.Fechas
+        val hoy = D.diaLogico(); val r = java.util.Random(3)
+        val fechas = (0..40).map { D.sumar(hoy, -it.toLong()) }
+        val nut = fechas.associateWith { f -> io.github.ruddy2003.vestigium.data.NutricionDia(f, mapOf(
+            "kcal" to 2300.0 + r.nextInt(500), "proteina_g" to 120.0 + r.nextInt(40), "carbohidratos_g" to 250.0 + r.nextInt(60), "grasa_g" to 80.0 + r.nextInt(20),
+            "fibra_g" to 17.0 + r.nextInt(8), "azucares_anadidos_g" to 45.0 + r.nextInt(40), "azucares_g" to 90.0, "sodio_mg" to 2600.0 + r.nextInt(900), "potasio_mg" to 2600.0 + r.nextInt(800),
+            "grasa_saturada_g" to 26.0 + r.nextInt(10), "alcohol_g" to (if (r.nextInt(5) == 0) 28.0 else 0.0), "cafeina_mg" to 180.0 + r.nextInt(150), "agua_g" to 1700.0 + r.nextInt(800),
+            "vitamin_c_mg" to 70.0 + r.nextInt(60), "vitamin_d_mcg" to 3.0 + r.nextInt(4), "vitamin_a_mcg" to 600.0 + r.nextInt(400), "calcio_mg" to 800.0 + r.nextInt(300),
+            "hierro_mg" to 14.0 + r.nextInt(6), "magnesio_mg" to 280.0 + r.nextInt(80), "zinc_mg" to 10.0 + r.nextInt(5), "folate_mcg" to 350.0 + r.nextInt(150),
+            "b12_cobalamin_mcg" to 4.0 + r.nextInt(3), "vitamin_e_mg" to 7.0 + r.nextInt(5), "selenium_mcg" to 90.0, "gasto_kcal" to 2600.0, "peso_tendencia_kg" to 74.0 - fechas.indexOf(f) * 0.03),
+            comidas = 4, primera = "08:40", ultima = "21:15") }
+        val ent = fechas.filterIndexed { i, _ -> i % 2 == 0 }.associateWith { f -> io.github.ruddy2003.vestigium.data.EntrenoDia(f, listOf("Torso"), 70.0, 18 + r.nextInt(6), 16, 140, 9000.0 + r.nextInt(3000),
+            mapOf("pecho" to 6.0, "espalda_alta" to 5.0, "biceps" to 3.0, "cuadriceps" to 4.0)) }
+        val chats = fechas.flatMap { f -> listOf("Ana", "Luis", "Familia").map { c -> io.github.ruddy2003.vestigium.data.ChatDia("$f$c", f, c, c == "Familia", mios = r.nextInt(30), otros = r.nextInt(40), palabras_mias = 200, resp_mia_min = 4.0 + r.nextInt(20), resp_otros_min = 6.0, inicie = 1, conversaciones = 2) } }
+        Repo.nutricionEnMemoria(nut, ent, chats)
+        Repo.configEnMemoria(Repo.config.copy(perfil = perfilEjemplo, salud_sexo = "hombre"))
+    }
+    @Test fun saludBotanico() = pantalla(TemaId.BOTANICO, false, 5200) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaSalud(navVacia) }
+    @Test fun saludGotico() = pantalla(TemaId.GOTICO, true, 3000) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaSalud(navVacia) }
+    @Test fun tusAppsComida() = pantalla(TemaId.CIBER, true, 3800) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusApps(navVacia, "comida") }
+    @Test fun tusAppsGimnasio() = pantalla(TemaId.ROMANO, false, 3400) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusApps(navVacia, "gimnasio") }
+    @Test fun tusAppsWhatsapp() = pantalla(TemaId.ANDALUS, false, 2600) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusApps(navVacia, "whatsapp") }
+    @Test fun otrasVidasRomano() = pantalla(TemaId.ROMANO, false, 6400) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia) }
+    @Test fun otrasVidasLaboratorio() = pantalla(TemaId.LABORATORIO, false, 6400) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia) }
+    @Test fun otrasVidasDistopia() = pantalla(TemaId.DISTOPIA, true, 6400) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia) }
+    @Test fun otrasVidasBotanico() = pantalla(TemaId.BOTANICO, true, 6400) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia) }
+    @Test fun medallasVidas() = captura(TemaId.RENACIMIENTO, false, alto = 1400) {
+        Column(Modifier.padding(12.dp)) {
+            val todas = io.github.ruddy2003.vestigium.data.OtrasVidas.BASE + io.github.ruddy2003.vestigium.data.OtrasVidas.DE_TEMAS
+            todas.chunked(6).forEach { fila ->
+                Row(Modifier.padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    fila.forEach { v ->
+                        Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+                            io.github.ruddy2003.vestigium.ui.pantallas.MedallaVida(v, 58.dp)
+                            Text(v.id.take(10), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @Test fun masBotanico() = pantalla(TemaId.BOTANICO, false, 3800) { mundoEjemplo(); obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    @Test fun masBotanicoOscuro() = pantalla(TemaId.BOTANICO, true, 2400) { mundoEjemplo(); obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    @Test fun emblemasBotanico() = captura(TemaId.BOTANICO, false, alto = 1400) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.Emblema(TemaId.BOTANICO, 150.dp, animado = false)
+                io.github.ruddy2003.vestigium.ui.Emblema(TemaId.BOTANICO, 60.dp, animado = false)
+            }
+            io.github.ruddy2003.vestigium.ui.Enredadera(Modifier)
+            io.github.ruddy2003.vestigium.ui.SelloHuella(Modifier.fillMaxWidth(0.5f).aspectRatio(1f), TemaId.BOTANICO)
+        }
+    }
+    @Test fun tecladoBotanico() = captura(TemaId.BOTANICO, false, alto = 1200) {
+        val v = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.text.input.TextFieldValue("Hoy vi una fila de hormigas")) }
+        Column(Modifier.fillMaxWidth()) {
+            Text(v.value.text, modifier = Modifier.padding(16.dp))
+            io.github.ruddy2003.vestigium.ui.TecladoTema(TemaId.BOTANICO, io.github.ruddy2003.vestigium.ui.pagina(TemaId.BOTANICO), v.value, { v.value = it }, {}, {})
+        }
+    }
     @Test fun epigrafeMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) {
         val ayer = io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1)
         Repo.configEnMemoria(Repo.config.copy(frases_guardadas = listOf(io.github.ruddy2003.vestigium.data.FraseGuardada("Quien no sabe callar, no sabe hablar.", null, "Refrán castellano", "medieval", ayer))))

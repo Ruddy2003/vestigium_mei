@@ -124,10 +124,9 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     }
     TemaId.NAPOLEON -> listOf(ovalo(c + Offset(0f, r * 0.2f), r * 0.32f, r * 0.72f), circulo(c + Offset(0f, -r * 0.62f), r * 0.24f),
         ovalo(c + Offset(-r * 0.52f, -r * 0.25f), r * 0.42f, r * 0.26f), ovalo(c + Offset(r * 0.52f, -r * 0.25f), r * 0.42f, r * 0.26f)).reduce { a, b -> mas(a, b) }
-    TemaId.BOTANICO -> (0 until 5).map { i ->
-        val a = -PI / 2 + 2 * PI * i / 5
-        Path().apply { val p = c + dir(a) * r; val l = c + dir(a - 0.55) * (r * 0.78f); val d = c + dir(a + 0.55) * (r * 0.78f); moveTo(c.x, c.y); quadraticTo(l.x, l.y, p.x, p.y); quadraticTo(d.x, d.y, c.x, c.y); close() }
-    }.reduce { a, b -> mas(a, b) }
+    // Un escarabajo: élitros, pronoto y cabeza.
+    TemaId.BOTANICO -> listOf(ovalo(c + Offset(0f, r * 0.2f), r * 0.62f, r * 0.78f), ovalo(c + Offset(0f, -r * 0.58f), r * 0.44f, r * 0.24f),
+        circulo(c + Offset(0f, -r * 0.86f), r * 0.17f)).reduce { a, b -> mas(a, b) }
     TemaId.NAVIDAD -> estrella(c, r, 6, 0.32f)
     TemaId.SEDA -> menos(circulo(c, r), poligono(c, r * 0.36f, 4, PI / 4))
     TemaId.URSS -> estrella(c, r, 5, 0.38f)
@@ -164,7 +163,7 @@ fun Calificacion(valor: Int?, modifier: Modifier = Modifier, tam: Dp = 14.dp, co
 
 /** Un recuadro grande con su dibujo arriba y el título abajo. */
 @Composable
-private fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modifier, alto: Dp = 150.dp, onClick: () -> Unit, dibujo: @Composable BoxScope.() -> Unit) {
+internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modifier, alto: Dp = 150.dp, onClick: () -> Unit, dibujo: @Composable BoxScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     val sentir = rememberSentir()
     Surface(onClick = { sentir(Sentidos.Evento.ABRIR); onClick() }, shape = MaterialTheme.shapes.medium, color = cs.surface,

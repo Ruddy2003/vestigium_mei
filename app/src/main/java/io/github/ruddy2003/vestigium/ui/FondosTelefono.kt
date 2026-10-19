@@ -87,10 +87,46 @@ object FondosTelefono {
     /** Pone los fondos: el limpio en inicio y el completo en bloqueo. [donde]: «inicio», «bloqueo» o «ambas». */
     fun poner(ctx: Context, inicio: Bitmap?, bloqueo: Bitmap?, donde: String): Boolean = runCatching {
         val wm = WallpaperManager.getInstance(ctx)
-        if (donde != "bloqueo" && inicio != null) wm.setBitmap(inicio, null, true, WallpaperManager.FLAG_SYSTEM)
-        if (donde != "inicio" && bloqueo != null) wm.setBitmap(bloqueo, null, true, WallpaperManager.FLAG_LOCK)
+        if (donde != "bloqueo" && inicio != null) ponerUno(ctx, wm, inicio, WallpaperManager.FLAG_SYSTEM)
+        if (donde != "inicio" && bloqueo != null) ponerUno(ctx, wm, bloqueo, WallpaperManager.FLAG_LOCK)
         true
     }.getOrDefault(false)
+
+    /** Tamaño real de la pantalla (con las barras del sistema), en píxeles. */
+    private fun pantalla(ctx: Context): android.graphics.Point {
+        val wmg = ctx.getSystemService(android.view.WindowManager::class.java)
+        val r = wmg.maximumWindowMetrics.bounds
+        return android.graphics.Point(r.width(), r.height())
+    }
+
+    /**
+     * La imagen, exactamente del tamaño de la pantalla, y diciéndole al teléfono que se vea entera. Sin esto, algunos
+     * teléfonos (los Pixel con Android 15 o más) recortan a su manera para dejar espacio al desplazamiento de la pantalla
+     * de inicio, y el fondo de bloqueo queda corrido hacia un lado.
+     */
+    private fun ponerUno(ctx: Context, wm: WallpaperManager, b: Bitmap, cual: Int) {
+        val p = pantalla(ctx)
+        val img = ajustar(b, p.x, p.y)
+        val todo = android.graphics.Rect(0, 0, img.width, img.height)
+        // Android 15+: un recorte explícito por tamaño de pantalla (si el sistema lo ofrece); si no, la pista de recorte de siempre.
+        val hecho = android.os.Build.VERSION.SDK_INT >= 35 && runCatching {
+            val m = WallpaperManager::class.java.getMethod("setBitmapWithCrops", Bitmap::class.java, Map::class.java, Boolean::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+            m.invoke(wm, img, mapOf(android.graphics.Point(img.width, img.height) to todo), true, cual)
+            true
+        }.getOrDefault(false)
+        if (!hecho) wm.setBitmap(img, todo, true, cual)
+    }
+
+    /** Escala y recorta al centro para llenar justo [w]×[h] (como «cubrir»). */
+    private fun ajustar(b: Bitmap, w: Int, h: Int): Bitmap {
+        if (w <= 0 || h <= 0 || (b.width == w && b.height == h)) return b
+        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val c = android.graphics.Canvas(out)
+        val s = maxOf(w.toFloat() / b.width, h.toFloat() / b.height)
+        val dw = b.width * s; val dh = b.height * s
+        c.drawBitmap(b, null, android.graphics.RectF((w - dw) / 2, (h - dh) / 2, (w + dw) / 2, (h + dh) / 2), Paint(Paint.FILTER_BITMAP_FLAG))
+        return out
+    }
 
     fun vivoActivo(ctx: Context): Boolean = runCatching { WallpaperManager.getInstance(ctx).wallpaperInfo?.packageName == ctx.packageName }.getOrDefault(false)
 
@@ -368,7 +404,7 @@ class FondoVivoServicio : WallpaperService() {
         }
 
         private fun tipo(t: TemaId, o: Boolean): String? = when (t) {
-            TemaId.ESPACIO -> "estrellas"; TemaId.GOTICO -> "vitral"; TemaId.BOTANICO -> if (o) "luciernagas" else "polen"; TemaId.NAVIDAD -> "nieve"
+            TemaId.ESPACIO -> "estrellas"; TemaId.GOTICO -> "vitral"; TemaId.BOTANICO -> if (o) "luciernagas" else "hormigas"; TemaId.NAVIDAD -> "nieve"
             TemaId.ANDALUS -> "agua"; TemaId.MONGOL -> "nubes"; TemaId.CIBER -> "lluvia"; TemaId.RENACIMIENTO -> "polvo"; TemaId.SEDA -> "arena"
             TemaId.HELENO -> if (o) "estrellas" else "polvo"; TemaId.REFUGIO -> if (o) "barrido" else null; TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.COLONOS -> "polvo"
             TemaId.LABORATORIO -> "polen"; TemaId.NAPOLEON -> "polvo"; TemaId.ORDEN, TemaId.DISTOPIA, TemaId.URSS -> "barrido"
@@ -380,7 +416,7 @@ class FondoVivoServicio : WallpaperService() {
         private fun particulas(c: android.graphics.Canvas, t: TemaId, o: Boolean, e: androidx.compose.material3.ColorScheme, w: Float, h: Float) {
             val tp = tipo(t, o) ?: return
             val u = resources.displayMetrics.density
-            val periodo = when (tp) { "nubes" -> 90000; "agua" -> 14000; "estrellas", "luciernagas" -> 9000; "lluvia" -> 4000; "barrido" -> 7000; else -> 24000 }
+            val periodo = when (tp) { "nubes" -> 90000; "hormigas" -> 70000; "agua" -> 14000; "estrellas", "luciernagas" -> 9000; "lluvia" -> 4000; "barrido" -> 7000; else -> 24000 }
             val tt = ((System.currentTimeMillis() - t0) % periodo) / periodo.toFloat()
             val tonos = listOf(e.primary, e.secondary, e.tertiary)
             p.shader = null; p.style = Paint.Style.FILL
@@ -402,6 +438,21 @@ class FondoVivoServicio : WallpaperService() {
                     val x = (m.x + 0.02f * sin(2 * PI * (tt * 4 + m.fase)).toFloat()) * w
                     p.color = alfa(when (tp) { "polen" -> Color(0xFFE2B84A); "arena" -> tonos[2]; else -> e.onBackground }, if (tp == "polvo") 0.16f else 0.3f)
                     c.drawCircle(x, y, 1.6f * u * m.tam, p)
+                }
+                "hormigas" -> motas.take(7).forEachIndexed { i, m ->
+                    val avance = (m.x + tt * (0.5f + m.v * 0.6f)) % 1.3f - 0.15f
+                    val dir = if (i % 2 == 0) 1f else -1f
+                    val x = (if (dir > 0) avance else 1f - avance) * w
+                    val fase = 2 * PI * (avance * 2 + m.fase)
+                    val y = m.y * h + 22f * u * sin(fase).toFloat()
+                    val ang = kotlin.math.atan2((22f * u * cos(fase) * 4 * PI / w).toFloat() * dir, dir)
+                    val l = 7f * u * (0.8f + m.tam * 0.3f); val dx = cos(ang); val dy = sin(ang)
+                    p.color = alfa(e.onBackground, 0.22f)
+                    c.drawCircle(x - dx * l * 0.35f, y - dy * l * 0.35f, l * 0.2f, p); c.drawCircle(x, y, l * 0.11f, p); c.drawCircle(x + dx * l * 0.28f, y + dy * l * 0.28f, l * 0.12f, p)
+                    p.strokeWidth = 0.9f * u
+                    for (k in -1..1) { val bx = x + dx * l * 0.05f * k; val by = y + dy * l * 0.05f * k
+                        c.drawLine(bx, by, bx - dy * l * 0.35f + dx * l * 0.12f * k, by + dx * l * 0.35f + dy * l * 0.12f * k, p)
+                        c.drawLine(bx, by, bx + dy * l * 0.35f + dx * l * 0.12f * k, by - dx * l * 0.35f + dy * l * 0.12f * k, p) }
                 }
                 "luciernagas" -> motas.forEach { m ->
                     val x = (m.x + 0.04f * sin(2 * PI * (tt * m.v + m.fase)).toFloat()) * w

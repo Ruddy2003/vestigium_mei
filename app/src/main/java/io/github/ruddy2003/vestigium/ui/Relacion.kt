@@ -115,13 +115,13 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
         while (x <= w) { lineTo(x, y + amp * sin(2 * PI * (x / w * ciclos) + fase).toFloat()); x += 2f }
     }
     when (tema) {
-        // Enredadera con una hoja; guirnalda en Navidad.
+        // Una ramita por la que caminan dos hormigas; guirnalda en Navidad.
         TemaId.BOTANICO -> {
             drawPath(onda(4 * u, 1.5f), col, style = Stroke(grosor, cap = StrokeCap.Round, pathEffect = punteado))
-            // Hojitas que salen del tallo, una arriba y una abajo.
-            listOf(0.3f to -1f, 0.7f to 1f).forEach { (f, lado) ->
-                val x = w * f; val y0 = y + 4 * u * sin(2 * PI * f * 1.5).toFloat(); val l = 7 * u + grosor
-                drawPath(Path().apply { moveTo(x, y0); quadraticTo(x + l * 0.2f, y0 + lado * l * 0.9f, x + l * 0.9f, y0 + lado * l); quadraticTo(x + l * 0.8f, y0 + lado * l * 0.2f, x, y0); close() }, col)
+            listOf(0.32f, 0.62f).forEach { f ->
+                val x = w * f; val y0 = y + 4 * u * sin(2 * PI * f * 1.5).toFloat()
+                val a = kotlin.math.atan2((4 * u * 2 * PI * 1.5 / w * kotlin.math.cos(2 * PI * f * 1.5)).toFloat(), 1f)
+                hormiga(Offset(x, y0 - grosor), 8 * u + grosor, a, col)
             }
         }
         // Guirnalda con dos esferas colgando.

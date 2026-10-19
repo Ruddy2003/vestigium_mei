@@ -20,6 +20,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -125,7 +131,7 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.MEDIEVAL -> Materia(c(0xFF6B2E1A), c(0xFF3E190D), c(0xFF8A4429), c(0xFFD4A93C), c(0xFFB08D57), c(0xFFEFE3C2), c(0xFF2B1D12), extra = c(0xFFB3261E))
     TemaId.COLONOS -> Materia(c(0xFF4A3423), c(0xFF2B1D12), c(0xFF6A4D35), c(0xFFB8893A), c(0xFF2E2016), c(0xFFF1E6CC), c(0xFF1E1A16), extra = c(0xFF9E2B25))
     TemaId.ORDEN -> Materia(c(0xFF4A525C), c(0xFF2A2F35), c(0xFF6E7883), c(0xFFC9A54A), c(0xFFA3172E), c(0xFFD6D9DC), c(0xFF1C2127))
-    TemaId.BOTANICO -> Materia(c(0xFF2F5D3A), c(0xFF1A3822), c(0xFF4E8A5A), c(0xFFC9A54A), c(0xFF7A2E45), c(0xFFF6F1DE), c(0xFF1C2A1C), extra = c(0xFFB24A6C))
+    TemaId.BOTANICO -> Materia(c(0xFF6B4A2E), c(0xFF432C19), c(0xFF8C6844), c(0xFFC9A54A), c(0xFF2E5E5A), c(0xFFF2EAD3), c(0xFF2A2318), extra = c(0xFF8C4A22))
     TemaId.GOTICO -> Materia(c(0xFF1F2F7A), c(0xFF0E1640), c(0xFF3B4FA8), c(0xFFE2B34A), c(0xFFB3122E), c(0xFFF3EBD6), c(0xFF1A1630), extra = c(0xFFB3122E))
     TemaId.ANDALUS -> Materia(c(0xFF7A3B1E), c(0xFF45200F), c(0xFF9C5530), c(0xFFD9B25B), c(0xFF1E6B5C), c(0xFFF3E7CC), c(0xFF2A1A12), extra = c(0xFF1E6B5C))
     TemaId.RENACIMIENTO -> Materia(c(0xFF9A7A50), c(0xFF5E462B), c(0xFFB89466), c(0xFF8C3B1E), c(0xFF3A2614), c(0xFFF0E4C6), c(0xFF3A2614), extra = c(0xFF8C3B1E))
@@ -463,15 +469,16 @@ private fun DrawScope.libroCerrado(t: TemaId, m: Materia) {
             drawRect(m.detalle, Offset(ini.x + tam.width * 0.72f, ini.y + tam.height - 4f), Size(w * 0.03f, h * 0.1f))
         }
         TemaId.BOTANICO -> {
-            // Tela verde con hojitas doradas estampadas en los bordes.
-            var x = ini.x + lomo + 8f; var k = 0
-            while (x < ini.x + tam.width - 14f) {
-                listOf(ini.y + 6f, ini.y + tam.height - 6f).forEachIndexed { i, y ->
-                    rotate(if ((k + i) % 2 == 0) -30f else 30f, Offset(x, y)) {
-                        drawPath(Path().apply { moveTo(x - 7f, y); quadraticTo(x, y - 5f, x + 7f, y); quadraticTo(x, y + 5f, x - 7f, y); close() }, m.acento.copy(alpha = 0.85f))
-                    }
+            // Libreta de campo de cuero, con su broche de latón y una fila de hormigas estampada en el borde.
+            val x = ini.x + tam.width * 0.86f
+            drawRect(m.sombra, Offset(x - w * 0.02f, ini.y), Size(w * 0.04f, tam.height))
+            drawRoundRect(m.acento, Offset(x - w * 0.034f, ini.y + tam.height * 0.46f), Size(w * 0.068f, tam.height * 0.08f), CornerRadius(3f))
+            var xx = ini.x + lomo + 12f
+            while (xx < x - 18f) {
+                listOf(ini.y + 8f, ini.y + tam.height - 8f).forEach { y ->
+                    drawCircle(m.acento.copy(alpha = 0.8f), 2.6f, Offset(xx - 4f, y)); drawCircle(m.acento.copy(alpha = 0.8f), 1.6f, Offset(xx, y)); drawCircle(m.acento.copy(alpha = 0.8f), 2f, Offset(xx + 3.6f, y))
                 }
-                x += 20f; k++
+                xx += 22f
             }
         }
         TemaId.GOTICO -> {
@@ -663,7 +670,13 @@ private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Ma
                 mediaLuna(Offset(w / 2, hh * 0.64f), w * 0.2f, LUNA.copy(alpha = 0.9f))
                 estrellas(d.fecha.hashCode(), 4, LUNA, Rect(w * 0.15f, hh * 0.72f, w * 0.85f, hh * 0.86f), 1.1f)
             } else if (tema == TemaId.URSS) { drawCircle(m.acento, w * 0.16f, Offset(w / 2, hh * 0.66f)) }
-            if (!noche && tema == TemaId.BOTANICO) drawPath(Path().apply { val cx = w / 2; val y0 = hh * 0.58f; moveTo(cx, y0); quadraticTo(cx + w * 0.3f, y0 + hh * 0.08f, cx, y0 + hh * 0.18f); quadraticTo(cx - w * 0.3f, y0 + hh * 0.08f, cx, y0); close() }, m.acento)
+            if (!noche && tema == TemaId.BOTANICO) {
+                // Un escarabajo estampado en oro sobre el cuero.
+                val cx = w / 2; val y0 = hh * 0.64f; val l = w * 0.2f
+                drawOval(m.acento, Offset(cx - l * 0.55f, y0 - l * 0.45f), Size(l * 1.1f, l * 1.5f)); drawCircle(m.acento, l * 0.3f, Offset(cx, y0 - l * 0.6f))
+                drawLine(lerp(cuerpo, Color.Black, 0.3f), Offset(cx, y0 - l * 0.4f), Offset(cx, y0 + l), 1.2f)
+                listOf(-1f, 1f).forEach { s -> for (k in 0 until 3) drawLine(m.acento, Offset(cx + s * l * 0.4f, y0 - l * 0.1f + k * l * 0.4f), Offset(cx + s * l * 0.85f, y0 - l * 0.3f + k * l * 0.55f), 1.4f) }
+            }
             if (!noche && tema == TemaId.GOTICO) { drawCircle(m.acento, w * 0.12f, Offset(w / 2, hh * 0.64f)); drawCircle(m.extra, w * 0.06f, Offset(w / 2, hh * 0.64f)) }
             if (!noche && tema == TemaId.ANDALUS) for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento, Offset(w / 2, hh * 0.66f), Offset(w / 2 + w * 0.22f * cos(a).toFloat(), hh * 0.66f + w * 0.22f * sin(a).toFloat()), 1.5f) }
             if (!noche && tema == TemaId.RENACIMIENTO) drawRect(m.detalle.copy(alpha = 0.7f), Offset(0f, hh * 0.62f), Size(w, hh * 0.03f))
@@ -823,7 +836,7 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.MEDIEVAL -> Pagina(R.drawable.papel_pergamino, c(0xFFEDDDB8), c(0xFF2B1D12), c(0xFF6E5639), c(0xFFB3261E), c(0xFF1F3A93), Letra.garamond, 18.5f, 27f, false, capitular = LetraExtra.gotica)
     TemaId.COLONOS -> Pagina(null, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), Letra.garamond, 18f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
     TemaId.ORDEN -> Pagina(null, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), Letra.texto, 16.5f, 25f, true, Rayas.NADA)
-    TemaId.BOTANICO -> Pagina(R.drawable.papel_lamina, c(0xFFF4EFDC), c(0xFF1C2A1C), c(0xFF5E6B55), c(0xFF2F6B3A), c(0xFFB24A6C), Letra.garamond, 18.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
+    TemaId.BOTANICO -> Pagina(R.drawable.papel_lamina, c(0xFFF1E9D2), c(0xFF2A2318), c(0xFF6B5E45), c(0xFF3F5A2C), c(0xFF8C4A22), Letra.garamond, 18.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
     TemaId.GOTICO -> Pagina(R.drawable.papel_vitela, c(0xFFF1E8D2), c(0xFF1A1630), c(0xFF5E5870), c(0xFFB3122E), c(0xFF1F3A9E), Letra.garamond, 18.5f, 27f, false, capitular = LetraExtra.textura)
     TemaId.ESPACIO -> Pagina(null, c(0xFF050A18), c(0xFFE8ECF8), c(0xFF6E7BA0), c(0xFF8AB4FF), c(0xFFFFB86B), LetraExtra.grotesk, 16f, 25f, true, Rayas.RENGLONES)
     TemaId.ANDALUS -> Pagina(R.drawable.papel_xativa, c(0xFFF2E6C8), c(0xFF2A1A12), c(0xFF6A5640), c(0xFF1E6B5C), c(0xFFB5432A), LetraExtra.amiri, 18.5f, 28f, false, capitular = LetraExtra.kufi)
@@ -1123,7 +1136,8 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
             FondoPagina(tema, p, noche = modo == Escrito.SUENO)
-            Column(Modifier.fillMaxSize().systemBarsPadding().imePadding()) {
+            // Arriba y a los lados, la barra del sistema; abajo la maneja el teclado del tema (o el del teléfono), para no contarla dos veces.
+            Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)).imePadding()) {
                 BarraPagina(p, guardar, "${Texto.palabras(campo.text)} palabras") {
                     Text(textoBoton ?: textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
                         modifier = Modifier.padding(end = 6.dp).background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }
@@ -1177,6 +1191,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                     onCambio = { v -> campo = v; if (v.text != valor) onCambio(v.text); cambioPropio++ },
                     sistema = { reenfocar = true; propio = false },
                     ocultar = { gestorFoco.clearFocus() })
+                else androidx.compose.foundation.layout.Spacer(Modifier.navigationBarsPadding())
             }
         }
     }

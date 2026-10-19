@@ -62,7 +62,7 @@ private fun Offset.mas(r: Float, ang: Float) = Offset(x + r * cos(ang), y + r * 
 private fun periodo(t: TemaId) = when (t) {
     TemaId.ROMANO -> 6000; TemaId.CIBER -> 1400; TemaId.HELENO -> 60000; TemaId.MEDIEVAL -> 5000; TemaId.DISTOPIA -> 7000
     TemaId.REFUGIO -> 3200; TemaId.ORDEN -> 2600; TemaId.LABORATORIO -> 2400; TemaId.COLONOS -> 1900
-    TemaId.NAPOLEON -> 5200; TemaId.BOTANICO -> 4200; TemaId.NAVIDAD -> 24000; TemaId.SEDA -> 4800; TemaId.URSS -> 12000
+    TemaId.NAPOLEON -> 5200; TemaId.BOTANICO -> 14000; TemaId.NAVIDAD -> 24000; TemaId.SEDA -> 4800; TemaId.URSS -> 12000
     TemaId.GOTICO -> 7000; TemaId.ESPACIO -> 9000; TemaId.ANDALUS -> 36000; TemaId.MONGOL -> 30000; TemaId.RENACIMIENTO -> 6000
 }
 
@@ -97,7 +97,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.LABORATORIO -> molecula(c, r, e.primary, e.secondary, t)
         TemaId.COLONOS -> farol(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.NAPOLEON -> { laurel(c, r, if (oscuro) e.primary else e.tertiary, t); letraN(c, r * 0.5f, if (oscuro) e.onBackground else e.primary, t) }
-        TemaId.BOTANICO -> ramita(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
+        TemaId.BOTANICO -> escarabajoLamina(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
         TemaId.GOTICO -> vitral(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, if (oscuro) e.tertiary else e.primary, e.onBackground, t)
         TemaId.ESPACIO -> planeta(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
         TemaId.ANDALUS -> rotate(t * 360f, c) { estrellaLazo(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.primary, e.background) }
@@ -126,40 +126,96 @@ private fun DrawScope.letraN(c: Offset, r: Float, color: Color, t: Float) {
     }
 }
 
-/** Lámina botánica: un tallo con hojas y una flor; una mariposa se posa y bate las alas. */
-private fun DrawScope.ramita(c: Offset, r: Float, verde: Color, rosa: Color, azul: Color, tinta: Color, t: Float) {
-    val tallo = Path().apply { moveTo(c.x - r * 0.1f, c.y + r * 0.95f); cubicTo(c.x - r * 0.25f, c.y + r * 0.3f, c.x + r * 0.25f, c.y - r * 0.1f, c.x - r * 0.05f, c.y - r * 0.6f) }
-    drawPath(tallo, verde, style = Stroke(r * 0.07f, cap = StrokeCap.Round))
-    fun hoja(base: Offset, ang: Float, largo: Float) {
-        rotate(ang, base) {
-            val h = Path().apply {
-                moveTo(base.x, base.y)
-                quadraticTo(base.x + largo * 0.5f, base.y - largo * 0.32f, base.x + largo, base.y)
-                quadraticTo(base.x + largo * 0.5f, base.y + largo * 0.32f, base.x, base.y); close()
+/**
+ * Lámina de naturalista: un escarabajo clavado con su alfiler sobre una fronda de helecho, con su etiqueta de colección.
+ * Mueve las antenas, y una hormiga da la vuelta al ejemplar.
+ */
+private fun DrawScope.escarabajoLamina(c: Offset, r: Float, musgo: Color, oxido: Color, irisado: Color, tinta: Color, t: Float) {
+    // Fronda de helecho detrás, en diagonal.
+    val base = Offset(c.x - r * 0.78f, c.y + r * 0.8f); val punta = Offset(c.x + r * 0.72f, c.y - r * 0.82f)
+    val raquis = Path().apply { moveTo(base.x, base.y); quadraticTo(c.x - r * 0.1f, c.y + r * 0.1f, punta.x, punta.y) }
+    drawPath(raquis, musgo.copy(alpha = 0.55f), style = Stroke(r * 0.035f, cap = StrokeCap.Round))
+    for (i in 2 until 16) {
+        val k = i / 16f
+        val x = (1 - k) * (1 - k) * base.x + 2 * (1 - k) * k * (c.x - r * 0.1f) + k * k * punta.x
+        val y = (1 - k) * (1 - k) * base.y + 2 * (1 - k) * k * (c.y + r * 0.1f) + k * k * punta.y
+        val l = r * (0.34f * (1 - k) + 0.06f)
+        listOf(-1f, 1f).forEach { lado ->
+            val a = atan2(punta.y - base.y, punta.x - base.x) + lado * 1.15f
+            val q = Offset(x, y).mas(l, a)
+            drawPath(Path().apply { moveTo(x, y); quadraticTo((x + q.x) / 2 + lado * l * 0.12f, (y + q.y) / 2 - l * 0.12f, q.x, q.y) }, musgo.copy(alpha = 0.42f), style = Stroke(r * 0.05f, cap = StrokeCap.Round))
+        }
+    }
+    // Etiqueta de colección, abajo a la derecha.
+    val et = Rect(c.x + r * 0.2f, c.y + r * 0.6f, c.x + r * 0.92f, c.y + r * 0.9f)
+    drawRect(Color(0xFFF4ECD6), et.topLeft, et.size)
+    drawRect(tinta.copy(alpha = 0.6f), et.topLeft, et.size, style = Stroke(r * 0.018f))
+    drawLine(tinta.copy(alpha = 0.55f), Offset(et.left + r * 0.06f, et.top + r * 0.1f), Offset(et.right - r * 0.08f, et.top + r * 0.1f), r * 0.02f)
+    drawLine(tinta.copy(alpha = 0.4f), Offset(et.left + r * 0.06f, et.top + r * 0.19f), Offset(et.right - r * 0.24f, et.top + r * 0.19f), r * 0.02f)
+    // El escarabajo, de cabeza hacia arriba e inclinado.
+    val L = r * 0.62f; val A = L * 0.68f; val b0 = Offset(c.x - r * 0.04f, c.y + r * 0.02f)
+    rotate(-18f, b0) {
+        val g = r * 0.035f
+        // Patas: tres pares con codo, que se reacomodan apenas.
+        listOf(Triple(-0.34f, -0.75f, -1.45f), Triple(-0.04f, 0.05f, 0.4f), Triple(0.2f, 0.65f, 1.2f)).forEachIndexed { i, (y0, a1, a2) ->
+            val mov = 0.08f * sin(2 * PI * (t * 6 + i * 0.3)).toFloat()
+            listOf(-1f, 1f).forEach { lado ->
+                val p0 = Offset(b0.x + lado * A * 0.3f, b0.y + L * y0)
+                val p1 = Offset(p0.x + lado * L * 0.3f * cos(a1 + mov), p0.y + L * 0.3f * sin(a1 + mov))
+                val p2 = Offset(p1.x + lado * L * 0.26f * cos(a2 + mov), p1.y + L * 0.26f * sin(a2 + mov))
+                drawPath(Path().apply { moveTo(p0.x, p0.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y) }, tinta, style = Stroke(g, cap = StrokeCap.Round))
             }
-            drawPath(h, verde.copy(alpha = 0.85f))
-            drawLine(tinta.copy(alpha = 0.45f), base, base + Offset(largo * 0.9f, 0f), r * 0.025f)
-            for (k in 1..3) { val x = base.x + largo * k / 4.2f; drawLine(tinta.copy(alpha = 0.3f), Offset(x, base.y), Offset(x + largo * 0.12f, base.y - largo * 0.14f), r * 0.018f) }
+        }
+        // Antenas que tantean.
+        listOf(-1f, 1f).forEach { lado ->
+            val tanteo = 0.18f * sin(2 * PI * (t * 9 + if (lado < 0) 0.0 else 0.4)).toFloat()
+            val ini = Offset(b0.x + lado * A * 0.1f, b0.y - L * 0.66f)
+            val a = (-PI / 2 + lado * 0.55 + tanteo).toFloat()
+            val m = ini.mas(L * 0.22f, a); val f = m.mas(L * 0.2f, a + lado * 0.35f)
+            drawPath(Path().apply { moveTo(ini.x, ini.y); lineTo(m.x, m.y); lineTo(f.x, f.y) }, tinta, style = Stroke(g * 0.8f, cap = StrokeCap.Round))
+            drawCircle(tinta, g * 1.1f, f)
+        }
+        drawOval(tinta, Offset(b0.x - A * 0.2f, b0.y - L * 0.74f), Size(A * 0.4f, L * 0.24f))
+        drawOval(androidx.compose.ui.graphics.lerp(irisado, tinta, 0.35f), Offset(b0.x - A * 0.42f, b0.y - L * 0.58f), Size(A * 0.84f, L * 0.38f))
+        // Élitros con brillo de metal: del irisado al musgo, con un destello de óxido dorado.
+        val el = Rect(b0.x - A * 0.5f, b0.y - L * 0.24f, b0.x + A * 0.5f, b0.y + L * 0.56f)
+        drawOval(androidx.compose.ui.graphics.Brush.radialGradient(listOf(oxido.copy(alpha = 0.95f), musgo, irisado, androidx.compose.ui.graphics.lerp(irisado, tinta, 0.5f)),
+            center = Offset(el.center.x - A * 0.16f, el.top + el.height * 0.3f), radius = el.height * 0.8f), el.topLeft, el.size)
+        drawOval(tinta, el.topLeft, el.size, style = Stroke(g * 0.8f))
+        drawLine(tinta, Offset(b0.x, el.top + L * 0.02f), Offset(b0.x, el.bottom - L * 0.02f), g * 0.8f)
+        listOf(-0.22f, -0.36f, 0.22f, 0.36f).forEach { k -> drawLine(tinta.copy(alpha = 0.35f), Offset(b0.x + A * k, el.top + L * 0.1f), Offset(b0.x + A * k * 1.04f, el.bottom - L * 0.14f), g * 0.4f) }
+        drawOval(tinta, Offset(b0.x - A * 0.42f, b0.y - L * 0.58f), Size(A * 0.84f, L * 0.38f), style = Stroke(g * 0.8f))
+        // El alfiler.
+        drawCircle(oxido, r * 0.06f, Offset(b0.x + A * 0.14f, b0.y - L * 0.02f))
+        drawCircle(Color.White.copy(alpha = 0.5f), r * 0.02f, Offset(b0.x + A * 0.12f, b0.y - L * 0.04f))
+    }
+    // Una hormiga que rodea el ejemplar.
+    val ang = (2 * PI * t).toFloat()
+    val pos = Offset(c.x + r * 0.86f * cos(ang), c.y + r * 0.86f * sin(ang))
+    hormiga(pos, r * 0.16f, ang + PI.toFloat() / 2, tinta.copy(alpha = 0.85f), t)
+}
+
+/** Una hormiga vista desde arriba: cabeza, tórax y gáster, con seis patas que se alternan al caminar. */
+internal fun DrawScope.hormiga(p: Offset, l: Float, ang: Float, color: Color, t: Float = 0f) {
+    rotate(Math.toDegrees(ang.toDouble()).toFloat(), p) {
+        val g = l * 0.07f
+        val paso = 0.25f * sin(2 * PI * t * 40).toFloat()
+        listOf(-0.04f, 0.04f, 0.12f).forEachIndexed { i, x ->
+            listOf(-1f, 1f).forEach { lado ->
+                val s = if ((i + if (lado > 0) 1 else 0) % 2 == 0) paso else -paso
+                val p0 = Offset(p.x + l * x, p.y)
+                val p1 = Offset(p0.x + l * (0.08f - i * 0.06f + s * 0.3f), p0.y + lado * l * 0.24f)
+                val p2 = Offset(p1.x + l * (0.1f - i * 0.14f + s * 0.4f), p1.y + lado * l * 0.16f)
+                drawPath(Path().apply { moveTo(p0.x, p0.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y) }, color, style = Stroke(g, cap = StrokeCap.Round))
+            }
+        }
+        drawOval(color, Offset(p.x - l * 0.58f, p.y - l * 0.17f), Size(l * 0.46f, l * 0.34f))
+        drawOval(color, Offset(p.x - l * 0.12f, p.y - l * 0.08f), Size(l * 0.3f, l * 0.16f))
+        drawOval(color, Offset(p.x + l * 0.16f, p.y - l * 0.11f), Size(l * 0.24f, l * 0.22f))
+        listOf(-1f, 1f).forEach { lado ->
+            drawPath(Path().apply { moveTo(p.x + l * 0.36f, p.y); lineTo(p.x + l * 0.48f, p.y + lado * l * 0.1f); lineTo(p.x + l * 0.6f, p.y + lado * l * 0.2f) }, color, style = Stroke(g * 0.8f, cap = StrokeCap.Round))
         }
     }
-    hoja(Offset(c.x - r * 0.12f, c.y + r * 0.45f), -150f, r * 0.62f)
-    hoja(Offset(c.x - r * 0.02f, c.y + r * 0.18f), -25f, r * 0.58f)
-    hoja(Offset(c.x + r * 0.02f, c.y - r * 0.2f), -160f, r * 0.42f)
-    // Flor de cinco pétalos en la punta.
-    val f = Offset(c.x - r * 0.05f, c.y - r * 0.66f)
-    for (i in 0 until 5) { val a = rad(72.0 * i - 90); drawCircle(rosa, r * 0.13f, f.mas(r * 0.13f, a)) }
-    drawCircle(Color(0xFFF2C14E), r * 0.08f, f)
-    // Mariposa: las alas se cierran y se abren.
-    val m = Offset(c.x + r * 0.5f, c.y - r * 0.35f + r * 0.05f * sin(2 * PI * t).toFloat())
-    val abre = 0.25f + 0.75f * abs(cos(2 * PI * t * 2).toFloat())
-    withTransform({ scale(abre, 1f, m) }) {
-        listOf(-1f, 1f).forEach { l ->
-            drawOval(azul, Offset(m.x + (if (l < 0) -r * 0.3f else 0f), m.y - r * 0.24f), Size(r * 0.3f, r * 0.24f))
-            drawOval(azul.copy(alpha = 0.7f), Offset(m.x + (if (l < 0) -r * 0.22f else 0f), m.y - r * 0.02f), Size(r * 0.22f, r * 0.18f))
-            drawCircle(tinta.copy(alpha = 0.6f), r * 0.03f, Offset(m.x + l * r * 0.16f, m.y - r * 0.13f))
-        }
-    }
-    drawLine(tinta, m + Offset(0f, -r * 0.16f), m + Offset(0f, r * 0.14f), r * 0.045f, StrokeCap.Round)
 }
 
 /** Ventana gótica de lanceta: arco apuntado, cristales de colores entre plomos y un rosetón; la luz pasa de un vidrio a otro. */
@@ -655,39 +711,34 @@ internal fun Laureles(modifier: Modifier) {
     }
 }
 
-/** Enredadera de lámina botánica: un tallo que ondula con hojas alternas, una flor rosa y, de vez en cuando, un escarabajo. */
+/** Divisor del cuaderno de naturalista: una ramita a tinta por la que pasa una fila de hormigas, y un escarabajo de vez en cuando. */
 @Composable
 internal fun Enredadera(modifier: Modifier) {
     val e = MaterialTheme.colorScheme
     Canvas(modifier.fillMaxWidth().height(16.dp)) {
-        val mid = size.height / 2; val amp = size.height * 0.18f; val lam = 36.dp.toPx()
+        val mid = size.height / 2; val amp = size.height * 0.12f; val lam = 80.dp.toPx()
         val p = Path(); var x = 0f
         p.moveTo(0f, mid)
         while (x <= size.width) { p.lineTo(x, mid + amp * sin(2 * PI * x / lam).toFloat()); x += 2f }
-        drawPath(p, e.primary.copy(alpha = 0.8f), style = Stroke(1.3f))
-        var k = 0; x = lam / 4
-        val l = 6.dp.toPx()
-        while (x < size.width) {
-            val arriba = k % 2 == 0
+        drawPath(p, e.onBackground.copy(alpha = 0.55f), style = Stroke(1.2f))
+        var k = 0; x = 10.dp.toPx()
+        val l = 7.dp.toPx()
+        while (x < size.width - l) {
             val y = mid + amp * sin(2 * PI * x / lam).toFloat()
-            when {
-                k % 9 == 4 -> {
-                    for (i in 0 until 5) drawCircle(e.secondary, 1.7.dp.toPx(), Offset(x, y).mas(2.dp.toPx(), rad(72.0 * i - 90)))
-                    drawCircle(Color(0xFFF2C14E), 1.1.dp.toPx(), Offset(x, y))
+            val a = atan2((amp * 2 * PI / lam * cos(2 * PI * x / lam)).toFloat(), 1f)
+            if (k % 11 == 6) {
+                // Escarabajo.
+                rotate(Math.toDegrees(a.toDouble()).toFloat() + 90f, Offset(x, y - 1f)) {
+                    drawOval(e.tertiary, Offset(x - 2.6.dp.toPx(), y - 3.4.dp.toPx()), Size(5.2.dp.toPx(), 6.dp.toPx()))
+                    drawLine(e.onBackground.copy(alpha = 0.7f), Offset(x, y - 3.dp.toPx()), Offset(x, y + 2.4.dp.toPx()), 1f)
+                    drawCircle(e.onBackground, 1.3.dp.toPx(), Offset(x, y - 4.dp.toPx()))
                 }
-                k % 13 == 8 -> {
-                    drawOval(e.tertiary, Offset(x - 2.6.dp.toPx(), y - 1.8.dp.toPx()), Size(5.2.dp.toPx(), 3.6.dp.toPx()))
-                    drawLine(e.onBackground.copy(alpha = 0.6f), Offset(x, y - 1.8.dp.toPx()), Offset(x, y + 1.8.dp.toPx()), 1f)
-                    drawCircle(e.onBackground.copy(alpha = 0.7f), 1.1.dp.toPx(), Offset(x + 3.dp.toPx(), y))
-                }
-                else -> rotate(if (arriba) -40f else 40f, Offset(x, y)) {
-                    val h = Path().apply {
-                        moveTo(x, y); quadraticTo(x + l / 2, y - l * 0.38f, x + l, y); quadraticTo(x + l / 2, y + l * 0.38f, x, y); close()
-                    }
-                    drawPath(h, e.primary.copy(alpha = 0.75f))
-                }
+                x += l * 2.4f
+            } else {
+                hormiga(Offset(x, y - 0.5.dp.toPx()), l, a, (if (k % 5 == 2) e.secondary else e.onBackground).copy(alpha = 0.8f))
+                x += l * 1.9f
             }
-            x += lam / 3; k++
+            k++
         }
     }
 }
@@ -933,14 +984,35 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             while (y < h) { var xx = if (fila % 2 == 0) 0f else p / 2; while (xx < w) { puntos.addOval(Rect(xx - 1.4f, y - 1.4f, xx + 1.4f, y + 1.4f)); xx += p }; y += p / 2; fila++ }
         }
         TemaId.BOTANICO -> {
-            // Hojas sueltas con su nervadura, como en un herbario.
-            color = esquema.primary.copy(alpha = if (oscuro) 0.07f else 0.06f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.05f else 0.045f)
+            // Libreta de campo: cuadrícula muy tenue, y aquí y allá hileras de hormigas, semillas y frondas de helecho a lápiz.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.045f); color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.07f else 0.06f)
+            val paso = 28.dp.toPx(); var gx = 0f
+            while (gx < w) { trazo.moveTo(gx, 0f); trazo.lineTo(gx, h); gx += paso }
+            var gy = 0f
+            while (gy < h) { trazo.moveTo(0f, gy); trazo.lineTo(w, gy); gy += paso }
             val azar = java.util.Random(23)
-            repeat(((w * h) / 26000f).toInt().coerceAtMost(110)) {
-                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val l = 9.dp.toPx() + azar.nextFloat() * 9.dp.toPx()
-                val a = azar.nextFloat() * 2 * PI.toFloat(); val dx = cos(a) * l; val dy = sin(a) * l; val nx = -dy * 0.36f; val ny = dx * 0.36f
-                puntos.moveTo(x, y); puntos.quadraticTo(x + dx / 2 + nx, y + dy / 2 + ny, x + dx, y + dy); puntos.quadraticTo(x + dx / 2 - nx, y + dy / 2 - ny, x, y); puntos.close()
-                trazo.moveTo(x, y); trazo.lineTo(x + dx * 1.15f, y + dy * 1.15f)
+            fun ovalo(x: Float, y: Float, rx: Float, ry: Float) = puntos.addOval(Rect(x - rx, y - ry, x + rx, y + ry))
+            // Hileras de hormigas: siguen una curva suave.
+            repeat(((w * h) / 140000f).toInt().coerceIn(2, 9)) {
+                val x0 = azar.nextFloat() * w; val y0 = azar.nextFloat() * h; val a0 = azar.nextFloat() * 2 * PI.toFloat(); val curva = (azar.nextFloat() - 0.5f) * 0.05f
+                var x = x0; var y = y0; var a = a0; val l = 5.dp.toPx()
+                repeat(5 + azar.nextInt(6)) {
+                    val dx = cos(a); val dy = sin(a)
+                    ovalo(x - dx * l * 0.4f, y - dy * l * 0.4f, l * 0.24f, l * 0.24f); ovalo(x, y, l * 0.13f, l * 0.13f); ovalo(x + dx * l * 0.3f, y + dy * l * 0.3f, l * 0.15f, l * 0.15f)
+                    x += dx * l * 3.2f; y += dy * l * 3.2f; a += curva * 6
+                }
+            }
+            // Semillas y helechitos.
+            repeat(((w * h) / 60000f).toInt().coerceAtMost(40)) {
+                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h
+                if (azar.nextBoolean()) ovalo(x, y, 2.6f.dp.toPx(), 1.5f.dp.toPx())
+                else {
+                    val a = azar.nextFloat() * 2 * PI.toFloat(); val l = 12.dp.toPx(); val dx = cos(a) * l; val dy = sin(a) * l
+                    trazo.moveTo(x, y); trazo.lineTo(x + dx, y + dy)
+                    for (k in 1..5) { val f = k / 6f; val bx = x + dx * f; val by = y + dy * f; val pl = l * 0.28f * (1 - f)
+                        trazo.moveTo(bx, by); trazo.lineTo(bx + cos(a + 1.1f) * pl, by + sin(a + 1.1f) * pl)
+                        trazo.moveTo(bx, by); trazo.lineTo(bx + cos(a - 1.1f) * pl, by + sin(a - 1.1f) * pl) }
+                }
             }
         }
         TemaId.GOTICO -> {
@@ -1133,7 +1205,8 @@ fun CapaFiesta() {
                     TemaId.LABORATORIO -> drawCircle(col, s * 0.7f, pos, style = Stroke(s * 0.18f))
                     TemaId.REFUGIO -> { drawCircle(col, s * 0.35f, pos); drawOval(col, Offset(pos.x - s, pos.y - s * 0.35f), Size(s * 2, s * 0.7f), style = Stroke(s * 0.12f)) }
                     TemaId.NAVIDAD -> for (i in 0 until 3) { val a = rad(60.0 * i); drawLine(col, pos.mas(s, a), pos.mas(-s, a), s * 0.22f, StrokeCap.Round) }
-                    TemaId.BOTANICO -> drawPath(Path().apply { moveTo(pos.x - s, pos.y); quadraticTo(pos.x, pos.y - s * 0.7f, pos.x + s, pos.y); quadraticTo(pos.x, pos.y + s * 0.7f, pos.x - s, pos.y); close() }, col)
+                    TemaId.BOTANICO -> { drawOval(col, Offset(pos.x - s * 0.55f, pos.y - s * 0.6f), Size(s * 1.1f, s * 1.5f)); drawCircle(col, s * 0.32f, pos - Offset(0f, s * 0.85f))
+                        drawLine(col.copy(alpha = col.alpha * 0.6f), pos - Offset(s * 0.9f, s * 0.1f), pos + Offset(s * 0.9f, -s * 0.1f), s * 0.12f) }
                     TemaId.GOTICO -> drawPath(Path().apply { moveTo(pos.x, pos.y - s); lineTo(pos.x + s * 0.7f, pos.y + s * 0.6f); lineTo(pos.x - s * 0.5f, pos.y + s * 0.8f); close() },
                         listOf(e.secondary, e.primary, Color(0xFF2E8B57), Color(0xFFE2B34A))[p.tono % 4].copy(alpha = a))
                     TemaId.ESPACIO -> drawPath(Path().apply { moveTo(pos.x, pos.y - s); quadraticTo(pos.x, pos.y, pos.x + s, pos.y); quadraticTo(pos.x, pos.y, pos.x, pos.y + s); quadraticTo(pos.x, pos.y, pos.x - s, pos.y); quadraticTo(pos.x, pos.y, pos.x, pos.y - s); close() }, col)

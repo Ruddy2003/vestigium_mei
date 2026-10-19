@@ -9,16 +9,59 @@ import android.database.sqlite.SQLiteOpenHelper
  * Almacén local. Cada colección guarda documentos JSON (flexible para que el esquema crezca con los años)
  * y las ubicaciones, que son muchas, van en su propia tabla con columnas numéricas.
  */
-class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 1) {
+class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE docs (col TEXT NOT NULL, id TEXT NOT NULL, fecha TEXT, json TEXT NOT NULL, editado INTEGER NOT NULL, PRIMARY KEY(col, id))")
         db.execSQL("CREATE INDEX docs_fecha ON docs(col, fecha)")
         db.execSQL("CREATE TABLE ubicaciones (ms INTEGER NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL, precision REAL, fuente TEXT)")
         db.execSQL("CREATE INDEX ubic_ms ON ubicaciones(ms)")
+        crearFotos(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+    /**
+     * Catálogo de fotos con lugar: de dónde viene cada una (aparato, carpeta u origen en Google Fotos), su fecha y la del archivo.
+     * Las ubicaciones «foto» se rehacen desde aquí cada vez que cambias qué aparatos son tuyos o qué fotos raras cuentan.
+     */
+    private fun crearFotos(db: SQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS fotos (clave TEXT PRIMARY KEY, ms INTEGER NOT NULL, lat REAL NOT NULL, lon REAL NOT NULL, aparato TEXT NOT NULL, origen TEXT NOT NULL, ms_archivo INTEGER NOT NULL, fuente TEXT NOT NULL)")
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) {
+            crearFotos(db)
+            // Las fotos que ya estaban en el mapa pasan al catálogo sin saber de qué aparato son (se completa al volver a revisarlas).
+            db.execSQL("INSERT OR IGNORE INTO fotos (clave, ms, lat, lon, aparato, origen, ms_archivo, fuente) " +
+                "SELECT (ms / 1000) || '_' || CAST(ROUND(lat * 10000) AS INTEGER) || '_' || CAST(ROUND(lon * 10000) AS INTEGER), ms, lat, lon, '', 'antes', 0, fuente FROM ubicaciones WHERE fuente IN ('foto', 'foto_takeout')")
+        }
+    }
+
+    class FotoCat(val clave: String, val ms: Long, val lat: Double, val lon: Double, val aparato: String, val origen: String, val msArchivo: Long, val fuente: String)
+
+    /** Guarda una foto en el catálogo; si ya estaba, se queda con el dato más completo (aparato y origen conocidos). */
+    fun ponerFoto(f: FotoCat) {
+        writableDatabase.execSQL("INSERT INTO fotos (clave, ms, lat, lon, aparato, origen, ms_archivo, fuente) VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+            "ON CONFLICT(clave) DO UPDATE SET aparato = CASE WHEN excluded.aparato != '' THEN excluded.aparato ELSE aparato END, " +
+            "origen = CASE WHEN excluded.origen != 'antes' THEN excluded.origen ELSE origen END, ms_archivo = MAX(ms_archivo, excluded.ms_archivo)",
+            arrayOf<Any>(f.clave, f.ms, f.lat, f.lon, f.aparato, f.origen, f.msArchivo, f.fuente))
+    }
+
+    fun recorrerFotos(f: (FotoCat) -> Unit) {
+        readableDatabase.rawQuery("SELECT clave, ms, lat, lon, aparato, origen, ms_archivo, fuente FROM fotos ORDER BY ms", null).use { c ->
+            while (c.moveToNext()) f(FotoCat(c.getString(0), c.getLong(1), c.getDouble(2), c.getDouble(3), c.getString(4), c.getString(5), c.getLong(6), c.getString(7)))
+        }
+    }
+
+    fun contarFotos(): Long = readableDatabase.rawQuery("SELECT COUNT(*) FROM fotos", null).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
+
+    fun borrarUbicacionesDeFotos() { writableDatabase.delete("ubicaciones", "fuente IN ('foto', 'foto_takeout')", null) }
+
+    fun contarUbicacionesDeFotos(): Long =
+        readableDatabase.rawQuery("SELECT COUNT(*) FROM ubicaciones WHERE fuente IN ('foto', 'foto_takeout')", null).use { c -> if (c.moveToFirst()) c.getLong(0) else 0 }
+
+    /** Puntos que no vienen de fotos (el teléfono, Google), entre dos instantes. */
+    fun ubicacionesSinFotos(desde: Long, hasta: Long): List<Punto> =
+        ubicaciones(desde, hasta).filter { it.fuente == null || !it.fuente.startsWith("foto") }
 
     fun poner(col: String, id: String, fecha: String?, json: String) {
         val v = ContentValues().apply {

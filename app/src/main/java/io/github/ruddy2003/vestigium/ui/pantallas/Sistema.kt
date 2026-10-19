@@ -283,6 +283,11 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
                 if (c.animaciones) Interruptor("Fondo vivo", c.fondo_vivo, "Algo se mueve muy despacio detrás de todo: estrellas que titilan, luz de vitral, luciérnagas, nieve, nubes de la estepa, reflejos de agua. Gasta un poco más de batería.") { v -> cambiar { it.copy(fondo_vivo = v) } }
                 Interruptor("Teclado del tema en el diario", c.teclado_tema, "Al escribir el diario aparece un teclado con el papel y la letra del tema (ñ, acentos al dejar presionada la vocal, @ y # a la mano). Con ⌨ cambias al del teléfono para dictar o usar el autocorrector.") { v -> cambiar { it.copy(teclado_tema = v) } }
+                if (c.teclado_tema) {
+                    Text("Altura del teclado: " + if (c.teclado_alto == 0) "normal" else "+${c.teclado_alto} dp", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
+                    Slider(value = c.teclado_alto.toFloat(), onValueChange = { v -> cambiar { it.copy(teclado_alto = (v / 4).toInt() * 4) } }, valueRange = 0f..200f)
+                    Ayuda("Si no alcanzas la barra espaciadora, súbelo. También puedes arrastrar la rayita de arriba del teclado mientras escribes.")
+                }
                 Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
                 Interruptor("Sonidos", c.sonidos, "Sonidos del tema al tocar, elegir, pasar de pantalla, abrir el diario, guardar y completar el día. Cambian un poco cada vez. No suenan con el teléfono en silencio o en vibración.") { v ->
                     cambiar { it.copy(sonidos = v) }

@@ -147,6 +147,21 @@ def pajaro(d, f0, f1):
     t = t_(d); f = f0 + (f1 - f0) * (t / d) ** 0.7
     ph = 2 * np.pi * np.cumsum(f * (1 + 0.04 * np.sin(2 * np.pi * 60 * t))) / SR
     return np.sin(ph) * np.sin(np.pi * t / d) ** 2
+def sinte(f, d, corte=1400, ataque=0.12, suelta=0.35):
+    """Colchón de sintetizador frío: dos sierras apenas desafinadas, filtradas, que entran y salen despacio."""
+    t = t_(d)
+    x = barrido(f, f, d, 'sierra') * 0.5 + barrido(f * 1.004, f * 1.004, d, 'sierra') * 0.5 + 0.3 * np.sin(2 * np.pi * f * 0.5 * t)
+    return filtro(x, 'bajo', corte) * np.minimum(1, t / ataque) * np.minimum(1, np.maximum(0, d - t) / suelta)
+def frio(f, d=0.5):
+    """Tono de instrumento de laboratorio: seno puro con un armónico de vidrio que se apaga rápido."""
+    t = t_(d)
+    return (np.sin(2 * np.pi * f * t) + 0.18 * np.sin(2 * np.pi * f * 3.01 * t) * np.exp(-t * 18)) * np.exp(-t * 4.5) * np.minimum(1, t / 0.004)
+def grillo(f, d=0.14, pulsos=3):
+    """Un grillo: ráfagas cortas sobre una nota aguda de la escala (frota las alas unas 30 veces por segundo)."""
+    t = t_(d); x = np.sin(2 * np.pi * f * t)
+    am = np.clip(np.sin(2 * np.pi * 30 * t), 0, 1) ** 2 * (t < pulsos / 30.0)
+    return x * am * np.minimum(1, t / 0.003)
+def guitarra(f, d=1.2, brillo=0.32): return pluck(f, d, brillo, 0.996)
 def acorde(inst, notas, d, g=1.0, arpegio=0.0, **kw):
     return mezclar(*[(i * arpegio, inst(hz(n), d, **kw), g / len(notas) ** 0.5) for i, n in enumerate(notas)])
 def melodia(inst, notas, paso, d, g=0.5, **kw):
@@ -272,19 +287,25 @@ def orden():
                                *[(1.0 * i, tambor(hz(T - 24), 0.6), 0.6) for i in range(4)]), 2.2, 0.32))
 
 def laboratorio():
-    # Do mayor: vidrio y pitidos limpios.
-    T = 15   # Do6
-    vidrio = lambda n, d=0.6: campana(hz(n), d, 2.0, 1.2, 5)
+    # Re menor: el instituto bajo tierra. Senos fríos, colchones de sintetizador, aire filtrado y un pulso grave lejano.
+    T = -7   # Re4
+    sub = lambda d=0.4: seno(hz(T - 24), d) * env(int(d * SR), 0.004, d * 0.7, 3)
+    aire = lambda d: filtro(ruido(d), 'banda', (900, 5000)) * np.sin(np.pi * t_(d) / d) ** 2
+    sala = lambda x, c=1.8, m=0.38: reverb(x, c, m, 2600)
     S['laboratorio'] = dict(
-        toque=mezclar((0, pip(hz(T + 12), 0.04), 0.6), (0, clic(0.006, (4000, 9000)), 0.3)),
-        elegir=pip(hz(T + 7), 0.05),
-        pasar=filtro(ruido(0.12), 'banda', (2000, 6000)) * env(int(0.12 * SR), 0.03, 0.08) * 0.6,
-        abrir=mezclar((0, vidrio(T + 12), 0.5), (0.08, vidrio(T + 16), 0.4)),
-        guardar=melodia(lambda f, d: pip(f, d), [T + 4, T + 7, T + 12], 0.07, 0.07),
-        logro=reverb(melodia(lambda f, d: campana(f, d, 2.0, 1.0, 3), [T, T + 4, T + 7, T + 11, T + 12], 0.1, 1.2, g=0.4), 1.4, 0.3),
-        tema=reverb(mezclar((0, vidrio(T + 7, 0.8), 0.45), (0.12, vidrio(T + 12, 1.0), 0.5)), 1.2, 0.28),
-        aviso=reverb(melodia(lambda f, d: pip(f, d), [T + 12, T + 7, T + 4, T + 12], 0.15, 0.12, g=0.5), 1.0, 0.25),
-        solemne=reverb(mezclar(*[(1.0 * i, acorde(lambda f, d: campana(f, d, 2.0, 0.6, 1.2), [T - 12 + a for a in ch], 1.4, arpegio=0.05), 0.6) for i, ch in enumerate([[0, 4, 7, 12], [-3, 0, 4, 9], [-7, -3, 0, 5], [-5, -1, 2, 7], [0, 4, 7, 12]])]), 2.0, 0.35))
+        toque=mezclar((0, frio(hz(T + 24), 0.18), 0.6), (0, clic(0.004, (5000, 9000)), 0.12)),
+        elegir=mezclar((0, frio(hz(T + 24), 0.09), 0.5), (0.05, frio(hz(T + 27), 0.14), 0.5)),
+        pasar=sala(mezclar((0, aire(0.22), 0.18), (0.02, sinte(hz(T), 0.32, 900, 0.03, 0.2), 0.5), (0.02, sinte(hz(T + 7), 0.32, 900, 0.03, 0.2), 0.35), (0, sub(0.25), 0.4)), 1.0, 0.3),
+        abrir=sala(mezclar((0, barrido(hz(T - 12), hz(T + 12), 0.35) * np.sin(np.pi * t_(0.35) / 0.35), 0.3), (0, aire(0.35), 0.2),
+                             (0.3, campana(hz(T + 12), 1.4, 3.5, 0.8, 2.2), 0.35), (0.3, campana(hz(T + 19), 1.4, 3.5, 0.8, 2.2), 0.25), (0.3, sub(0.5), 0.5))),
+        guardar=sala(mezclar(*[(0.09 * i, frio(hz(T + n), 0.3), 0.5) for i, n in enumerate([19, 15, 12])], (0.18, sub(0.5), 0.55)), 1.2, 0.3),
+        logro=sala(mezclar((0, acorde(lambda f, d: sinte(f, d, 1100, 0.3, 0.6), [T - 12, T - 5, T, T + 3], 1.8), 0.5),
+                           *[(0.12 * i, frio(hz(T + n), 0.7), 0.4) for i, n in enumerate([12, 15, 19, 24, 26, 27])], (0, sub(0.8), 0.5)), 2.2, 0.4),
+        tema=sala(mezclar((0, acorde(lambda f, d: sinte(f, d, 1000, 0.4, 0.7), [T - 12, T - 5, T + 2, T + 3], 1.9), 0.55), (0, sub(1.0), 0.55),
+                          (0.45, campana(hz(T + 26), 1.6, 3.5, 0.7, 2), 0.22), (0.75, campana(hz(T + 24), 1.6, 3.5, 0.7, 2), 0.2)), 2.4, 0.42),
+        aviso=sala(mezclar(*[(0.32 * i, frio(hz(T + n), 0.6), 0.5) for i, n in enumerate([12, 15, 14, 19])], (0, acorde(lambda f, d: sinte(f, d, 900, 0.3, 0.6), [T - 12, T - 5, T + 3], 1.7), 0.3), (0, sub(1.0), 0.4)), 2.0, 0.4),
+        solemne=sala(mezclar(*[(1.4 * i, acorde(lambda f, d: sinte(f, d, 1000, 0.5, 0.8), [T - 12 + a for a in ch], 1.6), 0.5) for i, ch in enumerate([[0, 7, 14, 15], [-2, 5, 9, 14], [-5, 2, 5, 10], [-3, 4, 7, 9], [0, 7, 12, 15]])],
+                             *[(1.4 * i + 0.6, frio(hz(T + n), 1.0), 0.25) for i, n in enumerate([14, 17, 15, 16, 12])], *[(1.4 * i, sub(0.9), 0.4) for i in range(5)]), 3.0, 0.45))
 
 def colonos():
     # Sol mayor pentatónico: madera afinada (marimba), crujidos y violín de pueblo.
@@ -322,23 +343,26 @@ def napoleon():
                                (0, redoble(0.8), 0.4), (2.9, redoble(1.0), 0.45), (3.0, filtro(ruido(1.2), 'alto', 5000) * env(int(1.2 * SR), 0.005, 0.8, 3), 0.15)), 2.0, 0.3))
 
 def botanico():
-    # Do mayor pentatónico: kalimba, gotas, hojas y pájaros que terminan en notas de la escala.
-    T = 3    # Do5
-    gota = lambda: barrido(hz(T + 4), hz(T + 16), 0.06) * env(int(0.06 * SR), 0.001, 0.05)
-    canto = lambda d, a, b: pajaro(d, hz(a), hz(b))
+    # Sol dórico: el cuaderno del naturalista. Guitarra de cuerdas de tripa, madera, la pluma que raspa, grillos afinados y un violonchelo.
+    T = -2   # Sol4
+    madera = lambda n, d=0.1: mezclar((0, filtro(ruido(d), 'banda', (hz(n) * 0.8, hz(n) * 1.4)) * env(int(d * SR), 0.001, d * 0.4, 6), 0.4), (0, marimba(hz(n), d * 3), 0.7))
+    pluma = lambda d=0.06: filtro(ruido(d), 'banda', (2500, 7500)) * env(int(d * SR), 0.004, d * 0.6, 4) * (0.7 + 0.3 * np.sin(np.linspace(0, 18, int(d * SR))))
+    cello = lambda n, d: arco(hz(n), d, 5.0)
+    gr = lambda n=T + 36, d=0.12, p=3: grillo(hz(n), d, p)
     S['botanico'] = dict(
-        toque=mezclar((0, filtro(ruido(0.03), 'banda', (800, 3000)) * env(int(0.03 * SR), 0.001, 0.02), 0.5), (0, kalimba(hz(T + 12), 0.25), 0.45)),
-        elegir=canto(0.09, T + 31, T + 36),
-        pasar=susurro(0.28),
-        abrir=reverb(melodia(kalimba, [T, T + 4, T + 7, T + 12], 0.07, 0.8), 0.8, 0.2),
-        guardar=mezclar((0, gota(), 0.7), (0.08, kalimba(hz(T + 7), 0.7), 0.5), (0.2, kalimba(hz(T + 12), 0.7), 0.5)),
-        logro=reverb(mezclar(melodia(kalimba, [T, T + 4, T + 7, T + 12], 0.12, 0.9), (0.36, kalimba(hz(T + 12), 1.2), 0.3),
-                             (0.3, canto(0.1, T + 28, T + 36), 0.25), (0.45, canto(0.08, T + 31, T + 36), 0.22), (0.6, canto(0.14, T + 31, T + 28), 0.22)), 1.0, 0.2),
-        tema=reverb(mezclar(melodia(kalimba, [T + 7, T + 9, T + 12, T + 16], 0.08, 0.8), (0.3, canto(0.1, T + 31, T + 36), 0.25)), 1.0, 0.2),
-        aviso=reverb(mezclar(*[(0.15 * i + (0.5 if i > 3 else 0), canto(0.08 + 0.04 * (i % 2), T + 24 + [0, 4, 7][i % 3], T + 31 + [0, 5][i % 2]), 0.5) for i in range(8)],
-                             (0.0, kalimba(hz(T + 12), 1.2), 0.25), (1.6, kalimba(hz(T + 7), 1.4), 0.25)), 1.4, 0.25),
-        solemne=reverb(mezclar(melodia(lambda f, d: kalimba(f, d), [T + n for n in [0, 4, 7, 12, 9, 7, 4, 7, 0]], 0.32, 1.6, g=0.45),
-                               *[(0.6 + 0.7 * i, canto(0.1, T + 26 + [2, 4, 7][i % 3], T + 36), 0.18) for i in range(6)], (2.9, susurro(1.5), 0.15)), 2.0, 0.3))
+        toque=madera(T + 12, 0.07),
+        elegir=gr(T + 36, 0.11, 3),
+        pasar=papel(0.2, (600, 4200)),
+        abrir=reverb(mezclar(*[(0.05 * i, guitarra(hz(T + n), 1.3), 0.45) for i, n in enumerate([-12, -5, 0, 3, 7])]), 1.0, 0.2),
+        guardar=mezclar((0, clic(0.006, (3000, 8000)), 0.4), (0.02, guitarra(hz(T + 7), 0.9), 0.5), (0.16, guitarra(hz(T + 12), 1.1), 0.55), (0.02, madera(T - 12, 0.12), 0.4)),
+        logro=reverb(mezclar(*[(0.15 * i, guitarra(hz(T + n), 0.9), 0.5) for i, n in enumerate([0, 3, 5, 7, 9, 7, 12])], (0.1, cello(T - 12, 1.2), 0.2),
+                             (0.5, gr(T + 36), 0.18), (0.62, gr(T + 36), 0.16), (1.0, gr(T + 39), 0.16)), 1.2, 0.22),
+        tema=reverb(mezclar(*[(0.035 * i, guitarra(hz(T + n), 1.6), 0.4) for i, n in enumerate([-12, -5, 0, 2, 7])], (0.1, cello(T - 5, 1.0), 0.22),
+                            (0.45, gr(T + 36), 0.18), (0.58, gr(T + 36), 0.16)), 1.2, 0.24),
+        aviso=reverb(mezclar(*[(0.16 * i, gr(T + 36 + [0, 0, 3][i % 3], 0.1), 0.35) for i in range(3)], *[(0.55 + 0.22 * i, guitarra(hz(T + n), 1.0), 0.5) for i, n in enumerate([12, 10, 7, 9])]), 1.3, 0.25),
+        solemne=reverb(mezclar(melodia(lambda f, d: arco(f, d, 5.0), [T - 12 + n for n in [7, 9, 10, 12, 9, 7, 5, 7]], 0.75, 0.85, g=0.3),
+                               *[(1.5 * i, mezclar(*[(0.06 * k, guitarra(hz(T - 12 + a), 1.8), 0.4) for k, a in enumerate(ch)]), 1) for i, ch in enumerate([[0, 7, 12, 15], [5, 12, 16, 19], [3, 10, 15, 19], [0, 7, 12, 15, 19]])],
+                               *[(0.8 + 1.1 * i, gr(T + 36 + [0, 3, 0][i % 3]), 0.12) for i in range(5)], (0, pluma(0.5), 0.1)), 2.0, 0.28))
 
 def navidad():
     # La mayor: cascabeles, caja de música y campanas.
@@ -510,11 +534,14 @@ def comunes():
     escribir('s_rascar', x, rms_db=-21)
 
 if __name__ == '__main__':
-    for f in (romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio, colonos, napoleon, botanico, navidad, seda, urss, gotico, espacio, andalus, mongol, renacimiento):
-        f()
+    todos = (romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio, colonos, napoleon, botanico, navidad, seda, urss, gotico, espacio, andalus, mongol, renacimiento)
+    solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
+    for f in todos:
+        if solo is None or f.__name__ in solo: f()
+    if solo is not None and 'comunes' in solo: comunes()
     for tema, d in S.items():
         for k, x in d.items():
             if k in ('aviso', 'solemne'): escribir(f'n_{tema}_{k}', x, calidad=4, rms_db=-16.0)
             else: escribir(f's_{tema}_{k}', x)
         print('listo', tema, flush=True)
-    comunes()
+    if solo is None: comunes()

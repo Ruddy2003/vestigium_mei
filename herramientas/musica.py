@@ -120,13 +120,14 @@ def hacer():
     kw = dict(inst_mel=trompa, inst_ac=trompa, perc=perc, g_ac=0.28, oct_mel=-12, oct_ac=-24)
     P['orden'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T - 12, trompa, [7, 12], 0.2, 0.6))
 
-    # --- Laboratorio: Do mayor, armónica de vidrio y pitidos
-    T = 15; pz = 0.4
-    vidrio = lambda f, d: campana(f, d + 0.6, 2.0, 0.6, 1.4)
-    ac = compases([0, 4, 7], [-3, 0, 4], [5, 9, 12], [7, 11, 14], [0, 4, 7, 12])
-    mel = frase(0, "0:1 4:1 7:1 12:1 | 9:2 7:2 | 5:1 9:1 12:1 9:1 | 11:2 14:2 | 12:4")
-    kw = dict(inst_mel=lambda f, d: seno(f, d) * env(int(d * SR), 0.01, d * 0.7, 2), inst_ac=vidrio, arpegio=True, g_mel=0.4, oct_mel=-12, oct_ac=-24)
-    P['laboratorio'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pip(f, 0.09), [0, 7, 12], 0.09, 0.1))
+    # --- Laboratorio: Re menor, el instituto bajo tierra. Arpegio de senos fríos, colchón de sintetizador, pulso grave y vidrio lejano.
+    T = -7; pz = 0.42
+    ac = compases([0, 3, 7, 14], [-2, 2, 5, 9], [-5, -2, 2, 5], [-3, 1, 4, 7], [0, 3, 7, 14], [-2, 2, 5, 9], [-7, -3, 0, 5], [0, 3, 7, 12])
+    mel = frase(0, "14:2 15:2 | 14:1 12:1 9:2 | 10:2 9:1 7:1 | 9:4 | 14:2 15:1 17:1 | 19:2 17:1 14:1 | 12:2 14:2 | 12:4")
+    pulsos = cada(32, lambda: seno(hz(T - 24), 0.35) * env(int(0.35 * SR), 0.004, 0.25, 3), 0.4, paso=1)
+    kw = dict(inst_mel=lambda f, d: campana(f, d + 0.8, 3.5, 0.7, 1.8), inst_ac=lambda f, d: frio(f, 0.5), arpegio=True,
+              bajo=lambda f, d: sinte(f, d, 900, 0.4, 0.6), perc=pulsos, g_mel=0.3, g_ac=0.3, g_bajo=0.3, oct_mel=0, oct_ac=0, cola=2.4, rev=0.4)
+    P['laboratorio'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: frio(f, 0.6), [12, 15, 19, 14], 0.16, 0.6, 1.8))
 
     # --- Colonos: Sol mayor pentatónico, marimba y violín de pueblo
     T = -2; pz = 0.4
@@ -145,13 +146,13 @@ def hacer():
     kw = dict(inst_mel=corneta, inst_ac=lambda f, d: metal(f, d, 2200, 0.06), perc=perc, g_ac=0.25)
     P['napoleon'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, corneta, [-5, 0, 4], 0.13, 0.4))
 
-    # --- Botánico: Do mayor pentatónico, kalimba y pájaros
-    T = 3; pz = 0.45
-    ac = compases([0, 4, 7], [5, 9, 12], [-3, 0, 4], [7, 11, 14], [0, 4, 7, 12])
-    mel = frase(0, "0:1 4:1 7:2 | 9:1 7:1 4:2 | 2:1 4:1 7:1 9:1 | 11:2 14:2 | 12:4")
-    pajaros = [(1.5 + 3.3 * i, pajaro(0.1, hz(T + 28 + [0, 3, 8][i % 3]), hz(T + 36)), 0.15) for i in range(6)]
-    kw = dict(inst_mel=kalimba, inst_ac=lambda f, d: kalimba(f, 0.8), arpegio=True, perc=pajaros, g_ac=0.3, oct_ac=-12, oct_mel=12)
-    P['botanico'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, kalimba, [12, 16, 19], 0.1, 0.8))
+    # --- Botánico: Sol dórico, el cuaderno del naturalista. Violonchelo sobre guitarra arpegiada y grillos afinados de fondo.
+    T = -2; pz = 0.48
+    ac = compases([0, 3, 7], [5, 9, 12], [0, 3, 7], [-2, 2, 5], [0, 3, 7], [5, 9, 12], [2, 5, 9], [0, 3, 7, 12])
+    mel = frase(0, "7:2 9:1 10:1 | 12:2 9:2 | 10:1 9:1 7:1 5:1 | 7:4 | 10:2 12:1 14:1 | 16:2 14:2 | 12:1 10:1 9:1 10:1 | 7:4")
+    grillos = [(1.0 + 2.6 * i, grillo(hz(T + 36 + [0, 3, 0, 7][i % 4]), 0.12, 3), 0.1) for i in range(12)]
+    kw = dict(inst_mel=lambda f, d: arco(f, d, 5.0), inst_ac=lambda f, d: guitarra(f, 1.2), arpegio=True, perc=grillos, g_mel=0.36, g_ac=0.32, oct_mel=-12, oct_ac=-12, legato=0.95)
+    P['botanico'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: guitarra(f, 1.0), [12, 15, 19], 0.12, 1.0))
 
     # --- Navidad: La mayor, caja de música, cascabeles y campanas
     T = 0; pz = 0.38
@@ -245,7 +246,9 @@ def hacer():
 
 if __name__ == '__main__':
     hacer()
+    solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     for tema, (pres, llam, notif) in P.items():
+        if solo is not None and tema not in solo: continue
         escribir(f's_{tema}_presentacion', pres, calidad=4, rms_db=-17.0)
         escribir(f't_{tema}_llamada', llam, calidad=4, rms_db=-15.0)
         escribir(f't_{tema}_notificacion', notif, calidad=4, rms_db=-15.0)

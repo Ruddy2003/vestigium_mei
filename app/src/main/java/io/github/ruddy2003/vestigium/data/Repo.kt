@@ -350,6 +350,8 @@ object Repo {
 
     /** Solo para las capturas de diseño: cartas de ejemplo en memoria. */
     fun cartasEnMemoria(l: List<Carta>) { cartas = l }
+    /** Para las capturas de diseño: nutrición, entrenos y chats sin base de datos. */
+    fun nutricionEnMemoria(n: Map<String, NutricionDia>, e: Map<String, EntrenoDia> = entrenos, c: List<ChatDia> = chats, s: List<Subrayado> = subrayados) { nutricion = n; entrenos = e; chats = c; subrayados = s }
 
     /** Solo para las capturas de diseño: datos de ejemplo en memoria. */
     fun ejemploEnMemoria(dias: Map<String, Dia>, salud: Map<String, SaludDia>, pantalla: Map<String, PantallaDia>, gastos: List<Gasto>,

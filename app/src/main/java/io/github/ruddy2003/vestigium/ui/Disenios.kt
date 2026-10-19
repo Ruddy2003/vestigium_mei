@@ -149,12 +149,13 @@ internal val napoleonOscuro = esquema(true, 0xFF0B1230, 0xFF121A3D, 0xFF1B2550, 
 internal val tipoNapoleon = tipografia(LetraExtra.bodoniTitulo, FontWeight.Normal, 1.06f, 1.7f, LetraExtra.bodoni, 1.06f, LetraExtra.bodoni, 1.08f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
-//  Botánico: lámina de historia natural en papel crema, verde hoja y rosa de pétalo; de noche, el bosque con luciérnagas.
+//  Botánico: el cuaderno de un naturalista viajero. Papel envejecido, tinta sepia, verde musgo, óxido de hormiga
+//  y el verde metálico de los escarabajos; de noche, el gabinete de especímenes con luciérnagas.
 // ---------------------------------------------------------------------
-internal val botanicoClaro = esquema(false, 0xFFF2EFE2, 0xFFFAF8EE, 0xFFE5E2CF, 0xFFC8C3A4, 0xFF1C2A1C, 0xFF56634F,
-    0xFF2F6B3A, 0xFFFFFFFF, 0xFFD6EAD5, 0xFF1C2A1C, 0xFFB24A6C, 0xFFF3D6E0, 0xFF2E7F86, 0xFF8A1A1A)
-internal val botanicoOscuro = esquema(true, 0xFF0C140E, 0xFF121D15, 0xFF1A291D, 0xFF2D442F, 0xFFEAF0E2, 0xFFA9B8A4,
-    0xFFB8E06A, 0xFF121A04, 0xFF26401F, 0xFFEAF0E2, 0xFFF29BB8, 0xFF3E1E2A, 0xFF5FC8C4, 0xFFFF8A80)
+internal val botanicoClaro = esquema(false, 0xFFEFE8D6, 0xFFF7F2E4, 0xFFE3D9C0, 0xFFBFAF8A, 0xFF2A2318, 0xFF5E5340,
+    0xFF3F5A2C, 0xFFFFFFFF, 0xFFDCE3C8, 0xFF1E2A14, 0xFF8C4A22, 0xFFF0D9C4, 0xFF2E5E5A, 0xFF8A1A1A)
+internal val botanicoOscuro = esquema(true, 0xFF14120D, 0xFF1C1912, 0xFF2A251B, 0xFF4A4231, 0xFFEDE4CF, 0xFFB8AC90,
+    0xFFA9C27A, 0xFF16200A, 0xFF33421F, 0xFFEDE4CF, 0xFFE09A5E, 0xFF4A2A14, 0xFF6FC2B0, 0xFFFF8A80)
 internal val tipoBotanico = tipografia(LetraExtra.fraunces, FontWeight.Medium, 1.04f, 0.2f, Letra.garamond, 1.12f, Letra.garamond, 1.14f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
@@ -242,7 +243,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFFFF7A9A, 0xFF18222F, 0xFF3CD2E5, 0xFF3CD2E5) else listOf(0xFFC0466A, 0xFFE6EDF2, 0xFF0B8FA1, 0xFF0B8FA1)
     TemaId.COLONOS -> if (oscuro) listOf(0xFFE07A62, 0xFF1E2838, 0xFF8FB3E0, 0xFFE3C27A) else listOf(0xFFA23B2A, 0xFFE7DDC8, 0xFF1F3A5F, 0xFF7A5A2E)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFFE05A6A, 0xFF1B2550, 0xFF9DB4FF, 0xFFD9B25B) else listOf(0xFFA3172E, 0xFFEAE1CB, 0xFF1E3A8A, 0xFFB8892B)
-    TemaId.BOTANICO -> if (oscuro) listOf(0xFFF29BB8, 0xFF1A291D, 0xFFB8E06A, 0xFF5FC8C4) else listOf(0xFFB24A6C, 0xFFE5E2CF, 0xFF2F6B3A, 0xFF2E7F86)
+    TemaId.BOTANICO -> if (oscuro) listOf(0xFFE09A5E, 0xFF2A251B, 0xFFA9C27A, 0xFF6FC2B0) else listOf(0xFF8C4A22, 0xFFE3D9C0, 0xFF3F5A2C, 0xFF2E5E5A)
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFFE5484D, 0xFF1C3125, 0xFF66BB6A, 0xFFF2C94C) else listOf(0xFFB71C1C, 0xFFECE4D6, 0xFF1B5E20, 0xFFC9A227)
     TemaId.SEDA -> if (oscuro) listOf(0xFFE26A50, 0xFF1F2846, 0xFF4FC3C3, 0xFFE0B04F) else listOf(0xFFC0392B, 0xFFEADFC3, 0xFF23408E, 0xFF1A8C8C)
     TemaId.URSS -> if (oscuro) listOf(0xFFE5252F, 0xFF262020, 0xFFE8D9B5, 0xFFE5252F) else listOf(0xFFC1121F, 0xFFE3D6B8, 0xFF1D1D1B, 0xFFC1121F)
@@ -265,7 +266,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFF3CD2E5, 0xFF9D93FF, 0xFFFF7A9A) else listOf(0xFF0B8FA1, 0xFF5E4FD1, 0xFFC0466A)
     TemaId.COLONOS -> if (oscuro) listOf(0xFF8FB3E0, 0xFFE3C27A, 0xFFE07A62) else listOf(0xFF1F3A5F, 0xFF7A5A2E, 0xFFA23B2A)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFF9DB4FF, 0xFFD9B25B, 0xFFE05A6A) else listOf(0xFF1E3A8A, 0xFFB8892B, 0xFFA3172E)
-    TemaId.BOTANICO -> if (oscuro) listOf(0xFF5FC8C4, 0xFFB8E06A, 0xFFF29BB8) else listOf(0xFF2E7F86, 0xFF2F6B3A, 0xFFB24A6C)
+    TemaId.BOTANICO -> if (oscuro) listOf(0xFF6FC2B0, 0xFFA9C27A, 0xFFE09A5E) else listOf(0xFF2E5E5A, 0xFF3F5A2C, 0xFF8C4A22)
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFF66BB6A, 0xFFF2C94C, 0xFFE5484D) else listOf(0xFF1B5E20, 0xFFC9A227, 0xFFB71C1C)
     TemaId.SEDA -> if (oscuro) listOf(0xFF4FC3C3, 0xFFE0B04F, 0xFFE26A50) else listOf(0xFF23408E, 0xFF1A8C8C, 0xFFC0392B)
     TemaId.URSS -> if (oscuro) listOf(0xFFE8D9B5, 0xFFE8B923, 0xFFE5252F) else listOf(0xFF1D1D1B, 0xFFD4A017, 0xFFC1121F)

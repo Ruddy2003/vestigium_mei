@@ -29,6 +29,7 @@ object Fechas {
     fun parse(s: String): LocalDate = LocalDate.parse(s.take(10), ISO_DIA)
     fun iso(d: LocalDate): String = d.format(ISO_DIA)
     fun sumar(s: String, dias: Long): String = iso(parse(s).plusDays(dias))
+    fun diasEntre(a: String, b: String): Long = java.time.temporal.ChronoUnit.DAYS.between(parse(a), parse(b))
 
     /** Marca de tiempo con desfase local, por ejemplo 2026-10-16T08:42:10-06:00. */
     fun ahoraIso(): String = OffsetDateTime.now().withNano(0).toString()

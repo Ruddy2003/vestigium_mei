@@ -54,6 +54,7 @@ fun PantallaMas(nav: Nav) {
         Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             RecuadroMapas(nav)
             RecuadroObras(nav)
+            RecuadroOtrasVidas(nav)
         }
         Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1) {
             Tarjeta {
@@ -73,6 +74,10 @@ fun PantallaMas(nav: Nav) {
         }
         Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 2) {
             Tarjeta {
+                FilaMenu("Salud", "Tus datos frente a las recomendaciones de la OMS: pasos, sueño, azúcar, sal, fibra, alcohol, vitaminas…") { nav.ir("salud") }
+                HorizontalDivider()
+                FilaMenu("Tus apps", "YouTube, música, comida, gimnasio, Kindle, WhatsApp y Google, en números") { nav.ir("tus_apps") }
+                HorizontalDivider()
                 FilaMenu("Cuestionarios", if (pendientes > 0) "$pendientes pendiente(s): bienestar, estrés, soledad, personalidad" else "Al día") { nav.ir("escalas") }
                 HorizontalDivider()
                 FilaMenu("Prueba de reacción", "30 segundos para medir tu estado mental") { nav.ir("reaccion") }

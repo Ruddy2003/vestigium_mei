@@ -329,6 +329,18 @@ object Frases {
     )
 
     val BOTANICO = listOf(
+        f("But no pursuit at Cambridge was followed with nearly so much eagerness or gave me so much pleasure as collecting beetles.",
+            "Ninguna afición en Cambridge la seguí con tanto entusiasmo, ni me dio tanto placer, como coleccionar escarabajos.", "Charles Darwin, Autobiografía, 1876"),
+        f(null, "Un día, al arrancar una corteza vieja, vi dos escarabajos raros y tomé uno en cada mano; entonces vi un tercero, de una especie nueva, que no podía soportar perder, así que me metí en la boca el de la mano derecha.",
+            "Charles Darwin, Autobiografía, 1876"),
+        f("The brain of an ant is one of the most marvellous atoms of matter in the world, perhaps more so than the brain of man.",
+            "El cerebro de una hormiga es uno de los átomos de materia más maravillosos del mundo, quizá más que el cerebro del hombre.", "Charles Darwin, El origen del hombre, 1871"),
+        f("Delight itself, however, is a weak term to express the feelings of a naturalist who, for the first time, has wandered by himself in a Brazilian forest.",
+            "Deleite es una palabra débil para lo que siente un naturalista que, por primera vez, ha vagado solo por un bosque brasileño.", "Charles Darwin, Viaje de un naturalista alrededor del mundo, 1839"),
+        f("From so simple a beginning endless forms most beautiful and most wonderful have been, and are being, evolved.",
+            "A partir de un comienzo tan sencillo, infinidad de formas, las más bellas y maravillosas, han evolucionado y siguen evolucionando.", "Charles Darwin, El origen de las especies, 1859"),
+        f("My heart began to beat violently, the blood rushed to my head, and I felt much more like fainting than I have done when in apprehension of immediate death.",
+            "El corazón empezó a latirme con violencia, la sangre se me subió a la cabeza y estuve más cerca de desmayarme que cuando creí que iba a morir (al atrapar una mariposa nueva).", "Alfred Russel Wallace, El archipiélago malayo, 1869"),
         f("Nomina si nescis, perit et cognitio rerum.", "Si no conoces los nombres, se pierde también el conocimiento de las cosas.", "Carlos Linneo, Filosofía botánica, 1751"),
         f("Natura non facit saltus.", "La naturaleza no da saltos.", "Carlos Linneo, Filosofía botánica, 1751"),
         f("Deus creavit, Linnaeus disposuit.", "Dios creó; Linneo ordenó.", "Lema que se atribuía el propio Linneo"),

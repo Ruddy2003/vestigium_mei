@@ -76,6 +76,8 @@ import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.BotonSecundario
 import io.github.ruddy2003.vestigium.ui.Cifra
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.Etiqueta
+import io.github.ruddy2003.vestigium.ui.Interruptor
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
@@ -491,7 +493,101 @@ private fun FotosConLugar() {
             }
         }
         BotonSecundario("importar Takeout de Google Fotos (.zip)", Modifier.padding(top = 8.dp), habilitado = !ocupado) { zips.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) }
-        Ayuda("Para las fotos que solo están en la nube: en takeout.google.com elige solo «Google Fotos», archivos .zip de 2 GB, y aquí elige uno o varios. Se leen solo los datos de fecha y lugar; puedes borrar el .zip después.", Modifier.padding(top = 8.dp))
+        Ayuda("Para las fotos que solo están en la nube: en takeout.google.com elige solo «Google Fotos», archivos .zip de 2 GB, y aquí elige uno o varios. Se leen solo los datos de fecha y lugar (y, si vienen las fotos, la marca y modelo de la cámara); puedes borrar el .zip después.", Modifier.padding(top = 8.dp))
+    }
+    if (!ocupado && io.github.ruddy2003.vestigium.sensores.FotosLugar.enCatalogo() > 0) OrigenFotos(cuenta) { cuenta = io.github.ruddy2003.vestigium.sensores.FotosLugar.conLugar(ctx) }
+}
+
+/**
+ * De dónde vienen tus fotos con lugar: cada aparato o carpeta, con cuántas fotos y de qué años. Marcas cuáles son tuyos
+ * (las demás no cuentan), cuáles tenían el reloj mal (se usa la fecha del archivo) y revisas las fotos que te ponen en lugares raros.
+ */
+@Composable
+private fun OrigenFotos(cuenta: Int, cambio: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val c = Repo.config
+    var abierto by remember { mutableStateOf(false) }
+    var version by remember { mutableIntStateOf(0) }
+    var aplicando by remember { mutableStateOf(false) }
+    val aparatos by produceState<List<io.github.ruddy2003.vestigium.sensores.FotosLugar.Aparato>?>(null, version, abierto) {
+        if (abierto) value = withContext(Dispatchers.IO) { io.github.ruddy2003.vestigium.sensores.FotosLugar.aparatos() }
+    }
+    val raras by produceState<List<io.github.ruddy2003.vestigium.sensores.FotosLugar.Rara>?>(null, version, abierto) {
+        if (abierto) value = withContext(Dispatchers.IO) { runCatching { io.github.ruddy2003.vestigium.sensores.FotosLugar.raras(ctx) }.getOrDefault(emptyList()) }
+    }
+    fun cambiar(f: (io.github.ruddy2003.vestigium.data.Config) -> io.github.ruddy2003.vestigium.data.Config) {
+        Repo.cambiarConfig(f)
+        aplicando = true
+        scope.launch {
+            withContext(Dispatchers.IO) { io.github.ruddy2003.vestigium.sensores.FotosLugar.aplicar(ctx) }
+            aplicando = false; version++; cambio()
+        }
+    }
+    Tarjeta(Modifier.padding(top = 10.dp)) {
+        Row(Modifier.fillMaxWidth().clickable { abierto = !abierto }, verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("De dónde vienen tus fotos", style = MaterialTheme.typography.titleMedium)
+                Ayuda("Elige qué aparatos son tuyos, corrige relojes mal puestos y revisa las fotos que te ponen en lugares raros.")
+            }
+            Text(if (abierto) "▲" else "▼", color = MaterialTheme.colorScheme.primary)
+        }
+        if (!abierto) return@Tarjeta
+        if (aplicando) Ayuda("Rehaciendo tu mapa…", Modifier.padding(top = 6.dp))
+        val lista = aparatos
+        if (lista == null) { Ayuda("Contando…", Modifier.padding(top = 6.dp)); return@Tarjeta }
+        val mios = c.fotos_aparatos.toSet()
+        androidx.compose.foundation.layout.Spacer(Modifier.height(10.dp)); Etiqueta("Aparatos y carpetas")
+        Ayuda(if (mios.isEmpty()) "Ahora cuentan todos. Marca los tuyos (también tus teléfonos anteriores) y los demás dejarán de contar." else "Cuentan solo los marcados. Las fotos con fecha imposible (antes de 2004 o en el futuro) nunca cuentan, salvo que digas que el reloj de ese aparato estaba mal.")
+        lista.forEach { a ->
+            val nombre = a.nombre.ifEmpty { "importadas antes (sin saber el aparato)" }
+            val marcado = mios.isEmpty() || a.nombre in mios
+            Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.Checkbox(checked = marcado, onCheckedChange = { v ->
+                        val base = if (mios.isEmpty()) lista.map { it.nombre }.toSet() else mios
+                        val nuevo = if (v) base + a.nombre else base - a.nombre
+                        cambiar { it.copy(fotos_aparatos = if (nuevo.size == lista.size) emptyList() else nuevo.toList()) }
+                    })
+                    Column(Modifier.weight(1f)) {
+                        Text(nombre, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Ayuda(listOfNotNull("${"%,d".format(a.fotos)} fotos",
+                            if (a.desde > 0) { val d = Fechas.diaDeMillis(a.desde).take(4); val h = Fechas.diaDeMillis(a.hasta).take(4); if (d == h) d else "$d–$h" } else null,
+                            if (a.imposibles > 0) "${a.imposibles} con fecha imposible" else null,
+                            if (a.compartidas > 0) "${a.compartidas} compartidas" else null).joinToString(" · "))
+                    }
+                }
+                if (a.imposibles > 0 || a.nombre in c.fotos_sin_fecha) Row(Modifier.padding(start = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val malo = a.nombre in c.fotos_sin_fecha
+                    androidx.compose.material3.Switch(checked = malo, onCheckedChange = { v -> cambiar { it.copy(fotos_sin_fecha = if (v) it.fotos_sin_fecha + a.nombre else it.fotos_sin_fecha - a.nombre) } })
+                    Text("su reloj estaba mal: usar la fecha del archivo", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+        if (lista.any { it.compartidas > 0 }) Interruptor("Contar fotos compartidas por otros", c.fotos_compartidas,
+            "De Google Fotos: álbumes compartidos y fotos de tu pareja. Normalmente no son tuyas, aunque a veces estuviste ahí.") { v -> cambiar { it.copy(fotos_compartidas = v) } }
+        val rs = raras
+        androidx.compose.foundation.layout.Spacer(Modifier.height(14.dp)); Etiqueta("Fotos raras")
+        when {
+            rs == null -> Ayuda("Buscando…")
+            rs.isEmpty() -> Ayuda("Ninguna foto te pone en un lugar raro.")
+            else -> {
+                Ayuda("Te ponen en un país donde quizá no estuviste. No cuentan hasta que digas que sí estuviste.")
+                rs.take(60).forEach { r ->
+                    val decidido = c.fotos_revisadas[r.clave]
+                    Column(Modifier.fillMaxWidth().padding(top = 10.dp)) {
+                        Text("${Mundo.bandera(r.pais)}  ${Mundo.pais(ctx, r.pais)?.nombre ?: r.pais} · ${Fechas.larga(r.fecha)}", style = MaterialTheme.typography.bodyLarge)
+                        Ayuda("${r.fotos} ${if (r.fotos == 1) "foto" else "fotos"} de ${r.aparatos.take(2).joinToString(", ") { it.ifEmpty { "aparato desconocido" } }} · ${r.motivo}")
+                        Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Ficha("sí estuve", decidido == true) { cambiar { it.copy(fotos_revisadas = it.fotos_revisadas + (r.clave to true)) } }
+                            Ficha("no cuenta", decidido != true) { cambiar { it.copy(fotos_revisadas = it.fotos_revisadas + (r.clave to false)) } }
+                        }
+                    }
+                }
+                if (rs.size > 60) Ayuda("…y ${rs.size - 60} grupos más.", Modifier.padding(top = 6.dp))
+            }
+        }
+        Ayuda("En tu mapa cuentan ${"%,d".format(cuenta)} de ${"%,d".format(io.github.ruddy2003.vestigium.sensores.FotosLugar.enCatalogo())} fotos con lugar.", Modifier.padding(top = 12.dp))
     }
 }
 

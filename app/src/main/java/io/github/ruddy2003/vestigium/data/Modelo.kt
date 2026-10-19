@@ -370,6 +370,18 @@ data class Config(
     val conocer_visto: Boolean = false,
     /** Tests políticos, uno por año. */
     val politica: List<TestPolitico> = emptyList(),
+    /** Cuánto más arriba va el teclado del tema (dp extra sobre el borde), por si el teléfono lo deja muy abajo. */
+    val teclado_alto: Int = 0,
+    /** Fotos con lugar: qué aparatos son tuyos (marca y modelo). Vacío = aún no eliges y cuentan todos. */
+    val fotos_aparatos: List<String> = emptyList(),
+    /** Aparatos cuyas fechas no son de fiar (cámara con la hora mal puesta): sus fotos dan lugar pero no día. */
+    val fotos_sin_fecha: List<String> = emptyList(),
+    /** Fotos raras que revisaste: id de la foto → true (cuenta) o false (no cuenta). */
+    val fotos_revisadas: Map<String, Boolean> = emptyMap(),
+    /** En Takeout, contar también lo que no subiste tú (álbumes compartidos, fotos de tu pareja). */
+    val fotos_compartidas: Boolean = false,
+    /** Para las referencias de salud: «hombre», «mujer» o vacío (se muestran ambas). */
+    val salud_sexo: String = "",
 )
 
 /** Una frase del día guardada: el texto tal como se mostró, el tema donde apareció y cuándo se guardó. */

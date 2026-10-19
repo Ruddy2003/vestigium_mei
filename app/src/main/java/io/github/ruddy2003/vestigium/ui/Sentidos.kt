@@ -272,17 +272,26 @@ object Sentidos {
 
     /**
      * Afinación: los sonidos con nota (laúd, lira, campanas, pitidos…) nunca se desafinan. El toque, si tiene nota,
-     * cambia entre las notas del acorde del tema (tónica, tercera, quinta), así tocar varias veces suena a música y no a máquina.
+     * va recorriendo las notas del acorde del tema; pasar de pantalla y elegir, si tienen nota, se transponen a la cuarta
+     * o la quinta (los acordes I, IV y V de la tonalidad), así cada pestaña suena distinta pero todo queda en el mismo tono.
+     * Nunca se repite la misma nota dos veces seguidas, y se mueve por pasos, como una melodía.
      * Los que son puro ruido (papel, pluma, madera, teclas) varían un poco de altura al azar.
      */
-    private val MAYOR = floatArrayOf(1f, 1.2599f, 1.4983f)
-    private val MENOR = floatArrayOf(1f, 1.1892f, 1.4983f)
+    private val MAYOR = floatArrayOf(1f, 1.2599f, 1.4983f, 2f)
+    private val MENOR = floatArrayOf(0.7492f, 1f, 1.1892f, 1.4983f)
     private val PENTA = floatArrayOf(1f, 1.1225f, 1.2599f, 1.4983f, 1.6818f)
+    private val DORICO = floatArrayOf(0.7492f, 1f, 1.1892f, 1.4983f, 1.6818f)
+    private val MISTERIO = floatArrayOf(0.7492f, 1f, 1.1225f, 1.1892f, 1.4983f)
+    private val HIYAZ = floatArrayOf(1f, 1.0595f, 1.2599f, 1.3348f, 1.4983f)
+    /** I, IV y V (y la quinta grave): sirve para acordes y frases enteras, no solo para notas sueltas. */
+    private val CUARTAS = floatArrayOf(0.7492f, 1f, 1.3348f, 1.4983f)
     private fun acordeToque(tema: TemaId): FloatArray? = when (tema) {
-        TemaId.ROMANO, TemaId.LABORATORIO -> MAYOR
+        TemaId.ROMANO, TemaId.ESPACIO -> MAYOR
+        TemaId.LABORATORIO -> MISTERIO
         TemaId.CIBER, TemaId.GOTICO -> MENOR
-        TemaId.HELENO, TemaId.COLONOS, TemaId.BOTANICO -> PENTA
-        TemaId.ESPACIO, TemaId.ANDALUS -> MAYOR
+        TemaId.HELENO, TemaId.COLONOS -> PENTA
+        TemaId.BOTANICO -> DORICO
+        TemaId.ANDALUS -> HIYAZ
         else -> null
     }
     /** ¿Ese sonido de ese tema es ruido sin nota? */
@@ -292,6 +301,34 @@ object Sentidos {
         4 -> tema in setOf(TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.NAPOLEON, TemaId.ANDALUS)
         else -> false
     }
+    /** Qué notas puede tomar cada evento con nota. */
+    private fun notas(tema: TemaId, i: Int): FloatArray? = when {
+        ruidoso(tema, i) -> null
+        i == 0 -> acordeToque(tema)
+        i == 3 || i == 4 -> CUARTAS
+        else -> null
+    }
+
+    /** La última nota de cada evento, para moverse por pasos y no repetir. */
+    private val ultima = IntArray(8) { -1 }
+    private var temaUltimo: TemaId? = null
+    private fun siguiente(tema: TemaId, i: Int, n: Int): Int {
+        if (temaUltimo != tema) { ultima.fill(-1); temaUltimo = tema }
+        val u = ultima[i]
+        val k = when {
+            u < 0 -> n / 2
+            n <= 1 -> 0
+            else -> {
+                val salto = if (azar.nextInt(4) == 0) 2 else 1
+                val dir = if (azar.nextBoolean()) 1 else -1
+                var k = u + dir * salto
+                if (k !in 0 until n) k = u - dir * salto
+                k.coerceIn(0, n - 1).let { if (it == u) (u + 1) % n else it }
+            }
+        }
+        ultima[i] = k
+        return k
+    }
 
     private fun sonar(ctx: Context, tema: TemaId, e: Evento) {
         val i = when (e) { Evento.TOQUE -> 0; Evento.GUARDAR -> 1; Evento.LOGRO -> 2; Evento.PASAR -> 3; Evento.ELEGIR -> 4; Evento.ABRIR, Evento.CAMBIO -> 5; Evento.TEMA -> 6; else -> return }
@@ -299,8 +336,9 @@ object Sentidos {
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
         val r = SONIDOS[tema.id]?.get(i) ?: return
         val vol = when (i) { 0, 4 -> 0.45f; 3 -> 0.38f; 5 -> 0.6f; 6 -> 0.75f; else -> 0.8f }
+        val escala = notas(tema, i)
         val tono = when {
-            i == 0 && acordeToque(tema) != null -> acordeToque(tema)!!.let { it[azar.nextInt(it.size)] }
+            escala != null -> escala[siguiente(tema, i, escala.size)]
             (i == 0 || i == 3 || i == 4) && ruidoso(tema, i) -> 0.94f + azar.nextFloat() * 0.12f
             else -> 1f
         }

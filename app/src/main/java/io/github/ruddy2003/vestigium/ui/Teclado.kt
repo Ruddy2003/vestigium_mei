@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.systemGestures
+import androidx.compose.foundation.layout.tappableElement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -142,7 +145,23 @@ fun TecladoTema(tema: TemaId, p: Pagina, valor: TextFieldValue, onCambio: (TextF
     }
 
     // Más arriba que el borde de la pantalla: abajo queda la barra de gestos y la última fila se alcanza sin estirar el dedo.
-    Column(Modifier.fillMaxWidth().background(e.fondo).navigationBarsPadding().padding(start = 3.dp, end = 3.dp, top = 6.dp, bottom = 26.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+    // Se mide la barra del sistema directamente (aunque algo de arriba ya la haya usado) y, si el teléfono no la informa
+    // (pasa en algunas ventanas a pantalla completa), se deja un margen fijo. Encima, lo que tú subas con la manija.
+    val densidad = androidx.compose.ui.platform.LocalDensity.current
+    val barra = with(densidad) {
+        maxOf(WindowInsets.navigationBars.getBottom(this), WindowInsets.systemGestures.getBottom(this), WindowInsets.tappableElement.getBottom(this)).toDp()
+    }
+    var extra by remember { mutableStateOf(io.github.ruddy2003.vestigium.data.Repo.config.teclado_alto.toFloat()) }
+    val abajo = maxOf(barra, 28.dp) + 40.dp + extra.dp
+    Column(Modifier.fillMaxWidth().background(e.fondo).padding(start = 3.dp, end = 3.dp, bottom = abajo), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+        // La manija: arrastra hacia arriba o abajo para acomodar el teclado a tu pulgar. Se recuerda.
+        Box(Modifier.fillMaxWidth().height(18.dp).pointerInput(Unit) {
+            androidx.compose.foundation.gestures.detectVerticalDragGestures(
+                onDragEnd = { val v = extra.toInt(); io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { it.copy(teclado_alto = v) } },
+                onVerticalDrag = { cambio, d -> cambio.consume(); extra = (extra - d / density).coerceIn(0f, 220f) })
+        }, contentAlignment = Alignment.Center) {
+            Box(Modifier.width(44.dp).height(4.dp).background(e.letraEspecial.copy(alpha = 0.45f), RoundedCornerShape(50)))
+        }
         val filas = if (simbolos) SIMBOLOS else FILAS
         filas.forEachIndexed { i, fila ->
             Row(Modifier.fillMaxWidth().height(46.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {

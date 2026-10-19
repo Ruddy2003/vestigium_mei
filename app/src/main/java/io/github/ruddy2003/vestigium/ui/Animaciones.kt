@@ -101,7 +101,7 @@ fun FondoVivo(tema: TemaId = Estilo.tema, fijo: Float? = null) {
     val tipo = when (tema) {
         TemaId.ESPACIO -> "estrellas"
         TemaId.GOTICO -> "vitral"
-        TemaId.BOTANICO -> if (oscuro) "luciernagas" else "polen"
+        TemaId.BOTANICO -> if (oscuro) "luciernagas" else "hormigas"
         TemaId.NAVIDAD -> "nieve"
         TemaId.ANDALUS -> "agua"
         TemaId.MONGOL -> "nubes"
@@ -116,7 +116,7 @@ fun FondoVivo(tema: TemaId = Estilo.tema, fijo: Float? = null) {
         val r = java.util.Random(tema.ordinal.toLong() + 5)
         List(if (tipo == "lluvia") 34 else 26) { Mota(r.nextFloat(), r.nextFloat(), 0.4f + r.nextFloat() * 0.6f, r.nextFloat(), 0.5f + r.nextFloat(), r.nextInt(3)) }
     }
-    val periodo = when (tipo) { "nubes" -> 90000; "agua" -> 14000; "estrellas", "luciernagas" -> 9000; "lluvia" -> 4000; "barrido" -> 7000; else -> 24000 }
+    val periodo = when (tipo) { "nubes" -> 90000; "hormigas" -> 70000; "agua" -> 14000; "estrellas", "luciernagas" -> 9000; "lluvia" -> 4000; "barrido" -> 7000; else -> 24000 }
     val t = if (fijo != null) fijo else {
         val v by rememberInfiniteTransition(label = "fondo").animateFloat(0f, 1f, infiniteRepeatable(tween(periodo, easing = LinearEasing)), label = "t")
         v
@@ -147,6 +147,17 @@ fun FondoVivo(tema: TemaId = Estilo.tema, fijo: Float? = null) {
                     val l = 5f * u * m.tam
                     drawPath(Path().apply { moveTo(x - l, y); quadraticTo(x, y - l * 0.7f, x + l, y); quadraticTo(x, y + l * 0.7f, x - l, y); close() }, e.primary.copy(alpha = 0.16f))
                 } else drawCircle(col, 1.3f * u * m.tam, Offset(x, y))
+            }
+            "hormigas" -> motas.take(7).forEachIndexed { i, m ->
+                // Unas pocas hormigas que cruzan despacio la hoja, cada una por su camino; y semillas quietas.
+                val avance = (m.x + t * (0.5f + m.v * 0.6f)) % 1.3f - 0.15f
+                val dir = if (i % 2 == 0) 1f else -1f
+                val x = (if (dir > 0) avance else 1f - avance) * w
+                val fase = 2 * PI * (avance * 2 + m.fase)
+                val y = m.y * h + 22f * u * sin(fase).toFloat()
+                val pend = (22f * u * cos(fase) * 2 * PI * 2 / w).toFloat()
+                val ang = kotlin.math.atan2(pend * dir, dir)
+                hormiga(Offset(x, y), 7f * u * (0.8f + m.tam * 0.3f), ang, e.onBackground.copy(alpha = 0.16f), t * 6 + m.fase)
             }
             "luciernagas" -> motas.forEach { m ->
                 val x = (m.x + 0.04f * sin(2 * PI * (t * m.v + m.fase)).toFloat()) * w

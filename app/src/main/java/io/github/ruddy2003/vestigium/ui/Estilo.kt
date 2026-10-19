@@ -28,7 +28,7 @@ object Estilo {
         TemaId.LABORATORIO -> "· "
         TemaId.COLONOS -> "~ "
         TemaId.NAPOLEON -> "— "
-        TemaId.BOTANICO -> "❀ "
+        TemaId.BOTANICO -> "⁂ "
         TemaId.NAVIDAD -> "✦ "
         TemaId.SEDA -> "◇ "
         TemaId.URSS -> "★ "
@@ -200,7 +200,7 @@ object Estilo {
     val prefijo: String get() = when (tema) {
         TemaId.ROMANO -> "› "; TemaId.CIBER -> "$ "; TemaId.HELENO -> "· "; TemaId.MEDIEVAL -> "¶ "; TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "; TemaId.ORDEN -> "▸ "; TemaId.LABORATORIO -> "○ "; TemaId.COLONOS -> "☞ "
-        TemaId.NAPOLEON -> "» "; TemaId.BOTANICO -> "✿ "; TemaId.NAVIDAD -> "✦ "; TemaId.SEDA -> "◇ "; TemaId.URSS -> "▶ "
+        TemaId.NAPOLEON -> "» "; TemaId.BOTANICO -> "⁂ "; TemaId.NAVIDAD -> "✦ "; TemaId.SEDA -> "◇ "; TemaId.URSS -> "▶ "
         TemaId.GOTICO -> "✠ "; TemaId.ESPACIO -> "◦ "; TemaId.ANDALUS -> "◈ "; TemaId.MONGOL -> "▹ "; TemaId.RENACIMIENTO -> "✎ "
     }
 
@@ -300,7 +300,7 @@ object Griego {
 
     private val NOMBRES = mapOf(
         "Mundo" to "ΟΙΚΟΥΜΕΝΗ", "Patrimonio Mundial" to "ΘΑΥΜΑΤΑ", "Mapa para rascar" to "ΠΙΝΑΞ ΤΗΣ ΓΗΣ", "Ciudades visitadas" to "ΠΟΛΕΙΣ",
-        "Biblioteca de sueños" to "ΟΝΕΙΡΟΙ", "Cartas" to "ΕΠΙΣΤΟΛΑΙ", "Escribir una carta" to "ΓΡΑΦΕ ΕΠΙΣΤΟΛΗΝ", "Carta" to "ΕΠΙΣΤΟΛΗ", "Conocerte" to "ΓΝΩΘΙ ΣΑΥΤΟΝ", "Brújula política" to "ΠΟΛΙΤΕΙΑ", "Mapas" to "ΧΑΡΤΑΙ", "Anoche" to "ΧΘΕΣ ΝΥΚΤΟΣ", "Selladas" to "ΣΕΣΗΜΑΣΜΕΝΑΙ", "Listas para abrir" to "ΠΡΟΣ ΑΝΟΙΞΙΝ", "A otras personas" to "ΠΡΟΣ ΑΛΛΟΥΣ", "Del pasado" to "ΕΚ ΤΟΥ ΠΑΡΕΛΘΟΝΤΟΣ", "Tus mapas" to "ΧΑΡΤΑΙ", "Tus calles" to "ΟΔΟΙ", "Tú" to "ΣΥ", "Con quién vives" to "ΟΙΚΟΣ", "A quién ves más" to "ΦΙΛΟΙ", "Pareja" to "ΣΥΖΥΓΟΣ", "A qué te dedicas" to "ΕΡΓΟΝ", "Tus costumbres" to "ΤΡΟΠΟΙ", "Lo que está pasando en tu vida" to "ΝΥΝ", "Cómo ha cambiado" to "ΜΕΤΑΒΟΛΑΙ", "Tu brújula" to "ΠΥΞΙΣ", "Los cinco ejes" to "ΠΕΝΤΕ ΑΞΟΝΕΣ", "Qué cambió" to "ΤΙ ΜΕΤΕΒΛΗΘΗ", "Lo que viviste cada año" to "ΧΡΟΝΙΚΑ", "¿Para quién?" to "ΤΙΝΙ;", "La carta" to "Η ΕΠΙΣΤΟΛΗ", "Donde más has estado" to "ΟΠΟΥ ΜΑΛΙΣΤΑ",
+        "Biblioteca de sueños" to "ΟΝΕΙΡΟΙ", "Cartas" to "ΕΠΙΣΤΟΛΑΙ", "Escribir una carta" to "ΓΡΑΦΕ ΕΠΙΣΤΟΛΗΝ", "Carta" to "ΕΠΙΣΤΟΛΗ", "Conocerte" to "ΓΝΩΘΙ ΣΑΥΤΟΝ", "Brújula política" to "ΠΟΛΙΤΕΙΑ", "Mapas" to "ΧΑΡΤΑΙ", "Salud" to "ΥΓΕΙΑ", "Tus apps" to "ΟΡΓΑΝΑ", "Otras vidas" to "ΑΛΛΟΙ ΒΙΟΙ", "Anoche" to "ΧΘΕΣ ΝΥΚΤΟΣ", "Selladas" to "ΣΕΣΗΜΑΣΜΕΝΑΙ", "Listas para abrir" to "ΠΡΟΣ ΑΝΟΙΞΙΝ", "A otras personas" to "ΠΡΟΣ ΑΛΛΟΥΣ", "Del pasado" to "ΕΚ ΤΟΥ ΠΑΡΕΛΘΟΝΤΟΣ", "Tus mapas" to "ΧΑΡΤΑΙ", "Tus calles" to "ΟΔΟΙ", "Tú" to "ΣΥ", "Con quién vives" to "ΟΙΚΟΣ", "A quién ves más" to "ΦΙΛΟΙ", "Pareja" to "ΣΥΖΥΓΟΣ", "A qué te dedicas" to "ΕΡΓΟΝ", "Tus costumbres" to "ΤΡΟΠΟΙ", "Lo que está pasando en tu vida" to "ΝΥΝ", "Cómo ha cambiado" to "ΜΕΤΑΒΟΛΑΙ", "Tu brújula" to "ΠΥΞΙΣ", "Los cinco ejes" to "ΠΕΝΤΕ ΑΞΟΝΕΣ", "Qué cambió" to "ΤΙ ΜΕΤΕΒΛΗΘΗ", "Lo que viviste cada año" to "ΧΡΟΝΙΚΑ", "¿Para quién?" to "ΤΙΝΙ;", "La carta" to "Η ΕΠΙΣΤΟΛΗ", "Donde más has estado" to "ΟΠΟΥ ΜΑΛΙΣΤΑ",
         "Día" to "ΗΜΕΡΑ", "Momentos" to "ΚΑΙΡΟΙ", "Gastos" to "ΔΑΠΑΝΑΙ", "Explorar" to "ΙΣΤΟΡΙΑ", "Más" to "ΤΑ ΛΟΙΠΑ",
         "Hábitos" to "ΕΘΗ", "Cartas al futuro" to "ΕΠΙΣΤΟΛΑΙ", "Experimentos personales" to "ΠΕΙΡΑΙ", "Guía científica" to "ΕΠΙΣΤΗΜΗ",
         "Cuestionarios" to "ΕΡΩΤΗΣΕΙΣ", "Prueba de reacción" to "ΤΑΧΟΣ", "Lugares" to "ΤΟΠΟΙ", "Datos" to "ΑΡΧΕΙΟΝ",
