@@ -177,13 +177,13 @@ object Importaciones {
      * «Mi actividad» de Google Takeout en formato JSON: el historial de YouTube (watch-history.json, search-history.json)
      * y el de la Búsqueda de Google (MyActivity.json). Se puede elegir el .zip completo.
      */
-    fun google(ctx: Context, uris: List<Uri>): String = google(ctx, Archivos.deDocumentos(ctx, uris))
+    fun google(ctx: Context, uris: List<Uri>): String = googleFuentes(ctx, Archivos.deDocumentos(ctx, uris))
 
     /**
      * Google Takeout: el historial de YouTube y Mi actividad (JSON), y los CSV de YouTube (suscripciones, «me gusta», listas, comentarios).
      * Acepta el .zip, archivos sueltos (varios a la vez) o la carpeta ya descomprimida.
      */
-    fun google(ctx: Context, fuentes: List<Archivos.Fuente>): String {
+    fun googleFuentes(ctx: Context, fuentes: List<Archivos.Fuente>): String {
         val lista = ArrayList<Huella>()
         val yt = ArrayList<YtEvento>(); var conSubs = false
         val filtro = { n: String -> (n.endsWith(".json", true) && (n.contains("history", true) || n.contains("MyActivity", true) || n.contains("actividad", true) || n.contains("historial", true))) ||

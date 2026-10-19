@@ -458,7 +458,7 @@ fun PantallaDatos(nav: Nav) {
     val macrofactor = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { io.github.ruddy2003.vestigium.data.Macrofactor.importar(ctx, uri) } }
     val google = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importaciones.google(ctx, uris) } }
     val googleCarpeta = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) tarea { Importaciones.google(ctx, io.github.ruddy2003.vestigium.data.Archivos.deCarpeta(ctx, uri) { n -> n.endsWith(".json", true) || n.endsWith(".csv", true) }) }
+        if (uri != null) tarea { Importaciones.googleFuentes(ctx, io.github.ruddy2003.vestigium.data.Archivos.deCarpeta(ctx, uri) { n -> n.endsWith(".json", true) || n.endsWith(".csv", true) }) }
     }
     var chatsLeidos by remember { mutableStateOf<List<Importaciones.Chat>?>(null) }
     val whatsapp = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
