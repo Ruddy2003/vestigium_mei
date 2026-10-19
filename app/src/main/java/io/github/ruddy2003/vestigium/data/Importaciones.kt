@@ -186,46 +186,74 @@ object Importaciones {
     fun googleFuentes(ctx: Context, fuentes: List<Archivos.Fuente>): String {
         val lista = ArrayList<Huella>()
         val yt = ArrayList<YtEvento>(); var conSubs = false
-        val filtro = { n: String -> (n.endsWith(".json", true) && (n.contains("history", true) || n.contains("MyActivity", true) || n.contains("actividad", true) || n.contains("historial", true))) ||
+        // Dentro de un .zip solo se abren los historiales; lo que elegiste suelto se revisa siempre (se reconoce por su contenido).
+        val filtro = { n: String -> (n.endsWith(".json", true) && (n.contains("history", true) || n.contains("activity", true) || n.contains("actividad", true) || n.contains("historial", true))) ||
             n.endsWith(".csv", true) }
-        Archivos.recorrer(ctx, fuentes, filtro) { ruta, _, s ->
+        val vistos = ArrayList<String>(); val fallas = ArrayList<String>()
+        Archivos.recorrer(ctx, fuentes, filtro, sueltos = { true }) { ruta, _, s ->
             val nombreArch = ruta.substringAfterLast('/')
             if (nombreArch.endsWith(".csv", true)) {
                 val r = youtubeCsv(ruta, s)
                 if (r.first) conSubs = true
                 yt.addAll(r.second)
+                vistos += nombreArch
                 return@recorrer
             }
-            val r = JsonReader(InputStreamReader(s, Charsets.UTF_8))
-            if (r.peek() != JsonToken.BEGIN_ARRAY) return@recorrer
-            r.beginArray()
-            while (r.hasNext()) {
-                var header = ""; var titulo = ""; var tiempo: String? = null; var canal = ""; val productos = ArrayList<String>(); var anuncio = false
-                r.beginObject()
-                while (r.hasNext()) when (r.nextName()) {
-                    "header" -> header = r.texto() ?: ""
-                    "title" -> titulo = r.texto() ?: ""
-                    "time" -> tiempo = r.texto()
-                    "subtitles" -> { r.beginArray(); while (r.hasNext()) { r.beginObject(); while (r.hasNext()) { if (r.nextName() == "name" && canal.isEmpty()) canal = r.texto() ?: "" else r.skipValue() }; r.endObject() }; r.endArray() }
-                    "products" -> { r.beginArray(); while (r.hasNext()) productos.add(r.texto() ?: ""); r.endArray() }
-                    // En el historial de YouTube, «details» marca los anuncios («From Google Ads»).
-                    "details" -> { anuncio = true; r.skipValue() }
-                    else -> r.skipValue()
+            val antes = lista.size
+            try {
+                // Algunos archivos traen una marca BOM al inicio que el lector de JSON no acepta.
+                val br = java.io.BufferedReader(InputStreamReader(s, Charsets.UTF_8))
+                br.mark(4); if (br.read() != 0xFEFF) br.reset()
+                val r = JsonReader(br)
+                r.isLenient = true
+                if (r.peek() != JsonToken.BEGIN_ARRAY) { fallas += "$nombreArch (no es un historial)"; return@recorrer }
+                r.beginArray()
+                while (r.hasNext()) {
+                    if (r.peek() != JsonToken.BEGIN_OBJECT) { r.skipValue(); continue }
+                    var header = ""; var titulo = ""; var tiempo: String? = null; var canal = ""; val productos = ArrayList<String>(); var anuncio = false
+                    r.beginObject()
+                    while (r.hasNext()) {
+                        val k = r.nextName()
+                        val t = r.peek()
+                        when {
+                            k == "header" && t == JsonToken.STRING -> header = r.nextString()
+                            k == "title" && t == JsonToken.STRING -> titulo = r.nextString()
+                            k == "time" && t == JsonToken.STRING -> tiempo = r.nextString()
+                            k == "subtitles" && t == JsonToken.BEGIN_ARRAY -> {
+                                r.beginArray()
+                                while (r.hasNext()) {
+                                    if (r.peek() != JsonToken.BEGIN_OBJECT) { r.skipValue(); continue }
+                                    r.beginObject()
+                                    while (r.hasNext()) { if (r.nextName() == "name" && canal.isEmpty() && r.peek() == JsonToken.STRING) canal = r.nextString() else r.skipValue() }
+                                    r.endObject()
+                                }
+                                r.endArray()
+                            }
+                            k == "products" && t == JsonToken.BEGIN_ARRAY -> { r.beginArray(); while (r.hasNext()) { if (r.peek() == JsonToken.STRING) productos.add(r.nextString()) else r.skipValue() }; r.endArray() }
+                            // En el historial de YouTube, «details» marca los anuncios («From Google Ads»).
+                            k == "details" -> { anuncio = true; r.skipValue() }
+                            else -> r.skipValue()
+                        }
+                    }
+                    r.endObject()
+                    val ms = tiempo?.let { x -> runCatching { Instant.parse(x).toEpochMilli() }.getOrNull() ?: runCatching { java.time.OffsetDateTime.parse(x).toInstant().toEpochMilli() }.getOrNull() } ?: continue
+                    if (anuncio) continue
+                    val (pref, accion) = PREFIJOS.firstOrNull { titulo.startsWith(it.first) } ?: ("" to "otro")
+                    val esYoutube = header.contains("YouTube", true) || productos.any { it.contains("YouTube", true) } || nombreArch.contains("watch-history", true) ||
+                        nombreArch.contains("search-history", true) || nombreArch.contains("reproducci", true)
+                    val producto = when {
+                        esYoutube -> "youtube"
+                        header.contains("Search", true) || header.contains("Búsqueda", true) || productos.any { it.contains("Search", true) || it.contains("Búsqueda", true) } -> "busqueda"
+                        else -> header.lowercase().ifBlank { "otro" }
+                    }
+                    lista.add(Huella(id = "gg_" + hash("$ms|$titulo"), ts = Fechas.isoDeMillis(ms), fecha = Fechas.diaLogicoDeMillis(ms),
+                        producto = producto, accion = accion, titulo = titulo.removePrefix(pref).take(300), canal = canal.take(120)))
                 }
-                r.endObject()
-                val ms = tiempo?.let { runCatching { Instant.parse(it).toEpochMilli() }.getOrNull() } ?: continue
-                if (anuncio) continue
-                val (pref, accion) = PREFIJOS.firstOrNull { titulo.startsWith(it.first) } ?: ("" to "otro")
-                val esYoutube = header.contains("YouTube", true) || productos.any { it.contains("YouTube", true) } || nombreArch.contains("watch-history", true) || nombreArch.contains("search-history", true)
-                val producto = when {
-                    esYoutube -> "youtube"
-                    header.contains("Search", true) || header.contains("Búsqueda", true) || productos.any { it.contains("Search", true) || it.contains("Búsqueda", true) } -> "busqueda"
-                    else -> header.lowercase().ifBlank { "otro" }
-                }
-                lista.add(Huella(id = "gg_" + hash("$ms|$titulo"), ts = Fechas.isoDeMillis(ms), fecha = Fechas.diaLogicoDeMillis(ms),
-                    producto = producto, accion = accion, titulo = titulo.removePrefix(pref).take(300), canal = canal.take(120)))
+                r.endArray()
+            } catch (e: Exception) {
+                fallas += "$nombreArch (se leyó hasta el registro ${lista.size - antes + 1}: ${e.message?.take(80)})"
             }
-            r.endArray()
+            if (lista.size > antes) vistos += nombreArch else if (fallas.none { it.startsWith(nombreArch) }) fallas += "$nombreArch (sin registros con fecha)"
         }
         val msgYt = if (yt.isNotEmpty()) {
             Repo.importarYoutube(yt.distinctBy { it.id }, conSubs)
@@ -233,7 +261,9 @@ object Importaciones {
             listOfNotNull(c["suscripcion"]?.let { "$it suscripciones" }, c["megusta"]?.let { "$it «me gusta»" }, c["lista"]?.let { "$it videos en listas" },
                 c["comentario"]?.let { "$it comentarios (solo fecha)" }, c["chat"]?.let { "$it mensajes en chats en vivo (solo fecha)" }).joinToString(", ")
         } else null
-        if (lista.isEmpty()) return msgYt?.let { "YouTube: $it." } ?: "No encontré actividad. En Google Takeout elige «YouTube» o «Mi actividad» y, en formato, JSON (no HTML)."
+        val detalle = if (fallas.isNotEmpty()) " No pude usar: " + fallas.take(5).joinToString("; ") + "." else ""
+        if (lista.isEmpty()) return (msgYt?.let { "YouTube: $it." } ?: ("No encontré actividad" + if (fuentes.isEmpty()) " (no llegó ningún archivo)." else
+            " en ${fuentes.size} archivo(s). Revisa que el historial esté en formato JSON (no HTML).")) + detalle
         Repo.importarHuellas(lista)
         // Resumen por día, recalculado con todo lo guardado en esas fechas para no contar dos veces.
         val desde = lista.minOf { it.fecha }; val hasta = lista.maxOf { it.fecha }
@@ -250,7 +280,7 @@ object Importaciones {
         }
         Repo.guardarHuellasDia(dias)
         return "Importé ${lista.size} registros (${lista.count { it.producto == "youtube" && it.accion == "visto" }} videos vistos, " +
-            "${lista.count { it.accion == "buscado" }} búsquedas) del $desde al $hasta." + (msgYt?.let { " YouTube: $it." } ?: "")
+            "${lista.count { it.accion == "buscado" }} búsquedas) del $desde al $hasta." + (msgYt?.let { " YouTube: $it." } ?: "") + detalle
     }
 
     // ---------------- CSV de YouTube (Takeout) ----------------

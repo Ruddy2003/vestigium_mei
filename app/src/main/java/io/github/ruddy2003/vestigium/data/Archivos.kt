@@ -53,7 +53,8 @@ object Archivos {
      * Recorre cada archivo; los .zip se abren y se entrega cada archivo de adentro (con su ruta dentro del zip).
      * El flujo que recibe [uso] no se debe cerrar.
      */
-    fun recorrer(ctx: Context, fuentes: List<Fuente>, filtro: (String) -> Boolean, avance: (Int) -> Unit = {}, uso: (ruta: String, tam: Long, ins: InputStream) -> Unit) {
+    fun recorrer(ctx: Context, fuentes: List<Fuente>, filtro: (String) -> Boolean, avance: (Int) -> Unit = {}, sueltos: (String) -> Boolean = filtro,
+                 uso: (ruta: String, tam: Long, ins: InputStream) -> Unit) {
         for ((k, f) in fuentes.withIndex()) {
             runCatching {
                 ctx.contentResolver.openInputStream(f.uri)?.use { s ->
@@ -68,7 +69,7 @@ object Archivos {
                                 override fun close() {}
                             }) }
                         }
-                    } else if (filtro(f.ruta.substringAfterLast('/'))) uso(f.ruta, f.tam, s)
+                    } else if (sueltos(f.ruta.substringAfterLast('/'))) uso(f.ruta, f.tam, s)
                 }
             }
             avance(k + 1)
