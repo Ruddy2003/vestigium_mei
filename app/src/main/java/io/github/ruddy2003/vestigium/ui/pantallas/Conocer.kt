@@ -100,6 +100,13 @@ fun PantallaConocer(nav: Nav) {
                 }
                 Etiqueta("Dónde vives")
                 CiudadDeCasa(p) { cambiar(it) }
+                OutlinedTextField(p.ciudad_natal, { cambiar(p.copy(ciudad_natal = it)) }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
+                    label = { Text("¿Dónde creciste?") })
+                Etiqueta("Sexo (solo para las referencias de salud)")
+                FilaFichas(Perfiles.SEXO, p.sexo.ifBlank { null }) { cambiar(p.copy(sexo = it.orEmpty())) }
+                OutlinedTextField(p.estatura_cm?.toString() ?: "", { t -> cambiar(p.copy(estatura_cm = t.filter { it.isDigit() }.take(3).toIntOrNull())) },
+                    Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("Estatura (cm)") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
             }
         }
 
@@ -163,6 +170,11 @@ fun PantallaConocer(nav: Nav) {
                 Varias(Perfiles.OCUPACION, p.ocupacion) { cambiar(p.copy(ocupacion = it)) }
                 OutlinedTextField(p.ocupacion_detalle, { cambiar(p.copy(ocupacion_detalle = it)) }, Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true,
                     placeholder = { Text("qué estudias o en qué trabajas") })
+                Etiqueta("Hasta dónde has estudiado"); FilaFichas(Perfiles.ESTUDIOS, p.estudios.ifBlank { null }) { cambiar(p.copy(estudios = it.orEmpty())) }
+                Etiqueta("Dónde trabajas o estudias"); FilaFichas(Perfiles.MODALIDAD, p.modalidad.ifBlank { null }) { cambiar(p.copy(modalidad = it.orEmpty())) }
+                OutlinedTextField(p.horas_semana?.toString() ?: "", { t -> cambiar(p.copy(horas_semana = t.filter { it.isDigit() }.take(3).toIntOrNull())) },
+                    Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("Horas a la semana de trabajo o escuela") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
                 Etiqueta("Tu horario"); FilaFichas(Perfiles.HORARIO, p.horario.ifBlank { null }) { cambiar(p.copy(horario = it.orEmpty())) }
                 Etiqueta("¿Eres de mañana o de noche?"); FilaFichas(Perfiles.CRONOTIPO, p.cronotipo.ifBlank { null }) { cambiar(p.copy(cronotipo = it.orEmpty())) }
             }
@@ -177,7 +189,39 @@ fun PantallaConocer(nav: Nav) {
             }
         }
 
-        Seccion("Lo que está pasando en tu vida", "Algo grande de esta temporada: una mudanza, un trabajo nuevo, una pérdida, una relación que empieza o termina.", numero = 7) {
+        Seccion("Tu día a día", "Cómo vives y te mueves. Sirve para comparar etapas: cuando trabajabas desde casa, cuando tenías auto, cuando dejaste la carne.", numero = 7) {
+            Tarjeta {
+                Etiqueta("Cómo te mueves casi siempre"); FilaFichas(Perfiles.TRANSPORTE, p.transporte.ifBlank { null }) { cambiar(p.copy(transporte = it.orEmpty())) }
+                Etiqueta("Tipo de vivienda"); FilaFichas(Perfiles.VIVIENDA, p.vivienda.ifBlank { null }) { cambiar(p.copy(vivienda = it.orEmpty())) }
+                Etiqueta("Cómo comes"); FilaFichas(Perfiles.DIETA, p.dieta.ifBlank { null }) { cambiar(p.copy(dieta = it.orEmpty())) }
+                OutlinedTextField(p.hijos?.toString() ?: "", { t -> cambiar(p.copy(hijos = t.filter { it.isDigit() }.take(2).toIntOrNull())) },
+                    Modifier.fillMaxWidth().padding(top = 10.dp), singleLine = true, label = { Text("¿Cuántos hijos tienes?") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
+                OutlinedTextField(p.deporte, { cambiar(p.copy(deporte = it)) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
+                    label = { Text("Tu deporte o actividad principal") })
+                Etiqueta("Tu horario de sueño ideal")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    fun reloj(valor: String, poner: (String) -> Unit) {
+                        val (h, m) = valor.split(":").mapNotNull { it.toIntOrNull() }.let { (it.getOrNull(0) ?: 23) to (it.getOrNull(1) ?: 0) }
+                        android.app.TimePickerDialog(ctx, { _, hh, mm -> poner("%02d:%02d".format(hh, mm)) }, h, m, true).show()
+                    }
+                    BotonSecundario(if (p.dormir_ideal.isBlank()) "me duermo a…" else "me duermo a las ${p.dormir_ideal}") { reloj(p.dormir_ideal.ifBlank { "23:00" }) { cambiar(p.copy(dormir_ideal = it)) } }
+                    BotonSecundario(if (p.despertar_ideal.isBlank()) "despierto a…" else "despierto a las ${p.despertar_ideal}") { reloj(p.despertar_ideal.ifBlank { "07:00" }) { cambiar(p.copy(despertar_ideal = it)) } }
+                }
+            }
+        }
+
+        Seccion("Lo que persigues", numero = 8) {
+            Tarjeta {
+                Etiqueta("Idiomas que estás aprendiendo")
+                ListaEtiquetas(p.idiomas, "francés, japonés…", normalizar = { it.trim() }) { cambiar(p.copy(idiomas = it.distinct())) }
+                Etiqueta("Metas de este año")
+                ListaEtiquetas(p.metas, "una meta (Enter para agregar)", normalizar = { it.trim() }) { cambiar(p.copy(metas = it.distinct())) }
+                Ayuda("Al cerrar el año, «Tu año» las pone junto a lo que de verdad pasó.", Modifier.padding(top = 6.dp))
+            }
+        }
+
+        Seccion("Lo que está pasando en tu vida", "Algo grande de esta temporada: una mudanza, un trabajo nuevo, una pérdida, una relación que empieza o termina.", numero = 9) {
             OutlinedTextField(p.momento, { cambiar(p.copy(momento = it)) }, Modifier.fillMaxWidth(), minLines = 3)
         }
 

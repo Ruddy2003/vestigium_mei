@@ -182,6 +182,28 @@ object Avisos {
         mostrar(ctx, 2006, b)
     }
 
+    fun logros(ctx: Context, nombres: List<String>) {
+        if (nombres.isEmpty()) return
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(if (nombres.size == 1) "Logro conseguido: ${nombres[0]}" else "${nombres.size} logros nuevos")
+            .setContentText(nombres.take(4).joinToString(" · "))
+            .setContentIntent(abrirApp(ctx, 2008, "logros"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2008, b)
+    }
+
+    /** El 31 de diciembre por la mañana: «Tu año» ya está listo, con el sonido del tema. */
+    fun tuAnio(ctx: Context, anio: Int) {
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("Tu $anio está listo")
+            .setContentText("Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para verlo.")
+            .setContentIntent(abrirApp(ctx, 2009, "tu_anio"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2009, b)
+    }
+
     fun drive(ctx: Context) {
         val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
             .setSmallIcon(R.drawable.ic_stat)

@@ -540,16 +540,14 @@ object Frases {
     }
 
     /**
-     * Las frases con ♥ de un día, para la hoja del diario: la frase del día que guardaste y las citas que marcaste ese día.
+     * Las frases con ♥ de un día, para la hoja del diario: solo la frase del día a la que tú le diste ♥ ese mismo día.
+     * Ni los subrayados de Kindle ni las citas de tus obras: esas viven en la Biblioteca y en «Frases guardadas».
      * Se muestran como epígrafe; no se guardan en el texto del diario.
      */
-    fun deLaHoja(fecha: String): List<Frase> {
-        val delDia = Repo.config.frases_guardadas.filter { it.fecha == fecha && it.tema != "kindle" }.map { Frase(it.original, it.texto, it.autor) }
-        val citas = Repo.obras.flatMap { o ->
-            o.citas.filter { it.favorita && it.fecha == fecha }.map { c ->
-                Frase(null, c.texto, listOfNotNull(o.autor.substringBefore(",").substringBefore(";").trim().ifBlank { null }, o.titulo.ifBlank { null }).joinToString(", "))
-            }
-        }
-        return (delDia + citas).distinctBy { it.texto }.take(3)
-    }
+    fun deLaHoja(fecha: String): List<Frase> =
+        Repo.config.frases_guardadas.filter { g -> g.fecha == fecha && TemaId.entries.any { it.id == g.tema } }
+            .map { Frase(it.original, it.texto, it.autor) }.distinctBy { it.texto }.take(2)
+
+    /** Quita el ♥ a una frase guardada (desde el epígrafe del diario). */
+    fun quitar(f: Frase) = Repo.cambiarConfig { c -> c.copy(frases_guardadas = c.frases_guardadas.filterNot { it.texto == f.texto && it.autor == f.autor }) }
 }

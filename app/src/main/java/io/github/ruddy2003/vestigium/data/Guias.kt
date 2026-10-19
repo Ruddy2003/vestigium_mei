@@ -24,6 +24,7 @@ object Guias {
     )
 
     private val OMS_ACTIVIDAD = Fuente("OMS, Directrices sobre actividad física y hábitos sedentarios (2020)", "https://www.who.int/news-room/fact-sheets/detail/physical-activity")
+    private val IMC = Fuente("OMS, Obesidad y sobrepeso: clasificación del IMC en adultos", "https://www.who.int/news-room/fact-sheets/detail/obesity-and-overweight")
     private val PASOS = Fuente("Ding y otros, Lancet Public Health (2025): pasos diarios y salud", "https://pubmed.ncbi.nlm.nih.gov/40713949/")
     private val SUENO = Fuente("AASM y Sleep Research Society: consenso sobre la duración del sueño en adultos (2015)", "https://aasm.org/seven-or-more-hours-of-sleep-per-night-a-health-necessity-for-adults/")
     private val AZUCAR = Fuente("OMS, Guía sobre la ingesta de azúcares (2015)", "https://www.ncbi.nlm.nih.gov/books/NBK285538/")
@@ -43,7 +44,7 @@ object Guias {
     private fun n(x: Double, d: Int = 0): String = if (d == 0) "%,d".format(x.roundToInt()) else "%.${d}f".format(x)
 
     /** Hombre, mujer o sin elegir (se usa el promedio de los dos). */
-    private fun ref(h: Double, m: Double): Double = when (Repo.config.salud_sexo) { "hombre" -> h; "mujer" -> m; else -> (h + m) / 2 }
+    private fun ref(h: Double, m: Double): Double = when (Perfiles.sexo()) { "hombre" -> h; "mujer" -> m; else -> (h + m) / 2 }
 
     fun evaluar(t: Map<String, TusNumeros.Valor>): List<Item> {
         val out = ArrayList<Item>()
@@ -115,6 +116,13 @@ object Guias {
         if (t.containsKey("trans_pct")) item("trans", "Comer", "Grasas trans", "menos del 1% de las calorías", "trans_pct", "% de la energía", 0.0, 3.0,
             listOf(Zona(0.0, 1.0, B), Zona(1.0, 1e9, L)), DIETA, { x -> "El ${n(x, 2)}% de tus calorías." })
         val peso = v("peso")?.v
+        // Índice de masa corporal: necesita tu estatura (Conocerte) y tu peso.
+        val est = Repo.config.perfil.estatura_cm?.takeIf { it in 100..250 }
+        if (est != null || peso != null) item("imc", "Cuerpo", "Índice de masa corporal", "18.5 a 24.9", null, "kg/m²", 15.0, 40.0,
+            listOf(Zona(0.0, 18.5, C), Zona(18.5, 25.0, B), Zona(25.0, 30.0, C), Zona(30.0, 1e9, L)), IMC,
+            { x -> "${n(x, 1)} con ${n(peso ?: 0.0, 1)} kg y ${est} cm. " + when { x < 18.5 -> "Por debajo del rango."; x < 25 -> "Dentro del rango."; x < 30 -> "Sobrepeso según la OMS (con mucho músculo el IMC exagera)."; else -> "Obesidad según la OMS." } },
+            "El IMC no distingue músculo de grasa; la cintura (menos de la mitad de tu estatura) ayuda a completarlo.", "Necesita tu estatura (Más → Conocerte) y tu peso (reloj, báscula o MacroFactor).",
+            valor = if (est != null && peso != null && peso > 30) peso / ((est / 100.0) * (est / 100.0)) else null)
         item("proteina", "Comer", "Proteína", "al menos 0.83 g por kilo de peso", null, "g por kg", 0.0, 2.4,
             listOf(Zona(0.0, 0.66, L), Zona(0.66, 0.83, C), Zona(0.83, 1e9, B)), PROTEINA,
             { x -> "${n(x, 2)} g por kilo (${n(v("proteina")?.v ?: 0.0)} g al día con ${n(peso ?: 0.0, 1)} kg): " + if (x >= 0.83) "cubres lo mínimo; si entrenas fuerza, 1.6 g/kg es lo que suele maximizar el músculo." else "por debajo del mínimo." },

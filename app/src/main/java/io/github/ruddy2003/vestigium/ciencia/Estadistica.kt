@@ -113,7 +113,8 @@ object Estadistica {
             Variable("luz_alta_min", "Minutos con luz de exterior", "Entorno"), Variable("carga_noche_h", "Hora de conectar el teléfono de noche", "Sueño"),
             Variable("peso_kg", "Peso (kg)", "Cuerpo"), Variable("temp_piel", "Variación de temperatura de la piel", "Cuerpo"),
             Variable("resp_rpm", "Frecuencia respiratoria", "Cuerpo"), Variable("cal_activas", "Calorías activas", "Cuerpo"),
-            Variable("yt_vistos", "Videos de YouTube vistos", "Teléfono"), Variable("busquedas", "Búsquedas en Google", "Teléfono"),
+            Variable("yt_vistos", "Videos de YouTube vistos", "Teléfono"), Variable("yt_megusta", "«Me gusta» en YouTube", "Teléfono"),
+            Variable("yt_comentarios", "Comentarios en YouTube", "Teléfono"), Variable("busquedas", "Búsquedas en Google", "Teléfono"),
             Variable("subrayados", "Subrayados de Kindle", "Lectura"), Variable("ruido_db", "Ruido medio al registrar (dB)", "Entorno"),
             Variable("sueno_inicio_h", "Hora de dormir (reloj)", "Sueño"), Variable("sueno_fin_h", "Hora de despertar (reloj)", "Sueño"),
             Variable("kcal", "Calorías consumidas", "Nutrición"), Variable("proteina_g", "Proteína (g)", "Nutrición"),
@@ -256,6 +257,16 @@ object Estadistica {
             filas.keys.filter { it >= desdeG }.forEach { f -> fila(f)["gimnasio"] = if ((Repo.entrenos[f]?.series ?: 0) > 0) 1.0 else 0.0 }
         }
         Repo.huellas.forEach { (f, h) -> val r = fila(f); r["yt_vistos"] = h.yt_vistos.toDouble(); r["busquedas"] = (h.busquedas + h.yt_busquedas).toDouble() }
+        // «Me gusta» y comentarios: cuentan desde el primero que hay (antes no se sabe), en días con historial de YouTube.
+        if (Repo.youtube.isNotEmpty()) {
+            val mg = Repo.youtube.filter { it.tipo == "megusta" && it.fecha.isNotBlank() }.groupingBy { it.fecha }.eachCount()
+            val co = Repo.youtube.filter { (it.tipo == "comentario" || it.tipo == "chat") && it.fecha.isNotBlank() }.groupingBy { it.fecha }.eachCount()
+            val d0 = mg.keys.minOrNull(); val c0 = co.keys.minOrNull()
+            Repo.huellas.keys.forEach { f ->
+                if (d0 != null && f >= d0) fila(f)["yt_megusta"] = (mg[f] ?: 0).toDouble()
+                if (c0 != null && f >= c0) fila(f)["yt_comentarios"] = (co[f] ?: 0).toDouble()
+            }
+        }
         Repo.subrayados.filter { it.fecha != null }.groupBy { it.fecha!! }.forEach { (f, l) -> fila(f)["subrayados"] = l.size.toDouble() }
         Repo.momentos.filter { it.ruido_db != null }.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["ruido_db"] = l.mapNotNull { it.ruido_db }.average() }
         runCatching {
@@ -420,7 +431,7 @@ object Estadistica {
         setOf("wa_mios", "wa_otros", "wa_chats"),
         setOf("canciones", "musica_min", "audifonos_min", "coche_min"),
         setOf("palabras", "personas", "hitos_n"),
-        setOf("yt_vistos", "busquedas"),
+        setOf("yt_vistos", "busquedas", "yt_megusta", "yt_comentarios"),
         setOf("t_max", "t_min", "precip_mm", "nubes_pct", "luz_horas", "sol_horas", "presion_hpa"),
         setOf("aqi_us", "pm25"),
         setOf("gasto_total", "gasto_imprevisto"),

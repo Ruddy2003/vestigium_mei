@@ -262,6 +262,34 @@ data class Perfil(
     val cafe: String = "",
     /** Lo que esté pasando en tu vida ahora (una mudanza, un trabajo nuevo, un duelo…). */
     val momento: String = "",
+    // ---- Más contexto para análisis más finos (todo opcional; cada cambio queda con su fecha).
+    /** Sexo biológico, solo para las referencias de salud (hombre, mujer). */
+    val sexo: String = "",
+    val estatura_cm: Int? = null,
+    /** Ciudad donde creciste. */
+    val ciudad_natal: String = "",
+    /** Hasta dónde has estudiado: secundaria, prepa, tecnico, licenciatura, maestria, doctorado. */
+    val estudios: String = "",
+    /** Dónde trabajas o estudias: presencial, hibrido, remoto. */
+    val modalidad: String = "",
+    /** Horas a la semana de trabajo o escuela. */
+    val horas_semana: Int? = null,
+    /** Cómo te mueves casi siempre: pie, bici, publico, auto, moto. */
+    val transporte: String = "",
+    /** casa, departamento, cuarto, residencia. */
+    val vivienda: String = "",
+    val hijos: Int? = null,
+    /** omnivora, flexitariana, pescetariana, vegetariana, vegana. */
+    val dieta: String = "",
+    /** Tu deporte o actividad principal (escalada, gimnasio, correr…). */
+    val deporte: String = "",
+    /** Tu horario de sueño ideal (HH:MM), aunque no siempre lo cumplas. */
+    val dormir_ideal: String = "",
+    val despertar_ideal: String = "",
+    /** Idiomas que estás aprendiendo. */
+    val idiomas: List<String> = emptyList(),
+    /** Lo que quieres lograr este año. */
+    val metas: List<String> = emptyList(),
 )
 
 /** Un cambio en «Conocerte»: qué campo, cómo estaba y cómo quedó, y cuándo. */
@@ -357,8 +385,6 @@ data class Config(
     /** Patrimonio Mundial: los que marcaste a mano y los que quitaste aunque pasaste cerca. */
     val unesco_marcados: List<SitioMarcado> = emptyList(),
     val unesco_descartados: List<Int> = emptyList(),
-    /** Al escribir el diario aparece el teclado del tema en lugar del del teléfono. */
-    val teclado_tema: Boolean = true,
     /** Al cambiar de tema, el fondo de pantalla del teléfono cambia también. */
     val fondo_telefono_auto: Boolean = false,
     /** Dónde poner el fondo del teléfono: «ambas», «inicio» o «bloqueo». */
@@ -370,8 +396,6 @@ data class Config(
     val conocer_visto: Boolean = false,
     /** Tests políticos, uno por año. */
     val politica: List<TestPolitico> = emptyList(),
-    /** Cuánto más arriba va el teclado del tema (dp extra sobre el borde), por si el teléfono lo deja muy abajo. */
-    val teclado_alto: Int = 0,
     /** Fotos con lugar: qué aparatos son tuyos (marca y modelo). Vacío = aún no eliges y cuentan todos. */
     val fotos_aparatos: List<String> = emptyList(),
     /** Aparatos cuyas fechas no son de fiar (cámara con la hora mal puesta): sus fotos dan lugar pero no día. */
@@ -382,7 +406,47 @@ data class Config(
     val fotos_compartidas: Boolean = false,
     /** Para las referencias de salud: «hombre», «mujer» o vacío (se muestran ambas). */
     val salud_sexo: String = "",
+    /** Cambiar de tema solo cada día (a las 5:00), entre los elegidos (vacío = todos). */
+    val tema_rotar: Boolean = false,
+    val temas_rotacion: List<String> = emptyList(),
+    /** Día lógico del último cambio automático. */
+    val tema_rotado: String = "",
+    /** Logros que inventaste tú. */
+    val logros_propios: List<LogroPropio> = emptyList(),
+    /** Logros ya vistos (id → día en que se vieron conseguidos), para festejar solo los nuevos. */
+    val logros_vistos: Map<String, String> = emptyMap(),
+    /** «Tu año»: las predicciones de enero, para compararlas al cerrar el año. Clave = año. */
+    val predicciones_anio: Map<String, PrediccionAnio> = emptyMap(),
+    /** «Tu año»: tarjetas que escondiste antes de exportar, y si los nombres van completos o con iniciales. */
+    val anio_ocultas: List<String> = emptyList(),
+    val anio_nombres_completos: Boolean = false,
 )
+
+/**
+ * Un logro que inventas: qué cuenta (una variable del día, un hábito, una etiqueta), cuántas veces o en cuántos días de una ventana.
+ * Por ejemplo «Leer 20 de 30 días», «10 ciudades nuevas», «Escribir 100,000 palabras».
+ */
+@Serializable
+data class LogroPropio(
+    val id: String,
+    val nombre: String,
+    /** variable (del panel diario), habito, etiqueta (#tema o @persona en el diario). */
+    val fuente: String,
+    val clave: String,
+    /** dias: días con algo (≥ umbral) dentro de la ventana; total: suma de todo; racha: días seguidos. */
+    val modo: String = "dias",
+    val meta: Double = 1.0,
+    /** Para «dias»: días que mira hacia atrás (30 = de los últimos 30 días). 0 = desde siempre. */
+    val ventana: Int = 0,
+    /** Desde cuánto cuenta un día (por ejemplo, 8000 pasos). */
+    val umbral: Double = 0.0,
+    val creado: String = "",
+    val icono: String = "★",
+)
+
+/** Lo que crees que pasará en el año (se escribe en enero; «Tu año» lo compara en diciembre). */
+@Serializable
+data class PrediccionAnio(val fecha: String, val respuestas: Map<String, String> = emptyMap())
 
 /** Una frase del día guardada: el texto tal como se mostró, el tema donde apareció y cuándo se guardó. */
 @Serializable
@@ -450,6 +514,22 @@ data class Huella(
     val accion: String,
     val titulo: String = "",
     val canal: String = "",
+)
+
+/**
+ * Lo que traen los CSV de YouTube en Takeout: suscripciones, «me gusta», videos agregados a tus listas, comentarios y mensajes en chats en vivo.
+ * De los comentarios y chats solo se guarda cuándo y en qué video; el texto se descarta al leerlo y nunca se guarda.
+ */
+@Serializable
+data class YtEvento(
+    val id: String,
+    /** suscripcion, megusta, lista, comentario o chat. */
+    val tipo: String,
+    val ts: String = "",
+    val fecha: String = "",
+    val video: String = "",
+    val canal: String = "",
+    val lista: String = "",
 )
 
 @Serializable
@@ -568,6 +648,22 @@ data class Escucha(
     val contexto: String = "",
 )
 
+/** Apps cuyo reproductor no es música (videos, navegadores, redes): lo que suena ahí no cuenta como canción ni su canal como artista. */
+private val NO_MUSICA = listOf("youtube", "chrome", "netflix", "twitch", "tiktok", "instagram", "facebook", "prime video", "disney", "hbo", "crunchyroll",
+    "firefox", "brave", "vlc", "twitter", "reddit", "plex", "fotos", "photos", "whatsapp", "telegram", "edge", "opera", "samsung internet", "galería",
+    "gallery", "mx player", "google tv", "kick", "vix", "pluto", "mubi", "paramount", "apple tv", "duolingo", "snapchat", "threads", "linkedin", "discord")
+private val SI_MUSICA = listOf("youtube music", "yt music", "music", "música", "musica")
+
+/** Si es música de verdad: lo importado de Spotify siempre; lo que sonó en el teléfono, salvo que venga de una app de video o navegador. */
+val Escucha.esMusica: Boolean get() {
+    if (fuente != "notificacion") return true
+    val a = app.lowercase().trim()
+    if (a.isEmpty()) return true
+    if (SI_MUSICA.any { a.contains(it) } && !a.contains("tv")) return true
+    if (a == "x" || a == "max") return false
+    return NO_MUSICA.none { a.contains(it) }
+}
+
 /** Minutos por tipo de movimiento que detecta el teléfono: a pie, corriendo, en bici, en vehículo, quieto. */
 @Serializable
 data class ActividadDia(
@@ -654,7 +750,7 @@ data class Obra(
 
 /** Una cita copiada de un libro, una película o un artículo. Las que tienen ♥ salen en «Frases guardadas». */
 @Serializable
-data class Cita(val id: String, val texto: String, val pagina: String = "", val fecha: String = "", val favorita: Boolean = true)
+data class Cita(val id: String, val texto: String, val pagina: String = "", val fecha: String = "", val favorita: Boolean = false)
 
 /** Nutrición del día exportada de MacroFactor (resumen «Quick Export»). Las claves son las columnas de MacroFactor. */
 @Serializable

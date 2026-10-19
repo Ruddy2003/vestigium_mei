@@ -53,9 +53,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -1014,14 +1011,20 @@ private fun EncabezadoSueno(t: TemaId, p: Pagina, fecha: String) {
 /** Las frases con ♥ del día, como epígrafe arriba de la hoja: se ven ahí, pero no se guardan en el diario. */
 @Composable
 private fun Epigrafe(fecha: String, p: Pagina) {
-    val frases = remember(fecha, Repo.config.frases_guardadas, Repo.obras) { Frases.deLaHoja(fecha) }
+    val frases = remember(fecha, Repo.config.frases_guardadas) { Frases.deLaHoja(fecha) }
+    var armada by remember(fecha) { mutableStateOf<String?>(null) }
+    val sentirEp = rememberSentir()
     frases.forEach { f ->
-        Column(Modifier.fillMaxWidth().padding(start = 44.dp, bottom = 16.dp), horizontalAlignment = Alignment.End) {
+        // Tocar la frase deja quitarle el ♥ (y con eso desaparece de la hoja).
+        Column(Modifier.fillMaxWidth().padding(start = 44.dp, bottom = 16.dp).clickable { sentirEp(Sentidos.Evento.TOQUE); armada = if (armada == f.texto) null else f.texto },
+            horizontalAlignment = Alignment.End) {
             f.original?.let { Text(it, fontFamily = p.texto, fontSize = (p.tam - 5).sp, lineHeight = (p.tam - 2).sp, color = p.tenue,
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, textAlign = TextAlign.End) }
             Text("«${f.texto}»", fontFamily = p.texto, fontSize = (p.tam - 3).sp, lineHeight = (p.tam + 1).sp, color = p.tinta.copy(alpha = 0.82f),
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, textAlign = TextAlign.End)
             Text("— ${f.autor}  ♥", style = MaterialTheme.typography.labelSmall, color = p.acento, textAlign = TextAlign.End, modifier = Modifier.padding(top = 2.dp))
+            if (armada == f.texto) Text("quitar ♥", style = MaterialTheme.typography.labelLarge, color = p.acento,
+                modifier = Modifier.padding(top = 4.dp).clickable { sentirEp(Sentidos.Evento.CAMBIO); Frases.quitar(f); armada = null }.padding(horizontal = 8.dp, vertical = 6.dp))
         }
     }
 }
@@ -1107,25 +1110,6 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
     var campo by remember { mutableStateOf(TextFieldValue(valor, TextRange(valor.length))) }
     if (campo.text != valor) campo = TextFieldValue(valor, TextRange(valor.length))
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
-    // El teclado del tema: aparece al tocar la hoja; el del teléfono queda a un toque (⌨) para dictar o usar el autocorrector.
-    var propio by remember { mutableStateOf(io.github.ruddy2003.vestigium.data.Repo.config.teclado_tema) }
-    var enfocado by remember { mutableStateOf(false) }
-    val foco = remember { androidx.compose.ui.focus.FocusRequester() }
-    val gestorFoco = androidx.compose.ui.platform.LocalFocusManager.current
-    val tecladoSistema = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
-    val alcance = androidx.compose.runtime.rememberCoroutineScope()
-    val traer = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
-    var cambioPropio by remember { mutableStateOf(0) }
-    var reenfocar by remember { mutableStateOf(false) }
-    LaunchedEffect(propio) {
-        if (reenfocar) { kotlinx.coroutines.delay(60); runCatching { foco.requestFocus() }; if (!propio) tecladoSistema?.show(); reenfocar = false }
-    }
-    // Tras cada tecla, el renglón del cursor se mantiene a la vista (el teclado del teléfono lo haría solo).
-    LaunchedEffect(cambioPropio) {
-        if (cambioPropio == 0) return@LaunchedEffect
-        kotlinx.coroutines.delay(16)
-        layout?.let { l -> runCatching { val r = l.getCursorRect(campo.selection.end.coerceIn(0, l.layoutInput.text.length)); traer.bringIntoView(r.copy(bottom = r.bottom + 60f)) } }
-    }
     val etiquetas = remember { Etiquetas.frecuentes() }
     val antes = campo.text.substring(0, campo.selection.start.coerceIn(0, campo.text.length))
     val token = Regex("[@#][\\p{L}\\d_]*$").find(antes)?.value
@@ -1136,7 +1120,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         Box(Modifier.fillMaxSize()) {
             FondoPagina(tema, p, noche = modo == Escrito.SUENO)
-            // Arriba y a los lados, la barra del sistema; abajo la maneja el teclado del tema (o el del teléfono), para no contarla dos veces.
+            // Arriba y a los lados, la barra del sistema; abajo, el teclado del teléfono o la barra de navegación (sin contarlas dos veces).
             Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)).imePadding()) {
                 BarraPagina(p, guardar, "${Texto.palabras(campo.text)} palabras") {
                     Text(textoBoton ?: textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
@@ -1147,16 +1131,9 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                     if (encabezado != null) encabezado(p) else EncabezadoPagina(tema, p, fecha, modo)
                     if (modo == Escrito.DIARIO) Epigrafe(fecha, p)
                     val estilo = TextStyle(fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, color = p.tinta)
-                    androidx.compose.runtime.key(propio) {
-                    androidx.compose.ui.platform.InterceptPlatformTextInput(interceptor = object : androidx.compose.ui.platform.PlatformTextInputInterceptor {
-                        override suspend fun interceptStartInputMethod(request: androidx.compose.ui.platform.PlatformTextInputMethodRequest,
-                                                                       nextHandler: androidx.compose.ui.platform.PlatformTextInputSession): Nothing =
-                            if (propio) kotlinx.coroutines.awaitCancellation() else nextHandler.startInputMethod(request)
-                    }) {
                     BasicTextField(
                         value = campo, onValueChange = { campo = it; if (it.text != valor) onCambio(it.text) },
-                        modifier = Modifier.fillMaxWidth().heightIn(min = 420.dp).rayado(p, layout)
-                            .focusRequester(foco).onFocusChanged { enfocado = it.isFocused }.bringIntoViewRequester(traer),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 420.dp).rayado(p, layout),
                         textStyle = estilo, cursorBrush = SolidColor(p.acento), onTextLayout = { layout = it },
                         visualTransformation = p.capitular?.let { Capitular(it, p.acento) } ?: VisualTransformation.None,
                         decorationBox = { interior ->
@@ -1170,15 +1147,10 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                             }
                         },
                     )
-                    }
-                    }
                 }
-                if (sugerencias.isNotEmpty() || dictado || (!propio && enfocado)) FlowRow(Modifier.fillMaxWidth().background(p.color.copy(alpha = 0.92f)).padding(horizontal = 12.dp, vertical = 6.dp),
+                if (sugerencias.isNotEmpty() || dictado) FlowRow(Modifier.fillMaxWidth().background(p.color.copy(alpha = 0.92f)).padding(horizontal = 12.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     if (dictado) BotonDictado { t -> val nuevo = (campo.text + " " + t).trim(); campo = TextFieldValue(nuevo, TextRange(nuevo.length)); onCambio(nuevo) }
-                    if (!propio && io.github.ruddy2003.vestigium.data.Repo.config.teclado_tema) Ficha("teclado del tema", false) {
-                        tecladoSistema?.hide(); reenfocar = true; propio = true
-                    }
                     sugerencias.forEach { s ->
                         Ficha(s, false) {
                             val ini = antes.length - token!!.length
@@ -1187,11 +1159,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                         }
                     }
                 }
-                if (propio && enfocado) TecladoTema(tema, p, campo,
-                    onCambio = { v -> campo = v; if (v.text != valor) onCambio(v.text); cambioPropio++ },
-                    sistema = { reenfocar = true; propio = false },
-                    ocultar = { gestorFoco.clearFocus() })
-                else androidx.compose.foundation.layout.Spacer(Modifier.navigationBarsPadding())
+                androidx.compose.foundation.layout.Spacer(Modifier.navigationBarsPadding())
             }
         }
     }

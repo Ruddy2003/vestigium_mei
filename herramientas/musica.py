@@ -56,6 +56,7 @@ def notificacion(T, inst, notas, paso=0.12, d=0.7, cola=1.0):
     return reverb(mezclar(*[(i * paso, inst(hz(T + n), d), 0.55) for i, n in enumerate(notas)]), cola, 0.25)
 
 P = {}   # tema → (presentación, llamada, notificación)
+ARGS = {}   # tema → lo necesario para la música larga de «Tu año»
 
 def hacer():
     # --- Romano: Re mayor, cornu, lira y tambor
@@ -66,6 +67,7 @@ def hacer():
     perc = cada(16, lambda: tambor(hz(T - 24), 0.35, 0.3), 0.5, paso=2) + [(15, tambor(hz(T - 24), 0.6), 0.7)]
     kw = dict(inst_mel=cornu, inst_ac=lambda f, d: metal(f, d, 2000, 0.08), perc=perc, g_ac=0.3)
     P['romano'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, cornu, [7, 12, 16], 0.14, 0.5))
+    ARGS['romano'] = (T, pz, ac, mel, kw)
 
     # --- Cyberpunk: Mi menor, arpegios cuadrados, bajo de sierra y hi-hat
     T = 7; pz = 0.3
@@ -75,6 +77,7 @@ def hacer():
     hats = cada(32, lambda: filtro(ruido(0.04), 'alto', 6000) * env(int(0.04 * SR), 0.001, 0.02), 0.25, paso=0.5)
     kw = dict(inst_mel=lambda f, d: cuadrada(f, d, 0.12), inst_ac=lambda f, d: cuadrada(f, min(d, 0.2), 0.05), arpegio=True, bajo=sierra, perc=hats, g_ac=0.25, oct_mel=-12)
     P['ciber'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: cuadrada(f, d, 0.1), [12, 19, 24], 0.08, 0.3))
+    ARGS['ciber'] = (T, pz, ac, mel, kw)
 
     # --- Helénico: La mayor pentatónico, lira y aulos
     T = -12; pz = 0.42
@@ -83,6 +86,7 @@ def hacer():
     mel = frase(0, "0:1 2:1 4:2 | 7:1 9:1 7:2 | 4:1 7:1 2:2 | 0:4")
     kw = dict(inst_mel=flauta, inst_ac=lambda f, d: pluck(f, 1.2, 0.45), arpegio=True, oct_ac=12, oct_mel=24, g_mel=0.35, legato=0.95)
     P['heleno'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, d, 0.6), [19, 24, 28], 0.1, 0.8))
+    ARGS['heleno'] = (T, pz, ac, mel, kw)
 
     # --- Scriptorium: Re dórico, canto llano sobre bordón y campanas
     T = -7; pz = 0.55
@@ -93,6 +97,7 @@ def hacer():
     kw = dict(inst_mel=coro, inst_ac=organo, extra=extra, g_mel=0.45, cola=2.4, rev=0.38)
     P['medieval'] = (obra(T, pz, [], mel, **kw), llamada(T, pz, [(0, [0], 4), (4, [0], 4), (8, [0], 4), (12, [0], 4)], mel, inst_mel=lambda f, d: campana(f, 1.2, 2.0, 1.6, 3), inst_ac=lambda f, d: coro(f, d), g_ac=0.15, cola=2.0, rev=0.35),
                      notificacion(T, lambda f, d: campana(f, 1.2, 2.0, 1.6, 3), [24, 19, 22], 0.16, 1.0, 1.6))
+    ARGS['medieval'] = (T, pz, [], mel, kw)
 
     # --- Distopía: Do menor, órgano del ministerio, máquina de escribir y timbre
     T = 3; pz = 0.5
@@ -102,6 +107,7 @@ def hacer():
     ding = lambda: campana(hz(T + 12), 1.2, 3.0, 1.0, 5)
     kw = dict(inst_mel=lambda f, d: metal(f, d, 1800, 0.06), inst_ac=organo, bajo=lambda f, d: organo(f, d), perc=teclas + [(16, ding(), 0.45)], g_mel=0.45, oct_mel=-12)
     P['distopia'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: campana(f, 1.0, 3.0, 1.0, 5), [12, 12, 7], 0.18, 0.8))
+    ARGS['distopia'] = (T, pz, ac, mel, kw)
 
     # --- Refugio: Fa mayor, vibráfono y órgano de los cincuenta
     T = 8; pz = 0.36
@@ -109,6 +115,7 @@ def hacer():
     mel = frase(0, "12:1 9:1 7:1 9:1 | 12:2 14:2 | 17:1 16:1 14:1 12:1 | 11:2 14:2 | 12:4")
     kw = dict(inst_mel=vibrafono, inst_ac=lambda f, d: organo(f, d, 0.15), bajo=lambda f, d: vibrafono(f, d), g_ac=0.22, oct_mel=-12, oct_ac=-12)
     P['refugio'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, vibrafono, [0, 4, 12], 0.12, 0.9))
+    ARGS['refugio'] = (T, pz, ac, mel, kw)
 
     # --- Orden: Sol menor, trompas y timbales
     T = -2; pz = 0.5
@@ -119,6 +126,7 @@ def hacer():
     trompa = lambda f, d: metal(f, d, 1800, 0.06)
     kw = dict(inst_mel=trompa, inst_ac=trompa, perc=perc, g_ac=0.28, oct_mel=-12, oct_ac=-24)
     P['orden'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T - 12, trompa, [7, 12], 0.2, 0.6))
+    ARGS['orden'] = (T, pz, ac, mel, kw)
 
     # --- Laboratorio: Re menor, el instituto bajo tierra. Arpegio de senos fríos, colchón de sintetizador, pulso grave y vidrio lejano.
     T = -7; pz = 0.42
@@ -128,6 +136,7 @@ def hacer():
     kw = dict(inst_mel=lambda f, d: campana(f, d + 0.8, 3.5, 0.7, 1.8), inst_ac=lambda f, d: frio(f, 0.5), arpegio=True,
               bajo=lambda f, d: sinte(f, d, 900, 0.4, 0.6), perc=pulsos, g_mel=0.3, g_ac=0.3, g_bajo=0.3, oct_mel=0, oct_ac=0, cola=2.4, rev=0.4)
     P['laboratorio'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: frio(f, 0.6), [12, 15, 19, 14], 0.16, 0.6, 1.8))
+    ARGS['laboratorio'] = (T, pz, ac, mel, kw)
 
     # --- Colonos: Sol mayor pentatónico, marimba y violín de pueblo
     T = -2; pz = 0.4
@@ -135,6 +144,7 @@ def hacer():
     mel = frase(0, "0:1 2:1 4:1 7:1 | 9:2 7:2 | 4:1 2:1 4:1 7:1 | 12:4")
     kw = dict(inst_mel=lambda f, d: arco(f, d, 5.0), inst_ac=lambda f, d: marimba(f, 0.6), arpegio=True, g_mel=0.4, legato=0.95)
     P['colonos'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: marimba(f, 0.6), [7, 12, 16], 0.11, 0.6))
+    ARGS['colonos'] = (T, pz, ac, mel, kw)
 
     # --- Napoleónico: Si bemol mayor, marcha con redoble y corneta
     T = 1; pz = 0.42
@@ -145,6 +155,7 @@ def hacer():
     corneta = lambda f, d: metal(f, d, 3500)
     kw = dict(inst_mel=corneta, inst_ac=lambda f, d: metal(f, d, 2200, 0.06), perc=perc, g_ac=0.25)
     P['napoleon'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, corneta, [-5, 0, 4], 0.13, 0.4))
+    ARGS['napoleon'] = (T, pz, ac, mel, kw)
 
     # --- Botánico: Sol dórico, el cuaderno del naturalista. Violonchelo sobre guitarra arpegiada y grillos afinados de fondo.
     T = -2; pz = 0.48
@@ -153,6 +164,7 @@ def hacer():
     grillos = [(1.0 + 2.6 * i, grillo(hz(T + 36 + [0, 3, 0, 7][i % 4]), 0.12, 3), 0.1) for i in range(12)]
     kw = dict(inst_mel=lambda f, d: arco(f, d, 5.0), inst_ac=lambda f, d: guitarra(f, 1.2), arpegio=True, perc=grillos, g_mel=0.36, g_ac=0.32, oct_mel=-12, oct_ac=-12, legato=0.95)
     P['botanico'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: guitarra(f, 1.0), [12, 15, 19], 0.12, 1.0))
+    ARGS['botanico'] = (T, pz, ac, mel, kw)
 
     # --- Navidad: La mayor, caja de música, cascabeles y campanas
     T = 0; pz = 0.38
@@ -167,6 +179,7 @@ def hacer():
     perc = cada(16, cascabel, 0.18, paso=1) + [(12, campana(hz(T - 12), 2.5, 2.0, 1.5, 1.5), 0.35), (12.5, campana(hz(T - 5), 2.5, 2.0, 1.5, 1.5), 0.3)]
     kw = dict(inst_mel=cajita, inst_ac=lambda f, d: cajita(f, 0.8), arpegio=True, perc=perc, g_ac=0.22, oct_mel=12)
     P['navidad'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, cajita, [19, 16, 24], 0.12, 0.9))
+    ARGS['navidad'] = (T, pz, ac, mel, kw)
 
     # --- Ruta de la Seda: La menor pentatónico, cítara, gong y bordón
     T = 0; pz = 0.5
@@ -178,6 +191,7 @@ def hacer():
     kw = dict(inst_mel=citara, inst_ac=citara, extra=extra, g_mel=0.5)
     P['seda'] = (obra(T, pz, [], mel, **kw), llamada(T, pz, [(0, [0], 4), (4, [7], 4), (8, [0], 4), (12, [0], 4)], mel, inst_mel=citara, inst_ac=citara, g_ac=0.2),
                  notificacion(T, citara, [12, 7, 15], 0.1, 0.8))
+    ARGS['seda'] = (T, pz, [], mel, kw)
 
     # --- Soviético: Do menor, metales y timbales
     T = 3; pz = 0.5
@@ -187,6 +201,7 @@ def hacer():
     bronce = lambda f, d: metal(f, d, 2600)
     kw = dict(inst_mel=bronce, inst_ac=lambda f, d: metal(f, d, 2000, 0.06), perc=perc, g_ac=0.28, oct_mel=-12, oct_ac=-24)
     P['urss'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T - 12, bronce, [0, 7, 12], 0.14, 0.45))
+    ARGS['urss'] = (T, pz, ac, mel, kw)
 
     # --- Gótico: La menor con tercera de picardía, órgano y campanas
     T = 0; pz = 0.6
@@ -195,6 +210,7 @@ def hacer():
     extra = [(0, campana(hz(T + 7), 2.0, 2.0, 2, 2.5), 0.3), (16 * pz, campana(hz(T + 12), 2.8, 2.0, 2, 1.5), 0.35), (16 * pz + 0.3, campana(hz(T + 7), 2.5, 2.0, 2, 1.5), 0.25)]
     kw = dict(inst_mel=coro, inst_ac=organo, extra=extra, g_ac=0.45, g_mel=0.35, oct_ac=0, cola=2.8, rev=0.42)
     P['gotico'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac[:4] + [ac[4]], mel, **kw), notificacion(T, lambda f, d: campana(f, 1.6, 2.0, 2, 2.5), [7, 0, 12], 0.22, 1.4, 2.0))
+    ARGS['gotico'] = (T, pz, ac, mel, kw)
 
     # --- Espacio: Mi mayor, pad que respira, tonos limpios y el pitido de la transmisión
     T = 7; pz = 0.55
@@ -206,6 +222,7 @@ def hacer():
     extra = [(20 * pz - 0.4, seno(hz(T + 24), 0.25) * np.minimum(1, t_(0.25) / 0.01) * np.minimum(1, (0.25 - t_(0.25)) / 0.02), 0.2)]
     kw = dict(inst_mel=lambda f, d: seno(f, d) * env(int(d * SR), 0.03, d * 0.9, 2), inst_ac=pad, extra=extra, g_ac=0.3, g_mel=0.35, oct_ac=-24, cola=2.4, rev=0.35)
     P['espacio'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pip(f, 0.12), [12, 16, 19, 24], 0.07, 0.12, 1.4))
+    ARGS['espacio'] = (T, pz, ac, mel, kw)
 
     # --- Al-Ándalus: Re hiyaz, laúd, darbuka (maqsum) y qanún
     T = -7; pz = 0.4
@@ -222,6 +239,7 @@ def hacer():
     kw = dict(inst_mel=oud, inst_ac=oud, bajo=None, perc=maqsum + qanun, extra=[(0, pluck(hz(T - 12), 6.5, 0.2, 0.998), 0.25)], g_mel=0.55)
     P['andalus'] = (obra(T, pz, [], mel, **kw), llamada(T, pz, [(0, [0], 4), (4, [0], 4), (8, [0], 4), (12, [0], 4)], mel, inst_mel=oud, inst_ac=oud, perc=maqsum[:10], g_ac=0.2),
                     notificacion(T, oud, [7, 8, 7, 12], 0.11, 0.7))
+    ARGS['andalus'] = (T, pz, [], mel, kw)
 
     # --- Mongol: Mi mayor pentatónico, canto difónico, morin juur y galope
     T = -5; pz = 0.5
@@ -235,6 +253,7 @@ def hacer():
     kw = dict(inst_mel=lambda f, d: arco(f, d, 5.5), inst_ac=lambda f, d: arco(f, d), perc=cada(16, galope, 0.35, paso=1), extra=[(0, joomii, 0.35)], g_mel=0.45)
     P['mongol'] = (obra(T, pz, [], mel, **kw), llamada(T, pz, [(0, [0], 4), (4, [0], 4), (8, [0], 4), (12, [0], 4)], mel, inst_mel=lambda f, d: arco(f, d, 5.5), inst_ac=lambda f, d: arco(f, d), perc=cada(16, galope, 0.35, paso=1), g_ac=0.1),
                    notificacion(T, lambda f, d: arco(f, 0.45), [0, 7, 12], 0.16, 0.45))
+    ARGS['mongol'] = (T, pz, [], mel, kw)
 
     # --- Renacimiento: La mayor, laúd rasgueado y flauta dulce
     T = 0; pz = 0.45
@@ -243,6 +262,37 @@ def hacer():
     mel = frase(0, "0:1 2:1 4:1 5:1 | 4:2 0:2 | 2:1 5:1 4:1 2:1 | -1:2 2:2 | 0:4")
     kw = dict(inst_mel=flauta, inst_ac=lambda f, d: pluck(f, 1.4, 0.45, 0.995), g_ac=0.45, g_mel=0.33, oct_ac=0, oct_mel=12, legato=0.92)
     P['renacimiento'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, laud, [4, 7, 12], 0.09, 1.0))
+    ARGS['renacimiento'] = (T, pz, ac, mel, kw)
+
+def anual(T, pz, ac, mel, kw, ciclos=10):
+    """La música de «Tu año» (~1 min y medio): la frase del tema, que va creciendo. Primero sola y suave; luego entran los acordes,
+    el bajo y la percusión; en el clímax la melodía se dobla a la octava y todo sube un tono; al final vuelve a casa y se apaga."""
+    largo = max([b + d for b, _, d in mel] + [b + d for b, _, d in ac] + [16])
+    partes = []
+    for c in range(ciclos):
+        k = dict(kw)
+        sube = 2 if c in (ciclos - 3, ciclos - 2) else 0
+        ac_c = [(b, [n + sube for n in ns], d) for b, ns, d in ac]
+        mel_c = [(b, n + sube, d) for b, n, d in mel]
+        if c < 2:
+            ac_c = []; k['perc'] = (); k['bajo'] = None; k['extra'] = ()
+            k['g_mel'] = kw.get('g_mel', 0.55) * 0.8
+        elif c < 4:
+            k['perc'] = (); k['bajo'] = None
+        if c >= ciclos - 4 and c < ciclos - 1:
+            mel_c = mel_c + [(b, n + 12, d) for b, n, d in mel_c]
+            k['g_mel'] = kw.get('g_mel', 0.55) * 0.75
+        if c == ciclos - 1:
+            k['perc'] = (); mel_c = [x for x in mel_c if x[0] < largo / 2] + [(largo / 2, 0, largo / 2)]
+        if c % 2 == 1 and c < ciclos - 1:
+            # Respira: la segunda vuelta de cada par cambia el final de la frase una octava abajo.
+            mel_c = [(b, n - 12 if b >= largo * 0.75 else n, d) for b, n, d in mel_c]
+        seg = obra(T, pz, ac_c, mel_c, **k)
+        g = 0.55 + 0.45 * min(1.0, c / (ciclos - 3))
+        partes.append((c * largo * pz, seg, g))
+    x = mezclar(*partes)
+    n = int(4.0 * SR); x[-n:] *= np.linspace(1, 0, n) ** 1.5
+    return x
 
 if __name__ == '__main__':
     hacer()
@@ -253,3 +303,8 @@ if __name__ == '__main__':
         escribir(f't_{tema}_llamada', llam, calidad=4, rms_db=-15.0)
         escribir(f't_{tema}_notificacion', notif, calidad=4, rms_db=-15.0)
         print(tema, '%.1f s' % (len(pres) / SR), '%.1f s' % (len(llam) / SR), flush=True)
+    for tema, (T, pz, ac, mel, kw) in ARGS.items():
+        if solo is not None and tema not in solo: continue
+        x = anual(T, pz, ac, mel, kw, ciclos=max(6, min(14, int(85 / (max([b + d for b, _, d in mel] + [16]) * pz)))))
+        escribir(f's_{tema}_anual', x, calidad=1, rms_db=-19.0)
+        print(tema, 'anual %.1f s' % (len(x) / SR), flush=True)

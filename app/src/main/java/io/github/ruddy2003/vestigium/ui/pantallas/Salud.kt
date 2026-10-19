@@ -67,14 +67,18 @@ fun PantallaSalud(nav: Nav) {
     val ctx = LocalContext.current
     val c = Repo.config
     fun calcular() = TusNumeros.calcular(ctx).let { t -> Guias.evaluar(t) to Guias.micronutrientes() }
-    val datos by produceState(if (TusNumeros.sincrono) calcular() else null, c.salud_sexo) {
+    val sexo = io.github.ruddy2003.vestigium.data.Perfiles.sexo()
+    val datos by produceState(if (TusNumeros.sincrono) calcular() else null, sexo, c.perfil.estatura_cm) {
         if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { calcular() }
     }
     Hoja("Salud", nav.atras, "Tus últimos 30 días frente a lo que recomiendan la OMS y otros organismos de salud.") {
         Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Text("Referencias para", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             listOf("hombre" to "hombre", "mujer" to "mujer").forEach { (id, n) ->
-                Ficha(n, c.salud_sexo == id) { Repo.cambiarConfig { it.copy(salud_sexo = if (it.salud_sexo == id) "" else id) } }
+                Ficha(n, sexo == id) {
+                    val nuevo = if (sexo == id) "" else id
+                    Repo.cambiarConfig { it.copy(salud_sexo = nuevo, perfil = it.perfil.copy(sexo = nuevo)) }
+                }
             }
         }
         Ayuda("Algunas metas cambian (agua, hierro, vitaminas). Sin elegir, se usa el promedio de las dos.")

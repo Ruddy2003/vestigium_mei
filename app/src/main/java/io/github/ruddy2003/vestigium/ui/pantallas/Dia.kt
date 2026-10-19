@@ -256,6 +256,7 @@ fun PantallaDia(nav: Nav) {
                         "escalas" -> nav.ir("escalas")
                         "gasto" -> nav.pestana("gastos")
                         "politica" -> nav.ir("politica")
+                        "reaccion" -> nav.ir("reaccion")
                     }
                 }
                 DatosQueFaltan(nav)
@@ -658,7 +659,7 @@ private fun Vestigios(fecha: String, nav: Nav) {
         }
         val citasDia = Repo.obras.flatMap { o -> o.citas.filter { it.fecha == fecha }.map { o to it } }
         if (citasDia.isNotEmpty()) { algo = true; Clave("citatio", "«${citasDia.first().second.texto.take(110)}» — ${citasDia.first().first.titulo}" + if (citasDia.size > 1) " (+${citasDia.size - 1})" else "") }
-        Repo.config.frases_guardadas.filter { it.fecha == fecha }.forEach { f -> algo = true; Clave("sententia", "♥ «${f.texto.take(110)}» — ${f.autor}") }
+        Repo.config.frases_guardadas.filter { it.fecha == fecha && it.tema != "kindle" }.forEach { f -> algo = true; Clave("sententia", "♥ «${f.texto.take(110)}» — ${f.autor}") }
         // Dónde estuviste: ciudades, lo que fue primera vez y el Patrimonio Mundial.
         mundo?.let { m ->
             val c = m.ciudades.filter { it.second >= 0.25 || it.second == 0.0 }

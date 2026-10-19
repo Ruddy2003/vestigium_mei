@@ -94,7 +94,7 @@ object Diccionario {
         "dia_logico" to "Día del diario al que cuenta el gasto: antes de las 5:00 es el día anterior (fecha y hora son las reales)",
         "gramos" to "Gramos del alimento (cantidad × peso de la porción); vacío si se registró en ml",
         "mililitros" to "Mililitros, cuando el alimento se registró en ml",
-        "contexto" to "Desde dónde sonó (conexión directa): playlist, album, artist o collection = tus «me gusta»", "canciones" to "Canciones escuchadas (30 s o más)",
+        "contexto" to "Desde dónde sonó (conexión directa): playlist, album, artist o collection = tus «me gusta»", "es_musica" to "1 si es música; 0 si sonó en una app de video o navegador (YouTube, Chrome…) y no cuenta como canción", "canciones" to "Canciones escuchadas (30 s o más)",
         // Actividad y ejercicio
         "a_pie_min" to "Minutos a pie", "corriendo_min" to "Minutos corriendo", "bici_min" to "Minutos en bici", "vehiculo_min" to "Minutos en vehículo", "quieto_min" to "Minutos quieto",
         "inicio" to "Inicio", "fin" to "Fin", "tipo_hc" to "Código de tipo de ejercicio de Health Connect", "min" to "Duración (minutos)", "ejercicio_min" to "Minutos de ejercicio del reloj",
@@ -129,6 +129,10 @@ object Diccionario {
         "revista" to "Revista donde salió el artículo", "doi" to "DOI del artículo", "dias_marcados" to "Días que marcaste que leíste, viste o jugaste la obra",
         "fechas_marcadas" to "Esos días (lista)", "pais" to "País (código ISO de dos letras)", "desde" to "Desde (fecha)", "hasta" to "Hasta (fecha)", "citas" to "Citas guardadas de la obra", "obra_id" to "Obra de la que es la cita", "favorita" to "Cita con ♥ (0/1)",
         // Google
+        "vm_youtube.csv:tipo" to "suscripcion, megusta (le diste «me gusta»), lista (lo agregaste a una lista), comentario o chat (mensaje en un chat en vivo)",
+        "vm_youtube.csv:video_id" to "Identificador del video de YouTube (youtube.com/watch?v=…)", "vm_youtube.csv:canal" to "Canal (en suscripciones)",
+        "vm_youtube.csv:lista" to "Nombre de tu lista (en videos agregados a listas)", "vm_youtube.csv:ts" to "Cuándo (vacío en suscripciones: Takeout no trae la fecha)",
+        "yt_megusta" to "Videos de YouTube a los que les diste «me gusta»", "yt_comentarios" to "Comentarios y mensajes en chats en vivo de YouTube (solo conteo)",
         "yt_vistos" to "Videos de YouTube vistos", "yt_busquedas" to "Búsquedas en YouTube", "busquedas" to "Búsquedas en Google", "visitas" to "Páginas visitadas desde la búsqueda",
         "canales" to "Canales más vistos, canal:n (lista)", "producto" to "youtube, busqueda u otro", "accion" to "visto, buscado, visitado u otro", "canal" to "Canal de YouTube",
         "subrayados" to "Subrayados y notas de Kindle hechos ese día",
@@ -216,9 +220,16 @@ object Diccionario {
             for (c in cols) filas.add(linkedMapOf("archivo" to t.archivo, "columna" to c, "tipo" to tipo(t.filas.map { it[c] }, c),
                 "descripcion" to describir(t.archivo, c), "tabla" to t.descripcion))
         }
-        listOf("ts" to "fecha_hora", "lat" to "numero", "lon" to "numero", "precision_m" to "numero", "fuente" to "texto").forEach { (c, ti) ->
+        listOf("ts" to "fecha_hora", "lat" to "numero", "lon" to "numero", "precision_m" to "numero", "fuente" to "texto", "ms" to "entero").forEach { (c, ti) ->
             filas.add(linkedMapOf("archivo" to "vm_ubicaciones.csv", "columna" to c, "tipo" to ti,
-                "descripcion" to if (c == "fuente") "De dónde salió la muestra (fondo, momento, cronología…)" else describir("vm_ubicaciones.csv", c), "tabla" to "Muestras de ubicación"))
+                "descripcion" to when (c) { "fuente" -> "De dónde salió la muestra (fondo, momento, cronología, foto…)"; "ms" -> "Milisegundos desde 1970 (la misma hora exacta, para restaurar)"; else -> describir("vm_ubicaciones.csv", c) },
+                "tabla" to "Muestras de ubicación"))
+        }
+        listOf("clave" to ("texto" to "Identificador de la foto (no es la foto)"), "ms" to ("entero" to "Hora de la foto en milisegundos"), "ts" to ("fecha_hora" to "Hora de la foto"),
+            "lat" to ("numero" to "Latitud"), "lon" to ("numero" to "Longitud"), "aparato" to ("texto" to "Con qué cámara o teléfono se tomó"),
+            "origen" to ("texto" to "Carpeta o fuente (cámara, WhatsApp, Takeout…)"), "ms_archivo" to ("entero" to "Fecha del archivo, para detectar relojes equivocados"),
+            "fuente" to ("texto" to "foto (del teléfono) o foto_takeout (de Google Fotos)")).forEach { (c, td) ->
+            filas.add(linkedMapOf("archivo" to "vm_fotos_catalogo.csv", "columna" to c, "tipo" to td.first, "descripcion" to td.second, "tabla" to "Catálogo de fotos con lugar (solo hora y coordenadas)"))
         }
         return Exportar.csv(filas)
     }

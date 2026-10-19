@@ -143,7 +143,27 @@ private fun calcular(pestana: String, periodo: String): List<Bloque> = when (pes
 private fun youtube(periodo: String): List<Bloque> {
     val todo = Repo.huellasDe(desde(periodo), HASTA).filter { it.producto == "youtube" }
     val vistos = todo.filter { it.accion == "visto" }
-    if (vistos.isEmpty()) return emptyList()
+    // Lo de los CSV de Takeout: «me gusta», comentarios, listas y suscripciones (estas no traen fecha).
+    val d0 = desde(periodo)
+    val yt = Repo.youtube
+    val megusta = yt.filter { it.tipo == "megusta" && (it.fecha.isBlank() || it.fecha >= d0) }
+    val coment = yt.filter { (it.tipo == "comentario" || it.tipo == "chat") && it.fecha >= d0 }
+    val listas = yt.filter { it.tipo == "lista" && (it.fecha.isBlank() || it.fecha >= d0) }
+    val subs = yt.filter { it.tipo == "suscripcion" }
+    if (vistos.isEmpty() && yt.isEmpty()) return emptyList()
+    val extra = listOfNotNull(
+        megusta.takeIf { it.isNotEmpty() }?.let { n(it.size) to "«me gusta»" }, coment.takeIf { it.isNotEmpty() }?.let { n(it.size) to "comentarios" },
+        subs.takeIf { it.isNotEmpty() }?.let { n(it.size) to "suscripciones" }, listas.takeIf { it.isNotEmpty() }?.let { n(it.size) to "videos en tus listas" })
+    val deCsv = listOfNotNull(
+        megusta.filter { it.fecha.isNotBlank() }.takeIf { it.size > 3 }?.let { l -> Bloque.Meses("«Me gusta» por mes", porMes(l.groupingBy { mes(it.fecha) }.eachCount().mapValues { it.value.toDouble() }), "me gusta") },
+        coment.takeIf { it.size > 3 }?.let { l ->
+            val h = DoubleArray(24); l.forEach { c -> hora(c.ts)?.let { h[it]++ } }
+            Bloque.Horas("A qué hora comentas", h, "Solo se guarda cuándo comentaste, nunca lo que escribiste.")
+        },
+        listas.takeIf { it.isNotEmpty() }?.let { l -> Bloque.Lista("Tus listas", l.groupingBy { it.lista }.eachCount().entries.sortedByDescending { it.value }.take(12).map { Triple(it.key, it.value.toDouble(), "${it.value} videos") }) },
+    )
+    if (vistos.isEmpty()) return listOf(Bloque.Cifras(extra)) + deCsv +
+        listOfNotNull(subs.takeIf { it.isNotEmpty() }?.let { Bloque.Texto("Tus suscripciones: " + it.map { s -> s.canal }.sorted().take(40).joinToString(", ") + if (it.size > 40) "…" else "") })
     val busq = todo.filter { it.accion == "buscado" }
     val dias = vistos.map { it.fecha }.toSet()
     val horas = DoubleArray(24); val semana = Array(7) { DoubleArray(24) }
@@ -154,14 +174,23 @@ private fun youtube(periodo: String): List<Bloque> {
     val palabras = busq.flatMap { it.titulo.lowercase().split(Regex("[^\\p{L}\\d]+")) }.filter { it.length > 3 && it !in VACIAS }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
     val primero = vistos.minOf { it.fecha }
     val total = Fechas.diasEntre(primero, vistos.maxOf { it.fecha }) + 1
-    return listOf(
+    // Suscripciones contra lo que de verdad ves.
+    val vistosPorCanal = canales.associate { it.key.lowercase() to it.value }
+    val subsVistas = subs.map { it.canal to (vistosPorCanal[it.canal.lowercase()] ?: 0) }
+    val olvidadas = subsVistas.filter { it.second == 0 }.map { it.first }.sorted()
+    val sinSuscribir = canales.filter { c -> subs.none { it.canal.equals(c.key, true) } }.take(10)
+    return listOfNotNull(
         Bloque.Cifras(listOf(n(vistos.size) to "videos vistos", n(busq.size) to "búsquedas", d1(vistos.size.toDouble() / total) to "videos al día", n(canales.size) to "canales distintos",
-            n(racha(dias)) to "días seguidos (récord)", "${(noche * 100.0 / vistos.size).roundToInt()}%" to "de madrugada")),
+            n(racha(dias)) to "días seguidos (récord)", "${(noche * 100.0 / vistos.size).roundToInt()}%" to "de madrugada") + extra),
         Bloque.Meses("Videos por mes", porMes(vistos.groupingBy { mes(it.fecha) }.eachCount().mapValues { it.value.toDouble() }), "videos"),
         Bloque.Semana("Cuándo ves YouTube", semana),
-        Bloque.Lista("Tus canales", canales.take(15).map { Triple(it.key, it.value.toDouble(), "${n(it.value)} videos") }),
+        Bloque.Lista("Tus canales", canales.take(15).map { Triple(it.key, it.value.toDouble(), "${n(it.value)} videos" + if (subs.any { s -> s.canal.equals(it.key, true) }) " · suscrito" else "") }),
         Bloque.Lista("Lo que más repetiste", repetidos.take(10).map { Triple(it.key, it.value.toDouble(), "${it.value} veces") }, "Videos que viste 3 veces o más."),
         Bloque.Lista("Lo que más buscas", palabras.take(15).map { Triple(it.key, it.value.toDouble(), "${it.value}") }),
+    ) + deCsv + listOfNotNull(
+        if (subs.isNotEmpty() && sinSuscribir.isNotEmpty()) Bloque.Lista("Los ves mucho y no estás suscrito", sinSuscribir.map { Triple(it.key, it.value.toDouble(), "${n(it.value)} videos") }) else null,
+        if (subs.isNotEmpty()) Bloque.Texto("De tus ${subs.size} suscripciones, ${subs.size - olvidadas.size} aparecen en tu historial" +
+            (if (olvidadas.isNotEmpty()) ". No has visto nada de: " + olvidadas.take(25).joinToString(", ") + (if (olvidadas.size > 25) "…" else "") + "." else ".")) else null,
     ).filter { it !is Bloque.Lista || it.l.isNotEmpty() }
 }
 

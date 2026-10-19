@@ -26,7 +26,20 @@ object Perfiles {
     val TABACO = listOf(Opcion("no", "No"), Opcion("ocasional", "A veces"), Opcion("diario", "A diario"))
     val CAFE = listOf(Opcion("no", "No tomo"), Opcion("1", "Uno al día"), Opcion("2_3", "2 o 3"), Opcion("4", "4 o más"))
 
+    val SEXO = listOf(Opcion("hombre", "Hombre"), Opcion("mujer", "Mujer"))
+    val ESTUDIOS = listOf(Opcion("secundaria", "Secundaria"), Opcion("prepa", "Preparatoria"), Opcion("tecnico", "Técnico"), Opcion("licenciatura", "Licenciatura"),
+        Opcion("maestria", "Maestría"), Opcion("doctorado", "Doctorado"))
+    val MODALIDAD = listOf(Opcion("presencial", "Presencial"), Opcion("hibrido", "Híbrido"), Opcion("remoto", "Desde casa"))
+    val TRANSPORTE = listOf(Opcion("pie", "A pie"), Opcion("bici", "Bici"), Opcion("publico", "Transporte público"), Opcion("auto", "Auto"), Opcion("moto", "Moto"))
+    val VIVIENDA = listOf(Opcion("casa", "Casa"), Opcion("departamento", "Departamento"), Opcion("cuarto", "Cuarto"), Opcion("residencia", "Residencia"))
+    val DIETA = listOf(Opcion("omnivora", "Como de todo"), Opcion("flexitariana", "Poca carne"), Opcion("pescetariana", "Pescetariana"),
+        Opcion("vegetariana", "Vegetariana"), Opcion("vegana", "Vegana"))
+
     private fun nombre(l: List<Opcion>, id: String) = l.firstOrNull { it.id == id }?.nombre ?: id
+    private fun op(l: List<Opcion>, id: String) = id.takeIf { it.isNotBlank() }?.let { nombre(l, it) }.orEmpty()
+
+    /** Sexo para las referencias de salud: el de Conocerte, o el que elegiste en Salud. */
+    fun sexo(): String = Repo.config.perfil.sexo.ifBlank { Repo.config.salud_sexo }
 
     /** No dijiste nada todavía. */
     fun vacio(p: Perfil): Boolean = p == Perfil()
@@ -49,6 +62,20 @@ object Perfiles {
         "tabaco" to p.tabaco.takeIf { it.isNotBlank() }?.let { nombre(TABACO, it) }.orEmpty(),
         "café" to p.cafe.takeIf { it.isNotBlank() }?.let { nombre(CAFE, it) }.orEmpty(),
         "lo que está pasando" to p.momento,
+        "sexo" to op(SEXO, p.sexo),
+        "estatura" to (p.estatura_cm?.let { "$it cm" } ?: ""),
+        "ciudad natal" to p.ciudad_natal,
+        "estudios" to op(ESTUDIOS, p.estudios),
+        "modalidad" to op(MODALIDAD, p.modalidad),
+        "horas a la semana" to (p.horas_semana?.toString() ?: ""),
+        "transporte" to op(TRANSPORTE, p.transporte),
+        "vivienda" to op(VIVIENDA, p.vivienda),
+        "hijos" to (p.hijos?.toString() ?: ""),
+        "dieta" to op(DIETA, p.dieta),
+        "deporte" to p.deporte,
+        "horario de sueño ideal" to if (p.dormir_ideal.isBlank() && p.despertar_ideal.isBlank()) "" else "${p.dormir_ideal.ifBlank { "?" }} a ${p.despertar_ideal.ifBlank { "?" }}",
+        "idiomas que aprendes" to p.idiomas.joinToString(", "),
+        "metas del año" to p.metas.joinToString(" | "),
     )
 
     /** Lo que cambió de [antes] a [despues], con la fecha de hoy. */

@@ -112,6 +112,10 @@ fun PantallaPermisos(nav: Nav) {
         if (primera) "Vestigium Mei junta en un solo lugar tu diario, tus momentos, tu cuerpo y tus lugares. Todo vive cifrado por el sistema en tu teléfono; nada pasa por servidores ajenos. Activa lo que quieras medir; puedes cambiarlo después."
         else "Cada permiso habilita una fuente de datos. Ninguno es obligatorio.") {
 
+        // ¿Vienes de otro teléfono? Lo primero es traer el respaldo.
+        if (primera && Repo.dias.isEmpty()) Seccion("¿Vienes de otro teléfono?", "Restaura tu respaldo completo (archivo o Drive) antes de empezar.") {
+            RespaldoCompleto(soloRestaurar = true)
+        }
         Seccion("Avisos") {
             Tarjeta {
                 Estado("Notificaciones", Avisos.permitido(ctx), "Ánimo durante el día, sueños por la mañana y diario por la noche.") { notif.launch(Manifest.permission.POST_NOTIFICATIONS) }
@@ -270,6 +274,28 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
             Ayuda(io.github.ruddy2003.vestigium.ui.Estilo.tema.descripcion, Modifier.padding(top = 2.dp))
             BotonSecundario("fondo del teléfono con este tema →", Modifier.padding(top = 8.dp)) { nav.ir("fondo_telefono") }
+            // Un tema distinto cada día, entre los que elijas.
+            Interruptor("Cambiar de tema cada día", c.tema_rotar,
+                "A las 5:00, cuando empieza el día, la app se viste con otro tema" + if (c.temas_rotacion.isEmpty()) " (de todos)." else " (de los ${c.temas_rotacion.size} que elegiste).") { v ->
+                cambiar { it.copy(tema_rotar = v, tema_rotado = if (v) io.github.ruddy2003.vestigium.data.Fechas.diaLogico() else it.tema_rotado) }
+            }
+            if (c.tema_rotar) {
+                Etiqueta("Entre cuáles (ninguno marcado = todos)")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    io.github.ruddy2003.vestigium.ui.TemaId.entries.forEach { t ->
+                        val dentro = t.id in c.temas_rotacion
+                        Ficha(t.nombre, dentro) { cambiar { it.copy(temas_rotacion = if (dentro) it.temas_rotacion - t.id else it.temas_rotacion + t.id) } }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    TextButton(onClick = { cambiar { it.copy(temas_rotacion = emptyList()) } }) { Text("todos", style = MaterialTheme.typography.labelLarge) }
+                    TextButton(onClick = { cambiar { it.copy(temas_rotacion = io.github.ruddy2003.vestigium.ui.TemaId.entries.map { t -> t.id } - it.tema) } }) {
+                        Text("todos menos este", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+                val manana = io.github.ruddy2003.vestigium.ui.RotacionTema.deDia(io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), 1), c.tema, c)
+                Ayuda("Mañana te toca: ${manana.nombre}.")
+            }
             Etiqueta("Claro u oscuro")
             if (io.github.ruddy2003.vestigium.ui.Estilo.tema.soloOscuro) Ayuda("El cyberpunk solo existe en oscuro.")
             else Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -282,12 +308,6 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
                 Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
                 if (c.animaciones) Interruptor("Fondo vivo", c.fondo_vivo, "Algo se mueve muy despacio detrás de todo: estrellas que titilan, luz de vitral, luciérnagas, nieve, nubes de la estepa, reflejos de agua. Gasta un poco más de batería.") { v -> cambiar { it.copy(fondo_vivo = v) } }
-                Interruptor("Teclado del tema en el diario", c.teclado_tema, "Al escribir el diario aparece un teclado con el papel y la letra del tema (ñ, acentos al dejar presionada la vocal, @ y # a la mano). Con ⌨ cambias al del teléfono para dictar o usar el autocorrector.") { v -> cambiar { it.copy(teclado_tema = v) } }
-                if (c.teclado_tema) {
-                    Text("Altura del teclado: " + if (c.teclado_alto == 0) "normal" else "+${c.teclado_alto} dp", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
-                    Slider(value = c.teclado_alto.toFloat(), onValueChange = { v -> cambiar { it.copy(teclado_alto = (v / 4).toInt() * 4) } }, valueRange = 0f..200f)
-                    Ayuda("Si no alcanzas la barra espaciadora, súbelo. También puedes arrastrar la rayita de arriba del teclado mientras escribes.")
-                }
                 Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
                 Interruptor("Sonidos", c.sonidos, "Sonidos del tema al tocar, elegir, pasar de pantalla, abrir el diario, guardar y completar el día. Cambian un poco cada vez. No suenan con el teléfono en silencio o en vibración.") { v ->
                     cambiar { it.copy(sonidos = v) }
@@ -405,6 +425,8 @@ fun PantallaReportes(nav: Nav) {
                 OutlinedButton(onClick = { scope.launch { abrir(withContext(Dispatchers.IO) { Reportes.semanal(ctx, Fechas.sumar(Fechas.lunesDe(hoy), -7), false) }, "image/png") } }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Semana pasada (imagen)") }
                 OutlinedButton(onClick = { scope.launch { abrir(withContext(Dispatchers.IO) { Reportes.mensual(ctx, Fechas.mesDe(hoy), false) }, "application/pdf") } }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Este mes (PDF)") }
                 OutlinedButton(onClick = { scope.launch { abrir(withContext(Dispatchers.IO) { Reportes.mensual(ctx, Fechas.mesDe(Fechas.iso(Fechas.parse(hoy).minusMonths(1))), false) }, "application/pdf") } }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Mes pasado (PDF)") }
+                OutlinedButton(onClick = { scope.launch { abrir(withContext(Dispatchers.IO) { Reportes.anual(ctx, hoy.take(4).toInt()) }, "image/png") } }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Este año (imagen y PDF)") }
+                Ayuda("Con los colores, letras y nombres del tema que tengas puesto. Para las historias del año, abre «Tu año» en Más.", Modifier.padding(top = 8.dp))
                 msg?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
             }
         }
@@ -435,6 +457,9 @@ fun PantallaDatos(nav: Nav) {
     val kindle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importaciones.kindle(ctx, uri) } }
     val macrofactor = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { io.github.ruddy2003.vestigium.data.Macrofactor.importar(ctx, uri) } }
     val google = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importaciones.google(ctx, uris) } }
+    val googleCarpeta = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) tarea { Importaciones.google(ctx, io.github.ruddy2003.vestigium.data.Archivos.deCarpeta(ctx, uri) { n -> n.endsWith(".json", true) || n.endsWith(".csv", true) }) }
+    }
     var chatsLeidos by remember { mutableStateOf<List<Importaciones.Chat>?>(null) }
     val whatsapp = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) scope.launch {
@@ -470,7 +495,10 @@ fun PantallaDatos(nav: Nav) {
                 }
             }
         }
-        Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí todos los CSV actualizados. Si eliges una carpeta que sincronizas con la computadora, R siempre tendrá los datos frescos.") {
+        Seccion("Respaldo completo", "Todo en un archivo, y de vuelta en un toque.") {
+            RespaldoCompleto()
+        }
+        Seccion("Respaldo automático", "Elige una carpeta del teléfono; cada mañana la app deja ahí el respaldo completo y los CSV actualizados (o solo el respaldo cifrado, si pusiste contraseña). Si eliges una carpeta que sincronizas con la computadora, R siempre tendrá los datos frescos.") {
             Tarjeta {
                 Ayuda(Repo.config.carpeta_respaldo?.let { "Carpeta configurada." } ?: "Sin carpeta.")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 6.dp)) {
@@ -479,7 +507,7 @@ fun PantallaDatos(nav: Nav) {
                 }
             }
         }
-        Seccion("Google Drive", "Cada mañana reemplaza tus CSV en la carpeta «Vestigium Mei» de tu Drive y cada semana guarda una copia .zip fechada (se conservan las últimas 12). La app solo puede ver lo que ella misma sube.") {
+        Seccion("Google Drive", "Cada mañana reemplaza el respaldo completo y tus CSV en la carpeta «Vestigium Mei» de tu Drive, y cada semana guarda una copia fechada (se conservan las últimas 12). Con contraseña, solo sube el respaldo cifrado. La app solo puede ver lo que ella misma sube.") {
             DriveTarjeta { tarea(it) }
         }
         Seccion("Spotify en vivo", "Conexión directa con tu cuenta: lo que escuchas en cualquier aparato (compu, bocina, coche), con artista, álbum y si venía de una playlist.", latin = "MVSICA") {
@@ -489,7 +517,7 @@ fun PantallaDatos(nav: Nav) {
             Tarjeta {
                 OutlinedButton(onClick = { obsidian.launch(arrayOf("text/markdown", "text/plain", "application/octet-stream", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text("Notas diarias de Obsidian (.md)") }
                 Ayuda("Elige varias a la vez. Los días que ya existan aquí no se tocan.")
-                OutlinedButton(onClick = { respaldo.launch(arrayOf("application/json", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Respaldo JSON (de esta app o de la versión web)") }
+                OutlinedButton(onClick = { respaldo.launch(arrayOf("application/json", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("JSON de la versión web") }
                 OutlinedButton(onClick = { maps.launch(arrayOf("application/json", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Cronología de Google Maps (.json)") }
                 Ayuda("En Google Maps: tu perfil → Tu cronología → ⋮ → Configuración → Exportar datos de Cronología.")
             }
@@ -504,16 +532,21 @@ fun PantallaDatos(nav: Nav) {
                 Ayuda("spotify.com → Cuenta → Privacidad → Descargar tus datos → «Historial de reproducción ampliado». Tarda unos días; llega un .zip: elígelo completo o los Streaming_History…json.")
                 OutlinedButton(onClick = { kindle.launch(arrayOf("text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Kindle · subrayados (My Clippings.txt)") }
                 Ayuda("Conecta el Kindle a la computadora: el archivo está en la carpeta documents. Pásalo al teléfono y elígelo.")
-                OutlinedButton(onClick = { google.launch(arrayOf("application/json", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Google · YouTube y búsquedas") }
-                Ayuda("takeout.google.com → elige «YouTube y YouTube Music» (historial) y «Mi actividad» → formato JSON (no HTML). Elige el .zip o los archivos watch-history.json, search-history.json y MyActivity.json.")
+                OutlinedButton(onClick = { google.launch(arrayOf("application/json", "application/zip", "text/csv", "text/comma-separated-values", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Google · YouTube y búsquedas (archivos)") }
+                OutlinedButton(onClick = { googleCarpeta.launch(null) }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Google · la carpeta de Takeout completa") }
+                Ayuda("takeout.google.com → elige «YouTube y YouTube Music» y «Mi actividad», con el historial en formato JSON (no HTML). Sirve el .zip tal cual, los archivos sueltos " +
+                    "(watch-history.json, search-history.json, MyActivity.json y los CSV: suscripciones, la lista de «me gusta», tus listas y comentarios) o la carpeta descomprimida entera. " +
+                    "De los comentarios y chats en vivo solo se guarda cuándo y en qué video; el texto se descarta al leerlo.")
                 OutlinedButton(onClick = { whatsapp.launch(arrayOf("text/plain", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("WhatsApp · actividad de chats") }
                 Ayuda("En cada chat: ⋮ → Más → Exportar chat → Sin archivos. Solo se guardan conteos (mensajes, palabras, horas y tiempos de respuesta); el texto se descarta al leerlo y nunca se guarda.")
                 val nMusica = remember(msg) { runCatching { Repo.db().contar("escuchas") }.getOrDefault(0L) }
-                if (nMusica > 0 || Repo.subrayados.isNotEmpty() || Repo.huellas.isNotEmpty() || Repo.chats.isNotEmpty()) {
+                if (nMusica > 0 || Repo.subrayados.isNotEmpty() || Repo.huellas.isNotEmpty() || Repo.chats.isNotEmpty() || Repo.youtube.isNotEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     if (nMusica > 0) Clave("musica", "$nMusica reproducciones")
                     if (Repo.subrayados.isNotEmpty()) Clave("kindle", "${Repo.subrayados.size} subrayados de ${Repo.subrayados.map { it.libro }.distinct().size} libros")
                     if (Repo.huellas.isNotEmpty()) Clave("google", "${Repo.huellas.size} días · ${Repo.huellas.values.sumOf { it.yt_vistos }} videos")
+                    if (Repo.youtube.isNotEmpty()) Clave("youtube", Repo.youtube.groupingBy { it.tipo }.eachCount().let { c ->
+                        listOfNotNull(c["suscripcion"]?.let { "$it suscripciones" }, c["megusta"]?.let { "$it me gusta" }, c["comentario"]?.let { "$it comentarios" }).joinToString(" · ") })
                     if (Repo.chats.isNotEmpty()) Clave("whatsapp", "${Repo.chats.map { it.chat }.distinct().size} chats · ${Repo.chats.size} días")
                 }
             }

@@ -151,40 +151,31 @@ object FotosLugar {
      * (subida desde tu teléfono y de qué carpeta, álbum compartido, fotos de tu pareja…). Si en el .zip también vienen las fotos,
      * de cada una se leen solo los primeros kilobytes, donde la cámara guarda su marca y modelo; nada más se guarda.
      */
-    fun importarTakeout(ctx: Context, uris: List<Uri>, avance: (String) -> Unit = {}): Resultado {
+    /** El Takeout de Google Fotos: uno o varios .zip, los .json sueltos (varios a la vez) o la carpeta ya descomprimida. */
+    fun importarTakeout(ctx: Context, fuentes: List<io.github.ruddy2003.vestigium.data.Archivos.Fuente>, avance: (String) -> Unit = {}): Resultado {
         val lados = HashMap<String, Sidecar>()       // carpeta/título → datos del .json
         val camaras = HashMap<String, String>()      // carpeta/archivo → aparato (de la foto misma)
         var vistos = 0
-        for ((k, u) in uris.withIndex()) {
-            runCatching {
-                ctx.contentResolver.openInputStream(u)?.use { ins ->
-                    val z = ZipInputStream(ins.buffered(1 shl 16))
-                    val buf = ByteArray(128 * 1024)
-                    while (true) {
-                        val e = z.nextEntry ?: break
-                        if (e.isDirectory) continue
-                        val ruta = e.name; val carpeta = ruta.substringBeforeLast('/', ""); val nombre = ruta.substringAfterLast('/')
-                        val bajo = nombre.lowercase()
-                        if (bajo.endsWith(".json") && bajo != "metadata.json" && (e.size in 0..200_000 || e.size == -1L)) {
-                            val txt = z.readBytes()
-                            if (txt.size < 200_000) leerSidecar(String(txt, Charsets.UTF_8))?.let { (titulo, l) ->
-                                vistos++
-                                lados["$carpeta/${titulo.lowercase()}"] = l
-                            }
-                        } else if (bajo.endsWith(".jpg") || bajo.endsWith(".jpeg")) {
-                            // Solo el principio del archivo: ahí está la marca y el modelo de la cámara.
-                            var n = 0
-                            while (n < buf.size) { val r = z.read(buf, n, buf.size - n); if (r <= 0) break; n += r }
-                            runCatching {
-                                val ex = ExifInterface(java.io.ByteArrayInputStream(buf, 0, n))
-                                nombreAparato(ex.getAttribute(ExifInterface.TAG_MAKE), ex.getAttribute(ExifInterface.TAG_MODEL)).takeIf { it.isNotEmpty() }?.let { camaras["$carpeta/$bajo"] = it }
-                            }
-                        }
-                        if (vistos % 500 == 0 && vistos > 0) avance("Archivo ${k + 1} de ${uris.size}: ${"%,d".format(lados.size)} fotos con lugar…")
-                    }
+        val buf = ByteArray(128 * 1024)
+        val filtro = { n: String -> val b = n.lowercase(); (b.endsWith(".json") && b != "metadata.json") || b.endsWith(".jpg") || b.endsWith(".jpeg") }
+        io.github.ruddy2003.vestigium.data.Archivos.recorrer(ctx, fuentes, filtro, { k -> avance("Archivo $k de ${fuentes.size}: ${"%,d".format(lados.size)} fotos con lugar…") }) { ruta, tam, ins ->
+            val carpeta = ruta.substringBeforeLast('/', ""); val bajo = ruta.substringAfterLast('/').lowercase()
+            if (bajo.endsWith(".json") && (tam in 0..200_000 || tam == -1L)) {
+                val txt = ins.readBytes()
+                if (txt.size < 200_000) leerSidecar(String(txt, Charsets.UTF_8))?.let { (titulo, l) ->
+                    vistos++
+                    lados["$carpeta/${titulo.lowercase()}"] = l
+                    if (vistos % 500 == 0) avance("${"%,d".format(lados.size)} fotos con lugar…")
+                }
+            } else if (bajo.endsWith(".jpg") || bajo.endsWith(".jpeg")) {
+                // Solo el principio del archivo: ahí está la marca y el modelo de la cámara.
+                var n = 0
+                while (n < buf.size) { val r = ins.read(buf, n, buf.size - n); if (r <= 0) break; n += r }
+                runCatching {
+                    val ex = ExifInterface(java.io.ByteArrayInputStream(buf, 0, n))
+                    nombreAparato(ex.getAttribute(ExifInterface.TAG_MAKE), ex.getAttribute(ExifInterface.TAG_MODEL)).takeIf { it.isNotEmpty() }?.let { camaras["$carpeta/$bajo"] = it }
                 }
             }
-            avance("Archivo ${k + 1} de ${uris.size}: ${"%,d".format(lados.size)} fotos con lugar…")
         }
         val db = Repo.db()
         val lista = lados.entries.toList()

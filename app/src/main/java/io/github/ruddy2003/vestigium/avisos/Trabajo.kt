@@ -70,6 +70,8 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         runCatching { io.github.ruddy2003.vestigium.data.Spotify.quizaSincronizar(ctx) }
         runCatching { avisos(ctx) }
         runCatching { diario(ctx) }
+        // El tema del día (si pediste que cambie solo): también el widget y el ícono.
+        runCatching { if (io.github.ruddy2003.vestigium.ui.RotacionTema.revisar()) { io.github.ruddy2003.vestigium.widget.Widgets.actualizar(ctx); io.github.ruddy2003.vestigium.ui.IconoApp.aplicar(ctx) } }
         return Result.success()
     }
 
@@ -165,6 +167,21 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             runCatching { Agenda.historia(ctx) }
             runCatching { io.github.ruddy2003.vestigium.sensores.Comunicacion.historia(ctx) }
             runCatching { Entorno.sincronizar(ctx, maxPeticiones = 20) }
+        }
+        // Logros nuevos: un aviso por la tarde con los que se consiguieron (se festejan al abrir Logros).
+        if (ahora.hour >= 18 && !yaFue("logros:$hoy")) {
+            marcar("logros:$hoy")
+            runCatching {
+                val vistos = Repo.config.logros_vistos
+                val avisados = Repo.config.disparos.keys.filter { it.startsWith("logro_aviso:") }.map { it.removePrefix("logro_aviso:") }.toSet()
+                val nuevos = io.github.ruddy2003.vestigium.ciencia.Logros.todos(ctx).filter { it.hecho && it.id !in vistos && it.id !in avisados && it.conseguido?.let { f -> f >= Fechas.sumar(hoy, -3) } == true }
+                if (nuevos.isNotEmpty()) { nuevos.forEach { marcar("logro_aviso:${it.id}") }; Avisos.logros(ctx, nuevos.map { it.nombre }) }
+            }
+        }
+        // «Tu año»: el 31 de diciembre por la mañana.
+        if (ahora.monthValue == 12 && ahora.dayOfMonth == 31 && ahora.hour >= 9 && !yaFue("tu_anio:${ahora.year}")) {
+            marcar("tu_anio:${ahora.year}")
+            runCatching { Avisos.tuAnio(ctx, ahora.year) }
         }
         // Reporte semanal: lunes, de la semana anterior
         if (ahora.dayOfWeek == DayOfWeek.MONDAY && ahora.hour >= 8 && !yaFue("reporte_sem:$hoy")) {

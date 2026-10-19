@@ -106,6 +106,8 @@ object Pendientes {
         Escalas.pendientes().firstOrNull()?.let { (ins, atraso) ->
             l += Pendiente("p:escalas", if (atraso > 0) "${ins.nombre}: ${atraso} días de atraso" else "${ins.nombre} toca hoy", "escalas")
         }
+        // La prueba de reacción, una vez al día (desde las 8, para no medir el cerebro recién despierto).
+        if (ahora.hour >= 8 && Repo.reacciones.none { it.fecha == hoy }) l += Pendiente("p:reaccion", "Prueba de reacción", "reaccion")
         // Lo de la noche aparece desde 4 horas antes de tu hora de diario.
         val tarde = ahora.hour >= (c.hora_diario - 4).coerceAtLeast(14)
         if (tarde && (d.valencia == null || d.nota.isBlank())) l += Pendiente("p:diario", if (d.valencia == null) "Diario de hoy" else "Escribir la nota del día", "diario")

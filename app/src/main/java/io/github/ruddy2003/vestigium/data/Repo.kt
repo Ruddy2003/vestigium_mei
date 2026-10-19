@@ -26,6 +26,7 @@ object Repo {
     var reacciones by mutableStateOf<List<Reaccion>>(emptyList()); private set
     var lugares by mutableStateOf<List<Lugar>>(emptyList()); private set
     var visitas by mutableStateOf<List<Visita>>(emptyList()); private set
+    var youtube by mutableStateOf<List<YtEvento>>(emptyList()); private set
     var salud by mutableStateOf<Map<String, SaludDia>>(emptyMap()); private set
     var pantalla by mutableStateOf<Map<String, PantallaDia>>(emptyMap()); private set
     var cartas by mutableStateOf<List<Carta>>(emptyList()); private set
@@ -59,6 +60,7 @@ object Repo {
         reacciones = cargar("reacciones", Reaccion.serializer()).sortedBy { it.ts }
         lugares = cargar("lugares", Lugar.serializer())
         visitas = cargar("visitas", Visita.serializer()).sortedBy { it.entrada }
+        youtube = cargar("youtube", YtEvento.serializer()).sortedBy { it.ts }
         salud = cargar("salud", SaludDia.serializer()).associateBy { it.fecha }
         pantalla = cargar("pantalla", PantallaDia.serializer()).associateBy { it.fecha }
         cartas = cargar("cartas", Carta.serializer())
@@ -186,6 +188,27 @@ object Repo {
         enMain { visitas = visitas.map { if (it.id == v.id) v else it } }
     }
 
+    /** Eventos de YouTube (Takeout). Si llega una lista de suscripciones, reemplaza la anterior (te pudiste desuscribir). */
+    fun importarYoutube(lista: List<YtEvento>, reemplazarSuscripciones: Boolean) {
+        val viejasSubs = if (reemplazarSuscripciones) youtube.filter { it.tipo == "suscripcion" }.map { it.id }.toSet() - lista.map { it.id }.toSet() else emptySet()
+        db.transaccion {
+            viejasSubs.forEach { db.borrar("youtube", it) }
+            lista.forEach { db.poner("youtube", it.id, it.fecha.ifBlank { null }, JSON.encodeToString(YtEvento.serializer(), it)) }
+        }
+        val ids = lista.map { it.id }.toSet()
+        val n = (youtube.filter { it.id !in ids && it.id !in viejasSubs } + lista).sortedBy { it.ts }
+        enMain { youtube = n }
+    }
+
+    /** Visitas de un respaldo: las que ya existen (mismo id) no se tocan. */
+    fun importarVisitas(lista: List<Visita>) {
+        val ya = visitas.map { it.id }.toSet()
+        val nuevas = lista.filter { it.id !in ya }
+        if (nuevas.isEmpty()) return
+        db.transaccion { nuevas.forEach { db.poner("visitas", it.id, it.entrada.take(10), JSON.encodeToString(Visita.serializer(), it)) } }
+        enMain { visitas = (visitas + nuevas).sortedBy { it.entrada } }
+    }
+
     fun lugarCercano(lat: Double, lon: Double): Lugar? =
         lugares.map { it to Geo.distanciaM(lat, lon, it.lat, it.lon) }.filter { it.second <= it.first.radio_m }.minByOrNull { it.second }?.first
 
@@ -264,8 +287,10 @@ object Repo {
     }
 
     fun guardarEscucha(e: Escucha) = db.poner("escuchas", e.id, e.fecha, JSON.encodeToString(Escucha.serializer(), e))
-    fun escuchas(desde: String, hasta: String): List<Escucha> =
-        db.porFecha("escuchas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Escucha.serializer(), it) }.getOrNull() }.sortedBy { it.ts }
+    /** Lo escuchado entre dos fechas. Por defecto solo música: los videos de YouTube o del navegador quedan fuera (sus canales no son artistas). */
+    fun escuchas(desde: String, hasta: String, todas: Boolean = false): List<Escucha> =
+        db.porFecha("escuchas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Escucha.serializer(), it) }.getOrNull() }
+            .filter { todas || it.esMusica }.sortedBy { it.ts }
 
     fun guardarComunicacion(c: ComunicacionDia) {
         db.poner("comunicacion", c.fecha, c.fecha, JSON.encodeToString(ComunicacionDia.serializer(), c))

@@ -224,11 +224,11 @@ object Analisis {
         "sido sin sobre solo sólo son su sus también tan tanto te tengo tenia tenía ti tiene tienen todo todos tu tú tus un una unas uno unos usted ya yo hoy dia día luego despues después " +
         "creo pues igual ahora vez veces cosa cosas hacer hace estuve estuvo tuve tuvo voy iba ir fui fue pude puedo quiero queria quería siento senti sentí").split(" ").toSet()
 
-    private val VACIAS_N by lazy { VACIAS.map { Normalizer.normalize(it, Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "") }.toSet() }
+    internal val VACIAS_N by lazy { VACIAS.map { Normalizer.normalize(it, Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "") }.toSet() }
 
     data class Palabra(val palabra: String, val dias: Int, val media: Double, val dif: Double)
 
-    private fun normal(s: String) = Normalizer.normalize(s.lowercase(), Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
+    internal fun normal(s: String) = Normalizer.normalize(s.lowercase(), Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
 
     fun palabras(minDias: Int = 5): Triple<List<Palabra>, List<Palabra>, List<Pair<String, Int>>> {
         val dias = Repo.dias.values.filter { it.nota.isNotBlank() }

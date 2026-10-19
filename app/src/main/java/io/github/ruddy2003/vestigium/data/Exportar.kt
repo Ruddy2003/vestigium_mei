@@ -49,6 +49,7 @@ data class Respaldo(
     val series: List<Serie> = emptyList(),
     val entrenos: List<EntrenoDia> = emptyList(),
     val ingresos: List<Ingreso> = emptyList(),
+    val youtube: List<YtEvento> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -224,9 +225,9 @@ object Exportar {
         }
     }
 
-    fun filasMusica() = Repo.escuchas("0000-01-01", "9999-12-31").map {
+    fun filasMusica() = Repo.escuchas("0000-01-01", "9999-12-31", todas = true).map {
         linkedMapOf<String, Any?>("ts" to it.ts, "fecha" to it.fecha, "hora" to Fechas.horaDe(it.ts), "titulo" to it.titulo, "artista" to it.artista,
-            "album" to it.album, "app" to it.app, "duracion_s" to it.duracion_s, "ms_escuchado" to it.ms, "saltada" to it.saltada, "fuente" to it.fuente, "contexto" to it.contexto)
+            "album" to it.album, "app" to it.app, "duracion_s" to it.duracion_s, "ms_escuchado" to it.ms, "saltada" to it.saltada, "fuente" to it.fuente, "contexto" to it.contexto, "es_musica" to it.esMusica)
     }
 
     fun filasComunicacion() = Repo.comunicacion.values.sortedBy { it.fecha }.map {
@@ -267,6 +268,11 @@ object Exportar {
         linkedMapOf<String, Any?>("fecha" to it.fecha, "yt_vistos" to it.yt_vistos, "yt_busquedas" to it.yt_busquedas, "busquedas" to it.busquedas,
             "visitas" to it.visitas, "otras" to it.otras, "primera" to it.primera, "ultima" to it.ultima,
             "canales" to it.canales.entries.map { e -> "${e.key}:${e.value}" })
+    }
+
+    fun filasYoutube() = Repo.youtube.sortedWith(compareBy({ it.tipo }, { it.ts })).map {
+        linkedMapOf<String, Any?>("tipo" to it.tipo, "ts" to it.ts.ifBlank { null }, "fecha" to it.fecha.ifBlank { null }, "hora" to it.ts.takeIf { t -> t.isNotBlank() }?.let { t -> Fechas.horaDe(t) },
+            "video_id" to it.video.ifBlank { null }, "canal" to it.canal.ifBlank { null }, "lista" to it.lista.ifBlank { null })
     }
 
     fun filasGoogle() = Repo.huellasDe("0000-01-01", "9999-12-31").sortedBy { it.ts }.map {
@@ -493,9 +499,19 @@ object Exportar {
     fun horaTexto(hhmm: String): Double? = runCatching { val (h, m) = hhmm.split(":").map { it.toInt() }; Math.round((h + m / 60.0) * 100) / 100.0 }.getOrNull()
 
     fun csvUbicaciones(): String {
-        val sb = StringBuilder("﻿ts,lat,lon,precision_m,fuente\n")
+        val sb = StringBuilder("﻿ts,lat,lon,precision_m,fuente,ms\n")
         Repo.db().ubicaciones().forEach { sb.append(Fechas.isoDeMillis(it.ms)).append(',').append(it.lat).append(',').append(it.lon).append(',')
-            .append(it.precision ?: "").append(',').append(it.fuente ?: "").append('\n') }
+            .append(it.precision ?: "").append(',').append(it.fuente ?: "").append(',').append(it.ms).append('\n') }
+        return sb.toString()
+    }
+
+    /** El catálogo de fotos con lugar (solo hora, coordenadas y de qué aparato; nunca la foto). Sirve para restaurar en otro teléfono. */
+    fun csvCatalogoFotos(): String {
+        val sb = StringBuilder("﻿clave,ms,ts,lat,lon,aparato,origen,ms_archivo,fuente\n")
+        Repo.db().recorrerFotos { f ->
+            sb.append(celda(f.clave)).append(',').append(f.ms).append(',').append(Fechas.isoDeMillis(f.ms)).append(',').append(f.lat).append(',').append(f.lon).append(',')
+                .append(celda(f.aparato)).append(',').append(celda(f.origen)).append(',').append(f.msArchivo).append(',').append(celda(f.fuente)).append('\n')
+        }
         return sb.toString()
     }
 
@@ -506,11 +522,12 @@ object Exportar {
         config = Repo.config.copy(disparos = emptyMap(), plan_muestreo = emptyMap()),
         entorno = Repo.entorno.values.sortedBy { it.fecha }, fotos = Repo.fotos.values.sortedBy { it.fecha }, agenda = Repo.agenda.values.sortedBy { it.fecha },
         notifs = Repo.notifs.values.sortedBy { it.fecha }, actividad = Repo.actividad.values.sortedBy { it.fecha }, sesiones = Repo.sesiones,
-        ascensos = Repo.ascensos, obras = Repo.obras, escuchas = Repo.escuchas("0000-01-01", "9999-12-31"),
+        ascensos = Repo.ascensos, obras = Repo.obras, escuchas = Repo.escuchas("0000-01-01", "9999-12-31", todas = true),
         comunicacion = Repo.comunicacion.values.sortedBy { it.fecha }, conexiones = Repo.conexiones.values.sortedBy { it.fecha },
         subrayados = Repo.subrayados, huellas = Repo.huellasDe("0000-01-01", "9999-12-31"), huellas_dia = Repo.huellas.values.sortedBy { it.fecha },
         chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
-        series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos))
+        series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
+        youtube = Repo.youtube))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -546,6 +563,7 @@ object Exportar {
         Tabla("vm_subrayados.csv", "Subrayados y notas de Kindle", filasSubrayados()),
         Tabla("vm_google_dia.csv", "YouTube y búsquedas de Google por día", filasGoogleDia()),
         Tabla("vm_google.csv", "YouTube y búsquedas de Google, una por fila", filasGoogle()),
+        Tabla("vm_youtube.csv", "YouTube (CSV de Takeout): suscripciones, «me gusta», videos en listas, comentarios y chats (sin texto)", filasYoutube()),
         Tabla("vm_whatsapp.csv", "WhatsApp: un chat por día por fila (solo conteos)", filasWhatsapp()),
         Tabla("vm_nutricion.csv", "MacroFactor: nutrición, gasto energético y peso por día", filasNutricion()),
         Tabla("vm_comidas.csv", "MacroFactor: cada alimento registrado", filasComidas()),
@@ -558,6 +576,7 @@ object Exportar {
         val out = ArrayList<Pair<String, String>>()
         ts.forEach { out.add(it.archivo to csv(it.filas)) }
         out.add("vm_ubicaciones.csv" to csvUbicaciones())
+        out.add("vm_fotos_catalogo.csv" to csvCatalogoFotos())
         out.add("vm_diccionario.csv" to Diccionario.csv(ts))
         out.add("vm_respaldo.json" to respaldoJson())
         out.add("LEEME.txt" to leeme())
@@ -619,27 +638,15 @@ object Exportar {
         return f
     }
 
-    fun compartir(ctx: Context, archivo: File? = null) {
+    fun compartir(ctx: Context, archivo: File? = null, tipo: String = "application/zip") {
         val f = archivo ?: java.io.File(java.io.File(ctx.cacheDir, "export"), "vestigium_${Fechas.hoyCalendario()}.zip").takeIf { it.exists() } ?: zip(ctx)
         val uri = FileProvider.getUriForFile(ctx, ctx.packageName + ".archivos", f)
-        val i = Intent(Intent.ACTION_SEND).setType("application/zip").putExtra(Intent.EXTRA_STREAM, uri)
+        val i = Intent(Intent.ACTION_SEND).setType(tipo).putExtra(Intent.EXTRA_STREAM, uri)
             .putExtra(Intent.EXTRA_SUBJECT, f.name).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         ctx.startActivity(Intent.createChooser(i, "Guardar o enviar los datos").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
-    /** Escribe todos los archivos en la carpeta elegida por el usuario (se reemplazan cada día). */
-    fun respaldoAutomatico(ctx: Context): Boolean {
-        val uriTxt = Repo.config.carpeta_respaldo ?: return false
-        val dir = DocumentFile.fromTreeUri(ctx, Uri.parse(uriTxt)) ?: return false
-        if (!dir.canWrite()) return false
-        archivos(ctx).forEach { (nombre, cont) ->
-            // Para .R se usa un tipo genérico: así el sistema no le agrega «.txt» al nombre.
-            val mime = when { nombre.endsWith(".csv") -> "text/csv"; nombre.endsWith(".json") -> "application/json"; nombre.endsWith(".R") -> "application/octet-stream"; else -> "text/plain" }
-            val f = dir.findFile(nombre) ?: dir.createFile(mime, nombre) ?: return@forEach
-            ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { it.write(cont.toByteArray()) }
-        }
-        Repo.cambiarConfig { it.copy(respaldo_ultimo = Fechas.ahoraIso()) }
-        return true
-    }
+    /** Respaldo diario en la carpeta elegida: los CSV para R y el respaldo completo (o solo el cifrado, si pusiste contraseña). */
+    fun respaldoAutomatico(ctx: Context): Boolean = Respaldos.aCarpeta(ctx)
 
 }

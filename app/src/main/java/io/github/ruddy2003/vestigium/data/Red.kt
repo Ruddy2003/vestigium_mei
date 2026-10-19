@@ -40,6 +40,19 @@ object Red {
         } finally { c.disconnect() }
     }
 
+    /** Descarga binaria (un respaldo de Drive). */
+    fun bajar(url: String, encabezados: Map<String, String> = emptyMap(), tiempo: Int = 120_000): ByteArray {
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 20_000; c.readTimeout = tiempo
+        c.setRequestProperty("User-Agent", AGENTE)
+        encabezados.forEach { (k, v) -> c.setRequestProperty(k, v) }
+        try {
+            val code = c.responseCode
+            if (code !in 200..299) throw IOException("HTTP $code ${c.errorStream?.bufferedReader()?.use { it.readText() }?.take(300) ?: ""}")
+            return c.inputStream.use { it.readBytes() }
+        } finally { c.disconnect() }
+    }
+
     fun borrar(url: String, encabezados: Map<String, String>) {
         val c = URL(url).openConnection() as HttpURLConnection
         c.requestMethod = "DELETE"

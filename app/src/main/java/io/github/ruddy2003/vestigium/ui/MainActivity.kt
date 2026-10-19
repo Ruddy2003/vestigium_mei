@@ -104,6 +104,7 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         Repo.init(this)
+        RotacionTema.revisar()
         Programador.asegurar(this)
         Sentidos.preparar(this)
         pedida = intent?.getStringExtra(PANTALLA)
@@ -132,6 +133,7 @@ class MainActivity : FragmentActivity() {
     override fun onStart() {
         super.onStart()
         Reanudar.n++
+        RotacionTema.revisar()
         if (Repo.config.bloqueo && desbloqueado && enFondoDesde > 0 && System.currentTimeMillis() - enFondoDesde > 60_000) {
             desbloqueado = false
             pedirHuella()
@@ -336,6 +338,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "salud" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSalud(nav)
                     "tus_apps" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusApps(nav)
                     "otras_vidas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(nav)
+                    "logros" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)
+                    "tu_anio" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTuAnio(nav)
                     "carta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(nav)
                     "sueno" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSueno(nav)
                     "biblioteca_suenos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "suenos")

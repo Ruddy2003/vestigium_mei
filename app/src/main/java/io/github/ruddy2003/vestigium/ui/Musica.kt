@@ -69,6 +69,28 @@ object Musica {
         TemaId.MONGOL -> R.raw.s_mongol_presentacion
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_presentacion
     }
+    /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). */
+    fun anual(t: TemaId): Int = when (t) {
+        TemaId.ROMANO -> R.raw.s_romano_anual
+        TemaId.CIBER -> R.raw.s_ciber_anual
+        TemaId.HELENO -> R.raw.s_heleno_anual
+        TemaId.MEDIEVAL -> R.raw.s_medieval_anual
+        TemaId.DISTOPIA -> R.raw.s_distopia_anual
+        TemaId.REFUGIO -> R.raw.s_refugio_anual
+        TemaId.ORDEN -> R.raw.s_orden_anual
+        TemaId.LABORATORIO -> R.raw.s_laboratorio_anual
+        TemaId.COLONOS -> R.raw.s_colonos_anual
+        TemaId.NAPOLEON -> R.raw.s_napoleon_anual
+        TemaId.BOTANICO -> R.raw.s_botanico_anual
+        TemaId.NAVIDAD -> R.raw.s_navidad_anual
+        TemaId.SEDA -> R.raw.s_seda_anual
+        TemaId.URSS -> R.raw.s_urss_anual
+        TemaId.GOTICO -> R.raw.s_gotico_anual
+        TemaId.ESPACIO -> R.raw.s_espacio_anual
+        TemaId.ANDALUS -> R.raw.s_andalus_anual
+        TemaId.MONGOL -> R.raw.s_mongol_anual
+        TemaId.RENACIMIENTO -> R.raw.s_renacimiento_anual
+    }
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
         TemaId.CIBER -> R.raw.t_ciber_llamada
@@ -130,6 +152,23 @@ object Musica {
             mp.prepare(); mp.start()
             reproductor = mp
         }
+    }
+
+    /** Para «Tu año»: la música larga, que se puede bajar poco a poco y se repite si las historias duran más. */
+    fun anualTocar(ctx: Context, t: TemaId): MediaPlayer? {
+        detener()
+        if (!Repo.config.sonidos) return null
+        val audio = ctx.getSystemService(AudioManager::class.java)
+        if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return null
+        return runCatching {
+            val mp = MediaPlayer()
+            mp.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
+            ctx.resources.openRawResourceFd(anual(t)).use { fd -> mp.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length) }
+            mp.isLooping = true
+            mp.prepare(); mp.start()
+            reproductor = mp
+            mp
+        }.getOrNull()
     }
 
     fun detener() {

@@ -91,30 +91,67 @@ object Drive {
 
     private fun mime(n: String) = when { n.endsWith(".csv") -> "text/csv"; n.endsWith(".json") -> "application/json"; n.endsWith(".zip") -> "application/zip"; else -> "text/plain" }
 
-    /** Sube todo. Devuelve un mensaje para mostrar. */
+    private fun subirArchivo(token: String, dir: String, existentes: Map<String, String>, nombre: String, tipo: String, datos: ByteArray) {
+        val id = existentes[nombre]
+        if (id != null) Red.enviar("$SUBIR/$id?uploadType=media", "PATCH", tipo, datos, h(token), 180_000)
+        else { val (t, cuerpo) = multipart(nombre, dir, tipo, datos); Red.enviar("$SUBIR?uploadType=multipart", "POST", t, cuerpo, h(token), 180_000) }
+    }
+
+    /**
+     * Sube todo. Sin contraseña: los CSV para R, el respaldo completo del día (vestigium_respaldo.zip) y una copia semanal fechada.
+     * Con contraseña: solo el respaldo cifrado (.vmc) y su copia semanal; los archivos sueltos de antes se borran de Drive.
+     */
     fun subir(ctx: Context, token: String): String {
         val dir = carpeta(token)
         val existentes = buscar(token, "'$dir' in parents and trashed = false").associate { it.second to it.first }
-        val archivos = Exportar.archivos(ctx)
+        val cifra = Respaldos.cifradoActivo(ctx)
         var n = 0
-        for ((nombre, cont) in archivos) {
-            val datos = cont.toByteArray()
-            val id = existentes[nombre]
-            if (id != null) Red.enviar("$SUBIR/$id?uploadType=media", "PATCH", mime(nombre), datos, h(token))
-            else { val (tipo, cuerpo) = multipart(nombre, dir, mime(nombre), datos); Red.enviar("$SUBIR?uploadType=multipart", "POST", tipo, cuerpo, h(token)) }
-            n++
+        if (cifra) {
+            existentes.filterKeys { Respaldos.esArchivoPlano(it) }.values.forEach { runCatching { Red.borrar("$API/$it", h(token)) } }
+        } else {
+            for ((nombre, cont) in Exportar.archivos(ctx)) { subirArchivo(token, dir, existentes, nombre, mime(nombre), cont.toByteArray()); n++ }
         }
+        val ext = if (cifra) ".vmc" else ".zip"
+        val diario = Respaldos.archivo(ctx)
+        val bytes = diario.readBytes(); diario.delete()
+        subirArchivo(token, dir, existentes, Respaldos.BASE + ext, Respaldos.mime(ext), bytes); n++
         // Copia semanal fechada (el lunes de la semana) y limpieza de las más viejas.
-        val nombreZip = "vestigium_${Fechas.lunesDe(Fechas.hoyCalendario())}.zip"
-        if (!existentes.containsKey(nombreZip)) {
-            val zip = ByteArrayOutputStream().also { bo -> ZipOutputStream(bo).use { z -> archivos.forEach { (nm, c) -> z.putNextEntry(ZipEntry(nm)); z.write(c.toByteArray()); z.closeEntry() } } }.toByteArray()
-            val (tipo, cuerpo) = multipart(nombreZip, dir, "application/zip", zip)
-            Red.enviar("$SUBIR?uploadType=multipart", "POST", tipo, cuerpo, h(token))
-            val copias = (existentes.keys.filter { it.startsWith("vestigium_") && it.endsWith(".zip") } + nombreZip).sortedDescending()
+        val nombreSem = "vestigium_${Fechas.lunesDe(Fechas.hoyCalendario())}$ext"
+        if (!existentes.containsKey(nombreSem)) {
+            val (tipo, cuerpo) = multipart(nombreSem, dir, Respaldos.mime(ext), bytes)
+            Red.enviar("$SUBIR?uploadType=multipart", "POST", tipo, cuerpo, h(token), 180_000); n++
+            val patron = Regex("vestigium_\\d{4}-\\d{2}-\\d{2}\\$ext")
+            val copias = (existentes.keys.filter { patron.matches(it) } + nombreSem).distinct().sortedDescending()
             copias.drop(COPIAS).forEach { viejo -> existentes[viejo]?.let { runCatching { Red.borrar("$API/$it", h(token)) } } }
         }
+        // El respaldo del otro modo (si cambiaste la contraseña) ya no sirve.
+        existentes[Respaldos.BASE + if (cifra) ".zip" else ".vmc"]?.let { runCatching { Red.borrar("$API/$it", h(token)) } }
         Repo.cambiarConfig { it.copy(drive_ultimo = Fechas.ahoraIso()) }
-        return "Subí $n archivos a tu Drive, carpeta «$CARPETA»."
+        return if (cifra) "Subí tu respaldo cifrado a Drive, carpeta «$CARPETA»." else "Subí $n archivos a tu Drive, carpeta «$CARPETA»."
+    }
+
+    /** La copia más reciente que esta app dejó en tu Drive (el respaldo del día o la semanal), con su fecha. */
+    fun ultimaCopia(token: String): Triple<String, String, String>? {
+        val q = "trashed = false and name contains 'vestigium_' and (name contains '.zip' or name contains '.vmc')"
+        val url = "$API?q=${Red.codificar(q)}&fields=${Red.codificar("files(id,name,modifiedTime)")}&orderBy=modifiedTime%20desc&pageSize=50&spaces=drive"
+        val o = JSON.parseToJsonElement(Red.get(url, h(token))).jsonObject
+        return (o["files"] as? JsonArray)?.mapNotNull { f ->
+            val j = f as? JsonObject ?: return@mapNotNull null
+            val id = (j["id"] as? JsonPrimitive)?.content ?: return@mapNotNull null
+            Triple(id, (j["name"] as? JsonPrimitive)?.content ?: "", (j["modifiedTime"] as? JsonPrimitive)?.content ?: "")
+        }?.filter { it.second.startsWith("vestigium_") && it.second != "vestigium_resumido.zip" }?.maxByOrNull { it.third }
+    }
+
+    fun bajar(token: String, id: String): ByteArray = Red.bajar("$API/$id?alt=media", h(token))
+
+    /** Trae la copia más reciente de Drive y la restaura. [contrasena] para un respaldo cifrado de otro teléfono. */
+    fun restaurar(ctx: Context, token: String, contrasena: CharArray?): Respaldos.Lectura {
+        val (id, nombre, cuando) = ultimaCopia(token) ?: return Respaldos.Lectura.Error("No encontré respaldos de Vestigium Mei en tu Drive.")
+        val datos = bajar(token, id)
+        return when (val r = Respaldos.restaurar(ctx, datos, contrasena)) {
+            is Respaldos.Lectura.Listo -> Respaldos.Lectura.Listo("Restauré «$nombre» (${cuando.take(10)}). " + r.mensaje)
+            else -> r
+        }
     }
 
     /** Respaldo de fondo: solo funciona si ya diste permiso antes; si Google pide confirmar de nuevo, avisa. */

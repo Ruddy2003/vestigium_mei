@@ -52,6 +52,8 @@ fun PantallaMas(nav: Nav) {
     }
     Hoja("Más", buscar = { nav.ir("buscar") }) {
         Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            RecuadroTuAnio(nav)
+            RecuadroLogros(nav)
             RecuadroMapas(nav)
             RecuadroObras(nav)
             RecuadroOtrasVidas(nav)

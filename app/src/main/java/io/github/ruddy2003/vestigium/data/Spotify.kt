@@ -244,7 +244,7 @@ object Spotify {
         var guardadas = 0
         if (nuevas.isNotEmpty()) {
             val desde = Fechas.sumar(nuevas.minOf { it.fecha }, -1); val hasta = Fechas.sumar(nuevas.maxOf { it.fecha }, 1)
-            val existentes = Repo.escuchas(desde, hasta)
+            val existentes = Repo.escuchas(desde, hasta, todas = true)
             val ids = existentes.map { it.id }.toHashSet()
             fun ms(e: Escucha) = runCatching { java.time.OffsetDateTime.parse(e.ts).toInstant().toEpochMilli() }.getOrDefault(0L)
             fun misma(a: Escucha, b: Escucha, margen: Long) = a.titulo.equals(b.titulo, true) && abs(ms(a) - ms(b)) <= margen

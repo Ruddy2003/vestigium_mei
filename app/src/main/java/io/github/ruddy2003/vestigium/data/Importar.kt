@@ -31,14 +31,23 @@ object Importar {
         else -> emptyList()
     }
 
-    /** Respaldo de esta app, o el JSON exportado por la versión web de Vestigium Mei. */
-    fun respaldo(ctx: Context, uri: Uri): ResultadoImport {
-        val texto = ctx.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } ?: return ResultadoImport("No pude leer el archivo.")
+    /** Respaldo de esta app (JSON suelto, .zip completo o cifrado .vmc), o el JSON exportado por la versión web de Vestigium Mei. */
+    fun respaldo(ctx: Context, uri: Uri): ResultadoImport = when (val r = Respaldos.restaurarUri(ctx, uri, null)) {
+        is Respaldos.Lectura.Listo -> ResultadoImport(r.mensaje)
+        is Respaldos.Lectura.Error -> ResultadoImport(r.mensaje)
+        Respaldos.Lectura.PideContrasena -> ResultadoImport("Ese respaldo está cifrado: restáuralo desde «Respaldo completo» para escribir la contraseña.")
+    }
+
+    /** El texto de vm_respaldo.json (o el de la versión web). */
+    fun respaldoTexto(texto: String): ResultadoImport {
         val raiz = runCatching { JSON.parseToJsonElement(texto).jsonObject }.getOrNull() ?: return ResultadoImport("El archivo no es un JSON válido.")
         // Respaldo propio
         if (raiz.containsKey("momentos") || raiz.containsKey("respuestas")) {
             val r = JSON.decodeFromString(Respaldo.serializer(), texto)
+            // En un teléfono recién instalado, el respaldo trae también todos tus ajustes; si ya hay datos, se combinan sin pisar lo tuyo.
+            val nuevo = Repo.dias.isEmpty() && Repo.momentos.isEmpty() && Repo.gastos.isEmpty()
             val n = Repo.importarDias(r.dias, sobrescribir = false)
+            if (r.visitas.isNotEmpty()) Repo.importarVisitas(r.visitas)
             r.momentos.filter { m -> Repo.momentos.none { it.id == m.id } }.forEach { Repo.guardarMomento(it) }
             Repo.importarGastos(r.gastos)
             if (r.ingresos.isNotEmpty()) Repo.importarIngresos(r.ingresos)
@@ -63,14 +72,14 @@ object Importar {
             if (r.huellas.isNotEmpty()) Repo.importarHuellas(r.huellas)
             if (r.huellas_dia.isNotEmpty()) Repo.guardarHuellasDia(r.huellas_dia.filter { it.fecha !in Repo.huellas })
             if (r.chats.isNotEmpty()) Repo.importarChats(r.chats.filter { c -> Repo.chats.none { it.id == c.id } })
+            if (r.youtube.isNotEmpty()) Repo.importarYoutube(r.youtube.filter { y -> Repo.youtube.none { it.id == y.id } }, reemplazarSuscripciones = false)
             if (r.nutricion.isNotEmpty() || r.series.isNotEmpty()) {
                 val fs = r.nutricion.map { it.fecha } + r.comidas.map { it.fecha } + r.series.map { it.fecha } + r.entrenos.map { it.fecha }
                 if (fs.isNotEmpty() && Repo.nutricion.isEmpty() && Repo.entrenos.isEmpty()) Repo.importarMacrofactor(fs.min(), fs.max(), r.nutricion, r.comidas, r.series, r.entrenos)
             }
-            Repo.cambiarConfig { c -> c.copy(habitos = (c.habitos + r.config.habitos).distinctBy { it.id }, equivalencias = r.config.equivalencias + c.equivalencias,
-                frases_guardadas = (c.frases_guardadas + r.config.frases_guardadas).distinctBy { it.texto + it.autor },
-                categorias_ingreso = (c.categorias_ingreso + r.config.categorias_ingreso).distinct()) }
-            return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos y ${r.gastos.size} gastos revisados.")
+            Repo.cambiarConfig { c -> combinarConfig(c, r.config, nuevo) }
+            return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos, ${r.gastos.size} gastos y ${r.visitas.size} visitas revisados" +
+                (if (nuevo) "; también tus ajustes, Conocerte, la brújula y el mapa." else "; tus ajustes se combinaron con los de aquí."))
         }
         // Versión web
         val dias = raiz["dias"]?.jsonArray?.mapNotNull { e -> runCatching { diaDesdeWeb(e.jsonObject) }.getOrNull() } ?: emptyList()
@@ -89,6 +98,31 @@ object Importar {
         val eq = (raiz["equivalencias"] as? JsonObject)?.mapNotNull { (k, v) -> v.str()?.let { k to it } }?.toMap() ?: emptyMap()
         Repo.cambiarConfig { c -> c.copy(habitos = (c.habitos + habitos).distinctBy { it.id }, equivalencias = eq + c.equivalencias) }
         return ResultadoImport("Importé $n días nuevos y ${gastos.size} gastos de la versión web. Los días que ya existían no se tocaron.")
+    }
+
+    /**
+     * Ajustes del respaldo. Con la app vacía se toman completos, menos lo que solo vale en el otro teléfono (la carpeta elegida,
+     * los avisos ya programados). Con datos, se suman listas y mapas sin borrar nada de lo de aquí.
+     */
+    fun combinarConfig(c: Config, r: Config, nuevo: Boolean): Config {
+        if (nuevo) return r.copy(carpeta_respaldo = null, disparos = emptyMap(), plan_muestreo = emptyMap(), ultimo_sync = c.ultimo_sync,
+            bienvenida_vista = true, drive = c.drive, drive_carpeta = c.drive_carpeta ?: r.drive_carpeta, drive_ultimo = c.drive_ultimo, respaldo_ultimo = c.respaldo_ultimo)
+        val perfilVacio = c.perfil == Perfil()
+        return c.copy(
+            habitos = (c.habitos + r.habitos).distinctBy { it.id }, equivalencias = r.equivalencias + c.equivalencias,
+            categorias = (c.categorias + r.categorias).distinct(), categorias_ingreso = (c.categorias_ingreso + r.categorias_ingreso).distinct(),
+            frases_guardadas = (c.frases_guardadas + r.frases_guardadas).distinctBy { it.texto + it.autor },
+            gimnasios = (c.gimnasios + r.gimnasios).distinct(), whatsapp_yo = c.whatsapp_yo.ifBlank { r.whatsapp_yo },
+            ciudades_visitadas = (c.ciudades_visitadas + r.ciudades_visitadas).distinctBy { it.id },
+            paises_rascados = (c.paises_rascados + r.paises_rascados).distinct(), paises_tapados = (c.paises_tapados + r.paises_tapados).distinct(),
+            unesco_marcados = (c.unesco_marcados + r.unesco_marcados).distinctBy { it.id }, unesco_descartados = (c.unesco_descartados + r.unesco_descartados).distinct(),
+            perfil = if (perfilVacio) r.perfil else c.perfil, perfil_historial = (r.perfil_historial + c.perfil_historial).distinct().sortedBy { it.fecha },
+            conocer_visto = c.conocer_visto || r.conocer_visto, politica = (c.politica + r.politica).distinctBy { it.fecha }.sortedBy { it.fecha },
+            fotos_aparatos = (c.fotos_aparatos + r.fotos_aparatos).distinct(), fotos_sin_fecha = (c.fotos_sin_fecha + r.fotos_sin_fecha).distinct(),
+            fotos_revisadas = r.fotos_revisadas + c.fotos_revisadas, salud_sexo = c.salud_sexo.ifBlank { r.salud_sexo },
+            logros_propios = (c.logros_propios + r.logros_propios).distinctBy { it.id }, logros_vistos = r.logros_vistos + c.logros_vistos,
+            temas_rotacion = c.temas_rotacion.ifEmpty { r.temas_rotacion },
+        )
     }
 
     private fun diaDesdeWeb(o: JsonObject): Dia {

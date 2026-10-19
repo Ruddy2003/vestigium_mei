@@ -464,15 +464,22 @@ private fun FotosConLugar() {
         }
     }
     val permisos = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) { revisar() }
-    val zips = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments()) { uris ->
-        if (uris.isEmpty() || ocupado) return@rememberLauncherForActivityResult
+    fun takeout(fuentes: suspend () -> List<io.github.ruddy2003.vestigium.data.Archivos.Fuente>) {
+        if (ocupado) return
         ocupado = true
         scope.launch {
-            val r = withContext(Dispatchers.IO) { io.github.ruddy2003.vestigium.sensores.FotosLugar.importarTakeout(ctx, uris) { t -> scope.launch { estado = t } } }
-            estado = if (r.revisadas == 0) "No encontré datos de fotos en ese archivo. ¿Es el Takeout de Google Fotos?" else "Takeout: ${"%,d".format(r.conLugar)} fotos con lugar, ${"%,d".format(r.nuevas)} nuevas en tu mapa."
+            estado = "Buscando los archivos…"
+            val r = withContext(Dispatchers.IO) { io.github.ruddy2003.vestigium.sensores.FotosLugar.importarTakeout(ctx, fuentes()) { t -> scope.launch { estado = t } } }
+            estado = if (r.revisadas == 0) "No encontré datos de fotos ahí. ¿Es el Takeout de Google Fotos (los .json que acompañan a cada foto)?" else "Takeout: ${"%,d".format(r.conLugar)} fotos con lugar, ${"%,d".format(r.nuevas)} nuevas en tu mapa."
             cuenta = io.github.ruddy2003.vestigium.sensores.FotosLugar.conLugar(ctx); ocupado = false
             if (r.nuevas > 0) sentir(Sentidos.Evento.GUARDAR)
         }
+    }
+    val zips = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) takeout { io.github.ruddy2003.vestigium.data.Archivos.deDocumentos(ctx, uris) }
+    }
+    val carpetaTakeout = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) takeout { io.github.ruddy2003.vestigium.data.Archivos.deCarpeta(ctx, uri) { n -> n.endsWith(".json", true) || n.endsWith(".jpg", true) || n.endsWith(".jpeg", true) } }
     }
     // Las fotos nuevas se revisan solas cada vez que abres esta pantalla (si ya diste permiso).
     LaunchedEffect(Unit) {
@@ -492,8 +499,15 @@ private fun FotosConLugar() {
                 if (faltan.isEmpty()) revisar() else permisos.launch(faltan.toTypedArray())
             }
         }
-        BotonSecundario("importar Takeout de Google Fotos (.zip)", Modifier.padding(top = 8.dp), habilitado = !ocupado) { zips.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) }
-        Ayuda("Para las fotos que solo están en la nube: en takeout.google.com elige solo «Google Fotos», archivos .zip de 2 GB, y aquí elige uno o varios. Se leen solo los datos de fecha y lugar (y, si vienen las fotos, la marca y modelo de la cámara); puedes borrar el .zip después.", Modifier.padding(top = 8.dp))
+        Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BotonSecundario("Takeout: archivos", Modifier.weight(1f), habilitado = !ocupado) {
+                zips.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/json", "application/octet-stream", "*/*"))
+            }
+            BotonSecundario("Takeout: carpeta", Modifier.weight(1f), habilitado = !ocupado) { carpetaTakeout.launch(null) }
+        }
+        Ayuda("Para las fotos que solo están en la nube: en takeout.google.com elige solo «Google Fotos». Aquí puedes elegir los .zip tal cual, " +
+            "o los .json sueltos (varios a la vez), o la carpeta ya descomprimida completa. Se leen solo fecha y lugar (y, si vienen las fotos, la marca y modelo de la cámara); " +
+            "puedes borrar los archivos después.", Modifier.padding(top = 8.dp))
     }
     if (!ocupado && io.github.ruddy2003.vestigium.sensores.FotosLugar.enCatalogo() > 0) OrigenFotos(cuenta) { cuenta = io.github.ruddy2003.vestigium.sensores.FotosLugar.conLugar(ctx) }
 }

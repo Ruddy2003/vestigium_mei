@@ -126,8 +126,8 @@ object LibroDiario {
 
     // ------------------------------------------------------------------ fuentes y colores del tema
 
-    private class Fuentes(val titulo: Int, val texto: Int)
-    private fun fuentes(t: TemaId) = when (t) {
+    internal class Fuentes(val titulo: Int, val texto: Int)
+    internal fun fuentes(t: TemaId) = when (t) {
         TemaId.ROMANO -> Fuentes(R.font.cinzel_regular, R.font.plex_sans_regular)
         TemaId.CIBER -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
         TemaId.HELENO -> Fuentes(R.font.garamond_medium, R.font.garamond_regular)

@@ -2,265 +2,272 @@ package io.github.ruddy2003.vestigium.reportes
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Picture
 import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.provider.MediaStore
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
+import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.res.ResourcesCompat
 import io.github.ruddy2003.vestigium.R
 import io.github.ruddy2003.vestigium.avisos.Avisos
-import io.github.ruddy2003.vestigium.data.Catalogo
+import io.github.ruddy2003.vestigium.ciencia.Periodo
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Grados
+import io.github.ruddy2003.vestigium.data.Mundo
 import io.github.ruddy2003.vestigium.data.Repo
-import io.github.ruddy2003.vestigium.data.Texto
-import io.github.ruddy2003.vestigium.ui.Romano
-import java.time.temporal.ChronoUnit
+import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.LibroDiario
+import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.esquemaDe
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
-data class Resumen(
-    val titulo: String,
-    val latin: String,
-    val subtitulo: String,
-    val fechas: List<String>,
-    val valencia: List<Double?>,
-    val activacion: List<Double?>,
-    val diasConRegistro: Int,
-    val sueno: Double?,
-    val pasos: Double?,
-    val pantalla: Double?,
-    val desbloqueos: Double?,
-    val gasto: Double,
-    val gastoImprevisto: Double,
-    val momentos: List<Pair<String, Int>>,
-    val personas: List<Pair<String, Int>>,
-    val temas: List<Pair<String, Int>>,
-    val escalas: List<String>,
-    val mejorDia: String?,
-    val peorDia: String?,
-    val comparacion: String?,
-    val tempMedia: Double?,
-    val luzMedia: Double?,
-    val lluviaDias: Int,
-    val fotos: Int,
-    val escalada: Int,
-    val obras: List<String>,
-    val hitos: List<String>,
-)
+/** Colores y letras del tema para dibujar fuera de la pantalla (reportes, imágenes para compartir). */
+class Lienzo(ctx: Context, val tema: TemaId = Estilo.tema, val oscuro: Boolean = oscuroFuera(ctx, tema)) {
+    private val e = esquemaDe(tema, oscuro)
+    val fondo = e.background.toArgb()
+    val superficie = e.surface.toArgb()
+    val superficie2 = e.surfaceVariant.toArgb()
+    val tinta = e.onBackground.toArgb()
+    val tenue = e.onSurfaceVariant.toArgb()
+    val primario = e.primary.toArgb()
+    val secundario = e.secondary.toArgb()
+    val terciario = e.tertiary.toArgb()
+    val error = e.error.toArgb()
+    val linea = e.outlineVariant.toArgb()
+    private val fu = LibroDiario.fuentes(tema)
+    val titulo: Typeface = runCatching { ResourcesCompat.getFont(ctx, fu.titulo) }.getOrNull() ?: Typeface.SERIF
+    val texto: Typeface = runCatching { ResourcesCompat.getFont(ctx, fu.texto) }.getOrNull() ?: Typeface.SANS_SERIF
+    val mono: Typeface = runCatching { ResourcesCompat.getFont(ctx, R.font.plex_mono_regular) }.getOrNull() ?: Typeface.MONOSPACE
+    /** Las cifras: en temas de letra caligráfica o gótica, la del texto (se leen mejor). */
+    val cifra: Typeface = if (tema in setOf(TemaId.RENACIMIENTO, TemaId.GOTICO, TemaId.MEDIEVAL, TemaId.SEDA, TemaId.COLONOS, TemaId.NAVIDAD)) texto
+        else if (tema in setOf(TemaId.CIBER, TemaId.REFUGIO)) mono else titulo
 
-/** Reportes como inscripciones: basalto, oro y bronce. Sin mapas ni direcciones, para poder compartirlos. */
-object Reportes {
-    private const val FONDO = 0xFF0E1113.toInt()
-    private const val SUPERFICIE = 0xFF161A1D.toInt()
-    private const val LINEA = 0xFF2B3137.toInt()
-    private const val TINTA = 0xFFE7E3DA.toInt()
-    private const val TENUE = 0xFF9AA0A6.toInt()
-    private const val ORO = 0xFFD2AE5A.toInt()
-    private const val BRONCE = 0xFF67BBAE.toInt()
-    private const val PORFIDO = 0xFFC2566A.toInt()
-
-    private class Letras(val ins: Typeface, val mono: Typeface, val sans: Typeface)
-    private fun letras(ctx: Context) = Letras(
-        ResourcesCompat.getFont(ctx, R.font.cinzel_regular) ?: Typeface.SERIF,
-        ResourcesCompat.getFont(ctx, R.font.plex_mono_regular) ?: Typeface.MONOSPACE,
-        ResourcesCompat.getFont(ctx, R.font.plex_sans_regular) ?: Typeface.SANS_SERIF,
-    )
-
-    fun resumen(ini: String, fin: String, titulo: String, latin: String, subtitulo: String, previo: Pair<String, String>? = null): Resumen {
-        val n = ChronoUnit.DAYS.between(Fechas.parse(ini), Fechas.parse(fin)).toInt() + 1
-        val fechas = (0 until n).map { Fechas.sumar(ini, it.toLong()) }
-        val conjunto = fechas.toHashSet()
-        val dias = fechas.mapNotNull { Repo.dias[it] }
-        val mu = Repo.momentos.filter { it.fecha in conjunto }
-        fun valDia(f: String): Double? = Repo.dias[f]?.valencia?.toDouble()
-            ?: mu.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.valencia?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
-        fun actDia(f: String): Double? = Repo.dias[f]?.activacion?.toDouble()
-            ?: mu.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.activacion?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
-        val eq = Repo.equivalencias()
-        fun top(lista: List<String>) = lista.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(6).map { it.key to it.value }
-        val personas = dias.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() } + mu.flatMap { Texto.personas(it.texto) }
-        val temas = dias.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() } + mu.flatMap { Texto.temas(it.texto) }
-        val salud = fechas.mapNotNull { Repo.salud[it] }
-        val pant = fechas.mapNotNull { Repo.pantalla[it] }
-        val ent = fechas.mapNotNull { Repo.entorno[it] }
-        val gastos = Repo.gastos.filter { it.dia in conjunto }
-        val escalas = Repo.respuestas.filter { it.fecha in conjunto }.map { r ->
-            val inst = io.github.ruddy2003.vestigium.ciencia.Escalas.por(r.instrumento)
-            (inst?.nombre ?: r.instrumento) + ": " + r.puntajes.entries.joinToString(" · ") { "${it.key} ${"%.0f".format(it.value)}" }
-        }
-        val vals = fechas.map { valDia(it) }
-        val mejor = fechas.zip(vals).filter { it.second != null }.maxByOrNull { it.second!! }?.first
-        val peor = fechas.zip(vals).filter { it.second != null }.minByOrNull { it.second!! }?.first
-        val comp = previo?.let { (pi, pf) ->
-            val pv = Repo.dias.values.filter { it.fecha in pi..pf }.mapNotNull { it.valencia?.toDouble() }
-            val av = vals.filterNotNull()
-            if (pv.size >= 3 && av.size >= 3) {
-                val d = av.average() - pv.average()
-                "valencia %.1f contra %.1f del periodo anterior (%s%.1f)".format(av.average(), pv.average(), if (d >= 0) "+" else "", d)
-            } else null
-        }
-        val asc = Repo.ascensos.filter { it.fecha in conjunto }
-        val obras = Repo.obras.filter { it.estado == "terminado" && it.fin != null && it.fin in conjunto }.map { "${it.titulo}" + (it.calificacion?.let { c -> " · $c/10" } ?: "") }
-        return Resumen(
-            titulo, latin, subtitulo, fechas, vals, fechas.map { actDia(it) },
-            diasConRegistro = dias.size,
-            sueno = salud.mapNotNull { it.sueno_min?.toDouble() }.takeIf { it.isNotEmpty() }?.average()?.div(60),
-            pasos = salud.mapNotNull { it.pasos?.toDouble() }.takeIf { it.isNotEmpty() }?.average(),
-            pantalla = pant.map { it.total_min.toDouble() }.takeIf { it.isNotEmpty() }?.average(),
-            desbloqueos = pant.map { it.desbloqueos.toDouble() }.takeIf { it.isNotEmpty() }?.average(),
-            gasto = gastos.sumOf { it.monto }, gastoImprevisto = gastos.filter { it.imprevisto }.sumOf { it.monto },
-            momentos = mu.filter { it.tipo != "muestreo" }.groupingBy { it.tipo }.eachCount().entries.sortedByDescending { it.value }.map { Catalogo.nombreTipo(it.key) to it.value },
-            personas = top(personas), temas = top(temas), escalas = escalas,
-            mejorDia = mejor, peorDia = peor, comparacion = comp,
-            tempMedia = ent.mapNotNull { it.t_max }.takeIf { it.isNotEmpty() }?.average(),
-            luzMedia = ent.mapNotNull { it.luz_min?.toDouble() }.takeIf { it.isNotEmpty() }?.average()?.div(60),
-            lluviaDias = ent.count { (it.precip_mm ?: 0.0) >= 1.0 },
-            fotos = fechas.sumOf { Repo.fotos[it]?.fotos ?: 0 },
-            escalada = asc.size, obras = obras, hitos = dias.flatMap { it.hitos }.distinct(),
-        )
-    }
-
-    private fun pincel(color: Int, tam: Float, tf: Typeface, espacio: Float = 0f) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    fun p(color: Int, tam: Float, tf: Typeface = texto, espacio: Float = 0f) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         this.color = color; textSize = tam; typeface = tf; letterSpacing = espacio
     }
+    fun relleno(color: Int) = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color; style = Paint.Style.FILL }
+    fun trazo(color: Int, ancho: Float) = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color; style = Paint.Style.STROKE; strokeWidth = ancho; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
 
-    private fun meandro(c: Canvas, x0: Float, x1: Float, y: Float, color: Int) {
-        val u = 9f; val paso = u * 4
-        val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color; style = Paint.Style.STROKE; strokeWidth = 2.5f }
-        val path = Path(); var x = x0
-        path.moveTo(x0, y + 3 * u)
-        while (x + paso <= x1) {
-            path.lineTo(x, y); path.lineTo(x + 3 * u, y); path.lineTo(x + 3 * u, y + 2 * u); path.lineTo(x + u, y + 2 * u); path.lineTo(x + u, y + u); path.lineTo(x + 2 * u, y + u)
-            path.moveTo(x, y + 3 * u); path.lineTo(x + paso, y + 3 * u); path.moveTo(x + paso, y + 3 * u)
-            x += paso
+    /** Mezcla dos colores (t de 0 a 1). */
+    fun mezcla(a: Int, b: Int, t: Double): Int {
+        val f = t.coerceIn(0.0, 1.0)
+        fun c(sh: Int) = (((a shr sh) and 0xFF) * (1 - f) + ((b shr sh) and 0xFF) * f).roundToInt()
+        return (0xFF shl 24) or (c(16) shl 16) or (c(8) shl 8) or c(0)
+    }
+    /** Color del ánimo (1 a 7): del color de alerta, pasando por la línea, al color del tema. */
+    fun colorAnimo(v: Double): Int { val t = (v - 1) / 6; return if (t < 0.5) mezcla(error, linea, t * 2) else mezcla(linea, primario, (t - 0.5) * 2) }
+
+    companion object {
+        /** Claro u oscuro sin Compose: lo que elegiste en la app, o lo del teléfono. */
+        fun oscuroFuera(ctx: Context, tema: TemaId): Boolean = tema.soloOscuro || when (Repo.config.modo) {
+            "oscuro" -> true; "claro" -> false
+            else -> (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         }
-        c.drawPath(path, p)
     }
+}
 
-    private fun encabezado(c: Canvas, w: Float, r: Resumen, L: Letras): Float {
-        val m = 64f
-        c.drawColor(FONDO)
-        var y = 100f
-        c.drawText("VESTIGIVM MEI", m, y, pincel(TENUE, 26f, L.ins, 0.25f)); y += 78f
-        c.drawText(r.latin, m, y, pincel(ORO, 62f, L.ins, 0.08f)); y += 46f
-        c.drawText("// " + r.titulo.lowercase() + " · " + r.subtitulo.lowercase(), m, y, pincel(TENUE, 24f, L.mono)); y += 28f
-        meandro(c, m, w - m, y, ORO); y += 70f
-        return y
-    }
+/**
+ * Reportes semanal (imagen), mensual (PDF e imagen) y anual, con los colores, letras, nombres y números del tema.
+ * Sin mapas ni direcciones para poder compartirlos; nunca incluyen lo del seguimiento privado ni el texto de las cartas.
+ */
+object Reportes {
+    private const val W = 1080f
+    private const val M = 64f
 
-    private fun cifras(c: Canvas, w: Float, y0: Float, lista: List<Pair<String, String>>, L: Letras): Float {
-        val m = 64f; val col = (w - 2 * m - 2 * 20f) / 3
-        lista.forEachIndexed { i, (v, l) ->
-            val x = m + (i % 3) * (col + 20f); val yy = y0 + (i / 3) * 140f
-            c.drawRect(RectF(x, yy, x + col, yy + 120f), Paint().apply { color = SUPERFICIE })
-            c.drawRect(RectF(x, yy, x + 4f, yy + 120f), Paint().apply { color = ORO })
-            c.drawText(v, x + 22f, yy + 62f, pincel(TINTA, 40f, L.mono))
-            c.drawText(l.uppercase(), x + 22f, yy + 98f, pincel(TENUE, 19f, L.mono, 0.05f))
+    /** Quien dibuja: lleva la altura y sabe poner cada pieza con el tema. */
+    private class Hoja(val c: Canvas, val L: Lienzo, val discreto: Boolean) {
+        var y = 0f
+        var seccion = 0
+        val ancho = W - 2 * M
+
+        fun envolver(t: CharSequence, p: TextPaint, w: Float = ancho, alinear: Layout.Alignment = Layout.Alignment.ALIGN_NORMAL, max: Int = 50): StaticLayout =
+            StaticLayout.Builder.obtain(t, 0, t.length, p, w.toInt()).setAlignment(alinear).setLineSpacing(0f, 1.18f).setIncludePad(false).setMaxLines(max)
+                .setEllipsize(android.text.TextUtils.TruncateAt.END).build()
+        fun texto(t: CharSequence, p: TextPaint, x: Float = M, w: Float = ancho, alinear: Layout.Alignment = Layout.Alignment.ALIGN_NORMAL, max: Int = 50): Float {
+            val l = envolver(t, p, w, alinear, max)
+            c.save(); c.translate(x, y); l.draw(c); c.restore()
+            y += l.height
+            return l.height.toFloat()
         }
-        return y0 + ((lista.size + 2) / 3) * 140f
-    }
 
-    private fun titulo(c: Canvas, x: Float, y: Float, numero: Int, latin: String, es: String, L: Letras) {
-        c.drawText("${Romano.de(numero)} · $latin", x, y, pincel(TINTA, 30f, L.ins, 0.1f))
-        c.drawText("// $es", x, y + 30f, pincel(TENUE, 20f, L.mono))
-    }
-
-    private fun dibujar(c: Canvas, w: Float, r: Resumen, discreto: Boolean, L: Letras) {
-        val m = 64f
-        var y = encabezado(c, w, r, L)
-        y = cifras(c, w, y, listOf(
-            "${r.diasConRegistro}/${r.fechas.size}" to "días con diario",
-            (r.valencia.filterNotNull().takeIf { it.isNotEmpty() }?.average()?.let { "%.1f".format(it) } ?: "—") to "valencia media",
-            (r.sueno?.let { "%.1f h".format(it) } ?: "—") to "sueño promedio",
-            (r.pasos?.let { "%,.0f".format(it) } ?: "—") to "pasos al día",
-            (r.pantalla?.let { "${(it / 60).toInt()}h ${(it % 60).toInt()}m" } ?: "—") to "pantalla al día",
-            ("$" + "%,.0f".format(r.gasto)) to "gasto total",
-        ), L) + 30f
-
-        // I · Ánimo
-        titulo(c, m, y, 1, "ANIMVS", "ánimo por día", L); y += 50f
-        val gx0 = m + 40f; val gx1 = w - m; val gy0 = y + 20f; val gy1 = y + 300f
-        val ejes = Paint().apply { color = LINEA; strokeWidth = 2f }
-        for (v in 1..7) {
-            val yy = gy1 - (v - 1) / 6f * (gy1 - gy0)
-            c.drawLine(gx0, yy, gx1, yy, ejes)
-            if (v % 2 == 1) c.drawText("$v", m, yy + 8f, pincel(TENUE, 20f, L.mono))
-        }
-        fun serie(vals: List<Double?>, color: Int) {
-            val p = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color; strokeWidth = 5f; style = Paint.Style.STROKE; strokeCap = Paint.Cap.SQUARE }
-            val path = Path(); var abierto = false
-            val n = vals.size
-            vals.forEachIndexed { i, v ->
-                val x = if (n == 1) (gx0 + gx1) / 2 else gx0 + i * (gx1 - gx0) / (n - 1)
-                if (v == null) { abierto = false; return@forEachIndexed }
-                val yy = gy1 - ((v - 1) / 6.0 * (gy1 - gy0)).toFloat()
-                if (!abierto) { path.moveTo(x, yy); abierto = true } else path.lineTo(x, yy)
-                c.drawRect(x - 6f, yy - 6f, x + 6f, yy + 6f, Paint().apply { this.color = color })
+        /** Adorno del tema entre secciones: la greca en los clásicos, una línea con su signo en los demás. */
+        fun ornamento() {
+            val yy = y + 10f
+            when (L.tema) {
+                TemaId.ROMANO, TemaId.HELENO -> {
+                    val u = 8f; val paso = u * 4
+                    val pa = L.trazo(L.primario, 2.4f).apply { strokeCap = Paint.Cap.SQUARE; strokeJoin = Paint.Join.MITER }
+                    val path = Path(); var x = M
+                    while (x + paso <= W - M) {
+                        path.moveTo(x, yy + 3 * u); path.lineTo(x, yy); path.lineTo(x + 3 * u, yy); path.lineTo(x + 3 * u, yy + 2 * u); path.lineTo(x + u, yy + 2 * u); path.lineTo(x + u, yy + u); path.lineTo(x + 2 * u, yy + u)
+                        path.moveTo(x, yy + 3 * u); path.lineTo(x + paso, yy + 3 * u)
+                        x += paso
+                    }
+                    c.drawPath(path, pa); y += 3 * u + 34f
+                }
+                TemaId.CIBER, TemaId.REFUGIO -> {
+                    val p = L.p(L.primario, 22f, L.mono)
+                    val s = "─".repeat(64)
+                    c.drawText(s, M, yy + 10f, p.apply { textSize = 22f }); y += 44f
+                }
+                TemaId.DISTOPIA, TemaId.URSS, TemaId.ORDEN -> {
+                    c.drawRect(M, yy, W - M, yy + 8f, L.relleno(L.primario)); y += 38f
+                }
+                else -> {
+                    val signo = Estilo.comentario.trim().ifEmpty { "◆" }
+                    val ps = L.p(L.primario, 30f, L.texto)
+                    val sw = ps.measureText(signo)
+                    val cx = W / 2
+                    c.drawLine(M, yy + 2f, cx - sw / 2 - 18f, yy + 2f, L.trazo(L.linea, 2f))
+                    c.drawLine(cx + sw / 2 + 18f, yy + 2f, W - M, yy + 2f, L.trazo(L.linea, 2f))
+                    c.drawText(signo, cx - sw / 2, yy + 12f, ps); y += 40f
+                }
             }
-            c.drawPath(path, p)
         }
-        serie(r.activacion, BRONCE); serie(r.valencia, ORO)
-        val etq = pincel(TENUE, 18f, L.mono)
-        val paso = maxOf(1, r.fechas.size / 7)
-        r.fechas.forEachIndexed { i, f ->
-            if (i % paso != 0) return@forEachIndexed
-            val x = if (r.fechas.size == 1) (gx0 + gx1) / 2 else gx0 + i * (gx1 - gx0) / (r.fechas.size - 1)
-            val t = if (r.fechas.size <= 8) Romano.SEMANA[Fechas.parse(f).dayOfWeek.value - 1] else Fechas.parse(f).dayOfMonth.toString()
-            c.drawText(t, x - etq.measureText(t) / 2, gy1 + 32f, etq)
-        }
-        y = gy1 + 66f
-        c.drawRect(m, y - 16f, m + 16f, y, Paint().apply { color = ORO }); c.drawText("valencia", m + 26f, y, pincel(TENUE, 20f, L.mono))
-        c.drawRect(m + 180f, y - 16f, m + 196f, y, Paint().apply { color = BRONCE }); c.drawText("activación", m + 206f, y, pincel(TENUE, 20f, L.mono))
-        y += 60f
 
-        // II · Momentos
-        titulo(c, m, y, 2, "MOMENTA", "momentos registrados", L); y += 40f
-        if (r.momentos.isEmpty()) { y += 34f; c.drawText("ninguno en este periodo", m, y, pincel(TENUE, 22f, L.mono)); y += 20f }
-        val maxM = r.momentos.maxOfOrNull { it.second } ?: 1
-        r.momentos.take(5).forEach { (t, n) ->
-            y += 44f
-            c.drawText(if (discreto) t.take(1) else t.lowercase(), m, y, pincel(TINTA, 22f, L.sans))
-            val bx = m + 250f; val bw = (w - m - bx - 80f) * n / maxM
-            c.drawRect(RectF(bx, y - 20f, bx + maxOf(bw, 6f), y), Paint().apply { color = PORFIDO })
-            c.drawText("$n", bx + bw + 14f, y, pincel(TENUE, 20f, L.mono))
+        fun encabezado(titulo: String, latin: String?, rango: String) {
+            c.drawColor(L.fondo)
+            y = 92f
+            val marca = if (L.tema == TemaId.ROMANO) "VESTIGIVM MEI" else "Vestigium Mei"
+            c.drawText(marca, M, y, L.p(L.tenue, 26f, L.titulo, 0.2f)); y += 30f
+            val (t, com) = Estilo.pantalla(titulo, latin)
+            texto(t, L.p(L.primario, if (t.length > 22) 60f else 76f, L.titulo, 0.03f), max = 2); y += 8f
+            com?.let { texto(it, L.p(L.tenue, 24f, L.texto), max = 1); y += 4f }
+            texto(rango, L.p(L.tinta, 26f, L.texto), max = 2); y += 18f
+            ornamento()
         }
-        y += 60f
 
-        // III · Personas y temas
-        val mitad = (w - 2 * m) / 2
-        titulo(c, m, y, 3, "PERSONAE", "personas y temas", L)
-        val filas = maxOf(r.personas.size, r.temas.size).coerceAtMost(5)
-        for (i in 0 until filas) {
-            val yy = y + 74f + i * 36f
-            r.personas.getOrNull(i)?.let { c.drawText("@${it.first}  ${it.second}", m, yy, pincel(TINTA, 22f, L.mono)) }
-            r.temas.getOrNull(i)?.let { c.drawText("#${it.first}  ${it.second}", m + mitad, yy, pincel(TINTA, 22f, L.mono)) }
+        fun cifras(l: List<Pair<String, String>>) {
+            if (l.isEmpty()) return
+            val col = (ancho - 2 * 18f) / 3; val alto = 128f
+            l.forEachIndexed { i, (v, et) ->
+                val x = M + (i % 3) * (col + 18f); val yy = y + (i / 3) * (alto + 18f)
+                c.drawRoundRect(RectF(x, yy, x + col, yy + alto), 10f, 10f, L.relleno(L.superficie2))
+                c.drawRect(RectF(x, yy + 14f, x + 5f, yy + alto - 14f), L.relleno(L.primario))
+                val pv = L.p(L.tinta, if (v.length > 9) 30f else 40f, L.cifra)
+                c.drawText(v, x + 22f, yy + 62f, pv)
+                val pe = L.p(L.tenue, 19f, L.texto, 0.02f)
+                val etq = envolver(et, pe, col - 34f, max = 2)
+                c.save(); c.translate(x + 22f, yy + 76f); etq.draw(c); c.restore()
+            }
+            y += ((l.size + 2) / 3) * (alto + 18f) + 16f
         }
-        if (filas == 0) c.drawText("sin menciones", m, y + 74f, pincel(TENUE, 22f, L.mono))
-        y += 74f + maxOf(filas, 1) * 36f + 30f
 
-        // IV · Notas
-        titulo(c, m, y, 4, "NOTAE", "lo demás", L); y += 76f
-        val lineas = mutableListOf<Pair<String, String>>()
-        r.mejorDia?.let { lineas += "optimus" to Fechas.titulo(it).lowercase() }
-        r.peorDia?.let { if (it != r.mejorDia) lineas += "difficilis" to Fechas.titulo(it).lowercase() }
-        r.comparacion?.let { lineas += "comparatio" to it }
-        r.tempMedia?.let { lineas += "caelum" to "máx. media %.0f°".format(it) + (r.luzMedia?.let { l -> " · %.1f h de luz".format(l) } ?: "") + " · ${r.lluviaDias} días de lluvia" }
-        if (r.fotos > 0) lineas += "imagines" to "${r.fotos} fotos"
-        if (r.escalada > 0) lineas += "ascensvs" to "${r.escalada} sesiones de escalada"
-        if (r.obras.isNotEmpty()) lineas += "perfecta" to r.obras.take(3).joinToString(", ")
-        if (r.hitos.isNotEmpty()) lineas += "memorabilia" to r.hitos.take(6).joinToString(", ")
-        if (r.gastoImprevisto > 0) lineas += "imprevisa" to "$" + "%,.0f".format(r.gastoImprevisto)
-        r.desbloqueos?.let { lineas += "reserationes" to "${it.toInt()} desbloqueos al día" }
-        r.escalas.forEach { lineas += "quaestio" to it }
-        val k = pincel(TENUE, 21f, L.mono); val v = pincel(TINTA, 21f, L.mono)
-        for ((a, b) in lineas) {
-            if (y > 1880f) break
-            c.drawText(a.padEnd(12), m, y, k); c.drawText("= ", m + 190f, y, pincel(ORO, 21f, L.mono))
-            c.drawText(recortar(b, v, w - m - (m + 222f)), m + 222f, y, v); y += 38f
+        fun titulo(es: String, latin: String) {
+            seccion++
+            y += 18f
+            val (t, com) = Estilo.seccion(es, latin)
+            val num = Estilo.numeral(seccion)
+            val pn = L.p(L.primario, 30f, L.titulo)
+            c.drawText(num, M, y + 30f, pn)
+            val x = M + pn.measureText(num) + 22f
+            c.drawText(t, x, y + 30f, L.p(L.tinta, 32f, L.titulo, 0.04f)); y += 42f
+            com?.let { c.drawText(it, x, y + 18f, L.p(L.tenue, 20f, L.texto)); y += 28f }
+            y += 14f
+        }
+
+        /** Línea «clave = valor» como en la pantalla del día (las claves se traducen al tema). */
+        fun clave(k: String, v: String) {
+            val pk = L.p(L.tenue, 22f, L.mono); val pv = L.p(L.tinta, 23f, L.texto)
+            val kk = Estilo.clave(k)
+            c.drawText(kk, M, y + 24f, pk)
+            c.drawText("=", M + 206f, y + 24f, L.p(L.primario, 22f, L.mono))
+            val h = envolver(v, pv, ancho - 236f, max = 3)
+            c.save(); c.translate(M + 236f, y + 2f); h.draw(c); c.restore()
+            y += maxOf(36f, h.height + 12f)
+        }
+
+        fun barras(l: List<Triple<String, Double, String>>, color: Int = L.primario) {
+            val max = l.maxOfOrNull { it.second }?.takeIf { it > 0 } ?: return
+            val pe = L.p(L.tinta, 22f, L.texto); val pv = L.p(L.tenue, 20f, L.mono)
+            l.forEach { (et, v, txt) ->
+                val etq = recortar(et, pe, 300f)
+                c.drawText(etq, M, y + 26f, pe)
+                val bx = M + 320f; val bwMax = W - M - bx - 150f
+                val bw = (bwMax * v / max).toFloat().coerceAtLeast(6f)
+                c.drawRoundRect(RectF(bx, y + 8f, bx + bw, y + 30f), 6f, 6f, L.relleno(color))
+                c.drawText(txt, bx + bw + 12f, y + 27f, pv)
+                y += 40f
+            }
+            y += 8f
+        }
+
+        /** Ánimo día por día: valencia (color del tema) y activación (secundario). */
+        fun graficaAnimo(d: Periodo.Datos) {
+            val gx0 = M + 34f; val gx1 = W - M; val gy0 = y + 10f; val gy1 = y + 260f
+            val ej = L.trazo(L.linea, 1.6f)
+            for (v in 1..7) {
+                val yy = gy1 - (v - 1) / 6f * (gy1 - gy0)
+                c.drawLine(gx0, yy, gx1, yy, ej)
+                if (v % 2 == 1) c.drawText("$v", M, yy + 8f, L.p(L.tenue, 18f, L.mono))
+            }
+            val n = d.fechas.size
+            fun x(i: Int) = if (n == 1) (gx0 + gx1) / 2 else gx0 + i * (gx1 - gx0) / (n - 1)
+            fun serie(vals: List<Double?>, color: Int, puntos: Boolean) {
+                val path = Path(); var abierto = false
+                vals.forEachIndexed { i, v ->
+                    if (v == null) { abierto = false; return@forEachIndexed }
+                    val yy = gy1 - ((v - 1) / 6.0 * (gy1 - gy0)).toFloat()
+                    if (!abierto) { path.moveTo(x(i), yy); abierto = true } else path.lineTo(x(i), yy)
+                    if (puntos && n <= 40) c.drawCircle(x(i), yy, 6f, L.relleno(L.colorAnimo(v)))
+                }
+                c.drawPath(path, L.trazo(color, if (n > 60) 2.5f else 4f))
+            }
+            serie(d.activacion, L.terciario, false); serie(d.valencia, L.primario, true)
+            val pe = L.p(L.tenue, 18f, L.mono)
+            val paso = maxOf(1, n / 7)
+            d.fechas.forEachIndexed { i, f ->
+                if (i % paso != 0) return@forEachIndexed
+                val fd = Fechas.parse(f)
+                val t = if (n <= 8) Estilo.semana[fd.dayOfWeek.value - 1] else "${fd.dayOfMonth}"
+                c.drawText(t, x(i) - pe.measureText(t) / 2, gy1 + 30f, pe)
+            }
+            y = gy1 + 52f
+            c.drawCircle(M + 8f, y - 6f, 7f, L.relleno(L.primario)); c.drawText("ánimo", M + 24f, y, L.p(L.tenue, 20f, L.texto))
+            c.drawCircle(M + 160f, y - 6f, 7f, L.relleno(L.terciario)); c.drawText("energía", M + 176f, y, L.p(L.tenue, 20f, L.texto))
+            y += 26f
+        }
+
+        /** Una barra por día (horas de sueño). */
+        fun barrasDia(vals: List<Double?>, fechas: List<String>, unidad: String, meta: Double? = null) {
+            if (vals.all { it == null }) return
+            val gx0 = M; val gx1 = W - M; val alto = 150f; val base = y + alto
+            val max = maxOf(vals.filterNotNull().maxOrNull() ?: 1.0, meta ?: 0.0) * 1.1
+            val n = vals.size; val bw = (gx1 - gx0) / n
+            meta?.let { val yy = base - (it / max * alto).toFloat(); c.drawLine(gx0, yy, gx1, yy, L.trazo(L.linea, 2f)); c.drawText("${"%.0f".format(it)} $unidad", gx1 - 90f, yy - 6f, L.p(L.tenue, 17f, L.mono)) }
+            vals.forEachIndexed { i, v ->
+                v ?: return@forEachIndexed
+                val h = (v / max * alto).toFloat()
+                c.drawRoundRect(RectF(gx0 + i * bw + bw * 0.18f, base - h, gx0 + (i + 1) * bw - bw * 0.18f, base), 4f, 4f,
+                    L.relleno(if (meta != null && v < meta * 0.9) L.mezcla(L.error, L.linea, 0.3) else L.primario))
+                if (n <= 8) c.drawText("%.1f".format(v), gx0 + i * bw + bw / 2 - 20f, base - h - 8f, L.p(L.tinta, 18f, L.mono))
+            }
+            if (n <= 8) fechas.forEachIndexed { i, f ->
+                val t = Estilo.semana[Fechas.parse(f).dayOfWeek.value - 1]
+                val pe = L.p(L.tenue, 18f, L.mono); c.drawText(t, gx0 + i * bw + bw / 2 - pe.measureText(t) / 2, base + 26f, pe)
+            }
+            y = base + if (n <= 8) 44f else 18f
+        }
+
+        fun nota(t: String) { texto(t, L.p(L.tenue, 20f, L.texto)); y += 6f }
+
+        fun pie(fin: String) {
+            y += 24f
+            ornamento()
+            val t = "Vestigium Mei · " + Estilo.fecha(fin)
+            val p = L.p(L.tenue, 19f, L.texto)
+            c.drawText(t, W / 2 - p.measureText(t) / 2, y + 10f, p); y += 50f
         }
     }
 
@@ -269,6 +276,197 @@ object Reportes {
         var t = s
         while (t.length > 3 && p.measureText("$t…") > ancho) t = t.dropLast(1)
         return "$t…"
+    }
+
+    private fun mesNombre(m: Int) = java.time.Month.of(m).getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)
+    private fun n0(x: Double) = "%,.0f".format(x)
+    private fun n1(x: Double) = "%.1f".format(x)
+    private fun hm(min: Double) = "${(min / 60).toInt()} h ${(min % 60).toInt()} min"
+    private fun hora(h: Double) = "%02d:%02d".format(((h % 24) + 24).toInt() % 24, ((h - h.toInt()) * 60).roundToInt().coerceIn(0, 59))
+    private fun dinero(x: Double) = "$" + n0(x)
+    private fun inicial(s: String) = s.split('_', ' ', '-').filter { it.isNotBlank() }.joinToString("") { it.take(1).uppercase() + "." }
+    private fun persona(p: String, discreto: Boolean) = if (discreto) inicial(p) else "@$p"
+    private fun cambio(a: Double?, b: Double?, unidad: String, dec: Boolean = true): String? {
+        if (a == null || b == null) return null
+        val d = a - b
+        if (abs(d) < (if (dec) 0.05 else 0.5)) return "igual que el periodo anterior"
+        return (if (d > 0) "+" else "−") + (if (dec) n1(abs(d)) else n0(abs(d))) + " $unidad frente al periodo anterior"
+    }
+
+    /** Todas las secciones que tengan datos, en el orden del tema. */
+    private fun cuerpo(h: Hoja, d: Periodo.Datos, anual: Boolean, logros: List<io.github.ruddy2003.vestigium.ciencia.Logros.Logro>) {
+        val L = h.L
+        h.cifras(listOfNotNull(
+            "${d.diasDiario}/${d.n}" to "días con diario",
+            d.valMedia?.let { n1(it) to "ánimo medio (de 7)" },
+            d.suenoH?.let { n1(it) + " h" to "sueño por noche" },
+            d.pasos?.let { n0(it) to "pasos al día" },
+            d.pantallaMin?.let { hm(it) to "pantalla al día" },
+            (d.palabras > 0).takeIf { it }?.let { n0(d.palabras.toDouble()) to "palabras escritas" },
+            (d.gasto > 0).takeIf { it }?.let { dinero(d.gasto) to "gastado" },
+            (d.entrenos > 0).takeIf { it }?.let { "${d.entrenos}" to "entrenamientos" },
+            (d.musicaH > 0.5).takeIf { it }?.let { n0(d.musicaH) + " h" to "de música" },
+        ).take(9))
+
+        // ---- Ánimo
+        if (d.valencia.any { it != null }) {
+            h.titulo("Ánimo", "ANIMVS")
+            if (anual) pixeles(h, d) else h.graficaAnimo(d)
+            listOfNotNull(
+                d.mejorDia?.let { "optimus" to Fechas.titulo(it).lowercase() + (d.mejorMomento?.let { m -> " · «${m.take(90)}»" } ?: "") },
+                d.peorDia?.takeIf { it != d.mejorDia }?.let { "pessimus" to Fechas.titulo(it).lowercase() },
+                cambio(d.valMedia, d.valAnterior, "de ánimo")?.let { "animus" to it },
+                d.valPorSemana.maxByOrNull { it.value }?.takeIf { d.n > 13 }?.let { "dies felix" to "los " + DIAS_LARGOS[it.key - 1] + " (%.1f)".format(it.value) },
+                d.habitosPct?.let { "consuetudo" to "${(it * 100).roundToInt()}% de tus hábitos cumplidos" + (d.habitos.firstOrNull()?.let { (n, k) -> " · más: $n ($k días)" } ?: "") },
+                d.rachaDiario.takeIf { it >= 3 }?.let { "series" to "$it días seguidos escribiendo" },
+            ).forEach { (k, v) -> h.clave(k, v) }
+        }
+
+        // ---- Cuerpo
+        val hayCuerpo = d.suenoH != null || d.pasos != null || d.entrenos > 0 || d.kcal != null || d.ejercicioMin > 0
+        if (hayCuerpo) {
+            h.titulo("Cuerpo", "CORPVS")
+            if (!anual && d.suenoH != null) h.barrasDia(d.suenoPorDia, d.fechas, "h", 7.0)
+            listOfNotNull(
+                d.suenoH?.let { "somnus" to "${n1(it)} h de media" + (d.dormirH?.let { a -> " · te dormías a las ${hora(a)}" } ?: "") + (d.despertarH?.let { b -> ", despertabas a las ${hora(b)}" } ?: "") },
+                d.nocheLarga?.takeIf { anual }?.let { "somnus" to "la noche más larga: ${hm(it.second.toDouble())} (${Fechas.corto(it.first)}); la más corta: " + (d.nocheCorta?.let { c -> "${hm(c.second.toDouble())} (${Fechas.corto(c.first)})" } ?: "—") },
+                cambio(d.suenoH, d.suenoAnterior, "h de sueño")?.let { "somnus" to it },
+                d.pasos?.let { "passus" to "${n0(it)} al día · ${n0(d.pasosTotal.toDouble())} en total · unos ${n0(d.km)} km" },
+                cambio(d.pasos, d.pasosAnterior, "pasos al día", false)?.let { "passus" to it },
+                d.ejercicioMin.takeIf { it > 0 }?.let { "exercitatio" to hm(it.toDouble()) + " de ejercicio" },
+                d.entrenos.takeIf { it > 0 }?.let { "robur" to "$it entrenos · ${d.series} series · ${n1(d.volumenKg / 1000)} t levantadas" + (d.pr?.let { p -> " · mejor marca: ${p.first} (${n0(p.second)} kg 1RM)" } ?: "") },
+                d.kcal?.let { "nutritio" to "${n0(it)} kcal al día" + (d.proteina?.let { p -> " · ${n0(p)} g de proteína" } ?: "") },
+                d.comidaTop.firstOrNull()?.let { "cibus" to "lo que más comiste: " + d.comidaTop.take(3).joinToString(", ") { it.first.lowercase() } },
+                if (d.pesoIni != null && d.pesoFin != null && abs(d.pesoFin - d.pesoIni) >= 0.2) "corpus" to "peso: ${n1(d.pesoIni)} → ${n1(d.pesoFin)} kg" else null,
+                d.fcReposo?.let { "cor" to "${n0(it)} latidos por minuto en reposo" },
+            ).forEach { (k, v) -> h.clave(k, v) }
+        }
+
+        // ---- Mente
+        if (d.reacciones > 0 || d.cuestionarios.isNotEmpty() || d.suenosRecordados > 0) {
+            h.titulo("Mente", "MENS")
+            listOfNotNull(
+                d.reaccionMs?.let { "celeritas" to "${n0(it)} ms de reacción (${d.reacciones} pruebas)" },
+                d.suenosRecordados.takeIf { it > 0 }?.let { "somnium" to "$it sueños recordados" },
+            ).forEach { (k, v) -> h.clave(k, v) }
+            d.cuestionarios.take(if (anual) 4 else 6).forEach { h.clave("quaestiones", it) }
+        }
+
+        // ---- Gente
+        if (d.personas.isNotEmpty() || d.momentos.isNotEmpty() || d.waMios + d.waOtros > 0 || d.llamadas > 0) {
+            h.titulo("Gente", "HOMINES")
+            if (d.personas.isNotEmpty()) h.barras(d.personas.take(6).map { Triple(persona(it.first, h.discreto), it.second.toDouble(), "${it.second} días") }, L.primario)
+            listOfNotNull(
+                d.personaNueva?.takeIf { anual }?.let { "personae" to "alguien nuevo: ${persona(it, h.discreto)}" },
+                d.temas.takeIf { it.isNotEmpty() }?.let { "themata" to it.take(5).joinToString("  ") { "#${it.first}" } },
+                d.momentos.takeIf { it.isNotEmpty() }?.let { "momenta" to it.take(4).joinToString(" · ") { (t, k) -> "${t.lowercase()} $k" } },
+                (d.waMios + d.waOtros).takeIf { it > 0 }?.let { "voces" to "${n0(d.waMios.toDouble())} mensajes tuyos y ${n0(d.waOtros.toDouble())} recibidos en WhatsApp" },
+                d.llamadas.takeIf { it > 0 }?.let { "voces" to "$it llamadas" },
+                d.cartas.takeIf { it > 0 }?.let { "epistulae" to "$it cartas escritas" },
+            ).forEach { (k, v) -> h.clave(k, v) }
+        }
+
+        // ---- Mundo
+        if (d.ciudades.isNotEmpty() || d.fotos > 0 || d.tempMax != null) {
+            h.titulo("Mundo", "ORBIS")
+            listOfNotNull(
+                d.ciudades.takeIf { it.isNotEmpty() }?.let { "loca" to it.take(if (anual) 8 else 5).joinToString(" · ") { (c, p) -> "${Mundo.bandera(p)} $c" } + if (it.size > 8) " y ${it.size - 8} más" else "" },
+                d.ciudadesNuevas.takeIf { it.isNotEmpty() }?.let { "nova" to "${it.size} ciudades nuevas" + if (d.paisesNuevos.isNotEmpty()) " · países nuevos: " + d.paisesNuevos.joinToString(" ") { p -> Mundo.bandera(p) } else "" },
+                d.sitios.takeIf { it.isNotEmpty() }?.let { "mirabilia" to it.take(3).joinToString(" · ") },
+                d.fotos.takeIf { it > 0 }?.let { "imagines" to "${n0(it.toDouble())} fotos" },
+                d.tempMax?.let { "caelum" to "máximas de ${n0(it)}° de media · ${d.diasLluvia} días de lluvia" + (d.luzH?.let { l -> " · ${n1(l)} h de luz" } ?: "") },
+            ).forEach { (k, v) -> h.clave(k, v) }
+        }
+
+        // ---- Cultura
+        if (d.obras.isNotEmpty() || d.artistas.isNotEmpty() || d.ytVideos > 0 || d.subrayados > 0 || d.frases > 0) {
+            h.titulo("Cultura", "CVLTVRA")
+            if (d.artistas.isNotEmpty()) h.barras(d.artistas.take(5).map { Triple(it.first, it.second, n1(it.second / 60) + " h") }, L.secundario)
+            listOfNotNull(
+                d.obras.takeIf { it.isNotEmpty() }?.let { "opera" to it.take(5).joinToString(" · ") { o -> o.titulo + (o.calificacion?.let { c -> " ($c/10)" } ?: "") } },
+                d.mejorObra?.takeIf { d.obras.size > 1 }?.let { "praeclarum" to "${it.titulo} · ${it.calificacion}/10" },
+                d.cancionTop?.let { "musica" to "${it.first} (${it.second} veces)" },
+                d.artistaNuevo?.let { "nova" to "descubriste a $it" },
+                d.ytVideos.takeIf { it > 0 }?.let { "youtube" to "${n0(it.toDouble())} videos" + (d.ytCanales.firstOrNull()?.let { c -> " · más: ${c.first}" } ?: "") + if (d.ytMadrugada > 0) " · ${d.ytMadrugada} de madrugada" else "" },
+                d.subrayados.takeIf { it > 0 }?.let { "lectio" to "$it subrayados" },
+                d.frase?.let { "sententia" to "«${it.texto.take(110)}» — ${it.autor}" },
+            ).forEach { (k, v) -> h.clave(k, v) }
+        }
+
+        // ---- Dinero
+        if (d.gasto > 0 || d.ingresos > 0) {
+            h.titulo("Dinero", "PECVNIA")
+            if (d.gastoCategorias.isNotEmpty()) h.barras(d.gastoCategorias.take(5).map { Triple(it.first, it.second, dinero(it.second)) }, L.terciario)
+            listOfNotNull(
+                "svmptvs" to dinero(d.gasto) + " gastados · ${dinero(d.gasto / d.n)} al día",
+                d.gastoImprevisto.takeIf { it > 0 }?.let { "svmptvs" to dinero(it) + " en imprevistos" },
+                d.ingresos.takeIf { it > 0 }?.let { "reditus" to dinero(it) + " · balance ${if (it - d.gasto >= 0) "+" else "−"}${dinero(abs(it - d.gasto))}" },
+            ).forEach { (k, v) -> h.clave(k, v) }
+        }
+
+        // ---- Teléfono
+        if (d.pantallaMin != null) {
+            h.titulo("Teléfono", "TELEPHONVM")
+            if (d.apps.isNotEmpty()) h.barras(d.apps.take(5).map { Triple(it.first, it.second.toDouble(), hm(it.second.toDouble())) }, L.linea)
+            listOfNotNull(
+                "telephonum" to hm(d.pantallaMin) + " al día" + (cambio(d.pantallaMin, d.pantallaAnterior, "min", false)?.let { " · $it" } ?: ""),
+                d.desbloqueos?.let { "usus" to "${n0(it)} desbloqueos al día" },
+                d.notifs.takeIf { it > 0 }?.let { "monita" to "${n0(it.toDouble())} notificaciones" },
+            ).forEach { (k, v) -> h.clave(k, v) }
+        }
+
+        // ---- Lo memorable
+        if (d.hitos.isNotEmpty() || logros.isNotEmpty()) {
+            h.titulo("Lo memorable", "MEMORABILIA")
+            if (d.hitos.isNotEmpty()) h.clave("memorabilia", d.hitos.take(8).joinToString(", ") { it.replace('_', ' ') })
+            if (logros.isNotEmpty()) h.clave("palmae", logros.take(8).joinToString(" · ") { "${it.icono} ${it.nombre}" })
+        }
+    }
+
+    private val DIAS_LARGOS = listOf("lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos")
+
+    /** El año en cuadros: un cuadro por día, del color de tu ánimo; y la media de cada mes. */
+    private fun pixeles(h: Hoja, d: Periodo.Datos) {
+        val L = h.L; val c = h.c
+        val anio = d.ini.take(4).toInt()
+        val celda = (h.ancho - 90f) / 31f
+        for (mes in 1..12) {
+            val yy = h.y + (mes - 1) * (celda + 4f)
+            c.drawText(Estilo.mes(mes).take(4), M, yy + celda * 0.8f, L.p(L.tenue, 18f, L.texto))
+            val dm = java.time.YearMonth.of(anio, mes).lengthOfMonth()
+            for (dd in 1..dm) {
+                val f = "%04d-%02d-%02d".format(anio, mes, dd)
+                val i = d.fechas.indexOf(f)
+                val v = if (i >= 0) d.valencia[i] else null
+                val x = M + 90f + (dd - 1) * celda
+                c.drawRoundRect(RectF(x, yy, x + celda - 3f, yy + celda), 3f, 3f, L.relleno(if (v != null) L.colorAnimo(v) else L.superficie2))
+            }
+        }
+        h.y += 12 * (celda + 4f) + 30f
+        val altoB = 160f; val anchoM = h.ancho / 12f
+        for (mes in 1..12) {
+            val v = d.valPorMes[mes] ?: continue
+            val x = M + (mes - 1) * anchoM
+            val hh = ((v - 1) / 6 * altoB).toFloat()
+            c.drawRoundRect(RectF(x + 8f, h.y + altoB - hh, x + anchoM - 8f, h.y + altoB), 5f, 5f, L.relleno(L.colorAnimo(v)))
+            c.drawText(n1(v), x + 10f, h.y + altoB - hh - 8f, L.p(L.tinta, 17f, L.mono))
+        }
+        for (mes in 1..12) c.drawText(Estilo.mes(mes).take(3), M + (mes - 1) * anchoM + 10f, h.y + altoB + 26f, L.p(L.tenue, 16f, L.texto))
+        h.y += altoB + 50f
+    }
+
+    /** Dibuja dos veces: primero para medir la altura, luego en su tamaño justo. */
+    private fun dibujarMedido(ctx: Context, dibujo: (Canvas) -> Float): Pair<Picture, Int> {
+        val pic = Picture()
+        val alto = dibujo(pic.beginRecording(W.toInt(), 12000)).roundToInt().coerceIn(800, 12000)
+        pic.endRecording()
+        return pic to alto
+    }
+
+    private fun bitmap(pic: Picture, alto: Int, fondo: Int): Bitmap {
+        val bmp = Bitmap.createBitmap(W.toInt(), alto, Bitmap.Config.ARGB_8888)
+        val c = Canvas(bmp); c.drawColor(fondo); c.drawPicture(pic)
+        return bmp
     }
 
     private fun guardarPng(ctx: Context, nombre: String, bmp: Bitmap): Uri? {
@@ -282,10 +480,10 @@ object Reportes {
         return uri
     }
 
-    private fun guardarPdf(ctx: Context, nombre: String, alto: Int, dibujo: (Canvas) -> Unit): Uri? {
+    private fun guardarPdf(ctx: Context, nombre: String, pic: Picture, alto: Int, fondo: Int): Uri? {
         val doc = PdfDocument()
-        val pagina = doc.startPage(PdfDocument.PageInfo.Builder(1080, alto, 1).create())
-        dibujo(pagina.canvas)
+        val pagina = doc.startPage(PdfDocument.PageInfo.Builder(W.toInt(), alto, 1).create())
+        pagina.canvas.drawColor(fondo); pagina.canvas.drawPicture(pic)
         doc.finishPage(pagina)
         val v = ContentValues().apply {
             put(MediaStore.Downloads.DISPLAY_NAME, nombre)
@@ -298,20 +496,39 @@ object Reportes {
         return uri
     }
 
-    private fun bitmap(alto: Int, dibujo: (Canvas) -> Unit): Bitmap {
-        val bmp = Bitmap.createBitmap(1080, alto, Bitmap.Config.ARGB_8888)
-        dibujo(Canvas(bmp))
-        return bmp
+    private fun reporte(ctx: Context, titulo: String, latin: String, rango: String, ini: String, fin: String, anual: Boolean): Triple<Picture, Int, Int> {
+        val L = Lienzo(ctx)
+        val d = Periodo.calcular(ctx, ini, fin)
+        val logros = runCatching { io.github.ruddy2003.vestigium.ciencia.Logros.todos(ctx).filter { l -> l.conseguido?.let { it in ini..fin } == true } }.getOrDefault(emptyList())
+        val (pic, alto) = dibujarMedido(ctx) { c ->
+            val h = Hoja(c, L, Repo.config.discreto)
+            h.encabezado(titulo, latin, rango)
+            cuerpo(h, d, anual, logros)
+            h.pie(fin)
+            h.y
+        }
+        return Triple(pic, alto, L.fondo)
+    }
+
+    /** La imagen del reporte semanal (sin guardarla). */
+    fun imagenSemana(ctx: Context, lunes: String): Bitmap {
+        val fin = Fechas.sumar(lunes, 6)
+        val ini = Fechas.parse(lunes); val f = Fechas.parse(fin)
+        val semana = f.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)
+        val rango = "Semana ${Estilo.numeral(semana)} · del ${ini.dayOfMonth} de ${mesNombre(ini.monthValue)} al ${f.dayOfMonth} de ${mesNombre(f.monthValue)} de ${f.year}"
+        val (pic, alto, fondo) = reporte(ctx, "Tu semana", "HEBDOMAS", rango, lunes, fin, false)
+        return bitmap(pic, alto, fondo)
+    }
+
+    /** La imagen del reporte de un año (sin guardarla). */
+    fun imagenAnio(ctx: Context, anio: Int): Bitmap {
+        val fin = minOf("$anio-12-31", Fechas.diaLogico())
+        val (pic, alto, fondo) = reporte(ctx, "Tu año", "ANNVS", "$anio", "$anio-01-01", fin, true)
+        return bitmap(pic, alto, fondo)
     }
 
     fun semanal(ctx: Context, lunes: String, avisar: Boolean): Uri? {
-        val fin = Fechas.sumar(lunes, 6)
-        val ini = Fechas.parse(lunes); val f = Fechas.parse(fin)
-        val sub = "del ${ini.dayOfMonth} de ${ini.month.getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)} al ${f.dayOfMonth} de ${f.month.getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)} de ${f.year}"
-        val semana = f.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)
-        val r = resumen(lunes, fin, "Tu semana", "HEBDOMAS ${Romano.de(semana)}", sub, Fechas.sumar(lunes, -7) to Fechas.sumar(lunes, -1))
-        val L = letras(ctx)
-        val uri = guardarPng(ctx, "semana_$lunes.png", bitmap(1920) { dibujar(it, 1080f, r, Repo.config.discreto, L) })
+        val uri = guardarPng(ctx, "semana_$lunes.png", imagenSemana(ctx, lunes))
         if (avisar && uri != null) Avisos.reporte(ctx, "Tu reporte semanal está listo", uri, "image/png")
         return uri
     }
@@ -320,104 +537,19 @@ object Reportes {
         val ini = "$ym-01"
         val d = Fechas.parse(ini)
         val fin = Fechas.iso(d.plusMonths(1).minusDays(1))
-        val pIni = Fechas.iso(d.minusMonths(1))
-        val r = resumen(ini, fin, Fechas.mesTitulo(ym), "${Romano.mes(d.monthValue)} ${Romano.de(d.year)}", "resumen del mes", pIni to Fechas.sumar(ini, -1))
-        val L = letras(ctx)
-        guardarPng(ctx, "mes_$ym.png", bitmap(1920) { dibujar(it, 1080f, r, Repo.config.discreto, L) })
-        val uri = guardarPdf(ctx, "mes_$ym.pdf", 1920) { dibujar(it, 1080f, r, Repo.config.discreto, L) }
+        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false)
+        guardarPng(ctx, "mes_$ym.png", bitmap(pic, alto, fondo))
+        val uri = guardarPdf(ctx, "mes_$ym.pdf", pic, alto, fondo)
         if (avisar && uri != null) Avisos.reporte(ctx, "Tu reporte de ${Fechas.mesTitulo(ym)} está listo", uri, "application/pdf")
         return uri
     }
 
-    // ---------------- Año ----------------
-    private fun colorValencia(v: Double): Int {
-        val t = ((v - 1) / 6).coerceIn(0.0, 1.0)
-        val (a, b, f) = if (t < 0.5) Triple(PORFIDO, 0xFF3A3F44.toInt(), t * 2) else Triple(0xFF3A3F44.toInt(), BRONCE, (t - 0.5) * 2)
-        fun mezcla(sh: Int) = (((a shr sh) and 0xFF) * (1 - f) + ((b shr sh) and 0xFF) * f).toInt()
-        return (0xFF shl 24) or (mezcla(16) shl 16) or (mezcla(8) shl 8) or mezcla(0)
-    }
-
-    private fun dibujarAnual(c: Canvas, w: Float, anio: Int, L: Letras) {
-        val m = 64f
-        val ini = "$anio-01-01"; val fin = "$anio-12-31"
-        val r = resumen(ini, fin, "Tu año", "ANNVS ${Romano.de(anio)}", "$anio", "${anio - 1}-01-01" to "${anio - 1}-12-31")
-        var y = encabezado(c, w, r, L)
-        val palabras = r.fechas.sumOf { f -> Repo.dias[f]?.let { Texto.palabras(it.nota) } ?: 0 }
-        val terminadas = Repo.obras.count { it.estado == "terminado" && it.fin?.startsWith("$anio") == true }
-        y = cifras(c, w, y, listOf(
-            "${r.diasConRegistro}" to "días escritos",
-            "%,d".format(palabras) to "palabras",
-            (r.valencia.filterNotNull().takeIf { it.isNotEmpty() }?.average()?.let { "%.2f".format(it) } ?: "—") to "valencia media",
-            "${Repo.momentos.count { it.fecha.startsWith("$anio") && it.tipo != "muestreo" }}" to "momentos",
-            (r.sueno?.let { "%.1f h".format(it) } ?: "—") to "sueño promedio",
-            "$terminadas" to "obras terminadas",
-        ), L) + 30f
-
-        // I · El año en píxeles
-        titulo(c, m, y, 1, "ANNVS IN PVNCTIS", "un cuadro por día, color por ánimo", L); y += 66f
-        val celda = (w - 2 * m - 80f) / 31f
-        for (mes in 1..12) {
-            val yy = y + (mes - 1) * (celda + 4f)
-            c.drawText(Romano.de(mes), m, yy + celda * 0.8f, pincel(TENUE, 18f, L.ins))
-            val dm = java.time.YearMonth.of(anio, mes).lengthOfMonth()
-            for (d in 1..dm) {
-                val f = "%04d-%02d-%02d".format(anio, mes, d)
-                val v = r.valencia.getOrNull(r.fechas.indexOf(f))
-                val x = m + 80f + (d - 1) * celda
-                c.drawRect(x, yy, x + celda - 3f, yy + celda, Paint().apply { color = if (v != null) colorValencia(v) else SUPERFICIE })
-            }
-        }
-        y += 12 * (celda + 4f) + 50f
-
-        // II · Mes por mes
-        titulo(c, m, y, 2, "MENSES", "valencia media de cada mes", L); y += 60f
-        val altoB = 200f
-        val ancho = (w - 2 * m) / 12f
-        for (mes in 1..12) {
-            val vs = r.fechas.zip(r.valencia).filter { it.first.substring(5, 7).toInt() == mes }.mapNotNull { it.second }
-            val x = m + (mes - 1) * ancho
-            if (vs.isNotEmpty()) {
-                val h = ((vs.average() - 1) / 6 * altoB).toFloat()
-                c.drawRect(x + 8f, y + altoB - h, x + ancho - 8f, y + altoB, Paint().apply { color = colorValencia(vs.average()) })
-                c.drawText("%.1f".format(vs.average()), x + 10f, y + altoB - h - 10f, pincel(TINTA, 18f, L.mono))
-            }
-            c.drawText(Romano.de(mes), x + 10f, y + altoB + 30f, pincel(TENUE, 18f, L.ins))
-        }
-        y += altoB + 80f
-
-        // III · Lo más frecuente
-        titulo(c, m, y, 3, "FREQVENTISSIMA", "lo más frecuente del año", L); y += 76f
-        val k = pincel(TENUE, 21f, L.mono); val v = pincel(TINTA, 21f, L.mono)
-        val lineas = mutableListOf<Pair<String, String>>()
-        if (r.personas.isNotEmpty()) lineas += "personae" to r.personas.take(5).joinToString(" ") { "@${it.first}" }
-        if (r.temas.isNotEmpty()) lineas += "themata" to r.temas.take(5).joinToString(" ") { "#${it.first}" }
-        if (r.momentos.isNotEmpty()) lineas += "momenta" to r.momentos.take(3).joinToString(" · ") { "${it.first.lowercase()} ${it.second}" }
-        val artistas = runCatching { Repo.escuchas(ini, fin).filter { it.artista.isNotBlank() }.groupingBy { it.artista }.eachCount().entries.sortedByDescending { it.value }.take(3) }.getOrDefault(emptyList())
-        if (artistas.isNotEmpty()) lineas += "musica" to artistas.joinToString(" · ") { "${it.key} ${it.value}" }
-        val asc = Repo.ascensos.filter { it.fecha.startsWith("$anio") }
-        if (asc.isNotEmpty()) {
-            val max = asc.flatMap { it.bloques }.filter { Grados.encadenado(it.estilo) }.mapNotNull { b -> Grados.valor(b.grado)?.let { it to b.grado } }.maxByOrNull { it.first }?.second
-            lineas += "ascensvs" to "${asc.size} sesiones" + (max?.let { " · máximo $it" } ?: "")
-        }
-        val porTipo = Repo.obras.filter { it.estado == "terminado" && it.fin?.startsWith("$anio") == true }.groupingBy { it.tipo }.eachCount()
-        if (porTipo.isNotEmpty()) lineas += "bibliotheca" to porTipo.entries.joinToString(" · ") { "${it.value} ${it.key}" }
-        r.mejorDia?.let { lineas += "optimus" to Fechas.titulo(it).lowercase() }
-        lineas += "svmptvs" to "$" + "%,.0f".format(r.gasto)
-        r.pasos?.let { lineas += "passus" to "%,.0f al día".format(it) }
-        r.tempMedia?.let { lineas += "caelum" to "máx. media %.0f° · ${r.lluviaDias} días de lluvia".format(it) }
-        if (r.fotos > 0) lineas += "imagines" to "%,d fotos".format(r.fotos)
-        if (r.hitos.isNotEmpty()) lineas += "memorabilia" to r.hitos.take(8).joinToString(", ")
-        for ((a, b) in lineas) {
-            c.drawText(a.padEnd(12), m, y, k); c.drawText("= ", m + 190f, y, pincel(ORO, 21f, L.mono))
-            c.drawText(recortar(b, v, w - m - (m + 222f)), m + 222f, y, v); y += 38f
-        }
-    }
-
     fun anual(ctx: Context, anio: Int): Uri? {
-        val L = letras(ctx)
-        val alto = 2400
-        val png = guardarPng(ctx, "anno_$anio.png", bitmap(alto) { dibujarAnual(it, 1080f, anio, L) })
-        guardarPdf(ctx, "anno_$anio.pdf", alto) { dibujarAnual(it, 1080f, anio, L) }
+        val hoy = Fechas.diaLogico()
+        val fin = minOf("$anio-12-31", hoy)
+        val (pic, alto, fondo) = reporte(ctx, "Tu año", "ANNVS", "$anio" + if (fin < "$anio-12-31") " · hasta el ${Fechas.titulo(fin).lowercase()}" else "", "$anio-01-01", fin, true)
+        val png = guardarPng(ctx, "anno_$anio.png", bitmap(pic, alto, fondo))
+        guardarPdf(ctx, "anno_$anio.pdf", pic, alto, fondo)
         return png
     }
 }

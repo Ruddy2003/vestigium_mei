@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
@@ -414,17 +415,6 @@ class Capturas {
     @Test fun rascarRomano() = pantalla(TemaId.ROMANO, false, 2400) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaRascar(navVacia) }
     @Test fun unescoGotico() = pantalla(TemaId.GOTICO, false, 3200) { mundoEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaUnesco(navVacia) }
 
-    private fun teclados(temas: List<Pair<TemaId, Boolean>>) = captura(temas.first().first, temas.first().second, alto = 2600) {
-        Column {
-            temas.forEach { (t, _) ->
-                io.github.ruddy2003.vestigium.ui.TecladoTema(t, io.github.ruddy2003.vestigium.ui.pagina(t), androidx.compose.ui.text.input.TextFieldValue("Hoy fui"), {}, {}, {})
-                Box(Modifier.padding(4.dp))
-            }
-        }
-    }
-    @Test fun teclados1() = teclados(listOf(TemaId.MEDIEVAL to false, TemaId.DISTOPIA to false, TemaId.CIBER to true, TemaId.BOTANICO to false, TemaId.ESPACIO to true))
-    @Test fun teclados2() = teclados(listOf(TemaId.GOTICO to false, TemaId.SEDA to true, TemaId.LABORATORIO to false, TemaId.REFUGIO to true, TemaId.ANDALUS to false))
-
     private fun fondo(tema: TemaId, oscuro: Boolean) = captura(tema, oscuro, alto = 2400) { io.github.ruddy2003.vestigium.ui.FondoTelefonoVista(tema, oscuro, Modifier.fillMaxSize()) }
     @Test fun fondoEspacio() = fondo(TemaId.ESPACIO, true)
     @Test fun fondoBotanico() = fondo(TemaId.BOTANICO, false)
@@ -682,13 +672,43 @@ class Capturas {
             io.github.ruddy2003.vestigium.ui.SelloHuella(Modifier.fillMaxWidth(0.5f).aspectRatio(1f), TemaId.BOTANICO)
         }
     }
-    @Test fun tecladoBotanico() = captura(TemaId.BOTANICO, false, alto = 1200) {
-        val v = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(androidx.compose.ui.text.input.TextFieldValue("Hoy vi una fila de hormigas")) }
-        Column(Modifier.fillMaxWidth()) {
-            Text(v.value.text, modifier = Modifier.padding(16.dp))
-            io.github.ruddy2003.vestigium.ui.TecladoTema(TemaId.BOTANICO, io.github.ruddy2003.vestigium.ui.pagina(TemaId.BOTANICO), v.value, { v.value = it }, {}, {})
-        }
+    // ------------------------------------------------------------ logros, «Tu año» y reportes
+    @Test fun logrosBotanico() = pantalla(TemaId.BOTANICO, false, 4200) {
+        io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia)
     }
+    @Test fun logrosCiber() = pantalla(TemaId.CIBER, true, 3000) {
+        io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia)
+    }
+    private fun tarjetaAnio(tema: TemaId, oscuro: Boolean, id: String) = pantalla(tema, oscuro, 2340) {
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        val d = androidx.compose.runtime.remember { io.github.ruddy2003.vestigium.ciencia.TuAnio.calcular(ctx, io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(4).toInt()) }
+        io.github.ruddy2003.vestigium.ui.pantallas.MuestraTarjetaAnio(d, id)
+    }
+    @Test fun anioPortadaRomano() = tarjetaAnio(TemaId.ROMANO, true, "portada")
+    @Test fun anioAnimoBotanico() = tarjetaAnio(TemaId.BOTANICO, false, "animo")
+    @Test fun anioSuenoEspacio() = tarjetaAnio(TemaId.ESPACIO, true, "sueno")
+    @Test fun anioComunDistopia() = tarjetaAnio(TemaId.DISTOPIA, false, "comun")
+    @Test fun anioArquetipoGotico() = tarjetaAnio(TemaId.GOTICO, true, "arquetipo")
+    @Test fun anioCartelCiber() = tarjetaAnio(TemaId.CIBER, true, "cartel")
+    @Test fun anioTelefonoLaboratorio() = tarjetaAnio(TemaId.LABORATORIO, false, "telefono")
+    @Test fun anioPantallaMedieval() = pantalla(TemaId.MEDIEVAL, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaTuAnio(navVacia) }
+    private fun reporte(tema: TemaId, oscuro: Boolean, alto: Int, anual: Boolean) = pantalla(tema, oscuro, alto) {
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        val r = androidx.compose.runtime.remember {
+            runCatching {
+                if (anual) io.github.ruddy2003.vestigium.reportes.Reportes.imagenAnio(ctx, io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(4).toInt())
+                else io.github.ruddy2003.vestigium.reportes.Reportes.imagenSemana(ctx, io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.lunesDe(io.github.ruddy2003.vestigium.data.Fechas.diaLogico()), -7))
+            }
+        }
+        val b = r.getOrNull()
+        if (b != null) androidx.compose.foundation.Image(b.asImageBitmap(), null, Modifier.fillMaxWidth())
+        else Text("Falló: ${r.exceptionOrNull()}")
+    }
+    @Test fun reporteSemanaRomano() = reporte(TemaId.ROMANO, true, 4200, false)
+    @Test fun reporteSemanaBotanico() = reporte(TemaId.BOTANICO, false, 4200, false)
+    @Test fun reporteAnioGotico() = reporte(TemaId.GOTICO, false, 5200, true)
     @Test fun epigrafeMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) {
         val ayer = io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1)
         Repo.configEnMemoria(Repo.config.copy(frases_guardadas = listOf(io.github.ruddy2003.vestigium.data.FraseGuardada("Quien no sabe callar, no sabe hablar.", null, "Refrán castellano", "medieval", ayer))))

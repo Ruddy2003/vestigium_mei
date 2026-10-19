@@ -37,7 +37,9 @@ object Dinamicas {
     )
 
     /** Familias cuyas variables, entre ellas, también son obvias (dos nutrientes del mismo plato, una ciudad y su país). */
-    val ENTRE_SI: List<Set<String>> = listOf(setOf("nut_", "ali_"), setOf("ciu_", "pais_"), setOf("gen_", "obr_"), setOf("pol_"), setOf("vida_"), setOf("suenot_"))
+    val ENTRE_SI: List<Set<String>> = listOf(setOf("nut_", "ali_"), setOf("ciu_", "pais_"), setOf("gen_", "obr_"), setOf("pol_"), setOf("vida_"), setOf("suenot_"),
+        // Dos músculos del mismo entrenamiento: con un split empuje/tirón van juntos (espalda alta y dorsales) o se excluyen (tríceps y bíceps) por diseño.
+        setOf("musc_", "act_"), setOf("art_"))
 
     fun prefijo(id: String): String? = (AGREGADOS.keys + listOf("esc_", "pol_", "vida_")).firstOrNull { id.startsWith(it) }
 
@@ -184,7 +186,8 @@ object Dinamicas {
 
         // ---- Nutrición: todos los nutrientes de MacroFactor que no son ya variables fijas (vitaminas, minerales…), y los alimentos más frecuentes.
         val fijas = setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "azucares_g", "gasto_kcal", "peso_tendencia_kg")
-        familia("nut_", "Nutrición", Repo.nutricion.mapValues { (_, n) -> n.valores.filterKeys { it !in fijas } }, Repo.nutricion.keys, 60, 14, { nutriente(it) })
+        // Pasos y peso de MacroFactor repiten los del teléfono, y los objetivos los pone la app, no tú: fuera.
+        familia("nut_", "Nutrición", Repo.nutricion.mapValues { (_, n) -> n.valores.filterKeys { it !in fijas && it != "pasos_mf" && it != "peso_mf_kg" && !it.startsWith("objetivo") && !it.startsWith("target") } }, Repo.nutricion.keys, 60, 14, { nutriente(it) })
         runCatching {
             val desde = Repo.nutricion.keys.minOrNull() ?: return@runCatching
             val ali = HashMap<String, HashMap<String, Double>>()
@@ -230,6 +233,13 @@ object Dinamicas {
                 Triple("vida_trabaja", "Etapa: trabajaba (0/1)", { f: String -> valorEn("a qué te dedicas", f).takeIf { it.isNotBlank() }?.let { if ("trabajo" in it || "por mi cuenta" in it) 1.0 else 0.0 } }),
                 Triple("vida_estudia", "Etapa: estudiaba (0/1)", { f: String -> valorEn("a qué te dedicas", f).takeIf { it.isNotBlank() }?.let { if ("estudio" in it) 1.0 else 0.0 } }),
                 Triple("vida_mascota", "Etapa: tenía mascota (0/1)", { f: String -> if (actual["mascotas"].isNullOrBlank() && hist.none { it.campo == "mascotas" }) null else if (valorEn("mascotas", f).isNotBlank()) 1.0 else 0.0 }),
+                Triple("vida_desde_casa", "Etapa: trabajaba o estudiaba desde casa, total o en parte (0/1)", { f: String -> valorEn("modalidad", f).takeIf { it.isNotBlank() }?.let { if (it == "Presencial") 0.0 else 1.0 } }),
+                Triple("vida_horas_semana", "Etapa: horas a la semana de trabajo o escuela", { f: String -> valorEn("horas a la semana", f).toDoubleOrNull() }),
+                Triple("vida_auto", "Etapa: me movía en auto o moto (0/1)", { f: String -> valorEn("transporte", f).takeIf { it.isNotBlank() }?.let { if (it == "Auto" || it == "Moto") 1.0 else 0.0 } }),
+                Triple("vida_sin_carne", "Etapa: comía sin carne (vegetariana o vegana) (0/1)", { f: String -> valorEn("dieta", f).takeIf { it.isNotBlank() }?.let { if (it == "Vegetariana" || it == "Vegana") 1.0 else 0.0 } }),
+                Triple("vida_hijos", "Etapa: número de hijos", { f: String -> valorEn("hijos", f).toDoubleOrNull() }),
+                Triple("vida_idiomas", "Etapa: idiomas que aprendía", { f: String -> if (actual["idiomas que aprendes"].isNullOrBlank() && hist.none { it.campo == "idiomas que aprendes" }) null else valorEn("idiomas que aprendes", f).split(",").count { it.isNotBlank() }.toDouble() }),
+                Triple("vida_estudios", "Etapa: nivel de estudios (1 secundaria … 6 doctorado)", { f: String -> Perfiles.ESTUDIOS.indexOfFirst { it.nombre == valorEn("estudios", f) }.takeIf { it >= 0 }?.let { it + 1.0 } }),
             )
             val fechas = Repo.dias.keys
             etapas.forEach { (id, nombre, fn) ->
@@ -265,11 +275,37 @@ object Dinamicas {
     }
 
     /** «vitamin_c_mg» → «Vitamin c (mg)». */
+    /** Nombres en español de las columnas de MacroFactor que llegan en inglés (el orden importa: «isoleucine» antes que «leucine»). */
+    private val NUTRIENTES_ES = listOf(
+        "thiamin" to "Vitamina B1 (tiamina)", "riboflavin" to "Vitamina B2 (riboflavina)", "niacin" to "Vitamina B3 (niacina)",
+        "pantothen" to "Vitamina B5 (ácido pantoténico)", "pyridox" to "Vitamina B6", "cobalamin" to "Vitamina B12", "b12" to "Vitamina B12",
+        "b6" to "Vitamina B6", "b5" to "Vitamina B5", "b3" to "Vitamina B3", "b2" to "Vitamina B2", "b1" to "Vitamina B1", "folate" to "Folato",
+        "folic" to "Ácido fólico", "biotin" to "Biotina", "vitamin_a" to "Vitamina A", "vitamin_c" to "Vitamina C", "vitamin_d" to "Vitamina D",
+        "vitamin_e" to "Vitamina E", "vitamin_k" to "Vitamina K", "retinol" to "Retinol", "beta_carotene" to "Betacaroteno", "choline" to "Colina",
+        "calcium" to "Calcio", "copper" to "Cobre", "iron" to "Hierro", "magnesium" to "Magnesio", "manganese" to "Manganeso", "phosphorus" to "Fósforo",
+        "potassium" to "Potasio", "selenium" to "Selenio", "sodium" to "Sodio", "zinc" to "Zinc", "iodine" to "Yodo", "chromium" to "Cromo",
+        "molybdenum" to "Molibdeno", "fluoride" to "Flúor", "chloride" to "Cloruro", "monounsaturated" to "Grasa monoinsaturada",
+        "polyunsaturated" to "Grasa poliinsaturada", "trans" to "Grasa trans", "saturated" to "Grasa saturada", "omega_3" to "Omega 3",
+        "omega_6" to "Omega 6", "cholesterol" to "Colesterol", "water" to "Agua", "sugars_added" to "Azúcares añadidos", "added_sugar" to "Azúcares añadidos",
+        "sugar_alcohol" to "Polialcoholes", "starch" to "Almidón", "net_carb" to "Carbohidratos netos", "cysteine" to "Cisteína", "histidine" to "Histidina",
+        "isoleucine" to "Isoleucina", "leucine" to "Leucina", "lysine" to "Lisina", "methionine" to "Metionina", "phenylalanine" to "Fenilalanina",
+        "threonine" to "Treonina", "tryptophan" to "Triptófano", "tyrosine" to "Tirosina", "valine" to "Valina", "alanine" to "Alanina",
+        "arginine" to "Arginina", "glycine" to "Glicina", "proline" to "Prolina", "serine" to "Serina", "glutamic" to "Ácido glutámico",
+        "aspartic" to "Ácido aspártico", "caffeine" to "Cafeína", "alcohol" to "Alcohol", "fiber" to "Fibra", "sugars" to "Azúcares",
+        "protein" to "Proteína", "carbs" to "Carbohidratos", "fat" to "Grasa", "calories" to "Calorías", "steps" to "Pasos (MacroFactor)",
+        "weight" to "Peso (MacroFactor)", "expenditure" to "Gasto calórico",
+        "azucares_anadidos" to "Azúcares añadidos", "grasa_saturada" to "Grasa saturada", "sodio" to "Sodio", "agua" to "Agua",
+        "colesterol" to "Colesterol", "potasio" to "Potasio", "calcio" to "Calcio", "hierro" to "Hierro", "magnesio" to "Magnesio", "omega" to "Omega 3",
+    )
+
     fun nutriente(k: String): String {
-        val unidades = listOf("mcg", "mg", "kcal", "g", "iu", "ml", "kg")
+        val unidades = listOf("mcg", "mg", "kcal", "g", "iu", "ml", "kg", "ug")
         val partes = k.split('_')
-        val u = partes.lastOrNull()?.takeIf { it in unidades }
-        val n = (if (u != null) partes.dropLast(1) else partes).joinToString(" ").replaceFirstChar { it.uppercase() }
-        return if (u != null) "$n ($u)" else n
+        val u = partes.lastOrNull()?.takeIf { it in unidades }?.let { if (it == "ug") "mcg" else it }
+        val base = (if (u != null) partes.dropLast(1) else partes).joinToString("_")
+        val es = NUTRIENTES_ES.firstOrNull { (en, _) -> base == en || base.startsWith(en + "_") || base.contains("_" + en) || (en.length >= 5 && base.contains(en)) }?.second
+        val n = es ?: base.replace('_', ' ').replaceFirstChar { it.uppercase() }
+        val pre = if (base.startsWith("objetivo") || base.startsWith("target")) "Objetivo: " else ""
+        return if (u != null) "$pre$n (${if (u == "iu") "UI" else u})" else "$pre$n"
     }
 }
