@@ -245,7 +245,7 @@ object Reportes {
             val gx0 = M; val gx1 = W - M; val alto = 150f; val base = y + alto
             val max = maxOf(vals.filterNotNull().maxOrNull() ?: 1.0, meta ?: 0.0) * 1.1
             val n = vals.size; val bw = (gx1 - gx0) / n
-            meta?.let { val yy = base - (it / max * alto).toFloat(); c.drawLine(gx0, yy, gx1, yy, L.trazo(L.linea, 2f)); c.drawText("${"%.0f".format(it)} $unidad", gx1 - 90f, yy - 6f, L.p(L.tenue, 17f, L.mono)) }
+            meta?.let { val yy = base - (it / max * alto).toFloat(); c.drawLine(gx0, yy, gx1, yy, L.trazo(L.linea, 2f)); }
             vals.forEachIndexed { i, v ->
                 v ?: return@forEachIndexed
                 val h = (v / max * alto).toFloat()
@@ -258,6 +258,7 @@ object Reportes {
                 val pe = L.p(L.tenue, 18f, L.mono); c.drawText(t, gx0 + i * bw + bw / 2 - pe.measureText(t) / 2, base + 26f, pe)
             }
             y = base + if (n <= 8) 44f else 18f
+            meta?.let { c.drawText("— la línea: ${"%.0f".format(it)} $unidad recomendadas", M, y + 6f, L.p(L.tenue, 18f, L.texto)); y += 26f }
         }
 
         fun nota(t: String) { texto(t, L.p(L.tenue, 20f, L.texto)); y += 6f }

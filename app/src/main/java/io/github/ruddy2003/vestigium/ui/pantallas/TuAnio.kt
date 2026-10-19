@@ -498,7 +498,7 @@ private fun CuerpoTarjeta(d: TuAnio.Datos, actual: CartaAnio, vista: Vista) {
         Text(t, style = MaterialTheme.typography.headlineMedium, color = cs.onBackground)
         com?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant) }
         Spacer(Modifier.height(14.dp))
-        Column(Modifier.weight(1f)) { androidx.compose.runtime.key(actual.id) { actual.dibujo(vista) } }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.Center) { androidx.compose.runtime.key(actual.id) { actual.dibujo(vista) } }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text("Vestigium Mei · ${d.anio}", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
             if (!d.completo) Text("año incompleto · faltan ${d.faltan} días", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
@@ -678,7 +678,7 @@ fun PantallaTuAnio(nav: Nav) {
         value = withContext(Dispatchers.Default) { runCatching { TuAnio.calcular(ctx, anio) }.getOrNull() }
     }
     val c = Repo.config
-    Hoja("Tu año", nav.atras, "Tu año en historias, con la música y los colores del tema: lo que más hiciste, lo único, lo curioso. Llega solo el 31 de diciembre por la mañana.") {
+    Hoja("Tu año en historias", nav.atras, "Tu año como historias, con la música y los colores del tema: lo que más hiciste, lo único, lo curioso. Llega solo el 31 de diciembre por la mañana.") {
         if (anios.size > 1) Row(Modifier.padding(top = 10.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             anios.forEach { a -> Ficha("$a", anio == a) { anio = a } }
         }
@@ -746,7 +746,7 @@ fun RecuadroTuAnio(nav: Nav) {
     val anio = hoy.take(4).toInt()
     val faltan = Fechas.diasEntre(hoy, "$anio-12-31").toInt()
     val cs = MaterialTheme.colorScheme
-    Recuadro("Tu año", if (faltan <= 0) "Tu $anio está listo: ábrelo" else "Tu $anio en historias · faltan $faltan días (puedes verlo ya)", alto = 110.dp, onClick = { nav.ir("tu_anio") }) {
+    Recuadro("Tu año en historias", if (faltan <= 0) "Tu $anio está listo: ábrelo" else "Tu $anio en historias · faltan $faltan días (puedes verlo ya)", alto = 110.dp, onClick = { nav.ir("tu_anio") }) {
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(listOf(cs.primary.copy(alpha = 0.22f), cs.surface, cs.tertiary.copy(alpha = 0.18f))))) {
             Row(Modifier.fillMaxSize().padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                 Emblema(tam = 64.dp)
