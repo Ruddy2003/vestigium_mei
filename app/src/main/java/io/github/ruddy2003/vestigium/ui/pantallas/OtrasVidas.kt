@@ -54,6 +54,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.inset
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
@@ -211,7 +213,7 @@ internal fun MedallaVida(v: OtrasVidas.Vida, tam: Dp, elegida: Boolean = false, 
 /** Dibuja el emblema de un tema centrado en [c] con radio [r] (los emblemas se dibujan en el tamaño entero del lienzo). */
 private fun DrawScope.withTransformEmblema(c: Offset, r: Float, f: DrawScope.() -> Unit) {
     val lado = r * 2
-    androidx.compose.ui.graphics.drawscope.inset(c.x - r, c.y - r, size.width - (c.x - r) - lado, size.height - (c.y - r) - lado) { f() }
+    inset(c.x - r, c.y - r, size.width - (c.x - r) - lado, size.height - (c.y - r) - lado) { f() }
 }
 
 // =====================================================================

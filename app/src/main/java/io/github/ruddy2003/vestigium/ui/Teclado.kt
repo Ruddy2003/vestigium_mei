@@ -4,6 +4,7 @@ import android.view.HapticFeedbackConstants
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -156,9 +157,9 @@ fun TecladoTema(tema: TemaId, p: Pagina, valor: TextFieldValue, onCambio: (TextF
     Column(Modifier.fillMaxWidth().background(e.fondo).padding(start = 3.dp, end = 3.dp, bottom = abajo), verticalArrangement = Arrangement.spacedBy(7.dp)) {
         // La manija: arrastra hacia arriba o abajo para acomodar el teclado a tu pulgar. Se recuerda.
         Box(Modifier.fillMaxWidth().height(18.dp).pointerInput(Unit) {
-            androidx.compose.foundation.gestures.detectVerticalDragGestures(
+            detectVerticalDragGestures(
                 onDragEnd = { val v = extra.toInt(); io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { it.copy(teclado_alto = v) } },
-                onVerticalDrag = { cambio, d -> cambio.consume(); extra = (extra - d / density).coerceIn(0f, 220f) })
+                onVerticalDrag = { cambio: androidx.compose.ui.input.pointer.PointerInputChange, d: Float -> cambio.consume(); extra = (extra - d / density).coerceIn(0f, 220f) })
         }, contentAlignment = Alignment.Center) {
             Box(Modifier.width(44.dp).height(4.dp).background(e.letraEspecial.copy(alpha = 0.45f), RoundedCornerShape(50)))
         }
