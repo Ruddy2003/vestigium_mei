@@ -249,7 +249,7 @@ object OtrasVidas {
             ),
             fuentes = listOf("IMCO: 100 años de datos de México" to "https://imco.org.mx/wp-content/uploads/2026/03/Presentacion_100-anos-de-datos.pdf", "Ciudad de México en el siglo XX" to "${W}Mexico_City")),
 
-        Vida("mundo2025", "Alguien promedio", "Una persona promedio del mundo", "Una ciudad de Asia, probablemente", "2025", 2025, "globo", edad = 31,
+        Vida("mundo2025", "Alguien del mundo", "Una persona promedio del mundo", "Una ciudad de Asia, probablemente", "2025", 2025, "globo", edad = 31,
             historia = listOf(
                 "La persona promedio del mundo tiene unos treinta años, vive en una ciudad y lleva un teléfono en el bolsillo. Pasa casi siete horas al día conectada a internet y escucha unas tres horas de música.",
                 "Da menos de cinco mil pasos al día: menos que cualquier otra persona de esta lista. Hay más comida que nunca: en el mundo se producen casi tres mil kilocalorías por persona, y también más azúcar.",
@@ -269,7 +269,7 @@ object OtrasVidas {
                 "IFPI (2023): cuánta música escuchamos" to "https://www.ifpi.org/ifpis-global-study-finds-were-listening-to-more-music-in-more-ways-than-ever",
                 "DataReportal (2025): el mundo conectado" to "https://datareportal.com/reports/digital-2025-sub-section-ever-more-connected")),
 
-        Vida("mexico2025", "Alguien promedio", "Una persona promedio de México", "Una ciudad de México", "2025", 2025, "telefono", edad = 30,
+        Vida("mexico2025", "Alguien de México", "Una persona promedio de México", "Una ciudad de México", "2025", 2025, "telefono", edad = 30,
             historia = listOf(
                 "La persona promedio de México tiene unos treinta años y vive en una ciudad. Ocho de cada diez usan internet, y lo hacen muchas horas: México está entre los países que más tiempo pasan en el teléfono y en redes.",
                 "Trabaja más horas al año que casi cualquier otro país de la OCDE y da menos de cinco mil pasos al día. Toma más refresco que casi cualquier país del mundo; el azúcar añadida es más de una décima parte de lo que come.",

@@ -83,12 +83,12 @@ object Guias {
         // ------------------------------------------------ comer
         val anadida = t.containsKey("azucar_anadida")
         val azPct = v("azucar_pct")?.v
-        if (anadida && azPct != null) item("azucar", "Comer", "Azúcar añadida", "menos del 10% de las calorías; mejor menos del 5%", null, "% de la energía", 0.0, 20.0,
+        if (anadida && azPct != null) item("azucar", "Comer", "Azúcar añadida", "menos del 10% de las calorías; mejor menos del 5%", "azucar_pct", "% de la energía", 0.0, 20.0,
             listOf(Zona(0.0, 5.0, B), Zona(5.0, 10.0, C), Zona(10.0, 1e9, L)), AZUCAR,
             { x -> val g = v("azucar")?.v ?: 0.0
                 when { x < 5 -> "El ${n(x, 1)}% de tus calorías (${n(g)} g al día): por debajo incluso de la meta ideal."; x < 10 -> "El ${n(x, 1)}% de tus calorías (${n(g)} g, unas ${n(g / 4)} cucharaditas): dentro del límite, sobre la meta ideal del 5%."
                     else -> "El ${n(x, 1)}% de tus calorías (${n(g)} g, unas ${n(g / 4)} cucharaditas al día): por encima del límite de la OMS." } },
-            "Azúcar libre: la que se añade a alimentos y bebidas, más la de la miel, los jarabes y los jugos. No cuenta la de la fruta entera ni la de la leche.", valor = azPct)
+            "Azúcar libre: la que se añade a alimentos y bebidas, más la de la miel, los jarabes y los jugos. No cuenta la de la fruta entera ni la de la leche.")
         else item("azucar", "Comer", "Azúcares", "azúcar añadida: menos del 10% de las calorías (unos 50 g)", "azucar", "g", 0.0, 120.0,
             listOf(Zona(0.0, 50.0, B), Zona(50.0, 90.0, C), Zona(90.0, 1e9, L)), AZUCAR,
             { x -> "Comes ${n(x)} g de azúcares al día, contando los de la fruta y la leche. MacroFactor no separó el azúcar añadida; la meta de la OMS es solo para esa." },

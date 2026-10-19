@@ -140,9 +140,12 @@ internal fun DrawScope.objetoVida(dibujo: String, c: Offset, r: Float, tinta: Co
             drawRect(acento, Offset(c.x - r * 0.06f, arr + r * 0.15f), Size(r * 0.12f, r * 0.2f))
         }
         "maiz" -> {
-            listOf(-1f, 1f).forEach { l -> drawPath(Path().apply { moveTo(c.x, c.y + r * 0.85f); quadraticTo(c.x + l * r * 0.7f, c.y + r * 0.2f, c.x + l * r * 0.25f, c.y - r * 0.6f); quadraticTo(c.x + l * r * 0.35f, c.y + r * 0.2f, c.x, c.y + r * 0.85f); close() }, tinta) }
-            drawOval(acento, Offset(c.x - r * 0.24f, c.y - r * 0.8f), Size(r * 0.48f, r * 1.4f))
-            for (fy in 0 until 7) for (fx in -1..1) drawCircle(lerp(acento, tinta, 0.35f), r * 0.045f, Offset(c.x + fx * r * 0.12f, c.y - r * 0.6f + fy * r * 0.18f))
+            // Mazorca amarilla entre sus hojas.
+            val grano = lerp(Color(0xFFE2B84A), acento, 0.2f)
+            listOf(-1f, 1f).forEach { l -> drawPath(Path().apply { moveTo(c.x, c.y + r * 0.9f); quadraticTo(c.x + l * r * 0.75f, c.y + r * 0.35f, c.x + l * r * 0.55f, c.y - r * 0.35f); quadraticTo(c.x + l * r * 0.3f, c.y + r * 0.35f, c.x, c.y + r * 0.9f); close() }, tinta.copy(alpha = 0.85f)) }
+            drawOval(grano, Offset(c.x - r * 0.3f, c.y - r * 0.85f), Size(r * 0.6f, r * 1.5f))
+            for (fy in 0 until 8) for (fx in -1..1) drawCircle(lerp(grano, tinta, 0.3f), r * 0.05f, Offset(c.x + fx * r * 0.14f, c.y - r * 0.66f + fy * r * 0.16f))
+            drawOval(tinta, Offset(c.x - r * 0.3f, c.y - r * 0.85f), Size(r * 0.6f, r * 1.5f), style = Stroke(g * 0.6f))
         }
         "abanico" -> {
             val piv = Offset(c.x, c.y + r * 0.6f)
@@ -235,7 +238,7 @@ fun RecuadroOtrasVidas(nav: Nav) {
             Row(Modifier.fillMaxSize().padding(horizontal = 10.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 muestra.forEach { v ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        MedallaVida(v, 40.dp, elegida = v.tema != null)
+                        MedallaVida(v, 46.dp, elegida = v.tema != null)
                         Text(anio(v.anio), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(top = 4.dp))
                     }
                 }

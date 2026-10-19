@@ -440,6 +440,7 @@ private fun LineaTiempo(l: List<Pair<String, Double>>, unidad: String) {
         val fin = medidor.measure(l.last().first.take(7), estilo)
         drawText(fin, topLeft = Offset(size.width - fin.size.width, abajo + 2.dp.toPx()))
     }
-    Ayuda("De ${d1(l.first().second)} a ${d1(l.last().second)} $unidad · mínimo ${d1(min)}, máximo ${d1(max)}.")
+    fun f(x: Double) = if (max >= 100) n(x) else d1(x)
+    Ayuda("De ${f(l.first().second)} a ${f(l.last().second)} $unidad · mínimo ${f(min)}, máximo ${f(max)}.")
 }
 

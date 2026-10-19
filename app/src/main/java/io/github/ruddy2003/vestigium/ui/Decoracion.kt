@@ -198,14 +198,15 @@ private fun DrawScope.escarabajoLamina(c: Offset, r: Float, musgo: Color, oxido:
 /** Una hormiga vista desde arriba: cabeza, tórax y gáster, con seis patas que se alternan al caminar. */
 internal fun DrawScope.hormiga(p: Offset, l: Float, ang: Float, color: Color, t: Float = 0f) {
     rotate(Math.toDegrees(ang.toDouble()).toFloat(), p) {
-        val g = l * 0.07f
+        val g = l * 0.05f
         val paso = 0.25f * sin(2 * PI * t * 40).toFloat()
-        listOf(-0.04f, 0.04f, 0.12f).forEachIndexed { i, x ->
+        // Patas cortas e inclinadas: las de adelante hacia adelante y las de atrás hacia atrás, para que se lea como hormiga y no como cruz.
+        listOf(-0.04f, 0.03f, 0.1f).forEachIndexed { i, x ->
             listOf(-1f, 1f).forEach { lado ->
                 val s = if ((i + if (lado > 0) 1 else 0) % 2 == 0) paso else -paso
                 val p0 = Offset(p.x + l * x, p.y)
-                val p1 = Offset(p0.x + l * (0.08f - i * 0.06f + s * 0.3f), p0.y + lado * l * 0.24f)
-                val p2 = Offset(p1.x + l * (0.1f - i * 0.14f + s * 0.4f), p1.y + lado * l * 0.16f)
+                val p1 = Offset(p0.x + l * (0.1f - i * 0.1f + s * 0.2f), p0.y + lado * l * 0.15f)
+                val p2 = Offset(p1.x + l * (0.14f - i * 0.16f + s * 0.25f), p1.y + lado * l * 0.08f)
                 drawPath(Path().apply { moveTo(p0.x, p0.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y) }, color, style = Stroke(g, cap = StrokeCap.Round))
             }
         }
