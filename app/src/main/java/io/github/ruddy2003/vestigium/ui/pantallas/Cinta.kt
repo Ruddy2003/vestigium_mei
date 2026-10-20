@@ -161,7 +161,7 @@ fun PantallaCinta(nav: Nav) {
     val privado = Repo.config.seguimiento_privado
     val mom = Repo.momentos.filter { it.fecha == fecha && (privado || it.tipo != "recaida") }
     if (mom.isNotEmpty()) {
-        val p = pista("momentos", "◷")
+        val p = pista("momentos", "✦")
         mom.forEach { m ->
             val t = Fechas.millis(m.ts)
             val color = if (m.tipo == "recaida") cs.error else Tonos.valencia(m.valencia?.toDouble(), oscuro) ?: cs.secondary

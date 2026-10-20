@@ -76,23 +76,23 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
         val camino = Path().apply { moveTo(pts[0].x, pts[0].y); for (i in 1 until 7) { val a = pts[i - 1]; val b = pts[i]; cubicTo((a.x + b.x) / 2, a.y, (a.x + b.x) / 2, b.y, b.x, b.y) } }
         val salon = salonDe(tema)
         when (salon) {
-            Salon.TEMPLO -> { drawPath(camino, cs.outline.copy(alpha = 0.5f), style = Stroke(9f)); drawPath(camino, cs.surface, style = Stroke(5f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f)))) }
-            Salon.CASTILLO -> drawPath(camino, cs.onSurfaceVariant.copy(alpha = 0.6f), style = Stroke(3f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f, 8f))))
-            Salon.LABORATORIO -> { drawPath(camino, cs.primary.copy(alpha = 0.25f), style = Stroke(8f)); drawPath(camino, cs.primary, style = Stroke(1.5f)) }
-            Salon.TALLER -> { drawPath(camino, Color(0xFF8A6A44).copy(alpha = 0.6f), style = Stroke(7f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f, 6f)))); drawPath(camino, cs.onSurfaceVariant.copy(alpha = 0.5f), style = Stroke(1.5f)) }
+            Salon.TEMPLO -> { drawPath(camino, cs.outline.copy(alpha = 0.5f), style = Stroke(3.6f * density)); drawPath(camino, cs.surface, style = Stroke(2f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f * density, 2.5f * density)))) }
+            Salon.CASTILLO -> drawPath(camino, cs.onSurfaceVariant.copy(alpha = 0.6f), style = Stroke(1.4f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1f * density, 3.5f * density))))
+            Salon.LABORATORIO -> { drawPath(camino, cs.primary.copy(alpha = 0.25f), style = Stroke(3f * density)); drawPath(camino, cs.primary, style = Stroke(0.8f * density)) }
+            Salon.TALLER -> { drawPath(camino, Color(0xFF8A6A44).copy(alpha = 0.6f), style = Stroke(3f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1f * density, 2.5f * density)))); drawPath(camino, cs.onSurfaceVariant.copy(alpha = 0.5f), style = Stroke(0.8f * density)) }
         }
         e.dias.forEachIndexed { i, (f, ok) ->
             val p = pts[i]
-            val r = if (i == 6) 13f else 9f
+            val r = (if (i == 6) 9f else 6.5f) * density
             val col = when { ok == true -> cs.primary; f == hoy -> cs.tertiary; f < hoy -> cs.error.copy(alpha = 0.55f); else -> cs.surfaceVariant }
-            if (f == hoy && ok != true && animar) drawCircle(cs.tertiary.copy(alpha = 0.25f * (1 - pulso)), r + 10f * pulso, p)
+            if (f == hoy && ok != true && animar) drawCircle(cs.tertiary.copy(alpha = 0.25f * (1 - pulso)), r + 5f * density * pulso, p)
             when (salon) {
                 Salon.CASTILLO -> drawRect(col, Offset(p.x - r, p.y - r), androidx.compose.ui.geometry.Size(r * 2, r * 2))
                 Salon.LABORATORIO -> drawPath(Path().apply { for (k in 0 until 6) { val a = k * Math.PI / 3; val x = p.x + (r * kotlin.math.cos(a)).toFloat(); val y = p.y + (r * kotlin.math.sin(a)).toFloat(); if (k == 0) moveTo(x, y) else lineTo(x, y) }; close() }, col)
                 else -> drawCircle(col, r, p)
             }
-            drawCircle(cs.outline, r, p, style = Stroke(1.2f))
-            if (ok == true) drawPath(Path().apply { moveTo(p.x - r * 0.45f, p.y); lineTo(p.x - r * 0.1f, p.y + r * 0.4f); lineTo(p.x + r * 0.5f, p.y - r * 0.4f) }, cs.onPrimary, style = Stroke(2.2f))
+            drawCircle(cs.outline, r, p, style = Stroke(0.6f * density))
+            if (ok == true) drawPath(Path().apply { moveTo(p.x - r * 0.45f, p.y); lineTo(p.x - r * 0.1f, p.y + r * 0.4f); lineTo(p.x + r * 0.5f, p.y - r * 0.4f) }, cs.onPrimary, style = Stroke(1f * density))
             if (conNombres) {
                 val t = medidor.measure(etapas.getOrElse(i) { "" }, estilo)
                 val y = if (i % 2 == 0) p.y - r - t.size.height - 2f else p.y + r + 2f
@@ -102,8 +102,8 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
         // La bandera de la meta si se ganó.
         if (e.ganada) {
             val m = pts[6]
-            drawLine(cs.onSurface, m, m + Offset(0f, -32f), 2f)
-            drawPath(Path().apply { moveTo(m.x, m.y - 32f); lineTo(m.x + 20f, m.y - 26f); lineTo(m.x, m.y - 20f); close() }, cs.primary)
+            drawLine(cs.onSurface, m, m + Offset(0f, -14f * density), 0.8f * density)
+            drawPath(Path().apply { moveTo(m.x, m.y - 14f * density); lineTo(m.x + 9f * density, m.y - 11.5f * density); lineTo(m.x, m.y - 9f * density); close() }, cs.primary)
         }
     }
 }

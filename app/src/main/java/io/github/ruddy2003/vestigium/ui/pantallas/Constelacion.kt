@@ -109,17 +109,17 @@ fun PantallaConstelacion(nav: Nav) {
                 val h = (e.nombre.hashCode() and 0x7fffffff)
                 val ang = (h % 3600) / 3600.0 * 2 * Math.PI
                 val dias = Fechas.diasEntre(e.ultima, hoy).toFloat().coerceAtLeast(0f)
-                val d = (0.16f + 0.78f * (dias / diasPeriodo).coerceIn(0f, 1f).pow(0.6f)) * radio * 0.94f
+                val d = (0.30f + 0.64f * (dias / diasPeriodo).coerceIn(0f, 1f).pow(0.6f)) * radio * 0.94f
                 e.x = c.x + (d * cos(ang)).toFloat(); e.y = c.y + (d * sin(ang)).toFloat()
-                e.r = (3f + 11f * sqrt(e.dias / maxDias)) * density
+                e.r = (2.5f + 7f * sqrt(e.dias / maxDias)) * density
             }
             val pos = estrellas.associateBy { it.nombre }
             juntos.forEach { (k, n) ->
                 val a = pos[k.first] ?: return@forEach; val b = pos[k.second] ?: return@forEach
-                drawLine(cs.primary.copy(alpha = (0.10f + 0.06f * n).coerceAtMost(0.5f)), Offset(a.x, a.y), Offset(b.x, b.y), 1f + n * 0.3f)
+                drawLine(cs.primary.copy(alpha = (0.12f + 0.06f * n).coerceAtMost(0.5f)), Offset(a.x, a.y), Offset(b.x, b.y), (0.6f + n * 0.15f).coerceAtMost(2f) * density)
             }
             // Tú, en el centro.
-            drawCircle(cs.primary, 7f * density, c); drawCircle(cs.primary.copy(alpha = 0.3f), 12f * density, c, style = Stroke(1.5f))
+            drawCircle(cs.primary, 4.5f * density, c); drawCircle(cs.primary.copy(alpha = 0.3f), 9f * density, c, style = Stroke(1f * density))
             estrellas.forEachIndexed { i, e ->
                 val col = tonos[e.relacion] ?: cs.onSurface
                 val brillo = if (animar) 0.65f + 0.35f * sin((fase.value + i * 0.137f) * 2 * Math.PI).toFloat().let { (it + 1) / 2 } else 1f
@@ -133,7 +133,7 @@ fun PantallaConstelacion(nav: Nav) {
             }
         }
         Ayuda("Colores: " + listOf("casa" to "quien vive contigo", "familia" to "familia", "pareja" to "pareja", "amistad" to "amistades").joinToString(", ") { it.second } +
-            ". Las demás, en blanco. Las relaciones vienen de «Conocerte».", Modifier.padding(top = 6.dp))
+            ". Las demás, del color del texto. Las relaciones vienen de «Conocerte».", Modifier.padding(top = 6.dp))
         Tarjeta(Modifier.padding(top = 10.dp)) {
             val e = elegida
             if (e == null) Ayuda("Toca una estrella para ver a esa persona.")

@@ -58,13 +58,13 @@ fun PantallaRecaidas(nav: Nav) {
         if (r.impulsos > 0) Tarjeta(Modifier.padding(top = 10.dp)) {
             val pct = r.impulsosSuperados * 100 / r.impulsos
             Text("$pct% de tus impulsos pasaron sin recaída", style = MaterialTheme.typography.titleMedium)
-            Ayuda("${r.impulsosSuperados} de ${r.impulsos} impulsos registrados no terminaron en recaída en las 3 horas siguientes. Cada uno cuenta.")
+            Ayuda("${r.impulsosSuperados} de ${r.impulsos} ${if (r.impulsos == 1) "impulso registrado no terminó" else "impulsos registrados no terminaron"} en recaída en las 3 horas siguientes. Cada uno cuenta.")
         }
         if (r.minutosImpulsoARecaida.isNotEmpty()) Tarjeta(Modifier.padding(top = 10.dp)) {
             val m = r.minutosImpulsoARecaida.sorted()
             val mediana = m[m.size / 2]
             Text("Entre las ganas y la recaída: ${duracion(mediana)} (mediana)", style = MaterialTheme.typography.titleMedium)
-            Ayuda("De ${m.size} recaídas con un impulso registrado antes. Ese rato es la ventana para cambiar de lugar, salir o hablar con alguien.")
+            Ayuda("De ${m.size} ${if (m.size == 1) "recaída" else "recaídas"} con un impulso registrado antes. Ese rato es la ventana para cambiar de lugar, salir o hablar con alguien.")
         }
         Seccion("A qué hora", "Cada barra es una hora del día, de 0:00 a 23:00.") {
             Tarjeta {
