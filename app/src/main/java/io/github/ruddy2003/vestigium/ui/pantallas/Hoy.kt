@@ -118,18 +118,41 @@ object Pendientes {
             l += Pendiente("p:politica", "Brújula política del año", "politica")
         return l
     }
+
+    /** Si lo que pedía [clave] ya está hecho (y no solo dejó de pedirse por la hora o porque lo descartaste). */
+    fun resuelto(clave: String, d: Dia, hoy: String): Boolean = when (clave) {
+        "p:ayer" -> Repo.dias[Fechas.sumar(hoy, -1)]?.let { it.valencia != null || it.nota.isNotBlank() } == true
+        "p:sueno" -> d.sueno_calidad != null
+        "p:aviso" -> {
+            val plan = Repo.config.plan_muestreo[Fechas.hoyCalendario()].orEmpty().count { it <= System.currentTimeMillis() }
+            Repo.momentos.count { it.fecha == hoy && it.tipo == "muestreo" } >= plan
+        }
+        "p:escalas" -> Escalas.pendientes().isEmpty()
+        "p:reaccion" -> Repo.reacciones.any { it.fecha == hoy }
+        "p:diario" -> d.valencia != null && d.nota.isNotBlank()
+        "p:prediccion" -> d.prediccion_manana != null
+        "p:gasto" -> Repo.gastos.any { it.dia == hoy }
+        "p:politica" -> !io.github.ruddy2003.vestigium.data.Politica.toca(hoy)
+        else -> false
+    }
 }
 
 @Composable
 fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (String) -> Unit) {
     val l = Pendientes.deHoy(d, hoy).filter { it.clave !in ocultar }
     val tarde = LocalTime.now().hour >= 21
-    // Cuando se completa lo pendiente, una pequeña celebración con el sonido y la vibración del tema.
+    // Cuando completas lo pendiente, una pequeña celebración con el sonido y la vibración del tema. Solo si lo que faltaba
+    // de verdad se hizo (no si se venció su hora, como «diario de ayer» a las 14:00) y no justo al volver a abrir la app.
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
-    var antes by remember(hoy) { mutableStateOf<Boolean?>(null) }
-    androidx.compose.runtime.LaunchedEffect(l.isEmpty()) {
-        if (antes == false && l.isEmpty()) { io.github.ruddy2003.vestigium.ui.Fiesta.lanzar(); sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO) }
-        antes = l.isEmpty()
+    var antes by remember(hoy) { mutableStateOf<Set<String>?>(null) }
+    val claves = l.map { it.clave }.toSet()
+    androidx.compose.runtime.LaunchedEffect(claves) {
+        val previo = antes
+        antes = claves
+        if (previo != null && previo.isNotEmpty() && claves.isEmpty() && !io.github.ruddy2003.vestigium.ui.Reanudar.recien() &&
+            previo.all { Pendientes.resuelto(it, d, hoy) }) {
+            io.github.ruddy2003.vestigium.ui.Fiesta.lanzar(); sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO)
+        }
     }
     if (l.isEmpty()) {
         if (tarde && d.valencia != null) Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
@@ -474,7 +497,10 @@ fun LineaDelTiempo(fecha: String) {
     }
     val ses = Repo.sesiones.filter { it.fecha == fecha }
     if (ses.isNotEmpty()) pistas += Pista("ejercicio", ses.map { Triple(Fechas.millis(it.inicio), Fechas.millis(it.fin), ter) })
-    val mom = Repo.momentos.filter { it.fecha == fecha }
+    val tramos = Repo.tramos.filter { it.fecha == fecha }
+    if (tramos.isNotEmpty()) pistas += Pista("enfoque", tramos.map { t -> val a = Fechas.millis(t.inicio); Triple(a, a + t.min * 60_000L, if (t.tipo == "siesta") sec else prim) },
+        etiquetas = tramos.map { t -> Fechas.millis(t.inicio) to io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(t.tipo).lowercase() })
+    val mom = Repo.momentos.filter { it.fecha == fecha && (Repo.config.seguimiento_privado || it.tipo != "recaida") }
     if (mom.isNotEmpty()) pistas += Pista("momentos", marcas = mom.map { m -> Fechas.millis(m.ts) to (Tonos.valencia(m.valencia?.toDouble(), oscuro) ?: sec) })
     Repo.notifs[fecha]?.por_hora?.takeIf { it.sum() > 0 }?.let { h -> pistas += Pista("teléfono", calor = h.map { it.toDouble() }) }
     Repo.conexiones[fecha]?.let { cx -> if (cx.luz_n.sum() > 0) pistas += Pista("luz", calor = cx.luz_suma.indices.map { i -> if (cx.luz_n[i] > 0) kotlin.math.ln(1 + cx.luz_suma[i] / cx.luz_n[i]) else 0.0 }) }

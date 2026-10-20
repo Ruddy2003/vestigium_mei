@@ -100,9 +100,11 @@ fun PantallaDiario(nav: Nav) {
         if (t != null) i.putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, t)
         ctx.startActivity(i)
     }
-    val porDia = remember(Repo.momentos) { Repo.momentos.groupBy { it.fecha } }
-    val fechas = remember(Repo.dias, Repo.momentos) {
-        (Repo.dias.values.filter { it.nota.isNotBlank() || it.sueno_texto.isNotBlank() }.map { it.fecha } + Repo.momentos.map { it.fecha }).distinct().sortedDescending()
+    val privado = Repo.config.seguimiento_privado
+    val visiblesM = remember(Repo.momentos, privado) { Repo.momentos.filter { privado || it.tipo != "recaida" } }
+    val porDia = remember(visiblesM) { visiblesM.groupBy { it.fecha } }
+    val fechas = remember(Repo.dias, visiblesM) {
+        (Repo.dias.values.filter { it.nota.isNotBlank() || it.sueno_texto.isNotBlank() }.map { it.fecha } + visiblesM.map { it.fecha }).distinct().sortedDescending()
     }
     val q = normal(busca.trim())
     val visibles = fechas.filter { f ->
@@ -121,7 +123,7 @@ fun PantallaDiario(nav: Nav) {
         Seccion("Ahora mismo estoy…") {
             Tarjeta {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
-                    io.github.ruddy2003.vestigium.data.Catalogo.MOMENTOS.forEach { t ->
+                    (io.github.ruddy2003.vestigium.data.Catalogo.MOMENTOS + if (privado) listOf(io.github.ruddy2003.vestigium.data.Catalogo.RECAIDA) else emptyList()).forEach { t ->
                         Surface(onClick = { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO, t.id) }, modifier = Modifier.weight(1f).heightIn(min = 46.dp),
                             shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.background, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                             Box(contentAlignment = Alignment.Center) { Text(if (discreto) t.discreto else t.nombre, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(6.dp)) }
@@ -207,7 +209,7 @@ private fun TarjetaDiaDiario(f: String, d: Dia?, ms: List<io.github.ruddy2003.ve
                         style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                 }
                 if (tipo != "momentos" && tipo != "suenos" && d != null && d.nota.isNotBlank())
-                    Text(d.nota.trim(), style = MaterialTheme.typography.bodyMedium, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                    io.github.ruddy2003.vestigium.ui.TextoMarcado(d.nota.trim(), style = MaterialTheme.typography.bodyMedium, maxLines = 4, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp).clickable(onClick = abrirEntrada))
                 if ((tipo == "todo" || tipo == "suenos") && d != null && d.sueno_texto.isNotBlank())
                     Text("☾ " + d.sueno_texto.trim(), style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
@@ -216,7 +218,7 @@ private fun TarjetaDiaDiario(f: String, d: Dia?, ms: List<io.github.ruddy2003.ve
                     ms.sortedBy { it.ts }.take(8).forEach { m ->
                         Row(Modifier.fillMaxWidth().clickable { editar(m) }.padding(top = 5.dp), verticalAlignment = Alignment.Top) {
                             Text(Fechas.horaDe(m.ts), style = MaterialTheme.typography.labelMedium, color = cs.primary, modifier = Modifier.width(46.dp))
-                            Text(io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, discreto) + (m.valencia?.let { " · $it" } ?: "") + (m.intensidad?.let { " · $it/5" } ?: "") +
+                            io.github.ruddy2003.vestigium.ui.TextoMarcado(io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, discreto) + (m.valencia?.let { " · $it" } ?: "") + (m.intensidad?.let { " · $it/5" } ?: "") +
                                 (if (m.texto.isNotBlank()) " — ${m.texto}" else ""), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
@@ -240,7 +242,7 @@ private fun FichaEntrada(d: Dia, abrir: () -> Unit) {
                     Text(Fechas.titulo(d.fecha), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
                     Text("${Texto.palabras(d.nota)} palabras" + (d.valencia?.let { " · $it/7" } ?: ""), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text(d.nota.trim(), style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
+                io.github.ruddy2003.vestigium.ui.TextoMarcado(d.nota.trim(), style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
             }
         }
     }

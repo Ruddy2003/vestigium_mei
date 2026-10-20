@@ -64,7 +64,7 @@ class QuickActivity : FragmentActivity() {
         const val MODO = "modo"; const val TIPO = "tipo"; const val VALENCIA = "valencia"
         const val ORIGEN = "origen"; const val AVISO_MS = "aviso_ms"; const val NOTIF = "notif"
         const val M_ANIMO = "animo"; const val M_MOMENTO = "momento"; const val M_MENU = "menu"
-        const val M_GASTO = "gasto"; const val M_SUENO = "sueno"; const val M_MINIMO = "minimo"
+        const val M_GASTO = "gasto"; const val M_SUENO = "sueno"; const val M_MINIMO = "minimo"; const val M_ENFOQUE = "enfoque"
         const val CATEGORIA = "categoria"; const val CALIDAD = "calidad"; const val RECORDADO = "recordado"
     }
 
@@ -115,6 +115,7 @@ class QuickActivity : FragmentActivity() {
                                 M_GASTO -> GastoRapido(catInicial)
                                 M_SUENO -> SuenoRapido()
                                 M_MINIMO -> Minimo()
+                                M_ENFOQUE -> EnfoqueRapido()
                                 else -> MomentoCaptura(null, origen)
                             }
                         }
@@ -126,6 +127,9 @@ class QuickActivity : FragmentActivity() {
 
     private fun terminar() { runCatching { Widgets.actualizar(this) }; finish() }
 
+    /** Cómo estaba el día antes de registrar una recaída, para que «Deshacer» lo deje igual. */
+    private var previoRecaida: io.github.ruddy2003.vestigium.data.Recaidas.Previo? = null
+
     /** Crea y guarda el momento al instante; la ubicación se añade en cuanto llega. */
     fun crear(tipo: String, origen: String, valencia: Int?, avisoMs: Long?): Momento {
         val m = Momento(
@@ -133,6 +137,7 @@ class QuickActivity : FragmentActivity() {
             origen = origen, aviso_ts = avisoMs?.let { Fechas.isoDeMillis(it) },
         )
         Repo.guardarMomento(m)
+        if (tipo == "recaida") previoRecaida = io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
         // Luz y, si lo activaste, ruido del ambiente en ese instante (no se guarda audio).
         lifecycleScope.launch {
             val ctx = this@QuickActivity
@@ -166,20 +171,40 @@ class QuickActivity : FragmentActivity() {
         var valencia by remember { mutableStateOf(inicial?.valencia) }
         var activacion by remember { mutableStateOf<Int?>(null) }
         var nota by remember { mutableStateOf("") }
+        var con by remember { mutableStateOf(inicial?.con_quien.orEmpty()) }
         Encabezado("¿Cómo te sientes ahora?", if (m != null) "Guardado a las ${Fechas.horaDe(m!!.ts)}. Agrega energía si quieres." else "Qué tan agradable y cuánta energía, en este momento.")
         Etiqueta("Qué tan agradable")
         Escala(valencia, 1, 7, Catalogo.ANCLAS["valencia"]) { v ->
             valencia = v
-            if (v != null) { val actual = m; if (actual == null) m = crear("muestreo", origen, v, avisoMs) else actualizar(actual.id) { it.copy(valencia = v) } }
+            if (v != null) {
+                val actual = m
+                if (actual == null) m = crear("muestreo", origen, v, avisoMs).also { nm -> if (con.isNotEmpty()) actualizar(nm.id) { it.copy(con_quien = con) } }
+                else actualizar(actual.id) { it.copy(valencia = v) }
+            }
         }
         Etiqueta("Energía")
         Escala(activacion, 1, 7, Catalogo.ANCLAS["activacion"]) { v ->
             activacion = v
             m?.let { mm -> actualizar(mm.id) { it.copy(activacion = v) } }
         }
+        Etiqueta("¿Con quién estás?")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.CON_QUIEN.forEach { o ->
+                val activo = o.id in con
+                Ficha(o.nombre, activo) {
+                    // «Solo» excluye a los demás, y elegir a alguien quita «solo».
+                    con = when {
+                        activo -> con - o.id
+                        o.id == "solo" -> listOf("solo")
+                        else -> con - "solo" + o.id
+                    }
+                    m?.let { mm -> actualizar(mm.id) { x -> x.copy(con_quien = con) } }
+                }
+            }
+        }
         Etiqueta("Nota (opcional)")
         OutlinedTextField(value = nota, onValueChange = { nota = it; m?.let { mm -> actualizar(mm.id) { x -> x.copy(texto = it) } } },
-            modifier = Modifier.fillMaxWidth(), placeholder = { Text("¿Qué está pasando? Usa @ y #") })
+            modifier = Modifier.fillMaxWidth(), placeholder = { Text("¿Qué está pasando? Usa @ y #") }, visualTransformation = rememberMarcas())
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) {
             BotonPrincipal("Listo", habilitado = m != null) { terminar() }
         }
@@ -194,7 +219,7 @@ class QuickActivity : FragmentActivity() {
         if (m == null) {
             Encabezado("Ahora mismo estoy…", "Toca uno. Se guarda al instante con la hora y el lugar.")
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
-                Catalogo.MOMENTOS.forEach { t ->
+                (Catalogo.MOMENTOS + if (Repo.config.seguimiento_privado) listOf(Catalogo.RECAIDA) else emptyList()).forEach { t ->
                     Surface(
                         onClick = { m = crear(t.id, origen, null, null) },
                         modifier = Modifier.weight(1f).heightIn(min = 56.dp),
@@ -207,17 +232,104 @@ class QuickActivity : FragmentActivity() {
             val mm = m!!
             val t = Catalogo.tipo(mm.tipo)
             Encabezado("Guardado: ${if (discreto) t?.discreto ?: "" else t?.nombre ?: mm.tipo}", "A las ${Fechas.horaDe(mm.ts)}. Lo demás es opcional; puedes cerrar.")
+            if (mm.tipo == "recaida") DetalleRecaida(mm)
             Etiqueta(t?.pregunta ?: "Detalle")
             OutlinedTextField(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
-                modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("Usa @persona y #tema") })
+                modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("Usa @persona y #tema") }, visualTransformation = rememberMarcas())
             Row(Modifier.padding(top = 8.dp)) { BotonDictado { d -> texto = (texto + " " + d).trim(); actualizar(mm.id) { x -> x.copy(texto = texto) } } }
-            Etiqueta("Intensidad")
+            Etiqueta(if (mm.tipo == "recaida") "Qué tan fuerte era el impulso" else "Intensidad")
             Escala(intensidad, 1, 5, mapOf(1 to "Muy leve", 2 to "Leve", 3 to "Moderada", 4 to "Fuerte", 5 to "Muy fuerte")) { v ->
                 intensidad = v; actualizar(mm.id) { it.copy(intensidad = v) }
             }
             Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { Repo.borrarMomento(mm.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Deshacer") }
+                TextButton(onClick = {
+                    Repo.borrarMomento(mm.id)
+                    previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
+                    Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
+                }) { Text("Deshacer") }
                 BotonPrincipal("Listo") { terminar() }
+            }
+        }
+    }
+
+    /** Lo que ayuda a entender una recaída: qué la detonó, en qué aparato y qué hacías antes. Todo opcional. */
+    @Composable
+    private fun DetalleRecaida(mm: Momento) {
+        var det by remember(mm.id) { mutableStateOf(mm.detonantes) }
+        var aparato by remember(mm.id) { mutableStateOf(mm.dispositivo) }
+        var antes by remember(mm.id) { mutableStateOf(mm.antes) }
+        val h = io.github.ruddy2003.vestigium.data.Recaidas.habito()
+        Ayuda("Solo para ti: no sale en reportes, logros ni «Tu año». " + (if (h != null) "El hábito «${h.nombre}» quedó en 0 hoy." else "Puedes ligarla a un hábito en Privacidad."),
+            Modifier.padding(bottom = 4.dp))
+        Etiqueta("Qué la detonó")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.DETONANTES.forEach { d ->
+                val activo = d in det
+                Ficha(d.replace("_", " "), activo) { det = if (activo) det - d else det + d; actualizar(mm.id) { it.copy(detonantes = det) } }
+            }
+        }
+        Etiqueta("Qué hacías justo antes")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.ANTES.forEach { o -> Ficha(o.nombre, antes == o.id) { antes = if (antes == o.id) null else o.id; actualizar(mm.id) { it.copy(antes = antes) } } }
+        }
+        Etiqueta("En qué aparato")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.DISPOSITIVOS.forEach { o -> Ficha(o.nombre, aparato == o.id) { aparato = if (aparato == o.id) null else o.id; actualizar(mm.id) { it.copy(dispositivo = aparato) } } }
+        }
+    }
+
+    /** El cronómetro: elegir qué empieza, ver cuánto lleva y terminarlo; también anotar una siesta que ya pasó. */
+    @Composable
+    private fun EnfoqueRapido() {
+        val ctx = this
+        val c = io.github.ruddy2003.vestigium.data.Enfoque.enCurso(Repo.config)
+        var nota by remember { mutableStateOf("") }
+        val ahora by androidx.compose.runtime.produceState(System.currentTimeMillis()) { while (true) { kotlinx.coroutines.delay(1000); value = System.currentTimeMillis() } }
+        if (c != null) {
+            val seg = ((ahora - c.second) / 1000).coerceAtLeast(0)
+            Encabezado(if (c.first == "siesta") "Siesta en curso" else "Enfoque: ${Catalogo.nombreTramo(c.first).lowercase()}", "Empezó a las ${Fechas.horaDe(Fechas.isoDeMillis(c.second))}.")
+            Text("%d:%02d:%02d".format(seg / 3600, (seg / 60) % 60, seg % 60), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Qué hiciste (opcional): #tesis, capítulo 2…") }, singleLine = true)
+            Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                TextButton(onClick = { io.github.ruddy2003.vestigium.data.Enfoque.descartar(ctx); Toast.makeText(ctx, "Descartado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Descartar") }
+                BotonPrincipal("Terminar") {
+                    val t = io.github.ruddy2003.vestigium.data.Enfoque.terminar(ctx, nota)
+                    Toast.makeText(ctx, if (t != null) "Guardado: ${t.min} min" else "Duró menos de un minuto; no se guardó.", Toast.LENGTH_SHORT).show()
+                    terminar()
+                }
+            }
+            return
+        }
+        Encabezado("Empezar a medir", "Toca qué vas a hacer. El tiempo corre aunque cierres esto; lo terminas desde la notificación, el widget o aquí.")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 3) {
+            (Catalogo.ENFOQUE + Catalogo.SIESTA).forEach { o ->
+                Surface(onClick = { io.github.ruddy2003.vestigium.data.Enfoque.iniciar(ctx, o.id); Toast.makeText(ctx, "Corriendo: ${o.nombre.lowercase()}", Toast.LENGTH_SHORT).show(); terminar() },
+                    modifier = Modifier.weight(1f).heightIn(min = 52.dp), shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+                    Box(contentAlignment = Alignment.Center) { Text(o.nombre, style = MaterialTheme.typography.titleSmall) }
+                }
+            }
+        }
+        // Una siesta (o un bloque) que ya pasó.
+        var tipo by remember { mutableStateOf("siesta") }
+        var hora by remember { mutableStateOf("") }
+        var min by remember { mutableStateOf("") }
+        Etiqueta("¿Ya pasó? Anótalo")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            (listOf(Catalogo.SIESTA) + Catalogo.ENFOQUE).forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedTextField(value = hora, onValueChange = { hora = it.filter { ch -> ch.isDigit() || ch == ':' }.take(5) }, modifier = Modifier.weight(1f), singleLine = true,
+                label = { Text("Empezó (15:30)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+            OutlinedTextField(value = min, onValueChange = { min = it.filter { ch -> ch.isDigit() }.take(4) }, modifier = Modifier.weight(1f), singleLine = true,
+                label = { Text("Minutos") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.End) {
+            BotonPrincipal("Guardar", habilitado = hora.length >= 4 && (min.toIntOrNull() ?: 0) > 0) {
+                val t = io.github.ruddy2003.vestigium.data.Enfoque.agregar(tipo, Fechas.diaLogico(), if (hora.contains(':')) hora else hora.dropLast(2) + ":" + hora.takeLast(2), min.toInt())
+                Toast.makeText(ctx, if (t != null) "Guardado" else "Revisa la hora (por ejemplo 15:30).", Toast.LENGTH_SHORT).show()
+                if (t != null) terminar()
             }
         }
     }

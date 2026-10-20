@@ -51,65 +51,88 @@ fun PantallaMas(nav: Nav) {
         u == null || java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(u.fecha), java.time.LocalDate.now()) >= i.frecuenciaDias
     }
     Hoja("Más", buscar = { nav.ir("buscar") }) {
+        AtajosFijos { nav.ir(it) }
+        // Los especiales, en recuadros grandes.
         Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             RecuadroTuAnio(nav)
             RecuadroLogros(nav)
+            RecuadroHall(nav)
+            RecuadroCampanas(nav)
             RecuadroMapas(nav)
             RecuadroObras(nav)
             RecuadroOtrasVidas(nav)
         }
+        val ir: (String) -> Unit = { nav.ir(it) }
         Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1) {
             Tarjeta {
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
-                FilaMenu("Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${Repo.ascensos.size} sesiones · última ${Fechas.relativo(ult.fecha)}") { nav.ir("escalada") }
+                FilaMas("escalada", "Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${Repo.ascensos.size} sesiones · última ${Fechas.relativo(ult.fecha)}", ir)
                 HorizontalDivider()
-                FilaMenu("Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados") { nav.ir("fuerza") }
+                FilaMas("fuerza", "Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados", ir)
                 HorizontalDivider()
-                FilaMenu("Hábitos", "${Repo.config.habitos.count { it.activo }} activos · se marcan en la hoja de la noche") { nav.ir("habitos") }
+                val corriendo = io.github.ruddy2003.vestigium.data.Enfoque.enCurso()
+                FilaMas("enfoque", "Enfoque y siestas", if (corriendo != null) "Corriendo: ${Catalogo.nombreTramo(corriendo.first).lowercase()}" else "${Repo.tramos.size} tramos medidos · estudio, lectura, idiomas, siestas", ir)
                 HorizontalDivider()
-                FilaMenu("Cartas", "${Repo.cartas.count { !it.abierta }} selladas para tu yo del futuro · ${Repo.cartas.count { it.para.isNotBlank() }} a otras personas") { nav.ir("cartas") }
+                FilaMas("habitos", "Hábitos", "${Repo.config.habitos.count { it.activo }} activos · se marcan en la hoja de la noche", ir)
                 HorizontalDivider()
-                FilaMenu("Biblioteca de sueños", "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos") { nav.ir("biblioteca_suenos") }
+                FilaMas("cartas", "Cartas", "${Repo.cartas.count { !it.abierta }} selladas para tu yo del futuro · ${Repo.cartas.count { it.para.isNotBlank() }} a otras personas", ir)
                 HorizontalDivider()
-                FilaMenu("Frases guardadas", (Repo.config.frases_guardadas.size + Repo.obras.sumOf { o -> o.citas.count { it.favorita } }).let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }) { nav.ir("frases") }
+                FilaMas("biblioteca_suenos", "Biblioteca de sueños", "${Repo.dias.values.count { it.sueno_texto.isNotBlank() }} sueños escritos", ir)
+                HorizontalDivider()
+                FilaMas("frases", "Frases guardadas", (Repo.config.frases_guardadas.size + Repo.obras.sumOf { o -> o.citas.count { it.favorita } }).let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }, ir)
             }
         }
-        Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 2) {
+        Seccion("Ver tu vida", "Tus datos dibujados.", numero = 2) {
             Tarjeta {
-                FilaMenu("Salud", "Tus datos frente a las recomendaciones de la OMS: pasos, sueño, azúcar, sal, fibra, alcohol, vitaminas…") { nav.ir("salud") }
+                FilaMas("cinta", "La cinta", "Tu día hora por hora: sueño, lugares, pantalla, música, momentos", ir)
                 HorizontalDivider()
-                FilaMenu("Tus apps", "YouTube, música, comida, gimnasio, Kindle, WhatsApp y Google, en números") { nav.ir("tus_apps") }
+                FilaMas("constelacion", "Constelación", "Tu gente como un cielo", ir)
                 HorizontalDivider()
-                FilaMenu("Cuestionarios", if (pendientes > 0) "$pendientes pendiente(s): bienestar, estrés, soledad, personalidad" else "Al día") { nav.ir("escalas") }
+                FilaMas("calendario", "Calendario", "Mes por mes, con capas de ánimo, sueño, pasos…", ir)
+                if (Repo.config.seguimiento_privado) {
+                    HorizontalDivider()
+                    FilaMas("recaidas", "Impulsos y recaídas", "Seguimiento privado: horas, lugares y detonantes", ir)
+                }
+            }
+        }
+        Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 3) {
+            Tarjeta {
+                FilaMas("salud", "Salud", "Tus datos frente a las recomendaciones de la OMS: pasos, sueño, azúcar, sal, fibra, alcohol, vitaminas…", ir)
                 HorizontalDivider()
-                FilaMenu("Prueba de reacción", "30 segundos para medir tu estado mental") { nav.ir("reaccion") }
+                FilaMas("tus_apps", "Tus apps", "YouTube, música, comida, gimnasio, Kindle, WhatsApp y Google, en números", ir)
+                HorizontalDivider()
+                FilaMas("escalas", "Cuestionarios", if (pendientes > 0) "$pendientes pendiente(s): bienestar, estrés, soledad, personalidad" else "Al día", ir)
+                HorizontalDivider()
+                FilaMas("reaccion", "Prueba de reacción", "30 segundos para medir tu estado mental", ir)
                 HorizontalDivider()
                 val u = io.github.ruddy2003.vestigium.data.Politica.ultimo()
-                FilaMenu("Brújula política", if (u == null) "Un test al año para ver cómo cambian tus posiciones" else "Último: ${Fechas.corto(u.fecha)} ${u.fecha.take(4)}" +
-                    if (io.github.ruddy2003.vestigium.data.Politica.toca()) " · toca el de este año" else "") { nav.ir("politica") }
+                FilaMas("politica", "Brújula política", if (u == null) "Un test al año para ver cómo cambian tus posiciones" else "Último: ${Fechas.corto(u.fecha)} ${u.fecha.take(4)}" +
+                    if (io.github.ruddy2003.vestigium.data.Politica.toca()) " · toca el de este año" else "", ir)
                 HorizontalDivider()
-                FilaMenu("Conocerte", if (io.github.ruddy2003.vestigium.data.Perfiles.vacio(Repo.config.perfil)) "Con quién vives, a quién ves, a qué te dedicas" else
-                    "Lo grande de tu vida · ${Repo.config.perfil_historial.size} cambios guardados") { nav.ir("conocer") }
+                FilaMas("conocer", "Conocerte", if (io.github.ruddy2003.vestigium.data.Perfiles.vacio(Repo.config.perfil)) "Con quién vives, a quién ves, a qué te dedicas" else
+                    "Lo grande de tu vida · ${Repo.config.perfil_historial.size} cambios guardados", ir)
             }
         }
-        Seccion("Sistema", numero = 3) {
+        Seccion("Sistema", numero = 4) {
             Tarjeta {
-                FilaMenu("Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, vibraciones y sonidos") { nav.ir("apariencia") }
+                FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, personaje, vibraciones y sonidos", ir)
                 HorizontalDivider()
-                FilaMenu("Avisos y recordatorios", "Avisos de ánimo, horas del diario y del sueño, cuestionarios") { nav.ir("avisos") }
+                FilaMas("avisos", "Avisos y recordatorios", "Avisos de ánimo, horas del diario y del sueño, cuestionarios", ir)
                 HorizontalDivider()
-                FilaMenu("Privacidad", "Huella, modo discreto, seguimiento privado, ubicación") { nav.ir("privacidad") }
+                FilaMas("privacidad", "Privacidad", "Huella, modo discreto, seguimiento privado, ubicación", ir)
                 HorizontalDivider()
-                FilaMenu("Datos", "Exportar a R, Google Drive, respaldos, importar") { nav.ir("datos") }
+                FilaMas("datos", "Datos", "Exportar a R, Google Drive, respaldos, importar", ir)
                 HorizontalDivider()
-                FilaMenu("Reportes", "Semanal en imagen, mensual en PDF") { nav.ir("reportes") }
+                FilaMas("estado_datos", "Estado de los datos", "Qué fuentes registraron hoy, qué permiso falta y el último respaldo", ir)
                 HorizontalDivider()
-                FilaMenu("Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima") { nav.ir("permisos") }
+                FilaMas("reportes", "Reportes", "Semanal en imagen, mensual en PDF", ir)
                 HorizontalDivider()
-                FilaMenu("Guía científica", "Qué mide cada cosa y de dónde viene") { nav.ir("guia") }
+                FilaMas("permisos", "Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima", ir)
+                HorizontalDivider()
+                FilaMas("guia", "Guía científica", "Qué mide cada cosa y de dónde viene", ir)
             }
         }
-        Ayuda("Atajo: mantén presionada una pestaña. Día abre la hoja de la noche; Diario, un momento; Gastos, un gasto nuevo; Entender, el resumen semanal; Más, el buscador. " +
+        Ayuda("Atajo: mantén presionada una pestaña. Día abre la hoja de la noche; Diario, un momento; Gastos, un gasto nuevo; Entender, el resumen semanal; Más, el buscador (que también encuentra pantallas). " +
             "Tocar la pestaña en la que ya estás te sube al inicio (en Día, además, te regresa a hoy).", Modifier.padding(top = 16.dp))
         Ayuda("vestigium mei · schema_v = ${io.github.ruddy2003.vestigium.data.SCHEMA_V} · ${io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico())}", Modifier.padding(top = 16.dp))
     }

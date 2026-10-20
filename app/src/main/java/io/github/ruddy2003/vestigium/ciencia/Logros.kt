@@ -31,7 +31,7 @@ object Logros {
 
     @Volatile private var cache: Pair<List<Any?>, List<Logro>>? = null
     private fun clave(): List<Any?> = listOf(Repo.dias, Repo.momentos, Repo.salud, Repo.entrenos, Repo.obras, Repo.cartas, Repo.reacciones, Repo.respuestas,
-        Repo.gastos, Repo.pantalla, Repo.config, Repo.ascensos, Repo.sesiones, Mundo.version, Fechas.diaLogico())
+        Repo.gastos, Repo.pantalla, Repo.config, Repo.ascensos, Repo.sesiones, Mundo.version, Fechas.diaLogico(), Repo.tramos)
 
     /** Fecha en que una lista ordenada de días llega a [n] (el día del n-ésimo). */
     private fun alLlegar(fechas: List<String>, n: Int): String? = if (n <= 0) null else fechas.getOrNull(n - 1)
@@ -116,7 +116,7 @@ object Logros {
         Repo.cartas.filter { it.abierta }.mapNotNull { it.abierta_el?.take(10) ?: it.abrir_en }.minOrNull().let { f ->
             out += Logro("carta_abierta", "Del pasado", "Abre una carta que te escribiste", "✉", "Diario", 2, 1.0, if (f != null) 1.0 else 0.0, f)
         }
-        val momentos = Repo.momentos.filter { it.tipo != "muestreo" }.map { it.fecha }.sorted()
+        val momentos = Repo.momentos.filter { it.tipo != "muestreo" && it.tipo != "recaida" }.map { it.fecha }.sorted()
         escalones("momentos", "Diario", "◷", "momentos", listOf(10.0 to "Coleccionista", 100.0 to "Cien momentos", 1000.0 to "Mil momentos"), momentos.size.toDouble(),
             { alLlegar(momentos, it.toInt()) }, { "Registra ${it.toInt()} momentos" })
         val avisos = Repo.momentos.filter { it.tipo == "muestreo" }.map { it.fecha }.sorted()
@@ -241,6 +241,14 @@ object Logros {
         escalones("gastos", "Curiosos", "$", "gastos", listOf(100.0 to "Contador", 1000.0 to "Libro mayor"), gastos.size.toDouble(), { alLlegar(gastos, it.toInt()) }, { "Registra ${it.toInt()} gastos" })
         val temas = Repo.config.tema_rotado.isNotBlank()
         out += Logro("camaleon", "Camaleón", "Deja que la app cambie de tema sola", "◑", "Curiosos", 1, 1.0, if (temas) 1.0 else 0.0, Repo.config.tema_rotado.ifBlank { null })
+
+        // ------------------------------------------------ Enfoque y campañas
+        val enfoque = Repo.tramos.filter { it.tipo != "siesta" }.groupBy { it.fecha }.mapValues { (_, l) -> l.sumOf { it.min } / 60.0 }.entries.sortedBy { it.key }.map { it.key to it.value }
+        if (enfoque.isNotEmpty()) escalones("enfoque", "Mente", "◷", "horas", listOf(10.0 to "Diez horas de enfoque", 50.0 to "Cincuenta horas", 100.0 to "Cien horas", 500.0 to "Quinientas horas", 1000.0 to "Mil horas"),
+            enfoque.sumOf { it.second }, { acumulado(enfoque, it) }, { "Acumula ${it.toInt()} horas de enfoque con el cronómetro" })
+        val victorias = runCatching { Campanas.victorias(hoy) }.getOrDefault(emptyList())
+        if (Repo.config.campanas.isNotEmpty()) escalones("campanas", "Constancia", "⚑", "campañas", listOf(1.0 to "Primera campaña", 5.0 to "Veterano de campaña", 20.0 to "Conquistador", 52.0 to "Un año de campañas"),
+            victorias.size.toDouble(), { alLlegar(victorias, it.toInt()) }, { "Gana ${it.toInt()} campañas semanales" })
 
         // ------------------------------------------------ Los tuyos
         Repo.config.logros_propios.forEach { p -> out += propio(p) }

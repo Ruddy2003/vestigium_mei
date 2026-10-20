@@ -120,7 +120,7 @@ object Totales {
         fun en(f: String?) = f != null && f.length >= 10 && f.take(10) >= desde && f.take(10) <= hasta
         val eq = Repo.equivalencias()
         val dias = Repo.dias.values.filter { en(it.fecha) }
-        val momentos = Repo.momentos.filter { en(it.fecha) }
+        val momentos = Repo.momentos.filter { en(it.fecha) && it.tipo != "recaida" }
         val salud = Repo.salud.values.filter { en(it.fecha) }
         val pantalla = Repo.pantalla.values.filter { en(it.fecha) }
         val actividad = Repo.actividad.values.filter { en(it.fecha) }

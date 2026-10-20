@@ -350,7 +350,7 @@ object Romano {
         "Gimnasio" to "ROBVR", "Análisis" to "ANALYSIS", "Buscar" to "QVAERERE", "Cifras" to "NVMERI", "Momentos de la semana" to "MOMENTA HEBDOMADIS",
         "Llenar el día" to "VESPERA", "Entender" to "INTELLEGERE", "Registros especiales" to "TABVLAE", "Apariencia" to "SPECIES", "Avisos y recordatorios" to "MONITIONES", "Biblioteca del diario" to "LIBRI DIERVM", "Entrada" to "PAGINA", "Hoy" to "HODIE", "Línea de tiempo" to "ORDO TEMPORVM", "Ahora mismo estoy…" to "NVNC",
     )
-    fun latin(titulo: String): String? = LATIN[titulo]
+    fun latin(titulo: String): String? = LATIN[titulo] ?: NombresNuevos.de(TemaId.ROMANO, titulo)
 
     val MESES = listOf("IANVARIVS", "FEBRVARIVS", "MARTIVS", "APRILIS", "MAIVS", "IVNIVS", "IVLIVS", "AVGVSTVS", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER")
     /** Días de la semana romanos, de lunes a domingo: de ahí vienen lunes (Lunae), martes (Martis), miércoles (Mercurii)… */

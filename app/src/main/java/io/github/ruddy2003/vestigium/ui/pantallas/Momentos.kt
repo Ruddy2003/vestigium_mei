@@ -68,7 +68,7 @@ fun PantallaMomentos(nav: Nav) {
         if (!conUbicacion) Aviso("Sin permiso de ubicación, los momentos se guardan sin lugar. Actívalo en Más → Permisos y sensores.")
         Seccion("Ahora mismo estoy…") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
-                Catalogo.MOMENTOS.forEach { t ->
+                (Catalogo.MOMENTOS + if (Repo.config.seguimiento_privado) listOf(Catalogo.RECAIDA) else emptyList()).forEach { t ->
                     Surface(onClick = { abrir(QuickActivity.M_MOMENTO, t.id) }, modifier = Modifier.weight(1f).heightIn(min = 54.dp),
                         shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                         Box(contentAlignment = Alignment.Center) { Text(if (discreto) t.discreto else t.nombre, style = MaterialTheme.typography.titleMedium) }
@@ -79,7 +79,7 @@ fun PantallaMomentos(nav: Nav) {
             Ayuda("También puedes agregar los widgets de Vestigium a tu pantalla de inicio o el botón al panel de ajustes rápidos.", Modifier.padding(top = 8.dp))
         }
 
-        val recientes = Repo.momentos.filter { it.fecha >= Fechas.sumar(Fechas.diaLogico(), -30) }.sortedByDescending { it.ts }
+        val recientes = Repo.momentos.filter { it.fecha >= Fechas.sumar(Fechas.diaLogico(), -30) && (Repo.config.seguimiento_privado || it.tipo != "recaida") }.sortedByDescending { it.ts }
         Seccion("Últimos 30 días", "${recientes.size} registros. Toca uno para editarlo.") {
             if (recientes.isEmpty()) Vacio("Todavía no hay momentos. Toca un botón de arriba cuando algo te pase por la cabeza.")
             var ultimoDia = ""
@@ -94,7 +94,7 @@ fun PantallaMomentos(nav: Nav) {
                         Column(Modifier.weight(1f)) {
                             val extra = listOfNotNull(m.valencia?.let { "valencia $it" }, m.activacion?.let { "energía $it" }, m.intensidad?.let { "intensidad $it" }).joinToString(" · ")
                             Text(tipoNombre(m.tipo, discreto) + if (extra.isNotEmpty()) " · $extra" else "", style = MaterialTheme.typography.titleMedium)
-                            if (m.texto.isNotBlank()) Text(m.texto, style = MaterialTheme.typography.bodyMedium)
+                            if (m.texto.isNotBlank()) io.github.ruddy2003.vestigium.ui.TextoMarcado(m.texto, style = MaterialTheme.typography.bodyMedium)
                             val lugar = Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre
                             Ayuda(listOfNotNull(lugar, if (m.lat != null && lugar == null) "con ubicación" else null, m.origen).joinToString(" · "))
                         }
@@ -122,14 +122,19 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
         title = { Text("${tipoNombre(m.tipo, discreto)} · ${Fechas.horaDe(m.ts)}") },
         text = {
         Column {
-            OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2)
+            OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
             if (m.tipo == "muestreo") { Etiqueta("Valencia"); Escala(valencia, 1, 7) { valencia = it } }
             else { Etiqueta("Intensidad"); Escala(intensidad, 1, 5) { intensidad = it } }
         }
         },
         confirmButton = { TextButton(onClick = { Repo.guardarMomento(m.copy(texto = texto, intensidad = intensidad, valencia = valencia)); cerrar() }) { Text("Guardar") } },
         dismissButton = {
-        TextButton(onClick = { if (confirmar) { Repo.borrarMomento(m.id); cerrar() } else confirmar = true }) {
+        TextButton(onClick = {
+            if (confirmar) {
+                Repo.borrarMomento(m.id); cerrar()
+                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") { Repo.guardarMomento(m) }
+            } else confirmar = true
+        }) {
             Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)
         }
         },

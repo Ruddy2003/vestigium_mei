@@ -148,6 +148,25 @@ object Estadistica {
         }
         if (Repo.config.seguimiento_privado) {
             v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
+            v += Variable("n_recaida", "Recaídas registradas con hora", "Privado")
+        }
+        // Enfoque, siestas y lo que se deriva del teléfono y el reloj.
+        if (Repo.tramos.isNotEmpty()) {
+            v += Variable("enfoque_min", "Minutos de enfoque (cronómetro)", "Enfoque")
+            Repo.tramos.map { it.tipo }.filter { it != "siesta" }.distinct().forEach { t -> v += Variable("enfoque_${t}_min", "Enfoque: ${Catalogo.nombreTramo(t).lowercase()} (min)", "Enfoque") }
+            if (Repo.tramos.any { it.tipo == "siesta" }) { v += Variable("siesta", "Tomé siesta (0/1)", "Sueño"); v += Variable("siesta_min", "Minutos de siesta", "Sueño") }
+        }
+        if (Repo.pantalla.values.any { it.cama_min != null }) {
+            v += Variable("cama_min", "Pantalla en la última hora antes de dormir (min)", "Sueño")
+            v += Variable("dormir_tras_tel_min", "Minutos entre soltar el teléfono y dormirte", "Sueño")
+        }
+        if (Repo.pantalla.values.any { it.tel_tras_despertar_min != null }) v += Variable("tel_tras_despertar_min", "Minutos entre despertar y tomar el teléfono", "Sueño")
+        v += Variable("aire_libre_min", "Minutos al aire libre (estimado)", "Entorno")
+        if (Repo.lugares.any { it.tipo == "casa" }) v += Variable("en_casa_min", "Minutos en casa", "Movilidad")
+        if (Repo.momentos.any { it.con_quien.isNotEmpty() }) {
+            v += Variable("acompanado_pct", "Avisos de ánimo con alguien (0 a 1)", "Social")
+            Catalogo.CON_QUIEN.filter { it.id != "solo" }.forEach { o -> v += Variable("con_${o.id}", "Avisos con ${o.nombre.lowercase()} (0 a 1)", "Social") }
+            v += Variable("valencia_acompanado", "Valencia en avisos con alguien", "Ánimo"); v += Variable("valencia_solo", "Valencia en avisos estando solo", "Ánimo")
         }
         Catalogo.CONTEXTOS.forEach { v += Variable("ctx_${it.id}", "Contexto: ${it.nombre} (0/1)", "Contexto") }
         Catalogo.CIENTIFICAS.forEach { p -> p.opciones.filter { it.id != "no_aplica" }.forEach { o -> v += Variable("${p.clave}_${o.id}", "${o.nombre} (0/1)", "Lectura del día") } }
@@ -191,6 +210,32 @@ object Estadistica {
             r["muestreo_valencia"] = media(mu.mapNotNull { it.valencia?.toDouble() })
             r["muestreo_activacion"] = media(mu.mapNotNull { it.activacion?.toDouble() })
             Catalogo.MOMENTOS.forEach { t -> r["n_${t.id}"] = lista.count { it.tipo == t.id }.toDouble() }
+            // Con quién: la proporción de avisos de ánimo con cada compañía, y el ánimo solo o acompañado.
+            val con = mu.filter { it.con_quien.isNotEmpty() }
+            if (con.isNotEmpty()) {
+                val acomp = con.filter { "solo" !in it.con_quien }
+                r["acompanado_pct"] = acomp.size.toDouble() / con.size
+                Catalogo.CON_QUIEN.filter { it.id != "solo" }.forEach { o -> r["con_${o.id}"] = con.count { o.id in it.con_quien }.toDouble() / con.size }
+                r["valencia_acompanado"] = media(acomp.mapNotNull { it.valencia?.toDouble() })
+                r["valencia_solo"] = media(con.filter { "solo" in it.con_quien }.mapNotNull { it.valencia?.toDouble() })
+            }
+        }
+        if (Repo.config.seguimiento_privado) {
+            val rec = Repo.momentos.filter { it.tipo == "recaida" }.groupingBy { it.fecha }.eachCount()
+            rec.keys.minOrNull()?.let { p0 -> Repo.dias.keys.filter { it >= p0 }.forEach { f -> fila(f)["n_recaida"] = (rec[f] ?: 0).toDouble() } }
+            rec.forEach { (f, n) -> fila(f)["n_recaida"] = n.toDouble() }
+        }
+        // Cronómetro: desde el primer tramo, los días sin nada cuentan como 0.
+        if (Repo.tramos.isNotEmpty()) {
+            val porDia = Repo.tramos.groupBy { it.fecha }
+            val tipos = Repo.tramos.map { it.tipo }.filter { it != "siesta" }.distinct()
+            val p0 = porDia.keys.min()
+            (Repo.dias.keys.filter { it >= p0 } + porDia.keys).toSet().forEach { f ->
+                val l = porDia[f].orEmpty(); val r = fila(f)
+                r["enfoque_min"] = l.filter { it.tipo != "siesta" }.sumOf { it.min }.toDouble()
+                tipos.forEach { t -> r["enfoque_${t}_min"] = l.filter { it.tipo == t }.sumOf { it.min }.toDouble() }
+                if (Repo.tramos.any { it.tipo == "siesta" }) { val sm = l.filter { it.tipo == "siesta" }.sumOf { it.min }; r["siesta_min"] = sm.toDouble(); r["siesta"] = b(sm > 0) }
+            }
         }
         Repo.gastos.groupBy { it.dia }.forEach { (f, lista) ->
             val r = fila(f); r["gasto_total"] = lista.sumOf { it.monto }; r["gasto_imprevisto"] = b(lista.any { it.imprevisto })
@@ -200,7 +245,10 @@ object Estadistica {
             r["sueno_horas"] = s.sueno_min?.let { it / 60.0 }; r["sueno_profundo"] = s.sueno_profundo_min?.toDouble()
             r["sueno_rem"] = s.sueno_rem_min?.toDouble(); r["hrv"] = s.hrv_rmssd; r["fc_reposo"] = s.fc_reposo; r["pasos"] = s.pasos?.toDouble()
         }
-        Repo.pantalla.forEach { (f, p) -> val r = fila(f); r["pantalla_min"] = p.total_min.toDouble(); r["desbloqueos"] = p.desbloqueos.toDouble() }
+        Repo.pantalla.forEach { (f, p) ->
+            val r = fila(f); r["pantalla_min"] = p.total_min.toDouble(); r["desbloqueos"] = p.desbloqueos.toDouble()
+            r["cama_min"] = p.cama_min?.toDouble(); r["dormir_tras_tel_min"] = p.dormir_tras_tel_min?.toDouble(); r["tel_tras_despertar_min"] = p.tel_tras_despertar_min?.toDouble()
+        }
         Repo.reacciones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["rt_media"] = media(l.mapNotNull { it.media_ms }) }
         Repo.visitas.groupBy { it.entrada.take(10) }.forEach { (f, l) -> fila(f)["lugares_distintos"] = l.map { it.lugar }.toSet().size.toDouble() }
         runCatching { Movilidad.kmPorDia() }.getOrDefault(emptyMap()).forEach { (f, km) -> fila(f)["distancia_km"] = km }
@@ -215,6 +263,30 @@ object Estadistica {
         Repo.notifs.forEach { (f, x) -> fila(f)["notificaciones"] = x.total.toDouble() }
         Repo.agenda.forEach { (f, x) -> val r = fila(f); r["eventos"] = x.eventos.toDouble(); r["min_ocupado"] = x.min_ocupado.toDouble() }
         Repo.actividad.forEach { (f, x) -> val r = fila(f); r["a_pie_min"] = (x.minutos["a_pie"] ?: 0).toDouble(); r["vehiculo_min"] = (x.minutos["vehiculo"] ?: 0).toDouble() }
+        // Al aire libre: la luz de exterior que mide el teléfono o, si es más, el tiempo caminando, corriendo o en bici.
+        (Repo.conexiones.keys + Repo.actividad.keys).forEach { f ->
+            val luz = Repo.conexiones[f]?.luz_alta_min
+            val mov = Repo.actividad[f]?.minutos?.let { (it["a_pie"] ?: 0) + (it["corriendo"] ?: 0) + (it["bici"] ?: 0) }
+            if (luz != null || mov != null) fila(f)["aire_libre_min"] = maxOf(luz ?: 0, mov ?: 0).toDouble()
+        }
+        // En casa: el tiempo dentro de los lugares que marcaste como casa, recortado a cada día.
+        val casas = Repo.lugares.filter { it.tipo == "casa" }.map { it.id }.toSet()
+        if (casas.isNotEmpty()) {
+            val enCasa = HashMap<String, Double>()
+            val ahoraMs = System.currentTimeMillis()
+            Repo.visitas.filter { it.lugar in casas }.forEach { v ->
+                var a = Fechas.millis(v.entrada); val z = v.salida?.let { Fechas.millis(it) } ?: ahoraMs
+                if (a <= 0 || z <= a || z - a > 40L * 86_400_000L) return@forEach
+                while (a < z) {
+                    val f = Fechas.diaLogicoDeMillis(a)
+                    val finDia = Fechas.finDia(f) + 5 * 3_600_000L
+                    val y = minOf(z, finDia)
+                    enCasa[f] = (enCasa[f] ?: 0.0) + (y - a) / 60_000.0
+                    a = y
+                }
+            }
+            enCasa.forEach { (f, m) -> fila(f)["en_casa_min"] = Math.round(minOf(m, 1440.0)).toDouble() }
+        }
         Repo.sesiones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["ejercicio_min"] = l.sumOf { it.min }.toDouble() }
         Repo.pantalla.forEach { (f, p) ->
             val r = fila(f)
@@ -338,7 +410,7 @@ object Estadistica {
             listOf("n_madrugada", "n_manana", "n_tarde", "n_noche").forEach { r[it] = 0.0 }
         }
         // Momentos según la hora, su intensidad y su valencia.
-        Repo.momentos.filter { it.tipo != "muestreo" }.groupBy { it.fecha }.forEach { (f, l) ->
+        Repo.momentos.filter { it.tipo != "muestreo" && it.tipo != "recaida" }.groupBy { it.fecha }.forEach { (f, l) ->
             val r = fila(f)
             val horas = l.mapNotNull { Fechas.horaDe(it.ts).take(2).toIntOrNull() }
             r["n_madrugada"] = horas.count { it < 5 }.toDouble(); r["n_manana"] = horas.count { it in 5..11 }.toDouble()
@@ -435,7 +507,14 @@ object Estadistica {
         setOf("t_max", "t_min", "precip_mm", "nubes_pct", "luz_horas", "sol_horas", "presion_hpa"),
         setOf("aqi_us", "pm25"),
         setOf("gasto_total", "gasto_imprevisto"),
-        setOf("impulso", "recaida"),
+        setOf("impulso", "recaida", "n_recaida", "n_impulso"),
+        setOf("enfoque_min", "enfoque_estudio_min", "enfoque_lectura_min", "enfoque_idiomas_min", "enfoque_tesis_min", "enfoque_trabajo_min", "enfoque_creativo_min"),
+        setOf("siesta", "siesta_min"),
+        setOf("cama_min", "dormir_tras_tel_min", "ultimo_uso_h", "sueno_inicio_h", "carga_noche_h"),
+        setOf("tel_tras_despertar_min", "primer_uso_h", "sueno_fin_h"),
+        setOf("aire_libre_min", "luz_alta_min", "a_pie_min", "pasos"),
+        setOf("en_casa_min", "sin_wifi_min", "lugares_distintos", "distancia_km", "fuera_de_casa"),
+        setOf("acompanado_pct", "con_pareja", "con_amigos", "con_familia", "con_companeros", "con_desconocidos", "valencia_acompanado", "valencia_solo", "muestreo_valencia"),
         setOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada", "calificacion_obra"),
         setOf("ciudades_dia", "fuera_de_casa", "extranjero", "ciudad_nueva", "unesco", "distancia_km", "vehiculo_min"),
         setOf("cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes", "personas", "palabras"),

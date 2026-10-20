@@ -427,6 +427,13 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_cifra_info" />
         </receiver>
         <receiver android:name=".widget.HabitoReceiver" android:exported="false" />
+        <receiver android:name=".data.EnfoqueReceiver" android:exported="false" />
+        <receiver android:name=".widget.WidgetEnfoque" android:exported="false" android:label="Enfoque">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_enfoque_info" />
+        </receiver>
         <receiver android:name=".widget.CifraReceiver" android:exported="false" />
         <receiver android:name=".sensores.GeocercaReceiver" android:exported="false" />
         <receiver android:name=".sensores.ActividadReceiver" android:exported="false" />
@@ -453,6 +460,10 @@
             <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
         </service>
         <service android:name=".widget.MosaicoGasto" android:exported="true" android:label="@string/tile_gasto"
+            android:icon="@drawable/ic_stat" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+        <service android:name=".widget.MosaicoEnfoque" android:exported="true" android:label="@string/tile_enfoque"
             android:icon="@drawable/ic_stat" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
         </service>

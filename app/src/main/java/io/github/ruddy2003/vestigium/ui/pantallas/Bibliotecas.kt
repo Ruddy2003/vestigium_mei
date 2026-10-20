@@ -460,7 +460,7 @@ fun PantallaCarta(nav: Nav) {
         }
     }
     if (borrar) AlertDialog(onDismissRequest = { borrar = false },
-        title = { Text("¿Borrar esta carta?") }, text = { Text("No se puede deshacer.") },
-        confirmButton = { TextButton(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras() }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
+        title = { Text("¿Borrar esta carta?") }, text = { Text("Tendrás unos segundos para deshacerlo.") },
+        confirmButton = { TextButton(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { borrar = false }) { Text("Cancelar") } })
 }

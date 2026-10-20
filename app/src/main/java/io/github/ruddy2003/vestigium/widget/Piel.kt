@@ -18,5 +18,6 @@ internal object Piel {
 internal object PielNuevos {
     val ANILLOS = Partes(intArrayOf(R.id.raiz_anillos), intArrayOf(R.id.titulo_anillos), intArrayOf(), intArrayOf(R.id.sub_anillos), intArrayOf(), intArrayOf(), intArrayOf(R.id.p_anillos_1))
     val FOTO = Partes(intArrayOf(R.id.raiz_foto), intArrayOf(R.id.titulo_foto), intArrayOf(), intArrayOf(R.id.sub_foto, R.id.pie_foto), intArrayOf(), intArrayOf(), intArrayOf(R.id.p_foto_1))
+    val ENFOQUE = Partes(intArrayOf(R.id.raiz_enfoque), intArrayOf(R.id.titulo_enfoque), intArrayOf(R.id.crono_enfoque), intArrayOf(R.id.sub_enfoque, R.id.estado_enfoque), intArrayOf(), intArrayOf(), intArrayOf(R.id.p_enfoque_1))
     val CIFRA = Partes(intArrayOf(R.id.raiz_cifra), intArrayOf(R.id.titulo_cifra), intArrayOf(R.id.valor_cifra), intArrayOf(R.id.sub_cifra, R.id.etiqueta_cifra), intArrayOf(), intArrayOf(), intArrayOf(R.id.p_cifra_1))
 }

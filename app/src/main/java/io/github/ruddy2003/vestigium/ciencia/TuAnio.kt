@@ -122,7 +122,7 @@ object TuAnio {
             val ciudadesDias = p.fechas.flatMap { fe -> mundo?.get(Fechas.parse(fe).toEpochDay().toInt())?.ciudades?.map { it.first.nombre to fe }.orEmpty() }
                 .groupBy { it.first }.filter { it.value.map { x -> x.second }.distinct().size == 1 }.keys
             ciudadesDias.take(3).forEach { add("estuviste en $it") }
-            val mom = Repo.momentos.filter { it.fecha in en && it.tipo != "muestreo" }.groupingBy { it.tipo }.eachCount().filter { it.value == 1 }.keys
+            val mom = Repo.momentos.filter { it.fecha in en && it.tipo != "muestreo" && it.tipo != "recaida" }.groupingBy { it.tipo }.eachCount().filter { it.value == 1 }.keys
             mom.take(2).forEach { add("registraste: " + io.github.ruddy2003.vestigium.data.Catalogo.nombreTipo(it).lowercase()) }
             val gente = p.fechas.mapNotNull { Repo.dias[it] }.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount().filter { it.value == 1 }.keys
             gente.take(2).forEach { add("mencionaste a @$it") }

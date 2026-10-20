@@ -70,7 +70,7 @@ object Periodo {
         val fechas = (0 until n).map { Fechas.sumar(ini, it.toLong()) }
         val en = fechas.toHashSet()
         val dias = fechas.mapNotNull { Repo.dias[it] }
-        val mu = Repo.momentos.filter { it.fecha in en }
+        val mu = Repo.momentos.filter { it.fecha in en && it.tipo != "recaida" }
         val eq = Repo.equivalencias()
 
         // ---- ánimo

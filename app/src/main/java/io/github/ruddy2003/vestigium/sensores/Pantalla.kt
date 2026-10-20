@@ -44,9 +44,22 @@ object Pantalla {
         var desbloqueos = 0
         var primero: Long? = null
         var ultimo: Long? = null
+        val porHora = LongArray(24)
+        val zona = Fechas.zona()
+        /** Reparte un tramo de uso entre las horas del día que toca. */
+        fun repartir(a: Long, b: Long) {
+            var x = a
+            while (x < b) {
+                val h = java.time.Instant.ofEpochMilli(x).atZone(zona)
+                val finHora = h.withMinute(0).withSecond(0).withNano(0).plusHours(1).toInstant().toEpochMilli()
+                val y = minOf(b, finHora)
+                porHora[h.hour] += y - x
+                x = y
+            }
+        }
         fun cerrar(t: Long) {
             val a = actual ?: return
-            if (t > desde) porApp[a] = (porApp[a] ?: 0L) + (t - desde)
+            if (t > desde) { porApp[a] = (porApp[a] ?: 0L) + (t - desde); repartir(desde, t) }
             actual = null
         }
         while (eventos.hasNextEvent()) {
@@ -68,6 +81,7 @@ object Pantalla {
         val mins = porApp.filterValues { it >= 60_000 }.mapKeys { nombreApp(ctx, it.key) }
             .entries.groupBy({ it.key }, { it.value }).mapValues { (it.value.sum() / 60_000).toInt() }
             .entries.sortedByDescending { it.value }.take(40).associate { it.key to it.value }
+        val sueno = runCatching { alrededorDelSueno(ctx, usm, fecha) }.getOrNull()
         return PantallaDia(
             fecha = fecha,
             total_min = (porApp.values.sum() / 60_000).toInt(),
@@ -75,7 +89,48 @@ object Pantalla {
             primer_uso = primero?.let { Fechas.isoDeMillis(it) },
             ultimo_uso = ultimo?.let { Fechas.isoDeMillis(it) },
             por_app_min = mins,
+            por_hora_min = porHora.map { (it / 60_000).toInt() },
+            cama_min = sueno?.first,
+            dormir_tras_tel_min = sueno?.second,
+            tel_tras_despertar_min = sueno?.third,
         )
+    }
+
+    /** Ratos de uso (inicio, fin) entre dos instantes, de cualquier app que no sea el lanzador. */
+    private fun usos(ctx: Context, usm: UsageStatsManager, a: Long, b: Long): List<Pair<Long, Long>> {
+        val eventos = usm.queryEvents(a, b)
+        val e = UsageEvents.Event()
+        val excluir = lanzadores(ctx)
+        val out = ArrayList<Pair<Long, Long>>()
+        var actual: String? = null; var desde = 0L
+        fun cerrar(t: Long) { if (actual != null && t > desde) out += desde to t; actual = null }
+        while (eventos.hasNextEvent()) {
+            eventos.getNextEvent(e)
+            when (e.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> { cerrar(e.timeStamp); if (e.packageName !in excluir) { actual = e.packageName; desde = e.timeStamp } }
+                UsageEvents.Event.ACTIVITY_PAUSED -> if (e.packageName == actual) cerrar(e.timeStamp)
+                UsageEvents.Event.SCREEN_NON_INTERACTIVE -> cerrar(e.timeStamp)
+            }
+        }
+        cerrar(b)
+        return out
+    }
+
+    /**
+     * La noche que terminó en [fecha] (según el reloj): minutos de pantalla en la última hora antes de dormirte, minutos entre
+     * soltar el teléfono y dormirte, y minutos entre despertar y tomarlo. Null si no hay sueño del reloj.
+     */
+    private fun alrededorDelSueno(ctx: Context, usm: UsageStatsManager, fecha: String): Triple<Int?, Int?, Int?>? {
+        val s = Repo.salud[fecha] ?: return null
+        val ini = s.sueno_inicio?.let { Fechas.millis(it) }?.takeIf { it > 0 } ?: return null
+        val fin = s.sueno_fin?.let { Fechas.millis(it) }?.takeIf { it > ini } ?: return null
+        val antes = usos(ctx, usm, ini - 3 * 3_600_000L, ini)
+        val cama = antes.sumOf { (a, b) -> (minOf(b, ini) - maxOf(a, ini - 3_600_000L)).coerceAtLeast(0L) } / 60_000
+        val soltar = antes.maxOfOrNull { it.second }?.let { ((ini - it) / 60_000).toInt().coerceAtLeast(0) }
+        val ahora = System.currentTimeMillis()
+        val despues = if (ahora > fin) usos(ctx, usm, fin, minOf(ahora, fin + 4 * 3_600_000L)) else emptyList()
+        val tomar = despues.minOfOrNull { it.first }?.let { ((it - fin) / 60_000).toInt().coerceAtLeast(0) }
+        return Triple(cama.toInt(), soltar, tomar)
     }
 
     fun sincronizar(ctx: Context, dias: Int = 2) {

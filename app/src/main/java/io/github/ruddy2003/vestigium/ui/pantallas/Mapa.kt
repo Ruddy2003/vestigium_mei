@@ -415,7 +415,7 @@ fun PantallaMapa(nav: Nav) {
         onDispose { ciclo.lifecycle.removeObserver(obs); mapa.value?.onDetach() }
     }
 
-    val momentos = Repo.momentos.filter { it.lat != null && it.lon != null && it.fecha >= desde }
+    val momentos = Repo.momentos.filter { it.lat != null && it.lon != null && it.fecha >= desde && it.tipo != "recaida" }
     val datos: List<Puntos.P> = when (capa) {
         "animo" -> momentos.mapNotNull { m ->
             val v = m.valencia?.toDouble() ?: Repo.dias[m.fecha]?.valencia?.toDouble() ?: return@mapNotNull null

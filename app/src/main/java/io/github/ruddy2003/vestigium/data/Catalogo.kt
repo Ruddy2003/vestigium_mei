@@ -77,8 +77,23 @@ object Catalogo {
         TipoMomento("recuerdo", "Recuerdo", "J", "¿Qué recordaste?"),
     )
     val MOMENTOS_WIDGET = listOf("pensando_en", "preocupacion", "tristeza", "ansiedad", "alegria", "gratitud", "impulso", "idea")
-    fun tipo(id: String): TipoMomento? = MOMENTOS.firstOrNull { it.id == id }
+    /** Recaída: solo aparece con el seguimiento privado activado y nunca sale de la app (salvo en tu exportación a R). */
+    val RECAIDA = TipoMomento("recaida", "Recaída", "K", "¿Qué pasó antes?")
+    fun tipo(id: String): TipoMomento? = MOMENTOS.firstOrNull { it.id == id } ?: RECAIDA.takeIf { it.id == id }
     fun nombreTipo(id: String): String = if (id == "muestreo") "Ánimo" else tipo(id)?.nombre ?: id
+
+    /** «¿Con quién estás?» en los avisos de ánimo. */
+    val CON_QUIEN = listOf(Opcion("solo", "Solo"), Opcion("pareja", "Pareja"), Opcion("amigos", "Amigos"), Opcion("familia", "Familia"),
+        Opcion("companeros", "Compañeros"), Opcion("desconocidos", "Desconocidos"))
+    /** Recaída: en qué aparato y qué hacías justo antes. */
+    val DISPOSITIVOS = listOf(Opcion("telefono", "Teléfono"), Opcion("computadora", "Computadora"), Opcion("tableta", "Tableta"), Opcion("tele", "Tele"), Opcion("otro", "Otro"))
+    val ANTES = listOf(Opcion("redes", "En redes"), Opcion("cama", "En la cama sin dormir"), Opcion("estudiando", "Estudiando o trabajando"),
+        Opcion("solo_casa", "Solo en casa"), Opcion("sin_plan", "Aburrido, sin plan"), Opcion("tras_discusion", "Después de algo difícil"), Opcion("otro", "Otra cosa"))
+    /** El cronómetro: bloques de enfoque y siestas. */
+    val ENFOQUE = listOf(Opcion("estudio", "Estudio"), Opcion("lectura", "Lectura"), Opcion("idiomas", "Idiomas"), Opcion("tesis", "Tesis"),
+        Opcion("trabajo", "Trabajo"), Opcion("creativo", "Creativo"))
+    val SIESTA = Opcion("siesta", "Siesta")
+    fun nombreTramo(id: String): String = (ENFOQUE + SIESTA).firstOrNull { it.id == id }?.nombre ?: id
 
     val CATEGORIAS = listOf("Comida", "Transporte", "Salud", "Ocio", "Social", "Suscripciones", "Escuela", "Ropa", "Regalos", "Otro")
     val CATEGORIAS_INGRESO = listOf("Sueldo", "Beca", "Trabajo extra", "Mesada", "Regalo", "Venta", "Reembolso", "Intereses", "Otro")

@@ -194,7 +194,7 @@ fun PantallaGastos(nav: Nav? = null) {
                             Text("${Fechas.corto(i.dia)} · ${i.hora}" + if (i.nota.isNotBlank()) " · ${i.nota}" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text("+" + dinero(i.monto), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, color = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()))
-                        TextButton(onClick = { if (armado == i.id) { Repo.borrarIngreso(i.id); armado = null } else armado = i.id }) {
+                        TextButton(onClick = { if (armado == i.id) { Repo.borrarIngreso(i.id); armado = null; io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Ingreso borrado") { Repo.guardarIngreso(i) } } else armado = i.id }) {
                             Text(if (armado == i.id) "¿Borrar?" else "Quitar", color = if (armado == i.id) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -238,7 +238,7 @@ fun PantallaGastos(nav: Nav? = null) {
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text(dinero(g.monto), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo)
-                    TextButton(onClick = { if (armado == g.id) { Repo.borrarGasto(g.id); armado = null } else armado = g.id }) {
+                    TextButton(onClick = { if (armado == g.id) { Repo.borrarGasto(g.id); armado = null; io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Gasto borrado") { Repo.guardarGasto(g) } } else armado = g.id }) {
                         Text(if (armado == g.id) "¿Borrar?" else "Quitar", color = if (armado == g.id) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }

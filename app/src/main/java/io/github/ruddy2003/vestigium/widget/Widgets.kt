@@ -147,7 +147,7 @@ object Widgets {
         val v = RemoteViews(ctx.packageName, R.layout.widget_momento)
         pintar(v, Piel.MOMENTO)
         val discreto = Repo.config.discreto
-        val hoy = Repo.momentos.count { it.tipo != "muestreo" && it.fecha == Fechas.diaLogico() }
+        val hoy = Repo.momentos.count { it.tipo != "muestreo" && it.tipo != "recaida" && it.fecha == Fechas.diaLogico() }
         v.setTextViewText(R.id.titulo_momento, if (discreto) "SCRIBERE" else Estilo.widget("momento"))
         v.setTextViewText(R.id.pregunta_momento, com + if (discreto) "registrar" else "ahora mismo estoy…")
         v.setTextViewText(R.id.sub_momento, if (hoy == 0) "" else "$hoy hoy")
@@ -302,7 +302,7 @@ object Widgets {
         }
         Repo.salud[f]?.sueno_min?.let { l += linea("somnus", "${it / 60} h ${"%02d".format(it % 60)}") }
         Repo.salud[f]?.pasos?.let { l += linea("passus", "%,d".format(it)) }
-        val mom = Repo.momentos.count { it.fecha == f && it.tipo != "muestreo" }
+        val mom = Repo.momentos.count { it.fecha == f && it.tipo != "muestreo" && it.tipo != "recaida" }
         l += linea("momenta", "$mom")
         Repo.pantalla[f]?.let { l += linea("telephon", "${it.total_min / 60} h ${"%02d".format(it.total_min % 60)}") }
         Repo.entorno[f]?.let { e -> if (e.t_max != null) l += linea("caelum", "%.0f°".format(e.t_max) + (e.codigo?.let { " " + Clima.descripcion(it) } ?: "")) }
@@ -408,8 +408,29 @@ object Widgets {
         return v
     }
 
+    /** El cronómetro de enfoque: corre mientras hay un bloque en marcha; tocarlo abre el registro rápido para empezar o terminar. */
+    fun vistaEnfoque(ctx: Context): RemoteViews {
+        val v = RemoteViews(ctx.packageName, R.layout.widget_enfoque)
+        pintar(v, PielNuevos.ENFOQUE)
+        v.setTextViewText(R.id.titulo_enfoque, Estilo.widget("enfoque"))
+        val c = io.github.ruddy2003.vestigium.data.Enfoque.enCurso()
+        val hoy = io.github.ruddy2003.vestigium.data.Enfoque.delDia(Fechas.diaLogico()).filterKeys { it != "siesta" }.values.sum()
+        v.setTextViewText(R.id.sub_enfoque, if (hoy > 0) "hoy ${hoy / 60}:${"%02d".format(hoy % 60)}" else "")
+        if (c != null) {
+            val base = android.os.SystemClock.elapsedRealtime() - (System.currentTimeMillis() - c.second)
+            v.setChronometer(R.id.crono_enfoque, base, null, true)
+            v.setTextViewText(R.id.estado_enfoque, io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(c.first).lowercase() + " · toca para terminar")
+        } else {
+            v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime(), null, false)
+            v.setTextViewText(R.id.estado_enfoque, "toca para empezar")
+        }
+        clic(v, R.id.raiz_enfoque, pi(ctx, 3930, quick(ctx, QuickActivity.M_ENFOQUE)))
+        return v
+    }
+
     fun actualizar(ctx: Context) {
         val m = AppWidgetManager.getInstance(ctx)
+        m.getAppWidgetIds(ComponentName(ctx, WidgetEnfoque::class.java)).forEach { m.updateAppWidget(it, vistaEnfoque(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, WidgetAnimo::class.java)).forEach { m.updateAppWidget(it, vistaAnimo(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, WidgetMomento::class.java)).forEach { m.updateAppWidget(it, vistaMomento(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, WidgetHoy::class.java)).forEach { m.updateAppWidget(it, vistaHoy(ctx)) }
@@ -490,6 +511,12 @@ class WidgetAnillos : AppWidgetProvider() {
 class WidgetFoto : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         Repo.init(context); appWidgetIds.forEach { appWidgetManager.updateAppWidget(it, Widgets.vistaFoto(context)) }
+    }
+}
+
+class WidgetEnfoque : AppWidgetProvider() {
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        Repo.init(context); appWidgetIds.forEach { appWidgetManager.updateAppWidget(it, Widgets.vistaEnfoque(context)) }
     }
 }
 

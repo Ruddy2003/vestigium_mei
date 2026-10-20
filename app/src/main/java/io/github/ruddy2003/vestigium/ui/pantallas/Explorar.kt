@@ -102,7 +102,7 @@ fun PantallaExplorar(nav: Nav) {
         val nDias = Repo.dias.size
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra("$nDias", "días con diario", Modifier.weight(1f))
-            Cifra("${Repo.momentos.count { it.tipo != "muestreo" }}", "momentos", Modifier.weight(1f))
+            Cifra("${Repo.momentos.count { it.tipo != "muestreo" && it.tipo != "recaida" }}", "momentos", Modifier.weight(1f))
             Cifra("${Repo.momentos.count { it.tipo == "muestreo" }}", "avisos respondidos", Modifier.weight(1f))
         }
         Ayuda(if (nDias >= 90) "Con 90 días o más ya se pueden detectar relaciones moderadas." else "Faltan ${90 - nDias} días para tener potencia suficiente; antes de eso, todo es pista, no evidencia.", Modifier.padding(top = 8.dp))
@@ -240,6 +240,7 @@ fun PantallaExplorar(nav: Nav) {
             }
         }
 
+        ConQuien()
         Seccion("Personas, temas e hitos") {
             val eq = Repo.equivalencias()
             val p = Repo.dias.values.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount()
@@ -437,7 +438,9 @@ private fun CentroEntender(nav: Nav) {
         Triple("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: "")) to "totales",
         Triple("Mapa", "${Repo.lugares.size}", "lugares marcados") to "mapa",
         Triple("Experimentos personales", "${Repo.experimentos.count { it.activo }}", "en curso") to "experimentos",
-    )
+        Triple("La cinta", "${Repo.momentos.count { it.fecha == hoy && it.tipo != "recaida" } + Repo.tramos.count { it.fecha == hoy }}", "cosas con hora hoy") to "cinta",
+        Triple("Constelación", "${Repo.dias.values.filter { it.fecha >= Fechas.sumar(hoy, -365) }.flatMap { Texto.personas(it.nota) }.toSet().size}", "personas en tu cielo este año") to "constelacion",
+    ) + (if (Repo.config.seguimiento_privado) listOf(Triple("Impulsos y recaídas", io.github.ruddy2003.vestigium.data.Recaidas.dias().maxOrNull()?.let { "${Fechas.diasEntre(it, hoy)}" } ?: "—", "días desde la última") to "recaidas") else emptyList())
     tarjetas.chunked(2).forEach { fila ->
         androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             fila.forEach { (t, ruta) ->
@@ -487,3 +490,35 @@ private fun EtapasDeVida(panel: Map<String, Map<String, Double?>>) {
 }
 
 private fun fmtCorto(v: Double) = if (kotlin.math.abs(v) >= 100) "%,.0f".format(v) else "%.1f".format(v)
+
+
+/** Tu ánimo en los avisos según con quién estabas (lo que contestas en «¿con quién estás?»). */
+@Composable
+private fun ConQuien() {
+    val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null && it.con_quien.isNotEmpty() }
+    if (mu.isEmpty()) return
+    Seccion("Ánimo según con quién estás", "Promedio de la valencia en los avisos de ánimo, según con quién dijiste que estabas.") {
+        Tarjeta {
+            if (mu.size < 10) Ayuda("Llevas ${mu.size} avisos con compañía. Con 10 o más empieza a verse algo; con 30, ya es una pista.")
+            val general = mu.mapNotNull { it.valencia }.average()
+            val cs = MaterialTheme.colorScheme
+            val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+            io.github.ruddy2003.vestigium.data.Catalogo.CON_QUIEN.forEach { o ->
+                val l = mu.filter { o.id in it.con_quien }.mapNotNull { it.valencia }
+                if (l.isEmpty()) return@forEach
+                val m = l.average()
+                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Text(o.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(0.32f))
+                    Canvas(Modifier.weight(0.48f).aspectRatio(10f)) {
+                        drawRoundRect(cs.surfaceVariant, Offset.Zero, size, CornerRadius(4f, 4f))
+                        drawRoundRect(io.github.ruddy2003.vestigium.ui.Tonos.valencia(m, oscuro) ?: cs.primary, Offset.Zero, Size(size.width * ((m - 1) / 6).toFloat(), size.height), CornerRadius(4f, 4f))
+                        val xg = size.width * ((general - 1) / 6).toFloat()
+                        drawLine(cs.onSurface, Offset(xg, 0f), Offset(xg, size.height), 2f)
+                    }
+                    Text("%.1f · %d".format(m, l.size), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(0.2f).padding(start = 8.dp))
+                }
+            }
+            Ayuda("La raya es tu promedio general (%.1f). Cuidado: con quién estás también depende de la hora y el lugar.".format(general), Modifier.padding(top = 6.dp))
+        }
+    }
+}

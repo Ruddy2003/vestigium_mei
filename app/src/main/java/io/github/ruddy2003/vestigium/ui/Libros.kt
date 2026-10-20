@@ -52,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -1050,8 +1051,19 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
     val cuerpo = if (sueno) d?.sueno_texto.orEmpty() else d?.nota.orEmpty()
     val sentirPagina = rememberSentir()
     var menu by remember { mutableStateOf(false) }
+    // Deslizar a los lados pasa de día: a la derecha, el anterior; a la izquierda, el siguiente.
+    val umbralPaso = with(androidx.compose.ui.platform.LocalDensity.current) { 110.dp.toPx() }
+    val ant by androidx.compose.runtime.rememberUpdatedState(anterior)
+    val sig by androidx.compose.runtime.rememberUpdatedState(siguiente)
+    val deslizar = Modifier.pointerInput(fecha) {
+        var total = 0f
+        androidx.compose.foundation.gestures.detectHorizontalDragGestures(onDragStart = { total = 0f }, onDragEnd = {
+            if (total > umbralPaso) ant?.let { sentirPagina(Sentidos.Evento.PASAR); it() }
+            else if (total < -umbralPaso) sig?.let { sentirPagina(Sentidos.Evento.PASAR); it() }
+        }) { _, dx -> total += dx }
+    }
     MaterialTheme(colorScheme = esquemaPagina(p), typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().then(deslizar)) {
             FondoPagina(tema, p, noche = sueno)
             Column(Modifier.fillMaxSize()) {
                 BarraPagina(p, volver, if (d != null) "${Texto.palabras(cuerpo)} palabras" else "") {
@@ -1073,18 +1085,20 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                         Text(if (sueno) "No anotaste ningún sueño esa noche." else "No hay nada escrito este día.", color = p.tenue, fontFamily = p.texto, fontSize = p.tam.sp)
                     } else if (sueno) {
                         var layout by remember(cuerpo) { mutableStateOf<TextLayoutResult?>(null) }
-                        val texto = AnnotatedString(cuerpo.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }
+                        val csPag = MaterialTheme.colorScheme
+                        val texto = AnnotatedString(cuerpo.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }.let { Marcas.anotar(it, tema, csPag, conFondo = false) }
                         SelectionContainer {
                             Text(texto, color = p.tinta, fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, onTextLayout = { layout = it },
-                                modifier = Modifier.fillMaxWidth().rayado(p, layout))
+                                modifier = Modifier.fillMaxWidth().rayado(p, layout).drawBehind { layout?.let { l -> with(Marcas) { dibujar(l, texto.text, tema, csPag) } } })
                         }
                         LibroDiario.metaSueno(d).takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = p.tenue, modifier = Modifier.padding(top = 22.dp)) }
                     } else {
                         var layout by remember(d.nota) { mutableStateOf<TextLayoutResult?>(null) }
-                        val texto = AnnotatedString(d.nota.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }
+                        val csPag = MaterialTheme.colorScheme
+                        val texto = AnnotatedString(d.nota.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }.let { Marcas.anotar(it, tema, csPag, conFondo = false) }
                         SelectionContainer {
                             Text(texto, color = p.tinta, fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, onTextLayout = { layout = it },
-                                modifier = Modifier.fillMaxWidth().rayado(p, layout))
+                                modifier = Modifier.fillMaxWidth().rayado(p, layout).drawBehind { layout?.let { l -> with(Marcas) { dibujar(l, texto.text, tema, csPag) } } })
                         }
                         if (d.mejor_momento.isNotBlank() || d.peor_momento.isNotBlank()) Column(Modifier.padding(top = 22.dp)) {
                             if (d.mejor_momento.isNotBlank()) Text("Lo mejor — " + d.mejor_momento, color = p.tinta, fontFamily = p.texto, fontSize = (p.tam - 2).sp, lineHeight = (p.interlinea - 3).sp)
@@ -1135,7 +1149,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                         value = campo, onValueChange = { campo = it; if (it.text != valor) onCambio(it.text) },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 420.dp).rayado(p, layout),
                         textStyle = estilo, cursorBrush = SolidColor(p.acento), onTextLayout = { layout = it },
-                        visualTransformation = p.capitular?.let { Capitular(it, p.acento) } ?: VisualTransformation.None,
+                        visualTransformation = rememberMarcas(p.capitular?.let { Capitular(it, p.acento) } ?: VisualTransformation.None),
                         decorationBox = { interior ->
                             Box {
                                 if (campo.text.isEmpty()) Text(pista ?: when {

@@ -420,6 +420,7 @@ fun Editor(valor: String, archivo: String, pista: String, minimo: Int = 200, pie
                 modifier = Modifier.weight(1f).heightIn(min = minimo.dp).padding(12.dp),
                 textStyle = MaterialTheme.typography.labelLarge.copy(fontSize = 14.5.sp, lineHeight = 22.sp, letterSpacing = 0.sp, fontWeight = FontWeight.Normal, color = MaterialTheme.colorScheme.onSurface),
                 cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
+                visualTransformation = rememberMarcas(),
                 decorationBox = { campoTexto ->
                     Box {
                         if (campo.text.isEmpty()) Text(pista, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.5.sp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f))

@@ -281,7 +281,7 @@ fun PantallaLugares(nav: Nav) {
                             Ayuda(if (aqui.size < 5) "Pocos datos de ánimo aquí (${aqui.size}); se necesitan 5." else
                                 "Valencia aquí ${"%.1f".format(media)}" + (general?.let { g -> " (tu promedio ${"%.1f".format(g)})" } ?: "") + (act?.let { " · energía ${"%.1f".format(it)}" } ?: ""))
                         }
-                        TextButton(onClick = { if (borrar) { Repo.borrarLugar(l.id); Geocercas.registrar(ctx) } else borrar = true }) {
+                        TextButton(onClick = { if (borrar) { Repo.borrarLugar(l.id); Geocercas.registrar(ctx); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Lugar borrado") { Repo.guardarLugar(l); Geocercas.registrar(ctx) } } else borrar = true }) {
                             Text(if (borrar) "¿Borrar?" else "Quitar", color = if (borrar) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }

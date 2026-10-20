@@ -50,6 +50,7 @@ data class Respaldo(
     val entrenos: List<EntrenoDia> = emptyList(),
     val ingresos: List<Ingreso> = emptyList(),
     val youtube: List<YtEvento> = emptyList(),
+    val tramos: List<Tramo> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -107,7 +108,13 @@ object Exportar {
             "lat" to it.lat, "lon" to it.lon, "precision_m" to it.precision_m, "lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.nombre,
             "origen" to it.origen, "aviso_ts" to it.aviso_ts,
             "latencia_min" to it.aviso_ts?.let { a -> (Fechas.millis(it.ts) - Fechas.millis(a)) / 60000.0 },
-            "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux)
+            "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux,
+            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes)
+    }
+
+    fun filasTramos() = Repo.tramos.map {
+        linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "tipo" to it.tipo, "es_siesta" to (it.tipo == "siesta"), "inicio" to it.inicio, "fin" to it.fin,
+            "hora" to Fechas.horaDe(it.inicio), "min" to it.min, "nota" to it.nota, "personas" to Texto.personas(it.nota), "temas" to Texto.temas(it.nota), "origen" to it.origen)
     }
 
     fun filasGastos() = Repo.gastos.map {
@@ -185,7 +192,9 @@ object Exportar {
     fun filasPantalla() = Repo.pantalla.values.sortedBy { it.fecha }.map {
         linkedMapOf<String, Any?>("fecha" to it.fecha, "total_min" to it.total_min, "desbloqueos" to it.desbloqueos,
             "primer_uso" to it.primer_uso, "ultimo_uso" to it.ultimo_uso,
-            "top_apps" to it.por_app_min.entries.take(10).map { e -> "${e.key}:${e.value}" })
+            "top_apps" to it.por_app_min.entries.take(10).map { e -> "${e.key}:${e.value}" },
+            "cama_min" to it.cama_min, "dormir_tras_tel_min" to it.dormir_tras_tel_min, "tel_tras_despertar_min" to it.tel_tras_despertar_min,
+            "por_hora_min" to it.por_hora_min)
     }
 
     fun filasVisitas() = Repo.visitas.map { v ->
@@ -527,7 +536,7 @@ object Exportar {
         subrayados = Repo.subrayados, huellas = Repo.huellasDe("0000-01-01", "9999-12-31"), huellas_dia = Repo.huellas.values.sortedBy { it.fecha },
         chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
         series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
-        youtube = Repo.youtube))
+        youtube = Repo.youtube, tramos = Repo.tramos))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -536,6 +545,7 @@ object Exportar {
         Tabla("vm_panel_extendido.csv", "Una fila por día con todas las variables: cada persona, lugar, app, categoría, artista, obra, ciudad, nutriente y más", filasPanelExtendido()),
         Tabla("vm_dias.csv", "Diario: lo que llenaste cada día", filasDias()),
         Tabla("vm_momentos.csv", "Momentos y avisos de ánimo, uno por fila", filasMomentos()),
+        Tabla("vm_tramos.csv", "Cronómetro: bloques de enfoque (estudio, lectura, idiomas, tesis…) y siestas, uno por fila", filasTramos()),
         Tabla("vm_gastos.csv", "Gastos, uno por fila", filasGastos()),
         Tabla("vm_ingresos.csv", "Ingresos, uno por fila", filasIngresos()),
         Tabla("vm_escalas.csv", "Cuestionarios validados (WHO-5, PSS-4, UCLA-3, TIPI)", filasEscalas()),

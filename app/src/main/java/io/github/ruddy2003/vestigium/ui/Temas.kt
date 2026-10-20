@@ -157,7 +157,9 @@ object Temas {
         return "$nombre, día ${java.time.temporal.ChronoUnit.DAYS.between(ini, d) + 1}"
     }
 
-    fun nombre(tema: TemaId, titulo: String): String? = when (tema) {
+    fun nombre(tema: TemaId, titulo: String): String? = nombreBase(tema, titulo) ?: NombresNuevos.de(tema, titulo)
+
+    private fun nombreBase(tema: TemaId, titulo: String): String? = when (tema) {
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
@@ -179,22 +181,22 @@ object Temas {
 
     fun widget(tema: TemaId, clave: String): String {
         val m = when (tema) {
-            TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura")
-            TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA")
-            TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO")
-            TemaId.ORDEN -> mapOf("animo" to "MORAL", "momento" to "BITÁCORA", "gasto" to "INTENDENCIA", "sueno" to "DESCANSO", "habitos" to "DISCIPLINA", "hoy" to "PARTE", "cifra" to "CIFRA", "foto" to "IMAGEN")
-            TemaId.LABORATORIO -> mapOf("animo" to "ESTADO", "momento" to "OBSERVACIÓN", "gasto" to "RECURSOS", "sueno" to "SUEÑO", "habitos" to "VARIABLES", "hoy" to "SESIÓN", "cifra" to "MEDIDA", "foto" to "MUESTRA")
-            TemaId.COLONOS -> mapOf("animo" to "Ánimo", "momento" to "Sucesos", "gasto" to "Cuentas", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Jornada", "cifra" to "Número", "foto" to "Estampa")
-            TemaId.NAPOLEON -> mapOf("animo" to "MORAL", "momento" to "DESPACHO", "gasto" to "TESORERÍA", "sueno" to "VIVAC", "habitos" to "CÓDIGO", "hoy" to "BOLETÍN", "cifra" to "CIFRA", "foto" to "RETRATO")
-            TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina")
-            TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera")
-            TemaId.ESPACIO -> mapOf("animo" to "ESTADO", "momento" to "EVENTO", "gasto" to "COMBUSTIBLE", "sueno" to "SUEÑO", "habitos" to "RUTINAS", "hoy" to "ÓRBITA", "cifra" to "TELEMETRÍA", "foto" to "IMAGEN")
-            TemaId.ANDALUS -> mapOf("animo" to "الروح", "momento" to "لحظة", "gasto" to "النفقات", "sueno" to "النوم", "habitos" to "العادات", "hoy" to "النهار", "cifra" to "الحساب", "foto" to "صورة")
-            TemaId.MONGOL -> mapOf("animo" to "СЭТГЭЛ", "momento" to "АГШИН", "gasto" to "ЗАРДАЛ", "sueno" to "НОЙР", "habitos" to "ЗАНШИЛ", "hoy" to "ӨДӨР", "cifra" to "ТОО", "foto" to "ЗУРАГ")
-            TemaId.RENACIMIENTO -> mapOf("animo" to "Animo", "momento" to "Nota", "gasto" to "Conti", "sueno" to "Sonno", "habitos" to "Esercizi", "hoy" to "Giornata", "cifra" to "Misura", "foto" to "Ritratto")
-            TemaId.NAVIDAD -> mapOf("animo" to "Ánimo", "momento" to "Momento", "gasto" to "Regalos", "sueno" to "Noche de paz", "habitos" to "Propósitos", "hoy" to "El día", "cifra" to "Número", "foto" to "Postal")
-            TemaId.SEDA -> mapOf("animo" to "Espíritu", "momento" to "Relato", "gasto" to "Mercancías", "sueno" to "Reposo", "habitos" to "Ritos", "hoy" to "Jornada", "cifra" to "Cuenta", "foto" to "Estampa")
-            TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO")
+            TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
+            TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")
+            TemaId.ORDEN -> mapOf("animo" to "MORAL", "momento" to "BITÁCORA", "gasto" to "INTENDENCIA", "sueno" to "DESCANSO", "habitos" to "DISCIPLINA", "hoy" to "PARTE", "cifra" to "CIFRA", "foto" to "IMAGEN", "enfoque" to "VIGILIA")
+            TemaId.LABORATORIO -> mapOf("animo" to "ESTADO", "momento" to "OBSERVACIÓN", "gasto" to "RECURSOS", "sueno" to "SUEÑO", "habitos" to "VARIABLES", "hoy" to "SESIÓN", "cifra" to "MEDIDA", "foto" to "MUESTRA", "enfoque" to "ENSAYO")
+            TemaId.COLONOS -> mapOf("animo" to "Ánimo", "momento" to "Sucesos", "gasto" to "Cuentas", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Jornada", "cifra" to "Número", "foto" to "Estampa", "enfoque" to "Faena")
+            TemaId.NAPOLEON -> mapOf("animo" to "MORAL", "momento" to "DESPACHO", "gasto" to "TESORERÍA", "sueno" to "VIVAC", "habitos" to "CÓDIGO", "hoy" to "BOLETÍN", "cifra" to "CIFRA", "foto" to "RETRATO", "enfoque" to "ÉTUDE")
+            TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina", "enfoque" to "Estudio")
+            TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera", "enfoque" to "Lectio")
+            TemaId.ESPACIO -> mapOf("animo" to "ESTADO", "momento" to "EVENTO", "gasto" to "COMBUSTIBLE", "sueno" to "SUEÑO", "habitos" to "RUTINAS", "hoy" to "ÓRBITA", "cifra" to "TELEMETRÍA", "foto" to "IMAGEN", "enfoque" to "CONCENTRACIÓN")
+            TemaId.ANDALUS -> mapOf("animo" to "الروح", "momento" to "لحظة", "gasto" to "النفقات", "sueno" to "النوم", "habitos" to "العادات", "hoy" to "النهار", "cifra" to "الحساب", "foto" to "صورة", "enfoque" to "دراسة")
+            TemaId.MONGOL -> mapOf("animo" to "СЭТГЭЛ", "momento" to "АГШИН", "gasto" to "ЗАРДАЛ", "sueno" to "НОЙР", "habitos" to "ЗАНШИЛ", "hoy" to "ӨДӨР", "cifra" to "ТОО", "foto" to "ЗУРАГ", "enfoque" to "СУРАЛЦАХ")
+            TemaId.RENACIMIENTO -> mapOf("animo" to "Animo", "momento" to "Nota", "gasto" to "Conti", "sueno" to "Sonno", "habitos" to "Esercizi", "hoy" to "Giornata", "cifra" to "Misura", "foto" to "Ritratto", "enfoque" to "Studio")
+            TemaId.NAVIDAD -> mapOf("animo" to "Ánimo", "momento" to "Momento", "gasto" to "Regalos", "sueno" to "Noche de paz", "habitos" to "Propósitos", "hoy" to "El día", "cifra" to "Número", "foto" to "Postal", "enfoque" to "Taller")
+            TemaId.SEDA -> mapOf("animo" to "Espíritu", "momento" to "Relato", "gasto" to "Mercancías", "sueno" to "Reposo", "habitos" to "Ritos", "hoy" to "Jornada", "cifra" to "Cuenta", "foto" to "Estampa", "enfoque" to "Estudio")
+            TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO", "enfoque" to "TRABAJO")
             else -> emptyMap()
         }
         return m[clave] ?: clave.uppercase()

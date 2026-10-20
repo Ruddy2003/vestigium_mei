@@ -47,6 +47,8 @@ object Repo {
     var chats by mutableStateOf<List<ChatDia>>(emptyList()); private set
     var nutricion by mutableStateOf<Map<String, NutricionDia>>(emptyMap()); private set
     var entrenos by mutableStateOf<Map<String, EntrenoDia>>(emptyMap()); private set
+    /** Bloques de enfoque y siestas del cronómetro. */
+    var tramos by mutableStateOf<List<Tramo>>(emptyList()); private set
 
     @Synchronized
     fun init(ctx: Context) {
@@ -83,6 +85,7 @@ object Repo {
         chats = cargar("whatsapp", ChatDia.serializer()).sortedBy { it.fecha }
         nutricion = cargar("nutricion", NutricionDia.serializer()).associateBy { it.fecha }
         entrenos = cargar("entrenos", EntrenoDia.serializer()).associateBy { it.fecha }
+        tramos = cargar("tramos", Tramo.serializer()).sortedBy { it.inicio }
         listo = true
     }
 
@@ -130,6 +133,22 @@ object Repo {
     }
     fun momento(id: String): Momento? = momentos.firstOrNull { it.id == id } ?: db.uno("momentos", id)?.let { JSON.decodeFromString(Momento.serializer(), it) }
     fun borrarMomento(id: String) { db.borrar("momentos", id); enMain { momentos = momentos.filter { it.id != id } } }
+
+    // ---------- Tramos (enfoque y siestas) ----------
+    fun guardarTramo(t: Tramo) {
+        db.poner("tramos", t.id, t.fecha, JSON.encodeToString(Tramo.serializer(), t))
+        enMain { tramos = (tramos.filter { it.id != t.id } + t).sortedBy { it.inicio } }
+    }
+    fun borrarTramo(id: String) { db.borrar("tramos", id); enMain { tramos = tramos.filter { it.id != id } } }
+    fun importarTramos(lista: List<Tramo>) {
+        val ids = tramos.map { it.id }.toSet()
+        val nuevos = lista.filter { it.id !in ids }
+        if (nuevos.isEmpty()) return
+        db.transaccion { nuevos.forEach { db.poner("tramos", it.id, it.fecha, JSON.encodeToString(Tramo.serializer(), it)) } }
+        enMain { tramos = (tramos + nuevos).sortedBy { it.inicio } }
+    }
+    /** Solo para las capturas de diseño. */
+    fun tramosEnMemoria(l: List<Tramo>) { tramos = l }
 
     // ---------- Gastos ----------
     fun guardarGasto(g: Gasto) {

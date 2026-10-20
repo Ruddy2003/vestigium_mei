@@ -521,7 +521,7 @@ fun PantallaObra(nav: Nav) {
         }
         val marcas = Repo.subrayados.filter { o.titulo.isNotBlank() && (it.libro.equals(o.titulo, true) || it.libro.contains(o.titulo, true) || o.titulo.contains(it.libro, true)) }
         if (marcas.isNotEmpty()) Seccion("Subrayados de Kindle", numero = 5, latin = "EXCERPTA") { Tarjeta { Subrayados(marcas) } }
-        TextButton(onClick = { if (confirmar) { Portadas.borrar(ctx, o.portada); Repo.borrarObra(o.id); nav.atras() } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
+        TextButton(onClick = { if (confirmar) { Repo.borrarObra(o.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Obra borrada", alExpirar = { Portadas.borrar(ctx, o.portada) }) { Repo.guardarObra(o) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
             Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
         }
     }

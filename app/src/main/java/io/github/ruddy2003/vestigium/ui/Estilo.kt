@@ -206,9 +206,9 @@ object Estilo {
 
     /** Rótulos de los widgets. */
     fun widget(clave: String): String = when (tema) {
-        TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO")[clave] ?: clave.uppercase()
+        TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO", "enfoque" to "STVDIVM")[clave] ?: clave.uppercase()
         TemaId.CIBER -> "> " + (mapOf("sueno" to "sueño", "habitos" to "hábitos", "animo" to "ánimo")[clave] ?: clave)
-        TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ")[clave] ?: clave.uppercase()
+        TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ", "enfoque" to "ΣΧΟΛΗ")[clave] ?: clave.uppercase()
         else -> Temas.widget(tema, clave)
     }
 
@@ -337,5 +337,5 @@ object Griego {
         "Tablero" to "ΠΙΝΑΞ", "Buscar" to "ΖΗΤΗΣΙΣ", "Cifras" to "ΑΡΙΘΜΟΙ", "Momentos de la semana" to "ΚΑΙΡΟΙ ΤΗΣ ΕΒΔΟΜΑΔΟΣ", "Tu día en 24 horas" to "ΤΟ ΗΜΕΡΟΝΥΚΤΙΟΝ", "Resumen semanal" to "ΕΒΔΟΜΑΣ",
         "Llenar el día" to "ΕΣΠΕΡΑ", "Entender" to "ΓΙΓΝΩΣΚΕΙΝ", "Registros especiales" to "ΑΝΑΓΡΑΦΑΙ", "Apariencia" to "ΚΟΣΜΟΣ", "Avisos y recordatorios" to "ΣΗΜΕΙΑ", "Biblioteca del diario" to "ΒΙΒΛΟΣ ΗΜΕΡΩΝ", "Entrada" to "ΣΕΛΙΣ", "Hoy" to "ΣΗΜΕΡΟΝ", "Línea de tiempo" to "ΧΡΟΝΟΣ", "Ahora mismo estoy…" to "ΝΥΝ",
     )
-    fun nombre(titulo: String): String? = NOMBRES[titulo]
+    fun nombre(titulo: String): String? = NOMBRES[titulo] ?: NombresNuevos.de(TemaId.HELENO, titulo)
 }

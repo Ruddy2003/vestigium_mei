@@ -748,6 +748,127 @@ private fun Muestra() {
             }
         }
     }
+
+    // ------------------------------------------------------------ versión 67: cinta, constelación, hall, campañas, personaje, marcas
+
+    private fun ejemploV67() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        fun iso(f: String, h: Int, m: Int = 0) = java.time.LocalDate.parse(f).atTime(h, m).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime().withNano(0).toString()
+        val ayer = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -1)
+        Repo.tramosEnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.Tramo("t1", hoy, "tesis", iso(hoy, 9, 30), iso(hoy, 11, 10), 100, "capítulo 2 #tesis"),
+            io.github.ruddy2003.vestigium.data.Tramo("t2", hoy, "siesta", iso(hoy, 15, 10), iso(hoy, 15, 35), 25),
+            io.github.ruddy2003.vestigium.data.Tramo("t3", hoy, "idiomas", iso(hoy, 20, 0), iso(hoy, 20, 40), 40, "chino: tonos"),
+            io.github.ruddy2003.vestigium.data.Tramo("t4", ayer, "lectura", iso(ayer, 22, 0), iso(ayer, 22, 50), 50),
+        ))
+        val momentos = Repo.momentos + listOf(
+            io.github.ruddy2003.vestigium.data.Momento("m3", iso(hoy, 13, 5), hoy, "muestreo", valencia = 6, con_quien = listOf("amigos")),
+            io.github.ruddy2003.vestigium.data.Momento("m4", iso(hoy, 19, 40), hoy, "alegria", texto = "cena con @ana y @luis #cumple", intensidad = 4),
+            io.github.ruddy2003.vestigium.data.Momento("m5", iso(ayer, 23, 10), ayer, "impulso", intensidad = 3),
+            io.github.ruddy2003.vestigium.data.Momento("m6", iso(ayer, 23, 50), ayer, "recaida", detonantes = listOf("noche_insomnio"), antes = "cama", dispositivo = "telefono", lugar = "casa"),
+        )
+        Repo.ejemploEnMemoria(Repo.dias, Repo.salud, Repo.pantalla.mapValues { (_, p) -> p.copy(por_hora_min = List(24) { h -> if (h in 8..23) (h * 7) % 45 else 0 }) }, Repo.gastos,
+            momentos, Repo.notifs, Repo.entorno, Repo.nutricion, Repo.lugares, Repo.visitas, Repo.sesiones, Repo.ingresos)
+    }
+    private fun v67(tema: TemaId, oscuro: Boolean, alto: Int, extra: (Config) -> Config = { it }, cont: @Composable () -> Unit) {
+        Ejemplo.cargar(); ejemploV67()
+        Repo.configEnMemoria(extra(config(tema, oscuro).copy(seguimiento_privado = true, habitos = listOf(io.github.ruddy2003.vestigium.data.Habito("h1", "Leer 20 min"), io.github.ruddy2003.vestigium.data.Habito("h2", "No ver contenido adulto")))))
+        paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = alto, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
+        paparazzi.snapshot { Lienzo(cont) }
+    }
+    @Test fun cintaRomano() = v67(TemaId.ROMANO, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
+    @Test fun cintaCiber() = v67(TemaId.CIBER, true, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
+    @Test fun constelacionGotico() = v67(TemaId.GOTICO, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) }
+    @Test fun constelacionNavidad() = v67(TemaId.NAVIDAD, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) }
+    @Test fun recaidasMedieval() = v67(TemaId.MEDIEVAL, false, 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(navVacia) }
+    @Test fun enfoqueLaboratorio() = v67(TemaId.LABORATORIO, false, 2800) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaEnfoque(navVacia) }
+    @Test fun estadoDatosOrden() = v67(TemaId.ORDEN, true, 2400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaEstadoDatos(navVacia) }
+    @Test fun nocheV67Seda() = v67(TemaId.SEDA, true, 4400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
+    @Test fun masV67Romano() = v67(TemaId.ROMANO, false, 4400, { it.copy(favoritos_mas = listOf("cinta", "enfoque", "estado_datos")) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    private fun campanas(tema: TemaId, oscuro: Boolean) = v67(tema, oscuro, 3000, { c ->
+        val l = io.github.ruddy2003.vestigium.data.Fechas.lunesDe(io.github.ruddy2003.vestigium.data.Fechas.diaLogico())
+        c.copy(campanas = listOf(io.github.ruddy2003.vestigium.data.Campana("c1", l, "diario", 5, tema.id), io.github.ruddy2003.vestigium.data.Campana("c2", l, "sueno7", 4, tema.id),
+            io.github.ruddy2003.vestigium.data.Campana("c0", io.github.ruddy2003.vestigium.data.Fechas.sumar(l, -7), "pasos", 5, tema.id)))
+    }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCampanas(navVacia) }
+    @Test fun campanasNapoleon() = campanas(TemaId.NAPOLEON, false)
+    @Test fun campanasEspacio() = campanas(TemaId.ESPACIO, true)
+    @Test fun campanasRomano() = campanas(TemaId.ROMANO, false)
+    @Test fun campanasSeda() = campanas(TemaId.SEDA, true)
+    private fun hall(tema: TemaId, oscuro: Boolean) = v67(tema, oscuro, 3400, { it.copy(hall_logros = listOf("diario_30", "ciudades_2", "paises_5", "unesco_1", "continentes_2", "pasos_dia_10000", "racha_diario_7", "diario_7")) }) {
+        mundoEjemplo(); io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaHall(navVacia)
+    }
+    @Test fun hallRomano() = hall(TemaId.ROMANO, false)
+    @Test fun hallMedieval() = hall(TemaId.MEDIEVAL, false)
+    @Test fun hallCiber() = hall(TemaId.CIBER, true)
+    @Test fun hallBotanico() = hall(TemaId.BOTANICO, false)
+    @Test fun hallAndalus() = hall(TemaId.ANDALUS, true)
+
+    /** Todas las piezas de logros, en cuatro temas. */
+    private fun piezas(tema: TemaId, oscuro: Boolean) = captura(tema, oscuro, alto = 2400) {
+        val ids = listOf("ciudades_10", "paises_5", "continentes_3", "unesco_1", "lejos_500", "pasos_dia_10000", "entrenos_10", "escalada_1", "diario_100", "suenos_10", "carta_1",
+            "momentos_100", "reaccion_1", "brujula", "obras_10", "frases_10", "personas_10", "c_hab_h1_20_30", "campanas_5", "madrugador", "gastos_100", "enfoque_10", "p_x", "lucido")
+        Column(Modifier.padding(12.dp)) {
+            ids.chunked(4).forEachIndexed { f, fila ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    fila.forEachIndexed { k, id ->
+                        val l = io.github.ruddy2003.vestigium.ciencia.Logros.Logro(id, id, "", "★", "Diario", (f + k) % 4 + 1, 1.0, 1.0, "2026-10-19")
+                        io.github.ruddy2003.vestigium.ui.pantallas.PiezaLogro(l, 84.dp, tema = tema)
+                    }
+                }
+            }
+        }
+    }
+    @Test fun piezasRomano() = piezas(TemaId.ROMANO, false)
+    @Test fun piezasCiber() = piezas(TemaId.CIBER, true)
+    @Test fun piezasSeda() = piezas(TemaId.SEDA, false)
+    @Test fun piezasGotico() = piezas(TemaId.GOTICO, true)
+
+    /** El personaje de cada tema, con estados distintos (cansado, feliz, lluvia, frío, calor, noche, racha). */
+    @Test fun personajes() = captura(TemaId.ROMANO, false, alto = 3200) {
+        val estados = listOf(
+            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.5, 8, false, false, false, false, ""),
+            io.github.ruddy2003.vestigium.ui.Personaje.Estado(true, 3.0, 2, false, false, false, false, ""),
+            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 5.0, 31, true, false, false, false, ""),
+            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 4.0, 0, false, true, false, true, ""),
+            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.0, 3, false, false, true, false, ""),
+        )
+        Column(Modifier.padding(8.dp)) {
+            TemaId.entries.chunked(4).forEachIndexed { f, fila ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    fila.forEachIndexed { k, t ->
+                        androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
+                            Box(Modifier.background(MaterialTheme.colorScheme.background).padding(4.dp)) {
+                                io.github.ruddy2003.vestigium.ui.FiguraPersonaje(estados[(f * 4 + k) % estados.size], tam = 120.dp, tema = t)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Las @personas y los #temas marcados en cada tema. */
+    @Test fun marcas() = captura(TemaId.ROMANO, false, alto = 3600) {
+        Column(Modifier.padding(12.dp)) {
+            TemaId.entries.forEach { t ->
+                androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
+                    Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = 10.dp, vertical = 6.dp)) {
+                        io.github.ruddy2003.vestigium.ui.TextoMarcado("${t.nombre}: café con @ana y @luis_m después del #protocolo de la #tesis", style = MaterialTheme.typography.bodyLarge, tema = t)
+                    }
+                }
+            }
+        }
+    }
+
+    @Test fun celebracionGotico() = v67(TemaId.GOTICO, true, 2400) {
+        io.github.ruddy2003.vestigium.ui.Celebracion.mostrar(listOf(io.github.ruddy2003.vestigium.ciencia.Logros.Logro("paises_5", "Pasaporte con sellos", "Visita 5 países", "⚐", "Mundo", 2, 5.0, 5.0, "2026-10-19")))
+        Box(Modifier.fillMaxSize()) { io.github.ruddy2003.vestigium.ui.CapaLogro() }
+    }
+    @Test fun celebracionUrss() = v67(TemaId.URSS, false, 2400) {
+        io.github.ruddy2003.vestigium.ui.Celebracion.mostrar(listOf(io.github.ruddy2003.vestigium.ciencia.Logros.Logro("ciudades_10", "Viajero", "Pasa tiempo en 10 ciudades distintas", "⌂", "Mundo", 2, 10.0, 10.0, "2026-10-19")))
+        Box(Modifier.fillMaxSize()) { io.github.ruddy2003.vestigium.ui.CapaLogro() }
+    }
 }
 
 /** Cinco semanas de datos inventados para ver el tablero y la línea del tiempo. */

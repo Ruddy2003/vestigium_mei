@@ -72,7 +72,39 @@ data class Momento(
     val ruido_db: Double? = null,
     /** Luz ambiental (lux) al registrar. */
     val luz_lux: Double? = null,
+    /** En los avisos de ánimo: con quién estabas (solo, pareja, amigos, familia, companeros, desconocidos). */
+    val con_quien: List<String> = emptyList(),
+    /** En una recaída: qué la detonó, en qué aparato y qué hacías antes (seguimiento privado). */
+    val detonantes: List<String> = emptyList(),
+    val dispositivo: String? = null,
+    val antes: String? = null,
 )
+
+/** El momento es del seguimiento privado: nunca sale en reportes, «Tu año», logros, mapas ni widgets. */
+val Momento.privado: Boolean get() = tipo == "recaida"
+
+/**
+ * Un tramo de tiempo medido con el cronómetro: un bloque de enfoque (estudio, lectura, idiomas, tesis…) o una siesta.
+ * [inicio] y [fin] en ISO con zona; [fecha] es el día lógico en que empezó.
+ */
+@Serializable
+data class Tramo(
+    val id: String,
+    val fecha: String,
+    val tipo: String,
+    val inicio: String,
+    val fin: String? = null,
+    val min: Int = 0,
+    val nota: String = "",
+    val origen: String = "app",
+)
+
+/**
+ * Una campaña de la semana: un reto opcional que aceptaste (por ejemplo, 5 noches de 7 horas).
+ * [lunes] es el lunes de esa semana; [reto] el id del catálogo; [meta] cuántos días de 7.
+ */
+@Serializable
+data class Campana(val id: String, val lunes: String, val reto: String, val meta: Int, val tema: String = "", val clave: String = "")
 
 @Serializable
 data class Ingreso(
@@ -188,6 +220,14 @@ data class PantallaDia(
     val primer_uso: String? = null,
     val ultimo_uso: String? = null,
     val por_app_min: Map<String, Int> = emptyMap(),
+    /** Minutos de pantalla en cada hora del día (0 a 23). */
+    val por_hora_min: List<Int> = emptyList(),
+    /** La noche que terminó este día: minutos de pantalla en la última hora antes de dormirte. */
+    val cama_min: Int? = null,
+    /** Minutos entre soltar el teléfono y quedarte dormido (según el reloj). */
+    val dormir_tras_tel_min: Int? = null,
+    /** Minutos entre despertar (según el reloj) y la primera vez que usaste el teléfono. */
+    val tel_tras_despertar_min: Int? = null,
 )
 
 /**
@@ -420,6 +460,21 @@ data class Config(
     /** «Tu año»: tarjetas que escondiste antes de exportar, y si los nombres van completos o con iniciales. */
     val anio_ocultas: List<String> = emptyList(),
     val anio_nombres_completos: Boolean = false,
+    /** Seguimiento privado: el hábito que una recaída marca como no cumplido (id). Vacío = se busca solo por el nombre. */
+    val habito_recaida: String? = null,
+    /** Cronómetro de enfoque en marcha: qué y desde cuándo (milisegundos). */
+    val enfoque_tipo: String? = null,
+    val enfoque_inicio: Long? = null,
+    /** Un personaje del tema en Día que reacciona a cómo dormiste, tu ánimo, tu racha y el clima. */
+    val personaje: Boolean = true,
+    /** Logros que pusiste en tu hall (ids), en orden. */
+    val hall_logros: List<String> = emptyList(),
+    /** Pantallas fijadas arriba de «Más». */
+    val favoritos_mas: List<String> = emptyList(),
+    /** Campañas semanales que aceptaste. */
+    val campanas: List<Campana> = emptyList(),
+    /** La hoja de la noche muestra solo lo que falta (lo ya lleno queda resumido arriba). */
+    val noche_solo_falta: Boolean = true,
 )
 
 /**

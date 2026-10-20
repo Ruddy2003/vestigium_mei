@@ -51,6 +51,7 @@ object Importar {
             r.momentos.filter { m -> Repo.momentos.none { it.id == m.id } }.forEach { Repo.guardarMomento(it) }
             Repo.importarGastos(r.gastos)
             if (r.ingresos.isNotEmpty()) Repo.importarIngresos(r.ingresos)
+            if (r.tramos.isNotEmpty()) Repo.importarTramos(r.tramos)
             r.respuestas.forEach { Repo.guardarRespuesta(it) }
             r.reacciones.forEach { rr -> if (Repo.reacciones.none { it.id == rr.id }) Repo.guardarReaccion(rr) }
             r.lugares.forEach { Repo.guardarLugar(it) }
@@ -105,7 +106,7 @@ object Importar {
      * los avisos ya programados). Con datos, se suman listas y mapas sin borrar nada de lo de aquí.
      */
     fun combinarConfig(c: Config, r: Config, nuevo: Boolean): Config {
-        if (nuevo) return r.copy(carpeta_respaldo = null, disparos = emptyMap(), plan_muestreo = emptyMap(), ultimo_sync = c.ultimo_sync,
+        if (nuevo) return r.copy(carpeta_respaldo = null, disparos = emptyMap(), plan_muestreo = emptyMap(), ultimo_sync = c.ultimo_sync, enfoque_tipo = null, enfoque_inicio = null,
             bienvenida_vista = true, drive = c.drive, drive_carpeta = c.drive_carpeta ?: r.drive_carpeta, drive_ultimo = c.drive_ultimo, respaldo_ultimo = c.respaldo_ultimo)
         val perfilVacio = c.perfil == Perfil()
         return c.copy(
@@ -122,6 +123,8 @@ object Importar {
             fotos_revisadas = r.fotos_revisadas + c.fotos_revisadas, salud_sexo = c.salud_sexo.ifBlank { r.salud_sexo },
             logros_propios = (c.logros_propios + r.logros_propios).distinctBy { it.id }, logros_vistos = r.logros_vistos + c.logros_vistos,
             temas_rotacion = c.temas_rotacion.ifEmpty { r.temas_rotacion },
+            campanas = (c.campanas + r.campanas).distinctBy { it.id }, hall_logros = c.hall_logros.ifEmpty { r.hall_logros },
+            favoritos_mas = (c.favoritos_mas + r.favoritos_mas).distinct(), habito_recaida = c.habito_recaida ?: r.habito_recaida,
         )
     }
 

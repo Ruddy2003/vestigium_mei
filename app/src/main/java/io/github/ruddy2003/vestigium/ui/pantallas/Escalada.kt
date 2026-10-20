@@ -278,7 +278,7 @@ fun PantallaAscenso(nav: Nav) {
                 Editor(a.nota, "ascensus_${a.fecha}.txt", "Qué funcionó, qué no, con quién fuiste…", minimo = 90) { g(a.copy(nota = it)) }
             }
         }
-        TextButton(onClick = { if (confirmar) { Repo.borrarAscenso(a.id); nav.atras() } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
+        TextButton(onClick = { if (confirmar) { Repo.borrarAscenso(a.id); nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sesión borrada") { Repo.guardarAscenso(a) } } else confirmar = true }, modifier = Modifier.padding(top = 16.dp)) {
             Text(if (confirmar) "¿borrar la sesión de verdad?" else "borrar sesión", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
         }
     }

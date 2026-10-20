@@ -91,7 +91,12 @@ import io.github.ruddy2003.vestigium.ui.pantallas.PantallaReportes
 import io.github.ruddy2003.vestigium.widget.Widgets
 
 /** Contador global que sube cada vez que la app vuelve al frente, para refrescar permisos y estados. */
-object Reanudar { var n by mutableIntStateOf(0) }
+object Reanudar {
+    var n by mutableIntStateOf(0)
+    /** Cuándo volvió la app al frente (reloj del sistema): lo que cambie justo al abrir no se festeja. */
+    @Volatile var desde = 0L
+    fun recien(ms: Long = 2500): Boolean = android.os.SystemClock.elapsedRealtime() - desde < ms
+}
 
 class MainActivity : FragmentActivity() {
     companion object { const val PANTALLA = "pantalla" }
@@ -133,6 +138,7 @@ class MainActivity : FragmentActivity() {
     override fun onStart() {
         super.onStart()
         Reanudar.n++
+        Reanudar.desde = android.os.SystemClock.elapsedRealtime()
         RotacionTema.revisar()
         if (Repo.config.bloqueo && desbloqueado && enFondoDesde > 0 && System.currentTimeMillis() - enFondoDesde > 60_000) {
             desbloqueado = false
@@ -296,6 +302,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                         "Momento" to { rapido(QuickActivity.M_MENU) },
                         "Gasto" to { rapido(QuickActivity.M_GASTO) },
                         "Sueño" to { rapido(QuickActivity.M_SUENO) },
+                        "Enfoque o siesta" to { rapido(QuickActivity.M_ENFOQUE) },
                         "Diario de hoy" to { abrirNoche() },
                     ).forEach { (t, f) ->
                         androidx.compose.material3.DropdownMenuItem(text = { Text(t, style = MaterialTheme.typography.bodyLarge) }, onClick = { sentir(Sentidos.Evento.ELEGIR); menu = false; f() })
@@ -372,13 +379,24 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "noche" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(nav)
                     "entrada" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(nav)
                     "biblioteca_diario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "diario")
+                    "cinta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(nav)
+                    "constelacion" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(nav)
+                    "hall" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaHall(nav)
+                    "campanas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCampanas(nav)
+                    "recaidas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(nav)
+                    "estado_datos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEstadoDatos(nav)
+                    "enfoque" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEnfoque(nav)
                     else -> Text("Pantalla desconocida: $actual")
                 }
                 }
             }
             CapaFiesta()
+            CapaDeshacer()
         }
     }
+    // Los logros que se consiguen mientras usas la app se celebran en ese momento, a pantalla completa.
+    VigiaLogros()
+    CapaLogro()
     // Encima de todo (también de la barra inferior): la huella al sellar el día.
     CapaHuella()
     // La presentación del tema nuevo (emblema, frase y música), y encima el tema anterior abriéndose en círculo.

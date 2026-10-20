@@ -99,6 +99,7 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
             placeholder = { Text("Buscar en todo: diario, plátano, @persona, artista, lugar…") },
             trailingIcon = if (busqueda.isNotEmpty()) ({ TextButton(onClick = { busqueda = "" }) { Text("×") } }) else null,
         )
+        if (busqueda.isNotBlank()) EnPantallas(busqueda) { ruta -> nav.ir(ruta) }
         val r = res
         when {
             r == null -> Ayuda("Sumando…", Modifier.padding(top = 12.dp))
@@ -247,7 +248,7 @@ private fun EnDiario(q: String, desde: String, hasta: String, abrir: (String) ->
         Repo.dias.values.filter { it.fecha in desde..hasta }.sortedByDescending { it.fecha }.forEach { d ->
             listOf(d.nota, d.sueno_texto, d.mejor_momento, d.peor_momento).firstOrNull { Totales.normal(it).contains(nq) }?.let { porDia[d.fecha] = it }
         }
-        Repo.momentos.filter { it.fecha in desde..hasta && Totales.normal(it.texto).contains(nq) }.forEach { m -> porDia.putIfAbsent(m.fecha, m.texto) }
+        Repo.momentos.filter { it.fecha in desde..hasta && (Repo.config.seguimiento_privado || it.tipo != "recaida") && Totales.normal(it.texto).contains(nq) }.forEach { m -> porDia.putIfAbsent(m.fecha, m.texto) }
         porDia.entries.sortedByDescending { it.key }.map { it.key to it.value }
     }
     if (hallados.isEmpty()) return
@@ -260,7 +261,7 @@ private fun EnDiario(q: String, desde: String, hasta: String, abrir: (String) ->
                 // Un fragmento alrededor de lo que buscaste.
                 val n = Totales.normal(t); val i = n.indexOf(nq).coerceAtLeast(0)
                 val a = (i - 50).coerceAtLeast(0); val b = (i + nq.length + 70).coerceAtMost(t.length)
-                Text((if (a > 0) "…" else "") + t.substring(a, b).replace("\n", " ") + (if (b < t.length) "…" else ""), style = MaterialTheme.typography.bodySmall)
+                io.github.ruddy2003.vestigium.ui.TextoMarcado((if (a > 0) "…" else "") + t.substring(a, b).replace("\n", " ") + (if (b < t.length) "…" else ""), style = MaterialTheme.typography.bodySmall)
             }
         }
         if (hallados.size > 20) Ayuda("y ${hallados.size - 20} días más.")
@@ -285,7 +286,7 @@ private fun EnCartas(q: String, desde: String, hasta: String, abrir: (String) ->
                 Text((if (c.alFuturo) "A mi yo del futuro" else "Para @${c.para}") + " · " + Totales.fecha(c.escrita), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 val t = c.texto; val n = Totales.normal(t); val i = n.indexOf(nq).coerceAtLeast(0)
                 val a = (i - 50).coerceAtLeast(0); val b = (i + nq.length + 70).coerceAtMost(t.length)
-                Text((if (a > 0) "…" else "") + t.substring(a, b).replace("\n", " ") + (if (b < t.length) "…" else ""), style = MaterialTheme.typography.bodySmall)
+                io.github.ruddy2003.vestigium.ui.TextoMarcado((if (a > 0) "…" else "") + t.substring(a, b).replace("\n", " ") + (if (b < t.length) "…" else ""), style = MaterialTheme.typography.bodySmall)
             }
         }
     }

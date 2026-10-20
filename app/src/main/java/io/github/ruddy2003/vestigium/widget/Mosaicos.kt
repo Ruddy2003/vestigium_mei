@@ -33,3 +33,16 @@ abstract class MosaicoBase(private val modo: String, private val req: Int) : Til
 class MosaicoMomento : MosaicoBase(QuickActivity.M_MENU, 3401)
 class MosaicoGasto : MosaicoBase(QuickActivity.M_GASTO, 3402)
 class MosaicoAnimo : MosaicoBase(QuickActivity.M_ANIMO, 3403)
+
+/** El cronómetro de enfoque: encendido mientras corre un bloque o una siesta. */
+class MosaicoEnfoque : MosaicoBase(QuickActivity.M_ENFOQUE, 3404) {
+    override fun onStartListening() {
+        super.onStartListening()
+        val corriendo = runCatching { io.github.ruddy2003.vestigium.data.Repo.init(this); io.github.ruddy2003.vestigium.data.Enfoque.enCurso() }.getOrNull()
+        qsTile?.let {
+            it.state = if (corriendo != null) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+            if (Build.VERSION.SDK_INT >= 29) it.subtitle = corriendo?.let { c -> io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(c.first) } ?: ""
+            it.updateTile()
+        }
+    }
+}

@@ -39,6 +39,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -415,10 +416,11 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = if (p.rayas == Rayas.NUMEROS) 52.dp else 30.dp, end = 26.dp, bottom = 40.dp)) {
                     EncabezadoCarta(tema, p, c.escrita, c.hora, c.lugar, c.para, if (c.alFuturo) c.abrir_en else null)
                     var layout by remember(c.texto) { mutableStateOf<TextLayoutResult?>(null) }
-                    val texto = AnnotatedString(c.texto.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }
+                    val csPag = MaterialTheme.colorScheme
+                    val texto = AnnotatedString(c.texto.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }.let { Marcas.anotar(it, tema, csPag, conFondo = false) }
                     SelectionContainer {
                         Text(texto, color = p.tinta, fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, onTextLayout = { layout = it },
-                            modifier = Modifier.fillMaxWidth().rayado(p, layout))
+                            modifier = Modifier.fillMaxWidth().rayado(p, layout).drawBehind { layout?.let { l -> with(Marcas) { dibujar(l, texto.text, tema, csPag) } } })
                     }
                     Text("— " + Repo.config.perfil.nombre.ifBlank { "yo" }, fontFamily = p.capitular ?: p.texto, fontSize = (p.tam + 3).sp, color = p.tinta, textAlign = TextAlign.End,
                         modifier = Modifier.fillMaxWidth().padding(top = 22.dp))

@@ -306,6 +306,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
+                Interruptor("Personaje del tema", c.personaje, "Un personaje en Día que se ve cansado si dormiste poco, sonríe con tu ánimo, presume tu racha y se viste para el clima.") { v -> cambiar { it.copy(personaje = v) } }
                 Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
                 if (c.animaciones) Interruptor("Fondo vivo", c.fondo_vivo, "Algo se mueve muy despacio detrás de todo: estrellas que titilan, luz de vitral, luciérnagas, nieve, nubes de la estepa, reflejos de agua. Gasta un poco más de batería.") { v -> cambiar { it.copy(fondo_vivo = v) } }
                 Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
@@ -399,7 +400,20 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Tarjeta {
                 Interruptor("Bloquear con huella", c.bloqueo, "Pide tu huella o PIN al abrir la app. Los widgets y botones rápidos siguen funcionando sin desbloquear.") { v -> cambiar { it.copy(bloqueo = v) } }
                 Interruptor("Modo discreto", c.discreto, "Los widgets y reportes muestran letras en vez de nombres de emociones.") { v -> cambiar { it.copy(discreto = v) } }
-                Interruptor("Seguimiento privado", c.seguimiento_privado, "Agrega al día la intensidad del impulso, recaídas y detonantes.") { v -> cambiar { it.copy(seguimiento_privado = v) } }
+                Interruptor("Seguimiento privado", c.seguimiento_privado, "Agrega al día la intensidad del impulso, recaídas y detonantes, y el botón «Recaída» con hora y lugar. Nunca sale en reportes, logros ni «Tu año».") { v -> cambiar { it.copy(seguimiento_privado = v) } }
+                if (c.seguimiento_privado) {
+                    Etiqueta("Hábito que una recaída deja en 0")
+                    val auto = io.github.ruddy2003.vestigium.data.Recaidas.habito(c.copy(habito_recaida = null))
+                    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Ficha("ninguno", c.habito_recaida == "") { cambiar { it.copy(habito_recaida = "") } }
+                        c.habitos.filter { it.activo }.forEach { h ->
+                            val sel = c.habito_recaida == h.id || (c.habito_recaida == null && auto?.id == h.id)
+                            Ficha(h.nombre, sel) { cambiar { it.copy(habito_recaida = h.id) } }
+                        }
+                    }
+                    Ayuda(if (c.habito_recaida == null && auto != null) "Elegido solo por su nombre: «${auto.nombre}»." else "Al registrar una recaída, ese hábito queda sin cumplir ese día.", Modifier.padding(top = 4.dp))
+                    TextButton(onClick = { nav.ir("recaidas") }) { Text("ver impulsos y recaídas →", style = MaterialTheme.typography.labelLarge) }
+                }
                 Interruptor("Ubicación de fondo", c.muestreo_ubicacion, "Una muestra cada 15 minutos para el mapa de calor.") { v -> cambiar { it.copy(muestreo_ubicacion = v) } }
             }
         }
