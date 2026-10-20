@@ -9,6 +9,7 @@ import android.content.Intent
 import android.service.notification.NotificationListenerService
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.layout.Arrangement
@@ -164,14 +165,13 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
     val invitaciones: @Composable (Color) -> Unit = { tinta ->
         if (extra.isNotEmpty()) {
             Text("si tienes tiempo:", style = MaterialTheme.typography.labelMedium, color = tinta.copy(alpha = 0.8f), modifier = Modifier.padding(top = 8.dp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                extra.forEach { p -> TextButton(onClick = { accion(p.accion) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)) {
-                    Text(p.texto.removePrefix("¿").removeSuffix("?").replaceFirstChar { it.lowercase() } + " →", style = MaterialTheme.typography.labelLarge, color = tinta)
-                } }
-                TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + extra.associate { it.clave to hoy }) } },
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)) {
-                    Text("hoy no", style = MaterialTheme.typography.labelLarge, color = tinta.copy(alpha = 0.7f))
+            FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                extra.forEach { p ->
+                    Text(p.texto.removePrefix("¿").removeSuffix("?").replaceFirstChar { it.lowercase() } + " →", style = MaterialTheme.typography.labelLarge, color = tinta,
+                        modifier = Modifier.clickable { accion(p.accion) }.padding(vertical = 4.dp))
                 }
+                Text("hoy no", style = MaterialTheme.typography.labelLarge, color = tinta.copy(alpha = 0.6f),
+                    modifier = Modifier.clickable { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + extra.associate { it.clave to hoy }) } }.padding(vertical = 4.dp))
             }
         }
     }
