@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -52,14 +53,15 @@ private val CERCANIA = mapOf(1 to "Casi nada en común", 2 to "Poco", 3 to "Algo
 @Composable
 fun CirculosCercania(valor: Int?, onCambio: (Int?) -> Unit) {
     val cs = MaterialTheme.colorScheme
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    // Siempre en una fila: cada par de círculos toma la séptima parte del ancho.
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         for (i in 1..7) {
             val sel = valor == i
-            Surface(onClick = { onCambio(if (sel) null else i) }, shape = MaterialTheme.shapes.small, color = if (sel) cs.primary.copy(alpha = 0.14f) else cs.surface,
+            Surface(onClick = { onCambio(if (sel) null else i) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.small, color = if (sel) cs.primary.copy(alpha = 0.14f) else cs.surface,
                 border = BorderStroke(if (sel) 2.dp else 1.dp, if (sel) cs.primary else cs.outline)) {
-                Column(Modifier.padding(horizontal = 3.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Canvas(Modifier.size(width = 32.dp, height = 20.dp)) {
-                        val r = size.height * 0.42f
+                Column(Modifier.padding(horizontal = 2.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Canvas(Modifier.fillMaxWidth().height(20.dp)) {
+                        val r = minOf(size.height * 0.42f, size.width / 4.3f)
                         // Separación de los centros: de casi 2 radios (no se tocan) a casi 0 (uno dentro del otro).
                         val d = r * (2.1f - (i - 1) * 0.31f)
                         val cx = size.width / 2; val cy = size.height / 2
