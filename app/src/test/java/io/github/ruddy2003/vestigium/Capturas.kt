@@ -715,40 +715,6 @@ class Capturas {
         io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.entrada = null
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(navVacia)
     }
-}
-
-@Composable
-private fun Muestra() {
-    Hoja("Día", subtitulo = null) {
-        Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Cifra("7.4 h", "sueño", Modifier.weight(1f)); Cifra("9,812", "pasos", Modifier.weight(1f)); Cifra("$245", "gasto", Modifier.weight(1f))
-        }
-        Seccion("Sueño", "Lo que recuerdas al despertar.", numero = 1) {
-            Tarjeta {
-                Etiqueta("Calidad")
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("1", "2", "3", "4", "5").forEach { Ficha(it, it == "4") {} } }
-                Interruptor("Recordé un sueño", true, "Se guarda con su valencia y temas.") {}
-                Clave("somnus", "7 h 24 · profundo 1 h 32")
-                Clave("hrv", "48 ms")
-            }
-        }
-        Seccion("Las relaciones más marcadas", numero = 2) {
-            Tarjeta {
-                Text("Horas de sueño  ↔  Valencia del día", style = MaterialTheme.typography.bodyMedium)
-                Ayuda("r = +0.42 · 118 días · moderada")
-                val o = esOscuro()
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp)) { for (k in 0..10) Box(Modifier.weight(1f).padding(1.dp).background(Tonos.divergente(k / 10f, o)).padding(6.dp)) }
-                Row(Modifier.fillMaxWidth().padding(top = 4.dp)) { for (k in 0..10) Box(Modifier.weight(1f).padding(1.dp).background(Tonos.calor(k / 10f, o)).padding(6.dp)) }
-            }
-        }
-        Seccion("Diario", numero = 3) {
-            Text("Hoy fui con @ana al Colegio y avancé el capítulo de la tesis. #tesis", style = MaterialTheme.typography.bodyLarge)
-            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BotonPrincipal("Guardar") {}; BotonSecundario("cancelar") {}
-            }
-        }
-    }
-
     // ------------------------------------------------------------ versión 67: cinta, constelación, hall, campañas, personaje, marcas
 
     private fun ejemploV67() {
@@ -869,6 +835,40 @@ private fun Muestra() {
         io.github.ruddy2003.vestigium.ui.Celebracion.mostrar(listOf(io.github.ruddy2003.vestigium.ciencia.Logros.Logro("ciudades_10", "Viajero", "Pasa tiempo en 10 ciudades distintas", "⌂", "Mundo", 2, 10.0, 10.0, "2026-10-19")))
         Box(Modifier.fillMaxSize()) { io.github.ruddy2003.vestigium.ui.CapaLogro() }
     }
+}
+
+@Composable
+private fun Muestra() {
+    Hoja("Día", subtitulo = null) {
+        Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Cifra("7.4 h", "sueño", Modifier.weight(1f)); Cifra("9,812", "pasos", Modifier.weight(1f)); Cifra("$245", "gasto", Modifier.weight(1f))
+        }
+        Seccion("Sueño", "Lo que recuerdas al despertar.", numero = 1) {
+            Tarjeta {
+                Etiqueta("Calidad")
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf("1", "2", "3", "4", "5").forEach { Ficha(it, it == "4") {} } }
+                Interruptor("Recordé un sueño", true, "Se guarda con su valencia y temas.") {}
+                Clave("somnus", "7 h 24 · profundo 1 h 32")
+                Clave("hrv", "48 ms")
+            }
+        }
+        Seccion("Las relaciones más marcadas", numero = 2) {
+            Tarjeta {
+                Text("Horas de sueño  ↔  Valencia del día", style = MaterialTheme.typography.bodyMedium)
+                Ayuda("r = +0.42 · 118 días · moderada")
+                val o = esOscuro()
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp)) { for (k in 0..10) Box(Modifier.weight(1f).padding(1.dp).background(Tonos.divergente(k / 10f, o)).padding(6.dp)) }
+                Row(Modifier.fillMaxWidth().padding(top = 4.dp)) { for (k in 0..10) Box(Modifier.weight(1f).padding(1.dp).background(Tonos.calor(k / 10f, o)).padding(6.dp)) }
+            }
+        }
+        Seccion("Diario", numero = 3) {
+            Text("Hoy fui con @ana al Colegio y avancé el capítulo de la tesis. #tesis", style = MaterialTheme.typography.bodyLarge)
+            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                BotonPrincipal("Guardar") {}; BotonSecundario("cancelar") {}
+            }
+        }
+    }
+
 }
 
 /** Cinco semanas de datos inventados para ver el tablero y la línea del tiempo. */
