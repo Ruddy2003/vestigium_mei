@@ -386,7 +386,7 @@ fun PantallaHojaMomentos(nav: Nav) {
             },
             "Abrir el día" to { Seleccion.abrir(nav, fecha) },
             "Ver en la cinta" to { Seleccion.cinta = fecha; nav.ir("cinta") },
-        ))
+        ), capitular = false)
 }
 
 // ---------------------------------------------------------------- Cartas

@@ -852,6 +852,8 @@ class Capturas {
         val momentos = Repo.momentos + listOf(
             io.github.ruddy2003.vestigium.data.Momento("a1", iso(hoy, 10, 15), hoy, "animo", valencia = 5, activacion = 5, emociones = listOf("calma", "esperanza"), pensamiento = "plan"),
             io.github.ruddy2003.vestigium.data.Momento("a2", iso(hoy, 17, 45), hoy, "animo", valencia = 2, activacion = 6, emociones = listOf("estres", "frustracion"), texto = "la entrega con @luis"),
+            io.github.ruddy2003.vestigium.data.Momento("a3", iso(ayer, 12, 0), ayer, "animo", valencia = 6, emociones = listOf("diversion"), texto = "comida con @marta"),
+            io.github.ruddy2003.vestigium.data.Momento("a4", iso(hoy, 12, 30), hoy, "animo", valencia = 5, emociones = listOf("calma"), texto = "café con @marta y @anita"),
         )
         Repo.ejemploEnMemoria(Repo.dias + (ayer to (Repo.dias[ayer] ?: io.github.ruddy2003.vestigium.data.Dia(ayer)).copy(sueno_recordado = true, sueno_texto = "Volvía a la casa de mi abuela con @ana",
             sueno_categorias = listOf("tema_regreso", "per_familia", "est_conexion"))), Repo.salud, Repo.pantalla, Repo.gastos,
@@ -871,7 +873,7 @@ class Capturas {
     @Test fun sustanciasGotico() = v73(TemaId.GOTICO, true, 3200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSustancias(navVacia) }
     @Test fun sustanciasRomano() = v73(TemaId.ROMANO, false, 3200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSustancias(navVacia) }
     @Test fun diarioV73Seda() = v73(TemaId.SEDA, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
-    @Test fun diaV73Romano() = v73(TemaId.ROMANO, false, 5200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
+    @Test fun diaV73Romano() = v73(TemaId.ROMANO, false, 8000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
     @Test fun cintaV73Laboratorio() = v73(TemaId.LABORATORIO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
     @Test fun libretaMomentosMedieval() = v73(TemaId.MEDIEVAL, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "momentos") }
     @Test fun hojaMomentosRomano() = v73(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(navVacia) }

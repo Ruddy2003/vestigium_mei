@@ -106,7 +106,7 @@ fun PantallaSustancias(nav: Nav) {
             mes.groupBy { it.sustancia }.forEach { (id, l) ->
                 val info = Catalogo.sustancia(id)
                 val partes = listOfNotNull(
-                    "${l.map { it.fecha }.distinct().size} días",
+                    l.map { it.fecha }.distinct().size.let { n -> if (n == 1) "1 día" else "$n días" },
                     l.mapNotNull { Sustancias.maximo(it) }.takeIf { it.isNotEmpty() }?.let { "nivel máx. medio %.1f".format(it.average()) },
                     l.mapNotNull { it.cantidad }.takeIf { it.isNotEmpty() }?.let { "${cifra(it.sum())} ${info?.unidad ?: ""}".trim() },
                     l.mapNotNull { Sustancias.horas(it) }.takeIf { it.isNotEmpty() }?.let { "%.1f h de media".format(it.average()) },

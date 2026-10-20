@@ -1046,7 +1046,7 @@ internal fun BarraPagina(p: Pagina, volver: () -> Unit, centro: String, derecha:
 /** Una entrada abierta a pantalla completa con el diseño del tema. */
 @Composable
 fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Unit)?, siguiente: (() -> Unit)?, acciones: List<Pair<String, () -> Unit>>,
-                tema: TemaId = Estilo.tema, modo: Escrito = Escrito.DIARIO) {
+                tema: TemaId = Estilo.tema, modo: Escrito = Escrito.DIARIO, capitular: Boolean = true) {
     val sueno = modo == Escrito.SUENO
     val p = if (sueno) paginaNoche(tema) else pagina(tema)
     val cuerpo = if (sueno) d?.sueno_texto.orEmpty() else d?.nota.orEmpty()
@@ -1087,7 +1087,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                     } else if (sueno) {
                         var layout by remember(cuerpo) { mutableStateOf<TextLayoutResult?>(null) }
                         val csPag = MaterialTheme.colorScheme
-                        val texto = AnnotatedString(cuerpo.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }.let { Marcas.anotar(it, tema, csPag, conFondo = false) }
+                        val texto = AnnotatedString(cuerpo.trim()).let { if (capitular && p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }.let { Marcas.anotar(it, tema, csPag, conFondo = false) }
                         SelectionContainer {
                             Text(texto, color = p.tinta, fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, onTextLayout = { layout = it },
                                 modifier = Modifier.fillMaxWidth().rayado(p, layout).drawBehind { layout?.let { l -> with(Marcas) { dibujar(l, texto.text, tema, csPag) } } })
@@ -1096,7 +1096,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                     } else {
                         var layout by remember(d.nota) { mutableStateOf<TextLayoutResult?>(null) }
                         val csPag = MaterialTheme.colorScheme
-                        val texto = AnnotatedString(d.nota.trim()).let { if (p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }.let { Marcas.anotar(it, tema, csPag, conFondo = false) }
+                        val texto = AnnotatedString(d.nota.trim()).let { if (capitular && p.capitular != null) conCapitular(it, p.capitular, p.acento) else it }.let { Marcas.anotar(it, tema, csPag, conFondo = false) }
                         SelectionContainer {
                             Text(texto, color = p.tinta, fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, onTextLayout = { layout = it },
                                 modifier = Modifier.fillMaxWidth().rayado(p, layout).drawBehind { layout?.let { l -> with(Marcas) { dibujar(l, texto.text, tema, csPag) } } })
