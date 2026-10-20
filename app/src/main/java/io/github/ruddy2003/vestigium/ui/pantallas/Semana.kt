@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,7 +48,7 @@ import kotlin.math.abs
 private class ResumenSemana(val dias: List<String>) {
     private fun prom(l: List<Double>) = if (l.isEmpty()) null else l.average()
     val diario = dias.count { f -> Repo.dias[f]?.let { it.valencia != null || it.nota.isNotBlank() } == true }
-    val valencias = dias.map { f -> Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average() }
+    val valencias = dias.map { f -> Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average() }
     val animo = prom(valencias.filterNotNull())
     val sueno = prom(dias.mapNotNull { Repo.salud[it]?.sueno_min?.let { m -> m / 60.0 } })
     val pasos = dias.mapNotNull { Repo.salud[it]?.pasos }.takeIf { it.isNotEmpty() }?.sum()

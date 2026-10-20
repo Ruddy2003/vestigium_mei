@@ -65,6 +65,8 @@ class QuickActivity : FragmentActivity() {
         const val ORIGEN = "origen"; const val AVISO_MS = "aviso_ms"; const val NOTIF = "notif"
         const val M_ANIMO = "animo"; const val M_MOMENTO = "momento"; const val M_MENU = "menu"
         const val M_GASTO = "gasto"; const val M_SUENO = "sueno"; const val M_MINIMO = "minimo"; const val M_ENFOQUE = "enfoque"
+        /** Sustancias: con [CONSUMO] abre ese registro para completarlo (lo de anoche); con [SUSTANCIA], esa sustancia. */
+        const val M_CONSUMO = "consumo"; const val CONSUMO = "consumo_id"; const val SUSTANCIA = "sustancia"
         const val CATEGORIA = "categoria"; const val CALIDAD = "calidad"; const val RECORDADO = "recordado"
     }
 
@@ -80,9 +82,24 @@ class QuickActivity : FragmentActivity() {
         // Guardado inmediato cuando el toque ya trae la información.
         var inicial: Momento? = null
         val tipo = intent.getStringExtra(TIPO)
-        if (modo == M_MOMENTO && tipo != null) inicial = crear(tipo, origen, null, null)
+        var pantallaInicial = when (modo) { M_MOMENTO, M_ANIMO -> M_ANIMO; else -> modo }
+        if (modo == M_MOMENTO && tipo != null) {
+            if (tipo == "impulso" || tipo == "recaida") { inicial = crear(tipo, origen, null, null); pantallaInicial = "privado" }
+            else {
+                // Un sentimiento (del widget) o un tipo de momento de antes: se guarda como registro de ánimo.
+                val m0 = crear("animo", origen, null, null)
+                val n = when {
+                    Catalogo.sentimiento(tipo) != null -> m0.copy(emociones = listOf(tipo))
+                    Catalogo.PENSAMIENTOS.any { it.id == tipo } -> m0.copy(pensamiento = tipo)
+                    else -> m0
+                }
+                Repo.guardarMomento(n); inicial = n
+            }
+        }
         val val0 = intent.getIntExtra(VALENCIA, 0).takeIf { it in 1..7 }
-        if (modo == M_ANIMO && val0 != null) inicial = crear("muestreo", origen, val0, avisoMs)
+        if (modo == M_ANIMO && val0 != null) inicial = crear(if (avisoMs != null) "muestreo" else "animo", origen, val0, avisoMs)
+        val consumoId = intent.getStringExtra(CONSUMO)
+        val sustanciaInicial = intent.getStringExtra(SUSTANCIA)
         // Desde el widget de sueño: la calidad se guarda con el toque.
         if (modo == M_SUENO) {
             val cal = intent.getIntExtra(CALIDAD, 0).takeIf { it in 1..5 }
@@ -107,16 +124,26 @@ class QuickActivity : FragmentActivity() {
                         color = MaterialTheme.colorScheme.background,
                         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                     ) {
+                        var pantalla by remember { mutableStateOf(pantallaInicial) }
+                        var privado by remember { mutableStateOf(inicial?.takeIf { pantallaInicial == "privado" }) }
                         Column(Modifier.padding(18.dp).verticalScroll(rememberScrollState())) {
                             Meandro(Modifier.padding(bottom = 12.dp))
-                            when (modo) {
-                                M_ANIMO -> Animo(inicial, origen, avisoMs)
-                                M_MOMENTO, M_MENU -> MomentoCaptura(inicial, origen)
+                            val ir: (String) -> Unit = { destino ->
+                                when (destino) {
+                                    "impulso", "recaida" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
+                                    else -> pantalla = destino
+                                }
+                            }
+                            when (pantalla) {
+                                M_ANIMO -> Animo(inicial, origen, avisoMs, ir)
+                                "privado" -> privado?.let { MomentoCaptura(it) } ?: Animo(null, origen, avisoMs, ir)
+                                M_MENU -> Registrar(ir)
                                 M_GASTO -> GastoRapido(catInicial)
                                 M_SUENO -> SuenoRapido()
                                 M_MINIMO -> Minimo()
                                 M_ENFOQUE -> EnfoqueRapido()
-                                else -> MomentoCaptura(null, origen)
+                                M_CONSUMO -> ConsumoRapido(consumoId, sustanciaInicial, origen)
+                                else -> Registrar(ir)
                             }
                         }
                     }
@@ -167,101 +194,171 @@ class QuickActivity : FragmentActivity() {
         Ayuda(sub, Modifier.padding(top = 2.dp, bottom = 12.dp))
     }
 
+    /** El menú del botón ⊕: todo lo que se registra, en botones grandes. */
     @Composable
-    private fun Animo(inicial: Momento?, origen: String, avisoMs: Long?) {
-        var m by remember { mutableStateOf(inicial) }
-        var valencia by remember { mutableStateOf(inicial?.valencia) }
-        var activacion by remember { mutableStateOf<Int?>(null) }
-        var nota by remember { mutableStateOf("") }
-        var con by remember { mutableStateOf(inicial?.con_quien.orEmpty()) }
-        Encabezado("¿Cómo te sientes ahora?", if (m != null) "Guardado a las ${Fechas.horaDe(m!!.ts)}. Agrega energía si quieres." else "Qué tan agradable y cuánta energía, en este momento.")
-        Etiqueta("Qué tan agradable")
-        Escala(valencia, 1, 7, Catalogo.ANCLAS["valencia"]) { v ->
-            valencia = v
-            if (v != null) {
-                val actual = m
-                if (actual == null) m = crear("muestreo", origen, v, avisoMs).also { nm -> if (con.isNotEmpty()) actualizar(nm.id) { it.copy(con_quien = con) } }
-                else actualizar(actual.id) { it.copy(valencia = v) }
+    private fun Registrar(ir: (String) -> Unit) {
+        val cs = MaterialTheme.colorScheme
+        Encabezado("Registrar", "Lo de todos los días en un toque. Lo demás, cuando quieras.")
+        Surface(onClick = { ir(M_ANIMO) }, modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp), shape = RoundedCornerShape(6.dp), color = cs.primary) {
+            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Ánimo ahora", style = MaterialTheme.typography.titleLarge, color = cs.onPrimary)
+                Text("cómo estás, qué sientes y qué piensas", style = MaterialTheme.typography.labelMedium, color = cs.onPrimary.copy(alpha = 0.85f))
             }
         }
-        Etiqueta("Energía")
-        Escala(activacion, 1, 7, Catalogo.ANCLAS["activacion"]) { v ->
-            activacion = v
-            m?.let { mm -> actualizar(mm.id) { it.copy(activacion = v) } }
+        val botones = listOfNotNull(
+            "Sustancias" to M_CONSUMO, "Gasto" to M_GASTO, "Sueño" to M_SUENO, "Enfoque o siesta" to M_ENFOQUE, "Diario de hoy" to "diario",
+            "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
+        )
+        FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
+            botones.forEach { (t, d) ->
+                Surface(onClick = {
+                    if (d == "diario") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, "diario")
+                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
+                    else ir(d)
+                }, modifier = Modifier.weight(1f).heightIn(min = 56.dp), shape = RoundedCornerShape(4.dp), color = cs.surface, border = BorderStroke(1.dp, cs.outline)) {
+                    Box(contentAlignment = Alignment.Center) { Text(t, style = MaterialTheme.typography.titleSmall) }
+                }
+            }
         }
+        val abiertos = io.github.ruddy2003.vestigium.data.Sustancias.abiertos()
+        if (abiertos.isNotEmpty()) Ayuda("En curso: " + abiertos.joinToString(", ") { if (io.github.ruddy2003.vestigium.data.Sustancias.visible(it)) Catalogo.nombreSustancia(it).lowercase() else "un registro" } +
+            ". Tócalo en «Sustancias» para cambiar el nivel o decir que ya se te pasó.", Modifier.padding(top = 10.dp))
+    }
+
+    /**
+     * Ánimo ahora: un registro con tres partes. Un toque en la cuadrícula (qué tan agradable y cuánta energía),
+     * y opcionales: qué sientes (varios, «otro» o «no sé»), en qué piensas y con quién estás.
+     * De un aviso se guarda como «muestreo»; si lo abres tú, como «animo».
+     */
+    @Composable
+    private fun Animo(inicial: Momento?, origen: String, avisoMs: Long?, ir: (String) -> Unit) {
+        var m by remember { mutableStateOf(inicial) }
+        var valencia by remember { mutableStateOf(inicial?.valencia) }
+        var activacion by remember { mutableStateOf(inicial?.activacion) }
+        var emociones by remember { mutableStateOf(inicial?.emociones.orEmpty()) }
+        var otra by remember { mutableStateOf(inicial?.emocion_otra.orEmpty()) }
+        var pensamiento by remember { mutableStateOf(inicial?.pensamiento) }
+        var nota by remember { mutableStateOf(inicial?.texto.orEmpty()) }
+        var con by remember { mutableStateOf(inicial?.con_quien.orEmpty()) }
+        val discreto = Repo.config.discreto
+        /** El registro se crea con lo primero que toques. */
+        fun asegurar(f: (Momento) -> Momento) {
+            val actual = m ?: crear(if (avisoMs != null) "muestreo" else "animo", origen, null, avisoMs)
+            val n = f(Repo.momento(actual.id) ?: actual)
+            Repo.guardarMomento(n); m = n
+        }
+        Encabezado("¿Cómo estás ahora?", if (m != null) "Guardado a las ${Fechas.horaDe(m!!.ts)}. Lo demás es opcional; puedes cerrar." else "Un toque en el cuadro basta.")
+        BannerConsumo(ir)
+        CuadriculaAfecto(valencia, activacion) { v, a -> valencia = v; activacion = a; asegurar { it.copy(valencia = v, activacion = a) } }
+        Etiqueta("¿Qué sientes? (opcional, varios)")
+        fun alternar(id: String) {
+            emociones = when {
+                id in emociones -> emociones - id
+                id == Catalogo.NO_SE -> listOf(Catalogo.NO_SE)
+                else -> emociones - Catalogo.NO_SE + id
+            }
+            val e = emociones
+            asegurar { it.copy(emociones = e, emocion_otra = if (Catalogo.OTRO in e) otra.ifBlank { null } else null) }
+        }
+        listOf(1, -1, 0).forEach { tono ->
+            FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Catalogo.SENTIMIENTOS.filter { it.tono == tono }.forEach { e -> Ficha(if (discreto) e.discreto else e.nombre, e.id in emociones) { alternar(e.id) } }
+                if (tono == 0) {
+                    Ficha("otro…", Catalogo.OTRO in emociones) { alternar(Catalogo.OTRO) }
+                    Ficha("no sé", Catalogo.NO_SE in emociones) { alternar(Catalogo.NO_SE) }
+                }
+            }
+        }
+        if (Catalogo.OTRO in emociones) OutlinedTextField(value = otra, onValueChange = { t -> otra = t; asegurar { it.copy(emocion_otra = t.trim().ifBlank { null }) } },
+            modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("¿Cuál?") })
+        Etiqueta("¿En qué piensas? (opcional)")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.PENSAMIENTOS.forEach { o -> Ficha(o.nombre, pensamiento == o.id) { pensamiento = if (pensamiento == o.id) null else o.id; val p = pensamiento; asegurar { it.copy(pensamiento = p) } } }
+        }
+        OutlinedTextField(value = nota, onValueChange = { t -> nota = t; asegurar { it.copy(texto = t) } },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp), minLines = 2, placeholder = { Text("¿Qué está pasando? Usa @persona y #tema") }, visualTransformation = rememberMarcas())
+        Row(Modifier.padding(top = 6.dp)) { BotonDictado { d -> nota = (nota + " " + d).trim(); val t = nota; asegurar { it.copy(texto = t) } } }
         Etiqueta("¿Con quién estás?")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Catalogo.CON_QUIEN.forEach { o ->
                 val activo = o.id in con
                 Ficha(o.nombre, activo) {
                     // «Solo» excluye a los demás, y elegir a alguien quita «solo».
-                    con = when {
-                        activo -> con - o.id
-                        o.id == "solo" -> listOf("solo")
-                        else -> con - "solo" + o.id
-                    }
-                    m?.let { mm -> actualizar(mm.id) { x -> x.copy(con_quien = con) } }
+                    con = when { activo -> con - o.id; o.id == "solo" -> listOf("solo"); else -> con - "solo" + o.id }
+                    val c = con; asegurar { it.copy(con_quien = c) }
                 }
             }
         }
-        Etiqueta("Nota (opcional)")
-        OutlinedTextField(value = nota, onValueChange = { nota = it; m?.let { mm -> actualizar(mm.id) { x -> x.copy(texto = it) } } },
-            modifier = Modifier.fillMaxWidth(), placeholder = { Text("¿Qué está pasando? Usa @ y #") }, visualTransformation = rememberMarcas())
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) {
-            BotonPrincipal("Listo", habilitado = m != null) { terminar() }
+        // Lo que no es ánimo, a un toque: sustancias, impulso y recaída.
+        FlowRow(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            BotonSecundario("＋ sustancia") { ir(M_CONSUMO) }
+            BotonSecundario("＋ impulso") { ir("impulso") }
+            if (Repo.config.seguimiento_privado) BotonSecundario("＋ recaída") { ir("recaida") }
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            if (m != null && inicial == null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Deshacer") }
+            else Spacer(Modifier.width(1.dp))
+            BotonPrincipal("Listo") { terminar() }
         }
     }
 
+    /** Si hay una sustancia en curso: su nivel ahora y «ya se me pasó», sin salir del ánimo. */
     @Composable
-    private fun MomentoCaptura(inicial: Momento?, origen: String) {
+    private fun BannerConsumo(ir: (String) -> Unit) {
+        val abiertos = io.github.ruddy2003.vestigium.data.Sustancias.abiertos()
+        if (abiertos.isEmpty()) return
+        val cs = MaterialTheme.colorScheme
+        abiertos.forEach { c ->
+            var nivel by remember(c.id) { mutableStateOf(c.niveles.lastOrNull()?.nivel) }
+            Surface(color = cs.secondaryContainer, shape = RoundedCornerShape(6.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+                Column(Modifier.padding(12.dp)) {
+                    val nombre = if (io.github.ruddy2003.vestigium.data.Sustancias.visible(c)) Catalogo.nombreSustancia(c) else "Registro en curso"
+                    Text("$nombre desde las ${Fechas.horaDe(c.inicio)} · ¿cómo vas?", style = MaterialTheme.typography.titleSmall, color = cs.onSecondaryContainer)
+                    Escala(nivel, 0, 10, Catalogo.anclasNivel(c.sustancia)) { v -> nivel = v; if (v != null) io.github.ruddy2003.vestigium.data.Sustancias.lectura(Repo.consumo(c.id) ?: c, v) }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
+                        TextButton(onClick = { io.github.ruddy2003.vestigium.data.Sustancias.cerrar(Repo.consumo(c.id) ?: c); Toast.makeText(this@QuickActivity, "Anotado: ya se te pasó", Toast.LENGTH_SHORT).show() }) { Text("ya se me pasó") }
+                        TextButton(onClick = { ir(M_CONSUMO) }) { Text("más detalles") }
+                    }
+                }
+            }
+        }
+    }
+
+    /** Impulso o recaída: lo que pasó, qué tan fuerte y (en la recaída) hora, duración y detalles. */
+    @Composable
+    private fun MomentoCaptura(inicial: Momento) {
         var m by remember { mutableStateOf(inicial) }
         var texto by remember { mutableStateOf("") }
         var intensidad by remember { mutableStateOf<Int?>(null) }
         val discreto = Repo.config.discreto
-        if (m == null) {
-            Encabezado("Ahora mismo estoy…", "Toca uno. Se guarda al instante con la hora y el lugar.")
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
-                (Catalogo.MOMENTOS + if (Repo.config.seguimiento_privado) listOf(Catalogo.RECAIDA) else emptyList()).forEach { t ->
-                    Surface(
-                        onClick = { m = crear(t.id, origen, null, null) },
-                        modifier = Modifier.weight(1f).heightIn(min = 56.dp),
-                        shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    ) { Box(contentAlignment = Alignment.Center) { Text(if (discreto) t.discreto else t.nombre, style = MaterialTheme.typography.titleMedium) } }
-                }
-            }
-        } else {
-            val mm = m!!
-            val t = Catalogo.tipo(mm.tipo)
-            Encabezado("Guardado: ${if (discreto) t?.discreto ?: "" else t?.nombre ?: mm.tipo}", "A las ${Fechas.horaDe(mm.ts)}. Lo demás es opcional; puedes cerrar.")
-            if (mm.tipo == "recaida") DetalleRecaida(mm) { m = it }
-            Etiqueta(t?.pregunta ?: "Detalle")
-            OutlinedTextField(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
-                modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("Usa @persona y #tema") }, visualTransformation = rememberMarcas())
-            Row(Modifier.padding(top = 8.dp)) { BotonDictado { d -> texto = (texto + " " + d).trim(); actualizar(mm.id) { x -> x.copy(texto = texto) } } }
-            Etiqueta(if (mm.tipo == "recaida") "Qué tan fuerte era el impulso" else "Intensidad")
-            Escala(intensidad, 1, 5, mapOf(1 to "Muy leve", 2 to "Leve", 3 to "Moderada", 4 to "Fuerte", 5 to "Muy fuerte")) { v ->
-                intensidad = v; actualizar(mm.id) { it.copy(intensidad = v) }
-            }
-            Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = {
-                    Repo.borrarMomento(mm.id)
-                    previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
-                    Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
-                }) { Text("Deshacer") }
-                BotonPrincipal("Listo") { terminar() }
-            }
+        val mm = m
+        val t = Catalogo.tipo(mm.tipo)
+        Encabezado("Guardado: ${if (discreto) t?.discreto ?: "" else t?.nombre ?: mm.tipo}", "A las ${Fechas.horaDe(mm.ts)}. Lo demás es opcional; puedes cerrar.")
+        if (mm.tipo == "recaida") DetalleRecaida(mm) { m = it }
+        Etiqueta(t?.pregunta ?: "Detalle")
+        OutlinedTextField(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
+            modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("Usa @persona y #tema") }, visualTransformation = rememberMarcas())
+        Row(Modifier.padding(top = 8.dp)) { BotonDictado { d -> texto = (texto + " " + d).trim(); actualizar(mm.id) { x -> x.copy(texto = texto) } } }
+        Etiqueta(if (mm.tipo == "recaida") "Qué tan fuerte era el impulso" else "Intensidad")
+        Escala(intensidad, 1, 5, mapOf(1 to "Muy leve", 2 to "Leve", 3 to "Moderada", 4 to "Fuerte", 5 to "Muy fuerte")) { v ->
+            intensidad = v; actualizar(mm.id) { it.copy(intensidad = v) }
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            TextButton(onClick = {
+                Repo.borrarMomento(mm.id)
+                previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
+                Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
+            }) { Text("Deshacer") }
+            BotonPrincipal("Listo") { terminar() }
         }
     }
 
     /** Lo que ayuda a entender una recaída: qué la detonó, en qué aparato y qué hacías antes. Todo opcional. */
     @Composable
     private fun DetalleRecaida(mm: Momento, alCambiar: (Momento) -> Unit) {
-        val ctx = this
         var det by remember(mm.id) { mutableStateOf(mm.detonantes) }
         var inicio by remember(mm.id) { mutableStateOf(Fechas.millis(mm.ts)) }
         var dur by remember(mm.id) { mutableStateOf(mm.duracion_min) }
-        var durTexto by remember(mm.id) { mutableStateOf("") }
         val ahoraMs = remember(mm.id) { Fechas.millis(mm.ts).takeIf { it > 0 } ?: System.currentTimeMillis() }
         /** Otra hora de inicio: se guarda con su día y con la ubicación que había a esa hora. */
         fun cambiarHora(ms: Long) {
@@ -278,39 +375,11 @@ class QuickActivity : FragmentActivity() {
             }
         }
         Etiqueta("¿Cuándo empezó?")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(0 to "ahora", 15 to "hace 15 min", 30 to "hace 30 min", 60 to "hace 1 h", 120 to "hace 2 h", 180 to "hace 3 h").forEach { (min, n) ->
-                val ms = ahoraMs - min * 60_000L
-                Ficha(n, kotlin.math.abs(inicio - ms) < 60_000L) { cambiarHora(ms) }
-            }
-            Ficha("otra hora…", false) {
-                val z = java.time.Instant.ofEpochMilli(inicio).atZone(Fechas.zona())
-                android.app.TimePickerDialog(ctx, { _, h, mi ->
-                    // Una hora más tarde que ahora es de ayer (por ejemplo, a la 1:00 eliges las 23:30).
-                    val hoyCal = java.time.LocalDate.now()
-                    var t = hoyCal.atTime(h, mi).atZone(Fechas.zona()).toInstant().toEpochMilli()
-                    if (t > System.currentTimeMillis()) t -= 86_400_000L
-                    cambiarHora(t)
-                }, z.hour, z.minute, true).show()
-            }
-        }
-        val diaInicio = Fechas.diaLogicoDeMillis(inicio)
-        Ayuda("Empezó a las ${Fechas.horaDe(Fechas.isoDeMillis(inicio))}" + (if (diaInicio != Fechas.diaLogico()) " de ${Fechas.relativo(diaInicio)}" else "") +
-            (if (kotlin.math.abs(inicio - ahoraMs) > 60_000L) ". El lugar se toma de tus ubicaciones de esa hora." else "."))
+        var cuando by remember(mm.id) { mutableStateOf<java.time.LocalDateTime?>(null) }
+        SelectorHora(cuando, atajos = listOf(15, 30, 60, 120, 180)) { t -> cuando = t; cambiarHora(t?.aMillis() ?: ahoraMs) }
+        if (kotlin.math.abs(inicio - ahoraMs) > 60_000L) Ayuda("El lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
         Etiqueta("¿Cuánto duró?")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            listOf(5, 10, 15, 30, 45, 60, 90, 120).forEach { d ->
-                Ficha(if (d < 60) "$d min" else if (d % 60 == 0) "${d / 60} h" else "${d / 60} h ${d % 60}", dur == d && durTexto.isEmpty()) {
-                    dur = if (dur == d && durTexto.isEmpty()) null else d; durTexto = ""
-                    actualizar(mm.id) { it.copy(duracion_min = dur) }
-                }
-            }
-        }
-        OutlinedTextField(value = durTexto, onValueChange = { t ->
-            durTexto = t.filter { it.isDigit() }.take(4); dur = durTexto.toIntOrNull()?.takeIf { it > 0 }
-            actualizar(mm.id) { it.copy(duracion_min = dur) }
-        }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Otra duración (minutos)") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
+        SelectorDuracion(dur) { d -> dur = d; actualizar(mm.id) { it.copy(duracion_min = d) } }
         var aparato by remember(mm.id) { mutableStateOf(mm.dispositivo) }
         var antes by remember(mm.id) { mutableStateOf(mm.antes) }
         val h = io.github.ruddy2003.vestigium.data.Recaidas.habito()
@@ -368,23 +437,180 @@ class QuickActivity : FragmentActivity() {
         }
         // Una siesta (o un bloque) que ya pasó.
         var tipo by remember { mutableStateOf("siesta") }
-        var hora by remember { mutableStateOf("") }
-        var min by remember { mutableStateOf("") }
+        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(java.time.LocalDateTime.now().withSecond(0).withNano(0).minusMinutes(30)) }
+        var min by remember { mutableStateOf<Int?>(null) }
         Etiqueta("¿Ya pasó? Anótalo")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             (listOf(Catalogo.SIESTA) + Catalogo.ENFOQUE).forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
         }
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedTextField(value = hora, onValueChange = { hora = it.filter { ch -> ch.isDigit() || ch == ':' }.take(5) }, modifier = Modifier.weight(1f), singleLine = true,
-                label = { Text("Empezó (15:30)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            OutlinedTextField(value = min, onValueChange = { min = it.filter { ch -> ch.isDigit() }.take(4) }, modifier = Modifier.weight(1f), singleLine = true,
-                label = { Text("Minutos") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-        }
+        Etiqueta("¿Cuándo empezó?")
+        SelectorHora(cuando, atajos = listOf(30, 60, 90, 120, 180)) { cuando = it }
+        Etiqueta("¿Cuánto duró?")
+        SelectorDuracion(min, listOf(10, 15, 20, 30, 45, 60, 90, 120)) { min = it }
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.End) {
-            BotonPrincipal("Guardar", habilitado = hora.length >= 4 && (min.toIntOrNull() ?: 0) > 0) {
-                val t = io.github.ruddy2003.vestigium.data.Enfoque.agregar(tipo, Fechas.diaLogico(), if (hora.contains(':')) hora else hora.dropLast(2) + ":" + hora.takeLast(2), min.toInt())
-                Toast.makeText(ctx, if (t != null) "Guardado" else "Revisa la hora (por ejemplo 15:30).", Toast.LENGTH_SHORT).show()
+            BotonPrincipal("Guardar", habilitado = (min ?: 0) > 0) {
+                val t = io.github.ruddy2003.vestigium.data.Enfoque.agregarMs(tipo, (cuando ?: java.time.LocalDateTime.now()).aMillis(), min ?: 0)
+                Toast.makeText(ctx, if (t != null) "Guardado" else "No se pudo guardar.", Toast.LENGTH_SHORT).show()
                 if (t != null) terminar()
+            }
+        }
+    }
+
+    /** Guarda dónde estabas en un consumo recién creado (si es de ahora). */
+    private fun ubicarConsumo(c: io.github.ruddy2003.vestigium.data.Consumo) {
+        lifecycleScope.launch {
+            val loc = Ubicacion.actual(this@QuickActivity) ?: return@launch
+            val actual = Repo.consumo(c.id) ?: return@launch
+            Repo.guardarConsumo(actual.copy(lat = loc.latitude, lon = loc.longitude, lugar = Repo.lugarCercano(loc.latitude, loc.longitude)?.id))
+        }
+    }
+
+    /**
+     * Sustancias. Sin nada abierto: qué, desde cuándo, cómo vas (0 a 10), cuánto y con quién (lo básico).
+     * Con un consumo en curso: subir o bajar el nivel, sumar bebidas, «ya se me pasó».
+     * Con [consumoId]: completar lo de anoche (hasta qué hora, máximo, cantidad, cruda y síntomas).
+     */
+    @Composable
+    private fun ConsumoRapido(consumoId: String?, sustanciaInicial: String?, origen: String) {
+        val ctx = this
+        val sus = io.github.ruddy2003.vestigium.data.Sustancias
+        val completar = consumoId?.let { Repo.consumo(it) }
+        if (completar != null) { CompletarConsumo(completar); return }
+        var sustancia by remember { mutableStateOf(sustanciaInicial) }
+        Encabezado("Sustancias", "Lo básico ahora; la duración y la cruda, mañana. Es un dato como cualquier otro.")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.SUSTANCIAS.forEach { x -> Ficha(x.nombre, sustancia == x.id) { sustancia = x.id } }
+        }
+        val id = sustancia ?: return
+        val info = Catalogo.sustancia(id) ?: return
+        val abierto = sus.abiertos().firstOrNull { it.sustancia == id }
+        if (abierto != null) {
+            var nivel by remember(abierto.id) { mutableStateOf(abierto.niveles.lastOrNull()?.nivel) }
+            var cantidad by remember(abierto.id) { mutableStateOf(abierto.cantidad ?: 0.0) }
+            var fin by remember(abierto.id) { mutableStateOf<java.time.LocalDateTime?>(null) }
+            Ayuda("En curso desde las ${Fechas.horaDe(abierto.inicio)}" + (sus.maximo(abierto)?.let { " · máximo hasta ahora $it" } ?: ""), Modifier.padding(top = 10.dp))
+            Etiqueta("¿Cómo vas ahora? (0 a 10)")
+            Escala(nivel, 0, 10, Catalogo.anclasNivel(id)) { v -> nivel = v; if (v != null) sus.lectura(Repo.consumo(abierto.id) ?: abierto, v) }
+            if (id == "alcohol") {
+                Etiqueta("Bebidas hasta ahora: ${"%.1f".format(cantidad).removeSuffix(".0")}")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Catalogo.BEBIDAS.forEach { (n, eq) -> Ficha("+ $n", false) { cantidad += eq; val q = cantidad; Repo.consumo(abierto.id)?.let { Repo.guardarConsumo(it.copy(cantidad = q)) } } }
+                }
+            }
+            Etiqueta("¿Ya se te pasó? ¿A qué hora?")
+            SelectorHora(fin, atajos = listOf(15, 30, 60)) { fin = it }
+            Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                TextButton(onClick = { terminar() }) { Text("sigue") }
+                BotonPrincipal("Ya se me pasó") {
+                    sus.cerrar(Repo.consumo(abierto.id) ?: abierto, (fin ?: java.time.LocalDateTime.now()).aMillis())
+                    Toast.makeText(ctx, "Anotado. Mañana te pregunto cómo terminó.", Toast.LENGTH_SHORT).show(); terminar()
+                }
+            }
+            return
+        }
+        var cuando by remember(id) { mutableStateOf<java.time.LocalDateTime?>(null) }
+        var nivel by remember(id) { mutableStateOf<Int?>(null) }
+        var cantidad by remember(id) { mutableStateOf(0.0) }
+        var via by remember(id) { mutableStateOf<String?>(null) }
+        var otra by remember(id) { mutableStateOf("") }
+        var con by remember(id) { mutableStateOf<List<String>>(emptyList()) }
+        if (id == "otra") OutlinedTextField(value = otra, onValueChange = { otra = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("¿Cuál?") })
+        Etiqueta(if (info.conNivel) "¿Desde cuándo?" else "¿Cuándo?")
+        SelectorHora(cuando, atajos = listOf(30, 60, 120, 180)) { cuando = it }
+        if (info.conNivel) {
+            Etiqueta("¿Cómo vas ahora? (0 a 10)")
+            Escala(nivel, 0, 10, Catalogo.anclasNivel(id)) { nivel = it }
+        }
+        when (id) {
+            "alcohol" -> {
+                Etiqueta("Bebidas: ${"%.1f".format(cantidad).removeSuffix(".0")} (opcional)")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Catalogo.BEBIDAS.forEach { (n, eq) -> Ficha("+ $n", false) { cantidad += eq } }
+                    if (cantidad > 0) Ficha("borrar", false) { cantidad = 0.0 }
+                }
+            }
+            "cafeina" -> {
+                Etiqueta("¿Qué tomaste? ${cantidad.toInt()} mg")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Catalogo.CAFES.forEach { (n, mg) -> Ficha("+ $n", false) { cantidad += mg } }
+                    if (cantidad > 0) Ficha("borrar", false) { cantidad = 0.0 }
+                }
+                Ayuda("Si registras la cafeína en MacroFactor, esos días se usa la de MacroFactor (con la hora de cada alimento) y no se cuenta dos veces.", Modifier.padding(top = 4.dp))
+            }
+            else -> {
+                if (info.vias.isNotEmpty()) {
+                    Etiqueta("¿Cómo?")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) { info.vias.forEach { o -> Ficha(o.nombre, via == o.id) { via = if (via == o.id) null else o.id } } }
+                }
+                Etiqueta("¿Cuántos ${info.unidad}? ${cantidad.toInt().takeIf { it > 0 } ?: ""}")
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("−", false) { cantidad = (cantidad - 1).coerceAtLeast(0.0) }
+                    Ficha("+", false) { cantidad += 1 }
+                }
+            }
+        }
+        Etiqueta("¿Con quién? (opcional)")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.CON_QUIEN.forEach { o -> val a = o.id in con; Ficha(o.nombre, a) { con = when { a -> con - o.id; o.id == "solo" -> listOf("solo"); else -> con - "solo" + o.id } } }
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) {
+            BotonPrincipal("Guardar", habilitado = id != "otra" || otra.isNotBlank()) {
+                val ms = (cuando ?: java.time.LocalDateTime.now()).aMillis()
+                val c = sus.nuevo(id, ms, nivel, cantidad.takeIf { it > 0 }, via, otra, con, origen)
+                if (cuando == null) ubicarConsumo(c)
+                Toast.makeText(ctx, if (info.conNivel) "Guardado. Desde «Ánimo ahora» puedes decir cómo vas." else "Guardado", Toast.LENGTH_SHORT).show()
+                terminar()
+            }
+        }
+    }
+
+    /** La mañana siguiente: hasta qué hora duró, el máximo, cuánto, la cruda y cómo te sentiste. */
+    @Composable
+    private fun CompletarConsumo(c0: io.github.ruddy2003.vestigium.data.Consumo) {
+        val ctx = this
+        val info = Catalogo.sustancia(c0.sustancia)
+        var inicio by remember { mutableStateOf<java.time.LocalDateTime?>(horaLocal(Fechas.millis(c0.inicio))) }
+        var fin by remember { mutableStateOf(c0.fin?.let { horaLocal(Fechas.millis(it)) }) }
+        var max by remember { mutableStateOf(io.github.ruddy2003.vestigium.data.Sustancias.maximo(c0)) }
+        var cantidad by remember { mutableStateOf(c0.cantidad ?: 0.0) }
+        var cruda by remember { mutableStateOf(c0.cruda) }
+        var sintomas by remember { mutableStateOf(c0.sintomas) }
+        var nota by remember { mutableStateOf(c0.nota) }
+        Encabezado((if (c0.fecha < Fechas.diaLogico()) "Lo de anoche: " else "Editar: ") + Catalogo.nombreSustancia(c0).lowercase(), "Unos toques. Lo que no recuerdes, déjalo vacío.")
+        Etiqueta("¿Desde cuándo?")
+        SelectorHora(inicio, etiquetaAhora = "no sé") { inicio = it }
+        Etiqueta("¿Hasta cuándo te duró el efecto?")
+        SelectorHora(fin, etiquetaAhora = "no sé") { fin = it }
+        if (info?.conNivel == true) {
+            Etiqueta("¿Hasta qué nivel llegaste? (0 a 10)")
+            Escala(max, 0, 10, Catalogo.anclasNivel(c0.sustancia)) { max = it }
+        }
+        if (c0.sustancia == "alcohol") {
+            Etiqueta("Bebidas en total: ${"%.1f".format(cantidad).removeSuffix(".0")}")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Catalogo.BEBIDAS.forEach { (n, eq) -> Ficha("+ $n", false) { cantidad += eq } }
+                if (cantidad > 0) Ficha("borrar", false) { cantidad = 0.0 }
+            }
+        }
+        Etiqueta("Cruda o bajón hoy (0 a 5)")
+        Escala(cruda, 0, 5, Catalogo.CRUDA) { cruda = it }
+        Etiqueta("Síntomas (opcional)")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.SINTOMAS.forEach { o -> val a = o.id in sintomas; Ficha(o.nombre, a) { sintomas = if (a) sintomas - o.id else sintomas + o.id } }
+        }
+        OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Nota (opcional): @persona, #lugar…") },
+            visualTransformation = rememberMarcas())
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            TextButton(onClick = {
+                Repo.borrarConsumo(c0.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Registro borrado") { Repo.guardarConsumo(c0) }
+                Toast.makeText(ctx, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
+            }) { Text("borrar") }
+            BotonPrincipal("Guardar") {
+                val actual = Repo.consumo(c0.id) ?: c0
+                val ini = inicio?.aMillis() ?: Fechas.millis(actual.inicio)
+                Repo.guardarConsumo(actual.copy(inicio = Fechas.isoDeMillis(ini), fecha = Fechas.diaLogicoDeMillis(ini), fin = fin?.aMillis()?.coerceAtLeast(ini)?.let { Fechas.isoDeMillis(it) } ?: actual.fin,
+                    nivel_max = max, cantidad = cantidad.takeIf { it > 0 } ?: actual.cantidad, cruda = cruda, sintomas = sintomas, nota = nota.trim(), completo = true))
+                Toast.makeText(ctx, "Guardado", Toast.LENGTH_SHORT).show(); terminar()
             }
         }
     }
@@ -404,6 +630,9 @@ class QuickActivity : FragmentActivity() {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Repo.config.categorias.forEach { c -> Ficha(c, cat == c) { cat = if (cat == c) null else c; error = null } }
         }
+        Etiqueta("Cuándo")
+        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(null) }
+        SelectorHora(cuando) { cuando = it }
         Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
         OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, singleLine = true)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
@@ -414,9 +643,12 @@ class QuickActivity : FragmentActivity() {
                     v == null || v <= 0 -> error = "Escribe un monto mayor a cero."
                     cat == null -> error = "Elige una categoría."
                     else -> {
-                        val g = Gasto(Repo.nuevoId(), Fechas.hoyCalendario(), Fechas.horaAhora(), Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim())
+                        val c = cuando
+                        val g = Gasto(Repo.nuevoId(), c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario(), c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora(),
+                            Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim())
                         Repo.guardarGasto(g)
-                        lifecycleScope.launch {
+                        // La ubicación de ahora solo sirve si el gasto es de ahora.
+                        if (c == null) lifecycleScope.launch {
                             val loc = Ubicacion.ultima(this@QuickActivity)
                             if (loc != null) Repo.guardarGasto(g.copy(lat = loc.latitude, lon = loc.longitude))
                         }
@@ -444,6 +676,8 @@ class QuickActivity : FragmentActivity() {
             Row(Modifier.padding(top = 8.dp)) { BotonDictado { t -> guardar(d.copy(sueno_texto = (d.sueno_texto + " " + t).trim())) } }
             Etiqueta("Qué tan agradable fue")
             Escala(d.sueno_valencia, 1, 7, Catalogo.ANCLAS["sueno_valencia"]) { guardar(d.copy(sueno_valencia = it)) }
+            Etiqueta("De qué fue (opcional)")
+            CategoriasSueno(d.sueno_categorias) { guardar(d.copy(sueno_categorias = it)) }
             Ayuda("Lucidez, vividez y tipo los puedes completar después en la app.", Modifier.padding(top = 8.dp))
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) { BotonPrincipal("Listo") { terminar() } }

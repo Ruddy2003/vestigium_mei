@@ -82,7 +82,8 @@ vm_archivos <- c(
   ejercicio = "vm_ejercicio.csv", escalada_sesiones = "vm_escalada_sesiones.csv", escalada_bloques = "vm_escalada_bloques.csv",
   biblioteca = "vm_biblioteca.csv", comunicacion = "vm_comunicacion.csv", conexiones = "vm_conexiones.csv",
   subrayados = "vm_subrayados.csv", google_dia = "vm_google_dia.csv", google = "vm_google.csv", whatsapp = "vm_whatsapp.csv",
-  nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv")
+  nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv",
+  tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv")
 
 vm <- compact(lapply(vm_archivos, vm_leer))
 
@@ -427,6 +428,37 @@ vm_mapa_animo <- function() {
   ggplot(d, aes(lon, lat, colour = v)) + geom_point(alpha = .7) + scale_colour_gradient2(low = "#7C2433", mid = "grey85", high = "#2D6B63", midpoint = 4) + coord_quickmap() + theme_minimal()
 }
 
+#' El día por dentro: el promedio de una columna de vm_horas.csv en cada hora (0 a 23), entre semana y en fin de semana.
+vm_por_hora <- function(var = "valencia") {
+  if (is.null(vm$horas)) stop("No hay vm_horas.csv.")
+  d <- vm$horas |> mutate(y = as.numeric(.vm_dato(vm$horas, var)), libre = dia_semana >= 6) |> filter(!is.na(y))
+  r <- d |> group_by(hora, libre) |> summarise(media = mean(y), n = n(), .groups = "drop")
+  ggplot(r, aes(hora, media, colour = libre)) + geom_line() + geom_point(aes(size = n), alpha = .6) +
+    scale_colour_manual(values = c(`FALSE` = "#7C2433", `TRUE` = "#2D6B63"), labels = c("entre semana", "fin de semana"), name = NULL) +
+    scale_x_continuous(breaks = seq(0, 23, 3)) + labs(x = "hora", y = var, size = "horas") + theme_minimal()
+}
+
+#' Dos columnas de vm_horas.csv en la misma hora (o con [desfase] horas después): por ejemplo, la cafeína en el cuerpo y la energía.
+vm_cruce_horas <- function(x = "cafeina_mg", y = "activacion", desfase = 0) {
+  if (is.null(vm$horas)) stop("No hay vm_horas.csv.")
+  d <- vm$horas |> arrange(fecha, hora) |> mutate(a = as.numeric(.vm_dato(vm$horas, x)), b = lead(as.numeric(.vm_dato(vm$horas, y)), desfase)) |> filter(!is.na(a), !is.na(b))
+  if (nrow(d) < 10) stop("Muy pocas horas con ambos datos (", nrow(d), ").")
+  ct <- suppressWarnings(cor.test(d$a, d$b, method = "spearman", exact = FALSE))
+  cat(x, "vs", y, if (desfase) paste0("(", desfase, " h después)") else "", ": rho =", round(ct$estimate, 3), " p =", signif(ct$p.value, 3), " n =", nrow(d), "horas\n")
+  ggplot(d, aes(a, b)) + geom_jitter(alpha = .35, width = 0, height = .15, colour = "#7C2433") + geom_smooth(method = "loess", formula = y ~ x, colour = "#2D6B63") +
+    labs(x = x, y = y) + theme_minimal()
+}
+
+#' Sustancias: días con cada una, nivel máximo, horas y cruda; y la cruda frente a lo que tomaste la noche anterior.
+vm_sustancias <- function() {
+  if (is.null(vm$sustancias) || nrow(vm$sustancias) == 0) stop("No hay registros de sustancias.")
+  print(vm$sustancias |> group_by(sustancia) |> summarise(registros = n(), dias = n_distinct(fecha), nivel_max_medio = mean(nivel_max, na.rm = TRUE),
+                                                          horas_medias = mean(duracion_h, na.rm = TRUE), cruda_media = mean(cruda, na.rm = TRUE), .groups = "drop"))
+  a <- vm$sustancias |> filter(sustancia == "alcohol", !is.na(cruda))
+  if (nrow(a) >= 3) ggplot(a, aes(coalesce(cantidad, 0), cruda)) + geom_jitter(width = .1, height = .1, colour = "#7C2433") +
+    labs(x = "bebidas estándar", y = "cruda (0 a 5)") + theme_minimal()
+}
+
 #' Guarda las gráficas principales como PNG en una subcarpeta.
 vm_guardar_graficas <- function(carpeta = file.path(vm_carpeta, "graficas")) {
   dir.create(carpeta, showWarnings = FALSE)
@@ -441,4 +473,5 @@ vm_resumen()
 message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
         "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_totales(), vm_buscar('texto'), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
+        "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(),",
         "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna')")

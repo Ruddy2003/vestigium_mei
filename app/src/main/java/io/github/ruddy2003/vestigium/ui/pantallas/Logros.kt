@@ -172,6 +172,7 @@ fun PantallaLogros(nav: Nav) {
             }
             LinearProgressIndicator(progress = { hechos.size.toFloat() / maxOf(1, l.size) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
         }
+        Seccion("Hall de logros", "Tus favoritos, en exhibición. Toca «elegir piezas» para cambiarlos.") { CuerpoHall(l) }
         if (nuevos.isNotEmpty()) Tarjeta(Modifier.padding(top = 10.dp)) {
             Text("¡Nuevo" + if (nuevos.size > 1) "s logros!" else " logro!", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
             Row(Modifier.padding(top = 8.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {

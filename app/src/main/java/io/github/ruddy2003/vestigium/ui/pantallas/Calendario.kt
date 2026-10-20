@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import android.app.DatePickerDialog
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -69,13 +70,15 @@ object Seleccion {
     var biblioteca by mutableStateOf("diario")
     /** Día abierto en la cinta de 24 horas. */
     var cinta by mutableStateOf<String?>(null)
+    /** Día abierto en la libreta de momentos. */
+    var momentos by mutableStateOf<String?>(null)
     fun abrir(nav: Nav, fecha: String) { pedida = fecha; ultimoMes = Fechas.mesDe(fecha); nav.pestana("dia") }
 }
 
 private data class CapaCal(val id: String, val nombre: String, val divergente: Boolean, val valor: (String) -> Double?, val rango: (List<Double>) -> Pair<Double, Double>, val texto: (Double) -> String)
 
 private fun capas(): List<CapaCal> {
-    val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }
+    val mu = Repo.momentos.filter { it.esAnimo && it.valencia != null }.groupBy { it.fecha }
     val gastos = Repo.gastos.groupBy { it.dia }.mapValues { e -> e.value.sumOf { it.monto } }
     val fijo = { a: Double, b: Double -> { _: List<Double> -> a to b } }
     val datos = { xs: List<Double> -> (xs.minOrNull() ?: 0.0) to (xs.maxOrNull()?.takeIf { it > 0 } ?: 1.0) }

@@ -1227,3 +1227,18 @@ fun CapaFiesta() {
         }
     }
 }
+
+/** El engrane de arriba: ajustes y todo lo demás («Más»). */
+@Composable
+fun BotonAjustes(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val sentir = rememberSentir()
+    Box(
+        modifier.size(36.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
+            .semantics { contentDescription = "Ajustes y más" },
+        contentAlignment = Alignment.Center,
+    ) {
+        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary) {
+            Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { IconoPestana("ajustes", nombre = "Ajustes y más") }
+        }
+    }
+}

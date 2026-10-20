@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.data.Sustancias
 import io.github.ruddy2003.vestigium.sensores.Galeria
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.Estilo
@@ -54,14 +55,15 @@ import java.time.LocalTime
 /** Algo con hora en la cinta: un tramo (de [a] a [b]) o un instante (b = null), con su texto al tocarlo. */
 private class Cosa(val pista: Int, val a: Long, val b: Long?, val color: Color, val rotulo: String, val detalle: String, val alto: Float = 1f)
 
-/** Una pista de la cinta: su nombre y su signo. */
-private class PistaCinta(val nombre: String, val signo: String)
+/** Una pista de la cinta: su nombre y su ícono (dibujado, ver [io.github.ruddy2003.vestigium.ui.IconoPista]). */
+private class PistaCinta(val nombre: String, val icono: String)
 
 /**
  * La cinta del día: 29 horas (de las 0:00 a las 5:00 del día siguiente) en una tira que se desliza, con una pista por
  * cada cosa que pasó: cielo, sueño, siestas y enfoque, lugares, ejercicio, pantalla, notificaciones, luz, música,
- * momentos, comidas, gastos y fotos. Tocar algo lo explica abajo.
+ * momentos, sustancias (y la cafeína y el alcohol estimados en el cuerpo), comidas, gastos y fotos. Tocar algo lo explica abajo.
  */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun PantallaCinta(nav: Nav) {
     var fecha by remember { mutableStateOf(Seleccion.cinta ?: Fechas.diaLogico()) }
@@ -88,16 +90,20 @@ fun PantallaCinta(nav: Nav) {
         }
     }
 
+    // La cafeína y el alcohol con su hora (de MacroFactor o anotados), desde el día anterior para lo que sigue en el cuerpo.
+    val dosis by produceState(emptyList<Sustancias.Dosis>() to emptyList<Sustancias.Dosis>(), fecha, Repo.consumos) {
+        value = withContext(Dispatchers.IO) { runCatching { Sustancias.dosis(Fechas.sumar(fecha, -1), Fechas.sumar(fecha, 1)) }.getOrDefault(emptyList<Sustancias.Dosis>() to emptyList<Sustancias.Dosis>()) }
+    }
     val pistas = ArrayList<PistaCinta>()
     val cosas = ArrayList<Cosa>()
-    fun pista(nombre: String, signo: String): Int { pistas += PistaCinta(nombre, signo); return pistas.lastIndex }
+    fun pista(nombre: String, icono: String): Int { pistas += PistaCinta(nombre, icono); return pistas.lastIndex }
     fun hm(ms: Long) = Fechas.horaDe(Fechas.isoDeMillis(ms))
 
     // Sueño: la noche que terminó esta mañana y la que empieza esta noche.
     val noches = listOf(fecha, Fechas.sumar(fecha, 1)).mapNotNull { f -> Repo.salud[f]?.let { s -> if (s.sueno_inicio != null && s.sueno_fin != null) s else null } }
     val tramos = Repo.tramos.filter { it.fecha == fecha }
     if (noches.isNotEmpty() || tramos.any { it.tipo == "siesta" }) {
-        val p = pista("sueño", "☾")
+        val p = pista("sueño", "sueno")
         noches.forEach { s ->
             val a = Fechas.millis(s.sueno_inicio!!); val b = Fechas.millis(s.sueno_fin!!)
             cosas += Cosa(p, a, b, cs.secondary, "${(s.sueno_min ?: 0) / 60} h", "Dormiste de ${hm(a)} a ${hm(b)}" + (s.sueno_min?.let { " · ${it / 60} h ${it % 60} min" } ?: ""))
@@ -109,7 +115,7 @@ fun PantallaCinta(nav: Nav) {
     }
     val enfoque = tramos.filter { it.tipo != "siesta" }
     if (enfoque.isNotEmpty()) {
-        val p = pista("enfoque", "◷")
+        val p = pista("enfoque", "enfoque")
         val colores = listOf(cs.primary, cs.tertiary, cs.secondary)
         enfoque.forEach { t ->
             val a = Fechas.millis(t.inicio)
@@ -120,7 +126,7 @@ fun PantallaCinta(nav: Nav) {
     }
     val visitas = Repo.visitas.filter { Fechas.millis(it.entrada) < fin && (it.salida?.let { s -> Fechas.millis(s) } ?: System.currentTimeMillis()) > ini }
     if (visitas.isNotEmpty()) {
-        val p = pista("lugares", "⌂")
+        val p = pista("lugares", "lugares")
         val ids = visitas.map { it.lugar }.distinct()
         val colores = listOf(cs.primary, cs.secondary, cs.tertiary)
         visitas.forEach { v ->
@@ -132,7 +138,7 @@ fun PantallaCinta(nav: Nav) {
     val ses = Repo.sesiones.filter { it.fecha == fecha }
     val esc = Repo.ascensos.filter { it.fecha == fecha && it.inicio != null }
     if (ses.isNotEmpty() || esc.isNotEmpty()) {
-        val p = pista("ejercicio", "▲")
+        val p = pista("ejercicio", "ejercicio")
         ses.forEach { s -> val a = Fechas.millis(s.inicio); val b = Fechas.millis(s.fin); cosas += Cosa(p, a, b, cs.tertiary, s.tipo_nombre.lowercase(), "${s.tipo_nombre}: ${s.min} min desde las ${hm(a)}") }
         esc.forEach { x ->
             val h = runCatching { LocalTime.parse(x.inicio!!.take(5)) }.getOrNull() ?: return@forEach
@@ -141,47 +147,87 @@ fun PantallaCinta(nav: Nav) {
         }
     }
     Repo.pantalla[fecha]?.por_hora_min?.takeIf { it.sum() > 0 }?.let { h ->
-        val p = pista("pantalla", "▭")
+        val p = pista("pantalla", "pantalla")
         h.forEachIndexed { i, m -> if (m > 0) cosas += Cosa(p, ini + i * 3_600_000L, ini + (i + 1) * 3_600_000L, cs.primary, "", "De ${i}:00 a ${i + 1}:00: $m min de pantalla", alto = (m / 60f).coerceIn(0.08f, 1f)) }
     }
     Repo.notifs[fecha]?.por_hora?.takeIf { it.sum() > 0 }?.let { h ->
-        val p = pista("avisos", "◌")
+        val p = pista("avisos", "avisos")
         val max = (h.maxOrNull() ?: 1).coerceAtLeast(1)
         h.forEachIndexed { i, n -> if (n > 0) cosas += Cosa(p, ini + i * 3_600_000L, ini + (i + 1) * 3_600_000L, cs.secondary, "", "De ${i}:00 a ${i + 1}:00: $n notificaciones", alto = (n.toFloat() / max).coerceIn(0.08f, 1f)) }
     }
     Repo.conexiones[fecha]?.let { cx ->
         if (cx.luz_n.sum() > 0) {
-            val p = pista("luz", "☀")
+            val p = pista("luz", "luz")
             val vals = cx.luz_suma.indices.map { i -> if (cx.luz_n[i] > 0) cx.luz_suma[i] / cx.luz_n[i] else 0.0 }
             vals.forEachIndexed { i, v -> if (v > 0) cosas += Cosa(p, ini + i * 3_600_000L, ini + (i + 1) * 3_600_000L, Color(0xFFE8B923), "", "De ${i}:00 a ${i + 1}:00: unos ${v.toInt()} lux" + if (v > 1000) " (luz de exterior)" else "",
                 alto = (kotlin.math.ln(1 + v) / kotlin.math.ln(1 + 20000.0)).toFloat().coerceIn(0.08f, 1f)) }
         }
     }
-    if (musica.isNotEmpty()) { val p = pista("música", "♫"); musica.forEach { (t, s) -> cosas += Cosa(p, t, null, cs.primary, "", "${hm(t)} · $s") } }
+    if (musica.isNotEmpty()) { val p = pista("música", "musica"); musica.forEach { (t, s) -> cosas += Cosa(p, t, null, cs.primary, "", "${hm(t)} · $s") } }
     val privado = Repo.config.seguimiento_privado
     val mom = Repo.momentos.filter { it.fecha == fecha && (privado || it.tipo != "recaida") }
     if (mom.isNotEmpty()) {
-        val p = pista("momentos", "✦")
+        val p = pista("momentos", "momentos")
         mom.forEach { m ->
             val t = Fechas.millis(m.ts)
             val color = if (m.tipo == "recaida") cs.error else Tonos.valencia(m.valencia?.toDouble(), oscuro) ?: cs.secondary
             val dur = m.duracion_min?.takeIf { it > 0 }
-            cosas += Cosa(p, t, dur?.let { t + it * 60_000L }, color, io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, Repo.config.discreto).take(1),
-                "${hm(t)} · ${io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, Repo.config.discreto)}" + (dur?.let { " · $it min" } ?: "") + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " — ${m.texto}" else "") +
+            cosas += Cosa(p, t, dur?.let { t + it * 60_000L }, color, Catalogo.titulo(m, Repo.config.discreto).take(1),
+                "${hm(t)} · ${Catalogo.titulo(m, Repo.config.discreto)}" + (Catalogo.pensamientoDe(m)?.takeIf { Catalogo.emocionesDe(m).isNotEmpty() && !Repo.config.discreto }
+                    ?.let { p0 -> " · pensando: " + (Catalogo.PENSAMIENTOS.firstOrNull { it.id == p0 }?.nombre?.lowercase() ?: p0) } ?: "") + (dur?.let { " · $it min" } ?: "") + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " — ${m.texto}" else "") +
                     (Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre?.let { " · en $it" } ?: ""))
         }
     }
-    if (comidas.isNotEmpty()) { val p = pista("comidas", "◒"); comidas.forEach { (t, s) -> cosas += Cosa(p, t, null, cs.tertiary, "", "${hm(t)} · $s") } }
+    // Sustancias: el nivel que dijiste (barras), y la cafeína y el alcohol estimados en el cuerpo.
+    val consumos = Repo.consumos.filter { Sustancias.visible(it) && Fechas.millis(it.inicio) < fin && Sustancias.finEfectivo(it) > ini - 6 * 3_600_000L }
+    if (consumos.isNotEmpty()) {
+        val p = pista("sustancias", "sustancias")
+        val paso = 10 * 60_000L
+        consumos.forEach { x ->
+            val a = Fechas.millis(x.inicio)
+            val nombre = Catalogo.nombreSustancia(x)
+            if (Catalogo.sustancia(x.sustancia)?.conNivel == true) {
+                val z = Sustancias.finEfectivo(x)
+                var t = a
+                var algo = false
+                while (t < z) {
+                    val n = Sustancias.nivelEn(x, t + paso / 2)
+                    if (n != null && n > 0) { algo = true
+                        cosas += Cosa(p, t, t + paso, Color(0xFFB0567A), "", "${hm(t)} · $nombre: nivel ~${"%.0f".format(n)}/10" + resumenConsumo(x).let { r -> if (r.isNotBlank()) " ($r)" else "" }, alto = (n / 10f).toFloat().coerceIn(0.08f, 1f)) }
+                    t += paso
+                }
+                if (!algo) cosas += Cosa(p, a, z.coerceAtLeast(a + paso), Color(0xFFB0567A), nombre.lowercase(), "${hm(a)} · $nombre" + resumenConsumo(x).let { r -> if (r.isNotBlank()) " · $r" else "" })
+            } else cosas += Cosa(p, a, null, Color(0xFF8C6A4A), "", "${hm(a)} · $nombre" + (x.cantidad?.let { q -> " · ${q.toInt()} ${Catalogo.sustancia(x.sustancia)?.unidad ?: ""}" } ?: ""))
+        }
+    }
+    if (dosis.first.isNotEmpty() && Sustancias.visible("cafeina")) {
+        val p = pista("cafeína en el cuerpo", "cafeina")
+        val paso = 20 * 60_000L
+        val instantes = (ini until fin step paso).toList()
+        val v = Sustancias.cafeinaEn(dosis.first, instantes)
+        instantes.zip(v).forEach { (t, mg) -> if (mg >= 5) cosas += Cosa(p, t, t + paso, Color(0xFF8C6A4A), "", "${hm(t)} · unos ${mg.toInt()} mg de cafeína en el cuerpo (estimado)", alto = (mg / 250.0).toFloat().coerceIn(0.06f, 1f)) }
+        dosis.first.filter { it.ms in ini..fin }.forEach { d -> cosas += Cosa(p, d.ms, null, cs.onSurface, "", "${hm(d.ms)} · ${d.cantidad.toInt()} mg de cafeína") }
+    }
+    if (dosis.second.isNotEmpty() && Sustancias.visible("alcohol")) {
+        val paso = 10 * 60_000L
+        val instantes = (ini until fin step paso).toList()
+        val v = Sustancias.alcoholEn(dosis.second, instantes)
+        if (v.any { it > 0.01 }) {
+            val p = pista("alcohol estimado", "sustancias")
+            instantes.zip(v).forEach { (t, gl) -> if (gl > 0.01) cosas += Cosa(p, t, t + paso, Color(0xFF7A4FB0), "", "${hm(t)} · alcohol en sangre ≈ ${"%.2f".format(gl)} g/L (Widmark, estimado)", alto = (gl / 1.5).toFloat().coerceIn(0.06f, 1f)) }
+        }
+    }
+    if (comidas.isNotEmpty()) { val p = pista("comidas", "comidas"); comidas.forEach { (t, s) -> cosas += Cosa(p, t, null, cs.tertiary, "", "${hm(t)} · $s") } }
     val gastos = Repo.gastos.filter { it.dia == fecha }
     if (gastos.isNotEmpty()) {
-        val p = pista("gastos", "$")
+        val p = pista("gastos", "gastos")
         gastos.forEach { g ->
             runCatching { java.time.LocalDateTime.of(Fechas.parse(g.fecha), LocalTime.parse(g.hora.take(5))).atZone(Fechas.zona()).toInstant().toEpochMilli() }.getOrNull()?.let { t ->
                 cosas += Cosa(p, t, null, cs.error, "", "${g.hora} · $" + "%,.0f".format(g.monto) + " en ${g.categoria.lowercase()}" + if (g.nota.isNotBlank()) " — ${g.nota}" else "")
             }
         }
     }
-    if (fotos.isNotEmpty()) { val p = pista("fotos", "▣"); fotos.forEach { t -> cosas += Cosa(p, t, null, cs.secondary, "", "${hm(t)} · una foto") } }
+    if (fotos.isNotEmpty()) { val p = pista("fotos", "fotos"); fotos.forEach { t -> cosas += Cosa(p, t, null, cs.secondary, "", "${hm(t)} · una foto") } }
 
     var elegida by remember(fecha) { mutableStateOf<Cosa?>(null) }
     val scroll = rememberScrollState()
@@ -216,7 +262,7 @@ fun PantallaCinta(nav: Nav) {
         val amanecer = hora(e?.amanecer); val atardecer = hora(e?.atardecer)
         Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
             Column(Modifier.width(30.dp)) {
-                pistas.forEach { p -> Box(Modifier.height(alto), contentAlignment = Alignment.Center) { Text(p.signo, style = MaterialTheme.typography.titleMedium, color = cs.primary) } }
+                pistas.forEach { p -> Box(Modifier.height(alto), contentAlignment = Alignment.Center) { io.github.ruddy2003.vestigium.ui.IconoPista(p.icono, cs.primary) } }
             }
             Box(Modifier.weight(1f).horizontalScroll(scroll)) {
                 Canvas(Modifier.width(anchoHora * 29).height(alto * pistas.size + 22.dp).pointerInput(fecha, cosas.size) {
@@ -277,7 +323,16 @@ fun PantallaCinta(nav: Nav) {
                 }
             }
         }
-        Ayuda(pistas.joinToString("   ") { "${it.signo} ${it.nombre}" }, Modifier.padding(top = 6.dp))
+        // La leyenda con los mismos íconos.
+        androidx.compose.foundation.layout.FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
+            pistas.forEach { p ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    io.github.ruddy2003.vestigium.ui.IconoPista(p.icono, cs.onSurfaceVariant, tam = 13.dp)
+                    Text(" " + p.nombre, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+                }
+            }
+        }
         Tarjeta(Modifier.padding(top = 10.dp)) {
             val c = elegida
             if (c == null) Ayuda("Toca un bloque o una marca de la cinta.")

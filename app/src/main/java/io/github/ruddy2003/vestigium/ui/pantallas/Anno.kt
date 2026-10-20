@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Intent
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -61,7 +62,7 @@ fun PantallaAnno(nav: Nav) {
     val pre = "$anio-"
     val oscuro = esOscuro()
     val vacio = MaterialTheme.colorScheme.surfaceVariant
-    val mu = remember(anio, Repo.momentos.size) { Repo.momentos.filter { it.fecha.startsWith(pre) && it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha } }
+    val mu = remember(anio, Repo.momentos.size) { Repo.momentos.filter { it.fecha.startsWith(pre) && it.esAnimo && it.valencia != null }.groupBy { it.fecha } }
     fun valencia(f: String): Double? = Repo.dias[f]?.valencia?.toDouble() ?: mu[f]?.mapNotNull { it.valencia }?.average()
 
     Hoja("Tu año", nav.atras, subtitulo = "Todo el año de un vistazo. Toca un cuadro para abrir ese día.") {

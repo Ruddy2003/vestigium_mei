@@ -131,6 +131,21 @@ object Avisos {
         mostrar(ctx, 2001, b)
     }
 
+    /** «¿Cómo terminó lo de anoche?»: abre la hoja para completar duración, máximo y cruda. Sin nombrar la sustancia si está oculta o en modo discreto. */
+    fun loDeAnoche(ctx: Context, c: io.github.ruddy2003.vestigium.data.Consumo, n: Int) {
+        val cfg = io.github.ruddy2003.vestigium.data.Repo.config
+        val nombrar = !cfg.discreto && io.github.ruddy2003.vestigium.data.Sustancias.visible(c)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("¿Cómo terminó lo de anoche?")
+            .setContentText((if (nombrar) io.github.ruddy2003.vestigium.data.Catalogo.nombreSustancia(c) + ": " else "") + "hasta qué hora duró, el máximo y cómo amaneciste." +
+                if (n > 1) " Hay $n por completar." else "")
+            .setContentIntent(quick(ctx, 2010, QuickActivity.M_CONSUMO) { putExtra(QuickActivity.CONSUMO, c.id); putExtra(QuickActivity.ORIGEN, "notificacion") })
+            .setAutoCancel(true)
+            .setTimeoutAfter(6 * 60 * 60 * 1000L)
+        mostrar(ctx, 2010, b)
+    }
+
     fun diario(ctx: Context) {
         val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
             .setSmallIcon(R.drawable.ic_stat)

@@ -364,12 +364,20 @@ fun PantallaHall(nav: Nav) {
     val todos by produceState(if (TusNumeros.sincrono) Logros.todos(ctx) else null, Repo.config.logros_vistos, Repo.dias, Repo.salud) {
         if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { runCatching { Logros.todos(ctx) }.getOrDefault(emptyList()) }
     }
-    var editar by remember { mutableStateOf(false) }
-    val tema = Estilo.tema
-    val cs = MaterialTheme.colorScheme
     Hoja("Hall de logros", nav.atras, "Tus logros favoritos, en exhibición. Cada uno con su pieza: ciudades, sellos, templos, huellas, libros…") {
         val l = todos
         if (l == null) { Vacio("Contando…"); return@Hoja }
+        CuerpoHall(l)
+    }
+}
+
+/** El hall: las piezas en sus pedestales con el salón del tema detrás, y el editor para elegir cuáles (hasta 12). Va arriba de Logros. */
+@Composable
+fun CuerpoHall(l: List<Logros.Logro>) {
+    var editar by remember { mutableStateOf(false) }
+    val tema = Estilo.tema
+    val cs = MaterialTheme.colorScheme
+    Column {
         val hechos = l.filter { it.hecho }
         val ids = Repo.config.hall_logros.filter { id -> hechos.any { it.id == id } }
         val enHall = ids.mapNotNull { id -> hechos.firstOrNull { it.id == id } }
@@ -433,7 +441,6 @@ fun PantallaHall(nav: Nav) {
                 }
             }
         }
-        TextButton(onClick = { nav.ir("logros") }, modifier = Modifier.padding(top = 8.dp)) { Text("ver todos los logros ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
     }
 }
 

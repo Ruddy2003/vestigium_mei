@@ -94,10 +94,11 @@ import java.time.LocalDate
 /** Minúsculas y sin acentos, para buscar sin importar cómo se escribió. */
 private fun sinAcentos(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
 
-private val BIBLIOTECAS = listOf(Triple("diario", "Diario", "biblioteca_diario"), Triple("suenos", "Sueños", "biblioteca_suenos"), Triple("cartas", "Cartas", "cartas"))
+private val BIBLIOTECAS = listOf(Triple("diario", "Diario", "biblioteca_diario"), Triple("suenos", "Sueños", "biblioteca_suenos"),
+    Triple("momentos", "Momentos", "biblioteca_momentos"), Triple("cartas", "Cartas", "cartas"))
 
 /**
- * Las tres bibliotecas en una: el diario, los sueños y las cartas. Se cambia entre ellas con las pestañas de arriba
+ * Las cuatro bibliotecas en una: el diario, los sueños, la libreta de momentos y las cartas. Se cambia entre ellas con las pestañas de arriba
  * o deslizando a los lados.
  */
 @Composable
@@ -121,9 +122,10 @@ fun PantallaBibliotecas(nav: Nav, inicial: String) {
             else if (total > umbral && i > 0) ir(BIBLIOTECAS[i - 1].first)
         }) { _, dx -> total += dx }
     }
-    val titulo = when (cual) { "suenos" -> "Biblioteca de sueños"; "cartas" -> "Cartas"; else -> "Biblioteca del diario" }
+    val titulo = when (cual) { "suenos" -> "Biblioteca de sueños"; "cartas" -> "Cartas"; "momentos" -> "Libreta de momentos"; else -> "Biblioteca del diario" }
     val sub = when (cual) {
         "suenos" -> "Lo que soñaste, noche por noche, en el mismo estante del tema pero de noche."
+        "momentos" -> "Una hoja por día con todo lo que registraste al momento: cómo te sentías, en qué pensabas, con quién y lo que tomaste."
         "cartas" -> "Las que te escribes al futuro, selladas hasta su fecha, y las que escribes a otras personas."
         else -> LibroDiario.entradas().let { l -> "${l.size} entradas · %,d palabras. Toca una para abrirla.".format(l.sumOf { Texto.palabras(it.nota) }) }
     }
@@ -132,6 +134,7 @@ fun PantallaBibliotecas(nav: Nav, inicial: String) {
         when (cual) {
             "suenos" -> BibliotecaSuenos(nav)
             "cartas" -> BibliotecaCartas(nav)
+            "momentos" -> BibliotecaMomentos(nav)
             else -> BibliotecaDiario(nav)
         }
     }
@@ -141,7 +144,8 @@ fun PantallaBibliotecas(nav: Nav, inicial: String) {
 @Composable
 private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
-    val n = mapOf("diario" to Repo.dias.values.count { it.nota.isNotBlank() }, "suenos" to Repo.dias.values.count { it.sueno_texto.isNotBlank() }, "cartas" to Repo.cartas.size)
+    val n = mapOf("diario" to Repo.dias.values.count { it.nota.isNotBlank() }, "suenos" to Repo.dias.values.count { it.sueno_texto.isNotBlank() },
+        "momentos" to diasConMomentos().size, "cartas" to Repo.cartas.size)
     Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         BIBLIOTECAS.forEach { (id, nombre, _) ->
             val sel = id == actual
@@ -167,6 +171,16 @@ private fun DrawScope.icono(id: String, c: Color) {
         "suenos" -> {
             mediaLuna(Offset(w * 0.42f, h * 0.52f), h * 0.42f, c)
             listOf(Offset(w * 0.8f, h * 0.22f) to 1.6f, Offset(w * 0.72f, h * 0.72f) to 1.1f, Offset(w * 0.92f, h * 0.5f) to 0.9f).forEach { (o, r) -> drawCircle(c, r.dp.toPx(), o) }
+        }
+        "momentos" -> {
+            // Una libreta de espiral con una estrella de cuatro puntas.
+            drawRect(c, Offset(w * 0.22f, h * 0.08f), Size(w * 0.6f, h * 0.84f), style = trazo)
+            for (k in 0 until 4) drawCircle(c, 1.4.dp.toPx(), Offset(w * 0.22f, h * (0.22f + k * 0.19f)))
+            val o = Offset(w * 0.54f, h * 0.5f); val r = h * 0.26f
+            drawPath(Path().apply {
+                moveTo(o.x, o.y - r); quadraticTo(o.x, o.y, o.x + r, o.y); quadraticTo(o.x, o.y, o.x, o.y + r)
+                quadraticTo(o.x, o.y, o.x - r, o.y); quadraticTo(o.x, o.y, o.x, o.y - r); close()
+            }, c)
         }
         "cartas" -> {
             drawRect(c, Offset(w * 0.12f, h * 0.15f), Size(w * 0.76f, h * 0.7f), style = trazo)
@@ -284,6 +298,95 @@ fun PantallaSueno(nav: Nav) {
             "Abrir el día" to { Seleccion.abrir(nav, fecha) },
         ), modo = Escrito.SUENO)
     if (escribiendo) EscribirSueno(fecha) { escribiendo = false }
+}
+
+// ---------------------------------------------------------------- Momentos
+
+private fun momentosVisibles() = Repo.config.seguimiento_privado.let { privado -> Repo.momentos.filter { privado || it.tipo != "recaida" } }
+
+/** Los días con algo registrado al momento (ánimo, momentos o sustancias visibles), del más reciente al más antiguo. */
+fun diasConMomentos(): List<String> =
+    (momentosVisibles().map { it.fecha } + Repo.consumos.filter { io.github.ruddy2003.vestigium.data.Sustancias.visible(it) }.map { it.fecha }).distinct().sortedDescending()
+
+private fun lineaMomento(m: io.github.ruddy2003.vestigium.data.Momento, discreto: Boolean): String = buildString {
+    val cat = io.github.ruddy2003.vestigium.data.Catalogo
+    append(Fechas.horaDe(m.ts)); append(" — "); append(cat.titulo(m, discreto))
+    val cifras = listOfNotNull(m.valencia?.let { "agrado $it/7" }, m.activacion?.let { "energía $it/7" }, m.intensidad?.let { "intensidad $it/5" })
+    if (cifras.isNotEmpty()) append(" (" + cifras.joinToString(", ") + ")")
+    if (!discreto) {
+        if (cat.emocionesDe(m).isNotEmpty()) cat.pensamientoDe(m)?.let { p -> append("\nen qué pensabas: " + (cat.PENSAMIENTOS.firstOrNull { it.id == p }?.nombre ?: p).lowercase()) }
+        if (m.con_quien.isNotEmpty()) append("\ncon: " + m.con_quien.joinToString(", ") { q -> cat.CON_QUIEN.firstOrNull { it.id == q }?.nombre?.lowercase() ?: q })
+        m.lugar?.takeIf { it.isNotBlank() }?.let { append("\nen: $it") }
+    }
+    if (m.texto.isNotBlank()) append("\n" + m.texto.trim())
+}
+
+private fun lineaConsumo(c: io.github.ruddy2003.vestigium.data.Consumo): String = buildString {
+    val cat = io.github.ruddy2003.vestigium.data.Catalogo
+    val sus = io.github.ruddy2003.vestigium.data.Sustancias
+    append(Fechas.horaDe(c.inicio)); append(" — "); append(cat.nombreSustancia(c))
+    val det = listOfNotNull(sus.maximo(c)?.let { "nivel $it/10" }, c.cantidad?.let { q -> "%s %s".format(if (q % 1.0 == 0.0) "${q.toInt()}" else "%.1f".format(q), cat.sustancia(c.sustancia)?.unidad ?: "") },
+        sus.horas(c)?.let { "%.1f h".format(it) }, c.cruda?.let { "cruda $it/5" })
+    if (det.isNotEmpty()) append(" (" + det.joinToString(", ") + ")")
+    if (c.con_quien.isNotEmpty()) append("\ncon: " + c.con_quien.joinToString(", "))
+    if (c.nota.isNotBlank()) append("\n" + c.nota.trim())
+}
+
+/** La hoja de momentos de un día, como si fuera una entrada del diario (para el estante y la lectura del tema). */
+fun hojaMomentos(fecha: String, discreto: Boolean = Repo.config.discreto): io.github.ruddy2003.vestigium.data.Dia? {
+    val ms = momentosVisibles().filter { it.fecha == fecha }
+    val cs = Repo.consumos.filter { it.fecha == fecha && io.github.ruddy2003.vestigium.data.Sustancias.visible(it) }
+    if (ms.isEmpty() && cs.isEmpty()) return null
+    val l = (ms.map { Fechas.millis(it.ts) to lineaMomento(it, discreto) } + cs.map { Fechas.millis(it.inicio) to lineaConsumo(it) }).sortedBy { it.first }
+    val v = ms.filter { io.github.ruddy2003.vestigium.data.Catalogo.esRegistro(it) }.mapNotNull { it.valencia }
+    return io.github.ruddy2003.vestigium.data.Dia(fecha, nota = l.joinToString("\n\n") { it.second },
+        valencia = v.takeIf { it.isNotEmpty() }?.average()?.let { kotlin.math.round(it).toInt() })
+}
+
+@Composable
+private fun BibliotecaMomentos(nav: Nav) {
+    val discreto = Repo.config.discreto
+    val todas = remember(Repo.momentos, Repo.consumos, discreto) { diasConMomentos().mapNotNull { hojaMomentos(it, discreto) } }
+    var busca by remember { mutableStateOf("") }
+    var anio by remember { mutableStateOf<String?>(null) }
+    var meses by remember { mutableIntStateOf(6) }
+    val q = sinAcentos(busca.trim())
+    val visibles = todas.filter { d -> (anio == null || d.fecha.startsWith(anio!!)) && (q.isBlank() || sinAcentos(d.nota).contains(q)) }
+    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true,
+        placeholder = { Text("buscar en tus momentos", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
+    FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        todas.map { it.fecha.take(4) }.distinct().forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }
+    }
+    if (todas.isEmpty()) Vacio("Todavía no hay momentos. Toca «¿Cómo estás ahora?» en la pestaña Diario.")
+    else if (visibles.isEmpty()) Vacio("Nada coincide con la búsqueda.")
+    val porMes = visibles.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
+    porMes.entries.take(meses).forEach { (mes, lista) ->
+        Text(rotuloMes(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
+        EstanteDiario(lista) { f -> Seleccion.momentos = f; nav.ir("hoja_momentos") }
+    }
+    if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
+}
+
+/** Una hoja de la libreta de momentos, con el diseño del tema; se pasa de día deslizando. */
+@Composable
+fun PantallaHojaMomentos(nav: Nav) {
+    val ctx = LocalContext.current
+    val discreto = Repo.config.discreto
+    val todas = remember(Repo.momentos, Repo.consumos) { diasConMomentos() }
+    var fecha by remember { mutableStateOf(Seleccion.momentos ?: todas.firstOrNull() ?: Fechas.diaLogico()) }
+    val d = remember(fecha, Repo.momentos, Repo.consumos, discreto) { hojaMomentos(fecha, discreto) }
+    val i = todas.indexOf(fecha)
+    LecturaTema(fecha, d, volver = nav.atras,
+        anterior = if (i in 0 until todas.size - 1) ({ fecha = todas[i + 1]; Seleccion.momentos = fecha }) else null,
+        siguiente = if (i > 0) ({ fecha = todas[i - 1]; Seleccion.momentos = fecha }) else null,
+        acciones = listOf(
+            "Compartir texto" to {
+                if (d != null) ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain")
+                    .putExtra(Intent.EXTRA_TEXT, "Momentos · ${Fechas.titulo(fecha)}\n\n" + d.nota), "Compartir").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            },
+            "Abrir el día" to { Seleccion.abrir(nav, fecha) },
+            "Ver en la cinta" to { Seleccion.cinta = fecha; nav.ir("cinta") },
+        ))
 }
 
 // ---------------------------------------------------------------- Cartas

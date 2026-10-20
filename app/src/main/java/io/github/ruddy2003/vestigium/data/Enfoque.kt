@@ -68,6 +68,14 @@ object Enfoque {
         return tr
     }
 
+    /** Un tramo que ya pasó, con su inicio exacto. */
+    fun agregarMs(tipo: String, inicioMs: Long, min: Int, nota: String = ""): Tramo? {
+        if (min <= 0) return null
+        val tr = Tramo(Repo.nuevoId(), Fechas.diaLogicoDeMillis(inicioMs), tipo, Fechas.isoDeMillis(inicioMs), Fechas.isoDeMillis(inicioMs + min * 60_000L), min, nota.trim(), origen = "manual")
+        Repo.guardarTramo(tr)
+        return tr
+    }
+
     /** Minutos por tipo de un día. */
     fun delDia(fecha: String): Map<String, Int> = Repo.tramos.filter { it.fecha == fecha }.groupBy { it.tipo }.mapValues { (_, l) -> l.sumOf { it.min } }
 

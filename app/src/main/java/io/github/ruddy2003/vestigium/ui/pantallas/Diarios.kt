@@ -113,26 +113,14 @@ fun PantallaDiario(nav: Nav) {
         (when (tipo) { "entradas" -> tieneEntrada; "momentos" -> ms.isNotEmpty(); "suenos" -> tieneSueno; else -> true }) &&
             (anio == null || f.startsWith(anio!!)) && (!conFoto || d?.foto != null) && (!largas || Texto.palabras(d?.nota) >= 200) &&
             (q.isBlank() || normal(listOfNotNull(d?.nota, d?.mejor_momento, d?.peor_momento, d?.sueno_texto).joinToString(" ") + " " +
-                ms.joinToString(" ") { it.texto + " " + io.github.ruddy2003.vestigium.ui.tipoNombre(it.tipo, false) }).contains(q))
+                ms.joinToString(" ") { it.texto + " " + io.github.ruddy2003.vestigium.data.Catalogo.titulo(it, false) + " " + it.pensamiento.orEmpty() }).contains(q))
     }
     val entradas = visibles.mapNotNull { Repo.dias[it]?.takeIf { d -> d.nota.isNotBlank() } }
     val palabras = remember(Repo.dias) { Repo.dias.values.sumOf { Texto.palabras(it.nota) } }
 
-    Hoja("Diario", buscar = { nav.ir("buscar") }) {
-        // Registrar ahora mismo, sin salir de aquí: todos los momentos a la vista, en un recuadro.
-        Seccion("Ahora mismo estoy…") {
-            Tarjeta {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
-                    (io.github.ruddy2003.vestigium.data.Catalogo.MOMENTOS + if (privado) listOf(io.github.ruddy2003.vestigium.data.Catalogo.RECAIDA) else emptyList()).forEach { t ->
-                        Surface(onClick = { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO, t.id) }, modifier = Modifier.weight(1f).heightIn(min = 46.dp),
-                            shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.background, border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-                            Box(contentAlignment = Alignment.Center) { Text(if (discreto) t.discreto else t.nombre, style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(6.dp)) }
-                        }
-                    }
-                }
-                io.github.ruddy2003.vestigium.ui.BotonPrincipal("Registrar mi ánimo ahora", Modifier.fillMaxWidth().padding(top = 10.dp)) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_ANIMO) }
-            }
-        }
+    Hoja("Diario", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
+        // Un solo botón: el ánimo de ahora (sentimientos, pensamiento, con quién) y, desde ahí, una sustancia o un impulso.
+        BotonAnimo(Modifier.padding(top = 14.dp)) { rapido(io.github.ruddy2003.vestigium.ui.QuickActivity.M_ANIMO) }
         // El diario de hoy, como objeto del tema: al tocarlo se abre a pantalla completa.
         val hoy = Fechas.diaLogico()
         Seccion("Hoy", "Toca para escribir. Se guarda mientras escribes.") {
@@ -146,11 +134,13 @@ fun PantallaDiario(nav: Nav) {
             io.github.ruddy2003.vestigium.ui.BotonPrincipal("entrar a la biblioteca →", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.ir("biblioteca_diario") }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 BotonSecundario("☾  sueños", Modifier.weight(1f)) { nav.ir("biblioteca_suenos") }
+                BotonSecundario("✦  momentos", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }
                 BotonSecundario("✉  cartas", Modifier.weight(1f)) { nav.ir("cartas") }
             }
         }
-        Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día.") {}
-        Text("${Repo.momentos.count { it.tipo != "muestreo" }} momentos registrados", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        // La línea de tiempo y la exportación empiezan plegadas, y se vuelven a plegar al cerrar la app o al cambiar de día.
+        Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día, con buscador y filtros.", autoPlegar = true) { Column {
+        Text("${visiblesM.size} registros de ánimo y momentos", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
         OutlinedTextField(busca, { busca = it; mostrar = 30 }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
             placeholder = { Text("buscar en tu diario, @personas, #temas", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -176,9 +166,10 @@ fun PantallaDiario(nav: Nav) {
                 abrirDia = { Seleccion.abrir(nav, f) }, abrirEntrada = { Seleccion.entrada = f; nav.ir("entrada") }, editar = { editando = it })
         }
         if (visibles.size > mostrar) BotonSecundario("ver ${minOf(30, visibles.size - mostrar)} días más", Modifier.padding(top = 8.dp)) { mostrar += 30 }
+        } }
 
         Seccion("Exportar", "Las ${entradas.size} entradas de lo que estás viendo. El PDF y el HTML llevan el diseño del tema; el de Obsidian es una nota por día con sus datos.",
-            plegable = true, plegadaPorDefecto = true) {
+            autoPlegar = true) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 BotonSecundario("PDF", habilitado = entradas.isNotEmpty()) { exportar("pdf", { LibroDiario.pdf(ctx, entradas) }, "application/pdf") }
                 BotonSecundario("HTML", habilitado = entradas.isNotEmpty()) { exportar("html", { LibroDiario.html(ctx, entradas) }, "text/html") }
@@ -190,6 +181,22 @@ fun PantallaDiario(nav: Nav) {
     }
     editando?.let { m -> DialogoMomento(m) { editando = null } }
     escribiendo?.let { f -> io.github.ruddy2003.vestigium.ui.EscribirDia(f) { escribiendo = null } }
+}
+
+/** El botón grande de la pestaña Diario: abre el selector de ánimo. */
+@Composable
+fun BotonAnimo(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = Fechas.diaLogico()
+    val ultimo = Repo.momentos.filter { it.fecha == hoy && io.github.ruddy2003.vestigium.data.Catalogo.esRegistro(it) }.maxByOrNull { it.ts }
+    Surface(onClick = onClick, modifier = modifier.fillMaxWidth().heightIn(min = 76.dp), shape = MaterialTheme.shapes.medium, color = cs.primary) {
+        Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
+            Text("¿Cómo estás ahora?", style = MaterialTheme.typography.titleLarge, color = cs.onPrimary)
+            Text(ultimo?.let { "último: ${Fechas.horaDe(it.ts)} · ${io.github.ruddy2003.vestigium.data.Catalogo.titulo(it, Repo.config.discreto)}" }
+                ?: "ánimo, sentimientos, pensamiento · y si tomaste o fumaste algo",
+                style = MaterialTheme.typography.labelMedium, color = cs.onPrimary.copy(alpha = 0.85f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
 }
 
 /** Un día en la línea de tiempo: la entrada, el sueño y los momentos, cada cosa tocable. */
@@ -218,7 +225,7 @@ private fun TarjetaDiaDiario(f: String, d: Dia?, ms: List<io.github.ruddy2003.ve
                     ms.sortedBy { it.ts }.take(8).forEach { m ->
                         Row(Modifier.fillMaxWidth().clickable { editar(m) }.padding(top = 5.dp), verticalAlignment = Alignment.Top) {
                             Text(Fechas.horaDe(m.ts), style = MaterialTheme.typography.labelMedium, color = cs.primary, modifier = Modifier.width(46.dp))
-                            io.github.ruddy2003.vestigium.ui.TextoMarcado(io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, discreto) + (m.valencia?.let { " · $it" } ?: "") + (m.intensidad?.let { " · $it/5" } ?: "") +
+                            io.github.ruddy2003.vestigium.ui.TextoMarcado(io.github.ruddy2003.vestigium.data.Catalogo.titulo(m, discreto) + (m.valencia?.let { " · $it/7" } ?: "") + (m.intensidad?.let { " · $it/5" } ?: "") +
                                 (if (m.texto.isNotBlank()) " — ${m.texto}" else ""), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }

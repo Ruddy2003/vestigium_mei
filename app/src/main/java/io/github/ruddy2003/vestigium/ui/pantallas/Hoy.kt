@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -103,11 +104,11 @@ object Pendientes {
         val hechos = Repo.momentos.count { it.fecha == hoy && it.tipo == "muestreo" }
         val faltan = (plan - hechos).coerceAtLeast(0)
         if (faltan > 0) l += Pendiente("p:aviso", if (faltan == 1) "1 aviso de ánimo sin contestar" else "$faltan avisos de ánimo sin contestar", "aviso")
-        Escalas.pendientes().firstOrNull()?.let { (ins, atraso) ->
+        if (!ignorado("p:escalas")) Escalas.pendientes().firstOrNull()?.let { (ins, atraso) ->
             l += Pendiente("p:escalas", if (atraso > 0) "${ins.nombre}: ${atraso} días de atraso" else "${ins.nombre} toca hoy", "escalas")
         }
         // La prueba de reacción, una vez al día (desde las 8, para no medir el cerebro recién despierto).
-        if (ahora.hour >= 8 && Repo.reacciones.none { it.fecha == hoy }) l += Pendiente("p:reaccion", "Prueba de reacción", "reaccion")
+        if (ahora.hour >= 8 && Repo.reacciones.none { it.fecha == hoy } && !ignorado("p:reaccion")) l += Pendiente("p:reaccion", "Prueba de reacción", "reaccion")
         // Lo de la noche aparece desde 4 horas antes de tu hora de diario.
         val tarde = ahora.hour >= (c.hora_diario - 4).coerceAtLeast(14)
         if (tarde && (d.valencia == null || d.nota.isBlank())) l += Pendiente("p:diario", if (d.valencia == null) "Diario de hoy" else "Escribir la nota del día", "diario")
@@ -137,11 +138,16 @@ object Pendientes {
     }
 }
 
+/** Lo único que «Te falta hoy» pide: el diario de ayer, el sueño, los avisos de ánimo y el diario. Lo demás es una invitación. */
+val ESENCIALES = setOf("p:ayer", "p:sueno", "p:aviso", "p:diario")
+
 @Composable
 fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (String) -> Unit) {
-    val l = Pendientes.deHoy(d, hoy).filter { it.clave !in ocultar }
+    val todo = Pendientes.deHoy(d, hoy).filter { it.clave !in ocultar }
+    val l = todo.filter { it.clave in ESENCIALES }
+    val extra = todo.filter { it.clave !in ESENCIALES }
     val tarde = LocalTime.now().hour >= 21
-    // Cuando completas lo pendiente, una pequeña celebración con el sonido y la vibración del tema. Solo si lo que faltaba
+    // Cuando completas lo esencial, una pequeña celebración con el sonido y la vibración del tema. Solo si lo que faltaba
     // de verdad se hizo (no si se venció su hora, como «diario de ayer» a las 14:00) y no justo al volver a abrir la app.
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
     var antes by remember(hoy) { mutableStateOf<Set<String>?>(null) }
@@ -154,10 +160,25 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
             io.github.ruddy2003.vestigium.ui.Fiesta.lanzar(); sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.LOGRO)
         }
     }
+    // Las invitaciones: una línea discreta que se puede descartar por hoy.
+    val invitaciones: @Composable (Color) -> Unit = { tinta ->
+        if (extra.isNotEmpty()) {
+            Text("si tienes tiempo:", style = MaterialTheme.typography.labelMedium, color = tinta.copy(alpha = 0.8f), modifier = Modifier.padding(top = 8.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                extra.forEach { p -> TextButton(onClick = { accion(p.accion) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)) {
+                    Text(p.texto.removePrefix("¿").removeSuffix("?").replaceFirstChar { it.lowercase() } + " →", style = MaterialTheme.typography.labelLarge, color = tinta)
+                } }
+                TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + extra.associate { it.clave to hoy }) } },
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)) {
+                    Text("hoy no", style = MaterialTheme.typography.labelLarge, color = tinta.copy(alpha = 0.7f))
+                }
+            }
+        }
+    }
     if (l.isEmpty()) {
         if (tarde && d.valencia != null) Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
             Text("✓ Hoy completo. Buenas noches.", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onPrimaryContainer)
-        }
+        } else if (extra.isNotEmpty()) Column(Modifier.fillMaxWidth().padding(top = 4.dp)) { invitaciones(MaterialTheme.colorScheme.primary) }
         return
     }
     Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
@@ -166,11 +187,11 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 l.forEach { p -> Ficha("${p.texto} →", false) { accion(p.accion) } }
             }
-            // Lo opcional se puede descartar por hoy.
-            val opcionales = l.filter { it.clave in setOf("p:gasto", "p:prediccion", "p:ayer", "p:politica") }
-            if (opcionales.isNotEmpty()) TextButton(onClick = {
-                Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + opcionales.associate { it.clave to hoy }) }
-            }) { Text("no hace falta: " + opcionales.joinToString(", ") { it.texto.lowercase().removePrefix("¿").removeSuffix("?") }, style = MaterialTheme.typography.labelMedium) }
+            // El diario de ayer se puede dejar pasar.
+            if (l.any { it.clave == "p:ayer" }) TextButton(onClick = {
+                Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + ("p:ayer" to hoy)) }
+            }) { Text("no hace falta: diario de ayer", style = MaterialTheme.typography.labelMedium) }
+            invitaciones(MaterialTheme.colorScheme.onPrimaryContainer)
         }
     }
 }
@@ -338,7 +359,7 @@ private fun horas(min: Double) = if (min >= 60) "%d h %02d".format((min / 60).to
 val METRICAS = listOf(
     Metrica("sueno", "Sueño", { "%.1f h".format(it) }) { f, _ -> Repo.salud[f]?.sueno_min?.let { it / 60.0 } },
     Metrica("animo", "Ánimo", { "%.1f / 7".format(it) }) { f, _ ->
-        Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average()
+        Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average()
     },
     Metrica("pasos", "Pasos", { "%,.0f".format(it) }) { f, _ -> Repo.salud[f]?.pasos?.toDouble() },
     Metrica("km", "Kilómetros", { "%.1f km".format(it) }) { f, x -> x["km"]?.get(f) },

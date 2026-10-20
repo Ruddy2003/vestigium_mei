@@ -50,18 +50,8 @@ fun PantallaMas(nav: Nav) {
         val u = Repo.ultimaRespuesta(i.id)
         u == null || java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(u.fecha), java.time.LocalDate.now()) >= i.frecuenciaDias
     }
-    Hoja("Más", buscar = { nav.ir("buscar") }) {
+    Hoja("Más", nav.atras, buscar = { nav.ir("buscar") }) {
         AtajosFijos { nav.ir(it) }
-        // Los especiales, en recuadros grandes.
-        Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            RecuadroTuAnio(nav)
-            RecuadroLogros(nav)
-            RecuadroHall(nav)
-            RecuadroCampanas(nav)
-            RecuadroMapas(nav)
-            RecuadroObras(nav)
-            RecuadroOtrasVidas(nav)
-        }
         val ir: (String) -> Unit = { nav.ir(it) }
         Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1) {
             Tarjeta {
@@ -82,13 +72,12 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("frases", "Frases guardadas", (Repo.config.frases_guardadas.size + Repo.obras.sumOf { o -> o.citas.count { it.favorita } }).let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }, ir)
             }
         }
-        Seccion("Ver tu vida", "Tus datos dibujados.", numero = 2) {
+        Seccion("Tu gente y sustancias", numero = 2) {
             Tarjeta {
-                FilaMas("cinta", "La cinta", "Tu día hora por hora: sueño, lugares, pantalla, música, momentos", ir)
+                val pend = io.github.ruddy2003.vestigium.data.Personas.pendientes().size
+                FilaMas("personas", "Tu gente", if (pend > 0) "$pend por clasificar · quién es cada @persona para ti" else "Quién es cada @persona para ti, y qué tan cerca", ir)
                 HorizontalDivider()
-                FilaMas("constelacion", "Constelación", "Tu gente como un cielo", ir)
-                HorizontalDivider()
-                FilaMas("calendario", "Calendario", "Mes por mes, con capas de ánimo, sueño, pasos…", ir)
+                FilaMas("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína: episodios, niveles y cruda", ir)
                 if (Repo.config.seguimiento_privado) {
                     HorizontalDivider()
                     FilaMas("recaidas", "Impulsos y recaídas", "Seguimiento privado: horas, lugares y detonantes", ir)
@@ -132,8 +121,8 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("guia", "Guía científica", "Qué mide cada cosa y de dónde viene", ir)
             }
         }
-        Ayuda("Atajo: mantén presionada una pestaña. Día abre la hoja de la noche; Diario, un momento; Gastos, un gasto nuevo; Entender, el resumen semanal; Más, el buscador (que también encuentra pantallas). " +
-            "Tocar la pestaña en la que ya estás te sube al inicio (en Día, además, te regresa a hoy).", Modifier.padding(top = 16.dp))
+        Ayuda("Atajo: mantén presionada una pestaña. Hoy abre la hoja de la noche; Diario y ⊕, el ánimo; Vida, el resumen semanal; Análisis, el buscador (que también encuentra pantallas). " +
+            "Tocar la pestaña en la que ya estás te sube al inicio (en Hoy, además, te regresa a hoy).", Modifier.padding(top = 16.dp))
         Ayuda("vestigium mei · schema_v = ${io.github.ruddy2003.vestigium.data.SCHEMA_V} · ${io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico())}", Modifier.padding(top = 16.dp))
     }
 }

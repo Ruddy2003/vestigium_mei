@@ -85,7 +85,9 @@ object Perfiles {
     }
 
     /** Qué es para ti una persona del diario (por su @), según lo que dijiste: pareja, familia, amistad, trabajo, casa. */
-    fun relacion(persona: String, p: Perfil = Repo.config.perfil): String? {
+    fun relacion(persona: String, p: Perfil = Repo.config.perfil, fecha: String? = null): String? {
+        // Primero lo que dijiste en «Tu gente» (con la relación que había ese día); luego «Conocerte».
+        Personas.relacionEn(persona, fecha)?.let { return Personas.grupo(it) }
         p.cercanas.firstOrNull { it.nombre == persona }?.let { return it.relacion.ifBlank { "otra" } }
         if (persona in p.convivientes) return "casa"
         return null

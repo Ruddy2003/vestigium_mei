@@ -178,16 +178,19 @@ fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.color
 /** Encabezado de sección: numeral y nombre según el tema, con el nombre en español como comentario. */
 @Composable
 fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), modifier: Modifier = Modifier,
-            plegable: Boolean = false, plegadaPorDefecto: Boolean = false, content: @Composable () -> Unit) {
+            plegable: Boolean = false, plegadaPorDefecto: Boolean = false, autoPlegar: Boolean = false, content: @Composable () -> Unit) {
     val (nombre, comentario) = Estilo.seccion(titulo, latin)
     // Las secciones plegables recuerdan si las cerraste (se guarda en tu configuración). Las que empiezan plegadas
-    // guardan «+título» cuando las abres.
+    // guardan «+título» cuando las abres. Las de [autoPlegar] se vuelven a plegar al cerrar la app o al cambiar de día.
     val plegadas = io.github.ruddy2003.vestigium.data.Repo.config.plegadas
-    val plegada = plegable && if (plegadaPorDefecto) "+$titulo" !in plegadas else titulo in plegadas
+    val claveAuto = "${SesionApp.n}|${io.github.ruddy2003.vestigium.data.Fechas.diaLogico()}"
+    var abiertaAuto by androidx.compose.runtime.remember(claveAuto) { mutableStateOf(false) }
+    val plegable = plegable || autoPlegar
+    val plegada = if (autoPlegar) !abiertaAuto else plegable && if (plegadaPorDefecto) "+$titulo" !in plegadas else titulo in plegadas
     Column(modifier.fillMaxWidth().padding(top = 26.dp).entrada(numero ?: 0)) {
         Row(
             verticalAlignment = if (Estilo.tema == TemaId.MEDIEVAL || Estilo.tema == TemaId.DISTOPIA) Alignment.CenterVertically else Alignment.Bottom,
-            modifier = if (!plegable) Modifier else Modifier.fillMaxWidth().clickable {
+            modifier = if (!plegable) Modifier else if (autoPlegar) Modifier.fillMaxWidth().clickable { abiertaAuto = !abiertaAuto } else Modifier.fillMaxWidth().clickable {
                 io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c ->
                     val clave = if (plegadaPorDefecto) "+$titulo" else titulo
                     val quitar = if (plegadaPorDefecto) !plegada else plegada
@@ -546,5 +549,5 @@ fun Pastilla(texto: String, color: Color = MaterialTheme.colorScheme.primary) {
     }
 }
 
-fun tipoNombre(id: String, discreto: Boolean): String = Catalogo.tipo(id)?.let { if (discreto) it.discreto else it.nombre } ?: if (id == "muestreo") "Ánimo" else id
+fun tipoNombre(id: String, discreto: Boolean): String = Catalogo.tipo(id)?.let { if (discreto) it.discreto else it.nombre } ?: if (id == "muestreo" || id == "animo") "Ánimo" else id
 

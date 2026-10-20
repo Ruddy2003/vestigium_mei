@@ -51,6 +51,7 @@ data class Respaldo(
     val ingresos: List<Ingreso> = emptyList(),
     val youtube: List<YtEvento> = emptyList(),
     val tramos: List<Tramo> = emptyList(),
+    val consumos: List<Consumo> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -88,7 +89,7 @@ object Exportar {
             r["flow"] = d.flow; r["sdt_necesidad"] = d.sdt_necesidad; r["apreciacion"] = d.apreciacion
             r["sueno_recordado"] = d.sueno_recordado; r["sueno_valencia"] = d.sueno_valencia; r["sueno_lucidez"] = d.sueno_lucidez
             r["sueno_vividez"] = d.sueno_vividez; r["sueno_tipo"] = d.sueno_tipo; r["sueno_temas"] = d.sueno_temas
-            r["sueno_calidad"] = d.sueno_calidad; r["sueno_texto"] = d.sueno_texto
+            r["sueno_calidad"] = d.sueno_calidad; r["sueno_categorias"] = d.sueno_categorias; r["sueno_texto"] = d.sueno_texto
             r["mejor_momento"] = d.mejor_momento; r["peor_momento"] = d.peor_momento
             r["impulso"] = d.impulso; r["recaida"] = d.recaida; r["detonantes"] = d.detonantes
             r["medicamentos"] = d.medicamentos; r["prediccion_manana"] = d.prediccion_manana
@@ -101,15 +102,182 @@ object Exportar {
         }
     }
 
-    fun filasMomentos() = Repo.momentos.map {
+    /** Nivel subjetivo (0 a 10) de una sustancia en un instante: el mayor de sus episodios; null antes del primer registro de esa sustancia. */
+    private fun nivelSustancia(id: String, ms: Long, lista: List<Consumo>): Double? {
+        val l = lista.filter { it.sustancia == id }
+        val p0 = l.minOfOrNull { Fechas.millis(it.inicio) } ?: return null
+        if (ms < p0) return null
+        return l.mapNotNull { c -> if (ms >= Fechas.millis(c.inicio) && ms <= Sustancias.finEfectivo(c)) Sustancias.nivelEn(c, ms) else null }.maxOrNull() ?: 0.0
+    }
+
+    fun filasMomentos(): List<Map<String, Any?>> {
+        val cons = Repo.consumos.filter { Catalogo.sustancia(it.sustancia)?.conNivel == true }
+        return Repo.momentos.map {
+        val ms = Fechas.millis(it.ts)
         linkedMapOf<String, Any?>("id" to it.id, "ts" to it.ts, "fecha" to it.fecha, "hora" to Fechas.horaDe(it.ts), "tipo" to it.tipo,
+            "es_animo" to Catalogo.esRegistro(it), "emociones" to Catalogo.emocionesDe(it), "emocion_otra" to it.emocion_otra, "pensamiento" to Catalogo.pensamientoDe(it),
             "intensidad" to it.intensidad, "valencia" to it.valencia, "activacion" to it.activacion, "texto" to it.texto,
             "personas" to Texto.personas(it.texto), "temas" to Texto.temas(it.texto),
             "lat" to it.lat, "lon" to it.lon, "precision_m" to it.precision_m, "lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.nombre,
             "origen" to it.origen, "aviso_ts" to it.aviso_ts,
             "latencia_min" to it.aviso_ts?.let { a -> (Fechas.millis(it.ts) - Fechas.millis(a)) / 60000.0 },
             "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux,
-            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min)
+            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min,
+            "alcohol_nivel" to nivelSustancia("alcohol", ms, cons), "cannabis_nivel" to nivelSustancia("cannabis", ms, cons), "otra_nivel" to nivelSustancia("otra", ms, cons))
+        }
+    }
+
+    /** Cada consumo de una sustancia, con lo de la mañana siguiente y el alcohol en sangre estimado. */
+    fun filasSustancias(): List<Map<String, Any?>> {
+        val l = Repo.consumos.sortedBy { it.inicio }
+        val alc = if (l.any { it.sustancia == "alcohol" }) runCatching { Sustancias.dosis(l.first().fecha, Fechas.diaLogico()).second }.getOrDefault(emptyList()) else emptyList()
+        val ocultas = Repo.config.sustancias_ocultas
+        return l.map { c ->
+            linkedMapOf<String, Any?>("id" to c.id, "fecha" to c.fecha, "sustancia" to c.sustancia, "otra_nombre" to c.otra_nombre.ifBlank { null },
+                "inicio" to c.inicio, "fin" to c.fin, "hora_inicio" to Fechas.horaDe(c.inicio), "hora_fin" to c.fin?.let { Fechas.horaDe(it) },
+                "duracion_h" to Sustancias.horas(c)?.let { Math.round(it * 100) / 100.0 }, "nivel_max" to Sustancias.maximo(c),
+                "lecturas" to c.niveles.map { "${Fechas.horaDe(it.ts)}=${it.nivel}" }, "cantidad" to c.cantidad, "unidad" to Catalogo.sustancia(c.sustancia)?.unidad,
+                "via" to c.via, "con_quien" to c.con_quien, "lat" to c.lat, "lon" to c.lon, "lugar" to (Repo.lugares.firstOrNull { it.id == c.lugar }?.nombre ?: c.lugar),
+                "cruda" to c.cruda, "sintomas" to c.sintomas, "nota" to c.nota, "personas" to Texto.personas(c.nota), "temas" to Texto.temas(c.nota),
+                "alcohol_estimado_max_gl" to Sustancias.alcoholMaximo(c, alc)?.let { Math.round(it * 1000) / 1000.0 },
+                "completo" to c.completo, "oculta_en_pantallas" to (c.sustancia in ocultas), "origen" to c.origen)
+        }
+    }
+
+    /**
+     * Una fila por hora (fecha de calendario y hora de 0 a 23) con lo que pasó en ella: dormido, dónde, pantalla,
+     * notificaciones, luz, música, ánimo, cafeína y alcohol en el cuerpo, nivel de cada sustancia, enfoque, siestas,
+     * gastos y comidas. Para ver el día por dentro en R (por ejemplo, el ánimo según la cafeína de esa hora).
+     */
+    fun filasHoras(): List<Map<String, Any?>> {
+        val H = 3_600_000L
+        val zona = Fechas.zona()
+        fun clave(ms: Long): String { val t = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(ms), zona); return "${t.toLocalDate()}|${t.hour}" }
+        fun inicioHora(f: String, h: Int): Long = java.time.LocalDateTime.of(Fechas.parse(f), java.time.LocalTime.of(h, 0)).atZone(zona).toInstant().toEpochMilli()
+        /** Reparte el intervalo [a, b) entre las horas que toca, en minutos. */
+        fun repartir(a: Long, b: Long, suma: HashMap<String, Double>) {
+            if (b <= a || b - a > 40L * 24 * H) return
+            var t = a
+            while (t < b) {
+                val ldt = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(t), zona).withMinute(0).withSecond(0).withNano(0)
+                val sig = ldt.plusHours(1).atZone(zona).toInstant().toEpochMilli()
+                val y = minOf(b, sig)
+                val k = "${ldt.toLocalDate()}|${ldt.hour}"
+                suma[k] = (suma[k] ?: 0.0) + (y - t) / 60_000.0
+                t = y
+            }
+        }
+        val fechas = sortedSetOf<String>()
+        val dormido = HashMap<String, Double>(); val siesta = HashMap<String, Double>(); val enfoque = HashMap<String, Double>()
+        Repo.salud.values.forEach { x ->
+            val a = x.sueno_inicio?.let { Fechas.millis(it) } ?: return@forEach; val b = x.sueno_fin?.let { Fechas.millis(it) } ?: return@forEach
+            if (a > 0 && b > a) repartir(a, b, dormido)
+        }
+        Repo.tramos.forEach { t -> val a = Fechas.millis(t.inicio); repartir(a, a + t.min * 60_000L, if (t.tipo == "siesta") siesta else enfoque) }
+        // Lugares: los minutos en cada lugar por hora; se queda el de más minutos.
+        val porLugar = HashMap<String, HashMap<String, Double>>()
+        val casas = Repo.lugares.filter { it.tipo == "casa" }.map { it.id }.toSet()
+        val enCasa = HashMap<String, Double>()
+        val ahora = System.currentTimeMillis()
+        Repo.visitas.forEach { v ->
+            val a = Fechas.millis(v.entrada); val b = v.salida?.let { Fechas.millis(it) } ?: ahora
+            if (a <= 0) return@forEach
+            val m = porLugar.getOrPut(v.lugar) { HashMap() }
+            repartir(a, b, m)
+            if (v.lugar in casas) repartir(a, b, enCasa)
+        }
+        val nombres = Repo.lugares.associate { it.id to it.nombre }
+        val lugarHora = HashMap<String, Pair<String, Double>>()
+        porLugar.forEach { (id, m) -> m.forEach { (k, min) -> if (min > (lugarHora[k]?.second ?: 0.0)) lugarHora[k] = (nombres[id] ?: id) to min } }
+        // Lo que va por día con 24 horas: pantalla (día de calendario); notificaciones y luz (día de la app: de 0 a 4 es la madrugada siguiente).
+        val pantalla = HashMap<String, Int>(); val notifs = HashMap<String, Int>(); val luz = HashMap<String, Double>()
+        Repo.pantalla.values.forEach { p -> p.por_hora_min.forEachIndexed { h, m -> pantalla["${p.fecha}|$h"] = m }; fechas += p.fecha }
+        fun calendario(f: String, h: Int) = if (h < 5) Fechas.sumar(f, 1) else f
+        Repo.notifs.values.forEach { n -> n.por_hora.forEachIndexed { h, k -> notifs["${calendario(n.fecha, h)}|$h"] = k } }
+        Repo.conexiones.values.forEach { c -> c.luz_n.forEachIndexed { h, k -> if (k > 0) luz["${calendario(c.fecha, h)}|$h"] = Math.round((c.luz_suma.getOrNull(h) ?: 0.0) / k * 10) / 10.0 } }
+        val canciones = HashMap<String, Int>()
+        runCatching { Repo.escuchas("0000-01-01", "9999-12-31").forEach { e -> val k = clave(Fechas.millis(e.ts)); canciones[k] = (canciones[k] ?: 0) + 1 } }
+        // Ánimo al momento.
+        val animo = Repo.momentos.filter { Catalogo.esRegistro(it) }.groupBy { clave(Fechas.millis(it.ts)) }
+        // Gastos y comidas con hora.
+        val gastos = HashMap<String, Double>()
+        Repo.gastos.forEach { g -> runCatching { val h = g.hora.take(2).toInt(); val k = "${g.fecha}|$h"; gastos[k] = (gastos[k] ?: 0.0) + g.monto } }
+        val comidas = runCatching { Repo.comidas("0000-01-01", "9999-12-31") }.getOrDefault(emptyList())
+        val comidasN = HashMap<String, Int>(); val kcal = HashMap<String, Double>()
+        comidas.forEach { c -> val h = c.hora.take(2).toIntOrNull() ?: return@forEach; val k = "${c.fecha}|$h"; comidasN[k] = (comidasN[k] ?: 0) + 1; c.valores["kcal"]?.let { kcal[k] = (kcal[k] ?: 0.0) + it } }
+        // Sustancias: el nivel que dijiste a la mitad de cada hora, y la cafeína y el alcohol estimados.
+        val cons = Repo.consumos
+        val niveles = HashMap<String, HashMap<String, Double>>()
+        cons.filter { Catalogo.sustancia(it.sustancia)?.conNivel == true }.forEach { c ->
+            val a = Fechas.millis(c.inicio); val b = Sustancias.finEfectivo(c)
+            if (b - a > 2 * 24 * H) return@forEach
+            var t = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(a), zona).withMinute(0).withSecond(0).withNano(0)
+            while (t.atZone(zona).toInstant().toEpochMilli() < b) {
+                val mitad = t.atZone(zona).toInstant().toEpochMilli() + 30 * 60_000L
+                val n = Sustancias.nivelEn(c, mitad)
+                if (n != null) { val m = niveles.getOrPut(c.sustancia) { HashMap() }; val k = "${t.toLocalDate()}|${t.hour}"; m[k] = maxOf(m[k] ?: 0.0, n) }
+                t = t.plusHours(1)
+            }
+        }
+        val tabaco = HashMap<String, Double>()
+        cons.filter { it.sustancia == "tabaco" }.forEach { c -> val k = clave(Fechas.millis(c.inicio)); tabaco[k] = (tabaco[k] ?: 0.0) + (c.cantidad ?: 1.0) }
+        val primerConsumo = cons.minOfOrNull { Fechas.millis(it.inicio) }
+        Repo.momentos.forEach { fechas += clave(Fechas.millis(it.ts)).substringBefore('|') }
+        (dormido.keys + enfoque.keys + siesta.keys + lugarHora.keys + notifs.keys + luz.keys + gastos.keys + comidasN.keys + tabaco.keys + niveles.values.flatMap { it.keys })
+            .forEach { fechas += it.substringBefore('|') }
+        cons.forEach { fechas += clave(Fechas.millis(it.inicio)).substringBefore('|') }
+        val hoyCal = Fechas.hoyCalendario()
+        val lista = fechas.filter { it <= hoyCal }
+        if (lista.isEmpty()) return emptyList()
+        val (caf, alc) = runCatching { Sustancias.dosis(Fechas.sumar(lista.first(), -1), Fechas.diaLogico()) }.getOrDefault(emptyList<Sustancias.Dosis>() to emptyList<Sustancias.Dosis>())
+        // Cafeína: suma de las dosis de las últimas 36 horas en cada mitad de hora (ventana deslizante).
+        val vm = Repo.config.cafeina_vida_media_h
+        val cafeina = HashMap<String, Double>()
+        if (caf.isNotEmpty()) {
+            var i0 = 0
+            for (f in lista) for (h in 0..23) {
+                val t = inicioHora(f, h) + 30 * 60_000L
+                while (i0 < caf.size && caf[i0].ms < t - 36 * H) i0++
+                var s0 = 0.0; var j = i0
+                while (j < caf.size && caf[j].ms <= t) {
+                    val dt = (t - caf[j].ms).toDouble()
+                    s0 += caf[j].cantidad * (dt / (45.0 * 60_000)).coerceAtMost(1.0) * Math.pow(0.5, dt / (vm * H)); j++
+                }
+                cafeina["$f|$h"] = Math.round(s0 * 10) / 10.0
+            }
+        }
+        // Alcohol en sangre: una simulación por día con alcohol (Widmark).
+        val alcohol = HashMap<String, Double>()
+        alc.groupBy { Fechas.diaLogicoDeMillis(it.ms) }.forEach { (_, l) ->
+            val a = l.minOf { it.ms }
+            val inst = (0 until 20).map { k -> java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(a), zona).withMinute(30).withSecond(0).withNano(0).plusHours(k.toLong()).atZone(zona).toInstant().toEpochMilli() }
+            Sustancias.alcoholEn(l, inst).forEachIndexed { k, g -> if (g > 0) alcohol[clave(inst[k])] = Math.round(g * 1000) / 1000.0 }
+        }
+        val primerCaf = caf.firstOrNull()?.ms; val primerAlc = alc.firstOrNull()?.ms
+        val out = ArrayList<Map<String, Any?>>(lista.size * 24)
+        for (f in lista) for (h in 0..23) {
+            val k = "$f|$h"
+            val t0 = inicioHora(f, h)
+            val an = animo[k].orEmpty()
+            out += linkedMapOf<String, Any?>(
+                "fecha" to f, "hora" to h, "dia_logico" to (if (h < 5) Fechas.sumar(f, -1) else f), "dia_semana" to Fechas.parse(f).dayOfWeek.value,
+                "dormido_min" to (dormido[k]?.let { Math.round(it).toInt() } ?: 0), "siesta_min" to (siesta[k]?.let { Math.round(it).toInt() } ?: 0),
+                "enfoque_min" to (enfoque[k]?.let { Math.round(it).toInt() } ?: 0),
+                "lugar" to lugarHora[k]?.takeIf { it.second >= 15 }?.first, "en_casa_min" to (if (casas.isEmpty()) null else (enCasa[k]?.let { Math.round(it).toInt() } ?: 0)),
+                "pantalla_min" to pantalla[k], "notificaciones" to notifs[k], "luz_lux" to luz[k], "canciones" to (canciones[k] ?: 0),
+                "n_registros" to an.size, "valencia" to an.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average(),
+                "activacion" to an.mapNotNull { it.activacion }.takeIf { it.isNotEmpty() }?.average(),
+                "emociones" to an.flatMap { Catalogo.emocionesDe(it) }.distinct(),
+                "cafeina_mg" to (if (primerCaf != null && t0 + H > primerCaf) cafeina[k] ?: 0.0 else null),
+                "alcohol_gl" to (if (primerAlc != null && t0 + H > primerAlc) alcohol[k] ?: 0.0 else null),
+                "alcohol_nivel" to (if (primerConsumo != null && cons.any { it.sustancia == "alcohol" }) niveles["alcohol"]?.get(k) ?: 0.0 else null),
+                "cannabis_nivel" to (if (cons.any { it.sustancia == "cannabis" }) niveles["cannabis"]?.get(k) ?: 0.0 else null),
+                "otra_nivel" to (if (cons.any { it.sustancia == "otra" }) niveles["otra"]?.get(k) ?: 0.0 else null),
+                "tabaco_n" to (if (cons.any { it.sustancia == "tabaco" }) tabaco[k] ?: 0.0 else null),
+                "gasto" to (gastos[k] ?: 0.0), "comidas_n" to (comidasN[k] ?: 0), "kcal" to kcal[k]?.let { Math.round(it).toDouble() },
+            )
+        }
+        return out
     }
 
     fun filasTramos() = Repo.tramos.map {
@@ -399,7 +567,12 @@ object Exportar {
         val can0 = runCatching { Repo.escuchas("0000-01-01", "9999-12-31").filter { (it.ms ?: 30_000) >= 30_000 }.groupingBy { it.fecha }.eachCount() }.getOrDefault(emptyMap())
         // Cultura, mundo, cartas y cercanos: se calculan igual que en los análisis.
         val nuevas = listOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada", "calificacion_obra", "citas_dia", "ciudades_dia", "fuera_de_casa",
-            "extranjero", "ciudad_nueva", "unesco", "carta_escrita", "sueno_palabras", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes")
+            "extranjero", "ciudad_nueva", "unesco", "carta_escrita", "sueno_palabras", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes",
+            "vi_expareja", "vi_trabajo", "cercania_media", "animo_valencia", "animo_activacion", "registros_animo",
+            "alcohol", "alcohol_bebidas", "alcohol_nivel_max", "alcohol_horas", "alcohol_estimado_max", "alcohol_al_dormir", "cannabis", "cannabis_nivel_max", "cannabis_horas",
+            "tabaco_n", "otra_sustancia", "cruda", "cafeina_total_mg", "cafeina_al_dormir_mg")
+        // Lo que sentías y pensabas (una columna por sentimiento o pensamiento que hayas registrado alguna vez).
+        val emociones = (Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO } + Repo.momentos.mapNotNull { Catalogo.pensamientoDe(it) }).distinct().sorted()
         val est = runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel() }.getOrDefault(emptyMap())
         return fechas.map { f ->
             val d = Repo.dias[f]; val s = Repo.salud[f]; val p = Repo.pantalla[f]; val e = Repo.entorno[f]
@@ -445,6 +618,7 @@ object Exportar {
             r["gimnasio"] = en != null && en.series > 0; r["gimnasio_min"] = en?.minutos; r["series_gimnasio"] = en?.series_efectivas; r["volumen_kg"] = en?.volumen_kg
             val x = est[f]
             nuevas.forEach { k -> r[k] = x?.get(k) }
+            emociones.forEach { k -> r["n_$k"] = x?.get("n_$k") }
             r
         }
     }
@@ -536,7 +710,7 @@ object Exportar {
         subrayados = Repo.subrayados, huellas = Repo.huellasDe("0000-01-01", "9999-12-31"), huellas_dia = Repo.huellas.values.sortedBy { it.fecha },
         chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
         series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
-        youtube = Repo.youtube, tramos = Repo.tramos))
+        youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -546,6 +720,8 @@ object Exportar {
         Tabla("vm_dias.csv", "Diario: lo que llenaste cada día", filasDias()),
         Tabla("vm_momentos.csv", "Momentos y avisos de ánimo, uno por fila", filasMomentos()),
         Tabla("vm_tramos.csv", "Cronómetro: bloques de enfoque (estudio, lectura, idiomas, tesis…) y siestas, uno por fila", filasTramos()),
+        Tabla("vm_sustancias.csv", "Sustancias: cada consumo (alcohol, cannabis, tabaco, cafeína, otra) con su nivel, duración y cruda", filasSustancias()),
+        Tabla("vm_horas.csv", "Una fila por hora: dormido, lugar, pantalla, notificaciones, luz, música, ánimo, cafeína y alcohol en el cuerpo, sustancias, enfoque, gastos y comidas", filasHoras()),
         Tabla("vm_gastos.csv", "Gastos, uno por fila", filasGastos()),
         Tabla("vm_ingresos.csv", "Ingresos, uno por fila", filasIngresos()),
         Tabla("vm_escalas.csv", "Cuestionarios validados (WHO-5, PSS-4, UCLA-3, TIPI)", filasEscalas()),

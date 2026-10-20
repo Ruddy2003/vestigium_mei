@@ -80,7 +80,120 @@ object Catalogo {
     /** Recaída: solo aparece con el seguimiento privado activado y nunca sale de la app (salvo en tu exportación a R). */
     val RECAIDA = TipoMomento("recaida", "Recaída", "K", "¿Qué pasó antes?")
     fun tipo(id: String): TipoMomento? = MOMENTOS.firstOrNull { it.id == id } ?: RECAIDA.takeIf { it.id == id }
-    fun nombreTipo(id: String): String = if (id == "muestreo") "Ánimo" else tipo(id)?.nombre ?: id
+    fun nombreTipo(id: String): String = if (id == "muestreo" || id == "animo") "Ánimo" else tipo(id)?.nombre ?: id
+
+    // ------------------------------------------------------------------ ánimo: sentimientos y pensamientos
+
+    /** Un sentimiento: nombre, si suele ser agradable (+1), desagradable (−1) o mixto (0), y su letra en modo discreto. */
+    data class Sentimiento(val id: String, val nombre: String, val tono: Int, val discreto: String)
+
+    val SENTIMIENTOS = listOf(
+        Sentimiento("alegria", "Alegría", 1, "A"), Sentimiento("calma", "Calma", 1, "B"), Sentimiento("gratitud", "Gratitud", 1, "C"),
+        Sentimiento("entusiasmo", "Entusiasmo", 1, "D"), Sentimiento("orgullo", "Orgullo", 1, "E"), Sentimiento("ternura", "Cariño", 1, "F"),
+        Sentimiento("alivio", "Alivio", 1, "G"), Sentimiento("diversion", "Diversión", 1, "H"), Sentimiento("esperanza", "Esperanza", 1, "I"),
+        Sentimiento("estres", "Estrés", -1, "J"), Sentimiento("ansiedad", "Ansiedad", -1, "K"), Sentimiento("frustracion", "Frustración", -1, "L"),
+        Sentimiento("tristeza", "Tristeza", -1, "M"), Sentimiento("enojo", "Enojo", -1, "N"), Sentimiento("miedo", "Miedo", -1, "O"),
+        Sentimiento("soledad", "Soledad", -1, "P"), Sentimiento("aburrimiento", "Aburrimiento", -1, "Q"), Sentimiento("culpa", "Culpa", -1, "R"),
+        Sentimiento("verguenza", "Vergüenza", -1, "S"), Sentimiento("celos", "Celos", -1, "T"), Sentimiento("abrumado", "Abrumado", -1, "U"),
+        Sentimiento("cansancio", "Cansancio", -1, "V"), Sentimiento("nostalgia", "Nostalgia", 0, "W"), Sentimiento("confusion", "Confusión", 0, "X"),
+        Sentimiento("sorpresa", "Sorpresa", 0, "Y"),
+    )
+    /** «No sé» también es un dato: no lo sabías nombrar. «Otro» lleva su nombre escrito. */
+    val NO_SE = "no_se"
+    val OTRO = "otro"
+    fun sentimiento(id: String) = SENTIMIENTOS.firstOrNull { it.id == id }
+    fun nombreSentimiento(id: String, discreto: Boolean = false): String = when (id) {
+        NO_SE -> if (discreto) "?" else "No sé"; OTRO -> if (discreto) "Ω" else "Otro"
+        else -> sentimiento(id)?.let { if (discreto) it.discreto else it.nombre } ?: id
+    }
+
+    /** En qué pensabas (opcional). */
+    val PENSAMIENTOS = listOf(
+        Opcion("pensando_en", "En alguien o algo"), Opcion("preocupacion", "Preocupación"), Opcion("idea", "Idea"), Opcion("recuerdo", "Recuerdo"),
+        Opcion("plan", "Plan o pendiente"), Opcion("vueltas", "Dándole vueltas"), Opcion("autocritica", "Autocrítica"), Opcion("deseo", "Deseo o antojo"),
+    )
+
+    /** Los tipos de momento de antes, traducidos al registro de ánimo nuevo: qué sentimiento o qué pensamiento eran. */
+    private val VIEJO_SENTIMIENTO = setOf("tristeza", "ansiedad", "enojo", "alegria", "gratitud")
+    private val VIEJO_PENSAMIENTO = setOf("pensando_en", "preocupacion", "idea", "recuerdo")
+    fun emocionesDe(m: Momento): List<String> = m.emociones.ifEmpty { if (m.tipo in VIEJO_SENTIMIENTO) listOf(m.tipo) else emptyList() }
+    fun pensamientoDe(m: Momento): String? = m.pensamiento ?: m.tipo.takeIf { it in VIEJO_PENSAMIENTO }
+    /** Un registro de ánimo o un momento de antes (no impulsos, recaídas ni sustancias). */
+    fun esRegistro(m: Momento) = m.esAnimo || m.tipo in VIEJO_SENTIMIENTO || m.tipo in VIEJO_PENSAMIENTO
+
+    /** Cómo se nombra un registro: sus sentimientos o, si no hay, su pensamiento o «Ánimo». */
+    fun titulo(m: Momento, discreto: Boolean): String {
+        if (m.tipo == "impulso" || m.tipo == "recaida") return nombreTipo(m.tipo).let { n -> if (discreto) tipo(m.tipo)?.discreto ?: n else n }
+        val e = emocionesDe(m).map { if (it == OTRO && !m.emocion_otra.isNullOrBlank() && !discreto) m.emocion_otra else nombreSentimiento(it, discreto) }
+        if (e.isNotEmpty()) return e.joinToString(" · ")
+        pensamientoDe(m)?.let { p -> return if (discreto) "·" else PENSAMIENTOS.firstOrNull { it.id == p }?.nombre ?: p }
+        return if (discreto) "Ā" else "Ánimo"
+    }
+
+    /** Las ocho del widget de momentos: un toque y se guarda ese sentimiento. */
+    val SENTIMIENTOS_WIDGET = listOf("alegria", "calma", "gratitud", "estres", "ansiedad", "frustracion", "tristeza", "enojo")
+
+    // ------------------------------------------------------------------ sustancias
+
+    data class Sustancia(val id: String, val nombre: String, val unidad: String, val conNivel: Boolean, val vias: List<Opcion> = emptyList())
+
+    val SUSTANCIAS = listOf(
+        Sustancia("alcohol", "Alcohol", "bebidas", true),
+        Sustancia("cannabis", "Cannabis", "veces", true, listOf(Opcion("fumado", "Fumado"), Opcion("vape", "Vape"), Opcion("comestible", "Comestible"))),
+        Sustancia("tabaco", "Tabaco o vape", "cigarros o sesiones", false, listOf(Opcion("cigarro", "Cigarro"), Opcion("vape", "Vape"))),
+        Sustancia("cafeina", "Cafeína", "mg", false),
+        Sustancia("otra", "Otra", "dosis", true),
+    )
+    fun sustancia(id: String) = SUSTANCIAS.firstOrNull { it.id == id }
+    fun nombreSustancia(c: Consumo) = if (c.sustancia == "otra" && c.otra_nombre.isNotBlank()) c.otra_nombre else sustancia(c.sustancia)?.nombre ?: c.sustancia
+
+    /** Escalas de 0 a 10 con anclas en 2.5, 5, 7.5 y 10, para que el número signifique lo mismo cada vez. */
+    val NIVEL_ALCOHOL = mapOf(
+        0 to "Sobrio", 1 to "Apenas lo noto", 2 to "Relajado, un poco suelto", 3 to "Tipsy: más platicador", 4 to "Bien tipsy",
+        5 to "Entre tipsy y pedo", 6 to "Pedo agradable", 7 to "Pedo, ya pierdo algo de control", 8 to "Pedo desagradable: mareo",
+        9 to "Muy mal, náusea fuerte", 10 to "Vómito y mucho mareo")
+    val NIVEL_CANNABIS = mapOf(
+        0 to "Nada", 1 to "Apenas lo noto", 2 to "Relajado", 3 to "Leve, agradable", 4 to "Se nota bien", 5 to "Claramente high",
+        6 to "Muy high, agradable", 7 to "Pensamientos rápidos, lento al hablar", 8 to "Demasiado: incómodo", 9 to "Ansiedad o paranoia", 10 to "Abrumador, náusea o pánico")
+    val NIVEL_OTRA = mapOf(0 to "Nada", 2 to "Leve", 5 to "Claro", 7 to "Fuerte", 8 to "Fuerte e incómodo", 10 to "Abrumador")
+    fun anclasNivel(sustancia: String) = when (sustancia) { "alcohol" -> NIVEL_ALCOHOL; "cannabis" -> NIVEL_CANNABIS; else -> NIVEL_OTRA }
+
+    val CRUDA = mapOf(0 to "Nada", 1 to "Leve: lo noto", 2 to "Molesta", 3 to "Moderada: me cuesta arrancar", 4 to "Fuerte: el día se pierde en parte", 5 to "No puedo funcionar")
+    val SINTOMAS = listOf(Opcion("cabeza", "Dolor de cabeza"), Opcion("nausea", "Náusea"), Opcion("cansancio", "Cansancio"), Opcion("ansiedad", "Ansiedad"),
+        Opcion("sed", "Sed o boca seca"), Opcion("lagunas", "Lagunas de memoria"), Opcion("mal_sueno", "Dormí mal"), Opcion("animo_bajo", "Ánimo bajo"))
+    /** Bebidas para contar rápido: equivalencia en bebidas estándar (14 g de alcohol). */
+    val BEBIDAS = listOf("Cerveza 355 ml" to 1.0, "Caguama 940 ml" to 2.6, "Copa de vino" to 1.0, "Caballito" to 1.0, "Cuba o trago" to 1.0, "Mezcal o tequila doble" to 2.0)
+    /** Cafeína para anotar a mano (mg). */
+    val CAFES = listOf("Espresso" to 64.0, "Café de taza" to 95.0, "Café grande" to 190.0, "Té negro" to 47.0, "Mate" to 80.0, "Energética" to 80.0, "Refresco de cola" to 35.0)
+
+    // ------------------------------------------------------------------ sueños por ejes
+
+    data class Eje(val id: String, val nombre: String, val ayuda: String, val opciones: List<Opcion>)
+
+    /**
+     * Categorías de sueños en ejes separados (para que no se enciman: un sueño puede ser «familia» y «niñez» a la vez).
+     * Se basan en el sistema de Hall y Van de Castle y en los cuestionarios de sueños típicos.
+     */
+    val SUENO_EJES = listOf(
+        Eje("per", "Quiénes aparecen", "Personajes", listOf(Opcion("per_familia", "Familia"), Opcion("per_pareja", "Pareja"), Opcion("per_expareja", "Expareja"),
+            Opcion("per_amistades", "Amistades"), Opcion("per_pasado", "Gente de antes"), Opcion("per_desconocidos", "Desconocidos"), Opcion("per_famosos", "Figuras públicas"),
+            Opcion("per_animales", "Animales"), Opcion("per_fallecidos", "Alguien que ya murió"))),
+        Eje("esc", "Dónde pasa", "Escenario", listOf(Opcion("esc_casa", "Mi casa de ahora"), Opcion("esc_infancia", "Lugares de mi infancia"), Opcion("esc_escuela", "Escuela o trabajo"),
+            Opcion("esc_desconocido", "Lugar desconocido"), Opcion("esc_extranjero", "Otro país o ciudad"), Opcion("esc_imposible", "Lugar imposible"), Opcion("esc_naturaleza", "Naturaleza"))),
+        Eje("int", "Qué pasa entre personas", "Interacción", listOf(Opcion("int_romantica", "Romántico: ligar, noviazgo"), Opcion("int_sexual", "Sexual"),
+            Opcion("int_amistosa", "Amistosa"), Opcion("int_conflicto", "Conflicto o pelea"), Opcion("int_ayuda", "Ayudar o que me ayuden"), Opcion("int_rechazo", "Rechazo o abandono"))),
+        Eje("tema", "Temas típicos", "Temas", listOf(Opcion("tema_persecucion", "Persecución"), Opcion("tema_caida", "Caer"), Opcion("tema_volar", "Volar"),
+            Opcion("tema_examen", "Examen o llegar tarde"), Opcion("tema_perder", "Perder algo"), Opcion("tema_muerte", "Muerte o enfermedad"),
+            Opcion("tema_desnudez", "Desnudez o vergüenza"), Opcion("tema_dientes", "Dientes"), Opcion("tema_viaje", "Viaje"), Opcion("tema_desastre", "Desastre"),
+            Opcion("tema_regreso", "Regreso a la niñez o al pasado"), Opcion("tema_poderes", "Poderes o magia"))),
+        Eje("est", "Cómo es el sueño", "Estructura", listOf(Opcion("est_conexion", "Conexión: una persona casi todo el sueño"), Opcion("est_restos", "Restos del día de ayer"),
+            Opcion("est_recurrente", "Se repite"), Opcion("est_continua", "Sigue un sueño anterior"), Opcion("est_fragmentos", "Solo fragmentos"))),
+        Eje("emo", "Emoción principal", "Emoción", listOf(Opcion("emo_alegria", "Alegría"), Opcion("emo_miedo", "Miedo"), Opcion("emo_tristeza", "Tristeza"),
+            Opcion("emo_enojo", "Enojo"), Opcion("emo_verguenza", "Vergüenza"), Opcion("emo_ternura", "Ternura"), Opcion("emo_confusion", "Confusión"), Opcion("emo_nostalgia", "Nostalgia"))),
+    )
+    /** Las que más usas, a la vista sin abrir los ejes. */
+    val SUENO_RAPIDAS = listOf("int_romantica", "tema_regreso", "est_conexion", "per_familia", "per_expareja", "tema_persecucion", "est_restos")
+    fun opcionSueno(id: String) = SUENO_EJES.flatMap { it.opciones }.firstOrNull { it.id == id }
 
     /** «¿Con quién estás?» en los avisos de ánimo. */
     val CON_QUIEN = listOf(Opcion("solo", "Solo"), Opcion("pareja", "Pareja"), Opcion("amigos", "Amigos"), Opcion("familia", "Familia"),

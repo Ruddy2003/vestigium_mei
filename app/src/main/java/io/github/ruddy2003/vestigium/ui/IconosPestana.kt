@@ -68,7 +68,10 @@ private class Trazo(val s: DrawScope, val c: Color) {
         "diario" -> when (tm) { TemaId.ROMANO, TemaId.MEDIEVAL, TemaId.DISTOPIA -> dia(tm); TemaId.CIBER -> documento(); else -> momentos(tm) }
         "momentos" -> momentos(tm)
         "gastos" -> gastos(tm)
-        "entender", "explorar" -> explorar(tm)
+        "entender", "explorar", "analisis" -> explorar(tm)
+        "registrar" -> { l(12f, 5f, 12f, 19f, 2.4f); l(5f, 12f, 19f, 12f, 2.4f) }
+        "ajustes" -> { engrane(12f, 12f, 9.5f, 7f, 8); ci(12f, 12f, 3f) }
+        "vida" -> mas(tm)
         else -> mas(tm)
     }
 

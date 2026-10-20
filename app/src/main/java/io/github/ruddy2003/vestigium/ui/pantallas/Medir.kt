@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import android.os.SystemClock
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -236,7 +237,7 @@ fun PantallaLugares(nav: Nav) {
     LaunchedEffect(Repo.lugares.size) {
         puntos = withContext(Dispatchers.IO) { Repo.db().ubicaciones(System.currentTimeMillis() - 60L * 86_400_000) }
     }
-    val muestreos = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }
+    val muestreos = Repo.momentos.filter { it.esAnimo && it.valencia != null }
     val general = muestreos.mapNotNull { it.valencia?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
 
     Hoja("Lugares", nav.atras, "Marca tus lugares frecuentes. La app registra cuándo llegas y te vas, y cruza tu ánimo con cada lugar.") {

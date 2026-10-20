@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import io.github.ruddy2003.vestigium.data.Exportar
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
@@ -167,7 +168,7 @@ object Analisis {
         val consecutivos = s.mapNotNull { (f, v) -> mapa[Fechas.sumar(f, 1)]?.let { v to it } }
         val mssd = if (consecutivos.size >= 3) consecutivos.map { (a, b) -> (b - a) * (b - a) }.average() else null
         val inercia = if (consecutivos.size >= 10) Estadistica.pearson(consecutivos.map { it.first }, consecutivos.map { it.second }) else null
-        val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }.values.mapNotNull { l -> if (l.size >= 2) sd(l.map { it.valencia!!.toDouble() }) else null }
+        val mu = Repo.momentos.filter { it.esAnimo && it.valencia != null }.groupBy { it.fecha }.values.mapNotNull { l -> if (l.size >= 2) sd(l.map { it.valencia!!.toDouble() }) else null }
         var buena = 0; var mala = 0; var rb = 0; var rm = 0; var prev: String? = null
         for ((f, v) in s) {
             val seguido = prev != null && Fechas.sumar(prev, 1) == f

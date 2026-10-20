@@ -91,6 +91,10 @@ import io.github.ruddy2003.vestigium.ui.pantallas.PantallaReportes
 import io.github.ruddy2003.vestigium.widget.Widgets
 
 /** Contador global que sube cada vez que la app vuelve al frente, para refrescar permisos y estados. */
+/** Cada vez que vuelves a la app después de un rato fuera, empieza una «sesión»: lo que se pliega solo se pliega otra vez. */
+/** Cuenta las veces que volviste a la app tras más de un minuto fuera: lo que se pliega solo se vuelve a plegar. */
+object SesionApp { var n by mutableIntStateOf(0) }
+
 object Reanudar {
     var n by mutableIntStateOf(0)
     /** Cuándo volvió la app al frente (reloj del sistema): lo que cambie justo al abrir no se festeja. */
@@ -140,6 +144,8 @@ class MainActivity : FragmentActivity() {
         Reanudar.n++
         Reanudar.desde = android.os.SystemClock.elapsedRealtime()
         RotacionTema.revisar()
+        // Lo que se pliega solo (línea de tiempo, exportar, lo del teléfono) vuelve a plegarse si la app estuvo cerrada un rato.
+        if (enFondoDesde > 0 && System.currentTimeMillis() - enFondoDesde > 60_000) SesionApp.n++
         if (Repo.config.bloqueo && desbloqueado && enFondoDesde > 0 && System.currentTimeMillis() - enFondoDesde > 60_000) {
             desbloqueado = false
             pedirHuella()
@@ -176,7 +182,7 @@ private fun Bloqueo(reintentar: () -> Unit) {
 
 private data class Pestana(val id: String, val nombre: String)
 private val PESTANAS = listOf(
-    Pestana("dia", "Día"), Pestana("diario", "Diario"), Pestana("gastos", "Gastos"), Pestana("entender", "Entender"), Pestana("mas", "Más"),
+    Pestana("dia", "Hoy"), Pestana("diario", "Diario"), Pestana("registrar", "Registrar"), Pestana("vida", "Vida"), Pestana("entender", "Análisis"),
 )
 
 /**
@@ -190,6 +196,16 @@ internal fun BarraPestanas(activa: String?, tema: TemaId, tocar: (String) -> Uni
         androidx.compose.material3.HorizontalDivider(color = cs.outline)
         Row(Modifier.fillMaxWidth().navigationBarsPadding().height(66.dp), verticalAlignment = Alignment.CenterVertically) {
             PESTANAS.forEach { p ->
+                // El botón del centro registra: un círculo grande con ＋, sin pestaña propia.
+                if (p.id == "registrar") {
+                    Box(Modifier.weight(1f).fillMaxHeight().combinedClickable(onClick = { tocar(p.id) }, onLongClick = { largo(p.id) }, onLongClickLabel = "ánimo ahora"),
+                        contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(52.dp).clip(MaterialTheme.shapes.extraLarge).background(cs.primary), contentAlignment = Alignment.Center) {
+                            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides cs.onPrimary) { IconoPestana("registrar", tema, "Registrar") }
+                        }
+                    }
+                    return@forEach
+                }
                 val sel = activa == p.id
                 val fondo by androidx.compose.animation.animateColorAsState(if (sel) cs.primary else cs.primary.copy(alpha = 0f), label = "indicador")
                 // El ícono elegido da un saltito.
@@ -217,11 +233,11 @@ class Nav(val ir: (String) -> Unit, val atras: () -> Unit, val pestana: (String)
 
 @Composable
 private fun Raiz(pedida: String?, consumir: () -> Unit) {
-    var pestana by remember { mutableStateOf(if (Repo.config.bienvenida_vista) "dia" else "mas") }
+    var pestana by remember { mutableStateOf("dia") }
     // Al instalar: primero «Conocerte» (se puede omitir) y luego los permisos. Si ya se llenó o se omitió, no vuelve a salir.
     var pila by remember {
         val conocer = !Repo.config.conocer_visto && io.github.ruddy2003.vestigium.data.Perfiles.vacio(Repo.config.perfil)
-        mutableStateOf((if (Repo.config.bienvenida_vista) emptyList() else listOf("permisos")) + (if (conocer) listOf("conocer") else emptyList()))
+        mutableStateOf((if (Repo.config.bienvenida_vista) emptyList() else listOf("mas", "permisos")) + (if (conocer) listOf("conocer") else emptyList()))
     }
 
     LaunchedEffect(pedida) {
@@ -234,8 +250,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         else if (p.startsWith("dia:")) { S.pedida = p.drop(4); pestana = "dia"; pila = emptyList() }
         else if (p == "momentos") { pestana = "diario"; pila = emptyList() }
         else if (p == "diarios") { pestana = "diario"; pila = listOf("biblioteca_diario") }
-        else if (p == "explorar") { pestana = "entender"; pila = emptyList() }
-        else if (PESTANAS.any { it.id == p }) { pestana = p; pila = emptyList() } else { pestana = "mas"; pila = listOf(p) }
+        else if (p == "explorar" || p == "entender") { pestana = "entender"; pila = emptyList() }
+        else if (PESTANAS.any { it.id == p }) { pestana = p; pila = emptyList() } else { pestana = "dia"; pila = listOf(p) }
         consumir()
     }
 
@@ -246,7 +262,6 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     // Modo nocturno cálido: de 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo.
     val hora by produceState(java.time.LocalTime.now().hour) { while (true) { kotlinx.coroutines.delay(60_000); value = java.time.LocalTime.now().hour } }
     val noche = Repo.config.nocturno && (hora >= 22 || hora < 5)
-    var menu by remember { mutableStateOf(false) }
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val sentir = rememberSentir()
     val tema = Estilo.tema
@@ -263,6 +278,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
     val scrolls = remember { mutableMapOf<String, androidx.compose.foundation.ScrollState>() }
     val alcance = androidx.compose.runtime.rememberCoroutineScope()
     fun tocar(id: String) {
+        if (id == "registrar") { sentir(Sentidos.Evento.TOQUE); rapido(QuickActivity.M_MENU); return }
         if (pestana == id && pila.isEmpty()) {
             // Tocar la pestaña en la que ya estás: arriba (y en Día, a hoy).
             alcance.launch { scrolls[id]?.animateScrollTo(0) }
@@ -273,10 +289,10 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         sentir(Sentidos.Evento.CAMBIO)
         when (id) {
             "dia" -> abrirNoche()
-            "diario" -> rapido(QuickActivity.M_MENU)
-            "gastos" -> rapido(QuickActivity.M_GASTO)
-            "entender" -> { pestana = "entender"; pila = listOf("semana") }
-            else -> { pestana = "mas"; pila = listOf("buscar") }
+            "diario" -> rapido(QuickActivity.M_ANIMO)
+            "registrar" -> rapido(QuickActivity.M_ANIMO)
+            "vida" -> { pestana = "vida"; pila = listOf("semana") }
+            else -> { pila = pila + "buscar" }
         }
     }
     Box(Modifier.fillMaxSize()) {
@@ -289,27 +305,6 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
-        floatingActionButton = {
-            // Botón + para registrar desde cualquier pestaña.
-            if (pila.isEmpty() && pestana != "gastos") Box {
-                androidx.compose.material3.FloatingActionButton(
-                    onClick = { sentir(Sentidos.Evento.TOQUE); menu = true }, containerColor = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = MaterialTheme.shapes.medium,
-                ) { Text("+", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onPrimary) }
-                androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = MaterialTheme.colorScheme.surface) {
-                    listOf(
-                        "Ánimo ahora" to { rapido(QuickActivity.M_ANIMO) },
-                        "Momento" to { rapido(QuickActivity.M_MENU) },
-                        "Gasto" to { rapido(QuickActivity.M_GASTO) },
-                        "Sueño" to { rapido(QuickActivity.M_SUENO) },
-                        "Enfoque o siesta" to { rapido(QuickActivity.M_ENFOQUE) },
-                        "Diario de hoy" to { abrirNoche() },
-                    ).forEach { (t, f) ->
-                        androidx.compose.material3.DropdownMenuItem(text = { Text(t, style = MaterialTheme.typography.bodyLarge) }, onClick = { sentir(Sentidos.Evento.ELEGIR); menu = false; f() })
-                    }
-                }
-            }
-        },
         // Al leer una entrada, la página ocupa toda la pantalla.
         bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
@@ -330,6 +325,10 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "momentos" -> PantallaMomentos(nav)
                     "gastos" -> PantallaGastos(nav)
                     "entender", "explorar" -> PantallaExplorar(nav)
+                    "vida" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(nav)
+                    "personas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaPersonas(nav)
+                    "hoja_momentos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(nav)
+                    "sustancias" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSustancias(nav)
                     "mas" -> PantallaMas(nav)
                     "escalas" -> PantallaEscalas(nav)
                     "reaccion" -> PantallaReaccion(nav)
@@ -379,9 +378,10 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "noche" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(nav)
                     "entrada" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(nav)
                     "biblioteca_diario" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "diario")
+                    "biblioteca_momentos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "momentos")
                     "cinta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(nav)
                     "constelacion" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(nav)
-                    "hall" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaHall(nav)
+                    "hall" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)
                     "campanas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCampanas(nav)
                     "recaidas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(nav)
                     "estado_datos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEstadoDatos(nav)

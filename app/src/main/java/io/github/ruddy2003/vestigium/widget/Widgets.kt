@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.widget
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -147,14 +148,14 @@ object Widgets {
         val v = RemoteViews(ctx.packageName, R.layout.widget_momento)
         pintar(v, Piel.MOMENTO)
         val discreto = Repo.config.discreto
-        val hoy = Repo.momentos.count { it.tipo != "muestreo" && it.tipo != "recaida" && it.fecha == Fechas.diaLogico() }
+        val hoy = Repo.momentos.count { Catalogo.esRegistro(it) && it.fecha == Fechas.diaLogico() }
         v.setTextViewText(R.id.titulo_momento, if (discreto) "SCRIBERE" else Estilo.widget("momento"))
-        v.setTextViewText(R.id.pregunta_momento, com + if (discreto) "registrar" else "ahora mismo estoy…")
+        v.setTextViewText(R.id.pregunta_momento, com + if (discreto) "registrar" else "ahora siento…")
         v.setTextViewText(R.id.sub_momento, if (hoy == 0) "" else "$hoy hoy")
-        Catalogo.MOMENTOS_WIDGET.forEachIndexed { i, tipo ->
-            val t = Catalogo.tipo(tipo) ?: return@forEachIndexed
-            v.setTextViewText(BOTONES_MOMENTO[i], if (discreto) t.discreto else t.nombre)
-            clic(v, BOTONES_MOMENTO[i], pi(ctx, 3200 + i, quick(ctx, QuickActivity.M_MOMENTO).putExtra(QuickActivity.TIPO, tipo)))
+        // Ocho sentimientos: un toque y queda registrado (luego se puede agregar en qué pensabas y cómo te sientes).
+        Catalogo.SENTIMIENTOS_WIDGET.take(BOTONES_MOMENTO.size).forEachIndexed { i, id ->
+            v.setTextViewText(BOTONES_MOMENTO[i], Catalogo.nombreSentimiento(id, discreto))
+            clic(v, BOTONES_MOMENTO[i], pi(ctx, 3200 + i, quick(ctx, QuickActivity.M_MOMENTO).putExtra(QuickActivity.TIPO, id)))
         }
         clic(v, R.id.m_mas, pi(ctx, 3301, quick(ctx, QuickActivity.M_MENU)))
         clic(v, R.id.m_diario, pi(ctx, 3302, abrir(ctx, "dia")))
@@ -246,7 +247,7 @@ object Widgets {
         val ini = hoy.withDayOfMonth(1)
         v.setTextViewText(R.id.titulo_mes, Estilo.mes(hoy.monthValue, hoy.year))
         val dias = (0 until ini.lengthOfMonth()).map { ini.plusDays(it.toLong()) }
-        val vals = dias.map { d -> val f = Fechas.iso(d); Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average() }
+        val vals = dias.map { d -> val f = Fechas.iso(d); Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average() }
         val conDato = vals.filterNotNull()
         v.setTextViewText(R.id.sub_mes, if (conDato.isEmpty()) Estilo.numeral(hoy.year) else "μ %.1f · ${conDato.size} días".format(conDato.average()))
         val celda = 64; val sep = 6; val cab = 34
@@ -294,7 +295,7 @@ object Widgets {
         v.setTextViewText(R.id.hoy_sub, com + Fechas.corto(f) + " · " + Luna.glifo(fase) + " " + Luna.nombre(fase))
         val l = ArrayList<String>()
         val d = Repo.dias[f]
-        val mu = Repo.momentos.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.valencia }
+        val mu = Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }
         when {
             d?.valencia != null -> l += linea("animus", "${d.valencia} / 7")
             mu.isNotEmpty() -> l += linea("animus", "%.1f (%d avisos)".format(mu.average(), mu.size))

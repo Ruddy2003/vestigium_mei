@@ -44,6 +44,39 @@ object Diccionario {
         "aire_libre_min" to "Minutos al aire libre, estimados con la luz de exterior o el tiempo caminando, corriendo o en bici (el mayor)",
         "en_casa_min" to "Minutos dentro de tus lugares de tipo casa", "acompanado_pct" to "Proporción de avisos de ánimo en que estabas con alguien",
         "valencia_acompanado" to "Valencia promedio en avisos con alguien", "valencia_solo" to "Valencia promedio en avisos estando solo", "n_recaida" to "Recaídas registradas con hora (seguimiento privado)",
+        // Ánimo unificado, sustancias y la tabla por hora
+        "es_animo" to "Es un registro de ánimo (aviso o hecho por ti), no un impulso ni una recaída (0/1)",
+        "emociones" to "Lo que sentías (lista de Catalogo: alegria, calma, estres, frustracion…; no_se = no lo sabías nombrar; otro = ver emocion_otra)",
+        "emocion_otra" to "El sentimiento que escribiste cuando elegiste «otro»", "pensamiento" to "En qué pensabas (pensando_en, preocupacion, idea, recuerdo, plan, vueltas, autocritica, deseo)",
+        "alcohol_nivel" to "Qué tan pedo estabas en ese momento (0 sobrio a 10 vómito y mucho mareo; interpolado de tus lecturas)",
+        "cannabis_nivel" to "Nivel con cannabis en ese momento (0 a 10; interpolado)", "otra_nivel" to "Nivel con otra sustancia en ese momento (0 a 10; interpolado)",
+        "sueno_categorias" to "De qué fue el sueño (lista de ejes: per_ personajes, esc_ escenario, int_ interacción, tema_ temas típicos, est_ estructura, emo_ emoción)",
+        "vm_sustancias.csv:sustancia" to "alcohol, cannabis, tabaco, cafeina u otra", "otra_nombre" to "Cuál, si fue «otra»",
+        "hora_inicio" to "Hora en que empezó", "hora_fin" to "Hora en que se te pasó el efecto", "duracion_h" to "Horas con efecto (de inicio a fin)",
+        "nivel_max" to "Nivel máximo (0 a 10): el que dijiste en la mañana o el mayor que leíste", "lecturas" to "Lecturas de nivel con su hora (lista HH:MM=nivel)",
+        "vm_sustancias.csv:cantidad" to "Alcohol: bebidas estándar (14 g); tabaco: cigarros o sesiones; cannabis: veces; cafeína: mg", "unidad" to "Unidad de la cantidad",
+        "tabaco_n" to "Cigarros o sesiones de vape del día", "via" to "Cannabis: fumado, vape o comestible; tabaco: cigarro o vape", "cruda" to "Cruda o bajón al día siguiente (0 nada a 5 no puedo funcionar)",
+        "sintomas" to "Síntomas al día siguiente (lista)", "alcohol_estimado_max_gl" to "Alcohol en sangre máximo estimado con Widmark (g/L ≈ por mil)",
+        "completo" to "Ya se llenó lo de la mañana siguiente (0/1)", "oculta_en_pantallas" to "Esa sustancia está oculta de las pantallas (sigue en los análisis) (0/1)",
+        "vm_horas.csv:fecha" to "Día de calendario (no el día de la app)", "vm_horas.csv:hora" to "Hora del día, de 0 a 23 (la fila cubre de HH:00 a HH:59)",
+        "dia_logico" to "El día de la app al que pertenece la hora (de 0 a 4 cuenta para el día anterior)",
+        "dormido_min" to "Minutos dormido en esa hora (reloj)", "vm_horas.csv:lugar" to "Lugar donde pasaste más tiempo en esa hora (al menos 15 min)",
+        "vm_horas.csv:en_casa_min" to "Minutos en casa en esa hora", "vm_horas.csv:pantalla_min" to "Minutos de pantalla en esa hora",
+        "vm_horas.csv:notificaciones" to "Notificaciones en esa hora", "vm_horas.csv:luz_lux" to "Luz ambiente media en esa hora (lux)",
+        "vm_horas.csv:canciones" to "Canciones que empezaron en esa hora", "n_registros" to "Registros de ánimo en esa hora",
+        "vm_horas.csv:valencia" to "Valencia media de los registros de esa hora (1 a 7)", "vm_horas.csv:activacion" to "Energía media de los registros de esa hora (1 a 7)",
+        "vm_horas.csv:cafeina_mg" to "Cafeína en el cuerpo a la mitad de la hora (mg, estimada con tu vida media)",
+        "alcohol_gl" to "Alcohol en sangre a la mitad de la hora (g/L, Widmark, estimado)",
+        "vm_horas.csv:tabaco_n" to "Cigarros o sesiones de vape en esa hora", "vm_horas.csv:gasto" to "Gasto en esa hora", "comidas_n" to "Alimentos registrados en esa hora (MacroFactor)",
+        "vm_horas.csv:kcal" to "Calorías registradas en esa hora (MacroFactor)", "vm_horas.csv:enfoque_min" to "Minutos de enfoque (cronómetro) en esa hora", "vm_horas.csv:siesta_min" to "Minutos de siesta en esa hora",
+        "alcohol" to "Tomó alcohol ese día (0/1)", "alcohol_bebidas" to "Bebidas estándar del día (MacroFactor o anotadas)", "alcohol_nivel_max" to "Qué tan pedo llegó (0 a 10)",
+        "alcohol_horas" to "Horas con efecto del alcohol", "alcohol_estimado_max" to "Alcohol en sangre máximo estimado del día (g/L)", "alcohol_al_dormir" to "Alcohol en sangre estimado al dormirte (g/L; en el día del sueño)",
+        "cannabis" to "Cannabis ese día (0/1)", "cannabis_nivel_max" to "Nivel máximo con cannabis (0 a 10)", "cannabis_horas" to "Horas con efecto del cannabis",
+        "otra_sustancia" to "Otra sustancia ese día (0/1)", "cafeina_total_mg" to "Cafeína del día (mg; MacroFactor o anotada, sin contar dos veces)",
+        "cafeina_al_dormir_mg" to "Cafeína en el cuerpo al dormirte (mg, estimada; en el día del sueño)",
+        "animo_valencia" to "Valencia promedio de todos los registros de ánimo del día (avisos y propios)", "animo_activacion" to "Energía promedio de todos los registros de ánimo del día",
+        "registros_animo" to "Registros de ánimo del día", "vi_expareja" to "Mencionó a una expareja (con la relación de ese día) (0/1)",
+        "vi_trabajo" to "Mencionó a un colega, compañero o mentor (0/1)", "cercania_media" to "Cercanía media (1 a 7, círculos de Aron) de quien mencionó ese día",
         "personas" to "@personas mencionadas (lista)", "temas" to "#temas mencionados (lista)", "palabras" to "Número de palabras",
         // Panel y días
         "dia_semana" to "1 = lunes … 7 = domingo", "con_diario" to "Hay registro del diario ese día (0/1)",
@@ -208,7 +241,11 @@ object Diccionario {
         return when {
             col.startsWith("ctx_") -> "Contexto del día: ${col.removePrefix("ctx_").replace('_', ' ')} (0/1)"
             col.startsWith("hab_") -> "Hábito cumplido: ${Repo.config.habitos.firstOrNull { it.id == col.removePrefix("hab_") }?.nombre ?: col.removePrefix("hab_")} (0/1)"
-            col.startsWith("m_") -> "Momentos de tipo ${col.removePrefix("m_")}"
+            col.startsWith("m_") -> "Momentos de tipo ${col.removePrefix("m_")} (registros de antes de unir ánimo y momentos)"
+            col.startsWith("n_") && Catalogo.sentimiento(col.removePrefix("n_")) != null -> "Registros con ${Catalogo.nombreSentimiento(col.removePrefix("n_")).lowercase()} en el día"
+            col.startsWith("n_") && Catalogo.PENSAMIENTOS.any { it.id == col.removePrefix("n_") } -> "Registros pensando: ${Catalogo.PENSAMIENTOS.first { it.id == col.removePrefix("n_") }.nombre.lowercase()}"
+            col == "n_no_se" -> "Registros en que no supiste nombrar lo que sentías"
+            col.startsWith("sueno_") && Catalogo.opcionSueno(col.removePrefix("sueno_")) != null -> "Sueño: ${Catalogo.opcionSueno(col.removePrefix("sueno_"))!!.nombre.lowercase()} (0/1, solo en días con categorías marcadas)"
             col.startsWith("item_") -> "Respuesta al ítem ${col.removePrefix("item_")}"
             archivo == "vm_politica.csv" && col.startsWith("r_") -> Politica.AFIRMACIONES.firstOrNull { it.id == col.removePrefix("r_") }?.let { "«${it.texto}» (1 muy en desacuerdo a 5 muy de acuerdo)" } ?: col
             col.startsWith("puntaje_") -> "Puntaje ${col.removePrefix("puntaje_")}"

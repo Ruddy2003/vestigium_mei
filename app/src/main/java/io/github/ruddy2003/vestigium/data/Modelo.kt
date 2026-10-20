@@ -32,6 +32,8 @@ data class Dia(
     val sueno_vividez: String? = null,
     val sueno_tipo: String? = null,
     val sueno_temas: List<String> = emptyList(),
+    /** Categorías del sueño por ejes (personajes, escenario, interacción, temas, estructura, emoción): ids de Catalogo.SUENO_EJES. */
+    val sueno_categorias: List<String> = emptyList(),
     val sueno_texto: String = "",
     val sueno_calidad: Int? = null,
     val mejor_momento: String = "",
@@ -80,7 +82,70 @@ data class Momento(
     val antes: String? = null,
     /** Cuánto duró (minutos), en una recaída. */
     val duracion_min: Int? = null,
+    /** Lo que sentías (ids de Catalogo.SENTIMIENTOS; «no_se» = no lo sabías; «otro» va con [emocion_otra]). */
+    val emociones: List<String> = emptyList(),
+    val emocion_otra: String? = null,
+    /** En qué pensabas: Catalogo.PENSAMIENTOS (preocupación, idea, recuerdo…). */
+    val pensamiento: String? = null,
 )
+
+/** Un registro de ánimo: de un aviso («muestreo») o hecho por ti («animo»). */
+val Momento.esAnimo: Boolean get() = tipo == "muestreo" || tipo == "animo"
+
+/**
+ * Un consumo de una sustancia: el periodo en que estuviste bajo su efecto ([inicio] a [fin], cuando se te pasó),
+ * con lecturas de nivel (0 a 10) en el camino. Lo básico se llena en el momento; duración, máximo y cruda, a la mañana siguiente.
+ * Es un dato normal: entra en los análisis aunque se oculte de las pantallas.
+ */
+@Serializable
+data class Consumo(
+    val id: String,
+    /** Día lógico en que empezó. */
+    val fecha: String,
+    /** alcohol, cannabis, tabaco, cafeina u otra. */
+    val sustancia: String,
+    val otra_nombre: String = "",
+    val inicio: String,
+    /** Cuando se te pasó el efecto. Null = sigue (o no lo dijiste). */
+    val fin: String? = null,
+    /** Lecturas de nivel con su hora (0 sobrio a 10). */
+    val niveles: List<Lectura> = emptyList(),
+    val nivel_max: Int? = null,
+    /** Alcohol: bebidas estándar; tabaco: cigarros o sesiones; cannabis: veces; cafeína: mg. */
+    val cantidad: Double? = null,
+    /** Cannabis: fumado, vape, comestible; tabaco: cigarro, vape. */
+    val via: String? = null,
+    val con_quien: List<String> = emptyList(),
+    val lat: Double? = null,
+    val lon: Double? = null,
+    val lugar: String? = null,
+    /** Cruda o bajón al día siguiente (0 nada a 5 no puedo funcionar). */
+    val cruda: Int? = null,
+    val sintomas: List<String> = emptyList(),
+    val nota: String = "",
+    /** Ya se llenó lo de la mañana siguiente. */
+    val completo: Boolean = false,
+    val origen: String = "app",
+)
+
+@Serializable
+data class Lectura(val ts: String, val nivel: Int)
+
+/** Quién es alguien que mencionas con @: qué es para ti, qué tan cerca (1 a 7, círculos de Aron) y desde cuándo. */
+@Serializable
+data class Persona(
+    val nombre: String,
+    val relacion: String,
+    /** Parentesco o detalle libre (mamá, primo, compañero de la maestría…). */
+    val detalle: String = "",
+    val cercania: Int? = null,
+    val desde: String = "",
+    /** Cómo era antes: cada cambio con su fecha (pareja → expareja). */
+    val historial: List<CambioRelacion> = emptyList(),
+)
+
+@Serializable
+data class CambioRelacion(val hasta: String, val relacion: String, val cercania: Int? = null)
 
 /** El momento es del seguimiento privado: nunca sale en reportes, «Tu año», logros, mapas ni widgets. */
 val Momento.privado: Boolean get() = tipo == "recaida"
@@ -477,6 +542,17 @@ data class Config(
     val campanas: List<Campana> = emptyList(),
     /** La hoja de la noche muestra solo lo que falta (lo ya lleno queda resumido arriba). */
     val noche_solo_falta: Boolean = true,
+    /** Sustancias que no se muestran en pantallas (cinta, Día, Vida). Siguen en los análisis y en la exportación. */
+    val sustancias_ocultas: List<String> = emptyList(),
+    /** Vida media de la cafeína para estimar cuánta te queda (horas; varía mucho entre personas). */
+    val cafeina_vida_media_h: Double = 5.0,
+    /** Quién es cada persona que mencionas. */
+    val personas: List<Persona> = emptyList(),
+    /** Personas que preferiste no clasificar, y pares que dijiste que no son la misma persona («a|b»). */
+    val personas_omitidas: List<String> = emptyList(),
+    val personas_distintas: List<String> = emptyList(),
+    /** Día en que se pospuso la pregunta «¿quién es…?». */
+    val personas_pospuesto: String = "",
 )
 
 /**

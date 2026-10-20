@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -166,6 +167,7 @@ fun PantallaDia(nav: Nav) {
             Text(est.pantalla("Día", "DIES").first + if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) "_" else "", style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.weight(1f))
             io.github.ruddy2003.vestigium.ui.BotonBuscar { nav.ir("buscar") }
+            io.github.ruddy2003.vestigium.ui.BotonAjustes(Modifier.padding(start = 4.dp)) { nav.ir("mas") }
             io.github.ruddy2003.vestigium.ui.BotonModo()
             io.github.ruddy2003.vestigium.ui.Emblema(tam = 34.dp, modifier = Modifier.padding(start = 4.dp))
         }
@@ -204,6 +206,9 @@ fun PantallaDia(nav: Nav) {
             if (!esHoy) TextButton(onClick = { irA(hoy) }) { Text("hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
             TextButton(onClick = { irA(Fechas.sumar(fecha, 1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) { Text("›", style = MaterialTheme.typography.titleLarge) }
         }
+        // La frase, siempre arriba, justo debajo del estado.
+        FraseDelDia(fecha)
+        if (esHoy) LoDeAnoche()
 
         val bloqueSueno: @Composable () -> Unit = {
         Seccion("Sueño", "Llénalo apenas despiertes. El resto, en la noche.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqSueno), plegable = true) {
@@ -218,6 +223,8 @@ fun PantallaDia(nav: Nav) {
                             Etiqueta("Lucidez: ¿sabías que soñabas?"); FilaFichas(Catalogo.SUENO_LUCIDEZ, d.sueno_lucidez) { cambiar(d.copy(sueno_lucidez = it)) }
                             Etiqueta("Vividez del recuerdo"); FilaFichas(Catalogo.SUENO_VIVIDEZ, d.sueno_vividez) { cambiar(d.copy(sueno_vividez = it)) }
                             Etiqueta("Tipo"); FilaFichas(Catalogo.SUENO_TIPO, d.sueno_tipo) { cambiar(d.copy(sueno_tipo = it)) }
+                            Etiqueta("De qué fue")
+                            io.github.ruddy2003.vestigium.ui.CategoriasSueno(d.sueno_categorias) { cambiar(d.copy(sueno_categorias = it)) }
                             Etiqueta("Personas y temas del sueño")
                             ListaEtiquetas(d.sueno_temas, "@persona o #tema", normalizar = { Texto.etiqueta(it) }) { cambiar(d.copy(sueno_temas = it)) }
                             Etiqueta("Narración")
@@ -231,14 +238,19 @@ fun PantallaDia(nav: Nav) {
         }
         val bloqueMomentos: @Composable () -> Unit = {
         val delDia = Repo.momentos.filter { it.fecha == fecha && (c.seguimiento_privado || it.tipo != "recaida") }
-            if (delDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
+        val sustanciasDia = Repo.consumos.filter { it.fecha == fecha && io.github.ruddy2003.vestigium.data.Sustancias.visible(it) }
+            if (delDia.isNotEmpty() || sustanciasDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
                 Tarjeta {
-                    delDia.forEach { m ->
+                    val filas = delDia.map { m -> Fechas.millis(m.ts) to (Fechas.horaDe(m.ts) to Catalogo.titulo(m, c.discreto) + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " · ${m.texto}" else "")) } +
+                        sustanciasDia.map { x -> Fechas.millis(x.inicio) to (Fechas.horaDe(x.inicio) to Catalogo.nombreSustancia(x) + resumenConsumo(x).let { r -> if (r.isNotBlank()) " · $r" else "" }) }
+                    filas.sortedBy { it.first }.forEach { (_, f) ->
                         Row(Modifier.padding(vertical = 3.dp)) {
-                            Text(Fechas.horaDe(m.ts) + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                            io.github.ruddy2003.vestigium.ui.TextoMarcado(tipoNombre(m.tipo, c.discreto) + (m.valencia?.let { " · $it" } ?: "") + (if (m.texto.isNotBlank()) " · ${m.texto}" else ""),
-                                style = MaterialTheme.typography.bodyMedium)
+                            Text(f.first + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            io.github.ruddy2003.vestigium.ui.TextoMarcado(f.second, style = MaterialTheme.typography.bodyMedium)
                         }
+                    }
+                    TextButton(onClick = { Seleccion.momentos = fecha; nav.ir("hoja_momentos") }) {
+                        Text("abrir la hoja de la libreta →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -254,12 +266,13 @@ fun PantallaDia(nav: Nav) {
                         "prediccion" -> abrirNoche("Predicción")
                         "aviso" -> abrirAviso(ctx)
                         "escalas" -> nav.ir("escalas")
-                        "gasto" -> nav.pestana("gastos")
+                        "gasto" -> nav.ir("gastos")
                         "politica" -> nav.ir("politica")
                         "reaccion" -> nav.ir("reaccion")
                     }
                 }
                 DatosQueFaltan(nav)
+                if (c.personas_pospuesto != hoy) TarjetaQuienEs(Modifier.padding(top = 10.dp), compacta = true) { nav.ir("personas") }
             }
         }
 
@@ -268,9 +281,9 @@ fun PantallaDia(nav: Nav) {
         if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas, pero se marcará como escrito por adelantado.")
 
         // 1. Lo de este momento del día.
-        if (manana) { bloqueSueno(); pendientes(); FraseDelDia(fecha) }
-        else if (nocheYa) { TarjetaNoche(d, fecha, c) { abrirNoche() }; pendientes(); FraseDelDia(fecha) }
-        else { FraseDelDia(fecha); pendientes() }
+        if (manana) { bloqueSueno(); pendientes() }
+        else if (nocheYa) { TarjetaNoche(d, fecha, c) { abrirNoche() }; pendientes() }
+        else pendientes()
 
         // 2. El tablero siempre a la vista, con los accesos de lo que se mide de vez en cuando.
         Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores.") { Tablero(fecha) }
@@ -301,7 +314,7 @@ fun PantallaDia(nav: Nav) {
         }
 
         // 5. Lo automático, al fondo.
-        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), plegable = true) {
+        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), autoPlegar = true) {
             Vestigios(fecha, nav)
         }
 
@@ -456,7 +469,7 @@ fun PantallaNoche(nav: Nav) {
                 Escala(d.activacion, 1, 7, Catalogo.ANCLAS["activacion"]) { cambiar(d.copy(activacion = it)) }
                 Etiqueta("Dolor o molestia física")
                 Escala(d.dolor, 0, 5, Catalogo.ANCLAS["dolor"]) { cambiar(d.copy(dolor = it)) }
-                val mu = Repo.momentos.filter { it.fecha == fecha && it.tipo == "muestreo" && it.valencia != null }
+                val mu = Repo.momentos.filter { it.fecha == fecha && it.esAnimo && it.valencia != null }
                 if (mu.isNotEmpty()) Clave("avisos", mu.joinToString("  ") { "${Fechas.horaDe(it.ts)}→${it.valencia}" })
             }
         }
@@ -826,6 +839,22 @@ private fun TramosDelDia(fecha: String) {
                     io.github.ruddy2003.vestigium.ui.TextoMarcado(Catalogo.nombreTramo(t.tipo) + " · " + horasMin(t.min) + if (t.nota.isNotBlank()) " · ${t.nota}" else "", style = MaterialTheme.typography.bodyMedium)
                 }
             }
+        }
+    }
+}
+
+/** «¿Cómo terminó lo de anoche?»: los consumos con efecto que falta completar (duración, máximo, cruda). */
+@Composable
+private fun LoDeAnoche() {
+    val ctx = LocalContext.current
+    val l = io.github.ruddy2003.vestigium.data.Sustancias.porCompletar()
+    if (l.isEmpty()) return
+    Tarjeta(Modifier.padding(top = 10.dp)) {
+        Text("¿Cómo terminó lo de anoche?", style = MaterialTheme.typography.titleMedium)
+        l.forEach { x ->
+            // Si esa sustancia está oculta de las pantallas, se pregunta sin nombrarla.
+            val nombre = if (io.github.ruddy2003.vestigium.data.Sustancias.visible(x)) "${Catalogo.nombreSustancia(x)} · desde las ${Fechas.horaDe(x.inicio)}" else "Un registro del ${Fechas.corto(x.fecha)}"
+            io.github.ruddy2003.vestigium.ui.FilaMenu(nombre, "hasta qué hora, el máximo y la cruda") { abrirConsumo(ctx, id = x.id) }
         }
     }
 }

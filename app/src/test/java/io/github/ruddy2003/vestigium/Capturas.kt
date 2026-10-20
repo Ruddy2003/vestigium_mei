@@ -835,6 +835,48 @@ class Capturas {
         io.github.ruddy2003.vestigium.ui.Celebracion.mostrar(listOf(io.github.ruddy2003.vestigium.ciencia.Logros.Logro("ciudades_10", "Viajero", "Pasa tiempo en 10 ciudades distintas", "⌂", "Mundo", 2, 10.0, 10.0, "2026-10-19")))
         Box(Modifier.fillMaxSize()) { io.github.ruddy2003.vestigium.ui.CapaLogro() }
     }
+
+    // ---------------- v73: ánimo unido, sustancias, tu gente, sueños, Vida ----------------
+    private fun ejemploV73() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        val ayer = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -1)
+        fun iso(f: String, h: Int, m: Int = 0) = java.time.LocalDate.parse(f).atTime(h, m).atZone(java.time.ZoneId.systemDefault()).toOffsetDateTime().withNano(0).toString()
+        Repo.consumosEnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.Consumo("c1", ayer, "alcohol", inicio = iso(ayer, 21, 0), fin = iso(ayer, 23, 59),
+                niveles = listOf(io.github.ruddy2003.vestigium.data.Lectura(iso(ayer, 22, 0), 3), io.github.ruddy2003.vestigium.data.Lectura(iso(ayer, 23, 0), 6)),
+                nivel_max = 6, cantidad = 4.0, con_quien = listOf("amigos")),
+            io.github.ruddy2003.vestigium.data.Consumo("c2", hoy, "cafeina", inicio = iso(hoy, 9, 0), fin = iso(hoy, 9, 0), cantidad = 95.0, completo = true),
+            io.github.ruddy2003.vestigium.data.Consumo("c3", hoy, "cafeina", inicio = iso(hoy, 15, 30), fin = iso(hoy, 15, 30), cantidad = 64.0, completo = true),
+            io.github.ruddy2003.vestigium.data.Consumo("c4", hoy, "cannabis", inicio = iso(hoy, 20, 30), fin = iso(hoy, 22, 30), nivel_max = 4, via = "vape", completo = true),
+        ))
+        val momentos = Repo.momentos + listOf(
+            io.github.ruddy2003.vestigium.data.Momento("a1", iso(hoy, 10, 15), hoy, "animo", valencia = 5, activacion = 5, emociones = listOf("calma", "esperanza"), pensamiento = "plan"),
+            io.github.ruddy2003.vestigium.data.Momento("a2", iso(hoy, 17, 45), hoy, "animo", valencia = 2, activacion = 6, emociones = listOf("estres", "frustracion"), texto = "la entrega con @luis"),
+        )
+        Repo.ejemploEnMemoria(Repo.dias + (ayer to (Repo.dias[ayer] ?: io.github.ruddy2003.vestigium.data.Dia(ayer)).copy(sueno_recordado = true, sueno_texto = "Volvía a la casa de mi abuela con @ana",
+            sueno_categorias = listOf("tema_regreso", "per_familia", "est_conexion"))), Repo.salud, Repo.pantalla, Repo.gastos,
+            momentos, Repo.notifs, Repo.entorno, Repo.nutricion, Repo.lugares, Repo.visitas, Repo.sesiones, Repo.ingresos)
+    }
+    private fun v73(tema: TemaId, oscuro: Boolean, alto: Int, extra: (Config) -> Config = { it }, cont: @Composable () -> Unit) {
+        Ejemplo.cargar(); ejemploV67(); ejemploV73()
+        Repo.configEnMemoria(extra(config(tema, oscuro).copy(personas = listOf(
+            io.github.ruddy2003.vestigium.data.Persona("ana", "amistad_cercana", "de la prepa", 6, "2026-01-01"),
+            io.github.ruddy2003.vestigium.data.Persona("luis", "colega", "", 4, "2026-01-01", listOf(io.github.ruddy2003.vestigium.data.CambioRelacion("2026-06-01", "amistad", 5)))))))
+        paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = alto, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
+        paparazzi.snapshot { Lienzo(cont) }
+    }
+    @Test fun vidaRomano() = v73(TemaId.ROMANO, false, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
+    @Test fun vidaCiber() = v73(TemaId.CIBER, true, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
+    @Test fun personasBotanico() = v73(TemaId.BOTANICO, false, 3200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaPersonas(navVacia) }
+    @Test fun sustanciasGotico() = v73(TemaId.GOTICO, true, 3200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSustancias(navVacia) }
+    @Test fun sustanciasRomano() = v73(TemaId.ROMANO, false, 3200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSustancias(navVacia) }
+    @Test fun diarioV73Seda() = v73(TemaId.SEDA, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+    @Test fun diaV73Romano() = v73(TemaId.ROMANO, false, 5200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
+    @Test fun cintaV73Laboratorio() = v73(TemaId.LABORATORIO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
+    @Test fun libretaMomentosMedieval() = v73(TemaId.MEDIEVAL, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "momentos") }
+    @Test fun hojaMomentosRomano() = v73(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(navVacia) }
+    @Test fun logrosConHallAndalus() = v73(TemaId.ANDALUS, true, 4400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
+    @Test fun momentosV73Napoleon() = v73(TemaId.NAPOLEON, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMomentos(navVacia) }
 }
 
 @Composable

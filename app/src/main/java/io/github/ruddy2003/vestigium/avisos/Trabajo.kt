@@ -108,6 +108,12 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             if (d?.sueno_texto.isNullOrBlank() && d?.sueno_recordado != true) Avisos.sueno(ctx)
         }
 
+        // Lo de anoche: una hora después de tu hora de despertar, si quedó un consumo sin completar.
+        if (ahora.hour >= (c.hora_sueno + 1).coerceAtMost(13) && ahora.hour < 15 && !yaFue("anoche:$hoy")) {
+            val l = io.github.ruddy2003.vestigium.data.Sustancias.porCompletar(diaLog)
+            if (l.isNotEmpty()) { marcar("anoche:$hoy"); Avisos.loDeAnoche(ctx, l.first(), l.size) }
+        }
+
         // Diario por la noche
         if (ahora.hour >= c.hora_diario && !yaFue("diario:$hoy")) {
             marcar("diario:$hoy")

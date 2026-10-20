@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -96,13 +97,16 @@ fun PantallaExplorar(nav: Nav) {
     }
     fun abrirFicha(id: String) { Herramienta.actual = "factores"; Herramienta.objetivo = id; nav.ir("analisis") }
 
-    Hoja("Entender", subtitulo = "Tus datos vistos de lejos: la semana, el año, el mapa y las relaciones. Para modelos completos, exporta y abre vestigium.R.",
-        buscar = { nav.ir("buscar") }) {
-        CentroEntender(nav)
+    Hoja("Análisis", subtitulo = "Qué se mueve con qué: relaciones, herramientas y experimentos. Para modelos completos, exporta y abre vestigium.R.",
+        buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
+        RejillaTarjetas(listOf(
+            Tarjetita("Experimentos personales", "${Repo.experimentos.count { it.activo }}", "en curso · prueba algo y mide si sirve", "experimentos"),
+            Tarjetita("Totales", "${Repo.dias.size}", "días de datos para analizar", "totales"),
+        )) { nav.ir(it) }
         val nDias = Repo.dias.size
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra("$nDias", "días con diario", Modifier.weight(1f))
-            Cifra("${Repo.momentos.count { it.tipo != "muestreo" && it.tipo != "recaida" }}", "momentos", Modifier.weight(1f))
+            Cifra("${Repo.momentos.count { it.tipo != "muestreo" && it.tipo != "recaida" }}", "registros propios", Modifier.weight(1f))
             Cifra("${Repo.momentos.count { it.tipo == "muestreo" }}", "avisos respondidos", Modifier.weight(1f))
         }
         Ayuda(if (nDias >= 90) "Con 90 días o más ya se pueden detectar relaciones moderadas." else "Faltan ${90 - nDias} días para tener potencia suficiente; antes de eso, todo es pista, no evidencia.", Modifier.padding(top = 8.dp))
@@ -223,18 +227,26 @@ fun PantallaExplorar(nav: Nav) {
             }
         }
 
-        Seccion("A qué hora aparecen tus emociones", "Momentos registrados por hora del día.") {
-            val tipos = listOf("preocupacion", "ansiedad", "tristeza", "alegria", "impulso")
-            val ms = Repo.momentos.filter { it.tipo in tipos }
-            if (ms.size < 5) Vacio("Registra al menos 5 momentos para ver el patrón por hora.")
+        Seccion("A qué hora aparecen tus emociones", "Lo que sentías en cada registro de ánimo, por hora del día (las seis más frecuentes, y los impulsos).") {
+            val regs = Repo.momentos.filter { Catalogo.esRegistro(it) }
+            val conteo = regs.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO && it != Catalogo.NO_SE }.groupingBy { it }.eachCount()
+            val top = conteo.entries.sortedByDescending { it.value }.take(6).map { it.key }
+            val impulsos = Repo.momentos.filter { it.tipo == "impulso" }
+            if (regs.size + impulsos.size < 5) Vacio("Registra al menos 5 veces tu ánimo para ver el patrón por hora.")
             else Tarjeta {
-                tipos.forEach { t ->
+                top.forEach { e ->
                     val porHora = IntArray(24)
-                    ms.filter { it.tipo == t }.forEach { m -> Fechas.horaDe(m.ts).take(2).toIntOrNull()?.let { porHora[it]++ } }
+                    regs.filter { e in Catalogo.emocionesDe(it) }.forEach { m -> Fechas.horaDe(m.ts).take(2).toIntOrNull()?.let { porHora[it]++ } }
                     if (porHora.sum() > 0) {
-                        Text(Catalogo.nombreTipo(t) + " · ${porHora.sum()}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                        Text(Catalogo.nombreSentimiento(e, Repo.config.discreto) + " · ${porHora.sum()}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
                         Horas(porHora)
                     }
+                }
+                if (impulsos.isNotEmpty()) {
+                    val porHora = IntArray(24)
+                    impulsos.forEach { m -> Fechas.horaDe(m.ts).take(2).toIntOrNull()?.let { porHora[it]++ } }
+                    Text(Catalogo.nombreTipo("impulso") + " · ${porHora.sum()}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+                    Horas(porHora)
                 }
                 Ayuda("De izquierda a derecha: de 0:00 a 23:00.", Modifier.padding(top = 6.dp))
             }
@@ -415,7 +427,7 @@ private fun Dispersion(ps: List<Par>, nx: String, ny: String) {
 
 /** Promedio de la valencia en un rango de días (diario o, si no hay, avisos de ánimo). */
 private fun animoEntre(dias: List<String>): Double? = dias.mapNotNull { f ->
-    Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average()
+    Repo.dias[f]?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia }.takeIf { it.isNotEmpty() }?.average()
 }.takeIf { it.isNotEmpty() }?.average()
 
 /** Las vistas de Entender como tarjetas con una cifra viva cada una. */
@@ -495,7 +507,7 @@ private fun fmtCorto(v: Double) = if (kotlin.math.abs(v) >= 100) "%,.0f".format(
 /** Tu ánimo en los avisos según con quién estabas (lo que contestas en «¿con quién estás?»). */
 @Composable
 private fun ConQuien() {
-    val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null && it.con_quien.isNotEmpty() }
+    val mu = Repo.momentos.filter { it.esAnimo && it.valencia != null && it.con_quien.isNotEmpty() }
     if (mu.isEmpty()) return
     Seccion("Ánimo según con quién estás", "Promedio de la valencia en los avisos de ánimo, según con quién dijiste que estabas.") {
         Tarjeta {

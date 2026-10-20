@@ -87,12 +87,6 @@ fun PantallaGastos(nav: Nav? = null) {
     var editandoIngreso by remember { mutableStateOf<Ingreso?>(null) }
 
     fun limpiar() { monto = ""; nota = ""; imprevisto = false; fijo = false; cuando = null; editando = null; editandoIngreso = null; error = null }
-    fun elegirCuando() {
-        val base = cuando ?: LocalDateTime.now()
-        DatePickerDialog(ctx, { _, y, m, d ->
-            TimePickerDialog(ctx, { _, h, min -> cuando = LocalDateTime.of(y, m + 1, d, h, min) }, base.hour, base.minute, true).show()
-        }, base.year, base.monthValue - 1, base.dayOfMonth).apply { datePicker.maxDate = System.currentTimeMillis() }.show()
-    }
 
     Hoja("Gastos", subtitulo = "Registra en el momento de pagar o de cobrar. Lo que se cuadra después ya no dice en qué se fue el dinero.", buscar = nav?.let { n -> { n.ir("buscar") } }) {
         val corrigiendo = editando != null || editandoIngreso != null
@@ -122,14 +116,7 @@ fun PantallaGastos(nav: Nav? = null) {
                     (if (entra) Repo.config.categorias_ingreso else Repo.config.categorias).forEach { c -> Ficha(c, cat == c) { cat = if (cat == c) null else c; error = null } }
                 }
                 Etiqueta("Cuándo")
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Ficha("ahora", cuando == null) { cuando = null }
-                    val c = cuando
-                    Ficha(if (c == null) "otra fecha u hora…" else "${Fechas.corto(Fechas.iso(c.toLocalDate()))} · ${"%02d:%02d".format(c.hour, c.minute)}", c != null) { elegirCuando() }
-                }
-                cuando?.takeIf { it.hour < 5 }?.let {
-                    Ayuda("De madrugada: en tu diario y en R cuenta para el ${Fechas.corto(Fechas.iso(it.toLocalDate().minusDays(1)))}, como los momentos.", Modifier.padding(top = 4.dp))
-                }
+                io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
                 if (entra) Interruptor("¿Se repite? (sueldo, beca, renta)", fijo) { fijo = it }
                 else Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
                 OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, singleLine = true)

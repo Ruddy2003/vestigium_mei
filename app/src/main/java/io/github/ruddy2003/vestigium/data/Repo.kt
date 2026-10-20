@@ -49,6 +49,8 @@ object Repo {
     var entrenos by mutableStateOf<Map<String, EntrenoDia>>(emptyMap()); private set
     /** Bloques de enfoque y siestas del cronómetro. */
     var tramos by mutableStateOf<List<Tramo>>(emptyList()); private set
+    /** Consumos de sustancias (episodios con inicio, fin y niveles). */
+    var consumos by mutableStateOf<List<Consumo>>(emptyList()); private set
 
     @Synchronized
     fun init(ctx: Context) {
@@ -86,6 +88,7 @@ object Repo {
         nutricion = cargar("nutricion", NutricionDia.serializer()).associateBy { it.fecha }
         entrenos = cargar("entrenos", EntrenoDia.serializer()).associateBy { it.fecha }
         tramos = cargar("tramos", Tramo.serializer()).sortedBy { it.inicio }
+        consumos = cargar("consumos", Consumo.serializer()).sortedBy { it.inicio }
         listo = true
     }
 
@@ -149,6 +152,23 @@ object Repo {
     }
     /** Solo para las capturas de diseño. */
     fun tramosEnMemoria(l: List<Tramo>) { tramos = l }
+
+    // ---------- Consumos de sustancias ----------
+    @Synchronized
+    fun guardarConsumo(c: Consumo) {
+        db.poner("consumos", c.id, c.fecha, JSON.encodeToString(Consumo.serializer(), c))
+        enMain { consumos = (consumos.filter { it.id != c.id } + c).sortedBy { it.inicio } }
+    }
+    fun consumo(id: String): Consumo? = consumos.firstOrNull { it.id == id }
+    fun borrarConsumo(id: String) { db.borrar("consumos", id); enMain { consumos = consumos.filter { it.id != id } } }
+    fun importarConsumos(lista: List<Consumo>) {
+        val ids = consumos.map { it.id }.toSet()
+        val nuevos = lista.filter { it.id !in ids }
+        if (nuevos.isEmpty()) return
+        db.transaccion { nuevos.forEach { db.poner("consumos", it.id, it.fecha, JSON.encodeToString(Consumo.serializer(), it)) } }
+        enMain { consumos = (consumos + nuevos).sortedBy { it.inicio } }
+    }
+    fun consumosEnMemoria(l: List<Consumo>) { consumos = l }
 
     // ---------- Gastos ----------
     fun guardarGasto(g: Gasto) {

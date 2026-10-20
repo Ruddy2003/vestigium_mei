@@ -32,7 +32,7 @@ val LocalScrollPestana = androidx.compose.runtime.staticCompositionLocalOf<Scrol
 @Composable
 fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null, latin: String? = Romano.latin(titulo), encabezado: (@Composable () -> Unit)? = null,
          modifier: Modifier = Modifier, scroll: ScrollState = LocalScrollPestana.current ?: rememberScrollState(), buscar: (() -> Unit)? = null,
-         content: @Composable ColumnScope.() -> Unit) {
+         ajustes: (() -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             if (atras != null) TextButton(onClick = atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
@@ -50,6 +50,7 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
                     style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f),
                 )
                 if (buscar != null) BotonBuscar(onClick = buscar)
+                if (ajustes != null) BotonAjustes(Modifier.padding(start = 4.dp), onClick = ajustes)
                 BotonModo()
                 Emblema(modifier = Modifier.padding(start = 4.dp))
             }

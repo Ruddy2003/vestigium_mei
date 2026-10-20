@@ -2,6 +2,9 @@ package io.github.ruddy2003.vestigium.ciencia
 
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
+import io.github.ruddy2003.vestigium.data.Personas
+import io.github.ruddy2003.vestigium.data.Sustancias
+import io.github.ruddy2003.vestigium.data.esAnimo
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import kotlin.math.abs
@@ -141,11 +144,44 @@ object Estadistica {
             Variable("n_tarde", "Momentos en la tarde (12 a 19)", "Momentos"), Variable("n_noche", "Momentos en la noche (19 a 24)", "Momentos"),
             Variable("momentos_intensidad", "Intensidad media de los momentos (1 a 5)", "Momentos"), Variable("momentos_valencia", "Valencia media de los momentos", "Momentos"),
         )
-        if (Repo.config.perfil.cercanas.isNotEmpty() || Repo.config.perfil.convivientes.isNotEmpty()) {
+        if (Repo.config.perfil.cercanas.isNotEmpty() || Repo.config.perfil.convivientes.isNotEmpty() || Repo.config.personas.isNotEmpty()) {
             v += Variable("cercanos", "Personas cercanas mencionadas", "Social"); v += Variable("vi_familia", "Mencioné a mi familia (0/1)", "Social")
             v += Variable("vi_pareja", "Mencioné a mi pareja (0/1)", "Social"); v += Variable("vi_amistades", "Mencioné a una amistad (0/1)", "Social")
             v += Variable("vi_convivientes", "Mencioné a quien vive conmigo (0/1)", "Social")
         }
+        // «Tu gente»: con la relación que había cada día.
+        if (Repo.config.personas.any { it.relacion == "expareja" || it.historial.any { h -> h.relacion == "expareja" } }) v += Variable("vi_expareja", "Mencioné a una expareja (0/1)", "Social")
+        if (Repo.config.personas.any { Personas.grupo(it.relacion) == "trabajo" }) v += Variable("vi_trabajo", "Mencioné a un colega, compañero o mentor (0/1)", "Social")
+        if (Repo.config.personas.any { it.cercania != null }) v += Variable("cercania_media", "Cercanía media de quien mencioné (1 a 7)", "Social")
+        // El ánimo de todos los registros (avisos y los que haces tú), y lo que sentías y pensabas.
+        if (Repo.momentos.any { it.esAnimo }) {
+            v += Variable("animo_valencia", "Valencia promedio al momento (todos los registros)", "Ánimo")
+            v += Variable("animo_activacion", "Activación promedio al momento (todos los registros)", "Ánimo")
+            v += Variable("registros_animo", "Registros de ánimo en el día", "Momentos")
+        }
+        emocionesUsadas().forEach { id -> v += Variable("n_$id", "Registros con ${Catalogo.nombreSentimiento(id).lowercase()}", "Sentimientos") }
+        pensamientosUsados().forEach { id -> v += Variable("n_$id", "Registros pensando: ${(Catalogo.PENSAMIENTOS.firstOrNull { it.id == id }?.nombre ?: id).lowercase()}", "Momentos") }
+        // Sustancias: un dato normal (también las que ocultas de las pantallas).
+        val sus = Repo.consumos.map { it.sustancia }.toSet()
+        if ("alcohol" in sus || Repo.nutricion.values.any { (it.valores["alcohol_g"] ?: 0.0) > 0 }) {
+            v += Variable("alcohol", "Tomé alcohol (0/1)", "Sustancias"); v += Variable("alcohol_bebidas", "Bebidas estándar", "Sustancias")
+            v += Variable("alcohol_estimado_max", "Alcohol en sangre máximo estimado (g/L)", "Sustancias")
+            v += Variable("alcohol_al_dormir", "Alcohol en sangre estimado al dormirme (g/L)", "Sustancias")
+        }
+        if ("alcohol" in sus) { v += Variable("alcohol_nivel_max", "Qué tan pedo llegué (0 a 10)", "Sustancias"); v += Variable("alcohol_horas", "Horas con efecto del alcohol", "Sustancias") }
+        if ("cannabis" in sus) {
+            v += Variable("cannabis", "Cannabis (0/1)", "Sustancias"); v += Variable("cannabis_nivel_max", "Nivel máximo con cannabis (0 a 10)", "Sustancias")
+            v += Variable("cannabis_horas", "Horas con efecto del cannabis", "Sustancias")
+        }
+        if ("tabaco" in sus) v += Variable("tabaco_n", "Cigarros o sesiones de vape", "Sustancias")
+        if ("otra" in sus) v += Variable("otra_sustancia", "Otra sustancia (0/1)", "Sustancias")
+        if (Repo.consumos.any { it.cruda != null }) v += Variable("cruda", "Cruda o bajón (0 a 5, del día anterior)", "Sustancias")
+        if ("cafeina" in sus || Repo.nutricion.values.any { (it.valores["cafeina_mg"] ?: 0.0) > 0 }) {
+            v += Variable("cafeina_total_mg", "Cafeína del día (MacroFactor o anotada, mg)", "Sustancias")
+            v += Variable("cafeina_al_dormir_mg", "Cafeína en el cuerpo al dormirme (mg, estimada)", "Sustancias")
+        }
+        // De qué fueron tus sueños.
+        categoriasSuenoUsadas().forEach { id -> v += Variable("sueno_$id", "Sueño: ${Catalogo.opcionSueno(id)?.nombre?.lowercase() ?: id} (0/1)", "Sueños") }
         if (Repo.config.seguimiento_privado) {
             v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
             v += Variable("n_recaida", "Recaídas registradas con hora", "Privado")
@@ -171,11 +207,16 @@ object Estadistica {
         }
         Catalogo.CONTEXTOS.forEach { v += Variable("ctx_${it.id}", "Contexto: ${it.nombre} (0/1)", "Contexto") }
         Catalogo.CIENTIFICAS.forEach { p -> p.opciones.filter { it.id != "no_aplica" }.forEach { o -> v += Variable("${p.clave}_${o.id}", "${o.nombre} (0/1)", "Lectura del día") } }
-        Catalogo.MOMENTOS.forEach { v += Variable("n_${it.id}", "Momentos de ${it.nombre.lowercase()}", "Momentos") }
+        // Lo de antes (tipos de momento) que no es un sentimiento ni un pensamiento: el impulso.
+        Catalogo.MOMENTOS.filter { it.id == "impulso" }.forEach { v += Variable("n_${it.id}", "Momentos de ${it.nombre.lowercase()}", "Momentos") }
         Repo.config.habitos.forEach { v += Variable("hab_${it.id}", "Hábito: ${it.nombre} (0/1)", "Hábitos") }
         if (dinamicas) v += Dinamicas.calcular(false).variables
         return v
     }
+
+    private fun emocionesUsadas(): List<String> = Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO }.distinct().sorted()
+    private fun pensamientosUsados(): List<String> = Repo.momentos.mapNotNull { Catalogo.pensamientoDe(it) }.distinct().sorted()
+    private fun categoriasSuenoUsadas(): List<String> = Repo.dias.values.flatMap { it.sueno_categorias }.distinct().sorted()
 
     /**
      * Una fila por día con todas las variables numéricas. Lo que no existe queda en null. Con [dinamicas] incluye las de
@@ -203,14 +244,25 @@ object Estadistica {
             }
             Repo.config.habitos.forEach { r["hab_${it.id}"] = b(d.habitos[it.id] == true) }
             r["gasto_total"] = 0.0; r["gasto_imprevisto"] = 0.0
-            Catalogo.MOMENTOS.forEach { r["n_${it.id}"] = 0.0 }
+            r["n_impulso"] = 0.0
+        }
+        val emoUsadas = emocionesUsadas(); val penUsados = pensamientosUsados()
+        // Desde el primer registro de ánimo, los días sin registros cuentan como 0.
+        Repo.momentos.filter { Catalogo.esRegistro(it) }.minOfOrNull { it.fecha }?.let { p0 ->
+            Repo.dias.keys.filter { it >= p0 }.forEach { f -> val r = fila(f); emoUsadas.forEach { r["n_$it"] = 0.0 }; penUsados.forEach { r["n_$it"] = 0.0 }; r["registros_animo"] = 0.0 }
         }
         Repo.momentos.groupBy { it.fecha }.forEach { (f, lista) ->
             val r = fila(f)
             val mu = lista.filter { it.tipo == "muestreo" }
             r["muestreo_valencia"] = media(mu.mapNotNull { it.valencia?.toDouble() })
             r["muestreo_activacion"] = media(mu.mapNotNull { it.activacion?.toDouble() })
-            Catalogo.MOMENTOS.forEach { t -> r["n_${t.id}"] = lista.count { it.tipo == t.id }.toDouble() }
+            val an = lista.filter { it.esAnimo }
+            if (an.isNotEmpty()) { r["animo_valencia"] = media(an.mapNotNull { it.valencia?.toDouble() }); r["animo_activacion"] = media(an.mapNotNull { it.activacion?.toDouble() }) }
+            val regs = lista.filter { Catalogo.esRegistro(it) }
+            r["registros_animo"] = regs.size.toDouble()
+            emoUsadas.forEach { e -> r["n_$e"] = regs.count { e in Catalogo.emocionesDe(it) }.toDouble() }
+            penUsados.forEach { t -> r["n_$t"] = regs.count { Catalogo.pensamientoDe(it) == t }.toDouble() }
+            r["n_impulso"] = lista.count { it.tipo == "impulso" }.toDouble()
             // Con quién: la proporción de avisos de ánimo con cada compañía, y el ánimo solo o acompañado.
             val con = mu.filter { it.con_quien.isNotEmpty() }
             if (con.isNotEmpty()) {
@@ -376,16 +428,20 @@ object Estadistica {
         for ((f, d) in Repo.dias) if (d.sueno_recordado || d.sueno_texto.isNotBlank()) fila(f)["sueno_palabras"] = Texto.palabras(d.sueno_texto).toDouble()
         // Las personas cercanas que dijiste en «Conocerte», cuando aparecen en el diario o en los momentos.
         val perfil = Repo.config.perfil
-        if (perfil.cercanas.isNotEmpty() || perfil.convivientes.isNotEmpty()) {
+        if (perfil.cercanas.isNotEmpty() || perfil.convivientes.isNotEmpty() || Repo.config.personas.isNotEmpty()) {
             val textos = HashMap<String, StringBuilder>()
             Repo.dias.forEach { (f, d) -> textos.getOrPut(f) { StringBuilder() }.append(d.nota).append(' ') }
             Repo.momentos.forEach { m -> textos.getOrPut(m.fecha) { StringBuilder() }.append(m.texto).append(' ') }
             for ((f, t) in textos) {
-                val rel = Texto.personas(t.toString()).map { Texto.canon(it, eq) }.distinct().mapNotNull { io.github.ruddy2003.vestigium.data.Perfiles.relacion(it, perfil)?.let { r -> it to r } }
+                val nombres = Texto.personas(t.toString()).map { Texto.canon(it, eq) }.distinct()
+                // La relación que había ese día (pareja hasta marzo, expareja después).
+                val rel = nombres.mapNotNull { io.github.ruddy2003.vestigium.data.Perfiles.relacion(it, perfil, f)?.let { r -> it to r } }
                 val r = fila(f)
-                r["cercanos"] = rel.size.toDouble()
+                r["cercanos"] = rel.count { it.second in setOf("familia", "pareja", "amistad", "casa") }.toDouble()
                 r["vi_familia"] = b(rel.any { it.second == "familia" }); r["vi_pareja"] = b(rel.any { it.second == "pareja" })
                 r["vi_amistades"] = b(rel.any { it.second == "amistad" }); r["vi_convivientes"] = b(rel.any { it.first in perfil.convivientes })
+                r["vi_expareja"] = b(rel.any { it.second == "expareja" }); r["vi_trabajo"] = b(rel.any { it.second == "trabajo" })
+                r["cercania_media"] = media(nombres.mapNotNull { Personas.cercaniaEn(it, f)?.toDouble() })
             }
         }
         // Dinero que entra, y el balance del día.
@@ -420,6 +476,12 @@ object Estadistica {
             r["momentos_intensidad"] = media(l.mapNotNull { it.intensidad?.toDouble() })
             r["momentos_valencia"] = media(l.mapNotNull { it.valencia?.toDouble() })
         }
+        // De qué fueron tus sueños: solo en los días en que marcaste alguna categoría.
+        val catSueno = categoriasSuenoUsadas()
+        if (catSueno.isNotEmpty()) for ((f, d) in Repo.dias) if (d.sueno_categorias.isNotEmpty()) {
+            val r = fila(f); catSueno.forEach { k -> r["sueno_$k"] = b(k in d.sueno_categorias) }
+        }
+        runCatching { sustancias(filas.keys.firstOrNull(), b) { f -> fila(f) } }
         // Cartas a otras personas.
         val aOtros = Repo.cartas.filter { it.para.isNotBlank() }.groupingBy { it.escrita }.eachCount()
         aOtros.keys.minOrNull()?.let { a -> Repo.dias.keys.filter { it >= a }.forEach { f -> fila(f)["cartas_otros"] = (aOtros[f] ?: 0).toDouble() } }
@@ -449,6 +511,82 @@ object Estadistica {
             }
         }
         return filas
+    }
+
+    /**
+     * Las variables de sustancias. Desde el primer registro de cada una, los días sin nada cuentan como 0. La cafeína y el
+     * alcohol en el cuerpo se estiman con sus dosis y su hora (MacroFactor o lo anotado); «al dormirme» va en el día del sueño.
+     */
+    @Volatile private var dosisCache: Pair<String, Pair<List<Sustancias.Dosis>, List<Sustancias.Dosis>>>? = null
+
+    private fun sustancias(desde: String?, b: (Boolean) -> Double, fila: (String) -> MutableMap<String, Double?>) {
+        val todos = Repo.consumos
+        val primero = (todos.map { it.fecha } + listOfNotNull(Repo.nutricion.keys.minOrNull())).minOrNull() ?: return
+        val ini = listOfNotNull(desde, primero).minOrNull() ?: primero
+        val hoy = Fechas.diaLogico()
+        val dias = Repo.dias.keys + todos.map { it.fecha }
+        val porDia = todos.groupBy { it.fecha }
+        fun desdePrimero(id: String, k: (String, List<io.github.ruddy2003.vestigium.data.Consumo>) -> Unit) {
+            val p0 = todos.filter { it.sustancia == id }.minOfOrNull { it.fecha } ?: return
+            dias.filter { it >= p0 }.forEach { f -> k(f, porDia[f].orEmpty().filter { it.sustancia == id }) }
+        }
+        desdePrimero("alcohol") { f, l ->
+            val r = fila(f)
+            r["alcohol"] = b(l.isNotEmpty())
+            r["alcohol_nivel_max"] = if (l.isEmpty()) 0.0 else l.mapNotNull { Sustancias.maximo(it) }.maxOrNull()?.toDouble()
+            r["alcohol_horas"] = if (l.isEmpty()) 0.0 else l.mapNotNull { Sustancias.horas(it) }.takeIf { it.isNotEmpty() }?.sum()
+        }
+        desdePrimero("cannabis") { f, l ->
+            val r = fila(f)
+            r["cannabis"] = b(l.isNotEmpty())
+            r["cannabis_nivel_max"] = if (l.isEmpty()) 0.0 else l.mapNotNull { Sustancias.maximo(it) }.maxOrNull()?.toDouble()
+            r["cannabis_horas"] = if (l.isEmpty()) 0.0 else l.mapNotNull { Sustancias.horas(it) }.takeIf { it.isNotEmpty() }?.sum()
+        }
+        desdePrimero("tabaco") { f, l -> fila(f)["tabaco_n"] = l.sumOf { it.cantidad ?: 1.0 } }
+        desdePrimero("otra") { f, l -> fila(f)["otra_sustancia"] = b(l.isNotEmpty()) }
+        // La cruda se siente al día siguiente: va en ese día.
+        todos.filter { it.cruda != null }.groupBy { Fechas.sumar(it.fecha, 1) }.forEach { (f, l) -> fila(f)["cruda"] = l.maxOf { it.cruda!! }.toDouble() }
+        // Leer todos los alimentos tarda: en el hilo principal se usa lo último calculado o solo lo anotado aquí.
+        val clave = "${todos.hashCode()}|${Repo.nutricion.size}|$ini|$hoy"
+        val enMain = android.os.Looper.myLooper() == android.os.Looper.getMainLooper()
+        val (caf, alc) = dosisCache?.takeIf { it.first == clave }?.second
+            ?: Sustancias.dosis(ini, hoy, if (enMain) emptyList() else null).also { if (!enMain) dosisCache = clave to it }
+        val gramos = HashMap<String, Double>()
+        alc.forEach { d -> val f = Fechas.diaLogicoDeMillis(d.ms); gramos[f] = (gramos[f] ?: 0.0) + d.cantidad }
+        val mg = HashMap<String, Double>()
+        caf.forEach { d -> val f = Fechas.diaLogicoDeMillis(d.ms); mg[f] = (mg[f] ?: 0.0) + d.cantidad }
+        val alcDesde = (alc.minOfOrNull { it.ms }?.let { Fechas.diaLogicoDeMillis(it) })
+        if (alcDesde != null) dias.filter { it >= alcDesde }.forEach { f ->
+            val r = fila(f); val g = gramos[f] ?: 0.0
+            r["alcohol_bebidas"] = g / Sustancias.GRAMOS_BEBIDA
+            if (g == 0.0) {
+                r["alcohol_estimado_max"] = 0.0
+                if (r["alcohol"] == null) r["alcohol"] = 0.0
+            } else {
+                r["alcohol"] = 1.0
+            }
+        }
+        // Máximo estimado: una simulación por día con alcohol (de la primera dosis a 12 horas después).
+        val alcPorDia = alc.groupBy { Fechas.diaLogicoDeMillis(it.ms) }
+        alcPorDia.forEach { (f, l) ->
+            val a = l.minOf { it.ms }
+            val instantes = (a..(a + 14 * 3_600_000L) step 10 * 60_000L).toList()
+            fila(f)["alcohol_estimado_max"] = Sustancias.alcoholEn(l, instantes).maxOrNull()
+        }
+        val cafDesde = caf.minOfOrNull { it.ms }?.let { Fechas.diaLogicoDeMillis(it) }
+        if (cafDesde != null) dias.filter { it >= cafDesde }.forEach { f -> fila(f)["cafeina_total_mg"] = mg[f] ?: 0.0 }
+        // Al dormirme: en el día del sueño (el reloj guarda la noche en el día en que despiertas).
+        Repo.salud.forEach { (f, x) ->
+            val t = x.sueno_inicio?.let { Fechas.millis(it) }?.takeIf { it > 0 } ?: return@forEach
+            if (cafDesde != null && f >= cafDesde) {
+                val previas = caf.filter { it.ms in (t - 36 * 3_600_000L)..t }
+                fila(f)["cafeina_al_dormir_mg"] = Sustancias.cafeinaEn(previas, listOf(t)).first()
+            }
+            if (alcDesde != null && f >= alcDesde) {
+                val previas = alc.filter { it.ms in (t - 18 * 3_600_000L)..t }
+                fila(f)["alcohol_al_dormir"] = if (previas.isEmpty()) 0.0 else Sustancias.alcoholEn(previas, listOf(t)).first()
+            }
+        }
     }
 
     /**
@@ -522,10 +660,20 @@ object Estadistica {
         setOf("cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes", "personas", "palabras"),
         setOf("sueno_palabras", "sueno_recordado", "sueno_valencia"),
         setOf("carta_escrita", "palabras"),
+        setOf("animo_valencia", "valencia", "muestreo_valencia", "momentos_valencia", "valencia_acompanado", "valencia_solo"),
+        setOf("animo_activacion", "activacion", "muestreo_activacion"),
+        setOf("registros_animo", "n_madrugada", "n_manana", "n_tarde", "n_noche"),
+        setOf("alcohol", "alcohol_g", "alcohol_bebidas", "alcohol_nivel_max", "alcohol_horas", "alcohol_estimado_max", "alcohol_al_dormir"),
+        setOf("cannabis", "cannabis_nivel_max", "cannabis_horas"),
+        setOf("cafeina_mg", "cafeina_total_mg", "cafeina_ultima_h", "cafeina_al_dormir_mg"),
+        setOf("cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_expareja", "vi_trabajo", "cercania_media", "personas"),
     )
 
     fun obvia(a: Variable, b: Variable): Boolean {
-        if ((a.grupo == b.grupo && (a.grupo == "Lectura del día" || a.grupo == "Momentos")) || FAMILIAS.any { a.id in it && b.id in it }) return true
+        if ((a.grupo == b.grupo && (a.grupo == "Lectura del día" || a.grupo == "Momentos" || a.grupo == "Sentimientos" || a.grupo == "Sueños")) || FAMILIAS.any { a.id in it && b.id in it }) return true
+        // Lo que sentías con el número de registros del día, y cada categoría del sueño con haber recordado un sueño.
+        if ((a.grupo == "Sentimientos" && b.id == "registros_animo") || (b.grupo == "Sentimientos" && a.id == "registros_animo")) return true
+        if ((a.grupo == "Sueños" && b.id.startsWith("sueno_")) || (b.grupo == "Sueños" && a.id.startsWith("sueno_"))) return true
         // Las variables de cada persona, app o categoría con su total (minutos en una app y minutos de pantalla).
         val pa = Dinamicas.prefijo(a.id); val pb = Dinamicas.prefijo(b.id)
         if (pa != null && Dinamicas.AGREGADOS[pa]?.contains(b.id) == true) return true

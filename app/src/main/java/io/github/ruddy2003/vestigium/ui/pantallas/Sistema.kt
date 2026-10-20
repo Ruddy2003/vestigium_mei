@@ -417,6 +417,19 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Interruptor("Ubicación de fondo", c.muestreo_ubicacion, "Una muestra cada 15 minutos para el mapa de calor.") { v -> cambiar { it.copy(muestreo_ubicacion = v) } }
             }
         }
+        if (parte == "privacidad") Seccion("Sustancias en pantalla", "Son un dato normal. Ocultar una la quita de la cinta, la libreta, Vida y Día; sigue en los análisis y en la exportación a R.") {
+            Tarjeta {
+                io.github.ruddy2003.vestigium.data.Catalogo.SUSTANCIAS.forEach { x ->
+                    val oculta = x.id in c.sustancias_ocultas
+                    Interruptor("Ocultar ${x.nombre.lowercase()}", oculta) { v ->
+                        cambiar { it.copy(sustancias_ocultas = if (v) (it.sustancias_ocultas + x.id).distinct() else it.sustancias_ocultas - x.id) }
+                    }
+                }
+                Etiqueta("Vida media de la cafeína: ${"%.1f".format(c.cafeina_vida_media_h).removeSuffix(".0")} h")
+                Slider(value = c.cafeina_vida_media_h.toFloat(), onValueChange = { v -> cambiar { it.copy(cafeina_vida_media_h = Math.round(v * 2) / 2.0) } }, valueRange = 2f..10f, steps = 15)
+                Ayuda("En adultos suele ir de 3 a 7 horas (5 es lo típico). Fumar la acorta; el embarazo y algunos anticonceptivos la alargan.", Modifier.padding(top = 4.dp))
+            }
+        }
     }
 }
 

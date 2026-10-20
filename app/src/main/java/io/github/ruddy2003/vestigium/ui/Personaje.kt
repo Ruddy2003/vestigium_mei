@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -53,7 +54,7 @@ object Personaje {
         val d = Repo.dias[hoy]
         val horas = Repo.salud[hoy]?.sueno_min?.let { it / 60.0 }
         val cansado = (horas != null && horas < 6.0) || (d?.sueno_calidad != null && d.sueno_calidad <= 2)
-        val animo = d?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == hoy && it.tipo == "muestreo" }.mapNotNull { it.valencia }.lastOrNull()?.toDouble()
+        val animo = d?.valencia?.toDouble() ?: Repo.momentos.filter { it.fecha == hoy && it.esAnimo }.mapNotNull { it.valencia }.lastOrNull()?.toDouble()
         val e = Repo.entorno[hoy]
         val lluvia = (e?.precip_mm ?: 0.0) >= 1.0 || (e?.codigo?.let { it in 51..67 || it in 80..82 || it >= 95 } == true)
         val frio = (e?.t_max ?: 99.0) < 14.0

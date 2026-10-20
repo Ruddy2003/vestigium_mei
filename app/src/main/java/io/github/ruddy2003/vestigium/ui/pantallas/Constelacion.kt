@@ -80,7 +80,8 @@ fun PantallaConstelacion(nav: Nav) {
     val (estrellas, juntos) = remember(Repo.dias, Repo.momentos, periodo) { Constelacion.calcular(desde, hoy) }
     var elegida by remember { mutableStateOf<Estrella?>(null) }
     val cs = MaterialTheme.colorScheme
-    val tonos = mapOf("familia" to cs.tertiary, "pareja" to cs.error, "amistad" to cs.secondary, "casa" to cs.primary)
+    val tonos = mapOf("familia" to cs.tertiary, "pareja" to cs.error, "amistad" to cs.secondary, "casa" to cs.primary,
+        "trabajo" to cs.outline, "expareja" to cs.error.copy(alpha = 0.45f))
     val trans = rememberInfiniteTransition(label = "cielo")
     val fase = trans.animateFloat(0f, 1f, infiniteRepeatable(tween(4000, easing = LinearEasing), RepeatMode.Restart), label = "titila")
     val animar = io.github.ruddy2003.vestigium.data.Repo.config.animaciones
@@ -133,14 +134,14 @@ fun PantallaConstelacion(nav: Nav) {
                 }
             }
         }
-        Ayuda("Colores: " + listOf("casa" to "quien vive contigo", "familia" to "familia", "pareja" to "pareja", "amistad" to "amistades").joinToString(", ") { it.second } +
-            ". Las demás, del color del texto. Las relaciones vienen de «Conocerte».", Modifier.padding(top = 6.dp))
+        Ayuda("Colores: " + listOf("casa" to "quien vive contigo", "familia" to "familia", "pareja" to "pareja", "amistad" to "amistades", "trabajo" to "colegas", "expareja" to "exparejas (tenue)").joinToString(", ") { it.second } +
+            ". Las demás, del color del texto. Las relaciones vienen de «Tu gente» y de «Conocerte».", Modifier.padding(top = 6.dp))
         Tarjeta(Modifier.padding(top = 10.dp)) {
             val e = elegida
             if (e == null) Ayuda("Toca una estrella para ver a esa persona.")
             else {
                 io.github.ruddy2003.vestigium.ui.TextoMarcado("@" + e.nombre, style = MaterialTheme.typography.titleMedium)
-                Text("${e.dias} ${if (e.dias == 1) "día" else "días"} · la última vez ${Fechas.relativo(e.ultima)}" + (e.relacion?.let { " · $it" } ?: ""),
+                Text("${e.dias} ${if (e.dias == 1) "día" else "días"} · la última vez ${Fechas.relativo(e.ultima)}" + (e.relacion?.let { " · ${io.github.ruddy2003.vestigium.data.Personas.nombreRelacion(it).lowercase()}" } ?: ""),
                     style = MaterialTheme.typography.bodySmall, color = cs.onSurfaceVariant)
                 val con = juntos.filterKeys { it.first == e.nombre || it.second == e.nombre }.entries.sortedByDescending { it.value }.take(4)
                     .map { (k, n) -> (if (k.first == e.nombre) k.second else k.first) to n }

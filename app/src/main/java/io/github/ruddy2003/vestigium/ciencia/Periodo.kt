@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Context
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
@@ -63,7 +64,7 @@ object Periodo {
     }.getOrNull()
 
     private fun valDe(f: String): Double? = Repo.dias[f]?.valencia?.toDouble()
-        ?: Repo.momentos.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.valencia?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
+        ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
 
     fun calcular(ctx: Context?, ini: String, fin: String): Datos {
         val n = (ChronoUnit.DAYS.between(Fechas.parse(ini), Fechas.parse(fin)).toInt() + 1).coerceAtLeast(1)
@@ -75,7 +76,7 @@ object Periodo {
 
         // ---- ánimo
         val vals = fechas.map { valDe(it) }
-        val acts = fechas.map { f -> Repo.dias[f]?.activacion?.toDouble() ?: mu.filter { it.fecha == f && it.tipo == "muestreo" }.mapNotNull { it.activacion?.toDouble() }.takeIf { it.isNotEmpty() }?.average() }
+        val acts = fechas.map { f -> Repo.dias[f]?.activacion?.toDouble() ?: mu.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.activacion?.toDouble() }.takeIf { it.isNotEmpty() }?.average() }
         val conVal = fechas.zip(vals).filter { it.second != null }
         val mejor = conVal.maxByOrNull { it.second!! }?.first
         val peor = conVal.minByOrNull { it.second!! }?.first
