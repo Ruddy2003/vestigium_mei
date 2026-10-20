@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -1057,7 +1058,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
     val sig by androidx.compose.runtime.rememberUpdatedState(siguiente)
     val deslizar = Modifier.pointerInput(fecha) {
         var total = 0f
-        androidx.compose.foundation.gestures.detectHorizontalDragGestures(onDragStart = { total = 0f }, onDragEnd = {
+        detectHorizontalDragGestures(onDragStart = { total = 0f }, onDragEnd = {
             if (total > umbralPaso) ant?.let { sentirPagina(Sentidos.Evento.PASAR); it() }
             else if (total < -umbralPaso) sig?.let { sentirPagina(Sentidos.Evento.PASAR); it() }
         }) { _, dx -> total += dx }

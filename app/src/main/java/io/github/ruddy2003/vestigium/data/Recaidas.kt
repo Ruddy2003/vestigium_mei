@@ -72,7 +72,7 @@ object Recaidas {
         var mejor = 0; var actual = 0
         val primero = respondidos.minOrNull()
         if (primero != null) {
-            var f = primero
+            var f: String = primero
             while (f <= hoy) {
                 if (f in dias) actual = 0 else { actual++; if (actual > mejor) mejor = actual }
                 f = Fechas.sumar(f, 1)
