@@ -109,7 +109,7 @@ object Exportar {
             "origen" to it.origen, "aviso_ts" to it.aviso_ts,
             "latencia_min" to it.aviso_ts?.let { a -> (Fechas.millis(it.ts) - Fechas.millis(a)) / 60000.0 },
             "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux,
-            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes)
+            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min)
     }
 
     fun filasTramos() = Repo.tramos.map {

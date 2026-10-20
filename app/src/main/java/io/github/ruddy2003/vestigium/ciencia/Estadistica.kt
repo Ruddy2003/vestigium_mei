@@ -149,6 +149,7 @@ object Estadistica {
         if (Repo.config.seguimiento_privado) {
             v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
             v += Variable("n_recaida", "Recaídas registradas con hora", "Privado")
+            if (Repo.momentos.any { it.tipo == "recaida" && it.duracion_min != null }) v += Variable("recaida_min", "Minutos de recaída", "Privado")
         }
         // Enfoque, siestas y lo que se deriva del teléfono y el reloj.
         if (Repo.tramos.isNotEmpty()) {
@@ -224,6 +225,7 @@ object Estadistica {
             val rec = Repo.momentos.filter { it.tipo == "recaida" }.groupingBy { it.fecha }.eachCount()
             rec.keys.minOrNull()?.let { p0 -> Repo.dias.keys.filter { it >= p0 }.forEach { f -> fila(f)["n_recaida"] = (rec[f] ?: 0).toDouble() } }
             rec.forEach { (f, n) -> fila(f)["n_recaida"] = n.toDouble() }
+            Repo.momentos.filter { it.tipo == "recaida" && it.duracion_min != null }.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["recaida_min"] = l.sumOf { it.duracion_min ?: 0 }.toDouble() }
         }
         // Cronómetro: desde el primer tramo, los días sin nada cuentan como 0.
         if (Repo.tramos.isNotEmpty()) {
@@ -507,7 +509,7 @@ object Estadistica {
         setOf("t_max", "t_min", "precip_mm", "nubes_pct", "luz_horas", "sol_horas", "presion_hpa"),
         setOf("aqi_us", "pm25"),
         setOf("gasto_total", "gasto_imprevisto"),
-        setOf("impulso", "recaida", "n_recaida", "n_impulso"),
+        setOf("impulso", "recaida", "n_recaida", "n_impulso", "recaida_min"),
         setOf("enfoque_min", "enfoque_estudio_min", "enfoque_lectura_min", "enfoque_idiomas_min", "enfoque_tesis_min", "enfoque_trabajo_min", "enfoque_creativo_min"),
         setOf("siesta", "siesta_min"),
         setOf("cama_min", "dormir_tras_tel_min", "ultimo_uso_h", "sueno_inicio_h", "carga_noche_h"),

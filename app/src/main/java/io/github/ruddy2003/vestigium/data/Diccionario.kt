@@ -35,6 +35,7 @@ object Diccionario {
         "lat" to "Latitud (grados)", "lon" to "Longitud (grados)", "precision_m" to "Precisión de la ubicación (metros)",
         "con_quien" to "Con quién estabas en el aviso de ánimo (lista: solo, pareja, amigos, familia, companeros, desconocidos)",
         "detonantes" to "Detonantes (lista)", "dispositivo" to "Recaída: en qué aparato (seguimiento privado)", "antes" to "Recaída: qué hacías justo antes (seguimiento privado)",
+        "duracion_min" to "Recaída: cuánto duró (minutos)", "recaida_min" to "Minutos de recaída en el día (seguimiento privado)",
         "es_siesta" to "El tramo es una siesta (0/1)", "inicio" to "Inicio, ISO 8601", "fin" to "Fin, ISO 8601", "min" to "Minutos",
         "cama_min" to "Minutos de pantalla en la última hora antes de dormirte (la noche que terminó ese día, según el reloj)",
         "dormir_tras_tel_min" to "Minutos entre soltar el teléfono y quedarte dormido", "tel_tras_despertar_min" to "Minutos entre despertar y usar el teléfono",

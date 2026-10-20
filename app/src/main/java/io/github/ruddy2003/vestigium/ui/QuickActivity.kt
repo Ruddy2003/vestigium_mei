@@ -144,11 +144,13 @@ class QuickActivity : FragmentActivity() {
             val luz = if (Repo.config.medir_luz) runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.lux(ctx) }.getOrNull() else null
             kotlinx.coroutines.delay(250)
             val ruido = if (Repo.config.medir_ruido) runCatching { io.github.ruddy2003.vestigium.sensores.Ambiente.ruido(ctx) }.getOrNull() else null
-            if (luz != null || ruido != null) actualizar(m.id) { it.copy(luz_lux = luz ?: it.luz_lux, ruido_db = ruido ?: it.ruido_db) }
+            if (luz != null || ruido != null) actualizar(m.id) { if (it.ts != m.ts) it else it.copy(luz_lux = luz ?: it.luz_lux, ruido_db = ruido ?: it.ruido_db) }
         }
         lifecycleScope.launch {
             val loc = Ubicacion.actual(this@QuickActivity) ?: return@launch
             val actual = Repo.momento(m.id) ?: m
+            // Si ya le cambiaste la hora, la ubicación de ahora no es la de ese momento.
+            if (actual.ts != m.ts) return@launch
             val lugar = Repo.lugarCercano(loc.latitude, loc.longitude)
             Repo.guardarMomento(actual.copy(lat = loc.latitude, lon = loc.longitude, precision_m = loc.accuracy, lugar = lugar?.id))
             Repo.db().ponerUbicacion(System.currentTimeMillis(), loc.latitude, loc.longitude, loc.accuracy, "momento")
@@ -232,7 +234,7 @@ class QuickActivity : FragmentActivity() {
             val mm = m!!
             val t = Catalogo.tipo(mm.tipo)
             Encabezado("Guardado: ${if (discreto) t?.discreto ?: "" else t?.nombre ?: mm.tipo}", "A las ${Fechas.horaDe(mm.ts)}. Lo demás es opcional; puedes cerrar.")
-            if (mm.tipo == "recaida") DetalleRecaida(mm)
+            if (mm.tipo == "recaida") DetalleRecaida(mm) { m = it }
             Etiqueta(t?.pregunta ?: "Detalle")
             OutlinedTextField(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
                 modifier = Modifier.fillMaxWidth(), minLines = 2, placeholder = { Text("Usa @persona y #tema") }, visualTransformation = rememberMarcas())
@@ -254,8 +256,61 @@ class QuickActivity : FragmentActivity() {
 
     /** Lo que ayuda a entender una recaída: qué la detonó, en qué aparato y qué hacías antes. Todo opcional. */
     @Composable
-    private fun DetalleRecaida(mm: Momento) {
+    private fun DetalleRecaida(mm: Momento, alCambiar: (Momento) -> Unit) {
+        val ctx = this
         var det by remember(mm.id) { mutableStateOf(mm.detonantes) }
+        var inicio by remember(mm.id) { mutableStateOf(Fechas.millis(mm.ts)) }
+        var dur by remember(mm.id) { mutableStateOf(mm.duracion_min) }
+        var durTexto by remember(mm.id) { mutableStateOf("") }
+        val ahoraMs = remember(mm.id) { Fechas.millis(mm.ts).takeIf { it > 0 } ?: System.currentTimeMillis() }
+        /** Otra hora de inicio: se guarda con su día y con la ubicación que había a esa hora. */
+        fun cambiarHora(ms: Long) {
+            inicio = ms
+            lifecycleScope.launch {
+                val actual = Repo.momento(mm.id) ?: return@launch
+                val n = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(actual, ms) }
+                Repo.guardarMomento(n)
+                if (n.fecha != actual.fecha) {
+                    previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }
+                    previoRecaida = io.github.ruddy2003.vestigium.data.Recaidas.registrar(n)
+                }
+                alCambiar(n)
+            }
+        }
+        Etiqueta("¿Cuándo empezó?")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(0 to "ahora", 15 to "hace 15 min", 30 to "hace 30 min", 60 to "hace 1 h", 120 to "hace 2 h", 180 to "hace 3 h").forEach { (min, n) ->
+                val ms = ahoraMs - min * 60_000L
+                Ficha(n, kotlin.math.abs(inicio - ms) < 60_000L) { cambiarHora(ms) }
+            }
+            Ficha("otra hora…", false) {
+                val z = java.time.Instant.ofEpochMilli(inicio).atZone(Fechas.zona())
+                android.app.TimePickerDialog(ctx, { _, h, mi ->
+                    // Una hora más tarde que ahora es de ayer (por ejemplo, a la 1:00 eliges las 23:30).
+                    val hoyCal = java.time.LocalDate.now()
+                    var t = hoyCal.atTime(h, mi).atZone(Fechas.zona()).toInstant().toEpochMilli()
+                    if (t > System.currentTimeMillis()) t -= 86_400_000L
+                    cambiarHora(t)
+                }, z.hour, z.minute, true).show()
+            }
+        }
+        val diaInicio = Fechas.diaLogicoDeMillis(inicio)
+        Ayuda("Empezó a las ${Fechas.horaDe(Fechas.isoDeMillis(inicio))}" + (if (diaInicio != Fechas.diaLogico()) " de ${Fechas.relativo(diaInicio)}" else "") +
+            (if (kotlin.math.abs(inicio - ahoraMs) > 60_000L) ". El lugar se toma de tus ubicaciones de esa hora." else "."))
+        Etiqueta("¿Cuánto duró?")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf(5, 10, 15, 30, 45, 60, 90, 120).forEach { d ->
+                Ficha(if (d < 60) "$d min" else if (d % 60 == 0) "${d / 60} h" else "${d / 60} h ${d % 60}", dur == d && durTexto.isEmpty()) {
+                    dur = if (dur == d && durTexto.isEmpty()) null else d; durTexto = ""
+                    actualizar(mm.id) { it.copy(duracion_min = dur) }
+                }
+            }
+        }
+        OutlinedTextField(value = durTexto, onValueChange = { t ->
+            durTexto = t.filter { it.isDigit() }.take(4); dur = durTexto.toIntOrNull()?.takeIf { it > 0 }
+            actualizar(mm.id) { it.copy(duracion_min = dur) }
+        }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("Otra duración (minutos)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
         var aparato by remember(mm.id) { mutableStateOf(mm.dispositivo) }
         var antes by remember(mm.id) { mutableStateOf(mm.antes) }
         val h = io.github.ruddy2003.vestigium.data.Recaidas.habito()

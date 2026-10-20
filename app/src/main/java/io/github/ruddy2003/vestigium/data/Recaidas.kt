@@ -31,6 +31,28 @@ object Recaidas {
         Repo.guardarDia(d.copy(recaida = p.recaida, habitos = habitos))
     }
 
+    /**
+     * El mismo momento a otra hora: su día lógico y la ubicación que había a esa hora (la muestra más cercana a ±30 min;
+     * si no hay, queda sin ubicación para no guardar el lugar de ahora). La luz y el ruido medidos al registrar se descartan.
+     */
+    fun aOtraHora(m: Momento, ms: Long): Momento {
+        val p = runCatching { Repo.db().ubicaciones(ms - 30 * 60_000L, ms + 30 * 60_000L).minByOrNull { kotlin.math.abs(it.ms - ms) } }.getOrNull()
+        return m.copy(ts = Fechas.isoDeMillis(ms), fecha = Fechas.diaLogicoDeMillis(ms), lat = p?.lat, lon = p?.lon, precision_m = p?.precision?.toFloat(),
+            lugar = p?.let { Repo.lugarCercano(it.lat, it.lon)?.id }, luz_lux = null, ruido_db = null)
+    }
+
+    /** Cambia la hora de una recaída ya guardada. Si cae en otro día, la marca del día se mueve con ella. */
+    fun moverHora(m: Momento, ms: Long): Momento {
+        val n = aOtraHora(m, ms)
+        Repo.guardarMomento(n)
+        if (n.fecha != m.fecha) {
+            val viejo = Repo.dia(m.fecha)
+            if (viejo.recaida == true && Repo.momentos.none { it.tipo == "recaida" && it.fecha == m.fecha && it.id != m.id }) Repo.guardarDia(viejo.copy(recaida = null))
+            registrar(n)
+        }
+        return n
+    }
+
     /** Días con recaída: los marcados en el día y los que tienen una recaída registrada con hora. */
     fun dias(): Set<String> = Repo.dias.values.filter { it.recaida == true }.map { it.fecha }.toSet() +
         Repo.momentos.filter { it.tipo == "recaida" }.map { it.fecha }
@@ -46,6 +68,8 @@ object Recaidas {
         /** Impulsos registrados con hora, y cuántos pasaron sin recaída en las 3 horas siguientes. */
         val impulsos: Int, val impulsosSuperados: Int,
         val diasDesdeUltima: Int?, val rachaMaxima: Int, val rachaActual: Int, val totalDias: Int, val diasConRespuesta: Int,
+        /** Duraciones anotadas (minutos). */
+        val duraciones: List<Int> = emptyList(),
     )
 
     fun resumen(hoy: String = Fechas.diaLogico()): Resumen {
@@ -79,6 +103,7 @@ object Recaidas {
             }
         }
         return Resumen(ih, rh, sem, lugares, det, antes, aparatos, entre, impMs.size, superados,
-            ultima?.let { Fechas.diasEntre(it, hoy).toInt() }, mejor, if (primero == null) 0 else actual, dias.size, respondidos.size)
+            ultima?.let { Fechas.diasEntre(it, hoy).toInt() }, mejor, if (primero == null) 0 else actual, dias.size, respondidos.size,
+            rec.mapNotNull { it.duracion_min }.filter { it > 0 })
     }
 }

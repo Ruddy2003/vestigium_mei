@@ -14,6 +14,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.clickable
+import io.github.ruddy2003.vestigium.data.Fechas
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -39,6 +43,8 @@ import io.github.ruddy2003.vestigium.ui.Vacio
 @Composable
 fun PantallaRecaidas(nav: Nav) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
+    var editando by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<io.github.ruddy2003.vestigium.data.Momento?>(null) }
+    editando?.let { m -> DialogoMomento(m) { editando = null } }
     Hoja("Impulsos y recaídas", nav.atras, "Solo para ti. Sirve para ver en qué horas, lugares y situaciones es más difícil, no para juzgarte.") {
         if (!Repo.config.seguimiento_privado) {
             Vacio("Activa el seguimiento privado en Más → Privacidad para usar esta pantalla.")
@@ -66,7 +72,12 @@ fun PantallaRecaidas(nav: Nav) {
             Text("Entre las ganas y la recaída: ${duracion(mediana)} (mediana)", style = MaterialTheme.typography.titleMedium)
             Ayuda("De ${m.size} ${if (m.size == 1) "recaída" else "recaídas"} con un impulso registrado antes. Ese rato es la ventana para cambiar de lugar, salir o hablar con alguien.")
         }
-        Seccion("A qué hora", "Cada barra es una hora del día, de 0:00 a 23:00.") {
+        if (r.duraciones.isNotEmpty()) Tarjeta(Modifier.padding(top = 10.dp)) {
+            val d = r.duraciones.sorted()
+            Text("Duración típica: ${duracion(d[d.size / 2].toDouble())} (mediana)", style = MaterialTheme.typography.titleMedium)
+            Ayuda("De ${d.size} ${if (d.size == 1) "recaída" else "recaídas"} con duración anotada · la más corta ${duracion(d.first().toDouble())}, la más larga ${duracion(d.last().toDouble())} · ${duracion(d.sum().toDouble())} en total.")
+        }
+        Seccion("A qué hora", "Cada barra es una hora del día, de 0:00 a 23:00 (según la hora en que empezó).") {
             Tarjeta {
                 if (r.recaidasHora.sum() + r.impulsosHora.sum() == 0) Ayuda("Aún no hay impulsos ni recaídas registrados con hora.")
                 else {
@@ -93,6 +104,23 @@ fun PantallaRecaidas(nav: Nav) {
             Lista("Detonantes", r.detonantes.map { it.first.replace("_", " ") to it.second })
             Lista("Justo antes", r.antes.map { (k, v) -> (Catalogo.ANTES.firstOrNull { it.id == k }?.nombre ?: k) to v })
             Lista("Aparato", r.aparatos.map { (k, v) -> (Catalogo.DISPOSITIVOS.firstOrNull { it.id == k }?.nombre ?: k) to v })
+        }
+        val lista = Repo.momentos.filter { it.tipo == "recaida" }.sortedByDescending { it.ts }
+        if (lista.isNotEmpty()) Seccion("Registro", "Toca una para corregir la hora, la duración o la nota.") {
+            Tarjeta {
+                lista.take(20).forEachIndexed { i, m ->
+                    if (i > 0) androidx.compose.material3.HorizontalDivider()
+                    Row(Modifier.fillMaxWidth().clickable { editando = m }.padding(vertical = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text("${Fechas.corto(m.fecha)} · ${Fechas.horaDe(m.ts)}" + (m.duracion_min?.let { " · ${duracion(it.toDouble())}" } ?: ""), style = MaterialTheme.typography.bodyLarge)
+                            val extra = listOfNotNull(Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre, m.detonantes.joinToString(", ") { it.replace("_", " ") }.ifBlank { null },
+                                m.antes?.let { a -> Catalogo.ANTES.firstOrNull { it.id == a }?.nombre?.lowercase() }).joinToString(" · ")
+                            if (extra.isNotEmpty()) Text(extra, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Text("✎", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
         }
         Ayuda("${r.totalDias} días con recaída de ${r.diasConRespuesta} días con seguimiento. Para cruzarlo con sueño, pantalla o ánimo, usa Entender → Cruzar dos variables (están en el grupo «Privado»).",
             Modifier.padding(top = 12.dp))

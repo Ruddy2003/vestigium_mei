@@ -165,8 +165,9 @@ fun PantallaCinta(nav: Nav) {
         mom.forEach { m ->
             val t = Fechas.millis(m.ts)
             val color = if (m.tipo == "recaida") cs.error else Tonos.valencia(m.valencia?.toDouble(), oscuro) ?: cs.secondary
-            cosas += Cosa(p, t, null, color, io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, Repo.config.discreto).take(1),
-                "${hm(t)} · ${io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, Repo.config.discreto)}" + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " — ${m.texto}" else "") +
+            val dur = m.duracion_min?.takeIf { it > 0 }
+            cosas += Cosa(p, t, dur?.let { t + it * 60_000L }, color, io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, Repo.config.discreto).take(1),
+                "${hm(t)} · ${io.github.ruddy2003.vestigium.ui.tipoNombre(m.tipo, Repo.config.discreto)}" + (dur?.let { " · $it min" } ?: "") + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " — ${m.texto}" else "") +
                     (Repo.lugares.firstOrNull { it.id == m.lugar }?.nombre?.let { " · en $it" } ?: ""))
         }
     }

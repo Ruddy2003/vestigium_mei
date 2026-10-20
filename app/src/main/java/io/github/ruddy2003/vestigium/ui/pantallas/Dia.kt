@@ -433,7 +433,8 @@ fun PantallaNoche(nav: Nav) {
                     Ficha("Sí", d.recaida == true) { cambiar(d.copy(recaida = if (d.recaida == true) null else true)) }
                 }
                 val recaidas = Repo.momentos.filter { it.fecha == fecha && it.tipo == "recaida" }
-                if (recaidas.isNotEmpty()) Clave("con hora", recaidas.joinToString("  ") { Fechas.horaDe(it.ts) + (Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.nombre?.let { n -> " · $n" } ?: "") })
+                if (recaidas.isNotEmpty()) Clave("con hora", recaidas.joinToString("  ") { Fechas.horaDe(it.ts) + (it.duracion_min?.let { d -> " · $d min" } ?: "") +
+                    (Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.nombre?.let { n -> " · $n" } ?: "") })
                 TextButton(onClick = {
                     ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java).putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO)
                         .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, "recaida").putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.ORIGEN, "app"))

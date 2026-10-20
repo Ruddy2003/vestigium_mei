@@ -78,6 +78,8 @@ data class Momento(
     val detonantes: List<String> = emptyList(),
     val dispositivo: String? = null,
     val antes: String? = null,
+    /** Cuánto duró (minutos), en una recaída. */
+    val duracion_min: Int? = null,
 )
 
 /** El momento es del seguimiento privado: nunca sale en reportes, «Tu año», logros, mapas ni widgets. */

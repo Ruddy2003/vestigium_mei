@@ -731,7 +731,7 @@ class Capturas {
             io.github.ruddy2003.vestigium.data.Momento("m3", iso(hoy, 13, 5), hoy, "muestreo", valencia = 6, con_quien = listOf("amigos")),
             io.github.ruddy2003.vestigium.data.Momento("m4", iso(hoy, 19, 40), hoy, "alegria", texto = "cena con @ana y @luis #cumple", intensidad = 4),
             io.github.ruddy2003.vestigium.data.Momento("m5", iso(ayer, 23, 10), ayer, "impulso", intensidad = 3),
-            io.github.ruddy2003.vestigium.data.Momento("m6", iso(ayer, 23, 50), ayer, "recaida", detonantes = listOf("noche_insomnio"), antes = "cama", dispositivo = "telefono", lugar = "casa"),
+            io.github.ruddy2003.vestigium.data.Momento("m6", iso(ayer, 23, 50), ayer, "recaida", detonantes = listOf("noche_insomnio"), antes = "cama", dispositivo = "telefono", lugar = "casa", duracion_min = 25),
         )
         Repo.ejemploEnMemoria(Repo.dias, Repo.salud, Repo.pantalla.mapValues { (_, p) -> p.copy(por_hora_min = List(24) { h -> if (h in 8..23) (h * 7) % 45 else 0 }) }, Repo.gastos,
             momentos, Repo.notifs, Repo.entorno, Repo.nutricion, Repo.lugares, Repo.visitas, Repo.sesiones, Repo.ingresos)

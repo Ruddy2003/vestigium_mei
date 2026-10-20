@@ -117,6 +117,16 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
     var intensidad by remember(m.id) { mutableStateOf(m.intensidad) }
     var valencia by remember(m.id) { mutableStateOf(m.valencia) }
     var confirmar by remember(m.id) { mutableStateOf(false) }
+    // En una recaída también se corrigen la hora de inicio y cuánto duró.
+    val esRecaida = m.tipo == "recaida"
+    var hora by remember(m.id) { mutableStateOf(Fechas.horaDe(m.ts)) }
+    var dur by remember(m.id) { mutableStateOf(m.duracion_min?.toString() ?: "") }
+    /** La hora escrita dentro del día lógico del momento: antes de las 5:00 es la madrugada siguiente. */
+    fun msDeHora(): Long? {
+        val t = runCatching { java.time.LocalTime.parse(hora.trim().padStart(5, '0').take(5)) }.getOrNull() ?: return null
+        val dia = if (t.hour < 5) Fechas.parse(m.fecha).plusDays(1) else Fechas.parse(m.fecha)
+        return dia.atTime(t).atZone(Fechas.zona()).toInstant().toEpochMilli()
+    }
     AlertDialog(
         onDismissRequest = { cerrar() },
         title = { Text("${tipoNombre(m.tipo, discreto)} · ${Fechas.horaDe(m.ts)}") },
@@ -125,9 +135,26 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
             OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
             if (m.tipo == "muestreo") { Etiqueta("Valencia"); Escala(valencia, 1, 7) { valencia = it } }
             else { Etiqueta("Intensidad"); Escala(intensidad, 1, 5) { intensidad = it } }
+            if (esRecaida) {
+                androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = hora, onValueChange = { hora = it.filter { c -> c.isDigit() || c == ':' }.take(5) }, modifier = Modifier.weight(1f), singleLine = true,
+                        label = { Text("Empezó (HH:MM)") }, isError = msDeHora() == null,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
+                    OutlinedTextField(value = dur, onValueChange = { dur = it.filter { c -> c.isDigit() }.take(4) }, modifier = Modifier.weight(1f), singleLine = true,
+                        label = { Text("Duró (min)") },
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number))
+                }
+                Ayuda("Si cambias la hora, el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
+            }
         }
         },
-        confirmButton = { TextButton(onClick = { Repo.guardarMomento(m.copy(texto = texto, intensidad = intensidad, valencia = valencia)); cerrar() }) { Text("Guardar") } },
+        confirmButton = { TextButton(onClick = {
+            val n = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, duracion_min = if (esRecaida) dur.toIntOrNull()?.takeIf { it > 0 } else m.duracion_min)
+            val ms = if (esRecaida) msDeHora() else null
+            if (ms != null && Fechas.horaDe(Fechas.isoDeMillis(ms)) != Fechas.horaDe(m.ts)) io.github.ruddy2003.vestigium.data.Recaidas.moverHora(n, ms)
+            else Repo.guardarMomento(n)
+            cerrar()
+        }) { Text("Guardar") } },
         dismissButton = {
         TextButton(onClick = {
             if (confirmar) {
