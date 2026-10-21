@@ -128,7 +128,7 @@ fun RecuadroLogros(nav: Nav) {
             Row(Modifier.fillMaxSize().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                 val muestra = (hechos.take(5) + l.orEmpty().filter { !it.hecho && !it.secreto }.sortedByDescending { it.fraccion }.take(5)).take(6)
                 if (muestra.isEmpty()) Text("Tus medallas aparecerán aquí", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-                muestra.forEach { MedallaLogro(it, 58.dp) }
+                muestra.forEach { TrofeoLogro(it, 76.dp) }
             }
         }
     }
@@ -142,6 +142,7 @@ fun PantallaLogros(nav: Nav) {
     var filtro by remember { mutableStateOf("todos") }
     var nuevos by remember { mutableStateOf<List<Logros.Logro>>(emptyList()) }
     var crear by remember { mutableStateOf(false) }
+    var abierto by remember { mutableStateOf<Logros.Logro?>(null) }
     // Al abrir: se festejan los nuevos (la primera vez solo se cuentan, para no festejar todo tu historial de golpe).
     LaunchedEffect(todos != null) {
         val l = todos ?: return@LaunchedEffect
@@ -152,7 +153,7 @@ fun PantallaLogros(nav: Nav) {
             Logros.marcarVistos(n)
         }
     }
-    Hoja("Logros", nav.atras, "Lo que has conseguido: escribir, moverte, viajar, leer, ser constante. Los de constancia piden la mayoría de los días, no una racha perfecta.") {
+    Hoja("Logros", nav.atras, "Tu sala de trofeos: escribir, moverte, viajar, leer, ser constante. Toca uno para ver lo que lograste o cuánto te falta. Los de constancia piden la mayoría de los días, no una racha perfecta.") {
         val l = todos
         if (l == null) { Vacio("Contando…"); return@Hoja }
         val hechos = l.filter { it.hecho }
@@ -176,12 +177,7 @@ fun PantallaLogros(nav: Nav) {
         if (nuevos.isNotEmpty()) Tarjeta(Modifier.padding(top = 10.dp)) {
             Text("¡Nuevo" + if (nuevos.size > 1) "s logros!" else " logro!", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary)
             Row(Modifier.padding(top = 8.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                nuevos.take(12).forEach { n ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(vertical = 4.dp)) {
-                        MedallaLogro(n, 64.dp)
-                        Text(n.nombre, style = MaterialTheme.typography.labelMedium, maxLines = 2, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp).size(width = 86.dp, height = 36.dp))
-                    }
-                }
+                nuevos.take(12).forEach { n -> Box(Modifier.clickable { abierto = n }) { TrofeoConNombre(n, 84.dp) } }
             }
         }
         Row(Modifier.padding(top = 12.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -200,12 +196,12 @@ fun PantallaLogros(nav: Nav) {
         }
         if (crear) EditorLogro(cerrar = { crear = false })
         if (lista.isEmpty()) Vacio(if (filtro == "Tuyos") "Todavía no inventas ninguno." else "Nada por aquí todavía.")
-        Tarjeta(Modifier.padding(top = 10.dp)) {
-            lista.forEachIndexed { i, g ->
-                if (i > 0) HorizontalDivider()
-                FilaLogro(g)
-            }
-        }
+        // La sala de trofeos: en «Todos», una vitrina por categoría; en los filtros, una sola.
+        if (filtro == "todos") Logros.CATEGORIAS.forEach { c ->
+            val deC = l.filter { it.categoria == c }.sortedWith(compareByDescending<Logros.Logro> { it.hecho }.thenByDescending { if (it.hecho) it.nivel.toFloat() else it.fraccion })
+            SalaTrofeos(deC, titulo = c + " · " + deC.count { it.hecho } + " de " + deC.size) { abierto = it }
+        } else SalaTrofeos(lista) { abierto = it }
+        abierto?.let { a -> DetalleTrofeo(a, l) { abierto = null } }
         if (filtro != "Tuyos") TextButton(onClick = { filtro = "Tuyos"; crear = true }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
             Text("+ inventar un logro propio", style = MaterialTheme.typography.labelLarge)
         }

@@ -417,12 +417,24 @@ object Widgets {
         val c = io.github.ruddy2003.vestigium.data.Enfoque.enCurso()
         val hoy = io.github.ruddy2003.vestigium.data.Enfoque.delDia(Fechas.diaLogico()).filterKeys { it != "siesta" }.values.sum()
         v.setTextViewText(R.id.sub_enfoque, if (hoy > 0) "hoy ${hoy / 60}:${"%02d".format(hoy % 60)}" else "")
-        if (c != null) {
-            val base = android.os.SystemClock.elapsedRealtime() - (System.currentTimeMillis() - c.second)
-            v.setChronometer(R.id.crono_enfoque, base, null, true)
-            v.setTextViewText(R.id.estado_enfoque, io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(c.first).lowercase() + " · toca para terminar")
+        val p = io.github.ruddy2003.vestigium.data.Enfoque.plan()
+        if (c != null && p != null) {
+            val E = io.github.ruddy2003.vestigium.data.Enfoque
+            val ahora = System.currentTimeMillis()
+            val rest = E.restante(p, ahora)
+            val corre = p.seg_inicio != null
+            // Con meta, cuenta hacia atrás lo que queda del bloque o del descanso; libre, hacia arriba. En pausa se detiene.
+            if (rest != null) { v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime() + rest, null, corre); v.setChronometerCountDown(R.id.crono_enfoque, true) }
+            else { v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime() - E.transcurrido(p, ahora), null, corre); v.setChronometerCountDown(R.id.crono_enfoque, false) }
+            v.setTextViewText(R.id.estado_enfoque, when {
+                p.esperando -> "¿empezamos el bloque ${E.numeroBloque(p)}?"
+                E.enPausa(p) -> "en pausa · toca para ver"
+                E.enDescanso(p) -> "descanso · toca para ver"
+                else -> io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(c.first).lowercase() + (if (E.bloques(p) > 1) " · bloque ${E.numeroBloque(p)} de ${E.bloques(p)}" else "") + " · toca para ver"
+            })
         } else {
             v.setChronometer(R.id.crono_enfoque, android.os.SystemClock.elapsedRealtime(), null, false)
+            v.setChronometerCountDown(R.id.crono_enfoque, false)
             v.setTextViewText(R.id.estado_enfoque, "toca para empezar")
         }
         clic(v, R.id.raiz_enfoque, pi(ctx, 3930, quick(ctx, QuickActivity.M_ENFOQUE)))

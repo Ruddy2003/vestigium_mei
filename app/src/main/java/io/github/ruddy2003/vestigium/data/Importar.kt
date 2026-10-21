@@ -107,7 +107,7 @@ object Importar {
      * los avisos ya programados). Con datos, se suman listas y mapas sin borrar nada de lo de aquí.
      */
     fun combinarConfig(c: Config, r: Config, nuevo: Boolean): Config {
-        if (nuevo) return r.copy(carpeta_respaldo = null, disparos = emptyMap(), plan_muestreo = emptyMap(), ultimo_sync = c.ultimo_sync, enfoque_tipo = null, enfoque_inicio = null,
+        if (nuevo) return r.copy(carpeta_respaldo = null, disparos = emptyMap(), plan_muestreo = emptyMap(), ultimo_sync = c.ultimo_sync, enfoque_tipo = null, enfoque_inicio = null, enfoque_plan = null,
             bienvenida_vista = true, drive = c.drive, drive_carpeta = c.drive_carpeta ?: r.drive_carpeta, drive_ultimo = c.drive_ultimo, respaldo_ultimo = c.respaldo_ultimo)
         val perfilVacio = c.perfil == Perfil()
         return c.copy(

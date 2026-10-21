@@ -167,6 +167,30 @@ data class Tramo(
 )
 
 /**
+ * Un enfoque planeado: [meta_min] minutos de enfoque repartidos en bloques iguales con [descansos] descansos de
+ * [descanso_min] minutos en medio. Sin meta = cronómetro libre. El estado va en el mismo objeto: en qué segmento vas
+ * (bloque o descanso), desde cuándo cuenta ([seg_inicio]; null = en pausa o esperando que confirmes el siguiente bloque)
+ * y cuánto llevaba antes de pausar.
+ */
+@Serializable
+data class PlanEnfoque(
+    val tipo: String,
+    val meta_min: Int? = null,
+    val descansos: Int = 0,
+    val descanso_min: Int = 10,
+    val inicio: Long = 0L,
+    val segmento: Int = 0,
+    val seg_inicio: Long? = null,
+    val seg_acumulado_ms: Long = 0L,
+    /** Cuándo empezó de verdad el segmento (antes de cualquier pausa): es el inicio del tramo que se guarda. */
+    val seg_primer_inicio: Long? = null,
+    val esperando: Boolean = false,
+    /** Enfoque ya guardado en los bloques terminados de esta sesión (ms). */
+    val hecho_ms: Long = 0L,
+    val pausas: Int = 0,
+)
+
+/**
  * Una campaña de la semana: un reto opcional que aceptaste (por ejemplo, 5 noches de 7 horas).
  * [lunes] es el lunes de esa semana; [reto] el id del catálogo; [meta] cuántos días de 7.
  */
@@ -277,6 +301,15 @@ data class SaludDia(
     val vo2max: Double? = null,
     val agua_ml: Double? = null,
     val ts: String? = null,
+    /** El sueño lo corregiste a mano: la sincronización ya no lo pisa. */
+    val sueno_manual: Boolean = false,
+    /** Lo que llegó de Health Connect esa noche (fuente, horas, etapas, si se usó): para entender de dónde salió el número. */
+    val sueno_fuentes: List<String> = emptyList(),
+    /** Siestas que registró el reloj ese día (minutos), aparte del sueño de la noche. */
+    val siesta_reloj_min: Int? = null,
+    /** Oxígeno mínimo y frecuencia cardiaca media durante el sueño de la noche. */
+    val spo2_min: Double? = null,
+    val fc_sueno: Double? = null,
 )
 
 @Serializable
@@ -532,6 +565,10 @@ data class Config(
     /** Cronómetro de enfoque en marcha: qué y desde cuándo (milisegundos). */
     val enfoque_tipo: String? = null,
     val enfoque_inicio: Long? = null,
+    /** El bloque de enfoque en curso con su plan (meta, descansos, pausa); null = nada corriendo. */
+    val enfoque_plan: PlanEnfoque? = null,
+    /** Lo último que elegiste al planear un enfoque, para proponerlo de nuevo. */
+    val enfoque_ultimo: PlanEnfoque? = null,
     /** Un personaje del tema en Día que reacciona a cómo dormiste, tu ánimo, tu racha y el clima. */
     val personaje: Boolean = true,
     /** Logros que pusiste en tu hall (ids), en orden. */
@@ -544,6 +581,9 @@ data class Config(
     val noche_solo_falta: Boolean = true,
     /** Sustancias que no se muestran en pantallas (cinta, Día, Vida). Siguen en los análisis y en la exportación. */
     val sustancias_ocultas: List<String> = emptyList(),
+    /** Qué devolvió Health Connect en la última sincronización, por tipo de dato (para «Estado de los datos»). */
+    val hc_diagnostico: Map<String, String> = emptyMap(),
+    val hc_diagnostico_ts: String? = null,
     /** Vida media de la cafeína para estimar cuánta te queda (horas; varía mucho entre personas). */
     val cafeina_vida_media_h: Double = 5.0,
     /** Quién es cada persona que mencionas. */

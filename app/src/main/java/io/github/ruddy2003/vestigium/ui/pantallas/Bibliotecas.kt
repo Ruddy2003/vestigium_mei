@@ -134,7 +134,7 @@ fun PantallaBibliotecas(nav: Nav, inicial: String) {
         when (cual) {
             "suenos" -> BibliotecaSuenos(nav)
             "cartas" -> BibliotecaCartas(nav)
-            "momentos" -> BibliotecaMomentos(nav)
+            "momentos" -> BibliotecaMomentosLibreta(nav)
             else -> BibliotecaDiario(nav)
         }
     }
@@ -302,7 +302,7 @@ fun PantallaSueno(nav: Nav) {
 
 // ---------------------------------------------------------------- Momentos
 
-private fun momentosVisibles() = Repo.config.seguimiento_privado.let { privado -> Repo.momentos.filter { privado || it.tipo != "recaida" } }
+internal fun momentosVisibles() = Repo.config.seguimiento_privado.let { privado -> Repo.momentos.filter { privado || it.tipo != "recaida" } }
 
 /** Los días con algo registrado al momento (ánimo, momentos o sustancias visibles), del más reciente al más antiguo. */
 fun diasConMomentos(): List<String> =
@@ -341,52 +341,6 @@ fun hojaMomentos(fecha: String, discreto: Boolean = Repo.config.discreto): io.gi
     val v = ms.filter { io.github.ruddy2003.vestigium.data.Catalogo.esRegistro(it) }.mapNotNull { it.valencia }
     return io.github.ruddy2003.vestigium.data.Dia(fecha, nota = l.joinToString("\n\n") { it.second },
         valencia = v.takeIf { it.isNotEmpty() }?.average()?.let { kotlin.math.round(it).toInt() })
-}
-
-@Composable
-private fun BibliotecaMomentos(nav: Nav) {
-    val discreto = Repo.config.discreto
-    val todas = remember(Repo.momentos, Repo.consumos, discreto) { diasConMomentos().mapNotNull { hojaMomentos(it, discreto) } }
-    var busca by remember { mutableStateOf("") }
-    var anio by remember { mutableStateOf<String?>(null) }
-    var meses by remember { mutableIntStateOf(6) }
-    val q = sinAcentos(busca.trim())
-    val visibles = todas.filter { d -> (anio == null || d.fecha.startsWith(anio!!)) && (q.isBlank() || sinAcentos(d.nota).contains(q)) }
-    OutlinedTextField(busca, { busca = it }, Modifier.fillMaxWidth().padding(top = 12.dp), singleLine = true,
-        placeholder = { Text("buscar en tus momentos", style = MaterialTheme.typography.bodyMedium) }, textStyle = MaterialTheme.typography.bodyLarge)
-    FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        todas.map { it.fecha.take(4) }.distinct().forEach { a -> Ficha(a, anio == a) { anio = if (anio == a) null else a } }
-    }
-    if (todas.isEmpty()) Vacio("Todavía no hay momentos. Toca «¿Cómo estás ahora?» en la pestaña Diario.")
-    else if (visibles.isEmpty()) Vacio("Nada coincide con la búsqueda.")
-    val porMes = visibles.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
-    porMes.entries.take(meses).forEach { (mes, lista) ->
-        Text(rotuloMes(mes), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 20.dp, bottom = 2.dp))
-        EstanteDiario(lista) { f -> Seleccion.momentos = f; nav.ir("hoja_momentos") }
-    }
-    if (porMes.size > meses) BotonSecundario("ver más meses", Modifier.padding(top = 14.dp)) { meses += 6 }
-}
-
-/** Una hoja de la libreta de momentos, con el diseño del tema; se pasa de día deslizando. */
-@Composable
-fun PantallaHojaMomentos(nav: Nav) {
-    val ctx = LocalContext.current
-    val discreto = Repo.config.discreto
-    val todas = remember(Repo.momentos, Repo.consumos) { diasConMomentos() }
-    var fecha by remember { mutableStateOf(Seleccion.momentos ?: todas.firstOrNull() ?: Fechas.diaLogico()) }
-    val d = remember(fecha, Repo.momentos, Repo.consumos, discreto) { hojaMomentos(fecha, discreto) }
-    val i = todas.indexOf(fecha)
-    LecturaTema(fecha, d, volver = nav.atras,
-        anterior = if (i in 0 until todas.size - 1) ({ fecha = todas[i + 1]; Seleccion.momentos = fecha }) else null,
-        siguiente = if (i > 0) ({ fecha = todas[i - 1]; Seleccion.momentos = fecha }) else null,
-        acciones = listOf(
-            "Compartir texto" to {
-                if (d != null) ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain")
-                    .putExtra(Intent.EXTRA_TEXT, "Momentos · ${Fechas.titulo(fecha)}\n\n" + d.nota), "Compartir").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            },
-            "Abrir el día" to { Seleccion.abrir(nav, fecha) },
-            "Ver en la cinta" to { Seleccion.cinta = fecha; nav.ir("cinta") },
-        ), capitular = false)
 }
 
 // ---------------------------------------------------------------- Cartas

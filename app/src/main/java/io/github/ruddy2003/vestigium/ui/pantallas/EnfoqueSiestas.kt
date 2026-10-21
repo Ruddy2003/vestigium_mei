@@ -49,10 +49,14 @@ fun PantallaEnfoque(nav: Nav) {
     fun abrir() = ctx.startActivity(android.content.Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, QuickActivity.M_ENFOQUE).putExtra(QuickActivity.ORIGEN, "app"))
     Hoja("Enfoque y siestas", nav.atras, "Lo que mides con el cronómetro: estudio, lectura, idiomas, tesis, trabajo, algo creativo y siestas. También desde el widget o el botón del panel rápido.") {
         if (corriendo != null) Tarjeta(Modifier.padding(top = 12.dp)) {
-            Text("Corriendo: ${Catalogo.nombreTramo(corriendo.first).lowercase()} · ${horasMin(((ahora - corriendo.second) / 60_000).toInt())}", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            @Suppress("UNUSED_VARIABLE") val tic = ahora
+            val p = Enfoque.plan()
+            Text("Corriendo: ${Catalogo.nombreTramo(corriendo.first).lowercase()} · ${horasMin(Enfoque.minutosCorriendo())} de enfoque" +
+                (p?.let { if (Enfoque.bloques(it) > 1) " · bloque ${Enfoque.numeroBloque(it)} de ${Enfoque.bloques(it)}" else "" } ?: ""),
+                style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {
-                BotonPrincipal("Terminar") { Enfoque.terminar(ctx) }
-                TextButton(onClick = { Enfoque.descartar(ctx) }) { Text("descartar") }
+                BotonPrincipal("Ver el reloj") { abrir() }
+                TextButton(onClick = { Enfoque.terminar(ctx) }) { Text("terminar") }
             }
         } else BotonPrincipal("Empezar o anotar", Modifier.fillMaxWidth().padding(top = 12.dp)) { abrir() }
         val semana = (0 until 7).map { Fechas.sumar(hoy, -it.toLong()) }.toSet()

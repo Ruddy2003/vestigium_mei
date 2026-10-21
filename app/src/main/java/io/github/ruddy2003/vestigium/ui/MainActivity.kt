@@ -306,7 +306,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
         },
         containerColor = MaterialTheme.colorScheme.background,
         // Al leer una entrada, la página ocupa toda la pantalla.
-        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
+        bottomBar = { if (pila.lastOrNull() !in setOf("entrada", "sueno", "carta", "hoja_momentos")) BarraPestanas(if (pila.isEmpty()) pestana else null, tema, ::tocar, ::largo) },
     ) { pad ->
         val esquema = MaterialTheme.colorScheme
         Box(Modifier.padding(pad).fillMaxSize().fondoTema(tema, esquema)) {

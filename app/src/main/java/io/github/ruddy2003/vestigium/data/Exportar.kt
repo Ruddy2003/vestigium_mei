@@ -354,7 +354,9 @@ object Exportar {
             "fc_reposo" to it.fc_reposo, "hrv_rmssd" to it.hrv_rmssd, "pasos" to it.pasos, "spo2" to it.spo2,
             "peso_kg" to it.peso_kg, "grasa_pct" to it.grasa_pct, "resp_rpm" to it.resp_rpm, "temp_c" to it.temp_c, "temp_piel_delta" to it.temp_piel_delta,
             "pa_sistolica" to it.pa_sistolica, "pa_diastolica" to it.pa_diastolica, "distancia_km" to it.distancia_km, "cal_activas" to it.cal_activas,
-            "cal_totales" to it.cal_totales, "pisos" to it.pisos, "vo2max" to it.vo2max, "agua_ml" to it.agua_ml)
+            "cal_totales" to it.cal_totales, "pisos" to it.pisos, "vo2max" to it.vo2max, "agua_ml" to it.agua_ml,
+            "spo2_min" to it.spo2_min, "fc_sueno" to it.fc_sueno, "siesta_reloj_min" to it.siesta_reloj_min, "sueno_manual" to it.sueno_manual,
+            "sueno_fuentes" to it.sueno_fuentes)
     }
 
     fun filasPantalla() = Repo.pantalla.values.sortedBy { it.fecha }.map {

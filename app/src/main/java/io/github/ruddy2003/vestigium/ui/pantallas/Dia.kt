@@ -232,7 +232,13 @@ fun PantallaDia(nav: Nav) {
                             Row(Modifier.padding(top = 6.dp)) { BotonDictado { t -> cambiar(d.copy(sueno_texto = (d.sueno_texto + " " + t).trim())) } }
                         }
                     }
-                    Repo.salud[fecha]?.sueno_min?.let { m -> Clave("horologium", "${m / 60} h ${m % 60} min dormido según tu reloj") }
+                    val sr = Repo.salud[fecha]
+                    var editandoSueno by remember(fecha) { mutableStateOf(false) }
+                    sr?.sueno_min?.let { m -> Clave("horologium", "${m / 60} h ${m % 60} min dormido " + if (sr.sueno_manual) "(corregido a mano)" else "según tu reloj") }
+                    TextButton(onClick = { editandoSueno = true }) {
+                        Text(if (sr?.sueno_min != null) "corregir las horas de sueño" else "anotar a qué hora dormí y desperté", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                    }
+                    if (editandoSueno) io.github.ruddy2003.vestigium.ui.EditarSueno(fecha) { editandoSueno = false }
                 }
             }
         }
@@ -597,14 +603,16 @@ private fun Vestigios(fecha: String, nav: Nav) {
             if (m != null) {
                 algo = true
                 val ini = s.sueno_inicio; val fin = s.sueno_fin
-                Clave("somnus", hm(m) + if (ini != null) " · ${Fechas.horaDe(ini)}→${if (fin != null) Fechas.horaDe(fin) else "?"}" else "")
+                Clave("somnus", hm(m) + (if (ini != null) " · ${Fechas.horaDe(ini)}→${if (fin != null) Fechas.horaDe(fin) else "?"}" else "") + if (s.sueno_manual) " · a mano" else "")
                 val prof = s.sueno_profundo_min
                 if (prof != null) Clave("  stadia", "profundo ${hm(prof)} · rem ${hm(s.sueno_rem_min ?: 0)} · ligero ${hm(s.sueno_ligero_min ?: 0)}")
             }
-            if (s.fc_reposo != null || s.hrv_rmssd != null) {
-                algo = true
-                Clave("cor", listOfNotNull(s.fc_reposo?.let { "reposo %.0f lpm".format(it) }, s.hrv_rmssd?.let { "hrv %.0f ms".format(it) }, s.spo2?.let { "spo₂ %.0f%%".format(it) }).joinToString(" · "))
-            }
+            s.siesta_reloj_min?.let { algo = true; Clave("  siesta", "${hm(it)} según el reloj") }
+            // Corazón: la media del día y su rango, en reposo, de noche y la variabilidad (lo que haya).
+            val cor = listOfNotNull(s.fc_media?.let { "media %.0f lpm".format(it) + (if (s.fc_min != null && s.fc_max != null) " (%.0f–%.0f)".format(s.fc_min, s.fc_max) else "") },
+                s.fc_reposo?.let { "reposo %.0f".format(it) }, s.fc_sueno?.let { "dormido %.0f".format(it) }, s.hrv_rmssd?.let { "hrv %.0f ms".format(it) })
+            if (cor.isNotEmpty()) { algo = true; Clave("cor", cor.joinToString(" · ")) }
+            if (s.spo2 != null) { algo = true; Clave("oxygenium", "spo₂ media %.1f%%".format(s.spo2) + (s.spo2_min?.let { " · mínima de noche %.0f%%".format(it) } ?: "")) }
             s.pasos?.let { algo = true; Clave("passus", "%,d pasos".format(it)) }
         }
         ac?.minutos?.filterKeys { it != "quieto" }?.filterValues { it > 0 }?.takeIf { it.isNotEmpty() }?.let { m ->

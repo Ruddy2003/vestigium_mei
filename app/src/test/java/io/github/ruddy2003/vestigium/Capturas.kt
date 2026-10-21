@@ -879,6 +879,21 @@ class Capturas {
     @Test fun hojaMomentosRomano() = v73(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(navVacia) }
     @Test fun logrosConHallAndalus() = v73(TemaId.ANDALUS, true, 4400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
     @Test fun momentosV73Napoleon() = v73(TemaId.NAPOLEON, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMomentos(navVacia) }
+
+    // ---------------- v77: reloj de enfoque, trofeos ----------------
+    private fun planEnfoque(segmento: Int, haceMin: Int, esperando: Boolean = false, hechoMin: Int = 0): io.github.ruddy2003.vestigium.data.PlanEnfoque {
+        val ahora = System.currentTimeMillis()
+        return io.github.ruddy2003.vestigium.data.PlanEnfoque("tesis", 120, 3, 10, inicio = ahora - 90 * 60_000L, segmento = segmento,
+            seg_inicio = if (esperando) null else ahora - haceMin * 60_000L, seg_primer_inicio = if (esperando) null else ahora - haceMin * 60_000L,
+            esperando = esperando, hecho_ms = hechoMin * 60_000L)
+    }
+    @Test fun enfoquePlanearRomano() = v73(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    @Test fun enfoqueSiestaGotico() = v73(TemaId.GOTICO, true, 2000) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(true) {} }
+    @Test fun enfoqueCorriendoCiber() = v73(TemaId.CIBER, true, 2400, { it.copy(enfoque_plan = planEnfoque(0, 12)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    @Test fun enfoqueDescansoBotanico() = v73(TemaId.BOTANICO, false, 2400, { it.copy(enfoque_plan = planEnfoque(1, 4, hechoMin = 30)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    @Test fun enfoqueEsperandoSeda() = v73(TemaId.SEDA, false, 2400, { it.copy(enfoque_plan = planEnfoque(2, 0, esperando = true, hechoMin = 30)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    @Test fun trofeosRomano() = v73(TemaId.ROMANO, false, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
+    @Test fun trofeosOrden() = v73(TemaId.ORDEN, true, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
 }
 
 @Composable

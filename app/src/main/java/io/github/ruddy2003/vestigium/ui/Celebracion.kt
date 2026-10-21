@@ -127,10 +127,10 @@ fun CapaLogro() {
             Column(Modifier.statusBarsPadding().navigationBarsPadding().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(Estilo.seccion("Logro conseguido", null).first, style = MaterialTheme.typography.titleLarge, color = cs.primary, textAlign = TextAlign.Center)
                 Box(Modifier.size(230.dp).graphicsLayer { scaleX = escala.value; scaleY = escala.value }, contentAlignment = Alignment.Center) {
-                    io.github.ruddy2003.vestigium.ui.pantallas.PiezaLogro(g, 210.dp, tema = tema)
+                    io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(g, 220.dp)
                 }
                 Text(g.nombre, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
-                Text(g.descripcion, style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
+                Text(io.github.ruddy2003.vestigium.ui.pantallas.pasado(g.descripcion) + ".", style = MaterialTheme.typography.bodyLarge, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
                 Text(listOf("bronce", "plata", "oro", "legendario")[(g.nivel - 1).coerceIn(0, 3)] + " · " + g.categoria.lowercase() + (g.conseguido?.let { " · " + Fechas.titulo(it).lowercase() } ?: ""),
                     style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 8.dp)) {

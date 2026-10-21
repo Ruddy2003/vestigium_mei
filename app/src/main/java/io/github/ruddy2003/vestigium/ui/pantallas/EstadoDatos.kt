@@ -40,6 +40,7 @@ import io.github.ruddy2003.vestigium.sensores.Sincronizar
 import io.github.ruddy2003.vestigium.sensores.Ubicacion
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
+import io.github.ruddy2003.vestigium.ui.Clave
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Reanudar
@@ -75,6 +76,22 @@ object EstadoDatos {
         val uPasos = Repo.salud.values.filter { (it.pasos ?: 0) > 0 }.maxOfOrNull { it.fecha }
         l += if (hc.isEmpty()) Fuente("Reloj · sueño y pasos", Salud3.SIN_PERMISO, "Health Connect sin permisos", "permisos")
         else Fuente("Reloj · sueño y pasos", maxOf(por(uSueno, hoy), por(uPasos, hoy)), "sueño ${hace(uSueno, hoy)} · pasos ${hace(uPasos, hoy)}", "sincronizar")
+        // Corazón y oxígeno: sin permiso, o con permiso pero sin datos (Samsung Health no los está escribiendo en Health Connect).
+        if (hc.isNotEmpty()) {
+            val pFc = androidx.health.connect.client.permission.HealthPermission.getReadPermission(androidx.health.connect.client.records.HeartRateRecord::class)
+            val pO2 = androidx.health.connect.client.permission.HealthPermission.getReadPermission(androidx.health.connect.client.records.OxygenSaturationRecord::class)
+            val uFc = Repo.salud.values.filter { it.fc_media != null || it.fc_reposo != null }.maxOfOrNull { it.fecha }
+            val uO2 = Repo.salud.values.filter { it.spo2 != null }.maxOfOrNull { it.fecha }
+            l += when {
+                pFc !in hc || pO2 !in hc -> Fuente("Reloj · corazón y oxígeno", Salud3.SIN_PERMISO,
+                    "Falta el permiso de " + listOfNotNull("ritmo cardiaco".takeIf { pFc !in hc }, "oxígeno".takeIf { pO2 !in hc }).joinToString(" y ") + " en Health Connect", "permisos")
+                uFc == null && uO2 == null -> Fuente("Reloj · corazón y oxígeno", Salud3.ATRASADA,
+                    "Health Connect no tiene esos datos. En Samsung Health → Ajustes → Health Connect, deja que escriba ritmo cardiaco y saturación de oxígeno; luego sincroniza.", "sincronizar")
+                else -> Fuente("Reloj · corazón y oxígeno", maxOf(por(uFc, hoy), por(uO2, hoy, 3)), "ritmo ${hace(uFc, hoy)} · oxígeno ${hace(uO2, hoy)}", "sincronizar")
+            }
+            if ("android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" !in hc)
+                l += Fuente("Reloj en segundo plano", Salud3.SIN_PERMISO, "Sin permiso de lectura en segundo plano: el reloj solo se actualiza con la app abierta", "permisos")
+        }
         // Pantalla.
         l += if (!Pantalla.tienePermiso(ctx)) Fuente("Uso del teléfono", Salud3.SIN_PERMISO, "Falta el acceso a uso", "permisos")
         else Repo.pantalla.keys.maxOrNull().let { u -> Fuente("Uso del teléfono", por(u, hoy), "último día: ${hace(u, hoy)}", "sincronizar") }
@@ -163,6 +180,11 @@ fun PantallaEstadoDatos(nav: Nav) {
                     }
                 }
             }
+        }
+        // Lo que devolvió Health Connect en la última sincronización, tipo por tipo: sirve para saber por qué algo no llega.
+        val diag = Repo.config.hc_diagnostico
+        if (diag.isNotEmpty()) Seccion("Detalle de Health Connect", "Última lectura: " + (Repo.config.hc_diagnostico_ts?.let { Fechas.corto(it.take(10)) + " " + Fechas.horaDe(it) } ?: "?"), plegable = true, plegadaPorDefecto = true) {
+            Tarjeta { diag.forEach { (k, v) -> Clave(k, v, 18) } }
         }
         TextButton(onClick = { nav.ir("permisos") }, modifier = Modifier.padding(top = 8.dp)) { Text("abrir Permisos y sensores ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
     }

@@ -90,6 +90,8 @@ object Estadistica {
             Variable("sueno_rem", "Minutos de sueño REM", "Sueño"), Variable("sueno_recordado", "Recordé un sueño (0/1)", "Sueño"),
             Variable("sueno_valencia", "Valencia del sueño", "Sueño"),
             Variable("hrv", "Variabilidad cardiaca (HRV)", "Cuerpo"), Variable("fc_reposo", "Frecuencia cardiaca en reposo", "Cuerpo"),
+            Variable("fc_media", "Frecuencia cardiaca media del día", "Cuerpo"), Variable("fc_sueno", "Frecuencia cardiaca dormido", "Cuerpo"),
+            Variable("spo2", "Saturación de oxígeno media (%)", "Cuerpo"), Variable("spo2_min", "Oxígeno mínimo de noche (%)", "Cuerpo"),
             Variable("pasos", "Pasos", "Cuerpo"), Variable("pantalla_min", "Minutos de pantalla", "Teléfono"),
             Variable("desbloqueos", "Desbloqueos del teléfono", "Teléfono"), Variable("gasto_total", "Gasto del día", "Dinero"),
             Variable("gasto_imprevisto", "Hubo gasto imprevisto (0/1)", "Dinero"), Variable("palabras", "Palabras en el diario", "Texto"),
@@ -298,6 +300,7 @@ object Estadistica {
             val r = fila(f)
             r["sueno_horas"] = s.sueno_min?.let { it / 60.0 }; r["sueno_profundo"] = s.sueno_profundo_min?.toDouble()
             r["sueno_rem"] = s.sueno_rem_min?.toDouble(); r["hrv"] = s.hrv_rmssd; r["fc_reposo"] = s.fc_reposo; r["pasos"] = s.pasos?.toDouble()
+            r["fc_media"] = s.fc_media; r["fc_sueno"] = s.fc_sueno; r["spo2"] = s.spo2; r["spo2_min"] = s.spo2_min
         }
         Repo.pantalla.forEach { (f, p) ->
             val r = fila(f); r["pantalla_min"] = p.total_min.toDouble(); r["desbloqueos"] = p.desbloqueos.toDouble()
@@ -631,7 +634,7 @@ object Estadistica {
         setOf("sueno_recordado", "sueno_valencia", "sueno_lucidez", "sueno_vividez", "sueno_palabras"),
         setOf("ingreso_total", "balance_dinero", "gasto_total"), setOf("prediccion", "error_prediccion"),
         setOf("valencia", "muestreo_valencia"), setOf("activacion", "muestreo_activacion"),
-        setOf("hrv", "fc_reposo"),
+        setOf("hrv", "fc_reposo", "fc_media", "fc_sueno"), setOf("spo2", "spo2_min"),
         setOf("pasos", "a_pie_min", "cal_activas", "ejercicio_min", "distancia_km"),
         setOf("distancia_km", "vehiculo_min", "coche_min", "sin_wifi_min", "lugares_distintos"),
         setOf("gimnasio", "volumen_kg", "series_gimnasio", "ejercicio_min", "cal_activas"),

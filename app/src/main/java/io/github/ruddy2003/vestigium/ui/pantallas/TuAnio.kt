@@ -389,7 +389,7 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
         Grande(d.medallas.size.toDouble(), "logros este año", v)
         FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             d.medallas.take(12).forEach { m -> Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(78.dp)) {
-                MedallaLogro(m, 56.dp); Text(m.nombre, style = MaterialTheme.typography.labelSmall, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
+                TrofeoLogro(m, 64.dp); Text(m.nombre, style = MaterialTheme.typography.labelSmall, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
             } }
         }
     }

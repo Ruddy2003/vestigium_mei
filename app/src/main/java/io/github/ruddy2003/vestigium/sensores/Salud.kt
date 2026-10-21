@@ -66,6 +66,68 @@ object Salud {
             HealthConnectClient.getOrCreate(ctx).permissionController.getGrantedPermissions()
         } catch (e: Exception) { emptySet() }
 
+    /** Lee todas las páginas (Health Connect devuelve de a 1000). */
+    private suspend fun <T : androidx.health.connect.client.records.Record> leer(cliente: HealthConnectClient, tipo: kotlin.reflect.KClass<T>, rango: TimeRangeFilter, max: Int = 6000): List<T> {
+        val out = ArrayList<T>()
+        var token: String? = null
+        do {
+            val r = cliente.readRecords(ReadRecordsRequest(recordType = tipo, timeRangeFilter = rango, pageSize = 1000, pageToken = token))
+            out += r.records; token = r.pageToken
+        } while (token != null && out.size < max)
+        return out
+    }
+
+    /** Nombre corto de la app que escribió el dato. */
+    fun fuente(pkg: String): String = when {
+        pkg.contains("shealth") || pkg.contains("samsung") -> "Samsung Health"
+        pkg.contains("apps.fitness") -> "Google Fit"
+        pkg.contains("urbandroid") -> "Sleep as Android"
+        pkg.contains("fitbit") -> "Fitbit"
+        pkg.contains("garmin") -> "Garmin"
+        pkg.contains("healthdata") -> "Health Connect"
+        else -> pkg.substringAfterLast('.')
+    }
+
+    private class Bloque(var ini: Instant, var fin: Instant, val sesiones: MutableList<SleepSessionRecord> = ArrayList())
+
+    private class Noche(val asleep: Long, val prof: Long, val rem: Long, val lig: Long, val desp: Long, val etapas: Boolean)
+
+    /**
+     * Cuánto dormiste en un bloque, en segundos (no en minutos por etapa: Samsung escribe etapas de pocos minutos y
+     * truncar cada una hacía perder hasta una hora). Si las etapas cubren al menos 60 % de la sesión se suman las de sueño;
+     * si no, se toma la sesión entera menos lo despierto. Las sesiones que se enciman dentro del bloque cuentan una sola vez.
+     */
+    private fun noche(b: Bloque): Noche {
+        var asleep = 0L; var prof = 0L; var rem = 0L; var lig = 0L; var desp = 0L; var etapas = false
+        // La más larga primero; una que se encime más de 10 minutos con otra ya contada se descarta.
+        val usadas = ArrayList<SleepSessionRecord>()
+        b.sesiones.sortedByDescending { java.time.Duration.between(it.startTime, it.endTime).seconds }.forEach { ses ->
+            val choca = usadas.any { u -> minOf(u.endTime, ses.endTime).epochSecond - maxOf(u.startTime, ses.startTime).epochSecond > 600 }
+            if (!choca) usadas += ses
+        }
+        for (ses in usadas) {
+            val dur = java.time.Duration.between(ses.startTime, ses.endTime).seconds
+            var cub = 0L; var dormido = 0L; var p = 0L; var r = 0L; var l = 0L; var d = 0L
+            for (st in ses.stages) {
+                val m = java.time.Duration.between(st.startTime, st.endTime).seconds.coerceAtLeast(0)
+                cub += m
+                when (st.stage) {
+                    SleepSessionRecord.STAGE_TYPE_DEEP -> { p += m; dormido += m }
+                    SleepSessionRecord.STAGE_TYPE_REM -> { r += m; dormido += m }
+                    SleepSessionRecord.STAGE_TYPE_LIGHT -> { l += m; dormido += m }
+                    SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED, SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> d += m
+                    else -> dormido += m
+                }
+            }
+            if (ses.stages.isNotEmpty()) etapas = true
+            asleep += if (ses.stages.isNotEmpty() && cub >= dur * 0.6) dormido else (dur - d).coerceAtLeast(0)
+            prof += p; rem += r; lig += l; desp += d
+        }
+        return Noche(asleep, prof, rem, lig, desp, etapas)
+    }
+
+    private fun hm(t: Instant, zona: ZoneId) = t.atZone(zona).toLocalTime().let { "%02d:%02d".format(it.hour, it.minute) }
+
     /** Sincroniza los últimos `dias` días. El sueño se asigna al día en que despertaste. */
     suspend fun sincronizar(ctx: Context, dias: Int = 3): Int {
         if (!disponible(ctx)) return 0
@@ -74,6 +136,15 @@ object Salud {
         if (ok.isEmpty()) return 0
         val zona = ZoneId.systemDefault()
         var n = 0
+        // Lo que devolvió cada tipo de dato, para «Estado de los datos».
+        val diag = LinkedHashMap<String, String>()
+        val conDato = HashMap<String, Int>()
+        fun bien(k: String) { conDato[k] = (conDato[k] ?: 0) + 1 }
+        fun error(k: String, e: Throwable) { diag[k] = "error: " + (e::class.simpleName ?: "?") + (e.message?.take(80)?.let { " · $it" } ?: "") }
+        suspend fun intentar(k: String, perm: String, bloque: suspend () -> Unit) {
+            if (perm !in ok) { diag[k] = "sin permiso"; return }
+            try { bloque() } catch (e: Exception) { error(k, e) }
+        }
         for (i in 0 until dias) {
             val fecha = Fechas.sumar(Fechas.hoyCalendario(), -i.toLong())
             val d = Fechas.parse(fecha)
@@ -82,68 +153,115 @@ object Salud {
             val rango = TimeRangeFilter.between(ini, fin)
             var s = Repo.salud[fecha] ?: SaludDia(fecha = fecha)
 
-            if (HealthPermission.getReadPermission(StepsRecord::class) in ok) runCatching {
-                val r = cliente.aggregate(AggregateRequest(setOf(StepsRecord.COUNT_TOTAL), rango))
-                s = s.copy(pasos = r[StepsRecord.COUNT_TOTAL])
+            intentar("pasos", HealthPermission.getReadPermission(StepsRecord::class)) {
+                val ag = cliente.aggregate(AggregateRequest(setOf(StepsRecord.COUNT_TOTAL), rango))
+                s = s.copy(pasos = ag[StepsRecord.COUNT_TOTAL]); if (s.pasos != null) bien("pasos")
             }
-            if (HealthPermission.getReadPermission(HeartRateRecord::class) in ok) runCatching {
-                val r = cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG, HeartRateRecord.BPM_MIN, HeartRateRecord.BPM_MAX), rango))
-                s = s.copy(fc_media = r[HeartRateRecord.BPM_AVG]?.toDouble(), fc_min = r[HeartRateRecord.BPM_MIN]?.toDouble(), fc_max = r[HeartRateRecord.BPM_MAX]?.toDouble())
+            intentar("ritmo cardiaco", HealthPermission.getReadPermission(HeartRateRecord::class)) {
+                val ag = cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG, HeartRateRecord.BPM_MIN, HeartRateRecord.BPM_MAX), rango))
+                var media = ag[HeartRateRecord.BPM_AVG]?.toDouble(); var min = ag[HeartRateRecord.BPM_MIN]?.toDouble(); var max = ag[HeartRateRecord.BPM_MAX]?.toDouble()
+                // Si la agregación no trae nada, se calcula con las muestras (algunas apps solo escriben series sueltas).
+                if (media == null) {
+                    val m = leer(cliente, HeartRateRecord::class, rango).flatMap { it.samples }.map { it.beatsPerMinute.toDouble() }
+                    if (m.isNotEmpty()) { media = m.average(); min = m.min(); max = m.max() }
+                }
+                s = s.copy(fc_media = r(media, 1), fc_min = min, fc_max = max); if (media != null) bien("ritmo cardiaco")
             }
-            if (HealthPermission.getReadPermission(RestingHeartRateRecord::class) in ok) runCatching {
-                val r = cliente.readRecords(ReadRecordsRequest(recordType = RestingHeartRateRecord::class, timeRangeFilter = rango))
-                if (r.records.isNotEmpty()) s = s.copy(fc_reposo = r.records.map { it.beatsPerMinute.toDouble() }.average())
+            intentar("frecuencia en reposo", HealthPermission.getReadPermission(RestingHeartRateRecord::class)) {
+                val l = leer(cliente, RestingHeartRateRecord::class, rango)
+                if (l.isNotEmpty()) { s = s.copy(fc_reposo = l.map { it.beatsPerMinute.toDouble() }.average()); bien("frecuencia en reposo") }
             }
-            if (HealthPermission.getReadPermission(OxygenSaturationRecord::class) in ok) runCatching {
-                val r = cliente.readRecords(ReadRecordsRequest(recordType = OxygenSaturationRecord::class, timeRangeFilter = rango))
-                if (r.records.isNotEmpty()) s = s.copy(spo2 = r.records.map { it.percentage.value }.average())
+            intentar("oxígeno", HealthPermission.getReadPermission(OxygenSaturationRecord::class)) {
+                val l = leer(cliente, OxygenSaturationRecord::class, rango)
+                if (l.isNotEmpty()) { s = s.copy(spo2 = r(l.map { it.percentage.value }.average(), 1)); bien("oxígeno") }
             }
-            // Noche que termina este día: de las 18:00 del día anterior a las 14:00 de este.
-            val noche = TimeRangeFilter.between(d.minusDays(1).atTime(18, 0).atZone(zona).toInstant(), d.atTime(14, 0).atZone(zona).toInstant())
-            if (HealthPermission.getReadPermission(SleepSessionRecord::class) in ok) runCatching {
-                val r = cliente.readRecords(ReadRecordsRequest(recordType = SleepSessionRecord::class, timeRangeFilter = noche))
-                val sesiones = r.records.filter { it.endTime.atZone(zona).toLocalDate() == d }
-                if (sesiones.isNotEmpty()) {
-                    var total = 0L; var prof = 0L; var rem = 0L; var lig = 0L; var desp = 0L
-                    var hayEtapas = false
-                    for (ses in sesiones) {
-                        if (ses.stages.isEmpty()) {
-                            total += java.time.Duration.between(ses.startTime, ses.endTime).toMinutes()
-                        } else for (st in ses.stages) {
-                            hayEtapas = true
-                            val m = java.time.Duration.between(st.startTime, st.endTime).toMinutes()
-                            when (st.stage) {
-                                SleepSessionRecord.STAGE_TYPE_DEEP -> { prof += m; total += m }
-                                SleepSessionRecord.STAGE_TYPE_REM -> { rem += m; total += m }
-                                SleepSessionRecord.STAGE_TYPE_LIGHT -> { lig += m; total += m }
-                                SleepSessionRecord.STAGE_TYPE_SLEEPING -> total += m
-                                SleepSessionRecord.STAGE_TYPE_AWAKE, SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED, SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> desp += m
-                                else -> {}
-                            }
-                        }
+            // El sueño: de las 12:00 del día anterior al final de este; se queda con lo que termina este día.
+            val ventana = TimeRangeFilter.between(d.minusDays(1).atTime(12, 0).atZone(zona).toInstant(), fin)
+            var bloqueNoche: Bloque? = null
+            intentar("sueño", HealthPermission.getReadPermission(SleepSessionRecord::class)) {
+                val todas = leer(cliente, SleepSessionRecord::class, ventana).filter { it.endTime.atZone(zona).toLocalDate() == d && it.endTime > it.startTime }
+                if (s.sueno_manual) { s = s.copy(sueno_fuentes = todas.map { "${fuente(it.metadata.dataOrigin.packageName)} ${hm(it.startTime, zona)}–${hm(it.endTime, zona)} · ${it.stages.size} etapas" }); return@intentar }
+                // Una sola fuente por noche: la que trae etapas (Samsung Health primero). Así no se suma la misma noche dos veces.
+                val porFuente = todas.groupBy { it.metadata.dataOrigin.packageName }
+                val elegida = porFuente.maxByOrNull { (pkg, l) ->
+                    (if (l.any { it.stages.isNotEmpty() }) 4_000_000_000L else 0L) + (if (fuente(pkg) == "Samsung Health") 2_000_000_000L else 0L) +
+                        l.sumOf { java.time.Duration.between(it.startTime, it.endTime).seconds }
+                }?.key
+                val propias = porFuente[elegida].orEmpty().sortedBy { it.startTime }
+                // Bloques: sesiones separadas por menos de una hora son la misma noche.
+                val bloques = ArrayList<Bloque>()
+                for (ses in propias) {
+                    val b = bloques.lastOrNull()
+                    if (b != null && ses.startTime.epochSecond - b.fin.epochSecond < 3600) { b.sesiones += ses; if (ses.endTime > b.fin) b.fin = ses.endTime }
+                    else bloques += Bloque(ses.startTime, ses.endTime, mutableListOf(ses))
+                }
+                // La noche: el bloque más largo que empezó antes del mediodía; lo demás son siestas.
+                val mediodia = d.atTime(12, 0).atZone(zona).toInstant()
+                val principal = bloques.filter { it.ini < mediodia }.maxByOrNull { it.fin.epochSecond - it.ini.epochSecond }
+                bloqueNoche = principal
+                val siestas = bloques.filter { it !== principal }
+                val fuentes = todas.sortedBy { it.startTime }.map { ses ->
+                    val estado = when {
+                        ses.metadata.dataOrigin.packageName != elegida -> "otra fuente, no se suma"
+                        principal?.sesiones?.contains(ses) == true -> "noche"
+                        else -> "siesta"
                     }
-                    val inicio = sesiones.minOf { it.startTime }; val finS = sesiones.maxOf { it.endTime }
+                    "${fuente(ses.metadata.dataOrigin.packageName)} ${hm(ses.startTime, zona)}–${hm(ses.endTime, zona)} · ${ses.stages.size} etapas · $estado"
+                }
+                if (principal != null) {
+                    val nn = noche(principal)
+                    fun min(x: Long) = Math.round(x / 60.0).toInt()
                     s = s.copy(
-                        sueno_min = total.toInt(),
-                        sueno_profundo_min = if (hayEtapas) prof.toInt() else null,
-                        sueno_rem_min = if (hayEtapas) rem.toInt() else null,
-                        sueno_ligero_min = if (hayEtapas) lig.toInt() else null,
-                        sueno_despierto_min = if (hayEtapas) desp.toInt() else null,
-                        sueno_inicio = Fechas.isoDeMillis(inicio.toEpochMilli()),
-                        sueno_fin = Fechas.isoDeMillis(finS.toEpochMilli()),
+                        sueno_min = min(nn.asleep),
+                        sueno_profundo_min = if (nn.etapas) min(nn.prof) else null, sueno_rem_min = if (nn.etapas) min(nn.rem) else null,
+                        sueno_ligero_min = if (nn.etapas) min(nn.lig) else null, sueno_despierto_min = if (nn.etapas) min(nn.desp) else null,
+                        sueno_inicio = Fechas.isoDeMillis(principal.ini.toEpochMilli()), sueno_fin = Fechas.isoDeMillis(principal.fin.toEpochMilli()),
+                        sueno_fuentes = fuentes,
+                        siesta_reloj_min = siestas.sumOf { noche(it).asleep }.takeIf { it > 0 }?.let { min(it) },
                     )
+                    bien("sueño")
+                } else {
+                    // La lectura funcionó y no hay noche: se borra lo que hubiera quedado mal de antes.
+                    s = s.copy(sueno_min = null, sueno_profundo_min = null, sueno_rem_min = null, sueno_ligero_min = null, sueno_despierto_min = null,
+                        sueno_inicio = null, sueno_fin = null, sueno_fuentes = fuentes,
+                        siesta_reloj_min = siestas.sumOf { noche(it).asleep }.takeIf { it > 0 }?.let { Math.round(it / 60.0).toInt() })
                 }
             }
-            if (HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class) in ok) runCatching {
-                val r = cliente.readRecords(ReadRecordsRequest(recordType = HeartRateVariabilityRmssdRecord::class, timeRangeFilter = noche))
-                if (r.records.isNotEmpty()) s = s.copy(hrv_rmssd = r.records.map { it.heartRateVariabilityMillis }.average())
+            // Durante la noche: variabilidad, frecuencia y oxígeno mínimo.
+            val rangoNoche = bloqueNoche?.let { TimeRangeFilter.between(it.ini, it.fin) }
+                ?: s.sueno_inicio?.let { a -> s.sueno_fin?.let { b -> TimeRangeFilter.between(Instant.ofEpochMilli(Fechas.millis(a)), Instant.ofEpochMilli(Fechas.millis(b))) } }
+            intentar("variabilidad (HRV)", HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class)) {
+                val l = leer(cliente, HeartRateVariabilityRmssdRecord::class, rangoNoche ?: TimeRangeFilter.between(d.minusDays(1).atTime(18, 0).atZone(zona).toInstant(), d.atTime(14, 0).atZone(zona).toInstant()))
+                if (l.isNotEmpty()) { s = s.copy(hrv_rmssd = r(l.map { it.heartRateVariabilityMillis }.average(), 1)); bien("variabilidad (HRV)") }
+            }
+            if (rangoNoche != null) {
+                if (HealthPermission.getReadPermission(HeartRateRecord::class) in ok) runCatching {
+                    s = s.copy(fc_sueno = r(cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG), rangoNoche))[HeartRateRecord.BPM_AVG]?.toDouble(), 1))
+                }
+                if (HealthPermission.getReadPermission(OxygenSaturationRecord::class) in ok) runCatching {
+                    val l = leer(cliente, OxygenSaturationRecord::class, rangoNoche)
+                    if (l.isNotEmpty()) s = s.copy(spo2_min = r(l.minOf { it.percentage.value }, 1))
+                }
             }
             s = extras(cliente, ok, rango, s)
             s = s.copy(ts = Fechas.ahoraIso())
             Repo.guardarSalud(s); n++
         }
         if (HealthPermission.getReadPermission(ExerciseSessionRecord::class) in ok) runCatching { ejercicio(cliente, dias + 1) }
+        // Resumen por tipo: en cuántos de los días revisados hubo dato, o el error/permiso que lo impidió.
+        listOf("sueño", "pasos", "ritmo cardiaco", "oxígeno", "frecuencia en reposo", "variabilidad (HRV)").forEach { k ->
+            if (diag[k] == null) diag[k] = conDato[k]?.let { "datos en $it de $dias días" } ?: "Health Connect no tiene datos de esto en $dias días"
+            else if (conDato[k] != null && diag[k]?.startsWith("error") == true) diag[k] = "datos en ${conDato[k]} de $dias días; a veces: ${diag[k]}"
+        }
+        diag["segundo plano"] = if ("android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" in ok) "permitido" else "sin permiso: solo se actualiza con la app abierta"
+        Repo.cambiarConfig { it.copy(hc_diagnostico = diag, hc_diagnostico_ts = Fechas.ahoraIso()) }
         return n
+    }
+
+    /** Vuelve a leer del reloj un solo día (tras quitar la corrección a mano). */
+    suspend fun resincronizarDia(ctx: Context, fecha: String) {
+        val dias = (Fechas.diasEntre(fecha, Fechas.hoyCalendario()) + 1).toInt().coerceIn(1, 60)
+        sincronizar(ctx, dias)
     }
 
     private fun r(x: Double?, d: Int = 1): Double? = x?.let { val f = Math.pow(10.0, d.toDouble()); Math.round(it * f) / f }

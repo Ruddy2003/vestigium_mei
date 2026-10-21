@@ -64,7 +64,7 @@ class QuickActivity : FragmentActivity() {
         const val MODO = "modo"; const val TIPO = "tipo"; const val VALENCIA = "valencia"
         const val ORIGEN = "origen"; const val AVISO_MS = "aviso_ms"; const val NOTIF = "notif"
         const val M_ANIMO = "animo"; const val M_MOMENTO = "momento"; const val M_MENU = "menu"
-        const val M_GASTO = "gasto"; const val M_SUENO = "sueno"; const val M_MINIMO = "minimo"; const val M_ENFOQUE = "enfoque"
+        const val M_GASTO = "gasto"; const val M_SUENO = "sueno"; const val M_MINIMO = "minimo"; const val M_ENFOQUE = "enfoque"; const val M_SIESTA = "siesta"
         /** Sustancias: con [CONSUMO] abre ese registro para completarlo (lo de anoche); con [SUSTANCIA], esa sustancia. */
         const val M_CONSUMO = "consumo"; const val CONSUMO = "consumo_id"; const val SUSTANCIA = "sustancia"
         const val CATEGORIA = "categoria"; const val CALIDAD = "calidad"; const val RECORDADO = "recordado"
@@ -75,6 +75,8 @@ class QuickActivity : FragmentActivity() {
         enableEdgeToEdge()
         Repo.init(this)
         val modo = intent.getStringExtra(MODO) ?: M_MENU
+        // El enfoque y la siesta viven en su propio reloj a pantalla completa.
+        if (modo == M_ENFOQUE || modo == M_SIESTA) { abrirReloj(modo == M_SIESTA); finish(); return }
         val origen = intent.getStringExtra(ORIGEN) ?: if (intent.hasExtra(AVISO_MS)) "notificacion" else "acceso_directo"
         val avisoMs = intent.getLongExtra(AVISO_MS, 0L).takeIf { it > 0 }
         intent.getIntExtra(NOTIF, 0).takeIf { it != 0 }?.let { NotificationManagerCompat.from(this).cancel(it) }
@@ -141,7 +143,7 @@ class QuickActivity : FragmentActivity() {
                                 M_GASTO -> GastoRapido(catInicial)
                                 M_SUENO -> SuenoRapido()
                                 M_MINIMO -> Minimo()
-                                M_ENFOQUE -> EnfoqueRapido()
+                                M_ENFOQUE, M_SIESTA -> androidx.compose.runtime.LaunchedEffect(Unit) { abrirReloj(pantalla == M_SIESTA); terminar() }
                                 M_CONSUMO -> ConsumoRapido(consumoId, sustanciaInicial, origen)
                                 else -> Registrar(ir)
                             }
@@ -206,7 +208,7 @@ class QuickActivity : FragmentActivity() {
             }
         }
         val botones = listOfNotNull(
-            "Sustancias" to M_CONSUMO, "Gasto" to M_GASTO, "Sueño" to M_SUENO, "Enfoque o siesta" to M_ENFOQUE, "Diario de hoy" to "diario",
+            "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto" to M_GASTO, "Sueño" to M_SUENO, "Diario de hoy" to "diario",
             "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
         )
         FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
@@ -403,57 +405,9 @@ class QuickActivity : FragmentActivity() {
     }
 
     /** El cronómetro: elegir qué empieza, ver cuánto lleva y terminarlo; también anotar una siesta que ya pasó. */
-    @Composable
-    private fun EnfoqueRapido() {
-        val ctx = this
-        val c = io.github.ruddy2003.vestigium.data.Enfoque.enCurso(Repo.config)
-        var nota by remember { mutableStateOf("") }
-        val ahora by androidx.compose.runtime.produceState(System.currentTimeMillis()) { while (true) { kotlinx.coroutines.delay(1000); value = System.currentTimeMillis() } }
-        if (c != null) {
-            val seg = ((ahora - c.second) / 1000).coerceAtLeast(0)
-            Encabezado(if (c.first == "siesta") "Siesta en curso" else "Enfoque: ${Catalogo.nombreTramo(c.first).lowercase()}", "Empezó a las ${Fechas.horaDe(Fechas.isoDeMillis(c.second))}.")
-            Text("%d:%02d:%02d".format(seg / 3600, (seg / 60) % 60, seg % 60), style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-            OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Qué hiciste (opcional): #tesis, capítulo 2…") }, singleLine = true)
-            Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { io.github.ruddy2003.vestigium.data.Enfoque.descartar(ctx); Toast.makeText(ctx, "Descartado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Descartar") }
-                BotonPrincipal("Terminar") {
-                    val t = io.github.ruddy2003.vestigium.data.Enfoque.terminar(ctx, nota)
-                    Toast.makeText(ctx, if (t != null) "Guardado: ${t.min} min" else "Duró menos de un minuto; no se guardó.", Toast.LENGTH_SHORT).show()
-                    terminar()
-                }
-            }
-            return
-        }
-        Encabezado("Empezar a medir", "Toca qué vas a hacer. El tiempo corre aunque cierres esto; lo terminas desde la notificación, el widget o aquí.")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 3) {
-            (Catalogo.ENFOQUE + Catalogo.SIESTA).forEach { o ->
-                Surface(onClick = { io.github.ruddy2003.vestigium.data.Enfoque.iniciar(ctx, o.id); Toast.makeText(ctx, "Corriendo: ${o.nombre.lowercase()}", Toast.LENGTH_SHORT).show(); terminar() },
-                    modifier = Modifier.weight(1f).heightIn(min = 52.dp), shape = RoundedCornerShape(4.dp), color = MaterialTheme.colorScheme.surface,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
-                    Box(contentAlignment = Alignment.Center) { Text(o.nombre, style = MaterialTheme.typography.titleSmall) }
-                }
-            }
-        }
-        // Una siesta (o un bloque) que ya pasó.
-        var tipo by remember { mutableStateOf("siesta") }
-        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(java.time.LocalDateTime.now().withSecond(0).withNano(0).minusMinutes(30)) }
-        var min by remember { mutableStateOf<Int?>(null) }
-        Etiqueta("¿Ya pasó? Anótalo")
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            (listOf(Catalogo.SIESTA) + Catalogo.ENFOQUE).forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
-        }
-        Etiqueta("¿Cuándo empezó?")
-        SelectorHora(cuando, atajos = listOf(30, 60, 90, 120, 180)) { cuando = it }
-        Etiqueta("¿Cuánto duró?")
-        SelectorDuracion(min, listOf(10, 15, 20, 30, 45, 60, 90, 120)) { min = it }
-        Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.End) {
-            BotonPrincipal("Guardar", habilitado = (min ?: 0) > 0) {
-                val t = io.github.ruddy2003.vestigium.data.Enfoque.agregarMs(tipo, (cuando ?: java.time.LocalDateTime.now()).aMillis(), min ?: 0)
-                Toast.makeText(ctx, if (t != null) "Guardado" else "No se pudo guardar.", Toast.LENGTH_SHORT).show()
-                if (t != null) terminar()
-            }
-        }
+    private fun abrirReloj(siesta: Boolean) {
+        startActivity(android.content.Intent(this, EnfoqueActivity::class.java).putExtra(EnfoqueActivity.SIESTA, siesta)
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP))
     }
 
     /** Guarda dónde estabas en un consumo recién creado (si es de ahora). */
