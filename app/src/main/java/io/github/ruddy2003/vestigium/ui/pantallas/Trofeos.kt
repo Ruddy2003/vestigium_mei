@@ -66,8 +66,18 @@ private fun figura(categoria: String) = when (categoria) {
     "Gente" -> "corazon"; "Curiosos" -> "estrella"; else -> "copa"
 }
 
+private val SINGULAR = mapOf("días" to "día", "sueños" to "sueño", "cartas" to "carta", "momentos" to "momento", "avisos" to "aviso", "veces" to "vez",
+    "libros" to "libro", "ciudades" to "ciudad", "países" to "país", "palabras" to "palabra", "semanas" to "semana", "sesiones" to "sesión",
+    "kilómetros" to "kilómetro", "horas" to "hora", "bloques" to "bloque", "obras" to "obra", "películas" to "película", "series" to "serie",
+    "juegos" to "juego", "personas" to "persona", "lugares" to "lugar", "fotos" to "foto", "pruebas" to "prueba", "noches" to "noche")
+private val RX_UNO = Regex("(?<![\\d.,])1 (" + SINGULAR.keys.joinToString("|") + ")\\b")
+
+/** «1 días» → «1 día» (las descripciones se arman con la meta como número). */
+fun singular(desc: String): String = RX_UNO.replace(desc) { m -> "1 " + (SINGULAR[m.groupValues[1]] ?: m.groupValues[1]) }
+
 /** «Llena el diario 100 días» → «Llenaste el diario 100 días». Lo que no empieza con un verbo queda igual. */
-fun pasado(desc: String): String {
+fun pasado(desc0: String): String {
+    val desc = singular(desc0)
     val i = desc.indexOf(' ').takeIf { it > 0 } ?: return desc
     val v = desc.substring(0, i); val resto = desc.substring(i)
     val especiales = mapOf("Haz" to "Hiciste", "Duerme" to "Dormiste", "Lee" to "Leíste", "Ve" to "Viste", "Mide" to "Mediste", "Ten" to "Tuviste",
@@ -252,7 +262,7 @@ private fun Placa(l: Logros.Logro, modifier: Modifier = Modifier) {
             }
             secreto -> Text("aparece cuando lo logras", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, color = cs.onSurfaceVariant)
             else -> {
-                Text(l.descripcion, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurfaceVariant)
+                Text(singular(l.descripcion), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurfaceVariant)
                 LinearProgressIndicator(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth(0.8f).padding(top = 3.dp).height(3.dp))
             }
         }
@@ -322,7 +332,7 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit
                     }
                     secreto -> Text("Sigue viviendo y escribiendo: aparece cuando lo logras.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                     else -> {
-                        Text("Reto: " + l.descripcion.replaceFirstChar { it.lowercase() } + ".", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+                        Text("Reto: " + singular(l.descripcion).replaceFirstChar { it.lowercase() } + ".", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
                         LinearProgressIndicator(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(6.dp))
                         Text("llevas ${cifraLogro(l.progreso)} de ${cifraLogro(l.meta)}" + if (l.unidad.isNotEmpty()) " ${l.unidad}" else "", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
                     }
