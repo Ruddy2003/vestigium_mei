@@ -150,6 +150,7 @@ object FondosTelefono {
         TemaId.ROMANO -> "VESTIGIVM · MEI"; TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ"; TemaId.CIBER -> "vestigium.mei"; TemaId.ANDALUS -> "أثري"
         TemaId.MONGOL -> "МИНИЙ МӨР"; TemaId.RENACIMIENTO -> "Vestigium mei"; TemaId.MEDIEVAL, TemaId.GOTICO -> "Vestigium mei"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"; TemaId.URSS -> "VESTIGIUM MEI"; TemaId.REFUGIO -> "VESTIGIUM-MEI OS"; TemaId.ESPACIO -> "VESTIGIUM · MEI"
+        TemaId.REVOLUCION -> "VESTIGIUM · MEI · AN I"
         else -> "Vestigium Mei"
     }
 }
@@ -407,7 +408,7 @@ class FondoVivoServicio : WallpaperService() {
             TemaId.ESPACIO -> "estrellas"; TemaId.GOTICO -> "vitral"; TemaId.BOTANICO -> if (o) "luciernagas" else "hormigas"; TemaId.NAVIDAD -> "nieve"
             TemaId.ANDALUS -> "agua"; TemaId.MONGOL -> "nubes"; TemaId.CIBER -> "lluvia"; TemaId.RENACIMIENTO -> "polvo"; TemaId.SEDA -> "arena"
             TemaId.HELENO -> if (o) "estrellas" else "polvo"; TemaId.REFUGIO -> if (o) "barrido" else null; TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.COLONOS -> "polvo"
-            TemaId.LABORATORIO -> "polen"; TemaId.NAPOLEON -> "polvo"; TemaId.ORDEN, TemaId.DISTOPIA, TemaId.URSS -> "barrido"
+            TemaId.LABORATORIO -> "polen"; TemaId.NAPOLEON, TemaId.REVOLUCION -> "polvo"; TemaId.ORDEN, TemaId.DISTOPIA, TemaId.URSS -> "barrido"
         }
 
         private fun alfa(c: Color, a: Float) = c.copy(alpha = a.coerceIn(0f, 1f)).toArgb()
@@ -501,4 +502,5 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.COLONOS -> R.drawable.logo_colonos; TemaId.NAPOLEON -> R.drawable.logo_napoleon; TemaId.BOTANICO -> R.drawable.logo_botanico; TemaId.NAVIDAD -> R.drawable.logo_navidad
     TemaId.SEDA -> R.drawable.logo_seda; TemaId.URSS -> R.drawable.logo_urss; TemaId.GOTICO -> R.drawable.logo_gotico; TemaId.ESPACIO -> R.drawable.logo_espacio
     TemaId.ANDALUS -> R.drawable.logo_andalus; TemaId.MONGOL -> R.drawable.logo_mongol; TemaId.RENACIMIENTO -> R.drawable.logo_renacimiento
+    TemaId.REVOLUCION -> R.drawable.logo_revolucion
 }

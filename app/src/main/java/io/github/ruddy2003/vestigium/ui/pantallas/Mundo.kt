@@ -177,6 +177,24 @@ private object GeoMapa {
     }
 }
 
+/**
+ * Colores para los países rascados: siete tonos bien distintos entre sí y lejos del color de la lámina
+ * (si la lámina es dorada, nada de amarillos ni ocres; si es de cobre, nada de naranjas), para que nunca
+ * se confunda un país rascado con uno que falta.
+ */
+private fun paletaRascados(lam: Lamina, oscuro: Boolean): List<Int> {
+    val hsv = FloatArray(3)
+    android.graphics.Color.colorToHSV(lam.media, hsv)
+    val tonoLamina = hsv[0]; val metalica = hsv[1] > 0.22f
+    // Azul, verde, rojo, violeta, turquesa, rosa, verde limón, naranja, amarillo, índigo.
+    val tonos = listOf(212f, 140f, 2f, 278f, 178f, 330f, 96f, 26f, 52f, 240f)
+    fun lejos(t: Float): Boolean { val d = kotlin.math.abs(t - tonoLamina).let { minOf(it, 360f - it) }; return !metalica || d > 38f }
+    val sat = if (oscuro) 0.50f else 0.55f; val val0 = if (oscuro) 0.72f else 0.80f
+    return tonos.filter { lejos(it) }.take(7).mapIndexed { i, t ->
+        android.graphics.Color.HSVToColor(floatArrayOf(t, sat + (i % 2) * 0.08f, val0 - (i % 3) * 0.06f))
+    }
+}
+
 /** La lámina que se rasca: oro, plata, cobre o acero según el tema. */
 private data class Lamina(val oscura: Int, val media: Int, val clara: Int)
 
@@ -203,9 +221,7 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
     val tema = Estilo.tema
     val oscuro = esOscuro()
     val lam = lamina(tema)
-    val paleta = remember(cs, oscuro) {
-        listOf(cs.primary, cs.secondary, cs.tertiary, lerp(cs.primary, cs.secondary, 0.5f), lerp(cs.primary, cs.surface, 0.3f), lerp(cs.secondary, cs.surface, 0.3f), lerp(cs.tertiary, cs.surface, 0.3f)).map { it.toArgb() }
-    }
+    val paleta = remember(lam, oscuro) { paletaRascados(lam, oscuro) }
     val dens = LocalDensity.current.density
     val pinceles = remember(lam, cs) {
         object {
@@ -218,6 +234,8 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
             val color = Paint(Paint.ANTI_ALIAS_FLAG)
             val borde = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = cs.onSurface.copy(alpha = 0.45f).toArgb() }
             val bordeLamina = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = lam.oscura }
+            // Trama fina de líneas sobre la lámina: lo que falta por rascar no se confunde con un país de color.
+            val trama = Paint(Paint.ANTI_ALIAS_FLAG)
             val reticula = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = cs.outline.copy(alpha = 0.35f).toArgb() }
             val mar = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = lerp(cs.surface, cs.primary, if (oscuro) 0.08f else 0.05f).toArgb() }
             val rasca = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
@@ -240,6 +258,12 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
         c.drawPath(GeoMapa.reticula, pinceles.reticula)
         pinceles.borde.strokeWidth = 0.6f * dens * px
         pinceles.bordeLamina.strokeWidth = 0.5f * dens * px
+        run {
+            val paso = 3.2f * dens * px
+            val linea = (lam.oscura and 0x00FFFFFF) or (0x55 shl 24)
+            pinceles.trama.shader = android.graphics.LinearGradient(0f, 0f, paso, paso, intArrayOf(linea, linea, 0x00000000, 0x00000000), floatArrayOf(0f, 0.28f, 0.28f, 1f),
+                android.graphics.Shader.TileMode.REPEAT)
+        }
         val r = 2.4f * dens * px
         for (f in formas) {
             val codigo = f.pais.codigo
@@ -255,7 +279,7 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
             if (visto && codigo != rascando) {
                 c.drawPath(f.path, pinceles.color); c.drawPath(f.path, pinceles.borde)
             } else {
-                c.drawPath(f.path, pinceles.lamina); c.drawPath(f.path, pinceles.brillo); c.drawPath(f.path, pinceles.bordeLamina)
+                c.drawPath(f.path, pinceles.lamina); c.drawPath(f.path, pinceles.brillo); c.drawPath(f.path, pinceles.trama); c.drawPath(f.path, pinceles.bordeLamina)
                 if (codigo == rascando && avance > 0f) {
                     // Rascado en zigzag: la lámina se va quitando a trazos hasta dejar el país a color.
                     c.save(); c.clipPath(f.path)

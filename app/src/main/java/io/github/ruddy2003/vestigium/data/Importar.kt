@@ -129,6 +129,7 @@ object Importar {
             // Tu gente: lo de aquí manda; del respaldo se suma a quien no esté.
             personas = c.personas + r.personas.filter { p -> c.personas.none { it.nombre == p.nombre } },
             personas_omitidas = (c.personas_omitidas + r.personas_omitidas).distinct(), personas_distintas = (c.personas_distintas + r.personas_distintas).distinct(),
+            temas_distintos = (c.temas_distintos + r.temas_distintos).distinct(),
             sustancias_ocultas = (c.sustancias_ocultas + r.sustancias_ocultas).distinct(),
             cafeina_vida_media_h = if (c.cafeina_vida_media_h == Config().cafeina_vida_media_h) r.cafeina_vida_media_h else c.cafeina_vida_media_h,
         )

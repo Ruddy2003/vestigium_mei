@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 9
+const val SCHEMA_V = 10
 
 /** Un día. Los campos opcionales quedan en null cuando no se marcaron: nunca se rellenan con promedios. */
 @Serializable
@@ -45,6 +45,13 @@ data class Dia(
     val prediccion_manana: Int? = null,
     val habitos: Map<String, Boolean> = emptyMap(),
     val nota: String = "",
+    /**
+     * Cómo estuviste con cada @persona que nombras ese día (clave sin @, en minúsculas): «pense» si solo pensaste en ella,
+     * «mensajes» si fue por mensaje o llamada. Sin entrada = estuviste con ella (lo de siempre).
+     */
+    val presencias: Map<String, String> = emptyMap(),
+    /** Ya revisaste a quién viste y en quién solo pensaste ese día (los días de antes de la versión 10 quedan sin revisar). */
+    val presencias_ok: Boolean = false,
     val dia_dificil: Boolean = false,
     /** Foto elegida para representar el día (content:// de la galería). */
     val foto: String? = null,
@@ -593,6 +600,8 @@ data class Config(
     val personas_distintas: List<String> = emptyList(),
     /** Día en que se pospuso la pregunta «¿quién es…?». */
     val personas_pospuesto: String = "",
+    /** Pares de #temas que dijiste que no son el mismo («a|b»), para no volver a sugerir unirlos. */
+    val temas_distintos: List<String> = emptyList(),
 )
 
 /**

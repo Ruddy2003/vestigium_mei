@@ -47,6 +47,8 @@ object Pantallas {
         P("entender", "Análisis", "Relaciones, herramientas y experimentos", "entender correlaciones explorar"),
         P("gastos", "Gastos", "Gastos e ingresos", "dinero ingresos gasto"),
         P("personas", "Tu gente", "Quién es cada @persona para ti", "personas amigos familia relaciones cercanía"),
+        P("temas", "Tus temas", "Tus #temas: unir, renombrar, pasar a hitos", "temas etiquetas hashtag # normalizar duplicados renombrar"),
+        P("presencias", "¿Estuviste o pensaste?", "Quién estuvo de verdad y en quién solo pensaste", "personas ver pensar mensajes presencia"),
         P("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína", "alcohol pedo cannabis weed mota cafeína café tabaco vape cruda"),
         P("biblioteca_momentos", "Libreta de momentos", "Un día por hoja, con todo lo que sentiste", "momentos ánimo emociones"),
         P("campanas", "Campañas", "Retos de la semana", "retos semana metas"),

@@ -64,6 +64,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.REFUGIO -> 3200; TemaId.ORDEN -> 2600; TemaId.LABORATORIO -> 2400; TemaId.COLONOS -> 1900
     TemaId.NAPOLEON -> 5200; TemaId.BOTANICO -> 14000; TemaId.NAVIDAD -> 24000; TemaId.SEDA -> 4800; TemaId.URSS -> 12000
     TemaId.GOTICO -> 7000; TemaId.ESPACIO -> 9000; TemaId.ANDALUS -> 36000; TemaId.MONGOL -> 30000; TemaId.RENACIMIENTO -> 6000
+    TemaId.REVOLUCION -> 9000
 }
 
 /**
@@ -106,7 +107,31 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.NAVIDAD -> rotate(t * 360f, c) { copo(c, r, if (oscuro) e.onBackground else e.secondary, e.tertiary) }
         TemaId.SEDA -> moneda(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.background, t)
         TemaId.URSS -> estrellaEngrane(c, r, e.primary, if (oscuro) e.tertiary else e.onBackground, t)
+        TemaId.REVOLUCION -> escarapelaEmblema(c, r, e.secondary, if (oscuro) Color(0xFFF0EADB) else Color.White, e.primary, e.onBackground, t)
     }
+}
+
+/** La escarapela tricolor: tela plisada en tres anillos que gira despacio, como si el viento la moviera. */
+private fun DrawScope.escarapelaEmblema(c: Offset, r: Float, azul: Color, blanco: Color, rojo: Color, tinta: Color, t: Float) {
+    val pliegues = 24
+    fun anillo(rr: Float, color: Color, giro: Float) {
+        val p = Path()
+        for (i in 0..pliegues * 2) {
+            val a = rad(giro + 360.0 * i / (pliegues * 2))
+            val q = c.mas(if (i % 2 == 0) rr else rr * 0.93f, a)
+            if (i == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
+        }
+        p.close(); drawPath(p, color)
+    }
+    anillo(r * 0.98f, azul, t * 360f)
+    anillo(r * 0.68f, blanco, -t * 360f)
+    anillo(r * 0.38f, rojo, t * 720f)
+    // Los pliegues, marcados con rayas finas.
+    for (i in 0 until pliegues) {
+        val a = rad(t * 360.0 + 360.0 * i / pliegues)
+        drawLine(tinta.copy(alpha = 0.18f), c.mas(r * 0.7f, a), c.mas(r * 0.96f, a), r * 0.03f)
+    }
+    drawCircle(tinta.copy(alpha = 0.35f), r * 0.1f, c)
 }
 
 /** Una N imperial de trazo grueso y fino, con un brillo que la recorre. */
@@ -686,7 +711,7 @@ internal fun Vineta(modifier: Modifier) {
 }
 
 
-/** Rama de laurel dorada con abejas imperiales cada tanto. */
+/** Rama de laurel dorada con una estrella de la Legión de Honor cada tanto. */
 @Composable
 internal fun Laureles(modifier: Modifier) {
     val oro = MaterialTheme.colorScheme.tertiary; val azul = MaterialTheme.colorScheme.primary
@@ -697,10 +722,10 @@ internal fun Laureles(modifier: Modifier) {
         val largo = 7.dp.toPx(); val ancho = 2.6.dp.toPx()
         while (x < size.width) {
             if (k % 12 == 6) {
-                // Abeja: cuerpo, alas y franjas.
-                drawOval(azul, Offset(x - ancho, y - ancho * 0.8f), Size(ancho * 2, ancho * 1.6f))
-                drawOval(oro, Offset(x - ancho * 1.8f, y - ancho * 1.9f), Size(ancho * 1.4f, ancho))
-                drawOval(oro, Offset(x + ancho * 0.4f, y - ancho * 1.9f), Size(ancho * 1.4f, ancho))
+                // Estrella de cinco brazos con el centro azul.
+                val est = Path(); val cc = Offset(x, y)
+                for (i in 0 until 10) { val rr = if (i % 2 == 0) ancho * 2.2f else ancho * 0.9f; val q = cc.mas(rr, rad(-90.0 + 36.0 * i)); if (i == 0) est.moveTo(q.x, q.y) else est.lineTo(q.x, q.y) }
+                est.close(); drawPath(est, oro); drawCircle(azul, ancho * 0.6f, cc)
             } else {
                 val arriba = k % 2 == 0
                 rotate(if (arriba) -30f else 30f, Offset(x, y)) {
@@ -912,6 +937,25 @@ internal fun Barra(modifier: Modifier) {
     }
 }
 
+/** La banda de la Revolución: un filete azul, blanco y rojo cortado al centro por una escarapela pequeña. */
+@Composable
+internal fun Tricolor(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    val oscuro = e.background.luminance() < 0.5f
+    val blanco = if (oscuro) Color(0xFFF0EADB) else Color.White
+    Canvas(modifier.fillMaxWidth().height(12.dp)) {
+        val h = size.height; val y = h / 2; val cx = size.width / 2; val r = h * 0.48f
+        val tercio = (cx - r * 1.6f) / 3
+        listOf(e.secondary, blanco, e.primary).forEachIndexed { i, c ->
+            drawRect(c, Offset(i * tercio, y - h * 0.12f), Size(tercio, h * 0.24f))
+            drawRect(c, Offset(size.width - (i + 1) * tercio, y - h * 0.12f), Size(tercio, h * 0.24f))
+        }
+        drawLine(e.onBackground.copy(alpha = 0.25f), Offset(0f, y + h * 0.2f), Offset(cx - r * 1.6f, y + h * 0.2f), 1f)
+        drawLine(e.onBackground.copy(alpha = 0.25f), Offset(cx + r * 1.6f, y + h * 0.2f), Offset(size.width, y + h * 0.2f), 1f)
+        drawCircle(e.secondary, r, Offset(cx, y)); drawCircle(blanco, r * 0.66f, Offset(cx, y)); drawCircle(e.primary, r * 0.34f, Offset(cx, y))
+    }
+}
+
 // =====================================================================
 //  Fondo con textura según el tema
 // =====================================================================
@@ -1086,6 +1130,19 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             while (x < w) { trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += p }
             x = 0f; while (x < w + h) { trazo.moveTo(x, h); trazo.lineTo(x - h * 0.5f, 0f); x += p * 3 }
         }
+        TemaId.REVOLUCION -> {
+            // Papel verjurado de la época: los corondeles verticales, y una escarapela diminuta de vez en cuando.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.04f else 0.035f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.08f else 0.07f)
+            val p = 24.dp.toPx(); var x = p / 2
+            while (x < w) { trazo.moveTo(x, 0f); trazo.lineTo(x, h); x += p }
+            val q = 3.dp.toPx(); var y = 0f
+            while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += q * 12 }
+            val azar = java.util.Random(1789)
+            repeat(((w * h) / 90000f).toInt().coerceIn(3, 14)) {
+                val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h; val rr = 3.dp.toPx()
+                puntos.addOval(Rect(cx - rr, cy - rr, cx + rr, cy + rr))
+            }
+        }
         TemaId.URSS -> {
             // Rayos que salen de una esquina, como en los carteles.
             color = esquema.primary.copy(alpha = if (oscuro) 0.06f else 0.05f)
@@ -1221,6 +1278,7 @@ fun CapaFiesta() {
                         est.close(); drawPath(est, col)
                     }
                     TemaId.SEDA -> { drawCircle(col, s * 0.7f, pos); drawRect(e.background.copy(alpha = a), Offset(pos.x - s * 0.22f, pos.y - s * 0.22f), Size(s * 0.44f, s * 0.44f)) }
+                    TemaId.REVOLUCION -> { drawCircle(e.secondary.copy(alpha = a), s * 0.8f, pos); drawCircle(Color.White.copy(alpha = a), s * 0.55f, pos); drawCircle(e.primary.copy(alpha = a), s * 0.3f, pos) }
                     else -> drawCircle(col, s * 0.5f, pos)
                 }
             }

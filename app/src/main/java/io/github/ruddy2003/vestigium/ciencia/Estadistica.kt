@@ -147,13 +147,22 @@ object Estadistica {
             Variable("momentos_intensidad", "Intensidad media de los momentos (1 a 5)", "Momentos"), Variable("momentos_valencia", "Valencia media de los momentos", "Momentos"),
         )
         if (Repo.config.perfil.cercanas.isNotEmpty() || Repo.config.perfil.convivientes.isNotEmpty() || Repo.config.personas.isNotEmpty()) {
-            v += Variable("cercanos", "Personas cercanas mencionadas", "Social"); v += Variable("vi_familia", "Mencioné a mi familia (0/1)", "Social")
-            v += Variable("vi_pareja", "Mencioné a mi pareja (0/1)", "Social"); v += Variable("vi_amistades", "Mencioné a una amistad (0/1)", "Social")
-            v += Variable("vi_convivientes", "Mencioné a quien vive conmigo (0/1)", "Social")
+            v += Variable("cercanos", "Personas cercanas con las que estuve", "Social"); v += Variable("vi_familia", "Estuve con mi familia (0/1)", "Social")
+            v += Variable("vi_pareja", "Estuve con mi pareja (0/1)", "Social"); v += Variable("vi_amistades", "Estuve con una amistad (0/1)", "Social")
+            v += Variable("vi_convivientes", "Estuve con quien vive conmigo (0/1)", "Social")
         }
         // «Tu gente»: con la relación que había cada día.
-        if (Repo.config.personas.any { it.relacion == "expareja" || it.historial.any { h -> h.relacion == "expareja" } }) v += Variable("vi_expareja", "Mencioné a una expareja (0/1)", "Social")
-        if (Repo.config.personas.any { Personas.grupo(it.relacion) == "trabajo" }) v += Variable("vi_trabajo", "Mencioné a un colega, compañero o mentor (0/1)", "Social")
+        val hayEx = Repo.config.personas.any { it.relacion == "expareja" || it.historial.any { h -> h.relacion == "expareja" } }
+        if (hayEx) v += Variable("vi_expareja", "Estuve con una expareja (0/1)", "Social")
+        if (Repo.config.personas.any { Personas.grupo(it.relacion) == "trabajo" }) v += Variable("vi_trabajo", "Estuve con un colega, compañero o mentor (0/1)", "Social")
+        // Ver a alguien no es lo mismo que pensar en esa persona o escribirse.
+        if (Repo.dias.values.any { it.presencias.isNotEmpty() } || Repo.momentos.any { Catalogo.pensamientoDe(it) == "pensando_en" && Texto.personas(it.texto).isNotEmpty() }) {
+            v += Variable("personas_vistas", "Personas con las que estuve", "Social"); v += Variable("personas_pensadas", "Personas en las que pensé sin verlas", "Social")
+            v += Variable("personas_mensajes", "Personas con las que hablé por mensaje o llamada", "Social")
+            if (Repo.config.personas.any { it.relacion == "pareja" } || Repo.config.perfil.pareja.isNotBlank()) v += Variable("penso_en_pareja", "Pensé en mi pareja sin verla (0/1)", "Social")
+            if (hayEx) v += Variable("penso_en_expareja", "Pensé en una expareja sin verla (0/1)", "Social")
+            v += Variable("penso_en_familia", "Pensé en mi familia sin verla (0/1)", "Social"); v += Variable("penso_en_amistades", "Pensé en una amistad sin verla (0/1)", "Social")
+        }
         if (Repo.config.personas.any { it.cercania != null }) v += Variable("cercania_media", "Cercanía media de quien mencioné (1 a 7)", "Social")
         // El ánimo de todos los registros (avisos y los que haces tú), y lo que sentías y pensabas.
         if (Repo.momentos.any { it.esAnimo }) {
@@ -429,22 +438,29 @@ object Estadistica {
         if (primeraCarta != null) Repo.dias.keys.filter { it >= primeraCarta }.forEach { f -> fila(f)["carta_escrita"] = b((cartas[f] ?: 0) > 0) }
         cartas.forEach { (f, _) -> fila(f)["carta_escrita"] = 1.0 }
         for ((f, d) in Repo.dias) if (d.sueno_recordado || d.sueno_texto.isNotBlank()) fila(f)["sueno_palabras"] = Texto.palabras(d.sueno_texto).toDouble()
-        // Las personas cercanas que dijiste en «Conocerte», cuando aparecen en el diario o en los momentos.
+        // Las personas del diario y los momentos: con quién estuviste, en quién solo pensaste (y su relación ese día).
         val perfil = Repo.config.perfil
-        if (perfil.cercanas.isNotEmpty() || perfil.convivientes.isNotEmpty() || Repo.config.personas.isNotEmpty()) {
-            val textos = HashMap<String, StringBuilder>()
-            Repo.dias.forEach { (f, d) -> textos.getOrPut(f) { StringBuilder() }.append(d.nota).append(' ') }
-            Repo.momentos.forEach { m -> textos.getOrPut(m.fecha) { StringBuilder() }.append(m.texto).append(' ') }
-            for ((f, t) in textos) {
-                val nombres = Texto.personas(t.toString()).map { Texto.canon(it, eq) }.distinct()
+        run {
+            val momentosPorDia = Repo.momentos.groupBy { it.fecha }
+            for (f in (Repo.dias.keys + momentosPorDia.keys).toSet()) {
+                // Quién estuvo de verdad, en quién solo pensaste y con quién hablaste por mensaje (el diario manda).
+                val estados = io.github.ruddy2003.vestigium.data.Presencias.delDia(f, eq, Repo.dias[f], momentosPorDia[f].orEmpty())
+                val nombres = estados.keys.toList()
+                fun rel(lista: Collection<String>) = lista.mapNotNull { io.github.ruddy2003.vestigium.data.Perfiles.relacion(it, perfil, f)?.let { r -> it to r } }
                 // La relación que había ese día (pareja hasta marzo, expareja después).
-                val rel = nombres.mapNotNull { io.github.ruddy2003.vestigium.data.Perfiles.relacion(it, perfil, f)?.let { r -> it to r } }
+                val vistos = rel(estados.filterValues { it == io.github.ruddy2003.vestigium.data.Presencias.ESTUVE }.keys)
+                val pensados = rel(estados.filterValues { it == io.github.ruddy2003.vestigium.data.Presencias.PENSE }.keys)
                 val r = fila(f)
-                r["cercanos"] = rel.count { it.second in setOf("familia", "pareja", "amistad", "casa") }.toDouble()
-                r["vi_familia"] = b(rel.any { it.second == "familia" }); r["vi_pareja"] = b(rel.any { it.second == "pareja" })
-                r["vi_amistades"] = b(rel.any { it.second == "amistad" }); r["vi_convivientes"] = b(rel.any { it.first in perfil.convivientes })
-                r["vi_expareja"] = b(rel.any { it.second == "expareja" }); r["vi_trabajo"] = b(rel.any { it.second == "trabajo" })
+                r["cercanos"] = vistos.count { it.second in setOf("familia", "pareja", "amistad", "casa") }.toDouble()
+                r["vi_familia"] = b(vistos.any { it.second == "familia" }); r["vi_pareja"] = b(vistos.any { it.second == "pareja" })
+                r["vi_amistades"] = b(vistos.any { it.second == "amistad" }); r["vi_convivientes"] = b(vistos.any { it.first in perfil.convivientes })
+                r["vi_expareja"] = b(vistos.any { it.second == "expareja" }); r["vi_trabajo"] = b(vistos.any { it.second == "trabajo" })
                 r["cercania_media"] = media(nombres.mapNotNull { Personas.cercaniaEn(it, f)?.toDouble() })
+                r["personas_vistas"] = estados.count { it.value == io.github.ruddy2003.vestigium.data.Presencias.ESTUVE }.toDouble()
+                r["personas_pensadas"] = estados.count { it.value == io.github.ruddy2003.vestigium.data.Presencias.PENSE }.toDouble()
+                r["personas_mensajes"] = estados.count { it.value == io.github.ruddy2003.vestigium.data.Presencias.MENSAJES }.toDouble()
+                r["penso_en_pareja"] = b(pensados.any { it.second == "pareja" }); r["penso_en_expareja"] = b(pensados.any { it.second == "expareja" })
+                r["penso_en_familia"] = b(pensados.any { it.second == "familia" }); r["penso_en_amistades"] = b(pensados.any { it.second == "amistad" })
             }
         }
         // Dinero que entra, y el balance del día.
@@ -670,6 +686,8 @@ object Estadistica {
         setOf("cannabis", "cannabis_nivel_max", "cannabis_horas"),
         setOf("cafeina_mg", "cafeina_total_mg", "cafeina_ultima_h", "cafeina_al_dormir_mg"),
         setOf("cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_expareja", "vi_trabajo", "cercania_media", "personas"),
+        setOf("personas", "personas_vistas", "personas_pensadas", "personas_mensajes", "cercanos"),
+        setOf("personas_pensadas", "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
     )
 
     fun obvia(a: Variable, b: Variable): Boolean {
@@ -682,6 +700,8 @@ object Estadistica {
         if (pa != null && Dinamicas.AGREGADOS[pa]?.contains(b.id) == true) return true
         if (pb != null && Dinamicas.AGREGADOS[pb]?.contains(a.id) == true) return true
         if (pa != null && pb != null && Dinamicas.ENTRE_SI.any { pa in it && pb in it }) return true
+        // La misma persona: «aparece @ana» y «pensé en @ana sin verla».
+        if (setOf(pa, pb) == setOf("per_", "pen_") && a.id.substringAfter('_') == b.id.substringAfter('_')) return true
         // Dos puntajes del mismo cuestionario salen de las mismas respuestas.
         if (pa == "esc_" && pb == "esc_" && a.id.split('_').getOrNull(1) == b.id.split('_').getOrNull(1)) return true
         return false

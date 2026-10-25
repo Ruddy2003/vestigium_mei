@@ -111,7 +111,7 @@ enum class Soporte { ROLLO, LIBRO, SOBRE, CARPETA, PANTALLA }
 
 fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.ROMANO, TemaId.HELENO, TemaId.SEDA, TemaId.MONGOL -> Soporte.ROLLO
-    TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.ORDEN, TemaId.BOTANICO, TemaId.URSS, TemaId.LABORATORIO, TemaId.GOTICO, TemaId.ANDALUS, TemaId.RENACIMIENTO -> Soporte.LIBRO
+    TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.ORDEN, TemaId.BOTANICO, TemaId.URSS, TemaId.LABORATORIO, TemaId.GOTICO, TemaId.ANDALUS, TemaId.RENACIMIENTO, TemaId.REVOLUCION -> Soporte.LIBRO
     TemaId.NAPOLEON, TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
     TemaId.CIBER, TemaId.REFUGIO, TemaId.ESPACIO -> Soporte.PANTALLA
@@ -143,6 +143,8 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.DISTOPIA -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
     TemaId.CIBER -> Materia(c(0xFF0B121C), c(0xFF05080E), c(0xFF15202E), c(0xFF00E5FF), c(0xFFFF2E88), c(0xFF05080E), c(0xFFD6F3F7), extra = c(0xFFF2C94C))
     TemaId.REFUGIO -> Materia(c(0xFFC9C2A6), c(0xFF8E886F), c(0xFFE2DCC4), c(0xFF3DFF7F), c(0xFF2F8F4E), c(0xFF031A0B), c(0xFF7CF098))
+    // Cuaderno de quejas: tapa de cartón azul, cinta tricolor y escarapela.
+    TemaId.REVOLUCION -> Materia(c(0xFF2F4A7A), c(0xFF1A2A4A), c(0xFF4A6699), c(0xFFB22234), c(0xFFF0EADB), c(0xFFF2ECDD), c(0xFF1C1A17), extra = c(0xFFB22234))
 }
 
 // =====================================================================
@@ -192,6 +194,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.LABORATORIO -> "REGISTRO DE SUEÑO"; TemaId.COLONOS -> "Lo soñado"; TemaId.NAPOLEON -> "SONGE · sueño"; TemaId.BOTANICO -> "Flora nocturna"
     TemaId.NAVIDAD -> "Sueños junto al fuego"; TemaId.SEDA -> "梦 · sueño"; TemaId.URSS -> "СОН · SUEÑO"; TemaId.GOTICO -> "Visio nocturna"
     TemaId.ESPACIO -> "TRANSMISIÓN NOCTURNA"; TemaId.ANDALUS -> "حلم · sueño"; TemaId.MONGOL -> "ЗҮҮД · sueño"; TemaId.RENACIMIENTO -> "Sogno"
+    TemaId.REVOLUCION -> "RÊVE · SUEÑO"
 }
 
 /** Lo que cierra la página de un sueño: el despertar, en cada tema. */
@@ -201,6 +204,7 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.COLONOS -> "Y amaneció."; TemaId.NAPOLEON -> "Réveil."; TemaId.BOTANICO -> "Se cerraron las flores de la noche."; TemaId.NAVIDAD -> "Y llegó la mañana."
     TemaId.SEDA -> "Despertar en la caravana."; TemaId.URSS -> "ПОДЪЁМ · DE PIE"; TemaId.GOTICO -> "Et evigilavi."; TemaId.ESPACIO -> "FIN DE LA TRANSMISIÓN NOCTURNA"
     TemaId.ANDALUS -> "واستيقظت · y desperté"; TemaId.MONGOL -> "Сэрлээ · desperté"; TemaId.RENACIMIENTO -> "E mi destai."
+    TemaId.REVOLUCION -> "DEBOUT · EN PIE"
 }
 
 /** Media luna: un círculo menos otro corrido hacia un lado. */
@@ -249,7 +253,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.COLONOS -> "asentar"; TemaId.NAPOLEON -> "SELLAR"; TemaId.BOTANICO -> "guardar"; TemaId.NAVIDAD -> "guardar carta"
     TemaId.SEDA -> "sellar el rollo"; TemaId.URSS -> "ENTREGAR"
     TemaId.GOTICO -> "sellar el folio"; TemaId.ESPACIO -> "TRANSMITIR"; TemaId.ANDALUS -> "guardar · حفظ"; TemaId.MONGOL -> "ТАМГА · sellar"
-    TemaId.RENACIMIENTO -> "annotare"
+    TemaId.RENACIMIENTO -> "annotare"; TemaId.REVOLUCION -> "FIRMAR"
 }
 
 /** Lo que cierra cada página al leerla. */
@@ -260,6 +264,7 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.NAVIDAD -> "Con cariño, junto al fuego."; TemaId.SEDA -> "Fin del rollo."; TemaId.URSS -> "INFORME ENTREGADO"
     TemaId.GOTICO -> "Explicit. Deo gratias."; TemaId.ESPACIO -> "FIN DE TRANSMISIÓN"; TemaId.ANDALUS -> "تمّ · Se acabó."
     TemaId.MONGOL -> "Ингэж бичив · Así quedó escrito."; TemaId.RENACIMIENTO -> "Finito."
+    TemaId.REVOLUCION -> "Lu et approuvé."
 }
 
 private fun pistaSueno(s: Soporte) = when (s) {
@@ -510,6 +515,13 @@ private fun DrawScope.libroCerrado(t: TemaId, m: Materia) {
             est.close(); drawPath(est, m.acento)
             drawRect(m.detalle, Offset(ini.x + lomo, ini.y + tam.height * 0.86f), Size(tam.width - lomo, tam.height * 0.06f))
         }
+        TemaId.REVOLUCION -> {
+            // Cinta tricolor que baja por la tapa y la escarapela clavada encima.
+            val x = ini.x + lomo + w * 0.06f; val an = w * 0.018f
+            listOf(c(0xFF1F3A6E), c(0xFFF4F1E8), c(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, Offset(x + i * an, ini.y), Size(an, tam.height)) }
+            val o = Offset(x + an * 1.5f, ini.y + tam.height * 0.5f)
+            drawCircle(c(0xFF1F3A6E), h * 0.1f, o); drawCircle(c(0xFFF4F1E8), h * 0.066f, o); drawCircle(c(0xFFB22234), h * 0.034f, o)
+        }
         else -> {}
     }
     // Placa para el título.
@@ -669,6 +681,10 @@ private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Ma
                 mediaLuna(Offset(w / 2, hh * 0.64f), w * 0.2f, LUNA.copy(alpha = 0.9f))
                 estrellas(d.fecha.hashCode(), 4, LUNA, Rect(w * 0.15f, hh * 0.72f, w * 0.85f, hh * 0.86f), 1.1f)
             } else if (tema == TemaId.URSS) { drawCircle(m.acento, w * 0.16f, Offset(w / 2, hh * 0.66f)) }
+            else if (tema == TemaId.REVOLUCION) {
+                val o = Offset(w / 2, hh * 0.66f)
+                drawCircle(Color(0xFF1F3A6E), w * 0.2f, o); drawCircle(Color(0xFFF4F1E8), w * 0.13f, o); drawCircle(Color(0xFFB22234), w * 0.065f, o)
+            }
             if (!noche && tema == TemaId.BOTANICO) {
                 // Un escarabajo estampado en oro sobre el cuero.
                 val cx = w / 2; val y0 = hh * 0.64f; val l = w * 0.2f
@@ -848,6 +864,7 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.DISTOPIA -> Pagina(null, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.codigo, 15f, 24f, false, Rayas.RENGLONES)
     TemaId.CIBER -> Pagina(null, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
     TemaId.REFUGIO -> Pagina(null, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
+    TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.cormorant, 19f, 28f, false, Rayas.NADA, LetraExtra.fell)
 }
 
 /** Fondo de la página: papel, papiro, seda, pantalla… En modo oscuro, el papel claro se atenúa un poco para no deslumbrar. */
@@ -882,6 +899,10 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     // Marco de lámina y el número de la tabla.
                     drawRect(p.tinta.copy(alpha = 0.35f), Offset(12.dp.toPx(), 12.dp.toPx()), Size(w - 24.dp.toPx(), h - 24.dp.toPx()), style = Stroke(1.2f))
                     drawRect(p.tinta.copy(alpha = 0.2f), Offset(16.dp.toPx(), 16.dp.toPx()), Size(w - 32.dp.toPx(), h - 32.dp.toPx()), style = Stroke(0.8f))
+                }
+                TemaId.REVOLUCION -> {
+                    // El margen del cuaderno: un filete azul y otro rojo.
+                    listOf(34.dp.toPx() to p.detalle, 38.dp.toPx() to p.acento).forEach { (x, col) -> drawLine(col.copy(alpha = 0.45f), Offset(x, 0f), Offset(x, h), 1.5f) }
                 }
                 TemaId.GOTICO -> {
                     // Margen de libro de horas: filete azul y rojo con bolitas de oro.

@@ -3,7 +3,9 @@ package io.github.ruddy2003.vestigium.ui.pantallas
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -74,7 +76,12 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
     val archivo = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) correr { c -> Respaldos.restaurarUri(ctx, uri, c) }
     }
-    fun desdeDrive(token: String) = correr { c -> Drive.restaurar(ctx, token, c) }
+    val archivoVerificar = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) correr { c -> Respaldos.verificarUri(ctx, uri, c) }
+    }
+    // Drive sirve para restaurar o solo para revisar la copia; se recuerda qué se pidió mientras Google da permiso.
+    var soloVerificar by remember { mutableStateOf(false) }
+    fun desdeDrive(token: String) = correr { c -> if (soloVerificar) Drive.verificar(ctx, token, c) else Drive.restaurar(ctx, token, c) }
     val permiso = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { r ->
         Drive.tokenDe(ctx, r.data)?.let { desdeDrive(it) } ?: run { msg = "No se concedió el acceso a Drive." }
     }
@@ -103,7 +110,13 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
             confirmarRestaurar = { archivo.launch(arrayOf("*/*")) }
         }
         BotonSecundario("Restaurar desde Drive (la copia más reciente)", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = !ocupado) {
-            confirmarRestaurar = { drive() }
+            confirmarRestaurar = { soloVerificar = false; drive() }
+        }
+        HorizontalDivider(Modifier.padding(vertical = 12.dp))
+        Ayuda("¿Tus respaldos sirven? Revísalo de vez en cuando: se abre el archivo completo (descifrado si lleva contraseña) y se cuenta lo que trae, sin cambiar nada de aquí.")
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            BotonSecundario("Verificar un archivo", Modifier.weight(1f), habilitado = !ocupado) { archivoVerificar.launch(arrayOf("*/*")) }
+            BotonSecundario("Verificar Drive", Modifier.weight(1f), habilitado = !ocupado) { soloVerificar = true; drive() }
         }
         Ayuda("Acepta el respaldo completo (.zip o .vmc), la exportación extendida o el JSON de antes. Lo que ya tengas aquí no se duplica ni se borra.",
             Modifier.padding(top = 6.dp))

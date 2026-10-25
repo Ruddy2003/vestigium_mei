@@ -122,8 +122,8 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         moveTo(c.x, c.y - r); lineTo(c.x + r * 0.95f, c.y - r * 0.05f); lineTo(c.x + r * 0.7f, c.y - r * 0.05f); lineTo(c.x + r * 0.7f, c.y + r * 0.9f)
         lineTo(c.x - r * 0.7f, c.y + r * 0.9f); lineTo(c.x - r * 0.7f, c.y - r * 0.05f); lineTo(c.x - r * 0.95f, c.y - r * 0.05f); close()
     }
-    TemaId.NAPOLEON -> listOf(ovalo(c + Offset(0f, r * 0.2f), r * 0.32f, r * 0.72f), circulo(c + Offset(0f, -r * 0.62f), r * 0.24f),
-        ovalo(c + Offset(-r * 0.52f, -r * 0.25f), r * 0.42f, r * 0.26f), ovalo(c + Offset(r * 0.52f, -r * 0.25f), r * 0.42f, r * 0.26f)).reduce { a, b -> mas(a, b) }
+    // La estrella de la Legión de Honor con su medallón.
+    TemaId.NAPOLEON -> mas(estrella(c, r, 5, 0.46f), circulo(c, r * 0.36f))
     // Un escarabajo: élitros, pronoto y cabeza.
     TemaId.BOTANICO -> listOf(ovalo(c + Offset(0f, r * 0.2f), r * 0.62f, r * 0.78f), ovalo(c + Offset(0f, -r * 0.58f), r * 0.44f, r * 0.24f),
         circulo(c + Offset(0f, -r * 0.86f), r * 0.17f)).reduce { a, b -> mas(a, b) }
@@ -134,6 +134,8 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.ANDALUS -> mas(poligono(c, r, 4, 0.0), poligono(c, r, 4, PI / 4))
     TemaId.MONGOL -> mas(estrella(c, r, 8, 0.5f), circulo(c, r * 0.45f))
     TemaId.RENACIMIENTO -> mas(menos(circulo(c, r), circulo(c, r * 0.8f)), poligono(c, r * 0.8f, 4, -PI / 2))
+    // La escarapela: borde plisado y el anillo blanco hueco.
+    TemaId.REVOLUCION -> menos(estrella(c, r, 18, 0.88f), menos(circulo(c, r * 0.62f), circulo(c, r * 0.4f)))
 }
 
 /**

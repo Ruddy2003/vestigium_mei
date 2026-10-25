@@ -619,20 +619,30 @@ class QuickActivity : FragmentActivity() {
         val fecha = Fechas.diaLogico()
         var d by remember { mutableStateOf(Repo.dia(fecha)) }
         fun guardar(n: io.github.ruddy2003.vestigium.data.Dia) { d = n; Repo.guardarDia(n) }
-        Encabezado("Tu sueño", "Antes de levantarte o revisar el teléfono.")
-        Etiqueta("Calidad del sueño")
+        Encabezado("Tu sueño", "Primero cuéntalo, antes de levantarte: los detalles se van en minutos. Lo demás, después.")
+        // 1. La narración, arriba: es lo que se olvida primero.
+        Etiqueta("Qué soñaste")
+        OutlinedTextField(value = d.sueno_texto, onValueChange = { t -> guardar(d.copy(sueno_texto = t, sueno_recordado = d.sueno_recordado || t.isNotBlank())) },
+            modifier = Modifier.fillMaxWidth(), minLines = 5, visualTransformation = rememberMarcas(),
+            placeholder = { Text("Lo que recuerdes, en el orden en que lo recuerdes, aunque sean fragmentos. Usa @persona y #tema.") })
+        Row(Modifier.padding(top = 8.dp)) { BotonDictado { t -> val n = (d.sueno_texto + " " + t).trim(); guardar(d.copy(sueno_texto = n, sueno_recordado = true)) } }
+        // 2. La noche.
+        Etiqueta("Calidad del sueño, como la sentiste")
         Escala(d.sueno_calidad, 1, 5, Catalogo.ANCLAS["sueno_calidad"]) { guardar(d.copy(sueno_calidad = it)) }
-        Interruptor("¿Recordaste algo?", d.sueno_recordado) { guardar(d.copy(sueno_recordado = it)) }
+        Interruptor("¿Recordaste un sueño?", d.sueno_recordado) { guardar(d.copy(sueno_recordado = it)) }
+        // 3. Todo lo del sueño, aquí mismo.
         if (d.sueno_recordado) {
-            Etiqueta("Narración")
-            OutlinedTextField(value = d.sueno_texto, onValueChange = { guardar(d.copy(sueno_texto = it)) }, modifier = Modifier.fillMaxWidth(), minLines = 4,
-                placeholder = { Text("Dicta con el micrófono: es más rápido recién despierto.") })
-            Row(Modifier.padding(top = 8.dp)) { BotonDictado { t -> guardar(d.copy(sueno_texto = (d.sueno_texto + " " + t).trim())) } }
             Etiqueta("Qué tan agradable fue")
             Escala(d.sueno_valencia, 1, 7, Catalogo.ANCLAS["sueno_valencia"]) { guardar(d.copy(sueno_valencia = it)) }
-            Etiqueta("De qué fue (opcional)")
+            Etiqueta("Lucidez: ¿sabías que soñabas?"); FilaFichas(Catalogo.SUENO_LUCIDEZ, d.sueno_lucidez) { guardar(d.copy(sueno_lucidez = it)) }
+            Etiqueta("Vividez del recuerdo"); FilaFichas(Catalogo.SUENO_VIVIDEZ, d.sueno_vividez) { guardar(d.copy(sueno_vividez = it)) }
+            Etiqueta("Tipo"); FilaFichas(Catalogo.SUENO_TIPO, d.sueno_tipo) { guardar(d.copy(sueno_tipo = it)) }
+            Etiqueta("De qué fue")
             CategoriasSueno(d.sueno_categorias) { guardar(d.copy(sueno_categorias = it)) }
-            Ayuda("Lucidez, vividez y tipo los puedes completar después en la app.", Modifier.padding(top = 8.dp))
+            Etiqueta("Personas y temas del sueño")
+            ListaEtiquetas(d.sueno_temas, "@persona o #tema", normalizar = { io.github.ruddy2003.vestigium.data.Texto.etiquetaConSimbolo(it) }) {
+                guardar(d.copy(sueno_temas = it))
+            }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) { BotonPrincipal("Listo") { terminar() } }
     }

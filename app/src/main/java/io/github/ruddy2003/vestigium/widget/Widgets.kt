@@ -101,6 +101,10 @@ object Widgets {
             0xFFD9B566.toInt(), 0xFFEFE0BE.toInt(), 0xFFBCA884.toInt(), 0xFF4A3826.toInt(),
             intArrayOf(0xFF6E8CA8.toInt(), 0xFF8DA2B5.toInt(), 0xFFB8B3A6.toInt(), 0xFFEFE0BE.toInt(), 0xFFE8C79A.toInt(), 0xFFE4A877.toInt(), 0xFFE08A5E.toInt()),
             0xFF241A11.toInt(), 0xFF2A1006.toInt())
+        TemaId.REVOLUCION -> Colores(R.drawable.widget_fondo_revolucion, R.drawable.widget_boton_revolucion, R.drawable.widget_boton_activo_revolucion, R.drawable.widget_boton_ambar_revolucion,
+            0xFF8FAEE8.toInt(), 0xFFF0EADB.toInt(), 0xFFB2AC9E.toInt(), 0xFF3A3F4A.toInt(),
+            intArrayOf(0xFFE5525E.toInt(), 0xFFE28A90.toInt(), 0xFFE3BCB8.toInt(), 0xFFF0EADB.toInt(), 0xFFC2D0EC.toInt(), 0xFFA8BFEA.toInt(), 0xFF8FAEE8.toInt()),
+            0xFF1B1D22.toInt(), 0xFFFFFFFF.toInt())
     }
 
     /** Pinta fondo, botones, líneas y textos según el tema. Va primero: lo que se pinta después (estado activo, colores de ánimo) lo sobrescribe. */

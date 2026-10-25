@@ -21,6 +21,13 @@ object Texto {
     /** Para etiquetas: minúsculas, sin símbolo inicial, espacios a guion bajo, conserva ñ y acentos. */
     fun etiqueta(s: String): String = s.trim().lowercase().removePrefix("@").removePrefix("#").replace(Regex("\\s+"), "_")
 
+    /** Como [etiqueta], pero conserva el @ o el # del principio (para las listas de personas y temas del sueño). */
+    fun etiquetaConSimbolo(s: String): String {
+        val x = s.trim()
+        val simbolo = x.firstOrNull()?.takeIf { it == '@' || it == '#' }
+        return (simbolo?.toString() ?: "") + etiqueta(x)
+    }
+
     fun levenshtein(a: String, b: String): Int {
         if (kotlin.math.abs(a.length - b.length) > 2) return 9
         val dp = Array(a.length + 1) { IntArray(b.length + 1) }

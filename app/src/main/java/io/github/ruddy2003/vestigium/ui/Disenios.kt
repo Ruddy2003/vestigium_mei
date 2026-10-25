@@ -231,6 +231,16 @@ internal val renacimientoOscuro = esquema(true, 0xFF1A130C, 0xFF241A11, 0xFF3023
     0xFFE08A5E, 0xFF2A1006, 0xFF4A2A18, 0xFFEFE0BE, 0xFF9EC0E0, 0xFF22303E, 0xFFD9B566, 0xFFFF8A80)
 internal val tipoRenacimiento = tipografia(LetraExtra.italianno, FontWeight.Normal, 1.78f, 0f, LetraExtra.cormorant, 1.2f, LetraExtra.cormorant, 1.22f, cifrasAlineadas = true)
 
+// ---------------------------------------------------------------------
+//  Revolución francesa: papel de cartel crudo, tinta de imprenta, el azul y el rojo de la escarapela y el verde del
+//  árbol de la libertad; de noche, la plaza a la luz de las antorchas.
+// ---------------------------------------------------------------------
+internal val revolucionClaro = esquema(false, 0xFFF2ECDD, 0xFFFAF6EC, 0xFFE6DDC8, 0xFFC8BB9C, 0xFF1C1A17, 0xFF57524A,
+    0xFFB22234, 0xFFFFFFFF, 0xFFF4D6D8, 0xFF1C1A17, 0xFF1F3A6E, 0xFFD8E0EF, 0xFF3F6B3A, 0xFF8A1A1A)
+internal val revolucionOscuro = esquema(true, 0xFF131417, 0xFF1B1D22, 0xFF25282F, 0xFF3A3F4A, 0xFFF0EADB, 0xFFB2AC9E,
+    0xFFE5525E, 0xFF1A0508, 0xFF4A161C, 0xFFF0EADB, 0xFF8FAEE8, 0xFF1E2A44, 0xFF8CC08A, 0xFFFF8A80)
+internal val tipoRevolucion = tipografia(LetraExtra.fell, FontWeight.Normal, 1.1f, 1.6f, LetraExtra.cormorant, 1.18f, LetraExtra.cormorant, 1.2f, cifrasAlineadas = true)
+
 /** Juegos de color para gráficas: bajo, medio, alto y el color fuerte (secuencial). */
 internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema) {
     TemaId.ROMANO -> if (oscuro) listOf(0xFFA63A4D, 0xFF2A2F34, 0xFF3FA393, 0xFFD2AE5A) else listOf(0xFF9E3445, 0xFFE4E2DA, 0xFF2D7A6F, 0xFFB8892B)
@@ -252,6 +262,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.ANDALUS -> if (oscuro) listOf(0xFFE07A5F, 0xFF18302D, 0xFF4FC1A6, 0xFFE0B65A) else listOf(0xFFB5432A, 0xFFE9DEC6, 0xFF1E6B5C, 0xFF2A4F9E)
     TemaId.MONGOL -> if (oscuro) listOf(0xFFFF7A59, 0xFF18263F, 0xFF6FB1FF, 0xFFF2C14E) else listOf(0xFFC2412D, 0xFFE6DFCF, 0xFF1F5FA8, 0xFFC48A1E)
     TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFFE08A5E, 0xFF302318, 0xFF9EC0E0, 0xFFD9B566) else listOf(0xFF8C3B1E, 0xFFE6D6B0, 0xFF2F4F6F, 0xFF9C7A2E)
+    TemaId.REVOLUCION -> if (oscuro) listOf(0xFFE5525E, 0xFF25282F, 0xFF8FAEE8, 0xFF8CC08A) else listOf(0xFFB22234, 0xFFE6DDC8, 0xFF1F3A6E, 0xFF3F6B3A)
 }.map { Color(it) }
 
 /** Escala de calor del mapa: poco, medio, mucho. */
@@ -275,4 +286,5 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.ANDALUS -> if (oscuro) listOf(0xFF4FC1A6, 0xFFE0B65A, 0xFFE07A5F) else listOf(0xFF1E6B5C, 0xFF2A4F9E, 0xFFB5432A)
     TemaId.MONGOL -> if (oscuro) listOf(0xFF6FB1FF, 0xFFF2C14E, 0xFFFF7A59) else listOf(0xFF1F5FA8, 0xFFC48A1E, 0xFFC2412D)
     TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFF9EC0E0, 0xFFD9B566, 0xFFE08A5E) else listOf(0xFF2F4F6F, 0xFF9C7A2E, 0xFF8C3B1E)
+    TemaId.REVOLUCION -> if (oscuro) listOf(0xFF8FAEE8, 0xFF8CC08A, 0xFFE5525E) else listOf(0xFF1F3A6E, 0xFF3F6B3A, 0xFFB22234)
 }.map { Color(it) }

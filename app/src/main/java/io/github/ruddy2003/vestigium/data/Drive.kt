@@ -19,14 +19,17 @@ import java.util.zip.ZipOutputStream
 /**
  * Respaldo en tu Google Drive, en una carpeta «Vestigium Mei». Usa el permiso drive.file:
  * la app solo puede ver los archivos que ella misma creó, nunca el resto de tu Drive.
- * Cada día reemplaza los CSV (para que R los lea siempre frescos) y cada semana guarda una copia .zip fechada.
+ * Cada día reemplaza los CSV (para que R los lea siempre frescos); guarda una copia fechada por semana (las últimas 8)
+ * y una por mes (las últimas 12).
  */
 object Drive {
     private const val ALCANCE = "https://www.googleapis.com/auth/drive.file"
     private const val API = "https://www.googleapis.com/drive/v3/files"
     private const val SUBIR = "https://www.googleapis.com/upload/drive/v3/files"
     private const val CARPETA = "Vestigium Mei"
-    private const val COPIAS = 12
+    /** Copias semanales (los últimos 8 lunes) y mensuales (los últimos 12 meses) que se guardan en Drive. */
+    private const val COPIAS = 8
+    private const val COPIAS_MES = 12
 
     sealed class Acceso {
         data class Listo(val token: String) : Acceso()
@@ -124,6 +127,15 @@ object Drive {
             val copias = (existentes.keys.filter { patron.matches(it) } + nombreSem).distinct().sortedDescending()
             copias.drop(COPIAS).forEach { viejo -> existentes[viejo]?.let { runCatching { Red.borrar("$API/$it", h(token)) } } }
         }
+        // Copia mensual (una por mes) y limpieza de las de hace más de un año.
+        val nombreMes = "vestigium_mes_${Fechas.hoyCalendario().take(7)}$ext"
+        if (!existentes.containsKey(nombreMes)) {
+            val (tipo, cuerpo) = multipart(nombreMes, dir, Respaldos.mime(ext), bytes)
+            Red.enviar("$SUBIR?uploadType=multipart", "POST", tipo, cuerpo, h(token), 180_000); n++
+            val patron = Regex("vestigium_mes_\\d{4}-\\d{2}\\$ext")
+            (existentes.keys.filter { patron.matches(it) } + nombreMes).distinct().sortedDescending().drop(COPIAS_MES)
+                .forEach { viejo -> existentes[viejo]?.let { runCatching { Red.borrar("$API/$it", h(token)) } } }
+        }
         // El respaldo del otro modo (si cambiaste la contraseña) ya no sirve.
         existentes[Respaldos.BASE + if (cifra) ".zip" else ".vmc"]?.let { runCatching { Red.borrar("$API/$it", h(token)) } }
         Repo.cambiarConfig { it.copy(drive_ultimo = Fechas.ahoraIso()) }
@@ -150,6 +162,15 @@ object Drive {
         val datos = bajar(token, id)
         return when (val r = Respaldos.restaurar(ctx, datos, contrasena)) {
             is Respaldos.Lectura.Listo -> Respaldos.Lectura.Listo("Restauré «$nombre» (${cuando.take(10)}). " + r.mensaje)
+            else -> r
+        }
+    }
+
+    /** Baja la copia más reciente de Drive y dice qué trae, sin restaurar nada. */
+    fun verificar(ctx: Context, token: String, contrasena: CharArray?): Respaldos.Lectura {
+        val (id, nombre, cuando) = ultimaCopia(token) ?: return Respaldos.Lectura.Error("No encontré respaldos de Vestigium Mei en tu Drive.")
+        return when (val r = Respaldos.verificar(ctx, bajar(token, id), contrasena)) {
+            is Respaldos.Lectura.Listo -> Respaldos.Lectura.Listo("«$nombre» (subido el ${cuando.take(10)}). " + r.mensaje)
             else -> r
         }
     }

@@ -459,6 +459,26 @@ vm_sustancias <- function() {
     labs(x = "bebidas estándar", y = "cruda (0 a 5)") + theme_minimal()
 }
 
+#' Lee vm_datos.sqlite (la exportación completa en una sola base) como una lista de tablas, con fechas y lógicos convertidos.
+#' Requiere DBI y RSQLite:  install.packages(c("DBI", "RSQLite"))
+vm_leer_sqlite <- function(ruta = file.path(vm_carpeta, "vm_datos.sqlite")) {
+  if (!file.exists(ruta)) stop("No encontré ", ruta)
+  con <- DBI::dbConnect(RSQLite::SQLite(), ruta)
+  on.exit(DBI::dbDisconnect(con))
+  dic <- tibble::as_tibble(DBI::dbReadTable(con, "diccionario"))
+  tablas <- setdiff(DBI::dbListTables(con), "diccionario")
+  out <- lapply(setNames(tablas, tablas), function(t) {
+    x <- tibble::as_tibble(DBI::dbReadTable(con, t))
+    d <- dic[dic$archivo == paste0("vm_", t, ".csv") & dic$columna %in% names(x), ]
+    for (cc in d$columna[d$tipo == "fecha"]) x[[cc]] <- as.Date(x[[cc]])
+    for (cc in d$columna[d$tipo == "fecha_hora"]) x[[cc]] <- vm_fecha_hora(x[[cc]])
+    for (cc in d$columna[d$tipo == "logico"]) x[[cc]] <- x[[cc]] == 1
+    x
+  })
+  out$diccionario <- dic
+  out
+}
+
 #' Guarda las gráficas principales como PNG en una subcarpeta.
 vm_guardar_graficas <- function(carpeta = file.path(vm_carpeta, "graficas")) {
   dir.create(carpeta, showWarnings = FALSE)
@@ -474,4 +494,4 @@ message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
         "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_totales(), vm_buscar('texto'), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
         "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(),",
-        "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna')")
+        "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna'), vm_leer_sqlite()")

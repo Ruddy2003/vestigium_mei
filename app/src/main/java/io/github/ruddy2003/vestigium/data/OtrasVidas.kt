@@ -44,7 +44,8 @@ object OtrasVidas {
         Medida("trabajo", "Trabajo a la semana", "h", null),
         Medida("aire_libre", "Horas al aire libre", "h al día", "aire_libre", "decimal", "Tu dato: minutos con luz de exterior que mide el teléfono."),
         Medida("pantalla", "Horas frente a una pantalla", "h al día", "pantalla", "decimal"),
-        Medida("notificaciones", "Avisos al día", "", "notificaciones", explica = "Algo que le interrumpe para avisarle de algo."),
+        Medida("notificaciones", "Interrupciones al día", "", "notificaciones",
+            explica = "Cuántas veces algo le interrumpe para avisarle de algo: un mensajero, una campana, un grito desde la calle. Tu dato: las notificaciones que recibe tu teléfono al día."),
         Medida("musica", "Música al día", "h", "musica", "decimal", "Antes de la grabación, solo en vivo: cantos, fiestas, iglesia."),
         Medida("personas_dia", "Personas con las que trata en un día", "", "personas_dia", explica = "Tu dato: lo más alto entre la gente que nombras en el diario, tus llamadas y tus chats del día."),
         Medida("conocidas", "Personas que conoce", "", "conocidas", explica = "En toda su vida. Tu dato: personas distintas que has nombrado con @ en tu diario."),
@@ -416,6 +417,22 @@ object OtrasVidas {
                 "vida" to e(37), "vida_adulto" to e(60), "hijos" to e(4.4), "alfabetizacion" to e(45), "lectura" to r(0)),
             fuentes = listOf("Lo que comía el ejército de Napoleón (NPR)" to "https://www.npr.org/sections/thesalt/2015/06/18/414614705/appetite-for-war-what-napoleon-and-his-men-ate-on-the-march",
                 "La infantería en la campaña de 1812" to "https://www.napoleonguide.com/campaign_russ_1812inf.htm")),
+
+        Vida("lavandera", "Marie-Jeanne", "Lavandera", "Un barco-lavadero en el Sena, París", "1789", 1789, "tema", "revolucion", edad = 28,
+            historia = listOf(
+                "Marie-Jeanne lava ropa ajena en uno de los barcos-lavaderos amarrados en el Sena: de rodillas, con las manos en agua fría, golpeando la ropa con una paleta de madera, desde que amanece hasta que se va la luz.",
+                "Casi todo lo que gana se va en pan. En el verano de 1789 una hogaza de cuatro libras llega a costar catorce sueldos y medio, cuando el jornal de un obrero da entre veinte y treinta, y el de una mujer, menos. La cola de la panadería empieza antes del alba.",
+                "En octubre caminará con miles de mujeres de los mercados y los barrios los veinte kilómetros hasta Versalles para pedir pan. No sabe leer, pero en la plaza alguien lee en voz alta los periódicos y los carteles pegados en los muros.",
+            ),
+            dia = listOf(t(21.5, 4.5, Hacer.DORMIR), t(4.5, 5.5, Hacer.CUIDAR, "la cola del pan"), t(5.5, 12.0, Hacer.TRABAJO, "lavar en el barco"), t(12.0, 12.5, Hacer.COMER),
+                t(12.5, 18.5, Hacer.TRABAJO, "tender y entregar"), t(18.5, 19.5, Hacer.COMER, "sopa y pan"), t(19.5, 21.5, Hacer.GENTE, "la plaza y la sección")),
+            datos = mapOf("pasos" to e(12000), "km_anio" to e(1500), "kcal" to e(2000, "Casi todo, pan."), "proteina" to e(55), "azucar" to e(5), "fibra" to e(30),
+                "alcohol" to e(15, "Vino barato de las tabernas de fuera de la muralla."), "sueno" to e(7.0), "dormir" to e(21.5), "trabajo" to e(78), "aire_libre" to e(10, "Sobre el río, bajo un techo abierto."),
+                "pantalla" to r(0), "notificaciones" to e(8, "Campanas, pregoneros y el tambor de la guardia."), "musica" to e(0.5, "Canciones de la calle."), "personas_dia" to e(150),
+                "conocidas" to e(2000), "poblacion" to e(600000, "París hacia 1789."), "lejos" to e(20, "Versalles."), "estatura" to e(151), "vida" to e(28), "vida_adulto" to e(60),
+                "hijos" to e(5), "alfabetizacion" to e(37, "Firmaban su acta de matrimonio cerca de la mitad de los hombres y una cuarta parte de las mujeres; en París, muchos más."), "lectura" to r(0)),
+            fuentes = listOf("La marcha sobre Versalles" to "${W}Women%27s_March_on_Versailles", "Los lavaderos" to "${W}Lavoir"),
+            inspiracion = "Inspirado en las mujeres de los mercados de París que marcharon sobre Versalles el 5 de octubre de 1789."),
 
         Vida("naturalista", "Un joven naturalista", "Naturalista a bordo de un bergantín", "La vuelta al mundo", "1832", 1832, "tema", "botanico", edad = 23,
             historia = listOf(

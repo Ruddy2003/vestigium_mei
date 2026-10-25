@@ -77,8 +77,8 @@ object Diccionario {
         "otra_sustancia" to "Otra sustancia ese día (0/1)", "cafeina_total_mg" to "Cafeína del día (mg; MacroFactor o anotada, sin contar dos veces)",
         "cafeina_al_dormir_mg" to "Cafeína en el cuerpo al dormirte (mg, estimada; en el día del sueño)",
         "animo_valencia" to "Valencia promedio de todos los registros de ánimo del día (avisos y propios)", "animo_activacion" to "Energía promedio de todos los registros de ánimo del día",
-        "registros_animo" to "Registros de ánimo del día", "vi_expareja" to "Mencionó a una expareja (con la relación de ese día) (0/1)",
-        "vi_trabajo" to "Mencionó a un colega, compañero o mentor (0/1)", "cercania_media" to "Cercanía media (1 a 7, círculos de Aron) de quien mencionó ese día",
+        "registros_animo" to "Registros de ánimo del día", "vi_expareja" to "Estuvo con una expareja (con la relación de ese día; no cuenta si solo pensó en ella) (0/1)",
+        "vi_trabajo" to "Estuvo con un colega, compañero o mentor (0/1)", "cercania_media" to "Cercanía media (1 a 7, círculos de Aron) de quien mencionó ese día",
         "personas" to "@personas mencionadas (lista)", "temas" to "#temas mencionados (lista)", "palabras" to "Número de palabras",
         // Panel y días
         "dia_semana" to "1 = lunes … 7 = domingo", "con_diario" to "Hay registro del diario ese día (0/1)",
@@ -210,9 +210,15 @@ object Diccionario {
         "jugue" to "Jugaste un videojuego (0/1)", "obra_terminada" to "Terminaste una obra ese día (0/1)", "calificacion_obra" to "Calificación media de lo que terminaste (1 a 10)",
         "citas_dia" to "Citas copiadas y frases guardadas ese día", "ciudades_dia" to "Ciudades distintas con al menos media hora", "fuera_de_casa" to "Fuera de tu ciudad (a más de 40 km) (0/1)",
         "extranjero" to "En un país distinto al tuyo (0/1)", "ciudad_nueva" to "Primera vez en una ciudad (0/1)", "unesco" to "Pasaste por un sitio del Patrimonio Mundial (0/1)",
-        "carta_escrita" to "Escribiste una carta ese día (0/1)", "sueno_palabras" to "Palabras del sueño escrito", "cercanos" to "Personas cercanas (de «Conocerte») mencionadas",
-        "vi_familia" to "Mencionaste a tu familia (0/1)", "vi_pareja" to "Mencionaste a tu pareja (0/1)", "vi_amistades" to "Mencionaste a una amistad (0/1)",
-        "vi_convivientes" to "Mencionaste a quien vive contigo (0/1)",
+        "carta_escrita" to "Escribiste una carta ese día (0/1)", "sueno_palabras" to "Palabras del sueño escrito", "cercanos" to "Personas cercanas (familia, pareja, amistades, convivientes) con las que estuviste",
+        "vi_familia" to "Estuviste con tu familia (0/1)", "vi_pareja" to "Estuviste con tu pareja (0/1)", "vi_amistades" to "Estuviste con una amistad (0/1)",
+        "vi_convivientes" to "Estuviste con quien vive contigo (0/1)",
+        "personas_vistas" to "Personas con las que estuviste ese día (diario y momentos)", "personas_pensadas" to "Personas en las que pensaste sin verlas",
+        "personas_mensajes" to "Personas con las que hablaste por mensaje o llamada, sin verlas", "penso_en_pareja" to "Pensaste en tu pareja sin verla (0/1)",
+        "penso_en_expareja" to "Pensaste en una expareja sin verla (0/1)", "penso_en_familia" to "Pensaste en tu familia sin verla (0/1)",
+        "penso_en_amistades" to "Pensaste en una amistad sin verla (0/1)",
+        "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista)",
+        "presencias_revisado" to "Ya revisaste ese día quién estuvo y en quién solo pensaste (0/1); antes de la versión 10 todo cuenta como «estuve»",
         // Cartas
         "vm_cartas.csv:para" to "A quién va (sin @); vacío = a ti en el futuro", "escrita" to "Día en que se escribió", "abrir_en" to "Día desde el que se puede abrir",
         "abierta" to "Ya se abrió (0/1)", "abierta_el" to "Día en que se abrió", "vm_cartas.csv:lugar" to "Ciudad donde se escribió", "vm_cartas.csv:tema" to "Tema de la app al escribirla",
@@ -263,7 +269,10 @@ object Diccionario {
         }
     }
 
-    fun csv(tablas: List<Exportar.Tabla>): String {
+    fun csv(tablas: List<Exportar.Tabla>): String = Exportar.csv(filas(tablas))
+
+    /** Una fila por columna de cada tabla: archivo, columna, tipo, descripción y de qué tabla es. */
+    fun filas(tablas: List<Exportar.Tabla>): List<Map<String, Any?>> {
         val filas = ArrayList<Map<String, Any?>>()
         for (t in tablas) {
             val cols = LinkedHashSet<String>(); t.filas.forEach { cols.addAll(it.keys) }
@@ -281,6 +290,6 @@ object Diccionario {
             "fuente" to ("texto" to "foto (del teléfono) o foto_takeout (de Google Fotos)")).forEach { (c, td) ->
             filas.add(linkedMapOf("archivo" to "vm_fotos_catalogo.csv", "columna" to c, "tipo" to td.first, "descripcion" to td.second, "tabla" to "Catálogo de fotos con lugar (solo hora y coordenadas)"))
         }
-        return Exportar.csv(filas)
+        return filas
     }
 }

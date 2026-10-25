@@ -46,6 +46,9 @@ import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.ciencia.Logros
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.TrofeosTema
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import kotlin.math.PI
 import kotlin.math.cos
@@ -99,17 +102,36 @@ fun pasado(desc0: String): String {
  * los curiosos y copa para la constancia y los tuyos), en el metal de su nivel. Si falta, es una silueta.
  */
 @Composable
-fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier) {
+fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: TemaId = Estilo.tema) {
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
     val secreto = l.secreto && !l.hecho
     val pedestal = if (oscuro) Color(0xFF2B2622) else Color(0xFF4A3A2C)
     Box(modifier.size(width = alto * 0.82f, height = alto), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, cs.onSurface)
+            if (tema in TrofeosTema.TEMAS) dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, cs.onSurface)
+            else dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, cs.onSurface)
         }
         if (secreto) Text("?", fontSize = (alto.value * 0.26f).sp, color = cs.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = alto * 0.3f))
+    }
+}
+
+/** El trofeo de los temas históricos: la obra o el objeto de su categoría (ver [TrofeosTema]) sobre el pedestal del tema. */
+internal fun DrawScope.dibujarTrofeoTema(tema: TemaId, categoria: String, nivel: Int, hecho: Boolean, pedestal: Color, tinta: Color) {
+    val (oscuro, base, brillo) = METAL[nivel - 1]
+    val p = TrofeosTema.Pincel(size.width, size.height, hecho, nivel, oscuro, base, brillo, tinta.copy(alpha = 0.13f))
+    with(TrofeosTema) { pedestal(tema, p, pedestal); figura(tema, categoria, p) }
+    destellos(nivel - 1, hecho)
+}
+
+/** Los legendarios brillan. */
+private fun DrawScope.destellos(nivel: Int, hecho: Boolean) {
+    val w = size.width; val h = size.height
+    if (hecho && nivel == 3) listOf(Offset(w * 0.14f, h * 0.12f), Offset(w * 0.88f, h * 0.22f), Offset(w * 0.2f, h * 0.5f), Offset(w * 0.84f, h * 0.6f)).forEachIndexed { i, o ->
+        val s = w * (if (i % 2 == 0) 0.05f else 0.035f)
+        drawPath(Path().apply { moveTo(o.x, o.y - s); lineTo(o.x + s * 0.25f, o.y - s * 0.25f); lineTo(o.x + s, o.y); lineTo(o.x + s * 0.25f, o.y + s * 0.25f)
+            lineTo(o.x, o.y + s); lineTo(o.x - s * 0.25f, o.y + s * 0.25f); lineTo(o.x - s, o.y); lineTo(o.x - s * 0.25f, o.y - s * 0.25f); close() }, Color.White.copy(alpha = 0.9f))
     }
 }
 
@@ -239,12 +261,7 @@ private fun DrawScope.dibujarTrofeo(fig: String, nivel: Int, hecho: Boolean, ped
             drawPath(Path().apply { moveTo(w * 0.36f, h * 0.77f); lineTo(w * 0.64f, h * 0.77f); lineTo(w * 0.58f, h * 0.68f); lineTo(w * 0.42f, h * 0.68f); close() }, brochaFig)
         }
     }
-    // Los legendarios brillan.
-    if (hecho && nivel == 3) listOf(Offset(w * 0.14f, h * 0.12f), Offset(w * 0.88f, h * 0.22f), Offset(w * 0.2f, h * 0.5f), Offset(w * 0.84f, h * 0.6f)).forEachIndexed { i, o ->
-        val s = w * (if (i % 2 == 0) 0.05f else 0.035f)
-        drawPath(Path().apply { moveTo(o.x, o.y - s); lineTo(o.x + s * 0.25f, o.y - s * 0.25f); lineTo(o.x + s, o.y); lineTo(o.x + s * 0.25f, o.y + s * 0.25f)
-            lineTo(o.x, o.y + s); lineTo(o.x - s * 0.25f, o.y + s * 0.25f); lineTo(o.x - s, o.y); lineTo(o.x - s * 0.25f, o.y - s * 0.25f); close() }, Color.White.copy(alpha = 0.9f))
-    }
+    destellos(nivel, hecho)
 }
 
 /** La placa debajo de la repisa: nombre, lo que lograste y cuándo (o cuánto falta). */
@@ -323,12 +340,14 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit
             Column(Modifier.verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
                 TrofeoLogro(l, 180.dp)
                 Text(if (secreto) "Logro secreto" else l.nombre, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
-                Text("${NIVELES[(l.nivel - 1).coerceIn(0, 3)]} · ${l.categoria}", style = MaterialTheme.typography.labelLarge, color = cs.primary)
+                Text("${NIVELES[(l.nivel - 1).coerceIn(0, 3)]} · ${l.categoria}" + (TrofeosTema.nombre(Estilo.tema, l.categoria)?.let { " · $it" } ?: ""),
+                    style = MaterialTheme.typography.labelLarge, color = cs.primary, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(10.dp))
                 when {
                     l.hecho -> {
                         Text(pasado(l.descripcion) + ".", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
                         Text("Lo lograste el " + Fechas.titulo(l.conseguido!!).lowercase() + ".", style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center)
+                        Logros.comoSeConsiguio(l)?.let { Text(it, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp)) }
                     }
                     secreto -> Text("Sigue viviendo y escribiendo: aparece cuando lo logras.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                     else -> {

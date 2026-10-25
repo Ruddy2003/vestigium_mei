@@ -280,7 +280,7 @@ fun PantallaOtrasVidas(nav: Nav) {
                     }
                 }
             }
-            Ayuda("Compara pasos, comida, alcohol, sueño, hora de dormir, aire libre, pantallas, avisos, música, gente y kilómetros con tus últimos 30 días.", Modifier.padding(top = 8.dp))
+            Ayuda("Compara pasos, comida, alcohol, sueño, hora de dormir, aire libre, pantallas, interrupciones, música, gente y kilómetros con tus últimos 30 días.", Modifier.padding(top = 8.dp))
         } else if (t != null) Ayuda("Cuando tengas unos días de pasos, sueño y pantalla registrados, aquí verás a quién te pareces.", Modifier.padding(top = 12.dp))
 
         // ---- La línea del tiempo.
@@ -339,7 +339,7 @@ private fun DetalleVida(v: OtrasVidas.Vida, t: Map<String, TusNumeros.Valor>?) {
             }
             OtrasVidas.MEDIDAS.forEach { m ->
                 val d = v.datos[m.id] ?: return@forEach
-                FilaComparacion(m, d, m.tuyo?.let { t?.get(it)?.v }, if (m.id == "vida" || m.id == "vida_adulto") t?.get("edad")?.v else null)
+                FilaComparacion(v, m, d, m.tuyo?.let { t?.get(it)?.v }, if (m.id == "vida" || m.id == "vida_adulto") t?.get("edad")?.v else null)
             }
         }
     }
@@ -381,11 +381,9 @@ private fun formato(m: OtrasVidas.Medida, x: Double): String = when (m.forma) {
     else -> when { x >= 1e6 -> "%.1f millones".format(x / 1e6); else -> "%,d".format(x.roundToInt()) }
 } + if (m.unidad.isNotEmpty() && m.forma != "hora") " ${m.unidad}" else ""
 
-/** Escala logarítmica para lo que va de unos cuantos a millones. */
-private val LOG = setOf("km_anio", "notificaciones", "personas_dia", "conocidas", "poblacion", "lejos")
 
 @Composable
-private fun FilaComparacion(m: OtrasVidas.Medida, d: OtrasVidas.Dato, tuyo: Double?, edad: Double?) {
+private fun FilaComparacion(v: OtrasVidas.Vida, m: OtrasVidas.Medida, d: OtrasVidas.Dato, tuyo: Double?, edad: Double?) {
     val cs = MaterialTheme.colorScheme
     var abierta by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().clickable { abierta = !abierta }.padding(top = 12.dp)) {
@@ -395,11 +393,22 @@ private fun FilaComparacion(m: OtrasVidas.Medida, d: OtrasVidas.Dato, tuyo: Doub
         }
         if (m.forma == "hora") RelojitoHora(d.v, tuyo)
         else {
-            val log = m.id in LOG
-            fun esc(x: Double) = if (log) ln(1 + x) else x
-            val max = maxOf(esc(d.v), esc(tuyo ?: 0.0), 1e-9)
-            BarraValor(cs.secondary, (esc(d.v) / max).toFloat(), formato(m, d.v))
-            if (tuyo != null) BarraValor(cs.primary, (esc(tuyo) / max).toFloat(), formato(m, tuyo))
+            // Las dos barras en la misma escala, desde cero: el largo es proporcional al número.
+            val max = maxOf(d.v, tuyo ?: 0.0, 1e-9)
+            BarraValor(cs.secondary, (d.v / max).toFloat(), formato(m, d.v))
+            if (tuyo != null) BarraValor(cs.primary, (tuyo / max).toFloat(), formato(m, tuyo))
+            // Cuando la diferencia es muy grande, una barra casi no se ve: se dice cuántas veces más.
+            if (tuyo != null) {
+                val mayor = maxOf(d.v, tuyo); val menor = minOf(d.v, tuyo)
+                val veces = if (menor > 0) mayor / menor else null
+                val texto = when {
+                    mayor <= 0 -> null
+                    menor <= 0 -> if (tuyo > d.v) "Para ${v.nombre}, cero." else "Para ti, cero."
+                    veces != null && veces >= 1.5 -> (if (tuyo > d.v) "Tú: " else "${v.nombre}: ") + (if (veces < 10) "%.1f".format(veces) else "%,d".format(veces.roundToInt())) + " veces más."
+                    else -> null
+                }
+                texto?.let { Ayuda(it, Modifier.padding(top = 2.dp)) }
+            }
         }
         if (edad != null) Ayuda("Tú tienes ${edad.roundToInt()} años.")
         if (abierta) {

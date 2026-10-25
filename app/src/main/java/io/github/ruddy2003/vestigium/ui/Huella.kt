@@ -57,7 +57,7 @@ fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.NAPOLEON -> "BOLETÍN ENVIADO"; TemaId.BOTANICO -> "Ejemplar prensado"; TemaId.NAVIDAD -> "Guardado bajo el árbol"
     TemaId.SEDA -> "Rollo sellado"; TemaId.URSS -> "PLAN CUMPLIDO"
     TemaId.GOTICO -> "Signatum et lucet"; TemaId.ESPACIO -> "TRANSMISIÓN COMPLETA"; TemaId.ANDALUS -> "Sellado · خُتِم"
-    TemaId.MONGOL -> "ТАМГА ДАРАВ · sellado"; TemaId.RENACIMIENTO -> "Fatto."
+    TemaId.MONGOL -> "ТАМГА ДАРАВ · sellado"; TemaId.RENACIMIENTO -> "Fatto."; TemaId.REVOLUCION -> "CAHIER FIRMADO"
 }
 
 /** Pantalla completa: la huella del tema se va formando desde el centro, como en un lector, y luego se sella. Toca para cerrar. */
@@ -100,6 +100,7 @@ fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.ANDALUS -> R.drawable.huella_fondo_andalus to R.drawable.huella_andalus
     TemaId.MONGOL -> R.drawable.huella_fondo_mongol to R.drawable.huella_mongol
     TemaId.RENACIMIENTO -> R.drawable.huella_fondo_renacimiento to R.drawable.huella_renacimiento
+    TemaId.REVOLUCION -> R.drawable.huella_fondo_revolucion to R.drawable.huella_revolucion
 }
 
 /** El sello del tema en un círculo: fondo con textura y huella. [revela] (0–1) la descubre desde el núcleo, como un lector. */

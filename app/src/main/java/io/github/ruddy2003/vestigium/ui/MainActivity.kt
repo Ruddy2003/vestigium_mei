@@ -327,6 +327,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "entender", "explorar" -> PantallaExplorar(nav)
                     "vida" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(nav)
                     "personas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaPersonas(nav)
+                    "temas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusTemas(nav)
+                    "presencias" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaPresencias(nav)
                     "hoja_momentos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(nav)
                     "sustancias" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSustancias(nav)
                     "mas" -> PantallaMas(nav)
@@ -455,5 +457,7 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.SEDA -> (expandVertically(t(340), expandFrom = Alignment.Top) + fadeIn(t(280))) togetherWith fadeOut(t(160))
         // Cartel que entra en diagonal.
         TemaId.URSS -> (slideIn(t(220)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 6, it.height / 12) } + fadeIn(t(160))) togetherWith fadeOut(t(100))
+        // Un cartel que se pega en la pared: cae apenas desde arriba y se asienta.
+        TemaId.REVOLUCION -> (slideInVertically(t(260)) { -it / 14 } + scaleIn(t(260), initialScale = 1.03f) + fadeIn(t(200))) togetherWith fadeOut(t(140))
     }
 }

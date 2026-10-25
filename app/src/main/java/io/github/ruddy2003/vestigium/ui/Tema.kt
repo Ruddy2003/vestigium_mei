@@ -70,7 +70,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     ORDEN("orden", "Orden", "Acero, carmesí y latón. Caballeros que custodian el saber técnico. Letra de estarcido."),
     LABORATORIO("laboratorio", "Laboratorio", "Blanco clínico, cian y violeta. Un laboratorio silencioso donde todo se mide."),
     COLONOS("colonos", "Colonos", "Papel de gaceta, azul marino y ladrillo. Vecinos que reconstruyen su pueblo."),
-    NAPOLEON("napoleon", "Napoleónico", "Azul imperial, oro y carmesí; letra Didot. Boletines de campaña y el calendario republicano."),
+    NAPOLEON("napoleon", "Napoleónico", "El Imperio (1804–1815): azul imperial, oro y carmesí, letra Didot. Boletines de la Grande Armée y fechas en francés."),
     BOTANICO("botanico", "Botánico", "El cuaderno de un naturalista viajero: escarabajos clavados con alfiler, hileras de hormigas y helechos a tinta sepia, verde musgo y óxido. Fecha según la estación."),
     NAVIDAD("navidad", "Navidad", "Rojo, verde pino y oro, con nieve. Cartas junto al fuego y la cuenta hacia el 25 de diciembre."),
     SEDA("seda", "Ruta de la Seda", "Seda, lapislázuli, cinabrio y oro. Monedas con agujero, caravanas y números chinos."),
@@ -80,6 +80,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     MONGOL("mongol", "Mongol", "El Cielo Azul Eterno, fieltro y oro de la estepa. Títulos en mongol y el año del animal."),
     RENACIMIENTO("renacimiento", "Renacimiento", "Los cuadernos de Leonardo: tinta sepia, sanguina y trazos de construcción. Títulos en italiano."),
     URSS("urss", "Soviético", "Rojo, negro y papel de cartel, en estilo constructivista. Planes quinquenales y meses en ruso."),
+    REVOLUCION("revolucion", "Revolución francesa", "Papel de cartel, tinta y la escarapela azul, blanca y roja. Cuadernos de quejas, el árbol de la libertad y el calendario republicano."),
 }
 
 internal val romanoClaro = lightColorScheme(
@@ -213,6 +214,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ANDALUS -> if (oscuro) andalusOscuro else andalusClaro
     TemaId.MONGOL -> if (oscuro) mongolOscuro else mongolClaro
     TemaId.RENACIMIENTO -> if (oscuro) renacimientoOscuro else renacimientoClaro
+    TemaId.REVOLUCION -> if (oscuro) revolucionOscuro else revolucionClaro
 }
 
 internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
@@ -222,14 +224,14 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ORDEN -> tipoOrden; TemaId.LABORATORIO -> tipoLaboratorio; TemaId.COLONOS -> tipoColonos
     TemaId.NAPOLEON -> tipoNapoleon; TemaId.BOTANICO -> tipoBotanico; TemaId.NAVIDAD -> tipoNavidad; TemaId.SEDA -> tipoSeda; TemaId.URSS -> tipoUrss
     TemaId.GOTICO -> tipoGotico; TemaId.ESPACIO -> if (oscuro) tipoEspacioOscuro else tipoEspacio; TemaId.ANDALUS -> tipoAndalus
-    TemaId.MONGOL -> tipoMongol; TemaId.RENACIMIENTO -> tipoRenacimiento
+    TemaId.MONGOL -> tipoMongol; TemaId.RENACIMIENTO -> tipoRenacimiento; TemaId.REVOLUCION -> tipoRevolucion
 }
 
 internal fun radioDe(tema: TemaId) = when (tema) {
     TemaId.ROMANO -> 4; TemaId.CIBER -> 1; TemaId.HELENO -> 6; TemaId.MEDIEVAL -> 3; TemaId.DISTOPIA -> 0
     TemaId.REFUGIO -> 10; TemaId.ORDEN -> 2; TemaId.LABORATORIO -> 14; TemaId.COLONOS -> 5
     TemaId.NAPOLEON -> 3; TemaId.BOTANICO -> 12; TemaId.NAVIDAD -> 8; TemaId.SEDA -> 6; TemaId.URSS -> 0
-    TemaId.GOTICO -> 2; TemaId.ESPACIO -> 16; TemaId.ANDALUS -> 10; TemaId.MONGOL -> 8; TemaId.RENACIMIENTO -> 2
+    TemaId.GOTICO -> 2; TemaId.ESPACIO -> 16; TemaId.ANDALUS -> 10; TemaId.MONGOL -> 8; TemaId.RENACIMIENTO -> 2; TemaId.REVOLUCION -> 1
 }
 
 /** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); el cyberpunk siempre es oscuro. */
@@ -382,13 +384,13 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ROMANO -> "DIES"; TemaId.CIBER -> "DÍA_"; TemaId.HELENO -> "ΗΜΕΡΑ"; TemaId.MEDIEVAL -> "Del día"
         TemaId.DISTOPIA -> "PARTE"; TemaId.REFUGIO -> "DIARIO"; TemaId.ORDEN -> "CAMPO"; TemaId.LABORATORIO -> "SESIÓN"; TemaId.COLONOS -> "Jornada"
         TemaId.NAPOLEON -> "BOLETÍN"; TemaId.BOTANICO -> "Herbario"; TemaId.NAVIDAD -> "El día"; TemaId.SEDA -> "Jornada"; TemaId.URSS -> "PLAN"
-        TemaId.GOTICO -> "Laudes"; TemaId.ESPACIO -> "ÓRBITA"; TemaId.ANDALUS -> "النهار"; TemaId.MONGOL -> "ӨДӨР"; TemaId.RENACIMIENTO -> "Giornata"
+        TemaId.GOTICO -> "Laudes"; TemaId.ESPACIO -> "ÓRBITA"; TemaId.ANDALUS -> "النهار"; TemaId.MONGOL -> "ӨДӨР"; TemaId.RENACIMIENTO -> "Giornata"; TemaId.REVOLUCION -> "CAHIER"
     }
     val linea = when (tema) {
         TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."; TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.DISTOPIA -> "EXP. 0290"; TemaId.REFUGIO -> "DÍA 290"; TemaId.ORDEN -> "17 OCT 26"; TemaId.LABORATORIO -> "T+290"; TemaId.COLONOS -> "17 de octubre"
-        TemaId.NAPOLEON -> "26 vendémiaire"; TemaId.BOTANICO -> "otoño · día 26"; TemaId.NAVIDAD -> "faltan 69 días"; TemaId.SEDA -> "十月十七日"; TemaId.URSS -> "ОКТЯБРЬ"
-        TemaId.GOTICO -> "hora de vísperas"; TemaId.ESPACIO -> "JD 2461331"; TemaId.ANDALUS -> "1448 H"; TemaId.MONGOL -> "Морин жил"; TemaId.RENACIMIENTO -> "addì 17 d'ottobre"
+        TemaId.NAPOLEON -> "samedi 17 octobre"; TemaId.BOTANICO -> "otoño · día 26"; TemaId.NAVIDAD -> "faltan 69 días"; TemaId.SEDA -> "十月十七日"; TemaId.URSS -> "ОКТЯБРЬ"
+        TemaId.GOTICO -> "hora de vísperas"; TemaId.ESPACIO -> "JD 2461331"; TemaId.ANDALUS -> "1448 H"; TemaId.MONGOL -> "Морин жил"; TemaId.RENACIMIENTO -> "addì 17 d'ottobre"; TemaId.REVOLUCION -> "26 vendémiaire"
     }
     androidx.compose.material3.Surface(
         onClick = onClick, modifier = modifier, color = e.background, shape = RoundedCornerShape(6.dp),

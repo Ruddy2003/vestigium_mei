@@ -217,6 +217,75 @@ object Respaldos {
         } finally { tmp.delete() }
     }
 
+    // ------------------------------------------------------------ verificar sin restaurar
+
+    /** Lo que trae un respaldo ya descifrado: sus datos y cuántas ubicaciones, fotos con lugar y portadas lleva. */
+    class Contenido(val r: Respaldo, val ubicaciones: Int, val fotos: Int, val portadas: Int)
+
+    /**
+     * Abre un respaldo (.zip o el JSON suelto) en memoria y lo lee completo, sin tocar nada de la app.
+     * null si no es un respaldo de Vestigium Mei. Sirve para «Verificar respaldo» y para las pruebas automáticas.
+     */
+    fun contenido(b: ByteArray): Contenido? {
+        val esZip = b.size > 4 && b[0] == 'P'.code.toByte() && b[1] == 'K'.code.toByte()
+        if (!esZip) {
+            val t = b.toString(Charsets.UTF_8)
+            if (!t.contains("\"momentos\"") && !t.contains("\"respuestas\"")) return null
+            return Contenido(JSON.decodeFromString(Respaldo.serializer(), t), 0, 0, 0)
+        }
+        var r: Respaldo? = null; var ub = 0; var fo = 0; var po = 0
+        java.util.zip.ZipInputStream(b.inputStream()).use { z ->
+            while (true) {
+                val e = z.nextEntry ?: break
+                if (e.isDirectory) continue
+                val n = e.name.substringAfterLast('/')
+                when {
+                    n == "vm_respaldo.json" -> r = JSON.decodeFromString(Respaldo.serializer(), z.readBytes().toString(Charsets.UTF_8))
+                    n == "vm_ubicaciones.csv" -> ub = (z.bufferedReader().lineSequence().count() - 1).coerceAtLeast(0)
+                    n == "vm_fotos_catalogo.csv" -> fo = (z.bufferedReader().lineSequence().count() - 1).coerceAtLeast(0)
+                    e.name.contains("portadas/") -> po++
+                }
+            }
+        }
+        return r?.let { Contenido(it, ub, fo, po) }
+    }
+
+    /** Las cifras de un respaldo, en una línea cada una: qué trae y desde cuándo. */
+    fun informe(c: Contenido): List<String> {
+        val r = c.r
+        fun n(x: Int) = "%,d".format(x)
+        val dias = r.dias.map { it.fecha }.sorted()
+        return listOfNotNull(
+            "Hecho el ${r.exportado.take(10)} a las ${r.exportado.drop(11).take(5)} · esquema ${r.schema_v}",
+            "${n(r.dias.size)} días" + (if (dias.isNotEmpty()) " (del ${dias.first()} al ${dias.last()})" else "") + " · ${n(r.dias.count { it.nota.isNotBlank() })} con diario · ${n(r.dias.count { it.sueno_texto.isNotBlank() })} sueños",
+            "${n(r.momentos.size)} momentos · ${n(r.tramos.size)} tramos de enfoque · ${n(r.consumos.size)} consumos",
+            "${n(r.gastos.size)} gastos · ${n(r.ingresos.size)} ingresos · ${n(r.cartas.size)} cartas · ${n(r.obras.size)} obras",
+            "${n(r.salud.size)} días de salud · ${n(r.pantalla.size)} de pantalla · ${n(r.escuchas.size)} canciones · ${n(r.comidas.size)} comidas",
+            "${n(r.lugares.size)} lugares · ${n(r.visitas.size)} visitas · ${n(c.ubicaciones)} ubicaciones · ${n(c.fotos)} fotos con lugar · ${n(c.portadas)} portadas",
+            "Ajustes: ${r.config.habitos.size} hábitos, ${r.config.personas.size} personas en Tu gente, ${r.config.equivalencias.size} etiquetas unidas, tema «${r.config.tema}»",
+        )
+    }
+
+    /** Abre el respaldo (descifrándolo si hace falta) y dice qué trae, comparado con lo que hay en este teléfono. No cambia nada. */
+    fun verificar(ctx: Context, datos: ByteArray, contrasena: CharArray?): Lectura {
+        var b = datos
+        val cifrado = estaCifrado(b)
+        if (cifrado) {
+            val clave = contrasena ?: contrasena(ctx) ?: return Lectura.PideContrasena
+            b = descifrar(b, clave) ?: return if (contrasena == null) Lectura.PideContrasena else Lectura.Error("La contraseña no abre este respaldo.")
+        }
+        val c = try { contenido(b) } catch (e: Exception) { return Lectura.Error("El archivo está dañado o incompleto: ${e.message}") }
+            ?: return Lectura.Error("Ese archivo no es un respaldo de Vestigium Mei.")
+        val aqui = "En este teléfono: %,d días, %,d momentos, %,d gastos.".format(Repo.dias.size, Repo.momentos.size, Repo.gastos.size)
+        return Lectura.Listo((if (cifrado) "Cifrado y abierto con la contraseña. " else "") + "El respaldo se lee completo y no le falta nada.\n" +
+            informe(c).joinToString("\n") { "· $it" } + "\n" + aqui)
+    }
+
+    fun verificarUri(ctx: Context, uri: Uri, contrasena: CharArray?): Lectura {
+        val b = runCatching { ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() } }.getOrNull() ?: return Lectura.Error("No pude leer el archivo.")
+        return verificar(ctx, b, contrasena)
+    }
+
     private fun ZipFile.entradaQueTermina(n: String): ZipEntry? = entries().asSequence().firstOrNull { !it.isDirectory && (it.name == n || it.name.endsWith("/$n")) }
 
     private fun columnas(cab: String) = cab.removePrefix("﻿").split(',').withIndex().associate { it.value.trim() to it.index }

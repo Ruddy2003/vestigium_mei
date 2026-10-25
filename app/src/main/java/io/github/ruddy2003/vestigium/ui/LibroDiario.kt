@@ -147,6 +147,7 @@ object LibroDiario {
         TemaId.ANDALUS -> Fuentes(R.font.kufi_medium, R.font.amiri_regular)
         TemaId.MONGOL -> Fuentes(R.font.philosopher_bold, R.font.plex_sans_regular)
         TemaId.RENACIMIENTO -> Fuentes(R.font.italianno, R.font.cormorant_regular)
+        TemaId.REVOLUCION -> Fuentes(R.font.fell, R.font.cormorant_regular)
     }
 
     private fun hex(c: Color) = "#%06X".format(c.toArgb() and 0xFFFFFF)

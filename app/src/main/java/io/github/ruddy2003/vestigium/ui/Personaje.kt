@@ -78,8 +78,8 @@ object Personaje {
         return Estado(cansado, animo, r, lluvia, frio, calor, noche, frase)
     }
 
-    private enum class Sombrero { CRESTA, CORINTIO, YELMO, GORRA, CASCO_OBRA, CAPUCHA_NEON, VISOR, GAFAS, ALA, BICORNIO, SALACOT, GORRO_NAVIDAD, TURBANTE, CAPUCHA, ESCAFANDRA, PUNTA, BOINA, USHANKA, LAUREL }
-    private enum class Objeto { LANZA, ESCUDO, ESPADA, CARPETA, LLAVE, TABLETA, LIBRO, MATRAZ, PALA, CATALEJO, LUPA, REGALO, FAROL, VELA, BANDERA, ARCO, PINCEL, MARTILLO, PERGAMINO }
+    private enum class Sombrero { CRESTA, CORINTIO, YELMO, GORRA, CASCO_OBRA, CAPUCHA_NEON, VISOR, GAFAS, ALA, BICORNIO, SALACOT, GORRO_NAVIDAD, TURBANTE, CAPUCHA, ESCAFANDRA, PUNTA, BOINA, USHANKA, LAUREL, FRIGIO }
+    private enum class Objeto { LANZA, ESCUDO, ESPADA, CARPETA, LLAVE, TABLETA, LIBRO, MATRAZ, PALA, CATALEJO, LUPA, REGALO, FAROL, VELA, BANDERA, ARCO, PINCEL, MARTILLO, PERGAMINO, TRICOLOR }
 
     private class Atuendo(val sombrero: Sombrero, val objeto: Objeto, val capa: Boolean)
 
@@ -103,6 +103,7 @@ object Personaje {
         TemaId.MONGOL -> Atuendo(Sombrero.PUNTA, Objeto.ARCO, true)
         TemaId.RENACIMIENTO -> Atuendo(Sombrero.BOINA, Objeto.PINCEL, false)
         TemaId.URSS -> Atuendo(Sombrero.USHANKA, Objeto.MARTILLO, false)
+        TemaId.REVOLUCION -> Atuendo(Sombrero.FRIGIO, Objeto.TRICOLOR, false)
     }
 
     /** Dibuja al personaje en un lienzo de [s] (alto); [t] es la fase de la animación (0 a 1), [parpadeo] cierra los ojos. */
@@ -274,6 +275,15 @@ object Personaje {
                 drawRoundRect(Color(0xFF6B5B4B), Offset(c.x + r * 1.25f - 5 * u, c.y - 4 * u), Size(5 * u, 11 * u), androidx.compose.ui.geometry.CornerRadius(2 * u, 2 * u))
                 drawCircle(acento, 2.4f * u, Offset(c.x, top - 1 * u))
             }
+            Sombrero.FRIGIO -> { // Gorro frigio rojo con la punta caída hacia delante y su escarapela.
+                drawPath(Path().apply {
+                    moveTo(c.x - r * 1.1f, top + 4 * u); quadraticTo(c.x - r * 1.2f, top - 10 * u, c.x + 2 * u, top - 13 * u)
+                    quadraticTo(c.x + r * 1.5f, top - 13 * u, c.x + r * 1.35f, top - 2 * u); quadraticTo(c.x + r * 0.9f, top - 6 * u, c.x + r * 1.05f, top + 4 * u); close()
+                }, Color(0xFFB22234))
+                drawRect(Color(0xFFF1E7D2), Offset(c.x - r * 1.12f, top + 1.5f * u), Size(r * 2.2f, 3 * u))
+                drawCircle(Color(0xFF1F3A6E), 3 * u, Offset(c.x - r * 0.55f, top - 1 * u)); drawCircle(Color.White, 2 * u, Offset(c.x - r * 0.55f, top - 1 * u))
+                drawCircle(Color(0xFFB22234), 1 * u, Offset(c.x - r * 0.55f, top - 1 * u))
+            }
         }
     }
 
@@ -298,6 +308,11 @@ object Personaje {
             Objeto.ARCO -> { drawArc(Color(0xFF8A6A44), -80f, 160f, false, Offset(m.x - 6 * u, m.y - 22 * u), Size(14 * u, 44 * u), style = Stroke(2 * u)); drawLine(tinta, Offset(m.x + 1 * u, m.y - 21 * u), Offset(m.x + 1 * u, m.y + 21 * u), 0.8f * u) }
             Objeto.PINCEL -> { drawLine(Color(0xFF8A6A44), m + Offset(-2 * u, 6 * u), m - Offset(-6 * u, 20 * u), 2 * u, StrokeCap.Round); drawCircle(acento, 2.6f * u, m - Offset(-7 * u, 22 * u)) }
             Objeto.MARTILLO -> { drawLine(Color(0xFF8A6A44), m + Offset(0f, 8 * u), m - Offset(0f, 18 * u), 2.4f * u); drawRect(Color(0xFF8E979F), m - Offset(6 * u, 22 * u), Size(12 * u, 5 * u)) }
+            Objeto.TRICOLOR -> {
+                drawLine(Color(0xFF8A6A44), m + Offset(0f, 10 * u), m - Offset(0f, 34 * u), 1.6f * u)
+                listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, m - Offset(-i * 5 * u, 34 * u), Size(5 * u, 11 * u)) }
+                drawCircle(Color(0xFFC9A04A), 1.4f * u, m - Offset(0f, 35 * u))
+            }
             Objeto.PERGAMINO -> { drawRect(Color(0xFFEDDFC2), m - Offset(3 * u, 12 * u), Size(10 * u, 20 * u)); drawCircle(Color(0xFFD5C29A), 2.2f * u, m - Offset(-2 * u, 12 * u)); drawCircle(Color(0xFFD5C29A), 2.2f * u, m + Offset(2 * u, 8 * u)); drawLine(acento, m - Offset(1 * u, 6 * u), m + Offset(5 * u, -6 * u), 1 * u) }
         }
     }

@@ -48,6 +48,7 @@ import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
+import io.github.ruddy2003.vestigium.ui.MapasCampana
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
@@ -65,6 +66,9 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
     val medidor = rememberTextMeasurer()
     val estilo = MaterialTheme.typography.labelSmall.copy(color = cs.onSurfaceVariant)
     val etapas = Campanas.etapas(e.c.tema.ifBlank { tema.id })
+    // El mapa es el de la campaña (el tema con que se aceptó), para que las etapas y el dibujo coincidan.
+    val temaMapa = TemaId.entries.firstOrNull { it.id == e.c.tema } ?: tema
+    val propio = temaMapa in MapasCampana.TEMAS
     val hoy = Fechas.diaLogico()
     val trans = rememberInfiniteTransition(label = "campana")
     val pulso by trans.animateFloat(0f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Reverse), label = "pulso")
@@ -74,8 +78,8 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
         // Siete puntos en zigzag, de izquierda a derecha.
         val pts = (0 until 7).map { i -> Offset(w * (0.07f + 0.86f * i / 6f), h * (if (i % 2 == 0) 0.32f else 0.62f)) }
         val camino = Path().apply { moveTo(pts[0].x, pts[0].y); for (i in 1 until 7) { val a = pts[i - 1]; val b = pts[i]; cubicTo((a.x + b.x) / 2, a.y, (a.x + b.x) / 2, b.y, b.x, b.y) } }
-        val salon = salonDe(tema)
-        when (salon) {
+        val salon = salonDe(temaMapa)
+        if (propio) with(MapasCampana) { fondo(temaMapa, cs, e.hechos / 7f); ruta(temaMapa, cs, camino) } else when (salon) {
             Salon.TEMPLO -> { drawPath(camino, cs.outline.copy(alpha = 0.5f), style = Stroke(3.6f * density)); drawPath(camino, cs.surface, style = Stroke(2f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f * density, 2.5f * density)))) }
             Salon.CASTILLO -> drawPath(camino, cs.onSurfaceVariant.copy(alpha = 0.6f), style = Stroke(1.4f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1f * density, 3.5f * density))))
             Salon.LABORATORIO -> { drawPath(camino, cs.primary.copy(alpha = 0.25f), style = Stroke(3f * density)); drawPath(camino, cs.primary, style = Stroke(0.8f * density)) }
@@ -86,12 +90,12 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
             val r = (if (i == 6) 9f else 6.5f) * density
             val col = when { ok == true -> cs.primary; f == hoy -> cs.tertiary; f < hoy -> cs.error.copy(alpha = 0.55f); else -> cs.surfaceVariant }
             if (f == hoy && ok != true && animar) drawCircle(cs.tertiary.copy(alpha = 0.25f * (1 - pulso)), r + 5f * density * pulso, p)
-            when (salon) {
+            if (propio) with(MapasCampana) { etapa(temaMapa, cs, p, r, col, i == 6) } else when (salon) {
                 Salon.CASTILLO -> drawRect(col, Offset(p.x - r, p.y - r), androidx.compose.ui.geometry.Size(r * 2, r * 2))
                 Salon.LABORATORIO -> drawPath(Path().apply { for (k in 0 until 6) { val a = k * Math.PI / 3; val x = p.x + (r * kotlin.math.cos(a)).toFloat(); val y = p.y + (r * kotlin.math.sin(a)).toFloat(); if (k == 0) moveTo(x, y) else lineTo(x, y) }; close() }, col)
                 else -> drawCircle(col, r, p)
             }
-            drawCircle(cs.outline, r, p, style = Stroke(0.6f * density))
+            if (!propio) drawCircle(cs.outline, r, p, style = Stroke(0.6f * density))
             if (ok == true) drawPath(Path().apply { moveTo(p.x - r * 0.45f, p.y); lineTo(p.x - r * 0.1f, p.y + r * 0.4f); lineTo(p.x + r * 0.5f, p.y - r * 0.4f) }, cs.onPrimary, style = Stroke(1f * density))
             if (conNombres) {
                 val t = medidor.measure(etapas.getOrElse(i) { "" }, estilo)
@@ -100,7 +104,8 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
             }
         }
         // La bandera de la meta si se ganó.
-        if (e.ganada) {
+        if (e.ganada && propio) with(MapasCampana) { victoria(temaMapa, cs, pts[6]) }
+        else if (e.ganada) {
             val m = pts[6]
             drawLine(cs.onSurface, m, m + Offset(0f, -14f * density), 0.8f * density)
             drawPath(Path().apply { moveTo(m.x, m.y - 14f * density); lineTo(m.x + 9f * density, m.y - 11.5f * density); lineTo(m.x, m.y - 9f * density); close() }, cs.primary)

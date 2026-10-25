@@ -77,6 +77,9 @@ fun PantallaMas(nav: Nav) {
                 val pend = io.github.ruddy2003.vestigium.data.Personas.pendientes().size
                 FilaMas("personas", "Tu gente", if (pend > 0) "$pend por clasificar · quién es cada @persona para ti" else "Quién es cada @persona para ti, y qué tan cerca", ir)
                 HorizontalDivider()
+                val temasN = Repo.dias.values.flatMap { io.github.ruddy2003.vestigium.data.Texto.temas(it.nota) }.toSet().size
+                FilaMas("temas", "Tus temas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a hitos", ir)
+                HorizontalDivider()
                 FilaMas("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína: episodios, niveles y cruda", ir)
                 if (Repo.config.seguimiento_privado) {
                     HorizontalDivider()

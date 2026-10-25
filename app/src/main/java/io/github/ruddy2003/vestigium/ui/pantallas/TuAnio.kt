@@ -141,6 +141,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.ANDALUS -> "Crónica del año $anio"
     TemaId.MONGOL -> Temas.anioMongol(java.time.LocalDate.of(anio, 6, 1))
     TemaId.RENACIMIENTO -> "Annali dell'anno $anio"
+    TemaId.REVOLUCION -> "ANALES DEL AÑO $anio · ${Temas.anRepublicano(anio, 6).uppercase()}"
 }
 
 /** Lo que una tarjeta necesita saber para dibujarse. */

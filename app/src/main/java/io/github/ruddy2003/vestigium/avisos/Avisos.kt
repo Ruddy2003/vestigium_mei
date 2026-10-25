@@ -34,6 +34,7 @@ object Avisos {
         "gotico" to (R.raw.n_gotico_aviso to R.raw.n_gotico_solemne), "espacio" to (R.raw.n_espacio_aviso to R.raw.n_espacio_solemne),
         "andalus" to (R.raw.n_andalus_aviso to R.raw.n_andalus_solemne), "mongol" to (R.raw.n_mongol_aviso to R.raw.n_mongol_solemne),
         "renacimiento" to (R.raw.n_renacimiento_aviso to R.raw.n_renacimiento_solemne),
+        "revolucion" to (R.raw.n_revolucion_aviso to R.raw.n_revolucion_solemne),
     )
 
     private fun nombreCanal(base: String) = when (base) {

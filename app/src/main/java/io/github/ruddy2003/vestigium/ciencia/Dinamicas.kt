@@ -20,6 +20,7 @@ object Dinamicas {
     /** Prefijo de cada familia → variables fijas que la resumen (pares obvios: «minutos en Instagram» con «minutos de pantalla»). */
     val AGREGADOS: Map<String, Set<String>> = mapOf(
         "per_" to setOf("personas", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes", "palabras", "cartas_otros"),
+        "pen_" to setOf("personas", "personas_pensadas", "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
         "tema_" to setOf("palabras"), "hito_" to setOf("hitos_n"),
         "lug_" to setOf("lugares_distintos", "distancia_km"),
         "app_" to setOf("pantalla_min", "desbloqueos"), "ntf_" to setOf("notificaciones"),
@@ -113,6 +114,14 @@ object Dinamicas {
         Repo.momentos.forEach { m -> texto(m.fecha, m.texto) }
         Repo.cartas.filter { it.para.isNotBlank() }.forEach { c -> personas.getOrPut(c.escrita) { HashMap() }[Texto.canon(c.para, eq)] = 1.0; texto(c.escrita, c.texto) }
         familia("per_", "Personas", personas, diasDiario, 15, 5, { "Aparece @$it (diario, momentos, sueños o cartas) (0/1)" })
+        // ---- En quién pensaste sin verla (lo marcas en el diario; en los momentos, «pensando en…» estando solo).
+        val pensadas = HashMap<String, HashMap<String, Double>>()
+        val momentosPorDia = Repo.momentos.groupBy { it.fecha }
+        (Repo.dias.keys + momentosPorDia.keys).toSet().forEach { f ->
+            io.github.ruddy2003.vestigium.data.Presencias.delDia(f, eq, Repo.dias[f], momentosPorDia[f].orEmpty())
+                .filterValues { it == io.github.ruddy2003.vestigium.data.Presencias.PENSE }.keys.forEach { p -> pensadas.getOrPut(f) { HashMap() }[p] = 1.0 }
+        }
+        if (pensadas.isNotEmpty()) familia("pen_", "Personas", pensadas, diasDiario, 10, 3, { "Pensé en @$it sin verla (0/1)" })
         familia("tema_", "Temas", temas, diasDiario, 12, 5, { "Aparece #$it (0/1)" })
         familia("hito_", "Hitos", Repo.dias.mapValues { (_, d) -> d.hitos.associateWith { 1.0 } }, Repo.dias.keys, 10, 3, { "Hito: ${it.replace('_', ' ')} (0/1)" })
 

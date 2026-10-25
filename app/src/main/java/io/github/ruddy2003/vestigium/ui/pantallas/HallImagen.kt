@@ -1,0 +1,119 @@
+package io.github.ruddy2003.vestigium.ui.pantallas
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Paint
+import androidx.compose.material3.ColorScheme
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
+import io.github.ruddy2003.vestigium.ciencia.Logros
+import io.github.ruddy2003.vestigium.data.Fechas
+import io.github.ruddy2003.vestigium.reportes.Lienzo
+import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.SalonesTema
+import io.github.ruddy2003.vestigium.ui.TemaId
+import java.io.File
+
+/**
+ * El hall como imagen para guardar o compartir: 1080 × 1350 (el formato vertical de las redes), con la escena del tema,
+ * las piezas en sus pedestales y, si quieres, sus nombres y fechas. Sin textos del diario ni nada privado.
+ */
+object HallImagen {
+    const val ANCHO = 1080
+    const val ALTO = 1350
+
+    fun crear(ctx: Context, piezas: List<Logros.Logro>, tema: TemaId, cs: ColorScheme, conTextos: Boolean): File {
+        val img = ImageBitmap(ANCHO, ALTO)
+        val lienzo = Canvas(img)
+        val densidad = Density(ctx.resources.displayMetrics.density)
+        val L = Lienzo(ctx, tema)
+        val arriba = 210f; val abajo = 90f
+
+        fun zona(x: Float, y: Float, w: Float, h: Float, dibujo: DrawScope.() -> Unit) {
+            lienzo.save(); lienzo.translate(x, y)
+            CanvasDrawScope().draw(densidad, LayoutDirection.Ltr, lienzo, Size(w, h), dibujo)
+            lienzo.restore()
+        }
+
+        // Fondo y escena.
+        zona(0f, 0f, ANCHO.toFloat(), ALTO.toFloat()) { drawRect(cs.background) }
+        zona(0f, arriba, ANCHO.toFloat(), ALTO - arriba - abajo) {
+            if (tema in SalonesTema.TEMAS) with(SalonesTema) { escena(tema, cs) } else fondoFamilia(tema, cs)
+        }
+
+        // Encabezado.
+        val c = lienzo.nativeCanvas
+        val marca = L.p(L.tenue, 30f, L.titulo, 0.2f)
+        c.drawText(if (tema == TemaId.ROMANO) "VESTIGIVM MEI" else "Vestigium Mei", 64f, 92f, marca)
+        val (titulo, _) = Estilo.pantalla("Hall de logros", "ATRIVM PALMARVM")
+        val pt = L.p(L.primario, if (titulo.length > 20) 58f else 72f, L.titulo, 0.03f)
+        c.drawText(titulo, 64f, 170f, pt)
+
+        // Las piezas: 3 por fila, hasta 4 filas.
+        val lista = piezas.take(12)
+        val porFila = if (lista.size <= 4) 2 else 3
+        val filas = ((lista.size + porFila - 1) / porFila).coerceAtLeast(1)
+        val celdaW = ANCHO / porFila.toFloat()
+        val celdaH = (ALTO - arriba - abajo) / filas.coerceAtLeast(if (porFila == 2) 2 else 3).toFloat()
+        val diam = minOf(celdaW * 0.62f, celdaH * (if (conTextos) 0.56f else 0.68f))
+        val pNombre = L.p(L.tinta, 28f, L.titulo); val pFecha = L.p(L.tenue, 22f, L.texto)
+        lista.forEachIndexed { i, g ->
+            val fila = i / porFila; val col = i % porFila
+            val enFila = minOf(porFila, lista.size - fila * porFila)
+            val x0 = (ANCHO - enFila * celdaW) / 2 + col * celdaW
+            val y0 = arriba + fila * celdaH + 18f
+            val cx = x0 + celdaW / 2
+            zona(cx - diam / 2, y0, diam, diam) { with(PiezasLogro) { pieza(g, tema, cs) } }
+            val metal = METALES_HALL[(g.nivel - 1).coerceIn(0, 3)]
+            zona(cx - diam * 0.55f, y0 + diam + 4f, diam * 1.1f, 30f) {
+                if (tema in SalonesTema.TEMAS) with(SalonesTema) { pedestal(tema, cs, metal) }
+                else drawRect(metal.copy(alpha = 0.6f), Offset(size.width * 0.1f, 0f), Size(size.width * 0.8f, size.height))
+            }
+            if (conTextos) {
+                val nombre = recortar(g.nombre, pNombre, celdaW - 24f)
+                c.drawText(nombre, cx - pNombre.measureText(nombre) / 2, y0 + diam + 70f, pNombre)
+                g.conseguido?.let { f ->
+                    val t = Fechas.corto(f) + " · " + f.take(4)
+                    c.drawText(t, cx - pFecha.measureText(t) / 2, y0 + diam + 102f, pFecha)
+                }
+            }
+        }
+
+        // Pie.
+        val pie = if (conTextos) "Vestigium Mei · " + Estilo.fecha(Fechas.diaLogico()) else "Vestigium Mei"
+        val pp = L.p(L.tenue, 24f, L.texto)
+        c.drawText(pie, ANCHO / 2f - pp.measureText(pie) / 2, ALTO - 40f, pp)
+
+        val dir = File(File(ctx.cacheDir, "export"), "hall").apply { mkdirs(); listFiles()?.forEach { it.delete() } }
+        val f = File(dir, "hall_${Fechas.diaLogico()}.png")
+        f.outputStream().use { img.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }
+        return f
+    }
+
+    private fun recortar(s: String, p: Paint, ancho: Float): String {
+        if (p.measureText(s) <= ancho) return s
+        var t = s
+        while (t.length > 1 && p.measureText("$t…") > ancho) t = t.dropLast(1)
+        return "$t…"
+    }
+
+    /** Para los temas sin escena propia: la familia del salón, en grande. */
+    private fun DrawScope.fondoFamilia(tema: TemaId, cs: ColorScheme) {
+        val w = size.width; val h = size.height
+        val linea = cs.outline.copy(alpha = 0.3f)
+        when (salonDe(tema)) {
+            Salon.TEMPLO -> { val n = 4; val paso = w / n; for (i in 0..n) drawRect(cs.surfaceVariant.copy(alpha = 0.5f), Offset(i * paso - 8f, 0f), Size(16f, h)) }
+            Salon.CASTILLO -> { var y = 0f; var k = 0; while (y < h) { val off = if (k % 2 == 0) 0f else 40f; var x = -off; while (x < w) { drawRect(linea, Offset(x, y), Size(80f, 30f), style = androidx.compose.ui.graphics.drawscope.Stroke(1f)); x += 80f }; y += 30f; k++ } }
+            Salon.LABORATORIO -> { var x = 0f; while (x < w) { drawLine(cs.primary.copy(alpha = 0.1f), Offset(x, 0f), Offset(x, h), 1f); x += 30f }; var y = 0f; while (y < h) { drawLine(cs.primary.copy(alpha = 0.1f), Offset(0f, y), Offset(w, y), 1f); y += 30f } }
+            Salon.TALLER -> { var y = 0f; while (y < h) { drawLine(androidx.compose.ui.graphics.Color(0xFF8A6A44).copy(alpha = 0.18f), Offset(0f, y), Offset(w, y), 2f); y += 18f } }
+        }
+    }
+}

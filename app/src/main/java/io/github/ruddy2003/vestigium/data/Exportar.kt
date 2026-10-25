@@ -95,6 +95,9 @@ object Exportar {
             r["medicamentos"] = d.medicamentos; r["prediccion_manana"] = d.prediccion_manana
             Repo.config.habitos.forEach { r["hab_${it.id}"] = d.habitos[it.id] == true }
             r["personas"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct()
+            // Cómo estuviste con cada persona: «ana:estuve|luis:pense|mama:mensajes».
+            r["presencias"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct().map { "$it:" + Presencias.enDiario(d, it, eq) }
+            r["presencias_revisado"] = d.presencias_ok
             r["temas"] = Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct()
             r["palabras"] = Texto.palabras(d.nota)
             r["nota"] = d.nota
@@ -570,7 +573,8 @@ object Exportar {
         // Cultura, mundo, cartas y cercanos: se calculan igual que en los análisis.
         val nuevas = listOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada", "calificacion_obra", "citas_dia", "ciudades_dia", "fuera_de_casa",
             "extranjero", "ciudad_nueva", "unesco", "carta_escrita", "sueno_palabras", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes",
-            "vi_expareja", "vi_trabajo", "cercania_media", "animo_valencia", "animo_activacion", "registros_animo",
+            "vi_expareja", "vi_trabajo", "cercania_media", "personas_vistas", "personas_pensadas", "personas_mensajes",
+            "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades", "animo_valencia", "animo_activacion", "registros_animo",
             "alcohol", "alcohol_bebidas", "alcohol_nivel_max", "alcohol_horas", "alcohol_estimado_max", "alcohol_al_dormir", "cannabis", "cannabis_nivel_max", "cannabis_horas",
             "tabaco_n", "otra_sustancia", "cruda", "cafeina_total_mg", "cafeina_al_dormir_mg")
         // Lo que sentías y pensabas (una columna por sentimiento o pensamiento que hayas registrado alguna vez).
@@ -759,8 +763,7 @@ object Exportar {
         Tabla("vm_series.csv", "MacroFactor Workouts: cada serie", filasSeries()),
     )
 
-    fun archivos(ctx: Context? = null): List<Pair<String, String>> {
-        val ts = tablas()
+    fun archivos(ctx: Context? = null, ts: List<Tabla> = tablas()): List<Pair<String, String>> {
         val out = ArrayList<Pair<String, String>>()
         ts.forEach { out.add(it.archivo to csv(it.filas)) }
         out.add("vm_ubicaciones.csv" to csvUbicaciones())
@@ -790,6 +793,9 @@ object Exportar {
         vm_diccionario.csv describe cada columna de cada archivo: tipo (fecha, fecha_hora, hora, entero, numero,
         logico, texto, lista), unidad y significado.
 
+        La exportación completa trae también vm_datos.sqlite: las mismas tablas en una sola base SQLite (formato abierto),
+        más «ubicaciones» y «diccionario». En R: vm_leer_sqlite() o DBI::dbConnect(RSQLite::SQLite(), "vm_datos.sqlite").
+
         Convenciones: texto en UTF-8; fechas AAAA-MM-DD en hora local; los días empiezan a las 5:00 (lo de la madrugada
         cuenta para el día anterior); fecha_hora en ISO 8601 con desfase horario (2026-10-16T08:42:10-06:00);
         horas HH:MM; booleanos 0/1; listas separadas por «|»; celda vacía = dato que no existe (nunca se rellenó con promedios).
@@ -818,11 +824,74 @@ object Exportar {
         val dir = File(ctx.cacheDir, "export").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() }
         val f = File(dir, "vestigium_${Fechas.hoyCalendario()}.zip")
+        val ts = tablas()
         ZipOutputStream(f.outputStream()).use { z ->
-            archivos(ctx).forEach { (nombre, cont) -> z.putNextEntry(ZipEntry(nombre)); z.write(cont.toByteArray()); z.closeEntry() }
+            archivos(ctx, ts).forEach { (nombre, cont) -> z.putNextEntry(ZipEntry(nombre)); z.write(cont.toByteArray()); z.closeEntry() }
+            // Todo también en una sola base SQLite (formato abierto que se lee igual dentro de veinte años): vm_datos.sqlite.
+            runCatching { sqlite(ctx, ts) }.getOrNull()?.let { db ->
+                z.putNextEntry(ZipEntry("vm_datos.sqlite")); db.inputStream().use { it.copyTo(z) }; z.closeEntry(); db.delete()
+            }
             // Las portadas también van, para no perder las fotos que pusiste a mano.
             Portadas.carpeta(ctx).listFiles()?.forEach { p -> z.putNextEntry(ZipEntry("portadas/" + p.name)); p.inputStream().use { it.copyTo(z) }; z.closeEntry() }
         }
+        return f
+    }
+
+    /**
+     * Las mismas tablas de la exportación en una base SQLite (una tabla por archivo, sin el «vm_»; más «ubicaciones» y
+     * «diccionario»). Números como números, lógicos como 0/1 y listas como texto separado por «|».
+     */
+    fun sqlite(ctx: Context, ts: List<Tabla> = tablas()): File {
+        val dir = File(ctx.cacheDir, "export_sqlite").apply { mkdirs() }
+        val f = File(dir, "vm_datos.sqlite")
+        f.delete(); File(f.path + "-journal").delete()
+        val db = android.database.sqlite.SQLiteDatabase.openOrCreateDatabase(f, null)
+        fun q(n: String) = "\"" + n.replace("\"", "") + "\""
+        fun tipoSql(valores: List<Any?>): String {
+            val v = valores.filterNotNull()
+            return when {
+                v.isEmpty() -> "TEXT"
+                v.all { it is Boolean || it is Int || it is Long || it is Short } -> "INTEGER"
+                v.all { it is Number || it is Boolean } -> "REAL"
+                else -> "TEXT"
+            }
+        }
+        fun tabla(nombre: String, filas: List<Map<String, Any?>>) {
+            val cols = LinkedHashSet<String>(); filas.forEach { cols.addAll(it.keys) }
+            if (cols.isEmpty()) return
+            // SQLite no distingue mayúsculas en los nombres de columna: si dos chocan, la segunda lleva «_2».
+            val vistos = HashSet<String>()
+            val nombres = cols.map { c -> var n = c; var k = 2; while (!vistos.add(n.lowercase())) { n = "${c}_$k"; k++ }; n }
+            db.execSQL("CREATE TABLE ${q(nombre)} (" + cols.mapIndexed { i, c -> q(nombres[i]) + " " + tipoSql(filas.map { it[c] }) }.joinToString(", ") + ")")
+            val st = db.compileStatement("INSERT INTO ${q(nombre)} VALUES (" + cols.joinToString(", ") { "?" } + ")")
+            for (fila in filas) {
+                st.clearBindings()
+                cols.forEachIndexed { i, c ->
+                    val k = i + 1
+                    when (val v = fila[c]) {
+                        null -> st.bindNull(k)
+                        is Boolean -> st.bindLong(k, if (v) 1L else 0L)
+                        is Int -> st.bindLong(k, v.toLong())
+                        is Long -> st.bindLong(k, v)
+                        is Short -> st.bindLong(k, v.toLong())
+                        is Double -> if (v.isNaN()) st.bindNull(k) else st.bindDouble(k, v)
+                        is Float -> if (v.isNaN()) st.bindNull(k) else st.bindDouble(k, v.toDouble())
+                        is Number -> st.bindDouble(k, v.toDouble())
+                        is List<*> -> st.bindString(k, v.joinToString("|"))
+                        else -> st.bindString(k, v.toString())
+                    }
+                }
+                st.executeInsert()
+            }
+            st.close()
+        }
+        try {
+            db.beginTransaction()
+            ts.forEach { t -> tabla(t.archivo.removeSuffix(".csv").removePrefix("vm_"), t.filas) }
+            tabla("ubicaciones", Repo.db().ubicaciones().map { linkedMapOf<String, Any?>("ts" to Fechas.isoDeMillis(it.ms), "lat" to it.lat, "lon" to it.lon, "precision_m" to it.precision, "fuente" to it.fuente, "ms" to it.ms) })
+            tabla("diccionario", Diccionario.filas(ts))
+            db.setTransactionSuccessful()
+        } finally { db.endTransaction(); db.close() }
         return f
     }
 

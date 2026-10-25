@@ -131,6 +131,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Soviético: papel de cartel en blanco y negro con un toque rojo.
         tema == io.github.ruddy2003.vestigium.ui.TemaId.URSS && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.95f, 0.78f, 0.74f, 6f, 0f, 0f)) }
         tema == io.github.ruddy2003.vestigium.ui.TemaId.URSS -> { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.93f, 0.84f, 4f, 0f, 0f)) }
+        // Revolución: papel de cartel con tinta de imprenta; de noche, la plaza con antorchas.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.REVOLUCION && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.72f, 0.74f, 0.82f, 6f, 4f, 8f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.REVOLUCION -> { m.setSaturation(0.12f); m.postConcat(tinte(1.0f, 0.96f, 0.88f, 4f, 2f, 0f)) }
         // Romano: mármol desaturado de día, basalto de noche.
         oscuro -> { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.80f, 0.82f, 0.85f, 8f, 10f, 12f)) }
         else -> { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }
@@ -181,6 +184,7 @@ private object Formas {
             TemaId.ANDALUS -> poligono(x, y, r * 1.2f, 8, -90.0, 0.62f)
             TemaId.MONGOL -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW) }
             TemaId.RENACIMIENTO -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW) }
+            TemaId.REVOLUCION -> poligono(x, y, r * 1.12f, 14, -90.0, 0.84f)   // escarapela plisada
         }
         c.drawPath(p, relleno)
         borde?.let { b -> c.drawPath(p, b) }
@@ -191,6 +195,7 @@ private object Formas {
             TemaId.RENACIMIENTO -> { c.drawLine(x - r * 1.4f, y, x + r * 1.4f, y, d); c.drawLine(x, y - r * 1.4f, x, y + r * 1.4f, d) }  // retícula de dibujo
             TemaId.GOTICO -> c.drawLine(x, y - r * 0.5f, x, y + r, d)
             TemaId.BOTANICO -> c.drawLine(x, y + r * 1.2f, x, y - r * 0.8f, d)
+            TemaId.REVOLUCION -> c.drawCircle(x, y, r * 0.42f, d)
             else -> {}
         }
     }

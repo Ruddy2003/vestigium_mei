@@ -514,6 +514,28 @@ def renacimiento():
         solemne=reverb(mezclar(*[(0.5 * i, flauta(hz(n + 12), 0.48), 0.3) for i, n in enumerate([0, 2, 4, 5, 7, 5, 4, 2, 4, 0])],
                                *[(1.0 * i, rasgueo(c), 0.45) for i, c in enumerate([[-12, 0, 4, 7], [-7, -3, 0, 5], [-5, -1, 2, 7], [-12, -5, 0, 4], [-12, 0, 4, 7, 12]])]), 2.0, 0.3))
 
+def revolucion():
+    # Sol mayor: pífano y tambor de las milicias, el papel de los carteles; en lo solemne, cuerdas de himno y bombo.
+    T = -2   # Sol4
+    pifano = lambda n, d: flauta(hz(n + 12), d)
+    def redoble(d=0.22):
+        x = np.zeros(int(d * SR))
+        for i in range(int(d / 0.024)):
+            g = filtro(ruido(0.03), 'banda', (1300, 5500)) * env(int(0.03 * SR), 0.001, 0.02)
+            k = int(i * 0.024 * SR); x[k:k + len(g)] += g[:len(x) - k] * (0.5 + 0.5 * i / (d / 0.024))
+        return x
+    golpe = lambda: mezclar((0, filtro(ruido(0.05), 'banda', (1300, 5500)) * env(int(0.05 * SR), 0.001, 0.03), 0.8), (0, tambor(hz(T - 24), 0.07), 0.45))
+    S['revolucion'] = dict(
+        toque=golpe(), elegir=pifano(T + 7, 0.12), pasar=papel(0.2, (600, 4000)),
+        abrir=mezclar((0, pifano(T, 0.12), 0.5), (0.13, pifano(T + 4, 0.12), 0.5), (0.26, pifano(T + 7, 0.25), 0.5)),
+        guardar=mezclar((0, golpe(), 0.6), (0.05, pifano(T + 7, 0.12), 0.45), (0.18, pifano(T + 12, 0.3), 0.5)),
+        logro=reverb(mezclar((0, redoble(0.4), 0.6), *[(0.42 + 0.13 * i, pifano(T + n, 0.13 if i < 5 else 0.6), 0.5) for i, n in enumerate([0, 4, 7, 12, 11, 12])]), 1.2, 0.22),
+        tema=reverb(mezclar((0, golpe(), 0.6), (0.1, pifano(T + 7, 0.14), 0.5), (0.25, pifano(T + 4, 0.14), 0.5), (0.4, pifano(T + 7, 0.14), 0.5),
+                            (0.55, pifano(T + 12, 0.5), 0.55), (0.55, golpe(), 0.6)), 1.2, 0.25),
+        aviso=reverb(mezclar(*[(0.16 * i, pifano(T + n, 0.15 if i < 5 else 0.6), 0.5) for i, n in enumerate([7, 7, 9, 7, 12, 11])], (1.0, redoble(0.3), 0.5)), 1.3, 0.25),
+        solemne=reverb(mezclar(*[(1.0 * i, acorde(lambda f, d: arco(f, d, 5), [T - 12 + a for a in ch], 1.0), 0.45) for i, ch in enumerate([[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7, 12]])],
+                               *[(1.0 * i, tambor(hz(T - 36), 0.4, 0.2), 0.5) for i in range(4)], (0, redoble(0.8), 0.35), (2.9, redoble(1.0), 0.4)), 2.0, 0.3))
+
 # ------------------------------------------------------------------ teclas del diario y el rascado del mapa
 
 def comunes():
@@ -534,7 +556,7 @@ def comunes():
     escribir('s_rascar', x, rms_db=-21)
 
 if __name__ == '__main__':
-    todos = (romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio, colonos, napoleon, botanico, navidad, seda, urss, gotico, espacio, andalus, mongol, renacimiento)
+    todos = (romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio, colonos, napoleon, botanico, navidad, seda, urss, gotico, espacio, andalus, mongol, renacimiento, revolucion)
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     for f in todos:
         if solo is None or f.__name__ in solo: f()

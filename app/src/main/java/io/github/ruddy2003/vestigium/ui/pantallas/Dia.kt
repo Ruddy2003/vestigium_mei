@@ -226,7 +226,7 @@ fun PantallaDia(nav: Nav) {
                             Etiqueta("De qué fue")
                             io.github.ruddy2003.vestigium.ui.CategoriasSueno(d.sueno_categorias) { cambiar(d.copy(sueno_categorias = it)) }
                             Etiqueta("Personas y temas del sueño")
-                            ListaEtiquetas(d.sueno_temas, "@persona o #tema", normalizar = { Texto.etiqueta(it) }) { cambiar(d.copy(sueno_temas = it)) }
+                            ListaEtiquetas(d.sueno_temas, "@persona o #tema", normalizar = { Texto.etiquetaConSimbolo(it) }) { cambiar(d.copy(sueno_temas = it)) }
                             Etiqueta("Narración")
                             Editor(d.sueno_texto, "somnium.txt", "Lo que recuerdes, aunque sean fragmentos.", minimo = 110, pie = "${Texto.palabras(d.sueno_texto)} verba") { cambiar(d.copy(sueno_texto = it)) }
                             Row(Modifier.padding(top = 6.dp)) { BotonDictado { t -> cambiar(d.copy(sueno_texto = (d.sueno_texto + " " + t).trim())) } }
@@ -494,6 +494,11 @@ fun PantallaNoche(nav: Nav) {
                 BotonDictado { t -> cambiar(d.copy(nota = (d.nota + " " + t).trim())) }
             }
             Detectados(d.nota, fecha) { nuevo -> cambiar(d.copy(nota = nuevo)) }
+            // Ver a alguien no es lo mismo que pensar en esa persona: un toque cambia entre «estuve con», «pensé en» y «mensajes».
+            if (Texto.personas(d.nota).isNotEmpty()) {
+                ChipsPresencia(d) { n -> cambiar(n) }
+                Ayuda("Toca un nombre si solo pensaste en esa persona o hablaron por mensaje.", Modifier.padding(top = 4.dp))
+            }
             TextButton(onClick = { nav.ir("biblioteca_diario") }) { Text("abrir la biblioteca del diario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
         Seccion("Lo que leí o vi hoy", "Toca la portada de lo que le dedicaste tiempo hoy: libro, serie, película, juego o artículo.", numero = n(), plegable = true) {

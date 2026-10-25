@@ -192,6 +192,7 @@ class Capturas {
     @Test fun widgetsNavidad() = widgets(TemaId.NAVIDAD)
     @Test fun widgetsSeda() = widgets(TemaId.SEDA)
     @Test fun widgetsUrss() = widgets(TemaId.URSS)
+    @Test fun widgetsRevolucion() = widgets(TemaId.REVOLUCION)
 
     private fun pantalla(tema: TemaId, oscuro: Boolean, alto: Int, cont: @Composable () -> Unit) {
         Ejemplo.cargar()
@@ -894,6 +895,88 @@ class Capturas {
     @Test fun enfoqueEsperandoSeda() = v73(TemaId.SEDA, false, 2400, { it.copy(enfoque_plan = planEnfoque(2, 0, esperando = true, hechoMin = 30)) }) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
     @Test fun trofeosRomano() = v73(TemaId.ROMANO, false, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
     @Test fun trofeosOrden() = v73(TemaId.ORDEN, true, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
+
+    // ---------------- lote 1 (v79): Revolución, Imperio, trofeos y hall por tema, mapas de campaña, libretas, reporte visual ----------------
+    @Test fun revolucionClaro() = captura(TemaId.REVOLUCION, false)
+    @Test fun revolucionOscuro() = captura(TemaId.REVOLUCION, true)
+    @Test fun diaRevolucion() = dia(TemaId.REVOLUCION, false)
+
+    /** Los trofeos de las nueve categorías en los siete temas históricos (el último de cada fila, sin conseguir). */
+    private fun trofeosTemas(oscuro: Boolean) = captura(TemaId.ROMANO, oscuro, alto = 3000) {
+        Column(Modifier.padding(6.dp)) {
+            io.github.ruddy2003.vestigium.ui.TrofeosTema.TEMAS.forEach { t ->
+                androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, oscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, oscuro)) {
+                    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(vertical = 4.dp)) {
+                        Text(t.nombre, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                            io.github.ruddy2003.vestigium.ciencia.Logros.CATEGORIAS.forEachIndexed { k, cat ->
+                                val l = io.github.ruddy2003.vestigium.ciencia.Logros.Logro("x_$k", cat, "", "★", cat, k % 4 + 1, 1.0, if (k == 8) 0.3 else 1.0, if (k == 8) null else "2026-10-19")
+                                io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(l, 46.dp, tema = t)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @Test fun trofeosTemasClaro() = trofeosTemas(false)
+    @Test fun trofeosTemasOscuro() = trofeosTemas(true)
+    @Test fun trofeosRevolucion() = v73(TemaId.REVOLUCION, false, 6000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
+
+    @Test fun hallRevolucion() = hall(TemaId.REVOLUCION, false)
+    @Test fun hallNapoleon() = hall(TemaId.NAPOLEON, true)
+    @Test fun hallGotico() = hall(TemaId.GOTICO, false)
+    @Test fun hallRenacimiento() = hall(TemaId.RENACIMIENTO, false)
+    @Test fun hallHeleno() = hall(TemaId.HELENO, true)
+    private fun hallImagen(tema: TemaId, oscuro: Boolean, textos: Boolean) = v67(tema, oscuro, 2700, { it.copy(hall_logros = listOf("diario_30", "ciudades_2", "paises_5", "unesco_1", "continentes_2", "pasos_dia_10000", "racha_diario_7", "diario_7")) }) {
+        mundoEjemplo(); io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        val cs = MaterialTheme.colorScheme
+        val r = androidx.compose.runtime.remember {
+            runCatching {
+                val todos = io.github.ruddy2003.vestigium.ciencia.Logros.todos(ctx)
+                val enHall = Repo.config.hall_logros.mapNotNull { id -> todos.firstOrNull { it.id == id && it.hecho } }
+                android.graphics.BitmapFactory.decodeFile(io.github.ruddy2003.vestigium.ui.pantallas.HallImagen.crear(ctx, enHall, tema, cs, textos).path)
+            }
+        }
+        val b = r.getOrNull()
+        if (b != null) androidx.compose.foundation.Image(b.asImageBitmap(), null, Modifier.fillMaxWidth())
+        else Text("Falló: ${r.exceptionOrNull()}")
+    }
+    @Test fun hallImagenRevolucion() = hallImagen(TemaId.REVOLUCION, false, true)
+    @Test fun hallImagenRomanoSinTextos() = hallImagen(TemaId.ROMANO, true, false)
+
+    @Test fun campanasRevolucion() = campanas(TemaId.REVOLUCION, false)
+    @Test fun campanasGotico() = campanas(TemaId.GOTICO, true)
+    @Test fun campanasRenacimiento() = campanas(TemaId.RENACIMIENTO, false)
+    @Test fun campanasMedieval() = campanas(TemaId.MEDIEVAL, false)
+    @Test fun campanasHeleno() = campanas(TemaId.HELENO, true)
+
+    private fun libreta(tema: TemaId, oscuro: Boolean) = v73(tema, oscuro, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "momentos") }
+    @Test fun libretaRomano() = libreta(TemaId.ROMANO, false)
+    @Test fun libretaHeleno() = libreta(TemaId.HELENO, false)
+    @Test fun libretaGotico() = libreta(TemaId.GOTICO, true)
+    @Test fun libretaRenacimiento() = libreta(TemaId.RENACIMIENTO, false)
+    @Test fun libretaNapoleon() = libreta(TemaId.NAPOLEON, false)
+    @Test fun libretaRevolucion() = libreta(TemaId.REVOLUCION, false)
+
+    @Test fun reporteSemanaRevolucion() = reporte(TemaId.REVOLUCION, false, 5200, false)
+    @Test fun reporteSemanaNapoleon() = reporte(TemaId.NAPOLEON, true, 5200, false)
+
+    @Test fun tusTemasRomano() = v73(TemaId.ROMANO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusTemas(navVacia) }
+    @Test fun presenciasBotanico() = v73(TemaId.BOTANICO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaPresencias(navVacia) }
+    @Test fun otrasVidasRevolucion() = v73(TemaId.REVOLUCION, false, 4000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia) }
+    @Test fun libroDiarioRevolucion() = v73(TemaId.REVOLUCION, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
+    @Test fun temasAjustes() = captura(TemaId.REVOLUCION, false, alto = 3200) {
+        Column(Modifier.padding(8.dp)) {
+            TemaId.entries.chunked(3).forEach { fila ->
+                Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    fila.forEach { t -> VistaPreviaTema(t, false, t == TemaId.REVOLUCION, Modifier.weight(1f)) {} }
+                    repeat(3 - fila.size) { Box(Modifier.weight(1f)) }
+                }
+            }
+        }
+    }
 }
 
 @Composable

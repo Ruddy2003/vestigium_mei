@@ -8,6 +8,8 @@ import io.github.ruddy2003.vestigium.data.Mundo
 import io.github.ruddy2003.vestigium.data.Perfiles
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
+import io.github.ruddy2003.vestigium.data.alFuturo
+import io.github.ruddy2003.vestigium.data.esAnimo
 import java.time.LocalDate
 
 /**
@@ -242,6 +244,70 @@ object Logros {
         val temas = Repo.config.tema_rotado.isNotBlank()
         out += Logro("camaleon", "Camaleón", "Deja que la app cambie de tema sola", "◑", "Curiosos", 1, 1.0, if (temas) 1.0 else 0.0, Repo.config.tema_rotado.ifBlank { null })
 
+        // ------------------------------------------------ Secretos: aparecen cuando los logras
+        fun secreto(id: String, nombre: String, desc: String, icono: String, nivel: Int, meta: Double, progreso: Double, cuando: String?, unidad: String = "") {
+            out += Logro(id, nombre, desc, icono, "Curiosos", nivel, meta, progreso.coerceAtMost(meta), cuando, secreto = true, unidad = unidad)
+        }
+        Repo.dias.values.filter { it.sueno_lucidez == "total" }.minByOrNull { it.fecha }.let { d ->
+            secreto("lucido_total", "Lúcido de verdad", "Anota un sueño en el que supiste por completo que soñabas", "◑", 4, 1.0, if (d != null) 1.0 else 0.0, d?.fecha)
+        }
+        val animo = Repo.momentos.filter { it.esAnimo }.sortedBy { it.ts }
+        secreto("cien_animo", "Cien estados de ánimo", "Registra tu ánimo 100 veces", "◔", 2, 100.0, animo.size.toDouble(), animo.getOrNull(99)?.fecha, "registros")
+        // Un hito en cada mes de un mismo año.
+        val hitosPorAnio = Repo.dias.values.filter { it.hitos.isNotEmpty() }.groupBy { it.fecha.take(4) }
+        val anioMemorable = hitosPorAnio.entries.mapNotNull { (_, l) ->
+            val primeroPorMes = l.groupBy { it.fecha.substring(5, 7) }.mapValues { (_, x) -> x.minOf { it.fecha } }
+            if (primeroPorMes.size == 12) primeroPorMes.values.max() else null
+        }.minOrNull()
+        secreto("anio_memorable", "Un año memorable", "Anota al menos un hito en cada mes de un mismo año", "✶", 3, 12.0,
+            hitosPorAnio.values.maxOfOrNull { l -> l.map { it.fecha.substring(5, 7) }.toSet().size }?.toDouble() ?: 0.0, anioMemorable, "meses")
+        // Una carta abierta al menos un año después de escribirla.
+        val cartaVieja = Repo.cartas.filter { it.alFuturo && it.abierta }.mapNotNull { c ->
+            val ab = c.abierta_el?.take(10) ?: c.abrir_en
+            if (runCatching { Fechas.diasEntre(c.escrita, ab) }.getOrDefault(0) >= 365) ab else null
+        }.minOrNull()
+        secreto("carta_un_anio", "Correo del pasado", "Abre una carta que te escribiste hace un año o más", "✉", 3, 1.0, if (cartaVieja != null) 1.0 else 0.0, cartaVieja)
+        // El mismo día del calendario escrito en tres años distintos.
+        val porDiaDelAnio = conDiario.groupBy { it.substring(5) }
+        val tresAnios = porDiaDelAnio.values.filter { it.size >= 3 }.mapNotNull { it.sorted().getOrNull(2) }.minOrNull()
+        secreto("tres_anios", "Tres veces el mismo día", "Escribe el diario el mismo día del calendario en tres años distintos", "❂", 4, 3.0,
+            porDiaDelAnio.values.maxOfOrNull { it.size }?.toDouble() ?: 0.0, tresAnios, "años")
+        // Diez sentimientos distintos en una misma semana.
+        val emo = Repo.momentos.filter { it.esAnimo }.flatMap { m -> io.github.ruddy2003.vestigium.data.Catalogo.emocionesDe(m).filter { it != "no_se" && it != "otro" }.map { m.fecha to it } }.sortedBy { it.first }
+        var paleta: String? = null; var mejorPaleta = 0
+        for (f in emo.map { it.first }.distinct()) {
+            val desde = Fechas.sumar(f, -6)
+            val n = emo.filter { it.first in desde..f }.map { it.second }.toSet().size
+            if (n > mejorPaleta) mejorPaleta = n
+            if (paleta == null && n >= 10) paleta = f
+        }
+        secreto("paleta", "Paleta de sentimientos", "Nombra diez sentimientos distintos en una misma semana", "❋", 2, 10.0, mejorPaleta.toDouble(), paleta, "sentimientos")
+        // Una campaña ganada los siete días.
+        val perfecta = Repo.config.campanas.mapNotNull { c -> runCatching { Campanas.estado(c, hoy) }.getOrNull()?.takeIf { e -> e.dias.all { it.second == true } }?.let { Fechas.sumar(c.lunes, 6) } }.minOrNull()
+        secreto("siete_de_siete", "Siete de siete", "Cumple el reto de una campaña los siete días de la semana", "⚑", 3, 1.0, if (perfecta != null) 1.0 else 0.0, perfecta)
+        // Muchos frentes: diez #temas distintos en 30 días.
+        val temasFecha = Repo.dias.values.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) to d.fecha } }.sortedBy { it.second }
+        var frentes: String? = null; var mejorFrentes = 0
+        for (f in temasFecha.map { it.second }.distinct()) {
+            val n = temasFecha.filter { it.second in Fechas.sumar(f, -29)..f }.map { it.first }.toSet().size
+            if (n > mejorFrentes) mejorFrentes = n
+            if (frentes == null && n >= 10) frentes = f
+        }
+        secreto("muchos_frentes", "Muchos frentes", "Escribe sobre diez #temas distintos en treinta días", "◇", 2, 10.0, mejorFrentes.toDouble(), frentes, "temas")
+        // Semana completa: siete días seguidos con diario, ánimo, sueño y al menos un registro al momento.
+        val completos = Repo.dias.values.filter { d -> d.nota.isNotBlank() && d.valencia != null && d.sueno_calidad != null && animo.any { it.fecha == d.fecha } }.map { it.fecha }.sorted()
+        val (rachaCompleta, cuandoCompleta) = racha(completos, 7)
+        secreto("semana_completa", "Semana completa", "Siete días seguidos con diario, ánimo, sueño y un registro al momento", "▣", 3, 7.0, rachaCompleta.toDouble(), cuandoCompleta, "días")
+        val gratitud = animo.filter { m -> "gratitud" in io.github.ruddy2003.vestigium.data.Catalogo.emocionesDe(m) }
+        secreto("agradecido", "Agradecido", "Registra gratitud 30 veces", "♡", 2, 30.0, gratitud.size.toDouble(), gratitud.getOrNull(29)?.fecha, "veces")
+        // Alba: un registro de ánimo entre las 5 y las 6 de la mañana.
+        val alba = animo.firstOrNull { m -> m.ts.length > 13 && m.ts.substring(11, 13) == "05" }
+        secreto("alba", "Alba", "Registra tu ánimo entre las 5 y las 6 de la mañana", "☀", 1, 1.0, if (alba != null) 1.0 else 0.0, alba?.fecha)
+        // Desahogo: una entrada de mil palabras o más.
+        val larga = Repo.dias.values.filter { Texto.palabras(it.nota) >= 1000 }.minByOrNull { it.fecha }
+        secreto("desahogo", "Desahogo", "Escribe una entrada de mil palabras o más", "❡", 2, 1000.0,
+            Repo.dias.values.maxOfOrNull { Texto.palabras(it.nota) }?.toDouble() ?: 0.0, larga?.fecha, "palabras")
+
         // ------------------------------------------------ Enfoque y campañas
         val enfoque = Repo.tramos.filter { it.tipo != "siesta" }.groupBy { it.fecha }.mapValues { (_, l) -> l.sumOf { it.min } / 60.0 }.entries.sortedBy { it.key }.map { it.key to it.value }
         if (enfoque.isNotEmpty()) escalones("enfoque", "Mente", "◷", "horas", listOf(10.0 to "Diez horas de enfoque", 50.0 to "Cincuenta horas", 100.0 to "Cien horas", 500.0 to "Quinientas horas", 1000.0 to "Mil horas"),
@@ -281,6 +347,31 @@ object Logros {
     }
 
     private fun fmt(x: Double) = if (x == Math.floor(x)) "%,d".format(x.toLong()) else "%.1f".format(x)
+
+    /**
+     * Cómo se consiguió: cuánto tardó desde el primer registro, si fue un día de diario y qué escribiste esa noche,
+     * y cómo estuvo tu ánimo ese día. Para el detalle del trofeo y el hall.
+     */
+    fun comoSeConsiguio(l: Logro): String? {
+        val f = l.conseguido ?: return null
+        val partes = mutableListOf<String>()
+        val primero = Repo.dias.keys.minOrNull()
+        if (primero != null && primero <= f) runCatching {
+            val n = java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(primero), Fechas.parse(f)) + 1
+            partes += if (n <= 1) "Llegó en tu primer día de registro" else "Llegó en tu día $n de registro"
+        }
+        val d = Repo.dias[f]
+        d?.valencia?.let { v -> partes += "ese día tu ánimo estuvo en $v de 7" }
+        val nota = d?.nota?.trim()?.takeIf { it.isNotEmpty() && !l.secreto }
+        val txt = partes.joinToString(", ").replaceFirstChar { it.uppercase() }
+        val cita = nota?.let { n -> val pal = n.split(Regex("\\s+")); pal.take(22).joinToString(" ") + if (pal.size > 22) "…" else "" }
+        return when {
+            txt.isEmpty() && cita == null -> null
+            cita == null -> "$txt."
+            txt.isEmpty() -> "Esa noche escribiste: «$cita»"
+            else -> "$txt. Esa noche escribiste: «$cita»"
+        }
+    }
 
     /** Los conseguidos que todavía no habías visto (para festejarlos), y marcarlos como vistos. */
     fun nuevos(ctx: Context?): List<Logro> {

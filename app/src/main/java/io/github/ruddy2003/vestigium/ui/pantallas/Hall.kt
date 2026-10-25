@@ -59,7 +59,9 @@ import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
+import io.github.ruddy2003.vestigium.ui.LibroDiario
 import io.github.ruddy2003.vestigium.ui.Nav
+import io.github.ruddy2003.vestigium.ui.SalonesTema
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Vacio
@@ -69,13 +71,13 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
-private val METALES_HALL = listOf(Color(0xFFB27A45), Color(0xFFBFC6CF), Color(0xFFE3B748), Color(0xFF9AD8E6))
+internal val METALES_HALL = listOf(Color(0xFFB27A45), Color(0xFFBFC6CF), Color(0xFFE3B748), Color(0xFF9AD8E6))
 
 /** Familias de temas para el salón: cada una con su arquitectura. */
 enum class Salon { TEMPLO, CASTILLO, LABORATORIO, TALLER }
 
 fun salonDe(t: TemaId): Salon = when (t) {
-    TemaId.ROMANO, TemaId.HELENO, TemaId.ANDALUS, TemaId.GOTICO, TemaId.RENACIMIENTO -> Salon.TEMPLO
+    TemaId.ROMANO, TemaId.HELENO, TemaId.ANDALUS, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.REVOLUCION -> Salon.TEMPLO
     TemaId.MEDIEVAL, TemaId.ORDEN, TemaId.MONGOL, TemaId.NAPOLEON -> Salon.CASTILLO
     TemaId.CIBER, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.LABORATORIO, TemaId.ESPACIO -> Salon.LABORATORIO
     TemaId.COLONOS, TemaId.BOTANICO, TemaId.SEDA, TemaId.NAVIDAD, TemaId.URSS -> Salon.TALLER
@@ -329,6 +331,7 @@ fun PiezaLogro(l: Logros.Logro, tam: Dp, modifier: Modifier = Modifier, tema: Te
 private fun BoxScope.FondoSalon(tema: TemaId) {
     val cs = MaterialTheme.colorScheme
     Canvas(Modifier.matchParentSize()) {
+        if (tema in SalonesTema.TEMAS) { with(SalonesTema) { escena(tema, cs) }; return@Canvas }
         val w = size.width; val h = size.height
         val linea = cs.outline.copy(alpha = 0.35f)
         when (salonDe(tema)) {
@@ -375,8 +378,12 @@ fun PantallaHall(nav: Nav) {
 @Composable
 fun CuerpoHall(l: List<Logros.Logro>) {
     var editar by remember { mutableStateOf(false) }
+    var abierto by remember { mutableStateOf<Logros.Logro?>(null) }
+    var conTextos by remember { mutableStateOf(true) }
     val tema = Estilo.tema
     val cs = MaterialTheme.colorScheme
+    val ctx = LocalContext.current
+    abierto?.let { a -> DetalleTrofeo(a, l) { abierto = null } }
     Column {
         val hechos = l.filter { it.hecho }
         val ids = Repo.config.hall_logros.filter { id -> hechos.any { it.id == id } }
@@ -397,10 +404,20 @@ fun CuerpoHall(l: List<Logros.Logro>) {
             Column(Modifier.padding(vertical = 12.dp)) {
                 enHall.chunked(2).forEach { fila ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-                        fila.forEach { g -> Pedestal(g, tema, Modifier.weight(1f)) }
+                        fila.forEach { g -> Pedestal(g, tema, Modifier.weight(1f).clickable { abierto = g }) }
                         if (fila.size == 1) Box(Modifier.weight(1f))
                     }
                 }
+            }
+        }
+        if (enHall.isNotEmpty() && !editar) {
+            Ayuda("Toca una pieza para ver cómo la conseguiste.", Modifier.padding(top = 6.dp))
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Checkbox(checked = conTextos, onCheckedChange = { conTextos = it })
+                Text("con nombres y fechas", style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f).clickable { conTextos = !conTextos })
+                TextButton(onClick = {
+                    runCatching { HallImagen.crear(ctx, enHall, tema, cs, conTextos) }.onSuccess { LibroDiario.compartir(ctx, it, "image/png") }
+                }) { Text("guardar imagen", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
             }
         }
         if (editar) {
@@ -460,6 +477,7 @@ private fun Pedestal(g: Logros.Logro, tema: TemaId, modifier: Modifier) {
         PiezaLogro(g, 104.dp, tema = tema)
         // El pedestal: columna en el templo, plinto de piedra en el castillo, base iluminada en el laboratorio, repisa en el taller.
         Canvas(Modifier.fillMaxWidth().height(22.dp).padding(horizontal = 18.dp)) {
+            if (tema in SalonesTema.TEMAS) { with(SalonesTema) { pedestal(tema, cs, metal) }; return@Canvas }
             when (salonDe(tema)) {
                 Salon.TEMPLO -> { drawRect(cs.surfaceVariant, Offset(size.width * 0.15f, 0f), Size(size.width * 0.7f, size.height)); for (k in 1..4) drawLine(cs.outline.copy(alpha = 0.5f), Offset(size.width * (0.15f + 0.14f * k), 0f), Offset(size.width * (0.15f + 0.14f * k), size.height), 1f); drawRect(cs.outline, Offset(0f, size.height - 3f), Size(size.width, 3f)) }
                 Salon.CASTILLO -> { drawRect(cs.outline.copy(alpha = 0.6f), Offset(size.width * 0.08f, 0f), Size(size.width * 0.84f, size.height)); drawRect(cs.surface, Offset(size.width * 0.08f, size.height * 0.45f), Size(size.width * 0.84f, 1.5f)) }

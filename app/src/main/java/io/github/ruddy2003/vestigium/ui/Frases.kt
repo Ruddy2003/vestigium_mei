@@ -288,6 +288,29 @@ object Frases {
         f("Le génie n'est qu'une plus grande aptitude à la patience.", "El genio no es más que una mayor aptitud para la paciencia.", "Atribuida a Buffon"),
     )
 
+    val REVOLUCION = listOf(
+        f("Les hommes naissent et demeurent libres et égaux en droits.", "Los hombres nacen y permanecen libres e iguales en derechos.", "Declaración de los Derechos del Hombre y del Ciudadano, art. 1, 1789"),
+        f("La liberté consiste à pouvoir faire tout ce qui ne nuit pas à autrui.", "La libertad consiste en poder hacer todo lo que no daña a otro.", "Declaración de los Derechos del Hombre y del Ciudadano, art. 4, 1789"),
+        f("Liberté, Égalité, Fraternité.", "Libertad, igualdad, fraternidad.", "Divisa de la Revolución"),
+        f("Qu'est-ce que le tiers état ? Tout. Qu'a-t-il été jusqu'à présent ? Rien. Que demande-t-il ? À y devenir quelque chose.",
+            "¿Qué es el tercer estado? Todo. ¿Qué ha sido hasta ahora? Nada. ¿Qué pide? Llegar a ser algo.", "Emmanuel-Joseph Sieyès, ¿Qué es el tercer estado?, 1789"),
+        f("De l'audace, encore de l'audace, toujours de l'audace.", "Audacia, más audacia, siempre audacia.", "Georges Danton, discurso ante la Asamblea, 1792"),
+        f("Le bonheur est une idée neuve en Europe.", "La felicidad es una idea nueva en Europa.", "Saint-Just, informe a la Convención, 1794"),
+        f("Les femmes ont le droit de monter sur l'échafaud ; elles doivent avoir également celui de monter à la tribune.",
+            "La mujer tiene derecho a subir al cadalso; debe tener también el de subir a la tribuna.", "Olympe de Gouges, Declaración de los Derechos de la Mujer, art. 10, 1791"),
+        f("La nature n'a marqué aucun terme au perfectionnement des facultés humaines.", "La naturaleza no ha puesto ningún límite al perfeccionamiento de las facultades humanas.",
+            "Condorcet, Esbozo de un cuadro histórico de los progresos del espíritu humano, 1795"),
+        f("L'homme est né libre, et partout il est dans les fers.", "El hombre nace libre, y en todas partes está encadenado.", "Jean-Jacques Rousseau, El contrato social, 1762"),
+        f("Il faut cultiver notre jardin.", "Hay que cultivar nuestro jardín.", "Voltaire, Cándido, 1759"),
+        f("Il faut tout examiner, tout remuer sans exception et sans ménagement.", "Hay que examinarlo todo, removerlo todo, sin excepción y sin miramientos.", "Denis Diderot, artículo «Enciclopedia», 1755"),
+        f("Habe Muth, dich deines eigenen Verstandes zu bedienen!", "¡Ten el valor de servirte de tu propio entendimiento!", "Immanuel Kant, ¿Qué es la Ilustración?, 1784"),
+        f("We have it in our power to begin the world over again.", "Está en nuestras manos empezar el mundo de nuevo.", "Thomas Paine, El sentido común, 1776"),
+        f("Bliss was it in that dawn to be alive, but to be young was very heaven!", "Era una dicha estar vivo en aquel amanecer, ¡y ser joven era el cielo mismo!", "William Wordsworth, sobre 1789, en El preludio"),
+        f("Nous sommes ici par la volonté du peuple.", "Estamos aquí por la voluntad del pueblo.", "Atribuida a Mirabeau, 23 de junio de 1789"),
+        f("Rien ne se perd, rien ne se crée, tout se transforme.", "Nada se pierde, nada se crea, todo se transforma.", "Atribuida a Lavoisier, a partir de su Tratado elemental de química, 1789"),
+        f("Notre histoire n'est pas notre code.", "Nuestra historia no es nuestro código.", "Rabaut Saint-Étienne, 1788"),
+    )
+
     val NAVIDAD = listOf(
         f("I will honour Christmas in my heart, and try to keep it all the year.", "Honraré la Navidad en mi corazón y procuraré guardarla todo el año.", "Charles Dickens, Canción de Navidad, 1843"),
         f("I will live in the Past, the Present, and the Future. The Spirits of all Three shall strive within me.",
@@ -506,6 +529,7 @@ object Frases {
         TemaId.DISTOPIA -> DISTOPIA; TemaId.REFUGIO -> REFUGIO; TemaId.ORDEN -> ORDEN; TemaId.LABORATORIO -> LABORATORIO; TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON; TemaId.BOTANICO -> BOTANICO; TemaId.NAVIDAD -> NAVIDAD; TemaId.SEDA -> SEDA; TemaId.URSS -> URSS
         TemaId.GOTICO -> GOTICO; TemaId.ESPACIO -> ESPACIO; TemaId.ANDALUS -> ANDALUS; TemaId.MONGOL -> MONGOL; TemaId.RENACIMIENTO -> RENACIMIENTO
+        TemaId.REVOLUCION -> REVOLUCION
     }
 
     /** La del día para el tema elegido: cambia cada día y recorre todas antes de repetir. */
@@ -523,6 +547,7 @@ object Frases {
         TemaId.SEDA -> "Dicho de la caravana"; TemaId.URSS -> "LEMA DEL DÍA"
         TemaId.GOTICO -> "Lectio del día"; TemaId.ESPACIO -> "TRANSMISIÓN DEL DÍA"; TemaId.ANDALUS -> "حكمة اليوم · sentencia del día"
         TemaId.MONGOL -> "ӨНӨӨДРИЙН БИЛИГ · máxima del día"; TemaId.RENACIMIENTO -> "Dal taccuino"
+        TemaId.REVOLUCION -> "CARTEL DEL DÍA"
     }
 
     // ------------------------------------------------------------ frases guardadas («me gusta»)

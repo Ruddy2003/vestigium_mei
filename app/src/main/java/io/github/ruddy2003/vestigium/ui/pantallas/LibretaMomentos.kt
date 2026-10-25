@@ -103,6 +103,22 @@ private fun LibretaCerrada(hojas: Int, desde: String?, modifier: Modifier = Modi
     val oscuro = esOscuro()
     val tapa = cs.primary
     val papel = if (oscuro) lerp(cs.surface, Color.White, 0.12f) else lerp(cs.surface, Color.White, 0.6f)
+    val contenedor = io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema)
+    if (contenedor != io.github.ruddy2003.vestigium.ui.Contenedor.ESPIRAL) {
+        // El contenedor del tema (rollo, tablillas, códice…): la misma lógica, otra forma.
+        Box(modifier.aspectRatio(0.74f).clickable(onClick = abrir), contentAlignment = Alignment.Center) {
+            Canvas(Modifier.fillMaxSize()) { with(io.github.ruddy2003.vestigium.ui.Contenedores) { cerrado(contenedor, hojas, tapa, cs.secondary, oscuro) } }
+            Column(Modifier.fillMaxSize().padding(bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f), shape = MaterialTheme.shapes.small) {
+                    Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(contenedor.nombre, style = MaterialTheme.typography.titleSmall, color = cs.primary, textAlign = TextAlign.Center)
+                        Text("$hojas ${contenedor.hoja}${if (hojas == 1) "" else "s"}" + (desde?.let { " · desde el ${Fechas.corto(it)}" } ?: ""), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+        return
+    }
     Box(modifier.aspectRatio(0.74f).clickable(onClick = abrir), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val d = density
@@ -199,18 +215,16 @@ private fun normalLibreta(s: String) = java.text.Normalizer.normalize(s.lowercas
 private fun HojaLibreta(fecha: String, numero: Int, total: Int, discreto: Boolean) {
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
-    val papel = if (oscuro) lerp(cs.surface, Color.White, 0.06f) else lerp(cs.surface, Color.White, 0.65f)
+    val contenedor = io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema)
+    val papel = io.github.ruddy2003.vestigium.ui.Contenedores.papel(contenedor, cs, oscuro)
     val renglon = 30.dp
     val l = remember(fecha, Repo.momentos, Repo.consumos, discreto) { renglones(fecha, discreto) }
     val vals = l.mapNotNull { it.valencia }
     Box(Modifier.fillMaxSize().padding(start = 6.dp, end = 10.dp, top = 4.dp, bottom = 4.dp)) {
         Surface(color = papel, shape = MaterialTheme.shapes.medium, shadowElevation = 3.dp, modifier = Modifier.fillMaxSize().padding(start = 12.dp)) {
             Column(Modifier.fillMaxSize().drawBehind {
-                // Renglones y margen rojo.
-                val p = renglon.toPx()
-                var y = 96.dp.toPx()
-                while (y < size.height) { drawLine(cs.primary.copy(alpha = 0.10f), Offset(0f, y), Offset(size.width, y), 1f); y += p }
-                drawLine(cs.error.copy(alpha = 0.35f), Offset(64.dp.toPx(), 0f), Offset(64.dp.toPx(), size.height), 1.2f * density)
+                // Renglones y margen (o fibras, cera, reglado, cuadrícula Seyès… según el contenedor del tema).
+                with(io.github.ruddy2003.vestigium.ui.Contenedores) { fondoHoja(contenedor, cs, oscuro, renglon.toPx(), 64.dp.toPx()) }
             }.verticalScroll(rememberScrollState()).padding(start = 26.dp, end = 18.dp, top = 18.dp, bottom = 24.dp)) {
                 Text(Estilo.fecha(fecha), style = MaterialTheme.typography.titleLarge, color = cs.primary, modifier = Modifier.padding(start = 46.dp))
                 Text(Fechas.titulo(fecha).lowercase() + " · " + (if (l.size == 1) "1 registro" else "${l.size} registros") +
@@ -244,20 +258,11 @@ private fun HojaLibreta(fecha: String, numero: Int, total: Int, discreto: Boolea
                     }
                 }
                 Spacer(Modifier.height(18.dp))
-                Text("hoja $numero de $total", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth())
+                Text("${contenedor.hoja} $numero de $total", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth())
             }
         }
-        // El resorte, encima del borde izquierdo de la hoja.
-        Canvas(Modifier.fillMaxSize()) {
-            val d = density
-            val paso = 34 * d
-            var y = 24 * d
-            while (y < size.height - 16 * d) {
-                drawCircle(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.25f), 3.4f * d, Offset(24 * d, y))
-                drawArc(lerp(cs.outline, if (oscuro) Color.White else Color.Gray, 0.4f), 160f, 220f, false, Offset(2 * d, y - 7 * d), Size(26 * d, 14 * d), style = Stroke(2.6f * d))
-                y += paso
-            }
-        }
+        // La encuadernación encima del borde izquierdo: el resorte, la varilla del rollo, los cordones, la costura…
+        Canvas(Modifier.fillMaxSize()) { with(io.github.ruddy2003.vestigium.ui.Contenedores) { encuadernacion(contenedor, cs, oscuro) } }
     }
 }
 
@@ -278,14 +283,15 @@ fun PantallaHojaMomentos(nav: Nav) {
     val i = todas.indexOf(fecha)
     fun ir(k: Int) {
         val f = todas.getOrNull(k) ?: return
-        adelante = k > i; sentir(Sentidos.Evento.PASAR); fecha = f; Seleccion.momentos = f
+        // La hoja de ahora se lee del estado (no de cuando se armó el gesto): así, ir hacia lo más nuevo siempre pasa la hoja a la izquierda.
+        adelante = k > todas.indexOf(fecha); sentir(Sentidos.Evento.PASAR); fecha = f; Seleccion.momentos = f
     }
     val umbral = with(LocalDensity.current) { 90.dp.toPx() }
-    val iActual by rememberUpdatedState(i)
     Column(Modifier.fillMaxSize().background(lerp(cs.background, Color.Black, if (esOscuro()) 0.25f else 0.06f))) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp, start = 4.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = nav.atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = cs.primary) }
-            Text(Estilo.seccion("Libreta de momentos", null).first, style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+            Text(io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema).let { c -> if (c == io.github.ruddy2003.vestigium.ui.Contenedor.ESPIRAL) Estilo.seccion("Libreta de momentos", null).first else c.nombre },
+                style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
             TextButton(onClick = {
                 val t = hojaMomentos(fecha, discreto)?.nota ?: return@TextButton
                 ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "Momentos · ${Fechas.titulo(fecha)}\n\n$t"), "Compartir")
@@ -296,7 +302,8 @@ fun PantallaHojaMomentos(nav: Nav) {
             var total = 0f
             detectHorizontalDragGestures(onDragStart = { total = 0f }, onDragEnd = {
                 // A la izquierda, la hoja siguiente (más nueva); a la derecha, la anterior.
-                if (total < -umbral) ir(iActual + 1) else if (total > umbral) ir(iActual - 1)
+                val ahora = todas.indexOf(fecha)
+                if (total < -umbral) ir(ahora + 1) else if (total > umbral) ir(ahora - 1)
             }) { _, dx -> total += dx }
         }) {
             AnimatedContent(targetState = fecha, transitionSpec = {

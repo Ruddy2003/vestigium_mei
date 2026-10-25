@@ -25,6 +25,7 @@ import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Grados
 import io.github.ruddy2003.vestigium.data.Mundo
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.LibroDiario
 import io.github.ruddy2003.vestigium.ui.TemaId
@@ -261,6 +262,106 @@ object Reportes {
             meta?.let { c.drawText("— la línea: ${"%.0f".format(it)} $unidad recomendadas", M, y + 6f, L.p(L.tenue, 18f, L.texto)); y += 26f }
         }
 
+        /**
+         * La semana de un vistazo: una columna por día con la medalla del ánimo, la pila de páginas que escribiste,
+         * la barra del sueño, las huellas de los pasos y los puntos de los momentos.
+         */
+        fun semanaVisual(dias: List<DiaVisual>) {
+            if (dias.isEmpty()) return
+            val n = dias.size; val col = ancho / n
+            fun cx(i: Int) = M + col * i + col / 2
+            fun rotulo(t: String) { c.drawText(t, M, y + 20f, L.p(L.tenue, 19f, L.texto, 0.04f)); y += 30f }
+            c.drawRoundRect(RectF(M - 18f, y - 6f, W - M + 18f, y + 16f), 8f, 8f, L.relleno(L.superficie2))
+            val pd = L.p(L.tinta, 22f, L.titulo)
+            dias.forEachIndexed { i, d ->
+                val fd = Fechas.parse(d.fecha)
+                val t = Estilo.semana[fd.dayOfWeek.value - 1] + " " + fd.dayOfMonth
+                c.drawText(t, cx(i) - pd.measureText(t) / 2, y + 12f, pd)
+            }
+            y += 34f
+            // ---- ánimo: medallas del color del día
+            rotulo("ánimo")
+            val r = minOf(col * 0.32f, 40f)
+            dias.forEachIndexed { i, d ->
+                val o = cx(i); val yy = y + r
+                if (d.animo != null) {
+                    c.drawCircle(o, yy, r, L.relleno(L.colorAnimo(d.animo)))
+                    c.drawCircle(o, yy, r, L.trazo(L.mezcla(L.colorAnimo(d.animo), L.tinta, 0.35), 2.5f))
+                    val pv = L.p(L.fondo, 26f, L.cifra); val tv = "%.0f".format(d.animo)
+                    c.drawText(tv, o - pv.measureText(tv) / 2, yy + 9f, pv)
+                } else c.drawCircle(o, yy, r, L.trazo(L.linea, 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(6f, 6f), 0f) })
+            }
+            y += 2 * r + 18f
+            // ---- diario: una hoja por cada 80 palabras, apiladas como un cuaderno
+            if (dias.any { it.palabras > 0 }) {
+                rotulo("páginas escritas")
+                val alto = 120f; val base = y + alto
+                dias.forEachIndexed { i, d ->
+                    val hojas = if (d.palabras == 0) 0 else ((d.palabras + 79) / 80).coerceIn(1, 12)
+                    val o = cx(i); val hw = col * 0.3f
+                    for (k in 0 until hojas) {
+                        val yy = base - (k + 1) * 9.5f; val dx = if (k % 2 == 0) -1.5f else 1.5f
+                        c.drawRoundRect(RectF(o - hw + dx, yy, o + hw + dx, yy + 8f), 2f, 2f, L.relleno(L.mezcla(L.superficie, L.fondo, 0.2)))
+                        c.drawRoundRect(RectF(o - hw + dx, yy, o + hw + dx, yy + 8f), 2f, 2f, L.trazo(L.mezcla(L.linea, L.tinta, 0.3), 1.4f))
+                    }
+                    if (hojas > 0) c.drawRect(RectF(o - hw * 0.6f, base - hojas * 9.5f - 4f, o - hw * 0.45f, base - hojas * 9.5f + 6f), L.relleno(L.primario))
+                    val tv = if (d.palabras >= 1000) "%.1fk".format(d.palabras / 1000.0) else "${d.palabras}"
+                    val pv = L.p(L.tenue, 18f, L.mono)
+                    if (d.palabras > 0) c.drawText(tv, o - pv.measureText(tv) / 2, base + 24f, pv)
+                }
+                y = base + 36f
+            }
+            // ---- sueño: barras con su luna
+            if (dias.any { it.suenoH != null }) {
+                rotulo("sueño")
+                val alto = 110f; val base = y + alto
+                c.drawLine(M, base - alto * 7f / 10f, W - M, base - alto * 7f / 10f, L.trazo(L.linea, 1.2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(8f, 8f), 0f) })
+                dias.forEachIndexed { i, d ->
+                    val h0 = d.suenoH ?: return@forEachIndexed
+                    val o = cx(i); val bw = col * 0.24f
+                    val hh = (h0.coerceIn(0.0, 10.0) / 10.0 * alto).toFloat()
+                    c.drawRoundRect(RectF(o - bw, base - hh, o + bw, base), 6f, 6f, L.relleno(if (h0 < 6.3) L.mezcla(L.error, L.linea, 0.3) else L.secundario))
+                    // Media luna arriba de la barra.
+                    val lr = bw * 0.75f; val ly = base - hh - lr - 6f
+                    c.drawCircle(o, ly, lr, L.relleno(L.terciario)); c.drawCircle(o + lr * 0.45f, ly - lr * 0.2f, lr * 0.85f, L.relleno(L.fondo))
+                    val tv = "%.1f".format(h0); val pv = L.p(L.tenue, 18f, L.mono)
+                    c.drawText(tv, o - pv.measureText(tv) / 2, base + 24f, pv)
+                }
+                y = base + 36f
+            }
+            // ---- pasos: una huella por cada 2 000
+            if (dias.any { (it.pasos ?: 0) > 0 }) {
+                rotulo("pasos")
+                val filas = 5; val base = y + filas * 18f
+                dias.forEachIndexed { i, d ->
+                    val p0 = d.pasos ?: return@forEachIndexed
+                    val k = ((p0 + 1999) / 2000).toInt().coerceIn(0, 10)
+                    val o = cx(i)
+                    for (j in 0 until k) {
+                        val izq = j % 2 == 0; val fila = j / 2
+                        val xx = o + (if (izq) -9f else 9f); val yy = base - fila * 18f - (if (izq) 0f else 7f)
+                        c.drawOval(RectF(xx - 5f, yy - 8f, xx + 5f, yy + 4f), L.relleno(L.primario))
+                    }
+                    val tv = if (p0 >= 1000) "%.1fk".format(p0 / 1000.0) else "$p0"; val pv = L.p(L.tenue, 18f, L.mono)
+                    c.drawText(tv, o - pv.measureText(tv) / 2, base + 28f, pv)
+                }
+                y = base + 40f
+            }
+            // ---- momentos: un punto por cada uno
+            if (dias.any { it.momentos > 0 }) {
+                rotulo("momentos")
+                dias.forEachIndexed { i, d ->
+                    val k = d.momentos.coerceAtMost(12); val o = cx(i)
+                    for (j in 0 until k) {
+                        val fila = j / 4; val pos = j % 4
+                        c.drawCircle(o - 21f + pos * 14f, y + 8f + fila * 14f, 5f, L.relleno(L.terciario))
+                    }
+                }
+                y += 14f * ((dias.maxOf { it.momentos.coerceAtMost(12) } + 3) / 4) + 16f
+            }
+            y += 8f
+        }
+
         fun nota(t: String) { texto(t, L.p(L.tenue, 20f, L.texto)); y += 6f }
 
         fun pie(fin: String) {
@@ -294,6 +395,19 @@ object Reportes {
         return (if (d > 0) "+" else "−") + (if (dec) n1(abs(d)) else n0(abs(d))) + " $unidad frente al periodo anterior"
     }
 
+    /** Lo de cada día para la semana de un vistazo (sin nada del seguimiento privado). */
+    private class DiaVisual(val fecha: String, val animo: Double?, val palabras: Int, val suenoH: Double?, val pasos: Long?, val momentos: Int)
+
+    private fun diasVisuales(d: Periodo.Datos): List<DiaVisual> {
+        val porDia = Repo.momentos.filter { !it.privado && it.fecha in d.ini..d.fin }.groupingBy { it.fecha }.eachCount()
+        return d.fechas.mapIndexed { i, f ->
+            val dia = Repo.dias[f]
+            val palabras = dia?.nota?.trim()?.takeIf { it.isNotEmpty() }?.split(Regex("\\s+"))?.size ?: 0
+            val s = Repo.salud[f]
+            DiaVisual(f, d.valencia.getOrNull(i), palabras, s?.sueno_min?.let { it / 60.0 }, s?.pasos, porDia[f] ?: 0)
+        }
+    }
+
     /** Todas las secciones que tengan datos, en el orden del tema. */
     private fun cuerpo(h: Hoja, d: Periodo.Datos, anual: Boolean, logros: List<io.github.ruddy2003.vestigium.ciencia.Logros.Logro>) {
         val L = h.L
@@ -308,6 +422,12 @@ object Reportes {
             (d.entrenos > 0).takeIf { it }?.let { "${d.entrenos}" to "entrenamientos" },
             (d.musicaH > 0.5).takeIf { it }?.let { n0(d.musicaH) + " h" to "de música" },
         ).take(9))
+
+        // ---- La semana de un vistazo (solo en el reporte semanal)
+        if (!anual && d.n <= 8) {
+            h.titulo("La semana de un vistazo", "HEBDOMAS PICTA")
+            h.semanaVisual(diasVisuales(d))
+        }
 
         // ---- Ánimo
         if (d.valencia.any { it != null }) {

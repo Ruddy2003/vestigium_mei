@@ -31,8 +31,8 @@ object Temas {
     private val REPUBLICANOS = listOf("vendémiaire", "brumaire", "frimaire", "nivôse", "pluviôse", "ventôse", "germinal", "floréal", "prairial", "messidor", "thermidor", "fructidor")
 
     /**
-     * Calendario republicano francés, el de los primeros años de Napoleón: doce meses de 30 días que empiezan
-     * cerca del equinoccio de otoño, más los días complementarios. (Aproximado: el año empieza el 22 de septiembre.)
+     * Calendario republicano francés (1793–1805): doce meses de 30 días que empiezan cerca del equinoccio de otoño,
+     * más los días complementarios, contados desde la proclamación de la República. (Aproximado: el año empieza el 22 de septiembre.)
      */
     fun republicano(iso: String): String = runCatching {
         val d = Fechas.parse(iso)
@@ -42,6 +42,17 @@ object Temas {
         val i = java.time.temporal.ChronoUnit.DAYS.between(inicio, d).toInt()
         val dia = if (i < 360) "${i % 30 + 1} ${REPUBLICANOS[i / 30]}" else "jour complémentaire ${i - 359}"
         "$dia an ${Romano.de(an)}"
+    }.getOrDefault(iso)
+
+    /** «an CCXXXV»: el año de la República al que pertenece un mes gregoriano (el que tiene la mayor parte del mes). */
+    fun anRepublicano(anio: Int, mes: Int): String = "an " + Romano.de(if (mes >= 10) anio - 1791 else anio - 1792)
+
+    private val SEMANA_FRANCESA = listOf("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche")
+
+    /** El Imperio volvió al calendario gregoriano en 1806: «samedi 17 octobre 2026». */
+    fun fechaImperial(iso: String): String = runCatching {
+        val d = Fechas.parse(iso)
+        "${SEMANA_FRANCESA[d.dayOfWeek.value - 1]} ${if (d.dayOfMonth == 1) "1er" else d.dayOfMonth} ${MESES_FRANCESES[d.monthValue - 1]} ${d.year}"
     }.getOrDefault(iso)
 
     private val CIFRAS_CHINAS = listOf("〇", "一", "二", "三", "四", "五", "六", "七", "八", "九")
@@ -73,7 +84,10 @@ object Temas {
     }
 
     private val MARCAS = mapOf(
-        TemaId.NAPOLEON to mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "07-14" to "Bastilla"),
+        TemaId.NAPOLEON to mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "05-18" to "Imperio",
+            "10-14" to "Jena", "06-14" to "Friedland", "03-20" to "Cien Días", "07-06" to "Wagram"),
+        TemaId.REVOLUCION to mapOf("07-14" to "Bastilla", "06-20" to "Juego de pelota", "08-04" to "Privilegios", "08-26" to "Derechos", "10-05" to "Versalles",
+            "09-22" to "República", "07-27" to "Termidor", "09-20" to "Valmy"),
         TemaId.BOTANICO to mapOf("05-23" to "Linneo", "02-12" to "Darwin", "09-14" to "Humboldt", "04-22" to "Tierra", "03-20" to "Equinoccio",
             "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "07-20" to "Mendel"),
         TemaId.GOTICO to mapOf("04-26" to "Consagr.", "08-25" to "S. Luis", "08-15" to "Asunción", "12-25" to "Navidad", "01-06" to "Epifanía", "11-01" to "Todos Santos", "09-29" to "S. Miguel"),
@@ -176,6 +190,7 @@ object Temas {
         TemaId.NAVIDAD -> NAVIDAD[titulo]
         TemaId.SEDA -> SEDA[titulo]
         TemaId.URSS -> URSS[titulo]
+        TemaId.REVOLUCION -> REVOLUCION[titulo]
         else -> null
     }
 
@@ -197,6 +212,7 @@ object Temas {
             TemaId.NAVIDAD -> mapOf("animo" to "Ánimo", "momento" to "Momento", "gasto" to "Regalos", "sueno" to "Noche de paz", "habitos" to "Propósitos", "hoy" to "El día", "cifra" to "Número", "foto" to "Postal", "enfoque" to "Taller")
             TemaId.SEDA -> mapOf("animo" to "Espíritu", "momento" to "Relato", "gasto" to "Mercancías", "sueno" to "Reposo", "habitos" to "Ritos", "hoy" to "Jornada", "cifra" to "Cuenta", "foto" to "Estampa", "enfoque" to "Estudio")
             TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO", "enfoque" to "TRABAJO")
+            TemaId.REVOLUCION -> mapOf("animo" to "ESPÍRITU", "momento" to "SUCESO", "gasto" to "ASIGNADOS", "sueno" to "REPOSO", "habitos" to "VIRTUDES", "hoy" to "CAHIER", "cifra" to "CIFRA", "foto" to "ESTAMPA", "enfoque" to "ESTUDIO")
             else -> emptyMap()
         }
         return m[clave] ?: clave.uppercase()
@@ -327,11 +343,30 @@ object Temas {
         "Día" to "BOLETÍN DEL DÍA", "Diario" to "MEMORIAS", "Gastos" to "TESORERÍA", "Entender" to "ESTADO MAYOR", "Más" to "GABINETE",
         "Llenar el día" to "DESPACHO NOCTURNO", "Biblioteca del diario" to "MEMORIAL", "Entrada" to "MEMORIA", "Tablero" to "PARTE DE CAMPAÑA",
         "Te falta hoy" to "ÓRDENES PENDIENTES", "Hábitos" to "CÓDIGO", "Sueño" to "VIVAC", "Ánimo y cuerpo" to "MORAL DE LA TROPA", "Predicción" to "PRONÓSTICO",
-        "Calendario" to "CALENDARIO REPUBLICANO", "Apariencia" to "ESTANDARTE", "Tu año" to "CAMPAÑA DEL AÑO", "Totales" to "BALANCE DEL IMPERIO",
+        "Calendario" to "CALENDARIO DE CAMPAÑA", "Apariencia" to "ESTANDARTE", "Tu año" to "CAMPAÑA DEL AÑO", "Totales" to "BALANCE DEL IMPERIO",
         "Obras" to "BIBLIOTECA DE CAMPAÑA", "Lugares" to "PLAZAS", "Mapa" to "TEATRO DE OPERACIONES", "Datos que faltan" to "BAJAS", "Hitos" to "VICTORIAS",
         "Momentos de este día" to "DESPACHOS DEL DÍA", "Resumen semanal" to "BOLETÍN SEMANAL", "Tu día en 24 horas" to "LAS VEINTICUATRO HORAS",
         "Registros especiales" to "CAMPAÑAS ESPECIALES", "Avisos y recordatorios" to "TOQUES DE TAMBOR", "Contexto" to "CIRCUNSTANCIAS",
     )
+    /** La Revolución: el vocabulario de 1789–1794 (asignados, espíritu público, salud pública, las jornadas, la Asamblea…). */
+    private val REVOLUCION = mapOf(
+        "Mundo" to "DEPARTAMENTOS", "Patrimonio Mundial" to "PATRIMONIO NACIONAL", "Mapa para rascar" to "MAPA DE LOS DEPARTAMENTOS", "Ciudades visitadas" to "COMUNAS",
+        "Biblioteca de sueños" to "CUADERNO DE SUEÑOS", "Cartas" to "CORRESPONDENCIA", "Escribir una carta" to "ESCRIBIR A LA POSTERIDAD", "Carta" to "CARTA",
+        "Conocerte" to "EXAMEN DEL CIUDADANO", "Brújula política" to "LA ASAMBLEA", "Mapas" to "ATLAS NACIONAL", "Salud" to "SALUD PÚBLICA", "Tus apps" to "INVENTARIO",
+        "Otras vidas" to "OTROS CIUDADANOS", "Logros" to "HONORES CÍVICOS", "Tu año en historias" to "ANALES DEL AÑO", "Anoche" to "LA NOCHE PASADA",
+        "Selladas" to "LACRADAS", "Listas para abrir" to "LISTAS PARA ABRIR", "A otras personas" to "A LOS CIUDADANOS", "Del pasado" to "ARCHIVOS",
+        "Hoy" to "CAHIER DE HOY", "Línea de tiempo" to "CRÓNICA", "Ahora mismo estoy…" to "EN ESTE INSTANTE…",
+        "Día" to "CAHIER DEL DÍA", "Diario" to "CUADERNOS", "Gastos" to "ASIGNADOS", "Entender" to "LAS LUCES", "Más" to "EL CLUB",
+        "Llenar el día" to "VELADA", "Biblioteca del diario" to "ARCHIVO NACIONAL", "Entrada" to "CAHIER", "Tablero" to "TABLERO CÍVICO",
+        "Te falta hoy" to "ORDEN DEL DÍA", "Hábitos" to "VIRTUDES CÍVICAS", "Sueño" to "REPOSO", "Ánimo y cuerpo" to "ESPÍRITU PÚBLICO", "Predicción" to "PRONÓSTICO",
+        "Calendario" to "CALENDARIO REPUBLICANO", "Apariencia" to "ESCARAPELA", "Tu año" to "EL AÑO REPUBLICANO", "Totales" to "BALANCE DE LA NACIÓN",
+        "Obras" to "BIBLIOTECA DEL PUEBLO", "Lugares" to "SECCIONES", "Mapa" to "MAPA DE LA NACIÓN", "Datos que faltan" to "CASILLAS VACÍAS", "Hitos" to "JORNADAS",
+        "Momentos de este día" to "SUCESOS DEL DÍA", "Resumen semanal" to "BOLETÍN SEMANAL", "Tu día en 24 horas" to "LAS VEINTICUATRO HORAS",
+        "Registros especiales" to "REGISTROS CÍVICOS", "Avisos y recordatorios" to "TOQUE DE REBATO", "Contexto" to "CIRCUNSTANCIAS", "Medicamentos" to "BOTICA",
+        "Ajustes" to "DECRETOS", "Datos" to "ARCHIVOS", "Privacidad" to "SECRETO", "Reportes" to "INFORMES", "Experimentos personales" to "ENSAYOS",
+        "Guía científica" to "ENCICLOPEDIA", "Cartas al futuro" to "CARTAS A LA POSTERIDAD",
+    )
+
     private val BOTANICO = mapOf(
         "Mundo" to "Expediciones", "Patrimonio Mundial" to "Maravillas del mundo", "Mapa para rascar" to "Mapa de expediciones", "Ciudades visitadas" to "Estaciones",
         "Biblioteca de sueños" to "Herbario de sueños", "Cartas" to "Correspondencia del naturalista", "Escribir una carta" to "Escribir una carta", "Carta" to "Carta", "Conocerte" to "Ficha del naturalista", "Brújula política" to "Brújula del naturalista", "Mapas" to "Atlas", "Salud" to "Fisiología", "Tus apps" to "Instrumentos", "Otras vidas" to "Otros ejemplares", "Logros" to "Vitrina de hallazgos", "Tu año en historias" to "Catálogo del año", "Anoche" to "Flora de anoche", "Selladas" to "Semillas guardadas", "Listas para abrir" to "Listas para brotar", "A otras personas" to "Cartas a otros", "Del pasado" to "Prensadas",

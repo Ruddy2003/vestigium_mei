@@ -171,6 +171,12 @@ object Sentidos {
                 Evento.GUARDAR -> listOf(g(THUD, 1f), g(THUD, 1f, 90))
                 else -> listOf(g(THUD, 1f), g(THUD, 1f, 120), g(THUD, 1f, 120), g(SUBE_LENTO, 0.8f, 120))
             }
+            // Tambor de las milicias: redoble y golpe.
+            TemaId.REVOLUCION -> when (e) {
+                Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 40))
+                Evento.GUARDAR -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 30), g(TICK, 0.7f, 30), g(THUD, 0.9f, 50))
+                else -> listOf(g(TICK, 0.6f), g(TICK, 0.6f, 30), g(TICK, 0.6f, 30), g(TICK, 0.7f, 30), g(TICK, 0.8f, 30), g(THUD, 1f, 60), g(SUBE, 0.6f, 120))
+            }
         }
     }
 
@@ -246,6 +252,7 @@ object Sentidos {
         "andalus" to intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir, R.raw.s_andalus_tema),
         "mongol" to intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir, R.raw.s_mongol_tema),
         "renacimiento" to intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir, R.raw.s_renacimiento_tema),
+        "revolucion" to intArrayOf(R.raw.s_revolucion_toque, R.raw.s_revolucion_guardar, R.raw.s_revolucion_logro, R.raw.s_revolucion_pasar, R.raw.s_revolucion_elegir, R.raw.s_revolucion_abrir, R.raw.s_revolucion_tema),
     )
 
     private var pool: SoundPool? = null
@@ -297,7 +304,7 @@ object Sentidos {
     /** ¿Ese sonido de ese tema es ruido sin nota? */
     private fun ruidoso(tema: TemaId, i: Int): Boolean = when (i) {
         0 -> acordeToque(tema) == null
-        3 -> tema in setOf(TemaId.ROMANO, TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.NAPOLEON, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.SEDA, TemaId.URSS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.ESPACIO)
+        3 -> tema in setOf(TemaId.ROMANO, TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.NAPOLEON, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.SEDA, TemaId.URSS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.ESPACIO, TemaId.REVOLUCION)
         4 -> tema in setOf(TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.NAPOLEON, TemaId.ANDALUS)
         else -> false
     }
@@ -362,7 +369,7 @@ object Sentidos {
         if (!puedeSonar(ctx)) return
         val r = when (tema) {
             TemaId.DISTOPIA, TemaId.URSS, TemaId.NAPOLEON, TemaId.COLONOS -> R.raw.s_tecla_maquina
-            TemaId.MEDIEVAL, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.ROMANO, TemaId.HELENO, TemaId.ANDALUS, TemaId.SEDA -> R.raw.s_tecla_pluma
+            TemaId.MEDIEVAL, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.ROMANO, TemaId.HELENO, TemaId.ANDALUS, TemaId.SEDA, TemaId.REVOLUCION -> R.raw.s_tecla_pluma
             TemaId.CIBER, TemaId.REFUGIO, TemaId.ESPACIO, TemaId.ORDEN, TemaId.LABORATORIO -> R.raw.s_tecla_digital
             else -> R.raw.s_tecla_suave
         }
