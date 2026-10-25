@@ -2,7 +2,7 @@ name: Capturas de diseño
 
 on:
   push:
-    branches: [main, lote1]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
