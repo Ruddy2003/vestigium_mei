@@ -242,8 +242,8 @@ object Contenedores {
                 val l = r * 0.36f; val ww = r * 0.14f
                 val p = Path().apply {
                     moveTo(o.x - l / 2 * cos(giro), o.y - l / 2 * sin(giro))
-                    quadraticBezierTo(o.x - ww * sin(giro), o.y + ww * cos(giro), o.x + l / 2 * cos(giro), o.y + l / 2 * sin(giro))
-                    quadraticBezierTo(o.x + ww * sin(giro), o.y - ww * cos(giro), o.x - l / 2 * cos(giro), o.y - l / 2 * sin(giro)); close()
+                    quadraticTo(o.x - ww * sin(giro), o.y + ww * cos(giro), o.x + l / 2 * cos(giro), o.y + l / 2 * sin(giro))
+                    quadraticTo(o.x + ww * sin(giro), o.y - ww * cos(giro), o.x - l / 2 * cos(giro), o.y - l / 2 * sin(giro)); close()
                 }
                 drawPath(p, color)
             }

@@ -107,12 +107,12 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.NAVIDAD -> rotate(t * 360f, c) { copo(c, r, if (oscuro) e.onBackground else e.secondary, e.tertiary) }
         TemaId.SEDA -> moneda(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.background, t)
         TemaId.URSS -> estrellaEngrane(c, r, e.primary, if (oscuro) e.tertiary else e.onBackground, t)
-        TemaId.REVOLUCION -> escarapelaEmblema(c, r, e.secondary, if (oscuro) Color(0xFFF0EADB) else Color.White, e.primary, e.onBackground, t)
+        TemaId.REVOLUCION -> escarapelaEmblema(c, r, e.primary, if (oscuro) Color(0xFFF0EADB) else Color.White, e.secondary, e.onBackground, t)
     }
 }
 
-/** La escarapela tricolor: tela plisada en tres anillos que gira despacio, como si el viento la moviera. */
-private fun DrawScope.escarapelaEmblema(c: Offset, r: Float, azul: Color, blanco: Color, rojo: Color, tinta: Color, t: Float) {
+/** La escarapela tricolor (rojo afuera, blanco y azul al centro): tela plisada en tres anillos que gira despacio. */
+private fun DrawScope.escarapelaEmblema(c: Offset, r: Float, afuera: Color, blanco: Color, centro: Color, tinta: Color, t: Float) {
     val pliegues = 24
     fun anillo(rr: Float, color: Color, giro: Float) {
         val p = Path()
@@ -123,9 +123,9 @@ private fun DrawScope.escarapelaEmblema(c: Offset, r: Float, azul: Color, blanco
         }
         p.close(); drawPath(p, color)
     }
-    anillo(r * 0.98f, azul, t * 360f)
+    anillo(r * 0.98f, afuera, t * 360f)
     anillo(r * 0.68f, blanco, -t * 360f)
-    anillo(r * 0.38f, rojo, t * 720f)
+    anillo(r * 0.38f, centro, t * 720f)
     // Los pliegues, marcados con rayas finas.
     for (i in 0 until pliegues) {
         val a = rad(t * 360.0 + 360.0 * i / pliegues)
@@ -952,7 +952,7 @@ internal fun Tricolor(modifier: Modifier) {
         }
         drawLine(e.onBackground.copy(alpha = 0.25f), Offset(0f, y + h * 0.2f), Offset(cx - r * 1.6f, y + h * 0.2f), 1f)
         drawLine(e.onBackground.copy(alpha = 0.25f), Offset(cx + r * 1.6f, y + h * 0.2f), Offset(size.width, y + h * 0.2f), 1f)
-        drawCircle(e.secondary, r, Offset(cx, y)); drawCircle(blanco, r * 0.66f, Offset(cx, y)); drawCircle(e.primary, r * 0.34f, Offset(cx, y))
+        drawCircle(e.primary, r, Offset(cx, y)); drawCircle(blanco, r * 0.66f, Offset(cx, y)); drawCircle(e.secondary, r * 0.34f, Offset(cx, y))
     }
 }
 
@@ -1278,7 +1278,7 @@ fun CapaFiesta() {
                         est.close(); drawPath(est, col)
                     }
                     TemaId.SEDA -> { drawCircle(col, s * 0.7f, pos); drawRect(e.background.copy(alpha = a), Offset(pos.x - s * 0.22f, pos.y - s * 0.22f), Size(s * 0.44f, s * 0.44f)) }
-                    TemaId.REVOLUCION -> { drawCircle(e.secondary.copy(alpha = a), s * 0.8f, pos); drawCircle(Color.White.copy(alpha = a), s * 0.55f, pos); drawCircle(e.primary.copy(alpha = a), s * 0.3f, pos) }
+                    TemaId.REVOLUCION -> { drawCircle(e.primary.copy(alpha = a), s * 0.8f, pos); drawCircle(Color.White.copy(alpha = a), s * 0.55f, pos); drawCircle(e.secondary.copy(alpha = a), s * 0.3f, pos) }
                     else -> drawCircle(col, s * 0.5f, pos)
                 }
             }

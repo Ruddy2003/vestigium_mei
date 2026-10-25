@@ -170,14 +170,14 @@ object TrofeosTema {
     }
 
     private fun DrawScope.laurel(p: Pincel, c: Offset, r: Float, b: Brush) {
-        for (lado in listOf(-1f, 1f)) for (k in 0 until 8) {
-            val a = (PI / 2 + lado * (0.3 + k * 0.33)).toFloat()
+        for (lado in listOf(-1f, 1f)) for (k in 0 until 9) {
+            val a = (PI / 2 + lado * (0.3 + k * 0.3)).toFloat()
             val o = Offset(c.x + r * cos(a), c.y + r * sin(a))
-            val g = a + lado * 1.25f; val l = r * 0.34f; val ww = r * 0.13f
+            val g = a + lado * 1.15f; val l = r * 0.5f; val ww = r * 0.2f
             drawPath(Path().apply {
                 moveTo(o.x - l / 2 * cos(g), o.y - l / 2 * sin(g))
-                quadraticBezierTo(o.x - ww * sin(g), o.y + ww * cos(g), o.x + l / 2 * cos(g), o.y + l / 2 * sin(g))
-                quadraticBezierTo(o.x + ww * sin(g), o.y - ww * cos(g), o.x - l / 2 * cos(g), o.y - l / 2 * sin(g)); close()
+                quadraticTo(o.x - ww * sin(g), o.y + ww * cos(g), o.x + l / 2 * cos(g), o.y + l / 2 * sin(g))
+                quadraticTo(o.x + ww * sin(g), o.y - ww * cos(g), o.x - l / 2 * cos(g), o.y - l / 2 * sin(g)); close()
             }, b)
         }
     }
@@ -245,7 +245,7 @@ object TrofeosTema {
             "Curiosos" -> {
                 // Anfiteatro: dos pisos de arcos y el borde roto de un lado.
                 val contorno = Path().apply {
-                    moveTo(p.x(0.06f), p.y(0.76f)); lineTo(p.x(0.06f), p.y(0.3f)); quadraticBezierTo(p.x(0.5f), p.y(0.2f), p.x(0.8f), p.y(0.26f))
+                    moveTo(p.x(0.06f), p.y(0.76f)); lineTo(p.x(0.06f), p.y(0.3f)); quadraticTo(p.x(0.5f), p.y(0.2f), p.x(0.8f), p.y(0.26f))
                     lineTo(p.x(0.86f), p.y(0.4f)); lineTo(p.x(0.94f), p.y(0.44f)); lineTo(p.x(0.94f), p.y(0.76f)); close()
                 }
                 conHuecos(p, 0.06f, 0.94f, contorno) {
@@ -339,7 +339,7 @@ object TrofeosTema {
                 // Capitel corintio: hojas de acanto en dos filas.
                 for (fila in 0 until 2) for (k in 0 until 4) {
                     val cx = 0.33f + k * 0.113f; val yy = 0.26f - fila * 0.07f
-                    drawPath(Path().apply { moveTo(p.x(cx - 0.05f), p.y(yy)); quadraticBezierTo(p.x(cx), p.y(yy - 0.12f), p.x(cx + 0.05f), p.y(yy)); close() }, p.metal(cx - 0.05f, cx + 0.05f))
+                    drawPath(Path().apply { moveTo(p.x(cx - 0.05f), p.y(yy)); quadraticTo(p.x(cx), p.y(yy - 0.12f), p.x(cx + 0.05f), p.y(yy)); close() }, p.metal(cx - 0.05f, cx + 0.05f))
                 }
                 caja(p, 0.28f, 0.1f, 0.72f, 0.13f); caja(p, 0.34f, 0.74f, 0.66f, 0.77f)
             }
@@ -440,8 +440,8 @@ object TrofeosTema {
         val x0 = p.x(0.18f); val x1 = p.x(0.82f); val yTop = p.y(0.02f); val yArr = p.y(0.28f); val yPie = p.y(0.8f)
         val ojiva = Path().apply {
             moveTo(x0, yPie); lineTo(x0, yArr)
-            quadraticBezierTo(x0, yTop + (yArr - yTop) * 0.3f, (x0 + x1) / 2, yTop)
-            quadraticBezierTo(x1, yTop + (yArr - yTop) * 0.3f, x1, yArr); lineTo(x1, yPie); close()
+            quadraticTo(x0, yTop + (yArr - yTop) * 0.3f, (x0 + x1) / 2, yTop)
+            quadraticTo(x1, yTop + (yArr - yTop) * 0.3f, x1, yArr); lineTo(x1, yPie); close()
         }
         val v = vidrios(p.nivel)
         val plomo = Color(0xFF1C1A22)
@@ -484,8 +484,8 @@ object TrofeosTema {
             "Mente" -> { estrella(c, p.w * 0.24f, p.w * 0.1f, 8, SolidColor(acento)); drawCircle(fondo, p.w * 0.07f, c) }
             "Cultura" -> {
                 // Flor de lis.
-                drawPath(Path().apply { moveTo(c.x, c.y - p.y(0.2f)); quadraticBezierTo(c.x + p.x(0.1f), c.y - p.y(0.06f), c.x, c.y + p.y(0.06f)); quadraticBezierTo(c.x - p.x(0.1f), c.y - p.y(0.06f), c.x, c.y - p.y(0.2f)); close() }, acento)
-                listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(c.x + s * p.x(0.03f), c.y + p.y(0.02f)); quadraticBezierTo(c.x + s * p.x(0.24f), c.y - p.y(0.12f), c.x + s * p.x(0.18f), c.y + p.y(0.1f)); quadraticBezierTo(c.x + s * p.x(0.1f), c.y + p.y(0.02f), c.x + s * p.x(0.03f), c.y + p.y(0.02f)); close() }, acento) }
+                drawPath(Path().apply { moveTo(c.x, c.y - p.y(0.2f)); quadraticTo(c.x + p.x(0.1f), c.y - p.y(0.06f), c.x, c.y + p.y(0.06f)); quadraticTo(c.x - p.x(0.1f), c.y - p.y(0.06f), c.x, c.y - p.y(0.2f)); close() }, acento)
+                listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(c.x + s * p.x(0.03f), c.y + p.y(0.02f)); quadraticTo(c.x + s * p.x(0.24f), c.y - p.y(0.12f), c.x + s * p.x(0.18f), c.y + p.y(0.1f)); quadraticTo(c.x + s * p.x(0.1f), c.y + p.y(0.02f), c.x + s * p.x(0.03f), c.y + p.y(0.02f)); close() }, acento) }
                 caja(p, 0.36f, 0.47f, 0.64f, 0.51f, SolidColor(fondo))
             }
             "Gente" -> {
@@ -500,7 +500,7 @@ object TrofeosTema {
             }
             "Curiosos" -> {
                 // Cáliz.
-                drawPath(Path().apply { moveTo(c.x - p.x(0.16f), c.y - p.y(0.16f)); lineTo(c.x + p.x(0.16f), c.y - p.y(0.16f)); quadraticBezierTo(c.x + p.x(0.14f), c.y + p.y(0.02f), c.x, c.y + p.y(0.03f)); quadraticBezierTo(c.x - p.x(0.14f), c.y + p.y(0.02f), c.x - p.x(0.16f), c.y - p.y(0.16f)); close() }, acento)
+                drawPath(Path().apply { moveTo(c.x - p.x(0.16f), c.y - p.y(0.16f)); lineTo(c.x + p.x(0.16f), c.y - p.y(0.16f)); quadraticTo(c.x + p.x(0.14f), c.y + p.y(0.02f), c.x, c.y + p.y(0.03f)); quadraticTo(c.x - p.x(0.14f), c.y + p.y(0.02f), c.x - p.x(0.16f), c.y - p.y(0.16f)); close() }, acento)
                 caja(p, 0.48f, 0.45f, 0.52f, 0.54f, SolidColor(acento)); drawOval(acento, Offset(c.x - p.x(0.12f), c.y + p.y(0.11f)), Size(p.x(0.24f), p.y(0.04f)))
             }
             else -> {
@@ -571,7 +571,7 @@ object TrofeosTema {
                 // Florín de oro con el lirio.
                 val c = Offset(p.x(0.5f), p.y(0.38f))
                 drawCircle(p.metal(0.2f, 0.8f), p.w * 0.3f, c); drawCircle(p.linea, p.w * 0.26f, c, style = Stroke(lw * 0.6f))
-                drawPath(Path().apply { moveTo(c.x, c.y - p.w * 0.16f); quadraticBezierTo(c.x + p.w * 0.06f, c.y, c.x, c.y + p.w * 0.06f); quadraticBezierTo(c.x - p.w * 0.06f, c.y, c.x, c.y - p.w * 0.16f); close() }, p.linea)
+                drawPath(Path().apply { moveTo(c.x, c.y - p.w * 0.16f); quadraticTo(c.x + p.w * 0.06f, c.y, c.x, c.y + p.w * 0.06f); quadraticTo(c.x - p.w * 0.06f, c.y, c.x, c.y - p.w * 0.16f); close() }, p.linea)
                 listOf(-1f, 1f).forEach { s -> drawLine(p.linea, Offset(c.x, c.y + p.w * 0.02f), Offset(c.x + s * p.w * 0.13f, c.y - p.w * 0.08f), lw) }
                 caja(p, 0.47f, 0.68f, 0.53f, 0.77f)
             }
@@ -660,21 +660,26 @@ object TrofeosTema {
                 caja(p, 0.44f, 0.16f, 0.56f, 0.2f)
                 val c = Offset(p.x(0.5f), p.y(0.44f))
                 for (k in 0 until 5) {
-                    val a = -PI / 2 + k * 2 * PI / 5; val R = p.w * 0.3f
-                    val punta = Offset(c.x + (R * cos(a)).toFloat(), c.y + (R * sin(a)).toFloat())
-                    val ab = 0.28; val lado1 = Offset(c.x + (R * 0.98f * cos(a - ab * 0.55)).toFloat(), c.y + (R * 0.98f * sin(a - ab * 0.55)).toFloat())
-                    val lado2 = Offset(c.x + (R * 0.98f * cos(a + ab * 0.55)).toFloat(), c.y + (R * 0.98f * sin(a + ab * 0.55)).toFloat())
-                    drawPath(Path().apply { moveTo(c.x, c.y); lineTo(lado1.x, lado1.y); lineTo(punta.x, punta.y - p.w * 0.01f); lineTo(lado2.x, lado2.y); close() }, if (p.hecho) SolidColor(Color.White.copy(alpha = 0.92f)) else SolidColor(p.sombra))
-                    drawPath(Path().apply { moveTo(c.x, c.y); lineTo(lado1.x, lado1.y); lineTo(punta.x, punta.y - p.w * 0.01f); lineTo(lado2.x, lado2.y); close() }, oro, style = Stroke(lw * 0.6f))
+                    // Cada brazo se abre hacia afuera y termina en dos puntas con una muesca, esmaltado en blanco con filete de oro.
+                    val a = -PI / 2 + k * 2 * PI / 5; val R = p.w * 0.32f
+                    fun pt(rr: Float, da: Double) = Offset(c.x + (rr * cos(a + da)).toFloat(), c.y + (rr * sin(a + da)).toFloat())
+                    val brazo = Path().apply {
+                        val b1 = pt(R * 0.22f, -0.32); val b2 = pt(R * 0.22f, 0.32)
+                        val t1 = pt(R, -0.24); val m = pt(R * 0.8f, 0.0); val t2 = pt(R, 0.24)
+                        moveTo(b1.x, b1.y); lineTo(t1.x, t1.y); lineTo(m.x, m.y); lineTo(t2.x, t2.y); lineTo(b2.x, b2.y); close()
+                    }
+                    drawPath(brazo, if (p.hecho) SolidColor(Color.White.copy(alpha = 0.95f)) else SolidColor(p.sombra))
+                    drawPath(brazo, oro, style = Stroke(lw * 0.8f))
+                    listOf(-0.24, 0.24).forEach { da -> drawCircle(oro, p.w * 0.014f, pt(R, da)) }
                 }
                 drawCircle(oro, p.w * 0.1f, c); drawCircle(if (p.hecho) SolidColor(Color(0xFF1E3A8A)) else SolidColor(p.sombra), p.w * 0.07f, c)
             }
             "Constancia" -> { laurel(p, Offset(p.x(0.5f), p.y(0.4f)), p.w * 0.3f, oro); if (p.hecho) drawLine(Color(0xFFB3122E), Offset(p.x(0.44f), p.y(0.72f)), Offset(p.x(0.56f), p.y(0.72f)), lw * 2) }
             "Curiosos" -> {
                 // El bicornio con su escarapela.
-                drawPath(Path().apply { moveTo(p.x(0.06f), p.y(0.56f)); quadraticBezierTo(p.x(0.5f), p.y(0.06f), p.x(0.94f), p.y(0.56f)); quadraticBezierTo(p.x(0.5f), p.y(0.46f), p.x(0.06f), p.y(0.56f)); close() },
-                    if (p.hecho) SolidColor(Color(0xFF15151C)) else SolidColor(p.sombra))
-                drawPath(Path().apply { moveTo(p.x(0.06f), p.y(0.56f)); quadraticBezierTo(p.x(0.5f), p.y(0.06f), p.x(0.94f), p.y(0.56f)) }, oro, style = Stroke(lw))
+                drawPath(Path().apply { moveTo(p.x(0.06f), p.y(0.56f)); quadraticTo(p.x(0.5f), p.y(0.06f), p.x(0.94f), p.y(0.56f)); quadraticTo(p.x(0.5f), p.y(0.46f), p.x(0.06f), p.y(0.56f)); close() },
+                    if (p.hecho) Brush.verticalGradient(listOf(Color(0xFF3A3A48), Color(0xFF15151C)), p.y(0.2f), p.y(0.56f)) else SolidColor(p.sombra))
+                drawPath(Path().apply { moveTo(p.x(0.06f), p.y(0.56f)); quadraticTo(p.x(0.5f), p.y(0.06f), p.x(0.94f), p.y(0.56f)) }, oro, style = Stroke(lw))
                 with(Contenedores) { if (p.hecho) escarapela(Offset(p.x(0.62f), p.y(0.36f)), p.w * 0.06f) }
                 caja(p, 0.46f, 0.6f, 0.54f, 0.77f)
             }
@@ -696,7 +701,7 @@ object TrofeosTema {
             "Diario" -> {
                 // La Declaración: dos tablas de bordes redondeados, con renglones.
                 listOf(0.14f, 0.52f).forEach { x0 ->
-                    drawPath(Path().apply { moveTo(p.x(x0), p.y(0.74f)); lineTo(p.x(x0), p.y(0.24f)); quadraticBezierTo(p.x(x0), p.y(0.1f), p.x(x0 + 0.17f), p.y(0.1f)); quadraticBezierTo(p.x(x0 + 0.34f), p.y(0.1f), p.x(x0 + 0.34f), p.y(0.24f)); lineTo(p.x(x0 + 0.34f), p.y(0.74f)); close() },
+                    drawPath(Path().apply { moveTo(p.x(x0), p.y(0.74f)); lineTo(p.x(x0), p.y(0.24f)); quadraticTo(p.x(x0), p.y(0.1f), p.x(x0 + 0.17f), p.y(0.1f)); quadraticTo(p.x(x0 + 0.34f), p.y(0.1f), p.x(x0 + 0.34f), p.y(0.24f)); lineTo(p.x(x0 + 0.34f), p.y(0.74f)); close() },
                         p.metal(x0, x0 + 0.34f))
                     if (p.hecho) for (k in 0 until 7) drawLine(p.linea, Offset(p.x(x0 + 0.05f), p.y(0.26f + k * 0.065f)), Offset(p.x(x0 + 0.29f), p.y(0.26f + k * 0.065f)), lw * 0.5f)
                 }
@@ -710,7 +715,11 @@ object TrofeosTema {
                 gorro(p, 0.5f, 0.06f, 0.1f, rojo)
                 if (p.hecho) listOf(azul, Color.White, rojo).forEachIndexed { i, c -> drawRect(c, Offset(p.x(0.44f + i * 0.04f), p.y(0.6f)), Size(p.x(0.04f), p.y(0.04f))) }
             }
-            "Cuerpo" -> with(Contenedores) { escarapela(Offset(p.x(0.5f), p.y(0.38f)), p.w * 0.3f); if (!p.hecho) drawCircle(p.sombra, p.w * 0.3f, Offset(p.x(0.5f), p.y(0.38f))) }
+            "Cuerpo" -> {
+                if (p.hecho) with(Contenedores) { escarapela(Offset(p.x(0.5f), p.y(0.38f)), p.w * 0.3f) }
+                else drawCircle(p.sombra, p.w * 0.3f, Offset(p.x(0.5f), p.y(0.38f)))
+                caja(p, 0.47f, 0.68f, 0.53f, 0.77f)
+            }
             "Mente" -> {
                 // La balanza en equilibrio.
                 caja(p, 0.48f, 0.12f, 0.52f, 0.72f); caja(p, 0.34f, 0.72f, 0.66f, 0.76f)
@@ -740,7 +749,7 @@ object TrofeosTema {
                 // Fasces: el haz de varas atado con cintas.
                 for (k in 0 until 5) caja(p, 0.39f + k * 0.045f, 0.12f, 0.425f + k * 0.045f, 0.74f)
                 listOf(0.24f, 0.44f, 0.64f).forEach { yy -> drawRect(rojo, Offset(p.x(0.37f), p.y(yy)), Size(p.x(0.26f), p.y(0.025f))) }
-                drawPath(Path().apply { moveTo(p.x(0.62f), p.y(0.16f)); quadraticBezierTo(p.x(0.84f), p.y(0.14f), p.x(0.82f), p.y(0.3f)); lineTo(p.x(0.62f), p.y(0.26f)); close() }, p.metal(0.62f, 0.84f))
+                drawPath(Path().apply { moveTo(p.x(0.62f), p.y(0.16f)); quadraticTo(p.x(0.84f), p.y(0.14f), p.x(0.82f), p.y(0.3f)); lineTo(p.x(0.62f), p.y(0.26f)); close() }, p.metal(0.62f, 0.84f))
             }
             else -> {
                 // El nivel: un triángulo con su plomada, símbolo de la igualdad.

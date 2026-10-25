@@ -281,8 +281,8 @@ object Personaje {
                     quadraticTo(c.x + r * 1.5f, top - 13 * u, c.x + r * 1.35f, top - 2 * u); quadraticTo(c.x + r * 0.9f, top - 6 * u, c.x + r * 1.05f, top + 4 * u); close()
                 }, Color(0xFFB22234))
                 drawRect(Color(0xFFF1E7D2), Offset(c.x - r * 1.12f, top + 1.5f * u), Size(r * 2.2f, 3 * u))
-                drawCircle(Color(0xFF1F3A6E), 3 * u, Offset(c.x - r * 0.55f, top - 1 * u)); drawCircle(Color.White, 2 * u, Offset(c.x - r * 0.55f, top - 1 * u))
-                drawCircle(Color(0xFFB22234), 1 * u, Offset(c.x - r * 0.55f, top - 1 * u))
+                drawCircle(Color.White, 3.2f * u, Offset(c.x - r * 0.55f, top - 1 * u)); drawCircle(Color(0xFFB22234), 3 * u, Offset(c.x - r * 0.55f, top - 1 * u), style = Stroke(1.2f * u))
+                drawCircle(Color(0xFF1F3A6E), 1.1f * u, Offset(c.x - r * 0.55f, top - 1 * u))
             }
         }
     }

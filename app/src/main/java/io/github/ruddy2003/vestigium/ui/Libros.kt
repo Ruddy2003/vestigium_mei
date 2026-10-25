@@ -520,7 +520,7 @@ private fun DrawScope.libroCerrado(t: TemaId, m: Materia) {
             val x = ini.x + lomo + w * 0.06f; val an = w * 0.018f
             listOf(c(0xFF1F3A6E), c(0xFFF4F1E8), c(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, Offset(x + i * an, ini.y), Size(an, tam.height)) }
             val o = Offset(x + an * 1.5f, ini.y + tam.height * 0.5f)
-            drawCircle(c(0xFF1F3A6E), h * 0.1f, o); drawCircle(c(0xFFF4F1E8), h * 0.066f, o); drawCircle(c(0xFFB22234), h * 0.034f, o)
+            drawCircle(c(0xFFB22234), h * 0.1f, o); drawCircle(c(0xFFF4F1E8), h * 0.066f, o); drawCircle(c(0xFF1F3A6E), h * 0.034f, o)
         }
         else -> {}
     }
@@ -683,7 +683,7 @@ private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Ma
             } else if (tema == TemaId.URSS) { drawCircle(m.acento, w * 0.16f, Offset(w / 2, hh * 0.66f)) }
             else if (tema == TemaId.REVOLUCION) {
                 val o = Offset(w / 2, hh * 0.66f)
-                drawCircle(Color(0xFF1F3A6E), w * 0.2f, o); drawCircle(Color(0xFFF4F1E8), w * 0.13f, o); drawCircle(Color(0xFFB22234), w * 0.065f, o)
+                drawCircle(Color(0xFFB22234), w * 0.2f, o); drawCircle(Color(0xFFF4F1E8), w * 0.13f, o); drawCircle(Color(0xFF1F3A6E), w * 0.065f, o)
             }
             if (!noche && tema == TemaId.BOTANICO) {
                 // Un escarabajo estampado en oro sobre el cuero.

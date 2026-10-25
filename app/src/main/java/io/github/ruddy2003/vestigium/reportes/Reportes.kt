@@ -292,12 +292,15 @@ object Reportes {
                 } else c.drawCircle(o, yy, r, L.trazo(L.linea, 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(6f, 6f), 0f) })
             }
             y += 2 * r + 18f
-            // ---- diario: una hoja por cada 80 palabras, apiladas como un cuaderno
+            // ---- diario: hojas apiladas como un cuaderno; el día que más escribiste llega a diez hojas
             if (dias.any { it.palabras > 0 }) {
-                rotulo("páginas escritas")
-                val alto = 120f; val base = y + alto
+                val maxPal = dias.maxOf { it.palabras }
+                val porHoja = maxOf(10, (maxPal + 9) / 10)
+                rotulo("páginas escritas · una hoja = $porHoja palabras")
+                val maxHojas = ((maxPal + porHoja - 1) / porHoja).coerceIn(1, 10)
+                val alto = maxHojas * 9.5f + 14f; val base = y + alto
                 dias.forEachIndexed { i, d ->
-                    val hojas = if (d.palabras == 0) 0 else ((d.palabras + 79) / 80).coerceIn(1, 12)
+                    val hojas = if (d.palabras == 0) 0 else ((d.palabras + porHoja - 1) / porHoja).coerceIn(1, 10)
                     val o = cx(i); val hw = col * 0.3f
                     for (k in 0 until hojas) {
                         val yy = base - (k + 1) * 9.5f; val dx = if (k % 2 == 0) -1.5f else 1.5f
@@ -329,23 +332,24 @@ object Reportes {
                 }
                 y = base + 36f
             }
-            // ---- pasos: una huella por cada 2 000
+            // ---- pasos: una huella por cada 2 000, que van subiendo
             if (dias.any { (it.pasos ?: 0) > 0 }) {
-                rotulo("pasos")
-                val filas = 5; val base = y + filas * 18f
+                rotulo("pasos · una huella = 2,000")
+                val filas = 5; val base = y + filas * 26f + 6f
                 dias.forEachIndexed { i, d ->
                     val p0 = d.pasos ?: return@forEachIndexed
                     val k = ((p0 + 1999) / 2000).toInt().coerceIn(0, 10)
                     val o = cx(i)
                     for (j in 0 until k) {
                         val izq = j % 2 == 0; val fila = j / 2
-                        val xx = o + (if (izq) -9f else 9f); val yy = base - fila * 18f - (if (izq) 0f else 7f)
-                        c.drawOval(RectF(xx - 5f, yy - 8f, xx + 5f, yy + 4f), L.relleno(L.primario))
+                        val xx = o + (if (izq) -11f else 11f); val yy = base - fila * 26f - (if (izq) 0f else 12f)
+                        c.drawOval(RectF(xx - 6f, yy - 11f, xx + 6f, yy + 5f), L.relleno(L.primario))
+                        c.drawOval(RectF(xx - 4.5f, yy + 7f, xx + 4.5f, yy + 13f), L.relleno(L.primario))
                     }
                     val tv = if (p0 >= 1000) "%.1fk".format(p0 / 1000.0) else "$p0"; val pv = L.p(L.tenue, 18f, L.mono)
-                    c.drawText(tv, o - pv.measureText(tv) / 2, base + 28f, pv)
+                    c.drawText(tv, o - pv.measureText(tv) / 2, base + 40f, pv)
                 }
-                y = base + 40f
+                y = base + 54f
             }
             // ---- momentos: un punto por cada uno
             if (dias.any { it.momentos > 0 }) {

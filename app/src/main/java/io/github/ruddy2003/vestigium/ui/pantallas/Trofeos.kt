@@ -118,10 +118,10 @@ fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: 
 }
 
 /** El trofeo de los temas históricos: la obra o el objeto de su categoría (ver [TrofeosTema]) sobre el pedestal del tema. */
-internal fun DrawScope.dibujarTrofeoTema(tema: TemaId, categoria: String, nivel: Int, hecho: Boolean, pedestal: Color, tinta: Color) {
+internal fun DrawScope.dibujarTrofeoTema(tema: TemaId, categoria: String, nivel: Int, hecho: Boolean, colorPedestal: Color, tinta: Color) {
     val (oscuro, base, brillo) = METAL[nivel - 1]
     val p = TrofeosTema.Pincel(size.width, size.height, hecho, nivel, oscuro, base, brillo, tinta.copy(alpha = 0.13f))
-    with(TrofeosTema) { pedestal(tema, p, pedestal); figura(tema, categoria, p) }
+    with(TrofeosTema) { pedestal(tema, p, colorPedestal); figura(tema, categoria, p) }
     destellos(nivel - 1, hecho)
 }
 

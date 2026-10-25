@@ -58,7 +58,7 @@ object MapasCampana {
                 drawPath(silueta, tinta.copy(alpha = 0.08f))
                 drawPath(silueta, tinta.copy(alpha = 0.25f), style = Stroke(1f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3 * d))))
                 val alto = h * avance.coerceIn(0f, 1f)
-                clipRect(0f, h - alto, w, h) { drawPath(silueta, cs.primary.copy(alpha = if (oscuro) 0.3f else 0.18f)) }
+                clipRect(0f, h - alto, w, h) { drawPath(silueta, cs.primary.copy(alpha = if (oscuro) 0.16f else 0.14f)) }
             }
             TemaId.RENACIMIENTO -> {
                 // El cuadro sobre el caballete: primero la retícula del boceto, luego el color que va entrando.
@@ -141,8 +141,8 @@ object MapasCampana {
                 for (k in 0 until 12) { val a = k * PI / 6; drawLine(Color(0xFFD4AF37), Offset(c.x + (r * 1.1f * cos(a)).toFloat(), c.y + (r * 1.1f * sin(a)).toFloat()), Offset(c.x + (r * 1.7f * cos(a)).toFloat(), c.y + (r * 1.7f * sin(a)).toFloat()), 1.2f * d) }
                 drawCircle(col, r, c)
             } else { drawRect(col, Offset(c.x - r, c.y - r * 0.7f), Size(r * 2, r * 1.4f)); drawLine(cs.onSurface.copy(alpha = 0.6f), Offset(c.x - r, c.y - r * 0.7f), Offset(c.x - r, c.y + r * 1.4f), 1f * d) }
-            // La escarapela: azul afuera, el color del día en medio y rojo al centro.
-            TemaId.REVOLUCION -> { drawCircle(Color(0xFF1F3A6E), r * 1.15f, c); drawCircle(col, r * 0.8f, c); drawCircle(Color(0xFFB22234), r * 0.38f, c) }
+            // La escarapela: rojo afuera, el color del día en medio y azul al centro.
+            TemaId.REVOLUCION -> { drawCircle(Color(0xFFB22234), r * 1.15f, c); drawCircle(col, r * 0.8f, c); drawCircle(Color(0xFF1F3A6E), r * 0.38f, c) }
             else -> drawCircle(col, r, c)
         }
     }

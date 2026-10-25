@@ -47,6 +47,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.data.Carta
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Mundo
@@ -154,8 +155,10 @@ private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
                 Column(Modifier.padding(vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     val tinta = if (sel) cs.onPrimary else cs.primary
                     Canvas(Modifier.size(width = 30.dp, height = 20.dp)) { icono(id, tinta) }
-                    Text(if (Estilo.mayusculas) nombre.uppercase() else nombre, style = MaterialTheme.typography.labelLarge, color = if (sel) cs.onPrimary else cs.onSurface,
-                        modifier = Modifier.padding(top = 4.dp))
+                    // En mayúsculas y con letra ancha (griego, Revolución) «MOMENTOS» no cabe: se achica un poco en lugar de partirse.
+                    val estilo = MaterialTheme.typography.labelLarge.let { if (Estilo.mayusculas && nombre.length > 7) it.copy(fontSize = it.fontSize * 0.82f, letterSpacing = 0.sp) else it }
+                    Text(if (Estilo.mayusculas) nombre.uppercase() else nombre, style = estilo, color = if (sel) cs.onPrimary else cs.onSurface,
+                        maxLines = 1, softWrap = false, modifier = Modifier.padding(top = 4.dp))
                     Text("${n[id] ?: 0}", style = MaterialTheme.typography.labelSmall, color = (if (sel) cs.onPrimary else cs.onSurfaceVariant).copy(alpha = 0.85f))
                 }
             }

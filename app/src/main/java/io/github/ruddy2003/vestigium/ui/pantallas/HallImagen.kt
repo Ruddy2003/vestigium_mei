@@ -38,15 +38,18 @@ object HallImagen {
         val arriba = 210f; val abajo = 90f
 
         fun zona(x: Float, y: Float, w: Float, h: Float, dibujo: DrawScope.() -> Unit) {
-            lienzo.save(); lienzo.translate(x, y)
+            lienzo.save(); lienzo.translate(x, y); lienzo.clipRect(0f, 0f, w, h)
             CanvasDrawScope().draw(densidad, LayoutDirection.Ltr, lienzo, Size(w, h), dibujo)
             lienzo.restore()
         }
 
+        val lista = piezas.take(12)
+        val porFila = if (lista.size <= 4) 2 else 3
+
         // Fondo y escena.
         zona(0f, 0f, ANCHO.toFloat(), ALTO.toFloat()) { drawRect(cs.background) }
         zona(0f, arriba, ANCHO.toFloat(), ALTO - arriba - abajo) {
-            if (tema in SalonesTema.TEMAS) with(SalonesTema) { escena(tema, cs) } else fondoFamilia(tema, cs)
+            if (tema in SalonesTema.TEMAS) with(SalonesTema) { escena(tema, cs, porFila) } else fondoFamilia(tema, cs)
         }
 
         // Encabezado.
@@ -57,9 +60,7 @@ object HallImagen {
         val pt = L.p(L.primario, if (titulo.length > 20) 58f else 72f, L.titulo, 0.03f)
         c.drawText(titulo, 64f, 170f, pt)
 
-        // Las piezas: 3 por fila, hasta 4 filas.
-        val lista = piezas.take(12)
-        val porFila = if (lista.size <= 4) 2 else 3
+        // Las piezas: 2 o 3 por fila, hasta 4 filas.
         val filas = ((lista.size + porFila - 1) / porFila).coerceAtLeast(1)
         val celdaW = ANCHO / porFila.toFloat()
         val celdaH = (ALTO - arriba - abajo) / filas.coerceAtLeast(if (porFila == 2) 2 else 3).toFloat()

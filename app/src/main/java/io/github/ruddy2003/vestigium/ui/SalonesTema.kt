@@ -24,16 +24,21 @@ import kotlin.math.sin
 object SalonesTema {
     val TEMAS = TrofeosTema.TEMAS
 
-    fun DrawScope.escena(tema: TemaId, cs: ColorScheme) {
+    /**
+     * La escena detrás de las piezas. [columnas] = cuántas piezas hay por fila: la arquitectura (columnas, arcos,
+     * hornacinas) se acomoda para enmarcar cada columna de piezas y nunca pasar por detrás de una.
+     */
+    fun DrawScope.escena(tema: TemaId, cs: ColorScheme, columnas: Int = 2) {
         val oscuro = cs.background.luminance() < 0.5f
+        val n = columnas.coerceAtLeast(1)
         when (tema) {
-            TemaId.ROMANO -> atrio(cs, oscuro)
-            TemaId.HELENO -> stoa(cs, oscuro)
-            TemaId.MEDIEVAL -> salaGestas(cs, oscuro)
-            TemaId.GOTICO -> nave(cs, oscuro)
-            TemaId.RENACIMIENTO -> galeria(cs, oscuro)
-            TemaId.NAPOLEON -> imperial(cs, oscuro)
-            TemaId.REVOLUCION -> panteon(cs, oscuro)
+            TemaId.ROMANO -> atrio(cs, oscuro, n)
+            TemaId.HELENO -> stoa(cs, oscuro, n)
+            TemaId.MEDIEVAL -> salaGestas(cs, oscuro, n)
+            TemaId.GOTICO -> nave(cs, oscuro, n)
+            TemaId.RENACIMIENTO -> galeria(cs, oscuro, n)
+            TemaId.NAPOLEON -> imperial(cs, oscuro, n)
+            TemaId.REVOLUCION -> panteon(cs, oscuro, n)
             else -> {}
         }
     }
@@ -90,148 +95,158 @@ object SalonesTema {
 
     // ------------------------------------------------------------------ las escenas
 
-    /** El atrio: zócalo de pórfido, pilastras de mármol con capitel corintio y el friso con la greca. */
-    private fun DrawScope.atrio(cs: ColorScheme, oscuro: Boolean) {
-        val w = size.width; val h = size.height
-        val marmol = (if (oscuro) Color(0xFF2A2F34) else Color(0xFFDCDAD2)).copy(alpha = 0.55f)
-        val porfido = Color(0xFF7C2433).copy(alpha = if (oscuro) 0.35f else 0.22f)
-        drawRect(porfido, Offset(0f, h * 0.78f), Size(w, h * 0.22f))
-        drawRect(cs.tertiary.copy(alpha = 0.35f), Offset(0f, h * 0.78f), Size(w, 2f))
-        val n = 4; val paso = w / n
-        for (i in 0..n) columnaClasica(i * paso, 30f, h * 0.78f, 16f, marmol, 2)
-        drawRect(marmol, Offset(0f, 0f), Size(w, 22f))
-        greca(4f, 12f, cs.tertiary.copy(alpha = 0.45f))
+    /** El atrio: pilastras de mármol con capitel corintio entre las piezas, el friso con la greca y un zócalo de pórfido abajo. */
+    private fun DrawScope.atrio(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val marmol = (if (oscuro) Color(0xFF2A2F34) else Color(0xFFDCDAD2)).copy(alpha = 0.6f)
+        val porfido = Color(0xFF7C2433).copy(alpha = if (oscuro) 0.3f else 0.18f)
+        drawRect(porfido, Offset(0f, h - 26 * d), Size(w, 26 * d))
+        drawRect(cs.tertiary.copy(alpha = 0.35f), Offset(0f, h - 26 * d), Size(w, 1.5f * d))
+        val paso = w / n
+        for (i in 0..n) columnaClasica(i * paso, 22 * d, h - 26 * d, 7 * d, marmol, 2)
+        drawRect(marmol, Offset(0f, 0f), Size(w, 14 * d))
+        greca(2.5f * d, 8 * d, cs.tertiary.copy(alpha = 0.45f))
     }
 
-    /** La stoa: columnas jónicas, el cielo del Egeo entre ellas arriba y el estilóbato abajo. */
-    private fun DrawScope.stoa(cs: ColorScheme, oscuro: Boolean) {
-        val w = size.width; val h = size.height
+    /** La stoa: columnas jónicas entre las piezas, el cielo del Egeo arriba y el estilóbato abajo. */
+    private fun DrawScope.stoa(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
         drawRect(Brush.verticalGradient(listOf(cs.secondary.copy(alpha = if (oscuro) 0.18f else 0.14f), Color.Transparent), 0f, h * 0.4f), Offset.Zero, Size(w, h * 0.4f))
-        val marmol = (if (oscuro) Color(0xFF3A3550) else Color(0xFFEDE7DA)).copy(alpha = 0.7f)
-        val n = 5; val paso = w / n
-        for (i in 0..n) columnaClasica(i * paso + paso / 2 - paso / 2, 34f, h - 18f, 14f, marmol, 1)
-        drawRect(marmol, Offset(0f, 0f), Size(w, 26f))
-        greca(6f, 12f, cs.primary.copy(alpha = 0.45f))
-        for (k in 0 until 3) drawRect(marmol, Offset(0f, h - 18f + k * 6f), Size(w, 5f))
+        val marmol = (if (oscuro) Color(0xFF3A3550) else Color(0xFFEDE7DA)).copy(alpha = 0.75f)
+        val paso = w / n
+        for (i in 0..n) columnaClasica(i * paso, 20 * d, h - 10 * d, 7 * d, marmol, 1)
+        drawRect(marmol, Offset(0f, 0f), Size(w, 15 * d))
+        greca(3 * d, 8 * d, cs.primary.copy(alpha = 0.45f))
+        for (k in 0 until 3) drawRect(marmol, Offset(0f, h - 10 * d + k * 3.4f * d), Size(w, 3 * d))
     }
 
-    /** La sala de gestas: sillares de piedra, tapices colgados con su borde de oro y antorchas. */
-    private fun DrawScope.salaGestas(cs: ColorScheme, oscuro: Boolean) {
-        val w = size.width; val h = size.height
+    /** La sala de gestas: sillares, un tapiz colgado entre cada par de piezas y antorchas en los muros de los lados. */
+    private fun DrawScope.salaGestas(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
         val junta = (if (oscuro) Color.Black else Color(0xFF8A7A5C)).copy(alpha = 0.18f)
+        val sw = 26 * d; val sh = 10 * d
         var y = 0f; var k = 0
-        while (y < h) { val off = if (k % 2 == 0) 0f else 34f; var x = -off; while (x < w) { drawRect(junta, Offset(x, y), Size(68f, 26f), style = Stroke(1f)); x += 68f }; y += 26f; k++ }
+        while (y < h) { val off = if (k % 2 == 0) 0f else sw / 2; var x = -off; while (x < w) { drawRect(junta, Offset(x, y), Size(sw, sh), style = Stroke(1f)); x += sw }; y += sh; k++ }
         val tapices = listOf(Color(0xFFB0281E), Color(0xFF1F3F8F))
-        listOf(0.16f, 0.84f).forEachIndexed { i, fx ->
-            val x0 = w * fx - 30f; val x1 = w * fx + 30f; val yb = min(h * 0.55f, 230f)
-            val tela = Path().apply { moveTo(x0, 14f); lineTo(x1, 14f); lineTo(x1, yb); lineTo(w * fx, yb - 20f); lineTo(x0, yb); close() }
-            drawPath(tela, tapices[i].copy(alpha = 0.38f))
-            drawPath(tela, Color(0xFFD4A93C).copy(alpha = 0.55f), style = Stroke(2f))
-            drawLine(Color(0xFF5A3A22).copy(alpha = 0.6f), Offset(x0 - 8f, 14f), Offset(x1 + 8f, 14f), 4f)
-            estrella(Offset(w * fx, yb * 0.45f), 12f, 5f, Color(0xFFD4A93C).copy(alpha = 0.6f), 6)
+        val paso = w / n
+        for (i in 1 until n) {
+            val cx = i * paso; val an = 11 * d; val yb = h * 0.9f
+            val tela = Path().apply { moveTo(cx - an, 6 * d); lineTo(cx + an, 6 * d); lineTo(cx + an, yb); lineTo(cx, yb - 8 * d); lineTo(cx - an, yb); close() }
+            drawPath(tela, tapices[i % 2].copy(alpha = 0.32f))
+            drawPath(tela, Color(0xFFD4A93C).copy(alpha = 0.55f), style = Stroke(1.2f * d))
+            drawLine(Color(0xFF5A3A22).copy(alpha = 0.6f), Offset(cx - an - 3 * d, 6 * d), Offset(cx + an + 3 * d, 6 * d), 2 * d)
+            var yy = 40 * d; while (yy < yb - 30 * d) { estrella(Offset(cx, yy), 5 * d, 2 * d, Color(0xFFD4A93C).copy(alpha = 0.55f), 6); yy += 120 * d }
         }
-        // Antorchas.
-        listOf(0.5f).forEach { fx ->
-            val x = w * fx; drawLine(Color(0xFF5A3A22).copy(alpha = 0.5f), Offset(x, 60f), Offset(x, 26f), 4f)
-            drawPath(Path().apply { moveTo(x, 4f); quadraticTo(x + 9f, 16f, x, 26f); quadraticTo(x - 9f, 16f, x, 4f); close() }, Color(0xFFFFB347).copy(alpha = 0.6f))
-            drawCircle(Brush.radialGradient(listOf(Color(0xFFFFB347).copy(alpha = 0.18f), Color.Transparent), Offset(x, 20f), 90f), 90f, Offset(x, 20f))
+        // Antorchas en los muros de los lados.
+        listOf(6 * d, w - 6 * d).forEach { x ->
+            var yy = 30 * d
+            while (yy < h) {
+                drawLine(Color(0xFF5A3A22).copy(alpha = 0.5f), Offset(x, yy + 14 * d), Offset(x, yy), 2 * d)
+                drawPath(Path().apply { moveTo(x, yy - 10 * d); quadraticTo(x + 4 * d, yy - 4 * d, x, yy); quadraticTo(x - 4 * d, yy - 4 * d, x, yy - 10 * d); close() }, Color(0xFFFFB347).copy(alpha = 0.6f))
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFB347).copy(alpha = 0.16f), Color.Transparent), Offset(x, yy - 5 * d), 40 * d), 40 * d, Offset(x, yy - 5 * d))
+                yy += 230 * d
+            }
         }
     }
 
-    /** La nave gótica: arcos apuntados, manchas de luz de colores en el suelo y el rosetón arriba al centro. */
-    private fun DrawScope.nave(cs: ColorScheme, oscuro: Boolean) {
-        val w = size.width; val h = size.height
-        val piedra = (if (oscuro) Color(0xFF1A2356) else Color(0xFFC9BC9F)).copy(alpha = 0.55f)
-        val n = 4; val paso = w / n
+    /** La nave gótica: un arco apuntado sobre cada columna de piezas, manchas de luz de colores y el rosetón entre los arcos. */
+    private fun DrawScope.nave(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val piedra = (if (oscuro) Color(0xFF2E3A7A) else Color(0xFFC9BC9F)).copy(alpha = 0.6f)
+        val paso = w / n
         for (i in 0 until n) {
-            val x0 = i * paso + 8f; val x1 = (i + 1) * paso - 8f; val yArr = 70f
-            drawPath(Path().apply { moveTo(x0, h); lineTo(x0, yArr); quadraticTo(x0, yArr - 40f, (x0 + x1) / 2, 14f); quadraticTo(x1, yArr - 40f, x1, yArr); lineTo(x1, h) }, piedra, style = Stroke(3f))
+            val x0 = i * paso + 6 * d; val x1 = (i + 1) * paso - 6 * d; val yArr = 34 * d
+            drawPath(Path().apply { moveTo(x0, h); lineTo(x0, yArr); quadraticTo(x0, yArr - 20 * d, (x0 + x1) / 2, 4 * d); quadraticTo(x1, yArr - 20 * d, x1, yArr); lineTo(x1, h) }, piedra, style = Stroke(2 * d))
         }
-        for (i in 0..n) drawRect(piedra, Offset(i * paso - 5f, 40f), Size(10f, h - 40f))
+        for (i in 0..n) drawRect(piedra, Offset(i * paso - 3 * d, 20 * d), Size(6 * d, h - 20 * d))
         // Luz de los vitrales.
         val luces = listOf(Color(0xFFB3122E), Color(0xFF1F3A9E), Color(0xFFE2B34A), Color(0xFF2E7D4A))
         val az = java.util.Random(4)
-        repeat(9) { k ->
-            val c = Offset(az.nextFloat() * w, h * (0.35f + az.nextFloat() * 0.6f))
-            drawCircle(Brush.radialGradient(listOf(luces[k % 4].copy(alpha = if (oscuro) 0.22f else 0.14f), Color.Transparent), c, 60f), 60f, c)
+        repeat(10) { k ->
+            val c = Offset(az.nextFloat() * w, h * (0.2f + az.nextFloat() * 0.75f))
+            drawCircle(Brush.radialGradient(listOf(luces[k % 4].copy(alpha = if (oscuro) 0.2f else 0.12f), Color.Transparent), c, 34 * d), 34 * d, c)
         }
-        // Rosetón.
-        val c = Offset(w / 2, 46f); val R = 34f
-        drawCircle(Color(0xFF1F3A9E).copy(alpha = 0.35f), R, c)
-        for (k in 0 until 12) { val a = k * PI / 6; drawCircle(luces[k % 4].copy(alpha = 0.45f), R * 0.22f, Offset(c.x + (R * 0.68f * cos(a)).toFloat(), c.y + (R * 0.68f * sin(a)).toFloat())) }
-        drawCircle(Color(0xFFE2B34A).copy(alpha = 0.6f), R * 0.25f, c)
-        drawCircle(piedra, R, c, style = Stroke(3f))
+        // Rosetones entre los arcos.
+        for (i in 1 until n) {
+            val c = Offset(i * paso, 24 * d); val R = 14 * d
+            drawCircle(Color(0xFF1F3A9E).copy(alpha = 0.4f), R, c)
+            for (k in 0 until 12) { val a = k * PI / 6; drawCircle(luces[k % 4].copy(alpha = 0.5f), R * 0.22f, Offset(c.x + (R * 0.68f * cos(a)).toFloat(), c.y + (R * 0.68f * sin(a)).toFloat())) }
+            drawCircle(Color(0xFFE2B34A).copy(alpha = 0.65f), R * 0.25f, c)
+            drawCircle(piedra, R, c, style = Stroke(1.5f * d))
+        }
     }
 
-    /** La galería: artesonado en perspectiva arriba, hornacinas en el muro y el pavimento en damero que huye al centro. */
-    private fun DrawScope.galeria(cs: ColorScheme, oscuro: Boolean) {
-        val w = size.width; val h = size.height
+    /** La galería: artesonado arriba, una hornacina que enmarca cada columna de piezas y el pavimento en damero que huye. */
+    private fun DrawScope.galeria(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
         val tinta = (if (oscuro) Color(0xFFEFE0BE) else Color(0xFF3A2614)).copy(alpha = 0.16f)
-        val fuga = Offset(w / 2, h * 0.42f)
-        // Artesonado.
-        val alto = 60f
-        for (k in 0..8) { val x = w * k / 8; drawLine(tinta, Offset(x, 0f), Offset(fuga.x + (x - fuga.x) * 0.55f, alto), 1.2f) }
-        listOf(0f, alto * 0.5f, alto).forEach { yy -> val f = yy / alto; drawLine(tinta, Offset(fuga.x - w / 2 * (1 - 0.45f * f), yy), Offset(fuga.x + w / 2 * (1 - 0.45f * f), yy), 1.2f) }
-        // Hornacinas.
-        listOf(0.18f, 0.82f).forEach { fx ->
-            val x0 = w * fx - 26f; val x1 = w * fx + 26f
-            drawPath(Path().apply { moveTo(x0, h * 0.6f); lineTo(x0, 110f); arcTo(Rect(x0, 84f, x1, 136f), 180f, 180f, false); lineTo(x1, h * 0.6f) }, tinta, style = Stroke(1.6f))
-            drawArc(cs.primary.copy(alpha = 0.12f), 180f, 180f, true, Offset(x0 + 6f, 92f), Size(40f, 36f))
+        val fuga = Offset(w / 2, 26 * d)
+        val alto = 24 * d
+        for (k in 0..8) { val x = w * k / 8; drawLine(tinta, Offset(x, 0f), Offset(fuga.x + (x - fuga.x) * 0.7f, alto), 1f) }
+        listOf(0f, alto * 0.5f, alto).forEach { yy -> drawLine(tinta, Offset(0f, yy), Offset(w, yy), 1f) }
+        val paso = w / n
+        for (i in 0 until n) {
+            val x0 = i * paso + 10 * d; val x1 = (i + 1) * paso - 10 * d; val r = (x1 - x0) / 2
+            drawPath(Path().apply { moveTo(x0, h - 30 * d); lineTo(x0, alto + 8 * d + r); arcTo(Rect(x0, alto + 8 * d, x1, alto + 8 * d + 2 * r), 180f, 180f, false); lineTo(x1, h - 30 * d) }, tinta, style = Stroke(1.4f * d))
+            drawArc(cs.primary.copy(alpha = 0.07f), 180f, 180f, true, Offset(x0 + 4 * d, alto + 12 * d), Size(x1 - x0 - 8 * d, 2 * r - 8 * d))
         }
         // Pavimento en damero.
-        val y0 = h * 0.72f
-        for (k in -10..10) drawLine(tinta, Offset(fuga.x + k * w / 10, h), Offset(fuga.x + k * w / 10 * 0.5f, y0), 1f)
-        var yy = y0; var paso = 10f
-        while (yy < h) { drawLine(tinta, Offset(0f, yy), Offset(w, yy), 1f); yy += paso; paso *= 1.35f }
+        val y0 = h - 30 * d
+        for (k in -10..10) drawLine(tinta, Offset(w / 2 + k * w / 10, h), Offset(w / 2 + k * w / 10 * 0.6f, y0), 1f)
+        var yy = y0; var pasoY = 4 * d
+        while (yy < h) { drawLine(tinta, Offset(0f, yy), Offset(w, yy), 1f); yy += pasoY; pasoY *= 1.35f }
     }
 
-    /** La galería imperial: pilastras de mármol verde, guirnaldas de laurel en oro y cortinajes carmesí arriba. */
-    private fun DrawScope.imperial(cs: ColorScheme, oscuro: Boolean) {
-        val w = size.width; val h = size.height
+    /** La galería imperial: pilastras de mármol verde entre las piezas, guirnaldas de laurel en oro y el cortinaje carmesí arriba. */
+    private fun DrawScope.imperial(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
         val verde = Color(0xFF2F5D4A).copy(alpha = if (oscuro) 0.45f else 0.3f)
         val oro = Color(0xFFD4AF37).copy(alpha = 0.6f)
-        val n = 4; val paso = w / n
-        for (i in 0..n) { val x = i * paso; drawRect(verde, Offset(x - 9f, 50f), Size(18f, h - 50f)); drawRect(oro, Offset(x - 12f, 46f), Size(24f, 5f)); drawRect(oro, Offset(x - 12f, h - 8f), Size(24f, 5f)) }
-        // Guirnaldas de laurel entre pilastras.
+        val paso = w / n; val arriba = 26 * d
+        for (i in 0..n) { val x = i * paso; drawRect(verde, Offset(x - 4 * d, arriba), Size(8 * d, h - arriba)); drawRect(oro, Offset(x - 6 * d, arriba - 2 * d), Size(12 * d, 2.5f * d)); drawRect(oro, Offset(x - 6 * d, h - 4 * d), Size(12 * d, 2.5f * d)) }
         for (i in 0 until n) {
-            val x0 = i * paso + 12f; val x1 = (i + 1) * paso - 12f
-            val p = Path().apply { moveTo(x0, 56f); quadraticTo((x0 + x1) / 2, 96f, x1, 56f) }
-            drawPath(p, oro, style = Stroke(2f))
-            for (k in 1..7) { val t = k / 8f; val x = x0 + (x1 - x0) * t; val y = 56f + 80f * t * (1 - t)
-                drawOval(oro, Offset(x - 5f, y - 2.5f), Size(10f, 5f)) }
-            estrella(Offset((x0 + x1) / 2, 30f), 9f, 3.6f, oro)
+            val x0 = i * paso + 6 * d; val x1 = (i + 1) * paso - 6 * d
+            val y0 = arriba + 4 * d; val caida = 14 * d
+            drawPath(Path().apply { moveTo(x0, y0); quadraticTo((x0 + x1) / 2, y0 + 2 * caida, x1, y0) }, oro, style = Stroke(1.2f * d))
+            for (k in 1..9) { val t = k / 10f; val x = x0 + (x1 - x0) * t; val y = y0 + 2 * caida * 2 * t * (1 - t)
+                drawOval(oro, Offset(x - 2.5f * d, y - 1.2f * d), Size(5 * d, 2.4f * d)) }
+            estrella(Offset((x0 + x1) / 2, y0 + caida * 2.2f), 4 * d, 1.6f * d, oro)
         }
         // Cortinaje.
         val carmesi = Color(0xFFA3172E).copy(alpha = if (oscuro) 0.5f else 0.35f)
-        val tela = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, 22f); var x = w; while (x > 0f) { val x2 = (x - w / 6).coerceAtLeast(0f); quadraticTo((x + x2) / 2, 46f, x2, 22f); x = x2 }; close() }
+        val tela = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, 10 * d); var x = w; while (x > 0f) { val x2 = (x - w / (3 * n)).coerceAtLeast(0f); quadraticTo((x + x2) / 2, 20 * d, x2, 10 * d); x = x2 }; close() }
         drawPath(tela, carmesi)
-        drawLine(oro, Offset(0f, 22f), Offset(w, 22f), 2f)
+        drawLine(oro, Offset(0f, 10 * d), Offset(w, 10 * d), 1 * d)
     }
 
-    /** El panteón: la cúpula artesonada en arcos, columnas lisas y estandartes tricolores. */
-    private fun DrawScope.panteon(cs: ColorScheme, oscuro: Boolean) {
-        val w = size.width; val h = size.height
-        val piedra = (if (oscuro) Color(0xFF3A3F4A) else Color(0xFFD8D1C2)).copy(alpha = 0.6f)
-        // La cúpula: arcos concéntricos con casetones.
-        val c = Offset(w / 2, 120f)
+    /** El panteón: la cúpula artesonada arriba, columnas lisas entre las piezas y estandartes tricolores en los muros. */
+    private fun DrawScope.panteon(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val piedra = (if (oscuro) Color(0xFF3A3F4A) else Color(0xFFD8D1C2)).copy(alpha = 0.65f)
+        // La cúpula: arcos concéntricos con casetones, apoyada en la cornisa.
+        val base = min(w * 0.42f, h * 0.4f); val c = Offset(w / 2, base)
         for (k in 0 until 4) {
-            val r = w * (0.48f - k * 0.1f)
-            drawArc(piedra, 180f, 180f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(2f))
-            if (k < 3) for (j in 1 until 10) { val a = PI + j * PI / 10; val r2 = w * (0.48f - (k + 1) * 0.1f)
-                drawLine(piedra, Offset(c.x + (r * cos(a)).toFloat(), c.y + (r * sin(a)).toFloat()), Offset(c.x + (r2 * cos(a)).toFloat(), c.y + (r2 * sin(a)).toFloat()), 1.2f) }
+            val r = base * (0.96f - k * 0.2f)
+            drawArc(piedra, 180f, 180f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(1.5f * d))
+            if (k < 3) for (j in 1 until 10) { val a = PI + j * PI / 10; val r2 = base * (0.96f - (k + 1) * 0.2f)
+                drawLine(piedra, Offset(c.x + (r * cos(a)).toFloat(), c.y + (r * sin(a)).toFloat()), Offset(c.x + (r2 * cos(a)).toFloat(), c.y + (r2 * sin(a)).toFloat()), 1f) }
         }
-        drawRect(piedra, Offset(0f, c.y), Size(w, 8f))
-        // Columnas lisas.
-        val n = 4; val paso = w / n
-        for (i in 0..n) columnaClasica(i * paso, c.y + 26f, h - 10f, 14f, piedra, 0)
-        // Estandartes tricolores entre columnas.
+        drawRect(piedra, Offset(0f, c.y), Size(w, 4 * d))
+        val paso = w / n
+        for (i in 0..n) columnaClasica(i * paso, c.y + 10 * d, h - 6 * d, 6 * d, piedra, 0)
+        // Estandartes tricolores en los muros de los lados.
         val tri = listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234))
-        listOf(0, n - 1).forEach { i ->
-            val x0 = i * paso + paso * 0.3f; val an = paso * 0.4f / 3; val y0 = c.y + 34f; val y1 = min(h * 0.6f, y0 + 150f)
-            tri.forEachIndexed { k, col -> drawRect(col.copy(alpha = if (k == 1) 0.5f else 0.38f), Offset(x0 + k * an, y0), Size(an, y1 - y0)) }
-            drawLine(Color(0xFFC9A04A).copy(alpha = 0.6f), Offset(x0 - 6f, y0), Offset(x0 + 3 * an + 6f, y0), 3f)
+        val an = 3.2f * d
+        listOf(8 * d, w - 8 * d - 3 * an).forEach { x0 ->
+            var y0 = c.y + 18 * d
+            while (y0 < h - 60 * d) {
+                tri.forEachIndexed { k, col -> drawRect(col.copy(alpha = if (k == 1) 0.6f else 0.45f), Offset(x0 + k * an, y0), Size(an, 46 * d)) }
+                drawLine(Color(0xFFC9A04A).copy(alpha = 0.6f), Offset(x0 - 2 * d, y0), Offset(x0 + 3 * an + 2 * d, y0), 1.5f * d)
+                y0 += 220 * d
+            }
         }
         // La escarapela en lo alto de la cúpula.
-        drawCircle(tri[0].copy(alpha = 0.6f), 13f, Offset(c.x, 30f)); drawCircle(tri[1].copy(alpha = 0.8f), 9f, Offset(c.x, 30f)); drawCircle(tri[2].copy(alpha = 0.7f), 5f, Offset(c.x, 30f))
+        val e = Offset(c.x, c.y - base * 0.96f + 8 * d)
+        drawCircle(tri[2].copy(alpha = 0.6f), 6 * d, e); drawCircle(tri[1].copy(alpha = 0.85f), 4 * d, e); drawCircle(tri[0].copy(alpha = 0.7f), 2.2f * d, e)
     }
 }
