@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.content.Context
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Geo
@@ -118,7 +119,7 @@ object Logros {
         Repo.cartas.filter { it.abierta }.mapNotNull { it.abierta_el?.take(10) ?: it.abrir_en }.minOrNull().let { f ->
             out += Logro("carta_abierta", "Del pasado", "Abre una carta que te escribiste", "✉", "Diario", 2, 1.0, if (f != null) 1.0 else 0.0, f)
         }
-        val momentos = Repo.momentos.filter { it.tipo != "muestreo" && it.tipo != "recaida" }.map { it.fecha }.sorted()
+        val momentos = Repo.momentos.filter { it.tipo != "muestreo" && !it.privado }.map { it.fecha }.sorted()
         escalones("momentos", "Diario", "◷", "momentos", listOf(10.0 to "Coleccionista", 100.0 to "Cien momentos", 1000.0 to "Mil momentos"), momentos.size.toDouble(),
             { alLlegar(momentos, it.toInt()) }, { "Registra ${it.toInt()} momentos" })
         val avisos = Repo.momentos.filter { it.tipo == "muestreo" }.map { it.fecha }.sorted()

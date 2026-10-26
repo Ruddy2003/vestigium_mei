@@ -86,7 +86,7 @@ class QuickActivity : FragmentActivity() {
         val tipo = intent.getStringExtra(TIPO)
         var pantallaInicial = when (modo) { M_MOMENTO, M_ANIMO -> M_ANIMO; else -> modo }
         if (modo == M_MOMENTO && tipo != null) {
-            if (tipo == "impulso" || tipo == "recaida") { inicial = crear(tipo, origen, null, null); pantallaInicial = "privado" }
+            if (tipo == "impulso" || tipo == "recaida" || (tipo == "libido" && Repo.config.seguimiento_privado)) { inicial = crear(tipo, origen, null, null); pantallaInicial = "privado" }
             else {
                 // Un sentimiento (del widget) o un tipo de momento de antes: se guarda como registro de ánimo.
                 val m0 = crear("animo", origen, null, null)
@@ -132,7 +132,7 @@ class QuickActivity : FragmentActivity() {
                             Meandro(Modifier.padding(bottom = 12.dp))
                             val ir: (String) -> Unit = { destino ->
                                 when (destino) {
-                                    "impulso", "recaida" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
+                                    "impulso", "recaida", "libido" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
                                     else -> pantalla = destino
                                 }
                             }
@@ -209,12 +209,13 @@ class QuickActivity : FragmentActivity() {
         }
         val botones = listOfNotNull(
             "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto" to M_GASTO, "Sueño" to M_SUENO, "Diario de hoy" to "diario",
-            "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
+            "Nota" to "notas", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
+            if (Repo.config.seguimiento_privado) "Libido" to "libido" else null,
         )
         FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
             botones.forEach { (t, d) ->
                 Surface(onClick = {
-                    if (d == "diario") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, "diario")
+                    if (d == "diario" || d == "notas") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, d)
                         .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
                     else ir(d)
                 }, modifier = Modifier.weight(1f).heightIn(min = 56.dp), shape = RoundedCornerShape(4.dp), color = cs.surface, border = BorderStroke(1.dp, cs.outline)) {
@@ -296,6 +297,7 @@ class QuickActivity : FragmentActivity() {
             BotonSecundario("＋ sustancia") { ir(M_CONSUMO) }
             BotonSecundario("＋ impulso") { ir("impulso") }
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ recaída") { ir("recaida") }
+            if (Repo.config.seguimiento_privado) BotonSecundario("＋ libido") { ir("libido") }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             if (m != null && inicial == null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Deshacer") }
@@ -336,6 +338,7 @@ class QuickActivity : FragmentActivity() {
         val mm = m
         val t = Catalogo.tipo(mm.tipo)
         Encabezado("Guardado: ${if (discreto) t?.discreto ?: "" else t?.nombre ?: mm.tipo}", "A las ${Fechas.horaDe(mm.ts)}. Lo demás es opcional; puedes cerrar.")
+        if (mm.tipo == "libido") { DetalleLibido(mm); return }
         if (mm.tipo == "recaida") DetalleRecaida(mm) { m = it }
         Etiqueta(t?.pregunta ?: "Detalle")
         OutlinedTextField(value = texto, onValueChange = { texto = it; actualizar(mm.id) { x -> x.copy(texto = it) } },
@@ -353,6 +356,34 @@ class QuickActivity : FragmentActivity() {
             }) { Text("Deshacer") }
             BotonPrincipal("Listo") { terminar() }
         }
+    }
+
+    /**
+     * Libido (seguimiento privado): qué tan presente, de 0 a 5, y en qué está el foco. Distinta del impulso; sin texto,
+     * sin logros, rachas ni widget. «También es un impulso» crea el registro de impulso a la misma hora.
+     */
+    @Composable
+    private fun DetalleLibido(mm: Momento) {
+        var nivel by remember(mm.id) { mutableStateOf(mm.intensidad) }
+        var foco by remember(mm.id) { mutableStateOf(mm.foco) }
+        var impulso by remember(mm.id) { mutableStateOf<Momento?>(null) }
+        Etiqueta("Qué tan presente (0 a 5)")
+        Escala(nivel, 0, 5, Catalogo.ANCLAS["libido"]) { v -> nivel = v; actualizar(mm.id) { it.copy(intensidad = v) } }
+        Etiqueta("En qué está el foco")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Catalogo.FOCOS.forEach { o -> Ficha(o.nombre, foco == o.id) { foco = if (foco == o.id) null else o.id; actualizar(mm.id) { it.copy(foco = foco) } } }
+        }
+        Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            if (impulso == null) TextButton(onClick = {
+                val i = Momento(Repo.nuevoId(), mm.ts, mm.fecha, "impulso", intensidad = nivel?.coerceIn(1, 5), lat = mm.lat, lon = mm.lon, lugar = mm.lugar, origen = mm.origen)
+                Repo.guardarMomento(i); impulso = i
+                Toast.makeText(this@QuickActivity, "Impulso registrado a la misma hora", Toast.LENGTH_SHORT).show()
+            }) { Text("también es un impulso") }
+            else TextButton(onClick = { impulso?.let { Repo.borrarMomento(it.id) }; impulso = null }) { Text("quitar el impulso") }
+            BotonPrincipal("Listo") { terminar() }
+        }
+        TextButton(onClick = { Repo.borrarMomento(mm.id); impulso?.let { Repo.borrarMomento(it.id) }; Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Deshacer") }
     }
 
     /** Lo que ayuda a entender una recaída: qué la detonó, en qué aparato y qué hacías antes. Todo opcional. */

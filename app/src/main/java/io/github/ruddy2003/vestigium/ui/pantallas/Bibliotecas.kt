@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
@@ -305,7 +306,7 @@ fun PantallaSueno(nav: Nav) {
 
 // ---------------------------------------------------------------- Momentos
 
-internal fun momentosVisibles() = Repo.config.seguimiento_privado.let { privado -> Repo.momentos.filter { privado || it.tipo != "recaida" } }
+internal fun momentosVisibles() = Repo.config.seguimiento_privado.let { privado -> Repo.momentos.filter { privado || !it.privado } }
 
 /** Los días con algo registrado al momento (ánimo, momentos o sustancias visibles), del más reciente al más antiguo. */
 fun diasConMomentos(): List<String> =

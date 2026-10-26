@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -71,7 +72,7 @@ fun PantallaVida(nav: Nav) {
     Hoja("Vida", subtitulo = "Tu vida vista de lejos: la semana, el año, tu gente, tus lugares y tus logros.", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
         RejillaTarjetas(listOf(
             Tarjetita("Resumen semanal", a?.let { "%.1f".format(it) + flecha } ?: "—", "ánimo de esta semana", "semana"),
-            Tarjetita("La cinta", "${Repo.momentos.count { it.fecha == hoy && it.tipo != "recaida" } + Repo.tramos.count { it.fecha == hoy } + Repo.consumos.count { it.fecha == hoy && Sustancias.visible(it) }}",
+            Tarjetita("La cinta", "${Repo.momentos.count { it.fecha == hoy && !it.privado } + Repo.tramos.count { it.fecha == hoy } + Repo.consumos.count { it.fecha == hoy && Sustancias.visible(it) }}",
                 "cosas con hora hoy", "cinta"),
             Tarjetita("Calendario", "$diasMes / ${hoy.takeLast(2).toInt()}", "días con diario este mes", "calendario"),
             Tarjetita("Tu año", "${Repo.dias.keys.count { it.startsWith(anio) }}", "días registrados en $anio", "anno"),

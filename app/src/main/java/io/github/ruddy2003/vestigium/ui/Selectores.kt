@@ -68,6 +68,13 @@ fun SelectorHora(valor: LocalDateTime?, atajos: List<Int> = emptyList(), etiquet
     }
 }
 
+/** Abre el calendario de Android para elegir un día (AAAA-MM-DD). Con [desdeManana], solo días futuros. */
+fun elegirFecha(ctx: android.content.Context, inicial: String?, desdeManana: Boolean = false, onFecha: (String) -> Unit) {
+    val base = inicial?.let { runCatching { Fechas.parse(it) }.getOrNull() } ?: java.time.LocalDate.now().plusDays(if (desdeManana) 1 else 0)
+    DatePickerDialog(ctx, { _, y, m, d -> onFecha(Fechas.iso(java.time.LocalDate.of(y, m + 1, d))) }, base.year, base.monthValue - 1, base.dayOfMonth)
+        .apply { if (desdeManana) datePicker.minDate = System.currentTimeMillis() + 86_400_000L }.show()
+}
+
 fun LocalDateTime.aMillis(): Long = atZone(Fechas.zona()).toInstant().toEpochMilli()
 fun horaLocal(ms: Long): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(ms), Fechas.zona()).withSecond(0).withNano(0)
 

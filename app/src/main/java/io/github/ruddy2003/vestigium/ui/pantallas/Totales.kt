@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.app.DatePickerDialog
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
@@ -248,7 +249,7 @@ private fun EnDiario(q: String, desde: String, hasta: String, abrir: (String) ->
         Repo.dias.values.filter { it.fecha in desde..hasta }.sortedByDescending { it.fecha }.forEach { d ->
             listOf(d.nota, d.sueno_texto, d.mejor_momento, d.peor_momento).firstOrNull { Totales.normal(it).contains(nq) }?.let { porDia[d.fecha] = it }
         }
-        Repo.momentos.filter { it.fecha in desde..hasta && (Repo.config.seguimiento_privado || it.tipo != "recaida") && Totales.normal(it.texto).contains(nq) }.forEach { m -> porDia.putIfAbsent(m.fecha, m.texto) }
+        Repo.momentos.filter { it.fecha in desde..hasta && (Repo.config.seguimiento_privado || !it.privado) && Totales.normal(it.texto).contains(nq) }.forEach { m -> porDia.putIfAbsent(m.fecha, m.texto) }
         porDia.entries.sortedByDescending { it.key }.map { it.key to it.value }
     }
     if (hallados.isEmpty()) return

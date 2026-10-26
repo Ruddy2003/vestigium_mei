@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
@@ -71,7 +72,7 @@ fun PantallaMomentos(nav: Nav) {
         BotonAnimo(Modifier.padding(top = 14.dp)) { abrir(QuickActivity.M_ANIMO) }
         Ayuda("También puedes agregar los widgets de Vestigium a tu pantalla de inicio o el botón al panel de ajustes rápidos.", Modifier.padding(top = 8.dp))
 
-        val recientes = Repo.momentos.filter { it.fecha >= Fechas.sumar(Fechas.diaLogico(), -30) && (Repo.config.seguimiento_privado || it.tipo != "recaida") }.sortedByDescending { it.ts }
+        val recientes = Repo.momentos.filter { it.fecha >= Fechas.sumar(Fechas.diaLogico(), -30) && (Repo.config.seguimiento_privado || !it.privado) }.sortedByDescending { it.ts }
         Seccion("Últimos 30 días", "${recientes.size} registros. Toca uno para editarlo.") {
             if (recientes.isEmpty()) Vacio("Todavía no hay momentos. Toca «¿Cómo estás ahora?» cuando algo te pase por la cabeza.")
             var ultimoDia = ""

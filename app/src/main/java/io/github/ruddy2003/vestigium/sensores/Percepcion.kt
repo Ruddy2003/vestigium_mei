@@ -51,6 +51,40 @@ object Percepcion {
         }
     }
 
+    /** Si el teléfono tiene barómetro (el Pixel sí). */
+    fun tieneBarometro(ctx: Context): Boolean = ctx.getSystemService(SensorManager::class.java)?.getDefaultSensor(Sensor.TYPE_PRESSURE) != null
+
+    /** Una lectura del barómetro (hPa), o null si no hay sensor. */
+    suspend fun presion(ctx: Context, esperaMs: Long = 1500): Double? {
+        val sm = ctx.getSystemService(SensorManager::class.java) ?: return null
+        val sensor = sm.getDefaultSensor(Sensor.TYPE_PRESSURE) ?: return null
+        return withTimeoutOrNull(esperaMs) {
+            suspendCancellableCoroutine { cont ->
+                val l = object : SensorEventListener {
+                    override fun onSensorChanged(e: SensorEvent) { sm.unregisterListener(this); if (cont.isActive) cont.resume(e.values[0].toDouble()) }
+                    override fun onAccuracyChanged(s: Sensor?, a: Int) {}
+                }
+                sm.registerListener(l, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+                cont.invokeOnCancellation { sm.unregisterListener(l) }
+            }
+        }?.takeIf { it in 850.0..1090.0 }
+    }
+
+    /**
+     * Cambio de presión en unas tres horas: la lectura de ahora menos la más cercana a hace tres horas (entre 2.5 y 3.5 h).
+     * Las lecturas de las últimas cuatro horas se guardan en las preferencias como «ms:hPa;…».
+     */
+    private fun cambio3h(p: android.content.SharedPreferences, ahora: Long, hpa: Double): Double? {
+        val previas = p.getString("presiones", "").orEmpty().split(";").mapNotNull { x ->
+            val (a, b) = x.split(":").takeIf { it.size == 2 } ?: return@mapNotNull null
+            (a.toLongOrNull() ?: return@mapNotNull null) to (b.toDoubleOrNull() ?: return@mapNotNull null)
+        }.filter { ahora - it.first < 4 * 3_600_000L }
+        p.edit().putString("presiones", (previas + (ahora to hpa)).joinToString(";") { "${it.first}:${"%.2f".format(java.util.Locale.US, it.second)}" }).apply()
+        val objetivo = ahora - 3 * 3_600_000L
+        val ref = previas.filter { ahora - it.first in (150 * 60_000L)..(210 * 60_000L) }.minByOrNull { kotlin.math.abs(it.first - objetivo) } ?: return null
+        return hpa - ref.second
+    }
+
     @Suppress("DEPRECATION")
     private fun wifi(ctx: Context): String? {
         val wm = ctx.applicationContext.getSystemService(WifiManager::class.java) ?: return null
@@ -114,6 +148,8 @@ object Percepcion {
         val enchufado = (bat?.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) ?: 0) != 0
         val nivel = bat?.let { val l = it.getIntExtra(BatteryManager.EXTRA_LEVEL, -1); val e = it.getIntExtra(BatteryManager.EXTRA_SCALE, 100); if (l >= 0 && e > 0) l * 100 / e else null }
         val luz = if (Repo.config.medir_luz) runCatching { lux(ctx) }.getOrNull() else null
+        val hpa = if (Repo.config.barometro) runCatching { presion(ctx) }.getOrNull() else null
+        val cambio = hpa?.let { cambio3h(p, ahora, it) }
 
         // Carga de noche: si se conectó entre las 20:00 y las 4:00 y duró más de 3 horas, marca aproximada de cuándo dormiste.
         val desde = p.getLong("carga_desde", 0L)
@@ -138,6 +174,11 @@ object Percepcion {
                 val k = n.luz_n.toMutableList().also { while (it.size < 24) it.add(0) }
                 s[hora] = s[hora] + luz; k[hora] = k[hora] + 1
                 n = n.copy(luz_suma = s, luz_n = k, luz_max = maxOf(n.luz_max ?: 0.0, luz), luz_alta_min = n.luz_alta_min + if (luz >= 1000) min else 0)
+            }
+            if (hpa != null) {
+                n = n.copy(presion_suma = n.presion_suma + hpa, presion_n = n.presion_n + 1, presion_min = minOf(n.presion_min ?: hpa, hpa), presion_max = maxOf(n.presion_max ?: hpa, hpa))
+                // Del día se guarda el cambio a tres horas más grande (con su signo): las bajadas bruscas son las que se notan.
+                if (cambio != null && kotlin.math.abs(cambio) > kotlin.math.abs(n.cambio_presion_3h ?: 0.0)) n = n.copy(cambio_presion_3h = Math.round(cambio * 100) / 100.0)
             }
             n
         }

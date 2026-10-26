@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.app.DatePickerDialog
 import androidx.compose.foundation.BorderStroke
@@ -89,7 +90,7 @@ private fun capas(): List<CapaCal> {
         CapaCal("pantalla", "pantalla", false, { f -> Repo.pantalla[f]?.total_min?.toDouble() }, datos) { "${(it / 60).toInt()} h ${(it % 60).toInt()} m" },
         CapaCal("gasto", "gasto", false, { f -> gastos[f] }, datos) { "$%,.0f".format(it) },
         CapaCal("fotos", "fotos", false, { f -> Repo.fotos[f]?.fotos?.toDouble() }, datos) { "%.0f".format(it) },
-        CapaCal("momentos", "momentos", false, { f -> Repo.momentos.count { it.fecha == f && it.tipo != "muestreo" && it.tipo != "recaida" }.toDouble().takeIf { it > 0 } }, datos) { "%.0f".format(it) },
+        CapaCal("momentos", "momentos", false, { f -> Repo.momentos.count { it.fecha == f && it.tipo != "muestreo" && !it.privado }.toDouble().takeIf { it > 0 } }, datos) { "%.0f".format(it) },
         CapaCal("lluvia", "lluvia", false, { f -> Repo.entorno[f]?.precip_mm }, datos) { "%.1f mm".format(it) },
     )
 }
@@ -173,7 +174,7 @@ fun PantallaCalendario(nav: Nav) {
                 if (vals.isNotEmpty()) Clave("animus", "%.2f de media · ${vals.size} días".format(vals.average()))
                 val mejor = dias.filter { Repo.dias[it]?.valencia != null }.maxByOrNull { Repo.dias[it]!!.valencia!! }
                 mejor?.let { Clave("optimus", Fechas.corto(it) + " · " + Repo.dias[it]?.valencia) }
-                val mom = Repo.momentos.count { it.fecha.startsWith(mes) && it.tipo != "muestreo" && it.tipo != "recaida" }
+                val mom = Repo.momentos.count { it.fecha.startsWith(mes) && it.tipo != "muestreo" && !it.privado }
                 Clave("momenta", "$mom")
                 val gasto = Repo.gastos.filter { it.fecha.startsWith(mes) }.sumOf { it.monto }
                 if (gasto > 0) Clave("svmptvs", "$%,.0f".format(gasto))
@@ -192,7 +193,7 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
     // Con «fotos», los días con foto del día la muestran de fondo (las letras van en blanco sobre una sombra).
     val conFoto = verFotos && d?.foto != null
     val tinta = if (conFoto) Color.White else Tonos.sobre(fondo)
-    val nMom = Repo.momentos.count { it.fecha == fecha && it.tipo != "muestreo" && it.tipo != "recaida" }
+    val nMom = Repo.momentos.count { it.fecha == fecha && it.tipo != "muestreo" && !it.privado }
     val marca = io.github.ruddy2003.vestigium.ui.Estilo.marca(fecha)
     Box(
         modifier.aspectRatio(0.78f).clip(RoundedCornerShape(3.dp)).background(fondo)

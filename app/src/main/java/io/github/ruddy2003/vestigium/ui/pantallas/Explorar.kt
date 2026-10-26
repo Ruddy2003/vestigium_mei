@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
@@ -106,7 +107,7 @@ fun PantallaExplorar(nav: Nav) {
         val nDias = Repo.dias.size
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra("$nDias", "días con diario", Modifier.weight(1f))
-            Cifra("${Repo.momentos.count { it.tipo != "muestreo" && it.tipo != "recaida" }}", "registros propios", Modifier.weight(1f))
+            Cifra("${Repo.momentos.count { it.tipo != "muestreo" && !it.privado }}", "registros propios", Modifier.weight(1f))
             Cifra("${Repo.momentos.count { it.tipo == "muestreo" }}", "avisos respondidos", Modifier.weight(1f))
         }
         Ayuda(if (nDias >= 90) "Con 90 días o más ya se pueden detectar relaciones moderadas." else "Faltan ${90 - nDias} días para tener potencia suficiente; antes de eso, todo es pista, no evidencia.", Modifier.padding(top = 8.dp))
@@ -120,7 +121,10 @@ fun PantallaExplorar(nav: Nav) {
             }
         }
 
-        Seccion("Cobertura", "Últimas 16 semanas. Más intenso = mejor valencia. Hueco = sin registro.") { Tarjeta { Cobertura() } }
+        Seccion("Cobertura", "Últimas 16 semanas. Más intenso = mejor valencia. Hueco = sin registro.") {
+            Tarjeta { Cobertura() }
+            TextButton(onClick = { nav.ir("cobertura") }) { Text("cobertura de cada variable: ¿ya hay 30 días? ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+        }
 
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("por día", !porSemana) { porSemana = false }
@@ -450,7 +454,7 @@ private fun CentroEntender(nav: Nav) {
         Triple("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: "")) to "totales",
         Triple("Mapa", "${Repo.lugares.size}", "lugares marcados") to "mapa",
         Triple("Experimentos personales", "${Repo.experimentos.count { it.activo }}", "en curso") to "experimentos",
-        Triple("La cinta", "${Repo.momentos.count { it.fecha == hoy && it.tipo != "recaida" } + Repo.tramos.count { it.fecha == hoy }}", "cosas con hora hoy") to "cinta",
+        Triple("La cinta", "${Repo.momentos.count { it.fecha == hoy && !it.privado } + Repo.tramos.count { it.fecha == hoy }}", "cosas con hora hoy") to "cinta",
         Triple("Constelación", "${Repo.dias.values.filter { it.fecha >= Fechas.sumar(hoy, -365) }.flatMap { Texto.personas(it.nota) }.toSet().size}", "personas en tu cielo este año") to "constelacion",
     ) + (if (Repo.config.seguimiento_privado) listOf(Triple("Impulsos y recaídas", io.github.ruddy2003.vestigium.data.Recaidas.dias().maxOrNull()?.let { "${Fechas.diasEntre(it, hoy)}" } ?: "—", "días desde la última") to "recaidas") else emptyList())
     tarjetas.chunked(2).forEach { fila ->

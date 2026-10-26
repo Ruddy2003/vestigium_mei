@@ -5,6 +5,7 @@ import android.os.SystemClock
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -246,6 +247,11 @@ fun PantallaLugares(nav: Nav) {
             Tarjeta { Mapa(puntos, Repo.lugares, muestreos) }
             io.github.ruddy2003.vestigium.ui.BotonSecundario("ver con calles →", Modifier.padding(top = 8.dp)) { nav.ir("mapa") }
         }
+        TiposDeLugar(Modifier.padding(top = 10.dp))
+        val pendLug = io.github.ruddy2003.vestigium.data.Lugares.pendientes().size
+        TextButton(onClick = { nav.ir("lugar_nuevo") }) {
+            Text(if (pendLug > 0) "$pendLug sitio(s) nuevos esperando que digas si son especiales ›" else "lugares especiales: cuándo pregunta y sitios ignorados ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        }
         Seccion("Marcar dónde estoy ahora") {
             Tarjeta {
                 OutlinedTextField(value = nombre, onValueChange = { nombre = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre (ej. SEDECO, casa de mis abuelos)") }, singleLine = true)
@@ -269,6 +275,7 @@ fun PantallaLugares(nav: Nav) {
             if (Repo.lugares.isEmpty()) Vacio("Aún no marcas lugares.")
             Repo.lugares.forEach { l ->
                 var borrar by remember(l.id) { mutableStateOf(false) }
+                var cambiarTipo by remember(l.id) { mutableStateOf(false) }
                 val vis = Repo.visitas.filter { it.lugar == l.id && it.entrada >= Fechas.sumar(Fechas.hoyCalendario(), -30) }
                 val horas = vis.sumOf { v -> v.salida?.let { (Fechas.millis(it) - Fechas.millis(v.entrada)) / 3_600_000.0 } ?: 0.0 }
                 val aqui = muestreos.filter { m -> m.lugar == l.id || (m.lat != null && m.lon != null && Geo.distanciaM(m.lat, m.lon, l.lat, l.lon) <= l.radio_m) }
@@ -278,6 +285,9 @@ fun PantallaLugares(nav: Nav) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(l.nombre, style = MaterialTheme.typography.titleMedium)
+                            Text(Catalogo.nombreTipoLugar(l.tipo).lowercase() + " · cambiar tipo", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.clickable { cambiarTipo = !cambiarTipo })
+                            if (cambiarTipo) FilaFichas(Catalogo.TIPOS_LUGAR, l.tipo) { t -> if (t != null) Repo.guardarLugar(l.copy(tipo = t)); cambiarTipo = false }
                             Ayuda("${vis.size} visitas en 30 días · ${"%.1f".format(horas)} h")
                             Ayuda(if (aqui.size < 5) "Pocos datos de ánimo aquí (${aqui.size}); se necesitan 5." else
                                 "Valencia aquí ${"%.1f".format(media)}" + (general?.let { g -> " (tu promedio ${"%.1f".format(g)})" } ?: "") + (act?.let { " · energía ${"%.1f".format(it)}" } ?: ""))

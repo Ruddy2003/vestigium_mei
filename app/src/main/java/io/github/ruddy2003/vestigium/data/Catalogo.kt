@@ -31,6 +31,8 @@ object Catalogo {
         "impulso" to mapOf(
             0 to "Ninguno", 1 to "Leve, pasó solo", 2 to "Lo noté varias veces", 3 to "Fuerte, me costó",
             4 to "Muy fuerte, casi todo el día", 5 to "Incontrolable"),
+        "libido" to mapOf(
+            0 to "Nada", 1 to "Leve", 2 to "Presente", 3 to "Notable", 4 to "Fuerte", 5 to "Dominante"),
         "prediccion_manana" to mapOf(
             1 to "Muy desagradable", 2 to "Desagradable", 3 to "Algo desagradable", 4 to "Neutral",
             5 to "Algo agradable", 6 to "Agradable", 7 to "Muy agradable"),
@@ -79,7 +81,10 @@ object Catalogo {
     val MOMENTOS_WIDGET = listOf("pensando_en", "preocupacion", "tristeza", "ansiedad", "alegria", "gratitud", "impulso", "idea")
     /** Recaída: solo aparece con el seguimiento privado activado y nunca sale de la app (salvo en tu exportación a R). */
     val RECAIDA = TipoMomento("recaida", "Recaída", "K", "¿Qué pasó antes?")
-    fun tipo(id: String): TipoMomento? = MOMENTOS.firstOrNull { it.id == id } ?: RECAIDA.takeIf { it.id == id }
+    /** Libido: solo con el seguimiento privado; distinta del impulso. Sin texto, sin logros, rachas ni widget. */
+    val LIBIDO = TipoMomento("libido", "Libido", "L", "¿En qué está el foco?")
+    val FOCOS = listOf(Opcion("pensando", "Pensando"), Opcion("viendo", "Viendo"), Opcion("conversando", "Conversando"), Opcion("nada", "Nada en particular"), Opcion("otro", "Otro"))
+    fun tipo(id: String): TipoMomento? = MOMENTOS.firstOrNull { it.id == id } ?: RECAIDA.takeIf { it.id == id } ?: LIBIDO.takeIf { it.id == id }
     fun nombreTipo(id: String): String = if (id == "muestreo" || id == "animo") "Ánimo" else tipo(id)?.nombre ?: id
 
     // ------------------------------------------------------------------ ánimo: sentimientos y pensamientos
@@ -123,7 +128,7 @@ object Catalogo {
 
     /** Cómo se nombra un registro: sus sentimientos o, si no hay, su pensamiento o «Ánimo». */
     fun titulo(m: Momento, discreto: Boolean): String {
-        if (m.tipo == "impulso" || m.tipo == "recaida") return nombreTipo(m.tipo).let { n -> if (discreto) tipo(m.tipo)?.discreto ?: n else n }
+        if (m.tipo == "impulso" || m.tipo == "recaida" || m.tipo == "libido") return nombreTipo(m.tipo).let { n -> if (discreto) tipo(m.tipo)?.discreto ?: n else n }
         val e = emocionesDe(m).map { if (it == OTRO && !m.emocion_otra.isNullOrBlank() && !discreto) m.emocion_otra else nombreSentimiento(it, discreto) }
         if (e.isNotEmpty()) return e.joinToString(" · ")
         pensamientoDe(m)?.let { p -> return if (discreto) "·" else PENSAMIENTOS.firstOrNull { it.id == p }?.nombre ?: p }
@@ -213,5 +218,13 @@ object Catalogo {
     val DETONANTES = listOf("aburrimiento", "soledad", "estres", "tristeza", "ansiedad", "noche_insomnio", "redes_sociales", "cansancio", "otro")
     val HABITOS_SUGERIDOS = listOf("Meditar", "Leer", "Estudiar chino", "Escribir a mano", "Dormir antes de 00:00", "Sin pantalla al despertar")
     val TIPOS_LUGAR = listOf(Opcion("casa", "Casa"), Opcion("familia", "Familia"), Opcion("trabajo", "Trabajo"),
-        Opcion("escuela", "Escuela"), Opcion("ejercicio", "Ejercicio"), Opcion("social", "Social"), Opcion("otro", "Otro"))
+        Opcion("escuela", "Escuela"), Opcion("ejercicio", "Ejercicio"), Opcion("social", "Social"), Opcion("bar", "Bar"), Opcion("ocio", "Ocio"),
+        Opcion("salud", "Salud"), Opcion("naturaleza", "Naturaleza"), Opcion("viaje", "Viaje"), Opcion("otro", "Otro"))
+    fun nombreTipoLugar(id: String) = TIPOS_LUGAR.firstOrNull { it.id == id }?.nombre ?: id
+
+    /** Notas sueltas y metas. */
+    val TIPOS_NOTA = listOf(Opcion("idea", "Idea"), Opcion("pensamiento", "Pensamiento"), Opcion("proposito", "Propósito"), Opcion("recordatorio", "Recordatorio"))
+    val HORIZONTES = listOf(Opcion("corto", "Corto", "hasta 3 meses"), Opcion("mediano", "Mediano", "hasta un año"), Opcion("largo", "Largo", "más de un año"))
+    val ESTADOS_META = listOf(Opcion("activa", "Activa"), Opcion("pausada", "Pausada"), Opcion("lograda", "Lograda"), Opcion("abandonada", "Abandonada"))
+    val REVISIONES = listOf(Opcion("semanal", "Cada semana"), Opcion("mensual", "Cada mes"), Opcion("fecha", "En una fecha"), Opcion("ninguna", "Sin revisión"))
 }

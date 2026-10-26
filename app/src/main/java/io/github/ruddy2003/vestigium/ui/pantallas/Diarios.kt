@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -101,7 +102,7 @@ fun PantallaDiario(nav: Nav) {
         ctx.startActivity(i)
     }
     val privado = Repo.config.seguimiento_privado
-    val visiblesM = remember(Repo.momentos, privado) { Repo.momentos.filter { privado || it.tipo != "recaida" } }
+    val visiblesM = remember(Repo.momentos, privado) { Repo.momentos.filter { privado || !it.privado } }
     val porDia = remember(visiblesM) { visiblesM.groupBy { it.fecha } }
     val fechas = remember(Repo.dias, visiblesM) {
         (Repo.dias.values.filter { it.nota.isNotBlank() || it.sueno_texto.isNotBlank() }.map { it.fecha } + visiblesM.map { it.fecha }).distinct().sortedDescending()

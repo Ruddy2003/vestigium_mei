@@ -83,7 +83,7 @@ vm_archivos <- c(
   biblioteca = "vm_biblioteca.csv", comunicacion = "vm_comunicacion.csv", conexiones = "vm_conexiones.csv",
   subrayados = "vm_subrayados.csv", google_dia = "vm_google_dia.csv", google = "vm_google.csv", whatsapp = "vm_whatsapp.csv",
   nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv",
-  tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv")
+  tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", metas = "vm_metas.csv")
 
 vm <- compact(lapply(vm_archivos, vm_leer))
 
@@ -459,6 +459,28 @@ vm_sustancias <- function() {
     labs(x = "bebidas estándar", y = "cruda (0 a 5)") + theme_minimal()
 }
 
+#' Lugares: horas por tipo de lugar en cada semana y la valencia de tus registros de ánimo en cada tipo.
+vm_lugares <- function() {
+  cols <- grep("^horas_tipo_", names(vm$panel), value = TRUE)
+  if (!length(cols)) stop("No hay lugares con tipo todavía.")
+  h <- vm$panel |> select(fecha, all_of(cols)) |> pivot_longer(-fecha, names_to = "tipo", values_to = "horas") |>
+    mutate(tipo = sub("^horas_tipo_", "", tipo), semana = lubridate::floor_date(fecha, "week", week_start = 1)) |>
+    group_by(semana, tipo) |> summarise(horas = sum(horas, na.rm = TRUE), .groups = "drop")
+  if (!is.null(vm$momentos) && "tipo_lugar" %in% names(vm$momentos))
+    print(vm$momentos |> filter(es_animo, !is.na(tipo_lugar), !is.na(valencia)) |> group_by(tipo_lugar) |>
+            summarise(registros = n(), valencia_media = mean(valencia), .groups = "drop") |> arrange(desc(valencia_media)))
+  ggplot(h, aes(semana, horas, fill = tipo)) + geom_col() + labs(x = NULL, y = "horas por semana", fill = "tipo de lugar") + theme_minimal()
+}
+
+#' Barómetro: la valencia del día contra el mayor cambio de presión en tres horas.
+vm_presion <- function() {
+  if (!"cambio_presion_3h" %in% names(vm$panel)) stop("No hay datos del barómetro.")
+  d <- vm$panel |> filter(!is.na(cambio_presion_3h), !is.na(valencia))
+  print(cor.test(d$cambio_presion_3h, d$valencia, method = "spearman", exact = FALSE))
+  ggplot(d, aes(cambio_presion_3h, valencia)) + geom_jitter(width = 0, height = .15, alpha = .5) + geom_smooth(method = "loess", se = FALSE) +
+    labs(x = "cambio de presión en 3 h (hPa)", y = "valencia del día") + theme_minimal()
+}
+
 #' Lee vm_datos.sqlite (la exportación completa en una sola base) como una lista de tablas, con fechas y lógicos convertidos.
 #' Requiere DBI y RSQLite:  install.packages(c("DBI", "RSQLite"))
 vm_leer_sqlite <- function(ruta = file.path(vm_carpeta, "vm_datos.sqlite")) {
@@ -493,5 +515,5 @@ vm_resumen()
 message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
         "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_totales(), vm_buscar('texto'), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
-        "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(),",
+        "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(), vm_lugares(), vm_presion(),",
         "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna'), vm_leer_sqlite()")

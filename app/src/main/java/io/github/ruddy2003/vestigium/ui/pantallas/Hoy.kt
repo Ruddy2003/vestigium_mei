@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.ComponentName
 import android.content.Context
@@ -171,7 +172,8 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
                         modifier = Modifier.clickable { accion(p.accion) }.padding(vertical = 4.dp))
                 }
                 Text("hoy no", style = MaterialTheme.typography.labelLarge, color = tinta.copy(alpha = 0.6f),
-                    modifier = Modifier.clickable { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + extra.associate { it.clave to hoy }) } }.padding(vertical = 4.dp))
+                    modifier = Modifier.clickable { Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + extra.associate { it.clave to hoy },
+                        hoy_no = (c.hoy_no.filter { it >= Fechas.sumar(hoy, -10) } + hoy).distinct()) } }.padding(vertical = 4.dp))
             }
         }
     }
@@ -521,7 +523,7 @@ fun LineaDelTiempo(fecha: String) {
     val tramos = Repo.tramos.filter { it.fecha == fecha }
     if (tramos.isNotEmpty()) pistas += Pista("enfoque", tramos.map { t -> val a = Fechas.millis(t.inicio); Triple(a, a + t.min * 60_000L, if (t.tipo == "siesta") sec else prim) },
         etiquetas = tramos.map { t -> Fechas.millis(t.inicio) to io.github.ruddy2003.vestigium.data.Catalogo.nombreTramo(t.tipo).lowercase() })
-    val mom = Repo.momentos.filter { it.fecha == fecha && (Repo.config.seguimiento_privado || it.tipo != "recaida") }
+    val mom = Repo.momentos.filter { it.fecha == fecha && (Repo.config.seguimiento_privado || !it.privado) }
     if (mom.isNotEmpty()) pistas += Pista("momentos", marcas = mom.map { m -> Fechas.millis(m.ts) to (Tonos.valencia(m.valencia?.toDouble(), oscuro) ?: sec) })
     Repo.notifs[fecha]?.por_hora?.takeIf { it.sum() > 0 }?.let { h -> pistas += Pista("teléfono", calor = h.map { it.toDouble() }) }
     Repo.conexiones[fecha]?.let { cx -> if (cx.luz_n.sum() > 0) pistas += Pista("luz", calor = cx.luz_suma.indices.map { i -> if (cx.luz_n[i] > 0) kotlin.math.ln(1 + cx.luz_suma[i] / cx.luz_n[i]) else 0.0 }) }

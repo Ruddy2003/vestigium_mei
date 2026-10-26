@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Intent
 import android.graphics.Bitmap
@@ -206,8 +207,11 @@ fun PantallaDia(nav: Nav) {
             if (!esHoy) TextButton(onClick = { irA(hoy) }) { Text("hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
             TextButton(onClick = { irA(Fechas.sumar(fecha, 1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) { Text("›", style = MaterialTheme.typography.titleLarge) }
         }
+        // Semana corta: solo cuatro cifras y tres botones.
+        if (esHoy && c.semana_corta) { SemanaCorta(d) { abrirNoche() }; return@Hoja }
         // La frase, siempre arriba, justo debajo del estado.
         FraseDelDia(fecha)
+        if (esHoy) SugerirSemanaCorta(hoy)
         if (esHoy) LoDeAnoche()
 
         val bloqueSueno: @Composable () -> Unit = {
@@ -243,7 +247,7 @@ fun PantallaDia(nav: Nav) {
             }
         }
         val bloqueMomentos: @Composable () -> Unit = {
-        val delDia = Repo.momentos.filter { it.fecha == fecha && (c.seguimiento_privado || it.tipo != "recaida") }
+        val delDia = Repo.momentos.filter { it.fecha == fecha && (c.seguimiento_privado || !it.privado) }
         val sustanciasDia = Repo.consumos.filter { it.fecha == fecha && io.github.ruddy2003.vestigium.data.Sustancias.visible(it) }
             if (delDia.isNotEmpty() || sustanciasDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
                 Tarjeta {
@@ -317,6 +321,10 @@ fun PantallaDia(nav: Nav) {
         Repo.experimentos.filter { it.activo }.forEach { e ->
             val semana = java.time.temporal.ChronoUnit.WEEKS.between(Fechas.parse(e.inicio), Fechas.parse(fecha)).toInt()
             if (semana in e.plan.indices) Aviso("Experimento «${e.nombre}», semana ${semana + 1} de ${e.semanas}: " + if (e.plan[semana]) "esta semana SÍ: ${e.accion}." else "esta semana NO hagas: ${e.accion}.")
+        }
+
+        if (esHoy) TextButton(onClick = { Repo.cambiarConfig { it.copy(semana_corta = true) } }, modifier = Modifier.padding(top = 6.dp)) {
+            Text("pasar a la semana corta (solo lo mínimo)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
 
         // 5. Lo automático, al fondo.
@@ -458,6 +466,12 @@ fun PantallaNoche(nav: Nav) {
                     ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java).putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO)
                         .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, "recaida").putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.ORIGEN, "app"))
                 }) { Text("registrar una recaída con hora y lugar →", style = MaterialTheme.typography.labelLarge) }
+                TextButton(onClick = {
+                    ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java).putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO)
+                        .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, "libido").putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.ORIGEN, "app"))
+                }) { Text("registrar la libido de ahora →", style = MaterialTheme.typography.labelLarge) }
+                val lib = Repo.momentos.filter { it.fecha == fecha && it.tipo == "libido" }
+                if (lib.isNotEmpty()) Clave("libido", lib.joinToString("  ") { Fechas.horaDe(it.ts) + "→" + (it.intensidad ?: "?") })
                 Etiqueta("Qué lo detonó")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Catalogo.DETONANTES.forEach { t ->
@@ -543,6 +557,8 @@ fun PantallaNoche(nav: Nav) {
         Seccion("Medicamentos", "Lo que tomaste hoy, si aplica.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             ListaEtiquetas(d.medicamentos, "nombre del medicamento", normalizar = { Texto.slug(it) }) { cambiar(d.copy(medicamentos = it)) }
         }
+        // El ánimo de ahora, con la hora real: la misma medición cada noche.
+        Seccion("Cómo estás ahora", "Al cerrar el día, con la hora de ahora. Se compara de un día a otro.", numero = n()) { BloqueCierre(fecha) }
         // Cerrar el día: guarda y, si está completo, lo sella con la huella.
         val faltan = listOfNotNull(if (d.valencia == null) "la valencia" else null, if (d.nota.isBlank()) "la nota del diario" else null)
         Spacer(Modifier.height(24.dp))

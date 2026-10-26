@@ -20,6 +20,13 @@ object Avisos {
     const val CANAL_DIARIO = "diario"
     const val CANAL_ESCALAS = "escalas"
     const val CANAL_REPORTES = "reportes"
+    /** Lugares especiales: canal propio con su sonido (se cambia en los ajustes de Android). */
+    const val CANAL_LUGARES = "lugares_especiales"
+    /** Importaciones, metas y notas de recordatorio. */
+    const val CANAL_RECORDATORIOS = "recordatorios"
+    const val ID_IMPORTAR = 2020
+    const val ID_METAS = 2021
+    const val ID_LUGAR = 2030
 
     /** Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). */
     private val SONIDOS = mapOf(
@@ -85,6 +92,15 @@ object Avisos {
     fun crearCanales(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(NotificationChannel(CANAL_REPORTES, nombreCanal(CANAL_REPORTES), importancia(CANAL_REPORTES)))
+        nm.createNotificationChannel(NotificationChannel(CANAL_RECORDATORIOS, "Importaciones y metas", NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = "Un aviso por semana con lo que toca importar, y las metas y notas que toca revisar"
+        })
+        if (nm.getNotificationChannel(CANAL_LUGARES) == null) nm.createNotificationChannel(NotificationChannel(CANAL_LUGARES, "Lugares especiales", NotificationManager.IMPORTANCE_DEFAULT).apply {
+            description = "«¿Es un lugar especial?» cuando llevas un rato en un sitio nuevo"
+            val atributos = android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
+            setSound(uriSonido(ctx, R.raw.n_lugar), atributos)
+        })
         listOf(CANAL_ANIMO, CANAL_DIARIO, CANAL_ESCALAS).forEach { runCatching { canal(ctx, it) } }
     }
 
@@ -218,6 +234,55 @@ object Avisos {
             .setContentIntent(abrirApp(ctx, 2009, "tu_anio"))
             .setAutoCancel(true)
         mostrar(ctx, 2009, b)
+    }
+
+    /** Una vez por semana: lo que toca importar, con «Recordar mañana». */
+    fun importar(ctx: Context, fuentes: List<String>) {
+        if (fuentes.isEmpty()) return
+        crearCanales(ctx)
+        val manana = PendingIntent.getBroadcast(ctx, 2022, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, Recordatorios.MANANA),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(if (fuentes.size == 1) "Toca importar ${fuentes[0].substringBefore(" (")}" else "Toca importar ${fuentes.size} fuentes")
+            .setContentText(fuentes.joinToString(" · "))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(fuentes.joinToString("\n")))
+            .setContentIntent(abrirApp(ctx, ID_IMPORTAR, "datos"))
+            .addAction(0, "Importar ahora", abrirApp(ctx, 2023, "datos"))
+            .addAction(0, "Recordar mañana", manana)
+            .setAutoCancel(true)
+        mostrar(ctx, ID_IMPORTAR, b)
+    }
+
+    /** Metas que toca revisar y notas de recordatorio que llegaron a su fecha. */
+    fun metas(ctx: Context, metas: List<String>, notas: List<String>) {
+        crearCanales(ctx)
+        val titulo = when {
+            metas.isNotEmpty() && notas.isEmpty() -> if (metas.size == 1) "Revisa tu meta: ${metas[0]}" else "Toca revisar ${metas.size} metas"
+            metas.isEmpty() -> if (notas.size == 1) "Recordatorio: ${notas[0]}" else "${notas.size} recordatorios para hoy"
+            else -> "Metas y recordatorios para hoy"
+        }
+        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(titulo)
+            .setContentText((metas + notas).take(4).joinToString(" · "))
+            .setContentIntent(abrirApp(ctx, ID_METAS, if (metas.isNotEmpty()) "metas" else "notas"))
+            .setAutoCancel(true)
+        mostrar(ctx, ID_METAS, b)
+    }
+
+    /** «¿Es un lugar especial?»: abre la hoja para nombrarlo, ignorarlo o dejarlo para después. */
+    fun lugar(ctx: Context, sugerencia: String, minutos: Int) {
+        crearCanales(ctx)
+        val discreto = io.github.ruddy2003.vestigium.data.Repo.config.discreto
+        val b = NotificationCompat.Builder(ctx, CANAL_LUGARES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("¿Es un lugar especial?")
+            .setContentText(if (discreto || sugerencia.isBlank()) "Llevas $minutos minutos aquí. Toca para nombrarlo o ignorarlo." else "Llevas $minutos minutos cerca de $sugerencia. Toca para nombrarlo.")
+            .setContentIntent(abrirApp(ctx, ID_LUGAR, "lugar_nuevo"))
+            .setAutoCancel(true)
+            .setTimeoutAfter(8 * 60 * 60 * 1000L)
+        mostrar(ctx, ID_LUGAR, b)
     }
 
     fun drive(ctx: Context) {

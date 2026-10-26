@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Context
 import io.github.ruddy2003.vestigium.data.Catalogo
@@ -71,7 +72,7 @@ object Periodo {
         val fechas = (0 until n).map { Fechas.sumar(ini, it.toLong()) }
         val en = fechas.toHashSet()
         val dias = fechas.mapNotNull { Repo.dias[it] }
-        val mu = Repo.momentos.filter { it.fecha in en && it.tipo != "recaida" }
+        val mu = Repo.momentos.filter { it.fecha in en && !it.privado }
         val eq = Repo.equivalencias()
 
         // ---- ánimo

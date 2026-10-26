@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.widget
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -307,7 +308,7 @@ object Widgets {
         }
         Repo.salud[f]?.sueno_min?.let { l += linea("somnus", "${it / 60} h ${"%02d".format(it % 60)}") }
         Repo.salud[f]?.pasos?.let { l += linea("passus", "%,d".format(it)) }
-        val mom = Repo.momentos.count { it.fecha == f && it.tipo != "muestreo" && it.tipo != "recaida" }
+        val mom = Repo.momentos.count { it.fecha == f && it.tipo != "muestreo" && !it.privado }
         l += linea("momenta", "$mom")
         Repo.pantalla[f]?.let { l += linea("telephon", "${it.total_min / 60} h ${"%02d".format(it.total_min % 60)}") }
         Repo.entorno[f]?.let { e -> if (e.t_max != null) l += linea("caelum", "%.0f°".format(e.t_max) + (e.codigo?.let { " " + Clima.descripcion(it) } ?: "")) }

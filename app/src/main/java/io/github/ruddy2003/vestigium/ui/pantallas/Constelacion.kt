@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -54,7 +55,7 @@ object Constelacion {
         val porDia = HashMap<String, MutableSet<String>>()
         fun sumar(f: String, t: String) { if (f >= desde) Texto.personas(t).forEach { porDia.getOrPut(f) { HashSet() }.add(Texto.canon(it, eq)) } }
         Repo.dias.values.forEach { d -> sumar(d.fecha, d.nota) }
-        Repo.momentos.filter { it.tipo != "recaida" }.forEach { m -> sumar(m.fecha, m.texto) }
+        Repo.momentos.filter { !it.privado }.forEach { m -> sumar(m.fecha, m.texto) }
         val dias = HashMap<String, Int>(); val ultima = HashMap<String, String>()
         val juntos = HashMap<Pair<String, String>, Int>()
         porDia.forEach { (f, gente) ->

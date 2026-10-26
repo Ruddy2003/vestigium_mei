@@ -67,6 +67,12 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         Repo.init(ctx)
         runCatching { Ubicacion.muestrear(ctx) }
         runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.muestrear(ctx) }
+        // ¿Llevas un rato en un sitio nuevo? Pregunta si es un lugar especial (máximo dos veces al día, nunca de noche).
+        runCatching {
+            if (Repo.config.avisos) io.github.ruddy2003.vestigium.data.Lugares.revisar(ctx)?.let { c ->
+                Avisos.lugar(ctx, c.sugerencia, ((c.hasta_ms - c.desde_ms) / 60_000L).toInt())
+            }
+        }
         runCatching { io.github.ruddy2003.vestigium.data.Spotify.quizaSincronizar(ctx) }
         runCatching { avisos(ctx) }
         runCatching { diario(ctx) }
@@ -134,6 +140,9 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
                 Avisos.escalas(ctx, pendientes)
             }
         }
+
+        // Importaciones (una vez por semana), metas que toca revisar y notas de recordatorio.
+        runCatching { Recordatorios.revisar(ctx, ahora, ::yaFue, ::marcar) }
 
         // Cartas al futuro
         val vencidas = Repo.cartas.filter { !it.abierta && it.abrir_en <= hoy }

@@ -1,10 +1,12 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Personas
 import io.github.ruddy2003.vestigium.data.Sustancias
 import io.github.ruddy2003.vestigium.data.esAnimo
+import io.github.ruddy2003.vestigium.data.esCierre
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import kotlin.math.abs
@@ -211,6 +213,19 @@ object Estadistica {
         if (Repo.pantalla.values.any { it.tel_tras_despertar_min != null }) v += Variable("tel_tras_despertar_min", "Minutos entre despertar y tomar el teléfono", "Sueño")
         v += Variable("aire_libre_min", "Minutos al aire libre (estimado)", "Entorno")
         if (Repo.lugares.any { it.tipo == "casa" }) v += Variable("en_casa_min", "Minutos en casa", "Movilidad")
+        // Horas en cada tipo de lugar (casa, trabajo, bar, naturaleza…).
+        Repo.lugares.map { it.tipo }.distinct().sorted().forEach { t -> v += Variable("horas_tipo_$t", "Horas en lugares de tipo ${Catalogo.nombreTipoLugar(t).lowercase()}", "Lugares") }
+        // El «Cómo estás ahora» al cerrar el día: la misma hora todos los días.
+        if (Repo.momentos.any { it.esCierre }) {
+            v += Variable("animo_cierre_valencia", "Valencia al cerrar el día", "Ánimo"); v += Variable("animo_cierre_activacion", "Activación al cerrar el día", "Ánimo")
+        }
+        // El barómetro del teléfono.
+        if (Repo.conexiones.values.any { it.presion_n > 0 }) {
+            v += Variable("presion_local_hpa", "Presión del barómetro del teléfono (hPa)", "Entorno"); v += Variable("cambio_presion_3h", "Mayor cambio de presión en 3 horas (hPa)", "Entorno")
+        }
+        if (Repo.config.seguimiento_privado && Repo.momentos.any { it.tipo == "libido" }) {
+            v += Variable("libido_max", "Libido máxima del día (0 a 5)", "Privado"); v += Variable("n_libido", "Registros de libido", "Privado")
+        }
         if (Repo.momentos.any { it.con_quien.isNotEmpty() }) {
             v += Variable("acompanado_pct", "Avisos de ánimo con alguien (0 a 1)", "Social")
             Catalogo.CON_QUIEN.filter { it.id != "solo" }.forEach { o -> v += Variable("con_${o.id}", "Avisos con ${o.nombre.lowercase()} (0 a 1)", "Social") }
@@ -353,6 +368,24 @@ object Estadistica {
             }
             enCasa.forEach { (f, m) -> fila(f)["en_casa_min"] = Math.round(minOf(m, 1440.0)).toDouble() }
         }
+        // Horas por tipo de lugar: desde el primer día con visitas, los días sin nada cuentan como 0.
+        if (Repo.lugares.isNotEmpty()) {
+            val porTipo = io.github.ruddy2003.vestigium.data.Lugares.minutosPorTipo()
+            val tipos = Repo.lugares.map { it.tipo }.toSet()
+            porTipo.keys.minOrNull()?.let { p0 ->
+                (Repo.dias.keys.filter { it >= p0 } + porTipo.keys).toSet().forEach { f ->
+                    val r = fila(f); tipos.forEach { t -> r["horas_tipo_$t"] = Math.round((porTipo[f]?.get(t) ?: 0.0) / 60.0 * 100) / 100.0 }
+                }
+            }
+        }
+        Repo.momentos.filter { it.esCierre }.groupBy { it.fecha }.forEach { (f, l) ->
+            val m = l.maxBy { it.ts }; val r = fila(f); r["animo_cierre_valencia"] = m.valencia?.toDouble(); r["animo_cierre_activacion"] = m.activacion?.toDouble()
+        }
+        val ajusteBar = io.github.ruddy2003.vestigium.data.Barometro.ajuste()
+        Repo.conexiones.forEach { (f, c) -> if (c.presion_n > 0) { val r = fila(f); r["presion_local_hpa"] = io.github.ruddy2003.vestigium.data.Barometro.local(c, ajusteBar); r["cambio_presion_3h"] = c.cambio_presion_3h } }
+        if (Repo.config.seguimiento_privado) Repo.momentos.filter { it.tipo == "libido" }.groupBy { it.fecha }.forEach { (f, l) ->
+            val r = fila(f); r["libido_max"] = l.mapNotNull { it.intensidad }.maxOrNull()?.toDouble(); r["n_libido"] = l.size.toDouble()
+        }
         Repo.sesiones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["ejercicio_min"] = l.sumOf { it.min }.toDouble() }
         Repo.pantalla.forEach { (f, p) ->
             val r = fila(f)
@@ -487,7 +520,7 @@ object Estadistica {
             listOf("n_madrugada", "n_manana", "n_tarde", "n_noche").forEach { r[it] = 0.0 }
         }
         // Momentos según la hora, su intensidad y su valencia.
-        Repo.momentos.filter { it.tipo != "muestreo" && it.tipo != "recaida" }.groupBy { it.fecha }.forEach { (f, l) ->
+        Repo.momentos.filter { it.tipo != "muestreo" && !it.privado }.groupBy { it.fecha }.forEach { (f, l) ->
             val r = fila(f)
             val horas = l.mapNotNull { Fechas.horaDe(it.ts).take(2).toIntOrNull() }
             r["n_madrugada"] = horas.count { it < 5 }.toDouble(); r["n_manana"] = horas.count { it in 5..11 }.toDouble()
@@ -666,7 +699,10 @@ object Estadistica {
         setOf("t_max", "t_min", "precip_mm", "nubes_pct", "luz_horas", "sol_horas", "presion_hpa"),
         setOf("aqi_us", "pm25"),
         setOf("gasto_total", "gasto_imprevisto"),
-        setOf("impulso", "recaida", "n_recaida", "n_impulso", "recaida_min"),
+        setOf("impulso", "recaida", "n_recaida", "n_impulso", "recaida_min", "libido_max", "n_libido"),
+        setOf("presion_local_hpa", "presion_hpa", "cambio_presion_3h"),
+        setOf("animo_cierre_valencia", "valencia", "animo_valencia"), setOf("animo_cierre_activacion", "activacion", "animo_activacion"),
+        setOf("horas_tipo_casa", "en_casa_min", "sin_wifi_min", "fuera_de_casa"),
         setOf("enfoque_min", "enfoque_estudio_min", "enfoque_lectura_min", "enfoque_idiomas_min", "enfoque_tesis_min", "enfoque_trabajo_min", "enfoque_creativo_min"),
         setOf("siesta", "siesta_min"),
         setOf("cama_min", "dormir_tras_tel_min", "ultimo_uso_h", "sueno_inicio_h", "carga_noche_h"),
@@ -692,6 +728,9 @@ object Estadistica {
 
     fun obvia(a: Variable, b: Variable): Boolean {
         if ((a.grupo == b.grupo && (a.grupo == "Lectura del día" || a.grupo == "Momentos" || a.grupo == "Sentimientos" || a.grupo == "Sueños")) || FAMILIAS.any { a.id in it && b.id in it }) return true
+        // Las horas por tipo de lugar se reparten el mismo día entre sí y con cada lugar.
+        val lugA = a.id.startsWith("horas_tipo_") || a.id.startsWith("lug_"); val lugB = b.id.startsWith("horas_tipo_") || b.id.startsWith("lug_")
+        if (lugA && lugB) return true
         // Lo que sentías con el número de registros del día, y cada categoría del sueño con haber recordado un sueño.
         if ((a.grupo == "Sentimientos" && b.id == "registros_animo") || (b.grupo == "Sentimientos" && a.id == "registros_animo")) return true
         if ((a.grupo == "Sueños" && b.id.startsWith("sueno_")) || (b.grupo == "Sueños" && a.id.startsWith("sueno_"))) return true

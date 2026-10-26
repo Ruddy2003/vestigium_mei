@@ -217,6 +217,21 @@ object Diccionario {
         "personas_mensajes" to "Personas con las que hablaste por mensaje o llamada, sin verlas", "penso_en_pareja" to "Pensaste en tu pareja sin verla (0/1)",
         "penso_en_expareja" to "Pensaste en una expareja sin verla (0/1)", "penso_en_familia" to "Pensaste en tu familia sin verla (0/1)",
         "penso_en_amistades" to "Pensaste en una amistad sin verla (0/1)",
+        // Lote 2: lugares, cierre, barómetro, libido, notas y metas.
+        "animo_cierre_valencia" to "Valencia del «Cómo estás ahora» al cerrar el día (1 a 7)", "animo_cierre_activacion" to "Activación al cerrar el día (1 a 7)",
+        "presion_local_hpa" to "Presión del barómetro del teléfono, media del día y calibrada con Open-Meteo (hPa)",
+        "cambio_presion_3h" to "Mayor cambio de presión en unas tres horas, con su signo (hPa; negativo = bajó)",
+        "presion_media" to "Presión media del barómetro sin calibrar (hPa)", "presion_min" to "Presión mínima del barómetro (hPa)", "presion_max" to "Presión máxima del barómetro (hPa)",
+        "libido_max" to "Libido máxima registrada en el día (0 nada a 5 dominante), seguimiento privado", "n_libido" to "Registros de libido del día, seguimiento privado",
+        "foco" to "Libido: en qué estaba el foco (pensando, viendo, conversando, nada, otro)", "cierre" to "Es el «Cómo estás ahora» al cerrar el día (0/1)",
+        "tipo_lugar" to "Tipo del lugar donde se registró (casa, trabajo, bar…)",
+        "vm_notas.csv:tipo" to "idea, pensamiento, proposito o recordatorio", "fijada" to "Fijada arriba (0/1)", "recordar_el" to "Día del recordatorio", "hecha" to "Ya hecha (0/1)",
+        "creada" to "Cuándo se creó", "editada" to "Última edición", "horizonte" to "corto (hasta 3 meses), mediano (hasta un año) o largo",
+        "fecha_objetivo" to "Fecha objetivo", "vm_metas.csv:estado" to "activa, pausada, lograda o abandonada", "medida_tipo" to "habito, variable o vacío (progreso a mano)",
+        "medida_clave" to "Hábito o variable del panel ligada a la meta", "medida_modo" to "dias (días que cumplen), suma o media", "umbral" to "Desde cuánto cuenta un día",
+        "objetivo" to "Meta numérica de la medida", "valor_actual" to "Lo que lleva la medida", "vm_metas.csv:progreso" to "Progreso de 0 a 1",
+        "revision" to "Cada cuánto se revisa: semanal, mensual, fecha o ninguna", "ultima_revision" to "Última revisión", "anio_proposito" to "Año del propósito (si es de año nuevo)",
+        "historial" to "Cambios: fecha:campo:antes>después (lista)",
         "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista)",
         "presencias_revisado" to "Ya revisaste ese día quién estuvo y en quién solo pensaste (0/1); antes de la versión 10 todo cuenta como «estuve»",
         // Cartas
@@ -247,6 +262,7 @@ object Diccionario {
         }
         D[col]?.let { return it }
         return when {
+            col.startsWith("horas_tipo_") -> "Horas en lugares de tipo ${Catalogo.nombreTipoLugar(col.removePrefix("horas_tipo_")).lowercase()}"
             col.startsWith("ctx_") -> "Contexto del día: ${col.removePrefix("ctx_").replace('_', ' ')} (0/1)"
             col.startsWith("hab_") -> "Hábito cumplido: ${Repo.config.habitos.firstOrNull { it.id == col.removePrefix("hab_") }?.nombre ?: col.removePrefix("hab_")} (0/1)"
             col.startsWith("m_") -> "Momentos de tipo ${col.removePrefix("m_")} (registros de antes de unir ánimo y momentos)"

@@ -52,6 +52,8 @@ data class Respaldo(
     val youtube: List<YtEvento> = emptyList(),
     val tramos: List<Tramo> = emptyList(),
     val consumos: List<Consumo> = emptyList(),
+    val notas: List<Nota> = emptyList(),
+    val metas: List<Meta> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -125,7 +127,8 @@ object Exportar {
             "origen" to it.origen, "aviso_ts" to it.aviso_ts,
             "latencia_min" to it.aviso_ts?.let { a -> (Fechas.millis(it.ts) - Fechas.millis(a)) / 60000.0 },
             "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux,
-            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min,
+            "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min, "foco" to it.foco, "cierre" to it.esCierre,
+            "tipo_lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.tipo,
             "alcohol_nivel" to nivelSustancia("alcohol", ms, cons), "cannabis_nivel" to nivelSustancia("cannabis", ms, cons), "otra_nivel" to nivelSustancia("otra", ms, cons))
         }
     }
@@ -288,6 +291,24 @@ object Exportar {
             "hora" to Fechas.horaDe(it.inicio), "min" to it.min, "nota" to it.nota, "personas" to Texto.personas(it.nota), "temas" to Texto.temas(it.nota), "origen" to it.origen)
     }
 
+    fun filasNotas() = Repo.notas.sortedBy { it.creada }.map {
+        linkedMapOf<String, Any?>("id" to it.id, "creada" to it.creada, "fecha" to it.fecha, "tipo" to it.tipo, "texto" to it.texto,
+            "personas" to Texto.personas(it.texto), "temas" to Texto.temas(it.texto), "fijada" to it.fijada, "recordar_el" to it.recordar_el,
+            "hecha" to it.hecha, "editada" to it.editada)
+    }
+
+    fun filasMetas(): List<Map<String, Any?>> {
+        val panel = if (Repo.metas.any { it.medida_tipo == "variable" }) runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel() }.getOrNull() else null
+        return Repo.metas.sortedBy { it.creada }.map { m ->
+            linkedMapOf<String, Any?>("id" to m.id, "nombre" to m.nombre, "detalle" to m.detalle, "horizonte" to m.horizonte, "creada" to m.creada,
+                "fecha_objetivo" to m.fecha_objetivo, "estado" to m.estado, "medida_tipo" to m.medida_tipo, "medida_clave" to m.medida_clave,
+                "medida_modo" to m.medida_modo, "umbral" to m.umbral, "objetivo" to m.objetivo, "valor_actual" to Metas.valor(m, panel = panel),
+                "progreso" to Metas.progreso(m, panel = panel)?.let { Math.round(it * 1000) / 1000.0 }, "revision" to m.revision,
+                "ultima_revision" to m.ultima_revision, "anio_proposito" to m.anio_proposito,
+                "historial" to m.historial.map { "${it.fecha}:${it.campo}:${it.antes}>${it.despues}" })
+        }
+    }
+
     fun filasGastos() = Repo.gastos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "dia_logico" to it.dia, "monto" to it.monto, "categoria" to it.categoria,
             "imprevisto" to it.imprevisto, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon)
@@ -434,6 +455,8 @@ object Exportar {
             val n = c.luz_n.sum()
             m["luz_media"] = if (n > 0) Math.round(c.luz_suma.sum() / n * 10) / 10.0 else null
             m["luz_max"] = c.luz_max; m["luz_alta_min"] = c.luz_alta_min
+            m["presion_media"] = if (c.presion_n > 0) Math.round(c.presion_suma / c.presion_n * 100) / 100.0 else null
+            m["presion_min"] = c.presion_min; m["presion_max"] = c.presion_max; m["cambio_presion_3h"] = c.cambio_presion_3h
             for (h in 0 until 24) m["luz_h%02d".format(h)] = c.luz_n.getOrNull(h)?.takeIf { it > 0 }?.let { k -> Math.round((c.luz_suma.getOrNull(h) ?: 0.0) / k * 10) / 10.0 }
             m["dispositivos"] = c.dispositivos_min.entries.sortedByDescending { it.value }.map { "${it.key}:${it.value}" }
             m["redes"] = c.wifi_min.entries.sortedByDescending { it.value }.map { "${it.key}:${it.value}" }
@@ -576,7 +599,9 @@ object Exportar {
             "vi_expareja", "vi_trabajo", "cercania_media", "personas_vistas", "personas_pensadas", "personas_mensajes",
             "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades", "animo_valencia", "animo_activacion", "registros_animo",
             "alcohol", "alcohol_bebidas", "alcohol_nivel_max", "alcohol_horas", "alcohol_estimado_max", "alcohol_al_dormir", "cannabis", "cannabis_nivel_max", "cannabis_horas",
-            "tabaco_n", "otra_sustancia", "cruda", "cafeina_total_mg", "cafeina_al_dormir_mg")
+            "tabaco_n", "otra_sustancia", "cruda", "cafeina_total_mg", "cafeina_al_dormir_mg",
+            "animo_cierre_valencia", "animo_cierre_activacion", "presion_local_hpa", "cambio_presion_3h") +
+            Repo.lugares.map { "horas_tipo_${it.tipo}" }.distinct().sorted()
         // Lo que sentías y pensabas (una columna por sentimiento o pensamiento que hayas registrado alguna vez).
         val emociones = (Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO } + Repo.momentos.mapNotNull { Catalogo.pensamientoDe(it) }).distinct().sorted()
         val est = runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel() }.getOrDefault(emptyMap())
@@ -716,7 +741,7 @@ object Exportar {
         subrayados = Repo.subrayados, huellas = Repo.huellasDe("0000-01-01", "9999-12-31"), huellas_dia = Repo.huellas.values.sortedBy { it.fecha },
         chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
         series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
-        youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos))
+        youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos, notas = Repo.notas, metas = Repo.metas))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -729,6 +754,8 @@ object Exportar {
         Tabla("vm_sustancias.csv", "Sustancias: cada consumo (alcohol, cannabis, tabaco, cafeína, otra) con su nivel, duración y cruda", filasSustancias()),
         Tabla("vm_horas.csv", "Una fila por hora: dormido, lugar, pantalla, notificaciones, luz, música, ánimo, cafeína y alcohol en el cuerpo, sustancias, enfoque, gastos y comidas", filasHoras()),
         Tabla("vm_gastos.csv", "Gastos, uno por fila", filasGastos()),
+        Tabla("vm_notas.csv", "Notas sueltas: ideas, pensamientos, propósitos y recordatorios", filasNotas()),
+        Tabla("vm_metas.csv", "Metas: horizonte, fecha objetivo, estado, medida, progreso e historial de cambios", filasMetas()),
         Tabla("vm_ingresos.csv", "Ingresos, uno por fila", filasIngresos()),
         Tabla("vm_escalas.csv", "Cuestionarios validados (WHO-5, PSS-4, UCLA-3, TIPI)", filasEscalas()),
         Tabla("vm_reaccion.csv", "Pruebas de reacción", filasReaccion()),

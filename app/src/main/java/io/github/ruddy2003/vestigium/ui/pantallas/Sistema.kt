@@ -191,6 +191,12 @@ fun PantallaPermisos(nav: Nav) {
                 Ayuda("El nombre de tu wifi solo se puede leer con la ubicación activada; si no, se anota como «wifi (sin nombre)».", Modifier.padding(top = 4.dp))
                 HorizontalDivider(Modifier.padding(vertical = 6.dp))
                 Interruptor("Luz del ambiente", Repo.config.medir_luz, "Lee el sensor de luz cada 15 minutos y al registrar un momento: cuánta luz de exterior recibes al día.") { v -> Repo.cambiarConfig { it.copy(medir_luz = v) } }
+                // El barómetro solo aparece si el teléfono lo tiene.
+                if (remember { Percepcion.tieneBarometro(ctx) }) {
+                    val aj = remember { io.github.ruddy2003.vestigium.data.Barometro.ajuste() }
+                    Interruptor("Barómetro", Repo.config.barometro, "Lee la presión cada 15 minutos: media, mínima, máxima y el mayor cambio en tres horas. Se calibra con la presión de Open-Meteo" +
+                        (aj?.let { " (ajuste actual %+.1f hPa).".format(it) } ?: " cuando haya unos días de datos.")) { v -> Repo.cambiarConfig { it.copy(barometro = v) } }
+                }
                 Interruptor("Ruido al registrar", Repo.config.medir_ruido && Ambiente.tienePermiso(ctx), "Al guardar un momento escucha 1.5 segundos y anota solo el nivel de ruido; el audio se descarta. Verás el aviso del micrófono un instante.") { v ->
                     if (v && !Ambiente.tienePermiso(ctx)) microfono.launch(Manifest.permission.RECORD_AUDIO) else Repo.cambiarConfig { it.copy(medir_ruido = v) }
                 }
@@ -482,10 +488,15 @@ fun PantallaDatos(nav: Nav) {
     val maps = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importar.cronologia(ctx, uri).mensaje } }
     val spotify = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importaciones.spotify(ctx, uris) } }
     val kindle = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { Importaciones.kindle(ctx, uri) } }
-    val macrofactor = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) tarea { io.github.ruddy2003.vestigium.data.Macrofactor.importar(ctx, uri) } }
-    val google = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris -> if (uris.isNotEmpty()) tarea { Importaciones.google(ctx, uris) } }
+    val macrofactor = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) tarea { io.github.ruddy2003.vestigium.data.Macrofactor.importar(ctx, uri).also { io.github.ruddy2003.vestigium.avisos.Recordatorios.importado("macrofactor") } }
+    }
+    val google = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) tarea { Importaciones.google(ctx, uris).also { io.github.ruddy2003.vestigium.avisos.Recordatorios.importado("takeout") } }
+    }
     val googleCarpeta = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-        if (uri != null) tarea { Importaciones.googleFuentes(ctx, io.github.ruddy2003.vestigium.data.Archivos.deCarpeta(ctx, uri) { n -> n.endsWith(".json", true) || n.endsWith(".csv", true) }) }
+        if (uri != null) tarea { Importaciones.googleFuentes(ctx, io.github.ruddy2003.vestigium.data.Archivos.deCarpeta(ctx, uri) { n -> n.endsWith(".json", true) || n.endsWith(".csv", true) })
+            .also { io.github.ruddy2003.vestigium.avisos.Recordatorios.importado("takeout") } }
     }
     var chatsLeidos by remember { mutableStateOf<List<Importaciones.Chat>?>(null) }
     val whatsapp = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
@@ -505,6 +516,14 @@ fun PantallaDatos(nav: Nav) {
     Hoja("Datos", nav.atras, "Todo lo que guarda la app, listo para R.") {
         msg?.let { Aviso(it) }
         if (ocupado) Ayuda("Trabajando…", Modifier.padding(top = 8.dp))
+        Seccion("Recordatorios de importación", "Un solo aviso a la semana con lo que toca importar. Cada fuente se puede posponer o apagar.", plegable = true) {
+            RecordatoriosImportacion { id ->
+                when (id) {
+                    "macrofactor" -> macrofactor.launch(arrayOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "*/*"))
+                    "takeout" -> googleCarpeta.launch(null)
+                }
+            }
+        }
         Seccion("Exportar", "Desde el menú de compartir puedes guardarlo directo en tu Drive. Los dos traen un diccionario con lo que significa cada columna.") {
             Tarjeta {
                 Text("Resumido", style = MaterialTheme.typography.titleMedium)
@@ -608,6 +627,47 @@ fun PantallaDatos(nav: Nav) {
             },
             confirmButton = { TextButton(onClick = { chatsLeidos = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
         )
+    }
+}
+
+/** Cada fuente que se importa a mano: hace cuánto, «importar ahora», «mañana», «elegir fecha» y apagar; y el día y hora del aviso. */
+@Composable
+private fun RecordatoriosImportacion(importar: (String) -> Unit) {
+    val ctx = LocalContext.current
+    val c = Repo.config
+    val hoy = Fechas.diaLogico()
+    val R = io.github.ruddy2003.vestigium.avisos.Recordatorios
+    Tarjeta {
+        R.FUENTES.forEachIndexed { i, f ->
+            if (i > 0) HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            val hace = R.hace(f.id, hoy)
+            val apagada = c.importar_pospuesto[f.id] == "apagado"
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(f.nombre, style = MaterialTheme.typography.titleSmall)
+                    Text(when {
+                        !f.activa -> f.que
+                        apagada -> "sin recordatorio"
+                        else -> (hace?.let { if (it == 0L) "importado hoy" else "hace $it días" } ?: "nunca importado") + " · cada ${if (f.cada >= 28) "mes" else "${f.cada} días"}" +
+                            (R.pospuesta(f.id, hoy)?.let { " · pospuesto al ${Fechas.corto(it)}" } ?: "")
+                    }, style = MaterialTheme.typography.bodySmall, color = if (f.activa && !apagada && R.toca(f, hoy)) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (f.activa) androidx.compose.material3.Switch(checked = !apagada, onCheckedChange = { R.apagar(f.id, !it) })
+            }
+            if (f.activa && !apagada) FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Ficha("importar ahora", false) { importar(f.id) }
+                Ficha("mañana", false) { R.posponer(f.id, Fechas.sumar(hoy, 1)) }
+                Ficha("elegir fecha…", false) { io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, R.pospuesta(f.id, hoy), desdeManana = true) { d -> R.posponer(f.id, d) } }
+            }
+        }
+        HorizontalDivider(Modifier.padding(vertical = 10.dp))
+        Etiqueta("Día del aviso")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom").forEachIndexed { k, n -> Ficha(n, c.importar_dia == k + 1) { Repo.cambiarConfig { it.copy(importar_dia = k + 1) } } }
+        }
+        Etiqueta("Hora: ${c.importar_hora}:00")
+        Slider(value = c.importar_hora.toFloat(), onValueChange = { v -> Repo.cambiarConfig { it.copy(importar_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
+        Ayuda("WhatsApp y Kindle no tienen recordatorio. Cold Turkey se activa cuando llegue su importador.")
     }
 }
 

@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,7 +57,7 @@ private class ResumenSemana(val dias: List<String>) {
     val gasto = Repo.gastos.filter { it.dia in dias }.sumOf { it.monto }
     val kcal = prom(dias.mapNotNull { Repo.nutricion[it]?.valores?.get("kcal") })
     val entrenos = dias.count { (Repo.entrenos[it]?.series ?: 0) > 0 } + dias.count { f -> Repo.ascensos.any { it.fecha == f } }
-    val momentos = Repo.momentos.filter { it.fecha in dias && it.tipo != "muestreo" && it.tipo != "recaida" }
+    val momentos = Repo.momentos.filter { it.fecha in dias && it.tipo != "muestreo" && !it.privado }
 }
 
 @Composable

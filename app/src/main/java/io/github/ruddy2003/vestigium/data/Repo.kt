@@ -51,6 +51,9 @@ object Repo {
     var tramos by mutableStateOf<List<Tramo>>(emptyList()); private set
     /** Consumos de sustancias (episodios con inicio, fin y niveles). */
     var consumos by mutableStateOf<List<Consumo>>(emptyList()); private set
+    /** Notas sueltas (ideas, pensamientos, propósitos, recordatorios) y metas. */
+    var notas by mutableStateOf<List<Nota>>(emptyList()); private set
+    var metas by mutableStateOf<List<Meta>>(emptyList()); private set
 
     @Synchronized
     fun init(ctx: Context) {
@@ -89,6 +92,8 @@ object Repo {
         entrenos = cargar("entrenos", EntrenoDia.serializer()).associateBy { it.fecha }
         tramos = cargar("tramos", Tramo.serializer()).sortedBy { it.inicio }
         consumos = cargar("consumos", Consumo.serializer()).sortedBy { it.inicio }
+        notas = cargar("notas", Nota.serializer()).sortedByDescending { it.creada }
+        metas = cargar("metas", Meta.serializer()).sortedBy { it.creada }
         listo = true
     }
 
@@ -170,6 +175,34 @@ object Repo {
     }
     fun consumosEnMemoria(l: List<Consumo>) { consumos = l }
 
+    // ---------- Notas y metas ----------
+    fun guardarNota(n: Nota) {
+        db.poner("notas", n.id, n.fecha, JSON.encodeToString(Nota.serializer(), n))
+        enMain { notas = (notas.filter { it.id != n.id } + n).sortedByDescending { it.creada } }
+    }
+    fun borrarNota(id: String) { db.borrar("notas", id); enMain { notas = notas.filter { it.id != id } } }
+    fun importarNotas(lista: List<Nota>) {
+        val ids = notas.map { it.id }.toSet()
+        val nuevas = lista.filter { it.id !in ids }
+        if (nuevas.isEmpty()) return
+        db.transaccion { nuevas.forEach { db.poner("notas", it.id, it.fecha, JSON.encodeToString(Nota.serializer(), it)) } }
+        enMain { notas = (notas + nuevas).sortedByDescending { it.creada } }
+    }
+    fun guardarMeta(m: Meta) {
+        db.poner("metas", m.id, m.creada.take(10), JSON.encodeToString(Meta.serializer(), m))
+        enMain { metas = (metas.filter { it.id != m.id } + m).sortedBy { it.creada } }
+    }
+    fun borrarMeta(id: String) { db.borrar("metas", id); enMain { metas = metas.filter { it.id != id } } }
+    fun importarMetas(lista: List<Meta>) {
+        val ids = metas.map { it.id }.toSet()
+        val nuevas = lista.filter { it.id !in ids }
+        if (nuevas.isEmpty()) return
+        db.transaccion { nuevas.forEach { db.poner("metas", it.id, it.creada.take(10), JSON.encodeToString(Meta.serializer(), it)) } }
+        enMain { metas = (metas + nuevas).sortedBy { it.creada } }
+    }
+    /** Solo para las capturas de diseño. */
+    fun notasEnMemoria(n: List<Nota>, m: List<Meta>) { notas = n; metas = m }
+
     // ---------- Gastos ----------
     fun guardarGasto(g: Gasto) {
         db.poner("gastos", g.id, g.fecha, JSON.encodeToString(Gasto.serializer(), g))
@@ -238,6 +271,9 @@ object Repo {
         val n = (youtube.filter { it.id !in ids && it.id !in viejasSubs } + lista).sortedBy { it.ts }
         enMain { youtube = n }
     }
+
+    /** Visitas reconstruidas de tus ubicaciones al guardar un lugar nuevo. */
+    fun agregarVisitas(lista: List<Visita>) = importarVisitas(lista)
 
     /** Visitas de un respaldo: las que ya existen (mismo id) no se tocan. */
     fun importarVisitas(lista: List<Visita>) {

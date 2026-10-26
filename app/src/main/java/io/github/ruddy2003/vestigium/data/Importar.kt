@@ -53,6 +53,8 @@ object Importar {
             if (r.ingresos.isNotEmpty()) Repo.importarIngresos(r.ingresos)
             if (r.tramos.isNotEmpty()) Repo.importarTramos(r.tramos)
             if (r.consumos.isNotEmpty()) Repo.importarConsumos(r.consumos)
+            if (r.notas.isNotEmpty()) Repo.importarNotas(r.notas)
+            if (r.metas.isNotEmpty()) Repo.importarMetas(r.metas)
             r.respuestas.forEach { Repo.guardarRespuesta(it) }
             r.reacciones.forEach { rr -> if (Repo.reacciones.none { it.id == rr.id }) Repo.guardarReaccion(rr) }
             r.lugares.forEach { Repo.guardarLugar(it) }
@@ -130,6 +132,8 @@ object Importar {
             personas = c.personas + r.personas.filter { p -> c.personas.none { it.nombre == p.nombre } },
             personas_omitidas = (c.personas_omitidas + r.personas_omitidas).distinct(), personas_distintas = (c.personas_distintas + r.personas_distintas).distinct(),
             temas_distintos = (c.temas_distintos + r.temas_distintos).distinct(),
+            lugares_ignorados = (c.lugares_ignorados + r.lugares_ignorados).distinctBy { "%.4f,%.4f".format(it.lat, it.lon) },
+            importado = r.importado + c.importado, barometro_ajuste = c.barometro_ajuste ?: r.barometro_ajuste,
             sustancias_ocultas = (c.sustancias_ocultas + r.sustancias_ocultas).distinct(),
             cafeina_vida_media_h = if (c.cafeina_vida_media_h == Config().cafeina_vida_media_h) r.cafeina_vida_media_h else c.cafeina_vida_media_h,
         )

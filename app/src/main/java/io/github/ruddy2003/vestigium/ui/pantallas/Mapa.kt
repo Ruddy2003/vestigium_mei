@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
@@ -420,7 +421,7 @@ fun PantallaMapa(nav: Nav) {
         onDispose { ciclo.lifecycle.removeObserver(obs); mapa.value?.onDetach() }
     }
 
-    val momentos = Repo.momentos.filter { it.lat != null && it.lon != null && it.fecha >= desde && it.tipo != "recaida" }
+    val momentos = Repo.momentos.filter { it.lat != null && it.lon != null && it.fecha >= desde && !it.privado }
     val datos: List<Puntos.P> = when (capa) {
         "animo" -> momentos.mapNotNull { m ->
             val v = m.valencia?.toDouble() ?: Repo.dias[m.fecha]?.valencia?.toDouble() ?: return@mapNotNull null
@@ -517,6 +518,7 @@ fun PantallaMapa(nav: Nav) {
 
     nuevoLugar?.let { p ->
         var nombre by remember(p) { mutableStateOf("") }
+        var tipoNuevo by remember(p) { mutableStateOf("otro") }
         AlertDialog(
             onDismissRequest = { nuevoLugar = null },
             title = { Text("Marcar este lugar", style = MaterialTheme.typography.titleLarge) },
@@ -524,12 +526,15 @@ fun PantallaMapa(nav: Nav) {
                 Column {
                     Ayuda("%.5f, %.5f · la app registrará cuándo llegas y te vas.".format(p.latitude, p.longitude))
                     OutlinedTextField(nombre, { nombre = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, placeholder = { Text("casa, gimnasio, oficina…") })
+                    io.github.ruddy2003.vestigium.ui.FilaFichas(io.github.ruddy2003.vestigium.data.Catalogo.TIPOS_LUGAR, tipoNuevo) { t -> if (t != null) tipoNuevo = t }
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     if (nombre.isNotBlank()) {
-                        Repo.guardarLugar(Lugar(Repo.nuevoId(), nombre.trim(), p.latitude, p.longitude))
+                        val l = Lugar(Repo.nuevoId(), nombre.trim(), p.latitude, p.longitude, tipo = tipoNuevo)
+                        Repo.guardarLugar(l)
+                        runCatching { io.github.ruddy2003.vestigium.data.Lugares.reconstruir(l) }
                         runCatching { io.github.ruddy2003.vestigium.sensores.Geocercas.registrar(ctx) }
                     }
                     nuevoLugar = null

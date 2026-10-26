@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
+import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Intent
 import androidx.compose.foundation.Canvas
@@ -130,7 +131,7 @@ fun PantallaAnno(nav: Nav) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Cifra("${dias.size}", "días escritos", Modifier.weight(1f))
                 Cifra("%,d".format(palabras), "palabras", Modifier.weight(1f))
-                Cifra("${Repo.momentos.count { it.fecha.startsWith(pre) && it.tipo != "muestreo" && it.tipo != "recaida" }}", "momentos", Modifier.weight(1f))
+                Cifra("${Repo.momentos.count { it.fecha.startsWith(pre) && it.tipo != "muestreo" && !it.privado }}", "momentos", Modifier.weight(1f))
             }
             val salud = Repo.salud.values.filter { it.fecha.startsWith(pre) }
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -145,7 +146,7 @@ fun PantallaAnno(nav: Nav) {
             val eq = Repo.equivalencias()
             val personas = dias.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(8)
             val temas = dias.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(8)
-            val tipos = Repo.momentos.filter { it.fecha.startsWith(pre) && it.tipo != "muestreo" && it.tipo != "recaida" }.groupingBy { it.tipo }.eachCount().entries.sortedByDescending { it.value }.take(4)
+            val tipos = Repo.momentos.filter { it.fecha.startsWith(pre) && it.tipo != "muestreo" && !it.privado }.groupingBy { it.tipo }.eachCount().entries.sortedByDescending { it.value }.take(4)
             val musica by produceState(emptyList<Pair<String, Int>>(), anio) {
                 value = withContext(Dispatchers.IO) {
                     runCatching { Repo.escuchas("$anio-01-01", "$anio-12-31").filter { it.artista.isNotBlank() }.groupingBy { it.artista }.eachCount().entries.sortedByDescending { it.value }.take(5).map { it.key to it.value } }.getOrDefault(emptyList())

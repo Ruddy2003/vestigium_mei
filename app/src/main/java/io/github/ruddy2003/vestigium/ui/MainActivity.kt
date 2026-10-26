@@ -388,6 +388,10 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "recaidas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(nav)
                     "estado_datos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEstadoDatos(nav)
                     "enfoque" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaEnfoque(nav)
+                    "cobertura" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCoberturaVariables(nav)
+                    "lugar_nuevo", "lugares_especiales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLugarNuevo(nav)
+                    "notas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaNotas(nav)
+                    "metas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(nav)
                     else -> Text("Pantalla desconocida: $actual")
                 }
                 }

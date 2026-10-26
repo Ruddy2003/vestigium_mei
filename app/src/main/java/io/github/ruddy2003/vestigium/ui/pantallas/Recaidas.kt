@@ -28,6 +28,7 @@ import io.github.ruddy2003.vestigium.data.Recaidas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
+import io.github.ruddy2003.vestigium.ui.BotonSecundario
 import io.github.ruddy2003.vestigium.ui.Cifra
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
@@ -56,6 +57,10 @@ fun PantallaRecaidas(nav: Nav) {
                 .putExtra(QuickActivity.TIPO, "recaida").putExtra(QuickActivity.ORIGEN, "app"))
         }
         Ayuda("También con el botón «Recaída» del registro rápido. Las ganas que pasaron sin recaer se anotan como «Impulso».", Modifier.padding(top = 6.dp))
+        BotonSecundario("Registrar la libido de ahora", Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            ctx.startActivity(android.content.Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, QuickActivity.M_MOMENTO)
+                .putExtra(QuickActivity.TIPO, "libido").putExtra(QuickActivity.ORIGEN, "app"))
+        }
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra(r.diasDesdeUltima?.toString() ?: "—", "días desde la última", Modifier.weight(1f))
             Cifra("${r.rachaActual}", "días seguidos sin", Modifier.weight(1f))
@@ -104,6 +109,19 @@ fun PantallaRecaidas(nav: Nav) {
             Lista("Detonantes", r.detonantes.map { it.first.replace("_", " ") to it.second })
             Lista("Justo antes", r.antes.map { (k, v) -> (Catalogo.ANTES.firstOrNull { it.id == k }?.nombre ?: k) to v })
             Lista("Aparato", r.aparatos.map { (k, v) -> (Catalogo.DISPOSITIVOS.firstOrNull { it.id == k }?.nombre ?: k) to v })
+        }
+        // Libido: distinta del impulso. Por hora, nivel medio y en qué estaba el foco.
+        val libido = Repo.momentos.filter { it.tipo == "libido" }
+        if (libido.isNotEmpty()) Seccion("Libido", "Escala de 0 (nada) a 5 (dominante). No es lo mismo que un impulso; sirve para ver cuándo sube.") {
+            Tarjeta {
+                val horas = IntArray(24).also { a -> libido.forEach { m -> runCatching { a[java.time.OffsetDateTime.parse(m.ts).atZoneSameInstant(Fechas.zona()).hour]++ } } }
+                Text("Registros por hora · ${libido.size}", style = MaterialTheme.typography.bodySmall)
+                Barras24(horas, MaterialTheme.colorScheme.tertiary)
+                val niv = libido.mapNotNull { it.intensidad }
+                if (niv.isNotEmpty()) Ayuda("Nivel medio %.1f de 5 · ".format(niv.average()) + "${libido.count { (it.intensidad ?: 0) >= 4 }} veces fuerte o dominante.", Modifier.padding(top = 6.dp))
+                Lista("Foco", libido.mapNotNull { it.foco }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }
+                    .map { (k, v) -> (Catalogo.FOCOS.firstOrNull { it.id == k }?.nombre ?: k) to v })
+            }
         }
         val lista = Repo.momentos.filter { it.tipo == "recaida" }.sortedByDescending { it.ts }
         if (lista.isNotEmpty()) Seccion("Registro", "Toca una para corregir la hora, la duración o la nota.") {

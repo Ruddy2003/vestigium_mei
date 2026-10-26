@@ -124,8 +124,13 @@ object EstadoDatos {
         l += if (!Comunicacion.tienePermiso(ctx)) Fuente("Llamadas y SMS", Salud3.APAGADA, "Sin permiso (opcional)", "permisos")
         else Repo.comunicacion.keys.maxOrNull().let { u -> Fuente("Llamadas y SMS", por(u, hoy, 3), "último día: ${hace(u, hoy)}") }
         Repo.conexiones.entries.filter { it.value.muestras > 0 }.maxOfOrNull { it.key }.let { u -> l += Fuente("Wifi, audio, carga y luz", por(u, hoy, 0), "muestras ${hace(u, hoy)}") }
-        // Importaciones.
-        Repo.nutricion.keys.maxOrNull().let { u -> l += Fuente("MacroFactor", if (u == null) Salud3.APAGADA else por(u, hoy, 10), "importado hasta ${u?.let { Fechas.corto(it) } ?: "nunca"}", "datos") }
+        // Importaciones a mano: hace cuánto se importó cada una (y si ya toca).
+        val R = io.github.ruddy2003.vestigium.avisos.Recordatorios
+        R.FUENTES.filter { it.activa }.forEach { f ->
+            val hace = R.hace(f.id, hoy)
+            val estado = when { R.apagada(f.id) -> Salud3.APAGADA; hace == null -> Salud3.ATRASADA; hace <= f.cada -> Salud3.BIEN; else -> Salud3.ATRASADA }
+            l += Fuente(f.nombre, estado, (hace?.let { if (it == 0L) "importado hoy" else "importado hace $it días" } ?: "nunca importado") + " · toca cada ${if (f.cada >= 28) "mes" else "${f.cada} días"}", "datos")
+        }
         // Respaldos.
         val respaldo = listOfNotNull(c.respaldo_ultimo?.takeIf { c.carpeta_respaldo != null }, c.drive_ultimo?.takeIf { c.drive }).maxOrNull()
         l += if (c.carpeta_respaldo == null && !c.drive) Fuente("Respaldo automático", Salud3.APAGADA, "Sin carpeta ni Google Drive", "datos")
@@ -186,6 +191,7 @@ fun PantallaEstadoDatos(nav: Nav) {
         if (diag.isNotEmpty()) Seccion("Detalle de Health Connect", "Última lectura: " + (Repo.config.hc_diagnostico_ts?.let { Fechas.corto(it.take(10)) + " " + Fechas.horaDe(it) } ?: "?"), plegable = true, plegadaPorDefecto = true) {
             Tarjeta { diag.forEach { (k, v) -> Clave(k, v, 18) } }
         }
-        TextButton(onClick = { nav.ir("permisos") }, modifier = Modifier.padding(top = 8.dp)) { Text("abrir Permisos y sensores ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+        TextButton(onClick = { nav.ir("cobertura") }, modifier = Modifier.padding(top = 8.dp)) { Text("cobertura de cada variable ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
+        TextButton(onClick = { nav.ir("permisos") }) { Text("abrir Permisos y sensores ›", style = MaterialTheme.typography.labelLarge, color = cs.primary) }
     }
 }

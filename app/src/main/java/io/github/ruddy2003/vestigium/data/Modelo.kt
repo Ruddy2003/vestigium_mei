@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 10
+const val SCHEMA_V = 11
 
 /** Un día. Los campos opcionales quedan en null cuando no se marcaron: nunca se rellenan con promedios. */
 @Serializable
@@ -94,6 +94,8 @@ data class Momento(
     val emocion_otra: String? = null,
     /** En qué pensabas: Catalogo.PENSAMIENTOS (preocupación, idea, recuerdo…). */
     val pensamiento: String? = null,
+    /** Libido (seguimiento privado): en qué está el foco (Catalogo.FOCOS: pensando, viendo, conversando, nada, otro). */
+    val foco: String? = null,
 )
 
 /** Un registro de ánimo: de un aviso («muestreo») o hecho por ti («animo»). */
@@ -154,8 +156,11 @@ data class Persona(
 @Serializable
 data class CambioRelacion(val hasta: String, val relacion: String, val cercania: Int? = null)
 
-/** El momento es del seguimiento privado: nunca sale en reportes, «Tu año», logros, mapas ni widgets. */
-val Momento.privado: Boolean get() = tipo == "recaida"
+/** El momento es del seguimiento privado (recaída o libido): nunca sale en reportes, «Tu año», logros, mapas, widgets ni búsqueda. */
+val Momento.privado: Boolean get() = tipo == "recaida" || tipo == "libido"
+
+/** El «Cómo estás ahora» al cerrar el día: un registro de ánimo con la hora real, comparable de un día a otro. */
+val Momento.esCierre: Boolean get() = tipo == "animo" && origen == "cierre"
 
 /**
  * Un tramo de tiempo medido con el cronómetro: un bloque de enfoque (estudio, lectura, idiomas, tesis…) o una siesta.
@@ -266,6 +271,25 @@ data class Lugar(
     val tipo: String = "otro",
 )
 
+/** Un sitio donde dijiste «no guardar nunca aquí»: ya no se pregunta en ese radio. */
+@Serializable
+data class LugarIgnorado(val lat: Double, val lon: Double, val radio_m: Int = 150, val desde: String = "")
+
+/**
+ * Un sitio donde llevas un rato y que todavía no es un lugar guardado: espera tu respuesta («¿Es un lugar especial?»).
+ * [preguntas] cuenta las veces que dijiste «ahora no»; [proximo_ms] es cuándo se puede volver a preguntar.
+ */
+@Serializable
+data class CandidatoLugar(
+    val lat: Double,
+    val lon: Double,
+    val desde_ms: Long,
+    val hasta_ms: Long,
+    val preguntas: Int = 0,
+    val proximo_ms: Long = 0L,
+    val sugerencia: String = "",
+)
+
 @Serializable
 data class Visita(
     val id: String,
@@ -273,6 +297,61 @@ data class Visita(
     val entrada: String,
     val salida: String? = null,
 )
+
+/**
+ * Una nota suelta: una idea, un pensamiento especial, un propósito o un recordatorio. Con @ y #, se puede fijar arriba
+ * y buscar. [recordar_el] (AAAA-MM-DD) solo para los recordatorios.
+ */
+@Serializable
+data class Nota(
+    val id: String,
+    val creada: String,
+    val fecha: String,
+    val texto: String,
+    /** idea, pensamiento, proposito o recordatorio. */
+    val tipo: String = "idea",
+    val fijada: Boolean = false,
+    val editada: String? = null,
+    val recordar_el: String? = null,
+    val hecha: Boolean = false,
+)
+
+/**
+ * Una meta con su horizonte (corto: hasta 3 meses; mediano: hasta un año; largo: más), su fecha objetivo y su estado.
+ * Puede ligarse a una medida (un hábito o una variable del día) y entonces el progreso se calcula solo; si no, lo marcas tú.
+ */
+@Serializable
+data class Meta(
+    val id: String,
+    val nombre: String,
+    val detalle: String = "",
+    /** corto, mediano o largo. */
+    val horizonte: String = "corto",
+    val creada: String,
+    val fecha_objetivo: String? = null,
+    /** activa, pausada, lograda o abandonada. */
+    val estado: String = "activa",
+    /** habito o variable; null = sin medida (progreso a mano). */
+    val medida_tipo: String? = null,
+    val medida_clave: String? = null,
+    /** dias (días que cumplen ≥ [umbral]), suma o media. */
+    val medida_modo: String = "dias",
+    val umbral: Double = 0.0,
+    val objetivo: Double? = null,
+    /** Progreso a mano, de 0 a 100. */
+    val progreso_manual: Int? = null,
+    /** semanal, mensual, fecha (solo en [revisar_el]) o ninguna. */
+    val revision: String = "mensual",
+    val revisar_el: String? = null,
+    /** Para los propósitos de año nuevo: revisiones en marzo, junio y septiembre. */
+    val revisiones: List<String> = emptyList(),
+    val ultima_revision: String? = null,
+    val anio_proposito: Int? = null,
+    val historial: List<CambioMeta> = emptyList(),
+)
+
+@Serializable
+data class CambioMeta(val fecha: String, val campo: String, val antes: String, val despues: String)
 
 @Serializable
 data class Habito(val id: String, val nombre: String, val activo: Boolean = true, val desde: String = "")
@@ -602,6 +681,32 @@ data class Config(
     val personas_pospuesto: String = "",
     /** Pares de #temas que dijiste que no son el mismo («a|b»), para no volver a sugerir unirlos. */
     val temas_distintos: List<String> = emptyList(),
+    // ---- Recordatorios de importación (MacroFactor, Cold Turkey, Takeout).
+    /** Fuente → última vez que importaste (ISO). */
+    val importado: Map<String, String> = emptyMap(),
+    /** Fuente → «apagado», o un día (AAAA-MM-DD) para el que lo pospusiste. */
+    val importar_pospuesto: Map<String, String> = emptyMap(),
+    /** Día de la semana del aviso (1 lunes … 7 domingo) y hora. */
+    val importar_dia: Int = 7,
+    val importar_hora: Int = 18,
+    // ---- Lugares especiales.
+    /** Preguntar «¿es un lugar especial?» cuando llevas un rato en un sitio nuevo. */
+    val lugares_detectar: Boolean = true,
+    val lugar_radio_m: Int = 75,
+    val lugar_minutos: Int = 20,
+    val lugares_ignorados: List<LugarIgnorado> = emptyList(),
+    /** Sitios que esperan respuesta (como mucho unos pocos). */
+    val lugares_candidatos: List<CandidatoLugar> = emptyList(),
+    // ---- Barómetro: diferencia con la presión de Open-Meteo (hPa), para calibrar.
+    val barometro: Boolean = true,
+    val barometro_ajuste: Double? = null,
+    // ---- Semana corta: Hoy con solo cuatro cifras y tres botones.
+    val semana_corta: Boolean = false,
+    /** Días en que tocaste «hoy no» (para sugerir la semana corta tras tres seguidos). */
+    val hoy_no: List<String> = emptyList(),
+    val semana_corta_sugerida: String = "",
+    /** Hora del recordatorio de metas y notas. */
+    val metas_hora: Int = 19,
 )
 
 /**
@@ -670,6 +775,12 @@ data class ConexionDia(
     val luz_n: List<Int> = List(24) { 0 },
     val luz_max: Double? = null,
     val luz_alta_min: Int = 0,
+    /** Barómetro del teléfono (hPa, sin calibrar): suma y número de lecturas, mínima y máxima, y el mayor cambio en 3 horas. */
+    val presion_suma: Double = 0.0,
+    val presion_n: Int = 0,
+    val presion_min: Double? = null,
+    val presion_max: Double? = null,
+    val cambio_presion_3h: Double? = null,
 )
 
 /** Subrayado o nota de Kindle (archivo My Clippings.txt). */
