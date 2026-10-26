@@ -220,6 +220,14 @@ object MapasMas {
         val base = Offset(c.x, c.y - 10 * d - salto * 3 * d)
         val color = cs.tertiary
         drawOval(Color.Black.copy(alpha = 0.18f), Offset(c.x - 5 * d, c.y - 2 * d), Size(10 * d, 4 * d))
+        // Distopía: no un alfiler, sino el banderín rojo del punto de control.
+        if (tema == TemaId.DISTOPIA) {
+            val top = c.y - 24 * d - salto * 3 * d
+            drawLine(Color(0xFF141414), Offset(c.x, c.y), Offset(c.x, top), 1.6f * d)
+            drawRect(Color(0xFFC8102E), Offset(c.x, top), Size(13 * d, 9 * d))
+            drawRect(Color(0xFFF2EFE6), Offset(c.x + 2 * d, top + 3.5f * d), Size(9 * d, 2 * d))
+            return
+        }
         drawPath(Path().apply { moveTo(base.x, base.y + 9 * d); cubicTo(base.x - 9 * d, base.y - 2 * d, base.x - 7 * d, base.y - 13 * d, base.x, base.y - 13 * d); cubicTo(base.x + 7 * d, base.y - 13 * d, base.x + 9 * d, base.y - 2 * d, base.x, base.y + 9 * d); close() }, color)
         val g = Offset(base.x, base.y - 5 * d); val r = 4.2f * d
         val tinta = if (color.luminance() > 0.5f) Color(0xFF2A1E0E) else Color.White
