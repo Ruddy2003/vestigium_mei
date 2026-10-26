@@ -39,6 +39,7 @@ object ContenedoresMas {
             Contenedor.HERBARIO -> Color(0xFFEFEADB)
             Contenedor.ADVIENTO -> Color(0xFFFBF7EE)
             Contenedor.MAPAS -> Color(0xFFE9DCC0)
+            Contenedor.EXPEDIENTE -> Color(0xFFF2EFE6)
             else -> PERGAMINO
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
@@ -181,6 +182,22 @@ object ContenedoresMas {
                 drawRect(HIERRO, Offset(w - 6 * d, h * 0.44f), Size(14 * d + grosor, 20 * d))
                 drawCircle(Color(0xFF1E7A5A), 5 * d, Offset(w + 2 * d, h * 0.44f + 10 * d))
             }
+            Contenedor.EXPEDIENTE -> {
+                // La carpeta de cartón con pestaña, la etiqueta mecanografiada, el sello rojo y la grapa.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 2 * d); canto(w, h, grosor, d, Color(0xFFF2EFE6))
+                val carton = Color(0xFFD8C08A)
+                drawPath(Path().apply { moveTo(0f, h * 0.06f); lineTo(w * 0.36f, h * 0.06f); lineTo(w * 0.42f, 0f); lineTo(w, 0f); lineTo(w, h); lineTo(0f, h); close() },
+                    Brush.linearGradient(listOf(lerp(carton, Color.White, 0.12f), carton, lerp(carton, Color.Black, 0.18f)), Offset.Zero, Offset(w, h)))
+                drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(w * 0.12f, h * 0.18f), Size(w * 0.76f, h * 0.12f), style = Stroke(1.2f * d))
+                drawRect(Color(0xFFF2EFE6), Offset(w * 0.13f, h * 0.185f), Size(w * 0.74f, h * 0.11f))
+                for (k in 0 until 2) drawLine(Color(0xFF141414).copy(alpha = 0.55f), Offset(w * 0.18f, h * (0.215f + k * 0.045f)), Offset(w * (0.7f - k * 0.18f), h * (0.215f + k * 0.045f)), 1.6f * d)
+                val c = Offset(w * 0.64f, h * 0.62f); val r = w * 0.16f
+                drawCircle(Color(0xFFC8102E).copy(alpha = 0.75f), r, c, style = Stroke(2.2f * d))
+                drawCircle(Color(0xFFC8102E).copy(alpha = 0.55f), r * 0.78f, c, style = Stroke(1f * d))
+                drawLine(Color(0xFFC8102E).copy(alpha = 0.75f), Offset(c.x - r * 0.9f, c.y + r * 0.15f), Offset(c.x + r * 0.9f, c.y - r * 0.15f), 2.4f * d)
+                drawRect(Color(0xFF8A8D91), Offset(w * 0.06f, h * 0.05f), Size(w * 0.12f, 3 * d))
+                drawRect(Color(0xFFC8102E), Offset(0f, h * 0.9f), Size(w, h * 0.03f))
+            }
             else -> {}
         }
     }
@@ -249,6 +266,17 @@ object ContenedoresMas {
                 for (k in 0 until 8) { val a = k * PI / 4; val rr = if (k % 2 == 0) r else r * 0.5f; drawLine(Color(0xFF6B5A44).copy(alpha = 0.18f), c, Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat()), 1 * d) }
                 drawCircle(Color(0xFF6B5A44).copy(alpha = 0.15f), r * 0.7f, c, style = Stroke(0.8f * d))
             }
+            Contenedor.EXPEDIENTE -> {
+                // Formulario oficial: renglones grises, casillas en el margen, el folio arriba y la franja roja.
+                drawRect(Color(0xFFC8102E).copy(alpha = 0.45f), Offset(0f, 0f), Size(size.width, 4 * d))
+                drawRect(tinta.copy(alpha = 0.15f), Offset(margen - 10 * d, 74 * d), Size(size.width - margen - 6 * d, size.height - 90 * d), style = Stroke(0.8f * d))
+                var y = 96 * d; var k = 0
+                while (y < size.height - 24 * d) {
+                    drawLine(tinta.copy(alpha = 0.07f), Offset(margen, y), Offset(size.width - 20 * d, y), 0.6f * d)
+                    if (k % 4 == 0) drawRect(tinta.copy(alpha = 0.18f), Offset(margen - 26 * d, y - 12 * d), Size(10 * d, 10 * d), style = Stroke(0.8f * d))
+                    y += renglon; k++
+                }
+            }
             else -> {}
         }
     }
@@ -260,6 +288,11 @@ object ContenedoresMas {
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.28f), Color.Transparent), 10 * d, 34 * d), Offset(10 * d, 4 * d), Size(24 * d, size.height - 8 * d))
                 if (c == Contenedor.MAPAS) { var y = 30 * d; while (y < size.height - 20 * d) { drawCircle(HIERRO, 5 * d, Offset(16 * d, y), style = Stroke(2 * d)); y += 70 * d } }
                 else { var y = 30 * d; while (y < size.height - 20 * d) { drawLine(ORO.copy(alpha = 0.7f), Offset(16 * d, y), Offset(16 * d, y + 10 * d), 1.6f * d); y += 48 * d } }
+            }
+            Contenedor.EXPEDIENTE -> {
+                // Las perforaciones del archivador y el broche metálico.
+                var y = 40 * d; while (y < size.height - 20 * d) { drawCircle(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.25f), 4 * d, Offset(18 * d, y)); y += 110 * d }
+                drawRect(Color(0xFF8A8D91).copy(alpha = 0.8f), Offset(12 * d, 30 * d), Size(4 * d, size.height - 60 * d))
             }
             Contenedor.ACORDEON -> {
                 // El zigzag del plegado a la izquierda.

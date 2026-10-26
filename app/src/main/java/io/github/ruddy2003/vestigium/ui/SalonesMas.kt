@@ -35,6 +35,7 @@ object SalonesMas {
             TemaId.BOTANICO -> invernadero(cs, oscuro, n)
             TemaId.NAVIDAD -> chimenea(cs, oscuro, n)
             TemaId.ANTIGUAS -> salonPiedra(cs, oscuro, n)
+            TemaId.DISTOPIA -> archivo(cs, oscuro, n)
             else -> {}
         }
     }
@@ -57,6 +58,13 @@ object SalonesMas {
                 // Una rama de acebo con sus bayas, de la que «cuelga» el adorno.
                 listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(w / 2, h * 0.5f); quadraticTo(w * (0.5f + s * 0.16f), 0f, w * (0.5f + s * 0.34f), h * 0.4f); quadraticTo(w * (0.5f + s * 0.16f), h * 0.8f, w / 2, h * 0.5f); close() }, Color(0xFF1F6B3A)) }
                 listOf(-0.05f, 0f, 0.05f).forEach { dx -> drawCircle(Color(0xFFB3122E), h * 0.16f, Offset(w * (0.5f + dx), h * 0.5f)) }
+            }
+            TemaId.DISTOPIA -> {
+                // El cajón superior de un archivero metálico, con su tarjetero y la jaladera.
+                drawRect(piedra(Color(0xFF8A8D91)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h))
+                drawRect(Color(0xFFC8102E), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.12f))
+                drawRect(Color(0xFFF2EFE6), Offset(w * 0.42f, h * 0.3f), Size(w * 0.16f, h * 0.3f))
+                drawRect(Color(0xFF3A3C40), Offset(w * 0.44f, h * 0.68f), Size(w * 0.12f, h * 0.12f))
             }
             TemaId.ANTIGUAS -> { drawRect(piedra(Color(0xFF7D7A72)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); with(TrofeosMas) { runas(Offset(w * 0.22f, h * 0.5f), w * 0.56f, h * 0.5f, Color(0xFF2B2A28).copy(alpha = 0.5f), h * 0.06f, 6) } }
             else -> drawRect(metal, Offset(0f, 0f), Size(w, h))
@@ -305,5 +313,42 @@ object SalonesMas {
         }
         // El piso de losas.
         drawRect(piedra.copy(alpha = piedra.alpha * 0.5f), Offset(0f, h - 8 * d), Size(w, 8 * d))
+    }
+
+    /** Distopía: un pasillo del archivo, con archiveros de cajones numerados, lámparas de tubo y la franja roja del Ministerio. */
+    private fun DrawScope.archivo(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val muro = (if (oscuro) Color(0xFF2A2B2E) else Color(0xFFD9D6CC)).copy(alpha = 0.6f)
+        val metal = (if (oscuro) Color(0xFF45474C) else Color(0xFF9A9CA0)).copy(alpha = 0.5f)
+        val linea = (if (oscuro) Color.Black else Color(0xFF55585C)).copy(alpha = 0.3f)
+        val rojo = Color(0xFFC8102E)
+        drawRect(muro, Offset(0f, 0f), Size(w, h))
+        // La franja roja a media altura y el zócalo oscuro.
+        drawRect(rojo.copy(alpha = if (oscuro) 0.5f else 0.35f), Offset(0f, 34 * d), Size(w, 5 * d))
+        drawRect(Color(0xFF141414).copy(alpha = 0.18f), Offset(0f, h - 10 * d), Size(w, 10 * d))
+        // Lámparas de tubo en el techo.
+        val paso = w / n
+        for (i in 0 until n) {
+            val cx = (i + 0.5f) * paso
+            drawRect(Color(0xFF141414).copy(alpha = 0.35f), Offset(cx - 26 * d, 6 * d), Size(52 * d, 4 * d))
+            drawRect(Color(0xFFF4F1E4).copy(alpha = if (oscuro) 0.75f else 0.9f), Offset(cx - 24 * d, 10 * d), Size(48 * d, 3 * d))
+            drawPath(Path().apply { moveTo(cx - 24 * d, 13 * d); lineTo(cx + 24 * d, 13 * d); lineTo(cx + 60 * d, 90 * d); lineTo(cx - 60 * d, 90 * d); close() },
+                Brush.verticalGradient(listOf(Color(0xFFF4F1E4).copy(alpha = if (oscuro) 0.16f else 0.22f), Color.Transparent), 13 * d, 90 * d))
+        }
+        // Archiveros entre las columnas de piezas: cajones con tarjetero y jaladera.
+        for (i in 0..n) {
+            val x = i * paso
+            var y = 50 * d; var k = 0
+            while (y + 30 * d < h - 12 * d) {
+                drawRect(metal, Offset(x - 12 * d, y), Size(24 * d, 28 * d))
+                drawRect(linea, Offset(x - 12 * d, y), Size(24 * d, 28 * d), style = Stroke(1f))
+                drawRect(Color(0xFFF2EFE6).copy(alpha = 0.55f), Offset(x - 5 * d, y + 5 * d), Size(10 * d, 6 * d))
+                drawRect(linea.copy(alpha = 0.6f), Offset(x - 4 * d, y + 17 * d), Size(8 * d, 3 * d))
+                // Algunos cajones llevan el sello rojo de «archivado».
+                if ((i + k) % 3 == 0) drawCircle(rojo.copy(alpha = 0.35f), 3.5f * d, Offset(x + 7 * d, y + 22 * d), style = Stroke(1f * d))
+                y += 30 * d; k++
+            }
+        }
+        drawLine(linea, Offset(0f, h - 10 * d), Offset(w, h - 10 * d), 1f * d)
     }
 }

@@ -153,7 +153,7 @@ private class CartaAnio(val id: String, val titulo: String, val latin: String, v
 
 /** Nombre de cada tarjeta, para elegir cuáles salen al exportar. */
 val TARJETAS_ANIO = listOf(
-    "portada" to "Portada", "movimiento" to "Movimiento y lugares", "sueno" to "Sueño", "animo" to "Ánimo", "gente" to "Gente", "cultura" to "Cultura",
+    "portada" to "Portada", "libros" to "Libros del diario", "cosas" to "El año en cosas", "movimiento" to "Movimiento y lugares", "sueno" to "Sueño", "animo" to "Ánimo", "gente" to "Gente", "cultura" to "Cultura",
     "musica" to "Música y YouTube", "cuerpo" to "Comida y gimnasio", "telefono" to "Teléfono", "dinero" to "Dinero", "comun" to "Lo más común",
     "curioso" to "Único y curioso", "comparar" to "Comparaciones", "medallas" to "Medallas", "predicciones" to "Predicciones", "arquetipo" to "Tu arquetipo",
     "palabra" to "La palabra del año", "cartel" to "Cartel final", "carta" to "La carta para el año que viene",
@@ -274,6 +274,15 @@ private fun cartas(d: TuAnio.Datos): List<CartaAnio> {
             Grande(p.palabras.toDouble(), "palabras en el diario", v)
             Text("Un libro de ${n0(d.paginas.toDouble())} páginas. Leerlo en voz alta te tomaría ${n1(d.horasLeerlo)} horas.", style = MaterialTheme.typography.bodyLarge)
         }
+    }
+    // El año visual: el diario como pilas de libros y las cifras como objetos que se cuentan de un vistazo.
+    if (p.palabras > 0) l += CartaAnio("libros", "Tu año en libros", "LIBRI") { _ ->
+        Text("Lo que escribiste, mes por mes", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground)
+        LibrosDelAnio(d.anio)
+    }
+    if (d.suenoDias >= 1 || p.pasosTotal > 0 || p.ciudades.isNotEmpty() || p.entrenos > 0) l += CartaAnio("cosas", "Tu año en cosas", "RES") { _ ->
+        Text("Tu año, contado en cosas", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground)
+        CosasDelAnio(d)
     }
     if (p.pasosTotal > 0 || p.ciudades.isNotEmpty()) l += CartaAnio("movimiento", "Te moviste", "MOTVS") { v ->
         if (p.pasosTotal > 0) {

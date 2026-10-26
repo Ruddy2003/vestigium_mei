@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
 import io.github.ruddy2003.vestigium.ciencia.Logros
@@ -72,7 +73,7 @@ object HallImagen {
             val x0 = (ANCHO - enFila * celdaW) / 2 + col * celdaW
             val y0 = arriba + fila * celdaH + 18f
             val cx = x0 + celdaW / 2
-            zona(cx - diam / 2, y0, diam, diam) { with(PiezasLogro) { pieza(g, tema, cs) } }
+            zona(cx - diam * 0.41f, y0, diam * 0.82f, diam) { dibujarTrofeoDe(g, tema, cs.background.luminance() < 0.5f, cs.onSurface) }
             val metal = METALES_HALL[(g.nivel - 1).coerceIn(0, 3)]
             zona(cx - diam * 0.55f, y0 + diam + 4f, diam * 1.1f, 30f) {
                 if (tema in SalonesTema.TEMAS) with(SalonesTema) { pedestal(tema, cs, metal) }

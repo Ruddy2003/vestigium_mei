@@ -39,6 +39,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     HERBARIO("Herbario de momentos", "pliego"),
     ADVIENTO("Calendario de adviento", "casilla"),
     MAPAS("Libro de mapas", "mapa"),
+    EXPEDIENTE("Expediente de momentos", "folio"),
 }
 
 fun contenedorDe(t: TemaId): Contenedor = when (t) {
@@ -56,6 +57,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.BOTANICO -> Contenedor.HERBARIO
     TemaId.NAVIDAD -> Contenedor.ADVIENTO
     TemaId.ANTIGUAS -> Contenedor.MAPAS
+    TemaId.DISTOPIA -> Contenedor.EXPEDIENTE
     else -> Contenedor.ESPIRAL
 }
 

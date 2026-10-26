@@ -367,7 +367,7 @@ fun PantallaHall(nav: Nav) {
     val todos by produceState(if (TusNumeros.sincrono) Logros.todos(ctx) else null, Repo.config.logros_vistos, Repo.dias, Repo.salud) {
         if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { runCatching { Logros.todos(ctx) }.getOrDefault(emptyList()) }
     }
-    Hoja("Hall de logros", nav.atras, "Tus logros favoritos, en exhibición. Cada uno con su pieza: ciudades, sellos, templos, huellas, libros…") {
+    Hoja("Hall de logros", nav.atras, "Tus logros favoritos, en exhibición, cada uno con el trofeo de su tema.") {
         val l = todos
         if (l == null) { Vacio("Contando…"); return@Hoja }
         CuerpoHall(l)
@@ -427,7 +427,7 @@ fun CuerpoHall(l: List<Logros.Logro>) {
                 enHall.forEachIndexed { i, g ->
                     if (i > 0) HorizontalDivider()
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        PiezaLogro(g, 40.dp, tema = tema)
+                        TrofeoLogro(g, 44.dp, tema = tema)
                         Text(g.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f).padding(start = 10.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         TextButton(onClick = { mover(ids, i, -1) }, enabled = i > 0) { Text("↑") }
                         TextButton(onClick = { mover(ids, i, 1) }, enabled = i < ids.lastIndex) { Text("↓") }
@@ -449,7 +449,7 @@ fun CuerpoHall(l: List<Logros.Logro>) {
                         Repo.cambiarConfig { c -> c.copy(hall_logros = if (dentro) c.hall_logros - g.id else if (c.hall_logros.size >= 12) c.hall_logros else c.hall_logros + g.id) }
                     }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = dentro, onCheckedChange = null)
-                        PiezaLogro(g, 36.dp, tema = tema)
+                        TrofeoLogro(g, 40.dp, tema = tema)
                         Column(Modifier.weight(1f).padding(start = 10.dp)) {
                             Text(g.nombre, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(g.categoria + " · " + Fechas.corto(g.conseguido!!), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
@@ -474,7 +474,8 @@ private fun Pedestal(g: Logros.Logro, tema: TemaId, modifier: Modifier) {
     val cs = MaterialTheme.colorScheme
     val metal = METALES_HALL[(g.nivel - 1).coerceIn(0, 3)]
     Column(modifier.padding(horizontal = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        PiezaLogro(g, 104.dp, tema = tema)
+        // El trofeo del tema (el mismo de la sala de trofeos), sobre la repisa del salón.
+        TrofeoLogro(g, 118.dp, tema = tema)
         // El pedestal: columna en el templo, plinto de piedra en el castillo, base iluminada en el laboratorio, repisa en el taller.
         Canvas(Modifier.fillMaxWidth().height(22.dp).padding(horizontal = 18.dp)) {
             if (tema in SalonesTema.TEMAS) { with(SalonesTema) { pedestal(tema, cs, metal) }; return@Canvas }
@@ -507,7 +508,7 @@ fun RecuadroHall(nav: Nav) {
         FondoSalon(tema)
         Row(Modifier.fillMaxSize().padding(horizontal = 10.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
             if (enHall.isEmpty()) Text("tu vitrina", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            enHall.take(5).forEach { PiezaLogro(it, 58.dp, tema = tema) }
+            enHall.take(5).forEach { TrofeoLogro(it, 72.dp, tema = tema) }
         }
     }
 }

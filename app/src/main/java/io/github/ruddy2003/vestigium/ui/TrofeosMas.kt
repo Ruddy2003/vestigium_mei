@@ -26,7 +26,7 @@ import kotlin.math.sin
  * mapas, llaves y cristales). Sin figuras humanas ni animales, sin letras reales: los signos son inventados.
  */
 object TrofeosMas {
-    val TEMAS = setOf(TemaId.ANDALUS, TemaId.SEDA, TemaId.MONGOL, TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ANTIGUAS)
+    val TEMAS = setOf(TemaId.ANDALUS, TemaId.SEDA, TemaId.MONGOL, TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ANTIGUAS, TemaId.DISTOPIA)
 
     val NOMBRES: Map<TemaId, Map<String, String>> = mapOf(
         TemaId.ANDALUS to mapOf("Diario" to "Libro de lacería", "Mundo" to "Astrolabio", "Cuerpo" to "Fuente del patio", "Mente" to "Estrella de ocho puntas",
@@ -43,6 +43,8 @@ object TrofeosMas {
             "Cultura" to "Esfera", "Gente" to "Corona", "Constancia" to "Campana", "Curiosos" to "Regalo", "Tuyos" to "Piña"),
         TemaId.ANTIGUAS to mapOf("Diario" to "Libro de runas", "Mundo" to "Mapa de la travesía", "Cuerpo" to "Yelmo", "Mente" to "Cristal",
             "Cultura" to "Arpa", "Gente" to "Estandarte", "Constancia" to "Llave de hierro", "Curiosos" to "Gema", "Tuyos" to "Linterna de mina"),
+        TemaId.DISTOPIA to mapOf("Diario" to "Expediente sellado", "Mundo" to "Pase de control", "Cuerpo" to "Insignia numerada", "Mente" to "Tarjeta perforada",
+            "Cultura" to "Documento censurado", "Gente" to "Credencial", "Constancia" to "Sello de goma", "Curiosos" to "Cámara de vigilancia", "Tuyos" to "Altavoz"),
     )
 
     private fun TrofeosTema.Pincel.c(c: Color): Color = if (hecho) c else sombra
@@ -102,6 +104,15 @@ object TrofeosMas {
                     listOf(-0.03f, 0.0f, 0.03f).forEach { dx -> drawCircle(Color(0xFFB3122E), w * 0.022f, Offset(w * (0.5f + dx), h * 0.825f)) }
                 }
             }
+            TemaId.DISTOPIA -> {
+                // Bloque de concreto con su número de inventario estarcido y una franja roja.
+                val c = if (p.hecho) Color(0xFF9A9890) else ped
+                drawRect(piedra(c), Offset(w * 0.16f, h * 0.79f), Size(w * 0.68f, h * 0.16f))
+                if (p.hecho) {
+                    drawRect(Color(0xFFC8102E), Offset(w * 0.16f, h * 0.79f), Size(w * 0.68f, h * 0.02f))
+                    for (k in 0 until 6) drawRect(Color(0xFF141414).copy(alpha = 0.55f), Offset(w * (0.3f + k * 0.07f), h * 0.85f), Size(w * 0.035f, h * 0.05f))
+                }
+            }
             TemaId.ANTIGUAS -> {
                 // Un sillar con runas inventadas.
                 val c = if (p.hecho) Color(0xFF7D7A72) else ped
@@ -153,6 +164,7 @@ object TrofeosMas {
             TemaId.BOTANICO -> botanico(cat, p)
             TemaId.NAVIDAD -> navidad(cat, p)
             TemaId.ANTIGUAS -> antiguas(cat, p)
+            TemaId.DISTOPIA -> distopia(cat, p)
             else -> return false
         }
         return true
@@ -893,6 +905,112 @@ object TrofeosMas {
                 listOf(0.36f, 0.5f, 0.64f).forEach { x -> drawLine(hierro, p.o(x, 0.22f), p.o(x, 0.6f), lw * 0.9f) }
                 caja(p, 0.3f, 0.6f, 0.7f, 0.68f)
                 caja(p, 0.36f, 0.68f, 0.64f, 0.74f, SolidColor(hierro))
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Distopía: la oficina del Ministerio
+
+    private fun DrawScope.distopia(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val carton = p.c(Color(0xFFD8C08A)); val papel = p.c(Color(0xFFF2EFE6)); val tinta = p.c(Color(0xFF141414))
+        val rojo = p.c(Color(0xFFC8102E)); val gris = p.c(Color(0xFF55585C)); val acero = p.c(Color(0xFF8A8D91))
+        fun lineas(x0: Float, y0: Float, x1: Float, n: Int, paso: Float, col: Color = gris) { for (k in 0 until n) drawLine(col, p.o(x0, y0 + k * paso), p.o(x1 - (if (k % 3 == 2) 0.12f else 0f), y0 + k * paso), lw * 0.45f) }
+        when (cat) {
+            "Diario" -> {
+                // El expediente: carpeta de cartón con pestaña, hojas que asoman y el sello rojo de «archivado».
+                caja(p, 0.2f, 0.18f, 0.8f, 0.72f, SolidColor(lerp(carton, Color.Black, 0.12f)))
+                caja(p, 0.22f, 0.14f, 0.78f, 0.68f, SolidColor(papel))
+                drawPath(Path().apply { moveTo(p.x(0.18f), p.y(0.24f)); lineTo(p.x(0.42f), p.y(0.24f)); lineTo(p.x(0.46f), p.y(0.2f)); lineTo(p.x(0.82f), p.y(0.2f)); lineTo(p.x(0.82f), p.y(0.74f)); lineTo(p.x(0.18f), p.y(0.74f)); close() }, SolidColor(carton))
+                drawRect(p.metal(0.2f, 0.8f), Offset(p.x(0.18f), p.y(0.2f)), Size(p.x(0.64f), p.y(0.54f)), style = Stroke(lw * 0.7f))
+                if (p.hecho) { lineas(0.26f, 0.32f, 0.6f, 3, 0.05f, tinta.copy(alpha = 0.55f)); texto("Nº 0417", p, 0.36f, 0.62f, 0.07f, tinta) }
+                drawCircle(rojo, p.w * 0.11f, p.o(0.66f, 0.56f), style = Stroke(lw * 1.2f))
+                drawLine(rojo, p.o(0.58f, 0.6f), p.o(0.74f, 0.52f), lw * 1.1f)
+            }
+            "Mundo" -> {
+                // El pase de control: tarjeta con franja roja, código de barras y el sello de la zona.
+                caja(p, 0.16f, 0.2f, 0.84f, 0.66f, SolidColor(papel))
+                caja(p, 0.16f, 0.2f, 0.84f, 0.3f, SolidColor(rojo))
+                if (p.hecho) texto("ZONA 3", p, 0.5f, 0.25f, 0.075f, Color(0xFFF2EFE6))
+                val barras = listOf(2, 1, 3, 1, 1, 2, 3, 1, 2, 1, 1, 3, 2, 1, 2)
+                var x = 0.22f
+                barras.forEach { b -> val ww = b * 0.009f; caja(p, x, 0.38f, x + ww, 0.58f, SolidColor(tinta)); x += ww + 0.012f }
+                drawCircle(gris, p.w * 0.08f, p.o(0.72f, 0.48f), style = Stroke(lw * 0.9f))
+                estrella(p.o(0.72f, 0.48f), p.w * 0.04f, p.w * 0.018f, 5, SolidColor(gris))
+                drawRect(p.metal(0.16f, 0.84f), Offset(p.x(0.16f), p.y(0.2f)), Size(p.x(0.68f), p.y(0.46f)), style = Stroke(lw * 0.8f))
+            }
+            "Cuerpo" -> {
+                // La insignia numerada: placa con muescas en las esquinas, el número grande y dos remaches.
+                val placa = Path().apply { val a = 0.06f; moveTo(p.x(0.2f + a), p.y(0.16f)); lineTo(p.x(0.8f - a), p.y(0.16f)); lineTo(p.x(0.8f), p.y(0.16f + a)); lineTo(p.x(0.8f), p.y(0.68f - a))
+                    lineTo(p.x(0.8f - a), p.y(0.68f)); lineTo(p.x(0.2f + a), p.y(0.68f)); lineTo(p.x(0.2f), p.y(0.68f - a)); lineTo(p.x(0.2f), p.y(0.16f + a)); close() }
+                drawPath(placa, p.metal(0.2f, 0.8f))
+                drawPath(placa, p.linea, style = Stroke(lw * 0.7f))
+                texto("7", p, 0.5f, 0.38f, 0.26f, p.c(Color(0xFF1F1F1F)))
+                caja(p, 0.28f, 0.56f, 0.72f, 0.6f, SolidColor(rojo))
+                listOf(0.27f, 0.73f).forEach { xx -> drawCircle(p.linea, p.w * 0.018f, p.o(xx, 0.24f)) }
+            }
+            "Mente" -> {
+                // La tarjeta perforada: esquina cortada, columnas de números y los agujeros de las respuestas.
+                val tarjeta = Path().apply { moveTo(p.x(0.22f), p.y(0.14f)); lineTo(p.x(0.84f), p.y(0.14f)); lineTo(p.x(0.84f), p.y(0.7f)); lineTo(p.x(0.16f), p.y(0.7f)); lineTo(p.x(0.16f), p.y(0.22f)); close() }
+                drawPath(tarjeta, SolidColor(carton))
+                val az = java.util.Random(41)
+                for (col in 0 until 10) for (fila in 0 until 8) {
+                    val cx = 0.22f + col * 0.06f; val cy = 0.22f + fila * 0.06f
+                    if (az.nextInt(5) == 0) caja(p, cx - 0.012f, cy - 0.016f, cx + 0.012f, cy + 0.016f, SolidColor(if (p.hecho) Color(0xFF2A2A2A) else p.sombra))
+                    else if (p.hecho) drawCircle(gris.copy(alpha = 0.35f), p.w * 0.004f, p.o(cx, cy))
+                }
+                drawPath(tarjeta, p.metal(0.16f, 0.84f), style = Stroke(lw * 0.8f))
+            }
+            "Cultura" -> {
+                // El documento censurado: hoja con renglones y barras negras encima.
+                caja(p, 0.22f, 0.08f, 0.78f, 0.72f, SolidColor(papel))
+                if (p.hecho) lineas(0.27f, 0.2f, 0.73f, 9, 0.055f)
+                listOf(Triple(0.3f, 0.25f, 0.66f), Triple(0.27f, 0.36f, 0.5f), Triple(0.45f, 0.47f, 0.73f), Triple(0.27f, 0.58f, 0.6f)).forEach { (x0, y, x1) -> caja(p, x0, y - 0.018f, x1, y + 0.018f, SolidColor(tinta)) }
+                drawRect(p.metal(0.22f, 0.78f), Offset(p.x(0.22f), p.y(0.08f)), Size(p.x(0.56f), p.y(0.64f)), style = Stroke(lw * 0.8f))
+                if (p.hecho) texto("CLASIFICADO", p, 0.5f, 0.13f, 0.055f, rojo)
+            }
+            "Gente" -> {
+                // La credencial: tarjeta colgada de su cinta, con foto vacía (solo el marco), huella y número.
+                drawLine(rojo, p.o(0.42f, 0.02f), p.o(0.48f, 0.16f), lw * 1.4f); drawLine(rojo, p.o(0.58f, 0.02f), p.o(0.52f, 0.16f), lw * 1.4f)
+                caja(p, 0.45f, 0.14f, 0.55f, 0.2f)
+                caja(p, 0.2f, 0.2f, 0.8f, 0.7f, SolidColor(papel))
+                caja(p, 0.26f, 0.28f, 0.48f, 0.54f, SolidColor(p.c(Color(0xFFCFCBC0))))
+                if (p.hecho) {
+                    for (k in 0 until 5) drawArc(gris, 200f, 140f, false, Offset(p.x(0.6f - k * 0.015f), p.y(0.3f - k * 0.012f)), Size(p.x(0.1f + k * 0.03f), p.y(0.1f + k * 0.03f)), style = Stroke(lw * 0.4f))
+                    lineas(0.26f, 0.6f, 0.74f, 2, 0.05f, tinta.copy(alpha = 0.6f))
+                }
+                drawRect(p.metal(0.2f, 0.8f), Offset(p.x(0.2f), p.y(0.2f)), Size(p.x(0.6f), p.y(0.5f)), style = Stroke(lw * 0.9f))
+            }
+            "Constancia" -> {
+                // El sello de goma: mango, cuerpo de metal y la huella roja del sello debajo.
+                drawCircle(p.c(Color(0xFF3A2A1E)), p.w * 0.09f, p.o(0.5f, 0.14f))
+                caja(p, 0.46f, 0.2f, 0.54f, 0.36f, SolidColor(p.c(Color(0xFF3A2A1E))))
+                caja(p, 0.3f, 0.36f, 0.7f, 0.46f)
+                caja(p, 0.32f, 0.46f, 0.68f, 0.5f, SolidColor(tinta))
+                drawRect(rojo, Offset(p.x(0.24f), p.y(0.56f)), Size(p.x(0.52f), p.y(0.16f)), style = Stroke(lw * 1.2f))
+                if (p.hecho) texto("APROBADO", p, 0.5f, 0.64f, 0.065f, rojo)
+            }
+            "Curiosos" -> {
+                // La cámara de vigilancia: brazo de pared, cuerpo y lente con su luz roja.
+                caja(p, 0.74f, 0.16f, 0.82f, 0.42f, SolidColor(gris))
+                drawLine(gris, p.o(0.78f, 0.28f), p.o(0.62f, 0.34f), lw * 1.6f)
+                val cuerpo = Path().apply { moveTo(p.x(0.18f), p.y(0.3f)); lineTo(p.x(0.64f), p.y(0.24f)); lineTo(p.x(0.66f), p.y(0.42f)); lineTo(p.x(0.2f), p.y(0.5f)); close() }
+                drawPath(cuerpo, p.metal(0.18f, 0.66f))
+                drawPath(cuerpo, p.linea, style = Stroke(lw * 0.6f))
+                drawCircle(tinta, p.w * 0.07f, p.o(0.2f, 0.4f)); drawCircle(p.c(Color(0xFF2E4A6E)), p.w * 0.04f, p.o(0.2f, 0.4f))
+                drawCircle(rojo, p.w * 0.018f, p.o(0.58f, 0.3f))
+                if (p.hecho) drawCircle(Brush.radialGradient(listOf(Color(0xFFC8102E).copy(alpha = 0.45f), Color.Transparent), p.o(0.58f, 0.3f), p.w * 0.06f), p.w * 0.06f, p.o(0.58f, 0.3f))
+            }
+            else -> {
+                // El altavoz de la plaza: bocina de metal en su poste, con las ondas del anuncio.
+                caja(p, 0.47f, 0.4f, 0.53f, 0.76f, SolidColor(gris))
+                val bocina = Path().apply { moveTo(p.x(0.36f), p.y(0.3f)); lineTo(p.x(0.36f), p.y(0.42f)); lineTo(p.x(0.74f), p.y(0.56f)); lineTo(p.x(0.74f), p.y(0.16f)); close() }
+                drawPath(bocina, p.metal(0.36f, 0.74f))
+                drawPath(bocina, p.linea, style = Stroke(lw * 0.6f))
+                caja(p, 0.3f, 0.3f, 0.36f, 0.42f, SolidColor(acero))
+                if (p.hecho) listOf(0.1f, 0.16f, 0.22f).forEachIndexed { k, r ->
+                    drawArc(rojo.copy(alpha = 0.8f - k * 0.2f), -40f, 80f, false, Offset(p.x(0.74f) - p.w * r, p.y(0.36f) - p.w * r), Size(p.w * r * 2, p.w * r * 2), style = Stroke(lw * 0.8f))
+                }
             }
         }
     }

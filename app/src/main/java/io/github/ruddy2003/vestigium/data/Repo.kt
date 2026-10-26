@@ -179,6 +179,7 @@ object Repo {
         enMain { consumos = (consumos + nuevos).sortedBy { it.inicio } }
     }
     fun consumosEnMemoria(l: List<Consumo>) { consumos = l }
+    fun experimentosEnMemoria(l: List<Experimento>) { experimentos = l }
 
     // ---------- Notas y metas ----------
     fun guardarNota(n: Nota) {

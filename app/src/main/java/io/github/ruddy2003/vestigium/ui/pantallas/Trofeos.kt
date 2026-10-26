@@ -117,6 +117,13 @@ fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: 
     }
 }
 
+/** El trofeo de un logro en un lienzo cualquiera (la imagen del hall): el del tema si lo tiene, o el de siempre. */
+internal fun DrawScope.dibujarTrofeoDe(l: Logros.Logro, tema: TemaId, oscuro: Boolean, tinta: Color) {
+    val pedestal = if (oscuro) Color(0xFF2B2622) else Color(0xFF4A3A2C)
+    if (tema in TrofeosTema.TEMAS) dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, tinta)
+    else dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, tinta)
+}
+
 /** El trofeo de los temas históricos: la obra o el objeto de su categoría (ver [TrofeosTema]) sobre el pedestal del tema. */
 internal fun DrawScope.dibujarTrofeoTema(tema: TemaId, categoria: String, nivel: Int, hecho: Boolean, colorPedestal: Color, tinta: Color) {
     val (oscuro, base, brillo) = METAL[nivel - 1]

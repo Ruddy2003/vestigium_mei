@@ -1040,6 +1040,58 @@ class Capturas {
         }
     }
     @Test fun recaidasLibidoMedieval() = v67(TemaId.MEDIEVAL, false, 4400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(navVacia) }
+    // ---------------------------------------------------------------- lote 3 (v81)
+    @Test fun l3HallGotico() = hall(TemaId.GOTICO, true)
+    @Test fun l3HallNapoleon() = hall(TemaId.NAPOLEON, false)
+    @Test fun l3HallDistopia() = hall(TemaId.DISTOPIA, false)
+    @Test fun l3HallRomano() = hall(TemaId.ROMANO, false)
+    @Test fun l3HallSeda() = hall(TemaId.SEDA, true)
+    @Test fun l3HallBotanico() = hall(TemaId.BOTANICO, false)
+    @Test fun l3HallCiber() = hall(TemaId.CIBER, true)
+    @Test fun l3LibretaDistopia() = libreta(TemaId.DISTOPIA, false)
+    @Test fun l3CampanaDistopia() = campanas(TemaId.DISTOPIA, false)
+    @Test fun l3CampanaDistopiaOscuro() = campanas(TemaId.DISTOPIA, true)
+    @Test fun l3TrofeosDistopia() = v73(TemaId.DISTOPIA, false, 6000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
+    @Test fun l3AnioLibrosGotico() = tarjetaAnio(TemaId.GOTICO, true, "libros")
+    @Test fun l3AnioLibrosNapoleon() = tarjetaAnio(TemaId.NAPOLEON, false, "libros")
+    @Test fun l3AnioLibrosDistopia() = tarjetaAnio(TemaId.DISTOPIA, false, "libros")
+    @Test fun l3AnioLibrosRomano() = tarjetaAnio(TemaId.ROMANO, false, "libros")
+    @Test fun l3AnioLibrosSeda() = tarjetaAnio(TemaId.SEDA, true, "libros")
+    @Test fun l3AnioLibrosBotanico() = tarjetaAnio(TemaId.BOTANICO, false, "libros")
+    @Test fun l3AnioLibrosAntiguas() = tarjetaAnio(TemaId.ANTIGUAS, false, "libros")
+    @Test fun l3AnioCosasRomano() = tarjetaAnio(TemaId.ROMANO, false, "cosas")
+    @Test fun l3AnioCosasCiber() = tarjetaAnio(TemaId.CIBER, true, "cosas")
+    private fun datosLote3() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        val tomas = (0 until 40).filter { it % 6 != 5 }.map { i ->
+            val f = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -i.toLong())
+            io.github.ruddy2003.vestigium.data.TomaSuplemento("t$i", "creatina", f + "T08:30:00-06:00", f, if (i > 33) 20.0 else 5.0)
+        } + listOf(io.github.ruddy2003.vestigium.data.TomaSuplemento("m1", "magnesio", io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -1) + "T22:00:00-06:00", io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -1), 300.0))
+        val r = java.util.Random(3)
+        val laptop = (0 until 14).associate { i ->
+            val f = io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -i.toLong())
+            f to io.github.ruddy2003.vestigium.data.LaptopDia(f, apps = mapOf("chrome" to 60.0 + r.nextInt(80), "claude" to 20.0 + r.nextInt(70), "winword" to r.nextInt(60).toDouble(),
+                "minecraft" to (if (i % 5 == 0) 70.0 else 0.0), "otras apps" to 10.0 + r.nextInt(30)).filterValues { it > 0 },
+                sitios = mapOf("gemini.google.com" to 5.0 + r.nextInt(20), "keep.google.com" to r.nextInt(15).toDouble(), "youtube.com" to r.nextInt(40).toDouble(), "otros sitios" to 10.0 + r.nextInt(30)).filterValues { it > 0 })
+        }
+        Repo.lote3EnMemoria(tomas, laptop)
+    }
+    @Test fun l3SuplementosRomano() = v73(TemaId.ROMANO, false, 3200, { c -> c.copy(suplementos = io.github.ruddy2003.vestigium.data.Suplementos.CATALOGO.take(3), suplementos_hora = 9) }) {
+        datosLote3(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(navVacia) }
+    @Test fun l3SuplementosDistopia() = v73(TemaId.DISTOPIA, true, 2400) { datosLote3(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(navVacia) }
+    @Test fun l3LaptopGotico() = v73(TemaId.GOTICO, false, 3600) { datosLote3(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaLaptop(navVacia) }
+    @Test fun l3RedBotanico() = v73(TemaId.BOTANICO, false, 3000, { c -> c.copy(vinculos = listOf(io.github.ruddy2003.vestigium.data.Vinculo("ana", "luis", "colegas"),
+        io.github.ruddy2003.vestigium.data.Vinculo("ana", "marta", "familia"))) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRed(navVacia) }
+    @Test fun l3RedCiber() = v73(TemaId.CIBER, true, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRed(navVacia) }
+    @Test fun l3ExperimentosSeda() = v73(TemaId.SEDA, false, 4200) {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        Repo.experimentosEnMemoria(listOf(io.github.ruddy2003.vestigium.data.Experimento("e1", "Hora de dormir", "Estar en la cama antes de las 00:00", "valencia",
+            io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.lunesDe(hoy), -28), 6, listOf(true, false, false, true, true, false),
+            pregunta = "¿Dormirme antes de las 00:00 mejora cómo me siento?", hipotesis = "Me sentiré un poco mejor al día siguiente", sellada = hoy + "T21:10:00-06:00", lavado_dias = 1)))
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaExperimentos(navVacia)
+    }
+    @Test fun l3GuiaNapoleon() = v73(TemaId.NAPOLEON, false, 3400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(navVacia, "diario") }
+    @Test fun l3GuiaCompletaRomano() = v73(TemaId.ROMANO, true, 3400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(navVacia) }
 }
 
 @Composable
