@@ -46,3 +46,30 @@ class MosaicoEnfoque : MosaicoBase(QuickActivity.M_ENFOQUE, 3404) {
         }
     }
 }
+
+/** Suplementos: un toque anota la dosis habitual de los que faltan hoy; encendido cuando ya están todos. */
+class MosaicoSuplemento : TileService() {
+    private fun pendientes(): List<io.github.ruddy2003.vestigium.data.Suplemento> = runCatching {
+        io.github.ruddy2003.vestigium.data.Repo.init(this)
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        io.github.ruddy2003.vestigium.data.Suplementos.activos().filter { it.modelo != "exposicion" && !io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id, hoy) }
+    }.getOrDefault(emptyList())
+
+    private fun pintar() {
+        val faltan = pendientes()
+        qsTile?.let {
+            it.state = if (faltan.isEmpty()) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+            if (Build.VERSION.SDK_INT >= 29) it.subtitle = if (faltan.isEmpty()) "hoy ya" else faltan.joinToString(", ") { s -> s.nombre.lowercase() }
+            it.updateTile()
+        }
+    }
+
+    override fun onStartListening() { super.onStartListening(); pintar() }
+
+    override fun onClick() {
+        super.onClick()
+        pendientes().forEach { io.github.ruddy2003.vestigium.data.Suplementos.registrar(it) }
+        // El guardado en la base es inmediato; el estado en memoria se actualiza en el hilo principal.
+        android.os.Handler(mainLooper).postDelayed({ pintar() }, 300)
+    }
+}

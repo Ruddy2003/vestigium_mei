@@ -236,7 +236,7 @@ object MapasMas {
             TemaId.BOTANICO -> drawPath(Path().apply { moveTo(g.x - r * 0.8f, g.y + r * 0.4f); quadraticTo(g.x - r * 0.4f, g.y - r, g.x + r * 0.8f, g.y - r * 0.5f); quadraticTo(g.x + r * 0.3f, g.y + r * 0.8f, g.x - r * 0.8f, g.y + r * 0.4f); close() }, Color(0xFF3F7A3A))
             TemaId.COLONOS -> { drawArc(Color(0xFFF1E6C8), 180f, 180f, true, Offset(g.x - r * 0.8f, g.y - r * 0.8f), Size(r * 1.6f, r * 1.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x - r * 0.4f, g.y + r * 0.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x + r * 0.4f, g.y + r * 0.4f)) }
             TemaId.ANTIGUAS -> with(TrofeosMas) { runas(Offset(g.x - r * 0.3f, g.y), r * 0.6f, r * 1.2f, tinta, 1f * d, 1, 4) }
-            TemaId.DISTOPIA -> { drawRect(Color(0xFFF2EFE6), Offset(g.x - r * 0.75f, g.y - r * 0.55f), Size(r * 1.5f, r * 1.1f)); drawRect(Color(0xFFC8102E), Offset(g.x - r * 0.75f, g.y - r * 0.55f), Size(r * 1.5f, r * 0.3f)) }
+            TemaId.DISTOPIA -> { drawRect(Color(0xFFC8102E), Offset(g.x - r * 0.7f, g.y - r * 0.7f), Size(r * 1.4f, r * 1.4f)); drawLine(Color(0xFFF2EFE6), Offset(g.x - r * 0.45f, g.y), Offset(g.x + r * 0.45f, g.y), 1.2f * d) }
             else -> drawCircle(tinta, r * 0.45f, g)
         }
     }

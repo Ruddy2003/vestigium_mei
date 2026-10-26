@@ -22,6 +22,7 @@
     <string name="tile_momento">Momento</string>
     <string name="tile_gasto">Gasto</string>
     <string name="tile_animo">Ánimo</string>
+    <string name="tile_suplemento">Suplementos</string>
     <string name="tile_enfoque">Enfoque</string>
     <string name="widget_enfoque_desc">Cronómetro de enfoque y siestas: toca para empezar o terminar</string>
 </resources>

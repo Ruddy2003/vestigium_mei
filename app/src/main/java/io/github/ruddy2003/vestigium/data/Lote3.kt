@@ -258,7 +258,7 @@ object RedPersonas {
         nodos.forEach { it.x = 0.2f + 0.6f * r.nextFloat(); it.y = 0.2f + 0.6f * r.nextFloat() }
         val idx = nodos.withIndex().associate { it.value.nombre to it.index }
         val lazos = aristas.filter { it.tipo != "no_se_conocen" }.mapNotNull { a -> val i = idx[a.a]; val j = idx[a.b]; if (i != null && j != null) Triple(i, j, a) else null }
-        val k = (0.9 / sqrt(nodos.size.toDouble())).toFloat()
+        val k = (0.5 / sqrt(nodos.size.toDouble())).toFloat()
         var temp = 0.1f
         repeat(vueltas) {
             val dx = FloatArray(nodos.size); val dy = FloatArray(nodos.size)
@@ -277,12 +277,18 @@ object RedPersonas {
             }
             for (i in nodos.indices) {
                 // Una leve atracción al centro para que los sueltos no se vayan a las orillas.
-                dx[i] += (0.5f - nodos[i].x) * 0.05f; dy[i] += (0.5f - nodos[i].y) * 0.05f
+                dx[i] += (0.5f - nodos[i].x) * 0.12f; dy[i] += (0.5f - nodos[i].y) * 0.12f
                 val d = sqrt(dx[i] * dx[i] + dy[i] * dy[i]).coerceAtLeast(1e-6f)
                 nodos[i].x = (nodos[i].x + dx[i] / d * minOf(d, temp)).coerceIn(0.04f, 0.96f)
                 nodos[i].y = (nodos[i].y + dy[i] / d * minOf(d, temp)).coerceIn(0.04f, 0.96f)
             }
             temp = (temp * 0.985f).coerceAtLeast(0.002f)
+        }
+        // Al final se estira para usar todo el cuadro (con margen para los nombres).
+        val x0 = nodos.minOf { it.x }; val x1 = nodos.maxOf { it.x }; val y0 = nodos.minOf { it.y }; val y1 = nodos.maxOf { it.y }
+        nodos.forEach { n ->
+            n.x = if (x1 - x0 < 1e-3f) 0.5f else 0.1f + 0.8f * (n.x - x0) / (x1 - x0)
+            n.y = if (y1 - y0 < 1e-3f) 0.5f else 0.1f + 0.8f * (n.y - y0) / (y1 - y0)
         }
     }
 }

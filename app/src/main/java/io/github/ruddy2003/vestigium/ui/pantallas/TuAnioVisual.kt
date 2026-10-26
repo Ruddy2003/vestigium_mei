@@ -76,7 +76,10 @@ internal fun LibrosDelAnio(anio: Int, tema: TemaId = Estilo.tema) {
         drawRect(cs.onBackground.copy(alpha = 0.25f), Offset(0f, size.height - 22 * density), Size(size.width, 2 * density))
     }
     Row(Modifier.fillMaxWidth()) {
-        for (m in 1..12) Text(Estilo.mes(m).take(1).uppercase(), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant,
+        // La inicial del mes del tema; si en el tema se repiten (MES 1, MES 2…; Luna de…), el número.
+        val iniciales = (1..12).map { Estilo.mes(it).trim().take(1).uppercase() }
+        val usar = if (iniciales.toSet().size >= 9) iniciales else (1..12).map { "$it" }
+        for (m in 1..12) Text(usar[m - 1], style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant,
             modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
     }
     Ayuda("Cada libro = ${miles(unidad)} palabras. El mes más escrito: ${Estilo.mes(porMes.indexOfFirst { it == maximo } + 1)} (${miles(maximo.toLong())}).", Modifier.padding(top = 6.dp))

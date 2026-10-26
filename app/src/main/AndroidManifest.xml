@@ -505,6 +505,10 @@
             android:icon="@drawable/ic_stat" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
         </service>
+        <service android:name=".widget.MosaicoSuplemento" android:exported="true" android:label="@string/tile_suplemento"
+            android:icon="@drawable/ic_stat" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
         <service android:name=".widget.MosaicoAnimo" android:exported="true" android:label="@string/tile_animo"
             android:icon="@drawable/ic_stat" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
