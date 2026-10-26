@@ -977,6 +977,69 @@ class Capturas {
             }
         }
     }
+    // ---------------------------------------------------------------- lote 2 (v80)
+    @Test fun l2HallAndalus() = hall(TemaId.ANDALUS, false)
+    @Test fun l2LibretaAndalus() = libreta(TemaId.ANDALUS, false)
+    @Test fun l2CampanaAndalus() = campanas(TemaId.ANDALUS, false)
+    @Test fun l2HallSeda() = hall(TemaId.SEDA, true)
+    @Test fun l2LibretaSeda() = libreta(TemaId.SEDA, true)
+    @Test fun l2CampanaSeda() = campanas(TemaId.SEDA, true)
+    @Test fun l2HallMongol() = hall(TemaId.MONGOL, false)
+    @Test fun l2LibretaMongol() = libreta(TemaId.MONGOL, false)
+    @Test fun l2CampanaMongol() = campanas(TemaId.MONGOL, false)
+    @Test fun l2HallColonos() = hall(TemaId.COLONOS, false)
+    @Test fun l2LibretaColonos() = libreta(TemaId.COLONOS, false)
+    @Test fun l2CampanaColonos() = campanas(TemaId.COLONOS, false)
+    @Test fun l2HallBotanico() = hall(TemaId.BOTANICO, false)
+    @Test fun l2LibretaBotanico() = libreta(TemaId.BOTANICO, false)
+    @Test fun l2CampanaBotanico() = campanas(TemaId.BOTANICO, false)
+    @Test fun l2HallNavidad() = hall(TemaId.NAVIDAD, true)
+    @Test fun l2LibretaNavidad() = libreta(TemaId.NAVIDAD, true)
+    @Test fun l2CampanaNavidad() = campanas(TemaId.NAVIDAD, true)
+    @Test fun l2HallAntiguas() = hall(TemaId.ANTIGUAS, false)
+    @Test fun l2LibretaAntiguas() = libreta(TemaId.ANTIGUAS, false)
+    @Test fun l2CampanaAntiguas() = campanas(TemaId.ANTIGUAS, false)
+    @Test fun antiguasClaro() = captura(TemaId.ANTIGUAS, false)
+    @Test fun antiguasOscuro() = captura(TemaId.ANTIGUAS, true)
+    @Test fun diaAntiguas() = dia(TemaId.ANTIGUAS, false)
+    @Test fun widgetsAntiguas() = widgets(TemaId.ANTIGUAS)
+    @Test fun trofeosAntiguas() = v73(TemaId.ANTIGUAS, false, 6000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
+    @Test fun reporteSemanaAntiguas() = reporte(TemaId.ANTIGUAS, true, 5200, false)
+    private fun reporteMes(tema: TemaId, oscuro: Boolean) = v73(tema, oscuro, 7600) {
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        val r = androidx.compose.runtime.remember { runCatching { io.github.ruddy2003.vestigium.reportes.Reportes.imagenMes(ctx, io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(7)) } }
+        val b = r.getOrNull()
+        if (b != null) androidx.compose.foundation.Image(b.asImageBitmap(), null, Modifier.fillMaxWidth())
+        else Text("Falló: ${r.exceptionOrNull()}")
+    }
+    @Test fun reporteMesRomano() = reporteMes(TemaId.ROMANO, false)
+    @Test fun reporteMesAntiguas() = reporteMes(TemaId.ANTIGUAS, true)
+    @Test fun reporteMesBotanico() = reporteMes(TemaId.BOTANICO, false)
+    private fun notasYMetas() {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        Repo.notasEnMemoria(listOf(
+            io.github.ruddy2003.vestigium.data.Nota("n1", hoy, hoy, "Probar escribir a mano antes de dormir; con @ana salió la idea de #lectura.", "idea", fijada = true),
+            io.github.ruddy2003.vestigium.data.Nota("n2", hoy, hoy, "Que el lunes empiece sin el teléfono en la cama.", "proposito"),
+            io.github.ruddy2003.vestigium.data.Nota("n3", hoy, io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -2), "Llamar a @luis por lo del viaje.", "recordatorio", recordar_el = hoy),
+            io.github.ruddy2003.vestigium.data.Nota("n4", hoy, io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -5), "Me gusta más el parque temprano, cuando no hay nadie.", "pensamiento")),
+            listOf(
+                io.github.ruddy2003.vestigium.data.Meta("m1", "Dormir 7 horas", "Entre semana", "corto", hoy, medida_tipo = "variable", medida_clave = "sueno_h", medida_modo = "dias", umbral = 7.0, objetivo = 20.0),
+                io.github.ruddy2003.vestigium.data.Meta("m2", "Leer 12 libros", "", "largo", hoy, fecha_objetivo = hoy.take(4) + "-12-31", progreso_manual = 40, anio_proposito = hoy.take(4).toInt()),
+                io.github.ruddy2003.vestigium.data.Meta("m3", "Correr 5 km", "", "mediano", hoy, estado = "pausada", progreso_manual = 15)))
+    }
+    @Test fun notasAntiguas() = v73(TemaId.ANTIGUAS, false, 3000) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaNotas(navVacia) }
+    @Test fun notasRomano() = v73(TemaId.ROMANO, true, 3000) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaNotas(navVacia) }
+    @Test fun metasBotanico() = v73(TemaId.BOTANICO, false, 3600) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(navVacia) }
+    @Test fun metasCiber() = v73(TemaId.CIBER, true, 3600) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(navVacia) }
+    @Test fun coberturaLaboratorio() = v73(TemaId.LABORATORIO, false, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCoberturaVariables(navVacia) }
+    @Test fun lugarNuevoSeda() = v73(TemaId.SEDA, false, 3000, { c -> c.copy(lugares_candidatos = listOf(io.github.ruddy2003.vestigium.data.CandidatoLugar(22.17, -100.97,
+        System.currentTimeMillis() - 50 * 60_000L, System.currentTimeMillis() - 10 * 60_000L, preguntas = 1, sugerencia = "Avenida Carranza"))) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLugarNuevo(navVacia) }
+    @Test fun semanaCortaAntiguas() = v73(TemaId.ANTIGUAS, true, 2400, { c -> c.copy(semana_corta = true) }) {
+        androidx.compose.foundation.layout.Column(Modifier.padding(16.dp)) {
+            io.github.ruddy2003.vestigium.ui.pantallas.SemanaCorta(io.github.ruddy2003.vestigium.data.Dia(fecha = io.github.ruddy2003.vestigium.data.Fechas.diaLogico())) {}
+        }
+    }
+    @Test fun recaidasLibidoMedieval() = v67(TemaId.MEDIEVAL, false, 4400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(navVacia) }
 }
 
 @Composable
@@ -1061,67 +1124,4 @@ object Ejemplo {
         Repo.ejemploEnMemoria(dias, salud, pantalla, gastos, momentos, notifs, entorno, nutricion, lugares, visitas, sesiones, ingresos)
     }
 
-    // ---------------------------------------------------------------- lote 2 (v80)
-    @Test fun l2HallAndalus() = hall(TemaId.ANDALUS, false)
-    @Test fun l2LibretaAndalus() = libreta(TemaId.ANDALUS, false)
-    @Test fun l2CampanaAndalus() = campanas(TemaId.ANDALUS, false)
-    @Test fun l2HallSeda() = hall(TemaId.SEDA, true)
-    @Test fun l2LibretaSeda() = libreta(TemaId.SEDA, true)
-    @Test fun l2CampanaSeda() = campanas(TemaId.SEDA, true)
-    @Test fun l2HallMongol() = hall(TemaId.MONGOL, false)
-    @Test fun l2LibretaMongol() = libreta(TemaId.MONGOL, false)
-    @Test fun l2CampanaMongol() = campanas(TemaId.MONGOL, false)
-    @Test fun l2HallColonos() = hall(TemaId.COLONOS, false)
-    @Test fun l2LibretaColonos() = libreta(TemaId.COLONOS, false)
-    @Test fun l2CampanaColonos() = campanas(TemaId.COLONOS, false)
-    @Test fun l2HallBotanico() = hall(TemaId.BOTANICO, false)
-    @Test fun l2LibretaBotanico() = libreta(TemaId.BOTANICO, false)
-    @Test fun l2CampanaBotanico() = campanas(TemaId.BOTANICO, false)
-    @Test fun l2HallNavidad() = hall(TemaId.NAVIDAD, true)
-    @Test fun l2LibretaNavidad() = libreta(TemaId.NAVIDAD, true)
-    @Test fun l2CampanaNavidad() = campanas(TemaId.NAVIDAD, true)
-    @Test fun l2HallAntiguas() = hall(TemaId.ANTIGUAS, false)
-    @Test fun l2LibretaAntiguas() = libreta(TemaId.ANTIGUAS, false)
-    @Test fun l2CampanaAntiguas() = campanas(TemaId.ANTIGUAS, false)
-    @Test fun antiguasClaro() = captura(TemaId.ANTIGUAS, false)
-    @Test fun antiguasOscuro() = captura(TemaId.ANTIGUAS, true)
-    @Test fun diaAntiguas() = dia(TemaId.ANTIGUAS, false)
-    @Test fun widgetsAntiguas() = widgets(TemaId.ANTIGUAS)
-    @Test fun trofeosAntiguas() = v73(TemaId.ANTIGUAS, false, 6000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
-    @Test fun reporteSemanaAntiguas() = reporte(TemaId.ANTIGUAS, true, 5200, false)
-    private fun reporteMes(tema: TemaId, oscuro: Boolean) = v73(tema, oscuro, 7600) {
-        val ctx = androidx.compose.ui.platform.LocalContext.current
-        val r = androidx.compose.runtime.remember { runCatching { io.github.ruddy2003.vestigium.reportes.Reportes.imagenMes(ctx, io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(7)) } }
-        val b = r.getOrNull()
-        if (b != null) androidx.compose.foundation.Image(b.asImageBitmap(), null, Modifier.fillMaxWidth())
-        else Text("Falló: ${r.exceptionOrNull()}")
-    }
-    @Test fun reporteMesRomano() = reporteMes(TemaId.ROMANO, false)
-    @Test fun reporteMesAntiguas() = reporteMes(TemaId.ANTIGUAS, true)
-    @Test fun reporteMesBotanico() = reporteMes(TemaId.BOTANICO, false)
-    private fun notasYMetas() {
-        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
-        Repo.notasEnMemoria(listOf(
-            io.github.ruddy2003.vestigium.data.Nota("n1", hoy, hoy, "Probar escribir a mano antes de dormir; con @ana salió la idea de #lectura.", "idea", fijada = true),
-            io.github.ruddy2003.vestigium.data.Nota("n2", hoy, hoy, "Que el lunes empiece sin el teléfono en la cama.", "proposito"),
-            io.github.ruddy2003.vestigium.data.Nota("n3", hoy, io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -2), "Llamar a @luis por lo del viaje.", "recordatorio", recordar_el = hoy),
-            io.github.ruddy2003.vestigium.data.Nota("n4", hoy, io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -5), "Me gusta más el parque temprano, cuando no hay nadie.", "pensamiento")),
-            listOf(
-                io.github.ruddy2003.vestigium.data.Meta("m1", "Dormir 7 horas", "Entre semana", "corto", hoy, medida_tipo = "variable", medida_clave = "sueno_h", medida_modo = "dias", umbral = 7.0, objetivo = 20.0),
-                io.github.ruddy2003.vestigium.data.Meta("m2", "Leer 12 libros", "", "largo", hoy, fecha_objetivo = hoy.take(4) + "-12-31", progreso_manual = 40, anio_proposito = hoy.take(4).toInt()),
-                io.github.ruddy2003.vestigium.data.Meta("m3", "Correr 5 km", "", "mediano", hoy, estado = "pausada", progreso_manual = 15)))
-    }
-    @Test fun notasAntiguas() = v73(TemaId.ANTIGUAS, false, 3000) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaNotas(navVacia) }
-    @Test fun notasRomano() = v73(TemaId.ROMANO, true, 3000) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaNotas(navVacia) }
-    @Test fun metasBotanico() = v73(TemaId.BOTANICO, false, 3600) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(navVacia) }
-    @Test fun metasCiber() = v73(TemaId.CIBER, true, 3600) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(navVacia) }
-    @Test fun coberturaLaboratorio() = v73(TemaId.LABORATORIO, false, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCoberturaVariables(navVacia) }
-    @Test fun lugarNuevoSeda() = v73(TemaId.SEDA, false, 3000, { c -> c.copy(lugares_candidatos = listOf(io.github.ruddy2003.vestigium.data.CandidatoLugar(22.17, -100.97,
-        System.currentTimeMillis() - 50 * 60_000L, System.currentTimeMillis() - 10 * 60_000L, preguntas = 1, sugerencia = "Avenida Carranza"))) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLugarNuevo(navVacia) }
-    @Test fun semanaCortaAntiguas() = v73(TemaId.ANTIGUAS, true, 2400, { c -> c.copy(semana_corta = true) }) {
-        androidx.compose.foundation.layout.Column(Modifier.padding(16.dp)) {
-            io.github.ruddy2003.vestigium.ui.pantallas.SemanaCorta(io.github.ruddy2003.vestigium.data.Dia(fecha = io.github.ruddy2003.vestigium.data.Fechas.diaLogico())) {}
-        }
-    }
-    @Test fun recaidasLibidoMedieval() = v67(TemaId.MEDIEVAL, false, 4400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaRecaidas(navVacia) }
 }
