@@ -47,3 +47,7 @@ En [console.cloud.google.com](https://console.cloud.google.com): crea un proyect
 ## Compilación
 
 Cada push a `main` compila la APK en GitHub Actions y la publica como Release.
+
+## Paper metodológico
+
+En `docs/paper/` está el paper que explica qué hace la app, cómo y por qué (capítulos, figuras, hallazgos y referencias). El plan por módulos está en `docs/paper/PLAN_PAPER_METODOLOGIA.md`.

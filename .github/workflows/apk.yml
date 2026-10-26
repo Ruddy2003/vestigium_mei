@@ -3,6 +3,8 @@ name: Compilar APK
 on:
   push:
     branches: [main]
+    # Cambios solo de documentación no compilan ni publican una versión nueva.
+    paths-ignore: ['docs/**', 'CLAUDE.md', 'README.md']
   workflow_dispatch:
 
 permissions:

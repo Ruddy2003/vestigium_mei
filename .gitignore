@@ -7,3 +7,7 @@ local.properties
 .DS_Store
 captures/
 .kotlin/
+
+# Borradores temporales del paper y cachés de Python
+.paper_tmp*/
+__pycache__/
