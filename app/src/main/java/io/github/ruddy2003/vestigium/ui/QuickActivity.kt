@@ -223,6 +223,22 @@ class QuickActivity : FragmentActivity() {
                 }
             }
         }
+        // Suplementos: un toque anota la dosis habitual.
+        val supl = io.github.ruddy2003.vestigium.data.Suplementos.activos()
+        if (supl.isNotEmpty()) {
+            var tomados by remember { mutableStateOf(supl.filter { io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id) }.map { it.id }.toSet()) }
+            FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
+                supl.forEach { sp ->
+                    val ya = sp.id in tomados
+                    val dosis = if (sp.dosis == Math.floor(sp.dosis)) "%.0f".format(sp.dosis) else "%.1f".format(sp.dosis)
+                    Surface(onClick = { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); tomados = tomados + sp.id },
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(4.dp), color = if (ya) cs.primary.copy(alpha = 0.12f) else cs.surface,
+                        border = BorderStroke(1.dp, if (ya) cs.primary else cs.outline)) {
+                        Box(contentAlignment = Alignment.Center) { Text((if (ya) "✓ " else "Tomé ") + sp.nombre.lowercase() + " · $dosis ${sp.unidad}", style = MaterialTheme.typography.labelLarge) }
+                    }
+                }
+            }
+        }
         val abiertos = io.github.ruddy2003.vestigium.data.Sustancias.abiertos()
         if (abiertos.isNotEmpty()) Ayuda("En curso: " + abiertos.joinToString(", ") { if (io.github.ruddy2003.vestigium.data.Sustancias.visible(it)) Catalogo.nombreSustancia(it).lowercase() else "un registro" } +
             ". Tócalo en «Sustancias» para cambiar el nivel o decir que ya se te pasó.", Modifier.padding(top = 10.dp))

@@ -54,6 +54,9 @@ object Repo {
     /** Notas sueltas (ideas, pensamientos, propósitos, recordatorios) y metas. */
     var notas by mutableStateOf<List<Nota>>(emptyList()); private set
     var metas by mutableStateOf<List<Meta>>(emptyList()); private set
+    /** Tomas de suplementos y minutos de la laptop (Cold Turkey). */
+    var tomas by mutableStateOf<List<TomaSuplemento>>(emptyList()); private set
+    var laptop by mutableStateOf<Map<String, LaptopDia>>(emptyMap()); private set
 
     @Synchronized
     fun init(ctx: Context) {
@@ -94,6 +97,8 @@ object Repo {
         consumos = cargar("consumos", Consumo.serializer()).sortedBy { it.inicio }
         notas = cargar("notas", Nota.serializer()).sortedByDescending { it.creada }
         metas = cargar("metas", Meta.serializer()).sortedBy { it.creada }
+        tomas = cargar("tomas", TomaSuplemento.serializer()).sortedBy { it.ts }
+        laptop = cargar("laptop", LaptopDia.serializer()).associateBy { it.fecha }
         listo = true
     }
 
@@ -202,6 +207,28 @@ object Repo {
     }
     /** Solo para las capturas de diseño. */
     fun notasEnMemoria(n: List<Nota>, m: List<Meta>) { notas = n; metas = m }
+
+    // ---------- Suplementos y laptop ----------
+    fun guardarToma(t: TomaSuplemento) {
+        db.poner("tomas", t.id, t.fecha, JSON.encodeToString(TomaSuplemento.serializer(), t))
+        enMain { tomas = (tomas.filter { it.id != t.id } + t).sortedBy { it.ts } }
+    }
+    fun borrarToma(id: String) { db.borrar("tomas", id); enMain { tomas = tomas.filter { it.id != id } } }
+    fun importarTomas(lista: List<TomaSuplemento>) {
+        val ids = tomas.map { it.id }.toSet()
+        val nuevas = lista.filter { it.id !in ids }
+        if (nuevas.isEmpty()) return
+        db.transaccion { nuevas.forEach { db.poner("tomas", it.id, it.fecha, JSON.encodeToString(TomaSuplemento.serializer(), it)) } }
+        enMain { tomas = (tomas + nuevas).sortedBy { it.ts } }
+    }
+    /** Reemplaza los días que trae la lista (reimportar el mismo día no duplica). */
+    fun guardarLaptop(lista: List<LaptopDia>) {
+        if (lista.isEmpty()) return
+        db.transaccion { lista.forEach { db.poner("laptop", it.fecha, it.fecha, JSON.encodeToString(LaptopDia.serializer(), it)) } }
+        enMain { laptop = laptop + lista.associateBy { it.fecha } }
+    }
+    /** Solo para las capturas de diseño. */
+    fun lote3EnMemoria(t: List<TomaSuplemento>, l: Map<String, LaptopDia>) { tomas = t; laptop = l }
 
     // ---------- Gastos ----------
     fun guardarGasto(g: Gasto) {

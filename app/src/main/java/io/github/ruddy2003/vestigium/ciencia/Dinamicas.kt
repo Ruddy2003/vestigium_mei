@@ -34,13 +34,15 @@ object Dinamicas {
         "act_" to setOf("ejercicio_min", "pasos", "cal_activas", "a_pie_min", "distancia_km"),
         "nut_" to setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "azucares_g", "cafeina_mg", "balance_kcal"),
         "ali_" to setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "azucares_g", "cafeina_mg", "comidas"),
+        "lap_" to setOf("laptop_min", "laptop_productivo_min", "laptop_ocio_min", "laptop_social_min", "laptop_otro_min"),
+        "web_" to setOf("laptop_min", "laptop_web_min", "laptop_productivo_min", "laptop_ocio_min", "laptop_social_min", "laptop_otro_min"),
         "suenot_" to setOf("sueno_recordado", "sueno_valencia", "sueno_palabras", "sueno_lucidez", "sueno_vividez"),
     )
 
     /** Familias cuyas variables, entre ellas, también son obvias (dos nutrientes del mismo plato, una ciudad y su país). */
     val ENTRE_SI: List<Set<String>> = listOf(setOf("nut_", "ali_"), setOf("ciu_", "pais_"), setOf("gen_", "obr_"), setOf("pol_"), setOf("vida_"), setOf("suenot_"),
         // Dos músculos del mismo entrenamiento: con un split empuje/tirón van juntos (espalda alta y dorsales) o se excluyen (tríceps y bíceps) por diseño.
-        setOf("musc_", "act_"), setOf("art_"))
+        setOf("musc_", "act_"), setOf("art_"), setOf("lap_", "web_"))
 
     fun prefijo(id: String): String? = (AGREGADOS.keys + listOf("esc_", "pol_", "vida_")).firstOrNull { id.startsWith(it) }
 
@@ -51,7 +53,7 @@ object Dinamicas {
     @Volatile private var cacheExt: Pair<List<Any?>, Resultado>? = null
 
     private fun clave(): List<Any?> = listOf(Repo.dias, Repo.momentos, Repo.obras, Repo.cartas, Repo.gastos, Repo.ingresos, Repo.pantalla, Repo.notifs,
-        Repo.huellas, Repo.nutricion, Repo.entrenos, Repo.actividad, Repo.visitas, Repo.lugares, Repo.respuestas, Repo.config, Mundo.version, Fechas.diaLogico())
+        Repo.huellas, Repo.nutricion, Repo.entrenos, Repo.actividad, Repo.visitas, Repo.lugares, Repo.respuestas, Repo.config, Mundo.version, Fechas.diaLogico(), Repo.laptop)
 
     private fun igual(a: List<Any?>, b: List<Any?>) = a.size == b.size && a.indices.all { a[it] === b[it] || a[it] == b[it] && a[it] !is Collection<*> && a[it] !is Map<*, *> }
 
@@ -137,6 +139,8 @@ object Dinamicas {
         // ---- Teléfono: minutos por app, notificaciones por app, YouTube por canal.
         familia("app_", "Apps", Repo.pantalla.mapValues { (_, p) -> p.por_app_min.mapValues { it.value.toDouble() } }, Repo.pantalla.keys, 12, 5, { "Minutos en $it" }, porPeso = true)
         familia("ntf_", "Notificaciones", Repo.notifs.mapValues { (_, n) -> n.por_app.mapValues { it.value.toDouble() } }, Repo.notifs.keys, 8, 5, { "Notificaciones de $it" }, porPeso = true)
+        familia("lap_", "Laptop", Repo.laptop.mapValues { (_, d) -> d.apps }, Repo.laptop.keys, 10, 4, { "Minutos en $it (laptop)" }, porPeso = true)
+        familia("web_", "Laptop", Repo.laptop.mapValues { (_, d) -> d.sitios }, Repo.laptop.keys, 10, 4, { "Minutos en $it (navegador de la laptop)" }, porPeso = true)
         familia("ytc_", "YouTube", Repo.huellas.mapValues { (_, h) -> h.canales.mapValues { it.value.toDouble() } }, Repo.huellas.keys, 8, 5, { "Videos de $it en YouTube" })
 
         // ---- Dinero por categoría.

@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 11
+const val SCHEMA_V = 12
 
 /** Un día. Los campos opcionales quedan en null cuando no se marcaron: nunca se rellenan con promedios. */
 @Serializable
@@ -536,6 +536,15 @@ data class Experimento(
     val semanas: Int,
     val plan: List<Boolean>,
     val activo: Boolean = true,
+    // ---- Experimento guiado (v81): la pregunta y la hipótesis quedan selladas con la hora antes de empezar.
+    val pregunta: String = "",
+    val hipotesis: String = "",
+    val sellada: String? = null,
+    /** alterno (semanas sorteadas) o antes_despues (primero sin, luego con). */
+    val diseno: String = "alterno",
+    /** Días que no cuentan después de cada cambio, para que el efecto anterior se vaya. */
+    val lavado_dias: Int = 0,
+    val plantilla: String? = null,
 )
 
 @Serializable
@@ -707,6 +716,57 @@ data class Config(
     val semana_corta_sugerida: String = "",
     /** Hora del recordatorio de metas y notas. */
     val metas_hora: Int = 19,
+    // ---- Lote 3: suplementos, red de personas y la laptop (Cold Turkey).
+    val suplementos: List<Suplemento> = Suplementos.INICIALES,
+    /** Recordatorio diario de suplementos (hora; null = apagado). */
+    val suplementos_hora: Int? = null,
+    /** Palabras de tu bitácora de MacroFactor que cuentan como una porción de probióticos (estimado). */
+    val probioticos_palabras: List<String> = listOf("kéfir", "kefir", "yogur", "yogurt", "yakult", "kombucha", "chucrut", "kimchi", "miso", "tempeh"),
+    /** Quién conoce a quién: pares de personas con el tipo de vínculo que dijiste. */
+    val vinculos: List<Vinculo> = emptyList(),
+    /** Categoría de cada app o sitio de la laptop (productivo, ocio, social u otro). */
+    val laptop_categorias: Map<String, String> = emptyMap(),
+)
+
+/**
+ * Un suplemento y cómo se modela en el cuerpo: «vida_media» (lo que queda de cada dosis decae a la mitad cada [vida_media_h] horas),
+ * «carga» (una reserva de 0 a 100 % que se llena en [carga_dias] días de dosis normal y se vacía en [lavado_dias] días sin tomar)
+ * o «exposicion» (solo porciones por día). Los parámetros son aproximados y se pueden cambiar.
+ */
+@Serializable
+data class Suplemento(
+    val id: String,
+    val nombre: String,
+    val unidad: String,
+    val dosis: Double,
+    val modelo: String,
+    val vida_media_h: Double = 24.0,
+    val carga_dias: Int = 28,
+    val lavado_dias: Int = 35,
+    val activo: Boolean = true,
+)
+
+/** Una toma de suplemento. [estimado] = inferida de tu bitácora de comidas, no anotada a mano. */
+@Serializable
+data class TomaSuplemento(
+    val id: String,
+    val suplemento: String,
+    val ts: String,
+    val fecha: String,
+    val cantidad: Double,
+    val estimado: Boolean = false,
+)
+
+/** Dos personas y cómo se conocen entre sí (se_conocen, familia, pareja, colegas, no_se_conocen). [a] < [b]. */
+@Serializable
+data class Vinculo(val a: String, val b: String, val tipo: String)
+
+/** Minutos por app y por sitio en la laptop un día (de Cold Turkey). */
+@Serializable
+data class LaptopDia(
+    val fecha: String,
+    val apps: Map<String, Double> = emptyMap(),
+    val sitios: Map<String, Double> = emptyMap(),
 )
 
 /**

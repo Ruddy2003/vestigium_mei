@@ -29,6 +29,9 @@ import androidx.compose.ui.unit.dp
 /** Desplazamiento de la pestaña abierta: cada pestaña recuerda dónde ibas aunque cambies a otra. */
 val LocalScrollPestana = androidx.compose.runtime.staticCompositionLocalOf<ScrollState?> { null }
 
+/** Abre la guía de uso en una sección (el «?» del encabezado). Null fuera de la app principal. */
+val LocalGuia = androidx.compose.runtime.staticCompositionLocalOf<((String) -> Unit)?> { null }
+
 @Composable
 fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null, latin: String? = Romano.latin(titulo), encabezado: (@Composable () -> Unit)? = null,
          modifier: Modifier = Modifier, scroll: ScrollState = LocalScrollPestana.current ?: rememberScrollState(), buscar: (() -> Unit)? = null,
@@ -49,6 +52,9 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
                     },
                     style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f),
                 )
+                val guia = LocalGuia.current
+                val seccionGuia = io.github.ruddy2003.vestigium.data.GuiaUso.PANTALLAS[titulo]
+                if (guia != null && seccionGuia != null) TextButton(onClick = { guia(seccionGuia) }) { Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) }
                 if (buscar != null) BotonBuscar(onClick = buscar)
                 if (ajustes != null) BotonAjustes(Modifier.padding(start = 4.dp), onClick = ajustes)
                 BotonModo()

@@ -232,6 +232,17 @@ object Diccionario {
         "objetivo" to "Meta numérica de la medida", "valor_actual" to "Lo que lleva la medida", "vm_metas.csv:progreso" to "Progreso de 0 a 1",
         "revision" to "Cada cuánto se revisa: semanal, mensual, fecha o ninguna", "ultima_revision" to "Última revisión", "anio_proposito" to "Año del propósito (si es de año nuevo)",
         "historial" to "Cambios: fecha:campo:antes>después (lista)",
+        // Lote 3: suplementos, laptop, red de personas y experimentos.
+        "creatina_saturacion_pct" to "Saturación de creatina estimada en el músculo (0 a 100 %; modelo simplificado, no es medición)",
+        "probioticos_porciones" to "Porciones de probióticos del día (anotadas más las leídas en tu bitácora de comidas)",
+        "probioticos_estimado" to "Porciones de probióticos leídas en tu bitácora de MacroFactor (estimado)",
+        "laptop_min" to "Minutos en la laptop (Cold Turkey, suma de apps)", "laptop_web_min" to "Minutos en sitios web de la laptop (Cold Turkey)",
+        "laptop_productivo_min" to "Minutos en apps y sitios productivos (categoría editable; sin contar el navegador mismo)",
+        "laptop_ocio_min" to "Minutos en apps y sitios de ocio", "laptop_social_min" to "Minutos en apps y sitios sociales", "laptop_otro_min" to "Minutos en el resto de apps y sitios",
+        "suplemento" to "Identificador del suplemento", "cantidad" to "Cantidad tomada (en la unidad del suplemento)", "estimado" to "Inferido de tu bitácora de comidas (0/1)",
+        "dias_mencion" to "Días en que la mencionaste en el diario o los momentos", "grado" to "Con cuántas personas está unida en tu red",
+        "tipo_declarado" to "Cómo se conocen según tú: se_conocen, familia, pareja, colegas, no_se_conocen (vacío = no lo dijiste)",
+        "dias_juntos" to "Días en que aparecen las dos el mismo día", "minutos" to "Minutos usados ese día", "categoria" to "Categoría (productivo, ocio, social, otro)",
         "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista)",
         "presencias_revisado" to "Ya revisaste ese día quién estuvo y en quién solo pensaste (0/1); antes de la versión 10 todo cuenta como «estuve»",
         // Cartas
@@ -262,6 +273,12 @@ object Diccionario {
         }
         D[col]?.let { return it }
         return when {
+            col.startsWith("supl_") -> {
+                val resto = col.removePrefix("supl_"); val id = resto.substringBeforeLast('_'); val s = Repo.config.suplementos.firstOrNull { it.id == id }
+                val n = s?.nombre ?: id
+                when (resto.substringAfterLast('_')) { "dosis" -> "$n: dosis del día (${s?.unidad ?: ""})"; "tomado" -> "$n: lo tomaste (0/1)"; "porciones" -> "$n: porciones del día"
+                    else -> if (s?.modelo == "carga") "$n: reserva estimada (0 a 100 %)" else "$n: cantidad estimada en el cuerpo al final del día" }
+            }
             col.startsWith("horas_tipo_") -> "Horas en lugares de tipo ${Catalogo.nombreTipoLugar(col.removePrefix("horas_tipo_")).lowercase()}"
             col.startsWith("ctx_") -> "Contexto del día: ${col.removePrefix("ctx_").replace('_', ' ')} (0/1)"
             col.startsWith("hab_") -> "Hábito cumplido: ${Repo.config.habitos.firstOrNull { it.id == col.removePrefix("hab_") }?.nombre ?: col.removePrefix("hab_")} (0/1)"

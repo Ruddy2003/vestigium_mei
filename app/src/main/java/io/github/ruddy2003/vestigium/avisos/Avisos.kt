@@ -27,6 +27,7 @@ object Avisos {
     const val ID_IMPORTAR = 2020
     const val ID_METAS = 2021
     const val ID_LUGAR = 2030
+    const val ID_SUPLEMENTOS = 2040
 
     /** Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). */
     private val SONIDOS = mapOf(
@@ -270,6 +271,22 @@ object Avisos {
             .setContentIntent(abrirApp(ctx, ID_METAS, if (metas.isNotEmpty()) "metas" else "notas"))
             .setAutoCancel(true)
         mostrar(ctx, ID_METAS, b)
+    }
+
+    /** El recordatorio diario de suplementos: «Ya los tomé» los anota con su dosis habitual; «En una hora» lo repite. */
+    fun suplementos(ctx: Context, nombres: List<String>) {
+        crearCanales(ctx)
+        fun accion(req: Int, a: String) = PendingIntent.getBroadcast(ctx, req, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, a),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(if (nombres.size == 1) "¿Ya tomaste ${nombres[0].lowercase()}?" else "¿Ya tomaste tus suplementos?")
+            .setContentText(nombres.joinToString(" · "))
+            .setContentIntent(abrirApp(ctx, ID_SUPLEMENTOS, "suplementos"))
+            .addAction(0, "Ya los tomé", accion(2041, Recordatorios.TOME))
+            .addAction(0, "En una hora", accion(2042, Recordatorios.UNA_HORA))
+            .setAutoCancel(true)
+        mostrar(ctx, ID_SUPLEMENTOS, b)
     }
 
     /** «¿Es un lugar especial?»: abre la hoja para nombrarlo, ignorarlo o dejarlo para después. */

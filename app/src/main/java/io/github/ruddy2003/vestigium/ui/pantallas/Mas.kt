@@ -65,6 +65,10 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMas("habitos", "Hábitos", "${Repo.config.habitos.count { it.activo }} activos · se marcan en la hoja de la noche", ir)
                 HorizontalDivider()
+                val supl = io.github.ruddy2003.vestigium.data.Suplementos.activos()
+                FilaMas("suplementos", "Suplementos", if (supl.isEmpty()) "Lo que tomas y su nivel estimado" else supl.joinToString(", ") { it.nombre } +
+                    " · " + (if (supl.all { io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id) }) "hoy ya" else "hoy falta"), ir)
+                HorizontalDivider()
                 FilaMas("notas", "Notas", if (Repo.notas.isEmpty()) "Ideas, pensamientos especiales, propósitos y recordatorios" else "${Repo.notas.size} notas · ${Repo.notas.count { it.fijada }} fijadas", ir)
                 HorizontalDivider()
                 val porRev = io.github.ruddy2003.vestigium.data.Metas.porRevisar().size
@@ -83,6 +87,8 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("personas", "Tu gente", if (pend > 0) "$pend por clasificar · quién es cada @persona para ti" else "Quién es cada @persona para ti, y qué tan cerca", ir)
                 HorizontalDivider()
                 val temasN = Repo.dias.values.flatMap { io.github.ruddy2003.vestigium.data.Texto.temas(it.nota) }.toSet().size
+                FilaMas("red", "Red", "Quién conoce a quién, como un grafo", ir)
+                HorizontalDivider()
                 FilaMas("temas", "Tus temas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a hitos", ir)
                 HorizontalDivider()
                 FilaMas("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína: episodios, niveles y cruda", ir)
@@ -98,6 +104,8 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMas("tus_apps", "Tus apps", "YouTube, música, comida, gimnasio, Kindle, WhatsApp y Google, en números", ir)
                 HorizontalDivider()
+                FilaMas("laptop", "Laptop", if (Repo.laptop.isEmpty()) "Minutos por app y sitio desde Cold Turkey" else "${Repo.laptop.size} días importados de Cold Turkey", ir)
+                HorizontalDivider()
                 FilaMas("escalas", "Cuestionarios", if (pendientes > 0) "$pendientes pendiente(s): bienestar, estrés, soledad, personalidad" else "Al día", ir)
                 HorizontalDivider()
                 FilaMas("reaccion", "Prueba de reacción", "30 segundos para medir tu estado mental", ir)
@@ -112,6 +120,8 @@ fun PantallaMas(nav: Nav) {
         }
         Seccion("Sistema", numero = 4) {
             Tarjeta {
+                FilaMas("guia_uso", "Guía", "Cómo usar la app: qué poner, cuándo y cómo leerte", ir)
+                HorizontalDivider()
                 FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, personaje, vibraciones y sonidos", ir)
                 HorizontalDivider()
                 FilaMas("avisos", "Avisos y recordatorios", "Avisos de ánimo, horas del diario y del sueño, cuestionarios", ir)
@@ -179,64 +189,6 @@ fun PantallaHabitos(nav: Nav) {
                         Text(h.nombre, Modifier.weight(1f), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(habitos = cc.habitos.map { if (it.id == h.id) it.copy(activo = true) else it }) } }) { Text("Reactivar") }
                     }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun PantallaExperimentos(nav: Nav) {
-    var nombre by remember { mutableStateOf("") }
-    var accion by remember { mutableStateOf("") }
-    var resultado by remember { mutableStateOf("valencia") }
-    var semanas by remember { mutableStateOf(6) }
-    val vars = remember { Estadistica.variables(dinamicas = false) }
-    Hoja("Experimentos personales", nav.atras,
-        "Eliges algo que probar y la app sortea qué semanas lo haces y cuáles no. Al final compara tu resultado entre unas y otras. Sortear evita que lo hagas justo en las semanas en que ya ibas a estar bien.") {
-        Repo.experimentos.sortedByDescending { it.inicio }.forEach { e ->
-            Seccion(e.nombre) {
-                Tarjeta {
-                    val panel = remember(e.id, Repo.dias.size) { Estadistica.panel(dinamicas = false) }
-                    val si = ArrayList<Double>(); val no = ArrayList<Double>()
-                    e.plan.forEachIndexed { s, toca ->
-                        for (d in 0 until 7) {
-                            val f = Fechas.sumar(e.inicio, s * 7L + d)
-                            panel[f]?.get(e.resultado)?.let { if (toca) si.add(it) else no.add(it) }
-                        }
-                    }
-                    val sem = java.time.temporal.ChronoUnit.WEEKS.between(Fechas.parse(e.inicio), Fechas.parse(Fechas.diaLogico())).toInt()
-                    Text("Acción: ${e.accion} · resultado: ${vars.firstOrNull { it.id == e.resultado }?.nombre ?: e.resultado}", style = MaterialTheme.typography.bodyMedium)
-                    Ayuda(if (sem in e.plan.indices) "Semana ${sem + 1} de ${e.semanas}: " + (if (e.plan[sem]) "SÍ toca." else "NO toca.") else if (sem >= e.semanas) "Terminado." else "Empieza el ${e.inicio}.")
-                    Ayuda("Plan: " + e.plan.joinToString(" ") { if (it) "SÍ" else "no" })
-                    val dif = Estadistica.diferencia(si, no)
-                    if (dif == null) Ayuda("Aún no hay suficientes días medidos en ambas condiciones (${si.size} con, ${no.size} sin).", Modifier.padding(top = 6.dp))
-                    else Text(
-                        "Con la acción: ${"%.2f".format(si.average())} · sin ella: ${"%.2f".format(no.average())}. Diferencia ${"%+.2f".format(dif.first)} " +
-                            "(intervalo de 95%: ${"%.2f".format(dif.second)} a ${"%.2f".format(dif.third)}). " +
-                            if (dif.second > 0 || dif.third < 0) "El intervalo no toca el cero: es una señal real para ti." else "El intervalo incluye el cero: todavía no se distingue del azar.",
-                        style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
-                    if (e.activo) TextButton(onClick = { Repo.guardarExperimento(e.copy(activo = false)) }) { Text("Terminar experimento") }
-                }
-            }
-        }
-        Seccion("Nuevo experimento") {
-            Tarjeta {
-                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre") }, singleLine = true)
-                OutlinedTextField(value = accion, onValueChange = { accion = it }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué vas a hacer (ej. meditar 10 minutos)") })
-                Ayuda("Qué quieres ver si cambia:", Modifier.padding(top = 10.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf("valencia", "activacion", "sueno_calidad", "sueno_horas", "muestreo_valencia", "pantalla_min", "rt_media", "impulso").forEach { id ->
-                        vars.firstOrNull { it.id == id }?.let { v -> Ficha(v.nombre, resultado == id) { resultado = id } }
-                    }
-                }
-                Ayuda("Duración:", Modifier.padding(top = 10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(4, 6, 8).forEach { s -> Ficha("$s semanas", semanas == s) { semanas = s } } }
-                BotonPrincipal("Empezar el lunes", Modifier.fillMaxWidth().padding(top = 12.dp), habilitado = nombre.isNotBlank() && accion.isNotBlank()) {
-                    val plan = (List(semanas / 2) { true } + List(semanas - semanas / 2) { false }).shuffled(Random(System.currentTimeMillis()))
-                    val lunes = Fechas.sumar(Fechas.lunesDe(Fechas.diaLogico()), 7)
-                    Repo.guardarExperimento(Experimento(Repo.nuevoId(), nombre.trim(), accion.trim(), resultado, lunes, semanas, plan))
-                    nombre = ""; accion = ""
                 }
             }
         }

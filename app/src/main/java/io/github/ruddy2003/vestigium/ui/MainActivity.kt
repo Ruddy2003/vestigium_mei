@@ -318,7 +318,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                 contentKey = { it.ruta }, label = "pantallas",
             ) { destino ->
                 val sc = if (destino.nivel == 0) scrolls.getOrPut(destino.ruta) { androidx.compose.foundation.ScrollState(0) } else null
-                androidx.compose.runtime.CompositionLocalProvider(LocalScrollPestana provides sc) {
+                androidx.compose.runtime.CompositionLocalProvider(LocalScrollPestana provides sc, LocalGuia provides { s: String -> nav.ir("guia_uso:$s") }) {
                 when (val actual = destino.ruta) {
                     "dia" -> PantallaDia(nav)
                     "diario", "diarios" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(nav)
@@ -336,7 +336,7 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "reaccion" -> PantallaReaccion(nav)
                     "lugares" -> PantallaLugares(nav)
                     "habitos" -> PantallaHabitos(nav)
-                    "experimentos" -> PantallaExperimentos(nav)
+                    "experimentos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaExperimentos(nav)
                     "cartas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(nav, "cartas")
                     "carta_nueva" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCartaNueva(nav)
                     "conocer" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaConocer(nav)
@@ -392,7 +392,11 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                     "lugar_nuevo", "lugares_especiales" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLugarNuevo(nav)
                     "notas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaNotas(nav)
                     "metas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(nav)
-                    else -> Text("Pantalla desconocida: $actual")
+                    "suplementos" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(nav)
+                    "laptop" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLaptop(nav)
+                    "red" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaRed(nav)
+                    else -> if (actual.startsWith("guia_uso")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(nav, actual.substringAfter(':', ""))
+                        else Text("Pantalla desconocida: $actual")
                 }
                 }
             }

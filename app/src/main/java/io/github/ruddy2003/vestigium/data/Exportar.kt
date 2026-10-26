@@ -54,6 +54,8 @@ data class Respaldo(
     val consumos: List<Consumo> = emptyList(),
     val notas: List<Nota> = emptyList(),
     val metas: List<Meta> = emptyList(),
+    val tomas: List<TomaSuplemento> = emptyList(),
+    val laptop: List<LaptopDia> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -289,6 +291,33 @@ object Exportar {
     fun filasTramos() = Repo.tramos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "tipo" to it.tipo, "es_siesta" to (it.tipo == "siesta"), "inicio" to it.inicio, "fin" to it.fin,
             "hora" to Fechas.horaDe(it.inicio), "min" to it.min, "nota" to it.nota, "personas" to Texto.personas(it.nota), "temas" to Texto.temas(it.nota), "origen" to it.origen)
+    }
+
+    fun filasSuplementos(): List<Map<String, Any?>> {
+        val nombres = Repo.config.suplementos.associate { it.id to it }
+        val manual = Repo.tomas.map { linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to Fechas.horaDe(it.ts), "suplemento" to it.suplemento,
+            "nombre" to (nombres[it.suplemento]?.nombre ?: it.suplemento), "cantidad" to it.cantidad, "unidad" to nombres[it.suplemento]?.unidad, "estimado" to false) }
+        val estimadas = if (nombres.containsKey("probioticos")) Suplementos.probioticosEstimados().map { (f, n) ->
+            linkedMapOf<String, Any?>("id" to "est_$f", "fecha" to f, "hora" to null, "suplemento" to "probioticos", "nombre" to "Probióticos", "cantidad" to n, "unidad" to "porción", "estimado" to true)
+        } else emptyList()
+        return (manual + estimadas).sortedBy { (it["fecha"] as String) + (it["hora"] ?: "") }
+    }
+
+    fun filasLaptop() = Repo.laptop.values.sortedBy { it.fecha }.flatMap { d ->
+        d.apps.map { (n, m) -> linkedMapOf<String, Any?>("fecha" to d.fecha, "tipo" to "app", "nombre" to n, "minutos" to m, "categoria" to ColdTurkey.categoria(n)) } +
+            d.sitios.map { (n, m) -> linkedMapOf<String, Any?>("fecha" to d.fecha, "tipo" to "sitio", "nombre" to n, "minutos" to m, "categoria" to ColdTurkey.categoria(n)) }
+    }
+
+    fun filasRed(): Pair<List<Map<String, Any?>>, List<Map<String, Any?>>> {
+        val (nodos, aristas) = RedPersonas.calcular(minJuntos = 1, max = 400)
+        return nodos.map { linkedMapOf<String, Any?>("persona" to it.nombre, "relacion" to it.relacion, "cercania" to it.cercania, "dias_mencion" to it.dias, "grado" to it.grado) } to
+            aristas.map { linkedMapOf<String, Any?>("a" to it.a, "b" to it.b, "tipo_declarado" to it.tipo, "dias_juntos" to it.juntos) }
+    }
+
+    fun filasExperimentos() = Repo.experimentos.sortedBy { it.inicio }.map {
+        linkedMapOf<String, Any?>("id" to it.id, "nombre" to it.nombre, "pregunta" to it.pregunta, "hipotesis" to it.hipotesis, "sellada" to it.sellada, "accion" to it.accion,
+            "resultado" to it.resultado, "diseno" to it.diseno, "inicio" to it.inicio, "semanas" to it.semanas, "lavado_dias" to it.lavado_dias,
+            "plan" to it.plan.map { p -> if (p) 1 else 0 }, "activo" to it.activo, "plantilla" to it.plantilla)
     }
 
     fun filasNotas() = Repo.notas.sortedBy { it.creada }.map {
@@ -741,7 +770,8 @@ object Exportar {
         subrayados = Repo.subrayados, huellas = Repo.huellasDe("0000-01-01", "9999-12-31"), huellas_dia = Repo.huellas.values.sortedBy { it.fecha },
         chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
         series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
-        youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos, notas = Repo.notas, metas = Repo.metas))
+        youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos, notas = Repo.notas, metas = Repo.metas,
+        tomas = Repo.tomas, laptop = Repo.laptop.values.sortedBy { it.fecha }))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -755,6 +785,11 @@ object Exportar {
         Tabla("vm_horas.csv", "Una fila por hora: dormido, lugar, pantalla, notificaciones, luz, música, ánimo, cafeína y alcohol en el cuerpo, sustancias, enfoque, gastos y comidas", filasHoras()),
         Tabla("vm_gastos.csv", "Gastos, uno por fila", filasGastos()),
         Tabla("vm_notas.csv", "Notas sueltas: ideas, pensamientos, propósitos y recordatorios", filasNotas()),
+        Tabla("vm_suplementos.csv", "Cada toma de suplemento (y las porciones de probióticos estimadas de tu bitácora de comidas)", filasSuplementos()),
+        Tabla("vm_laptop.csv", "Minutos por app y por sitio en la laptop, por día (Cold Turkey)", filasLaptop()),
+        filasRed().let { (n, v) -> Tabla("vm_red_nodos.csv", "Personas de tu red: relación, cercanía, días mencionada y grado", n) },
+        Tabla("vm_red_vinculos.csv", "Pares de personas: cómo se conocen según tú y cuántos días aparecen juntas", filasRed().second),
+        Tabla("vm_experimentos.csv", "Experimentos personales: pregunta, hipótesis sellada, diseño, lavado y plan por semana (1 = con la acción)", filasExperimentos()),
         Tabla("vm_metas.csv", "Metas: horizonte, fecha objetivo, estado, medida, progreso e historial de cambios", filasMetas()),
         Tabla("vm_ingresos.csv", "Ingresos, uno por fila", filasIngresos()),
         Tabla("vm_escalas.csv", "Cuestionarios validados (WHO-5, PSS-4, UCLA-3, TIPI)", filasEscalas()),

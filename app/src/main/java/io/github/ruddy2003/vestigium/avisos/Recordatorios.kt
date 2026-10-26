@@ -19,7 +19,7 @@ object Recordatorios {
 
     val FUENTES = listOf(
         Fuente("macrofactor", "MacroFactor", 7, true, "nutrición y Workouts"),
-        Fuente("coldturkey", "Cold Turkey", 7, false, "estadísticas de bloqueo (llega en la siguiente versión)"),
+        Fuente("coldturkey", "Cold Turkey", 7, true, "minutos por app y por sitio en la laptop"),
         Fuente("takeout", "Google Takeout", 30, true, "YouTube, búsquedas y Mi actividad"),
     )
 
@@ -73,24 +73,53 @@ object Recordatorios {
                 if (pend.isNotEmpty()) Avisos.importar(ctx, pend.map { it.nombre + (hace(it.id, hoy)?.let { d -> " (hace $d días)" } ?: " (nunca)") })
             }
         }
+        // Suplementos: a la hora elegida (o una hora después de «en una hora»), solo si falta alguno.
+        c.suplementos_hora?.let { h ->
+            val hoyL = Fechas.diaLogico()
+            val pospuesto = ctx.getSharedPreferences("recordatorios", Context.MODE_PRIVATE).getLong("supl_hasta", 0L)
+            if (ahora.hour >= h && !yaFue("supl:$hoy") && System.currentTimeMillis() >= pospuesto) {
+                val faltan = io.github.ruddy2003.vestigium.data.Suplementos.activos(c).filter { it.modelo != "exposicion" && !io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id, hoyL) }
+                marcar("supl:$hoy")
+                if (faltan.isNotEmpty()) Avisos.suplementos(ctx, faltan.map { it.nombre })
+            }
+        }
         if (ahora.hour >= c.metas_hora && !yaFue("metas:$hoy")) {
             val metas = Metas.porRevisar(hoy); val notas = notasVencidas(hoy)
             if (metas.isNotEmpty() || notas.isNotEmpty()) { marcar("metas:$hoy"); Avisos.metas(ctx, metas.map { it.nombre }, notas.map { it.texto.lineSequence().first().take(60) }) }
         }
     }
 
+    /** Borra la marca «ya se avisó hoy» para que el pulso vuelva a avisar. */
+    fun desmarcar(ctx: Context, clave: String) { Repo.cambiarConfig { c -> c.copy(disparos = c.disparos - clave) } }
+
     const val ACCION = "accion"
     const val MANANA = "manana"
+    const val TOME = "tome"
+    const val UNA_HORA = "una_hora"
 }
 
 /** «Recordar mañana» desde el aviso de importaciones: pospone todo lo pendiente un día. */
 class RecordatorioReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Repo.init(context)
-        if (intent.getStringExtra(Recordatorios.ACCION) == Recordatorios.MANANA) {
-            val manana = Fechas.sumar(Fechas.hoyCalendario(), 1)
-            Recordatorios.pendientes(Fechas.hoyCalendario()).forEach { Recordatorios.posponer(it.id, manana) }
+        when (intent.getStringExtra(Recordatorios.ACCION)) {
+            Recordatorios.MANANA -> {
+                val manana = Fechas.sumar(Fechas.hoyCalendario(), 1)
+                Recordatorios.pendientes(Fechas.hoyCalendario()).forEach { Recordatorios.posponer(it.id, manana) }
+                NotificationManagerCompat.from(context).cancel(Avisos.ID_IMPORTAR)
+            }
+            Recordatorios.TOME -> {
+                val hoy = Fechas.diaLogico()
+                io.github.ruddy2003.vestigium.data.Suplementos.activos().filter { it.modelo != "exposicion" && !io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id, hoy) }
+                    .forEach { io.github.ruddy2003.vestigium.data.Suplementos.registrar(it) }
+                NotificationManagerCompat.from(context).cancel(Avisos.ID_SUPLEMENTOS)
+            }
+            Recordatorios.UNA_HORA -> {
+                // Se vuelve a preguntar en una hora: se borra la marca del día y se guarda desde cuándo.
+                context.getSharedPreferences("recordatorios", Context.MODE_PRIVATE).edit().putLong("supl_hasta", System.currentTimeMillis() + 3_600_000L).apply()
+                Recordatorios.desmarcar(context, "supl:" + Fechas.hoyCalendario())
+                NotificationManagerCompat.from(context).cancel(Avisos.ID_SUPLEMENTOS)
+            }
         }
-        NotificationManagerCompat.from(context).cancel(Avisos.ID_IMPORTAR)
     }
 }

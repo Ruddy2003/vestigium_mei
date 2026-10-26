@@ -83,7 +83,9 @@ vm_archivos <- c(
   biblioteca = "vm_biblioteca.csv", comunicacion = "vm_comunicacion.csv", conexiones = "vm_conexiones.csv",
   subrayados = "vm_subrayados.csv", google_dia = "vm_google_dia.csv", google = "vm_google.csv", whatsapp = "vm_whatsapp.csv",
   nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv",
-  tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", metas = "vm_metas.csv")
+  tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", metas = "vm_metas.csv",
+  suplementos = "vm_suplementos.csv", laptop = "vm_laptop.csv", red_nodos = "vm_red_nodos.csv", red_vinculos = "vm_red_vinculos.csv",
+  experimentos = "vm_experimentos.csv")
 
 vm <- compact(lapply(vm_archivos, vm_leer))
 
@@ -479,6 +481,38 @@ vm_presion <- function() {
   print(cor.test(d$cambio_presion_3h, d$valencia, method = "spearman", exact = FALSE))
   ggplot(d, aes(cambio_presion_3h, valencia)) + geom_jitter(width = 0, height = .15, alpha = .5) + geom_smooth(method = "loess", se = FALSE) +
     labs(x = "cambio de presión en 3 h (hPa)", y = "valencia del día") + theme_minimal()
+}
+
+#' Tu red personal con igraph: densidad, restricción de Burt (qué tanto tus contactos se conocen entre sí) y composición por relación.
+#' Solo con las líneas que dijiste (declaradas = TRUE) o también con quienes aparecen juntos al menos `min_juntos` días.
+#' Requiere igraph:  install.packages("igraph")
+vm_red <- function(declaradas = FALSE, min_juntos = 2) {
+  if (is.null(vm$red_nodos)) stop("No hay red: menciona personas con @ o di quién conoce a quién en Tu gente.")
+  v <- vm$red_vinculos
+  v <- v[(!is.na(v$tipo_declarado) & v$tipo_declarado != "no_se_conocen") | (!declaradas & v$dias_juntos >= min_juntos), ]
+  g <- igraph::graph_from_data_frame(v[, c("a", "b")], directed = FALSE, vertices = vm$red_nodos)
+  # Tú (ego) unido a todas: así la restricción de Burt se calcula sobre tu red personal.
+  g_ego <- igraph::add_vertices(g, 1, name = "yo")
+  g_ego <- igraph::add_edges(g_ego, as.vector(rbind("yo", igraph::V(g)$name)))
+  r <- list(
+    densidad = igraph::edge_density(g),
+    componentes = igraph::components(g)$no,
+    restriccion_burt = unname(igraph::constraint(g_ego)[igraph::V(g_ego)$name == "yo"]),
+    grado = sort(igraph::degree(g), decreasing = TRUE),
+    composicion = table(vm$red_nodos$relacion, useNA = "ifany")
+  )
+  print(r[c("densidad", "componentes", "restriccion_burt")])
+  plot(g, vertex.size = 4 + 2 * sqrt(vm$red_nodos$dias_mencion), vertex.label.cex = .7, vertex.color = as.integer(factor(vm$red_nodos$relacion)))
+  invisible(r)
+}
+
+#' Minutos en la laptop por categoría y semana (Cold Turkey).
+vm_laptop <- function() {
+  if (is.null(vm$laptop)) stop("No hay datos de Cold Turkey.")
+  vm$laptop |> mutate(semana = lubridate::floor_date(fecha, "week", week_start = 1)) |>
+    filter(!(tipo == "app" & nombre %in% c("chrome", "msedge", "firefox", "opera", "brave"))) |>
+    group_by(semana, categoria) |> summarise(horas = sum(minutos) / 60, .groups = "drop") |>
+    ggplot(aes(semana, horas, fill = categoria)) + geom_col() + labs(x = NULL, y = "horas por semana") + theme_minimal()
 }
 
 #' Lee vm_datos.sqlite (la exportación completa en una sola base) como una lista de tablas, con fechas y lógicos convertidos.

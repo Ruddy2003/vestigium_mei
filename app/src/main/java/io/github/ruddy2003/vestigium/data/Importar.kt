@@ -55,6 +55,8 @@ object Importar {
             if (r.consumos.isNotEmpty()) Repo.importarConsumos(r.consumos)
             if (r.notas.isNotEmpty()) Repo.importarNotas(r.notas)
             if (r.metas.isNotEmpty()) Repo.importarMetas(r.metas)
+            if (r.tomas.isNotEmpty()) Repo.importarTomas(r.tomas)
+            if (r.laptop.isNotEmpty()) Repo.guardarLaptop(r.laptop.filter { it.fecha !in Repo.laptop })
             r.respuestas.forEach { Repo.guardarRespuesta(it) }
             r.reacciones.forEach { rr -> if (Repo.reacciones.none { it.id == rr.id }) Repo.guardarReaccion(rr) }
             r.lugares.forEach { Repo.guardarLugar(it) }
@@ -136,6 +138,9 @@ object Importar {
             importado = r.importado + c.importado, barometro_ajuste = c.barometro_ajuste ?: r.barometro_ajuste,
             sustancias_ocultas = (c.sustancias_ocultas + r.sustancias_ocultas).distinct(),
             cafeina_vida_media_h = if (c.cafeina_vida_media_h == Config().cafeina_vida_media_h) r.cafeina_vida_media_h else c.cafeina_vida_media_h,
+            suplementos = (c.suplementos + r.suplementos).distinctBy { it.id },
+            vinculos = (c.vinculos + r.vinculos).distinctBy { it.a + "|" + it.b },
+            laptop_categorias = r.laptop_categorias + c.laptop_categorias,
         )
     }
 

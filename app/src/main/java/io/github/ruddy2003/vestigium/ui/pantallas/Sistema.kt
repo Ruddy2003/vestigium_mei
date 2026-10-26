@@ -491,6 +491,9 @@ fun PantallaDatos(nav: Nav) {
     val macrofactor = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) tarea { io.github.ruddy2003.vestigium.data.Macrofactor.importar(ctx, uri).also { io.github.ruddy2003.vestigium.avisos.Recordatorios.importado("macrofactor") } }
     }
+    val coldturkey = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) tarea { io.github.ruddy2003.vestigium.data.ColdTurkey.importar(ctx, uris) }
+    }
     val google = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) tarea { Importaciones.google(ctx, uris).also { io.github.ruddy2003.vestigium.avisos.Recordatorios.importado("takeout") } }
     }
@@ -521,6 +524,7 @@ fun PantallaDatos(nav: Nav) {
                 when (id) {
                     "macrofactor" -> macrofactor.launch(arrayOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "*/*"))
                     "takeout" -> googleCarpeta.launch(null)
+                    "coldturkey" -> coldturkey.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "*/*"))
                 }
             }
         }
@@ -574,6 +578,9 @@ fun PantallaDatos(nav: Nav) {
                 Ayuda("En MacroFactor: Más → Data Management → Data Export. Elige el periodo e incluye nutrición y Workouts. Al reimportar, las fechas del archivo se reemplazan.")
                 if (Repo.nutricion.isNotEmpty() || Repo.entrenos.isNotEmpty()) Clave("macrofactor", "${Repo.nutricion.size} días de nutrición · ${Repo.entrenos.values.count { it.series > 0 }} entrenos" +
                     (Repo.nutricion.keys.maxOrNull()?.let { " · hasta $it" } ?: ""))
+                OutlinedButton(onClick = { coldturkey.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Cold Turkey · laptop (los dos .csv)") }
+                Ayuda("En Cold Turkey: Statistics → Export. Elige el CSV de apps y el de sitios (los dos a la vez). Reimportar un día lo reemplaza." +
+                    if (Repo.laptop.isNotEmpty()) " Tienes ${Repo.laptop.size} días, hasta ${Repo.laptop.keys.max()}." else "")
                 OutlinedButton(onClick = { spotify.launch(arrayOf("application/json", "application/zip", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Spotify · historial de reproducción") }
                 Ayuda("spotify.com → Cuenta → Privacidad → Descargar tus datos → «Historial de reproducción ampliado». Tarda unos días; llega un .zip: elígelo completo o los Streaming_History…json.")
                 OutlinedButton(onClick = { kindle.launch(arrayOf("text/plain", "*/*")) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) { Text("Kindle · subrayados (My Clippings.txt)") }
@@ -667,7 +674,7 @@ private fun RecordatoriosImportacion(importar: (String) -> Unit) {
         }
         Etiqueta("Hora: ${c.importar_hora}:00")
         Slider(value = c.importar_hora.toFloat(), onValueChange = { v -> Repo.cambiarConfig { it.copy(importar_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
-        Ayuda("WhatsApp y Kindle no tienen recordatorio. Cold Turkey se activa cuando llegue su importador.")
+        Ayuda("WhatsApp y Kindle no tienen recordatorio.")
     }
 }
 

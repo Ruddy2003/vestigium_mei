@@ -226,6 +226,23 @@ object Estadistica {
         if (Repo.config.seguimiento_privado && Repo.momentos.any { it.tipo == "libido" }) {
             v += Variable("libido_max", "Libido máxima del día (0 a 5)", "Privado"); v += Variable("n_libido", "Registros de libido", "Privado")
         }
+        // Suplementos: dosis, si se tomó y el nivel del modelo (o porciones).
+        val sup = runCatching { io.github.ruddy2003.vestigium.data.Suplementos.panel() }.getOrDefault(emptyMap())
+        val clavesSup = sup.values.flatMap { it.keys }.toSet()
+        Repo.config.suplementos.forEach { s ->
+            val u = s.unidad
+            listOf("supl_${s.id}_dosis" to "${s.nombre}: dosis del día ($u)", "supl_${s.id}_tomado" to "${s.nombre}: lo tomaste (0/1)",
+                "supl_${s.id}_nivel" to (if (s.modelo == "carga") "${s.nombre}: reserva estimada (0 a 100 %)" else "${s.nombre}: cantidad estimada en el cuerpo al final del día ($u)"),
+                "supl_${s.id}_porciones" to "${s.nombre}: porciones del día").forEach { (k, n) -> if (k in clavesSup) v += Variable(k, n, "Suplementos") }
+        }
+        if ("creatina_saturacion_pct" in clavesSup) v += Variable("creatina_saturacion_pct", "Saturación de creatina estimada (%)", "Suplementos")
+        if ("probioticos_porciones" in clavesSup) { v += Variable("probioticos_porciones", "Porciones de probióticos (anotadas y estimadas)", "Suplementos"); v += Variable("probioticos_estimado", "Porciones de probióticos leídas en tu bitácora de comidas", "Suplementos") }
+        // La laptop (Cold Turkey).
+        if (Repo.laptop.isNotEmpty()) {
+            v += Variable("laptop_min", "Minutos en la laptop", "Laptop")
+            if (Repo.laptop.values.any { it.sitios.isNotEmpty() }) v += Variable("laptop_web_min", "Minutos en sitios web (laptop)", "Laptop")
+            io.github.ruddy2003.vestigium.data.ColdTurkey.CATEGORIAS.forEach { o -> v += Variable("laptop_${o.id}_min", "Minutos en la laptop: ${o.nombre.lowercase()}", "Laptop") }
+        }
         if (Repo.momentos.any { it.con_quien.isNotEmpty() }) {
             v += Variable("acompanado_pct", "Avisos de ánimo con alguien (0 a 1)", "Social")
             Catalogo.CON_QUIEN.filter { it.id != "solo" }.forEach { o -> v += Variable("con_${o.id}", "Avisos con ${o.nombre.lowercase()} (0 a 1)", "Social") }
@@ -386,6 +403,8 @@ object Estadistica {
         if (Repo.config.seguimiento_privado) Repo.momentos.filter { it.tipo == "libido" }.groupBy { it.fecha }.forEach { (f, l) ->
             val r = fila(f); r["libido_max"] = l.mapNotNull { it.intensidad }.maxOrNull()?.toDouble(); r["n_libido"] = l.size.toDouble()
         }
+        runCatching { io.github.ruddy2003.vestigium.data.Suplementos.panel().forEach { (f, m) -> val r = fila(f); m.forEach { (k, x) -> r[k] = x } } }
+        Repo.laptop.forEach { (f, d) -> val r = fila(f); io.github.ruddy2003.vestigium.data.ColdTurkey.resumen(d).forEach { (k, x) -> r[k] = x } }
         Repo.sesiones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["ejercicio_min"] = l.sumOf { it.min }.toDouble() }
         Repo.pantalla.forEach { (f, p) ->
             val r = fila(f)
@@ -701,6 +720,10 @@ object Estadistica {
         setOf("gasto_total", "gasto_imprevisto"),
         setOf("impulso", "recaida", "n_recaida", "n_impulso", "recaida_min", "libido_max", "n_libido"),
         setOf("presion_local_hpa", "presion_hpa", "cambio_presion_3h"),
+        setOf("laptop_min", "laptop_web_min", "laptop_productivo_min", "laptop_ocio_min", "laptop_social_min", "laptop_otro_min"),
+        setOf("laptop_productivo_min", "enfoque_min", "enfoque_estudio_min", "enfoque_tesis_min", "enfoque_trabajo_min"),
+        setOf("creatina_saturacion_pct", "supl_creatina_dosis", "supl_creatina_tomado", "supl_creatina_nivel"),
+        setOf("probioticos_porciones", "probioticos_estimado", "supl_probioticos_porciones", "supl_probioticos_dosis", "supl_probioticos_tomado"),
         setOf("animo_cierre_valencia", "valencia", "animo_valencia"), setOf("animo_cierre_activacion", "activacion", "animo_activacion"),
         setOf("horas_tipo_casa", "en_casa_min", "sin_wifi_min", "fuera_de_casa"),
         setOf("enfoque_min", "enfoque_estudio_min", "enfoque_lectura_min", "enfoque_idiomas_min", "enfoque_tesis_min", "enfoque_trabajo_min", "enfoque_creativo_min"),
@@ -731,6 +754,9 @@ object Estadistica {
         // Las horas por tipo de lugar se reparten el mismo día entre sí y con cada lugar.
         val lugA = a.id.startsWith("horas_tipo_") || a.id.startsWith("lug_"); val lugB = b.id.startsWith("horas_tipo_") || b.id.startsWith("lug_")
         if (lugA && lugB) return true
+        // Las variables del mismo suplemento (dosis, si se tomó, nivel) se mueven juntas por construcción.
+        fun supl(id: String) = if (id.startsWith("supl_")) id.removePrefix("supl_").substringBeforeLast('_') else null
+        if (supl(a.id) != null && supl(a.id) == supl(b.id)) return true
         // Lo que sentías con el número de registros del día, y cada categoría del sueño con haber recordado un sueño.
         if ((a.grupo == "Sentimientos" && b.id == "registros_animo") || (b.grupo == "Sentimientos" && a.id == "registros_animo")) return true
         if ((a.grupo == "Sueños" && b.id.startsWith("sueno_")) || (b.grupo == "Sueños" && a.id.startsWith("sueno_"))) return true

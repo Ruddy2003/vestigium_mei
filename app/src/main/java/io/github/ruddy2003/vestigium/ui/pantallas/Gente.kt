@@ -192,6 +192,7 @@ fun PantallaPersonas(nav: Nav) {
                         Ayuda("Antes: " + h.sortedBy { it.hasta }.joinToString(" · ") { "${Personas.nombreRelacion(it.relacion).lowercase()} hasta ${Fechas.corto(it.hasta)}" })
                     }
                     FormularioPersona(n, alGuardar = { editando = null })
+                    AQuienConoce(n)
                 }
             })
     }
