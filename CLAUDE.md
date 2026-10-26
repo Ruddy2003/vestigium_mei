@@ -46,3 +46,10 @@ Reglas de escritura:
 - Lo que no puedas comprobar, dilo explícitamente.
 - **Los módulos de contenido (1 a 8, 11 a 14) no cambian código**: solo anotan hallazgos. El código se cambia únicamente en el módulo 10, con lo aprobado en `revision_propuestas.md`.
 - Al terminar un módulo: marca su fila como «hecho <fecha>» en el plan, haz commit en una rama `paper-modulo-N` y abre un pull request hacia `main`.
+
+### Mantener el paper al día cuando cambia la app
+
+- Si un cambio de código altera algo que `docs/paper/` describe (qué se mide, cómo se calcula, umbrales, ventanas, horarios de avisos, variables del panel o de la exportación, funciones de R), **actualiza esa sección en el mismo PR** y dilo en la descripción del PR. Si el cambio resuelve un hallazgo, márcalo en `hallazgos.md` como «Resuelto en <versión/commit>».
+- Si cambia lo que se calcula y la figura lo ilustra, actualiza también su script y su PNG.
+- **No hace falta tocar el paper** en cambios que no afectan la metodología: colores, temas, íconos, sonidos, textos de la interfaz, acomodo de pantallas, animaciones, widgets solo visuales, correcciones de errores que no cambian ningún cálculo.
+- Si el capítulo que tocaría aún no existe (su módulo está pendiente), no lo escribas: basta con que el módulo correspondiente lea el código vigente cuando se haga.
