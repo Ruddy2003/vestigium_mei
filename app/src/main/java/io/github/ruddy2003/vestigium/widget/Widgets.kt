@@ -106,6 +106,10 @@ object Widgets {
             0xFF8FAEE8.toInt(), 0xFFF0EADB.toInt(), 0xFFB2AC9E.toInt(), 0xFF3A3F4A.toInt(),
             intArrayOf(0xFFE5525E.toInt(), 0xFFE28A90.toInt(), 0xFFE3BCB8.toInt(), 0xFFF0EADB.toInt(), 0xFFC2D0EC.toInt(), 0xFFA8BFEA.toInt(), 0xFF8FAEE8.toInt()),
             0xFF1B1D22.toInt(), 0xFFFFFFFF.toInt())
+        TemaId.ANTIGUAS -> Colores(R.drawable.widget_fondo_antiguas, R.drawable.widget_boton_antiguas, R.drawable.widget_boton_activo_antiguas, R.drawable.widget_boton_ambar_antiguas,
+            0xFFD9BC6A.toInt(), 0xFFEDE7D8.toInt(), 0xFFB0AA9C.toInt(), 0xFF45464C.toInt(),
+            intArrayOf(0xFFE06A72.toInt(), 0xFFE39A96.toInt(), 0xFFE3C2B6.toInt(), 0xFFEDE7D8.toInt(), 0xFFBCDDC3.toInt(), 0xFFA4D2AE.toInt(), 0xFF8CC79A.toInt()),
+            0xFF1F2023.toInt(), 0xFF0D1F14.toInt())
     }
 
     /** Pinta fondo, botones, líneas y textos según el tema. Va primero: lo que se pinta después (estado activo, colores de ánimo) lo sobrescribe. */

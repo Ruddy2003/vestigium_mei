@@ -104,6 +104,7 @@ object Personaje {
         TemaId.RENACIMIENTO -> Atuendo(Sombrero.BOINA, Objeto.PINCEL, false)
         TemaId.URSS -> Atuendo(Sombrero.USHANKA, Objeto.MARTILLO, false)
         TemaId.REVOLUCION -> Atuendo(Sombrero.FRIGIO, Objeto.TRICOLOR, false)
+        TemaId.ANTIGUAS -> Atuendo(Sombrero.CAPUCHA, Objeto.FAROL, true)
     }
 
     /** Dibuja al personaje en un lienzo de [s] (alto); [t] es la fase de la animación (0 a 1), [parpadeo] cierra los ojos. */

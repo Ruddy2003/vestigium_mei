@@ -463,5 +463,7 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.URSS -> (slideIn(t(220)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 6, it.height / 12) } + fadeIn(t(160))) togetherWith fadeOut(t(100))
         // Un cartel que se pega en la pared: cae apenas desde arriba y se asienta.
         TemaId.REVOLUCION -> (slideInVertically(t(260)) { -it / 14 } + scaleIn(t(260), initialScale = 1.03f) + fadeIn(t(200))) togetherWith fadeOut(t(140))
+        // Una puerta de piedra que se abre: la pantalla nueva aparece despacio, un poco más grande, como al entrar a un salón.
+        TemaId.ANTIGUAS -> (scaleIn(t(380), initialScale = 0.96f) + fadeIn(t(320))) togetherWith (scaleOut(t(220), targetScale = 1.02f) + fadeOut(t(220)))
     }
 }

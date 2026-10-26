@@ -288,6 +288,34 @@ object Frases {
         f("Le génie n'est qu'une plus grande aptitude à la patience.", "El genio no es más que una mayor aptitud para la paciencia.", "Atribuida a Buffon"),
     )
 
+    /** Tierras Antiguas: dichos propios del tema, escritos para la app (no citan ninguna obra). */
+    val ANTIGUAS = listOf(
+        f(null, "El camino no se acorta mirándolo; se acorta andándolo.", "Dicho de los caminantes"),
+        f(null, "Piedra a piedra se alza la torre, y nadie recuerda cuál fue la primera.", "Dicho de los canteros"),
+        f(null, "Quien lleva farol no teme a la noche, pero tampoco la mira.", "Dicho de los guardas del paso"),
+        f(null, "Lo que se escribe en la crónica ya no se pierde en la niebla.", "Dicho de los cronistas"),
+        f(null, "El río no discute con la roca: la rodea y sigue.", "Dicho de los barqueros"),
+        f(null, "Una lumbre pequeña calienta más que un incendio lejano.", "Dicho de las posadas"),
+        f(null, "No preguntes al bosque cuánto falta; pregúntale a tus pies.", "Dicho de los caminantes"),
+        f(null, "El que guarda las semillas guarda el verano.", "Dicho de los labradores del valle"),
+        f(null, "Toda puerta cerrada fue antes un muro con paciencia.", "Dicho de los canteros"),
+        f(null, "Descansar también es parte del viaje.", "Dicho de las posadas"),
+        f(null, "La montaña no se mueve, pero cada día la subes distinto.", "Dicho de los pastores altos"),
+        f(null, "El mapa dice adónde ir; la libreta dice quién fuiste.", "Dicho de los cronistas"),
+        f(null, "Un paso firme vale más que diez apresurados.", "Dicho de los guardas del paso"),
+        f(null, "Lo que hoy cuesta, mañana se cuenta junto al fuego.", "Dicho de las posadas"),
+        f(null, "Hasta la noche más larga termina en alba.", "Dicho de los vigías"),
+        f(null, "Quien escucha al viento sabe cuándo plegar la vela.", "Dicho de los barqueros"),
+        f(null, "No hay tesoro que pese menos que una costumbre buena.", "Dicho de los labradores del valle"),
+        f(null, "La luna cambia de cara, y nadie la llama falsa.", "Dicho de los vigías"),
+        f(null, "El que siembra a la sombra cosecha despacio, pero cosecha.", "Dicho de los labradores del valle"),
+        f(null, "Cada piedra del camino fue puesta por alguien que no lo vería terminado.", "Dicho de los canteros"),
+        f(null, "La niebla esconde el sendero, no lo borra.", "Dicho de los pastores altos"),
+        f(null, "Cuenta tus días como cuentas tus monedas: sin miedo y sin descuido.", "Dicho de los mercaderes"),
+        f(null, "Un día sin gesta no es un día perdido; es un día de camino.", "Dicho de los caminantes"),
+        f(null, "Lo que se nombra se puede cuidar.", "Dicho de los cronistas"),
+    )
+
     val REVOLUCION = listOf(
         f("Les hommes naissent et demeurent libres et égaux en droits.", "Los hombres nacen y permanecen libres e iguales en derechos.", "Declaración de los Derechos del Hombre y del Ciudadano, art. 1, 1789"),
         f("La liberté consiste à pouvoir faire tout ce qui ne nuit pas à autrui.", "La libertad consiste en poder hacer todo lo que no daña a otro.", "Declaración de los Derechos del Hombre y del Ciudadano, art. 4, 1789"),
@@ -529,7 +557,7 @@ object Frases {
         TemaId.DISTOPIA -> DISTOPIA; TemaId.REFUGIO -> REFUGIO; TemaId.ORDEN -> ORDEN; TemaId.LABORATORIO -> LABORATORIO; TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON; TemaId.BOTANICO -> BOTANICO; TemaId.NAVIDAD -> NAVIDAD; TemaId.SEDA -> SEDA; TemaId.URSS -> URSS
         TemaId.GOTICO -> GOTICO; TemaId.ESPACIO -> ESPACIO; TemaId.ANDALUS -> ANDALUS; TemaId.MONGOL -> MONGOL; TemaId.RENACIMIENTO -> RENACIMIENTO
-        TemaId.REVOLUCION -> REVOLUCION
+        TemaId.REVOLUCION -> REVOLUCION; TemaId.ANTIGUAS -> ANTIGUAS
     }
 
     /** La del día para el tema elegido: cambia cada día y recorre todas antes de repetir. */
@@ -547,7 +575,7 @@ object Frases {
         TemaId.SEDA -> "Dicho de la caravana"; TemaId.URSS -> "LEMA DEL DÍA"
         TemaId.GOTICO -> "Lectio del día"; TemaId.ESPACIO -> "TRANSMISIÓN DEL DÍA"; TemaId.ANDALUS -> "حكمة اليوم · sentencia del día"
         TemaId.MONGOL -> "ӨНӨӨДРИЙН БИЛИГ · máxima del día"; TemaId.RENACIMIENTO -> "Dal taccuino"
-        TemaId.REVOLUCION -> "CARTEL DEL DÍA"
+        TemaId.REVOLUCION -> "CARTEL DEL DÍA"; TemaId.ANTIGUAS -> "Dicho del camino"
     }
 
     // ------------------------------------------------------------ frases guardadas («me gusta»)

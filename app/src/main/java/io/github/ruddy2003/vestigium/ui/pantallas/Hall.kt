@@ -78,7 +78,7 @@ enum class Salon { TEMPLO, CASTILLO, LABORATORIO, TALLER }
 
 fun salonDe(t: TemaId): Salon = when (t) {
     TemaId.ROMANO, TemaId.HELENO, TemaId.ANDALUS, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.REVOLUCION -> Salon.TEMPLO
-    TemaId.MEDIEVAL, TemaId.ORDEN, TemaId.MONGOL, TemaId.NAPOLEON -> Salon.CASTILLO
+    TemaId.MEDIEVAL, TemaId.ORDEN, TemaId.MONGOL, TemaId.NAPOLEON, TemaId.ANTIGUAS -> Salon.CASTILLO
     TemaId.CIBER, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.LABORATORIO, TemaId.ESPACIO -> Salon.LABORATORIO
     TemaId.COLONOS, TemaId.BOTANICO, TemaId.SEDA, TemaId.NAVIDAD, TemaId.URSS -> Salon.TALLER
 }

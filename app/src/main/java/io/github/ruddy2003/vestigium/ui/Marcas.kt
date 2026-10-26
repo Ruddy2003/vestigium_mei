@@ -74,6 +74,7 @@ object Marcas {
             TemaId.RENACIMIENTO -> if (persona) Aspecto(p, p, Forma.ONDULADO, cursiva = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
             TemaId.URSS -> if (persona) Aspecto(cs.onPrimary, p, Forma.SELLO, negrita = true) else Aspecto(cs.onBackground, cs.onBackground, Forma.SUBRAYADO, negrita = true)
             TemaId.REVOLUCION -> if (persona) Aspecto(p, s, Forma.SUBRAYADO, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
+            TemaId.ANTIGUAS -> if (persona) Aspecto(p, s, Forma.MARCADOR, negrita = true) else Aspecto(t, t, Forma.SUBRAYADO, cursiva = true)
         }
     }
 

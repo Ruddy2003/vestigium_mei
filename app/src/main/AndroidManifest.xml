@@ -352,6 +352,19 @@
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
+        <activity-alias
+            android:name=".IconoAntiguas"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_antiguas"
+            android:roundIcon="@mipmap/ic_launcher_antiguas"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
 
         <activity
             android:name=".ui.QuickActivity"

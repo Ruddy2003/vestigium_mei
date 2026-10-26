@@ -69,6 +69,7 @@ object Musica {
         TemaId.MONGOL -> R.raw.s_mongol_presentacion
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_presentacion
         TemaId.REVOLUCION -> R.raw.s_revolucion_presentacion
+        TemaId.ANTIGUAS -> R.raw.s_antiguas_presentacion
     }
     /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). */
     fun anual(t: TemaId): Int = when (t) {
@@ -92,6 +93,7 @@ object Musica {
         TemaId.MONGOL -> R.raw.s_mongol_anual
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_anual
         TemaId.REVOLUCION -> R.raw.s_revolucion_anual
+        TemaId.ANTIGUAS -> R.raw.s_antiguas_anual
     }
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
@@ -114,6 +116,7 @@ object Musica {
         TemaId.MONGOL -> R.raw.t_mongol_llamada
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_llamada
         TemaId.REVOLUCION -> R.raw.t_revolucion_llamada
+        TemaId.ANTIGUAS -> R.raw.t_antiguas_llamada
     }
     fun notificacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_notificacion
@@ -136,6 +139,7 @@ object Musica {
         TemaId.MONGOL -> R.raw.t_mongol_notificacion
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_notificacion
         TemaId.REVOLUCION -> R.raw.t_revolucion_notificacion
+        TemaId.ANTIGUAS -> R.raw.t_antiguas_notificacion
     }
 
     private var reproductor: MediaPlayer? = null

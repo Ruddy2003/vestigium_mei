@@ -132,6 +132,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Soviético: papel de cartel en blanco y negro con un toque rojo.
         tema == io.github.ruddy2003.vestigium.ui.TemaId.URSS && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.95f, 0.78f, 0.74f, 6f, 0f, 0f)) }
         tema == io.github.ruddy2003.vestigium.ui.TemaId.URSS -> { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.93f, 0.84f, 4f, 0f, 0f)) }
+        // Tierras Antiguas: pergamino verdoso de día; de noche, bosque con luz de luna.
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.ANTIGUAS && oscuro -> { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.70f, 0.80f, 0.74f, 4f, 10f, 6f)) }
+        tema == io.github.ruddy2003.vestigium.ui.TemaId.ANTIGUAS -> { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 1.0f, 0.90f, 4f, 6f, 0f)) }
         // Revolución: papel de cartel con tinta de imprenta; de noche, la plaza con antorchas.
         tema == io.github.ruddy2003.vestigium.ui.TemaId.REVOLUCION && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.72f, 0.74f, 0.82f, 6f, 4f, 8f)) }
         tema == io.github.ruddy2003.vestigium.ui.TemaId.REVOLUCION -> { m.setSaturation(0.12f); m.postConcat(tinte(1.0f, 0.96f, 0.88f, 4f, 2f, 0f)) }
@@ -186,6 +189,7 @@ private object Formas {
             TemaId.MONGOL -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW) }
             TemaId.RENACIMIENTO -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW) }
             TemaId.REVOLUCION -> poligono(x, y, r * 1.12f, 14, -90.0, 0.84f)   // escarapela plisada
+            TemaId.ANTIGUAS -> poligono(x, y, r * 1.2f, 6, -90.0, 0.5f)   // gema tallada de seis puntas
         }
         c.drawPath(p, relleno)
         borde?.let { b -> c.drawPath(p, b) }
@@ -197,6 +201,7 @@ private object Formas {
             TemaId.GOTICO -> c.drawLine(x, y - r * 0.5f, x, y + r, d)
             TemaId.BOTANICO -> c.drawLine(x, y + r * 1.2f, x, y - r * 0.8f, d)
             TemaId.REVOLUCION -> c.drawCircle(x, y, r * 0.42f, d)
+            TemaId.ANTIGUAS -> { c.drawLine(x, y - r * 0.5f, x, y + r * 0.5f, d); c.drawLine(x - r * 0.3f, y - r * 0.15f, x + r * 0.3f, y + r * 0.15f, d) }
             else -> {}
         }
     }

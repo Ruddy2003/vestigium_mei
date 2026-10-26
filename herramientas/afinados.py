@@ -536,6 +536,22 @@ def revolucion():
         solemne=reverb(mezclar(*[(1.0 * i, acorde(lambda f, d: arco(f, d, 5), [T - 12 + a for a in ch], 1.0), 0.45) for i, ch in enumerate([[0, 4, 7], [5, 9, 12], [7, 11, 14], [0, 4, 7, 12]])],
                                *[(1.0 * i, tambor(hz(T - 36), 0.4, 0.2), 0.5) for i in range(4)], (0, redoble(0.8), 0.35), (2.9, redoble(1.0), 0.4)), 2.0, 0.3))
 
+def antiguas():
+    # Re dórico: arpa, cuerno grave y piedra; en lo solemne, coro grave, cuerno y tambor de salón.
+    T = -7   # Re4
+    arpa = lambda n, d=1.0: pluck(hz(n), d, 0.62, 0.997)
+    cuerno = lambda n, d: metal(hz(n - 12), d, brillo=1300, ataque=0.09)
+    piedra = lambda: mezclar((0, filtro(ruido(0.06), 'bajo', 500) * env(int(0.06 * SR), 0.001, 0.04), 1.0), (0, tambor(hz(T - 24), 0.08), 0.4))
+    S['antiguas'] = dict(
+        toque=piedra(), elegir=arpa(T + 7, 0.5), pasar=papel(0.22, (500, 3500)),
+        abrir=mezclar(*[(0.06 * i, arpa(T + n, 0.8), 0.45) for i, n in enumerate([0, 3, 7, 10])]),
+        guardar=mezclar((0, piedra(), 0.6), (0.06, arpa(T + 7, 0.6), 0.5), (0.18, arpa(T + 12, 0.9), 0.5)),
+        logro=reverb(mezclar((0, cuerno(T, 0.6), 0.5), (0.6, cuerno(T + 7, 0.9), 0.5), *[(0.7 + 0.1 * i, arpa(T + n, 0.9), 0.4) for i, n in enumerate([0, 3, 7, 10, 12, 14])]), 1.6, 0.3),
+        tema=reverb(mezclar((0, cuerno(T, 0.8), 0.55), (0.3, cuerno(T + 7, 1.0), 0.5), *[(0.5 + 0.08 * i, arpa(T + n, 1.0), 0.4) for i, n in enumerate([-12, -5, 0, 3, 7])]), 1.6, 0.3),
+        aviso=reverb(mezclar(*[(0.2 * i, arpa(T + n, 1.0), 0.5) for i, n in enumerate([7, 5, 3, 5, 7, 12])]), 1.5, 0.3),
+        solemne=reverb(mezclar(*[(1.0 * i, acorde(coro, [T - 12 + a for a in ch], 1.1), 0.45) for i, ch in enumerate([[0, 3, 7], [-2, 2, 5], [5, 9, 12], [0, 3, 7, 12]])],
+                               *[(1.0 * i, tambor(hz(T - 36), 0.5, 0.15), 0.45) for i in range(4)], (0, cuerno(T, 2.0), 0.3)), 2.2, 0.35))
+
 # ------------------------------------------------------------------ teclas del diario y el rascado del mapa
 
 def comunes():
@@ -556,7 +572,7 @@ def comunes():
     escribir('s_rascar', x, rms_db=-21)
 
 if __name__ == '__main__':
-    todos = (romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio, colonos, napoleon, botanico, navidad, seda, urss, gotico, espacio, andalus, mongol, renacimiento, revolucion)
+    todos = (romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio, colonos, napoleon, botanico, navidad, seda, urss, gotico, espacio, andalus, mongol, renacimiento, revolucion, antiguas)
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     for f in todos:
         if solo is None or f.__name__ in solo: f()

@@ -83,7 +83,7 @@ object MapasCampana {
                 drawPath(Path().apply { moveTo(0f, h * 0.48f); cubicTo(w * 0.25f, h * 0.2f, w * 0.45f, h * 0.85f, w * 0.7f, h * 0.5f); cubicTo(w * 0.82f, h * 0.32f, w * 0.9f, h * 0.5f, w, h * 0.44f) },
                     agua.copy(alpha = agua.alpha * 2.2f), style = Stroke(5 * d, cap = StrokeCap.Round))
             }
-            else -> {}
+            else -> with(MapasMas) { fondoMas(tema, cs, avance) }
         }
     }
 
@@ -114,7 +114,7 @@ object MapasCampana {
             TemaId.REVOLUCION -> {
                 drawPath(p, Color(0xFF1F3A6E), style = Stroke(6 * d)); drawPath(p, Color.White, style = Stroke(4 * d)); drawPath(p, Color(0xFFB22234), style = Stroke(2 * d))
             }
-            else -> drawPath(p, cs.outline, style = Stroke(2 * d))
+            else -> with(MapasMas) { rutaMas(tema, cs, p) }
         }
     }
 
@@ -143,7 +143,7 @@ object MapasCampana {
             } else { drawRect(col, Offset(c.x - r, c.y - r * 0.7f), Size(r * 2, r * 1.4f)); drawLine(cs.onSurface.copy(alpha = 0.6f), Offset(c.x - r, c.y - r * 0.7f), Offset(c.x - r, c.y + r * 1.4f), 1f * d) }
             // La escarapela: rojo afuera, el color del día en medio y azul al centro.
             TemaId.REVOLUCION -> { drawCircle(Color(0xFFB22234), r * 1.15f, c); drawCircle(col, r * 0.8f, c); drawCircle(Color(0xFF1F3A6E), r * 0.38f, c) }
-            else -> drawCircle(col, r, c)
+            else -> with(MapasMas) { etapaMas(tema, cs, c, r, col, meta) }
         }
     }
 
@@ -163,7 +163,7 @@ object MapasCampana {
                 drawLine(cs.onSurface, m, m + Offset(0f, -18 * d), 1f * d)
                 listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, c -> drawRect(c, Offset(m.x + i * 4 * d, m.y - 18 * d), Size(4 * d, 9 * d)) }
             }
-            else -> {}
+            else -> with(MapasMas) { victoriaMas(tema, cs, m) }
         }
     }
 }

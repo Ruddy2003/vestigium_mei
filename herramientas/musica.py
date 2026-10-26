@@ -275,6 +275,18 @@ def hacer_revolucion():
     P['revolucion'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T + 12, flauta, [7, 12, 16], 0.12, 0.45))
     ARGS['revolucion'] = (T, pz, ac, mel, kw)
 
+def hacer_antiguas():
+    # --- Tierras Antiguas: Re dórico, una balada de arpa con cuerno y coro grave (melodía propia)
+    T = -7; pz = 0.5
+    ac = compases([0, 3, 7], [-2, 2, 5], [5, 9, 12], [0, 3, 7, 12])
+    mel = frase(0, "7:1 5:0.5 3:0.5 5:1 7:1 | 10:1.5 9:0.5 7:2 | 3:1 5:1 7:1 9:1 | 7:1 5:1 7:2")
+    golpe = lambda: tambor(hz(T - 36), 0.5, 0.12)
+    perc = cada(16, golpe, 0.35, paso=2)
+    kw = dict(inst_mel=lambda f, d: pluck(f, max(0.8, d), 0.6, 0.997), inst_ac=coro, perc=perc, g_mel=0.5, g_ac=0.28, oct_mel=0, oct_ac=-12, legato=1.0,
+              bajo=lambda f, d: metal(f, d, brillo=900, ataque=0.12), g_bajo=0.18)
+    P['antiguas'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, 1.0, 0.62, 0.997), [7, 10, 14], 0.12, 1.0))
+    ARGS['antiguas'] = (T, pz, ac, mel, kw)
+
 def anual(T, pz, ac, mel, kw, ciclos=10):
     """La música de «Tu año» (~1 min y medio): la frase del tema, que va creciendo. Primero sola y suave; luego entran los acordes,
     el bajo y la percusión; en el clímax la melodía se dobla a la octava y todo sube un tono; al final vuelve a casa y se apaga."""
@@ -306,7 +318,7 @@ def anual(T, pz, ac, mel, kw, ciclos=10):
     return x
 
 if __name__ == '__main__':
-    hacer(); hacer_revolucion()
+    hacer(); hacer_revolucion(); hacer_antiguas()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     for tema, (pres, llam, notif) in P.items():
         if solo is not None and tema not in solo: continue

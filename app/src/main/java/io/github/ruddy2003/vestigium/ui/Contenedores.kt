@@ -32,6 +32,13 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     TALLER("Cuaderno de taller", "hoja"),
     LEGAJO("Legajo de despachos", "despacho"),
     CAHIER("Cahier de momentos", "página"),
+    MANUSCRITO("Manuscrito de momentos", "folio"),
+    ACORDEON("Libro plegado de momentos", "pliegue"),
+    ORDENES("Rollo de órdenes", "orden"),
+    BITACORA("Diario de a bordo", "página"),
+    HERBARIO("Herbario de momentos", "pliego"),
+    ADVIENTO("Calendario de adviento", "casilla"),
+    MAPAS("Libro de mapas", "mapa"),
 }
 
 fun contenedorDe(t: TemaId): Contenedor = when (t) {
@@ -42,6 +49,13 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.RENACIMIENTO -> Contenedor.TALLER
     TemaId.NAPOLEON -> Contenedor.LEGAJO
     TemaId.REVOLUCION -> Contenedor.CAHIER
+    TemaId.ANDALUS -> Contenedor.MANUSCRITO
+    TemaId.SEDA -> Contenedor.ACORDEON
+    TemaId.MONGOL -> Contenedor.ORDENES
+    TemaId.COLONOS -> Contenedor.BITACORA
+    TemaId.BOTANICO -> Contenedor.HERBARIO
+    TemaId.NAVIDAD -> Contenedor.ADVIENTO
+    TemaId.ANTIGUAS -> Contenedor.MAPAS
     else -> Contenedor.ESPIRAL
 }
 
@@ -64,6 +78,7 @@ object Contenedores {
         Contenedor.TALLER -> if (oscuro) lerp(Color(0xFFEAD9B0), Color.Black, 0.74f) else Color(0xFFEAD9B0)
         Contenedor.LEGAJO -> if (oscuro) lerp(Color(0xFFF3EEDF), Color.Black, 0.78f) else Color(0xFFF7F2E4)
         Contenedor.CAHIER -> if (oscuro) lerp(Color(0xFFF8F6EE), Color.Black, 0.8f) else Color(0xFFF8F6EE)
+        else -> ContenedoresMas.papel(c, cs, oscuro)
     }
 
     // ================================================================== cerrado
@@ -81,6 +96,7 @@ object Contenedores {
             Contenedor.LEGAJO -> legajoCerrado(grosor, d, tapa)
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
             Contenedor.ESPIRAL -> {}
+            else -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
         }
     }
 
@@ -316,6 +332,7 @@ object Contenedores {
                 var x = margen; while (x < size.width) { drawLine(malva.copy(alpha = 0.14f), Offset(x, 96 * d), Offset(x, size.height), 0.5f * d); x += renglon }
                 drawLine(Color(0xFFB22234).copy(alpha = 0.5f), Offset(margen - 6 * d, 0f), Offset(margen - 6 * d, size.height), 1.2f * d)
             }
+            else -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
         }
     }
 
@@ -362,6 +379,7 @@ object Contenedores {
                 // El hilo de la costura del cuaderno.
                 var y = 20 * d; while (y < size.height - 20 * d) { drawLine(Color(0xFF1F3A6E).copy(alpha = 0.7f), Offset(16 * d, y), Offset(16 * d, y + 8 * d), 1.4f * d); y += 22 * d }
             }
+            else -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
         }
     }
 }

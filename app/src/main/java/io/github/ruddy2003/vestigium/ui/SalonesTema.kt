@@ -39,7 +39,7 @@ object SalonesTema {
             TemaId.RENACIMIENTO -> galeria(cs, oscuro, n)
             TemaId.NAPOLEON -> imperial(cs, oscuro, n)
             TemaId.REVOLUCION -> panteon(cs, oscuro, n)
-            else -> {}
+            else -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
         }
     }
 
@@ -58,7 +58,7 @@ object SalonesTema {
                 drawRect(piedra(Color(0xFFD8D1C2)), Offset(w * 0.18f, 0f), Size(w * 0.64f, h))
                 listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, c -> drawRect(c, Offset(w * (0.18f + i * 0.2133f), 0f), Size(w * 0.2133f, h * 0.22f)) }
             }
-            else -> drawRect(metal, Offset(0f, 0f), Size(w, h))
+            else -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
         }
     }
 

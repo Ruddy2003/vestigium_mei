@@ -402,6 +402,68 @@ def renacimiento(tam, tipo):
     capa = a_rgba(rgb, alfa)
     guardar(fondo, capa, 'renacimiento', tipo)
 
+# ------------------------------------------------------------------ Tierras Antiguas
+def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
+    """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
+    r = np.random.default_rng(semilla)
+    paso = ancho / n
+    for k in range(n):
+        x0 = x + k * paso + paso * 0.2; ww = paso * 0.6; cx = x0 + ww / 2
+        d.line([(cx, y - alto / 2), (cx, y + alto / 2)], fill=color, width=grosor)
+        t = r.integers(0, 4)
+        if t == 0: d.line([(cx, y - alto / 2), (x0 + ww, y - alto / 6)], fill=color, width=grosor)
+        elif t == 1: d.line([(x0, y - alto / 4), (cx, y), (x0 + ww, y - alto / 4)], fill=color, width=grosor)
+        elif t == 2: d.line([(x0, y + alto / 6), (x0 + ww, y - alto / 6)], fill=color, width=grosor)
+        else: d.line([(x0, y + alto / 6), (cx, y - alto / 6), (x0 + ww, y + alto / 6)], fill=color, width=grosor)
+
+def antiguas(tam, tipo):
+    m = mascara(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    # Muro de sillares de piedra gris, con grano y vetas.
+    piedra = mezcla(col('#3E4046'), col('#6E6A62'), ruido(tam, tam / 20, 81))
+    piedra = piedra * (0.9 + 0.14 * ruido(tam, 0.9, 82)[..., None])
+    fondo = a_img(piedra).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    alto = tam / 6; largo = tam / 3.2
+    for j in range(7):
+        y = j * alto
+        d.line([(0, y), (tam, y)], fill=(20, 20, 22, 150), width=max(2, tam // 160))
+        x = (largo / 2) if j % 2 else 0
+        while x < tam:
+            d.line([(x, y), (x, y + alto)], fill=(20, 20, 22, 150), width=max(2, tam // 160)); x += largo
+    # Runas inventadas talladas en la fila de arriba y la de abajo.
+    for k, y in enumerate((alto * 0.5, tam - alto * 0.5)):
+        runas_pil(d, tam * 0.08, y, tam * 0.84, alto * 0.5, 7, (210, 188, 120, 120), max(2, tam // 120), 90 + k)
+    # Luz verde de gema que sale del centro.
+    c = tam / 2
+    dist = np.sqrt((xx - c) ** 2 + (yy - c) ** 2) / (tam / 2)
+    fondo = fondo.convert('RGB')
+    arr = np.array(fondo).astype(np.float32)
+    arr = mezcla(arr, col('#2E5A3E'), np.clip(0.9 - dist, 0, 1) * 0.55)
+    arr = mezcla(arr, col('#8CC79A'), np.clip(0.45 - dist, 0, 1) * 0.6)
+    fondo = a_img(arr)
+    # Huella en oro viejo con relieve y una pátina verde en los surcos.
+    sh = relieve(m, fuerza=1.3)[..., None]
+    oro = mezcla(col('#8A6A26'), col('#E8C878'), ruido(tam, tam / 28, 83))
+    oro = mezcla(oro, col('#5E7A5A'), np.clip((ruido(tam, tam / 60, 84) - 0.65) * 3, 0, 1) * 0.5)
+    rgb = oro * (1 + sh * 0.5)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 120))).astype(np.float32) / 255
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#0E0F10'), np.roll(np.roll(sombra, 3, 0), 3, 1) * 0.6)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'antiguas', tipo)
+
+def papel_antiguas():
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    borde = np.clip(np.maximum(np.abs(xx - W / 2) / (W / 2), np.abs(yy - H / 2) / (H / 2)) - 0.78, 0, 1) * 5
+    # Pergamino de mapa: amarillento, con manchas y bordes oscurecidos por el uso.
+    a = mezcla(col('#EDE2C6'), col('#D9C79C'), ruido_rect(W, H, 32, 91) * 0.8)
+    a = mezcla(a, col('#BFA676'), np.clip((ruido_rect(W, H, 14, 92) - 0.72) * 3.5, 0, 1) * 0.4)
+    a = mezcla(a, col('#8E7448'), np.clip(borde, 0, 1) * 0.7)
+    a = a * (0.96 + 0.06 * ruido_rect(W, H, 0.8, 93)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_antiguas.jpg'), quality=86)
+
 # ------------------------------------------------------------------ papeles
 def papeles():
     W, H = 720, 1280
@@ -447,3 +509,4 @@ if __name__ == '__main__':
         f(432, 'logo'); f(720, 'huella')
         print('listo', f.__name__)
     if len(sys.argv) <= 2: papeles(); print('papeles listos')
+    if 'antiguas' in hacer: papel_antiguas(); print('papel de Tierras Antiguas listo')

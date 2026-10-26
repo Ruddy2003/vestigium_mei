@@ -27,10 +27,11 @@ import kotlin.math.sin
  * Imperio, laureles y condecoraciones; en la Revolución, sus símbolos. Sin figuras humanas ni animales.
  */
 object TrofeosTema {
-    val TEMAS = setOf(TemaId.ROMANO, TemaId.HELENO, TemaId.MEDIEVAL, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.NAPOLEON, TemaId.REVOLUCION)
+    /** Los siete del lote 1 (Europa histórica) y los siete del lote 2 (rutas, oriente, colonos, botánico, Navidad y Tierras Antiguas). */
+    val TEMAS = setOf(TemaId.ROMANO, TemaId.HELENO, TemaId.MEDIEVAL, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.NAPOLEON, TemaId.REVOLUCION) + TrofeosMas.TEMAS
 
     /** Cómo se llama el trofeo de cada categoría en cada tema (para la placa y el detalle). */
-    fun nombre(tema: TemaId, categoria: String): String? = NOMBRES[tema]?.get(categoria) ?: NOMBRES[tema]?.get("Tuyos")
+    fun nombre(tema: TemaId, categoria: String): String? = (NOMBRES[tema] ?: TrofeosMas.NOMBRES[tema])?.let { it[categoria] ?: it["Tuyos"] }
 
     private val NOMBRES: Map<TemaId, Map<String, String>> = mapOf(
         TemaId.ROMANO to mapOf("Diario" to "Columna conmemorativa", "Mundo" to "Miliario", "Cuerpo" to "Acueducto", "Mente" to "Cúpula", "Cultura" to "Arco de triunfo",
@@ -104,7 +105,7 @@ object TrofeosTema {
                 drawRect(piedra(c), Offset(w * 0.2f, h * 0.79f), Size(w * 0.6f, h * 0.16f))
                 if (p.hecho) listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, Offset(w * (0.2f + i * 0.2f), h * 0.79f), Size(w * 0.2f, h * 0.03f)) }
             }
-            else -> {}
+            else -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
         }
     }
 
@@ -120,37 +121,37 @@ object TrofeosTema {
             TemaId.RENACIMIENTO -> renacimiento(categoria, p)
             TemaId.NAPOLEON -> napoleon(categoria, p)
             TemaId.REVOLUCION -> revolucion(categoria, p)
-            else -> return false
+            else -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
         }
         return true
     }
 
     // ---------------------------------------------------------------- utilidades
 
-    private fun Pincel.r(x0: Float, y0: Float, x1: Float, y1: Float) = Rect(x(x0), y(y0), x(x1), y(y1))
+    internal fun Pincel.r(x0: Float, y0: Float, x1: Float, y1: Float) = Rect(x(x0), y(y0), x(x1), y(y1))
 
-    private fun DrawScope.caja(p: Pincel, x0: Float, y0: Float, x1: Float, y1: Float, b: Brush = p.metal(x0, x1)) =
+    internal fun DrawScope.caja(p: Pincel, x0: Float, y0: Float, x1: Float, y1: Float, b: Brush = p.metal(x0, x1)) =
         drawRect(b, Offset(p.x(x0), p.y(y0)), Size(p.x(x1 - x0), p.y(y1 - y0)))
 
     /** Un arco de medio punto en un path: de [x0] a [x1], con los arranques en [yArranque] y los pies en [yPie]. */
-    private fun Path.arco(p: Pincel, x0: Float, x1: Float, yArranque: Float, yPie: Float) {
+    internal fun Path.arco(p: Pincel, x0: Float, x1: Float, yArranque: Float, yPie: Float) {
         moveTo(p.x(x0), p.y(yPie)); lineTo(p.x(x0), p.y(yArranque))
         arcTo(Rect(p.x(x0), p.y(yArranque) - p.x(x1 - x0) / 2, p.x(x1), p.y(yArranque) + p.x(x1 - x0) / 2), 180f, 180f, false)
         lineTo(p.x(x1), p.y(yPie)); close()
     }
 
     /** Una figura con huecos (arcos, vanos): el contorno menos los huecos. */
-    private fun DrawScope.conHuecos(p: Pincel, x0: Float, x1: Float, contorno: Path, huecos: Path.() -> Unit) {
+    internal fun DrawScope.conHuecos(p: Pincel, x0: Float, x1: Float, contorno: Path, huecos: Path.() -> Unit) {
         val todo = Path().apply { fillType = PathFillType.EvenOdd; addPath(contorno); huecos() }
         drawPath(todo, p.metal(x0, x1))
     }
 
-    private fun DrawScope.columna(p: Pincel, cx: Float, ancho: Float, y0: Float, y1: Float, estrias: Int = 3) {
+    internal fun DrawScope.columna(p: Pincel, cx: Float, ancho: Float, y0: Float, y1: Float, estrias: Int = 3) {
         caja(p, cx - ancho / 2, y0, cx + ancho / 2, y1)
         if (p.hecho) for (k in 1..estrias) { val xx = cx - ancho / 2 + ancho * k / (estrias + 1); drawLine(p.linea.copy(alpha = 0.35f), Offset(p.x(xx), p.y(y0)), Offset(p.x(xx), p.y(y1)), p.w * 0.006f) }
     }
 
-    private fun DrawScope.texto(t: String, p: Pincel, cx: Float, cy: Float, tam: Float, color: Color, negrita: Boolean = true) {
+    internal fun DrawScope.texto(t: String, p: Pincel, cx: Float, cy: Float, tam: Float, color: Color, negrita: Boolean = true) {
         val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
             this.color = color.toArgb(); textSize = p.w * tam; textAlign = android.graphics.Paint.Align.CENTER
             typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, if (negrita) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
@@ -158,7 +159,7 @@ object TrofeosTema {
         drawContext.canvas.nativeCanvas.drawText(t, p.x(cx), p.y(cy) + paint.textSize * 0.35f, paint)
     }
 
-    private fun DrawScope.estrella(c: Offset, R: Float, r: Float, puntas: Int, b: Brush, giro: Double = -PI / 2) {
+    internal fun DrawScope.estrella(c: Offset, R: Float, r: Float, puntas: Int, b: Brush, giro: Double = -PI / 2) {
         val path = Path()
         for (k in 0 until puntas * 2) {
             val a = giro + k * PI / puntas
@@ -169,7 +170,7 @@ object TrofeosTema {
         path.close(); drawPath(path, b)
     }
 
-    private fun DrawScope.laurel(p: Pincel, c: Offset, r: Float, b: Brush) {
+    internal fun DrawScope.laurel(p: Pincel, c: Offset, r: Float, b: Brush) {
         for (lado in listOf(-1f, 1f)) for (k in 0 until 9) {
             val a = (PI / 2 + lado * (0.3 + k * 0.3)).toFloat()
             val o = Offset(c.x + r * cos(a), c.y + r * sin(a))

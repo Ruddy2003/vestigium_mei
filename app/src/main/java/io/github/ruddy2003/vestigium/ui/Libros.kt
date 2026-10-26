@@ -111,7 +111,7 @@ enum class Soporte { ROLLO, LIBRO, SOBRE, CARPETA, PANTALLA }
 
 fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.ROMANO, TemaId.HELENO, TemaId.SEDA, TemaId.MONGOL -> Soporte.ROLLO
-    TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.ORDEN, TemaId.BOTANICO, TemaId.URSS, TemaId.LABORATORIO, TemaId.GOTICO, TemaId.ANDALUS, TemaId.RENACIMIENTO, TemaId.REVOLUCION -> Soporte.LIBRO
+    TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.ORDEN, TemaId.BOTANICO, TemaId.URSS, TemaId.LABORATORIO, TemaId.GOTICO, TemaId.ANDALUS, TemaId.RENACIMIENTO, TemaId.REVOLUCION, TemaId.ANTIGUAS -> Soporte.LIBRO
     TemaId.NAPOLEON, TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
     TemaId.CIBER, TemaId.REFUGIO, TemaId.ESPACIO -> Soporte.PANTALLA
@@ -145,6 +145,8 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.REFUGIO -> Materia(c(0xFFC9C2A6), c(0xFF8E886F), c(0xFFE2DCC4), c(0xFF3DFF7F), c(0xFF2F8F4E), c(0xFF031A0B), c(0xFF7CF098))
     // Cuaderno de quejas: tapa de cartón azul, cinta tricolor y escarapela.
     TemaId.REVOLUCION -> Materia(c(0xFF2F4A7A), c(0xFF1A2A4A), c(0xFF4A6699), c(0xFFB22234), c(0xFFF0EADB), c(0xFFF2ECDD), c(0xFF1C1A17), extra = c(0xFFB22234))
+    // Libro de crónicas: cuero gastado, esquinas de hierro, oro viejo y una gema verde.
+    TemaId.ANTIGUAS -> Materia(c(0xFF5A3A22), c(0xFF33210F), c(0xFF7A5232), c(0xFFC9A04A), c(0xFF4A4E54), c(0xFFEDE2C6), c(0xFF1E1D1A), extra = c(0xFF2E7A5A))
 }
 
 // =====================================================================
@@ -195,6 +197,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.NAVIDAD -> "Sueños junto al fuego"; TemaId.SEDA -> "梦 · sueño"; TemaId.URSS -> "СОН · SUEÑO"; TemaId.GOTICO -> "Visio nocturna"
     TemaId.ESPACIO -> "TRANSMISIÓN NOCTURNA"; TemaId.ANDALUS -> "حلم · sueño"; TemaId.MONGOL -> "ЗҮҮД · sueño"; TemaId.RENACIMIENTO -> "Sogno"
     TemaId.REVOLUCION -> "RÊVE · SUEÑO"
+    TemaId.ANTIGUAS -> "VISIONES DE LA NOCHE"
 }
 
 /** Lo que cierra la página de un sueño: el despertar, en cada tema. */
@@ -205,6 +208,7 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.SEDA -> "Despertar en la caravana."; TemaId.URSS -> "ПОДЪЁМ · DE PIE"; TemaId.GOTICO -> "Et evigilavi."; TemaId.ESPACIO -> "FIN DE LA TRANSMISIÓN NOCTURNA"
     TemaId.ANDALUS -> "واستيقظت · y desperté"; TemaId.MONGOL -> "Сэрлээ · desperté"; TemaId.RENACIMIENTO -> "E mi destai."
     TemaId.REVOLUCION -> "DEBOUT · EN PIE"
+    TemaId.ANTIGUAS -> "Y la compañía despertó."
 }
 
 /** Media luna: un círculo menos otro corrido hacia un lado. */
@@ -253,7 +257,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.COLONOS -> "asentar"; TemaId.NAPOLEON -> "SELLAR"; TemaId.BOTANICO -> "guardar"; TemaId.NAVIDAD -> "guardar carta"
     TemaId.SEDA -> "sellar el rollo"; TemaId.URSS -> "ENTREGAR"
     TemaId.GOTICO -> "sellar el folio"; TemaId.ESPACIO -> "TRANSMITIR"; TemaId.ANDALUS -> "guardar · حفظ"; TemaId.MONGOL -> "ТАМГА · sellar"
-    TemaId.RENACIMIENTO -> "annotare"; TemaId.REVOLUCION -> "FIRMAR"
+    TemaId.RENACIMIENTO -> "annotare"; TemaId.REVOLUCION -> "FIRMAR"; TemaId.ANTIGUAS -> "ASENTAR EN LA CRÓNICA"
 }
 
 /** Lo que cierra cada página al leerla. */
@@ -265,6 +269,7 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.GOTICO -> "Explicit. Deo gratias."; TemaId.ESPACIO -> "FIN DE TRANSMISIÓN"; TemaId.ANDALUS -> "تمّ · Se acabó."
     TemaId.MONGOL -> "Ингэж бичив · Así quedó escrito."; TemaId.RENACIMIENTO -> "Finito."
     TemaId.REVOLUCION -> "Lu et approuvé."
+    TemaId.ANTIGUAS -> "Así quedó escrito en la crónica."
 }
 
 private fun pistaSueno(s: Soporte) = when (s) {
@@ -522,6 +527,16 @@ private fun DrawScope.libroCerrado(t: TemaId, m: Materia) {
             val o = Offset(x + an * 1.5f, ini.y + tam.height * 0.5f)
             drawCircle(c(0xFFB22234), h * 0.1f, o); drawCircle(c(0xFFF4F1E8), h * 0.066f, o); drawCircle(c(0xFF1F3A6E), h * 0.034f, o)
         }
+        TemaId.ANTIGUAS -> {
+            // Esquinas de hierro y el broche con su gema.
+            val e = h * 0.12f
+            listOf(Offset(ini.x + lomo, ini.y), Offset(ini.x + tam.width, ini.y), Offset(ini.x + lomo, ini.y + tam.height), Offset(ini.x + tam.width, ini.y + tam.height)).forEachIndexed { i, o ->
+                val sx = if (i % 2 == 0) 1f else -1f; val sy = if (i < 2) 1f else -1f
+                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + sx * e, o.y); lineTo(o.x, o.y + sy * e); close() }, m.detalle)
+            }
+            drawRect(m.detalle, Offset(ini.x + tam.width - w * 0.02f, ini.y + tam.height * 0.44f), Size(w * 0.04f, tam.height * 0.12f))
+            drawCircle(m.extra, h * 0.035f, Offset(ini.x + tam.width, ini.y + tam.height * 0.5f))
+        }
         else -> {}
     }
     // Placa para el título.
@@ -684,6 +699,12 @@ private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Ma
             else if (tema == TemaId.REVOLUCION) {
                 val o = Offset(w / 2, hh * 0.66f)
                 drawCircle(Color(0xFFB22234), w * 0.2f, o); drawCircle(Color(0xFFF4F1E8), w * 0.13f, o); drawCircle(Color(0xFF1F3A6E), w * 0.065f, o)
+            }
+            else if (tema == TemaId.ANTIGUAS) {
+                // Una gema tallada en el lomo.
+                val o = Offset(w / 2, hh * 0.66f); val g = w * 0.18f
+                drawPath(Path().apply { moveTo(o.x, o.y - g); lineTo(o.x + g * 0.75f, o.y - g * 0.2f); lineTo(o.x, o.y + g); lineTo(o.x - g * 0.75f, o.y - g * 0.2f); close() }, m.extra)
+                drawLine(m.acento, Offset(o.x - g * 0.75f, o.y - g * 0.2f), Offset(o.x + g * 0.75f, o.y - g * 0.2f), 1.2f)
             }
             if (!noche && tema == TemaId.BOTANICO) {
                 // Un escarabajo estampado en oro sobre el cuero.
@@ -865,6 +886,7 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.CIBER -> Pagina(null, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
     TemaId.REFUGIO -> Pagina(null, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
     TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.cormorant, 19f, 28f, false, Rayas.NADA, LetraExtra.fell)
+    TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), Letra.garamond, 18.5f, 27f, false, Rayas.NADA, Letra.inscripcion)
 }
 
 /** Fondo de la página: papel, papiro, seda, pantalla… En modo oscuro, el papel claro se atenúa un poco para no deslumbrar. */
@@ -899,6 +921,14 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     // Marco de lámina y el número de la tabla.
                     drawRect(p.tinta.copy(alpha = 0.35f), Offset(12.dp.toPx(), 12.dp.toPx()), Size(w - 24.dp.toPx(), h - 24.dp.toPx()), style = Stroke(1.2f))
                     drawRect(p.tinta.copy(alpha = 0.2f), Offset(16.dp.toPx(), 16.dp.toPx()), Size(w - 32.dp.toPx(), h - 32.dp.toPx()), style = Stroke(0.8f))
+                }
+                TemaId.ANTIGUAS -> {
+                    // Marco de mapa: doble filete y una rosa de los vientos tenue en la esquina.
+                    drawRect(p.tinta.copy(alpha = 0.3f), Offset(10.dp.toPx(), 10.dp.toPx()), Size(w - 20.dp.toPx(), h - 20.dp.toPx()), style = Stroke(1.4f))
+                    drawRect(p.detalle.copy(alpha = 0.3f), Offset(14.dp.toPx(), 14.dp.toPx()), Size(w - 28.dp.toPx(), h - 28.dp.toPx()), style = Stroke(0.8f))
+                    val o = Offset(w - 46.dp.toPx(), h - 56.dp.toPx()); val r0 = 22.dp.toPx()
+                    for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); val rr = if (i % 2 == 0) r0 else r0 * 0.5f; drawLine(p.tinta.copy(alpha = 0.16f), o, Offset(o.x + rr * cos(a).toFloat(), o.y + rr * sin(a).toFloat()), 1.2f) }
+                    drawCircle(p.tinta.copy(alpha = 0.12f), r0 * 0.7f, o, style = Stroke(1f))
                 }
                 TemaId.REVOLUCION -> {
                     // El margen del cuaderno: un filete azul y otro rojo.

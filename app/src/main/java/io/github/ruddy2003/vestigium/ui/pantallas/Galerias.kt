@@ -136,6 +136,8 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.RENACIMIENTO -> mas(menos(circulo(c, r), circulo(c, r * 0.8f)), poligono(c, r * 0.8f, 4, -PI / 2))
     // La escarapela: borde plisado y el anillo blanco hueco.
     TemaId.REVOLUCION -> menos(estrella(c, r, 18, 0.88f), menos(circulo(c, r * 0.62f), circulo(c, r * 0.4f)))
+    // Una gema tallada: seis puntas cortas.
+    TemaId.ANTIGUAS -> estrella(c, r, 6, 0.72f)
 }
 
 /**

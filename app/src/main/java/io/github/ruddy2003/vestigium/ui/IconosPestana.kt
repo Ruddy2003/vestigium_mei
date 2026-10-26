@@ -109,6 +109,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.URSS -> { l(2.5f, 21f, 21.5f, 21f); p { m(4f, 21f); t(4f, 13f); t(8.5f, 16f); t(8.5f, 13f); t(13f, 16f); t(13f, 21f) }; r(15.5f, 6f, 3.4f, 15f, 0.3f)
             ci(17.2f, 3.2f, 1.3f, st = fino); ci(20f, 2.4f, 0.9f, st = fino) }                                                               // fábrica
         TemaId.REVOLUCION -> { p { m(5f, 20f); q(4f, 10f, 10f, 5f); q(15f, 2f, 19f, 6f); q(20f, 9f, 17.5f, 10f); q(19f, 14f, 19f, 20f); close() }; l(4.5f, 20.5f, 19.5f, 20.5f); ci(9f, 15.5f, 1.8f, st = fino) } // gorro frigio
+        TemaId.ANTIGUAS -> { p { m(5f, 21f); t(5f, 10f); q(5f, 3f, 12f, 3f); q(19f, 3f, 19f, 10f); t(19f, 21f) }; l(3f, 21f, 21f, 21f); l(9f, 9f, 9f, 21f, 1.1f); l(15f, 9f, 15f, 21f, 1.1f)
+            ci(13.6f, 15f, 0.9f, relleno = true) }                                                                                           // puerta del salón
     } }
 
     // ------------------------------------------------------------ Momentos
@@ -142,6 +144,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.SEDA -> { l(4.5f, 3.5f, 19.5f, 3.5f, 2.4f); r(6f, 3.5f, 12f, 16f, 0.3f); l(4.5f, 20f, 19.5f, 20f, 2.4f); l(10f, 7f, 10f, 16.5f, 1.1f); l(14f, 7f, 14f, 13f, 1.1f) } // rollo colgante
         TemaId.URSS -> { r(5f, 3f, 14f, 18f, 0.5f); estrella(12f, 8.5f, 3.4f, 1.4f, relleno = true); l(8f, 14f, 16f, 14f, 1.1f); l(8f, 17f, 14f, 17f, 1.1f) } // informe
         TemaId.REVOLUCION -> { r(5f, 3f, 14f, 18f, 0.6f); l(12f, 3f, 12f, 1.2f, 1.1f); l(8f, 8f, 16f, 8f, 1.1f); l(8f, 11.5f, 16f, 11.5f, 1.1f); l(8f, 15f, 13f, 15f, 1.1f) } // cuaderno de quejas
+        TemaId.ANTIGUAS -> { r(5f, 3f, 14f, 18f, 0.6f); l(8.5f, 3f, 8.5f, 21f, 1.1f); r(17.5f, 10f, 3.5f, 4f, 0.3f, relleno = true); p(st = fino) { m(13.5f, 7.5f); t(15.5f, 10.5f); t(13.5f, 14.5f); t(11.5f, 10.5f); close() } } // libro con broche
     } }
 
     // ------------------------------------------------------------ Gastos
@@ -173,6 +176,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.SEDA -> { ci(12f, 12f, 8.6f); r(9.4f, 9.4f, 5.2f, 5.2f, 0.3f); l(12f, 4.5f, 12f, 6.5f, 1.1f); l(12f, 17.5f, 12f, 19.5f, 1.1f) } // moneda de agujero cuadrado
         TemaId.URSS -> { engrane(12f, 12f, 9.5f, 7.2f, 8); ci(12f, 12f, 3f) }                                                                // engrane
         TemaId.REVOLUCION -> { r(3f, 6f, 18f, 12f, 0.6f); p(st = fino) { m(5.5f, 8.5f); t(18.5f, 8.5f); t(18.5f, 15.5f); t(5.5f, 15.5f); close() }; ci(12f, 12f, 2.2f, st = fino) } // asignado
+        TemaId.ANTIGUAS -> { p { m(7.5f, 8f); q(3.5f, 14f, 6f, 19f); q(12f, 22.5f, 18f, 19f); q(20.5f, 14f, 16.5f, 8f); close() }; l(7f, 8f, 17f, 8f); p(st = fino) { m(9f, 8f); q(12f, 3.5f, 15f, 8f) }
+            ci(12f, 14.5f, 1.5f, relleno = true) }                                                                                           // bolsa de monedas
     } }
 
     // ------------------------------------------------------------ Explorar
@@ -204,6 +209,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.SEDA -> { ci(12f, 13f, 7.8f); ci(12f, 3.8f, 1.3f, st = fino); l(12f, 5.1f, 12f, 5.2f); ci(12f, 13f, 4.2f, st = fino); l(5.5f, 17.5f, 18.5f, 8.5f); ci(12f, 13f, 1f, relleno = true) } // astrolabio
         TemaId.URSS -> { l(3f, 21f, 21f, 21f); r(5f, 14f, 3.4f, 7f, 0.2f, true); r(10.3f, 10f, 3.4f, 11f, 0.2f, true); r(15.6f, 5f, 3.4f, 16f, 0.2f, true) } // estadística
         TemaId.REVOLUCION -> { l(12f, 4f, 12f, 20f); l(4f, 7f, 20f, 7f); l(8f, 20.5f, 16f, 20.5f); p(st = fino) { m(4f, 7f); t(2f, 13f); q(4f, 15.5f, 6f, 13f); t(4f, 7f) }; p(st = fino) { m(20f, 7f); t(18f, 13f); q(20f, 15.5f, 22f, 13f); t(20f, 7f) } } // balanza
+        TemaId.ANTIGUAS -> { r(3f, 5f, 18f, 14f, 0.4f); p(st = fino) { m(5.5f, 16f); q(9f, 9f, 12.5f, 13f); q(16f, 16.5f, 18f, 8.5f) }; l(7f, 9f, 9f, 7f, 1.1f); l(9f, 9f, 11f, 7f, 1.1f); ci(18f, 8.5f, 1.3f, relleno = true) } // mapa con el camino
     } }
 
     // ------------------------------------------------------------ Más
@@ -235,5 +241,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.SEDA -> { p { m(4f, 21f); t(4f, 11f); q(4f, 5f, 12f, 3.5f); q(20f, 5f, 20f, 11f); t(20f, 21f) }; p { m(9f, 21f); t(9f, 15f); q(12f, 11f, 15f, 15f); t(15f, 21f) }; l(2.5f, 21f, 21.5f, 21f) } // caravasar
         TemaId.URSS -> { p { m(4f, 10f); t(9f, 10f); t(18.5f, 5f); t(18.5f, 19f); t(9f, 14f); t(4f, 14f); close() }; l(7f, 14f, 8.2f, 19.5f); p(st = fino) { m(20.5f, 9f); q(22.5f, 12f, 20.5f, 15f) } } // megáfono
         TemaId.REVOLUCION -> { ci(12f, 12f, 9f); ci(12f, 12f, 5.6f, st = fino); ci(12f, 12f, 2.4f, relleno = true) } // escarapela
+        TemaId.ANTIGUAS -> { p { m(5.5f, 9f); t(9f, 4f); t(15f, 4f); t(18.5f, 9f); t(12f, 21f); close() }; l(5.5f, 9f, 18.5f, 9f, 1.1f); l(9f, 4f, 10.5f, 9f, 1.1f); l(15f, 4f, 13.5f, 9f, 1.1f)
+            l(10.5f, 9f, 12f, 21f, 0.9f); l(13.5f, 9f, 12f, 21f, 0.9f) }                                                                   // gema tallada
     } }
 }

@@ -34,7 +34,9 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -64,7 +66,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.REFUGIO -> 3200; TemaId.ORDEN -> 2600; TemaId.LABORATORIO -> 2400; TemaId.COLONOS -> 1900
     TemaId.NAPOLEON -> 5200; TemaId.BOTANICO -> 14000; TemaId.NAVIDAD -> 24000; TemaId.SEDA -> 4800; TemaId.URSS -> 12000
     TemaId.GOTICO -> 7000; TemaId.ESPACIO -> 9000; TemaId.ANDALUS -> 36000; TemaId.MONGOL -> 30000; TemaId.RENACIMIENTO -> 6000
-    TemaId.REVOLUCION -> 9000
+    TemaId.REVOLUCION -> 9000; TemaId.ANTIGUAS -> 16000
 }
 
 /**
@@ -108,7 +110,43 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.SEDA -> moneda(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.background, t)
         TemaId.URSS -> estrellaEngrane(c, r, e.primary, if (oscuro) e.tertiary else e.onBackground, t)
         TemaId.REVOLUCION -> escarapelaEmblema(c, r, e.primary, if (oscuro) Color(0xFFF0EADB) else Color.White, e.secondary, e.onBackground, t)
+        TemaId.ANTIGUAS -> gemaRunas(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
     }
+}
+
+/**
+ * Tierras Antiguas: una gema tallada dentro de un anillo de piedra con runas inventadas que gira despacio;
+ * un destello recorre las facetas.
+ */
+private fun DrawScope.gemaRunas(c: Offset, r: Float, verde: Color, oro: Color, rubi: Color, tinta: Color, t: Float) {
+    drawCircle(oro, r * 0.96f, c, style = Stroke(r * 0.12f))
+    drawCircle(tinta.copy(alpha = 0.25f), r * 0.8f, c, style = Stroke(r * 0.03f))
+    // Las runas del anillo: trazos rectos que no son de ningún alfabeto.
+    for (i in 0 until 8) {
+        val a = rad(t * 360.0 + i * 45.0)
+        val o = c.mas(r * 0.96f, a)
+        val tg = Offset(-sin(a), cos(a)); val radial = Offset(cos(a), sin(a))
+        val l = r * 0.09f
+        drawLine(tinta.copy(alpha = 0.55f), o - tg * l, o + tg * l, r * 0.03f)
+        when (i % 3) {
+            0 -> drawLine(tinta.copy(alpha = 0.55f), o + tg * l, o + radial * (l * 0.8f), r * 0.03f)
+            1 -> drawLine(tinta.copy(alpha = 0.55f), o - tg * (l * 0.3f) - radial * (l * 0.6f), o + tg * (l * 0.3f) + radial * (l * 0.6f), r * 0.03f)
+            else -> drawLine(tinta.copy(alpha = 0.55f), o, o - radial * (l * 0.8f), r * 0.03f)
+        }
+    }
+    // La gema: un hexágono con su tabla y facetas.
+    val g = r * 0.56f
+    val pts = (0 until 6).map { c.mas(g, rad(-90.0 + it * 60.0)) }
+    val gema = Path().apply { pts.forEachIndexed { i, q -> if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() }
+    drawPath(gema, Brush.linearGradient(listOf(lerp(verde, Color.White, 0.35f), verde, lerp(verde, Color.Black, 0.35f)), c - Offset(g, g), c + Offset(g, g)))
+    val tabla = (0 until 6).map { c.mas(g * 0.5f, rad(-90.0 + it * 60.0)) }
+    drawPath(Path().apply { tabla.forEachIndexed { i, q -> if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() }, lerp(verde, Color.White, 0.18f))
+    for (i in 0 until 6) drawLine(tinta.copy(alpha = 0.25f), pts[i], tabla[i], r * 0.02f)
+    drawPath(gema, oro, style = Stroke(r * 0.05f))
+    // El destello que recorre las facetas.
+    val b = c.mas(g * 0.55f, rad(t * 720.0))
+    drawCircle(Color.White.copy(alpha = 0.55f), r * 0.06f, b)
+    drawCircle(rubi, r * 0.05f, c.mas(r * 0.96f, rad(t * 360.0 + 22.5)))
 }
 
 /** La escarapela tricolor (rojo afuera, blanco y azul al centro): tela plisada en tres anillos que gira despacio. */
@@ -937,6 +975,23 @@ internal fun Barra(modifier: Modifier) {
     }
 }
 
+/** Tierras Antiguas: una línea tallada con runas inventadas a los lados de una gema. */
+@Composable
+internal fun Runica(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    Canvas(modifier.fillMaxWidth().height(12.dp)) {
+        val h = size.height; val y = h / 2; val cx = size.width / 2; val r = h * 0.45f
+        drawLine(e.secondary.copy(alpha = 0.7f), Offset(0f, y), Offset(cx - r * 1.8f, y), 1.2f.dp.toPx())
+        drawLine(e.secondary.copy(alpha = 0.7f), Offset(cx + r * 1.8f, y), Offset(size.width, y), 1.2f.dp.toPx())
+        with(TrofeosMas) {
+            runas(Offset(cx - r * 9f, y), r * 6f, h * 0.7f, e.onBackground.copy(alpha = 0.45f), 1.dp.toPx(), 4, 8)
+            runas(Offset(cx + r * 3f, y), r * 6f, h * 0.7f, e.onBackground.copy(alpha = 0.45f), 1.dp.toPx(), 4, 11)
+        }
+        drawPath(Path().apply { moveTo(cx, y - r); lineTo(cx + r * 0.8f, y); lineTo(cx, y + r); lineTo(cx - r * 0.8f, y); close() }, e.primary)
+        drawPath(Path().apply { moveTo(cx, y - r); lineTo(cx + r * 0.8f, y); lineTo(cx, y + r); lineTo(cx - r * 0.8f, y); close() }, e.secondary, style = Stroke(1.dp.toPx()))
+    }
+}
+
 /** La banda de la Revolución: un filete azul, blanco y rojo cortado al centro por una escarapela pequeña. */
 @Composable
 internal fun Tricolor(modifier: Modifier) {
@@ -1143,6 +1198,17 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 puntos.addOval(Rect(cx - rr, cy - rr, cx + rr, cy + rr))
             }
         }
+        TemaId.ANTIGUAS -> {
+            // Muro de sillares tenue, y de vez en cuando una gema incrustada.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.045f); color2 = esquema.secondary.copy(alpha = if (oscuro) 0.08f else 0.07f)
+            val alto = 22.dp.toPx(); val largo = 52.dp.toPx(); var y = 0f; var fila = 0
+            while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); var x = if (fila % 2 == 0) 0f else largo / 2; while (x < w) { trazo.moveTo(x, y); trazo.lineTo(x, y + alto); x += largo }; y += alto; fila++ }
+            val azar = java.util.Random(3019)
+            repeat(((w * h) / 120000f).toInt().coerceIn(2, 10)) {
+                val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h; val rr = 2.6f.dp.toPx()
+                puntos.moveTo(cx, cy - rr); puntos.lineTo(cx + rr, cy); puntos.lineTo(cx, cy + rr); puntos.lineTo(cx - rr, cy); puntos.close()
+            }
+        }
         TemaId.URSS -> {
             // Rayos que salen de una esquina, como en los carteles.
             color = esquema.primary.copy(alpha = if (oscuro) 0.06f else 0.05f)
@@ -1279,6 +1345,9 @@ fun CapaFiesta() {
                     }
                     TemaId.SEDA -> { drawCircle(col, s * 0.7f, pos); drawRect(e.background.copy(alpha = a), Offset(pos.x - s * 0.22f, pos.y - s * 0.22f), Size(s * 0.44f, s * 0.44f)) }
                     TemaId.REVOLUCION -> { drawCircle(e.primary.copy(alpha = a), s * 0.8f, pos); drawCircle(Color.White.copy(alpha = a), s * 0.55f, pos); drawCircle(e.secondary.copy(alpha = a), s * 0.3f, pos) }
+                    // Gemas talladas que caen girando.
+                    TemaId.ANTIGUAS -> { drawPath(Path().apply { moveTo(pos.x, pos.y - s); lineTo(pos.x + s * 0.7f, pos.y - s * 0.2f); lineTo(pos.x, pos.y + s); lineTo(pos.x - s * 0.7f, pos.y - s * 0.2f); close() },
+                        listOf(e.primary, e.tertiary, e.secondary)[p.tono % 3].copy(alpha = a)); drawLine(Color.White.copy(alpha = a * 0.6f), Offset(pos.x - s * 0.7f, pos.y - s * 0.2f), Offset(pos.x + s * 0.7f, pos.y - s * 0.2f), s * 0.1f) }
                     else -> drawCircle(col, s * 0.5f, pos)
                 }
             }

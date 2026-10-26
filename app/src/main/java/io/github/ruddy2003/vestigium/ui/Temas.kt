@@ -55,6 +55,16 @@ object Temas {
         "${SEMANA_FRANCESA[d.dayOfWeek.value - 1]} ${if (d.dayOfMonth == 1) "1er" else d.dayOfMonth} ${MESES_FRANCESES[d.monthValue - 1]} ${d.year}"
     }.getOrDefault(iso)
 
+    /** Tierras Antiguas: el año se cuenta por lunas con nombres de las labores y del clima (invención propia). */
+    val LUNAS = listOf("LUNA DEL HIELO", "LUNA DE LA NIEVE", "LUNA DEL DESHIELO", "LUNA DE LA SIEMBRA", "LUNA DE LAS FLORES", "LUNA LARGA",
+        "LUNA DEL HENO", "LUNA DE LA COSECHA", "LUNA DE LAS HOJAS", "LUNA DE LA NIEBLA", "LUNA DE LA ESCARCHA", "LUNA DEL HOGAR")
+
+    /** «17 de la Luna de las Hojas» (el 17 de octubre, contado a la antigua). */
+    fun fechaAntigua(iso: String): String = runCatching {
+        val d = Fechas.parse(iso)
+        "${d.dayOfMonth} de la " + LUNAS[d.monthValue - 1].lowercase().replaceFirstChar { it.uppercase() }
+    }.getOrDefault(iso)
+
     private val CIFRAS_CHINAS = listOf("〇", "一", "二", "三", "四", "五", "六", "七", "八", "九")
 
     /** Números chinos tradicionales: 十七, 二十三, 一百二十… */
@@ -86,6 +96,7 @@ object Temas {
     private val MARCAS = mapOf(
         TemaId.NAPOLEON to mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "05-18" to "Imperio",
             "10-14" to "Jena", "06-14" to "Friedland", "03-20" to "Cien Días", "07-06" to "Wagram"),
+        TemaId.ANTIGUAS to mapOf("12-21" to "Noche larga", "06-21" to "Día largo", "03-20" to "Deshielo", "09-22" to "Cosecha", "10-31" to "Víspera", "01-01" to "Año nuevo"),
         TemaId.REVOLUCION to mapOf("07-14" to "Bastilla", "06-20" to "Juego de pelota", "08-04" to "Privilegios", "08-26" to "Derechos", "10-05" to "Versalles",
             "09-22" to "República", "07-27" to "Termidor", "09-20" to "Valmy"),
         TemaId.BOTANICO to mapOf("05-23" to "Linneo", "02-12" to "Darwin", "09-14" to "Humboldt", "04-22" to "Tierra", "03-20" to "Equinoccio",
@@ -191,6 +202,7 @@ object Temas {
         TemaId.SEDA -> SEDA[titulo]
         TemaId.URSS -> URSS[titulo]
         TemaId.REVOLUCION -> REVOLUCION[titulo]
+        TemaId.ANTIGUAS -> ANTIGUAS[titulo]
         else -> null
     }
 
@@ -213,6 +225,7 @@ object Temas {
             TemaId.SEDA -> mapOf("animo" to "Espíritu", "momento" to "Relato", "gasto" to "Mercancías", "sueno" to "Reposo", "habitos" to "Ritos", "hoy" to "Jornada", "cifra" to "Cuenta", "foto" to "Estampa", "enfoque" to "Estudio")
             TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO", "enfoque" to "TRABAJO")
             TemaId.REVOLUCION -> mapOf("animo" to "ESPÍRITU", "momento" to "SUCESO", "gasto" to "ASIGNADOS", "sueno" to "REPOSO", "habitos" to "VIRTUDES", "hoy" to "CAHIER", "cifra" to "CIFRA", "foto" to "ESTAMPA", "enfoque" to "ESTUDIO")
+            TemaId.ANTIGUAS -> mapOf("animo" to "TEMPLE", "momento" to "SUCESO", "gasto" to "MONEDAS", "sueno" to "VIGILIA", "habitos" to "JURAMENTOS", "hoy" to "CRÓNICA", "cifra" to "CUENTA", "foto" to "GRABADO", "enfoque" to "ESTUDIO")
             else -> emptyMap()
         }
         return m[clave] ?: clave.uppercase()
@@ -365,6 +378,25 @@ object Temas {
         "Registros especiales" to "REGISTROS CÍVICOS", "Avisos y recordatorios" to "TOQUE DE REBATO", "Contexto" to "CIRCUNSTANCIAS", "Medicamentos" to "BOTICA",
         "Ajustes" to "DECRETOS", "Datos" to "ARCHIVOS", "Privacidad" to "SECRETO", "Reportes" to "INFORMES", "Experimentos personales" to "ENSAYOS",
         "Guía científica" to "ENCICLOPEDIA", "Cartas al futuro" to "CARTAS A LA POSTERIDAD",
+    )
+
+    /** Tierras Antiguas: el vocabulario de una compañía de viaje (crónica, travesía, salones, runas, lunas). Todo inventado. */
+    private val ANTIGUAS = mapOf(
+        "Mundo" to "LAS TIERRAS", "Patrimonio Mundial" to "MARAVILLAS ANTIGUAS", "Mapa para rascar" to "MAPA DE LAS TIERRAS", "Ciudades visitadas" to "VILLAS Y ALDEAS",
+        "Biblioteca de sueños" to "LIBRO DE VISIONES", "Cartas" to "MISIVAS", "Escribir una carta" to "ESCRIBIR UNA MISIVA", "Carta" to "MISIVA",
+        "Conocerte" to "EL VIAJERO", "Brújula política" to "EL CONSEJO", "Mapas" to "CARTOGRAFÍA", "Salud" to "EL CUERPO DEL VIAJERO", "Tus apps" to "INVENTARIO",
+        "Otras vidas" to "OTRAS VIDAS", "Logros" to "HAZAÑAS", "Tu año en historias" to "CRÓNICA DEL AÑO", "Anoche" to "LA NOCHE PASADA",
+        "Selladas" to "LACRADAS", "Listas para abrir" to "LISTAS PARA ABRIR", "A otras personas" to "A LA COMPAÑÍA", "Del pasado" to "DEL PASADO",
+        "Hoy" to "LA JORNADA", "Línea de tiempo" to "EL CAMINO DEL DÍA", "Ahora mismo estoy…" to "EN ESTE MOMENTO…",
+        "Día" to "CRÓNICA DEL DÍA", "Diario" to "CRÓNICAS", "Gastos" to "MONEDERO", "Entender" to "EL SABER", "Más" to "EL SALÓN",
+        "Llenar el día" to "JUNTO AL FUEGO", "Biblioteca del diario" to "ARCHIVO DE CRÓNICAS", "Entrada" to "CRÓNICA", "Tablero" to "MESA DE MAPAS",
+        "Te falta hoy" to "TAREAS DEL DÍA", "Hábitos" to "JURAMENTOS", "Sueño" to "VIGILIA", "Ánimo y cuerpo" to "TEMPLE Y FUERZAS", "Predicción" to "PRESAGIO",
+        "Calendario" to "LAS LUNAS", "Apariencia" to "BLASÓN", "Tu año" to "EL AÑO DE LA TRAVESÍA", "Totales" to "EL TESORO",
+        "Obras" to "BIBLIOTECA DEL SALÓN", "Lugares" to "LUGARES", "Mapa" to "MAPA DE LA TRAVESÍA", "Datos que faltan" to "LO QUE FALTA", "Hitos" to "HITOS DEL CAMINO",
+        "Momentos de este día" to "SUCESOS DEL DÍA", "Resumen semanal" to "CRÓNICA DE LA SEMANA", "Tu día en 24 horas" to "LAS HORAS DEL DÍA",
+        "Registros especiales" to "REGISTROS", "Avisos y recordatorios" to "CUERNOS Y CAMPANAS", "Contexto" to "CIRCUNSTANCIAS", "Medicamentos" to "POCIONES",
+        "Ajustes" to "EL TALLER", "Datos" to "ARCHIVOS", "Privacidad" to "LO SECRETO", "Reportes" to "PERGAMINOS", "Experimentos personales" to "PRUEBAS",
+        "Guía científica" to "EL SABER ANTIGUO", "Cartas al futuro" to "MISIVAS AL PORVENIR", "Notas" to "APUNTES DE VIAJE", "Metas" to "LAS GESTAS POR VENIR",
     )
 
     private val BOTANICO = mapOf(

@@ -38,6 +38,7 @@ object Estilo {
         TemaId.MONGOL -> "◆ "
         TemaId.RENACIMIENTO -> "❧ "
         TemaId.REVOLUCION -> "✶ "
+        TemaId.ANTIGUAS -> "⟡ "
     }
 
     /** ¿Los títulos van en mayúsculas? La gótica y la letra de imprenta antigua se leen mejor en minúsculas. */
@@ -100,6 +101,7 @@ object Estilo {
         TemaId.ESPACIO -> "%03d".format(n)
         TemaId.ANDALUS -> Temas.arabe(n)
         TemaId.REVOLUCION -> if (n < 100) "N° $n" else "$n"
+        TemaId.ANTIGUAS -> if (n in 1..3999) Romano.de(n) else "$n"
     }
 
     /** Días desde el primer registro: «día N en el refugio», «T+N» en el laboratorio. */
@@ -124,6 +126,7 @@ object Estilo {
         TemaId.COLONOS -> runCatching { val d = Fechas.parse(iso); "${SEMANA_LARGA[d.dayOfWeek.value - 1]}, ${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} de ${d.year}" }.getOrDefault(iso)
         TemaId.NAPOLEON -> Temas.fechaImperial(iso)
         TemaId.REVOLUCION -> Temas.republicano(iso)
+        TemaId.ANTIGUAS -> Temas.fechaAntigua(iso)
         TemaId.BOTANICO -> runCatching { val d = Fechas.parse(iso); "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} · ${Temas.estacion(d)}" }.getOrDefault(iso)
         TemaId.GOTICO -> runCatching {
             val d = Fechas.parse(iso)
@@ -163,6 +166,7 @@ object Estilo {
             TemaId.MONGOL -> "$n-р сар" + (anio?.let { " · $it" } ?: "")
             TemaId.RENACIMIENTO -> Temas.MESES_ITALIANOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " $it" } ?: "")
             TemaId.REVOLUCION -> Temas.MESES_FRANCESES[i].uppercase() + (anio?.let { " " + Temas.anRepublicano(it, n) } ?: "")
+            TemaId.ANTIGUAS -> Temas.LUNAS[i] + (anio?.let { " · $it" } ?: "")
         }
     }
 
@@ -173,6 +177,7 @@ object Estilo {
         TemaId.LABORATORIO -> listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do")
         TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
         TemaId.NAPOLEON, TemaId.REVOLUCION -> listOf("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM")
+        TemaId.ANTIGUAS -> listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")
         TemaId.SEDA -> listOf("一", "二", "三", "四", "五", "六", "日")
         TemaId.URSS -> listOf("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС")
         TemaId.GOTICO -> listOf("ij", "iij", "iv", "v", "vj", "Sab", "Dom")
@@ -199,13 +204,13 @@ object Estilo {
         TemaId.ROMANO -> "← cd .."; TemaId.CIBER -> "<< cd .."; TemaId.HELENO -> "← ὀπίσω"; TemaId.MEDIEVAL -> "← tornar"
         TemaId.DISTOPIA -> "◄ RETROCEDER"; TemaId.REFUGIO -> "< SALIR"; TemaId.ORDEN -> "« REPLEGARSE"; TemaId.LABORATORIO -> "← volver"; TemaId.COLONOS -> "← volver"
         TemaId.NAPOLEON -> "← retirada"; TemaId.BOTANICO -> "← regresar"; TemaId.NAVIDAD -> "← volver"; TemaId.SEDA -> "← regresar"; TemaId.URSS -> "◄ НАЗАД"
-        TemaId.GOTICO -> "← redire"; TemaId.ESPACIO -> "◄ RETORNO"; TemaId.ANDALUS -> "← رجوع"; TemaId.MONGOL -> "◄ БУЦАХ"; TemaId.RENACIMIENTO -> "← indietro"; TemaId.REVOLUCION -> "← retour"
+        TemaId.GOTICO -> "← redire"; TemaId.ESPACIO -> "◄ RETORNO"; TemaId.ANDALUS -> "← رجوع"; TemaId.MONGOL -> "◄ БУЦАХ"; TemaId.RENACIMIENTO -> "← indietro"; TemaId.REVOLUCION -> "← retour"; TemaId.ANTIGUAS -> "← volver al camino"
     }
     val prefijo: String get() = when (tema) {
         TemaId.ROMANO -> "› "; TemaId.CIBER -> "$ "; TemaId.HELENO -> "· "; TemaId.MEDIEVAL -> "¶ "; TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "; TemaId.ORDEN -> "▸ "; TemaId.LABORATORIO -> "○ "; TemaId.COLONOS -> "☞ "
         TemaId.NAPOLEON -> "» "; TemaId.BOTANICO -> "⁂ "; TemaId.NAVIDAD -> "✦ "; TemaId.SEDA -> "◇ "; TemaId.URSS -> "▶ "
-        TemaId.GOTICO -> "✠ "; TemaId.ESPACIO -> "◦ "; TemaId.ANDALUS -> "◈ "; TemaId.MONGOL -> "▹ "; TemaId.RENACIMIENTO -> "✎ "; TemaId.REVOLUCION -> "• "
+        TemaId.GOTICO -> "✠ "; TemaId.ESPACIO -> "◦ "; TemaId.ANDALUS -> "◈ "; TemaId.MONGOL -> "▹ "; TemaId.RENACIMIENTO -> "✎ "; TemaId.REVOLUCION -> "• "; TemaId.ANTIGUAS -> "◆ "
     }
 
     /** Rótulos de los widgets. */
@@ -224,7 +229,7 @@ object Estilo {
         val v = when (tema) {
             TemaId.CIBER -> CLAVES_CIBER[k]
             TemaId.HELENO -> CLAVES_GRIEGO[k]
-            TemaId.DISTOPIA, TemaId.ORDEN, TemaId.URSS, TemaId.ESPACIO, TemaId.MONGOL, TemaId.REVOLUCION -> CLAVES_ES[k]?.uppercase()
+            TemaId.DISTOPIA, TemaId.ORDEN, TemaId.URSS, TemaId.ESPACIO, TemaId.MONGOL, TemaId.REVOLUCION, TemaId.ANTIGUAS -> CLAVES_ES[k]?.uppercase()
             TemaId.RENACIMIENTO -> CLAVES_IT[k]
             else -> CLAVES_ES[k]
         }

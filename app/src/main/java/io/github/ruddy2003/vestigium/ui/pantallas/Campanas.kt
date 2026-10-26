@@ -75,8 +75,9 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
     val animar = Repo.config.animaciones
     Canvas(modifier.fillMaxWidth().aspectRatio(2.4f)) {
         val w = size.width; val h = size.height
-        // Siete puntos en zigzag, de izquierda a derecha.
-        val pts = (0 until 7).map { i -> Offset(w * (0.07f + 0.86f * i / 6f), h * (if (i % 2 == 0) 0.32f else 0.62f)) }
+        // Las siete paradas del tema (donde quedan en su mapa) o, si no tiene, en zigzag de izquierda a derecha.
+        val pts = io.github.ruddy2003.vestigium.ui.MapasMas.puntos(temaMapa)?.map { Offset(w * it.x, h * it.y) }
+            ?: (0 until 7).map { i -> Offset(w * (0.07f + 0.86f * i / 6f), h * (if (i % 2 == 0) 0.32f else 0.62f)) }
         val camino = Path().apply { moveTo(pts[0].x, pts[0].y); for (i in 1 until 7) { val a = pts[i - 1]; val b = pts[i]; cubicTo((a.x + b.x) / 2, a.y, (a.x + b.x) / 2, b.y, b.x, b.y) } }
         val salon = salonDe(temaMapa)
         if (propio) with(MapasCampana) { fondo(temaMapa, cs, e.hechos / 7f); ruta(temaMapa, cs, camino) } else when (salon) {
@@ -99,10 +100,14 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
             if (ok == true) drawPath(Path().apply { moveTo(p.x - r * 0.45f, p.y); lineTo(p.x - r * 0.1f, p.y + r * 0.4f); lineTo(p.x + r * 0.5f, p.y - r * 0.4f) }, cs.onPrimary, style = Stroke(1f * density))
             if (conNombres) {
                 val t = medidor.measure(etapas.getOrElse(i) { "" }, estilo)
-                val y = if (i % 2 == 0) p.y - r - t.size.height - 2f else p.y + r + 2f
+                // El nombre va arriba si la parada está en la mitad de abajo, y abajo si está arriba (así no choca con el marcador).
+                val y = if (p.y > h * 0.45f) p.y + r + 2f else p.y - r - t.size.height - 2f
                 drawText(t, topLeft = Offset((p.x - t.size.width / 2).coerceIn(0f, w - t.size.width), y.coerceIn(0f, h - t.size.height)))
             }
         }
+        // El marcador del tema avanza por la ruta con los días cumplidos (brinca si hoy falta cumplir).
+        val hoyFalta = e.dias.any { it.first == hoy && it.second != true } && !e.ganada
+        with(io.github.ruddy2003.vestigium.ui.MapasMas) { marcador(temaMapa, cs, pts[e.hechos.coerceIn(0, 6)], if (animar && hoyFalta) pulso else 0f) }
         // La bandera de la meta si se ganó.
         if (e.ganada && propio) with(MapasCampana) { victoria(temaMapa, cs, pts[6]) }
         else if (e.ganada) {
