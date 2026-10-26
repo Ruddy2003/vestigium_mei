@@ -726,6 +726,8 @@ data class Config(
     val vinculos: List<Vinculo> = emptyList(),
     /** Categoría de cada app o sitio de la laptop (productivo, ocio, social u otro). */
     val laptop_categorias: Map<String, String> = emptyMap(),
+    /** Ya se reabrieron los días que se habían dado por revisados al tocar un nombre (v82). */
+    val presencias_reabiertas: Boolean = false,
 )
 
 /**

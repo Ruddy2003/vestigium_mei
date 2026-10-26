@@ -134,7 +134,7 @@ fun PantallaPersonas(nav: Nav) {
     var verTodas by remember { mutableStateOf(false) }
     Hoja("Tu gente", nav.atras, "Quién es cada @persona para ti. Si una relación cambia (pareja → expareja), lo de antes se guarda y los análisis usan lo que había cada día.") {
         TarjetaQuienEs(Modifier.padding(top = 14.dp))
-        val porRevisar = remember(Repo.dias) { io.github.ruddy2003.vestigium.data.Presencias.porRevisar().size }
+        val porRevisar = remember(Repo.dias) { io.github.ruddy2003.vestigium.data.Presencias.porRevisar().size + io.github.ruddy2003.vestigium.data.Presencias.paraReabrir().size }
         if (porRevisar > 0) Tarjeta(Modifier.padding(top = 10.dp)) {
             FilaMenu("¿Estuviste o solo pensaste?", "$porRevisar días con personas por revisar: ver a alguien no es lo mismo que pensar en esa persona") { nav.ir("presencias") }
         }

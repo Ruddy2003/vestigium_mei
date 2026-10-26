@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -141,22 +142,37 @@ fun PantallaTusTemas(nav: Nav) {
  */
 @Composable
 fun PantallaPresencias(nav: Nav) {
-    val pendientes = remember(Repo.dias) { Presencias.porRevisar() }
+    var todos by remember { mutableStateOf(false) }
+    // La lista se fija al abrir (o al cambiar de vista): tocar un nombre no quita la tarjeta; solo «así está bien» la da por revisada.
+    val reabiertos = remember { Presencias.paraReabrir().map { it.fecha }.toSet() }
+    androidx.compose.runtime.LaunchedEffect(Unit) { Presencias.reabrirUnaVez() }
+    val lista = remember(todos) {
+        if (todos) Presencias.conPersonas() else (Presencias.porRevisar() + Presencias.conPersonas().filter { it.fecha in reabiertos }).distinctBy { it.fecha }.sortedByDescending { it.fecha }
+    }
+    var listos by remember { mutableStateOf(emptySet<String>()) }
+    val pendientes = lista.filter { it.fecha !in listos }
     var cuantos by remember { mutableIntStateOf(20) }
     Hoja("¿Estuviste o pensaste?", nav.atras, "Ver a alguien no es lo mismo que pensar en esa persona. Toca cada nombre para cambiar entre «estuve con», «pensé en» y «mensajes». Lo que no cambies se queda como «estuve con».") {
-        if (pendientes.isEmpty()) Vacio("No hay días por revisar.")
+        Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Ficha("por revisar", !todos) { todos = false; listos = emptySet() }
+            Ficha("todos los días", todos) { todos = true; listos = emptySet() }
+        }
+        if (pendientes.isEmpty()) Vacio(if (todos) "No hay días con personas en el diario." else "No hay días por revisar.")
         else {
             Ayuda("${pendientes.size} días por revisar. No hace falta hacerlo todo: sirve más revisar los días en que pensaste en alguien sin verlo.", Modifier.padding(top = 8.dp))
             BotonSecundario("dejar todos como están", Modifier.padding(top = 8.dp)) {
-                Repo.importarDias(pendientes.map { it.copy(presencias_ok = true) }, sobrescribir = true)
+                Repo.importarDias(pendientes.map { (Repo.dias[it.fecha] ?: it).copy(presencias_ok = true) }, sobrescribir = true)
+                listos = listos + pendientes.map { it.fecha }
             }
         }
-        pendientes.take(cuantos).forEach { d ->
+        pendientes.take(cuantos).forEach { d0 ->
+            // El día como está ahora (con lo que ya tocaste), aunque la lista se haya fijado al abrir.
+            val d = Repo.dias[d0.fecha] ?: d0
             Tarjeta(Modifier.padding(top = 10.dp)) {
-                Text(Fechas.titulo(d.fecha), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                Text(Fechas.titulo(d.fecha) + if (todos && d.presencias_ok) " · revisado" else "", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                 TextoMarcado(d.nota.trim().take(220) + if (d.nota.length > 220) "…" else "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp))
-                ChipsPresencia(d) { n -> Repo.importarDias(listOf(n), sobrescribir = true) }
-                TextButton(onClick = { Repo.importarDias(listOf(Repo.dia(d.fecha).copy(presencias_ok = true)), sobrescribir = true) }) {
+                ChipsPresencia(d, revisado = false) { n -> Repo.importarDias(listOf(n), sobrescribir = true) }
+                TextButton(onClick = { Repo.importarDias(listOf(Repo.dia(d.fecha).copy(presencias_ok = true)), sobrescribir = true); listos = listos + d.fecha }) {
                     Text("así está bien", style = MaterialTheme.typography.labelLarge)
                 }
             }
@@ -167,14 +183,14 @@ fun PantallaPresencias(nav: Nav) {
 
 /** Una ficha por @persona del diario de ese día; cada toque cambia entre «estuve con», «pensé en» y «mensajes». */
 @Composable
-fun ChipsPresencia(d: io.github.ruddy2003.vestigium.data.Dia, onCambio: (io.github.ruddy2003.vestigium.data.Dia) -> Unit) {
+fun ChipsPresencia(d: io.github.ruddy2003.vestigium.data.Dia, revisado: Boolean = true, onCambio: (io.github.ruddy2003.vestigium.data.Dia) -> Unit) {
     val eq = Repo.equivalencias()
     val personas = Texto.personas(d.nota).distinct()
     if (personas.isEmpty()) return
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         personas.forEach { p ->
             val e = Presencias.enDiario(d, p, eq)
-            Ficha("${Presencias.nombre(e)} @$p", e != Presencias.ESTUVE) { onCambio(Presencias.con(d, p, Presencias.siguiente(e))) }
+            Ficha("${Presencias.nombre(e)} @$p", e != Presencias.ESTUVE) { onCambio(Presencias.con(d, p, Presencias.siguiente(e), revisado)) }
         }
     }
 }

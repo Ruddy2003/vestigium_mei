@@ -26,11 +26,11 @@ object Presencias {
         return p.entries.firstOrNull { Texto.canon(it.key, eq) == k }?.value ?: ESTUVE
     }
 
-    /** Guarda el estado de una persona en el día (estuve = sin entrada) y marca el día como revisado. */
-    fun con(d: Dia, persona: String, estado: String): Dia {
+    /** Guarda el estado de una persona en el día (estuve = sin entrada). Con [revisado], marca además el día como revisado. */
+    fun con(d: Dia, persona: String, estado: String, revisado: Boolean = true): Dia {
         val k = persona.lowercase().removePrefix("@")
         val m = if (estado == ESTUVE) d.presencias - k else d.presencias + (k to estado)
-        return d.copy(presencias = m, presencias_ok = true)
+        return d.copy(presencias = m, presencias_ok = d.presencias_ok || revisado)
     }
 
     private val PENSAR = setOf("pensando_en", "recuerdo")
@@ -60,4 +60,21 @@ object Presencias {
 
     /** Días con personas en el diario que todavía no revisaste (de los más nuevos a los más viejos). */
     fun porRevisar(): List<Dia> = Repo.dias.values.filter { !it.presencias_ok && Texto.personas(it.nota).isNotEmpty() }.sortedByDescending { it.fecha }
+
+    /** Todos los días con personas en el diario, revisados o no. */
+    fun conPersonas(): List<Dia> = Repo.dias.values.filter { Texto.personas(it.nota).isNotEmpty() }.sortedByDescending { it.fecha }
+
+    /**
+     * Hasta v81, tocar un nombre en «¿Estuviste o pensaste?» daba el día por revisado y lo quitaba de la lista. Una sola vez,
+     * esos días (los que tienen algún cambio marcado) vuelven a «por revisar», con lo que ya marcaste.
+     */
+    fun paraReabrir(): List<Dia> = if (Repo.config.presencias_reabiertas) emptyList()
+        else Repo.dias.values.filter { it.presencias_ok && it.presencias.isNotEmpty() && Texto.personas(it.nota).isNotEmpty() }
+
+    fun reabrirUnaVez() {
+        if (Repo.config.presencias_reabiertas) return
+        val l = paraReabrir().map { it.copy(presencias_ok = false) }
+        if (l.isNotEmpty()) Repo.importarDias(l, sobrescribir = true)
+        Repo.cambiarConfig { it.copy(presencias_reabiertas = true) }
+    }
 }
