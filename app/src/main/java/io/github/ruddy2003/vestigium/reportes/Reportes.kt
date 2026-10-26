@@ -22,7 +22,9 @@ import io.github.ruddy2003.vestigium.R
 import io.github.ruddy2003.vestigium.avisos.Avisos
 import io.github.ruddy2003.vestigium.ciencia.Periodo
 import io.github.ruddy2003.vestigium.data.Fechas
+import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Grados
+import io.github.ruddy2003.vestigium.data.Lugares
 import io.github.ruddy2003.vestigium.data.Mundo
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.privado
@@ -80,7 +82,8 @@ class Lienzo(ctx: Context, val tema: TemaId = Estilo.tema, val oscuro: Boolean =
 
 /**
  * Reportes semanal (imagen), mensual (PDF e imagen) y anual, con los colores, letras, nombres y números del tema.
- * Sin mapas ni direcciones para poder compartirlos; nunca incluyen lo del seguimiento privado ni el texto de las cartas.
+ * Sin calles, direcciones ni nombres de lugares para poder compartirlos (el mapa del mes es solo puntos sobre una cuadrícula);
+ * nunca incluyen lo del seguimiento privado ni el texto de las cartas.
  */
 object Reportes {
     private const val W = 1080f
@@ -366,6 +369,163 @@ object Reportes {
             y += 8f
         }
 
+        fun rotulo(t: String) { c.drawText(t, M, y + 20f, L.p(L.tenue, 19f, L.texto, 0.04f)); y += 32f }
+
+        /** El mes como calendario: cada día del color de su ánimo (el hueco punteado es un día sin registro). */
+        fun calendarioMes(d: Periodo.Datos) {
+            val ini = Fechas.parse(d.ini); val dm = ini.lengthOfMonth()
+            val desfase = ini.dayOfWeek.value - 1
+            val col = ancho / 7f; val alto = col * 0.74f; val g = 8f
+            val pd = L.p(L.tenue, 19f, L.texto)
+            for (i in 0 until 7) { val t = Estilo.semana[i]; c.drawText(t, M + col * i + col / 2 - pd.measureText(t) / 2, y + 18f, pd) }
+            y += 32f
+            val filas = (desfase + dm + 6) / 7
+            for (dd in 1..dm) {
+                val k = desfase + dd - 1; val fx = M + (k % 7) * col; val fy = y + (k / 7) * (alto + g)
+                val f = "%s-%02d".format(d.ini.take(7), dd)
+                val i = d.fechas.indexOf(f); val v = if (i >= 0) d.valencia[i] else null
+                val r = RectF(fx + g / 2, fy, fx + col - g / 2, fy + alto)
+                val pn: TextPaint
+                if (v != null) {
+                    c.drawRoundRect(r, 10f, 10f, L.relleno(L.colorAnimo(v)))
+                    pn = L.p(L.fondo, 26f, L.cifra)
+                    val tv = n1(v); val pv = L.p(L.fondo, 18f, L.mono)
+                    c.drawText(tv, r.right - pv.measureText(tv) - 10f, r.bottom - 10f, pv)
+                } else {
+                    c.drawRoundRect(r, 10f, 10f, L.trazo(L.linea, 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(6f, 6f), 0f) })
+                    pn = L.p(L.tenue, 26f, L.cifra)
+                }
+                c.drawText("$dd", r.left + 10f, r.top + 30f, pn)
+            }
+            y += filas * (alto + g) + 6f
+            // Leyenda: la escala de colores del ánimo.
+            val lw = 260f; val lx = W - M - lw
+            for (k in 0 until 26) c.drawRect(lx + k * lw / 26, y, lx + (k + 1) * lw / 26 + 1, y + 12f, L.relleno(L.colorAnimo(1 + 6.0 * k / 25)))
+            val pl = L.p(L.tenue, 17f, L.mono)
+            c.drawText("1", lx - 18f, y + 12f, pl); c.drawText("7", lx + lw + 8f, y + 12f, pl)
+            c.drawText("ánimo del día", M, y + 12f, L.p(L.tenue, 18f, L.texto))
+            y += 34f
+        }
+
+        /** La curva del sueño del mes, con la línea de las 7 h y la media del mes anterior. */
+        fun curvaSueno(d: Periodo.Datos) {
+            val vals = d.suenoPorDia; if (vals.count { it != null } < 2) return
+            val gx0 = M + 34f; val gx1 = W - M; val gy0 = y + 6f; val gy1 = y + 210f
+            val lo = 3.0; val hi = maxOf(10.0, vals.filterNotNull().max() + 0.5)
+            fun yy(v: Double) = gy1 - ((v.coerceIn(lo, hi) - lo) / (hi - lo) * (gy1 - gy0)).toFloat()
+            val n = vals.size
+            fun x(i: Int) = if (n == 1) (gx0 + gx1) / 2 else gx0 + i * (gx1 - gx0) / (n - 1)
+            val pe = L.p(L.tenue, 17f, L.mono)
+            for (h0 in listOf(4, 6, 8, 10)) { if (h0 > hi) continue; c.drawLine(gx0, yy(h0.toDouble()), gx1, yy(h0.toDouble()), L.trazo(L.mezcla(L.linea, L.fondo, 0.4), 1.2f)); c.drawText("$h0", M, yy(h0.toDouble()) + 6f, pe) }
+            c.drawLine(gx0, yy(7.0), gx1, yy(7.0), L.trazo(L.linea, 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(10f, 8f), 0f) })
+            d.suenoAnterior?.let { a -> c.drawLine(gx0, yy(a), gx1, yy(a), L.trazo(L.mezcla(L.terciario, L.fondo, 0.35), 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(3f, 7f), 0f) }) }
+            // Relleno bajo la curva y la curva.
+            val linea = Path(); val area = Path(); var abierto = false; var primero = 0f; var ultimo = 0f
+            fun cerrar() { if (abierto) { area.lineTo(ultimo, gy1); area.lineTo(primero, gy1); area.close() }; abierto = false }
+            vals.forEachIndexed { i, v ->
+                if (v == null) { cerrar(); return@forEachIndexed }
+                val px = x(i); val py = yy(v)
+                if (!abierto) { linea.moveTo(px, py); area.moveTo(px, py); primero = px; abierto = true } else { linea.lineTo(px, py); area.lineTo(px, py) }
+                ultimo = px
+            }
+            cerrar()
+            c.drawPath(area, L.relleno(L.mezcla(L.secundario, L.fondo, 0.78)))
+            c.drawPath(linea, L.trazo(L.secundario, 3.5f))
+            vals.forEachIndexed { i, v -> if (v != null && v < 6.3) c.drawCircle(x(i), yy(v), 5f, L.relleno(L.mezcla(L.error, L.linea, 0.3))) }
+            for (i in vals.indices step 5) { val t = "${i + 1}"; c.drawText(t, x(i) - pe.measureText(t) / 2, gy1 + 26f, pe) }
+            y = gy1 + 46f
+            c.drawLine(M, y - 6f, M + 34f, y - 6f, L.trazo(L.linea, 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(10f, 8f), 0f) })
+            c.drawText("7 h", M + 44f, y, L.p(L.tenue, 18f, L.texto))
+            if (d.suenoAnterior != null) {
+                c.drawLine(M + 140f, y - 6f, M + 174f, y - 6f, L.trazo(L.mezcla(L.terciario, L.fondo, 0.35), 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(3f, 7f), 0f) })
+                c.drawText("media del mes anterior (${n1(d.suenoAnterior)} h)", M + 184f, y, L.p(L.tenue, 18f, L.texto))
+            }
+            y += 26f
+        }
+
+        /** Este mes frente al anterior: una «mancuerna» por medida (punto hueco = antes, lleno = ahora). */
+        fun comparacion(filas: List<Triple<String, Double, Double>>, formato: List<(Double) -> String>) {
+            if (filas.isEmpty()) return
+            val pe = L.p(L.tinta, 22f, L.texto); val pv = L.p(L.tenue, 19f, L.mono)
+            val bx = M + 190f; val bw = W - M - bx - 230f
+            filas.forEachIndexed { i, (et, ahora, antes) ->
+                val max = maxOf(ahora, antes).takeIf { it > 0 } ?: 1.0
+                val xa = bx + (antes / max * 0.9 * bw).toFloat(); val xn = bx + (ahora / max * 0.9 * bw).toFloat()
+                val yy = y + 20f
+                c.drawText(et, M, yy + 7f, pe)
+                c.drawLine(bx, yy, bx + bw, yy, L.trazo(L.mezcla(L.linea, L.fondo, 0.4), 2f))
+                c.drawLine(xa, yy, xn, yy, L.trazo(L.primario, 6f))
+                c.drawCircle(xa, yy, 9f, L.relleno(L.fondo)); c.drawCircle(xa, yy, 9f, L.trazo(L.tenue, 2.5f))
+                c.drawCircle(xn, yy, 11f, L.relleno(L.primario))
+                val f = formato[i]
+                val t = "${f(antes)} → ${f(ahora)}"
+                c.drawText(t, W - M - pv.measureText(t), yy + 7f, pv)
+                y += 46f
+            }
+            c.drawCircle(M + 8f, y + 4f, 7f, L.trazo(L.tenue, 2f)); c.drawText("mes anterior", M + 24f, y + 10f, L.p(L.tenue, 18f, L.texto))
+            c.drawCircle(M + 190f, y + 4f, 8f, L.relleno(L.primario)); c.drawText("este mes", M + 206f, y + 10f, L.p(L.tenue, 18f, L.texto))
+            y += 34f
+        }
+
+        /** Etiquetas que fluyen en renglones; más grandes cuanto más aparecen. */
+        fun nube(items: List<Pair<String, Int>>, color: Int) {
+            if (items.isEmpty()) return
+            val max = items.maxOf { it.second }.toFloat(); val min = items.minOf { it.second }.toFloat()
+            var x = M; var alto = 0f; val g = 12f
+            items.forEach { (t, k) ->
+                val tam = if (max == min) 28f else 22f + 18f * (k - min) / (max - min)
+                val p = L.p(color, tam, L.titulo)
+                val et = "$t · $k"; val w = p.measureText(et) + 28f; val h = tam + 18f
+                if (x + w > W - M && x > M) { x = M; y += alto + g; alto = 0f }
+                c.drawRoundRect(RectF(x, y, x + w, y + h), h / 2, h / 2, L.relleno(L.superficie2))
+                c.drawText(et, x + 14f, y + h / 2 + tam * 0.34f, p)
+                x += w + g; alto = maxOf(alto, h)
+            }
+            y += alto + 22f
+        }
+
+        /** Los lugares del mes como puntos sobre una cuadrícula (sin calles ni nombres): tamaño = horas, color = tipo. */
+        fun mapaLugares(pts: List<Triple<Double, Double, Pair<String, Double>>>, horasTipo: Map<String, Double>) {
+            if (pts.isEmpty()) return
+            val alto = 440f; val x0 = M; val x1 = W - M; val y0 = y; val y1 = y + alto
+            c.drawRoundRect(RectF(x0, y0, x1, y1), 14f, 14f, L.relleno(L.superficie2))
+            val cuad = L.trazo(L.mezcla(L.linea, L.superficie2, 0.5), 1.2f)
+            for (k in 1 until 8) { val xx = x0 + (x1 - x0) * k / 8; c.drawLine(xx, y0 + 10f, xx, y1 - 10f, cuad) }
+            for (k in 1 until 4) { val yy = y0 + alto * k / 4; c.drawLine(x0 + 10f, yy, x1 - 10f, yy, cuad) }
+            val lat0 = pts.minOf { it.first }; val lat1 = pts.maxOf { it.first }
+            val lon0 = pts.minOf { it.second }; val lon1 = pts.maxOf { it.second }
+            val k = kotlin.math.cos(Math.toRadians((lat0 + lat1) / 2))
+            val sx = (lon1 - lon0) * k; val sy = lat1 - lat0
+            val pad = 60f; val aw = x1 - x0 - 2 * pad; val ah = alto - 2 * pad
+            val esc = if (sx <= 0 && sy <= 0) 0.0 else minOf(if (sx > 0) aw / sx else Double.MAX_VALUE, if (sy > 0) ah / sy else Double.MAX_VALUE)
+            val cx = (x0 + x1) / 2; val cy = (y0 + y1) / 2
+            val maxH = pts.maxOf { it.third.second }.coerceAtLeast(0.1)
+            pts.sortedByDescending { it.third.second }.forEach { (la, lo, th) ->
+                val px = cx + (((lo - (lon0 + lon1) / 2) * k) * esc).toFloat()
+                val py = cy - (((la - (lat0 + lat1) / 2)) * esc).toFloat()
+                val r = 8f + 34f * kotlin.math.sqrt(th.second / maxH).toFloat()
+                val col = colorTipo(th.first)
+                c.drawCircle(px, py, r, L.relleno(L.mezcla(col, L.superficie2, 0.45)))
+                c.drawCircle(px, py, r, L.trazo(col, 3f))
+                c.drawCircle(px, py, 4f, L.relleno(col))
+            }
+            y = y1 + 20f
+            // Leyenda: horas por tipo de lugar.
+            horasTipo.entries.take(8).forEachIndexed { i, (t, hh) ->
+                val lx = M + (i % 2) * (ancho / 2); val ly = y + (i / 2) * 34f
+                c.drawCircle(lx + 9f, ly + 12f, 9f, L.relleno(colorTipo(t)))
+                c.drawText("${Catalogo.nombreTipoLugar(t)} · ${n1(hh)} h", lx + 28f, ly + 19f, L.p(L.tinta, 21f, L.texto))
+            }
+            y += ((minOf(horasTipo.size, 8) + 1) / 2) * 34f + 14f
+        }
+
+        fun colorTipo(t: String): Int {
+            val base = listOf(L.primario, L.secundario, L.terciario, L.mezcla(L.primario, L.tinta, 0.45), L.mezcla(L.secundario, L.tinta, 0.45),
+                L.mezcla(L.terciario, L.tinta, 0.45), L.mezcla(L.primario, L.fondo, 0.45), L.mezcla(L.secundario, L.fondo, 0.45), L.mezcla(L.terciario, L.fondo, 0.45), L.tenue)
+            val i = Catalogo.TIPOS_LUGAR.indexOfFirst { it.id == t }.let { if (it < 0) Catalogo.TIPOS_LUGAR.size - 1 else it }
+            return base[i % base.size]
+        }
+
         fun nota(t: String) { texto(t, L.p(L.tenue, 20f, L.texto)); y += 6f }
 
         fun pie(fin: String) {
@@ -413,8 +573,11 @@ object Reportes {
     }
 
     /** Todas las secciones que tengan datos, en el orden del tema. */
-    private fun cuerpo(h: Hoja, d: Periodo.Datos, anual: Boolean, logros: List<io.github.ruddy2003.vestigium.ciencia.Logros.Logro>) {
+    private fun cuerpo(h: Hoja, d: Periodo.Datos, anual: Boolean, logros: List<io.github.ruddy2003.vestigium.ciencia.Logros.Logro>, mensual: Boolean = false) {
         val L = h.L
+        // Los lugares guardados: horas por tipo y el ánimo en cada tipo (nunca lo privado).
+        val horasTipo = runCatching { Lugares.horasPorTipo(d.ini, d.fin) }.getOrDefault(emptyMap()).filterValues { it >= 0.5 }
+        val valTipo = runCatching { Lugares.valenciaPorTipo(d.ini, d.fin) }.getOrDefault(emptyMap()).filterValues { it.second >= 2 }
         h.cifras(listOfNotNull(
             "${d.diasDiario}/${d.n}" to "días con diario",
             d.valMedia?.let { n1(it) to "ánimo medio (de 7)" },
@@ -431,6 +594,24 @@ object Reportes {
         if (!anual && d.n <= 8) {
             h.titulo("La semana de un vistazo", "HEBDOMAS PICTA")
             h.semanaVisual(diasVisuales(d))
+        }
+
+        // ---- El mes de un vistazo (solo en el reporte mensual)
+        if (mensual) {
+            h.titulo("El mes de un vistazo", "MENSIS PICTVS")
+            if (d.valencia.any { it != null }) { h.rotulo("el calendario de tu ánimo"); h.calendarioMes(d) }
+            if (d.suenoPorDia.count { it != null } >= 2) { h.rotulo("las horas de sueño, noche a noche"); h.curvaSueno(d) }
+            val comp = listOfNotNull(
+                if (d.valMedia != null && d.valAnterior != null) Triple("ánimo", d.valMedia!!, d.valAnterior!!) to { v: Double -> n1(v) } else null,
+                if (d.suenoH != null && d.suenoAnterior != null) Triple("sueño", d.suenoH!!, d.suenoAnterior!!) to { v: Double -> n1(v) + " h" } else null,
+                if (d.pasos != null && d.pasosAnterior != null) Triple("pasos", d.pasos!!, d.pasosAnterior!!) to { v: Double -> n0(v) } else null,
+                if (d.pantallaMin != null && d.pantallaAnterior != null) Triple("pantalla", d.pantallaMin!!, d.pantallaAnterior!!) to { v: Double -> hm(v) } else null,
+            )
+            if (comp.isNotEmpty()) { h.rotulo("frente al mes anterior"); h.comparacion(comp.map { it.first }, comp.map { it.second }) }
+            if (d.personas.isNotEmpty()) { h.rotulo("con quién"); h.nube(d.personas.take(10).map { persona(it.first, h.discreto) to it.second }, L.primario) }
+            if (d.temas.isNotEmpty()) { h.rotulo("de qué"); h.nube(d.temas.take(10).map { "#" + it.first to it.second }, L.secundario) }
+            val pts = lugaresDelMes(d.ini, d.fin)
+            if (pts.isNotEmpty()) { h.rotulo("dónde pasaste el mes · cada punto es un lugar guardado"); h.mapaLugares(pts, horasTipo) }
         }
 
         // ---- Ánimo
@@ -492,8 +673,12 @@ object Reportes {
         }
 
         // ---- Mundo
-        if (d.ciudades.isNotEmpty() || d.fotos > 0 || d.tempMax != null) {
+        if (d.ciudades.isNotEmpty() || d.fotos > 0 || d.tempMax != null || horasTipo.isNotEmpty()) {
             h.titulo("Mundo", "ORBIS")
+            if (horasTipo.isNotEmpty() && !mensual) h.barras(horasTipo.entries.take(6).map { (t, hh) -> Triple(Catalogo.nombreTipoLugar(t), hh, n1(hh) + " h") }, L.secundario)
+            valTipo.entries.sortedByDescending { it.value.first }.takeIf { it.isNotEmpty() }?.let { l ->
+                h.clave("genius loci", "ánimo por tipo de lugar: " + l.take(5).joinToString(" · ") { (t, v) -> "${Catalogo.nombreTipoLugar(t).lowercase()} ${n1(v.first)}" })
+            }
             listOfNotNull(
                 d.ciudades.takeIf { it.isNotEmpty() }?.let { "loca" to it.take(if (anual) 8 else 5).joinToString(" · ") { (c, p) -> "${Mundo.bandera(p)} $c" } + if (it.size > 8) " y ${it.size - 8} más" else "" },
                 d.ciudadesNuevas.takeIf { it.isNotEmpty() }?.let { "nova" to "${it.size} ciudades nuevas" + if (d.paisesNuevos.isNotEmpty()) " · países nuevos: " + d.paisesNuevos.joinToString(" ") { p -> Mundo.bandera(p) } else "" },
@@ -546,6 +731,18 @@ object Reportes {
             if (d.hitos.isNotEmpty()) h.clave("memorabilia", d.hitos.take(8).joinToString(", ") { it.replace('_', ' ') })
             if (logros.isNotEmpty()) h.clave("palmae", logros.take(8).joinToString(" · ") { "${it.icono} ${it.nombre}" })
         }
+    }
+
+    /** Cada lugar guardado con visitas en el periodo: lat, lon, tipo y horas (solo para el mapa abstracto del mes). */
+    private fun lugaresDelMes(ini: String, fin: String): List<Triple<Double, Double, Pair<String, Double>>> {
+        val ahora = System.currentTimeMillis()
+        val a0 = Fechas.inicioDia(ini) + 5 * 3_600_000L; val z0 = Fechas.finDia(fin) + 5 * 3_600_000L
+        val horas = HashMap<String, Double>()
+        Repo.visitas.forEach { v ->
+            val a = maxOf(Fechas.millis(v.entrada), a0); val z = minOf(v.salida?.let { Fechas.millis(it) } ?: ahora, z0)
+            if (a > 0 && z > a) horas[v.lugar] = (horas[v.lugar] ?: 0.0) + (z - a) / 3_600_000.0
+        }
+        return Repo.lugares.mapNotNull { l -> horas[l.id]?.takeIf { it >= 0.25 }?.let { Triple(l.lat, l.lon, l.tipo to it) } }
     }
 
     private val DIAS_LARGOS = listOf("lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos")
@@ -621,14 +818,14 @@ object Reportes {
         return uri
     }
 
-    private fun reporte(ctx: Context, titulo: String, latin: String, rango: String, ini: String, fin: String, anual: Boolean): Triple<Picture, Int, Int> {
+    private fun reporte(ctx: Context, titulo: String, latin: String, rango: String, ini: String, fin: String, anual: Boolean, mensual: Boolean = false): Triple<Picture, Int, Int> {
         val L = Lienzo(ctx)
         val d = Periodo.calcular(ctx, ini, fin)
         val logros = runCatching { io.github.ruddy2003.vestigium.ciencia.Logros.todos(ctx).filter { l -> l.conseguido?.let { it in ini..fin } == true } }.getOrDefault(emptyList())
         val (pic, alto) = dibujarMedido(ctx) { c ->
             val h = Hoja(c, L, Repo.config.discreto)
             h.encabezado(titulo, latin, rango)
-            cuerpo(h, d, anual, logros)
+            cuerpo(h, d, anual, logros, mensual)
             h.pie(fin)
             h.y
         }
@@ -642,6 +839,14 @@ object Reportes {
         val semana = f.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)
         val rango = "Semana ${Estilo.numeral(semana)} · del ${ini.dayOfMonth} de ${mesNombre(ini.monthValue)} al ${f.dayOfMonth} de ${mesNombre(f.monthValue)} de ${f.year}"
         val (pic, alto, fondo) = reporte(ctx, "Tu semana", "HEBDOMAS", rango, lunes, fin, false)
+        return bitmap(pic, alto, fondo)
+    }
+
+    /** La imagen del reporte de un mes (sin guardarla); «ym» es «AAAA-MM». */
+    fun imagenMes(ctx: Context, ym: String): Bitmap {
+        val ini = "$ym-01"; val d = Fechas.parse(ini)
+        val fin = minOf(Fechas.iso(d.plusMonths(1).minusDays(1)), Fechas.diaLogico())
+        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false, mensual = true)
         return bitmap(pic, alto, fondo)
     }
 
@@ -662,7 +867,7 @@ object Reportes {
         val ini = "$ym-01"
         val d = Fechas.parse(ini)
         val fin = Fechas.iso(d.plusMonths(1).minusDays(1))
-        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false)
+        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false, mensual = true)
         guardarPng(ctx, "mes_$ym.png", bitmap(pic, alto, fondo))
         val uri = guardarPdf(ctx, "mes_$ym.pdf", pic, alto, fondo)
         if (avisar && uri != null) Avisos.reporte(ctx, "Tu reporte de ${Fechas.mesTitulo(ym)} está listo", uri, "application/pdf")
