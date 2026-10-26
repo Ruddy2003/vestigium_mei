@@ -133,7 +133,7 @@ fun PantallaCoberturaVariables(nav: Nav) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(f.v.nombre, style = MaterialTheme.typography.bodyMedium)
-                        Text("${f.n} días · ${Math.round(f.pct * 100)}% desde el ${f.primera?.let { Fechas.corto(it) } ?: "?"}" + if (f.faltan > 0) " · faltan ${f.faltan} para 30" else "",
+                        Text("${f.n} ${if (f.n == 1) "día" else "días"} · ${Math.round(f.pct * 100)}% desde el ${f.primera?.let { Fechas.corto(it) } ?: "?"}" + if (f.faltan > 0) " · faltan ${f.faltan} para 30" else "",
                             style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                     }
                 }

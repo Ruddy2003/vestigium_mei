@@ -92,7 +92,7 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
             val d = density
             val mk = pts[e.hechos.coerceIn(0, 6)]
             val evitar = pts.map { androidx.compose.ui.geometry.Rect(it.x - 7 * d, it.y - 7 * d, it.x + 7 * d, it.y + 7 * d) } +
-                androidx.compose.ui.geometry.Rect(mk.x - 11 * d, mk.y - 30 * d, mk.x + 11 * d, mk.y + 4 * d)
+                androidx.compose.ui.geometry.Rect(mk.x - 14 * d, mk.y - 36 * d, mk.x + 14 * d, mk.y + 6 * d)
             val puestos = ArrayList<androidx.compose.ui.geometry.Rect>()
             (0 until 7).map { i ->
                 val p = pts[i]; val r = (if (i == 6) 9f else 6.5f) * d
