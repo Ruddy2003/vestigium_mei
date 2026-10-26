@@ -443,23 +443,31 @@ object Reportes {
             y += 26f
         }
 
-        /** Este mes frente al anterior: una «mancuerna» por medida (punto hueco = antes, lleno = ahora). */
+        /**
+         * Este mes frente al anterior: el punto hueco (el mes anterior) queda al centro y el lleno se corre según el cambio,
+         * hasta ±50 % en los bordes; así un cambio pequeño se ve pequeño en todas las medidas.
+         */
         fun comparacion(filas: List<Triple<String, Double, Double>>, formato: List<(Double) -> String>) {
             if (filas.isEmpty()) return
             val pe = L.p(L.tinta, 22f, L.texto); val pv = L.p(L.tenue, 19f, L.mono)
-            val bx = M + 190f; val bw = W - M - bx - 230f
+            val textos = filas.mapIndexed { i, (_, ahora, antes) -> "${formato[i](antes)} → ${formato[i](ahora)}" }
+            val bx = M + 150f; val bw = W - M - bx - (textos.maxOf { pv.measureText(it) } + 30f)
+            val cx = bx + bw / 2
+            val pm = L.p(L.tenue, 16f, L.mono)
+            c.drawText("−50 %", bx - 4f, y + 12f, pm); c.drawText("+50 %", bx + bw - pm.measureText("+50 %"), y + 12f, pm)
+            val t0 = "igual"; c.drawText(t0, cx - pm.measureText(t0) / 2, y + 12f, pm)
+            y += 20f
             filas.forEachIndexed { i, (et, ahora, antes) ->
-                val max = maxOf(ahora, antes).takeIf { it > 0 } ?: 1.0
-                val xa = bx + (antes / max * 0.9 * bw).toFloat(); val xn = bx + (ahora / max * 0.9 * bw).toFloat()
+                val pct = if (antes > 0) ((ahora - antes) / antes).coerceIn(-0.5, 0.5) else 0.0
+                val xn = cx + (pct / 0.5 * bw / 2).toFloat()
                 val yy = y + 20f
                 c.drawText(et, M, yy + 7f, pe)
                 c.drawLine(bx, yy, bx + bw, yy, L.trazo(L.mezcla(L.linea, L.fondo, 0.4), 2f))
-                c.drawLine(xa, yy, xn, yy, L.trazo(L.primario, 6f))
-                c.drawCircle(xa, yy, 9f, L.relleno(L.fondo)); c.drawCircle(xa, yy, 9f, L.trazo(L.tenue, 2.5f))
+                c.drawLine(cx, yy - 10f, cx, yy + 10f, L.trazo(L.linea, 1.5f))
+                c.drawLine(cx, yy, xn, yy, L.trazo(L.primario, 6f))
+                c.drawCircle(cx, yy, 9f, L.relleno(L.fondo)); c.drawCircle(cx, yy, 9f, L.trazo(L.tenue, 2.5f))
                 c.drawCircle(xn, yy, 11f, L.relleno(L.primario))
-                val f = formato[i]
-                val t = "${f(antes)} → ${f(ahora)}"
-                c.drawText(t, W - M - pv.measureText(t), yy + 7f, pv)
+                c.drawText(textos[i], W - M - pv.measureText(textos[i]), yy + 7f, pv)
                 y += 46f
             }
             c.drawCircle(M + 8f, y + 4f, 7f, L.trazo(L.tenue, 2f)); c.drawText("mes anterior", M + 24f, y + 10f, L.p(L.tenue, 18f, L.texto))

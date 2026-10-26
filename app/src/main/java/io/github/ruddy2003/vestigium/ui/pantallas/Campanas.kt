@@ -86,6 +86,32 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
             Salon.LABORATORIO -> { drawPath(camino, cs.primary.copy(alpha = 0.25f), style = Stroke(3f * density)); drawPath(camino, cs.primary, style = Stroke(0.8f * density)) }
             Salon.TALLER -> { drawPath(camino, Color(0xFF8A6A44).copy(alpha = 0.6f), style = Stroke(3f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1f * density, 2.5f * density)))); drawPath(camino, cs.onSurfaceVariant.copy(alpha = 0.5f), style = Stroke(0.8f * density)) }
         }
+        // Dónde va cada nombre: se prueban abajo, arriba, a la derecha y a la izquierda, y se queda el primero que no choca
+        // con otro nombre, con otra parada ni con el marcador.
+        val lugaresNombre: List<Pair<androidx.compose.ui.text.TextLayoutResult, Offset>> = if (!conNombres) emptyList() else {
+            val d = density
+            val mk = pts[e.hechos.coerceIn(0, 6)]
+            val evitar = pts.map { androidx.compose.ui.geometry.Rect(it.x - 7 * d, it.y - 7 * d, it.x + 7 * d, it.y + 7 * d) } +
+                androidx.compose.ui.geometry.Rect(mk.x - 11 * d, mk.y - 30 * d, mk.x + 11 * d, mk.y + 4 * d)
+            val puestos = ArrayList<androidx.compose.ui.geometry.Rect>()
+            (0 until 7).map { i ->
+                val p = pts[i]; val r = (if (i == 6) 9f else 6.5f) * d
+                val t = medidor.measure(etapas.getOrElse(i) { "" }, estilo)
+                val tw = t.size.width.toFloat(); val th = t.size.height.toFloat()
+                val abajo = Offset(p.x - tw / 2, p.y + r + 2f); val arriba = Offset(p.x - tw / 2, p.y - r - th - 2f)
+                val opciones = (if (p.y > h * 0.45f) listOf(abajo, arriba) else listOf(arriba, abajo)) + listOf(
+                    Offset(p.x + r + 4f, p.y - th / 2), Offset(p.x - r - 4f - tw, p.y - th / 2),
+                    Offset(p.x + r, p.y + r), Offset(p.x - r - tw, p.y + r), Offset(p.x + r, p.y - r - th), Offset(p.x - r - tw, p.y - r - th))
+                fun caja(o: Offset): androidx.compose.ui.geometry.Rect {
+                    val x = o.x.coerceIn(0f, (w - tw).coerceAtLeast(0f)); val y = o.y.coerceIn(0f, (h - th).coerceAtLeast(0f))
+                    return androidx.compose.ui.geometry.Rect(x, y, x + tw, y + th)
+                }
+                fun choques(c: androidx.compose.ui.geometry.Rect) = puestos.count { it.overlaps(c) } * 3 + evitar.filterIndexed { k, _ -> k != i }.count { it.overlaps(c) }
+                val mejor = opciones.map { caja(it) }.withIndex().minByOrNull { (k, c) -> choques(c) * 10 + k }!!.value
+                puestos.add(mejor)
+                t to mejor.topLeft
+            }
+        }
         e.dias.forEachIndexed { i, (f, ok) ->
             val p = pts[i]
             val r = (if (i == 6) 9f else 6.5f) * density
@@ -98,13 +124,9 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
             }
             if (!propio) drawCircle(cs.outline, r, p, style = Stroke(0.6f * density))
             if (ok == true) drawPath(Path().apply { moveTo(p.x - r * 0.45f, p.y); lineTo(p.x - r * 0.1f, p.y + r * 0.4f); lineTo(p.x + r * 0.5f, p.y - r * 0.4f) }, cs.onPrimary, style = Stroke(1f * density))
-            if (conNombres) {
-                val t = medidor.measure(etapas.getOrElse(i) { "" }, estilo)
-                // El nombre va arriba si la parada está en la mitad de abajo, y abajo si está arriba (así no choca con el marcador).
-                val y = if (p.y > h * 0.45f) p.y + r + 2f else p.y - r - t.size.height - 2f
-                drawText(t, topLeft = Offset((p.x - t.size.width / 2).coerceIn(0f, w - t.size.width), y.coerceIn(0f, h - t.size.height)))
-            }
         }
+        // Los nombres al final, encima de la ruta y las paradas.
+        lugaresNombre.forEach { (t, o) -> drawText(t, topLeft = o) }
         // El marcador del tema avanza por la ruta con los días cumplidos (brinca si hoy falta cumplir).
         val hoyFalta = e.dias.any { it.first == hoy && it.second != true } && !e.ganada
         with(io.github.ruddy2003.vestigium.ui.MapasMas) { marcador(temaMapa, cs, pts[e.hechos.coerceIn(0, 6)], if (animar && hoyFalta) pulso else 0f) }

@@ -34,7 +34,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     CAHIER("Cahier de momentos", "página"),
     MANUSCRITO("Manuscrito de momentos", "folio"),
     ACORDEON("Libro plegado de momentos", "pliegue"),
-    ORDENES("Rollo de órdenes", "orden"),
+    ORDENES("Rollo de órdenes", "mandato"),
     BITACORA("Diario de a bordo", "página"),
     HERBARIO("Herbario de momentos", "pliego"),
     ADVIENTO("Calendario de adviento", "casilla"),

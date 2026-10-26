@@ -1023,7 +1023,7 @@ class Capturas {
             io.github.ruddy2003.vestigium.data.Nota("n3", hoy, io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -2), "Llamar a @luis por lo del viaje.", "recordatorio", recordar_el = hoy),
             io.github.ruddy2003.vestigium.data.Nota("n4", hoy, io.github.ruddy2003.vestigium.data.Fechas.sumar(hoy, -5), "Me gusta más el parque temprano, cuando no hay nadie.", "pensamiento")),
             listOf(
-                io.github.ruddy2003.vestigium.data.Meta("m1", "Dormir 7 horas", "Entre semana", "corto", hoy, medida_tipo = "variable", medida_clave = "sueno_h", medida_modo = "dias", umbral = 7.0, objetivo = 20.0),
+                io.github.ruddy2003.vestigium.data.Meta("m1", "Dormir 7 horas", "Entre semana", "corto", hoy, medida_tipo = "variable", medida_clave = "sueno_horas", medida_modo = "dias", umbral = 7.0, objetivo = 20.0),
                 io.github.ruddy2003.vestigium.data.Meta("m2", "Leer 12 libros", "", "largo", hoy, fecha_objetivo = hoy.take(4) + "-12-31", progreso_manual = 40, anio_proposito = hoy.take(4).toInt()),
                 io.github.ruddy2003.vestigium.data.Meta("m3", "Correr 5 km", "", "mediano", hoy, estado = "pausada", progreso_manual = 15)))
     }
@@ -1031,7 +1031,7 @@ class Capturas {
     @Test fun notasRomano() = v73(TemaId.ROMANO, true, 3000) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaNotas(navVacia) }
     @Test fun metasBotanico() = v73(TemaId.BOTANICO, false, 3600) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(navVacia) }
     @Test fun metasCiber() = v73(TemaId.CIBER, true, 3600) { notasYMetas(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMetas(navVacia) }
-    @Test fun coberturaLaboratorio() = v73(TemaId.LABORATORIO, false, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCoberturaVariables(navVacia) }
+    @Test fun coberturaLaboratorio() = v73(TemaId.LABORATORIO, false, 4200) { io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true; io.github.ruddy2003.vestigium.ui.pantallas.PantallaCoberturaVariables(navVacia) }
     @Test fun lugarNuevoSeda() = v73(TemaId.SEDA, false, 3000, { c -> c.copy(lugares_candidatos = listOf(io.github.ruddy2003.vestigium.data.CandidatoLugar(22.17, -100.97,
         System.currentTimeMillis() - 50 * 60_000L, System.currentTimeMillis() - 10 * 60_000L, preguntas = 1, sugerencia = "Avenida Carranza"))) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLugarNuevo(navVacia) }
     @Test fun semanaCortaAntiguas() = v73(TemaId.ANTIGUAS, true, 2400, { c -> c.copy(semana_corta = true) }) {

@@ -99,7 +99,10 @@ object CoberturaVariables {
 
 @Composable
 fun PantallaCoberturaVariables(nav: Nav) {
-    val filas by produceState<List<FilaCobertura>?>(null) { value = withContext(Dispatchers.Default) { runCatching { CoberturaVariables.calcular() }.getOrDefault(emptyList()) } }
+    val sinc = io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono
+    val filas by produceState<List<FilaCobertura>?>(if (sinc) runCatching { CoberturaVariables.calcular() }.getOrDefault(emptyList()) else null) {
+        if (!sinc) value = withContext(Dispatchers.Default) { runCatching { CoberturaVariables.calcular() }.getOrDefault(emptyList()) }
+    }
     var grupo by remember { mutableStateOf("todas") }
     var orden by remember { mutableStateOf("menos") }
     val cs = MaterialTheme.colorScheme
