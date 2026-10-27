@@ -61,7 +61,7 @@ _Hecha el 27 oct 2026 sobre `main` en el commit `87f7f2c`: versión con la entre
    - La pestaña «Hoy» abre una pantalla titulada «Día», que puede estar en otra fecha.
    - «Diario» significa cuatro cosas distintas.
    - Hay dos pantallas «Obras» y dos «Análisis».
-   - Los temas cambian el título de casi todas las pantallas (anexo E, § 2).
+   - Los temas cambian el título de casi todas las pantallas (anexo E, § 2). En medieval, la pestaña «Análisis» se titula «Quaestiones», y sus tarjetas, «Pruebas» y «Suma de todo»; el Día se llama «Del día» y la noche «Completas» (capturas de Ana).
 10. **El buscador y Más no alcanzan para encontrar lo raro** (E-33).
     - El buscador lista 55 de 79 rutas. Faltan, por ejemplo, Lugares (donde se corrigen y borran lugares), la pestaña Diario y las herramientas de Análisis.
     - Busca la frase entera, sin palabras sueltas, y muestra 8 resultados como máximo. No conoce palabras como «corregir», «borrar» o «ayer».
@@ -557,23 +557,24 @@ Detalle: **anexo D**, con cada tarjeta, su condición en el código, su frecuenc
 
 Píxeles en un Pixel 6, 1080 px de ancho. «Pantallas» = alto del contenido ÷ 2200 px útiles (con las barras reales quedan unos 2050).
 
-**Capturas de escenario (los datos de Ana, run 84):**
+**Capturas de escenario** (los datos de Ana, run 87 de `capturas.yml`, commit `26d1079`; las 22 sin fallas):
 
 | Pantalla | Captura | Alto del contenido (px) | Pantallas |
 |---|---|---|---|
 | Hoy (sábado, sin ánimo aún) | `anaHoyMedieval` / `Romano` / `Ciber` | 6553 / 6081 / 6049 | 3,0 / 2,8 / 2,7 |
 | Día del miércoles (con errores) | `anaMiercolesMedieval` / `Romano` | 5765 / 5277 | 2,6 / 2,4 |
 | Día del jueves (vacío) | `anaJuevesMedieval` | 4674 | 2,1 |
-| Noche de hoy | `anaNoche…` | ≥ 9000 (llega al borde del lienzo) | ≥ 4,1 |
+| Noche de hoy (sin nada lleno) | `anaNocheMedieval` / `Romano` | ≥ 9000 (llega al borde) | ≥ 4,1 |
 | Diario | `anaDiarioMedieval` / `Ciber` | 2773 / 2769 | 1,3 |
 | Vida | `anaVidaMedieval` / `Romano` | 5474 / 5338 | 2,5 / 2,4 |
-| Análisis | `anaAnalisis…` | ≥ 7000 (llega al borde) | ≥ 3,2 |
-| Más | `anaMas…` | ≥ 7000 (llega al borde) | ≥ 3,2 |
-| Gastos | `anaGastosRomano` | ≥ 5000 (llega al borde) | ≥ 2,3 |
+| Análisis (31 días de datos) | `anaAnalisisMedieval` / `Ciber` | ≥ 8000 (cortada en «Personas y temas») | ≥ 3,6 |
+| Más | `anaMasMedieval` / `Romano` | ≥ 8000 (llega al borde) | ≥ 3,6 |
+| Gastos (un mes) | `anaGastosRomano` | ≥ 6600 (llega al borde) | ≥ 3,0 |
+| Experimentos | `anaExperimentosRomano` | 5734 | 2,6 |
 | Suplementos | `anaSuplementosMedieval` | 4263 | 1,9 |
 | Tu gente / Notas / Momentos | `anaPersonasCiber` / `anaNotasMedieval` / `anaMomentosMedieval` | 2451 / 1943 / 2267 | 1,1 / 0,9 / 1,0 |
 
-Las que llegan al borde se volvieron a capturar con un lienzo más alto (run 85).
+Los lienzos más altos (de 11 000 a 16 000 px) agotaron la memoria de Java en el CI (run 85). Por eso la noche, Análisis, Más y Gastos se dan como mínimo.
 
 **Capturas anteriores, con datos más cargados** (anexo D, § 0.3):
 - Hoy: 7602 px (`diaV73Romano`, unas 3,5 pantallas).
@@ -1251,11 +1252,12 @@ ANTES                                   DESPUÉS
     - una nota de la 1:30 que cayó en el miércoles.
   - **Jueves y viernes**: vacíos.
   - **Sábado (hoy)**: en la mañana, sin ánimo.
-- **Temas:** medieval claro, romano oscuro y ciber.
+- **Temas:** medieval claro, romano oscuro y ciber (la noche, solo en los dos primeros: en ciber no cabía en la memoria del CI).
 - **Pantallas:** Hoy, el Día del miércoles y del jueves, la noche, Diario, Vida, Análisis, Más, Momentos, Gastos, Suplementos, Tu gente, Notas y Experimentos.
 - **Dónde verlas:** en la rama `capturas`, con el prefijo `io.github.ruddy2003.vestigium_CapturasEscenario_ana…`.
 
 **Limitaciones de las capturas**:
-- **La hora la pone el CI.** El orden de Hoy cambia con la hora (`LocalTime.now()`), y las capturas salieron a la hora en que corrió Actions: unas 17:50 UTC, la franja de mediodía. Para comparar mañana, mediodía y noche hace falta poder fijar la hora en la prueba, lo que obliga a tocar código de la app.
+- **La hora la pone el CI.** El orden de Hoy cambia con la hora (`LocalTime.now()`), y las capturas salieron a la hora en que corrió Actions: entre las 17:40 y las 18:30 UTC, la franja de mediodía. Para comparar mañana, mediodía y noche hace falta poder fijar la hora en la prueba, lo que obliga a tocar código de la app.
 - **El estado se comparte.** Las capturas viejas (`Capturas.kt`) no limpian todo el estado entre pruebas (anexo D, § 0.2). Las de escenario cargan todo lo que usan, pero el orden de las pruebas no está garantizado.
+- **Los lienzos tienen un tope.** Más de unos 9000 px agota la memoria de las pruebas en el CI.
 - **Los diálogos no salen.** `EditarSueno` y `DialogoMomento` son ventanas aparte que Paparazzi no dibuja.
