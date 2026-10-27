@@ -490,6 +490,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Qué pasa:** el error estándar de Welch trata cada día como independiente y usa 1.96 aun con 3 días por condición; la unidad sorteada es la semana, no el día. Pistas 1 y 2 del plan, confirmadas.
 - **Por qué importa:** en simulación (6 semanas alternas, sin efecto real), falsas señales del 14 % con autocorrelación 0.3 y del 24 % con 0.5, en lugar del 5 %. Con 3 + 3 días, el intervalo debería ser ~42 % más ancho solo por usar *t*.
 - **Gravedad:** Alta.
+- **Relación:** es el mismo problema de H-5-5, aquí cuantificado para los experimentos.
 - **Propuesta:** prueba de aleatorización sobre los planes posibles (por semanas); como mínimo, *t* de Welch y un error estándar ajustado por la autocorrelación (como el *n* efectivo de las correlaciones), y exigir más días antes de mostrar el resultado.
 
 ### H-7-4 · El resultado se ve y se actualiza durante el experimento
@@ -550,7 +551,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 
 ### H-7-12 · «Antes y después» de los cambios de vida: muchas comparaciones y tarjetas repetidas
 - **Dónde:** `ui/pantallas/Explorar.kt`, `EtapasDeVida()`.
-- **Qué pasa:** hasta 8 cambios × 7 variables = 56 comparaciones con el intervalo de H-7-3, sin corrección; un mismo guardado con varios campos produce tarjetas con la misma fecha y los mismos números; ventanas de 60 días que se enciman; fecha de edición, no del cambio real.
+- **Qué pasa:** hasta 8 cambios × 7 variables = 56 comparaciones con el intervalo de H-7-3 (el mismo de H-5-5), sin corrección; un mismo guardado con varios campos produce tarjetas con la misma fecha y los mismos números; ventanas de 60 días que se enciman; fecha de edición, no del cambio real.
 - **Por qué importa:** cabe esperar ~3 diferencias «claras» por azar incluso sin cambios reales (más con autocorrelación); la repetición da la impresión de hallazgos independientes.
 - **Gravedad:** Media.
 - **Propuesta:** agrupar los cambios por fecha, aplicar Benjamini-Hochberg (como en las correlaciones) y un intervalo ajustado por autocorrelación; mantener el aviso de «pista».
@@ -574,20 +575,20 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 ### H-8-1 · Los momentos de impulso no cuentan como privados
 - **Dónde:** `data/Modelo.kt`, `Momento.privado` (solo `recaida` y `libido`); consumidores que filtran con `!privado`: `ciencia/Periodo.kt` (reportes), `ciencia/TuAnio.kt` («lo que pasó una vez»), `ciencia/Logros.kt` (logros de momentos), pantallas Semana, Calendario, Año y Mapa.
 - **Qué pasa:** los momentos de tipo `impulso` aparecen en el conteo por tipo del reporte («momenta»), sus @menciones entran en «con quién», pueden salir en «Tu año» y cuentan para los logros «Coleccionista», «Cien momentos» y «Mil momentos». El comentario de `Periodo` dice «Nunca toca lo privado (impulsos, detonantes, medicamentos)».
-- **Por qué importa:** contenido del seguimiento privado llega a salidas que se guardan en carpetas públicas o se comparten, y a un sistema de recompensas; criterio (c) del módulo 9.
+- **Por qué importa:** contenido del seguimiento privado llega a salidas que se guardan en carpetas públicas o se comparten, y a un sistema de recompensas. Contradice la regla declarada en la sección 7 del documento de contexto («Seguimiento privado (impulsos, …) nunca en reportes, Tu año, logros, mapas ni widgets»); también llegan al mapa (`Mapa.kt`) y al conteo de momentos de un widget (`Widgets.kt`). Criterio (c) del módulo 9.
 - **Gravedad:** Alta.
 - **Propuesta:** incluir `impulso` en `Momento.privado` (revisando que la pantalla de impulsos siga funcionando) o filtrarlo explícitamente en `Periodo`, `TuAnio` y `Logros`.
 
 ### H-8-2 · «La relación del año» puede usar variables privadas y de medicamentos
 - **Dónde:** `ciencia/TuAnio.kt`, `calcular()` (`Estadistica.relaciones(panelAnio, vars, true)` con `vars = Estadistica.variables(dinamicas = false)`).
 - **Qué pasa:** con el seguimiento privado activo, la lista incluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`; `medicamentos_n` siempre. La relación más fuerte se muestra en una tarjeta que se puede compartir como imagen.
-- **Por qué importa:** contradice «Nunca toca el seguimiento privado» del propio comentario; criterio (c).
+- **Por qué importa:** contradice «Nunca toca el seguimiento privado» del propio comentario y la regla declarada del proyecto, que incluye los medicamentos en el seguimiento privado; criterio (c).
 - **Gravedad:** Media.
 - **Propuesta:** excluir el grupo «Privado» y los medicamentos de `vars` en `TuAnio` (y en cualquier salida compartible).
 
 ### H-8-3 · La recaída afecta logros y campañas a través del hábito ligado
 - **Dónde:** `data/Recaidas.kt`, `registrar()` (desmarca el hábito ligado); `ciencia/Logros.kt`, constancia por hábito (`c_hab_*`) y logros propios (`serie`, cualquier variable del panel); `ciencia/Campanas.kt`, retos `habito:*`.
-- **Qué pasa:** registrar una recaída baja el progreso de los logros de constancia y de las campañas de ese hábito; un logro propio puede definirse sobre variables privadas o de sustancias.
+- **Qué pasa:** registrar una recaída baja el progreso de los logros de constancia y de las campañas de ese hábito; un logro propio puede definirse sobre variables privadas (las de sustancias no son privadas según la regla declarada, así que ahí no hay conflicto).
 - **Por qué importa:** el principio de no premiar ni castigar con logros el seguimiento privado se cumple solo en los logros predefinidos; la vía indirecta añade presión para no registrar recaídas (dato faltante no al azar).
 - **Gravedad:** Media.
 - **Propuesta:** excluir el hábito ligado a recaídas de logros y campañas, y excluir el grupo «Privado» de las fuentes de logros propios.
@@ -601,7 +602,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 
 ### H-8-5 · Sin contraseña, todo sale en claro; el JSON lleva el texto de las cartas selladas
 - **Dónde:** `data/Respaldos.kt`, `aCarpeta()`; `data/Drive.kt`, `subir()`; `data/Exportar.kt`, `archivos()` (`vm_respaldo.json` junto a `vm_cartas.csv`).
-- **Qué pasa:** sin contraseña, la carpeta elegida y Drive reciben todos los CSV y el JSON completo (diario, seguimiento privado aunque el interruptor esté apagado). `vm_cartas.csv` omite el texto de las cartas selladas, pero `vm_respaldo.json` lo trae.
+- **Qué pasa:** sin contraseña, la carpeta elegida y Drive reciben todos los CSV y el JSON completo (diario, seguimiento privado aunque el interruptor esté apagado). Que el seguimiento privado vaya en la exportación a R es intencional según la regla declarada; lo que no lo es: que viaje en claro fuera del teléfono. `vm_cartas.csv` omite el texto de las cartas selladas (como pide la regla), pero `vm_respaldo.json` lo trae.
 - **Por qué importa:** el diario y lo privado quedan legibles fuera del teléfono; el sello de las cartas se puede saltar.
 - **Gravedad:** Media.
 - **Propuesta:** proponer (o exigir) contraseña al activar la carpeta o Drive; en `respaldoJson()` para exportar (no para el respaldo cifrado), omitir el texto de las cartas aún selladas o advertirlo.
@@ -639,6 +640,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Qué pasa:** usa la valencia del diario y, si falta, el promedio de los registros momentáneos.
 - **Por qué importa:** el ánimo medio de periodos con distinta cobertura del diario no es comparable (capítulo 3, sección 3.3.4).
 - **Gravedad:** Baja.
+- **Relación:** ya señalado en H-5-15 (módulo 5); se repite aquí porque afecta a «Tu año» y a la comparación entre periodos.
 - **Propuesta:** usar solo la valencia del diario (y mostrar aparte la de los avisos) o indicar cuántos días vienen de cada fuente.
 
 ### H-8-11 · Comparaciones con el periodo anterior sin incertidumbre
@@ -678,7 +680,14 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 
 ### H-8-16 · Los medicamentos no están detrás del interruptor privado
 - **Dónde:** `ui/pantallas/Dia.kt` (sección «Medicamentos» siempre visible); `ciencia/Estadistica.kt` (`medicamentos_n` siempre); `ciencia/Dinamicas.kt` (`med_`); comentario de `ciencia/Periodo.kt`.
-- **Qué pasa:** el código los trata como datos de salud normales, pero su propio comentario y la guía del proyecto los cuentan como seguimiento privado.
-- **Por qué importa:** inconsistencia de criterio; llegan a «Tu año» (H-8-2) y a cualquier análisis.
+- **Qué pasa:** el código los trata como datos de salud normales, pero su propio comentario, la guía del proyecto y la regla declarada del documento de contexto (sección 7) los cuentan como seguimiento privado.
+- **Por qué importa:** la regla no prohíbe mostrarlos en pantallas ni analizarlos, pero sí que lleguen a «Tu año», y llegan (H-8-2). El criterio del código y el declarado no coinciden.
 - **Gravedad:** Baja.
 - **Propuesta:** decidir explícitamente; si son privados, ponerlos detrás del interruptor y excluirlos de salidas compartibles.
+
+### H-8-17 · La lista declarada de servicios externos está incompleta
+- **Dónde:** documento de contexto (sección 1: «nada pasa por servidores ajenos salvo Drive del usuario, Open-Meteo (clima) y Spotify API»); código: `data/Portadas.kt` (TMDB, RAWG, TVmaze, Open Library, Crossref), `ui/pantallas/Mapa.kt` (mosaicos de OpenStreetMap con osmdroid, `TileSourceFactory.MAPNIK`).
+- **Qué pasa:** la app también consulta catálogos de obras (envía el título o DOI buscado) y descarga mosaicos del mapa (revela la zona que se mira).
+- **Por qué importa:** la descripción de qué sale del teléfono es la base para decidir qué es privado; hoy subestima las salidas, aunque las omitidas no envían datos del diario.
+- **Gravedad:** Baja.
+- **Propuesta:** solo documentar (actualizar la sección 1 del documento de contexto); opcionalmente, mostrar en la app una lista de servicios externos con lo que recibe cada uno.

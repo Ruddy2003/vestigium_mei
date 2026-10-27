@@ -192,7 +192,7 @@ Ahora, lo mismo con dos correcciones que la app **no** hace:
 
 ### 8.6.3 Por qué el intervalo de la app es demasiado estrecho (pistas 1 y 2, confirmadas)
 
-**1. Trata cada día como independiente** (H-7-3). El cálculo supone que cada día es un dato nuevo, como si fueran 38 personas distintas. Pero el ánimo, el sueño y casi todo lo que mide la app **se parecen de un día al siguiente**. La propia app lo sabe: para las correlaciones calcula la autocorrelación de cada variable y un *n efectivo* (`Estadistica.autocorr`; capítulo 6, pendiente). En los experimentos no lo usa. Además, lo que se sortea son **semanas**, no días: en un experimento de 6 semanas hay 6 unidades sorteadas, no 38.
+**1. Trata cada día como independiente** (H-7-3). El cálculo supone que cada día es un dato nuevo, como si fueran 38 personas distintas. Pero el ánimo, el sueño y casi todo lo que mide la app **se parecen de un día al siguiente**. La propia app lo sabe: para las correlaciones calcula la autocorrelación de cada variable y un *n efectivo* (`Estadistica.autocorr`; capítulo 6, sección 6.6, y H-5-5, que señala el mismo problema en `Estadistica.diferencia` para todas las pantallas que la usan). En los experimentos no lo usa. Además, lo que se sortea son **semanas**, no días: en un experimento de 6 semanas hay 6 unidades sorteadas, no 38.
 
 **2. Usa 1.96 fijo** (H-7-3). Con pocos días, el valor correcto sale de la distribución *t* y es mayor.
 

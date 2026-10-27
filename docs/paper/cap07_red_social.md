@@ -450,7 +450,7 @@ Con los mismos datos, la app y R pueden dar **densidades y número de grupos dis
 
 ## 7.12 Cómo entran las personas en las correlaciones
 
-Las variables de las secciones 7.7.1 y 7.7.2 entran en la lista de relaciones de Explorar con el mismo método que todas las demás (capítulo 6, pendiente del módulo 5): mínimo de días con dato, quitar la tendencia, intervalo y corrección por comparaciones múltiples. Lo específico de las personas:
+Las variables de las secciones 7.7.1 y 7.7.2 entran en la lista de relaciones de Explorar con el mismo método que todas las demás (capítulo 6, secciones 6.5 a 6.10): mínimo de días con dato, quitar la tendencia, intervalo y corrección por comparaciones múltiples. Lo específico de las personas:
 
 - **Cuántas entran**: 15 `per_` (≥ 5 días) y 10 `pen_` (≥ 3 días). Es un filtro razonable para no llenar la lista de casos raros, pero significa que las relaciones con personas poco frecuentes **no se buscan** en la app (sí en R con la exportación extendida).
 - **Pares «obvios» que se excluyen** (`Estadistica.obvia`), porque se mueven juntos por construcción:
@@ -458,6 +458,7 @@ Las variables de las secciones 7.7.1 y 7.7.2 entran en la lista de relaciones de
   - cada `pen_` con `personas`, `personas_pensadas` y los `penso_en_*`;
   - `per_x` con `pen_x` de la misma persona;
   - y las familias fijas: {`cercanos`, `vi_*`, `personas`, `palabras`}, {`cercanos`, `vi_*`, `cercania_media`, `personas`}, {`personas`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `cercanos`}, {`personas_pensadas`, `penso_en_*`}.
+- **Atención: R usa otra lista.** La lista de pares obvios de R es mucho más corta que la de la app (H-5-2), así que en `vm_relaciones()` varios de estos pares sí aparecen.
 - **Lo que no se excluye y quizá debería**: `per_x` con `personas_vistas`, `personas_mensajes`, `vi_expareja`, `vi_trabajo` y `cercania_media` (no están en `AGREGADOS["per_"]`). Si `@ana` es tu pareja, `per_ana` y `vi_pareja` se excluyen, pero `per_ana` con `personas_vistas` no, y saldrá como relación aunque sea por construcción (H-6-10).
 - **Dos personas entre sí** (`per_ana` con `per_beto`) **no** se excluyen: una relación positiva entre ellas es su co-mención, que es la misma información de la Red. No es un error, pero no es un hallazgo nuevo.
 - **La relación de cada día sí se usa** en `vi_*`, `penso_en_*` y `cercania_media` (sección 7.4). Las variables `per_`/`pen_` son por persona, sin relación.

@@ -4,7 +4,7 @@
 >
 > **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función; cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-8-n (este capítulo y el 10 forman el módulo 8) y se detallan en `hallazgos.md`. Lo relativo a qué datos privados llegan a cada salida está en el capítulo 10.
 >
-> **Nota.** El plan pedía leer también la sección 7 del documento de contexto del Project de claude.ai (`VESTIGIUM_MEI_CONTEXTO.md`), que no está en el repositorio. Este capítulo se escribió **solo a partir del código**; si ese documento describe intenciones distintas, no están reflejadas aquí.
+> **Fuentes.** Además del código, se leyó el documento de contexto del proyecto (`VESTIGIUM_MEI_CONTEXTO.md`, v81, que no está en el repositorio). Su sección 7 fija las **reglas de privacidad** de la app; el capítulo 10 (sección 10.3.4) las compara una por una con el código. Donde ese documento describe una intención («nunca en reportes…») y el código hace otra cosa, este capítulo y el 10 lo dicen.
 
 ---
 
@@ -44,7 +44,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | **Personas, temas** | Las @ y # del diario (una vez por día) y de los momentos no privados. |
 | **Comparación con el periodo anterior** | Solo si el periodo anterior tiene **al menos 3 días** con dato. |
 
-**Detalle a saber** (H-8-10). El «ánimo del día» mezcla dos instrumentos distintos: la valencia recordada del diario y, cuando falta, el promedio de los registros momentáneos. El capítulo 3 (sección 3.3.4) explica por qué no son la misma medida. Si un mes tiene pocos diarios y muchos avisos, su «ánimo medio» no es comparable con el de un mes con diario completo.
+**Detalle a saber** (H-8-10; también señalado en H-5-15, junto con otras diferencias de criterio entre los reportes y el panel). El «ánimo del día» mezcla dos instrumentos distintos: la valencia recordada del diario y, cuando falta, el promedio de los registros momentáneos. El capítulo 3 (sección 3.3.4) explica por qué no son la misma medida. Si un mes tiene pocos diarios y muchos avisos, su «ánimo medio» no es comparable con el de un mes con diario completo.
 
 ---
 
@@ -102,7 +102,7 @@ La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las regla
 
 Dos observaciones:
 
-- **«La relación del año» es la más fuerte de muchas.** Elegir el máximo |*r*| entre cientos de pares sobreestima su tamaño: es la que tuvo más suerte además de ser real (un sesgo de selección; capítulo 6, pendiente). Que pase la corrección por comparaciones múltiples (*q* < 0.05) ayuda, pero el valor de *r* mostrado será, en promedio, más alto que el verdadero. **[Aproximación]**.
+- **«La relación del año» es la más fuerte de muchas.** Elegir el máximo |*r*| entre cientos de pares sobreestima su tamaño: es la que tuvo más suerte además de ser real (un sesgo de selección; el método y su criterio para «Tu año» están en el capítulo 6, secciones 6.8 y 6.10). Que pase la corrección por comparaciones múltiples (*q* < 0.05) ayuda, pero el valor de *r* mostrado será, en promedio, más alto que el verdadero. **[Aproximación]**.
 - **Predecir tu ánimo medio en enero** crea una expectativa sobre la variable que luego mides. No hay forma de saber cuánto influye, pero es una forma de reactividad (sección 9.7).
 
 ---
