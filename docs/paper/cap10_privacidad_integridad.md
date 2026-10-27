@@ -61,7 +61,7 @@ _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-
   - todas las listas de análisis: `Estadistica.variables()` excluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, las familias `med_` y `det_` y `hab_` del hábito ligado.
 - **El interruptor `Config.seguimiento_privado`** (apagado por omisión) solo decide qué se **ofrece** anotar: con él apagado, la pantalla Privado tiene medicamentos e impulsos; con él encendido, también recaídas, libido y detonantes. Ya no decide qué se muestra fuera de Privado: fuera, nunca se muestra.
 - **La exportación para R lleva todo, siempre.** El panel calcula las variables privadas aunque el interruptor esté apagado, y `vm_momentos.csv`, `vm_dias.csv`, `vm_panel_extendido.csv` y `vm_respaldo.json` las llevan. Las coordenadas de un momento privado ya no se usan para pedir el clima (`Entorno.lugarDe`).
-- **Registrar una recaída** (`Recaidas.registrar`) guarda el momento con hora y lugar, marca el día con recaída y **desmarca el hábito ligado**. Se puede deshacer tal cual (`deshacer`) y cambiar la hora (`moverHora`), que busca la ubicación de esa hora (la más cercana en ±30 min) y descarta la luz y el ruido medidos al registrar.
+- **Registrar una recaída** (`Recaidas.registrar`) guarda el momento con hora y lugar, marca el día con recaída y **desmarca el hábito ligado**. Se puede deshacer tal cual (`deshacer`) y cambiar la hora (`moverHora`), que busca la ubicación de esa hora (la más cercana en ±30 min) y descarta la luz y el ruido medidos al registrar. Desde el esquema 14 (H-NAV-6): cambiar solo el día, con la misma hora, también la mueve, porque se compara el minuto completo; y borrarla desde el diálogo de Privado quita la marca del día si era la única recaída de ese día (`alBorrar`; el día queda sin respuesta, porque no se sabe qué había antes).
 - **El resumen privado** (`Recaidas.resumen`):
   - impulsos y recaídas por hora; recaídas por día de la semana;
   - lugares, detonantes, qué hacías antes y aparato;
@@ -201,7 +201,7 @@ Los reportes semanales y mensuales se generan **solos** (capítulo 9, sección 9
 |---|---|
 | Días | **gana el teléfono**: el día del respaldo se ignora (`importarDias(sobrescribir = false)`) |
 | Momentos, reacciones, obras, ascensos, chats, YouTube | se agregan los que no existan (por identificador) |
-| Salud, pantalla, lugares, cartas, entorno, fotos, agenda, sesiones, canciones | **gana el respaldo**: se guardan encima |
+| Salud, pantalla, lugares, cartas, entorno, fotos, agenda, sesiones, canciones | **gana el respaldo**: se guardan encima. Desde el esquema 14, con una excepción: el sueño que corregiste a mano en el teléfono (`sueno_manual`) no lo pisa un respaldo que no lo tenía corregido (`Fusion.salud`; H-NAV-5) |
 | Experimentos (desde el esquema 13) | gana el teléfono, pero se conserva lo que solo trae el respaldo: la fecha de fin (un respaldo viejo no reactiva uno terminado) y las respuestas de «¿Lo hiciste hoy?» (`Fusion.experimento`). Hasta el 12, ganaba el respaldo |
 | Gastos e ingresos | se agregan los que no existan (por identificador). Hasta el esquema 12, los repetidos se sobrescribían en la base pero no en memoria, y al reiniciar aparecía en silencio la versión del respaldo (H-9-28) |
 | Avisos de ánimo (desde el esquema 13) | se juntan los dos: el mayor número de planeados y la unión de vencidos y mostrados |
@@ -214,6 +214,10 @@ Los reportes semanales y mensuales se generan **solos** (capítulo 9, sección 9
 **Por qué importa.** Si restauras un respaldo sobre un teléfono que tiene una versión **incompleta** de un día (por ejemplo, solo el sueño de esa mañana), el diario completo del respaldo para ese día **no se recupera**. En cambio, para la salud, un respaldo viejo puede **pisar** datos más nuevos del teléfono. Ninguna de las dos cosas se avisa.
 
 ---
+
+### 10.7.1 La papelera (desde el esquema 14)
+
+Antes de borrar un registro que hiciste tú (momentos, tramos, consumos, notas, metas, tomas, gastos, ingresos, lugares, cartas, sesiones de escalada y obras), `Repo` copia el documento tal como estaba a la colección `papelera` (`Borrado`: colección, id, el documento y cuándo se borró). Lo que lleva más de 7 días se vacía en la tarea diaria (`Repo.limpiarPapelera`). Lo que volvió con «deshacer» deja de contar como borrado. La papelera **no viaja** en los respaldos ni en la exportación. Lo que vive en los ajustes (fechas propias, logros propios, ciudades) no pasa por la papelera; para eso queda «deshacer». La pantalla para recuperar llega en una entrega posterior de la revisión de navegación (N-14). **[Diseño propio]**.
 
 ## 10.8 Servicios externos
 

@@ -163,7 +163,7 @@ class QuickActivity : FragmentActivity() {
     fun crear(tipo: String, origen: String, valencia: Int?, avisoMs: Long?): Momento {
         val m = Momento(
             id = Repo.nuevoId(), ts = Fechas.ahoraIso(), fecha = Fechas.diaLogico(), tipo = tipo, valencia = valencia,
-            origen = origen, aviso_ts = avisoMs?.let { Fechas.isoDeMillis(it) },
+            origen = origen, aviso_ts = avisoMs?.let { Fechas.isoDeMillis(it) }, ts_creado = Fechas.ahoraIso(),
         )
         Repo.guardarMomento(m)
         if (tipo == "recaida") previoRecaida = io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
@@ -392,7 +392,7 @@ class QuickActivity : FragmentActivity() {
         Ayuda("Solo para ti: no sale en reportes, logros, «Tu año», mapas ni widgets. Sí en tu exportación a R.", Modifier.padding(top = 10.dp))
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
             if (impulso == null) TextButton(onClick = {
-                val i = Momento(Repo.nuevoId(), mm.ts, mm.fecha, "impulso", intensidad = nivel?.coerceIn(1, 5), lat = mm.lat, lon = mm.lon, lugar = mm.lugar, origen = mm.origen)
+                val i = Momento(Repo.nuevoId(), mm.ts, mm.fecha, "impulso", intensidad = nivel?.coerceIn(1, 5), lat = mm.lat, lon = mm.lon, lugar = mm.lugar, origen = mm.origen, ts_creado = Fechas.ahoraIso())
                 Repo.guardarMomento(i); impulso = i
                 Toast.makeText(this@QuickActivity, "Impulso registrado a la misma hora", Toast.LENGTH_SHORT).show()
             }) { Text("también es un impulso") }
@@ -646,7 +646,7 @@ class QuickActivity : FragmentActivity() {
                     else -> {
                         val c = cuando
                         val g = Gasto(Repo.nuevoId(), c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario(), c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora(),
-                            Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim())
+                            Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), ts_creado = Fechas.ahoraIso())
                         Repo.guardarGasto(g)
                         // La ubicación de ahora solo sirve si el gasto es de ahora.
                         if (c == null) lifecycleScope.launch {

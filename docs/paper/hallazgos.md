@@ -1146,6 +1146,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** se pierde un dato que el usuario corrigió a propósito; la noche queda como faltante.
 - **Gravedad:** Media.
 - **Propuesta:** N-04 (confirmar antes y ofrecer Deshacer) y respetar `sueno_manual` al restaurar.
+- **Estado:** Resuelto en la entrega N0 de la revisión de navegación (esquema 14): confirmación, aviso si el reloj no tiene la noche, Deshacer, y `Fusion.salud` al restaurar.
 
 ### H-NAV-6 · Seguimiento privado: dos fallas al corregir una recaída (solo la mecánica)
 - **Dónde:** `ui/pantallas/Momentos.kt:156` (solo compara la hora «HH:mm») y `:161-165` (borrar); `data/Recaidas.kt` (`deshacer` solo se llama desde `QuickActivity`).
@@ -1155,6 +1156,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** `recaida`, `n_recaida` y el hábito ligado quedan distintos de los registros. Solo afecta a la exportación para R (`data/Privado.kt`).
 - **Gravedad:** Media.
 - **Propuesta:** comparar la marca de tiempo completa y llamar a `Recaidas.deshacer` también al borrar desde el diálogo. Es una corrección de error y no requiere aprobación de navegación.
+- **Estado:** Resuelto en la entrega N0 de la revisión de navegación (esquema 14): se compara el minuto completo, y `Recaidas.alBorrar` quita la marca del día.
 
 ### H-NAV-7 · La calidad del sueño anotada antes de las 05:00 va al día anterior
 - **Dónde:** `ui/QuickActivity.kt:110` (widget de sueño) y `:666` (`SuenoRapido`): `Fechas.diaLogico()`; las horas del reloj van con la fecha del despertar (`sensores/Salud.kt:181-182`).
@@ -1169,6 +1171,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** `dia_dificil` viaja en la exportación.
 - **Gravedad:** Baja.
 - **Propuesta:** mostrar la marca en la hoja de la noche con la opción de quitarla.
+- **Estado:** Resuelto en la entrega N0 de la revisión de navegación (esquema 14).
 
 ### H-NAV-9 · Cambiar dónde y cuándo se registra cambia cuánto se registra
 - **Dónde:** propuestas del informe de navegación:

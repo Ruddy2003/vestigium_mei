@@ -71,3 +71,27 @@ Decisiones del autor (27 oct 2026):
 - capítulo 9: sección 9.5 y resúmenes;
 - capítulo 10: secciones 10.5, 10.6, 10.7, 10.9 y resúmenes;
 - los apéndices A (variables, tablas y la sección A.4 nueva) y C.
+
+## Revisión de navegación · Entregas N0 y NE (esquema 14)
+
+Salen de `docs/navegacion/revision_navegacion.md`. Decisiones del autor del 27 oct 2026: aprobó las 30 propuestas y el orden de entregas, y contestó las preguntas P-1 a P-11 (§ 13 del informe).
+
+**`SCHEMA_V` sube de 13 a 14**, una sola vez para todos los campos nuevos de la revisión. Los respaldos viejos se siguen leyendo, porque todos los campos nuevos tienen valor por omisión. Una app con esquema 13 rechaza un respaldo del 14 (`Importar.esquemaFuturo`).
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.22 | Corregir una recaída: cambiar solo el día, con la misma hora, ya la mueve. Borrarla desde el diálogo quita la marca del día si era la única | `ui/pantallas/Momentos.kt`, `data/Recaidas.kt` (`alBorrar`) | H-NAV-6 (N0) |
+| D.23 | «Volver a lo del reloj» pide confirmación, avisa si el reloj no tiene esa noche y se puede deshacer. Restaurar un respaldo no pisa el sueño corregido a mano | `ui/EditarSueno.kt`, `data/Fusion.kt` (`salud`), `data/Importar.kt` | H-NAV-5 (N0) |
+| D.24 | «Día difícil» se ve en la hoja de la noche y se puede quitar | `ui/pantallas/Dia.kt` | H-NAV-8 (N0) |
+| D.25 | Cuándo se anotó (`ts_creado`) en momentos, gastos, ingresos, tomas, consumos y tramos, y cuándo se corrigió (`ts_editado`) en momentos, gastos e ingresos. La marca se pone donde se crea cada registro, no al guardar, para que «deshacer» o restaurar no marque como nuevo algo viejo | `data/Modelo.kt`, `ui/QuickActivity.kt`, `ui/pantallas/Gastos.kt`, `ui/pantallas/Lote2.kt`, `ui/pantallas/Momentos.kt`, `data/Enfoque.kt`, `data/Sustancias.kt`, `data/Lote3.kt`, `data/Exportar.kt`, `vestigium.R` (`vm_retraso`) | P-3, H-2-9 (en parte), H-NAV-9 (N-30) |
+| D.26 | `Dia.version_noche`: cada día que pasa por la hoja de la noche guarda con qué orden de preguntas se llenó (1 por ahora) | `data/Modelo.kt` (`VERSION_NOCHE`), `ui/pantallas/Dia.kt`, `data/Exportar.kt` | P-8, preparación de N-18 |
+| D.27 | Campos para lo que viene: `Gasto.subcategoria` y `Config.subcategorias` (N-29), `SaludDia.sueno_descartadas` (N-04) | `data/Modelo.kt`, `data/Exportar.kt`, `data/Diccionario.kt` | P-7, H-NAV-3 |
+| D.28 | Papelera de 7 días para los registros que borras tú (sin pantalla todavía) | `data/Repo.kt` (`aPapelera`, `papelera`, `restaurar`, `limpiarPapelera`), `avisos/Trabajo.kt` | P-9 (N-14) |
+
+**Efectos que conviene saber al leer los datos:**
+- **`ts_creado` y `ts_editado` solo existen desde esta versión.** En los registros de antes van vacíos; `vm_retraso` los deja en NA. No se pueden reconstruir.
+- **`version_noche` vale 1** en todos los días que pasen por la hoja desde esta versión. Cuando entre el orden nuevo (N-18), pasará a 2. Los análisis que crucen esa fecha deben leerse por tramo.
+- **`subcategoria` y `sueno_descartadas` estarán vacías** hasta que lleguen sus pantallas (N-29 y N-04).
+
+**Capítulos actualizados:** capítulo 4 (sueño, sección del día asignado), capítulo 10 (secciones 10.3.1, 10.7 y la 10.7.1 nueva) y los apéndices A (sección A.5) y C.
+

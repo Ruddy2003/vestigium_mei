@@ -30,7 +30,7 @@ object Suplementos {
 
     fun registrar(s: Suplemento, cantidad: Double = s.dosis, ts: String = Fechas.ahoraIso()) {
         val fecha = Fechas.diaLogicoDeMillis(Fechas.millis(ts).takeIf { it > 0 } ?: System.currentTimeMillis())
-        Repo.guardarToma(TomaSuplemento(Repo.nuevoId(), s.id, ts, fecha, cantidad))
+        Repo.guardarToma(TomaSuplemento(Repo.nuevoId(), s.id, ts, fecha, cantidad, ts_creado = Fechas.ahoraIso()))
     }
 
     fun tomadoHoy(id: String, hoy: String = Fechas.diaLogico()) = Repo.tomas.any { it.suplemento == id && it.fecha == hoy }

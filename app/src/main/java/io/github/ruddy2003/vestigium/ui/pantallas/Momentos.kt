@@ -151,7 +151,7 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
         confirmButton = { TextButton(onClick = {
             val n = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
                 emociones = if (registro) emociones else m.emociones, pensamiento = if (registro) pensamiento else m.pensamiento,
-                duracion_min = if (esRecaida) dur else m.duracion_min)
+                duracion_min = if (esRecaida) dur else m.duracion_min).let { e -> if (e != m) e.copy(ts_editado = Fechas.ahoraIso()) else e }
             val ms = if (esRecaida) (cuando ?: java.time.LocalDateTime.now()).aMillis() else null
             // Se compara el minuto completo (fecha y hora): cambiar solo el día, con la misma hora, también mueve la recaída.
             if (ms != null && ms / 60_000L != Fechas.millis(m.ts) / 60_000L) io.github.ruddy2003.vestigium.data.Recaidas.moverHora(n, ms)

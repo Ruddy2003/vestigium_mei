@@ -10,7 +10,10 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 13
+const val SCHEMA_V = 14
+
+/** Orden de las preguntas de la hoja de la noche (v14): se guarda en cada día que pasa por ella ([Dia.version_noche]). */
+const val VERSION_NOCHE = 1
 
 /** Un día. Los campos opcionales quedan en null cuando no se marcaron: nunca se rellenan con promedios. */
 @Serializable
@@ -63,6 +66,11 @@ data class Dia(
      * se puso otro día lógico, después. Los días de antes de la v13 no la tienen y conservan su [retroactivo].
      */
     val ts_valencia: String? = null,
+    /**
+     * Con qué orden de preguntas se llenó la hoja de la noche (v14): 1 = el orden de hasta la v14; 2 = el orden nuevo
+     * (el ánimo del momento primero). Null = el día no pasó por la hoja de la noche o es de antes de la v14.
+     */
+    val version_noche: Int? = null,
 )
 
 /** Un momento capturado al instante: pensamiento, emoción o muestreo de ánimo, con hora y lugar. */
@@ -101,6 +109,10 @@ data class Momento(
     val pensamiento: String? = null,
     /** Libido (seguimiento privado): en qué está el foco (Catalogo.FOCOS: pensando, viendo, conversando, nada, otro). */
     val foco: String? = null,
+    /** Cuándo se anotó (v14). [ts] es cuándo pasó; si se anotó después, las dos difieren. Null en los registros de antes. */
+    val ts_creado: String? = null,
+    /** Cuándo se corrigió por última vez después de anotarlo (v14). */
+    val ts_editado: String? = null,
 )
 
 /**
@@ -149,6 +161,8 @@ data class Consumo(
     /** Ya se llenó lo de la mañana siguiente. */
     val completo: Boolean = false,
     val origen: String = "app",
+    /** Cuándo se anotó (v14). */
+    val ts_creado: String? = null,
 )
 
 @Serializable
@@ -194,6 +208,8 @@ data class Tramo(
     val min: Int = 0,
     val nota: String = "",
     val origen: String = "app",
+    /** Cuándo se anotó (v14). */
+    val ts_creado: String? = null,
 )
 
 /**
@@ -240,6 +256,9 @@ data class Ingreso(
     val nota: String = "",
     /** Ingreso que se repite (sueldo, beca, renta): solo informativo, no se duplica solo. */
     val fijo: Boolean = false,
+    /** Cuándo se anotó y cuándo se corrigió por última vez (v14). */
+    val ts_creado: String? = null,
+    val ts_editado: String? = null,
 ) {
     val dia: String get() = if (hora.length >= 2 && (hora.take(2).toIntOrNull() ?: 12) < 5) Fechas.sumar(fecha, -1) else fecha
 }
@@ -255,6 +274,11 @@ data class Gasto(
     val nota: String = "",
     val lat: Double? = null,
     val lon: Double? = null,
+    /** Subcategoría dentro de [categoria] (v14), por ejemplo Comida → Café. Vacía = sin subcategoría. */
+    val subcategoria: String = "",
+    /** Cuándo se anotó y cuándo se corrigió por última vez (v14). */
+    val ts_creado: String? = null,
+    val ts_editado: String? = null,
 ) {
     /** Día del diario al que pertenece: un gasto de madrugada (antes de las 5:00) cuenta para el día anterior, como los momentos. */
     val dia: String get() = if (hora.length >= 2 && (hora.take(2).toIntOrNull() ?: 12) < 5) Fechas.sumar(fecha, -1) else fecha
@@ -377,6 +401,17 @@ data class CambioMeta(val fecha: String, val campo: String, val antes: String, v
 @Serializable
 data class Habito(val id: String, val nombre: String, val activo: Boolean = true, val desde: String = "")
 
+/** Una subcategoría de gasto (v14). [monto] es el monto habitual fijado a mano; null = se calcula de tus últimos gastos. */
+@Serializable
+data class Subcategoria(val nombre: String, val monto: Double? = null)
+
+/**
+ * Algo borrado que se guarda 7 días en la papelera (v14): de qué colección es, su id y el documento tal como estaba.
+ * La papelera no viaja en los respaldos ni en la exportación.
+ */
+@Serializable
+data class Borrado(val col: String, val id: String, val json: String, val borrado: String)
+
 @Serializable
 data class SaludDia(
     val fecha: String,
@@ -419,6 +454,8 @@ data class SaludDia(
     /** Oxígeno mínimo y frecuencia cardiaca media durante el sueño de la noche. */
     val spo2_min: Double? = null,
     val fc_sueno: Double? = null,
+    /** Lo que llegó del reloj y dijiste que no cuenta (v14): la descripción de cada fuente, como en [sueno_fuentes]. */
+    val sueno_descartadas: List<String> = emptyList(),
 )
 
 @Serializable
@@ -587,6 +624,8 @@ data class Experimento(
 data class Config(
     val habitos: List<Habito> = emptyList(),
     val categorias: List<String> = Catalogo.CATEGORIAS,
+    /** Subcategorías de gasto por categoría (v14), cada una con su monto habitual si lo fijaste. */
+    val subcategorias: Map<String, List<Subcategoria>> = emptyMap(),
     val equivalencias: Map<String, String> = emptyMap(),
     val muestreos_por_dia: Int = 3,
     val ventana_inicio: Int = 10,
@@ -799,6 +838,8 @@ data class TomaSuplemento(
     val fecha: String,
     val cantidad: Double,
     val estimado: Boolean = false,
+    /** Cuándo se anotó (v14). [ts] es cuándo la tomaste. */
+    val ts_creado: String? = null,
 )
 
 /** Dos personas y cómo se conocen entre sí (se_conocen, familia, pareja, colegas, no_se_conocen). [a] < [b]. */

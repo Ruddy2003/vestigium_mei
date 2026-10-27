@@ -379,7 +379,8 @@ fun PantallaNoche(nav: Nav) {
     LaunchedEffect(guardado) { if (!sucio && guardado != null) d = guardado }
     LaunchedEffect(d, sucio) { if (sucio) { delay(700); Repo.guardarDia(d); sucio = false } }
     DisposableEffect(fecha) { onDispose { if (sucioActual) Repo.guardarDia(dActual) } }
-    fun cambiar(n: Dia) { d = n; sucio = true }
+    // Cada día que pasa por la hoja guarda con qué orden de preguntas se llenó.
+    fun cambiar(n: Dia) { d = n.copy(version_noche = io.github.ruddy2003.vestigium.data.VERSION_NOCHE); sucio = true }
     var escribiendo by remember(fecha) { mutableStateOf(false) }
     if (escribiendo) io.github.ruddy2003.vestigium.ui.DialogoEscritor(fecha, d.nota, { cambiar(d.copy(nota = it)) }) {
         Repo.guardarDia(dActual); sucio = false; escribiendo = false

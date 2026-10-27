@@ -496,6 +496,26 @@ vm_lugares <- function() {
   ggplot(h, aes(semana, horas, fill = tipo)) + geom_col() + labs(x = NULL, y = "horas por semana", fill = "tipo de lugar") + theme_minimal()
 }
 
+#' Cuánto después de que pasó se anotó cada registro (desde la v14): minutos de retraso y si fue «tarde», es decir,
+#' más de `umbral_min` minutos después o en otro día lógico. Sirve para momentos, sustancias, tramos, suplementos,
+#' gastos e ingresos. Los registros de antes de la v14 no tienen la hora de anotación y quedan con NA.
+#' El umbral es una decisión propia, no un estándar: cámbialo si quieres.
+vm_retraso <- function(tabla = "momentos", umbral_min = 60) {
+  x <- vm[[tabla]]
+  if (is.null(x) || nrow(x) == 0) stop("No hay datos en vm$", tabla, ".")
+  if (!"ts_creado" %in% names(x)) stop("La tabla ", tabla, " no tiene ts_creado (se exporta desde la v14).")
+  .fh <- function(v) if (inherits(v, "POSIXct")) v else vm_fecha_hora(v)
+  creado <- .fh(x$ts_creado)
+  paso <- if ("ts" %in% names(x)) .fh(x$ts) else if ("inicio" %in% names(x)) .fh(x$inicio) else
+    parse_date_time(paste(x$fecha, x$hora), orders = c("Ymd HMS", "Ymd HM"), tz = vm_zona, quiet = TRUE)
+  dia <- as.Date(if ("dia_logico" %in% names(x)) x$dia_logico else x$fecha)
+  # El día lógico empieza a las 05:00: lo anotado de madrugada cuenta para el día anterior.
+  dia_creado <- as.Date(creado - hours(5), tz = vm_zona)
+  x |> mutate(retraso_min = as.numeric(difftime(creado, paso, units = "mins")),
+              otro_dia = !is.na(creado) & dia_creado != dia,
+              tarde = !is.na(creado) & (coalesce(retraso_min > umbral_min, FALSE) | otro_dia))
+}
+
 #' Barómetro: la valencia del día contra el mayor cambio de presión en tres horas.
 vm_presion <- function() {
   if (!"cambio_presion_3h" %in% names(vm$panel)) stop("No hay datos del barómetro.")
@@ -571,5 +591,5 @@ vm_resumen()
 message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
         "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_totales(), vm_buscar('texto'), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
-        "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(), vm_lugares(), vm_presion(),",
+        "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(), vm_lugares(), vm_presion(), vm_retraso('momentos'),",
         "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna'), vm_leer_sqlite()")

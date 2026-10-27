@@ -178,6 +178,8 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             runCatching { io.github.ruddy2003.vestigium.sensores.Comunicacion.sincronizar(ctx, 3) }
             runCatching { Entorno.sincronizar(ctx) }
             runCatching { Exportar.respaldoAutomatico(ctx) }
+            // Lo que lleva más de 7 días en la papelera se va (v14).
+            Repo.limpiarPapelera()
             if ((Repo.config.carpeta_respaldo != null || Repo.config.drive) && io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx) &&
                 !yaFue("respaldo_pausa:${Fechas.lunesDe(hoy)}")) { marcar("respaldo_pausa:${Fechas.lunesDe(hoy)}"); Avisos.respaldoPausado(ctx) }
             if (Repo.config.drive && !Drive.automatico(ctx) && !yaFue("drive_aviso:${Fechas.lunesDe(hoy)}")) {

@@ -130,8 +130,8 @@ fun PantallaGastos(nav: Nav? = null) {
                             val c = cuando
                             val fecha = c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario()
                             val hora = c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora()
-                            val i = editandoIngreso?.copy(fecha = fecha, hora = hora, monto = Math.round(v * 100) / 100.0, categoria = cat!!, fijo = fijo, nota = nota.trim())
-                                ?: Ingreso(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, nota.trim(), fijo)
+                            val i = editandoIngreso?.copy(fecha = fecha, hora = hora, monto = Math.round(v * 100) / 100.0, categoria = cat!!, fijo = fijo, nota = nota.trim(), ts_editado = Fechas.ahoraIso())
+                                ?: Ingreso(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, nota.trim(), fijo, ts_creado = Fechas.ahoraIso())
                             Repo.guardarIngreso(i)
                             sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.GUARDAR)
                             limpiar(); mes = Fechas.mesDe(i.fecha)
@@ -141,8 +141,8 @@ fun PantallaGastos(nav: Nav? = null) {
                             val fecha = c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario()
                             val hora = c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora()
                             val previo = editando
-                            val g = previo?.copy(fecha = fecha, hora = hora, monto = Math.round(v * 100) / 100.0, categoria = cat!!, imprevisto = imprevisto, nota = nota.trim())
-                                ?: Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim())
+                            val g = previo?.copy(fecha = fecha, hora = hora, monto = Math.round(v * 100) / 100.0, categoria = cat!!, imprevisto = imprevisto, nota = nota.trim(), ts_editado = Fechas.ahoraIso())
+                                ?: Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), ts_creado = Fechas.ahoraIso())
                             Repo.guardarGasto(g)
                             if (previo == null && c == null) scope.launch { Ubicacion.ultima(ctx)?.let { Repo.guardarGasto(g.copy(lat = it.latitude, lon = it.longitude)) } }
                             limpiar(); mes = Fechas.mesDe(g.fecha)

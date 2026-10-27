@@ -173,14 +173,14 @@ object Repo {
         enMain { momentos = (momentos.filter { it.id != m.id } + m).sortedBy { it.ts } }
     }
     fun momento(id: String): Momento? = momentos.firstOrNull { it.id == id } ?: db.uno("momentos", id)?.let { JSON.decodeFromString(Momento.serializer(), it) }
-    fun borrarMomento(id: String) { db.borrar("momentos", id); enMain { momentos = momentos.filter { it.id != id } } }
+    fun borrarMomento(id: String) { aPapelera("momentos", id); db.borrar("momentos", id); enMain { momentos = momentos.filter { it.id != id } } }
 
     // ---------- Tramos (enfoque y siestas) ----------
     fun guardarTramo(t: Tramo) {
         db.poner("tramos", t.id, t.fecha, JSON.encodeToString(Tramo.serializer(), t))
         enMain { tramos = (tramos.filter { it.id != t.id } + t).sortedBy { it.inicio } }
     }
-    fun borrarTramo(id: String) { db.borrar("tramos", id); enMain { tramos = tramos.filter { it.id != id } } }
+    fun borrarTramo(id: String) { aPapelera("tramos", id); db.borrar("tramos", id); enMain { tramos = tramos.filter { it.id != id } } }
     fun importarTramos(lista: List<Tramo>) {
         val ids = tramos.map { it.id }.toSet()
         val nuevos = lista.filter { it.id !in ids }
@@ -198,7 +198,7 @@ object Repo {
         enMain { consumos = (consumos.filter { it.id != c.id } + c).sortedBy { it.inicio } }
     }
     fun consumo(id: String): Consumo? = consumos.firstOrNull { it.id == id }
-    fun borrarConsumo(id: String) { db.borrar("consumos", id); enMain { consumos = consumos.filter { it.id != id } } }
+    fun borrarConsumo(id: String) { aPapelera("consumos", id); db.borrar("consumos", id); enMain { consumos = consumos.filter { it.id != id } } }
     fun importarConsumos(lista: List<Consumo>) {
         val ids = consumos.map { it.id }.toSet()
         val nuevos = lista.filter { it.id !in ids }
@@ -214,7 +214,7 @@ object Repo {
         db.poner("notas", n.id, n.fecha, JSON.encodeToString(Nota.serializer(), n))
         enMain { notas = (notas.filter { it.id != n.id } + n).sortedByDescending { it.creada } }
     }
-    fun borrarNota(id: String) { db.borrar("notas", id); enMain { notas = notas.filter { it.id != id } } }
+    fun borrarNota(id: String) { aPapelera("notas", id); db.borrar("notas", id); enMain { notas = notas.filter { it.id != id } } }
     fun importarNotas(lista: List<Nota>) {
         val ids = notas.map { it.id }.toSet()
         val nuevas = lista.filter { it.id !in ids }
@@ -226,7 +226,7 @@ object Repo {
         db.poner("metas", m.id, m.creada.take(10), JSON.encodeToString(Meta.serializer(), m))
         enMain { metas = (metas.filter { it.id != m.id } + m).sortedBy { it.creada } }
     }
-    fun borrarMeta(id: String) { db.borrar("metas", id); enMain { metas = metas.filter { it.id != id } } }
+    fun borrarMeta(id: String) { aPapelera("metas", id); db.borrar("metas", id); enMain { metas = metas.filter { it.id != id } } }
     fun importarMetas(lista: List<Meta>) {
         val ids = metas.map { it.id }.toSet()
         val nuevas = lista.filter { it.id !in ids }
@@ -242,7 +242,7 @@ object Repo {
         db.poner("tomas", t.id, t.fecha, JSON.encodeToString(TomaSuplemento.serializer(), t))
         enMain { tomas = (tomas.filter { it.id != t.id } + t).sortedBy { it.ts } }
     }
-    fun borrarToma(id: String) { db.borrar("tomas", id); enMain { tomas = tomas.filter { it.id != id } } }
+    fun borrarToma(id: String) { aPapelera("tomas", id); db.borrar("tomas", id); enMain { tomas = tomas.filter { it.id != id } } }
     fun importarTomas(lista: List<TomaSuplemento>) {
         val ids = tomas.map { it.id }.toSet()
         val nuevas = lista.filter { it.id !in ids }
@@ -264,7 +264,7 @@ object Repo {
         db.poner("gastos", g.id, g.fecha, JSON.encodeToString(Gasto.serializer(), g))
         enMain { gastos = (gastos.filter { it.id != g.id } + g).sortedBy { it.fecha + it.hora } }
     }
-    fun borrarGasto(id: String) { db.borrar("gastos", id); enMain { gastos = gastos.filter { it.id != id } } }
+    fun borrarGasto(id: String) { aPapelera("gastos", id); db.borrar("gastos", id); enMain { gastos = gastos.filter { it.id != id } } }
     /** Gastos de un respaldo o de la versión web: los que ya existen (mismo id) no se tocan, ni en la base ni en memoria. */
     fun importarGastos(lista: List<Gasto>) {
         val nuevos = Fusion.nuevosPorId(gastos, lista) { it.id }
@@ -278,7 +278,7 @@ object Repo {
         db.poner("ingresos", i.id, i.fecha, JSON.encodeToString(Ingreso.serializer(), i))
         enMain { ingresos = (ingresos.filter { it.id != i.id } + i).sortedBy { it.fecha + it.hora } }
     }
-    fun borrarIngreso(id: String) { db.borrar("ingresos", id); enMain { ingresos = ingresos.filter { it.id != id } } }
+    fun borrarIngreso(id: String) { aPapelera("ingresos", id); db.borrar("ingresos", id); enMain { ingresos = ingresos.filter { it.id != id } } }
     fun importarIngresos(lista: List<Ingreso>) {
         val nuevos = Fusion.nuevosPorId(ingresos, lista) { it.id }
         if (nuevos.isEmpty()) return
@@ -302,7 +302,7 @@ object Repo {
         db.poner("lugares", l.id, null, JSON.encodeToString(Lugar.serializer(), l))
         enMain { lugares = lugares.filter { it.id != l.id } + l }
     }
-    fun borrarLugar(id: String) { db.borrar("lugares", id); enMain { lugares = lugares.filter { it.id != id } } }
+    fun borrarLugar(id: String) { aPapelera("lugares", id); db.borrar("lugares", id); enMain { lugares = lugares.filter { it.id != id } } }
 
     @Synchronized
     fun entrada(lugarId: String, ts: String) {
@@ -361,7 +361,7 @@ object Repo {
         db.poner("cartas", c.id, c.abrir_en, JSON.encodeToString(Carta.serializer(), c))
         enMain { cartas = cartas.filter { it.id != c.id } + c }
     }
-    fun borrarCarta(id: String) { db.borrar("cartas", id); enMain { cartas = cartas.filter { it.id != id } } }
+    fun borrarCarta(id: String) { aPapelera("cartas", id); db.borrar("cartas", id); enMain { cartas = cartas.filter { it.id != id } } }
     fun guardarExperimento(e: Experimento) {
         db.poner("experimentos", e.id, e.inicio, JSON.encodeToString(Experimento.serializer(), e))
         enMain { experimentos = experimentos.filter { it.id != e.id } + e }
@@ -515,12 +515,53 @@ object Repo {
         db.poner("ascensos", a.id, a.fecha, JSON.encodeToString(Ascenso.serializer(), a))
         enMain { ascensos = (ascensos.filter { it.id != a.id } + a).sortedBy { it.fecha + (it.inicio ?: "") } }
     }
-    fun borrarAscenso(id: String) { db.borrar("ascensos", id); enMain { ascensos = ascensos.filter { it.id != id } } }
+    fun borrarAscenso(id: String) { aPapelera("ascensos", id); db.borrar("ascensos", id); enMain { ascensos = ascensos.filter { it.id != id } } }
     fun guardarObra(o: Obra) {
         db.poner("obras", o.id, o.fin ?: o.inicio ?: o.agregado, JSON.encodeToString(Obra.serializer(), o))
         enMain { obras = obras.filter { it.id != o.id } + o }
     }
-    fun borrarObra(id: String) { db.borrar("obras", id); enMain { obras = obras.filter { it.id != id } } }
+    fun borrarObra(id: String) { aPapelera("obras", id); db.borrar("obras", id); enMain { obras = obras.filter { it.id != id } } }
+
+    // ---------- Papelera (v14) ----------
+    /** Lo que se guarda 7 días al borrarlo: los registros que haces tú (no lo que llega solo ni lo que se reimporta). */
+    private val EN_PAPELERA = setOf("momentos", "tramos", "consumos", "notas", "metas", "tomas", "gastos", "ingresos", "lugares", "cartas", "ascensos", "obras")
+
+    private fun aPapelera(col: String, id: String) {
+        if (col !in EN_PAPELERA) return
+        val json = db.uno(col, id) ?: return
+        val b = Borrado(col, id, json, Fechas.ahoraIso())
+        runCatching { db.poner("papelera", "$col:$id", Fechas.diaLogico(), JSON.encodeToString(Borrado.serializer(), b)) }
+    }
+
+    /** Lo que está en la papelera y no se ha recuperado (lo que volvió con «deshacer» ya no cuenta), lo más reciente primero. */
+    fun papelera(): List<Borrado> = db.todos("papelera").mapNotNull { runCatching { JSON.decodeFromString(Borrado.serializer(), it) }.getOrNull() }
+        .filter { db.uno(it.col, it.id) == null }.sortedByDescending { it.borrado }
+
+    /** Devuelve algo de la papelera a su lugar. false si no se pudo leer. */
+    fun restaurar(b: Borrado): Boolean {
+        val ok = runCatching {
+            when (b.col) {
+                "momentos" -> guardarMomento(JSON.decodeFromString(Momento.serializer(), b.json))
+                "tramos" -> guardarTramo(JSON.decodeFromString(Tramo.serializer(), b.json))
+                "consumos" -> guardarConsumo(JSON.decodeFromString(Consumo.serializer(), b.json))
+                "notas" -> guardarNota(JSON.decodeFromString(Nota.serializer(), b.json))
+                "metas" -> guardarMeta(JSON.decodeFromString(Meta.serializer(), b.json))
+                "tomas" -> guardarToma(JSON.decodeFromString(TomaSuplemento.serializer(), b.json))
+                "gastos" -> guardarGasto(JSON.decodeFromString(Gasto.serializer(), b.json))
+                "ingresos" -> guardarIngreso(JSON.decodeFromString(Ingreso.serializer(), b.json))
+                "lugares" -> guardarLugar(JSON.decodeFromString(Lugar.serializer(), b.json))
+                "cartas" -> guardarCarta(JSON.decodeFromString(Carta.serializer(), b.json))
+                "ascensos" -> guardarAscenso(JSON.decodeFromString(Ascenso.serializer(), b.json))
+                "obras" -> guardarObra(JSON.decodeFromString(Obra.serializer(), b.json))
+                else -> error("colección sin papelera")
+            }
+        }.isSuccess
+        if (ok) db.borrar("papelera", "${b.col}:${b.id}")
+        return ok
+    }
+
+    /** Vacía lo que lleva más de [dias] días en la papelera. */
+    fun limpiarPapelera(dias: Long = 7) { runCatching { db.borrarRango("papelera", "0000-01-01", Fechas.sumar(Fechas.diaLogico(), -dias)) } }
 
     // ---------- Configuración ----------
     @Synchronized

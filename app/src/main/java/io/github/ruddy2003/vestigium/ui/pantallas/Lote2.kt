@@ -500,7 +500,7 @@ fun BloqueCierre(fecha: String) {
         Ayuda(previo?.let { "Anotado a las ${Fechas.horaDe(it.ts)}. Si lo cambias, se guarda con la hora de ahora." } ?: "Un toque: qué tan agradable y cuánta energía, ahora que cierras el día.")
         CuadriculaAfecto(v, a, Modifier.padding(top = 8.dp)) { nv, na ->
             v = nv; a = na
-            val base = previo ?: Momento(Repo.nuevoId(), Fechas.ahoraIso(), fecha, "animo", origen = "cierre")
+            val base = previo ?: Momento(Repo.nuevoId(), Fechas.ahoraIso(), fecha, "animo", origen = "cierre", ts_creado = Fechas.ahoraIso())
             Repo.guardarMomento(base.copy(ts = Fechas.ahoraIso(), valencia = nv, activacion = na))
         }
     }

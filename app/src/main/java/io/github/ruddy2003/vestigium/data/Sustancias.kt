@@ -34,7 +34,8 @@ object Sustancias {
             // Tabaco y cafeína son instantáneos: quedan cerrados y completos al registrarlos.
             fin = if (conNivel) null else ini,
             niveles = if (nivel != null) listOf(Lectura(Fechas.isoDeMillis(System.currentTimeMillis().coerceAtLeast(inicioMs)), nivel)) else emptyList(),
-            nivel_max = nivel, cantidad = cantidad, via = via, con_quien = conQuien, completo = !conNivel, origen = origen)
+            nivel_max = nivel, cantidad = cantidad, via = via, con_quien = conQuien, completo = !conNivel, origen = origen,
+            ts_creado = Fechas.ahoraIso())
         Repo.guardarConsumo(c)
         return c
     }
