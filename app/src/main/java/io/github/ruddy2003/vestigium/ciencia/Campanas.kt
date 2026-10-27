@@ -32,7 +32,7 @@ object Campanas {
             Reto("reaccion", "Prueba de reacción", "Hacer la prueba de reacción", 5) { f -> Repo.reacciones.any { it.fecha == f } },
             Reto("animo", "Contestar los avisos de ánimo", "Contestar al menos dos avisos de ánimo", 5) { f -> Repo.momentos.count { it.fecha == f && it.tipo == "muestreo" } >= 2 },
         )
-        val habitos = Repo.config.habitos.filter { it.activo }.map { h -> Reto("habito:${h.id}", h.nombre, "Cumplir «${h.nombre}»", 5) { f -> Repo.dias[f]?.habitos?.get(h.id) == true } }
+        val habitos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }.map { h -> Reto("habito:${h.id}", h.nombre, "Cumplir «${h.nombre}»", 5) { f -> Repo.dias[f]?.habitos?.get(h.id) == true } }
         return base + habitos
     }
 

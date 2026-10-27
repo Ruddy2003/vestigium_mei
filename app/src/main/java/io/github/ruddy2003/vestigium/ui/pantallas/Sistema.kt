@@ -406,7 +406,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Tarjeta {
                 Interruptor("Bloquear con huella", c.bloqueo, "Pide tu huella o PIN al abrir la app. Los widgets y botones rápidos siguen funcionando sin desbloquear.") { v -> cambiar { it.copy(bloqueo = v) } }
                 Interruptor("Modo discreto", c.discreto, "Los widgets y reportes muestran letras en vez de nombres de emociones.") { v -> cambiar { it.copy(discreto = v) } }
-                Interruptor("Seguimiento privado", c.seguimiento_privado, "Agrega al día la intensidad del impulso, recaídas y detonantes, y el botón «Recaída» con hora y lugar. Nunca sale en reportes, logros ni «Tu año».") { v -> cambiar { it.copy(seguimiento_privado = v) } }
+                Interruptor("Seguimiento privado", c.seguimiento_privado, "Agrega a la pantalla Privado la intensidad del impulso, las recaídas con hora y lugar, la libido y los detonantes. Lo privado (también los medicamentos) solo se ve en esa pantalla; sí va en tu exportación para R.") { v -> cambiar { it.copy(seguimiento_privado = v) } }
                 if (c.seguimiento_privado) {
                     Etiqueta("Hábito que una recaída deja en 0")
                     val auto = io.github.ruddy2003.vestigium.data.Recaidas.habito(c.copy(habito_recaida = null))
@@ -418,7 +418,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                         }
                     }
                     Ayuda(if (c.habito_recaida == null && auto != null) "Elegido solo por su nombre: «${auto.nombre}»." else "Al registrar una recaída, ese hábito queda sin cumplir ese día.", Modifier.padding(top = 4.dp))
-                    TextButton(onClick = { nav.ir("recaidas") }) { Text("ver impulsos y recaídas →", style = MaterialTheme.typography.labelLarge) }
+                    TextButton(onClick = { nav.ir("recaidas") }) { Text("abrir Privado →", style = MaterialTheme.typography.labelLarge) }
                 }
                 Interruptor("Ubicación de fondo", c.muestreo_ubicacion, "Una muestra cada 15 minutos para el mapa de calor.") { v -> cambiar { it.copy(muestreo_ubicacion = v) } }
             }
@@ -543,6 +543,8 @@ fun PantallaDatos(nav: Nav) {
                 BotonPrincipal("Exportar extendido", Modifier.fillMaxWidth().padding(top = 8.dp)) {
                     scope.launch { ocupado = true; val f = withContext(Dispatchers.IO) { runCatching { Exportar.zip(ctx) }.getOrNull() }; f?.let { Exportar.compartir(ctx, it) }; ocupado = false }
                 }
+                if (io.github.ruddy2003.vestigium.data.Privado.hayDatos())
+                    Ayuda("Las dos exportaciones llevan tus datos privados sin cifrar (R necesita leerlos). Guárdalas solo en un lugar tuyo y bórralas cuando ya no las uses.", Modifier.padding(top = 8.dp))
             }
         }
         Seccion("Respaldo completo", "Todo en un archivo, y de vuelta en un toque.") {

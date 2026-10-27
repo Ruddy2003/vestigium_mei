@@ -420,7 +420,7 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                 Etiqueta("Cómo se mide")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Ficha("a mano", m.medida_tipo == null) { m = m.copy(medida_tipo = null, medida_clave = null) }
-                    if (Repo.config.habitos.isNotEmpty()) Ficha("un hábito", m.medida_tipo == "habito") { m = m.copy(medida_tipo = "habito", medida_clave = null, medida_modo = "dias") }
+                    if (io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().isNotEmpty()) Ficha("un hábito", m.medida_tipo == "habito") { m = m.copy(medida_tipo = "habito", medida_clave = null, medida_modo = "dias") }
                     Ficha("una variable", m.medida_tipo == "variable") { m = m.copy(medida_tipo = "variable", medida_clave = null) }
                 }
                 when (m.medida_tipo) {
@@ -429,7 +429,7 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                         Slider(value = (m.progreso_manual ?: 0).toFloat(), onValueChange = { m = m.copy(progreso_manual = it.toInt()) }, valueRange = 0f..100f, steps = 19)
                     }
                     "habito" -> FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Repo.config.habitos.filter { it.activo }.forEach { h -> Ficha(h.nombre, m.medida_clave == h.id) { m = m.copy(medida_clave = h.id) } }
+                        io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }.forEach { h -> Ficha(h.nombre, m.medida_clave == h.id) { m = m.copy(medida_clave = h.id) } }
                     }
                     else -> {
                         OutlinedTextField(value = buscarVar, onValueChange = { buscarVar = it }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp),

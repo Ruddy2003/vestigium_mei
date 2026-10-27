@@ -306,7 +306,8 @@ fun PantallaSueno(nav: Nav) {
 
 // ---------------------------------------------------------------- Momentos
 
-internal fun momentosVisibles() = Repo.config.seguimiento_privado.let { privado -> Repo.momentos.filter { privado || !it.privado } }
+/** Los momentos que se ven fuera de la pantalla Privado. */
+internal fun momentosVisibles() = Repo.momentos.filter { !it.privado }
 
 /** Los días con algo registrado al momento (ánimo, momentos o sustancias visibles), del más reciente al más antiguo. */
 fun diasConMomentos(): List<String> =

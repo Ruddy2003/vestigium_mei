@@ -224,7 +224,7 @@ object Logros {
         constante("c_sueno", "Buen dormir", "7 horas o más %d de %d noches", "☾", Repo.salud.values.filter { (it.sueno_min ?: 0) >= 420 }.map { it.fecha }.toSet(), 30, listOf(15, 20, 25))
         constante("c_gym", "Disciplina", "Entrena %d de %d días", "▣", ent.toSet(), 56, listOf(16, 20, 24))
         constante("c_reac", "Mente afilada", "Haz la prueba de reacción %d de %d días", "⚡", reac.map { it.fecha }.toSet(), 30, listOf(15, 25))
-        Repo.config.habitos.filter { it.activo }.forEach { h ->
+        io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }.forEach { h ->
             constante("c_hab_${h.id}", h.nombre, "«${h.nombre}» %d de %d días", "✓", Repo.dias.values.filter { it.habitos[h.id] == true }.map { it.fecha }.toSet(), 30, listOf(15, 20, 25))
         }
 
@@ -318,7 +318,11 @@ object Logros {
             victorias.size.toDouble(), { alLlegar(victorias, it.toInt()) }, { "Gana ${it.toInt()} campañas semanales" })
 
         // ------------------------------------------------ Los tuyos
-        Repo.config.logros_propios.forEach { p -> out += propio(p) }
+        // Un logro sobre algo privado (el hábito ligado a las recaídas o una variable privada) no se muestra.
+        val ligado = io.github.ruddy2003.vestigium.data.Privado.habito()?.id
+        Repo.config.logros_propios.filter { p ->
+            if (p.fuente == "habito") p.clave != ligado else p.fuente == "etiqueta" || !io.github.ruddy2003.vestigium.data.Privado.esVariable(p.clave, ligado)
+        }.forEach { p -> out += propio(p) }
         return out
     }
 

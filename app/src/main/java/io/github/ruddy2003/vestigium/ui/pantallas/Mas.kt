@@ -92,10 +92,8 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("temas", "Tus temas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a hitos", ir)
                 HorizontalDivider()
                 FilaMas("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína: episodios, niveles y cruda", ir)
-                if (Repo.config.seguimiento_privado) {
-                    HorizontalDivider()
-                    FilaMas("recaidas", "Impulsos y recaídas", "Seguimiento privado: horas, lugares y detonantes", ir)
-                }
+                HorizontalDivider()
+                FilaMas("recaidas", "Privado", "Medicamentos" + (if (Repo.config.seguimiento_privado) ", impulsos, recaídas y libido" else " e impulsos") + ": solo se ven aquí", ir)
             }
         }
         Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 3) {
@@ -165,10 +163,14 @@ fun PantallaHabitos(nav: Nav) {
             Tarjeta {
                 val activos = c.habitos.filter { it.activo }
                 if (activos.isEmpty()) Ayuda("Sin hábitos activos.")
+                val ligado = io.github.ruddy2003.vestigium.data.Privado.habito(c)?.id
                 activos.forEach { h ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         val hechos = Repo.dias.values.count { it.habitos[h.id] == true }
-                        Column(Modifier.weight(1f)) { Text(h.nombre, style = MaterialTheme.typography.bodyLarge); Ayuda("$hechos días cumplido") }
+                        Column(Modifier.weight(1f)) {
+                            Text(h.nombre, style = MaterialTheme.typography.bodyLarge)
+                            Ayuda(if (h.id == ligado) "Privado: se marca y se ve en Más → Privado" else "$hechos días cumplido")
+                        }
                         TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(habitos = cc.habitos.map { if (it.id == h.id) it.copy(activo = false) else it }) } }) { Text("Archivar") }
                     }
                 }

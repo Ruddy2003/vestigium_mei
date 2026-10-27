@@ -231,12 +231,11 @@ fun PantallaExplorar(nav: Nav) {
             }
         }
 
-        Seccion("A qué hora aparecen tus emociones", "Lo que sentías en cada registro de ánimo, por hora del día (las seis más frecuentes, y los impulsos).") {
+        Seccion("A qué hora aparecen tus emociones", "Lo que sentías en cada registro de ánimo, por hora del día (las seis más frecuentes).") {
             val regs = Repo.momentos.filter { Catalogo.esRegistro(it) }
             val conteo = regs.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO && it != Catalogo.NO_SE }.groupingBy { it }.eachCount()
             val top = conteo.entries.sortedByDescending { it.value }.take(6).map { it.key }
-            val impulsos = Repo.momentos.filter { it.tipo == "impulso" }
-            if (regs.size + impulsos.size < 5) Vacio("Registra al menos 5 veces tu ánimo para ver el patrón por hora.")
+            if (regs.size < 5) Vacio("Registra al menos 5 veces tu ánimo para ver el patrón por hora.")
             else Tarjeta {
                 top.forEach { e ->
                     val porHora = IntArray(24)
@@ -245,12 +244,6 @@ fun PantallaExplorar(nav: Nav) {
                         Text(Catalogo.nombreSentimiento(e, Repo.config.discreto) + " · ${porHora.sum()}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
                         Horas(porHora)
                     }
-                }
-                if (impulsos.isNotEmpty()) {
-                    val porHora = IntArray(24)
-                    impulsos.forEach { m -> Fechas.horaDe(m.ts).take(2).toIntOrNull()?.let { porHora[it]++ } }
-                    Text(Catalogo.nombreTipo("impulso") + " · ${porHora.sum()}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
-                    Horas(porHora)
                 }
                 Ayuda("De izquierda a derecha: de 0:00 a 23:00.", Modifier.padding(top = 6.dp))
             }
@@ -456,7 +449,7 @@ private fun CentroEntender(nav: Nav) {
         Triple("Experimentos personales", "${Repo.experimentos.count { it.activo }}", "en curso") to "experimentos",
         Triple("La cinta", "${Repo.momentos.count { it.fecha == hoy && !it.privado } + Repo.tramos.count { it.fecha == hoy }}", "cosas con hora hoy") to "cinta",
         Triple("Constelación", "${Repo.dias.values.filter { it.fecha >= Fechas.sumar(hoy, -365) }.flatMap { Texto.personas(it.nota) }.toSet().size}", "personas en tu cielo este año") to "constelacion",
-    ) + (if (Repo.config.seguimiento_privado) listOf(Triple("Impulsos y recaídas", io.github.ruddy2003.vestigium.data.Recaidas.dias().maxOrNull()?.let { "${Fechas.diasEntre(it, hoy)}" } ?: "—", "días desde la última") to "recaidas") else emptyList())
+    )
     tarjetas.chunked(2).forEach { fila ->
         androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             fila.forEach { (t, ruta) ->

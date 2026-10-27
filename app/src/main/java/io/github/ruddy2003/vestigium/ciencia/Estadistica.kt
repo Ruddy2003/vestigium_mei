@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.Privado
 import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
@@ -82,8 +83,11 @@ object Estadistica {
     }
 
     // ---------- Variables diarias para cruzar ----------
-    /** Todas las variables. Con [dinamicas], también una por persona, lugar, app, categoría, artista, nutriente… (ver [Dinamicas]). */
-    fun variables(dinamicas: Boolean = true): List<Variable> {
+    /**
+     * Todas las variables. Con [dinamicas], también una por persona, lugar, app, categoría, artista, nutriente… (ver [Dinamicas]).
+     * Las privadas (ver [Privado]) solo salen con [privadas]: las pantallas de la app nunca las piden; el diccionario de la exportación sí.
+     */
+    fun variables(dinamicas: Boolean = true, privadas: Boolean = false): List<Variable> {
         val v = mutableListOf(
             Variable("valencia", "Valencia del día", "Ánimo"), Variable("activacion", "Activación del día", "Ánimo"),
             Variable("muestreo_valencia", "Valencia promedio en avisos", "Ánimo"), Variable("muestreo_activacion", "Activación promedio en avisos", "Ánimo"),
@@ -195,11 +199,9 @@ object Estadistica {
         }
         // De qué fueron tus sueños.
         categoriasSuenoUsadas().forEach { id -> v += Variable("sueno_$id", "Sueño: ${Catalogo.opcionSueno(id)?.nombre?.lowercase() ?: id} (0/1)", "Sueños") }
-        if (Repo.config.seguimiento_privado) {
-            v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
-            v += Variable("n_recaida", "Recaídas registradas con hora", "Privado")
-            if (Repo.momentos.any { it.tipo == "recaida" && it.duracion_min != null }) v += Variable("recaida_min", "Minutos de recaída", "Privado")
-        }
+        v += Variable("impulso", "Intensidad del impulso", "Privado"); v += Variable("recaida", "Recaída (0/1)", "Privado")
+        v += Variable("n_recaida", "Recaídas registradas con hora", "Privado")
+        if (Repo.momentos.any { it.tipo == "recaida" && it.duracion_min != null }) v += Variable("recaida_min", "Minutos de recaída", "Privado")
         // Enfoque, siestas y lo que se deriva del teléfono y el reloj.
         if (Repo.tramos.isNotEmpty()) {
             v += Variable("enfoque_min", "Minutos de enfoque (cronómetro)", "Enfoque")
@@ -223,7 +225,7 @@ object Estadistica {
         if (Repo.conexiones.values.any { it.presion_n > 0 }) {
             v += Variable("presion_local_hpa", "Presión del barómetro del teléfono (hPa)", "Entorno"); v += Variable("cambio_presion_3h", "Mayor cambio de presión en 3 horas (hPa)", "Entorno")
         }
-        if (Repo.config.seguimiento_privado && Repo.momentos.any { it.tipo == "libido" }) {
+        if (Repo.momentos.any { it.tipo == "libido" }) {
             v += Variable("libido_max", "Libido máxima del día (0 a 5)", "Privado"); v += Variable("n_libido", "Registros de libido", "Privado")
         }
         // Suplementos: dosis, si se tomó y el nivel del modelo (o porciones).
@@ -251,10 +253,12 @@ object Estadistica {
         Catalogo.CONTEXTOS.forEach { v += Variable("ctx_${it.id}", "Contexto: ${it.nombre} (0/1)", "Contexto") }
         Catalogo.CIENTIFICAS.forEach { p -> p.opciones.filter { it.id != "no_aplica" }.forEach { o -> v += Variable("${p.clave}_${o.id}", "${o.nombre} (0/1)", "Lectura del día") } }
         // Lo de antes (tipos de momento) que no es un sentimiento ni un pensamiento: el impulso.
-        Catalogo.MOMENTOS.filter { it.id == "impulso" }.forEach { v += Variable("n_${it.id}", "Momentos de ${it.nombre.lowercase()}", "Momentos") }
+        Catalogo.MOMENTOS.filter { it.id == "impulso" }.forEach { v += Variable("n_${it.id}", "Momentos de ${it.nombre.lowercase()}", "Privado") }
         Repo.config.habitos.forEach { v += Variable("hab_${it.id}", "Hábito: ${it.nombre} (0/1)", "Hábitos") }
         if (dinamicas) v += Dinamicas.calcular(false).variables
-        return v
+        if (privadas) return v
+        val ligado = Privado.habito()?.id
+        return v.filter { !Privado.esVariable(it.id, ligado) }
     }
 
     private fun emocionesUsadas(): List<String> = Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO }.distinct().sorted()
@@ -316,7 +320,8 @@ object Estadistica {
                 r["valencia_solo"] = media(con.filter { "solo" in it.con_quien }.mapNotNull { it.valencia?.toDouble() })
             }
         }
-        if (Repo.config.seguimiento_privado) {
+        // Lo privado se calcula siempre: no sale en las pantallas (ver [variables]), pero sí en la exportación para R.
+        run {
             val rec = Repo.momentos.filter { it.tipo == "recaida" }.groupingBy { it.fecha }.eachCount()
             rec.keys.minOrNull()?.let { p0 -> Repo.dias.keys.filter { it >= p0 }.forEach { f -> fila(f)["n_recaida"] = (rec[f] ?: 0).toDouble() } }
             rec.forEach { (f, n) -> fila(f)["n_recaida"] = n.toDouble() }
@@ -400,7 +405,7 @@ object Estadistica {
         }
         val ajusteBar = io.github.ruddy2003.vestigium.data.Barometro.ajuste()
         Repo.conexiones.forEach { (f, c) -> if (c.presion_n > 0) { val r = fila(f); r["presion_local_hpa"] = io.github.ruddy2003.vestigium.data.Barometro.local(c, ajusteBar); r["cambio_presion_3h"] = c.cambio_presion_3h } }
-        if (Repo.config.seguimiento_privado) Repo.momentos.filter { it.tipo == "libido" }.groupBy { it.fecha }.forEach { (f, l) ->
+        Repo.momentos.filter { it.tipo == "libido" }.groupBy { it.fecha }.forEach { (f, l) ->
             val r = fila(f); r["libido_max"] = l.mapNotNull { it.intensidad }.maxOrNull()?.toDouble(); r["n_libido"] = l.size.toDouble()
         }
         runCatching { io.github.ruddy2003.vestigium.data.Suplementos.panel().forEach { (f, m) -> val r = fila(f); m.forEach { (k, x) -> r[k] = x } } }

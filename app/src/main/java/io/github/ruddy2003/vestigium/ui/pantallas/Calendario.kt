@@ -56,6 +56,8 @@ import java.time.LocalDate
 /** Fecha que otra pantalla le pide abrir al Día. */
 object Seleccion {
     var pedida by mutableStateOf<String?>(null)
+    /** Día que abre la pantalla Privado (desde «privado de este día» en Día). */
+    var privado by mutableStateOf<String?>(null)
     var ultimoMes by mutableStateOf<String?>(null)
     /** Sección de Día a la que hay que llevar al abrirlo (por ejemplo, desde el atajo «Diario de hoy»). */
     var seccion by mutableStateOf<String?>(null)

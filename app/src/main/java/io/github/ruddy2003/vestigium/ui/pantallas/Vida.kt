@@ -97,7 +97,6 @@ fun PantallaVida(nav: Nav) {
             RejillaTarjetas(listOfNotNull(
                 Tarjetita("Dinero", dinero(gasto), "gastado este mes" + if (ingreso > 0) " · entró ${dinero(ingreso)}" else "", "gastos"),
                 Tarjetita("Sustancias", "${semanaSus.map { it.fecha }.distinct().size}", "días con algo en 7 días", "sustancias"),
-                if (Repo.config.seguimiento_privado) Tarjetita("Impulsos y recaídas", io.github.ruddy2003.vestigium.data.Recaidas.dias().maxOrNull()?.let { "${Fechas.diasEntre(it, hoy)}" } ?: "—", "días desde la última", "recaidas") else null,
                 Tarjetita("Enfoque y siestas", horasMin(io.github.ruddy2003.vestigium.data.Enfoque.delDia(hoy).filterKeys { it != "siesta" }.values.sum()), "de enfoque hoy", "enfoque"),
             ), ir)
         }

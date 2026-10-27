@@ -101,8 +101,7 @@ fun PantallaDiario(nav: Nav) {
         if (t != null) i.putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, t)
         ctx.startActivity(i)
     }
-    val privado = Repo.config.seguimiento_privado
-    val visiblesM = remember(Repo.momentos, privado) { Repo.momentos.filter { privado || !it.privado } }
+    val visiblesM = remember(Repo.momentos) { Repo.momentos.filter { !it.privado } }
     val porDia = remember(visiblesM) { visiblesM.groupBy { it.fecha } }
     val fechas = remember(Repo.dias, visiblesM) {
         (Repo.dias.values.filter { it.nota.isNotBlank() || it.sueno_texto.isNotBlank() }.map { it.fecha } + visiblesM.map { it.fecha }).distinct().sortedDescending()

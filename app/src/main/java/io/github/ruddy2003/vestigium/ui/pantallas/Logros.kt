@@ -265,7 +265,7 @@ private fun EditorLogro(cerrar: () -> Unit) {
         }
         when (fuente) {
             "habito" -> FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                val hs = Repo.config.habitos.filter { it.activo }
+                val hs = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }
                 if (hs.isEmpty()) Ayuda("Primero crea un hábito en Más → Hábitos.")
                 hs.forEach { h -> Ficha(h.nombre, clave == h.id) { clave = h.id; if (nombre.isBlank()) nombre = h.nombre } }
             }

@@ -2,7 +2,7 @@ package io.github.ruddy2003.vestigium.data
 
 /**
  * Seguimiento privado de recaídas: cada una se guarda como un momento con hora y lugar, y además marca el día
- * (recaída = sí) y deja en 0 el hábito ligado. Nada de esto sale en reportes, «Tu año», logros ni widgets.
+ * (recaída = sí) y deja en 0 el hábito ligado. Todo esto se ve solo en la pantalla Privado (ver `Privado`).
  */
 object Recaidas {
     /** Lo que había en el día antes de registrar la recaída, para poder deshacerla tal cual. */
@@ -12,6 +12,7 @@ object Recaidas {
 
     /** El hábito que una recaída rompe: el elegido en Privacidad o, si no hay, uno cuyo nombre lo diga. */
     fun habito(c: Config = Repo.config): Habito? {
+        if (c.habito_recaida == "") return null
         c.habito_recaida?.let { id -> c.habitos.firstOrNull { it.id == id }?.let { return it } }
         return c.habitos.filter { it.activo }.firstOrNull { h -> val n = Texto.slug(h.nombre); PALABRAS.any { n.contains(it) } }
     }

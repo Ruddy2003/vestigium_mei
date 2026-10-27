@@ -247,7 +247,7 @@ fun PantallaDia(nav: Nav) {
             }
         }
         val bloqueMomentos: @Composable () -> Unit = {
-        val delDia = Repo.momentos.filter { it.fecha == fecha && (c.seguimiento_privado || !it.privado) }
+        val delDia = Repo.momentos.filter { it.fecha == fecha && !it.privado }
         val sustanciasDia = Repo.consumos.filter { it.fecha == fecha && io.github.ruddy2003.vestigium.data.Sustancias.visible(it) }
             if (delDia.isNotEmpty() || sustanciasDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
                 Tarjeta {
@@ -338,7 +338,7 @@ fun PantallaDia(nav: Nav) {
 /** Resumen de la noche en Día: qué falta y el botón para abrir la hoja. */
 @Composable
 private fun TarjetaNoche(d: Dia, fecha: String, c: io.github.ruddy2003.vestigium.data.Config, abrir: () -> Unit) {
-    val activos = c.habitos.filter { it.activo }
+    val activos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
     val hechos = activos.count { d.habitos[it.id] == true }
     val partes = listOf(
         "ánimo" to (d.valencia != null), "diario" to d.nota.isNotBlank(), "predicción" to (d.prediccion_manana != null),
@@ -402,7 +402,7 @@ fun PantallaNoche(nav: Nav) {
         nav.atras()
     }
     // Lo esencial, en orden: lo que falta se puede saltar con «siguiente».
-    val habitosActivos = c.habitos.filter { it.activo }
+    val habitosActivos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
     val pasos = listOfNotNull(
         Triple("ánimo", d.valencia != null, reqAnimo), Triple("diario", d.nota.isNotBlank(), reqDiario),
         if (habitosActivos.isNotEmpty()) Triple("hábitos", habitosActivos.all { d.habitos[it.id] == true }, reqHabitos) else null,
@@ -432,7 +432,7 @@ fun PantallaNoche(nav: Nav) {
             Ficha(if (soloFalta) "solo lo que falta" else "mostrar todo", soloFalta) { Repo.cambiarConfig { cc -> cc.copy(noche_solo_falta = !cc.noche_solo_falta) } }
         }
         Seccion("Hábitos", "Siempre aquí, para marcarlos al cerrar el día.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqHabitos)) {
-            val activos = c.habitos.filter { it.activo }
+            val activos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
             if (activos.isEmpty()) {
                 Tarjeta {
                     Ayuda("Aún no tienes hábitos.")
@@ -446,37 +446,6 @@ fun PantallaNoche(nav: Nav) {
                             colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary))
                         Text(h.nombre, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                         Text(if (hecho) "= 1" else "= 0", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            }
-        }
-        if (c.seguimiento_privado) Seccion("Seguimiento privado", "Solo para ti. Sirve para ver qué días y contextos lo hacen más difícil.", numero = n(), plegable = true) {
-            Tarjeta {
-                Etiqueta("Intensidad del impulso")
-                Escala(d.impulso, 0, 5, Catalogo.ANCLAS["impulso"]) { cambiar(d.copy(impulso = it)) }
-                Etiqueta("¿Hubo recaída?")
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Ficha("No", d.recaida == false) { cambiar(d.copy(recaida = if (d.recaida == false) null else false)) }
-                    Ficha("Sí", d.recaida == true) { cambiar(d.copy(recaida = if (d.recaida == true) null else true)) }
-                }
-                val recaidas = Repo.momentos.filter { it.fecha == fecha && it.tipo == "recaida" }
-                if (recaidas.isNotEmpty()) Clave("con hora", recaidas.joinToString("  ") { Fechas.horaDe(it.ts) + (it.duracion_min?.let { d -> " · $d min" } ?: "") +
-                    (Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.nombre?.let { n -> " · $n" } ?: "") })
-                TextButton(onClick = {
-                    ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java).putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO)
-                        .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, "recaida").putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.ORIGEN, "app"))
-                }) { Text("registrar una recaída con hora y lugar →", style = MaterialTheme.typography.labelLarge) }
-                TextButton(onClick = {
-                    ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java).putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_MOMENTO)
-                        .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.TIPO, "libido").putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.ORIGEN, "app"))
-                }) { Text("registrar la libido de ahora →", style = MaterialTheme.typography.labelLarge) }
-                val lib = Repo.momentos.filter { it.fecha == fecha && it.tipo == "libido" }
-                if (lib.isNotEmpty()) Clave("libido", lib.joinToString("  ") { Fechas.horaDe(it.ts) + "→" + (it.intensidad ?: "?") })
-                Etiqueta("Qué lo detonó")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Catalogo.DETONANTES.forEach { t ->
-                        val activo = t in d.detonantes
-                        Ficha(t.replace("_", " "), activo) { cambiar(d.copy(detonantes = if (activo) d.detonantes - t else d.detonantes + t)) }
                     }
                 }
             }
@@ -554,8 +523,9 @@ fun PantallaNoche(nav: Nav) {
         Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             ListaEtiquetas(d.hitos, "vuelo, beso, decision_importante", normalizar = { Texto.slug(it) }) { cambiar(d.copy(hitos = it)) }
         }
-        Seccion("Medicamentos", "Lo que tomaste hoy, si aplica.", numero = n(), plegable = true, plegadaPorDefecto = true) {
-            ListaEtiquetas(d.medicamentos, "nombre del medicamento", normalizar = { Texto.slug(it) }) { cambiar(d.copy(medicamentos = it)) }
+        // Medicamentos, impulsos, recaídas y libido se anotan y se ven solo en la pantalla Privado.
+        TextButton(onClick = { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.privado = fecha; nav.ir("recaidas") }) {
+            Text("privado de este día →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         // El ánimo de ahora, con la hora real: la misma medición cada noche.
         Seccion("Cómo estás ahora", "Al cerrar el día, con la hora de ahora. Se compara de un día a otro.", numero = n()) { BloqueCierre(fecha) }
@@ -716,7 +686,7 @@ private fun Vestigios(fecha: String, nav: Nav) {
         Repo.huellas[fecha]?.let { h -> algo = true; Clave("google", "${h.yt_vistos} videos · ${h.busquedas + h.yt_busquedas} búsquedas" + (h.canales.keys.firstOrNull()?.let { " · más: $it" } ?: "")) }
         val sub = Repo.subrayados.filter { it.fecha == fecha }
         if (sub.isNotEmpty()) { algo = true; Clave("lectio", "${sub.size} subrayados · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
-        val ruidos = Repo.momentos.filter { it.fecha == fecha }.mapNotNull { it.ruido_db }
+        val ruidos = Repo.momentos.filter { it.fecha == fecha && !it.privado }.mapNotNull { it.ruido_db }
         if (ruidos.isNotEmpty()) Clave("strepitus", "%.0f dB de media al registrar".format(ruidos.average()))
         // Lo que leíste, viste o jugaste; si lo terminaste ese día, tu calificación y lo que opinaste.
         val obras = Repo.obras.filter { it.titulo.isNotBlank() && (fecha in it.dias || (it.estado == "terminado" && it.fin == fecha)) }
@@ -821,7 +791,7 @@ fun Detectados(texto: String, fecha: String, onCorregir: (String) -> Unit) {
     val conocidas = remember(Repo.dias.size, fecha) {
         val p = HashSet<String>(); val t = HashSet<String>()
         Repo.dias.forEach { (f, dd) -> if (f != fecha) { Texto.personas(dd.nota).forEach { p.add(Texto.canon(it, eq)) }; Texto.temas(dd.nota).forEach { t.add(Texto.canon(it, eq)) } } }
-        Repo.momentos.forEach { m -> Texto.personas(m.texto).forEach { p.add(Texto.canon(it, eq)) }; Texto.temas(m.texto).forEach { t.add(Texto.canon(it, eq)) } }
+        Repo.momentos.filter { !it.privado }.forEach { m -> Texto.personas(m.texto).forEach { p.add(Texto.canon(it, eq)) }; Texto.temas(m.texto).forEach { t.add(Texto.canon(it, eq)) } }
         p to t
     }
     val P = Texto.personas(texto).distinct(); val T = Texto.temas(texto).distinct()

@@ -423,10 +423,12 @@ vm_fuerza <- function(n = 6) {
     facet_wrap(~ ejercicio, scales = "free_y") + labs(x = NULL, y = "1RM estimado (kg)") + theme_minimal()
 }
 
-#' Momentos con lugar, coloreados por valencia (sin mapa de fondo).
+#' Registros de ánimo con lugar, coloreados por su valencia (sin mapa de fondo).
 vm_mapa_animo <- function() {
   if (is.null(vm$momentos)) stop("No hay momentos.")
-  d <- vm$momentos |> filter(!is.na(lat), !is.na(lon)) |> left_join(select(panel, fecha, v_dia = valencia), by = "fecha") |> mutate(v = coalesce(as.numeric(valencia), v_dia)) |> filter(!is.na(v))
+  # Solo registros de ánimo con su propia valencia: ni el seguimiento privado (impulso, recaída, libido) ni la valencia del diario prestada.
+  d <- vm$momentos |> filter(!is.na(lat), !is.na(lon), as.logical(es_animo) %in% TRUE, !tipo %in% c("impulso", "recaida", "libido")) |>
+    mutate(v = as.numeric(valencia)) |> filter(!is.na(v))
   ggplot(d, aes(lon, lat, colour = v)) + geom_point(alpha = .7) + scale_colour_gradient2(low = "#7C2433", mid = "grey85", high = "#2D6B63", midpoint = 4) + coord_quickmap() + theme_minimal()
 }
 

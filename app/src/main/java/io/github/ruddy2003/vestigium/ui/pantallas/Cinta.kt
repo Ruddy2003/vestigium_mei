@@ -165,8 +165,7 @@ fun PantallaCinta(nav: Nav) {
         }
     }
     if (musica.isNotEmpty()) { val p = pista("música", "musica"); musica.forEach { (t, s) -> cosas += Cosa(p, t, null, cs.primary, "", "${hm(t)} · $s") } }
-    val privado = Repo.config.seguimiento_privado
-    val mom = Repo.momentos.filter { it.fecha == fecha && (privado || !it.privado) }
+    val mom = Repo.momentos.filter { it.fecha == fecha && !it.privado }
     if (mom.isNotEmpty()) {
         val p = pista("momentos", "momentos")
         mom.forEach { m ->

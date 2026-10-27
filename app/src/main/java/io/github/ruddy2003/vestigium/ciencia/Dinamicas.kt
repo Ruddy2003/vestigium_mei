@@ -6,6 +6,7 @@ import io.github.ruddy2003.vestigium.data.Perfiles
 import io.github.ruddy2003.vestigium.data.Politica
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
+import io.github.ruddy2003.vestigium.data.privado
 
 /**
  * Variables que dependen de lo que registraste: una por cada persona, tema, hito, lugar, app, categoría de gasto,
@@ -101,7 +102,9 @@ object Dinamicas {
             return Repo.dias.keys.filter { it in a..z } + fechas
         }
         val eq = Repo.equivalencias()
-        val diasDiario = Repo.dias.keys + Repo.momentos.map { it.fecha }
+        // Lo privado no cuenta: ni sus @menciones ni sus #temas, ni sus días como «días con diario».
+        val publicos = Repo.momentos.filter { !it.privado }
+        val diasDiario = Repo.dias.keys + publicos.map { it.fecha }
 
         // ---- Personas: el diario, los momentos, los sueños y las cartas que les escribiste.
         val personas = HashMap<String, HashMap<String, Double>>(); val temas = HashMap<String, HashMap<String, Double>>()
@@ -113,7 +116,7 @@ object Dinamicas {
             texto(f, d.nota); texto(f, d.sueno_texto); texto(f, d.mejor_momento + " " + d.peor_momento)
             d.sueno_temas.forEach { t -> val x = Texto.etiqueta(t); if (t.trim().startsWith("#")) temas.getOrPut(f) { HashMap() }[Texto.canon(x, eq)] = 1.0 else personas.getOrPut(f) { HashMap() }[Texto.canon(x, eq)] = 1.0 }
         }
-        Repo.momentos.forEach { m -> texto(m.fecha, m.texto) }
+        publicos.forEach { m -> texto(m.fecha, m.texto) }
         Repo.cartas.filter { it.para.isNotBlank() }.forEach { c -> personas.getOrPut(c.escrita) { HashMap() }[Texto.canon(c.para, eq)] = 1.0; texto(c.escrita, c.texto) }
         familia("per_", "Personas", personas, diasDiario, 15, 5, { "Aparece @$it (diario, momentos, sueños o cartas) (0/1)" })
         // ---- En quién pensaste sin verla (lo marcas en el diario; en los momentos, «pensando en…» estando solo).
@@ -169,9 +172,8 @@ object Dinamicas {
         familia("gen_", "Cultura", generos, cobertura(generos.keys), 10, 5, { "Leí, vi o jugué algo de ${it.replace('_', ' ')} (0/1)" })
 
         // ---- Medicamentos y detonantes.
-        familia("med_", "Salud", Repo.dias.mapValues { (_, d) -> d.medicamentos.associateWith { 1.0 } }, cobertura(Repo.dias.filterValues { it.medicamentos.isNotEmpty() }.keys), 15, 3, { "Tomé $it (0/1)" })
-        if (Repo.config.seguimiento_privado)
-            familia("det_", "Privado", Repo.dias.mapValues { (_, d) -> d.detonantes.associateWith { 1.0 } }, cobertura(Repo.dias.filterValues { it.detonantes.isNotEmpty() }.keys), 10, 3, { "Detonante: ${it.replace('_', ' ')} (0/1)" })
+        familia("med_", "Privado", Repo.dias.mapValues { (_, d) -> d.medicamentos.associateWith { 1.0 } }, cobertura(Repo.dias.filterValues { it.medicamentos.isNotEmpty() }.keys), 15, 3, { "Tomé $it (0/1)" })
+        familia("det_", "Privado", Repo.dias.mapValues { (_, d) -> d.detonantes.associateWith { 1.0 } }, cobertura(Repo.dias.filterValues { it.detonantes.isNotEmpty() }.keys), 10, 3, { "Detonante: ${it.replace('_', ' ')} (0/1)" })
 
         // ---- El sueño de la noche: tipo.
         familia("suenot_", "Sueño", Repo.dias.filterValues { it.sueno_recordado }.mapValues { (_, d) -> listOfNotNull(d.sueno_tipo).associateWith { 1.0 } },
