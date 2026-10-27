@@ -21,7 +21,7 @@ _Creado el 26 oct 2026 sobre la versión v81 (commit `fa527df`). Este archivo es
 | 6 | Personas y red social | Sonnet | Alto | Cap. 7 | hecho 2026-10-27 |
 | 7 | Experimentos personales (N-de-1) | Opus | Alto | Cap. 8 | hecho 2026-10-27 |
 | 8 | Reportes, motivación, privacidad e integridad | Sonnet | Medio | Caps. 9 y 10 | hecho 2026-10-27 |
-| 9 | Revisión metodológica general (diagnóstico) | Opus | Alto | Lista de cambios propuestos | pendiente |
+| 9 | Revisión metodológica general (diagnóstico) | Opus | Alto | Lista de cambios propuestos | hecho 2026-10-27 |
 | 10 | Aplicar los cambios aprobados | Sonnet | Alto | Código + Apéndice D | pendiente |
 | 11 | Introducción, marco teórico, discusión y limitaciones | Opus | Alto | Caps. 1 y 11 | pendiente |
 | 12 | Ensamblado: figuras, formato y referencias | Sonnet | Medio | Documento completo | pendiente |
