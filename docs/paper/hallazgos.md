@@ -1171,7 +1171,11 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Propuesta:** mostrar la marca en la hoja de la noche con la opción de quitarla.
 
 ### H-NAV-9 · Cambiar dónde y cuándo se registra cambia cuánto se registra
-- **Dónde:** propuestas N-07, N-08 y N-09 (registrar en otra fecha) y N-16 y N-18 (reordenar Hoy y la hoja de la noche) del informe de navegación.
+- **Dónde:** propuestas del informe de navegación:
+  - N-07, N-08 y N-09: registrar en otra fecha;
+  - N-16 y N-18: reordenar Hoy y la hoja de la noche (N-18 guarda `version_noche`);
+  - N-28: el historial de ánimo a la vista en Hoy;
+  - N-29: gastos en un toque.
 - **Qué pasa:** hoy, lo olvidado casi nunca se recupera. Con estas propuestas se recuperaría, y lo que suba o baje en Hoy o en la noche se llenará más o menos. Ya pasó con el impulso (capítulo 3, sección 3.16).
 - **Por qué importa:**
   - La completitud y la mezcla de datos momentáneos y retrospectivos cambian a partir de la fecha de la entrega.

@@ -1,6 +1,6 @@
 # Revisión de navegación, corrección de datos y saturación
 
-_Hecha el 27 oct 2026 sobre `main` en el commit `87f7f2c`: versión con la entrega 10b, esquema 13. Sigue `docs/navegacion/PLAN_REVISION_NAVEGACION.md`. **No cambia nada de la app.** Solo agrega capturas de prueba con datos inventados (`app/src/test/.../CapturasEscenario.kt`). Todo lo que aquí se propone espera tu aprobación, punto por punto._
+_Actualizada el 27 oct 2026 con tus respuestas a las preguntas: § 13 y propuestas N-28 a N-30. Hecha el 27 oct 2026 sobre `main` en el commit `87f7f2c`: versión con la entrega 10b, esquema 13. Sigue `docs/navegacion/PLAN_REVISION_NAVEGACION.md`. **No cambia nada de la app.** Solo agrega capturas de prueba con datos inventados (`app/src/test/.../CapturasEscenario.kt`). Todo lo que aquí se propone espera tu aprobación, punto por punto._
 
 **Cómo leer este informe**
 
@@ -88,9 +88,17 @@ Los del plan (§ 7) se confirman. Abajo, cómo queda cada uno y dos nuevos:
 
 ### 1.3 En números
 
-- **27 propuestas** (N-01 a N-27), en **6 entregas** (§ 10).
+- **30 propuestas** (N-01 a N-30; las tres últimas salen de tus respuestas), en **8 entregas** (§ 10).
 - Las que resuelven tus tres ejemplos: **N-01 y N-04** (sueño), **N-07 y N-09** (creatina de ayer), **N-02 y N-03** (momento mal guardado).
-- **Cambian lo que se guarda**, y por eso suben `SCHEMA_V`: N-04 (siestas descartadas), N-08 y N-03 (marca de cuándo se anotó o corrigió) y N-14 (papelera, si la quieres). Las demás solo tocan pantallas.
+- **Cambian lo que se guarda**, y por eso suben `SCHEMA_V`:
+  - N-04 (siestas descartadas);
+  - N-30, con N-03 y N-08 (cuándo se anotó y cuándo se corrigió);
+  - N-18 (`version_noche`);
+  - N-29 (subcategorías);
+  - N-14 (papelera);
+  - N-05, si se recuerdan las visitas quitadas.
+
+  Se juntan en **una sola subida, a 14**: la entrega NE (§ 10). Las demás solo tocan pantallas.
 - **Ninguna propuesta saca lo privado de su pantalla.**
 - **Ninguna renombra rutas** usadas por widgets, avisos, accesos directos o atajos con ★ (§ 8, «Riesgo»).
 - Hay **9 hallazgos nuevos** en `docs/paper/hallazgos.md` (H-NAV-1 a H-NAV-9), entre ellos dos errores con datos del seguimiento privado (H-NAV-6), descritos solo en su mecánica.
@@ -858,7 +866,7 @@ Cada propuesta dice qué cambia en palabras simples. El detalle técnico es una 
 - **Cambia lo que se guarda:** no.
 - **Cómo se comprueba:** una prueba por tipo de borrado (borrar → deshacer → el documento vuelve igual).
 
-### N-14 · (Opcional) Papelera de 7 días
+### N-14 · Papelera de 7 días (aprobada en tu respuesta a P-9)
 - **Problema:** E-20; N9.
 - **Cambio:** lo borrado va a una colección `papelera` durante 7 días. Desde Más → Datos → «Papelera» se puede recuperar.
 - **Dónde:** `data/Repo.kt` (cada `borrar*`), `data/Db.kt`, una pantalla nueva y la limpieza en `avisos/Trabajo.kt`.
@@ -895,13 +903,14 @@ Cada propuesta dice qué cambia en palabras simples. El detalle técnico es una 
   3. **«Llenar el día» compacto** (○ ánimo ○ diario ○ predicción · hábitos 1/2 · botón), siempre.
   4. **Tablero compacto**: las primeras 4 cifras de tu tablero, con «ver todo».
   5. En la mañana, si falta, la calidad del sueño (la ficha ya lleva a la sección).
-  6. La frase del día, en una línea (se abre al tocarla).
+
+  **Arriba de todo**, después de la fecha y el estado, se quedan **la frase del día**, como ahora (tu respuesta a P-10), y **«Tus últimos días»** (N-28), en lugar del personaje.
 
   Debajo, plegado: «Tu día» (N-17), sueño, «Hace un año», lo del teléfono.
 
-  **Se mueven**:
+  **Se mueven o salen**:
   - la fila «cuestionarios · reacción · enfoque»: salen como invitación cuando tocan, y siguen en Más, el buscador y ⊕;
-  - el personaje: junto al estado, o debajo;
+  - **el personaje sale de Hoy** (tu respuesta a P-10); su lugar lo ocupa N-28;
   - «pasar a la semana corta»: a Apariencia y al buscador.
 
   En el Día de otra fecha no salen los tres botones.
@@ -927,18 +936,42 @@ Cada propuesta dice qué cambia en palabras simples. El detalle técnico es una 
 - **Cambia lo que se guarda:** no.
 - **Cómo se comprueba:** captura del miércoles de Ana.
 
-### N-18 · La noche: el diario antes y lo largo después
-- **Problema:** E-07; P5.
-- **Cambio:**
-  - Orden: hábitos → ánimo y cuerpo → **diario** → contexto → predicción → **«Cómo estás ahora»** → sellar.
-  - Abajo, plegado: obras de hoy, foto, «lectura del día», lo mejor y lo peor, hitos, «privado de este día».
-  - La foto del día se elige con un botón visible («elegir como foto del día»), no solo con toque largo (P7).
-- **Dónde:** `ui/pantallas/Dia.kt:420-545`, `:765-768`.
-- **Riesgo:** **metodológico**. El orden de las preguntas puede cambiar las respuestas, y mover el contexto después del diario puede cambiar qué se marca (capítulo 3, sección 3.7; H-2-11 sobre lo que se ve al responder). Hay que anotar la versión en el Apéndice D y, si se quiere, comparar antes y después.
+### N-18 · La noche, ordenada con el mayor rigor posible
+- **Problema:** E-07; P5. Tu respuesta a P-8: «de la forma que se consiga el mayor rigor científico».
+- **El problema de fondo:** cada pregunta de la noche puede cambiar las respuestas que vienen después. Hoy el orden es: hábitos → ánimo y cuerpo → contexto → diario → obras → foto → predicción → lo opcional → «Cómo estás ahora» → sellar. Tiene tres problemas:
+  1. **«Cómo estás ahora» va al final**, después de recordar todo el día y de escribir el diario. Recordar a propósito lo que te pasó cambia el ánimo del momento; de hecho, es una forma habitual de inducir un ánimo en el laboratorio (Westermann et al., 1996). Además, ponerle nombre a lo que sientes al escribir baja la intensidad de la emoción (Lieberman et al., 2007). Así, el «cierre» no mide cómo estabas al cerrar el día, sino cómo quedaste después de repasarlo y escribirlo. Es justo lo que este dato quiere evitar (capítulo 3, sección 3.7.5: «un dato momentáneo comparable entre días»).
+  2. **Los hábitos van antes de la valencia del día.** Cuando se pregunta algo específico antes de un juicio general («¿cumpliste tus hábitos?» antes de «¿qué tan agradable fue el día?»), lo específico se mete en el juicio general o se excluye de él. Con eso cambia la relación entre las dos respuestas (Schwarz, Strack y Mai, 1991). Para el análisis importa: el panel cruza la valencia con los hábitos.
+  3. **Mientras eliges la valencia ves los valores de tus avisos de ese día** («avisos = 09:40→5»). Es un ancla (H-2-11).
+- **Cambio (orden nuevo, siempre el mismo):**
+  1. **«Cómo estás ahora»** (la cuadrícula), lo primero, antes de repasar nada. Solo cuando la hoja es la del día lógico de hoy. En un día pasado no aparece, como propone H-2-8: si no, se guardaría «ahora» con la fecha de otro día.
+  2. **Ánimo y cuerpo del día**: valencia, activación y dolor. Es el juicio general, antes de cualquier pregunta específica. La línea de los avisos solo se muestra **después** de elegir la valencia (H-2-11), y la activación usa una paleta que no sugiere «bueno o malo» (H-2-11).
+  3. **Predicción de mañana**, junto al juicio del día y antes de escribir.
+  4. **Contexto** (casillas de hechos).
+  5. **Hábitos** (casillas de hechos).
+  6. **Diario** (texto libre, lo que más mueve el ánimo) y presencias.
+  7. Plegado, en este orden fijo: lectura del día, lo mejor y lo peor, hitos, obras de hoy, foto del día (con un botón visible «elegir», P7), «privado de este día →».
+  8. Sellar.
+- **Por qué este orden y no otro:** no hay un orden libre de efectos. Si el ánimo del momento va primero, puede teñir el juicio del día; es el efecto de usar el ánimo como información (Schwarz y Clore, 1983). Se elige proteger el dato **momentáneo**, porque ese es el único fin del cierre. El juicio del día es retrospectivo y el ánimo del momento ya lo tiñe en cualquier orden. El mismo artículo de Schwarz y Clore encontró que, cuando la persona se fija en su ánimo actual, este pesa menos en el juicio. Es una **[Aproximación]**: viene de estudios de encuestas y de laboratorio, no de una prueba con esta app. La forma de saberlo en tus datos es comparar los dos tramos (abajo).
+- **Lo que hace riguroso el cambio:**
+  - **El orden queda fijo**: «solo lo que falta» oculta lo ya contestado, pero no reordena.
+  - **Cada día guarda con qué orden se llenó**: un campo `Dia.version_noche` (1 = el orden de hoy; 2 = el nuevo). Así se separan los tramos en R, igual que `ventana_pantalla` en la 10b.
+  - **El Apéndice D anota la versión** en que entró.
+- **Dónde:** `ui/pantallas/Dia.kt:420-545` (orden), `:457-468` (avisos después de la valencia), `:765-768` (foto); `ui/pantallas/Lote2.kt:494-507` (`BloqueCierre` solo hoy); `ui/Componentes.kt` (`Escala` con otra paleta para la activación).
+- **Riesgo:** costumbre, porque llenarás la noche en otro orden. Metodológico: es un cambio a propósito y queda medido por `version_noche`.
 - **Esfuerzo:** chico.
-- **Paper:** **sí**: capítulo 3, sección 3.7.1 (qué contiene y en qué orden), y H-NAV-9.
-- **Cambia lo que se guarda:** no.
-- **Cómo se comprueba:** captura de la noche en los tres temas; el diario debe quedar en el primer alto.
+- **Paper:** **sí**:
+  - capítulo 3, secciones 3.7.1 (contenido y orden), 3.7.5 (el cierre pasa al principio y solo para hoy) y 3.4;
+  - H-2-8 y H-2-11 se resolverían;
+  - H-NAV-9;
+  - Apéndice A (`version_noche`);
+  - referencias: las cuatro de abajo, ya comprobadas.
+- **Cambia lo que se guarda:** **sí**, `Dia.version_noche`. Sube `SCHEMA_V` (se junta con las demás marcas, § 10), y cambian el diccionario y R (`vm_dias`, `vm_panel`).
+- **Cómo se comprueba:** captura de la noche en dos temas (la cuadrícula arriba y los avisos ocultos hasta elegir); una prueba de que el cierre no se guarda en un día pasado.
+- **Referencias** (DOI comprobados en la sesión con Crossref):
+  - Lieberman, M. D., Eisenberger, N. I., Crockett, M. J., Tom, S. M., Pfeifer, J. H. y Way, B. M. (2007). Putting feelings into words. *Psychological Science, 18*(5), 421-428. https://doi.org/10.1111/j.1467-9280.2007.01916.x
+  - Schwarz, N. y Clore, G. L. (1983). Mood, misattribution, and judgments of well-being: Informative and directive functions of affective states. *Journal of Personality and Social Psychology, 45*(3), 513-523. https://doi.org/10.1037/0022-3514.45.3.513
+  - Schwarz, N., Strack, F. y Mai, H.-P. (1991). Assimilation and contrast effects in part-whole question sequences: A conversational logic analysis. *Public Opinion Quarterly, 55*(1), 3-23. https://doi.org/10.1086/269239
+  - Westermann, R., Spies, K., Stahl, G. y Hesse, F. W. (1996). Relative effectiveness and validity of mood induction procedures: A meta-analysis. *European Journal of Social Psychology, 26*(4), 557-580. https://doi.org/10.1002/(SICI)1099-0992(199607)26:4<557::AID-EJSP769>3.0.CO;2-4
 
 ### N-19 · Análisis: los resultados primero
 - **Problema:** E-32; P5.
@@ -988,7 +1021,11 @@ Cada propuesta dice qué cambia en palabras simples. El detalle técnico es una 
   - **Acciones** además de pantallas: «corregir sueño», «quitar siesta», «suplemento de ayer», «cambiar hora de un momento», «borrar gasto», «aviso de cumpleaños», «día lógico / madrugada». Cada una lleva al lugar exacto, por ejemplo al Día de ayer con `EditarSueno` abierto.
   - Las fichas @persona y #tema del Resumen semanal llevan su texto al buscador.
 - **Dónde:** `ui/pantallas/Pantallas.kt:36-120`; `ui/pantallas/Semana.kt:131-132`.
-- **Riesgo:** **privacidad**. Hoy el buscador ya encuentra «Privado» con las palabras «impulso recaída libido medicamentos» (`Pantallas.kt:83`). Son nombres de función, no datos, pero **confírmalo** (pregunta P-2). Ninguna acción nueva lleva a datos privados fuera de Privado.
+- **Riesgo:** **privacidad**. Tu respuesta a P-2: que el buscador encuentre todo, no solo «Privado». Lo entiendo así:
+  - el buscador indexa **todas las pantallas y acciones**, también las de Privado, con sus palabras de función («impulso», «recaída», «medicamentos», «registrar un impulso»…);
+  - **lo que escribiste** en lo privado (textos, detonantes) no sale en los resultados fuera de Privado, porque lo prohíbe la regla de la entrega 10a (`data/Privado.kt`, vigilada por `PrivadoPrueba`).
+
+  Si querías que también se busque ese contenido, dímelo: habría que cambiar esa regla a propósito.
 - **Esfuerzo:** medio.
 - **Paper:** no.
 - **Cambia lo que se guarda:** no.
@@ -1005,7 +1042,7 @@ Cada propuesta dice qué cambia en palabras simples. El detalle técnico es una 
   - «Guía» → «Cómo usar la app» y «Guía científica» → «Cómo leer tus datos»;
   - la clave de la guía de Privado se arregla, para que tenga su «?»;
   - el Día tiene su «?».
-  - **Temas**: el título en español se ve siempre, igual de grande; el nombre del tema queda como adorno (pregunta P-1).
+  - **Temas** (tu respuesta a P-1): el nombre del tema y el nombre en español van **en la misma línea y del mismo tamaño**, por ejemplo «Quaestiones · Análisis». El del tema va con **más contraste** (color principal y peso medio); el español, un poco más tenue. Hoy el español sale abajo, en letra pequeña de comentario (`Estilo.kt:50-61`).
 - **Dónde:** `ui/pantallas/Dia.kt:164-169`; `ui/QuickActivity.kt:211`; `res/xml/accesos.xml` (solo el rótulo); `widget/Widgets.kt:170`; `avisos/Avisos.kt:173`; `ui/pantallas/Biblioteca.kt:190`; `ui/pantallas/Analisis.kt:101`; `ui/pantallas/Mas.kt:121`, `:141`; `data/GuiaUso.kt:85-91`; `ui/Estilo.kt:65-73`.
 - **Riesgo:**
   - Rutas: **ninguna cambia**. El acceso directo conserva el id `diario` y solo cambia su rótulo.
@@ -1034,7 +1071,7 @@ Cada propuesta dice qué cambia en palabras simples. El detalle técnico es una 
 - **Problema:** E-25; anexo A, § 4.1.
 - **Cambio:**
   - **Quitar** el código muerto: `PantallaHall`, `RecuadroHall`, `CentroEntender`, `Portada` y la rama «Sueño» de `Dia.kt:144`.
-  - **Reutilizar** `PantallaMomentos` (ruta `momentos`, que se queda) como «Todos tus registros», con la lista editable de 30 días y filtro por día, alcanzable desde Diario y el buscador. O quitarla también (pregunta P-4).
+  - **`PantallaMomentos`**: decidir entre revivirla o quitarla (pregunta P-4, explicada otra vez en § 13). Mi recomendación es quitarla: con N-26, todo se corrige desde el Día de cada fecha. La ruta `momentos` se queda como desvío a la pestaña Diario, como hoy.
   - En Tu gente, «+ persona» sin mención previa, con nombre, relación y nacimiento.
 - **Dónde:** `ui/pantallas/Hall.kt:365-510`; `ui/pantallas/Explorar.kt:432`; `ui/pantallas/Hoy.kt:617-623`; `ui/pantallas/Momentos.kt:57-101`; `ui/pantallas/Gente.kt`; `data/Personas.kt`.
 - **Riesgo:**
@@ -1082,6 +1119,75 @@ Cada propuesta dice qué cambia en palabras simples. El detalle técnico es una 
 - **Cambia lo que se guarda:** no.
 - **Cómo se comprueba:** Accessibility Scanner en el teléfono; capturas.
 
+### N-28 · «Tus últimos días» en lugar del personaje
+- **Problema:** tu respuesta a P-10. El personaje no se usa y no se ve bien; quieres algo **dinámico, que salga de tus datos** y que mejore mucho cómo se ve Hoy. Además sirve a P3 (ver de un vistazo qué días quedaron vacíos) y a E-22.
+- **Cambio:** una franja a todo lo ancho, de unos 140 dp de alto, justo debajo de la frase. Muestra **tus últimos 14 días** como 14 «hilos» verticales:
+  - **Color**: la valencia de ese día, con la misma paleta divergente del Calendario (`Tonos.valencia`): tonos fríos para los días malos, cálidos para los buenos.
+  - **Alto**: las horas de sueño de esa noche frente a tu normal. Más alto, más sueño.
+  - **Remate**: una pequeña huella (el sello que ya existe, `VistaHuella`) si el día quedó sellado; un punto si tiene diario sin sellar.
+  - **Días sin nada**: solo el contorno, hueco. Así el jueves y el viernes de Ana se ven vacíos sin leer nada.
+  - **Hoy**: el último hilo se va llenando durante el día (sueño → ánimo → diario), como los anillos del widget.
+  - **Debajo, una línea**: «esta semana: ánimo 4,6 (↑0,3) · sueño 6 h 50 · 2 días sin llenar →».
+  - **Al tocar** un hilo se abre ese día (apilado, con «atrás»). La línea de abajo lleva a «ponerte al día» (N-09).
+  - **Cada tema lo dibuja a su manera**, con los recursos de dibujo que ya tiene (`ui/Decoracion.kt` y `Tonos`, en `ui/Tema.kt`): en medieval, franjas iluminadas con remate dorado; en ciber, barras con líneas de escaneo; en romano, columnas.
+- **Alternativa más simple** (si la franja no convence en las capturas): solo **la huella del día** creciendo con lo que llenas, al lado de la fecha.
+- **Dónde:** un componente nuevo `FranjaDias` en `ui/pantallas/Hoy.kt`. `TarjetaPersonaje` sale de `ui/pantallas/Dia.kt:290`. En Apariencia, el interruptor «Personaje» (`ui/pantallas/Sistema.kt:315`) pasa a ser «Tus últimos días».
+- **Riesgo:**
+  - Privacidad: usa solo la valencia, el sueño y si hay diario. Nada privado.
+  - **Metodológico (reactividad)**: ver todos los días tu historial de ánimo puede influir en cómo calificas el día (capítulo 3, sección 3.14). El Calendario ya lo muestra, pero esto lo pone en primer plano. Para no influir en la noche, la franja **no aparece en la hoja de la noche** y el hilo de hoy no muestra el color hasta que el día está sellado.
+- **Esfuerzo:** medio (es sobre todo diseño). Conviene revisar las capturas en 3 o 4 temas antes de pasarlo a `main`.
+- **Paper:** capítulo 3, sección 3.14 (reactividad), una línea con la fecha de la versión.
+- **Cambia lo que se guarda:** no.
+- **Cómo se comprueba:** capturas de Hoy con los datos de Ana en medieval, romano, ciber y gótico.
+
+### N-29 · Gastos en dos o tres toques, con subcategorías e ingresos
+- **Problema:** tu respuesta a P-7 y E-24. La forma actual es limitada:
+  - el gasto rápido pide siempre escribir el monto;
+  - no hay subcategorías;
+  - los ingresos solo se anotan en Vida → Dinero;
+  - las categorías propias existen, pero escondidas en Más → Datos (`ui/pantallas/Sistema.kt:728-736`).
+- **Cambio:**
+  1. **Subcategorías con monto habitual.** Cada categoría puede tener subcategorías, por ejemplo Comida → Café, Comida → Súper, Transporte → Camión. Cada subcategoría tiene un **monto habitual**: por omisión, el monto que más se repite en tus últimos 10 gastos de esa subcategoría; se puede fijar a mano.
+  2. **Frecuentes arriba.** La hoja de gasto abre con una fila de **frecuentes**: tus 6 subcategorías más usadas, con su monto («☕ Café $55», «🚌 Camión $12»). Tocar una registra el gasto en el acto y muestra «Café $55 registrado · cambiar monto · deshacer».
+     - Camino: **⊕ → Gasto → Café = 3 toques**, sin escribir.
+     - Si no es frecuente: categoría → subcategoría → «Registrar» (4-5 toques, sin escribir si tiene monto habitual).
+     - Escribir solo cuando el gasto es muy específico: «otro monto» y la nota siguen ahí, debajo.
+  3. **Ingresos en la misma hoja.** Arriba, un selector **«Gasto | Ingreso»**. Con «Ingreso» cambian las categorías (sueldo, beca…) y el botón dice **«Registrar ingreso»**. En ⊕ el botón pasa a llamarse **«Gasto o ingreso»**.
+     - Es la mejor de tus dos opciones: un botón aparte en ⊕ ocuparía lugar en el menú de todos los días para algo que pasa pocas veces al mes, y la misma hoja te deja el mismo camino para las dos cosas.
+  4. **Categorías y subcategorías propias, a la vista.** En Gastos, «editar categorías»: agregar, renombrar, ordenar y quitar categorías y subcategorías, y fijar el monto habitual. Al renombrar, la app pregunta si cambia también los gastos anteriores. También estará en el buscador («categorías de gasto»). Se quita el editor escondido de Más → Datos.
+  5. **El widget de gasto** muestra tus 6 frecuentes con su monto: **1 toque** registra.
+  6. **Gastos por subcategoría**: en Gastos, el mes por categoría se despliega por subcategoría («Comida $2,300 → Café $620»). Resuelve E-24.
+- **Dónde:**
+  - `ui/QuickActivity.kt:618-662` (`GastoRapido`);
+  - `ui/pantallas/Gastos.kt`;
+  - `widget/Widgets.kt:180-200`;
+  - `data/Modelo.kt` (`Gasto.subcategoria`, `Config.subcategorias`);
+  - `ui/pantallas/Sistema.kt:728-736`;
+  - `data/Exportar.kt:357` (columna nueva), `data/Diccionario.kt`;
+  - `ui/pantallas/Pantallas.kt`.
+- **Riesgo:**
+  - Datos: los gastos viejos quedan sin subcategoría. Se puede ofrecer una sola vez: «tienes 40 gastos con la nota "café": ¿pasarlos a Comida → Café?».
+  - Métodos: el panel solo usa `gasto_total` y `gasto_imprevisto` (`ciencia/Estadistica.kt:367-368`), que no cambian. Registrar con un toque probablemente hará que se anoten **más** gastos pequeños: `gasto_total` puede subir a partir de esa versión sin que gastes más (H-NAV-9).
+  - Doble toque: el registro de un toque necesita su «deshacer» y no repetirse si se toca dos veces en menos de 2 s.
+- **Esfuerzo:** medio.
+- **Paper:** Apéndice A (columna `subcategoria` de `vm_gastos.csv`) y H-NAV-9 (la completitud cambia).
+- **Cambia lo que se guarda:** **sí**: `Gasto.subcategoria` y `Config.subcategorias` (con el monto habitual). Sube `SCHEMA_V`; cambian el diccionario y, si lee las columnas por nombre, `vestigium.R`.
+- **Cómo se comprueba:** capturas de la hoja de gasto (gasto e ingreso) y de Gastos por subcategoría; una prueba del monto habitual.
+
+### N-30 · La fecha de anotación queda en todo registro (P12)
+- **Problema:** tu respuesta a P-3: que quede marcado lo anotado para otra fecha, y también **cuándo** se anotó. H-NAV-9, H-2-9.
+- **Cambio:** cada registro guarda, además de su hora (cuándo pasó), **cuándo lo anotaste** y, si se corrige, **cuándo lo corregiste**:
+  - `ts_creado` en momentos, tomas, gastos, ingresos, consumos y tramos (el día y las notas ya lo tienen: `Dia.ts_creado`, `Nota.creada`);
+  - `ts_editado` en momentos (H-2-9), gastos e ingresos;
+  - lo que ya existía antes de la versión queda sin marca (vacío), como en la 10b.
+- **En R:** con las dos horas se calcula el retraso de cada registro. La regla de «anotado tarde» se decide en el análisis, no en la app. Por ejemplo: más de 60 minutos después de su hora, o en otro día lógico (umbral **[Diseño propio]**, que se documenta en el paper). `vestigium.R` suma una función para filtrar o separar los registros tardíos.
+- **Dónde:** `data/Modelo.kt` (campos nuevos), `data/Repo.kt` (`guardar*` pone `ts_creado` si viene vacío), `data/Exportar.kt`, `data/Diccionario.kt`, `app/src/main/assets/vestigium.R`, `data/Fusion` (conservar la marca al restaurar).
+- **Riesgo:** ninguno para lo privado (la marca no dice nada del contenido). Datos: los registros viejos no tienen marca; R los trata como «sin dato», no como «a tiempo».
+- **Esfuerzo:** chico en la app, medio en R y en el paper.
+- **Paper:** capítulo 3 (secciones 3.4 y 3.15), Apéndices A y C, H-2-9 (se resolvería) y H-NAV-9.
+- **Cambia lo que se guarda:** **sí** (sube `SCHEMA_V`).
+- **Cómo se comprueba:** pruebas de `Repo` (la marca se pone al crear, no cambia al editar y sobrevive a la fusión de respaldos); una prueba de exportación con las columnas nuevas.
+
 ### Fuera de la aprobación: errores que conviene corregir ya
 
 Son fallas del código, no decisiones de diseño. Están en `docs/paper/hallazgos.md`:
@@ -1098,13 +1204,14 @@ Pueden ir en la primera entrega de código o antes, en una rama aparte.
 ```
 BARRA (sin cambios de rutas): Hoy · Diario · ＋ · Vida · Análisis   (toques largos iguales, explicados en la guía)
 
-HOY / DÍA (título «Hoy» o «Día · fecha»)
+HOY / DÍA (título «Hoy» o «Día · fecha»; con el tema: «Del día · Hoy», los dos del mismo tamaño)
  ├─ fecha y estado (‹ › hoy); en la madrugada, «va al lunes 26»
+ ├─ frase del día (arriba, como ahora)
+ ├─ Tus últimos días: 14 hilos (color = ánimo, alto = sueño, huella = sellado, hueco = sin llenar) → tocar abre el día
  ├─ Te falta hoy: ayer y días sin abrir (→ ponerte al día) · sueño · avisos · experimento sí/no · lo de anoche ·
  │                quién es @x · N datos que faltan
  ├─ Llenar el día (compacto, a toda hora)
  ├─ Tablero compacto (4 cifras tocables → su corrección) · ver todo
- ├─ frase (una línea)
  ├─ ▸ Tu día: línea de 24 h + lista por hora (momentos, consumos, tramos, gastos, tomas, notas, visitas), todo tocable
  │           + «＋ agregar a este día…»
  ├─ ▸ Sueño (calidad, sueño recordado, corregir horas y siestas)
@@ -1126,7 +1233,10 @@ MÁS (⚙ «Más», 48 dp): índice 1-4 · ★ atajos
 | Qué | Antes | Después | Cómo se encuentra |
 |---|---|---|---|
 | Cuestionarios, reacción, enfoque (botones) | Hoy, debajo del Tablero | invitación en «Te falta hoy» cuando tocan; Más → 3 / 1; ⊕ (enfoque) | buscador |
-| Personaje | Hoy, primer alto | junto al estado, o más abajo | Apariencia |
+| Personaje | Hoy, primer alto | sale de Hoy; en su lugar, «Tus últimos días» (N-28) | Apariencia («Tus últimos días») |
+| Categorías de gasto | Más → Datos (escondido) | Gastos → «editar categorías» | buscador «categorías de gasto» (nuevo) |
+| Ingresos | Vida → Dinero → «+ Ingreso» | además en ⊕ → «Gasto o ingreso» → «Ingreso» | buscador |
+| Pantalla Momentos | sin acceso | según P-4 | — |
 | Pasar a la semana corta | al fondo de Hoy | Apariencia | buscador «semana corta» (nuevo) |
 | Respuesta del experimento | al fondo de Hoy | «Te falta hoy» | — |
 | Momentos, enfoque y siestas, 24 h | tres secciones de Hoy | «Tu día» | — |
@@ -1140,35 +1250,25 @@ MÁS (⚙ «Más», 48 dp): índice 1-4 · ★ atajos
 
 ## 10. Entregas sugeridas
 
-Cada una se compila y se revisa por separado: una rama, capturas y luego `main`. Van en orden de impacto.
+Cada una se compila y se revisa por separado: una rama, capturas y luego `main`. Van en orden de impacto. Con tus respuestas, los cambios a lo que se guarda se juntan en **una sola entrega (NE)**, para subir `SCHEMA_V` una sola vez: de 13 a 14. Las entregas de pantallas que vienen después ya encuentran los campos listos.
 
 | Entrega | Propuestas | Por qué en este orden | ¿Sube `SCHEMA_V`? |
 |---|---|---|---|
-| **N0 · Errores** | correcciones de H-NAV-5, H-NAV-6 y H-NAV-8 | Son fallas: no esperan decisiones de diseño | No |
-| **N1 · Corregir donde se ve** | N-01, N-02, N-03, N-06, N-13 | Resuelve tus ejemplos 1 y 3 y casi todo el «no veo dónde se corrige» | Sí, si N-03 lleva `ts_editado` |
-| **N2 · Ayer y fechas** | N-07, N-08, N-09, N-10, N-11, N-12 | Resuelve tu ejemplo 2 y los días sin abrir la app | Sí, si se marca lo anotado tarde (P12) |
-| **N3 · El Día como centro** | N-17, N-26, N-15 | Junta N1 y N2 en un solo lugar | No (lo hereda de N1 y N2) |
-| **N4 · Hoy y pestañas menos saturadas** | N-16, N-18, N-19, N-20 | Lo más visible; después de que el Día ya corrija | No |
-| **N5 · Más, buscador y nombres** | N-21, N-22, N-23, N-25 | Encontrar lo raro | No |
-| **N6 · Sueño, lugares, gestos y accesibilidad** | N-04, N-05, N-24, N-27 (N-14 si la quieres) | Lo más grande y lo que toca los sensores | Sí (N-04; N-05 y N-14 según la decisión) |
-
-Si alguna entrega sube `SCHEMA_V`, conviene juntar en ella **todas** las marcas nuevas, para subirlo una sola vez.
+| **N0 · Errores** | correcciones de H-NAV-5, H-NAV-6 y H-NAV-8; el nombre del perfil en `Capturas.kt` (P-11) | Son fallas: no esperan decisiones de diseño | No |
+| **NE · Esquema 14** | los campos de N-30 (`ts_creado`, `ts_editado`), N-18 (`version_noche`), N-29 (`subcategoria`, `subcategorias`), N-04 (siestas descartadas) y N-14 (papelera); exportación, diccionario, `vestigium.R` y paper | Una sola subida de esquema, con sus pruebas, antes de las pantallas | **Sí, a 14** |
+| **N1 · Corregir donde se ve** | N-01, N-02, N-03, N-06, N-13 | Resuelve tus ejemplos 1 y 3 y casi todo el «no veo dónde se corrige» | No (usa NE) |
+| **N2 · Ayer y fechas** | N-07, N-08, N-09, N-10, N-11, N-12 | Resuelve tu ejemplo 2 y los días sin abrir la app | No (usa NE) |
+| **N3 · El Día como centro** | N-17, N-26, N-15 | Junta N1 y N2 en un solo lugar | No |
+| **N4 · Hoy, la noche y las pestañas** | N-16, N-28, N-18, N-19, N-20 | Lo más visible, con el orden riguroso de la noche | No (usa NE) |
+| **N5 · Dinero** | N-29 | Gastos en dos o tres toques, subcategorías e ingresos | No (usa NE) |
+| **N6 · Más, buscador y nombres** | N-21, N-22, N-23, N-25 | Encontrar lo raro | No |
+| **N7 · Sueño, lugares, papelera, gestos y accesibilidad** | N-04, N-05, N-14, N-24, N-27 | Lo más grande y lo que toca los sensores | No (usa NE), salvo que N-05 recuerde visitas quitadas |
 
 ---
 
 ## 11. Preguntas para el autor
 
-1. **P-1 · Nombres por tema.** ¿El título en español debe verse siempre, igual de grande, con el nombre del tema como adorno? ¿O prefieres que el tema mande, como ahora (N-23)?
-2. **P-2 · Privado en el buscador.** Hoy el buscador encuentra «Privado» con las palabras «impulso, recaída, libido, medicamentos», y ⊕ muestra «Impulso». Son nombres de función, no datos. ¿Lo aceptas o prefieres que el buscador solo responda a «privado»?
-3. **P-3 · Lo anotado tarde (P12).** ¿Quieres que los registros de ánimo, las tomas y las notas anotados para otra fecha queden marcados? Implica subir `SCHEMA_V` y una columna nueva en R. Sin marca, se mezclan con los momentáneos.
-4. **P-4 · Pantalla Momentos.** ¿La reutilizamos como «Todos tus registros», editable, o la quitamos?
-5. **P-5 · Hoy recuerda el día abierto.** ¿Te sirve que la pestaña Hoy se quede en la fecha que abriste, o prefieres que siempre vuelva a hoy (N-12)?
-6. **P-6 · Fuerza a mano.** El gimnasio solo entra por MacroFactor (E-06, E-17). ¿Lo quieres así, o una forma mínima de anotar series y corregirlas en la app?
-7. **P-7 · Café y otras subcategorías.** ¿Te sirve buscar o sumar gastos por la nota («café»), o prefieres categorías propias (E-24)?
-8. **P-8 · La noche.** ¿Te parece bien el orden de N-18 (diario antes del contexto; «Cómo estás ahora» antes de lo opcional)? Cambia el orden de las preguntas y hay que anotarlo en el paper.
-9. **P-9 · Papelera.** ¿Quieres la papelera de 7 días (N-14) o basta con Deshacer en todo (N-13)?
-10. **P-10 · Personaje y frase.** ¿Los quieres en el primer alto de Hoy, o pueden bajar o ir en una línea?
-11. **P-11 · Un nombre real en las capturas.** `app/src/test/.../Capturas.kt:525` usa como nombre del perfil uno que parece real. ¿Lo cambio por uno inventado en la próxima entrega de código?
+Ya las contestaste: tus respuestas están en el § 13. Solo queda pendiente **P-4**, que explico otra vez allí.
 
 ---
 
@@ -1176,31 +1276,39 @@ Si alguna entrega sube `SCHEMA_V`, conviene juntar en ella **todas** las marcas 
 
 ### Hoy, a mediodía: antes y después (primer alto, unos 2200 px)
 
+Con tus respuestas a P-1 y P-10: el nombre del tema y el español en una línea, la frase arriba y «Tus últimos días» en lugar del personaje.
+
 ```
 ANTES                                   DESPUÉS
 ┌──────────────────────────────┐        ┌──────────────────────────────┐
-│ Día            🔍 ⚙ ☾ (emb)  │        │ Hoy · martes 27      🔍 ⚙ ☾ │
-│ xxvij de otubre ▾            │        │ ‹ guardado · racha 30      › │
-│ martes · hoy · ◑             │        ├──────────────────────────────┤
-│ ‹ estado = guardado        › │        │ TE FALTA HOY                 │
+│ Día            🔍 ⚙ ☾ (emb)  │        │ Del día · Hoy        🔍 ⚙ ☾  │
+│ xxvij de otubre ▾            │        │ martes 27 de octubre ▾       │
+│ martes · hoy · ◑             │        │ ‹ guardado · racha 30      › │
+│ ‹ estado = guardado        › │        ├──────────────────────────────┤
+├──────────────────────────────┤        │ Sentencia del día            │
+│ Sentencia del día            │        │ Sic stude quasi semper…      │
+│ Sic stude quasi semper…      │        │ Estudia como si fueras a…  ♡ │
+│ Estudia como si fueras a…    │        ├──────────────────────────────┤
+│ — Isidoro de Sevilla      ♡  │        │ TUS ÚLTIMOS DÍAS             │
+├──────────────────────────────┤        │ ▌▐▌▐▌▌▐▌▐▌ ▌ ┆ ┆ ▏            │
+│ (personaje) ¿Qué haremos hoy?│        │ (color=ánimo, alto=sueño,    │
+├──────────────────────────────┤        │  ┆ = jue y vie vacíos, ▏= hoy)│
+│ LO QUE RESTA                 │        │ semana: ánimo 4,6 ↑ · 2 días │
+│ [Calidad del sueño →]        │        │ sin llenar →                 │
+│ si tienes tiempo: WHO-5 →    │        ├──────────────────────────────┤
+│ reacción → brújula → hoy no  │        │ TE FALTA HOY                 │
 ├──────────────────────────────┤        │ [Calidad del sueño →]        │
-│ Sentencia del día            │        │ [Experimento: ¿leíste? sí|no]│
-│ Sic stude quasi semper…      │        │ [Faltan jueves y viernes →]  │
-│ Estudia como si fueras a…    │        │ ¿quién es @luis? · 2 datos → │
-│ — Isidoro de Sevilla      ♡  │        ├──────────────────────────────┤
-├──────────────────────────────┤        │ LLENAR EL DÍA  ○ánimo ○diario│
-│ (personaje) ¿Qué haremos hoy?│        │ ○predicción · hábitos 0/2 [▶]│
-├──────────────────────────────┤        ├──────────────────────────────┤
-│ LO QUE RESTA                 │        │ sueño 7.0h›  ánimo —›        │
-│ [Calidad del sueño →]        │        │ pasos 6,400› gasto $55›      │
-│ si tienes tiempo: WHO-5 →    │        │ ver todo                     │
-│ reacción → brújula → hoy no  │        ├──────────────────────────────┤
-├──────────────────────────────┤        │ «Sic stude…» — Isidoro    ♡ ›│
-│ TABLA (empieza aquí, abajo)  │        ├──────────────────────────────┤
-└──────────────────────────────┘        │ ▸ Tu día · 4 cosas con hora  │
-  «Llenar el día» ≈ y 3800              │ ▸ Sueño  ▸ Hace un año …     │
-  experimento ≈ casi al fondo           └──────────────────────────────┘
+│ TABLA (empieza aquí, abajo)  │        │ [Experimento: ¿leíste? sí|no]│
+└──────────────────────────────┘        │ [Faltan jueves y viernes →]  │
+  «Llenar el día» ≈ y 3800              ├──────────────────────────────┤
+  experimento ≈ casi al fondo           │ LLENAR EL DÍA  ○ánimo ○diario│
+                                        │ ○predicción · hábitos 0/2 [▶]│
+                                        └──────────────────────────────┘
+                                          debajo: Tablero compacto (4 cifras ›),
+                                          ▸ Tu día · ▸ Sueño · ▸ Hace un año …
 ```
+
+Con la frase arriba y la franja, el Tablero compacto quedaría justo en el borde del primer alto (unos 2050 a 2400 px, según el largo de la frase y el tema). Si prefieres verlo sin bajar, la frase podría mostrarse en una línea y abrirse al tocarla. Lo comprobaré en las capturas.
 
 ### Día del miércoles: «Tu día», todo tocable (N-17, N-26)
 
@@ -1235,6 +1343,39 @@ ANTES                                   DESPUÉS
 │            [siguiente día →] │
 └──────────────────────────────┘
 ```
+
+---
+
+## 13. Tus respuestas (27 oct 2026) y qué cambian
+
+| Pregunta | Tu respuesta | Qué cambia |
+|---|---|---|
+| **P-1** · Nombres por tema | Los dos del mismo tamaño y en la misma línea; el del tema con más contraste, el español un poco menos | N-23 (títulos «Quaestiones · Análisis»), § 9 y el boceto de Hoy |
+| **P-2** · Privado en el buscador | Que salga todo, no solo «Privado» | N-22: el buscador indexa todas las pantallas y acciones, también las de Privado con sus palabras. **Lo que escribiste en lo privado sigue sin salir fuera de Privado** (regla de la 10a). Si querías también ese contenido, dímelo |
+| **P-3** · Marcar lo anotado tarde | Sí, y que se guarde también la fecha de anotación | Propuesta nueva **N-30** (`ts_creado` y `ts_editado`); entra en la entrega NE (esquema 14) |
+| **P-4** · Pantalla Momentos | No quedó clara | Explicada abajo |
+| **P-5** · Hoy recuerda el día abierto | Que siempre vuelva a hoy | N-12 tal cual |
+| **P-6** · Fuerza a mano | Por ahora, que dependa de MacroFactor | E-06 y E-17 quedan como están, por decisión tuya. No hay propuesta |
+| **P-7** · Gastos | La forma actual es muy limitada: subcategorías (Comida → Café), dos o tres toques sin escribir, ingresos a la mano y categorías propias | Propuesta nueva **N-29**. Para los ingresos elegí el selector «Gasto \| Ingreso» dentro de la misma hoja, con el botón «Registrar ingreso» (razones en N-29) |
+| **P-8** · Orden de la noche | El que dé más rigor científico | **N-18 reescrita**: el cierre va primero; después el juicio general del día; los avisos se ven solo después de elegir; las casillas de hechos y el diario al final; el orden queda fijo y se guarda `version_noche`. Lleva 4 referencias comprobadas |
+| **P-9** · Papelera | Sí | N-14 aprobada; entra en NE y N7 |
+| **P-10** · Personaje y frase | El personaje se ve feo y no lo usas; quieres algo dinámico con tus datos que mejore mucho el aspecto; la frase, arriba | Propuesta nueva **N-28** («Tus últimos días»); el personaje sale de Hoy; la frase se queda arriba (N-16) |
+| **P-11** · Nombre en las capturas | Da igual | Lo cambio por uno inventado en la entrega N0, porque las reglas del repositorio piden no subir nombres reales |
+
+### P-4, otra vez y más claro
+
+Hay una pantalla vieja, **«Momentos»**, que antes era una pestaña. Lista tus registros de ánimo y momentos de los últimos 30 días, y tocar uno lo abre para corregirlo o borrarlo. **Hoy ningún botón lleva a ella**: quedó escondida cuando la pestaña pasó a ser «Diario». Su código sigue en la app (`ui/pantallas/Momentos.kt:57-101`).
+
+Las opciones:
+- **A · Revivirla** como «Todos tus registros», con un botón en Diario y entrada en el buscador. Sería una lista larga, para buscar un momento cuando no recuerdas el día.
+- **B · Quitarla.** Con N-02 y N-26, cada momento se corrige tocándolo en el Día de su fecha. Diario → «Línea de tiempo» ya sirve para buscar por texto, @persona o #tema.
+
+**Recomiendo B**: un solo lugar para corregir (P11) y menos código que mantener. Elige A si a veces buscas un momento sin saber de qué día fue y la línea de tiempo no te basta.
+
+### Lo que falta para empezar
+
+1. Tu elección en **P-4**.
+2. Tu aprobación de las **30 propuestas** (todas o con excepciones) y del **orden de entregas** del § 10. Con eso empiezo por N0 (errores) y NE (esquema 14), cada una en su rama, con capturas antes de pasar a `main`.
 
 ---
 
