@@ -1390,7 +1390,7 @@ Todo está en la rama de trabajo, un commit por entrega, compilado y probado con
 | N4 | N-16, N-18, N-19, N-20, N-28 | `4fd7b52` | run 93, limpio |
 | N5 | N-29 | `8fe90fc` | run 95, limpio |
 | N6 | N-21, N-22, N-23, N-25 | `04391e5`, `0aafdb8` | run 95, limpio |
-| N7 | N-04, N-05, N-14, N-24, N-27 | `1da2f4a` | run 96 |
+| N7 | N-04, N-05, N-14, N-24, N-27 | `1da2f4a` | run 96, limpio |
 
 **Diferencias con lo propuesto** (lo que quedó distinto o fuera):
 - **N-16.** Lo que «Te falta hoy» absorbe (lo de anoche, el experimento, «¿quién es?», los datos que faltan) quedó junto, en ese orden, pero en bloques seguidos y no dentro de la misma tarjeta. Los datos que faltan sí quedaron como contador que se despliega.
