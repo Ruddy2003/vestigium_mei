@@ -253,7 +253,7 @@ fun PantallaNotas(nav: Nav) {
     var tipo by remember { mutableStateOf("idea") }
     var recordar by remember { mutableStateOf<String?>(null) }
     // null = el día lógico de hoy; se puede mover a otro día (N-11).
-    var paraDia by remember { mutableStateOf<String?>(null) }
+    var paraDia by remember { mutableStateOf<String?>(Seleccion.notaPara.also { Seleccion.notaPara = null }) }
     var buscar by remember { mutableStateOf("") }
     var filtro by remember { mutableStateOf("todas") }
     var editando by remember { mutableStateOf<Nota?>(null) }
@@ -293,42 +293,48 @@ fun PantallaNotas(nav: Nav) {
         if (lista.isEmpty()) Vacio(if (Repo.notas.isEmpty()) "Todavía no hay notas." else "Nada con eso.")
         lista.forEach { n -> FilaNota(n, onEditar = { editando = n }) }
     }
-    editando?.let { n ->
-        var t by remember(n.id) { mutableStateOf(n.texto) }
-        var tp by remember(n.id) { mutableStateOf(n.tipo) }
-        var f by remember(n.id) { mutableStateOf(n.fecha) }
-        var rec by remember(n.id) { mutableStateOf(n.recordar_el) }
-        AlertDialog(onDismissRequest = { editando = null }, title = { Text("Editar nota") },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Catalogo.TIPOS_NOTA.forEach { o -> Ficha(o.nombre, tp == o.id) { tp = o.id } }
-                    }
-                    OutlinedTextField(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
-                    Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Ayuda("Del ${Fechas.titulo(f).lowercase()}", Modifier.weight(1f))
-                        Text("cambiar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.clickable { elegirFecha(ctx, f) { f = it } }.padding(6.dp))
-                    }
-                    if (tp == "recordatorio") Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Ficha(rec?.let { "recordar el ${Fechas.corto(it)}" } ?: "¿qué día te aviso?", rec != null) { elegirFecha(ctx, rec) { rec = it } }
-                        if (rec != null) Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.clickable { rec = null }.padding(6.dp))
-                    }
+    editando?.let { n -> DialogoNota(n) { editando = null } }
+}
+
+/** Corregir una nota: texto, tipo, fecha y recordatorio; borrar pide confirmación y deja deshacer (N-11). */
+@Composable
+fun DialogoNota(n: Nota, cerrar: () -> Unit) {
+    val ctx = LocalContext.current
+    val marcas = rememberMarcas()
+    var t by remember(n.id) { mutableStateOf(n.texto) }
+    var tp by remember(n.id) { mutableStateOf(n.tipo) }
+    var f by remember(n.id) { mutableStateOf(n.fecha) }
+    var rec by remember(n.id) { mutableStateOf(n.recordar_el) }
+    AlertDialog(onDismissRequest = { cerrar() }, title = { Text("Editar nota") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Catalogo.TIPOS_NOTA.forEach { o -> Ficha(o.nombre, tp == o.id) { tp = o.id } }
                 }
-            },
-            confirmButton = { TextButton(onClick = {
-                Repo.guardarNota(n.copy(texto = t.trim(), tipo = tp, fecha = f, recordar_el = rec.takeIf { tp == "recordatorio" }, editada = Fechas.ahoraIso()))
-                editando = null
-            }, enabled = t.isNotBlank()) { Text("guardar") } },
-            dismissButton = {
-                var confirmar by remember(n.id) { mutableStateOf(false) }
-                TextButton(onClick = {
-                    if (!confirmar) { confirmar = true; return@TextButton }
-                    Repo.borrarNota(n.id); editando = null; io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
-                }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
-            })
-    }
+                OutlinedTextField(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+                Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Ayuda("Del ${Fechas.titulo(f).lowercase()}", Modifier.weight(1f))
+                    Text("cambiar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable { elegirFecha(ctx, f) { f = it } }.padding(6.dp))
+                }
+                if (tp == "recordatorio") Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Ficha(rec?.let { "recordar el ${Fechas.corto(it)}" } ?: "¿qué día te aviso?", rec != null) { elegirFecha(ctx, rec) { rec = it } }
+                    if (rec != null) Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.clickable { rec = null }.padding(6.dp))
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = {
+            Repo.guardarNota(n.copy(texto = t.trim(), tipo = tp, fecha = f, recordar_el = rec.takeIf { tp == "recordatorio" }, editada = Fechas.ahoraIso()))
+            cerrar()
+        }, enabled = t.isNotBlank()) { Text("guardar") } },
+        dismissButton = {
+            var confirmar by remember(n.id) { mutableStateOf(false) }
+            TextButton(onClick = {
+                if (!confirmar) { confirmar = true; return@TextButton }
+                Repo.borrarNota(n.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
+            }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
+        })
 }
 
 @Composable

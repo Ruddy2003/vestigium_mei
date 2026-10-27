@@ -125,3 +125,13 @@ Salen de `docs/navegacion/revision_navegacion.md`. Decisiones del autor del 27 o
 - Más días se llenan de memoria con «Ponerte al día». Quedan marcados como `retroactivo` (capítulo 3, sección 3.7.4).
 - La calidad del sueño anotada entre las 00:00 y las 05:00 cambia de día: antes iba al día anterior y ahora va al del despertar. Los datos viejos no se mueven.
 
+## Revisión de navegación · Entrega N3 (el Día como centro de corrección)
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.41 | «Tu día en 24 horas», «Momentos de este día» y «Enfoque y siestas» son ahora una sola sección, «Tu día»: la línea de 24 horas y, debajo, todo lo que tiene hora ese día (momentos, consumos, tramos, gastos, ingresos, tomas y notas), cada fila corregible al tocarla. Plegada, dice cuántos registros tiene | `ui/pantallas/Dia.kt` (`TuDia`), `ui/Componentes.kt` (`Seccion(resumen)`) | N-17, N-26 |
+| D.42 | «＋ agregar a este día…»: registro de ánimo con hora, gasto, nota y tomas de suplementos con la fecha de ese día ya puesta | `ui/pantallas/Dia.kt` (`TuDia`, `SuplementosDelDia`), `ui/QuickActivity.kt` (extra `FECHA`), `ui/pantallas/Gastos.kt` (`DialogoGasto(nuevo)`), `ui/pantallas/Lote2.kt` (`DialogoNota`, `Seleccion.notaPara`) | N-26 |
+| D.43 | Lo que guardó un toque en el widget de ánimo o de sueño se ve arriba de la hoja («Guardado con el toque: 5/7») y se puede borrar o quitar | `ui/QuickActivity.kt` | N-15 |
+
+**Efectos al leer los datos:** más registros con fecha pasada, agregados desde el Día. Llevan `ts_creado`, así que `vm_retraso()` los separa (H-NAV-9).
+

@@ -181,7 +181,8 @@ fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.color
 /** Encabezado de sección: numeral y nombre según el tema, con el nombre en español como comentario. */
 @Composable
 fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), modifier: Modifier = Modifier,
-            plegable: Boolean = false, plegadaPorDefecto: Boolean = false, autoPlegar: Boolean = false, abrir: Int = 0, content: @Composable () -> Unit) {
+            plegable: Boolean = false, plegadaPorDefecto: Boolean = false, autoPlegar: Boolean = false, abrir: Int = 0, resumen: String? = null,
+            content: @Composable () -> Unit) {
     val (nombre, comentario) = Estilo.seccion(titulo, latin)
     // Las secciones plegables recuerdan si las cerraste (se guarda en tu configuración). Las que empiezan plegadas
     // guardan «+título» cuando las abres. Las de [autoPlegar] se vuelven a plegar al cerrar la app o al cambiar de día.
@@ -231,6 +232,8 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
             if (plegable) Text(if (plegada) "▸" else "▾", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
+        // Plegada, una línea dice qué hay adentro (por ejemplo, «5 registros con hora»).
+        if (plegada && resumen != null) Text(resumen, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
         androidx.compose.animation.AnimatedVisibility(!plegada) {
             Column {
                 if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))

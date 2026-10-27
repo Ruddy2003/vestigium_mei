@@ -478,7 +478,9 @@ En un registro personal, los datos **no faltan al azar**. Lo típico es no llena
 
 ### 3.15.3 Editar después
 
-Un registro de ánimo se puede editar más tarde con `DialogoMomento`: valencia, activación, emociones, pensamiento, texto y, desde el esquema 14, también **la fecha y la hora**. Se abre tocándolo en el Día de su fecha («Momentos de este día»), en Diario → «Línea de tiempo» o en Privado.
+Un registro de ánimo se puede editar más tarde con `DialogoMomento`: valencia, activación, emociones, pensamiento, texto y, desde el esquema 14, también **la fecha y la hora**. Se abre tocándolo en el Día de su fecha (sección «Tu día»), en Diario → «Línea de tiempo» o en Privado.
+
+Desde la entrega N3 de la revisión de navegación, «Tu día» lista todo lo que tiene hora ese día (momentos, consumos, tramos, gastos, ingresos, tomas y notas; lo privado no) y cada fila abre su corrección. «＋ agregar a este día…» abre el registro de ánimo, el gasto, la nota o las tomas **con la fecha de ese día ya puesta**. El registro de ánimo empieza a mediodía de ese día y la hora se elige ahí mismo. Todo lo que se agrega así guarda `ts_creado` con la hora real en que se anotó, así que `vm_retraso()` lo marca como anotado tarde.
 
 Hasta el esquema 13, el registro **no guardaba que fue editado ni cuándo**, así que un dato «momentáneo» podía convertirse en retrospectivo sin que se supiera (H-2-9). Desde el 14:
 - cada corrección guarda `ts_editado`, y cada registro nuevo, `ts_creado` (cuándo se anotó);

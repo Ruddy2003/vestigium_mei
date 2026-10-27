@@ -68,6 +68,8 @@ class QuickActivity : FragmentActivity() {
         /** Sustancias: con [CONSUMO] abre ese registro para completarlo (lo de anoche); con [SUSTANCIA], esa sustancia. */
         const val M_CONSUMO = "consumo"; const val CONSUMO = "consumo_id"; const val SUSTANCIA = "sustancia"
         const val CATEGORIA = "categoria"; const val CALIDAD = "calidad"; const val RECORDADO = "recordado"
+        /** Día (AAAA-MM-DD) para el que se anota, desde «＋ agregar a este día». */
+        const val FECHA = "fecha"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -302,8 +304,10 @@ class QuickActivity : FragmentActivity() {
         var con by remember { mutableStateOf(inicial?.con_quien.orEmpty()) }
         val discreto = Repo.config.discreto
         // Cuándo: null = ahora. Para anotar tarde («ayer», otra hora); no en la respuesta a un aviso, que es de ese momento.
-        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(null) }
-        var elegirCuando by remember { mutableStateOf(false) }
+        // Desde «＋ agregar a este día» de otro día: empieza a mediodía de ese día, con el selector abierto (N-26).
+        val fechaPedida = intent.getStringExtra(FECHA)?.takeIf { it != Fechas.diaLogico() }
+        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(fechaPedida?.let { Fechas.parse(it).atTime(12, 0) }) }
+        var elegirCuando by remember { mutableStateOf(fechaPedida != null) }
         /** El registro se crea con lo primero que toques. */
         fun asegurar(f: (Momento) -> Momento) {
             val actual = m ?: crear(if (avisoMs != null) "muestreo" else "animo", origen, null, avisoMs, cuando?.aMillis())
@@ -311,6 +315,11 @@ class QuickActivity : FragmentActivity() {
             Repo.guardarMomento(n); m = n
         }
         Encabezado("¿Cómo estás ahora?", if (m != null) "Guardado a las ${Fechas.horaDe(m!!.ts)} del ${Fechas.titulo(m!!.fecha).lowercase()}. Lo demás es opcional; puedes cerrar." else "Un toque en el cuadro basta.")
+        // Lo guardó el toque en el widget o en el aviso: se dice qué quedó y se puede borrar si fue sin querer (N-15).
+        if (inicial != null && m != null) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Guardado con el toque" + (m!!.valencia?.let { ": $it/7" } ?: "") + ".", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+            TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("borrar") }
+        }
         if (avisoMs == null && inicial == null) {
             if (!elegirCuando) TextButton(onClick = { elegirCuando = true }) {
                 Text(if (cuando == null) "¿fue antes? anotarlo en otra hora o día" else "cuándo: ${Fechas.corto(Fechas.diaLogicoDeMillis(cuando!!.aMillis()))} ${"%02d:%02d".format(cuando!!.hour, cuando!!.minute)}",
@@ -370,7 +379,7 @@ class QuickActivity : FragmentActivity() {
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ libido") { ir("libido") }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            if (m != null && inicial == null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
+            if (m != null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
             else Spacer(Modifier.width(1.dp))
             BotonPrincipal("Listo") { terminar() }
         }
@@ -733,6 +742,12 @@ class QuickActivity : FragmentActivity() {
         var d by remember { mutableStateOf(Repo.dia(fecha)) }
         fun guardar(n: io.github.ruddy2003.vestigium.data.Dia) { d = n; Repo.guardarDia(n) }
         Encabezado("Tu sueño", "Primero cuéntalo, antes de levantarte: los detalles se van en minutos. Lo demás, después.", fecha)
+        // La calidad que guardó el toque en el widget: se ve y se quita si fue sin querer (N-15).
+        val delWidget = remember { intent.getIntExtra(CALIDAD, 0).takeIf { it in 1..5 } }
+        if (delWidget != null && d.sueno_calidad == delWidget) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("Guardado con el toque: calidad $delWidget.", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+            TextButton(onClick = { guardar(d.copy(sueno_calidad = null)) }) { Text("quitar") }
+        }
         // 1. La narración, arriba: es lo que se olvida primero.
         Etiqueta("Qué soñaste")
         OutlinedTextField(value = d.sueno_texto, onValueChange = { t -> guardar(d.copy(sueno_texto = t, sueno_recordado = d.sueno_recordado || t.isNotBlank())) },

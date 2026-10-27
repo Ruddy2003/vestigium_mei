@@ -66,6 +66,8 @@ object Seleccion {
     var diaAbierto by mutableStateOf<String?>(null)
     /** Días sin llenar que se están rellenando juntos en la hoja de la noche («ponerte al día», N-09). */
     var ponerse by mutableStateOf<List<String>>(emptyList())
+    /** Día para el que se abre Notas desde «＋ agregar a este día» (N-26). */
+    var notaPara: String? = null
     /** Entrada abierta en la biblioteca del diario. */
     var entrada by mutableStateOf<String?>(null)
     /** Sueño abierto en la biblioteca de sueños, y carta abierta en la de cartas. */

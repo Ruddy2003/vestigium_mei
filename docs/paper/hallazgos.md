@@ -1179,7 +1179,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 
 ### H-NAV-9 · Cambiar dónde y cuándo se registra cambia cuánto se registra
 - **Dónde:** propuestas del informe de navegación:
-  - N-07, N-08 y N-09: registrar en otra fecha;
+  - N-07, N-08, N-09 y N-26: registrar en otra fecha;
   - N-16 y N-18: reordenar Hoy y la hoja de la noche (N-18 guarda `version_noche`);
   - N-28: el historial de ánimo a la vista en Hoy;
   - N-29: gastos en un toque.

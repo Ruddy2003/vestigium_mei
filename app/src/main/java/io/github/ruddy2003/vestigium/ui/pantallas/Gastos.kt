@@ -225,11 +225,15 @@ fun PantallaGastos(nav: Nav? = null) {
 
 /** Corregir un gasto: monto, categoría, fecha y hora, imprevisto y nota; o borrarlo (con confirmación y Deshacer). */
 @Composable
-fun DialogoGasto(g: Gasto, cerrar: () -> Unit) = DialogoDinero(
-    titulo = "Gasto", monto0 = g.monto, cat0 = g.categoria, categorias = Repo.config.categorias, fecha0 = g.fecha, hora0 = g.hora, nota0 = g.nota,
+fun DialogoGasto(g: Gasto, nuevo: Boolean = false, cerrar: () -> Unit) = DialogoDinero(
+    titulo = if (nuevo) "Nuevo gasto" else "Gasto", monto0 = g.monto, cat0 = g.categoria, categorias = Repo.config.categorias, fecha0 = g.fecha, hora0 = g.hora, nota0 = g.nota,
     marca = "¿Fue imprevisto?", marca0 = g.imprevisto, cerrar = cerrar,
-    guardar = { monto, cat, fecha, hora, nota, marca -> Repo.guardarGasto(g.copy(monto = monto, categoria = cat, fecha = fecha, hora = hora, nota = nota, imprevisto = marca, ts_editado = Fechas.ahoraIso())) },
-    borrar = { Repo.borrarGasto(g.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Gasto borrado") { Repo.guardarGasto(g) } },
+    // Uno nuevo (desde «＋ agregar a este día») guarda cuándo se anotó; uno corregido, cuándo se corrigió.
+    guardar = { monto, cat, fecha, hora, nota, marca ->
+        val n = g.copy(monto = monto, categoria = cat, fecha = fecha, hora = hora, nota = nota, imprevisto = marca)
+        Repo.guardarGasto(if (nuevo) n.copy(ts_creado = Fechas.ahoraIso()) else n.copy(ts_editado = Fechas.ahoraIso()))
+    },
+    borrar = if (nuevo) null else ({ Repo.borrarGasto(g.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Gasto borrado") { Repo.guardarGasto(g) } }),
 )
 
 /** Corregir un ingreso, igual que un gasto. */
@@ -244,9 +248,9 @@ fun DialogoIngreso(i: Ingreso, cerrar: () -> Unit) = DialogoDinero(
 @Composable
 private fun DialogoDinero(
     titulo: String, monto0: Double, cat0: String, categorias: List<String>, fecha0: String, hora0: String, nota0: String, marca: String, marca0: Boolean,
-    cerrar: () -> Unit, guardar: (Double, String, String, String, String, Boolean) -> Unit, borrar: () -> Unit,
+    cerrar: () -> Unit, guardar: (Double, String, String, String, String, Boolean) -> Unit, borrar: (() -> Unit)?,
 ) {
-    var monto by remember { mutableStateOf(if (monto0 % 1.0 == 0.0) monto0.toLong().toString() else monto0.toString()) }
+    var monto by remember { mutableStateOf(if (monto0 <= 0.0) "" else if (monto0 % 1.0 == 0.0) monto0.toLong().toString() else monto0.toString()) }
     var cat by remember { mutableStateOf(cat0) }
     var cuando by remember { mutableStateOf<LocalDateTime?>(runCatching { LocalDateTime.of(Fechas.parse(fecha0), java.time.LocalTime.parse(hora0.take(5))) }.getOrNull()) }
     var nota by remember { mutableStateOf(nota0) }
@@ -278,9 +282,9 @@ private fun DialogoDinero(
             }) { Text("Guardar") }
         },
         dismissButton = {
-            TextButton(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }) {
+            if (borrar != null) TextButton(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }) {
                 Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)
-            }
+            } else TextButton(onClick = cerrar) { Text("Cancelar") }
         },
     )
 }
