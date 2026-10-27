@@ -269,7 +269,7 @@ object Diccionario {
             io.github.ruddy2003.vestigium.ciencia.Dinamicas.nombres[col]?.let { return it }
             PREFIJOS_EXT.entries.firstOrNull { col.startsWith(it.key) }?.let { (p, a) -> return describir(a, col.removePrefix(p)) + " (de ${a.removePrefix("vm_").removeSuffix(".csv")})" }
             D[col]?.let { return it }
-            io.github.ruddy2003.vestigium.ciencia.Estadistica.variables(dinamicas = false).firstOrNull { it.id == col }?.let { return it.nombre }
+            io.github.ruddy2003.vestigium.ciencia.Estadistica.variables(dinamicas = false, privadas = true).firstOrNull { it.id == col }?.let { return it.nombre }
         }
         D[col]?.let { return it }
         return when {

@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.sensores
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.content.Context
 import io.github.ruddy2003.vestigium.data.EntornoDia
 import io.github.ruddy2003.vestigium.data.Fechas
@@ -29,8 +30,9 @@ object Entorno {
     /** Dónde estuviste ese día: la mediana de tus ubicaciones; si no hay, la de tus momentos; si no, la última conocida. */
     fun lugarDe(fecha: String, respaldo: Punto?): Punto? {
         val pts = Repo.db().ubicaciones(Fechas.inicioDia(fecha), Fechas.finDia(fecha))
-        val lats = pts.map { it.lat }.ifEmpty { Repo.momentos.filter { it.fecha == fecha }.mapNotNull { it.lat } }
-        val lons = pts.map { it.lon }.ifEmpty { Repo.momentos.filter { it.fecha == fecha }.mapNotNull { it.lon } }
+        // Las coordenadas de un momento privado no salen hacia el servicio del clima.
+        val lats = pts.map { it.lat }.ifEmpty { Repo.momentos.filter { it.fecha == fecha && !it.privado }.mapNotNull { it.lat } }
+        val lons = pts.map { it.lon }.ifEmpty { Repo.momentos.filter { it.fecha == fecha && !it.privado }.mapNotNull { it.lon } }
         if (lats.isEmpty() || lons.isEmpty()) return respaldo
         return Punto(mediana(lats), mediana(lons))
     }
@@ -44,7 +46,7 @@ object Entorno {
         val hoy = Fechas.hoyCalendario()
         val ultimo = Ubicacion.ultima(ctx)?.let { Punto(it.latitude, it.longitude) }
             ?: Repo.db().ubicaciones(System.currentTimeMillis() - 30L * 86_400_000).lastOrNull()?.let { Punto(it.lat, it.lon) }
-            ?: Repo.momentos.lastOrNull { it.lat != null }?.let { Punto(it.lat!!, it.lon!!) }
+            ?: Repo.momentos.lastOrNull { it.lat != null && !it.privado }?.let { Punto(it.lat!!, it.lon!!) }
             ?: return 0
         // Días que interesan: los últimos 7, más cualquier día con registro que no tenga entorno, hasta 365 días atrás.
         val limite = Fechas.sumar(hoy, -365)

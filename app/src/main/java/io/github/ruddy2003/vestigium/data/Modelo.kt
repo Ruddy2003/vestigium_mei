@@ -156,8 +156,8 @@ data class Persona(
 @Serializable
 data class CambioRelacion(val hasta: String, val relacion: String, val cercania: Int? = null)
 
-/** El momento es del seguimiento privado (recaída o libido): nunca sale en reportes, «Tu año», logros, mapas, widgets ni búsqueda. */
-val Momento.privado: Boolean get() = tipo == "recaida" || tipo == "libido"
+/** El momento es privado (impulso, recaída o libido): solo se ve en la pantalla Privado y en la exportación para R (ver `Privado`). */
+val Momento.privado: Boolean get() = tipo in Privado.TIPOS
 
 /** El «Cómo estás ahora» al cerrar el día: un registro de ánimo con la hora real, comparable de un día a otro. */
 val Momento.esCierre: Boolean get() = tipo == "animo" && origen == "cierre"

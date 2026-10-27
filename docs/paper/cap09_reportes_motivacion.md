@@ -58,7 +58,7 @@ La tarea periódica (`avisos/Trabajo.kt`) genera, sin que lo pidas:
 - **El mensual**, cada **día 1 desde las 9:00**, del mes anterior: PNG y PDF.
 - **El anual**: a petición (y «Tu año» avisa el 31 de diciembre desde las 9:00).
 
-Se guardan en las carpetas públicas del teléfono: **`Pictures/VestigiumMei`** (imágenes) y **`Download/VestigiumMei`** (PDF), con una notificación. Las consecuencias para la privacidad están en el capítulo 10 (H-8-4).
+Se guardan en las carpetas públicas del teléfono: **`Pictures/VestigiumMei`** (imágenes) y **`Download/VestigiumMei`** (PDF), con una notificación. Desde el módulo 10a, los que se generan solos van **siempre en modo discreto** (iniciales en vez de nombres) y **sin la frase del mejor momento**; los que pides a mano siguen tu ajuste de modo discreto. Las consecuencias para la privacidad están en el capítulo 10 (H-8-4).
 
 ### 9.3.2 Qué muestran (`Reportes.cuerpo`)
 
@@ -117,9 +117,9 @@ Medallas de cuatro niveles (bronce, plata, oro, legendario) en 9 categorías: Di
 |---|---|---|
 | **Cantidad** | Diario: 1, 7, 30, 100, 365 y 1000 días; palabras: 10 000 a 1 000 000; momentos: 10, 100 y 1000; avisos contestados: 50, 250 y 1000 | `escalones` |
 | **Récord** | 20 000 pasos en un día; 42.195 km en un día; reacción con mediana < 250 ms | — |
-| **Constancia** | «Escribe 20, 25 o 28 de 30 días»; 8000 pasos 15, 20 o 25 de 30 días; 7 h de sueño 15, 20 o 25 de 30 noches; entrenar 16, 20 o 24 de 56 días; cada hábito activo 15, 20 o 25 de 30 días | `constancia` |
+| **Constancia** | «Escribe 20, 25 o 28 de 30 días»; 8000 pasos 15, 20 o 25 de 30 días; 7 h de sueño 15, 20 o 25 de 30 noches; entrenar 16, 20 o 24 de 56 días; cada hábito activo 15, 20 o 25 de 30 días (salvo el ligado a las recaídas, desde el módulo 10a) | `constancia` |
 
-Además hay **rachas** de diario (7, 30 y 100 días seguidos), **secretos** (aparecen al lograrlos: «Día perfecto», «Remontada», «Noctámbulo», «Desahogo»…) y **logros propios**: eliges una fuente (un hábito, una @persona o #tema, o **cualquier variable del panel**), un umbral y un modo (total, racha, días o constancia en una ventana).
+Además hay **rachas** de diario (7, 30 y 100 días seguidos), **secretos** (aparecen al lograrlos: «Día perfecto», «Remontada», «Noctámbulo», «Desahogo»…) y **logros propios**: eliges una fuente (un hábito, una @persona o #tema, o **cualquier variable del panel** que no sea privada), un umbral y un modo (total, racha, días o constancia en una ventana). Desde el módulo 10a no se ofrecen ni se muestran los logros propios sobre algo privado: el hábito ligado a las recaídas o una variable privada.
 
 Al abrir un logro, `comoSeConsiguio` dice en qué día de registro llegó, el ánimo de ese día y una cita de hasta **22 palabras** del diario de esa noche (no en los secretos).
 

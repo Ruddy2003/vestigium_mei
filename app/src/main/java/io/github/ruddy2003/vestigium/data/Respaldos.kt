@@ -149,8 +149,17 @@ object Respaldos {
     fun esArchivoPlano(n: String) = (n.startsWith("vm_") && (n.endsWith(".csv") || n.endsWith(".json"))) || n == "LEEME.txt" || n == "vestigium.R" ||
         (n.startsWith("vestigium_") && n.endsWith(".zip"))
 
+    /**
+     * Con datos privados y sin contraseña, ningún respaldo sale del teléfono: ni a la carpeta, ni a Drive, ni al compartirlo.
+     * (La exportación para R es la excepción: la pides tú, a mano, y R necesita leerla; la pantalla lo advierte.)
+     */
+    fun bloqueado(ctx: Context): Boolean = !cifradoActivo(ctx) && Privado.hayDatos()
+
+    const val PAUSA = "Tus respaldos están en pausa: llevan datos privados y no tienen contraseña. Ponla en Más → Datos → Respaldo completo → Cifrar con contraseña."
+
     /** Con contraseña: solo el .vmc cifrado (y se borran los CSV sueltos de antes). Sin contraseña: los CSV para R y el .zip completo. */
     fun aCarpeta(ctx: Context): Boolean {
+        if (bloqueado(ctx)) return false
         val uriTxt = Repo.config.carpeta_respaldo ?: return false
         val dir = DocumentFile.fromTreeUri(ctx, Uri.parse(uriTxt)) ?: return false
         if (!dir.canWrite()) return false

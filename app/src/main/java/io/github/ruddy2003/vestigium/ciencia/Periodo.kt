@@ -87,7 +87,7 @@ object Periodo {
         val antes = Repo.dias.values.filter { it.fecha < ini }.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) } }.toHashSet()
         val nueva = dias.sortedBy { it.fecha }.flatMap { d -> Texto.personas(d.nota).map { Texto.canon(it, eq) } }.firstOrNull { it !in antes && Repo.dias.isNotEmpty() && Repo.dias.keys.min() < ini }
         val temasL = dias.flatMap { d -> Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct() } + mu.flatMap { Texto.temas(it.texto).map { t -> Texto.canon(t, eq) } }
-        val activos = Repo.config.habitos.filter { it.activo }
+        val activos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }
         val habPct = if (activos.isEmpty() || dias.isEmpty()) null else dias.sumOf { d -> activos.count { d.habitos[it.id] == true } }.toDouble() / (activos.size * dias.size)
         val habitos = activos.map { h -> h.nombre to dias.count { it.habitos[h.id] == true } }.filter { it.second > 0 }.sortedByDescending { it.second }
         var racha = 0; var r = 0

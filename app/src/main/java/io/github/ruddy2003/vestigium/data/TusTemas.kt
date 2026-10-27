@@ -9,7 +9,7 @@ object TusTemas {
     class Tema(val nombre: String, val dias: Int, val primera: String, val ultima: String)
 
     /** Un texto donde puede haber #temas, con cómo cambiarlo. */
-    private class Lugar(val fecha: String, val texto: String, val cambiar: (String) -> Unit)
+    private class Lugar(val fecha: String, val texto: String, val privado: Boolean = false, val cambiar: (String) -> Unit)
 
     private fun lugares(): List<Lugar> {
         val out = ArrayList<Lugar>()
@@ -19,7 +19,7 @@ object TusTemas {
             if (d.mejor_momento.isNotBlank()) out += Lugar(d.fecha, d.mejor_momento) { t -> Repo.importarDias(listOf(Repo.dia(d.fecha).copy(mejor_momento = t)), sobrescribir = true) }
             if (d.peor_momento.isNotBlank()) out += Lugar(d.fecha, d.peor_momento) { t -> Repo.importarDias(listOf(Repo.dia(d.fecha).copy(peor_momento = t)), sobrescribir = true) }
         }
-        Repo.momentos.filter { it.texto.isNotBlank() }.forEach { m -> out += Lugar(m.fecha, m.texto) { t -> Repo.momento(m.id)?.let { Repo.guardarMomento(it.copy(texto = t)) } } }
+        Repo.momentos.filter { it.texto.isNotBlank() }.forEach { m -> out += Lugar(m.fecha, m.texto, m.privado) { t -> Repo.momento(m.id)?.let { Repo.guardarMomento(it.copy(texto = t)) } } }
         Repo.tramos.filter { it.nota.isNotBlank() }.forEach { tr -> out += Lugar(tr.fecha, tr.nota) { t -> Repo.guardarTramo(tr.copy(nota = t)) } }
         Repo.consumos.filter { it.nota.isNotBlank() }.forEach { c -> out += Lugar(c.fecha, c.nota) { t -> Repo.guardarConsumo(c.copy(nota = t)) } }
         // Las cartas selladas no se tocan: siguen cerradas hasta su fecha.
@@ -27,10 +27,10 @@ object TusTemas {
         return out
     }
 
-    /** Cada #tema (como lo escribiste, sin unir) con los días en que aparece. */
+    /** Cada #tema (como lo escribiste, sin unir) con los días en que aparece. Lo privado no cuenta (renombrar sí lo cambia). */
     fun crudos(): Map<String, Set<String>> {
         val m = HashMap<String, HashSet<String>>()
-        lugares().forEach { l -> Texto.temas(l.texto).forEach { t -> m.getOrPut(t) { HashSet() }.add(l.fecha) } }
+        lugares().filter { !it.privado }.forEach { l -> Texto.temas(l.texto).forEach { t -> m.getOrPut(t) { HashSet() }.add(l.fecha) } }
         Repo.dias.values.forEach { d -> d.sueno_temas.filter { it.trim().startsWith("#") }.forEach { t -> m.getOrPut(Texto.etiqueta(t)) { HashSet() }.add(d.fecha) } }
         return m
     }

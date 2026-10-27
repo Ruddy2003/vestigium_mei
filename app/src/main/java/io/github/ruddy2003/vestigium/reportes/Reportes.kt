@@ -90,7 +90,7 @@ object Reportes {
     private const val M = 64f
 
     /** Quien dibuja: lleva la altura y sabe poner cada pieza con el tema. */
-    private class Hoja(val c: Canvas, val L: Lienzo, val discreto: Boolean) {
+    private class Hoja(val c: Canvas, val L: Lienzo, val discreto: Boolean, val sinFrases: Boolean = false) {
         var y = 0f
         var seccion = 0
         val ancho = W - 2 * M
@@ -627,7 +627,7 @@ object Reportes {
             h.titulo("Ánimo", "ANIMVS")
             if (anual) pixeles(h, d) else h.graficaAnimo(d)
             listOfNotNull(
-                d.mejorDia?.let { "optimus" to Fechas.titulo(it).lowercase() + (d.mejorMomento?.let { m -> " · «${m.take(90)}»" } ?: "") },
+                d.mejorDia?.let { "optimus" to Fechas.titulo(it).lowercase() + (d.mejorMomento?.takeIf { !h.sinFrases }?.let { m -> " · «${m.take(90)}»" } ?: "") },
                 d.peorDia?.takeIf { it != d.mejorDia }?.let { "pessimus" to Fechas.titulo(it).lowercase() },
                 cambio(d.valMedia, d.valAnterior, "de ánimo")?.let { "animus" to it },
                 d.valPorSemana.maxByOrNull { it.value }?.takeIf { d.n > 13 }?.let { "dies felix" to "los " + DIAS_LARGOS[it.key - 1] + " (%.1f)".format(it.value) },
@@ -826,12 +826,17 @@ object Reportes {
         return uri
     }
 
-    private fun reporte(ctx: Context, titulo: String, latin: String, rango: String, ini: String, fin: String, anual: Boolean, mensual: Boolean = false): Triple<Picture, Int, Int> {
+    /**
+     * [automatico]: el que se guarda solo (lunes y día 1) en Imágenes y Descargas, al alcance de la galería y de su copia a la nube.
+     * Ese va siempre en modo discreto (iniciales en vez de nombres) y sin la frase del mejor momento.
+     */
+    private fun reporte(ctx: Context, titulo: String, latin: String, rango: String, ini: String, fin: String, anual: Boolean, mensual: Boolean = false,
+                        automatico: Boolean = false): Triple<Picture, Int, Int> {
         val L = Lienzo(ctx)
         val d = Periodo.calcular(ctx, ini, fin)
         val logros = runCatching { io.github.ruddy2003.vestigium.ciencia.Logros.todos(ctx).filter { l -> l.conseguido?.let { it in ini..fin } == true } }.getOrDefault(emptyList())
         val (pic, alto) = dibujarMedido(ctx) { c ->
-            val h = Hoja(c, L, Repo.config.discreto)
+            val h = Hoja(c, L, Repo.config.discreto || automatico, sinFrases = automatico)
             h.encabezado(titulo, latin, rango)
             cuerpo(h, d, anual, logros, mensual)
             h.pie(fin)
@@ -841,12 +846,12 @@ object Reportes {
     }
 
     /** La imagen del reporte semanal (sin guardarla). */
-    fun imagenSemana(ctx: Context, lunes: String): Bitmap {
+    fun imagenSemana(ctx: Context, lunes: String, automatico: Boolean = false): Bitmap {
         val fin = Fechas.sumar(lunes, 6)
         val ini = Fechas.parse(lunes); val f = Fechas.parse(fin)
         val semana = f.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)
         val rango = "Semana ${Estilo.numeral(semana)} · del ${ini.dayOfMonth} de ${mesNombre(ini.monthValue)} al ${f.dayOfMonth} de ${mesNombre(f.monthValue)} de ${f.year}"
-        val (pic, alto, fondo) = reporte(ctx, "Tu semana", "HEBDOMAS", rango, lunes, fin, false)
+        val (pic, alto, fondo) = reporte(ctx, "Tu semana", "HEBDOMAS", rango, lunes, fin, false, automatico = automatico)
         return bitmap(pic, alto, fondo)
     }
 
@@ -866,7 +871,7 @@ object Reportes {
     }
 
     fun semanal(ctx: Context, lunes: String, avisar: Boolean): Uri? {
-        val uri = guardarPng(ctx, "semana_$lunes.png", imagenSemana(ctx, lunes))
+        val uri = guardarPng(ctx, "semana_$lunes.png", imagenSemana(ctx, lunes, automatico = avisar))
         if (avisar && uri != null) Avisos.reporte(ctx, "Tu reporte semanal está listo", uri, "image/png")
         return uri
     }
@@ -875,7 +880,7 @@ object Reportes {
         val ini = "$ym-01"
         val d = Fechas.parse(ini)
         val fin = Fechas.iso(d.plusMonths(1).minusDays(1))
-        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false, mensual = true)
+        val (pic, alto, fondo) = reporte(ctx, "Tu mes", "MENSIS", Estilo.mes(d.monthValue, d.year), ini, fin, false, mensual = true, automatico = avisar)
         guardarPng(ctx, "mes_$ym.png", bitmap(pic, alto, fondo))
         val uri = guardarPdf(ctx, "mes_$ym.pdf", pic, alto, fondo)
         if (avisar && uri != null) Avisos.reporte(ctx, "Tu reporte de ${Fechas.mesTitulo(ym)} está listo", uri, "application/pdf")

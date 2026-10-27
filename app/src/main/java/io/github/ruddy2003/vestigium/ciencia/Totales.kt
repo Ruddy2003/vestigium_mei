@@ -390,7 +390,7 @@ object Totales {
 
         run {
             val m = LinkedHashMap<String, Entrada>()
-            Repo.config.habitos.forEach { h -> dias.filter { it.habitos[h.id] == true }.forEach { d -> m.getOrPut(h.id) { Entrada(h.nombre, "días") }.sumar(d.fecha, 1.0) } }
+            io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().forEach { h -> dias.filter { it.habitos[h.id] == true }.forEach { d -> m.getOrPut(h.id) { Entrada(h.nombre, "días") }.sumar(d.fecha, 1.0) } }
             if (m.isNotEmpty()) indices.add(Indice("habitos", "Hábitos cumplidos", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} días" })
         }
         run {
@@ -402,11 +402,6 @@ object Totales {
             val m = LinkedHashMap<String, Entrada>()
             Catalogo.CONTEXTOS.forEach { cx -> dias.filter { it.ctx[cx.id] == true }.forEach { d -> m.getOrPut(cx.id) { Entrada(cx.nombre, "días") }.sumar(d.fecha, 1.0) } }
             if (m.isNotEmpty()) indices.add(Indice("contextos", "Contextos", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} días" })
-        }
-        run {
-            val m = LinkedHashMap<String, Entrada>()
-            dias.forEach { d -> d.medicamentos.forEach { x -> m.getOrPut(normal(x)) { Entrada(x, "días") }.sumar(d.fecha, 1.0) } }
-            if (m.isNotEmpty()) indices.add(Indice("medicamentos", "Medicamentos", m.values.sortedByDescending { it.total }) { e -> "${n(e.total)} días" })
         }
         run {
             val m = LinkedHashMap<String, Entrada>()

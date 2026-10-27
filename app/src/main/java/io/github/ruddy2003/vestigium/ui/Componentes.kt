@@ -2,6 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.speech.RecognizerIntent
@@ -452,7 +453,7 @@ fun Editor(valor: String, archivo: String, pista: String, minimo: Int = 200, pie
 object Etiquetas {
     fun frecuentes(): Pair<List<String>, List<String>> {
         val p = HashMap<String, Int>(); val t = HashMap<String, Int>()
-        val textos = io.github.ruddy2003.vestigium.data.Repo.dias.values.map { it.nota } + io.github.ruddy2003.vestigium.data.Repo.momentos.map { it.texto }
+        val textos = io.github.ruddy2003.vestigium.data.Repo.dias.values.map { it.nota } + io.github.ruddy2003.vestigium.data.Repo.momentos.filter { m -> !m.privado }.map { it.texto }
         textos.forEach { x ->
             io.github.ruddy2003.vestigium.data.Texto.personas(x).distinct().forEach { p.merge(it, 1, Int::plus) }
             io.github.ruddy2003.vestigium.data.Texto.temas(x).distinct().forEach { t.merge(it, 1, Int::plus) }

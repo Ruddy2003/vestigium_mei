@@ -254,14 +254,6 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `ciudad_nueva` | Primera vez en una ciudad (0/1) | binaria (0/1) | — | Si hay datos de la fuente |
 | `unesco` | Pasé por un sitio del Patrimonio Mundial (0/1) | binaria (0/1) | — | Si hay datos de la fuente |
 
-### Salud
-
-*Fuente:* Diario (medicamentos)
-
-| Identificador | Descripción | Tipo | Unidad | Existe |
-|---|---|---|---|---|
-| `medicamentos_n` | Medicamentos tomados | numérica | — | Si hay datos de la fuente |
-
 ### Momentos
 
 *Fuente:* Momentos con hora
@@ -272,7 +264,7 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `n_manana` | Momentos en la mañana (5 a 12) | numérica | — | Si hay datos de la fuente |
 | `n_tarde` | Momentos en la tarde (12 a 19) | numérica | — | Si hay datos de la fuente |
 | `n_noche` | Momentos en la noche (19 a 24) | numérica | — | Si hay datos de la fuente |
-| `momentos_intensidad` | Intensidad media de los momentos (1 a 5) | numérica | — | Si hay datos de la fuente |
+| `momentos_intensidad` | Intensidad media de los momentos no privados (1 a 5; desde el módulo 10a sin impulsos) | numérica | — | Si hay datos de la fuente |
 | `momentos_valencia` | Valencia media de los momentos | numérica | — | Si hay datos de la fuente |
 | `registros_animo` | Registros de ánimo en el día | numérica | — | Si hay registros de ánimo |
 
@@ -299,16 +291,18 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 
 ### Privado
 
-*Fuente:* Seguimiento privado (solo con el interruptor activo)
+*Fuente:* Pantalla Privado. Desde el módulo 10a estas variables **no aparecen en ninguna lista ni análisis de la app**; el panel las calcula siempre (con o sin el interruptor) y van en la exportación para R. Tampoco aparece `hab_` del hábito ligado a las recaídas.
 
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
-| `impulso` | Intensidad del impulso | numérica | — | Solo con seguimiento privado activo |
-| `recaida` | Recaída (0/1) | binaria (0/1) | — | Solo con seguimiento privado activo |
-| `n_recaida` | Recaídas registradas con hora | numérica | — | Solo con seguimiento privado activo |
-| `recaida_min` | Minutos de recaída | numérica | — | Solo con seguimiento privado activo |
-| `libido_max` | Libido máxima del día (0 a 5) | numérica | — | Solo con seguimiento privado y registros de libido |
-| `n_libido` | Registros de libido | numérica | — | Solo con seguimiento privado y registros de libido |
+| `impulso` | Intensidad del impulso | numérica | — | Si se anotó |
+| `recaida` | Recaída (0/1) | binaria (0/1) | — | Si se anotó |
+| `n_recaida` | Recaídas registradas con hora | numérica | — | Desde la primera recaída con hora |
+| `recaida_min` | Minutos de recaída | numérica | — | Si hay recaídas con duración |
+| `libido_max` | Libido máxima del día (0 a 5) | numérica | — | Si hay registros de libido |
+| `n_libido` | Registros de libido | numérica | — | Si hay registros de libido |
+| `n_impulso` | Momentos de impulso | numérica | — | Días con diario (hasta v84 estaba en el grupo «Momentos» y entraba siempre en los análisis) |
+| `medicamentos_n` | Medicamentos tomados | numérica | — | Desde el primer día con medicamentos (hasta v84, grupo «Salud») |
 
 ### Enfoque
 
@@ -386,7 +380,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `art_` | Música | 10 | 5 | Canciones de ‹elemento› |
 | `obr_` | Cultura | 10 | 5 | Le dediqué tiempo a «‹elemento›» (0/1) |
 | `gen_` | Cultura | 10 | 5 | Leí, vi o jugué algo de ‹elemento› (0/1) |
-| `med_` | Salud | 15 | 3 | Tomé ‹elemento› (0/1) |
+| `med_` | Privado | 15 | 3 | Tomé ‹elemento› (0/1) |
 | `det_` | Privado | 10 | 3 | Detonante: ‹elemento› (0/1) |
 | `suenot_` | Sueño | 6 | 3 | Sueño de tipo ‹elemento› (0/1) |
 | `ciu_` | Mundo | 8 | 3 | Horas en ‹elemento› |

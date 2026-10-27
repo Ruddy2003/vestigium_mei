@@ -230,7 +230,7 @@ object Widgets {
         v.setTextViewText(R.id.titulo_habitos, Estilo.widget("habitos"))
         val f = Fechas.diaLogico()
         val d = Repo.dias[f]
-        val hs = Repo.config.habitos.filter { it.activo }.take(6)
+        val hs = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }.take(6)
         v.setTextViewText(R.id.sub_habitos, if (hs.isEmpty()) "" else "${hs.count { d?.habitos?.get(it.id) == true }}/${hs.size}")
         v.setTextViewText(R.id.pregunta_habitos, com + if (hs.isEmpty()) "agrega hábitos en Más → Hábitos" else "toca para marcar hoy")
         FILAS_HABITO.forEachIndexed { i, id ->

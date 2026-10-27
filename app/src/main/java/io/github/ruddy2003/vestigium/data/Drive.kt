@@ -105,6 +105,7 @@ object Drive {
      * Con contraseña: solo el respaldo cifrado (.vmc) y su copia semanal; los archivos sueltos de antes se borran de Drive.
      */
     fun subir(ctx: Context, token: String): String {
+        if (Respaldos.bloqueado(ctx)) return Respaldos.PAUSA
         val dir = carpeta(token)
         val existentes = buscar(token, "'$dir' in parents and trashed = false").associate { it.second to it.first }
         val cifra = Respaldos.cifradoActivo(ctx)
@@ -178,6 +179,8 @@ object Drive {
     /** Respaldo de fondo: solo funciona si ya diste permiso antes; si Google pide confirmar de nuevo, avisa. */
     suspend fun automatico(ctx: Context): Boolean {
         if (!Repo.config.drive) return false
+        // En pausa por falta de contraseña no es un problema de permiso: eso lo avisa Trabajo con su propio aviso.
+        if (Respaldos.bloqueado(ctx)) return true
         return when (val a = acceso(ctx)) {
             is Acceso.Listo -> runCatching { subir(ctx, a.token); true }.getOrDefault(false)
             else -> false

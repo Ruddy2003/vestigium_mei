@@ -303,6 +303,17 @@ object Avisos {
         mostrar(ctx, ID_LUGAR, b)
     }
 
+    /** Los respaldos automáticos dejaron de salir: hay datos privados y no hay contraseña. */
+    fun respaldoPausado(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("Tus respaldos están en pausa")
+            .setContentText("Llevan datos privados y no tienen contraseña. Toca para ponerla.")
+            .setContentIntent(abrirApp(ctx, 2031, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2031, b)
+    }
+
     fun drive(ctx: Context) {
         val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
             .setSmallIcon(R.drawable.ic_stat)

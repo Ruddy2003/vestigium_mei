@@ -80,7 +80,7 @@ object Pantallas {
         P("conocer", "Conocerte", "Lo grande de tu vida", "perfil"),
         P("experimentos", "Experimentos personales", "Prueba algo y mide si sirve", "experimento"),
         P("totales", "Totales", "Todo lo acumulado", "sumas"),
-        if (Repo.config.seguimiento_privado) P("recaidas", "Impulsos y recaídas", "Seguimiento privado", "impulso recaída privado") else null,
+        P("recaidas", "Privado", "Solo se ve aquí", "impulso recaída libido medicamentos privado"),
         P("apariencia", "Apariencia", "Tema, claro u oscuro, animaciones, personaje", "tema colores sonido personaje"),
         P("avisos", "Avisos y recordatorios", "Ánimo, diario, sueño, cuestionarios", "notificaciones"),
         P("privacidad", "Privacidad", "Huella, modo discreto, seguimiento privado", "bloqueo huella discreto"),

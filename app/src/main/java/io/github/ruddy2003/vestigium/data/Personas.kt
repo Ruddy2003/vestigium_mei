@@ -59,7 +59,7 @@ object Personas {
         val dias = HashMap<String, MutableSet<String>>()
         fun sumar(f: String, t: String?) { Texto.personas(t).forEach { dias.getOrPut(Texto.canon(it, eq)) { HashSet() }.add(f) } }
         Repo.dias.values.forEach { d -> sumar(d.fecha, d.nota); sumar(d.fecha, d.sueno_texto); d.sueno_temas.filter { it.startsWith("@") }.forEach { t -> sumar(d.fecha, t) } }
-        Repo.momentos.forEach { m -> sumar(m.fecha, m.texto) }
+        Repo.momentos.filter { !it.privado }.forEach { m -> sumar(m.fecha, m.texto) }
         Repo.tramos.forEach { t -> sumar(t.fecha, t.nota) }
         Repo.cartas.filter { it.para.isNotBlank() }.forEach { c -> dias.getOrPut(Texto.canon(c.para.lowercase(), eq)) { HashSet() }.add(c.escrita) }
         return dias.mapValues { (_, s) -> s.size to (s.maxOrNull() ?: "") }

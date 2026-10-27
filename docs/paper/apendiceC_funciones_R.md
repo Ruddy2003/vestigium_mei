@@ -84,7 +84,7 @@ z robusto con `median` y `mad` (constante 1.4826) por variable; devuelve los dí
 | `vm_totales(desde, hasta, datos)` | Para ~40 columnas sumables: total, días con dato, primera y última fecha con valor > 0, promedio por día con dato. | Como la pantalla Totales, sobre `vm_panel.csv`. |
 | `vm_buscar(texto, desde, hasta)` | Busca sin acentos en alimentos, personas («@»), temas («#»), artistas, canciones (≥ 30 s), lugares, ejercicios (sin calentamiento), canales, búsquedas, gastos, libros y chats. | Como el buscador de Totales (sin los sinónimos español-inglés de `Totales.SINONIMOS`). |
 | `vm_fuerza(n = 6)` | 1RM estimado máximo por sesión de los n ejercicios más repetidos. | Capítulo 5. |
-| `vm_mapa_animo()` | Momentos con coordenadas, coloreados por valencia; si un momento no tiene valencia, usa la del diario de ese día. | H-2-15. |
+| `vm_mapa_animo()` | Registros de ánimo (`es_animo`) con coordenadas y su propia valencia, coloreados por ella. Desde el módulo 10a excluye impulso, recaída y libido y ya no rellena con la valencia del diario. | H-2-15 (parte de R) y H-9-12, resueltos. |
 | `vm_por_hora(var)` | Promedio por hora (0–23) de una columna de `vm_horas.csv`, entre semana y fin de semana. | No hay equivalente en pantalla. |
 | `vm_cruce_horas(x, y, desfase)` | Spearman entre dos columnas de `vm_horas.csv` en la misma hora o `desfase` horas después; exige 10 horas. | Ignora que horas consecutivas se parecen mucho más que días consecutivos: su p es muy optimista. |
 | `vm_sustancias()` | Registros, días, nivel máximo medio, horas y cruda por sustancia; cruda contra bebidas. | Descriptiva. |

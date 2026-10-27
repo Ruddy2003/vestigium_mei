@@ -491,7 +491,7 @@ fun PantallaMapa(nav: Nav) {
                             }
                             override fun longPressHelper(p: GeoPoint?): Boolean { nuevoLugar = p; return p != null }
                         }))
-                        val centro = Repo.momentos.lastOrNull { it.lat != null }?.let { GeoPoint(it.lat!!, it.lon!!) }
+                        val centro = Repo.momentos.lastOrNull { it.lat != null && !it.privado }?.let { GeoPoint(it.lat!!, it.lon!!) }
                             ?: Repo.lugares.firstOrNull()?.let { GeoPoint(it.lat, it.lon) } ?: GeoPoint(19.4326, -99.1332)
                         controller.setZoom(13.5); controller.setCenter(centro)
                         mapa.value = this

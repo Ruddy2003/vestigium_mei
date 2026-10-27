@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ciencia
 
+import io.github.ruddy2003.vestigium.data.privado
 import android.content.Context
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Mundo
@@ -105,7 +106,7 @@ object TusNumeros {
         }
         // Lo que no es por día.
         val gente = HashSet<String>()
-        (Repo.dias.values.map { it.nota } + Repo.dias.values.map { it.sueno_texto } + Repo.momentos.map { it.texto }).forEach { gente += Texto.personas(it) }
+        (Repo.dias.values.map { it.nota } + Repo.dias.values.map { it.sueno_texto } + Repo.momentos.filter { !it.privado }.map { it.texto }).forEach { gente += Texto.personas(it) }
         if (gente.isNotEmpty()) out["conocidas"] = Valor(gente.size.toDouble(), 0, "", hoy)
         val hace = Fechas.sumar(hoy, -365)
         Repo.obras.count { it.tipo == "libro" && it.estado == "terminado" && (it.fin ?: "") >= hace }.takeIf { Repo.obras.any { o -> o.tipo == "libro" } }

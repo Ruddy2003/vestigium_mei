@@ -413,7 +413,9 @@ fun PantallaExperimentos(nav: Nav) {
     Hoja("Experimentos personales", nav.atras,
         "Escribes la pregunta y lo que crees que pasará antes de empezar (queda sellado con la hora). La app decide qué semanas haces la acción y, al final, compara.") {
         val panel = remember(Repo.dias.size, Repo.experimentos) { if (Repo.experimentos.isEmpty()) emptyMap() else Estadistica.panel(dinamicas = false) }
-        Repo.experimentos.sortedByDescending { it.inicio }.forEach { e -> TarjetaExperimento(e, panel, vars.firstOrNull { it.id == e.resultado }?.nombre ?: e.resultado) }
+        // Un experimento que mide algo privado no se muestra aquí: su resultado se analiza en R.
+        Repo.experimentos.filter { !io.github.ruddy2003.vestigium.data.Privado.esVariable(it.resultado) }.sortedByDescending { it.inicio }
+            .forEach { e -> TarjetaExperimento(e, panel, vars.firstOrNull { it.id == e.resultado }?.nombre ?: e.resultado) }
         Seccion("Nuevo experimento") {
             Tarjeta {
                 Etiqueta("Empieza de una plantilla (opcional)")
@@ -431,7 +433,7 @@ fun PantallaExperimentos(nav: Nav) {
                 OutlinedTextField(hipotesis, { hipotesis = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué crees que pasará (hipótesis)") })
                 Etiqueta("Qué vas a medir")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    (listOf("valencia", "activacion", "sueno_calidad", "sueno_horas", "muestreo_valencia", "pantalla_min", "rt_media", "volumen_kg", "enfoque_min", "impulso") +
+                    (listOf("valencia", "activacion", "sueno_calidad", "sueno_horas", "muestreo_valencia", "pantalla_min", "rt_media", "volumen_kg", "enfoque_min") +
                         listOf(resultado)).distinct().forEach { id -> vars.firstOrNull { it.id == id }?.let { v -> Ficha(v.nombre, resultado == id) { resultado = id } } }
                 }
                 Etiqueta("Diseño")

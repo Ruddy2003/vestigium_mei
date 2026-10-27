@@ -19,7 +19,7 @@
 | **PBKDF2** | Una función que convierte una contraseña en una llave **a propósito lenta**: repite un cálculo muchas veces (las **iteraciones**) para que probar millones de contraseñas cueste mucho (Turan et al., 2010). |
 | **Sal** | Bytes al azar que se mezclan con la contraseña, para que la misma contraseña dé llaves distintas en cada archivo. |
 | **Android Keystore** | Un almacén de llaves del sistema: la app puede usar una llave para cifrar, pero no puede sacarla del teléfono. |
-| **Seguimiento privado** | Los registros de recaídas y libido (y el interruptor que los muestra). La app los oculta de casi todas las salidas (sección 10.3). |
+| **Seguimiento privado** | Impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado a las recaídas. Desde el módulo 10a solo se ven en la pantalla Privado y viajan a R (sección 10.3). |
 | **Integridad** | Que los datos no se pierdan, no se dañen y no cambien sin que lo sepas. |
 
 ---
@@ -37,36 +37,57 @@
 
 ### 10.3.1 Qué es y cómo funciona
 
-- Un momento es **privado** para el código si su tipo es `recaida` o `libido` (`Momento.privado`, `data/Modelo.kt`). Además, el día guarda una intensidad de impulso (0 a 5), si hubo recaída y los detonantes.
-- El interruptor `Config.seguimiento_privado` está **apagado por omisión**. Con él apagado, las pantallas del día, los momentos, la cinta y los diarios no muestran los momentos privados, y la sección «Seguimiento privado» del día no aparece.
-- **Registrar una recaída** (`Recaidas.registrar`) guarda el momento con hora y lugar, marca el día con recaída y **desmarca el hábito ligado**: el que elegiste en Privacidad o, si no elegiste ninguno, un hábito activo cuyo nombre contenga ciertas palabras clave del código. Se puede deshacer tal cual (`deshacer`) y cambiar la hora (`moverHora`), que busca la ubicación de esa hora (la más cercana en ±30 min) y descarta la luz y el ruido medidos al registrar.
-- **El resumen privado** (`Recaidas.resumen`): impulsos y recaídas por hora, recaídas por día de la semana, lugares, detonantes, qué hacías antes, aparato, minutos entre un impulso y la recaída que le siguió (dentro de 24 h), cuántos impulsos pasaron **sin recaída en las 3 horas siguientes**, días desde la última y rachas.
+_Esta sección describe el código después del módulo 10a (decisiones D-1 y D-2 de `revision_propuestas.md`). Hasta v84 la regla era otra; el cambio está en el Apéndice D._
+
+- **Una sola regla, en un solo archivo** (`data/Privado.kt`). Es privado:
+  - todo momento de tipo `impulso`, `recaida` o `libido` (`Momento.privado`, que usa `Privado.TIPOS`);
+  - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y los **medicamentos**;
+  - el **hábito ligado a las recaídas**. Con el interruptor encendido es el que elegiste en Privacidad o, si no elegiste, un hábito activo cuyo nombre contenga ciertas palabras clave. Con el interruptor apagado, solo el que elegiste. Elegir «ninguno» funciona; hasta v84 caía de nuevo en las palabras clave.
+- **Dónde se ve: solo en la pantalla Privado** (Más → Privado; antes «Impulsos y recaídas»). Ahí se anota cada día:
+  - los medicamentos, con un botón «lo de siempre» que copia los del último día con medicamentos;
+  - con el interruptor encendido, también el impulso, la recaída, los detonantes y el hábito ligado.
+
+  La pantalla trae además:
+  - el resumen privado;
+  - una tendencia de los últimos 12 meses: días con recaída, impulsos y días con medicamentos;
+  - los días que tomaste cada medicamento;
+  - el registro de los últimos 30 momentos privados, que se pueden corregir.
+
+  Desde Día, el enlace «privado de este día» abre la pantalla en esa fecha. Las correlaciones de estas variables se hacen **solo en R**, como decidiste.
+- **Dónde no se ve: en ninguna otra parte de la app**, ni con el interruptor encendido:
+  - Día, Hoy, momentos, cinta, diarios, libreta, calendario, semana, año, totales, mapa y widgets;
+  - reportes, «Tu año», logros (también los propios), metas, campañas y experimentos (el impulso dejó de ser una medida posible);
+  - Constelación, Red, Tu gente, las sugerencias de @ y # al escribir, «Tus temas», y las variables `per_`, `pen_` y `tema_`;
+  - todas las listas de análisis: `Estadistica.variables()` excluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, las familias `med_` y `det_` y `hab_` del hábito ligado.
+- **El interruptor `Config.seguimiento_privado`** (apagado por omisión) solo decide qué se **ofrece** anotar: con él apagado, la pantalla Privado tiene medicamentos e impulsos; con él encendido, también recaídas, libido y detonantes. Ya no decide qué se muestra fuera de Privado: fuera, nunca se muestra.
+- **La exportación para R lleva todo, siempre.** El panel calcula las variables privadas aunque el interruptor esté apagado, y `vm_momentos.csv`, `vm_dias.csv`, `vm_panel_extendido.csv` y `vm_respaldo.json` las llevan. Las coordenadas de un momento privado ya no se usan para pedir el clima (`Entorno.lugarDe`).
+- **Registrar una recaída** (`Recaidas.registrar`) guarda el momento con hora y lugar, marca el día con recaída y **desmarca el hábito ligado**. Se puede deshacer tal cual (`deshacer`) y cambiar la hora (`moverHora`), que busca la ubicación de esa hora (la más cercana en ±30 min) y descarta la luz y el ruido medidos al registrar.
+- **El resumen privado** (`Recaidas.resumen`):
+  - impulsos y recaídas por hora; recaídas por día de la semana;
+  - lugares, detonantes, qué hacías antes y aparato;
+  - minutos entre un impulso y la recaída que le siguió (dentro de 24 h);
+  - cuántos impulsos pasaron **sin recaída en las 3 horas siguientes**;
+  - días desde la última recaída y rachas.
+- **Lo que no se puede filtrar:** si escribes algo privado en el texto libre del diario o de un momento común, la app no tiene forma de saberlo.
 
 ### 10.3.2 Las rachas cuentan como «limpios» los días sin respuesta (H-8-8)
 
 `Recaidas.resumen` empieza a contar desde el primer día con respuesta y, a partir de ahí, **todo día que no es de recaída cuenta como limpio**, aunque ese día no hayas contestado nada. Es el mismo problema de los datos faltantes del capítulo 3 (sección 3.15): si los días sin registro son justamente los difíciles, la racha queda inflada. Existe `diasConRespuesta()`, pero la racha no la usa.
 
-### 10.3.3 Dónde aparece y dónde no
+### 10.3.3 Dónde aparecía hasta v84 y qué cambió
 
-La Figura 10.1 resume, según el código, qué tipo de dato llega a cada salida. Lo principal:
+La Figura 10.1 resume qué tipo de dato llega a cada salida. Hasta v84, el seguimiento privado se ocultaba de casi todo, pero se filtraba por seis vías. Todas quedaron resueltas en el módulo 10a:
 
-**Se respeta bien**: los momentos de recaída y libido no aparecen en los reportes, «Tu año» (salvo lo de abajo), los logros, el mapa, la semana, el calendario, el año, los totales ni en la Constelación o la Red (capítulo 7). Las variables del panel `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido` y la familia `det_` (detonantes) **solo existen con el interruptor encendido**.
+1. **Los momentos de impulso no eran «privados» para el código** (H-8-1). Contaban en el reporte, en «Tu año», en los logros de momentos, en el mapa, en un widget, en la semana, el calendario, el año, la Constelación, la Red y las presencias. Ahora `Momento.privado` incluye el impulso.
+2. **«La relación del año» podía usar variables privadas y `medicamentos_n`** (H-8-2), y `n_impulso` entraba siempre, aun con el interruptor apagado, porque estaba en el grupo «Momentos» (H-9-1). Ahora `variables()` las excluye.
+3. **La recaída apagaba un hábito con logros, campañas y rachas visibles** (H-8-3, H-9-38), y los logros propios aceptaban variables privadas. Ahora el hábito ligado solo se ve y se marca en Privado (`Privado.habitosVisibles`), y los logros propios sobre algo privado no se ofrecen ni se muestran.
+4. **Los medicamentos no estaban detrás de ninguna regla** (H-8-16). Ahora son privados.
+5. **La exportación salía en claro a la carpeta y a Drive** (H-8-5). Ahora, con datos privados y sin contraseña, el respaldo no sale del teléfono (sección 10.5).
+6. **Las @menciones y #temas de los momentos privados** entraban en `per_`, `tema_`, «Tu gente», «¿Quién es @x?» y las sugerencias al escribir (H-6-1). Ahora se filtran.
 
-**Por dónde se filtra:**
+**Sobre la pregunta del plan («por qué los logros nunca se ligan a sustancias, impulsos, recaídas ni libido»).** El documento de contexto lo afirma de los 12 logros secretos y, en general, de todo el seguimiento privado. El razonamiento es correcto: un logro por «días sin recaída» o por «tomar menos alcohol» convertiría el seguimiento privado en un marcador, con la presión de la ley de Campbell (capítulo 9, sección 9.7) justo sobre los datos más delicados; y uno «por registrar impulsos» premiaría registrarlos.
 
-1. **Los momentos de impulso no son «privados» para el código** (H-8-1). Solo `recaida` y `libido` lo son, aunque la regla declarada del proyecto («Seguimiento privado (impulsos, recaídas, libido, detonantes, medicamentos) nunca en reportes, Tu año, logros, mapas ni widgets») y los comentarios del propio código (`Periodo`: «Nunca toca lo privado (impulsos, detonantes, medicamentos)») los incluyen. En consecuencia, los momentos de impulso:
-   - cuentan en la línea «momenta» del reporte (conteo por tipo) y sus @menciones entran en «con quién»;
-   - pueden aparecer en «Tu año» como «lo que pasó una sola vez»;
-   - **cuentan para los logros de momentos** («Coleccionista», «Cien momentos», «Mil momentos»);
-   - pueden aparecer en el **mapa** (que filtra con `!privado`) y cuentan en el número de momentos de un **widget** (`Widgets.kt`, conteo con `!privado`);
-   - entran en la semana, el calendario, el año, la Constelación, la Red y las presencias (capítulo 7, H-6-1).
-2. **«La relación del año» de «Tu año»** usa todas las variables del panel (`Estadistica.variables(dinamicas = false)`), incluidas las privadas cuando el interruptor está encendido y `medicamentos_n` siempre (H-8-2). Esa tarjeta se puede compartir como imagen.
-3. **La recaída apaga el hábito ligado** (H-8-3), y cada hábito activo tiene logros de constancia («15, 20 o 25 de 30 días») y puede ser reto de campaña. Así, registrar una recaída **sí afecta** logros y campañas, de forma indirecta. Además, los **logros propios** pueden usar cualquier variable del panel, incluidas las privadas y las de sustancias.
-4. **Los medicamentos** no están detrás del interruptor: la sección «Medicamentos» del día siempre se ve y `medicamentos_n` y `med_*` siempre están en el panel (H-8-16). La regla declarada los cuenta como seguimiento privado; la regla no prohíbe mostrarlos en las pantallas ni usarlos en el análisis, pero sí en «Tu año», adonde pueden llegar por la relación del año (punto 2).
-5. **La exportación incluye todo, siempre** (H-8-5): `vm_momentos.csv`, `vm_dias.csv` y `vm_respaldo.json` llevan los momentos privados, detonantes, aparatos y demás, **con o sin el interruptor**. Eso es **intencional** (la regla dice «sí en la exportación a R»); el problema es que, sin contraseña, esos archivos se copian en claro a la carpeta elegida y a Drive (sección 10.5).
-6. **Las menciones dentro de momentos privados** entran en `per_*` y en «Tu gente» (capítulo 7, H-6-1).
-
-**Sobre la pregunta del plan («por qué los logros nunca se ligan a sustancias, impulsos, recaídas ni libido»):** el documento de contexto lo afirma de los 12 logros secretos y, en general, de todo el seguimiento privado. En el código de v81 la afirmación es **casi** cierta. Ningún logro predefinido usa variables de sustancias, impulsos, recaídas ni libido, y el razonamiento es correcto: un logro por «días sin recaída» o por «tomar menos alcohol» convertiría el seguimiento privado en un marcador, con la presión de la ley de Campbell (capítulo 9, sección 9.7) justo sobre los datos más delicados, y uno «por registrar impulsos» premiaría registrarlos. Pero hay tres vías indirectas: los impulsos cuentan como momentos, la recaída desmarca un hábito que tiene logros, y los logros propios aceptan cualquier variable del panel. Las sustancias, en cambio, **no** son privadas según la regla declarada («Sustancias NO son privadas: dato normal»), así que un logro propio sobre ellas no rompe ninguna regla; solo conviene recordar el riesgo de la ley de Campbell.
+Hasta v84 la afirmación era **casi** cierta, por las tres vías indirectas de arriba (puntos 1 y 3). Desde el módulo 10a se cumple. Las sustancias **no** son privadas según la regla declarada («Sustancias NO son privadas: dato normal»), así que un logro propio sobre ellas no rompe ninguna regla; solo conviene recordar el riesgo de la ley de Campbell.
 
 ### 10.3.4 Las reglas declaradas frente al código
 
@@ -80,14 +101,14 @@ La sección 7 del documento de contexto llama a estas reglas «no negociables».
 | `allowBackup=false` | **Sí** | Manifiesto |
 | Fotos nunca se copian | **Sí** | El catálogo guarda hora, coordenadas y aparato, no la imagen |
 | Cartas selladas: sin contenido en búsqueda, CSV ni «Tu año» | **En parte** | El CSV y «Tu año» cumplen; `vm_respaldo.json`, que se exporta junto al CSV, lleva el texto (H-8-5). La búsqueda no la comprobé **[sin verificar]** |
-| Seguimiento privado (impulsos, recaídas, libido, detonantes, medicamentos) nunca en reportes, «Tu año», logros, mapas ni widgets; sí en la exportación a R | **Recaídas, libido y detonantes: sí. Impulsos: no** (reportes, «Tu año», logros, mapa, conteo de un widget; H-8-1). **Medicamentos: no** en «Tu año» (H-8-2). Exportación a R: sí, como dice la regla | `Momento.privado`, `Periodo`, `TuAnio`, `Logros`, `Mapa.kt`, `Widgets.kt` |
+| Seguimiento privado (impulsos, recaídas, libido, detonantes, medicamentos) nunca en reportes, «Tu año», logros, mapas ni widgets; sí en la exportación a R | **Sí desde el módulo 10a**, con una regla más estricta: fuera de la pantalla Privado no aparece en ninguna salida. Hasta v84 fallaba en los impulsos y los medicamentos (H-8-1, H-8-2) | `data/Privado.kt`, `Momento.privado`, `Estadistica.variables` |
 | Sustancias no son privadas | **Sí** | Se tratan como dato normal |
 | La imagen del hall no lleva texto del diario | **Sí** | `HallImagen.kt` («Sin textos del diario ni nada privado»); la cita del diario solo aparece en el detalle del trofeo dentro de la app |
 | «Nada pasa por servidores ajenos salvo Drive, Open-Meteo y Spotify» (sección 1) | **No del todo** | También hay consultas a TMDB, RAWG, TVmaze, Open Library, Crossref y a los mosaicos de OpenStreetMap (sección 10.8; H-8-17) |
 
 ![Figura 10.1](figuras/fig24_flujo_privacidad.png)
 
-*Figura 10.1. Qué tipo de dato llega a cada salida, según el código de v81. Borde rojo: hallazgos de los módulos 6 y 8. Script: `figuras/fig24_flujo_privacidad.py`.*
+*Figura 10.1. Qué tipo de dato llega a cada salida, según el código después del módulo 10a. Borde rojo: hallazgo que sigue abierto (H-8-5). Script: `figuras/fig24_flujo_privacidad.py`.*
 
 ---
 
@@ -131,23 +152,26 @@ Una vez al día (la primera vez que corre la tarea diaria después de las 6:00, 
 
 - **Con contraseña**: se escribe solo `vestigium_respaldo.vmc` y se **borran** los archivos en claro que hubiera de antes (`vm_*.csv`, `vm_*.json`, `LEEME.txt`, `vestigium.R`, `vestigium_*.zip`).
 - **Sin contraseña**: se escriben **todos** los CSV de la exportación, el diccionario, `vm_respaldo.json`, `vestigium.R` y `vestigium_respaldo.zip`, en claro.
+- **Sin contraseña y con datos privados** (desde el módulo 10a): **no se escribe nada** (`Respaldos.bloqueado`). Hoy muestra «Tus respaldos están en pausa…» y llega una notificación por semana hasta que pongas contraseña.
 
 ### 10.5.2 A Google Drive (`data/Drive.kt`)
 
 - Usa el permiso **`drive.file`**: la app solo ve los archivos que ella misma creó, **nunca el resto de tu Drive**. **[Validado]** como el permiso mínimo necesario.
 - Todo va a una carpeta «Vestigium Mei». Cada día **reemplaza** el respaldo del día (y, sin contraseña, los CSV); guarda una **copia semanal** fechada con el lunes (se conservan las **8** más recientes) y una **mensual** (las **12** más recientes).
 - Con contraseña, solo sube el .vmc y borra de Drive los archivos en claro anteriores; sin contraseña, sube los CSV y el .zip en claro.
+- Con datos privados y sin contraseña, no sube nada (desde el módulo 10a), igual que la carpeta. Tampoco se puede **compartir** el respaldo completo desde la pantalla Respaldo: el botón se desactiva y explica por qué.
 - Si el permiso de Google caduca, avisa una vez por semana.
 
 ### 10.5.3 Cuándo falla
 
-- **Sin contraseña, todo queda en claro fuera del teléfono** (H-8-5), incluido el seguimiento privado y el diario completo. El cifrado es opcional y no se propone al activar Drive.
+- **Sin contraseña, todo queda en claro fuera del teléfono** (H-8-5), incluido el diario completo. Desde el módulo 10a, si hay datos privados, el respaldo no sale sin contraseña. La **exportación para R** (resumida o extendida, que pides a mano y compartes) es la excepción: R necesita leer los CSV, así que va sin cifrar, y la pantalla advierte que lleva los datos privados.
+- **El costo de esa regla:** si nunca pones contraseña, los respaldos automáticos quedan en pausa mientras haya datos privados. Por eso el aviso es visible en Hoy y llega una notificación semanal.
 - **Las cartas selladas** van **sin texto** en `vm_cartas.csv` («no se pueden leer antes de su fecha»), pero `vm_respaldo.json`, que se exporta junto, lleva **el texto completo** (H-8-5). El sello se puede saltar abriendo el JSON.
 - **Un respaldo malo puede reemplazar a uno bueno** (H-8-14). Si un día los datos del teléfono se dañan o se pierden (por ejemplo, tras reinstalar), el respaldo de ese día **sobrescribe** el anterior sin comprobar si trae muchos menos datos. La copia semanal de esa semana también será mala si es la primera de la semana. Quedan las copias semanales y mensuales anteriores, pero «Restaurar desde Drive» **toma siempre la más reciente** (`Drive.ultimaCopia`, por fecha de modificación). Para traer una anterior hay que bajarla a mano y usar «Restaurar desde un archivo».
 
 ### 10.5.4 Los reportes, en carpetas públicas (H-8-4)
 
-Los reportes semanales y mensuales se generan **solos** (capítulo 9, sección 9.3.1) y se guardan con `MediaStore` en `Pictures/VestigiumMei` y `Download/VestigiumMei`, fuera del almacenamiento privado de la app. Ahí los ve la galería, cualquier app con permiso para leer imágenes o descargas y, si está activada, la copia automática de fotos del teléfono, que puede subirlos a la nube sin que lo decidas. El reporte excluye el seguimiento privado (salvo los impulsos, H-8-1), las calles y los nombres de lugares, pero incluye **nombres de personas** (salvo en modo discreto, apagado por omisión), la **frase del mejor momento** del diario, ciudades, peso, dinero y ánimo. **[Diseño propio]**: la idea de reportes «para compartir» es coherente, pero guardarlos solos en una carpeta pública convierte cada lunes en una salida de datos que no elegiste.
+Los reportes semanales y mensuales se generan **solos** (capítulo 9, sección 9.3.1) y se guardan con `MediaStore` en `Pictures/VestigiumMei` y `Download/VestigiumMei`, fuera del almacenamiento privado de la app. Ahí los ve la galería, cualquier app con permiso para leer imágenes o descargas y, si está activada, la copia automática de fotos del teléfono, que puede subirlos a la nube sin que lo decidas. El reporte excluye el seguimiento privado (desde el módulo 10a también los impulsos), las calles y los nombres de lugares, pero incluye ciudades, peso, dinero y ánimo. Hasta v84 incluía también los **nombres de personas** (salvo en modo discreto, apagado por omisión) y la **frase del mejor momento** del diario. Desde el módulo 10a, los reportes **que se guardan solos** (lunes y día 1) van siempre en modo discreto, con iniciales, y sin esa frase (`Reportes.reporte(automatico = true)`); los que pides a mano siguen como antes. **[Diseño propio]**: la idea de reportes «para compartir» es coherente, pero guardarlos solos en una carpeta pública convierte cada lunes en una salida de datos que no elegiste.
 
 ---
 
@@ -228,7 +252,8 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 | Verificar sin restaurar | Validado como práctica | — |
 | Combinar al restaurar con reglas distintas por colección | Diseño propio (inconsistente) | — |
 | Ubicación redondeada a 0.01° para el clima | Diseño propio (razonable) | — |
-| Seguimiento privado detrás de un interruptor | Diseño propio | — |
+| Seguimiento privado: visible solo en la pantalla Privado, siempre en la exportación para R | Diseño propio | — |
+| Sin contraseña no sale ningún respaldo si hay datos privados (salvo la exportación para R, a mano) | Diseño propio | — |
 
 ---
 
@@ -236,8 +261,8 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 
 1. Los datos viven solo en el teléfono, sin copia automática de Android; la app puede pedir huella. Salen solo por los respaldos que tú activas y por consultas puntuales (clima con la ubicación redondeada, títulos de obras, mapas).
 2. El **respaldo cifrado** usa AES-256-GCM con sal e IV nuevos en cada archivo: bien diseñado. PBKDF2 con 210 000 iteraciones está por debajo de las 600 000 que recomienda hoy OWASP (H-8-9); lo que más importa es una contraseña larga.
-3. **Sin contraseña, todo sale en claro** a la carpeta y a Drive, incluido el seguimiento privado y el texto de las cartas selladas (H-8-5).
-4. El seguimiento privado se oculta bien en casi todo, pero **los impulsos no cuentan como privados** y llegan a reportes, «Tu año» y logros (H-8-1); «la relación del año» puede usar variables privadas y de medicamentos (H-8-2); la recaída afecta logros de hábitos (H-8-3); las rachas cuentan como limpios los días sin respuesta (H-8-8).
+3. **Sin contraseña, todo sale en claro** a la carpeta y a Drive, incluido el texto de las cartas selladas (H-8-5). Desde el módulo 10a, si hay datos privados, el respaldo no sale sin contraseña; solo la exportación para R, que pides a mano, va en claro y lo advierte.
+4. **El seguimiento privado** (impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado) se ve, desde el módulo 10a, **solo en la pantalla Privado** y va completo a R. Hasta v84 se colaba por los impulsos, los medicamentos y el hábito ligado (H-8-1, H-8-2, H-8-3, H-9-39). Sigue pendiente que las rachas cuentan como limpios los días sin respuesta (H-8-8).
 5. **Verificar** un respaldo es una gran idea, pero el mensaje promete más de lo que comprueba y no revisa la versión del esquema (H-8-12).
 6. **Restaurar** combina con reglas distintas según la colección (H-8-13), y un respaldo malo puede reemplazar al bueno en Drive, que restaura siempre el más reciente (H-8-14).
 7. Los reportes se guardan solos en carpetas públicas con nombres y frases del diario (H-8-4; capítulo 9).
