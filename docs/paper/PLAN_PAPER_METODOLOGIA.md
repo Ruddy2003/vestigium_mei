@@ -19,7 +19,7 @@ _Creado el 26 oct 2026 sobre la versión v81 (commit `fa527df`). Este archivo es
 | 4 | Modelos fisiológicos y variables derivadas | Opus | Alto | Cap. 5 | pendiente |
 | 5 | Núcleo estadístico (app y R) | Opus | Alto | Cap. 6, Apéndices B y C | pendiente |
 | 6 | Personas y red social | Sonnet | Alto | Cap. 7 | hecho 2026-10-27 |
-| 7 | Experimentos personales (N-de-1) | Opus | Alto | Cap. 8 | pendiente |
+| 7 | Experimentos personales (N-de-1) | Opus | Alto | Cap. 8 | hecho 2026-10-27 |
 | 8 | Reportes, motivación, privacidad e integridad | Sonnet | Medio | Caps. 9 y 10 | pendiente |
 | 9 | Revisión metodológica general (diagnóstico) | Opus | Alto | Lista de cambios propuestos | pendiente |
 | 10 | Aplicar los cambios aprobados | Sonnet | Alto | Código + Apéndice D | pendiente |

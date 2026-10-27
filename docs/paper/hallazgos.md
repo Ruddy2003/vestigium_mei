@@ -352,3 +352,103 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** la validez de la IOS es para la versión pictórica en un momento dado; `cercania_media` mide a quién nombras más que la cercanía de ese día.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar; opcionalmente, recordar revisar la cercanía una vez al año.
+
+## Módulo 7 · Experimentos personales N-de-1 (v81, commit `fa527df`)
+
+### H-7-1 · El lavado puede eliminar una condición entera; la plantilla «Creatina» nunca da resultado
+- **Dónde:** `data/Lote3.kt`, `Experimentos.enLavado()` y `PLANTILLAS` («creatina»: antes/después, 8 semanas, 28 días de lavado); `ui/pantallas/Lote3.kt`, `PantallaExperimentos` (opciones de lavado 0, 1, 2, 7 y 28 con cualquier diseño y duración).
+- **Qué pasa:** en la plantilla, el único cambio es el día 28 y los días 28–55 son de lavado: cuentan 28 días sin la acción y 0 con ella, así que `diferencia()` siempre devuelve `null`. Con semanas alternas, un lavado de 7 días elimina toda semana que empieza con un cambio (un plan SÍ no SÍ no SÍ no queda sin ningún día); con 28, todo.
+- **Por qué importa:** el experimento se hace completo y no produce resultado; la plantilla recomendada para el caso más largo es inutilizable.
+- **Gravedad:** Alta.
+- **Propuesta:** impedir lavados ≥ duración de un periodo (o alargar el plan en esos casos); en la plantilla, por ejemplo, 12 semanas con lavado de 28 o contar el lavado solo al inicio de la fase «SÍ» con más semanas.
+
+### H-7-2 · «Terminar experimento» no guarda la fecha
+- **Dónde:** `ui/pantallas/Lote3.kt`, `TarjetaExperimento` (`e.copy(activo = false)`); `data/Lote3.kt`, `Experimentos.resultado()` (no mira `activo`).
+- **Qué pasa:** tras terminar antes de tiempo, los días hasta el final del plan siguen contando según el plan, aunque ya no hagas la acción; el aviso diario desaparece.
+- **Por qué importa:** semanas «SÍ» sin acción se cuentan como «con la acción» y diluyen o distorsionan el resultado.
+- **Gravedad:** Media.
+- **Propuesta:** guardar `fin` al terminar y cortar el análisis en esa fecha.
+
+### H-7-3 · Intervalo demasiado estrecho: días independientes y 1.96 fijo
+- **Dónde:** `ciencia/Estadistica.kt`, `diferencia()`; `Experimentos.resultado()`; también `EtapasDeVida` en `Explorar.kt`.
+- **Qué pasa:** el error estándar de Welch trata cada día como independiente y usa 1.96 aun con 3 días por condición; la unidad sorteada es la semana, no el día. Pistas 1 y 2 del plan, confirmadas.
+- **Por qué importa:** en simulación (6 semanas alternas, sin efecto real), falsas señales del 14 % con autocorrelación 0.3 y del 24 % con 0.5, en lugar del 5 %. Con 3 + 3 días, el intervalo debería ser ~42 % más ancho solo por usar *t*.
+- **Gravedad:** Alta.
+- **Propuesta:** prueba de aleatorización sobre los planes posibles (por semanas); como mínimo, *t* de Welch y un error estándar ajustado por la autocorrelación (como el *n* efectivo de las correlaciones), y exigir más días antes de mostrar el resultado.
+
+### H-7-4 · El resultado se ve y se actualiza durante el experimento
+- **Dónde:** `ui/pantallas/Lote3.kt`, `TarjetaExperimento` (muestra la diferencia y el mensaje de «señal» desde 3 días por condición).
+- **Qué pasa:** se puede mirar cada día y detenerse en la primera «señal».
+- **Por qué importa:** en simulación, detenerse en la primera señal da falsas señales el 30 % (días independientes) a 50 % (autocorrelación 0.3) de las veces; además, ver resultados parciales alimenta la expectativa (sin cegamiento).
+- **Gravedad:** Media.
+- **Propuesta:** ocultar la diferencia hasta terminar el plan (mostrar solo días contados), o marcar el resultado como «provisional».
+
+### H-7-5 · El sorteo libre puede producir un antes/después
+- **Dónde:** `ui/pantallas/Lote3.kt`, `PantallaExperimentos` (`shuffled(...)` de la mitad «SÍ» y la mitad «no»).
+- **Qué pasa:** probabilidad de un bloque puro (todo «SÍ» y luego todo «no», o al revés): 33 % con 4 semanas, 10 % con 6, 2.9 % con 8, 0.2 % con 12. Pista 3 del plan, confirmada.
+- **Por qué importa:** con una tendencia lenta (0.02 desviaciones/día, 8 semanas, sin efecto real), falsas señales del 14 % con sorteo libre frente al 6 % por pares.
+- **Gravedad:** Media.
+- **Propuesta:** sortear por pares de semanas y, si se usa una prueba de aleatorización, recomendar 10–12 semanas (con pares, el *p* mínimo es 1/2^(N/2): 0.125 con 6 semanas).
+
+### H-7-6 · La prueba de tendencia confunde un efecto real con una tendencia
+- **Dónde:** `data/Lote3.kt`, `Experimentos.resultado()` (pendiente del valor contra el día, ambas condiciones juntas, |b/EE| > 2).
+- **Qué pasa:** en un antes/después, un efecto real hace la segunda mitad más alta y la recta lo toma como tendencia.
+- **Por qué importa:** en simulación, con efecto real *d* = 0.8 y sin tendencia, el aviso aparece en el 72 % de los antes/después y el 16 % de los alternos (≈ 5 % esperado); el mensaje sugiere lo contrario de lo que pasa.
+- **Gravedad:** Media.
+- **Propuesta:** ajustar valor ~ día + condición y reportar el efecto de la condición descontada la tendencia; avisar de la tendencia solo con el término del día en ese modelo.
+
+### H-7-7 · d de Cohen sin corrección de Hedges y con umbrales de diseños entre personas
+- **Dónde:** `data/Lote3.kt`, `Experimentos.resultado()` y `tamano()`.
+- **Qué pasa:** *d* con desviación agrupada sin el factor de Hedges (0.80 con 3 + 3 días); etiquetas 0.2/0.5/0.8 pensadas para diferencias entre personas, aplicadas a la variación de un día a otro de una persona.
+- **Por qué importa:** con pocos días, *d* inflado; las etiquetas («mediano», «grande») sugieren comparaciones con la literatura que no aplican.
+- **Gravedad:** Baja.
+- **Propuesta:** aplicar la corrección de Hedges y aclarar en la tarjeta que la escala es relativa a tus días.
+
+### H-7-8 · No se registra la adherencia
+- **Dónde:** modelo `Experimento` (`data/Modelo.kt`); aviso en `ui/pantallas/Dia.kt`.
+- **Qué pasa:** se guarda lo asignado por semana, no si se hizo la acción cada día.
+- **Por qué importa:** el análisis es por intención de tratar; el efecto se diluye con incumplimientos y no se puede medir cuánto se cumplió.
+- **Gravedad:** Media.
+- **Propuesta:** casilla diaria «¿lo hiciste?» en el aviso del Día, guardada por fecha, y mostrar el % de cumplimiento (y un análisis por lo hecho como secundario).
+
+### H-7-9 · El aviso del Día muestra la semana 1 durante la semana previa
+- **Dónde:** `ui/pantallas/Dia.kt` (`ChronoUnit.WEEKS.between(inicio, fecha)`).
+- **Qué pasa:** la función trunca hacia cero: para los 6 días anteriores a `inicio` da 0 y se muestra «semana 1 de N» con su instrucción.
+- **Por qué importa:** si la semana 1 es «SÍ», se puede empezar antes y alterar la línea de base inmediata (no cambia el cálculo, que empieza en `inicio`).
+- **Gravedad:** Baja.
+- **Propuesta:** usar `Experimentos.toca()` (que devuelve `null` antes del inicio) o comprobar `fecha >= inicio`; mostrar «empieza el lunes».
+
+### H-7-10 · El sellado no fija el análisis y no está protegido
+- **Dónde:** `PantallaExperimentos` y `Repo.guardarExperimento()` (sobrescribe el documento).
+- **Qué pasa:** se sella la hora de la hipótesis, pero no el criterio de decisión ni cuándo mirar; el documento se puede reemplazar al restaurar un respaldo.
+- **Por qué importa:** el prerregistro queda incompleto (ver H-7-4); su valor depende de la disciplina del usuario.
+- **Gravedad:** Baja.
+- **Propuesta:** solo documentar; opcionalmente, sellar también el umbral de decisión y guardar una huella (hash) del texto sellado.
+
+### H-7-11 · No hay función de R para analizar los experimentos
+- **Dónde:** `assets/vestigium.R` (lee `vm_experimentos.csv` pero no lo usa); `data/Exportar.kt`, `filasExperimentos()`.
+- **Qué pasa:** el plan, el lavado y la variable se exportan, pero no hay forma reproducible de recalcular el resultado ni de hacer una prueba de aleatorización.
+- **Por qué importa:** el resultado de la app no se puede comprobar fuera de ella; criterio (b) del módulo 9 por ausencia.
+- **Gravedad:** Baja.
+- **Propuesta:** `vm_experimento(id)` que replique `Experimentos.resultado` y añada la prueba de aleatorización sobre todos los planes posibles.
+
+### H-7-12 · «Antes y después» de los cambios de vida: muchas comparaciones y tarjetas repetidas
+- **Dónde:** `ui/pantallas/Explorar.kt`, `EtapasDeVida()`.
+- **Qué pasa:** hasta 8 cambios × 7 variables = 56 comparaciones con el intervalo de H-7-3, sin corrección; un mismo guardado con varios campos produce tarjetas con la misma fecha y los mismos números; ventanas de 60 días que se enciman; fecha de edición, no del cambio real.
+- **Por qué importa:** cabe esperar ~3 diferencias «claras» por azar incluso sin cambios reales (más con autocorrelación); la repetición da la impresión de hallazgos independientes.
+- **Gravedad:** Media.
+- **Propuesta:** agrupar los cambios por fecha, aplicar Benjamini-Hochberg (como en las correlaciones) y un intervalo ajustado por autocorrelación; mantener el aviso de «pista».
+
+### H-7-13 · El panel de los experimentos se recalcula solo cuando cambia el número de días
+- **Dónde:** `ui/pantallas/Lote3.kt`, `PantallaExperimentos` (`remember(Repo.dias.size, Repo.experimentos)`).
+- **Qué pasa:** datos que llegan sin crear un día nuevo (sueño del reloj, pantalla, entrenos) no actualizan el resultado mientras la pantalla siga en memoria.
+- **Por qué importa:** el resultado mostrado puede no incluir los últimos datos.
+- **Gravedad:** Baja.
+- **Propuesta:** usar las mismas claves de caché que el panel general.
+
+### H-7-14 · La medida de la plantilla «Creatina» depende de la sesión y de la progresión
+- **Dónde:** `Experimentos.PLANTILLAS` («creatina» → `volumen_kg`).
+- **Qué pasa:** `volumen_kg` solo existe los días con entreno y depende de qué grupo muscular se entrenó; con entrenamiento progresivo, sube solo.
+- **Por qué importa:** en un antes/después, la progresión se confunde con el efecto (sección 8.8 del capítulo 8).
+- **Gravedad:** Baja.
+- **Propuesta:** medir con un ejercicio fijo de referencia (o el máximo estimado en ese ejercicio) y documentar el riesgo de tendencia.

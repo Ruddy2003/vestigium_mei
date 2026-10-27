@@ -115,3 +115,31 @@ Perry, B. L., Pescosolido, B. A., & Borgatti, S. P. (2018). *Egocentric network 
 _Verificación (módulo 6):_ en esta sesión Crossref no estaba accesible desde la red del entorno; las fichas (autores, año, revista, volumen, páginas y DOI) se comprobaron con búsquedas web contra páginas del editor, PubMed Central, JSTOR o repositorios institucionales. La fórmula de la restricción de Burt se tomó de la documentación de `igraph::constraint` (r.igraph.org), que cita a Burt (2004). El libro de Burt (1992), *Structural holes*, no se usa como fuente directa.
 
 _Afirmaciones marcadas [sin verificar] en el capítulo 7:_ el espaciado de los círculos en la IOS original; que las redes densas se asocian a más apoyo; los «círculos» de cercanía en la literatura sobre tamaño de redes; que `igraph` dé exactamente los mismos valores que `networkx` para el ego (no se pudo ejecutar R).
+
+## Módulo 7 · Capítulo 8 (experimentos personales)
+
+Armitage, P., McPherson, C. K., & Rowe, B. C. (1969). Repeated significance tests on accumulating data. *Journal of the Royal Statistical Society. Series A (General), 132*(2), 235–244. [DOI sin verificar; ficha comprobada en listados de JSTOR y de la propia revista]
+
+Cohen, J. (1988). *Statistical power analysis for the behavioral sciences* (2.ª ed.). Lawrence Erlbaum Associates. https://doi.org/10.4324/9780203771587 [DOI tomado de un registro bibliográfico (GESIS); no comprobado en el editor]
+
+Guyatt, G., Sackett, D., Taylor, D. W., Chong, J., Roberts, R., & Pugsley, S. (1986). Determining optimal therapy—randomized trials in individual patients. *New England Journal of Medicine, 314*(14), 889–892. https://doi.org/10.1056/NEJM198604033141406
+
+Hedges, L. V. (1981). Distribution theory for Glass's estimator of effect size and related estimators. *Journal of Educational Statistics, 6*(2), 107–128. https://doi.org/10.3102/10769986006002107
+
+Hultman, E., Söderlund, K., Timmons, J. A., Cederblad, G., & Greenhaff, P. L. (1996). Muscle creatine loading in men. *Journal of Applied Physiology, 81*(1), 232–237. https://doi.org/10.1152/jappl.1996.81.1.232
+
+Kratochwill, T. R., & Levin, J. R. (2010). Enhancing the scientific credibility of single-case intervention research: Randomization to the rescue. *Psychological Methods, 15*(2), 124–144. https://doi.org/10.1037/a0017736
+
+Kravitz, R. L., Duan, N., & the DEcIDE Methods Center N-of-1 Guidance Panel (Eds.). (2014). *Design and implementation of N-of-1 trials: A user's guide* (AHRQ Publication No. 13(14)-EHC122-EF). Agency for Healthcare Research and Quality. https://effectivehealthcare.ahrq.gov/N-1-Trials.cfm [ficha comprobada; enlace no abierto en la sesión]
+
+Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018). The preregistration revolution. *Proceedings of the National Academy of Sciences, 115*(11), 2600–2606. https://doi.org/10.1073/pnas.1708274114
+
+Simmons, J. P., Nelson, L. D., & Simonsohn, U. (2011). False-positive psychology: Undisclosed flexibility in data collection and analysis allows presenting anything as significant. *Psychological Science, 22*(11), 1359–1366. https://doi.org/10.1177/0956797611417632
+
+Tanious, R., & Onghena, P. (2019). Randomized single-case experimental designs in healthcare research: What, why, and how? *Healthcare, 7*(4), Artículo 143. https://doi.org/10.3390/healthcare7040143
+
+Vohra, S., Shamseer, L., Sampson, M., Bukutu, C., Schmid, C. H., Tate, R., Nikles, J., Zucker, D. R., Kravitz, R., Guyatt, G., Altman, D. G., Moher, D., & the CENT Group. (2015). CONSORT extension for reporting N-of-1 trials (CENT) 2015 Statement. *BMJ, 350*, h1738. https://doi.org/10.1136/bmj.h1738
+
+_Verificación (módulo 7):_ Crossref seguía inaccesible desde el entorno; las fichas se comprobaron con búsquedas web contra el editor, PubMed Central, JSTOR o repositorios. La lista completa de autores de Vohra et al. (2015) se escribió de memoria y no se comprobó uno por uno **[sin verificar]**; título, revista, volumen y DOI sí. De Hultman et al. (1996) solo se usa lo que dice el resumen (≈ 20 % tras 6 días a 20 g/día, mantenido con 2 g/día durante 30 días).
+
+_Afirmaciones marcadas [sin verificar] en el capítulo 8:_ el nombre «lavado analítico» en las guías N-de-1; la autocorrelación típica (0.3–0.5) de medidas diarias de ánimo; el tiempo exacto de vaciado de la creatina; cuánto reducen los avisos al azar el sesgo de expectativa.
