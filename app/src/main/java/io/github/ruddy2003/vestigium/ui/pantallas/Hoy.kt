@@ -95,9 +95,9 @@ object Pendientes {
         val c = Repo.config
         val ignorado = { k: String -> c.avisos_ignorados[k] == hoy }
         // Los días sin llenar de la última semana (N-09): a cualquier hora, hasta que se llenen o se descarten hoy.
-        val faltan = faltantes(hoy)
-        if (faltan.isNotEmpty() && !ignorado("p:ayer"))
-            l += Pendiente("p:ayer", if (faltan == listOf(Fechas.sumar(hoy, -1))) "Diario de ayer" else "Te faltan " + nombresDias(faltan), "ponerse")
+        val dias = faltantes(hoy)
+        if (dias.isNotEmpty() && !ignorado("p:ayer"))
+            l += Pendiente("p:ayer", if (dias == listOf(Fechas.sumar(hoy, -1))) "Diario de ayer" else "Te faltan " + nombresDias(dias), "ponerse")
         if (d.sueno_calidad == null && ahora.hour >= 5) l += Pendiente("p:sueno", "Calidad del sueño", "sueno")
         // Avisos de ánimo que ya sonaron y no contestaste.
         // Se cuentan los avisos sin respuesta (por su hora), no la resta de planeados menos registros.
