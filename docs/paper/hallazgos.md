@@ -452,3 +452,117 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** en un antes/después, la progresión se confunde con el efecto (sección 8.8 del capítulo 8).
 - **Gravedad:** Baja.
 - **Propuesta:** medir con un ejercicio fijo de referencia (o el máximo estimado en ese ejercicio) y documentar el riesgo de tendencia.
+
+## Módulo 8 · Reportes, motivación, privacidad e integridad (v81, commit `fa527df`)
+
+### H-8-1 · Los momentos de impulso no cuentan como privados
+- **Dónde:** `data/Modelo.kt`, `Momento.privado` (solo `recaida` y `libido`); consumidores que filtran con `!privado`: `ciencia/Periodo.kt` (reportes), `ciencia/TuAnio.kt` («lo que pasó una vez»), `ciencia/Logros.kt` (logros de momentos), pantallas Semana, Calendario, Año y Mapa.
+- **Qué pasa:** los momentos de tipo `impulso` aparecen en el conteo por tipo del reporte («momenta»), sus @menciones entran en «con quién», pueden salir en «Tu año» y cuentan para los logros «Coleccionista», «Cien momentos» y «Mil momentos». El comentario de `Periodo` dice «Nunca toca lo privado (impulsos, detonantes, medicamentos)».
+- **Por qué importa:** contenido del seguimiento privado llega a salidas que se guardan en carpetas públicas o se comparten, y a un sistema de recompensas; criterio (c) del módulo 9.
+- **Gravedad:** Alta.
+- **Propuesta:** incluir `impulso` en `Momento.privado` (revisando que la pantalla de impulsos siga funcionando) o filtrarlo explícitamente en `Periodo`, `TuAnio` y `Logros`.
+
+### H-8-2 · «La relación del año» puede usar variables privadas y de medicamentos
+- **Dónde:** `ciencia/TuAnio.kt`, `calcular()` (`Estadistica.relaciones(panelAnio, vars, true)` con `vars = Estadistica.variables(dinamicas = false)`).
+- **Qué pasa:** con el seguimiento privado activo, la lista incluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`; `medicamentos_n` siempre. La relación más fuerte se muestra en una tarjeta que se puede compartir como imagen.
+- **Por qué importa:** contradice «Nunca toca el seguimiento privado» del propio comentario; criterio (c).
+- **Gravedad:** Media.
+- **Propuesta:** excluir el grupo «Privado» y los medicamentos de `vars` en `TuAnio` (y en cualquier salida compartible).
+
+### H-8-3 · La recaída afecta logros y campañas a través del hábito ligado
+- **Dónde:** `data/Recaidas.kt`, `registrar()` (desmarca el hábito ligado); `ciencia/Logros.kt`, constancia por hábito (`c_hab_*`) y logros propios (`serie`, cualquier variable del panel); `ciencia/Campanas.kt`, retos `habito:*`.
+- **Qué pasa:** registrar una recaída baja el progreso de los logros de constancia y de las campañas de ese hábito; un logro propio puede definirse sobre variables privadas o de sustancias.
+- **Por qué importa:** el principio de no premiar ni castigar con logros el seguimiento privado se cumple solo en los logros predefinidos; la vía indirecta añade presión para no registrar recaídas (dato faltante no al azar).
+- **Gravedad:** Media.
+- **Propuesta:** excluir el hábito ligado a recaídas de logros y campañas, y excluir el grupo «Privado» de las fuentes de logros propios.
+
+### H-8-4 · Reportes automáticos en carpetas públicas
+- **Dónde:** `reportes/Reportes.kt`, `guardarPng` / `guardarPdf` (`Pictures/VestigiumMei`, `Download/VestigiumMei`); `avisos/Trabajo.kt` (lunes desde las 8:00, día 1 desde las 9:00).
+- **Qué pasa:** los reportes se generan y guardan solos en almacenamiento compartido; incluyen nombres de personas (modo discreto apagado por omisión), la frase del mejor momento, ciudades, peso, dinero y ánimo.
+- **Por qué importa:** quedan al alcance de la galería, de otras apps con permiso de medios y de la copia automática de fotos a la nube, sin una decisión explícita.
+- **Gravedad:** Media.
+- **Propuesta:** guardarlos en el almacenamiento privado y copiarlos a la carpeta pública solo al compartir; o preguntar la primera vez; considerar el modo discreto por omisión en lo que se guarda solo.
+
+### H-8-5 · Sin contraseña, todo sale en claro; el JSON lleva el texto de las cartas selladas
+- **Dónde:** `data/Respaldos.kt`, `aCarpeta()`; `data/Drive.kt`, `subir()`; `data/Exportar.kt`, `archivos()` (`vm_respaldo.json` junto a `vm_cartas.csv`).
+- **Qué pasa:** sin contraseña, la carpeta elegida y Drive reciben todos los CSV y el JSON completo (diario, seguimiento privado aunque el interruptor esté apagado). `vm_cartas.csv` omite el texto de las cartas selladas, pero `vm_respaldo.json` lo trae.
+- **Por qué importa:** el diario y lo privado quedan legibles fuera del teléfono; el sello de las cartas se puede saltar.
+- **Gravedad:** Media.
+- **Propuesta:** proponer (o exigir) contraseña al activar la carpeta o Drive; en `respaldoJson()` para exportar (no para el respaldo cifrado), omitir el texto de las cartas aún selladas o advertirlo.
+
+### H-8-6 · Logros que premian valores de la valencia
+- **Dónde:** `ciencia/Logros.kt` («Día perfecto»: valencia 7; «Remontada»: de ≤ 2 a ≥ 6 en menos de 3 días).
+- **Qué pasa:** son medallas por escribir ciertos valores en la escala subjetiva más analizada; son secretas y de una sola vez.
+- **Por qué importa:** incentivo (pequeño) a sesgar la valencia; ley de Campbell.
+- **Gravedad:** Baja.
+- **Propuesta:** reemplazarlas por logros de registro (p. ej., «registraste un día difícil con un toque») o solo documentar.
+
+### H-8-7 · Las campañas no quedan registradas como variable
+- **Dónde:** `ciencia/Campanas.kt`; `Config.campanas`; ausentes de `Estadistica.panel` y de la exportación tabular.
+- **Qué pasa:** una semana con campaña de sueño o de pasos es una intervención, pero el panel no la marca.
+- **Por qué importa:** las correlaciones entre la conducta objetivo y otras variables pueden deberse a la campaña (o a por qué se eligió esa semana); no se puede controlar en R; criterio (e).
+- **Gravedad:** Media.
+- **Propuesta:** variable diaria `campana_<reto>` (0/1) en el panel y en la exportación.
+
+### H-8-8 · Las rachas de recaídas cuentan como limpios los días sin respuesta
+- **Dónde:** `data/Recaidas.kt`, `resumen()` (bucle desde el primer día con respuesta; `diasConRespuesta()` no se usa en la racha).
+- **Qué pasa:** todo día sin recaída registrada cuenta como limpio, aunque no haya respuesta ese día.
+- **Por qué importa:** si los días sin registro son los difíciles, la racha se infla (dato faltante no al azar).
+- **Gravedad:** Media.
+- **Propuesta:** contar como limpios solo los días con respuesta «no»; mostrar aparte los días sin respuesta.
+
+### H-8-9 · PBKDF2 con menos iteraciones que la recomendación actual
+- **Dónde:** `data/Respaldos.kt`, `ITERACIONES = 210_000` con `PBKDF2WithHmacSHA256`; contraseña mínima de 8 caracteres (`ui/pantallas/Respaldo.kt`).
+- **Qué pasa:** OWASP recomienda 600 000 iteraciones para PBKDF2-HMAC-SHA256 (210 000 parece corresponder a una recomendación anterior para SHA-512).
+- **Por qué importa:** ~2.9 veces menos costo por intento al adivinar la contraseña de un .vmc robado.
+- **Gravedad:** Baja.
+- **Propuesta:** subir a 600 000 guardando el número de iteraciones en el encabezado (nueva versión del formato, p. ej. `…-CIFRADO-2`) para seguir abriendo los archivos viejos; sugerir contraseñas largas.
+
+### H-8-10 · El «ánimo del día» de reportes y «Tu año» mezcla instrumentos
+- **Dónde:** `ciencia/Periodo.kt`, `valDe()`.
+- **Qué pasa:** usa la valencia del diario y, si falta, el promedio de los registros momentáneos.
+- **Por qué importa:** el ánimo medio de periodos con distinta cobertura del diario no es comparable (capítulo 3, sección 3.3.4).
+- **Gravedad:** Baja.
+- **Propuesta:** usar solo la valencia del diario (y mostrar aparte la de los avisos) o indicar cuántos días vienen de cada fuente.
+
+### H-8-11 · Comparaciones con el periodo anterior sin incertidumbre
+- **Dónde:** `reportes/Reportes.kt`, `cambio()` (umbral fijo 0.05 / 0.5); `Periodo` (mínimo 3 días en el periodo anterior).
+- **Qué pasa:** cualquier diferencia ≥ 0.05 se presenta como cambio.
+- **Por qué importa:** con pocas observaciones se reportan como cambios variaciones de azar.
+- **Gravedad:** Baja.
+- **Propuesta:** solo documentar, o marcar «parecido» cuando la diferencia sea menor que el error típico de la semana.
+
+### H-8-12 · «Verificar» promete más de lo que comprueba y no revisa el esquema
+- **Dónde:** `data/Respaldos.kt`, `verificar()` y `contenido()`; `data/Modelo.kt`, `JSON { ignoreUnknownKeys = true }`.
+- **Qué pasa:** el mensaje dice «se lee completo y no le falta nada» sin comparar con el teléfono; no compara `schema_v` del respaldo con el de la app; al restaurar un respaldo de una versión más nueva, los campos desconocidos se descartan en silencio.
+- **Por qué importa:** falsa sensación de seguridad; pérdida silenciosa de datos al restaurar entre versiones; criterio (d).
+- **Gravedad:** Media.
+- **Propuesta:** decir «se lee completo» y comparar conteos con el teléfono; avisar (o impedir restaurar) si `schema_v` del respaldo es mayor que `SCHEMA_V`.
+
+### H-8-13 · Restaurar combina con reglas distintas por colección
+- **Dónde:** `data/Importar.kt`, `respaldoTexto()`; `data/Repo.kt`, `importarDias(sobrescribir = false)`.
+- **Qué pasa:** en días gana el teléfono; en salud, pantalla, lugares, cartas, experimentos y otras gana el respaldo; momentos y obras se agregan por id; MacroFactor solo si no hay nada.
+- **Por qué importa:** restaurar sobre un teléfono con un día incompleto no recupera el diario de ese día; un respaldo viejo puede pisar datos nuevos de salud; no se avisa; criterio (d).
+- **Gravedad:** Media.
+- **Propuesta:** regla única (gana el documento con `ts_editado` más reciente, o fusión campo por campo de los días) e informe de conflictos.
+
+### H-8-14 · Un respaldo malo puede reemplazar al bueno; Drive restaura siempre el más reciente
+- **Dónde:** `data/Drive.kt`, `subir()` (reemplaza el respaldo del día y crea la semanal sin comparar) y `ultimaCopia()` / `restaurar()`; `data/Respaldos.kt`, `aCarpeta()`.
+- **Qué pasa:** tras una pérdida o daño de datos en el teléfono, el respaldo automático sube la versión empobrecida; la restauración desde Drive elige la copia con fecha de modificación más reciente.
+- **Por qué importa:** la protección contra pérdida depende de copias más viejas que la app no ofrece restaurar; criterio (d).
+- **Gravedad:** Media.
+- **Propuesta:** no sobrescribir si el respaldo nuevo trae muchos menos días o momentos que el anterior (y avisar); dejar elegir la copia a restaurar.
+
+### H-8-15 · Cambiar la contraseña deja copias viejas con la contraseña anterior
+- **Dónde:** `data/Respaldos.kt`, `ponerContrasena()`; copias semanales y mensuales de `data/Drive.kt`.
+- **Qué pasa:** las copias ya subidas siguen cifradas con la contraseña anterior.
+- **Por qué importa:** para restaurar una copia vieja hace falta recordar la contraseña de entonces.
+- **Gravedad:** Baja.
+- **Propuesta:** avisarlo al cambiarla (o recifrar las copias existentes).
+
+### H-8-16 · Los medicamentos no están detrás del interruptor privado
+- **Dónde:** `ui/pantallas/Dia.kt` (sección «Medicamentos» siempre visible); `ciencia/Estadistica.kt` (`medicamentos_n` siempre); `ciencia/Dinamicas.kt` (`med_`); comentario de `ciencia/Periodo.kt`.
+- **Qué pasa:** el código los trata como datos de salud normales, pero su propio comentario y la guía del proyecto los cuentan como seguimiento privado.
+- **Por qué importa:** inconsistencia de criterio; llegan a «Tu año» (H-8-2) y a cualquier análisis.
+- **Gravedad:** Baja.
+- **Propuesta:** decidir explícitamente; si son privados, ponerlos detrás del interruptor y excluirlos de salidas compartibles.

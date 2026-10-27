@@ -110,7 +110,7 @@ Fruchterman, T. M. J., & Reingold, E. M. (1991). Graph drawing by force-directed
 
 Gächter, S., Starmer, C., & Tufano, F. (2015). Measuring the closeness of relationships: A comprehensive evaluation of the 'Inclusion of the Other in the Self' scale. *PLoS ONE, 10*(6), e0129478. https://doi.org/10.1371/journal.pone.0129478
 
-Perry, B. L., Pescosolido, B. A., & Borgatti, S. P. (2018). *Egocentric network analysis: Foundations, methods, and models*. Cambridge University Press. https://doi.org/10.1017/9781316443255 [DOI sin verificar: la ficha del libro se comprobó, el DOI se dedujo del identificador de Cambridge]
+Perry, B. L., Pescosolido, B. A., & Borgatti, S. P. (2018). *Egocentric network analysis: Foundations, methods, and models*. Cambridge University Press. https://doi.org/10.1017/9781316443255 [DOI comprobado en Crossref en la sesión del módulo 8]
 
 _Verificación (módulo 6):_ en esta sesión Crossref no estaba accesible desde la red del entorno; las fichas (autores, año, revista, volumen, páginas y DOI) se comprobaron con búsquedas web contra páginas del editor, PubMed Central, JSTOR o repositorios institucionales. La fórmula de la restricción de Burt se tomó de la documentación de `igraph::constraint` (r.igraph.org), que cita a Burt (2004). El libro de Burt (1992), *Structural holes*, no se usa como fuente directa.
 
@@ -118,9 +118,9 @@ _Afirmaciones marcadas [sin verificar] en el capítulo 7:_ el espaciado de los c
 
 ## Módulo 7 · Capítulo 8 (experimentos personales)
 
-Armitage, P., McPherson, C. K., & Rowe, B. C. (1969). Repeated significance tests on accumulating data. *Journal of the Royal Statistical Society. Series A (General), 132*(2), 235–244. [DOI sin verificar; ficha comprobada en listados de JSTOR y de la propia revista]
+Armitage, P., McPherson, C. K., & Rowe, B. C. (1969). Repeated significance tests on accumulating data. *Journal of the Royal Statistical Society. Series A (General), 132*(2), 235–244. https://doi.org/10.2307/2343787 [DOI comprobado en Crossref en la sesión del módulo 8]
 
-Cohen, J. (1988). *Statistical power analysis for the behavioral sciences* (2.ª ed.). Lawrence Erlbaum Associates. https://doi.org/10.4324/9780203771587 [DOI tomado de un registro bibliográfico (GESIS); no comprobado en el editor]
+Cohen, J. (1988). *Statistical power analysis for the behavioral sciences* (2.ª ed.). Lawrence Erlbaum Associates. https://doi.org/10.4324/9780203771587 [DOI comprobado en Crossref en la sesión del módulo 8; corresponde a la reedición digital de Routledge de 2013]
 
 Guyatt, G., Sackett, D., Taylor, D. W., Chong, J., Roberts, R., & Pugsley, S. (1986). Determining optimal therapy—randomized trials in individual patients. *New England Journal of Medicine, 314*(14), 889–892. https://doi.org/10.1056/NEJM198604033141406
 
@@ -140,6 +140,34 @@ Tanious, R., & Onghena, P. (2019). Randomized single-case experimental designs i
 
 Vohra, S., Shamseer, L., Sampson, M., Bukutu, C., Schmid, C. H., Tate, R., Nikles, J., Zucker, D. R., Kravitz, R., Guyatt, G., Altman, D. G., Moher, D., & the CENT Group. (2015). CONSORT extension for reporting N-of-1 trials (CENT) 2015 Statement. *BMJ, 350*, h1738. https://doi.org/10.1136/bmj.h1738
 
-_Verificación (módulo 7):_ Crossref seguía inaccesible desde el entorno; las fichas se comprobaron con búsquedas web contra el editor, PubMed Central, JSTOR o repositorios. La lista completa de autores de Vohra et al. (2015) se escribió de memoria y no se comprobó uno por uno **[sin verificar]**; título, revista, volumen y DOI sí. De Hultman et al. (1996) solo se usa lo que dice el resumen (≈ 20 % tras 6 días a 20 g/día, mantenido con 2 g/día durante 30 días).
+_Verificación (módulo 7):_ Crossref seguía inaccesible desde el entorno; las fichas se comprobaron con búsquedas web contra el editor, PubMed Central, JSTOR o repositorios. La lista de autores de Vohra et al. (2015) se comprobó en Crossref en la sesión del módulo 8 (Crossref da «C.» para Schmid y «D.» para Zucker y Altman, sin segunda inicial). De Hultman et al. (1996) solo se usa lo que dice el resumen (≈ 20 % tras 6 días a 20 g/día, mantenido con 2 g/día durante 30 días).
 
 _Afirmaciones marcadas [sin verificar] en el capítulo 8:_ el nombre «lavado analítico» en las guías N-de-1; la autocorrelación típica (0.3–0.5) de medidas diarias de ánimo; el tiempo exacto de vaciado de la creatina; cuánto reducen los avisos al azar el sesgo de expectativa.
+
+## Módulo 8 · Capítulos 9 y 10 (reportes, motivación, privacidad e integridad)
+
+Campbell, D. T. (1979). Assessing the impact of planned social change. *Evaluation and Program Planning, 2*(1), 67–90. https://doi.org/10.1016/0149-7189(79)90048-X
+
+Choe, E. K., Lee, N. B., Lee, B., Pratt, W., & Kientz, J. A. (2014). Understanding quantified-selfers' practices in collecting and exploring personal data. En *Proceedings of the SIGCHI Conference on Human Factors in Computing Systems* (pp. 1143–1152). ACM. https://doi.org/10.1145/2556288.2557372
+
+Cleveland, W. S., & McGill, R. (1984). Graphical perception: Theory, experimentation, and application to the development of graphical methods. *Journal of the American Statistical Association, 79*(387), 531–554. https://doi.org/10.1080/01621459.1984.10478080
+
+Deci, E. L., Koestner, R., & Ryan, R. M. (1999). A meta-analytic review of experiments examining the effects of extrinsic rewards on intrinsic motivation. *Psychological Bulletin, 125*(6), 627–668. https://doi.org/10.1037/0033-2909.125.6.627
+
+Deterding, S., Dixon, D., Khaled, R., & Nacke, L. (2011). From game design elements to gamefulness: Defining "gamification". En *Proceedings of the 15th International Academic MindTrek Conference* (pp. 9–15). ACM. https://doi.org/10.1145/2181037.2181040
+
+Dworkin, M. J. (2007). *Recommendation for block cipher modes of operation: Galois/Counter Mode (GCM) and GMAC* (NIST Special Publication 800-38D). National Institute of Standards and Technology. https://doi.org/10.6028/NIST.SP.800-38D
+
+Hamari, J., Koivisto, J., & Sarsa, H. (2014). Does gamification work? A literature review of empirical studies on gamification. En *2014 47th Hawaii International Conference on System Sciences* (pp. 3025–3034). IEEE. https://doi.org/10.1109/HICSS.2014.377
+
+Korotitsch, W. J., & Nelson-Gray, R. O. (1999). An overview of self-monitoring research in assessment and treatment. *Psychological Assessment, 11*(4), 415–425. https://doi.org/10.1037/1040-3590.11.4.415
+
+Li, I., Dey, A., & Forlizzi, J. (2010). A stage-based model of personal informatics systems. En *Proceedings of the SIGCHI Conference on Human Factors in Computing Systems* (pp. 557–566). ACM. https://doi.org/10.1145/1753326.1753409
+
+OWASP Foundation. (s. f.). *Password storage cheat sheet*. OWASP Cheat Sheet Series. Recuperado el 27 de octubre de 2026, de https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+
+Turan, M. S., Barker, E., Burr, W., & Chen, L. (2010). *Recommendation for password-based key derivation: Part 1: Storage applications* (NIST Special Publication 800-132). National Institute of Standards and Technology. https://doi.org/10.6028/NIST.SP.800-132
+
+_Verificación (módulo 8):_ todos los DOI de este bloque se comprobaron en Crossref durante la sesión (ya había acceso a internet). La página de OWASP se consultó en la sesión: recomienda 600 000 iteraciones para PBKDF2-HMAC-SHA256, 220 000 para HMAC-SHA512 y 1 400 000 para HMAC-SHA1. En la misma sesión se comprobaron en Crossref tres DOI que los módulos 6 y 7 habían dejado «sin verificar» (Perry et al., 2018; Armitage et al., 1969; Cohen, 1988) y los autores de Vohra et al. (2015); se corrigieron sus notas arriba.
+
+_Afirmaciones marcadas [sin verificar] en los capítulos 9 y 10:_ que 7 h sea la recomendación habitual mínima de sueño para adultos; cómo cifra Android el almacenamiento en cada versión; que la lectura de entradas .zip compruebe el CRC-32; las políticas de privacidad de los servicios externos. Además, el capítulo 9 se escribió sin la sección 7 de `VESTIGIUM_MEI_CONTEXTO.md` (no está en el repositorio).
