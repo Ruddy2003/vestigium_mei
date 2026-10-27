@@ -57,6 +57,12 @@ object Repo {
     /** Tomas de suplementos y minutos de la laptop (Cold Turkey). */
     var tomas by mutableStateOf<List<TomaSuplemento>>(emptyList()); private set
     var laptop by mutableStateOf<Map<String, LaptopDia>>(emptyMap()); private set
+    /** Los avisos de ánimo de cada día: planeados, vencidos y mostrados (v13). */
+    var avisos by mutableStateOf<Map<String, AvisosDia>>(emptyMap()); private set
+    /** Documentos que no se pudieron leer, por colección (se muestran en Estado de los datos). */
+    var ilegibles by mutableStateOf<Map<String, Int>>(emptyMap()); private set
+    /** Si la configuración no se pudo leer al abrir: la hora con que se guardó la copia del original (colección config_ilegible). */
+    var configIlegible by mutableStateOf<String?>(null); private set
 
     @Synchronized
     fun init(ctx: Context) {
@@ -75,7 +81,18 @@ object Repo {
         pantalla = cargar("pantalla", PantallaDia.serializer()).associateBy { it.fecha }
         cartas = cargar("cartas", Carta.serializer())
         experimentos = cargar("experimentos", Experimento.serializer())
-        config = db.uno("config", "config")?.let { runCatching { JSON.decodeFromString(Config.serializer(), it) }.getOrNull() } ?: Config()
+        // Si la configuración no se puede leer, se guarda el texto original aparte antes de seguir con una vacía:
+        // así el siguiente cambio de ajustes no lo sobrescribe (se perderían personas, hábitos, perfil, campañas…).
+        val crudo = db.uno("config", "config")
+        config = crudo?.let { t ->
+            runCatching { JSON.decodeFromString(Config.serializer(), t) }.getOrElse {
+                val ya = db.todos("config_ilegible").any { it == t }
+                val ts = Fechas.ahoraIso()
+                if (!ya) db.poner("config_ilegible", ts, null, t)
+                configIlegible = ts
+                null
+            }
+        } ?: Config()
         // El tema «Día de Muertos» se convirtió en «Botánico»: quien lo tenía elegido pasa al nuevo.
         if (config.tema == "muertos") { config = config.copy(tema = "botanico"); db.poner("config", "config", null, JSON.encodeToString(Config.serializer(), config)) }
         entorno = cargar("entorno", EntornoDia.serializer()).associateBy { it.fecha }
@@ -99,13 +116,23 @@ object Repo {
         metas = cargar("metas", Meta.serializer()).sortedBy { it.creada }
         tomas = cargar("tomas", TomaSuplemento.serializer()).sortedBy { it.ts }
         laptop = cargar("laptop", LaptopDia.serializer()).associateBy { it.fecha }
+        avisos = cargar("avisos", AvisosDia.serializer()).associateBy { it.fecha }
         listo = true
     }
 
     fun db(): Db = db
 
-    private fun <T> cargar(col: String, s: KSerializer<T>): List<T> =
-        db.todos(col).mapNotNull { runCatching { JSON.decodeFromString(s, it) }.getOrNull() }
+    private fun <T> cargar(col: String, s: KSerializer<T>): List<T> = leer(col, db.todos(col), s)
+
+    /** Decodifica y anota cuántos documentos de [col] no se pudieron leer (en las consultas por fechas, el mayor conteo visto). */
+    private fun <T> leer(col: String, textos: List<String>, s: KSerializer<T>): List<T> {
+        val (l, fallidos) = Decodificar.todos(textos, s)
+        if (fallidos > 0) {
+            val n = maxOf(fallidos, ilegibles[col] ?: 0)
+            if (listo) enMain { ilegibles = ilegibles + (col to n) } else ilegibles = ilegibles + (col to n)
+        }
+        return l
+    }
 
     private fun enMain(b: () -> Unit) { if (Looper.myLooper() == Looper.getMainLooper()) b() else main.post(b) }
 
@@ -118,8 +145,9 @@ object Repo {
     fun guardarDia(d: Dia) {
         val ahora = Fechas.ahoraIso()
         val previo = dias[d.fecha]
-        val retro = previo?.retroactivo ?: (Fechas.parse(d.fecha).isBefore(Fechas.parse(Fechas.diaLogico())))
-        val final = d.copy(schema_v = SCHEMA_V, ts_creado = d.ts_creado ?: previo?.ts_creado ?: ahora, ts_editado = ahora, retroactivo = retro)
+        val tsVal = Reglas.tsValencia(d, previo, ahora)
+        val retro = Reglas.retroactivo(d.fecha, tsVal, previo?.retroactivo, Fechas.diaLogico())
+        val final = d.copy(schema_v = SCHEMA_V, ts_creado = d.ts_creado ?: previo?.ts_creado ?: ahora, ts_editado = ahora, retroactivo = retro, ts_valencia = tsVal)
         db.poner("dias", final.fecha, final.fecha, JSON.encodeToString(Dia.serializer(), final))
         enMain { dias = dias + (final.fecha to final) }
     }
@@ -237,10 +265,12 @@ object Repo {
         enMain { gastos = (gastos.filter { it.id != g.id } + g).sortedBy { it.fecha + it.hora } }
     }
     fun borrarGasto(id: String) { db.borrar("gastos", id); enMain { gastos = gastos.filter { it.id != id } } }
+    /** Gastos de un respaldo o de la versión web: los que ya existen (mismo id) no se tocan, ni en la base ni en memoria. */
     fun importarGastos(lista: List<Gasto>) {
-        db.transaccion { lista.forEach { db.poner("gastos", it.id, it.fecha, JSON.encodeToString(Gasto.serializer(), it)) } }
-        val ids = gastos.map { it.id }.toSet()
-        enMain { gastos = (gastos + lista.filter { it.id !in ids }).sortedBy { it.fecha + it.hora } }
+        val nuevos = Fusion.nuevosPorId(gastos, lista) { it.id }
+        if (nuevos.isEmpty()) return
+        db.transaccion { nuevos.forEach { db.poner("gastos", it.id, it.fecha, JSON.encodeToString(Gasto.serializer(), it)) } }
+        enMain { gastos = (gastos + nuevos).sortedBy { it.fecha + it.hora } }
     }
 
     // ---------- Ingresos ----------
@@ -250,9 +280,10 @@ object Repo {
     }
     fun borrarIngreso(id: String) { db.borrar("ingresos", id); enMain { ingresos = ingresos.filter { it.id != id } } }
     fun importarIngresos(lista: List<Ingreso>) {
-        db.transaccion { lista.forEach { db.poner("ingresos", it.id, it.fecha, JSON.encodeToString(Ingreso.serializer(), it)) } }
-        val ids = ingresos.map { it.id }.toSet()
-        enMain { ingresos = (ingresos + lista.filter { it.id !in ids }).sortedBy { it.fecha + it.hora } }
+        val nuevos = Fusion.nuevosPorId(ingresos, lista) { it.id }
+        if (nuevos.isEmpty()) return
+        db.transaccion { nuevos.forEach { db.poner("ingresos", it.id, it.fecha, JSON.encodeToString(Ingreso.serializer(), it)) } }
+        enMain { ingresos = (ingresos + nuevos).sortedBy { it.fecha + it.hora } }
     }
 
     // ---------- Escalas y reacción ----------
@@ -367,6 +398,32 @@ object Repo {
         enMain { notifs = notifs + (fecha to n) }
     }
 
+    private val avisosMem = HashMap<String, AvisosDia>()
+    /** Cambia el registro de avisos de ánimo del día y lo guarda. Se llama desde el trabajo de fondo. */
+    @Synchronized
+    fun anotarAvisos(fecha: String, f: (AvisosDia) -> AvisosDia) {
+        val previo = avisosMem[fecha] ?: avisos[fecha] ?: AvisosDia(fecha)
+        val n = f(previo)
+        if (n == previo && fecha in avisos) return
+        avisosMem[fecha] = n
+        db.poner("avisos", fecha, fecha, JSON.encodeToString(AvisosDia.serializer(), n))
+        enMain { avisos = avisos + (fecha to n) }
+    }
+    /** Avisos de un respaldo: se juntan con lo de aquí sin perder ningún aviso de ninguno de los dos. */
+    fun importarAvisos(lista: List<AvisosDia>) {
+        if (lista.isEmpty()) return
+        val nuevos = lista.mapNotNull { r ->
+            val a = avisos[r.fecha] ?: return@mapNotNull r
+            val n = a.copy(planeados = maxOf(a.planeados, r.planeados), vencidos = (a.vencidos + r.vencidos).distinct().sorted(), mostrados = (a.mostrados + r.mostrados).distinct().sorted())
+            n.takeIf { it != a }
+        }
+        if (nuevos.isEmpty()) return
+        db.transaccion { nuevos.forEach { db.poner("avisos", it.fecha, it.fecha, JSON.encodeToString(AvisosDia.serializer(), it)) } }
+        enMain { avisos = avisos + nuevos.associateBy { it.fecha } }
+    }
+    /** Solo para las capturas de diseño. */
+    fun avisosEnMemoria(a: Map<String, AvisosDia>) { avisos = a }
+
     private val actMem = HashMap<String, ActividadDia>()
     @Synchronized
     fun sumarActividad(fecha: String, tipo: String, minutos: Int) {
@@ -392,7 +449,7 @@ object Repo {
     fun guardarEscucha(e: Escucha) = db.poner("escuchas", e.id, e.fecha, JSON.encodeToString(Escucha.serializer(), e))
     /** Lo escuchado entre dos fechas. Por defecto solo música: los videos de YouTube o del navegador quedan fuera (sus canales no son artistas). */
     fun escuchas(desde: String, hasta: String, todas: Boolean = false): List<Escucha> =
-        db.porFecha("escuchas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Escucha.serializer(), it) }.getOrNull() }
+        leer("escuchas", db.porFecha("escuchas", desde, hasta), Escucha.serializer())
             .filter { todas || it.esMusica }.sortedBy { it.ts }
 
     fun guardarComunicacion(c: ComunicacionDia) {
@@ -425,7 +482,7 @@ object Repo {
         db.transaccion { lista.forEach { db.poner("huellas", it.id, it.fecha, JSON.encodeToString(Huella.serializer(), it)) } }
     }
     fun huellasDe(desde: String, hasta: String): List<Huella> =
-        db.porFecha("huellas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Huella.serializer(), it) }.getOrNull() }
+        leer("huellas", db.porFecha("huellas", desde, hasta), Huella.serializer())
     fun guardarHuellasDia(lista: List<HuellasDia>) {
         db.transaccion { lista.forEach { db.poner("huellas_dia", it.fecha, it.fecha, JSON.encodeToString(HuellasDia.serializer(), it)) } }
         enMain { huellas = huellas + lista.associateBy { it.fecha } }
@@ -449,9 +506,9 @@ object Repo {
         enMain { nutricion = nutricion + dias.associateBy { it.fecha }; entrenos = entrenos + entr.associateBy { it.fecha } }
     }
     fun comidas(desde: String, hasta: String): List<Comida> =
-        db.porFecha("comidas", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Comida.serializer(), it) }.getOrNull() }.sortedWith(compareBy({ it.fecha }, { it.hora }))
+        leer("comidas", db.porFecha("comidas", desde, hasta), Comida.serializer()).sortedWith(compareBy({ it.fecha }, { it.hora }))
     fun series(desde: String, hasta: String): List<Serie> =
-        db.porFecha("series", desde, hasta).mapNotNull { runCatching { JSON.decodeFromString(Serie.serializer(), it) }.getOrNull() }.sortedWith(compareBy({ it.fecha }, { it.orden }))
+        leer("series", db.porFecha("series", desde, hasta), Serie.serializer()).sortedWith(compareBy({ it.fecha }, { it.orden }))
 
     // ---------- Escalada y biblioteca ----------
     fun guardarAscenso(a: Ascenso) {

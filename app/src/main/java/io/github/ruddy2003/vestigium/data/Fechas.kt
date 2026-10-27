@@ -40,6 +40,9 @@ object Fechas {
     fun diaDeMillis(ms: Long): String = iso(Instant.ofEpochMilli(ms).atZone(zona()).toLocalDate())
     fun diaLogicoDeMillis(ms: Long): String = diaLogico(LocalDateTime.ofInstant(Instant.ofEpochMilli(ms), zona()))
 
+    /** De dónde a dónde va el día lógico [s]: de las 05:00 de ese día a las 05:00 del siguiente. */
+    fun inicioDiaLogico(s: String): Long = parse(s).atTime(5, 0).atZone(zona()).toInstant().toEpochMilli()
+    fun finDiaLogico(s: String): Long = parse(s).plusDays(1).atTime(5, 0).atZone(zona()).toInstant().toEpochMilli()
     fun inicioDia(s: String): Long = parse(s).atStartOfDay(zona()).toInstant().toEpochMilli()
     fun finDia(s: String): Long = parse(s).plusDays(1).atStartOfDay(zona()).toInstant().toEpochMilli()
 

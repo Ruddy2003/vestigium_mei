@@ -153,9 +153,12 @@ object Salud {
             val rango = TimeRangeFilter.between(ini, fin)
             var s = Repo.salud[fecha] ?: SaludDia(fecha = fecha)
 
-            intentar("pasos", HealthPermission.getReadPermission(StepsRecord::class)) {
-                val ag = cliente.aggregate(AggregateRequest(setOf(StepsRecord.COUNT_TOTAL), rango))
-                s = s.copy(pasos = ag[StepsRecord.COUNT_TOTAL]); if (s.pasos != null) bien("pasos")
+            // Los pasos, del día lógico (v13): de las 05:00 a las 05:00 del día siguiente; lo de la madrugada es del día anterior.
+            val iniPasos = Instant.ofEpochMilli(Fechas.inicioDiaLogico(fecha))
+            val finPasos = Instant.ofEpochMilli(minOf(Fechas.finDiaLogico(fecha), System.currentTimeMillis()))
+            if (finPasos > iniPasos) intentar("pasos", HealthPermission.getReadPermission(StepsRecord::class)) {
+                val ag = cliente.aggregate(AggregateRequest(setOf(StepsRecord.COUNT_TOTAL), TimeRangeFilter.between(iniPasos, finPasos)))
+                s = s.copy(pasos = ag[StepsRecord.COUNT_TOTAL], ventana_pasos = "logica"); if (s.pasos != null) bien("pasos")
             }
             intentar("ritmo cardiaco", HealthPermission.getReadPermission(HeartRateRecord::class)) {
                 val ag = cliente.aggregate(AggregateRequest(setOf(HeartRateRecord.BPM_AVG, HeartRateRecord.BPM_MIN, HeartRateRecord.BPM_MAX), rango))

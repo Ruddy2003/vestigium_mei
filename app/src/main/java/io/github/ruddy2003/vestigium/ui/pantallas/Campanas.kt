@@ -145,7 +145,7 @@ fun PantallaCampanas(nav: Nav) {
     val hoy = Fechas.diaLogico()
     val lunes = Fechas.lunesDe(hoy)
     val tema = Estilo.tema
-    val actuales = Repo.config.campanas.filter { it.lunes == lunes }
+    val actuales = Campanas.deLaSemana(hoy)
     var eligiendo by remember { mutableStateOf(false) }
     Hoja("Campañas", nav.atras, "Retos opcionales de lunes a domingo. Cada día que cumples avanzas una etapa; al llegar a la meta, ganas la campaña.") {
         if (actuales.isEmpty() && !eligiendo) Vacio("Esta semana no tienes campañas. Elige hasta tres retos: dormir, moverte, escribir, enfocarte, leer…")
@@ -160,7 +160,8 @@ fun PantallaCampanas(nav: Nav) {
                     e.perdida -> "Esta ya no se alcanza. La próxima semana se vuelve a intentar."
                     else -> "${e.hechos} de ${c.meta}. " + (e.reto?.descripcion ?: "")
                 }, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
-                TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas - c) } }) {
+                // Abandonar la cierra hoy, no la borra: queda en la historia (y en el panel, los días que la tuviste).
+                TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas.map { if (it.id == c.id) it.copy(abandonada = hoy) else it }) } }) {
                     Text("abandonar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -187,7 +188,7 @@ fun PantallaCampanas(nav: Nav) {
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) { (3..7).forEach { m -> Ficha("$m", meta == m) { meta = m } } }
                     Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         BotonPrincipal("Aceptar la campaña") {
-                            val c = Campana(Repo.nuevoId(), lunes, id, meta, tema.id)
+                            val c = Campana(Repo.nuevoId(), lunes, id, meta, tema.id, aceptada = hoy)
                             Repo.cambiarConfig { cc -> cc.copy(campanas = cc.campanas + c) }
                             eligiendo = false; elegido = null
                         }
@@ -196,8 +197,8 @@ fun PantallaCampanas(nav: Nav) {
                 }
             }
         }
-        val pasadas = Repo.config.campanas.filter { it.lunes < lunes }.sortedByDescending { it.lunes }
-        if (pasadas.isNotEmpty()) Seccion("Campañas anteriores", "${Campanas.victorias(hoy).size} ganadas de ${Repo.config.campanas.count { it.lunes < lunes }}.") {
+        val pasadas = Repo.config.campanas.filter { it.lunes < lunes || it.abandonada != null }.sortedByDescending { it.lunes }
+        if (pasadas.isNotEmpty()) Seccion("Campañas anteriores", "${Campanas.victorias(hoy).size} ganadas de ${pasadas.size}.") {
             Tarjeta {
                 pasadas.take(20).forEachIndexed { i, c ->
                     if (i > 0) HorizontalDivider()
@@ -205,7 +206,7 @@ fun PantallaCampanas(nav: Nav) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(Campanas.titulo(c.tema.ifBlank { tema.id }, c.lunes, c.reto), style = MaterialTheme.typography.bodyMedium)
-                            Text("semana del ${Fechas.corto(c.lunes)} · ${e.reto?.nombre ?: c.reto}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("semana del ${Fechas.corto(c.lunes)} · ${e.reto?.nombre ?: c.reto}" + (c.abandonada?.let { " · abandonada el ${Fechas.corto(it)}" } ?: ""), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text(if (e.ganada) "✓ ${e.hechos}/${c.meta}" else "${e.hechos}/${c.meta}", style = MaterialTheme.typography.labelLarge,
                             color = if (e.ganada) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)

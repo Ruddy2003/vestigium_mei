@@ -30,6 +30,9 @@ object Drive {
     /** Copias semanales (los últimos 8 lunes) y mensuales (los últimos 12 meses) que se guardan en Drive. */
     private const val COPIAS = 8
     private const val COPIAS_MES = 12
+    /** Nombre (sin extensión) del respaldo que se guarda aparte cuando viene mucho más pobre que el último. */
+    private const val REVISAR = "vestigium_revisar"
+    const val EMPOBRECIDO = "Este respaldo trae muchos menos días o momentos que el último que subiste, así que no reemplacé tu copia de Drive: lo guardé aparte como «vestigium_revisar». Si borraste a propósito, toca «conectar y subir ahora» en Más → Datos."
 
     sealed class Acceso {
         data class Listo(val token: String) : Acceso()
@@ -104,21 +107,29 @@ object Drive {
      * Sube todo. Sin contraseña: los CSV para R, el respaldo completo del día (vestigium_respaldo.zip) y una copia semanal fechada.
      * Con contraseña: solo el respaldo cifrado (.vmc) y su copia semanal; los archivos sueltos de antes se borran de Drive.
      */
-    fun subir(ctx: Context, token: String): String {
+    fun subir(ctx: Context, token: String, forzar: Boolean = false): String {
         if (Respaldos.bloqueado(ctx)) return Respaldos.PAUSA
         val dir = carpeta(token)
         val existentes = buscar(token, "'$dir' in parents and trashed = false").associate { it.second to it.first }
         val cifra = Respaldos.cifradoActivo(ctx)
-        var n = 0
-        if (cifra) {
-            existentes.filterKeys { Respaldos.esArchivoPlano(it) }.values.forEach { runCatching { Red.borrar("$API/$it", h(token)) } }
-        } else {
-            for ((nombre, cont) in Exportar.archivos(ctx)) { subirArchivo(token, dir, existentes, nombre, mime(nombre), cont.toByteArray()); n++ }
-        }
         val ext = if (cifra) ".vmc" else ".zip"
+        val conteo = Respaldos.conteo()
+        // Mucho más pobre que el último: se guarda aparte y no se tocan la copia del día, la semanal ni la mensual.
+        if (!forzar && Respaldos.empobrecido(Repo.config.drive_conteo, conteo)) {
+            val a = Respaldos.archivo(ctx)
+            val b = a.readBytes(); a.delete()
+            subirArchivo(token, dir, existentes, REVISAR + ext, Respaldos.mime(ext), b)
+            Repo.cambiarConfig { it.copy(drive_ultimo = Fechas.ahoraIso()) }
+            return EMPOBRECIDO
+        }
+        var n = 0
+        if (!cifra) for ((nombre, cont) in Exportar.archivos(ctx)) { subirArchivo(token, dir, existentes, nombre, mime(nombre), cont.toByteArray()); n++ }
         val diario = Respaldos.archivo(ctx)
         val bytes = diario.readBytes(); diario.delete()
         subirArchivo(token, dir, existentes, Respaldos.BASE + ext, Respaldos.mime(ext), bytes); n++
+        // Los archivos en claro de antes se borran solo cuando ya subió el cifrado (si falla la subida, quedan).
+        if (cifra) existentes.filterKeys { Respaldos.esArchivoPlano(it) }.values.forEach { runCatching { Red.borrar("$API/$it", h(token)) } }
+        existentes[REVISAR + ext]?.let { runCatching { Red.borrar("$API/$it", h(token)) } }
         // Copia semanal fechada (el lunes de la semana) y limpieza de las más viejas.
         val nombreSem = "vestigium_${Fechas.lunesDe(Fechas.hoyCalendario())}$ext"
         if (!existentes.containsKey(nombreSem)) {
@@ -139,7 +150,7 @@ object Drive {
         }
         // El respaldo del otro modo (si cambiaste la contraseña) ya no sirve.
         existentes[Respaldos.BASE + if (cifra) ".zip" else ".vmc"]?.let { runCatching { Red.borrar("$API/$it", h(token)) } }
-        Repo.cambiarConfig { it.copy(drive_ultimo = Fechas.ahoraIso()) }
+        Repo.cambiarConfig { it.copy(drive_ultimo = Fechas.ahoraIso(), drive_conteo = conteo) }
         return if (cifra) "Subí tu respaldo cifrado a Drive, carpeta «$CARPETA»." else "Subí $n archivos a tu Drive, carpeta «$CARPETA»."
     }
 
@@ -152,7 +163,7 @@ object Drive {
             val j = f as? JsonObject ?: return@mapNotNull null
             val id = (j["id"] as? JsonPrimitive)?.content ?: return@mapNotNull null
             Triple(id, (j["name"] as? JsonPrimitive)?.content ?: "", (j["modifiedTime"] as? JsonPrimitive)?.content ?: "")
-        }?.filter { it.second.startsWith("vestigium_") && it.second != "vestigium_resumido.zip" }?.maxByOrNull { it.third }
+        }?.filter { it.second.startsWith("vestigium_") && it.second != "vestigium_resumido.zip" && !it.second.startsWith(REVISAR) }?.maxByOrNull { it.third }
     }
 
     fun bajar(token: String, id: String): ByteArray = Red.bajar("$API/$id?alt=media", h(token))
@@ -182,7 +193,10 @@ object Drive {
         // En pausa por falta de contraseña no es un problema de permiso: eso lo avisa Trabajo con su propio aviso.
         if (Respaldos.bloqueado(ctx)) return true
         return when (val a = acceso(ctx)) {
-            is Acceso.Listo -> runCatching { subir(ctx, a.token); true }.getOrDefault(false)
+            is Acceso.Listo -> runCatching {
+                if (subir(ctx, a.token) == EMPOBRECIDO) io.github.ruddy2003.vestigium.avisos.Avisos.driveEmpobrecido(ctx)
+                true
+            }.getOrDefault(false)
             else -> false
         }
     }

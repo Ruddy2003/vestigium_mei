@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 12
+const val SCHEMA_V = 13
 
 /** Un día. Los campos opcionales quedan en null cuando no se marcaron: nunca se rellenan con promedios. */
 @Serializable
@@ -58,6 +58,11 @@ data class Dia(
     val retroactivo: Boolean = false,
     val ts_creado: String? = null,
     val ts_editado: String? = null,
+    /**
+     * Cuándo se llenó (o se cambió por última vez) la valencia del día (v13). Con ella se decide [retroactivo]: la valencia
+     * se puso otro día lógico, después. Los días de antes de la v13 no la tienen y conservan su [retroactivo].
+     */
+    val ts_valencia: String? = null,
 )
 
 /** Un momento capturado al instante: pensamiento, emoción o muestreo de ánimo, con hora y lugar. */
@@ -97,6 +102,15 @@ data class Momento(
     /** Libido (seguimiento privado): en qué está el foco (Catalogo.FOCOS: pensando, viendo, conversando, nada, otro). */
     val foco: String? = null,
 )
+
+/**
+ * Los avisos de ánimo de un día (v13): cuántos se planearon, cuáles ya vencieron (pasó su hora) y cuáles se mostraron
+ * (menos de 50 minutos tarde y con permiso de notificaciones). Las horas van en ISO, igual que [Momento.aviso_ts],
+ * para unir cada aviso con su respuesta. [fecha] es el día del plan (de calendario; con la ventana de avisos después
+ * de las 05:00 coincide con el día lógico). Con los avisos apagados no se anota nada: el día queda sin dato, no en 0.
+ */
+@Serializable
+data class AvisosDia(val fecha: String, val planeados: Int = 0, val vencidos: List<String> = emptyList(), val mostrados: List<String> = emptyList())
 
 /** Un registro de ánimo: de un aviso («muestreo») o hecho por ti («animo»). */
 val Momento.esAnimo: Boolean get() = tipo == "muestreo" || tipo == "animo"
@@ -151,6 +165,10 @@ data class Persona(
     val desde: String = "",
     /** Cómo era antes: cada cambio con su fecha (pareja → expareja). */
     val historial: List<CambioRelacion> = emptyList(),
+    /** Cuándo nació (v13): AAAA-MM-DD, o --MM-DD si no sabes el año. Con el año se calcula su edad. */
+    val nacimiento: String = "",
+    /** Cuándo murió (v13), en la misma forma. Su aniversario cuenta como día especial. */
+    val fallecimiento: String = "",
 )
 
 @Serializable
@@ -205,9 +223,12 @@ data class PlanEnfoque(
 /**
  * Una campaña de la semana: un reto opcional que aceptaste (por ejemplo, 5 noches de 7 horas).
  * [lunes] es el lunes de esa semana; [reto] el id del catálogo; [meta] cuántos días de 7.
+ * [aceptada] y [abandonada] (v13) son días lógicos: los días antes de aceptarla no cuentan, y abandonarla la cierra ese día
+ * en lugar de borrarla. Las de antes de la v13 no tienen [aceptada] y cuentan la semana completa.
  */
 @Serializable
-data class Campana(val id: String, val lunes: String, val reto: String, val meta: Int, val tema: String = "", val clave: String = "")
+data class Campana(val id: String, val lunes: String, val reto: String, val meta: Int, val tema: String = "", val clave: String = "",
+                   val aceptada: String? = null, val abandonada: String? = null)
 
 @Serializable
 data class Ingreso(
@@ -389,6 +410,8 @@ data class SaludDia(
     val ts: String? = null,
     /** El sueño lo corregiste a mano: la sincronización ya no lo pisa. */
     val sueno_manual: Boolean = false,
+    /** Qué ventana usaron los pasos (v13): «logica» (de las 05:00 a las 05:00 del día siguiente) o «calendario» (los días de antes). */
+    val ventana_pasos: String = "calendario",
     /** Lo que llegó de Health Connect esa noche (fuente, horas, etapas, si se usó): para entender de dónde salió el número. */
     val sueno_fuentes: List<String> = emptyList(),
     /** Siestas que registró el reloj ese día (minutos), aparte del sueño de la noche. */
@@ -414,6 +437,12 @@ data class PantallaDia(
     val dormir_tras_tel_min: Int? = null,
     /** Minutos entre despertar (según el reloj) y la primera vez que usaste el teléfono. */
     val tel_tras_despertar_min: Int? = null,
+    /**
+     * Qué ventana se usó (v13): «logica», de las 05:00 a las 05:00 del día siguiente (lo de la madrugada cuenta para el día
+     * anterior), o «calendario», de 0:00 a 24:00 (los días de antes). En [por_hora_min], con la ventana lógica, las horas 0 a 4
+     * son de la madrugada siguiente.
+     */
+    val ventana: String = "calendario",
 )
 
 /**
@@ -545,6 +574,13 @@ data class Experimento(
     /** Días que no cuentan después de cada cambio, para que el efecto anterior se vaya. */
     val lavado_dias: Int = 0,
     val plantilla: String? = null,
+    /** Día lógico en que lo terminaste (v13). Los días después ya no cuentan, aunque el plan siguiera. */
+    val fin: String? = null,
+    /**
+     * «¿Lo hiciste hoy?» (v13): fecha → sí o no. Se pregunta en las dos condiciones. Sin entrada = sin respuesta,
+     * que no es lo mismo que «no».
+     */
+    val hecho: Map<String, Boolean> = emptyMap(),
 )
 
 @Serializable
@@ -571,6 +607,8 @@ data class Config(
     val drive: Boolean = false,
     val drive_carpeta: String? = null,
     val drive_ultimo: String? = null,
+    /** Cuántos días y momentos llevaba el último respaldo que reemplazó la copia de Drive (v13): para no cambiarla por una mucho más pobre. */
+    val drive_conteo: Map<String, Int> = emptyMap(),
     val escalada_escala: String = "V",
     val gimnasios: List<String> = emptyList(),
     val medir_ruido: Boolean = false,
@@ -683,6 +721,10 @@ data class Config(
     val cafeina_vida_media_h: Double = 5.0,
     /** Quién es cada persona que mencionas. */
     val personas: List<Persona> = emptyList(),
+    /** Fechas que se repiten cada año y no son de nadie de Tu gente (v13; ver [Especiales]). */
+    val fechas_propias: List<FechaPropia> = emptyList(),
+    /** Aviso en la mañana de los cumpleaños, aniversarios y fechas propias (v13). */
+    val avisos_especiales: Boolean = true,
     /** Personas que preferiste no clasificar, y pares que dijiste que no son la misma persona («a|b»). */
     val personas_omitidas: List<String> = emptyList(),
     val personas_distintas: List<String> = emptyList(),

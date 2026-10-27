@@ -19,6 +19,9 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Respaldo completo en un solo archivo y su restauración de un toque.
@@ -155,6 +158,16 @@ object Respaldos {
      */
     fun bloqueado(ctx: Context): Boolean = !cifradoActivo(ctx) && Privado.hayDatos()
 
+    /** Lo que se compara entre un respaldo y el anterior para saber si se empobreció. */
+    fun conteo(): Map<String, Int> = mapOf("dias" to Repo.dias.size, "momentos" to Repo.momentos.size)
+
+    /**
+     * El respaldo nuevo trae menos del 90 % de los días o de los momentos que el anterior (solo cuenta si el anterior tenía 20 o más).
+     * Puede ser un borrado a propósito o datos que no se cargaron: en los dos casos no conviene pisar la copia buena sin preguntar.
+     */
+    fun empobrecido(previo: Map<String, Int>, ahora: Map<String, Int>): Boolean =
+        listOf("dias", "momentos").any { k -> val p = previo[k] ?: 0; p >= 20 && (ahora[k] ?: 0) < 0.9 * p }
+
     const val PAUSA = "Tus respaldos están en pausa: llevan datos privados y no tienen contraseña. Ponla en Más → Datos → Respaldo completo → Cifrar con contraseña."
 
     /** Con contraseña: solo el .vmc cifrado (y se borran los CSV sueltos de antes). Sin contraseña: los CSV para R y el .zip completo. */
@@ -164,19 +177,21 @@ object Respaldos {
         val dir = DocumentFile.fromTreeUri(ctx, Uri.parse(uriTxt)) ?: return false
         if (!dir.canWrite()) return false
         val cifra = cifradoActivo(ctx)
-        if (cifra) dir.listFiles().filter { f -> f.name?.let { esArchivoPlano(it) } == true }.forEach { runCatching { it.delete() } }
-        else Exportar.archivos(ctx).forEach { (nombre, cont) ->
+        if (!cifra) Exportar.archivos(ctx).forEach { (nombre, cont) ->
             // Para .R se usa un tipo genérico: así el sistema no le agrega «.txt» al nombre.
             val m = when { nombre.endsWith(".csv") -> "text/csv"; nombre.endsWith(".json") -> "application/json"; nombre.endsWith(".R") -> "application/octet-stream"; else -> "text/plain" }
             val f = dir.findFile(nombre) ?: dir.createFile(m, nombre) ?: return@forEach
             ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { it.write(cont.toByteArray()) }
         }
         val a = archivo(ctx)
-        val f = dir.findFile(a.name) ?: dir.createFile(mime(a.name), a.name) ?: return false
-        ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { o -> a.inputStream().use { it.copyTo(o) } }
+        val f = dir.findFile(a.name) ?: dir.createFile(mime(a.name), a.name) ?: run { a.delete(); return false }
+        val escrito = ctx.contentResolver.openOutputStream(f.uri, "wt")?.use { o -> a.inputStream().use { it.copyTo(o) }; true } ?: false
+        a.delete()
+        if (!escrito) return false
+        // Los archivos en claro de antes se borran solo cuando ya quedó la copia cifrada.
+        if (cifra) dir.listFiles().filter { x -> x.name?.let { esArchivoPlano(it) } == true }.forEach { runCatching { it.delete() } }
         // Si cambió el modo, el archivo del otro tipo ya no sirve.
         dir.findFile(BASE + if (cifra) ".zip" else ".vmc")?.let { runCatching { it.delete() } }
-        a.delete()
         Repo.cambiarConfig { it.copy(respaldo_ultimo = Fechas.ahoraIso()) }
         return true
     }
@@ -202,14 +217,23 @@ object Respaldos {
             b = descifrar(b, clave) ?: return if (contrasena == null) Lectura.PideContrasena else Lectura.Error("La contraseña no abre este respaldo.")
         }
         val esZip = b.size > 4 && b[0] == 'P'.code.toByte() && b[1] == 'K'.code.toByte()
-        if (!esZip) return Lectura.Listo(Importar.respaldoTexto(b.toString(Charsets.UTF_8)).mensaje)
+        if (!esZip) {
+            val t = b.toString(Charsets.UTF_8)
+            val v = runCatching { JSON.parseToJsonElement(t).jsonObject["schema_v"]?.jsonPrimitive?.intOrNull }.getOrNull()
+            Importar.esquemaFuturo(v)?.let { return Lectura.Error(it) }
+            return Lectura.Listo(Importar.respaldoTexto(t).mensaje)
+        }
         val tmp = File(ctx.cacheDir, "restaurar.zip")
         tmp.writeBytes(b)
         try {
             ZipFile(tmp).use { z ->
                 // Primero el respaldo (trae los ajustes que deciden qué fotos cuentan), luego ubicaciones, catálogo y portadas.
                 val json = z.entradaQueTermina("vm_respaldo.json") ?: return Lectura.Error("Ese .zip no trae vm_respaldo.json: no es un respaldo de Vestigium Mei.")
-                val msg = z.getInputStream(json).use { Importar.respaldoTexto(it.readBytes().toString(Charsets.UTF_8)).mensaje }
+                val texto = z.getInputStream(json).use { it.readBytes().toString(Charsets.UTF_8) }
+                // De una versión más nueva: no se restaura nada (ni ubicaciones ni portadas), para no dejarlo a medias.
+                val v = runCatching { JSON.parseToJsonElement(texto).jsonObject["schema_v"]?.jsonPrimitive?.intOrNull }.getOrNull()
+                Importar.esquemaFuturo(v)?.let { return Lectura.Error(it) }
+                val msg = Importar.respaldoTexto(texto).mensaje
                 val nUb = z.entradaQueTermina("vm_ubicaciones.csv")?.let { e -> z.getInputStream(e).bufferedReader().use { ubicaciones(it.readLines()) } } ?: 0
                 val nFo = z.entradaQueTermina("vm_fotos_catalogo.csv")?.let { e -> z.getInputStream(e).bufferedReader().use { catalogo(it.readLines()) } } ?: 0
                 if (nFo > 0) runCatching { io.github.ruddy2003.vestigium.sensores.FotosLugar.aplicar(ctx) }
@@ -285,9 +309,11 @@ object Respaldos {
         }
         val c = try { contenido(b) } catch (e: Exception) { return Lectura.Error("El archivo está dañado o incompleto: ${e.message}") }
             ?: return Lectura.Error("Ese archivo no es un respaldo de Vestigium Mei.")
-        val aqui = "En este teléfono: %,d días, %,d momentos, %,d gastos.".format(Repo.dias.size, Repo.momentos.size, Repo.gastos.size)
-        return Lectura.Listo((if (cifrado) "Cifrado y abierto con la contraseña. " else "") + "El respaldo se lee completo y no le falta nada.\n" +
-            informe(c).joinToString("\n") { "· $it" } + "\n" + aqui)
+        val aqui = "Respaldo / este teléfono: %,d / %,d días · %,d / %,d momentos · %,d / %,d gastos · %,d / %,d experimentos.".format(
+            c.r.dias.size, Repo.dias.size, c.r.momentos.size, Repo.momentos.size, c.r.gastos.size, Repo.gastos.size, c.r.experimentos.size, Repo.experimentos.size)
+        // «Se lee completo» es lo único que se comprobó: que no le falte nada depende de qué había cuando se hizo.
+        return Lectura.Listo((if (cifrado) "Cifrado y abierto con la contraseña. " else "") + "El respaldo se lee completo.\n" +
+            (Importar.esquemaFuturo(c.r.schema_v)?.let { "$it\n" } ?: "") + informe(c).joinToString("\n") { "· $it" } + "\n" + aqui)
     }
 
     fun verificarUri(ctx: Context, uri: Uri, contrasena: CharArray?): Lectura {

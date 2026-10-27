@@ -97,15 +97,22 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
         val hoy = Fechas.hoyCalendario()
         val diaLog = Fechas.diaLogico()
 
-        // Muestreo de ánimo
+        // Muestreo de ánimo. Cada aviso queda anotado (planeado, vencido, mostrado) para saber cuántos se contestaron.
         val plan = c.plan_muestreo[hoy] ?: Programador.planDelDia(hoy).also { p ->
             Repo.cambiarConfig { cc -> cc.copy(plan_muestreo = cc.plan_muestreo.filterKeys { it >= Fechas.sumar(hoy, -3) } + (hoy to p)) }
+            // Si el plan se rehace a mitad del día (cambiaste los ajustes), los que ya vencieron siguen contando y del plan nuevo
+            // solo cuentan los que aún pueden sonar (los de un turno ya usado no vuelven a sonar).
+            if (p.isNotEmpty() || Repo.avisos[hoy] != null)
+                Repo.anotarAvisos(hoy) { a -> a.copy(planeados = a.vencidos.size + p.indices.count { !yaFue("muestreo:$hoy:$it") }) }
         }
         plan.forEachIndexed { i, t ->
             val clave = "muestreo:$hoy:$i"
             if (!yaFue(clave) && ms >= t) {
                 marcar(clave)
-                if (ms - t < 50 * 60_000L) Avisos.muestreo(ctx, i, t)
+                val iso = Fechas.isoDeMillis(t)
+                val muestra = ms - t < 50 * 60_000L && Avisos.permitido(ctx)
+                Repo.anotarAvisos(hoy) { a -> a.copy(vencidos = (a.vencidos + iso).distinct(), mostrados = if (muestra) (a.mostrados + iso).distinct() else a.mostrados) }
+                if (muestra) Avisos.muestreo(ctx, i, t)
             }
         }
 
@@ -114,6 +121,13 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             marcar("sueno:$hoy")
             val d = Repo.dias[diaLog]
             if (d?.sueno_texto.isNullOrBlank() && d?.sueno_recordado != true) Avisos.sueno(ctx)
+        }
+
+        // Días especiales (cumpleaños, aniversarios, fechas propias): una vez, desde tu hora de despertar y hasta las 21.
+        if (c.avisos_especiales && ahora.hour >= c.hora_sueno && ahora.hour < 21 && !yaFue("especial:$diaLog")) {
+            marcar("especial:$diaLog")
+            val l = io.github.ruddy2003.vestigium.data.Especiales.de(diaLog, c)
+            if (l.isNotEmpty()) Avisos.especial(ctx, l.map { io.github.ruddy2003.vestigium.data.Especiales.frase(it) })
         }
 
         // Lo de anoche: una hora después de tu hora de despertar, si quedó un consumo sin completar.

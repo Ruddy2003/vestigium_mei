@@ -101,7 +101,7 @@ fun PantallaExplorar(nav: Nav) {
     Hoja("Análisis", subtitulo = "Qué se mueve con qué: relaciones, herramientas y experimentos. Para modelos completos, exporta y abre vestigium.R.",
         buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
         RejillaTarjetas(listOf(
-            Tarjetita("Experimentos personales", "${Repo.experimentos.count { it.activo }}", "en curso · prueba algo y mide si sirve", "experimentos"),
+            Tarjetita("Experimentos personales", "${Repo.experimentos.count { io.github.ruddy2003.vestigium.data.Experimentos.enCurso(it) }}", "en curso · prueba algo y mide si sirve", "experimentos"),
             Tarjetita("Totales", "${Repo.dias.size}", "días de datos para analizar", "totales"),
         )) { nav.ir(it) }
         val nDias = Repo.dias.size
@@ -446,7 +446,7 @@ private fun CentroEntender(nav: Nav) {
         Triple("Tu año", "${Repo.dias.keys.count { it.startsWith(anio) }}", "días registrados en $anio") to "anno",
         Triple("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: "")) to "totales",
         Triple("Mapa", "${Repo.lugares.size}", "lugares marcados") to "mapa",
-        Triple("Experimentos personales", "${Repo.experimentos.count { it.activo }}", "en curso") to "experimentos",
+        Triple("Experimentos personales", "${Repo.experimentos.count { io.github.ruddy2003.vestigium.data.Experimentos.enCurso(it) }}", "en curso") to "experimentos",
         Triple("La cinta", "${Repo.momentos.count { it.fecha == hoy && !it.privado } + Repo.tramos.count { it.fecha == hoy }}", "cosas con hora hoy") to "cinta",
         Triple("Constelación", "${Repo.dias.values.filter { it.fecha >= Fechas.sumar(hoy, -365) }.flatMap { Texto.personas(it.nota) }.toSet().size}", "personas en tu cielo este año") to "constelacion",
     )

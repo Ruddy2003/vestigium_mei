@@ -85,7 +85,7 @@ vm_archivos <- c(
   nutricion = "vm_nutricion.csv", comidas = "vm_comidas.csv", entrenos = "vm_entrenos.csv", series = "vm_series.csv",
   tramos = "vm_tramos.csv", sustancias = "vm_sustancias.csv", horas = "vm_horas.csv", notas = "vm_notas.csv", metas = "vm_metas.csv",
   suplementos = "vm_suplementos.csv", laptop = "vm_laptop.csv", red_nodos = "vm_red_nodos.csv", red_vinculos = "vm_red_vinculos.csv",
-  experimentos = "vm_experimentos.csv")
+  experimentos = "vm_experimentos.csv", personas = "vm_personas.csv", fechas_propias = "vm_fechas_propias.csv")
 
 vm <- compact(lapply(vm_archivos, vm_leer))
 
@@ -167,6 +167,7 @@ vm_familias <- list(
   c("eventos", "min_ocupado"),
   c("sueno_min", "sueno_h", "sueno_profundo_min", "sueno_rem_min", "sueno_inicio_h", "sueno_fin_h"),
   c("valencia", "valencia_muestreo"),
+  c("avisos_planeados", "avisos_mostrados", "avisos_respondidos", "tasa_respuesta", "valencia_muestreo", "n_muestreos"),
   c("hrv_rmssd", "fc_reposo"),
   c("pasos", "a_pie_min", "cal_activas", "ejercicio_min", "km"),
   c("km", "vehiculo_min", "coche_min", "sin_wifi_min"),
@@ -182,9 +183,27 @@ vm_familias <- list(
   c("t_max", "t_min", "precip_mm", "nubes_pct", "luz_dia_min", "sol_min"),
   c("aqi_us", "pm25")
 )
+#' Lo que cada campaña busca mover (columnas de vm_panel.csv): su correlación con la campaña es esperable, la elegiste para eso.
+vm_campana_mueve <- list(
+  sueno7 = c("sueno_min", "sueno_profundo_min", "sueno_rem_min", "sueno_inicio_h", "sueno_fin_h", "sueno_calidad"),
+  temprano = c("sueno_inicio_h", "sueno_min", "ultimo_uso_h", "carga_noche_inicio_h"),
+  pasos = c("pasos", "a_pie_min", "km", "cal_activas"),
+  diario = c("palabras"),
+  pantalla = c("pantalla_min", "desbloqueos", "primer_uso_h", "ultimo_uso_h", "notificaciones"),
+  movimiento = c("ejercicio_min", "gimnasio", "gimnasio_min", "volumen_kg", "series_gimnasio", "escalada", "cal_activas"),
+  leer = c("lectura", "obras_dia"),
+  animo = c("valencia_muestreo", "n_muestreos", "avisos_respondidos", "tasa_respuesta", "registros_animo")
+)
 vm_obvia <- function(a, b) {
   mom <- function(v) startsWith(v, "m_") || v == "n_momentos"
-  (mom(a) && mom(b)) || any(map_lgl(vm_familias, ~ a %in% .x && b %in% .x))
+  camp <- function(x, y) {
+    if (!startsWith(x, "campana_")) return(FALSE)
+    if (y == "campanas_n" || (x == "campanas_n" && startsWith(y, "campana_"))) return(TRUE)
+    r <- sub("^campana_", "", x)
+    if (startsWith(r, "hab_")) return(y == r)
+    y %in% vm_campana_mueve[[r]]
+  }
+  (mom(a) && mom(b)) || camp(a, b) || camp(b, a) || any(map_lgl(vm_familias, ~ a %in% .x && b %in% .x))
 }
 
 #' Todas las parejas de variables del panel, como «Las relaciones más marcadas» de la app.
@@ -346,7 +365,7 @@ vm_atipicos <- function(vars = c("valencia", "sueno_h", "pasos", "pantalla_min",
 vm_totales <- function(desde = NULL, hasta = NULL, datos = panel) {
   sumables <- c("km", "pasos", "a_pie_min", "vehiculo_min", "ejercicio_min", "sueno_min", "cal_activas", "kcal", "proteina_g",
                 "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "comidas", "volumen_kg", "series_gimnasio",
-                "gasto_total", "palabras", "n_momentos", "n_muestreos", "pantalla_min", "desbloqueos", "notificaciones", "fotos",
+                "gasto_total", "palabras", "n_momentos", "n_muestreos", "avisos_planeados", "avisos_mostrados", "avisos_respondidos", "pantalla_min", "desbloqueos", "notificaciones", "fotos",
                 "canciones", "musica_min", "audifonos_min", "yt_vistos", "busquedas", "llamadas", "min_hablado", "sms", "wa_mios",
                 "wa_otros", "eventos", "min_ocupado", "subrayados", "precip_mm", "sol_min")
   d <- .vm_rango(datos, desde, hasta)

@@ -471,6 +471,7 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
             val hoy = Fechas.diaLogico()
             val sem = (Fechas.diasEntre(e.inicio, hoy) / 7).toInt()
             Ayuda(when {
+                e.fin != null -> "Terminado el ${Fechas.corto(e.fin)}" + (if (e.fin < Experimentos.ultimoDia(e.copy(fin = null))) ", antes de acabar el plan: los días siguientes no cuentan." else ".")
                 Fechas.diasEntre(e.inicio, hoy) < 0 -> "Empieza el ${Fechas.corto(e.inicio)}."
                 sem >= e.semanas -> "Terminado."
                 else -> "Semana ${sem + 1} de ${e.semanas}: " + (if (e.plan[sem]) "SÍ toca." else "NO toca.") + if (Experimentos.enLavado(e, hoy)) " Hoy es día de lavado (no cuenta)." else ""
@@ -485,10 +486,21 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
                     style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
                 Ayuda(if (lo > 0 || hi < 0) "El intervalo no toca el cero: es una señal para ti." else "El intervalo incluye el cero: todavía no se distingue del azar.")
                 r.d?.let { Ayuda("Tamaño del efecto (d de Cohen): ${"%.2f".format(it)}, ${Experimentos.tamano(it)}.") }
+                Ayuda("Comparación según el plan: semanas que tocaba la acción contra semanas que no, la hayas hecho o no. Es la comparación justa; si no siempre cumpliste, el efecto real puede ser mayor.",
+                    Modifier.padding(top = 2.dp))
                 if (r.tendenciaClara) Ayuda("Ojo: tu medida venía cambiando sola a lo largo del experimento (${"%+.3f".format(r.tendencia ?: 0.0)} por día). Parte de la diferencia puede ser esa tendencia" +
                     (if (e.diseno == "antes_despues") ", y en un diseño de antes y después pesa más." else "."), Modifier.padding(top = 2.dp))
             }
-            if (e.activo) TextButton(onClick = { Repo.guardarExperimento(e.copy(activo = false)) }) { Text("Terminar experimento") }
+            // Cuánto cumpliste, con lo que respondiste en «¿Lo hiciste hoy?» (en el Día).
+            r.cumplimiento?.let { c ->
+                fun pct(p: Double?) = p?.let { "%.0f %%".format(it * 100) } ?: "sin respuestas"
+                Text("Lo hiciste: ${pct(c.pSi)} de los días que tocaba (${c.respSi} de ${c.diasSi} respondidos) y ${pct(c.pNo)} de los que no tocaba (${c.respNo} de ${c.diasNo}).",
+                    style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
+                if (c.sinRespuesta > 0) Ayuda("${c.sinRespuesta} días sin respuesta: no cuentan como «no».")
+                r.cociente?.let { Ayuda("Si el efecto viene de hacerlo, hacerlo de verdad cambiaría tu medida en unos ${"%+.2f".format(it)} (la diferencia según el plan entre la diferencia de cumplimiento). " +
+                    "Es una aproximación: supone que saber qué semana tocaba no cambia nada por sí solo.") }
+            }
+            if (Experimentos.enCurso(e, hoy)) TextButton(onClick = { Repo.guardarExperimento(e.copy(activo = false, fin = hoy)) }) { Text("Terminar experimento") }
         }
     }
 }

@@ -30,7 +30,7 @@ object Privado {
 
     /** La regla sin leer la configuración (para probarla sin la app). */
     fun esVariable(id: String, habitoLigado: String?): Boolean =
-        id in VARIABLES || PREFIJOS.any { id.startsWith(it) } || (habitoLigado != null && id == "hab_$habitoLigado")
+        id in VARIABLES || PREFIJOS.any { id.startsWith(it) } || (habitoLigado != null && (id == "hab_$habitoLigado" || id == "campana_hab_$habitoLigado"))
 
     /** Si hay algo privado guardado: entonces ningún respaldo sale del teléfono sin contraseña. */
     fun hayDatos(): Boolean = Repo.momentos.any { it.privado } ||

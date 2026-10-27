@@ -204,6 +204,19 @@ object Avisos {
         mostrar(ctx, 2005, b)
     }
 
+    /** Un día especial (I-6): cumpleaños, aniversario o fecha propia. Abre Tu gente. */
+    fun especial(ctx: Context, lineas: List<String>) {
+        val titulo = "Hoy: " + lineas.first() + if (lineas.size > 1) " y ${lineas.size - 1} más" else ""
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(titulo.replaceFirstChar { it.uppercase() })
+            .setContentText(lineas.joinToString(" · "))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(lineas.joinToString("\n")))
+            .setContentIntent(abrirApp(ctx, 2033, "personas"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2033, b)
+    }
+
     fun reporte(ctx: Context, titulo: String, uri: Uri, mime: String) {
         val ver = Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         val pi = PendingIntent.getActivity(ctx, 2006, ver, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
@@ -312,6 +325,18 @@ object Avisos {
             .setContentIntent(abrirApp(ctx, 2031, "datos"))
             .setAutoCancel(true)
         mostrar(ctx, 2031, b)
+    }
+
+    /** El respaldo automático de Drive vino mucho más pobre que el último y se guardó aparte. */
+    fun driveEmpobrecido(ctx: Context) {
+        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("No reemplacé tu respaldo de Drive")
+            .setContentText("El nuevo trae muchos menos días o momentos. Toca para revisarlo.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText(io.github.ruddy2003.vestigium.data.Drive.EMPOBRECIDO))
+            .setContentIntent(abrirApp(ctx, 2032, "datos"))
+            .setAutoCancel(true)
+        mostrar(ctx, 2032, b)
     }
 
     fun drive(ctx: Context) {

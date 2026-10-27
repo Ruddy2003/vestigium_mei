@@ -807,12 +807,12 @@ private fun DriveTarjeta(tarea: (suspend () -> String) -> Unit) {
     var guia by remember { mutableStateOf(false) }
     val permiso = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { r ->
         val token = Drive.tokenDe(ctx, r.data)
-        if (token == null) msg = "No se concedió el acceso." else { Repo.cambiarConfig { it.copy(drive = true) }; tarea { Drive.subir(ctx, token) } }
+        if (token == null) msg = "No se concedió el acceso." else { Repo.cambiarConfig { it.copy(drive = true) }; tarea { Drive.subir(ctx, token, forzar = true) } }
     }
     fun conectar() {
         scope.launch {
             when (val a = Drive.acceso(ctx)) {
-                is Drive.Acceso.Listo -> { Repo.cambiarConfig { it.copy(drive = true) }; tarea { Drive.subir(ctx, a.token) } }
+                is Drive.Acceso.Listo -> { Repo.cambiarConfig { it.copy(drive = true) }; tarea { Drive.subir(ctx, a.token, forzar = true) } }
                 is Drive.Acceso.Permiso -> permiso.launch(androidx.activity.result.IntentSenderRequest.Builder(a.intent.intentSender).build())
                 is Drive.Acceso.Error -> { msg = a.mensaje; guia = true }
             }
