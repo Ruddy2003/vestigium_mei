@@ -24,6 +24,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** pérdida silenciosa de observaciones; sesga el análisis si el fallo no es aleatorio.
 - **Gravedad:** Media.
 - **Propuesta:** contar y mostrar documentos descartados por colección (diagnóstico de integridad) y conservarlos en una lista de «no leídos».
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-07): los documentos que no se pueden leer se cuentan por colección (`Repo.ilegibles`) y se muestran en Estado de los datos y en Hoy.
 
 ### H-1-4 · `coerceInputValues` convierte nulos o inválidos en valores por omisión
 - **Dónde:** `data/Modelo.kt`, `val JSON = Json { coerceInputValues = true … }`.
@@ -75,6 +76,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** desalinea justo las variables de uso nocturno, las más relevantes para el sueño; correlaciones entre fuentes comparan ventanas distintas.
 - **Gravedad:** Alta.
 - **Propuesta:** unificar a día lógico (o declarar explícitamente el criterio de cada variable en el diccionario). Relacionado con H-1-2.
+- **Estado:** Resuelto en parte en el módulo 10b (esquema 13) (P-16 ii): pantalla y pasos pasan al día lógico de aquí en adelante, con la ventana guardada por día. Corazón, oxígeno, agenda y clima siguen por día de calendario.
 
 ### H-3-2 · `primer_uso_h` / `ultimo_uso_h` con ventana de calendario
 - **Dónde:** `sensores/Pantalla.kt`.
@@ -82,6 +84,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** variable de ritmo circadiano sesgada hacia horas tempranas.
 - **Gravedad:** Media.
 - **Propuesta:** calcular sobre día lógico.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-16 ii), en los días nuevos: con la ventana del día lógico, el primer uso es el de después de las 05:00 y la corrección +24 de `ultimo_uso_h` sí actúa. Los días anteriores quedan como estaban (`ventana_pantalla`).
 
 ### H-3-3 · Filtro barométrico 850–1090 hPa descarta lecturas en altura
 - **Dónde:** `Barometro.kt` / `sensores/Percepcion.kt`.
@@ -154,6 +157,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** es la variable pensada para controlar el sesgo de recuerdo; tal como está, lo subestima.
 - **Gravedad:** Media.
 - **Propuesta:** guardar la fecha/hora en que se llenó la valencia (p. ej., `ts_valencia`) y derivar `retroactivo` de ella.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-13): `Dia.ts_valencia` y `Reglas.retroactivo`; los días anteriores conservan su marca.
 
 ### H-2-3 · No se guarda cuántos avisos de ánimo se mostraron
 - **Dónde:** `avisos/Trabajo.kt`, `avisos()`: el aviso se marca como disparado (`marcar(clave)`) y solo se muestra si `ms - t < 50 min`; `plan_muestreo` se poda a 3 días y `disparos` a 40.
@@ -161,6 +165,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** no se puede calcular la tasa de respuesta ni ver si la falta de respuesta se concentra en ciertos días u horas (dato que puede ser no aleatorio).
 - **Gravedad:** Media.
 - **Propuesta:** registrar por día los avisos planeados, mostrados y respondidos (p. ej., en una colección pequeña o en el documento del día) y exportarlos.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-10): la colección `avisos` guarda planeados, vencidos y mostrados por día; el panel tiene `avisos_*` y `tasa_respuesta`. Los días anteriores quedan vacíos.
 
 ### H-2-4 · «No respondí» codificado como 0 en varias variables subjetivas
 - **Dónde:** `ciencia/Estadistica.kt`, `panel()`: `sueno_recordado = b(d.sueno_recordado)`, `ctx_* = b(...)`, `hab_* = b(...)` en todos los días con documento; codificación de `sdt_necesidad` (`las_tres` deja `autonomia`, `competencia`, `relacion` en 0) y de flujo (`no_aplica` deja todas en 0).
@@ -579,6 +584,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** semanas «SÍ» sin acción se cuentan como «con la acción» y diluyen o distorsionan el resultado.
 - **Gravedad:** Media.
 - **Propuesta:** guardar `fin` al terminar y cortar el análisis en esa fecha.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-12): «Terminar» guarda `Experimento.fin`, y el resultado deja de contar los días posteriores.
 
 ### H-7-3 · Intervalo demasiado estrecho: días independientes y 1.96 fijo
 - **Dónde:** `ciencia/Estadistica.kt`, `diferencia()`; `Experimentos.resultado()`; también `EtapasDeVida` en `Explorar.kt`.
@@ -622,6 +628,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el análisis es por intención de tratar; el efecto se diluye con incumplimientos y no se puede medir cuánto se cumplió.
 - **Gravedad:** Media.
 - **Propuesta:** casilla diaria «¿lo hiciste?» en el aviso del Día, guardada por fecha, y mostrar el % de cumplimiento (y un análisis por lo hecho como secundario).
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (I-3): «¿Lo hiciste hoy?» en el aviso del Día, en las dos condiciones (`Experimento.hecho`); la tarjeta muestra el cumplimiento y un cociente secundario.
 
 ### H-7-9 · El aviso del Día muestra la semana 1 durante la semana previa
 - **Dónde:** `ui/pantallas/Dia.kt` (`ChronoUnit.WEEKS.between(inicio, fecha)`).
@@ -720,6 +727,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** las correlaciones entre la conducta objetivo y otras variables pueden deberse a la campaña (o a por qué se eligió esa semana); no se puede controlar en R; criterio (e).
 - **Gravedad:** Media.
 - **Propuesta:** variable diaria `campana_<reto>` (0/1) en el panel y en la exportación.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-11): `campana_<reto>` y `campanas_n` en el panel y la exportación, obvias con lo que cada reto mueve (también en R).
 
 ### H-8-8 · Las rachas de recaídas cuentan como limpios los días sin respuesta
 - **Dónde:** `data/Recaidas.kt`, `resumen()` (bucle desde el primer día con respuesta; `diasConRespuesta()` no se usa en la racha).
@@ -756,6 +764,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** falsa sensación de seguridad; pérdida silenciosa de datos al restaurar entre versiones; criterio (d).
 - **Gravedad:** Media.
 - **Propuesta:** decir «se lee completo» y comparar conteos con el teléfono; avisar (o impedir restaurar) si `schema_v` del respaldo es mayor que `SCHEMA_V`.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-08): «Verificar» dice «se lee completo», compara respaldo y teléfono, y un respaldo de un esquema más nuevo no se restaura (`Importar.esquemaFuturo`).
 
 ### H-8-13 · Restaurar combina con reglas distintas por colección
 - **Dónde:** `data/Importar.kt`, `respaldoTexto()`; `data/Repo.kt`, `importarDias(sobrescribir = false)`.
@@ -763,6 +772,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** restaurar sobre un teléfono con un día incompleto no recupera el diario de ese día; un respaldo viejo puede pisar datos nuevos de salud; no se avisa; criterio (d).
 - **Gravedad:** Media.
 - **Propuesta:** regla única (gana el documento con `ts_editado` más reciente, o fusión campo por campo de los días) e informe de conflictos.
+- **Estado:** Resuelto en parte en el módulo 10b (esquema 13) (P-08): gastos, ingresos, experimentos, avisos y personas tienen regla propia. La regla única para todas las colecciones queda documentada como rediseño.
 
 ### H-8-14 · Un respaldo malo puede reemplazar al bueno; Drive restaura siempre el más reciente
 - **Dónde:** `data/Drive.kt`, `subir()` (reemplaza el respaldo del día y crea la semanal sin comparar) y `ultimaCopia()` / `restaurar()`; `data/Respaldos.kt`, `aCarpeta()`.
@@ -770,6 +780,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** la protección contra pérdida depende de copias más viejas que la app no ofrece restaurar; criterio (d).
 - **Gravedad:** Media.
 - **Propuesta:** no sobrescribir si el respaldo nuevo trae muchos menos días o momentos que el anterior (y avisar); dejar elegir la copia a restaurar.
+- **Estado:** Resuelto en parte en el módulo 10b (esquema 13) (P-09): Drive ya no reemplaza la copia por una con menos del 90 % de días o momentos; la guarda aparte y avisa. Elegir qué copia restaurar sigue pendiente.
 
 ### H-8-15 · Cambiar la contraseña deja copias viejas con la contraseña anterior
 - **Dónde:** `data/Respaldos.kt`, `ponerContrasena()`; copias semanales y mensuales de `data/Drive.kt`.
@@ -811,6 +822,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (d); pérdida total y silenciosa.
 - **Gravedad:** Media (poco probable, daño alto).
 - **Propuesta:** P-07.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-07): el texto de una configuración ilegible se copia a `config_ilegible` antes de seguir, y Hoy lo avisa.
 
 ### H-9-3 · `canciones` se cuenta distinto en la app y en R
 - **Dónde:** `ciencia/Estadistica.kt:464` (todas las escuchas) frente a `data/Exportar.kt:624` (30 s o más); `data/Diccionario.kt:143`.
@@ -861,6 +873,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a); la respuesta sale de `muestreo_valencia` y `n_muestreos`, y la tarjeta invita a registrar varias veces.
 - **Gravedad:** Media.
 - **Propuesta:** P-10.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-10): la tarjeta cuenta los avisos sin respuesta por su hora y abre la captura con la del más antiguo; la respuesta queda como `muestreo`.
 
 ### H-9-10 · Dos definiciones de «aviso respondido»
 - **Dónde:** `data/Exportar.kt:615`, `:642` (solo con valencia) frente al diccionario, `ui/pantallas/Explorar.kt:111` y `widget/Widgets.kt:144`, `:337` (todos).
@@ -868,6 +881,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterios (b) y (e).
 - **Gravedad:** Baja.
 - **Propuesta:** P-10.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-10): `n_muestreos` cuenta todos los avisos respondidos, con o sin valencia, igual que el diccionario, Explorar y los widgets.
 
 ### H-9-11 · Cambiar los ajustes de avisos a mitad del día deja un número de avisos que no corresponde a ningún plan
 - **Dónde:** `ui/pantallas/Sistema.kt:381-384` (vacía el plan); `avisos/Trabajo.kt:101-110` (las claves ya disparadas siguen).
@@ -875,6 +889,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** condiciona el registro de P-10.
 - **Gravedad:** Baja.
 - **Propuesta:** documentar (P-10).
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-10): al rehacer el plan, `planeados` = vencidos previos + los del plan nuevo que aún pueden sonar.
 
 ### H-9-12 · El mapa de ánimo de R incluye el seguimiento privado
 - **Dónde:** `vestigium.R`, `vm_mapa_animo` (`:427-431`) y `vm_guardar_graficas` (`:542`).
@@ -996,6 +1011,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (d); se vuelve grave si se agregan `fin` o `hecho`.
 - **Gravedad:** Baja (Media con P-12 o I-3).
 - **Propuesta:** P-08.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-08): `Fusion.experimento` conserva lo de aquí y suma del respaldo la fecha de fin y las respuestas de «¿Lo hiciste hoy?».
 
 ### H-9-29 · Un experimento terminado sigue diciendo «SÍ toca» y cuenta como «en curso»
 - **Dónde:** `ui/pantallas/Lote3.kt:470-475`; `ui/pantallas/Explorar.kt:104`, `:456`.
@@ -1003,6 +1019,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a) menor.
 - **Gravedad:** Baja.
 - **Propuesta:** P-12.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-12): la tarjeta dice «Terminado el …» y «En curso» usa `Experimentos.enCurso`.
 
 ### H-9-30 · El aviso de diseño en bloque depende del diseño elegido, no del plan sorteado
 - **Dónde:** `ui/pantallas/Lote3.kt:487`.
@@ -1031,6 +1048,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (d).
 - **Gravedad:** Media.
 - **Propuesta:** P-08.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-08): `importarGastos` e `importarIngresos` solo agregan los que no existen, en la base y en memoria.
 
 ### H-9-34 · Una campaña aceptada a mitad de semana cuenta los días anteriores
 - **Dónde:** `ciencia/Campanas.kt`, `estado()`.
@@ -1038,6 +1056,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a).
 - **Gravedad:** Baja.
 - **Propuesta:** P-11 (paso B).
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-11): `Campana.aceptada`; los días antes de aceptarla no cuentan.
 
 ### H-9-35 · Desactivar un hábito anula sus campañas ganadas y los logros de campañas
 - **Dónde:** `ciencia/Campanas.kt:35`, `:39`.
@@ -1045,6 +1064,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterios (a) y (d).
 - **Gravedad:** Baja.
 - **Propuesta:** P-11 (paso B).
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-11): `Campanas.reto` encuentra también los hábitos desactivados.
 
 ### H-9-36 · «Abandonar» una campaña la borra sin rastro, y restaurar la resucita
 - **Dónde:** `ui/pantallas/Campanas.kt:163`; `data/Importar.kt:131`.
@@ -1052,6 +1072,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (d); la variable de campaña de P-11 no podría saber que existió.
 - **Gravedad:** Baja.
 - **Propuesta:** P-11 (paso B).
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-11): abandonar guarda `Campana.abandonada` en lugar de borrar, y restaurar la conserva abandonada.
 
 ### H-9-37 · Activar el cifrado borra en Drive todas las copias en claro sin avisar
 - **Dónde:** `data/Drive.kt:113`.
@@ -1059,6 +1080,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (d); por un momento no queda ninguna copia vieja.
 - **Gravedad:** Baja–Media.
 - **Propuesta:** P-09.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (P-09): los archivos en claro se borran solo después de subir (o escribir) el respaldo cifrado.
 
 ### H-9-38 · El hábito ligado a las recaídas aparece por su nombre en salidas comunes
 - **Dónde:** `reportes/Reportes.kt:634`; `ciencia/Logros.kt` (`c_hab_*`); `ciencia/Campanas.kt` (retos `habito:*`); widget de hábitos; «Tu año».

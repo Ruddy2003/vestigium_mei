@@ -25,6 +25,10 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `animo_cierre_activacion` | Activación al cerrar el día | numérica | — | Si hay registros de cierre del día |
 | `valencia_acompanado` | Valencia en avisos con alguien | numérica | — | Si hay avisos con «con quién» |
 | `valencia_solo` | Valencia en avisos estando solo | numérica | — | Si hay avisos con «con quién» |
+| `avisos_planeados` | Avisos de ánimo planeados | numérica | avisos | Desde el esquema 13, los días con avisos encendidos |
+| `avisos_mostrados` | Avisos de ánimo mostrados (menos de 50 min tarde y con permiso de notificaciones) | numérica | avisos | Desde el esquema 13 |
+| `avisos_respondidos` | Avisos mostrados con respuesta (con o sin valencia) | numérica | avisos | Desde el esquema 13 |
+| `tasa_respuesta` | Proporción de avisos respondidos (respondidos ÷ mostrados) | numérica | 0 a 1 | Desde el esquema 13, si se mostró alguno |
 
 ### Cuerpo
 
@@ -358,6 +362,11 @@ Estas se crean una por cada elemento que el usuario ha usado; el identificador l
 | `horas_tipo_<tipo>` | Horas en lugares de ese tipo (12 tipos de lugar posibles) | Lugares |
 | `enfoque_<tipo>_min` | Minutos de enfoque de ese tipo (estudio, lectura, idiomas, tesis, trabajo, creativo) | Enfoque |
 | `laptop_<categoria>_min` | Minutos en la laptop por categoría (productivo, ocio, social, otro) | Laptop |
+| `campana_<reto>`, `campana_hab_<id>` | En campaña ese día (0/1; la tenías aceptada). 0 desde tu primera campaña, vacío antes. Desde el esquema 13 | Campañas |
+| `campanas_n` | Campañas que tenías ese día. Desde el esquema 13 | Campañas |
+| `dia_especial` | Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1). Existe si hay alguna fecha guardada. Desde el esquema 13 | Calendario |
+
+**Pantalla y pasos, desde el esquema 13.** `pantalla_min`, `desbloqueos`, `primer_uso_h`, `ultimo_uso_h` y `pasos` se calculan por **día lógico** (de 05:00 a 05:00) en los días nuevos; los de antes quedaron por día de calendario. La ventana de cada día está en `vm_pantalla.csv:ventana`, `vm_salud.csv:ventana_pasos` y, en el panel exportado, `ventana_pantalla` y `ventana_pasos` (capítulo 2, sección 2.3.2).
 
 ## A.2 Familias de variables dinámicas
 
@@ -395,7 +404,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 
 ## A.3 Tablas exportadas
 
-La exportación genera 48 tablas CSV con datos, más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv`, `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por CSV, con las ubicaciones y el diccionario) y un `LEEME.txt`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 50 tablas CSV con datos (48 hasta el esquema 12; el 13 agregó `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv`, `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por CSV, con las ubicaciones y el diccionario) y un `LEEME.txt`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
@@ -412,7 +421,9 @@ La exportación genera 48 tablas CSV con datos, más `vm_ubicaciones.csv`, `vm_f
 | `vm_laptop.csv` | Minutos por app y por sitio en la laptop, por día (Cold Turkey) |
 | `vm_red_nodos.csv` | Personas de tu red: relación, cercanía, días mencionada y grado |
 | `vm_red_vinculos.csv` | Pares de personas: cómo se conocen según tú y cuántos días aparecen juntas |
-| `vm_experimentos.csv` | Experimentos personales: pregunta, hipótesis sellada, diseño, lavado y plan por semana (1 = con la acción) |
+| `vm_personas.csv` | Tu gente: relación, cercanía, desde cuándo, nacimiento, fallecimiento y edad (esquema 13) |
+| `vm_fechas_propias.csv` | Fechas propias que se repiten cada año (esquema 13) |
+| `vm_experimentos.csv` | Experimentos personales: pregunta, hipótesis sellada, diseño, lavado y plan por semana (1 = con la acción); desde el esquema 13, también `fin` y `hecho` («¿Lo hiciste hoy?») |
 | `vm_metas.csv` | Metas: horizonte, fecha objetivo, estado, medida, progreso e historial de cambios |
 | `vm_ingresos.csv` | Ingresos, uno por fila |
 | `vm_escalas.csv` | Cuestionarios validados (WHO-5, PSS-4, UCLA-3, TIPI) |
@@ -447,3 +458,20 @@ La exportación genera 48 tablas CSV con datos, más `vm_ubicaciones.csv`, `vm_f
 | `vm_entrenos.csv` | MacroFactor Workouts: resumen por día y por grupo muscular |
 | `vm_series.csv` | MacroFactor Workouts: cada serie |
 | `vm_panel.csv` | Una fila por día con lo principal de todas las fuentes |
+
+## A.4 Columnas nuevas del esquema 13 (entrega 10b)
+
+| Archivo | Columna | Qué es |
+|---|---|---|
+| `vm_panel.csv` | `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta` | Los avisos de ánimo del día (capítulo 3, sección 3.5.3) |
+| `vm_panel.csv` | `n_muestreos` | Ahora cuenta **todos** los avisos respondidos, con o sin valencia (antes, solo con valencia) |
+| `vm_panel.csv` | `campana_<reto>`, `campanas_n` | Campañas como variable (capítulo 9, sección 9.5) |
+| `vm_panel.csv` | `ventana_pantalla`, `ventana_pasos` | `logica` o `calendario` |
+| `vm_panel.csv` | `dia_especial`, `dia_especial_tipo` | Día especial y de qué tipo: `mi_cumpleanos`, `cumpleanos`, `fallecimiento`, `aniversario` u `otra` (lista) |
+| `vm_dias.csv` | `ts_valencia` | Cuándo se llenó o cambió la valencia; decide `retroactivo` |
+| `vm_experimentos.csv` | `fin`, `hecho` | Fecha de fin; respuestas de «¿Lo hiciste hoy?» como `fecha:1` o `fecha:0` (lista; sin fecha = sin respuesta) |
+| `vm_pantalla.csv` | `ventana` | `logica` (05:00 a 05:00) o `calendario` (0:00 a 24:00) |
+| `vm_salud.csv` | `ventana_pasos` | Igual, para los pasos |
+| `vm_personas.csv` | `persona`, `relacion`, `detalle`, `cercania`, `desde`, `nacimiento`, `fallecimiento`, `edad`, `historial` | Fechas en AAAA-MM-DD, o --MM-DD sin año. `edad` = años cumplidos hoy, o al morir |
+| `vm_fechas_propias.csv` | `nombre`, `fecha`, `mes_dia`, `anio`, `tipo` | Fechas propias que se repiten cada año |
+| `vm_respaldo.json` | `avisos` | Los avisos de ánimo de cada día, para restaurarlos |

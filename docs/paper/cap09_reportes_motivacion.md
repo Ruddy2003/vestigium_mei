@@ -164,6 +164,24 @@ Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que
 
 **Qué son científicamente.** Una campaña de sueño **es una intervención**: durante esa semana intentas dormir más. Eso está bien para tu vida, pero tiene una consecuencia para el análisis: **las campañas no se guardan como variable del panel ni se exportan como tal** (solo viven en los ajustes, `Config.campanas`) (H-8-7). Si en las semanas con campaña de sueño también estuviste de mejor ánimo, la app verá «dormir más se asocia con mejor ánimo», sin poder distinguir si fue el sueño o el empujón motivacional de la campaña (o qué te llevó a elegir esa campaña esa semana). Un experimento personal (capítulo 8) separa esto; una campaña, no.
 
+**Desde el esquema 13 (P-11) la campaña es una variable del panel.** Hay una columna `campana_<reto>` por cada reto que hayas tenido. Por ejemplo, `campana_sueno7`, o `campana_hab_<id>` para un hábito. Vale **1** los días que tenías ese reto aceptado y **0** los demás, desde el primer día de tu primera campaña; antes, sin dato. Además está `campanas_n`, cuántas tenías ese día, porque puede haber hasta tres a la vez. Codifica la **asignación** (la tenías aceptada), no el cumplimiento. `Campanas.diasActivos` la arma desde `Config.campanas`, que guarda la historia completa.
+
+Cada `campana_<reto>` se marca como «obvia» con lo que ese reto busca mover (`Campanas.MUEVE`; capítulo 6). La de sueño va con las horas y las horas de dormir y despertar; la de pantalla, con los minutos y desbloqueos. Así no aparece como hallazgo «en las semanas de campaña de sueño dormiste más». En R hay una regla equivalente (`vm_campana_mueve` dentro de `vm_obvia`).
+
+Lo que sí queda para el análisis es lo interesante: por ejemplo, si en las semanas de campaña de sueño cambió **otra** cosa, como el ánimo. Y la campaña sirve como control: comparar «dormir más y ánimo» con y sin campaña. **[Diseño propio]**.
+
+**Tres cambios en cómo se cuentan, también del esquema 13:**
+- **Fecha de aceptación.** `Campana.aceptada` guarda el día lógico. Una campaña aceptada el miércoles ya no cuenta el lunes ni el martes, así que no se puede ganar en el mismo acto de aceptarla (H-9-34).
+- **Abandonar no borra.** Abandonar la cierra ese día (`Campana.abandonada`): queda en la historia y en el panel, los días que la tuviste (H-9-36).
+- **Hábitos desactivados.** Desactivar un hábito ya no anula las campañas ganadas con él ni sus logros, porque `Campanas.reto` sigue encontrando el hábito (H-9-35).
+
+Las campañas de antes no tienen `aceptada` y cuentan la semana completa.
+
+**Lo que hay que tener en cuenta al leerlas:**
+- Una campaña es **autoelegida**, no sorteada. Pudiste elegirla justo en una semana en que ya ibas a mejorar.
+- Varias semanas seguidas de la misma campaña hacen que la variable cambie poco. Puede clasificarse como «lenta» y quedar fuera del análisis sin tendencia (capítulo 6).
+- Una campaña de avisos o de diario cambia cuántos datos faltan esa semana.
+
 ---
 
 ## 9.6 Gamificación: lo que dice la evidencia
@@ -188,7 +206,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 - **Bien**: la mayoría de los logros premian **registrar** o **conductas objetivas medidas por sensores** (pasos y sueño del reloj, pantalla del teléfono), no lo que escribes. Un reloj no se deja convencer por una medalla.
 - **Bien**: la constancia tolera días malos, así que no hay incentivo para inventar un día con tal de no romper la racha… salvo en las rachas de diario, donde sí lo hay.
 - **Bien**: el registro de un toque para días difíciles (capítulo 3) hace que registrar un día malo cuente igual que uno bueno para los logros de diario.
-- **Mejorable**: «Día perfecto» y «Remontada» premian valores de la valencia (H-8-6); las predicciones de enero incluyen el ánimo medio; las campañas no quedan registradas como variable (H-8-7).
+- **Mejorable**: «Día perfecto» y «Remontada» premian valores de la valencia (H-8-6); las predicciones de enero incluyen el ánimo medio. Las campañas, desde el esquema 13, sí quedan como variable (H-8-7, resuelto).
 - **No se puede evitar**: que ver tus reportes cambie tu conducta. Es, en parte, el propósito de la app.
 
 **Recomendación práctica para leer los datos** (no requiere cambiar código): al analizar una variable que también fue meta de una campaña o un logro, mirar si su relación con otras cambia antes y después de empezar a perseguir esa meta.
@@ -216,7 +234,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 2. Los reportes se generan solos (lunes y día 1) y se guardan en las carpetas públicas de imágenes y descargas; su contenido y privacidad se tratan en el capítulo 10.
 3. La visualización combina codificaciones precisas (barras con eje y números) con otras gruesas (colores, iconos); las comparaciones con el periodo anterior no tienen noción de azar (H-8-11).
 4. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas: una buena decisión para no abandonar. Dos logros secretos premian valores de la valencia (H-8-6).
-5. Las campañas son **intervenciones** que no quedan registradas como variable, así que pueden confundir el análisis observacional (H-8-7).
+5. Las campañas son **intervenciones**. Hasta el esquema 12 no quedaban registradas como variable y podían confundir el análisis observacional (H-8-7). Desde el 13 son variables del panel (`campana_<reto>`, `campanas_n`), obvias con lo que cada reto mueve.
 6. La gamificación puede ayudar a no abandonar, pero con efectos dependientes del contexto; las recompensas pueden cambiar la motivación y lo que se mide.
 
 ---

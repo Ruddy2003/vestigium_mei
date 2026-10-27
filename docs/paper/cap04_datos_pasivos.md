@@ -54,7 +54,7 @@ En el capítulo 2 vimos que la app define el «día» de 05:00 a 04:59. **Pero n
 
 | Usan **día lógico** (05:00 → 04:59) | Usan **día de calendario** (00:00 → 24:00) |
 |---|---|
-| Ubicación (km del día), Movimiento, Wifi/audio/carga/luz/presión, Notificaciones, Música (Oyente), Fotos, Llamadas/SMS, Spotify, Google Takeout, WhatsApp, Kindle | **Pantalla**, **Reloj** (pasos, corazón, oxígeno, calorías…), **Agenda**, **Clima/aire** (por naturaleza son datos por día de calendario), Cold Turkey y MacroFactor (el archivo trae la fecha) |
+| Ubicación (km del día), Movimiento, Wifi/audio/carga/luz/presión, Notificaciones, Música (Oyente), Fotos, Llamadas/SMS, Spotify, Google Takeout, WhatsApp, Kindle y, **desde el esquema 13, Pantalla y pasos** | **Pantalla** (hasta el esquema 12), **Reloj** (pasos hasta el esquema 12; corazón, oxígeno, calorías…), **Agenda**, **Clima/aire** (por naturaleza son datos por día de calendario), Cold Turkey y MacroFactor (el archivo trae la fecha) |
 | El **sueño** del reloj se asigna al **día en que despiertas** (fecha de calendario del final de la sesión). | |
 
 **Ejemplo (inventado).** Un lunes te quedas usando el teléfono de 00:30 a 01:30 de la madrugada del martes.
@@ -68,7 +68,9 @@ Resultado: dentro de una misma fila del panel (digamos «martes»), la pantalla 
 
 **Qué ocurre en la práctica.** Para alguien que se duerme antes de la medianoche, ambos criterios casi coinciden y el efecto es pequeño. Para quien usa el teléfono de madrugada, el efecto es real. **[Aproximación]** hoy; la propuesta (en `hallazgos.md`) es usar un solo criterio.
 
-Una consecuencia concreta (**H‑3‑2**): `primer_uso_h` (hora del primer uso del día) se calcula con la ventana de calendario, así que el uso de las 01:00 de la madrugada aparece como «primer uso» a la 01:00, no a la hora real en que te levantaste. Y la corrección «+24 si la hora es menor a 5» de `ultimo_uso_h` casi nunca llega a actuar, porque la ventana de calendario termina a las 24:00.
+**Lo que cambió en el esquema 13 (P‑16 ii, decisión D‑3 del autor).** La pantalla y los pasos pasan al día lógico de aquí en adelante. En el ejemplo, la hora de 00:30 a 01:30 de pantalla cuenta ahora para el **lunes**, igual que las notificaciones y el wifi. Cada día guarda qué ventana usó (`PantallaDia.ventana`, `SaludDia.ventana_pasos`: `"logica"` o `"calendario"`), y el panel exportado lleva `ventana_pantalla` y `ventana_pasos`, para analizar por separado los dos tramos de la serie. Los días de antes no se recalculan: Android solo guarda unos días de eventos de uso, y mezclar días recalculados con otros sin recalcular sería peor. Lo que **no** cambió: el corazón, el oxígeno y las demás lecturas del reloj siguen por día de calendario, y la agenda y el clima también. Por eso H‑3‑1 queda **resuelto en parte**.
+
+Una consecuencia concreta (**H‑3‑2**), hasta el esquema 12: `primer_uso_h` (hora del primer uso del día) se calcula con la ventana de calendario, así que el uso de las 01:00 de la madrugada aparece como «primer uso» a la 01:00, no a la hora real en que te levantaste. Y la corrección «+24 si la hora es menor a 5» de `ultimo_uso_h` casi nunca llega a actuar, porque la ventana de calendario termina a las 24:00.
 
 ---
 
@@ -102,7 +104,7 @@ Resultado: A = 30 min, B = 30 min, total 60 min. Por hora: 22:00–23:00 → 50 
 
 **Relación con el autorreporte.** Una revisión sistemática de 106 tamaños de efecto encontró que lo que la gente *dice* que usa los medios digitales **solo se correlaciona moderadamente** con lo que registran los dispositivos, y que los autorreportes rara vez reflejan con exactitud el uso real (Parry et al., 2021). Esa es la razón principal para medirla de forma pasiva. **[Validado]**.
 
-**Día y cobertura.** Ventana de **calendario** (H‑3‑1, H‑3‑2). La sincronización recalcula hoy y ayer (2 días).
+**Día y cobertura.** Hasta el esquema 12, ventana de **calendario** (H‑3‑1, H‑3‑2). Desde el esquema 13, ventana del **día lógico**: de las 05:00 de ese día a las 05:00 del siguiente, y en `por_hora_min` las horas 0 a 4 son de la madrugada siguiente. La sincronización recalcula el día lógico de hoy y el de ayer (2 días).
 
 **Cuando falta.** Sin permiso de «acceso a uso», la función devuelve nulo y esa fecha no se guarda.
 
@@ -332,7 +334,7 @@ La app lee los datos de tu reloj a través de **Health Connect**, el sistema de 
 
 ### 4.5.3 Otras lecturas del reloj
 
-Peso, grasa corporal, frecuencia respiratoria (`resp_rpm`), temperatura corporal, **temperatura de la piel** (`temp_piel_delta`: diferencia respecto a la línea base del propio dispositivo), presión arterial, distancia, calorías activas y totales, pisos, VO2 máx. y agua: se guarda **lo que el reloj o la báscula escriban**, si tienes el permiso. **Ejercicio:** se leen las sesiones (tipo, duración, frecuencia cardiaca media y máxima) y se asignan al **día lógico** del inicio (¡distinto al de los pasos, que usa calendario! H‑3‑1).
+Peso, grasa corporal, frecuencia respiratoria (`resp_rpm`), temperatura corporal, **temperatura de la piel** (`temp_piel_delta`: diferencia respecto a la línea base del propio dispositivo), presión arterial, distancia, calorías activas y totales, pisos, VO2 máx. y agua: se guarda **lo que el reloj o la báscula escriban**, si tienes el permiso. **Ejercicio:** se leen las sesiones (tipo, duración, frecuencia cardiaca media y máxima) y se asignan al **día lógico** del inicio (igual que los pasos desde el esquema 13; hasta el 12 los pasos usaban el calendario, H‑3‑1).
 
 ### 4.5.4 Resumen de confianza (reloj)
 

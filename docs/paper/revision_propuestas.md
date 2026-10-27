@@ -23,11 +23,12 @@ Ninguna propuesta se tachó: todas quedan aprobadas. Las decisiones de la secci�
      - **10b**: datos que no se guardaban (P-07 a P-13, P-16 (ii), I-3, I-6 e I-7); es la única que sube `SCHEMA_V`, a 13;
      - **10c**: cálculos (P-14 a P-29, I-1 e I-2);
      - **10d**: R y exportación (P-30 a P-33).
-  5. Sobre los días especiales (I-6), queda por decidir en la entrega 10b si se registran fechas de fallecimiento y si hay aviso de cumpleaños.
+  5. Sobre los días especiales (I-6): sí se registran fechas de fallecimiento y sí hay aviso de cumpleaños (respuesta del autor antes de la entrega 10b).
 - **P-34 · Pantalla Privado.** Todo lo privado se anota y se ve solo en ella; fuera de ella no aparece en ninguna visualización; sí va en la exportación para R.
 - **Estado:**
-  - **10a hecha** (commit `a67bad0`): P-01 a P-06 y P-34, detalladas en el Apéndice D.
-  - **10b, 10c y 10d:** pendientes.
+  - **10a hecha** (commit `a67bad0`, versión v85): P-01 a P-06 y P-34, detalladas en el Apéndice D.
+  - **10b hecha** (esquema 13): P-07 a P-13, P-16 (ii), I-3, I-6 e I-7, detalladas en el Apéndice D. En I-6 el autor decidió registrar también las fechas de fallecimiento y avisar de los cumpleaños.
+  - **10c y 10d:** pendientes.
 
 ## Cómo leer y anotar este documento
 

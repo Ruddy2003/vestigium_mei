@@ -352,7 +352,7 @@ Marca las parejas cuya correlación es casi segura por construcción, para no pr
 `Estadistica.obvia(a, b)` devuelve verdadero si se cumple **cualquiera** de estas reglas:
 
 1. Ambas son del mismo grupo y el grupo es «Lectura del día», «Momentos», «Sentimientos» o «Sueños».
-2. Ambas están en una misma familia de `Estadistica.FAMILIAS` (56 conjuntos; una variable puede estar en varios). Ejemplos: todos los nutrientes fijos; `valencia` con `muestreo_valencia`; `valencia`, `animo_valencia`, `animo_cierre_valencia`, `momentos_valencia`, `valencia_acompanado` y `valencia_solo`; las de alcohol entre sí; impulsos, recaídas y libido entre sí.
+2. Ambas están en una misma familia de `Estadistica.FAMILIAS` (57 conjuntos desde el esquema 13; una variable puede estar en varios). Ejemplos: todos los nutrientes fijos; `valencia` con `muestreo_valencia`; `valencia`, `animo_valencia`, `animo_cierre_valencia`, `momentos_valencia`, `valencia_acompanado` y `valencia_solo`; las de alcohol entre sí; impulsos, recaídas y libido entre sí.
 3. Ambas son de lugares (`horas_tipo_*` o `lug_*`).
 4. Son del mismo suplemento (`supl_<id>_dosis`, `_tomado`, `_nivel`…).
 5. Una es un sentimiento y la otra `registros_animo`; o una es una categoría de sueño y la otra empieza con `sueno_`.
@@ -360,6 +360,9 @@ Marca las parejas cuya correlación es casi segura por construcción, para no pr
 7. Ambas son dinámicas de familias que se consideran obvias **entre sí** (`Dinamicas.ENTRE_SI`: dos nutrientes, nutriente y alimento, ciudad y país, obra y género, dos músculos, dos artistas, dos etapas de vida, dos ejes políticos…).
 8. `per_X` y `pen_X` de la **misma** persona.
 9. Dos puntajes del **mismo** cuestionario (`esc_<instrumento>_…`).
+10. Desde el esquema 13: una campaña (`campana_<reto>`) y lo que ese reto busca mover (`Campanas.MUEVE`; por ejemplo, la de pasos con `pasos`, `a_pie_min` y `distancia_km`; la de un hábito con su `hab_`), y cualquier campaña con `campanas_n` (capítulo 9).
+
+La familia de los avisos de ánimo, también del esquema 13, entra por la regla 2: `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos` y `tasa_respuesta`, entre sí y con `muestreo_valencia`, `muestreo_activacion` y `n_muestreos` (capítulo 3).
 
 Las obvias se calculan igual pero se esconden (el interruptor «Mostrar también las obvias» las muestra) y no cuentan en la corrección BH por omisión.
 

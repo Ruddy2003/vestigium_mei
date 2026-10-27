@@ -63,6 +63,8 @@ fun diaLogico(ahora: LocalDateTime) =
 
 *Razonamiento científico.* La medianoche no es una frontera natural de la conducta: quien se acuesta a las 01:30 «todavía está viviendo» el día anterior. La *American Time Use Survey* usa un **día‑diario que va de las 4:00 a.m. a las 3:59 a.m.** por la misma razón (U.S. Bureau of Labor Statistics, s. f.). Elegir el corte en un periodo de mínima actividad reduce el número de episodios (sueño, cena tardía, última revisión del teléfono) partidos entre dos días. **[Validado]** el principio (cortes entre 3 y 5 h en encuestas de uso del tiempo); **[Diseño propio]** el valor exacto 05:00.
 
+**Desde la versión con esquema 13 (entrega 10b del módulo 10, Apéndice D), la pantalla y los pasos también van por día lógico.** Antes se sumaban de 0:00 a 24:00 (día de calendario), aunque todo lo demás usaba el corte de las 05:00. Ahora `Pantalla.calcular` lee los eventos de uso de las 05:00 de ese día a las 05:00 del siguiente (`Fechas.inicioDiaLogico` y `finDiaLogico`), y `Salud.sincronizar` agrega los pasos en la misma ventana. Cada día guarda qué ventana usó: `PantallaDia.ventana` y `SaludDia.ventana_pasos` valen `"logica"` desde ese cambio y `"calendario"` en los días de antes. *Por qué importa:* la serie **se parte en dos tramos**. Por ejemplo, una madrugada con el teléfono de 01:00 a 01:30 antes contaba para el día nuevo, y su `primer_uso_h` era 1.0; ahora cuenta para el día anterior, y el primer uso del día nuevo es el de la mañana. Las correlaciones que crucen la fecha del cambio deben leerse por tramo; en R se separan con las columnas `ventana_pantalla` y `ventana_pasos` de `vm_panel.csv`. El resto del reloj (ritmo cardiaco, oxígeno) sigue por día de calendario. **[Diseño propio]**.
+
 ![Figura 2.3](figuras/fig03_dia_logico.png)
 
 ### Ejemplo sintético (Figura 2.3)
@@ -108,20 +110,20 @@ La configuración global `JSON` activa cuatro opciones:
 | `coerceInputValues` | Sustituye `null` o valores inválidos por el valor por omisión | Puede convertir un «sin dato» en un valor por omisión (H‑1‑4) |
 | `isLenient` | Acepta JSON con sintaxis relajada | Tolera archivos importados imperfectos |
 
-La carga inicial usa `cargar(col, serializer)`, que descarta **sin aviso** los documentos que no se pueden decodificar (`mapNotNull { runCatching … getOrNull() }`): siguen en la base de datos, pero son invisibles para la app, el panel y la exportación (H‑1‑3).
+La carga inicial usa `cargar(col, serializer)`. Hasta el esquema 12 descartaba **sin aviso** los documentos que no se podían decodificar (`mapNotNull { runCatching … getOrNull() }`): seguían en la base de datos, pero eran invisibles para la app, el panel y la exportación (H‑1‑3). Desde el esquema 13 (P‑07) los sigue dejando fuera, pero **los cuenta**: `Decodificar.todos` devuelve los leídos y el número de fallidos, y `Repo.ilegibles` guarda ese conteo por colección. Las consultas por fechas (`escuchas`, `huellas`, `comidas`, `series`) anotan el mayor conteo visto. El conteo aparece en «Estado de los datos» y como aviso en Hoy. La configuración, que es un solo documento, tiene un trato aparte: si no se puede leer, su texto original se copia a la colección `config_ilegible` **antes** de seguir con una configuración vacía. Sin esa copia, el siguiente cambio de ajustes la sobrescribiría, y se perderían personas, hábitos, perfil y campañas (H‑9‑2).
 
 ### 2.4.3 `Repo`: memoria con escritura inmediata
 
-`Repo` mantiene en memoria el estado observable (Compose `mutableStateOf`) de las **34 colecciones** que precarga al iniciar (`dias`, `momentos`, `gastos`, `ingresos`, `respuestas`, `reacciones`, `lugares`, `visitas`, `youtube`, `salud`, `pantalla`, `cartas`, `experimentos`, `entorno`, `fotos`, `agenda`, `notifs`, `actividad`, `sesiones`, `ascensos`, `obras`, `comunicacion`, `conexiones`, `subrayados`, `huellas_dia`, `whatsapp`, `nutricion`, `entrenos`, `tramos`, `consumos`, `notas`, `metas`, `tomas`, `laptop`). Cada `guardarX` hace **escritura inmediata (write‑through)**: primero a SQLite (`db.poner`), luego actualiza la memoria en el hilo principal. Los métodos de guardado están sincronizados (`@Synchronized`).
+`Repo` mantiene en memoria el estado observable (Compose `mutableStateOf`) de las **35 colecciones** que precarga al iniciar (`dias`, `momentos`, `gastos`, `ingresos`, `respuestas`, `reacciones`, `lugares`, `visitas`, `youtube`, `salud`, `pantalla`, `cartas`, `experimentos`, `entorno`, `fotos`, `agenda`, `notifs`, `actividad`, `sesiones`, `ascensos`, `obras`, `comunicacion`, `conexiones`, `subrayados`, `huellas_dia`, `whatsapp`, `nutricion`, `entrenos`, `tramos`, `consumos`, `notas`, `metas`, `tomas`, `laptop` y, desde el esquema 13, `avisos`, un documento por día con los avisos de ánimo planeados, vencidos y mostrados; capítulo 3). Cada `guardarX` hace **escritura inmediata (write‑through)**: primero a SQLite (`db.poner`), luego actualiza la memoria en el hilo principal. Los métodos de guardado están sincronizados (`@Synchronized`).
 
-Otras colecciones (`comidas`, `escuchas`, `huellas`, `series`, `config`) se guardan en la misma tabla pero, según el código, no figuran en la carga inicial de 34 y se leen bajo demanda.
+Otras colecciones (`comidas`, `escuchas`, `huellas`, `series`, `config`) se guardan en la misma tabla pero, según el código, no figuran en la carga inicial de 35 y se leen bajo demanda.
 
 *Razonamiento.* La escritura inmediata minimiza la pérdida de datos si la app se cierra; mantener todo en memoria hace instantáneos los análisis sobre cientos o miles de días. El costo es el uso de memoria, aceptable para un solo usuario.
 
 **Metadatos de calidad en `Dia`.** `guardarDia` añade a cada día:
 
 - `ts_creado` (primera vez que se guardó), `ts_editado` (última edición), `schema_v`;
-- **`retroactivo`**: `true` si el día se guarda por primera vez *después* de que su día lógico terminó.
+- **`retroactivo`**: hasta el esquema 12, `true` si el documento del día se guardaba por primera vez *después* de que su día lógico terminó. Esa regla fallaba cuando otra cosa creaba el documento ese mismo día (el sueño de la captura rápida, un hábito desde el widget): el día quedaba `false` para siempre, aunque la valencia se llenara días después (H‑2‑2). Desde el esquema 13 (P‑13), `Dia` guarda **`ts_valencia`**, la hora en que la valencia pasó de vacía a llena o cambió (`Reglas.tsValencia`). Así, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). Los días de antes, sin `ts_valencia`, conservan el valor que tenían.
 
 *Razonamiento.* `retroactivo` permite estimar sesgo de recuerdo: un día llenado a posteriori se recuerda, no se vive. Es un **moderador** que el análisis puede incluir (¿cambian las asociaciones al excluir los días retroactivos?). **[Diseño propio]**, muy buena práctica: en la literatura de diarios se recomienda registrar *cuándo* se llenó cada entrada (Stone et al., 2002 propusieron verificar el cumplimiento temporal en diarios).
 
@@ -133,7 +135,7 @@ Resumen por familia temática (el detalle campo a campo está en el Apéndice A)
 
 | Familia | Colecciones | Granularidad | Capa |
 |---|---|---|---|
-| Ánimo y diario | `dias`, `momentos`, `respuestas`, `cartas`, `notas`, `metas` | día / evento | activa |
+| Ánimo y diario | `dias`, `momentos`, `respuestas`, `cartas`, `notas`, `metas`, `avisos` (desde el esquema 13) | día / evento | activa (`avisos`: automática) |
 | Cuerpo y salud | `salud`, `entrenos`, `sesiones`, `ascensos`, `consumos`, `tomas`, `nutricion` | día / sesión | pasiva e importada |
 | Teléfono y pantalla | `pantalla`, `notifs`, `conexiones`, `laptop`, `huellas_dia`, `youtube` | día | pasiva e importada |
 | Dinero | `gastos`, `ingresos` | transacción | activa |
@@ -243,6 +245,7 @@ La app puede exportar **48 tablas CSV** con datos (`vm_*.csv`, Apéndice A.3), m
 - **Transacciones.** Las importaciones masivas (`importarDias`) usan `db.transaccion { }`: se aplican todas o ninguna.
 - **Importar con o sin sobrescribir.** `importarDias(lista, sobrescribir)` evita pisar días existentes por omisión. Los días importados **no** reciben `ts_creado`, `ts_editado` ni `schema_v` actualizados (H‑1‑9): se pierde la capacidad de saber cuándo fueron capturados.
 - **Caché de variables dinámicas.** `Dinamicas.calcular` guarda en caché el resultado y lo invalida comparando referencias de las colecciones (`clave()`); si cambia cualquiera de ellas se recalcula. *Razonamiento:* cálculo costoso, pero la invalidación por referencia es correcta solo mientras las colecciones se reemplacen (inmutables), como hace `Repo`.
+- **Restaurar sin pisar ni dejar a medias (esquema 13, P‑08).** Un respaldo con `schema_v` mayor que el de la app no se restaura: los campos que esta versión no conoce se descartarían en silencio (`ignoreUnknownKeys`). Los gastos e ingresos del respaldo que ya existen (mismo id) no se tocan, ni en la base ni en memoria. Antes se sobrescribían en la base pero no en memoria, y al reiniciar aparecía la versión del respaldo. Un experimento del respaldo no reactiva uno terminado aquí, y se juntan las respuestas de «¿Lo hiciste hoy?» de los dos (`Fusion.experimento`). El detalle está en el capítulo 10.
 - **Identificadores.** `nuevoId()` = UUID recortado a 16 caracteres hexadecimales (64 bits): colisión prácticamente imposible a esta escala (probabilidad de al menos una colisión ≈ 3×10⁻¹⁰ con 10⁵ registros).
 
 ---
