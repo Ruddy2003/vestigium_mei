@@ -1,5 +1,5 @@
 """Figura 7.1 - Constelación con datos SINTÉTICOS, con las mismas fórmulas que PantallaConstelacion
-(ui/pantallas/Constelacion.kt). Personas y fechas inventadas. Uso: python fig11_constelacion.py [salida.png]"""
+(ui/pantallas/Constelacion.kt). Personas y fechas inventadas. Uso: python fig17_constelacion.py [salida.png]"""
 import sys, math
 import numpy as np
 import matplotlib
@@ -72,4 +72,4 @@ b.legend(handles=hand, loc="lower right", fontsize=7.5, frameon=False, title="co
 fig.suptitle("Figura 7.1  La constelación: tamaño = días mencionada, cercanía al centro = recencia (datos sintéticos)", x=0.01, ha="left",
              fontsize=11, weight="bold", color="#1f2937")
 fig.tight_layout(rect=(0, 0, 1, .94))
-fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig11_constelacion.png")
+fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig17_constelacion.png")

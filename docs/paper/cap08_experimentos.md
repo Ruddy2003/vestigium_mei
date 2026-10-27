@@ -134,9 +134,9 @@ Observa que el lavado se aplica **en los dos sentidos**: al pasar de «SÍ» a �
 
 Plan sorteado: SÍ no no SÍ SÍ no, 2 días de lavado. Cambios: día 0 (empieza con SÍ), día 7 (SÍ→no), día 21 (no→SÍ), día 35 (SÍ→no). Días de lavado: 0–1, 7–8, 21–22, 35–36 = 8 días. Cuentan **17 días con la acción** (21 − 4) y **17 sin ella** (21 − 4). La semana 3 («no» tras «no») no pierde ningún día.
 
-![Figura 8.1](figuras/fig14_calendario_experimento.png)
+![Figura 8.1](figuras/fig20_calendario_experimento.png)
 
-*Figura 8.1. Izquierda: qué días cuentan con un plan alterno y 2 días de lavado; la fila punteada es la semana previa, en la que el día ya muestra la instrucción de la semana 1. Derecha: la plantilla «Creatina» (8 semanas, antes y después, 28 días de lavado): todo el periodo con la acción queda en lavado. Script: `figuras/fig14_calendario_experimento.py`.*
+*Figura 8.1. Izquierda: qué días cuentan con un plan alterno y 2 días de lavado; la fila punteada es la semana previa, en la que el día ya muestra la instrucción de la semana 1. Derecha: la plantilla «Creatina» (8 semanas, antes y después, 28 días de lavado): todo el periodo con la acción queda en lavado. Script: `figuras/fig20_calendario_experimento.py`.*
 
 ### 8.5.3 Razonamiento y cuándo falla
 
@@ -210,9 +210,9 @@ Ahora, lo mismo con dos correcciones que la app **no** hace:
 
 Con autocorrelaciones como las que suelen tener las medidas diarias de ánimo (la app calcula la tuya), **entre una de cada siete y una de cada cuatro** «señales» pueden ser azar, y la mitad si te detienes al ver la primera. La cifra de 0.3 a 0.5 es ilustrativa: no verifiqué un valor típico en la literatura **[sin verificar]**; lo que importa es que cualquier autocorrelación positiva estrecha el intervalo de más.
 
-![Figura 8.2](figuras/fig15_resultado_experimento.png)
+![Figura 8.2](figuras/fig21_resultado_experimento.png)
 
-*Figura 8.2. Izquierda: un experimento inventado con su resultado calculado como en la app y con dos correcciones. Derecha: con qué frecuencia el método de la app da una «señal» cuando la acción no hace nada. Script: `figuras/fig15_resultado_experimento.py`.*
+*Figura 8.2. Izquierda: un experimento inventado con su resultado calculado como en la app y con dos correcciones. Derecha: con qué frecuencia el método de la app da una «señal» cuando la acción no hace nada. Script: `figuras/fig21_resultado_experimento.py`.*
 
 ### 8.6.4 Qué sería más adecuado
 
@@ -261,9 +261,9 @@ La recta se ajusta **sin separar la condición**. En un antes/después, un **efe
 
 Lo adecuado sería ajustar **a la vez** la tendencia y la condición (una regresión del valor contra el día **y** contra «con/sin»), y reportar el efecto de la condición ya descontada la tendencia. Aun así, en un antes/después puro, tendencia y efecto se separan mal (la condición cambia una sola vez); en un alterno, bien.
 
-![Figura 8.3](figuras/fig16_tendencia_diseno.png)
+![Figura 8.3](figuras/fig22_tendencia_diseno.png)
 
-*Figura 8.3. Izquierda: una tendencia sin efecto real produce una diferencia falsa en un antes/después. Centro: con semanas alternas por pares, la misma tendencia se reparte entre las dos condiciones. Derecha: frecuencia de falsas señales con tendencia, y de avisos de tendencia cuando hay un efecto real. Script: `figuras/fig16_tendencia_diseno.py`.*
+*Figura 8.3. Izquierda: una tendencia sin efecto real produce una diferencia falsa en un antes/después. Centro: con semanas alternas por pares, la misma tendencia se reparte entre las dos condiciones. Derecha: frecuencia de falsas señales con tendencia, y de avisos de tendencia cuando hay un efecto real. Script: `figuras/fig22_tendencia_diseno.py`.*
 
 ---
 

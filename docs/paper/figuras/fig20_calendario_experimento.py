@@ -1,5 +1,5 @@
 """Figura 8.1 - Calendario de dos experimentos SINTÉTICOS con las reglas de Experimentos.toca / enLavado
-(data/Lote3.kt) y del aviso del Día (ui/pantallas/Dia.kt). Uso: python fig14_calendario_experimento.py [salida.png]"""
+(data/Lote3.kt) y del aviso del Día (ui/pantallas/Dia.kt). Uso: python fig20_calendario_experimento.py [salida.png]"""
 import sys
 import matplotlib
 matplotlib.use("Agg")
@@ -50,5 +50,5 @@ fig.legend(hand, ["con la acción (cuenta)", "sin la acción (cuenta)", "lavado 
            loc="lower center", ncol=4, fontsize=8, frameon=False)
 fig.suptitle("Figura 8.1  Qué días cuentan en un experimento (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
 fig.tight_layout(rect=(0, .06, 1, .94))
-fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig14_calendario_experimento.png")
+fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig20_calendario_experimento.png")
 print("alterno:", r1, " creatina:", r2)

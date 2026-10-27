@@ -67,9 +67,9 @@ La Figura 10.1 resume, según el código, qué tipo de dato llega a cada salida.
 
 **Sobre la pregunta del plan («por qué los logros nunca se ligan a sustancias, impulsos, recaídas ni libido»):** en el código de v81 la afirmación es **casi** cierta. Ningún logro predefinido usa variables de sustancias, impulsos, recaídas ni libido, y el razonamiento es correcto: un logro por «días sin recaída» o por «tomar menos alcohol» convertiría el seguimiento privado en un marcador, con la presión de la ley de Campbell (capítulo 9, sección 9.7) justo sobre los datos más delicados, y uno «por registrar impulsos» premiaría registrarlos. Pero hay tres vías indirectas: los impulsos cuentan como momentos, la recaída desmarca un hábito que tiene logros, y los logros propios aceptan cualquier variable.
 
-![Figura 10.1](figuras/fig18_flujo_privacidad.png)
+![Figura 10.1](figuras/fig24_flujo_privacidad.png)
 
-*Figura 10.1. Qué tipo de dato llega a cada salida, según el código de v81. Borde rojo: hallazgos de los módulos 6 y 8. Script: `figuras/fig18_flujo_privacidad.py`.*
+*Figura 10.1. Qué tipo de dato llega a cada salida, según el código de v81. Borde rojo: hallazgos de los módulos 6 y 8. Script: `figuras/fig24_flujo_privacidad.py`.*
 
 ---
 

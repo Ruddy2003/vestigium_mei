@@ -1,6 +1,6 @@
 """Figura 8.2 - Resultado de un experimento SINTÉTICO calculado como Experimentos.resultado y Estadistica.diferencia
 (intervalo con 1.96, d de Cohen con desviación agrupada) y tasa de falsas señales por simulación.
-Uso: python fig15_resultado_experimento.py [salida.png]"""
+Uso: python fig21_resultado_experimento.py [salida.png]"""
 import sys, math
 import numpy as np
 import matplotlib
@@ -88,5 +88,5 @@ b.set_ylabel("experimentos SIN efecto que dan «señal»", fontsize=8.3); b.tick
 b.set_title(f"Falsas señales del método de la app ({N} simulaciones)", loc="left", fontsize=9.3, color="#1f2937")
 fig.suptitle("Figura 8.2  El resultado de un experimento y qué tan seguido engaña (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
 fig.tight_layout(rect=(0, 0, 1, .93))
-fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig15_resultado_experimento.png")
+fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig21_resultado_experimento.png")
 print(txt); print(dict(zip([c[0].replace("\n", " ") for c in casos], [round(t, 3) for t in tasas])))

@@ -139,9 +139,9 @@ Clasificas a una persona inventada así:
 
 Si estuviste con ella el 2 abr 2026, ese día se enciende `vi_pareja` (no `vi_expareja`).
 
-![Figura 7.3](figuras/fig13_relacion_fecha.png)
+![Figura 7.3](figuras/fig19_relacion_fecha.png)
 
-*Figura 7.3. Historial de una persona inventada. Rayado: días anteriores a la primera clasificación, a los que se les proyecta la relación más antigua. Cuadriculado: días entre la ruptura real y el día en que la anotaste, que cuentan con la relación vieja. Script: `figuras/fig13_relacion_fecha.py`.*
+*Figura 7.3. Historial de una persona inventada. Rayado: días anteriores a la primera clasificación, a los que se les proyecta la relación más antigua. Cuadriculado: días entre la ruptura real y el día en que la anotaste, que cuentan con la relación vieja. Script: `figuras/fig19_relacion_fecha.py`.*
 
 **Razonamiento.** En un registro de años, las relaciones cambian. Si los análisis usaran la relación de hoy, todos los días con quien hoy es expareja contarían como «estuve con una expareja», incluidos los días en que era tu pareja: eso mezclaría dos situaciones opuestas. Guardar la relación por fecha es la forma correcta de tratar una **covariable que cambia con el tiempo** (*time-varying covariate*: un dato de contexto que no es fijo, sino que tiene un valor por periodo). **[Diseño propio]**, bien planteado.
 
@@ -297,9 +297,9 @@ $$d = \left(0.30 + 0.64\cdot \min\!\left(1, \frac{\text{días desde la última m
 10. **Nombres**: solo las 14 primeras (o la que tocas). Al tocar una estrella: días, última vez, relación y «suele aparecer con» las 4 personas con más días juntas.
 11. Tres anillos de guía a 1/3, 2/3 y el total del radio útil; son decorativos, no umbrales.
 
-![Figura 7.1](figuras/fig11_constelacion.png)
+![Figura 7.1](figuras/fig17_constelacion.png)
 
-*Figura 7.1. Una constelación de un año con 16 personas inventadas, calculada con las fórmulas de la app. Derecha: la curva que convierte «hace cuántos días» en distancia. Script: `figuras/fig11_constelacion.py`.*
+*Figura 7.1. Una constelación de un año con 16 personas inventadas, calculada con las fórmulas de la app. Derecha: la curva que convierte «hace cuántos días» en distancia. Script: `figuras/fig17_constelacion.py`.*
 
 ### 7.9.3 Ejemplo
 
@@ -420,9 +420,9 @@ donde *a*<sub>ij</sub> = 1 si *i* y *j* están unidos. Sin pesos, *p*<sub>ij</su
 
 Estos números los calcula el script de la figura con la fórmula escrita a mano y los compara con `networkx.constraint` (coinciden). Para el ego unido a todas, `igraph` y `networkx` suman sobre las mismas personas, así que deberían coincidir también con R; **no pude ejecutar R en esta sesión** para confirmarlo **[sin verificar]**.
 
-![Figura 7.2](figuras/fig12_burt_puente.png)
+![Figura 7.2](figuras/fig18_burt_puente.png)
 
-*Figura 7.2. Restricción de Burt del ego y densidad en cuatro redes de 6 personas (datos sintéticos). Script: `figuras/fig12_burt_puente.py`.*
+*Figura 7.2. Restricción de Burt del ego y densidad en cuatro redes de 6 personas (datos sintéticos). Script: `figuras/fig18_burt_puente.py`.*
 
 **Composición.** Qué proporción de tu red es familia, amistad, trabajo… Es la descripción más sencilla de una red personal y una de las más usadas en el análisis de redes egocéntricas (Perry et al., 2018).
 

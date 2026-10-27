@@ -80,9 +80,9 @@ La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las regla
 - **Sueño**: barras de 0 a 10 h, con una línea punteada en **7 h** y la barra en tono de alerta si la noche duró **menos de 6.3 h**.
 - **Pasos**: una huella por cada **2 000**, hasta 10.
 
-![Figura 9.1](figuras/fig17_reporte_semanal.png)
+![Figura 9.1](figuras/fig23_reporte_semanal.png)
 
-*Figura 9.1. «La semana de un vistazo», imitada con datos inventados y las mismas reglas del código. Script: `figuras/fig17_reporte_semanal.py`.*
+*Figura 9.1. «La semana de un vistazo», imitada con datos inventados y las mismas reglas del código. Script: `figuras/fig23_reporte_semanal.py`.*
 
 **Qué dice la investigación sobre gráficas.** Cleveland y McGill (1984) midieron qué tan bien la gente lee distintas codificaciones: la **posición sobre una escala común** (la altura de una barra con su eje) se lee con mucha más precisión que el **área** o el **color**. Aplicado a la app **[Aproximación]**:
 

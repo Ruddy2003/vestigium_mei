@@ -1,7 +1,7 @@
 """Figura 9.1 - Imitación SIMPLIFICADA de «La semana de un vistazo» del reporte semanal (Reportes.semanaVisual), con datos
 SINTÉTICOS y las reglas de dibujo del código: medalla del color del ánimo con el número redondeado, hojas de diario
 (una hoja = max(10, ⌈máx/10⌉) palabras, tope 10), barras de sueño de 0 a 10 h con línea a 7 h y en rojo bajo 6.3 h,
-huellas de pasos (una cada 2,000, tope 10). Uso: python fig17_reporte_semanal.py [salida.png]"""
+huellas de pasos (una cada 2,000, tope 10). Uso: python fig23_reporte_semanal.py [salida.png]"""
 import sys, math
 import matplotlib
 matplotlib.use("Agg")
@@ -66,4 +66,4 @@ fig.suptitle("Figura 9.1  «La semana de un vistazo» del reporte semanal (imita
 fig.text(.01, .005, "El miércoles no hay ánimo: círculo punteado. El sábado (6.5) se muestra como 7 y el lunes (4.5) como 5.\nLas cifras de arriba del reporte (días con diario, ánimo medio, sueño, pasos…) se omiten aquí.",
          fontsize=7.5, color="#374151")
 fig.tight_layout(rect=(0, .05, 1, .95))
-fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig17_reporte_semanal.png")
+fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig23_reporte_semanal.png")

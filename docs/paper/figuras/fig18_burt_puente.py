@@ -1,6 +1,6 @@
 """Figura 7.2 - Restricción de Burt del ego (tú) en cuatro redes SINTÉTICAS de 6 personas, calculada como vm_red()
 (ego unido a todas; igraph::constraint). Se implementa la fórmula a mano y se compara con networkx.
-Uso: python fig12_burt_puente.py [salida.png]"""
+Uso: python fig18_burt_puente.py [salida.png]"""
 import sys, itertools, math
 import numpy as np
 import matplotlib
@@ -59,5 +59,5 @@ fig.text(0.01, 0.02, "Líneas grises: tú con cada persona (vm_red() las agrega 
          "Menor C = tus contactos se conocen menos entre sí (más «huecos estructurales»).", fontsize=7.8, color="#374151")
 fig.suptitle("Figura 7.2  Restricción de Burt del ego en cuatro redes de 6 personas (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
 fig.tight_layout(rect=(0, 0.05, 1, .93))
-fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig12_burt_puente.png")
+fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig18_burt_puente.png")
 for t, C, d in resultados: print(f"{t:40s} C={C:.4f} densidad={d:.3f}")

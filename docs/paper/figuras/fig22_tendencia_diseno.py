@@ -1,6 +1,6 @@
 """Figura 8.3 - Cómo una tendencia crea una diferencia falsa en un diseño de antes y después, y cómo la prueba de tendencia
 de Experimentos.resultado (pendiente contra el día, |b/EE| > 2) se enciende con un efecto real. Datos SINTÉTICOS.
-Uso: python fig16_tendencia_diseno.py [salida.png]"""
+Uso: python fig22_tendencia_diseno.py [salida.png]"""
 import sys, math
 import numpy as np
 import matplotlib
@@ -71,5 +71,5 @@ b.set_ylim(0, 1.05); b.tick_params(axis="y", labelsize=7.5)
 b.set_title(f"Qué tan seguido pasa ({N} simulaciones)", loc="left", fontsize=8.8, color="#1f2937")
 fig.suptitle("Figura 8.3  La tendencia y el diseño de antes y después (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
 fig.tight_layout(rect=(0, 0, 1, .92))
-fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig16_tendencia_diseno.png")
+fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig22_tendencia_diseno.png")
 for n, t in barras: print(n.replace("\n", " "), round(t, 3))

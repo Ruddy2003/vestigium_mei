@@ -1,6 +1,6 @@
 """Figura 10.1 - Qué tipo de dato llega a cada salida de la app, según el código de v81 (ver capítulo 10).
 No contiene datos: es una tabla de diseño. Las celdas con borde rojo son hallazgos (H-6-n o H-8-n).
-Uso: python fig18_flujo_privacidad.py [salida.png]"""
+Uso: python fig24_flujo_privacidad.py [salida.png]"""
 import sys
 import matplotlib
 matplotlib.use("Agg")
@@ -42,4 +42,4 @@ ax.legend(ley, ["no llega", "agregado o conteo", "contenido", "cifrado", "hallaz
           bbox_to_anchor=(.45, -.1), ncol=5, fontsize=8, frameon=False)
 fig.suptitle("Figura 10.1  Qué datos llegan a cada salida (código de v81)", x=.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
 fig.tight_layout(rect=(0, .03, 1, .95))
-fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig18_flujo_privacidad.png")
+fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig24_flujo_privacidad.png")
