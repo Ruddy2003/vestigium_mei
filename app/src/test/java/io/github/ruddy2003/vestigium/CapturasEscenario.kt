@@ -91,8 +91,8 @@ class CapturasEscenario {
     @Test fun anaJuevesMedieval() = escena(TemaId.MEDIEVAL, false, 5200, { abrirDia(Ana.jueves) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
 
     // La hoja de la noche de hoy.
-    @Test fun anaNocheMedieval() = escena(TemaId.MEDIEVAL, false, 9000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
-    @Test fun anaNocheRomano() = escena(TemaId.ROMANO, true, 9000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
+    @Test fun anaNocheMedieval() = escena(TemaId.MEDIEVAL, false, 8000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
+    @Test fun anaNocheRomano() = escena(TemaId.ROMANO, true, 8000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
 
     // Las pestañas y Más.
     @Test fun anaDiarioMedieval() = escena(TemaId.MEDIEVAL, false, 3500) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
