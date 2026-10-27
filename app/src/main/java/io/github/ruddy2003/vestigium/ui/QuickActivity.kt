@@ -68,6 +68,8 @@ class QuickActivity : FragmentActivity() {
         /** Sustancias: con [CONSUMO] abre ese registro para completarlo (lo de anoche); con [SUSTANCIA], esa sustancia. */
         const val M_CONSUMO = "consumo"; const val CONSUMO = "consumo_id"; const val SUSTANCIA = "sustancia"
         const val CATEGORIA = "categoria"; const val CALIDAD = "calidad"; const val RECORDADO = "recordado"
+        /** Subcategoría y monto de un gasto frecuente del widget: se registra con el toque. */
+        const val SUBCATEGORIA = "subcategoria"; const val MONTO = "monto"
         /** Día (AAAA-MM-DD) para el que se anota, desde «＋ agregar a este día». */
         const val FECHA = "fecha"
     }
@@ -115,6 +117,11 @@ class QuickActivity : FragmentActivity() {
             }
         }
         val catInicial = intent.getStringExtra(CATEGORIA)
+        // Un frecuente del widget de gasto: se registra con el toque (N-29); la hoja deja cambiar el monto o deshacerlo.
+        val subInicial = intent.getStringExtra(SUBCATEGORIA)
+        val gastoInicial = if (modo == M_GASTO && catInicial != null && subInicial != null)
+            intent.getDoubleExtra(MONTO, 0.0).takeIf { it > 0 }?.let { m -> io.github.ruddy2003.vestigium.data.Dinero.registrarFrecuente(catInicial, subInicial, m).also { (g, nuevo) -> if (nuevo) ubicarGasto(g) }.first }
+        else null
 
         setContent {
             TemaVestigium {
@@ -143,7 +150,7 @@ class QuickActivity : FragmentActivity() {
                                 M_ANIMO -> Animo(inicial, origen, avisoMs, ir)
                                 "privado" -> privado?.let { MomentoCaptura(it) } ?: Animo(null, origen, avisoMs, ir)
                                 M_MENU -> Registrar(ir)
-                                M_GASTO -> GastoRapido(catInicial)
+                                M_GASTO -> GastoRapido(catInicial, subInicial, gastoInicial)
                                 M_SUENO -> SuenoRapido()
                                 M_MINIMO -> Minimo()
                                 M_ENFOQUE, M_SIESTA -> androidx.compose.runtime.LaunchedEffect(Unit) { abrirReloj(pantalla == M_SIESTA); terminar() }
@@ -236,7 +243,7 @@ class QuickActivity : FragmentActivity() {
             }
         }
         val botones = listOfNotNull(
-            "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto" to M_GASTO, "Sueño" to M_SUENO, "Diario de hoy" to "diario",
+            "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto o ingreso" to M_GASTO, "Sueño" to M_SUENO, "Diario de hoy" to "diario",
             "Nota" to "notas", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
             if (Repo.config.seguimiento_privado) "Libido" to "libido" else null,
         )
@@ -685,53 +692,130 @@ class QuickActivity : FragmentActivity() {
         }
     }
 
+    /** La ubicación de ahora, para un gasto de ahora. */
+    private fun ubicarGasto(g: Gasto) {
+        lifecycleScope.launch {
+            val loc = Ubicacion.ultima(this@QuickActivity)
+            if (loc != null) Repo.gasto(g.id)?.let { Repo.guardarGasto(it.copy(lat = loc.latitude, lon = loc.longitude)) }
+        }
+    }
+
+    /**
+     * Gasto o ingreso (N-29). Arriba, «Gasto | Ingreso». En gasto, los frecuentes registran con un toque (⊕ → Gasto →
+     * Café: tres toques); si no, categoría → subcategoría (con su monto habitual) → «Registrar». Escribir el monto o la nota
+     * queda para lo muy específico.
+     */
     @Composable
-    private fun GastoRapido(catInicial: String?) {
+    private fun GastoRapido(catInicial: String?, subInicial: String?, inicial: Gasto?) {
+        val D = io.github.ruddy2003.vestigium.data.Dinero
+        fun dinero(v: Double) = io.github.ruddy2003.vestigium.ui.pantallas.dinero(v)
+        var entra by remember { mutableStateOf(false) }
         var monto by remember { mutableStateOf("") }
+        // El monto que puso la subcategoría: si eliges otra, se reemplaza; si lo escribiste tú, se respeta.
+        var auto by remember { mutableStateOf<String?>(null) }
         var guardando by remember { mutableStateOf(false) }
-        androidx.compose.runtime.SideEffect { sinGuardar = monto.isNotBlank() && !guardando }
-        var cat by remember { mutableStateOf(catInicial) }
+        androidx.compose.runtime.SideEffect { sinGuardar = monto.isNotBlank() && monto != auto && !guardando }
+        var cat by remember { mutableStateOf(catInicial.takeIf { inicial == null }) }
+        var sub by remember { mutableStateOf("") }
         var imprevisto by remember { mutableStateOf(false) }
+        var fijo by remember { mutableStateOf(false) }
         var nota by remember { mutableStateOf("") }
         var error by remember { mutableStateOf<String?>(null) }
-        Encabezado("Registrar gasto", "En el momento de pagar. Monto y categoría bastan.")
-        OutlinedTextField(value = monto, onValueChange = { monto = it.filter { c -> c.isDigit() || c == '.' }; error = null }, modifier = Modifier.fillMaxWidth(),
+        var registrado by remember { mutableStateOf(inicial) }
+        var corrigiendo by remember { mutableStateOf(false) }
+        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(null) }
+        val c = Repo.config
+        Encabezado("Gasto o ingreso", if (entra) "Lo que entra: sueldo, beca, venta, regalo." else "En el momento de pagar. Un frecuente registra con un toque.")
+        Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Ficha("− Gasto", !entra) { if (entra) { entra = false; cat = null; sub = ""; error = null } }
+            Ficha("+ Ingreso", entra) { if (!entra) { entra = true; cat = null; sub = ""; error = null } }
+        }
+        // Lo que acaba de registrar un frecuente: se ve, se corrige o se deshace.
+        registrado?.let { r ->
+            val g = Repo.gasto(r.id) ?: r
+            Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f), modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
+                Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text("${g.subcategoria.ifBlank { g.categoria }} ${dinero(g.monto)} registrado", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { corrigiendo = true }) { Text("cambiar monto") }
+                    TextButton(onClick = { Repo.borrarGasto(g.id); registrado = null; Toast.makeText(this@QuickActivity, "Gasto quitado", Toast.LENGTH_SHORT).show() }) { Text("deshacer") }
+                }
+            }
+        }
+        if (!entra) {
+            val frecuentes = remember(registrado) { D.frecuentes() }
+            if (frecuentes.isNotEmpty()) {
+                Etiqueta("Frecuentes · un toque registra")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    frecuentes.forEach { f ->
+                        Ficha("${f.sub} ${dinero(f.monto)}", registrado?.let { it.categoria == f.categoria && it.subcategoria == f.sub } == true) {
+                            val (g, nuevo) = D.registrarFrecuente(f.categoria, f.sub, f.monto)
+                            if (nuevo) ubicarGasto(g)
+                            registrado = g
+                        }
+                    }
+                }
+            }
+        }
+        Etiqueta(if (entra) "Monto" else "Otro gasto")
+        OutlinedTextField(value = monto, onValueChange = { monto = it.filter { ch -> ch.isDigit() || ch == '.' }; error = null }, modifier = Modifier.fillMaxWidth(),
             prefix = { Text("$ ") }, placeholder = { Text("0") }, singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.headlineSmall)
         Etiqueta("Categoría")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Repo.config.categorias.forEach { c -> Ficha(c, cat == c) { cat = if (cat == c) null else c; error = null } }
+            (if (entra) c.categorias_ingreso else c.categorias).forEach { k -> Ficha(k, cat == k) { cat = if (cat == k) null else k; sub = ""; error = null } }
+        }
+        val subs = cat?.takeIf { !entra }?.let { D.subcategorias(it) }.orEmpty()
+        if (subs.isNotEmpty()) {
+            Etiqueta("Subcategoría")
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                subs.forEach { s ->
+                    val h = D.montoHabitual(cat!!, s.nombre)
+                    Ficha(s.nombre + (h?.let { " · ${dinero(it)}" } ?: ""), sub == s.nombre) {
+                        sub = if (sub == s.nombre) "" else s.nombre
+                        if (sub.isNotEmpty() && h != null && (monto.isBlank() || monto == auto)) { monto = D.texto(h); auto = monto }
+                    }
+                }
+            }
         }
         Etiqueta("Cuándo")
-        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(null) }
         SelectorHora(cuando) { cuando = it }
-        Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
+        if (entra) Interruptor("¿Se repite? (sueldo, beca, renta)", fijo) { fijo = it }
+        else Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
         OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, singleLine = true)
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
-        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) {
-            BotonPrincipal("Registrar") {
+        Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+            if (registrado != null) TextButton(onClick = { terminar() }) { Text("Listo") }
+            BotonPrincipal(if (entra) "Registrar ingreso" else "Registrar gasto") {
                 // Un toque doble no registra dos veces.
                 if (guardando) return@BotonPrincipal
                 val v = monto.toDoubleOrNull()
+                val k = cuando
+                val fecha = k?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario()
+                val hora = k?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora()
                 when {
                     v == null || v <= 0 -> error = "Escribe un monto mayor a cero."
                     cat == null -> error = "Elige una categoría."
+                    entra -> {
+                        val i = io.github.ruddy2003.vestigium.data.Ingreso(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, nota.trim(), fijo, ts_creado = Fechas.ahoraIso())
+                        Repo.guardarIngreso(i)
+                        guardando = true
+                        Toast.makeText(this@QuickActivity, "Ingreso registrado: ${dinero(i.monto)} · ${i.categoria}", Toast.LENGTH_SHORT).show()
+                        terminar()
+                    }
                     else -> {
-                        val c = cuando
-                        val g = Gasto(Repo.nuevoId(), c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario(), c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora(),
-                            Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), ts_creado = Fechas.ahoraIso())
+                        val g = Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), subcategoria = sub, ts_creado = Fechas.ahoraIso())
                         Repo.guardarGasto(g)
                         // La ubicación de ahora solo sirve si el gasto es de ahora.
-                        if (c == null) lifecycleScope.launch {
-                            val loc = Ubicacion.ultima(this@QuickActivity)
-                            if (loc != null) Repo.guardarGasto(g.copy(lat = loc.latitude, lon = loc.longitude))
-                        }
+                        if (k == null) ubicarGasto(g)
                         guardando = true
-                        Toast.makeText(this@QuickActivity, "Gasto registrado: $${"%,.2f".format(g.monto)} · ${g.categoria}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@QuickActivity, "Gasto registrado: ${dinero(g.monto)} · ${g.categoria}" + (if (sub.isNotBlank()) " → $sub" else ""), Toast.LENGTH_SHORT).show()
                         terminar()
                     }
                 }
             }
+        }
+        if (corrigiendo) registrado?.let { r ->
+            io.github.ruddy2003.vestigium.ui.pantallas.DialogoGasto(Repo.gasto(r.id) ?: r) { corrigiendo = false; registrado = Repo.gasto(r.id) ?: registrado }
         }
     }
 

@@ -150,3 +150,17 @@ Salen de `docs/navegacion/revision_navegacion.md`. Decisiones del autor del 27 o
 - Ya no se crean cierres en días pasados.
 - La pregunta del experimento sube al primer alto de Hoy: se contestará más (H-NAV-9).
 
+## Revisión de navegación · Entrega N5 (gastos en dos o tres toques)
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.49 | Subcategorías de gasto con **monto habitual**: el fijado a mano o, si no, el que más se repite en tus últimos 10 gastos de esa subcategoría (si empatan, el más reciente). Elegir la subcategoría llena el monto | `data/Dinero.kt` (`montoHabitual`), `ui/QuickActivity.kt`, `ui/pantallas/Gastos.kt` | N-29, P-7 |
+| D.50 | **Frecuentes**: tus 6 subcategorías más usadas en los últimos 90 días (y las de monto fijo), con su monto. Un toque registra el gasto y muestra «registrado · cambiar monto · deshacer»; un segundo toque en menos de 2 s no lo repite. También en el widget de gasto | `data/Dinero.kt` (`frecuentes`, `repetido`, `registrarFrecuente`), `ui/QuickActivity.kt`, `widget/Widgets.kt` | N-29 |
+| D.51 | La hoja rápida es «Gasto o ingreso», con el selector arriba; en ⊕ el botón se llama igual | `ui/QuickActivity.kt` (`GastoRapido`) | N-29, P-7 |
+| D.52 | En Gastos: «Categorías y subcategorías» (agregar, renombrar con la opción de cambiar los gastos anteriores, ordenar, quitar y fijar el monto habitual), el mes por subcategoría y la subcategoría en el diálogo de corrección. Sale el editor de Más → Datos | `ui/pantallas/Gastos.kt` (`EditorCategorias`, `DialogoDinero`), `ui/pantallas/Sistema.kt`, `data/Repo.kt` (`gasto`) | N-29, E-24 |
+
+**Efectos al leer los datos:**
+- Los gastos de antes quedan sin subcategoría (`subcategoria` vacía en `vm_gastos.csv`).
+- Registrar con un toque probablemente hará que se anoten **más gastos pequeños**: `gasto_total` puede subir desde esta versión sin que gastes más (H-NAV-9). El panel no cambia de fórmula (`gasto_total`, `gasto_imprevisto`).
+- Renombrar una categoría con «cambiar también los gastos anteriores» reescribe esos gastos (quedan con `ts_editado`).
+

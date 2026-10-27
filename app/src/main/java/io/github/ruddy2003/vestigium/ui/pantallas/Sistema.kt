@@ -610,7 +610,7 @@ fun PantallaDatos(nav: Nav) {
         Seccion("Etiquetas equivalentes", "Unifica variantes de una misma persona o tema (tianita → tia_anita). Se aplica en Explorar, reportes y exportación; tus textos no cambian.") {
             Equivalencias()
         }
-        Seccion("Categorías de gasto") { Categorias() }
+        Seccion("Categorías de gasto") { Ayuda("Las categorías y subcategorías de gasto, con su monto habitual, se editan en Gastos (al final de la pantalla).") }
         Seccion("Resumen") {
             Tarjeta {
                 Clave("dies", "${Repo.dias.size}"); Clave("momenta", "${Repo.momentos.size}"); Clave("svmptvs", "${Repo.gastos.size}")
@@ -727,26 +727,6 @@ private fun Equivalencias() {
         }
     }
 }
-
-@Composable
-private fun Categorias() {
-    var nueva by remember { mutableStateOf("") }
-    Tarjeta {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Repo.config.categorias.forEach { c -> Ficha("$c ×", false) {
-                val i = Repo.config.categorias.indexOf(c)
-                Repo.cambiarConfig { it.copy(categorias = it.categorias - c) }
-                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Categoría quitada") { Repo.cambiarConfig { cc -> if (c in cc.categorias) cc else cc.copy(categorias = cc.categorias.toMutableList().apply { add(i.coerceIn(0, size), c) }) } }
-            } }
-        }
-        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })
-            TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
-        }
-        Ayuda("Tocar una categoría la quita de la lista; los gastos ya registrados la conservan.", Modifier.padding(top = 6.dp))
-    }
-}
-
 
 /** Huella SHA-1 del certificado con que está firmada esta app (la que pide Google Cloud). */
 @Suppress("DEPRECATION")

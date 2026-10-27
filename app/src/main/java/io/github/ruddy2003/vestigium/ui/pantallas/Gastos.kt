@@ -74,6 +74,9 @@ fun PantallaGastos(nav: Nav? = null) {
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
     var monto by remember { mutableStateOf("") }
     var cat by remember { mutableStateOf<String?>(null) }
+    var sub by remember { mutableStateOf("") }
+    var auto by remember { mutableStateOf<String?>(null) }
+    var abiertaCat by remember { mutableStateOf<String?>(null) }
     var imprevisto by remember { mutableStateOf(false) }
     var nota by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
@@ -88,7 +91,7 @@ fun PantallaGastos(nav: Nav? = null) {
     var fijo by remember { mutableStateOf(false) }
     var editandoIngreso by remember { mutableStateOf<Ingreso?>(null) }
 
-    fun limpiar() { monto = ""; nota = ""; imprevisto = false; fijo = false; cuando = null; error = null }
+    fun limpiar() { monto = ""; nota = ""; imprevisto = false; fijo = false; cuando = null; error = null; sub = ""; auto = null }
 
     Hoja("Gastos", subtitulo = "Registra en el momento de pagar o de cobrar. Lo que se cuadra después ya no dice en qué se fue el dinero.", buscar = nav?.let { n -> { n.ir("buscar") } }) {
         Seccion("Registrar") {
@@ -99,7 +102,7 @@ fun PantallaGastos(nav: Nav? = null) {
                         val sel = entra == v
                         val color = if (v) io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()) else io.github.ruddy2003.vestigium.ui.Tonos.gasto(io.github.ruddy2003.vestigium.ui.esOscuro())
                         androidx.compose.material3.Surface(
-                            onClick = { if (entra != v) { entra = v; cat = null; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } },
+                            onClick = { if (entra != v) { entra = v; cat = null; sub = ""; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } },
                             shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f),
                             color = if (sel) color.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surface,
                             border = androidx.compose.foundation.BorderStroke(if (sel) 2.dp else 1.dp, if (sel) color else MaterialTheme.colorScheme.outlineVariant),
@@ -114,7 +117,21 @@ fun PantallaGastos(nav: Nav? = null) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.headlineSmall)
                 Etiqueta("Categoría")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    (if (entra) Repo.config.categorias_ingreso else Repo.config.categorias).forEach { c -> Ficha(c, cat == c) { cat = if (cat == c) null else c; error = null } }
+                    (if (entra) Repo.config.categorias_ingreso else Repo.config.categorias).forEach { c -> Ficha(c, cat == c) { cat = if (cat == c) null else c; sub = ""; error = null } }
+                }
+                // Subcategorías con su monto habitual: elegir una llena el monto (N-29).
+                val subs = cat?.takeIf { !entra }?.let { io.github.ruddy2003.vestigium.data.Dinero.subcategorias(it) }.orEmpty()
+                if (subs.isNotEmpty()) {
+                    Etiqueta("Subcategoría")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        subs.forEach { sc ->
+                            val h = io.github.ruddy2003.vestigium.data.Dinero.montoHabitual(cat!!, sc.nombre)
+                            Ficha(sc.nombre + (h?.let { " · ${dinero(it)}" } ?: ""), sub == sc.nombre) {
+                                sub = if (sub == sc.nombre) "" else sc.nombre
+                                if (sub.isNotEmpty() && h != null && (monto.isBlank() || monto == auto)) { monto = io.github.ruddy2003.vestigium.data.Dinero.texto(h); auto = monto }
+                            }
+                        }
+                    }
                 }
                 Etiqueta("Cuándo")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
@@ -141,7 +158,7 @@ fun PantallaGastos(nav: Nav? = null) {
                             val c = cuando
                             val fecha = c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario()
                             val hora = c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora()
-                            val g = Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), ts_creado = Fechas.ahoraIso())
+                            val g = Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), subcategoria = sub, ts_creado = Fechas.ahoraIso())
                             Repo.guardarGasto(g)
                             if (c == null) scope.launch { Ubicacion.ultima(ctx)?.let { Repo.guardarGasto(g.copy(lat = it.latitude, lon = it.longitude)) } }
                             sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.GUARDAR)
@@ -189,13 +206,24 @@ fun PantallaGastos(nav: Nav? = null) {
             val max = porCat.first().value
             Box(Modifier.padding(top = 12.dp)) {
                 Tarjeta {
+                    // Cada categoría se despliega por subcategoría al tocarla (Comida $2,300 → Café $620).
                     porCat.forEach { (c, v) ->
-                        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(c, style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(100.dp))
+                        val porSub = items.filter { it.categoria == c && it.subcategoria.isNotBlank() }.groupBy { it.subcategoria }.mapValues { e -> e.value.sumOf { it.monto } }
+                        Row(Modifier.fillMaxWidth().clickable(enabled = porSub.isNotEmpty()) { abiertaCat = if (abiertaCat == c) null else c }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(c + if (porSub.isNotEmpty()) (if (abiertaCat == c) " ▾" else " ▸") else "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(100.dp))
                             Box(Modifier.weight(1f)) {
                                 Box(Modifier.fillMaxWidth((v / max).toFloat().coerceAtLeast(0.03f)).height(9.dp).clip(RoundedCornerShape(1.dp)).background(MaterialTheme.colorScheme.primary))
                             }
                             Text(dinero(v), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 12.sp, modifier = Modifier.width(80.dp), textAlign = TextAlign.End)
+                        }
+                        if (abiertaCat == c) {
+                            val sin = v - porSub.values.sum()
+                            (porSub.entries.sortedByDescending { it.value }.map { it.key to it.value } + (if (sin > 0.004) listOf("sin subcategoría" to sin) else emptyList())).forEach { (n, x) ->
+                                Row(Modifier.fillMaxWidth().padding(start = 16.dp, top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text("→ $n", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                                    Text(dinero(x), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
                         }
                     }
                 }
@@ -209,7 +237,7 @@ fun PantallaGastos(nav: Nav? = null) {
                 Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     // Tocar un gasto abre su corrección: monto, categoría, fecha u hora, o borrarlo.
                     Column(Modifier.weight(1f).clickable { editando = g }) {
-                        Text(g.categoria + if (g.imprevisto) " · imprevisto" else "", style = MaterialTheme.typography.bodyLarge)
+                        Text(g.categoria + (if (g.subcategoria.isNotBlank()) " → ${g.subcategoria}" else "") + if (g.imprevisto) " · imprevisto" else "", style = MaterialTheme.typography.bodyLarge)
                         Text((if (g.dia != g.fecha) "${g.hora} de la madrugada" else g.hora) + if (g.nota.isNotBlank()) " · ${g.nota}" else "",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -218,19 +246,97 @@ fun PantallaGastos(nav: Nav? = null) {
                 }
             }
         }
+        Seccion("Categorías y subcategorías", "Las tuyas, con el monto habitual de cada subcategoría: con él, un gasto se registra sin escribir.", plegable = true, plegadaPorDefecto = true) {
+            EditorCategorias()
+        }
     }
     editando?.let { g -> DialogoGasto(g) { editando = null } }
     editandoIngreso?.let { i -> DialogoIngreso(i) { editandoIngreso = null } }
+}
+
+/**
+ * Categorías y subcategorías de gasto (N-29): agregar, renombrar, ordenar y quitar, y fijar el monto habitual de cada
+ * subcategoría (vacío = automático: el que más se repite en tus últimos 10). Al renombrar, pregunta si cambia también los
+ * gastos anteriores. Quitar no toca los gastos ya registrados.
+ */
+@Composable
+fun EditorCategorias() {
+    val D = io.github.ruddy2003.vestigium.data.Dinero
+    val c = Repo.config
+    var abierta by remember { mutableStateOf<String?>(null) }
+    var nueva by remember { mutableStateOf("") }
+    var nuevaSub by remember { mutableStateOf("") }
+    // Qué se renombra: la categoría y, si es una subcategoría, su nombre.
+    var renombrar by remember { mutableStateOf<Pair<String, String?>?>(null) }
+    Tarjeta {
+        c.categorias.forEachIndexed { i, cat ->
+            if (i > 0) androidx.compose.material3.HorizontalDivider()
+            val subs = D.subcategorias(cat)
+            Row(Modifier.fillMaxWidth().clickable { abierta = if (abierta == cat) null else cat; nuevaSub = "" }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text((if (abierta == cat) "▾ " else "▸ ") + cat + if (subs.isNotEmpty()) " · ${subs.size}" else "", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                if (i > 0) TextButton(onClick = { D.subir(cat) }) { Text("↑") }
+                TextButton(onClick = { renombrar = cat to null }) { Text("✎") }
+                TextButton(onClick = {
+                    Repo.cambiarConfig { it.copy(categorias = it.categorias - cat) }
+                    io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Categoría quitada") { Repo.cambiarConfig { cc -> if (cat in cc.categorias) cc else cc.copy(categorias = cc.categorias.toMutableList().apply { add(i.coerceIn(0, size), cat) }) } }
+                }) { Text("×", color = MaterialTheme.colorScheme.error) }
+            }
+            if (abierta == cat) Column(Modifier.padding(start = 14.dp, bottom = 6.dp)) {
+                subs.forEach { sc ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(sc.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                        var m by remember(cat, sc.nombre) { mutableStateOf(sc.monto?.let { D.texto(it) } ?: "") }
+                        OutlinedTextField(value = m, onValueChange = { t -> m = t.filter { ch -> ch.isDigit() || ch == '.' }; D.fijarMonto(cat, sc.nombre, m.toDoubleOrNull()?.takeIf { it > 0 }) },
+                            modifier = Modifier.width(112.dp), singleLine = true, prefix = { Text("$") },
+                            placeholder = { Text(D.montoHabitual(cat, sc.nombre)?.let { D.texto(it) } ?: "auto", style = MaterialTheme.typography.bodySmall) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), textStyle = MaterialTheme.typography.bodySmall)
+                        TextButton(onClick = { renombrar = cat to sc.nombre }) { Text("✎") }
+                        TextButton(onClick = {
+                            D.quitarSub(cat, sc.nombre)
+                            io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Subcategoría quitada") { Repo.cambiarConfig { cc -> cc.copy(subcategorias = cc.subcategorias + (cat to (cc.subcategorias[cat].orEmpty() + sc))) } }
+                        }) { Text("×", color = MaterialTheme.colorScheme.error) }
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(value = nuevaSub, onValueChange = { nuevaSub = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva subcategoría de $cat") })
+                    TextButton(onClick = { D.agregarSub(cat, nuevaSub); nuevaSub = "" }, enabled = nuevaSub.isNotBlank()) { Text("Añadir") }
+                }
+            }
+        }
+        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })
+            TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
+        }
+        Ayuda("El monto vacío es automático: el que más se repite en tus últimos 10 gastos de esa subcategoría. Quitar una categoría no cambia los gastos ya registrados.", Modifier.padding(top = 6.dp))
+    }
+    renombrar?.let { (cat, sb) ->
+        var t by remember(cat, sb) { mutableStateOf(sb ?: cat) }
+        val n = D.cuantos(cat, sb)
+        var tambien by remember(cat, sb) { mutableStateOf(true) }
+        androidx.compose.material3.AlertDialog(onDismissRequest = { renombrar = null }, title = { Text(if (sb == null) "Renombrar categoría" else "Renombrar subcategoría") },
+            text = {
+                Column {
+                    OutlinedTextField(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    if (n > 0) Interruptor("Cambiar también ${if (n == 1) "el gasto anterior" else "los $n gastos anteriores"}", tambien) { tambien = it }
+                }
+            },
+            confirmButton = { TextButton(onClick = {
+                if (sb == null) D.renombrarCategoria(cat, t, tambien) else D.renombrarSub(cat, sb, t, tambien)
+                renombrar = null
+            }, enabled = t.isNotBlank()) { Text("Guardar") } },
+            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("Cancelar") } })
+    }
 }
 
 /** Corregir un gasto: monto, categoría, fecha y hora, imprevisto y nota; o borrarlo (con confirmación y Deshacer). */
 @Composable
 fun DialogoGasto(g: Gasto, nuevo: Boolean = false, cerrar: () -> Unit) = DialogoDinero(
     titulo = if (nuevo) "Nuevo gasto" else "Gasto", monto0 = g.monto, cat0 = g.categoria, categorias = Repo.config.categorias, fecha0 = g.fecha, hora0 = g.hora, nota0 = g.nota,
+    sub0 = g.subcategoria, subs = { cat -> io.github.ruddy2003.vestigium.data.Dinero.subcategorias(cat).map { it.nombre } },
     marca = "¿Fue imprevisto?", marca0 = g.imprevisto, cerrar = cerrar,
     // Uno nuevo (desde «＋ agregar a este día») guarda cuándo se anotó; uno corregido, cuándo se corrigió.
-    guardar = { monto, cat, fecha, hora, nota, marca ->
-        val n = g.copy(monto = monto, categoria = cat, fecha = fecha, hora = hora, nota = nota, imprevisto = marca)
+    guardar = { monto, cat, sub, fecha, hora, nota, marca ->
+        val n = g.copy(monto = monto, categoria = cat, subcategoria = sub, fecha = fecha, hora = hora, nota = nota, imprevisto = marca)
         Repo.guardarGasto(if (nuevo) n.copy(ts_creado = Fechas.ahoraIso()) else n.copy(ts_editado = Fechas.ahoraIso()))
     },
     borrar = if (nuevo) null else ({ Repo.borrarGasto(g.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Gasto borrado") { Repo.guardarGasto(g) } }),
@@ -241,17 +347,19 @@ fun DialogoGasto(g: Gasto, nuevo: Boolean = false, cerrar: () -> Unit) = Dialogo
 fun DialogoIngreso(i: Ingreso, cerrar: () -> Unit) = DialogoDinero(
     titulo = "Ingreso", monto0 = i.monto, cat0 = i.categoria, categorias = Repo.config.categorias_ingreso, fecha0 = i.fecha, hora0 = i.hora, nota0 = i.nota,
     marca = "¿Se repite? (sueldo, beca, renta)", marca0 = i.fijo, cerrar = cerrar,
-    guardar = { monto, cat, fecha, hora, nota, marca -> Repo.guardarIngreso(i.copy(monto = monto, categoria = cat, fecha = fecha, hora = hora, nota = nota, fijo = marca, ts_editado = Fechas.ahoraIso())) },
+    guardar = { monto, cat, _, fecha, hora, nota, marca -> Repo.guardarIngreso(i.copy(monto = monto, categoria = cat, fecha = fecha, hora = hora, nota = nota, fijo = marca, ts_editado = Fechas.ahoraIso())) },
     borrar = { Repo.borrarIngreso(i.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Ingreso borrado") { Repo.guardarIngreso(i) } },
 )
 
 @Composable
 private fun DialogoDinero(
     titulo: String, monto0: Double, cat0: String, categorias: List<String>, fecha0: String, hora0: String, nota0: String, marca: String, marca0: Boolean,
-    cerrar: () -> Unit, guardar: (Double, String, String, String, String, Boolean) -> Unit, borrar: (() -> Unit)?,
+    cerrar: () -> Unit, guardar: (Double, String, String, String, String, String, Boolean) -> Unit, borrar: (() -> Unit)?,
+    sub0: String = "", subs: (String) -> List<String> = { emptyList() },
 ) {
     var monto by remember { mutableStateOf(if (monto0 <= 0.0) "" else if (monto0 % 1.0 == 0.0) monto0.toLong().toString() else monto0.toString()) }
     var cat by remember { mutableStateOf(cat0) }
+    var sub by remember { mutableStateOf(sub0) }
     var cuando by remember { mutableStateOf<LocalDateTime?>(runCatching { LocalDateTime.of(Fechas.parse(fecha0), java.time.LocalTime.parse(hora0.take(5))) }.getOrNull()) }
     var nota by remember { mutableStateOf(nota0) }
     var m by remember { mutableStateOf(marca0) }
@@ -266,7 +374,14 @@ private fun DialogoDinero(
                     prefix = { Text("$ ") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
                 Etiqueta("Categoría")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    (categorias + listOf(cat0).filter { it !in categorias }).forEach { c -> Ficha(c, cat == c) { cat = c } }
+                    (categorias + listOf(cat0).filter { it !in categorias }).forEach { c -> Ficha(c, cat == c) { if (cat != c) sub = ""; cat = c } }
+                }
+                val opciones = (subs(cat) + listOf(sub).filter { it.isNotBlank() && cat == cat0 && it !in subs(cat) })
+                if (opciones.isNotEmpty()) {
+                    Etiqueta("Subcategoría")
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        opciones.forEach { o -> Ficha(o, sub == o) { sub = if (sub == o) "" else o } }
+                    }
                 }
                 Etiqueta("Cuándo")
                 io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
@@ -277,7 +392,7 @@ private fun DialogoDinero(
         confirmButton = {
             TextButton(enabled = v != null && v > 0, onClick = {
                 val c = cuando ?: LocalDateTime.now()
-                guardar(Math.round((v ?: monto0) * 100) / 100.0, cat, Fechas.iso(c.toLocalDate()), "%02d:%02d".format(c.hour, c.minute), nota.trim(), m)
+                guardar(Math.round((v ?: monto0) * 100) / 100.0, cat, sub, Fechas.iso(c.toLocalDate()), "%02d:%02d".format(c.hour, c.minute), nota.trim(), m)
                 cerrar()
             }) { Text("Guardar") }
         },

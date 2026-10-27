@@ -185,16 +185,27 @@ object Widgets {
         val gHoy = Repo.gastos.filter { it.fecha == hoy }.sumOf { it.monto }
         val gMes = Repo.gastos.filter { it.fecha.startsWith(hoy.take(7)) }.sumOf { it.monto }
         v.setTextViewText(R.id.sub_gasto, if (Repo.config.discreto) "" else "hoy ${dinero(gHoy)} · mes ${dinero(gMes)}")
-        // Las categorías que más usas primero; si aún no hay historia, el orden de tus ajustes.
+        // Primero tus frecuentes con su monto: un toque registra (N-29). Si sobran botones, las categorías que más usas
+        // (o el orden de tus ajustes), que abren la hoja con la categoría puesta.
+        val frecuentes = io.github.ruddy2003.vestigium.data.Dinero.frecuentes(6, hoy)
         val usadas = Repo.gastos.filter { it.fecha >= Fechas.sumar(hoy, -90) }.groupingBy { it.categoria }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
-        val cats = (usadas + Repo.config.categorias).distinct().take(6)
+        val cats = (usadas + Repo.config.categorias).distinct().take(6 - frecuentes.size)
         BOTONES_GASTO.forEachIndexed { i, id ->
-            val c = cats.getOrNull(i)
-            if (c == null) v.setViewVisibility(id, android.view.View.INVISIBLE)
-            else {
-                v.setViewVisibility(id, android.view.View.VISIBLE)
-                v.setTextViewText(id, c)
-                clic(v, id, pi(ctx, 3500 + i, quick(ctx, QuickActivity.M_GASTO).putExtra(QuickActivity.CATEGORIA, c)))
+            val f = frecuentes.getOrNull(i)
+            val c = cats.getOrNull(i - frecuentes.size)
+            when {
+                f != null -> {
+                    v.setViewVisibility(id, android.view.View.VISIBLE)
+                    v.setTextViewText(id, "${f.sub}\n${dinero(f.monto)}")
+                    clic(v, id, pi(ctx, 3500 + i, quick(ctx, QuickActivity.M_GASTO).putExtra(QuickActivity.CATEGORIA, f.categoria)
+                        .putExtra(QuickActivity.SUBCATEGORIA, f.sub).putExtra(QuickActivity.MONTO, f.monto)))
+                }
+                c != null -> {
+                    v.setViewVisibility(id, android.view.View.VISIBLE)
+                    v.setTextViewText(id, c)
+                    clic(v, id, pi(ctx, 3500 + i, quick(ctx, QuickActivity.M_GASTO).putExtra(QuickActivity.CATEGORIA, c)))
+                }
+                else -> v.setViewVisibility(id, android.view.View.INVISIBLE)
             }
         }
         clic(v, R.id.g_otro, pi(ctx, 3510, quick(ctx, QuickActivity.M_GASTO)))

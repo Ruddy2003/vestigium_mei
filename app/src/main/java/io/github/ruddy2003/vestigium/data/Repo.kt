@@ -265,6 +265,7 @@ object Repo {
         enMain { gastos = (gastos.filter { it.id != g.id } + g).sortedBy { it.fecha + it.hora } }
     }
     fun borrarGasto(id: String) { aPapelera("gastos", id); db.borrar("gastos", id); enMain { gastos = gastos.filter { it.id != id } } }
+    fun gasto(id: String): Gasto? = gastos.firstOrNull { it.id == id } ?: db.uno("gastos", id)?.let { JSON.decodeFromString(Gasto.serializer(), it) }
     /** Gastos de un respaldo o de la versión web: los que ya existen (mismo id) no se tocan, ni en la base ni en memoria. */
     fun importarGastos(lista: List<Gasto>) {
         val nuevos = Fusion.nuevosPorId(gastos, lista) { it.id }
