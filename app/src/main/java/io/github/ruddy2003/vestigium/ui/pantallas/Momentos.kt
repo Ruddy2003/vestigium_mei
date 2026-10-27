@@ -6,6 +6,7 @@ import io.github.ruddy2003.vestigium.data.privado
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,14 +68,21 @@ fun PantallaMomentos(nav: Nav) {
         ctx.startActivity(i)
     }
 
-    Hoja("Momentos", subtitulo = "Lo que piensas o sientes en el instante. Un toque y se guarda con la hora y el lugar.") {
-        if (!conUbicacion) Aviso("Sin permiso de ubicación, los momentos se guardan sin lugar. Actívalo en Más → Permisos y sensores.")
+    // «Todos tus registros» (N-25): la lista editable de 30 días, con filtro por día. Lo privado no sale aquí.
+    var dia by remember { mutableStateOf<String?>(null) }
+    Hoja("Todos tus registros", nav.atras, subtitulo = "Tus registros de ánimo de los últimos 30 días. Toca uno para cambiar lo que sentías, su hora o su día, o para borrarlo.") {
+        if (!conUbicacion) Aviso("Sin permiso de ubicación, los registros se guardan sin lugar. Actívalo en Más → Permisos y sensores.")
         BotonAnimo(Modifier.padding(top = 14.dp)) { abrir(QuickActivity.M_ANIMO) }
-        Ayuda("También puedes agregar los widgets de Vestigium a tu pantalla de inicio o el botón al panel de ajustes rápidos.", Modifier.padding(top = 8.dp))
 
-        val recientes = Repo.momentos.filter { it.fecha >= Fechas.sumar(Fechas.diaLogico(), -30) && !it.privado }.sortedByDescending { it.ts }
+        val todos = Repo.momentos.filter { it.fecha >= Fechas.sumar(Fechas.diaLogico(), -30) && !it.privado }.sortedByDescending { it.ts }
+        val dias = todos.map { it.fecha }.distinct()
+        if (dias.size > 1) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            io.github.ruddy2003.vestigium.ui.Ficha("todos", dia == null) { dia = null }
+            dias.forEach { f -> io.github.ruddy2003.vestigium.ui.Ficha(Fechas.corto(f), dia == f) { dia = if (dia == f) null else f } }
+        }
+        val recientes = todos.filter { dia == null || it.fecha == dia }
         Seccion("Últimos 30 días", "${recientes.size} registros. Toca uno para editarlo.") {
-            if (recientes.isEmpty()) Vacio("Todavía no hay momentos. Toca «¿Cómo estás ahora?» cuando algo te pase por la cabeza.")
+            if (recientes.isEmpty()) Vacio("Todavía no hay registros. Toca «¿Cómo estás ahora?» cuando algo te pase por la cabeza.")
             var ultimoDia = ""
             recientes.take(200).forEach { m ->
                 if (m.fecha != ultimoDia) {

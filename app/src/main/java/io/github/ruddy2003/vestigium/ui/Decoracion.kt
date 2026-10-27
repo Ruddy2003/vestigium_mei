@@ -1359,13 +1359,17 @@ fun CapaFiesta() {
 @Composable
 fun BotonAjustes(modifier: Modifier = Modifier, onClick: () -> Unit) {
     val sentir = rememberSentir()
-    Box(
-        modifier.size(36.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
-            .semantics { contentDescription = "Ajustes y más" },
-        contentAlignment = Alignment.Center,
+    // 48 dp para el dedo y la palabra «Más» debajo, para que no sea solo un ícono (N-21).
+    androidx.compose.foundation.layout.Column(
+        modifier.size(48.dp).clip(MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
+            .semantics { contentDescription = "Más: ajustes y todas las pantallas" },
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
     ) {
-        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary) {
-            Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { IconoPestana("ajustes", nombre = "Ajustes y más") }
+        Box(Modifier.size(30.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape), contentAlignment = Alignment.Center) {
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary) {
+                Box(Modifier.size(18.dp), contentAlignment = Alignment.Center) { IconoPestana("ajustes", nombre = "Más") }
+            }
         }
+        Text("Más", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
     }
 }

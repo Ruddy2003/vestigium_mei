@@ -42,13 +42,16 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
         }
         if (encabezado != null) encabezado()
         else {
-            val (nombre, comentario) = Estilo.pantalla(titulo, latin)
+            val (nombre, espanol, comentario) = Estilo.pantallaEnLinea(titulo, latin)
             Row(Modifier.fillMaxWidth().padding(top = if (atras == null) 14.dp else 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     buildAnnotatedString {
-                        append(nombre)
+                        // El nombre del tema con más contraste y el español al lado, del mismo tamaño y un poco más tenue (P-1).
+                        if (espanol != null) withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)) { append(nombre) }
+                        else append(nombre)
                         // En cyberpunk el título termina con un cursor de terminal.
                         if (Estilo.tema == TemaId.CIBER) withStyle(SpanStyle(color = MaterialTheme.colorScheme.secondary)) { append("_") }
+                        if (espanol != null) withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · $espanol") }
                     },
                     style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f),
                 )

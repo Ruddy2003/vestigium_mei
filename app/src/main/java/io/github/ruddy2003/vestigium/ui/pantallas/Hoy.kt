@@ -649,14 +649,6 @@ fun abrirAviso(ctx: Context) {
     ctx.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
-@Composable
-fun Portada(uri: String?) {
-    if (uri == null) return
-    Box(Modifier.fillMaxWidth().padding(top = 10.dp).clip(RoundedCornerShape(6.dp))) {
-        Miniatura(android.net.Uri.parse(uri), 900, Modifier.fillMaxWidth().aspectRatio(1.9f))
-    }
-}
-
 // =====================================================================
 //  Tus últimos días (N-28)
 // =====================================================================

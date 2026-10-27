@@ -83,7 +83,7 @@ object GuiaUso {
 
     /** Qué sección abre el «?» de cada pantalla (por su título en español). */
     val PANTALLAS: Map<String, String> = mapOf(
-        "Día" to "principios", "Llenar el día" to "noche", "Diario" to "diario", "Momentos" to "animo", "Tu gente" to "sustancias_gente",
+        "Día" to "principios", "Hoy" to "principios", "Privado" to "privado", "Llenar el día" to "noche", "Cómo usar la app" to "principios", "Diario" to "diario", "Momentos" to "animo", "Todos tus registros" to "animo", "Tu gente" to "sustancias_gente",
         "¿Estuviste o pensaste?" to "diario", "Tus temas" to "diario", "Sustancias" to "sustancias_gente", "Impulsos y recaídas" to "privado",
         "Lugares" to "lugares", "Lugares especiales" to "lugares", "Suplementos" to "suplementos", "Notas" to "notas_metas", "Metas" to "notas_metas",
         "Laptop" to "laptop", "Red" to "sustancias_gente", "Experimentos personales" to "leerte", "Análisis" to "leerte", "Cobertura de variables" to "leerte",

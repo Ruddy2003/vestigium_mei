@@ -164,3 +164,14 @@ Salen de `docs/navegacion/revision_navegacion.md`. Decisiones del autor del 27 o
 - Registrar con un toque probablemente hará que se anoten **más gastos pequeños**: `gasto_total` puede subir desde esta versión sin que gastes más (H-NAV-9). El panel no cambia de fórmula (`gasto_total`, `gasto_imprevisto`).
 - Renombrar una categoría con «cambiar también los gastos anteriores» reescribe esos gastos (quedan con `ts_editado`).
 
+## Revisión de navegación · Entrega N6 (Más, buscador, nombres y pantallas huérfanas)
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.53 | Más: un índice arriba («1 Registros · 2 Gente · 3 Medir · 4 Sistema») que abre y trae cada sección; las secciones se pliegan. Entran Gastos, Campañas, Experimentos, Lugares y «Días especiales y cumpleaños». El botón de Más mide 48 dp y dice «Más» | `ui/pantallas/Mas.kt`, `ui/Decoracion.kt` (`BotonAjustes`) | N-21 |
+| D.54 | Buscador: pantallas que faltaban (Diario, Más, Lugares, cada herramienta de Análisis, Mundo, Patrimonio, Lista y pendientes, Nueva carta, Todos tus registros…) y **acciones** («corregir las horas de sueño» abre el Día con la corrección abierta, «anotar un suplemento de ayer», «ponerte al día»…). Busca por palabras sueltas, en cualquier orden y sin acentos, y muestra más de 8. Lo privado se encuentra por sus palabras de función, nunca por lo que escribiste. Las @personas y los #temas del resumen semanal llevan su texto al buscador | `ui/pantallas/Pantallas.kt` (`ACCIONES`, `buscar`), `ui/pantallas/Totales.kt`, `ui/pantallas/Semana.kt` | N-22, P-2 |
+| D.55 | Un solo nombre para cada cosa: «Hoy» cuando el Día es hoy; «Llenar el día» en ⊕, el acceso directo, el widget («✎ diario» ahora abre la hoja) y el aviso de la noche; «Lista y pendientes»; cada herramienta con su nombre; «Cómo usar la app» y «Cómo leer tus datos». El Día y Privado tienen su «?». En los títulos de pantalla, el nombre del tema y el español van en la misma línea y del mismo tamaño, el del tema con más contraste | `ui/pantallas/Dia.kt`, `ui/Hoja.kt`, `ui/Estilo.kt` (`pantallaEnLinea`), `ui/QuickActivity.kt`, `res/values/strings.xml`, `widget/Widgets.kt`, `avisos/Avisos.kt`, `data/GuiaUso.kt` | N-23, P-1 |
+| D.56 | Vuelve «Todos tus registros» (la lista editable de 30 días, con filtro por día), con un botón en Diario. Sale el código que ya no se usaba (`PantallaHall`, `RecuadroHall`, `CentroEntender`, `Portada`); la ruta `hall` sigue abriendo Logros. En Tu gente, «+ persona» sin mención previa | `ui/pantallas/Momentos.kt`, `ui/pantallas/Diarios.kt`, `ui/pantallas/Hall.kt`, `ui/pantallas/Gente.kt` | N-25, P-4 |
+
+**Efectos al leer los datos:** ninguno en lo que se guarda. Una persona agregada a mano entra en «Tu gente» sin días hasta que la menciones.
+

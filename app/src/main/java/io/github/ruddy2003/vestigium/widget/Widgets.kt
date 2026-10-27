@@ -167,7 +167,8 @@ object Widgets {
             clic(v, BOTONES_MOMENTO[i], pi(ctx, 3200 + i, quick(ctx, QuickActivity.M_MOMENTO).putExtra(QuickActivity.TIPO, id)))
         }
         clic(v, R.id.m_mas, pi(ctx, 3301, quick(ctx, QuickActivity.M_MENU)))
-        clic(v, R.id.m_diario, pi(ctx, 3302, abrir(ctx, "dia")))
+        // «✎ diario» abre «Llenar el día» (la hoja de la noche de hoy), como el aviso de la noche (N-23).
+        clic(v, R.id.m_diario, pi(ctx, 3302, abrir(ctx, "diario")))
         return v
     }
 

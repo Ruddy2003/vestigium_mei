@@ -533,7 +533,7 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
 @Composable
 fun PantallaGuiaUso(nav: Nav, seccion: String = "") {
     val sola = io.github.ruddy2003.vestigium.data.GuiaUso.de(seccion)
-    Hoja("Guía", nav.atras, if (sola != null) null else "Cómo usar la app para que tus datos digan algo. Los ejemplos marcan las @personas y los #temas como el tema de hoy.") {
+    Hoja("Cómo usar la app", nav.atras, if (sola != null) null else "Cómo usar la app para que tus datos digan algo. Los ejemplos marcan las @personas y los #temas como el tema de hoy.") {
         val lista = if (sola != null) listOf(sola) else io.github.ruddy2003.vestigium.data.GuiaUso.SECCIONES
         lista.forEach { s ->
             Seccion(s.titulo, plegable = sola == null, plegadaPorDefecto = sola == null && s.id != "principios") {
@@ -547,7 +547,7 @@ fun PantallaGuiaUso(nav: Nav, seccion: String = "") {
             }
         }
         if (sola != null) BotonSecundario("Ver toda la guía", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.reemplazar("guia_uso") }
-        else BotonSecundario("Guía científica: por qué se mide lo que se mide", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.ir("guia") }
+        else BotonSecundario("Cómo leer tus datos: por qué se mide lo que se mide", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.ir("guia") }
     }
 }
 

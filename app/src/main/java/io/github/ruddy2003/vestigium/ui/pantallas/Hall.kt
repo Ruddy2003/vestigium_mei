@@ -357,23 +357,6 @@ private fun BoxScope.FondoSalon(tema: TemaId) {
     }
 }
 
-/**
- * El hall: los logros que elegiste, en pedestales, con el salón del tema detrás.
- * Cada pieza se dibuja según lo que celebra (y el tema le cambia techos, sellos y templos).
- */
-@Composable
-fun PantallaHall(nav: Nav) {
-    val ctx = LocalContext.current
-    val todos by produceState(if (TusNumeros.sincrono) Logros.todos(ctx) else null, Repo.config.logros_vistos, Repo.dias, Repo.salud) {
-        if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { runCatching { Logros.todos(ctx) }.getOrDefault(emptyList()) }
-    }
-    Hoja("Hall de logros", nav.atras, "Tus logros favoritos, en exhibición, cada uno con el trofeo de su tema.") {
-        val l = todos
-        if (l == null) { Vacio("Contando…"); return@Hoja }
-        CuerpoHall(l)
-    }
-}
-
 /** El hall: las piezas en sus pedestales con el salón del tema detrás, y el editor para elegir cuáles (hasta 12). Va arriba de Logros. */
 @Composable
 fun CuerpoHall(l: List<Logros.Logro>) {
@@ -495,20 +478,3 @@ private fun Pedestal(g: Logros.Logro, tema: TemaId, modifier: Modifier) {
     }
 }
 
-/** En Más: la vitrina con las primeras piezas del hall. */
-@Composable
-fun RecuadroHall(nav: Nav) {
-    val ctx = LocalContext.current
-    val todos by produceState(if (TusNumeros.sincrono) Logros.todos(ctx) else null, Repo.config.hall_logros) {
-        if (!TusNumeros.sincrono) value = withContext(Dispatchers.Default) { runCatching { Logros.todos(ctx) }.getOrDefault(emptyList()) }
-    }
-    val enHall = Repo.config.hall_logros.mapNotNull { id -> todos?.firstOrNull { it.id == id && it.hecho } }
-    val tema = Estilo.tema
-    Recuadro("Hall de logros", if (enHall.isEmpty()) "Elige tus logros favoritos y exhíbelos" else "${enHall.size} piezas en exhibición", alto = 128.dp, onClick = { nav.ir("hall") }) {
-        FondoSalon(tema)
-        Row(Modifier.fillMaxSize().padding(horizontal = 10.dp), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
-            if (enHall.isEmpty()) Text("tu vitrina", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            enHall.take(5).forEach { TrofeoLogro(it, 72.dp, tema = tema) }
-        }
-    }
-}

@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.ciencia.Movilidad
@@ -131,6 +132,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
     val reqTelefono = remember { BringIntoViewRequester() }
     var abrirTelefono by remember { mutableStateOf(0) }
     var editarSueno by remember(fecha) { mutableStateOf(false) }
+    // Desde el buscador («corregir las horas de sueño»): la corrección ya abierta.
+    LaunchedEffect(Seleccion.editarSueno, fecha) { if (Seleccion.editarSueno) { Seleccion.editarSueno = false; editarSueno = true } }
     // Lo que se está corrigiendo desde «Tu día»: un momento, tramo, gasto, ingreso, toma o nota (N-26).
     var abierto by remember(fecha) { mutableStateOf<Any?>(null) }
     /** Abre una sección (si estaba plegada) y la trae a la vista. */
@@ -151,14 +154,10 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         Seleccion.noche = fecha; Seleccion.seccion = sec
         nav.ir("noche")
     }
-    // Si se llegó desde «Diario de hoy» (botón + o atajo del ícono): el sueño está aquí; lo demás, en la hoja de la noche.
+    // Si se pidió una sección de la noche (avisos, atajos), se abre la hoja de la noche en ella.
     LaunchedEffect(Seleccion.seccion, fecha) {
         val sec = Seleccion.seccion ?: return@LaunchedEffect
-        if (sec == "Sueño") {
-            Seleccion.seccion = null
-            kotlinx.coroutines.delay(250)
-            mostrar(sec, reqSueno)
-        } else abrirNoche(sec)
+        abrirNoche(sec)
     }
     val umbral = with(LocalDensity.current) { 120.dp.toPx() }
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
@@ -182,8 +181,15 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
             if (apilado) TextButton(onClick = nav.atras, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) {
                 Text("←", style = MaterialTheme.typography.titleLarge)
             }
-            Text(est.pantalla("Día", "DIES").first + if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) "_" else "", style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.weight(1f))
+            // «Hoy» cuando es hoy; «Día» en otra fecha (N-23). El nombre del tema y el español en la misma línea (P-1).
+            val (nombreT, espanolT, _) = if (fecha == hoy) est.pantallaEnLinea("Hoy", "HODIE") else est.pantallaEnLinea("Día", "DIES")
+            Text(androidx.compose.ui.text.buildAnnotatedString {
+                if (espanolT != null) withStyle(androidx.compose.ui.text.SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)) { append(nombreT) }
+                else append(nombreT)
+                if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) append("_")
+                if (espanolT != null) withStyle(androidx.compose.ui.text.SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · $espanolT") }
+            }, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            io.github.ruddy2003.vestigium.ui.LocalGuia.current?.let { guia -> TextButton(onClick = { guia("principios") }) { Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) } }
             io.github.ruddy2003.vestigium.ui.BotonBuscar { nav.ir("buscar") }
             io.github.ruddy2003.vestigium.ui.BotonAjustes(Modifier.padding(start = 4.dp)) { nav.ir("mas") }
             io.github.ruddy2003.vestigium.ui.BotonModo()

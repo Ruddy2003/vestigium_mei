@@ -159,6 +159,22 @@ fun PantallaPersonas(nav: Nav) {
             FilaMenu("¿Estuviste o solo pensaste?", "$porRevisar días con personas por revisar: ver a alguien no es lo mismo que pensar en esa persona") { nav.ir("presencias") }
         }
         val clasif = c.personas.sortedByDescending { menc[it.nombre]?.first ?: 0 }
+        // Alguien que aún no mencionas (N-25): nombre, y después relación y nacimiento en su ficha.
+        var nueva by remember { mutableStateOf<String?>(null) }
+        TextButton(onClick = { nueva = "" }, modifier = Modifier.padding(top = 8.dp)) { Text("+ persona", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+        nueva?.let { t ->
+            androidx.compose.material3.AlertDialog(onDismissRequest = { nueva = null }, title = { Text("Nueva persona") },
+                text = {
+                    Column {
+                        androidx.compose.material3.OutlinedTextField(value = t, onValueChange = { nueva = it }, singleLine = true, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nombre, como la escribirías con @") })
+                        Ayuda("Después eliges su relación, su cercanía y su nacimiento. No tendrá días hasta que la menciones.", Modifier.padding(top = 6.dp))
+                    }
+                },
+                confirmButton = { TextButton(enabled = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t).isNotEmpty(), onClick = {
+                    editando = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t); nueva = null
+                }) { Text("Seguir") } },
+                dismissButton = { TextButton(onClick = { nueva = null }) { Text("Cancelar") } })
+        }
         Seccion("Clasificadas", "${clasif.size} personas. Toca una para cambiarla.") {
             if (clasif.isEmpty()) Vacio("Todavía nadie. Responde arriba o toca a alguien de la lista de abajo.")
             Personas.RELACIONES.forEach { r ->

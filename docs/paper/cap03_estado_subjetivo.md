@@ -238,7 +238,7 @@ Ponerle palabras a una emoción (*affect labeling*) puede reducir su intensidad:
 
 ### 3.7.1 Qué contiene
 
-La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`) reúne en una página, **en este orden fijo** desde la entrega N4 de la revisión de navegación (`VERSION_NOCHE = 2`):
+La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`; en la app se llama **«Llenar el día»** en todas partes desde la entrega N6 de la revisión de navegación: en Hoy, en ⊕, en el acceso directo, en el widget y en el aviso de la noche) reúne en una página, **en este orden fijo** desde la entrega N4 de la revisión de navegación (`VERSION_NOCHE = 2`):
 
 1. **«Cómo estás ahora»** (el cierre, sección 3.7.5), solo en la hoja del día de hoy.
 2. **Ánimo y cuerpo** del día: valencia, activación y dolor.

@@ -169,8 +169,9 @@ object Avisos {
         val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("¿Cómo estuvo tu día?")
-            .setContentText("Llena tu diario. Si fue un día difícil, basta con un número.")
-            .setContentIntent(abrirApp(ctx, 2002, "dia"))
+            .setContentText("Llena el día. Si fue un día difícil, basta con un número.")
+            // Abre «Llenar el día» (la hoja de la noche de hoy), no solo la pestaña (N-23).
+            .setContentIntent(abrirApp(ctx, 2002, "diario"))
             .addAction(0, "Día difícil: solo un número", quick(ctx, 2003, QuickActivity.M_MINIMO))
             .setAutoCancel(true)
         mostrar(ctx, 2002, b)

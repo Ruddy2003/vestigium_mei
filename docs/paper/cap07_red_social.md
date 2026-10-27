@@ -83,7 +83,7 @@ Durante un mes escribes `@Dani` 6 días y `@daniel` 3 días. Sin equivalencias, 
 
 ### 7.4.1 Qué hace
 
-En «Tu gente» dices qué es cada @persona para ti. Si eso cambia (pareja → expareja), la app **guarda lo de antes** con su fecha, y los análisis usan **la relación que había cada día**.
+En «Tu gente» dices qué es cada @persona para ti. Una persona nace cuando la mencionas con @, cuando la pones en «Conocerte» o, desde la entrega N6 de la revisión de navegación, cuando la agregas a mano con «+ persona» (sin días hasta que la menciones). Si eso cambia (pareja → expareja), la app **guarda lo de antes** con su fecha, y los análisis usan **la relación que había cada día**.
 
 ### 7.4.2 Las opciones
 

@@ -66,6 +66,10 @@ object Seleccion {
     var diaAbierto by mutableStateOf<String?>(null)
     /** Días sin llenar que se están rellenando juntos en la hoja de la noche («ponerte al día», N-09). */
     var ponerse by mutableStateOf<List<String>>(emptyList())
+    /** El Día se abre con la corrección del sueño abierta (acción del buscador, N-22). */
+    var editarSueno by mutableStateOf(false)
+    /** Texto con el que se abre el buscador (una @persona o un #tema del resumen semanal). */
+    var buscar: String? = null
     /** Día para el que se abre Notas desde «＋ agregar a este día» (N-26). */
     var notaPara: String? = null
     /** Entrada abierta en la biblioteca del diario. */

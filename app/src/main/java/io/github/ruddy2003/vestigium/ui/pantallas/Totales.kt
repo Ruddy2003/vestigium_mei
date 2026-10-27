@@ -76,7 +76,7 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
         value = null
         value = withContext(Dispatchers.Default) { runCatching { Totales.calcular(desde, hoy) }.getOrNull() }
     }
-    var busqueda by remember { mutableStateOf("") }
+    var busqueda by remember { mutableStateOf(Seleccion.buscar.orEmpty().also { Seleccion.buscar = null }) }
     var indice by remember { mutableStateOf<String?>(null) }
     var todos by remember { mutableStateOf(false) }
     var abierta by remember { mutableStateOf<Pair<Totales.Indice, Totales.Entrada>?>(null) }

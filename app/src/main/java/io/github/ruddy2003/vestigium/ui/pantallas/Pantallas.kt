@@ -29,12 +29,50 @@ import io.github.ruddy2003.vestigium.ui.Romano
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 
-/** Todas las pantallas a las que se llega desde «Más» o «Entender», para fijarlas arriba y para encontrarlas en el buscador. */
+/**
+ * Todas las pantallas a las que se llega desde «Más» o «Entender», para fijarlas arriba y para encontrarlas en el buscador.
+ * El buscador encuentra también **acciones** (N-22): «corregir sueño» lleva al Día con la corrección abierta. Lo privado se
+ * encuentra por sus palabras de función («impulso», «medicamentos»), nunca por lo que escribiste (`data/Privado.kt`).
+ */
 object Pantallas {
-    class P(val ruta: String, val titulo: String, val detalle: String, val palabras: String = "")
+    /** Una pantalla o una acción. [antes] prepara a dónde llega (un día, una herramienta, un diálogo abierto). */
+    class P(val ruta: String, val titulo: String, val detalle: String, val palabras: String = "", val accion: Boolean = false, val antes: (() -> Unit)? = null)
+
+    /** Lo que se hace, no solo a dónde se va. */
+    val ACCIONES: List<P> get() = listOf(
+        P("dia_fecha", "Corregir las horas de sueño", "El Día de hoy con la corrección abierta", "sueño dormir desperté horas reloj corregir arreglar", accion = true) {
+            Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico(); Seleccion.editarSueno = true
+        },
+        P("enfoque", "Quitar o corregir una siesta", "Enfoque y siestas: toca la siesta para corregirla o quitarla", "siesta quitar borrar corregir dormí tarde", accion = true),
+        P("suplementos", "Anotar un suplemento de ayer", "Suplementos: «¿cuándo la tomaste?» → ayer", "suplemento creatina ayer olvidé tomé anotar tarde", accion = true),
+        P("momentos", "Cambiar la hora de un registro", "Todos tus registros: toca uno para cambiar su hora o su día", "momento registro ánimo hora cambiar corregir mover", accion = true),
+        P("gastos", "Borrar o corregir un gasto", "Gastos: toca el gasto para corregirlo o borrarlo", "gasto borrar quitar corregir monto dinero", accion = true),
+        P("gastos", "Categorías de gasto", "Agregar, renombrar y ordenar categorías y subcategorías, con su monto habitual", "categorías subcategorías gasto café editar", accion = true),
+        P("personas", "Aviso de cumpleaños", "Tu gente → días especiales: cumpleaños, aniversarios y tus fechas", "cumpleaños aniversario fecha especial aviso", accion = true),
+        P("guia_uso:principios", "Día lógico y madrugada", "Por qué lo que anotas antes de las 5:00 va al día anterior", "madrugada 5:00 día lógico medianoche ayer", accion = true),
+        P("apariencia", "Semana corta", "Hoy con lo mínimo, para las semanas pesadas (en Apariencia)", "semana corta mínimo pesada simple", accion = true),
+        P("dia_fecha", "Este día hace un año", "El Día de hace un año", "hace un año aniversario recuerdo", accion = true) {
+            Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -365)
+        },
+        P("noche", "Ponerte al día", "Llenar los días que faltan de la última semana", "faltan días ayer atrasado ponerse al día", accion = true) {
+            val f = Pendientes.faltantes(io.github.ruddy2003.vestigium.data.Fechas.diaLogico())
+            Seleccion.ponerse = f; Seleccion.noche = f.firstOrNull()
+        },
+        P("recaidas", "Registrar un impulso", "En Privado", "impulso registrar anotar privado", accion = true),
+    )
 
     val TODAS: List<P> get() = listOfNotNull(
-        P("dia", "Día", "El día de hoy", "hoy tablero"),
+        P("dia", "Hoy", "El día de hoy", "hoy día tablero"),
+        P("diario", "Diario", "La pestaña del diario: tus entradas y tu línea de tiempo", "diario entradas pestaña"),
+        P("mas", "Más", "Todo lo demás: registros, gente, medir y sistema", "más menú ajustes configuración tuerca"),
+        P("momentos", "Todos tus registros", "La lista editable de tus registros de ánimo de 30 días", "momentos registros ánimo lista editar hora"),
+        P("lugares", "Lugares", "El mapa emocional de tus lugares", "lugares mapa emocional sitios"),
+        P("mundo", "Mundo", "Los países que conoces", "mundo países viajes"),
+        P("rascar", "Mapa para rascar", "Rasca los países que visitaste", "rascar mapa países"),
+        P("unesco", "Patrimonio", "Sitios de la UNESCO que conoces", "unesco patrimonio"),
+        P("ciudad_nueva", "Nueva ciudad", "Agregar una ciudad que visitaste", "ciudad agregar viaje"),
+        P("biblioteca", "Lista y pendientes", "Todas tus obras y lo pendiente de leer o ver", "pendientes leer ver lista libros películas añadir"),
+        P("carta_nueva", "Nueva carta", "Escribir una carta al futuro o a alguien", "carta escribir futuro"),
         P("noche", "Llenar el día", "La hoja de la noche", "diario nota ánimo hábitos predicción"),
         P("cinta", "La cinta", "Tu día hora por hora", "línea tiempo 24 horas horario"),
         P("constelacion", "Constelación", "Tu gente como un cielo", "personas amigos familia @"),
@@ -45,7 +83,8 @@ object Pantallas {
         P("logros", "Logros", "Medallas y metas", "medallas premios"),
         P("vida", "Vida", "Tu vida vista de lejos", "semana mes año resumen"),
         P("entender", "Análisis", "Relaciones, herramientas y experimentos", "entender correlaciones explorar"),
-        P("gastos", "Gastos", "Gastos e ingresos", "dinero ingresos gasto"),
+    ) + HERRAMIENTAS.map { (id, n, d) -> P("analisis", n, d, "análisis herramienta $id", antes = { Herramienta.actual = id }) } + listOfNotNull(
+        P("gastos", "Gastos", "Gastos e ingresos, por mes y por categoría", "dinero ingresos gasto mes mensual categorías"),
         P("personas", "Tu gente", "Quién es cada @persona para ti", "personas amigos familia relaciones cercanía"),
         P("temas", "Tus temas", "Tus #temas: unir, renombrar, pasar a hitos", "temas etiquetas hashtag # normalizar duplicados renombrar"),
         P("presencias", "¿Estuviste o pensaste?", "Quién estuvo de verdad y en quién solo pensaste", "personas ver pensar mensajes presencia"),
@@ -62,7 +101,7 @@ object Pantallas {
         P("suplementos", "Suplementos", "Creatina y lo que tomes, con su nivel estimado", "creatina vitamina magnesio probióticos omega melatonina"),
         P("laptop", "Laptop", "Minutos por app y sitio (Cold Turkey)", "computadora cold turkey pc apps sitios productivo"),
         P("red", "Red", "Quién conoce a quién", "personas red vínculos grafo amigos"),
-        P("guia_uso", "Guía", "Cómo usar la app y qué poner", "ayuda manual cómo uso instrucciones"),
+        P("guia_uso", "Cómo usar la app", "Qué poner y dónde", "guía ayuda manual cómo uso instrucciones"),
         P("cobertura", "Cobertura de variables", "Días con dato de cada variable", "cobertura datos faltantes correlación"),
         P("lugar_nuevo", "Lugares especiales", "Preguntar por sitios nuevos", "lugar especial ignorar radio"),
         P("biblioteca_suenos", "Biblioteca de sueños", "Lo que soñaste", "sueños"),
@@ -70,7 +109,7 @@ object Pantallas {
         P("frases", "Frases guardadas", "Las frases con ♥", "citas"),
         P("mapas", "Mapas", "Mundo, ciudades, patrimonio", "mapa viajes países ciudades"),
         P("mapa", "Mapa", "Tus lugares y rutas", "lugares calor"),
-        P("obras", "Biblioteca", "Libros, películas, series y juegos", "libros películas series juegos"),
+        P("obras", "Obras", "Libros, películas, series y juegos", "biblioteca libros películas series juegos"),
         P("otras_vidas", "Otras vidas", "Personas de la historia a tu edad", "historia"),
         P("salud", "Salud", "Tus datos frente a la OMS", "oms imc pasos sueño"),
         P("tus_apps", "Tus apps", "YouTube, música, comida, Kindle, WhatsApp", "youtube spotify música whatsapp kindle"),
@@ -81,22 +120,29 @@ object Pantallas {
         P("experimentos", "Experimentos personales", "Prueba algo y mide si sirve", "experimento"),
         P("totales", "Totales", "Todo lo acumulado", "sumas"),
         P("recaidas", "Privado", "Solo se ve aquí", "impulso recaída libido medicamentos privado"),
-        P("apariencia", "Apariencia", "Tema, claro u oscuro, animaciones, personaje", "tema colores sonido personaje"),
+        P("apariencia", "Apariencia", "Tema, claro u oscuro, animaciones, tus últimos días, semana corta", "tema colores sonido personaje franja semana corta"),
         P("avisos", "Avisos y recordatorios", "Ánimo, diario, sueño, cuestionarios", "notificaciones"),
         P("privacidad", "Privacidad", "Huella, modo discreto, seguimiento privado", "bloqueo huella discreto"),
         P("datos", "Datos", "Exportar a R, Drive, respaldos, importar", "exportar respaldo drive importar csv r"),
         P("estado_datos", "Estado de los datos", "Qué fuentes registraron hoy y qué permiso falta", "sensores permisos sincronizar"),
         P("reportes", "Reportes", "Semanal en imagen, mensual en PDF", "pdf"),
         P("permisos", "Permisos y sensores", "Ubicación, reloj, pantalla, fotos", "permisos"),
-        P("guia", "Guía científica", "Qué mide cada cosa", "ciencia"),
+        P("guia", "Cómo leer tus datos", "Qué mide cada cosa y por qué", "guía científica ciencia"),
     )
 
     private fun normal(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
 
-    fun buscar(q: String): List<P> {
-        val n = normal(q.trim())
-        if (n.length < 2) return emptyList()
-        return TODAS.filter { normal(it.titulo + " " + it.detalle + " " + it.palabras + " " + Estilo.pantalla(it.titulo, Romano.latin(it.titulo)).first).contains(n) }
+    /**
+     * Pantallas y acciones que tienen **todas** las palabras de [q], en cualquier orden y sin acentos («gastos mes»,
+     * «corregir sueño»). Las acciones van primero. [nombreDelTema] da el título en el tema (en las pruebas, nada).
+     */
+    fun buscar(q: String, nombreDelTema: (P) -> String = { Estilo.pantalla(it.titulo, Romano.latin(it.titulo)).first }): List<P> {
+        val palabras = normal(q).split(Regex("\\s+")).filter { it.length >= 2 }
+        if (palabras.isEmpty()) return emptyList()
+        return (ACCIONES + TODAS).filter { p ->
+            val texto = normal(p.titulo + " " + p.detalle + " " + p.palabras + " " + p.ruta + " " + nombreDelTema(p))
+            palabras.all { texto.contains(it) }
+        }
     }
 
     fun de(ruta: String): P? = TODAS.firstOrNull { it.ruta == ruta }
@@ -107,18 +153,20 @@ object Pantallas {
 fun EnPantallas(q: String, ir: (String) -> Unit) {
     val l = Pantallas.buscar(q)
     if (l.isEmpty()) return
-    Seccion("Pantallas") {
+    var todos by androidx.compose.runtime.remember(q) { androidx.compose.runtime.mutableStateOf(false) }
+    Seccion("Pantallas y acciones") {
         Tarjeta {
-            l.take(8).forEachIndexed { i, p ->
+            (if (todos) l else l.take(12)).forEachIndexed { i, p ->
                 if (i > 0) HorizontalDivider()
-                Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); ir(p.ruta) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); p.antes?.invoke(); ir(p.ruta) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text(Estilo.pantalla(p.titulo, Romano.latin(p.titulo)).first, style = MaterialTheme.typography.bodyLarge)
+                        Text((if (p.accion) "✎ " + p.titulo else Estilo.pantalla(p.titulo, Romano.latin(p.titulo)).first), style = MaterialTheme.typography.bodyLarge)
                         Text(p.detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text("→", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 }
             }
+            if (!todos && l.size > 12) TextButton(onClick = { todos = true }) { Text("ver los ${l.size - 12} siguientes ▾") }
         }
     }
 }

@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalLayoutApi::class)
+@file:OptIn(ExperimentalLayoutApi::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
@@ -35,6 +35,8 @@ import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.Ficha
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import kotlinx.coroutines.launch
 import io.github.ruddy2003.vestigium.ui.FilaMenu
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
@@ -50,12 +52,26 @@ fun PantallaMas(nav: Nav) {
         val u = Repo.ultimaRespuesta(i.id)
         u == null || java.time.temporal.ChronoUnit.DAYS.between(Fechas.parse(u.fecha), java.time.LocalDate.now()) >= i.frecuenciaDias
     }
+    // Un índice arriba: cada ficha abre su sección y la trae a la vista (N-21).
+    val req = remember { List(4) { androidx.compose.foundation.relocation.BringIntoViewRequester() } }
+    val abrir = remember { androidx.compose.runtime.mutableStateListOf(0, 0, 0, 0) }
+    val alcance = androidx.compose.runtime.rememberCoroutineScope()
     Hoja("Más", nav.atras, buscar = { nav.ir("buscar") }) {
+        val indice = listOf("Registros" to 12, "Gente" to 6, "Medir" to 9, "Sistema" to 11)
+        FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            indice.forEachIndexed { i, (t, n) ->
+                Ficha("${i + 1} $t · $n", false) { abrir[i]++; alcance.launch { kotlinx.coroutines.delay(150); req[i].bringIntoView() } }
+            }
+        }
         AtajosFijos { nav.ir(it) }
         val ir: (String) -> Unit = { nav.ir(it) }
-        Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1) {
+        Seccion("Registros especiales", "Lo que no anotas todos los días.", numero = 1, plegable = true, abrir = abrir[0], modifier = Modifier.bringIntoViewRequester(req[0])) {
             Tarjeta {
                 val ult = Repo.ascensos.maxByOrNull { it.fecha }
+                FilaMas("gastos", "Gastos", "Gastos e ingresos del mes, por categoría y subcategoría", ir)
+                HorizontalDivider()
+                FilaMas("campanas", "Campañas", "Retos de la semana", ir)
+                HorizontalDivider()
                 FilaMas("escalada", "Escalada", if (ult == null) "Bitácora de sesiones y bloques" else "${Repo.ascensos.size} sesiones · última ${Fechas.relativo(ult.fecha)}", ir)
                 HorizontalDivider()
                 FilaMas("fuerza", "Gimnasio", if (Repo.entrenos.isEmpty()) "Entrenamientos de MacroFactor Workouts" else "${Repo.entrenos.values.count { it.series > 0 }} entrenamientos importados", ir)
@@ -81,12 +97,14 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("frases", "Frases guardadas", (Repo.config.frases_guardadas.size + Repo.obras.sumOf { o -> o.citas.count { it.favorita } }).let { if (it == 0) "Las frases del día a las que les des ♥" else "$it frase${if (it == 1) "" else "s"} con ♥" }, ir)
             }
         }
-        Seccion("Tu gente y sustancias", numero = 2) {
+        Seccion("Tu gente y sustancias", numero = 2, plegable = true, abrir = abrir[1], modifier = Modifier.bringIntoViewRequester(req[1])) {
             Tarjeta {
                 val pend = io.github.ruddy2003.vestigium.data.Personas.pendientes().size
                 FilaMas("personas", "Tu gente", if (pend > 0) "$pend por clasificar · quién es cada @persona para ti" else "Quién es cada @persona para ti, y qué tan cerca", ir)
                 HorizontalDivider()
                 val temasN = Repo.dias.values.flatMap { io.github.ruddy2003.vestigium.data.Texto.temas(it.nota) }.toSet().size
+                FilaMas("personas", "Días especiales y cumpleaños", "Cumpleaños, aniversarios y tus fechas, con su aviso (en Tu gente)", ir)
+                HorizontalDivider()
                 FilaMas("red", "Red", "Quién conoce a quién, como un grafo", ir)
                 HorizontalDivider()
                 FilaMas("temas", "Tus temas", if (temasN == 0) "Tus #temas, ordenados y sin duplicados" else "$temasN #temas · juntar los que se parecen, renombrar, pasar a hitos", ir)
@@ -96,8 +114,12 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("recaidas", "Privado", "Medicamentos" + (if (Repo.config.seguimiento_privado) ", impulsos, recaídas y libido" else " e impulsos") + ": solo se ven aquí", ir)
             }
         }
-        Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 3) {
+        Seccion("Medir", "Instrumentos para compararte contigo mismo.", numero = 3, plegable = true, abrir = abrir[2], modifier = Modifier.bringIntoViewRequester(req[2])) {
             Tarjeta {
+                FilaMas("experimentos", "Experimentos personales", "${Repo.experimentos.count { io.github.ruddy2003.vestigium.data.Experimentos.enCurso(it) }} en curso · prueba algo y mide si sirve", ir)
+                HorizontalDivider()
+                FilaMas("lugares", "Lugares", "El mapa emocional de tus lugares", ir)
+                HorizontalDivider()
                 FilaMas("salud", "Salud", "Tus datos frente a las recomendaciones de la OMS: pasos, sueño, azúcar, sal, fibra, alcohol, vitaminas…", ir)
                 HorizontalDivider()
                 FilaMas("tus_apps", "Tus apps", "YouTube, música, comida, gimnasio, Kindle, WhatsApp y Google, en números", ir)
@@ -116,11 +138,11 @@ fun PantallaMas(nav: Nav) {
                     "Lo grande de tu vida · ${Repo.config.perfil_historial.size} cambios guardados", ir)
             }
         }
-        Seccion("Sistema", numero = 4) {
+        Seccion("Sistema", numero = 4, plegable = true, abrir = abrir[3], modifier = Modifier.bringIntoViewRequester(req[3])) {
             Tarjeta {
-                FilaMas("guia_uso", "Guía", "Cómo usar la app: qué poner, cuándo y cómo leerte", ir)
+                FilaMas("guia_uso", "Cómo usar la app", "Qué poner, cuándo y cómo leerte", ir)
                 HorizontalDivider()
-                FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, personaje, vibraciones y sonidos", ir)
+                FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, tus últimos días, semana corta, vibraciones y sonidos", ir)
                 HorizontalDivider()
                 FilaMas("avisos", "Avisos y recordatorios", "Avisos de ánimo, horas del diario y del sueño, cuestionarios", ir)
                 HorizontalDivider()
@@ -138,7 +160,7 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMas("permisos", "Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima", ir)
                 HorizontalDivider()
-                FilaMas("guia", "Guía científica", "Qué mide cada cosa y de dónde viene", ir)
+                FilaMas("guia", "Cómo leer tus datos", "Qué mide cada cosa, de dónde viene y por qué", ir)
             }
         }
         Ayuda("Atajo: mantén presionada una pestaña. Hoy abre la hoja de la noche; Diario y ⊕, el ánimo; Vida, el resumen semanal; Análisis, el buscador (que también encuentra pantallas). " +
@@ -199,7 +221,7 @@ fun PantallaHabitos(nav: Nav) {
 
 @Composable
 fun PantallaGuia(nav: Nav) {
-    Hoja("Guía científica", nav.atras, "Por qué la app mide lo que mide.") {
+    Hoja("Cómo leer tus datos", nav.atras, "Qué mide cada cosa y por qué la app la mide así.") {
         Seccion("Cómo leer tus datos") {
             Tarjeta {
                 Text("Con pocos días todo es pista, no evidencia. Para detectar una relación moderada se necesitan unos 85 días con ambos datos.", style = MaterialTheme.typography.bodyMedium)
