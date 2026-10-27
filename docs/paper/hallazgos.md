@@ -245,3 +245,110 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** mezcla ánimo momentáneo con recordado y muestreo al azar con muestreo por evento.
 - **Gravedad:** Baja.
 - **Propuesta:** un solo criterio de pertenencia al lugar; preferir solo avisos (`muestreo`) o mostrarlos separados; en R, no rellenar con la valencia del día.
+
+## Módulo 6 · Personas y red social (v81, commit `fa527df`)
+
+### H-6-1 · Momentos privados e impulsos en funciones de personas
+- **Dónde:** `ciencia/Dinamicas.kt`, `construir()` (familia `per_`: `Repo.momentos.forEach { texto(...) }`, sin filtro); `data/Personas.kt`, `menciones()` (todos los momentos); `data/Modelo.kt`, `Momento.privado` = solo `recaida` o `libido`.
+- **Qué pasa:** las @menciones de momentos de recaída y libido entran en `per_*` (panel, análisis y exportación) y en «Tu gente» (días mencionada, «¿Quién es @x?», duplicados), sin importar si el seguimiento privado está activo. Los momentos de tipo `impulso` no cuentan como privados para el código y entran además en presencias, Constelación, Red y `vm_red_*`. La Constelación y la Red sí excluyen recaída y libido con el mismo criterio (la pista 4 del plan no se confirma en su forma original).
+- **Por qué importa:** contenido del seguimiento privado aparece en pantallas y exportaciones donde el resto de la app lo oculta; criterio (c) del módulo 9.
+- **Gravedad:** Media.
+- **Propuesta:** filtrar `!it.privado` en `Dinamicas.construir` y `Personas.menciones`; decidir explícitamente si `impulso` debe formar parte de `Momento.privado`.
+
+### H-6-2 · No hay variable por persona de «estuve con @x»; `per_` mezcla cuatro cosas
+- **Dónde:** `ciencia/Dinamicas.kt`, familias `per_` y `pen_`.
+- **Qué pasa:** `per_<x>` vale 1 si la persona aparece en el diario, un sueño, el mejor/peor momento, cualquier momento o una carta. Existe `pen_<x>` (pensé sin verla), pero no `vi_<x>`/`estuve_<x>`.
+- **Por qué importa:** una correlación con `per_ana` no distingue haberla visto de haberla soñado o pensado; el constructo es «presencia mental o física», no contacto.
+- **Gravedad:** Media.
+- **Propuesta:** agregar una familia por persona con estado «estuve» (desde `Presencias.delDia`) o documentar `per_` como «mención en cualquier texto» en el diccionario.
+
+### H-6-3 · La fecha de un cambio de relación es la fecha de edición, y lo anterior a la primera clasificación se proyecta
+- **Dónde:** `data/Personas.kt`, `guardar()` (`CambioRelacion(hoy, …)`) y `relacionEn()`/`cercaniaEn()`.
+- **Qué pasa:** no se puede indicar cuándo cambió de verdad la relación; los días entre el cambio real y la anotación cuentan con la relación anterior. Para días previos a la primera clasificación se usa la relación más antigua del historial (o la actual).
+- **Por qué importa:** `vi_pareja`/`vi_expareja` y `penso_en_*` quedan mal asignados alrededor de los cambios, que suelen ser justo los periodos más interesantes.
+- **Gravedad:** Media.
+- **Propuesta:** permitir elegir la fecha del cambio (por omisión, hoy) y, opcionalmente, una fecha «desde» real de la relación.
+
+### H-6-4 · Conocerte sin historial y sin equivalencias
+- **Dónde:** `data/Perfiles.kt`, `relacion()` (`p.cercanas.firstOrNull { it.nombre == persona }`, `persona in p.convivientes`); `ciencia/Estadistica.kt`, `panel()` (`vi_convivientes` con `perfil.convivientes` actual).
+- **Qué pasa:** «a quién ves más» y «quiénes viven contigo» se aplican con su valor actual a todas las fechas, y se comparan con el nombre canónico sin aplicar equivalencias ni quitar @/mayúsculas.
+- **Por qué importa:** `vi_convivientes` y los `vi_*` de quien solo está en Conocerte se proyectan hacia atrás (como H-2-5) y pueden fallar si el nombre de Conocerte es un alias.
+- **Gravedad:** Baja.
+- **Propuesta:** comparar con `Texto.canon`; usar el historial de cambios del perfil (`CambioPerfil`) para fechar convivientes, o mover a esas personas a «Tu gente».
+
+### H-6-5 · Colores de la Red con la relación sin agrupar
+- **Dónde:** `data/Lote3.kt`, `RedPersonas.calcular()` (`p?.relacion ?: Perfiles.relacion(n)`); `ui/pantallas/Lote3.kt`, `PantallaRed` (`tonos`).
+- **Qué pasa:** para quien está en Tu gente se usa la relación tal cual (`amistad_cercana`, `colega`, `companero`, `mentor`), que no está en la tabla de colores; esas personas salen sin color de relación. La Constelación sí agrupa. Lo mismo llega a `vm_red_nodos.csv` y a `composicion` en R.
+- **Por qué importa:** el dibujo engaña (una amistad cercana parece «sin clasificar») y la composición en R separa categorías que los análisis juntan.
+- **Gravedad:** Baja.
+- **Propuesta:** usar `Personas.grupo(...)` para el color (y exportar ambas columnas: relación y grupo).
+
+### H-6-6 · «Solo lo que dije» cuenta grupos de más en la Red
+- **Dónde:** `ui/pantallas/Lote3.kt`, `PantallaRed` (filtra aristas pero no recalcula `grado`); `data/Lote3.kt`, `componentes()` (`nodos.filter { it.grado > 0 }`).
+- **Qué pasa:** con el filtro activo, quien solo tenía líneas derivadas conserva `grado > 0` y cuenta como un grupo de una persona; la ficha «unida a N» muestra el grado con todas las líneas.
+- **Por qué importa:** la cifra «grupos» y el grado mostrados no corresponden al dibujo.
+- **Gravedad:** Baja.
+- **Propuesta:** recalcular el grado con las aristas filtradas antes de `componentes()`.
+
+### H-6-7 · La app y `vm_red()` calculan la red distinto
+- **Dónde:** `data/Exportar.kt`, `filasRed()` (`minJuntos = 1, max = 400`); `assets/vestigium.R`, `vm_red()`; `PantallaRed`.
+- **Qué pasa:** (a) R incluye como línea un par declarado «no se conocen» si aparece junto ≥ `min_juntos` días; la app lo excluye. (b) `components(g)$no` cuenta a cada persona sin líneas como componente; la app no. (c) La app usa 45 personas; la exportación hasta 400, sin mínimo de días. (d) El `grado` del CSV usa co-mención ≥ 1 día; la app, ≥ 2.
+- **Por qué importa:** densidad, grupos y grado difieren entre app y R para los mismos datos; criterio (b) del módulo 9.
+- **Gravedad:** Media.
+- **Propuesta:** en R, excluir `tipo_declarado == "no_se_conocen"` también en la rama derivada y contar componentes sin aislados (o mostrar ambos); exportar el grado con `minJuntos = 2` o documentarlo.
+
+### H-6-8 · Densidad y restricción de Burt dominadas por personas mencionadas pocas veces
+- **Dónde:** `assets/vestigium.R`, `vm_red()` (vértices = todos los nodos exportados; ego unido a todos); `PantallaRed` (densidad con todos los nodos).
+- **Qué pasa:** con el ego unido a todas, la restricción mínima es 1/*n* y cada persona sin líneas la baja; la densidad cae con cada nodo aislado. Con hasta 400 nodos sin mínimo de días, una persona mencionada una vez pesa igual que tu familia.
+- **Por qué importa:** las métricas cambian con cuánto escribes, no con la estructura de tu red; comparar periodos o versiones puede llevar a conclusiones falsas.
+- **Gravedad:** Baja.
+- **Propuesta:** argumento `min_dias` en `vm_red()` (p. ej., 3) y documentarlo; solo documentar en la app.
+
+### H-6-9 · Cada función usa fuentes distintas para «quién aparece»
+- **Dónde:** `Personas.menciones`, `Estadistica.panel` (`personas`), `Presencias.delDia`, `Dinamicas` (`per_`), `Constelacion.calcular`, `RedPersonas.calcular`, tarjetas de `Explorar.kt` y `Vida.kt`.
+- **Qué pasa:** unas leen solo el diario, otras diario y momentos, otras también sueños, mejor/peor momento, notas del cronómetro o cartas; la tarjeta «personas en tu cielo este año» ni siquiera aplica equivalencias (tabla 7.2 del capítulo 7).
+- **Por qué importa:** los conteos de una misma persona no cuadran entre pantallas y variables; `personas` (solo diario) y `per_` (todo) miden cosas distintas con nombres parecidos.
+- **Gravedad:** Baja.
+- **Propuesta:** documentar en el diccionario la fuente de cada variable; aplicar `Texto.canon` en las tarjetas.
+
+### H-6-10 · Pares por construcción no marcados como obvios
+- **Dónde:** `ciencia/Dinamicas.kt`, `AGREGADOS["per_"]`.
+- **Qué pasa:** no incluye `personas_vistas`, `personas_mensajes`, `vi_expareja`, `vi_trabajo` ni `cercania_media`, que dependen de las mismas menciones.
+- **Por qué importa:** pueden aparecer «relaciones» triviales (p. ej., `per_ana` con `personas_vistas`) que ocupan lugar en la lista y en la corrección por comparaciones múltiples.
+- **Gravedad:** Baja.
+- **Propuesta:** agregar esas variables a `AGREGADOS["per_"]` (y `personas_pensadas` ya está en `pen_`).
+
+### H-6-11 · Equivalencias de un solo paso y compartidas entre @ y #
+- **Dónde:** `data/Texto.kt`, `canon()` (`eq[t] ?: t`); `Config.equivalencias` usada para personas y temas.
+- **Qué pasa:** `a → b` y `b → c` dejan `a` como `b`; una equivalencia creada para `@x` también afecta `#x`.
+- **Por qué importa:** una persona puede quedar partida en dos tras unir nombres en cadena; colisión improbable entre personas y temas.
+- **Gravedad:** Baja.
+- **Propuesta:** resolver la cadena al aplicar (o al guardar) y separar las tablas por símbolo.
+
+### H-6-12 · La cercanía no se puede borrar y la primera se proyecta hacia atrás
+- **Dónde:** `data/Personas.kt`, `guardar()` (`cercania ?: previo.cercania`; cambio solo si ambas cercanías existen).
+- **Qué pasa:** una cercanía puesta no se puede quitar; poner cercanía a alguien que no tenía no crea historial y vale para todos los días pasados.
+- **Por qué importa:** `cercania_media` de días antiguos usa un juicio de hoy.
+- **Gravedad:** Baja.
+- **Propuesta:** registrar en el historial también el paso de «sin cercanía» a un valor; permitir borrar.
+
+### H-6-13 · Variables sociales en 0 en días sin diario
+- **Dónde:** `ciencia/Estadistica.kt`, `panel()` (bucle sobre `Repo.dias.keys + momentosPorDia.keys`).
+- **Qué pasa:** `vi_*`, `cercanos`, `personas_vistas`, `penso_en_*` valen 0 en cualquier día con documento de diario o algún momento, aunque no se haya escrito el texto del diario (p. ej., solo un aviso de ánimo o solo el sueño). Lo mismo con la base de `per_`/`pen_` (`diasDiario`).
+- **Por qué importa:** «no escribí» se confunde con «no vi a nadie»; si los días sin diario no son al azar (días malos o muy ocupados), sesga las correlaciones sociales. Relacionado con H-1-6 y H-2-4.
+- **Gravedad:** Media.
+- **Propuesta:** calcular estas variables solo en días con texto de diario (o dejarlas `null` cuando no lo hay y no hay momentos con @).
+
+### H-6-14 · La Constelación usa la relación actual
+- **Dónde:** `ui/pantallas/Constelacion.kt`, `calcular()` (`Perfiles.relacion(p)` sin fecha).
+- **Qué pasa:** el color refleja la relación de hoy, no la del periodo mostrado (pista 6 del plan, confirmada). El ángulo de cada estrella depende de su posición en el orden por días y no tiene significado.
+- **Por qué importa:** solo visual; no entra en análisis.
+- **Gravedad:** Baja.
+- **Propuesta:** solo documentar (opcional: colorear con la relación más frecuente en el periodo).
+
+### H-6-15 · La escala IOS de la app difiere del original
+- **Dónde:** `ui/pantallas/Gente.kt`, `CirculosCercania` y `CERCANIA`.
+- **Qué pasa:** se agregan etiquetas verbales a los siete pares de círculos; se responde una vez por persona y no se pide actualizarla; la superposición crece de forma no lineal (0 %, 4 %, 15 %, 30 %, 47 %, 65 %, 85 %).
+- **Por qué importa:** la validez de la IOS es para la versión pictórica en un momento dado; `cercania_media` mide a quién nombras más que la cercanía de ese día.
+- **Gravedad:** Baja.
+- **Propuesta:** solo documentar; opcionalmente, recordar revisar la cercanía una vez al año.

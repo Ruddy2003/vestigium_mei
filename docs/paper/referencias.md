@@ -95,3 +95,23 @@ Wilson, T. D., & Gilbert, D. T. (2005). Affective forecasting: Knowing what to w
 _Verificación (módulo 2):_ los DOI de artículos se comprobaron en Crossref durante la sesión, salvo Remor (2006), comprobado en la página de Cambridge University Press. Cohen et al. (1983): Crossref da solo la página inicial (385); el rango 385–396 es el habitual en las citas. Los libros de Csikszentmihalyi (1990) y Lazarus y Folkman (1984) que cita la app no se usan como fuente directa de cifras. Ya estaban en la lista: Csikszentmihalyi y Larson (1987), Kahneman et al. (1993), Rubin (1976) y Stone et al. (2002).
 
 _Afirmaciones marcadas [sin verificar] en el capítulo 3:_ el tamaño original de la Affect Grid (9 × 9); el punto de corte WHO-5 ≤ 28; el punto de corte UCLA-3 ≥ 6; que el recuerdo de los sueños se pierda «en minutos»; la conclusión general de que la reactividad suele ser pequeña.
+
+## Módulo 6 · Capítulo 7 (personas y red social)
+
+Aron, A., Aron, E. N., & Smollan, D. (1992). Inclusion of Other in the Self Scale and the structure of interpersonal closeness. *Journal of Personality and Social Psychology, 63*(4), 596–612. https://doi.org/10.1037/0022-3514.63.4.596
+
+Bernard, H. R., Killworth, P., Kronenfeld, D., & Sailer, L. (1984). The problem of informant accuracy: The validity of retrospective data. *Annual Review of Anthropology, 13*, 495–517. https://doi.org/10.1146/annurev.an.13.100184.002431
+
+Burt, R. S. (2004). Structural holes and good ideas. *American Journal of Sociology, 110*(2), 349–399. https://doi.org/10.1086/421787
+
+Eagle, N., Pentland, A., & Lazer, D. (2009). Inferring friendship network structure by using mobile phone data. *Proceedings of the National Academy of Sciences, 106*(36), 15274–15278. https://doi.org/10.1073/pnas.0900282106
+
+Fruchterman, T. M. J., & Reingold, E. M. (1991). Graph drawing by force-directed placement. *Software: Practice and Experience, 21*(11), 1129–1164. https://doi.org/10.1002/spe.4380211102
+
+Gächter, S., Starmer, C., & Tufano, F. (2015). Measuring the closeness of relationships: A comprehensive evaluation of the 'Inclusion of the Other in the Self' scale. *PLoS ONE, 10*(6), e0129478. https://doi.org/10.1371/journal.pone.0129478
+
+Perry, B. L., Pescosolido, B. A., & Borgatti, S. P. (2018). *Egocentric network analysis: Foundations, methods, and models*. Cambridge University Press. https://doi.org/10.1017/9781316443255 [DOI sin verificar: la ficha del libro se comprobó, el DOI se dedujo del identificador de Cambridge]
+
+_Verificación (módulo 6):_ en esta sesión Crossref no estaba accesible desde la red del entorno; las fichas (autores, año, revista, volumen, páginas y DOI) se comprobaron con búsquedas web contra páginas del editor, PubMed Central, JSTOR o repositorios institucionales. La fórmula de la restricción de Burt se tomó de la documentación de `igraph::constraint` (r.igraph.org), que cita a Burt (2004). El libro de Burt (1992), *Structural holes*, no se usa como fuente directa.
+
+_Afirmaciones marcadas [sin verificar] en el capítulo 7:_ el espaciado de los círculos en la IOS original; que las redes densas se asocian a más apoyo; los «círculos» de cercanía en la literatura sobre tamaño de redes; que `igraph` dé exactamente los mismos valores que `networkx` para el ego (no se pudo ejecutar R).
