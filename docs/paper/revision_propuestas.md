@@ -2,6 +2,23 @@
 
 _Hecho el 27 oct 2026 sobre el código de `main` en `fa527df`/`3abc1c9` (v84; `SCHEMA_V = 12`) y los capítulos 2 a 10 tal como están en el PR #3. Este documento es un **diagnóstico**: no cambia código. Lo aplica el módulo 10._
 
+## Respuesta del autor (27 oct 2026)
+
+Ninguna propuesta se tachó: todas quedan aprobadas. Las decisiones de la sección 2 quedan así:
+
+- **D-1 y D-2, ampliadas.** **Todo** el seguimiento privado se ve **solo en una pantalla de Privacidad** (nueva, o la que ya existe ampliada) y no sale en ninguna otra visualización. Es decir: impulsos, recaídas, libido, detonantes, el hábito ligado a las recaídas y **los medicamentos**. **Sí** se exporta a R, como ahora. Esto amplía P-01 a P-03: ya no basta con sacarlo de las salidas compartibles; también sale de las pantallas comunes (Día, momentos, cinta, calendario, Explorar, Análisis, experimentos, logros, metas y widgets). El módulo 10 lo detalla como **P-34** antes de programarlo.
+- **D-3: sí.** Pantalla y pasos pasan al día lógico (P-16, parte ii).
+- **D-4: sí.** Festivos (I-1) y estatura para el alcohol (I-2), con el alcance mínimo descrito.
+- **Dos funciones nuevas pedidas** (fuera del criterio del módulo 9; se definen antes de programarlas):
+  - **I-6 · Días especiales propios:** cumpleaños de familiares y otras fechas que se repiten cada año.
+  - **I-7 · Datos de las personas:** edad y otros, a partir de su fecha de nacimiento.
+
+  Se recomienda que entren en el mismo aumento de `SCHEMA_V` de la fase 2, para no subir el esquema dos veces.
+- **Preguntas abiertas para el módulo 10:**
+  1. Si la pantalla de Privacidad debe tener sus propios análisis (tendencias, relación con el sueño) o si eso se deja solo a R.
+  2. Si el impulso puede seguir siendo la medida de un experimento.
+  3. Si hace falta contraseña para cualquier exportación que salga del teléfono (H-8-5).
+
 ## Cómo leer y anotar este documento
 
 1. **Qué hice.** Leí otra vez, contra el código, los 109 hallazgos de `hallazgos.md` (módulos 1 a 8), uno por uno. Busqué además problemas que ningún módulo vio por separado, sobre todo **en las uniones**: una variable que un archivo calcula de un modo y otro usa de otro; la app frente a R; datos privados que llegan donde no deben. Los nuevos están al final de `hallazgos.md` como H-9-1 a H-9-40.
