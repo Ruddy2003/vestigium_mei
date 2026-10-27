@@ -784,3 +784,287 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** la descripción de qué sale del teléfono es la base para decidir qué es privado; hoy subestima las salidas, aunque las omitidas no envían datos del diario.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar (actualizar la sección 1 del documento de contexto); opcionalmente, mostrar en la app una lista de servicios externos con lo que recibe cada uno.
+
+## Módulo 9 · Revisión metodológica general (v84, commit `3abc1c9`; código igual a `fa527df`)
+
+_El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la propuesta que lo resuelve están en `revision_propuestas.md`, sección 6. Aquí solo se registran los problemas nuevos que encontró la revisión. Las propuestas se identifican como P-NN en ese documento._
+
+### H-9-1 · El conteo de impulsos entra en todo aunque el seguimiento privado esté apagado
+- **Dónde:** `ciencia/Estadistica.kt`, `variables()` (`:254`, `n_impulso` en el grupo «Momentos») y `panel()` (`:290`, `:308`).
+- **Qué pasa:** `n_impulso` se declara siempre, fuera del grupo «Privado». Por eso entra en «Las relaciones más marcadas», en «La relación del año» (`ciencia/TuAnio.kt:134`) y en los logros propios (`ui/pantallas/Logros.kt:257`), sin importar el interruptor.
+- **Por qué importa:** criterio (c); contradice la regla declarada del seguimiento privado.
+- **Gravedad:** Media.
+- **Propuesta:** P-03.
+
+### H-9-2 · Una configuración ilegible se reemplaza por la de fábrica y se sobrescribe
+- **Dónde:** `data/Repo.kt`, `init` (`:78`) y `cambiarConfig()` (`:493-498`).
+- **Qué pasa:** si `config` no se puede decodificar, se usa `Config()` sin avisar, y el siguiente cambio de ajustes escribe encima del JSON original. Se pierden personas, perfil, hábitos, suplementos, campañas y el interruptor privado.
+- **Por qué importa:** criterio (d); pérdida total y silenciosa.
+- **Gravedad:** Media (poco probable, daño alto).
+- **Propuesta:** P-07.
+
+### H-9-3 · `canciones` se cuenta distinto en la app y en R
+- **Dónde:** `ciencia/Estadistica.kt:464` (todas las escuchas) frente a `data/Exportar.kt:624` (30 s o más); `data/Diccionario.kt:143`.
+- **Qué pasa:** el diccionario promete «30 s o más», y la app no lo cumple.
+- **Por qué importa:** criterios (a) y (b).
+- **Gravedad:** Baja.
+- **Propuesta:** P-30.
+
+### H-9-4 · `ultimo_uso_h` suma 24 con umbrales distintos en la app (< 5) y en R (< 12)
+- **Dónde:** `ciencia/Estadistica.kt:413`; `data/Exportar.kt:657`, `:739` (`horaDecimal`).
+- **Qué pasa:** la misma hora sale distinta en cada lado; por ejemplo, un último uso a las 11:00 vale 11 en la app y 35 en R.
+- **Por qué importa:** criterio (b).
+- **Gravedad:** Baja.
+- **Propuesta:** P-16 y P-30.
+
+### H-9-5 · Importaciones con sellos y versión falsos
+- **Dónde:** `data/Importar.kt:150-158`, `:225`, `:231` (versión web y Obsidian).
+- **Qué pasa:** `ts_creado` y `ts_editado` reciben la hora de la importación, y `schema_v`, la versión actual.
+- **Por qué importa:** criterio (a) menor; un día importado parece escrito en la fecha de importación.
+- **Gravedad:** Baja.
+- **Propuesta:** P-33.
+
+### H-9-6 · Coordenadas de momentos privados hacia Open-Meteo
+- **Dónde:** `sensores/Entorno.kt`, `lugarDe()` (`:32-33`) y `sincronizar()` (`:47`).
+- **Qué pasa:** los días sin puntos de ubicación se usan las coordenadas de todos los momentos del día, recaídas incluidas, redondeadas a 0.01°.
+- **Por qué importa:** criterio (c); impacto bajo, porque no se envía el tipo de momento.
+- **Gravedad:** Baja.
+- **Propuesta:** P-04.
+
+### H-9-7 · El formato viejo de Takeout pierde la precisión de cada punto
+- **Dónde:** `data/Importar.kt:274-280`.
+- **Qué pasa:** se ignora `accuracy` y se guarda vacío; luego la detección de lugares lo trata como 0 m.
+- **Por qué importa:** criterio (d) menor; puede crear estancias falsas.
+- **Gravedad:** Baja.
+- **Propuesta:** P-33.
+
+### H-9-8 · `distancia_km` significa dos cosas
+- **Dónde:** `data/Exportar.kt:409` (Health Connect, en `vm_salud.csv`) frente a `ciencia/Estadistica.kt:352` (GPS, en el panel); `Diccionario.kt:114`.
+- **Qué pasa:** la misma descripción sirve para dos medidas distintas.
+- **Por qué importa:** confusión al cruzar en R.
+- **Gravedad:** Baja.
+- **Propuesta:** P-28.
+
+### H-9-9 · Responder un aviso pendiente desde Hoy lo guarda como registro propio
+- **Dónde:** `ui/pantallas/Hoy.kt:105-108`, `:128-131`, `:603-606`; `ui/QuickActivity.kt:102`, `:265`.
+- **Qué pasa:** la tarjeta «N avisos de ánimo sin contestar» abre la captura sin `AVISO_MS`. El registro queda como `animo`, no como `muestreo`, y la tarjeta nunca se apaga.
+- **Por qué importa:** criterio (a); la respuesta sale de `muestreo_valencia` y `n_muestreos`, y la tarjeta invita a registrar varias veces.
+- **Gravedad:** Media.
+- **Propuesta:** P-10.
+
+### H-9-10 · Dos definiciones de «aviso respondido»
+- **Dónde:** `data/Exportar.kt:615`, `:642` (solo con valencia) frente al diccionario, `ui/pantallas/Explorar.kt:111` y `widget/Widgets.kt:144`, `:337` (todos).
+- **Qué pasa:** `asegurar()` (`ui/QuickActivity.kt:262-266`) crea el registro sin valencia si lo primero que se toca es una emoción.
+- **Por qué importa:** criterios (b) y (e).
+- **Gravedad:** Baja.
+- **Propuesta:** P-10.
+
+### H-9-11 · Cambiar los ajustes de avisos a mitad del día deja un número de avisos que no corresponde a ningún plan
+- **Dónde:** `ui/pantallas/Sistema.kt:381-384` (vacía el plan); `avisos/Trabajo.kt:101-110` (las claves ya disparadas siguen).
+- **Qué pasa:** el día mezcla dos planes.
+- **Por qué importa:** condiciona el registro de P-10.
+- **Gravedad:** Baja.
+- **Propuesta:** documentar (P-10).
+
+### H-9-12 · El mapa de ánimo de R incluye el seguimiento privado
+- **Dónde:** `vestigium.R`, `vm_mapa_animo` (`:427-431`) y `vm_guardar_graficas` (`:542`).
+- **Qué pasa:** recaídas, libido e impulsos con coordenadas se pintan con la valencia del día y se guardan como imagen.
+- **Por qué importa:** criterios (c) y (a).
+- **Gravedad:** Baja.
+- **Propuesta:** P-05.
+
+### H-9-13 · Tomas de MacroFactor sin hora legible se pierden de los modelos
+- **Dónde:** `data/Sustancias.kt:101-103`, `:111-112`.
+- **Qué pasa:** `msDe` devuelve vacío y la toma no entra en `cafeina_total_mg` ni en `alcohol_bebidas`, aunque sí en `cafeina_mg` y `alcohol_g`.
+- **Por qué importa:** criterio (a); dos totales del mismo día no cuadran.
+- **Gravedad:** Baja.
+- **Propuesta:** P-20.
+
+### H-9-14 · La caché de dosis no se refresca al reimportar comidas
+- **Dónde:** `ciencia/Estadistica.kt:621`.
+- **Qué pasa:** la clave usa el número de días de nutrición, no su contenido.
+- **Por qué importa:** cifras de sustancias viejas tras corregir MacroFactor.
+- **Gravedad:** Baja.
+- **Propuesta:** P-21.
+
+### H-9-15 · La regla de «día libre» está escrita en cinco lugares
+- **Dónde:** `ciencia/Analisis.kt:212`, `ui/pantallas/Analisis.kt:368`, `vestigium.R:103`, `:305`, `:436`.
+- **Qué pasa:** cualquier cambio (festivos, por ejemplo) debe tocarlos todos.
+- **Por qué importa:** si no se tocan todos, aparece un desacuerdo entre la app y R, criterio (b).
+- **Gravedad:** Baja.
+- **Propuesta:** P-19.
+
+### H-9-16 · `ejercicio_min` y `distancia_km` quedan vacíos cuando se sabe que fueron 0
+- **Dónde:** `ciencia/Estadistica.kt:408` y `kmPorDia` (`:898-914`).
+- **Qué pasa:** los días con reloj y sin sesión, o con ubicaciones y sin movimiento, no tienen valor.
+- **Por qué importa:** criterios (a) y (e); esas variables nunca comparan «moverse» con «no moverse», y los promedios por día se inflan (`ciencia/TusNumeros.kt:54-55`, `:84`).
+- **Gravedad:** Media.
+- **Propuesta:** P-15.
+
+### H-9-17 · `alcohol` (0/1) con dos reglas de día
+- **Dónde:** `ciencia/Estadistica.kt:606` frente a `:637`.
+- **Qué pasa:** un episodio que cruza las 5:00 marca dos días.
+- **Por qué importa:** criterio (a) menor.
+- **Gravedad:** Baja.
+- **Propuesta:** P-20.
+
+### H-9-18 · R analiza variables de calendario y de cobertura como si fueran conductas
+- **Dónde:** `vestigium.R:103`, `:197` (`vm_relaciones`, `vm_factores`).
+- **Qué pasa:** `fin_de_semana`, `con_diario` y `n_muestreos` no están en las exclusiones.
+- **Por qué importa:** criterio (b); relaciones triviales o artefactos en la lista de R.
+- **Gravedad:** Baja.
+- **Propuesta:** P-32.
+
+### H-9-19 · `n_momentos` de `vm_panel` incluye recaídas y libido sin decirlo
+- **Dónde:** `data/Exportar.kt:613`, `:635`; `Diccionario.kt`.
+- **Qué pasa:** el conteo mezcla momentos privados con los demás, y el diccionario no lo aclara.
+- **Por qué importa:** interpretación en R.
+- **Gravedad:** Baja.
+- **Propuesta:** P-28.
+
+### H-9-20 · Claves repetidas en el diccionario describen mal columnas de la exportación
+- **Dónde:** `data/Diccionario.kt` (`D` es un `mapOf`: gana la última clave). Choques de `grado` (`:153`/`:243`), `antes` (`:37`/`:253`), `dia_logico` (`:64`/`:140`), `categoria`, `minutos` y `cantidad`.
+- **Qué pasa:** `vm_escalada_bloques.grado` se describe como «Con cuántas personas está unida en tu red»; `dia_logico`, en todas las tablas, como el día del gasto.
+- **Por qué importa:** criterio (a); el diccionario es la referencia para leer los datos en R.
+- **Gravedad:** Baja.
+- **Propuesta:** P-28.
+
+### H-9-21 · Las etiquetas del sueño sin símbolo cuentan como personas
+- **Dónde:** `ciencia/Dinamicas.kt:114`.
+- **Qué pasa:** todo lo que no empieza con `#` se toma como persona en `per_`, aunque la interfaz acepta etiquetas sin símbolo; `Personas.menciones` solo cuenta las que llevan @.
+- **Por qué importa:** criterio (a); personas inventadas en `per_`.
+- **Gravedad:** Baja.
+- **Propuesta:** P-25.
+
+### H-9-22 · Los vínculos declarados no pasan por las equivalencias
+- **Dónde:** `data/Lote3.kt:206-209`, `:230-231`.
+- **Qué pasa:** tras unir dos nombres, el alias sigue como un nodo aparte con 0 días en la Red y en `vm_red_*`.
+- **Por qué importa:** criterio (a) leve.
+- **Gravedad:** Baja.
+- **Propuesta:** P-25.
+
+### H-9-23 · `vm_red()` falla si no hay ningún par
+- **Dónde:** `vestigium.R:491-493`.
+- **Qué pasa:** con `vm_red_vinculos.csv` vacío, `vm_leer` devuelve `NULL` y la función da un error poco claro.
+- **Por qué importa:** el script de R no es robusto con pocos datos.
+- **Gravedad:** Baja.
+- **Propuesta:** P-32.
+
+### H-9-24 · `pesoEn` no usa el peso más reciente
+- **Dónde:** `data/Sustancias.kt:136-140`.
+- **Qué pasa:** la báscula, aunque sea de hace años, le gana a MacroFactor de ayer; antes de la primera pesada se usan 70 kg aunque haya pesos posteriores.
+- **Por qué importa:** criterio (a); con 90 kg reales frente a 70, el máximo de alcohol estimado cambia un 48 %.
+- **Gravedad:** Media.
+- **Propuesta:** P-20.
+
+### H-9-25 · El diccionario de `vm_experimentos.csv` está vacío o mal
+- **Dónde:** `data/Diccionario.kt:183`.
+- **Qué pasa:** `accion` recibe la descripción de Google («visto, buscado, visitado u otro»); `inicio` dice solo «Inicio»; las demás columnas no tienen descripción.
+- **Por qué importa:** criterio (a) menor.
+- **Gravedad:** Baja.
+- **Propuesta:** P-28.
+
+### H-9-26 · La adherencia de la plantilla «Creatina» ya existe y no se usa
+- **Dónde:** `ciencia/Estadistica.kt:234` (`supl_creatina_tomado`); `data/Lote3.kt` (`Experimentos`).
+- **Qué pasa:** el registro de suplementos dice qué días se tomó, pero el experimento no lo muestra.
+- **Por qué importa:** criterio (e) débil.
+- **Gravedad:** Baja.
+- **Propuesta:** I-3 (en `revision_propuestas.md`).
+
+### H-9-27 · `momentos_intensidad` mezcla la intensidad del impulso con la de otros momentos
+- **Dónde:** `ciencia/Estadistica.kt:542-547`; escala del impulso en `ui/QuickActivity.kt:364`.
+- **Qué pasa:** el promedio mezcla escalas de momentos distintos, incluida la del impulso.
+- **Por qué importa:** interpretación; depende de la decisión D-1.
+- **Gravedad:** Baja.
+- **Propuesta:** documentar (no se verificó más allá de la lectura).
+
+### H-9-28 · Restaurar sobrescribe los experimentos enteros
+- **Dónde:** `data/Importar.kt:66`.
+- **Qué pasa:** a diferencia de días y momentos, un respaldo viejo reemplaza el experimento, y puede reactivar uno terminado.
+- **Por qué importa:** criterio (d); se vuelve grave si se agregan `fin` o `hecho`.
+- **Gravedad:** Baja (Media con P-12 o I-3).
+- **Propuesta:** P-08.
+
+### H-9-29 · Un experimento terminado sigue diciendo «SÍ toca» y cuenta como «en curso»
+- **Dónde:** `ui/pantallas/Lote3.kt:470-475`; `ui/pantallas/Explorar.kt:104`, `:456`.
+- **Qué pasa:** la tarjeta y Análisis no miran si el experimento terminó o el plan venció.
+- **Por qué importa:** criterio (a) menor.
+- **Gravedad:** Baja.
+- **Propuesta:** P-12.
+
+### H-9-30 · El aviso de diseño en bloque depende del diseño elegido, no del plan sorteado
+- **Dónde:** `ui/pantallas/Lote3.kt:487`.
+- **Qué pasa:** un sorteo libre que salió «SÍ SÍ SÍ no no no» recibe el aviso débil, como si fuera alterno.
+- **Por qué importa:** criterio (a).
+- **Gravedad:** Baja.
+- **Propuesta:** P-18.
+
+### H-9-31 · El resultado del experimento incluye el día de hoy
+- **Dónde:** `data/Lote3.kt:333-334`.
+- **Qué pasa:** entran datos incompletos de las variables que se acumulan (pantalla, pasos, enfoque).
+- **Por qué importa:** criterio (a); sesga hacia abajo el último día.
+- **Gravedad:** Baja.
+- **Propuesta:** P-18.
+
+### H-9-32 · «Aún no hay suficientes días» no distingue tres situaciones
+- **Dónde:** `ui/pantallas/Lote3.kt:479`.
+- **Qué pasa:** el mismo mensaje sirve para «espera», «este plan nunca dará resultado» y «ya terminó».
+- **Por qué importa:** criterio (a); oculta H-7-1.
+- **Gravedad:** Baja.
+- **Propuesta:** P-18.
+
+### H-9-33 · Al restaurar, gastos e ingresos quedan distintos en la base y en la pantalla
+- **Dónde:** `data/Repo.kt:240-244`, `:252-256`.
+- **Qué pasa:** la lista en memoria y la base no se igualan; al reiniciar aparece en silencio la versión del respaldo.
+- **Por qué importa:** criterio (d).
+- **Gravedad:** Media.
+- **Propuesta:** P-08.
+
+### H-9-34 · Una campaña aceptada a mitad de semana cuenta los días anteriores
+- **Dónde:** `ciencia/Campanas.kt`, `estado()`.
+- **Qué pasa:** no se guarda cuándo se aceptó; una campaña puede ganarse en el acto de aceptarla.
+- **Por qué importa:** criterio (a).
+- **Gravedad:** Baja.
+- **Propuesta:** P-11 (paso B).
+
+### H-9-35 · Desactivar un hábito anula sus campañas ganadas y los logros de campañas
+- **Dónde:** `ciencia/Campanas.kt:35`, `:39`.
+- **Qué pasa:** el cálculo es retroactivo: lo ganado deja de contar.
+- **Por qué importa:** criterios (a) y (d).
+- **Gravedad:** Baja.
+- **Propuesta:** P-11 (paso B).
+
+### H-9-36 · «Abandonar» una campaña la borra sin rastro, y restaurar la resucita
+- **Dónde:** `ui/pantallas/Campanas.kt:163`; `data/Importar.kt:131`.
+- **Qué pasa:** la campaña abandonada desaparece de la historia; un respaldo viejo la trae de vuelta.
+- **Por qué importa:** criterio (d); la variable de campaña de P-11 no podría saber que existió.
+- **Gravedad:** Baja.
+- **Propuesta:** P-11 (paso B).
+
+### H-9-37 · Activar el cifrado borra en Drive todas las copias en claro sin avisar
+- **Dónde:** `data/Drive.kt:113`.
+- **Qué pasa:** el historial de 8 copias semanales y 12 mensuales en claro se elimina al activar la contraseña.
+- **Por qué importa:** criterio (d); por un momento no queda ninguna copia vieja.
+- **Gravedad:** Baja–Media.
+- **Propuesta:** P-09.
+
+### H-9-38 · El hábito ligado a las recaídas aparece por su nombre en salidas comunes
+- **Dónde:** `reportes/Reportes.kt:634`; `ciencia/Logros.kt` (`c_hab_*`); `ciencia/Campanas.kt` (retos `habito:*`); widget de hábitos; «Tu año».
+- **Qué pasa:** el seguimiento privado se cuela por la vía de un hábito normal.
+- **Por qué importa:** criterio (c).
+- **Gravedad:** Media.
+- **Propuesta:** P-03.
+
+### H-9-39 · Tres nociones de «privado» que no coinciden con la regla declarada
+- **Dónde:** `data/Modelo.kt:160` (`Momento.privado`); el grupo «Privado» de `Estadistica.variables()`; `Config.seguimiento_privado`; regla declarada en `CLAUDE.md` y en `ciencia/Periodo.kt:17`.
+- **Qué pasa:** cada salida filtra con una noción distinta. Por los huecos pasan impulsos, medicamentos, el hábito ligado y los textos de las recaídas (sección 3.1 de `revision_propuestas.md`).
+- **Por qué importa:** criterio (c); es la causa común de H-6-1, H-8-1, H-8-2, H-8-3, H-8-16, H-9-1 y H-9-38.
+- **Gravedad:** Alta.
+- **Propuesta:** P-01 a P-03 (decisiones D-1 y D-2).
+
+### H-9-40 · Desde el modo «por semana», tocar una relación abre la ficha por día
+- **Dónde:** `ui/pantallas/Explorar.kt:99`.
+- **Qué pasa:** la ficha que se abre muestra un análisis distinto del que se tocó.
+- **Por qué importa:** confusión menor.
+- **Gravedad:** Baja.
+- **Propuesta:** documentar.
