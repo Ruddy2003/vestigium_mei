@@ -232,6 +232,8 @@ fun PantallaRecaidas(nav: Nav) {
         Ayuda((if (c.seguimiento_privado) "${r.totalDias} días con recaída de ${r.diasConRespuesta} días con seguimiento. " else "") +
             "Para cruzar esto con sueño, pantalla o ánimo, usa tu exportación en R (vm_panel_extendido.csv: impulso, recaida, n_recaida, n_impulso, libido_max, medicamentos_n, med_…, det_…).",
             Modifier.padding(top = 12.dp))
+        // Lo privado borrado se recupera aquí, nunca en la papelera general (N-14).
+        ListaPapelera(privado = true)
     }
 }
 

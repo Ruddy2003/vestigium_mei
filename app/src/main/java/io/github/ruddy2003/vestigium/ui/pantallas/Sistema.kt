@@ -520,6 +520,8 @@ fun PantallaDatos(nav: Nav) {
     Hoja("Datos", nav.atras, "Todo lo que guarda la app, listo para R.") {
         msg?.let { Aviso(it) }
         if (ocupado) Ayuda("Trabajando…", Modifier.padding(top = 8.dp))
+        // Lo borrado en los últimos 7 días (N-14).
+        Tarjeta(Modifier.padding(top = 10.dp)) { io.github.ruddy2003.vestigium.ui.FilaMenu("Papelera", "Lo que borraste en los últimos 7 días, para recuperarlo") { nav.ir("papelera") } }
         Seccion("Recordatorios de importación", "Un solo aviso a la semana con lo que toca importar. Cada fuente se puede posponer o apagar.", plegable = true) {
             RecordatoriosImportacion { id ->
                 when (id) {

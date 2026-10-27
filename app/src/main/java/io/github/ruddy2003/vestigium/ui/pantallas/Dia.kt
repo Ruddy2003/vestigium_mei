@@ -60,6 +60,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.ciencia.Movilidad
@@ -178,7 +180,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         val tema = est.tema
         fun abrirCalendario() { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (apilado) TextButton(onClick = nav.atras, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) {
+            if (apilado) TextButton(onClick = nav.atras, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+                modifier = Modifier.semantics { contentDescription = "Volver" }) {
                 Text("←", style = MaterialTheme.typography.titleLarge)
             }
             // «Hoy» cuando es hoy; «Día» en otra fecha (N-23). El nombre del tema y el español en la misma línea (P-1).
@@ -212,7 +215,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
 
         // Estado del día, con flechas pequeñas (también se cambia de día deslizando a los lados).
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { irA(Fechas.sumar(fecha, -1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) { Text("‹", style = MaterialTheme.typography.titleLarge) }
+            TextButton(onClick = { irA(Fechas.sumar(fecha, -1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+                modifier = Modifier.semantics { contentDescription = "Día anterior" }) { Text("‹", style = MaterialTheme.typography.titleLarge) }
             Text("estado = ", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(when { sucio -> "guardando…"; guardado != null -> "guardado"; else -> "vacío" } + (if (guardado?.retroactivo == true) " · retroactivo" else ""),
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
@@ -227,7 +231,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
             if (r >= 2) Text("  ·  racha $r", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.weight(1f))
             if (!esHoy) TextButton(onClick = { irA(hoy) }) { Text("hoy", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
-            TextButton(onClick = { irA(Fechas.sumar(fecha, 1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) { Text("›", style = MaterialTheme.typography.titleLarge) }
+            TextButton(onClick = { irA(Fechas.sumar(fecha, 1)) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
+                modifier = Modifier.semantics { contentDescription = "Día siguiente" }) { Text("›", style = MaterialTheme.typography.titleLarge) }
         }
         // Semana corta: solo cuatro cifras y tres botones.
         if (esHoy && c.semana_corta) { SemanaCorta(d) { abrirNoche() }; return@Hoja }
@@ -342,6 +347,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
             is io.github.ruddy2003.vestigium.data.Ingreso -> DialogoIngreso(x) { abierto = null }
             is io.github.ruddy2003.vestigium.data.TomaSuplemento -> DialogoToma(x) { abierto = null }
             is io.github.ruddy2003.vestigium.data.Nota -> DialogoNota(x) { abierto = null }
+            is io.github.ruddy2003.vestigium.data.Visita -> DialogoVisita(x) { abierto = null }
         }
 
     }
@@ -565,7 +571,7 @@ fun PantallaNoche(nav: Nav) {
         Seccion("Lo que leí o vi hoy", "Toca la portada de lo que le dedicaste tiempo hoy: libro, serie, película, juego o artículo.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             ObrasDeHoy(fecha, nav)
         }
-        if (ver("foto")) Seccion("Foto del día", "Mantén presionada una foto para elegirla como la foto del día: sale en el calendario, en la biblioteca del diario y en el widget. Tócala para verla.", numero = n(), plegable = true, plegadaPorDefecto = true) {
+        if (ver("foto")) Seccion("Foto del día", "Toca «elegir» (o mantén presionada la foto) para que sea la foto del día: sale en el calendario, en la biblioteca del diario y en el widget. Tócala para verla.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
         }
         // Medicamentos, impulsos, recaídas y libido se anotan y se ven solo en la pantalla Privado.
@@ -799,6 +805,8 @@ private fun Imagenes(fecha: String, elegida: String?, nav: Nav, onElegir: (Strin
     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         items(orden, key = { it.id }) { f ->
             val sel = f.uri.toString() == elegida
+            // Elegir también con un botón visible, no solo manteniendo presionado (N-24).
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.size(96.dp).clip(RoundedCornerShape(3.dp))
                 .border(if (sel) 2.dp else 1.dp, if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, RoundedCornerShape(3.dp))
                 .combinedClickable(
@@ -811,6 +819,10 @@ private fun Imagenes(fecha: String, elegida: String?, nav: Nav, onElegir: (Strin
                 if (f.tipo == "captura") Text("cap", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.align(Alignment.TopStart).background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.55f)).padding(horizontal = 3.dp))
                 if (sel) Text("★", color = MaterialTheme.colorScheme.primary, modifier = Modifier.align(Alignment.TopEnd).padding(3.dp))
+            }
+            TextButton(onClick = { onElegir(f.uri.toString()) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) {
+                Text(if (sel) "quitar" else "elegir", style = MaterialTheme.typography.labelMedium)
+            }
             }
         }
     }
@@ -900,6 +912,11 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
             val s = io.github.ruddy2003.vestigium.data.Suplementos.de(t.suplemento)
             add(Fila(Fechas.millis(t.ts), Fechas.horaDe(t.ts), "${s?.nombre ?: t.suplemento} · ${cifra(t.cantidad)} ${s?.unidad ?: ""}".trim()) { abrir(t) })
         }
+        // Las visitas a tus lugares, por día lógico: tocar una dice «fue en…» o «no estuve aquí» (N-05).
+        Repo.visitas.filter { Fechas.diaLogicoDeMillis(Fechas.millis(it.entrada)) == fecha }.forEach { v ->
+            val l = Repo.lugares.firstOrNull { it.id == v.lugar }
+            add(Fila(Fechas.millis(v.entrada), Fechas.horaDe(v.entrada), "En ${l?.nombre ?: "un lugar quitado"}" + (v.salida?.let { " hasta las ${Fechas.horaDe(it)}" } ?: "")) { abrir(v) })
+        }
         // Las notas van a la hora en que se escribieron si fue ese mismo día; si no, al final.
         Repo.notas.filter { it.fecha == fecha }.forEach { n ->
             val ms = Fechas.millis(n.creada)
@@ -909,7 +926,7 @@ private fun TuDia(fecha: String, nav: Nav, numero: Int, guardarAntes: () -> Unit
         }
     }.sortedBy { it.ms }
     var agregar by remember(fecha) { mutableStateOf(false) }
-    Seccion("Tu día", "La línea de 24 horas y todo lo que anotaste, por hora. Toca una fila para corregirla.", numero = numero, plegable = true,
+    Seccion("Tu día", "La línea de 24 horas y todo lo que anotaste o registró el teléfono en tus lugares, por hora. Toca una fila para corregirla.", numero = numero, plegable = true,
         resumen = if (filas.isEmpty()) "Nada anotado con hora" else "${filas.size} ${if (filas.size == 1) "registro" else "registros"} con hora") {
         LineaDelTiempo(fecha)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {

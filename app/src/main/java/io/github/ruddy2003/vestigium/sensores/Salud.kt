@@ -182,8 +182,12 @@ object Salud {
             val ventana = TimeRangeFilter.between(d.minusDays(1).atTime(12, 0).atZone(zona).toInstant(), fin)
             var bloqueNoche: Bloque? = null
             intentar("sueño", HealthPermission.getReadPermission(SleepSessionRecord::class)) {
-                val todas = leer(cliente, SleepSessionRecord::class, ventana).filter { it.endTime.atZone(zona).toLocalDate() == d && it.endTime > it.startTime }
-                if (s.sueno_manual) { s = s.copy(sueno_fuentes = todas.map { "${fuente(it.metadata.dataOrigin.packageName)} ${hm(it.startTime, zona)}–${hm(it.endTime, zona)} · ${it.stages.size} etapas" }); return@intentar }
+                val leidas = leer(cliente, SleepSessionRecord::class, ventana).filter { it.endTime.atZone(zona).toLocalDate() == d && it.endTime > it.startTime }
+                fun clave(ses: SleepSessionRecord) = "${fuente(ses.metadata.dataOrigin.packageName)} ${hm(ses.startTime, zona)}–${hm(ses.endTime, zona)}"
+                // Lo que marcaste «no cuenta» (la siesta del sofá, una noche que no fue tuya) no entra en la cuenta (N-04).
+                val noCuentan = leidas.filter { clave(it) in s.sueno_descartadas }
+                val todas = leidas - noCuentan.toSet()
+                val fuentesNoCuentan = noCuentan.map { "${clave(it)} · ${it.stages.size} etapas · no cuenta" }
                 // Una sola fuente por noche: la que trae etapas (Samsung Health primero). Así no se suma la misma noche dos veces.
                 val porFuente = todas.groupBy { it.metadata.dataOrigin.packageName }
                 val elegida = porFuente.maxByOrNull { (pkg, l) ->
@@ -209,7 +213,14 @@ object Salud {
                         principal?.sesiones?.contains(ses) == true -> "noche"
                         else -> "siesta"
                     }
-                    "${fuente(ses.metadata.dataOrigin.packageName)} ${hm(ses.startTime, zona)}–${hm(ses.endTime, zona)} · ${ses.stages.size} etapas · $estado"
+                    "${clave(ses)} · ${ses.stages.size} etapas · $estado"
+                } + fuentesNoCuentan
+                // Con la noche corregida a mano, la noche no se toca, pero las siestas sí se vuelven a contar (antes se congelaban, H-NAV-3).
+                if (s.sueno_manual) {
+                    // La variabilidad y el oxígeno de la noche se leen en tus horas corregidas, no en las del reloj.
+                    bloqueNoche = null
+                    s = s.copy(sueno_fuentes = fuentes, siesta_reloj_min = siestas.sumOf { noche(it).asleep }.takeIf { it > 0 }?.let { Math.round(it / 60.0).toInt() })
+                    return@intentar
                 }
                 if (principal != null) {
                     val nn = noche(principal)

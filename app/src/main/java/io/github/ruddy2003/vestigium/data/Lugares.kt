@@ -103,6 +103,15 @@ object Lugares {
         Repo.cambiarConfig { cc -> cc.copy(lugares_candidatos = cc.lugares_candidatos.map { if (Geo.distanciaM(it.lat, it.lon, cand.lat, cand.lon) <= 150.0) it.copy(proximo_ms = ahora + TRES_DIAS) else it }) }
     }
 
+    /** Las visitas con las de [de] pasadas a [a]; con [a] = null, sin ellas (al borrar un lugar, N-05). */
+    fun reasignar(visitas: List<Visita>, de: String, a: String?): List<Visita> =
+        if (a == null) visitas.filter { it.lugar != de } else visitas.map { if (it.lugar == de) it.copy(lugar = a) else it }
+
+    /** «Ignorar este sitio para siempre» para un lugar ya guardado: deja de preguntar en su radio. */
+    fun ignorarLugar(l: Lugar) {
+        Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados + LugarIgnorado(l.lat, l.lon, l.radio_m.coerceAtLeast(150), Fechas.diaLogico())) }
+    }
+
     /** Los que esperan respuesta (ya avisados y todavía sin decidir), del más reciente al más viejo. */
     fun pendientes(): List<CandidatoLugar> = Repo.config.lugares_candidatos.filter { it.preguntas in 1 until MAX_PREGUNTAS + 1 }.sortedByDescending { it.hasta_ms }
 

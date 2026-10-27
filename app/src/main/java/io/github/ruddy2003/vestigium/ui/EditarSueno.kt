@@ -56,8 +56,24 @@ fun EditarSueno(fecha: String, cerrar: () -> Unit) {
                     modifier = Modifier.padding(top = 10.dp))
                 if (s0.sueno_fuentes.isNotEmpty()) {
                     Etiqueta("Lo que llegó del reloj esa noche")
-                    s0.sueno_fuentes.forEach { Text("· $it", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                    Ayuda("Se suma una sola fuente por noche (la que trae etapas; Samsung Health primero). Lo que termina después del mediodía se cuenta como siesta.", Modifier.padding(top = 4.dp))
+                    // Cada sesión se puede marcar «no cuenta» (la siesta del sofá, una noche que no fue tuya); la sincronización lo respeta (N-04).
+                    s0.sueno_fuentes.forEach { f ->
+                        val k = io.github.ruddy2003.vestigium.data.claveFuenteSueno(f)
+                        val fuera = k in s0.sueno_descartadas
+                        androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Text("· $f", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+                            TextButton(onClick = {
+                                val app = ctx.applicationContext
+                                Repo.guardarSalud(s0.copy(sueno_descartadas = if (fuera) s0.sueno_descartadas - k else s0.sueno_descartadas + k))
+                                // Se vuelve a leer el reloj de esa noche para rehacer la cuenta sin (o con) esa sesión.
+                                if (!s0.sueno_manual) kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                                    runCatching { io.github.ruddy2003.vestigium.sensores.Salud.resincronizarDia(app, fecha) }
+                                }
+                            }) { Text(if (fuera) "sí cuenta" else "no cuenta", style = MaterialTheme.typography.labelMedium) }
+                        }
+                    }
+                    Ayuda("Se suma una sola fuente por noche (la que trae etapas; Samsung Health primero). Lo que termina después del mediodía se cuenta como siesta. " +
+                        "Lo que marques «no cuenta» no entra ni en la noche ni en las siestas.", Modifier.padding(top = 4.dp))
                 }
                 if (s0.sueno_manual) {
                     if (volver) {

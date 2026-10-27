@@ -17,6 +17,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -38,7 +41,10 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
          ajustes: (() -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (atras != null) TextButton(onClick = atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            // El texto cambia con el tema («← tornar», «cd ..»); para TalkBack siempre dice «Volver» (N-27).
+            if (atras != null) TextButton(onClick = atras, modifier = Modifier.semantics { contentDescription = "Volver" }) {
+                Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clearAndSetSemantics { })
+            }
         }
         if (encabezado != null) encabezado()
         else {
@@ -57,7 +63,9 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
                 )
                 val guia = LocalGuia.current
                 val seccionGuia = io.github.ruddy2003.vestigium.data.GuiaUso.PANTALLAS[titulo]
-                if (guia != null && seccionGuia != null) TextButton(onClick = { guia(seccionGuia) }) { Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) }
+                if (guia != null && seccionGuia != null) TextButton(onClick = { guia(seccionGuia) }, modifier = Modifier.semantics { contentDescription = "Ayuda de esta pantalla" }) {
+                    Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clearAndSetSemantics { })
+                }
                 if (buscar != null) BotonBuscar(onClick = buscar)
                 if (ajustes != null) BotonAjustes(Modifier.padding(start = 4.dp), onClick = ajustes)
                 BotonModo()

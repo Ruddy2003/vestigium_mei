@@ -1,6 +1,9 @@
 package io.github.ruddy2003.vestigium
 
+import io.github.ruddy2003.vestigium.data.Borrado
+import io.github.ruddy2003.vestigium.data.JSON
 import io.github.ruddy2003.vestigium.data.Momento
+import io.github.ruddy2003.vestigium.data.Papelera
 import io.github.ruddy2003.vestigium.data.Privado
 import io.github.ruddy2003.vestigium.data.privado
 import org.junit.Assert.assertEquals
@@ -28,5 +31,15 @@ class PrivadoPrueba {
         assertTrue(Privado.esVariable("hab_sin_x", "sin_x"))
         assertFalse(Privado.esVariable("hab_leer", "sin_x"))
         assertEquals(false, Privado.esVariable("hab_sin_x", null))
+    }
+
+    @Test fun laPapeleraGeneralNoMuestraLoPrivado() {
+        // Un impulso borrado va a la papelera de Privado y su texto no se lee en la lista (N-14).
+        val m = Momento("m1", "2026-10-20T22:00:00-06:00", "2026-10-20", "impulso", texto = "texto inventado")
+        val b = Borrado("momentos", "m1", JSON.encodeToString(Momento.serializer(), m), "2026-10-21T08:00:00-06:00")
+        assertTrue(Papelera.esPrivado(b))
+        assertFalse(Papelera.describir(b).contains("texto inventado"))
+        val a = m.copy(id = "m2", tipo = "animo")
+        assertFalse(Papelera.esPrivado(Borrado("momentos", "m2", JSON.encodeToString(Momento.serializer(), a), "2026-10-21T08:00:00-06:00")))
     }
 }

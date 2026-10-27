@@ -63,10 +63,13 @@ fun PantallaAnno(nav: Nav) {
     val pre = "$anio-"
     val oscuro = esOscuro()
     val vacio = MaterialTheme.colorScheme.surfaceVariant
+    val marco = MaterialTheme.colorScheme.onSurface
     val mu = remember(anio, Repo.momentos.size) { Repo.momentos.filter { it.fecha.startsWith(pre) && it.esAnimo && it.valencia != null }.groupBy { it.fecha } }
     fun valencia(f: String): Double? = Repo.dias[f]?.valencia?.toDouble() ?: mu[f]?.mapNotNull { it.valencia }?.average()
 
-    Hoja("Tu año", nav.atras, subtitulo = "Todo el año de un vistazo. Toca un cuadro para abrir ese día.") {
+    // El primer toque dice qué día es y su ánimo; el segundo (o «abrir») lo abre (N-27).
+    var tocado by remember(anio) { mutableStateOf<String?>(null) }
+    Hoja("Tu año", nav.atras, subtitulo = "Todo el año de un vistazo. Toca un cuadro para ver su día y su ánimo; tócalo otra vez para abrirlo.") {
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = { anio-- }, shape = RoundedCornerShape(4.dp)) { Text("‹", fontSize = 18.sp) }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -89,7 +92,10 @@ fun PantallaAnno(nav: Nav) {
                         detectTapGestures { p ->
                             val cw = size.width / 31f; val ch = size.height / 12f
                             val d = (p.x / cw).toInt() + 1; val m = (p.y / ch).toInt() + 1
-                            if (m in 1..12 && d in 1..YearMonth.of(anio, m).lengthOfMonth()) Seleccion.abrir(nav, "%04d-%02d-%02d".format(anio, m, d))
+                            if (m in 1..12 && d in 1..YearMonth.of(anio, m).lengthOfMonth()) {
+                                val f = "%04d-%02d-%02d".format(anio, m, d)
+                                if (tocado == f) Seleccion.abrir(nav, f) else tocado = f
+                            }
                         }
                     }) {
                         val cw = size.width / 31f; val ch = size.height / 12f
@@ -100,7 +106,18 @@ fun PantallaAnno(nav: Nav) {
                                 drawRect(Tonos.valencia(v, oscuro) ?: vacio, Offset((d - 1) * cw, (m - 1) * ch), Size(cw - 2f, ch - 2f))
                             }
                         }
+                        tocado?.let { f ->
+                            val m = f.substring(5, 7).toInt(); val d = f.substring(8, 10).toInt()
+                            drawRect(marco, Offset((d - 1) * cw - 1f, (m - 1) * ch - 1f), Size(cw, ch), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+                        }
                     }
+                }
+            }
+            tocado?.let { f ->
+                Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(Fechas.titulo(f) + " · " + (valencia(f)?.let { "ánimo ${"%.1f".format(it)}/7" } ?: "sin ánimo anotado"),
+                        style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
+                    androidx.compose.material3.TextButton(onClick = { Seleccion.abrir(nav, f) }) { Text("abrir →") }
                 }
             }
         }

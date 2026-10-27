@@ -24,6 +24,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -110,7 +115,18 @@ fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modi
     val sentir = rememberSentir()
     Column(modifier) {
         Text("más energía ↑", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-        Canvas(Modifier.fillMaxWidth().aspectRatio(1.25f).padding(vertical = 4.dp).pointerInput(Unit) {
+        // Para TalkBack (N-27): qué es, qué tiene marcado y cuatro acciones para moverse sin ver la cuadrícula.
+        val v0 = valencia ?: 4; val a0 = activacion ?: 4
+        Canvas(Modifier.fillMaxWidth().aspectRatio(1.25f).padding(vertical = 4.dp).semantics {
+            contentDescription = "Cuadrícula de ánimo: de izquierda a derecha, de desagradable a agradable; de abajo arriba, de menos a más energía"
+            stateDescription = if (valencia == null) "sin marcar" else "agrado $valencia de 7, energía ${activacion ?: "sin marcar"} de 7"
+            customActions = listOf(
+                CustomAccessibilityAction("más agradable") { onCambio((v0 + 1).coerceAtMost(7), a0); true },
+                CustomAccessibilityAction("menos agradable") { onCambio((v0 - 1).coerceAtLeast(1), a0); true },
+                CustomAccessibilityAction("más energía") { onCambio(v0, (a0 + 1).coerceAtMost(7)); true },
+                CustomAccessibilityAction("menos energía") { onCambio(v0, (a0 - 1).coerceAtLeast(1)); true },
+            )
+        }.pointerInput(Unit) {
             detectTapGestures { o ->
                 val v = (o.x / size.width * 7).toInt().coerceIn(0, 6) + 1
                 val a = 7 - (o.y / size.height * 7).toInt().coerceIn(0, 6)

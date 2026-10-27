@@ -57,7 +57,7 @@ fun PantallaMas(nav: Nav) {
     val abrir = remember { androidx.compose.runtime.mutableStateListOf(0, 0, 0, 0) }
     val alcance = androidx.compose.runtime.rememberCoroutineScope()
     Hoja("Más", nav.atras, buscar = { nav.ir("buscar") }) {
-        val indice = listOf("Registros" to 12, "Gente" to 6, "Medir" to 9, "Sistema" to 11)
+        val indice = listOf("Registros" to 12, "Gente" to 6, "Medir" to 9, "Sistema" to 12)
         FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             indice.forEachIndexed { i, (t, n) ->
                 Ficha("${i + 1} $t · $n", false) { abrir[i]++; alcance.launch { kotlinx.coroutines.delay(150); req[i].bringIntoView() } }
@@ -150,6 +150,8 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMas("datos", "Datos", "Exportar a R, Google Drive, respaldos, importar", ir)
                 HorizontalDivider()
+                FilaMas("papelera", "Papelera", "Lo que borraste en los últimos 7 días, para recuperarlo", ir)
+                HorizontalDivider()
                 FilaMas("estado_datos", "Estado de los datos", "Qué fuentes registraron hoy, qué permiso falta y el último respaldo", ir)
                 HorizontalDivider()
                 FilaMas("cobertura", "Cobertura de variables", "Cuántos días tiene cada variable y cuánto falta para 30", ir)
@@ -163,8 +165,7 @@ fun PantallaMas(nav: Nav) {
                 FilaMas("guia", "Cómo leer tus datos", "Qué mide cada cosa, de dónde viene y por qué", ir)
             }
         }
-        Ayuda("Atajo: mantén presionada una pestaña. Hoy abre la hoja de la noche; Diario y ⊕, el ánimo; Vida, el resumen semanal; Análisis, el buscador (que también encuentra pantallas). " +
-            "Tocar la pestaña en la que ya estás te sube al inicio (en Hoy, además, te regresa a hoy).", Modifier.padding(top = 16.dp))
+        TextButton(onClick = { nav.ir("guia_uso:atajos") }, modifier = Modifier.padding(top = 12.dp)) { Text("Atajos, corregir y deshacer →") }
         Ayuda("vestigium mei · schema_v = ${io.github.ruddy2003.vestigium.data.SCHEMA_V} · ${io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico())}", Modifier.padding(top = 16.dp))
     }
 }

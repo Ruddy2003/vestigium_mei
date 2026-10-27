@@ -465,9 +465,15 @@ data class SaludDia(
     /** Oxígeno mínimo y frecuencia cardiaca media durante el sueño de la noche. */
     val spo2_min: Double? = null,
     val fc_sueno: Double? = null,
-    /** Lo que llegó del reloj y dijiste que no cuenta (v14): la descripción de cada fuente, como en [sueno_fuentes]. */
+    /** Lo que llegó del reloj y dijiste que no cuenta (v14): la clave de cada sesión ([claveFuenteSueno]: fuente y horas). */
     val sueno_descartadas: List<String> = emptyList(),
 )
+
+/**
+ * La clave estable de una sesión de sueño del reloj: «Samsung Health 23:10–07:05», sin las etapas ni el estado (noche,
+ * siesta…), que cambian de una lectura a otra. Con ella se recuerda lo que marcaste «no cuenta» (N-04).
+ */
+fun claveFuenteSueno(descripcion: String): String = descripcion.substringBefore(" · ").trim()
 
 @Serializable
 data class PantallaDia(

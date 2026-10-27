@@ -126,6 +126,7 @@ object Pantallas {
         P("avisos", "Avisos y recordatorios", "Ánimo, diario, sueño, cuestionarios", "notificaciones"),
         P("privacidad", "Privacidad", "Huella, modo discreto, seguimiento privado", "bloqueo huella discreto"),
         P("datos", "Datos", "Exportar a R, Drive, respaldos, importar", "exportar respaldo drive importar csv r"),
+        P("papelera", "Papelera", "Lo que borraste en los últimos 7 días, para recuperarlo", "papelera borrado recuperar deshacer basura"),
         P("estado_datos", "Estado de los datos", "Qué fuentes registraron hoy y qué permiso falta", "sensores permisos sincronizar"),
         P("reportes", "Reportes", "Semanal en imagen, mensual en PDF", "pdf"),
         P("permisos", "Permisos y sensores", "Ubicación, reloj, pantalla, fotos", "permisos"),

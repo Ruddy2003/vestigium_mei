@@ -1219,8 +1219,12 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                         },
                     )
                 }
-                if (sugerencias.isNotEmpty() || dictado) FlowRow(Modifier.fillMaxWidth().background(p.color.copy(alpha = 0.92f)).padding(horizontal = 12.dp, vertical = 6.dp),
+                // Abajo, junto al teclado, también está «guardar»: con el texto largo, el de arriba queda lejos del pulgar (N-27).
+                FlowRow(Modifier.fillMaxWidth().background(p.color.copy(alpha = 0.92f)).padding(horizontal = 12.dp, vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(textoBoton ?: textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
+                        modifier = Modifier.background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }
+                            .padding(horizontal = 14.dp, vertical = 8.dp))
                     if (dictado) BotonDictado { t -> val nuevo = (campo.text + " " + t).trim(); campo = TextFieldValue(nuevo, TextRange(nuevo.length)); onCambio(nuevo) }
                     sugerencias.forEach { s ->
                         Ficha(s, false) {

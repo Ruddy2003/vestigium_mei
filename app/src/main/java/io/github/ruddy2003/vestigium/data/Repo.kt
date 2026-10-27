@@ -305,6 +305,28 @@ object Repo {
     }
     fun borrarLugar(id: String) { aPapelera("lugares", id); db.borrar("lugares", id); enMain { lugares = lugares.filter { it.id != id } } }
 
+    /** Borra un lugar y decide qué pasa con sus visitas: pasarlas a [pasarA] o, con null, quitarlas (N-05). */
+    fun borrarLugar(id: String, pasarA: String?) {
+        val suyas = visitas.filter { it.lugar == id }
+        db.transaccion {
+            suyas.forEach { v ->
+                if (pasarA == null) db.borrar("visitas", v.id)
+                else db.poner("visitas", v.id, v.entrada.take(10), JSON.encodeToString(Visita.serializer(), v.copy(lugar = pasarA)))
+            }
+        }
+        enMain { visitas = Lugares.reasignar(visitas, id, pasarA) }
+        borrarLugar(id)
+    }
+
+    /** Corrige una visita (por ejemplo, «fue en…» otro lugar). */
+    fun guardarVisita(v: Visita) {
+        db.poner("visitas", v.id, v.entrada.take(10), JSON.encodeToString(Visita.serializer(), v))
+        enMain { visitas = (visitas.filter { it.id != v.id } + v).sortedBy { it.entrada } }
+    }
+
+    /** «No estuve aquí»: quita una visita. */
+    fun borrarVisita(id: String) { db.borrar("visitas", id); enMain { visitas = visitas.filter { it.id != id } } }
+
     @Synchronized
     fun entrada(lugarId: String, ts: String) {
         if (visitas.any { it.lugar == lugarId && it.salida == null }) return

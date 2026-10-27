@@ -175,3 +175,17 @@ Salen de `docs/navegacion/revision_navegacion.md`. Decisiones del autor del 27 o
 
 **Efectos al leer los datos:** ninguno en lo que se guarda. Una persona agregada a mano entra en «Tu gente» sin días hasta que la menciones.
 
+## Revisión de navegación · Entrega N7 (corregir lo automático, papelera, gestos y accesibilidad)
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.57 | En la corrección del sueño, cada sesión del reloj tiene «no cuenta» / «sí cuenta»; la sincronización la respeta y un respaldo no la borra. Con la noche corregida a mano, las siestas se vuelven a contar | `ui/EditarSueno.kt`, `sensores/Salud.kt`, `data/Modelo.kt` (`claveFuenteSueno`), `data/Fusion.kt` | N-04, H-NAV-3 |
+| D.58 | Lugares: renombrar, cambiar el radio (agrandarlo busca visitas de 30 días), ignorar para siempre y quitar decidiendo qué pasa con sus visitas. En «Tu día», cada visita se corrige («fue en…» o «no estuve aquí») | `ui/pantallas/Medir.kt` (`DialogoVisita`), `data/Repo.kt` (`borrarLugar(id, pasarA)`, `guardarVisita`, `borrarVisita`), `data/Lugares.kt` (`reasignar`, `ignorarLugar`), `ui/pantallas/Dia.kt` | N-05, H-NAV-4 |
+| D.59 | La papelera tiene pantalla (Más → Datos → Papelera, y en el buscador); lo privado borrado solo se recupera en Privado | `ui/pantallas/Papelera.kt`, `data/Papelera.kt`, `ui/pantallas/Recaidas.kt` | N-14, P-9 |
+| D.60 | Gestos con alternativa visible: «elegir» en la foto del día, «＋ lugar aquí» en el mapa, − / + / «todo» en el mapa para rascar, flechas y pausa en Tu año en historias, y una sección «Atajos, corregir y deshacer» en la guía | `ui/pantallas/Dia.kt`, `ui/pantallas/Mapa.kt`, `ui/pantallas/Mundo.kt`, `ui/pantallas/TuAnio.kt`, `data/GuiaUso.kt` | N-24, P-7 |
+| D.61 | Accesibilidad: la cuadrícula de ánimo se describe y se mueve con acciones de TalkBack; lupa y modo con 48 dp de toque; «Volver» fijo para TalkBack; «guardar» también abajo en el escritor; en Tu año, el primer toque dice el día y su ánimo | `ui/Selectores.kt`, `ui/Decoracion.kt`, `ui/Hoja.kt`, `ui/Libros.kt`, `ui/pantallas/Anno.kt` | N-27, P-10 |
+
+**Efectos al leer los datos:**
+- `sueno_min` y `siesta_reloj_min` pueden cambiar en los días donde marques «no cuenta», y `siesta_reloj_min` deja de congelarse en las noches corregidas.
+- Las variables de lugar (`en_casa_min`, minutos por tipo, `lugares_distintos`) cambian en los días cuyas visitas corrijas o reasignes.
+

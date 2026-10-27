@@ -73,6 +73,13 @@ object GuiaUso {
             "Escribir la misma persona de dos formas (@ana y @anita): en Tu gente, «¿son la misma persona?» las une.",
             "Dejar de importar: el aviso semanal te recuerda MacroFactor, Cold Turkey y Takeout.",
         )),
+        Seccion("atajos", "Atajos, corregir y deshacer", listOf(
+            "Mantén presionada una pestaña de abajo: Hoy abre «Llenar el día»; Diario y ⊕, el ánimo; Vida, el resumen semanal; Análisis, el buscador. Tocar la pestaña en la que ya estás te sube al inicio (en Hoy, además, te regresa a hoy).",
+            "Casi todo se corrige donde se ve: toca una cifra del tablero, una fila de «Tu día», un gasto o una toma. «＋ agregar a este día» anota con la fecha ya puesta.",
+            "Lo que borras se puede deshacer unos segundos con la barra de abajo, y se queda 7 días en la papelera (Más → Datos → Papelera). Lo privado borrado se recupera en Privado.",
+            "El buscador encuentra pantallas y también acciones: «corregir sueño», «suplemento de ayer», «ponerte al día».",
+            "Antes de las 5:00 lo que anotas va al día anterior (los días empiezan a las 5:00); la app lo dice en palabras. El sueño va al día en que despiertas.",
+        )),
         Seccion("lista", "Lista rápida", listOf(
             "Mañana: sueño (texto primero) y suplementos.",
             "Durante el día: «Ánimo ahora» cuando te avisa; enfoque con el cronómetro; momentos que valgan la pena.",

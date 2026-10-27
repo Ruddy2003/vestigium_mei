@@ -1137,6 +1137,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** `siesta_reloj_min` entra al panel y a los modelos de sueño (capítulo 4, sección del sueño; capítulo 5). Un falso positivo no se puede limpiar.
 - **Gravedad:** Media.
 - **Propuesta:** N-04 (descartar una siesta en `EditarSueno`). Obliga a guardar qué se descartó y sube `SCHEMA_V`.
+- **Estado:** Resuelto en la entrega N7 de la revisión de navegación (esquema 14): «no cuenta» en cada sesión del reloj (`sueno_descartadas`) y las siestas se vuelven a contar aunque la noche esté corregida.
 
 ### H-NAV-4 · Las visitas no se corrigen, y borrar un lugar las deja huérfanas
 - **Dónde:** `data/Repo.kt:305` (`borrarLugar` no toca las visitas); `ui/pantallas/Medir.kt:288-295` (de un lugar solo se cambia el tipo o se borra); `ui/pantallas/Dia.kt:620` («?» para una visita sin lugar); `data/Lugares.kt:140`.
@@ -1144,6 +1145,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** las variables de lugar (`en_casa_min`, minutos por tipo, `lugares_distintos`; H-1-2) cuentan visitas mal asignadas, y las huérfanas desaparecen de unas variables pero no de otras.
 - **Gravedad:** Media.
 - **Propuesta:** N-05 (renombrar, cambiar el radio, reasignar o quitar una visita; al borrar un lugar, decidir qué pasa con sus visitas).
+- **Estado:** Resuelto en la entrega N7 de la revisión de navegación: renombrar, radio, ignorar; visitas con «fue en…» y «no estuve aquí»; al quitar un lugar, sus visitas pasan a otro o se quitan. Queda abierto que «no estuve aquí» no se recuerda (ver capítulo 4).
 
 ### H-NAV-5 · La corrección manual del sueño se puede perder sin aviso
 - **Dónde:** `ui/EditarSueno.kt:63-67` («quitar la corrección y volver a lo del reloj»: un toque, sin confirmar); `sensores/Salud.kt:226-231` (si el reloj no tiene esa noche, la relectura deja `sueno_min = null`); `data/Importar.kt:72` (restaurar un respaldo reemplaza el registro de salud del día).

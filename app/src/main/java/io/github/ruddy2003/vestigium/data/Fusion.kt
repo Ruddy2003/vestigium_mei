@@ -25,9 +25,12 @@ object Fusion {
      * el sueño que corregiste aquí a mano: ese no lo pisa un respaldo que no lo tenía corregido.
      */
     fun salud(aqui: SaludDia?, respaldo: SaludDia): SaludDia {
-        if (aqui == null || !aqui.sueno_manual || respaldo.sueno_manual) return respaldo
+        if (aqui == null) return respaldo
+        // Lo que dijiste que no cuenta se respeta venga de donde venga (N-04).
+        val descartadas = (respaldo.sueno_descartadas + aqui.sueno_descartadas).distinct()
+        if (!aqui.sueno_manual || respaldo.sueno_manual) return respaldo.copy(sueno_descartadas = descartadas)
         return respaldo.copy(sueno_min = aqui.sueno_min, sueno_inicio = aqui.sueno_inicio, sueno_fin = aqui.sueno_fin,
             sueno_despierto_min = aqui.sueno_despierto_min, sueno_profundo_min = aqui.sueno_profundo_min, sueno_rem_min = aqui.sueno_rem_min,
-            sueno_ligero_min = aqui.sueno_ligero_min, sueno_manual = true)
+            sueno_ligero_min = aqui.sueno_ligero_min, sueno_manual = true, sueno_descartadas = descartadas)
     }
 }
