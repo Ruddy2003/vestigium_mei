@@ -201,6 +201,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** contamina una variable pensada como comparable entre días.
 - **Gravedad:** Baja–Media.
 - **Propuesta:** mostrar el cierre solo si `fecha` es el día lógico actual (o marcar los cierres tardíos).
+- **Estado:** Resuelto en la entrega N4 de la revisión de navegación: el cierre va al principio de la hoja y solo en la del día de hoy (`cierrePermitido`).
 
 ### H-2-9 · Editar un registro de ánimo no deja rastro
 - **Dónde:** `ui/pantallas/Momentos.kt`, `DialogoMomento`; modelo `Momento` sin sello de edición.
@@ -223,6 +224,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** reduce la independencia entre `valencia` y `muestreo_valencia`; posible sesgo leve en la activación.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar, o mostrar los avisos después de elegir la valencia y usar una paleta secuencial para la activación.
+- **Estado:** Resuelto en la entrega N4 de la revisión de navegación: los avisos se ven después de elegir la valencia y la activación usa la paleta secuencial.
 
 ### H-2-12 · Prueba de reacción: diferencias con la PVT
 - **Dónde:** `ui/pantallas/Medir.kt`, `PantallaReaccion`.

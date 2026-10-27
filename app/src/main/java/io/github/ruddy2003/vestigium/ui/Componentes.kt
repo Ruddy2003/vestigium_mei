@@ -294,12 +294,13 @@ fun Clave(clave: String, valor: String, ancho: Int = 14) {
 }
 
 @Composable
-fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null, onCambio: (Int?) -> Unit) {
+fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null, secuencial: Boolean = false, onCambio: (Int?) -> Unit) {
     val sentir = rememberSentir()
     val oscuro = esOscuro()
     val n = hasta - desde + 1
-    // Las escalas desde 0 son de intensidad (dolor, impulso); las demás van de desagradable a agradable.
-    fun tono(i: Int): Color = if (desde == 0) Tonos.secuencial((i - desde).toFloat() / (n - 1), oscuro) else Tonos.divergente((i - desde).toFloat() / (n - 1), oscuro)
+    // Las escalas desde 0 son de intensidad (dolor, impulso), igual que las [secuencial] (la activación: más energía no es
+    // «mejor»); las demás van de desagradable a agradable.
+    fun tono(i: Int): Color = if (desde == 0 || secuencial) Tonos.secuencial((i - desde).toFloat() / (n - 1), oscuro) else Tonos.divergente((i - desde).toFloat() / (n - 1), oscuro)
     val actual by androidx.compose.runtime.rememberUpdatedState(valor)
     Column {
         // Se puede tocar un número o deslizar el dedo sobre la fila.

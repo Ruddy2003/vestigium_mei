@@ -266,7 +266,7 @@ object Faltas {
 }
 
 @Composable
-fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav) {
+fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav, compacto: Boolean = false) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var version by remember { mutableStateOf(0) }
@@ -274,6 +274,14 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav) {
     var msg by remember { mutableStateOf<String?>(null) }
     if (faltas.isEmpty() && msg == null) return
     val hoy = Fechas.diaLogico()
+    // En Hoy, solo un contador que se despliega (N-16).
+    var abierto by remember { mutableStateOf(!compacto) }
+    if (!abierto) {
+        TextButton(onClick = { abierto = true }) {
+            Text(if (faltas.size == 1) "1 dato que falta →" else "${faltas.size} datos que faltan →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.error)
+        }
+        return
+    }
     Tarjeta(Modifier.padding(top = 10.dp)) {
         Text(Estilo.seccion("Datos que faltan", null).first, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
         faltas.forEachIndexed { i, f ->
@@ -402,8 +410,10 @@ val METRICAS = listOf(
 val TABLERO_INICIAL = listOf("sueno", "animo", "pasos", "pantalla", "gasto", "kcal")
 
 @Composable
-fun Tablero(fecha: String, tocar: (String) -> Unit = {}) {
+fun Tablero(fecha: String, max: Int? = null, tocar: (String) -> Unit = {}) {
     var editando by remember { mutableStateOf(false) }
+    // Con [max], solo las primeras cifras y «ver todo» (N-16).
+    var todo by remember { mutableStateOf(max == null) }
     val elegidas = Repo.config.tablero.ifEmpty { TABLERO_INICIAL }
     // Lo que sale de la base (kilómetros, canciones) se lee una vez para las cinco semanas alrededor.
     val extra by produceState(emptyMap<String, Map<String, Double>>(), fecha) {
@@ -415,12 +425,17 @@ fun Tablero(fecha: String, tocar: (String) -> Unit = {}) {
             )
         }
     }
-    val lista = elegidas.mapNotNull { id -> METRICAS.firstOrNull { it.id == id } }
+    val completa = elegidas.mapNotNull { id -> METRICAS.firstOrNull { it.id == id } }
+    val lista = if (todo || max == null) completa else completa.take(max)
     lista.chunked(2).forEach { par ->
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             par.forEach { m -> TarjetaMetrica(m, fecha, extra, Modifier.weight(1f)) { tocar(m.id) } }
             if (par.size == 1) Spacer(Modifier.weight(1f))
         }
+    }
+    if (!todo && completa.size > lista.size) {
+        TextButton(onClick = { todo = true }) { Text("ver todo (${completa.size}) ▾", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
+        return
     }
     TextButton(onClick = { editando = !editando }) {
         Text(if (editando) "listo" else "editar tablero", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -639,5 +654,118 @@ fun Portada(uri: String?) {
     if (uri == null) return
     Box(Modifier.fillMaxWidth().padding(top = 10.dp).clip(RoundedCornerShape(6.dp))) {
         Miniatura(android.net.Uri.parse(uri), 900, Modifier.fillMaxWidth().aspectRatio(1.9f))
+    }
+}
+
+// =====================================================================
+//  Tus últimos días (N-28)
+// =====================================================================
+
+/**
+ * «Tus últimos días»: los 13 días anteriores y hoy como hilos verticales, en lugar del personaje.
+ * - Color: la valencia del día, con la paleta divergente del calendario (`Tonos.valencia`).
+ * - Alto: las horas de sueño de esa noche frente a tu normal (promedio de los 28 días anteriores; 7 h si hay menos de 5).
+ * - Remate: un sello si el día tiene valencia y diario; un punto si solo tiene diario. Un día sin nada queda hueco.
+ * - Hoy se va llenando (sueño → ánimo → diario) y no muestra su color hasta tener valencia y diario, para no influir en
+ *   cómo lo calificas (capítulo 3, sección 3.14). Por lo mismo, la franja no sale en la hoja de la noche.
+ * Solo usa la valencia, el sueño y si hay diario: nada privado. Cada tema la dibuja a su manera.
+ */
+@Composable
+fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
+    if (!Repo.config.personaje) return
+    val oscuro = esOscuro()
+    val cs = MaterialTheme.colorScheme
+    val tema = Estilo.tema
+    val dias = (13 downTo 0).map { Fechas.sumar(hoy, -it.toLong()) }
+    val normal = (1..28).mapNotNull { Repo.salud[Fechas.sumar(hoy, -it.toLong())]?.sueno_min }.takeIf { it.size >= 5 }?.average() ?: 420.0
+    val oro = Tonos.secuencial(1f, oscuro)
+    val letras = listOf("L", "M", "M", "J", "V", "S", "D")
+    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        Etiqueta("Tus últimos días")
+        Row(Modifier.fillMaxWidth().height(118.dp).padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            dias.forEach { f ->
+                val d = Repo.dias[f]
+                val esHoy = f == hoy
+                val conDiario = d?.nota?.isNotBlank() == true
+                val completo = d?.valencia != null && conDiario
+                val sueno = Repo.salud[f]?.sueno_min
+                val alto = ((sueno?.div(normal))?.toFloat() ?: 0.8f).coerceIn(0.45f, 1.25f) / 1.25f
+                val color = if (esHoy && !completo) null else Tonos.valencia(d?.valencia?.toDouble(), oscuro)
+                val avance = if (!esHoy) 0f else listOf(d?.sueno_calidad != null || sueno != null, d?.valencia != null, conDiario).count { it } / 3f
+                val marca = if (completo) 2 else if (conDiario) 1 else 0
+                Canvas(Modifier.weight(1f).fillMaxHeight().clickable { abrir(f) }) {
+                    val w = size.width; val h = size.height
+                    val remate = 14.dp.toPx()
+                    val barH = (h - remate) * alto
+                    val top = h - barH
+                    val borde = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx())
+                    val linea = if (esHoy) cs.primary else cs.outline
+                    when (tema) {
+                        // Columnas: fuste, capitel y basa.
+                        TemaId.ROMANO -> {
+                            val fx = w * 0.18f; val fw = w * 0.64f; val cap = 3.dp.toPx()
+                            if (color != null) drawRect(color, Offset(fx, top + cap), Size(fw, barH - 2 * cap)) else drawRect(linea, Offset(fx, top + cap), Size(fw, barH - 2 * cap), style = borde)
+                            if (color != null) for (k in 1..2) drawLine(Color.Black.copy(alpha = 0.18f), Offset(fx + fw * k / 3, top + cap), Offset(fx + fw * k / 3, h - cap), 1.dp.toPx())
+                            drawRect(color ?: linea, Offset(0f, top), Size(w, cap), style = if (color == null) borde else androidx.compose.ui.graphics.drawscope.Fill)
+                            drawRect(color ?: linea, Offset(0f, h - cap), Size(w, cap), style = if (color == null) borde else androidx.compose.ui.graphics.drawscope.Fill)
+                        }
+                        // Barras con líneas de escaneo.
+                        TemaId.CIBER -> {
+                            if (color != null) {
+                                drawRect(color, Offset(0f, top), Size(w, barH))
+                                var y = top + 2.dp.toPx()
+                                while (y < h) { drawLine(Color.Black.copy(alpha = 0.28f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() }
+                            } else drawRect(linea, Offset(0f, top), Size(w, barH), style = borde)
+                        }
+                        // Franjas iluminadas: arco arriba y filete dorado.
+                        TemaId.MEDIEVAL, TemaId.GOTICO -> {
+                            val r = CornerRadius(w / 2, w / 2)
+                            if (color != null) {
+                                drawRoundRect(color, Offset(0f, top), Size(w, barH), r)
+                                drawRoundRect(oro, Offset(0f, top), Size(w, barH), r, style = androidx.compose.ui.graphics.drawscope.Stroke(1.5.dp.toPx()))
+                            } else drawRoundRect(linea, Offset(0f, top), Size(w, barH), r, style = borde)
+                        }
+                        else -> {
+                            val r = CornerRadius(3.dp.toPx(), 3.dp.toPx())
+                            if (color != null) drawRoundRect(color, Offset(0f, top), Size(w, barH), r) else drawRoundRect(linea, Offset(0f, top), Size(w, barH), r, style = borde)
+                        }
+                    }
+                    // Hoy: se llena desde abajo con lo que ya anotaste, sin el color del ánimo.
+                    if (esHoy && color == null && avance > 0f) drawRect(cs.primary.copy(alpha = 0.35f), Offset(0f, h - barH * avance), Size(w, barH * avance))
+                    val cx = w / 2; val cy = remate / 2
+                    when (marca) {
+                        2 -> { drawCircle(if (tema == TemaId.MEDIEVAL || tema == TemaId.GOTICO) oro else cs.primary, w.coerceAtMost(remate) * 0.42f, Offset(cx, cy))
+                               drawCircle(cs.background, w.coerceAtMost(remate) * 0.16f, Offset(cx, cy)) }
+                        1 -> drawCircle(cs.onSurfaceVariant, 2.dp.toPx(), Offset(cx, cy))
+                    }
+                }
+            }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            dias.forEach { f ->
+                Text(letras[Fechas.parse(f).dayOfWeek.value - 1], style = MaterialTheme.typography.labelSmall, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    color = if (f == hoy) cs.primary else cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+            }
+        }
+        // La semana en una línea, contra la anterior. Hoy cuenta solo si ya tiene valencia y diario.
+        fun valencias(desde: Int, hasta: Int) = (desde..hasta).mapNotNull { k ->
+            val f = Fechas.sumar(hoy, -k.toLong()); val d = Repo.dias[f]
+            if (k == 0 && (d?.valencia == null || d.nota.isBlank())) null else d?.valencia
+        }
+        val esta = valencias(0, 6).takeIf { it.isNotEmpty() }?.average()
+        val antes = valencias(7, 13).takeIf { it.isNotEmpty() }?.average()
+        val sueno = (0..6).mapNotNull { Repo.salud[Fechas.sumar(hoy, -it.toLong())]?.sueno_min }.takeIf { it.isNotEmpty() }?.average()?.toInt()
+        val faltan = Pendientes.faltantes(hoy).size
+        val partes = listOfNotNull(
+            esta?.let { e -> "ánimo ${"%.1f".format(e)}" + (antes?.let { a -> val x = e - a; if (abs(x) >= 0.05) " (${if (x > 0) "↑" else "↓"}${"%.1f".format(abs(x))})" else "" } ?: "") },
+            sueno?.let { "sueño ${it / 60} h ${"%02d".format(it % 60)}" },
+        )
+        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (partes.isEmpty()) "Esta semana todavía no hay datos." else "esta semana: " + partes.joinToString(" · "),
+                style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+            if (faltan > 0) TextButton(onClick = ponerse) {
+                Text(if (faltan == 1) "1 día sin llenar →" else "$faltan días sin llenar →", style = MaterialTheme.typography.labelMedium, color = cs.primary)
+            }
+        }
     }
 }

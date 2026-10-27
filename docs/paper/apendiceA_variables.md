@@ -483,7 +483,7 @@ La exportación genera 50 tablas CSV con datos (48 hasta el esquema 12; el 13 ag
 | `vm_momentos.csv`, `vm_gastos.csv`, `vm_ingresos.csv` | `ts_creado`, `ts_editado` | Cuándo se anotó y cuándo se corrigió por última vez. Vacíos en los registros de antes del esquema 14 |
 | `vm_sustancias.csv`, `vm_tramos.csv`, `vm_suplementos.csv` | `ts_creado` | Cuándo se anotó. En `vm_suplementos.csv` va también `ts` (cuándo se tomó); las porciones estimadas de probióticos quedan vacías |
 | `vm_gastos.csv` | `subcategoria` | Subcategoría dentro de la categoría (por ejemplo, Comida → Café). Vacía = sin subcategoría |
-| `vm_dias.csv`, `vm_panel.csv` | `version_noche` | Con qué orden de preguntas se llenó la hoja de la noche: 1 = el de hasta el esquema 14; 2 = el orden nuevo (N-18), cuando entre. Vacío = no pasó por la hoja o es de antes |
+| `vm_dias.csv`, `vm_panel.csv` | `version_noche` | Con qué orden de preguntas se llenó la hoja de la noche: 1 = el de hasta el esquema 14; 2 = el orden nuevo (N-18, desde la entrega N4: el ánimo del momento primero; capítulo 3, sección 3.7.1). Vacío = no pasó por la hoja o es de antes |
 | `vm_salud.csv` | `sueno_descartadas` | Lo que llegó del reloj esa noche y marcaste que no cuenta (lista) |
 
 **Cómo leer `ts_creado`.** La hora de un registro (`ts`, `inicio` o `fecha` + `hora`) dice **cuándo pasó**; `ts_creado`, **cuándo lo anotaste**. La diferencia dice si se anotó en el momento o después. En R, `vm_retraso(tabla, umbral_min = 60)` la calcula (`retraso_min`) y marca `tarde` si pasó más del umbral o cayó en otro día lógico (Apéndice C). El umbral es **[Diseño propio]**.

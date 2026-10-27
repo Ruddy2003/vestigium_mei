@@ -10,6 +10,9 @@ import io.github.ruddy2003.vestigium.data.SCHEMA_V
 import io.github.ruddy2003.vestigium.data.SaludDia
 import io.github.ruddy2003.vestigium.data.Subcategoria
 import io.github.ruddy2003.vestigium.data.TomaSuplemento
+import io.github.ruddy2003.vestigium.data.VERSION_NOCHE
+import io.github.ruddy2003.vestigium.data.cierrePermitido
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -42,5 +45,14 @@ class EsquemaCatorcePrueba {
         val b = Borrado("gastos", "g2", JSON.encodeToString(Gasto.serializer(), g), "2026-10-22T10:00:00-06:00")
         val b2 = JSON.decodeFromString(Borrado.serializer(), JSON.encodeToString(Borrado.serializer(), b))
         assertEquals(g, JSON.decodeFromString(Gasto.serializer(), b2.json))
+    }
+
+    @Test fun nocheConElOrdenNuevo() = assertEquals(2, VERSION_NOCHE)
+
+    @Test fun cierreSoloHoy() {
+        // El «cómo estás ahora» de la noche solo va en la hoja de hoy; en un día pasado no se ofrece (H-2-8).
+        assertTrue(cierrePermitido("2026-10-27", hoy = "2026-10-27"))
+        assertFalse(cierrePermitido("2026-10-26", hoy = "2026-10-27"))
+        assertFalse(cierrePermitido("2026-10-28", hoy = "2026-10-27"))
     }
 }

@@ -138,6 +138,13 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         if (titulo in Repo.config.plegadas) Repo.cambiarConfig { cc -> cc.copy(plegadas = cc.plegadas - titulo) }
         scope.launch { kotlinx.coroutines.delay(120); r.bringIntoView() }
     }
+    /** «Ponerte al día»: la hoja de la noche del día más viejo que falta, y de ahí al siguiente (N-09). */
+    fun ponerte() {
+        val faltan = Pendientes.faltantes(hoy)
+        if (faltan.isEmpty()) return
+        if (sucio) { Repo.guardarDia(d); sucio = false }
+        Seleccion.ponerse = faltan; Seleccion.noche = faltan.first(); Seleccion.seccion = "Ánimo y cuerpo"; nav.ir("noche")
+    }
     /** Abre la hoja de la noche de este día, opcionalmente en una sección. */
     fun abrirNoche(sec: String? = null) {
         if (sucio) { Repo.guardarDia(d); sucio = false }
@@ -194,9 +201,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         fun n() = ++k
         val ahora = java.time.LocalTime.now().hour
         val esHoy = fecha == hoy
-        // El día se ordena según la hora: en la mañana manda el sueño; desde unas horas antes de tu diario, la hoja de la noche.
+        // El orden es el mismo a cualquier hora; solo en la mañana sube el sueño, si falta (N-16).
         val manana = esHoy && ahora in 5..11
-        val nocheYa = !esHoy && fecha < hoy || esHoy && (ahora >= (c.hora_diario - 4).coerceAtLeast(14) || ahora < 5)
 
         // Estado del día, con flechas pequeñas (también se cambia de día deslizando a los lados).
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -221,8 +227,9 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         if (esHoy && c.semana_corta) { SemanaCorta(d) { abrirNoche() }; return@Hoja }
         // La frase, siempre arriba, justo debajo del estado.
         FraseDelDia(fecha)
+        // En lugar del personaje: tus últimos días, de un vistazo (N-28). Tocar un día lo abre; hoy abre «Llenar el día».
+        if (esHoy) FranjaDias(hoy, abrir = { f -> if (f == hoy) abrirNoche() else { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.abrir(nav, f) } }) { ponerte() }
         if (esHoy) SugerirSemanaCorta(hoy)
-        if (esHoy) LoDeAnoche()
 
         val bloqueSueno: @Composable () -> Unit = {
         Seccion("Sueño", "Llénalo apenas despiertes. El resto, en la noche.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqSueno), plegable = true) {
@@ -254,20 +261,14 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
                 }
             }
         }
+        // «Te falta hoy» y lo que se contesta ahí mismo: lo de anoche, el experimento, los datos que faltan y «¿quién es?» (N-16).
         val pendientes: @Composable () -> Unit = {
             if (esHoy) {
-                // Diario y predicción ya los muestra la tarjeta de la noche; aquí no se repiten.
+                LoDeAnoche()
                 TeFaltaHoy(d, hoy, setOf("p:diario", "p:prediccion")) { a ->
                     when (a) {
                         "ayer" -> irA(Fechas.sumar(hoy, -1))
-                        // Ponerte al día: la hoja de la noche del día más viejo que falta, y de ahí al siguiente (N-09).
-                        "ponerse" -> {
-                            val faltan = Pendientes.faltantes(hoy)
-                            if (faltan.isNotEmpty()) {
-                                if (sucio) { Repo.guardarDia(d); sucio = false }
-                                Seleccion.ponerse = faltan; Seleccion.noche = faltan.first(); Seleccion.seccion = "Ánimo y cuerpo"; nav.ir("noche")
-                            }
-                        }
+                        "ponerse" -> ponerte()
                         "sueno" -> mostrar("Sueño", reqSueno)
                         "diario" -> abrirNoche("Ánimo y cuerpo")
                         "prediccion" -> abrirNoche("Predicción")
@@ -278,23 +279,28 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
                         "reaccion" -> nav.ir("reaccion")
                     }
                 }
-                DatosQueFaltan(nav)
+            }
+            // También en los terminados, para contestar los días que quedaron sin respuesta (hasta su último día y nunca en el futuro).
+            Repo.experimentos.filter { Experimentos.cubre(it, fecha) && fecha <= Fechas.diaLogico() && !io.github.ruddy2003.vestigium.data.Privado.esVariable(it.resultado) }.forEach { e ->
+                AvisoExperimento(e, fecha)
+            }
+            if (esHoy) {
+                DatosQueFaltan(nav, compacto = true)
                 if (c.personas_pospuesto != hoy) TarjetaQuienEs(Modifier.padding(top = 10.dp), compacta = true) { nav.ir("personas") }
             }
         }
 
-        if (esHoy) io.github.ruddy2003.vestigium.ui.TarjetaPersonaje(hoy)
         if (esHoy && ahora < 5) Aviso("Pasa de medianoche: sigues llenando el día $fecha. Los días empiezan a las 5:00.")
         if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas, pero se marcará como escrito por adelantado.")
 
-        // 1. Lo de este momento del día.
-        if (manana) { bloqueSueno(); pendientes() }
-        else if (nocheYa) { TarjetaNoche(d, fecha, c) { abrirNoche() }; pendientes() }
-        else pendientes()
-
-        // 2. El tablero siempre a la vista, con los accesos de lo que se mide de vez en cuando.
+        // Lo diario en el primer alto, siempre en el mismo orden (N-16):
+        // 1. Lo que falta hoy.
+        pendientes()
+        // 2. Llenar el día.
+        TarjetaNoche(d, fecha, c) { abrirNoche() }
+        // 3. El tablero, compacto: las primeras cuatro cifras y «ver todo».
         Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores. Toca una para corregirla o ver de dónde sale.") {
-            Tablero(fecha) { id ->
+            Tablero(fecha, max = 4) { id ->
                 when (id) {
                     "sueno" -> editarSueno = true
                     "animo" -> abrirNoche("Ánimo y cuerpo")
@@ -305,35 +311,19 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
                 }
             }
         }
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            BotonSecundario("✎ cuestionarios", Modifier.weight(1f)) { nav.ir("escalas") }
-            BotonSecundario("⚡ reacción", Modifier.weight(1f)) { nav.ir("reaccion") }
-            BotonSecundario("◷ enfoque", Modifier.weight(1f)) {
-                ctx.startActivity(android.content.Intent(ctx, io.github.ruddy2003.vestigium.ui.QuickActivity::class.java)
-                    .putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.MODO, io.github.ruddy2003.vestigium.ui.QuickActivity.M_ENFOQUE).putExtra(io.github.ruddy2003.vestigium.ui.QuickActivity.ORIGEN, "app"))
-            }
-        }
-        if (!nocheYa) TarjetaNoche(d, fecha, c) { abrirNoche() }
+        // 4. En la mañana, si falta, la calidad del sueño.
+        val suenoArriba = manana && d.sueno_calidad == null
+        if (suenoArriba) bloqueSueno()
 
-        // 3. Lo que va pasando: una sola sección, y cada cosa se corrige al tocarla (N-17, N-26).
+        // Debajo: lo que va pasando (N-17), el sueño, los días especiales y este día hace un año.
         TuDia(fecha, nav, numero = n(), guardarAntes = { if (sucio) { Repo.guardarDia(d); sucio = false } }) { abierto = it }
-        if (!manana) bloqueSueno()
-
-        // 4. Recuerdos, días especiales y experimentos.
+        if (!suenoArriba) bloqueSueno()
         io.github.ruddy2003.vestigium.data.Especiales.de(fecha).takeIf { it.isNotEmpty() }?.let { l ->
             Aviso((if (esHoy) "Hoy: " else "Este día: ") + l.joinToString(" · ") { io.github.ruddy2003.vestigium.data.Especiales.frase(it) } + ".")
         }
         HaceUnAnio(fecha, nav)
-        // También en los terminados, para contestar los días que quedaron sin respuesta (hasta su último día y nunca en el futuro).
-        Repo.experimentos.filter { Experimentos.cubre(it, fecha) && fecha <= Fechas.diaLogico() && !io.github.ruddy2003.vestigium.data.Privado.esVariable(it.resultado) }.forEach { e ->
-            AvisoExperimento(e, fecha)
-        }
 
-        if (esHoy) TextButton(onClick = { Repo.cambiarConfig { it.copy(semana_corta = true) } }, modifier = Modifier.padding(top = 6.dp)) {
-            Text("pasar a la semana corta (solo lo mínimo)", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-
-        // 5. Lo automático, al fondo.
+        // Lo automático, al fondo.
         Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), autoPlegar = true,
             abrir = abrirTelefono, modifier = Modifier.bringIntoViewRequester(reqTelefono)) {
             Vestigios(fecha, nav)
@@ -357,8 +347,8 @@ private fun TarjetaNoche(d: Dia, fecha: String, c: io.github.ruddy2003.vestigium
     val activos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
     val hechos = activos.count { d.habitos[it.id] == true }
     val partes = listOf(
-        "ánimo" to (d.valencia != null), "diario" to d.nota.isNotBlank(), "predicción" to (d.prediccion_manana != null),
-    ) + (if (activos.isNotEmpty()) listOf("hábitos $hechos/${activos.size}" to (hechos == activos.size)) else emptyList())
+        "ánimo" to (d.valencia != null), "predicción" to (d.prediccion_manana != null),
+    ) + (if (activos.isNotEmpty()) listOf("hábitos $hechos/${activos.size}" to (hechos == activos.size)) else emptyList()) + listOf("diario" to d.nota.isNotBlank())
     val listo = d.valencia != null && d.nota.isNotBlank()
     Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(1.dp, if (listo) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
@@ -425,9 +415,9 @@ fun PantallaNoche(nav: Nav) {
     // Lo esencial, en orden: lo que falta se puede saltar con «siguiente».
     val habitosActivos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
     val pasos = listOfNotNull(
-        Triple("ánimo", d.valencia != null, reqAnimo), Triple("diario", d.nota.isNotBlank(), reqDiario),
+        Triple("ánimo", d.valencia != null, reqAnimo), Triple("predicción", d.prediccion_manana != null, reqPred),
         if (habitosActivos.isNotEmpty()) Triple("hábitos", habitosActivos.all { d.habitos[it.id] == true }, reqHabitos) else null,
-        Triple("predicción", d.prediccion_manana != null, reqPred),
+        Triple("diario", d.nota.isNotBlank(), reqDiario),
     )
     androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
     Hoja("Llenar el día", nav.atras,
@@ -467,6 +457,38 @@ fun PantallaNoche(nav: Nav) {
                 modifier = Modifier.weight(1f))
             TextButton(onClick = { cambiar(d.copy(dia_dificil = false)) }) { Text("quitar", style = MaterialTheme.typography.labelLarge) }
         }
+        // 1. El ánimo de este momento, antes de repasar el día: recordar y escribir lo cambian (N-18). Solo en la hoja de hoy:
+        //    en un día pasado se guardaría «ahora» con la fecha de otro día (H-2-8).
+        if (io.github.ruddy2003.vestigium.data.cierrePermitido(fecha))
+            Seccion("Cómo estás ahora", "Antes de repasar el día, con la hora de ahora. Se compara de un día a otro.", numero = n()) { BloqueCierre(fecha) }
+        // 2. El juicio general del día, antes de cualquier pregunta específica (Schwarz, Strack y Mai, 1991).
+        if (ver("ánimo")) Seccion("Ánimo y cuerpo", numero = n(), modifier = Modifier.bringIntoViewRequester(reqAnimo)) {
+            Tarjeta {
+                Etiqueta("Valencia · qué tan agradable fue el día")
+                Escala(d.valencia, 1, 7, Catalogo.ANCLAS["valencia"]) { cambiar(d.copy(valencia = it)) }
+                Etiqueta("Activación · tu nivel de energía")
+                // Paleta secuencial: más o menos energía no es «mejor» ni «peor» (H-2-11).
+                Escala(d.activacion, 1, 7, Catalogo.ANCLAS["activacion"], secuencial = true) { cambiar(d.copy(activacion = it)) }
+                Etiqueta("Dolor o molestia física")
+                Escala(d.dolor, 0, 5, Catalogo.ANCLAS["dolor"]) { cambiar(d.copy(dolor = it)) }
+                val mu = Repo.momentos.filter { it.fecha == fecha && it.esAnimo && it.valencia != null }
+                // Los avisos del día se ven solo después de elegir la valencia, para que no sirvan de ancla (H-2-11).
+                if (mu.isNotEmpty() && d.valencia != null) Clave("avisos", mu.joinToString("  ") { "${Fechas.horaDe(it.ts)}→${it.valencia}" })
+            }
+        }
+        // 3. La predicción, junto al juicio del día y antes de escribir.
+        if (ver("predicción")) Seccion("Predicción", "¿Cómo crees que estará tu ánimo mañana? La app medirá qué tan bien te conoces.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqPred)) {
+            Escala(d.prediccion_manana, 1, 7, Catalogo.ANCLAS["prediccion_manana"]) { cambiar(d.copy(prediccion_manana = it)) }
+        }
+        // 4 y 5. Hechos: contexto, hábitos y suplementos.
+        if (ver("contexto")) Seccion("Contexto", "Activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Catalogo.CONTEXTOS.forEach { o ->
+                    val activo = d.ctx[o.id] == true
+                    Ficha(o.nombre, activo) { cambiar(d.copy(ctx = if (activo) d.ctx - o.id else d.ctx + (o.id to true))) }
+                }
+            }
+        }
         Seccion("Hábitos", "Siempre aquí, para marcarlos al cerrar el día.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqHabitos)) {
             val activos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
             if (activos.isEmpty()) {
@@ -489,26 +511,7 @@ fun PantallaNoche(nav: Nav) {
         // Lo que tomaste ese día: sirve también para lo que olvidaste anotar (N-09, E-11). Tocar de nuevo lo quita.
         if (io.github.ruddy2003.vestigium.data.Suplementos.activos(c).isNotEmpty())
             Seccion("Suplementos de este día", "Toca lo que tomaste ese día; si ya está, tocarlo lo quita.", numero = n(), plegable = true) { SuplementosDelDia(fecha) }
-        if (ver("ánimo")) Seccion("Ánimo y cuerpo", numero = n(), modifier = Modifier.bringIntoViewRequester(reqAnimo)) {
-            Tarjeta {
-                Etiqueta("Valencia · qué tan agradable fue el día")
-                Escala(d.valencia, 1, 7, Catalogo.ANCLAS["valencia"]) { cambiar(d.copy(valencia = it)) }
-                Etiqueta("Activación · tu nivel de energía")
-                Escala(d.activacion, 1, 7, Catalogo.ANCLAS["activacion"]) { cambiar(d.copy(activacion = it)) }
-                Etiqueta("Dolor o molestia física")
-                Escala(d.dolor, 0, 5, Catalogo.ANCLAS["dolor"]) { cambiar(d.copy(dolor = it)) }
-                val mu = Repo.momentos.filter { it.fecha == fecha && it.esAnimo && it.valencia != null }
-                if (mu.isNotEmpty()) Clave("avisos", mu.joinToString("  ") { "${Fechas.horaDe(it.ts)}→${it.valencia}" })
-            }
-        }
-        if (ver("contexto")) Seccion("Contexto", "Activa todo lo que aplique. Pueden ser varios o ninguno.", numero = n()) {
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Catalogo.CONTEXTOS.forEach { o ->
-                    val activo = d.ctx[o.id] == true
-                    Ficha(o.nombre, activo) { cambiar(d.copy(ctx = if (activo) d.ctx - o.id else d.ctx + (o.id to true))) }
-                }
-            }
-        }
+        // 6. El diario, lo que más mueve el ánimo, al final de lo esencial.
         if (ver("diario")) Seccion("Diario", "Escribe libre. Usa @persona y #tema; abajo ves lo que se detecta y si alguna etiqueta parece error de dedo.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqDiario)) {
             // El diario es un objeto del tema (rollo, libro, carta…): al tocarlo se abre a pantalla completa para escribir.
             io.github.ruddy2003.vestigium.ui.ObjetoDiario(fecha, d.nota) { Repo.guardarDia(d); sucio = false; escribiendo = true }
@@ -523,17 +526,8 @@ fun PantallaNoche(nav: Nav) {
             }
             TextButton(onClick = { nav.ir("biblioteca_diario") }) { Text("abrir la biblioteca del diario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }
-        Seccion("Lo que leí o vi hoy", "Toca la portada de lo que le dedicaste tiempo hoy: libro, serie, película, juego o artículo.", numero = n(), plegable = true) {
-            ObrasDeHoy(fecha, nav)
-        }
-        if (ver("foto")) Seccion("Foto del día", "Mantén presionada una foto para elegirla como la foto del día: sale en el calendario, en la biblioteca del diario y en el widget. Tócala para verla.", numero = n(), plegable = true) {
-            Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
-        }
-        if (ver("predicción")) Seccion("Predicción", "¿Cómo crees que estará tu ánimo mañana? La app medirá qué tan bien te conoces.", numero = n(), modifier = Modifier.bringIntoViewRequester(reqPred)) {
-            Escala(d.prediccion_manana, 1, 7, Catalogo.ANCLAS["prediccion_manana"]) { cambiar(d.copy(prediccion_manana = it)) }
-        }
 
-        // Lo opcional: plegado hasta que lo abras.
+        // 7. Lo opcional, plegado y en orden fijo: lectura, lo mejor y lo peor, hitos, obras, foto y lo privado.
         Text("opcional", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 28.dp))
         Seccion("Lectura del día", "Tres preguntas de marcos científicos. Toca «cómo elegir» si dudas.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             Tarjeta {
@@ -562,12 +556,16 @@ fun PantallaNoche(nav: Nav) {
         Seccion("Hitos", "Lo que no pasa todos los días: un vuelo, un beso, una decisión importante. Una etiqueta corta por cosa.", numero = n(), plegable = true, plegadaPorDefecto = true) {
             ListaEtiquetas(d.hitos, "vuelo, beso, decision_importante", normalizar = { Texto.slug(it) }) { cambiar(d.copy(hitos = it)) }
         }
+        Seccion("Lo que leí o vi hoy", "Toca la portada de lo que le dedicaste tiempo hoy: libro, serie, película, juego o artículo.", numero = n(), plegable = true, plegadaPorDefecto = true) {
+            ObrasDeHoy(fecha, nav)
+        }
+        if (ver("foto")) Seccion("Foto del día", "Mantén presionada una foto para elegirla como la foto del día: sale en el calendario, en la biblioteca del diario y en el widget. Tócala para verla.", numero = n(), plegable = true, plegadaPorDefecto = true) {
+            Imagenes(fecha, d.foto, nav) { uri -> cambiar(d.copy(foto = if (d.foto == uri) null else uri)) }
+        }
         // Medicamentos, impulsos, recaídas y libido se anotan y se ven solo en la pantalla Privado.
         TextButton(onClick = { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.privado = fecha; nav.ir("recaidas") }) {
             Text("privado de este día →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        // El ánimo de ahora, con la hora real: la misma medición cada noche.
-        Seccion("Cómo estás ahora", "Al cerrar el día, con la hora de ahora. Se compara de un día a otro.", numero = n()) { BloqueCierre(fecha) }
         // Cerrar el día: guarda y, si está completo, lo sella con la huella.
         val faltan = listOfNotNull(if (d.valencia == null) "la valencia" else null, if (d.nota.isBlank()) "la nota del diario" else null)
         Spacer(Modifier.height(24.dp))

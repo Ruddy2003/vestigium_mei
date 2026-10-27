@@ -35,7 +35,7 @@
 
 ## 6.2 Mapa: qué análisis hay y con qué método
 
-La pantalla **Análisis** (`ui/pantallas/Explorar.kt`) tiene, de arriba abajo: «Cruzar dos variables», «Las relaciones más marcadas», «¿Qué tan bien te conoces?», «A qué hora aparecen tus emociones», «Ánimo según con quién estás», listas de personas, temas y lugares, y «Antes y después». Desde ahí se abren ocho **herramientas** (`ui/pantallas/Analisis.kt`). La tabla resume qué hace cada una y qué protecciones estadísticas aplica.
+La pantalla **Análisis** (`ui/pantallas/Explorar.kt`) tiene, de arriba abajo (desde la entrega N4 de la revisión de navegación): los experimentos, «Las relaciones más marcadas» (las 5 primeras, con «ver las siguientes»), las herramientas en fichas y, plegadas, «Cruzar dos variables», la cobertura, «¿Qué tan bien te conoces?», «A qué hora aparecen tus emociones», «Ánimo según con quién estás», listas de personas, temas y lugares, y «Antes y después». Desde ahí se abren ocho **herramientas** (`ui/pantallas/Analisis.kt`). La tabla resume qué hace cada una y qué protecciones estadísticas aplica.
 
 | Dónde | Función | Coeficiente o prueba | ¿Quita tendencia? | ¿Corrige por días parecidos? | ¿Corrige por muchas pruebas? | En R |
 |---|---|---|---|---|---|---|

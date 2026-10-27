@@ -135,3 +135,18 @@ Salen de `docs/navegacion/revision_navegacion.md`. Decisiones del autor del 27 o
 
 **Efectos al leer los datos:** más registros con fecha pasada, agregados desde el Día. Llevan `ts_creado`, así que `vm_retraso()` los separa (H-NAV-9).
 
+## Revisión de navegación · Entrega N4 (Hoy, la noche, Análisis y Vida)
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.44 | Hoy, a cualquier hora, en el mismo orden: fecha y estado, la frase, «Tus últimos días», lo que falta (con lo de anoche, el experimento, «¿quién es?» y un contador de datos que faltan), «Llenar el día», el tablero con 4 cifras y «ver todo», y en la mañana el sueño si falta. Debajo, «Tu día», el sueño y «hace un año». Salen el personaje, la fila «cuestionarios · reacción · enfoque» y «pasar a la semana corta» (que pasa a Apariencia) | `ui/pantallas/Dia.kt` (`PantallaDia`), `ui/pantallas/Hoy.kt` (`Tablero(max)`, `DatosQueFaltan(compacto)`), `ui/pantallas/Sistema.kt` | N-16, P-10 |
+| D.45 | «Tus últimos días»: 14 hilos con el color de la valencia, el alto del sueño frente a tu normal y un remate si el día está sellado. Hoy no se colorea hasta tener valencia y diario. Cada tema la dibuja a su manera. Se apaga en Apariencia (el ajuste del personaje) | `ui/pantallas/Hoy.kt` (`FranjaDias`) | N-28, P-10 |
+| D.46 | **La hoja de la noche cambia de orden (`VERSION_NOCHE = 2`)**: «cómo estás ahora» (solo hoy), ánimo y cuerpo, predicción, contexto, hábitos y suplementos, diario, y lo opcional plegado. Los avisos del día se ven después de elegir la valencia; la activación usa una paleta secuencial | `ui/pantallas/Dia.kt` (`PantallaNoche`), `data/Modelo.kt` (`VERSION_NOCHE`, `cierrePermitido`), `ui/Componentes.kt` (`Escala(secuencial)`), `ui/pantallas/Lote2.kt` (`BloqueCierre`) | N-18, P-8, H-2-8, H-2-11 |
+| D.47 | Análisis: arriba los experimentos y las relaciones más marcadas (5, con «ver las siguientes»); las herramientas en fichas; lo demás plegable. Las cifras van en una línea. Totales sale de Análisis | `ui/pantallas/Explorar.kt` | N-19 |
+| D.48 | Vida: Campañas y «Dinero y sustancias» arriba; las galerías (tu año, logros, mapas, obras, otras vidas) juntas y plegadas | `ui/pantallas/Vida.kt` | N-20 |
+
+**Efectos al leer los datos:**
+- **`version_noche` pasa de 1 a 2** desde esta versión. Los análisis que crucen la fecha (sobre todo valencia del día contra hábitos, y el cierre) deben leerse por tramo.
+- Ya no se crean cierres en días pasados.
+- La pregunta del experimento sube al primer alto de Hoy: se contestará más (H-NAV-9).
+

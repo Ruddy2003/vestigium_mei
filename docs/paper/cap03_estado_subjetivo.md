@@ -238,7 +238,27 @@ Ponerle palabras a una emoción (*affect labeling*) puede reducir su intensidad:
 
 ### 3.7.1 Qué contiene
 
-La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`) reúne en una página: hábitos (casillas; sin el hábito ligado a las recaídas), **ánimo y cuerpo** (valencia, activación, dolor), **contexto** del día (trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia; varios o ninguno), **diario** (texto libre con @personas y #temas), lo que leíste o viste, foto del día, **predicción** de mañana y, plegado como opcional: la «lectura del día», lo mejor y lo peor del día, hitos y medicamentos. Al final, el **cierre** («cómo estás ahora»).
+La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`) reúne en una página, **en este orden fijo** desde la entrega N4 de la revisión de navegación (`VERSION_NOCHE = 2`):
+
+1. **«Cómo estás ahora»** (el cierre, sección 3.7.5), solo en la hoja del día de hoy.
+2. **Ánimo y cuerpo** del día: valencia, activación y dolor.
+3. **Predicción** de mañana.
+4. **Contexto** del día (trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia; varios o ninguno).
+5. **Hábitos** (casillas; sin el hábito ligado a las recaídas) y **suplementos de este día**.
+6. **Diario** (texto libre con @personas y #temas) y con quién estuviste.
+7. Plegado, como opcional: la «lectura del día», lo mejor y lo peor, hitos, lo que leíste o viste, la foto del día y «privado de este día →».
+8. Sellar.
+
+«Solo lo que falta» oculta lo ya contestado, pero no cambia el orden.
+
+**Por qué este orden.** No hay un orden sin efectos: cada pregunta puede cambiar las que vienen después. Se eligió así:
+- **El ánimo del momento va primero.** Recordar a propósito lo que te pasó cambia el ánimo; de hecho, es una forma habitual de inducir un ánimo en el laboratorio (Westermann et al., 1996). Y ponerle nombre a lo que sientes al escribir baja la intensidad de la emoción (Lieberman et al., 2007). Con el cierre al final, medía cómo quedaste después de repasar y escribir el día, no cómo estabas.
+- **El juicio general del día va antes de las preguntas específicas.** Si primero se pregunta algo concreto («¿cumpliste tus hábitos?») y luego algo general («¿qué tan agradable fue el día?»), lo concreto se mete en el juicio general o se excluye de él, y cambia la relación entre las dos respuestas (Schwarz, Strack y Mai, 1991). El panel cruza justo la valencia con los hábitos.
+- **El costo.** Con el ánimo del momento primero, ese ánimo puede teñir el juicio del día: es el efecto de usar el ánimo como información (Schwarz y Clore, 1983). Se aceptó porque el cierre es el dato que se quiere proteger (momentáneo, comparable entre días), mientras que el juicio del día es retrospectivo y el ánimo del momento lo tiñe en cualquier orden. En ese mismo trabajo, cuando la persona se fija en su ánimo actual, este pesa menos en el juicio.
+
+Es una **[Aproximación]**: viene de estudios de encuestas y de laboratorio, no de una prueba con esta app. Para verlo en tus datos, cada día guarda `version_noche` (1 = el orden de antes: hábitos, ánimo, contexto, diario, obras, foto, predicción, lo opcional y el cierre al final; 2 = el nuevo). Así se pueden comparar los dos tramos en R.
+
+Además, desde `VERSION_NOCHE = 2`, la línea con los valores de tus avisos de ánimo de ese día solo aparece **después** de elegir la valencia, y la activación usa una paleta de una sola dirección (`Escala(secuencial = true)`), para que «menos energía» no se lea como «peor» (H-2-11).
 
 Desde la entrega N2 de la revisión de navegación hay también una sección **«Suplementos de este día»**: marca o quita la toma de ese día (a la hora habitual o a la de ahora). Y si faltan días, «Ponerte al día» abre la hoja en el primero que falta y, al sellar, pasa al siguiente (hasta 7 días hacia atrás). Lo que se llena así queda como `retroactivo` (sección 3.7.4), y la diferencia entre `ts` y `ts_creado` dice cuánto después se anotó.
 
@@ -280,12 +300,12 @@ Cada documento de día guarda `retroactivo`: verdadero si el día se **guardó p
 
 ### 3.7.5 El cierre del día
 
-Al final de la hoja hay una cuadrícula «Cómo estás ahora» (`BloqueCierre`, en `ui/pantallas/Lote2.kt`). Guarda un registro de ánimo con la **hora real** (tipo `animo`, origen `cierre`). La idea es tener **la misma medición, en el mismo punto del día, todos los días**. **[Diseño propio]**, buena idea: es un dato momentáneo comparable entre días, menos afectado por el recuerdo que la valencia del diario.
+Al **principio** de la hoja (hasta `VERSION_NOCHE = 1` iba al final; sección 3.7.1) hay una cuadrícula «Cómo estás ahora» (`BloqueCierre`, en `ui/pantallas/Lote2.kt`). Guarda un registro de ánimo con la **hora real** (tipo `animo`, origen `cierre`). La idea es tener **la misma medición, en el mismo punto del día, todos los días**. **[Diseño propio]**, buena idea: es un dato momentáneo comparable entre días, menos afectado por el recuerdo que la valencia del diario.
 
 Dos precisiones (H-2-8):
 
 - El comentario dice «a la misma hora todos los días», pero en realidad es **a la hora en que cierres** el diario, que varía. La hora queda guardada, así que se puede controlar en el análisis.
-- Si llenas la hoja de **un día pasado**, el cierre se guarda **con la fecha de ese día pero con la hora de ahora**. Es decir, `animo_cierre_valencia` del martes puede ser cómo te sentías el viernes. Debería evitarse o marcarse.
+- Hasta la entrega N4, si llenabas la hoja de **un día pasado**, el cierre se guardaba **con la fecha de ese día pero con la hora de ahora**: `animo_cierre_valencia` del martes podía ser cómo te sentías el viernes. Desde la N4, el cierre solo se ofrece en la hoja del día lógico de hoy (`cierrePermitido(fecha)`, en `data/Modelo.kt`; lo comprueba `EsquemaCatorcePrueba.cierreSoloHoy`). Los cierres tardíos de antes siguen en los datos; se reconocen porque el día de `ts` no coincide con `fecha`.
 
 ---
 
@@ -453,6 +473,7 @@ Reglas exactas:
 - Los cambios **al inicio** del uso (o al empezar a medir algo nuevo) pueden deberse en parte a empezar a medir. Conviene no sacar conclusiones de las primeras semanas.
 - Las conductas que quieres cambiar (hábitos, sustancias, el seguimiento privado) son las más expuestas.
 - Ver tus propios números antes de responder (sección 3.4) es una forma de reactividad dentro del mismo día.
+- Desde la entrega N4 de la revisión de navegación, Hoy muestra **«Tus últimos días»**: 14 hilos con el color de la valencia de cada día, el alto del sueño frente a tu normal y si el día quedó sellado (`FranjaDias`, en `ui/pantallas/Hoy.kt`). Pone tu historial de ánimo en primer plano. Para no influir en cómo calificas el día, el hilo de hoy no se colorea hasta que tiene valencia y diario, y la franja no aparece en la hoja de la noche. Aun así, puede influir; se puede apagar en Apariencia. **[Diseño propio]**.
 
 ---
 

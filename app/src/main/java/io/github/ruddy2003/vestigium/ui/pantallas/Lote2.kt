@@ -543,12 +543,13 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
  */
 @Composable
 fun BloqueCierre(fecha: String) {
+    if (!io.github.ruddy2003.vestigium.data.cierrePermitido(fecha)) return
     val previo = Repo.momentos.lastOrNull { it.fecha == fecha && it.esCierre }
     var v by remember(fecha, previo?.id) { mutableStateOf(previo?.valencia) }
     var a by remember(fecha, previo?.id) { mutableStateOf(previo?.activacion) }
     Tarjeta {
         Text("Cómo estás ahora", style = MaterialTheme.typography.titleMedium)
-        Ayuda(previo?.let { "Anotado a las ${Fechas.horaDe(it.ts)}. Si lo cambias, se guarda con la hora de ahora." } ?: "Un toque: qué tan agradable y cuánta energía, ahora que cierras el día.")
+        Ayuda(previo?.let { "Anotado a las ${Fechas.horaDe(it.ts)}. Si lo cambias, se guarda con la hora de ahora." } ?: "Un toque: qué tan agradable y cuánta energía, ahora, antes de repasar el día.")
         CuadriculaAfecto(v, a, Modifier.padding(top = 8.dp)) { nv, na ->
             v = nv; a = na
             val base = previo ?: Momento(Repo.nuevoId(), Fechas.ahoraIso(), fecha, "animo", origen = "cierre", ts_creado = Fechas.ahoraIso())

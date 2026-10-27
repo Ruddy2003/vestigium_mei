@@ -12,8 +12,19 @@ val JSON = Json {
 
 const val SCHEMA_V = 14
 
-/** Orden de las preguntas de la hoja de la noche (v14): se guarda en cada día que pasa por ella ([Dia.version_noche]). */
-const val VERSION_NOCHE = 1
+/**
+ * Orden de las preguntas de la hoja de la noche (v14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
+ * 1 = hábitos, ánimo y cuerpo, contexto, diario, obras, foto, predicción, lo opcional y «cómo estás ahora» al final.
+ * 2 (N-18) = «cómo estás ahora» primero (solo hoy), ánimo y cuerpo, predicción, contexto, hábitos, suplementos, diario y
+ * lo opcional plegado.
+ */
+const val VERSION_NOCHE = 2
+
+/**
+ * El «cómo estás ahora» de la noche solo se guarda en la hoja del día lógico de hoy: en un día pasado quedaría la hora de
+ * ahora con la fecha de otro día (H-2-8).
+ */
+fun cierrePermitido(fecha: String, hoy: String = Fechas.diaLogico()): Boolean = fecha == hoy
 
 /** Un día. Los campos opcionales quedan en null cuando no se marcaron: nunca se rellenan con promedios. */
 @Serializable
@@ -741,7 +752,7 @@ data class Config(
     val enfoque_plan: PlanEnfoque? = null,
     /** Lo último que elegiste al planear un enfoque, para proponerlo de nuevo. */
     val enfoque_ultimo: PlanEnfoque? = null,
-    /** Un personaje del tema en Día que reacciona a cómo dormiste, tu ánimo, tu racha y el clima. */
+    /** «Tus últimos días» en Hoy (N-28; antes, el personaje del tema). El nombre se queda para no perder el ajuste guardado. */
     val personaje: Boolean = true,
     /** Logros que pusiste en tu hall (ids), en orden. */
     val hall_logros: List<String> = emptyList(),
