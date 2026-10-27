@@ -548,7 +548,7 @@ fun BloqueCierre(fecha: String) {
     var v by remember(fecha, previo?.id) { mutableStateOf(previo?.valencia) }
     var a by remember(fecha, previo?.id) { mutableStateOf(previo?.activacion) }
     Tarjeta {
-        Text("Cómo estás ahora", style = MaterialTheme.typography.titleMedium)
+        // El título ya lo pone la sección de la hoja de la noche.
         Ayuda(previo?.let { "Anotado a las ${Fechas.horaDe(it.ts)}. Si lo cambias, se guarda con la hora de ahora." } ?: "Un toque: qué tan agradable y cuánta energía, ahora, antes de repasar el día.")
         CuadriculaAfecto(v, a, Modifier.padding(top = 8.dp)) { nv, na ->
             v = nv; a = na

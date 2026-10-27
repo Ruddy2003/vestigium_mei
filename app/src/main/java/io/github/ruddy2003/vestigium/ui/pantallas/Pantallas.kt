@@ -18,6 +18,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -66,7 +68,7 @@ object Pantallas {
         P("diario", "Diario", "La pestaña del diario: tus entradas y tu línea de tiempo", "diario entradas pestaña"),
         P("mas", "Más", "Todo lo demás: registros, gente, medir y sistema", "más menú ajustes configuración tuerca"),
         P("momentos", "Todos tus registros", "La lista editable de tus registros de ánimo de 30 días", "momentos registros ánimo lista editar hora"),
-        P("lugares", "Lugares", "El mapa emocional de tus lugares", "lugares mapa emocional sitios"),
+        P("lugares", "Lugares", "El mapa emocional de tus lugares; renombrar, cambiar el radio o quitar uno", "lugares lugar mapa emocional sitios ubicación corregir radio renombrar"),
         P("mundo", "Mundo", "Los países que conoces", "mundo países viajes"),
         P("rascar", "Mapa para rascar", "Rasca los países que visitaste", "rascar mapa países"),
         P("unesco", "Patrimonio", "Sitios de la UNESCO que conoces", "unesco patrimonio"),

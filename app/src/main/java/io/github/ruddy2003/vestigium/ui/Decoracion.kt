@@ -1370,6 +1370,6 @@ fun BotonAjustes(modifier: Modifier = Modifier, onClick: () -> Unit) {
                 Box(Modifier.size(18.dp), contentAlignment = Alignment.Center) { IconoPestana("ajustes", nombre = "Más") }
             }
         }
-        Text("Más", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+        androidx.compose.material3.Text("Más", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
     }
 }
