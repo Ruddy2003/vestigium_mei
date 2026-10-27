@@ -257,7 +257,7 @@ La app puede exportar **48 tablas CSV** con datos (`vm_*.csv`, Apéndice A.3), m
 | L‑4 | **Medición reactiva** (medirse cambia lo medido; efecto Hawthorne personal) | N‑de‑1 | — | Inevitable; documentar periodos de adaptación |
 | L‑5 | **Cambios de instrumento** (nuevo reloj, nuevo permiso, nueva versión de la app) | Captura pasiva | `schema_v` | Registrar eventos de cambio como variables de intervención |
 | L‑6 | **Multiplicidad por variables dinámicas** | 2.7 | Filtros por frecuencia | Corrección formal en el análisis (cap. 5) |
-| L‑7 | **Autocorrelación** (días consecutivos no son independientes) | Estructura temporal | — | Tratada en capítulo 5 (tamaño efectivo de muestra) |
+| L‑7 | **Autocorrelación** (días consecutivos no son independientes) | Estructura temporal | — | Tratada en capítulo 6 (tamaño efectivo de muestra) |
 | L‑8 | **Generalización** (un solo sujeto) | Diseño N‑de‑1 | — | Los resultados describen a *esa persona*; no se extrapolan a poblaciones |
 
 ---
