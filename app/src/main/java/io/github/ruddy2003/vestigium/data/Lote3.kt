@@ -28,9 +28,24 @@ object Suplementos {
     fun activos(c: Config = Repo.config) = c.suplementos.filter { it.activo }
     fun de(id: String, c: Config = Repo.config) = c.suplementos.firstOrNull { it.id == id }
 
-    fun registrar(s: Suplemento, cantidad: Double = s.dosis, ts: String = Fechas.ahoraIso()) {
+    /** Anota una toma. [ts] es cuándo la tomaste (ahora, o antes si la anotas tarde); el día lógico sale de esa hora. */
+    fun registrar(s: Suplemento, cantidad: Double = s.dosis, ts: String = Fechas.ahoraIso()): TomaSuplemento {
         val fecha = Fechas.diaLogicoDeMillis(Fechas.millis(ts).takeIf { it > 0 } ?: System.currentTimeMillis())
-        Repo.guardarToma(TomaSuplemento(Repo.nuevoId(), s.id, ts, fecha, cantidad, ts_creado = Fechas.ahoraIso()))
+        val t = TomaSuplemento(Repo.nuevoId(), s.id, ts, fecha, cantidad, ts_creado = Fechas.ahoraIso())
+        Repo.guardarToma(t)
+        return t
+    }
+
+    /** Las de los activos que faltan hoy, con su dosis habitual (lo que hacen «Ya los tomé» y el mosaico). */
+    fun registrarFaltantes(): List<TomaSuplemento> {
+        val hoy = Fechas.diaLogico()
+        return activos().filter { it.modelo != "exposicion" && !tomadoHoy(it.id, hoy) }.map { registrar(it) }
+    }
+
+    /** «Creatina 5 g · Vitamina D 2000 UI»: para decir qué se anotó. */
+    fun resumen(tomas: List<TomaSuplemento>): String = tomas.joinToString(" · ") { t ->
+        val s = de(t.suplemento)
+        "${s?.nombre ?: t.suplemento} ${if (t.cantidad % 1.0 == 0.0) t.cantidad.toLong().toString() else t.cantidad.toString()} ${s?.unidad ?: ""}".trim()
     }
 
     fun tomadoHoy(id: String, hoy: String = Fechas.diaLogico()) = Repo.tomas.any { it.suplemento == id && it.fecha == hoy }

@@ -240,6 +240,8 @@ Ponerle palabras a una emoción (*affect labeling*) puede reducir su intensidad:
 
 La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`) reúne en una página: hábitos (casillas; sin el hábito ligado a las recaídas), **ánimo y cuerpo** (valencia, activación, dolor), **contexto** del día (trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia; varios o ninguno), **diario** (texto libre con @personas y #temas), lo que leíste o viste, foto del día, **predicción** de mañana y, plegado como opcional: la «lectura del día», lo mejor y lo peor del día, hitos y medicamentos. Al final, el **cierre** («cómo estás ahora»).
 
+Desde la entrega N2 de la revisión de navegación hay también una sección **«Suplementos de este día»**: marca o quita la toma de ese día (a la hora habitual o a la de ahora). Y si faltan días, «Ponerte al día» abre la hoja en el primero que falta y, al sellar, pasa al siguiente (hasta 7 días hacia atrás). Lo que se llena así queda como `retroactivo` (sección 3.7.4), y la diferencia entre `ts` y `ts_creado` dice cuánto después se anotó.
+
 Se guarda sola mientras escribes (cada 0.7 s sin cambios). Si tiene **valencia y texto del diario**, se puede «sellar» el día; sellar no cambia los datos, es solo un cierre simbólico.
 
 ### 3.7.2 La «lectura del día»: tres preguntas de marcos científicos
@@ -406,7 +408,7 @@ A la hora configurada (**8:00** por omisión, `hora_sueno`), si el día lógico 
 
 Se registra:
 
-- **Calidad del sueño como la sentiste**, de 1 (muy mala) a 5 (muy buena). Es una percepción, distinta de las horas que mide el reloj (capítulo 4).
+- **Calidad del sueño como la sentiste**, de 1 (muy mala) a 5 (muy buena). Es una percepción, distinta de las horas que mide el reloj (capítulo 4). Se guarda en el **día del despertar** (la fecha del calendario, `Fechas.hoyCalendario()`), igual que las horas del reloj. Así, quien despierta a las 04:30 y la anota no la deja en el día anterior. Esto es así desde la entrega N2 de la revisión de navegación; antes usaba el día lógico (H-NAV-7).
 - **¿Recordaste un sueño?** (sí/no). Si sí: **valencia del sueño** (1–7), **lucidez** (no / parcial / total), **vividez** (vago / moderado / muy vívido), **tipo** (mundano, ansioso o pesadilla, bizarro o surreal, recurrente), **categorías por ejes** y personas y temas.
 
 ### 3.12.2 Las categorías por ejes

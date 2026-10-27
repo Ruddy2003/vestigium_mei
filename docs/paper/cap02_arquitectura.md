@@ -79,6 +79,8 @@ fun diaLogico(ahora: LocalDateTime) =
 
 Con corte a medianoche, el «lunes» perdería su cierre y el «martes» empezaría con 5 horas de pantalla nocturna que en realidad pertenecen al lunes. La variable `ultimo_uso_h` se corrige además sumando 24 si la hora es < 5 (p. ej. 02:10 → 26.17), de modo que «más tarde» siga significando un número mayor.
 
+En las pantallas donde se anota, el corte se dice en palabras antes de las 05:00: «Son las 01:30: lo que anotes va al lunes… (los días empiezan a las 5:00)» (`AvisoMadrugada`, en `ui/Componentes.kt`). La excepción es la calidad del sueño, que va al día del despertar (capítulo 3, sección 3.12.1).
+
 **Cuándo falla.** (a) Quien trabaja de noche o duerme de madrugada con regularidad rompe el supuesto de que a las 05:00 «hay poca actividad»; la regla es fija y no se adapta a la persona (limitación L‑1). (b) **No todo el código usa el mismo criterio de día.** Los visitas a lugares se agrupan con `entrada.take(10)`, es decir, por **fecha calendario**, no por día lógico (variable `lugares_distintos`), mientras que `en_casa_min` sí usa `diaLogicoDeMillis`. Una visita que empieza a las 01:00 cae en un día distinto según la variable (H‑1‑2).
 
 ---

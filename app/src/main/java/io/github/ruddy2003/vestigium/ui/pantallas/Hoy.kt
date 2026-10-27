@@ -94,11 +94,10 @@ object Pendientes {
         val l = ArrayList<Pendiente>()
         val c = Repo.config
         val ignorado = { k: String -> c.avisos_ignorados[k] == hoy }
-        // Diario de ayer: solo en la mañana, si no tiene nada.
-        val ayer = Fechas.sumar(hoy, -1)
-        val dAyer = Repo.dias[ayer]
-        if (ahora.hour < 14 && (dAyer == null || (dAyer.valencia == null && dAyer.nota.isBlank())) && !ignorado("p:ayer"))
-            l += Pendiente("p:ayer", "Diario de ayer", "ayer")
+        // Los días sin llenar de la última semana (N-09): a cualquier hora, hasta que se llenen o se descarten hoy.
+        val faltan = faltantes(hoy)
+        if (faltan.isNotEmpty() && !ignorado("p:ayer"))
+            l += Pendiente("p:ayer", if (faltan == listOf(Fechas.sumar(hoy, -1))) "Diario de ayer" else "Te faltan " + nombresDias(faltan), "ponerse")
         if (d.sueno_calidad == null && ahora.hour >= 5) l += Pendiente("p:sueno", "Calidad del sueño", "sueno")
         // Avisos de ánimo que ya sonaron y no contestaste.
         // Se cuentan los avisos sin respuesta (por su hora), no la resta de planeados menos registros.
@@ -120,9 +119,26 @@ object Pendientes {
         return l
     }
 
+    /**
+     * Días de los 7 anteriores sin valencia ni diario, desde que empezaste a usar la app (el primer día guardado).
+     * Del más viejo al más nuevo.
+     */
+    fun faltantes(hoy: String): List<String> {
+        val primero = Repo.dias.keys.minOrNull() ?: return emptyList()
+        return (7 downTo 1).map { Fechas.sumar(hoy, -it.toLong()) }.filter { f ->
+            f >= primero && Repo.dias[f].let { d -> d == null || (d.valencia == null && d.nota.isBlank()) }
+        }
+    }
+
+    /** «jueves y viernes», «lunes, martes y miércoles». */
+    fun nombresDias(l: List<String>): String {
+        val n = l.map { Fechas.parse(it).dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, java.util.Locale.forLanguageTag("es")) }
+        return if (n.size == 1) n[0] else n.dropLast(1).joinToString(", ") + " y " + n.last()
+    }
+
     /** Si lo que pedía [clave] ya está hecho (y no solo dejó de pedirse por la hora o porque lo descartaste). */
     fun resuelto(clave: String, d: Dia, hoy: String): Boolean = when (clave) {
-        "p:ayer" -> Repo.dias[Fechas.sumar(hoy, -1)]?.let { it.valencia != null || it.nota.isNotBlank() } == true
+        "p:ayer" -> faltantes(hoy).isEmpty()
         "p:sueno" -> d.sueno_calidad != null
         "p:aviso" -> io.github.ruddy2003.vestigium.data.AvisosAnimo.sinContestar().isEmpty()
         "p:escalas" -> Escalas.pendientes().isEmpty()
@@ -187,7 +203,7 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
             // El diario de ayer se puede dejar pasar.
             if (l.any { it.clave == "p:ayer" }) TextButton(onClick = {
                 Repo.cambiarConfig { c -> c.copy(avisos_ignorados = c.avisos_ignorados + ("p:ayer" to hoy)) }
-            }) { Text("no hace falta: diario de ayer", style = MaterialTheme.typography.labelMedium) }
+            }) { Text("hoy no: " + (l.first { it.clave == "p:ayer" }.texto.removePrefix("Te faltan ").lowercase()), style = MaterialTheme.typography.labelMedium) }
             invitaciones(MaterialTheme.colorScheme.onPrimaryContainer)
         }
     }

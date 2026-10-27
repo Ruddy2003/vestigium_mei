@@ -99,10 +99,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun PantallaDia(nav: Nav) {
-    var fecha by remember { mutableStateOf(Seleccion.pedida ?: Seleccion.diaAbierto ?: Fechas.diaLogico()) }
-    // Día recuerda la fecha abierta aunque cambies de pestaña o vayas a la hoja de la noche.
-    LaunchedEffect(fecha) { Seleccion.diaAbierto = fecha }
+fun PantallaDia(nav: Nav, apilado: Boolean = false) {
+    var fecha by remember { mutableStateOf(Seleccion.pedida ?: (if (apilado) null else Seleccion.diaAbierto) ?: Fechas.diaLogico()) }
+    // La pestaña recuerda la fecha abierta mientras vas a la hoja de la noche y vuelves; un día apilado no la cambia.
+    LaunchedEffect(fecha) { if (!apilado) Seleccion.diaAbierto = fecha }
     val guardado = Repo.dias[fecha]
     var d by remember(fecha) { mutableStateOf(guardado ?: Dia(fecha = fecha)) }
     var sucio by remember(fecha) { mutableStateOf(false) }
@@ -171,6 +171,9 @@ fun PantallaDia(nav: Nav) {
         val tema = est.tema
         fun abrirCalendario() { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (apilado) TextButton(onClick = nav.atras, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp)) {
+                Text("←", style = MaterialTheme.typography.titleLarge)
+            }
             Text(est.pantalla("Día", "DIES").first + if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) "_" else "", style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.weight(1f))
             io.github.ruddy2003.vestigium.ui.BotonBuscar { nav.ir("buscar") }
@@ -278,6 +281,14 @@ fun PantallaDia(nav: Nav) {
                 TeFaltaHoy(d, hoy, setOf("p:diario", "p:prediccion")) { a ->
                     when (a) {
                         "ayer" -> irA(Fechas.sumar(hoy, -1))
+                        // Ponerte al día: la hoja de la noche del día más viejo que falta, y de ahí al siguiente (N-09).
+                        "ponerse" -> {
+                            val faltan = Pendientes.faltantes(hoy)
+                            if (faltan.isNotEmpty()) {
+                                if (sucio) { Repo.guardarDia(d); sucio = false }
+                                Seleccion.ponerse = faltan; Seleccion.noche = faltan.first(); Seleccion.seccion = "Ánimo y cuerpo"; nav.ir("noche")
+                            }
+                        }
                         "sueno" -> mostrar("Sueño", reqSueno)
                         "diario" -> abrirNoche("Ánimo y cuerpo")
                         "prediccion" -> abrirNoche("Predicción")
@@ -391,7 +402,9 @@ private fun TarjetaNoche(d: Dia, fecha: String, c: io.github.ruddy2003.vestigium
 @Composable
 fun PantallaNoche(nav: Nav) {
     val ctx = LocalContext.current
-    val fecha = remember { Seleccion.noche ?: Fechas.diaLogico() }
+    var fecha by remember { mutableStateOf(Seleccion.noche ?: Fechas.diaLogico()) }
+    // «Ponerte al día» se acaba al salir de la hoja.
+    DisposableEffect(Unit) { onDispose { Seleccion.ponerse = emptyList() } }
     val guardado = Repo.dias[fecha]
     var d by remember(fecha) { mutableStateOf(guardado ?: Dia(fecha = fecha)) }
     var sucio by remember(fecha) { mutableStateOf(false) }
@@ -425,7 +438,9 @@ fun PantallaNoche(nav: Nav) {
     fun sellar() {
         Repo.guardarDia(d); sucio = false
         if (completo) io.github.ruddy2003.vestigium.ui.Sello.lanzar(fecha)
-        nav.atras()
+        // Poniéndote al día: sigue con el siguiente día que falta.
+        val siguiente = Seleccion.ponerse.firstOrNull { it > fecha }
+        if (siguiente != null) fecha = siguiente else nav.atras()
     }
     // Lo esencial, en orden: lo que falta se puede saltar con «siguiente».
     val habitosActivos = io.github.ruddy2003.vestigium.data.Privado.habitosVisibles(c).filter { it.activo }
@@ -452,10 +467,19 @@ fun PantallaNoche(nav: Nav) {
             )
         }
         fun ver(sec: String) = !soloFalta || sec !in llenoAlAbrir
+        if (fecha == Fechas.diaLogico()) io.github.ruddy2003.vestigium.ui.AvisoMadrugada(Modifier.padding(top = 6.dp))
         Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (soloFalta && llenoAlAbrir.isNotEmpty()) "Ya está: " + llenoAlAbrir.joinToString(" · ") { "✓ $it" } else "Todo el día en una hoja.",
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
             Ficha(if (soloFalta) "solo lo que falta" else "mostrar todo", soloFalta) { Repo.cambiarConfig { cc -> cc.copy(noche_solo_falta = !cc.noche_solo_falta) } }
+        }
+        // Poniéndote al día: los días que faltan, para pasar de uno a otro.
+        if (Seleccion.ponerse.size > 1) Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text("Ponerte al día:", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Seleccion.ponerse.forEach { f ->
+                val lleno = Repo.dias[f]?.let { it.valencia != null } == true
+                Ficha((if (lleno) "✓ " else "") + Fechas.corto(f), f == fecha) { if (sucio) { Repo.guardarDia(d); sucio = false }; fecha = f }
+            }
         }
         // «Día difícil» se marca desde el aviso del diario; aquí se ve y se puede quitar si fue un toque equivocado.
         if (d.dia_dificil) Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -478,6 +502,27 @@ fun PantallaNoche(nav: Nav) {
                             colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary))
                         Text(h.nombre, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
                         Text(if (hecho) "= 1" else "= 0", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+        // Lo que tomaste ese día: sirve también para lo que olvidaste anotar (N-09, E-11). Tocar de nuevo lo quita.
+        val suplementos = io.github.ruddy2003.vestigium.data.Suplementos.activos(c)
+        if (suplementos.isNotEmpty()) Seccion("Suplementos de este día", "Toca lo que tomaste ese día; si ya está, tocarlo lo quita.", numero = n(), plegable = true) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                suplementos.forEach { s ->
+                    val tomas = Repo.tomas.filter { it.suplemento == s.id && it.fecha == fecha }
+                    val dosis = if (s.dosis % 1.0 == 0.0) s.dosis.toLong().toString() else s.dosis.toString()
+                    Ficha((if (tomas.isNotEmpty()) "✓ " else "") + "${s.nombre.lowercase()} · $dosis ${s.unidad}", tomas.isNotEmpty()) {
+                        if (tomas.isEmpty()) {
+                            // Hoy, con la hora de ahora; otro día, a tu hora habitual (o a las 9).
+                            val ts = if (fecha == Fechas.diaLogico()) Fechas.ahoraIso()
+                                else Fechas.isoDeMillis(Fechas.parse(fecha).atTime((c.suplementos_hora ?: 9).coerceIn(5, 23), 0).atZone(Fechas.zona()).toInstant().toEpochMilli())
+                            io.github.ruddy2003.vestigium.data.Suplementos.registrar(s, s.dosis, ts)
+                        } else {
+                            val t = tomas.maxBy { it.ts }
+                            Repo.borrarToma(t.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma quitada") { Repo.guardarToma(t) }
+                        }
                     }
                 }
             }

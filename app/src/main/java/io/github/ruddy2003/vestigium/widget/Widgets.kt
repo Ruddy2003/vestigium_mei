@@ -209,7 +209,8 @@ object Widgets {
         v.setTextViewText(R.id.titulo_sueno, Estilo.widget("sueno"))
         val col = colores()
         val tonos = intArrayOf(col.animo[0], col.animo[2], col.animo[3], col.animo[5], col.animo[6])
-        val f = Fechas.diaLogico()
+        // El día del despertar, igual que al guardar la calidad (H-NAV-7).
+        val f = Fechas.hoyCalendario()
         val d = Repo.dias[f]
         val reloj = Repo.salud[f]?.sueno_min
         v.setTextViewText(R.id.sub_sueno, listOfNotNull(reloj?.let { "reloj ${it / 60} h ${"%02d".format(it % 60)}" }, d?.sueno_calidad?.let { "calidad $it" }).joinToString(" · "))

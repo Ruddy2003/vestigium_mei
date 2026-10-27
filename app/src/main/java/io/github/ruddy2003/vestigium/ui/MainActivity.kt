@@ -145,7 +145,12 @@ class MainActivity : FragmentActivity() {
         Reanudar.desde = android.os.SystemClock.elapsedRealtime()
         RotacionTema.revisar()
         // Lo que se pliega solo (línea de tiempo, exportar, lo del teléfono) vuelve a plegarse si la app estuvo cerrada un rato.
-        if (enFondoDesde > 0 && System.currentTimeMillis() - enFondoDesde > 60_000) SesionApp.n++
+        if (enFondoDesde > 0 && System.currentTimeMillis() - enFondoDesde > 60_000) {
+            SesionApp.n++
+            // Al volver después de un rato, Hoy vuelve a hoy y se olvidan las fechas de la última vez (N-12).
+            val S = io.github.ruddy2003.vestigium.ui.pantallas.Seleccion
+            S.diaAbierto = null; S.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico(); S.limpiarFechas()
+        }
         if (Repo.config.bloqueo && desbloqueado && enFondoDesde > 0 && System.currentTimeMillis() - enFondoDesde > 60_000) {
             desbloqueado = false
             pedirHuella()
@@ -283,7 +288,11 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
             // Tocar la pestaña en la que ya estás: arriba (y en Día, a hoy).
             alcance.launch { scrolls[id]?.animateScrollTo(0) }
             if (id == "dia") io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
-        } else { sentir(Sentidos.Evento.PASAR); pestana = id; pila = emptyList() }
+        } else {
+            sentir(Sentidos.Evento.PASAR); pestana = id; pila = emptyList()
+            // La pestaña Hoy siempre abre en hoy (N-12).
+            if (id == "dia") { io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.diaAbierto = null; io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.pedida = io.github.ruddy2003.vestigium.data.Fechas.diaLogico() }
+        }
     }
     fun largo(id: String) {
         sentir(Sentidos.Evento.CAMBIO)
@@ -321,6 +330,8 @@ private fun Raiz(pedida: String?, consumir: () -> Unit) {
                 androidx.compose.runtime.CompositionLocalProvider(LocalScrollPestana provides sc, LocalGuia provides { s: String -> nav.ir("guia_uso:$s") }) {
                 when (val actual = destino.ruta) {
                     "dia" -> PantallaDia(nav)
+                    // Un día abierto desde otra pantalla (calendario, diario, cinta…): se apila y «atrás» regresa.
+                    "dia_fecha" -> PantallaDia(nav, apilado = true)
                     "diario", "diarios" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(nav)
                     "momentos" -> PantallaMomentos(nav)
                     "gastos" -> PantallaGastos(nav)

@@ -107,3 +107,21 @@ Salen de `docs/navegacion/revision_navegacion.md`. Decisiones del autor del 27 o
 | D.33 | Deshacer en los borrados que no lo tenían (notas, metas, fechas propias, logros propios, citas, bloques, sitios ignorados, frases, ciudades, Patrimonio, reglas de nombres, categorías, mascotas y personas cercanas) y confirmación en los de un toque. La barra de Deshacer también en el registro rápido. Su botón «Deshacer» se llama ahora «Borrar este registro» | varios archivos de `ui/`, `ui/QuickActivity.kt` | N-13, P4 |
 
 **Efectos al leer los datos:** desde esta versión, un registro de ánimo puede cambiar de hora y de día después de anotarlo; queda marcado con `ts_editado`. Los momentos viejos que se corrijan cambian de tipo a `animo`.
+
+## Revisión de navegación · Entrega N2 (ayer y fechas)
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.34 | Suplementos: «¿Cuándo la tomaste?» (ahora, ayer u otra hora) antes de «Tomé…»; «Últimas tomas» se tocan para corregir cantidad u hora, o quitarlas con Deshacer. En ⊕, tocar un suplemento ya tomado pregunta «otra toma» o «quitar la de hoy». El aviso «Ya los tomé» dice qué anotó y ofrece «Deshacer» durante 10 minutos; el mosaico rápido también dice qué anotó | `ui/pantallas/Lote3.kt` (`DialogoToma`), `data/Lote3.kt` (`registrar`, `registrarFaltantes`, `resumen`), `ui/QuickActivity.kt`, `avisos/Recordatorios.kt`, `avisos/Avisos.kt` (`tomasAnotadas`), `widget/Mosaicos.kt` | N-07, H-NAV-1 |
+| D.35 | El registro rápido dice el día en palabras; el ánimo se puede poner «antes» (ayer u otra hora) y el registro se mueve con `Recaidas.aOtraHora`. El selector de hora tiene la ficha «ayer» | `ui/QuickActivity.kt` (`Encabezado`, `crear`), `ui/Selectores.kt` (`SelectorHora(ayer)`) | N-08 |
+| D.36 | La calidad del sueño del widget y de la hoja rápida se guarda en el **día del despertar** (fecha del calendario), como las horas del reloj, aunque se anote antes de las 05:00. El widget muestra la calidad de ese mismo día | `ui/QuickActivity.kt` (`SuenoRapido`), `widget/Widgets.kt` | N-08, H-NAV-7 |
+| D.37 | «Ponerte al día»: si faltan días (hasta 7, sin valencia ni diario, desde el primer día guardado), Hoy dice cuáles. La hoja de la noche los recorre uno tras otro; al sellar pasa al siguiente. La noche tiene una sección nueva, «Suplementos de este día», para anotar o quitar la toma de ese día. «Diario de ayer» ya no se va a las 14 h: se queda hasta llenarlo o descartarlo | `ui/pantallas/Hoy.kt` (`Pendientes.faltantes`), `ui/pantallas/Dia.kt` (`PantallaNoche`), `ui/pantallas/Calendario.kt` (`Seleccion.ponerse`) | N-09 |
+| D.38 | Aviso del día lógico en palabras («Son las 01:30: lo que anotes va al lunes…») en el registro rápido, en Notas, en la noche de hoy y en la semana corta | `ui/Componentes.kt` (`AvisoMadrugada`) | N-10 |
+| D.39 | Notas: el formulario dice para qué día es y deja cambiarlo; el diálogo de editar cambia también el tipo, la fecha y el recordatorio | `ui/pantallas/Lote2.kt` (`PantallaNotas`) | N-11 |
+| D.40 | La pestaña Hoy abre siempre en hoy (también al volver a la app después de un minuto). «Abrir el día» desde otras pantallas apila el Día y «atrás» regresa | `ui/MainActivity.kt`, `ui/pantallas/Calendario.kt` (`Seleccion.abrir`, `limpiarFechas`), `ui/pantallas/Dia.kt` (`PantallaDia(apilado)`) | N-12 |
+
+**Efectos al leer los datos:**
+- Desde esta versión hay más **tomas de suplementos y registros de ánimo anotados después**. Se distinguen con `ts_creado` frente a `ts` (`vm_retraso` en R, Apéndice C). Los niveles estimados de los suplementos se recalculan con las tomas corregidas; eso es lo esperado.
+- Más días se llenan de memoria con «Ponerte al día». Quedan marcados como `retroactivo` (capítulo 3, sección 3.7.4).
+- La calidad del sueño anotada entre las 00:00 y las 05:00 cambia de día: antes iba al día anterior y ahora va al del despertar. Los datos viejos no se mueven.
+

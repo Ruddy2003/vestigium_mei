@@ -252,6 +252,8 @@ fun PantallaNotas(nav: Nav) {
     var texto by remember { mutableStateOf("") }
     var tipo by remember { mutableStateOf("idea") }
     var recordar by remember { mutableStateOf<String?>(null) }
+    // null = el día lógico de hoy; se puede mover a otro día (N-11).
+    var paraDia by remember { mutableStateOf<String?>(null) }
     var buscar by remember { mutableStateOf("") }
     var filtro by remember { mutableStateOf("todas") }
     var editando by remember { mutableStateOf<Nota?>(null) }
@@ -267,9 +269,16 @@ fun PantallaNotas(nav: Nav) {
                 Ficha(recordar?.let { "el ${Fechas.corto(it)}" } ?: "¿qué día?", recordar != null) { elegirFecha(ctx, recordar, desdeManana = false) { recordar = it } }
                 Ayuda("  Te aviso ese día a las ${Repo.config.metas_hora}:00.")
             }
+            val dia = paraDia ?: Fechas.diaLogico()
+            Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Ayuda("Para el ${Fechas.titulo(dia).lowercase()}", Modifier.weight(1f))
+                Text("cambiar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable { elegirFecha(ctx, dia) { paraDia = it.takeIf { f -> f != Fechas.diaLogico() } } }.padding(6.dp))
+            }
+            if (paraDia == null) io.github.ruddy2003.vestigium.ui.AvisoMadrugada()
             BotonPrincipal("Guardar nota", Modifier.fillMaxWidth().padding(top = 10.dp), habilitado = texto.isNotBlank()) {
-                Repo.guardarNota(Nota(Repo.nuevoId(), Fechas.ahoraIso(), Fechas.diaLogico(), texto.trim(), tipo, recordar_el = recordar.takeIf { tipo == "recordatorio" }))
-                texto = ""; recordar = null
+                Repo.guardarNota(Nota(Repo.nuevoId(), Fechas.ahoraIso(), dia, texto.trim(), tipo, recordar_el = recordar.takeIf { tipo == "recordatorio" }))
+                texto = ""; recordar = null; paraDia = null
             }
         }
         OutlinedTextField(value = buscar, onValueChange = { buscar = it }, modifier = Modifier.fillMaxWidth().padding(top = 14.dp), singleLine = true,
@@ -286,9 +295,32 @@ fun PantallaNotas(nav: Nav) {
     }
     editando?.let { n ->
         var t by remember(n.id) { mutableStateOf(n.texto) }
+        var tp by remember(n.id) { mutableStateOf(n.tipo) }
+        var f by remember(n.id) { mutableStateOf(n.fecha) }
+        var rec by remember(n.id) { mutableStateOf(n.recordar_el) }
         AlertDialog(onDismissRequest = { editando = null }, title = { Text("Editar nota") },
-            text = { OutlinedTextField(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth()) },
-            confirmButton = { TextButton(onClick = { Repo.guardarNota(n.copy(texto = t.trim(), editada = Fechas.ahoraIso())); editando = null }) { Text("guardar") } },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Catalogo.TIPOS_NOTA.forEach { o -> Ficha(o.nombre, tp == o.id) { tp = o.id } }
+                    }
+                    OutlinedTextField(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+                    Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Ayuda("Del ${Fechas.titulo(f).lowercase()}", Modifier.weight(1f))
+                        Text("cambiar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { elegirFecha(ctx, f) { f = it } }.padding(6.dp))
+                    }
+                    if (tp == "recordatorio") Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Ficha(rec?.let { "recordar el ${Fechas.corto(it)}" } ?: "¿qué día te aviso?", rec != null) { elegirFecha(ctx, rec) { rec = it } }
+                        if (rec != null) Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.clickable { rec = null }.padding(6.dp))
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = {
+                Repo.guardarNota(n.copy(texto = t.trim(), tipo = tp, fecha = f, recordar_el = rec.takeIf { tp == "recordatorio" }, editada = Fechas.ahoraIso()))
+                editando = null
+            }, enabled = t.isNotBlank()) { Text("guardar") } },
             dismissButton = {
                 var confirmar by remember(n.id) { mutableStateOf(false) }
                 TextButton(onClick = {
@@ -534,6 +566,7 @@ fun SemanaCorta(d: Dia, abrirNoche: () -> Unit) {
     val enfoque = Enfoque.delDia(f).filterKeys { it != "siesta" }.values.sum()
     val pasos = Repo.salud[f]?.pasos
     Column(Modifier.padding(top = 12.dp)) {
+        if (f == Fechas.diaLogico()) io.github.ruddy2003.vestigium.ui.AvisoMadrugada(Modifier.padding(bottom = 6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra(animo?.let { "$it/7" } ?: "—", "valencia", Modifier.weight(1f))
             Cifra(sueno?.let { "${it / 60}h${"%02d".format(it % 60)}" } ?: "—", "sueño", Modifier.weight(1f))

@@ -1116,6 +1116,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** los niveles derivados (`supl_*_nivel`, modelos de carga y de vida media, capítulo 5) tratan un olvido de registro como un día sin tomar, y una toma doble como doble dosis. El error no se ve en ningún lado.
 - **Gravedad:** Alta.
 - **Propuesta:** N-07 (anotar en otra fecha y corregir o quitar tomas pasadas, con Deshacer).
+- **Estado:** Resuelto en la entrega N2 de la revisión de navegación (esquema 14): fecha y hora al tomar, «Últimas tomas» corregibles, Deshacer en el aviso.
 
 ### H-NAV-2 · La hora y la fecha de un registro de ánimo no se corrigen
 - **Dónde:** `ui/pantallas/Momentos.kt:107-158` (`DialogoMomento`: la hora solo se edita en recaídas); `ui/QuickActivity.kt:163-168` (`crear` usa siempre la hora actual); `data/Catalogo.kt:124-125`.
@@ -1166,6 +1167,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** la calidad subjetiva y las horas medidas de la misma noche quedan en días distintos (capítulo 3, sección 3.12). Es raro, pero sesga a quienes despiertan muy temprano.
 - **Gravedad:** Baja.
 - **Propuesta:** guardar la calidad en la fecha del despertar (la del calendario) cuando se anota entre las 00:00 y las 05:00, o preguntarlo (N-10).
+- **Estado:** Resuelto en la entrega N2 de la revisión de navegación (esquema 14): el widget y la hoja rápida usan `Fechas.hoyCalendario()`.
 
 ### H-NAV-8 · «Día difícil» no se puede quitar
 - **Dónde:** `ui/QuickActivity.kt:702` es el único lugar que escribe `dia_dificil`.

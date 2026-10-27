@@ -68,7 +68,9 @@ class MosaicoSuplemento : TileService() {
 
     override fun onClick() {
         super.onClick()
-        pendientes().forEach { io.github.ruddy2003.vestigium.data.Suplementos.registrar(it) }
+        val l = pendientes().map { io.github.ruddy2003.vestigium.data.Suplementos.registrar(it) }
+        // Avisa qué anotó, con «deshacer».
+        if (l.isNotEmpty()) runCatching { io.github.ruddy2003.vestigium.avisos.Avisos.tomasAnotadas(this, l) }
         // El guardado en la base es inmediato; el estado en memoria se actualiza en el hilo principal.
         android.os.Handler(mainLooper).postDelayed({ pintar() }, 300)
     }

@@ -257,6 +257,20 @@ fun Etiqueta(texto: String) {
     }
 }
 
+
+/**
+ * Antes de las 5:00 dice, en palabras, a qué día va lo que anotas: el día lógico empieza a las 5:00 (N-10).
+ * Fuera de la madrugada no ocupa nada.
+ */
+@Composable
+fun AvisoMadrugada(modifier: Modifier = Modifier) {
+    val ahora = java.time.LocalTime.now()
+    if (ahora.hour >= 5) return
+    val dia = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+    Ayuda("Son las ${"%02d:%02d".format(ahora.hour, ahora.minute)}: lo que anotes va al ${io.github.ruddy2003.vestigium.data.Fechas.titulo(dia).lowercase()} " +
+        "(los días empiezan a las 5:00).", modifier.padding(top = 2.dp))
+}
+
 @Composable
 fun Ayuda(texto: String, modifier: Modifier = Modifier) {
     Text(texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = modifier)

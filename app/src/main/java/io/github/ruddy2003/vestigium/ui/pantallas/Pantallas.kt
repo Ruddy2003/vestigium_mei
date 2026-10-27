@@ -111,7 +111,7 @@ fun EnPantallas(q: String, ir: (String) -> Unit) {
         Tarjeta {
             l.take(8).forEachIndexed { i, p ->
                 if (i > 0) HorizontalDivider()
-                Row(Modifier.fillMaxWidth().clickable { ir(p.ruta) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); ir(p.ruta) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(Estilo.pantalla(p.titulo, Romano.latin(p.titulo)).first, style = MaterialTheme.typography.bodyLarge)
                         Text(p.detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -128,7 +128,7 @@ fun EnPantallas(q: String, ir: (String) -> Unit) {
 fun FilaMas(ruta: String, titulo: String, detalle: String?, ir: (String) -> Unit) {
     val fija = ruta in Repo.config.favoritos_mas
     val cs = MaterialTheme.colorScheme
-    Row(Modifier.fillMaxWidth().clickable { ir(ruta) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); ir(ruta) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f).padding(vertical = 7.dp)) {
             Text(titulo, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
@@ -148,7 +148,7 @@ fun AtajosFijos(ir: (String) -> Unit) {
     Seccion("Tus atajos", "Toca ★ en cualquier fila para fijarla o quitarla.") {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             fijos.forEach { p ->
-                Surface(onClick = { ir(p.ruta) }, shape = MaterialTheme.shapes.medium, color = cs.surface, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.6f)),
+                Surface(onClick = { Seleccion.limpiarFechas(); ir(p.ruta) }, shape = MaterialTheme.shapes.medium, color = cs.surface, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.6f)),
                     modifier = Modifier.widthIn(min = 96.dp, max = 172.dp)) {
                     Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
                         Text(Estilo.seccion(p.titulo, Romano.latin(p.titulo)).first, style = MaterialTheme.typography.labelLarge, color = cs.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)

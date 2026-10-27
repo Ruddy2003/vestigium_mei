@@ -96,6 +96,9 @@ object Recordatorios {
     const val MANANA = "manana"
     const val TOME = "tome"
     const val UNA_HORA = "una_hora"
+    /** Quitar las tomas que acaba de anotar «Ya los tomé» o el mosaico (sus ids van en [TOMAS]). */
+    const val DESHACER_TOMAS = "deshacer_tomas"
+    const val TOMAS = "tomas"
 }
 
 /** «Recordar mañana» desde el aviso de importaciones: pospone todo lo pendiente un día. */
@@ -109,9 +112,13 @@ class RecordatorioReceiver : BroadcastReceiver() {
                 NotificationManagerCompat.from(context).cancel(Avisos.ID_IMPORTAR)
             }
             Recordatorios.TOME -> {
-                val hoy = Fechas.diaLogico()
-                io.github.ruddy2003.vestigium.data.Suplementos.activos().filter { it.modelo != "exposicion" && !io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id, hoy) }
-                    .forEach { io.github.ruddy2003.vestigium.data.Suplementos.registrar(it) }
+                val l = io.github.ruddy2003.vestigium.data.Suplementos.registrarFaltantes()
+                NotificationManagerCompat.from(context).cancel(Avisos.ID_SUPLEMENTOS)
+                // Dice qué anotó y deja deshacerlo un rato.
+                if (l.isNotEmpty()) Avisos.tomasAnotadas(context, l)
+            }
+            Recordatorios.DESHACER_TOMAS -> {
+                intent.getStringArrayExtra(Recordatorios.TOMAS)?.forEach { Repo.borrarToma(it) }
                 NotificationManagerCompat.from(context).cancel(Avisos.ID_SUPLEMENTOS)
             }
             Recordatorios.UNA_HORA -> {

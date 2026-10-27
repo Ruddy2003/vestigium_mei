@@ -68,7 +68,7 @@ fun PantallaVida(nav: Nav) {
     val mes = hoy.take(7)
     val diasMes = Repo.dias.keys.count { it.startsWith(mes) && Repo.dias[it]?.let { d -> d.valencia != null || d.nota.isNotBlank() } == true }
     val anio = hoy.take(4)
-    val ir: (String) -> Unit = { nav.ir(it) }
+    val ir: (String) -> Unit = { if (it == "cinta") Seleccion.cinta = null; nav.ir(it) }
     Hoja("Vida", subtitulo = "Tu vida vista de lejos: la semana, el año, tu gente, tus lugares y tus logros.", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
         RejillaTarjetas(listOf(
             Tarjetita("Resumen semanal", a?.let { "%.1f".format(it) + flecha } ?: "—", "ánimo de esta semana", "semana"),

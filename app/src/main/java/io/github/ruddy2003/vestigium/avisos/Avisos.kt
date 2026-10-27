@@ -302,6 +302,23 @@ object Avisos {
         mostrar(ctx, ID_SUPLEMENTOS, b)
     }
 
+    /** Lo que anotaron «Ya los tomé» o el mosaico, con «deshacer» durante 10 minutos. */
+    fun tomasAnotadas(ctx: Context, tomas: List<io.github.ruddy2003.vestigium.data.TomaSuplemento>) {
+        crearCanales(ctx)
+        val quitar = PendingIntent.getBroadcast(ctx, 2043, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, Recordatorios.DESHACER_TOMAS)
+            .putExtra(Recordatorios.TOMAS, tomas.map { it.id }.toTypedArray()), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("Anotado")
+            .setContentText(io.github.ruddy2003.vestigium.data.Suplementos.resumen(tomas))
+            .setContentIntent(abrirApp(ctx, ID_SUPLEMENTOS, "suplementos"))
+            .addAction(0, "Deshacer", quitar)
+            .setTimeoutAfter(10 * 60_000L)
+            .setOnlyAlertOnce(true).setSilent(true)
+            .setAutoCancel(true)
+        mostrar(ctx, ID_SUPLEMENTOS, b)
+    }
+
     /** «¿Es un lugar especial?»: abre la hoja para nombrarlo, ignorarlo o dejarlo para después. */
     fun lugar(ctx: Context, sugerencia: String, minutos: Int) {
         crearCanales(ctx)

@@ -45,7 +45,7 @@ import java.time.LocalDateTime
  */
 @Composable
 fun SelectorHora(valor: LocalDateTime?, atajos: List<Int> = emptyList(), etiquetaAhora: String = "ahora", permitirFuturo: Boolean = false,
-                 onCambio: (LocalDateTime?) -> Unit) {
+                 ayer: Boolean = false, onCambio: (LocalDateTime?) -> Unit) {
     val ctx = LocalContext.current
     val ahora = remember { LocalDateTime.now().withSecond(0).withNano(0) }
     fun elegir() {
@@ -60,7 +60,10 @@ fun SelectorHora(valor: LocalDateTime?, atajos: List<Int> = emptyList(), etiquet
             val t = ahora.minusMinutes(m.toLong())
             Ficha(if (m < 60) "hace $m min" else if (m % 60 == 0) "hace ${m / 60} h" else "hace ${m / 60} h ${m % 60}", valor == t) { onCambio(t) }
         }
-        val propio = valor != null && atajos.none { ahora.minusMinutes(it.toLong()) == valor }
+        // «ayer»: la misma hora de ayer (para lo que olvidaste anotar).
+        val ayerT = ahora.minusDays(1)
+        if (ayer) Ficha("ayer", valor == ayerT) { onCambio(ayerT) }
+        val propio = valor != null && atajos.none { ahora.minusMinutes(it.toLong()) == valor } && !(ayer && valor == ayerT)
         Ficha(if (!propio) "otra fecha u hora…" else "${Fechas.corto(Fechas.iso(valor!!.toLocalDate()))} · ${"%02d:%02d".format(valor.hour, valor.minute)}", propio) { elegir() }
     }
     valor?.takeIf { it.hour < 5 }?.let {

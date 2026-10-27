@@ -107,7 +107,8 @@ class QuickActivity : FragmentActivity() {
             val cal = intent.getIntExtra(CALIDAD, 0).takeIf { it in 1..5 }
             val rec = intent.getBooleanExtra(RECORDADO, false)
             if (cal != null || rec) {
-                val d = Repo.dia(Fechas.diaLogico())
+                // Va al día del despertar (la fecha del calendario), como las horas del reloj, aunque sea antes de las 5:00 (H-NAV-7).
+                val d = Repo.dia(Fechas.hoyCalendario())
                 Repo.guardarDia(d.copy(sueno_calidad = cal ?: d.sueno_calidad, sueno_recordado = rec || d.sueno_recordado))
             }
         }
@@ -150,7 +151,7 @@ class QuickActivity : FragmentActivity() {
                         }
                     }
                     // La barra de «deshacer» también aquí (por ejemplo, al borrar un consumo).
-                    io.github.ruddy2003.vestigium.ui.CapaDeshacer()
+                    CapaDeshacer()
                 }
             }
         }
@@ -169,12 +170,22 @@ class QuickActivity : FragmentActivity() {
     /** Cómo estaba el día antes de registrar una recaída, para que «Deshacer» lo deje igual. */
     private var previoRecaida: io.github.ruddy2003.vestigium.data.Recaidas.Previo? = null
 
-    /** Crea y guarda el momento al instante; la ubicación se añade en cuanto llega. */
-    fun crear(tipo: String, origen: String, valencia: Int?, avisoMs: Long?): Momento {
-        val m = Momento(
+    /**
+     * Crea y guarda el momento al instante; la ubicación se añade en cuanto llega. Con [ms] (lo anotas tarde) el momento
+     * va a esa hora y a su día lógico, sin la ubicación, la luz ni el ruido de ahora.
+     */
+    fun crear(tipo: String, origen: String, valencia: Int?, avisoMs: Long?, ms: Long? = null): Momento {
+        val m0 = Momento(
             id = Repo.nuevoId(), ts = Fechas.ahoraIso(), fecha = Fechas.diaLogico(), tipo = tipo, valencia = valencia,
             origen = origen, aviso_ts = avisoMs?.let { Fechas.isoDeMillis(it) }, ts_creado = Fechas.ahoraIso(),
         )
+        if (ms != null) {
+            val m = io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(m0, ms)
+            Repo.guardarMomento(m)
+            if (tipo == "recaida") previoRecaida = io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
+            return m
+        }
+        val m = m0
         Repo.guardarMomento(m)
         if (tipo == "recaida") previoRecaida = io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
         // Luz y, si lo activaste, ruido del ambiente en ese instante (no se guarda audio).
@@ -200,9 +211,14 @@ class QuickActivity : FragmentActivity() {
     private fun actualizar(id: String, f: (Momento) -> Momento) { Repo.momento(id)?.let { Repo.guardarMomento(f(it)) } }
 
     @Composable
-    private fun Encabezado(titulo: String, sub: String) {
+    private fun Encabezado(titulo: String, sub: String, fecha: String? = null) {
         Text(titulo, style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp))
-        Text(io.github.ruddy2003.vestigium.ui.Estilo.comentario + Fechas.horaAhora() + " · " + io.github.ruddy2003.vestigium.ui.Estilo.fecha(Fechas.diaLogico()), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        // El día va también en palabras: con algunos temas la fecha del estilo no se lee de un vistazo (N-08).
+        val dia = fecha ?: Fechas.diaLogico()
+        Text(io.github.ruddy2003.vestigium.ui.Estilo.comentario + Fechas.horaAhora() + " · " + io.github.ruddy2003.vestigium.ui.Estilo.fecha(dia) +
+            " · " + Fechas.titulo(dia).lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        // Con una fecha propia (el sueño va al día del despertar) el aviso del día lógico no aplica.
+        if (fecha == null) io.github.ruddy2003.vestigium.ui.AvisoMadrugada()
         Ayuda(sub, Modifier.padding(top = 2.dp, bottom = 12.dp))
     }
 
@@ -237,15 +253,30 @@ class QuickActivity : FragmentActivity() {
         val supl = io.github.ruddy2003.vestigium.data.Suplementos.activos()
         if (supl.isNotEmpty()) {
             var tomados by remember { mutableStateOf(supl.filter { io.github.ruddy2003.vestigium.data.Suplementos.tomadoHoy(it.id) }.map { it.id }.toSet()) }
+            var duda by remember { mutableStateOf<String?>(null) }
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
                 supl.forEach { sp ->
                     val ya = sp.id in tomados
                     val dosis = if (sp.dosis == Math.floor(sp.dosis)) "%.0f".format(sp.dosis) else "%.1f".format(sp.dosis)
-                    Surface(onClick = { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); tomados = tomados + sp.id },
+                    // Si ya lo tomaste hoy, un toque pregunta (otra toma o quitar la de hoy) en vez de sumar otra sin querer.
+                    Surface(onClick = { if (ya) duda = if (duda == sp.id) null else sp.id else { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); tomados = tomados + sp.id } },
                         modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(4.dp), color = if (ya) cs.primary.copy(alpha = 0.12f) else cs.surface,
                         border = BorderStroke(1.dp, if (ya) cs.primary else cs.outline)) {
                         Box(contentAlignment = Alignment.Center) { Text((if (ya) "✓ " else "Tomé ") + sp.nombre.lowercase() + " · $dosis ${sp.unidad}", style = MaterialTheme.typography.labelLarge) }
                     }
+                }
+            }
+            supl.firstOrNull { it.id == duda }?.let { sp ->
+                Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(sp.nombre + " ya está hoy:", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); duda = null; Toast.makeText(this@QuickActivity, "Otra toma anotada", Toast.LENGTH_SHORT).show() }) { Text("otra toma") }
+                    TextButton(onClick = {
+                        // Se cuentan antes de borrar: la lista en memoria se actualiza después, en el hilo principal.
+                        val deHoy = Repo.tomas.filter { it.suplemento == sp.id && it.fecha == Fechas.diaLogico() }
+                        deHoy.maxByOrNull { it.ts }?.let { Repo.borrarToma(it.id) }
+                        if (deHoy.size <= 1) tomados = tomados - sp.id
+                        duda = null; Toast.makeText(this@QuickActivity, "Quitada la de hoy (7 días en la papelera)", Toast.LENGTH_SHORT).show()
+                    }) { Text("quitar la de hoy") }
                 }
             }
         }
@@ -270,13 +301,26 @@ class QuickActivity : FragmentActivity() {
         var nota by remember { mutableStateOf(inicial?.texto.orEmpty()) }
         var con by remember { mutableStateOf(inicial?.con_quien.orEmpty()) }
         val discreto = Repo.config.discreto
+        // Cuándo: null = ahora. Para anotar tarde («ayer», otra hora); no en la respuesta a un aviso, que es de ese momento.
+        var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(null) }
+        var elegirCuando by remember { mutableStateOf(false) }
         /** El registro se crea con lo primero que toques. */
         fun asegurar(f: (Momento) -> Momento) {
-            val actual = m ?: crear(if (avisoMs != null) "muestreo" else "animo", origen, null, avisoMs)
+            val actual = m ?: crear(if (avisoMs != null) "muestreo" else "animo", origen, null, avisoMs, cuando?.aMillis())
             val n = f(Repo.momento(actual.id) ?: actual)
             Repo.guardarMomento(n); m = n
         }
-        Encabezado("¿Cómo estás ahora?", if (m != null) "Guardado a las ${Fechas.horaDe(m!!.ts)}. Lo demás es opcional; puedes cerrar." else "Un toque en el cuadro basta.")
+        Encabezado("¿Cómo estás ahora?", if (m != null) "Guardado a las ${Fechas.horaDe(m!!.ts)} del ${Fechas.titulo(m!!.fecha).lowercase()}. Lo demás es opcional; puedes cerrar." else "Un toque en el cuadro basta.")
+        if (avisoMs == null && inicial == null) {
+            if (!elegirCuando) TextButton(onClick = { elegirCuando = true }) {
+                Text(if (cuando == null) "¿fue antes? anotarlo en otra hora o día" else "cuándo: ${Fechas.corto(Fechas.diaLogicoDeMillis(cuando!!.aMillis()))} ${"%02d:%02d".format(cuando!!.hour, cuando!!.minute)}",
+                    style = MaterialTheme.typography.labelLarge)
+            } else io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true, atajos = listOf(60, 180)) { nuevo ->
+                cuando = nuevo
+                // Si ya estaba creado, se mueve a esa hora (y a su día).
+                m?.let { actual -> val ms = (nuevo ?: java.time.LocalDateTime.now()).aMillis(); val n = io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(Repo.momento(actual.id) ?: actual, ms); Repo.guardarMomento(n); m = n }
+            }
+        }
         BannerConsumo(ir)
         CuadriculaAfecto(valencia, activacion) { v, a -> valencia = v; activacion = a; asegurar { it.copy(valencia = v, activacion = a) } }
         Etiqueta("¿Qué sientes? (opcional, varios)")
@@ -684,10 +728,11 @@ class QuickActivity : FragmentActivity() {
 
     @Composable
     private fun SuenoRapido() {
-        val fecha = Fechas.diaLogico()
+        // El sueño va al día del despertar (la fecha del calendario), como las horas del reloj (H-NAV-7).
+        val fecha = Fechas.hoyCalendario()
         var d by remember { mutableStateOf(Repo.dia(fecha)) }
         fun guardar(n: io.github.ruddy2003.vestigium.data.Dia) { d = n; Repo.guardarDia(n) }
-        Encabezado("Tu sueño", "Primero cuéntalo, antes de levantarte: los detalles se van en minutos. Lo demás, después.")
+        Encabezado("Tu sueño", "Primero cuéntalo, antes de levantarte: los detalles se van en minutos. Lo demás, después.", fecha)
         // 1. La narración, arriba: es lo que se olvida primero.
         Etiqueta("Qué soñaste")
         OutlinedTextField(value = d.sueno_texto, onValueChange = { t -> guardar(d.copy(sueno_texto = t, sueno_recordado = d.sueno_recordado || t.isNotBlank())) },
