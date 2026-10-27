@@ -246,6 +246,122 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Gravedad:** Baja.
 - **Propuesta:** un solo criterio de pertenencia al lugar; preferir solo avisos (`muestreo`) o mostrarlos separados; en R, no rellenar con la valencia del día.
 
+## Módulo 5 · Núcleo estadístico (v81, commit `fa527df`)
+
+_Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma** (H-5-7). Las pistas 1 y 2 (experimentos) dependen de `Estadistica.diferencia`; aquí se registra el problema general de esa función (H-5-5) y el módulo 7 lo desarrolla para los experimentos._
+
+### H-5-1 · R analiza otra tabla: `vm_panel.csv` no es el panel de la app
+- Dónde: `data/Exportar.kt`, `filasPanel()` frente a `ciencia/Estadistica.kt`, `panel()`; `vestigium.R`, `vm_relaciones`, `vm_factores`, `vm_atipicos`, `vm_modelo` (todas usan `panel` = `vm_panel.csv`).
+- Qué pasa: la misma variable tiene otro nombre (`sueno_min`/`sueno_horas`, `km`/`distancia_km`, `hrv_rmssd`/`hrv`, `valencia_muestreo`/`muestreo_valencia`, `luz_dia_min`/`luz_horas`, `carga_noche_inicio_h`/`carga_noche_h`, `temp_piel_delta`/`temp_piel`, `ruido_db_medio`/`ruido_db`); otras reglas de ceros (`gasto_total` e `ingreso_total` = 0 en cualquier fecha exportada; `escalada` y `gimnasio` = falso en cualquier fecha; `n_momentos`/`m_*` incluyen momentos privados); otras filas; y faltan muchas variables (dinámicas, contextos, hábitos, lectura del día, enfoque…), que están en `vm_panel_extendido.csv` pero el script no lo carga.
+- Por qué importa: `vm_relaciones()` aplica el mismo algoritmo que «Las relaciones más marcadas» pero a otra tabla; no se puede usar R para verificar lo que muestra la app, y las diferencias de ceros cambian medias y correlaciones.
+- Gravedad: alta.
+- Propuesta: exportar el panel de la app (`Estadistica.panel()` con los nombres de `variables()`) como tabla de análisis (por ejemplo, que `vm_panel_extendido.csv` sea exactamente ese panel) y que el script de R lo lea por omisión; o, como mínimo, unificar nombres y reglas de ceros entre `filasPanel()` y `panel()`.
+
+### H-5-2 · La lista de relaciones «obvias» de R es mucho más corta que la de la app
+- Dónde: `vestigium.R`, `vm_familias` (19 conjuntos) y `vm_obvia`; `ciencia/Estadistica.kt`, `FAMILIAS` (56 conjuntos) y `obvia()` (reglas por grupo, lugares, suplementos, prefijos dinámicos `AGREGADOS`/`ENTRE_SI`, misma persona, mismo cuestionario).
+- Qué pasa: en R se prueban y pueden salir como «firmes» parejas que la app esconde como triviales (p. ej., `valencia` con `animo_valencia` o `animo_cierre_valencia`; `cercanos` con `vi_familia`; `alcohol` con `alcohol_bebidas`; `cafeina_mg` con `cafeina_total_mg`; `n_<emoción>` con `registros_animo`), y la corrección BH se hace sobre otro número de pruebas.
+- Por qué importa: la lista de R se llena de trivialidades y no coincide con la de la app.
+- Gravedad: media.
+- Propuesta: exportar las familias de la app (por ejemplo, `vm_familias.csv` generado desde `FAMILIAS` y las reglas de `obvia`) y que `vm_obvia` lo lea; o una columna `obvia` precalculada para cada pareja.
+
+### H-5-3 · «Todo lo que se mueve con algo» no quita tendencia ni descuenta la autocorrelación
+- Dónde: `ciencia/Analisis.kt`, `factores()`; `ui/pantallas/Analisis.kt`, `Factores`; mismo patrón en `vestigium.R`, `vm_factores`.
+- Qué pasa: compara valores tal cual con n bruto (Spearman con EE = 1/√(n − 3); diferencia de medias con días independientes) y luego aplica BH. Como tocar una tarjeta de «Las relaciones más marcadas» abre esta pantalla, la misma pareja puede verse punteada («podría ser azar») en la lista y con ✓ (q < 0.1) aquí, o con otro signo si la relación era de tendencia.
+- Por qué importa: con variables persistentes los p son mucho más pequeños de lo que deberían (en la simulación de la Figura 6.3, con autocorrelación 0.8 la tasa de falsas alarmas sube de 5 % a 35 %), y BH no lo compensa; el usuario recibe ✓ en relaciones espurias.
+- Gravedad: alta.
+- Propuesta: reutilizar en `factores` la maquinaria de `relaciones` (restos sin tendencia según el interruptor, nEf y p con nEf); para 0/1, una diferencia de medias con EE inflado por (1 + r₁)/(1 − r₁) o calculada sobre los restos. Alternativa mínima: mostrar el mismo r, IC y q que la lista para la pareja de origen.
+
+### H-5-4 · «Cruzar dos variables» usa n bruto y valores con tendencia
+- Dónde: `ui/pantallas/Explorar.kt`, sección «Cruzar dos variables» (`Estadistica.pares`, `pearson`, `ic95`).
+- Qué pasa: el intervalo y la frase «no incluye el cero» se calculan con n sin descontar la autocorrelación y sin quitar tendencia.
+- Por qué importa: puede afirmar que una relación «no incluye el cero» cuando la lista la marca como posible azar; contradicción visible entre secciones de la misma pantalla.
+- Gravedad: media.
+- Propuesta: calcular el intervalo con nEf (autocorrelación de cada variable) y ofrecer el mismo interruptor «Quitar tendencias»; o al menos mostrar «≈ nEf independientes» y el r sin tendencia junto al bruto.
+
+### H-5-5 · `Estadistica.diferencia`: 1.96 fijo y días independientes
+- Dónde: `ciencia/Estadistica.kt`, `diferencia()`; la usan `Analisis.cambio` (Tendencia: 30 contra 30 días), `Analisis.factores` (variables 0/1), `EtapasDeVida` en `ui/pantallas/Explorar.kt` (60 contra 60 días) y `Experimentos` (`data/Lote3.kt`). Lo mismo en `Analisis.porDiaSemana` (media ± 1.96 DE/√n con n ≥ 2).
+- Qué pasa: el intervalo usa el cuantil de la normal (1.96) en vez del de t (con 3 a 5 valores por grupo, t ≈ 2.8–4.3; con 2 valores en «Día de la semana», 12.7) y trata cada día como independiente aunque los días de un mismo periodo se parecen.
+- Por qué importa: intervalos demasiado estrechos; «El cambio es claro» o «la diferencia parece real» con más frecuencia de la debida.
+- Gravedad: media.
+- Propuesta: usar t con los grados de libertad de Welch; inflar el EE por la autocorrelación (o usar nEf por grupo); subir el mínimo de `porDiaSemana` (p. ej., 5 por día). Para experimentos, ver módulo 7.
+
+### H-5-6 · Quitar la tendencia no quita el ciclo semanal
+- Dónde: `ciencia/Estadistica.kt`, `series()` (ventana ±10 días = 21 días = 3 semanas exactas); igual en `vm_relaciones`.
+- Qué pasa: el promedio de 21 días elimina el patrón semanal del promedio y lo deja entero en los restos. Dos variables que cambian con el fin de semana quedan correlacionadas sin tendencia.
+- Por qué importa: el día de la semana es un confusor común (sueño, ánimo, pantalla, gasto, alcohol); relaciones «firmes» pueden deberse solo al calendario.
+- Gravedad: media.
+- Propuesta: opción de restar también la media de cada día de la semana (calculada sobre los restos) antes de correlacionar, o documentarlo en la pantalla; en R, sugerir `factor(dia_semana)` en los modelos.
+
+### H-5-7 · Pearson y Spearman mezclados entre pantallas y con R (pista 5 confirmada)
+- Dónde: `Estadistica.relaciones` (Pearson sobre restos), `Analisis.factores` (Spearman), Explorar «Cruzar dos variables» (muestra ambos, razona con Pearson), `vestigium.R`: `vm_cruce`, `vm_factores`, `vm_cruce_horas`, `vm_presion` (Spearman por omisión), `vm_relaciones` (Pearson).
+- Qué pasa: la misma pareja muestra números distintos según dónde se mire, sin explicación.
+- Por qué importa: confusión; parece que los análisis se contradicen.
+- Gravedad: baja.
+- Propuesta: un solo coeficiente principal por tipo de análisis, nombrado siempre en pantalla; `vm_cruce` con `metodo = "pearson"` por omisión o mostrar ambos como la app.
+
+### H-5-8 · Días atípicos: la variable `km` no existe en el panel de la app
+- Dónde: `ciencia/Analisis.kt`, `atipicos()`, lista `ids`.
+- Qué pasa: busca `km`, pero la variable del panel se llama `distancia_km`; la distancia nunca se revisa. Además, la mediana y la MAD toman el central superior cuando n es par (R promedia).
+- Por qué importa: se pierden días atípicos de movilidad (viajes); pequeñas diferencias de z con R.
+- Gravedad: baja.
+- Propuesta: cambiar `km` por `distancia_km`; opcionalmente promediar los dos centrales.
+
+### H-5-9 · «Tus números»: ejercicio semanal sobreestimado y aire libre con otra variable
+- Dónde: `ciencia/TusNumeros.kt`, `construir()`: `ejercicio_sem` = media de `ejercicio_min` en los últimos 30 días con dato × 7; `aire_libre` usa `luz_alta_min`.
+- Qué pasa: `ejercicio_min` solo tiene valor los días con sesión del reloj, así que se promedian solo días con ejercicio y se multiplica por 7 (tres sesiones de 45 min por semana dan 315 min/semana en lugar de 135). «Aire libre» usa solo la luz del teléfono y no `aire_libre_min` (máximo de luz y movimiento).
+- Por qué importa: la comparación con las recomendaciones de actividad física (150 min/semana) sale engañosamente favorable.
+- Gravedad: media.
+- Propuesta: calcular el ejercicio semanal como suma de minutos en los últimos 28 días con cobertura de reloj / 4 (o rellenar con 0 los días con datos del reloj y sin sesión); usar `aire_libre_min`.
+
+### H-5-10 · Palabras del diario sin incertidumbre y distintas en R
+- Dónde: `ciencia/Analisis.kt`, `palabras()`; `vestigium.R`, `vm_palabras`.
+- Qué pasa: se ordenan cientos de palabras por la diferencia de medias con mínimo 5 días, sin intervalo ni corrección; las de los extremos son en parte azar (regresión a la media). R usa otra lista de vacías (107 frente a 167, con y sin acentos) y otra media de referencia (todos los días frente a días con nota).
+- Por qué importa: listas llamativas pero poco estables; app y R no coinciden.
+- Gravedad: baja.
+- Propuesta: mostrar n y un intervalo, o encoger la diferencia hacia 0 según n (p. ej., dif · n/(n + k)); unificar lista de vacías y referencia en R.
+
+### H-5-11 · Modelo múltiple: inferencia y etiqueta
+- Dónde: `ciencia/Analisis.kt`, `modelo()`; `ui/pantallas/Analisis.kt`, `ModeloUI`.
+- Qué pasa: intervalos con 1.96 en vez de t(n − k − 1); R² sin ajustar; mínimo n ≥ k + 10; el interruptor dice «Controlar por el ánimo del día anterior» pero agrega el objetivo de ayer, sea cual sea.
+- Por qué importa: con pocos días los intervalos son estrechos y el R² optimista; texto inexacto cuando el objetivo no es el ánimo.
+- Gravedad: baja.
+- Propuesta: usar t y mostrar R² ajustado; texto «Controlar por el valor del día anterior».
+
+### H-5-12 · Dinámica emocional: dos definiciones de «difícil»
+- Dónde: `ciencia/Analisis.kt`, `dinamica()`.
+- Qué pasa: «% días difíciles» usa valencia ≤ 2 y «racha dura» usa ≤ 3. En R, `vm_dinamica` por mes empareja el último día de un mes con el primero del siguiente y calcula inercia mensual; la app no.
+- Por qué importa: inconsistencia de definiciones en la misma tarjeta; pequeñas diferencias con R.
+- Gravedad: baja.
+- Propuesta: un solo umbral (o nombrarlos distinto: «muy difíciles» ≤ 2); documentar la diferencia mensual con R.
+
+### H-5-13 · Límites de la corrección por autocorrelación
+- Dónde: `ciencia/Estadistica.kt`, `autocorr()` y `relaciones()`.
+- Qué pasa: con menos de 10 pares consecutivos la autocorrelación vale 0 (sin corrección: variables esporádicas y las primeras ~11 semanas del modo semanal); la autocorrelación se estima sobre toda la serie de cada variable, no sobre los días compartidos; la fórmula es de primer orden (AR(1)).
+- Por qué importa: en esos casos nEf = n y la relación parece más segura de lo que es.
+- Gravedad: baja.
+- Propuesta: solo documentar; opcionalmente usar un valor prudente (p. ej., 0.3) cuando no se puede estimar.
+
+### H-5-14 · Las variables de etapa, cuestionario y política casi nunca entran «sin tendencia»
+- Dónde: `ciencia/Estadistica.kt`, `series()` (criterio de lenta var(resto)/var < 0.12) aplicado a `vida_*`, `pol_*`, `esc_*` de `Dinamicas.kt`.
+- Qué pasa: al ser escalones que cambian pocas veces, se clasifican como lentas y se omiten con el interruptor encendido; con el interruptor apagado entran, pero expuestas a tendencias.
+- Por qué importa: la promesa «cruzar todo con todo» no se cumple para estas variables en el modo recomendado; el usuario puede no notarlo (la pantalla las nombra solo en el texto de lentas).
+- Gravedad: baja.
+- Propuesta: solo documentar, o remitir desde la lista a «Antes y después» y al análisis en R para estas variables.
+
+### H-5-15 · Reportes y Totales: fechas y horas con criterios distintos al panel
+- Dónde: `ciencia/Periodo.kt` (`horaDec` suma 24 a las horas < 15; lee la hora del texto ISO; ingresos por `fecha`, gastos por `dia`; `valDe` cae a los registros de ánimo si no hay diario); `ciencia/Totales.kt` (gastos e ingresos por `fecha` de calendario).
+- Qué pasa: la hora media de dormir del reporte usa otro corte (15 h) que el resto de la app (12 h); un ingreso de madrugada cae en otro día que su gasto; la valencia del reporte mezcla diario y registros momentáneos.
+- Por qué importa: pequeñas incoherencias entre reportes, panel y R (relacionado con H-1-2).
+- Gravedad: baja.
+- Propuesta: usar `Exportar.horaDecimal` y `dia` en todas partes; indicar cuando la valencia de un día viene de registros momentáneos.
+
+### H-5-16 · El aviso de potencia cuenta días con diario, no días por pareja
+- Dónde: `ui/pantallas/Explorar.kt` («Con 90 días o más ya se pueden detectar relaciones moderadas» / «Faltan N días…», con `Repo.dias.size`).
+- Qué pasa: 90 días bastan para |r| ≈ 0.29 en **una** prueba con días independientes; con autocorrelación y miles de comparaciones hace falta |r| ≳ 0.5. Y el conteo es de días con diario, no de días con ambos datos.
+- Por qué importa: expectativa optimista sobre lo que la lista puede encontrar.
+- Gravedad: baja.
+- Propuesta: matizar el texto («relaciones moderadas en una pareja concreta; en la lista completa, solo las fuertes») o basarlo en la cobertura de cada variable.
+
 ## Módulo 6 · Personas y red social (v81, commit `fa527df`)
 
 ### H-6-1 · Momentos privados e impulsos en funciones de personas

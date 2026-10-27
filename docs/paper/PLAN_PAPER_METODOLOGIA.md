@@ -17,7 +17,7 @@ _Creado el 26 oct 2026 sobre la versión v81 (commit `fa527df`). Este archivo es
 | 2 | Medición del estado subjetivo | Opus | Alto | Cap. 3 | hecho 2026-10-26 |
 | 3 | Sensores, datos pasivos e importaciones | Sonnet | Medio | Cap. 4 | hecho 2026-10-26 |
 | 4 | Modelos fisiológicos y variables derivadas | Opus | Alto | Cap. 5 | pendiente |
-| 5 | Núcleo estadístico (app y R) | Opus | Alto | Cap. 6, Apéndices B y C | pendiente |
+| 5 | Núcleo estadístico (app y R) | Opus | Alto | Cap. 6, Apéndices B y C | hecho 2026-10-26 |
 | 6 | Personas y red social | Sonnet | Alto | Cap. 7 | hecho 2026-10-27 |
 | 7 | Experimentos personales (N-de-1) | Opus | Alto | Cap. 8 | hecho 2026-10-27 |
 | 8 | Reportes, motivación, privacidad e integridad | Sonnet | Medio | Caps. 9 y 10 | hecho 2026-10-27 |

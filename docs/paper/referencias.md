@@ -96,6 +96,50 @@ _Verificación (módulo 2):_ los DOI de artículos se comprobaron en Crossref du
 
 _Afirmaciones marcadas [sin verificar] en el capítulo 3:_ el tamaño original de la Affect Grid (9 × 9); el punto de corte WHO-5 ≤ 28; el punto de corte UCLA-3 ≥ 6; que el recuerdo de los sueños se pierda «en minutos»; la conclusión general de que la reactividad suele ser pequeña.
 
+## Módulo 5 · Capítulo 6 y Apéndices B y C (núcleo estadístico)
+
+_Verificación:_ en esta sesión el acceso directo a Crossref y doi.org estaba bloqueado; cada referencia se comprobó por búsqueda web (título, revista, volumen, páginas y DOI coincidentes en la página del editor, PubMed/PMC, Project Euclid, ADS, RePEc u otra base bibliográfica). Lo que solo se confirmó parcialmente se indica.
+
+Abramowitz, M., & Stegun, I. A. (Eds.). (1964). *Handbook of mathematical functions with formulas, graphs, and mathematical tables* (Applied Mathematics Series 55). National Bureau of Standards. https://personal.math.ubc.ca/~cbm/aands/ (fórmula 7.1.26, p. 299; los coeficientes y la cota de error 1.5 × 10⁻⁷ se comprobaron en fuentes secundarias, no en la página escaneada).
+
+Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: A practical and powerful approach to multiple testing. *Journal of the Royal Statistical Society: Series B (Methodological), 57*(1), 289–300. https://doi.org/10.1111/j.2517-6161.1995.tb02031.x
+
+Benjamini, Y., & Yekutieli, D. (2001). The control of the false discovery rate in multiple testing under dependency. *The Annals of Statistics, 29*(4), 1165–1188. https://doi.org/10.1214/aos/1013699998
+
+Bretherton, C. S., Widmann, M., Dymnikov, V. P., Wallace, J. M., & Bladé, I. (1999). The effective number of spatial degrees of freedom of a time-varying field. *Journal of Climate, 12*(7), 1990–2009. https://doi.org/10.1175/1520-0442(1999)012<1990:TENOSD>2.0.CO;2
+
+Cohen, J. (1988). *Statistical power analysis for the behavioral sciences* (2.ª ed.). Lawrence Erlbaum Associates. ISBN 978-0-8058-0283-2. [DOI de la reedición de Routledge, 10.4324/9780203771587, sin verificar]
+
+Dejonckheere, E., Mestdagh, M., Houben, M., Rutten, I., Sels, L., Kuppens, P., & Tuerlinckx, F. (2019). Complex affect dynamics add limited information to the prediction of psychological well-being. *Nature Human Behaviour, 3*(5), 478–491. https://doi.org/10.1038/s41562-019-0555-0 [lista de autores después del tercero sin verificar]
+
+Fieller, E. C., Hartley, H. O., & Pearson, E. S. (1957). Tests for rank correlation coefficients. I. *Biometrika, 44*(3–4), 470–481. https://doi.org/10.1093/biomet/44.3-4.470
+
+Fisher, R. A. (1915). Frequency distribution of the values of the correlation coefficient in samples from an indefinitely large population. *Biometrika, 10*(4), 507–521. https://doi.org/10.2307/2331838
+
+Granger, C. W. J., & Newbold, P. (1974). Spurious regressions in econometrics. *Journal of Econometrics, 2*(2), 111–120. https://doi.org/10.1016/0304-4076(74)90034-7
+
+Hamaker, E. L., & Wichers, M. (2017). No time like the present: Discovering the hidden dynamics in intensive longitudinal data. *Current Directions in Psychological Science, 26*(1), 10–15. https://doi.org/10.1177/0963721416666518
+
+Jahng, S., Wood, P. K., & Trull, T. J. (2008). Analysis of affective instability in ecological momentary assessment: Indices using successive difference and group comparison via multilevel modeling. *Psychological Methods, 13*(4), 354–375. https://doi.org/10.1037/a0014173
+
+Kuppens, P., Allen, N. B., & Sheeber, L. B. (2010). Emotional inertia and psychological maladjustment. *Psychological Science, 21*(7), 984–991. https://doi.org/10.1177/0956797610372634
+
+Leys, C., Ley, C., Klein, O., Bernard, P., & Licata, L. (2013). Detecting outliers: Do not use standard deviation around the mean, use absolute deviation around the median. *Journal of Experimental Social Psychology, 49*(4), 764–766. https://doi.org/10.1016/j.jesp.2013.03.013
+
+Pinheiro, J., Bates, D., & R Core Team. (2026). *nlme: Linear and nonlinear mixed effects models* (versión 3.1-171) [Paquete de R]. https://search.r-project.org/CRAN/refmans/nlme/html/corAR1.html (el manejo de días faltantes en `corAR1` se comprobó en el código fuente, `R/corStruct.R`).
+
+Pyper, B. J., & Peterman, R. M. (1998). Comparison of methods to account for autocorrelation in correlation analyses of fish data. *Canadian Journal of Fisheries and Aquatic Sciences, 55*(9), 2127–2140. https://doi.org/10.1139/f98-104 (existe una fe de erratas: 55(12), 2710, https://doi.org/10.1139/f98-201).
+
+Storey, J. D., & Tibshirani, R. (2003). Statistical significance for genomewide studies. *Proceedings of the National Academy of Sciences, 100*(16), 9440–9445. https://doi.org/10.1073/pnas.1530509100
+
+Tausczik, Y. R., & Pennebaker, J. W. (2010). The psychological meaning of words: LIWC and computerized text analysis methods. *Journal of Language and Social Psychology, 29*(1), 24–54. https://doi.org/10.1177/0261927X09351676
+
+von Neumann, J., Kent, R. H., Bellinson, H. R., & Hart, B. I. (1941). The mean square successive difference. *The Annals of Mathematical Statistics, 12*(2), 153–162. https://doi.org/10.1214/aoms/1177731746
+
+Welch, B. L. (1947). The generalization of 'Student's' problem when several different population variances are involved. *Biometrika, 34*(1–2), 28–35. https://doi.org/10.1093/biomet/34.1-2.28
+
+Yule, G. U. (1926). Why do we sometimes get nonsense-correlations between time-series? A study in sampling and the nature of time-series. *Journal of the Royal Statistical Society, 89*(1), 1–63. https://doi.org/10.2307/2341482
+
 ## Módulo 6 · Capítulo 7 (personas y red social)
 
 Aron, A., Aron, E. N., & Smollan, D. (1992). Inclusion of Other in the Self Scale and the structure of interpersonal closeness. *Journal of Personality and Social Psychology, 63*(4), 596–612. https://doi.org/10.1037/0022-3514.63.4.596
