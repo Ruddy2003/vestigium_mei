@@ -96,6 +96,38 @@ _Verificación (módulo 2):_ los DOI de artículos se comprobaron en Crossref du
 
 _Afirmaciones marcadas [sin verificar] en el capítulo 3:_ el tamaño original de la Affect Grid (9 × 9); el punto de corte WHO-5 ≤ 28; el punto de corte UCLA-3 ≥ 6; que el recuerdo de los sueños se pierda «en minutos»; la conclusión general de que la reactividad suele ser pequeña.
 
+## Módulo 4 · Capítulo 5 (modelos fisiológicos y variables derivadas)
+
+Cuttone, A., Bækgaard, P., Sekara, V., Jonsson, H., Larsen, J. E., & Lehmann, S. (2017). SensibleSleep: A Bayesian model for learning sleep patterns from smartphone events. *PLOS ONE, 12*(1), e0169901. https://doi.org/10.1371/journal.pone.0169901
+
+Harpsøe, N. G., Andersen, L. P. H., Gögenur, I., & Rosenberg, J. (2015). Clinical pharmacokinetics of melatonin: A systematic review. *European Journal of Clinical Pharmacology, 71*(8), 901–909. https://doi.org/10.1007/s00228-015-1873-4
+
+Hultman, E., Söderlund, K., Timmons, J. A., Cederblad, G., & Greenhaff, P. L. (1996). Muscle creatine loading in men. *Journal of Applied Physiology, 81*(1), 232–237. https://doi.org/10.1152/jappl.1996.81.1.232 (también citada en el módulo 7)
+
+Institute of Medicine. (2001). *Caffeine for the sustainment of mental task performance: Formulations for military operations*. National Academies Press. https://doi.org/10.17226/10219
+
+Jones, A. W. (2010). Evidence-based survey of the elimination rates of ethanol from blood with applications in forensic casework. *Forensic Science International, 200*(1–3), 1–20. https://doi.org/10.1016/j.forsciint.2010.02.021
+
+Jones, G. (2008). Pharmacokinetics of vitamin D toxicity. *The American Journal of Clinical Nutrition, 88*(2), 582S–586S. https://doi.org/10.1093/ajcn/88.2.582S
+
+National Institute on Alcohol Abuse and Alcoholism. (s. f.). *What is a standard drink?* Recuperado el 27 de octubre de 2026, de https://www.niaaa.nih.gov/alcohols-effects-health/what-standard-drink
+
+Nehlig, A. (2018). Interindividual differences in caffeine metabolism and factors driving caffeine consumption. *Pharmacological Reviews, 70*(2), 384–411. https://doi.org/10.1124/pr.117.014407
+
+Phillips, A. J. K., Clerx, W. M., O'Brien, C. S., Sano, A., Barger, L. K., Picard, R. W., Lockley, S. W., Klerman, E. B., & Czeisler, C. A. (2017). Irregular sleep/wake patterns are associated with poorer academic performance and delayed circadian and sleep/wake timing. *Scientific Reports, 7*, Artículo 3216. https://doi.org/10.1038/s41598-017-03171-4
+
+Roenneberg, T., Allebrandt, K. V., Merrow, M., & Vetter, C. (2012). Social jetlag and obesity. *Current Biology, 22*(10), 939–943. https://doi.org/10.1016/j.cub.2012.03.038
+
+Searle, J. (2015). Alcohol calculations and their uncertainty. *Medicine, Science and the Law, 55*(1), 58–64. https://doi.org/10.1177/0025802414524385
+
+Watson, P. E., Watson, I. D., & Batt, R. D. (1980). Total body water volumes for adult males and females estimated from simple anthropometric measurements. *The American Journal of Clinical Nutrition, 33*(1), 27–39. https://doi.org/10.1093/ajcn/33.1.27
+
+Wittmann, M., Dinich, J., Merrow, M., & Roenneberg, T. (2006). Social jetlag: Misalignment of biological and social time. *Chronobiology International, 23*(1–2), 497–509. https://doi.org/10.1080/07420520500545979
+
+_Verificación (módulo 4):_ todos los DOI se comprobaron en Crossref durante la sesión, y las cifras que se citan se leyeron en los resúmenes de PubMed (Hultman, Jones 2010, Searle, Wittmann, Roenneberg, Phillips, Jones 2008, Harpsøe, Cuttone) o en la página de la NIAAA. Las cifras de la cafeína del Institute of Medicine (99 % absorbido en 45 min; pico de 15 a 120 min; vida media media de unas 5 h, de 1.5 a 9.5 h) se comprobaron con una búsqueda web contra el texto del capítulo de farmacología en NAP y NCBI Bookshelf; el libro completo no se abrió. Searle publicó en línea en 2014; la edición impresa es de 2015.
+
+_Afirmaciones marcadas [sin verificar] en el capítulo 5:_ el umbral de 1 hora de jet lag social que menciona la pantalla; las vidas medias de magnesio (12 h) y omega-3 (60 h); el error de la fase lunar con el mes sinódico medio; la fuente original de la fórmula de Epley.
+
 ## Módulo 5 · Capítulo 6 y Apéndices B y C (núcleo estadístico)
 
 _Verificación:_ en esta sesión el acceso directo a Crossref y doi.org estaba bloqueado; cada referencia se comprobó por búsqueda web (título, revista, volumen, páginas y DOI coincidentes en la página del editor, PubMed/PMC, Project Euclid, ADS, RePEc u otra base bibliográfica). Lo que solo se confirmó parcialmente se indica.
@@ -184,9 +216,9 @@ Tanious, R., & Onghena, P. (2019). Randomized single-case experimental designs i
 
 Vohra, S., Shamseer, L., Sampson, M., Bukutu, C., Schmid, C. H., Tate, R., Nikles, J., Zucker, D. R., Kravitz, R., Guyatt, G., Altman, D. G., Moher, D., & the CENT Group. (2015). CONSORT extension for reporting N-of-1 trials (CENT) 2015 Statement. *BMJ, 350*, h1738. https://doi.org/10.1136/bmj.h1738
 
-_Verificación (módulo 7):_ Crossref seguía inaccesible desde el entorno; las fichas se comprobaron con búsquedas web contra el editor, PubMed Central, JSTOR o repositorios. La lista de autores de Vohra et al. (2015) se comprobó en Crossref en la sesión del módulo 8 (Crossref da «C.» para Schmid y «D.» para Zucker y Altman, sin segunda inicial). De Hultman et al. (1996) solo se usa lo que dice el resumen (≈ 20 % tras 6 días a 20 g/día, mantenido con 2 g/día durante 30 días).
+_Verificación (módulo 7):_ Crossref seguía inaccesible desde el entorno; las fichas se comprobaron con búsquedas web contra el editor, PubMed Central, JSTOR o repositorios. La lista de autores de Vohra et al. (2015) se comprobó en Crossref en la sesión del módulo 8 (Crossref da «C.» para Schmid y «D.» para Zucker y Altman, sin segunda inicial). De Hultman et al. (1996) solo se usa lo que dice el resumen (≈ 20 % tras 6 días a 20 g/día, mantenido con 2 g/día durante 30 días; en la sesión del módulo 4 se leyó el resumen completo en PubMed, que además da el vaciado a 30 días y el protocolo de 3 g/día durante 28 días).
 
-_Afirmaciones marcadas [sin verificar] en el capítulo 8:_ el nombre «lavado analítico» en las guías N-de-1; la autocorrelación típica (0.3–0.5) de medidas diarias de ánimo; el tiempo exacto de vaciado de la creatina; cuánto reducen los avisos al azar el sesgo de expectativa.
+_Afirmaciones marcadas [sin verificar] en el capítulo 8:_ el nombre «lavado analítico» en las guías N-de-1; la autocorrelación típica (0.3–0.5) de medidas diarias de ánimo; cuánto reducen los avisos al azar el sesgo de expectativa.
 
 ## Módulo 8 · Capítulos 9 y 10 (reportes, motivación, privacidad e integridad)
 

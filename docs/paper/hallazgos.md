@@ -246,6 +246,99 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Gravedad:** Baja.
 - **Propuesta:** un solo criterio de pertenencia al lugar; preferir solo avisos (`muestreo`) o mostrarlos separados; en R, no rellenar con la valencia del día.
 
+## Módulo 4 · Modelos fisiológicos y variables derivadas (v81, commit `fa527df`)
+
+### H-4-1 · Cafeína: forma de la curva y una sola vida media
+- **Dónde:** `data/Sustancias.kt`, `cafeinaEn()`; `Config.cafeina_vida_media_h` (5 h por omisión).
+- **Qué pasa:** la rampa de absorción de 45 min se multiplica por la eliminación desde el primer minuto (a los 45 min queda el 90 % de la dosis con 5 h); una sola vida media vale para todo el historial.
+- **Por qué importa:** la vida media real va de 1.5 a 9.5 h entre personas (Institute of Medicine, 2001); con la misma tarde, la cafeína al dormir puede variar de 12 a 106 mg. La cifra solo es comparable contigo mismo.
+- **Gravedad:** Baja.
+- **Propuesta:** solo documentar; opcionalmente, un modelo de absorción y eliminación de primer orden y mostrar la cifra como rango.
+
+### H-4-2 · Cafeína y alcohol: una sola fuente por día y la hora de MacroFactor
+- **Dónde:** `data/Sustancias.kt`, `dosis()` (si MacroFactor tiene algo de esa sustancia ese día, se ignoran los registros propios del día).
+- **Qué pasa:** un café o una bebida anotados en la app el mismo día que otro distinto en MacroFactor se pierden; la hora de MacroFactor es la del registro del alimento, no necesariamente la de la toma.
+- **Por qué importa:** subestima `cafeina_total_mg`, `cafeina_al_dormir_mg`, `alcohol_bebidas` y `alcohol_*`, y desplaza las curvas.
+- **Gravedad:** Media.
+- **Propuesta:** combinar por toma (descartar un registro propio solo si hay uno de MacroFactor a menos de, por ejemplo, 30 min con cantidad parecida) en vez de por día.
+
+### H-4-3 · En el hilo principal sin caché, las variables de sustancias omiten MacroFactor
+- **Dónde:** `ciencia/Estadistica.kt`, `sustancias()` (`Sustancias.dosis(ini, hoy, if (enMain) emptyList() else null)`); `ui/pantallas/Lote3.kt`, `PantallaExperimentos` (panel calculado en el hilo principal).
+- **Qué pasa:** si no hay un cálculo previo guardado con la misma clave, en el hilo principal solo se usan los registros propios de la app.
+- **Por qué importa:** la misma variable puede valer distinto según la pantalla o el momento; criterio (a) del módulo 9.
+- **Gravedad:** Media.
+- **Propuesta:** calcular siempre en segundo plano (también en experimentos) o marcar el resultado como incompleto en vez de devolver otra cifra.
+
+### H-4-4 · Alcohol: parámetros fijos y sin incertidumbre
+- **Dónde:** `data/Sustancias.kt`, `widmarkR()` (0.68 / 0.55 / 0.62), `pesoEn()` (70 kg si no hay peso), `alcoholEn()` (β = 0.15 g/L/h, absorción de 30 min).
+- **Qué pasa:** β no cambia con la comida (de 0.10–0.15 en ayunas a 0.15–0.20 tras comer; Jones, 2010); *r* depende solo del sexo aunque la app conoce la estatura; sin peso se usa 70 kg sin avisar; no se muestra el error, que puede ser de varias décimas (Searle, 2015).
+- **Por qué importa:** `alcohol_estimado_max` y `alcohol_al_dormir` aparentan una precisión que no tienen.
+- **Gravedad:** Media.
+- **Propuesta:** usar el agua corporal total de Watson et al. (1980) con la estatura de Conocerte; avisar cuando se usa el peso por omisión; mostrar un rango.
+
+### H-4-5 · Alcohol: cada día se simula desde cero
+- **Dónde:** `ciencia/Estadistica.kt`, `sustancias()` (simulación de 14 h desde la primera dosis de cada día lógico).
+- **Qué pasa:** no se arrastra el alcohol del día anterior; un episodio que cruza las 5:00 se parte en dos días que arrancan en 0.
+- **Por qué importa:** subestima el máximo en noches largas.
+- **Gravedad:** Baja.
+- **Propuesta:** simular la serie continua y asignar a cada día el máximo dentro de su ventana.
+
+### H-4-6 · Creatina: la dosis de referencia hace el llenado más lento que el estudio de origen
+- **Dónde:** `data/Lote3.kt`, `Suplementos.carga()` y `CATALOGO` (5 g, 28 días, 35 días).
+- **Qué pasa:** Hultman et al. (1996) llenaron la reserva con 3 g/día en 28 días; en el modelo, 3 g/día dan 83 % al día 28 porque la referencia es 5 g. El 100 % es la saturación del modelo, sin creatina de la dieta ni personas que no responden.
+- **Por qué importa:** `creatina_saturacion_pct` subestima el llenado con dosis bajas; no es una medida del músculo.
+- **Gravedad:** Baja.
+- **Propuesta:** dosis de referencia de 3 g (o documentarlo en la pantalla); solo documentar el resto.
+
+### H-4-7 · Suplementos con vida media: variables poco útiles o sin fuente
+- **Dónde:** `data/Lote3.kt`, `Suplementos.cantidadEn()` y `panel()` (nivel al final del día lógico, 5:00).
+- **Qué pasa:** con vida media de 1 h, `supl_melatonina_nivel` es casi siempre ≈ 0 (6 h después de tomarla queda el 1.6 %); magnesio (12 h) y omega-3 (60 h) no tienen una fuente verificada; vitamina D suma «UI en el cuerpo» (≈ 44 000 UI en equilibrio con 2000 UI/día), sin equivalencia con un análisis de sangre.
+- **Por qué importa:** variables que ocupan lugar en los análisis sin información útil, o con unidades que se prestan a malinterpretarse.
+- **Gravedad:** Baja.
+- **Propuesta:** para vidas medias cortas, no exportar `nivel` (o calcularlo a una hora fija relevante); documentar las unidades.
+
+### H-4-8 · Probióticos por palabras clave
+- **Dónde:** `data/Lote3.kt`, `Suplementos.probioticosEstimados()`.
+- **Qué pasa:** cuenta una porción por cada alimento cuyo nombre contiene una palabra clave, sin ver cantidades ni si el producto tiene cultivos vivos; los días sin bitácora de MacroFactor cuentan 0.
+- **Por qué importa:** `probioticos_porciones` mezcla exposición real con coincidencias de texto y ceros por falta de registro.
+- **Gravedad:** Baja.
+- **Propuesta:** solo documentar; dejar `probioticos_estimado` en `null` los días sin bitácora.
+
+### H-4-9 · Jet lag social: días libres fijos y toda la historia
+- **Dónde:** `ciencia/Analisis.kt`, `ritmo()`.
+- **Qué pasa:** los días libres son siempre sábado y domingo (sin festivos, vacaciones, turnos ni el horario de Conocerte); los promedios usan todas las noches de la historia aunque la gráfica muestre 30; la regularidad es la desviación estándar de la hora de dormir, que mezcla la diferencia sistemática entre semana y fin de semana.
+- **Por qué importa:** el jet lag social y la regularidad mostrados pueden no describir tu situación actual.
+- **Gravedad:** Media.
+- **Propuesta:** ventana reciente (p. ej., 8 semanas); permitir marcar días libres atípicos; añadir el Índice de Regularidad del Sueño (Phillips et al., 2017) o calcular la regularidad por separado en días laborales y libres.
+
+### H-4-10 · Noches por uso del teléfono mezcladas con las del reloj
+- **Dónde:** `ciencia/Analisis.kt`, `ritmo()`.
+- **Qué pasa:** sin 7 noches del reloj, se mezclan noches del reloj con noches estimadas por el último uso (≥ 18:00) y el primer uso (≥ 4:00) del teléfono.
+- **Por qué importa:** dos medidas con sesgos distintos en un mismo promedio; el último uso no es la hora de dormirse.
+- **Gravedad:** Baja.
+- **Propuesta:** no mezclar fuentes en un mismo promedio, o mostrarlas por separado.
+
+### H-4-11 · Cambiar un parámetro reescribe todas las variables pasadas
+- **Dónde:** `Config.cafeina_vida_media_h`; parámetros de cada `Suplemento` (`vida_media_h`, `carga_dias`, `lavado_dias`, `dosis`).
+- **Qué pasa:** al cambiarlos, `cafeina_al_dormir_mg`, `supl_*_nivel` y `creatina_saturacion_pct` se recalculan para toda la historia, sin guardar el parámetro usado ni cuándo cambió.
+- **Por qué importa:** exportaciones de fechas distintas pueden no ser comparables y no hay forma de saberlo (relacionado con H-1-8).
+- **Gravedad:** Baja.
+- **Propuesta:** guardar el historial de parámetros (con fecha) y escribir en el diccionario el valor vigente al exportar.
+
+### H-4-12 · Cuatro variables de cafeína con fuentes distintas
+- **Dónde:** `ciencia/Estadistica.kt` (`cafeina_mg` y `cafeina_ultima_h` de MacroFactor; `cafeina_total_mg` y `cafeina_al_dormir_mg` de MacroFactor y registros propios).
+- **Qué pasa:** la hora de la última cafeína ignora los registros hechos en la app; dos totales del día pueden diferir.
+- **Por qué importa:** confusión al elegir cuál cruzar; las «relaciones obvias» las agrupan, pero el usuario ve cifras distintas.
+- **Gravedad:** Baja.
+- **Propuesta:** derivar las cuatro de la misma lista de dosis (`Sustancias.dosis`).
+
+### H-4-13 · La repetición máxima estimada usa tres criterios distintos
+- **Dónde:** `data/Macrofactor.kt`, `e1rm()` (1 a 12 repeticiones, sin calentamientos; va a la exportación y a `vm_fuerza()`); `ciencia/Periodo.kt` (1 a 15 repeticiones, con calentamientos; reportes); `ui/pantallas/TusApps.kt` (sin límite).
+- **Qué pasa:** la misma fórmula de Epley con filtros distintos.
+- **Por qué importa:** la «mejor marca» del reporte puede no coincidir con la de R ni con la de la pantalla; criterio (b) del módulo 9.
+- **Gravedad:** Baja.
+- **Propuesta:** usar `Macrofactor.e1rm` en todas partes.
+
 ## Módulo 5 · Núcleo estadístico (v81, commit `fa527df`)
 
 _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma** (H-5-7). Las pistas 1 y 2 (experimentos) dependen de `Estadistica.diferencia`; aquí se registra el problema general de esa función (H-5-5) y el módulo 7 lo desarrolla para los experimentos._
