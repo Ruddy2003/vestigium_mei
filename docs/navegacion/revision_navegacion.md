@@ -1376,6 +1376,29 @@ Las opciones:
 
 El 27 oct 2026 aprobaste **las 30 propuestas** y el **orden de entregas** del § 10. Cada entrega va en un commit propio en la rama de trabajo, se compila en Actions y se revisa con capturas antes de pasar a `main`.
 
+### Implementación (27 oct 2026)
+
+Todo está en la rama de trabajo, un commit por entrega, compilado y probado con `capturas.yml` (compila, corre las pruebas unitarias y genera las capturas).
+
+| Entrega | Propuestas | Commit | Compilación y pruebas |
+|---|---|---|---|
+| N0 | errores (H-NAV-5, 6, 8) | `1e283d3` | run 88, limpio |
+| NE | esquema 14 | `841a1d7` | run 89 (una captura sin memoria; se ajustó en `9e4e8ff`) |
+| N1 | N-01, N-02, N-03, N-06, N-13 | `12da686` | corregido en N2; run 92, limpio |
+| N2 | N-07 a N-12 | `9b57d4d`, `e183ccc` | run 92, limpio |
+| N3 | N-15, N-17, N-26 | `bf6ec63` | run 93, limpio |
+| N4 | N-16, N-18, N-19, N-20, N-28 | `4fd7b52` | run 93, limpio |
+| N5 | N-29 | `8fe90fc` | run 95, limpio |
+| N6 | N-21, N-22, N-23, N-25 | `04391e5`, `0aafdb8` | run 95, limpio |
+| N7 | N-04, N-05, N-14, N-24, N-27 | `1da2f4a` | run 96 |
+
+**Diferencias con lo propuesto** (lo que quedó distinto o fuera):
+- **N-16.** Lo que «Te falta hoy» absorbe (lo de anoche, el experimento, «¿quién es?», los datos que faltan) quedó junto, en ese orden, pero en bloques seguidos y no dentro de la misma tarjeta. Los datos que faltan sí quedaron como contador que se despliega.
+- **N-23.** `biblioteca` se titula «Lista y pendientes» y no solo «Pendientes», porque lista todas las obras. El nombre del tema y el español en la misma línea (P-1) se aplicó a los títulos de pantalla (también al de Hoy), no a los títulos de sección.
+- **N-29.** Los frecuentes están en la hoja rápida y en el widget; en el formulario de Gastos están las subcategorías con su monto, pero no la fila de frecuentes. No se hizo la oferta única de pasar gastos viejos a una subcategoría según su nota.
+- **N-05.** «No estuve aquí» quita la visita, pero no se recuerda: si después agrandas el radio de ese lugar, la reconstrucción podría volver a crearla.
+- **N-27.** La capa de ánimo del Calendario no muestra el número al tocar (Tu año sí). La descripción fija para TalkBack se puso en «Volver», «?», ‹ › del Día y el ✕ de Tu año, no en los ≈ 31 botones de un solo glifo.
+
 ---
 
 ## Anexo · Capturas de la Fase 6
