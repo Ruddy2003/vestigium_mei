@@ -522,7 +522,7 @@ class Capturas {
     @Test fun sobres3() = sobres(listOf(TemaId.GOTICO, TemaId.ESPACIO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.CIBER))
 
     private fun cartaLectura(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 2400) {
-        Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Javier")))
+        Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Ana")))
         cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.carta = "k4"
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(navVacia)
     }

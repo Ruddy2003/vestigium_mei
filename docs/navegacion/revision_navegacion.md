@@ -1071,7 +1071,7 @@ Cada propuesta dice qué cambia en palabras simples. El detalle técnico es una 
 - **Problema:** E-25; anexo A, § 4.1.
 - **Cambio:**
   - **Quitar** el código muerto: `PantallaHall`, `RecuadroHall`, `CentroEntender`, `Portada` y la rama «Sueño» de `Dia.kt:144`.
-  - **`PantallaMomentos`**: decidir entre revivirla o quitarla (pregunta P-4, explicada otra vez en § 13). Mi recomendación es quitarla: con N-26, todo se corrige desde el Día de cada fecha. La ruta `momentos` se queda como desvío a la pestaña Diario, como hoy.
+  - **`PantallaMomentos` vuelve** (tu respuesta a P-4) como «Todos tus registros»: la lista editable de 30 días, con filtro por día, botón atrás, un botón en Diario («✦ todos tus registros») y entrada en el buscador. La ruta `momentos` no cambia; un aviso o acceso con `momentos` seguirá abriendo la pestaña Diario.
   - En Tu gente, «+ persona» sin mención previa, con nombre, relación y nacimiento.
 - **Dónde:** `ui/pantallas/Hall.kt:365-510`; `ui/pantallas/Explorar.kt:432`; `ui/pantallas/Hoy.kt:617-623`; `ui/pantallas/Momentos.kt:57-101`; `ui/pantallas/Gente.kt`; `data/Personas.kt`.
 - **Riesgo:**
@@ -1353,7 +1353,7 @@ Con la frase arriba y la franja, el Tablero compacto quedaría justo en el borde
 | **P-1** · Nombres por tema | Los dos del mismo tamaño y en la misma línea; el del tema con más contraste, el español un poco menos | N-23 (títulos «Quaestiones · Análisis»), § 9 y el boceto de Hoy |
 | **P-2** · Privado en el buscador | Que salga todo, no solo «Privado» | N-22: el buscador indexa todas las pantallas y acciones, también las de Privado con sus palabras. **Lo que escribiste en lo privado sigue sin salir fuera de Privado** (regla de la 10a). Si querías también ese contenido, dímelo |
 | **P-3** · Marcar lo anotado tarde | Sí, y que se guarde también la fecha de anotación | Propuesta nueva **N-30** (`ts_creado` y `ts_editado`); entra en la entrega NE (esquema 14) |
-| **P-4** · Pantalla Momentos | No quedó clara | Explicada abajo |
+| **P-4** · Pantalla Momentos | Revivirla (respondida después de la explicación de abajo) | N-25: «Momentos» vuelve como «Todos tus registros», con botón en Diario y entrada en el buscador |
 | **P-5** · Hoy recuerda el día abierto | Que siempre vuelva a hoy | N-12 tal cual |
 | **P-6** · Fuerza a mano | Por ahora, que dependa de MacroFactor | E-06 y E-17 quedan como están, por decisión tuya. No hay propuesta |
 | **P-7** · Gastos | La forma actual es muy limitada: subcategorías (Comida → Café), dos o tres toques sin escribir, ingresos a la mano y categorías propias | Propuesta nueva **N-29**. Para los ingresos elegí el selector «Gasto \| Ingreso» dentro de la misma hoja, con el botón «Registrar ingreso» (razones en N-29) |
@@ -1372,10 +1372,9 @@ Las opciones:
 
 **Recomiendo B**: un solo lugar para corregir (P11) y menos código que mantener. Elige A si a veces buscas un momento sin saber de qué día fue y la línea de tiempo no te basta.
 
-### Lo que falta para empezar
+### Aprobación
 
-1. Tu elección en **P-4**.
-2. Tu aprobación de las **30 propuestas** (todas o con excepciones) y del **orden de entregas** del § 10. Con eso empiezo por N0 (errores) y NE (esquema 14), cada una en su rama, con capturas antes de pasar a `main`.
+El 27 oct 2026 aprobaste **las 30 propuestas** y el **orden de entregas** del § 10. Cada entrega va en un commit propio en la rama de trabajo, se compila en Actions y se revisa con capturas antes de pasar a `main`.
 
 ---
 

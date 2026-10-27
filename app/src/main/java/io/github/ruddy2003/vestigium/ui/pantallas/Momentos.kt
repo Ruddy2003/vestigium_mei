@@ -153,15 +153,19 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                 emociones = if (registro) emociones else m.emociones, pensamiento = if (registro) pensamiento else m.pensamiento,
                 duracion_min = if (esRecaida) dur else m.duracion_min)
             val ms = if (esRecaida) (cuando ?: java.time.LocalDateTime.now()).aMillis() else null
-            if (ms != null && Fechas.horaDe(Fechas.isoDeMillis(ms)) != Fechas.horaDe(m.ts)) io.github.ruddy2003.vestigium.data.Recaidas.moverHora(n, ms)
+            // Se compara el minuto completo (fecha y hora): cambiar solo el día, con la misma hora, también mueve la recaída.
+            if (ms != null && ms / 60_000L != Fechas.millis(m.ts) / 60_000L) io.github.ruddy2003.vestigium.data.Recaidas.moverHora(n, ms)
             else Repo.guardarMomento(n)
             cerrar()
         }) { Text("Guardar") } },
         dismissButton = {
         TextButton(onClick = {
             if (confirmar) {
-                Repo.borrarMomento(m.id); cerrar()
-                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") { Repo.guardarMomento(m) }
+                Repo.borrarMomento(m.id); io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(m); cerrar()
+                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") {
+                    Repo.guardarMomento(m)
+                    if (m.tipo == "recaida") io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
+                }
             } else confirmar = true
         }) {
             Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)

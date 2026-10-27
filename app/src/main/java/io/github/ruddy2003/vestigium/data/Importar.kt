@@ -69,7 +69,7 @@ object Importar {
             r.respuestas.forEach { Repo.guardarRespuesta(it) }
             r.reacciones.forEach { rr -> if (Repo.reacciones.none { it.id == rr.id }) Repo.guardarReaccion(rr) }
             r.lugares.forEach { Repo.guardarLugar(it) }
-            r.salud.forEach { Repo.guardarSalud(it) }
+            r.salud.forEach { Repo.guardarSalud(Fusion.salud(Repo.salud[it.fecha], it)) }
             r.pantalla.forEach { Repo.guardarPantalla(it) }
             r.cartas.forEach { Repo.guardarCarta(it) }
             r.experimentos.forEach { e -> Fusion.experimento(Repo.experimentos.firstOrNull { it.id == e.id }, e)?.let { Repo.guardarExperimento(it) } }
