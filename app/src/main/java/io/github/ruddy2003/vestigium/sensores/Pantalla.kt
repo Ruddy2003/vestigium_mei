@@ -30,11 +30,16 @@ object Pantalla {
         pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0)).toString()
     } catch (e: Exception) { pkg }
 
+    /**
+     * El uso del día lógico [fecha] (v13): de las 05:00 a las 05:00 del día siguiente, así lo de la madrugada cuenta para
+     * el día que estabas viviendo. Los días calculados antes de la v13 quedaron con el día de calendario (ver [PantallaDia.ventana]).
+     */
     fun calcular(ctx: Context, fecha: String): PantallaDia? {
         if (!tienePermiso(ctx)) return null
         val usm = ctx.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-        val ini = Fechas.inicioDia(fecha)
-        val fin = minOf(Fechas.finDia(fecha), System.currentTimeMillis())
+        val ini = Fechas.inicioDiaLogico(fecha)
+        val fin = minOf(Fechas.finDiaLogico(fecha), System.currentTimeMillis())
+        if (fin <= ini) return null
         val eventos = usm.queryEvents(ini, fin)
         val e = UsageEvents.Event()
         val excluir = lanzadores(ctx) + ctx.packageName
@@ -93,6 +98,7 @@ object Pantalla {
             cama_min = sueno?.first,
             dormir_tras_tel_min = sueno?.second,
             tel_tras_despertar_min = sueno?.third,
+            ventana = "logica",
         )
     }
 
@@ -135,7 +141,7 @@ object Pantalla {
 
     fun sincronizar(ctx: Context, dias: Int = 2) {
         for (i in 0 until dias) {
-            val f = Fechas.sumar(Fechas.hoyCalendario(), -i.toLong())
+            val f = Fechas.sumar(Fechas.diaLogico(), -i.toLong())
             calcular(ctx, f)?.let { Repo.guardarPantalla(it) }
         }
     }

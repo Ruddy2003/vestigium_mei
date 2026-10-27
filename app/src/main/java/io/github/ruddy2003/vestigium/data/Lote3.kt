@@ -308,6 +308,18 @@ object Experimentos {
             "Semanas alternas; dos días de lavado por la cafeína que queda en el cuerpo."),
     )
 
+    /** El último día que cuenta: el día en que lo terminaste o, si no, el último del plan. */
+    fun ultimoDia(e: Experimento): String {
+        val plan = Fechas.sumar(e.inicio, e.semanas * 7L - 1)
+        return e.fin?.let { minOf(it, plan) } ?: plan
+    }
+
+    /** Si [f] está dentro del experimento (del inicio a su último día). */
+    fun cubre(e: Experimento, f: String): Boolean = f >= e.inicio && f <= ultimoDia(e)
+
+    /** En curso: no lo terminaste y el plan no ha vencido (los que aún no empiezan también cuentan). */
+    fun enCurso(e: Experimento, hoy: String = Fechas.diaLogico()): Boolean = e.activo && e.fin == null && hoy <= ultimoDia(e)
+
     /** Si toca la acción ese día (null si el día no está en el experimento). */
     fun toca(e: Experimento, f: String): Boolean? {
         val d = Fechas.diasEntre(e.inicio, f)
@@ -324,16 +336,42 @@ object Experimentos {
         return cambios.any { d - it in 0 until e.lavado_dias }
     }
 
-    class Resultado(val con: List<Double>, val sin: List<Double>, val dif: Triple<Double, Double, Double>?, val d: Double?, val tendencia: Double?, val tendenciaClara: Boolean)
+    /**
+     * Cuánto cumpliste, según «¿Lo hiciste hoy?» (I-3): en los días que tocaba la acción y en los que no
+     * (sin contar los de lavado). Los días sin respuesta no son «no».
+     */
+    class Cumplimiento(val diasSi: Int, val respSi: Int, val hechoSi: Int, val diasNo: Int, val respNo: Int, val hechoNo: Int) {
+        /** Proporción de días con la acción hecha entre los respondidos (null sin respuestas). */
+        val pSi: Double? get() = if (respSi > 0) hechoSi.toDouble() / respSi else null
+        val pNo: Double? get() = if (respNo > 0) hechoNo.toDouble() / respNo else null
+        val sinRespuesta: Int get() = diasSi - respSi + diasNo - respNo
+    }
+
+    class Resultado(val con: List<Double>, val sin: List<Double>, val dif: Triple<Double, Double, Double>?, val d: Double?, val tendencia: Double?, val tendenciaClara: Boolean,
+                    val cumplimiento: Cumplimiento? = null) {
+        /**
+         * Efecto estimado de hacerlo de verdad: la diferencia según el plan entre la diferencia de cumplimiento
+         * (SÍ − no). Supone que saber la condición no cambia nada por sí solo. null si el cumplimiento casi no difiere.
+         */
+        val cociente: Double? get() {
+            val c = cumplimiento ?: return null; val a = c.pSi ?: return null; val b = c.pNo ?: return null
+            val dd = dif?.first ?: return null
+            return if (a - b >= 0.2) dd / (a - b) else null
+        }
+    }
 
     fun resultado(e: Experimento, panel: Map<String, Map<String, Double?>>, hoy: String = Fechas.diaLogico()): Resultado {
         val con = ArrayList<Double>(); val sin = ArrayList<Double>()
         val serie = ArrayList<Pair<Double, Double>>()
+        var dSi = 0; var rSi = 0; var hSi = 0; var dNo = 0; var rNo = 0; var hNo = 0
         for (i in 0 until e.semanas * 7) {
             val f = Fechas.sumar(e.inicio, i.toLong())
-            if (f > hoy) break
+            // Después de terminarlo ya no cuenta: las semanas «SÍ» que quedaban no tuvieron la acción.
+            if (f > hoy || (e.fin != null && f > e.fin)) break
             val t = toca(e, f) ?: continue
             if (enLavado(e, f)) continue
+            val h = e.hecho[f]
+            if (t) { dSi++; if (h != null) { rSi++; if (h) hSi++ } } else { dNo++; if (h != null) { rNo++; if (h) hNo++ } }
             val v = panel[f]?.get(e.resultado) ?: continue
             if (t) con.add(v) else sin.add(v)
             serie.add(i.toDouble() to v)
@@ -357,7 +395,8 @@ object Experimentos {
                 pend = b; clara = se > 0 && abs(b / se) > 2.0
             }
         }
-        return Resultado(con, sin, dif, d, pend, clara)
+        val cum = if (e.hecho.isEmpty()) null else Cumplimiento(dSi, rSi, hSi, dNo, rNo, hNo)
+        return Resultado(con, sin, dif, d, pend, clara, cum)
     }
 
     fun tamano(d: Double): String = when { abs(d) < 0.2 -> "muy pequeño"; abs(d) < 0.5 -> "pequeño"; abs(d) < 0.8 -> "mediano"; else -> "grande" }

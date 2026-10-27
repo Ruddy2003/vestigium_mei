@@ -85,6 +85,13 @@ En la pantalla del día (`ui/pantallas/Dia.kt`), cada experimento activo muestra
 
 **Detalle.** Esa función **trunca hacia cero**: para los 6 días anteriores al inicio da 0, no −1. Por eso, desde el martes de la semana previa, el día ya muestra «semana 1 de *N*» con la instrucción de la primera semana (Figura 8.1, fila punteada). Si la primera semana es «SÍ», puedes empezar antes de tiempo. No afecta al cálculo del resultado, que solo cuenta desde `inicio`, pero sí puede contaminar la línea de base (H-7-9).
 
+**Desde el esquema 13 (entrega 10b):**
+- **Cuándo aparece el aviso.** Sale en los días que cubre el experimento (`Experimentos.cubre`: del inicio a su último día) y nunca en días futuros. Ya no depende de que esté activo: así puedes contestar los días que quedaron sin respuesta aunque ya lo hayas terminado. La semana se calcula como días desde el inicio entre 7, y ya no aparece antes de empezar.
+- **Días de lavado.** El aviso dice cuándo un día es de lavado y no cuenta.
+- **«¿Lo hiciste hoy?»** El aviso lleva la pregunta (I-3) con dos fichas, «sí» y «no». Se pregunta **en las dos condiciones**: en una semana «no», responder «sí» quiere decir que lo hiciste aunque no tocaba. La respuesta se guarda en `Experimento.hecho` (fecha → sí/no). Tocar otra vez la ficha elegida la borra, y el día queda **sin respuesta**, que no es lo mismo que «no».
+- **Por qué en el experimento.** Se guarda en el experimento y no en el día para no crear días vacíos ni tocar `retroactivo`.
+- **Lo que no se pudo medir.** Preguntar cada día puede cambiar la conducta (reactividad); no se pudo estimar cuánto.
+
 ---
 
 ## 8.4 El sorteo del plan
@@ -156,7 +163,7 @@ La app debería impedir combinaciones en las que el lavado sea igual o mayor que
 
 ### 8.6.1 Qué calcula (`Experimentos.resultado` y `Estadistica.diferencia`)
 
-Recorre los días desde `inicio` hasta el último día del plan (o hasta hoy, lo que llegue antes). Para cada día que está en el experimento, no es de lavado y **tiene dato** en la variable elegida, guarda el valor en la lista «con» o «sin». El panel es el mismo de los análisis (`Estadistica.panel(dinamicas = false)`).
+Recorre los días desde `inicio` hasta el último día del plan, hasta hoy o, desde el esquema 13, hasta el día en que lo terminaste (`Experimento.fin`), lo que llegue antes. Para cada día que está en el experimento, no es de lavado y **tiene dato** en la variable elegida, guarda el valor en la lista «con» o «sin». El panel es el mismo de los análisis (`Estadistica.panel(dinamicas = false)`).
 
 1. **Diferencia de medias con su intervalo** (`Estadistica.diferencia(con, sin)`), solo si hay **al menos 3 días en cada condición**:
 
@@ -235,7 +242,17 @@ Su ventaja: **no supone que los días sean independientes**, porque se apoya sol
 
 La app guarda qué **debías** hacer cada semana, pero **no si lo hiciste** (H-7-8). Si en una semana «SÍ» te dormiste tarde tres noches, esos días cuentan igual como «con la acción». Es lo que en ensayos clínicos se llama análisis por **intención de tratar**: compara lo asignado, no lo hecho. Es una forma legítima de análisis (estima el efecto de *intentar* la acción) **[Validado]**, pero diluye el efecto si no la cumples y no te deja saber cuánto la cumpliste.
 
-Relacionado: **«Terminar experimento» no guarda la fecha** (H-7-2). Solo marca `activo = false`. `Experimentos.resultado` sigue contando todos los días hasta el final del plan original, así que si terminas en la semana 3 de 6 y dejas de hacer la acción, las semanas «SÍ» posteriores se cuentan como «con la acción» aunque no la hiciste. Además, el aviso del día desaparece y no sabrás qué semanas tocaban.
+Relacionado: **hasta el esquema 12, «Terminar experimento» no guardaba la fecha** (H-7-2). Solo marcaba `activo = false`. `Experimentos.resultado` seguía contando todos los días hasta el final del plan original, así que si terminabas en la semana 3 de 6 y dejabas de hacer la acción, las semanas «SÍ» posteriores se contaban como «con la acción» aunque no la hiciste. Además, el aviso del día desaparecía y no sabías qué semanas tocaban.
+
+### 8.7.1 Lo que cambió en el esquema 13 (P-12 e I-3)
+
+- **Fecha de fin.** «Terminar» guarda el día lógico en `Experimento.fin`, y el resultado deja de contar los días posteriores. La tarjeta dice «Terminado el …» y, si fue antes de acabar el plan, que lo que seguía no cuenta. «En curso» (Análisis) cuenta solo los que no tienen fin y cuyo plan no ha vencido (`Experimentos.enCurso`).
+- **Restaurar.** Un respaldo viejo ya no reactiva un experimento terminado, y se juntan las respuestas de los dos (`Fusion.experimento`, capítulo 10).
+- **Cumplimiento.** Con las respuestas de «¿Lo hiciste hoy?», `Experimentos.resultado` da `Cumplimiento`, sin contar los días de lavado: cuántos días de cada condición hubo, cuántos respondiste y en cuántos lo hiciste. La tarjeta muestra el porcentaje de días en que lo hiciste en las semanas «SÍ» y en las «no», y cuántos días quedaron sin respuesta.
+- **El análisis principal no cambia.** Sigue siendo **según el plan** (intención de tratar), y la tarjeta lo dice. Como dato secundario, cuando el cumplimiento difiere al menos 20 puntos entre condiciones, la tarjeta da el **cociente**: la diferencia según el plan entre la diferencia de cumplimiento (`Resultado.cociente`). Es una estimación del efecto de **hacerlo de verdad**, y supone que saber qué semana tocaba no cambia nada por sí solo. Eso es dudoso sin cegamiento (sección 8.10). **[Aproximación]**. *Ejemplo (inventado):* diferencia según el plan +0.30; lo hiciste el 70 % de los días «SÍ» y el 10 % de los «no». Cociente = 0.30 ÷ 0.60 = +0.50.
+- **Por qué no se usa «por lo hecho».** No se calcula el análisis «por lo hecho», que compara días hechos contra no hechos. Si tiendes a cumplir más en los días buenos, ese análisis exagera el efecto: en una simulación del módulo 9 lo **duplicaba**.
+- **Límites de las respuestas.** «No respondí» no es «no lo hice», y probablemente se responde menos en los días malos. Responder días después mete sesgo de memoria.
+- **Creatina.** En la plantilla «Creatina», la adherencia ya está en el registro de suplementos (`supl_creatina_tomado`); la pregunta sale igual, por uniformidad.
 
 ---
 
@@ -359,6 +376,8 @@ Nadie sorteó cuándo mudarte o cambiar de trabajo, y esos cambios suelen venir 
 | Prueba de tendencia con la recta sin separar la condición | Diseño propio (confunde efecto con tendencia) | — |
 | Plantilla «Creatina» en antes/después | Razonamiento correcto; parámetros incompatibles | Hultman et al. (1996) |
 | «Antes y después» de los cambios de vida, 60 contra 60 días | Aproximación (observacional) | — |
+| Fecha de fin y «¿Lo hiciste hoy?» en las dos condiciones (esquema 13) | Diseño propio | — |
+| Cociente efecto según el plan ÷ diferencia de cumplimiento, como dato secundario | Aproximación (supone que saber la condición no cambia nada) | — |
 
 ---
 
@@ -369,7 +388,7 @@ Nadie sorteó cuándo mudarte o cambiar de trabajo, y esos cambios suelen venir 
 3. El **intervalo** trata los días como independientes y usa 1.96: con autocorrelaciones de 0.3 a 0.5, da falsas señales el 14 % a 24 % de las veces en lugar del 5 %; si se mira cada día y uno se detiene en la primera señal, hasta el 50 % (H-7-3, H-7-4). La alternativa natural es una **prueba de aleatorización** por semanas, que no existe ni en la app ni en R (H-7-11).
 4. El **sorteo libre** puede producir un antes/después disfrazado (33 % de las veces con 4 semanas); sortear por pares protege de las tendencias, pero requiere más semanas para poder concluir (H-7-5).
 5. La **prueba de tendencia** confunde un efecto real con una tendencia en los antes/después: avisa en el 72 % de los casos con un efecto grande y sin tendencia (H-7-6).
-6. **«Terminar» no guarda la fecha** y no se registra si cumpliste la acción (H-7-2, H-7-8). No hay cegamiento: prefiere medidas objetivas y mirar solo al final.
+6. Hasta el esquema 12, **«Terminar» no guardaba la fecha** ni se registraba si cumpliste la acción (H-7-2, H-7-8). Desde el 13 se guardan la fecha de fin y «¿Lo hiciste hoy?», con el cumplimiento por condición y un cociente secundario. No hay cegamiento: prefiere medidas objetivas y mirar solo al final.
 7. «Antes y después» en Explorar es **observacional**, con hasta 56 comparaciones sin corregir (H-7-12).
 8. Se identificaron **14 hallazgos** (H-7-1 a H-7-14). No se cambió código.
 

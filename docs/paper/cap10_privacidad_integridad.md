@@ -150,7 +150,7 @@ Las iteraciones son el «peaje» por cada intento de adivinar. La guía de OWASP
 
 Una vez al día (la primera vez que corre la tarea diaria después de las 6:00, `Trabajo.diario`), si elegiste una carpeta:
 
-- **Con contraseña**: se escribe solo `vestigium_respaldo.vmc` y se **borran** los archivos en claro que hubiera de antes (`vm_*.csv`, `vm_*.json`, `LEEME.txt`, `vestigium.R`, `vestigium_*.zip`).
+- **Con contraseña**: se escribe solo `vestigium_respaldo.vmc` y se **borran** los archivos en claro que hubiera de antes (`vm_*.csv`, `vm_*.json`, `LEEME.txt`, `vestigium.R`, `vestigium_*.zip`). Desde el esquema 13 (P-09) se borran **después** de que el .vmc quedó escrito: si la escritura falla, la copia en claro sigue ahí (H-9-37).
 - **Sin contraseña**: se escriben **todos** los CSV de la exportación, el diccionario, `vm_respaldo.json`, `vestigium.R` y `vestigium_respaldo.zip`, en claro.
 - **Sin contraseña y con datos privados** (desde el módulo 10a): **no se escribe nada** (`Respaldos.bloqueado`). Hoy muestra «Tus respaldos están en pausa…» y llega una notificación por semana hasta que pongas contraseña.
 
@@ -158,7 +158,8 @@ Una vez al día (la primera vez que corre la tarea diaria después de las 6:00, 
 
 - Usa el permiso **`drive.file`**: la app solo ve los archivos que ella misma creó, **nunca el resto de tu Drive**. **[Validado]** como el permiso mínimo necesario.
 - Todo va a una carpeta «Vestigium Mei». Cada día **reemplaza** el respaldo del día (y, sin contraseña, los CSV); guarda una **copia semanal** fechada con el lunes (se conservan las **8** más recientes) y una **mensual** (las **12** más recientes).
-- Con contraseña, solo sube el .vmc y borra de Drive los archivos en claro anteriores; sin contraseña, sube los CSV y el .zip en claro.
+- Con contraseña, solo sube el .vmc y borra de Drive los archivos en claro anteriores; sin contraseña, sube los CSV y el .zip en claro. Desde el esquema 13 (P-09), los archivos en claro se borran solo **después** de subir el .vmc (H-9-37).
+- **No se reemplaza una copia buena por una mucho más pobre** (esquema 13, P-09). Antes de subir, `Respaldos.empobrecido` compara cuántos días y momentos trae el respaldo nuevo con los del último que reemplazó la copia (`Config.drive_conteo`). Si el nuevo trae **menos del 90 %** de cualquiera de los dos (y el anterior tenía 20 o más), no toca la copia del día, la semanal ni la mensual. En su lugar lo guarda aparte como `vestigium_revisar` y avisa con una notificación. «Restaurar desde Drive» nunca elige esa copia. Si el borrado fue a propósito, «conectar y subir ahora» (a mano) reemplaza la copia y fija el nuevo punto de comparación. El umbral de 90 % y el mínimo de 20 son **[Diseño propio]**: borrar a propósito muchos días también dispara el aviso, y eso es lo que se busca (H-8-14).
 - Con datos privados y sin contraseña, no sube nada (desde el módulo 10a), igual que la carpeta. Tampoco se puede **compartir** el respaldo completo desde la pantalla Respaldo: el botón se desactiva y explica por qué.
 - Si el permiso de Google caduca, avisa una vez por semana.
 
@@ -167,7 +168,7 @@ Una vez al día (la primera vez que corre la tarea diaria después de las 6:00, 
 - **Sin contraseña, todo queda en claro fuera del teléfono** (H-8-5), incluido el diario completo. Desde el módulo 10a, si hay datos privados, el respaldo no sale sin contraseña. La **exportación para R** (resumida o extendida, que pides a mano y compartes) es la excepción: R necesita leer los CSV, así que va sin cifrar, y la pantalla advierte que lleva los datos privados.
 - **El costo de esa regla:** si nunca pones contraseña, los respaldos automáticos quedan en pausa mientras haya datos privados. Por eso el aviso es visible en Hoy y llega una notificación semanal.
 - **Las cartas selladas** van **sin texto** en `vm_cartas.csv` («no se pueden leer antes de su fecha»), pero `vm_respaldo.json`, que se exporta junto, lleva **el texto completo** (H-8-5). El sello se puede saltar abriendo el JSON.
-- **Un respaldo malo puede reemplazar a uno bueno** (H-8-14). Si un día los datos del teléfono se dañan o se pierden (por ejemplo, tras reinstalar), el respaldo de ese día **sobrescribe** el anterior sin comprobar si trae muchos menos datos. La copia semanal de esa semana también será mala si es la primera de la semana. Quedan las copias semanales y mensuales anteriores, pero «Restaurar desde Drive» **toma siempre la más reciente** (`Drive.ultimaCopia`, por fecha de modificación). Para traer una anterior hay que bajarla a mano y usar «Restaurar desde un archivo».
+- **Hasta el esquema 12, un respaldo malo podía reemplazar a uno bueno** (H-8-14; desde el 13, ver la sección 10.5.2). Si un día los datos del teléfono se dañan o se pierden (por ejemplo, tras reinstalar), el respaldo de ese día **sobrescribe** el anterior sin comprobar si trae muchos menos datos. La copia semanal de esa semana también será mala si es la primera de la semana. Quedan las copias semanales y mensuales anteriores, pero «Restaurar desde Drive» **toma siempre la más reciente** (`Drive.ultimaCopia`, por fecha de modificación). Para traer una anterior hay que bajarla a mano y usar «Restaurar desde un archivo».
 
 ### 10.5.4 Los reportes, en carpetas públicas (H-8-4)
 
@@ -187,8 +188,8 @@ Los reportes semanales y mensuales se generan **solos** (capítulo 9, sección 9
 
 **Qué no garantiza** (H-8-12):
 
-- El mensaje dice «**El respaldo se lee completo y no le falta nada**», pero la app **no compara** nada: muestra las cifras del respaldo y las del teléfono una debajo de otra, y tú tienes que notar si no cuadran. «No le falta nada» es más de lo que se comprobó.
-- **No revisa la versión del esquema.** Como el lector de JSON ignora los campos que no conoce (`ignoreUnknownKeys = true`), restaurar en una versión vieja de la app un respaldo hecho con una versión más nueva **pierde en silencio** los campos nuevos. Y al revés, los campos que falten se llenan con valores por omisión (H-1-4).
+- Hasta el esquema 12, el mensaje decía «**El respaldo se lee completo y no le falta nada**», pero la app **no comparaba** nada: mostraba las cifras del respaldo y las del teléfono una debajo de otra, y tú tenías que notar si no cuadraban. «No le falta nada» era más de lo que se comprobó. Desde el 13 (P-08) dice solo «El respaldo se lee completo», y pone lado a lado respaldo / teléfono en días, momentos, gastos y experimentos.
+- **La versión del esquema.** Como el lector de JSON ignora los campos que no conoce (`ignoreUnknownKeys = true`), restaurar en una versión vieja de la app un respaldo hecho con una versión más nueva **perdía en silencio** los campos nuevos. Desde el esquema 13, `Importar.esquemaFuturo` **rechaza** restaurar un respaldo con `schema_v` mayor que el de la app, antes de tocar nada (ni días, ni ubicaciones, ni portadas), y «Verificar» lo advierte. Al revés, los campos que falten se siguen llenando con valores por omisión (H-1-4).
 
 ---
 
@@ -200,7 +201,11 @@ Los reportes semanales y mensuales se generan **solos** (capítulo 9, sección 9
 |---|---|
 | Días | **gana el teléfono**: el día del respaldo se ignora (`importarDias(sobrescribir = false)`) |
 | Momentos, reacciones, obras, ascensos, chats, YouTube | se agregan los que no existan (por identificador) |
-| Salud, pantalla, lugares, cartas, experimentos, entorno, fotos, agenda, sesiones, canciones | **gana el respaldo**: se guardan encima |
+| Salud, pantalla, lugares, cartas, entorno, fotos, agenda, sesiones, canciones | **gana el respaldo**: se guardan encima |
+| Experimentos (desde el esquema 13) | gana el teléfono, pero se conserva lo que solo trae el respaldo: la fecha de fin (un respaldo viejo no reactiva uno terminado) y las respuestas de «¿Lo hiciste hoy?» (`Fusion.experimento`). Hasta el 12, ganaba el respaldo |
+| Gastos e ingresos | se agregan los que no existan (por identificador). Hasta el esquema 12, los repetidos se sobrescribían en la base pero no en memoria, y al reiniciar aparecía en silencio la versión del respaldo (H-9-28) |
+| Avisos de ánimo (desde el esquema 13) | se juntan los dos: el mayor número de planeados y la unión de vencidos y mostrados |
+| Personas y fechas propias (desde el esquema 13) | las personas del teléfono mandan, pero toman la fecha de nacimiento o de fallecimiento que solo tenga el respaldo; las fechas propias se suman |
 | Laptop, comunicación, conexiones | se agregan solo las fechas nuevas |
 | MacroFactor (nutrición, comidas, series, entrenos) | solo si en el teléfono **no hay nada** de MacroFactor |
 | Ajustes | se combinan (`combinarConfig`) |
@@ -231,7 +236,7 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 
 ## 10.9 Integridad: lo que ya se vio en otros capítulos
 
-- **Documentos que no se pueden leer se descartan en silencio** (H-1-3) y **valores inválidos se convierten en valores por omisión** (H-1-4).
+- **Documentos que no se pueden leer.** Hasta el esquema 12 se descartaban en silencio (H-1-3). Desde el 13 (P-07) se cuentan por colección y se muestran en «Estado de los datos» y en Hoy, y una configuración ilegible se copia aparte antes de quedar en blanco (H-9-2; capítulo 2). Los **valores inválidos se convierten en valores por omisión** (H-1-4).
 - **Versión del esquema**: cada día guarda `schema_v` y cada respaldo el suyo (capítulo 2); el diccionario no versiona variable por variable (H-1-8).
 - **Estado de los datos** (`EstadoDatos.kt`, capítulo 4): muestra por fuente si llegó hoy o ayer (verde), si está atrasada (ámbar), si falta un permiso (rojo) o si está apagada (gris). Es el monitor de integridad de los datos pasivos.
 - **Días importados sin sellos** (H-1-9).
@@ -254,6 +259,9 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 | Ubicación redondeada a 0.01° para el clima | Diseño propio (razonable) | — |
 | Seguimiento privado: visible solo en la pantalla Privado, siempre en la exportación para R | Diseño propio | — |
 | Sin contraseña no sale ningún respaldo si hay datos privados (salvo la exportación para R, a mano) | Diseño propio | — |
+| Contar lo ilegible y apartar la configuración dañada (esquema 13) | Diseño propio | — |
+| No restaurar un respaldo de un esquema más nuevo (esquema 13) | Validado como práctica | — |
+| No reemplazar en Drive una copia por otra con menos del 90 % de días o momentos (esquema 13) | Diseño propio | — |
 
 ---
 
@@ -263,8 +271,8 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 2. El **respaldo cifrado** usa AES-256-GCM con sal e IV nuevos en cada archivo: bien diseñado. PBKDF2 con 210 000 iteraciones está por debajo de las 600 000 que recomienda hoy OWASP (H-8-9); lo que más importa es una contraseña larga.
 3. **Sin contraseña, todo sale en claro** a la carpeta y a Drive, incluido el texto de las cartas selladas (H-8-5). Desde el módulo 10a, si hay datos privados, el respaldo no sale sin contraseña; solo la exportación para R, que pides a mano, va en claro y lo advierte.
 4. **El seguimiento privado** (impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado) se ve, desde el módulo 10a, **solo en la pantalla Privado** y va completo a R. Hasta v84 se colaba por los impulsos, los medicamentos y el hábito ligado (H-8-1, H-8-2, H-8-3, H-9-39). Sigue pendiente que las rachas cuentan como limpios los días sin respuesta (H-8-8).
-5. **Verificar** un respaldo es una gran idea, pero el mensaje promete más de lo que comprueba y no revisa la versión del esquema (H-8-12).
-6. **Restaurar** combina con reglas distintas según la colección (H-8-13), y un respaldo malo puede reemplazar al bueno en Drive, que restaura siempre el más reciente (H-8-14).
+5. **Verificar** un respaldo es una gran idea. Hasta el esquema 12, el mensaje prometía más de lo que comprobaba y no revisaba la versión del esquema (H-8-12). Desde el 13 dice solo lo que comprueba, compara respaldo y teléfono, y un respaldo de una versión más nueva no se restaura.
+6. **Restaurar** combina con reglas distintas según la colección (H-8-13). Desde el esquema 13, los gastos e ingresos no se pisan y un experimento terminado no se reactiva. En Drive, un respaldo mucho más pobre ya no reemplaza al bueno: se guarda aparte y se avisa (H-8-14).
 7. Los reportes se guardan solos en carpetas públicas con nombres y frases del diario (H-8-4; capítulo 9).
 8. Las reglas de privacidad declaradas se cumplen en casi todo (texto de WhatsApp, notificaciones, claves, fotos, recaídas, libido); fallan en los impulsos y los medicamentos (H-8-1, H-8-2), en el texto de las cartas selladas dentro del JSON (H-8-5) y en la lista de servicios externos (H-8-17).
 9. Entre los capítulos 9 y 10 se identificaron **17 hallazgos** (H-8-1 a H-8-17). No se cambió código.

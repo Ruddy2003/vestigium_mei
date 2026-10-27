@@ -38,11 +38,19 @@ object Importar {
         Respaldos.Lectura.PideContrasena -> ResultadoImport("Ese respaldo está cifrado: restáuralo desde «Respaldo completo» para escribir la contraseña.")
     }
 
+    /**
+     * Un respaldo hecho por una versión más nueva de la app no se restaura: lo que esta versión no conoce se descartaría
+     * en silencio. Devuelve el aviso, o null si se puede restaurar.
+     */
+    fun esquemaFuturo(v: Int?): String? =
+        if (v != null && v > SCHEMA_V) "Este respaldo es de una versión más nueva de la app (esquema $v; esta tiene el $SCHEMA_V). Actualiza la app antes de restaurarlo: así no se pierde nada." else null
+
     /** El texto de vm_respaldo.json (o el de la versión web). */
     fun respaldoTexto(texto: String): ResultadoImport {
         val raiz = runCatching { JSON.parseToJsonElement(texto).jsonObject }.getOrNull() ?: return ResultadoImport("El archivo no es un JSON válido.")
         // Respaldo propio
         if (raiz.containsKey("momentos") || raiz.containsKey("respuestas")) {
+            esquemaFuturo(raiz["schema_v"].int())?.let { return ResultadoImport(it) }
             val r = JSON.decodeFromString(Respaldo.serializer(), texto)
             // En un teléfono recién instalado, el respaldo trae también todos tus ajustes; si ya hay datos, se combinan sin pisar lo tuyo.
             val nuevo = Repo.dias.isEmpty() && Repo.momentos.isEmpty() && Repo.gastos.isEmpty()
@@ -56,6 +64,7 @@ object Importar {
             if (r.notas.isNotEmpty()) Repo.importarNotas(r.notas)
             if (r.metas.isNotEmpty()) Repo.importarMetas(r.metas)
             if (r.tomas.isNotEmpty()) Repo.importarTomas(r.tomas)
+            Repo.importarAvisos(r.avisos)
             if (r.laptop.isNotEmpty()) Repo.guardarLaptop(r.laptop.filter { it.fecha !in Repo.laptop })
             r.respuestas.forEach { Repo.guardarRespuesta(it) }
             r.reacciones.forEach { rr -> if (Repo.reacciones.none { it.id == rr.id }) Repo.guardarReaccion(rr) }
@@ -63,7 +72,7 @@ object Importar {
             r.salud.forEach { Repo.guardarSalud(it) }
             r.pantalla.forEach { Repo.guardarPantalla(it) }
             r.cartas.forEach { Repo.guardarCarta(it) }
-            r.experimentos.forEach { Repo.guardarExperimento(it) }
+            r.experimentos.forEach { e -> Fusion.experimento(Repo.experimentos.firstOrNull { it.id == e.id }, e)?.let { Repo.guardarExperimento(it) } }
             r.entorno.forEach { Repo.guardarEntorno(it) }
             r.fotos.forEach { Repo.guardarFotos(it) }
             r.agenda.forEach { Repo.guardarAgenda(it) }
@@ -128,10 +137,14 @@ object Importar {
             fotos_revisadas = r.fotos_revisadas + c.fotos_revisadas, salud_sexo = c.salud_sexo.ifBlank { r.salud_sexo },
             logros_propios = (c.logros_propios + r.logros_propios).distinctBy { it.id }, logros_vistos = r.logros_vistos + c.logros_vistos,
             temas_rotacion = c.temas_rotacion.ifEmpty { r.temas_rotacion },
-            campanas = (c.campanas + r.campanas).distinctBy { it.id }, hall_logros = c.hall_logros.ifEmpty { r.hall_logros },
+            // Si se abandonó en el otro teléfono, aquí también queda abandonada.
+            campanas = (c.campanas.map { a -> r.campanas.firstOrNull { it.id == a.id }?.abandonada?.let { ab -> a.copy(abandonada = a.abandonada ?: ab) } ?: a } + r.campanas).distinctBy { it.id }, hall_logros = c.hall_logros.ifEmpty { r.hall_logros },
             favoritos_mas = (c.favoritos_mas + r.favoritos_mas).distinct(), habito_recaida = c.habito_recaida ?: r.habito_recaida,
             // Tu gente: lo de aquí manda; del respaldo se suma a quien no esté.
-            personas = c.personas + r.personas.filter { p -> c.personas.none { it.nombre == p.nombre } },
+            // Las fechas de nacimiento y fallecimiento que solo tiene el respaldo también se suman.
+            personas = c.personas.map { p -> r.personas.firstOrNull { it.nombre == p.nombre }?.let { q -> p.copy(nacimiento = p.nacimiento.ifBlank { q.nacimiento }, fallecimiento = p.fallecimiento.ifBlank { q.fallecimiento }) } ?: p } +
+                r.personas.filter { p -> c.personas.none { it.nombre == p.nombre } },
+            fechas_propias = (c.fechas_propias + r.fechas_propias).distinctBy { it.id },
             personas_omitidas = (c.personas_omitidas + r.personas_omitidas).distinct(), personas_distintas = (c.personas_distintas + r.personas_distintas).distinct(),
             temas_distintos = (c.temas_distintos + r.temas_distintos).distinct(),
             lugares_ignorados = (c.lugares_ignorados + r.lugares_ignorados).distinctBy { "%.4f,%.4f".format(it.lat, it.lon) },

@@ -36,22 +36,84 @@ object Campanas {
         return base + habitos
     }
 
-    fun reto(id: String): Reto? = retos().firstOrNull { it.id == id }
+    /**
+     * El reto de una campaña. Un hábito que ya desactivaste se sigue encontrando: si no, al desactivarlo se perderían
+     * las campañas que ganaste con él y sus logros.
+     */
+    fun reto(id: String): Reto? = retos().firstOrNull { it.id == id } ?: id.takeIf { it.startsWith("habito:") }?.let { hid ->
+        io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().firstOrNull { "habito:${it.id}" == hid }
+            ?.let { h -> Reto(hid, h.nombre, "Cumplir «${h.nombre}»", 5) { f -> Repo.dias[f]?.habitos?.get(h.id) == true } }
+    }
+
+    /** Primer y último día que cuenta de una campaña: desde que la aceptaste y hasta que la abandonaste (los dos incluidos). */
+    fun tramo(c: Campana): Pair<String, String> {
+        val domingo = Fechas.sumar(c.lunes, 6)
+        val ini = c.aceptada?.takeIf { it > c.lunes }?.let { minOf(it, domingo) } ?: c.lunes
+        val fin = c.abandonada?.let { minOf(it, domingo) } ?: domingo
+        return ini to fin
+    }
+
+    /** Nombre de la variable del panel de un reto: campana_sueno7, campana_hab_leer… */
+    fun variable(reto: String): String = "campana_" + if (reto.startsWith("habito:")) "hab_" + reto.removePrefix("habito:") else reto
+
+    /**
+     * Por fecha, los retos que tenías en campaña ese día (P-11). Codifica la asignación (la tenías aceptada), no el cumplimiento.
+     * Días hasta [hoy].
+     */
+    fun diasActivos(campanas: List<Campana>, hoy: String): Map<String, Set<String>> {
+        val m = HashMap<String, MutableSet<String>>()
+        for (c in campanas) {
+            val (ini, fin) = tramo(c)
+            var f = ini
+            while (f <= fin && f <= hoy) { m.getOrPut(f) { mutableSetOf() } += c.reto; f = Fechas.sumar(f, 1) }
+        }
+        return m
+    }
+
+    /**
+     * Las variables del panel que cada reto busca mover: su correlación con la campaña es esperable (la elegiste para eso)
+     * y no dice nada nuevo. Las de un hábito, con su variable hab_.
+     */
+    val MUEVE: Map<String, Set<String>> = mapOf(
+        "sueno7" to setOf("sueno_horas", "sueno_profundo", "sueno_rem", "sueno_inicio_h", "sueno_fin_h", "sueno_calidad"),
+        "temprano" to setOf("sueno_inicio_h", "sueno_horas", "ultimo_uso_h", "carga_noche_h", "cama_min"),
+        "pasos" to setOf("pasos", "a_pie_min", "distancia_km", "cal_activas", "aire_libre_min"),
+        "diario" to setOf("palabras", "personas", "hitos_n"),
+        "enfoque" to setOf("enfoque_min", "enfoque_estudio_min", "enfoque_lectura_min", "enfoque_idiomas_min", "enfoque_tesis_min", "enfoque_trabajo_min", "enfoque_creativo_min", "laptop_productivo_min"),
+        "pantalla" to setOf("pantalla_min", "desbloqueos", "primer_uso_h", "ultimo_uso_h", "notificaciones"),
+        "movimiento" to setOf("ejercicio_min", "gimnasio", "volumen_kg", "series_gimnasio", "escalada", "escalada_grado", "cal_activas"),
+        "leer" to setOf("lectura", "enfoque_lectura_min", "obras_dia"),
+        "reaccion" to setOf("rt_media"),
+        "animo" to setOf("muestreo_valencia", "muestreo_activacion", "avisos_respondidos", "tasa_respuesta", "n_muestreos", "registros_animo"),
+    )
+
+    /** Si la variable [id] es de una campaña y [otra] es lo que ese reto busca mover (o el conteo de campañas). */
+    fun obvia(id: String, otra: String): Boolean {
+        if (id == "campanas_n") return otra.startsWith("campana_")
+        if (!id.startsWith("campana_")) return false
+        if (otra == "campanas_n") return true
+        val reto = id.removePrefix("campana_")
+        if (reto.startsWith("hab_")) return otra == reto
+        return MUEVE[reto]?.contains(otra) == true
+    }
 
     class Estado(val c: Campana, val reto: Reto?, val dias: List<Pair<String, Boolean?>>, val hechos: Int, val ganada: Boolean, val perdida: Boolean, val terminada: Boolean, val ganadaEl: String?)
 
     fun estado(c: Campana, hoy: String = Fechas.diaLogico()): Estado {
         val r = reto(c.reto)
-        val dias = (0 until 7).map { i -> val f = Fechas.sumar(c.lunes, i.toLong()); f to (if (f > hoy || r == null) null else r.cumple(f)) }
+        // Solo cuentan los días desde que la aceptaste y hasta que la abandonaste: no se gana en el acto de aceptarla.
+        val (ini, fin) = tramo(c)
+        val dias = (0 until 7).map { i -> val f = Fechas.sumar(c.lunes, i.toLong()); f to (if (f > hoy || f < ini || f > fin || r == null) null else r.cumple(f)) }
         var n = 0; var ganadaEl: String? = null
         dias.forEach { (f, ok) -> if (ok == true) { n++; if (n == c.meta && ganadaEl == null) ganadaEl = f } }
-        val quedan = dias.count { it.first > hoy } + if (dias.any { it.first == hoy && it.second != true }) 1 else 0
-        val terminada = Fechas.sumar(c.lunes, 6) < hoy
+        val quedan = if (c.abandonada != null) 0 else dias.count { it.first > hoy } + if (dias.any { it.first == hoy && it.second != true }) 1 else 0
+        val terminada = Fechas.sumar(c.lunes, 6) < hoy || c.abandonada != null
         val ganada = n >= c.meta
         return Estado(c, r, dias, n, ganada, !ganada && n + quedan < c.meta, terminada, ganadaEl)
     }
 
-    fun deLaSemana(hoy: String = Fechas.diaLogico()): List<Campana> { val l = Fechas.lunesDe(hoy); return Repo.config.campanas.filter { it.lunes == l } }
+    /** Las campañas vigentes de esta semana (las abandonadas no). */
+    fun deLaSemana(hoy: String = Fechas.diaLogico()): List<Campana> { val l = Fechas.lunesDe(hoy); return Repo.config.campanas.filter { it.lunes == l && it.abandonada == null } }
 
     /** Días en que ganaste cada campaña, ordenados (para los logros). */
     fun victorias(hoy: String = Fechas.diaLogico()): List<String> = Repo.config.campanas.mapNotNull { estado(it, hoy).ganadaEl }.sorted()

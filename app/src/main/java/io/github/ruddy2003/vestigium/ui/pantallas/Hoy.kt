@@ -101,10 +101,8 @@ object Pendientes {
             l += Pendiente("p:ayer", "Diario de ayer", "ayer")
         if (d.sueno_calidad == null && ahora.hour >= 5) l += Pendiente("p:sueno", "Calidad del sueño", "sueno")
         // Avisos de ánimo que ya sonaron y no contestaste.
-        val ms = System.currentTimeMillis()
-        val plan = c.plan_muestreo[Fechas.hoyCalendario()].orEmpty().count { it <= ms }
-        val hechos = Repo.momentos.count { it.fecha == hoy && it.tipo == "muestreo" }
-        val faltan = (plan - hechos).coerceAtLeast(0)
+        // Se cuentan los avisos sin respuesta (por su hora), no la resta de planeados menos registros.
+        val faltan = io.github.ruddy2003.vestigium.data.AvisosAnimo.sinContestar().size
         if (faltan > 0) l += Pendiente("p:aviso", if (faltan == 1) "1 aviso de ánimo sin contestar" else "$faltan avisos de ánimo sin contestar", "aviso")
         if (!ignorado("p:escalas")) Escalas.pendientes().firstOrNull()?.let { (ins, atraso) ->
             l += Pendiente("p:escalas", if (atraso > 0) "${ins.nombre}: ${atraso} días de atraso" else "${ins.nombre} toca hoy", "escalas")
@@ -126,10 +124,7 @@ object Pendientes {
     fun resuelto(clave: String, d: Dia, hoy: String): Boolean = when (clave) {
         "p:ayer" -> Repo.dias[Fechas.sumar(hoy, -1)]?.let { it.valencia != null || it.nota.isNotBlank() } == true
         "p:sueno" -> d.sueno_calidad != null
-        "p:aviso" -> {
-            val plan = Repo.config.plan_muestreo[Fechas.hoyCalendario()].orEmpty().count { it <= System.currentTimeMillis() }
-            Repo.momentos.count { it.fecha == hoy && it.tipo == "muestreo" } >= plan
-        }
+        "p:aviso" -> io.github.ruddy2003.vestigium.data.AvisosAnimo.sinContestar().isEmpty()
         "p:escalas" -> Escalas.pendientes().isEmpty()
         "p:reaccion" -> Repo.reacciones.any { it.fecha == hoy }
         "p:diario" -> d.valencia != null && d.nota.isNotBlank()
@@ -229,6 +224,13 @@ object Faltas {
                 "Spotify: ${Spotify.sincronizar(x)} canciones nuevas."
             }
         }
+        // Lo que no se pudo leer al abrir la app.
+        Repo.configIlegible?.let { ts ->
+            l += Falta("config_ilegible", "Tus ajustes no se pudieron leer al abrir la app y quedaron como nuevos. Guardé el original aparte (${Fechas.corto(ts.take(10))}); para recuperar hábitos, personas y perfil, restaura un respaldo.", "datos") { null }
+        }
+        Repo.ilegibles.values.sum().takeIf { it > 0 }?.let { n ->
+            l += Falta("ilegibles", "$n registros guardados no se pudieron leer. Mira de qué tipo en Estado de los datos.", "estado") { null }
+        }
         val respaldo = listOfNotNull(c.respaldo_ultimo?.takeIf { c.carpeta_respaldo != null }, c.drive_ultimo?.takeIf { c.drive }).maxOrNull()
         if ((c.carpeta_respaldo != null || c.drive) && io.github.ruddy2003.vestigium.data.Respaldos.bloqueado(ctx))
             l += Falta("respaldo", io.github.ruddy2003.vestigium.data.Respaldos.PAUSA, "datos") { null }
@@ -266,6 +268,7 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav) {
                     when (f.arreglo) {
                         "permisos" -> nav.ir("permisos")
                         "datos" -> nav.ir("datos")
+                        "estado" -> nav.ir("estado_datos")
                         else -> scope.launch { msg = runCatching { withContext(Dispatchers.IO) { f.hacer(ctx) } }.getOrElse { "No se pudo: ${it.message}" }; version++ }
                     }
                 }) { Text(f.arreglo, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
@@ -601,10 +604,14 @@ fun LineaDelTiempo(fecha: String) {
     Ayuda("De 0:00 a las 5:00 del día siguiente. Lo sombreado es de noche.", Modifier.padding(top = 4.dp))
 }
 
-/** Abre el registro rápido de un aviso de ánimo. */
+/**
+ * Abre el registro rápido del aviso de ánimo más antiguo sin contestar: la respuesta se guarda como respuesta a ese aviso
+ * («muestreo», con su hora), no como un registro propio, y la tarjeta se apaga al contestarlos.
+ */
 fun abrirAviso(ctx: Context) {
-    ctx.startActivity(Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, QuickActivity.M_ANIMO).putExtra(QuickActivity.ORIGEN, "app")
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    val i = Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, QuickActivity.M_ANIMO).putExtra(QuickActivity.ORIGEN, "app")
+    io.github.ruddy2003.vestigium.data.AvisosAnimo.sinContestar().firstOrNull()?.let { i.putExtra(QuickActivity.AVISO_MS, it) }
+    ctx.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
 }
 
 @Composable

@@ -84,9 +84,10 @@ object Diccionario {
         "dia_semana" to "1 = lunes … 7 = domingo", "con_diario" to "Hay registro del diario ese día (0/1)",
         "valencia" to "Qué tan agradable fue (1 muy desagradable a 7 muy agradable; Russell)", "activacion" to "Energía (1 muy baja a 7 muy alta)",
         "dolor" to "Dolor o molestia física (0 nada a 5 muy fuerte)", "sueno_calidad" to "Calidad del sueño percibida (1 a 5)",
-        "valencia_muestreo" to "Promedio de la valencia en los avisos del día", "n_muestreos" to "Avisos de ánimo respondidos", "n_momentos" to "Momentos registrados (sin contar avisos)",
+        "valencia_muestreo" to "Promedio de la valencia en los avisos del día", "n_muestreos" to "Avisos de ánimo respondidos (registros «muestreo», con o sin valencia)", "n_momentos" to "Momentos registrados (sin contar avisos)",
         "gasto_total" to "Gasto del día (tu moneda)", "ingreso_total" to "Ingresos del día (tu moneda)", "fijo" to "Ingreso que se repite, como sueldo o beca (0/1)", "schema_v" to "Versión del esquema de datos", "origen" to "De dónde vino el registro (app, web, obsidian, widget…)",
-        "retroactivo" to "Se llenó después de ese día (0/1)", "dia_dificil" to "Marcado como día difícil (0/1)",
+        "retroactivo" to "La valencia se llenó otro día, después (0/1). Desde la v13 se decide con ts_valencia; los días de antes, por si el registro del día se creó después",
+        "ts_valencia" to "Cuándo se llenó o se cambió por última vez la valencia del día (desde la v13)", "dia_dificil" to "Marcado como día difícil (0/1)",
         "ts_creado" to "Cuándo se creó el registro", "ts_editado" to "Última edición",
         "hitos" to "Hitos del día (lista)", "flow" to "Experiencia de flujo (Csikszentmihalyi)", "sdt_necesidad" to "Necesidad psicológica más presente (Deci y Ryan)",
         "apreciacion" to "Evaluación del estrés (Lazarus)", "sueno_recordado" to "Recordó un sueño (0/1)", "sueno_valencia" to "Qué tan agradable fue el sueño (1 a 7)",
@@ -245,6 +246,26 @@ object Diccionario {
         "dias_juntos" to "Días en que aparecen las dos el mismo día", "minutos" to "Minutos usados ese día", "categoria" to "Categoría (productivo, ocio, social, otro)",
         "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista)",
         "presencias_revisado" to "Ya revisaste ese día quién estuvo y en quién solo pensaste (0/1); antes de la versión 10 todo cuenta como «estuve»",
+        // Entrega 10b (v13): avisos de ánimo, campañas, experimentos, ventana del día, días especiales y Tu gente.
+        "avisos_planeados" to "Avisos de ánimo planeados ese día (desde la v13; vacío = sin registro o con los avisos apagados)",
+        "avisos_mostrados" to "Avisos de ánimo que se mostraron: menos de 50 minutos tarde y con permiso de notificaciones",
+        "avisos_respondidos" to "Avisos mostrados que tienen respuesta (un registro «muestreo» con esa hora de aviso, con o sin valencia)",
+        "tasa_respuesta" to "avisos_respondidos entre avisos_mostrados (vacío si no se mostró ninguno)",
+        "campanas_n" to "Campañas que tenías aceptadas ese día (vacío antes de tu primera campaña)",
+        "vm_experimentos.csv:fin" to "Día lógico en que lo terminaste (desde la v13; los días después no cuentan)",
+        "vm_experimentos.csv:hecho" to "«¿Lo hiciste hoy?»: fecha:1 sí, fecha:0 no (lista; una fecha que no aparece = sin respuesta, no «no»)",
+        "vm_pantalla.csv:ventana" to "logica = de las 05:00 a las 05:00 del día siguiente (desde la v13); calendario = de 0:00 a 24:00 (antes)",
+        "ventana_pantalla" to "Ventana del uso del teléfono ese día: logica (05:00 a 05:00, desde la v13) o calendario (0:00 a 24:00)",
+        "ventana_pasos" to "Ventana de los pasos ese día: logica (05:00 a 05:00, desde la v13) o calendario (0:00 a 24:00)",
+        "dia_especial" to "Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1)",
+        "dia_especial_tipo" to "Qué cae: mi_cumpleanos, cumpleanos, fallecimiento, aniversario u otra (lista)",
+        "vm_personas.csv:persona" to "Nombre con que la mencionas (sin @)", "vm_personas.csv:relacion" to "Qué es para ti ahora",
+        "vm_personas.csv:detalle" to "Parentesco o detalle libre", "vm_personas.csv:cercania" to "Qué tan cerca (1 a 7, círculos de Aron)",
+        "vm_personas.csv:desde" to "Desde cuándo la tienes clasificada", "nacimiento" to "AAAA-MM-DD, o --MM-DD si no se sabe el año",
+        "fallecimiento" to "AAAA-MM-DD, o --MM-DD si no se sabe el año", "edad" to "Años cumplidos hoy, o los que tenía al morir (vacío sin el año)",
+        "vm_personas.csv:historial" to "Relaciones de antes: relacion:hasta (lista)",
+        "vm_fechas_propias.csv:nombre" to "Qué es", "vm_fechas_propias.csv:fecha" to "AAAA-MM-DD, o --MM-DD si no se sabe el año",
+        "mes_dia" to "Mes y día en que se repite (MM-DD)", "vm_fechas_propias.csv:anio" to "Año, si se sabe", "vm_fechas_propias.csv:tipo" to "cumpleanos, aniversario u otra",
         // Cartas
         "vm_cartas.csv:para" to "A quién va (sin @); vacío = a ti en el futuro", "escrita" to "Día en que se escribió", "abrir_en" to "Día desde el que se puede abrir",
         "abierta" to "Ya se abrió (0/1)", "abierta_el" to "Día en que se abrió", "vm_cartas.csv:lugar" to "Ciudad donde se escribió", "vm_cartas.csv:tema" to "Tema de la app al escribirla",
@@ -281,6 +302,7 @@ object Diccionario {
             }
             col.startsWith("horas_tipo_") -> "Horas en lugares de tipo ${Catalogo.nombreTipoLugar(col.removePrefix("horas_tipo_")).lowercase()}"
             col.startsWith("ctx_") -> "Contexto del día: ${col.removePrefix("ctx_").replace('_', ' ')} (0/1)"
+            col.startsWith("campana_") -> "En campaña ese día: ${io.github.ruddy2003.vestigium.ciencia.Campanas.reto(col.removePrefix("campana_").let { if (it.startsWith("hab_")) "habito:" + it.removePrefix("hab_") else it })?.nombre ?: col.removePrefix("campana_")} (0/1; la tenías aceptada, la cumplieras o no)"
             col.startsWith("hab_") -> "Hábito cumplido: ${Repo.config.habitos.firstOrNull { it.id == col.removePrefix("hab_") }?.nombre ?: col.removePrefix("hab_")} (0/1)"
             col.startsWith("m_") -> "Momentos de tipo ${col.removePrefix("m_")} (registros de antes de unir ánimo y momentos)"
             col.startsWith("n_") && Catalogo.sentimiento(col.removePrefix("n_")) != null -> "Registros con ${Catalogo.nombreSentimiento(col.removePrefix("n_")).lowercase()} en el día"

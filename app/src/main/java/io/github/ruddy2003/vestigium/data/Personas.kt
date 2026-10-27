@@ -37,14 +37,18 @@ object Personas {
     }
 
     /** Guarda o cambia a alguien. Si cambia la relación o la cercanía, lo de antes queda en el historial hasta hoy. */
-    fun guardar(nombre: String, relacion: String, cercania: Int?, detalle: String = "", hoy: String = Fechas.diaLogico()) {
+    /** [nacimiento] y [fallecimiento] en la forma de [Especiales] ("" = borrar; null = dejar como estaba). */
+    fun guardar(nombre: String, relacion: String, cercania: Int?, detalle: String = "", hoy: String = Fechas.diaLogico(),
+                nacimiento: String? = null, fallecimiento: String? = null) {
         Repo.cambiarConfig { c ->
             val previo = de(nombre, c)
-            val n = if (previo == null) Persona(nombre.lowercase().removePrefix("@"), relacion, detalle, cercania, hoy)
+            val n = if (previo == null) Persona(nombre.lowercase().removePrefix("@"), relacion, detalle, cercania, hoy,
+                nacimiento = nacimiento.orEmpty(), fallecimiento = fallecimiento.orEmpty())
             else {
                 val cambio = previo.relacion != relacion || (previo.cercania != null && cercania != null && previo.cercania != cercania)
                 previo.copy(relacion = relacion, cercania = cercania ?: previo.cercania, detalle = detalle.ifBlank { previo.detalle },
-                    historial = if (cambio) previo.historial + CambioRelacion(hoy, previo.relacion, previo.cercania) else previo.historial)
+                    historial = if (cambio) previo.historial + CambioRelacion(hoy, previo.relacion, previo.cercania) else previo.historial,
+                    nacimiento = nacimiento ?: previo.nacimiento, fallecimiento = fallecimiento ?: previo.fallecimiento)
             }
             c.copy(personas = c.personas.filter { it !== previo } + n, personas_omitidas = c.personas_omitidas - n.nombre)
         }

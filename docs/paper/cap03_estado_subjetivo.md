@@ -166,7 +166,26 @@ La app no programa una alarma exacta para cada aviso: lo revisa en el **pulso** 
 
 Si respondes tocando la notificación, el registro se guarda como tipo **`muestreo`**, con la hora planeada en `aviso_ts`. La exportación calcula `latencia_min` = minutos entre la hora planeada y tu respuesta. Si en vez de eso abres la app por tu cuenta, el registro se guarda como **`animo`** (iniciativa propia), aunque fuera para contestar el aviso.
 
-**Qué no queda registrado (H-2-3).** Si el teléfono estuvo dormido y el pulso llegó más de 50 minutos tarde, el aviso **se marca como hecho pero nunca se muestra**, sin dejar rastro. Tampoco se guarda, como dato del día, **cuántos avisos se mostraron**: el plan se borra a los 3 días y las marcas internas a los 40. La pantalla de Hoy sí cuenta «avisos sin contestar» del día en curso, pero ese número no llega al panel. Consecuencia: no se puede calcular la **tasa de respuesta** histórica (avisos respondidos / avisos mostrados), que es la primera cifra que se reporta en un estudio de muestreo de experiencia, ni saber si los avisos sin respuesta se concentran en ciertos días u horas (Rintala et al., 2019, combinando datos de varios estudios de este tipo, encontraron una respuesta promedio de 78 %, más baja temprano en la mañana y que bajaba con los días de estudio). Gravedad media.
+**Lo que queda registrado desde el esquema 13 (P-10).** Cada pulso anota en la colección `avisos`, un documento por día del plan (`AvisosDia`):
+- **`planeados`**: cuántos avisos podían sonar ese día. Si cambias los ajustes a mitad del día, el plan se rehace. Entonces se suman los que ya vencieron y los del plan nuevo que todavía pueden sonar; los de un turno ya usado no vuelven a sonar (H-9-11).
+- **`vencidos`**: los avisos cuya hora ya pasó y que el pulso ya procesó.
+- **`mostrados`**: los que además salieron en pantalla, es decir, con menos de 50 minutos de retraso y con permiso de notificaciones.
+
+Las horas se guardan en el mismo formato que `aviso_ts`, para unir cada aviso con su respuesta. Con los avisos apagados no se anota nada, y el día queda **sin dato**, no en 0.
+
+En el panel salen cuatro variables (`AvisosAnimo.cifras`):
+- `avisos_planeados`;
+- `avisos_mostrados`;
+- `avisos_respondidos`: los mostrados que tienen un registro `muestreo` con esa hora, tenga o no valencia;
+- **`tasa_respuesta`** = respondidos ÷ mostrados.
+
+Se marcan como familia «obvia» entre sí y con `muestreo_valencia`, `muestreo_activacion` y `n_muestreos` (capítulo 6). En la exportación, `n_muestreos` cuenta ahora **todos** los avisos respondidos, con o sin valencia: la misma regla que el diccionario, Explorar y los widgets (H-9-10).
+
+*Ejemplo (inventado):* 4 avisos planeados; 3 vencen y 2 se muestran (el tercero llegó 70 minutos tarde porque el teléfono dormía); respondes uno de los mostrados. Queda planeados 4, mostrados 2, respondidos 1, tasa 0.5. Los días anteriores al cambio quedan vacíos: reconstruirlos no es fiable. **[Validado]** el propósito (la tasa de respuesta es la primera cifra de un estudio de muestreo de experiencia); **[Diseño propio]** la forma de contarla.
+
+También cambió la tarjeta «N avisos de ánimo sin contestar» de Hoy (H-9-9). Antes restaba registros a avisos planeados, y al tocarla la respuesta se guardaba como registro propio (`animo`), así que la tarjeta no se apagaba. Ahora cuenta los avisos sin respuesta por su hora (`AvisosAnimo.sinContestar`) y abre la captura con la hora del más antiguo. La respuesta queda como `muestreo` de ese aviso, con su `latencia_min`.
+
+**Qué no quedaba registrado hasta el esquema 12 (H-2-3).** Si el teléfono estuvo dormido y el pulso llegó más de 50 minutos tarde, el aviso **se marca como hecho pero nunca se muestra**, sin dejar rastro. Tampoco se guarda, como dato del día, **cuántos avisos se mostraron**: el plan se borra a los 3 días y las marcas internas a los 40. La pantalla de Hoy sí cuenta «avisos sin contestar» del día en curso, pero ese número no llega al panel. Consecuencia: no se puede calcular la **tasa de respuesta** histórica (avisos respondidos / avisos mostrados), que es la primera cifra que se reporta en un estudio de muestreo de experiencia, ni saber si los avisos sin respuesta se concentran en ciertos días u horas (Rintala et al., 2019, combinando datos de varios estudios de este tipo, encontraron una respuesta promedio de 78 %, más baja temprano en la mañana y que bajaba con los días de estudio). Gravedad media.
 
 ![Figura 3.2](figuras/fig08_dia_muestreo.png)
 
@@ -251,7 +270,9 @@ Estas preguntas están **plegadas por omisión**, así que se responden menos y 
 
 Cada documento de día guarda `retroactivo`: verdadero si el día se **guardó por primera vez** después de que terminó (`Repo.guardarDia`: la fecha del documento es anterior al día lógico de hoy). Sirve para separar lo escrito en el momento de lo escrito de memoria días después, que tiene más sesgo de recuerdo. **[Validado]** el propósito (Stone et al., 2002, mostraron que en diarios en papel mucha gente llena días atrasados de golpe).
 
-**Pero se decide en el primer guardado, no cuando se llenó el ánimo (H-2-2).** Ejemplo (inventado): el martes a las 8:10 tocas la calidad del sueño en el widget. Eso crea el documento del martes con `retroactivo = falso`. El viernes llenas la valencia y el diario del martes de memoria: el día **sigue marcado como no retroactivo**, porque la marca ya existía. Al revés, un día que se crea retroactivo lo es para siempre. Además, `ts_editado` se sobrescribe en cada cambio, así que tampoco queda cuándo se escribió cada parte. Gravedad media: es justo la variable pensada para controlar el sesgo de recuerdo.
+**Hasta el esquema 12 se decidía en el primer guardado, no cuando se llenó el ánimo (H-2-2).** Ejemplo (inventado): el martes a las 8:10 tocas la calidad del sueño en el widget. Eso crea el documento del martes con `retroactivo = falso`. El viernes llenas la valencia y el diario del martes de memoria: el día **sigue marcado como no retroactivo**, porque la marca ya existía. Al revés, un día que se crea retroactivo lo es para siempre. Además, `ts_editado` se sobrescribe en cada cambio, así que tampoco queda cuándo se escribió cada parte. Gravedad media: es justo la variable pensada para controlar el sesgo de recuerdo.
+
+**Desde el esquema 13 (P-13)** cada día guarda `ts_valencia`: la hora en que la valencia pasó de vacía a llena, o en que cambió. Con ella, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). En el ejemplo, la valencia del martes se llenó el viernes, así que el martes queda retroactivo aunque el widget lo haya creado el mismo martes. Llenarla el martes a la 1:30 de la madrugada del miércoles no cuenta como retroactivo, porque sigue siendo el día lógico del martes. Corregir la valencia días después también vuelve el día retroactivo: el número nuevo es de memoria. Los días de antes de la v13 no tienen `ts_valencia` y conservan su marca. **[Diseño propio]**.
 
 **Un aviso que no tiene efecto (H-2-14).** Si abres un día futuro, la app dice «se marcará como escrito por adelantado», pero no existe ningún campo que lo registre. Gravedad baja.
 
@@ -447,7 +468,7 @@ En un registro personal, los datos **no faltan al azar**. Lo típico es no llena
 
 **Otros apoyos:** el diario de ayer aparece como pendiente hasta las 14:00 del día siguiente; los cuestionarios insisten más con el atraso; la «semana corta» reduce la app a lo mínimo; y `retroactivo` intenta separar lo escrito tarde (con el problema de H-2-2).
 
-**Lo que falta:** saber **cuántos avisos se mostraron** (H-2-3) para medir la tasa de respuesta y ver si los avisos sin respuesta se concentran en ciertos momentos.
+**Lo que faltaba hasta el esquema 13:** saber **cuántos avisos se mostraron** (H-2-3). Desde entonces `tasa_respuesta` está en el panel (sección 3.5.3). Con ella se puede ver si los avisos sin respuesta se concentran en ciertos días u horas, y usarla como covariable: por ejemplo, ver si los días con tasa baja son también los de valencia baja del diario.
 
 ![Figura 3.4](figuras/fig09_dia_faltante.png)
 

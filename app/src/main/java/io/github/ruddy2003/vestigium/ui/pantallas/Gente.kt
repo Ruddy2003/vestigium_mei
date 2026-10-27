@@ -31,7 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import io.github.ruddy2003.vestigium.data.Especiales
+import io.github.ruddy2003.vestigium.data.FechaPropia
 import io.github.ruddy2003.vestigium.data.Fechas
+import io.github.ruddy2003.vestigium.data.Persona
 import io.github.ruddy2003.vestigium.data.Personas
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
@@ -85,6 +88,9 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, extra: @Com
     var rel by remember(nombre) { mutableStateOf(previo?.relacion) }
     var cerca by remember(nombre) { mutableStateOf(previo?.cercania) }
     var detalle by remember(nombre) { mutableStateOf(previo?.detalle.orEmpty()) }
+    var nac by remember(nombre) { mutableStateOf(Especiales.paraEditar(previo?.nacimiento.orEmpty())) }
+    var fall by remember(nombre) { mutableStateOf(Especiales.paraEditar(previo?.fallecimiento.orEmpty())) }
+    val nacOk = Especiales.leer(nac); val fallOk = Especiales.leer(fall)
     Etiqueta("¿Qué es para ti?")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Personas.RELACIONES.forEach { o -> Ficha(o.nombre, rel == o.id) { rel = if (rel == o.id) null else o.id } }
@@ -93,11 +99,25 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, extra: @Com
     CirculosCercania(cerca) { cerca = it }
     OutlinedTextField(detalle, { detalle = it.take(80) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
         placeholder = { Text("detalle opcional: «mi prima», «de la prepa»…") })
+    // Fechas (opcionales): con el año de nacimiento se ve su edad; los dos días cuentan como días especiales.
+    Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(nac, { nac = it.take(10) }, Modifier.weight(1f), singleLine = true, isError = nacOk == null,
+            label = { Text("nacimiento") }, placeholder = { Text("15/03/1962 o 15/03") })
+        OutlinedTextField(fall, { fall = it.take(10) }, Modifier.weight(1f), singleLine = true, isError = fallOk == null,
+            label = { Text("fallecimiento") }, placeholder = { Text("si aplica") })
+    }
+    if (nacOk == null || fallOk == null) Ayuda("Escribe día/mes o día/mes/año, por ejemplo 15/03 o 15/03/1962.", Modifier.padding(top = 4.dp))
+    else nacOk.takeIf { it.isNotBlank() }?.let { n ->
+        val e = Especiales.edadDe(Persona(nombre, "", nacimiento = n, fallecimiento = fallOk))
+        Ayuda("Cumple el ${Especiales.texto(n, conAnio = false)}" + (e?.let { if (fallOk.isBlank()) " · tiene $it años" else " · tenía $it años" } ?: ""), Modifier.padding(top = 4.dp))
+    }
     if (previo != null && rel != null && rel != previo.relacion)
         Ayuda("Lo de antes (${Personas.nombreRelacion(previo.relacion).lowercase()}) queda guardado hasta hoy: los días anteriores se siguen analizando así.", Modifier.padding(top = 6.dp))
     FlowRow(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         extra()
-        BotonPrincipal("Guardar", habilitado = rel != null) { rel?.let { Personas.guardar(nombre, it, cerca, detalle.trim()); alGuardar() } }
+        BotonPrincipal("Guardar", habilitado = rel != null && nacOk != null && fallOk != null) {
+            rel?.let { Personas.guardar(nombre, it, cerca, detalle.trim(), nacimiento = nacOk, fallecimiento = fallOk); alGuardar() }
+        }
     }
 }
 
@@ -148,7 +168,8 @@ fun PantallaPersonas(nav: Nav) {
                     l.forEach { p ->
                         val m = menc[p.nombre]
                         FilaMenu("@${p.nombre}" + if (p.detalle.isNotBlank()) " · ${p.detalle}" else "",
-                            listOfNotNull(p.cercania?.let { "cercanía $it/7" }, m?.let { "${it.first} días" }, m?.second?.takeIf { it.isNotBlank() }?.let { "última vez ${Fechas.corto(it)}" },
+                            listOfNotNull(Especiales.edadDe(p)?.let { if (p.fallecimiento.isBlank()) "$it años" else "†, a los $it" } ?: "†".takeIf { p.fallecimiento.isNotBlank() },
+                                p.cercania?.let { "cercanía $it/7" }, m?.let { "${it.first} días" }, m?.second?.takeIf { it.isNotBlank() }?.let { "última vez ${Fechas.corto(it)}" },
                                 p.historial.lastOrNull()?.let { "antes ${Personas.nombreRelacion(it.relacion).lowercase()}" }).joinToString(" · ")) { editando = p.nombre }
                     }
                 }
@@ -161,6 +182,7 @@ fun PantallaPersonas(nav: Nav) {
                 conocer.forEach { n -> FilaMenu("@$n", "ya cuenta en los análisis · toca para detallar") { editando = n } }
             }
         }
+        DiasEspeciales()
         val dups = remember(menc, c.personas_distintas) { Personas.duplicados() }
         if (dups.isNotEmpty()) Seccion("¿Son la misma persona?", "Nombres que se parecen. Si son la misma, se cuentan juntos en todo (conservas lo que escribiste).") {
             dups.take(6).forEach { (a, b) ->
@@ -193,6 +215,74 @@ fun PantallaPersonas(nav: Nav) {
                     }
                     FormularioPersona(n, alGuardar = { editando = null })
                     AQuienConoce(n)
+                }
+            })
+    }
+}
+
+/**
+ * Días especiales (I-6): los cumpleaños y aniversarios de Tu gente, el tuyo (de Conocerte) y tus fechas propias,
+ * en el orden en que vienen. Las fechas propias se agregan y se editan aquí.
+ */
+@Composable
+private fun DiasEspeciales() {
+    val c = Repo.config
+    val hoy = Fechas.diaLogico()
+    var editando by remember { mutableStateOf<FechaPropia?>(null) }
+    // Los próximos 12 meses, día por día.
+    val proximos = remember(c.personas, c.fechas_propias, c.perfil.nacimiento, hoy) {
+        (0L until 366L).flatMap { i -> val f = Fechas.sumar(hoy, i); Especiales.de(f, c).map { f to it } }
+    }
+    Seccion("Días especiales", "Cumpleaños, aniversarios y tus propias fechas. Cuentan como «día especial» en la exportación para R.") {
+        Tarjeta {
+            if (proximos.isEmpty()) Ayuda("Todavía no hay fechas. Pon la de nacimiento de alguien al tocarlo, o agrega una fecha propia.")
+            proximos.take(8).forEach { (f, e) ->
+                Text((if (f == hoy) "Hoy" else Fechas.corto(f)) + " · " + Especiales.frase(e), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = 2.dp))
+            }
+            if (c.fechas_propias.isNotEmpty()) {
+                Etiqueta("Tus fechas propias")
+                c.fechas_propias.sortedBy { Especiales.mesDia(it.fecha) }.forEach { fp ->
+                    FilaMenu(fp.nombre, Especiales.texto(fp.fecha) + " · " + (Especiales.TIPOS_PROPIOS.firstOrNull { it.id == fp.tipo }?.nombre ?: fp.tipo).lowercase()) { editando = fp }
+                }
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                BotonSecundario("+ fecha propia") { editando = FechaPropia(Repo.nuevoId(), "", "") }
+                Ficha(if (c.avisos_especiales) "aviso en la mañana: sí" else "aviso en la mañana: no", c.avisos_especiales) {
+                    Repo.cambiarConfig { it.copy(avisos_especiales = !it.avisos_especiales) }
+                }
+            }
+        }
+    }
+    editando?.let { fp0 ->
+        var nombre by remember(fp0.id) { mutableStateOf(fp0.nombre) }
+        var fecha by remember(fp0.id) { mutableStateOf(Especiales.paraEditar(fp0.fecha)) }
+        var tipo by remember(fp0.id) { mutableStateOf(fp0.tipo) }
+        val ok = Especiales.leer(fecha)?.takeIf { it.isNotBlank() }
+        val existe = c.fechas_propias.any { it.id == fp0.id }
+        AlertDialog(onDismissRequest = { editando = null },
+            confirmButton = {
+                TextButton(enabled = ok != null && nombre.isNotBlank(), onClick = {
+                    val n = fp0.copy(nombre = nombre.trim(), fecha = ok!!, tipo = tipo)
+                    Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != n.id } + n) }
+                    editando = null
+                }) { Text("guardar") }
+            },
+            dismissButton = {
+                Row {
+                    if (existe) TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != fp0.id }) }; editando = null }) { Text("borrar") }
+                    TextButton(onClick = { editando = null }) { Text("cancelar") }
+                }
+            },
+            title = { Text(if (existe) "Fecha propia" else "Nueva fecha propia") },
+            text = {
+                Column {
+                    OutlinedTextField(nombre, { nombre = it.take(60) }, Modifier.fillMaxWidth(), singleLine = true, label = { Text("qué es") },
+                        placeholder = { Text("«boda de mis papás», «llegué a la ciudad»…") })
+                    OutlinedTextField(fecha, { fecha = it.take(10) }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, isError = fecha.isNotBlank() && ok == null,
+                        label = { Text("fecha") }, placeholder = { Text("15/03/1990 o 15/03") })
+                    FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Especiales.TIPOS_PROPIOS.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
+                    }
                 }
             })
     }

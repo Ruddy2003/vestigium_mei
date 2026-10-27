@@ -66,6 +66,7 @@ import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Clima
 import io.github.ruddy2003.vestigium.data.Dia
 import io.github.ruddy2003.vestigium.data.Fechas
+import io.github.ruddy2003.vestigium.data.Experimentos
 import io.github.ruddy2003.vestigium.data.Luna
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
@@ -316,11 +317,14 @@ fun PantallaDia(nav: Nav) {
         if (!manana) bloqueSueno()
 
         TramosDelDia(fecha)
-        // 4. Recuerdos y experimentos.
+        // 4. Recuerdos, días especiales y experimentos.
+        io.github.ruddy2003.vestigium.data.Especiales.de(fecha).takeIf { it.isNotEmpty() }?.let { l ->
+            Aviso((if (esHoy) "Hoy: " else "Este día: ") + l.joinToString(" · ") { io.github.ruddy2003.vestigium.data.Especiales.frase(it) } + ".")
+        }
         HaceUnAnio(fecha, nav)
-        Repo.experimentos.filter { it.activo }.forEach { e ->
-            val semana = java.time.temporal.ChronoUnit.WEEKS.between(Fechas.parse(e.inicio), Fechas.parse(fecha)).toInt()
-            if (semana in e.plan.indices) Aviso("Experimento «${e.nombre}», semana ${semana + 1} de ${e.semanas}: " + if (e.plan[semana]) "esta semana SÍ: ${e.accion}." else "esta semana NO hagas: ${e.accion}.")
+        // También en los terminados, para contestar los días que quedaron sin respuesta (hasta su último día y nunca en el futuro).
+        Repo.experimentos.filter { Experimentos.cubre(it, fecha) && fecha <= Fechas.diaLogico() && !io.github.ruddy2003.vestigium.data.Privado.esVariable(it.resultado) }.forEach { e ->
+            AvisoExperimento(e, fecha)
         }
 
         if (esHoy) TextButton(onClick = { Repo.cambiarConfig { it.copy(semana_corta = true) } }, modifier = Modifier.padding(top = 6.dp)) {
@@ -855,5 +859,28 @@ private fun LoDeAnoche() {
             val nombre = if (io.github.ruddy2003.vestigium.data.Sustancias.visible(x)) "${Catalogo.nombreSustancia(x)} · desde las ${Fechas.horaDe(x.inicio)}" else "Un registro del ${Fechas.corto(x.fecha)}"
             io.github.ruddy2003.vestigium.ui.FilaMenu(nombre, "hasta qué hora, el máximo y la cruda") { abrirConsumo(ctx, id = x.id) }
         }
+    }
+}
+
+/**
+ * El aviso del experimento en el Día, con «¿Lo hiciste hoy?» (I-3). Se pregunta en las dos condiciones: en las semanas «no»
+ * mide si lo hiciste igual. Tocar la respuesta elegida la borra (queda sin respuesta, que no es «no»).
+ */
+@Composable
+private fun AvisoExperimento(e: io.github.ruddy2003.vestigium.data.Experimento, fecha: String) {
+    val semana = (Fechas.diasEntre(e.inicio, fecha) / 7).toInt()
+    val toca = e.plan.getOrNull(semana) ?: return
+    val lavado = Experimentos.enLavado(e, fecha)
+    Aviso("Experimento «${e.nombre}», semana ${semana + 1} de ${e.semanas}: " + (if (toca) "esta semana SÍ: ${e.accion}." else "esta semana NO hagas: ${e.accion}.") +
+        if (lavado) " Hoy es día de lavado: no cuenta para el resultado." else "")
+    val h = e.hecho[fecha]
+    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(if (fecha == Fechas.diaLogico()) "¿Lo hiciste hoy?" else "¿Lo hiciste ese día?", style = MaterialTheme.typography.labelLarge)
+        fun responder(v: Boolean) {
+            val actual = Repo.experimentos.firstOrNull { it.id == e.id } ?: e
+            Repo.guardarExperimento(actual.copy(hecho = if (actual.hecho[fecha] == v) actual.hecho - fecha else actual.hecho + (fecha to v)))
+        }
+        Ficha("sí", h == true) { responder(true) }
+        Ficha("no", h == false) { responder(false) }
     }
 }

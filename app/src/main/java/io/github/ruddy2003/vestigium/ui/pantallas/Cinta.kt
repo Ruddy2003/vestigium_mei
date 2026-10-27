@@ -147,9 +147,12 @@ fun PantallaCinta(nav: Nav) {
             cosas += Cosa(p, a, a + (x.min ?: 90) * 60_000L, cs.primary, "escalada", "Escalada en ${x.lugar.ifBlank { "el muro" }}: ${x.bloques.size} bloques")
         }
     }
-    Repo.pantalla[fecha]?.por_hora_min?.takeIf { it.sum() > 0 }?.let { h ->
+    Repo.pantalla[fecha]?.takeIf { it.por_hora_min.sum() > 0 }?.let { pd ->
+        val h = pd.por_hora_min
         val p = pista("pantalla", "pantalla")
-        h.forEachIndexed { i, m -> if (m > 0) cosas += Cosa(p, ini + i * 3_600_000L, ini + (i + 1) * 3_600_000L, cs.primary, "", "De ${i}:00 a ${i + 1}:00: $m min de pantalla", alto = (m / 60f).coerceIn(0.08f, 1f)) }
+        // Con la ventana del día lógico (v13), las horas 0 a 4 son de la madrugada siguiente.
+        fun desde(i: Int) = ini + (if (pd.ventana == "logica" && i < 5) i + 24 else i) * 3_600_000L
+        h.forEachIndexed { i, m -> if (m > 0) cosas += Cosa(p, desde(i), desde(i) + 3_600_000L, cs.primary, "", "De ${i}:00 a ${i + 1}:00: $m min de pantalla", alto = (m / 60f).coerceIn(0.08f, 1f)) }
     }
     Repo.notifs[fecha]?.por_hora?.takeIf { it.sum() > 0 }?.let { h ->
         val p = pista("avisos", "avisos")

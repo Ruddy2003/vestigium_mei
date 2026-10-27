@@ -13,7 +13,7 @@ _El script `app/src/main/assets/vestigium.R` viaja con cada exportación. Se pon
 | `vm_leer(archivo)` | Lee un CSV con el tipo de cada columna según el diccionario: fechas, horas, números, lógicos (1 → `TRUE`), fecha-hora ISO 8601 convertida a `vm_zona`, enteros. Avisa si hubo celdas ilegibles. |
 | `vm_fecha_hora(x)` | Convierte texto ISO con desfase a fecha-hora en `vm_zona`; agrega «:00» cuando Java omitió los segundos. |
 | `vm_lista(x)`, `vm_pares(datos, columna)` | Separan columnas «a\|b\|c» y «clave:n\|clave:n». |
-| `vm` y objetos sueltos | `vm` es la lista de todas las tablas; cada una queda también como objeto (`panel`, `dias`, `momentos`…). |
+| `vm` y objetos sueltos | `vm` es la lista de todas las tablas; cada una queda también como objeto (`panel`, `dias`, `momentos`…). Desde el esquema 13 incluye `personas` (`vm_personas.csv`) y `fechas_propias` (`vm_fechas_propias.csv`). |
 | `panel` (enriquecido) | `vm_panel.csv` ordenado, **completado a todos los días del calendario** (`complete()`), con `dia_semana`, `fin_de_semana`, `semana`, `mes`, `valencia_ayer`, `valencia_manana` y `sueno_h = sueno_min/60`. |
 | `vm_describir(archivo)`, `vm_resumen()` | Diccionario de una tabla; resumen de filas, columnas y rangos de fechas. |
 | `vm_leer_sqlite(ruta)` | Lee `vm_datos.sqlite` con los mismos tipos. |
@@ -37,7 +37,7 @@ Media, n, EE = DE/√n e intervalo ±1.96 EE por día de la semana; gráfica de 
 `cor.test` entre x de hoy e y de `desfase` días después (con `lead` sobre el panel completado: días de calendario); exige 5 días; dispersión con recta y banda de `lm`. **Diferencia:** por omisión es **Spearman**; la app muestra Pearson y Spearman pero razona con Pearson (H-5-7). Ninguna de las dos quita tendencia ni corrige autocorrelación.
 
 ### `vm_familias`, `vm_obvia(a, b)`
-19 conjuntos de columnas «obvias» y la regla de que todas las `m_*` y `n_momentos` lo son entre sí. **Diferencia (H-5-2):** la app tiene 56 conjuntos en `Estadistica.FAMILIAS` más reglas por grupo, por prefijo dinámico, por suplemento, por persona y por cuestionario (sección 6.9). Faltan en R, entre otras, las familias de valencia (`valencia`, `animo_valencia`, `animo_cierre_valencia`), de activación, de alcohol, de cafeína, de personas (`cercanos`, `vi_*`, `personas_*`, `penso_en_*`), de horas por tipo de lugar, de cultura, de mundo, de presión y de sentimientos con `registros_animo`.
+20 conjuntos de columnas «obvias» (desde el esquema 13, también los avisos de ánimo: `avisos_*`, `tasa_respuesta`, `valencia_muestreo` y `n_muestreos`) y la regla de que todas las `m_*` y `n_momentos` lo son entre sí. Desde el esquema 13 hay una regla más, la de las campañas: cada `campana_<reto>` es obvia con lo que ese reto busca mover (`vm_campana_mueve`, con los nombres de `vm_panel.csv`) y con `campanas_n`, y `campana_hab_<id>` con su `hab_<id>` (capítulo 9). **Diferencia (H-5-2):** la app tiene 57 conjuntos en `Estadistica.FAMILIAS` más reglas por grupo, por prefijo dinámico, por suplemento, por persona y por cuestionario (sección 6.9). Faltan en R, entre otras, las familias de valencia (`valencia`, `animo_valencia`, `animo_cierre_valencia`), de activación, de alcohol, de cafeína, de personas (`cercanos`, `vi_*`, `personas_*`, `penso_en_*`), de horas por tipo de lugar, de cultura, de mundo, de presión y de sentimientos con `registros_animo`.
 
 ### `vm_relaciones(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, ventana = 10, datos = panel)`
 Todas las parejas de columnas numéricas o lógicas del panel (excepto `fecha`, `semana`, `mes`, `dia_semana`, `valencia_ayer`, `valencia_manana`, `con_diario`, `n_muestreos`).
@@ -81,7 +81,7 @@ z robusto con `median` y `mad` (constante 1.4826) por variable; devuelve los dí
 
 | Función | Qué hace | Relación con la app |
 |---|---|---|
-| `vm_totales(desde, hasta, datos)` | Para ~40 columnas sumables: total, días con dato, primera y última fecha con valor > 0, promedio por día con dato. | Como la pantalla Totales, sobre `vm_panel.csv`. |
+| `vm_totales(desde, hasta, datos)` | Para ~40 columnas sumables (desde el esquema 13, también `avisos_planeados`, `avisos_mostrados` y `avisos_respondidos`): total, días con dato, primera y última fecha con valor > 0, promedio por día con dato. | Como la pantalla Totales, sobre `vm_panel.csv`. |
 | `vm_buscar(texto, desde, hasta)` | Busca sin acentos en alimentos, personas («@»), temas («#»), artistas, canciones (≥ 30 s), lugares, ejercicios (sin calentamiento), canales, búsquedas, gastos, libros y chats. | Como el buscador de Totales (sin los sinónimos español-inglés de `Totales.SINONIMOS`). |
 | `vm_fuerza(n = 6)` | 1RM estimado máximo por sesión de los n ejercicios más repetidos. | Capítulo 5. |
 | `vm_mapa_animo()` | Registros de ánimo (`es_animo`) con coordenadas y su propia valencia, coloreados por ella. Desde el módulo 10a excluye impulso, recaída y libido y ya no rellena con la valencia del diario. | H-2-15 (parte de R) y H-9-12, resueltos. |

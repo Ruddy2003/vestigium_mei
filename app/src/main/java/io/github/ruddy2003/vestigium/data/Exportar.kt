@@ -56,6 +56,7 @@ data class Respaldo(
     val metas: List<Meta> = emptyList(),
     val tomas: List<TomaSuplemento> = emptyList(),
     val laptop: List<LaptopDia> = emptyList(),
+    val avisos: List<AvisosDia> = emptyList(),
 )
 
 /** CSV listos para R: fechas AAAA-MM-DD, booleanos como 0/1, listas separadas por «|», vacío = dato faltante. */
@@ -84,7 +85,7 @@ object Exportar {
         val eq = Repo.equivalencias()
         return Repo.dias.values.sortedBy { it.fecha }.map { d ->
             val r = linkedMapOf<String, Any?>(
-                "fecha" to d.fecha, "schema_v" to d.schema_v, "origen" to d.origen, "retroactivo" to d.retroactivo,
+                "fecha" to d.fecha, "schema_v" to d.schema_v, "origen" to d.origen, "retroactivo" to d.retroactivo, "ts_valencia" to d.ts_valencia,
                 "dia_dificil" to d.dia_dificil, "ts_creado" to d.ts_creado, "ts_editado" to d.ts_editado,
                 "valencia" to d.valencia, "activacion" to d.activacion, "dolor" to d.dolor,
             )
@@ -197,10 +198,11 @@ object Exportar {
         val nombres = Repo.lugares.associate { it.id to it.nombre }
         val lugarHora = HashMap<String, Pair<String, Double>>()
         porLugar.forEach { (id, m) -> m.forEach { (k, min) -> if (min > (lugarHora[k]?.second ?: 0.0)) lugarHora[k] = (nombres[id] ?: id) to min } }
-        // Lo que va por día con 24 horas: pantalla (día de calendario); notificaciones y luz (día de la app: de 0 a 4 es la madrugada siguiente).
+        // Lo que va por día con 24 horas: notificaciones, luz y la pantalla desde la v13 van por día de la app (de 0 a 4 es la madrugada siguiente).
         val pantalla = HashMap<String, Int>(); val notifs = HashMap<String, Int>(); val luz = HashMap<String, Double>()
-        Repo.pantalla.values.forEach { p -> p.por_hora_min.forEachIndexed { h, m -> pantalla["${p.fecha}|$h"] = m }; fechas += p.fecha }
         fun calendario(f: String, h: Int) = if (h < 5) Fechas.sumar(f, 1) else f
+        // La pantalla de antes de la v13 va por día de calendario; la de después, por día lógico (de 0 a 4, la madrugada siguiente).
+        Repo.pantalla.values.forEach { p -> p.por_hora_min.forEachIndexed { h, m -> pantalla["${if (p.ventana == "logica") calendario(p.fecha, h) else p.fecha}|$h"] = m }; fechas += p.fecha }
         Repo.notifs.values.forEach { n -> n.por_hora.forEachIndexed { h, k -> notifs["${calendario(n.fecha, h)}|$h"] = k } }
         Repo.conexiones.values.forEach { c -> c.luz_n.forEachIndexed { h, k -> if (k > 0) luz["${calendario(c.fecha, h)}|$h"] = Math.round((c.luz_suma.getOrNull(h) ?: 0.0) / k * 10) / 10.0 } }
         val canciones = HashMap<String, Int>()
@@ -314,10 +316,23 @@ object Exportar {
             aristas.map { linkedMapOf<String, Any?>("a" to it.a, "b" to it.b, "tipo_declarado" to it.tipo, "dias_juntos" to it.juntos) }
     }
 
+    /** Tu gente (I-7): quién es cada persona, desde cuándo, sus fechas y su edad (hoy, o la que tenía al morir). */
+    fun filasPersonas() = Repo.config.personas.sortedBy { it.nombre }.map {
+        linkedMapOf<String, Any?>("persona" to it.nombre, "relacion" to it.relacion, "detalle" to it.detalle.ifBlank { null }, "cercania" to it.cercania,
+            "desde" to it.desde.ifBlank { null }, "nacimiento" to it.nacimiento.ifBlank { null }, "fallecimiento" to it.fallecimiento.ifBlank { null },
+            "edad" to Especiales.edadDe(it), "historial" to it.historial.sortedBy { h -> h.hasta }.map { h -> "${h.relacion}:${h.hasta}" })
+    }
+
+    /** Fechas propias (I-6): las que se repiten cada año y no son de nadie de Tu gente. */
+    fun filasFechasPropias() = Repo.config.fechas_propias.sortedBy { Especiales.mesDia(it.fecha) }.map {
+        linkedMapOf<String, Any?>("nombre" to it.nombre, "fecha" to it.fecha, "mes_dia" to Especiales.mesDia(it.fecha), "anio" to Especiales.anio(it.fecha), "tipo" to it.tipo)
+    }
+
     fun filasExperimentos() = Repo.experimentos.sortedBy { it.inicio }.map {
         linkedMapOf<String, Any?>("id" to it.id, "nombre" to it.nombre, "pregunta" to it.pregunta, "hipotesis" to it.hipotesis, "sellada" to it.sellada, "accion" to it.accion,
             "resultado" to it.resultado, "diseno" to it.diseno, "inicio" to it.inicio, "semanas" to it.semanas, "lavado_dias" to it.lavado_dias,
-            "plan" to it.plan.map { p -> if (p) 1 else 0 }, "activo" to it.activo, "plantilla" to it.plantilla)
+            "plan" to it.plan.map { p -> if (p) 1 else 0 }, "activo" to it.activo, "plantilla" to it.plantilla, "fin" to it.fin,
+            "hecho" to it.hecho.entries.sortedBy { e -> e.key }.map { (f, h) -> "$f:${if (h) 1 else 0}" })
     }
 
     fun filasNotas() = Repo.notas.sortedBy { it.creada }.map {
@@ -409,7 +424,7 @@ object Exportar {
             "pa_sistolica" to it.pa_sistolica, "pa_diastolica" to it.pa_diastolica, "distancia_km" to it.distancia_km, "cal_activas" to it.cal_activas,
             "cal_totales" to it.cal_totales, "pisos" to it.pisos, "vo2max" to it.vo2max, "agua_ml" to it.agua_ml,
             "spo2_min" to it.spo2_min, "fc_sueno" to it.fc_sueno, "siesta_reloj_min" to it.siesta_reloj_min, "sueno_manual" to it.sueno_manual,
-            "sueno_fuentes" to it.sueno_fuentes)
+            "sueno_fuentes" to it.sueno_fuentes, "ventana_pasos" to it.ventana_pasos)
     }
 
     fun filasPantalla() = Repo.pantalla.values.sortedBy { it.fecha }.map {
@@ -417,7 +432,7 @@ object Exportar {
             "primer_uso" to it.primer_uso, "ultimo_uso" to it.ultimo_uso,
             "top_apps" to it.por_app_min.entries.take(10).map { e -> "${e.key}:${e.value}" },
             "cama_min" to it.cama_min, "dormir_tras_tel_min" to it.dormir_tras_tel_min, "tel_tras_despertar_min" to it.tel_tras_despertar_min,
-            "por_hora_min" to it.por_hora_min)
+            "por_hora_min" to it.por_hora_min, "ventana" to it.ventana)
     }
 
     fun filasVisitas() = Repo.visitas.map { v ->
@@ -612,7 +627,8 @@ object Exportar {
     fun filasPanel(): List<Map<String, Any?>> {
         val fechas = (Repo.dias.keys + Repo.salud.keys + Repo.pantalla.keys + Repo.entorno.keys + Repo.momentos.map { it.fecha } + Repo.gastos.map { it.fecha } + Repo.ingresos.map { it.dia } +
             Repo.nutricion.keys + Repo.entrenos.keys).toSortedSet()
-        val mu = Repo.momentos.filter { it.tipo == "muestreo" && it.valencia != null }.groupBy { it.fecha }
+        // Respondido = hay un registro del aviso, tenga o no valencia (la misma regla en el diccionario, Explorar y los widgets).
+        val mu = Repo.momentos.filter { it.tipo == "muestreo" }.groupBy { it.fecha }
         val mo = Repo.momentos.filter { it.tipo != "muestreo" }.groupBy { it.fecha }
         val ga = Repo.gastos.groupBy { it.dia }
         val ing = Repo.ingresos.groupBy { it.dia }
@@ -629,11 +645,15 @@ object Exportar {
             "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades", "animo_valencia", "animo_activacion", "registros_animo",
             "alcohol", "alcohol_bebidas", "alcohol_nivel_max", "alcohol_horas", "alcohol_estimado_max", "alcohol_al_dormir", "cannabis", "cannabis_nivel_max", "cannabis_horas",
             "tabaco_n", "otra_sustancia", "cruda", "cafeina_total_mg", "cafeina_al_dormir_mg",
-            "animo_cierre_valencia", "animo_cierre_activacion", "presion_local_hpa", "cambio_presion_3h") +
+            "animo_cierre_valencia", "animo_cierre_activacion", "presion_local_hpa", "cambio_presion_3h",
+            "avisos_planeados", "avisos_mostrados", "avisos_respondidos", "tasa_respuesta") +
+            Repo.config.campanas.map { io.github.ruddy2003.vestigium.ciencia.Campanas.variable(it.reto) }.distinct().sorted() +
+            (if (Repo.config.campanas.isNotEmpty()) listOf("campanas_n") else emptyList()) +
             Repo.lugares.map { "horas_tipo_${it.tipo}" }.distinct().sorted()
         // Lo que sentías y pensabas (una columna por sentimiento o pensamiento que hayas registrado alguna vez).
         val emociones = (Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO } + Repo.momentos.mapNotNull { Catalogo.pensamientoDe(it) }).distinct().sorted()
         val est = runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel() }.getOrDefault(emptyMap())
+        val hayEspeciales = Especiales.hay()
         return fechas.map { f ->
             val d = Repo.dias[f]; val s = Repo.salud[f]; val p = Repo.pantalla[f]; val e = Repo.entorno[f]
             val ft = Repo.fotos[f]; val ag = Repo.agenda[f]; val nt = Repo.notifs[f]; val ac = Repo.actividad[f]
@@ -647,7 +667,7 @@ object Exportar {
             r["palabras"] = d?.let { Texto.palabras(it.nota) }
             r["sueno_min"] = s?.sueno_min; r["sueno_profundo_min"] = s?.sueno_profundo_min; r["sueno_rem_min"] = s?.sueno_rem_min
             r["fc_reposo"] = s?.fc_reposo; r["hrv_rmssd"] = s?.hrv_rmssd; r["pasos"] = s?.pasos
-            r["pantalla_min"] = p?.total_min; r["desbloqueos"] = p?.desbloqueos; r["primer_uso"] = p?.primer_uso?.let { Fechas.horaDe(it) }; r["ultimo_uso"] = p?.ultimo_uso?.let { Fechas.horaDe(it) }
+            r["pantalla_min"] = p?.total_min; r["desbloqueos"] = p?.desbloqueos; r["ventana_pantalla"] = p?.ventana; r["ventana_pasos"] = s?.takeIf { it.pasos != null }?.ventana_pasos; r["primer_uso"] = p?.primer_uso?.let { Fechas.horaDe(it) }; r["ultimo_uso"] = p?.ultimo_uso?.let { Fechas.horaDe(it) }
             r["t_max"] = e?.t_max; r["t_min"] = e?.t_min; r["precip_mm"] = e?.precip_mm; r["nubes_pct"] = e?.nubes_pct; r["luz_dia_min"] = e?.luz_min
             r["sol_min"] = e?.sol_min; r["aqi_us"] = e?.aqi_us; r["pm25"] = e?.pm25; r["luna_ilum"] = e?.luna_ilum ?: Luna.iluminacion(Luna.fase(f))
             r["fotos"] = ft?.fotos; r["eventos"] = ag?.eventos; r["min_ocupado"] = ag?.min_ocupado; r["notificaciones"] = nt?.total
@@ -678,6 +698,8 @@ object Exportar {
             r["gimnasio"] = en != null && en.series > 0; r["gimnasio_min"] = en?.minutos; r["series_gimnasio"] = en?.series_efectivas; r["volumen_kg"] = en?.volumen_kg
             val x = est[f]
             nuevas.forEach { k -> r[k] = x?.get(k) }
+            // Días especiales (I-6): si cae alguno y de qué tipo (mi_cumpleanos, cumpleanos, fallecimiento, aniversario, otra).
+            if (hayEspeciales) Especiales.de(f).let { l -> r["dia_especial"] = l.isNotEmpty(); r["dia_especial_tipo"] = l.map { it.tipo }.distinct() }
             emociones.forEach { k -> r["n_$k"] = x?.get("n_$k") }
             r
         }
@@ -771,7 +793,7 @@ object Exportar {
         chats = Repo.chats, nutricion = Repo.nutricion.values.sortedBy { it.fecha }, comidas = Repo.comidas("0000-01-01", "9999-12-31"),
         series = Repo.series("0000-01-01", "9999-12-31"), entrenos = Repo.entrenos.values.sortedBy { it.fecha }, ingresos = Repo.ingresos,
         youtube = Repo.youtube, tramos = Repo.tramos, consumos = Repo.consumos, notas = Repo.notas, metas = Repo.metas,
-        tomas = Repo.tomas, laptop = Repo.laptop.values.sortedBy { it.fecha }))
+        tomas = Repo.tomas, laptop = Repo.laptop.values.sortedBy { it.fecha }, avisos = Repo.avisos.values.sortedBy { it.fecha }))
 
     class Tabla(val archivo: String, val descripcion: String, val filas: List<Map<String, Any?>>)
 
@@ -789,6 +811,8 @@ object Exportar {
         Tabla("vm_laptop.csv", "Minutos por app y por sitio en la laptop, por día (Cold Turkey)", filasLaptop()),
         filasRed().let { (n, v) -> Tabla("vm_red_nodos.csv", "Personas de tu red: relación, cercanía, días mencionada y grado", n) },
         Tabla("vm_red_vinculos.csv", "Pares de personas: cómo se conocen según tú y cuántos días aparecen juntas", filasRed().second),
+        Tabla("vm_personas.csv", "Tu gente: relación, cercanía, desde cuándo, nacimiento, fallecimiento y edad", filasPersonas()),
+        Tabla("vm_fechas_propias.csv", "Fechas propias que se repiten cada año (aniversarios y otras)", filasFechasPropias()),
         Tabla("vm_experimentos.csv", "Experimentos personales: pregunta, hipótesis sellada, diseño, lavado y plan por semana (1 = con la acción)", filasExperimentos()),
         Tabla("vm_metas.csv", "Metas: horizonte, fecha objetivo, estado, medida, progreso e historial de cambios", filasMetas()),
         Tabla("vm_ingresos.csv", "Ingresos, uno por fila", filasIngresos()),

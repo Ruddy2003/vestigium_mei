@@ -91,6 +91,8 @@ object Estadistica {
         val v = mutableListOf(
             Variable("valencia", "Valencia del día", "Ánimo"), Variable("activacion", "Activación del día", "Ánimo"),
             Variable("muestreo_valencia", "Valencia promedio en avisos", "Ánimo"), Variable("muestreo_activacion", "Activación promedio en avisos", "Ánimo"),
+            Variable("avisos_planeados", "Avisos de ánimo planeados", "Ánimo"), Variable("avisos_mostrados", "Avisos de ánimo mostrados", "Ánimo"),
+            Variable("avisos_respondidos", "Avisos de ánimo respondidos", "Ánimo"), Variable("tasa_respuesta", "Proporción de avisos respondidos", "Ánimo"),
             Variable("dolor", "Dolor físico", "Cuerpo"), Variable("sueno_calidad", "Calidad de sueño percibida", "Sueño"),
             Variable("sueno_horas", "Horas de sueño (reloj)", "Sueño"), Variable("sueno_profundo", "Minutos de sueño profundo", "Sueño"),
             Variable("sueno_rem", "Minutos de sueño REM", "Sueño"), Variable("sueno_recordado", "Recordé un sueño (0/1)", "Sueño"),
@@ -255,6 +257,13 @@ object Estadistica {
         // Lo de antes (tipos de momento) que no es un sentimiento ni un pensamiento: el impulso.
         Catalogo.MOMENTOS.filter { it.id == "impulso" }.forEach { v += Variable("n_${it.id}", "Momentos de ${it.nombre.lowercase()}", "Privado") }
         Repo.config.habitos.forEach { v += Variable("hab_${it.id}", "Hábito: ${it.nombre} (0/1)", "Hábitos") }
+        if (io.github.ruddy2003.vestigium.data.Especiales.hay()) v += Variable("dia_especial", "Día especial: cumpleaños, aniversario o fecha propia (0/1)", "Calendario")
+        // Campañas (P-11): una por reto que hayas tenido, y cuántas tenías ese día.
+        val camp = Repo.config.campanas
+        if (camp.isNotEmpty()) {
+            camp.map { it.reto }.distinct().forEach { r -> v += Variable(Campanas.variable(r), "En campaña: ${Campanas.reto(r)?.nombre ?: r} (0/1)", "Campañas") }
+            v += Variable("campanas_n", "Campañas que tenías ese día", "Campañas")
+        }
         if (dinamicas) v += Dinamicas.calcular(false).variables
         if (privadas) return v
         val ligado = Privado.habito()?.id
@@ -318,6 +327,22 @@ object Estadistica {
                 Catalogo.CON_QUIEN.filter { it.id != "solo" }.forEach { o -> r["con_${o.id}"] = con.count { o.id in it.con_quien }.toDouble() / con.size }
                 r["valencia_acompanado"] = media(acomp.mapNotNull { it.valencia?.toDouble() })
                 r["valencia_solo"] = media(con.filter { "solo" in it.con_quien }.mapNotNull { it.valencia?.toDouble() })
+            }
+        }
+        // Avisos de ánimo (v13): planeados, mostrados, respondidos y tasa de respuesta. Los días sin registro quedan sin dato.
+        val respAv = io.github.ruddy2003.vestigium.data.AvisosAnimo.respondidos(Repo.momentos)
+        Repo.avisos.values.forEach { a -> fila(a.fecha).putAll(io.github.ruddy2003.vestigium.data.AvisosAnimo.cifras(a, respAv)) }
+        // Campañas (P-11): 1 los días que tenías aceptado ese reto, 0 los demás desde tu primera campaña; antes, sin dato.
+        val camp = Repo.config.campanas
+        if (camp.isNotEmpty()) {
+            val hoyL = Fechas.diaLogico()
+            val act = Campanas.diasActivos(camp, hoyL)
+            val vars = camp.map { Campanas.variable(it.reto) }.distinct()
+            val p0 = camp.minOf { Campanas.tramo(it).first }
+            (Repo.dias.keys.filter { it in p0..hoyL } + act.keys).toSet().forEach { f ->
+                val r = fila(f); val hoyActivas = act[f].orEmpty().mapTo(HashSet()) { Campanas.variable(it) }
+                vars.forEach { k -> r[k] = if (k in hoyActivas) 1.0 else 0.0 }
+                r["campanas_n"] = hoyActivas.size.toDouble()
             }
         }
         // Lo privado se calcula siempre: no sale en las pantallas (ver [variables]), pero sí en la exportación para R.
@@ -586,6 +611,9 @@ object Estadistica {
                 r["unesco"] = b(m.sitios.isNotEmpty())
             }
         }
+        // Días especiales (I-6): 1 si ese día cae un cumpleaños, un aniversario o una fecha propia. Es del calendario:
+        // vale para todos los días del panel.
+        if (io.github.ruddy2003.vestigium.data.Especiales.hay()) filas.forEach { (f, r) -> r["dia_especial"] = b(io.github.ruddy2003.vestigium.data.Especiales.de(f).isNotEmpty()) }
         return filas
     }
 
@@ -707,6 +735,7 @@ object Estadistica {
         setOf("sueno_recordado", "sueno_valencia", "sueno_lucidez", "sueno_vividez", "sueno_palabras"),
         setOf("ingreso_total", "balance_dinero", "gasto_total"), setOf("prediccion", "error_prediccion"),
         setOf("valencia", "muestreo_valencia"), setOf("activacion", "muestreo_activacion"),
+        setOf("avisos_planeados", "avisos_mostrados", "avisos_respondidos", "tasa_respuesta", "muestreo_valencia", "muestreo_activacion", "n_muestreos"),
         setOf("hrv", "fc_reposo", "fc_media", "fc_sueno"), setOf("spo2", "spo2_min"),
         setOf("pasos", "a_pie_min", "cal_activas", "ejercicio_min", "distancia_km"),
         setOf("distancia_km", "vehiculo_min", "coche_min", "sin_wifi_min", "lugares_distintos"),
@@ -755,6 +784,8 @@ object Estadistica {
     )
 
     fun obvia(a: Variable, b: Variable): Boolean {
+        // Una campaña y lo que ese reto busca mover (la elegiste para eso).
+        if (Campanas.obvia(a.id, b.id) || Campanas.obvia(b.id, a.id)) return true
         if ((a.grupo == b.grupo && (a.grupo == "Lectura del día" || a.grupo == "Momentos" || a.grupo == "Sentimientos" || a.grupo == "Sueños")) || FAMILIAS.any { a.id in it && b.id in it }) return true
         // Las horas por tipo de lugar se reparten el mismo día entre sí y con cada lugar.
         val lugA = a.id.startsWith("horas_tipo_") || a.id.startsWith("lug_"); val lugB = b.id.startsWith("horas_tipo_") || b.id.startsWith("lug_")

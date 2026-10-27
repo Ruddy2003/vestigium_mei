@@ -136,6 +136,11 @@ object EstadoDatos {
         l += if (c.carpeta_respaldo == null && !c.drive) Fuente("Respaldo automático", Salud3.APAGADA, "Sin carpeta ni Google Drive", "datos")
         else Fuente("Respaldo automático", if (respaldo != null && System.currentTimeMillis() - Fechas.millis(respaldo) < 36 * 3_600_000L) Salud3.BIEN else Salud3.ATRASADA,
             "último: " + (respaldo?.let { Fechas.corto(it.take(10)) + " " + Fechas.horaDe(it) } ?: "nunca"), "datos")
+        // Registros guardados que no se pudieron leer (un documento dañado no debe perderse en silencio).
+        val il = Repo.ilegibles
+        l += if (il.isEmpty() && Repo.configIlegible == null) Fuente("Registros guardados", Salud3.BIEN, "todos se leen bien")
+        else Fuente("Registros guardados", Salud3.ATRASADA, (listOfNotNull("ajustes (el original quedó aparte)".takeIf { Repo.configIlegible != null }) +
+            il.entries.sortedBy { it.key }.map { "${it.value} de «${it.key}»" }).joinToString(" · ") + " no se pudieron leer", "datos")
         l += Fuente("Sincronización", if (c.ultimo_sync != null && System.currentTimeMillis() - Fechas.millis(c.ultimo_sync) < 6 * 3_600_000L) Salud3.BIEN else Salud3.ATRASADA,
             "última: " + (c.ultimo_sync?.let { Fechas.corto(it.take(10)) + " " + Fechas.horaDe(it) } ?: "nunca"), "sincronizar")
         l
