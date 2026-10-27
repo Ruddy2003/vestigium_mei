@@ -89,8 +89,9 @@ object Campanas {
 
     /** Si la variable [id] es de una campaña y [otra] es lo que ese reto busca mover (o el conteo de campañas). */
     fun obvia(id: String, otra: String): Boolean {
+        if (id == "campanas_n") return otra.startsWith("campana_")
         if (!id.startsWith("campana_")) return false
-        if (otra == "campanas_n" || (id == "campanas_n" && otra.startsWith("campana_"))) return true
+        if (otra == "campanas_n") return true
         val reto = id.removePrefix("campana_")
         if (reto.startsWith("hab_")) return otra == reto
         return MUEVE[reto]?.contains(otra) == true

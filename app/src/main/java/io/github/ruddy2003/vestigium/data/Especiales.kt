@@ -22,13 +22,14 @@ object Especiales {
 
     val TIPOS_PROPIOS = listOf(Opcion("cumpleanos", "Cumpleaños"), Opcion("aniversario", "Aniversario"), Opcion("otra", "Otra fecha"))
 
-    private val FORMA = Regex("""^(\d{4}|--)-(\d{2})-(\d{2})$""")
+    /** AAAA-MM-DD, o --MM-DD sin año (la forma de ISO 8601 para una fecha que se repite). */
+    private val FORMA = Regex("""^(?:(\d{4})-|--)(\d{2})-(\d{2})$""")
 
     /** El mes y día («03-15») de una fecha guardada; null si no es válida. */
     fun mesDia(f: String): String? {
         val m = FORMA.matchEntire(f) ?: return null
         val (a, mes, dia) = m.destructured
-        val anio = if (a == "--") 2024 else a.toInt()   // 2024 es bisiesto: sin año, el 29 de febrero vale
+        val anio = a.toIntOrNull() ?: 2024   // 2024 es bisiesto: sin año, el 29 de febrero vale
         return runCatching { LocalDate.of(anio, mes.toInt(), dia.toInt()); "$mes-$dia" }.getOrNull()
     }
 
@@ -44,7 +45,7 @@ object Especiales {
         if (mesDia(t) != null) return t
         val m = Regex("""^(\d{1,2})[/.\- ](\d{1,2})(?:[/.\- ](\d{4}))?$""").matchEntire(t) ?: return null
         val (d, mes, a) = m.destructured
-        val f = (if (a.isEmpty()) "--" else a) + "-%02d-%02d".format(mes.toInt(), d.toInt())
+        val f = (if (a.isEmpty()) "--" else "$a-") + "%02d-%02d".format(mes.toInt(), d.toInt())
         return f.takeIf { mesDia(it) != null }
     }
 

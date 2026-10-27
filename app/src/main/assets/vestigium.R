@@ -197,8 +197,9 @@ vm_campana_mueve <- list(
 vm_obvia <- function(a, b) {
   mom <- function(v) startsWith(v, "m_") || v == "n_momentos"
   camp <- function(x, y) {
+    if (x == "campanas_n") return(startsWith(y, "campana_"))
     if (!startsWith(x, "campana_")) return(FALSE)
-    if (y == "campanas_n" || (x == "campanas_n" && startsWith(y, "campana_"))) return(TRUE)
+    if (y == "campanas_n") return(TRUE)
     r <- sub("^campana_", "", x)
     if (startsWith(r, "hab_")) return(y == r)
     y %in% vm_campana_mueve[[r]]
