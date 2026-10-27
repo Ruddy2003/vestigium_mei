@@ -91,27 +91,27 @@ class CapturasEscenario {
     @Test fun anaJuevesMedieval() = escena(TemaId.MEDIEVAL, false, 9000, { abrirDia(Ana.jueves) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) }
 
     // La hoja de la noche de hoy.
-    @Test fun anaNocheMedieval() = escena(TemaId.MEDIEVAL, false, 9000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
-    @Test fun anaNocheRomano() = escena(TemaId.ROMANO, true, 9000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
-    @Test fun anaNocheCiber() = escena(TemaId.CIBER, true, 9000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
+    @Test fun anaNocheMedieval() = escena(TemaId.MEDIEVAL, false, 14000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
+    @Test fun anaNocheRomano() = escena(TemaId.ROMANO, true, 14000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
+    @Test fun anaNocheCiber() = escena(TemaId.CIBER, true, 14000, { abrirNoche(Ana.hoy) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
 
     // Las pestañas y Más.
     @Test fun anaDiarioMedieval() = escena(TemaId.MEDIEVAL, false, 6000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
     @Test fun anaDiarioCiber() = escena(TemaId.CIBER, true, 6000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
     @Test fun anaVidaMedieval() = escena(TemaId.MEDIEVAL, false, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
     @Test fun anaVidaRomano() = escena(TemaId.ROMANO, true, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
-    @Test fun anaAnalisisMedieval() = escena(TemaId.MEDIEVAL, false, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExplorar(navVacia) }
-    @Test fun anaAnalisisCiber() = escena(TemaId.CIBER, true, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExplorar(navVacia) }
-    @Test fun anaMasMedieval() = escena(TemaId.MEDIEVAL, false, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
-    @Test fun anaMasRomano() = escena(TemaId.ROMANO, true, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    @Test fun anaAnalisisMedieval() = escena(TemaId.MEDIEVAL, false, 16000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExplorar(navVacia) }
+    @Test fun anaAnalisisCiber() = escena(TemaId.CIBER, true, 16000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExplorar(navVacia) }
+    @Test fun anaMasMedieval() = escena(TemaId.MEDIEVAL, false, 11000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
+    @Test fun anaMasRomano() = escena(TemaId.ROMANO, true, 11000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
 
     // Donde se corrige: momentos, gastos (el café doble), suplementos (la creatina olvidada), tu gente y notas.
     @Test fun anaMomentosMedieval() = escena(TemaId.MEDIEVAL, false, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMomentos(navVacia) }
-    @Test fun anaGastosRomano() = escena(TemaId.ROMANO, true, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaGastos(navVacia) }
+    @Test fun anaGastosRomano() = escena(TemaId.ROMANO, true, 8000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaGastos(navVacia) }
     @Test fun anaSuplementosMedieval() = escena(TemaId.MEDIEVAL, false, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaSuplementos(navVacia) }
     @Test fun anaPersonasCiber() = escena(TemaId.CIBER, true, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaPersonas(navVacia) }
     @Test fun anaNotasMedieval() = escena(TemaId.MEDIEVAL, false, 4000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNotas(navVacia) }
-    @Test fun anaExperimentosRomano() = escena(TemaId.ROMANO, true, 5000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExperimentos(navVacia) }
+    @Test fun anaExperimentosRomano() = escena(TemaId.ROMANO, true, 7000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaExperimentos(navVacia) }
 }
 
 /** Los días inventados de Ana: 30 años, oficinista, reloj que mide el sueño, creatina y vitamina D, gimnasio dos veces por semana. */
