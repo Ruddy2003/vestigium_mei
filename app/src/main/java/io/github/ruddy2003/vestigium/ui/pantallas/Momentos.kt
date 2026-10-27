@@ -114,13 +114,13 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
     var pensamiento by remember(m.id) { mutableStateOf(Catalogo.pensamientoDe(m)) }
     var confirmar by remember(m.id) { mutableStateOf(false) }
     val registro = Catalogo.esRegistro(m)
-    // En una recaída también se corrigen la hora de inicio y cuánto duró (con los selectores de siempre).
+    // Se corrigen la fecha y la hora de cualquier registro; en una recaída, además, cuánto duró.
     val esRecaida = m.tipo == "recaida"
     var cuando by remember(m.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(m.ts))) }
     var dur by remember(m.id) { mutableStateOf(m.duracion_min) }
     AlertDialog(
         onDismissRequest = { cerrar() },
-        title = { Text("${Catalogo.titulo(m, discreto)} · ${Fechas.horaDe(m.ts)}") },
+        title = { Text("${Catalogo.titulo(m, discreto)} · ${Fechas.corto(m.fecha)} ${Fechas.horaDe(m.ts)}") },
         text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
@@ -139,23 +139,33 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                     Catalogo.PENSAMIENTOS.forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(if (discreto) "·" else o.nombre, pensamiento == o.id) { pensamiento = if (pensamiento == o.id) null else o.id } }
                 }
             } else { Etiqueta("Intensidad"); Escala(intensidad, 1, 5) { intensidad = it } }
+            Etiqueta(if (esRecaida) "Empezó" else "Cuándo")
+            io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, atajos = listOf(15, 30, 60, 120)) { cuando = it }
             if (esRecaida) {
-                Etiqueta("Empezó")
-                io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, atajos = listOf(15, 30, 60, 120)) { cuando = it }
                 Etiqueta("Duró")
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(dur) { dur = it }
-                Ayuda("Si cambias la hora, el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
             }
+            Ayuda("Si cambias la hora, el día se ajusta (empieza a las 5:00) y el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
         }
         },
         confirmButton = { TextButton(onClick = {
-            val n = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
+            val base = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
                 emociones = if (registro) emociones else m.emociones, pensamiento = if (registro) pensamiento else m.pensamiento,
-                duracion_min = if (esRecaida) dur else m.duracion_min).let { e -> if (e != m) e.copy(ts_editado = Fechas.ahoraIso()) else e }
-            val ms = if (esRecaida) (cuando ?: java.time.LocalDateTime.now()).aMillis() else null
-            // Se compara el minuto completo (fecha y hora): cambiar solo el día, con la misma hora, también mueve la recaída.
-            if (ms != null && ms / 60_000L != Fechas.millis(m.ts) / 60_000L) io.github.ruddy2003.vestigium.data.Recaidas.moverHora(n, ms)
-            else Repo.guardarMomento(n)
+                duracion_min = if (esRecaida) dur else m.duracion_min)
+            val ms = (cuando ?: io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(m.ts))).aMillis()
+            // Se compara el minuto completo (fecha y hora): cambiar solo el día, con la misma hora, también lo mueve.
+            val mover = ms / 60_000L != Fechas.millis(m.ts) / 60_000L
+            if (base != m || mover) {
+                // Un momento de antes («idea», «alegría» como tipo) pasa a registro de ánimo: lo que sentías y pensabas ya va
+                // explícito en sus campos, y así el tipo viejo deja de contar como pensamiento o sentimiento.
+                val viejo = registro && m.tipo != "animo" && m.tipo != "muestreo"
+                val n = (if (viejo) base.copy(tipo = "animo") else base).copy(ts_editado = Fechas.ahoraIso())
+                when {
+                    mover && esRecaida -> io.github.ruddy2003.vestigium.data.Recaidas.moverHora(n, ms)
+                    mover -> Repo.guardarMomento(io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(n, ms))
+                    else -> Repo.guardarMomento(n)
+                }
+            }
             cerrar()
         }) { Text("Guardar") } },
         dismissButton = {

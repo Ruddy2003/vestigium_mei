@@ -1,6 +1,16 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package io.github.ruddy2003.vestigium.ui.pantallas
 
 import androidx.compose.foundation.Canvas
+import io.github.ruddy2003.vestigium.ui.aMillis
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,6 +55,7 @@ fun PantallaEnfoque(nav: Nav) {
     val ctx = LocalContext.current
     val hoy = Fechas.diaLogico()
     val corriendo = Enfoque.enCurso()
+    var abierto by remember { mutableStateOf<io.github.ruddy2003.vestigium.data.Tramo?>(null) }
     val ahora by produceState(System.currentTimeMillis(), corriendo) { while (corriendo != null) { kotlinx.coroutines.delay(30_000); value = System.currentTimeMillis() } }
     fun abrir() = ctx.startActivity(android.content.Intent(ctx, QuickActivity::class.java).putExtra(QuickActivity.MODO, QuickActivity.M_ENFOQUE).putExtra(QuickActivity.ORIGEN, "app"))
     Hoja("Enfoque y siestas", nav.atras, "Lo que mides con el cronómetro: estudio, lectura, idiomas, tesis, trabajo, algo creativo y siestas. También desde el widget o el botón del panel rápido.") {
@@ -91,20 +102,64 @@ fun PantallaEnfoque(nav: Nav) {
             Tarjeta {
                 tr.sortedByDescending { it.inicio }.take(40).forEachIndexed { i, t ->
                     if (i > 0) HorizontalDivider()
-                    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // Tocar un tramo lo abre para corregir el tipo, la hora, la duración o la nota, o para borrarlo.
+                    Row(Modifier.fillMaxWidth().clickable { abierto = t }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("${Catalogo.nombreTramo(t.tipo)} · ${horasMin(t.min)}", style = MaterialTheme.typography.bodyLarge)
                             Text("${Fechas.corto(t.fecha)} · ${Fechas.horaDe(t.inicio)}" + if (t.origen == "manual") " · anotado después" else "", style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                             if (t.nota.isNotBlank()) TextoMarcado(t.nota, style = MaterialTheme.typography.bodySmall)
                         }
-                        TextButton(onClick = { Repo.borrarTramo(t.id); Deshacer.ofrecer("Tramo borrado") { Repo.guardarTramo(t) } }) {
-                            Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                        Text("corregir ›", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
         }
         Ayuda("En Entender puedes cruzar los minutos de enfoque y las siestas con tu sueño, ánimo y pantalla.", Modifier.padding(top = 8.dp))
     }
+    abierto?.let { t -> DialogoTramo(t) { abierto = null } }
+}
+
+/**
+ * Corregir un tramo de enfoque o de siesta: tipo, cuándo empezó, cuánto duró y la nota. El día se recalcula con la hora
+ * nueva (día lógico). Borrar pide confirmación y se puede deshacer.
+ */
+@Composable
+fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit) {
+    var tipo by remember(t.id) { mutableStateOf(t.tipo) }
+    var cuando by remember(t.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(t.inicio))) }
+    var min by remember(t.id) { mutableStateOf<Int?>(t.min) }
+    var nota by remember(t.id) { mutableStateOf(t.nota) }
+    var confirmar by remember(t.id) { mutableStateOf(false) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = cerrar,
+        title = { Text("${Catalogo.nombreTramo(t.tipo)} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.inicio)}") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                io.github.ruddy2003.vestigium.ui.Etiqueta("Qué fue")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (Catalogo.ENFOQUE + Catalogo.SIESTA).forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
+                }
+                io.github.ruddy2003.vestigium.ui.Etiqueta("Empezó")
+                io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
+                io.github.ruddy2003.vestigium.ui.Etiqueta("Duró")
+                io.github.ruddy2003.vestigium.ui.SelectorDuracion(min) { min = it }
+                androidx.compose.material3.OutlinedTextField(nota, { nota = it }, Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Qué hiciste (opcional)") })
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = (min ?: 0) > 0, onClick = {
+                val ini = (cuando ?: io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(t.inicio))).aMillis()
+                val m = min ?: t.min
+                val n = t.copy(tipo = tipo, inicio = Fechas.isoDeMillis(ini), fin = Fechas.isoDeMillis(ini + m * 60_000L), min = m, fecha = Fechas.diaLogicoDeMillis(ini), nota = nota.trim())
+                if (n != t) Repo.guardarTramo(n)
+                cerrar()
+            }) { Text("Guardar") }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                if (confirmar) { Repo.borrarTramo(t.id); cerrar(); Deshacer.ofrecer("Tramo borrado") { Repo.guardarTramo(t) } } else confirmar = true
+            }) { Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error) }
+        },
+    )
 }

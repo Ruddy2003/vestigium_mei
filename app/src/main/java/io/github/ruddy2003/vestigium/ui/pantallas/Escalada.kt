@@ -258,7 +258,11 @@ fun PantallaAscenso(nav: Nav) {
                         }
                         OutlinedTextField(b.nota, { cambiarB(b.copy(nota = it)) }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true,
                             placeholder = { Text("nota: color, nombre, beta…", style = MaterialTheme.typography.labelLarge) })
-                        TextButton(onClick = { g(a.copy(bloques = a.bloques.filterIndexed { j, _ -> j != i })); abierto = null }) {
+                        TextButton(onClick = {
+                            val antes = a
+                            g(a.copy(bloques = a.bloques.filterIndexed { j, _ -> j != i })); abierto = null
+                            io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Bloque quitado") { g(antes) }
+                        }) {
                             Text("quitar este bloque", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelLarge)
                         }
                     }

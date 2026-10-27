@@ -476,7 +476,14 @@ En un registro personal, los datos **no faltan al azar**. Lo típico es no llena
 
 ### 3.15.3 Editar después
 
-Un registro de ánimo se puede editar más tarde (valencia, activación, emociones, texto) desde Momentos (`DialogoMomento`). El registro **no guarda que fue editado ni cuándo** (el modelo `Momento` no tiene sello de edición). Así, un dato «momentáneo» puede convertirse en retrospectivo sin que se sepa (H-2-9). Gravedad baja si se usa poco.
+Un registro de ánimo se puede editar más tarde con `DialogoMomento`: valencia, activación, emociones, pensamiento, texto y, desde el esquema 14, también **la fecha y la hora**. Se abre tocándolo en el Día de su fecha («Momentos de este día»), en Diario → «Línea de tiempo» o en Privado.
+
+Hasta el esquema 13, el registro **no guardaba que fue editado ni cuándo**, así que un dato «momentáneo» podía convertirse en retrospectivo sin que se supiera (H-2-9). Desde el 14:
+- cada corrección guarda `ts_editado`, y cada registro nuevo, `ts_creado` (cuándo se anotó);
+- al cambiar la hora, el día se recalcula con el día lógico y el lugar se toma de las ubicaciones de esa hora (`Recaidas.aOtraHora`); la luz y el ruido medidos al registrar se descartan;
+- un momento de antes, con tipo «idea», «alegría», etc., pasa a tipo `animo` al corregirlo: lo que sentías y pensabas ya va explícito en `emociones` y `pensamiento`. Por eso los conteos `m_<tipo>` de esos tipos viejos pueden bajar un poco en los días con correcciones.
+
+En R, `vm_retraso()` dice qué registros se anotaron tarde (Apéndice C). Los registros con `ts_editado` se pueden excluir si se quiere solo lo momentáneo sin tocar.
 
 ---
 

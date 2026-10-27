@@ -269,7 +269,12 @@ private fun DiasEspeciales() {
             },
             dismissButton = {
                 Row {
-                    if (existe) TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != fp0.id }) }; editando = null }) { Text("borrar") }
+                    var confirmar by remember(fp0.id) { mutableStateOf(false) }
+                    if (existe) TextButton(onClick = {
+                        if (!confirmar) { confirmar = true; return@TextButton }
+                        Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != fp0.id }) }; editando = null
+                        io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Fecha borrada") { Repo.cambiarConfig { cc -> if (cc.fechas_propias.any { it.id == fp0.id }) cc else cc.copy(fechas_propias = cc.fechas_propias + fp0) } }
+                    }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
                     TextButton(onClick = { editando = null }) { Text("cancelar") }
                 }
             },

@@ -1077,7 +1077,12 @@ private fun Epigrafe(fecha: String, p: Pagina) {
                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, textAlign = TextAlign.End)
             Text("— ${f.autor}  ♥", style = MaterialTheme.typography.labelSmall, color = p.acento, textAlign = TextAlign.End, modifier = Modifier.padding(top = 2.dp))
             if (armada == f.texto) Text("quitar ♥", style = MaterialTheme.typography.labelLarge, color = p.acento,
-                modifier = Modifier.padding(top = 4.dp).clickable { sentirEp(Sentidos.Evento.CAMBIO); Frases.quitar(f); armada = null }.padding(horizontal = 8.dp, vertical = 6.dp))
+                modifier = Modifier.padding(top = 4.dp).clickable {
+                    sentirEp(Sentidos.Evento.CAMBIO)
+                    val antes = Repo.config.frases_guardadas.filter { it.texto == f.texto && it.autor == f.autor }
+                    Frases.quitar(f); armada = null
+                    Deshacer.ofrecer("Frase quitada") { Repo.cambiarConfig { c -> c.copy(frases_guardadas = c.frases_guardadas + antes.filter { a -> c.frases_guardadas.none { it.texto == a.texto && it.autor == a.autor } }) } }
+                }.padding(horizontal = 8.dp, vertical = 6.dp))
         }
     }
 }

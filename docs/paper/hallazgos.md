@@ -208,6 +208,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** un dato momentáneo puede volverse retrospectivo sin saberlo.
 - **Gravedad:** Baja.
 - **Propuesta:** añadir `ts_editado` a `Momento`.
+- **Estado:** Resuelto en el esquema 14 (revisión de navegación, entregas NE y N1): `Momento.ts_editado` y `ts_creado`.
 
 ### H-2-10 · `error_prediccion` es absoluto y pierde la dirección
 - **Dónde:** `ciencia/Estadistica.kt`, `panel()`: `abs(p - valencia)`.
@@ -1125,6 +1126,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** la hora decide el día lógico, el bloque horario (capítulo 3, sección 3.5) y la cercanía al aviso. Un error de hora mueve el registro de día o de franja sin que se pueda arreglar. Si se agrega la corrección, debe quedar marcada (H-2-9).
 - **Gravedad:** Media.
 - **Propuesta:** N-02 y N-03 (editar desde donde se ve, con hora y fecha), junto con `ts_editado` (H-2-9).
+- **Estado:** Resuelto en la entrega N1 de la revisión de navegación (esquema 14).
 
 ### H-NAV-3 · La siesta del reloj no se puede descartar, y se congela al corregir la noche
 - **Dónde:** `sensores/Salud.kt:186` (con `sueno_manual`, la lectura sale antes de recalcular la siesta) y `:197-231` (cálculo de `siesta_reloj_min`); `ui/EditarSueno.kt:33-82` (no trata siestas).

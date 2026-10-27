@@ -24,6 +24,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -339,9 +343,15 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit
                 TextButton(onClick = {
                     Repo.cambiarConfig { c -> c.copy(hall_logros = if (enHall) c.hall_logros - l.id else (c.hall_logros + l.id).takeLast(12)) }
                 }) { Text(if (enHall) "quitar del hall" else "ponerlo en el hall") }
-            } else if (l.propio) TextButton(onClick = {
-                Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios.filterNot { "p_" + it.id == l.id }) }; cerrar()
-            }) { Text("borrar este logro") }
+            } else if (l.propio) {
+                var confirmar by remember(l.id) { mutableStateOf(false) }
+                TextButton(onClick = {
+                    if (!confirmar) { confirmar = true; return@TextButton }
+                    val previos = Repo.config.logros_propios.filter { "p_" + it.id == l.id }
+                    Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios.filterNot { "p_" + it.id == l.id }) }; cerrar()
+                    io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Logro borrado") { Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios + previos.filter { p -> c.logros_propios.none { it.id == p.id } }) } }
+                }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar este logro", color = MaterialTheme.colorScheme.error) }
+            }
         },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {

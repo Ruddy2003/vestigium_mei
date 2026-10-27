@@ -18,6 +18,7 @@ import java.time.LocalDateTime
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -80,17 +81,17 @@ fun PantallaGastos(nav: Nav? = null) {
     var armado by remember { mutableStateOf<String?>(null) }
     // null = ahora. Si se elige otra fecha u hora, se guarda tal cual y sin ubicación (la de ahora no sería la del pago).
     var cuando by remember { mutableStateOf<LocalDateTime?>(null) }
+    // Lo que se corrige se abre en un diálogo, para que el cambio se vea donde lo tocaste (N-06).
     var editando by remember { mutableStateOf<Gasto?>(null) }
     // Gastos e ingresos comparten el formulario: «entra» cambia categorías, el interruptor y el color.
     var entra by remember { mutableStateOf(false) }
     var fijo by remember { mutableStateOf(false) }
     var editandoIngreso by remember { mutableStateOf<Ingreso?>(null) }
 
-    fun limpiar() { monto = ""; nota = ""; imprevisto = false; fijo = false; cuando = null; editando = null; editandoIngreso = null; error = null }
+    fun limpiar() { monto = ""; nota = ""; imprevisto = false; fijo = false; cuando = null; error = null }
 
     Hoja("Gastos", subtitulo = "Registra en el momento de pagar o de cobrar. Lo que se cuadra después ya no dice en qué se fue el dinero.", buscar = nav?.let { n -> { n.ir("buscar") } }) {
-        val corrigiendo = editando != null || editandoIngreso != null
-        Seccion(if (corrigiendo) (if (entra) "Corregir ingreso" else "Corregir gasto") else "Registrar", latin = if (corrigiendo) "CORRIGERE" else io.github.ruddy2003.vestigium.ui.Romano.latin("Registrar")) {
+        Seccion("Registrar") {
             Tarjeta {
                 // Gasto o ingreso: dos fichas grandes, como una balanza.
                 Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -98,7 +99,7 @@ fun PantallaGastos(nav: Nav? = null) {
                         val sel = entra == v
                         val color = if (v) io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()) else io.github.ruddy2003.vestigium.ui.Tonos.gasto(io.github.ruddy2003.vestigium.ui.esOscuro())
                         androidx.compose.material3.Surface(
-                            onClick = { if (!corrigiendo && entra != v) { entra = v; cat = null; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } },
+                            onClick = { if (entra != v) { entra = v; cat = null; error = null; sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.ELEGIR) } },
                             shape = MaterialTheme.shapes.small, modifier = Modifier.weight(1f),
                             color = if (sel) color.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surface,
                             border = androidx.compose.foundation.BorderStroke(if (sel) 2.dp else 1.dp, if (sel) color else MaterialTheme.colorScheme.outlineVariant),
@@ -121,7 +122,7 @@ fun PantallaGastos(nav: Nav? = null) {
                 else Interruptor("¿Fue imprevisto?", imprevisto) { imprevisto = it }
                 OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, singleLine = true)
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
-                BotonPrincipal(if (corrigiendo) "Guardar cambios" else if (entra) "Registrar ingreso" else "Registrar", Modifier.fillMaxWidth().padding(top = 10.dp)) {
+                BotonPrincipal(if (entra) "Registrar ingreso" else "Registrar gasto", Modifier.fillMaxWidth().padding(top = 10.dp)) {
                     val v = monto.toDoubleOrNull()
                     when {
                         v == null || v <= 0 -> error = "Escribe un monto mayor a cero."
@@ -130,26 +131,25 @@ fun PantallaGastos(nav: Nav? = null) {
                             val c = cuando
                             val fecha = c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario()
                             val hora = c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora()
-                            val i = editandoIngreso?.copy(fecha = fecha, hora = hora, monto = Math.round(v * 100) / 100.0, categoria = cat!!, fijo = fijo, nota = nota.trim(), ts_editado = Fechas.ahoraIso())
-                                ?: Ingreso(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, nota.trim(), fijo, ts_creado = Fechas.ahoraIso())
+                            val i = Ingreso(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, nota.trim(), fijo, ts_creado = Fechas.ahoraIso())
                             Repo.guardarIngreso(i)
                             sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.GUARDAR)
+                            android.widget.Toast.makeText(ctx, "Ingreso registrado: ${dinero(i.monto)}", android.widget.Toast.LENGTH_SHORT).show()
                             limpiar(); mes = Fechas.mesDe(i.fecha)
                         }
                         else -> {
                             val c = cuando
                             val fecha = c?.let { Fechas.iso(it.toLocalDate()) } ?: Fechas.hoyCalendario()
                             val hora = c?.let { "%02d:%02d".format(it.hour, it.minute) } ?: Fechas.horaAhora()
-                            val previo = editando
-                            val g = previo?.copy(fecha = fecha, hora = hora, monto = Math.round(v * 100) / 100.0, categoria = cat!!, imprevisto = imprevisto, nota = nota.trim(), ts_editado = Fechas.ahoraIso())
-                                ?: Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), ts_creado = Fechas.ahoraIso())
+                            val g = Gasto(Repo.nuevoId(), fecha, hora, Math.round(v * 100) / 100.0, cat!!, imprevisto, nota.trim(), ts_creado = Fechas.ahoraIso())
                             Repo.guardarGasto(g)
-                            if (previo == null && c == null) scope.launch { Ubicacion.ultima(ctx)?.let { Repo.guardarGasto(g.copy(lat = it.latitude, lon = it.longitude)) } }
+                            if (c == null) scope.launch { Ubicacion.ultima(ctx)?.let { Repo.guardarGasto(g.copy(lat = it.latitude, lon = it.longitude)) } }
+                            sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.GUARDAR)
+                            android.widget.Toast.makeText(ctx, "Gasto registrado: ${dinero(g.monto)} · ${g.categoria}", android.widget.Toast.LENGTH_SHORT).show()
                             limpiar(); mes = Fechas.mesDe(g.fecha)
                         }
                     }
                 }
-                if (corrigiendo) TextButton(onClick = { limpiar(); cat = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) }
             }
         }
 
@@ -172,18 +172,12 @@ fun PantallaGastos(nav: Nav? = null) {
                 Etiqueta("ingresos del mes")
                 entradas.sortedByDescending { it.dia + it.hora }.forEach { i ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f).clickable {
-                            entra = true; editandoIngreso = i; editando = null
-                            monto = if (i.monto % 1.0 == 0.0) i.monto.toLong().toString() else i.monto.toString(); cat = i.categoria; fijo = i.fijo; nota = i.nota; error = null
-                            cuando = runCatching { LocalDateTime.of(Fechas.parse(i.fecha), java.time.LocalTime.parse(i.hora.take(5))) }.getOrNull()
-                        }) {
+                        Column(Modifier.weight(1f).clickable { editandoIngreso = i }) {
                             Text(i.categoria + if (i.fijo) " · se repite" else "", style = MaterialTheme.typography.bodyLarge)
                             Text("${Fechas.corto(i.dia)} · ${i.hora}" + if (i.nota.isNotBlank()) " · ${i.nota}" else "", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text("+" + dinero(i.monto), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, color = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro()))
-                        TextButton(onClick = { if (armado == i.id) { Repo.borrarIngreso(i.id); armado = null; io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Ingreso borrado") { Repo.guardarIngreso(i) } } else armado = i.id }) {
-                            Text(if (armado == i.id) "¿Borrar?" else "Quitar", color = if (armado == i.id) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                        Text("  ›", color = MaterialTheme.colorScheme.outline)
                     }
                 }
             }
@@ -213,25 +207,82 @@ fun PantallaGastos(nav: Nav? = null) {
                     Text(Fechas.corto(g.dia).uppercase(), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 14.dp, bottom = 2.dp))
                 }
                 Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    // Tocar un gasto lo carga arriba para corregir monto, categoría, fecha u hora.
-                    Column(Modifier.weight(1f).clickable {
-                        entra = false; editandoIngreso = null; fijo = false
-                        editando = g; monto = if (g.monto % 1.0 == 0.0) g.monto.toLong().toString() else g.monto.toString(); cat = g.categoria
-                        imprevisto = g.imprevisto; nota = g.nota; error = null
-                        cuando = runCatching { LocalDateTime.of(Fechas.parse(g.fecha), java.time.LocalTime.parse(g.hora.take(5))) }.getOrNull()
-                    }) {
+                    // Tocar un gasto abre su corrección: monto, categoría, fecha u hora, o borrarlo.
+                    Column(Modifier.weight(1f).clickable { editando = g }) {
                         Text(g.categoria + if (g.imprevisto) " · imprevisto" else "", style = MaterialTheme.typography.bodyLarge)
                         Text((if (g.dia != g.fecha) "${g.hora} de la madrugada" else g.hora) + if (g.nota.isNotBlank()) " · ${g.nota}" else "",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text(dinero(g.monto), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo)
-                    TextButton(onClick = { if (armado == g.id) { Repo.borrarGasto(g.id); armado = null; io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Gasto borrado") { Repo.guardarGasto(g) } } else armado = g.id }) {
-                        Text(if (armado == g.id) "¿Borrar?" else "Quitar", color = if (armado == g.id) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    Text("  ›", color = MaterialTheme.colorScheme.outline)
                 }
             }
         }
     }
+    editando?.let { g -> DialogoGasto(g) { editando = null } }
+    editandoIngreso?.let { i -> DialogoIngreso(i) { editandoIngreso = null } }
+}
+
+/** Corregir un gasto: monto, categoría, fecha y hora, imprevisto y nota; o borrarlo (con confirmación y Deshacer). */
+@Composable
+fun DialogoGasto(g: Gasto, cerrar: () -> Unit) = DialogoDinero(
+    titulo = "Gasto", monto0 = g.monto, cat0 = g.categoria, categorias = Repo.config.categorias, fecha0 = g.fecha, hora0 = g.hora, nota0 = g.nota,
+    marca = "¿Fue imprevisto?", marca0 = g.imprevisto, cerrar = cerrar,
+    guardar = { monto, cat, fecha, hora, nota, marca -> Repo.guardarGasto(g.copy(monto = monto, categoria = cat, fecha = fecha, hora = hora, nota = nota, imprevisto = marca, ts_editado = Fechas.ahoraIso())) },
+    borrar = { Repo.borrarGasto(g.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Gasto borrado") { Repo.guardarGasto(g) } },
+)
+
+/** Corregir un ingreso, igual que un gasto. */
+@Composable
+fun DialogoIngreso(i: Ingreso, cerrar: () -> Unit) = DialogoDinero(
+    titulo = "Ingreso", monto0 = i.monto, cat0 = i.categoria, categorias = Repo.config.categorias_ingreso, fecha0 = i.fecha, hora0 = i.hora, nota0 = i.nota,
+    marca = "¿Se repite? (sueldo, beca, renta)", marca0 = i.fijo, cerrar = cerrar,
+    guardar = { monto, cat, fecha, hora, nota, marca -> Repo.guardarIngreso(i.copy(monto = monto, categoria = cat, fecha = fecha, hora = hora, nota = nota, fijo = marca, ts_editado = Fechas.ahoraIso())) },
+    borrar = { Repo.borrarIngreso(i.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Ingreso borrado") { Repo.guardarIngreso(i) } },
+)
+
+@Composable
+private fun DialogoDinero(
+    titulo: String, monto0: Double, cat0: String, categorias: List<String>, fecha0: String, hora0: String, nota0: String, marca: String, marca0: Boolean,
+    cerrar: () -> Unit, guardar: (Double, String, String, String, String, Boolean) -> Unit, borrar: () -> Unit,
+) {
+    var monto by remember { mutableStateOf(if (monto0 % 1.0 == 0.0) monto0.toLong().toString() else monto0.toString()) }
+    var cat by remember { mutableStateOf(cat0) }
+    var cuando by remember { mutableStateOf<LocalDateTime?>(runCatching { LocalDateTime.of(Fechas.parse(fecha0), java.time.LocalTime.parse(hora0.take(5))) }.getOrNull()) }
+    var nota by remember { mutableStateOf(nota0) }
+    var m by remember { mutableStateOf(marca0) }
+    var confirmar by remember { mutableStateOf(false) }
+    val v = monto.toDoubleOrNull()
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = cerrar,
+        title = { Text("$titulo · ${Fechas.corto(fecha0)} ${hora0.take(5)}") },
+        text = {
+            Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                OutlinedTextField(value = monto, onValueChange = { monto = it.filter { c -> c.isDigit() || c == '.' } }, modifier = Modifier.fillMaxWidth(),
+                    prefix = { Text("$ ") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+                Etiqueta("Categoría")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (categorias + listOf(cat0).filter { it !in categorias }).forEach { c -> Ficha(c, cat == c) { cat = c } }
+                }
+                Etiqueta("Cuándo")
+                io.github.ruddy2003.vestigium.ui.SelectorHora(cuando) { cuando = it }
+                Interruptor(marca, m) { m = it }
+                OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nota opcional") }, singleLine = true)
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = v != null && v > 0, onClick = {
+                val c = cuando ?: LocalDateTime.now()
+                guardar(Math.round((v ?: monto0) * 100) / 100.0, cat, Fechas.iso(c.toLocalDate()), "%02d:%02d".format(c.hour, c.minute), nota.trim(), m)
+                cerrar()
+            }) { Text("Guardar") }
+        },
+        dismissButton = {
+            TextButton(onClick = { if (confirmar) { borrar(); cerrar() } else confirmar = true }) {
+                Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)
+            }
+        },
+    )
 }
 
 /** Lo que entró contra lo que salió en el mes: dos barras que crecen y el saldo. */

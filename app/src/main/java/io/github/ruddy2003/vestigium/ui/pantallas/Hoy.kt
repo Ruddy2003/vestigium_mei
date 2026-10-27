@@ -386,7 +386,7 @@ val METRICAS = listOf(
 val TABLERO_INICIAL = listOf("sueno", "animo", "pasos", "pantalla", "gasto", "kcal")
 
 @Composable
-fun Tablero(fecha: String) {
+fun Tablero(fecha: String, tocar: (String) -> Unit = {}) {
     var editando by remember { mutableStateOf(false) }
     val elegidas = Repo.config.tablero.ifEmpty { TABLERO_INICIAL }
     // Lo que sale de la base (kilómetros, canciones) se lee una vez para las cinco semanas alrededor.
@@ -402,7 +402,7 @@ fun Tablero(fecha: String) {
     val lista = elegidas.mapNotNull { id -> METRICAS.firstOrNull { it.id == id } }
     lista.chunked(2).forEach { par ->
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            par.forEach { m -> TarjetaMetrica(m, fecha, extra, Modifier.weight(1f)) }
+            par.forEach { m -> TarjetaMetrica(m, fecha, extra, Modifier.weight(1f)) { tocar(m.id) } }
             if (par.size == 1) Spacer(Modifier.weight(1f))
         }
     }
@@ -435,7 +435,7 @@ private fun mover(l: List<String>, id: String, d: Int) {
 }
 
 @Composable
-private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<String, Double>>, modifier: Modifier) {
+private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<String, Double>>, modifier: Modifier, tocar: () -> Unit) {
     val semana = (6 downTo 0).map { k -> Fechas.sumar(fecha, -k.toLong()).let { f -> m.valor(f, extra) } }
     val v = semana.last()
     val previos = (1..28).mapNotNull { k -> m.valor(Fechas.sumar(fecha, -k.toLong()), extra) }
@@ -447,10 +447,14 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
     androidx.compose.runtime.LaunchedEffect(fecha, m.id) {
         crecer.animateTo(1f, androidx.compose.animation.core.tween(700, delayMillis = 60, easing = androidx.compose.animation.core.FastOutSlowInEasing))
     }
-    Surface(modifier, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface,
+    // Tocar la cifra lleva a donde se corrige o se ve de dónde salió (P1).
+    Surface(onClick = tocar, modifier = modifier, shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
         Column(Modifier.padding(10.dp)) {
-            Text(m.nombre.lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(m.nombre.lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, modifier = Modifier.weight(1f))
+                Text("›", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.outline)
+            }
             Text(v?.let(m.formato) ?: "—", style = estiloCifra(), maxLines = 1)
             val dif = if (v != null && normal != null && normal != 0.0) (v - normal) / abs(normal) else null
             Text(

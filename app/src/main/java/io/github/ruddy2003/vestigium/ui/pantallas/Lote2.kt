@@ -205,7 +205,10 @@ fun PantallaLugarNuevo(nav: Nav) {
                     if (i > 0) HorizontalDivider()
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("%.4f, %.4f · desde %s".format(x.lat, x.lon, x.desde.ifBlank { "?" }), style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados - x) } }) { Text("quitar") }
+                        TextButton(onClick = {
+                            Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados - x) }
+                            io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sitio quitado de los ignorados") { Repo.cambiarConfig { cc -> if (x in cc.lugares_ignorados) cc else cc.copy(lugares_ignorados = cc.lugares_ignorados + x) } }
+                        }) { Text("quitar") }
                     }
                 }
             }
@@ -286,7 +289,13 @@ fun PantallaNotas(nav: Nav) {
         AlertDialog(onDismissRequest = { editando = null }, title = { Text("Editar nota") },
             text = { OutlinedTextField(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth()) },
             confirmButton = { TextButton(onClick = { Repo.guardarNota(n.copy(texto = t.trim(), editada = Fechas.ahoraIso())); editando = null }) { Text("guardar") } },
-            dismissButton = { TextButton(onClick = { Repo.borrarNota(n.id); editando = null }) { Text("borrar", color = MaterialTheme.colorScheme.error) } })
+            dismissButton = {
+                var confirmar by remember(n.id) { mutableStateOf(false) }
+                TextButton(onClick = {
+                    if (!confirmar) { confirmar = true; return@TextButton }
+                    Repo.borrarNota(n.id); editando = null; io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
+                }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
+            })
     }
 }
 
@@ -476,7 +485,11 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
         confirmButton = { TextButton(onClick = { if (m.nombre.isNotBlank()) { Metas.cambiar(previa, m.copy(nombre = m.nombre.trim())); cerrar() } }) { Text("guardar") } },
         dismissButton = {
             Row {
-                if (previa != null) TextButton(onClick = { Repo.borrarMeta(previa.id); cerrar() }) { Text("borrar", color = MaterialTheme.colorScheme.error) }
+                var confirmar by remember { mutableStateOf(false) }
+                if (previa != null) TextButton(onClick = {
+                    if (!confirmar) { confirmar = true; return@TextButton }
+                    Repo.borrarMeta(previa.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Meta borrada") { Repo.guardarMeta(previa) }
+                }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
                 TextButton(onClick = cerrar) { Text("cancelar") }
             }
         })

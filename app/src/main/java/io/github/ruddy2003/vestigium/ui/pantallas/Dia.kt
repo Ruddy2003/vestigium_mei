@@ -127,6 +127,11 @@ fun PantallaDia(nav: Nav) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val reqSueno = remember { BringIntoViewRequester() }
+    val reqTelefono = remember { BringIntoViewRequester() }
+    var abrirTelefono by remember { mutableStateOf(0) }
+    var editarSueno by remember(fecha) { mutableStateOf(false) }
+    var momentoAbierto by remember(fecha) { mutableStateOf<io.github.ruddy2003.vestigium.data.Momento?>(null) }
+    var tramoAbierto by remember(fecha) { mutableStateOf<io.github.ruddy2003.vestigium.data.Tramo?>(null) }
     /** Abre una sección (si estaba plegada) y la trae a la vista. */
     fun mostrar(titulo: String, r: BringIntoViewRequester) {
         if (titulo in Repo.config.plegadas) Repo.cambiarConfig { cc -> cc.copy(plegadas = cc.plegadas - titulo) }
@@ -238,12 +243,10 @@ fun PantallaDia(nav: Nav) {
                         }
                     }
                     val sr = Repo.salud[fecha]
-                    var editandoSueno by remember(fecha) { mutableStateOf(false) }
                     sr?.sueno_min?.let { m -> Clave("horologium", "${m / 60} h ${m % 60} min dormido " + if (sr.sueno_manual) "(corregido a mano)" else "según tu reloj") }
-                    TextButton(onClick = { editandoSueno = true }) {
+                    TextButton(onClick = { editarSueno = true }) {
                         Text(if (sr?.sueno_min != null) "corregir las horas de sueño" else "anotar a qué hora dormí y desperté", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     }
-                    if (editandoSueno) io.github.ruddy2003.vestigium.ui.EditarSueno(fecha) { editandoSueno = false }
                 }
             }
         }
@@ -252,12 +255,15 @@ fun PantallaDia(nav: Nav) {
         val sustanciasDia = Repo.consumos.filter { it.fecha == fecha && io.github.ruddy2003.vestigium.data.Sustancias.visible(it) }
             if (delDia.isNotEmpty() || sustanciasDia.isNotEmpty()) Seccion("Momentos de este día", numero = n(), plegable = true) {
                 Tarjeta {
-                    val filas = delDia.map { m -> Fechas.millis(m.ts) to (Fechas.horaDe(m.ts) to Catalogo.titulo(m, c.discreto) + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " · ${m.texto}" else "")) } +
-                        sustanciasDia.map { x -> Fechas.millis(x.inicio) to (Fechas.horaDe(x.inicio) to Catalogo.nombreSustancia(x) + resumenConsumo(x).let { r -> if (r.isNotBlank()) " · $r" else "" }) }
-                    filas.sortedBy { it.first }.forEach { (_, f) ->
-                        Row(Modifier.padding(vertical = 3.dp)) {
-                            Text(f.first + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                            io.github.ruddy2003.vestigium.ui.TextoMarcado(f.second, style = MaterialTheme.typography.bodyMedium)
+                    // Cada fila se toca para corregirla (P1): el momento abre su diálogo; la sustancia, su hoja.
+                    class Fila(val ms: Long, val hora: String, val texto: String, val tocar: () -> Unit)
+                    val filas = delDia.map { m -> Fila(Fechas.millis(m.ts), Fechas.horaDe(m.ts), Catalogo.titulo(m, c.discreto) + (m.valencia?.let { " · $it/7" } ?: "") + (if (m.texto.isNotBlank()) " · ${m.texto}" else "")) { momentoAbierto = m } } +
+                        sustanciasDia.map { x -> Fila(Fechas.millis(x.inicio), Fechas.horaDe(x.inicio), Catalogo.nombreSustancia(x) + resumenConsumo(x).let { r -> if (r.isNotBlank()) " · $r" else "" }) { abrirConsumo(ctx, id = x.id) } }
+                    filas.sortedBy { it.ms }.forEach { f ->
+                        Row(Modifier.fillMaxWidth().clickable(onClick = f.tocar).padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(f.hora + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            io.github.ruddy2003.vestigium.ui.TextoMarcado(f.texto, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                            Text(" ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.outline)
                         }
                     }
                     TextButton(onClick = { Seleccion.momentos = fecha; nav.ir("hoja_momentos") }) {
@@ -297,7 +303,18 @@ fun PantallaDia(nav: Nav) {
         else pendientes()
 
         // 2. El tablero siempre a la vista, con los accesos de lo que se mide de vez en cuando.
-        Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores.") { Tablero(fecha) }
+        Seccion("Tablero", "Tus cifras del día y la semana, contra tu promedio de las 4 semanas anteriores. Toca una para corregirla o ver de dónde sale.") {
+            Tablero(fecha) { id ->
+                when (id) {
+                    "sueno" -> editarSueno = true
+                    "animo" -> abrirNoche("Ánimo y cuerpo")
+                    "palabras" -> abrirNoche("Diario")
+                    "gasto" -> nav.ir("gastos")
+                    // Lo que mide el teléfono: se abre «Lo que registró el teléfono» y se trae a la vista.
+                    else -> { abrirTelefono++; scope.launch { kotlinx.coroutines.delay(200); reqTelefono.bringIntoView() } }
+                }
+            }
+        }
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonSecundario("✎ cuestionarios", Modifier.weight(1f)) { nav.ir("escalas") }
             BotonSecundario("⚡ reacción", Modifier.weight(1f)) { nav.ir("reaccion") }
@@ -316,7 +333,7 @@ fun PantallaDia(nav: Nav) {
         bloqueMomentos()
         if (!manana) bloqueSueno()
 
-        TramosDelDia(fecha)
+        TramosDelDia(fecha) { tramoAbierto = it }
         // 4. Recuerdos, días especiales y experimentos.
         io.github.ruddy2003.vestigium.data.Especiales.de(fecha).takeIf { it.isNotEmpty() }?.let { l ->
             Aviso((if (esHoy) "Hoy: " else "Este día: ") + l.joinToString(" · ") { io.github.ruddy2003.vestigium.data.Especiales.frase(it) } + ".")
@@ -332,9 +349,13 @@ fun PantallaDia(nav: Nav) {
         }
 
         // 5. Lo automático, al fondo.
-        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), autoPlegar = true) {
+        Seccion("Lo que registró el teléfono", "Se llena solo con los sensores que activaste. Nada de esto tienes que escribirlo.", numero = n(), autoPlegar = true,
+            abrir = abrirTelefono, modifier = Modifier.bringIntoViewRequester(reqTelefono)) {
             Vestigios(fecha, nav)
         }
+        if (editarSueno) io.github.ruddy2003.vestigium.ui.EditarSueno(fecha) { editarSueno = false }
+        momentoAbierto?.let { m -> DialogoMomento(m) { momentoAbierto = null } }
+        tramoAbierto?.let { t -> DialogoTramo(t) { tramoAbierto = null } }
 
     }
 }
@@ -837,16 +858,18 @@ private fun Tok(t: String, nueva: Boolean) {
 
 /** El enfoque y las siestas de un día, medidos con el cronómetro o anotados después. */
 @Composable
-private fun TramosDelDia(fecha: String) {
+private fun TramosDelDia(fecha: String, tocar: (io.github.ruddy2003.vestigium.data.Tramo) -> Unit) {
     val l = Repo.tramos.filter { it.fecha == fecha }
     if (l.isEmpty()) return
     Seccion("Enfoque y siestas", "${horasMin(l.filter { it.tipo != "siesta" }.sumOf { it.min })} de enfoque" +
         l.filter { it.tipo == "siesta" }.sumOf { it.min }.let { if (it > 0) " · ${horasMin(it)} de siesta" else "" }, plegable = true) {
         Tarjeta {
             l.sortedBy { it.inicio }.forEach { t ->
-                Row(Modifier.padding(vertical = 3.dp)) {
+                Row(Modifier.fillMaxWidth().clickable { tocar(t) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(Fechas.horaDe(t.inicio) + "  ", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-                    io.github.ruddy2003.vestigium.ui.TextoMarcado(Catalogo.nombreTramo(t.tipo) + " · " + horasMin(t.min) + if (t.nota.isNotBlank()) " · ${t.nota}" else "", style = MaterialTheme.typography.bodyMedium)
+                    io.github.ruddy2003.vestigium.ui.TextoMarcado(Catalogo.nombreTramo(t.tipo) + " · " + horasMin(t.min) + if (t.nota.isNotBlank()) " · ${t.nota}" else "", style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f))
+                    Text(" ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.outline)
                 }
             }
         }

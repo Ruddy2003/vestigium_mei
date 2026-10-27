@@ -116,7 +116,7 @@ class QuickActivity : FragmentActivity() {
         setContent {
             TemaVestigium {
                 Box(
-                    Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { terminar() },
+                    Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tocarFuera() },
                     contentAlignment = Alignment.BottomCenter,
                 ) {
                     Surface(
@@ -149,12 +149,22 @@ class QuickActivity : FragmentActivity() {
                             }
                         }
                     }
+                    // La barra de «deshacer» también aquí (por ejemplo, al borrar un consumo).
+                    io.github.ruddy2003.vestigium.ui.CapaDeshacer()
                 }
             }
         }
     }
 
     private fun terminar() { runCatching { Widgets.actualizar(this) }; finish() }
+
+    /** Hay algo escrito que no se ha guardado (el monto de un gasto): tocar fuera avisa una vez antes de cerrar. */
+    private var sinGuardar = false
+    private var avisado = false
+    private fun tocarFuera() {
+        if (sinGuardar && !avisado) { avisado = true; Toast.makeText(this, "Tienes un monto sin registrar. Toca fuera otra vez para salir sin guardarlo.", Toast.LENGTH_LONG).show() }
+        else terminar()
+    }
 
     /** Cómo estaba el día antes de registrar una recaída, para que «Deshacer» lo deje igual. */
     private var previoRecaida: io.github.ruddy2003.vestigium.data.Recaidas.Previo? = null
@@ -316,7 +326,7 @@ class QuickActivity : FragmentActivity() {
             if (Repo.config.seguimiento_privado) BotonSecundario("＋ libido") { ir("libido") }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-            if (m != null && inicial == null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Deshacer") }
+            if (m != null && inicial == null) TextButton(onClick = { Repo.borrarMomento(m!!.id); Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
             else Spacer(Modifier.width(1.dp))
             BotonPrincipal("Listo") { terminar() }
         }
@@ -369,7 +379,7 @@ class QuickActivity : FragmentActivity() {
                 Repo.borrarMomento(mm.id)
                 previoRecaida?.let { io.github.ruddy2003.vestigium.data.Recaidas.deshacer(it) }; previoRecaida = null
                 Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
-            }) { Text("Deshacer") }
+            }) { Text("Borrar este registro") }
             BotonPrincipal("Listo") { terminar() }
         }
     }
@@ -399,7 +409,7 @@ class QuickActivity : FragmentActivity() {
             else TextButton(onClick = { impulso?.let { Repo.borrarMomento(it.id) }; impulso = null }) { Text("quitar el impulso") }
             BotonPrincipal("Listo") { terminar() }
         }
-        TextButton(onClick = { Repo.borrarMomento(mm.id); impulso?.let { Repo.borrarMomento(it.id) }; Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Deshacer") }
+        TextButton(onClick = { Repo.borrarMomento(mm.id); impulso?.let { Repo.borrarMomento(it.id) }; Toast.makeText(this@QuickActivity, "Borrado", Toast.LENGTH_SHORT).show(); terminar() }) { Text("Borrar este registro") }
     }
 
     /** Lo que ayuda a entender una recaída: qué la detonó, en qué aparato y qué hacías antes. Todo opcional. */
@@ -510,6 +520,7 @@ class QuickActivity : FragmentActivity() {
             return
         }
         var cuando by remember(id) { mutableStateOf<java.time.LocalDateTime?>(null) }
+        var guardado by remember(id) { mutableStateOf(false) }
         var nivel by remember(id) { mutableStateOf<Int?>(null) }
         var cantidad by remember(id) { mutableStateOf(0.0) }
         var via by remember(id) { mutableStateOf<String?>(null) }
@@ -555,7 +566,10 @@ class QuickActivity : FragmentActivity() {
             Catalogo.CON_QUIEN.forEach { o -> val a = o.id in con; Ficha(o.nombre, a) { con = when { a -> con - o.id; o.id == "solo" -> listOf("solo"); else -> con - "solo" + o.id } } }
         }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) {
-            BotonPrincipal("Guardar", habilitado = id != "otra" || otra.isNotBlank()) {
+            BotonPrincipal("Guardar", habilitado = (id != "otra" || otra.isNotBlank()) && !guardado) {
+                // Un toque doble no guarda dos consumos.
+                if (guardado) return@BotonPrincipal
+                guardado = true
                 val ms = (cuando ?: java.time.LocalDateTime.now()).aMillis()
                 val c = sus.nuevo(id, ms, nivel, cantidad.takeIf { it > 0 }, via, otra, con, origen)
                 if (cuando == null) ubicarConsumo(c)
@@ -602,10 +616,12 @@ class QuickActivity : FragmentActivity() {
         OutlinedTextField(value = nota, onValueChange = { nota = it }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp), placeholder = { Text("Nota (opcional): @persona, #lugar…") },
             visualTransformation = rememberMarcas())
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+            var confirmar by remember { mutableStateOf(false) }
             TextButton(onClick = {
+                if (!confirmar) { confirmar = true; return@TextButton }
                 Repo.borrarConsumo(c0.id); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Registro borrado") { Repo.guardarConsumo(c0) }
-                Toast.makeText(ctx, "Borrado", Toast.LENGTH_SHORT).show(); terminar()
-            }) { Text("borrar") }
+                Toast.makeText(ctx, "Borrado. Queda 7 días en la papelera.", Toast.LENGTH_LONG).show(); terminar()
+            }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = if (confirmar) MaterialTheme.colorScheme.error else androidx.compose.ui.graphics.Color.Unspecified) }
             BotonPrincipal("Guardar") {
                 val actual = Repo.consumo(c0.id) ?: c0
                 val ini = inicio?.aMillis() ?: Fechas.millis(actual.inicio)
@@ -619,6 +635,8 @@ class QuickActivity : FragmentActivity() {
     @Composable
     private fun GastoRapido(catInicial: String?) {
         var monto by remember { mutableStateOf("") }
+        var guardando by remember { mutableStateOf(false) }
+        androidx.compose.runtime.SideEffect { sinGuardar = monto.isNotBlank() && !guardando }
         var cat by remember { mutableStateOf(catInicial) }
         var imprevisto by remember { mutableStateOf(false) }
         var nota by remember { mutableStateOf("") }
@@ -639,6 +657,8 @@ class QuickActivity : FragmentActivity() {
         error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.End) {
             BotonPrincipal("Registrar") {
+                // Un toque doble no registra dos veces.
+                if (guardando) return@BotonPrincipal
                 val v = monto.toDoubleOrNull()
                 when {
                     v == null || v <= 0 -> error = "Escribe un monto mayor a cero."
@@ -653,7 +673,8 @@ class QuickActivity : FragmentActivity() {
                             val loc = Ubicacion.ultima(this@QuickActivity)
                             if (loc != null) Repo.guardarGasto(g.copy(lat = loc.latitude, lon = loc.longitude))
                         }
-                        Toast.makeText(this@QuickActivity, "Gasto registrado", Toast.LENGTH_SHORT).show()
+                        guardando = true
+                        Toast.makeText(this@QuickActivity, "Gasto registrado: $${"%,.2f".format(g.monto)} · ${g.categoria}", Toast.LENGTH_SHORT).show()
                         terminar()
                     }
                 }

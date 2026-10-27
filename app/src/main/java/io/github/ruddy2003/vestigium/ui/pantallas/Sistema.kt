@@ -710,7 +710,10 @@ private fun Equivalencias() {
         eq.forEach { (k, v) ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("$k → $v", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                TextButton(onClick = { Repo.cambiarConfig { it.copy(equivalencias = it.equivalencias - k) } }) { Text("Quitar") }
+                TextButton(onClick = {
+                    Repo.cambiarConfig { it.copy(equivalencias = it.equivalencias - k) }
+                    io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Regla quitada") { Repo.cambiarConfig { c -> c.copy(equivalencias = c.equivalencias + (k to v)) } }
+                }) { Text("Quitar") }
             }
         }
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -729,7 +732,11 @@ private fun Categorias() {
     var nueva by remember { mutableStateOf("") }
     Tarjeta {
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Repo.config.categorias.forEach { c -> Ficha("$c ×", false) { Repo.cambiarConfig { it.copy(categorias = it.categorias - c) } } }
+            Repo.config.categorias.forEach { c -> Ficha("$c ×", false) {
+                val i = Repo.config.categorias.indexOf(c)
+                Repo.cambiarConfig { it.copy(categorias = it.categorias - c) }
+                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Categoría quitada") { Repo.cambiarConfig { cc -> if (c in cc.categorias) cc else cc.copy(categorias = cc.categorias.toMutableList().apply { add(i.coerceIn(0, size), c) }) } }
+            } }
         }
         Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })

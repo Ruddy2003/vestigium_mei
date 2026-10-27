@@ -95,3 +95,15 @@ Salen de `docs/navegacion/revision_navegacion.md`. Decisiones del autor del 27 o
 
 **Capítulos actualizados:** capítulo 4 (sueño, sección del día asignado), capítulo 10 (secciones 10.3.1, 10.7 y la 10.7.1 nueva) y los apéndices A (sección A.5) y C.
 
+
+## Revisión de navegación · Entrega N1 (corregir donde se ve)
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.29 | Las cifras del Tablero se tocan: el sueño abre su corrección; el ánimo y las palabras, la hoja de la noche; el gasto, Gastos; lo demás despliega «Lo que registró el teléfono» | `ui/pantallas/Hoy.kt` (`Tablero`, `TarjetaMetrica`), `ui/pantallas/Dia.kt`, `ui/Componentes.kt` (`Seccion(abrir)`) | N-01, P1 |
+| D.30 | En el Día, cada fila de «Momentos de este día» y de «Enfoque y siestas» abre su corrección (momento, sustancia o tramo). Los tramos se corrigen por primera vez: tipo, inicio, duración y nota | `ui/pantallas/Dia.kt`, `ui/pantallas/EnfoqueSiestas.kt` (`DialogoTramo`) | N-02, P1 |
+| D.31 | `DialogoMomento` corrige la fecha y la hora de cualquier registro y guarda `ts_editado`. Un momento viejo pasa a tipo `animo` al corregirlo | `ui/pantallas/Momentos.kt`, `data/Recaidas.kt` (`aOtraHora`) | N-03, H-NAV-2, H-2-9 |
+| D.32 | Gastos e ingresos se corrigen en un diálogo, donde se tocan; registrar confirma con un aviso. El gasto y el consumo rápidos no se registran dos veces con un toque doble, y tocar fuera con un monto escrito avisa antes de cerrar | `ui/pantallas/Gastos.kt` (`DialogoGasto`, `DialogoIngreso`), `ui/QuickActivity.kt` | N-06 |
+| D.33 | Deshacer en los borrados que no lo tenían (notas, metas, fechas propias, logros propios, citas, bloques, sitios ignorados, frases, ciudades, Patrimonio, reglas de nombres, categorías, mascotas y personas cercanas) y confirmación en los de un toque. La barra de Deshacer también en el registro rápido. Su botón «Deshacer» se llama ahora «Borrar este registro» | varios archivos de `ui/`, `ui/QuickActivity.kt` | N-13, P4 |
+
+**Efectos al leer los datos:** desde esta versión, un registro de ánimo puede cambiar de hora y de día después de anotarlo; queda marcado con `ts_editado`. Los momentos viejos que se corrijan cambian de tipo a `animo`.
