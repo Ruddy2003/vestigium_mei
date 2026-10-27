@@ -245,6 +245,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** mezcla ánimo momentáneo con recordado y muestreo al azar con muestreo por evento.
 - **Gravedad:** Baja.
 - **Propuesta:** un solo criterio de pertenencia al lugar; preferir solo avisos (`muestreo`) o mostrarlos separados; en R, no rellenar con la valencia del día.
+- **Estado:** Resuelto en parte en el módulo 10a (commit `a67bad0`): `vm_mapa_animo` en R. Lo de la pantalla queda para la entrega 10c (P-26).
 
 ## Módulo 4 · Modelos fisiológicos y variables derivadas (v81, commit `fa527df`)
 
@@ -463,6 +464,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** contenido del seguimiento privado aparece en pantallas y exportaciones donde el resto de la app lo oculta; criterio (c) del módulo 9.
 - **Gravedad:** Media.
 - **Propuesta:** filtrar `!it.privado` en `Dinamicas.construir` y `Personas.menciones`; decidir explícitamente si `impulso` debe formar parte de `Momento.privado`.
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`): `Dinamicas.construir`, `Personas.menciones`, las sugerencias al escribir y «Tus temas» ya no leen momentos privados, y el impulso es privado.
 
 ### H-6-2 · No hay variable por persona de «estuve con @x»; `per_` mezcla cuatro cosas
 - **Dónde:** `ciencia/Dinamicas.kt`, familias `per_` y `pen_`.
@@ -671,6 +673,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** contenido del seguimiento privado llega a salidas que se guardan en carpetas públicas o se comparten, y a un sistema de recompensas. Contradice la regla declarada en la sección 7 del documento de contexto («Seguimiento privado (impulsos, …) nunca en reportes, Tu año, logros, mapas ni widgets»); también llegan al mapa (`Mapa.kt`) y al conteo de momentos de un widget (`Widgets.kt`). Criterio (c) del módulo 9.
 - **Gravedad:** Alta.
 - **Propuesta:** incluir `impulso` en `Momento.privado` (revisando que la pantalla de impulsos siga funcionando) o filtrarlo explícitamente en `Periodo`, `TuAnio` y `Logros`.
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`): `Momento.privado` incluye el impulso, y nada privado sale fuera de la pantalla Privado.
 
 ### H-8-2 · «La relación del año» puede usar variables privadas y de medicamentos
 - **Dónde:** `ciencia/TuAnio.kt`, `calcular()` (`Estadistica.relaciones(panelAnio, vars, true)` con `vars = Estadistica.variables(dinamicas = false)`).
@@ -678,6 +681,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** contradice «Nunca toca el seguimiento privado» del propio comentario y la regla declarada del proyecto, que incluye los medicamentos en el seguimiento privado; criterio (c).
 - **Gravedad:** Media.
 - **Propuesta:** excluir el grupo «Privado» y los medicamentos de `vars` en `TuAnio` (y en cualquier salida compartible).
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`): `Estadistica.variables()` excluye todas las variables privadas, también los medicamentos.
 
 ### H-8-3 · La recaída afecta logros y campañas a través del hábito ligado
 - **Dónde:** `data/Recaidas.kt`, `registrar()` (desmarca el hábito ligado); `ciencia/Logros.kt`, constancia por hábito (`c_hab_*`) y logros propios (`serie`, cualquier variable del panel); `ciencia/Campanas.kt`, retos `habito:*`.
@@ -685,6 +689,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el principio de no premiar ni castigar con logros el seguimiento privado se cumple solo en los logros predefinidos; la vía indirecta añade presión para no registrar recaídas (dato faltante no al azar).
 - **Gravedad:** Media.
 - **Propuesta:** excluir el hábito ligado a recaídas de logros y campañas, y excluir el grupo «Privado» de las fuentes de logros propios.
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`): el hábito ligado solo se ve en Privado (`Privado.habitosVisibles`), y no hay logros propios sobre algo privado.
 
 ### H-8-4 · Reportes automáticos en carpetas públicas
 - **Dónde:** `reportes/Reportes.kt`, `guardarPng` / `guardarPdf` (`Pictures/VestigiumMei`, `Download/VestigiumMei`); `avisos/Trabajo.kt` (lunes desde las 8:00, día 1 desde las 9:00).
@@ -692,6 +697,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** quedan al alcance de la galería, de otras apps con permiso de medios y de la copia automática de fotos a la nube, sin una decisión explícita.
 - **Gravedad:** Media.
 - **Propuesta:** guardarlos en el almacenamiento privado y copiarlos a la carpeta pública solo al compartir; o preguntar la primera vez; considerar el modo discreto por omisión en lo que se guarda solo.
+- **Estado:** Resuelto en parte en el módulo 10a (commit `a67bad0`): los reportes que se guardan solos van en modo discreto y sin la frase del mejor momento. Siguen en carpetas públicas.
 
 ### H-8-5 · Sin contraseña, todo sale en claro; el JSON lleva el texto de las cartas selladas
 - **Dónde:** `data/Respaldos.kt`, `aCarpeta()`; `data/Drive.kt`, `subir()`; `data/Exportar.kt`, `archivos()` (`vm_respaldo.json` junto a `vm_cartas.csv`).
@@ -699,6 +705,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el diario y lo privado quedan legibles fuera del teléfono; el sello de las cartas se puede saltar.
 - **Gravedad:** Media.
 - **Propuesta:** proponer (o exigir) contraseña al activar la carpeta o Drive; en `respaldoJson()` para exportar (no para el respaldo cifrado), omitir el texto de las cartas aún selladas o advertirlo.
+- **Estado:** Resuelto en parte en el módulo 10a (commit `a67bad0`): con datos privados y sin contraseña ningún respaldo sale del teléfono. La exportación para R sigue en claro, a propósito y con aviso; el texto de las cartas selladas en el JSON sigue abierto.
 
 ### H-8-6 · Logros que premian valores de la valencia
 - **Dónde:** `ciencia/Logros.kt` («Día perfecto»: valencia 7; «Remontada»: de ≤ 2 a ≥ 6 en menos de 3 días).
@@ -777,6 +784,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** la regla no prohíbe mostrarlos en pantallas ni analizarlos, pero sí que lleguen a «Tu año», y llegan (H-8-2). El criterio del código y el declarado no coinciden.
 - **Gravedad:** Baja.
 - **Propuesta:** decidir explícitamente; si son privados, ponerlos detrás del interruptor y excluirlos de salidas compartibles.
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`): los medicamentos son privados por decisión del autor (D-2).
 
 ### H-8-17 · La lista declarada de servicios externos está incompleta
 - **Dónde:** documento de contexto (sección 1: «nada pasa por servidores ajenos salvo Drive del usuario, Open-Meteo (clima) y Spotify API»); código: `data/Portadas.kt` (TMDB, RAWG, TVmaze, Open Library, Crossref), `ui/pantallas/Mapa.kt` (mosaicos de OpenStreetMap con osmdroid, `TileSourceFactory.MAPNIK`).
@@ -795,6 +803,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (c); contradice la regla declarada del seguimiento privado.
 - **Gravedad:** Media.
 - **Propuesta:** P-03.
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`).
 
 ### H-9-2 · Una configuración ilegible se reemplaza por la de fábrica y se sobrescribe
 - **Dónde:** `data/Repo.kt`, `init` (`:78`) y `cambiarConfig()` (`:493-498`).
@@ -830,6 +839,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (c); impacto bajo, porque no se envía el tipo de momento.
 - **Gravedad:** Baja.
 - **Propuesta:** P-04.
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`).
 
 ### H-9-7 · El formato viejo de Takeout pierde la precisión de cada punto
 - **Dónde:** `data/Importar.kt:274-280`.
@@ -872,6 +882,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterios (c) y (a).
 - **Gravedad:** Baja.
 - **Propuesta:** P-05.
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`).
 
 ### H-9-13 · Tomas de MacroFactor sin hora legible se pierden de los modelos
 - **Dónde:** `data/Sustancias.kt:101-103`, `:111-112`.
@@ -977,6 +988,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** interpretación; depende de la decisión D-1.
 - **Gravedad:** Baja.
 - **Propuesta:** documentar (no se verificó más allá de la lectura).
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`): el impulso es privado y ya no entra en `momentos_intensidad`.
 
 ### H-9-28 · Restaurar sobrescribe los experimentos enteros
 - **Dónde:** `data/Importar.kt:66`.
@@ -1054,6 +1066,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (c).
 - **Gravedad:** Media.
 - **Propuesta:** P-03.
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`).
 
 ### H-9-39 · Tres nociones de «privado» que no coinciden con la regla declarada
 - **Dónde:** `data/Modelo.kt:160` (`Momento.privado`); el grupo «Privado» de `Estadistica.variables()`; `Config.seguimiento_privado`; regla declarada en `CLAUDE.md` y en `ciencia/Periodo.kt:17`.
@@ -1061,6 +1074,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (c); es la causa común de H-6-1, H-8-1, H-8-2, H-8-3, H-8-16, H-9-1 y H-9-38.
 - **Gravedad:** Alta.
 - **Propuesta:** P-01 a P-03 (decisiones D-1 y D-2).
+- **Estado:** Resuelto en el módulo 10a (commit `a67bad0`): regla única en `data/Privado.kt`.
 
 ### H-9-40 · Desde el modo «por semana», tocar una relación abre la ficha por día
 - **Dónde:** `ui/pantallas/Explorar.kt:99`.

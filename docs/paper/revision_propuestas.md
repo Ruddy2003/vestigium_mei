@@ -14,10 +14,20 @@ Ninguna propuesta se tachó: todas quedan aprobadas. Las decisiones de la secci�
   - **I-7 · Datos de las personas:** edad y otros, a partir de su fecha de nacimiento.
 
   Se recomienda que entren en el mismo aumento de `SCHEMA_V` de la fase 2, para no subir el esquema dos veces.
-- **Preguntas abiertas para el módulo 10:**
-  1. Si la pantalla de Privacidad debe tener sus propios análisis (tendencias, relación con el sueño) o si eso se deja solo a R.
-  2. Si el impulso puede seguir siendo la medida de un experimento.
-  3. Si hace falta contraseña para cualquier exportación que salga del teléfono (H-8-5).
+- **Preguntas que quedaron abiertas, ya respondidas.** El autor aceptó todas las recomendaciones:
+  1. La pantalla Privado lleva los análisis que ya tenía más una tendencia simple por mes; las correlaciones se hacen solo en R.
+  2. El impulso deja de ser medida de los experimentos.
+  3. Con datos privados, ningún respaldo sale del teléfono sin contraseña. La exportación para R, que se pide a mano, es la excepción, porque R necesita leerla; la pantalla lo advierte.
+  4. El módulo 10 se hace en cuatro entregas:
+     - **10a**: privacidad (P-01 a P-06 y P-34);
+     - **10b**: datos que no se guardaban (P-07 a P-13, P-16 (ii), I-3, I-6 e I-7); es la única que sube `SCHEMA_V`, a 13;
+     - **10c**: cálculos (P-14 a P-29, I-1 e I-2);
+     - **10d**: R y exportación (P-30 a P-33).
+  5. Sobre los días especiales (I-6), queda por decidir en la entrega 10b si se registran fechas de fallecimiento y si hay aviso de cumpleaños.
+- **P-34 · Pantalla Privado.** Todo lo privado se anota y se ve solo en ella; fuera de ella no aparece en ninguna visualización; sí va en la exportación para R.
+- **Estado:**
+  - **10a hecha** (commit `a67bad0`): P-01 a P-06 y P-34, detalladas en el Apéndice D.
+  - **10b, 10c y 10d:** pendientes.
 
 ## Cómo leer y anotar este documento
 

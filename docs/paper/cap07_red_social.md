@@ -43,7 +43,7 @@ La misma persona puede «aparecer» de forma distinta según la función, porque
 | Red y exportación `vm_red_*` (`RedPersonas.calcular`) | sí | sí | no | no | no | no | no | sí |
 | Tarjeta «personas en tu cielo este año» (`Explorar.kt`, `Vida.kt`) | sí | no | no | no | no | no | no | **no** |
 
-«Momentos privados» son los de tipo `recaida` o `libido` (la propiedad `Momento.privado` en `data/Modelo.kt`). Los momentos de tipo `impulso` **no** cuentan como privados para el código, así que entran en todas las filas que dicen «Momentos» (sección 7.13).
+«Momentos privados» son los de tipo `impulso`, `recaida` o `libido` (la propiedad `Momento.privado` en `data/Modelo.kt`, que desde el módulo 10a incluye el impulso). Ninguna fila de esta tabla los usa (sección 7.13). Hasta v84 el impulso no contaba como privado y entraba en todas las filas que dicen «Momentos».
 
 ---
 
@@ -467,13 +467,18 @@ Las variables de las secciones 7.7.1 y 7.7.2 entran en la lista de relaciones de
 
 ## 7.13 Privacidad: dónde entran los momentos privados
 
-Para el código, un momento es privado si su tipo es `recaida` o `libido` (`Momento.privado`). Según la tabla de la sección 7.2:
+Desde el módulo 10a, un momento es privado si su tipo es `impulso`, `recaida` o `libido` (`Momento.privado`, regla única en `data/Privado.kt`). Sus @menciones y #temas **no entran en nada de este capítulo**:
+- no entran en presencias, `vi_*`, `personas_vistas`, `pen_`, Constelación ni Red (ni en `vm_red_*`);
+- no entran en `per_` ni `tema_`, porque `Dinamicas.construir` filtra los privados, y sus días ya no cuentan como «días con diario» para los ceros;
+- no entran en `Personas.menciones` (Tu gente, la tarjeta «¿Quién es @x?», los duplicados, «¿A quién conoce?»), ni en las sugerencias de @ y # al escribir.
 
-- **No entran** en presencias, `vi_*`, `personas_vistas`, `pen_`, Constelación ni Red (ni en `vm_red_*`).
-- **Sí entran** en `per_` (`Dinamicas.construir` recorre todos los momentos) y en `Personas.menciones` (los días que ves en Tu gente, la tarjeta «¿Quién es @x?» y los duplicados). Esto no depende de que el seguimiento privado esté activado. En la práctica, una persona nombrada **solo** en momentos privados puede aparecer en «Tu gente» como pendiente de clasificar y tener su variable `per_` en la exportación (H-6-1).
-- Los momentos de tipo **`impulso`** no son «privados» para el código, aunque el seguimiento de impulsos se considera privado en el resto de la app: sus @menciones entran **en todo** (presencias, Constelación, Red, `per_`). No sé si es intencional (H-6-1).
+Esto vale con o sin el seguimiento privado activado. Los momentos privados solo se ven en la pantalla Privado y van completos a la exportación para R (`vm_momentos.csv`), donde sus menciones se pueden analizar si se quiere.
 
-La pista 4 del plan («la constelación toma los momentos excepto el tipo `recaida`; la red excluye todos los privados») **no se confirma en esa forma**: en v81 ambas usan el mismo criterio (`!it.privado`, que excluye recaída y libido). Lo que sí queda es la inconsistencia con `per_`, `Personas.menciones` y los impulsos.
+**Hasta v84** (H-6-1):
+- las recaídas y la libido entraban en `per_`, `tema_` y `Personas.menciones`, sin importar el interruptor;
+- los impulsos no eran privados para el código y entraban **en todo**.
+
+La pista 4 del plan («la constelación toma los momentos excepto el tipo `recaida`; la red excluye todos los privados») **no se confirmó en esa forma**: ya entonces la Constelación y la Red usaban el mismo criterio.
 
 ---
 

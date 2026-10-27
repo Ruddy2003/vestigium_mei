@@ -219,7 +219,7 @@ Ponerle palabras a una emoción (*affect labeling*) puede reducir su intensidad:
 
 ### 3.7.1 Qué contiene
 
-La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`) reúne en una página: hábitos (casillas), seguimiento privado (si está activado), **ánimo y cuerpo** (valencia, activación, dolor), **contexto** del día (trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia; varios o ninguno), **diario** (texto libre con @personas y #temas), lo que leíste o viste, foto del día, **predicción** de mañana y, plegado como opcional: la «lectura del día», lo mejor y lo peor del día, hitos y medicamentos. Al final, el **cierre** («cómo estás ahora»).
+La «hoja de la noche» (`PantallaNoche`, en `ui/pantallas/Dia.kt`) reúne en una página: hábitos (casillas; sin el hábito ligado a las recaídas), **ánimo y cuerpo** (valencia, activación, dolor), **contexto** del día (trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia; varios o ninguno), **diario** (texto libre con @personas y #temas), lo que leíste o viste, foto del día, **predicción** de mañana y, plegado como opcional: la «lectura del día», lo mejor y lo peor del día, hitos y medicamentos. Al final, el **cierre** («cómo estás ahora»).
 
 Se guarda sola mientras escribes (cada 0.7 s sin cambios). Si tiene **valencia y texto del diario**, se puede «sellar» el día; sellar no cambia los datos, es solo un cierre simbólico.
 
@@ -244,7 +244,7 @@ Estas preguntas están **plegadas por omisión**, así que se responden menos y 
 
 - **Lo mejor y lo peor** del día: una línea cada uno, texto libre. No entran al panel como números.
 - **Hitos**: etiquetas cortas de cosas que no pasan todos los días; `hitos_n` cuenta cuántas.
-- **Medicamentos**: etiquetas; `medicamentos_n` cuenta cuántas desde el primer día en que anotaste alguno.
+- **Medicamentos**: desde el módulo 10a son privados y se anotan en la pantalla Privado, no en el diario de la noche (al final hay un enlace «privado de este día»). Son etiquetas; `medicamentos_n` cuenta cuántas desde el primer día en que anotaste alguno y solo viaja a R.
 - **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** valen **0 en todos los días con diario**, también si no abriste esa sección, y los hábitos valen 0 incluso **antes de crear el hábito** (el modelo guarda la fecha `desde`, pero el panel no la usa). Así, «no lo marqué» se confunde con «no pasó» y con «aún no existía». Mismo problema de fondo que H-1-1.
 
 ### 3.7.4 «Retroactivo»: cuándo se llenó el día
@@ -461,9 +461,18 @@ Un registro de ánimo se puede editar más tarde (valencia, activación, emocion
 
 ## 3.16 Seguimiento privado (solo la mecánica)
 
-Con el seguimiento privado activado aparecen tres registros: **impulso** (intensidad de 0 a 5 en el diario, y momentos con intensidad de 1 a 5), **recaída** (sí/no en el diario; momentos con hora, duración, detonantes, aparato y qué hacías antes) y **libido** (0 a 5 y en qué está el foco; distinta del impulso). Usan anclas propias (`Catalogo.ANCLAS["impulso"]`, `["libido"]`).
+Hay tres registros:
+- **impulso**: intensidad de 0 a 5 en el día, y momentos con intensidad de 1 a 5;
+- **recaída**: sí o no en el día; momentos con hora, duración, detonantes, aparato y qué hacías antes;
+- **libido**: de 0 a 5 y en qué está el foco; es distinta del impulso.
 
-Estos registros **no aparecen** en reportes, logros, «Tu año», mapas ni widgets, y la red de personas no los usa; **sí** entran en la exportación a R y en el panel (por ejemplo, `n_recaida`, `recaida_min`), porque su propósito es entender qué días y contextos los hacen más difíciles. Cómo se protegen se detalla en el capítulo 10. **[Diseño propio]**.
+Usan anclas propias (`Catalogo.ANCLAS["impulso"]`, `["libido"]`). Los momentos de impulso se pueden registrar siempre. La intensidad del día, las recaídas, la libido y los detonantes solo con el seguimiento privado activado.
+
+Desde el módulo 10a todo esto, junto con los medicamentos, **se anota y se ve solo en la pantalla Privado**. No aparece en el Día, los momentos, la cinta, los reportes, los logros, «Tu año», los mapas, los widgets ni los análisis de la app, y la red de personas no lo usa. **Sí** entra en el panel que se exporta a R (por ejemplo, `n_recaida`, `recaida_min`, `n_impulso`), porque su propósito es entender qué días y contextos lo hacen más difícil. El capítulo 10 detalla cómo se protege. **[Diseño propio]**.
+
+**Para la medición, el cambio tiene dos efectos posibles, sin comprobar:**
+- Ver menos estos datos en el día a día puede reducir la reactividad (que registrar cambie lo registrado).
+- Que la intensidad del impulso ya no esté en el diario de la noche puede hacer que se anote menos días, y eso aumenta los datos faltantes.
 
 ---
 
