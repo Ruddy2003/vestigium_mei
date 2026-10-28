@@ -20,7 +20,7 @@ object Lugares {
         val ventana = c.lugar_minutos.coerceIn(10, 120) * 60_000L
         val radio = c.lugar_radio_m.coerceIn(30, 300).toDouble()
         val pts = runCatching { Repo.db().ubicacionesSinFotos(ahora - ventana - 45 * 60_000L, ahora + 60_000L) }.getOrDefault(emptyList())
-            .filter { (it.precision ?: 0.0) <= 120.0 }
+            .filter { (it.precision ?: Db.PRECISION_SIN_DATO) <= 120.0 }
         if (pts.size < 2) return null
         val ultimo = pts.last()
         if (ahora - ultimo.ms > 25 * 60_000L) return null

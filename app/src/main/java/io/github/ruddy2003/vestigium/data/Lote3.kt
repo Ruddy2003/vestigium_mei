@@ -130,7 +130,7 @@ object ColdTurkey {
     val NAVEGADORES = setOf("chrome", "msedge", "firefox", "opera", "brave", "vivaldi", "safari", "arc")
     private val PRODUCTIVO = listOf("winword", "excel", "powerpnt", "onenote", "outlook", "rstudio", "rsession", "code", "pycharm", "notion", "obsidian", "zotero", "acrobat",
         "claude", "chatgpt", "gemini.google", "keep.google", "meet.google", "docs.google", "drive.google", "classroom", "scholar", "overleaf", "github", "deepl", "duolingo", "teams", "zoom")
-    private val OCIO = listOf("steam", "minecraft", "epic", "netflix", "youtube", "twitch", "spotify", "primevideo", "disney", "max.com", "crunchyroll", "epicgames", "roblox", "league")
+    private val OCIO = listOf("steam", "minecraft", "epic", "netflix", "youtube", "twitch", "spotify", "primevideo", "disney", "max.com", "crunchyroll", "epicgames", "roblox", "league", "leagueoflegends")
     private val SOCIAL = listOf("whatsapp", "telegram", "discord", "instagram", "facebook", "twitter", "x.com", "reddit", "tiktok", "messenger", "linkedin", "bsky")
 
     fun nombre(raw: String, sitio: Boolean): String {
@@ -141,11 +141,19 @@ object ColdTurkey {
 
     fun categoria(n: String, c: Config = Repo.config): String = c.laptop_categorias[n] ?: when {
         n.startsWith("otr") -> "otro"
-        PRODUCTIVO.any { n.contains(it) } -> "productivo"
-        OCIO.any { n.contains(it) } -> "ocio"
-        SOCIAL.any { n.contains(it) } -> "social"
+        PRODUCTIVO.any { coincide(n, it) } -> "productivo"
+        OCIO.any { coincide(n, it) } -> "ocio"
+        SOCIAL.any { coincide(n, it) } -> "social"
         else -> "otro"
     }
+
+    /**
+     * Si el sitio o la app [n] es de la lista [patron] (P-33). En un sitio (lleva punto) el patrón tiene que ocupar partes completas
+     * del dominio: «x.com» es x.com o m.x.com, pero no dropbox.com; «youtube» es youtube.com o m.youtube.com. En una app basta
+     * con que el nombre lo contenga (rstudio, leagueclient).
+     */
+    fun coincide(n: String, patron: String): Boolean =
+        if ('.' in n) ".$n.".contains(".$patron.") else n.contains(patron)
 
     class Leido(val sitios: Boolean, val dias: Map<String, Map<String, Double>>)
 

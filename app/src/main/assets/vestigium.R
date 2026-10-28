@@ -75,7 +75,7 @@ vm_leer <- function(archivo) {
 }
 
 vm_archivos <- c(
-  panel = "vm_panel.csv", dias = "vm_dias.csv", momentos = "vm_momentos.csv", gastos = "vm_gastos.csv", ingresos = "vm_ingresos.csv",
+  panel = "vm_panel.csv", panel_extendido = "vm_panel_extendido.csv", variables = "vm_variables.csv", familias = "vm_familias.csv", dias = "vm_dias.csv", momentos = "vm_momentos.csv", gastos = "vm_gastos.csv", ingresos = "vm_ingresos.csv",
   escalas = "vm_escalas.csv", reaccion = "vm_reaccion.csv", salud = "vm_salud.csv", pantalla = "vm_pantalla.csv",
   visitas = "vm_visitas.csv", ubicaciones = "vm_ubicaciones.csv", entorno = "vm_entorno.csv", fotos = "vm_fotos.csv",
   agenda = "vm_agenda.csv", notificaciones = "vm_notificaciones.csv", musica = "vm_musica.csv", actividad = "vm_actividad.csv",
@@ -94,20 +94,19 @@ for (.n in names(vm)) assign(.n, vm[[.n]], envir = globalenv())
 rm(.n)
 
 # ---- Panel diario enriquecido ---------------------------------------------
-if (!is.null(vm$panel) && nrow(vm$panel) > 0) {
-  panel <- vm$panel |>
-    arrange(fecha) |>
-    complete(fecha = seq(min(fecha), max(fecha), by = "day")) |>
-    mutate(
-      dia_semana = wday(fecha, week_start = 1),
-      fin_de_semana = dia_semana >= 6,
-      semana = floor_date(fecha, "week", week_start = 1),
-      mes = floor_date(fecha, "month"),
-      valencia_ayer = lag(valencia), valencia_manana = lead(valencia),
-      sueno_h = sueno_min / 60
-    )
-  vm$panel <- panel
+# Desde la entrega 10d, el panel de análisis (panel) es vm_panel_extendido.csv: el mismo panel de la app, con sus nombres y
+# sus reglas de 0 y vacío, más las columnas de las tablas diarias. vm$panel (vm_panel.csv) queda por compatibilidad.
+.vm_enriquecer <- function(p) {
+  p <- p |> filter(!is.na(fecha)) |> arrange(fecha) |> complete(fecha = seq(min(fecha), max(fecha), by = "day")) |>
+    mutate(dia_semana = wday(fecha, week_start = 1), fin_de_semana = dia_semana >= 6,
+           semana = floor_date(fecha, "week", week_start = 1), mes = floor_date(fecha, "month"))
+  if ("valencia" %in% names(p)) p <- mutate(p, valencia_ayer = lag(valencia), valencia_manana = lead(valencia))
+  if ("sueno_min" %in% names(p)) p <- mutate(p, sueno_h = sueno_min / 60)
+  p
 }
+if (!is.null(vm$panel) && nrow(vm$panel) > 0) vm$panel <- .vm_enriquecer(vm$panel)
+if (!is.null(vm$panel_extendido) && nrow(vm$panel_extendido) > 0) vm$panel_extendido <- .vm_enriquecer(vm$panel_extendido)
+panel <- if (!is.null(vm$panel_extendido) && nrow(vm$panel_extendido) > 0) vm$panel_extendido else vm$panel
 
 # ---- Utilidades -------------------------------------------------------------
 .vm_dato <- function(datos, var) { if (!var %in% names(datos)) stop("No existe la columna '", var, "'. Columnas: ", paste(names(datos), collapse = ", ")); datos[[var]] }
@@ -140,11 +139,13 @@ vm_tendencia <- function(var = "valencia", datos = panel) {
     labs(title = var, subtitle = "puntos: días · verde: media de 7 días · rojo: media de 30 días", x = NULL, y = NULL) + theme_minimal()
 }
 
-#' Media e intervalo de 95% por día de la semana.
+#' Media e intervalo de 95% por día de la semana (solo los días de la semana con 5 o más datos).
 vm_semana <- function(var = "valencia", datos = panel) {
   d <- datos |> mutate(y = .vm_dato(datos, var)) |> filter(!is.na(y)) |>
     group_by(dia = factor(wday(fecha, week_start = 1), 1:7, c("lun", "mar", "mié", "jue", "vie", "sáb", "dom"))) |>
-    summarise(media = mean(y), n = n(), ee = sd(y) / sqrt(n), .groups = "drop") |> mutate(lo = media - 1.96 * ee, hi = media + 1.96 * ee)
+    summarise(media = mean(y), n = n(), ee = sd(y) / sqrt(n), .groups = "drop") |>
+    # Como la app (P-17): al menos 5 días de cada uno y t de Student con n − 1 grados de libertad.
+    filter(n >= 5) |> mutate(t = qt(.975, n - 1), lo = media - t * ee, hi = media + t * ee) |> select(-t)
   print(d)
   ggplot(d, aes(dia, media)) + geom_col(fill = "#2D6B63") + geom_errorbar(aes(ymin = lo, ymax = hi), width = .2) + labs(title = var, x = NULL, y = NULL) + theme_minimal()
 }
@@ -194,7 +195,34 @@ vm_campana_mueve <- list(
   leer = c("lectura", "obras_dia"),
   animo = c("valencia_muestreo", "n_muestreos", "avisos_respondidos", "tasa_respuesta", "registros_animo")
 )
+# Las parejas que la app esconde por obvias vienen en vm_familias.csv (P-31): dos variables lo son si comparten una familia
+# con lado 0, o están en lados distintos (1 y 2) de la misma. Sin ese archivo (exportaciones viejas) se usan las listas de arriba.
+.vm_fam <- if (!is.null(vm$familias) && nrow(vm$familias) > 0) mutate(vm$familias, lado = as.integer(lado)) else NULL
+
+#' Claves "a|b" (en los dos órdenes) de las parejas obvias entre `vars`, según vm_familias.csv.
+.vm_pares_obvios <- function(vars) {
+  if (is.null(.vm_fam)) return(character())
+  f <- .vm_fam[.vm_fam$variable %in% vars, ]
+  pares <- function(a, b) { e <- expand.grid(a = a, b = b, stringsAsFactors = FALSE); e <- e[e$a != e$b, ]; paste(e$a, e$b, sep = "|") }
+  unique(unlist(lapply(split(f, f$familia), function(g) {
+    todas <- g$variable[g$lado == 0]; uno <- g$variable[g$lado == 1]; dos <- g$variable[g$lado == 2]
+    c(if (length(todas) >= 2) pares(todas, todas), if (length(uno) && length(dos)) c(pares(uno, dos), pares(dos, uno)))
+  }), use.names = FALSE))
+}
+
+#' Las variables que la app cruza (vm_variables.csv); con privadas = TRUE, también el seguimiento privado. NULL sin ese archivo.
+.vm_variables <- function(privadas = FALSE) {
+  if (is.null(vm$variables) || !nrow(vm$variables)) return(NULL)
+  v <- vm$variables
+  v$variable[privadas | !(v$privada %in% c(TRUE, 1))]
+}
+
+# Lo que describe al calendario o a cuánto se registró, no a una conducta (P-32): no se cruza.
+.vm_no_cruzar <- c("fecha", "semana", "mes", "dia_semana", "fin_de_semana", "dia_libre", "festivo", "valencia_ayer", "valencia_manana",
+                   "con_diario", "n_muestreos")
+
 vm_obvia <- function(a, b) {
+  if (!is.null(.vm_fam)) return(paste(a, b, sep = "|") %in% .vm_pares_obvios(c(a, b)))
   mom <- function(v) startsWith(v, "m_") || v == "n_momentos"
   camp <- function(x, y) {
     if (x == "campanas_n") return(startsWith(y, "campana_"))
@@ -211,11 +239,14 @@ vm_obvia <- function(a, b) {
 #' sin_tendencia: cada día menos el promedio de sus ±`ventana` días, para que dos cosas que solo cambian con las semanas
 #'   (horas de luz y peso, por ejemplo) no parezcan relacionadas. Las variables casi puramente lentas se omiten.
 #' n_ef: días efectivos descontando que un día se parece al anterior (Bartlett); lo y hi usan n_ef; q: corrección BH.
-#' obvias = FALSE deja fuera las parejas de la misma familia (vm_familias).
-vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, ventana = 10, datos = panel) {
+#' obvias = FALSE deja fuera las parejas obvias, las mismas que esconde la app (vm_familias.csv).
+#' Por omisión cruza las mismas variables que la app (vm_variables.csv); privadas = TRUE suma el seguimiento privado, que la app
+#' nunca cruza; variables = c(...) elige otras columnas del panel.
+vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, ventana = 10, privadas = FALSE, variables = NULL, datos = panel) {
   datos <- arrange(datos, fecha)
-  excluir <- c("fecha", "semana", "mes", "dia_semana", "valencia_ayer", "valencia_manana", "con_diario", "n_muestreos")
-  cand <- names(datos)[map_lgl(datos, ~ is.numeric(.x) || is.logical(.x)) & !names(datos) %in% excluir]
+  if (is.null(variables)) variables <- .vm_variables(privadas)
+  cand <- names(datos)[map_lgl(datos, ~ is.numeric(.x) || is.logical(.x)) & !names(datos) %in% .vm_no_cruzar]
+  if (!is.null(variables)) cand <- intersect(variables, cand)
   dias <- as.numeric(datos$fecha)
   quitar <- function(x) {
     out <- rep(NA_real_, length(x)); ok <- which(!is.na(x))
@@ -239,9 +270,10 @@ vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, vent
   }
   vs <- names(S); if (length(vs) < 2) return(tibble())
   pares <- combn(vs, 2)
+  obv <- .vm_pares_obvios(vs)
   res <- map_dfr(seq_len(ncol(pares)), function(k) {
     a <- pares[1, k]; b <- pares[2, k]; sa <- S[[a]]; sb <- S[[b]]
-    ob <- vm_obvia(a, b)
+    ob <- if (!is.null(.vm_fam)) paste(a, b, sep = "|") %in% obv else vm_obvia(a, b)
     if (ob && !obvias) return(NULL)
     if (sin_tendencia && (sa$lenta || sb$lenta)) return(NULL)
     xa <- if (sin_tendencia) sa$r else sa$x; xb <- if (sin_tendencia) sb$r else sb$x
@@ -261,31 +293,85 @@ vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, vent
     arrange(desc(seguro), desc(abs(r))) |> select(-seguro)
 }
 
-#' Todo lo que se asocia con un objetivo: diferencias (variables 0/1) o correlación de Spearman, con corrección BH.
-#' Se omiten las variables de la misma familia que el objetivo (la misma medida por otra vía).
-vm_factores <- function(objetivo = "valencia", desfase = 0, min_n = 14, datos = panel) {
-  datos <- arrange(datos, fecha)
-  yv <- lead(.vm_dato(datos, objetivo), desfase)
-  excluir <- c("fecha", "semana", "mes", "dia_semana", objetivo, "valencia_ayer", "valencia_manana",
-               unlist(keep(vm_familias, ~ objetivo %in% .x)))
-  cand <- names(datos)[map_lgl(datos, ~ is.numeric(.x) || is.logical(.x)) & !names(datos) %in% excluir]
+# Piezas comunes con la app (ciencia/Estadistica.kt), para que R dé los mismos intervalos (P-17).
+#' Cada día menos el promedio de sus ±ventana días de calendario con dato (si hay al menos 3), como sinTendencia() de la app.
+.vm_sin_tendencia <- function(f, x, ventana = 10) {
+  d <- as.numeric(f); out <- rep(NA_real_, length(x)); ok <- which(!is.na(x))
+  for (i in ok) { w <- ok[abs(d[ok] - d[i]) <= ventana]; if (length(w) >= 3) out[i] <- x[i] - mean(x[w]) }
+  out
+}
+#' Autocorrelación de un día al siguiente (solo días seguidos); NULL con menos de 10 pares, como ar1() de la app.
+.vm_ar1 <- function(f, x) {
+  m <- match(f + 1, f); ok <- !is.na(x) & !is.na(m) & !is.na(x[m])
+  if (sum(ok) < 10) return(NULL)
+  r <- suppressWarnings(cor(x[ok], x[m][ok])); if (is.na(r)) NULL else r
+}
+#' Diferencia de medias entre dos grupos de días (fechas fa y fb), con t de Welch y el error estándar corregido por la
+#' autocorrelación de cada grupo (más la corrección de Marriott y Pope para series cortas): diferenciaEnDias() de la app.
+.vm_dif_dias <- function(fa, ya, fb, yb) {
+  if (length(ya) < 3 || length(yb) < 3) return(NULL)
+  oa <- order(fa); ob <- order(fb); fa <- fa[oa]; ya <- ya[oa]; fb <- fb[ob]; yb <- yb[ob]
+  corregida <- function(f, y) { r <- .vm_ar1(f, y); if (is.null(r)) NULL else r + (1 + 4 * r) / length(y) }
+  fj <- c(fa, fb); yj <- c(ya - mean(ya), yb - mean(yb)); o <- order(fj); fj <- fj[o]; yj <- yj[o]; u <- !duplicated(fj)
+  comun <- corregida(fj[u], yj[u]); if (is.null(comun)) comun <- 0
+  ra <- corregida(fa, ya); if (is.null(ra)) ra <- comun
+  rb <- corregida(fb, yb); if (is.null(rb)) rb <- comun
+  ra <- min(max(ra, 0), .9); rb <- min(max(rb, 0), .9)
+  na <- max(length(ya) * (1 - ra) / (1 + ra), 2); nb <- max(length(yb) * (1 - rb) / (1 + rb), 2)
+  sa <- var(ya) / length(ya) * (1 + ra) / (1 - ra); sb <- var(yb) / length(yb) * (1 + rb) / (1 - rb)
+  se <- sqrt(sa + sb); d <- mean(ya) - mean(yb)
+  if (se == 0) return(list(d = d, lo = d, hi = d, se = 0, gl = na + nb - 2, p = if (d == 0) 1 else 0))
+  gl <- min(max((sa + sb)^2 / (sa^2 / (na - 1) + sb^2 / (nb - 1)), 1), na + nb - 2)
+  t <- qt(.975, gl)
+  list(d = d, lo = d - t * se, hi = d + t * se, se = se, gl = gl, p = 2 * pt(-abs(d / se), gl))
+}
+
+#' Todo lo que se mueve con un objetivo, como «Todo lo que se mueve con algo» de la app (P-17).
+#' sin_tendencia = TRUE: cada día se compara con sus semanas cercanas (objetivo y variable). Las variables continuas, con r de
+#' Pearson y el n efectivo (n_ef, que descuenta que un día se parece al anterior); las 0/1, con la diferencia de medias del
+#' objetivo entre los días con y sin, con t de Welch y el error estándar corregido por autocorrelación. q: corrección BH.
+#' Se omiten las parejas obvias con el objetivo (la misma medida por otra vía, una parte y su total…).
+vm_factores <- function(objetivo = "valencia", desfase = 0, sin_tendencia = TRUE, min_n = 14, ventana = 10, privadas = FALSE,
+                        variables = NULL, datos = panel) {
+  datos <- datos |> filter(!is.na(fecha)) |> arrange(fecha)
+  f <- datos$fecha
+  y0 <- as.numeric(.vm_dato(datos, objetivo))
+  y <- if (sin_tendencia) .vm_sin_tendencia(f, y0, ventana) else y0
+  rY <- .vm_ar1(f, y); if (is.null(rY)) rY <- 0
+  yEn <- y[match(f + desfase, f)]
+  if (is.null(variables)) variables <- .vm_variables(privadas)
+  cand <- names(datos)[map_lgl(datos, ~ is.numeric(.x) || is.logical(.x)) & !names(datos) %in% c(.vm_no_cruzar, objetivo)]
+  if (!is.null(variables)) cand <- intersect(variables, cand)
+  obv <- if (!is.null(.vm_fam)) .vm_pares_obvios(c(cand, objetivo)) else character()
+  misma <- unlist(keep(vm_familias, ~ objetivo %in% .x))
   res <- map_dfr(cand, function(v) {
-    x <- datos[[v]]; ok <- !is.na(x) & !is.na(yv)
-    if (sum(ok) < min_n || length(unique(x[ok])) < 2) return(NULL)
-    xs <- as.numeric(x[ok]); ys <- yv[ok]
-    if (all(xs %in% c(0, 1))) {
-      if (sum(xs == 1) < 5 || sum(xs == 0) < 5) return(NULL)
-      t <- t.test(ys[xs == 1], ys[xs == 0])
-      tibble(variable = v, tipo = "0/1", efecto = unname(diff(rev(t$estimate))), lo = t$conf.int[1], hi = t$conf.int[2], n = sum(ok), p = t$p.value)
+    if (if (!is.null(.vm_fam)) paste(v, objetivo, sep = "|") %in% obv else v %in% misma || vm_obvia(v, objetivo)) return(NULL)
+    x0 <- as.numeric(datos[[v]]); hay <- !is.na(x0)
+    if (sum(hay) < 10) return(NULL)
+    if (all(x0[hay] %in% c(0, 1))) {
+      con <- hay & x0 == 1 & !is.na(yEn); sin <- hay & x0 == 0 & !is.na(yEn)
+      if (sum(con) < 5 || sum(sin) < 5) return(NULL)
+      d <- .vm_dif_dias(f[con], yEn[con], f[sin], yEn[sin])
+      if (is.null(d) || d$se <= 0) return(NULL)
+      tibble(variable = v, tipo = "0/1", efecto = d$d, lo = d$lo, hi = d$hi, n = sum(con) + sum(sin), n_con = sum(con), n_sin = sum(sin),
+             n_ef = NA_real_, p = d$p)
     } else {
-      ct <- suppressWarnings(cor.test(xs, ys, method = "spearman", exact = FALSE)); r <- unname(ct$estimate)
-      z <- atanh(min(max(r, -.999), .999)); e <- 1.96 / sqrt(sum(ok) - 3)
-      tibble(variable = v, tipo = "rho", efecto = r, lo = tanh(z - e), hi = tanh(z + e), n = sum(ok), p = ct$p.value)
+      x <- if (sin_tendencia) .vm_sin_tendencia(f, x0, ventana) else x0
+      ok <- !is.na(x) & !is.na(yEn); n <- sum(ok)
+      if (n < min_n) return(NULL)
+      r <- suppressWarnings(cor(x[ok], yEn[ok])); if (is.na(r)) return(NULL)
+      ra <- .vm_ar1(f, x); if (is.null(ra)) ra <- 0
+      ra <- min(max(ra, -.5), .97); rb <- min(max(rY, -.5), .97)
+      n_ef <- min(max(n * (1 - ra * rb) / (1 + ra * rb), min(4, n)), n)
+      if (n_ef <= 3) return(NULL)
+      z <- atanh(min(max(r, -.9999), .9999)); se <- 1 / sqrt(n_ef - 3)
+      tibble(variable = v, tipo = "r", efecto = r, lo = tanh(z - 1.96 * se), hi = tanh(z + 1.96 * se), n = n, n_con = NA_integer_,
+             n_sin = NA_integer_, n_ef = round(n_ef, 1), p = 2 * pnorm(-abs(z / se)))
     }
   })
   if (!nrow(res)) return(res)
-  res |> mutate(q = p.adjust(p, "BH"), firme = q < .1) |> arrange(p) |>
-    left_join(vm_dic |> filter(archivo == "vm_panel.csv") |> select(variable = columna, descripcion), by = "variable")
+  dic <- vm_dic |> filter(archivo %in% c("vm_panel_extendido.csv", "vm_panel.csv")) |> distinct(variable = columna, .keep_all = TRUE) |> select(variable, descripcion)
+  res |> mutate(q = p.adjust(p, "BH"), firme = q < .1) |> arrange(p) |> left_join(dic, by = "variable")
 }
 
 #' Regresión con variables estandarizadas; con ayer = TRUE controla por el objetivo del día anterior.
@@ -337,19 +423,33 @@ vm_ritmo <- function(dias = 56) {
     labs(x = NULL, y = NULL, title = "Noches") + theme_minimal()
 }
 
-#' Palabras del diario asociadas con días buenos y difíciles.
+#' Palabras del diario asociadas con días buenos y difíciles, como la app (P-32): las mismas palabras vacías (sin importar
+#' acentos) y la misma referencia, la valencia media de los días con nota.
 vm_palabras <- function(min_dias = 5) {
   if (is.null(vm$dias)) stop("No hay diario.")
-  vacias <- c("de","la","que","el","en","y","a","los","se","del","las","un","por","con","no","una","su","para","es","al","lo","como","más","mas","pero","sus","le","ya","o","este","sí","si","porque","esta","entre","cuando","muy","sin","sobre","también","me","hasta","hay","donde","quien","desde","todo","nos","durante","todos","uno","les","ni","contra","otros","ese","eso","ante","ellos","e","esto","mí","antes","algunos","qué","unos","yo","otro","otras","otra","él","tanto","esa","estos","mucho","quienes","nada","muchos","cual","poco","ella","estar","estas","algunas","algo","nosotros","mi","mis","tú","te","ti","tu","tus","hoy","día","fue","estaba","fui","era","tengo","tenía","hice","creo","luego","después","bien","vez")
-  d <- vm$dias |> filter(!is.na(nota), nzchar(nota)) |> select(fecha, valencia, nota) |>
-    mutate(p = str_extract_all(str_to_lower(nota), "[\\p{L}]{3,}")) |> select(-nota) |> unnest(p) |> filter(!p %in% vacias) |> distinct(fecha, valencia, p)
-  media <- mean(vm$dias$valencia, na.rm = TRUE)
+  vacias <- c("a", "al", "algo", "algunas", "algunos", "ante", "antes", "aquel", "aquella", "aquello", "aqui", "aquí", "asi", "así", "aun", "aún",
+    "bien", "cada", "casi", "como", "cómo", "con", "contra", "cual", "cuando", "cuándo", "de", "del", "desde", "donde", "dónde", "dos", "el", "él",
+    "ella", "ellas", "ellos", "en", "entre", "era", "eran", "es", "esa", "esas", "ese", "eso", "esos", "esta", "está", "estaba", "estaban", "estar",
+    "este", "esto", "estos", "estoy", "fue", "fueron", "fui", "ha", "habia", "había", "han", "hasta", "hay", "hice", "hizo", "la", "las", "le", "les",
+    "lo", "los", "mas", "más", "me", "mi", "mí", "mis", "mucho", "muy", "nada", "ni", "no", "nos", "nosotros", "o", "otra", "otras", "otro", "otros",
+    "para", "pero", "poco", "por", "porque", "que", "qué", "quien", "quién", "se", "sea", "ser", "si", "sí", "sido", "sin", "sobre", "solo", "sólo",
+    "son", "su", "sus", "también", "tan", "tanto", "te", "tengo", "tenia", "tenía", "ti", "tiene", "tienen", "todo", "todos", "tu", "tú", "tus", "un",
+    "una", "unas", "uno", "unos", "usted", "ya", "yo", "hoy", "dia", "día", "luego", "despues", "después", "creo", "pues", "igual", "ahora", "vez",
+    "veces", "cosa", "cosas", "hacer", "hace", "estuve", "estuvo", "tuve", "tuvo", "voy", "iba", "ir", "fui", "fue", "pude", "puedo", "quiero",
+    "queria", "quería", "siento", "senti", "sentí")
+  sin_acentos <- function(x) stringi::stri_trans_general(x, "NFD; [:Nonspacing Mark:] Remove; NFC")
+  vacias <- unique(sin_acentos(vacias))
+  con_nota <- vm$dias |> filter(!is.na(nota), nzchar(trimws(nota)))
+  d <- con_nota |> select(fecha, valencia, nota) |>
+    mutate(p = str_extract_all(str_to_lower(nota), "[\\p{L}]{3,}")) |> select(-nota) |> unnest(p) |> filter(!sin_acentos(p) %in% vacias) |> distinct(fecha, valencia, p)
+  media <- mean(con_nota$valencia, na.rm = TRUE)
   d |> filter(!is.na(valencia)) |> group_by(palabra = p) |> summarise(dias = n(), media = mean(valencia), .groups = "drop") |>
     filter(dias >= min_dias) |> mutate(diferencia = media - !!media) |> arrange(desc(diferencia))
 }
 
-#' Días que se salen de lo normal (z robusto con mediana y MAD).
-vm_atipicos <- function(vars = c("valencia", "sueno_h", "pasos", "pantalla_min", "gasto_total", "notificaciones", "desbloqueos", "km"), z = 3, datos = panel) {
+#' Días que se salen de lo normal (z robusto con mediana y MAD), en las mismas variables que revisa la app.
+vm_atipicos <- function(vars = c("valencia", "sueno_horas", "pasos", "pantalla_min", "desbloqueos", "gasto_total", "notificaciones", "fotos",
+                                 "distancia_km", "min_hablado", "wa_mios", "musica_min", "fc_reposo", "hrv", "palabras"), z = 3, datos = panel) {
   vars <- intersect(vars, names(datos))
   datos |> select(fecha, all_of(vars)) |> pivot_longer(-fecha, names_to = "variable", values_to = "valor") |> filter(!is.na(valor)) |>
     group_by(variable) |> mutate(z = (valor - median(valor)) / mad(valor)) |> ungroup() |> filter(is.finite(z), abs(z) >= !!z) |> arrange(desc(fecha))
@@ -532,24 +632,29 @@ vm_presion <- function() {
 #' Tu red personal con igraph: densidad, restricción de Burt (qué tanto tus contactos se conocen entre sí) y composición por relación.
 #' Solo con las líneas que dijiste (declaradas = TRUE) o también con quienes aparecen juntos al menos `min_juntos` días.
 #' Requiere igraph:  install.packages("igraph")
+#' Como la app (P-32): «no se conocen» nunca es línea, aunque aparezcan juntas; los grupos no cuentan a quien no tiene ninguna
+#' línea (van aparte, en aisladas). La app pide 2 días juntas y dibuja 45 personas; la exportación trae hasta 400.
 vm_red <- function(declaradas = FALSE, min_juntos = 2) {
-  if (is.null(vm$red_nodos)) stop("No hay red: menciona personas con @ o di quién conoce a quién en Tu gente.")
+  if (is.null(vm$red_nodos) || !nrow(vm$red_nodos)) stop("No hay red: menciona personas con @ o di quién conoce a quién en Tu gente.")
   v <- vm$red_vinculos
-  v <- v[(!is.na(v$tipo_declarado) & v$tipo_declarado != "no_se_conocen") | (!declaradas & v$dias_juntos >= min_juntos), ]
-  g <- igraph::graph_from_data_frame(v[, c("a", "b")], directed = FALSE, vertices = vm$red_nodos)
+  if (is.null(v) || !nrow(v)) v <- tibble(a = character(), b = character(), tipo_declarado = character(), dias_juntos = integer())
+  no <- !is.na(v$tipo_declarado) & v$tipo_declarado == "no_se_conocen"
+  v <- v[!no & (!is.na(v$tipo_declarado) | (!declaradas & v$dias_juntos >= min_juntos)), ]
+  g <- igraph::graph_from_data_frame(as.data.frame(v[, c("a", "b")]), directed = FALSE, vertices = as.data.frame(vm$red_nodos))
   # Tú (ego) unido a todas: así la restricción de Burt se calcula sobre tu red personal.
   g_ego <- igraph::add_vertices(g, 1, name = "yo")
   g_ego <- igraph::add_edges(g_ego, as.vector(rbind("yo", igraph::V(g)$name)))
   r <- list(
     densidad = igraph::edge_density(g),
-    componentes = igraph::components(g)$no,
+    componentes = sum(igraph::components(g)$csize > 1),
+    aisladas = sum(igraph::components(g)$csize == 1),
     restriccion_burt = unname(igraph::constraint(g_ego)[igraph::V(g_ego)$name == "yo"]),
     grado = sort(igraph::degree(g), decreasing = TRUE),
     # Composición y color por grupo de relación (familia, pareja, amistad, trabajo…), como la Red de la app; las exportaciones
     # de antes de la columna «grupo» usan la relación tal cual.
     composicion = table(if (!is.null(vm$red_nodos$grupo)) vm$red_nodos$grupo else vm$red_nodos$relacion, useNA = "ifany")
   )
-  print(r[c("densidad", "componentes", "restriccion_burt")])
+  print(r[c("densidad", "componentes", "aisladas", "restriccion_burt")])
   grupo <- if (!is.null(vm$red_nodos$grupo)) vm$red_nodos$grupo else vm$red_nodos$relacion
   plot(g, vertex.size = 4 + 2 * sqrt(vm$red_nodos$dias_mencion), vertex.label.cex = .7, vertex.color = as.integer(factor(grupo)))
   invisible(r)
