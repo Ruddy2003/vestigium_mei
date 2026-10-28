@@ -1,6 +1,6 @@
 # Capítulo 3. Medición del estado subjetivo
 
-> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento, el ánimo del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras (la brújula política, la prueba de reacción). Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número para los análisis y qué tan sólido es eso científicamente. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» (y lo de la revisión de navegación, «desde N1…N7») y está en el Apéndice D. **Los ejemplos numéricos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento, el ánimo del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras (la brújula política, la prueba de reacción). Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número para los análisis y qué tan sólido es eso científicamente. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» (lo de la revisión de navegación, «desde N1…N7», y lo de la entrega 10e, posterior al módulo 14, «desde 10e») y está en el Apéndice D. **Los ejemplos numéricos son inventados.**
 >
 > **Cómo leerlo.** Está escrito para entenderse sin ser experto, pero sin recortar la precisión. Las cifras y reglas que vienen del código se dan tal cual. Cuando algo no lo pude comprobar, lo digo. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-2-n (el número es el del módulo 2, en el que se escribió este capítulo, no el del capítulo) y se detallan en `hallazgos.md`.
 >
@@ -35,7 +35,7 @@
 | Ánimo al cerrar el día | Al principio de la hoja de la noche, solo la de hoy (hasta la entrega N4, al final) | Cuadrícula 7 × 7 | `Momento` tipo `animo`, origen `cierre` | `animo_cierre_valencia`, `animo_cierre_activacion` |
 | Ánimo del día (diario) | Aviso a las 22:00 por omisión | Valencia 1–7, activación 1–7, dolor 0–5, con anclas | `Dia` | `valencia`, `activacion`, `dolor` |
 | Emociones con nombre, pensamiento, con quién | Dentro de cualquier registro de ánimo (opcional) | Listas | `Momento` | `n_<emoción>`, `n_<pensamiento>`, `con_*`, `acompanado_pct` |
-| Predicción de mañana | En la hoja de la noche | 1–7 | `Dia` | `prediccion`, `error_prediccion` |
+| Predicción de mañana | En la hoja de la noche | 1–7 | `Dia` | `prediccion`, `error_prediccion`, `error_prediccion_signo` (desde 10e) |
 | «Lectura del día» (flujo, necesidades, evaluación) | En la hoja de la noche, plegada | Opción única | `Dia` | `flow_*`, `sdt_necesidad_*`, `apreciacion_*` |
 | Cuestionarios (WHO-5, PSS-4, UCLA-3, TIPI) | Semanal, mensual o anual | Las de cada instrumento | `Respuesta` | `esc_<instrumento>_<puntaje>` |
 | Sueño y sueños | Aviso a las 8:00 por omisión | Calidad 1–5, valencia 1–7, ejes de contenido | `Dia` | `sueno_calidad`, `sueno_recordado`, `sueno_<categoría>`… |
@@ -316,11 +316,17 @@ En la hoja de la noche: «¿Cómo crees que estará tu ánimo mañana?», de 1 a
 
   `error_prediccion` = | predicción de ayer − valencia de hoy |
 
-(`Estadistica.panel`; solo si existen las dos).
+y, desde 10e (D.94),
+
+  `error_prediccion_signo` = valencia de hoy − predicción de ayer
+
+(`Estadistica.panel`; las dos solo si existen la predicción de la noche anterior y la valencia de hoy). La segunda va de −6 a +6: **positiva** si el día salió **mejor** de lo que predijiste, **negativa** si salió peor. `error_prediccion` es su valor absoluto.
 
 **Para qué.** Las personas solemos equivocarnos al predecir cómo nos sentiremos: sobrestimamos cuánto y cuánto tiempo nos afectarán los eventos (*pronóstico afectivo*; Wilson y Gilbert, 2005). Medir el error permite ver si con el tiempo te conoces mejor y qué días predices peor. **[Validado]** la idea; **[Diseño propio]** la variable.
 
-**Qué se pierde al usar el valor absoluto (H-2-10).** El valor absoluto quita la dirección del error. Ejemplo (inventado): el lunes predices 6 y el martes resulta 4 → error 2 (fuiste **optimista**). El miércoles predices 3 y el jueves resulta 5 → error 2 (fuiste **pesimista**). Para la variable son iguales, aunque son sesgos opuestos. Si quieres saber si tiendes al optimismo, hace falta también el **error con signo** (valencia − predicción). Gravedad baja; se resuelve agregando una columna. En la v90 sigue pendiente: ni el panel ni R tienen esa columna, aunque se puede calcular en R con `prediccion` del día anterior y `valencia`.
+**Qué se pierde al usar el valor absoluto (H-2-10).** El valor absoluto quita la dirección del error. Ejemplo (inventado): el lunes predices 6 y el martes resulta 4 → error 2 (fuiste **optimista**). El miércoles predices 3 y el jueves resulta 5 → error 2 (fuiste **pesimista**). Para la variable son iguales, aunque son sesgos opuestos. Si quieres saber si tiendes al optimismo, hace falta también el **error con signo**. En la v90 no existía: había que calcularlo en R con `prediccion` del día anterior y `valencia`. Desde 10e es `error_prediccion_signo` (H-2-10, resuelto). Con el ejemplo: el martes vale 4 − 6 = **−2** (optimista) y el jueves 5 − 3 = **+2** (pesimista). Si su promedio en un mes es −0.8, ese mes tendiste a esperar días mejores de los que tuviste. **[Diseño propio]** la variable, como la otra.
+
+**Cuándo falla.** (a) Hereda la regla de la otra: sin predicción la noche anterior o sin valencia hoy, queda vacía, y los días que faltan no son al azar (sección 3.15). (b) Como se calcula con la valencia de hoy, **se mueve con `valencia` por construcción**: un día bueno tiende a dar un error positivo aunque la predicción no cambie. Por eso `Estadistica.FAMILIAS` la marca como obvia con `prediccion`, `error_prediccion` y `valencia` (desde 10e, también `error_prediccion` con `valencia`): esas parejas no salen en «Las relaciones más marcadas» salvo con «Mostrar también las obvias» (capítulo 2, sección 2.7).
 
 ---
 
@@ -601,7 +607,7 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 5. Hasta el esquema 12 no se guardaba cuántos avisos se mostraron, así que no hay tasa de respuesta de esos días (H-2-3); desde el esquema 13 (10b) el panel tiene `avisos_*` y `tasa_respuesta`.
 6. El **registro de un toque** para días difíciles es una buena defensa contra el sesgo de los días malos sin registrar.
 7. Los cuestionarios están bien puntuados (incluidas las preguntas inversas), pero WHO-5 y PSS-4 usan un periodo de 7 días distinto al original, y algunos puntos de corte que muestra la app no los pude verificar.
-8. El módulo 2 identificó **15 hallazgos** (H-2-1 a H-2-15) y no cambió código. Después, el módulo 10 resolvió H-2-1, H-2-2, H-2-3, H-2-4, H-2-7, H-2-12 y H-2-14, y en parte H-2-5, H-2-6 y H-2-15; la revisión de navegación (esquema 14) resolvió H-2-8 (completado en 10c), H-2-9 y H-2-11. Siguen pendientes H-2-10 y H-2-13.
+8. El módulo 2 identificó **15 hallazgos** (H-2-1 a H-2-15) y no cambió código. Después, el módulo 10 resolvió H-2-1, H-2-2, H-2-3, H-2-4, H-2-7, H-2-12 y H-2-14, y en parte H-2-5, H-2-6 y H-2-15; la revisión de navegación (esquema 14) resolvió H-2-8 (completado en 10c), H-2-9 y H-2-11; el módulo 10d, en parte, H-2-13, y la entrega 10e, H-2-10 (`error_prediccion_signo`, D.94). Ya no queda ninguno pendiente.
 
 ---
 

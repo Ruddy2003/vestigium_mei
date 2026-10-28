@@ -1,6 +1,6 @@
 # Capítulo 2. Inventario y arquitectura de datos
 
-> **Para qué sirve este capítulo.** Explica *cómo se obtiene, se guarda, se asigna a un día y se organiza* cada dato de Vestigium Mei, y por qué cada decisión es razonable (o no). Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`). Los ejemplos numéricos son **sintéticos**. Cada decisión se marca como **[Validado]** (respaldada por literatura o por un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app sin referente directo). Los hallazgos de este capítulo son H-1-n (módulo 1); los H-9-n son de la revisión general.
+> **Para qué sirve este capítulo.** Explica *cómo se obtiene, se guarda, se asigna a un día y se organiza* cada dato de Vestigium Mei, y por qué cada decisión es razonable (o no). Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». Los ejemplos numéricos son **sintéticos**. Cada decisión se marca como **[Validado]** (respaldada por literatura o por un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app sin referente directo). Los hallazgos de este capítulo son H-1-n (módulo 1); los H-9-n son de la revisión general.
 
 ---
 
@@ -105,7 +105,7 @@ Una fila se crea para cada fecha que aparece en *alguna* fuente. Una variable re
 | `gasto_total`, `gasto_imprevisto`, `n_impulso`, `escalada`, `gimnasio`; emociones `n_*`, `registros_animo`, `ingreso_total` y otras | desde el primer registro de su fuente, en días con diario (en algunas, o con datos de esa fuente) |
 | Hábitos `hab_<id>` | desde `Habito.desde` (el día en que se creó el hábito) |
 | `sueno_recordado` | solo si ese día se dijo algo del sueño |
-| Variables sociales (`personas`, `vi_*`, `per_`, `pen_`…) | solo en días en que se pudo nombrar a alguien (`Dinamicas.diasSociales`) |
+| Variables sociales (`personas`, `vi_*`, `per_`, `pen_`…) | solo en días en que se pudo nombrar a alguien (`Dinamicas.diasSociales`); desde 10e, `personas` cuenta a quien nombras en el diario y en los momentos no privados (D.93) |
 | `ctx_*`, `dia_dificil`, `palabras`, `hitos_n` y otras | en todos los días con diario |
 | Pasos, sueño del reloj, pantalla, clima, HRV… | nunca: sin lectura no hay dato |
 
@@ -119,7 +119,7 @@ La lista completa está en la versión completa, §2.6.1.
 
 ### 2.6.2 Agregación de eventos a día y otras variables
 
-La operación sigue la naturaleza física de la variable: las cantidades extensivas (minutos, gastos, pasos) se **suman**; los estados intensivos (valencia) se **promedian**; los eventos raros se **cuentan** o se marcan 0/1. Así, `muestreo_valencia` es la media de los avisos del día (`null` si no hay avisos); `escalada_grado` toma el máximo, porque el desempeño en escalada se evalúa por su pico; `aire_libre_min` toma el máximo entre la luz alta del teléfono y el tiempo a pie, corriendo o en bici (dos aproximaciones a lo mismo, **[Aproximación]**). `gasto_imprevisto` es **binaria** (¿hubo algún gasto imprevisto?), no un monto (H-1-5, abierto). **[Diseño propio]** cada operador.
+La operación sigue la naturaleza física de la variable: las cantidades extensivas (minutos, gastos, pasos) se **suman**; los estados intensivos (valencia) se **promedian**; los eventos raros se **cuentan** o se marcan 0/1. Así, `muestreo_valencia` es la media de los avisos del día (`null` si no hay avisos); `escalada_grado` toma el máximo, porque el desempeño en escalada se evalúa por su pico; `aire_libre_min` toma el máximo entre la luz alta del teléfono y el tiempo a pie, corriendo o en bici (dos aproximaciones a lo mismo, **[Aproximación]**). `gasto_imprevisto` es **binaria** (¿hubo algún gasto imprevisto?); desde 10e, el monto va en `gasto_imprevisto_monto`, con la misma regla de 0 que `gasto_total` (H-1-5, resuelto, D.94). `error_prediccion_signo` (desde 10e) es la valencia de hoy menos la predicción de ayer (capítulo 3). **[Diseño propio]** cada operador.
 
 Las escalas del diario (valencia y activación, 1–7) son **ordinales**: la distancia entre 3 y 4 no es necesariamente la de 6 a 7; los análisis usan métodos de rangos (Spearman, capítulo 6) cuando la variable es ordinal. Algunos códigos se vuelven números que solo preservan el orden: `sueno_lucidez` (no = 0, parcial = 1, total = 2). `luna_ilum` se calcula con una fórmula astronómica para cada fecha: es **exógena y completa**, útil como control negativo (si aparece una asociación con la luna, probablemente es ruido o multiplicidad).
 
@@ -127,7 +127,7 @@ Las escalas del diario (valencia y activación, 1–7) son **ordinales**: la dis
 
 ## 2.7 Familias de variables dinámicas
 
-Hay **184** variables fijas (cada identificador que `Estadistica.variables()` escribe con su nombre): 128 existen siempre y 56 solo si hay datos de su fuente. Siete son privadas: la app no las cruza y van a R. Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por persona (`per_*`, `pen_*`), tema, lugar, app, categoría de gasto, artista, ciudad, nutriente… (27 prefijos, Apéndice A), y también hábitos, emociones usadas y campañas.
+Hay **186** variables fijas desde 10e (cada identificador que `Estadistica.variables()` escribe con su nombre; 184 en la v90): 130 existen siempre y 56 solo si hay datos de su fuente. Las dos nuevas son `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94). Siete son privadas: la app no las cruza y van a R. Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por persona (`per_*`, `pen_*`), tema, lugar, app, categoría de gasto, artista, ciudad, nutriente… (27 prefijos, Apéndice A), y también hábitos, emociones usadas y campañas.
 
 - **Análisis:** entran solo las más frecuentes de cada familia, con un tope y un mínimo de días (por ejemplo, `per_`: máx. 15, mín. 5 días; `Dinamicas.familia`).
 - **Exportación extendida (`vm_panel_extendido.csv`):** todas las que aparecen en al menos 2 días, hasta 400 por familia.
@@ -154,7 +154,7 @@ La app exporta **51 tablas CSV** de datos (`Exportar.tablas()`, Apéndice A), m�
 
 Una prueba JVM (`ExportacionPrueba`) comprueba con datos inventados que la app da los mismos números que R, y con una exportación real el autor comprobó que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026).
 
-**Cuándo falla.** El diccionario describe el *significado* pero no versiona cada variable: si una definición cambia entre versiones, solo refleja la actual, y una exportación antigua puede no ser comparable (`schema_v` ayuda, pero no a nivel de variable) (H-1-8, abierto).
+**Cuándo falla.** El diccionario describe el *significado* pero no versiona cada variable: si una definición cambia entre versiones, solo refleja la actual, y una exportación antigua puede no ser comparable (`schema_v` ayuda, pero no a nivel de variable) (H-1-8, abierto). Desde 10e, el diccionario dice los parámetros con que se calcularon las variables de modelos (vida media, carga y lavado; D.99), y el LEEME dice «esquema 13» y «esquema 14», no «v13» y «v14», y dónde está el esquema de cada día (`schema_v` de `vm_dias.csv`; D.107).
 
 ---
 
@@ -190,4 +190,4 @@ Una prueba JVM (`ExportacionPrueba`) comprueba con datos inventados que la app d
 4. El panel distingue **valor, cero estructural y sin dato**; desde la entrega 10c hay una sola regla, `ceroDesde`: 0 desde el primer registro de la fuente y solo en los días que se pudieron responder.
 5. Las variables dinámicas (una por persona, lugar, tema…) exigen control de multiplicidad.
 6. La exportación sigue principios tidy y FAIR, y desde la entrega 10d R analiza el mismo panel que la app.
-7. El módulo 1 anotó 9 hallazgos (H-1-1 a H-1-9). El módulo 10 resolvió H-1-1 (salvo el abandono de una función), H-1-2, H-1-3 y H-1-6, y en parte H-1-9; siguen abiertos H-1-4, H-1-5, H-1-7 y H-1-8.
+7. El módulo 1 anotó 9 hallazgos (H-1-1 a H-1-9). El módulo 10 resolvió H-1-1 (salvo el abandono de una función), H-1-2, H-1-3 y H-1-6, y en parte H-1-9; la entrega 10e, H-1-5. Siguen abiertos H-1-4, H-1-7 y H-1-8.

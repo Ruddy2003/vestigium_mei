@@ -1,6 +1,6 @@
 # Capítulo 3. Medición del estado subjetivo
 
-> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento y el del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras. Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número y qué tan sólido es eso. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`). **Los ejemplos numéricos son inventados.** Los hallazgos se numeran H-2-n (módulo 2). El seguimiento privado se describe solo en su mecánica.
+> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento y el del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras. Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número y qué tan sólido es eso. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». **Los ejemplos numéricos son inventados.** Los hallazgos se numeran H-2-n (módulo 2). El seguimiento privado se describe solo en su mecánica.
 
 ---
 
@@ -123,7 +123,11 @@ La cuadrícula «Cómo estás ahora» (`BloqueCierre`) guarda un registro `animo
 
 $$ \text{error\_prediccion} = |\,\text{predicción de ayer} - \text{valencia de hoy}\,| $$
 
-Solemos equivocarnos al predecir cómo nos sentiremos (*pronóstico afectivo*; Wilson y Gilbert, 2005). **[Validado]** la idea; **[Diseño propio]** la variable. El valor absoluto quita la dirección: predecir 6 y obtener 4 (optimista) y predecir 3 y obtener 5 (pesimista) dan el mismo error, 2. El error con signo no está en el panel, aunque se puede calcular en R (H-2-10, pendiente).
+Solemos equivocarnos al predecir cómo nos sentiremos (*pronóstico afectivo*; Wilson y Gilbert, 2005). **[Validado]** la idea; **[Diseño propio]** la variable. El valor absoluto quita la dirección: predecir 6 y obtener 4 (optimista) y predecir 3 y obtener 5 (pesimista) dan el mismo error, 2. Por eso, desde 10e, el panel tiene también el error con signo (D.94; H-2-10, resuelto):
+
+$$ \text{error\_prediccion\_signo} = \text{valencia de hoy} - \text{predicción de ayer} $$
+
+De −6 a +6; positivo si el día salió mejor de lo predicho. En el ejemplo, −2 y +2. **[Diseño propio]**. Se mueve con `valencia` por construcción; por eso la app esconde esa pareja como obvia, igual que con `prediccion` y `error_prediccion`.
 
 ---
 
@@ -232,4 +236,4 @@ Es una versión muy corta de la **prueba de vigilancia psicomotora (PVT)**, la m
 5. En 10c dejaron de codificarse como 0 varios «no respondí» (H-2-4), y el perfil nuevo ya no se proyecta hacia atrás (H-2-5); `retroactivo` usa `ts_valencia` desde el esquema 13 (H-2-2).
 6. El **registro de un toque** es una buena defensa contra los días malos sin registrar (MNAR).
 7. Los cuestionarios están bien puntuados, pero WHO-5 y PSS-4 usan 7 días en vez de su periodo original, y algunos cortes no se pudieron verificar.
-8. De los 15 hallazgos del módulo 2 siguen pendientes H-2-10 y H-2-13; H-2-5, H-2-6 y H-2-15 se resolvieron en parte.
+8. De los 15 hallazgos del módulo 2 ya no queda ninguno pendiente: H-2-10 se resolvió en 10e (D.94), y H-2-5, H-2-6, H-2-13 y H-2-15, en parte.

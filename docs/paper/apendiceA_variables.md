@@ -1,6 +1,6 @@
 # Apéndice A. Variables y tablas del sistema
 
-_Se generó a partir del código de la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper: `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt`, `data/Exportar.kt` (`tablas()`) y `data/Diccionario.kt`. Lo que cambió en el módulo 10 se marca «desde 10a…10d» y está en el Apéndice D. Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
+_Se generó a partir del código de la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper, y con la entrega 10e, posterior al módulo 14 (`SCHEMA_V` sigue en 14): `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt`, `data/Exportar.kt` (`tablas()`) y `data/Diccionario.kt`. Lo que cambió en el módulo 10 se marca «desde 10a…10d», lo de la entrega 10e, «desde 10e» (sección A.8), y todo está en el Apéndice D. Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
 
 **Cómo leer las columnas.** *Tipo* y *Unidad* se leen del nombre que ve el usuario en la app (la app no guarda un tipo formal por variable). *Fuente* es la de todo el grupo; la procedencia exacta de cada variable está en el panel (`Estadistica.panel`). *Un valor vacío significa «sin dato»; un 0 significa «se observó y fue cero»* salvo en las reglas de relleno con ceros del capítulo 2, sección 2.6. Las definiciones que cambiaron en la entrega 10c (cuándo vale 0 y cuándo queda vacía cada variable) están en la sección A.6.
 
@@ -19,6 +19,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `dia_dificil` | Día difícil (0/1) | binaria (0/1) | — | Si hay datos de la fuente |
 | `prediccion` | Predicción para mañana (1 a 7) | numérica | — | Si hay datos de la fuente |
 | `error_prediccion` | Cuánto falló la predicción de anoche | numérica | — | Si hay datos de la fuente |
+| `error_prediccion_signo` | El día contra la predicción de anoche (+ mejor, − peor): valencia de hoy − predicción de anoche, de −6 a +6 | numérica | — | Si hay datos de la fuente: los mismos días que `error_prediccion` (con valencia hoy y predicción la noche anterior); si falta una, vacía. Desde 10e (D.94) |
 | `animo_valencia` | Valencia promedio al momento (todos los registros) | numérica | — | Si hay registros de ánimo |
 | `animo_activacion` | Activación promedio al momento (todos los registros) | numérica | — | Si hay registros de ánimo |
 | `animo_cierre_valencia` | Valencia al cerrar el día | numérica | — | Si hay registros de cierre del día |
@@ -108,6 +109,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 |---|---|---|---|---|
 | `gasto_total` | Gasto del día | numérica | — | Si hay datos de la fuente |
 | `gasto_imprevisto` | Hubo gasto imprevisto (0/1) | binaria (0/1) | — | Si hay datos de la fuente |
+| `gasto_imprevisto_monto` | Gasto imprevisto (monto): suma de los gastos imprevistos del día | numérica | tu moneda | Si hay datos de la fuente: 0 desde el primer gasto en los días con diario (`ceroDesde`, como `gasto_total`) y en los días con gastos sin ninguno imprevisto; vacía antes del primer gasto. Desde 10e (D.94) |
 | `ingreso_total` | Ingresos del día | numérica | — | Si hay datos de la fuente |
 | `balance_dinero` | Ingresos menos gastos del día | numérica | — | Si hay datos de la fuente |
 
@@ -127,7 +129,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
-| `personas` | Personas distintas mencionadas | numérica | — | Si hay datos de la fuente; vacía los días sin diario escrito ni momento con @ (10c, A.6) |
+| `personas` | Personas distintas mencionadas: las nombradas con @ en el diario y, desde 10e, en los momentos no privados de ese día (D.93; antes, solo el diario) | numérica | — | Si hay datos de la fuente; vacía los días sin diario escrito ni momento con @ (10c, A.6) |
 | `presencias_revisado` | Revisaste quién estuvo y en quién solo pensaste (0/1) | binaria (0/1) | — | Días con personas en el diario o ya revisados (desde 10c) |
 | `llamadas` | Llamadas (entrantes y salientes) | numérica | — | Si hay datos de la fuente |
 | `min_hablado` | Minutos al teléfono | numérica | — | Si hay datos de la fuente |
@@ -231,7 +233,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `balance_kcal` | Calorías menos gasto estimado | numérica | — | Si hay datos de la fuente |
 | `primera_comida_h` | Hora del primer alimento | numérica | — | Si hay datos de la fuente |
 | `ultima_comida_h` | Hora del último alimento | numérica | — | Si hay datos de la fuente |
-| `cafeina_ultima_h` | Hora de la última cafeína | numérica | — | Si hay datos de la fuente |
+| `cafeina_ultima_h` | Hora de la última cafeína. Desde 10e (D.92), del día lógico, con las tomas de MacroFactor y de la app (antes de las 5:00 suma 24); antes, la de MacroFactor por día de calendario (A.8) | numérica | — | Si hay datos de la fuente |
 
 ### Cultura
 
@@ -281,7 +283,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 |---|---|---|---|---|
 | `alcohol` | Tomé alcohol (0/1) | binaria (0/1) | — | Si hay consumos de alcohol o alcohol en MacroFactor |
 | `alcohol_bebidas` | Bebidas estándar | numérica | — | Si hay consumos de alcohol o alcohol en MacroFactor |
-| `alcohol_estimado_max` | Alcohol en sangre máximo estimado (g/L) | numérica | g/L | Si hay consumos de alcohol o alcohol en MacroFactor |
+| `alcohol_estimado_max` | Alcohol en sangre máximo estimado (g/L); desde 10e cuenta lo que seguía de la noche anterior (A.8) | numérica | g/L | Si hay consumos de alcohol o alcohol en MacroFactor |
 | `alcohol_al_dormir` | Alcohol en sangre estimado al dormirme (g/L) | numérica | g/L | Si hay consumos de alcohol o alcohol en MacroFactor |
 | `alcohol_nivel_max` | Qué tan pedo llegué (0 a 10) | numérica | — | Si hay consumos de alcohol |
 | `alcohol_horas` | Horas con efecto del alcohol | numérica | — | Si hay consumos de alcohol |
@@ -323,7 +325,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
-| `creatina_saturacion_pct` | Saturación de creatina estimada (%) | numérica | % | Si el suplemento correspondiente tiene datos |
+| `creatina_saturacion_pct` | Saturación de creatina estimada (%); desde 10e, con 3 g al día como dosis de referencia (A.8) | numérica | % | Si el suplemento correspondiente tiene datos |
 | `probioticos_porciones` | Porciones de probióticos (anotadas y estimadas) | numérica | — | Si el suplemento correspondiente tiene datos |
 | `probioticos_estimado` | Porciones de probióticos leídas en tu bitácora de comidas | numérica | — | Si el suplemento correspondiente tiene datos |
 
@@ -336,7 +338,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `laptop_min` | Minutos en la laptop | numérica | — | Si se importó Cold Turkey |
 | `laptop_web_min` | Minutos en sitios web (laptop) | numérica | — | Si se importó Cold Turkey con sitios web |
 
-_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. En la v90 son **184, con 24 nombres de grupo**. Las tablas de arriba traen **183 en 21 grupos**, porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, y 10c, `presencias_revisado`. No todas existen en cada instalación: 128 se agregan siempre (4 de ellas privadas) y el resto según la columna «Existe»._
+_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. Desde 10e son **186, con 24 nombres de grupo** (184 en la v90). Las tablas de arriba traen **185 en 21 grupos**, porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, 10c, `presencias_revisado`, y 10e, `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94). No todas existen en cada instalación: 130 se agregan siempre (entre ellas, las dos de 10e y 4 privadas) y las otras 56, según la columna «Existe»._
 
 ### Variables con nombre generado
 
@@ -354,7 +356,7 @@ Estas se crean una por cada elemento que el usuario ha usado (o, en las de catá
 | `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 10 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia | Contexto |
 | `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1); siempre, 13 opciones (4, 5 y 4; «No aplica» no cuenta) | Lectura del día |
 | `hab_<id>` | Hábito: ‹nombre› (0/1) | Hábitos |
-| `supl_<id>_dosis/_tomado/_nivel/_porciones` | Dosis, toma, reserva o cantidad estimada y porciones del suplemento | Suplementos |
+| `supl_<id>_dosis/_tomado/_nivel/_porciones` | Dosis, toma, reserva o cantidad estimada y porciones del suplemento. Desde 10e, `_nivel` no existe en los suplementos de vida media menor de 6 horas (`Suplementos.VIDA_MEDIA_MIN_NIVEL`, A.8) | Suplementos |
 | `campana_<reto>`, `campana_hab_<id>` | En campaña ese día (0/1; la tenías aceptada). 0 desde tu primera campaña, vacío antes. Desde el esquema 13 | Campañas |
 | `campanas_n` | Campañas que tenías ese día. Desde el esquema 13 | Campañas |
 | `dia_especial` | Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1). Existe si hay alguna fecha guardada. Desde el esquema 13 | Calendario |
@@ -569,3 +571,21 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de alguna
 | `vm_familias.csv` | `lado` | 0 = obvia con todas las de la familia; 1 o 2 = obvia solo con las del otro lado |
 
 **Otras columnas que cambiaron (P-33).** `vm_dias.csv:schema_v` vale 0 en los días importados de Obsidian o de la versión web que no traían versión; `ts_creado` y `ts_editado` de los días de Obsidian quedan vacíos si la nota no los traía. `vm_ubicaciones.csv:precision_m` guarda la precisión de los puntos del formato viejo de Takeout (antes vacía). La descripción de `vm_red_nodos.csv:grado` aclara que usa 1 día juntas y hasta 400 personas, frente a 2 días y 45 personas en la app.
+
+## A.8 Definiciones que cambiaron en la entrega 10e
+
+Tampoco cambia lo que se guarda (`SCHEMA_V` = 14): cambia cómo se calculan algunas variables con lo ya guardado, **también en los días viejos**, y hay dos variables nuevas. Detalle y motivo en el Apéndice D (D.88 a D.107); los modelos de sustancias y suplementos se explican en el capítulo 5.
+
+| Variable | Definición desde 10e | Antes |
+|---|---|---|
+| `error_prediccion_signo` (nueva) | Valencia de hoy − predicción de la noche anterior (−6 a +6; positiva, el día salió mejor de lo predicho). Los mismos días que `error_prediccion` (D.94) | No existía; solo el valor absoluto (H-2-10) |
+| `gasto_imprevisto_monto` (nueva) | Suma de los gastos imprevistos del día; 0 desde el primer gasto en los días con diario (`ceroDesde`) y en los días con gastos sin ninguno imprevisto; vacía antes (D.94) | No existía; `gasto_imprevisto` solo dice si hubo alguno (0/1) (H-1-5) |
+| `personas` | Personas distintas nombradas con @ en el diario **y** en los momentos no privados de ese día, en los mismos días en que puede valer 0 (`Dinamicas.diasSociales`) (D.93) | Solo el diario: un día con solo momentos valía 0 aunque nombraras a alguien (H-14-2) |
+| `alcohol_estimado_max` | Cada día con alcohol mira de su primera dosis a 14 horas después, o hasta justo antes de la primera dosis del siguiente día con alcohol; la simulación incluye las dosis de las 24 horas previas, y se lee cada 5 minutos, como `Sustancias.alcoholMaximo` (D.88, D.89) | Cada día empezaba en 0 y se leía cada 10 minutos (H-4-5, H-14-5) |
+| `alcohol` | En el hilo principal, cuando aún no están calculadas las dosis de MacroFactor: 1 los días con un episodio anotado y vacío los demás (D.90). Fuera de ese caso, como en A.6 | Esos días sin episodio valían 0 (H-14-4) |
+| `cafeina_total_mg`, `alcohol_bebidas` (y lo que sale de las mismas dosis: `cafeina_al_dormir_mg`, `alcohol_estimado_max`, `alcohol_al_dormir`) | MacroFactor y la app se juntan toma por toma (`Sustancias.dosis`, `MISMA_TOMA` = 90 min). Cafeína: una toma de la app y una de MacroFactor a menos de 90 minutos y de cantidad parecida (de la mitad al doble) cuentan una vez, con la hora de la app. Alcohol: un episodio de la app y lo de MacroFactor entre su inicio y su fin (±90 minutos) son el mismo, y cuenta la fuente con más gramos (D.91) | Si MacroFactor tenía algo de esa sustancia ese día, se ignoraba todo lo de la app (H-4-2) |
+| `cafeina_ultima_h` | Hora de la última de esas mismas dosis, por día lógico; antes de las 5:00 suma 24. En `vm_panel.csv`, la misma; si no se pudo calcular, la de MacroFactor. `cafeina_mg` sigue siendo el nutriente de MacroFactor tal cual (D.92) | La de MacroFactor, por su fecha de calendario (H-4-12, en parte) |
+| `creatina_saturacion_pct` | Llega al 95 % en los días de carga (28 por omisión) con **3 g** al día, la dosis de referencia (`Suplementos.dosisReferencia`); con 5 g al día se llena antes, en unos 17 días (D.98) | Con la dosis que pusiste (5 g en el catálogo) llegaba al 95 % en 28 días (H-4-6) |
+| `supl_<id>_nivel` | Solo en los suplementos con vida media de 6 horas o más (`Suplementos.VIDA_MEDIA_MIN_NIVEL`); la melatonina del catálogo (1 hora) ya no lo tiene (D.98) | También en los de vida media corta, que a las 5:00 casi siempre valían 0 (H-4-7, en parte) |
+
+**El diccionario y el LEEME (10e).** La descripción de `cafeina_al_dormir_mg`, `creatina_saturacion_pct` y cada `supl_<id>_nivel` termina con los parámetros vigentes al exportar (vida media, o días de carga y de lavado con la dosis de referencia) y con el aviso de que cambiarlos recalcula toda la historia (`Diccionario.conParametros`, D.99; H-4-11, en parte). El LEEME y el diccionario dicen «esquema 13» y «esquema 14» donde decían «v13» y «v14», y el LEEME dice que el esquema de cada día está en `schema_v` de `vm_dias.csv` (D.107, H-14-1). Las descripciones nuevas del diccionario son las de `error_prediccion_signo`, `gasto_imprevisto_monto`, `cafeina_ultima_h` y `vm_panel_extendido.csv:personas`.
