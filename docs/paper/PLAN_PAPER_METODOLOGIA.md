@@ -26,7 +26,7 @@ _Creado el 26 oct 2026 sobre la versión v81 (commit `fa527df`). Este archivo es
 | 11 | Introducción, marco teórico, discusión y limitaciones | Opus | Alto | Caps. 1 y 11 | hecho 2026-10-28 (resumen en `resumen.md`) |
 | 12 | Ensamblado: figuras, formato y referencias | Sonnet | Medio | Documento completo | hecho 2026-10-28 (`ensamblado/`: .md, .docx y .pdf; también como documento de Claude) |
 | 13 | Corrección mecánica | Haiku | Bajo | Documento corregido | hecho 2026-10-28 (glosario en `apendiceE_glosario.md`; lista para el 14 en `pendientes_modulo14.md`) |
-| 14 | Lectura final de contenido | Opus | Medio | Versión final | pendiente |
+| 14 | Lectura final de contenido | Opus | Medio | Versión final | hecho 2026-10-28 (versión completa y versión corta en `ensamblado/` y en el documento de Claude) |
 
 **Por qué este reparto.** Opus va donde un error de razonamiento arruina el capítulo: medición psicológica, modelos fisiológicos, estadística, diseño experimental, la revisión y la discusión. Sonnet va donde el trabajo es leer mucho código y describirlo con precisión, programar figuras y ensamblar. Haiku solo hace trabajo mecánico que no requiere juicio científico.
 

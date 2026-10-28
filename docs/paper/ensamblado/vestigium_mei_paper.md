@@ -4469,7 +4469,7 @@ Lo que no puede resolver ninguna app es la naturaleza de sus datos: **una sola p
 
 ## 11.9 Resumen del capítulo
 
-1. Lo sólido: una sola regla para «cero» y «no sé», el ánimo medido de varias formas, la lista de relaciones con tres protecciones, R alineado con la app, experimentos sorteados por pares con intervalos corregidos, costuras marcadas y una sola regla de privacidad. De 158 hallazgos, 98 están resueltos, 22 en parte y 38 abiertos (6 de gravedad media, ninguno alto).
+1. Lo sólido: una sola regla para «cero» y «no sé», el ánimo medido de varias formas, la lista de relaciones con tres protecciones, R alineado con la app, experimentos sorteados por pares con intervalos corregidos, costuras marcadas y una sola regla de privacidad. De 158 hallazgos, 97 están resueltos, 24 en parte y 37 abiertos (6 de gravedad media, ninguno alto); el módulo 14 sumó seis de gravedad baja (H-14-1 a H-14-6).
 2. Lo que se puede concluir depende de la herramienta: descripción, asociación de corto plazo dentro de tus días, predicción con desfase o efecto causal en un experimento. Ninguna generaliza a otras personas, y solo valen para tu futuro si tu vida no cambió en lo importante.
 3. La lista de relaciones usa toda la historia, como si las relaciones fueran las mismas en todas las etapas (H-11-1, nuevo), y las maneras de mirar los datos no entran en ninguna corrección (H-11-2, nuevo).
 4. Muchas variables miden algo distinto de su nombre: recuerdos, proxies, modelos o cuánto escribes. Hay que leer cada relación con el nombre verdadero de sus variables.

@@ -142,7 +142,7 @@ def norm(s):
 
 def citada(e, cuerpo):
     """¿Se cita la entrada en el cuerpo? Primer apellido (o autor institucional) seguido de su año."""
-    autor = re.split(r",| \(", e, 1)[0].strip().rstrip(".")
+    autor = re.split(r",| \(", e, maxsplit=1)[0].strip().rstrip(".")
     anio = re.search(r"\((\d{4}|s\. f\.)", e).group(1)
     return any(anio in cuerpo[m.end():m.end() + 160] for m in re.finditer(re.escape(norm(autor)), cuerpo))
 

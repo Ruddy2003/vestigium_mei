@@ -26,7 +26,7 @@ Lo importante: **«Las relaciones más marcadas» y, desde la entrega 10c, «Tod
 
 ### 6.2.1 Qué es
 
-`Estadistica.panel()` devuelve un mapa `fecha → (variable → valor)`. Cada **fecha** es un día lógico (de 5:00 a 4:59 del día siguiente; capítulo 2). Cada **valor** es un número o `null` (un **dato faltante**: «no sé» para ese día, que no es lo mismo que 0). Las variables 0/1 se guardan como 0.0 y 1.0. Qué variables entran en los análisis lo decide `Estadistica.variables()`: unas 150 fijas (valencia, sueño, pasos, clima…), las que **solo aparecen si hay datos** y las **dinámicas** (6.2.3). Las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R. **[Diseño propio]**.
+`Estadistica.panel()` devuelve un mapa `fecha → (variable → valor)`. Cada **fecha** es un día lógico (de 5:00 a 4:59 del día siguiente; capítulo 2). Cada **valor** es un número o `null` (un **dato faltante**: «no sé» para ese día, que no es lo mismo que 0). Las variables 0/1 se guardan como 0.0 y 1.0. Qué variables entran en los análisis lo decide `Estadistica.variables()`: 184 con nombre fijo (valencia, sueño, pasos, clima…; 128 existen siempre y 56 **solo aparecen si hay datos**) y las **dinámicas** (6.2.3). Las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R. **[Diseño propio]**.
 
 ### 6.2.2 Cero o faltante: la decisión más delicada
 
