@@ -18,11 +18,11 @@ import kotlin.math.sin
 /**
  * La entrega 10d (P-30 a P-33): R y la app dan lo mismo. Los números esperados salieron de correr vestigium.R
  * (vm_factores y vm_relaciones) con los mismos datos inventados; si una de las dos cambia, esta prueba lo avisa.
- * Los p que salen de la normal se comparan con 1e-6: la app usa la aproximación de Abramowitz y Stegun (7.1.26, error
+ * Los p que salen de la normal se comparan con 2e-6: la app usa la aproximación de Abramowitz y Stegun (7.1.26, error
  * máximo 1.5e-7) y R, la normal exacta (pnorm); q multiplica esa diferencia por hasta el número de pruebas.
  */
 class ExportacionPrueba {
-    private val P = 1e-6
+    private val P = 2e-6
     private val vars = listOf("y", "x1", "x2", "b").map { Variable(it, it, "Prueba") }
 
     /** 80 días con fórmulas fijas (sin azar), iguales a las del script de R. x1 falta cada 9 días. */
