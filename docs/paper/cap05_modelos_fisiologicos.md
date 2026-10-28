@@ -1,6 +1,6 @@
 # Capítulo 5. Modelos fisiológicos y variables derivadas
 
-> **Para qué sirve este capítulo.** Algunas variables de la app no se miden: se **calculan con un modelo** a partir de otros datos. La cafeína que te queda en el cuerpo al dormir, el alcohol en sangre, la reserva de creatina del músculo, el «jet lag social» o los minutos al aire libre son **estimaciones**, no mediciones. Este capítulo explica cada modelo: qué calcula, con qué fórmula exacta y qué parámetros, de dónde salen esos parámetros, qué tan preciso puede ser y cuándo falla. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper. Lo que cambió en el módulo 10 se marca «desde la 10c» y está en el apéndice D (D.63 y D.69 a D.72): el peso y la *r* del alcohol, las tomas sin hora, el ritmo de sueño con las noches recientes y los festivos, y una sola repetición máxima. **Los ejemplos usan datos inventados.**
+> **Para qué sirve este capítulo.** Algunas variables de la app no se miden: se **calculan con un modelo** a partir de otros datos. La cafeína que te queda en el cuerpo al dormir, el alcohol en sangre, la reserva de creatina del músculo, el «jet lag social» o los minutos al aire libre son **estimaciones**, no mediciones. Este capítulo explica cada modelo: qué calcula, con qué fórmula exacta y qué parámetros, de dónde salen esos parámetros, qué tan preciso puede ser y cuándo falla. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper. Lo que cambió en el módulo 10 se marca «desde la 10c» y está en el apéndice D (D.63 y D.69 a D.72): el peso y la *r* del alcohol, las tomas sin hora, el ritmo de sueño con las noches recientes y los festivos, y una sola repetición máxima. Está puesto al día también con la **entrega 10e**, posterior (todavía sin número de versión; `SCHEMA_V` sigue en 14), que se marca «desde 10e» (D.88 a D.92, D.98 y D.99): el alcohol de la noche anterior en el máximo del día, la cafeína y el alcohol de MacroFactor y de la app juntados toma por toma, la hora de la última cafeína, la referencia de 3 g de la creatina, los suplementos de vida media corta y los parámetros en el diccionario. **Los ejemplos usan datos inventados.**
 >
 > **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, fórmulas y cifras del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-4-n (por el módulo 4, en que se escribió este capítulo) y se detallan en `hallazgos.md`. **Ningún número de este capítulo es una medición de tu cuerpo**: son cuentas con parámetros promedio de la literatura.
 
@@ -28,11 +28,11 @@
 
 | Qué | Función (archivo) | Parámetros | Variables del panel | Tipo |
 |---|---|---|---|---|
-| Cafeína en el cuerpo | `Sustancias.cafeinaEn` (`data/Sustancias.kt`) | absorción 45 min; vida media 5 h (ajustable) | `cafeina_total_mg`, `cafeina_al_dormir_mg` (y `cafeina_mg`, `cafeina_ultima_h` de MacroFactor) | Aproximación |
+| Cafeína en el cuerpo | `Sustancias.cafeinaEn` (`data/Sustancias.kt`) | absorción 45 min; vida media 5 h (ajustable) | `cafeina_total_mg`, `cafeina_al_dormir_mg`, `cafeina_ultima_h` (desde 10e; y `cafeina_mg`, de MacroFactor) | Aproximación |
 | Alcohol en sangre | `Sustancias.alcoholEn` | absorción 30 min; β = 0.15 g/L/h; *r* de Watson (con peso, sexo, estatura y edad) o fija de 0.68, 0.55 o 0.62; peso de cada día | `alcohol_bebidas`, `alcohol_estimado_max`, `alcohol_al_dormir` | Aproximación |
 | Nivel subjetivo de un episodio | `Sustancias.nivelEn` | tus lecturas de 0 a 10 | `alcohol_nivel_max`, `cannabis_nivel_max`, `*_horas` | Diseño propio |
-| Reserva de creatina | `Suplementos.carga` (`data/Lote3.kt`) | 28 días para llenar, 35 para vaciar | `creatina_saturacion_pct`, `supl_creatina_nivel` | Aproximación |
-| Suplementos con vida media | `Suplementos.cantidadEn` | vitamina D 360 h, magnesio 12 h, melatonina 1 h, omega-3 60 h | `supl_<id>_nivel` | Aproximación |
+| Reserva de creatina | `Suplementos.carga` (`data/Lote3.kt`) | 28 días para llenar con 3 g al día (desde 10e), 35 para vaciar | `creatina_saturacion_pct`, `supl_creatina_nivel` | Aproximación |
+| Suplementos con vida media | `Suplementos.cantidadEn` | vitamina D 360 h, magnesio 12 h, melatonina 1 h, omega-3 60 h | `supl_<id>_nivel` (desde 10e, solo con vida media de 6 h o más: la melatonina no lo tiene) | Aproximación |
 | Probióticos | `Suplementos.probioticosEstimados` | palabras clave en la bitácora de comidas | `probioticos_porciones`, `probioticos_estimado` | Diseño propio |
 | Ritmo de sueño y jet lag social | `Analisis.ritmo` (`ciencia/Analisis.kt`) | noches de los últimos 56 días; días libres = sábado, domingo y, en México, festivos (`Fechas.esDiaLibre`) | solo en la pantalla Análisis (el panel exportado lleva `festivo` y `dia_libre`) | Validado (definición) / Aproximación |
 | Noches sin reloj | `Analisis.ritmo` | último y primer uso del teléfono | solo en Análisis | Aproximación |
@@ -57,13 +57,22 @@ $$C(t) = \sum_{\text{dosis}} D \cdot \min\!\left(1, \frac{\Delta t}{0.75}\right)
 - El segundo es la eliminación de primer orden con la vida media *T*½ de `Config.cafeina_vida_media_h`, **5 h por omisión** (se cambia en Privacidad, de 2 a 10 h en pasos de media hora).
 - Las dosis se suman: cada café se va por su cuenta.
 
-**De dónde salen las dosis** (`Sustancias.dosis`): de **MacroFactor** (cada alimento con su hora y su `cafeina_mg`) y de lo que anotes en la app. **Por día y sustancia, una sola fuente**: si MacroFactor tiene algo de cafeína ese día, **mandan los datos de MacroFactor** y lo anotado en la app ese día se ignora, para no contar dos veces. Desde la entrega 10c, un alimento de MacroFactor cuya hora no se puede leer se pone **al mediodía de su día** (`msComida`) en lugar de perderse; antes desaparecía de `cafeina_total_mg` aunque sí contaba en `cafeina_mg` (H-9-13).
+**De dónde salen las dosis** (`Sustancias.dosis`): de **MacroFactor** (cada alimento con su hora y su `cafeina_mg`) y de lo que anotes en la app. Desde la entrega 10e (D.91), las dos fuentes se juntan **toma por toma**, para no contar dos veces la misma taza:
+
+- Cada toma de la app (en orden de hora) busca entre las de MacroFactor que aún no tienen pareja una que esté a **90 minutos o menos** (`MISMA_TOMA`) y cuya cantidad vaya **de la mitad al doble** de la suya; si hay varias, la más cercana en hora.
+- Si la encuentra, las dos son **la misma toma** y cuenta **una vez, con la hora y los miligramos de la app**: la hora de MacroFactor es la de cuando registraste el alimento, no necesariamente la de cuando lo tomaste.
+- Las tomas de MacroFactor sin pareja y las de la app sin pareja cuentan todas.
+
+*Ejemplo inventado.* En la app anotas un café de 150 mg a las 14:00; en MacroFactor hay un café de 95 mg a las 8:30 y uno de 120 mg registrado a las 15:10. El de 15:10 está a 70 minutos y 120 cae entre 75 y 300 mg: es la misma toma. Cuentan 95 mg a las 8:30 y 150 mg a las 14:00: `cafeina_total_mg` = **245 mg**. Hasta 10e, como MacroFactor tenía cafeína ese día, mandaba solo MacroFactor (H-4-2): **215 mg**, con el segundo café a las 15:10 y el de la app perdido. Los 90 minutos y el rango de la mitad al doble son **[Diseño propio]**: un margen razonable para la diferencia entre la hora de la toma y la del registro, no un valor estimado.
+
+Desde la entrega 10c, un alimento de MacroFactor cuya hora no se puede leer se pone **al mediodía de su día** (`msComida`) en lugar de perderse; antes desaparecía de `cafeina_total_mg` aunque sí contaba en `cafeina_mg` (H-9-13).
 
 **Variables del panel:**
 
-- `cafeina_total_mg`: suma de las dosis del día lógico (de ambas fuentes, con la regla anterior), desde el primer día con cafeína.
+- `cafeina_total_mg`: suma de las dosis del día lógico (de ambas fuentes, juntadas toma por toma), desde el primer día con cafeína.
 - `cafeina_al_dormir_mg`: la cafeína estimada **en el instante en que te dormiste** según el reloj, sumando las dosis de las **36 horas** previas. Va en el día del sueño (el día en que despiertas).
-- `cafeina_mg` y `cafeina_ultima_h` vienen **directo de MacroFactor** (total del día y hora de la última), sin el modelo.
+- `cafeina_ultima_h`: desde 10e (D.92), la hora de la **última dosis del día lógico** en la misma lista de dosis que `cafeina_total_mg` (MacroFactor y la app), en hora decimal con dos decimales; **antes de las 5:00 suma 24** (un café a las 0:30 cuenta como 24.5 del día anterior), como `ultimo_uso_h`. Queda vacía los días con bitácora de MacroFactor sin ninguna dosis. Antes salía solo de MacroFactor y por día de calendario, así que un café anotado solo en la app no contaba y uno de madrugada caía en el día siguiente. La exportación (`Exportar.filasPanel`) usa la misma cifra y solo recurre a la de MacroFactor si el panel no la calculó.
+- `cafeina_mg` sigue viniendo **directo de MacroFactor** (el nutriente del día, tal cual, como los demás nutrientes), sin el modelo.
 
 ### 5.3.3 Razonamiento científico
 
@@ -87,11 +96,11 @@ Con una vida media corta (2.5 h; el rango va de 1.5 a 9.5 h) serían **12 mg**; 
 
 ### 5.3.5 Cuándo falla
 
-- **El pico queda un poco bajo y temprano.** Como la rampa de absorción se multiplica por la eliminación desde el primer minuto, a los 45 min queda 0.5^(0.75/5) = **90 %** de la dosis. Un modelo farmacocinético estándar (absorción y eliminación de primer orden) da otra forma de curva. Para dosis separadas por horas, la diferencia es pequeña. **[Aproximación]**.
-- **Una sola vida media para toda la historia** (H-4-1): si la cambias, **todas** las `cafeina_al_dormir_mg` pasadas se recalculan con la nueva, sin dejar registro.
-- **La regla de una sola fuente por día** (H-4-2): si en MacroFactor anotaste un café y en la app otro distinto el mismo día, el de la app se pierde. Y la hora de MacroFactor es la hora en que registraste el alimento, que puede no ser la hora en que lo tomaste.
-- **Las cifras cambiaban según dónde se calcularan** (H-4-3, resuelto en 10c, D.71). Para no trabar la pantalla, cuando el panel se calculaba en el hilo principal **sin un cálculo previo guardado**, `Estadistica.sustancias` usaba solo lo anotado en la app y **omitía MacroFactor**, y la pantalla de experimentos calculaba ahí. Desde la entrega 10c: la pantalla de experimentos arma el panel en segundo plano, como Explorar y Análisis; si aun así toca calcular en el hilo principal sin caché y hay datos de MacroFactor, las variables que dependen de las dosis (`cafeina_total_mg`, `cafeina_al_dormir_mg`, `alcohol_bebidas`, `alcohol_estimado_max`, `alcohol_al_dormir`) quedan **vacías** en lugar de dar otra cifra (salvo `alcohol` 0/1: en ese caso vale 1 solo en los días con episodios sin cantidad y 0 en los demás, aunque hayas bebido, porque el 1 de los días con dosis se pone después de ese corte); y la clave de la caché incluye la identidad del mapa de MacroFactor, que cambia con cada importación, no solo el número de días (H-9-14).
-- **Cuatro variables de cafeína** con fuentes distintas: `cafeina_mg` y `cafeina_ultima_h` solo de MacroFactor; `cafeina_total_mg` y `cafeina_al_dormir_mg` de ambas (H-4-12).
+- **El pico queda un poco bajo y temprano** (H-4-1, resuelto por documentación: este punto y el siguiente son esa documentación; el código no cambió). Como la rampa de absorción se multiplica por la eliminación desde el primer minuto, a los 45 min queda 0.5^(0.75/5) = **90 %** de la dosis. Un modelo farmacocinético estándar (absorción y eliminación de primer orden) da otra forma de curva. Para dosis separadas por horas, la diferencia es pequeña. **[Aproximación]**.
+- **Una sola vida media para toda la historia**: si la cambias, **todas** las `cafeina_al_dormir_mg` pasadas se recalculan con la nueva, sin dejar registro.
+- **Juntar dos fuentes** (H-4-2, resuelto en 10e, D.91). Hasta 10e mandaba una sola fuente por día: si en MacroFactor anotaste un café y en la app otro distinto el mismo día, el de la app se perdía. Ahora se juntan toma por toma (sección 5.3.2), pero la regla puede equivocarse en los dos sentidos: dos cafés distintos de cantidad parecida, uno en cada app y a menos de 90 minutos, cuentan como uno; y la misma taza registrada en MacroFactor más de 90 minutos después, o con una cantidad muy distinta, cuenta dos veces. Una toma de MacroFactor sin pareja conserva la hora del registro, que puede no ser la de la toma.
+- **Las cifras cambiaban según dónde se calcularan** (H-4-3, resuelto en 10c, D.71). Para no trabar la pantalla, cuando el panel se calculaba en el hilo principal **sin un cálculo previo guardado**, `Estadistica.sustancias` usaba solo lo anotado en la app y **omitía MacroFactor**, y la pantalla de experimentos calculaba ahí. Desde la entrega 10c: la pantalla de experimentos arma el panel en segundo plano, como Explorar y Análisis; si aun así toca calcular en el hilo principal sin caché y hay datos de MacroFactor, las variables que dependen de las dosis (`cafeina_total_mg`, `cafeina_al_dormir_mg`, `alcohol_bebidas`, `alcohol_estimado_max`, `alcohol_al_dormir`) quedan **vacías** en lugar de dar otra cifra (`alcohol` 0/1 valía 1 solo en los días con episodios sin cantidad y 0 en los demás, aunque hayas bebido; desde 10e, D.90, en ese caso vale **1 los días con un episodio anotado** y queda **vacío** los demás, porque sin MacroFactor no se sabe si un día sin episodios fue 0, H-14-4); y la clave de la caché incluye la identidad del mapa de MacroFactor, que cambia con cada importación, no solo el número de días (H-9-14).
+- **Cuatro variables de cafeína** (H-4-12, resuelto en parte en 10e, D.92): `cafeina_total_mg`, `cafeina_al_dormir_mg` y, desde 10e, `cafeina_ultima_h` salen de la misma lista de dosis; `cafeina_mg` sigue siendo el nutriente de MacroFactor, así que puede no coincidir con `cafeina_total_mg` los días con cafeína anotada en la app. En el hilo principal sin caché (punto anterior), `cafeina_ultima_h` queda vacía, como las demás variables que dependen de MacroFactor.
 
 ---
 
@@ -124,12 +133,14 @@ con *A* = gramos de alcohol, *W* = peso (kg), *r* = factor de Widmark y β = vel
   Hace falta el sexo (de Conocerte o de Salud), la estatura de Conocerte entre **100 y 250 cm** y, en los hombres, la edad de ese día (`Perfiles.edad`, a partir de la fecha de nacimiento de Conocerte). Si falta algo, o si el peso es el de omisión, se usa la *r* fija (`widmarkR`): **0.68** si dijiste «hombre», **0.55** si «mujer», **0.62** si no dijiste nada. Con 70 kg inventados, Watson no corregiría nada: por eso no se usa.
 - **Bebida estándar** = **14 g** de alcohol puro (`GRAMOS_BEBIDA`), la definición de Estados Unidos (NIAAA, s. f.). Otros países usan otras cifras.
 
-**De dónde salen las dosis** (`Sustancias.dosis`): de MacroFactor (`alcohol_g` de cada alimento, con su hora; sin hora legible, al mediodía de su día desde la 10c) o, los días en que MacroFactor no tiene alcohol, de los episodios que anotas. Las bebidas de un episodio se **reparten** en el primer 70 % del episodio (si dijiste cuándo terminó) o una cada 40 minutos (si no).
+**De dónde salen las dosis** (`Sustancias.dosis`): de MacroFactor (`alcohol_g` de cada alimento, con su hora; sin hora legible, al mediodía de su día desde la 10c) y de los episodios que anotas. Las bebidas de un episodio se **reparten** en el primer 70 % del episodio (si dijiste cuándo terminó) o una cada 40 minutos (si no).
+
+Desde la entrega 10e (D.91), las dos fuentes se juntan **por episodio**, no por día. Para cada episodio de la app con cantidad (en orden de inicio), se toman los registros de MacroFactor que aún no se usaron y caen entre su inicio y su fin, con **90 minutos** de margen a cada lado (sin fin dicho, el fin es la hora de la última bebida repartida). Son lo mismo y **cuenta la fuente con más gramos**: si MacroFactor suma más, se quedan sus registros y se quitan las bebidas del episodio; si no (también con empate), se quedan las del episodio y se quitan esos registros. Lo de MacroFactor fuera de todo episodio cuenta siempre. *Ejemplo inventado:* un episodio de 20:00 a 23:00 con 3 bebidas (42 g) y, en MacroFactor, una cerveza de 13 g a las 21:30 y un vino de 15 g a las 23:40 (dentro del margen, que llega a las 00:30): 28 g < 42 g, así que cuentan las 3 bebidas del episodio. Hasta 10e, como MacroFactor tenía alcohol ese día, contaban solo los 28 g (H-4-2). El margen de 90 minutos y «la fuente con más gramos» son **[Diseño propio]**.
 
 **Variables del panel** (desde el primer día con alcohol):
 
 - `alcohol_bebidas`: gramos del día ÷ 14.
-- `alcohol_estimado_max`: el máximo de una simulación por día, desde la primera dosis y durante **14 horas**, con muestras cada 10 minutos.
+- `alcohol_estimado_max` (desde 10e, D.88 y D.89): para cada día lógico con alcohol, el máximo de la simulación **desde su primera dosis hasta 14 horas después, o hasta justo antes de la primera dosis del siguiente día con alcohol** si llega antes (para no contar el mismo pico en dos días). La simulación incluye las dosis de las **24 horas previas** a esa primera dosis: lo que seguía en la sangre de la noche anterior cuenta. Las muestras son **cada 5 minutos**, como en la lista de episodios (`Sustancias.alcoholMaximo`). Los días desde el primero con alcohol sin ninguna dosis valen 0. Las 14 horas y las 24 horas son **[Diseño propio]**; con β = 0.15 g/L/h, en 24 horas se eliminan 3.6 g/L, así que lo tomado antes ya no queda en la sangre, salvo tras más de un día bebiendo casi sin parar.
 - `alcohol_al_dormir`: la concentración en el instante en que te dormiste, con las dosis de las **18 horas** previas.
 - `alcohol` (0/1, desde la 10c con **una sola regla de día**, H-9-17): 1 el día lógico de **cada dosis**; los episodios anotados **sin cantidad** (que no tienen dosis) cuentan el día lógico en que empezaron; 0 los demás días desde el primero con alcohol. Antes, la variable mezclaba el día del episodio y el de las dosis, y un episodio que cruzaba las 5:00 podía quedar en un día y sus bebidas en otro.
 - Aparte, `alcohol_nivel_max` y `alcohol_horas` vienen de **tu nivel subjetivo** (sección 5.5), no del modelo.
@@ -152,7 +163,7 @@ Si en el hombre β fuera 0.10 o 0.20 en lugar de 0.15, el final de la curva se m
 
 **Con la *r* de Watson (desde la 10c).** El mismo hombre de 75 kg, si en Conocerte su fecha de nacimiento le da 30 años y dijo que mide 180 cm: agua = 2.447 − 0.09516 × 30 + 0.1074 × 180 + 0.3362 × 75 = 44.14 L; *r* = 44.14 / (0.80 × 75) = **0.736**. Con un recipiente más grande, el máximo baja de 0.42 a **0.36 g/L** y llega a 0 hacia la **01:00** (línea punteada).
 
-**Cuánto cambia con Watson** (tres bebidas de 14 g a los 0, 40 y 80 minutos, como reparte la app un episodio de tres bebidas sin hora de fin; simulación de `alcoholEn`, en pasos de 5 minutos, para personas inventadas; tres decimales para que los porcentajes se puedan rehacer):
+**Cuánto cambia con Watson** (tres bebidas de 14 g a los 0, 40 y 80 minutos, como reparte la app un episodio de tres bebidas sin hora de fin; simulación de `alcoholEn`, en pasos de 5 minutos, para personas inventadas; desde 10e es también lo que da `alcohol_estimado_max`; tres decimales para que los porcentajes se puedan rehacer):
 
 | Persona | *r* fija | *r* de Watson | Máximo con *r* fija | Máximo con Watson |
 |---|---|---|---|---|
@@ -173,9 +184,9 @@ El error que más pesaba no era *r*, sino el **peso**: con las mismas tres bebid
 - **No muestra incertidumbre**: dice «≈ 0.45 g/L estimado», pero el error razonable es de varias décimas.
 - **Unidades**: la fórmula de Widmark da gramos por kilo de peso corporal; la app lo presenta como g/L de sangre. La diferencia (por la densidad y el contenido de agua de la sangre) es pequeña frente a las demás incertidumbres, pero existe.
 - **Absorción de 30 minutos fija**: con el estómago lleno la absorción es más lenta y el pico más bajo y tardío.
-- **Cada día se simula por separado** (H-4-5): `alcohol_estimado_max` empieza en 0 con la primera dosis del día lógico y no arrastra lo del día anterior. Si un episodio cruza las 5:00, las bebidas posteriores caen en el día siguiente y ese día arranca de cero.
-- **Dos máximos casi iguales.** La lista de episodios (`alcoholMaximo`) mira la simulación cada 5 minutos; `alcohol_estimado_max`, cada 10. Si el pico cae entre dos muestras de 10 minutos, el panel da hasta 0.15/12 ≈ **0.0125 g/L** menos (en la tabla de arriba, 0.595 en lugar de 0.607 g/L).
-- **Una sola fuente por día** (H-4-2, igual que la cafeína). La dependencia del hilo (H-4-3) se resolvió en la 10c (sección 5.3.5).
+- **Cada día se simulaba por separado** (H-4-5, resuelto en 10e, D.88). Hasta 10e, `alcohol_estimado_max` empezaba en 0 con la primera dosis del día lógico y no arrastraba lo del día anterior: si un episodio cruzaba las 5:00, las bebidas posteriores caían en el día siguiente, que arrancaba de cero. *Ejemplo inventado* (hombre de 75 kg, *r* = 0.68): un episodio de 1:00 a 7:00 con 5 bebidas, repartidas a las 1:00, 2:03, 3:06, 4:09 y 5:12. Las cuatro primeras son del día lógico anterior y la última del siguiente. Antes, el primer día daba 0.536 g/L y el segundo, con una sola bebida desde cero, **0.187 g/L**. Desde 10e, el primer día mira hasta justo antes de las 5:12 y da 0.548 g/L; el segundo incluye las cuatro bebidas anteriores y da **0.660 g/L** (el pico de la noche, a las 5:40). Lo que queda: si el pico llega después de la primera bebida del día siguiente, cuenta en ese día, aunque ahí `alcohol_bebidas` valga 1 (en el ejemplo).
+- **Dos máximos que no coincidían** (H-14-5, resuelto en 10e, D.89). Hasta 10e, la lista de episodios (`alcoholMaximo`) miraba la simulación cada 5 minutos y `alcohol_estimado_max` cada 10: si el pico caía entre dos muestras de 10 minutos, el panel daba hasta 0.15/12 ≈ **0.0125 g/L** menos (en la tabla de arriba, 0.595 en lugar de 0.607 g/L). Ahora los dos miran cada 5 minutos desde la primera bebida y, con un episodio por día y sin alcohol en las horas previas, dan la misma cifra. Pueden seguir difiriendo cuando no se cumple eso: el episodio solo cuenta las dosis desde 1 hora antes de su inicio y hasta 3 horas después de su fin, el panel da un solo máximo por día (y, como en el ejemplo anterior, lo corta en la primera dosis del día siguiente), y si mandan los registros de MacroFactor las muestras del panel empiezan en la primera de ellas.
+- **Juntar dos fuentes** (H-4-2, resuelto en 10e): la regla por episodio de la sección 5.4.2 puede equivocarse si un registro de MacroFactor de otra ocasión cae dentro del margen de 90 minutos, o si la misma bebida se registró en MacroFactor fuera de él. La dependencia del hilo (H-4-3) se resolvió en la 10c (sección 5.3.5).
 
 ---
 
@@ -197,10 +208,10 @@ Variables: `alcohol_nivel_max`, `cannabis_nivel_max` (el mayor nivel del día) y
 
 | Suplemento | Dosis de referencia | Modelo | Parámetros |
 |---|---|---|---|
-| Creatina | 5 g | carga | 28 días para llenar, 35 para vaciar |
+| Creatina | 5 g (la reserva se calcula con 3 g, desde 10e) | carga | 28 días para llenar, 35 para vaciar |
 | Vitamina D | 2000 UI | vida media | 360 h (15 días) |
 | Magnesio | 300 mg | vida media | 12 h |
-| Melatonina | 1 mg | vida media | 1 h |
+| Melatonina | 1 mg | vida media | 1 h (sin `nivel`, desde 10e) |
 | Omega-3 | 1000 mg | vida media | 60 h |
 | Probióticos | 1 porción | exposición | — |
 
@@ -214,38 +225,40 @@ La creatina no actúa como una pastilla que sube y baja en horas: se **acumula**
 
 $$s = 1 - 0.05^{1/\text{carga\_días}}, \qquad b = 1 - 0.05^{1/\text{lavado\_días}}$$
 
-- Un día con dosis *d*: $\text{nivel} \mathrel{+}= \left(1 - (1-s)^{d/\text{dosis}}\right)\cdot(100 - \text{nivel})$: se llena una fracción de **lo que falta**.
+- Un día con dosis *d*: $\text{nivel} \mathrel{+}= \left(1 - (1-s)^{d/\text{ref}}\right)\cdot(100 - \text{nivel})$: se llena una fracción de **lo que falta**. *ref* es la **dosis de referencia** (`Suplementos.dosisReferencia`): desde la entrega 10e (D.98), **3 g en la creatina**, la dosis del estudio del que salen los 28 días, aunque en el catálogo tenga 5 g; en los demás suplementos con este modelo, la dosis que pusiste. Antes de 10e, *ref* era siempre la dosis del suplemento (5 g en la creatina).
 - Un día sin dosis: $\text{nivel} \mathrel{\times}= (1 - b)$: se vacía una fracción de **lo que hay**.
 
-Con 28 y 35 días, *s* = 0.1015 y *b* = 0.0820. El diseño garantiza dos cosas: con la dosis de referencia todos los días, a los **28 días** queda lleno al **95 %** (falta el 5 %); y sin tomarla, a los **35 días** queda el **5 %** de lo que había. Las variables son `supl_creatina_nivel` y `creatina_saturacion_pct`.
+Con 28 y 35 días, *s* = 0.1015 y *b* = 0.0820. El diseño garantiza dos cosas: con la dosis de referencia todos los días, a los **28 días** queda lleno al **95 %** (falta el 5 %); y sin tomarla, a los **35 días** queda el **5 %** de lo que había. Con una dosis diaria *d* distinta, el 95 % llega a los 28 · ref/*d* días. Las variables son `supl_creatina_nivel` y `creatina_saturacion_pct`, redondeadas a una décima.
 
 **Ejemplo (Figura 5.3).**
 
-- 5 g diarios: día 28 → **95.0 %**.
-- Carga de 20 g × 6 días (4 veces la dosis de referencia): cada día se llena 1 − (1 − 0.1015)⁴ = 34.8 % de lo que falta; al día 6 → **92.3 %**.
-- 3 g diarios (0.6 veces la referencia): día 28 → **83.4 %**.
-- Tras 8 semanas a 5 g (99.8 %) se deja: 30 días después → **7.7 %**; 35 días → **5.0 %**.
+- 3 g diarios (la referencia): día 28 → **95.0 %**.
+- 5 g diarios (la dosis del catálogo, 5/3 de la referencia): llega al 95 % a los 28 × 3/5 = 16.8 días, es decir, el **día 17** (95.2 %); día 28 → **99.3 %**.
+- Carga de 20 g × 6 días (20/3 ≈ 6.7 veces la referencia): cada día se llena 1 − (1 − 0.1015)^(20/3) = 51.0 % de lo que falta; al día 6 → **98.6 %**.
+- Tras 8 semanas a 5 g (100.0 %) se deja: 30 días después → **7.7 %**; 35 días → **5.0 %**.
 
-**De dónde salen los parámetros.** Hultman et al. (1996) midieron la creatina del músculo en 31 hombres: aumentó alrededor de un **20 %** tras 6 días a 20 g diarios; se mantuvo con 2 g diarios; **30 días después de dejarla ya no difería** del valor inicial; y con **3 g diarios** se alcanzó el mismo 20 % de forma gradual en **28 días**. **[Aproximación]**: los 28 días del modelo vienen de ese protocolo lento y el vaciado de 35 días es compatible con los 30 días medidos (el modelo dice 7.7 % a los 30 días).
+Hasta 10e, con la referencia de 5 g, las mismas cuentas daban 83.4 % con 3 g al día 28, 95.0 % con 5 g al día 28 y 92.3 % con la carga al día 6.
+
+**De dónde salen los parámetros.** Hultman et al. (1996) midieron la creatina del músculo en 31 hombres: aumentó alrededor de un **20 %** tras 6 días a 20 g diarios; se mantuvo con 2 g diarios; **30 días después de dejarla ya no difería** del valor inicial; y con **3 g diarios** se alcanzó el mismo 20 % de forma gradual en **28 días**. **[Aproximación]**: los 28 días del modelo vienen de ese protocolo lento, y desde 10e con su misma dosis (3 g); el vaciado de 35 días es compatible con los 30 días medidos (el modelo dice 7.7 % a los 30 días). Que con 5 g llegue al 95 % en 17 días, o con 20 g en 5, sale de la forma del modelo (más dosis llena proporcionalmente más rápido), no de una medición: el estudio midió el +20 % tras 6 días a 20 g, pero no a qué día llega con 5 g **[Diseño propio]**.
 
 ![Figura 5.3](figuras/fig27_creatina.png)
 
-*Figura 5.3. La reserva de creatina del modelo con tres formas de tomarla y al dejarla. Script: `figuras/fig27_creatina.py`.*
+*Figura 5.3. La reserva de creatina del modelo con tres formas de tomarla y al dejarla, con la dosis de referencia de 3 g (desde 10e). Script: `figuras/fig27_creatina.py`.*
 
 **Cuándo falla** (H-4-6):
 
-- **La dosis de referencia define la velocidad.** Hultman et al. llenaron la reserva con **3 g** en 28 días; con la referencia de 5 g de la app, 3 g diarios dan solo 83 % al día 28. El modelo dice que se llena más lento de lo que dice el estudio en que se basa.
+- **La dosis de referencia define la velocidad** (resuelto en 10e, D.98). Hultman et al. llenaron la reserva con **3 g** en 28 días; con la referencia de 5 g que usaba la app, 3 g diarios daban solo 83 % al día 28: el modelo se llenaba más lento que el estudio en que se basa. Desde 10e la referencia es 3 g. Queda fija en el código: cambiar la dosis de la creatina en la app ya no cambia la velocidad del llenado (cambiar los días de carga o de lavado, sí).
 - **El 100 % es del modelo**, no una concentración: no considera la creatina de la dieta (carne, pescado), el punto de partida de cada persona ni que hay personas que casi no responden a la suplementación.
-- **Interacción con los experimentos**: la plantilla de experimento de creatina usa 28 días de lavado, que con 8 semanas eliminaba todos los días con creatina (capítulo 8, H-7-1). Desde la entrega 10c dura 12 semanas (6 sin la acción y luego 6 con ella; el lavado se come los primeros 28 días con ella): quedan 14 días con la acción y 42 sin ella (`Experimentos.PLANTILLAS`, `data/Lote3.kt`).
+- **Interacción con los experimentos**: la plantilla de experimento de creatina usa 28 días de lavado, que con 8 semanas eliminaba todos los días con creatina (capítulo 8, H-7-1). Desde la entrega 10c dura 12 semanas (6 sin la acción y luego 6 con ella; el lavado se come los primeros 28 días con ella): quedan 14 días con la acción y 42 sin ella (`Experimentos.PLANTILLAS`, `data/Lote3.kt`). Desde 10e (D.96), en esa plantilla los días sin respuesta a «¿Lo hiciste hoy?» se completan con `supl_creatina_tomado` (capítulo 8).
 
 ### 5.6.2 Vida media (`Suplementos.cantidadEn`)
 
-La cantidad «en el cuerpo» en un instante es la suma de cada toma multiplicada por 0.5^(horas transcurridas / vida media), **sin fase de absorción**. La variable `supl_<id>_nivel` se evalúa **al final del día lógico** (las 5:00 del día siguiente).
+La cantidad «en el cuerpo» en un instante es la suma de cada toma multiplicada por 0.5^(horas transcurridas / vida media), **sin fase de absorción**. La variable `supl_<id>_nivel` se evalúa **al final del día lógico** (las 5:00 del día siguiente). Desde la entrega 10e (D.98), solo existe si la vida media es de **6 horas o más** (`Suplementos.VIDA_MEDIA_MIN_NIVEL`); con menos, a las 5:00 casi no queda nada. La regla mira la vida media que tenga el suplemento: con la de omisión, la melatonina (1 h) se queda sin `nivel`; si se la subieras a 6 h, volvería. El umbral de 6 h es **[Diseño propio]**: con esa vida media, una toma a las 23:00 conserva la mitad a las 5:00.
 
 **Los parámetros:**
 
 - **Vitamina D, 360 h (15 días)**: coincide con la vida media de **25(OH)D**, la forma que circula en sangre, de unos 15 días; la vitamina D almacenada en la grasa tiene una vida media de unos 2 meses (Jones, 2008). **[Aproximación]**: el modelo suma «UI en el cuerpo», que no es lo que mide un análisis de sangre. Con 2000 UI diarias, el modelo se estabiliza en 2000 / (1 − 0.5^(24/360)) ≈ **44 000 UI**: una cifra sin interpretación fisiológica directa, útil solo para ver la tendencia.
-- **Melatonina, 1 h**: la vida media de la melatonina oral va de unos 28 a 126 minutos según la revisión de Harpsøe et al. (2015). **[Validado]** como orden de magnitud. Pero si la tomas a las 23:00, a las 5:00 han pasado 6 vidas medias y queda el 1.6 %: **`supl_melatonina_nivel` es casi siempre ≈ 0** y no sirve para el análisis (H-4-7); la variable útil es `supl_melatonina_tomado`.
+- **Melatonina, 1 h**: la vida media de la melatonina oral va de unos 28 a 126 minutos según la revisión de Harpsøe et al. (2015). **[Validado]** como orden de magnitud. Pero si la tomas a las 23:00, a las 5:00 han pasado 6 vidas medias y queda el 1.6 %: **`supl_melatonina_nivel` era casi siempre ≈ 0** y no servía para el análisis (H-4-7, resuelto en parte en 10e): desde 10e ya no existe, y la variable útil es `supl_melatonina_tomado`. Lo demás de H-4-7 (las fuentes del magnesio y el omega-3, y las unidades de la vitamina D) queda solo documentado aquí.
 - **Magnesio, 12 h; omega-3, 60 h**: no encontré en esta sesión una fuente que respalde esos valores **[sin verificar]**. El magnesio no se comporta como un fármaco con una vida media única (el cuerpo regula sus reservas), y los omega-3 se incorporan a las membranas durante semanas.
 
 ### 5.6.3 Exposición: los probióticos (`Suplementos.probioticosEstimados`)
@@ -329,7 +342,7 @@ Todo este capítulo comparte tres advertencias:
 
 1. **Parámetros promedio.** Los modelos usan valores promedio de la literatura; tu cuerpo puede estar lejos de ese promedio (la vida media de la cafeína varía entre 1.5 y 9.5 h). Los resultados sirven sobre todo para **compararte contigo mismo** con los mismos parámetros.
 2. **Sin incertidumbre visible.** Ninguna pantalla ni variable dice cuánto podría equivocarse la cifra.
-3. **Parámetros que reescriben el pasado** (H-4-11). La vida media de la cafeína y los parámetros de los suplementos se pueden cambiar, y al hacerlo **todas** las variables derivadas pasadas se recalculan, sin guardar qué parámetro se usó ni cuándo cambió. Dos exportaciones de fechas distintas pueden no ser comparables (relacionado con H-1-8).
+3. **Parámetros que reescriben el pasado** (H-4-11, resuelto en parte en 10e, D.99). La vida media de la cafeína y los parámetros de los suplementos se pueden cambiar, y al hacerlo **todas** las variables derivadas pasadas se recalculan, sin guardar qué parámetro se usó ni cuándo cambió. Desde 10e, el diccionario de cada exportación (`Diccionario.conParametros`) agrega a la descripción de `cafeina_al_dormir_mg`, `creatina_saturacion_pct` y cada `supl_<id>_nivel` los parámetros vigentes al exportar: por ejemplo, «· al exportar: vida media de la cafeína de 5 h (si lo cambias, se recalcula toda la historia)», o, en la creatina, «llega al 95 % en 28 días con 3 g al día y se vacía en 35 días». Así se sabe con qué se calculó cada exportación, pero no qué valía antes: dos exportaciones con parámetros distintos siguen sin ser comparables entre sí (relacionado con H-1-8).
 
 Cuando una variable estimada aparece relacionada con otra en Explorar, la relación es tan buena como el modelo: por ejemplo, `cafeina_al_dormir_mg` es, en la práctica, una **combinación de la cantidad y la hora** de tus cafés. Si se relaciona con dormir peor, eso dice que «tomar más o más tarde» se asocia con dormir peor; no que tu sangre tuviera exactamente esos miligramos.
 
@@ -346,7 +359,10 @@ Cuando una variable estimada aparece relacionada con otra en Explorar, la relaci
 | *r* fija 0.68 / 0.55 / 0.62 si falta algo; peso más reciente entre báscula y MacroFactor; 70 kg solo sin pesos | Aproximación / Diseño propio | Searle (2015) sobre la incertidumbre |
 | Bebida estándar de 14 g | Validado (definición de EE. UU.) | NIAAA (s. f.) |
 | Nivel subjetivo con interpolación y trapecio | Diseño propio | — |
-| Creatina: 28 días para llenar, 35 para vaciar | Aproximación | Hultman et al. (1996) |
+| Cafeína y alcohol de MacroFactor y de la app juntados toma por toma: 90 min; en la cafeína, de la mitad al doble; en el alcohol, la fuente con más gramos (desde 10e) | Diseño propio | — |
+| Máximo de alcohol del día: dosis de las 24 h previas; de la primera dosis a 14 h o a la primera del día siguiente; muestras cada 5 min (desde 10e) | Diseño propio | — |
+| Creatina: 28 días para llenar con 3 g al día (desde 10e), 35 para vaciar | Aproximación | Hultman et al. (1996) |
+| Sin `supl_<id>_nivel` con vida media de menos de 6 h (desde 10e) | Diseño propio | — |
 | Vitamina D 15 días; melatonina 1 h | Aproximación / Validado (orden de magnitud) | Jones (2008); Harpsøe et al. (2015) |
 | Magnesio 12 h; omega-3 60 h | Diseño propio | [sin verificar] |
 | Probióticos por palabras clave | Diseño propio | — |
@@ -365,11 +381,11 @@ Cuando una variable estimada aparece relacionada con otra en Explorar, la relaci
 
 1. La cafeína y el alcohol se estiman con modelos farmacocinéticos sencillos y **parámetros promedio bien elegidos** (5 h de vida media y 45 min de absorción; β = 0.15 g/L/h), pero la variación entre personas es enorme: la misma tarde de café puede dejar de 12 a 106 mg al dormir según la vida media.
 2. Desde la entrega 10c, el alcohol usa el peso más reciente entre la báscula y MacroFactor y, cuando tiene los datos, la *r* de Watson; sin pesos sigue usando 70 kg y no muestra su incertidumbre (H-4-4, en parte).
-3. Lo anotado en la app se ignora los días en que MacroFactor tiene algo (H-4-2). Desde la 10c, las cifras ya no cambian según la pantalla (H-4-3) y las tomas de MacroFactor sin hora ya no se pierden.
-4. El modelo de creatina se basa en Hultman et al. (1996), pero su dosis de referencia de 5 g lo hace más lento que el estudio con 3 g (H-4-6). El nivel de melatonina al final del día es casi siempre 0 (H-4-7).
+3. Desde la 10e, lo de MacroFactor y lo anotado en la app se juntan toma por toma, en vez de ignorar la app los días en que MacroFactor tenía algo (H-4-2); el máximo de alcohol del día arrastra lo de la noche anterior (H-4-5) y se lee cada 5 minutos, como la lista de episodios; y la hora de la última cafeína sale de las mismas dosis que los totales (H-4-12, en parte). Desde la 10c, las cifras ya no cambian según la pantalla (H-4-3) y las tomas de MacroFactor sin hora ya no se pierden.
+4. El modelo de creatina se basa en Hultman et al. (1996) y, desde la 10e, usa su dosis de 3 g como referencia: 3 g al día llenan al 95 % en 28 días, y 5 g en unos 17 (H-4-6). La melatonina, cuyo nivel al final del día era casi siempre 0, ya no tiene `nivel` (H-4-7, en parte).
 5. El jet lag social está bien definido. Desde la 10c usa las noches de los últimos 56 días y una sola regla de día libre con los festivos de México (H-4-9 y H-4-10, resueltos en parte); las vacaciones siguen sin contarse y la regularidad es una desviación estándar simple.
-6. Todas estas cifras son **estimaciones**: sirven para compararte contigo mismo con parámetros fijos, y cambiar un parámetro reescribe el pasado (H-4-11).
-7. El módulo 4 identificó **13 hallazgos** (H-4-1 a H-4-13) y no cambió código. Después, la entrega 10c resolvió H-4-3, H-4-8 y H-4-13, y en parte H-4-4, H-4-9 y H-4-10 (apéndice D, D.63 y D.69 a D.72); siguen abiertos H-4-1, H-4-2, H-4-5, H-4-6, H-4-7, H-4-11 y H-4-12.
+6. Todas estas cifras son **estimaciones**: sirven para compararte contigo mismo con parámetros fijos, y cambiar un parámetro reescribe el pasado (H-4-11, en parte: desde la 10e el diccionario dice con qué parámetros se exportó).
+7. El módulo 4 identificó **13 hallazgos** (H-4-1 a H-4-13) y no cambió código. Después, la entrega 10c resolvió H-4-3, H-4-8 y H-4-13, y en parte H-4-4, H-4-9 y H-4-10 (apéndice D, D.63 y D.69 a D.72); la entrega 10e resolvió H-4-2, H-4-5 y H-4-6, y en parte H-4-7, H-4-11 y H-4-12 (D.88 a D.92, D.98 y D.99), y H-4-1 quedó resuelto por documentación (este capítulo). Quedan **7 resueltos** (H-4-1, H-4-2, H-4-3, H-4-5, H-4-6, H-4-8 y H-4-13), **6 resueltos en parte** (H-4-4, H-4-7, H-4-9, H-4-10, H-4-11 y H-4-12) y ninguno pendiente.
 
 ---
 

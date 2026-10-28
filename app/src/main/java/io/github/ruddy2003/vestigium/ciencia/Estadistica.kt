@@ -845,6 +845,8 @@ object Estadistica {
         val enCache = dosisCache?.takeIf { it.first == clave }?.second
         if (enCache == null && enMain && Repo.nutricion.isNotEmpty()) {
             desdePrimero("alcohol") { f, l -> fila(f)["alcohol"] = if (l.isEmpty()) null else 1.0 }
+            // La última cafeína también sale de las dosis (H-4-12): sin ellas, vacía, no la de MacroFactor por día de calendario.
+            Repo.nutricion.keys.forEach { f -> fila(f)["cafeina_ultima_h"] = null }
             return
         }
         val (caf, alc) = enCache ?: Sustancias.dosis(ini, hoy, if (enMain) emptyList() else null).also { if (!enMain) dosisCache = clave to it }
