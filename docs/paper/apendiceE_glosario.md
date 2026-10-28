@@ -55,6 +55,7 @@ _Reúne, en orden alfabético, los términos que cada capítulo explica en su mi
 | **Grupo de relación** | La relación simplificada que usan los análisis: `familia`, `pareja`, `amistad`, `trabajo`, `casa` y, aparte, `expareja` y las demás (sección 7.4). | 7 |
 | **Health Connect** | El sistema de salud de Android, donde otras apps (por ejemplo, la del reloj) escriben sus datos. La app solo pide permisos de lectura. | 4 |
 | **hPa** | Hectopascales, la unidad de presión del aire (a nivel del mar, ~1013 hPa). | 4 |
+| **Huella** (*hash*) | (cap. 8) Un código corto que se calcula a partir de un texto: si cambia una sola letra del texto, la huella sale completamente distinta. La app usa SHA-256, que da 64 caracteres (la tarjeta muestra los primeros 8). Sirve para notar que algo cambió, no para saber qué cambió. (cap. 10) Un resumen de 64 caracteres que se calcula de un texto: el mismo texto da siempre la misma huella, y cambiar una sola letra da una huella completamente distinta. No esconde nada ni usa contraseña; sirve para notar si algo cambió (sección 10.9). | 8, 10 |
 | **Idiográfico** | Que busca entender **a una persona concreta**: «en mis días, ¿dormir más va con mejor ánimo?». Es el enfoque de esta app. | 1 |
 | **Instrumento validado** | Un cuestionario publicado cuyas preguntas, escala y forma de puntuar se han probado en estudios (miden lo que dicen medir y dan resultados estables). | 3 |
 | **Integridad** | Que los datos no se pierdan, no se dañen y no cambien sin que lo sepas. | 10 |
@@ -113,3 +114,4 @@ _Reúne, en orden alfabético, los términos que cada capítulo explica en su mi
 | **Volumen de distribución** | El «tamaño del recipiente» en el que se diluye una sustancia. Con la misma cantidad, un recipiente más chico da una concentración más alta. | 5 |
 | **WHO-5** | Cuestionario de bienestar: cinco frases, cada una de 0 (nunca) a 5 (todo el tiempo). En la app, cada 7 días. | 3 |
 | **z robusto** | Qué tan lejos está un día de lo habitual, medido con la mediana y la MAD en lugar del promedio y la desviación estándar, para que los valores raros no muevan la regla. La app marca como atípico un día con |z| > 3. | 6 |
+| **Zona horaria y desfase con UTC** | La zona es la regla de hora de un lugar («America/Mexico_City»); el desfase, cuántas horas va ese lugar respecto a la hora universal (UTC): −6 en la Ciudad de México, +2 en Madrid en verano. Un mismo instante es las 15:30 en un sitio y las 23:30 en el otro (sección 4.3). | 4 |
