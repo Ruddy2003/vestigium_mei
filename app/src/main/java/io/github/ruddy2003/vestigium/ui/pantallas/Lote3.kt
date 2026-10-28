@@ -439,8 +439,11 @@ fun PantallaExperimentos(nav: Nav) {
         "Escribes la pregunta y lo que crees que pasará antes de empezar (queda sellado con la hora). La app decide qué semanas haces la acción y, al final, compara.") {
         // El panel se arma en segundo plano, como en Análisis: así las variables que dependen de MacroFactor valen lo mismo aquí
         // que en las demás pantallas (P-21). La clave son los propios datos, no solo cuántos días hay.
-        val panel by androidx.compose.runtime.produceState<Map<String, Map<String, Double?>>>(emptyMap(), Repo.dias, Repo.experimentos, Repo.salud, Repo.nutricion, Repo.momentos) {
-            value = if (Repo.experimentos.isEmpty()) emptyMap() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { Estadistica.panel(dinamicas = false) }
+        // En las capturas (sincrono) se calcula de una vez, como en Logros y Cobertura.
+        val sinc = io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono
+        val panel by androidx.compose.runtime.produceState(if (sinc && Repo.experimentos.isNotEmpty()) Estadistica.panel(dinamicas = false) else emptyMap(),
+            Repo.dias, Repo.experimentos, Repo.salud, Repo.nutricion, Repo.momentos) {
+            if (!sinc) value = if (Repo.experimentos.isEmpty()) emptyMap() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { Estadistica.panel(dinamicas = false) }
         }
         // Un experimento que mide algo privado no se muestra aquí: su resultado se analiza en R.
         Repo.experimentos.filter { !io.github.ruddy2003.vestigium.data.Privado.esVariable(it.resultado) }.sortedByDescending { it.inicio }

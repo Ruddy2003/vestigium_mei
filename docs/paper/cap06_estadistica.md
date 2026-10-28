@@ -41,18 +41,18 @@ La pantalla **Análisis** (`ui/pantallas/Explorar.kt`) tiene, de arriba abajo (d
 |---|---|---|---|---|---|---|
 | Las relaciones más marcadas | `Estadistica.relaciones` | Pearson | Sí (interruptor, encendido por omisión) | Sí (nEf) | Sí (BH, q < 0.10) | `vm_relaciones` |
 | … por semana | `Estadistica.semanal` + `relaciones` | Pearson sobre promedios semanales | Sí (±35 días) | Sí (nEf semanal) | Sí | — |
-| Cruzar dos variables | `Estadistica.pares`, `pearson`, `spearman`, `ic95` | Pearson y Spearman; intervalo sobre Pearson | No | No | No aplica (una sola pareja) | `vm_cruce` (Spearman) |
-| Todo lo que se mueve con algo | `Analisis.factores` | Spearman (continuas); diferencia de medias (0/1) | No | No | Sí (BH, q < 0.1) | `vm_factores` |
-| Modelo múltiple | `Analisis.modelo` | Mínimos cuadrados estandarizados | No | En parte (el día anterior como predictor) | No | `vm_modelo`, `vm_modelo_ar1` |
-| Tendencia | `Analisis.movil`, `Analisis.cambio` | Medias móviles; diferencia de medias | — | No | No | `vm_tendencia` |
-| Día de la semana | `Analisis.porDiaSemana` | Media ± 1.96 EE | No | No | No | `vm_semana` |
+| Cruzar dos variables | `Estadistica.pares`, `pearson`, `spearman`, `correlacionEf`, `sinTendencia` | Pearson y Spearman; intervalo sobre Pearson con nEf; r sin tendencia al lado | Se muestra al lado (r sin tendencia) | Sí (nEf, desde 10c) | No aplica (una sola pareja) | `vm_cruce` (Spearman) |
+| Todo lo que se mueve con algo | `Analisis.factores` | Pearson con nEf (continuas); diferencia de medias con t de Welch y factor AR(1) (0/1) | Sí (interruptor, el mismo de la lista; desde 10c) | Sí (desde 10c) | Sí (BH, q < 0.1) | `vm_factores` (aún sin estas correcciones: entrega 10d) |
+| Modelo múltiple | `Analisis.modelo` | Mínimos cuadrados estandarizados; t con n − k − 1; R² ajustado | No | En parte (el día anterior como predictor) | No | `vm_modelo`, `vm_modelo_ar1` |
+| Tendencia | `Analisis.movil`, `Analisis.cambio` | Medias móviles; diferencia de medias con t de Welch y factor AR(1) | — | Sí (desde 10c) | No | `vm_tendencia` |
+| Día de la semana | `Analisis.porDiaSemana` | Media ± t(n − 1) · EE, con 5 días o más | No | No | No | `vm_semana` |
 | Dinámica emocional | `Analisis.dinamica` | DE, MSSD, autocorrelación | No | — | — | `vm_dinamica` |
 | Ritmo de sueño | `Analisis.ritmo` | Promedios de horas | — | — | — | `vm_ritmo` |
 | Palabras del diario | `Analisis.palabras` | Diferencia de medias, sin prueba | No | No | No | `vm_palabras` |
 | Días atípicos | `Analisis.atipicos` | z robusto (mediana y MAD) | No | — | — | `vm_atipicos` |
-| Antes y después | `Estadistica.diferencia` (en `EtapasDeVida`) | Diferencia de medias, z | No | No | No | — |
+| Antes y después | `Estadistica.diferenciaEnDias` (en `EtapasDeVida`) | Diferencia de medias con t de Welch y factor AR(1) | No | Sí (desde 10c) | No | — |
 
-Lo importante de la tabla: **solo «Las relaciones más marcadas» aplica las tres protecciones a la vez** (tendencia, días parecidos y muchas pruebas). Las demás herramientas son descriptivas o aplican una sola. Esto no es un error en sí —la app lo dice: «Pistas para entenderte. Ninguna prueba causas»—, pero sí produce contradicciones entre pantallas que se discuten en las secciones 6.12 y 6.13 (H-5-3, H-5-4).
+Lo importante de la tabla: **«Las relaciones más marcadas» y, desde la entrega 10c, «Todo lo que se mueve con algo» aplican las tres protecciones a la vez** (tendencia, días parecidos y muchas pruebas). Hasta 10c, «Todo lo que se mueve» no quitaba tendencia ni contaba los días parecidos, así que la misma pareja podía verse «podría ser azar» en la lista y con ✓ un toque después (H-5-3, H-5-4; secciones 6.12 y 6.13). Las demás herramientas son descriptivas o aplican una o dos; la app lo dice: «Pistas para entenderte. Ninguna prueba causas».
 
 ---
 
@@ -66,15 +66,23 @@ Qué variables entran en los análisis lo decide otra función, `Estadistica.var
 
 ### 6.3.2 Cero o faltante: la decisión más delicada del panel
 
-Para cada variable la app decide qué pasa en los días en que no hay registro. Hay tres reglas en el código:
+Para cada variable la app decide qué pasa en los días en que no hay registro. Desde la entrega 10c (D.63) hay **una regla general** y unas pocas excepciones declaradas:
 
 1. **Faltante**: si la fuente no dio nada, `null` (sueño del reloj, clima, pantalla…).
-2. **Cero en todos los días con diario**: `gasto_total`, `gasto_imprevisto`, `n_impulso`, `escalada`, `n_madrugada`… valen 0 en cualquier día que tenga diario y no tenga registros.
-3. **Cero desde el primer registro**: muchas familias (`registros_animo` y `n_<emoción>` desde el primer registro de ánimo; `enfoque_*` desde el primer tramo de cronómetro; `ingreso_total` desde el primer ingreso; `gimnasio` desde el primer entrenamiento; `obras_dia` desde la primera obra; las de sustancias desde el primer consumo de cada una…). Antes de esa fecha, `null`; después, 0 si ese día no hubo nada.
+2. **Cero desde el primer registro** (`Estadistica.ceroDesde(fuente, base)`): devuelve los días de `base` que son iguales o posteriores al primer día de `fuente`. En esos días «no hubo» vale 0; antes, `null`. La usan `gasto_total` y `gasto_imprevisto` (desde el primer gasto, en días con diario), `n_impulso` (desde el primer impulso), `escalada` (desde la primera sesión), `gimnasio` (desde el primer entrenamiento, en días con diario o con entrenamiento) y `ejercicio_min` (desde la primera sesión del reloj, en días con datos del reloj: pasos o frecuencia cardiaca). Las familias que ya seguían esta idea siguen igual: `registros_animo` y `n_<emoción>`, `enfoque_*`, `ingreso_total`, `obras_dia`, las de sustancias…
+3. **Cero solo donde se pudo responder.** Algunas variables necesitan algo más que «ya usabas la función»:
+   - `hab_<id>`: 0 desde el día en que creaste el hábito (`Habito.desde`); antes, `null`, salvo que lo hayas marcado. Los hábitos creados antes de que se guardara esa fecha no la tienen y valen 0 en todos los días con diario.
+   - `sueno_recordado`: 1 si recordaste un sueño; 0 solo si ese día dijiste algo del sueño (calidad o texto); si no, `null`.
+   - Las sociales (`personas`, `cercanos`, `vi_*`, `cercania_media`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `penso_en_*`) y la base de `per_` y `pen_`: solo en los días «sociales» (`Dinamicas.diasSociales`), es decir, con diario escrito o con un momento no privado que nombra a alguien con @. En `tema_`, los días con diario escrito o con un momento que tiene un #tema.
+   - `distancia_km`: 0 en los días con ubicaciones y sin movimiento (`Movilidad.kmPorDia` marca cada día lógico que tiene alguna muestra).
+   - `probioticos_estimado`: solo en los días con bitácora de MacroFactor.
+4. **Excepción declarada**: los contextos `ctx_*` valen 0 cuando no se marcan, porque la pantalla del Día dice que lo no marcado es «no».
 
-La regla 3 es la más defendible: antes de empezar a usar una función no se sabe si «no pasó» o «no lo anotaste». La mezcla de las reglas 2 y 3 en funciones parecidas (gastos frente a ingresos) ya se registró en H-1-1. **[Diseño propio]**.
+La regla 2 es la más defendible: antes de empezar a usar una función no se sabe si «no pasó» o «no lo anotaste» (H-1-1, H-9-16). **[Diseño propio]**. Además, `presencias_revisado` (si revisaste quién estuvo y en quién solo pensaste) entra al panel como covariable en los días con personas, y es obvia con las variables sociales (H-1-6).
 
-**Ejemplo.** Empiezas a registrar ingresos el 1 de marzo. El 15 de febrero, `ingreso_total` es `null` (no se sabe), pero `gasto_total` es 0 si ese día escribiste el diario. Si comparas «gasto» con «ánimo» usando todo el año, los ceros de enero y febrero cuentan como «no gasté nada», aunque solo significan «todavía no anotaba gastos».
+**Ejemplo.** Empiezas a registrar gastos el 1 de marzo. Hasta la entrega 10c, el 15 de febrero `gasto_total` valía 0 si ese día escribiste el diario: si comparabas «gasto» con «ánimo» usando todo el año, los ceros de enero y febrero contaban como «no gasté nada», aunque solo significaban «todavía no anotaba gastos». Ahora ese día es `null`, como ya pasaba con `ingreso_total`.
+
+**Efecto:** más vacíos y menos ceros. Cambian medias, frecuencias y correlaciones, y la cobertura por variable baja; el cambio vale también para los días viejos, porque se recalcula con lo ya guardado.
 
 ### 6.3.3 Las variables dinámicas: «todo se puede cruzar con todo»
 
@@ -101,7 +109,7 @@ La regla 3 es la más defendible: antes de empezar a usar una función no se sab
 | `ciu_`, `pais_` | horas en cada ciudad y país | horas | 8 / 3; 6 / 3 |
 | `musc_`, `act_` | series por músculo; minutos por tipo de movimiento | n, min | 12 / 3; 6 / 3 |
 | `nut_`, `ali_` | cada nutriente de MacroFactor; cada alimento | cantidad; 0/1 | 60 / 14; 12 / 5 |
-| `esc_` | puntaje de cada cuestionario (copiado a los días de su ventana) | puntaje | todos |
+| `esc_` | puntaje de cada cuestionario, copiado a los días que pregunta (7 en WHO-5 y PSS-4, 30 en UCLA-3; si dos respuestas cubren un día, la primera que lo cubre; desde 10c, `Dinamicas.porDiaCuestionario`) | puntaje | todos |
 | `vida_` | etapas de vida («Conocerte») | 0/1 o número | todas |
 | `pol_` | brújula política, vigente hasta el test siguiente | −100 a 100 | todos |
 
@@ -114,7 +122,7 @@ La regla 3 es la más defendible: antes de empezar a usar una función no se sab
 El script de R lee `vm_panel.csv`, que **no** es `Estadistica.panel()`. Lo arma `Exportar.filasPanel()` con otras reglas:
 
 - **Otros nombres** para lo mismo: `sueno_min` (en minutos) frente a `sueno_horas`; `km` frente a `distancia_km`; `hrv_rmssd` frente a `hrv`; `valencia_muestreo` frente a `muestreo_valencia`; `luz_dia_min` frente a `luz_horas`; `carga_noche_inicio_h` frente a `carga_noche_h`; `temp_piel_delta` frente a `temp_piel`; `ruido_db_medio` frente a `ruido_db`.
-- **Otros ceros**: `gasto_total` e `ingreso_total` valen 0 en **cualquier** fecha exportada sin registros (no solo con diario ni desde el primer ingreso); `escalada` y `gimnasio` son falso en cualquier fecha exportada; `n_momentos` y `m_<tipo>` cuentan también momentos privados y las `m_<tipo>` están congeladas desde el registro de ánimo nuevo (H-2-13).
+- **Otros ceros**: `gasto_total` e `ingreso_total` valen 0 en **cualquier** fecha exportada sin registros (en la app, desde 10c, solo desde el primer gasto o ingreso; sección 6.3.2); `escalada` y `gimnasio` son falso en cualquier fecha exportada; alinear estas reglas con las de la app es la propuesta P-30 (entrega 10d); `n_momentos` y `m_<tipo>` cuentan también momentos privados y las `m_<tipo>` están congeladas desde el registro de ánimo nuevo (H-2-13).
 - **Otras filas**: solo fechas con diario, salud, pantalla, entorno, momentos, gastos, ingresos, nutrición o entrenos; R además completa el calendario con renglones vacíos (`complete()`).
 - **Menos variables**: no trae las dinámicas (están en `vm_panel_extendido.csv`), ni contextos, hábitos, lectura del día, sueños por categoría, enfoque, lugares por nombre, etc. Sí trae, copiadas del panel de la app, unas 50 (`nuevas` en `filasPanel`): cultura, mundo, cercanos, presencias, ánimo de todos los registros, sustancias, cierre del día, barómetro, horas por tipo de lugar y `n_<emoción>`.
 
@@ -146,14 +154,14 @@ Si una de las dos variables no cambia (suma de cuadrados igual a 0), devuelve `n
 |---|---|
 | Las relaciones más marcadas (`relaciones`) | **Pearson** sobre los restos sin tendencia (o los valores, si se apaga el interruptor) |
 | Cruzar dos variables | Muestra **Pearson y Spearman**; el texto, la fuerza y el intervalo usan **Pearson** |
-| Todo lo que se mueve con algo (`factores`) | **Spearman** para variables continuas; diferencia de medias para 0/1 |
+| Todo lo que se mueve con algo (`factores`) | Desde 10c, **Pearson** (sobre los restos sin tendencia, como la lista) para variables continuas; diferencia de medias para 0/1. Hasta 10c era Spearman |
 | Dinámica (inercia) | Pearson |
 | R: `vm_relaciones` | Pearson (como la app) |
 | R: `vm_cruce`, `vm_factores`, `vm_cruce_horas`, `vm_presion` | **Spearman** por omisión |
 
 ### 6.4.4 Razonamiento y cuándo falla
 
-Pearson mide relaciones **rectas** y se deja arrastrar por un día extremo (un día con 30 000 pasos pesa mucho). Spearman mide relaciones **que solo suben o solo bajan** (monótonas) y es robusto a extremos, pero con muchas variables 0/1 o con muchos empates pierde información. Usar Pearson sobre los restos sin tendencia es razonable: al restar el promedio de los vecinos, los valores se vuelven más simétricos. El problema no es elegir uno u otro, sino que **la misma pareja puede mostrar números distintos en dos pantallas** (r en la lista, ρ en la ficha de la variable) sin que la app lo explique. **[Aproximación]**.
+Pearson mide relaciones **rectas** y se deja arrastrar por un día extremo (un día con 30 000 pasos pesa mucho). Spearman mide relaciones **que solo suben o solo bajan** (monótonas) y es robusto a extremos, pero con muchas variables 0/1 o con muchos empates pierde información. Usar Pearson sobre los restos sin tendencia es razonable: al restar el promedio de los vecinos, los valores se vuelven más simétricos. El problema no es elegir uno u otro, sino que **la misma pareja puede mostrar números distintos en dos pantallas** (r en la lista, ρ en la ficha de la variable) sin que la app lo explique. Desde la entrega 10c, la ficha usa también r de Pearson con la misma tendencia quitada que la lista, así que la pareja muestra el mismo número en las dos; «Cruzar dos variables» sigue mostrando los dos coeficientes y ahora también la r sin tendencia. Las funciones de R siguen con Spearman por omisión (entrega 10d). **[Aproximación]**.
 
 ---
 
@@ -252,7 +260,7 @@ Como 94.3 es menor que 0.8 × 120 = 96, la tarjeta escribe «120 días (≈ 94 i
 - **Variables esporádicas**: si una variable tiene menos de 10 pares de días consecutivos, su autocorrelación se toma como 0 y no se corrige nada. En el análisis por semana pasa durante las primeras ~11 semanas.
 - **Autocorrelación de toda la serie, no de los días compartidos**: si una variable tiene dos años y la otra dos meses, la autocorrelación de la primera se calcula con los dos años, aunque la comparación use solo los dos meses comunes.
 - **Persistencia más larga que un día**: si el parecido entre días dura semanas (no decae geométricamente), la fórmula de primer orden se queda corta. Quitar la tendencia reduce mucho este problema.
-- **Solo en esta lista.** La corrección existe solo en «Las relaciones más marcadas». «Cruzar dos variables», «Todo lo que se mueve con algo», «Tendencia» y «Antes y después» tratan los días como independientes (H-5-3, H-5-4, H-5-5).
+- **Ya no solo en esta lista (resuelto en 10c, D.65 y D.66).** Hasta la entrega 10c, la corrección existía solo en «Las relaciones más marcadas»; «Cruzar dos variables», «Todo lo que se mueve con algo», «Tendencia» y «Antes y después» trataban los días como independientes (H-5-3, H-5-4, H-5-5). Ahora las correlaciones de «Cruzar» y de «Todo lo que se mueve» usan la misma fórmula de nEf (`Estadistica.correlacionEf`, con la autocorrelación de cada serie calculada por `Estadistica.ar1`, que también exige 10 pares de días seguidos), y las diferencias de medias usan el factor AR(1) de la sección 6.15.2.
 
 ---
 
@@ -268,6 +276,13 @@ $$ z=\operatorname{atanh}(r),\qquad EE=\frac{1}{\sqrt{n-3}},\qquad IC_{95}=\big[
 - En `relaciones` se usa **nEf** en lugar de *n*, y el valor p bilateral es *p* = 2 · (1 − Φ(|z| / EE)).
 - Φ (la distribución normal acumulada) se calcula con `Analisis.phi`, la aproximación 7.1.26 de Abramowitz y Stegun (1964) para la función de error, con error máximo del orden de 10⁻⁷. Para estos usos es exacta en la práctica. **[Validado]**.
 
+**La t de Student (desde la entrega 10c).** Para las diferencias de medias, el modelo múltiple y el día de la semana, la app ya no usa 1.96 sino el cuantil de la **t de Student**, la curva que reemplaza a la normal cuando la variabilidad se estima con pocos datos: tiene colas más gruesas, y más cuanto menos grados de libertad (con 2, el 95 % central llega a ±4.30; con 5, a ±2.57; con 30, a ±2.04; con muchos, a ±1.96).
+
+- `Estadistica.pT(t, gl)`: el *p* de dos colas, con la fórmula exacta p = I_{gl/(gl+t²)}(gl/2, 1/2), donde I es la función beta incompleta regularizada. La app la calcula con una fracción continua (método de Lentz) y el logaritmo de la función gamma con la aproximación de Lanczos (g = 7). Admite grados no enteros, como los de Welch (B.14a).
+- `Estadistica.cuantilT(p, gl)`: el valor t tal que la probabilidad acumulada es *p*, buscado por bisección (100 pasos) sobre `pT`.
+
+Se comprobó en pruebas JVM (`CalculosPrueba.cuantilesDeT`): cuantilT(0.975, 1) = 12.706, (0.975, 2) = 4.303, (0.975, 5) = 2.571, (0.975, 30) = 2.042, y pT(2, 10) = 0.0734, los valores de las tablas. **[Validado]**.
+
 ### 6.7.2 Por qué
 
 La distribución de *r* es asimétrica cerca de ±1; atanh la vuelve aproximadamente normal con varianza 1/(n − 3). Es el método estándar. **[Validado]**. Usarlo con nEf es la combinación habitual con la corrección de la sección 6.6. **[Aproximación]**.
@@ -282,7 +297,8 @@ Con *n* = 120 sin corregir habría salido IC 0.13 a 0.45 y p = 0.0008: casi cuat
 
 ### 6.7.4 Cuándo falla
 
-- Para **Spearman**, la varianza de atanh(ρ) es algo mayor que 1/(n − 3) (Fieller et al., 1957, proponen 1.06/(n − 3)). `factores` y `vm_factores` usan 1/(n − 3) también para ρ: intervalos ligeramente estrechos. **[Aproximación]**.
+- Para **Spearman**, la varianza de atanh(ρ) es algo mayor que 1/(n − 3) (Fieller et al., 1957, proponen 1.06/(n − 3)). `vm_factores` en R usa 1/(n − 3) también para ρ: intervalos ligeramente estrechos. En la app, desde 10c `factores` usa Pearson, así que este punto ya no la afecta. **[Aproximación]**.
+- El intervalo de la correlación sigue usando **1.96** (normal) aun con nEf pequeño. Con la transformación de Fisher eso es lo estándar: el error de usar la normal es pequeño frente al de no corregir por días parecidos. **[Aproximación]**.
 - Para variables 0/1 con pocos «1», Pearson es una correlación punto-biserial; la aproximación de Fisher es menos precisa. La app exige al menos **4 días de cada valor** para evaluarlas (sección 6.10).
 
 ---
@@ -438,11 +454,16 @@ Sueño (h) y valencia, interruptor encendido. Tras quitar la tendencia hay 120 d
 
 ## 6.12 «Cruzar dos variables»
 
-**Qué hace.** Eliges X e Y y ves su dispersión, r de Pearson, ρ de Spearman, el número de días y un texto.
+**Qué hace.** Eliges X e Y y ves su dispersión, r de Pearson, la r sin tendencia, ρ de Spearman, el número de días y un texto.
 
-**Cómo exactamente.** `Estadistica.pares(panel, x, y, desfase)` toma los días con ambos datos; con desfase, Y es la del **día siguiente de calendario** (fecha + 1). Con menos de 3 días no dibuja; el intervalo (`ic95`, sobre Pearson, con *n* sin corregir) requiere 5. El texto dice la fuerza, la dirección, si el intervalo incluye el cero («podría ser azar») y, con menos de 30 días, «Solo son N días: tómalo como pista»; siempre recuerda que correlación no es causa. La recta punteada de la dispersión es la de mínimos cuadrados de Y sobre X.
+**Cómo exactamente.** `Estadistica.pares(panel, x, y, desfase)` toma los días con ambos datos; con desfase, Y es la del **día siguiente de calendario** (fecha + 1; por semana, la semana siguiente). Con menos de 3 días no dibuja. Desde la entrega 10c (D.66):
 
-**Cuándo falla (H-5-4).** Esta pantalla usa **los valores tal cual** (sin quitar tendencia) y el **n bruto** (sin descontar la autocorrelación). Puede decir «no incluye el cero» para una pareja que en la lista aparece punteada como «podría ser azar», o con un signo distinto si la relación era de tendencia. Para una sola pareja elegida por ti no hace falta BH, pero sí los otros dos ajustes, o al menos un aviso.
+- **El intervalo** sale de `Estadistica.correlacionEf`: Pearson con el intervalo de Fisher sobre **nEf** (6.6), usando la autocorrelación de toda la serie de X y de toda la de Y (`Estadistica.ar1`; por semana, entre semanas seguidas). Requiere 5 días. Si nEf < 0.8 · n, el texto añade «cuentan como unos N independientes».
+- **La r sin tendencia**: `Estadistica.sinTendencia` resta a cada valor el promedio de sus ±10 días (±35 por semana), como la lista; con al menos 5 pares, la pantalla la muestra en una cifra aparte, y si difiere de la bruta en 0.2 o más el texto lo explica («parte de lo que se ve es que las dos cambiaron con el tiempo»).
+
+El texto dice la fuerza, la dirección, si el intervalo incluye el cero («podría ser azar») y, con menos de 30 días, «Solo son N días: tómalo como pista»; siempre recuerda que correlación no es causa. La recta punteada de la dispersión es la de mínimos cuadrados de Y sobre X.
+
+**Cuándo falla.** Hasta 10c esta pantalla usaba el **n bruto** y solo los valores tal cual, así que podía decir «no incluye el cero» para una pareja que la lista marcaba «podría ser azar» (H-5-4, **resuelto en 10c, D.66**). Sigue habiendo diferencias menores con la lista: el intervalo y la fuerza son los de la r **bruta** (la sin tendencia se muestra al lado, sin intervalo), y la autocorrelación se calcula con toda la serie de cada variable, no solo con los días comunes. Para una sola pareja elegida por ti no hace falta BH. **[Aproximación]**.
 
 ---
 
@@ -456,14 +477,18 @@ Eliges un objetivo (tu ánimo, una persona, un lugar, una app, una etapa de vida
 
 Para cada variable *v* distinta del objetivo:
 
-1. Se salta si comparte familia con el objetivo (`FAMILIAS`) o si `obvia(v, objetivo)`.
-2. Toma los pares (con o sin desfase de un día). Si hay **menos de 10**, se salta.
-3. Si *v* es 0/1:
-   - exige al menos **5** días con 1 y 5 con 0;
-   - calcula la **diferencia de medias** del objetivo entre días con y sin (`Estadistica.diferencia`, 6.15.2), su intervalo con ±1.96 EE y *p* = 2(1 − Φ(|d|/EE));
+Desde la entrega 10c (D.66), con un interruptor «Quitar tendencias» que empieza como estaba en la lista desde la que llegaste (`Herramienta.sinTendencia`):
+
+1. Prepara el objetivo: su serie y, con el interruptor encendido, sus **restos sin tendencia** (`Estadistica.sinTendencia`, ±10 días, como en 6.5); calcula su autocorrelación (`Estadistica.ar1`).
+2. Para cada variable *v* distinta del objetivo: se salta si comparte familia con el objetivo (`FAMILIAS`) o si `obvia(v, objetivo)`. Si *v* tiene menos de 10 días, se salta.
+3. Si *v* es 0/1 (en sus valores tal cual):
+   - toma el objetivo (resto o valor; con desfase, el del día siguiente) en los días con 1 y en los días con 0; exige al menos **5** de cada uno;
+   - calcula la **diferencia de medias** con `Estadistica.diferenciaEnDias` (6.15.2): t de Welch y el error estándar corregido porque los días seguidos se parecen; el *p* es el de esa t;
    - muestra «+0.45 puntos los días con (12) frente a sin (80)».
-4. Si es continua: exige al menos **14** pares; calcula **ρ de Spearman**, su intervalo de Fisher con *n* bruto y *p* con z = atanh(ρ)·√(n − 3).
+4. Si es continua: toma sus restos (o valores), los empareja con el objetivo y exige al menos **14** pares; calcula **r de Pearson**, el intervalo de Fisher y el *p* con **nEf** (`Estadistica.correlacionEf`, igual que la lista). Muestra «r = +0.31 · moderada · 90 días (≈ 70 independientes)».
 5. Corrige todos los *p* con BH; marca con ✓ los de q < 0.1; muestra las 20 primeras ordenadas por *p*.
+
+Hasta 10c usaba los valores tal cual, ρ de Spearman con *n* bruto y, para 0/1, la normal (1.96) con días independientes.
 
 ### 6.13.3 Razonamiento
 
@@ -471,13 +496,20 @@ Responde una pregunta natural («¿qué acompaña mis mejores días?»). El desf
 
 ### 6.13.4 Ejemplo trabajado
 
-Objetivo: valencia. Variable: «Aparece @persona_b» (0/1). Días con: 5, 6, 5, 4, 6, 5, 6 (media 5.29). Días sin (diez): 4, 4, 5, 3, 4, 5, 4, 3, 4, 5 (media 4.10). Diferencia 1.19; EE = √(0.571/7 + 0.544/10) = 0.369; IC 0.46 a 1.91; p = 0.0013. Hay 17 pares (mínimo 10) y 7 y 10 días de cada tipo (mínimo 5), así que la app sí la evalúa. La prueba t de Welch de R daría p = 0.0069 e IC 0.39 a 1.98: más ancho, porque con 7 y 10 días la distribución t tiene colas más gruesas que la normal.
+Objetivo: valencia, con el interruptor apagado (valores tal cual). Variable: «Aparece @persona_b» (0/1). Días con: 5, 6, 5, 4, 6, 5, 6 (media 5.29). Días sin (diez): 4, 4, 5, 3, 4, 5, 4, 3, 4, 5 (media 4.10). Hay 7 y 10 días de cada tipo (mínimo 5), así que la app sí la evalúa. Supón que son días sueltos, sin 10 pares de días seguidos: la autocorrelación se toma como 0.
+
+- Diferencia 1.19; EE = √(0.571/7 + 0.544/10) = 0.369.
+- Grados de libertad de Welch: (0.0816 + 0.0544)² / (0.0816²/6 + 0.0544²/9) = **12.86**; t(0.975; 12.86) = **2.163**.
+- IC: 1.19 ± 2.163 × 0.369 = **0.39 a 1.98**; t = 3.21, **p = 0.0069**. Es lo mismo que da `t.test` de R.
+
+Hasta 10c, con 1.96 y la normal, salía IC 0.46 a 1.91 y p = 0.0013: unas cinco veces «más significativo». Si los días fueran seguidos y se parecieran (ρ ≈ 0.4), el intervalo se ensancharía todavía más (6.15.2).
 
 ### 6.13.5 Cuándo falla (H-5-3, alta)
 
-- **No quita la tendencia ni descuenta la autocorrelación.** Sus *p* son, para variables persistentes, mucho más pequeños de lo que deberían (Figura 6.3), y BH no puede compensar eso. Como tocar una tarjeta de la lista abre esta pantalla, el usuario puede ver la misma pareja **punteada** («podría ser azar») en la lista y con **✓** aquí.
-- Usa ρ de Spearman donde la lista usa r de Pearson sobre restos: el número también cambia.
-- Para 0/1 usa z (1.96) en vez de t, con apenas 5 días por grupo (H-5-5).
+- **Resuelto en 10c (D.66):** hasta esa entrega no quitaba la tendencia ni descontaba la autocorrelación, así que sus *p* eran, para variables persistentes, mucho más pequeños de lo que debían (Figura 6.3: con autocorrelación 0.8, alrededor de un tercio de falsas alarmas), y la misma pareja podía verse **punteada** en la lista y con **✓** aquí; usaba ρ donde la lista usa r, y para 0/1 usaba 1.96 con apenas 5 días por grupo (H-5-5). Ahora usa la misma maquinaria que la lista.
+- **Lo que sigue distinto de la lista:** el *q* se calcula entre las variables revisadas contra **este** objetivo, no entre todas las parejas; la autocorrelación de cada variable se calcula con toda su serie. Por eso una pareja puede tener ✓ aquí y salir punteada en la lista (o al revés) sin contradicción: se corrigió por menos comparaciones. **[Aproximación]**.
+- Para 0/1 se comparan los **restos del objetivo** entre días con y sin, pero la variable 0/1 no se «desestaciona»: si casi todos sus 1 caen en una sola temporada, la comparación hereda esa temporada en parte (los restos ya quitan lo lento del objetivo).
+- `vm_factores` en R aún no tiene estas correcciones: es la propuesta P-30/P-32 (entrega 10d).
 
 ---
 
@@ -493,8 +525,8 @@ Pregunta por **varias causas posibles a la vez**: ¿el sueño se asocia con el �
 2. Exige **n ≥ k + 10**, con *k* el número de predictores (incluido «ayer»). Con 3 predictores y ayer, 14 días.
 3. **Estandariza** cada columna y el objetivo: resta su media y divide entre su DE (si alguna DE es 0, no hay modelo).
 4. Resuelve mínimos cuadrados **sin intercepto** (todo está centrado): β = (X′X)⁻¹ X′y, invirtiendo con Gauss-Jordan con pivoteo parcial; si un pivote es menor que 10⁻¹⁰ (predictores redundantes), no hay modelo.
-5. Error: s² = SSE / (n − k − 1); EE(β_j) = √(s² · [(X′X)⁻¹]_jj); intervalo β ± **1.96** EE.
-6. R² = 1 − SSE / SST, con SST = Σ y² (y estandarizada).
+5. Error: s² = SSE / (n − k − 1); EE(β_j) = √(s² · [(X′X)⁻¹]_jj); intervalo β ± **t(0.975; n − k − 1)** · EE (desde 10c; antes, 1.96).
+6. R² = 1 − SSE / SST, con SST = Σ y² (y estandarizada), y el **R² ajustado** = 1 − (1 − R²)·(n − 1)/(n − k − 1), que es el que muestra la pantalla («varianza explicada (ajustada)», con 0 como mínimo).
 
 La pantalla permite hasta **6** predictores; marca ✓ si el intervalo no incluye el cero; interpreta |β| de 0.1 como pequeño, 0.3 moderado y 0.5 grande.
 
@@ -504,15 +536,13 @@ Los coeficientes estandarizados permiten comparar predictores en unidades distin
 
 ### 6.14.4 Ejemplo trabajado (sintético)
 
-59 días completos; objetivo valencia; predictores horas de sueño, pasos y valencia de ayer. Resultado: β sueño = +0.38 [0.15, 0.62] ✓; β pasos = +0.09 [−0.14, 0.32]; β ayer = +0.41 [0.18, 0.65] ✓; R² = 27 %. Lectura: un día con una DE más de sueño (≈ 1 h en estos datos) se asocia con 0.38 DE más de valencia, a igual ánimo de ayer y pasos; los pasos no añaden nada claro.
+59 días completos; objetivo valencia; predictores horas de sueño, pasos y valencia de ayer (k = 3; 55 grados de libertad, t = 2.004). Resultado: β sueño = +0.38 [0.14, 0.62] ✓; β pasos = +0.09 [−0.15, 0.33]; β ayer = +0.41 [0.17, 0.65] ✓; R² = 27 % y R² ajustado = 1 − 0.73 × 58/55 = **23 %**, que es lo que se muestra. Lectura: un día con una DE más de sueño (≈ 1 h en estos datos) se asocia con 0.38 DE más de valencia, a igual valor de ayer y pasos; los pasos no añaden nada claro. Con 1.96 (antes de 10c) los intervalos eran apenas más estrechos ([0.15, 0.62], [−0.14, 0.32], [0.18, 0.65]): con 59 días la diferencia entre t y la normal es pequeña; con 14 días sería de ~7 %.
 
 ### 6.14.5 Cuándo falla (H-5-11)
 
-- Intervalo con 1.96 (normal) en vez de t con n − k − 1 grados de libertad: con 14 días queda ~7 % estrecho.
-- R² **no ajustado**: con 6 predictores y pocos días sube aunque los predictores sean ruido.
+- **Resuelto en 10c (D.66):** el intervalo usaba 1.96 en vez de t con n − k − 1 grados (con 14 días quedaba ~7 % estrecho); el R² no estaba ajustado; y el interruptor decía «Controlar por el **ánimo** del día anterior» aunque agrega el **objetivo** de ayer. Ahora dice «Controlar por el valor del día anterior».
 - Solo días **completos**: si un predictor falta mucho, el modelo usa pocos días y quizá no representativos.
-- No quita tendencias.
-- El interruptor dice «Controlar por el **ánimo** del día anterior», pero lo que agrega es el **objetivo** de ayer (si el objetivo es el sueño, es el sueño de ayer).
+- No quita tendencias, y el error estándar supone residuos independientes (el valor de ayer como predictor reduce, pero no elimina, la autocorrelación de los residuos).
 - En R, `vm_modelo_ar1` agrega errores AR(1) pero no tiene la opción del valor de ayer (Apéndice C).
 
 ---
@@ -527,29 +557,54 @@ Para cada día del calendario entre el primero y el último con dato, promedia l
 
 *Figura 6.1. Valencia sintética de 200 días con 18 % de días sin registro y un hueco de 17 días; medias móviles de 7 y 30 días con sus mínimos de días. Script: `figuras/fig11_medias_moviles.py` (replica `Analisis.movil`).*
 
-### 6.15.2 Diferencia de medias (`Estadistica.diferencia`)
+### 6.15.2 Diferencia de medias (`Estadistica.diferenciaCompleta` y `diferenciaEnDias`)
 
-Con al menos 3 valores por grupo (B.11):
+**Qué hace.** Compara el promedio de dos grupos de días (los últimos 30 contra los 30 anteriores; los días con algo contra los días sin) y dice qué tan seguro es que la diferencia no sea azar. Desde la entrega 10c (D.65) tiene en cuenta dos cosas que antes ignoraba: que con pocos días la incertidumbre es mayor de lo que dice la curva normal, y que los días seguidos se parecen.
 
-$$ d=\bar a-\bar b,\qquad EE=\sqrt{\frac{s_a^2}{n_a}+\frac{s_b^2}{n_b}},\qquad IC_{95}=d\pm 1.96\,EE $$
+**Cómo exactamente.** Con al menos 3 valores por grupo (B.11 y B.11a):
 
-Las varianzas son muestrales (con n − 1). Es el error estándar de Welch (1947), pero con el multiplicador **1.96 de la normal** en vez del cuantil t con los grados de libertad de Welch. La usan «Tendencia» (`cambio`), «Todo lo que se mueve con algo» (variables 0/1), «Antes y después» y los experimentos (capítulo 8).
+1. Medias y varianzas muestrales (con n − 1) de cada grupo.
+2. **Autocorrelación de cada grupo** (`Estadistica.ar1Grupos`, solo en `diferenciaEnDias`, que recibe los días con su fecha): la de orden 1 del grupo (`ar1`: Pearson entre cada día y el siguiente, solo con días seguidos, si hay al menos 10 pares); si el grupo no tiene 10 pares, la de los dos grupos juntos, cada uno centrado en su media; si tampoco, 0. Como en series cortas la autocorrelación estimada sale **más baja** que la real, se corrige: ρ̂ + (1 + 4ρ̂)/n, con n los días del grupo (o de los dos juntos). Al final se acota a **[0, 0.9]**: solo corrige hacia arriba (una autocorrelación negativa no estrecha el intervalo).
+3. **Error estándar con el factor AR(1)**: el de cada grupo se multiplica por √((1 + ρ)/(1 − ρ)) (`Estadistica.factorAR1`):
+
+$$ EE=\sqrt{\frac{s_a^2}{n_a}\,\frac{1+\rho_a}{1-\rho_a}+\frac{s_b^2}{n_b}\,\frac{1+\rho_b}{1-\rho_b}} $$
+
+4. **Grados de libertad de Welch** con el número efectivo de días de cada grupo, n·(1 − ρ)/(1 + ρ) (mínimo 2), acotados entre 1 y la suma de esos números menos 2.
+5. **Intervalo**: d ± t(0.975; gl) · EE, con `Estadistica.cuantilT`; **p** de dos colas con `Estadistica.pT`. Los dos salen de la distribución t exacta (sección 6.7 y B.14a).
+
+Sin fechas (`diferencia(a, b)` con ρ = 0), es la prueba t de Welch (1947) clásica. La usan «Tendencia» (`cambio`), «Todo lo que se mueve con algo» (variables 0/1), «Antes y después» y los experimentos (capítulo 8). **[Validado]** la t de Welch; **[Aproximación]** el factor AR(1) (supone que el parecido entre días decae de un día a otro de forma geométrica) y la corrección de sesgo.
+
+**Por qué la corrección de sesgo.** La fórmula ρ + (1 + 4ρ)/n es la aproximación de primer orden al sesgo de la autocorrelación de orden 1 cuando la media se estima, que se suele atribuir a Marriott y Pope (1954). **No se pudo leer el artículo original en la sesión** [sin verificar]; la corrección se justificó por simulación (abajo). **[Aproximación]**.
+
+**Ejemplo trabajado 1 (solo la t).** a = 1, 2, 3 y b = 4, 5, 6. d = −3; EE = √(1/3 + 1/3) = 0.816; Welch da 4 grados de libertad y t = 2.776. IC: −3 ± 2.776 × 0.816 = **−5.27 a −0.73**; p = 0.021. Con 1.96 (antes de 10c) salía −4.60 a −1.40: el intervalo con t es un 42 % más ancho.
+
+**Ejemplo trabajado 2 (días que se parecen).** Los últimos 30 días tienen media 4.6 y los 30 anteriores 4.0, ambos con DE 1.0; la autocorrelación estimada de cada grupo es 0.45.
+
+- Sin corregir: EE = √(1/30 + 1/30) = 0.258; con 1.96, IC **0.09 a 1.11**: «El cambio es claro».
+- Corrección de sesgo: 0.45 + (1 + 4 × 0.45)/30 = **0.543**. Factor √(1.543/0.457) = 1.838; días efectivos por grupo 30 × 0.457/1.543 = 8.9.
+- EE = 0.258 × 1.838 = 0.475; gl = 15.8; t = 2.123. IC: 0.6 ± 2.123 × 0.475 = **−0.41 a 1.61**: «podría ser variación normal».
+
+**Comprobación por simulación** (prueba `CalculosPrueba.coberturaConDiasParecidos` y simulación de la entrega 10c, con 2 000 réplicas sin cambio real): con 30 + 30 días y ρ = 0.5, el intervalo «de 95 %» cubre el cero el **74 %** de las veces sin corregir, el **92 %** con el factor AR(1) pero sin la corrección de sesgo, y alrededor del **95 %** con las dos (la prueba exige entre 93 y 97 %). Con 3 + 3 días independientes, la t de Welch cubre el **96 %** (con 1.96, el 88 %).
 
 ### 6.15.3 Cambio reciente (`Analisis.cambio`)
 
-Compara los **últimos 30 días** (fechas posteriores a hoy − 30) con los **30 anteriores** (de hoy − 60, exclusive, a hoy − 30, inclusive) con `diferencia`. Si el intervalo no incluye el cero: «El cambio es claro».
+Compara los **últimos 30 días** (fechas posteriores a hoy − 30 y hasta hoy) con los **30 anteriores** (de hoy − 60, exclusive, a hoy − 30, inclusive) con `diferenciaEnDias` (6.15.2). Si el intervalo no incluye el cero: «El cambio es claro».
 
 ### 6.15.4 Día de la semana (`Analisis.porDiaSemana`)
 
-Para cada día de la semana con **al menos 2** valores: media ± 1.96 · DE/√n. Dice «Los intervalos no se enciman: la diferencia parece real» si el límite inferior del mejor día supera el superior del peor.
+Para cada día de la semana con **al menos 5** valores (desde 10c; antes, 2): media ± t(0.975; n − 1) · DE/√n. Con 5 valores el multiplicador es 2.776; con 20, 2.093. Dice «Los intervalos no se enciman: la diferencia parece real» si el límite inferior del mejor día supera el superior del peor. No corrige por autocorrelación: los lunes no son días seguidos entre sí, así que el parecido de un día al siguiente casi no los afecta (sí el de una semana a la siguiente).
 
 ### 6.15.5 Antes y después (`EtapasDeVida` en Explorar.kt)
 
-Para cada uno de los últimos 8 cambios guardados en «Conocerte», compara los **60 días anteriores** (fecha − 1 a fecha − 60) con los **60 siguientes** (fecha a fecha + 59) en valencia, sueño, pantalla, pasos, gasto, personas mencionadas y palabras, con `diferencia`. El diseño (estudio observacional, no experimento) se discute en el capítulo 8.
+Para cada uno de los últimos 8 días con cambios guardados en «Conocerte» (desde 10c, los cambios de un mismo día van en una sola tarjeta y el primer llenado no sale), compara los **60 días anteriores** (fecha − 1 a fecha − 60) con los **60 siguientes** (fecha a fecha + 59) en valencia, sueño, pantalla, pasos, gasto, personas mencionadas y palabras, con `diferenciaEnDias`. El diseño (estudio observacional, no experimento) se discute en el capítulo 8.
 
 ### 6.15.6 Cuándo fallan (H-5-5)
 
-Las tres comparaciones tratan cada día como **independiente**: 30 días seguidos de un mismo periodo se parecen, así que el intervalo real es más ancho (la misma lógica de la Figura 6.3). Además usan 1.96 fijo: con «Día de la semana» basta **n = 2** por día, y con 2 valores el multiplicador correcto de t sería 12.7, no 1.96. «Antes y después» compara periodos que también difieren en estación del año y en todo lo demás que cambió a la vez (la app lo advierte: «Muchas cosas cambian a la vez; tómalo como una pista»).
+**Resuelto en 10c (D.65, D.66):** hasta esa entrega las tres comparaciones trataban cada día como **independiente** y usaban 1.96 fijo; con «Día de la semana» bastaban **n = 2** por día, y con 2 valores el multiplicador correcto de t es 12.7, no 1.96 (H-5-5). Lo que sigue:
+
+- La corrección AR(1) supone que el parecido entre días decae geométricamente; si un periodo entero es distinto (un mes de vacaciones dentro de los 30 días), la autocorrelación de orden 1 no lo captura del todo. **[Aproximación]**.
+- Con menos de 10 pares de días seguidos en los dos grupos juntos, ρ = 0 y solo queda la t.
+- «Antes y después» compara periodos que también difieren en estación del año y en todo lo demás que cambió a la vez (la app lo advierte: «Muchas cosas cambian a la vez; tómalo como una pista»).
 
 ---
 
@@ -607,7 +662,7 @@ Días difíciles (≤ 2): 0 %. Racha buena (≥ 5): 2 días (6, 5). Racha dura (
 
 **Qué hace.** Lista los días del **último año** que se salieron de lo normal en alguna variable, con la razón.
 
-**Cómo exactamente (`Analisis.atipicos`).** Revisa 15 variables: `valencia`, `sueno_horas`, `pasos`, `pantalla_min`, `desbloqueos`, `gasto_total`, `notificaciones`, `fotos`, `km`, `min_hablado`, `wa_mios`, `musica_min`, `fc_reposo`, `hrv`, `palabras`. Para cada una con al menos **20** días: mediana *M* = el valor en la posición n/2 de los datos ordenados (con n par, el **de arriba** de los dos centrales), MAD = la mediana (misma regla) de |x − M| multiplicada por **1.4826**, y z robusto (B.14):
+**Cómo exactamente (`Analisis.atipicos`).** Revisa 15 variables: `valencia`, `sueno_horas`, `pasos`, `pantalla_min`, `desbloqueos`, `gasto_total`, `notificaciones`, `fotos`, `distancia_km`, `min_hablado`, `wa_mios`, `musica_min`, `fc_reposo`, `hrv`, `palabras`. Para cada una con al menos **20** días: mediana *M* = el valor en la posición n/2 de los datos ordenados (con n par, el **de arriba** de los dos centrales), MAD = la mediana (misma regla) de |x − M| multiplicada por **1.4826**, y z robusto (B.14):
 
 $$ z_i=\frac{x_i-M}{1.4826\cdot \mathrm{mediana}(|x-M|)} $$
 
@@ -617,13 +672,13 @@ Marca el día si |z| ≥ **3** («muy alto» o «muy bajo»). Si MAD = 0 (la mit
 
 **Ejemplo.** 20 días de pasos: mediana (superior) 8 200; MAD × 1.4826 = 1 038; un día con 2 100 pasos da z = (2100 − 8200)/1038 = **−5.9**: «Pasos muy bajo». (R, con la mediana promediada, daría 8 150 y 964; z = −6.3.)
 
-**Cuándo falla (H-5-8).** El identificador `km` **no existe** en el panel de la app (la variable se llama `distancia_km`), así que la distancia **nunca** se revisa. Las variables muy concentradas (gasto, muchos días en 0) tienen MAD = 0 y se saltan siempre.
+**Cuándo falla.** Hasta la entrega 10c la lista pedía `km`, que **no existe** en el panel de la app, así que la distancia nunca se revisaba y los viajes no salían como atípicos (H-5-8, **resuelto en 10c, D.72**: ahora es `distancia_km`). Las variables muy concentradas (gasto, muchos días en 0) tienen MAD = 0 y se saltan siempre.
 
 ---
 
 ## 6.19 Ritmo de sueño (lo estadístico)
 
-Los modelos de sueño (jet lag social, noches aproximadas por el teléfono) se explican en el capítulo 5. Desde lo estadístico basta saber que `Analisis.ritmo` usa **promedios simples** de horas decimales (con la madrugada sumada 24 h para no promediar 23:30 con 0:30 como 12:00), una DE de la hora de dormir como «regularidad» y la diferencia absoluta de los puntos medios entre noches antes de días libres y laborales; exige 5 noches en total y 2 de cada tipo. `vm_ritmo` en R hace lo mismo pero **solo con el reloj** (no aproxima con el teléfono) y filtra con 2 < duración < 16 h (la app incluye los extremos 2 y 16).
+Los modelos de sueño (jet lag social, noches aproximadas por el teléfono) se explican en el capítulo 5. Desde lo estadístico basta saber que `Analisis.ritmo` usa **promedios simples** de horas decimales (con la madrugada sumada 24 h para no promediar 23:30 con 0:30 como 12:00), una DE de la hora de dormir como «regularidad» y la diferencia absoluta de los puntos medios entre noches antes de días libres y laborales; exige 5 noches en total y 2 de cada tipo. Desde la entrega 10c (D.69) usa solo las noches de los **últimos 56 días** (`Analisis.recientes`) y una sola regla de día libre (`Fechas.esDiaLibre`: sábado, domingo o, si vives en México, festivo). `vm_ritmo(dias = 56)` en R hace lo mismo, con la columna `dia_libre` del panel, pero **solo con el reloj** (no aproxima con el teléfono) y filtra con 2 < duración < 16 h (la app incluye los extremos 2 y 16).
 
 ---
 
@@ -633,17 +688,17 @@ Estas funciones no prueban nada; resumen. Importan porque sus cifras se comparan
 
 ### 6.20.1 «Tus números» (`TusNumeros`)
 
-Para cada medida: el **promedio de los últimos 30 días que tengan dato** dentro del último año (función `ultimos`), con las fechas desde y hasta; se considera «reciente» si el último dato tiene 45 días o menos. Algunas conversiones: km al año = km por día × 365; ejercicio a la semana = media diaria × 7; días de fuerza por semana = entrenamientos en los 28 días que terminan en el último entrenamiento / 4; personas al día = el máximo entre `personas`, `contactos` y `wa_chats`; tazas de café (en reportes) = mg de cafeína / 95.
+Para cada medida: el **promedio de los últimos 30 días que tengan dato** dentro del último año (función `ultimos`), con las fechas desde y hasta; se considera «reciente» si el último dato tiene 45 días o menos. Algunas conversiones: km al año = km por día × 365; ejercicio a la semana = la suma de los minutos de las sesiones de los 28 días que terminan en la última sesión, entre 4 (desde 10c); días de fuerza por semana = entrenamientos en los 28 días que terminan en el último entrenamiento / 4; personas al día = el máximo entre `personas`, `contactos` y `wa_chats`; tazas de café (en reportes) = mg de cafeína / 95.
 
-**Cuándo falla (H-5-9).** `ejercicio_min` solo tiene valor los días **con** una sesión del reloj (los demás son `null`), así que «los últimos 30 días con dato» son los últimos 30 días **en que hiciste ejercicio**, y multiplicar su media por 7 supone que haces ejercicio **todos** los días: sobreestima el ejercicio semanal. Ejemplo: 3 sesiones de 45 min por semana → la app calcula 45 × 7 = **315 min/semana** en lugar de 135. Además, «aire libre» usa `luz_alta_min` (solo la luz del teléfono) y no `aire_libre_min` (el máximo entre luz y movimiento, capítulo 4).
+**Cuándo falla.** Hasta la entrega 10c el ejercicio semanal era la media de los días **con** sesión multiplicada por 7, lo que suponía que hacías ejercicio todos los días: con 3 sesiones de 45 min por semana daba 45 × 7 = **315 min/semana** en lugar de 135 (H-5-9, **resuelto en 10c, D.72**: ahora 4 semanas × 3 × 45 = 540 min, entre 4 = **135**). Queda que, si dejaste de hacer ejercicio hace meses, la cifra es la de tus últimas 4 semanas con sesiones, con sus fechas (como los días de fuerza). Además, «aire libre» usa `luz_alta_min` (solo la luz del teléfono) y no `aire_libre_min` (el máximo entre luz y movimiento, capítulo 4).
 
 ### 6.20.2 «Totales» (`Totales.calcular`)
 
-Suma cada medida en un periodo y dice **desde qué fecha** hay datos de cada fuente, el récord y su fecha; arma índices buscables (alimentos, personas, artistas, lugares, ejercicios…). Excluye los momentos privados. Es pura aritmética. Usa la fecha de calendario (`fecha`) para gastos e ingresos, mientras el panel usa el día lógico (`dia`).
+Suma cada medida en un periodo y dice **desde qué fecha** hay datos de cada fuente, el récord y su fecha; arma índices buscables (alimentos, personas, artistas, lugares, ejercicios…). Excluye los momentos privados. Es pura aritmética. Desde la entrega 10c (D.77) cuenta gastos e ingresos por el día del diario (`dia`, de 5:00 a 5:00), como el panel; antes usaba la fecha de calendario.
 
 ### 6.20.3 Reportes y «Tu año» (`Periodo.calcular`)
 
-Calcula todo lo de una semana, mes o año y lo compara con el **periodo anterior de la misma duración** (exige 3 días con dato en el anterior). La valencia de un día es la del diario o, si no hay, el promedio de los registros de ánimo (`valDe`): mezcla el «yo que recuerda» con el «yo que experimenta» (capítulo 3). La hora media de dormir suma 24 a las horas **antes de las 15:00** (en el resto de la app, antes de las 12:00) y lee la hora tal como quedó escrita en el texto, no en la zona actual. Los gastos van por día lógico y los ingresos por fecha de calendario (H-5-15). Nunca usa lo privado ni el texto de las cartas.
+Calcula todo lo de una semana, mes o año y lo compara con el **periodo anterior de la misma duración** (exige 3 días con dato en el anterior). Desde la entrega 10c (D.77): la valencia de un día es **solo la del diario** (`valDe`), como `valencia` en el panel y en R, y el reporte dice cuántos días tenían ánimo solo en los avisos («N días solo con avisos no cuentan»); hasta 10c, si no había diario usaba el promedio de los registros de ánimo, mezclando el «yo que recuerda» con el «yo que experimenta» (capítulo 3). La hora media de dormir usa `Exportar.horaDecimal` (suma 24 antes de las 12:00, en la zona actual), como el panel; antes sumaba 24 antes de las 15:00 y leía la hora escrita en el texto. Gastos e ingresos van por día lógico (H-5-15, resuelto). Nunca usa lo privado ni el texto de las cartas.
 
 ---
 
@@ -653,7 +708,7 @@ Calcula todo lo de una semana, mes o año y lo compara con el **periodo anterior
 
 - La lista de relaciones exige **14** días (8 semanas por semana).
 - «Cruzar dos variables» dice que hacen falta «unos 30 para empezar a creerle», y la pantalla «Cobertura de variables» cuenta cuánto falta para **30** días por variable.
-- La pantalla de Análisis dice: «Con 90 días o más ya se pueden detectar relaciones moderadas» y, antes, «Faltan N días para tener potencia suficiente».
+- La pantalla de Análisis dice, desde la entrega 10c (D.76): «Con 90 días o más ya se puede detectar una relación moderada en una pareja concreta; en esta lista, que revisa todas a la vez, solo las fuertes» y, antes de los 90, «Faltan N días para tener potencia suficiente». Hasta 10c decía solo «Con 90 días o más ya se pueden detectar relaciones moderadas».
 
 ### 6.21.2 Qué significa «potencia»
 
@@ -681,7 +736,7 @@ Así, la frase de los 90 días es **correcta para una sola relación con días i
 
 ### 6.21.4 Cuándo falla (H-5-16)
 
-El aviso de los 90 días cuenta **días con diario** (`Repo.dias.size`), no días con ambos datos de cada pareja, y no menciona que la corrección por muchas pruebas y la autocorrelación suben bastante el umbral.
+El aviso de los 90 días cuenta **días con diario** (`Repo.dias.size`), no días con ambos datos de cada pareja. Desde 10c sí dice que en la lista completa solo se sostienen las relaciones fuertes (H-5-16, resuelto en parte), aunque no menciona la autocorrelación.
 
 ---
 
@@ -693,16 +748,16 @@ El script `vestigium.R` reproduce casi todas las herramientas. La tabla dice dó
 |---|---|---|---|
 | Datos | `Estadistica.panel()` | `vm_panel.csv` (`Exportar.filasPanel`) | **No**: otros nombres, otras filas, otros ceros, menos variables (6.3.4; H-5-1) |
 | Relaciones | `relaciones`: Pearson, ±10 d, lentas < 0.12, nEf, BH, orden por «seguro» | `vm_relaciones`: el **mismo algoritmo** (mismas cotas, mínimos y orden; p con `pnorm` exacto) | Mismo método, **distinta tabla** y **distinta lista de obvias** (19 conjuntos frente a 56 + reglas; H-5-2). R además compara `fin_de_semana` (columna lógica que agrega el script). No hay modo semanal en R. |
-| Cruzar | Pearson + Spearman; IC de Pearson con n | `vm_cruce`: **Spearman** por omisión, `cor.test` | Distinto coeficiente por omisión (H-5-7) |
-| Factores | ρ con p por Fisher; 0/1 con z; mínimos 10 pares (5 y 5) / 14 | `vm_factores`: ρ con p de `cor.test` (aproximación t); 0/1 con **t de Welch**; mínimo 14 pares para todo; excluye solo la familia del objetivo en `vm_familias` | Parecido, no igual (H-5-3) |
-| Modelo | MCO estandarizado sin intercepto; IC 1.96 | `vm_modelo`: `lm` sobre datos estandarizados; inferencia con t | Mismos β; intervalos/p algo distintos |
+| Cruzar | Pearson + Spearman; IC de Pearson con nEf; r sin tendencia al lado (desde 10c) | `vm_cruce`: **Spearman** por omisión, `cor.test` con n | Distinto coeficiente por omisión y distinto intervalo (H-5-7); alinear es de la entrega 10d |
+| Factores | Desde 10c: restos sin tendencia (interruptor), r de Pearson con nEf; 0/1 con t de Welch y factor AR(1); mínimos 10 días (5 y 5) / 14 | `vm_factores`: valores tal cual, ρ con p de `cor.test` (n bruto); 0/1 con **t de Welch** sin factor AR(1); mínimo 14 pares para todo; excluye solo la familia del objetivo en `vm_familias` | **No** desde 10c: R sigue como la app de antes; se alinea en la entrega 10d (P-32) |
+| Modelo | MCO estandarizado sin intercepto; IC con t(n − k − 1); R² ajustado (desde 10c) | `vm_modelo`: `lm` sobre datos estandarizados; inferencia con t | Mismos β e intervalos desde 10c (los dos usan n − k − 1 grados; R reporta el R² sin ajustar y el ajustado) |
 | Modelo con AR(1) | — | `vm_modelo_ar1`: `nlme::gls` con `corAR1(~ t)` | Solo en R |
 | Tendencia | `movil` | `vm_movil` | Igual |
-| Día de la semana | n ≥ 2 por día; 1.96 EE | `vm_semana`: sin mínimo; 1.96 EE | Igual salvo el mínimo |
+| Día de la semana | n ≥ 5 por día; t(n − 1) EE (desde 10c) | `vm_semana`: sin mínimo; 1.96 EE | **No** con pocos días por día de la semana; se alinea en 10d |
 | Dinámica | Valencia; mínimos 7 días, 3 y 10 pares; meses sin cruzar | `vm_dinamica`: cualquier variable; sin mínimos; inercia por mes; pares que cruzan meses | Casi igual en el total |
-| Ritmo | Reloj o teléfono | Solo reloj | Igual con reloj |
+| Ritmo | Reloj o teléfono; últimos 56 días; `Fechas.esDiaLibre` (desde 10c) | `vm_ritmo(dias = 56)`: solo reloj; lee `dia_libre` del panel (desde 10c) | Igual con reloj |
 | Palabras | ~170 vacías sin acentos; referencia: días con nota | ~110 vacías con acentos; referencia: todos los días | **No** (H-5-10) |
-| Atípicos | 15 variables; mediana superior; ≥ 20 días; último año; `km` inexistente | 8 variables; `median`/`mad` de R; todos los días; `km` sí existe | **No** (H-5-8) |
+| Atípicos | 15 variables (con `distancia_km` desde 10c); mediana superior; ≥ 20 días; último año | 8 variables; `median`/`mad` de R; todos los días; `km` del panel de R | Parecido; distinto número de variables y de días |
 
 ---
 
@@ -720,8 +775,11 @@ El script `vestigium.R` reproduce casi todas las herramientas. La tabla dice dó
 | Lista de relaciones obvias | [Diseño propio] |
 | Familias dinámicas, topes y mínimos de días | [Diseño propio] |
 | Mínimos de 14 días, 4 de cada valor en 0/1, 8 semanas | [Diseño propio] |
-| Diferencia de medias con EE de Welch y 1.96 | [Aproximación] (debería ser t) |
-| Modelo estandarizado con el día anterior | [Aproximación] |
+| Diferencia de medias con t de Welch (desde 10c) | [Validado] |
+| Factor AR(1) √((1 + ρ)/(1 − ρ)) en el EE y n efectivo por grupo | [Aproximación] (supone AR(1)); acotar ρ a [0, 0.9] y el respaldo con los dos grupos juntos: [Diseño propio] |
+| Corrección de sesgo ρ + (1 + 4ρ)/n | [Aproximación] (atribuida a Marriott y Pope, 1954, sin leer el original; validada por simulación) |
+| t de Student exacta por la beta incompleta (Lentz, Lanczos) | [Validado] (comprobada contra tablas) |
+| Modelo estandarizado con el día anterior; t con n − k − 1 y R² ajustado | [Aproximación] (el modelo); [Validado] (la inferencia, si los residuos fueran independientes) |
 | DE, MSSD, inercia | [Validado] como índices; [Aproximación] con un valor por día |
 | z robusto con MAD y umbral 3 | [Validado] |
 | Palabras por diferencia de medias | [Diseño propio] |
@@ -731,13 +789,13 @@ El script `vestigium.R` reproduce casi todas las herramientas. La tabla dice dó
 
 ## 6.24 Resumen del capítulo
 
-1. Todo sale de un **panel** de un renglón por día. Cada variable tiene su regla para distinguir «0» de «no sé», y esas reglas no son uniformes (H-1-1).
+1. Todo sale de un **panel** de un renglón por día. Desde la entrega 10c, casi todas las variables siguen una sola regla para distinguir «0» de «no sé»: 0 desde el primer registro y donde se pudo responder (`ceroDesde`; H-1-1, resuelto en 10c, D.63).
 2. «Las relaciones más marcadas» es el análisis más cuidadoso de la app: **quita tendencias** (±10 días), **descuenta los días parecidos** (nEf) y **corrige por miles de comparaciones** (BH, q < 0.10). Una relación firme ahí es una pista seria, no una prueba de causa.
-3. Las demás herramientas aplican menos protecciones. La más importante de corregir es «Todo lo que se mueve con algo», que puede marcar como firme lo que la lista llama azar (H-5-3).
+3. Desde 10c, «Todo lo que se mueve con algo» usa la misma maquinaria, y las diferencias de medias usan **t de Welch** con el error estándar corregido porque los días seguidos se parecen (H-5-3, H-5-5, resueltos en 10c, D.65 y D.66). Antes, la ficha podía marcar como firme lo que la lista llamaba azar.
 4. **El ciclo semanal no se quita** al quitar la tendencia (H-5-6).
-5. **R aplica el mismo algoritmo a otra tabla y con otra lista de obvias**: hoy no se puede esperar que dé la misma lista (H-5-1, H-5-2).
+5. **R aplica el mismo algoritmo a otra tabla y con otra lista de obvias**, y `vm_factores`, `vm_cruce` y `vm_semana` todavía no tienen las correcciones de 10c: hoy no se puede esperar que dé lo mismo (H-5-1, H-5-2). Alinearlo es la entrega 10d.
 6. Con 90 días independientes se ve una relación de 0.3; con miles de parejas y días parecidos, hace falta más de 0.5. Paciencia: el sistema está pensado para años.
 
 ### Referencias citadas en este capítulo
 
-Abramowitz y Stegun (1964); Benjamini y Hochberg (1995); Benjamini y Yekutieli (2001); Bretherton et al. (1999); Cohen (1988); Dejonckheere et al. (2019); Fieller et al. (1957); Fisher (1915); Granger y Newbold (1974); Hamaker y Wichers (2017); Jahng et al. (2008); Kuppens et al. (2010); Leys et al. (2013); Pyper y Peterman (1998); Storey y Tibshirani (2003); Tausczik y Pennebaker (2010); von Neumann et al. (1941); Welch (1947); Yule (1926). Datos completos y verificación en `referencias.md`.
+Abramowitz y Stegun (1964); Benjamini y Hochberg (1995); Benjamini y Yekutieli (2001); Bretherton et al. (1999); Cohen (1988); Dejonckheere et al. (2019); Fieller et al. (1957); Fisher (1915); Granger y Newbold (1974); Hamaker y Wichers (2017); Jahng et al. (2008); Kuppens et al. (2010); Leys et al. (2013); Marriott y Pope (1954); Pyper y Peterman (1998); Storey y Tibshirani (2003); Tausczik y Pennebaker (2010); von Neumann et al. (1941); Welch (1947); Yule (1926). Datos completos y verificación en `referencias.md`.
