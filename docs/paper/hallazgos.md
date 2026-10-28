@@ -1269,3 +1269,19 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
   - Marcar lo anotado tarde: `retroactivo` en el día, la marca de tiempo de creación en momentos y tomas.
   - Anotar en el Apéndice D la versión de cada entrega.
   - Leer por tramo los análisis que crucen esa fecha.
+
+## Módulo 11 · Introducción, marco teórico, discusión y limitaciones (v90, commit `8818d5a`, esquema 14)
+
+### H-11-1 · Las relaciones se calculan con toda la historia, como si fueran las mismas en todas las etapas
+- **Dónde:** `ui/pantallas/Explorar.kt`, `PantallaExplorar`: pasa a `Estadistica.relaciones` el panel completo (`Estadistica.panel()`, desde el primer día); lo mismo `vm_relaciones()` y `vm_factores()` en R, con `datos = panel` por omisión.
+- **Qué pasa:** quitar la tendencia (±10 días) corrige los niveles que cambian lento, pero no una relación que cambia con los años. Si el sueño y el ánimo iban muy juntos durante dos años y después ya no, la lista muestra un promedio que no describe ninguno de los dos periodos. La app no ofrece ver la lista por año o por etapa de vida.
+- **Por qué importa:** en un registro de por vida, el supuesto de estacionariedad (que las reglas del proceso no cambian) es cada vez menos razonable. Una relación firme puede ser de una etapa que ya terminó, y una relación nueva puede quedar diluida por años en que no existía (capítulo 11, sección 11.2.3).
+- **Gravedad:** Media (crece con los años de registro).
+- **Propuesta:** solo documentar. En R ya se puede comparar por periodo pasando un subconjunto: `vm_relaciones(datos = filter(panel, fecha >= …))` (no ejecutado en la sesión). Opcionalmente, en una revisión futura, un selector de periodo en la lista o un modelo multinivel con la pendiente variando por año (capítulo 11, sección 11.7.1).
+
+### H-11-2 · Las maneras de mirar los datos no entran en ninguna corrección
+- **Dónde:** `ui/pantallas/Explorar.kt` (interruptores «Quitar tendencias», «por semana», «Mostrar también las obvias», los ocho filtros por tema, el desfase de «Cruzar dos variables») y `ui/pantallas/Analisis.kt` («Todo lo que se mueve con algo» con cualquier objetivo); en R, los argumentos de `vm_relaciones` y `vm_factores` (`sin_tendencia`, `ventana`, `privadas`, `datos`).
+- **Qué pasa:** Benjamini-Hochberg corrige entre las parejas de **una** lista. Cada modo, filtro u objetivo es otra lista con su propia corrección, y nada registra cuántos se miraron antes de encontrar algo. Además, la relación más fuerte de una lista larga exagera su tamaño aunque sea real («maldición del ganador»; Ioannidis, 2008), como en «la relación del año» de «Tu año».
+- **Por qué importa:** cuando el análisis se elige después de ver los datos, la probabilidad de un hallazgo por azar es mayor que la que dice cada prueba (Gelman y Loken, 2014). Es la única fuente de sesgo del capítulo 11 (sección 11.4) que no deja ninguna marca en los datos.
+- **Gravedad:** Media.
+- **Propuesta:** solo documentar (capítulo 1, sección 1.6.3). Usar la lista como generadora de hipótesis y confirmar con un flujo que separe explorar de confirmar: explorar en un periodo, escribir antes las pocas relaciones a confirmar y probarlas en el periodo siguiente, o con un experimento personal (capítulo 11, sección 11.7.4).
