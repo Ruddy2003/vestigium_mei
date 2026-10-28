@@ -18,8 +18,11 @@ import kotlin.math.sin
 /**
  * La entrega 10d (P-30 a P-33): R y la app dan lo mismo. Los números esperados salieron de correr vestigium.R
  * (vm_factores y vm_relaciones) con los mismos datos inventados; si una de las dos cambia, esta prueba lo avisa.
+ * Los p que salen de la normal se comparan con 1e-6: la app usa la aproximación de Abramowitz y Stegun (7.1.26, error
+ * máximo 1.5e-7) y R, la normal exacta (pnorm); q multiplica esa diferencia por hasta el número de pruebas.
  */
 class ExportacionPrueba {
+    private val P = 1e-6
     private val vars = listOf("y", "x1", "x2", "b").map { Variable(it, it, "Prueba") }
 
     /** 80 días con fórmulas fijas (sin azar), iguales a las del script de R. x1 falta cada 9 días. */
@@ -34,7 +37,7 @@ class ExportacionPrueba {
     private fun revisa(f: List<Analisis.Factor>, id: String, efecto: Double, lo: Double, hi: Double, n: Int, p: Double) {
         val x = f.first { it.v.id == id }
         assertEquals("$id efecto", efecto, x.efecto, 1e-9); assertEquals("$id lo", lo, x.lo, 1e-9); assertEquals("$id hi", hi, x.hi, 1e-9)
-        assertEquals("$id n", n, x.n); assertEquals("$id p", p, x.p, 1e-9)
+        assertEquals("$id n", n, x.n); assertEquals("$id p", p, x.p, P)
     }
 
     // ---- P-17 en R: vm_factores() es «Todo lo que se mueve con algo».
@@ -43,7 +46,7 @@ class ExportacionPrueba {
         revisa(a, "x1", -0.4034934343749698, -0.694999479938390, 0.00193264386639378, 71, 0.051034977249207)
         revisa(a, "x2", -0.0199092324446691, -0.238586345409335, 0.20068948055265140, 80, 0.861295020338990)
         revisa(a, "b", 0.0326740851880019, -0.537943083485518, 0.60329125386152160, 80, 0.903286493051766)
-        assertEquals(0.153104931747621, a.first { it.v.id == "x1" }.q, 1e-9)
+        assertEquals(0.153104931747621, a.first { it.v.id == "x1" }.q, P)
         val b = Analisis.factores(panel, vars, "y", desfase = true, sinTendencia = true)
         revisa(b, "x1", -0.4590620857627961, -0.730302352492540, -0.0627869207780215, 70, 0.024805578531723)
         revisa(b, "b", -0.0183898582173502, -0.530241580408015, 0.4934618639733142, 79, 0.939951813469952)
@@ -63,9 +66,9 @@ class ExportacionPrueba {
         val yx1 = par("y", "x1")
         assertEquals(-0.4034934343749698, yx1.r, 1e-9); assertEquals(71, yx1.n)
         assertEquals(-0.694999479938390, yx1.ic!!.first, 1e-9); assertEquals(0.00193264386639378, yx1.ic!!.second, 1e-9)
-        assertEquals(0.051034977249207, yx1.p, 1e-9); assertEquals(0.306209863495242, yx1.q, 1e-9)
+        assertEquals(0.051034977249207, yx1.p, P); assertEquals(0.306209863495242, yx1.q, P)
         val x2b = par("x2", "b")
-        assertEquals(-0.0386309377125217, x2b.r, 1e-9); assertEquals(0.782468955969985, x2b.p, 1e-9)
+        assertEquals(-0.0386309377125217, x2b.r, 1e-9); assertEquals(0.782468955969985, x2b.p, P)
         assertEquals(listOf("y" to "x1", "x1" to "x2", "x1" to "b"), l.take(3).map { it.a.id to it.b.id })
     }
 
