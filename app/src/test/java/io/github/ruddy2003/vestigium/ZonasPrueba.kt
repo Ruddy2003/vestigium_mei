@@ -1,6 +1,7 @@
 package io.github.ruddy2003.vestigium
 
 import io.github.ruddy2003.vestigium.data.CambioZona
+import io.github.ruddy2003.vestigium.data.Diccionario
 import io.github.ruddy2003.vestigium.data.EntornoDia
 import io.github.ruddy2003.vestigium.data.Experimento
 import io.github.ruddy2003.vestigium.data.Experimentos
@@ -77,6 +78,19 @@ class ZonasPrueba {
         // Epley: 30 × (1 + 8/30) = 38 y 32 × (1 + 5/30) = 37.3; el calentamiento no cuenta.
         assertEquals(38.0, Macrofactor.fuerzaReferencia(l)!!, 1e-9)
         assertNull(Macrofactor.fuerzaReferencia(listOf(s("Squat", 100.0, 5))))
+    }
+
+    // ---- H-1-8: desde qué versión rige cada columna.
+    @Test fun desdeVersion() {
+        assertEquals(92, Diccionario.desde("vm_panel.csv", "cambio_horario")?.first)
+        // El panel extendido toma lo de vm_panel.csv con el mismo nombre.
+        assertEquals(92, Diccionario.desde("vm_panel_extendido.csv", "desfase_utc_h")?.first)
+        // Por columna sola, en cualquier tabla.
+        assertEquals(92, Diccionario.desde("vm_entrenos.csv", "fuerza_ref_kg")?.first)
+        // Con comodín: la clave más larga gana.
+        assertEquals(86, Diccionario.desde("vm_panel_extendido.csv", "app_min_whatsapp")?.first)
+        assertEquals(90, Diccionario.desde("vm_panel_extendido.csv", "app_whatsapp")?.first)
+        assertNull(Diccionario.desde("vm_panel.csv", "columna_que_no_cambio"))
     }
 
     // ---- H-7-10: el criterio y la huella quedan sellados.
