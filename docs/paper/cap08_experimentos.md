@@ -1,8 +1,8 @@
 # Capítulo 8. Experimentos personales (N-de-1)
 
-> **Para qué sirve este capítulo.** Explica cómo la app te ayuda a **probar algo en ti mismo** (dormirte antes, dejar la cafeína en la tarde, tomar creatina) y a decidir si funcionó. Cubre la lógica de estos diseños y su respaldo en la literatura, qué hace exactamente el código (sorteo de semanas, días de lavado, diferencia de medias, tamaño del efecto, prueba de tendencia) y qué tan confiable es el resultado. También trata la sección «Antes y después» de Explorar, que **parece** un experimento pero no lo es. Todo corresponde a la versión v81 (commit `fa527df`), con lo que cambiaron el esquema 13 (entrega 10b) y la entrega 10c (commit `b943ec7`; apéndice D, D.65, D.67 y D.68): intervalo con *t* y autocorrelación, sorteo por pares, lavado que no se come una condición, tendencia dentro de cada condición y resultado provisional mientras dura el plan. Cada sección dice qué era así antes y qué es así ahora. **Los ejemplos y las simulaciones usan datos inventados.**
+> **Para qué sirve este capítulo.** Explica cómo la app te ayuda a **probar algo en ti mismo** (dormirte antes, dejar la cafeína en la tarde, tomar creatina) y a decidir si funcionó. Cubre la lógica de estos diseños y su respaldo en la literatura, qué hace exactamente el código (sorteo de semanas, días de lavado, diferencia de medias, tamaño del efecto, prueba de tendencia) y qué tan confiable es el resultado. También trata la sección «Antes y después» de Explorar, que **parece** un experimento pero no lo es. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper. Lo que cambió en el módulo 10 se marca «desde el esquema 13» (entrega 10b: fecha de fin y «¿Lo hiciste hoy?») o «desde la 10c» (commit `b943ec7`: intervalo con *t* y autocorrelación, sorteo por pares, lavado que no se come una condición, tendencia dentro de cada condición y resultado provisional mientras dura el plan), y está en el apéndice D (D.13, D.17, D.65, D.67 y D.68). Cada sección dice qué era así antes y qué es así ahora. **Los ejemplos y las simulaciones usan datos inventados.**
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-7-n y se detallan en `hallazgos.md`. Este capítulo usa **simulaciones**: generar miles de experimentos inventados en los que *sabemos* la verdad (por ejemplo, que la acción no hace nada) y contar cuántas veces el método de la app se equivoca. Los scripts están en `figuras/`.
+> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-7-n (el número es el del módulo 7, que escribió este capítulo) y se detallan en `hallazgos.md`. Este capítulo usa **simulaciones**: generar miles de experimentos inventados en los que *sabemos* la verdad (por ejemplo, que la acción no hace nada) y contar cuántas veces el método de la app se equivoca. Los scripts están en `figuras/`.
 
 ---
 
@@ -31,7 +31,7 @@
 
 ### 8.2.1 El problema que resuelven
 
-El resto de la app encuentra **relaciones**: «los días que duermes más, estás de mejor ánimo». Pero una relación no dice qué causa qué: quizá dormir más mejora el ánimo, quizá el buen ánimo te deja dormir, quizá los fines de semana causan ambas cosas. La propia app lo recuerda en Explorar y Análisis: «Para causas, usa los experimentos personales» (`Explorar.kt`, `Mas.kt`).
+El resto de la app encuentra **relaciones**: «los días que duermes más, estás de mejor ánimo». Pero una relación no dice qué causa qué: quizá dormir más mejora el ánimo, quizá el buen ánimo te deja dormir, quizá los fines de semana causan ambas cosas. La propia app lo recuerda en «Cómo leer tus datos»: «Para causas, usa los experimentos personales» (`PantallaGuia`, `ui/pantallas/Mas.kt`), y con otras palabras en la guía de uso (`data/GuiaUso.kt`).
 
 Un **experimento** rompe ese nudo: **tú decides** cuándo hacer la acción, y si además lo decide **el azar**, lo demás (el día de la semana, tu humor previo, el clima) queda repartido entre las dos condiciones. Si después hay diferencia, lo más probable es que la cause la acción.
 
@@ -57,7 +57,7 @@ Está en `PantallaExperimentos` (`ui/pantallas/Lote3.kt`) y el modelo `Experimen
 ### 8.3.1 Lo que escribes
 
 - **Nombre**, **pregunta** (opcional), **acción** («qué vas a cambiar») e **hipótesis** («qué crees que pasará»). Sin nombre, acción e hipótesis, el botón no se activa.
-- **Qué vas a medir**: una sola variable del panel, elegida de una lista corta: valencia del día, activación, calidad de sueño, horas de sueño, valencia de los avisos, minutos de pantalla, tiempo de reacción, volumen en el gimnasio o minutos de enfoque. Las plantillas pueden traer otra. Desde la entrega 10a, el impulso ya no es una medida posible (es privado), y un experimento viejo que lo medía no se muestra en esta pantalla.
+- **Qué vas a medir**: una sola variable del panel, elegida de una lista corta: valencia del día, activación, calidad de sueño, horas de sueño, valencia de los avisos, minutos de pantalla, tiempo de reacción, volumen en el gimnasio o minutos de enfoque. Las cuatro plantillas usan medidas de esa lista. Desde la entrega 10a, el impulso ya no es una medida posible (es privado), y un experimento viejo que lo medía no se muestra en esta pantalla.
 - **Diseño**: «Semanas alternas sorteadas» (`alterno`) o «Antes y después» (`antes_despues`).
 - **Duración**: 4, 6, 8 o 12 semanas.
 - **Días de lavado tras cada cambio**: ninguno, 1, 2, 7 o 28.
@@ -77,19 +77,19 @@ Después, la tarjeta muestra la hipótesis con «sellada el … a las …». La 
 
 **Límites del sellado** (H-7-10):
 
-- La hora queda guardada, pero no hay nada que impida cambiar el texto por otros medios (por ejemplo, restaurando un respaldo editado). El sello es de **honor**, no una garantía. Para un solo usuario es razonable.
+- La hora queda guardada, pero no hay huella del texto sellado. Hasta el esquema 12, restaurar un respaldo reemplazaba el experimento entero; desde el 13 (`Fusion.experimento`), un experimento que ya está en el teléfono conserva su texto y su plan, y del respaldo solo se toman la fecha de fin y las respuestas. Aun así, un respaldo editado que se restaura en un teléfono sin ese experimento lo trae tal cual. El sello es de **honor**, no una garantía. Para un solo usuario es razonable.
 - Se fija la variable, pero **no el análisis**: no se sella cuándo vas a mirar el resultado ni qué vas a considerar «funcionó». Y el resultado **se ve desde el principio** (sección 8.6.3).
 
 ### 8.3.3 El aviso diario
 
-En la pantalla del día (`ui/pantallas/Dia.kt`), cada experimento activo muestra: «Experimento «…», semana *k* de *N*: esta semana SÍ: … / esta semana NO hagas: …». La semana se calcula con `ChronoUnit.WEEKS.between(inicio, fecha)`.
+En la pantalla del día (`ui/pantallas/Dia.kt`), cada experimento muestra: «Experimento «…», semana *k* de *N*: esta semana SÍ: … / esta semana NO hagas: …» (`AvisoExperimento`). Hasta el esquema 12 solo salía en los experimentos activos, y la semana se calculaba con `ChronoUnit.WEEKS.between(inicio, fecha)`.
 
 **Detalle (hasta el esquema 12).** Esa función **trunca hacia cero**: para los 6 días anteriores al inicio da 0, no −1. Por eso, desde el martes de la semana previa, el día ya mostraba «semana 1 de *N*» con la instrucción de la primera semana. Si la primera semana era «SÍ», podías empezar antes de tiempo. No afectaba al cálculo del resultado, que solo cuenta desde `inicio`, pero sí podía contaminar la línea de base (H-7-9). Resuelto: el esquema 13 dejó de mostrar el aviso fuera de los días del experimento, y desde la entrega 10c `AvisoExperimento` toma la condición de `Experimentos.toca`, que no devuelve nada antes del inicio.
 
 **Desde el esquema 13 (entrega 10b):**
 - **Cuándo aparece el aviso.** Sale en los días que cubre el experimento (`Experimentos.cubre`: del inicio a su último día) y nunca en días futuros. Ya no depende de que esté activo: así puedes contestar los días que quedaron sin respuesta aunque ya lo hayas terminado. La semana se calcula como días desde el inicio entre 7, y ya no aparece antes de empezar.
 - **Días de lavado.** El aviso dice cuándo un día es de lavado y no cuenta.
-- **«¿Lo hiciste hoy?»** El aviso lleva la pregunta (I-3) con dos fichas, «sí» y «no». Se pregunta **en las dos condiciones**: en una semana «no», responder «sí» quiere decir que lo hiciste aunque no tocaba. La respuesta se guarda en `Experimento.hecho` (fecha → sí/no). Tocar otra vez la ficha elegida la borra, y el día queda **sin respuesta**, que no es lo mismo que «no».
+- **«¿Lo hiciste hoy?»** El aviso lleva la pregunta (I-3; en un día pasado, «¿Lo hiciste ese día?») con dos fichas, «sí» y «no». Se pregunta **en las dos condiciones**: en una semana «no», responder «sí» quiere decir que lo hiciste aunque no tocaba. La respuesta se guarda en `Experimento.hecho` (fecha → sí/no). Tocar otra vez la ficha elegida la borra, y el día queda **sin respuesta**, que no es lo mismo que «no».
 - **Por qué en el experimento.** Se guarda en el experimento y no en el día para no crear días vacíos ni tocar `retroactivo`.
 - **Lo que no se pudo medir.** Preguntar cada día puede cambiar la conducta (reactividad); no se pudo estimar cuánto.
 
@@ -123,11 +123,11 @@ Barajar sin restricciones podía dar «SÍ SÍ SÍ no no no», que en la prácti
 
 Con 4 semanas, uno de cada tres experimentos «alternos» era en realidad un antes/después.
 
-**Sortear por pares** lo evita: nunca hay más de dos semanas seguidas iguales, y una tendencia lenta afecta casi por igual a ambas condiciones. En las simulaciones de la Figura 8.3 (con el método de antes de la 10c), con una tendencia de 0.02 desviaciones por día y sin efecto real, el sorteo libre de 8 semanas daba una falsa señal el **14 %** de las veces y el sorteo por pares el **6 %**.
+**Sortear por pares** lo evita: nunca hay más de dos semanas seguidas iguales, y una tendencia lenta afecta casi por igual a ambas condiciones. En las simulaciones de la Figura 8.3 (con el método de antes de la 10c), con una tendencia de 0.02 desviaciones por día y sin efecto real, el sorteo libre de 8 semanas daba una falsa señal el **14 %** de las veces y el sorteo por pares, alrededor del **5 %** (el script de la figura no trae este último caso; se repitió con sus mismas funciones en el módulo 14).
 
-**El costo**: hay menos planes posibles. Esto importaría para una **prueba de aleatorización** (sección 8.6.4), cuyo valor *p* más pequeño posible es 1 entre el número de planes: con 6 semanas por pares, nunca podría bajar de 1/8 = 0.125. Con pares conviene ir a 10 o 12 semanas.
+**El costo**: hay menos planes posibles. Esto importaría para una **prueba de aleatorización** (sección 8.6.4), cuyo valor *p* más pequeño posible es 1 entre el número de planes: con pares, 1/8 = 0.125 con 6 semanas y 1/16 = 0.0625 con 8, las dos por encima de 0.05. De las duraciones que ofrece la app (4, 6, 8 o 12 semanas), solo con 12 (1/64 ≈ 0.016) podría bajar de 0.05.
 
-**Con pares ya no puede salir un plan en bloque** (siempre hay al menos dos cambios de condición con 4 semanas o más), pero los experimentos sellados antes con sorteo libre conservan su plan. Desde la 10c, la tarjeta decide si el plan **real** quedó en bloque (`Experimentos.enBloque`: diseño antes/después, o un solo cambio de condición en todo el plan) y, si es un alterno que quedó así, lo dice: «El sorteo quedó en bloque… Se lee como un antes y después». Antes, el aviso fuerte dependía solo de que el diseño elegido fuera «antes y después» (H-9-30).
+**Con pares ya no puede salir un plan en bloque** (siempre hay al menos dos cambios de condición con 4 semanas o más), pero los experimentos sellados antes con sorteo libre conservan su plan. Desde la 10c, la tarjeta decide si el plan **real** quedó en bloque (`Experimentos.enBloque`: diseño antes/después, o un solo cambio de condición en todo el plan) y, si es un alterno que quedó así, lo dice: «El sorteo quedó en bloque… Se lee como un antes y después» (si además salta el aviso de tendencia, lo dice dentro de ese aviso, sección 8.8.1). Antes, el aviso fuerte dependía solo de que el diseño elegido fuera «antes y después» (H-9-30).
 
 ---
 
@@ -146,7 +146,7 @@ Plan sorteado: SÍ no no SÍ SÍ no, 2 días de lavado. Cambios: día 0 (empieza
 
 ![Figura 8.1](figuras/fig20_calendario_experimento.png)
 
-*Figura 8.1. Izquierda: qué días cuentan con un plan alterno y 2 días de lavado. Derecha: la plantilla «Creatina» desde la entrega 10c (12 semanas, antes y después, 28 días de lavado): quedan 14 días con la acción y 42 sin ella; con las 8 semanas de antes, todo el periodo con la acción quedaba en lavado. Script: `figuras/fig20_calendario_experimento.py`.*
+*Figura 8.1. Izquierda: qué días cuentan con un plan alterno y 2 días de lavado. Derecha: la plantilla «Creatina» desde la entrega 10c (12 semanas, antes y después, 28 días de lavado): quedan 14 días con la acción y 42 sin ella. Con las 8 semanas que tenía la plantilla hasta la 10c (4 «no» y 4 «SÍ»), todo el periodo con la acción quedaba en lavado (sección 8.5.3). Script: `figuras/fig20_calendario_experimento.py`.*
 
 ### 8.5.3 Razonamiento y cuándo falla
 
@@ -170,12 +170,12 @@ Recorre los días desde `inicio` hasta el último día del plan, hasta hoy o, de
 
 1. **Diferencia de medias con su intervalo** (`Estadistica.diferenciaEnDias(con, sin)`), solo si hay **al menos 3 días en cada condición**. Desde la 10c (D.65):
 
-   - **La autocorrelación de cada condición**, *ρ* (`Estadistica.ar1Grupos`): la correlación entre pares de días **seguidos** de esa condición, si hay al menos 10 pares; si no, la de las dos condiciones juntas (cada una centrada en su media); si tampoco, 0. Como en series cortas la autocorrelación estimada sale más baja que la real, se corrige: *ρ* + (1 + 4*ρ*)/*n*, con *n* los días de esa condición (la aproximación de primer orden atribuida a Marriott y Pope, 1954; la forma exacta no se leyó en el artículo **[sin verificar]**). Luego se acota entre 0 y 0.9: solo se corrige hacia un intervalo más ancho.
-   - **El error estándar de cada condición** se multiplica por √((1 + *ρ*)/(1 − *ρ*)), y su número efectivo de días es *n*(1 − *ρ*)/(1 + *ρ*):
+   - **La autocorrelación de cada condición**, *ρ* (`Estadistica.ar1Grupos`): la correlación entre pares de días **seguidos** de esa condición, si hay al menos 10 pares; si no, la de las dos condiciones juntas (cada una centrada en su media); si tampoco, 0. Como en series cortas la autocorrelación estimada sale más baja que la real, se corrige: *ρ* + (1 + 4*ρ*)/*n*, con *n* los días de esa condición (o de las dos, si se usó la de las dos juntas) (la aproximación de primer orden atribuida a Marriott y Pope, 1954; la forma exacta no se leyó en el artículo **[sin verificar]**). Luego se acota entre 0 y 0.9: solo se corrige hacia un intervalo más ancho.
+   - **El error estándar de cada condición** se multiplica por √((1 + *ρ*)/(1 − *ρ*)), y su número efectivo de días es *n*(1 − *ρ*)/(1 + *ρ*), nunca menos de 2 (`Estadistica.diferenciaCompleta`):
 
 $$EE = \sqrt{\frac{s_c^2}{n_c}\cdot\frac{1+\rho_c}{1-\rho_c} + \frac{s_s^2}{n_s}\cdot\frac{1+\rho_s}{1-\rho_s}}$$
 
-   - **Los grados de libertad** son los de Welch con esos *n* efectivos, y el intervalo usa el **cuantil de la *t* de Student** (`Estadistica.cuantilT(0.975, gl)`) en lugar de 1.96:
+   - **Los grados de libertad** son los de Welch con esos *n* efectivos (acotados entre 1 y la suma de los dos *n* efectivos menos 2), y el intervalo usa el **cuantil de la *t* de Student** (`Estadistica.cuantilT(0.975, gl)`) en lugar de 1.96:
 
 $$\bar{x}_c - \bar{x}_s \;\pm\; t_{0.975,\,gl}\cdot EE$$
 
@@ -222,7 +222,7 @@ La estimación de *ρ* con 19 días es muy ruidosa (salió 0.17 y 0.55 para un v
 
 ### 8.6.3 Por qué el intervalo de antes de la 10c era demasiado estrecho (pistas 1 y 2; H-7-3 y H-7-4, resueltos en 10c)
 
-**1. Trataba cada día como independiente** (H-7-3). El cálculo supone que cada día es un dato nuevo, como si fueran 38 personas distintas. Pero el ánimo, el sueño y casi todo lo que mide la app **se parecen de un día al siguiente**. La propia app lo sabe: para las correlaciones calcula la autocorrelación de cada variable y un *n efectivo* (`Estadistica.autocorr`; capítulo 6, sección 6.6, y H-5-5, que señala el mismo problema en `Estadistica.diferencia` para todas las pantallas que la usan). En los experimentos no lo usaba. Además, lo que se sortea son **semanas**, no días: en un experimento de 6 semanas hay 6 unidades sorteadas, no 38.
+**1. Trataba cada día como independiente** (H-7-3). El cálculo suponía que cada día era un dato nuevo, como si fueran 38 personas distintas. Pero el ánimo, el sueño y casi todo lo que mide la app **se parecen de un día al siguiente**. La propia app lo sabe: para las correlaciones calcula la autocorrelación de cada variable y un *n efectivo* (`Estadistica.autocorr`; capítulo 6, sección 6.6, y H-5-5, el mismo problema en `Estadistica.diferencia` para todas las pantallas que la usaban, también resuelto en 10c). En los experimentos no lo usaba. Además, lo que se sortea son **semanas**, no días: en un experimento de 6 semanas hay 6 unidades sorteadas, no 38.
 
 **2. Usaba 1.96 fijo** (H-7-3). Con pocos días, el valor correcto sale de la distribución *t* y es mayor.
 
@@ -254,7 +254,7 @@ Antes de la 10c, con autocorrelaciones como las que suelen tener las medidas dia
 2. Calcula la misma diferencia con **cada uno de los otros planes que pudieron salir** (con los mismos datos y el lavado que correspondería a cada plan).
 3. El valor *p* es la fracción de planes que dan una diferencia igual o mayor que la real.
 
-Su ventaja: **no supone que los días sean independientes**, porque se apoya solo en que el sorteo fue real. Su límite: el *p* más pequeño posible es 1 / número de planes. Con el sorteo por pares de la 10c hay $2^{N/2}$ planes: con 8 semanas (16 planes), 0.0625; con 12 (64 planes), 0.016. Es decir, **con 4 o 6 semanas no se puede llegar a una conclusión con el criterio habitual**, por grande que sea el efecto. Sigue siendo una **propuesta no aplicada**: la app no la ofrece y **tampoco hay función de R para los experimentos**, aunque `vm_experimentos.csv` exporta el plan, el lavado, la variable, la fecha de fin y las respuestas (H-7-11). La corrección por autocorrelación de la 10c es la alternativa mínima que la revisión propuso.
+Su ventaja: **no supone que los días sean independientes**, porque se apoya solo en que el sorteo fue real. Su límite: el *p* más pequeño posible es 1 / número de planes. Con el sorteo por pares de la 10c hay $2^{N/2}$ planes: con 4 semanas, 0.25; con 6, 0.125; con 8 (16 planes), 0.0625; con 12 (64 planes), 0.016. Es decir, **con 4, 6 u 8 semanas no se puede llegar a una conclusión con el criterio habitual** (*p* < 0.05), por grande que sea el efecto; de las duraciones de la app, solo 12 semanas lo permite. Sigue siendo una **propuesta no aplicada**: la app no la ofrece y **tampoco hay función de R para los experimentos**, aunque `vm_experimentos.csv` exporta el plan, el lavado, la variable, la fecha de fin y las respuestas (H-7-11). La corrección por autocorrelación de la 10c es la alternativa mínima que la revisión propuso.
 
 ### 8.6.5 El d de Cohen en una sola persona
 
@@ -265,7 +265,7 @@ Su ventaja: **no supone que los días sean independientes**, porque se apoya sol
 
 ## 8.7 Lo que no se registra: la adherencia
 
-La app guarda qué **debías** hacer cada semana, pero **no si lo hiciste** (H-7-8). Si en una semana «SÍ» te dormiste tarde tres noches, esos días cuentan igual como «con la acción». Es lo que en ensayos clínicos se llama análisis por **intención de tratar**: compara lo asignado, no lo hecho. Es una forma legítima de análisis (estima el efecto de *intentar* la acción) **[Validado]**, pero diluye el efecto si no la cumples y no te deja saber cuánto la cumpliste.
+Hasta el esquema 12, la app guardaba qué **debías** hacer cada semana, pero **no si lo hiciste** (H-7-8; desde el esquema 13 se pregunta, sección 8.7.1). El resultado sigue comparando lo asignado: si en una semana «SÍ» te dormiste tarde tres noches, esos días cuentan igual como «con la acción». Es lo que en ensayos clínicos se llama análisis por **intención de tratar**: compara lo asignado, no lo hecho. Es una forma legítima de análisis (estima el efecto de *intentar* la acción) **[Validado]**, pero diluye el efecto si no la cumples; sin la pregunta diaria, además, no había forma de saber cuánto la cumpliste.
 
 Relacionado: **hasta el esquema 12, «Terminar experimento» no guardaba la fecha** (H-7-2). Solo marcaba `activo = false`. `Experimentos.resultado` seguía contando todos los días hasta el final del plan original, así que si terminabas en la semana 3 de 6 y dejabas de hacer la acción, las semanas «SÍ» posteriores se contaban como «con la acción» aunque no la hiciste. Además, el aviso del día desaparecía y no sabías qué semanas tocaban.
 
@@ -285,11 +285,11 @@ Relacionado: **hasta el esquema 12, «Terminar experimento» no guardaba la fech
 
 ### 8.8.1 Qué hace (desde la entrega 10c: `Experimentos.tendencia`)
 
-Si hay al menos 8 días que cuentan, ajusta por mínimos cuadrados **a la vez** la tendencia y la condición:
+Si hay al menos 8 días que cuentan y tienen dato (sin hoy), ajusta por mínimos cuadrados **a la vez** la tendencia y la condición:
 
 $$y = a + b\,i + c\,\text{con} + \varepsilon$$
 
-con *i* = número de día (0, 1, 2…) y «con» = 1 los días con la acción y 0 los demás. *b* es la **pendiente dentro de cada condición** (la misma para las dos): cuánto cambia la medida por día una vez descontado el efecto de la condición. Su error estándar sale de la matriz del ajuste con *n* − 3 grados de libertad, y el aviso salta si |*b*/EE(*b*)| supera el **cuantil 0.975 de la *t*** con *n* − 3 grados. Si todos los días son de la misma condición, queda la pendiente simple con *n* − 2. El aviso dice: «Ojo: dentro de cada condición, tu medida venía cambiando sola (… por día). Parte de la diferencia puede ser esa tendencia», y añade «como el plan quedó en bloque (primero una condición y luego la otra), pesa más» si `Experimentos.enBloque`.
+con *i* = número de día (0, 1, 2…) y «con» = 1 los días con la acción y 0 los demás. *b* es la **pendiente dentro de cada condición** (la misma para las dos): cuánto cambia la medida por día una vez descontado el efecto de la condición. Su error estándar sale de la matriz del ajuste con *n* − 3 grados de libertad, y el aviso salta si |*b*/EE(*b*)| supera el **cuantil 0.975 de la *t*** con *n* − 3 grados. Si todos los días son de la misma condición (o el día y la condición no se pueden separar), queda la pendiente simple con *n* − 2. El aviso dice: «Ojo: dentro de cada condición, tu medida venía cambiando sola (… por día). Parte de la diferencia puede ser esa tendencia», y añade «como el plan quedó en bloque (primero una condición y luego la otra), pesa más» si `Experimentos.enBloque`.
 
 **Hasta la 10c** la recta se ajustaba **con las dos condiciones juntas** (valor contra día) y avisaba si |*b*/EE(*b*)| > 2:
 
@@ -328,7 +328,7 @@ Con el modelo de la 10c, en la misma situación el aviso sale el **5 %** de las 
 |---|---|---|---|---|---|---|
 | Creatina | 5 g al día | `volumen_kg` | antes/después | 12 (8 hasta la 10c) | 28 | «la reserva del músculo tarda semanas en llenarse y en vaciarse, así que alternar semanas no sirve» |
 | Hora de dormir | en la cama antes de las 00:00 | `valencia` | alterno | 6 | 1 | «el primer día de cada cambio no cuenta» |
-| Pantalla antes de dormir | sin pantalla la última hora | `sueno_calidad` | alterno | 6 | 1 | — |
+| Pantalla antes de dormir | sin pantalla la última hora | `sueno_calidad` | alterno | 6 | 1 | «Semanas alternas sorteadas» |
 | Cafeína en la tarde | nada después de las 14:00 | `sueno_horas` | alterno | 6 | 2 | «dos días de lavado por la cafeína que queda en el cuerpo» |
 
 **Por qué la creatina va en antes/después.** La creatina no actúa como una pastilla para dormir: se acumula en el músculo. Hultman et al. (1996) midieron que la creatina total del músculo sube alrededor de un 20 % tras 6 días a 20 g diarios y se mantiene con 2 g diarios durante 30 días más. Si la reserva tarda semanas en llenarse y en vaciarse, alternar semanas solo compararía «medio lleno» con «medio lleno». El razonamiento es correcto. El modelo de saturación de la app (28 días para llenarse y 35 para vaciarse) se trata en el capítulo 5 (sección 5.6.1). El mismo estudio midió el vaciado: 30 días después de dejar la creatina, su concentración en el músculo ya no difería del valor inicial.
@@ -362,7 +362,7 @@ Lo que ayuda (sin cambiar la app):
 
 ### 8.11.1 Qué hace (`EtapasDeVida`, `ui/pantallas/Explorar.kt`)
 
-Para cada uno de los **8 cambios más recientes** que guardaste en «Conocerte» (mudanza, pareja, trabajo…; `perfil_historial`), compara siete variables: valencia, horas de sueño, minutos de pantalla, pasos, gasto, personas mencionadas y palabras escritas.
+Para los **8 días más recientes** en que guardaste cambios en «Conocerte» (mudanza, pareja, trabajo…; `perfil_historial`), compara siete variables: valencia (la tarjeta la rotula «ánimo»), horas de sueño, minutos de pantalla, pasos, gasto, personas mencionadas y palabras escritas.
 
 - **Antes**: los días −1 a −60 respecto a la fecha del cambio.
 - **Después**: los días 0 a 59.
@@ -376,8 +376,8 @@ Nadie sorteó cuándo mudarte o cambiar de trabajo, y esos cambios suelen venir 
 
 ### 8.11.3 Cuándo falla (H-7-12)
 
-- **Muchas comparaciones.** 8 cambios × 7 variables = hasta **56 comparaciones**. Aunque nada cambiara de verdad, con días independientes y 5 % de error cabe esperar unas **3** comparaciones «claras» por azar; con la autocorrelación de 60 días de datos, muchas más (sección 8.6.3). No se corrige por comparaciones múltiples.
-- **Días tratados como independientes**, con 1.96 (igual que en H-7-3; resuelto en 10c: ahora con *t* y autocorrelación).
+- **Muchas comparaciones.** 8 tarjetas × 7 variables = hasta **56 comparaciones**. Aunque nada cambiara de verdad, con un intervalo que da el 5 % de falsas señales cabe esperar unas **3** comparaciones «claras» por azar; con el intervalo de antes de la 10c, que ignoraba la autocorrelación, muchas más (sección 8.6.3). No se corrige por comparaciones múltiples.
+- **Hasta la 10c, días tratados como independientes**, con 1.96 (igual que en H-7-3); desde la 10c, con *t* y autocorrelación.
 - **Tendencias**: el mismo problema del antes/después (sección 8.8).
 - **La fecha es la del registro en la app**, no la del cambio real (como H-6-3).
 - **Un mismo cambio podía salir varias veces** (resuelto en 10c): si en una sola edición cambiabas ciudad, vivienda y «vive con», salían tres tarjetas con la misma fecha y **los mismos números**, lo que daba la impresión de tres hallazgos. Ahora es una tarjeta con los tres cambios.
@@ -432,7 +432,7 @@ Nadie sorteó cuándo mudarte o cambiar de trabajo, y esos cambios suelen venir 
 5. La **prueba de tendencia** confundía un efecto real con una tendencia en los antes/después: avisaba en el 71 % de los casos con un efecto grande y sin tendencia (H-7-6). Desde la 10c separa tendencia y condición y avisa en el 5 %; pero en un antes/después con tendencia real solo la detecta el 22 % de las veces.
 6. Hasta el esquema 12, **«Terminar» no guardaba la fecha** ni se registraba si cumpliste la acción (H-7-2, H-7-8). Desde el 13 se guardan la fecha de fin y «¿Lo hiciste hoy?», con el cumplimiento por condición y un cociente secundario. No hay cegamiento: prefiere medidas objetivas y mirar solo al final.
 7. «Antes y después» en Explorar es **observacional**, con hasta 56 comparaciones sin corregir (H-7-12); desde la 10c, una tarjeta por guardado y con el mismo intervalo corregido.
-8. Se identificaron **14 hallazgos** (H-7-1 a H-7-14). El módulo 7 no cambió código; la entrega 10c resolvió H-7-1, H-7-3 a H-7-6, H-7-8, H-7-9, H-7-12 y H-7-13 (H-7-12 en parte: las comparaciones múltiples siguen sin corregirse). H-7-7 (Hedges) queda documentado.
+8. El módulo 7 identificó **14 hallazgos** (H-7-1 a H-7-14) y no cambió código. Después, el esquema 13 (entrega 10b) resolvió H-7-2 y H-7-8 (el rótulo «según el plan» llegó en la 10c), y la entrega 10c resolvió H-7-1, H-7-3, H-7-4, H-7-5, H-7-9 y H-7-13, y en parte H-7-6 (el efecto que se muestra no descuenta la tendencia) y H-7-12 (las comparaciones múltiples siguen sin corregirse). Siguen abiertos H-7-7 (Hedges, documentado), H-7-10 (desde el esquema 13, restaurar ya no reescribe un experimento que está en el teléfono, pero el sello sigue sin fijar el análisis), H-7-11 y H-7-14.
 
 ---
 

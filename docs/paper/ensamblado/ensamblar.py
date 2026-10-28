@@ -10,13 +10,18 @@ Qué hace, en orden:
    deja visible «[sin verificar: …]» y ordena alfabéticamente (APA 7).
 6. Escribe vestigium_mei_paper.md; los .docx y .pdf los genera construir.sh.
 
-Uso (desde docs/paper/ensamblado): python3 ensamblar.py"""
+Con --corta (módulo 14) arma la versión corta: los capítulos y el apéndice B de docs/paper/corta/, el mismo resumen
+y el mismo glosario, y en la lista de referencias solo las citadas. Escribe vestigium_mei_paper_corta.md.
+
+Uso (desde docs/paper/ensamblado): python3 ensamblar.py [--corta]"""
 import re
+import sys
 import unicodedata
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
-SALIDA = Path(__file__).resolve().parent / "vestigium_mei_paper.md"
+CORTA = "--corta" in sys.argv
+SALIDA = Path(__file__).resolve().parent / ("vestigium_mei_paper_corta.md" if CORTA else "vestigium_mei_paper.md")
 
 CAPITULOS = ["cap01_introduccion.md", "cap02_arquitectura.md", "cap03_estado_subjetivo.md", "cap04_datos_pasivos.md",
              "cap05_modelos_fisiologicos.md", "cap06_estadistica.md", "cap07_red_social.md", "cap08_experimentos.md",
@@ -33,6 +38,11 @@ toc-title: "Índice"
 ---
 
 """
+if CORTA:
+    CAPITULOS = ["corta/" + c for c in CAPITULOS]
+    APENDICES = ["corta/apendiceB_formulas.md", "apendiceE_glosario.md"]
+    PORTADA = PORTADA.replace('subtitle: "Qué hace la app, cómo y por qué: el paper metodológico"',
+                              'subtitle: "Qué hace la app, cómo y por qué: el paper metodológico (versión corta)"')
 
 # Notas de verificación con «sin verificar»: se reemplazan por una marca corta y visible.
 SIN_VERIFICAR = {
@@ -130,7 +140,14 @@ def norm(s):
     return "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn").lower()
 
 
-def referencias():
+def citada(e, cuerpo):
+    """¿Se cita la entrada en el cuerpo? Primer apellido (o autor institucional) seguido de su año."""
+    autor = re.split(r",| \(", e, 1)[0].strip().rstrip(".")
+    anio = re.search(r"\((\d{4}|s\. f\.)", e).group(1)
+    return any(anio in cuerpo[m.end():m.end() + 160] for m in re.finditer(re.escape(norm(autor)), cuerpo))
+
+
+def referencias(cuerpo_paper=None):
     t = (RAIZ / "referencias.md").read_text(encoding="utf-8")
     ents = [p.strip() for p in t.split("\n\n")
             if re.match(r"^(?:[A-ZÁÉÍÓÚÑ]|(?:von|van|de|del|da) [A-Z])", p.strip()) and re.search(r"\((\d{4}|s\. f\.)[a-z]?[,)]", p[:300])]
@@ -152,6 +169,8 @@ def referencias():
         e = e.rstrip()
         if marca:
             e += f" **[sin verificar: {marca}]**"
+        if cuerpo_paper is not None and not citada(e, cuerpo_paper):
+            continue
         lista.append(e)
     def orden(e):
         # APA 7: por los apellidos de los autores en orden (sin «&») y, con los mismos autores, por año
@@ -171,12 +190,13 @@ def main():
     partes.append(limpiar(resumen.replace("# Resumen", "# Resumen {.unnumbered}", 1)))
     for f in CAPITULOS + APENDICES:
         t = (RAIZ / f).read_text(encoding="utf-8")
-        pref = re.match(r"cap(\d+)", f).group(1).lstrip("0") if f.startswith("cap") else re.match(r"apendice([A-E])", f).group(1)
+        nombre = f.split("/")[-1]
+        pref = re.match(r"cap(\d+)", nombre).group(1).lstrip("0") if nombre.startswith("cap") else re.match(r"apendice([A-E])", nombre).group(1)
         t = quitar_referencias_del_capitulo(t)
         t = figuras(t)
         t = tablas_y_ecuaciones(t, pref)
         partes.append(limpiar(t))
-    refs, n = referencias()
+    refs, n = referencias(norm("\n".join(partes)) if CORTA else None)
     partes.append(refs)
     texto = "\n\n".join(partes)
     SALIDA.write_text(texto, encoding="utf-8")

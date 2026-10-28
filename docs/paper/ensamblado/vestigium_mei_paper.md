@@ -10,7 +10,7 @@ toc-title: "Índice"
 
 # Resumen {.unnumbered}
 
-Vestigium Mei es una app de Android para registrar, durante toda la vida y con una sola persona usuaria, el rastro de cada día. Combina datos que se escriben (ánimo en dos ejes, valencia y activación, con avisos al azar y un diario nocturno; cuestionarios validados; personas nombradas con @), datos que el teléfono y el reloj miden solos (pantalla, ubicación, sueño, pasos) y archivos importados. Todo se resume en un panel de un renglón por día, de 05:00 a 04:59, que distingue «cero» de «sin dato» con una sola regla. La app cruza cualquier variable con cualquier otra: quita tendencias restando el promedio de ±10 días, descuenta que los días se parecen con un número efectivo de días y corrige por miles de comparaciones con Benjamini-Hochberg. Ofrece experimentos personales con semanas sorteadas por pares, hipótesis sellada e intervalos corregidos por autocorrelación, y exporta todo a R, que repite los análisis. Este documento describe cada función según el código de la versión 90, con su base científica, ejemplos inventados y límites, y separa lo validado de lo aproximado y lo propio. Una revisión anotó 158 problemas metodológicos; 98 se resolvieron y 22 en parte. Las conclusiones posibles son descriptivas y de asociación dentro de la persona, salvo las de los experimentos, causales sin cegamiento. Las limitaciones principales son los datos faltantes no al azar, variables que miden algo distinto de su nombre, la reactividad y suponer que las relaciones no cambian con los años. Se propone confirmar cada hallazgo con datos nuevos.
+Vestigium Mei es una app de Android para registrar, durante toda la vida y con una sola persona usuaria, el rastro de cada día. Combina datos que se escriben (valencia y activación con avisos al azar y un diario nocturno; cuestionarios validados; personas nombradas con @), datos que el teléfono y el reloj miden solos (pantalla, ubicación, sueño, pasos) y archivos importados. Todo se resume en un panel de un renglón por día, de 05:00 a 04:59 (salvo algunas fuentes, por día de calendario), que distingue «cero» de «sin dato» con una sola regla. La app cruza cualquier variable con cualquier otra: quita tendencias restando el promedio de ±10 días, descuenta que los días se parecen con un número efectivo de días y corrige por miles de comparaciones con Benjamini-Hochberg. Ofrece experimentos personales con semanas sorteadas por pares, hipótesis sellada e intervalos corregidos por autocorrelación, y exporta todo a R, que repite los análisis. Este documento describe cada función según el código de la versión 90 (esquema de datos 14) con su base científica y sus límites, y separa lo validado de lo aproximado y lo propio. Las revisiones anotaron 158 problemas metodológicos; 97 se resolvieron y 24 en parte. Las conclusiones posibles son descriptivas y de asociación dentro de la persona, salvo las de los experimentos, causales sin cegamiento. Las limitaciones principales son los datos faltantes no al azar, variables que miden algo distinto de su nombre, la reactividad y suponer que las relaciones no cambian con los años. Se propone confirmar cada hallazgo con datos nuevos.
 
 
 # Capítulo 1. Introducción y marco teórico
@@ -47,7 +47,7 @@ Vestigium Mei («mi rastro», en latín) es una app de Android, escrita en Kotli
 - **Pasiva**: lo que el teléfono y el reloj miden solos. Tiempo de pantalla, ubicación y lugares, pasos y sueño del reloj por Health Connect, clima, luz, ruido, notificaciones (capítulo 4).
 - **Importada**: archivos que cargas. Spotify, Google Takeout, WhatsApp (solo conteos), MacroFactor, Kindle, Cold Turkey (capítulo 4).
 
-**Una unidad de análisis: el día.** Todo se resume en el **panel diario**, una tabla con un renglón por día y una columna por variable (`Estadistica.panel`). El día no va de medianoche a medianoche, sino de **las 05:00 a las 04:59** del día siguiente (el *día lógico*, `Fechas.diaLogico`), para que la madrugada cuente con el día que se estaba viviendo. Algunas variables de fuentes externas siguen yendo por día de calendario, y la exportación lo dice en cada una (capítulo 2, sección 2.3.2). Además de unas 177 variables fijas (Apéndice A.1), la app crea **variables dinámicas**: una por cada persona, tema, lugar, app, artista, nutriente o etapa de vida que aparece en tus datos (27 prefijos; capítulo 2, sección 2.7).
+**Una unidad de análisis: el día.** Todo se resume en el **panel diario**, una tabla con un renglón por día y una columna por variable (`Estadistica.panel`). El día no va de medianoche a medianoche, sino de **las 05:00 a las 04:59** del día siguiente (el *día lógico*, `Fechas.diaLogico`), para que la madrugada cuente con el día que se estaba viviendo. Algunas variables de fuentes externas siguen yendo por día de calendario, y la exportación lo dice en cada una (capítulo 2, sección 2.3.2). Además de 184 variables fijas (las que `Estadistica.variables()` escribe con su nombre; 56 de ellas solo existen si hay datos de su fuente; capítulo 2, sección 2.7, y Apéndice A.1), la app crea **variables dinámicas**: una por cada persona, tema, lugar, app, artista, nutriente o etapa de vida que aparece en tus datos (27 prefijos; capítulo 2, sección 2.7).
 
 **Lo que la app devuelve:**
 
@@ -107,7 +107,7 @@ Seis personas inventadas, 60 días cada una. Entre personas, quien duerme más e
 
 ![Figura 1.1. Seis personas sintéticas: relación entre personas (azul, discontinua) y relación dentro de una persona (naranja). Script: `figuras/fig30_dentro_entre.py`.](figuras/fig30_dentro_entre.png){width=100%}
 
-Por eso, el panel de la app compara **tus días entre sí**, y no te compara con normas de población. Donde la app usa normas (los puntos de corte del WHO-5, los umbrales de Cohen, la «recomendación» de 7 h de sueño), los capítulos lo señalan como un préstamo que hay que leer con cuidado (capítulos 3, 8 y 9).
+Por eso, el panel de la app compara **tus días entre sí**, y no te compara con normas de población. Donde la app usa normas (los puntos de corte del WHO-5, los umbrales de Cohen, la «recomendación» de 7 h de sueño), los capítulos lo señalan como un préstamo que hay que leer con cuidado (capítulos 3, 6, 8 y 9).
 
 ### 1.4.3 Medir en la vida diaria
 
@@ -139,7 +139,7 @@ La mayoría de los estudios de muestreo de experiencia duran una o dos semanas, 
 
 ### 1.5.2 Razones a favor
 
-1. **Potencia.** Con pocos días solo se ven relaciones enormes. Para una sola pregunta y días independientes, con 90 días se detecta una correlación de **0.29**; con 365, de **0.15** (capítulo 6, sección 6.21; fórmula B.15). Si los días se parecen a sus vecinos (autocorrelación 0.5 en las dos variables), hacen falta más: **0.37** con 90 días y **0.19** con 365. Y en la lista de relaciones, que revisa miles de parejas, el umbral efectivo se parece al de α = 0.001: **0.52** con 90 días, **0.27** con 365. Solo un registro de años permite ver relaciones moderadas en la lista completa.
+1. **Potencia.** Con pocos días solo se ven relaciones enormes. Para una sola pregunta y días independientes, con potencia de 80 % y α = 0.05, con 90 días se detecta una correlación de **0.29**; con 365, de **0.15** (capítulo 6, sección 6.21; fórmula B.15). Si los días se parecen a sus vecinos (autocorrelación 0.5 en las dos variables), hacen falta más: **0.37** con 90 días y **0.19** con 365. Y en la lista de relaciones, que revisa miles de parejas, el umbral efectivo se parece al de α = 0.001: con esa misma autocorrelación, **0.52** con 90 días y **0.27** con 365. Solo un registro de años permite ver relaciones moderadas en la lista completa.
 2. **Lo que pasa poco.** Viajes, enfermedades, mudanzas, rupturas, una persona que ves una vez al mes: para tener 5 días con una persona (el mínimo de `per_`) o 60 días antes y 60 después de un cambio de vida («Antes y después», capítulo 8, sección 8.11), hace falta tiempo.
 3. **Los ciclos lentos.** Las estaciones dan un solo ciclo al año. Para separar «el invierno» de «lo que me pasó ese invierno» hacen falta varios inviernos.
 4. **Tu propia normalidad.** Los días atípicos se juzgan contra tu mediana (`Analisis.atipicos`, al menos 20 días por variable), la variabilidad del corazón contra tu línea base (capítulo 4, sección 4.5.2) y las cifras de los modelos fisiológicos sirven para compararte contigo mismo (capítulo 5). Una línea base larga es más estable.
@@ -149,13 +149,13 @@ La mayoría de los estudios de muestreo de experiencia duran una o dos semanas, 
 
 Un registro de por vida trae problemas que un estudio de dos semanas no tiene:
 
-- **Cambia el instrumento.** En una década cambian el teléfono, el reloj, los permisos de Android y la propia app. Para comparar mediciones de distintas épocas hace falta que midan lo mismo de la misma manera, lo que en psicometría se llama **invarianza de la medición** (Meredith, 1993, para grupos; la idea se aplica igual entre periodos). La app ya tiene varias costuras así, todas marcadas: la ventana de pantalla y pasos (`ventana_pantalla`, `ventana_pasos`, esquema 13), el orden de la hoja de la noche (`version_noche`, 1 y 2), los avisos de ánimo contados solo desde el esquema 13 y las marcas `ts_creado` y `ts_editado` solo desde el 14 (Apéndice D). Otras no dejan marca: cambiar la vida media de la cafeína reescribe todo el pasado (H-4-11), y el diccionario describe solo la definición vigente de cada variable (H-1-8).
-- **Cambias tú.** Una relación entre el sueño y el ánimo puede ser distinta a los 25 y a los 35 años. Si el proceso no es estacionario, mezclar toda la historia en un solo número la promedia. La lista de relaciones usa **todos** los días del panel (`PantallaExplorar` llama a `Estadistica.relaciones` con el panel completo); quitar la tendencia corrige los **niveles** que cambian lento, pero no una **relación** que cambia con los años (capítulo 11, sección 11.4; H-11-1).
+- **Cambia el instrumento.** En una década cambian el teléfono, el reloj, los permisos de Android y la propia app. Para comparar mediciones de distintas épocas hace falta que midan lo mismo de la misma manera, lo que en psicometría se llama **invarianza de la medición** (Meredith, 1993, para grupos; la idea se aplica igual entre periodos). La app ya tiene varias costuras así, todas marcadas: la ventana de pantalla y pasos (`ventana_pantalla`, `ventana_pasos`, esquema 13), el orden de la hoja de la noche (`version_noche`, 1 y 2), los avisos de ánimo contados solo desde el esquema 13 y las marcas `ts_creado` y `ts_editado` de momentos, gastos, ingresos, consumos, bloques del cronómetro y tomas solo desde el 14 (los días ya las tenían; Apéndice D). Otras no dejan marca: cambiar la vida media de la cafeína reescribe todo el pasado (H-4-11), y el diccionario describe solo la definición vigente de cada variable (H-1-8).
+- **Cambias tú.** Una relación entre el sueño y el ánimo puede ser distinta a los 25 y a los 35 años. Si el proceso no es estacionario, mezclar toda la historia en un solo número la promedia. La lista de relaciones usa **todos** los días del panel (`PantallaExplorar` llama a `Estadistica.relaciones` con el panel completo); quitar la tendencia corrige los **niveles** que cambian lento, pero no una **relación** que cambia con los años (capítulo 11, secciones 11.2.3 y 11.4; H-11-1).
 - **El registro mismo cambia lo registrado,** y ese efecto se acumula y se mezcla con lo que se quiere medir (capítulo 3, sección 3.14, y capítulo 11, sección 11.5).
 - **Se abandona.** Epstein et al. (2015) muestran que dejar de registrar y retomar es lo normal. Un hueco largo no es «nada pasó» (capítulo 2, sección 2.6; H-1-1 en su parte de abandono).
 - **Los datos se pueden perder** en un cambio de teléfono o una restauración mal hecha (capítulo 10).
 
-**Cómo lo enfrenta la app.** Guardar el dato crudo con su hora y calcular después (capítulo 2, sección 2.1), marcar la versión de cada día y de cada respaldo, guardar la ventana de cada día cuando una regla cambia y documentar cada cambio con su versión en el Apéndice D. Es lo que en el capítulo 2 se llama principio 3, «conservar el dato crudo y derivarlo después». **[Diseño propio]**, coherente con los principios FAIR de reutilización de datos (Wilkinson et al., 2016) aplicados a una sola persona.
+**Cómo lo enfrenta la app.** Guardar el dato crudo con su hora y calcular después, salvo en las fuentes que se guardan ya sumadas por día (capítulo 2, sección 2.1), marcar la versión de cada día y de cada respaldo, guardar la ventana de cada día cuando una regla cambia y documentar cada cambio con su versión en el Apéndice D. Es lo que en el capítulo 2 se llama principio 3, «conservar el dato crudo y derivarlo después». **[Diseño propio]**, coherente con los principios FAIR de reutilización de datos (Wilkinson et al., 2016) aplicados a una sola persona.
 
 ## 1.6 Todo con todo, y su costo
 
@@ -233,12 +233,15 @@ Esta clasificación sigue la regla del plan: **no presentar heurísticas como mo
 | Ap. B | Fórmulas | Las fórmulas del capítulo 6, numeradas |
 | Ap. C | Funciones de R | Qué hace cada función de `vestigium.R` y en qué difiere de la app |
 | Ap. D | Cambios metodológicos aplicados | Cada cambio del módulo 10 y de la revisión de navegación, con su motivo y su versión |
+| Ap. E | Glosario | Los términos de los mini-glosarios, en orden alfabético |
 
 : Tabla 1.4. Cómo está organizado el paper
 
-**Cómo se hizo.** El paper se escribió por módulos, cada uno en una sesión de trabajo con un modelo de Claude, leyendo el código de la app (el plan está en `PLAN_PAPER_METODOLOGIA.md`). Los módulos 1 a 8 describieron el código y anotaron problemas en `hallazgos.md` sin cambiarlo; el módulo 9 revisó todos los hallazgos y propuso cambios (`revision_propuestas.md`); el autor los aprobó, y el módulo 10 los aplicó en cuatro entregas, actualizando los capítulos. Por eso, muchos capítulos dicen «hasta la entrega 10c era así; desde entonces es así»: el paper documenta también **la historia de las decisiones**, que importa para leer datos viejos.
+**Cómo se hizo.** El paper se escribió por módulos, cada uno en una sesión de trabajo con un modelo de Claude, leyendo el código de la app (el plan está en `PLAN_PAPER_METODOLOGIA.md`). Los módulos 1 a 8 describieron el código y anotaron problemas en `hallazgos.md` sin cambiarlo; el módulo 9 revisó todos los hallazgos y propuso cambios (`revision_propuestas.md`); el autor los aprobó, y el módulo 10 los aplicó en cuatro entregas, actualizando los capítulos. El módulo 11 escribió este capítulo y el 11; los módulos 12 a 14 ensamblaron, corrigieron y revisaron el documento. Por eso, muchos capítulos dicen «hasta la entrega 10c era así; desde entonces es así»: el paper documenta también **la historia de las decisiones**, que importa para leer datos viejos.
 
-**Lo que no es.** No es un artículo para publicar ni una revisión sistemática de la literatura: las referencias se eligieron para respaldar o discutir decisiones concretas, y cada una se comprobó en la sesión en que se citó.
+**Cómo se numeran los hallazgos.** Cada hallazgo lleva el número del **módulo** que lo encontró, no del capítulo: H-1-n son del capítulo 2; H-2-n, del 3; H-3-n, del 4, y así hasta H-7-n, del 8; H-8-n, de los capítulos 9 y 10; H-9-n, de la revisión general; H-11-n, de los capítulos 1 y 11, y H-NAV-n, de la revisión de navegación.
+
+**Lo que no es.** No es un artículo para publicar ni una revisión sistemática de la literatura: las referencias se eligieron para respaldar o discutir decisiones concretas, y se buscaron en la sesión en que se citaron; las pocas que no se pudieron comprobar llevan «[sin verificar]» en `referencias.md`.
 
 ## 1.10 Resumen del capítulo
 
@@ -253,9 +256,9 @@ Esta clasificación sigue la regla del plan: **no presentar heurísticas como mo
 
 # Capítulo 2. Inventario y arquitectura de datos
 
-> **Alcance.** Este capítulo describe *cómo se obtiene, se guarda, se asigna a un día y se organiza* cada dato de Vestigium Mei, y por qué cada decisión es razonable (o no) desde la metodología de investigación. No evalúa todavía las pruebas estadísticas (capítulos 6 en adelante). Todo lo descrito corresponde a la versión v81 del código (commit `fa527df`, esquema de datos `SCHEMA_V = 12`). Los ejemplos numéricos son **sintéticos**: ningún dato real del usuario aparece aquí.
+> **Alcance.** Este capítulo describe *cómo se obtiene, se guarda, se asigna a un día y se organiza* cada dato de Vestigium Mei, y por qué cada decisión es razonable (o no) desde la metodología de investigación. No evalúa todavía las pruebas estadísticas (capítulos 6 en adelante). Se escribió sobre la v81 (commit `fa527df`, `SCHEMA_V = 12`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» (o «desde el esquema 13») y está en el Apéndice D. Los ejemplos numéricos son **sintéticos**: ningún dato real del usuario aparece aquí.
 >
-> **Convención de etiquetas.** Cada decisión de diseño se marca como **[Validado]** (respaldada por literatura o por un estándar establecido), **[Aproximación]** (razonable pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app sin referente directo; defendible, pero no es un estándar). Los problemas encontrados están numerados H-1-n y se detallan en `hallazgos.md`.
+> **Convención de etiquetas.** Cada decisión de diseño se marca como **[Validado]** (respaldada por literatura o por un estándar establecido), **[Aproximación]** (razonable pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app sin referente directo; defendible, pero no es un estándar). Los hallazgos llevan el número del módulo que los encontró: los de este capítulo (módulo 1) son H-1-n; los H-9-n son de la revisión general. Están en `hallazgos.md`.
 
 ## 2.1 Propósito y principios de diseño
 
@@ -265,7 +268,7 @@ La arquitectura responde con cinco principios:
 
 1. **Un día es la unidad de análisis.** Casi todo se resume en una fila por día (el *panel diario*). Es la unidad natural del autoseguimiento: el sueño, el ánimo del día y el diario se organizan por día. *Razonamiento:* la resolución diaria equilibra ruido y señal; las mediciones intradía (avisos de ánimo, ubicación por hora) se conservan en tablas aparte para análisis más finos.
 2. **No inventar datos.** Un dato ausente no se convierte en cero salvo que haya una razón estructural (sección 2.6). *Razonamiento:* confundir «no medido» con «cero» es uno de los errores más comunes en datos observacionales y sesga medias, correlaciones y modelos (Rubin, 1976; Little y Rubin, 2019).
-3. **Conservar el dato crudo y derivarlo después.** Cada evento se guarda con su marca de tiempo completa (ISO-8601 con desfase horario); el día, la semana y los resúmenes se calculan al exportar, no al capturar. *Razonamiento:* permite re-derivar con otra regla (por ejemplo, otro corte de día) sin perder información.
+3. **Conservar el dato crudo y derivarlo después.** Cada evento (momento, gasto, visita, punto de ubicación) se guarda con su marca de tiempo completa (ISO-8601 con desfase horario), y el panel, la semana y los resúmenes se calculan después, al analizar o exportar. *Razonamiento:* permite re-derivar con otra regla (por ejemplo, otro corte de día) sin perder información. *Límite:* varias fuentes pasivas se guardan ya sumadas por día (`PantallaDia`, `SaludDia`: pantalla, pasos y lo que Health Connect entrega por día); para ellas no se puede re-derivar, y por eso el cambio de ventana del esquema 13 parte la serie (sección 2.3.2).
 4. **Esquema flexible que crece con los años.** Cada colección guarda documentos JSON; añadir un campo no obliga a migrar la base. *Razonamiento:* un instrumento personal evoluciona; la rigidez de un esquema relacional estricto lo volvería inusable.
 5. **Todo es exportable y legible por otros programas.** Existen exportaciones en formato ordenado (*tidy*, Wickham, 2014), diccionario de variables y un script en R. *Razonamiento:* reproducibilidad y principios FAIR (Wilkinson et al., 2016) a escala individual.
 
@@ -289,7 +292,7 @@ El origen de un dato determina su tipo de error, por lo que la app conserva esa 
 
 ### Ejemplo sintético
 
-Un martes (día lógico 12): el diario nocturno marca `valencia = 5` (escala 1–7). Durante el día hubo tres avisos con valencias 4, 6 y 5. La app guarda `valencia = 5`, `muestreo_valencia = media(4, 6, 5) = 5.0`. Coinciden aquí; en otro día `valencia = 3` con `muestreo_valencia = 5.3` sugeriría que el recuerdo nocturno está dominado por un episodio reciente (efecto de «recencia / fin de pico», Kahneman et al., 1993). Esa diferencia **es un resultado de investigación**, no un error, y solo es visible porque ambas medidas se conservan.
+Un martes (día lógico 12): el diario nocturno marca `valencia = 5` (escala 1–7). Durante el día hubo tres avisos con valencias 4, 6 y 5. La app guarda `valencia = 5`, `muestreo_valencia = media(4, 6, 5) = 5.0`. Coinciden aquí; en otro día `valencia = 3` con `muestreo_valencia = 5.3` sugeriría que el recuerdo nocturno está dominado por el peor momento o por el final del día (la «regla del pico y el final», Kahneman et al., 1993). Esa diferencia **es un resultado de investigación**, no un error, y solo es visible porque ambas medidas se conservan.
 
 ## 2.3 Tiempo: marcas ISO y día lógico
 
@@ -304,8 +307,10 @@ Un martes (día lógico 12): el diario nocturno marca `valencia = 5` (escala 1�
 ### 2.3.2 Día lógico (corte a las 05:00)
 
 ```kotlin
-fun diaLogico(ahora: LocalDateTime) =
-    if (ahora.hour < 5) ahora.toLocalDate().minusDays(1) else ahora.toLocalDate()
+fun diaLogico(ahora: LocalDateTime = LocalDateTime.now()): String {
+    val d = if (ahora.hour < 5) ahora.toLocalDate().minusDays(1) else ahora.toLocalDate()
+    return d.format(ISO_DIA)
+}
 ```
 
 *Qué hace:* un evento entre las 00:00 y las 04:59 se asigna al **día anterior**.
@@ -314,7 +319,7 @@ fun diaLogico(ahora: LocalDateTime) =
 
 **Desde la versión con esquema 13 (entrega 10b del módulo 10, Apéndice D), la pantalla y los pasos también van por día lógico.** Antes se sumaban de 0:00 a 24:00 (día de calendario), aunque todo lo demás usaba el corte de las 05:00. Ahora `Pantalla.calcular` lee los eventos de uso de las 05:00 de ese día a las 05:00 del siguiente (`Fechas.inicioDiaLogico` y `finDiaLogico`), y `Salud.sincronizar` agrega los pasos en la misma ventana. Cada día guarda qué ventana usó: `PantallaDia.ventana` y `SaludDia.ventana_pasos` valen `"logica"` desde ese cambio y `"calendario"` en los días de antes. *Por qué importa:* la serie **se parte en dos tramos**. Por ejemplo, una madrugada con el teléfono de 01:00 a 01:30 antes contaba para el día nuevo, y su `primer_uso_h` era 1.0; ahora cuenta para el día anterior, y el primer uso del día nuevo es el de la mañana. Las correlaciones que crucen la fecha del cambio deben leerse por tramo; en R se separan con las columnas `ventana_pantalla` y `ventana_pasos` de `vm_panel.csv`. El resto del reloj (ritmo cardiaco, oxígeno) sigue por día de calendario. **[Diseño propio]**.
 
-**Qué va todavía por día de calendario, dicho en la exportación (entrega 10c, D.64).** No todo pudo pasar al día lógico: lo que Health Connect entrega ya sumado por día y lo que depende del calendario se queda de 0:00 a 24:00. La lista está en `Diccionario.CALENDARIO`: `fc_media`, `fc_reposo`, `spo2`, `spo2_min`, `cal_activas`, `temp_piel`, `resp_rpm`, `peso_kg` (reloj y báscula), `eventos` y `min_ocupado` (agenda), `t_max`, `t_min`, `precip_mm`, `nubes_pct`, `luz_horas`, `sol_horas`, `presion_hpa`, `aqi_us`, `pm25` (clima), `luna_ilum`, y `ciudades_dia`, `fuera_de_casa`, `extranjero`, `ciudad_nueva`, `unesco` y las familias `ciu_` y `pais_` (Mundo). En `vm_panel.csv` y `vm_panel_extendido.csv`, la descripción de cada una de esas columnas termina con «· por día de calendario (0:00 a 24:00)» (`Diccionario.conVentana`), y el `LEEME.txt` lo resume: los días empiezan a las 5:00 salvo esas variables, la pantalla y los pasos de antes de la v13, y el sueño, que va al día en que despiertas. Antes, el LEEME decía que **todo** empezaba a las 5:00, y era falso (H-9-4). **[Diseño propio]**.
+**Qué va todavía por día de calendario, dicho en la exportación (entrega 10c, D.64).** No todo pudo pasar al día lógico: lo que Health Connect entrega ya sumado por día y lo que depende del calendario se queda de 0:00 a 24:00. La lista está en `Diccionario.CALENDARIO`: `fc_media`, `fc_reposo`, `spo2`, `spo2_min`, `cal_activas`, `temp_piel`, `resp_rpm`, `peso_kg` (reloj y báscula), `eventos` y `min_ocupado` (agenda), `t_max`, `t_min`, `precip_mm`, `nubes_pct`, `luz_horas`, `sol_horas`, `presion_hpa`, `aqi_us`, `pm25` (clima), `luna_ilum`, y `ciudades_dia`, `fuera_de_casa`, `extranjero`, `ciudad_nueva`, `unesco` y las familias `ciu_` y `pais_` (Mundo). En `vm_panel.csv` y `vm_panel_extendido.csv`, la descripción de cada una de esas columnas termina con «· por día de calendario (0:00 a 24:00)» (`Diccionario.conVentana`), y el `LEEME.txt` lo resume: los días empiezan a las 5:00 salvo esas variables, «la pantalla y los pasos de antes de la v13» (así lo dice el LEEME; se refiere al **esquema** 13, la entrega 10b, no a la versión 13 de la app) y el sueño, que va al día en que despiertas. Antes, el LEEME decía que **todo** empezaba a las 5:00, y era falso (H-9-4). **[Diseño propio]**.
 
 ![Figura 2.2. Un evento a las 00:40 del martes pertenece al lunes lógico: el día lógico va de las 05:00 a las 04:59 del día siguiente (`Fechas.diaLogico`). Ejemplo sintético. Script: `figuras/fig03_dia_logico.py`.](figuras/fig03_dia_logico.png){width=100%}
 
@@ -330,7 +335,7 @@ fun diaLogico(ahora: LocalDateTime) =
 
 : Tabla 2.2. Ejemplo sintético (Figura 2.2)
 
-Con corte a medianoche, el «lunes» perdería su cierre y el «martes» empezaría con 5 horas de pantalla nocturna que en realidad pertenecen al lunes. La variable `ultimo_uso_h` se corrige además sumando 24 si la hora es < 5 (p. ej., 02:10 → 26.17), de modo que «más tarde» siga significando un número mayor.
+Con corte a medianoche, el «lunes» perdería su cierre y el «martes» empezaría con la pantalla de la madrugada (de 00:40 a 04:55), que en realidad pertenece al lunes. La variable `ultimo_uso_h` se corrige además sumando 24 si la hora es < 5 (p. ej., 02:10 → 26.17), de modo que «más tarde» siga significando un número mayor.
 
 En las pantallas donde se anota, el corte se dice en palabras antes de las 05:00: «Son las 01:30: lo que anotes va al lunes… (los días empiezan a las 5:00)» (`AvisoMadrugada`, en `ui/Componentes.kt`). La excepción es la calidad del sueño, que va al día del despertar (capítulo 3, sección 3.12.1).
 
@@ -371,16 +376,16 @@ La carga inicial usa `cargar(col, serializer)`. Hasta el esquema 12 descartaba *
 
 ### 2.4.3 `Repo`: memoria con escritura inmediata
 
-`Repo` mantiene en memoria el estado observable (Compose `mutableStateOf`) de las **35 colecciones** que precarga al iniciar (`dias`, `momentos`, `gastos`, `ingresos`, `respuestas`, `reacciones`, `lugares`, `visitas`, `youtube`, `salud`, `pantalla`, `cartas`, `experimentos`, `entorno`, `fotos`, `agenda`, `notifs`, `actividad`, `sesiones`, `ascensos`, `obras`, `comunicacion`, `conexiones`, `subrayados`, `huellas_dia`, `whatsapp`, `nutricion`, `entrenos`, `tramos`, `consumos`, `notas`, `metas`, `tomas`, `laptop` y, desde el esquema 13, `avisos`, un documento por día con los avisos de ánimo planeados, vencidos y mostrados; capítulo 3). Cada `guardarX` hace **escritura inmediata (write-through)**: primero a SQLite (`db.poner`), luego actualiza la memoria en el hilo principal. Los métodos de guardado están sincronizados (`@Synchronized`).
+`Repo` mantiene en memoria el estado observable (Compose `mutableStateOf`) de las **35 colecciones** que precarga al iniciar (`dias`, `momentos`, `gastos`, `ingresos`, `respuestas`, `reacciones`, `lugares`, `visitas`, `youtube`, `salud`, `pantalla`, `cartas`, `experimentos`, `entorno`, `fotos`, `agenda`, `notifs`, `actividad`, `sesiones`, `ascensos`, `obras`, `comunicacion`, `conexiones`, `subrayados`, `huellas_dia`, `whatsapp`, `nutricion`, `entrenos`, `tramos`, `consumos`, `notas`, `metas`, `tomas`, `laptop` y, desde el esquema 13, `avisos`, un documento por día con los avisos de ánimo planeados, vencidos y mostrados; capítulo 3). Cada `guardarX` hace **escritura inmediata (write-through)**: primero a SQLite (`db.poner`), luego actualiza la memoria en el hilo principal. Los más usados (`guardarDia`, `guardarMomento`, `guardarConsumo` y los que anotan visitas, avisos, actividad, notificaciones y conexiones) están sincronizados (`@Synchronized`); los demás no.
 
-Otras colecciones (`comidas`, `escuchas`, `huellas`, `series`, `config`) se guardan en la misma tabla pero, según el código, no figuran en la carga inicial de 35 y se leen bajo demanda.
+Otras colecciones se guardan en la misma tabla pero no están en la carga de 35: `comidas`, `escuchas`, `huellas` y `series` se leen bajo demanda, por fechas; `papelera` (desde el esquema 14) y `config_ilegible`, cuando hacen falta. La configuración (`config`, un solo documento) se lee al iniciar, aparte de las 35.
 
 *Razonamiento.* La escritura inmediata minimiza la pérdida de datos si la app se cierra; mantener todo en memoria hace instantáneos los análisis sobre cientos o miles de días. El costo es el uso de memoria, aceptable para un solo usuario.
 
 **Metadatos de calidad en `Dia`.** `guardarDia` añade a cada día:
 
 - `ts_creado` (primera vez que se guardó), `ts_editado` (última edición), `schema_v`;
-- **`retroactivo`**: hasta el esquema 12, `true` si el documento del día se guardaba por primera vez *después* de que su día lógico terminó. Esa regla fallaba cuando otra cosa creaba el documento ese mismo día (el sueño de la captura rápida, un hábito desde el widget): el día quedaba `false` para siempre, aunque la valencia se llenara días después (H-2-2). Desde el esquema 13 (P-13), `Dia` guarda **`ts_valencia`**, la hora en que la valencia pasó de vacía a llena o cambió (`Reglas.tsValencia`). Así, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). Los días de antes, sin `ts_valencia`, conservan el valor que tenían.
+- **`retroactivo`**: hasta el esquema 12, `true` si el documento del día se guardaba por primera vez *después* de que su día lógico terminó. Esa regla fallaba cuando otra cosa creaba el documento ese mismo día (el sueño de la captura rápida, un hábito desde el widget): el día quedaba `false` para siempre, aunque la valencia se llenara días después (H-2-2). Desde el esquema 13 (P-13), `Dia` guarda **`ts_valencia`**, la hora en que la valencia pasó de vacía a llena o cambió (`Reglas.tsValencia`). Así, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). Sin `ts_valencia` (días de antes del esquema 13, o sin valencia), el día conserva el valor que tenía; si el documento es nuevo, vale `true` si se creó después de su fecha.
 
 *Razonamiento.* `retroactivo` permite estimar sesgo de recuerdo: un día llenado a posteriori se recuerda, no se vive. Es un **moderador** que el análisis puede incluir (¿cambian las asociaciones al excluir los días retroactivos?). **[Diseño propio]**, muy buena práctica: en la literatura de diarios se recomienda registrar *cuándo* se llenó cada entrada (Stone et al., 2002 propusieron verificar el cumplimiento temporal en diarios).
 
@@ -391,19 +396,19 @@ Resumen por familia temática (el detalle campo a campo está en el Apéndice A)
 | Familia | Colecciones | Granularidad | Capa |
 |---|---|---|---|
 | Ánimo y diario | `dias`, `momentos`, `respuestas`, `cartas`, `notas`, `metas`, `avisos` (desde el esquema 13) | día / evento | activa (`avisos`: automática) |
-| Cuerpo y salud | `salud`, `entrenos`, `sesiones`, `ascensos`, `consumos`, `tomas`, `nutricion` | día / sesión | pasiva e importada |
+| Cuerpo y salud | `salud`, `entrenos`, `sesiones`, `ascensos`, `consumos`, `tomas`, `nutricion` | día / sesión | pasiva e importada (`consumos` y `tomas`: activa) |
 | Teléfono y pantalla | `pantalla`, `notifs`, `conexiones`, `laptop`, `huellas_dia`, `youtube` | día | pasiva e importada |
 | Dinero | `gastos`, `ingresos` | transacción | activa |
 | Lugar y movimiento | `lugares`, `visitas`, `actividad`, `ubicaciones` (tabla), `fotos` | visita / punto | pasiva |
 | Entorno | `entorno` (clima, aire, luz solar), fases de la luna (calculadas) | día | pasiva / calculada |
-| Cultura y mente | `obras`, `subrayados`, `agenda` | día / obra | activa e importada |
+| Cultura y mente | `obras`, `subrayados`, `agenda`, `tramos` (cronómetro de enfoque y siestas) | día / obra / bloque | activa e importada |
 | Sociales | `comunicacion`, `whatsapp`, menciones `@persona` en texto | día | pasiva e importada |
 | Cognición | `reacciones` (tiempo de reacción) | sesión | activa |
 | Ciencia personal | `experimentos` | semanas | activa (diseño en capítulo de experimentos) |
 
 : Tabla 2.5. Catálogo de colecciones
 
-**Unidad de observación.** No todas las colecciones son «una fila por día»: `momentos` (varios por día, con hora), `gastos` (por transacción), `visitas` (con entrada/salida) y `ubicaciones` (puntos) son **eventos**. El paso evento → día (agregar por media, suma, conteo o máximo según la variable) es el corazón de la sección 2.6 y una fuente de decisiones que afectan los resultados (por ejemplo, un día con un solo aviso de ánimo tiene una media tan ruidosa como una observación única; el panel no guarda el número de avisos de esa media más allá de `registros_animo`).
+**Unidad de observación.** No todas las colecciones son «una fila por día»: `momentos` (varios por día, con hora), `gastos` (por transacción), `visitas` (con entrada/salida) y `ubicaciones` (puntos) son **eventos**. El paso evento → día (agregar por media, suma, conteo o máximo según la variable) es el corazón de la sección 2.6 y una fuente de decisiones que afectan los resultados (por ejemplo, un día con un solo aviso de ánimo tiene una media tan ruidosa como una observación única). Desde el esquema 13, `avisos_respondidos` dice cuántos de los avisos mostrados ese día tuvieron respuesta, que es casi siempre el número de valores detrás de `muestreo_valencia` (no siempre: la media usa todos los registros de tipo «muestreo» del día, también los que no están unidos a un aviso); antes solo estaba `registros_animo`, que cuenta también los registros por iniciativa propia.
 
 ## 2.6 El panel diario y las reglas de relleno
 
@@ -432,7 +437,7 @@ Una fila de la tabla se crea para cada fecha que aparece en *alguna* fuente. Una
 | **Variables sociales** `personas`, `vi_*`, `cercanos`, `cercania_media`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `penso_en_*`, y las familias `per_` y `pen_` | 0 solo en los días en que se pudo nombrar a alguien (`Dinamicas.diasSociales`): con diario escrito o con un momento no privado que nombra a alguien con @. En `tema_`, los días con diario escrito o con un momento que lleva un #tema | esos días | Antes, un toque en el widget de hábitos o una recaída creaban el documento del día y con él un día de «no vi a nadie» |
 | **Ejercicio y distancia** | `ejercicio_min` en 0 los días con datos del reloj (pasos o ritmo cardiaco) y sin sesión, desde la primera sesión; `distancia_km` en 0 los días con ubicaciones y sin movimiento (`Movilidad.kmPorDia`) | días con reloj / con ubicaciones | Antes quedaban vacíos aunque sí se sabía que fueron 0 |
 | **Probióticos leídos de la bitácora** `probioticos_estimado` | solo los días con bitácora de MacroFactor | días con nutrición | Sin bitácora no se puede leer nada |
-| **Cero en todo el diario** (lo que queda) | `n_madrugada…n_noche`, `ctx_*` | todos los días con diario | Los contextos sin marcar valen 0 por convención de la pantalla («marca lo que aplique»); se documenta |
+| **Cero en todo el diario** (lo que queda) | `n_madrugada…n_noche`, `ctx_*`, `dia_dificil`, `palabras`, `hitos_n` | todos los días con diario | Los contextos sin marcar valen 0 por convención de la pantalla («marca lo que aplique»); se documenta |
 | **Ausencia = null** | pasos, sueño del reloj, pantalla, clima, HRV, etc. | — | Son mediciones instrumentales: no hay lectura = no hay dato (el dispositivo no midió). |
 
 : Tabla 2.7. La regla general
@@ -441,7 +446,7 @@ Una fila de la tabla se crea para cada fecha que aparece en *alguna* fuente. Una
 
 ### Ejemplo sintético
 
-Un usuario registra su primera emoción el día 6 y no vuelve a hacerlo hasta el 8. La variable `n_ansiedad`: días 1–5 → `null`; día 6 → 2; día 7 → `0` (sí usa la función, ese día no hubo ansiedad registrada); día 8 → 1. Si en cambio `n_ansiedad` se rellenara con 0 desde el día 1, la media de la ansiedad bajaría artificialmente y su correlación con cualquier variable que *empieza* a registrarse más tarde (por ejemplo, el sueño del reloj desde el día 4) mostraría una asociación falsa, producto solo del calendario de adopción.
+Un usuario registra su primera emoción el día 6 y no vuelve a hacerlo hasta el 8. La variable `n_ansiedad`: días 1–5 → `null`; día 6 → 2; día 7 → `0` (ya usa la función y ese día hay diario, pero no registró ansiedad); día 8 → 1. Si en cambio `n_ansiedad` se rellenara con 0 desde el día 1, la media de la ansiedad bajaría artificialmente y su correlación con cualquier variable que *empieza* a registrarse más tarde (por ejemplo, el sueño del reloj desde el día 4) mostraría una asociación falsa, producto solo del calendario de adopción.
 
 Lo mismo con el gasto, que hasta la entrega 10c era la excepción. Con diario desde el día 1 y el primer gasto el día 40: antes, `gasto_total` valía 0 los días 1 a 39; ahora esos días quedan vacíos y el 0 empieza el día 40 (`ceroDesde(["día 40", …], días con diario)`). Un día 41 con diario y sin gasto vale 0; un día 42 sin documento de diario, vacío.
 
@@ -475,20 +480,22 @@ Los 0/1 (`ctx_*`, `hab_*`, `vi_pareja`…) tratan una condición como «ocurrió
 
 ## 2.7 Familias de variables dinámicas
 
-Además de ~177 variables fijas (Apéndice A.1), el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por cada persona (`per_*`, `pen_*`), tema, hito, lugar, app, categoría de gasto, artista, canal, género, obra, medicamento, ciudad, país, músculo, nutriente, alimento… (27 prefijos, Apéndice A.2).
+**Cuántas variables fijas hay.** Contando como «fija» cada identificador que `Estadistica.variables()` escribe con su nombre, son **184**, en 24 grupos: 128 existen siempre y 56 solo si hay datos de su fuente (por ejemplo, `alcohol` si alguna vez anotaste alcohol, o `laptop_min` si importaste Cold Turkey). De ellas, 7 son privadas (`impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `medicamentos_n`): la app no las cruza y van a R. Otras 33 salen de listas fijas del catálogo: los 10 `ctx_*`, las 13 opciones de las tres preguntas científicas, los 5 `con_*`, las 4 `laptop_<categoría>_min` y `n_impulso`. El Apéndice A.1 lista 183, porque pone `dia_especial` y `campanas_n` entre las de nombre generado y suma `n_impulso`.
 
-- **Análisis:** entran solo las más frecuentes de cada familia, con un tope máximo y un mínimo de días (por ejemplo, `per_`: máx. 15, mín. 5 días).
-- **Exportación extendida (`vm_panel_extendido.csv`):** entran todas las que aparecen en al menos 2 días.
+Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por cada persona (`per_*`, `pen_*`), tema, hito, lugar, app, categoría de gasto, artista, canal, género, obra, medicamento, ciudad, país, músculo, nutriente, alimento… (27 prefijos, Apéndice A.2). Lo mismo los hábitos (`hab_*`), las emociones y pensamientos usados (`n_*`), las categorías de sueño, los tipos de lugar, los suplementos y las campañas, que `variables()` arma con lo que hay en tus datos.
+
+- **Análisis:** entran solo las más frecuentes de cada familia, con un tope máximo y un mínimo de días (por ejemplo, `per_`: máx. 15, mín. 5 días; `Dinamicas.familia`).
+- **Exportación extendida (`vm_panel_extendido.csv`):** entran todas las que aparecen en al menos 2 días, hasta 400 por familia.
 
 *Razonamiento científico.* Con *p* variables hay *p(p−1)/2* pares posibles; crecer sin límite dispararía la **multiplicidad** (falsos positivos) y la inestabilidad de las estimaciones con pocos días. El filtro por frecuencia es una forma de control de la dimensionalidad: solo se analizan elementos con suficiente información para estimar algo. Aun así, el filtro depende de los datos (se eligen las más frecuentes *mirando los mismos datos*), por lo que el tratamiento estadístico posterior (corrección de falsos descubrimientos, capítulo 6) es imprescindible. **[Aproximación]**.
 
-Además, el mapa `AGREGADOS` evita comparar variables **obviamente relacionadas** (p. ej., `app_instagram` contra `pantalla_min`: una es parte de la otra) y `ENTRE_SI` evita pares dentro de la misma familia (dos nutrientes del mismo plato). *Razonamiento:* una correlación que es consecuencia de la definición (parte vs. todo) no es un hallazgo, es una tautología; excluirla reduce falsos positivos de «descubrimientos» triviales. **[Validado]** el principio (evitar colinealidad por construcción); **[Diseño propio]** los pares concretos.
+Además, el mapa `AGREGADOS` (en `ciencia/Dinamicas.kt`, usado por `Estadistica.obvia`) evita comparar variables **obviamente relacionadas** (p. ej., `app_instagram` contra `pantalla_min`: una es parte de la otra) y `ENTRE_SI` evita pares dentro de ciertas familias o entre familias que salen de lo mismo (dos nutrientes del mismo plato, un nutriente y un alimento, una ciudad y su país). *Razonamiento:* una correlación que es consecuencia de la definición (parte vs. todo) no es un hallazgo, es una tautología; excluirla reduce falsos positivos de «descubrimientos» triviales. **[Validado]** el principio (evitar colinealidad por construcción); **[Diseño propio]** los pares concretos.
 
 **Ejemplo.** Si la persona menciona `@ana` en 12 de 60 días, existen `per_ana` (0/1 por día) y, si hubo días en que pensó en ella sin verla, `pen_ana`. La normalización de nombres (`Texto.canon` con el diccionario de equivalencias) unifica «@Ana», «@ana_m» y apodos declarados. Una mención escrita en el diario cuenta como **«estuve con»** por omisión (estado `estuve`), a menos que la persona cambie el estado a «pensé en» o «mensajes»; la marca `presencias_ok` indica si el día fue *revisado* (H-1-6). Esto es relevante porque una mención no es presencia. Desde la entrega 10c esa marca entra al panel como `presencias_revisado` (0/1, solo en días con personas en el diario o ya revisados), para usarla como covariable: así se puede comparar «estuve con» en días revisados y sin revisar. Es obvia con las variables sociales (se mueve con ellas por construcción), así que no sale como «relación» en la app. La normalización `Texto.canon` sigue además las uniones encadenadas (capítulo 7, D.73).
 
 ## 2.8 Exportación, diccionario y R
 
-La app puede exportar **51 tablas CSV** con datos (las que arma `Exportar.tablas()`) (`vm_*.csv`, Apéndice A.3), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, el diccionario `vm_diccionario.csv`, una copia SQLite y un script `vestigium.R` que carga todo en *tidy*.
+La app puede exportar **51 tablas CSV** con datos (las que arma `Exportar.tablas()`) (`vm_*.csv`, Apéndice A.3), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, el diccionario `vm_diccionario.csv`, `vm_respaldo.json`, `LEEME.txt`, una copia SQLite (`vm_datos.sqlite`, en la exportación completa) y un script `vestigium.R` que carga todo en *tidy* (`Exportar.archivos`).
 
 | Elemento | Función | Razonamiento |
 |---|---|---|
@@ -512,7 +519,7 @@ La app puede exportar **51 tablas CSV** con datos (las que arma `Exportar.tablas
 **R analiza el mismo panel que la app (entrega 10d, P-30 y P-31).** Hasta 10c, `vestigium.R` analizaba `vm_panel.csv`, que se armaba con reglas propias: `gasto_total` e `ingreso_total` valían 0 en cualquier fecha exportada, `escalada` y `gimnasio` eran «falso» en cualquier fecha, `canciones` contaba distinto y `ultimo_uso_h` sumaba 24 a cualquier hora antes de las 12:00. Así, R no servía para comprobar lo que muestra la app (H-5-1). Ahora hay cuatro piezas:
 
 1. **Los valores de las columnas compartidas.** `Exportar.comoLaApp` recorre, después de armar `vm_panel.csv`, cada columna cuyo nombre también existe en el panel de la app (`Estadistica.panel()`) y le pone el valor de la app, con sus reglas de 0 y vacío (§ 2.6.1). Por ejemplo, `gasto_total`, `escalada` y `gimnasio` valen 0 desde el primer registro de su fuente y solo en días con diario, y antes quedan vacíos; `ejercicio_min` vale 0 en días con datos del reloj y sin sesión; `ultimo_uso_h` suma 24 solo antes de las 5:00, como el día lógico (1:00 → 25; 11:00 → 11). Se conserva el tipo que tenía la columna: si era 0/1, sigue siendo 0/1, y si era entero, sigue entero cuando el valor no tiene decimales. Así un script viejo la sigue leyendo igual. **[Diseño propio]**.
-2. **Once nombres distintos, documentados y no renombrados.** La misma medida tiene otro nombre en `vm_panel.csv` y en la app. Por ejemplo, `km` es `distancia_km`, `sueno_min` es `sueno_horas` en minutos y `hrv_rmssd` es `hrv`. La lista completa está en `Exportar.EQUIVALENTES`: `sueno_min`, `sueno_profundo_min`, `sueno_rem_min`, `hrv_rmssd`, `km`, `valencia_muestreo`, `luz_dia_min`, `sol_min`, `carga_noche_inicio_h`, `temp_piel_delta` y `ruido_db_medio`. No se renombraron para no romper scripts viejos. El diccionario lo dice en las dos (`Diccionario.conEquivalente`: «· en el panel de la app: distancia_km» y «· en vm_panel.csv: km»). Las ocho de igual unidad toman el valor de la app. Las tres que cambian de unidad (minutos frente a horas: `sueno_min`, `luz_dia_min`, `sol_min`) se dejan como estaban, porque salen de la misma fuente. Por eso, `ruido_db_medio` ahora es el `ruido_db` de la app.
+2. **Once nombres distintos, documentados y no renombrados.** La misma medida tiene otro nombre en `vm_panel.csv` y en la app. Por ejemplo, `km` es `distancia_km`, `sueno_min` es `sueno_horas` en minutos y `hrv_rmssd` es `hrv`. La lista completa está en `Exportar.EQUIVALENTES`: `sueno_min`, `sueno_profundo_min`, `sueno_rem_min`, `hrv_rmssd`, `km`, `valencia_muestreo`, `luz_dia_min`, `sol_min`, `carga_noche_inicio_h`, `temp_piel_delta` y `ruido_db_medio`. No se renombraron para no romper scripts viejos. El diccionario lo dice en las dos (`Diccionario.conEquivalente`: «· en el panel de la app: distancia_km» y «· en vm_panel.csv: km»). Las ocho de igual unidad (factor 1 en `EQUIVALENTES`) toman el valor de la app (`comoLaApp`); por ejemplo, `ruido_db_medio` ahora trae el `ruido_db` de la app, y `km`, la `distancia_km`. Las tres que cambian de unidad (minutos frente a horas, factor 60: `sueno_min`, `luz_dia_min`, `sol_min`) se dejan como estaban, porque salen de la misma fuente y solo difieren en la unidad.
 3. **`vm_variables.csv` y `vm_familias.csv`.** La primera lista las variables que la app cruza en «Las relaciones más marcadas» (`Estadistica.variables()`), con la columna `privada` (0/1): la app nunca cruza las privadas, y R solo las cruza si se pide. La segunda escribe como familias las parejas que la app esconde por obvias (`Estadistica.familias`, P-31; detalle en el capítulo 6).
 4. **R lee el panel extendido por omisión.** `vestigium.R` carga `vm_panel_extendido.csv` como `panel`, y `vm_relaciones()` y `vm_factores()` cruzan por omisión las variables de `vm_variables.csv`. `vm_panel.csv` queda en `vm$panel` como tabla de compatibilidad. El `LEEME.txt` lo explica.
 
@@ -534,9 +541,9 @@ Una prueba JVM (`ExportacionPrueba`) fija los números que da R con unos datos i
 |---|---|---|---|---|
 | L-1 | **Día lógico fijo** (05:00) | 2.3.2 | Corte único | No se adapta al ritmo de la persona |
 | L-2 | **Cero vs. nulo** | 2.6.1 | Una sola regla, `ceroDesde` (10c) | El abandono de una función sigue contando como 0; desde 10d, `vm_panel.csv` usa las mismas reglas |
-| L-3 | **Autoselección del registro** (se registra más cuando hay algo que contar) | Captura activa | Marca `retroactivo` | Indicador de «días con diario» como covariable |
+| L-3 | **Autoselección del registro** (se registra más cuando hay algo que contar) | Captura activa | Marca `retroactivo`; `con_diario` (0/1) en `vm_panel.csv` | Indicador de «días con diario» como covariable en el panel de la app |
 | L-4 | **Medición reactiva** (medirse cambia lo medido; efecto Hawthorne personal) | N-de-1 | — | Inevitable; documentar periodos de adaptación |
-| L-5 | **Cambios de instrumento** (nuevo reloj, nuevo permiso, nueva versión de la app) | Captura pasiva | `schema_v` | Registrar eventos de cambio como variables de intervención |
+| L-5 | **Cambios de instrumento** (nuevo reloj, nuevo permiso, nueva versión de la app) | Captura pasiva | `schema_v`; desde el esquema 13, la ventana de cada día (`ventana_pantalla`, `ventana_pasos`) | Registrar eventos de cambio como variables de intervención |
 | L-6 | **Multiplicidad por variables dinámicas** | 2.7 | Filtros por frecuencia | Corrección formal en el análisis (cap. 6) |
 | L-7 | **Autocorrelación** (días consecutivos no son independientes) | Estructura temporal | — | Tratada en capítulo 6 (tamaño efectivo de muestra) |
 | L-8 | **Generalización** (un solo sujeto) | Diseño N-de-1 | — | Los resultados describen a *esa persona*; no se extrapolan a poblaciones |
@@ -564,20 +571,20 @@ Una prueba JVM (`ExportacionPrueba`) fija los números que da R con unos datos i
 
 1. La app recoge datos activos, pasivos e importados y conserva su origen; eso permite comparar autorreporte con medición objetiva.
 2. Cada evento guarda su marca de tiempo completa; el **día lógico** (corte 05:00) asigna los eventos nocturnos al día vivido, siguiendo la lógica de las encuestas de uso del tiempo.
-3. El almacén (SQLite + documentos JSON + `Repo` en memoria) privilegia flexibilidad y pérdida mínima de datos; sus opciones tolerantes de lectura pueden ocultar datos que no se pueden decodificar.
+3. El almacén (SQLite + documentos JSON + `Repo` en memoria) privilegia flexibilidad y pérdida mínima de datos. Sus opciones tolerantes de lectura dejan fuera los documentos que no se pueden decodificar (desde el esquema 13 se cuentan y se avisan) y pueden convertir un «sin dato» en un valor por omisión (H-1-4).
 4. El panel diario distingue **valor, cero estructural y sin dato**. Las reglas de relleno con cero no eran uniformes entre fuentes (hallazgo principal del módulo); desde la entrega 10c hay una sola regla, `ceroDesde`: 0 desde el primer registro de la fuente y solo en los días que se pudieron responder.
 5. Las variables dinámicas amplían el panel con elementos de la vida de la persona; su volumen exige control de multiplicidad.
 6. La exportación sigue principios tidy y FAIR, con diccionario y script de R.
-7. Se identificaron **9 hallazgos** (H-1-1 a H-1-9) que no cambian el código en esta fase, pero deberían revisarse en el módulo de revisión general de metodología.
+7. El módulo 1 anotó **9 hallazgos** (H-1-1 a H-1-9) sin cambiar código. Después, el módulo 10 resolvió H-1-1 (salvo el abandono de una función, que sigue contando como 0), H-1-2, H-1-3 y H-1-6, y en parte H-1-9; siguen abiertos H-1-4, H-1-5, H-1-7 y H-1-8.
 
 **Siguiente capítulo.** Capítulo 3: instrumentos de medición del estado de ánimo y el muestreo (valencia-activación, avisos, validez de escala).
 
 
 # Capítulo 3. Medición del estado subjetivo
 
-> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento, el ánimo del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras (la brújula política, la prueba de reacción). Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número para los análisis y qué tan sólido es eso científicamente. Todo corresponde a la versión v81 del código (commit `fa527df`). **Los ejemplos numéricos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento, el ánimo del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras (la brújula política, la prueba de reacción). Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número para los análisis y qué tan sólido es eso científicamente. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» (y lo de la revisión de navegación, «desde N1…N7») y está en el Apéndice D. **Los ejemplos numéricos son inventados.**
 >
-> **Cómo leerlo.** Está escrito para entenderse sin ser experto, pero sin recortar la precisión. Las cifras y reglas que vienen del código se dan tal cual. Cuando algo no lo pude comprobar, lo digo. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-2-n y se detallan en `hallazgos.md`.
+> **Cómo leerlo.** Está escrito para entenderse sin ser experto, pero sin recortar la precisión. Las cifras y reglas que vienen del código se dan tal cual. Cuando algo no lo pude comprobar, lo digo. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-2-n (el número es el del módulo 2, en el que se escribió este capítulo, no el del capítulo) y se detallan en `hallazgos.md`.
 >
 > **Privacidad.** El seguimiento privado (impulsos, recaídas, libido) se describe solo en su mecánica, sin datos ni ejemplos personales.
 
@@ -605,7 +612,7 @@ Una prueba JVM (`ExportacionPrueba`) fija los números que da R con unos datos i
 |---|---|---|---|---|
 | Ánimo ahora (aviso) | 3 veces al día por omisión, al azar entre 10:00 y 21:00 | Cuadrícula 7 × 7 (valencia y activación) + opcionales | `Momento` con tipo `muestreo` | `muestreo_valencia`, `muestreo_activacion` |
 | Ánimo ahora (por iniciativa propia) | Cuando tú quieras (botón, widget, mosaico) | Igual | `Momento` con tipo `animo` | entra en `animo_valencia`, `animo_activacion` |
-| Ánimo al cerrar el día | Al final de la hoja de la noche | Cuadrícula 7 × 7 | `Momento` tipo `animo`, origen `cierre` | `animo_cierre_valencia`, `animo_cierre_activacion` |
+| Ánimo al cerrar el día | Al principio de la hoja de la noche, solo la de hoy (hasta la entrega N4, al final) | Cuadrícula 7 × 7 | `Momento` tipo `animo`, origen `cierre` | `animo_cierre_valencia`, `animo_cierre_activacion` |
 | Ánimo del día (diario) | Aviso a las 22:00 por omisión | Valencia 1–7, activación 1–7, dolor 0–5, con anclas | `Dia` | `valencia`, `activacion`, `dolor` |
 | Emociones con nombre, pensamiento, con quién | Dentro de cualquier registro de ánimo (opcional) | Listas | `Momento` | `n_<emoción>`, `n_<pensamiento>`, `con_*`, `acompanado_pct` |
 | Predicción de mañana | En la hoja de la noche | 1–7 | `Dia` | `prediccion`, `error_prediccion` |
@@ -659,7 +666,7 @@ Además, pide **dolor o molestia física de 0 a 5**, con anclas por **interferen
 
 **Por qué 1 a 7.** Una escala con un punto medio (4) permite decir «neutral», y siete opciones dan más detalle que cinco sin volverse difíciles de distinguir. Las **anclas** existen para que un «5» signifique lo mismo hoy que dentro de dos años: sin texto, la gente tiende a «reajustar» lo que significa cada número con el tiempo. **[Aproximación]**: es una práctica común y razonable; las anclas concretas son de la app y no están validadas como instrumento.
 
-**Detalle a saber.** Las anclas de activación mezclan un poco de valencia: «3 = relajado, en calma» suena agradable y «7 = acelerado, inquieto» suena algo desagradable. En el circumplejo puro, la activación no debería sugerir agrado ni desagrado. Además, la fila de activación usa **la misma paleta de color** que la de valencia (`Tonos.divergente`, del color «bajo» al «alto»), lo que puede insinuar que poca energía es «peor». Es un efecto pequeño y no hay forma de saber cuánto influye; lo dejo anotado (parte de H-2-11).
+**Detalle a saber.** Las anclas de activación mezclan un poco de valencia: «3 = relajado, en calma» suena agradable y «7 = acelerado, inquieto» suena algo desagradable. En el circumplejo puro, la activación no debería sugerir agrado ni desagrado. Además, hasta la entrega N4 la fila de activación usaba **la misma paleta de color** que la de valencia (`Tonos.divergente`, del color «bajo» al «alto»), lo que podía insinuar que poca energía es «peor»; desde N4 usa una paleta de una sola dirección (sección 3.7.1). Las anclas no cambiaron. Es un efecto pequeño y no hay forma de saber cuánto influye (parte de H-2-11).
 
 ### 3.3.4 Las dos escalas no son la misma medida
 
@@ -679,11 +686,11 @@ La app mide las tres:
 
 : Tabla 3.4. Tres formas de responder «¿cómo estuve?»
 
-Y una cuarta, intermedia: el **cierre del día** («cómo estás ahora», al terminar la hoja de la noche) es momentáneo, pero siempre al final del día.
+Y una cuarta, intermedia: el **cierre del día** («cómo estás ahora», al abrir la hoja de la noche; hasta la entrega N4, al terminarla) es momentáneo, pero siempre al final del día.
 
 **Por qué el recuerdo no es un promedio.** Al evaluar un periodo, la gente pesa de más el **momento más intenso** y **cómo terminó**, y casi ignora la duración (regla «pico-final»; Kahneman et al., 1993). Así, un día bueno con un final malo puede recordarse como peor que su promedio.
 
-**Ejemplo (inventado).** Un martes respondes tres avisos: 6, 5 y 6 (promedio 5.67). A las 21:30 tienes una discusión fuerte. En el diario de las 23:00 pones **3**. El cierre del día lo marcas en 2. Las tres cifras son «verdad», pero de cosas distintas: el promedio de avisos refleja **la mayor parte del día**; el diario, **el día tal como quedó en tu memoria**; el cierre, **cómo te fuiste a dormir**. Ninguna es la «correcta»; por eso se guardan las tres.
+**Ejemplo (inventado).** Un martes respondes tres avisos: 6, 5 y 6 (promedio 5.67). A las 21:30 tienes una discusión fuerte. En el diario de las 23:00 pones **3**. El cierre del día lo marcas en 2. Las tres cifras son «verdad», pero de cosas distintas: el promedio de avisos refleja **la mayor parte del día**; el diario, **el día tal como quedó en tu memoria**; el cierre, **cómo estabas al sentarte a cerrar el día**. Ninguna es la «correcta»; por eso se guardan las tres.
 
 **Cómo se calcula cada una en el panel** (`Estadistica.panel`):
 
@@ -695,7 +702,7 @@ Y una cuarta, intermedia: el **cierre del día** («cómo estás ahora», al ter
 
 La app marca como «obvias» las relaciones entre estas variables (por ejemplo, `valencia` con `muestreo_valencia`), para no presentarlas como descubrimientos (capítulo 6).
 
-**Un detalle de presentación que puede influir (H-2-11).** Mientras llenas la valencia del día en la hoja de la noche, debajo aparecen los valores de los avisos de ese día («avisos: 10:56→6 14:55→5…»). Ver esos números antes de calificar el día puede **anclar** tu respuesta hacia ellos, y así las dos medidas se parecen más de lo que se parecerían por sí solas. Es una decisión de diseño razonable (ayuda a recordar), pero vuelve menos independiente la valencia del día. **[Diseño propio]**.
+**Un detalle de presentación que podía influir (H-2-11).** Hasta la entrega N4, mientras llenabas la valencia del día en la hoja de la noche, debajo aparecían los valores de los avisos de ese día («avisos: 10:56→6 14:55→5…»). Ver esos números antes de calificar el día puede **anclar** (arrastrar) tu respuesta hacia ellos, y así las dos medidas se parecen más de lo que se parecerían por sí solas. Desde N4 la línea solo aparece **después** de elegir la valencia (`PantallaNoche`); todavía puede influir si la corriges después de verla. **[Diseño propio]**.
 
 ## 3.5 El muestreo de experiencia: cómo y cuándo pregunta la app
 
@@ -759,7 +766,7 @@ Se marcan como familia «obvia» entre sí y con `muestreo_valencia`, `muestreo_
 
 También cambió la tarjeta «N avisos de ánimo sin contestar» de Hoy (H-9-9). Antes restaba registros a avisos planeados, y al tocarla la respuesta se guardaba como registro propio (`animo`), así que la tarjeta no se apagaba. Ahora cuenta los avisos sin respuesta por su hora (`AvisosAnimo.sinContestar`) y abre la captura con la hora del más antiguo. La respuesta queda como `muestreo` de ese aviso, con su `latencia_min`.
 
-**Qué no quedaba registrado hasta el esquema 12 (H-2-3).** Si el teléfono estuvo dormido y el pulso llegó más de 50 minutos tarde, el aviso **se marca como hecho pero nunca se muestra**, sin dejar rastro. Tampoco se guarda, como dato del día, **cuántos avisos se mostraron**: el plan se borra a los 3 días y las marcas internas a los 40. La pantalla de Hoy sí cuenta «avisos sin contestar» del día en curso, pero ese número no llega al panel. Consecuencia: no se puede calcular la **tasa de respuesta** histórica (avisos respondidos / avisos mostrados), que es la primera cifra que se reporta en un estudio de muestreo de experiencia, ni saber si los avisos sin respuesta se concentran en ciertos días u horas (Rintala et al., 2019, combinando datos de varios estudios de este tipo, encontraron una respuesta promedio de 78 %, más baja temprano en la mañana y que bajaba con los días de estudio). Gravedad media.
+**Qué no quedaba registrado hasta el esquema 12 (H-2-3).** Si el teléfono estuvo dormido y el pulso llegó más de 50 minutos tarde, el aviso **se marcaba como hecho pero nunca se mostraba**, sin dejar rastro (hoy sigue sin mostrarse, pero queda en `vencidos`). Tampoco se guardaba, como dato del día, **cuántos avisos se mostraron**: el plan se borra a los 3 días y las marcas internas a los 40. La pantalla de Hoy sí contaba «avisos sin contestar» del día en curso, pero ese número no llegaba al panel. Consecuencia, para los días anteriores al esquema 13: no se puede calcular la **tasa de respuesta** histórica (avisos respondidos / avisos mostrados), que es la primera cifra que se reporta en un estudio de muestreo de experiencia, ni saber si los avisos sin respuesta se concentraban en ciertos días u horas (Rintala et al., 2019, combinando datos de varios estudios de este tipo, encontraron una respuesta promedio de 78 %, más baja temprano en la mañana y que bajaba con los días de estudio). Gravedad media.
 
 ![Figura 3.2. Un día sintético con los valores por omisión: tres avisos dentro de sus franjas posibles, una respuesta rápida, un aviso que caduca y los demás registros del día. Script: `figuras/fig08_dia_muestreo.py` (replica las reglas de `planDelDia`, pero no el generador al azar de Kotlin, así que las horas exactas difieren).](figuras/fig08_dia_muestreo.png){width=100%}
 
@@ -796,7 +803,7 @@ Los dos ejes resumen bien, pero pierden información: «enojo» y «miedo» caen
 - **Relleno con cero:** desde la fecha de tu **primer** registro de ánimo, los días que tienen documento de diario y no tienen registros cuentan como **0** en estas variables (no como «sin dato»). **[Diseño propio]**: es razonable si se asume que siempre registras cuando sientes algo, cosa que no es cierta en un día sin registros por olvido (ver H-1-1 sobre el criterio de rellenar con cero).
 - Con quién (solo con los registros **de aviso** que tienen compañía marcada): `acompanado_pct` (fracción de avisos en compañía), `con_pareja`, `con_amigos`… (fracción de avisos con cada tipo) y `valencia_acompanado` / `valencia_solo` (promedio de valencia en cada caso).
 
-**Compatibilidad con los registros viejos.** Antes existían «tipos de momento» (tristeza, alegría, pensando en…). La función `Catalogo.emocionesDe` traduce los viejos al formato nuevo (un momento viejo de tipo «tristeza» cuenta como la emoción tristeza). En el panel la serie es continua. **En la exportación `vm_dias.csv` no**: sus columnas `m_<tipo>` siguen contando solo los tipos viejos, así que desde el cambio valen 0 aunque registres esas emociones (H-2-13).
+**Compatibilidad con los registros viejos.** Antes existían «tipos de momento» (tristeza, alegría, pensando en…). La función `Catalogo.emocionesDe` traduce los viejos al formato nuevo (un momento viejo de tipo «tristeza» cuenta como la emoción tristeza). En el panel la serie es continua. **En la exportación `vm_dias.csv` no**: sus columnas `m_<tipo>` siguen contando solo los tipos viejos, así que desde el cambio valen 0 aunque registres esas emociones (H-2-13, pendiente; el diccionario de la v90 lo advierte: «registros de antes de unir ánimo y momentos»).
 
 ### 3.6.4 Nombrar puede cambiar lo que sientes
 
@@ -858,11 +865,11 @@ Estas preguntas están **plegadas por omisión**, así que se responden menos y 
 
 ### 3.7.4 «Retroactivo»: cuándo se llenó el día
 
-Cada documento de día guarda `retroactivo`: verdadero si el día se **guardó por primera vez** después de que terminó (`Repo.guardarDia`: la fecha del documento es anterior al día lógico de hoy). Sirve para separar lo escrito en el momento de lo escrito de memoria días después, que tiene más sesgo de recuerdo. **[Validado]** el propósito (Stone et al., 2002, mostraron que en diarios en papel mucha gente llena días atrasados de golpe).
+Cada documento de día guarda `retroactivo`: verdadero si el día se llenó **después de que terminó** (la regla exacta cambió en el esquema 13; abajo). Sirve para separar lo escrito en el momento de lo escrito de memoria días después, que tiene más sesgo de recuerdo. **[Validado]** el propósito (Stone et al., 2002, mostraron que en diarios en papel mucha gente llena días atrasados de golpe).
 
-**Hasta el esquema 12 se decidía en el primer guardado, no cuando se llenó el ánimo (H-2-2).** Ejemplo (inventado): el martes a las 8:10 tocas la calidad del sueño en el widget. Eso crea el documento del martes con `retroactivo = falso`. El viernes llenas la valencia y el diario del martes de memoria: el día **sigue marcado como no retroactivo**, porque la marca ya existía. Al revés, un día que se crea retroactivo lo es para siempre. Además, `ts_editado` se sobrescribe en cada cambio, así que tampoco queda cuándo se escribió cada parte. Gravedad media: es justo la variable pensada para controlar el sesgo de recuerdo.
+**Hasta el esquema 12 se decidía en el primer guardado, no cuando se llenó el ánimo (H-2-2).** `Repo.guardarDia` marcaba el día como retroactivo si, al crear el documento, su fecha era anterior al día lógico de hoy, y la marca ya no cambiaba. Ejemplo (inventado): el martes a las 8:10 tocas la calidad del sueño en el widget. Eso crea el documento del martes con `retroactivo = falso`. El viernes llenas la valencia y el diario del martes de memoria: el día **seguía marcado como no retroactivo**, porque la marca ya existía. Al revés, un día creado retroactivo lo era para siempre. Además, `ts_editado` se sobrescribe en cada cambio, así que tampoco quedaba cuándo se escribió cada parte. Gravedad media: es justo la variable pensada para controlar el sesgo de recuerdo.
 
-**Desde el esquema 13 (P-13)** cada día guarda `ts_valencia`: la hora en que la valencia pasó de vacía a llena, o en que cambió. Con ella, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). En el ejemplo, la valencia del martes se llenó el viernes, así que el martes queda retroactivo aunque el widget lo haya creado el mismo martes. Llenarla el martes a la 1:30 de la madrugada del miércoles no cuenta como retroactivo, porque sigue siendo el día lógico del martes. Corregir la valencia días después también vuelve el día retroactivo: el número nuevo es de memoria. Los días de antes de la v13 no tienen `ts_valencia` y conservan su marca. **[Diseño propio]**.
+**Desde el esquema 13 (P-13)** cada día guarda `ts_valencia`: la hora en que la valencia pasó de vacía a llena, o en que cambió. Con ella, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). En el ejemplo, la valencia del martes se llenó el viernes, así que el martes queda retroactivo aunque el widget lo haya creado el mismo martes. Llenarla el martes a la 1:30 de la madrugada del miércoles no cuenta como retroactivo, porque sigue siendo el día lógico del martes. Corregir la valencia días después también vuelve el día retroactivo: el número nuevo es de memoria. Los días de antes del esquema 13 no tienen `ts_valencia` y conservan su marca vieja, salvo que cambies su valencia. **[Diseño propio]**.
 
 **Un aviso que prometía una marca inexistente (H-2-14).** Si abrías un día futuro, la app decía «se marcará como escrito por adelantado», pero no existía ningún campo que lo registrara. Desde el esquema 14 el día guarda `ts_creado`, así que «escrito por adelantado» se deriva en R: el día lógico de `ts_creado` es anterior a la fecha del día. Desde la entrega 10c el aviso dice lo que pasa de verdad: «Puedes dejar notas; queda guardado cuándo las escribiste».
 
@@ -877,7 +884,7 @@ Dos precisiones (H-2-8):
 
 ## 3.8 La predicción de mañana
 
-En la hoja de la noche: «¿Cómo crees que estará tu ánimo mañana?», de 1 a 7 con las mismas anclas que la valencia. Al día siguiente el panel calcula:
+En la hoja de la noche: «¿Cómo crees que estará tu ánimo mañana?», de 1 a 7. Aunque la pregunta dice «ánimo», la escala es de agrado: sus anclas (`Catalogo.ANCLAS["prediccion_manana"]`) van de «1 = Muy desagradable» a «7 = Muy agradable», las mismas palabras de la valencia del día pero sin sus descripciones («angustia, desesperanza»…). Por eso se compara con la **valencia** del diario del día siguiente, no con la activación. Al día siguiente el panel calcula:
 
   `error_prediccion` = | predicción de ayer − valencia de hoy |
 
@@ -885,7 +892,7 @@ En la hoja de la noche: «¿Cómo crees que estará tu ánimo mañana?», de 1 a
 
 **Para qué.** Las personas solemos equivocarnos al predecir cómo nos sentiremos: sobrestimamos cuánto y cuánto tiempo nos afectarán los eventos (*pronóstico afectivo*; Wilson y Gilbert, 2005). Medir el error permite ver si con el tiempo te conoces mejor y qué días predices peor. **[Validado]** la idea; **[Diseño propio]** la variable.
 
-**Qué se pierde al usar el valor absoluto (H-2-10).** El valor absoluto quita la dirección del error. Ejemplo (inventado): el lunes predices 6 y el martes resulta 4 → error 2 (fuiste **optimista**). El miércoles predices 3 y el jueves resulta 5 → error 2 (fuiste **pesimista**). Para la variable son iguales, aunque son sesgos opuestos. Si quieres saber si tiendes al optimismo, hace falta también el **error con signo** (valencia − predicción). Gravedad baja; se resuelve agregando una columna.
+**Qué se pierde al usar el valor absoluto (H-2-10).** El valor absoluto quita la dirección del error. Ejemplo (inventado): el lunes predices 6 y el martes resulta 4 → error 2 (fuiste **optimista**). El miércoles predices 3 y el jueves resulta 5 → error 2 (fuiste **pesimista**). Para la variable son iguales, aunque son sesgos opuestos. Si quieres saber si tiendes al optimismo, hace falta también el **error con signo** (valencia − predicción). Gravedad baja; se resuelve agregando una columna. En la v90 sigue pendiente: ni el panel ni R tienen esa columna, aunque se puede calcular en R con `prediccion` del día anterior y `valencia`.
 
 ## 3.9 Cuestionarios validados
 
@@ -925,7 +932,7 @@ Referencias: Gosling, Rentfrow y Swann (2003); versión española, Romero et al.
 
 ### 3.9.2 Cuándo se piden
 
-`Escalas.proxima`: la fecha de la última respuesta más la frecuencia (7, 30 o 365 días); si nunca se respondió, hoy. El recordatorio (a las 19:00 por omisión, `escalas_hora`) insiste más con el atraso (`Escalas.horasAviso`): el día que toca, **una vez**; con 1 a 3 días de atraso, **dos** (12:00 y la hora configurada); con 4 o más, **tres** (10:00, 15:00 y la configurada o las 20:00, la que sea más tarde).
+`Escalas.proxima`: la fecha de la última respuesta más la frecuencia (7, 30 o 365 días); si nunca se respondió, hoy. El recordatorio (a las 19:00 por omisión, `escalas_hora`) insiste más con el atraso (`Escalas.horasAviso`, si está encendido `escalas_insistir`, como viene por omisión; si no, avisa una vez al día): el día que toca, **una vez**; con 1 a 3 días de atraso, **dos** (12:00 y la hora configurada); con 4 o más, **tres** (10:00, 15:00 y la configurada o las 20:00, la que sea más tarde).
 
 Que se pidan de forma regular es importante porque estos instrumentos preguntan por un periodo («los últimos 7 días»): si se responden irregularmente, los periodos se enciman o dejan huecos.
 
@@ -968,7 +975,7 @@ Una vez al año (la primera vez, cuando ya hay al menos 14 días con documento d
 
   posición = Σ (respuesta − 3) × signo × 100 / (2 × número de afirmaciones respondidas)  (−100 a +100)
 
-y se describe como «muy hacia…» (≤ −60 o ≥ 60), «hacia…» (de −60 a −20, o de 20 a 60) o «al centro» (entre −20 y 20).
+y se describe (`Politica.lado`) como «muy hacia…» (≤ −60 o ≥ 60), «hacia…» (más de −60 y hasta −20, o desde 20 y menos de 60) o «al centro» (más de −20 y menos de 20). Los bordes son simétricos: ±20 ya es «hacia…» y ±60 ya es «muy hacia…».
 
 **Para qué sirven los signos mezclados.** Hay personas que tienden a estar de acuerdo con todo (*aquiescencia*). Si todas las afirmaciones apuntaran al mismo lado, esa tendencia se confundiría con una postura. Mezclar afirmaciones en ambos sentidos la neutraliza… **si están equilibradas**.
 
@@ -992,7 +999,7 @@ Lo que no se arregla: los perfiles llenados antes de esta versión no tienen ese
 
 ### 3.12.1 Cómo se captura
 
-A la hora configurada (**8:00** por omisión, `hora_sueno`), si el día lógico aún no tiene sueño anotado, llega el aviso «¿Recuerdas lo que soñaste? Anótalo antes de levantarte; el recuerdo se borra en minutos», que se borra solo a las **3 horas**. El aviso solo se intenta durante las 3 horas siguientes a la hora configurada. La pantalla rápida pone **primero la narración** y después lo demás, precisamente porque el contenido de los sueños se olvida muy rápido al despertar. Que el olvido sea cuestión de minutos es la afirmación de la app; es coherente con lo que sé de la literatura sobre el recuerdo de sueños, pero no la verifiqué con una fuente en esta sesión **[sin verificar]**.
+A la hora configurada (**8:00** por omisión, `hora_sueno`), si el día lógico aún no tiene relato del sueño ni la marca «recordé un sueño» (la calidad sola no lo evita), llega el aviso «¿Recuerdas lo que soñaste? Anótalo antes de levantarte; el recuerdo se borra en minutos», que se borra solo a las **3 horas**. El aviso solo se intenta durante las 3 horas siguientes a la hora configurada. La pantalla rápida pone **primero la narración** y después lo demás, precisamente porque el contenido de los sueños se olvida muy rápido al despertar. Que el olvido sea cuestión de minutos es la afirmación de la app; es coherente con lo que sé de la literatura sobre el recuerdo de sueños, pero no la verifiqué con una fuente en esta sesión **[sin verificar]**.
 
 Se registra:
 
@@ -1051,7 +1058,7 @@ En un registro personal, los datos **no faltan al azar**. Lo típico es no llena
 
 **El registro de un toque.** La notificación del diario trae un botón «**Día difícil: solo un número**» que abre una pantalla con **una sola escala de valencia**. Al tocarla se guarda la valencia del día con la marca `dia_dificil = 1` (`QuickActivity.Minimo`). La idea: que llenar el día cueste un segundo justo cuando menos ganas hay. «Un día registrado así vale mucho más que un día vacío», dice la propia pantalla, y es correcto: en el ejemplo, con esos tres números el promedio vuelve a 4.50. **[Diseño propio]** con buen fundamento. La variable `dia_dificil` permite además ver cuántos días se registraron así.
 
-**Otros apoyos:** el diario de ayer aparece como pendiente hasta las 14:00 del día siguiente; los cuestionarios insisten más con el atraso; la «semana corta» reduce la app a lo mínimo; y `retroactivo` intenta separar lo escrito tarde (con el problema de H-2-2).
+**Otros apoyos:** desde la entrega N2 (D.37), Hoy muestra como pendientes los días de los 7 anteriores que no tienen ni valencia ni diario («Diario de ayer» o «Te faltan…», `Pendientes.faltantes`), a cualquier hora, hasta que los llenes; descartarlo los oculta solo ese día (antes, el diario de ayer dejaba de pedirse a las 14:00). Además, los cuestionarios insisten más con el atraso; la «semana corta» reduce la app a lo mínimo; y `retroactivo` separa lo escrito tarde (desde el esquema 13, con `ts_valencia`; sección 3.7.4).
 
 **Lo que faltaba hasta el esquema 13:** saber **cuántos avisos se mostraron** (H-2-3). Desde entonces `tasa_respuesta` está en el panel (sección 3.5.3). Con ella se puede ver si los avisos sin respuesta se concentran en ciertos días u horas, y usarla como covariable: por ejemplo, ver si los días con tasa baja son también los de valencia baja del diario.
 
@@ -1091,7 +1098,7 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 
 **Base científica.** Es una versión muy corta de la **prueba de vigilancia psicomotora (PVT)**, la medida estándar de cómo la falta de sueño afecta la atención (Basner y Dinges, 2011). La PVT estándar dura **10 minutos**, con esperas de **2 a 10 s**, cuenta como lapso un tiempo de **500 ms o más** y como **falsa salida** tanto tocar sin estímulo como responder en **menos de 100 ms** (demasiado rápido para ser una reacción real). La versión breve validada (PVT-B) dura **3 minutos**, con esperas de **1 a 4 s** (Basner, Mollicone y Dinges, 2011), y sus autores encontraron que para ella funcionaba mejor un umbral de lapso de **355 ms**.
 
-**Comparación (H-2-12).** La prueba de la app dura unos 30 segundos (10 intentos), mucho menos que cualquier versión validada; usa el umbral de 500 ms (pensado para la prueba de 10 minutos); hasta la entrega 10c **no marcaba como falsas salidas las respuestas de menos de 100 ms** (entraban en la media). Desde 10c, un toque a menos de 100 ms del estímulo cuenta como anticipación (suma a `anticipaciones`), no entra en los tiempos y el intento se repite, como en la PVT (D.74). Sigue midiendo en una pantalla táctil, con retrasos de dibujo y de detección del toque que varían entre teléfonos. La propia app advierte que solo sirve para compararte contigo mismo. **[Aproximación]**: útil para ver tendencias grandes, con mucho ruido de un día a otro. En el panel, `rt_media` es el promedio de las medias de las pruebas hechas ese día.
+**Comparación (H-2-12).** La pantalla dice «unos 30 segundos»; con 10 esperas de 1.5 a 4.0 s (2.75 s en promedio), 9 pausas de 0.6 s y los tiempos de reacción, sale más cerca de **unos 36 s** en promedio (de ~22 a ~50 s con reacciones de 0.15 a 0.5 s; cada anticipación suma 0.9 s y una espera nueva; cálculo propio a partir de `PantallaReaccion`). Es mucho menos que cualquier versión validada; usa el umbral de 500 ms (pensado para la prueba de 10 minutos); hasta la entrega 10c **no marcaba como falsas salidas las respuestas de menos de 100 ms** (entraban en la media). Desde 10c, un toque a menos de 100 ms del estímulo cuenta como anticipación (suma a `anticipaciones`), no entra en los tiempos y el intento se repite, como en la PVT (D.74). Sigue midiendo en una pantalla táctil, con retrasos de dibujo y de detección del toque que varían entre teléfonos. La propia app advierte que solo sirve para compararte contigo mismo. **[Aproximación]**: útil para ver tendencias grandes, con mucho ruido de un día a otro. En el panel, `rt_media` es el promedio de las medias de las pruebas hechas ese día.
 
 ## 3.18 Amenazas a la validez (resumen)
 
@@ -1099,15 +1106,15 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 |---|---|---|---|---|
 | L-3.1 | Cuestionarios asignados a semanas que no les corresponden | 3.9.3 | Resuelto en 10c (D.62): cada puntaje cubre los días que pregunta | H-2-1 |
 | L-3.2 | Días malos sin registrar (MNAR) | 3.15 | Revisar `dia_dificil` y días sin diario; no confiar en promedios de periodos con muchos huecos | — |
-| L-3.3 | Tasa de respuesta a avisos desconocida | 3.5.3 | Usar `n_muestreos` con cautela; no hay denominador | H-2-3 |
+| L-3.3 | Tasa de respuesta a avisos desconocida | 3.5.3 | Desde el esquema 13 (10b), usar `avisos_mostrados` y `tasa_respuesta`; en los días anteriores no hay denominador y `n_muestreos` va con cautela | H-2-3 |
 | L-3.4 | Recuerdo frente a experiencia | 3.4 | No tratar `valencia` y `muestreo_valencia` como intercambiables | — |
 | L-3.5 | Registros por iniciativa propia sesgados hacia eventos | 3.5.4 | Preferir `muestreo_valencia` para «cómo estoy en general» | — |
 | L-3.6 | «No respondí» codificado como 0 | 3.7.3, 3.12.3 | `sueno_recordado`, hábitos antes de existir y «las tres» resueltos en 10c (D.63); `ctx_*` y hábitos no marcados siguen como cotas inferiores | H-2-4 |
-| L-3.7 | `retroactivo` poco fiable | 3.7.4 | No usarlo como control del sesgo de recuerdo hasta corregir | H-2-2 |
+| L-3.7 | `retroactivo` poco fiable | 3.7.4 | Corregido en el esquema 13 (10b, `ts_valencia`); en los días anteriores, que conservan la marca vieja, usarlo con cautela | H-2-2 |
 | L-3.8 | Perfil proyectado hacia atrás | 3.11 | Resuelto en 10c para los perfiles nuevos (D.74); en los ya llenados, desconfiar de `vida_*` antes de la primera respuesta | H-2-5 |
 | L-3.9 | Reactividad | 3.14 | Descartar o separar las primeras semanas de cada medición nueva | — |
 | L-3.10 | Instrumentos adaptados (periodo de 7 días) | 3.9.1 | Usar los puntajes para compararte contigo, no con normas | — |
-| L-3.11 | Anclaje al calificar el día | 3.4 | Tener presente que `valencia` y `muestreo_valencia` no son independientes | H-2-11 |
+| L-3.11 | Anclaje al calificar el día | 3.4 | Desde N4 los avisos se ven después de elegir la valencia; antes (sin `version_noche` = 2), tener presente que `valencia` y `muestreo_valencia` no son independientes | H-2-11 |
 
 : Tabla 3.7. Amenazas a la validez (resumen)
 
@@ -1141,17 +1148,17 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 2. Los avisos usan **muestreo aleatorio estratificado**: 3 al día por omisión, uno por tramo de la ventana 10:00–21:00, con margen de 45 minutos. Es un diseño estándar.
 3. El hallazgo más grave del módulo era que **los puntajes de los cuestionarios se asignaban en el panel a días de otras semanas** (ventanas de 14 y 30 días hacia atrás, con sobrescritura) (H-2-1). Desde la entrega 10c, cada puntaje cubre solo los días que pregunta y cada día se queda con la primera respuesta que lo cubre (D.62).
 4. Varias variables codificaban «no respondí» como 0 (`sueno_recordado`, contextos, hábitos, «las tres» necesidades) (H-2-4); en 10c se corrigieron `sueno_recordado`, los hábitos antes de existir y «las tres» (D.63); los contextos siguen la convención de la pantalla. El perfil se proyectaba hacia atrás (H-2-5; corregido para los perfiles nuevos en 10c, D.74); la marca `retroactivo` no reflejaba cuándo se llenó el ánimo (H-2-2; corregido en 10b). Los cierres guardados otro día ya no cuentan en el panel (D.74).
-5. No se guarda cuántos avisos se mostraron, así que la tasa de respuesta no se puede calcular (H-2-3).
+5. Hasta el esquema 12 no se guardaba cuántos avisos se mostraron, así que no hay tasa de respuesta de esos días (H-2-3); desde el esquema 13 (10b) el panel tiene `avisos_*` y `tasa_respuesta`.
 6. El **registro de un toque** para días difíciles es una buena defensa contra el sesgo de los días malos sin registrar.
 7. Los cuestionarios están bien puntuados (incluidas las preguntas inversas), pero WHO-5 y PSS-4 usan un periodo de 7 días distinto al original, y algunos puntos de corte que muestra la app no los pude verificar.
-8. Se identificaron **15 hallazgos** (H-2-1 a H-2-15). No se cambió código.
+8. El módulo 2 identificó **15 hallazgos** (H-2-1 a H-2-15) y no cambió código. Después, el módulo 10 resolvió H-2-1, H-2-2, H-2-3, H-2-4, H-2-7, H-2-12 y H-2-14, y en parte H-2-5, H-2-6 y H-2-15; la revisión de navegación (esquema 14) resolvió H-2-8 (completado en 10c), H-2-9 y H-2-11. Siguen pendientes H-2-10 y H-2-13.
 
 
 # Capítulo 4. Sensores, datos pasivos e importaciones
 
-> **Para qué sirve este capítulo.** Explica, fuente por fuente, **qué mide la app sin que tú escribas nada** (datos *pasivos*) y **qué datos entran cuando tú cargas un archivo** (datos *importados*): qué dato es, cómo se obtiene exactamente, qué tan confiable es, qué hace la app cuando falta y a qué día se asigna. Todo corresponde a la versión v81 del código (commit `fa527df`). Los ejemplos numéricos son **inventados**; no hay datos reales aquí.
+> **Para qué sirve este capítulo.** Explica, fuente por fuente, **qué mide la app sin que tú escribas nada** (datos *pasivos*) y **qué datos entran cuando tú cargas un archivo** (datos *importados*): qué dato es, cómo se obtiene exactamente, qué tan confiable es, qué hace la app cuando falta y a qué día se asigna. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» (o «desde el esquema 13») y está en el Apéndice D. Los ejemplos numéricos son **inventados**; no hay datos reales aquí.
 >
-> **Cómo leerlo.** Está escrito para entenderse sin ser experto, pero sin recortar la precisión: cuando una cifra o regla viene del código, se da tal cual (umbrales, ventanas de tiempo, mínimos). Cuando algo es una suposición mía o no pude comprobarlo, lo digo. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-3-n y se detallan en `hallazgos.md`.
+> **Cómo leerlo.** Está escrito para entenderse sin ser experto, pero sin recortar la precisión: cuando una cifra o regla viene del código, se da tal cual (umbrales, ventanas de tiempo, mínimos). Cuando algo es una suposición mía o no pude comprobarlo, lo digo. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-3-n (el 3 es el número del módulo que los encontró, no del capítulo) y se detallan en `hallazgos.md`.
 
 ## 4.1 Mini-glosario (palabras que aparecen mucho)
 
@@ -1179,9 +1186,9 @@ La app programa una tarea periódica (`Pulso`, con `PeriodicWorkRequestBuilder` 
 
 ### 4.2.2 La sincronización diaria
 
-Una vez al día, después de las 06:00 (`Trabajo.kt`, función `diario`), la app trae del teléfono, en este orden: reloj (últimos **3** días), pantalla (últimos **2** días), registra de nuevo las geocercas y el reconocimiento de actividad, fotos (3 días), agenda, llamadas/SMS (3 días), clima y un respaldo automático. A partir de las 21:00 hay una **segunda** pasada más corta (1 día de pantalla, reloj, fotos y llamadas, más la agenda). Además, una vez al mes rellena la historia que guardan la galería y el calendario.
+Una vez al día, después de las 06:00 (`Trabajo.kt`, función `diario`), la app trae del teléfono, en este orden: reloj (últimos **3** días), pantalla (últimos **2** días), registra de nuevo las geocercas y el reconocimiento de actividad, fotos (3 días), agenda, llamadas/SMS (3 días), clima y un respaldo automático. A partir de las 21:00 hay una **segunda** pasada más corta (1 día de pantalla, reloj, fotos y llamadas, más la agenda). Además, una vez al mes (después de las 13:00) rellena la historia que guardan la galería (hasta 400 días con registro y sin conteo de fotos), el calendario y el registro de llamadas (hasta un año atrás), y pide clima atrasado (hasta 20 peticiones).
 
-Hay un botón «Sincronizar todo ahora» (7 días de ventana) y otros para rangos mayores.
+Hay un botón «Sincronizar todo ahora» (`Sincronizar.todo`): en Permisos y sensores lee 7 días; el de Estado de los datos, y los de Hoy y el Día, 3 días. Hay otros para rangos mayores.
 
 **Por qué importa la ventana de 2–3 días.** Si la app no corrió durante más días (teléfono apagado, ahorro de batería agresivo), esos días **no se recuperan solos**. Para el reloj hay botones que leen hasta 30 días; para la pantalla, el botón manual calcula 7 días. Android conserva los eventos de uso por un tiempo limitado, así que el historial de pantalla de días lejanos puede ya no existir en el sistema (esto último es comportamiento de Android que conozco pero no pude comprobar en la documentación oficial durante esta sesión).
 
@@ -1199,25 +1206,25 @@ En el capítulo 2 vimos que la app define el «día» de 05:00 a 04:59. **Pero n
 
 | Usan **día lógico** (05:00 → 04:59) | Usan **día de calendario** (00:00 → 24:00) |
 |---|---|
-| Ubicación (km del día), Movimiento, Wifi/audio/carga/luz/presión, Notificaciones, Música (Oyente), Fotos, Llamadas/SMS, Spotify, Google Takeout, WhatsApp, Kindle y, **desde el esquema 13, Pantalla y pasos** | **Pantalla** (hasta el esquema 12), **Reloj** (pasos hasta el esquema 12; corazón, oxígeno, calorías…), **Agenda**, **Clima/aire** (por naturaleza son datos por día de calendario), Cold Turkey y MacroFactor (el archivo trae la fecha) |
+| Ubicación (km del día), Movimiento, Wifi/audio/carga/luz/presión, Notificaciones, Música (Oyente), Fotos, Llamadas/SMS, Spotify, Google Takeout, WhatsApp, Kindle, ejercicio del reloj (día del inicio) y, **desde el esquema 13, Pantalla y pasos** | **Pantalla** (hasta el esquema 12), **Reloj** (pasos hasta el esquema 12; corazón, oxígeno, calorías…), **Agenda**, **Clima/aire** (por naturaleza son datos por día de calendario), **ciudades y países** (`Mundo`), Cold Turkey y MacroFactor (el archivo trae la fecha) |
 | El **sueño** del reloj se asigna al **día en que despiertas** (fecha de calendario del final de la sesión). | |
 
 : Tabla 4.2. Dos relojes: día lógico y día de calendario (¡lee esta sección!)
 
-**Ejemplo (inventado).** Un lunes te quedas usando el teléfono de 00:30 a 01:30 de la madrugada del martes.
-- Esa hora de **pantalla** se suma al **martes** (calendario).
+**Ejemplo (inventado), como era hasta el esquema 12.** Un lunes te quedas usando el teléfono de 00:30 a 01:30 de la madrugada del martes.
+- Esa hora de **pantalla** se sumaba al **martes** (calendario).
 - Las **notificaciones** que llegaron a las 01:00 se cuentan para el **lunes** (lógico).
 - El **wifi** de esa hora también va al **lunes**.
 
-Resultado: dentro de una misma fila del panel (digamos «martes»), la pantalla incluye una hora que las notificaciones y el wifi del mismo martes *no* incluyen. Esto es el hallazgo **H-3-1** (gravedad alta, porque afecta justo las variables de uso nocturno, que son las más interesantes para el sueño).
+Resultado: dentro de una misma fila del panel (digamos «martes»), la pantalla incluía una hora que las notificaciones y el wifi del mismo martes *no* incluyen. Ese es el hallazgo **H-3-1** (gravedad alta, porque afecta justo las variables de uso nocturno, que son las más interesantes para el sueño).
 
 **Por qué importa científicamente.** Cuando se cruzan dos variables medidas con ventanas distintas, parte de la relación (o de la falta de relación) viene de que «no hablan del mismo día». Para quien duerme tarde, el desfase es de varias horas.
 
-**Qué ocurre en la práctica.** Para alguien que se duerme antes de la medianoche, ambos criterios casi coinciden y el efecto es pequeño. Para quien usa el teléfono de madrugada, el efecto es real. **[Aproximación]** hoy; la propuesta (en `hallazgos.md`) es usar un solo criterio.
+**Qué ocurre en la práctica.** Para alguien que se duerme antes de la medianoche, ambos criterios casi coinciden y el efecto es pequeño. Para quien usa el teléfono de madrugada, el efecto es real. La propuesta del módulo 3 fue usar un solo criterio o, al menos, declarar el de cada variable; el módulo 10 hizo las dos cosas en parte (abajo). **[Aproximación]** mientras queden variables por calendario.
 
-**Lo que cambió en el esquema 13 (P-16 ii, decisión D-3 del autor).** La pantalla y los pasos pasan al día lógico de aquí en adelante. En el ejemplo, la hora de 00:30 a 01:30 de pantalla cuenta ahora para el **lunes**, igual que las notificaciones y el wifi. Cada día guarda qué ventana usó (`PantallaDia.ventana`, `SaludDia.ventana_pasos`: `"logica"` o `"calendario"`), y el panel exportado lleva `ventana_pantalla` y `ventana_pasos`, para analizar por separado los dos tramos de la serie. Los días de antes no se recalculan: Android solo guarda unos días de eventos de uso, y mezclar días recalculados con otros sin recalcular sería peor. Lo que **no** cambió: el corazón, el oxígeno y las demás lecturas del reloj siguen por día de calendario, y la agenda y el clima también. Por eso H-3-1 queda **resuelto en parte**.
+**Lo que cambió en el esquema 13 (entrega 10b; P-16 ii, decisión D-3 del autor).** La pantalla y los pasos pasan al día lógico de aquí en adelante. En el ejemplo, la hora de 00:30 a 01:30 de pantalla cuenta ahora para el **lunes**, igual que las notificaciones y el wifi. Cada día guarda qué ventana usó (`PantallaDia.ventana`, `SaludDia.ventana_pasos`: `"logica"` o `"calendario"`), y el panel exportado lleva `ventana_pantalla` y `ventana_pasos`, para analizar por separado los dos tramos de la serie. La app no recalcula por su cuenta los días de antes: Android solo guarda unos días de eventos de uso, y mezclar días recalculados con otros sin recalcular sería peor. Los botones manuales sí vuelven a calcular, con la ventana nueva, los días que cubren (7 de pantalla, hasta 30 del reloj), y esos días quedan marcados `"logica"`. Lo que **no** cambió: el corazón, el oxígeno y las demás lecturas del reloj (salvo pasos, sueño y ejercicio) siguen por día de calendario, y la agenda, el clima y las ciudades también. Desde la entrega 10c (P-16 i, D.64) eso queda declarado: el LEEME de la exportación lo dice y el diccionario marca «por día de calendario» en cada una de esas variables del panel (`Diccionario.CALENDARIO`); además, `lugares_distintos` pasó al día lógico. Por eso H-3-1 queda **resuelto en parte**.
 
-Una consecuencia concreta (**H-3-2**), hasta el esquema 12: `primer_uso_h` (hora del primer uso del día) se calcula con la ventana de calendario, así que el uso de las 01:00 de la madrugada aparece como «primer uso» a la 01:00, no a la hora real en que te levantaste. Y la corrección «+24 si la hora es menor a 5» de `ultimo_uso_h` casi nunca llega a actuar, porque la ventana de calendario termina a las 24:00.
+Una consecuencia concreta (**H-3-2**), hasta el esquema 12: `primer_uso_h` (hora del primer uso del día) se calculaba con la ventana de calendario, así que el uso de las 01:00 de la madrugada aparecía como «primer uso» a la 01:00, no a la hora real en que te levantaste. Y la corrección «+24 si la hora es menor a 5» de `ultimo_uso_h` casi nunca llegaba a actuar, porque la ventana de calendario termina a las 24:00. Desde el esquema 13, con la ventana del día lógico, el primer uso es el de después de las 05:00 y la corrección sí actúa (`Estadistica.panel`); los días anteriores quedan como estaban y se reconocen por `ventana_pantalla`.
 
 ## 4.4 Fuente por fuente: teléfono
 
@@ -1245,7 +1252,7 @@ Cada ficha responde: **qué mide · cómo lo hace exactamente · qué tan confia
 
 : Tabla 4.3. Pantalla (sensores/Pantalla.kt)
 
-Resultado: A = 30 min, B = 30 min, total 60 min. Por hora: 22:00–23:00 → 50 min (20 de A + 30 de B), 23:00–24:00 → 10 min.
+Resultado: A = 30 min, B = 30 min, total 60 min. Por hora: 22:00–23:00 → 50 min (30 de A + 20 de B), 23:00–24:00 → 10 min (de B).
 
 **Qué es y qué no es.** Es **tiempo de apps en primer plano**, no «pantalla encendida». Un video que se ve sin tocar la pantalla cuenta mientras la app esté al frente; un teléfono con pantalla encendida en la pantalla de inicio **no cuenta** (porque el lanzador se excluye). Por eso **no coincidirá exactamente** con «Bienestar digital» u otras apps, que pueden definir el tiempo de otra manera. **[Diseño propio]** la definición.
 
@@ -1273,18 +1280,18 @@ Solo si el reloj registró el sueño de esa noche (`sueno_inicio`, `sueno_fin`):
 - **Muestra de fondo:** en cada pulso (cada ~15 min), si tienes el permiso de ubicación *en segundo plano* y el muestreo está activo, pide una lectura de **potencia equilibrada** (`PRIORITY_BALANCED_POWER_ACCURACY`: en general usa wifi y antenas antes que encender el GPS; gasta poca batería, pero es menos precisa). Espera hasta 10 s; si no responde, usa la última ubicación conocida.
 - **Geocercas:** para cada lugar guardado (hasta **95**; Android permite 100 por app) registra un círculo con radio `max(radio del lugar, 80 m)`. Android avisa al **entrar** y al **salir**. Eso crea o cierra «visitas» sin gastar mucha batería. (El código también fija una «espera» de 2 minutos, pero esa espera solo aplica a un tipo de aviso, «permanencia», que la app no pide; por eso no tiene efecto.)
 
-**Precisión.** El campo `precision` es la estimación que da Android del error. Según la documentación de Android, se define como el **radio de un círculo con 68 % de confianza** de contener la posición verdadera (*dato que recuerdo de la documentación oficial; no pude abrir esa página completa en la sesión, así que conviene verificarlo antes de citarlo en el texto final*). Con potencia equilibrada es normal ver errores de decenas o cientos de metros; por eso la detección de lugares ignora puntos con precisión peor a **120 m** (4.4.3). Un punto **sin** precisión (los importados de Google Maps, 4.6.7) cuenta desde la entrega 10d como de **100 m** (`Db.PRECISION_SIN_DATO`), no de 0 m. Así lo leen la detección de lugares (`Lugares.estancia`), `Db.recorrerUbicaciones` (el mapa y el Mundo) y la ruta del mapa. Antes, `COALESCE(precision, 0)` lo trataba como un punto perfecto. Los 100 m son una cifra prudente propia, sin estándar detrás. **[Diseño propio]**. Con los umbrales actuales (120 m para lugares, 150 m para la ruta, 500 m y 1 000 m para el mapa y el Mundo), un punto así **sigue entrando** en todos: el cambio corrige lo que el valor significa y deja de presentarlo como exacto, pero no cambia por sí solo ningún resultado.
+**Precisión.** El campo `precision` es la estimación que da Android del error. Según la documentación de Android para `Location.getAccuracy` (Android Developers, s. f.), es el **radio horizontal con 68 % de confianza**: hay 68 % de probabilidad de que la posición verdadera esté dentro de un círculo de ese radio alrededor del punto. Con potencia equilibrada es normal ver errores de decenas o cientos de metros; por eso la detección de lugares ignora puntos con precisión peor a **120 m** (4.4.3). Un punto **sin** precisión (los importados de Google Maps, 4.6.7) cuenta desde la entrega 10d como de **100 m** (`Db.PRECISION_SIN_DATO`), no de 0 m. Así lo leen la detección de lugares (`Lugares.estancia`), `Db.recorrerUbicaciones` (el mapa y el Mundo) y la ruta del mapa. Antes, `COALESCE(precision, 0)` lo trataba como un punto perfecto. Los 100 m son una cifra prudente propia, sin estándar detrás. **[Diseño propio]**. Con los umbrales actuales (120 m para lugares, 150 m para la ruta, 500 m y 1 000 m para el mapa y el Mundo), un punto así **sigue entrando** en todos: el cambio corrige lo que el valor significa y deja de presentarlo como exacto, pero no cambia por sí solo ningún resultado.
 
 **Nota.** El comentario del código dice que la muestra se guarda «solo si cambió algo o pasó tiempo suficiente», pero el código **siempre inserta** un punto por pulso (**H-3-8**, baja gravedad: no cambia los resultados, solo el tamaño de la tabla).
 
 #### Distancia recorrida (`distancia_km`)
 
-`kmPorDia` recorre **todos** los puntos en orden (de cualquier fuente) y, para cada par consecutivo, suma la distancia en línea recta (fórmula del *haversine*, radio terrestre 6 371 km) **si**:
+`Movilidad.kmPorDia` (`ciencia/Estadistica.kt`) recorre **todos** los puntos en orden (de cualquier fuente) y, para cada par consecutivo, suma la distancia en línea recta (fórmula del *haversine*, radio terrestre 6 371 km) **si**:
 1. el tiempo entre los puntos está entre **1 segundo y 2 horas**,
 2. la velocidad implícita es menor a **70 m/s** (252 km/h: descarta saltos imposibles), y
 3. la distancia es mayor a **30 m** (descarta el «temblor» del GPS quieto).
 
-La distancia se asigna al **día lógico** del segundo punto.
+La distancia se asigna al **día lógico** del segundo punto. Desde la entrega 10c (P-15, D.63), un día con puntos de ubicación pero sin ningún tramo que cuente vale **0 km**, no «sin dato».
 
 *Cómo interpretarlo.* Es una **cota inferior**: la línea recta entre dos puntos siempre es ≤ el camino real, y los tramos con huecos de más de 2 horas se pierden. Además, mezcla puntos de varias fuentes con precisiones distintas (fotos, importaciones de Maps). **[Aproximación]** (**H-3-5**).
 
@@ -1300,7 +1307,7 @@ La distancia se asigna al **día lógico** del segundo punto.
 4. Si ese tramo tiene ≥ 2 puntos y dura **≥ 20 min** → candidato. El centro es el promedio de lat/lon del tramo.
 5. Se descarta si ya está cerca de un lugar guardado (distancia ≤ radio del lugar + radio/2) o de uno ignorado.
 
-**Reglas para no molestar** (`revisar`): solo entre **08:00 y 22:00**; **máximo 2 preguntas al día**; un mismo sitio se pregunta **máximo 3 veces** y, si respondes «ahora no», espera **3 días**.
+**Reglas para no molestar** (`revisar`): solo entre **08:00 y 22:00**; **máximo 2 preguntas al día**; un mismo sitio (a ≤ 150 m de un candidato anterior) se pregunta **máximo 3 veces**, y después de cada pregunta (la respondas con «ahora no» o no) espera **3 días**.
 
 **Un detalle importante (con ejemplo).** Como los puntos llegan *aproximadamente cada 15 minutos*, con solo 2 puntos (15 min de diferencia) no se llega a 20 min. En la práctica, se necesitan **3 lecturas dentro del radio**, es decir, **~30 minutos** de permanencia. La Figura 4.2 lo muestra con datos inventados: llegas en el minuto 30 del recorrido y la app pregunta en el minuto 60.
 
@@ -1342,7 +1349,7 @@ Cada pulso toma una **muestra** del estado del teléfono. Las variables resultan
 
 | Muestra | Tiempo desde la anterior | Minutos que se cuentan |
 |---|---|---|
-| 10:00 | (primera del día) | 15 |
+| 10:00 | más de 2 h (la anterior fue de la noche) | 15 |
 | 10:16 | 16 min | 16 |
 | 10:31 | 15 min | 15 |
 | 12:45 | 134 min (> 2 h) | **15** (no 134) |
@@ -1355,7 +1362,7 @@ Total: 61 min contados. Entre 10:31 y 12:45 pasaron 134 min, pero solo 15 se con
 
 | Variable | Qué hace exactamente |
 |---|---|
-| **Wifi** | Nombre de la red (SSID). Si no hay red → suma a `sin_wifi_min`. Si hay red pero Android oculta el nombre → «wifi (sin nombre)». *(Posible riesgo, H-3-7: en versiones recientes de Android el sistema puede devolver datos «censurados» incluso conectado; si la lectura devuelve nulo, ese tiempo se cuenta como «sin wifi». No lo pude comprobar sin el teléfono.)* |
+| **Wifi** | Nombre de la red (SSID). Si no hay red → suma a `sin_wifi_min`. Si hay red pero Android oculta el nombre → «wifi (sin nombre)». *(H-3-7: el módulo 3 temía que un dato «censurado» de Android se contara como «sin wifi». Según el código (`Percepcion.wifi`), solo cuenta «sin wifi» si la conexión no tiene red **ni** dirección IP (`networkId == −1` y `ipAddress == 0`) o si el sistema no da ninguna información; un nombre oculto cuenta como «wifi (sin nombre)». El riesgo es, por eso, poco probable; no lo pude comprobar en un teléfono.)* |
 | **Audio** | Dispositivos de salida activos: audífonos (cable, USB o Bluetooth clase «headphones»), coche (Bluetooth clase «car audio/handsfree»), bocina, USB, pantalla HDMI, «bluetooth» genérico. Se guarda la categoría y el **nombre** del dispositivo. |
 | **Música** | `isMusicActive` del sistema de audio: ¿suena algo ahora? |
 | **Carga** | ¿Está enchufado? Más **carga nocturna**: si se enchufó entre las **20:00 y las 04:00** y estuvo enchufado **> 3 h y < 16 h**, se guarda inicio y fin como marca aproximada de cuándo dormiste. |
@@ -1367,13 +1374,13 @@ Total: 61 min contados. Entre 10:31 y 12:45 pasaron 134 min, pero solo 15 se con
 
 **Sobre la luz.** Un sensor de luz de teléfono mide dentro del bolsillo o sobre la mesa, no donde están tus ojos. Por eso `luz_alta_min` **subestima** el tiempo al aire libre. La app lo compensa en `aire_libre_min` (capítulo 2) tomando el **máximo** entre la luz alta y el tiempo a pie/corriendo/en bici, un **proxy** razonable pero no medición. Los 1 000 lux son un umbral práctico (por referencia, el exterior de día suele ser de miles a decenas de miles de lux y una oficina bien iluminada ronda cientos), **regla propia, sin estándar detrás**. **[Aproximación]**.
 
-**Sobre la presión y la altitud (hallazgo H-3-3).** El filtro 850–1 090 hPa descarta «lecturas absurdas». Pero 850 hPa corresponde a unos **1 450 m** sobre el nivel del mar en una atmósfera estándar. En una ciudad más alta, la presión *normal* es menor que 850 hPa, y **todas** las lecturas se descartarían, dejando sin datos todas las variables de presión. Gravedad **alta si vives por encima de ~1 450 m; ninguna si vives más abajo**. No sé a qué altitud vive la persona usuaria, así que lo dejo como condicional.
+**Sobre la presión y la altitud (hallazgo H-3-3, resuelto en 10d).** Hasta la entrega 10d, el filtro era 850–1 090 hPa, para descartar «lecturas absurdas». Pero 850 hPa corresponde a unos **1 450 m** sobre el nivel del mar en una atmósfera estándar. En una ciudad más alta, la presión *normal* es menor que 850 hPa, y **todas** las lecturas se descartaban, dejando sin datos todas las variables de presión. La gravedad era **alta si se vive por encima de ~1 450 m y ninguna más abajo**; no sé a qué altitud vive la persona usuaria, así que quedó como condicional.
 
-**Corregido en la entrega 10d (P-33).** El filtro pasó a **300–1 100 hPa** (`Percepcion.RANGO_HPA`). Es el rango de medida de dos sensores de presión comunes en teléfonos, comprobado en sus hojas de datos durante la sesión. El BMP280 de Bosch mide de 300 a 1 100 hPa (revisión 1.26, «*handsets such as mobile phones*»; Bosch Sensortec, 2021). El LPS22HB de ST mide de 260 a 1 260 hPa (DocID027083, revisión 5; STMicroelectronics, 2016). 300 hPa equivale, en atmósfera estándar, a unos 9 000 m, así que ya no se pierde ninguna ciudad habitada. Lo que se descarta sigue siendo lo imposible: un cero o un valor basura del sensor. Qué sensor trae tu teléfono **no lo comprobé**: si fuera otro modelo con un rango más estrecho, el filtro dejaría pasar lecturas que ese sensor no garantiza. **[Aproximación]**. Efecto: si vives o viajas por encima de ~1 450 m, aparecen lecturas de presión que antes se descartaban todas; por debajo, nada cambia.
+**Corregido en la entrega 10d (P-33, D.85).** El filtro pasó a **300–1 100 hPa** (`Percepcion.RANGO_HPA`, que aplica `Percepcion.presion`). Es el rango de medida de dos sensores de presión comunes en teléfonos, comprobado en sus hojas de datos en la sesión de la entrega 10d. El BMP280 de Bosch mide de 300 a 1 100 hPa (revisión 1.26, «*handsets such as mobile phones*»; Bosch Sensortec, 2021). El LPS22HB de ST mide de 260 a 1 260 hPa (DocID027083, revisión 5; STMicroelectronics, 2016). 300 hPa equivale, en atmósfera estándar, a unos 9 000 m, así que ya no se pierde ninguna ciudad habitada. Lo que se descarta sigue siendo lo imposible: un cero o un valor basura del sensor. Qué sensor trae tu teléfono **no lo comprobé**: si fuera otro modelo con un rango más estrecho, el filtro dejaría pasar lecturas que ese sensor no garantiza. **[Aproximación]**. Efecto: si vives o viajas por encima de ~1 450 m, aparecen lecturas de presión que antes se descartaban todas; por debajo, nada cambia.
 
 **Cambio de presión en 3 horas.** Se guardan las lecturas de las últimas 4 horas; la comparación usa la lectura más cercana a **hace 3 horas** entre **2.5 y 3.5 h**. Del día se queda el cambio con **mayor valor absoluto, con signo** («las bajadas bruscas son las que se notan»). Es una hipótesis popular (los cambios de presión y el dolor o el ánimo), pero la evidencia es mixta; aquí se mide para *poder cruzarlo*, no para afirmarlo.
 
-**Calibración del barómetro** (`data/Barometro.kt`). La presión de un sensor de teléfono tiene un **sesgo constante** (cada sensor «lee» unos hPa de más o de menos). La app calcula la **mediana de las diferencias** entre la media del sensor y la presión de Open-Meteo (clima) en los **últimos 60 días** con ambos datos (≥ 8 lecturas ese día, diferencia < 150 hPa) y se la suma. Necesita **≥ 3 días**. El resultado se parece a la presión meteorológica del lugar, y los *cambios* del día conservan la precisión del sensor.
+**Calibración del barómetro** (`data/Barometro.kt`). La presión de un sensor de teléfono tiene un **sesgo constante** (cada sensor «lee» unos hPa de más o de menos). La app (`Barometro.ajuste`) toma los **60 días más recientes con ≥ 8 lecturas** del sensor; de ellos, los que tienen presión de Open-Meteo (clima) y una diferencia < 150 hPa. Calcula la **mediana de las diferencias** (Open-Meteo menos la media del sensor) y se la suma a la media del sensor. Necesita **≥ 3 días**. El resultado se parece a la presión meteorológica del lugar, y los *cambios* del día conservan la precisión del sensor.
 
 *Razonamiento.* Si el sesgo es constante, la **diferencia** entre dos lecturas (el cambio de presión) no se ve afectada; solo se corrige el nivel absoluto para que se pueda comparar con datos de clima. **[Diseño propio]**, lógica razonable.
 
@@ -1399,7 +1406,7 @@ Total: 61 min contados. Entre 10:31 y 12:45 pasaron 134 min, pero solo 15 se con
 
 Qué **no** cuenta: notificaciones de la propia app, notificaciones «en curso» (`isOngoing`, como el reproductor de música fijo), resúmenes de grupo, y **actualizaciones de la misma notificación** (misma clave) si ocurren en **menos de 60 segundos** o si está marcada «alertar solo una vez».
 
-**Música.** El mismo servicio puede ver las **sesiones de reproducción** del teléfono. Cuando pasa a *reproduciendo*, anota título, artista, álbum, app y duración. **No cuenta dos veces** la misma canción de la misma app si vuelve a sonar dentro de `max(duración, 3 min) + 1 min`. En el análisis, una escucha cuenta como **música** (`esMusica`) salvo que venga de una app de video o del navegador.
+**Música.** El mismo servicio puede ver las **sesiones de reproducción** del teléfono. Cuando pasa a *reproduciendo*, anota título, artista, álbum, app y duración. **No cuenta dos veces** la misma canción de la misma app si vuelve a sonar dentro de `max(duración, 3 min) + 1 min`. En el análisis, una escucha cuenta como **música** (`esMusica`) salvo que venga de una app de video, un navegador, una red social o de mensajería (lista `NO_MUSICA` en `data/Modelo.kt`).
 
 *Razonamiento.* Contar notificaciones es una medida de **interrupciones externas**. Las notificaciones y el tiempo de pantalla son indicadores de la relación con el teléfono que se usan en investigación del uso del teléfono inteligente (Mohr et al., 2017 hablan del «sensado personal» en general). **[Aproximación]**.
 
@@ -1429,7 +1436,7 @@ Qué **no** cuenta: notificaciones de la propia app, notificaciones «en curso»
 
 **De dónde viene.** De **Open-Meteo**, un servicio gratuito sin cuenta. Solo se envían **coordenadas redondeadas a 0.01°** (~1 km) y fechas; **nunca tu ruta**.
 
-**Dónde estabas.** `lugarDe` toma la **mediana** de latitud y la **mediana** de longitud de los puntos de ese día (si no hay, de tus momentos con coordenadas; si no, la última ubicación conocida). Se piden varios días seguidos de golpe mientras estén a < 0.1° (≈ 10 km) y a < 60 días de distancia.
+**Dónde estabas.** `lugarDe` toma la **mediana** de latitud y la **mediana** de longitud de los puntos de ese día de calendario (si no hay, de tus momentos no privados con coordenadas; si no, la última ubicación conocida). Se piden varios días seguidos de golpe mientras estén a < 0.1° (≈ 10 km), a < 60 días de distancia y usen la misma fuente (archivo o pronóstico).
 
 **Qué se pide.** Diarios: código de clima, temperatura máxima y mínima, sensación térmica máxima, precipitación, horas de lluvia, amanecer, atardecer, duración de luz y de sol, viento máximo (y **índice UV máximo**, solo en el modo «pronóstico»). Por hora, de las que se saca el **promedio diario**: temperatura, humedad, nubosidad y **presión de superficie**. De la API de calidad del aire: **PM2.5** y **PM10** (promedio diario, partículas de menos de 2.5 y 10 micrómetros) y el **índice de calidad del aire de EE. UU.** (máximo del día).
 
@@ -1515,9 +1522,9 @@ Las importaciones tienen una ventaja (traen datos que el teléfono no ve) y tres
 
 **(a) Conexión directa (API «recently-played»).** Autorización **PKCE** (un método estándar sin guardar un «secreto» en la app: la app crea un código de un solo uso y su huella SHA-256). La app abre durante un rato un receptor en `127.0.0.1` (solo accesible desde el propio teléfono) para recibir la respuesta. Los **tokens** se guardan en preferencias privadas y **no entran al respaldo ni a los CSV**. Cada **~25–30 min** (desde el pulso) lee las **últimas 50** reproducciones. *Limitación de Spotify:* esa API solo devuelve 50, así que si no se consulta a tiempo (muchas canciones cortas, teléfono sin pulso), **se pierden**.
 
-Spotify entrega la hora en que **terminó** cada canción (`played_at`); la app calcula el **inicio = fin − duración** de la canción. **Ojo (H-3-9):** si paraste la canción a la mitad, el inicio calculado queda **demasiado temprano** (resta la duración completa y no lo que realmente escuchaste). El error es de minutos y solo importa cerca del corte de las 05:00.
+Spotify entrega la hora en que **terminó** cada canción (`played_at`); la app calcula el **inicio = fin − duración** de la canción. **Ojo (H-3-9):** si paraste la canción a la mitad, el inicio calculado queda **demasiado temprano** (resta la duración completa y no lo que realmente escuchaste). El error es de minutos y solo importa cerca del corte de las 05:00. El historial descargable (b) no tiene este problema: resta lo que de verdad escuchaste (`ms_played`).
 
-**(b) Historial descargable.** El «historial de reproducción ampliado» (`Streaming_History_Audio_*.json`) trae **cuántos milisegundos escuchaste** y si **saltaste** la canción. Las horas vienen en **UTC** y se convierten a hora local. La app **reemplaza** lo anotado antes por notificaciones o por la API en esos días (el historial es más preciso) y no duplica (identificador por huella de *hora de fin + título + artista*). Distingue las reproducciones de **≥ 30 s** («reales»; 30 s es el umbral habitual con que Spotify cuenta una reproducción, dato que no comprobé en esta sesión). La variable `canciones` del panel cuenta solo esas, en la app y en la exportación (desde la entrega 10d, P-30; antes la app contaba todas las escuchas y la exportación solo las de 30 s o más, H-9-3). Una escucha sin la duración escuchada (por notificaciones o por la API) cuenta.
+**(b) Historial descargable.** El «historial de reproducción ampliado» (`Streaming_History_Audio_*.json`) trae **cuántos milisegundos escuchaste** y si **saltaste** la canción. Las horas vienen en **UTC** y se convierten a hora local. La app **reemplaza** lo de Spotify anotado antes por notificaciones o por la API en esos días (el historial es más preciso) y no duplica (identificador por huella de *hora de fin + título + artista*). Distingue las reproducciones de **≥ 30 s** («reales»; 30 s es el umbral habitual con que Spotify cuenta una reproducción, dato que no comprobé en esta sesión). La variable `canciones` del panel cuenta solo esas, en la app y en la exportación (desde la entrega 10d, P-30; antes la app contaba todas las escuchas y la exportación solo las de 30 s o más, H-9-3). Una escucha sin la duración escuchada (por notificaciones o por la API) cuenta.
 
 **Música vs. «lo que sonó».** `Escucha.esMusica`: todo lo de Spotify cuenta; lo que viene de notificaciones cuenta salvo apps de video o navegadores.
 
@@ -1560,7 +1567,7 @@ Cold Turkey es un programa de bloqueo para la computadora que registra **minutos
 
 **Variables.** `laptop_min` (total de apps, o de sitios si no hay apps), `laptop_web_min` (total de sitios) y minutos por **categoría**: productivo, ocio, social, otro. Los **navegadores** no cuentan en categorías (sus minutos ya están repartidos entre los sitios).
 
-**La categorización es automática** con listas de palabras: «productivo» (word, excel, rstudio, code, notion, github, zoom…), «ocio» (steam, netflix, youtube, spotify, leagueoflegends…), «social» (whatsapp, instagram, reddit, **x.com**…). Lo demás es «otro». Puedes **corregir a mano** la categoría de cada nombre, y tu corrección siempre manda.
+**La categorización es automática** con listas de palabras: «productivo» (winword, excel, rstudio, code, notion, github, zoom…), «ocio» (steam, netflix, youtube, spotify, leagueoflegends…), «social» (whatsapp, instagram, reddit, **x.com**…). Lo demás es «otro». Puedes **corregir a mano** la categoría de cada nombre, y tu corrección siempre manda.
 
 **Cómo se compara, desde la entrega 10d (P-33, `ColdTurkey.coincide`).** Hay dos casos:
 - **Sitios** (nombres con punto): la palabra de la lista tiene que ocupar **partes completas del dominio**. La regla es que «.sitio.» contenga «.palabra.». Así, «x.com» coincide con `x.com` y `m.x.com`, pero ya no con `dropbox.com` ni `wix.com`. «youtube» coincide con `youtube.com` y `m.youtube.com`, y «gemini.google» con `gemini.google.com`. «max.com» ya no atrapa a `hbomax.com`.
@@ -1605,7 +1612,7 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 
 ![Figura 4.3. Cobertura sintética de 90 días por fuente (oscuro = con dato; claro = sin dato) y porcentaje de días con dato. Script: `figuras/fig06_cobertura.py`.](figuras/fig06_cobertura.png){width=100%}
 
-**Cómo lo trata el panel (capítulo 2, sección 2.6).** Una celda sin dato queda **vacía**, no en 0, salvo las reglas de relleno con cero (que son por función, no por sensor). Los datos **de sensores** (pantalla, reloj, ubicación, notificaciones) **nunca se rellenan con ceros**: sin lectura, sin dato.
+**Cómo lo trata el panel (capítulo 2, sección 2.6).** Una celda sin dato queda **vacía**, no en 0, salvo las reglas de relleno con cero (que son por función, no por sensor). Los datos **de sensores** (pantalla, reloj, ubicación, notificaciones) **nunca se rellenan con ceros**: sin lectura, sin dato. Un 0 aparece solo cuando la fuente sí registró algo ese día; por ejemplo, desde 10c, `distancia_km` con puntos pero sin movimiento y `ejercicio_min` con datos del reloj y sin sesión (D.63).
 
 **Por qué importa para el análisis.** Dos variables pueden estar disponibles en periodos distintos. Una correlación entre «Spotify» y «ánimo» solo usa los días con ambas. Si **el hueco no es azar** (por ejemplo, el reloj se agota justo las noches de poco sueño), el resultado se **sesga** aunque se ignoren las celdas vacías (datos faltantes «no al azar», Rubin, 1976; capítulo 2).
 
@@ -1616,13 +1623,13 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 | # | Amenaza | Dónde | Qué hace la app | Qué falta |
 |---|---|---|---|---|
 | L-4.1 | **No se guarda el motivo de un hueco** | Todas las fuentes pasivas | Estado en vivo | Marcar «hueco por permiso/apagado» en el histórico |
-| L-4.2 | **Dos criterios de día** (calendario vs. lógico) | 4.3 | — | Unificar (H-3-1, H-3-2) |
+| L-4.2 | **Dos criterios de día** (calendario vs. lógico) | 4.3 | Desde el esquema 13, pantalla y pasos por día lógico, con `ventana_pantalla` y `ventana_pasos`; desde 10c, el diccionario marca las variables por calendario (`Diccionario.CALENDARIO`) | Corazón, oxígeno, agenda, clima y ciudades siguen por calendario, y los días de antes del esquema 13 no se recalculan solos (H-3-1, resuelto en parte; H-3-2, resuelto en los días nuevos) |
 | L-4.3 | **Muestreo cada ~15 min con mínimos** (minutos «observados») | 4.4.5 | Tope de 15 min tras huecos | Guardar también las horas cubiertas por muestras |
 | L-4.4 | **Proxies** (luz → aire libre; notificaciones → interrupciones; pantalla de apps ≠ pantalla encendida) | 4.4 | Variables separadas | Validar contra autorreportes |
 | L-4.5 | **Instrumentos de consumo** (reloj, micrófono, clasificador de actividad) | 4.5, 4.4.6 | — | Sin calibración propia |
 | L-4.6 | **Importaciones tardías y parciales** | 4.6 | Recordatorios | Fecha de «cubierto hasta» por fuente |
 | L-4.7 | **Procedencia mixta de clima** | 4.4.10 | — | H-3-4 |
-| L-4.8 | **Presión descartada en altura** | 4.4.5 | — | H-3-3 |
+| L-4.8 | **Presión descartada en altura** (hasta 10d) | 4.4.5 | Desde 10d acepta 300–1 100 hPa (`Percepcion.RANGO_HPA`) | — (H-3-3, resuelto) |
 | L-4.9 | **Medir cambia la conducta** (saber que te miden) | Todas | — | Inevitable en N-de-1 |
 
 : Tabla 4.8. Resumen de amenazas a la validez
@@ -1654,21 +1661,21 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 ## 4.11 Resumen del capítulo
 
 1. Los datos pasivos llegan por un **pulso de ~15 min** (ubicación y estados del teléfono) y una **sincronización diaria** (reloj, pantalla, fotos, agenda, llamadas, clima). Los importados llegan **cuando tú los cargas**.
-2. **No todas las fuentes usan el mismo «día»:** pantalla, reloj, agenda y clima usan el día de calendario; casi todo lo demás, el día lógico (H-3-1, H-3-2). Es el hallazgo más importante del módulo.
+2. **No todas las fuentes usan el mismo «día»:** hasta el esquema 12, pantalla, reloj, agenda y clima usaban el día de calendario, y casi todo lo demás, el día lógico (H-3-1, H-3-2); fue el hallazgo más importante del módulo 3. Desde el esquema 13 (10b), la pantalla y los pasos van por día lógico; siguen por calendario el corazón, el oxígeno y las demás lecturas del reloj (salvo pasos, sueño y ejercicio), la agenda, el clima y las ciudades, y desde 10c el diccionario lo marca en cada variable.
 3. Los minutos de wifi, audio, carga y luz son **estimaciones por muestreo** con una regla que **subestima** a propósito; no son minutos del día.
 4. El **sueño** del reloj está bien cuidado en el cálculo, pero el dato en sí es una estimación de consumo (buena para duración, débil para etapas).
 5. **Detectar un lugar** necesita ~**30 min** reales, no 20.
-6. Algunos defectos concretos: barómetro descartado a gran altura (H-3-3), procedencia mixta del clima (H-3-4), categorías de Cold Turkey por coincidencia de texto (H-3-6). La entrega 10d corrigió el barómetro (300–1 100 hPa), Cold Turkey (partes completas del dominio) y la precisión de los puntos importados.
-7. Se identificaron **10 hallazgos** (H-3-1 a H-3-10). No se cambió código.
+6. El módulo 3 encontró además defectos concretos: barómetro descartado a gran altura (H-3-3), procedencia mixta del clima (H-3-4), categorías de Cold Turkey por coincidencia de texto (H-3-6). La entrega 10d corrigió el barómetro (300–1 100 hPa), Cold Turkey (partes completas del dominio) y la precisión de los puntos importados (H-3-8, inciso b); la procedencia mixta del clima sigue igual.
+7. El módulo 3 identificó **10 hallazgos** (H-3-1 a H-3-10) y, como todo módulo de contenido, no cambió código. Después, el módulo 10 resolvió H-3-3 y H-3-6, H-3-2 en los días nuevos, el inciso b de H-3-8 y H-3-1 en parte. Siguen abiertos H-3-4, H-3-5, H-3-7, H-3-9, H-3-10 y el inciso a de H-3-8.
 
 **Siguiente capítulo.** Capítulo 5: modelos fisiológicos (cafeína, alcohol, creatina…) y variables derivadas.
 
 
 # Capítulo 5. Modelos fisiológicos y variables derivadas
 
-> **Para qué sirve este capítulo.** Algunas variables de la app no se miden: se **calculan con un modelo** a partir de otros datos. La cafeína que te queda en el cuerpo al dormir, el alcohol en sangre, la reserva de creatina del músculo, el «jet lag social» o los minutos al aire libre son **estimaciones**, no mediciones. Este capítulo explica cada modelo: qué calcula, con qué fórmula exacta y qué parámetros, de dónde salen esos parámetros, qué tan preciso puede ser y cuándo falla. Todo corresponde a la versión v81 (commit `fa527df`), con lo que cambió la entrega 10c (commit `b943ec7`; apéndice D, D.69 a D.72): el peso y la *r* del alcohol, las tomas sin hora, el ritmo de sueño con las noches recientes y los festivos, y una sola repetición máxima. **Los ejemplos usan datos inventados.**
+> **Para qué sirve este capítulo.** Algunas variables de la app no se miden: se **calculan con un modelo** a partir de otros datos. La cafeína que te queda en el cuerpo al dormir, el alcohol en sangre, la reserva de creatina del músculo, el «jet lag social» o los minutos al aire libre son **estimaciones**, no mediciones. Este capítulo explica cada modelo: qué calcula, con qué fórmula exacta y qué parámetros, de dónde salen esos parámetros, qué tan preciso puede ser y cuándo falla. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper. Lo que cambió en el módulo 10 se marca «desde la 10c» y está en el apéndice D (D.63 y D.69 a D.72): el peso y la *r* del alcohol, las tomas sin hora, el ritmo de sueño con las noches recientes y los festivos, y una sola repetición máxima. **Los ejemplos usan datos inventados.**
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, fórmulas y cifras del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-4-n y se detallan en `hallazgos.md`. **Ningún número de este capítulo es una medición de tu cuerpo**: son cuentas con parámetros promedio de la literatura.
+> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, fórmulas y cifras del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-4-n (por el módulo 4, en que se escribió este capítulo) y se detallan en `hallazgos.md`. **Ningún número de este capítulo es una medición de tu cuerpo**: son cuentas con parámetros promedio de la literatura.
 
 ## 5.1 Mini-glosario
 
@@ -1718,7 +1725,7 @@ Para cada dosis *D* (mg) tomada hace Δ*t* horas:
 $$C(t) = \sum_{\text{dosis}} D \cdot \min\!\left(1, \frac{\Delta t}{0.75}\right) \cdot 0.5^{\Delta t / T_{1/2}}\qquad\qquad (5.1)$$
 
 - El primer factor sube en línea recta de 0 a 1 en **45 minutos** (0.75 h): la absorción.
-- El segundo es la eliminación de primer orden con la vida media *T*½ de `Config.cafeina_vida_media_h`, **5 h por omisión** (se cambia en Privacidad).
+- El segundo es la eliminación de primer orden con la vida media *T*½ de `Config.cafeina_vida_media_h`, **5 h por omisión** (se cambia en Privacidad, de 2 a 10 h en pasos de media hora).
 - Las dosis se suman: cada café se va por su cuenta.
 
 **De dónde salen las dosis** (`Sustancias.dosis`): de **MacroFactor** (cada alimento con su hora y su `cafeina_mg`) y de lo que anotes en la app. **Por día y sustancia, una sola fuente**: si MacroFactor tiene algo de cafeína ese día, **mandan los datos de MacroFactor** y lo anotado en la app ese día se ignora, para no contar dos veces. Desde la entrega 10c, un alimento de MacroFactor cuya hora no se puede leer se pone **al mediodía de su día** (`msComida`) en lugar de perderse; antes desaparecía de `cafeina_total_mg` aunque sí contaba en `cafeina_mg` (H-9-13).
@@ -1743,7 +1750,7 @@ Un café de **95 mg a las 8:00** y uno grande de **150 mg a las 14:00**; te duer
 - Segundo café: han pasado 9.5 h → 150 × 0.5^(9.5/5) = 150 × 0.268 = **40.2 mg**.
 - `cafeina_al_dormir_mg` = **51.3 mg**.
 
-Con la vida media más corta del rango típico (2.5 h) serían **12 mg**; con la más larga (9.5 h), **106 mg**. **La misma tarde da una cifra que varía casi nueve veces según la persona.** Por eso la cifra solo sirve **para compararte contigo mismo** (si fijas tu vida media), no como dato absoluto.
+Con una vida media corta (2.5 h; el rango va de 1.5 a 9.5 h) serían **12 mg**; con la más larga (9.5 h), **106 mg**. **La misma tarde da una cifra que varía casi nueve veces según la persona.** Por eso la cifra solo sirve **para compararte contigo mismo** (si fijas tu vida media), no como dato absoluto.
 
 ![Figura 5.1. Cafeína estimada tras dos dosis con tres vidas medias. Script: `figuras/fig25_cafeina.py`.](figuras/fig25_cafeina.png){width=100%}
 
@@ -1752,7 +1759,7 @@ Con la vida media más corta del rango típico (2.5 h) serían **12 mg**; con la
 - **El pico queda un poco bajo y temprano.** Como la rampa de absorción se multiplica por la eliminación desde el primer minuto, a los 45 min queda 0.5^(0.75/5) = **90 %** de la dosis. Un modelo farmacocinético estándar (absorción y eliminación de primer orden) da otra forma de curva. Para dosis separadas por horas, la diferencia es pequeña. **[Aproximación]**.
 - **Una sola vida media para toda la historia** (H-4-1): si la cambias, **todas** las `cafeina_al_dormir_mg` pasadas se recalculan con la nueva, sin dejar registro.
 - **La regla de una sola fuente por día** (H-4-2): si en MacroFactor anotaste un café y en la app otro distinto el mismo día, el de la app se pierde. Y la hora de MacroFactor es la hora en que registraste el alimento, que puede no ser la hora en que lo tomaste.
-- **Las cifras cambiaban según dónde se calcularan** (H-4-3, resuelto en 10c, D.71). Para no trabar la pantalla, cuando el panel se calculaba en el hilo principal **sin un cálculo previo guardado**, `Estadistica.sustancias` usaba solo lo anotado en la app y **omitía MacroFactor**, y la pantalla de experimentos calculaba ahí. Desde la entrega 10c: la pantalla de experimentos arma el panel en segundo plano, como Explorar y Análisis; si aun así toca calcular en el hilo principal sin caché y hay datos de MacroFactor, las variables que dependen de las dosis (`cafeina_total_mg`, `cafeina_al_dormir_mg`, `alcohol_bebidas`, `alcohol_estimado_max`, `alcohol_al_dormir`) quedan **vacías** en lugar de dar otra cifra; y la clave de la caché incluye la identidad del mapa de MacroFactor, que cambia con cada importación, no solo el número de días (H-9-14).
+- **Las cifras cambiaban según dónde se calcularan** (H-4-3, resuelto en 10c, D.71). Para no trabar la pantalla, cuando el panel se calculaba en el hilo principal **sin un cálculo previo guardado**, `Estadistica.sustancias` usaba solo lo anotado en la app y **omitía MacroFactor**, y la pantalla de experimentos calculaba ahí. Desde la entrega 10c: la pantalla de experimentos arma el panel en segundo plano, como Explorar y Análisis; si aun así toca calcular en el hilo principal sin caché y hay datos de MacroFactor, las variables que dependen de las dosis (`cafeina_total_mg`, `cafeina_al_dormir_mg`, `alcohol_bebidas`, `alcohol_estimado_max`, `alcohol_al_dormir`) quedan **vacías** en lugar de dar otra cifra (salvo `alcohol` 0/1: en ese caso vale 1 solo en los días con episodios sin cantidad y 0 en los demás, aunque hayas bebido, porque el 1 de los días con dosis se pone después de ese corte); y la clave de la caché incluye la identidad del mapa de MacroFactor, que cambia con cada importación, no solo el número de días (H-9-14).
 - **Cuatro variables de cafeína** con fuentes distintas: `cafeina_mg` y `cafeina_ultima_h` solo de MacroFactor; `cafeina_total_mg` y `cafeina_al_dormir_mg` de ambas (H-4-12).
 
 ## 5.4 Alcohol en sangre: el modelo de Widmark
@@ -1781,7 +1788,7 @@ con *A* = gramos de alcohol, *W* = peso (kg), *r* = factor de Widmark y β = vel
   - mujeres: agua (L) = −2.097 + 0.1069 · estatura (cm) + 0.2466 · peso (kg);
   - *r* = agua / (0.80 · peso), acotada entre **0.45 y 0.95**. El 0.80 (`AGUA_SANGRE`) es la proporción de agua en la sangre que usan Watson et al. (1981) para pasar del agua corporal a *r*.
 
-  Hace falta el sexo (de Conocerte o de Salud), la estatura de Conocerte entre **100 y 250 cm** y, en los hombres, la edad de ese día (`Perfiles.edad`). Si falta algo, o si el peso es el de omisión, se usa la *r* fija (`widmarkR`): **0.68** si dijiste «hombre», **0.55** si «mujer», **0.62** si no dijiste nada. Con 70 kg inventados, Watson no corregiría nada: por eso no se usa.
+  Hace falta el sexo (de Conocerte o de Salud), la estatura de Conocerte entre **100 y 250 cm** y, en los hombres, la edad de ese día (`Perfiles.edad`, a partir de la fecha de nacimiento de Conocerte). Si falta algo, o si el peso es el de omisión, se usa la *r* fija (`widmarkR`): **0.68** si dijiste «hombre», **0.55** si «mujer», **0.62** si no dijiste nada. Con 70 kg inventados, Watson no corregiría nada: por eso no se usa.
 - **Bebida estándar** = **14 g** de alcohol puro (`GRAMOS_BEBIDA`), la definición de Estados Unidos (NIAAA, s. f.). Otros países usan otras cifras.
 
 **De dónde salen las dosis** (`Sustancias.dosis`): de MacroFactor (`alcohol_g` de cada alimento, con su hora; sin hora legible, al mediodía de su día desde la 10c) o, los días en que MacroFactor no tiene alcohol, de los episodios que anotas. Las bebidas de un episodio se **reparten** en el primer 70 % del episodio (si dijiste cuándo terminó) o una cada 40 minutos (si no).
@@ -1810,22 +1817,22 @@ Tres bebidas estándar (42 g) en un episodio de 20:00 a 23:00. La app las coloca
 
 Si en el hombre β fuera 0.10 o 0.20 en lugar de 0.15, el final de la curva se movería más de una hora en cada dirección (banda sombreada).
 
-**Con la *r* de Watson (desde la 10c).** El mismo hombre de 75 kg, si dijo en Conocerte que tiene 30 años y mide 180 cm: agua = 2.447 − 0.09516 × 30 + 0.1074 × 180 + 0.3362 × 75 = 44.14 L; *r* = 44.14 / (0.80 × 75) = **0.736**. Con un recipiente más grande, el máximo baja de 0.42 a **0.36 g/L** y llega a 0 hacia la **01:00** (línea punteada).
+**Con la *r* de Watson (desde la 10c).** El mismo hombre de 75 kg, si en Conocerte su fecha de nacimiento le da 30 años y dijo que mide 180 cm: agua = 2.447 − 0.09516 × 30 + 0.1074 × 180 + 0.3362 × 75 = 44.14 L; *r* = 44.14 / (0.80 × 75) = **0.736**. Con un recipiente más grande, el máximo baja de 0.42 a **0.36 g/L** y llega a 0 hacia la **01:00** (línea punteada).
 
-**Cuánto cambia con Watson** (tres bebidas de 14 g a los 0, 40 y 80 minutos; simulación de la app, en pasos de 5 minutos, para personas inventadas):
+**Cuánto cambia con Watson** (tres bebidas de 14 g a los 0, 40 y 80 minutos, como reparte la app un episodio de tres bebidas sin hora de fin; simulación de `alcoholEn`, en pasos de 5 minutos, para personas inventadas; tres decimales para que los porcentajes se puedan rehacer):
 
 | Persona | *r* fija | *r* de Watson | Máximo con *r* fija | Máximo con Watson |
 |---|---|---|---|---|
-| Hombre, 30 años, 175 cm, 70 kg | 0.68 | 0.749 | 0.56 g/L | 0.48 g/L (−14 %) |
-| Hombre, 30 años, 190 cm, 70 kg | 0.68 | 0.777 | 0.56 g/L | 0.45 g/L (−19 %) |
-| Hombre, 55 años, 170 cm, 95 kg | 0.68 | 0.624 | 0.34 g/L | 0.39 g/L (+16 %) |
-| Mujer, 30 años, 160 cm, 60 kg | 0.55 | 0.621 | 0.93 g/L | 0.79 g/L (−15 %) |
+| Hombre, 30 años, 175 cm, 70 kg | 0.68 | 0.749 | 0.607 g/L | 0.527 g/L (−13 %) |
+| Hombre, 30 años, 190 cm, 70 kg | 0.68 | 0.777 | 0.607 g/L | 0.497 g/L (−18 %) |
+| Hombre, 55 años, 170 cm, 95 kg | 0.68 | 0.624 | 0.375 g/L | 0.434 g/L (+16 %) |
+| Mujer, 30 años, 160 cm, 60 kg | 0.55 | 0.621 | 0.998 g/L | 0.852 g/L (−15 %) |
 
 : Tabla 5.3. Ejemplo trabajado (Figura 5.2)
 
-El error que más pesaba no era *r*, sino el **peso**: con las mismas tres bebidas, un hombre de 90 kg reales calculado con 70 kg sale con un máximo de **0.56 g/L** en lugar de **0.37 g/L** (un 50 % más alto: el peso divide la dosis, pero la eliminación por hora no cambia). Por eso `pesoDe` busca el peso más reciente entre las dos fuentes antes de cualquier ajuste de *r*.
+El error que más pesaba no era *r*, sino el **peso**: con las mismas tres bebidas y *r* = 0.68, un hombre de 90 kg reales calculado con 70 kg sale con un máximo de **0.61 g/L** en lugar de **0.41 g/L** (casi un 50 % más alto: el peso divide la dosis, pero la eliminación por hora no cambia). Por eso `pesoDe` busca el peso más reciente entre las dos fuentes antes de cualquier ajuste de *r*.
 
-![Figura 5.2. Tres bebidas estándar con la simulación de la app para tres perfiles; la banda muestra β de 0.10 a 0.20 g/L/h. Script: `figuras/fig26_alcohol_widmark.py`.](figuras/fig26_alcohol_widmark.png){width=100%}
+![Figura 5.2. Tres bebidas estándar con la simulación de la app para tres perfiles y, punteado, el mismo hombre con la *r* de Watson; la banda muestra β de 0.10 a 0.20 g/L/h. Script: `figuras/fig26_alcohol_widmark.py`.](figuras/fig26_alcohol_widmark.png){width=100%}
 
 ### 5.4.5 Cuándo falla
 
@@ -1834,13 +1841,14 @@ El error que más pesaba no era *r*, sino el **peso**: con las mismas tres bebid
 - **Unidades**: la fórmula de Widmark da gramos por kilo de peso corporal; la app lo presenta como g/L de sangre. La diferencia (por la densidad y el contenido de agua de la sangre) es pequeña frente a las demás incertidumbres, pero existe.
 - **Absorción de 30 minutos fija**: con el estómago lleno la absorción es más lenta y el pico más bajo y tardío.
 - **Cada día se simula por separado** (H-4-5): `alcohol_estimado_max` empieza en 0 con la primera dosis del día lógico y no arrastra lo del día anterior. Si un episodio cruza las 5:00, las bebidas posteriores caen en el día siguiente y ese día arranca de cero.
+- **Dos máximos casi iguales.** La lista de episodios (`alcoholMaximo`) mira la simulación cada 5 minutos; `alcohol_estimado_max`, cada 10. Si el pico cae entre dos muestras de 10 minutos, el panel da hasta 0.15/12 ≈ **0.0125 g/L** menos (en la tabla de arriba, 0.595 en lugar de 0.607 g/L).
 - **Una sola fuente por día** (H-4-2, igual que la cafeína). La dependencia del hilo (H-4-3) se resolvió en la 10c (sección 5.3.5).
 
 ## 5.5 Episodios con nivel subjetivo (`Sustancias.nivelEn`)
 
 Para alcohol y cannabis (las sustancias «con nivel»), además de las dosis, puedes decir **qué tan fuerte lo sientes** de 0 a 10, una o varias veces. La curva del episodio se arma así:
 
-- Con lecturas: se unen con líneas rectas, empezando en el nivel de la primera lectura; si el máximo que dijiste después (la mañana siguiente) es mayor que lo leído, se agrega ese máximo **a la mitad del episodio**; si el episodio terminó, baja a 0 al final.
+- Con lecturas: se unen con líneas rectas, empezando en el nivel de la primera lectura; si el máximo que dijiste después (la mañana siguiente) es mayor que lo leído, se agrega ese máximo **a la mitad del episodio**; si el episodio terminó (o quedó abierto de otro día), baja a 0 al final.
 - Sin lecturas, solo con el máximo: un trapecio que sube de 0 al máximo en el primer 35 % del episodio, se queda hasta el 65 % y baja a 0 al final.
 - **Fin efectivo** (`finEfectivo`): el que dijiste; si el episodio sigue abierto y empezó hace menos de 18 horas, «ahora»; si quedó abierto de otro día, **4 horas** después del inicio.
 
@@ -1891,7 +1899,7 @@ Con 28 y 35 días, *s* = 0.1015 y *b* = 0.0820. El diseño garantiza dos cosas: 
 
 - **La dosis de referencia define la velocidad.** Hultman et al. llenaron la reserva con **3 g** en 28 días; con la referencia de 5 g de la app, 3 g diarios dan solo 83 % al día 28. El modelo dice que se llena más lento de lo que dice el estudio en que se basa.
 - **El 100 % es del modelo**, no una concentración: no considera la creatina de la dieta (carne, pescado), el punto de partida de cada persona ni que hay personas que casi no responden a la suplementación.
-- **Interacción con los experimentos**: la plantilla de experimento de creatina usa 28 días de lavado, que con 8 semanas eliminaba todos los días con creatina (capítulo 8, H-7-1). Desde la entrega 10c dura 12 semanas: quedan 14 días con la acción y 42 sin ella.
+- **Interacción con los experimentos**: la plantilla de experimento de creatina usa 28 días de lavado, que con 8 semanas eliminaba todos los días con creatina (capítulo 8, H-7-1). Desde la entrega 10c dura 12 semanas (6 sin la acción y luego 6 con ella; el lavado se come los primeros 28 días con ella): quedan 14 días con la acción y 42 sin ella (`Experimentos.PLANTILLAS`, `data/Lote3.kt`).
 
 ### 5.6.2 Vida media (`Suplementos.cantidadEn`)
 
@@ -1905,7 +1913,7 @@ La cantidad «en el cuerpo» en un instante es la suma de cada toma multiplicada
 
 ### 5.6.3 Exposición: los probióticos (`Suplementos.probioticosEstimados`)
 
-No hay farmacocinética: solo se cuentan **porciones**. A lo que anotes se suma **una porción por cada alimento de MacroFactor cuyo nombre contenga** alguna de las palabras clave que configures (por ejemplo, «yogur» o «kéfir»; comparación sin acentos ni mayúsculas). Variables: `probioticos_porciones` (anotadas + estimadas) y `probioticos_estimado` (solo las estimadas; desde la entrega 10c, vacía los días sin bitácora de MacroFactor, porque esos días no se sabe, D.63). **[Diseño propio]**: es una cuenta de exposición, sin relación con las unidades formadoras de colonias ni con si el producto tiene cultivos vivos (H-4-8).
+No hay farmacocinética: solo se cuentan **porciones**. A lo que anotes se suma **una porción por cada alimento de MacroFactor cuyo nombre contenga** alguna de las palabras clave que configures (por ejemplo, «yogur» o «kéfir»; comparación sin acentos ni mayúsculas). Variables: `probioticos_porciones` (anotadas + estimadas) y `probioticos_estimado` (solo las estimadas; desde la entrega 10c, vacía los días sin bitácora de MacroFactor, porque esos días no se sabe, D.63). **[Diseño propio]**: es una cuenta de exposición, sin relación con las unidades formadoras de colonias ni con si el producto tiene cultivos vivos (H-4-8; lo que proponía, dejar vacío `probioticos_estimado` sin bitácora, se hizo en la 10c).
 
 ## 5.7 Ritmo de sueño y jet lag social (`Analisis.ritmo`)
 
@@ -1915,10 +1923,10 @@ La herramienta «Ritmo» de Análisis muestra a qué hora te duermes y despierta
 
 ### 5.7.2 Cómo lo hace exactamente
 
-0. **Solo las noches recientes** (desde la entrega 10c, D.69): las que terminan en los **últimos 56 días** hasta hoy (`Analisis.recientes`; la noche cuenta por el día en que despiertas). Todos los umbrales que siguen se aplican dentro de esa ventana. En R, `vm_ritmo(dias = 56)` hace lo mismo con el último día de `vm_salud` como referencia (`dias = Inf` para toda la historia).
+0. **Solo las noches recientes** (desde la entrega 10c, D.69): las que terminan en los **últimos 56 días** hasta hoy (`Analisis.recientes`; la noche cuenta por el día en que despiertas). Todos los umbrales que siguen se aplican dentro de esa ventana. En R, `vm_ritmo(dias = 56)` aplica la misma ventana con el último día de `vm_salud` como referencia (`dias = Inf` para toda la historia), pero solo con las noches del reloj: no usa las del teléfono ni pide un mínimo de noches.
 1. **Noches del reloj**: inicio y fin del sueño en hora decimal; si el inicio es antes de las 12:00, se le suman 24 (dormirte a la 1:00 cuenta como 25.0, para promediarlo bien con las 23:00); al fin se le suman 24 siempre. La noche se guarda con **el día en que despiertas**.
-2. **Noches del teléfono** (si faltan del reloj): inicio = **último uso del teléfono** del día (debe ser **a las 18:00 o después**); fin = **primer uso** del día siguiente (a las **4:00 o después**).
-3. Si hay **7 o más** noches del reloj, se usan solo esas; si no, se completan con las del teléfono en las fechas sin reloj. La pantalla lo dice: sin ninguna noche del reloj, «Sin datos del reloj en las últimas 8 semanas…»; con 1 a 6, «Solo *N* noches del reloj en las últimas 8 semanas: las demás se aproximan con el teléfono» (fuente «mezcla»).
+2. **Noches del teléfono** (si faltan del reloj): inicio = **último uso del teléfono** del día lógico (debe ser **a las 18:00 o después**; uno de madrugada, antes de las 12:00, cuenta como 24 + la hora y también vale); fin = **primer uso** del día siguiente (a las **4:00 o después**).
+3. Si hay **7 o más** noches del reloj, se usan solo esas; si no, se completan con las del teléfono en las fechas sin reloj. La pantalla lo dice: sin ninguna noche del reloj, «Sin datos del reloj en las últimas 8 semanas…»; con 1 a 6, «Solo *N* noches del reloj en las últimas 8 semanas: las demás se aproximan con el último uso del teléfono y el primero del día siguiente» (fuente «mezcla»). Las noches del reloj se cuentan antes del filtro del paso 4.
 4. Se descartan las noches de menos de **2 h** o más de **16 h**. Hacen falta al menos **5** noches.
 5. **Días libres** (`Fechas.esDiaLibre`, la única regla de la app desde la 10c): una noche es libre si el día en que despiertas es **sábado, domingo** o, si en Conocerte dijiste que vives en México (`pais = "MX"`), un **festivo** de la Ley Federal del Trabajo, art. 74 (`Fechas.esFestivoMx`): 1 de enero; primer lunes de febrero; tercer lunes de marzo; 1 de mayo; 16 de septiembre; tercer lunes de noviembre; 25 de diciembre; y el día de la transmisión del Poder Ejecutivo Federal, cada seis años (años 2024, 2030… el **1 de octubre**; hasta 2018, el **1 de diciembre**). **Antes de 2006**, los de febrero, marzo y noviembre iban en su fecha fija (5 de febrero, 21 de marzo y 20 de noviembre). Se omite la jornada electoral (cae en domingo) y no se cuentan Jueves ni Viernes Santo, que no están en la ley. Las demás noches son laborales. La misma regla da las columnas `festivo` (vacía si no vives en México) y `dia_libre` del panel exportado, y R la lee de ahí.
 6. **Punto medio** de cada noche = (inicio + fin)/2. **MSW** = promedio de los puntos medios laborales; **MSF** = de los libres (cada uno con al menos 2 noches).
@@ -1949,9 +1957,9 @@ Tres semanas inventadas. Entre semana te duermes hacia las **00:15** y despierta
 ### 5.7.5 Cuándo falla (H-4-9 y H-4-10)
 
 - **Días libres por calendario.** Desde la 10c cuentan los festivos de México, pero no el horario de Conocerte, las vacaciones ni los turnos. Si trabajas un sábado o tienes vacaciones, el cálculo los clasifica mal. Los festivos mueven poco el jet lag social (unas 7 noches laborales al año, el 2.8 %); las vacaciones, que no arregla ningún calendario fijo, pesan mucho más. Las fechas anteriores a 2006 y a 2024 siguen las reglas de entonces: que los «lunes» empezaran con la reforma de 2006 y que antes de 2024 la transmisión fuera el 1 de diciembre se dedujo de las notas de reforma del artículo, no del texto de los decretos **[sin verificar]**.
-- **Toda la historia junta** (H-4-9, resuelto en 10c): hasta la 10c, los promedios usaban **todas** las noches registradas aunque la gráfica mostrara solo las últimas 30. Ahora usan las de los últimos 56 días. *Ejemplo inventado:* 60 noches de hace meses con 3 h de jet lag social y 60 recientes con 1 h: con toda la historia salía cerca de **2 h**; con la ventana, **1 h**, que es tu presente.
+- **Toda la historia junta** (esta parte de H-4-9 se resolvió en la 10c; el hallazgo queda resuelto en parte): hasta la 10c, los promedios usaban **todas** las noches registradas aunque la gráfica mostrara solo las últimas 30. Ahora usan las de los últimos 56 días. *Ejemplo inventado:* 60 noches de hace meses con 3 h de jet lag social y 60 recientes con 1 h: con toda la historia salía cerca de **2 h**; con la ventana, **1 h**, que es tu presente.
 - **El valor absoluto** pierde la dirección (si en días libres duermes antes o después), aunque casi siempre es después.
-- **Reloj y teléfono mezclados** cuando hay menos de 7 noches del reloj: dos medidas distintas en un mismo promedio. Desde la 10c la pantalla lo avisa (H-4-10).
+- **Reloj y teléfono mezclados** cuando hay menos de 7 noches del reloj: dos medidas distintas en un mismo promedio. Desde la 10c la pantalla lo avisa, pero sigue mezclándolas (H-4-10, resuelto en parte).
 - **Hora de dormir con dos cortes distintos** (H-5-15, resuelto en 10c): ahora los reportes (`Periodo`) usan la misma regla que aquí y el panel (`Exportar.horaDecimal`: antes de las 12:00 suma 24).
 
 ## 5.8 Aire libre y kilómetros
@@ -2010,16 +2018,16 @@ Cuando una variable estimada aparece relacionada con otra en Explorar, la relaci
 2. Desde la entrega 10c, el alcohol usa el peso más reciente entre la báscula y MacroFactor y, cuando tiene los datos, la *r* de Watson; sin pesos sigue usando 70 kg y no muestra su incertidumbre (H-4-4, en parte).
 3. Lo anotado en la app se ignora los días en que MacroFactor tiene algo (H-4-2). Desde la 10c, las cifras ya no cambian según la pantalla (H-4-3) y las tomas de MacroFactor sin hora ya no se pierden.
 4. El modelo de creatina se basa en Hultman et al. (1996), pero su dosis de referencia de 5 g lo hace más lento que el estudio con 3 g (H-4-6). El nivel de melatonina al final del día es casi siempre 0 (H-4-7).
-5. El jet lag social está bien definido. Desde la 10c usa las noches de los últimos 56 días y una sola regla de día libre con los festivos de México (H-4-9, H-4-10); las vacaciones siguen sin contarse y la regularidad es una desviación estándar simple.
+5. El jet lag social está bien definido. Desde la 10c usa las noches de los últimos 56 días y una sola regla de día libre con los festivos de México (H-4-9 y H-4-10, resueltos en parte); las vacaciones siguen sin contarse y la regularidad es una desviación estándar simple.
 6. Todas estas cifras son **estimaciones**: sirven para compararte contigo mismo con parámetros fijos, y cambiar un parámetro reescribe el pasado (H-4-11).
-7. Se identificaron **13 hallazgos** (H-4-1 a H-4-13). El módulo 4 no cambió código; la entrega 10c resolvió H-4-3, H-4-9, H-4-10 y H-4-13, y H-4-4 en parte (apéndice D, D.69 a D.72).
+7. El módulo 4 identificó **13 hallazgos** (H-4-1 a H-4-13) y no cambió código. Después, la entrega 10c resolvió H-4-3, H-4-8 y H-4-13, y en parte H-4-4, H-4-9 y H-4-10 (apéndice D, D.63 y D.69 a D.72); siguen abiertos H-4-1, H-4-2, H-4-5, H-4-6, H-4-7, H-4-11 y H-4-12.
 
 
 # Capítulo 6. Análisis estadístico
 
-> **Para qué sirve este capítulo.** Explica **cómo la app pasa de miles de registros a frases como «cuando duermes más, tu ánimo tiende a subir»**: cómo arma la tabla de un renglón por día (el *panel*), cómo compara cada variable con cada otra, qué hace para no dejarse engañar por las tendencias, por los días que se parecen a sus vecinos y por el azar de revisar miles de parejas, y qué hacen las demás herramientas de análisis (modelo múltiple, dinámica emocional, palabras, días atípicos…). Al final compara **función por función** lo que hace la app con lo que hace el script de R que viaja en cada exportación. Todo corresponde a la versión v81 del código (commit `fa527df`), con los cambios del módulo 10 señalados donde corresponde; la comparación con R (6.3.4, 6.9.3 y 6.22) describe el script de la entrega 10d (commit `035982c`). **Los ejemplos numéricos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo la app pasa de miles de registros a frases como «cuando duermes más, tu ánimo tiende a subir»**: cómo arma la tabla de un renglón por día (el *panel*), cómo compara cada variable con cada otra, qué hace para no dejarse engañar por las tendencias, por los días que se parecen a sus vecinos y por el azar de revisar miles de parejas, y qué hacen las demás herramientas de análisis (modelo múltiple, dinámica emocional, palabras, días atípicos…). Al final compara **función por función** lo que hace la app con lo que hace el script de R que viaja en cada exportación. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» y está en el Apéndice D (la comparación con R de 6.3.4, 6.9.3 y 6.22 describe el script desde la entrega 10d). **Los ejemplos numéricos son inventados.**
 >
-> **Cómo leerlo.** Está escrito para entenderse sin saber estadística, pero sin recortar la precisión. Las cifras, umbrales y fórmulas se dan tal como están en el código, con el nombre de la función de origen; las fórmulas completas están reunidas en el **Apéndice B** y las funciones de R en el **Apéndice C**. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-5-n y se detallan en `hallazgos.md`.
+> **Cómo leerlo.** Está escrito para entenderse sin saber estadística, pero sin recortar la precisión. Las cifras, umbrales y fórmulas se dan tal como están en el código, con el nombre de la función de origen; las fórmulas completas están reunidas en el **Apéndice B** y las funciones de R en el **Apéndice C**. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-5-n (por el módulo 5, que escribió el capítulo) y se detallan en `hallazgos.md`, con su estado.
 >
 > **Archivos leídos.** `ciencia/Estadistica.kt` (completo), `ciencia/Analisis.kt`, `ciencia/Dinamicas.kt`, `ciencia/Periodo.kt`, `ciencia/TusNumeros.kt`, `ciencia/Totales.kt`, `ui/pantallas/Explorar.kt`, `ui/pantallas/Analisis.kt`, `ui/Relacion.kt` (la tarjeta de relación), la parte de `data/Exportar.kt` que arma `vm_panel.csv` y todas las funciones de análisis de `app/src/main/assets/vestigium.R`.
 
@@ -2077,7 +2085,7 @@ Lo importante de la tabla: **«Las relaciones más marcadas» y, desde la entreg
 
 `Estadistica.panel()` devuelve un mapa `fecha → (variable → valor)`. Cada **fecha** es un día lógico (de 5:00 a 4:59 del día siguiente; capítulo 2). Cada **valor** es un número o `null`. Las variables 0/1 se guardan como 0.0 y 1.0.
 
-Qué variables entran en los análisis lo decide otra función, `Estadistica.variables()`: una lista de unas 150 variables fijas (valencia, sueño, pasos, clima…) más las que **solo aparecen si hay datos** (por ejemplo, las de alcohol solo si alguna vez registraste alcohol; las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R) y, con `dinamicas = true`, las **variables dinámicas** de `Dinamicas.calcular()`: una por persona, tema, lugar, app, artista, nutriente, cuestionario, etapa de vida… (sección 6.3.3). El panel puede tener columnas que no están en esa lista; esas no se analizan. **[Diseño propio]**.
+Qué variables entran en los análisis lo decide otra función, `Estadistica.variables()`: una lista de 184 variables con nombre fijo (valencia, sueño, pasos, clima…; capítulo 2 y Apéndice A.1): 128 existen siempre y 56 **solo aparecen si hay datos** (por ejemplo, las de alcohol solo si alguna vez registraste alcohol; las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R) y, con `dinamicas = true`, las **variables dinámicas** de `Dinamicas.calcular()`: una por persona, tema, lugar, app, artista, nutriente, cuestionario, etapa de vida… (sección 6.3.3). El panel puede tener columnas que no están en esa lista; esas no se analizan. **[Diseño propio]**.
 
 ### 6.3.2 Cero o faltante: la decisión más delicada del panel
 
@@ -2358,7 +2366,7 @@ Las cinco primeras tienen q < 0.10: se sostienen. Con m = 6 la corrección es su
 
 - **El número de pruebas depende del modo.** Por día o por semana, con o sin tendencia, se prueban parejas distintas (las lentas salen, el mínimo de días cambia), así que la misma pareja puede tener q distinto en cada modo.
 - **Excluir las obvias es razonable pero no neutral**: baja *m* y hace la corrección más permisiva. Está bien porque esas parejas no son descubrimientos, pero la lista de obvias debe estar completa y ser la misma en app y R (H-5-2; desde 10d lo es, sección 6.9.3).
-- **«Todo lo que se mueve con algo» corrige con p que no descuentan la autocorrelación** (H-5-3): ahí BH trabaja con valores p demasiado pequeños.
+- **Hasta 10c, «Todo lo que se mueve con algo» corregía con p que no descontaban la autocorrelación** (H-5-3): ahí BH trabajaba con valores p demasiado pequeños. Desde 10c en la app y desde 10d en R (`vm_factores`), sus p usan nEf o el factor AR(1) (sección 6.13). Lo que queda: su BH corrige solo entre las variables revisadas contra ese objetivo.
 
 ## 6.9 Las relaciones «obvias» y cómo se excluyen
 
@@ -2371,7 +2379,7 @@ Marca las parejas cuya correlación es casi segura por construcción, para no pr
 `Estadistica.obvia(a, b)` devuelve verdadero si se cumple **cualquiera** de estas reglas:
 
 1. Ambas son del mismo grupo y el grupo es «Lectura del día», «Momentos», «Sentimientos» o «Sueños».
-2. Ambas están en una misma familia de `Estadistica.FAMILIAS` (57 conjuntos desde el esquema 13; una variable puede estar en varios). Ejemplos: todos los nutrientes fijos; `valencia` con `muestreo_valencia`; `valencia`, `animo_valencia`, `animo_cierre_valencia`, `momentos_valencia`, `valencia_acompanado` y `valencia_solo`; las de alcohol entre sí; impulsos, recaídas y libido entre sí.
+2. Ambas están en una misma familia de `Estadistica.FAMILIAS` (58 conjuntos en la v90; 56 en la v81, más el de los avisos de ánimo y el de `presencias_revisado`; una variable puede estar en varios). Ejemplos: todos los nutrientes fijos; `valencia` con `muestreo_valencia`; `valencia`, `animo_valencia`, `momentos_valencia`, `valencia_acompanado` y `valencia_solo`; `animo_cierre_valencia` con `valencia` y `animo_valencia`; las de alcohol entre sí; impulsos, recaídas y libido entre sí.
 3. Ambas son de lugares (`horas_tipo_*` o `lug_*`).
 4. Son del mismo suplemento (`supl_<id>_dosis`, `_tomado`, `_nivel`…).
 5. Una es un sentimiento y la otra `registros_animo`; o una es una categoría de sueño y la otra empieza con `sueno_`.
@@ -2416,7 +2424,7 @@ Con el panel, la lista de variables, el modo (`sinTendencia`), `minN = 14`, `pas
 ### 6.10.3 Qué se muestra (Explorar.kt)
 
 - Un resumen: «Revisé N combinaciones (dejé fuera M obvias)… ya corregido eso, K se sostienen», donde K es el número con q < 0.10. Si hay lentas, las nombra.
-- Filtros por tema (`FOCOS`: con tu ánimo, con tu sueño, personas y vida, lugares y viajes, cuerpo y comida, teléfono y social, cultura, dinero). Una pareja entra si **alguna** de sus dos variables es del tema.
+- Filtros por tema (`FOCOS`: con tu ánimo, con tu sueño, personas y vida, lugares y viajes, cuerpo y comida, teléfono y social, lo que lees, ves y escuchas, dinero). Una pareja entra si **alguna** de sus dos variables es del tema.
 - `agrupar(lista, 15)`: junta las parejas **casi repetidas**. Dos parejas son «parecidas» si comparten una variable y la otra de cada una está en la misma familia de `FAMILIAS` (ánimo con horas de sueño y ánimo con sueño REM). Recorre la lista ya ordenada; la primera de cada grupo es la representante y las demás se anotan como «También con «…» (+0.31)» (máximo 3 nombradas y «y N más»). Muestra hasta **15** grupos; deja de buscar parecidas después del elemento 400.
 - La **tarjeta** (`ui/Relacion.kt`, `TarjetaRelacion`): dos recuadros con los nombres y un **lazo** entre ellos.
   - Color: verde si r ≥ 0 («suben juntas»), rojo si r < 0.
@@ -2435,7 +2443,7 @@ Sueño (h) y valencia, interruptor encendido. Tras quitar la tendencia hay 120 d
 
 - Las tres protecciones solo cubren el azar y las tendencias; **no** cubren **confusores** (una tercera cosa que mueve a las dos, como el día de la semana o estar enfermo) ni la **dirección** (¿el sueño mejora el ánimo o el buen ánimo te deja dormir?). La app lo dice en «Cruzar dos variables».
 - El mínimo de 14 días con 14 restos es bajo; con 14 días solo se ven correlaciones muy grandes (sección 6.21).
-- Las variables privadas **no** entran en esta lista ni en ningún análisis de la app desde el módulo 10a (`Estadistica.variables()` las excluye; ver capítulo 10, sección 10.3). Son `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, `med_*`, `det_*` y `hab_` del hábito ligado a las recaídas. El panel las sigue calculando para la exportación, así que solo se cruzan en R. Hasta v84 entraban con el interruptor encendido, y `n_impulso` y `med_*` siempre.
+- Las variables privadas **no** entran en esta lista ni en ningún análisis de la app desde el módulo 10a (`Estadistica.variables()` las excluye; ver capítulo 10, sección 10.3). Son `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, `med_*`, `det_*`, y el `hab_` y la `campana_hab_` del hábito ligado a las recaídas (`Privado.esVariable`). El panel las sigue calculando para la exportación, así que solo se cruzan en R. Hasta v84 entraban si el seguimiento privado estaba encendido, y `n_impulso` y `med_*` siempre.
 
 ## 6.11 Análisis por semana
 
@@ -2525,11 +2533,11 @@ Los coeficientes estandarizados permiten comparar predictores en unidades distin
 
 ### 6.14.4 Ejemplo trabajado (sintético)
 
-59 días completos; objetivo valencia; predictores horas de sueño, pasos y valencia de ayer (k = 3; 55 grados de libertad, t = 2.004). Resultado: β sueño = +0.38 [0.14, 0.62] ✓; β pasos = +0.09 [−0.15, 0.33]; β ayer = +0.41 [0.17, 0.65] ✓; R² = 27 % y R² ajustado = 1 − 0.73 × 58/55 = **23 %**, que es lo que se muestra. Lectura: un día con una DE más de sueño (≈ 1 h en estos datos) se asocia con 0.38 DE más de valencia, a igual valor de ayer y pasos; los pasos no añaden nada claro. Con 1.96 (antes de 10c) los intervalos eran apenas más estrechos ([0.15, 0.62], [−0.14, 0.32], [0.18, 0.65]): con 59 días la diferencia entre t y la normal es pequeña; con 14 días sería de ~7 %.
+59 días completos; objetivo valencia; predictores horas de sueño, pasos y valencia de ayer (k = 3; 55 grados de libertad, t = 2.004). Resultado: β sueño = +0.38 [0.14, 0.62] ✓; β pasos = +0.09 [−0.15, 0.33]; β ayer = +0.41 [0.17, 0.65] ✓; R² = 27 % y R² ajustado = 1 − 0.73 × 58/55 = **23 %**, que es lo que se muestra. Lectura: un día con una DE más de sueño (≈ 1 h en estos datos) se asocia con 0.38 DE más de valencia, a igual valor de ayer y pasos; los pasos no añaden nada claro. Con 1.96 (antes de 10c) los intervalos eran apenas más estrechos ([0.15, 0.62], [−0.14, 0.32], [0.18, 0.65]): con 59 días la diferencia entre t y la normal es pequeña. Con pocos días no: en el mínimo que admite el modelo (n = k + 10) siempre quedan 9 grados de libertad, t = 2.262, y el intervalo con 1.96 sale un 13 % más estrecho (1 − 1.96/2.262); con 14 días y un solo predictor (12 grados, t = 2.179), un 10 %.
 
 ### 6.14.5 Cuándo falla (H-5-11)
 
-- **Resuelto en 10c (D.66):** el intervalo usaba 1.96 en vez de t con n − k − 1 grados (con 14 días quedaba ~7 % estrecho); el R² no estaba ajustado; y el interruptor decía «Controlar por el **ánimo** del día anterior» aunque agrega el **objetivo** de ayer. Ahora dice «Controlar por el valor del día anterior».
+- **Resuelto en 10c (D.66):** el intervalo usaba 1.96 en vez de t con n − k − 1 grados (en el mínimo de días quedaba un 13 % más estrecho, 6.14.4); el R² no estaba ajustado; y el interruptor decía «Controlar por el **ánimo** del día anterior» aunque agrega el **objetivo** de ayer. Ahora dice «Controlar por el valor del día anterior».
 - Solo días **completos**: si un predictor falta mucho, el modelo usa pocos días y quizá no representativos.
 - No quita tendencias, y el error estándar supone residuos independientes (el valor de ayer como predictor reduce, pero no elimina, la autocorrelación de los residuos).
 - En R, `vm_modelo_ar1` agrega errores AR(1) pero no tiene la opción del valor de ayer (Apéndice C).
@@ -2540,7 +2548,7 @@ Los coeficientes estandarizados permiten comparar predictores en unidades distin
 
 Para cada día del calendario entre el primero y el último con dato, promedia los valores de **ese día y los `ventana − 1` anteriores** que existan; el punto se dibuja solo si hay **al menos max(2, ventana/3)** días con dato (división entera: 2 para la de 7 días, 10 para la de 30). Es una media **hacia atrás**: se «retrasa» frente a los cambios, a diferencia de la media centrada que se usa para quitar la tendencia. La gráfica muestra el último año, con líneas solo entre días consecutivos. `vm_movil` en R es idéntica. **[Diseño propio]**, técnica estándar.
 
-![Figura 6.5. Valencia sintética de 200 días con 18 % de días sin registro y un hueco de 17 días; medias móviles de 7 y 30 días con sus mínimos de días. Script: `figuras/fig11_medias_moviles.py` (replica `Analisis.movil`).](figuras/fig11_medias_moviles.png){width=100%}
+![Figura 6.5. Valencia sintética de 200 días: cada día falta con probabilidad 0.18 y además se fuerza un hueco de 17 días (sombreado), que con dos faltas al azar pegadas queda en 19 días seguidos; en total faltan 55 de los 200 días (27.5 %). Medias móviles de 7 y 30 días con sus mínimos de días. Script: `figuras/fig11_medias_moviles.py` (replica `Analisis.movil`).](figuras/fig11_medias_moviles.png){width=100%}
 
 ### 6.15.2 Diferencia de medias (`Estadistica.diferenciaCompleta` y `diferenciaEnDias`)
 
@@ -2631,11 +2639,11 @@ Días difíciles (≤ 2): 0 %. Racha buena (≥ 5): 2 días (6, 5). Racha dura (
 
 **Qué hace.** Muestra las palabras de tus días mejores y más difíciles, y las 25 más frecuentes.
 
-**Cómo exactamente (`Analisis.palabras`).** Solo días con nota. Toma las secuencias de **3 o más letras** (en minúsculas), quita una lista de ~170 palabras vacías (comparando sin acentos) y, para cada palabra, los **días distintos** en que aparece. Si aparece en al menos **5** días con valencia, calcula la media de la valencia de esos días y su diferencia con la media **de los días con nota y valencia**. Muestra las 15 de mayor y menor diferencia (la pantalla, 10).
+**Cómo exactamente (`Analisis.palabras`).** Solo días con nota. Toma las secuencias de **3 o más letras** (en minúsculas), quita las palabras vacías de `Analisis.VACIAS` (167 escritas, muchas en dos formas como «aqui» y «aquí»: 146 distintas sin acentos, que es como se comparan) y, para cada palabra, los **días distintos** en que aparece. Si aparece en al menos **5** días con valencia, calcula la media de la valencia de esos días y su diferencia con la media **de los días con nota y valencia**. Muestra las 15 de mayor y menor diferencia (la pantalla, 10).
 
 **Ejemplo.** La media de tus días con nota es 4.4. «Playa» aparece en 6 días con valencias 6, 5, 7, 6, 5, 6 (media 5.83): +1.43.
 
-**Razonamiento y límites (H-5-10).** Es un análisis de **contenido por conteo** sin diccionario de emociones (a diferencia de LIWC, Tausczik y Pennebaker, 2010) ni prueba estadística. **[Diseño propio]**. Con cientos de palabras y 5 días como mínimo, las de los extremos de la lista son, en buena parte, las que tuvieron suerte (regresión a la media): con 5 días, la media de valencia varía ±0.9 puntos solo por azar si tu DE es 1. No hay intervalo ni q. Las palabras de días malos pueden reflejar **lo que escribes** cuando estás mal más que **lo que te pone mal**. Hasta la entrega 10d, `vm_palabras` en R usaba otra lista de vacías (con acentos) y otra referencia (la media de **todos** los días); desde 10d usa las mismas 167 palabras vacías comparadas sin acentos y la misma referencia (los días con nota), así que da las mismas diferencias. Lo de la incertidumbre sigue igual en las dos.
+**Razonamiento y límites (H-5-10).** Es un análisis de **contenido por conteo** sin diccionario de emociones (a diferencia de LIWC, Tausczik y Pennebaker, 2010) ni prueba estadística. **[Diseño propio]**. Con cientos de palabras y 5 días como mínimo, las de los extremos de la lista son, en buena parte, las que tuvieron suerte (regresión a la media): con 5 días, la media de valencia varía ±0.9 puntos solo por azar si tu DE es 1. No hay intervalo ni q. Las palabras de días malos pueden reflejar **lo que escribes** cuando estás mal más que **lo que te pone mal**. Hasta la entrega 10d, `vm_palabras` en R usaba otra lista de vacías (con acentos) y otra referencia (la media de **todos** los días); desde 10d usa la misma lista de 167 palabras vacías, comparadas sin acentos y la misma referencia (los días con nota), así que da las mismas diferencias. Lo de la incertidumbre sigue igual en las dos.
 
 ## 6.18 Días atípicos
 
@@ -2645,7 +2653,7 @@ Días difíciles (≤ 2): 0 %. Racha buena (≥ 5): 2 días (6, 5). Racha dura (
 
 $$z_i=\frac{x_i-M}{1.4826\cdot \mathrm{mediana}(|x-M|)}\qquad\qquad (6.7)$$
 
-Marca el día si |z| ≥ **3** («muy alto» o «muy bajo»). Si MAD = 0 (la mitad o más de los días tienen el mismo valor), salta la variable. «Tu año» usa umbral 2.8.
+Marca el día si |z| ≥ **3** («muy alto» o «muy bajo»). Si MAD = 0 (más de la mitad de los días tienen el valor de la mediana), salta la variable. «Tu año» usa umbral 2.8.
 
 **Razonamiento.** La media y la DE se dejan arrastrar por los propios atípicos; la mediana y la MAD no. El factor 1.4826 hace que la MAD equivalga a la DE si los datos fueran normales, y |z| ≥ 3 es un umbral común y conservador (Leys et al., 2013). **[Validado]**.
 
@@ -2695,7 +2703,7 @@ $$|r_{\min}|=\tanh\!\Big(\frac{1.96+0.84}{\sqrt{n_{Ef}-3}}\Big)\qquad\qquad (6.8
 
 | Días | Días independientes | Autocorrelación 0.5 en ambas (nEf = 0.6 n) | Igual, con α = 0.001 |
 |---|---|---|---|
-| 14 | 0.69 | 0.84 | 0.95 |
+| 14 | 0.69 | 0.84 | 0.94 |
 | 30 | 0.49 | 0.62 | 0.79 |
 | 90 | **0.29** | 0.37 | 0.52 |
 | 180 | 0.21 | 0.27 | 0.38 |
@@ -2709,7 +2717,7 @@ Así, la frase de los 90 días es **correcta para una sola relación con días i
 
 ### 6.21.4 Cuándo falla (H-5-16)
 
-El aviso de los 90 días cuenta **días con diario** (`Repo.dias.size`), no días con ambos datos de cada pareja. Desde 10c sí dice que en la lista completa solo se sostienen las relaciones fuertes (H-5-16, resuelto en parte), aunque no menciona la autocorrelación.
+El aviso de los 90 días cuenta **días con diario** (`Repo.dias.size`), no días con ambos datos de cada pareja. Desde 10c sí dice que en la lista completa solo se sostienen las relaciones fuertes (H-5-16, resuelto en 10c con la primera opción de su propuesta: matizar el texto), aunque no menciona la autocorrelación y sigue contando días con diario.
 
 ## 6.22 App y R, función por función
 
@@ -2727,7 +2735,7 @@ El script `vestigium.R` reproduce casi todas las herramientas. Desde la entrega 
 | Día de la semana | n ≥ 5 por día; t(n − 1) EE (desde 10c) | `vm_semana` desde 10d: n ≥ 5 por día; t(n − 1) EE | Igual |
 | Dinámica | Valencia; mínimos 7 días, 3 y 10 pares; meses sin cruzar | `vm_dinamica`: cualquier variable; sin mínimos; inercia por mes; pares que cruzan meses | Casi igual en el total |
 | Ritmo | Reloj o teléfono; últimos 56 días; `Fechas.esDiaLibre` (desde 10c) | `vm_ritmo(dias = 56)`: solo reloj; lee `dia_libre` del panel (desde 10c) | Igual con reloj |
-| Palabras | ~170 vacías sin acentos; referencia: días con nota | Desde 10d, las mismas 167 vacías sin acentos; referencia: días con nota | Igual; R devuelve todas las palabras, la app los 15 extremos |
+| Palabras | 167 vacías (146 sin acentos), comparadas sin acentos; referencia: días con nota | Desde 10d, las mismas vacías, sin acentos; referencia: días con nota | Igual; R devuelve todas las palabras, la app los 15 extremos |
 | Atípicos | 15 variables (con `distancia_km` desde 10c); mediana superior; ≥ 20 días; último año | Desde 10d, las mismas 15 variables; `median`/`mad` de R; todos los días | Parecido; distinto número de días y mediana para n par |
 
 : Tabla 6.7. App y R, función por función
@@ -2771,9 +2779,9 @@ El script `vestigium.R` reproduce casi todas las herramientas. Desde la entrega 
 
 # Capítulo 7. Personas y red social
 
-> **Para qué sirve este capítulo.** Explica **cómo la app registra a la gente de tu vida** y qué hace con eso: cómo reconoce a una persona cuando la nombras con @, cómo guarda qué es para ti (y cómo eso cambia con los años), cómo mide qué tan cerca la sientes, cómo dibuja la **Constelación** y la **Red**, qué calcula R con `vm_red()` y cómo entran las personas en las correlaciones. Todo corresponde a la versión v81 del código (commit `fa527df`). **Las personas, fechas y números de los ejemplos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo la app registra a la gente de tu vida** y qué hace con eso: cómo reconoce a una persona cuando la nombras con @, cómo guarda qué es para ti (y cómo eso cambia con los años), cómo mide qué tan cerca la sientes, cómo dibuja la **Constelación** y la **Red**, qué calcula R con `vm_red()` y cómo entran las personas en las correlaciones. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» y está en el Apéndice D. **Las personas, fechas y números de los ejemplos son inventados.**
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, pero las cifras, umbrales y condiciones del código van tal cual, con el nombre de la función de donde salen. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-6-n y se detallan en `hallazgos.md`.
+> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, pero las cifras, umbrales y condiciones del código van tal cual, con el nombre de la función de donde salen. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-6-n (el número es el del módulo 6, que escribió este capítulo) y se detallan en `hallazgos.md`.
 >
 > **Privacidad.** El capítulo describe la mecánica; no hay nombres reales. Los momentos del seguimiento privado se mencionan solo para decir dónde entran y dónde no (sección 7.13).
 
@@ -2804,7 +2812,7 @@ La misma persona puede «aparecer» de forma distinta según la función, porque
 
 | Función (archivo) | Diario (`nota`) | Momentos | Momentos privados (recaída, libido) | Sueño (texto y temas) | Mejor/peor momento | Notas del cronómetro | Cartas | Equivalencias |
 |---|---|---|---|---|---|---|---|---|
-| `Personas.menciones` (`data/Personas.kt`): lista de «Tu gente», «¿Quién es @x?», duplicados | sí | sí | **sí** | sí | no | sí | destinatario | sí |
+| `Personas.menciones` (`data/Personas.kt`): lista de «Tu gente», «¿Quién es @x?», duplicados | sí | sí | no (desde 10a) | sí | no | sí | destinatario | sí |
 | Variable `personas` del panel (`Estadistica.panel`) | sí | no | no | no | no | no | no | sí |
 | `Presencias.delDia` → `personas_vistas`, `vi_*`, `penso_en_*`, `cercania_media`, `pen_*` | sí | sí | no | no | no | no | no | sí |
 | Familia `per_` (`Dinamicas.construir`) | sí | sí | no (desde 10a) | sí (en los temas del sueño, solo los que llevan @, desde 10c) | sí | no | destinatario y texto | sí |
@@ -2838,7 +2846,7 @@ La app no intenta adivinar nombres en el texto libre: **solo cuenta a una person
 
 ### 7.3.3 Ejemplo
 
-Durante un mes escribes `@Dani` 6 días y `@daniel` 3 días. Sin equivalencias, son dos personas: 6 y 3 días. Como `dani` y `daniel` cumplen la regla 3 (prefijo, diferencia de 2 letras), la app pregunta. Si eliges «misma: @dani», se guarda `daniel → dani` y desde ese momento todas las funciones cuentan **9 días** (o menos si algún día aparecen ambas: un día cuenta una vez).
+Durante un mes escribes `@Dani` 6 días y `@daniel` 3 días. Sin equivalencias, son dos personas: 6 y 3 días. Como `dani` y `daniel` cumplen las reglas 2 (distancia 2) y 3 (prefijo, diferencia de 2 letras), la app pregunta. Si eliges «misma: @dani», se guarda `daniel → dani` y desde ese momento todas las funciones cuentan **9 días** (o menos si algún día aparecen ambas: un día cuenta una vez).
 
 ### 7.3.4 Cuándo falla
 
@@ -2920,7 +2928,7 @@ Si estuviste con ella el 2 abr 2026, ese día se enciende `vi_pareja` (no `vi_ex
 
 - **La fecha del cambio es la fecha en que lo anotas**, no la fecha en que ocurrió. No hay forma de decir «terminamos hace tres semanas». En la Figura 7.1, los 23 días entre la ruptura real (28 mar) y la anotación (20 abr) cuentan como pareja (H-6-3).
 - **Antes de la primera clasificación se proyecta la relación más antigua conocida.** Si clasificaste a alguien como amistad en 2025, los días de 2024 (cuando quizá era un conocido) también cuentan como amistad. Es el mismo problema que el perfil proyectado hacia atrás (H-2-5).
-- **Conocerte no tiene historial por persona.** «A quién ves más» y «quiénes viven contigo» se leen con su valor **actual** para todas las fechas (H-6-4, parte que sigue vigente). Si alguien dejó de vivir contigo, `vi_convivientes` lo sigue contando como conviviente en todos los días anteriores y posteriores.
+- **Conocerte no tiene historial por persona.** «A quién ves más» y «quiénes viven contigo» se leen con su valor **actual** para todas las fechas (H-6-4, parte que sigue vigente). Si alguien deja de vivir contigo y lo quitas de la lista, `vi_convivientes` deja de contarlo también en los días en que sí vivía contigo; si no lo quitas, lo sigue contando en los días posteriores.
 - **Comparaciones sin canon (resuelto en 10c, D.73).** `Perfiles.relacion` buscaba en `perfil.cercanas` y en `perfil.convivientes` con el texto tal cual; ahora compara los nombres canónicos, igual que `vi_convivientes` (H-6-4).
 - **Cercanía (resuelto en 10c, D.73).** Antes no se podía borrar, y ponerle cercanía a quien no tenía no contaba como cambio, así que se aplicaba a todos los días pasados (H-6-12). Ahora se borra al desmarcarla, y el paso de «sin cercanía» a un valor queda en el historial. Lo que sigue: la fecha del cambio es la de la anotación, y una cercanía puesta antes de esta versión, sin historial, sigue valiendo hacia atrás.
 - **Varios cambios el mismo día**: si cambias dos veces en un día, la relación intermedia se pierde (las dos entradas tienen el mismo `hasta`). Es irrelevante en la práctica.
@@ -2937,7 +2945,7 @@ La **escala de Inclusión del Otro en el Yo** (*Inclusion of Other in the Self*,
 
 $$d_i = r\,(2.1 - 0.31\,(i-1)), \quad i = 1,\dots,7\qquad\qquad (7.1)$$
 
-es decir, de 2.1 *r* (los círculos no se tocan) a 0.24 *r* (casi uno encima del otro). Debajo pone una palabra por nivel (`CERCANIA`): 1 «Casi nada en común», 2 «Poco», 3 «Algo», 4 «Bastante», 5 «Mucho», 6 «Muy cercana», 7 «Casi parte de mí». Es opcional; tocar de nuevo el par elegido lo desmarca.
+es decir, de 2.1 *r* (los círculos no se tocan) a 0.24 *r* (casi uno encima del otro). Debajo de cada par va su número; al elegir uno, una línea bajo la fila dice la palabra de ese nivel (`CERCANIA`): 1 «Casi nada en común», 2 «Poco», 3 «Algo», 4 «Bastante», 5 «Mucho», 6 «Muy cercana», 7 «Casi parte de mí». Es opcional; tocar de nuevo el par elegido lo desmarca.
 
 Como la distancia entre centros baja en línea recta, la **fracción encimada** de cada círculo no sube en línea recta. Calculada con la fórmula del área de intersección de dos círculos iguales:
 
@@ -2952,7 +2960,7 @@ No pude comprobar en esta sesión cómo están espaciados los círculos en la pu
 
 **Diferencias con el original y qué implican.** **[Aproximación]**:
 
-- **Etiquetas con palabras.** La IOS original es solo dibujo. Las palabras de la app ayudan a que un «5» signifique lo mismo con el tiempo (como las anclas del capítulo 3), pero cambian el instrumento: alguien puede elegir por la palabra y no por el dibujo.
+- **Etiquetas con palabras.** La IOS original es solo dibujo. Las palabras de la app (que aparecen al elegir un par) ayudan a que un «5» signifique lo mismo con el tiempo (como las anclas del capítulo 3), pero cambian el instrumento: alguien puede ajustar su elección por la palabra y no por el dibujo.
 - **Se responde una vez por persona, no por día.** En los estudios, la IOS se aplica en un momento dado. En la app, la cercanía es un rasgo de la persona que **solo cambia cuando la editas**. Por eso `cercania_media` (sección 7.7) mide **a quién nombras** (personas que sientes más o menos cercanas), no **cómo te sentiste con ellas ese día**.
 - **No se pregunta con regularidad.** Si no la actualizas, la cercanía de hace años sigue valiendo. No hay recordatorio para revisarla.
 
@@ -2964,7 +2972,7 @@ El capítulo 3 (sección 3.13) explica las reglas de `data/Presencias.kt`. Lo qu
 - **En el diario, el estado por omisión es «estuve»** si no tocas el nombre (H-1-6).
 - Si alguien aparece **solo en momentos**, cuenta como «pensé» cuando el momento era «pensando en…» o «recuerdo» y no marcaste compañía (o marcaste solo «solo»); en cualquier otro caso, «estuve». Basta un momento con «estuve» para que el día cuente «estuve».
 - **El diario manda**: si la persona está en el diario, se ignoran los momentos.
-- `Presencias.delDia` **excluye los momentos privados** (`recaida`, `libido`).
+- `Presencias.delDia` **excluye los momentos privados** (`impulso`, `recaida`, `libido`; el impulso, desde 10a: hasta v84 sus @menciones contaban aquí).
 - La pantalla «¿Estuviste o pensaste?» (`PantallaPresencias`) lista los días con personas sin revisar; «dejar todos como están» los da por revisados sin cambiar nada.
 
 ## 7.7 Las variables de personas en el panel
@@ -2975,7 +2983,7 @@ Se calculan solo para los días en que **se pudo nombrar a alguien** (`Dinamicas
 
 | Variable | Definición exacta | Aparece en la lista de análisis si… |
 |---|---|---|
-| `personas` | Número de @personas **distintas** (canónicas) en el **texto del diario**, sin importar su estado (vacío los días sin texto ni momento con @) | siempre |
+| `personas` | Número de @personas **distintas** (canónicas) en el **texto del diario**, sin importar su estado (vacío los días sin texto ni momento con @; 0 si ese día solo un momento nombró a alguien) | siempre |
 | `cercanos` | Número de personas con estado «estuve» y grupo `familia`, `pareja`, `amistad` o `casa` | hay alguien en Conocerte o en Tu gente |
 | `vi_familia`, `vi_pareja`, `vi_amistades` | 1 si estuviste con al menos una persona de ese grupo; 0 si no | igual |
 | `vi_convivientes` | 1 si estuviste con alguien cuyo nombre canónico está en la lista **actual** de convivientes (también pasada por `canon` desde 10c) **y** tiene algún grupo de relación | igual |
@@ -3012,7 +3020,7 @@ Relaciones de ese día: ana = familia (cercanía 6), beto = pareja (7), caro = a
 4. `cercanos` = 2 (ana familia, beto pareja). `vi_familia` = 1, `vi_pareja` = 1, `vi_amistades` = 0 (caro y dani fueron «pensé»).
 5. `penso_en_amistades` = 1 (caro y dani son del grupo amistad). `penso_en_familia` = 0.
 6. `cercania_media` = (6 + 7 + 5 + 4) / 4 = **5.5** (incluye a las pensadas).
-7. `per_ana` = `per_beto` = `per_caro` = `per_dani` = `per_eli` = 1 (eli por el sueño, si en los temas del sueño la escribiste `@eli`; una etiqueta `eli` sin @ ya no cuenta desde 10c). `pen_caro` = `pen_dani` = 1.
+7. `per_ana` = `per_beto` = `per_caro` = `per_dani` = `per_eli` = 1 (eli por el sueño, si la escribiste `@eli` en su texto o en sus temas; en los temas, una etiqueta `eli` sin @ ya no cuenta desde 10c). `pen_caro` = `pen_dani` = 1.
 8. Al día siguiente solo respondes un aviso de ánimo, sin escribir el diario ni nombrar a nadie: desde 10c, todas estas variables quedan **vacías** ese día (antes, `vi_familia = 0`, `personas_vistas = 0`…).
 
 ### 7.7.4 Cuándo falla
@@ -3216,16 +3224,16 @@ Desde la entrega 10d (P-32) solo quedan dos diferencias, las de personas y de gr
 
 Las variables de las secciones 7.7.1 y 7.7.2 entran en la lista de relaciones de Explorar con el mismo método que todas las demás (capítulo 6, secciones 6.5 a 6.10): mínimo de días con dato, quitar la tendencia, intervalo y corrección por comparaciones múltiples. Lo específico de las personas:
 
-- **Cuántas entran**: 15 `per_` (≥ 5 días) y 10 `pen_` (≥ 3 días). Es un filtro razonable para no llenar la lista de casos raros, pero significa que las relaciones con personas poco frecuentes **no se buscan** en la app (sí en R con la exportación extendida).
+- **Cuántas entran**: 15 `per_` (≥ 5 días) y 10 `pen_` (≥ 3 días). Es un filtro razonable para no llenar la lista de casos raros, pero significa que las relaciones con personas poco frecuentes **no se buscan** en la app. En R sí se pueden buscar: desde 10d el panel de R es `vm_panel_extendido.csv`, que trae a todas las personas con 2 días o más (hasta 400), aunque `vm_relaciones()` cruza por omisión solo las variables de la app (`vm_variables.csv`); las demás se piden con `variables = c(...)`.
 - **Pares «obvios» que se excluyen** (`Estadistica.obvia`), porque se mueven juntos por construcción:
   - cada `per_` con `personas`, `cercanos`, `vi_familia`, `vi_pareja`, `vi_amistades`, `vi_convivientes`, `palabras`, `cartas_otros` y, desde 10c, también `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `vi_expareja`, `vi_trabajo`, `cercania_media`, `presencias_revisado` y los `penso_en_*` (`Dinamicas.AGREGADOS["per_"]`);
   - cada `pen_` con `personas`, `personas_pensadas` y los `penso_en_*`;
   - `per_x` con `pen_x` de la misma persona;
-  - y las familias fijas: {`cercanos`, `vi_*`, `personas`, `palabras`}, {`cercanos`, `vi_*`, `cercania_media`, `personas`}, {`personas`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `cercanos`}, {`personas_pensadas`, `penso_en_*`} y, desde 10c, {`presencias_revisado`, `personas`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `cercanos`, `palabras`}.
-- **Atención: R usa otra lista.** La lista de pares obvios de R es mucho más corta que la de la app (H-5-2), así que en `vm_relaciones()` varios de estos pares sí aparecen.
+  - y las familias fijas de `Estadistica.FAMILIAS`: {`palabras`, `personas`, `hitos_n`}, {`cercanos`, `vi_familia`, `vi_pareja`, `vi_amistades`, `vi_convivientes`, `personas`, `palabras`}, {`cercanos`, `vi_familia`, `vi_pareja`, `vi_amistades`, `vi_expareja`, `vi_trabajo`, `cercania_media`, `personas`}, {`personas`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `cercanos`}, {`personas_pensadas`, `penso_en_*`} y, desde 10c, {`presencias_revisado`, `personas`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `cercanos`, `palabras`}.
+- **R usa la misma lista (desde 10d).** Hasta 10d, la lista de pares obvios de R era mucho más corta que la de la app y no tenía ninguna de estas familias de personas, así que en `vm_relaciones()` varios de estos pares sí aparecían (H-5-2). Desde 10d (P-31), la exportación trae `vm_familias.csv`, generado con `Estadistica.familias` a partir de las mismas reglas de `obvia()` (incluidas las de `per_` y `pen_`, también para las personas que solo están en el panel extendido), y `vm_obvia`/`vm_relaciones()` lo leen. Solo con una exportación vieja, sin ese archivo, R vuelve a su lista corta.
 - **Lo que no se excluía y debía (resuelto en 10c, D.73)**: `per_x` con `personas_vistas`, `personas_mensajes`, `vi_expareja`, `vi_trabajo` y `cercania_media` no estaban en `AGREGADOS["per_"]`, y salían como relación aunque fueran por construcción (H-6-10). Ahora sí están.
 - **Dos personas entre sí** (`per_ana` con `per_beto`) **no** se excluyen: una relación positiva entre ellas es su co-mención, que es la misma información de la Red. No es un error, pero no es un hallazgo nuevo.
-- **La relación de cada día sí se usa** en `vi_*`, `penso_en_*` y `cercania_media` (sección 7.4). Las variables `per_`/`pen_` son por persona, sin relación.
+- **La relación de cada día sí se usa** en `vi_*`, `penso_en_*` y `cercania_media` (sección 7.4), salvo la lista de convivientes de `vi_convivientes`, que es la actual. Las variables `per_`/`pen_` son por persona, sin relación.
 
 ## 7.13 Privacidad: dónde entran los momentos privados
 
@@ -3268,16 +3276,16 @@ La pista 4 del plan («la constelación toma los momentos excepto el tipo `recai
 3. La **cercanía** usa la escala IOS, validada, con etiquetas añadidas y respondida una vez por persona; `cercania_media` describe a quién nombras, no cómo te fue con ellos ese día.
 4. Las variables sociales del panel ponían **0 en días sin diario** pero con algún momento o documento (H-6-13); desde 10c quedan vacías los días sin diario escrito ni momento con @. **No hay variable por persona de «estuve con @x»**: `per_` mezcla presencia, pensamiento, sueños y cartas, y su etiqueta lo dice (H-6-2).
 5. La **Constelación** es una visualización de frecuencia y recencia, coloreada con la relación actual. La **Red** combina co-menciones (≥ 2 días) y vínculos declarados (con nombres unidos desde 10c), con un dibujo de fuerzas estándar; sus dos fallos de presentación (color y «solo lo que dije») se corrigieron en 10c (H-6-5, H-6-6).
-6. `vm_red()` calcula densidad, componentes, **restricción de Burt** y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8) y **diferían de la app** en tres puntos concretos (H-6-7). Desde la entrega 10d, `vm_red()` ya no cuenta como línea los pares «no se conocen» ni cuenta como grupo a quien no tiene líneas, y no falla sin pares; la diferencia de personas (45 frente a 400) y de grado (2 días frente a 1) se documenta en el diccionario.
-7. Los momentos privados no entran en la Constelación ni en la Red; hasta v84 entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1, resuelto en 10a).
-8. Se identificaron **15 hallazgos** (H-6-1 a H-6-15). No se cambió código.
+6. `vm_red()` calcula densidad, componentes, **restricción de Burt** y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8) y **diferían de la app** en cuatro puntos concretos (H-6-7). Desde la entrega 10d, `vm_red()` ya no cuenta como línea los pares «no se conocen» ni cuenta como grupo a quien no tiene líneas, y no falla sin pares; la diferencia de personas (45 frente a 400) y de grado (2 días frente a 1) se documenta en el diccionario.
+7. Desde 10a, los momentos privados (impulso, recaída, libido) no entran en nada de este capítulo; hasta v84, recaídas y libido entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1).
+8. En el módulo 6 se identificaron **15 hallazgos** (H-6-1 a H-6-15) y no se cambió código. Después, el módulo 10 resolvió H-6-1 (10a), H-6-2 (documentándolo), H-6-5, H-6-6, H-6-10, H-6-12, H-6-13 y H-6-14 (10c) y H-6-7 (10d), y resolvió en parte H-6-4, H-6-9 y H-6-11 (10c). Siguen pendientes H-6-3 (fecha del cambio de relación), H-6-8 (métricas dominadas por personas poco mencionadas) y H-6-15 (diferencias con la IOS original).
 
 
 # Capítulo 8. Experimentos personales (N-de-1)
 
-> **Para qué sirve este capítulo.** Explica cómo la app te ayuda a **probar algo en ti mismo** (dormirte antes, dejar la cafeína en la tarde, tomar creatina) y a decidir si funcionó. Cubre la lógica de estos diseños y su respaldo en la literatura, qué hace exactamente el código (sorteo de semanas, días de lavado, diferencia de medias, tamaño del efecto, prueba de tendencia) y qué tan confiable es el resultado. También trata la sección «Antes y después» de Explorar, que **parece** un experimento pero no lo es. Todo corresponde a la versión v81 (commit `fa527df`), con lo que cambiaron el esquema 13 (entrega 10b) y la entrega 10c (commit `b943ec7`; apéndice D, D.65, D.67 y D.68): intervalo con *t* y autocorrelación, sorteo por pares, lavado que no se come una condición, tendencia dentro de cada condición y resultado provisional mientras dura el plan. Cada sección dice qué era así antes y qué es así ahora. **Los ejemplos y las simulaciones usan datos inventados.**
+> **Para qué sirve este capítulo.** Explica cómo la app te ayuda a **probar algo en ti mismo** (dormirte antes, dejar la cafeína en la tarde, tomar creatina) y a decidir si funcionó. Cubre la lógica de estos diseños y su respaldo en la literatura, qué hace exactamente el código (sorteo de semanas, días de lavado, diferencia de medias, tamaño del efecto, prueba de tendencia) y qué tan confiable es el resultado. También trata la sección «Antes y después» de Explorar, que **parece** un experimento pero no lo es. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper. Lo que cambió en el módulo 10 se marca «desde el esquema 13» (entrega 10b: fecha de fin y «¿Lo hiciste hoy?») o «desde la 10c» (commit `b943ec7`: intervalo con *t* y autocorrelación, sorteo por pares, lavado que no se come una condición, tendencia dentro de cada condición y resultado provisional mientras dura el plan), y está en el apéndice D (D.13, D.17, D.65, D.67 y D.68). Cada sección dice qué era así antes y qué es así ahora. **Los ejemplos y las simulaciones usan datos inventados.**
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-7-n y se detallan en `hallazgos.md`. Este capítulo usa **simulaciones**: generar miles de experimentos inventados en los que *sabemos* la verdad (por ejemplo, que la acción no hace nada) y contar cuántas veces el método de la app se equivoca. Los scripts están en `figuras/`.
+> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-7-n (el número es el del módulo 7, que escribió este capítulo) y se detallan en `hallazgos.md`. Este capítulo usa **simulaciones**: generar miles de experimentos inventados en los que *sabemos* la verdad (por ejemplo, que la acción no hace nada) y contar cuántas veces el método de la app se equivoca. Los scripts están en `figuras/`.
 
 ## 8.1 Mini-glosario
 
@@ -3304,7 +3312,7 @@ La pista 4 del plan («la constelación toma los momentos excepto el tipo `recai
 
 ### 8.2.1 El problema que resuelven
 
-El resto de la app encuentra **relaciones**: «los días que duermes más, estás de mejor ánimo». Pero una relación no dice qué causa qué: quizá dormir más mejora el ánimo, quizá el buen ánimo te deja dormir, quizá los fines de semana causan ambas cosas. La propia app lo recuerda en Explorar y Análisis: «Para causas, usa los experimentos personales» (`Explorar.kt`, `Mas.kt`).
+El resto de la app encuentra **relaciones**: «los días que duermes más, estás de mejor ánimo». Pero una relación no dice qué causa qué: quizá dormir más mejora el ánimo, quizá el buen ánimo te deja dormir, quizá los fines de semana causan ambas cosas. La propia app lo recuerda en «Cómo leer tus datos»: «Para causas, usa los experimentos personales» (`PantallaGuia`, `ui/pantallas/Mas.kt`), y con otras palabras en la guía de uso (`data/GuiaUso.kt`).
 
 Un **experimento** rompe ese nudo: **tú decides** cuándo hacer la acción, y si además lo decide **el azar**, lo demás (el día de la semana, tu humor previo, el clima) queda repartido entre las dos condiciones. Si después hay diferencia, lo más probable es que la cause la acción.
 
@@ -3328,7 +3336,7 @@ Está en `PantallaExperimentos` (`ui/pantallas/Lote3.kt`) y el modelo `Experimen
 ### 8.3.1 Lo que escribes
 
 - **Nombre**, **pregunta** (opcional), **acción** («qué vas a cambiar») e **hipótesis** («qué crees que pasará»). Sin nombre, acción e hipótesis, el botón no se activa.
-- **Qué vas a medir**: una sola variable del panel, elegida de una lista corta: valencia del día, activación, calidad de sueño, horas de sueño, valencia de los avisos, minutos de pantalla, tiempo de reacción, volumen en el gimnasio o minutos de enfoque. Las plantillas pueden traer otra. Desde la entrega 10a, el impulso ya no es una medida posible (es privado), y un experimento viejo que lo medía no se muestra en esta pantalla.
+- **Qué vas a medir**: una sola variable del panel, elegida de una lista corta: valencia del día, activación, calidad de sueño, horas de sueño, valencia de los avisos, minutos de pantalla, tiempo de reacción, volumen en el gimnasio o minutos de enfoque. Las cuatro plantillas usan medidas de esa lista. Desde la entrega 10a, el impulso ya no es una medida posible (es privado), y un experimento viejo que lo medía no se muestra en esta pantalla.
 - **Diseño**: «Semanas alternas sorteadas» (`alterno`) o «Antes y después» (`antes_despues`).
 - **Duración**: 4, 6, 8 o 12 semanas.
 - **Días de lavado tras cada cambio**: ninguno, 1, 2, 7 o 28.
@@ -3348,19 +3356,19 @@ Después, la tarjeta muestra la hipótesis con «sellada el … a las …». La 
 
 **Límites del sellado** (H-7-10):
 
-- La hora queda guardada, pero no hay nada que impida cambiar el texto por otros medios (por ejemplo, restaurando un respaldo editado). El sello es de **honor**, no una garantía. Para un solo usuario es razonable.
+- La hora queda guardada, pero no hay huella del texto sellado. Hasta el esquema 12, restaurar un respaldo reemplazaba el experimento entero; desde el 13 (`Fusion.experimento`), un experimento que ya está en el teléfono conserva su texto y su plan, y del respaldo solo se toman la fecha de fin y las respuestas. Aun así, un respaldo editado que se restaura en un teléfono sin ese experimento lo trae tal cual. El sello es de **honor**, no una garantía. Para un solo usuario es razonable.
 - Se fija la variable, pero **no el análisis**: no se sella cuándo vas a mirar el resultado ni qué vas a considerar «funcionó». Y el resultado **se ve desde el principio** (sección 8.6.3).
 
 ### 8.3.3 El aviso diario
 
-En la pantalla del día (`ui/pantallas/Dia.kt`), cada experimento activo muestra: «Experimento «…», semana *k* de *N*: esta semana SÍ: … / esta semana NO hagas: …». La semana se calcula con `ChronoUnit.WEEKS.between(inicio, fecha)`.
+En la pantalla del día (`ui/pantallas/Dia.kt`), cada experimento muestra: «Experimento «…», semana *k* de *N*: esta semana SÍ: … / esta semana NO hagas: …» (`AvisoExperimento`). Hasta el esquema 12 solo salía en los experimentos activos, y la semana se calculaba con `ChronoUnit.WEEKS.between(inicio, fecha)`.
 
 **Detalle (hasta el esquema 12).** Esa función **trunca hacia cero**: para los 6 días anteriores al inicio da 0, no −1. Por eso, desde el martes de la semana previa, el día ya mostraba «semana 1 de *N*» con la instrucción de la primera semana. Si la primera semana era «SÍ», podías empezar antes de tiempo. No afectaba al cálculo del resultado, que solo cuenta desde `inicio`, pero sí podía contaminar la línea de base (H-7-9). Resuelto: el esquema 13 dejó de mostrar el aviso fuera de los días del experimento, y desde la entrega 10c `AvisoExperimento` toma la condición de `Experimentos.toca`, que no devuelve nada antes del inicio.
 
 **Desde el esquema 13 (entrega 10b):**
 - **Cuándo aparece el aviso.** Sale en los días que cubre el experimento (`Experimentos.cubre`: del inicio a su último día) y nunca en días futuros. Ya no depende de que esté activo: así puedes contestar los días que quedaron sin respuesta aunque ya lo hayas terminado. La semana se calcula como días desde el inicio entre 7, y ya no aparece antes de empezar.
 - **Días de lavado.** El aviso dice cuándo un día es de lavado y no cuenta.
-- **«¿Lo hiciste hoy?»** El aviso lleva la pregunta (I-3) con dos fichas, «sí» y «no». Se pregunta **en las dos condiciones**: en una semana «no», responder «sí» quiere decir que lo hiciste aunque no tocaba. La respuesta se guarda en `Experimento.hecho` (fecha → sí/no). Tocar otra vez la ficha elegida la borra, y el día queda **sin respuesta**, que no es lo mismo que «no».
+- **«¿Lo hiciste hoy?»** El aviso lleva la pregunta (I-3; en un día pasado, «¿Lo hiciste ese día?») con dos fichas, «sí» y «no». Se pregunta **en las dos condiciones**: en una semana «no», responder «sí» quiere decir que lo hiciste aunque no tocaba. La respuesta se guarda en `Experimento.hecho` (fecha → sí/no). Tocar otra vez la ficha elegida la borra, y el día queda **sin respuesta**, que no es lo mismo que «no».
 - **Por qué en el experimento.** Se guarda en el experimento y no en el día para no crear días vacíos ni tocar `retroactivo`.
 - **Lo que no se pudo medir.** Preguntar cada día puede cambiar la conducta (reactividad); no se pudo estimar cuánto.
 
@@ -3394,11 +3402,11 @@ Barajar sin restricciones podía dar «SÍ SÍ SÍ no no no», que en la prácti
 
 Con 4 semanas, uno de cada tres experimentos «alternos» era en realidad un antes/después.
 
-**Sortear por pares** lo evita: nunca hay más de dos semanas seguidas iguales, y una tendencia lenta afecta casi por igual a ambas condiciones. En las simulaciones de la Figura 8.3 (con el método de antes de la 10c), con una tendencia de 0.02 desviaciones por día y sin efecto real, el sorteo libre de 8 semanas daba una falsa señal el **14 %** de las veces y el sorteo por pares el **6 %**.
+**Sortear por pares** lo evita: nunca hay más de dos semanas seguidas iguales, y una tendencia lenta afecta casi por igual a ambas condiciones. En las simulaciones de la Figura 8.3 (con el método de antes de la 10c), con una tendencia de 0.02 desviaciones por día y sin efecto real, el sorteo libre de 8 semanas daba una falsa señal el **14 %** de las veces y el sorteo por pares, alrededor del **5 %** (el script de la figura no trae este último caso; se repitió con sus mismas funciones en el módulo 14).
 
-**El costo**: hay menos planes posibles. Esto importaría para una **prueba de aleatorización** (sección 8.6.4), cuyo valor *p* más pequeño posible es 1 entre el número de planes: con 6 semanas por pares, nunca podría bajar de 1/8 = 0.125. Con pares conviene ir a 10 o 12 semanas.
+**El costo**: hay menos planes posibles. Esto importaría para una **prueba de aleatorización** (sección 8.6.4), cuyo valor *p* más pequeño posible es 1 entre el número de planes: con pares, 1/8 = 0.125 con 6 semanas y 1/16 = 0.0625 con 8, las dos por encima de 0.05. De las duraciones que ofrece la app (4, 6, 8 o 12 semanas), solo con 12 (1/64 ≈ 0.016) podría bajar de 0.05.
 
-**Con pares ya no puede salir un plan en bloque** (siempre hay al menos dos cambios de condición con 4 semanas o más), pero los experimentos sellados antes con sorteo libre conservan su plan. Desde la 10c, la tarjeta decide si el plan **real** quedó en bloque (`Experimentos.enBloque`: diseño antes/después, o un solo cambio de condición en todo el plan) y, si es un alterno que quedó así, lo dice: «El sorteo quedó en bloque… Se lee como un antes y después». Antes, el aviso fuerte dependía solo de que el diseño elegido fuera «antes y después» (H-9-30).
+**Con pares ya no puede salir un plan en bloque** (siempre hay al menos dos cambios de condición con 4 semanas o más), pero los experimentos sellados antes con sorteo libre conservan su plan. Desde la 10c, la tarjeta decide si el plan **real** quedó en bloque (`Experimentos.enBloque`: diseño antes/después, o un solo cambio de condición en todo el plan) y, si es un alterno que quedó así, lo dice: «El sorteo quedó en bloque… Se lee como un antes y después» (si además salta el aviso de tendencia, lo dice dentro de ese aviso, sección 8.8.1). Antes, el aviso fuerte dependía solo de que el diseño elegido fuera «antes y después» (H-9-30).
 
 ## 8.5 Qué días cuentan: el lavado
 
@@ -3413,7 +3421,7 @@ Observa que el lavado se aplica **en los dos sentidos**: al pasar de «SÍ» a �
 
 Plan sorteado: SÍ no no SÍ SÍ no, 2 días de lavado. Cambios: día 0 (empieza con SÍ), día 7 (SÍ→no), día 21 (no→SÍ), día 35 (SÍ→no). Días de lavado: 0–1, 7–8, 21–22, 35–36 = 8 días. Cuentan **17 días con la acción** (21 − 4) y **17 sin ella** (21 − 4). La semana 3 («no» tras «no») no pierde ningún día.
 
-![Figura 8.1. Izquierda: qué días cuentan con un plan alterno y 2 días de lavado. Derecha: la plantilla «Creatina» desde la entrega 10c (12 semanas, antes y después, 28 días de lavado): quedan 14 días con la acción y 42 sin ella; con las 8 semanas de antes, todo el periodo con la acción quedaba en lavado. Script: `figuras/fig20_calendario_experimento.py`.](figuras/fig20_calendario_experimento.png){width=100%}
+![Figura 8.1. Izquierda: qué días cuentan con un plan alterno y 2 días de lavado. Derecha: la plantilla «Creatina» desde la entrega 10c (12 semanas, antes y después, 28 días de lavado): quedan 14 días con la acción y 42 sin ella. Con las 8 semanas que tenía la plantilla hasta la 10c (4 «no» y 4 «SÍ»), todo el periodo con la acción quedaba en lavado (sección 8.5.3). Script: `figuras/fig20_calendario_experimento.py`.](figuras/fig20_calendario_experimento.png){width=100%}
 
 ### 8.5.3 Razonamiento y cuándo falla
 
@@ -3435,12 +3443,12 @@ Recorre los días desde `inicio` hasta el último día del plan, hasta hoy o, de
 
 1. **Diferencia de medias con su intervalo** (`Estadistica.diferenciaEnDias(con, sin)`), solo si hay **al menos 3 días en cada condición**. Desde la 10c (D.65):
 
-   - **La autocorrelación de cada condición**, *ρ* (`Estadistica.ar1Grupos`): la correlación entre pares de días **seguidos** de esa condición, si hay al menos 10 pares; si no, la de las dos condiciones juntas (cada una centrada en su media); si tampoco, 0. Como en series cortas la autocorrelación estimada sale más baja que la real, se corrige: *ρ* + (1 + 4*ρ*)/*n*, con *n* los días de esa condición (la aproximación de primer orden atribuida a Marriott y Pope, 1954; la forma exacta no se leyó en el artículo **[sin verificar]**). Luego se acota entre 0 y 0.9: solo se corrige hacia un intervalo más ancho.
-   - **El error estándar de cada condición** se multiplica por √((1 + *ρ*)/(1 − *ρ*)), y su número efectivo de días es *n*(1 − *ρ*)/(1 + *ρ*):
+   - **La autocorrelación de cada condición**, *ρ* (`Estadistica.ar1Grupos`): la correlación entre pares de días **seguidos** de esa condición, si hay al menos 10 pares; si no, la de las dos condiciones juntas (cada una centrada en su media); si tampoco, 0. Como en series cortas la autocorrelación estimada sale más baja que la real, se corrige: *ρ* + (1 + 4*ρ*)/*n*, con *n* los días de esa condición (o de las dos, si se usó la de las dos juntas) (la aproximación de primer orden atribuida a Marriott y Pope, 1954; la forma exacta no se leyó en el artículo **[sin verificar]**). Luego se acota entre 0 y 0.9: solo se corrige hacia un intervalo más ancho.
+   - **El error estándar de cada condición** se multiplica por √((1 + *ρ*)/(1 − *ρ*)), y su número efectivo de días es *n*(1 − *ρ*)/(1 + *ρ*), nunca menos de 2 (`Estadistica.diferenciaCompleta`):
 
 $$EE = \sqrt{\frac{s_c^2}{n_c}\cdot\frac{1+\rho_c}{1-\rho_c} + \frac{s_s^2}{n_s}\cdot\frac{1+\rho_s}{1-\rho_s}}\qquad\qquad (8.1)$$
 
-   - **Los grados de libertad** son los de Welch con esos *n* efectivos, y el intervalo usa el **cuantil de la *t* de Student** (`Estadistica.cuantilT(0.975, gl)`) en lugar de 1.96:
+   - **Los grados de libertad** son los de Welch con esos *n* efectivos (acotados entre 1 y la suma de los dos *n* efectivos menos 2), y el intervalo usa el **cuantil de la *t* de Student** (`Estadistica.cuantilT(0.975, gl)`) en lugar de 1.96:
 
 $$\bar{x}_c - \bar{x}_s \;\pm\; t_{0.975,\,gl}\cdot EE\qquad\qquad (8.2)$$
 
@@ -3487,7 +3495,7 @@ La estimación de *ρ* con 19 días es muy ruidosa (salió 0.17 y 0.55 para un v
 
 ### 8.6.3 Por qué el intervalo de antes de la 10c era demasiado estrecho (pistas 1 y 2; H-7-3 y H-7-4, resueltos en 10c)
 
-**1. Trataba cada día como independiente** (H-7-3). El cálculo supone que cada día es un dato nuevo, como si fueran 38 personas distintas. Pero el ánimo, el sueño y casi todo lo que mide la app **se parecen de un día al siguiente**. La propia app lo sabe: para las correlaciones calcula la autocorrelación de cada variable y un *n efectivo* (`Estadistica.autocorr`; capítulo 6, sección 6.6, y H-5-5, que señala el mismo problema en `Estadistica.diferencia` para todas las pantallas que la usan). En los experimentos no lo usaba. Además, lo que se sortea son **semanas**, no días: en un experimento de 6 semanas hay 6 unidades sorteadas, no 38.
+**1. Trataba cada día como independiente** (H-7-3). El cálculo suponía que cada día era un dato nuevo, como si fueran 38 personas distintas. Pero el ánimo, el sueño y casi todo lo que mide la app **se parecen de un día al siguiente**. La propia app lo sabe: para las correlaciones calcula la autocorrelación de cada variable y un *n efectivo* (`Estadistica.autocorr`; capítulo 6, sección 6.6, y H-5-5, el mismo problema en `Estadistica.diferencia` para todas las pantallas que la usaban, también resuelto en 10c). En los experimentos no lo usaba. Además, lo que se sortea son **semanas**, no días: en un experimento de 6 semanas hay 6 unidades sorteadas, no 38.
 
 **2. Usaba 1.96 fijo** (H-7-3). Con pocos días, el valor correcto sale de la distribución *t* y es mayor.
 
@@ -3519,7 +3527,7 @@ Antes de la 10c, con autocorrelaciones como las que suelen tener las medidas dia
 2. Calcula la misma diferencia con **cada uno de los otros planes que pudieron salir** (con los mismos datos y el lavado que correspondería a cada plan).
 3. El valor *p* es la fracción de planes que dan una diferencia igual o mayor que la real.
 
-Su ventaja: **no supone que los días sean independientes**, porque se apoya solo en que el sorteo fue real. Su límite: el *p* más pequeño posible es 1 / número de planes. Con el sorteo por pares de la 10c hay $2^{N/2}$ planes: con 8 semanas (16 planes), 0.0625; con 12 (64 planes), 0.016. Es decir, **con 4 o 6 semanas no se puede llegar a una conclusión con el criterio habitual**, por grande que sea el efecto. Sigue siendo una **propuesta no aplicada**: la app no la ofrece y **tampoco hay función de R para los experimentos**, aunque `vm_experimentos.csv` exporta el plan, el lavado, la variable, la fecha de fin y las respuestas (H-7-11). La corrección por autocorrelación de la 10c es la alternativa mínima que la revisión propuso.
+Su ventaja: **no supone que los días sean independientes**, porque se apoya solo en que el sorteo fue real. Su límite: el *p* más pequeño posible es 1 / número de planes. Con el sorteo por pares de la 10c hay $2^{N/2}$ planes: con 4 semanas, 0.25; con 6, 0.125; con 8 (16 planes), 0.0625; con 12 (64 planes), 0.016. Es decir, **con 4, 6 u 8 semanas no se puede llegar a una conclusión con el criterio habitual** (*p* < 0.05), por grande que sea el efecto; de las duraciones de la app, solo 12 semanas lo permite. Sigue siendo una **propuesta no aplicada**: la app no la ofrece y **tampoco hay función de R para los experimentos**, aunque `vm_experimentos.csv` exporta el plan, el lavado, la variable, la fecha de fin y las respuestas (H-7-11). La corrección por autocorrelación de la 10c es la alternativa mínima que la revisión propuso.
 
 ### 8.6.5 El d de Cohen en una sola persona
 
@@ -3528,7 +3536,7 @@ Su ventaja: **no supone que los días sean independientes**, porque se apoya sol
 
 ## 8.7 Lo que no se registra: la adherencia
 
-La app guarda qué **debías** hacer cada semana, pero **no si lo hiciste** (H-7-8). Si en una semana «SÍ» te dormiste tarde tres noches, esos días cuentan igual como «con la acción». Es lo que en ensayos clínicos se llama análisis por **intención de tratar**: compara lo asignado, no lo hecho. Es una forma legítima de análisis (estima el efecto de *intentar* la acción) **[Validado]**, pero diluye el efecto si no la cumples y no te deja saber cuánto la cumpliste.
+Hasta el esquema 12, la app guardaba qué **debías** hacer cada semana, pero **no si lo hiciste** (H-7-8; desde el esquema 13 se pregunta, sección 8.7.1). El resultado sigue comparando lo asignado: si en una semana «SÍ» te dormiste tarde tres noches, esos días cuentan igual como «con la acción». Es lo que en ensayos clínicos se llama análisis por **intención de tratar**: compara lo asignado, no lo hecho. Es una forma legítima de análisis (estima el efecto de *intentar* la acción) **[Validado]**, pero diluye el efecto si no la cumples; sin la pregunta diaria, además, no había forma de saber cuánto la cumpliste.
 
 Relacionado: **hasta el esquema 12, «Terminar experimento» no guardaba la fecha** (H-7-2). Solo marcaba `activo = false`. `Experimentos.resultado` seguía contando todos los días hasta el final del plan original, así que si terminabas en la semana 3 de 6 y dejabas de hacer la acción, las semanas «SÍ» posteriores se contaban como «con la acción» aunque no la hiciste. Además, el aviso del día desaparecía y no sabías qué semanas tocaban.
 
@@ -3546,11 +3554,11 @@ Relacionado: **hasta el esquema 12, «Terminar experimento» no guardaba la fech
 
 ### 8.8.1 Qué hace (desde la entrega 10c: `Experimentos.tendencia`)
 
-Si hay al menos 8 días que cuentan, ajusta por mínimos cuadrados **a la vez** la tendencia y la condición:
+Si hay al menos 8 días que cuentan y tienen dato (sin hoy), ajusta por mínimos cuadrados **a la vez** la tendencia y la condición:
 
 $$y = a + b\,i + c\,\text{con} + \varepsilon\qquad\qquad (8.4)$$
 
-con *i* = número de día (0, 1, 2…) y «con» = 1 los días con la acción y 0 los demás. *b* es la **pendiente dentro de cada condición** (la misma para las dos): cuánto cambia la medida por día una vez descontado el efecto de la condición. Su error estándar sale de la matriz del ajuste con *n* − 3 grados de libertad, y el aviso salta si |*b*/EE(*b*)| supera el **cuantil 0.975 de la *t*** con *n* − 3 grados. Si todos los días son de la misma condición, queda la pendiente simple con *n* − 2. El aviso dice: «Ojo: dentro de cada condición, tu medida venía cambiando sola (… por día). Parte de la diferencia puede ser esa tendencia», y añade «como el plan quedó en bloque (primero una condición y luego la otra), pesa más» si `Experimentos.enBloque`.
+con *i* = número de día (0, 1, 2…) y «con» = 1 los días con la acción y 0 los demás. *b* es la **pendiente dentro de cada condición** (la misma para las dos): cuánto cambia la medida por día una vez descontado el efecto de la condición. Su error estándar sale de la matriz del ajuste con *n* − 3 grados de libertad, y el aviso salta si |*b*/EE(*b*)| supera el **cuantil 0.975 de la *t*** con *n* − 3 grados. Si todos los días son de la misma condición (o el día y la condición no se pueden separar), queda la pendiente simple con *n* − 2. El aviso dice: «Ojo: dentro de cada condición, tu medida venía cambiando sola (… por día). Parte de la diferencia puede ser esa tendencia», y añade «como el plan quedó en bloque (primero una condición y luego la otra), pesa más» si `Experimentos.enBloque`.
 
 **Hasta la 10c** la recta se ajustaba **con las dos condiciones juntas** (valor contra día) y avisaba si |*b*/EE(*b*)| > 2:
 
@@ -3587,7 +3595,7 @@ Con el modelo de la 10c, en la misma situación el aviso sale el **5 %** de las 
 |---|---|---|---|---|---|---|
 | Creatina | 5 g al día | `volumen_kg` | antes/después | 12 (8 hasta la 10c) | 28 | «la reserva del músculo tarda semanas en llenarse y en vaciarse, así que alternar semanas no sirve» |
 | Hora de dormir | en la cama antes de las 00:00 | `valencia` | alterno | 6 | 1 | «el primer día de cada cambio no cuenta» |
-| Pantalla antes de dormir | sin pantalla la última hora | `sueno_calidad` | alterno | 6 | 1 | — |
+| Pantalla antes de dormir | sin pantalla la última hora | `sueno_calidad` | alterno | 6 | 1 | «Semanas alternas sorteadas» |
 | Cafeína en la tarde | nada después de las 14:00 | `sueno_horas` | alterno | 6 | 2 | «dos días de lavado por la cafeína que queda en el cuerpo» |
 
 : Tabla 8.5. Las plantillas
@@ -3619,7 +3627,7 @@ Lo que ayuda (sin cambiar la app):
 
 ### 8.11.1 Qué hace (`EtapasDeVida`, `ui/pantallas/Explorar.kt`)
 
-Para cada uno de los **8 cambios más recientes** que guardaste en «Conocerte» (mudanza, pareja, trabajo…; `perfil_historial`), compara siete variables: valencia, horas de sueño, minutos de pantalla, pasos, gasto, personas mencionadas y palabras escritas.
+Para los **8 días más recientes** en que guardaste cambios en «Conocerte» (mudanza, pareja, trabajo…; `perfil_historial`), compara siete variables: valencia (la tarjeta la rotula «ánimo»), horas de sueño, minutos de pantalla, pasos, gasto, personas mencionadas y palabras escritas.
 
 - **Antes**: los días −1 a −60 respecto a la fecha del cambio.
 - **Después**: los días 0 a 59.
@@ -3633,8 +3641,8 @@ Nadie sorteó cuándo mudarte o cambiar de trabajo, y esos cambios suelen venir 
 
 ### 8.11.3 Cuándo falla (H-7-12)
 
-- **Muchas comparaciones.** 8 cambios × 7 variables = hasta **56 comparaciones**. Aunque nada cambiara de verdad, con días independientes y 5 % de error cabe esperar unas **3** comparaciones «claras» por azar; con la autocorrelación de 60 días de datos, muchas más (sección 8.6.3). No se corrige por comparaciones múltiples.
-- **Días tratados como independientes**, con 1.96 (igual que en H-7-3; resuelto en 10c: ahora con *t* y autocorrelación).
+- **Muchas comparaciones.** 8 tarjetas × 7 variables = hasta **56 comparaciones**. Aunque nada cambiara de verdad, con un intervalo que da el 5 % de falsas señales cabe esperar unas **3** comparaciones «claras» por azar; con el intervalo de antes de la 10c, que ignoraba la autocorrelación, muchas más (sección 8.6.3). No se corrige por comparaciones múltiples.
+- **Hasta la 10c, días tratados como independientes**, con 1.96 (igual que en H-7-3); desde la 10c, con *t* y autocorrelación.
 - **Tendencias**: el mismo problema del antes/después (sección 8.8).
 - **La fecha es la del registro en la app**, no la del cambio real (como H-6-3).
 - **Un mismo cambio podía salir varias veces** (resuelto en 10c): si en una sola edición cambiabas ciudad, vivienda y «vive con», salían tres tarjetas con la misma fecha y **los mismos números**, lo que daba la impresión de tres hallazgos. Ahora es una tarjeta con los tres cambios.
@@ -3685,14 +3693,14 @@ Nadie sorteó cuándo mudarte o cambiar de trabajo, y esos cambios suelen venir 
 5. La **prueba de tendencia** confundía un efecto real con una tendencia en los antes/después: avisaba en el 71 % de los casos con un efecto grande y sin tendencia (H-7-6). Desde la 10c separa tendencia y condición y avisa en el 5 %; pero en un antes/después con tendencia real solo la detecta el 22 % de las veces.
 6. Hasta el esquema 12, **«Terminar» no guardaba la fecha** ni se registraba si cumpliste la acción (H-7-2, H-7-8). Desde el 13 se guardan la fecha de fin y «¿Lo hiciste hoy?», con el cumplimiento por condición y un cociente secundario. No hay cegamiento: prefiere medidas objetivas y mirar solo al final.
 7. «Antes y después» en Explorar es **observacional**, con hasta 56 comparaciones sin corregir (H-7-12); desde la 10c, una tarjeta por guardado y con el mismo intervalo corregido.
-8. Se identificaron **14 hallazgos** (H-7-1 a H-7-14). El módulo 7 no cambió código; la entrega 10c resolvió H-7-1, H-7-3 a H-7-6, H-7-8, H-7-9, H-7-12 y H-7-13 (H-7-12 en parte: las comparaciones múltiples siguen sin corregirse). H-7-7 (Hedges) queda documentado.
+8. El módulo 7 identificó **14 hallazgos** (H-7-1 a H-7-14) y no cambió código. Después, el esquema 13 (entrega 10b) resolvió H-7-2 y H-7-8 (el rótulo «según el plan» llegó en la 10c), y la entrega 10c resolvió H-7-1, H-7-3, H-7-4, H-7-5, H-7-9 y H-7-13, y en parte H-7-6 (el efecto que se muestra no descuenta la tendencia) y H-7-12 (las comparaciones múltiples siguen sin corregirse). Siguen abiertos H-7-7 (Hedges, documentado), H-7-10 (desde el esquema 13, restaurar ya no reescribe un experimento que está en el teléfono, pero el sello sigue sin fijar el análisis), H-7-11 y H-7-14.
 
 
 # Capítulo 9. Reportes, visualización y motivación
 
-> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales. Para cada uno dice qué muestra, de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Todo corresponde a la versión v81 (commit `fa527df`). **Los ejemplos son inventados.**
+> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales. Para cada uno dice qué muestra, de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» o «desde el esquema 13» y está en el Apéndice D. **Los ejemplos son inventados.**
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función; cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-8-n (este capítulo y el 10 forman el módulo 8) y se detallan en `hallazgos.md`. Lo relativo a qué datos privados llegan a cada salida está en el capítulo 10.
+> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función; cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-8-n (este capítulo y el 10 forman el módulo 8; los H-9-n son del módulo 9) y se detallan en `hallazgos.md`. Lo relativo a qué datos privados llegan a cada salida está en el capítulo 10.
 >
 > **Fuentes.** Además del código, se leyó el documento de contexto del proyecto (`VESTIGIUM_MEI_CONTEXTO.md`, v81, que no está en el repositorio). Su sección 7 fija las **reglas de privacidad** de la app; el capítulo 10 (sección 10.3.4) las compara una por una con el código. Donde ese documento describe una intención («nunca en reportes…») y el código hace otra cosa, este capítulo y el 10 lo dicen.
 
@@ -3723,7 +3731,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | **Ánimo medio** | Promedio de los «ánimos del día» que existen. El reporte lo rotula «ánimo medio del diario (de 7)» y, si en el periodo hubo días con valencia solo en los avisos (`diasSoloAvisos`), añade «*N* días solo con avisos no cuentan». |
 | **Mejor y peor día** | El día con mayor y menor «ánimo del día»; en empate, el primero. Con el mejor día se muestra su «mejor momento» (hasta 90 caracteres). |
 | **Racha de diario** | La racha más larga **dentro del periodo** de días con texto o valencia. |
-| **Hábitos cumplidos** | Hábitos activos marcados ÷ (hábitos activos × días con documento de diario). |
+| **Hábitos cumplidos** | Hábitos activos marcados ÷ (hábitos activos × días con documento de diario). No cuenta el hábito ligado a las recaídas (`Privado.habitosVisibles`). |
 | **Sueño medio** | Promedio de las noches del reloj con **más de 120 minutos** (las más cortas se descartan como siestas o errores). |
 | **Hora de dormir media** | Promedio de las horas de inicio, con la misma regla que el panel y R (`Exportar.horaDecimal`, desde 10c): de noche, las anteriores a las **12:00** suman 24 (la 01:00 cuenta como 25:00) para no promediar la 01:00 con las 23:00 como si fuera mediodía. Antes el corte era a las 15:00, y una siesta larga que empezara a las 13:00 contaba como 37:00. La hora se lee en la zona del teléfono. |
 | **Pasos** | Promedio de los días con pasos > 0. Km: los del reloj o, si no hay, pasos × 0.00075. |
@@ -3758,23 +3766,23 @@ Arriba, hasta **9 cifras** (días con diario, ánimo medio, sueño, pasos, panta
 - **Ánimo**: gráfica de valencia (con la activación detrás) o, en el anual, un cuadro por día del color del ánimo; mejor y peor día, cambio frente al periodo anterior, el mejor día de la semana (si el periodo pasa de 13 días), hábitos y racha.
 - **Cuerpo, Mente, Gente, Mundo, Cultura, Dinero, Teléfono, Lo memorable** (hitos y logros del periodo).
 
-**El modo discreto** (`Config.discreto`, apagado por omisión) cambia los nombres de las personas por iniciales (`@ana_luisa` → «A.L.»). No toca nada más.
+**El modo discreto** (`Config.discreto`, apagado por omisión), en los reportes, cambia los nombres de las personas por iniciales (`@ana_luisa` → «A.L.», `Reportes.persona`). No toca nada más del reporte (en otras pantallas también oculta, por ejemplo, los nombres de las emociones).
 
 ### 9.3.3 Decisiones de visualización
 
 La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las reglas de `semanaVisual`:
 
-- **Ánimo**: una **medalla** por día con el color del ánimo y el número **redondeado** (`%.0f`, que redondea la mitad hacia arriba: 4.5 → 5, 6.5 → 7). El color va del color de alerta (1), pasando por un gris neutro (4), al color del tema (7) (`Lienzo.colorAnimo`). Sin dato, un círculo punteado.
+- **Ánimo**: una **medalla** por día con el color del ánimo y el número (`%.0f`). Desde 10c es la valencia del diario, un entero de 1 a 7, así que no se redondea nada; hasta entonces podía ser un promedio de avisos y se redondeaba la mitad hacia arriba (4.5 → 5, 6.5 → 7). El color va del color de alerta (1), pasando por un gris neutro (4), al color del tema (7) (`Lienzo.colorAnimo`). Sin dato, un círculo punteado.
 - **Diario**: hojas apiladas; una hoja = max(10, ⌈máximo de la semana / 10⌉) palabras, hasta 10 hojas. El día que más escribiste llega a 10 hojas.
 - **Sueño**: barras de 0 a 10 h, con una línea punteada en **7 h** y la barra en tono de alerta si la noche duró **menos de 6.3 h**.
-- **Pasos**: una huella por cada **2 000**, hasta 10.
+- **Pasos**: ⌈pasos / 2 000⌉ huellas, hasta 10.
 
-![Figura 9.1. «La semana de un vistazo», imitada con datos inventados y las mismas reglas del código. Script: `figuras/fig23_reporte_semanal.py`.](figuras/fig23_reporte_semanal.png){width=100%}
+![Figura 9.1. «La semana de un vistazo», imitada con datos inventados y las mismas reglas del código. El ánimo de la figura trae dos días con decimales (4.5 y 6.5), como podía pasar hasta 10c; desde entonces el número de la medalla siempre es un entero. Script: `figuras/fig23_reporte_semanal.py`.](figuras/fig23_reporte_semanal.png){width=100%}
 
 **Qué dice la investigación sobre gráficas.** Cleveland y McGill (1984) midieron qué tan bien la gente lee distintas codificaciones: la **posición sobre una escala común** (la altura de una barra con su eje) se lee con mucha más precisión que el **área** o el **color**. Aplicado a la app **[Aproximación]**:
 
 - Las barras de sueño son la codificación más precisa del reporte, y además llevan el número.
-- La medalla del ánimo codifica con **color**, que se lee mal, pero lleva el número escrito, lo que lo compensa. El número redondeado sí pierde información: un 4.5 y un 5.4 se ven igual («5»).
+- La medalla del ánimo codifica con **color**, que se lee mal, pero lleva el número escrito, lo que lo compensa. Hasta 10c, cuando el ánimo podía ser un promedio, el redondeo perdía información (un 4.5 y un 5.4 se veían igual, «5»); con la valencia del diario, que es entera, ya no.
 - Las hojas y huellas son **conteos de iconos**: se leen bien para comparaciones gruesas («el domingo escribí mucho más»), no para cifras exactas.
 - La línea de 7 h y el corte de 6.3 h son **[Diseño propio]**: 7 h coincide con la recomendación habitual mínima de sueño para adultos (no verificada en esta sesión **[sin verificar]**); el 6.3 h no tiene una fuente que yo conozca.
 - El color «de alerta» para el ánimo bajo y el sueño corto **juzga** el dato (rojo = malo). Para un resumen personal es útil, pero refuerza la idea de que hay valores «correctos», lo que se relaciona con la sección 9.7.
@@ -3785,7 +3793,7 @@ La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las regla
 
 ### 9.3.5 «Tu año»
 
-`TuAnio.calcular` usa el mismo `Periodo` del año y le suma: equivalencias («escribiste el equivalente a *N* páginas», a 300 palabras por página), un día típico armado con lo más frecuente, lo que pasó una sola vez, **el día más raro** (`Analisis.atipicos` con umbral 2.8, sobre 15 variables fijas), récords, **la relación más fuerte del año** (la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días), la palabra del año, un «arquetipo», tus medallas y cómo te fue con las **predicciones de enero** (8 preguntas: obras, países, ciudades, pasos, sueño, **ánimo medio**, persona más mencionada y palabras).
+`TuAnio.calcular` usa el mismo `Periodo` del año y le suma: equivalencias («escribiste el equivalente a *N* páginas», a 300 palabras por página), un día típico armado con lo más frecuente, lo que pasó una sola vez, **el día más raro** (`Analisis.atipicos` con umbral 2.8, sobre 15 variables fijas; `atipicos` solo devuelve días de los últimos 365 contados desde hoy, así que al ver un año pasado puede faltar o quedarse en parte del año), récords, **la relación más fuerte del año** (la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días), la palabra del año, un «arquetipo», tus medallas y cómo te fue con las **predicciones de enero** (8 preguntas: obras, países, ciudades, pasos, sueño, **ánimo medio**, persona más mencionada y palabras).
 
 Dos observaciones:
 
@@ -3822,7 +3830,7 @@ Conviene separar los logros por **qué** premian:
 |---|---|---|
 | **Registrar** | días de diario, avisos contestados, momentos, cuestionarios, pruebas de reacción | Menos datos faltantes (bueno: capítulo 3, sección 3.15). Riesgo: entradas de relleno para cumplir. |
 | **Una conducta** | pasos, sueño ≥ 7 h, entrenar, hábitos, enfoque | Cambian la conducta medida: es su objetivo (es una intervención). Riesgo: confundir el análisis observacional (sección 9.7). |
-| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (de ≤ 2 a ≥ 6 en menos de 3 días) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). |
+| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores, que pueden no ser seguidos) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). |
 | **Un rendimiento** | «Rayo» (reacción < 250 ms) | Incentiva practicar la prueba; los tiempos pueden mejorar por práctica y no por estar más despierto. |
 
 : Tabla 9.4. Lo que premian, y por qué importa para los datos
@@ -3831,7 +3839,7 @@ Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que
 
 ## 9.5 Campañas
 
-`ciencia/Campanas.kt`. Un reto de lunes a domingo con una meta de días. Los retos y sus metas:
+`ciencia/Campanas.kt`. Un reto de lunes a domingo con una meta de días. Los retos y la meta que propone cada uno (al aceptar se puede elegir de 3 a 7 días):
 
 | Reto | Cuenta el día si… | Meta |
 |---|---|---|
@@ -3851,11 +3859,11 @@ Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que
 
 `Campanas.estado`: cada día cumplido avanza una etapa en un «mapa» narrativo que cambia con el tema (de Roma a Alesia, de Chang'an a Antioquía…); se **gana** al llegar a la meta y se **pierde** cuando ya no da tiempo (días cumplidos + días que quedan < meta). Ganar campañas da logros (1, 5, 20 y 52 victorias).
 
-**Qué son científicamente.** Una campaña de sueño **es una intervención**: durante esa semana intentas dormir más. Eso está bien para tu vida, pero tiene una consecuencia para el análisis: **las campañas no se guardan como variable del panel ni se exportan como tal** (solo viven en los ajustes, `Config.campanas`) (H-8-7). Si en las semanas con campaña de sueño también estuviste de mejor ánimo, la app verá «dormir más se asocia con mejor ánimo», sin poder distinguir si fue el sueño o el empujón motivacional de la campaña (o qué te llevó a elegir esa campaña esa semana). Un experimento personal (capítulo 8) separa esto; una campaña, no.
+**Qué son científicamente.** Una campaña de sueño **es una intervención**: durante esa semana intentas dormir más. Eso está bien para tu vida, pero tiene una consecuencia para el análisis. **Hasta el esquema 12, las campañas no se guardaban como variable del panel ni se exportaban como tal** (solo vivían en los ajustes, `Config.campanas`) (H-8-7). Si en las semanas con campaña de sueño también estuviste de mejor ánimo, la app veía «dormir más se asocia con mejor ánimo», sin poder distinguir si fue el sueño o el empujón motivacional de la campaña (o qué te llevó a elegir esa campaña esa semana). Un experimento personal (capítulo 8) separa esto; una campaña, no; desde el esquema 13, al menos queda registrada.
 
 **Desde el esquema 13 (P-11) la campaña es una variable del panel.** Hay una columna `campana_<reto>` por cada reto que hayas tenido. Por ejemplo, `campana_sueno7`, o `campana_hab_<id>` para un hábito. Vale **1** los días que tenías ese reto aceptado y **0** los demás, desde el primer día de tu primera campaña; antes, sin dato. Además está `campanas_n`, cuántas tenías ese día, porque puede haber hasta tres a la vez. Codifica la **asignación** (la tenías aceptada), no el cumplimiento. `Campanas.diasActivos` la arma desde `Config.campanas`, que guarda la historia completa.
 
-Cada `campana_<reto>` se marca como «obvia» con lo que ese reto busca mover (`Campanas.MUEVE`; capítulo 6). La de sueño va con las horas y las horas de dormir y despertar; la de pantalla, con los minutos y desbloqueos. Así no aparece como hallazgo «en las semanas de campaña de sueño dormiste más». En R, desde la entrega 10d (P-31), la regla sale de la misma fuente: `vm_familias.csv` se genera desde `Campanas.MUEVE` (`Estadistica.familias`; cada campaña en el lado 1 y lo que busca mover en el lado 2, así lo que mueve no queda «obvio» entre sí), y `vm_obvia` lo lee. La lista escrita a mano en R (`vm_campana_mueve`) queda solo para exportaciones viejas sin ese archivo; desde la entrega 10d tiene los mismos retos que `Campanas.MUEVE`, con los nombres de `vm_panel.csv`.
+Cada `campana_<reto>` se marca como «obvia» con lo que ese reto busca mover (`Campanas.MUEVE`; capítulo 6). La de sueño va con las horas y las horas de dormir y despertar; la de pantalla, con los minutos y desbloqueos. Así no aparece como hallazgo «en las semanas de campaña de sueño dormiste más». En R, desde la entrega 10d (P-31), la regla sale de la misma fuente: `vm_familias.csv` se genera desde `Campanas.MUEVE` (`Estadistica.familias`: cada campaña va en el lado 1 y lo que busca mover en el lado 2, y solo cuentan como obvias las parejas de lados distintos; así, dos variables que mueve la misma campaña, como las horas de sueño y la hora de dormir, no se esconden entre sí por esa razón), y `vm_obvia` lo lee. La lista escrita a mano en R (`vm_campana_mueve`) queda solo para exportaciones viejas sin ese archivo; desde la entrega 10d tiene los mismos retos que `Campanas.MUEVE`, con los nombres de `vm_panel.csv`.
 
 Lo que sí queda para el análisis es lo interesante: por ejemplo, si en las semanas de campaña de sueño cambió **otra** cosa, como el ánimo. Y la campaña sirve como control: comparar «dormir más y ánimo» con y sin campaña. **[Diseño propio]**.
 
@@ -3923,9 +3931,9 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 
 # Capítulo 10. Privacidad, seguridad e integridad de los datos
 
-> **Para qué sirve este capítulo.** Explica **dónde viven tus datos, quién puede verlos y qué tan seguro es que no se pierdan**: el almacenamiento en el teléfono, el seguimiento privado y por dónde se filtra, el cifrado del respaldo, la verificación sin restaurar, los respaldos automáticos (carpeta y Google Drive), la restauración y los servicios externos con los que la app habla. Todo corresponde a la versión v81 (commit `fa527df`).
+> **Para qué sirve este capítulo.** Explica **dónde viven tus datos, quién puede verlos y qué tan seguro es que no se pierdan**: el almacenamiento en el teléfono, el seguimiento privado y por dónde se filtra, el cifrado del respaldo, la verificación sin restaurar, los respaldos automáticos (carpeta y Google Drive), la restauración y los servicios externos con los que la app habla. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» o «desde el esquema 13» y está en el Apéndice D.
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores. Las cifras criptográficas y las reglas vienen del código, con el nombre de la función. Los hallazgos son H-8-n (módulo 8, junto con el capítulo 9). Las **reglas de privacidad declaradas** vienen de la sección 7 del documento de contexto del proyecto (`VESTIGIUM_MEI_CONTEXTO.md`, v81); la sección 10.3.4 las compara con el código.
+> **Cómo leerlo.** Igual que los capítulos anteriores. Las cifras criptográficas y las reglas vienen del código, con el nombre de la función. Los hallazgos son H-8-n (módulo 8, junto con el capítulo 9); los H-9-n son del módulo 9. Las **reglas de privacidad declaradas** vienen de la sección 7 del documento de contexto del proyecto (`VESTIGIUM_MEI_CONTEXTO.md`, v81); la sección 10.3.4 las compara con el código.
 >
 > **Privacidad del propio capítulo.** El seguimiento privado (impulsos, recaídas, libido, medicamentos) se describe **solo en su mecánica**: no hay ejemplos ni datos personales, y tampoco se reproducen las palabras clave que el código usa para reconocer ciertos hábitos.
 
@@ -3962,15 +3970,15 @@ _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-
   - todo momento de tipo `impulso`, `recaida` o `libido` (`Momento.privado`, que usa `Privado.TIPOS`);
   - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y los **medicamentos**;
   - el **hábito ligado a las recaídas**. Con el interruptor encendido es el que elegiste en Privacidad o, si no elegiste, un hábito activo cuyo nombre contenga ciertas palabras clave. Con el interruptor apagado, solo el que elegiste. Elegir «ninguno» funciona; hasta v84 caía de nuevo en las palabras clave.
-- **Dónde se ve: solo en la pantalla Privado** (Más → Privado; antes «Impulsos y recaídas»). Ahí se anota cada día:
-  - los medicamentos, con un botón «lo de siempre» que copia los del último día con medicamentos;
-  - con el interruptor encendido, también el impulso, la recaída, los detonantes y el hábito ligado.
+- **Dónde se ve: solo en la pantalla Privado** (Más → Privado; antes «Impulsos y recaídas»). Siempre, con el interruptor encendido o apagado (`ui/pantallas/Recaidas.kt`):
+  - los medicamentos del día, con un botón «lo de siempre» que copia los del último día con medicamentos;
+  - «Registrar un impulso ahora» (un momento de impulso con hora);
+  - los impulsos por hora, la tendencia de los últimos 12 meses (impulsos y días con medicamentos), los días que tomaste cada medicamento y el registro de los últimos 30 momentos privados, que se pueden corregir.
 
-  La pantalla trae además:
-  - el resumen privado;
-  - una tendencia de los últimos 12 meses: días con recaída, impulsos y días con medicamentos;
-  - los días que tomaste cada medicamento;
-  - el registro de los últimos 30 momentos privados, que se pueden corregir.
+  Con el interruptor encendido, además:
+  - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y el hábito ligado;
+  - los botones para registrar una recaída o la libido;
+  - el resto del resumen privado (rachas, recaídas por hora y por día de la semana, lugares, detonantes…), los días con recaída en la tendencia y la sección de libido.
 
   Desde Día, el enlace «privado de este día» abre la pantalla en esa fecha. Las correlaciones de estas variables se hacen **solo en R**, como decidiste.
 - **Dónde no se ve: en ninguna otra parte de la app**, ni con el interruptor encendido:
@@ -3978,7 +3986,7 @@ _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-
   - reportes, «Tu año», logros (también los propios), metas, campañas y experimentos (el impulso dejó de ser una medida posible);
   - Constelación, Red, Tu gente, las sugerencias de @ y # al escribir, «Tus temas», y las variables `per_`, `pen_` y `tema_`;
   - todas las listas de análisis: `Estadistica.variables()` excluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, las familias `med_` y `det_` y `hab_` del hábito ligado.
-- **El interruptor `Config.seguimiento_privado`** (apagado por omisión) solo decide qué se **ofrece** anotar: con él apagado, la pantalla Privado tiene medicamentos e impulsos; con él encendido, también recaídas, libido y detonantes. Ya no decide qué se muestra fuera de Privado: fuera, nunca se muestra.
+- **El interruptor `Config.seguimiento_privado`** (apagado por omisión) solo decide qué se **ofrece** en la pantalla Privado: con él apagado, medicamentos y momentos de impulso; con él encendido, también la intensidad del impulso del día, recaídas, libido y detonantes (la lista de arriba). Ya no decide qué se muestra fuera de Privado: fuera, nunca se muestra.
 - **La exportación para R lleva todo, siempre.** El panel calcula las variables privadas aunque el interruptor esté apagado, y `vm_momentos.csv`, `vm_dias.csv`, `vm_panel_extendido.csv` y `vm_respaldo.json` las llevan. Desde la entrega 10d, `vm_variables.csv` lista las variables que la app cruza y marca las privadas (`privada` = 1, con `Privado.esVariable`). Por omisión, `vm_relaciones()` y `vm_factores()` de R **no** las cruzan, para dar lo mismo que la app; con `privadas = TRUE` sí, y esa es la vía para hacer en R las correlaciones del seguimiento privado. Las coordenadas de un momento privado ya no se usan para pedir el clima (`Entorno.lugarDe`).
 - **Registrar una recaída** (`Recaidas.registrar`) guarda el momento con hora y lugar, marca el día con recaída y **desmarca el hábito ligado**. Se puede deshacer tal cual (`deshacer`) y cambiar la hora (`moverHora`), que busca la ubicación de esa hora (la más cercana en ±30 min) y descarta la luz y el ruido medidos al registrar. Desde el esquema 14 (H-NAV-6): cambiar solo el día, con la misma hora, también la mueve, porque se compara el minuto completo; y borrarla desde el diálogo de Privado quita la marca del día si era la única recaída de ese día (`alBorrar`; el día queda sin respuesta, porque no se sabe qué había antes).
 - **El resumen privado** (`Recaidas.resumen`):
@@ -4003,7 +4011,7 @@ La más larga (`rachaMaxima`) y la actual (`rachaActual`) salen de ahí, y la pa
 
 ### 10.3.3 Dónde aparecía hasta v84 y qué cambió
 
-La Figura 10.1 resume qué tipo de dato llega a cada salida. Hasta v84, el seguimiento privado se ocultaba de casi todo, pero se filtraba por seis vías. Todas quedaron resueltas en el módulo 10a:
+La Figura 10.1 resume qué tipo de dato llega a cada salida. Hasta v84, el seguimiento privado se ocultaba de casi todo, pero se filtraba por seis vías. Todas se cerraron en el módulo 10a (la 5, en lo que toca a lo privado: H-8-5 sigue abierto en lo demás):
 
 1. **Los momentos de impulso no eran «privados» para el código** (H-8-1). Contaban en el reporte, en «Tu año», en los logros de momentos, en el mapa, en un widget, en la semana, el calendario, el año, la Constelación, la Red y las presencias. Ahora `Momento.privado` incluye el impulso.
 2. **«La relación del año» podía usar variables privadas y `medicamentos_n`** (H-8-2), y `n_impulso` entraba siempre, aun con el interruptor apagado, porque estaba en el grupo «Momentos» (H-9-1). Ahora `variables()` las excluye.
@@ -4014,11 +4022,11 @@ La Figura 10.1 resume qué tipo de dato llega a cada salida. Hasta v84, el segui
 
 **Sobre la pregunta del plan («por qué los logros nunca se ligan a sustancias, impulsos, recaídas ni libido»).** El documento de contexto lo afirma de los 12 logros secretos y, en general, de todo el seguimiento privado. El razonamiento es correcto: un logro por «días sin recaída» o por «tomar menos alcohol» convertiría el seguimiento privado en un marcador, con la presión de la ley de Campbell (capítulo 9, sección 9.7) justo sobre los datos más delicados; y uno «por registrar impulsos» premiaría registrarlos.
 
-Hasta v84 la afirmación era **casi** cierta, por las tres vías indirectas de arriba (puntos 1 y 3). Desde el módulo 10a se cumple. Las sustancias **no** son privadas según la regla declarada («Sustancias NO son privadas: dato normal»), así que un logro propio sobre ellas no rompe ninguna regla; solo conviene recordar el riesgo de la ley de Campbell.
+Hasta v84 la afirmación era **casi** cierta, salvo por tres vías indirectas, recogidas en los puntos 1 y 3 de arriba: los impulsos contaban en los logros de momentos, el hábito ligado tenía logros de constancia y campañas, y los logros propios aceptaban variables privadas. Desde el módulo 10a se cumple. Las sustancias **no** son privadas según la regla declarada («Sustancias NO son privadas: dato normal»), así que un logro propio sobre ellas no rompe ninguna regla; solo conviene recordar el riesgo de la ley de Campbell.
 
 ### 10.3.4 Las reglas declaradas frente al código
 
-La sección 7 del documento de contexto llama a estas reglas «no negociables». Comparación con el código de v81:
+La sección 7 del documento de contexto llama a estas reglas «no negociables». Comparación con el código de v90 (donde cambió desde v81, se dice):
 
 | Regla declarada | ¿Se cumple? | Dónde se comprobó |
 |---|---|---|
@@ -4027,7 +4035,7 @@ La sección 7 del documento de contexto llama a estas reglas «no negociables».
 | Tokens de Spotify y claves de API solo en el teléfono | **Sí** | Preferencias privadas (`Spotify.prefs`, `Portadas.prefs` «claves_busqueda»), fuera de `Config` y por tanto fuera de los respaldos |
 | `allowBackup=false` | **Sí** | Manifiesto |
 | Fotos nunca se copian | **Sí** | El catálogo guarda hora, coordenadas y aparato, no la imagen |
-| Cartas selladas: sin contenido en búsqueda, CSV ni «Tu año» | **En parte** | El CSV y «Tu año» cumplen; `vm_respaldo.json`, que se exporta junto al CSV, lleva el texto (H-8-5). La búsqueda no la comprobé **[sin verificar]** |
+| Cartas selladas: sin contenido en búsqueda, CSV ni «Tu año» | **En parte** | El CSV, «Tu año» y la búsqueda cumplen (la búsqueda en cartas solo mira las legibles, `Carta.legible`, en `ui/pantallas/Totales.kt`); `vm_respaldo.json`, que se exporta junto al CSV, lleva el texto (H-8-5) |
 | Seguimiento privado (impulsos, recaídas, libido, detonantes, medicamentos) nunca en reportes, «Tu año», logros, mapas ni widgets; sí en la exportación a R | **Sí desde el módulo 10a**, con una regla más estricta: fuera de la pantalla Privado no aparece en ninguna salida. Hasta v84 fallaba en los impulsos y los medicamentos (H-8-1, H-8-2) | `data/Privado.kt`, `Momento.privado`, `Estadistica.variables` |
 | Sustancias no son privadas | **Sí** | Se tratan como dato normal |
 | La imagen del hall no lleva texto del diario | **Sí** | `HallImagen.kt` («Sin textos del diario ni nada privado»); la cita del diario solo aparece en el detalle del trofeo dentro de la app |
@@ -4057,9 +4065,9 @@ La sección 7 del documento de contexto llama a estas reglas «no negociables».
 
 ### 10.4.3 Las iteraciones (H-8-9)
 
-Las iteraciones son el «peaje» por cada intento de adivinar. La guía de OWASP para guardar contraseñas recomienda, para PBKDF2 con HMAC-SHA256, **600 000 iteraciones** (y 220 000 para HMAC-SHA512) (OWASP, s. f.). La app usa **210 000 con SHA-256**: unas 2.9 veces menos peaje que lo recomendado hoy. **[Aproximación]**: es mucho mejor que nada, pero por debajo de la recomendación actual.
+Las iteraciones son el «peaje» por cada intento de adivinar. La guía de OWASP para guardar contraseñas recomienda, para PBKDF2 con HMAC-SHA256, **600 000 iteraciones** (y 220 000 para HMAC-SHA512; cifras comprobadas en la página el 28 de octubre de 2026) (OWASP, s. f.). La app usa **210 000 con SHA-256** (`PBKDF2WithHmacSHA256`, `ITERACIONES = 210_000` en `data/Respaldos.kt`): unas 2.9 veces menos peaje que lo que OWASP recomienda hoy para SHA-256. (Algunas fuentes secundarias atribuyen a una versión anterior de la guía 210 000 para SHA-512, la cifra de la app; no lo pude confirmar en la fuente **[sin verificar]**. Aunque fuera así, la app usa SHA-256.) **[Aproximación]**: es mucho mejor que nada, pero por debajo de la recomendación actual.
 
-**Ejemplo (cuentas exactas, sin velocidades).** La app exige al menos **8 caracteres**. Si fueran 8 letras minúsculas al azar, hay 26⁸ ≈ 2.1 × 10¹¹ contraseñas posibles; probarlas todas cuesta 2.1 × 10¹¹ × 210 000 ≈ 4.4 × 10¹⁶ cálculos de HMAC. Con 600 000 iteraciones serían ≈ 1.3 × 10¹⁷. Pero una contraseña humana (una palabra con un número) no es aleatoria y se adivina mucho antes. **La longitud y el azar de la contraseña importan mucho más que las iteraciones.** No doy tiempos, porque dependen del equipo del atacante y no los verifiqué.
+**Ejemplo (cuentas exactas, sin velocidades).** La app exige al menos **8 caracteres** (`ui/pantallas/Respaldo.kt`). Si fueran 8 letras minúsculas al azar, hay 26⁸ ≈ 2.1 × 10¹¹ contraseñas posibles; probarlas todas cuesta 2.1 × 10¹¹ × 210 000 ≈ 4.4 × 10¹⁶ cálculos de HMAC. Con 600 000 iteraciones serían ≈ 1.3 × 10¹⁷. Pero una contraseña humana (una palabra con un número) no es aleatoria y se adivina mucho antes. **La longitud y el azar de la contraseña importan mucho más que las iteraciones.** No doy tiempos, porque dependen del equipo del atacante y no los verifiqué.
 
 ### 10.4.4 La contraseña en el teléfono
 
@@ -4091,7 +4099,7 @@ Una vez al día (la primera vez que corre la tarea diaria después de las 6:00, 
 - **Sin contraseña, todo queda en claro fuera del teléfono** (H-8-5), incluido el diario completo. Desde el módulo 10a, si hay datos privados, el respaldo no sale sin contraseña. La **exportación para R** (resumida o extendida, que pides a mano y compartes) es la excepción: R necesita leer los CSV, así que va sin cifrar, y la pantalla advierte que lleva los datos privados.
 - **El costo de esa regla:** si nunca pones contraseña, los respaldos automáticos quedan en pausa mientras haya datos privados. Por eso el aviso es visible en Hoy y llega una notificación semanal.
 - **Las cartas selladas** van **sin texto** en `vm_cartas.csv` («no se pueden leer antes de su fecha»), pero `vm_respaldo.json`, que se exporta junto, lleva **el texto completo** (H-8-5). El sello se puede saltar abriendo el JSON.
-- **Hasta el esquema 12, un respaldo malo podía reemplazar a uno bueno** (H-8-14; desde el 13, ver la sección 10.5.2). Si un día los datos del teléfono se dañan o se pierden (por ejemplo, tras reinstalar), el respaldo de ese día **sobrescribe** el anterior sin comprobar si trae muchos menos datos. La copia semanal de esa semana también será mala si es la primera de la semana. Quedan las copias semanales y mensuales anteriores, pero «Restaurar desde Drive» **toma siempre la más reciente** (`Drive.ultimaCopia`, por fecha de modificación). Para traer una anterior hay que bajarla a mano y usar «Restaurar desde un archivo».
+- **Hasta el esquema 12, un respaldo malo podía reemplazar a uno bueno** (H-8-14). Si un día los datos del teléfono se dañaban o se perdían (por ejemplo, tras reinstalar), el respaldo de ese día **sobrescribía** el anterior sin comprobar si traía muchos menos datos, y la copia semanal también salía mala si era la primera de la semana. Desde el 13, Drive aparta un respaldo mucho más pobre (sección 10.5.2). Lo que sigue igual: «Restaurar desde Drive» **toma siempre la más reciente** (`Drive.ultimaCopia`, por fecha de modificación, sin contar `vestigium_revisar`). Para traer una semanal o mensual anterior hay que bajarla a mano y usar «Restaurar desde un archivo».
 
 ### 10.5.4 Los reportes, en carpetas públicas (H-8-4)
 
@@ -4194,9 +4202,9 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 4. **El seguimiento privado** (impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado) se ve, desde el módulo 10a, **solo en la pantalla Privado** y va completo a R. Hasta v84 se colaba por los impulsos, los medicamentos y el hábito ligado (H-8-1, H-8-2, H-8-3, H-9-39). Desde la entrega 10c, las rachas cuentan solo los días respondidos «no» (H-8-8, D.75).
 5. **Verificar** un respaldo es una gran idea. Hasta el esquema 12, el mensaje prometía más de lo que comprobaba y no revisaba la versión del esquema (H-8-12). Desde el 13 dice solo lo que comprueba, compara respaldo y teléfono, y un respaldo de una versión más nueva no se restaura.
 6. **Restaurar** combina con reglas distintas según la colección (H-8-13). Desde el esquema 13, los gastos e ingresos no se pisan y un experimento terminado no se reactiva. En Drive, un respaldo mucho más pobre ya no reemplaza al bueno: se guarda aparte y se avisa (H-8-14).
-7. Los reportes se guardan solos en carpetas públicas con nombres y frases del diario (H-8-4; capítulo 9).
-8. Las reglas de privacidad declaradas se cumplen en casi todo (texto de WhatsApp, notificaciones, claves, fotos, recaídas, libido); fallan en los impulsos y los medicamentos (H-8-1, H-8-2), en el texto de las cartas selladas dentro del JSON (H-8-5) y en la lista de servicios externos (H-8-17).
-9. Entre los capítulos 9 y 10 se identificaron **17 hallazgos** (H-8-1 a H-8-17). No se cambió código.
+7. Los reportes se guardan solos en carpetas públicas (H-8-4; capítulo 9). Hasta v84 llevaban nombres de personas y la frase del mejor momento; desde el módulo 10a, los que se guardan solos van en modo discreto y sin esa frase.
+8. Las reglas de privacidad declaradas se cumplen en casi todo (texto de WhatsApp, notificaciones, claves, fotos, seguimiento privado). Hasta v84 fallaban en los impulsos y los medicamentos (H-8-1, H-8-2, resueltos en 10a); siguen fallando en el texto de las cartas selladas dentro del JSON (H-8-5) y en la lista de servicios externos (H-8-17).
+9. El módulo 8 identificó, entre los capítulos 9 y 10, **17 hallazgos** (H-8-1 a H-8-17), sin cambiar código. Después, el módulo 10 resolvió H-8-1, H-8-2, H-8-3, H-8-7, H-8-8, H-8-10, H-8-12 y H-8-16, y en parte H-8-4, H-8-5, H-8-13 y H-8-14; siguen abiertos H-8-6, H-8-9, H-8-11, H-8-15 y H-8-17.
 
 
 # Capítulo 11. Discusión, limitaciones y trabajo futuro
@@ -4219,7 +4227,7 @@ Antes de las limitaciones, conviene decir qué partes del sistema son sólidas, 
 6. **Las costuras se marcan.** Cuando una regla de medición cambió, cada día guarda con qué regla se midió (`ventana_pantalla`, `ventana_pasos`, `version_noche`) y el Apéndice D dice qué cambió y en qué versión.
 7. **Lo privado tiene una sola regla** (`data/Privado.kt`) y una prueba que falla si algo se cuela (`PrivadoPrueba`); el respaldo se cifra con AES-256-GCM, se verifica sin restaurar y no se restaura si es de un esquema más nuevo (capítulo 10).
 
-**El saldo de la revisión.** Los módulos 1 a 9 anotaron **158 hallazgos** en `hallazgos.md`. Según su campo «Estado», **98 están resueltos**, **22 resueltos en parte** y **38 abiertos**. De los abiertos, 32 son de gravedad baja y 6 de gravedad media; ninguno de gravedad alta queda abierto del todo. Los dos de gravedad alta marcados «en parte» son H-3-1 (las lecturas del reloj, la agenda y el clima siguen por día de calendario, ahora declarado en cada variable) y H-5-3 (resuelto en la app en 10c y en R en 10d; su estado conserva la palabra «en parte» de la primera entrega). La sección 11.7.5 lista los de gravedad media que siguen abiertos.
+**El saldo de la revisión.** Los módulos 1 a 9 y la revisión de navegación anotaron **158 hallazgos** en `hallazgos.md` (149 de los módulos y 9 H-NAV). Según su campo «Estado», revisado en el módulo 14, **97 están resueltos**, **24 resueltos en parte** y **37 abiertos**. De los abiertos, 31 son de gravedad baja (uno, baja a media) y 6 de gravedad media; ninguno de gravedad alta queda abierto del todo. Los dos de gravedad alta marcados «en parte» son H-1-1 (una sola regla para «cero» y «no sé», pero una función que se deja de usar sigue contando 0) y H-3-1 (las lecturas del reloj, la agenda, el clima y las ciudades siguen por día de calendario, ahora declarado en cada variable). La sección 11.7.5 lista los de gravedad media que siguen abiertos. A ellos se suman los dos de este capítulo (H-11-1 y H-11-2, que se documentan, no se corrigen) y seis de gravedad baja o muy baja que encontró la lectura final contra el código (H-14-1 a H-14-6; por ejemplo, que «el día más raro» de un año pasado sale incompleto, o que R descuenta menos navegadores que la app).
 
 ## 11.2 Qué se puede concluir y qué no
 
@@ -4445,7 +4453,7 @@ Para una futura ronda de revisión con el mismo criterio del módulo 9. Abiertos
 
 : Tabla 11.8. Hallazgos de gravedad media que siguen abiertos
 
-Resueltos en parte, con una parte de gravedad media pendiente: H-2-5 (perfiles llenados antes de la 10c), H-4-4 (sin pesos se usan 70 kg; no se muestra la incertidumbre), H-4-9 (vacaciones y turnos no cuentan como días libres), H-5-9 (aire libre con otra variable en «Tus números»), H-7-6 (en un antes/después puro, tendencia y efecto se separan mal), H-7-12 (las comparaciones de «Antes y después» no se corrigen), H-8-4 (reportes en carpetas públicas), H-8-5 (la exportación para R va en claro, a propósito, y el JSON lleva el texto de las cartas selladas), H-8-13 (reglas de restauración distintas por colección) y H-8-14 (no se puede elegir qué copia de Drive restaurar).
+Resueltos en parte, con una parte de gravedad media pendiente: H-2-5 (perfiles llenados antes de la 10c), H-4-4 (sin pesos se usan 70 kg; no se muestra la incertidumbre), H-4-9 (vacaciones y turnos no cuentan como días libres), H-5-9 (aire libre con otra variable en «Tus números»), H-6-13 (un diario escrito sin @ cuenta como «no vi a nadie»), H-7-6 (en un antes/después puro, tendencia y efecto se separan mal), H-7-12 (las comparaciones de «Antes y después» no se corrigen), H-8-4 (reportes en carpetas públicas), H-8-5 (la exportación para R va en claro, a propósito, y el JSON lleva el texto de las cartas selladas), H-8-13 (reglas de restauración distintas por colección) y H-8-14 (no se puede elegir qué copia de Drive restaurar).
 
 ### 11.7.6 Comprobaciones pendientes
 
@@ -4473,7 +4481,7 @@ Lo que no puede resolver ninguna app es la naturaleza de sus datos: **una sola p
 
 # Apéndice A. Variables y tablas del sistema
 
-_Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt` y `data/Exportar.kt` (`tablas()`). Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
+_Se generó a partir del código de la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper: `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt`, `data/Exportar.kt` (`tablas()`) y `data/Diccionario.kt`. Lo que cambió en el módulo 10 se marca «desde 10a…10d» y está en el Apéndice D. Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
 
 **Cómo leer las columnas.** *Tipo* y *Unidad* se leen del nombre que ve el usuario en la app (la app no guarda un tipo formal por variable). *Fuente* es la de todo el grupo; la procedencia exacta de cada variable está en el panel (`Estadistica.panel`). *Un valor vacío significa «sin dato»; un 0 significa «se observó y fue cero»* salvo en las reglas de relleno con ceros del capítulo 2, sección 2.6. Las definiciones que cambiaron en la entrega 10c (cuándo vale 0 y cuándo queda vacía cada variable) están en la sección A.6.
 
@@ -4551,8 +4559,8 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `sueno_palabras` | Palabras del sueño escrito | numérica | — | Si hay datos de la fuente |
 | `sueno_lucidez` | Lucidez del sueño (0 no, 1 parcial, 2 total) | numérica | — | Si hay datos de la fuente |
 | `sueno_vividez` | Vividez del sueño (0 vago, 1 moderado, 2 muy vívido) | numérica | — | Si hay datos de la fuente |
-| `siesta` | Tomé siesta (0/1) | binaria (0/1) | — | Si hay tramos del cronómetro |
-| `siesta_min` | Minutos de siesta | numérica | — | Si hay tramos del cronómetro |
+| `siesta` | Tomé siesta (0/1) | binaria (0/1) | — | Si hay siestas en el cronómetro |
+| `siesta_min` | Minutos de siesta | numérica | — | Si hay siestas en el cronómetro |
 | `cama_min` | Pantalla en la última hora antes de dormir (min) | numérica | min | Si hay datos de pantalla nocturna |
 | `dormir_tras_tel_min` | Minutos entre soltar el teléfono y dormirte | numérica | — | Si hay datos de pantalla nocturna |
 | `tel_tras_despertar_min` | Minutos entre despertar y tomar el teléfono | numérica | — | Si hay datos de uso al despertar |
@@ -4796,14 +4804,14 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `tabaco_n` | Cigarros o sesiones de vape | numérica | — | Si hay consumos de tabaco |
 | `otra_sustancia` | Otra sustancia (0/1) | binaria (0/1) | — | Si hay consumos de «otra» |
 | `cruda` | Cruda o bajón (0 a 5, del día anterior) | numérica | — | Si algún consumo tiene cruda |
-| `cafeina_total_mg` | Cafeína del día (MacroFactor o anotada, mg) | numérica | — | Si hay cafeína registrada o en MacroFactor |
-| `cafeina_al_dormir_mg` | Cafeína en el cuerpo al dormirme (mg, estimada) | numérica | — | Si hay cafeína registrada o en MacroFactor |
+| `cafeina_total_mg` | Cafeína del día (MacroFactor o anotada, mg) | numérica | mg | Si hay cafeína registrada o en MacroFactor |
+| `cafeina_al_dormir_mg` | Cafeína en el cuerpo al dormirme (mg, estimada) | numérica | mg | Si hay cafeína registrada o en MacroFactor |
 
 : Tabla A.17. Sustancias
 
 ### Privado
 
-*Fuente:* Pantalla Privado. Desde el módulo 10a estas variables **no aparecen en ninguna lista ni análisis de la app**; el panel las calcula siempre (con o sin el interruptor) y van en la exportación para R. Tampoco aparece `hab_` del hábito ligado a las recaídas.
+*Fuente:* Pantalla Privado. Desde el módulo 10a estas variables **no aparecen en ninguna lista ni análisis de la app**; el panel las calcula siempre (con o sin el interruptor) y van en la exportación para R (en `vm_variables.csv`, con `privada` = 1). La regla es `Privado.esVariable`: las de `Privado.VARIABLES`, las familias `med_` y `det_`, y el `hab_` y el `campana_hab_` del hábito ligado a las recaídas.
 
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
@@ -4813,8 +4821,8 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `recaida_min` | Minutos de recaída | numérica | — | Si hay recaídas con duración |
 | `libido_max` | Libido máxima del día (0 a 5) | numérica | — | Si hay registros de libido |
 | `n_libido` | Registros de libido | numérica | — | Si hay registros de libido |
-| `n_impulso` | Momentos de impulso | numérica | — | Días con diario (hasta v84 estaba en el grupo «Momentos» y entraba siempre en los análisis) |
-| `medicamentos_n` | Medicamentos tomados | numérica | — | Desde el primer día con medicamentos (hasta v84, grupo «Salud») |
+| `n_impulso` | Momentos de impulso | numérica | — | Días con diario desde el primer impulso (10c; antes, todos los días con diario). Hasta v84 estaba en el grupo «Momentos» y entraba en los análisis |
+| `medicamentos_n` | Medicamentos tomados | numérica | — | Desde el primer día con medicamentos. En el código conserva el grupo «Salud» (así sale en `vm_variables.csv`), pero desde 10a es privada; hasta v84 entraba en los análisis |
 
 : Tabla A.18. Privado
 
@@ -4847,37 +4855,29 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
 | `laptop_min` | Minutos en la laptop | numérica | — | Si se importó Cold Turkey |
-| `laptop_web_min` | Minutos en sitios web (laptop) | numérica | — | Si se importó Cold Turkey |
+| `laptop_web_min` | Minutos en sitios web (laptop) | numérica | — | Si se importó Cold Turkey con sitios web |
 
 : Tabla A.21. Laptop
 
-_Total de variables fijas listadas en el código: 177 en 22 grupos._
+_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. En la v90 son **184, con 24 nombres de grupo**. Las tablas de arriba traen **183 en 21 grupos**, porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, y 10c, `presencias_revisado`. No todas existen en cada instalación: 128 se agregan siempre (4 de ellas privadas) y el resto según la columna «Existe»._
 
 ### Variables con nombre generado
 
-Estas se crean una por cada elemento que el usuario ha usado; el identificador lleva el id del elemento.
+Estas se crean una por cada elemento que el usuario ha usado (o, en las de catálogo fijo, una por opción); el identificador lleva el id del elemento. Todas salen de `Estadistica.variables()`; las dos últimas filas tienen nombre fijo y van aquí con su grupo.
 
 | Patrón | Descripción | Grupo |
 |---|---|---|
-| `n_$id` | Registros con \${Catalogo.nombreSentimiento(id).lowercase()} | Sentimientos |
-| `n_$id` | Registros pensando: \${(Catalogo.PENSAMIENTOS.firstOrNull { it.id == id }?.nombre ?: id).lowercase()} | Momentos |
-| `sueno_$id` | Sueño: \${Catalogo.opcionSueno(id)?.nombre?.lowercase() ?: id} (0/1) | Sueños |
-| `enfoque_${t}_min` | Enfoque: \${Catalogo.nombreTramo(t).lowercase()} (min) | Enfoque |
-| `horas_tipo_$t` | Horas en lugares de tipo \${Catalogo.nombreTipoLugar(t).lowercase()} | Lugares |
-| `laptop_${o.id}_min` | Minutos en la laptop: \${o.nombre.lowercase()} | Laptop |
-| `con_${o.id}` | Avisos con \${o.nombre.lowercase()} (0 a 1) | Social |
-| `ctx_${it.id}` | Contexto: \${it.nombre} (0/1) | Contexto |
-| `${p.clave}_${o.id}` | \${o.nombre} (0/1) | Lectura del día |
-| `n_${it.id}` | Momentos de \${it.nombre.lowercase()} | Momentos |
-| `hab_${it.id}` | Hábito: \${it.nombre} (0/1) | Hábitos |
-| `ctx_<id>` | Contexto: <nombre> (0/1); 10 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia | Contexto |
-| `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1) | Lectura del día |
-| `hab_<id>` | Hábito: <nombre> (0/1) | Hábitos |
-| `sueno_<categoria>` | Categoría del sueño marcada (0/1), solo en días con categorías | Sueños |
+| `n_<sentimiento>` | Registros con ‹sentimiento› (los usados, sin «otro») | Sentimientos |
+| `n_<pensamiento>` | Registros pensando: ‹pensamiento› (los usados) | Momentos |
+| `sueno_<categoria>` | Sueño: ‹categoría› (0/1); las categorías usadas, con valor solo en días con categorías | Sueños |
+| `enfoque_<tipo>_min` | Enfoque: ‹tipo› (min); los tipos usados de estudio, lectura, idiomas, tesis, trabajo y creativo | Enfoque |
+| `horas_tipo_<tipo>` | Horas en lugares de tipo ‹tipo›; los tipos de tus lugares, de 12 posibles | Lugares |
+| `laptop_<categoria>_min` | Minutos en la laptop: ‹categoría› (productivo, ocio, social, otro); con Cold Turkey | Laptop |
+| `con_<id>` | Avisos con ‹pareja, amigos, familia, compañeros o desconocidos› (0 a 1); si hay avisos con «con quién» | Social |
+| `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 10 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia | Contexto |
+| `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1); siempre, 13 opciones (4, 5 y 4; «No aplica» no cuenta) | Lectura del día |
+| `hab_<id>` | Hábito: ‹nombre› (0/1) | Hábitos |
 | `supl_<id>_dosis/_tomado/_nivel/_porciones` | Dosis, toma, reserva o cantidad estimada y porciones del suplemento | Suplementos |
-| `horas_tipo_<tipo>` | Horas en lugares de ese tipo (12 tipos de lugar posibles) | Lugares |
-| `enfoque_<tipo>_min` | Minutos de enfoque de ese tipo (estudio, lectura, idiomas, tesis, trabajo, creativo) | Enfoque |
-| `laptop_<categoria>_min` | Minutos en la laptop por categoría (productivo, ocio, social, otro) | Laptop |
 | `campana_<reto>`, `campana_hab_<id>` | En campaña ese día (0/1; la tenías aceptada). 0 desde tu primera campaña, vacío antes. Desde el esquema 13 | Campañas |
 | `campanas_n` | Campañas que tenías ese día. Desde el esquema 13 | Campañas |
 | `dia_especial` | Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1). Existe si hay alguna fecha guardada. Desde el esquema 13 | Calendario |
@@ -4916,15 +4916,15 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `act_` | Cuerpo | 6 | 3 | Minutos ‹elemento› |
 | `nut_` | Nutrición | 60 | 14 | nombre del nutriente de MacroFactor traducido (p. ej., «Vitamina C (mg)»); excluye los ya fijos, los objetivos y los pasos/peso de MacroFactor |
 | `ali_` | Nutrición | 12 | 5 | Comí ‹elemento› (0/1) |
-| `esc_` | Cuestionarios | todos | — | «‹cuestionario›: ‹puntaje›»; desde 10c el puntaje vale para su día y los 6 previos (WHO-5, PSS-4) o los 29 previos (UCLA-3), y un día cubierto por dos respuestas se queda con la primera; la personalidad, hasta el test siguiente. Hasta 10c: 14 o 30 días previos, ganando la última |
-| `pol_` | Política | ejes | — | «Brújula: ‹eje›»; la posición de cada test vale hasta el test siguiente (máx. 400 días) |
+| `esc_` | Cuestionarios | todos | — | «‹cuestionario›: ‹puntaje›»; desde 10c el puntaje vale para su día y los 6 previos (WHO-5, PSS-4) o los 29 previos (UCLA-3), y un día cubierto por dos respuestas se queda con la primera; la personalidad, hasta el test siguiente (máx. 365 días, `porDiaCuestionario`). Hasta 10c: 14 o 30 días previos, ganando la última |
+| `pol_` | Política | ejes | — | «Brújula: ‹eje› (−100 ‹polo›, +100 ‹polo›)»; la posición de cada test vale hasta el test siguiente (máx. 400 días) |
 | `vida_` | Etapas de vida | 14 + ciudades | — | «Etapa: ‹campo de Conocerte›»; se reconstruye con el historial de cambios. Desde 10c, vacía antes del primer guardado de «Conocerte» para los campos llenados ese día (`Perfiles.primerGuardado`) |
 
 : Tabla A.23. Familias de variables dinámicas
 
 ## A.3 Tablas exportadas
 
-La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv`, `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por CSV, con las ubicaciones y el diccionario) y un `LEEME.txt`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
@@ -5008,7 +5008,7 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_momentos.csv`, `vm_gastos.csv`, `vm_ingresos.csv` | `ts_creado`, `ts_editado` | Cuándo se anotó y cuándo se corrigió por última vez. Vacíos en los registros de antes del esquema 14 |
 | `vm_sustancias.csv`, `vm_tramos.csv`, `vm_suplementos.csv` | `ts_creado` | Cuándo se anotó. En `vm_suplementos.csv` va también `ts` (cuándo se tomó); las porciones estimadas de probióticos quedan vacías |
 | `vm_gastos.csv` | `subcategoria` | Subcategoría dentro de la categoría (por ejemplo, Comida → Café). Vacía = sin subcategoría |
-| `vm_dias.csv`, `vm_panel.csv` | `version_noche` | Con qué orden de preguntas se llenó la hoja de la noche: 1 = el de hasta el esquema 14; 2 = el orden nuevo (N-18, desde la entrega N4: el ánimo del momento primero; capítulo 3, sección 3.7.1). Vacío = no pasó por la hoja o es de antes |
+| `vm_dias.csv`, `vm_panel.csv` | `version_noche` | Con qué orden de preguntas se llenó la hoja de la noche (`VERSION_NOCHE`): 1 = el orden con que se creó el campo en la entrega NE; 2 = el orden nuevo (N-18, desde la entrega N4: el ánimo del momento primero; capítulo 3, sección 3.7.1). Vacío = no pasó por la hoja o es de antes del esquema 14 |
 | `vm_salud.csv` | `sueno_descartadas` | Las sesiones del reloj de esa noche que marcaste «no cuenta» (fuente y horas, por ejemplo, «Samsung Health 15:10–16:05»); no entran ni en `sueno_min` ni en `siesta_reloj_min` |
 
 : Tabla A.26. Columnas nuevas del esquema 14 (revisión de navegación, entrega NE)
@@ -5116,7 +5116,7 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de alguna
 
 # Apéndice B. Fórmulas
 
-_Todas las fórmulas del núcleo estadístico (capítulo 6), tal como están en el código de v81 (commit `fa527df`), con los cambios de la entrega 10c (commit `b943ec7`; apéndice D, D.63 a D.72) marcados «desde 10c». Cada una lleva la función de origen. Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
+_Todas las fórmulas del núcleo estadístico (capítulo 6), con la función de origen. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10c» o «desde 10d» y está en el Apéndice D (entrega 10c, D.62 a D.78: la app; entrega 10d, D.79 a D.87: R y la exportación). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
 
 ## B.1 Correlación de Pearson — `Estadistica.pearson`, función interna `r` de `Estadistica.relaciones`
 
@@ -5146,7 +5146,7 @@ paso = 1 (por día) o 7 (por semana). Si hay menos de 10 pares, r₁ = 0. Antes 
 
 **Desde 10c**, la misma autocorrelación sobre una serie con fechas es pública: `Estadistica.ar1(serie, paso)`, que devuelve `null` (y quien la usa toma 0) con menos de 10 pares. La usan «Cruzar dos variables», «Todo lo que se mueve con algo» y la diferencia de medias (B.11a).
 
-## B.5 Número efectivo de días — `Estadistica.relaciones`
+## B.5 Número efectivo de días — `Estadistica.relaciones`; desde 10c, también `Estadistica.correlacionEf`; en R, `vm_relaciones` y `vm_factores`
 
 $$n_{Ef}=\operatorname{acotar}\Big(n\,\frac{1-r_a r_b}{1+r_a r_b},\ \min(4,n),\ n\Big)\qquad\qquad (B.5)$$
 
@@ -5196,7 +5196,7 @@ $$\bar x_{s}=\frac{1}{|D_s|}\sum_{f\in D_s}x_f,\qquad D_s=\{\text{días de la se
 
 Para una variable 0/1 es la proporción de días con 1.
 
-## B.11 Diferencia de medias — `Estadistica.diferenciaCompleta` (desde 10c)
+## B.11 Diferencia de medias — `Estadistica.diferenciaCompleta` (desde 10c); `.vm_dif_dias` en R (desde 10d)
 
 Con n_a, n_b ≥ 3 y autocorrelaciones ρ_a, ρ_b acotadas a [0, 0.9] (0 si no se dan):
 
@@ -5238,12 +5238,6 @@ $$z_i=\frac{x_i-M}{1.4826\cdot \mathrm{MAD}},\qquad M=x_{(\lfloor n/2\rfloor)},\
 
 (posición ⌊n/2⌋ en base 0 de los datos ordenados: para n par, el central superior). Requiere n ≥ 20 y MAD > 0. Atípico si |z| ≥ 3 (2.8 en «Tu año»). En R: `(valor − median(valor)) / mad(valor)`, con la mediana promediada para n par.
 
-## B.15 Correlación mínima detectable (potencia)
-
-$$|r_{\min}|=\tanh\!\Big(\frac{z_{1-\alpha/2}+z_{1-\beta}}{\sqrt{n_{Ef}-3}}\Big)\qquad\qquad (B.15)$$
-
-Con α = 0.05 y potencia 1 − β = 0.80: z = 1.96 + 0.84. No está en el código; sirve para interpretar los umbrales de 14, 30 y 90 días (sección 6.21).
-
 ## B.14a Distribución t de Student — `Estadistica.pT`, `Estadistica.cuantilT` (desde 10c)
 
 p de dos colas de un valor t con gl grados de libertad (gl real > 0, acotado a 10⁶):
@@ -5251,6 +5245,12 @@ p de dos colas de un valor t con gl grados de libertad (gl real > 0, acotado a 1
 $$p_T(t,gl)=I_{\,gl/(gl+t^2)}\Big(\frac{gl}{2},\ \frac12\Big)\qquad\qquad (B.14a)$$
 
 I_x(a, b) es la beta incompleta regularizada, calculada con la fracción continua de Lentz (hasta 400 términos, tolerancia 10⁻¹²; si x > (a + 1)/(a + b + 2) se usa I_x(a, b) = 1 − I₁₋ₓ(b, a)) y ln Γ con la aproximación de Lanczos (g = 7, 9 coeficientes). El cuantil t_p (p > 0.5) es el t ≥ 0 con p_T(t, gl) = 2(1 − p), buscado por bisección (100 pasos); para p < 0.5, t_p = −t₁₋ₚ. Comprobado: t₀.₉₇₅ = 12.706 (gl 1), 4.303 (2), 2.571 (5), 2.042 (30).
+
+## B.15 Correlación mínima detectable (potencia)
+
+$$|r_{\min}|=\tanh\!\Big(\frac{z_{1-\alpha/2}+z_{1-\beta}}{\sqrt{n_{Ef}-3}}\Big)\qquad\qquad (B.15)$$
+
+Con α = 0.05 y potencia 1 − β = 0.80: z = 1.96 + 0.84. No está en el código; sirve para interpretar los umbrales de 14, 30 y 90 días (sección 6.21).
 
 ## B.16 Modelo múltiple — `Analisis.modelo`
 
@@ -5262,7 +5262,7 @@ $$IC_{95}(\beta_j)=\hat\beta_j\pm t_{0.975;\,n-k-1}\,EE(\hat\beta_j),\qquad R^2=
 
 (desde 10c; antes, 1.96 y solo R²). La pantalla muestra R²_aj, con 0 como mínimo.
 
-Sin intercepto. Inversa por Gauss-Jordan con pivoteo parcial; si |pivote| < 10⁻¹⁰, no hay modelo. Con `conAyer`, se agrega como predictor el objetivo del día de calendario anterior.
+Sin intercepto: con todo centrado valdría 0. Los grados n − k − 1 son los que da `lm` con intercepto en `vm_modelo` (R, sobre los mismos datos estandarizados), así que los β y sus intervalos coinciden. Inversa por Gauss-Jordan con pivoteo parcial; si |pivote| < 10⁻¹⁰, no hay modelo. Con `conAyer`, se agrega como predictor el objetivo del día de calendario anterior.
 
 ## B.17 Media móvil — `Analisis.movil`; `vm_movil` en R
 
@@ -5272,7 +5272,7 @@ w = 7 o 30 días.
 
 ## B.18 Palabras — `Analisis.palabras`
 
-Para cada palabra w (≥ 3 letras, fuera de la lista de vacías) presente en al menos 5 días con nota y valencia:
+Para cada palabra w (≥ 3 letras, fuera de `Analisis.VACIAS`: 167 escritas, 146 distintas sin acentos, que es como se comparan; la misma lista en `vm_palabras` desde 10d) presente en al menos 5 días con nota y valencia:
 
 $$\text{dif}_w=\overline{\text{valencia}}_{\{\text{días con } w\}}-\overline{\text{valencia}}_{\{\text{días con nota y valencia}\}}\qquad\qquad (B.18)$$
 
@@ -5299,19 +5299,19 @@ $$\text{esc}(d)=v_{k^*},\qquad k^*=\min\{\,k:\ 0\le f_k-d\le w-1\,\}\qquad\qquad
 
 # Apéndice C. Funciones de R (`vestigium.R`)
 
-_El script `app/src/main/assets/vestigium.R` viaja con cada exportación. Se pone en la misma carpeta que los `vm_*.csv` y se ejecuta con `source("vestigium.R")`. Requiere tidyverse; algunas funciones piden además `nlme`, `igraph`, `stringi`, `DBI` y `RSQLite`. Versión descrita: la de la entrega 10d (commit `035982c`), que alineó R con la app (P-30 a P-32): R analiza el mismo panel que la app, esconde las mismas parejas obvias y repite las correcciones que la entrega 10c (commit `b943ec7`) hizo en la app (t de Student, autocorrelación, tendencia en «Todo lo que se mueve»). **Cómo se comprobó:** en esta sesión se corrió `vestigium.R` con R 4.3.3 sobre CSV sintéticos (todas las funciones de C.2 que cambiaron, más `vm_red`), y la prueba `ExportacionPrueba.kt` fija que `vm_factores` y `vm_relaciones` dan los mismos números que `Analisis.factores` y `Estadistica.relaciones` con los mismos datos inventados (diferencia < 10⁻⁹). R no corre en la compilación automática. Después se corrió con una exportación real de la v89: cargó y analizó sin errores, y así se vio que al panel extendido le faltaban 57 variables de la app (D.87, commit `d4e8e62`). Después, el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). Para cada función: qué hace, cómo y en qué se diferencia de la app. Las fórmulas están en el Apéndice B._
+_El script `app/src/main/assets/vestigium.R` viaja con cada exportación. Se pone en la misma carpeta que los `vm_*.csv` y se ejecuta con `source("vestigium.R")`. Requiere tidyverse; algunas funciones piden además `nlme`, `igraph`, `stringi`, `DBI` y `RSQLite`. Versión descrita: la de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la que describe todo el paper; el script cambió por última vez en el commit `3794fec`, dentro de la entrega 10d (commit principal `035982c`), que alineó R con la app (P-30 a P-32): R analiza el mismo panel que la app, esconde las mismas parejas obvias y repite las correcciones que la entrega 10c (commit `b943ec7`) hizo en la app (t de Student, autocorrelación, tendencia en «Todo lo que se mueve»). Lo que cambió en el módulo 10 se marca «desde 10a…10d» y está en el Apéndice D. **Cómo se comprobó:** en la sesión de la entrega 10d se corrió `vestigium.R` con R 4.3.3 sobre CSV sintéticos (todas las funciones de C.2 que cambiaron, más `vm_red`), y la prueba `ExportacionPrueba.kt` fija que `vm_factores` y `vm_relaciones` dan los mismos números que `Analisis.factores` y `Estadistica.relaciones` con los mismos datos inventados (diferencia < 10⁻⁹). R no corre en la compilación automática. Después se corrió con una exportación real de la v89: cargó y analizó sin errores, y así se vio que al panel extendido le faltaban 57 variables de la app (D.87, commit `d4e8e62`). Después, el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). Para cada función: qué hace, cómo y en qué se diferencia de la app. Las fórmulas están en el Apéndice B._
 
 ## C.1 Carga
 
 | Función u objeto | Qué hace |
 |---|---|
 | `vm_carpeta`, `vm_zona` | Carpeta de los CSV (la del script) y zona horaria (la del sistema; si es UTC, `America/Mexico_City`). Se pueden definir antes de `source()`. |
-| `vm_dic` | Lee `vm_diccionario.csv` (archivo, columna, tipo, descripción). |
+| `vm_dic` | Lee `vm_diccionario.csv` (archivo, columna, tipo, descripción y tabla). |
 | `vm_leer(archivo)` | Lee un CSV con el tipo de cada columna según el diccionario: fechas, horas, números, lógicos (1 → `TRUE`), fecha-hora ISO 8601 convertida a `vm_zona`, enteros. Avisa si hubo celdas ilegibles. |
 | `vm_fecha_hora(x)` | Convierte texto ISO con desfase a fecha-hora en `vm_zona`; agrega «:00» cuando Java omitió los segundos. |
 | `vm_lista(x)`, `vm_pares(datos, columna)` | Separan columnas «a\|b\|c» y «clave:n\|clave:n». |
-| `vm` y objetos sueltos | `vm` es la lista de todas las tablas; cada una queda también como objeto (`panel`, `dias`, `momentos`…). Desde el esquema 13 incluye `personas` (`vm_personas.csv`) y `fechas_propias` (`vm_fechas_propias.csv`); desde 10d, `panel_extendido` (`vm_panel_extendido.csv`), `variables` (`vm_variables.csv`) y `familias` (`vm_familias.csv`). |
-| `panel` (enriquecido) | Desde 10d, **`vm_panel_extendido.csv`** (si la exportación lo trae; si no, `vm_panel.csv`), pasado por `.vm_enriquecer()`: quita filas sin fecha, ordena, **completa todos los días del calendario** (`complete()`) y agrega `dia_semana`, `fin_de_semana`, `semana`, `mes`, `valencia_ayer` y `valencia_manana` (si hay `valencia`) y `sueno_h = sueno_min/60` (si hay `sueno_min`). Todas las funciones de análisis lo usan por omisión. `vm$panel` (de `vm_panel.csv`, enriquecido igual) queda por compatibilidad y lo siguen usando `vm_ritmo` (columna `dia_libre`), `vm_lugares` y `vm_presion`. |
+| `vm` y objetos sueltos | `vm` es la lista de las tablas de `vm_archivos`; cada una queda también como objeto (`panel`, `dias`, `momentos`…). Son 45 de las 51 tablas de `Exportar.tablas()`, más `vm_ubicaciones.csv`; no carga `vm_citas`, `vm_mundo`, `vm_cartas`, `vm_perfil`, `vm_politica`, `vm_youtube` ni `vm_fotos_catalogo` (se leen con `vm_leer("vm_citas.csv")`, con sus tipos). Desde el esquema 13 incluye `personas` (`vm_personas.csv`) y `fechas_propias` (`vm_fechas_propias.csv`); desde 10d, `panel_extendido` (`vm_panel_extendido.csv`), `variables` (`vm_variables.csv`) y `familias` (`vm_familias.csv`). |
+| `panel` (enriquecido) | Desde 10d, **`vm_panel_extendido.csv`** (si la exportación lo trae; si no, `vm_panel.csv`), pasado por `.vm_enriquecer()`: quita filas sin fecha, ordena, **completa todos los días del calendario** (`complete()`) y agrega `dia_semana` (1 = lunes), `fin_de_semana`, `semana`, `mes`, `valencia_ayer` y `valencia_manana` (si hay `valencia`) y `sueno_h = sueno_min/60` (si hay `sueno_min`). Todas las funciones de análisis lo usan por omisión. `vm$panel` (de `vm_panel.csv`, enriquecido igual) queda por compatibilidad y lo siguen usando `vm_ritmo` y `vm_por_hora` (columna `dia_libre`), `vm_lugares` y `vm_presion`. |
 | `.vm_variables(privadas = FALSE)` | Las variables de `vm_variables.csv`: las que la app cruza (`Estadistica.variables(dinamicas = true)`, con las familias dinámicas recortadas como en la app). Con `privadas = TRUE` suma el seguimiento privado, marcado en la columna `privada`, que la app nunca cruza. Devuelve NULL si la exportación no trae ese archivo. |
 | `.vm_no_cruzar` | Columnas que describen el calendario o cuánto se registró, no una conducta, y que `vm_relaciones` y `vm_factores` no cruzan nunca (P-32): `fecha`, `semana`, `mes`, `dia_semana`, `fin_de_semana`, `dia_libre`, `festivo`, `valencia_ayer`, `valencia_manana`, `con_diario` y `n_muestreos`. **[Diseño propio]**. |
 | `vm_describir(archivo)`, `vm_resumen()` | Diccionario de una tabla; resumen de filas, columnas y rangos de fechas. |
@@ -5377,7 +5377,9 @@ Con eso, contra el objetivo (con `sin_tendencia`, sus restos) del día `f + desf
 **Coincide con la app:** `ExportacionPrueba.factoresComoR` fija, con 80 días inventados y en las cuatro combinaciones (con y sin tendencia, con y sin desfase), que efecto, intervalo, n, p y q son los de `Analisis.factores` (< 10⁻⁹). Hasta 10d usaba los valores tal cual, Spearman con n bruto y `t.test` sin corrección por autocorrelación.
 
 ### `vm_modelo(objetivo, predictores = c("sueno_h", "pasos", "pantalla_min"), ayer = TRUE, datos)`
-Agrega `.ayer` = el objetivo del día anterior (`lag` sobre el panel completado: día de calendario anterior), deja los días completos, estandariza todo y ajusta `lm` (con intercepto, que vale 0 al estar centrado). Exige n ≥ número de predictores + 10. Imprime `summary`. **Mismos β e intervalos que `Analisis.modelo`** desde 10c: los dos usan la distribución t con n − k − 1 grados de libertad (antes la app usaba 1.96). `summary` muestra el R² y el R² ajustado; la app muestra el ajustado.
+Agrega `.ayer` = el objetivo del día anterior (`lag` sobre el panel completado: día de calendario anterior), deja los días completos, estandariza todo (objetivo y predictores, con la media y la DE de esos mismos días) y ajusta `lm`. Exige n ≥ número de predictores + 10. Imprime `summary`.
+
+**El intercepto.** `lm` estima un intercepto (la constante de la recta) y `Analisis.modelo` no («sin intercepto porque todo está centrado»). No se contradicen: como cada columna tiene media 0 en los días que entran, el mejor intercepto es exactamente 0 (en `summary` sale un número del orden de 10⁻¹⁶, con p ≈ 1: no se interpreta), y con él o sin él salen los mismos β, los mismos residuos y el mismo R². La app descuenta igual un grado de libertad por esa media (`gl = n − k − 1`, con k predictores contando `ayer`), que es el que usa `lm`. Por eso, con los mismos datos, **los β, sus errores estándar, sus intervalos (`confint(m)`) y el R² ajustado son los de `Analisis.modelo`** desde 10c: los dos usan la t con n − k − 1 grados (antes la app usaba 1.96). `summary` muestra el R² y el R² ajustado; la app, el ajustado. Si alguien ajustara en R sin intercepto (`y ~ 0 + …`), `lm` usaría n − k grados y los intervalos saldrían un poco más estrechos que en la app.
 
 ### `vm_modelo_ar1(objetivo, predictores, datos)`
 Mismo modelo sin el día anterior, ajustado con `nlme::gls(…, correlation = corAR1(form = ~ t), method = "ML")`, con t = días desde el primero. Los errores siguen un proceso AR(1): el parecido entre dos días separados por h días es φ^h. Comprobado en el código de nlme (v3.1-171): si la covariable entera tiene saltos, `corAR1` se convierte internamente en `corARMA(p = 1, q = 0)` y usa la distancia real en días, así que **los días faltantes se respetan**. No existe en la app. Es la opción más defendible para inferencia sobre efectos de un día (Hamaker y Wichers, 2017), aunque no quita tendencias ni ciclos semanales.
@@ -5386,10 +5388,10 @@ Mismo modelo sin el día anterior, ajustado con `nlme::gls(…, correlation = co
 n, media, DE, MSSD e inercia (con `lead` sobre el panel completado: solo pares de días consecutivos), en total y por mes. **Diferencias con `Analisis.dinamica`:** sirve para cualquier variable; no exige mínimos (la app: 7 días, 3 pares para MSSD, 10 para inercia); por mes calcula también la inercia, y el último día de un mes se empareja con el primero del siguiente (la app solo empareja dentro del mes); no calcula días difíciles, rachas ni la DE intradía.
 
 ### `vm_ritmo(dias = 56)`
-Desde `vm_salud`: hora de dormir (madrugada + 24), despertar (+ 24), duración, punto medio; filtra 2 < duración < 16 h; desde 10c usa solo las noches de los últimos `dias` días hasta la última fecha de `vm_salud` (`dias = Inf` para toda la historia); agrupa en noches antes de día libre y laborales: una noche es libre si el día en que despiertas tiene `dia_libre` en el panel (sábado, domingo o, si vives en México, festivo; `Fechas.esDiaLibre`), y si el panel no trae esa columna (exportaciones viejas), si cae en sábado o domingo; imprime el jet lag social (diferencia absoluta de los puntos medios) y la DE de la hora de dormir. **Como `Analisis.ritmo` con reloj** (misma ventana y misma regla de día libre desde 10c); R no aproxima con el teléfono ni exige mínimos.
+Desde `vm_salud`: hora de dormir (madrugada + 24), despertar (+ 24), duración, punto medio; filtra 2 < duración < 16 h (la app incluye los extremos); desde 10c usa solo las noches de los últimos `dias` días hasta la última fecha de `vm_salud` (la app cuenta hasta hoy; `dias = Inf` para toda la historia); agrupa en noches antes de día libre y laborales: una noche es libre si el día en que despiertas tiene `dia_libre` en el panel (sábado, domingo o, si vives en México, festivo; `Fechas.esDiaLibre`), y si el panel no trae esa columna (exportaciones viejas), si cae en sábado o domingo; imprime el jet lag social (diferencia absoluta de los puntos medios) y la DE de la hora de dormir. **Como `Analisis.ritmo` con reloj** (misma ventana de 56 días y misma regla de día libre desde 10c); R no aproxima con el teléfono ni exige mínimos.
 
 ### `vm_palabras(min_dias = 5)`
-Tokens de 3+ letras de las notas (en minúsculas), sin las **mismas 167 palabras vacías que la app** (`Analisis.VACIAS`), comparadas **sin acentos** (se quitan con `stringi`, igual que `Analisis.normal`); un conteo por día; para cada palabra con ≥ `min_dias` días con valencia: media y diferencia con la valencia media de los **días con nota**. **Igual que `Analisis.palabras`** desde 10d (P-32; la parte de R de H-5-10); `ExportacionPrueba.palabrasVaciasComoR` comprueba que las dos listas son la misma. Diferencias que quedan: R devuelve todas las palabras ordenadas y la app solo los 15 extremos de cada lado; ninguna de las dos da intervalo ni encoge las diferencias con pocos días (la otra mitad de H-5-10 sigue abierta).
+Tokens de 3+ letras de las notas (en minúsculas), sin las **mismas palabras vacías que la app** (`Analisis.VACIAS`: la misma lista, 169 escritas, 167 distintas, 146 distintas ya sin acentos), comparadas **sin acentos** (se quitan con `stringi`, igual que `Analisis.normal`); un conteo por día; para cada palabra con ≥ `min_dias` días con valencia: media y diferencia con la valencia media de los **días con nota**. **Igual que `Analisis.palabras`** desde 10d (P-32; la parte de R de H-5-10); `ExportacionPrueba.palabrasVaciasComoR` comprueba que las dos listas son la misma. Diferencias que quedan: R devuelve todas las palabras ordenadas y la app solo los 15 extremos de cada lado; ninguna de las dos da intervalo ni encoge las diferencias con pocos días (la otra mitad de H-5-10 sigue abierta).
 
 ### `vm_atipicos(vars = c("valencia", "sueno_horas", "pasos", "pantalla_min", "desbloqueos", "gasto_total", "notificaciones", "fotos", "distancia_km", "min_hablado", "wa_mios", "musica_min", "fc_reposo", "hrv", "palabras"), z = 3, datos)`
 z robusto con `median` y `mad` (constante 1.4826) por variable; devuelve los días con |z| ≥ 3, del más reciente al más viejo. Desde 10d revisa **las mismas 15 variables que `Analisis.atipicos`**, con los nombres de la app (antes eran 8, con `sueno_h` y `km`). **Diferencias que quedan:** sin mínimo de 20 días ni límite de un año; mediana promediada para n par (la app toma la superior); R da una fila por variable y día, la app un día con sus razones.
@@ -5398,7 +5400,7 @@ z robusto con `median` y `mad` (constante 1.4826) por variable; devuelve los dí
 
 | Función | Qué hace | Relación con la app |
 |---|---|---|
-| `vm_totales(desde, hasta, datos)` | Para ~40 columnas sumables (desde el esquema 13, también `avisos_planeados`, `avisos_mostrados` y `avisos_respondidos`): total, días con dato, primera y última fecha con valor > 0, promedio por día con dato. | Como la pantalla Totales. Desde 10d corre sobre el panel extendido, que trae las mismas columnas de `vm_panel.csv` (ya con los valores de la app). |
+| `vm_totales(desde, hasta, datos)` | Para 43 columnas sumables (las que existan) (desde el esquema 13, también `avisos_planeados`, `avisos_mostrados` y `avisos_respondidos`): total, días con dato, primera y última fecha con valor > 0, promedio por día con dato. | Como la pantalla Totales. Desde 10d corre sobre el panel extendido, que trae las mismas columnas de `vm_panel.csv` (ya con los valores de la app). |
 | `vm_buscar(texto, desde, hasta)` | Busca sin acentos en alimentos, personas («@»), temas («#»), artistas, canciones (≥ 30 s), lugares, ejercicios (sin calentamiento), canales, búsquedas, gastos, libros y chats. | Como el buscador de Totales (sin los sinónimos español-inglés de `Totales.SINONIMOS`). |
 | `vm_fuerza(n = 6)` | 1RM estimado máximo por sesión de los n ejercicios más repetidos. | Capítulo 5. |
 | `vm_mapa_animo()` | Registros de ánimo (`es_animo`) con coordenadas y su propia valencia, coloreados por ella. Desde el módulo 10a excluye impulso, recaída y libido y ya no rellena con la valencia del diario. | H-2-15 (parte de R) y H-9-12, resueltos. |
@@ -5409,7 +5411,7 @@ z robusto con `median` y `mad` (constante 1.4826) por variable; devuelve los dí
 | `vm_presion()` | Spearman entre `cambio_presion_3h` y valencia. | Una sola prueba, sin tendencia ni nEf. |
 | `vm_retraso(tabla, umbral_min = 60)` | Desde el esquema 14: minutos entre cuándo pasó y cuándo se anotó cada registro (`retraso_min`), si se anotó en otro día lógico (`otro_dia`) y si fue `tarde` (más del umbral u otro día). Sirve para momentos, sustancias, tramos, suplementos, gastos e ingresos. | Descriptiva. El umbral de 60 min es **[Diseño propio]**; los registros de antes del esquema 14 quedan con NA. |
 | `vm_red(declaradas, min_juntos = 2)` | Red personal con igraph: densidad, grupos, aisladas, restricción de Burt, grado, composición. Desde 10c, la composición y el color usan la columna `grupo` de `vm_red_nodos.csv` (familia, pareja, amistad, trabajo…), como la Red de la app; si la exportación no la trae, la relación tal cual. Desde 10d (P-32; H-6-7 a y b, H-9-23): un par declarado «no se conocen» **nunca** es línea, aunque aparezcan juntas `min_juntos` días; `componentes` cuenta solo los grupos con al menos una línea (`sum(csize > 1)`) y las personas sin ninguna van aparte en `aisladas`; sin ningún par (o sin `vm_red_vinculos.csv`) ya no falla: da una red sin líneas. | Capítulo 7. Igual que `RedPersonas.componentes`. Lo que sigue distinto (H-6-7 c y d, documentado en el diccionario): la exportación trae hasta 400 personas y el `grado` del CSV cuenta pares con 1 día o más juntas; la Red de la app dibuja 45 y pide 2 días. |
-| `vm_laptop()` | Horas por categoría de Cold Turkey por semana. | Descriptiva. |
+| `vm_laptop()` | Horas por categoría de Cold Turkey por semana (apps y sitios, sin las apps de navegador). | Descriptiva. Quita 5 navegadores (chrome, msedge, firefox, opera, brave); la app (`ColdTurkey.NAVEGADORES`) quita 8, también vivaldi, safari y arc, así que en R los minutos de esos tres cuentan dos veces (como app y como sitios). |
 | `vm_guardar_graficas(carpeta)` | Guarda en PNG tendencia y semana de la valencia, ritmo y mapa de ánimo. | — |
 
 : Tabla C.2. Funciones descriptivas y temáticas
@@ -5637,14 +5639,14 @@ Decisiones del autor (27 oct 2026): todo aprobado, con D-4 = sí (festivos e I-2
 |---|---|---|---|
 | D.62 | Cada cuestionario cubre solo los días que pregunta: WHO-5 y PSS-4, los 7 anteriores a responder (incluido el día); UCLA-3, los 30. Si dos respuestas cubren un día, se queda la primera que lo cubre (la más cercana después) | `ciencia/Dinamicas.kt` (`porDiaCuestionario`, `ventanaCuestionario`) | H-2-1 (P-14). Antes, un PSS-4 semanal dejaba todo el mes con el último puntaje |
 | D.63 | Una sola regla de «cero» y «sin dato» (`ceroDesde`): 0 desde el primer registro de la fuente y en los días con diario; antes, vacío. Aplica a `gasto_total`, `gasto_imprevisto`, `n_impulso`, `escalada` y `gimnasio`. Además: `hab_<id>` vacío antes de que existiera el hábito (salvo marcado); `sueno_recordado` vacío si ese día no dijiste nada del sueño; las variables sociales (`personas`, `vi_*`, `cercanos`, `cercania_media`, `personas_*`, `penso_en_*`) y la base de `per_` y `pen_`, vacías los días sin diario escrito ni momento que nombre a alguien (en `tema_`, que tenga un #tema); `ejercicio_min` en 0 los días con datos del reloj y sin sesión; `distancia_km` en 0 los días con ubicaciones y sin movimiento; `probioticos_estimado` vacío sin bitácora de MacroFactor; «las tres» necesidades cuenta en autonomía, competencia y relación; `presencias_revisado` entra al panel (obvia con lo social) | `ciencia/Estadistica.kt` (`ceroDesde`, `panel`, `Movilidad.kmPorDia`), `ciencia/Dinamicas.kt` (`diasSociales`), `data/Lote3.kt`, `data/Exportar.kt` | H-1-1, H-1-6, H-2-4, H-4-8, H-6-13, H-9-16 (P-15). Los `ctx_*` siguen en 0 cuando no se marcan: es la convención de la pantalla |
-| D.64 | `lugares_distintos` por día lógico. El LEEME y el diccionario dicen qué variables van por día de calendario: corazón, oxígeno, calorías activas, temperatura de la piel, respiración y peso del reloj, agenda, clima, luna, ciudades y países, y la pantalla y los pasos de antes de la v13 | `ciencia/Estadistica.kt`, `data/Exportar.kt` (`leeme`), `data/Diccionario.kt` (`CALENDARIO`) | H-1-2, H-3-1 (en parte), H-9-4 (P-16 i). La regla de +24 de `ultimo_uso_h` en R queda para 10d |
+| D.64 | `lugares_distintos` por día lógico. El LEEME y el diccionario dicen qué variables van por día de calendario: corazón, oxígeno, calorías activas, temperatura de la piel, respiración y peso del reloj, agenda, clima, luna, ciudades y países, y la pantalla y los pasos de antes del esquema 13 (el LEEME lo escribe «v13»; H-14-1) | `ciencia/Estadistica.kt`, `data/Exportar.kt` (`leeme`), `data/Diccionario.kt` (`CALENDARIO`) | H-1-2, H-3-1 (en parte), H-9-4 (P-16 i). La regla de +24 de `ultimo_uso_h` en R queda para 10d |
 | D.65 | La t de Student exacta (`cuantilT`, `pT`, con la beta incompleta) y la autocorrelación de orden 1 de una serie con fechas (`ar1`). `diferencia()` usa t de Welch y multiplica el error estándar de cada grupo por √((1 + ρ)/(1 − ρ)), con ρ corregido por su sesgo en series cortas, ρ + (1 + 4ρ)/n, y acotado entre 0 y 0.9. Lo usan la Tendencia (30 contra 30 días), «Antes y después», los experimentos y las variables 0/1 de «Todo lo que se mueve» | `ciencia/Estadistica.kt` (`diferenciaCompleta`, `diferenciaEnDias`, `ar1Grupos`) | H-5-5, H-7-3 (P-17) |
 | D.66 | «Todo lo que se mueve con algo» usa los mismos restos sin tendencia que la lista (con su interruptor, que llega desde la lista) y el p con el n efectivo; muestra r de Pearson, no ρ. «Cruzar dos variables» da el intervalo con el n efectivo y la r sin tendencia junto a la bruta. El modelo múltiple usa t con n − k − 1 grados y muestra el R² ajustado; su interruptor dice «Controlar por el valor del día anterior». «Día de la semana» pide 5 días por día de la semana y usa t con n − 1 | `ciencia/Analisis.kt` (`factores`, `modelo`, `porDiaSemana`, `cambio`), `ciencia/Estadistica.kt` (`sinTendencia`, `correlacionEf`), `ui/pantallas/Analisis.kt`, `ui/pantallas/Explorar.kt` | H-5-3, H-5-4, H-5-11 (P-17, P-28). `vm_factores` en R queda para 10d |
 | D.67 | Experimentos: no se sella si con el lavado podrían quedar menos de 7 días en una condición (se prueban todos los sorteos posibles); la plantilla «Creatina» pasa a 12 semanas (14 días con la acción y 42 sin ella); el sorteo es por pares de semanas; la tendencia se mide con valor ~ día + condición; el aviso de diseño en bloque depende del plan real; mientras dura el plan el resultado dice «provisional» y no habla de señal; hoy no entra; «aún no hay suficientes días» distingue «falta esperar», «este plan nunca dará resultado» y «terminó sin suficientes»; el rótulo dice «Semanas con la acción según el plan»; el aviso del Día no sale antes del inicio; el panel de la pantalla se arma en segundo plano | `data/Lote3.kt` (`Experimentos.plan`, `diasPorCondicion`, `minimoPosible`, `enBloque`, `tendencia`, `resultado`), `ui/pantallas/Lote3.kt`, `ui/pantallas/Dia.kt` | H-7-1, H-7-4, H-7-5, H-7-6, H-7-8, H-7-9, H-7-13, H-9-30, H-9-31, H-9-32 (P-18, P-21). Los experimentos ya sellados conservan su plan |
 | D.68 | «Antes y después»: los cambios de un mismo guardado van en una sola tarjeta, y el primer llenado de «Conocerte» no sale | `ui/pantallas/Explorar.kt` (`EtapasDeVida`) | H-7-12 (P-18), H-2-5 |
 | D.69 | El ritmo de sueño usa las noches de los últimos 56 días (`vm_ritmo(dias = 56)` en R). Una sola regla de día libre, `Fechas.esDiaLibre`: sábado, domingo o, si en «Conocerte» vives en México, un festivo de la Ley Federal del Trabajo (art. 74), con sus reglas anteriores a 2006 y a 2024. El panel exportado gana `festivo` y `dia_libre`, y R lee esa columna. Con 1 a 6 noches del reloj, el aviso dice que se mezclan con las del teléfono | `ciencia/Analisis.kt` (`ritmo`, `ritmoDe`, `recientes`), `data/Fechas.kt` (`esFestivoMx`, `esDiaLibre`), `data/Exportar.kt`, `data/Diccionario.kt`, `ui/pantallas/Analisis.kt`, `vestigium.R` | H-4-9, H-4-10, H-9-15 (P-19), I-1 |
 | D.70 | El alcohol: el peso es el más reciente entre la báscula y la tendencia de MacroFactor; antes del primero, el primero posterior; 70 kg solo si no hay ninguno. Con un peso real, sexo, estatura (100 a 250 cm) y, en hombres, edad, la r sale del agua corporal de Watson et al. (1980), r = agua / (0.80 · peso), acotada entre 0.45 y 0.95; si no, la r fija por sexo. Las tomas de MacroFactor sin hora legible van al mediodía. `alcohol` (0/1) sigue el día lógico de cada dosis (los episodios sin cantidad cuentan su propio día) | `data/Sustancias.kt` (`pesos`, `pesoDe`, `watsonR`, `rYPeso`, `msComida`), `ciencia/Estadistica.kt` | H-4-4 (en parte), H-9-13, H-9-17, H-9-24 (P-20), I-2 |
-| D.71 | Las mismas cifras en todas las pantallas: la clave de la caché de dosis cambia con cada importación de MacroFactor, y en el hilo principal sin esa caché lo que depende de MacroFactor queda vacío | `ciencia/Estadistica.kt` (`sustancias`) | H-4-3, H-9-14 (P-21) |
+| D.71 | Las mismas cifras en todas las pantallas: la clave de la caché de dosis cambia con cada importación de MacroFactor, y en el hilo principal sin esa caché lo que depende de MacroFactor queda vacío (salvo `alcohol`, que queda en 0: H-14-4) | `ciencia/Estadistica.kt` (`sustancias`) | H-4-3, H-9-14 (P-21) |
 | D.72 | Una sola 1RM estimada (`Macrofactor.e1rm`: Epley, de 1 a 12 repeticiones, sin calentamientos) en el reporte y en Tus apps. «Tus números»: el ejercicio semanal es la suma de las últimas 4 semanas con sesiones entre 4. Los días atípicos revisan `distancia_km` | `ciencia/Periodo.kt`, `ui/pantallas/TusApps.kt`, `ciencia/TusNumeros.kt`, `ciencia/Analisis.kt` (`atipicos`) | H-4-13 (P-22), H-5-9 (P-23), H-5-8 (P-24) |
 | D.73 | Personas y red: `Texto.canon` sigue las uniones encadenadas hasta 8 pasos y une los ciclos (al primero en orden alfabético); `Perfiles.relacion`, `vi_convivientes`, los vínculos dichos y la cuenta de la Constelación en Vida usan el nombre unido; la Red colorea por grupo de relación y `vm_red_nodos.csv` gana `grupo` (R lo usa para la composición y el color); con «solo lo que dije», el grado y los grupos se recalculan; `per_` es obvia con todas las variables sociales; la cercanía se puede borrar, y pasar de «sin cercanía» a un valor (o al revés) queda en el historial; en los sueños, solo lo que lleva @ cuenta como persona | `data/Texto.kt`, `data/Perfiles.kt`, `data/Personas.kt`, `data/Lote3.kt` (`RedPersonas.dichos`, `grados`, `componentes`), `ui/pantallas/Lote3.kt`, `ciencia/Dinamicas.kt`, `ciencia/Estadistica.kt`, `ui/pantallas/Vida.kt`, `data/Exportar.kt`, `vestigium.R` | H-6-4, H-6-5, H-6-6, H-6-9, H-6-10, H-6-11, H-6-12, H-9-21, H-9-22 (P-25) |
 | D.74 | Estado subjetivo: el panel ignora los «Cómo estás ahora» guardados otro día que el que cierran, también los viejos; el primer guardado de «Conocerte» deja historial y antes de esa fecha sus campos no dan etapa; un toque a menos de 100 ms del estímulo cuenta como anticipación y se repite; el ánimo por lugar usa el mismo criterio en la lista y en el mapa (lugar marcado o dentro del radio) y el texto ya no dice «últimos 60 días» de las medias; se corrigen los comentarios de la brújula política, de la separación de avisos y del ángulo de la Constelación, y el aviso de «escrito por adelantado» | `ciencia/Estadistica.kt` (`cierreFuera`), `ui/pantallas/Conocer.kt`, `data/Perfiles.kt` (`primerGuardado`), `ciencia/Dinamicas.kt`, `ui/pantallas/Medir.kt` (`enLugar`), `data/Politica.kt`, `avisos/Trabajo.kt`, `ui/pantallas/Constelacion.kt`, `ui/pantallas/Dia.kt` | H-2-5, H-2-6, H-2-7, H-2-8, H-2-12, H-2-14, H-2-15, H-6-14 (P-26) |
@@ -5825,6 +5827,8 @@ Las referencias marcadas **[sin verificar: …]** no se pudieron comprobar del t
 ::: {custom-style="Bibliografía"}
 Abramowitz, M., & Stegun, I. A. (Eds.). (1964). *Handbook of mathematical functions with formulas, graphs, and mathematical tables* (Applied Mathematics Series 55). National Bureau of Standards. https://personal.math.ubc.ca/~cbm/aands/
 
+Android Developers. (s. f.). *Location: getAccuracy()* [Página web]. Android API reference. Recuperado el 28 de octubre de 2026, de https://developer.android.com/reference/android/location/Location#getAccuracy()
+
 Armitage, P., McPherson, C. K., & Rowe, B. C. (1969). Repeated significance tests on accumulating data. *Journal of the Royal Statistical Society. Series A (General), 132*(2), 235–244. https://doi.org/10.2307/2343787
 
 Aron, A., Aron, E. N., & Smollan, D. (1992). Inclusion of Other in the Self Scale and the structure of interpersonal closeness. *Journal of Personality and Social Psychology, 63*(4), 596–612. https://doi.org/10.1037/0022-3514.63.4.596
@@ -5985,7 +5989,7 @@ Nehlig, A. (2018). Interindividual differences in caffeine metabolism and factor
 
 Nosek, B. A., Ebersole, C. R., DeHaven, A. C., & Mellor, D. T. (2018). The preregistration revolution. *Proceedings of the National Academy of Sciences, 115*(11), 2600–2606. https://doi.org/10.1073/pnas.1708274114
 
-OWASP Foundation. (s. f.). *Password storage cheat sheet*. OWASP Cheat Sheet Series. Recuperado el 27 de octubre de 2026, de https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+OWASP Foundation. (s. f.). *Password storage cheat sheet*. OWASP Cheat Sheet Series. Recuperado el 28 de octubre de 2026, de https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 
 Parry, D. A., Davidson, B. I., Sewall, C. J. R., Fisher, J. T., Mieczkowski, H., & Quintana, D. S. (2021). A systematic review and meta-analysis of discrepancies between logged and self-reported digital media use. *Nature Human Behaviour, 5*, 1535–1547. https://doi.org/10.1038/s41562-021-01117-5
 

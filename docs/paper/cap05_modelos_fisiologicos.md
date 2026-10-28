@@ -1,8 +1,8 @@
 # Capítulo 5. Modelos fisiológicos y variables derivadas
 
-> **Para qué sirve este capítulo.** Algunas variables de la app no se miden: se **calculan con un modelo** a partir de otros datos. La cafeína que te queda en el cuerpo al dormir, el alcohol en sangre, la reserva de creatina del músculo, el «jet lag social» o los minutos al aire libre son **estimaciones**, no mediciones. Este capítulo explica cada modelo: qué calcula, con qué fórmula exacta y qué parámetros, de dónde salen esos parámetros, qué tan preciso puede ser y cuándo falla. Todo corresponde a la versión v81 (commit `fa527df`), con lo que cambió la entrega 10c (commit `b943ec7`; apéndice D, D.69 a D.72): el peso y la *r* del alcohol, las tomas sin hora, el ritmo de sueño con las noches recientes y los festivos, y una sola repetición máxima. **Los ejemplos usan datos inventados.**
+> **Para qué sirve este capítulo.** Algunas variables de la app no se miden: se **calculan con un modelo** a partir de otros datos. La cafeína que te queda en el cuerpo al dormir, el alcohol en sangre, la reserva de creatina del músculo, el «jet lag social» o los minutos al aire libre son **estimaciones**, no mediciones. Este capítulo explica cada modelo: qué calcula, con qué fórmula exacta y qué parámetros, de dónde salen esos parámetros, qué tan preciso puede ser y cuándo falla. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper. Lo que cambió en el módulo 10 se marca «desde la 10c» y está en el apéndice D (D.63 y D.69 a D.72): el peso y la *r* del alcohol, las tomas sin hora, el ritmo de sueño con las noches recientes y los festivos, y una sola repetición máxima. **Los ejemplos usan datos inventados.**
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, fórmulas y cifras del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-4-n y se detallan en `hallazgos.md`. **Ningún número de este capítulo es una medición de tu cuerpo**: son cuentas con parámetros promedio de la literatura.
+> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, fórmulas y cifras del código tal cual, con el nombre de la función. Cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-4-n (por el módulo 4, en que se escribió este capítulo) y se detallan en `hallazgos.md`. **Ningún número de este capítulo es una medición de tu cuerpo**: son cuentas con parámetros promedio de la literatura.
 
 ---
 
@@ -54,7 +54,7 @@ Para cada dosis *D* (mg) tomada hace Δ*t* horas:
 $$C(t) = \sum_{\text{dosis}} D \cdot \min\!\left(1, \frac{\Delta t}{0.75}\right) \cdot 0.5^{\Delta t / T_{1/2}}$$
 
 - El primer factor sube en línea recta de 0 a 1 en **45 minutos** (0.75 h): la absorción.
-- El segundo es la eliminación de primer orden con la vida media *T*½ de `Config.cafeina_vida_media_h`, **5 h por omisión** (se cambia en Privacidad).
+- El segundo es la eliminación de primer orden con la vida media *T*½ de `Config.cafeina_vida_media_h`, **5 h por omisión** (se cambia en Privacidad, de 2 a 10 h en pasos de media hora).
 - Las dosis se suman: cada café se va por su cuenta.
 
 **De dónde salen las dosis** (`Sustancias.dosis`): de **MacroFactor** (cada alimento con su hora y su `cafeina_mg`) y de lo que anotes en la app. **Por día y sustancia, una sola fuente**: si MacroFactor tiene algo de cafeína ese día, **mandan los datos de MacroFactor** y lo anotado en la app ese día se ignora, para no contar dos veces. Desde la entrega 10c, un alimento de MacroFactor cuya hora no se puede leer se pone **al mediodía de su día** (`msComida`) en lugar de perderse; antes desaparecía de `cafeina_total_mg` aunque sí contaba en `cafeina_mg` (H-9-13).
@@ -79,7 +79,7 @@ Un café de **95 mg a las 8:00** y uno grande de **150 mg a las 14:00**; te duer
 - Segundo café: han pasado 9.5 h → 150 × 0.5^(9.5/5) = 150 × 0.268 = **40.2 mg**.
 - `cafeina_al_dormir_mg` = **51.3 mg**.
 
-Con la vida media más corta del rango típico (2.5 h) serían **12 mg**; con la más larga (9.5 h), **106 mg**. **La misma tarde da una cifra que varía casi nueve veces según la persona.** Por eso la cifra solo sirve **para compararte contigo mismo** (si fijas tu vida media), no como dato absoluto.
+Con una vida media corta (2.5 h; el rango va de 1.5 a 9.5 h) serían **12 mg**; con la más larga (9.5 h), **106 mg**. **La misma tarde da una cifra que varía casi nueve veces según la persona.** Por eso la cifra solo sirve **para compararte contigo mismo** (si fijas tu vida media), no como dato absoluto.
 
 ![Figura 5.1](figuras/fig25_cafeina.png)
 
@@ -90,7 +90,7 @@ Con la vida media más corta del rango típico (2.5 h) serían **12 mg**; con la
 - **El pico queda un poco bajo y temprano.** Como la rampa de absorción se multiplica por la eliminación desde el primer minuto, a los 45 min queda 0.5^(0.75/5) = **90 %** de la dosis. Un modelo farmacocinético estándar (absorción y eliminación de primer orden) da otra forma de curva. Para dosis separadas por horas, la diferencia es pequeña. **[Aproximación]**.
 - **Una sola vida media para toda la historia** (H-4-1): si la cambias, **todas** las `cafeina_al_dormir_mg` pasadas se recalculan con la nueva, sin dejar registro.
 - **La regla de una sola fuente por día** (H-4-2): si en MacroFactor anotaste un café y en la app otro distinto el mismo día, el de la app se pierde. Y la hora de MacroFactor es la hora en que registraste el alimento, que puede no ser la hora en que lo tomaste.
-- **Las cifras cambiaban según dónde se calcularan** (H-4-3, resuelto en 10c, D.71). Para no trabar la pantalla, cuando el panel se calculaba en el hilo principal **sin un cálculo previo guardado**, `Estadistica.sustancias` usaba solo lo anotado en la app y **omitía MacroFactor**, y la pantalla de experimentos calculaba ahí. Desde la entrega 10c: la pantalla de experimentos arma el panel en segundo plano, como Explorar y Análisis; si aun así toca calcular en el hilo principal sin caché y hay datos de MacroFactor, las variables que dependen de las dosis (`cafeina_total_mg`, `cafeina_al_dormir_mg`, `alcohol_bebidas`, `alcohol_estimado_max`, `alcohol_al_dormir`) quedan **vacías** en lugar de dar otra cifra; y la clave de la caché incluye la identidad del mapa de MacroFactor, que cambia con cada importación, no solo el número de días (H-9-14).
+- **Las cifras cambiaban según dónde se calcularan** (H-4-3, resuelto en 10c, D.71). Para no trabar la pantalla, cuando el panel se calculaba en el hilo principal **sin un cálculo previo guardado**, `Estadistica.sustancias` usaba solo lo anotado en la app y **omitía MacroFactor**, y la pantalla de experimentos calculaba ahí. Desde la entrega 10c: la pantalla de experimentos arma el panel en segundo plano, como Explorar y Análisis; si aun así toca calcular en el hilo principal sin caché y hay datos de MacroFactor, las variables que dependen de las dosis (`cafeina_total_mg`, `cafeina_al_dormir_mg`, `alcohol_bebidas`, `alcohol_estimado_max`, `alcohol_al_dormir`) quedan **vacías** en lugar de dar otra cifra (salvo `alcohol` 0/1: en ese caso vale 1 solo en los días con episodios sin cantidad y 0 en los demás, aunque hayas bebido, porque el 1 de los días con dosis se pone después de ese corte); y la clave de la caché incluye la identidad del mapa de MacroFactor, que cambia con cada importación, no solo el número de días (H-9-14).
 - **Cuatro variables de cafeína** con fuentes distintas: `cafeina_mg` y `cafeina_ultima_h` solo de MacroFactor; `cafeina_total_mg` y `cafeina_al_dormir_mg` de ambas (H-4-12).
 
 ---
@@ -121,7 +121,7 @@ con *A* = gramos de alcohol, *W* = peso (kg), *r* = factor de Widmark y β = vel
   - mujeres: agua (L) = −2.097 + 0.1069 · estatura (cm) + 0.2466 · peso (kg);
   - *r* = agua / (0.80 · peso), acotada entre **0.45 y 0.95**. El 0.80 (`AGUA_SANGRE`) es la proporción de agua en la sangre que usan Watson et al. (1981) para pasar del agua corporal a *r*.
 
-  Hace falta el sexo (de Conocerte o de Salud), la estatura de Conocerte entre **100 y 250 cm** y, en los hombres, la edad de ese día (`Perfiles.edad`). Si falta algo, o si el peso es el de omisión, se usa la *r* fija (`widmarkR`): **0.68** si dijiste «hombre», **0.55** si «mujer», **0.62** si no dijiste nada. Con 70 kg inventados, Watson no corregiría nada: por eso no se usa.
+  Hace falta el sexo (de Conocerte o de Salud), la estatura de Conocerte entre **100 y 250 cm** y, en los hombres, la edad de ese día (`Perfiles.edad`, a partir de la fecha de nacimiento de Conocerte). Si falta algo, o si el peso es el de omisión, se usa la *r* fija (`widmarkR`): **0.68** si dijiste «hombre», **0.55** si «mujer», **0.62** si no dijiste nada. Con 70 kg inventados, Watson no corregiría nada: por eso no se usa.
 - **Bebida estándar** = **14 g** de alcohol puro (`GRAMOS_BEBIDA`), la definición de Estados Unidos (NIAAA, s. f.). Otros países usan otras cifras.
 
 **De dónde salen las dosis** (`Sustancias.dosis`): de MacroFactor (`alcohol_g` de cada alimento, con su hora; sin hora legible, al mediodía de su día desde la 10c) o, los días en que MacroFactor no tiene alcohol, de los episodios que anotas. Las bebidas de un episodio se **reparten** en el primer 70 % del episodio (si dijiste cuándo terminó) o una cada 40 minutos (si no).
@@ -150,22 +150,22 @@ Tres bebidas estándar (42 g) en un episodio de 20:00 a 23:00. La app las coloca
 
 Si en el hombre β fuera 0.10 o 0.20 en lugar de 0.15, el final de la curva se movería más de una hora en cada dirección (banda sombreada).
 
-**Con la *r* de Watson (desde la 10c).** El mismo hombre de 75 kg, si dijo en Conocerte que tiene 30 años y mide 180 cm: agua = 2.447 − 0.09516 × 30 + 0.1074 × 180 + 0.3362 × 75 = 44.14 L; *r* = 44.14 / (0.80 × 75) = **0.736**. Con un recipiente más grande, el máximo baja de 0.42 a **0.36 g/L** y llega a 0 hacia la **01:00** (línea punteada).
+**Con la *r* de Watson (desde la 10c).** El mismo hombre de 75 kg, si en Conocerte su fecha de nacimiento le da 30 años y dijo que mide 180 cm: agua = 2.447 − 0.09516 × 30 + 0.1074 × 180 + 0.3362 × 75 = 44.14 L; *r* = 44.14 / (0.80 × 75) = **0.736**. Con un recipiente más grande, el máximo baja de 0.42 a **0.36 g/L** y llega a 0 hacia la **01:00** (línea punteada).
 
-**Cuánto cambia con Watson** (tres bebidas de 14 g a los 0, 40 y 80 minutos; simulación de la app, en pasos de 5 minutos, para personas inventadas):
+**Cuánto cambia con Watson** (tres bebidas de 14 g a los 0, 40 y 80 minutos, como reparte la app un episodio de tres bebidas sin hora de fin; simulación de `alcoholEn`, en pasos de 5 minutos, para personas inventadas; tres decimales para que los porcentajes se puedan rehacer):
 
 | Persona | *r* fija | *r* de Watson | Máximo con *r* fija | Máximo con Watson |
 |---|---|---|---|---|
-| Hombre, 30 años, 175 cm, 70 kg | 0.68 | 0.749 | 0.56 g/L | 0.48 g/L (−14 %) |
-| Hombre, 30 años, 190 cm, 70 kg | 0.68 | 0.777 | 0.56 g/L | 0.45 g/L (−19 %) |
-| Hombre, 55 años, 170 cm, 95 kg | 0.68 | 0.624 | 0.34 g/L | 0.39 g/L (+16 %) |
-| Mujer, 30 años, 160 cm, 60 kg | 0.55 | 0.621 | 0.93 g/L | 0.79 g/L (−15 %) |
+| Hombre, 30 años, 175 cm, 70 kg | 0.68 | 0.749 | 0.607 g/L | 0.527 g/L (−13 %) |
+| Hombre, 30 años, 190 cm, 70 kg | 0.68 | 0.777 | 0.607 g/L | 0.497 g/L (−18 %) |
+| Hombre, 55 años, 170 cm, 95 kg | 0.68 | 0.624 | 0.375 g/L | 0.434 g/L (+16 %) |
+| Mujer, 30 años, 160 cm, 60 kg | 0.55 | 0.621 | 0.998 g/L | 0.852 g/L (−15 %) |
 
-El error que más pesaba no era *r*, sino el **peso**: con las mismas tres bebidas, un hombre de 90 kg reales calculado con 70 kg sale con un máximo de **0.56 g/L** en lugar de **0.37 g/L** (un 50 % más alto: el peso divide la dosis, pero la eliminación por hora no cambia). Por eso `pesoDe` busca el peso más reciente entre las dos fuentes antes de cualquier ajuste de *r*.
+El error que más pesaba no era *r*, sino el **peso**: con las mismas tres bebidas y *r* = 0.68, un hombre de 90 kg reales calculado con 70 kg sale con un máximo de **0.61 g/L** en lugar de **0.41 g/L** (casi un 50 % más alto: el peso divide la dosis, pero la eliminación por hora no cambia). Por eso `pesoDe` busca el peso más reciente entre las dos fuentes antes de cualquier ajuste de *r*.
 
 ![Figura 5.2](figuras/fig26_alcohol_widmark.png)
 
-*Figura 5.2. Tres bebidas estándar con la simulación de la app para tres perfiles; la banda muestra β de 0.10 a 0.20 g/L/h. Script: `figuras/fig26_alcohol_widmark.py`.*
+*Figura 5.2. Tres bebidas estándar con la simulación de la app para tres perfiles y, punteado, el mismo hombre con la *r* de Watson; la banda muestra β de 0.10 a 0.20 g/L/h. Script: `figuras/fig26_alcohol_widmark.py`.*
 
 ### 5.4.5 Cuándo falla
 
@@ -174,6 +174,7 @@ El error que más pesaba no era *r*, sino el **peso**: con las mismas tres bebid
 - **Unidades**: la fórmula de Widmark da gramos por kilo de peso corporal; la app lo presenta como g/L de sangre. La diferencia (por la densidad y el contenido de agua de la sangre) es pequeña frente a las demás incertidumbres, pero existe.
 - **Absorción de 30 minutos fija**: con el estómago lleno la absorción es más lenta y el pico más bajo y tardío.
 - **Cada día se simula por separado** (H-4-5): `alcohol_estimado_max` empieza en 0 con la primera dosis del día lógico y no arrastra lo del día anterior. Si un episodio cruza las 5:00, las bebidas posteriores caen en el día siguiente y ese día arranca de cero.
+- **Dos máximos casi iguales.** La lista de episodios (`alcoholMaximo`) mira la simulación cada 5 minutos; `alcohol_estimado_max`, cada 10. Si el pico cae entre dos muestras de 10 minutos, el panel da hasta 0.15/12 ≈ **0.0125 g/L** menos (en la tabla de arriba, 0.595 en lugar de 0.607 g/L).
 - **Una sola fuente por día** (H-4-2, igual que la cafeína). La dependencia del hilo (H-4-3) se resolvió en la 10c (sección 5.3.5).
 
 ---
@@ -182,7 +183,7 @@ El error que más pesaba no era *r*, sino el **peso**: con las mismas tres bebid
 
 Para alcohol y cannabis (las sustancias «con nivel»), además de las dosis, puedes decir **qué tan fuerte lo sientes** de 0 a 10, una o varias veces. La curva del episodio se arma así:
 
-- Con lecturas: se unen con líneas rectas, empezando en el nivel de la primera lectura; si el máximo que dijiste después (la mañana siguiente) es mayor que lo leído, se agrega ese máximo **a la mitad del episodio**; si el episodio terminó, baja a 0 al final.
+- Con lecturas: se unen con líneas rectas, empezando en el nivel de la primera lectura; si el máximo que dijiste después (la mañana siguiente) es mayor que lo leído, se agrega ese máximo **a la mitad del episodio**; si el episodio terminó (o quedó abierto de otro día), baja a 0 al final.
 - Sin lecturas, solo con el máximo: un trapecio que sube de 0 al máximo en el primer 35 % del episodio, se queda hasta el 65 % y baja a 0 al final.
 - **Fin efectivo** (`finEfectivo`): el que dijiste; si el episodio sigue abierto y empezó hace menos de 18 horas, «ahora»; si quedó abierto de otro día, **4 horas** después del inicio.
 
@@ -235,7 +236,7 @@ Con 28 y 35 días, *s* = 0.1015 y *b* = 0.0820. El diseño garantiza dos cosas: 
 
 - **La dosis de referencia define la velocidad.** Hultman et al. llenaron la reserva con **3 g** en 28 días; con la referencia de 5 g de la app, 3 g diarios dan solo 83 % al día 28. El modelo dice que se llena más lento de lo que dice el estudio en que se basa.
 - **El 100 % es del modelo**, no una concentración: no considera la creatina de la dieta (carne, pescado), el punto de partida de cada persona ni que hay personas que casi no responden a la suplementación.
-- **Interacción con los experimentos**: la plantilla de experimento de creatina usa 28 días de lavado, que con 8 semanas eliminaba todos los días con creatina (capítulo 8, H-7-1). Desde la entrega 10c dura 12 semanas: quedan 14 días con la acción y 42 sin ella.
+- **Interacción con los experimentos**: la plantilla de experimento de creatina usa 28 días de lavado, que con 8 semanas eliminaba todos los días con creatina (capítulo 8, H-7-1). Desde la entrega 10c dura 12 semanas (6 sin la acción y luego 6 con ella; el lavado se come los primeros 28 días con ella): quedan 14 días con la acción y 42 sin ella (`Experimentos.PLANTILLAS`, `data/Lote3.kt`).
 
 ### 5.6.2 Vida media (`Suplementos.cantidadEn`)
 
@@ -249,7 +250,7 @@ La cantidad «en el cuerpo» en un instante es la suma de cada toma multiplicada
 
 ### 5.6.3 Exposición: los probióticos (`Suplementos.probioticosEstimados`)
 
-No hay farmacocinética: solo se cuentan **porciones**. A lo que anotes se suma **una porción por cada alimento de MacroFactor cuyo nombre contenga** alguna de las palabras clave que configures (por ejemplo, «yogur» o «kéfir»; comparación sin acentos ni mayúsculas). Variables: `probioticos_porciones` (anotadas + estimadas) y `probioticos_estimado` (solo las estimadas; desde la entrega 10c, vacía los días sin bitácora de MacroFactor, porque esos días no se sabe, D.63). **[Diseño propio]**: es una cuenta de exposición, sin relación con las unidades formadoras de colonias ni con si el producto tiene cultivos vivos (H-4-8).
+No hay farmacocinética: solo se cuentan **porciones**. A lo que anotes se suma **una porción por cada alimento de MacroFactor cuyo nombre contenga** alguna de las palabras clave que configures (por ejemplo, «yogur» o «kéfir»; comparación sin acentos ni mayúsculas). Variables: `probioticos_porciones` (anotadas + estimadas) y `probioticos_estimado` (solo las estimadas; desde la entrega 10c, vacía los días sin bitácora de MacroFactor, porque esos días no se sabe, D.63). **[Diseño propio]**: es una cuenta de exposición, sin relación con las unidades formadoras de colonias ni con si el producto tiene cultivos vivos (H-4-8; lo que proponía, dejar vacío `probioticos_estimado` sin bitácora, se hizo en la 10c).
 
 ---
 
@@ -261,10 +262,10 @@ La herramienta «Ritmo» de Análisis muestra a qué hora te duermes y despierta
 
 ### 5.7.2 Cómo lo hace exactamente
 
-0. **Solo las noches recientes** (desde la entrega 10c, D.69): las que terminan en los **últimos 56 días** hasta hoy (`Analisis.recientes`; la noche cuenta por el día en que despiertas). Todos los umbrales que siguen se aplican dentro de esa ventana. En R, `vm_ritmo(dias = 56)` hace lo mismo con el último día de `vm_salud` como referencia (`dias = Inf` para toda la historia).
+0. **Solo las noches recientes** (desde la entrega 10c, D.69): las que terminan en los **últimos 56 días** hasta hoy (`Analisis.recientes`; la noche cuenta por el día en que despiertas). Todos los umbrales que siguen se aplican dentro de esa ventana. En R, `vm_ritmo(dias = 56)` aplica la misma ventana con el último día de `vm_salud` como referencia (`dias = Inf` para toda la historia), pero solo con las noches del reloj: no usa las del teléfono ni pide un mínimo de noches.
 1. **Noches del reloj**: inicio y fin del sueño en hora decimal; si el inicio es antes de las 12:00, se le suman 24 (dormirte a la 1:00 cuenta como 25.0, para promediarlo bien con las 23:00); al fin se le suman 24 siempre. La noche se guarda con **el día en que despiertas**.
-2. **Noches del teléfono** (si faltan del reloj): inicio = **último uso del teléfono** del día (debe ser **a las 18:00 o después**); fin = **primer uso** del día siguiente (a las **4:00 o después**).
-3. Si hay **7 o más** noches del reloj, se usan solo esas; si no, se completan con las del teléfono en las fechas sin reloj. La pantalla lo dice: sin ninguna noche del reloj, «Sin datos del reloj en las últimas 8 semanas…»; con 1 a 6, «Solo *N* noches del reloj en las últimas 8 semanas: las demás se aproximan con el teléfono» (fuente «mezcla»).
+2. **Noches del teléfono** (si faltan del reloj): inicio = **último uso del teléfono** del día lógico (debe ser **a las 18:00 o después**; uno de madrugada, antes de las 12:00, cuenta como 24 + la hora y también vale); fin = **primer uso** del día siguiente (a las **4:00 o después**).
+3. Si hay **7 o más** noches del reloj, se usan solo esas; si no, se completan con las del teléfono en las fechas sin reloj. La pantalla lo dice: sin ninguna noche del reloj, «Sin datos del reloj en las últimas 8 semanas…»; con 1 a 6, «Solo *N* noches del reloj en las últimas 8 semanas: las demás se aproximan con el último uso del teléfono y el primero del día siguiente» (fuente «mezcla»). Las noches del reloj se cuentan antes del filtro del paso 4.
 4. Se descartan las noches de menos de **2 h** o más de **16 h**. Hacen falta al menos **5** noches.
 5. **Días libres** (`Fechas.esDiaLibre`, la única regla de la app desde la 10c): una noche es libre si el día en que despiertas es **sábado, domingo** o, si en Conocerte dijiste que vives en México (`pais = "MX"`), un **festivo** de la Ley Federal del Trabajo, art. 74 (`Fechas.esFestivoMx`): 1 de enero; primer lunes de febrero; tercer lunes de marzo; 1 de mayo; 16 de septiembre; tercer lunes de noviembre; 25 de diciembre; y el día de la transmisión del Poder Ejecutivo Federal, cada seis años (años 2024, 2030… el **1 de octubre**; hasta 2018, el **1 de diciembre**). **Antes de 2006**, los de febrero, marzo y noviembre iban en su fecha fija (5 de febrero, 21 de marzo y 20 de noviembre). Se omite la jornada electoral (cae en domingo) y no se cuentan Jueves ni Viernes Santo, que no están en la ley. Las demás noches son laborales. La misma regla da las columnas `festivo` (vacía si no vives en México) y `dia_libre` del panel exportado, y R la lee de ahí.
 6. **Punto medio** de cada noche = (inicio + fin)/2. **MSW** = promedio de los puntos medios laborales; **MSF** = de los libres (cada uno con al menos 2 noches).
@@ -297,9 +298,9 @@ Tres semanas inventadas. Entre semana te duermes hacia las **00:15** y despierta
 ### 5.7.5 Cuándo falla (H-4-9 y H-4-10)
 
 - **Días libres por calendario.** Desde la 10c cuentan los festivos de México, pero no el horario de Conocerte, las vacaciones ni los turnos. Si trabajas un sábado o tienes vacaciones, el cálculo los clasifica mal. Los festivos mueven poco el jet lag social (unas 7 noches laborales al año, el 2.8 %); las vacaciones, que no arregla ningún calendario fijo, pesan mucho más. Las fechas anteriores a 2006 y a 2024 siguen las reglas de entonces: que los «lunes» empezaran con la reforma de 2006 y que antes de 2024 la transmisión fuera el 1 de diciembre se dedujo de las notas de reforma del artículo, no del texto de los decretos **[sin verificar]**.
-- **Toda la historia junta** (H-4-9, resuelto en 10c): hasta la 10c, los promedios usaban **todas** las noches registradas aunque la gráfica mostrara solo las últimas 30. Ahora usan las de los últimos 56 días. *Ejemplo inventado:* 60 noches de hace meses con 3 h de jet lag social y 60 recientes con 1 h: con toda la historia salía cerca de **2 h**; con la ventana, **1 h**, que es tu presente.
+- **Toda la historia junta** (esta parte de H-4-9 se resolvió en la 10c; el hallazgo queda resuelto en parte): hasta la 10c, los promedios usaban **todas** las noches registradas aunque la gráfica mostrara solo las últimas 30. Ahora usan las de los últimos 56 días. *Ejemplo inventado:* 60 noches de hace meses con 3 h de jet lag social y 60 recientes con 1 h: con toda la historia salía cerca de **2 h**; con la ventana, **1 h**, que es tu presente.
 - **El valor absoluto** pierde la dirección (si en días libres duermes antes o después), aunque casi siempre es después.
-- **Reloj y teléfono mezclados** cuando hay menos de 7 noches del reloj: dos medidas distintas en un mismo promedio. Desde la 10c la pantalla lo avisa (H-4-10).
+- **Reloj y teléfono mezclados** cuando hay menos de 7 noches del reloj: dos medidas distintas en un mismo promedio. Desde la 10c la pantalla lo avisa, pero sigue mezclándolas (H-4-10, resuelto en parte).
 - **Hora de dormir con dos cortes distintos** (H-5-15, resuelto en 10c): ahora los reportes (`Periodo`) usan la misma regla que aquí y el panel (`Exportar.horaDecimal`: antes de las 12:00 suma 24).
 
 ---
@@ -366,9 +367,9 @@ Cuando una variable estimada aparece relacionada con otra en Explorar, la relaci
 2. Desde la entrega 10c, el alcohol usa el peso más reciente entre la báscula y MacroFactor y, cuando tiene los datos, la *r* de Watson; sin pesos sigue usando 70 kg y no muestra su incertidumbre (H-4-4, en parte).
 3. Lo anotado en la app se ignora los días en que MacroFactor tiene algo (H-4-2). Desde la 10c, las cifras ya no cambian según la pantalla (H-4-3) y las tomas de MacroFactor sin hora ya no se pierden.
 4. El modelo de creatina se basa en Hultman et al. (1996), pero su dosis de referencia de 5 g lo hace más lento que el estudio con 3 g (H-4-6). El nivel de melatonina al final del día es casi siempre 0 (H-4-7).
-5. El jet lag social está bien definido. Desde la 10c usa las noches de los últimos 56 días y una sola regla de día libre con los festivos de México (H-4-9, H-4-10); las vacaciones siguen sin contarse y la regularidad es una desviación estándar simple.
+5. El jet lag social está bien definido. Desde la 10c usa las noches de los últimos 56 días y una sola regla de día libre con los festivos de México (H-4-9 y H-4-10, resueltos en parte); las vacaciones siguen sin contarse y la regularidad es una desviación estándar simple.
 6. Todas estas cifras son **estimaciones**: sirven para compararte contigo mismo con parámetros fijos, y cambiar un parámetro reescribe el pasado (H-4-11).
-7. Se identificaron **13 hallazgos** (H-4-1 a H-4-13). El módulo 4 no cambió código; la entrega 10c resolvió H-4-3, H-4-9, H-4-10 y H-4-13, y H-4-4 en parte (apéndice D, D.69 a D.72).
+7. El módulo 4 identificó **13 hallazgos** (H-4-1 a H-4-13) y no cambió código. Después, la entrega 10c resolvió H-4-3, H-4-8 y H-4-13, y en parte H-4-4, H-4-9 y H-4-10 (apéndice D, D.63 y D.69 a D.72); siguen abiertos H-4-1, H-4-2, H-4-5, H-4-6, H-4-7, H-4-11 y H-4-12.
 
 ---
 

@@ -1,6 +1,6 @@
 # Apéndice B. Fórmulas
 
-_Todas las fórmulas del núcleo estadístico (capítulo 6), tal como están en el código de v81 (commit `fa527df`), con los cambios de la entrega 10c (commit `b943ec7`; apéndice D, D.63 a D.72) marcados «desde 10c». Cada una lleva la función de origen. Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
+_Todas las fórmulas del núcleo estadístico (capítulo 6), con la función de origen. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10c» o «desde 10d» y está en el Apéndice D (entrega 10c, D.62 a D.78: la app; entrega 10d, D.79 a D.87: R y la exportación). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
 
 ---
 
@@ -32,7 +32,7 @@ paso = 1 (por día) o 7 (por semana). Si hay menos de 10 pares, r₁ = 0. Antes 
 
 **Desde 10c**, la misma autocorrelación sobre una serie con fechas es pública: `Estadistica.ar1(serie, paso)`, que devuelve `null` (y quien la usa toma 0) con menos de 10 pares. La usan «Cruzar dos variables», «Todo lo que se mueve con algo» y la diferencia de medias (B.11a).
 
-## B.5 Número efectivo de días — `Estadistica.relaciones`
+## B.5 Número efectivo de días — `Estadistica.relaciones`; desde 10c, también `Estadistica.correlacionEf`; en R, `vm_relaciones` y `vm_factores`
 
 $$ n_{Ef}=\operatorname{acotar}\Big(n\,\frac{1-r_a r_b}{1+r_a r_b},\ \min(4,n),\ n\Big) $$
 
@@ -82,7 +82,7 @@ $$ \bar x_{s}=\frac{1}{|D_s|}\sum_{f\in D_s}x_f,\qquad D_s=\{\text{días de la s
 
 Para una variable 0/1 es la proporción de días con 1.
 
-## B.11 Diferencia de medias — `Estadistica.diferenciaCompleta` (desde 10c)
+## B.11 Diferencia de medias — `Estadistica.diferenciaCompleta` (desde 10c); `.vm_dif_dias` en R (desde 10d)
 
 Con n_a, n_b ≥ 3 y autocorrelaciones ρ_a, ρ_b acotadas a [0, 0.9] (0 si no se dan):
 
@@ -124,12 +124,6 @@ $$ z_i=\frac{x_i-M}{1.4826\cdot \mathrm{MAD}},\qquad M=x_{(\lfloor n/2\rfloor)},
 
 (posición ⌊n/2⌋ en base 0 de los datos ordenados: para n par, el central superior). Requiere n ≥ 20 y MAD > 0. Atípico si |z| ≥ 3 (2.8 en «Tu año»). En R: `(valor − median(valor)) / mad(valor)`, con la mediana promediada para n par.
 
-## B.15 Correlación mínima detectable (potencia)
-
-$$ |r_{\min}|=\tanh\!\Big(\frac{z_{1-\alpha/2}+z_{1-\beta}}{\sqrt{n_{Ef}-3}}\Big) $$
-
-Con α = 0.05 y potencia 1 − β = 0.80: z = 1.96 + 0.84. No está en el código; sirve para interpretar los umbrales de 14, 30 y 90 días (sección 6.21).
-
 ## B.14a Distribución t de Student — `Estadistica.pT`, `Estadistica.cuantilT` (desde 10c)
 
 p de dos colas de un valor t con gl grados de libertad (gl real > 0, acotado a 10⁶):
@@ -137,6 +131,12 @@ p de dos colas de un valor t con gl grados de libertad (gl real > 0, acotado a 1
 $$ p_T(t,gl)=I_{\,gl/(gl+t^2)}\Big(\frac{gl}{2},\ \frac12\Big) $$
 
 I_x(a, b) es la beta incompleta regularizada, calculada con la fracción continua de Lentz (hasta 400 términos, tolerancia 10⁻¹²; si x > (a + 1)/(a + b + 2) se usa I_x(a, b) = 1 − I₁₋ₓ(b, a)) y ln Γ con la aproximación de Lanczos (g = 7, 9 coeficientes). El cuantil t_p (p > 0.5) es el t ≥ 0 con p_T(t, gl) = 2(1 − p), buscado por bisección (100 pasos); para p < 0.5, t_p = −t₁₋ₚ. Comprobado: t₀.₉₇₅ = 12.706 (gl 1), 4.303 (2), 2.571 (5), 2.042 (30).
+
+## B.15 Correlación mínima detectable (potencia)
+
+$$ |r_{\min}|=\tanh\!\Big(\frac{z_{1-\alpha/2}+z_{1-\beta}}{\sqrt{n_{Ef}-3}}\Big) $$
+
+Con α = 0.05 y potencia 1 − β = 0.80: z = 1.96 + 0.84. No está en el código; sirve para interpretar los umbrales de 14, 30 y 90 días (sección 6.21).
 
 ## B.16 Modelo múltiple — `Analisis.modelo`
 
@@ -148,7 +148,7 @@ $$ IC_{95}(\beta_j)=\hat\beta_j\pm t_{0.975;\,n-k-1}\,EE(\hat\beta_j),\qquad R^2
 
 (desde 10c; antes, 1.96 y solo R²). La pantalla muestra R²_aj, con 0 como mínimo.
 
-Sin intercepto. Inversa por Gauss-Jordan con pivoteo parcial; si |pivote| < 10⁻¹⁰, no hay modelo. Con `conAyer`, se agrega como predictor el objetivo del día de calendario anterior.
+Sin intercepto: con todo centrado valdría 0. Los grados n − k − 1 son los que da `lm` con intercepto en `vm_modelo` (R, sobre los mismos datos estandarizados), así que los β y sus intervalos coinciden. Inversa por Gauss-Jordan con pivoteo parcial; si |pivote| < 10⁻¹⁰, no hay modelo. Con `conAyer`, se agrega como predictor el objetivo del día de calendario anterior.
 
 ## B.17 Media móvil — `Analisis.movil`; `vm_movil` en R
 
@@ -158,7 +158,7 @@ w = 7 o 30 días.
 
 ## B.18 Palabras — `Analisis.palabras`
 
-Para cada palabra w (≥ 3 letras, fuera de la lista de vacías) presente en al menos 5 días con nota y valencia:
+Para cada palabra w (≥ 3 letras, fuera de `Analisis.VACIAS`: 167 escritas, 146 distintas sin acentos, que es como se comparan; la misma lista en `vm_palabras` desde 10d) presente en al menos 5 días con nota y valencia:
 
 $$ \text{dif}_w=\overline{\text{valencia}}_{\{\text{días con } w\}}-\overline{\text{valencia}}_{\{\text{días con nota y valencia}\}} $$
 

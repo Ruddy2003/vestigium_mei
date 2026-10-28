@@ -65,3 +65,30 @@ Regla que siguen los capítulos: **«ánimo»** es el área general (valencia y 
 - **Apéndice B**: el orden de las secciones no es el numérico (B.14a va después de B.15). No se renumeró porque los capítulos citan esos números.
 - **Apéndice C, línea 83, y B, línea 151**: `vm_modelo` usa `lm` con intercepto y la app «sin intercepto»; es coherente (en R las variables van centradas), pero quizá convenga decirlo.
 - **Extensión**: el paper ensamblado tiene ~262 páginas, muy por encima de las 60-100 del plan.
+
+## Cómo quedó (módulo 14, 28 oct 2026)
+
+Todos los puntos se revisaron contra el código de la v90. Resumen:
+
+- **Sección 1.** Todas las cabeceras dicen ahora que el capítulo se escribió sobre la v81 y está al día con la v90 (`8818d5a`, esquema 14). Los resúmenes de cierre dicen qué hallazgos resolvió después el módulo 10, y el capítulo 1 (sección 1.9) y cada cabecera explican que el número del hallazgo es el del módulo.
+- **Sección 2.** Corregido en cada capítulo; las filas de las tablas de amenazas y los resúmenes describen el estado de la v90, con la historia en pasado. H-5-3 quedó resuelto del todo en `hallazgos.md`.
+- **Sección 3.**
+  - «~7 %» → 13 % en el mínimo de días que permite `Analisis.modelo` (siempre 9 grados de libertad) y 10 % con 14 días y un predictor.
+  - Palabras vacías: 169 escritas, 167 distintas, 146 distintas sin acentos.
+  - La tabla de Watson estaba mal entera; se rehízo con una réplica exacta de `Sustancias.alcoholEn`.
+  - Los «14 + 42 días» estaban bien.
+  - Experimentos: con 4, 6 u 8 semanas no se llega a *p* < 0.05; solo con 12.
+  - OWASP: la guía dice hoy 220 000 para SHA-512, así que el texto estaba bien.
+  - Las «tres vías» de Privado son tres vías en dos puntos.
+  - Qué ofrece Privado con el interruptor apagado: se rehízo la lista según `ui/pantallas/Recaidas.kt`.
+  - La prueba de reacción dura unos 36 s de media (la pantalla dice «unos 30 segundos»).
+  - Brújula política: ±20 ya es «hacia» y ±60 ya es «muy hacia».
+  - Variables fijas: 184 en 24 grupos (128 siempre, 56 si hay datos). Los capítulos 1, 2 y 6 y el Apéndice A dicen lo mismo.
+  - El pie de la Figura 6.5 decía 18 % de días faltantes; en realidad faltan 55 de 200 días (27.5 %), con un hueco de 19 días seguidos.
+- **Sección 4.** Frases rehechas. «v13» es el esquema 13; el LEEME de la app lo escribe así (H-14-1). D.70 cita bien a Watson et al. (1980), por el agua corporal.
+- **Sección 5.** Los capítulos ya dicen qué es «ánimo» en cada lugar: la predicción del capítulo 3 se compara con la valencia, y el «ánimo del día» del capítulo 9 es la valencia del diario.
+- **Sección 6.**
+  - Las tres referencias del capítulo 3 se agregaron a su lista.
+  - B.14a va ahora antes de B.15, sin renumerar.
+  - El intercepto de `vm_modelo` se aclara en los apéndices B y C.
+- **Además:** la Figura 2.3 ponía 0 en días sin diario en `n_ansiedad` y `gimnasio`; se corrigió el script y la imagen. También hay seis hallazgos nuevos, de gravedad baja o muy baja (H-14-1 a H-14-6).

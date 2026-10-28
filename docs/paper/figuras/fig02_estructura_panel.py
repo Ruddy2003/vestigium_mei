@@ -24,6 +24,9 @@ M[4, g.min():] = ZERO; M[4, g] = VAL; M[4, [d for d in (9, 10, 21) if d >= g.min
 M[5, 5:] = ZERO; M[5, rng.choice(np.arange(5, dias), 8, replace=False)] = VAL  # cero desde el primer registro
 M[6, 14:] = ZERO; M[6, rng.choice(np.arange(14, dias), 7, replace=False)] = VAL
 M[7, 18:] = VAL; M[7, [24]] = NULL
+for v in (5, 6):                                           # momentos y gimnasio: también solo en días con diario
+    for d in (9, 10, 21):
+        if M[v, d] == ZERO: M[v, d] = NULL
 
 cmap = ListedColormap([estilo.REJILLA, estilo.AZUL_CLARO, estilo.AZUL])
 fig, ax = plt.subplots(figsize=(10.5, 4.6), dpi=160)

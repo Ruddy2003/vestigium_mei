@@ -246,7 +246,7 @@ Korotitsch, W. J., & Nelson-Gray, R. O. (1999). An overview of self-monitoring r
 
 Li, I., Dey, A., & Forlizzi, J. (2010). A stage-based model of personal informatics systems. En *Proceedings of the SIGCHI Conference on Human Factors in Computing Systems* (pp. 557–566). ACM. https://doi.org/10.1145/1753326.1753409
 
-OWASP Foundation. (s. f.). *Password storage cheat sheet*. OWASP Cheat Sheet Series. Recuperado el 27 de octubre de 2026, de https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+OWASP Foundation. (s. f.). *Password storage cheat sheet*. OWASP Cheat Sheet Series. Recuperado el 28 de octubre de 2026, de https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 
 Turan, M. S., Barker, E., Burr, W., & Chen, L. (2010). *Recommendation for password-based key derivation: Part 1: Storage applications* (NIST Special Publication 800-132). National Institute of Standards and Technology. https://doi.org/10.6028/NIST.SP.800-132
 
@@ -315,3 +315,9 @@ Swan, M. (2013). The Quantified Self: Fundamental disruption in big data science
 Trull, T. J., & Ebner-Priemer, U. (2013). Ambulatory assessment. *Annual Review of Clinical Psychology, 9*, 151–176. https://doi.org/10.1146/annurev-clinpsy-050212-185510
 
 _Verificación (módulo 11):_ los 18 DOI de este bloque se comprobaron en Crossref durante la sesión del 28 oct 2026 (autores, año, título, revista, volumen, número y páginas, salvo lo marcado). Barnett et al.: Crossref fecha la versión en línea en 2004; la edición impresa es de 2005. Lo que se dice de cada obra en los capítulos 1 y 11 es su tesis principal, conocida de antemano; **no se releyeron los textos completos** en la sesión. En particular, no se repiten cifras de Fisher et al. (2018) ni detalles históricos de Swan (2013) sobre el origen del nombre Quantified Self **[sin verificar]**. Se reutilizan referencias ya comprobadas en módulos anteriores: Benjamini y Hochberg (1995), Campbell (1979), Choe et al. (2014), Cruise et al. (1996), Csikszentmihalyi y Larson (1987), Guyatt et al. (1986), Hamaker y Wichers (2017), Kahneman et al. (1993), Korotitsch y Nelson-Gray (1999), Kratochwill y Levin (2010), Kravitz et al. (2014), Li et al. (2010), Lieberman et al. (2007), Marriott y Pope (1954), Nosek et al. (2018), Parry et al. (2021), Robinson y Clore (2002), Rubin (1976), Russell (1980), Shiffman et al. (2008), Simmons et al. (2011), Watson et al. (1981) y Wilkinson et al. (2016).
+
+## Módulo 14 · Lectura final
+
+Android Developers. (s. f.). *Location: getAccuracy()* [Página web]. Android API reference. Recuperado el 28 de octubre de 2026, de https://developer.android.com/reference/android/location/Location#getAccuracy()
+
+_Verificación (módulo 14):_ la página de Android se abrió en la sesión (dice «68th percentile confidence level»). La guía de OWASP se volvió a consultar el 28 de octubre de 2026: 600 000 iteraciones para PBKDF2-HMAC-SHA256 y 220 000 para HMAC-SHA512; qué cifra daba antes para SHA-512 queda [sin verificar].

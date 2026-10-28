@@ -1,7 +1,8 @@
 """Convierte vestigium_mei_paper.docx a PDF con LibreOffice (módulo 12).
 Abre el .docx sin pantalla, actualiza el índice y los campos (números de página) y exporta a PDF con marcadores.
-Uso (desde docs/paper/ensamblado): python3 a_pdf.py"""
+Uso (desde docs/paper/ensamblado): python3 a_pdf.py [nombre sin extensión; por omisión vestigium_mei_paper]"""
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -9,7 +10,8 @@ import uno
 from com.sun.star.beans import PropertyValue
 
 AQUI = Path(__file__).resolve().parent
-ENTRADA, SALIDA = AQUI / "vestigium_mei_paper.docx", AQUI / "vestigium_mei_paper.pdf"
+BASE = sys.argv[1] if len(sys.argv) > 1 else "vestigium_mei_paper"
+ENTRADA, SALIDA = AQUI / f"{BASE}.docx", AQUI / f"{BASE}.pdf"
 
 
 def prop(nombre, valor):

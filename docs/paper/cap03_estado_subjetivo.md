@@ -1,8 +1,8 @@
 # Capítulo 3. Medición del estado subjetivo
 
-> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento, el ánimo del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras (la brújula política, la prueba de reacción). Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número para los análisis y qué tan sólido es eso científicamente. Todo corresponde a la versión v81 del código (commit `fa527df`). **Los ejemplos numéricos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento, el ánimo del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras (la brújula política, la prueba de reacción). Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número para los análisis y qué tan sólido es eso científicamente. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» (y lo de la revisión de navegación, «desde N1…N7») y está en el Apéndice D. **Los ejemplos numéricos son inventados.**
 >
-> **Cómo leerlo.** Está escrito para entenderse sin ser experto, pero sin recortar la precisión. Las cifras y reglas que vienen del código se dan tal cual. Cuando algo no lo pude comprobar, lo digo. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-2-n y se detallan en `hallazgos.md`.
+> **Cómo leerlo.** Está escrito para entenderse sin ser experto, pero sin recortar la precisión. Las cifras y reglas que vienen del código se dan tal cual. Cuando algo no lo pude comprobar, lo digo. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-2-n (el número es el del módulo 2, en el que se escribió este capítulo, no el del capítulo) y se detallan en `hallazgos.md`.
 >
 > **Privacidad.** El seguimiento privado (impulsos, recaídas, libido) se describe solo en su mecánica, sin datos ni ejemplos personales.
 
@@ -32,7 +32,7 @@
 |---|---|---|---|---|
 | Ánimo ahora (aviso) | 3 veces al día por omisión, al azar entre 10:00 y 21:00 | Cuadrícula 7 × 7 (valencia y activación) + opcionales | `Momento` con tipo `muestreo` | `muestreo_valencia`, `muestreo_activacion` |
 | Ánimo ahora (por iniciativa propia) | Cuando tú quieras (botón, widget, mosaico) | Igual | `Momento` con tipo `animo` | entra en `animo_valencia`, `animo_activacion` |
-| Ánimo al cerrar el día | Al final de la hoja de la noche | Cuadrícula 7 × 7 | `Momento` tipo `animo`, origen `cierre` | `animo_cierre_valencia`, `animo_cierre_activacion` |
+| Ánimo al cerrar el día | Al principio de la hoja de la noche, solo la de hoy (hasta la entrega N4, al final) | Cuadrícula 7 × 7 | `Momento` tipo `animo`, origen `cierre` | `animo_cierre_valencia`, `animo_cierre_activacion` |
 | Ánimo del día (diario) | Aviso a las 22:00 por omisión | Valencia 1–7, activación 1–7, dolor 0–5, con anclas | `Dia` | `valencia`, `activacion`, `dolor` |
 | Emociones con nombre, pensamiento, con quién | Dentro de cualquier registro de ánimo (opcional) | Listas | `Momento` | `n_<emoción>`, `n_<pensamiento>`, `con_*`, `acompanado_pct` |
 | Predicción de mañana | En la hoja de la noche | 1–7 | `Dia` | `prediccion`, `error_prediccion` |
@@ -86,7 +86,7 @@ Además, pide **dolor o molestia física de 0 a 5**, con anclas por **interferen
 
 **Por qué 1 a 7.** Una escala con un punto medio (4) permite decir «neutral», y siete opciones dan más detalle que cinco sin volverse difíciles de distinguir. Las **anclas** existen para que un «5» signifique lo mismo hoy que dentro de dos años: sin texto, la gente tiende a «reajustar» lo que significa cada número con el tiempo. **[Aproximación]**: es una práctica común y razonable; las anclas concretas son de la app y no están validadas como instrumento.
 
-**Detalle a saber.** Las anclas de activación mezclan un poco de valencia: «3 = relajado, en calma» suena agradable y «7 = acelerado, inquieto» suena algo desagradable. En el circumplejo puro, la activación no debería sugerir agrado ni desagrado. Además, la fila de activación usa **la misma paleta de color** que la de valencia (`Tonos.divergente`, del color «bajo» al «alto»), lo que puede insinuar que poca energía es «peor». Es un efecto pequeño y no hay forma de saber cuánto influye; lo dejo anotado (parte de H-2-11).
+**Detalle a saber.** Las anclas de activación mezclan un poco de valencia: «3 = relajado, en calma» suena agradable y «7 = acelerado, inquieto» suena algo desagradable. En el circumplejo puro, la activación no debería sugerir agrado ni desagrado. Además, hasta la entrega N4 la fila de activación usaba **la misma paleta de color** que la de valencia (`Tonos.divergente`, del color «bajo» al «alto»), lo que podía insinuar que poca energía es «peor»; desde N4 usa una paleta de una sola dirección (sección 3.7.1). Las anclas no cambiaron. Es un efecto pequeño y no hay forma de saber cuánto influye (parte de H-2-11).
 
 ### 3.3.4 Las dos escalas no son la misma medida
 
@@ -106,11 +106,11 @@ La app mide las tres:
 | El que recuerda | Diario de la noche («qué tan agradable fue el día») | `valencia` |
 | El que cree | Cuestionarios semanales/mensuales/anuales | `esc_*` |
 
-Y una cuarta, intermedia: el **cierre del día** («cómo estás ahora», al terminar la hoja de la noche) es momentáneo, pero siempre al final del día.
+Y una cuarta, intermedia: el **cierre del día** («cómo estás ahora», al abrir la hoja de la noche; hasta la entrega N4, al terminarla) es momentáneo, pero siempre al final del día.
 
 **Por qué el recuerdo no es un promedio.** Al evaluar un periodo, la gente pesa de más el **momento más intenso** y **cómo terminó**, y casi ignora la duración (regla «pico-final»; Kahneman et al., 1993). Así, un día bueno con un final malo puede recordarse como peor que su promedio.
 
-**Ejemplo (inventado).** Un martes respondes tres avisos: 6, 5 y 6 (promedio 5.67). A las 21:30 tienes una discusión fuerte. En el diario de las 23:00 pones **3**. El cierre del día lo marcas en 2. Las tres cifras son «verdad», pero de cosas distintas: el promedio de avisos refleja **la mayor parte del día**; el diario, **el día tal como quedó en tu memoria**; el cierre, **cómo te fuiste a dormir**. Ninguna es la «correcta»; por eso se guardan las tres.
+**Ejemplo (inventado).** Un martes respondes tres avisos: 6, 5 y 6 (promedio 5.67). A las 21:30 tienes una discusión fuerte. En el diario de las 23:00 pones **3**. El cierre del día lo marcas en 2. Las tres cifras son «verdad», pero de cosas distintas: el promedio de avisos refleja **la mayor parte del día**; el diario, **el día tal como quedó en tu memoria**; el cierre, **cómo estabas al sentarte a cerrar el día**. Ninguna es la «correcta»; por eso se guardan las tres.
 
 **Cómo se calcula cada una en el panel** (`Estadistica.panel`):
 
@@ -122,7 +122,7 @@ Y una cuarta, intermedia: el **cierre del día** («cómo estás ahora», al ter
 
 La app marca como «obvias» las relaciones entre estas variables (por ejemplo, `valencia` con `muestreo_valencia`), para no presentarlas como descubrimientos (capítulo 6).
 
-**Un detalle de presentación que puede influir (H-2-11).** Mientras llenas la valencia del día en la hoja de la noche, debajo aparecen los valores de los avisos de ese día («avisos: 10:56→6 14:55→5…»). Ver esos números antes de calificar el día puede **anclar** tu respuesta hacia ellos, y así las dos medidas se parecen más de lo que se parecerían por sí solas. Es una decisión de diseño razonable (ayuda a recordar), pero vuelve menos independiente la valencia del día. **[Diseño propio]**.
+**Un detalle de presentación que podía influir (H-2-11).** Hasta la entrega N4, mientras llenabas la valencia del día en la hoja de la noche, debajo aparecían los valores de los avisos de ese día («avisos: 10:56→6 14:55→5…»). Ver esos números antes de calificar el día puede **anclar** (arrastrar) tu respuesta hacia ellos, y así las dos medidas se parecen más de lo que se parecerían por sí solas. Desde N4 la línea solo aparece **después** de elegir la valencia (`PantallaNoche`); todavía puede influir si la corriges después de verla. **[Diseño propio]**.
 
 ---
 
@@ -186,7 +186,7 @@ Se marcan como familia «obvia» entre sí y con `muestreo_valencia`, `muestreo_
 
 También cambió la tarjeta «N avisos de ánimo sin contestar» de Hoy (H-9-9). Antes restaba registros a avisos planeados, y al tocarla la respuesta se guardaba como registro propio (`animo`), así que la tarjeta no se apagaba. Ahora cuenta los avisos sin respuesta por su hora (`AvisosAnimo.sinContestar`) y abre la captura con la hora del más antiguo. La respuesta queda como `muestreo` de ese aviso, con su `latencia_min`.
 
-**Qué no quedaba registrado hasta el esquema 12 (H-2-3).** Si el teléfono estuvo dormido y el pulso llegó más de 50 minutos tarde, el aviso **se marca como hecho pero nunca se muestra**, sin dejar rastro. Tampoco se guarda, como dato del día, **cuántos avisos se mostraron**: el plan se borra a los 3 días y las marcas internas a los 40. La pantalla de Hoy sí cuenta «avisos sin contestar» del día en curso, pero ese número no llega al panel. Consecuencia: no se puede calcular la **tasa de respuesta** histórica (avisos respondidos / avisos mostrados), que es la primera cifra que se reporta en un estudio de muestreo de experiencia, ni saber si los avisos sin respuesta se concentran en ciertos días u horas (Rintala et al., 2019, combinando datos de varios estudios de este tipo, encontraron una respuesta promedio de 78 %, más baja temprano en la mañana y que bajaba con los días de estudio). Gravedad media.
+**Qué no quedaba registrado hasta el esquema 12 (H-2-3).** Si el teléfono estuvo dormido y el pulso llegó más de 50 minutos tarde, el aviso **se marcaba como hecho pero nunca se mostraba**, sin dejar rastro (hoy sigue sin mostrarse, pero queda en `vencidos`). Tampoco se guardaba, como dato del día, **cuántos avisos se mostraron**: el plan se borra a los 3 días y las marcas internas a los 40. La pantalla de Hoy sí contaba «avisos sin contestar» del día en curso, pero ese número no llegaba al panel. Consecuencia, para los días anteriores al esquema 13: no se puede calcular la **tasa de respuesta** histórica (avisos respondidos / avisos mostrados), que es la primera cifra que se reporta en un estudio de muestreo de experiencia, ni saber si los avisos sin respuesta se concentraban en ciertos días u horas (Rintala et al., 2019, combinando datos de varios estudios de este tipo, encontraron una respuesta promedio de 78 %, más baja temprano en la mañana y que bajaba con los días de estudio). Gravedad media.
 
 ![Figura 3.2](figuras/fig08_dia_muestreo.png)
 
@@ -227,7 +227,7 @@ Los dos ejes resumen bien, pero pierden información: «enojo» y «miedo» caen
 - **Relleno con cero:** desde la fecha de tu **primer** registro de ánimo, los días que tienen documento de diario y no tienen registros cuentan como **0** en estas variables (no como «sin dato»). **[Diseño propio]**: es razonable si se asume que siempre registras cuando sientes algo, cosa que no es cierta en un día sin registros por olvido (ver H-1-1 sobre el criterio de rellenar con cero).
 - Con quién (solo con los registros **de aviso** que tienen compañía marcada): `acompanado_pct` (fracción de avisos en compañía), `con_pareja`, `con_amigos`… (fracción de avisos con cada tipo) y `valencia_acompanado` / `valencia_solo` (promedio de valencia en cada caso).
 
-**Compatibilidad con los registros viejos.** Antes existían «tipos de momento» (tristeza, alegría, pensando en…). La función `Catalogo.emocionesDe` traduce los viejos al formato nuevo (un momento viejo de tipo «tristeza» cuenta como la emoción tristeza). En el panel la serie es continua. **En la exportación `vm_dias.csv` no**: sus columnas `m_<tipo>` siguen contando solo los tipos viejos, así que desde el cambio valen 0 aunque registres esas emociones (H-2-13).
+**Compatibilidad con los registros viejos.** Antes existían «tipos de momento» (tristeza, alegría, pensando en…). La función `Catalogo.emocionesDe` traduce los viejos al formato nuevo (un momento viejo de tipo «tristeza» cuenta como la emoción tristeza). En el panel la serie es continua. **En la exportación `vm_dias.csv` no**: sus columnas `m_<tipo>` siguen contando solo los tipos viejos, así que desde el cambio valen 0 aunque registres esas emociones (H-2-13, pendiente; el diccionario de la v90 lo advierte: «registros de antes de unir ánimo y momentos»).
 
 ### 3.6.4 Nombrar puede cambiar lo que sientes
 
@@ -291,11 +291,11 @@ Estas preguntas están **plegadas por omisión**, así que se responden menos y 
 
 ### 3.7.4 «Retroactivo»: cuándo se llenó el día
 
-Cada documento de día guarda `retroactivo`: verdadero si el día se **guardó por primera vez** después de que terminó (`Repo.guardarDia`: la fecha del documento es anterior al día lógico de hoy). Sirve para separar lo escrito en el momento de lo escrito de memoria días después, que tiene más sesgo de recuerdo. **[Validado]** el propósito (Stone et al., 2002, mostraron que en diarios en papel mucha gente llena días atrasados de golpe).
+Cada documento de día guarda `retroactivo`: verdadero si el día se llenó **después de que terminó** (la regla exacta cambió en el esquema 13; abajo). Sirve para separar lo escrito en el momento de lo escrito de memoria días después, que tiene más sesgo de recuerdo. **[Validado]** el propósito (Stone et al., 2002, mostraron que en diarios en papel mucha gente llena días atrasados de golpe).
 
-**Hasta el esquema 12 se decidía en el primer guardado, no cuando se llenó el ánimo (H-2-2).** Ejemplo (inventado): el martes a las 8:10 tocas la calidad del sueño en el widget. Eso crea el documento del martes con `retroactivo = falso`. El viernes llenas la valencia y el diario del martes de memoria: el día **sigue marcado como no retroactivo**, porque la marca ya existía. Al revés, un día que se crea retroactivo lo es para siempre. Además, `ts_editado` se sobrescribe en cada cambio, así que tampoco queda cuándo se escribió cada parte. Gravedad media: es justo la variable pensada para controlar el sesgo de recuerdo.
+**Hasta el esquema 12 se decidía en el primer guardado, no cuando se llenó el ánimo (H-2-2).** `Repo.guardarDia` marcaba el día como retroactivo si, al crear el documento, su fecha era anterior al día lógico de hoy, y la marca ya no cambiaba. Ejemplo (inventado): el martes a las 8:10 tocas la calidad del sueño en el widget. Eso crea el documento del martes con `retroactivo = falso`. El viernes llenas la valencia y el diario del martes de memoria: el día **seguía marcado como no retroactivo**, porque la marca ya existía. Al revés, un día creado retroactivo lo era para siempre. Además, `ts_editado` se sobrescribe en cada cambio, así que tampoco quedaba cuándo se escribió cada parte. Gravedad media: es justo la variable pensada para controlar el sesgo de recuerdo.
 
-**Desde el esquema 13 (P-13)** cada día guarda `ts_valencia`: la hora en que la valencia pasó de vacía a llena, o en que cambió. Con ella, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). En el ejemplo, la valencia del martes se llenó el viernes, así que el martes queda retroactivo aunque el widget lo haya creado el mismo martes. Llenarla el martes a la 1:30 de la madrugada del miércoles no cuenta como retroactivo, porque sigue siendo el día lógico del martes. Corregir la valencia días después también vuelve el día retroactivo: el número nuevo es de memoria. Los días de antes de la v13 no tienen `ts_valencia` y conservan su marca. **[Diseño propio]**.
+**Desde el esquema 13 (P-13)** cada día guarda `ts_valencia`: la hora en que la valencia pasó de vacía a llena, o en que cambió. Con ella, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). En el ejemplo, la valencia del martes se llenó el viernes, así que el martes queda retroactivo aunque el widget lo haya creado el mismo martes. Llenarla el martes a la 1:30 de la madrugada del miércoles no cuenta como retroactivo, porque sigue siendo el día lógico del martes. Corregir la valencia días después también vuelve el día retroactivo: el número nuevo es de memoria. Los días de antes del esquema 13 no tienen `ts_valencia` y conservan su marca vieja, salvo que cambies su valencia. **[Diseño propio]**.
 
 **Un aviso que prometía una marca inexistente (H-2-14).** Si abrías un día futuro, la app decía «se marcará como escrito por adelantado», pero no existía ningún campo que lo registrara. Desde el esquema 14 el día guarda `ts_creado`, así que «escrito por adelantado» se deriva en R: el día lógico de `ts_creado` es anterior a la fecha del día. Desde la entrega 10c el aviso dice lo que pasa de verdad: «Puedes dejar notas; queda guardado cuándo las escribiste».
 
@@ -312,7 +312,7 @@ Dos precisiones (H-2-8):
 
 ## 3.8 La predicción de mañana
 
-En la hoja de la noche: «¿Cómo crees que estará tu ánimo mañana?», de 1 a 7 con las mismas anclas que la valencia. Al día siguiente el panel calcula:
+En la hoja de la noche: «¿Cómo crees que estará tu ánimo mañana?», de 1 a 7. Aunque la pregunta dice «ánimo», la escala es de agrado: sus anclas (`Catalogo.ANCLAS["prediccion_manana"]`) van de «1 = Muy desagradable» a «7 = Muy agradable», las mismas palabras de la valencia del día pero sin sus descripciones («angustia, desesperanza»…). Por eso se compara con la **valencia** del diario del día siguiente, no con la activación. Al día siguiente el panel calcula:
 
   `error_prediccion` = | predicción de ayer − valencia de hoy |
 
@@ -320,7 +320,7 @@ En la hoja de la noche: «¿Cómo crees que estará tu ánimo mañana?», de 1 a
 
 **Para qué.** Las personas solemos equivocarnos al predecir cómo nos sentiremos: sobrestimamos cuánto y cuánto tiempo nos afectarán los eventos (*pronóstico afectivo*; Wilson y Gilbert, 2005). Medir el error permite ver si con el tiempo te conoces mejor y qué días predices peor. **[Validado]** la idea; **[Diseño propio]** la variable.
 
-**Qué se pierde al usar el valor absoluto (H-2-10).** El valor absoluto quita la dirección del error. Ejemplo (inventado): el lunes predices 6 y el martes resulta 4 → error 2 (fuiste **optimista**). El miércoles predices 3 y el jueves resulta 5 → error 2 (fuiste **pesimista**). Para la variable son iguales, aunque son sesgos opuestos. Si quieres saber si tiendes al optimismo, hace falta también el **error con signo** (valencia − predicción). Gravedad baja; se resuelve agregando una columna.
+**Qué se pierde al usar el valor absoluto (H-2-10).** El valor absoluto quita la dirección del error. Ejemplo (inventado): el lunes predices 6 y el martes resulta 4 → error 2 (fuiste **optimista**). El miércoles predices 3 y el jueves resulta 5 → error 2 (fuiste **pesimista**). Para la variable son iguales, aunque son sesgos opuestos. Si quieres saber si tiendes al optimismo, hace falta también el **error con signo** (valencia − predicción). Gravedad baja; se resuelve agregando una columna. En la v90 sigue pendiente: ni el panel ni R tienen esa columna, aunque se puede calcular en R con `prediccion` del día anterior y `valencia`.
 
 ---
 
@@ -360,7 +360,7 @@ Referencias: Gosling, Rentfrow y Swann (2003); versión española, Romero et al.
 
 ### 3.9.2 Cuándo se piden
 
-`Escalas.proxima`: la fecha de la última respuesta más la frecuencia (7, 30 o 365 días); si nunca se respondió, hoy. El recordatorio (a las 19:00 por omisión, `escalas_hora`) insiste más con el atraso (`Escalas.horasAviso`): el día que toca, **una vez**; con 1 a 3 días de atraso, **dos** (12:00 y la hora configurada); con 4 o más, **tres** (10:00, 15:00 y la configurada o las 20:00, la que sea más tarde).
+`Escalas.proxima`: la fecha de la última respuesta más la frecuencia (7, 30 o 365 días); si nunca se respondió, hoy. El recordatorio (a las 19:00 por omisión, `escalas_hora`) insiste más con el atraso (`Escalas.horasAviso`, si está encendido `escalas_insistir`, como viene por omisión; si no, avisa una vez al día): el día que toca, **una vez**; con 1 a 3 días de atraso, **dos** (12:00 y la hora configurada); con 4 o más, **tres** (10:00, 15:00 y la configurada o las 20:00, la que sea más tarde).
 
 Que se pidan de forma regular es importante porque estos instrumentos preguntan por un periodo («los últimos 7 días»): si se responden irregularmente, los periodos se enciman o dejan huecos.
 
@@ -407,7 +407,7 @@ Una vez al año (la primera vez, cuando ya hay al menos 14 días con documento d
 
   posición = Σ (respuesta − 3) × signo × 100 / (2 × número de afirmaciones respondidas)  (−100 a +100)
 
-y se describe como «muy hacia…» (≤ −60 o ≥ 60), «hacia…» (de −60 a −20, o de 20 a 60) o «al centro» (entre −20 y 20).
+y se describe (`Politica.lado`) como «muy hacia…» (≤ −60 o ≥ 60), «hacia…» (más de −60 y hasta −20, o desde 20 y menos de 60) o «al centro» (más de −20 y menos de 20). Los bordes son simétricos: ±20 ya es «hacia…» y ±60 ya es «muy hacia…».
 
 **Para qué sirven los signos mezclados.** Hay personas que tienden a estar de acuerdo con todo (*aquiescencia*). Si todas las afirmaciones apuntaran al mismo lado, esa tendencia se confundiría con una postura. Mezclar afirmaciones en ambos sentidos la neutraliza… **si están equilibradas**.
 
@@ -435,7 +435,7 @@ Lo que no se arregla: los perfiles llenados antes de esta versión no tienen ese
 
 ### 3.12.1 Cómo se captura
 
-A la hora configurada (**8:00** por omisión, `hora_sueno`), si el día lógico aún no tiene sueño anotado, llega el aviso «¿Recuerdas lo que soñaste? Anótalo antes de levantarte; el recuerdo se borra en minutos», que se borra solo a las **3 horas**. El aviso solo se intenta durante las 3 horas siguientes a la hora configurada. La pantalla rápida pone **primero la narración** y después lo demás, precisamente porque el contenido de los sueños se olvida muy rápido al despertar. Que el olvido sea cuestión de minutos es la afirmación de la app; es coherente con lo que sé de la literatura sobre el recuerdo de sueños, pero no la verifiqué con una fuente en esta sesión **[sin verificar]**.
+A la hora configurada (**8:00** por omisión, `hora_sueno`), si el día lógico aún no tiene relato del sueño ni la marca «recordé un sueño» (la calidad sola no lo evita), llega el aviso «¿Recuerdas lo que soñaste? Anótalo antes de levantarte; el recuerdo se borra en minutos», que se borra solo a las **3 horas**. El aviso solo se intenta durante las 3 horas siguientes a la hora configurada. La pantalla rápida pone **primero la narración** y después lo demás, precisamente porque el contenido de los sueños se olvida muy rápido al despertar. Que el olvido sea cuestión de minutos es la afirmación de la app; es coherente con lo que sé de la literatura sobre el recuerdo de sueños, pero no la verifiqué con una fuente en esta sesión **[sin verificar]**.
 
 Se registra:
 
@@ -500,7 +500,7 @@ En un registro personal, los datos **no faltan al azar**. Lo típico es no llena
 
 **El registro de un toque.** La notificación del diario trae un botón «**Día difícil: solo un número**» que abre una pantalla con **una sola escala de valencia**. Al tocarla se guarda la valencia del día con la marca `dia_dificil = 1` (`QuickActivity.Minimo`). La idea: que llenar el día cueste un segundo justo cuando menos ganas hay. «Un día registrado así vale mucho más que un día vacío», dice la propia pantalla, y es correcto: en el ejemplo, con esos tres números el promedio vuelve a 4.50. **[Diseño propio]** con buen fundamento. La variable `dia_dificil` permite además ver cuántos días se registraron así.
 
-**Otros apoyos:** el diario de ayer aparece como pendiente hasta las 14:00 del día siguiente; los cuestionarios insisten más con el atraso; la «semana corta» reduce la app a lo mínimo; y `retroactivo` intenta separar lo escrito tarde (con el problema de H-2-2).
+**Otros apoyos:** desde la entrega N2 (D.37), Hoy muestra como pendientes los días de los 7 anteriores que no tienen ni valencia ni diario («Diario de ayer» o «Te faltan…», `Pendientes.faltantes`), a cualquier hora, hasta que los llenes; descartarlo los oculta solo ese día (antes, el diario de ayer dejaba de pedirse a las 14:00). Además, los cuestionarios insisten más con el atraso; la «semana corta» reduce la app a lo mínimo; y `retroactivo` separa lo escrito tarde (desde el esquema 13, con `ts_valencia`; sección 3.7.4).
 
 **Lo que faltaba hasta el esquema 13:** saber **cuántos avisos se mostraron** (H-2-3). Desde entonces `tasa_respuesta` está en el panel (sección 3.5.3). Con ella se puede ver si los avisos sin respuesta se concentran en ciertos días u horas, y usarla como covariable: por ejemplo, ver si los días con tasa baja son también los de valencia baja del diario.
 
@@ -546,7 +546,7 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 
 **Base científica.** Es una versión muy corta de la **prueba de vigilancia psicomotora (PVT)**, la medida estándar de cómo la falta de sueño afecta la atención (Basner y Dinges, 2011). La PVT estándar dura **10 minutos**, con esperas de **2 a 10 s**, cuenta como lapso un tiempo de **500 ms o más** y como **falsa salida** tanto tocar sin estímulo como responder en **menos de 100 ms** (demasiado rápido para ser una reacción real). La versión breve validada (PVT-B) dura **3 minutos**, con esperas de **1 a 4 s** (Basner, Mollicone y Dinges, 2011), y sus autores encontraron que para ella funcionaba mejor un umbral de lapso de **355 ms**.
 
-**Comparación (H-2-12).** La prueba de la app dura unos 30 segundos (10 intentos), mucho menos que cualquier versión validada; usa el umbral de 500 ms (pensado para la prueba de 10 minutos); hasta la entrega 10c **no marcaba como falsas salidas las respuestas de menos de 100 ms** (entraban en la media). Desde 10c, un toque a menos de 100 ms del estímulo cuenta como anticipación (suma a `anticipaciones`), no entra en los tiempos y el intento se repite, como en la PVT (D.74). Sigue midiendo en una pantalla táctil, con retrasos de dibujo y de detección del toque que varían entre teléfonos. La propia app advierte que solo sirve para compararte contigo mismo. **[Aproximación]**: útil para ver tendencias grandes, con mucho ruido de un día a otro. En el panel, `rt_media` es el promedio de las medias de las pruebas hechas ese día.
+**Comparación (H-2-12).** La pantalla dice «unos 30 segundos»; con 10 esperas de 1.5 a 4.0 s (2.75 s en promedio), 9 pausas de 0.6 s y los tiempos de reacción, sale más cerca de **unos 36 s** en promedio (de ~22 a ~50 s con reacciones de 0.15 a 0.5 s; cada anticipación suma 0.9 s y una espera nueva; cálculo propio a partir de `PantallaReaccion`). Es mucho menos que cualquier versión validada; usa el umbral de 500 ms (pensado para la prueba de 10 minutos); hasta la entrega 10c **no marcaba como falsas salidas las respuestas de menos de 100 ms** (entraban en la media). Desde 10c, un toque a menos de 100 ms del estímulo cuenta como anticipación (suma a `anticipaciones`), no entra en los tiempos y el intento se repite, como en la PVT (D.74). Sigue midiendo en una pantalla táctil, con retrasos de dibujo y de detección del toque que varían entre teléfonos. La propia app advierte que solo sirve para compararte contigo mismo. **[Aproximación]**: útil para ver tendencias grandes, con mucho ruido de un día a otro. En el panel, `rt_media` es el promedio de las medias de las pruebas hechas ese día.
 
 ---
 
@@ -556,15 +556,15 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 |---|---|---|---|---|
 | L-3.1 | Cuestionarios asignados a semanas que no les corresponden | 3.9.3 | Resuelto en 10c (D.62): cada puntaje cubre los días que pregunta | H-2-1 |
 | L-3.2 | Días malos sin registrar (MNAR) | 3.15 | Revisar `dia_dificil` y días sin diario; no confiar en promedios de periodos con muchos huecos | — |
-| L-3.3 | Tasa de respuesta a avisos desconocida | 3.5.3 | Usar `n_muestreos` con cautela; no hay denominador | H-2-3 |
+| L-3.3 | Tasa de respuesta a avisos desconocida | 3.5.3 | Desde el esquema 13 (10b), usar `avisos_mostrados` y `tasa_respuesta`; en los días anteriores no hay denominador y `n_muestreos` va con cautela | H-2-3 |
 | L-3.4 | Recuerdo frente a experiencia | 3.4 | No tratar `valencia` y `muestreo_valencia` como intercambiables | — |
 | L-3.5 | Registros por iniciativa propia sesgados hacia eventos | 3.5.4 | Preferir `muestreo_valencia` para «cómo estoy en general» | — |
 | L-3.6 | «No respondí» codificado como 0 | 3.7.3, 3.12.3 | `sueno_recordado`, hábitos antes de existir y «las tres» resueltos en 10c (D.63); `ctx_*` y hábitos no marcados siguen como cotas inferiores | H-2-4 |
-| L-3.7 | `retroactivo` poco fiable | 3.7.4 | No usarlo como control del sesgo de recuerdo hasta corregir | H-2-2 |
+| L-3.7 | `retroactivo` poco fiable | 3.7.4 | Corregido en el esquema 13 (10b, `ts_valencia`); en los días anteriores, que conservan la marca vieja, usarlo con cautela | H-2-2 |
 | L-3.8 | Perfil proyectado hacia atrás | 3.11 | Resuelto en 10c para los perfiles nuevos (D.74); en los ya llenados, desconfiar de `vida_*` antes de la primera respuesta | H-2-5 |
 | L-3.9 | Reactividad | 3.14 | Descartar o separar las primeras semanas de cada medición nueva | — |
 | L-3.10 | Instrumentos adaptados (periodo de 7 días) | 3.9.1 | Usar los puntajes para compararte contigo, no con normas | — |
-| L-3.11 | Anclaje al calificar el día | 3.4 | Tener presente que `valencia` y `muestreo_valencia` no son independientes | H-2-11 |
+| L-3.11 | Anclaje al calificar el día | 3.4 | Desde N4 los avisos se ven después de elegir la valencia; antes (sin `version_noche` = 2), tener presente que `valencia` y `muestreo_valencia` no son independientes | H-2-11 |
 
 ---
 
@@ -598,13 +598,13 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 2. Los avisos usan **muestreo aleatorio estratificado**: 3 al día por omisión, uno por tramo de la ventana 10:00–21:00, con margen de 45 minutos. Es un diseño estándar.
 3. El hallazgo más grave del módulo era que **los puntajes de los cuestionarios se asignaban en el panel a días de otras semanas** (ventanas de 14 y 30 días hacia atrás, con sobrescritura) (H-2-1). Desde la entrega 10c, cada puntaje cubre solo los días que pregunta y cada día se queda con la primera respuesta que lo cubre (D.62).
 4. Varias variables codificaban «no respondí» como 0 (`sueno_recordado`, contextos, hábitos, «las tres» necesidades) (H-2-4); en 10c se corrigieron `sueno_recordado`, los hábitos antes de existir y «las tres» (D.63); los contextos siguen la convención de la pantalla. El perfil se proyectaba hacia atrás (H-2-5; corregido para los perfiles nuevos en 10c, D.74); la marca `retroactivo` no reflejaba cuándo se llenó el ánimo (H-2-2; corregido en 10b). Los cierres guardados otro día ya no cuentan en el panel (D.74).
-5. No se guarda cuántos avisos se mostraron, así que la tasa de respuesta no se puede calcular (H-2-3).
+5. Hasta el esquema 12 no se guardaba cuántos avisos se mostraron, así que no hay tasa de respuesta de esos días (H-2-3); desde el esquema 13 (10b) el panel tiene `avisos_*` y `tasa_respuesta`.
 6. El **registro de un toque** para días difíciles es una buena defensa contra el sesgo de los días malos sin registrar.
 7. Los cuestionarios están bien puntuados (incluidas las preguntas inversas), pero WHO-5 y PSS-4 usan un periodo de 7 días distinto al original, y algunos puntos de corte que muestra la app no los pude verificar.
-8. Se identificaron **15 hallazgos** (H-2-1 a H-2-15). No se cambió código.
+8. El módulo 2 identificó **15 hallazgos** (H-2-1 a H-2-15) y no cambió código. Después, el módulo 10 resolvió H-2-1, H-2-2, H-2-3, H-2-4, H-2-7, H-2-12 y H-2-14, y en parte H-2-5, H-2-6 y H-2-15; la revisión de navegación (esquema 14) resolvió H-2-8 (completado en 10c), H-2-9 y H-2-11. Siguen pendientes H-2-10 y H-2-13.
 
 ---
 
 ### Referencias citadas en este capítulo
 
-Ver `referencias.md`. Citas: Basner y Dinges (2011); Basner, Mollicone y Dinges (2011); Cohen, Kamarck y Mermelstein (1983); Conner y Barrett (2012); Cruise et al. (1996); Csikszentmihalyi y Larson (1987); Csikszentmihalyi y LeFevre (1989); Deci y Ryan (2000); Domhoff (2003); Gosling, Rentfrow y Swann (2003); Hall y Van de Castle (1966); Hughes et al. (2004); Kahneman et al. (1993); Kashdan, Barrett y McKnight (2015); Lazarus y Folkman (1984); Lieberman et al. (2007); Remor (2006); Rintala et al. (2019); Robinson y Clore (2002); Romero et al. (2012); Rubin (1976); Russell (1980); Russell, Weiss y Mendelsohn (1989); Shiffman, Stone y Hufford (2008); Stone et al. (2002); Topp et al. (2015); Wilson y Gilbert (2005).
+Ver `referencias.md`. Citas: Basner y Dinges (2011); Basner, Mollicone y Dinges (2011); Cohen, Kamarck y Mermelstein (1983); Conner y Barrett (2012); Cruise et al. (1996); Csikszentmihalyi y Larson (1987); Csikszentmihalyi y LeFevre (1989); Deci y Ryan (2000); Domhoff (2003); Gosling, Rentfrow y Swann (2003); Hall y Van de Castle (1966); Hughes et al. (2004); Kahneman et al. (1993); Kashdan, Barrett y McKnight (2015); Lazarus y Folkman (1984); Lieberman et al. (2007); Remor (2006); Rintala et al. (2019); Robinson y Clore (2002); Romero et al. (2012); Rubin (1976); Russell (1980); Russell, Weiss y Mendelsohn (1989); Schwarz y Clore (1983); Schwarz, Strack y Mai (1991); Shiffman, Stone y Hufford (2008); Stone et al. (2002); Topp et al. (2015); Westermann et al. (1996); Wilson y Gilbert (2005).
