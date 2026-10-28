@@ -475,8 +475,6 @@ Eliges un objetivo (tu ánimo, una persona, un lugar, una app, una etapa de vida
 
 ### 6.13.2 Cómo exactamente (`Analisis.factores`)
 
-Para cada variable *v* distinta del objetivo:
-
 Desde la entrega 10c (D.66), con un interruptor «Quitar tendencias» que empieza como estaba en la lista desde la que llegaste (`Herramienta.sinTendencia`):
 
 1. Prepara el objetivo: su serie y, con el interruptor encendido, sus **restos sin tendencia** (`Estadistica.sinTendencia`, ±10 días, como en 6.5); calcula su autocorrelación (`Estadistica.ar1`).
@@ -794,7 +792,7 @@ El script `vestigium.R` reproduce casi todas las herramientas. Desde la entrega 
 2. «Las relaciones más marcadas» es el análisis más cuidadoso de la app: **quita tendencias** (±10 días), **descuenta los días parecidos** (nEf) y **corrige por miles de comparaciones** (BH, q < 0.10). Una relación firme ahí es una pista seria, no una prueba de causa.
 3. Desde 10c, «Todo lo que se mueve con algo» usa la misma maquinaria, y las diferencias de medias usan **t de Welch** con el error estándar corregido porque los días seguidos se parecen (H-5-3, H-5-5, resueltos en 10c, D.65 y D.66). Antes, la ficha podía marcar como firme lo que la lista llamaba azar.
 4. **El ciclo semanal no se quita** al quitar la tendencia (H-5-6).
-5. Desde la entrega 10d, **R analiza el mismo panel que la app**, con las mismas variables y las mismas parejas obvias, y `vm_factores`, `vm_semana` y `vm_palabras` tienen las correcciones de 10c (H-5-1, H-5-2, resueltos): R sirve para verificar lo que muestra la app. Se comprobó con datos inventados; con una exportación real, el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). `vm_cruce` sigue con Spearman y n bruto.
+5. Desde la entrega 10d, **R analiza el mismo panel que la app**, con las mismas variables y las mismas parejas obvias, y `vm_factores`, `vm_semana` y `vm_palabras` tienen las correcciones de 10c (H-5-1, H-5-2, resueltos): R sirve para verificar lo que muestra la app. Se comprobó con datos inventados; con una exportación real, el autor comprobó que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). `vm_cruce` sigue con Spearman y n bruto.
 6. Con 90 días independientes se ve una relación de 0.3; con miles de parejas y días parecidos, hace falta más de 0.5. Paciencia: el sistema está pensado para años.
 
 ### Referencias citadas en este capítulo

@@ -68,7 +68,7 @@ Leída con esos modelos, Vestigium Mei toma decisiones claras en cada etapa:
 | Actuar | No saber si un cambio funcionó | Experimentos personales sorteados | 8 |
 | (Abandono, Epstein et al., 2015) | Dejar de registrar | Constancia en lugar de rachas, campañas, recordatorios | 9 |
 
-La respuesta a la barrera de Choe et al. (2014) es la parte más ambiciosa de la app: en lugar de dejar que la persona saque conclusiones a ojo, el capítulo 6 describe un análisis que quita tendencias, descuenta que los días se parecen entre sí y corrige por las miles de comparaciones. **[Diseño propio]** la combinación; cada pieza está **[Validada]** en la literatura estadística (capítulo 6).
+La respuesta a la barrera de Choe et al. (2014) es la parte más ambiciosa de la app: en lugar de dejar que la persona saque conclusiones a ojo, el capítulo 6 describe un análisis que quita tendencias, descuenta que los días se parecen entre sí y corrige por las miles de comparaciones. **[Diseño propio]** la combinación; cada pieza está **[Validado]** en la literatura estadística (capítulo 6).
 
 ### 1.3.3 Para qué sirve conocerse con datos
 
@@ -98,7 +98,7 @@ Seis personas inventadas, 60 días cada una. Entre personas, quien duerme más e
 
 *Figura 1.1. Seis personas sintéticas: relación entre personas (azul, discontinua) y relación dentro de una persona (naranja). Script: `figuras/fig30_dentro_entre.py`.*
 
-Por eso el panel de la app compara **tus días entre sí**, y no te compara con normas de población. Donde la app usa normas (los puntos de corte del WHO-5, los umbrales de Cohen, la «recomendación» de 7 h de sueño), los capítulos lo señalan como un préstamo que hay que leer con cuidado (capítulos 3, 8 y 9).
+Por eso, el panel de la app compara **tus días entre sí**, y no te compara con normas de población. Donde la app usa normas (los puntos de corte del WHO-5, los umbrales de Cohen, la «recomendación» de 7 h de sueño), los capítulos lo señalan como un préstamo que hay que leer con cuidado (capítulos 3, 8 y 9).
 
 ### 1.4.3 Medir en la vida diaria
 
@@ -130,7 +130,7 @@ La mayoría de los estudios de muestreo de experiencia duran una o dos semanas, 
 
 ### 1.5.2 Razones a favor
 
-1. **Potencia.** Con pocos días solo se ven relaciones enormes. Para una sola pregunta y días independientes, con 90 días se detecta una correlación de **0.29**; con 365, de **0.15** (capítulo 6, sección 6.21; fórmula B.15). Si los días se parecen a sus vecinos (autocorrelación 0.5 en las dos variables) hacen falta más: **0.37** con 90 días y **0.19** con 365. Y en la lista de relaciones, que revisa miles de parejas, el umbral efectivo se parece al de α = 0.001: **0.52** con 90 días, **0.27** con 365. Solo un registro de años permite ver relaciones moderadas en la lista completa.
+1. **Potencia.** Con pocos días solo se ven relaciones enormes. Para una sola pregunta y días independientes, con 90 días se detecta una correlación de **0.29**; con 365, de **0.15** (capítulo 6, sección 6.21; fórmula B.15). Si los días se parecen a sus vecinos (autocorrelación 0.5 en las dos variables), hacen falta más: **0.37** con 90 días y **0.19** con 365. Y en la lista de relaciones, que revisa miles de parejas, el umbral efectivo se parece al de α = 0.001: **0.52** con 90 días, **0.27** con 365. Solo un registro de años permite ver relaciones moderadas en la lista completa.
 2. **Lo que pasa poco.** Viajes, enfermedades, mudanzas, rupturas, una persona que ves una vez al mes: para tener 5 días con una persona (el mínimo de `per_`) o 60 días antes y 60 después de un cambio de vida («Antes y después», capítulo 8, sección 8.11), hace falta tiempo.
 3. **Los ciclos lentos.** Las estaciones dan un solo ciclo al año. Para separar «el invierno» de «lo que me pasó ese invierno» hacen falta varios inviernos.
 4. **Tu propia normalidad.** Los días atípicos se juzgan contra tu mediana (`Analisis.atipicos`, al menos 20 días por variable), la variabilidad del corazón contra tu línea base (capítulo 4, sección 4.5.2) y las cifras de los modelos fisiológicos sirven para compararte contigo mismo (capítulo 5). Una línea base larga es más estable.
@@ -235,7 +235,7 @@ Esta clasificación sigue la regla del plan: **no presentar heurísticas como mo
 | Ap. C | Funciones de R | Qué hace cada función de `vestigium.R` y en qué difiere de la app |
 | Ap. D | Cambios metodológicos aplicados | Cada cambio del módulo 10 y de la revisión de navegación, con su motivo y su versión |
 
-**Cómo se hizo.** El paper se escribió por módulos, cada uno en una sesión de trabajo con un modelo de Claude, leyendo el código de la app (el plan está en `PLAN_PAPER_METODOLOGIA.md`). Los módulos 1 a 8 describieron el código y anotaron problemas en `hallazgos.md` sin cambiarlo; el módulo 9 revisó todos los hallazgos y propuso cambios (`revision_propuestas.md`); el autor los aprobó, y el módulo 10 los aplicó en cuatro entregas, actualizando los capítulos. Por eso muchos capítulos dicen «hasta la entrega 10c era así; desde entonces es así»: el paper documenta también **la historia de las decisiones**, que importa para leer datos viejos.
+**Cómo se hizo.** El paper se escribió por módulos, cada uno en una sesión de trabajo con un modelo de Claude, leyendo el código de la app (el plan está en `PLAN_PAPER_METODOLOGIA.md`). Los módulos 1 a 8 describieron el código y anotaron problemas en `hallazgos.md` sin cambiarlo; el módulo 9 revisó todos los hallazgos y propuso cambios (`revision_propuestas.md`); el autor los aprobó, y el módulo 10 los aplicó en cuatro entregas, actualizando los capítulos. Por eso, muchos capítulos dicen «hasta la entrega 10c era así; desde entonces es así»: el paper documenta también **la historia de las decisiones**, que importa para leer datos viejos.
 
 **Lo que no es.** No es un artículo para publicar ni una revisión sistemática de la literatura: las referencias se eligieron para respaldar o discutir decisiones concretas, y cada una se comprobó en la sesión en que se citó.
 

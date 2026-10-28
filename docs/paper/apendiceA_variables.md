@@ -397,7 +397,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `pais_` | Mundo | 6 | 3 | Horas en ‹elemento› |
 | `musc_` | Cuerpo | 12 | 3 | Series de ‹elemento› |
 | `act_` | Cuerpo | 6 | 3 | Minutos ‹elemento› |
-| `nut_` | Nutrición | 60 | 14 | nombre del nutriente de MacroFactor traducido (p. ej. «Vitamina C (mg)»); excluye los ya fijos, los objetivos y los pasos/peso de MacroFactor |
+| `nut_` | Nutrición | 60 | 14 | nombre del nutriente de MacroFactor traducido (p. ej., «Vitamina C (mg)»); excluye los ya fijos, los objetivos y los pasos/peso de MacroFactor |
 | `ali_` | Nutrición | 12 | 5 | Comí ‹elemento› (0/1) |
 | `esc_` | Cuestionarios | todos | — | «‹cuestionario›: ‹puntaje›»; desde 10c el puntaje vale para su día y los 6 previos (WHO-5, PSS-4) o los 29 previos (UCLA-3), y un día cubierto por dos respuestas se queda con la primera; la personalidad, hasta el test siguiente. Hasta 10c: 14 o 30 días previos, ganando la última |
 | `pol_` | Política | ejes | — | «Brújula: ‹eje›»; la posición de cada test vale hasta el test siguiente (máx. 400 días) |
@@ -486,7 +486,7 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_sustancias.csv`, `vm_tramos.csv`, `vm_suplementos.csv` | `ts_creado` | Cuándo se anotó. En `vm_suplementos.csv` va también `ts` (cuándo se tomó); las porciones estimadas de probióticos quedan vacías |
 | `vm_gastos.csv` | `subcategoria` | Subcategoría dentro de la categoría (por ejemplo, Comida → Café). Vacía = sin subcategoría |
 | `vm_dias.csv`, `vm_panel.csv` | `version_noche` | Con qué orden de preguntas se llenó la hoja de la noche: 1 = el de hasta el esquema 14; 2 = el orden nuevo (N-18, desde la entrega N4: el ánimo del momento primero; capítulo 3, sección 3.7.1). Vacío = no pasó por la hoja o es de antes |
-| `vm_salud.csv` | `sueno_descartadas` | Las sesiones del reloj de esa noche que marcaste «no cuenta» (fuente y horas, por ejemplo «Samsung Health 15:10–16:05»); no entran ni en `sueno_min` ni en `siesta_reloj_min` |
+| `vm_salud.csv` | `sueno_descartadas` | Las sesiones del reloj de esa noche que marcaste «no cuenta» (fuente y horas, por ejemplo, «Samsung Health 15:10–16:05»); no entran ni en `sueno_min` ni en `siesta_reloj_min` |
 
 **Cómo leer `ts_creado`.** La hora de un registro (`ts`, `inicio` o `fecha` + `hora`) dice **cuándo pasó**; `ts_creado`, **cuándo lo anotaste**. La diferencia dice si se anotó en el momento o después. En R, `vm_retraso(tabla, umbral_min = 60)` la calcula (`retraso_min`) y marca `tarde` si pasó más del umbral o cayó en otro día lógico (Apéndice C). El umbral es **[Diseño propio]**.
 
@@ -535,7 +535,7 @@ No cambia lo que se guarda (`SCHEMA_V` = 14); cambia cómo se calcula el panel c
 
 Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de algunas columnas de `vm_panel.csv` y hay dos tablas nuevas. Detalle en el capítulo 2 (sección 2.8) y en el Apéndice D.
 
-**`vm_panel.csv` con los valores de la app (P‑30).** En cada columna que comparte nombre con el panel de la app, el valor es el de la app (`Exportar.comoLaApp`), con el mismo tipo que tenía la columna (0/1, entero o número). Las que más cambian:
+**`vm_panel.csv` con los valores de la app (P-30).** En cada columna que comparte nombre con el panel de la app, el valor es el de la app (`Exportar.comoLaApp`), con el mismo tipo que tenía la columna (0/1, entero o número). Las que más cambian:
 
 | Columna | Desde 10d (= la app) | Antes en `vm_panel.csv` |
 |---|---|---|
@@ -572,8 +572,8 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de alguna
 | `vm_variables.csv` | `variable` | Nombre de la columna en `vm_panel_extendido.csv` |
 | `vm_variables.csv` | `nombre`, `grupo` | Qué es y su grupo, como lo dice la app |
 | `vm_variables.csv` | `privada` | Seguimiento privado (0/1): la app no lo cruza; en R, solo con `privadas = TRUE` |
-| `vm_familias.csv` | `familia` | La regla de la app que la produce (por ejemplo `familia_3`, `total:per_`, `persona:ana`, `escala:who5`, `igual:distancia_km`) |
+| `vm_familias.csv` | `familia` | La regla de la app que la produce (por ejemplo, `familia_3`, `total:per_`, `persona:ana`, `escala:who5`, `igual:distancia_km`) |
 | `vm_familias.csv` | `variable` | Columna de `vm_panel_extendido.csv`, o su nombre en `vm_panel.csv` |
 | `vm_familias.csv` | `lado` | 0 = obvia con todas las de la familia; 1 o 2 = obvia solo con las del otro lado |
 
-**Otras columnas que cambiaron (P‑33).** `vm_dias.csv:schema_v` vale 0 en los días importados de Obsidian o de la versión web que no traían versión; `ts_creado` y `ts_editado` de los días de Obsidian quedan vacíos si la nota no los traía. `vm_ubicaciones.csv:precision_m` guarda la precisión de los puntos del formato viejo de Takeout (antes vacía). La descripción de `vm_red_nodos.csv:grado` aclara que usa 1 día juntas y hasta 400 personas, frente a 2 días y 45 personas en la app.
+**Otras columnas que cambiaron (P-33).** `vm_dias.csv:schema_v` vale 0 en los días importados de Obsidian o de la versión web que no traían versión; `ts_creado` y `ts_editado` de los días de Obsidian quedan vacíos si la nota no los traía. `vm_ubicaciones.csv:precision_m` guarda la precisión de los puntos del formato viejo de Takeout (antes vacía). La descripción de `vm_red_nodos.csv:grado` aclara que usa 1 día juntas y hasta 400 personas, frente a 2 días y 45 personas en la app.

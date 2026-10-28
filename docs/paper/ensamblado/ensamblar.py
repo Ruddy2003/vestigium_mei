@@ -1,7 +1,7 @@
 """Ensambla el paper completo (módulo 12) a partir de los archivos de docs/paper/.
 
 Qué hace, en orden:
-1. Une resumen, capítulos 1 a 11, apéndices A a D y una lista única de referencias.
+1. Une resumen, capítulos 1 a 11, apéndices A a E (E, el glosario, lo genera glosario.py) y una lista única de referencias.
 2. Quita las listas de referencias de cada capítulo (la lista final las reemplaza) y las líneas horizontales.
 3. Junta cada imagen con su pie («*Figura N.M. …*») para que el pie quede como leyenda de la figura.
 4. Numera las tablas (Tabla N.k, con el título de la sección donde está) y las ecuaciones en bloque
@@ -21,7 +21,8 @@ SALIDA = Path(__file__).resolve().parent / "vestigium_mei_paper.md"
 CAPITULOS = ["cap01_introduccion.md", "cap02_arquitectura.md", "cap03_estado_subjetivo.md", "cap04_datos_pasivos.md",
              "cap05_modelos_fisiologicos.md", "cap06_estadistica.md", "cap07_red_social.md", "cap08_experimentos.md",
              "cap09_reportes_motivacion.md", "cap10_privacidad_integridad.md", "cap11_discusion.md"]
-APENDICES = ["apendiceA_variables.md", "apendiceB_formulas.md", "apendiceC_funciones_R.md", "apendiceD_cambios.md"]
+APENDICES = ["apendiceA_variables.md", "apendiceB_formulas.md", "apendiceC_funciones_R.md", "apendiceD_cambios.md",
+             "apendiceE_glosario.md"]
 
 PORTADA = """---
 title: "Vestigium Mei"
@@ -66,7 +67,8 @@ def figuras(t):
 
 
 def titulo_limpio(h):
-    h = re.sub(r"^[\dA-D]+(\.\d+[a-z]?)*\.?\s+", "", h.strip())   # quita «2.6.1 », «B.3 »
+    h = re.sub(r"^(Capítulo \d+|Apéndice [A-E])[.·]\s+", "", h.strip())   # quita «Capítulo 3. »
+    h = re.sub(r"^[\dA-D]+(\.\d+[a-z]?)*\.?\s+", "", h)   # quita «2.6.1 », «B.3 »
     h = re.sub(r"`", "", h)
     return h.strip()
 
@@ -80,7 +82,7 @@ def tablas_y_ecuaciones(t, pref):
         l = lineas[i]
         if l.startswith("```"):
             en_codigo = not en_codigo
-        if not en_codigo and re.match(r"^#{2,4} ", l):
+        if not en_codigo and re.match(r"^#{1,4} ", l):
             seccion = l.lstrip("#").strip()
         # Tabla: una fila con | seguida de la fila separadora
         if (not en_codigo and l.lstrip().startswith("|") and i + 1 < len(lineas)
@@ -131,7 +133,7 @@ def norm(s):
 def referencias():
     t = (RAIZ / "referencias.md").read_text(encoding="utf-8")
     ents = [p.strip() for p in t.split("\n\n")
-            if re.match(r"^[A-ZÁÉÍÓÚÑ]", p.strip()) and re.search(r"\((\d{4}|s\. f\.)[a-z]?[,)]", p[:300])]
+            if re.match(r"^(?:[A-ZÁÉÍÓÚÑ]|(?:von|van|de|del|da) [A-Z])", p.strip()) and re.search(r"\((\d{4}|s\. f\.)[a-z]?[,)]", p[:300])]
     vistas, lista = {}, []
     for e in ents:
         e = " ".join(e.split())
@@ -169,7 +171,7 @@ def main():
     partes.append(limpiar(resumen.replace("# Resumen", "# Resumen {.unnumbered}", 1)))
     for f in CAPITULOS + APENDICES:
         t = (RAIZ / f).read_text(encoding="utf-8")
-        pref = re.match(r"cap(\d+)", f).group(1).lstrip("0") if f.startswith("cap") else re.match(r"apendice([A-D])", f).group(1)
+        pref = re.match(r"cap(\d+)", f).group(1).lstrip("0") if f.startswith("cap") else re.match(r"apendice([A-E])", f).group(1)
         t = quitar_referencias_del_capitulo(t)
         t = figuras(t)
         t = tablas_y_ecuaciones(t, pref)

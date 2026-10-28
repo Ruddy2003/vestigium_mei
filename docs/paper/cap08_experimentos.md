@@ -21,7 +21,7 @@
 | **Intervalo de confianza del 95 %** | Un rango de valores plausibles para el efecto. Si se repitiera el experimento muchas veces con el mismo método, el 95 % de esos rangos contendría el efecto real… **si los supuestos del método se cumplen** (sección 8.6). |
 | **Falsa señal** (falso positivo) | Que el método diga «hay un efecto» cuando en realidad no lo hay. Un intervalo del 95 % bien hecho lo hace el **5 %** de las veces. |
 | **Autocorrelación** | Que un día se parezca al anterior (si hoy estás bien, mañana probablemente también). La autocorrelación de orden 1, *ρ*, va de −1 a 1; 0 significa días independientes. |
-| **d de Cohen** | La diferencia entre las dos condiciones medida en «desviaciones típicas»: cuántas veces el vaivén normal de un día a otro (Cohen, 1988). |
+| **d de Cohen** | La diferencia entre las dos condiciones medida en «desviaciones estándar»: cuántas veces el vaivén normal de un día a otro (Cohen, 1988). |
 | **Tendencia** | Que la medida suba o baje sola con el tiempo, por algo ajeno al experimento (la estación del año, avanzar en el gimnasio, una racha). |
 | **Cegamiento** | Que quien recibe la acción no sepa si la está recibiendo (como con una pastilla de azúcar). En estos experimentos casi nunca es posible. |
 
@@ -73,7 +73,7 @@ Al tocar **«Sellar y empezar el lunes»**:
 
 Después, la tarjeta muestra la hipótesis con «sellada el … a las …». La pantalla no permite editar la pregunta, la hipótesis, la variable ni el plan; solo «Terminar experimento». Tampoco hay botón para borrar un experimento.
 
-**Razonamiento.** Es un **prerregistro** casero: escribir qué esperas antes de ver los datos. Sin él, es fácil reinterpretar después («en realidad lo que quería ver era la energía, no el ánimo») y encontrar algo por casualidad (Simmons et al., 2011; Nosek et al., 2018). Que no se puedan borrar los experimentos también ayuda: los que no salieron quedan a la vista, en lugar de olvidarse. **[Diseño propio]** inspirado en una práctica **[Validada]**.
+**Razonamiento.** Es un **prerregistro** casero: escribir qué esperas antes de ver los datos. Sin él, es fácil reinterpretar después («en realidad lo que quería ver era la energía, no el ánimo») y encontrar algo por casualidad (Simmons et al., 2011; Nosek et al., 2018). Que no se puedan borrar los experimentos también ayuda: los que no salieron quedan a la vista, en lugar de olvidarse. **[Diseño propio]** inspirado en una práctica **[Validado]**.
 
 **Límites del sellado** (H-7-10):
 
@@ -191,7 +191,7 @@ $$\bar{x}_c - \bar{x}_s \;\pm\; t_{0.975,\,gl}\cdot EE$$
 
 $$d = \frac{\bar{x}_c - \bar{x}_s}{s_p}, \qquad s_p = \sqrt{\frac{(n_c-1)s_c^2 + (n_s-1)s_s^2}{n_c+n_s-2}}$$
 
-   con la **desviación típica agrupada** $s_p$. La palabra (`Experimentos.tamano`): |*d*| < 0.2 «muy pequeño», < 0.5 «pequeño», < 0.8 «mediano» y desde 0.8 «grande». Son los puntos de referencia de Cohen (1988). No cambió en la 10c.
+   con la **desviación estándar agrupada** $s_p$. La palabra (`Experimentos.tamano`): |*d*| < 0.2 «muy pequeño», < 0.5 «pequeño», < 0.8 «mediano» y desde 0.8 «grande». Son los puntos de referencia de Cohen (1988). No cambió en la 10c.
 
 4. **Prueba de tendencia** (sección 8.8).
 
@@ -259,7 +259,7 @@ Su ventaja: **no supone que los días sean independientes**, porque se apoya sol
 ### 8.6.5 El d de Cohen en una sola persona
 
 - **Sin corrección de Hedges** (H-7-7; no se cambió en la 10c porque no cumple el criterio de cambio: se documenta). El *d* calculado con pocos datos sale un poco inflado; Hedges (1981) derivó la corrección. Con la aproximación habitual, el factor es 1 − 3/(4(*n*<sub>c</sub> + *n*<sub>s</sub>) − 9): 0.98 con 19 + 19 días (0.71 → 0.69) y 0.80 con 3 + 3. Importa solo con muy pocos días.
-- **Los umbrales de Cohen no significan lo mismo aquí.** Cohen propuso 0.2, 0.5 y 0.8 para diferencias **entre personas**, con la desviación típica de un grupo de personas. En un experimento N-de-1, la desviación es la de **tus días**, que suele ser menor que la que hay entre personas, así que el mismo cambio da un *d* más grande. Un «mediano» aquí no equivale a un «mediano» en un estudio de grupos. **[Aproximación]**: es útil como escala dentro de la app, no como comparación con la literatura.
+- **Los umbrales de Cohen no significan lo mismo aquí.** Cohen propuso 0.2, 0.5 y 0.8 para diferencias **entre personas**, con la desviación estándar de un grupo de personas. En un experimento N-de-1, la desviación es la de **tus días**, que suele ser menor que la que hay entre personas, así que el mismo cambio da un *d* más grande. Un «mediano» aquí no equivale a un «mediano» en un estudio de grupos. **[Aproximación]**: es útil como escala dentro de la app, no como comparación con la literatura.
 
 ---
 

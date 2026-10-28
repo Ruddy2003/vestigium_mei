@@ -1,8 +1,9 @@
 #!/bin/sh
-# Construye el paper completo (módulo 12): Markdown ensamblado, .docx y .pdf.
+# Construye el paper completo (módulos 12 y 13): Markdown ensamblado, .docx y .pdf.
 # Requiere python3 con python-docx, pandoc y LibreOffice. Uso: sh construir.sh (desde docs/paper/ensamblado)
 set -e
 cd "$(dirname "$0")"
+python3 glosario.py
 python3 ensamblar.py
 [ -f plantilla_base.docx ] || pandoc -o plantilla_base.docx --print-default-data-file reference.docx
 python3 plantilla.py
