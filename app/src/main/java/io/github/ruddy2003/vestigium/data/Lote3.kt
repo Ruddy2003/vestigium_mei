@@ -361,7 +361,8 @@ object Experimentos {
         Plantilla("creatina", "Creatina", "¿La creatina cambia mi fuerza o mi energía?", "Tomar 5 g de creatina al día", "fuerza_ref_kg", "antes_despues", 12, 28,
             "Antes y después: la reserva del músculo tarda semanas en llenarse y en vaciarse, así que alternar semanas no sirve. Se mide con un " +
                 "ejercicio fijo, el press inclinado con mancuernas (la 1RM estimada de tu mejor serie), para que no dependa de qué entrenaste ese " +
-                "día; solo cuentan los días en que lo hiciste. Si vas subiendo de peso, la cifra sube sola: una mejora no prueba que fue la creatina."),
+                "día; solo cuentan los días en que lo hiciste, así que hazlo al menos dos veces por semana (con una, apenas quedan días con la acción). " +
+                "Si vas subiendo de peso, la cifra sube sola: una mejora no prueba que fue la creatina."),
         Plantilla("hora_dormir", "Hora de dormir", "¿Dormirme antes de las 00:00 mejora cómo me siento?", "Estar en la cama antes de las 00:00", "valencia", "alterno", 6, 1,
             "Semanas alternas sorteadas; el primer día de cada cambio no cuenta."),
         Plantilla("pantalla_noche", "Pantalla antes de dormir", "¿Soltar el teléfono una hora antes de dormir mejora mi sueño?", "Sin pantalla en la última hora antes de dormir", "sueno_calidad", "alterno", 6, 1,

@@ -90,7 +90,11 @@ object Importar {
             if (r.youtube.isNotEmpty()) Repo.importarYoutube(r.youtube.filter { y -> Repo.youtube.none { it.id == y.id } }, reemplazarSuscripciones = false)
             if (r.nutricion.isNotEmpty() || r.series.isNotEmpty()) {
                 val fs = r.nutricion.map { it.fecha } + r.comidas.map { it.fecha } + r.series.map { it.fecha } + r.entrenos.map { it.fecha }
-                if (fs.isNotEmpty() && Repo.nutricion.isEmpty() && Repo.entrenos.isEmpty()) Repo.importarMacrofactor(fs.min(), fs.max(), r.nutricion, r.comidas, r.series, r.entrenos)
+                if (fs.isNotEmpty() && Repo.nutricion.isEmpty() && Repo.entrenos.isEmpty()) {
+                    Repo.importarMacrofactor(fs.min(), fs.max(), r.nutricion, r.comidas, r.series, r.entrenos)
+                    // Un respaldo de antes del esquema 15 no trae la fuerza de referencia: se calcula con sus series (H-7-14).
+                    runCatching { Repo.completarFuerzaReferencia() }
+                }
             }
             Repo.cambiarConfig { c -> combinarConfig(c, r.config, nuevo) }
             return ResultadoImport("Respaldo importado: $n días nuevos, ${r.momentos.size} momentos, ${r.gastos.size} gastos y ${r.visitas.size} visitas revisados" +
@@ -145,6 +149,8 @@ object Importar {
             personas = c.personas.map { p -> r.personas.firstOrNull { it.nombre == p.nombre }?.let { q -> p.copy(nacimiento = p.nacimiento.ifBlank { q.nacimiento }, fallecimiento = p.fallecimiento.ifBlank { q.fallecimiento }) } ?: p } +
                 r.personas.filter { p -> c.personas.none { it.nombre == p.nombre } },
             fechas_propias = (c.fechas_propias + r.fechas_propias).distinctBy { it.id },
+            // El historial de zonas: lo de aquí y lo del respaldo, sin repetir instantes (lo de aquí manda; H-1-7).
+            zonas = (c.zonas + r.zonas).distinctBy { Fechas.millis(it.desde) }.sortedBy { Fechas.millis(it.desde) },
             personas_omitidas = (c.personas_omitidas + r.personas_omitidas).distinct(), personas_distintas = (c.personas_distintas + r.personas_distintas).distinct(),
             temas_distintos = (c.temas_distintos + r.temas_distintos).distinct(),
             lugares_ignorados = (c.lugares_ignorados + r.lugares_ignorados).distinctBy { "%.4f,%.4f".format(it.lat, it.lon) },

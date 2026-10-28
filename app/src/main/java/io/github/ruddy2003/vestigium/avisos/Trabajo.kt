@@ -51,10 +51,9 @@ object Programador {
         val c = Repo.config
         val n = c.muestreos_por_dia.coerceIn(0, 6)
         if (n == 0 || c.ventana_fin <= c.ventana_inicio) return emptyList()
-        val zona = ZoneId.systemDefault()
-        val base = Fechas.parse(fecha).atStartOfDay(zona).toInstant().toEpochMilli()
-        val ini = base + c.ventana_inicio * 3_600_000L
-        val fin = base + c.ventana_fin * 3_600_000L
+        // La ventana en la hora local de ese día (un día con cambio de horario no la corre una hora; H-1-7).
+        val ini = Fechas.millisDe(Fechas.parse(fecha).atTime(c.ventana_inicio, 0))
+        val fin = Fechas.millisDe(Fechas.parse(fecha).atTime(c.ventana_fin.coerceAtMost(23), 0)) + if (c.ventana_fin >= 24) 3_600_000L else 0L
         val tramo = (fin - ini) / n
         val rnd = Random(fecha.hashCode())
         return (0 until n).map { i ->

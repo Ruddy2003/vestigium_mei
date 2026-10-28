@@ -1,6 +1,6 @@
 # Capítulo 1. Introducción y marco teórico
 
-> **Para qué sirve este capítulo.** Explica **qué es Vestigium Mei, qué tipo de conocimiento puede dar y por qué está construida como está**, y discute dos decisiones de fondo: que sea un sistema **para toda la vida** y que **todo pueda cruzarse con todo**. Describe el código de la v92 (`SCHEMA_V = 15`): la v90 (commit `8818d5a`), después de las entregas 10a a 10d del módulo 10 y de la revisión de navegación (N0 a N7), más la entrega 10e, que arregló los hallazgos abiertos que tenían solución en el código, y la 10f, que aplicó las decisiones del autor sobre los que seguían pendientes (commit `2b262c5`). Los ejemplos numéricos son **inventados**.
+> **Para qué sirve este capítulo.** Explica **qué es Vestigium Mei, qué tipo de conocimiento puede dar y por qué está construida como está**, y discute dos decisiones de fondo: que sea un sistema **para toda la vida** y que **todo pueda cruzarse con todo**. Describe el código de la v92 (`SCHEMA_V = 15`): la v90 (commit `8818d5a`), después de las entregas 10a a 10d del módulo 10 y de la revisión de navegación (N0 a N7), más la entrega 10e, que arregló los hallazgos abiertos que tenían solución en el código, y la 10f, que aplicó las decisiones del autor sobre los que seguían pendientes. Los ejemplos numéricos son **inventados**.
 
 ---
 
@@ -73,7 +73,7 @@ La mayoría de los estudios de muestreo de experiencia duran una o dos semanas; 
 
 **Costos.**
 
-- **Cambia el instrumento.** Comparar épocas exige que midan lo mismo de la misma manera (**invarianza de la medición**; Meredith, 1993). Las costuras conocidas se marcan (`ventana_pantalla`, `ventana_pasos`, `version_noche`, `ts_creado` y `ts_editado` desde el esquema 14; `cambio_horario` y `clima_reanalisis` desde el 15); otras no: cambiar la vida media de la cafeína reescribe todo el pasado (H-4-11). Desde 10f, el diccionario tiene columnas para decir desde qué versión rige cada definición (`desde_version`, H-1-8), aunque en el código revisado aún salen vacías.
+- **Cambia el instrumento.** Comparar épocas exige que midan lo mismo de la misma manera (**invarianza de la medición**; Meredith, 1993). Las costuras conocidas se marcan (`ventana_pantalla`, `ventana_pasos`, `version_noche`, `ts_creado` y `ts_editado` desde el esquema 14; `cambio_horario` y `clima_reanalisis` desde el 15); otras no: cambiar la vida media de la cafeína reescribe todo el pasado (H-4-11). Desde 10f, el diccionario tiene columnas para decir desde qué versión rige cada definición (`desde_version`, H-1-8).
 - **Cambias tú.** La lista de relaciones usa **todos** los días del panel; quitar la tendencia corrige los niveles que cambian lento, no una **relación** que cambia con los años (H-11-1; capítulo 11).
 - **Se abandona**, y un hueco largo no es «nada pasó» (Epstein et al., 2015; H-1-1). Y **los datos se pueden perder** (capítulo 10).
 
