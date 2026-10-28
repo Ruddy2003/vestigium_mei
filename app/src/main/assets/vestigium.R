@@ -192,7 +192,10 @@ vm_campana_mueve <- list(
   diario = c("palabras"),
   pantalla = c("pantalla_min", "desbloqueos", "primer_uso_h", "ultimo_uso_h", "notificaciones"),
   movimiento = c("ejercicio_min", "gimnasio", "gimnasio_min", "volumen_kg", "series_gimnasio", "escalada", "cal_activas"),
-  leer = c("lectura", "obras_dia"),
+  leer = c("lectura", "obras_dia", "enfoque_lectura_min"),
+  enfoque = c("enfoque_min", "enfoque_estudio_min", "enfoque_lectura_min", "enfoque_idiomas_min", "enfoque_tesis_min", "enfoque_trabajo_min",
+              "enfoque_creativo_min", "laptop_productivo_min"),
+  reaccion = c("rt_media"),
   animo = c("valencia_muestreo", "n_muestreos", "avisos_respondidos", "tasa_respuesta", "registros_animo")
 )
 # Las parejas que la app esconde por obvias vienen en vm_familias.csv (P-31): dos variables lo son si comparten una familia

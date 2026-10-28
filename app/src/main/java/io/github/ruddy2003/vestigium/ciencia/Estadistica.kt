@@ -557,7 +557,6 @@ object Estadistica {
             r["luz_horas"] = e.luz_min?.let { it / 60.0 }; r["sol_horas"] = e.sol_min?.let { it / 60.0 }; r["presion_hpa"] = e.presion_hpa
             r["aqi_us"] = e.aqi_us?.toDouble(); r["pm25"] = e.pm25
         }
-        filas.keys.toList().forEach { f -> fila(f)["luna_ilum"] = io.github.ruddy2003.vestigium.data.Luna.iluminacion(io.github.ruddy2003.vestigium.data.Luna.fase(f)) }
         Repo.fotos.forEach { (f, x) -> fila(f)["fotos"] = x.fotos.toDouble() }
         Repo.notifs.forEach { (f, x) -> fila(f)["notificaciones"] = x.total.toDouble() }
         Repo.agenda.forEach { (f, x) -> val r = fila(f); r["eventos"] = x.eventos.toDouble(); r["min_ocupado"] = x.min_ocupado.toDouble() }
@@ -786,6 +785,8 @@ object Estadistica {
                 r["unesco"] = b(m.sitios.isNotEmpty())
             }
         }
+        // La luna de todos los días del panel, también los que solo tienen nutrición o entreno (y así en vm_panel.csv).
+        filas.forEach { (f, r) -> r["luna_ilum"] = io.github.ruddy2003.vestigium.data.Luna.iluminacion(io.github.ruddy2003.vestigium.data.Luna.fase(f)) }
         // Días especiales (I-6): 1 si ese día cae un cumpleaños, un aniversario o una fecha propia. Es del calendario:
         // vale para todos los días del panel.
         if (io.github.ruddy2003.vestigium.data.Especiales.hay()) filas.forEach { (f, r) -> r["dia_especial"] = b(io.github.ruddy2003.vestigium.data.Especiales.de(f).isNotEmpty()) }

@@ -1,6 +1,6 @@
 # Capítulo 6. Análisis estadístico
 
-> **Para qué sirve este capítulo.** Explica **cómo la app pasa de miles de registros a frases como «cuando duermes más, tu ánimo tiende a subir»**: cómo arma la tabla de un renglón por día (el *panel*), cómo compara cada variable con cada otra, qué hace para no dejarse engañar por las tendencias, por los días que se parecen a sus vecinos y por el azar de revisar miles de parejas, y qué hacen las demás herramientas de análisis (modelo múltiple, dinámica emocional, palabras, días atípicos…). Al final compara **función por función** lo que hace la app con lo que hace el script de R que viaja en cada exportación. Todo corresponde a la versión v81 del código (commit `fa527df`). **Los ejemplos numéricos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo la app pasa de miles de registros a frases como «cuando duermes más, tu ánimo tiende a subir»**: cómo arma la tabla de un renglón por día (el *panel*), cómo compara cada variable con cada otra, qué hace para no dejarse engañar por las tendencias, por los días que se parecen a sus vecinos y por el azar de revisar miles de parejas, y qué hacen las demás herramientas de análisis (modelo múltiple, dinámica emocional, palabras, días atípicos…). Al final compara **función por función** lo que hace la app con lo que hace el script de R que viaja en cada exportación. Todo corresponde a la versión v81 del código (commit `fa527df`), con los cambios del módulo 10 señalados donde corresponde; la comparación con R (6.3.4, 6.9.3 y 6.22) describe el script de la entrega 10d (commit `035982c`). **Los ejemplos numéricos son inventados.**
 >
 > **Cómo leerlo.** Está escrito para entenderse sin saber estadística, pero sin recortar la precisión. Las cifras, umbrales y fórmulas se dan tal como están en el código, con el nombre de la función de origen; las fórmulas completas están reunidas en el **Apéndice B** y las funciones de R en el **Apéndice C**. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-5-n y se detallan en `hallazgos.md`.
 >
@@ -42,7 +42,7 @@ La pantalla **Análisis** (`ui/pantallas/Explorar.kt`) tiene, de arriba abajo (d
 | Las relaciones más marcadas | `Estadistica.relaciones` | Pearson | Sí (interruptor, encendido por omisión) | Sí (nEf) | Sí (BH, q < 0.10) | `vm_relaciones` |
 | … por semana | `Estadistica.semanal` + `relaciones` | Pearson sobre promedios semanales | Sí (±35 días) | Sí (nEf semanal) | Sí | — |
 | Cruzar dos variables | `Estadistica.pares`, `pearson`, `spearman`, `correlacionEf`, `sinTendencia` | Pearson y Spearman; intervalo sobre Pearson con nEf; r sin tendencia al lado | Se muestra al lado (r sin tendencia) | Sí (nEf, desde 10c) | No aplica (una sola pareja) | `vm_cruce` (Spearman) |
-| Todo lo que se mueve con algo | `Analisis.factores` | Pearson con nEf (continuas); diferencia de medias con t de Welch y factor AR(1) (0/1) | Sí (interruptor, el mismo de la lista; desde 10c) | Sí (desde 10c) | Sí (BH, q < 0.1) | `vm_factores` (aún sin estas correcciones: entrega 10d) |
+| Todo lo que se mueve con algo | `Analisis.factores` | Pearson con nEf (continuas); diferencia de medias con t de Welch y factor AR(1) (0/1) | Sí (interruptor, el mismo de la lista; desde 10c) | Sí (desde 10c) | Sí (BH, q < 0.1) | `vm_factores` (las mismas correcciones desde 10d) |
 | Modelo múltiple | `Analisis.modelo` | Mínimos cuadrados estandarizados; t con n − k − 1; R² ajustado | No | En parte (el día anterior como predictor) | No | `vm_modelo`, `vm_modelo_ar1` |
 | Tendencia | `Analisis.movil`, `Analisis.cambio` | Medias móviles; diferencia de medias con t de Welch y factor AR(1) | — | Sí (desde 10c) | No | `vm_tendencia` |
 | Día de la semana | `Analisis.porDiaSemana` | Media ± t(n − 1) · EE, con 5 días o más | No | No | No | `vm_semana` |
@@ -117,16 +117,16 @@ La regla 2 es la más defendible: antes de empezar a usar una función no se sab
 
 **Un efecto que conviene conocer.** Las variables de tipo «escalón» (`vida_*`, `pol_*`, y en buena parte `esc_*`) cambian pocas veces al año. Al quitar la tendencia casi no les queda variación de un día a otro, así que la app las clasifica como «lentas» y **no entran** en «Las relaciones más marcadas» con el interruptor encendido (sección 6.5.4). Con el interruptor apagado sí entran, pero entonces quedan expuestas a cualquier otra tendencia que coincida en el tiempo. Dicho de otro modo: **una etapa de vida nunca puede aparecer como relación «sin tendencia»**; para ella están «Antes y después» y el análisis en R (H-5-14).
 
-### 6.3.4 El panel de R no es el mismo panel (H-5-1)
+### 6.3.4 El panel de R y el de la app (H-5-1, resuelto en 10d)
 
-El script de R lee `vm_panel.csv`, que **no** es `Estadistica.panel()`. Lo arma `Exportar.filasPanel()` con otras reglas:
+Hasta la entrega 10d, el script de R leía `vm_panel.csv`, que **no** es `Estadistica.panel()`: lo arma `Exportar.filasPanel()`, y tenía otros nombres para lo mismo, otros ceros (`gasto_total` e `ingreso_total` en 0 en cualquier fecha exportada; `escalada` y `gimnasio` falso en cualquier fecha), otras filas y muchas menos variables. Así, `vm_relaciones()` y «Las relaciones más marcadas» aplicaban el mismo algoritmo a tablas distintas. Desde 10d (P-30; Apéndice D, D.79 a D.84):
 
-- **Otros nombres** para lo mismo: `sueno_min` (en minutos) frente a `sueno_horas`; `km` frente a `distancia_km`; `hrv_rmssd` frente a `hrv`; `valencia_muestreo` frente a `muestreo_valencia`; `luz_dia_min` frente a `luz_horas`; `carga_noche_inicio_h` frente a `carga_noche_h`; `temp_piel_delta` frente a `temp_piel`; `ruido_db_medio` frente a `ruido_db`.
-- **Otros ceros**: `gasto_total` e `ingreso_total` valen 0 en **cualquier** fecha exportada sin registros (en la app, desde 10c, solo desde el primer gasto o ingreso; sección 6.3.2); `escalada` y `gimnasio` son falso en cualquier fecha exportada; alinear estas reglas con las de la app es la propuesta P-30 (entrega 10d); `n_momentos` y `m_<tipo>` cuentan también momentos privados y las `m_<tipo>` están congeladas desde el registro de ánimo nuevo (H-2-13).
-- **Otras filas**: solo fechas con diario, salud, pantalla, entorno, momentos, gastos, ingresos, nutrición o entrenos; R además completa el calendario con renglones vacíos (`complete()`).
-- **Menos variables**: no trae las dinámicas (están en `vm_panel_extendido.csv`), ni contextos, hábitos, lectura del día, sueños por categoría, enfoque, lugares por nombre, etc. Sí trae, copiadas del panel de la app, unas 50 (`nuevas` en `filasPanel`): cultura, mundo, cercanos, presencias, ánimo de todos los registros, sustancias, cierre del día, barómetro, horas por tipo de lugar y `n_<emoción>`.
+- **R analiza `vm_panel_extendido.csv`.** Empieza con las columnas de `vm_panel.csv` y suma todas las del panel de la app que falten, con sus nombres (`sueno_horas`, `distancia_km`, `hrv`…), las dinámicas, los contextos, hábitos, lectura del día y demás. `vm_panel.csv` se queda como tabla de compatibilidad.
+- **Mismos valores en las columnas que comparten nombre.** En `vm_panel.csv` (y por tanto en el extendido) cada columna con el mismo nombre que una variable de la app lleva el valor de la app (`Exportar.comoLaApp`), con su regla de 0 y vacío (`ceroDesde`, sección 6.3.2): `gasto_total`, `ingreso_total`, `escalada` y `gimnasio` valen 0 desde el primer registro y en días con diario, y antes quedan vacíos; `ejercicio_min` vale 0 en días con datos del reloj y sin sesión; `ultimo_uso_h` suma 24 solo antes de las 5:00 (antes, en el CSV, antes de las 12; H-9-4); `canciones` cuenta solo escuchas de 30 s o más, también en la app (H-9-3). El tipo de cada columna (0/1, entero o número) se conserva.
+- **Once nombres distintos, documentados.** `sueno_min`/`sueno_horas` (en minutos frente a horas), `sueno_profundo_min`/`sueno_profundo`, `sueno_rem_min`/`sueno_rem`, `km`/`distancia_km`, `hrv_rmssd`/`hrv`, `valencia_muestreo`/`muestreo_valencia`, `luz_dia_min`/`luz_horas` (minutos frente a horas), `sol_min`/`sol_horas` (minutos frente a horas), `carga_noche_inicio_h`/`carga_noche_h`, `temp_piel_delta`/`temp_piel` y `ruido_db_medio`/`ruido_db` (`Exportar.EQUIVALENTES`). No se renombraron, para no romper scripts viejos; el diccionario dice en cada una cuál es la otra, y `vm_familias.csv` las trata como la misma medida.
+- **Mismas variables.** `vm_variables.csv` lista las que la app cruza (`Estadistica.variables()`, con las dinámicas recortadas igual que en la app); `vm_relaciones` y `vm_factores` se limitan a ellas por omisión. El seguimiento privado va marcado y solo se cruza con `privadas = TRUE`.
 
-Consecuencia: **`vm_relaciones()` en R y «Las relaciones más marcadas» en la app aplican el mismo algoritmo a tablas distintas**, así que no dan la misma lista. Ver la comparación completa en la sección 6.22.
+Lo que sigue distinto: `n_momentos` y `m_<tipo>` (solo en `vm_panel.csv`) cuentan también momentos privados (H-2-13), y R completa el calendario con renglones vacíos (`complete()`), que no cambia ningún cálculo porque los vacíos no entran. **Cómo se comprobó:** `ExportacionPrueba.kt` fija que, con el mismo panel inventado, `vm_relaciones` y `vm_factores` dan los mismos números que la app; que con una exportación real den las mismas 10 primeras parejas **no se ha comprobado** (R no corre en la compilación automática; requiere el teléfono). Ver la comparación completa en la sección 6.22.
 
 ---
 
@@ -156,12 +156,12 @@ Si una de las dos variables no cambia (suma de cuadrados igual a 0), devuelve `n
 | Cruzar dos variables | Muestra **Pearson y Spearman**; el texto, la fuerza y el intervalo usan **Pearson** |
 | Todo lo que se mueve con algo (`factores`) | Desde 10c, **Pearson** (sobre los restos sin tendencia, como la lista) para variables continuas; diferencia de medias para 0/1. Hasta 10c era Spearman |
 | Dinámica (inercia) | Pearson |
-| R: `vm_relaciones` | Pearson (como la app) |
-| R: `vm_cruce`, `vm_factores`, `vm_cruce_horas`, `vm_presion` | **Spearman** por omisión |
+| R: `vm_relaciones`, `vm_factores` | Pearson (como la app; `vm_factores` desde 10d) |
+| R: `vm_cruce`, `vm_cruce_horas`, `vm_presion` | **Spearman** por omisión |
 
 ### 6.4.4 Razonamiento y cuándo falla
 
-Pearson mide relaciones **rectas** y se deja arrastrar por un día extremo (un día con 30 000 pasos pesa mucho). Spearman mide relaciones **que solo suben o solo bajan** (monótonas) y es robusto a extremos, pero con muchas variables 0/1 o con muchos empates pierde información. Usar Pearson sobre los restos sin tendencia es razonable: al restar el promedio de los vecinos, los valores se vuelven más simétricos. El problema no es elegir uno u otro, sino que **la misma pareja puede mostrar números distintos en dos pantallas** (r en la lista, ρ en la ficha de la variable) sin que la app lo explique. Desde la entrega 10c, la ficha usa también r de Pearson con la misma tendencia quitada que la lista, así que la pareja muestra el mismo número en las dos; «Cruzar dos variables» sigue mostrando los dos coeficientes y ahora también la r sin tendencia. Las funciones de R siguen con Spearman por omisión (entrega 10d). **[Aproximación]**.
+Pearson mide relaciones **rectas** y se deja arrastrar por un día extremo (un día con 30 000 pasos pesa mucho). Spearman mide relaciones **que solo suben o solo bajan** (monótonas) y es robusto a extremos, pero con muchas variables 0/1 o con muchos empates pierde información. Usar Pearson sobre los restos sin tendencia es razonable: al restar el promedio de los vecinos, los valores se vuelven más simétricos. El problema no es elegir uno u otro, sino que **la misma pareja puede mostrar números distintos en dos pantallas** (r en la lista, ρ en la ficha de la variable) sin que la app lo explique. Desde la entrega 10c, la ficha usa también r de Pearson con la misma tendencia quitada que la lista, así que la pareja muestra el mismo número en las dos; «Cruzar dos variables» sigue mostrando los dos coeficientes y ahora también la r sin tendencia. En R, desde la entrega 10d `vm_factores` usa Pearson como la app; `vm_cruce`, `vm_cruce_horas` y `vm_presion` siguen con Spearman por omisión (P-32 no los incluía). **[Aproximación]**.
 
 ---
 
@@ -297,7 +297,7 @@ Con *n* = 120 sin corregir habría salido IC 0.13 a 0.45 y p = 0.0008: casi cuat
 
 ### 6.7.4 Cuándo falla
 
-- Para **Spearman**, la varianza de atanh(ρ) es algo mayor que 1/(n − 3) (Fieller et al., 1957, proponen 1.06/(n − 3)). `vm_factores` en R usa 1/(n − 3) también para ρ: intervalos ligeramente estrechos. En la app, desde 10c `factores` usa Pearson, así que este punto ya no la afecta. **[Aproximación]**.
+- Para **Spearman**, la varianza de atanh(ρ) es algo mayor que 1/(n − 3) (Fieller et al., 1957, proponen 1.06/(n − 3)). Hasta 10d, `vm_factores` en R usaba 1/(n − 3) también para ρ: intervalos ligeramente estrechos. Desde 10c en la app y desde 10d en R, `factores` usa Pearson, así que este punto ya no los afecta. **[Aproximación]**.
 - El intervalo de la correlación sigue usando **1.96** (normal) aun con nEf pequeño. Con la transformación de Fisher eso es lo estándar: el error de usar la normal es pequeño frente al de no corregir por días parecidos. **[Aproximación]**.
 - Para variables 0/1 con pocos «1», Pearson es una correlación punto-biserial; la aproximación de Fisher es menos precisa. La app exige al menos **4 días de cada valor** para evaluarlas (sección 6.10).
 
@@ -352,7 +352,7 @@ Las cinco primeras tienen q < 0.10: se sostienen. Con m = 6 la corrección es su
 ### 6.8.6 Cuándo falla
 
 - **El número de pruebas depende del modo.** Por día o por semana, con o sin tendencia, se prueban parejas distintas (las lentas salen, el mínimo de días cambia), así que la misma pareja puede tener q distinto en cada modo.
-- **Excluir las obvias es razonable pero no neutral**: baja *m* y hace la corrección más permisiva. Está bien porque esas parejas no son descubrimientos, pero la lista de obvias debe estar completa y ser la misma en app y R (H-5-2).
+- **Excluir las obvias es razonable pero no neutral**: baja *m* y hace la corrección más permisiva. Está bien porque esas parejas no son descubrimientos, pero la lista de obvias debe estar completa y ser la misma en app y R (H-5-2; desde 10d lo es, sección 6.9.3).
 - **«Todo lo que se mueve con algo» corrige con p que no descuentan la autocorrelación** (H-5-3): ahí BH trabaja con valores p demasiado pequeños.
 
 ---
@@ -386,7 +386,7 @@ Las obvias se calculan igual pero se esconden (el interruptor «Mostrar también
 
 No hay una regla estadística para decidir qué es «obvio»; es una lista curada a mano. **[Diseño propio]**. Dos riesgos: (a) olvidar una familia hace que aparezca como «hallazgo» algo trivial; (b) marcar como obvio algo que no lo es esconde una relación interesante. Un caso discutible: la regla 1 declara obvias **todas** las parejas entre sentimientos (por ejemplo, «registros con tristeza» con «registros con alegría»), aunque su relación sí podría ser informativa (¿las emociones opuestas se excluyen o conviven el mismo día?).
 
-En R, `vm_familias` tiene solo **19** conjuntos y `vm_obvia` no tiene las reglas 1, 3–9 (salvo los `m_*` entre sí). Así, en `vm_relaciones()` aparecen como relaciones fuertes y «firmes» parejas que la app esconde, como `valencia` con `animo_valencia` o `vi_familia` con `cercanos` (H-5-2).
+Hasta la entrega 10d, en R `vm_familias` tenía solo 20 conjuntos y `vm_obvia` no tenía las reglas 1 y 3–9 (salvo los `m_*` entre sí), así que en `vm_relaciones()` salían como «firmes» parejas que la app esconde, como `valencia` con `animo_valencia` o `vi_familia` con `cercanos`, y BH corregía sobre otro número de pruebas (H-5-2). Desde 10d (P-31) la exportación escribe `vm_familias.csv`, generado por `Estadistica.familias()` con las **mismas** diez reglas, sobre las variables fijas y todas las dinámicas, con los nombres del panel exportado. Cada familia tiene un **lado**: con lado 0 todas sus variables son obvias entre sí; con lados 1 y 2, cada una de un lado lo es con cada una del otro, pero no con las de su lado. Así se escriben las reglas «en estrella» (6, 10 y parte de 5): `per_ana` es obvia con `personas` y con `palabras`, pero eso no vuelve obvias a `personas` y `palabras` entre sí. `vm_obvia` lee ese archivo. `ExportacionPrueba.familiasIgualQueObvia` comprueba, con 45 variables inventadas que tocan todas las reglas, que da lo mismo que `obvia()` en cada par. La forma (familias con lados) es **[Diseño propio]**; la lista sigue siendo la misma lista curada a mano. Sin ese archivo (exportaciones viejas o la resumida), R usa la lista corta de antes.
 
 ---
 
@@ -509,7 +509,7 @@ Hasta 10c, con 1.96 y la normal, salía IC 0.46 a 1.91 y p = 0.0013: unas cinco 
 - **Resuelto en 10c (D.66):** hasta esa entrega no quitaba la tendencia ni descontaba la autocorrelación, así que sus *p* eran, para variables persistentes, mucho más pequeños de lo que debían (Figura 6.3: con autocorrelación 0.8, alrededor de un tercio de falsas alarmas), y la misma pareja podía verse **punteada** en la lista y con **✓** aquí; usaba ρ donde la lista usa r, y para 0/1 usaba 1.96 con apenas 5 días por grupo (H-5-5). Ahora usa la misma maquinaria que la lista.
 - **Lo que sigue distinto de la lista:** el *q* se calcula entre las variables revisadas contra **este** objetivo, no entre todas las parejas; la autocorrelación de cada variable se calcula con toda su serie. Por eso una pareja puede tener ✓ aquí y salir punteada en la lista (o al revés) sin contradicción: se corrigió por menos comparaciones. **[Aproximación]**.
 - Para 0/1 se comparan los **restos del objetivo** entre días con y sin, pero la variable 0/1 no se «desestaciona»: si casi todos sus 1 caen en una sola temporada, la comparación hereda esa temporada en parte (los restos ya quitan lo lento del objetivo).
-- `vm_factores` en R aún no tiene estas correcciones: es la propuesta P-30/P-32 (entrega 10d).
+- Desde la entrega 10d, `vm_factores` en R hace lo mismo (P-17 y P-32): las mismas piezas (`.vm_sin_tendencia`, `.vm_ar1`, `.vm_dif_dias`, con la corrección de Marriott y Pope y los grados de Welch con n efectivo), las mismas variables y las mismas obvias; `ExportacionPrueba.factoresComoR` fija que da los mismos números que la app con datos inventados (Apéndice C).
 
 ---
 
@@ -654,7 +654,7 @@ Días difíciles (≤ 2): 0 %. Racha buena (≥ 5): 2 días (6, 5). Racha dura (
 
 **Ejemplo.** La media de tus días con nota es 4.4. «Playa» aparece en 6 días con valencias 6, 5, 7, 6, 5, 6 (media 5.83): +1.43.
 
-**Razonamiento y límites (H-5-10).** Es un análisis de **contenido por conteo** sin diccionario de emociones (a diferencia de LIWC, Tausczik y Pennebaker, 2010) ni prueba estadística. **[Diseño propio]**. Con cientos de palabras y 5 días como mínimo, las de los extremos de la lista son, en buena parte, las que tuvieron suerte (regresión a la media): con 5 días, la media de valencia varía ±0.9 puntos solo por azar si tu DE es 1. No hay intervalo ni q. Las palabras de días malos pueden reflejar **lo que escribes** cuando estás mal más que **lo que te pone mal**. En R, `vm_palabras` usa otra lista de vacías y otra referencia (la media de **todos** los días, con o sin nota), así que sus diferencias no coinciden con las de la app.
+**Razonamiento y límites (H-5-10).** Es un análisis de **contenido por conteo** sin diccionario de emociones (a diferencia de LIWC, Tausczik y Pennebaker, 2010) ni prueba estadística. **[Diseño propio]**. Con cientos de palabras y 5 días como mínimo, las de los extremos de la lista son, en buena parte, las que tuvieron suerte (regresión a la media): con 5 días, la media de valencia varía ±0.9 puntos solo por azar si tu DE es 1. No hay intervalo ni q. Las palabras de días malos pueden reflejar **lo que escribes** cuando estás mal más que **lo que te pone mal**. Hasta la entrega 10d, `vm_palabras` en R usaba otra lista de vacías (con acentos) y otra referencia (la media de **todos** los días); desde 10d usa las mismas 167 palabras vacías comparadas sin acentos y la misma referencia (los días con nota), así que da las mismas diferencias. Lo de la incertidumbre sigue igual en las dos.
 
 ---
 
@@ -742,22 +742,22 @@ El aviso de los 90 días cuenta **días con diario** (`Repo.dias.size`), no día
 
 ## 6.22 App y R, función por función
 
-El script `vestigium.R` reproduce casi todas las herramientas. La tabla dice dónde coinciden y dónde no. El detalle de cada función está en el Apéndice C.
+El script `vestigium.R` reproduce casi todas las herramientas. Desde la entrega 10d (P-30 a P-32) analiza el mismo panel, con las mismas variables y las mismas obvias, y repite las correcciones de 10c en «Todo lo que se mueve», el día de la semana y las palabras. La tabla dice dónde coinciden y dónde no. El detalle de cada función está en el Apéndice C.
 
 | Análisis | App | R | ¿Mismo resultado? |
 |---|---|---|---|
-| Datos | `Estadistica.panel()` | `vm_panel.csv` (`Exportar.filasPanel`) | **No**: otros nombres, otras filas, otros ceros, menos variables (6.3.4; H-5-1) |
-| Relaciones | `relaciones`: Pearson, ±10 d, lentas < 0.12, nEf, BH, orden por «seguro» | `vm_relaciones`: el **mismo algoritmo** (mismas cotas, mínimos y orden; p con `pnorm` exacto) | Mismo método, **distinta tabla** y **distinta lista de obvias** (19 conjuntos frente a 56 + reglas; H-5-2). R además compara `fin_de_semana` (columna lógica que agrega el script). No hay modo semanal en R. |
-| Cruzar | Pearson + Spearman; IC de Pearson con nEf; r sin tendencia al lado (desde 10c) | `vm_cruce`: **Spearman** por omisión, `cor.test` con n | Distinto coeficiente por omisión y distinto intervalo (H-5-7); alinear es de la entrega 10d |
-| Factores | Desde 10c: restos sin tendencia (interruptor), r de Pearson con nEf; 0/1 con t de Welch y factor AR(1); mínimos 10 días (5 y 5) / 14 | `vm_factores`: valores tal cual, ρ con p de `cor.test` (n bruto); 0/1 con **t de Welch** sin factor AR(1); mínimo 14 pares para todo; excluye solo la familia del objetivo en `vm_familias` | **No** desde 10c: R sigue como la app de antes; se alinea en la entrega 10d (P-32) |
+| Datos | `Estadistica.panel()` | Desde 10d, `vm_panel_extendido.csv` (las columnas de la app más las de `vm_panel.csv`, que en lo compartido llevan el valor de la app); variables de `vm_variables.csv` | **Sí** en las variables que la app cruza; quedan 11 nombres dobles documentados y el calendario completado (6.3.4; H-5-1 resuelto) |
+| Relaciones | `relaciones`: Pearson, ±10 d, lentas < 0.12, nEf, BH, orden por «seguro» | `vm_relaciones`: el **mismo algoritmo** (mismas cotas, mínimos y orden; p con `pnorm` exacto) | **Sí** desde 10d: mismo panel, mismas variables y mismas obvias (`vm_familias.csv`; H-5-2 resuelto); R ya no cruza calendario ni cobertura (`.vm_no_cruzar`: `fin_de_semana`, `dia_libre`, `festivo`, `con_diario`, `n_muestreos`…). Probado con datos inventados, no con una exportación real. No hay modo semanal en R. |
+| Cruzar | Pearson + Spearman; IC de Pearson con nEf; r sin tendencia al lado (desde 10c) | `vm_cruce`: **Spearman** por omisión, `cor.test` con n | Distinto coeficiente por omisión y distinto intervalo (H-5-7); la entrega 10d no lo cambió |
+| Factores | Desde 10c: restos sin tendencia (interruptor), r de Pearson con nEf; 0/1 con t de Welch y factor AR(1); mínimos 10 días (5 y 5) / 14 | `vm_factores` desde 10d: lo mismo (`sin_tendencia`, r de Pearson con `n_ef`; 0/1 con `.vm_dif_dias`: Welch, factor AR(1), Marriott y Pope, `qt`); mismos mínimos; obvias de `vm_familias.csv` | **Sí** (fijado por `ExportacionPrueba.factoresComoR` con datos inventados) |
 | Modelo | MCO estandarizado sin intercepto; IC con t(n − k − 1); R² ajustado (desde 10c) | `vm_modelo`: `lm` sobre datos estandarizados; inferencia con t | Mismos β e intervalos desde 10c (los dos usan n − k − 1 grados; R reporta el R² sin ajustar y el ajustado) |
 | Modelo con AR(1) | — | `vm_modelo_ar1`: `nlme::gls` con `corAR1(~ t)` | Solo en R |
 | Tendencia | `movil` | `vm_movil` | Igual |
-| Día de la semana | n ≥ 5 por día; t(n − 1) EE (desde 10c) | `vm_semana`: sin mínimo; 1.96 EE | **No** con pocos días por día de la semana; se alinea en 10d |
+| Día de la semana | n ≥ 5 por día; t(n − 1) EE (desde 10c) | `vm_semana` desde 10d: n ≥ 5 por día; t(n − 1) EE | Igual |
 | Dinámica | Valencia; mínimos 7 días, 3 y 10 pares; meses sin cruzar | `vm_dinamica`: cualquier variable; sin mínimos; inercia por mes; pares que cruzan meses | Casi igual en el total |
 | Ritmo | Reloj o teléfono; últimos 56 días; `Fechas.esDiaLibre` (desde 10c) | `vm_ritmo(dias = 56)`: solo reloj; lee `dia_libre` del panel (desde 10c) | Igual con reloj |
-| Palabras | ~170 vacías sin acentos; referencia: días con nota | ~110 vacías con acentos; referencia: todos los días | **No** (H-5-10) |
-| Atípicos | 15 variables (con `distancia_km` desde 10c); mediana superior; ≥ 20 días; último año | 8 variables; `median`/`mad` de R; todos los días; `km` del panel de R | Parecido; distinto número de variables y de días |
+| Palabras | ~170 vacías sin acentos; referencia: días con nota | Desde 10d, las mismas 167 vacías sin acentos; referencia: días con nota | Igual; R devuelve todas las palabras, la app los 15 extremos |
+| Atípicos | 15 variables (con `distancia_km` desde 10c); mediana superior; ≥ 20 días; último año | Desde 10d, las mismas 15 variables; `median`/`mad` de R; todos los días | Parecido; distinto número de días y mediana para n par |
 
 ---
 
@@ -773,6 +773,7 @@ El script `vestigium.R` reproduce casi todas las herramientas. La tabla dice dó
 | Quitar tendencia restando la media de ±10 días | [Aproximación]; tamaño de ventana [Diseño propio] |
 | Variables lentas con var(resto)/var < 0.12 | [Diseño propio] |
 | Lista de relaciones obvias | [Diseño propio] |
+| Escribirla como familias con lados para R (`vm_familias.csv`) y no cruzar en R calendario ni cobertura (`.vm_no_cruzar`) | [Diseño propio] |
 | Familias dinámicas, topes y mínimos de días | [Diseño propio] |
 | Mínimos de 14 días, 4 de cada valor en 0/1, 8 semanas | [Diseño propio] |
 | Diferencia de medias con t de Welch (desde 10c) | [Validado] |
@@ -793,7 +794,7 @@ El script `vestigium.R` reproduce casi todas las herramientas. La tabla dice dó
 2. «Las relaciones más marcadas» es el análisis más cuidadoso de la app: **quita tendencias** (±10 días), **descuenta los días parecidos** (nEf) y **corrige por miles de comparaciones** (BH, q < 0.10). Una relación firme ahí es una pista seria, no una prueba de causa.
 3. Desde 10c, «Todo lo que se mueve con algo» usa la misma maquinaria, y las diferencias de medias usan **t de Welch** con el error estándar corregido porque los días seguidos se parecen (H-5-3, H-5-5, resueltos en 10c, D.65 y D.66). Antes, la ficha podía marcar como firme lo que la lista llamaba azar.
 4. **El ciclo semanal no se quita** al quitar la tendencia (H-5-6).
-5. **R aplica el mismo algoritmo a otra tabla y con otra lista de obvias**, y `vm_factores`, `vm_cruce` y `vm_semana` todavía no tienen las correcciones de 10c: hoy no se puede esperar que dé lo mismo (H-5-1, H-5-2). Alinearlo es la entrega 10d.
+5. Desde la entrega 10d, **R analiza el mismo panel que la app**, con las mismas variables y las mismas parejas obvias, y `vm_factores`, `vm_semana` y `vm_palabras` tienen las correcciones de 10c (H-5-1, H-5-2, resueltos): R sirve para verificar lo que muestra la app. Se comprobó con datos inventados, no con una exportación real. `vm_cruce` sigue con Spearman y n bruto.
 6. Con 90 días independientes se ve una relación de 0.3; con miles de parejas y días parecidos, hace falta más de 0.5. Paciencia: el sistema está pensado para años.
 
 ### Referencias citadas en este capítulo

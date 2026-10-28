@@ -235,7 +235,7 @@ Además, el mapa `AGREGADOS` evita comparar variables **obviamente relacionadas*
 
 ## 2.8 Exportación, diccionario y R
 
-La app puede exportar **50 tablas CSV** con datos (`vm_*.csv`, Apéndice A.3), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, el diccionario `vm_diccionario.csv`, una copia SQLite y un script `vestigium.R` que carga todo en *tidy*.
+La app puede exportar **51 tablas CSV** con datos (las que arma `Exportar.tablas()`) (`vm_*.csv`, Apéndice A.3), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, el diccionario `vm_diccionario.csv`, una copia SQLite y un script `vestigium.R` que carga todo en *tidy*.
 
 | Elemento | Función | Razonamiento |
 |---|---|---|

@@ -90,7 +90,7 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `desbloqueos` | Desbloqueos del teléfono | numérica | — | Si hay datos de la fuente |
 | `fotos` | Fotos tomadas | numérica | — | Si hay datos de la fuente |
 | `notificaciones` | Notificaciones recibidas | numérica | — | Si hay datos de la fuente |
-| `canciones` | Canciones escuchadas | numérica | — | Si hay datos de la fuente |
+| `canciones` | Canciones escuchadas (30 s o más, desde 10d) | numérica | — | Si hay datos de la fuente |
 | `primer_uso_h` | Hora del primer uso del teléfono | numérica | — | Si hay datos de la fuente |
 | `ultimo_uso_h` | Hora del último uso del teléfono | numérica | — | Si hay datos de la fuente |
 | `audifonos_min` | Minutos con audífonos | numérica | — | Si hay datos de la fuente |
@@ -405,12 +405,14 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 
 ## A.3 Tablas exportadas
 
-La exportación genera 50 tablas CSV con datos (48 hasta el esquema 12; el 13 agregó `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv`, `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por CSV, con las ubicaciones y el diccionario) y un `LEEME.txt`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv`, `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por CSV, con las ubicaciones y el diccionario) y un `LEEME.txt`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
 | `vm_panel.csv` | Una fila por día con lo principal de todas las fuentes |
-| `vm_panel_extendido.csv` | Una fila por día con todas las variables: cada persona, lugar, app, categoría, artista, obra, ciudad, nutriente y más |
+| `vm_panel_extendido.csv` | Una fila por día con todas las variables: cada persona, lugar, app, categoría, artista, obra, ciudad, nutriente y más; desde 10d, el panel que analiza R |
+| `vm_variables.csv` | Las variables que la app cruza entre sí, con su nombre y su grupo (las privadas, marcadas) (10d) |
+| `vm_familias.csv` | Parejas de variables que la app esconde por obvias (la misma medida, una parte y su total…), en familias (10d) |
 | `vm_dias.csv` | Diario: lo que llenaste cada día |
 | `vm_momentos.csv` | Momentos y avisos de ánimo, uno por fila |
 | `vm_tramos.csv` | Cronómetro: bloques de enfoque (estudio, lectura, idiomas, tesis…) y siestas, uno por fila |
@@ -458,7 +460,6 @@ La exportación genera 50 tablas CSV con datos (48 hasta el esquema 12; el 13 ag
 | `vm_comidas.csv` | MacroFactor: cada alimento registrado |
 | `vm_entrenos.csv` | MacroFactor Workouts: resumen por día y por grupo muscular |
 | `vm_series.csv` | MacroFactor Workouts: cada serie |
-| `vm_panel.csv` | Una fila por día con lo principal de todas las fuentes |
 
 ## A.4 Columnas nuevas del esquema 13 (entrega 10b)
 
@@ -529,3 +530,50 @@ No cambia lo que se guarda (`SCHEMA_V` = 14); cambia cómo se calcula el panel c
 | `vm_red_nodos.csv` | `grupo` | Grupo de la relación: familia, pareja, amistad, trabajo u otro; el que da el color en la Red |
 
 **Por día de calendario.** Las descripciones del diccionario de `vm_panel.csv` y `vm_panel_extendido.csv` terminan con «· por día de calendario (0:00 a 24:00)» en las variables de `Diccionario.CALENDARIO` y en las familias `ciu_` y `pais_` (capítulo 2, sección 2.3.2).
+
+## A.7 La exportación en la entrega 10d (R y exportación)
+
+Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de algunas columnas de `vm_panel.csv` y hay dos tablas nuevas. Detalle en el capítulo 2 (sección 2.8) y en el Apéndice D.
+
+**`vm_panel.csv` con los valores de la app (P‑30).** En cada columna que comparte nombre con el panel de la app, el valor es el de la app (`Exportar.comoLaApp`), con el mismo tipo que tenía la columna (0/1, entero o número). Las que más cambian:
+
+| Columna | Desde 10d (= la app) | Antes en `vm_panel.csv` |
+|---|---|---|
+| `gasto_total` | 0 en los días con diario desde el primer gasto; vacío antes | 0 en cualquier fecha exportada |
+| `ingreso_total` | 0 en los días con diario desde el primer ingreso; vacío antes | 0 en cualquier fecha exportada |
+| `escalada`, `gimnasio` | 0 en los días con diario desde la primera sesión o el primer entreno; vacío antes | Falso en cualquier fecha exportada |
+| `ejercicio_min` | 0 los días con datos del reloj y sin sesión, desde la primera sesión | Vacío esos días |
+| `canciones` | Escuchas de 30 s o más (o sin duración), en la app y en el CSV | El CSV ya filtraba 30 s; la app contaba todas |
+| `ultimo_uso_h` | +24 solo antes de las 5:00 (1:00 = 25; 11:00 = 11) | +24 antes de las 12:00 (11:00 = 35) |
+| `audifonos_min`, `coche_min` | 0 en días con datos de conexiones y sin ese audio | Vacío esos días |
+| `luna_ilum` | La iluminación calculada de la fase lunar, en todos los días del panel | La de `vm_entorno.csv` si existía |
+| `ruido_db_medio` | `ruido_db` de la app: la media de todos los registros del día con ruido | La media solo de los momentos que no son avisos |
+
+**Once columnas con otro nombre en la app** (`Exportar.EQUIVALENTES`; no se renombran, y el diccionario lo dice en las dos):
+
+| `vm_panel.csv` | Panel de la app | ¿Mismo valor? |
+|---|---|---|
+| `sueno_min` | `sueno_horas` | La misma fuente; en minutos frente a horas |
+| `sueno_profundo_min` | `sueno_profundo` | Sí (toma el de la app) |
+| `sueno_rem_min` | `sueno_rem` | Sí |
+| `hrv_rmssd` | `hrv` | Sí |
+| `km` | `distancia_km` | Sí |
+| `valencia_muestreo` | `muestreo_valencia` | Sí |
+| `luz_dia_min` | `luz_horas` | La misma fuente; en minutos frente a horas |
+| `sol_min` | `sol_horas` | La misma fuente; en minutos frente a horas |
+| `carga_noche_inicio_h` | `carga_noche_h` | Sí |
+| `temp_piel_delta` | `temp_piel` | Sí |
+| `ruido_db_medio` | `ruido_db` | Sí |
+
+**Tablas nuevas.**
+
+| Archivo | Columna | Qué es |
+|---|---|---|
+| `vm_variables.csv` | `variable` | Nombre de la columna en `vm_panel_extendido.csv` |
+| `vm_variables.csv` | `nombre`, `grupo` | Qué es y su grupo, como lo dice la app |
+| `vm_variables.csv` | `privada` | Seguimiento privado (0/1): la app no lo cruza; en R, solo con `privadas = TRUE` |
+| `vm_familias.csv` | `familia` | La regla de la app que la produce (por ejemplo `familia_3`, `total:per_`, `persona:ana`, `escala:who5`, `igual:distancia_km`) |
+| `vm_familias.csv` | `variable` | Columna de `vm_panel_extendido.csv`, o su nombre en `vm_panel.csv` |
+| `vm_familias.csv` | `lado` | 0 = obvia con todas las de la familia; 1 o 2 = obvia solo con las del otro lado |
+
+**Otras columnas que cambiaron (P‑33).** `vm_dias.csv:schema_v` vale 0 en los días importados de Obsidian o de la versión web que no traían versión; `ts_creado` y `ts_editado` de los días de Obsidian quedan vacíos si la nota no los traía. `vm_ubicaciones.csv:precision_m` guarda la precisión de los puntos del formato viejo de Takeout (antes vacía). La descripción de `vm_red_nodos.csv:grado` aclara que usa 1 día juntas y hasta 400 personas, frente a 2 días y 45 personas en la app.
