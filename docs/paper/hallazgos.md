@@ -10,6 +10,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** los ceros previos a la adopción reducen medias y pueden generar correlaciones espurias con variables que sí empiezan más tarde (sesgo por calendario de adopción).
 - **Gravedad:** Alta.
 - **Propuesta:** criterio único «cero desde la fecha de primer registro» (o fecha de adopción declarada); opcionalmente marcar periodos de abandono como `null`.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): una sola regla, `Estadistica.ceroDesde`: `gasto_total`, `gasto_imprevisto`, `n_impulso`, `escalada` y `gimnasio` valen 0 solo desde el primer registro de su fuente y en días con diario; antes, sin dato.
 
 ### H-1-2 · Dos criterios de día en el mismo panel
 - **Dónde:** `panel()`: `lugares_distintos` agrupa por `v.entrada.take(10)` (fecha calendario); `en_casa_min` usa `Fechas.diaLogicoDeMillis`.
@@ -17,6 +18,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** inconsistencia que desalinea variables de movilidad entre sí y con el sueño/diario.
 - **Gravedad:** Media.
 - **Propuesta:** usar `diaLogicoDeMillis(Fechas.millis(entrada))` en todas las agregaciones por día (revisar también `reacciones`, `gastos.dia`, `Movilidad.kmPorDia`).
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-16 i): `lugares_distintos` agrupa por día lógico (`Fechas.diaLogicoDeMillis`), como `en_casa_min`; `reacciones`, `gastos.dia` y `kmPorDia` ya usaban el día lógico.
 
 ### H-1-3 · Documentos no decodificables se descartan en silencio
 - **Dónde:** `data/Repo.kt`, `cargar(col, s)`: `mapNotNull { runCatching { decode }.getOrNull() }`.
@@ -46,6 +48,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** infla las variables de contacto social y la red de personas con menciones que no son presencia.
 - **Gravedad:** Media.
 - **Propuesta:** excluir (o marcar como incierto) los días con `presencias_ok = false` en las variables `vi_*`/`personas_vistas`, o exponer la variable de revisión como covariable.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): `presencias_revisado` (0/1) entra al panel los días con personas en el diario, como covariable; es obvia con las variables sociales y con `per_`.
 
 ### H-1-7 · Reinterpretación de horas con la zona actual del teléfono
 - **Dónde:** `data/Fechas.kt`: `zona()` = `ZoneId.systemDefault()`; `horaDe`, `diaLogicoDeMillis`, `diaDeMillis`.
@@ -76,7 +79,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** desalinea justo las variables de uso nocturno, las más relevantes para el sueño; correlaciones entre fuentes comparan ventanas distintas.
 - **Gravedad:** Alta.
 - **Propuesta:** unificar a día lógico (o declarar explícitamente el criterio de cada variable en el diccionario). Relacionado con H-1-2.
-- **Estado:** Resuelto en parte en el módulo 10b (esquema 13) (P-16 ii): pantalla y pasos pasan al día lógico de aquí en adelante, con la ventana guardada por día. Corazón, oxígeno, agenda y clima siguen por día de calendario.
+- **Estado:** Resuelto en parte en el módulo 10b (esquema 13) (P-16 ii): pantalla y pasos pasan al día lógico de aquí en adelante, con la ventana guardada por día. Corazón, oxígeno, agenda y clima siguen por día de calendario; desde el módulo 10c (commit `b943ec7`) (P-16 i) eso queda declarado: el LEEME lo dice y el diccionario lo marca en cada variable del panel (`Diccionario.CALENDARIO`).
 
 ### H-3-2 · `primer_uso_h` / `ultimo_uso_h` con ventana de calendario
 - **Dónde:** `sensores/Pantalla.kt`.
@@ -150,6 +153,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** toda correlación entre `esc_*` y variables diarias compara semanas distintas (con el valor «viniendo del futuro»), y la serie se aplana.
 - **Gravedad:** Alta.
 - **Propuesta:** ventana = periodo realmente preguntado (7 días WHO-5 y PSS-4; 30 UCLA-3) y, si hay solapamiento, que cada día conserve la respuesta más cercana posterior (la primera que lo cubre), no la última.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-14): cada respuesta cubre solo los días que pregunta (7 días WHO-5 y PSS-4, 30 UCLA-3; `Dinamicas.ventanaCuestionario`) y un día cubierto por dos respuestas se queda con la primera (`Dinamicas.porDiaCuestionario`).
 
 ### H-2-2 · `retroactivo` se decide en el primer guardado del documento del día
 - **Dónde:** `data/Repo.kt`, `guardarDia()`: `retro = previo?.retroactivo ?: (fecha < diaLogico())`; `ts_editado` se sobrescribe en cada guardado.
@@ -173,6 +177,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** subestima frecuencias (recuerdo de sueños, contextos, hábitos) en proporción a los días sin respuesta y sesga análisis por necesidad. Mismo problema de fondo que H-1-1.
 - **Gravedad:** Media.
 - **Propuesta:** vacío (`null`) cuando la sección no se respondió (`sueno_recordado` solo si se abrió la pantalla de sueño o hay calidad; `hab_*` desde `Habito.desde`); con «las tres», poner 1 en las tres columnas.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): `sueno_recordado` queda vacío salvo que ese día haya calidad, texto o la propia marca del sueño; `hab_*` queda vacío antes de `Habito.desde` (en el panel y en `vm_dias`); con «las tres», las tres necesidades valen 1. Los hábitos sin `desde` (los importados) siguen con 0.
 
 ### H-2-5 · El perfil actual se proyecta hacia atrás en las etapas de vida
 - **Dónde:** `ciencia/Dinamicas.kt`, «Etapas de vida», `valorEn()`: si un campo nunca cambió, se usa `actual[campo]` para cualquier fecha.
@@ -180,6 +185,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** contamina las comparaciones «antes y después» de etapas de vida sin que se note.
 - **Gravedad:** Media.
 - **Propuesta:** no asignar etapa antes de la primera fecha en que se respondió ese campo, o pedir «desde cuándo».
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-26): el primer guardado de «Conocerte» deja historial y, antes de esa fecha, los campos llenados ese día no dan etapa (`Perfiles.primerGuardado`); tampoco sale en «Antes y después». Los perfiles llenados antes de esta versión no tienen arreglo.
 
 ### H-2-6 · Brújula política: 5 afirmaciones por eje no neutralizan la aquiescencia
 - **Dónde:** `data/Politica.kt` (`AFIRMACIONES`, `ejes()`, comentario de la cabecera).
@@ -187,6 +193,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** un estilo de respuesta se lee como postura; el sesgo es constante entre años, así que afecta poco a la comparación contigo mismo.
 - **Gravedad:** Baja.
 - **Propuesta:** ajustar por la media de acuerdo de la persona (restar su aquiescencia) o usar un número par de afirmaciones por eje; corregir el comentario.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-26): el comentario de `Politica.kt` dice que estar de acuerdo con todo sí empuja (±20). No se ajusta por la aquiescencia.
 
 ### H-2-7 · La separación mínima entre avisos no siempre es de 90 minutos
 - **Dónde:** `avisos/Trabajo.kt`, `Programador.planDelDia` (margen = `minOf(45 min, tramo/4)`; comentario «separadas al menos 90 minutos»).
@@ -194,6 +201,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** solo documentación; avisos muy juntos aumentan la carga y la dependencia entre respuestas.
 - **Gravedad:** Baja.
 - **Propuesta:** corregir el comentario, o fijar una separación mínima real.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-26): el comentario de `planDelDia` dice la separación real, 2 × min(45 min, tramo/4).
 
 ### H-2-8 · El cierre de un día pasado se guarda con la hora actual
 - **Dónde:** `ui/pantallas/Lote2.kt`, `BloqueCierre(fecha)`: `Momento(…, ts = ahoraIso(), fecha = fecha, origen = "cierre")`.
@@ -201,7 +209,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** contamina una variable pensada como comparable entre días.
 - **Gravedad:** Baja–Media.
 - **Propuesta:** mostrar el cierre solo si `fecha` es el día lógico actual (o marcar los cierres tardíos).
-- **Estado:** Resuelto en la entrega N4 de la revisión de navegación: el cierre va al principio de la hoja y solo en la del día de hoy (`cierrePermitido`).
+- **Estado:** Resuelto en la entrega N4 de la revisión de navegación: el cierre va al principio de la hoja y solo en la del día de hoy (`cierrePermitido`). Desde el módulo 10c (commit `b943ec7`) (P-26), el panel además ignora los cierres guardados otro día que el que cierran (`Estadistica.cierreFuera`), también los de antes.
 
 ### H-2-9 · Editar un registro de ánimo no deja rastro
 - **Dónde:** `ui/pantallas/Momentos.kt`, `DialogoMomento`; modelo `Momento` sin sello de edición.
@@ -232,6 +240,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** mucho ruido entre días; un toque reflejo muy rápido baja la media.
 - **Gravedad:** Baja.
 - **Propuesta:** contar las respuestas < 100 ms como falsas salidas (excluirlas de la media); documentar que no es una PVT validada.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-26): un toque a menos de 100 ms del estímulo cuenta como anticipación, no entra en la media y se repite el intento.
 
 ### H-2-13 · Exportación `vm_dias.csv`: columnas de momentos congeladas y nombres distintos al panel
 - **Dónde:** `data/Exportar.kt` (`m_<tipo>` con `Catalogo.MOMENTOS`; `valencia_muestreo`, `n_muestreos`) frente a `Estadistica.panel()` (`muestreo_valencia`, `n_<emoción>`).
@@ -246,6 +255,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** notas de días futuros no se distinguen de las escritas ese día.
 - **Gravedad:** Baja.
 - **Propuesta:** añadir la marca o cambiar el texto.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-26): el aviso ya no promete una marca; dice que queda guardado cuándo se escribió (`ts_creado`, desde el esquema 14).
 
 ### H-2-15 · Ánimo por lugar: criterios distintos y mezcla de tipos de registro
 - **Dónde:** `ui/pantallas/Medir.kt` (`PantallaLugares`: la lista usa `m.lugar == id` **o** distancia ≤ radio; `Mapa` solo `m.lugar == id`; ambos usan todos los registros de ánimo); `vestigium.R`, `vm_mapa_animo` (`coalesce(valencia, v_dia)`).
@@ -253,7 +263,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** mezcla ánimo momentáneo con recordado y muestreo al azar con muestreo por evento.
 - **Gravedad:** Baja.
 - **Propuesta:** un solo criterio de pertenencia al lugar; preferir solo avisos (`muestreo`) o mostrarlos separados; en R, no rellenar con la valencia del día.
-- **Estado:** Resuelto en parte en el módulo 10a (commit `a67bad0`): `vm_mapa_animo` en R. Lo de la pantalla queda para la entrega 10c (P-26).
+- **Estado:** Resuelto en parte en el módulo 10a (commit `a67bad0`): `vm_mapa_animo` en R. En el módulo 10c (commit `b943ec7`) (P-26), la lista y el mapa usan el mismo criterio (lugar marcado o distancia ≤ radio) y el texto dice que los colores usan todo el historial de ánimo. Siguen mezclándose avisos y registros por iniciativa propia.
 
 ## Módulo 4 · Modelos fisiológicos y variables derivadas (v81, commit `fa527df`)
 
@@ -277,6 +287,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** la misma variable puede valer distinto según la pantalla o el momento; criterio (a) del módulo 9.
 - **Gravedad:** Media.
 - **Propuesta:** calcular siempre en segundo plano (también en experimentos) o marcar el resultado como incompleto en vez de devolver otra cifra.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-21): el panel de Experimentos se calcula en segundo plano, y en el hilo principal sin caché las variables que dependen de MacroFactor quedan vacías en vez de dar otra cifra.
 
 ### H-4-4 · Alcohol: parámetros fijos y sin incertidumbre
 - **Dónde:** `data/Sustancias.kt`, `widmarkR()` (0.68 / 0.55 / 0.62), `pesoEn()` (70 kg si no hay peso), `alcoholEn()` (β = 0.15 g/L/h, absorción de 30 min).
@@ -284,6 +295,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** `alcohol_estimado_max` y `alcohol_al_dormir` aparentan una precisión que no tienen.
 - **Gravedad:** Media.
 - **Propuesta:** usar el agua corporal total de Watson et al. (1980) con la estatura de Conocerte; avisar cuando se usa el peso por omisión; mostrar un rango.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-20, I-2): el peso es el más reciente entre báscula y MacroFactor (o el primero posterior) y la *r* sale del agua corporal de Watson et al. (1980) con la estatura de «Conocerte» cuando hay sexo, edad (en hombres), estatura y un peso real (`Sustancias.rYPeso`). β sigue fijo, no se muestra un rango y no se avisa en pantalla cuando se usan 70 kg.
 
 ### H-4-5 · Alcohol: cada día se simula desde cero
 - **Dónde:** `ciencia/Estadistica.kt`, `sustancias()` (simulación de 14 h desde la primera dosis de cada día lógico).
@@ -312,6 +324,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** `probioticos_porciones` mezcla exposición real con coincidencias de texto y ceros por falta de registro.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar; dejar `probioticos_estimado` en `null` los días sin bitácora.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): `probioticos_estimado` queda vacío los días sin bitácora de MacroFactor.
 
 ### H-4-9 · Jet lag social: días libres fijos y toda la historia
 - **Dónde:** `ciencia/Analisis.kt`, `ritmo()`.
@@ -319,6 +332,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** el jet lag social y la regularidad mostrados pueden no describir tu situación actual.
 - **Gravedad:** Media.
 - **Propuesta:** ventana reciente (p. ej., 8 semanas); permitir marcar días libres atípicos; añadir el Índice de Regularidad del Sueño (Phillips et al., 2017) o calcular la regularidad por separado en días laborales y libres.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-19, I-1): los promedios, el jet lag social y la regularidad usan las noches de las últimas 8 semanas (`Analisis.ritmo(dias = 56)`, también `vm_ritmo(dias = 56)` en R), y los festivos de México cuentan como días libres. No se pueden marcar días libres propios y la regularidad sigue siendo la desviación estándar de la hora de dormir.
 
 ### H-4-10 · Noches por uso del teléfono mezcladas con las del reloj
 - **Dónde:** `ciencia/Analisis.kt`, `ritmo()`.
@@ -326,6 +340,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** dos medidas con sesgos distintos en un mismo promedio; el último uso no es la hora de dormirse.
 - **Gravedad:** Baja.
 - **Propuesta:** no mezclar fuentes en un mismo promedio, o mostrarlas por separado.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-19): las fuentes se siguen mezclando cuando hay de 1 a 6 noches del reloj, pero la pantalla lo dice («Solo n noches del reloj… las demás se aproximan con el teléfono»).
 
 ### H-4-11 · Cambiar un parámetro reescribe todas las variables pasadas
 - **Dónde:** `Config.cafeina_vida_media_h`; parámetros de cada `Suplemento` (`vida_media_h`, `carga_dias`, `lavado_dias`, `dosis`).
@@ -347,6 +362,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** la «mejor marca» del reporte puede no coincidir con la de R ni con la de la pantalla; criterio (b) del módulo 9.
 - **Gravedad:** Baja.
 - **Propuesta:** usar `Macrofactor.e1rm` en todas partes.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-22): el reporte y Tus apps usan `Macrofactor.e1rm`.
 
 ## Módulo 5 · Núcleo estadístico (v81, commit `fa527df`)
 
@@ -372,6 +388,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: con variables persistentes los p son mucho más pequeños de lo que deberían (en la simulación de la Figura 6.3, con autocorrelación 0.8 la tasa de falsas alarmas sube de 5 % a 35 %), y BH no lo compensa; el usuario recibe ✓ en relaciones espurias.
 - Gravedad: alta.
 - Propuesta: reutilizar en `factores` la maquinaria de `relaciones` (restos sin tendencia según el interruptor, nEf y p con nEf); para 0/1, una diferencia de medias con EE inflado por (1 + r₁)/(1 − r₁) o calculada sobre los restos. Alternativa mínima: mostrar el mismo r, IC y q que la lista para la pareja de origen.
+- Estado: Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-17): en la app, `Analisis.factores` usa los mismos restos sin tendencia que la lista (según el interruptor, que llega desde Explorar), r de Pearson con el n efectivo y p con nEf; para las 0/1, la diferencia de medias del objetivo con t de Welch y el error estándar corregido por autocorrelación. `vm_factores` en R queda para la entrega 10d.
 
 ### H-5-4 · «Cruzar dos variables» usa n bruto y valores con tendencia
 - Dónde: `ui/pantallas/Explorar.kt`, sección «Cruzar dos variables» (`Estadistica.pares`, `pearson`, `ic95`).
@@ -379,6 +396,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: puede afirmar que una relación «no incluye el cero» cuando la lista la marca como posible azar; contradicción visible entre secciones de la misma pantalla.
 - Gravedad: media.
 - Propuesta: calcular el intervalo con nEf (autocorrelación de cada variable) y ofrecer el mismo interruptor «Quitar tendencias»; o al menos mostrar «≈ nEf independientes» y el r sin tendencia junto al bruto.
+- Estado: Resuelto en el módulo 10c (commit `b943ec7`) (P-17): el intervalo usa el n efectivo (autocorrelación de cada variable), se dice «≈ n independientes» y se muestra el r sin tendencia junto al bruto. No tiene interruptor propio de «Quitar tendencias».
 
 ### H-5-5 · `Estadistica.diferencia`: 1.96 fijo y días independientes
 - Dónde: `ciencia/Estadistica.kt`, `diferencia()`; la usan `Analisis.cambio` (Tendencia: 30 contra 30 días), `Analisis.factores` (variables 0/1), `EtapasDeVida` en `ui/pantallas/Explorar.kt` (60 contra 60 días) y `Experimentos` (`data/Lote3.kt`). Lo mismo en `Analisis.porDiaSemana` (media ± 1.96 DE/√n con n ≥ 2).
@@ -386,6 +404,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: intervalos demasiado estrechos; «El cambio es claro» o «la diferencia parece real» con más frecuencia de la debida.
 - Gravedad: media.
 - Propuesta: usar t con los grados de libertad de Welch; inflar el EE por la autocorrelación (o usar nEf por grupo); subir el mínimo de `porDiaSemana` (p. ej., 5 por día). Para experimentos, ver módulo 7.
+- Estado: Resuelto en el módulo 10c (commit `b943ec7`) (P-17): `Estadistica.diferenciaCompleta` usa t con los grados de Welch y multiplica el error estándar de cada grupo por √((1 + ρ)/(1 − ρ)), con ρ de cada grupo corregido por sesgo (`ar1Grupos`); en una simulación de 30 + 30 días con ρ = 0.5, el intervalo cubre el 95 %. `porDiaSemana` pide 5 días y usa t con n − 1 grados.
 
 ### H-5-6 · Quitar la tendencia no quita el ciclo semanal
 - Dónde: `ciencia/Estadistica.kt`, `series()` (ventana ±10 días = 21 días = 3 semanas exactas); igual en `vm_relaciones`.
@@ -407,6 +426,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: se pierden días atípicos de movilidad (viajes); pequeñas diferencias de z con R.
 - Gravedad: baja.
 - Propuesta: cambiar `km` por `distancia_km`; opcionalmente promediar los dos centrales.
+- Estado: Resuelto en el módulo 10c (commit `b943ec7`) (P-24): `atipicos()` revisa `distancia_km`.
 
 ### H-5-9 · «Tus números»: ejercicio semanal sobreestimado y aire libre con otra variable
 - Dónde: `ciencia/TusNumeros.kt`, `construir()`: `ejercicio_sem` = media de `ejercicio_min` en los últimos 30 días con dato × 7; `aire_libre` usa `luz_alta_min`.
@@ -414,6 +434,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: la comparación con las recomendaciones de actividad física (150 min/semana) sale engañosamente favorable.
 - Gravedad: media.
 - Propuesta: calcular el ejercicio semanal como suma de minutos en los últimos 28 días con cobertura de reloj / 4 (o rellenar con 0 los días con datos del reloj y sin sesión); usar `aire_libre_min`.
+- Estado: Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-23): `ejercicio_sem` es la suma de minutos de las sesiones en las 4 semanas que terminan en la última, entre 4. Lo del aire libre se deja: la etiqueta dice que es la luz que mide el teléfono (módulo 9).
 
 ### H-5-10 · Palabras del diario sin incertidumbre y distintas en R
 - Dónde: `ciencia/Analisis.kt`, `palabras()`; `vestigium.R`, `vm_palabras`.
@@ -428,6 +449,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: con pocos días los intervalos son estrechos y el R² optimista; texto inexacto cuando el objetivo no es el ánimo.
 - Gravedad: baja.
 - Propuesta: usar t y mostrar R² ajustado; texto «Controlar por el valor del día anterior».
+- Estado: Resuelto en el módulo 10c (commit `b943ec7`) (P-17, P-28): t con n − k − 1 grados, «varianza explicada (ajustada)» con el R² ajustado y el interruptor «Controlar por el valor del día anterior».
 
 ### H-5-12 · Dinámica emocional: dos definiciones de «difícil»
 - Dónde: `ciencia/Analisis.kt`, `dinamica()`.
@@ -456,6 +478,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: pequeñas incoherencias entre reportes, panel y R (relacionado con H-1-2).
 - Gravedad: baja.
 - Propuesta: usar `Exportar.horaDecimal` y `dia` en todas partes; indicar cuando la valencia de un día viene de registros momentáneos.
+- Estado: Resuelto en el módulo 10c (commit `b943ec7`) (P-29): el reporte usa `Exportar.horaDecimal`, ingresos por `dia` y solo la valencia del diario (dice cuántos días tienen solo avisos); Totales cuenta gastos e ingresos por `dia`.
 
 ### H-5-16 · El aviso de potencia cuenta días con diario, no días por pareja
 - Dónde: `ui/pantallas/Explorar.kt` («Con 90 días o más ya se pueden detectar relaciones moderadas» / «Faltan N días…», con `Repo.dias.size`).
@@ -463,6 +486,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: expectativa optimista sobre lo que la lista puede encontrar.
 - Gravedad: baja.
 - Propuesta: matizar el texto («relaciones moderadas en una pareja concreta; en la lista completa, solo las fuertes») o basarlo en la cobertura de cada variable.
+- Estado: Resuelto en el módulo 10c (commit `b943ec7`) (P-28): el texto dice que 90 días bastan para una relación moderada en una pareja concreta y, en la lista completa, solo para las fuertes.
 
 ## Módulo 6 · Personas y red social (v81, commit `fa527df`)
 
@@ -480,6 +504,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** una correlación con `per_ana` no distingue haberla visto de haberla soñado o pensado; el constructo es «presencia mental o física», no contacto.
 - **Gravedad:** Media.
 - **Propuesta:** agregar una familia por persona con estado «estuve» (desde `Presencias.delDia`) o documentar `per_` como «mención en cualquier texto» en el diccionario.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-28), por la vía de documentar: el nombre de cada `per_` dice sus fuentes (diario, mejor y peor momento, momentos, sueños o cartas). No hay familia «estuve con @x».
 
 ### H-6-3 · La fecha de un cambio de relación es la fecha de edición, y lo anterior a la primera clasificación se proyecta
 - **Dónde:** `data/Personas.kt`, `guardar()` (`CambioRelacion(hoy, …)`) y `relacionEn()`/`cercaniaEn()`.
@@ -494,6 +519,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** `vi_convivientes` y los `vi_*` de quien solo está en Conocerte se proyectan hacia atrás (como H-2-5) y pueden fallar si el nombre de Conocerte es un alias.
 - **Gravedad:** Baja.
 - **Propuesta:** comparar con `Texto.canon`; usar el historial de cambios del perfil (`CambioPerfil`) para fechar convivientes, o mover a esas personas a «Tu gente».
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-25): `Perfiles.relacion` y `vi_convivientes` comparan con `Texto.canon`. Los convivientes y las personas cercanas de «Conocerte» siguen sin fecha.
 
 ### H-6-5 · Colores de la Red con la relación sin agrupar
 - **Dónde:** `data/Lote3.kt`, `RedPersonas.calcular()` (`p?.relacion ?: Perfiles.relacion(n)`); `ui/pantallas/Lote3.kt`, `PantallaRed` (`tonos`).
@@ -501,6 +527,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el dibujo engaña (una amistad cercana parece «sin clasificar») y la composición en R separa categorías que los análisis juntan.
 - **Gravedad:** Baja.
 - **Propuesta:** usar `Personas.grupo(...)` para el color (y exportar ambas columnas: relación y grupo).
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-25): la Red colorea por `Personas.grupo`, `vm_red_nodos.csv` trae `relacion` y `grupo`, y `vm_red` usa `grupo` para la composición y el color.
 
 ### H-6-6 · «Solo lo que dije» cuenta grupos de más en la Red
 - **Dónde:** `ui/pantallas/Lote3.kt`, `PantallaRed` (filtra aristas pero no recalcula `grado`); `data/Lote3.kt`, `componentes()` (`nodos.filter { it.grado > 0 }`).
@@ -508,6 +535,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** la cifra «grupos» y el grado mostrados no corresponden al dibujo.
 - **Gravedad:** Baja.
 - **Propuesta:** recalcular el grado con las aristas filtradas antes de `componentes()`.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-25): con «solo lo que dije», el grado y los grupos se recalculan con las líneas filtradas (`RedPersonas.grados`, `componentes`).
 
 ### H-6-7 · La app y `vm_red()` calculan la red distinto
 - **Dónde:** `data/Exportar.kt`, `filasRed()` (`minJuntos = 1, max = 400`); `assets/vestigium.R`, `vm_red()`; `PantallaRed`.
@@ -529,6 +557,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** los conteos de una misma persona no cuadran entre pantallas y variables; `personas` (solo diario) y `per_` (todo) miden cosas distintas con nombres parecidos.
 - **Gravedad:** Baja.
 - **Propuesta:** documentar en el diccionario la fuente de cada variable; aplicar `Texto.canon` en las tarjetas.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-25, P-28): las tarjetas de Explorar y Vida aplican `Texto.canon` y el nombre de `per_` dice sus fuentes. El diccionario no documenta la fuente de cada variable de personas.
 
 ### H-6-10 · Pares por construcción no marcados como obvios
 - **Dónde:** `ciencia/Dinamicas.kt`, `AGREGADOS["per_"]`.
@@ -536,6 +565,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** pueden aparecer «relaciones» triviales (p. ej., `per_ana` con `personas_vistas`) que ocupan lugar en la lista y en la corrección por comparaciones múltiples.
 - **Gravedad:** Baja.
 - **Propuesta:** agregar esas variables a `AGREGADOS["per_"]` (y `personas_pensadas` ya está en `pen_`).
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-25): `AGREGADOS["per_"]` incluye `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `vi_expareja`, `vi_trabajo`, `cercania_media`, `penso_en_*` y `presencias_revisado`.
 
 ### H-6-11 · Equivalencias de un solo paso y compartidas entre @ y #
 - **Dónde:** `data/Texto.kt`, `canon()` (`eq[t] ?: t`); `Config.equivalencias` usada para personas y temas.
@@ -543,6 +573,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** una persona puede quedar partida en dos tras unir nombres en cadena; colisión improbable entre personas y temas.
 - **Gravedad:** Baja.
 - **Propuesta:** resolver la cadena al aplicar (o al guardar) y separar las tablas por símbolo.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-25): `Texto.canon` sigue la cadena hasta 8 pasos y, en un ciclo, todos cuentan como el primero en orden alfabético. Personas y temas siguen compartiendo la tabla.
 
 ### H-6-12 · La cercanía no se puede borrar y la primera se proyecta hacia atrás
 - **Dónde:** `data/Personas.kt`, `guardar()` (`cercania ?: previo.cercania`; cambio solo si ambas cercanías existen).
@@ -550,6 +581,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** `cercania_media` de días antiguos usa un juicio de hoy.
 - **Gravedad:** Baja.
 - **Propuesta:** registrar en el historial también el paso de «sin cercanía» a un valor; permitir borrar.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-25): la cercanía se puede quitar y el paso de «sin cercanía» a un valor (o al revés) queda en el historial; en ese tramo cuenta como «sin cercanía». Los cambios anteriores a esta versión no tienen arreglo.
 
 ### H-6-13 · Variables sociales en 0 en días sin diario
 - **Dónde:** `ciencia/Estadistica.kt`, `panel()` (bucle sobre `Repo.dias.keys + momentosPorDia.keys`).
@@ -557,6 +589,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** «no escribí» se confunde con «no vi a nadie»; si los días sin diario no son al azar (días malos o muy ocupados), sesga las correlaciones sociales. Relacionado con H-1-6 y H-2-4.
 - **Gravedad:** Media.
 - **Propuesta:** calcular estas variables solo en días con texto de diario (o dejarlas `null` cuando no lo hay y no hay momentos con @).
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): las variables sociales (`personas`, `vi_*`, `cercanos`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `penso_en_*`) quedan vacías los días sin texto de diario y sin momentos no privados con @ (`Dinamicas.diasSociales`); la base de `per_` y `pen_` es la misma, y la de `tema_`, los días con diario o con un momento con #.
 
 ### H-6-14 · La Constelación usa la relación actual
 - **Dónde:** `ui/pantallas/Constelacion.kt`, `calcular()` (`Perfiles.relacion(p)` sin fecha).
@@ -564,6 +597,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** solo visual; no entra en análisis.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar (opcional: colorear con la relación más frecuente en el periodo).
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-26): el comentario dice que el ángulo no significa nada; el color con la relación actual se documenta en el capítulo 7.
 
 ### H-6-15 · La escala IOS de la app difiere del original
 - **Dónde:** `ui/pantallas/Gente.kt`, `CirculosCercania` y `CERCANIA`.
@@ -580,6 +614,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el experimento se hace completo y no produce resultado; la plantilla recomendada para el caso más largo es inutilizable.
 - **Gravedad:** Alta.
 - **Propuesta:** impedir lavados ≥ duración de un periodo (o alargar el plan en esos casos); en la plantilla, por ejemplo, 12 semanas con lavado de 28 o contar el lavado solo al inicio de la fase «SÍ» con más semanas.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-18): no se puede sellar si, con el peor sorteo posible, alguna condición quedaría con menos de 7 días que cuentan (`Experimentos.minimoPosible`); la plantilla «Creatina» pasa a 12 semanas (14 días con la acción y 42 sin ella).
 
 ### H-7-2 · «Terminar experimento» no guarda la fecha
 - **Dónde:** `ui/pantallas/Lote3.kt`, `TarjetaExperimento` (`e.copy(activo = false)`); `data/Lote3.kt`, `Experimentos.resultado()` (no mira `activo`).
@@ -596,6 +631,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Gravedad:** Alta.
 - **Relación:** es el mismo problema de H-5-5, aquí cuantificado para los experimentos.
 - **Propuesta:** prueba de aleatorización sobre los planes posibles (por semanas); como mínimo, *t* de Welch y un error estándar ajustado por la autocorrelación (como el *n* efectivo de las correlaciones), y exigir más días antes de mostrar el resultado.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-17, P-18): t de Welch con el error estándar corregido por autocorrelación (`diferenciaEnDias`) y al menos 7 días que cuenten en cada condición para poder sellar. No hay prueba de aleatorización.
 
 ### H-7-4 · El resultado se ve y se actualiza durante el experimento
 - **Dónde:** `ui/pantallas/Lote3.kt`, `TarjetaExperimento` (muestra la diferencia y el mensaje de «señal» desde 3 días por condición).
@@ -603,6 +639,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** en simulación, detenerse en la primera señal da falsas señales el 30 % (días independientes) a 50 % (autocorrelación 0.3) de las veces; además, ver resultados parciales alimenta la expectativa (sin cegamiento).
 - **Gravedad:** Media.
 - **Propuesta:** ocultar la diferencia hasta terminar el plan (mostrar solo días contados), o marcar el resultado como «provisional».
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-18): mientras dura el plan, el resultado sale como «provisional» y sin la frase de «señal».
 
 ### H-7-5 · El sorteo libre puede producir un antes/después
 - **Dónde:** `ui/pantallas/Lote3.kt`, `PantallaExperimentos` (`shuffled(...)` de la mitad «SÍ» y la mitad «no»).
@@ -610,6 +647,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** con una tendencia lenta (0.02 desviaciones/día, 8 semanas, sin efecto real), falsas señales del 14 % con sorteo libre frente al 6 % por pares.
 - **Gravedad:** Media.
 - **Propuesta:** sortear por pares de semanas y, si se usa una prueba de aleatorización, recomendar 10–12 semanas (con pares, el *p* mínimo es 1/2^(N/2): 0.125 con 6 semanas).
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-18): el sorteo es por pares de semanas (`Experimentos.plan`): en cada par, una con la acción y otra sin ella. Los experimentos ya sellados conservan su plan.
 
 ### H-7-6 · La prueba de tendencia confunde un efecto real con una tendencia
 - **Dónde:** `data/Lote3.kt`, `Experimentos.resultado()` (pendiente del valor contra el día, ambas condiciones juntas, |b/EE| > 2).
@@ -617,6 +655,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** en simulación, con efecto real *d* = 0.8 y sin tendencia, el aviso aparece en el 72 % de los antes/después y el 16 % de los alternos (≈ 5 % esperado); el mensaje sugiere lo contrario de lo que pasa.
 - **Gravedad:** Media.
 - **Propuesta:** ajustar valor ~ día + condición y reportar el efecto de la condición descontada la tendencia; avisar de la tendencia solo con el término del día en ese modelo.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-18): la tendencia se mide dentro de cada condición, con valor ~ día + condición (`Experimentos.tendencia`), y el aviso sale solo con el término del día. El efecto que se muestra sigue siendo la diferencia según el plan, sin descontar la tendencia.
 
 ### H-7-7 · d de Cohen sin corrección de Hedges y con umbrales de diseños entre personas
 - **Dónde:** `data/Lote3.kt`, `Experimentos.resultado()` y `tamano()`.
@@ -631,7 +670,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el análisis es por intención de tratar; el efecto se diluye con incumplimientos y no se puede medir cuánto se cumplió.
 - **Gravedad:** Media.
 - **Propuesta:** casilla diaria «¿lo hiciste?» en el aviso del Día, guardada por fecha, y mostrar el % de cumplimiento (y un análisis por lo hecho como secundario).
-- **Estado:** Resuelto en el módulo 10b (esquema 13) (I-3): «¿Lo hiciste hoy?» en el aviso del Día, en las dos condiciones (`Experimento.hecho`); la tarjeta muestra el cumplimiento y un cociente secundario.
+- **Estado:** Resuelto en el módulo 10b (esquema 13) (I-3): «¿Lo hiciste hoy?» en el aviso del Día, en las dos condiciones (`Experimento.hecho`); la tarjeta muestra el cumplimiento y un cociente secundario. En el módulo 10c (commit `b943ec7`) (P-18), el rótulo pasa a «Semanas con la acción según el plan / sin ella».
 
 ### H-7-9 · El aviso del Día muestra la semana 1 durante la semana previa
 - **Dónde:** `ui/pantallas/Dia.kt` (`ChronoUnit.WEEKS.between(inicio, fecha)`).
@@ -639,6 +678,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** si la semana 1 es «SÍ», se puede empezar antes y alterar la línea de base inmediata (no cambia el cálculo, que empieza en `inicio`).
 - **Gravedad:** Baja.
 - **Propuesta:** usar `Experimentos.toca()` (que devuelve `null` antes del inicio) o comprobar `fecha >= inicio`; mostrar «empieza el lunes».
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-18): el aviso usa `Experimentos.toca`, que no devuelve nada antes del inicio.
 
 ### H-7-10 · El sellado no fija el análisis y no está protegido
 - **Dónde:** `PantallaExperimentos` y `Repo.guardarExperimento()` (sobrescribe el documento).
@@ -660,6 +700,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** cabe esperar ~3 diferencias «claras» por azar incluso sin cambios reales (más con autocorrelación); la repetición da la impresión de hallazgos independientes.
 - **Gravedad:** Media.
 - **Propuesta:** agrupar los cambios por fecha, aplicar Benjamini-Hochberg (como en las correlaciones) y un intervalo ajustado por autocorrelación; mantener el aviso de «pista».
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-18, P-17): los cambios de un mismo día van en una sola tarjeta, el primer llenado de «Conocerte» no sale y la diferencia usa t de Welch con el error estándar corregido por autocorrelación. No se aplica Benjamini-Hochberg.
 
 ### H-7-13 · El panel de los experimentos se recalcula solo cuando cambia el número de días
 - **Dónde:** `ui/pantallas/Lote3.kt`, `PantallaExperimentos` (`remember(Repo.dias.size, Repo.experimentos)`).
@@ -667,6 +708,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el resultado mostrado puede no incluir los últimos datos.
 - **Gravedad:** Baja.
 - **Propuesta:** usar las mismas claves de caché que el panel general.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-21): el panel de Experimentos se recalcula con los propios datos como clave (días, experimentos, salud, nutrición y momentos).
 
 ### H-7-14 · La medida de la plantilla «Creatina» depende de la sesión y de la progresión
 - **Dónde:** `Experimentos.PLANTILLAS` («creatina» → `volumen_kg`).
@@ -738,6 +780,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** si los días sin registro son los difíciles, la racha se infla (dato faltante no al azar).
 - **Gravedad:** Media.
 - **Propuesta:** contar como limpios solo los días con respuesta «no»; mostrar aparte los días sin respuesta.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-27): solo cuentan como limpios los días respondidos «no»; los días sin respuesta no suman ni reinician la racha y se muestran aparte (`Recaidas.rachas`).
 
 ### H-8-9 · PBKDF2 con menos iteraciones que la recomendación actual
 - **Dónde:** `data/Respaldos.kt`, `ITERACIONES = 210_000` con `PBKDF2WithHmacSHA256`; contraseña mínima de 8 caracteres (`ui/pantallas/Respaldo.kt`).
@@ -753,6 +796,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Gravedad:** Baja.
 - **Relación:** ya señalado en H-5-15 (módulo 5); se repite aquí porque afecta a «Tu año» y a la comparación entre periodos.
 - **Propuesta:** usar solo la valencia del diario (y mostrar aparte la de los avisos) o indicar cuántos días vienen de cada fuente.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-29): el ánimo de los reportes y «Tu año» es solo la valencia del diario, y el reporte dice cuántos días solo tenían avisos.
 
 ### H-8-11 · Comparaciones con el periodo anterior sin incertidumbre
 - **Dónde:** `reportes/Reportes.kt`, `cambio()` (umbral fijo 0.05 / 0.5); `Periodo` (mínimo 3 días en el periodo anterior).
@@ -840,6 +884,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (b).
 - **Gravedad:** Baja.
 - **Propuesta:** P-16 y P-30.
+- **Estado:** Pendiente para la entrega 10d (P-30): la entrega 10c no cambió `ultimo_uso_h`; la misma regla de +24 en la app y en R entra con el panel de R.
 
 ### H-9-5 · Importaciones con sellos y versión falsos
 - **Dónde:** `data/Importar.kt:150-158`, `:225`, `:231` (versión web y Obsidian).
@@ -869,6 +914,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** confusión al cruzar en R.
 - **Gravedad:** Baja.
 - **Propuesta:** P-28.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-28): el diccionario separa `vm_panel.csv:distancia_km` (GPS) y `vm_salud.csv:distancia_km` (Health Connect).
 
 ### H-9-9 · Responder un aviso pendiente desde Hoy lo guarda como registro propio
 - **Dónde:** `ui/pantallas/Hoy.kt:105-108`, `:128-131`, `:603-606`; `ui/QuickActivity.kt:102`, `:265`.
@@ -908,6 +954,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a); dos totales del mismo día no cuadran.
 - **Gravedad:** Baja.
 - **Propuesta:** P-20.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-20): una toma sin hora legible se pone al mediodía de su día.
 
 ### H-9-14 · La caché de dosis no se refresca al reimportar comidas
 - **Dónde:** `ciencia/Estadistica.kt:621`.
@@ -915,6 +962,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** cifras de sustancias viejas tras corregir MacroFactor.
 - **Gravedad:** Baja.
 - **Propuesta:** P-21.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-21): la clave de la caché de dosis cambia con cada importación de MacroFactor.
 
 ### H-9-15 · La regla de «día libre» está escrita en cinco lugares
 - **Dónde:** `ciencia/Analisis.kt:212`, `ui/pantallas/Analisis.kt:368`, `vestigium.R:103`, `:305`, `:436`.
@@ -922,6 +970,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** si no se tocan todos, aparece un desacuerdo entre la app y R, criterio (b).
 - **Gravedad:** Baja.
 - **Propuesta:** P-19.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-19, I-1): en la app hay una sola regla, `Fechas.esDiaLibre` (fin de semana o festivo), que usan el ritmo, su gráfica y la columna `dia_libre` del panel; `vm_ritmo` lee esa columna. En R, `fin_de_semana` del panel y `vm_por_hora` siguen con su regla: entrega 10d.
 
 ### H-9-16 · `ejercicio_min` y `distancia_km` quedan vacíos cuando se sabe que fueron 0
 - **Dónde:** `ciencia/Estadistica.kt:408` y `kmPorDia` (`:898-914`).
@@ -929,6 +978,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterios (a) y (e); esas variables nunca comparan «moverse» con «no moverse», y los promedios por día se inflan (`ciencia/TusNumeros.kt:54-55`, `:84`).
 - **Gravedad:** Media.
 - **Propuesta:** P-15.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): `ejercicio_min` vale 0 los días con datos del reloj (pasos o frecuencia cardiaca) y sin sesión, desde la primera sesión; `distancia_km` vale 0 los días con ubicaciones y sin movimiento (`Movilidad.kmPorDia`).
 
 ### H-9-17 · `alcohol` (0/1) con dos reglas de día
 - **Dónde:** `ciencia/Estadistica.kt:606` frente a `:637`.
@@ -936,6 +986,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a) menor.
 - **Gravedad:** Baja.
 - **Propuesta:** P-20.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-20): `alcohol` (0/1) es el día lógico de cada dosis; un episodio sin cantidad cuenta en su propio día.
 
 ### H-9-18 · R analiza variables de calendario y de cobertura como si fueran conductas
 - **Dónde:** `vestigium.R:103`, `:197` (`vm_relaciones`, `vm_factores`).
@@ -950,6 +1001,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** interpretación en R.
 - **Gravedad:** Baja.
 - **Propuesta:** P-28.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-28): el diccionario dice que `n_momentos` incluye impulsos, recaídas y libido.
 
 ### H-9-20 · Claves repetidas en el diccionario describen mal columnas de la exportación
 - **Dónde:** `data/Diccionario.kt` (`D` es un `mapOf`: gana la última clave). Choques de `grado` (`:153`/`:243`), `antes` (`:37`/`:253`), `dia_logico` (`:64`/`:140`), `categoria`, `minutos` y `cantidad`.
@@ -957,6 +1009,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a); el diccionario es la referencia para leer los datos en R.
 - **Gravedad:** Baja.
 - **Propuesta:** P-28.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-28): las claves repetidas pasan a la forma `vm_x.csv:columna`, y una prueba JVM revisa que ninguna clave se repita con descripciones distintas.
 
 ### H-9-21 · Las etiquetas del sueño sin símbolo cuentan como personas
 - **Dónde:** `ciencia/Dinamicas.kt:114`.
@@ -964,6 +1017,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a); personas inventadas en `per_`.
 - **Gravedad:** Baja.
 - **Propuesta:** P-25.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-25): en el sueño, solo las etiquetas con @ cuentan como personas.
 
 ### H-9-22 · Los vínculos declarados no pasan por las equivalencias
 - **Dónde:** `data/Lote3.kt:206-209`, `:230-231`.
@@ -971,6 +1025,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a) leve.
 - **Gravedad:** Baja.
 - **Propuesta:** P-25.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-25): los vínculos declarados pasan por `Texto.canon` (`RedPersonas.dichos`).
 
 ### H-9-23 · `vm_red()` falla si no hay ningún par
 - **Dónde:** `vestigium.R:491-493`.
@@ -985,6 +1040,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a); con 90 kg reales frente a 70, el máximo de alcohol estimado cambia un 48 %.
 - **Gravedad:** Media.
 - **Propuesta:** P-20.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-20): `Sustancias.pesoDe` toma el peso más reciente entre las dos fuentes y, si no hay uno anterior, el primero posterior; 70 kg solo si no hay ningún peso.
 
 ### H-9-25 · El diccionario de `vm_experimentos.csv` está vacío o mal
 - **Dónde:** `data/Diccionario.kt:183`.
@@ -992,6 +1048,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a) menor.
 - **Gravedad:** Baja.
 - **Propuesta:** P-28.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-28): todas las columnas de `vm_experimentos.csv` tienen su descripción.
 
 ### H-9-26 · La adherencia de la plantilla «Creatina» ya existe y no se usa
 - **Dónde:** `ciencia/Estadistica.kt:234` (`supl_creatina_tomado`); `data/Lote3.kt` (`Experimentos`).
@@ -1030,6 +1087,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a).
 - **Gravedad:** Baja.
 - **Propuesta:** P-18.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-18): el aviso fuerte depende del plan real (`Experimentos.enBloque`): un sorteo que quedó con un solo cambio de condición también lo recibe.
 
 ### H-9-31 · El resultado del experimento incluye el día de hoy
 - **Dónde:** `data/Lote3.kt:333-334`.
@@ -1037,6 +1095,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a); sesga hacia abajo el último día.
 - **Gravedad:** Baja.
 - **Propuesta:** P-18.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-18): hoy no entra en los valores del resultado (sí en el cumplimiento).
 
 ### H-9-32 · «Aún no hay suficientes días» no distingue tres situaciones
 - **Dónde:** `ui/pantallas/Lote3.kt:479`.
@@ -1044,6 +1103,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a); oculta H-7-1.
 - **Gravedad:** Baja.
 - **Propuesta:** P-18.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-18): el mensaje distingue si el plan nunca dará resultado, si el experimento ya terminó sin días suficientes o si falta esperar.
 
 ### H-9-33 · Al restaurar, gastos e ingresos quedan distintos en la base y en la pantalla
 - **Dónde:** `data/Repo.kt:240-244`, `:252-256`.
