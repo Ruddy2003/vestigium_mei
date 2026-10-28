@@ -389,15 +389,16 @@ Estilo: líneas declaradas de 2 dp y más opacas (punteadas si son «colegas»);
 - `vm_red_nodos.csv`: `persona`, `relacion` (actual, sin agrupar para Tu gente; agrupada para Conocerte), `grupo` (desde 10c: el grupo de relación, el mismo que da el color en la app), `cercania` (actual), `dias_mencion`, `grado` (calculado con **cualquier** co-mención, `minJuntos = 1`).
 - `vm_red_vinculos.csv`: `a`, `b`, `tipo_declarado` (vacío si no lo dijiste), `dias_juntos`.
 
-Exportar con `minJuntos = 1` permite elegir el umbral en R. Pero ojo: el `grado` del archivo **no** es el que muestra la app (que usa 2 días).
+Exportar con `minJuntos = 1` permite elegir el umbral en R. Pero ojo: el `grado` del archivo **no** es el que muestra la app (que usa 2 días). Desde la entrega 10d el diccionario lo dice en esa columna: «líneas que dijiste (salvo "no se conocen") o con 1 día o más juntas. La Red de la app pide 2 días y muestra 45 personas; aquí van hasta 400» (P‑32, incisos c y d de H‑6‑7, que se documentan en vez de cambiarse).
 
 ### 7.11.2 Qué hace `vm_red(declaradas = FALSE, min_juntos = 2)`
 
-1. Se queda con los vínculos declarados (que no sean «no se conocen») **o**, si `declaradas = FALSE`, con los pares con `dias_juntos ≥ min_juntos`.
+1. Quita **siempre** los pares declarados «no se conocen», aunque aparezcan juntos muchos días (como la app; desde la entrega 10d). De los demás, se queda con los declarados **o**, si `declaradas = FALSE`, con los pares con `dias_juntos ≥ min_juntos`. Si no hay ningún par (`vm_red_vinculos.csv` vacío o ausente), sigue con una red sin líneas en vez de fallar (H‑9‑23).
 2. Arma el grafo no dirigido con **todos** los nodos del archivo (hasta 400), tengan o no líneas.
 3. Calcula:
    - **`densidad`** = `igraph::edge_density(g)`: líneas / (*n*(*n*−1)/2), sin el ego.
-   - **`componentes`** = `igraph::components(g)$no`: número de componentes **incluyendo a cada persona sin líneas** como componente propia.
+   - **`componentes`** = `sum(igraph::components(g)$csize > 1)`: número de grupos con al menos una línea, **sin contar a las personas sin líneas**, como la app (desde la entrega 10d; antes, `components(g)$no` contaba a cada persona aislada como un grupo).
+   - **`aisladas`** = `sum(igraph::components(g)$csize == 1)`: las personas sin ninguna línea, aparte.
    - **`restriccion_burt`**: agrega un nodo «yo» unido a todas las personas y calcula `igraph::constraint` para «yo».
    - **`grado`**: grado de cada persona, de mayor a menor.
    - **`composicion`**: cuántas personas hay de cada relación (`table(relacion)`).
@@ -445,12 +446,12 @@ Las métricas son estándar **[Validado]** como definiciones (Burt, 2004; Perry 
 | Aspecto | App (pantalla Red) | R (`vm_red`) |
 |---|---|---|
 | Personas | 45 más mencionadas + declaradas | hasta 400 + declaradas, sin mínimo de días |
-| Pares «no se conocen» que aparecen juntos ≥ umbral | **no** cuentan como línea | **sí** cuentan (la condición es «declarada y no "no se conocen"» **o** `dias_juntos ≥ min_juntos`) |
-| Grupos / componentes | sin contar a las personas sin líneas | contando a cada persona sin líneas como componente |
+| Pares «no se conocen» que aparecen juntos ≥ umbral | **no** cuentan como línea | **no** cuentan (igual desde 10d; antes sí contaban) |
+| Grupos / componentes | sin contar a las personas sin líneas | sin contar a las personas sin líneas (desde 10d), y aparte `aisladas` |
 | Grado | con co-mención ≥ 2 días | en el CSV, con ≥ 1 día; en R, recalculado con `min_juntos` |
 | Relación | grupo actual (desde 10c) | `composicion` y color por la columna `grupo` desde 10c (las exportaciones viejas, sin esa columna, usan `relacion`) |
 
-Con los mismos datos, la app y R pueden dar **densidades y número de grupos distintos** por estas razones, no por error de cálculo.
+Desde la entrega 10d (P‑32) solo quedan dos diferencias, las de personas y de grado, y el diccionario las dice. Con los mismos datos, la app y R pueden dar todavía **densidades y número de grupos distintos** por esas dos razones, no por error de cálculo; con `min_juntos = 2` y filtrando a las mismas 45 personas, deberían coincidir (no lo comprobé con datos reales: R no corre en la compilación automática; sí corrí `vm_red()` con un archivo inventado de 3 personas, un par con 3 días juntas y otro declarado «no se conocen»: 1 grupo, 1 aislada).
 
 ---
 
@@ -514,7 +515,7 @@ La pista 4 del plan («la constelación toma los momentos excepto el tipo `recai
 3. La **cercanía** usa la escala IOS, validada, con etiquetas añadidas y respondida una vez por persona; `cercania_media` describe a quién nombras, no cómo te fue con ellos ese día.
 4. Las variables sociales del panel ponían **0 en días sin diario** pero con algún momento o documento (H-6-13); desde 10c quedan vacías los días sin diario escrito ni momento con @. **No hay variable por persona de «estuve con @x»**: `per_` mezcla presencia, pensamiento, sueños y cartas, y su etiqueta lo dice (H-6-2).
 5. La **Constelación** es una visualización de frecuencia y recencia, coloreada con la relación actual. La **Red** combina co-menciones (≥ 2 días) y vínculos declarados (con nombres unidos desde 10c), con un dibujo de fuerzas estándar; sus dos fallos de presentación (color y «solo lo que dije») se corrigieron en 10c (H-6-5, H-6-6).
-6. `vm_red()` calcula densidad, componentes, **restricción de Burt** y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8) y **difieren de la app** en tres puntos concretos (H-6-7).
+6. `vm_red()` calcula densidad, componentes, **restricción de Burt** y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8) y **diferían de la app** en tres puntos concretos (H-6-7). Desde la entrega 10d, `vm_red()` ya no cuenta como línea los pares «no se conocen» ni cuenta como grupo a quien no tiene líneas, y no falla sin pares; la diferencia de personas (45 frente a 400) y de grado (2 días frente a 1) se documenta en el diccionario.
 7. Los momentos privados no entran en la Constelación ni en la Red; hasta v84 entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1, resuelto en 10a).
 8. Se identificaron **15 hallazgos** (H-6-1 a H-6-15). No se cambió código.
 

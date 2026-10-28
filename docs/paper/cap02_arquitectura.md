@@ -190,7 +190,7 @@ Un usuario registra su primera emoción el día 6 y no vuelve a hacerlo hasta el
 
 Lo mismo con el gasto, que hasta la entrega 10c era la excepción. Con diario desde el día 1 y el primer gasto el día 40: antes, `gasto_total` valía 0 los días 1 a 39; ahora esos días quedan vacíos y el 0 empieza el día 40 (`ceroDesde(["día 40", …], días con diario)`). Un día 41 con diario y sin gasto vale 0; un día 42 sin documento de diario, vacío.
 
-**Cuándo falla.** (a) «Desde el primer registro» no distingue entre *abandono de la función* y *ausencia real*: si la persona deja de usar el registro de emociones tres meses, esos meses quedan en 0, no `null` (H‑1‑1, sigue vigente para el abandono). (b) La base «días con diario» supone que, si abriste el diario, pudiste anotar un gasto o una escalada; un día en que solo marcaste la valencia cuenta como «sin gasto». (c) Los hábitos creados antes de que existiera `Habito.desde` no tienen fecha de inicio y siguen en 0 desde el principio. La inconsistencia entre fuentes parecidas que señalaba H‑1‑1 (gasto desde el diario, ingreso desde su primer registro) quedó resuelta en 10c (D.63); la exportación `vm_panel.csv` aplica sus reglas propias hasta la entrega 10d (P‑30).
+**Cuándo falla.** (a) «Desde el primer registro» no distingue entre *abandono de la función* y *ausencia real*: si la persona deja de usar el registro de emociones tres meses, esos meses quedan en 0, no `null` (H‑1‑1, sigue vigente para el abandono). (b) La base «días con diario» supone que, si abriste el diario, pudiste anotar un gasto o una escalada; un día en que solo marcaste la valencia cuenta como «sin gasto». (c) Los hábitos creados antes de que existiera `Habito.desde` no tienen fecha de inicio y siguen en 0 desde el principio. La inconsistencia entre fuentes parecidas que señalaba H‑1‑1 (gasto desde el diario, ingreso desde su primer registro) quedó resuelta en 10c (D.63). Desde la entrega 10d (P‑30), `vm_panel.csv` toma estas mismas reglas del panel de la app en lugar de aplicar las suyas (§ 2.8).
 
 ### 2.6.2 Agregación de eventos a día
 
@@ -235,12 +235,14 @@ Además, el mapa `AGREGADOS` evita comparar variables **obviamente relacionadas*
 
 ## 2.8 Exportación, diccionario y R
 
-La app puede exportar **48 tablas CSV** con datos (`vm_*.csv`, Apéndice A.3), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, el diccionario `vm_diccionario.csv`, una copia SQLite y un script `vestigium.R` que carga todo en *tidy*.
+La app puede exportar **50 tablas CSV** con datos (`vm_*.csv`, Apéndice A.3), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, el diccionario `vm_diccionario.csv`, una copia SQLite y un script `vestigium.R` que carga todo en *tidy*.
 
 | Elemento | Función | Razonamiento |
 |---|---|---|
-| `vm_panel.csv` | Una fila por día con las variables principales | Entrada para el análisis rápido |
-| `vm_panel_extendido.csv` | Panel + todas las dinámicas (≥ 2 días) | Exploración amplia |
+| `vm_panel.csv` | Una fila por día con las variables principales | Entrada para el análisis rápido; tabla de compatibilidad para scripts viejos |
+| `vm_panel_extendido.csv` | Panel de la app + todas las dinámicas (≥ 2 días) + las columnas de las tablas diarias | El panel que analiza `vestigium.R` desde la entrega 10d |
+| `vm_variables.csv` | Las variables que la app cruza, con su nombre, su grupo y si son privadas | Que R cruce las mismas variables que la app (10d) |
+| `vm_familias.csv` | Las parejas de variables que la app esconde por obvias, escritas como familias | Que R esconda las mismas parejas (10d) |
 | Tablas por evento (`vm_momentos`, `vm_gastos`, `vm_horas`…) | Una fila por evento (o por hora) | Datos en forma **larga**: cada fila es una observación (Wickham, 2014) |
 | `vm_diccionario.csv` | Qué significa cada columna, unidad, grupo | Interoperabilidad y reutilización (FAIR: *Findable, Accessible, Interoperable, Reusable*; Wilkinson et al., 2016) |
 | `vestigium.R` | Carga, tipos de datos y funciones auxiliares | Reproducibilidad: otro analista (o la misma persona en 5 años) reproduce el análisis |
@@ -252,6 +254,15 @@ La app puede exportar **48 tablas CSV** con datos (`vm_*.csv`, Apéndice A.3), m
 
 **El calendario como variable (entrega 10c, D.69).** `vm_panel.csv` trae, junto a `dia_semana`, dos columnas nuevas: `festivo` (0/1; día de descanso obligatorio de la Ley Federal del Trabajo de México, art. 74, solo si en «Conocerte» el país es México; vacío si no) y `dia_libre` (0/1; sábado, domingo o festivo). `dia_libre` es la misma regla que usa el jet lag social de la app (`Fechas.esDiaLibre`, capítulo 5), y R la lee de esa columna en vez de recalcularla.
 
+**R analiza el mismo panel que la app (entrega 10d, P‑30 y P‑31).** Hasta 10c, `vestigium.R` analizaba `vm_panel.csv`, que se armaba con reglas propias: `gasto_total` e `ingreso_total` valían 0 en cualquier fecha exportada, `escalada` y `gimnasio` eran «falso» en cualquier fecha, `canciones` contaba distinto y `ultimo_uso_h` sumaba 24 a cualquier hora antes de las 12:00. Así, R no servía para comprobar lo que muestra la app (H‑5‑1). Ahora hay cuatro piezas:
+
+1. **Los valores de las columnas compartidas.** `Exportar.comoLaApp` recorre, después de armar `vm_panel.csv`, cada columna cuyo nombre también existe en el panel de la app (`Estadistica.panel()`) y le pone el valor de la app, con sus reglas de 0 y vacío (§ 2.6.1). Por ejemplo, `gasto_total`, `escalada` y `gimnasio` valen 0 desde el primer registro de su fuente y solo en días con diario, y antes quedan vacíos; `ejercicio_min` vale 0 en días con datos del reloj y sin sesión; `ultimo_uso_h` suma 24 solo antes de las 5:00, como el día lógico (1:00 → 25; 11:00 → 11). Se conserva el tipo que tenía la columna: si era 0/1, sigue siendo 0/1, y si era entero, sigue entero cuando el valor no tiene decimales. Así un script viejo la sigue leyendo igual. **[Diseño propio]**.
+2. **Once nombres distintos, documentados y no renombrados.** La misma medida tiene otro nombre en `vm_panel.csv` y en la app. Por ejemplo, `km` es `distancia_km`, `sueno_min` es `sueno_horas` en minutos y `hrv_rmssd` es `hrv`. La lista completa está en `Exportar.EQUIVALENTES`: `sueno_min`, `sueno_profundo_min`, `sueno_rem_min`, `hrv_rmssd`, `km`, `valencia_muestreo`, `luz_dia_min`, `sol_min`, `carga_noche_inicio_h`, `temp_piel_delta` y `ruido_db_medio`. No se renombraron para no romper scripts viejos. El diccionario lo dice en las dos (`Diccionario.conEquivalente`: «· en el panel de la app: distancia_km» y «· en vm_panel.csv: km»). Las ocho de igual unidad toman el valor de la app. Las tres que cambian de unidad (minutos frente a horas: `sueno_min`, `luz_dia_min`, `sol_min`) se dejan como estaban, porque salen de la misma fuente. Por eso `ruido_db_medio` ahora es el `ruido_db` de la app.
+3. **`vm_variables.csv` y `vm_familias.csv`.** La primera lista las variables que la app cruza en «Las relaciones más marcadas» (`Estadistica.variables()`), con la columna `privada` (0/1): la app nunca cruza las privadas, y R solo las cruza si se pide. La segunda escribe como familias las parejas que la app esconde por obvias (`Estadistica.familias`, P‑31; detalle en el capítulo 6).
+4. **R lee el panel extendido por omisión.** `vestigium.R` carga `vm_panel_extendido.csv` como `panel`, y `vm_relaciones()` y `vm_factores()` cruzan por omisión las variables de `vm_variables.csv`. `vm_panel.csv` queda en `vm$panel` como tabla de compatibilidad. El `LEEME.txt` lo explica.
+
+Una prueba JVM (`ExportacionPrueba`) fija los números que da R con unos datos inventados y comprueba que la app da los mismos (capítulo 6). Lo que **no** se pudo comprobar es la exportación real completa: R no corre en la compilación automática, y comparar las cifras de la app y de R con los datos reales hay que hacerlo a mano en el teléfono.
+
 **Cuándo falla.** El diccionario describe el *significado* pero no versiona cada variable: si el código cambia la definición de una variable entre versiones (p. ej. el cálculo de `aire_libre_min`), el diccionario sólo refleja la versión actual; una exportación antigua puede no ser comparable sin la versión del esquema (`schema_v` ayuda, pero no a nivel variable) (H‑1‑8).
 
 ---
@@ -259,7 +270,7 @@ La app puede exportar **48 tablas CSV** con datos (`vm_*.csv`, Apéndice A.3), m
 ## 2.9 Integridad, respaldo e importación
 
 - **Transacciones.** Las importaciones masivas (`importarDias`) usan `db.transaccion { }`: se aplican todas o ninguna.
-- **Importar con o sin sobrescribir.** `importarDias(lista, sobrescribir)` evita pisar días existentes por omisión. Los días importados **no** reciben `ts_creado`, `ts_editado` ni `schema_v` actualizados (H‑1‑9): se pierde la capacidad de saber cuándo fueron capturados.
+- **Importar con o sin sobrescribir.** `importarDias(lista, sobrescribir)` evita pisar días existentes por omisión. Los días importados guardan lo que traiga el archivo, sin inventar nada (entrega 10d, P‑33). Los de la versión web conservan su `ts_creado` y `ts_editado`, y `schema_v` es el del archivo, o 0 si no lo trae; antes recibían la versión de hoy. Los de Obsidian toman `ts_creado` y `ts_editado` del encabezado de la nota, o los dejan vacíos; antes recibían la hora de la importación. `origen` dice de dónde vinieron (`web`, `obsidian`). Sigue sin haber una marca de «importado el día X» (H‑1‑9): si el archivo no traía sellos, no se sabe cuándo se capturaron esos días, y la app no lo inventa.
 - **Caché de variables dinámicas.** `Dinamicas.calcular` guarda en caché el resultado y lo invalida comparando referencias de las colecciones (`clave()`); si cambia cualquiera de ellas se recalcula. *Razonamiento:* cálculo costoso, pero la invalidación por referencia es correcta solo mientras las colecciones se reemplacen (inmutables), como hace `Repo`.
 - **Restaurar sin pisar ni dejar a medias (esquema 13, P‑08).** Un respaldo con `schema_v` mayor que el de la app no se restaura: los campos que esta versión no conoce se descartarían en silencio (`ignoreUnknownKeys`). Los gastos e ingresos del respaldo que ya existen (mismo id) no se tocan, ni en la base ni en memoria. Antes se sobrescribían en la base pero no en memoria, y al reiniciar aparecía la versión del respaldo. Un experimento del respaldo no reactiva uno terminado aquí, y se juntan las respuestas de «¿Lo hiciste hoy?» de los dos (`Fusion.experimento`). El detalle está en el capítulo 10.
 - **Identificadores.** `nuevoId()` = UUID recortado a 16 caracteres hexadecimales (64 bits): colisión prácticamente imposible a esta escala (probabilidad de al menos una colisión ≈ 3×10⁻¹⁰ con 10⁵ registros).
@@ -271,7 +282,7 @@ La app puede exportar **48 tablas CSV** con datos (`vm_*.csv`, Apéndice A.3), m
 | # | Amenaza | Dónde nace | Qué hace el sistema | Qué falta |
 |---|---|---|---|---|
 | L‑1 | **Día lógico fijo** (05:00) | 2.3.2 | Corte único | No se adapta al ritmo de la persona |
-| L‑2 | **Cero vs. nulo** | 2.6.1 | Una sola regla, `ceroDesde` (10c) | El abandono de una función sigue contando como 0; `vm_panel.csv` se alinea en 10d |
+| L‑2 | **Cero vs. nulo** | 2.6.1 | Una sola regla, `ceroDesde` (10c) | El abandono de una función sigue contando como 0; desde 10d, `vm_panel.csv` usa las mismas reglas |
 | L‑3 | **Autoselección del registro** (se registra más cuando hay algo que contar) | Captura activa | Marca `retroactivo` | Indicador de «días con diario» como covariable |
 | L‑4 | **Medición reactiva** (medirse cambia lo medido; efecto Hawthorne personal) | N‑de‑1 | — | Inevitable; documentar periodos de adaptación |
 | L‑5 | **Cambios de instrumento** (nuevo reloj, nuevo permiso, nueva versión de la app) | Captura pasiva | `schema_v` | Registrar eventos de cambio como variables de intervención |

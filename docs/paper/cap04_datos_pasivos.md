@@ -126,7 +126,7 @@ Solo si el reloj registró el sueño de esa noche (`sueno_inicio`, `sueno_fin`):
 - **Muestra de fondo:** en cada pulso (cada ~15 min), si tienes el permiso de ubicación *en segundo plano* y el muestreo está activo, pide una lectura de **potencia equilibrada** (`PRIORITY_BALANCED_POWER_ACCURACY`: en general usa wifi y antenas antes que encender el GPS; gasta poca batería, pero es menos precisa). Espera hasta 10 s; si no responde, usa la última ubicación conocida.
 - **Geocercas:** para cada lugar guardado (hasta **95**; Android permite 100 por app) registra un círculo con radio `max(radio del lugar, 80 m)`. Android avisa al **entrar** y al **salir**. Eso crea o cierra «visitas» sin gastar mucha batería. (El código también fija una «espera» de 2 minutos, pero esa espera solo aplica a un tipo de aviso, «permanencia», que la app no pide; por eso no tiene efecto.)
 
-**Precisión.** El campo `precision` es la estimación que da Android del error. Según la documentación de Android, se define como el **radio de un círculo con 68 % de confianza** de contener la posición verdadera (*dato que recuerdo de la documentación oficial; no pude abrir esa página completa en la sesión, así que conviene verificarlo antes de citarlo en el texto final*). Con potencia equilibrada es normal ver errores de decenas o cientos de metros; por eso la detección de lugares ignora puntos con precisión peor a **120 m** (4.4.3).
+**Precisión.** El campo `precision` es la estimación que da Android del error. Según la documentación de Android, se define como el **radio de un círculo con 68 % de confianza** de contener la posición verdadera (*dato que recuerdo de la documentación oficial; no pude abrir esa página completa en la sesión, así que conviene verificarlo antes de citarlo en el texto final*). Con potencia equilibrada es normal ver errores de decenas o cientos de metros; por eso la detección de lugares ignora puntos con precisión peor a **120 m** (4.4.3). Un punto **sin** precisión (los importados de Google Maps, 4.6.7) cuenta desde la entrega 10d como de **100 m** (`Db.PRECISION_SIN_DATO`), no de 0 m. Así lo leen la detección de lugares (`Lugares.estancia`), `Db.recorrerUbicaciones` (el mapa y el Mundo) y la ruta del mapa. Antes, `COALESCE(precision, 0)` lo trataba como un punto perfecto. Los 100 m son una cifra prudente propia, sin estándar detrás. **[Diseño propio]**. Con los umbrales actuales (120 m para lugares, 150 m para la ruta, 500 m y 1 000 m para el mapa y el Mundo), un punto así **sigue entrando** en todos: el cambio corrige lo que el valor significa y deja de presentarlo como exacto, pero no cambia por sí solo ningún resultado.
 
 **Nota.** El comentario del código dice que la muestra se guarda «solo si cambió algo o pasó tiempo suficiente», pero el código **siempre inserta** un punto por pulso (**H‑3‑8**, baja gravedad: no cambia los resultados, solo el tamaño de la tabla).
 
@@ -212,11 +212,13 @@ Total: 61 min contados. Entre 10:31 y 12:45 pasaron 134 min, pero solo 15 se con
 | **Carga** | ¿Está enchufado? Más **carga nocturna**: si se enchufó entre las **20:00 y las 04:00** y estuvo enchufado **> 3 h y < 16 h**, se guarda inicio y fin como marca aproximada de cuándo dormiste. |
 | **Batería** | Suma de niveles y mínimo del día. |
 | **Luz** | Una lectura del sensor de luz (hasta 1.5 s de espera), **si** la opción está activa. Guarda suma por hora, máximo, y **`luz_alta_min` = minutos con ≥ 1 000 lux**. |
-| **Presión** | Una lectura del barómetro **si la opción está activa y el teléfono tiene sensor**; se **descartan lecturas fuera de 850–1 090 hPa**. Guarda suma, cantidad, mínimo, máximo y el **cambio de presión en ~3 horas** (ver abajo). |
+| **Presión** | Una lectura del barómetro **si la opción está activa y el teléfono tiene sensor**; se **descartan lecturas fuera de 300–1 100 hPa** (`Percepcion.RANGO_HPA`, desde la entrega 10d; antes, 850–1 090 hPa). Guarda suma, cantidad, mínimo, máximo y el **cambio de presión en ~3 horas** (ver abajo). |
 
 **Sobre la luz.** Un sensor de luz de teléfono mide dentro del bolsillo o sobre la mesa, no donde están tus ojos. Por eso `luz_alta_min` **subestima** el tiempo al aire libre. La app lo compensa en `aire_libre_min` (capítulo 2) tomando el **máximo** entre la luz alta y el tiempo a pie/corriendo/en bici, un **proxy** razonable pero no medición. Los 1 000 lux son un umbral práctico (por referencia, el exterior de día suele ser de miles a decenas de miles de lux y una oficina bien iluminada ronda cientos), **regla propia, sin estándar detrás**. **[Aproximación]**.
 
 **Sobre la presión y la altitud (hallazgo H‑3‑3).** El filtro 850–1 090 hPa descarta «lecturas absurdas». Pero 850 hPa corresponde a unos **1 450 m** sobre el nivel del mar en una atmósfera estándar. En una ciudad más alta, la presión *normal* es menor que 850 hPa, y **todas** las lecturas se descartarían, dejando sin datos todas las variables de presión. Gravedad **alta si vives por encima de ~1 450 m; ninguna si vives más abajo**. No sé a qué altitud vive la persona usuaria, así que lo dejo como condicional.
+
+**Corregido en la entrega 10d (P‑33).** El filtro pasó a **300–1 100 hPa** (`Percepcion.RANGO_HPA`). Es el rango de medida de dos sensores de presión comunes en teléfonos, comprobado en sus hojas de datos durante la sesión. El BMP280 de Bosch mide de 300 a 1 100 hPa (revisión 1.26, «*handsets such as mobile phones*»; Bosch Sensortec, 2021). El LPS22HB de ST mide de 260 a 1 260 hPa (DocID027083, revisión 5; STMicroelectronics, 2016). 300 hPa equivale, en atmósfera estándar, a unos 9 000 m, así que ya no se pierde ninguna ciudad habitada. Lo que se descarta sigue siendo lo imposible: un cero o un valor basura del sensor. Qué sensor trae tu teléfono **no lo comprobé**: si fuera otro modelo con un rango más estrecho, el filtro dejaría pasar lecturas que ese sensor no garantiza. **[Aproximación]**. Efecto: si vives o viajas por encima de ~1 450 m, aparecen lecturas de presión que antes se descartaban todas; por debajo, nada cambia.
 
 **Cambio de presión en 3 horas.** Se guardan las lecturas de las últimas 4 horas; la comparación usa la lectura más cercana a **hace 3 horas** entre **2.5 y 3.5 h**. Del día se queda el cambio con **mayor valor absoluto, con signo** («las bajadas bruscas son las que se notan»). Es una hipótesis popular (los cambios de presión y el dolor o el ánimo), pero la evidencia es mixta; aquí se mide para *poder cruzarlo*, no para afirmarlo.
 
@@ -364,7 +366,7 @@ Las importaciones tienen una ventaja (traen datos que el teléfono no ve) y tres
 
 Spotify entrega la hora en que **terminó** cada canción (`played_at`); la app calcula el **inicio = fin − duración** de la canción. **Ojo (H‑3‑9):** si paraste la canción a la mitad, el inicio calculado queda **demasiado temprano** (resta la duración completa y no lo que realmente escuchaste). El error es de minutos y solo importa cerca del corte de las 05:00.
 
-**(b) Historial descargable.** El «historial de reproducción ampliado» (`Streaming_History_Audio_*.json`) trae **cuántos milisegundos escuchaste** y si **saltaste** la canción. Las horas vienen en **UTC** y se convierten a hora local. La app **reemplaza** lo anotado antes por notificaciones o por la API en esos días (el historial es más preciso) y no duplica (identificador por huella de *hora de fin + título + artista*). Distingue las reproducciones de **≥ 30 s** («reales»; 30 s es el umbral habitual con que Spotify cuenta una reproducción, dato que no comprobé en esta sesión).
+**(b) Historial descargable.** El «historial de reproducción ampliado» (`Streaming_History_Audio_*.json`) trae **cuántos milisegundos escuchaste** y si **saltaste** la canción. Las horas vienen en **UTC** y se convierten a hora local. La app **reemplaza** lo anotado antes por notificaciones o por la API en esos días (el historial es más preciso) y no duplica (identificador por huella de *hora de fin + título + artista*). Distingue las reproducciones de **≥ 30 s** («reales»; 30 s es el umbral habitual con que Spotify cuenta una reproducción, dato que no comprobé en esta sesión). La variable `canciones` del panel cuenta solo esas, en la app y en la exportación (desde la entrega 10d, P‑30; antes la app contaba todas las escuchas y la exportación solo las de 30 s o más, H‑9‑3). Una escucha sin la duración escuchada (por notificaciones o por la API) cuenta.
 
 **Música vs. «lo que sonó».** `Escucha.esMusica`: todo lo de Spotify cuenta; lo que viene de notificaciones cuenta salvo apps de video o navegadores.
 
@@ -407,9 +409,15 @@ Cold Turkey es un programa de bloqueo para la computadora que registra **minutos
 
 **Variables.** `laptop_min` (total de apps, o de sitios si no hay apps), `laptop_web_min` (total de sitios) y minutos por **categoría**: productivo, ocio, social, otro. Los **navegadores** no cuentan en categorías (sus minutos ya están repartidos entre los sitios).
 
-**La categorización es automática por coincidencia de texto** (`contains`) con listas de palabras: «productivo» (word, excel, rstudio, code, notion, github, zoom…), «ocio» (steam, netflix, youtube, spotify…), «social» (whatsapp, instagram, reddit, **x.com**…). Lo demás es «otro». Puedes **corregir a mano** la categoría de cada nombre.
+**La categorización es automática** con listas de palabras: «productivo» (word, excel, rstudio, code, notion, github, zoom…), «ocio» (steam, netflix, youtube, spotify, leagueoflegends…), «social» (whatsapp, instagram, reddit, **x.com**…). Lo demás es «otro». Puedes **corregir a mano** la categoría de cada nombre, y tu corrección siempre manda.
 
-**Un defecto concreto (H‑3‑6).** Como la coincidencia es por *contiene*, «**x.com**» (la red social) también coincide con **«dropbox.com»**, **«box.com»** o **«wix.com»**, que se clasificarían como «social». Con «code» pasa algo parecido (cualquier sitio cuyo nombre contenga «code»). Es de gravedad baja y se corrige a mano, pero hay que saberlo al interpretar `laptop_social_min`.
+**Cómo se compara, desde la entrega 10d (P‑33, `ColdTurkey.coincide`).** Hay dos casos:
+- **Sitios** (nombres con punto): la palabra de la lista tiene que ocupar **partes completas del dominio**. La regla es que «.sitio.» contenga «.palabra.». Así, «x.com» coincide con `x.com` y `m.x.com`, pero ya no con `dropbox.com` ni `wix.com`. «youtube» coincide con `youtube.com` y `m.youtube.com`, y «gemini.google» con `gemini.google.com`. «max.com» ya no atrapa a `hbomax.com`.
+- **Apps** (sin punto): basta con que el nombre contenga la palabra, como antes (`rstudio`, `leagueclient`).
+
+Se agregó «leagueoflegends» a «ocio», porque con la regla nueva «league» ya no coincide con `leagueoflegends.com`. **[Diseño propio]**.
+
+**El defecto que corrigió (H‑3‑6).** Antes la coincidencia era por *contiene* también en los sitios: «**x.com**» coincidía con **«dropbox.com»**, **«box.com»** o **«wix.com»**, que se clasificaban como «social», y con «code» pasaba algo parecido. Eso inflaba `laptop_social_min`. Lo que queda: un sitio que no está en ninguna lista va a «otro», y en las apps, «code» sigue coincidiendo con cualquier nombre que lo contenga.
 
 **Día.** El de la fecha del CSV (calendario).
 
@@ -427,9 +435,9 @@ Lee el `.xlsx` que exporta MacroFactor (la app incluye su propio lector mínimo 
 
 ### 4.6.7 Otras importaciones
 
-- **Cronología de Google Maps** (JSON del teléfono o el formato viejo de Takeout): se leen los puntos de ubicación y las visitas y se guardan en la tabla `ubicaciones`, con fuentes «maps», «maps_visita» y «takeout». No se duplica un punto con la misma marca de tiempo. **Estos puntos no traen precisión** (queda vacía); la detección de lugares los trata como precisos (**H‑3‑8**).
-- **Notas de Obsidian (`.md`)**: migran los **diarios antiguos** (YAML al principio de cada nota) a días de la app, sin sobrescribir los existentes.
-- **Respaldo propio** (JSON, `.zip` o `.vmc` cifrado) y el JSON de la versión web: restauran datos y configuración (capítulos 2 y 10).
+- **Cronología de Google Maps** (JSON del teléfono o el formato viejo de Takeout): se leen los puntos de ubicación y las visitas y se guardan en la tabla `ubicaciones`, con fuentes «maps», «maps_visita» y «takeout». No se duplica un punto con la misma marca de tiempo. Los puntos del JSON del teléfono **no traen precisión** (queda vacía) y, desde la entrega 10d, se leen como de 100 m (4.4.2). El formato viejo de Takeout sí trae `accuracy` en cada punto, y desde 10d se guarda como su precisión (P‑33; antes se descartaba) (**H‑3‑8**, H‑9‑7).
+- **Notas de Obsidian (`.md`)**: migran los **diarios antiguos** (YAML al principio de cada nota) a días de la app, sin sobrescribir los existentes. Desde la entrega 10d (P‑33), `ts_creado` y `ts_editado` se toman del encabezado si los trae y, si no, quedan vacíos; antes recibían la hora de la importación, y el día parecía escrito ese día (H‑9‑5). `schema_v` es el del encabezado, o 0.
+- **Respaldo propio** (JSON, `.zip` o `.vmc` cifrado) y el JSON de la versión web: restauran datos y configuración (capítulos 2 y 10). Los días de la versión web conservan sus sellos y, desde la entrega 10d, `schema_v` es el del día en el archivo, o 0; antes recibían la versión actual (H‑9‑5).
 
 ---
 
@@ -491,6 +499,9 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 | Clima de Open‑Meteo (reanálisis/pronóstico) | Aproximación | Hersbach et al. (2020) para el reanálisis |
 | Fase lunar con mes sinódico medio | Aproximación | Fórmula astronómica simple |
 | Calibración del barómetro por mediana de 60 días | Diseño propio | Corrige sesgo constante |
+| Filtro del barómetro 300–1 100 hPa (10d) | Aproximación | Rango de medida del BMP280 (Bosch Sensortec, 2021); el LPS22HB mide 260–1 260 hPa (STMicroelectronics, 2016) |
+| Precisión de 100 m para puntos sin ella (10d) | Diseño propio | Cifra prudente |
+| Cold Turkey por partes completas del dominio (10d) | Diseño propio | Corrige H‑3‑6 |
 | Importar solo conteos de WhatsApp | Diseño propio | Privacidad |
 
 ---
@@ -502,7 +513,7 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 3. Los minutos de wifi, audio, carga y luz son **estimaciones por muestreo** con una regla que **subestima** a propósito; no son minutos del día.
 4. El **sueño** del reloj está bien cuidado en el cálculo, pero el dato en sí es una estimación de consumo (buena para duración, débil para etapas).
 5. **Detectar un lugar** necesita ~**30 min** reales, no 20.
-6. Algunos defectos concretos: barómetro descartado a gran altura (H‑3‑3), procedencia mixta del clima (H‑3‑4), categorías de Cold Turkey por coincidencia de texto (H‑3‑6).
+6. Algunos defectos concretos: barómetro descartado a gran altura (H‑3‑3), procedencia mixta del clima (H‑3‑4), categorías de Cold Turkey por coincidencia de texto (H‑3‑6). La entrega 10d corrigió el barómetro (300–1 100 hPa), Cold Turkey (partes completas del dominio) y la precisión de los puntos importados.
 7. Se identificaron **10 hallazgos** (H‑3‑1 a H‑3‑10). No se cambió código.
 
 **Siguiente capítulo.** Capítulo 5: modelos fisiológicos (cafeína, alcohol, creatina…) y variables derivadas.
