@@ -1,6 +1,6 @@
 # Capítulo 9. Reportes, visualización y motivación
 
-> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales; de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`). **Los ejemplos son inventados.** Qué datos privados llegan a cada salida está en el capítulo 10.
+> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales; de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Describe el código de la v92 (la v91 más la entrega 10f; `SCHEMA_V = 15`). **Los ejemplos son inventados.** Qué datos privados llegan a cada salida está en el capítulo 10.
 
 ---
 
@@ -87,10 +87,10 @@ Una **racha** son días **seguidos** cumpliendo algo: un solo día sin cumplir l
 |---|---|---|
 | **Registrar** | días de diario, avisos contestados, momentos | Menos datos faltantes (bueno). Riesgo: entradas de relleno. |
 | **Una conducta** | pasos, sueño ≥ 7 h, entrenar, hábitos | Cambian la conducta medida: es una intervención. |
-| **Un valor de la medida subjetiva** | «Día perfecto» (7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores) | Premian **un número que tú escribes** (H-8-6). |
+| **Un valor de la medida subjetiva** | «Día perfecto» (7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores) | Premian **un número que tú escribes** (H-8-6). Se quedan por decisión del autor (D.117). |
 | **Un rendimiento** | «Rayo» (reacción < 250 ms) | Los tiempos pueden mejorar por práctica y no por estar más despierto. |
 
-Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que reduce mucho el incentivo. **[Diseño propio]**, de bajo riesgo en la práctica, pero contrario al principio de no premiar el valor de una medida.
+Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que reduce mucho el incentivo. **[Diseño propio]**, de bajo riesgo en la práctica, pero contrario al principio de no premiar el valor de una medida. **Desde 10f se quedan como están, por decisión del autor** (D.117). El riesgo que queda es **un incentivo pequeño a sesgar la valencia del diario** (poner un 7 en vez de un 6), que desaparece en cuanto se gana cada uno; que sean «secretos» casi no protege, porque el único usuario, el autor, sabe que existen. Si se sospecha el efecto, se puede comparar la proporción de 7 antes y después del día en que se ganó (más en la versión completa, §9.4.3).
 
 ---
 
@@ -116,7 +116,7 @@ También desde el esquema 13, una campaña aceptada el miércoles ya no cuenta e
 
 - **Bien**: la mayoría de los logros premian **registrar** o **conductas objetivas medidas por sensores** (pasos y sueño del reloj, pantalla del teléfono), no lo que escribes.
 - **Bien**: la constancia tolera días malos, así que no hay incentivo para inventar un día… salvo en las rachas de diario.
-- **Mejorable**: «Día perfecto» y «Remontada» premian valores de la valencia (H-8-6); las predicciones de enero incluyen el ánimo medio. Las campañas, desde el esquema 13, sí quedan como variable (H-8-7, resuelto).
+- **Mejorable**: «Día perfecto» y «Remontada» premian valores de la valencia (H-8-6) y se quedan por decisión del autor (D.117); las predicciones de enero incluyen el ánimo medio. Las campañas, desde el esquema 13, sí quedan como variable (H-8-7, resuelto).
 - **No se puede evitar**: que ver tus reportes cambie tu conducta. Es, en parte, el propósito de la app.
 
 **Recomendación práctica** (no requiere cambiar código): al analizar una variable que también fue meta de una campaña o un logro, mirar si su relación con otras cambia antes y después de empezar a perseguir esa meta.
@@ -129,6 +129,6 @@ También desde el esquema 13, una campaña aceptada el miércoles ya no cuenta e
 2. Los reportes se generan solos (lunes y día 1) y se guardan en carpetas públicas; los automáticos van en modo discreto y sin la frase del mejor momento (capítulo 10, H-8-4).
 3. La visualización combina codificaciones precisas (barras con eje y números) con otras gruesas (colores, iconos) **[Aproximación]**; las comparaciones con el periodo anterior dicen «parecido» desde 10e cuando la diferencia es menor que su error típico, un filtro que se queda corto (H-8-11).
 4. «La relación del año» es el máximo |*r*| de muchos pares y sobrestima su tamaño **[Aproximación]**.
-5. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas **[Diseño propio]**. Dos logros secretos premian valores de la valencia (H-8-6, pendiente: es una decisión del autor).
+5. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas **[Diseño propio]**. Dos logros secretos premian valores de la valencia (H-8-6); desde 10f se quedan por decisión del autor (D.117), con un riesgo pequeño y documentado.
 6. Las campañas son **intervenciones**. Desde el esquema 13 son variables del panel (`campana_<reto>`, `campanas_n`), obvias con lo que cada reto mueve (H-8-7, resuelto).
 7. La gamificación puede ayudar a no abandonar, con efectos que dependen del contexto (Hamari et al., 2014); las recompensas pueden cambiar la motivación y lo que se mide (Campbell, 1979).

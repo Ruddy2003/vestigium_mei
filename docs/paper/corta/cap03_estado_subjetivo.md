@@ -1,6 +1,6 @@
 # Capítulo 3. Medición del estado subjetivo
 
-> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento y el del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras. Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número y qué tan sólido es eso. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». **Los ejemplos numéricos son inventados.** Los hallazgos se numeran H-2-n (módulo 2). El seguimiento privado se describe solo en su mecánica.
+> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento y el del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras. Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número y qué tan sólido es eso. Describe el código de la v92 (la v91 más la entrega 10f; `SCHEMA_V = 15`); lo que cambió en las entregas 10e y 10f se marca «desde 10e» y «desde 10f». **Los ejemplos numéricos son inventados.** Los hallazgos se numeran H-2-n (módulo 2). El seguimiento privado se describe solo en su mecánica.
 
 ---
 
@@ -87,7 +87,7 @@ En cualquier registro de ánimo se puede marcar (todo opcional) **qué sientes**
 
 «Enojo» y «miedo» caen en la misma zona de los dos ejes y son experiencias distintas. Nombrar con precisión lo que sientes (*granularidad emocional*) se asocia con manejar mejor las emociones desagradables (Kashdan, Barrett y McKnight, 2015). **[Validado]** el concepto; la app solo guarda los nombres, no calcula un índice. «No sé» también es información y tiene su variable, `n_no_se`. **[Diseño propio]**. Como hay más emociones desagradables que agradables, **los conteos no son comparables entre sí**.
 
-**En el panel**, `n_<emoción>` cuenta los registros del día con esa emoción, y `registros_animo`, los registros del día; desde el primer registro de ánimo, un día con diario sin registros vale **0** (H-1-1, capítulo 2). Con los avisos que tienen compañía marcada se calculan `acompanado_pct`, `con_*`, `valencia_acompanado` y `valencia_solo`. En `vm_dias.csv`, las columnas `m_<tipo>` cuentan solo los tipos de momento viejos y valen 0 desde que se unieron ánimo y momentos (H-2-13, pendiente).
+**En el panel**, `n_<emoción>` cuenta los registros del día con esa emoción, y `registros_animo`, los registros del día; desde el primer registro de ánimo, un día con diario sin registros vale **0** (H-1-1, capítulo 2). Con los avisos que tienen compañía marcada se calculan `acompanado_pct`, `con_*`, `valencia_acompanado` y `valencia_solo`. En `vm_dias.csv`, las columnas `m_<tipo>` cuentan solo los tipos de momento viejos y valen 0 desde que se unieron ánimo y momentos (H-2-13, resuelto en parte: el diccionario lo advierte).
 
 Ponerle palabras a una emoción (*affect labeling*) puede reducir su intensidad: nombrar la emoción de una cara redujo la respuesta de la amígdala (Lieberman et al., 2007). **Registrar puede cambiar un poco lo registrado** (sección 3.13).
 
@@ -109,7 +109,7 @@ Tres preguntas de opción única, plegadas por omisión (`Catalogo.CIENTIFICAS`)
 
 Los contextos (`ctx_*`) valen **0 en todos los días con diario**, también si no abriste esa sección: es la convención de la pantalla («marca lo que aplique»). Los hábitos quedan vacíos antes de `Habito.desde`, salvo que los hayas marcado (desde 10c). En ambos, «no lo marqué» y «no pasó» siguen siendo lo mismo (H-2-4, H-1-1).
 
-`retroactivo` separa lo escrito en el momento de lo escrito de memoria. **[Validado]** el propósito: Stone et al. (2002) mostraron que en diarios en papel mucha gente llena días atrasados de golpe. Desde el esquema 13, `retroactivo` = el día lógico de `ts_valencia` (cuándo se llenó o cambió la valencia) es posterior a la fecha del día (`Reglas.retroactivo`); antes se decidía al crear el documento, y un día creado por el widget el martes y llenado el viernes quedaba «no retroactivo» (H-2-2). Llenarla a la 1:30 del miércoles no cuenta, porque sigue siendo el día lógico del martes. **[Diseño propio]**.
+`retroactivo` separa lo escrito en el momento de lo escrito de memoria. **[Validado]** el propósito: Stone et al. (2002) mostraron que en diarios en papel mucha gente llena días atrasados de golpe. Desde el esquema 13, `retroactivo` = el día lógico de `ts_valencia` (cuándo se llenó o cambió la valencia) es posterior a la fecha del día (`Reglas.retroactivo`); antes se decidía al crear el documento, y un día creado por el widget el martes y llenado el viernes quedaba «no retroactivo» (H-2-2). Llenarla a la 1:30 del miércoles no cuenta, porque sigue siendo el día lógico del martes. Desde 10f (D.109), ese día lógico se calcula con la zona horaria que tenía el teléfono al llenarla, no con la de hoy, así que un viaje no cambia la marca al volver (capítulo 4). **[Diseño propio]**.
 
 ### 3.6.4 El cierre del día
 

@@ -641,7 +641,7 @@ data class Experimento(
      */
     val umbral: Double? = null,
     val sentido: Int? = null,
-    /** Huella SHA-256 de lo sellado (pregunta, acción, medida, hipótesis, umbral, sentido, plan y hora), para notar cambios. */
+    /** Huella SHA-256 de lo sellado (`Experimentos.textoSellado`: pregunta, acción, medida, hipótesis, criterio, diseño, inicio, semanas, plan, lavado y hora), para notar cambios. */
     val huella: String? = null,
 )
 

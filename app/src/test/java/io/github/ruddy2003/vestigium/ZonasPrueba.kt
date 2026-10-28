@@ -73,6 +73,9 @@ class ZonasPrueba {
         assertFalse(Macrofactor.esReferencia("Incline Dumbbell Fly"))
         assertFalse(Macrofactor.esReferencia("Incline Barbell Bench Press"))
         assertFalse(Macrofactor.esReferencia("Dumbbell Bench Press"))
+        assertTrue(Macrofactor.esReferencia("Press de banca inclinado con mancuernas"))
+        assertFalse(Macrofactor.esReferencia("Curl inclinado con mancuernas en banco"))
+        assertFalse(Macrofactor.esReferencia("Aperturas en banco inclinado con mancuernas"))
         fun s(ej: String, kg: Double, reps: Int, tipo: String = "") = Serie("x", "2026-10-20", ejercicio = ej, peso_kg = kg, reps = reps, tipo = tipo)
         val l = listOf(s("Incline Dumbbell Press", 30.0, 8), s("Incline Dumbbell Press", 32.0, 5), s("Incline Dumbbell Press", 40.0, 3, "Warm Up"), s("Squat", 100.0, 5))
         // Epley: 30 × (1 + 8/30) = 38 y 32 × (1 + 5/30) = 37.3; el calentamiento no cuenta.

@@ -1,6 +1,6 @@
 # Apéndice B. Fórmulas
 
-_Todas las fórmulas del núcleo estadístico (capítulo 6), con la función de origen. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10c» o «desde 10d» y está en el Apéndice D (entrega 10c, D.62 a D.78: la app; entrega 10d, D.79 a D.87: R y la exportación). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
+_Todas las fórmulas del núcleo estadístico (capítulo 6), con la función de origen. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v92 (la v91 más la entrega 10f, commit `2b262c5`; `SCHEMA_V = 15`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10c», «desde 10d», «desde 10e» o «desde 10f» y está en el Apéndice D (entrega 10c, D.62 a D.78: la app; entrega 10d, D.79 a D.87: R y la exportación; entrega 10e, D.88 a D.108; entrega 10f, D.109 a D.118). Las tres últimas (B.22 a B.24) no son del capítulo 6: son las fórmulas que agregó la entrega 10f (capítulos 8, 5 y 2). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
 
 ---
 
@@ -181,3 +181,31 @@ Con respuestas (f_k, v_k) ordenadas por fecha y ventana w (7 en WHO-5 y PSS-4, 3
 $$ \text{esc}(d)=v_{k^*},\qquad k^*=\min\{\,k:\ 0\le f_k-d\le w-1\,\} $$
 
 (la primera respuesta que cubre el día d). Con w = 0 (TIPI), cada puntaje vale desde su fecha hasta el test siguiente, como mucho 365 días y no más allá de hoy.
+
+## B.22 Criterio sellado de un experimento — `Experimentos.criterio` (desde 10f); `criterio` en `vm_experimento`
+
+Con la diferencia d = media con la acción − media sin ella y su intervalo de 95 % [lo, hi] de B.11 (`diferenciaEnDias`), el sentido sellado s (+1 «debería subir», −1 «debería bajar») y el umbral u ≥ 0 (en las unidades de la medida; 0 si no se puso):
+
+$$ \text{se cumple}\iff d\cdot s\ \ge\ u\ \ \text{y}\ \ \begin{cases}\text{lo}>0&\text{si } s=+1\\ \text{hi}<0&\text{si } s=-1\end{cases} $$
+
+Es decir: la diferencia va en el sentido dicho, mide al menos el umbral y su intervalo no toca el cero **del lado de s**. Sin sentido sellado, sin diferencia (menos de 3 días medidos en una condición) o con el plan en curso (`provisional`), no hay veredicto (`null` en la app, `NA` en R): no se decide a medio camino. La app guarda el umbral en valor absoluto. **[Diseño propio]** la regla «sentido + umbral + intervalo que no toca el cero».
+
+*Ejemplo inventado.* s = +1, u = 0.5: con d = 0.6 e intervalo [0.1, 1.1] se cumple; con d = 0.4 e intervalo [0.1, 0.7], no (no llega al umbral); con u = 0 y d = 0.6 pero intervalo [−0.1, 1.3], tampoco (toca el cero). Con s = −1 y u = 0.5, d = −0.8 e intervalo [−1.4, −0.2] se cumple. (Comprobado con la expresión de `vm_experimento` en R 4.3.3.)
+
+**Huella.** `Experimentos.huella` = SHA-256 (en hexadecimal) del texto UTF-8 que arma `textoSellado`: pregunta, acción, medida, hipótesis, umbral, sentido, diseño, inicio, semanas, plan (como «1» y «0»), lavado y hora del sello, en ese orden y separados por el carácter U+001F. `intacto` = la huella guardada es igual a la que da lo que hay ahora. **[Validado]** que SHA-256 detecta cambios, en el sentido de que es una función hash criptográfica estándar: cambiar una sola letra da otra huella. No impide cambiar lo sellado; solo lo hace visible.
+
+## B.23 Fuerza de referencia — `Macrofactor.fuerzaReferencia`, `Macrofactor.e1rm` (desde 10f)
+
+Para cada serie efectiva de un día (no de calentamiento: el tipo no contiene «Warm»), con peso p > 0 kg y r repeticiones, 1 ≤ r ≤ 12, la 1RM (el peso que se podría levantar una sola vez) estimada con Epley:
+
+$$ \text{e1RM}=\operatorname{redondeo}_{0.1}\Big(p\,\big(1+\tfrac{r}{30}\big)\Big),\qquad \text{fuerza\_ref\_kg}=\max_{\text{series del ejercicio de referencia}}\ \text{e1RM} $$
+
+El ejercicio de referencia es el press inclinado con mancuernas (`Macrofactor.esReferencia`): el nombre, en minúsculas, sin acentos y con todo lo que no sea letra o número cambiado por «_» (`Texto.slug`), contiene «inclin», además «mancuern», «dumbbell» o «db» como palabra suelta, y además «press», «banc» o «bench». Vacío los días sin ese ejercicio. *Ejemplo inventado:* 3 series de 22 kg × 10, 24 kg × 8 y 24 kg × 6 dan 29.3, 30.4 y 28.8 kg; `fuerza_ref_kg` = 30.4. **[Aproximación]** la 1RM de Epley (su fuente original está [sin verificar], capítulo 5); **[Diseño propio]** reconocer el ejercicio por su nombre.
+
+## B.24 Duración del día lógico con cambio de hora — `Fechas.cambioDeHora`, `ui/pantallas/Dia.kt` (desde 10f)
+
+Con a = desfase con UTC (en horas) al empezar el día lógico (`desfaseH(inicioDiaLogico)`) y b = desfase en su último instante (`desfaseH(finDiaLogico − 1 ms)`):
+
+$$ \text{duración (h)} = 24-(b-a) $$
+
+Si a ≠ b, `cambio_horario` = 1 y la pantalla del Día muestra la duración. *Ejemplos inventados:* el día del cambio al horario de verano en Madrid (de UTC+1 a UTC+2) dura 23 h; el de regreso, 25 h; un viaje de la Ciudad de México a Madrid en verano (de UTC−6 a UTC+2), 24 − 8 = 16 h. `desfase_utc_h` de `vm_panel.csv` es otro valor: el desfase a mediodía (`desfaseH` de las 12:00 de la fecha).

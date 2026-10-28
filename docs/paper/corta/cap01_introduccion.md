@@ -1,6 +1,6 @@
 # Capítulo 1. Introducción y marco teórico
 
-> **Para qué sirve este capítulo.** Explica **qué es Vestigium Mei, qué tipo de conocimiento puede dar y por qué está construida como está**, y discute dos decisiones de fondo: que sea un sistema **para toda la vida** y que **todo pueda cruzarse con todo**. Describe el código de la v91 (`SCHEMA_V = 14`): la v90 (commit `8818d5a`), después de las entregas 10a a 10d del módulo 10 y de la revisión de navegación (N0 a N7), más la entrega 10e, que arregló los hallazgos abiertos que tenían solución en el código. Los ejemplos numéricos son **inventados**.
+> **Para qué sirve este capítulo.** Explica **qué es Vestigium Mei, qué tipo de conocimiento puede dar y por qué está construida como está**, y discute dos decisiones de fondo: que sea un sistema **para toda la vida** y que **todo pueda cruzarse con todo**. Describe el código de la v92 (`SCHEMA_V = 15`): la v90 (commit `8818d5a`), después de las entregas 10a a 10d del módulo 10 y de la revisión de navegación (N0 a N7), más la entrega 10e, que arregló los hallazgos abiertos que tenían solución en el código, y la 10f, que aplicó las decisiones del autor sobre los que seguían pendientes (commit `2b262c5`). Los ejemplos numéricos son **inventados**.
 
 ---
 
@@ -14,9 +14,9 @@ Vestigium Mei («mi rastro», en latín) es una app de Android, escrita en Kotli
 - **Pasiva**: lo que el teléfono y el reloj miden solos: pantalla, ubicación, pasos y sueño por Health Connect, clima, luz, ruido (capítulo 4).
 - **Importada**: Spotify, Google Takeout, WhatsApp (solo conteos), MacroFactor, Kindle, Cold Turkey (capítulo 4).
 
-**Una unidad de análisis: el día.** Todo se resume en el **panel diario**, una tabla con un renglón por día y una columna por variable (`Estadistica.panel`). El día va de **las 05:00 a las 04:59** del día siguiente (el *día lógico*, `Fechas.diaLogico`), para que la madrugada cuente con el día que se estaba viviendo; algunas variables de fuentes externas siguen yendo por día de calendario, y la exportación lo dice en cada una. Además de 186 variables fijas (56 de ellas solo existen si hay datos de su fuente; versión completa, §2.7), la app crea **variables dinámicas**: una por cada persona, tema, lugar, app, artista, nutriente o etapa de vida que aparece en tus datos (27 prefijos; capítulo 2).
+**Una unidad de análisis: el día.** Todo se resume en el **panel diario**, una tabla con un renglón por día y una columna por variable (`Estadistica.panel`). El día va de **las 05:00 a las 04:59** del día siguiente (el *día lógico*, `Fechas.diaLogico`), para que la madrugada cuente con el día que se estaba viviendo; algunas variables de fuentes externas siguen yendo por día de calendario, y la exportación lo dice en cada una. Además de 187 variables fijas (57 de ellas solo existen si hay datos de su fuente; versión completa, §2.7), la app crea **variables dinámicas**: una por cada persona, tema, lugar, app, artista, nutriente o etapa de vida que aparece en tus datos (27 prefijos; capítulo 2).
 
-**Lo que devuelve:** análisis de relaciones entre cualquier par de variables, quitando tendencias y corrigiendo por días parecidos y por muchas comparaciones (capítulo 6); **experimentos personales** sorteados, con la hipótesis sellada antes de empezar (capítulo 8); reportes, «Tu año», logros y campañas (capítulo 9), y una **exportación** de 51 tablas CSV, un diccionario y un script de R (`vestigium.R`) que repite los análisis de la app.
+**Lo que devuelve:** análisis de relaciones entre cualquier par de variables, quitando tendencias y corrigiendo por días parecidos y por muchas comparaciones (capítulo 6); **experimentos personales** sorteados, con la hipótesis sellada antes de empezar (desde 10f, si se quiere, también el criterio de decisión; capítulo 8); reportes, «Tu año», logros y campañas (capítulo 9), y una **exportación** de 51 tablas CSV, un diccionario y un script de R (`vestigium.R`) que repite los análisis de la app.
 
 **Lo privado.** Impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado a las recaídas se ven **solo en la pantalla Privado** y viajan completos a R; no entran en ningún otro análisis de la app (capítulo 10). Aquí se describen solo en su mecánica.
 
@@ -73,7 +73,7 @@ La mayoría de los estudios de muestreo de experiencia duran una o dos semanas; 
 
 **Costos.**
 
-- **Cambia el instrumento.** Comparar épocas exige que midan lo mismo de la misma manera (**invarianza de la medición**; Meredith, 1993). Las costuras conocidas se marcan (`ventana_pantalla`, `ventana_pasos`, `version_noche`, `ts_creado` y `ts_editado` desde el esquema 14); otras no: cambiar la vida media de la cafeína reescribe todo el pasado (H-4-11) y el diccionario describe solo la definición vigente (H-1-8).
+- **Cambia el instrumento.** Comparar épocas exige que midan lo mismo de la misma manera (**invarianza de la medición**; Meredith, 1993). Las costuras conocidas se marcan (`ventana_pantalla`, `ventana_pasos`, `version_noche`, `ts_creado` y `ts_editado` desde el esquema 14; `cambio_horario` y `clima_reanalisis` desde el 15); otras no: cambiar la vida media de la cafeína reescribe todo el pasado (H-4-11). Desde 10f, el diccionario tiene columnas para decir desde qué versión rige cada definición (`desde_version`, H-1-8), aunque en el código revisado aún salen vacías.
 - **Cambias tú.** La lista de relaciones usa **todos** los días del panel; quitar la tendencia corrige los niveles que cambian lento, no una **relación** que cambia con los años (H-11-1; capítulo 11).
 - **Se abandona**, y un hueco largo no es «nada pasó» (Epstein et al., 2015; H-1-1). Y **los datos se pueden perder** (capítulo 10).
 
@@ -97,7 +97,7 @@ En consecuencia (Ioannidis, 2005), una relación firme de la lista es **una buen
 
 ## 1.6 Qué no es este sistema
 
-No es un **instrumento clínico**: WHO-5 y PSS-4 preguntan por 7 días y sus puntos de corte son orientativos (capítulo 3). No **mide el cuerpo** en todo: cafeína, alcohol en sangre, creatina y suplementos son **estimaciones con parámetros de población** (capítulo 5). No **generaliza**: vale para el autor, en el periodo analizado. No es un **estudio diseñado de antemano**: casi todo es exploratorio, salvo los experimentos personales (capítulo 8).
+No es un **instrumento clínico**: WHO-5 y PSS-4 preguntan por 7 días y sus puntos de corte son orientativos (capítulo 3). No **mide el cuerpo** en todo: cafeína, alcohol en sangre, creatina y suplementos son **estimaciones con parámetros de población** (capítulo 5). No **generaliza**: vale para el autor, en el periodo analizado. No es un **estudio diseñado de antemano**: casi todo es exploratorio, salvo los experimentos personales, con su hipótesis sellada (y, desde 10f, si se quiere, su criterio; capítulo 8).
 
 ---
 
@@ -127,13 +127,13 @@ La regla es **no presentar heurísticas como modelos validados**: buena parte de
 | 10. Privacidad e integridad | Cómo se protegen los datos y cómo no se pierden |
 | 11. Discusión | Qué puede y qué no puede concluirse, y qué falta |
 
-El paper se escribió por módulos, leyendo el código: los módulos 1 a 8 describieron y anotaron problemas en `hallazgos.md`, el 9 propuso cambios, el autor los aprobó y el 10 los aplicó en cuatro entregas; tras la lectura final, la 10e arregló los que quedaban y tenían solución en el código. Cada hallazgo lleva el número del **módulo** que lo encontró: H-1-n son del capítulo 2; H-2-n, del 3, y así hasta H-7-n, del 8; H-8-n, de los capítulos 9 y 10; H-9-n, de la revisión general; H-11-n, de los capítulos 1 y 11, y H-NAV-n, de la revisión de navegación.
+El paper se escribió por módulos, leyendo el código: los módulos 1 a 8 describieron y anotaron problemas en `hallazgos.md`, el 9 propuso cambios, el autor los aprobó y el 10 los aplicó en cuatro entregas; tras la lectura final, la 10e arregló los que quedaban y tenían solución en el código, y la 10f aplicó lo que el autor decidió sobre los ocho pendientes. Cada hallazgo lleva el número del **módulo** que lo encontró: H-1-n son del capítulo 2; H-2-n, del 3, y así hasta H-7-n, del 8; H-8-n, de los capítulos 9 y 10; H-9-n, de la revisión general; H-11-n, de los capítulos 1 y 11, y H-NAV-n, de la revisión de navegación.
 
 ---
 
 ## 1.9 Cómo leer esta versión corta
 
-Es un **resumen fiel de la versión completa**: describe el mismo código (v91), con las mismas cifras, umbrales y marcas. El detalle exhaustivo está solo en la completa: todas las variables y tablas de la exportación (Apéndice A), las funciones de R (Apéndice C) y el historial de cambios del módulo 10 (Apéndice D). Las remisiones **«(versión completa, §N.k)»** llevan a la sección N.k de la completa, que tiene otra numeración.
+Es un **resumen fiel de la versión completa**: describe el mismo código (v92), con las mismas cifras, umbrales y marcas. El detalle exhaustivo está solo en la completa: todas las variables y tablas de la exportación (Apéndice A), las funciones de R (Apéndice C) y el historial de cambios del módulo 10 (Apéndice D). Las remisiones **«(versión completa, §N.k)»** llevan a la sección N.k de la completa, que tiene otra numeración.
 
 ---
 

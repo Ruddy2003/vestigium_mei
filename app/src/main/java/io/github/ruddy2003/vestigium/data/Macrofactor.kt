@@ -235,13 +235,13 @@ object Macrofactor {
 
     /**
      * El ejercicio fijo de referencia para medir la fuerza (H-7-14): el press inclinado con mancuernas, escrito en inglés o en
-     * español («Incline Dumbbell Press», «Press inclinado con mancuernas»). Uno solo, para que la cifra no dependa de qué
-     * entrenaste ese día: el volumen total sube o baja según la sesión.
+     * español («Incline Dumbbell (Bench) Press», «Press (de banca) inclinado con mancuernas»). Uno solo, para que la cifra no
+     * dependa de qué entrenaste ese día: el volumen total sube o baja según la sesión. Tiene que decir «press», «inclin» y
+     * mancuernas («mancuerna», «dumbbell» o «db»): así no entran las aperturas ni los curls en banco inclinado.
      */
     fun esReferencia(ejercicio: String): Boolean {
         val s = Texto.slug(ejercicio)
-        return "inclin" in s && ("mancuern" in s || "dumbbell" in s || Regex("(^|_)db(_|$)").containsMatchIn(s)) &&
-            ("press" in s || "banc" in s || "bench" in s)
+        return "press" in s && "inclin" in s && ("mancuern" in s || "dumbbell" in s || Regex("(^|_)db(_|$)").containsMatchIn(s))
     }
 
     /** La mejor 1RM estimada ([e1rm]) del día en el ejercicio de referencia; null si ese día no lo hiciste. */

@@ -519,7 +519,7 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
             if (e.pregunta.isNotBlank()) Text(e.pregunta, style = MaterialTheme.typography.titleSmall)
             Text("Acción: ${e.accion} · mides: $nombreResultado", style = MaterialTheme.typography.bodyMedium)
             if (e.hipotesis.isNotBlank()) Ayuda("Hipótesis: «${e.hipotesis}»" + (e.sellada?.let { " · sellada el ${Fechas.corto(it.take(10))} a las ${Fechas.horaDe(it)}" } ?: ""), Modifier.padding(top = 4.dp))
-            e.sentido?.let { s -> Ayuda("Criterio sellado: un cambio hacia " + (if (s > 0) "arriba" else "abajo") + (e.umbral?.takeIf { it > 0 }?.let { " de al menos ${"%.2f".format(it).removeSuffix("0").removeSuffix(".0")}" } ?: "") +
+            e.sentido?.let { s -> Ayuda("Criterio sellado: un cambio hacia " + (if (s > 0) "arriba" else "abajo") + (e.umbral?.takeIf { it > 0 }?.let { " de al menos ${"%.2f".format(java.util.Locale.US, it).removeSuffix("0").removeSuffix(".0")}" } ?: "") +
                 ", con un intervalo de 95 % que no toque el cero.") }
             when (Experimentos.intacto(e)) {
                 true -> Ayuda("Huella del sello: ${e.huella!!.take(8)} (coincide: nada de lo sellado cambió).")
