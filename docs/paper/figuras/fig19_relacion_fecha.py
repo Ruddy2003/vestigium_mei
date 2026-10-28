@@ -1,4 +1,4 @@
-"""Figura 7.3 - Relación según la fecha con datos SINTÉTICOS: replica Personas.guardar (historial) y
+"""Figura 7.1 - Relación según la fecha con datos SINTÉTICOS: replica Personas.guardar (historial) y
 Personas.relacionEn / cercaniaEn (data/Personas.kt). Uso: python fig19_relacion_fecha.py [salida.png]"""
 import sys
 from datetime import date, timedelta
@@ -69,6 +69,6 @@ for (r, c), cell in tab.get_celld().items():
     cell.set_edgecolor(estilo.GRIS_CLARO)
     if r == 0: cell.set_facecolor("#f3f4f6"); cell.set_text_props(weight="bold")
     elif filas[r - 1][0] == "2026-04-02": cell.set_facecolor(estilo.ROJO_PALIDO)
-fig.suptitle("Figura 7.3  La relación que había cada día: historial de una persona inventada", x=0.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
+fig.suptitle("La relación que había cada día: historial de una persona inventada", x=0.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig19_relacion_fecha.png")
 for f in filas: print(f)

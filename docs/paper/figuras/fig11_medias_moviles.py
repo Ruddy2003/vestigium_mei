@@ -1,4 +1,4 @@
-"""Figura 6.1 - Serie diaria con medias móviles de 7 y 30 días (datos SINTÉTICOS).
+"""Figura 6.5 - Serie diaria con medias móviles de 7 y 30 días (datos SINTÉTICOS).
 Replica Analisis.movil (y vm_movil en R): para cada día d del calendario se promedian los valores de los días
 d, d-1, ..., d-(ventana-1) que existan, y el punto solo se dibuja si hay al menos max(2, ventana/3) días con dato
 (división entera: 2 días para la de 7, 10 días para la de 30). La ventana es HACIA ATRÁS (no centrada).

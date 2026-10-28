@@ -1,4 +1,4 @@
-"""Figura 2.2 - Estructura del panel diario con datos SINTÉTICOS: valor, cero estructural y dato ausente (null).
+"""Figura 2.3 - Estructura del panel diario con datos SINTÉTICOS: valor, cero estructural y dato ausente (null).
 Uso: python fig02_estructura_panel.py [salida.png]"""
 import sys
 import numpy as np
@@ -35,6 +35,6 @@ ax.grid(which="minor", color="white", lw=1.5); ax.tick_params(which="both", leng
 for s in ax.spines.values(): s.set_visible(False)
 ax.legend(handles=[Patch(fc=estilo.REJILLA, label="null (no hay dato)"), Patch(fc=estilo.AZUL_CLARO, label="0 estructural (no ocurrió)"),
                    Patch(fc=estilo.AZUL, label="valor observado")], loc="upper center", bbox_to_anchor=(.5, -.09), ncol=3, frameon=False, fontsize=8.5)
-ax.set_title("Figura 2.2  Panel diario sintético: tres estados posibles de cada celda", loc="left", fontsize=11.5, weight="bold", color=estilo.TINTA)
+ax.set_title("Panel diario sintético: tres estados posibles de cada celda", loc="left", fontsize=11.5, weight="bold", color=estilo.TINTA)
 fig.tight_layout()
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig02_estructura_panel.png")

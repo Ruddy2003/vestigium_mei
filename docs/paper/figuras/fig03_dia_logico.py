@@ -1,4 +1,4 @@
-"""Figura 2.3 - Día lógico (corte 05:00) con eventos sintéticos de una noche. Uso: python fig03_dia_logico.py [salida.png]"""
+"""Figura 2.2 - Día lógico (corte 05:00) con eventos sintéticos de una noche. Uso: python fig03_dia_logico.py [salida.png]"""
 import sys
 import matplotlib
 matplotlib.use("Agg")
@@ -21,6 +21,6 @@ for i, (h, x, t) in enumerate(ev):
 ax.set_xlim(19.5, 34); ax.set_ylim(0, 1.45); ax.set_yticks([])
 ax.set_xticks([20, 24, 29, 32]); ax.set_xticklabels(["20:00 lun", "00:00 mar", "05:00 mar\n(corte)", "08:00 mar"], fontsize=8)
 for s in ["top", "right", "left"]: ax.spines[s].set_visible(False)
-ax.set_title("Figura 2.3  Un evento a las 00:40 del martes pertenece al lunes lógico", loc="left", fontsize=11, weight="bold", color=estilo.TINTA)
+ax.set_title("Un evento a las 00:40 del martes pertenece al lunes lógico", loc="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.tight_layout()
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig03_dia_logico.png")

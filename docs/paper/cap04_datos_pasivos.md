@@ -46,6 +46,8 @@ Cada fuente necesita un permiso del sistema. Sin permiso no hay dato, y la app *
 
 ![Figura 4.1](figuras/fig04_fuentes_datos.png)
 
+*Figura 4.1. Fuentes de datos pasivos e importados: cómo llega cada una, cuándo se sincroniza y qué «día» usa. Esquema, sin datos. Script: `figuras/fig04_fuentes_datos.py`.*
+
 ---
 
 ## 4.3 Dos relojes: día lógico y día de calendario (¡lee esta sección!)
@@ -159,6 +161,8 @@ La distancia se asigna al **día lógico** del segundo punto.
 
 ![Figura 4.2](figuras/fig05_deteccion_lugar.png)
 
+*Figura 4.2. Detección de un lugar nuevo con datos sintéticos: un punto cada 15 minutos y un radio de 75 m; la app pregunta en el minuto 60, 30 minutos después de llegar. Script: `figuras/fig05_deteccion_lugar.py`.*
+
 **Reconstrucción de visitas** (`reconstruir`, 30 días hacia atrás): recorre los puntos; cada racha de puntos dentro del radio del lugar (**mínimo 60 m**) es una visita; huecos de hasta **2 horas** dentro del radio no la rompen; **solo cuentan visitas de ≥ 10 minutos** y no se duplican con las existentes.
 
 **Corregir lugares y visitas** (desde la entrega N7 de la revisión de navegación, H-NAV-4). Un lugar guardado se puede renombrar, cambiar de radio o quitar. Agrandar el radio vuelve a llamar a `reconstruir` (30 días), que solo agrega visitas que no se enciman con las existentes; achicarlo no quita las que ya hay. Al quitar un lugar se pregunta qué pasa con sus visitas: pasarlas a otro lugar o quitarlas (`Repo.borrarLugar(id, pasarA)`, `Lugares.reasignar`); ya no quedan visitas que apuntan a un lugar que no existe. Se puede, además, ignorar el sitio para siempre. En el Día, cada visita aparece en «Tu día» y se corrige con «fue en…» (otro de tus lugares) o «no estuve aquí». *Límite:* «no estuve aquí» no se recuerda; si después agrandas el radio de ese lugar, `reconstruir` podría volver a crear esa visita. **[Diseño propio]**.
@@ -240,7 +244,7 @@ Total: 61 min contados. Entre 10:31 y 12:45 pasaron 134 min, pero solo 15 se con
 
 **Ejemplo (inventado).** Si el RMS es 328 (≈ 1 % del máximo): 20·log10(0.01) = −40 → −40 + 90 = **50**. Con RMS 33 (0.1 %): −60 + 90 = **30**.
 
-**Qué es y qué NO es.** Es un **nivel relativo**, no decibeles de presión sonora (dB SPL). Los micrófonos de teléfono no están calibrados, tienen control automático de ganancia y filtran frecuencias. Las pruebas con apps de sonómetro para teléfono muestran que algunas se acercan a un sonómetro profesional y otras no, y que **la precisión varía mucho entre dispositivos y apps** (Kardous & Shaw, 2014). El propio código lo reconoce: es «útil para comparar tus lugares entre sí», no para medir ruido real. **[Aproximación]**. La variable `ruido_db` del panel es la media de las lecturas del día.
+**Qué es y qué NO es.** Es un **nivel relativo**, no decibeles de presión sonora (dB SPL). Los micrófonos de teléfono no están calibrados, tienen control automático de ganancia y filtran frecuencias. Las pruebas con apps de sonómetro para teléfono muestran que algunas se acercan a un sonómetro profesional y otras no, y que **la precisión varía mucho entre dispositivos y apps** (Kardous y Shaw, 2014). El propio código lo reconoce: es «útil para comparar tus lugares entre sí», no para medir ruido real. **[Aproximación]**. La variable `ruido_db` del panel es la media de las lecturas del día.
 
 ### 4.4.7 Notificaciones y música (`sensores/Oyente.kt`)
 
@@ -331,7 +335,7 @@ La app lee los datos de tu reloj a través de **Health Connect**, el sistema de 
 | `spo2_min` | Mínimo durante la noche. |
 | `hrv` (RMSSD) | Promedio de los registros de variabilidad **durante la noche**; si no hay noche, de 18:00 del día anterior a 14:00. |
 
-**Qué es el RMSSD.** El corazón no late a intervalos exactamente iguales. El RMSSD es la **raíz cuadrada del promedio de los cuadrados de las diferencias entre intervalos de latidos consecutivos** (en milisegundos). Un valor mayor suele reflejar más **actividad parasimpática** («descanso y recuperación»); es la medida de variabilidad de **corto plazo** más usada en dispositivos de consumo (Task Force of the ESC and NASPE, 1996; Shaffer & Ginsberg, 2017). **[Validado]** el significado; **[Aproximación]** el uso: el RMSSD depende de cuándo y cómo se mide (en reposo, de noche) y **varía mucho entre personas y días**, así que se interpreta sobre todo como cambio **respecto a tu propia línea base**, no contra normas.
+**Qué es el RMSSD.** El corazón no late a intervalos exactamente iguales. El RMSSD es la **raíz cuadrada del promedio de los cuadrados de las diferencias entre intervalos de latidos consecutivos** (en milisegundos). Un valor mayor suele reflejar más **actividad parasimpática** («descanso y recuperación»); es la medida de variabilidad de **corto plazo** más usada en dispositivos de consumo (Task Force of the ESC and NASPE, 1996; Shaffer y Ginsberg, 2017). **[Validado]** el significado; **[Aproximación]** el uso: el RMSSD depende de cuándo y cómo se mide (en reposo, de noche) y **varía mucho entre personas y días**, así que se interpreta sobre todo como cambio **respecto a tu propia línea base**, no contra normas.
 
 **Un matiz.** Un «promedio de lecturas del día» pesa más los momentos con más lecturas (por ejemplo, durante el ejercicio, si el reloj mide más seguido). Es un promedio **de muestras**, no de **tiempo** (no lo pude comprobar en la documentación de Health Connect; lo asumo por el nombre de la función `BPM_AVG`).
 
@@ -458,6 +462,8 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 
 ![Figura 4.3](figuras/fig06_cobertura.png)
 
+*Figura 4.3. Cobertura sintética de 90 días por fuente (oscuro = con dato; claro = sin dato) y porcentaje de días con dato. Script: `figuras/fig06_cobertura.py`.*
+
 **Cómo lo trata el panel (capítulo 2, sección 2.6).** Una celda sin dato queda **vacía**, no en 0, salvo las reglas de relleno con cero (que son por función, no por sensor). Los datos **de sensores** (pantalla, reloj, ubicación, notificaciones) **nunca se rellenan con ceros**: sin lectura, sin dato.
 
 **Por qué importa para el análisis.** Dos variables pueden estar disponibles en periodos distintos. Una correlación entre «Spotify» y «ánimo» solo usa los días con ambas. Si **el hueco no es azar** (por ejemplo, el reloj se agota justo las noches de poco sueño), el resultado se **sesga** aunque se ignoren las celdas vacías (datos faltantes «no al azar», Rubin, 1976; capítulo 2).
@@ -492,9 +498,9 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 | Radio 75 m, 20 min, precisión ≤ 120 m | Diseño propio | Configurable |
 | Minutos por muestreo con tope de 15 min tras huecos | Diseño propio | Subestima a propósito |
 | Umbral 1 000 lux = «luz alta» | Diseño propio | Regla práctica |
-| Ruido en dB relativos | Aproximación | Los micrófonos de teléfono no están calibrados (Kardous & Shaw, 2014) |
+| Ruido en dB relativos | Aproximación | Los micrófonos de teléfono no están calibrados (Kardous y Shaw, 2014) |
 | Sueño del reloj (cálculo, bloques, siestas) | Aproximación | Dispositivos de consumo sobrestiman sueño (Chinoy et al., 2021) |
-| RMSSD nocturno | Validado (concepto) | Task Force (1996); Shaffer & Ginsberg (2017) |
+| RMSSD nocturno | Validado (concepto) | Task Force (1996); Shaffer y Ginsberg (2017) |
 | Pasos y corazón del reloj | Validado (laboratorio) | Fuller et al. (2020) |
 | Clima de Open‑Meteo (reanálisis/pronóstico) | Aproximación | Hersbach et al. (2020) para el reanálisis |
 | Fase lunar con mes sinódico medio | Aproximación | Fórmula astronómica simple |
@@ -522,4 +528,4 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 
 ## Referencias del capítulo
 
-Ver `referencias.md`. Citas de este capítulo: Chinoy et al. (2021); Fuller et al. (2020); Hersbach et al. (2020); Kardous & Shaw (2014); Mohr et al. (2017); Parry et al. (2021); Rubin (1976); Shaffer & Ginsberg (2017); Task Force of the ESC and NASPE (1996); Zheng (2015).
+Ver `referencias.md`. Citas de este capítulo: Chinoy et al. (2021); Fuller et al. (2020); Hersbach et al. (2020); Kardous y Shaw (2014); Mohr et al. (2017); Parry et al. (2021); Rubin (1976); Shaffer y Ginsberg (2017); Task Force of the ESC and NASPE (1996); Zheng (2015).

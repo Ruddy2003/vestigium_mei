@@ -40,6 +40,6 @@ for i, f in enumerate(filas):
 ley = [Rectangle((0, 0), 1, 1, fc=COLOR[k]) for k in (0, 1, 2, 3)] + [Rectangle((0, 0), 1, 1, fc="white", ec=estilo.ROJO, lw=2)]
 ax.legend(ley, ["no llega", "agregado o conteo", "contenido", "cifrado", "hallazgo abierto (H-8-5)"], loc="lower center",
           bbox_to_anchor=(.45, -.1), ncol=5, fontsize=8, frameon=False)
-fig.suptitle("Figura 10.1  Qué datos llegan a cada salida (después del módulo 10a)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
+fig.suptitle("Qué datos llegan a cada salida (después del módulo 10a)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.tight_layout(rect=(0, .03, 1, .95))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig24_flujo_privacidad.png")

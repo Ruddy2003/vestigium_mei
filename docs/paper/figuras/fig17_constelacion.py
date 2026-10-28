@@ -1,4 +1,4 @@
-"""Figura 7.1 - Constelación con datos SINTÉTICOS, con las mismas fórmulas que PantallaConstelacion
+"""Figura 7.2 - Constelación con datos SINTÉTICOS, con las mismas fórmulas que PantallaConstelacion
 (ui/pantallas/Constelacion.kt). Personas y fechas inventadas. Uso: python fig17_constelacion.py [salida.png]"""
 import sys, math
 import numpy as np
@@ -70,7 +70,7 @@ hand = [plt.Line2D([], [], marker="o", ls="", color=COLOR[k], label=l) for k, l 
         [("casa", "vive contigo"), ("familia", "familia"), ("pareja", "pareja"), ("amistad", "amistad"), ("trabajo", "trabajo"),
          ("expareja", "expareja (tenue)"), (None, "sin clasificar / otra")]]
 b.legend(handles=hand, loc="lower right", fontsize=7.5, frameon=False, title="color = relación ACTUAL", title_fontsize=7.5)
-fig.suptitle("Figura 7.1  La constelación: tamaño = días mencionada, cercanía al centro = recencia (datos sintéticos)", x=0.01, ha="left",
+fig.suptitle("La constelación: tamaño = días mencionada, cercanía al centro = recencia (datos sintéticos)", x=0.01, ha="left",
              fontsize=11, weight="bold", color=estilo.TINTA)
 fig.tight_layout(rect=(0, 0, 1, .94))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig17_constelacion.png")

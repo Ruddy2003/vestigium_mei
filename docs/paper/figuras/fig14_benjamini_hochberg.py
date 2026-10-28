@@ -1,4 +1,4 @@
-"""Figura 6.4 - Corrección de Benjamini-Hochberg con 200 pruebas simuladas (datos SINTÉTICOS).
+"""Figura 6.3 - Corrección de Benjamini-Hochberg con 200 pruebas simuladas (datos SINTÉTICOS).
 180 pares sin relación real y 20 con una relación verdadera (r = 0.35) en n = 90 días independientes.
 Se calcula p con Fisher (como Estadistica.relaciones) y q con Analisis.bh: se ordenan los p de menor a mayor y
 q_(k) = min_{j>=k} p_(j) * m / j. La app llama «se sostiene» a q < 0.10. Uso: python fig14_benjamini_hochberg.py [salida.png]"""

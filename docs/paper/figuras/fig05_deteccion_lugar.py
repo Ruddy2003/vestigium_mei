@@ -52,7 +52,7 @@ b.set_ylabel("distancia al último punto (m)", fontsize=8.5); b.tick_params(labe
 if disparo is not None:
     b.axvline(disparo, color=estilo.TINTA, lw=1); b.text(disparo + 1.5, max(d) * .6, f"minuto {int(disparo)}: 30 min después\nde llegar (2 lecturas no bastan\ncon un punto cada 15 min)\n→ la app pregunta", fontsize=8, color=estilo.TINTA)
 b.set_title("Cuánto tiempo llevas dentro del radio", loc="left", fontsize=9.5, color=estilo.TINTA)
-fig.suptitle("Figura 4.2  Detección de un lugar nuevo (datos sintéticos)", x=0.01, ha="left", fontsize=11.5, weight="bold", color=estilo.TINTA)
+fig.suptitle("Detección de un lugar nuevo (datos sintéticos)", x=0.01, ha="left", fontsize=11.5, weight="bold", color=estilo.TINTA)
 fig.tight_layout(rect=(0, 0, 1, .93))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig05_deteccion_lugar.png")
 print("detección en el minuto", disparo)

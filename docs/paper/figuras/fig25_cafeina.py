@@ -36,7 +36,7 @@ for h, mg in DOSIS: ax.annotate(f"{mg:.0f} mg", (h, 0), xytext=(h, -28), ha="cen
 ax.set_xticks(range(6, 33, 2)); ax.set_xticklabels([f"{h % 24:02d}:00" for h in range(6, 33, 2)], fontsize=7.5)
 ax.set_ylabel("cafeína en el cuerpo (mg, estimada)", fontsize=8.5); ax.set_ylim(-35, 230); ax.set_xlim(6, 32)
 ax.legend(fontsize=8, frameon=False, loc="upper right")
-fig.suptitle("Figura 5.1  Cafeína en el cuerpo tras dos dosis (datos sintéticos)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
+fig.suptitle("Cafeína en el cuerpo tras dos dosis (datos sintéticos)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.text(.01, .01, "Rango de vidas medias del informe del Institute of Medicine (2001): media ≈ 5 h, de 1.5 a 9.5 h entre personas. Se muestran 2.5, 5 y 9.5 h.",
          fontsize=7.5, color=estilo.TINTA_2)
 fig.tight_layout(rect=(0, .04, 1, .94))

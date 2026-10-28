@@ -1,4 +1,4 @@
-"""Figura 1.1 - El costo de cruzar todo con todo (cálculo, sin datos).
+"""Figura 1.2 - El costo de cruzar todo con todo (cálculo, sin datos).
 Izquierda: con p variables hay p(p-1)/2 parejas; si ninguna tuviera relación, con p < 0.05 saldrían por azar 5 % de ellas.
 Derecha: la |r| que necesita la mejor pareja para sostenerse, según los días independientes (nEf). Para una sola pregunta
 hecha de antemano basta p < 0.05; en la lista, si esa pareja es la única real entre m revisadas, Benjamini-Hochberg con

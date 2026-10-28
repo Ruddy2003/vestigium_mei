@@ -36,7 +36,7 @@ ax.annotate("Hultman et al. (1996): con 3 g/día se\nllega al mismo +20 % en 28 
             (28, serie(tres)[27]), xytext=(30, 45), fontsize=7.5, color=estilo.TINTA_2, arrowprops=dict(arrowstyle="-", color=estilo.OCRE, lw=.8))
 ax.set_xlabel("día", fontsize=8.5); ax.set_ylabel("reserva estimada (0 a 100 %)", fontsize=8.5); ax.set_ylim(0, 105); ax.set_xlim(0, N)
 ax.legend(fontsize=8, frameon=False, loc="lower left", bbox_to_anchor=(.13, .02))
-fig.suptitle("Figura 5.3  Carga y lavado de creatina con el modelo de la app (datos sintéticos)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
+fig.suptitle("Carga y lavado de creatina con el modelo de la app (datos sintéticos)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.text(.01, .01, "El 100 % es la saturación del modelo, no una concentración medida. En el músculo, la carga completa equivale a ≈ +20 % de creatina total (Hultman et al., 1996).",
          fontsize=7.5, color=estilo.TINTA_2)
 fig.tight_layout(rect=(0, .04, 1, .94))

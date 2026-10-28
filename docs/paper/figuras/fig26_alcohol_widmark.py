@@ -52,7 +52,7 @@ ax.axhline(.5, color=estilo.GRIS_MEDIO, lw=.8, ls="--"); ax.text(31.9, .51, "0.5
 ax.set_xticks(range(20, 33, 1)); ax.set_xticklabels([f"{h % 24:02d}:00" for h in range(20, 33)], fontsize=7.5)
 ax.set_xlim(19.5, 32); ax.set_ylim(-.12, 1.0); ax.set_ylabel("alcohol en sangre estimado (g/L ≈ ‰)", fontsize=8.5)
 ax.legend(fontsize=8, frameon=False, loc="upper right")
-fig.suptitle("Figura 5.2  Tres bebidas estándar con el modelo de Widmark de la app (datos sintéticos)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
+fig.suptitle("Tres bebidas estándar con el modelo de Widmark de la app (datos sintéticos)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.text(.01, .01, "Las tres bebidas (14 g cada una) se reparten como hace la app: un episodio de 20:00 a 23:00 → bebidas a las 20:00, 21:03 y 22:06.", fontsize=7.5, color=estilo.TINTA_2)
 fig.tight_layout(rect=(0, .04, 1, .94))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig26_alcohol_widmark.png")

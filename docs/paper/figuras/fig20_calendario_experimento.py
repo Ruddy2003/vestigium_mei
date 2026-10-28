@@ -49,7 +49,7 @@ r2 = calendario(b, plan_b, 28, "Plantilla «Creatina» · antes y después · 12
 hand = [Rectangle((0, 0), 1, 1, fc=CON), Rectangle((0, 0), 1, 1, fc=SIN), Rectangle((0, 0), 1, 1, fc=LAV, hatch="///")]
 fig.legend(hand, ["con la acción (cuenta)", "sin la acción (cuenta)", "lavado (no cuenta)"],
            loc="lower center", ncol=3, fontsize=8, frameon=False)
-fig.suptitle("Figura 8.1  Qué días cuentan en un experimento (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
+fig.suptitle("Qué días cuentan en un experimento (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.tight_layout(rect=(0, .06, 1, .94))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig20_calendario_experimento.png")
 print("alterno:", r1, " creatina:", r2)

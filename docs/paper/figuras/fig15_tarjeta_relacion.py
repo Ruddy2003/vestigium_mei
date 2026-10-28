@@ -1,4 +1,4 @@
-"""Figura 6.5 - La tarjeta de relación de «Las relaciones más marcadas» (ejemplos SINTÉTICOS).
+"""Figura 6.4 - La tarjeta de relación de «Las relaciones más marcadas» (ejemplos SINTÉTICOS).
 Imita ui/Relacion.kt (TarjetaRelacion y lazo, tema por omisión): dos recuadros con las variables, un lazo entre ellos
 de grosor (1.2 + 4.5·|r|) dp; verde si r >= 0 («suben juntas»), rojo si r < 0; punteado y con 65 % de opacidad si
 q >= 0.10 («podría ser azar»). Debajo, el texto de detalle que arma Explorar.kt. Uso: python fig15_tarjeta_relacion.py [salida.png]"""

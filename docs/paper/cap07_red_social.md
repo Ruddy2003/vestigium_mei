@@ -123,7 +123,7 @@ Si hay cambio, se agrega al historial `CambioRelacion(hasta = hoy, relación ant
 
 **Al consultar** (`Personas.relacionEn(nombre, fecha)`): ordena el historial por `hasta` y toma la **primera** entrada con `fecha < hasta`; si ninguna cumple, usa la relación actual. `cercaniaEn` hace lo mismo con la cercanía. Desde 10c, si esa entrada no tenía cercanía, el resultado es **«sin cercanía»** en ese tramo (antes usaba la actual, y una cercanía puesta hoy se aplicaba a todos los días pasados). En palabras: **cada entrada del historial vale para los días anteriores a su `hasta`** (y posteriores al `hasta` de la entrada anterior); el propio día del cambio ya tiene la relación nueva.
 
-### 7.4.4 Ejemplo trabajado (Figura 7.3)
+### 7.4.4 Ejemplo trabajado (Figura 7.1)
 
 Clasificas a una persona inventada así:
 
@@ -141,15 +141,15 @@ Clasificas a una persona inventada así:
 
 Si estuviste con ella el 2 abr 2026, ese día se enciende `vi_pareja` (no `vi_expareja`).
 
-![Figura 7.3](figuras/fig19_relacion_fecha.png)
+![Figura 7.1](figuras/fig19_relacion_fecha.png)
 
-*Figura 7.3. Historial de una persona inventada. Rayado: días anteriores a la primera clasificación, a los que se les proyecta la relación más antigua. Cuadriculado: días entre la ruptura real y el día en que la anotaste, que cuentan con la relación vieja. Script: `figuras/fig19_relacion_fecha.py`.*
+*Figura 7.1. Historial de una persona inventada. Rayado: días anteriores a la primera clasificación, a los que se les proyecta la relación más antigua. Cuadriculado: días entre la ruptura real y el día en que la anotaste, que cuentan con la relación vieja. Script: `figuras/fig19_relacion_fecha.py`.*
 
 **Razonamiento.** En un registro de años, las relaciones cambian. Si los análisis usaran la relación de hoy, todos los días con quien hoy es expareja contarían como «estuve con una expareja», incluidos los días en que era tu pareja: eso mezclaría dos situaciones opuestas. Guardar la relación por fecha es la forma correcta de tratar una **covariable que cambia con el tiempo** (*time-varying covariate*: un dato de contexto que no es fijo, sino que tiene un valor por periodo). **[Diseño propio]**, bien planteado.
 
 ### 7.4.5 Cuándo falla
 
-- **La fecha del cambio es la fecha en que lo anotas**, no la fecha en que ocurrió. No hay forma de decir «terminamos hace tres semanas». En la Figura 7.3, los 23 días entre la ruptura real (28 mar) y la anotación (20 abr) cuentan como pareja (H-6-3).
+- **La fecha del cambio es la fecha en que lo anotas**, no la fecha en que ocurrió. No hay forma de decir «terminamos hace tres semanas». En la Figura 7.1, los 23 días entre la ruptura real (28 mar) y la anotación (20 abr) cuentan como pareja (H-6-3).
 - **Antes de la primera clasificación se proyecta la relación más antigua conocida.** Si clasificaste a alguien como amistad en 2025, los días de 2024 (cuando quizá era un conocido) también cuentan como amistad. Es el mismo problema que el perfil proyectado hacia atrás (H-2-5).
 - **Conocerte no tiene historial por persona.** «A quién ves más» y «quiénes viven contigo» se leen con su valor **actual** para todas las fechas (H-6-4, parte que sigue vigente). Si alguien dejó de vivir contigo, `vi_convivientes` lo sigue contando como conviviente en todos los días anteriores y posteriores.
 - **Comparaciones sin canon (resuelto en 10c, D.73).** `Perfiles.relacion` buscaba en `perfil.cercanas` y en `perfil.convivientes` con el texto tal cual; ahora compara los nombres canónicos, igual que `vi_convivientes` (H-6-4).
@@ -301,9 +301,9 @@ $$d = \left(0.30 + 0.64\cdot \min\!\left(1, \frac{\text{días desde la última m
 10. **Nombres**: solo las 14 primeras (o la que tocas). Al tocar una estrella: días, última vez, relación y «suele aparecer con» las 4 personas con más días juntas.
 11. Tres anillos de guía a 1/3, 2/3 y el total del radio útil; son decorativos, no umbrales.
 
-![Figura 7.1](figuras/fig17_constelacion.png)
+![Figura 7.2](figuras/fig17_constelacion.png)
 
-*Figura 7.1. Una constelación de un año con 16 personas inventadas, calculada con las fórmulas de la app. Derecha: la curva que convierte «hace cuántos días» en distancia. Script: `figuras/fig17_constelacion.py`.*
+*Figura 7.2. Una constelación de un año con 16 personas inventadas, calculada con las fórmulas de la app. Derecha: la curva que convierte «hace cuántos días» en distancia. Script: `figuras/fig17_constelacion.py`.*
 
 ### 7.9.3 Ejemplo
 
@@ -418,7 +418,7 @@ $$C_i = \sum_{j \ne i} \Big(p_{ij} + \sum_{q \ne i,j} p_{iq}\,p_{qj}\Big)^2, \qq
 
 donde *a*<sub>ij</sub> = 1 si *i* y *j* están unidos. Sin pesos, *p*<sub>ij</sub> es simplemente 1/(grado de *i*): la parte de tu atención que «invierte» *i* en *j*. El término de adentro suma la inversión **indirecta**: lo que inviertes en *q* que a su vez invierte en *j*. Si tus contactos se conocen, cada uno te «llega» también por los demás y la restricción sube.
 
-**Ejemplo trabajado (Figura 7.2).** Tú y 6 personas; `vm_red()` te une a las 6.
+**Ejemplo trabajado (Figura 7.3).** Tú y 6 personas; `vm_red()` te une a las 6.
 
 - **Nadie se conoce.** Cada *p* = 1/6 y no hay caminos indirectos: *C* = 6 × (1/6)² = **0.167** (en general, 1/*n*).
 - **Dos grupos de 3** (cada grupo se conoce entero, sin conexión entre grupos). Cada persona tiene grado 3 (dos de su grupo + tú). Para un contacto *j*: directo 1/6; indirecto por sus dos compañeros de grupo, 2 × (1/6)(1/3) = 1/9. Término: (1/6 + 1/9)² = (5/18)² = 0.0772; × 6 = **0.463**.
@@ -427,9 +427,9 @@ donde *a*<sub>ij</sub> = 1 si *i* y *j* están unidos. Sin pesos, *p*<sub>ij</su
 
 Estos números los calcula el script de la figura con la fórmula escrita a mano y los compara con `networkx.constraint` (coinciden). Para el ego unido a todas, `igraph` y `networkx` suman sobre las mismas personas, así que deberían coincidir también con R; **no pude ejecutar R en esta sesión** para confirmarlo **[sin verificar]**.
 
-![Figura 7.2](figuras/fig18_burt_puente.png)
+![Figura 7.3](figuras/fig18_burt_puente.png)
 
-*Figura 7.2. Restricción de Burt del ego y densidad en cuatro redes de 6 personas (datos sintéticos). Script: `figuras/fig18_burt_puente.py`.*
+*Figura 7.3. Restricción de Burt del ego y densidad en cuatro redes de 6 personas (datos sintéticos). Script: `figuras/fig18_burt_puente.py`.*
 
 **Composición.** Qué proporción de tu red es familia, amistad, trabajo… Es la descripción más sencilla de una red personal y una de las más usadas en el análisis de redes egocéntricas (Perry et al., 2018).
 

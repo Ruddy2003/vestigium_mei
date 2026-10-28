@@ -50,6 +50,6 @@ flecha(8.55, 3.0, 8.95, 4.7); flecha(9.92, 4.25, 9.92, 3.9)
 ax.text(5.5, 1.5, "Convención de lectura: las flechas indican quién alimenta a quién.\n"
         "Los colores de borde distinguen el origen del dato (activo, pasivo, importado) y se conservan en el capítulo 2.",
         ha="center", fontsize=8, color=MUTED)
-ax.set_title("Figura 2.1  Flujo de datos de Vestigium Mei", loc="left", fontsize=11.5, color=INK, weight="bold", pad=6)
+ax.set_title("Flujo de datos de Vestigium Mei", loc="left", fontsize=11.5, color=INK, weight="bold", pad=6)
 fig.tight_layout()
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig01_flujo_datos.png")

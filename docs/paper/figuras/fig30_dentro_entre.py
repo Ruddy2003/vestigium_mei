@@ -1,4 +1,4 @@
-"""Figura 1.2 - Lo que vale para un grupo no tiene por qué valer para ti (datos sintéticos).
+"""Figura 1.1 - Lo que vale para un grupo no tiene por qué valer para ti (datos sintéticos).
 Seis personas inventadas, 60 días cada una. Entre personas: quien duerme más en promedio está, en promedio, de mejor
 ánimo (la recta discontinua une los promedios de cada persona). Dentro de cada persona, la relación día a día es otra:
 para la persona resaltada («tú»), las noches en que duerme más que su propio promedio no van con días mejores.

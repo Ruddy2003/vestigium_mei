@@ -48,6 +48,6 @@ for i, (f, c, w, d, k) in enumerate(filas):
         ax.plot(9.2, y, "s", ms=6.5, color=INK); ax.text(9.45, y, "día en que despiertas", fontsize=8.2, color=INK, va="center")
 ax.text(0.1, n + 0.45, "Franja verde = pasiva · franja naranja = importada · ● día lógico (corte 05:00) · ○ día de calendario (00:00 a 24:00) · pantalla y pasos, por día lógico desde el esquema 13",
         fontsize=8, color=MUTED)
-ax.set_title("Figura 4.1  Fuentes de datos pasivos e importados y el «día» que cada una usa", loc="left", fontsize=11.5, weight="bold", color=INK)
+ax.set_title("Fuentes de datos pasivos e importados y el «día» que cada una usa", loc="left", fontsize=11.5, weight="bold", color=INK)
 fig.tight_layout()
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig04_fuentes_datos.png")

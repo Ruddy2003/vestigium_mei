@@ -1,4 +1,4 @@
-"""Figura 6.2 - Correlación espuria por tendencia, antes y después de quitarla (datos SINTÉTICOS).
+"""Figura 6.1 - Correlación espuria por tendencia, antes y después de quitarla (datos SINTÉTICOS).
 Dos variables SIN ninguna relación día a día comparten solo un cambio lento (una sube y otra baja con los meses).
 Se aplica lo mismo que Estadistica.series(): a cada día se le resta el promedio de los días con dato que están a
 <= 10 días de calendario de él (incluido él mismo; se exige que haya al menos 3). Luego se calcula Pearson sobre esos

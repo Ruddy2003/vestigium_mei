@@ -26,6 +26,8 @@ El origen de un dato determina su tipo de error, por lo que la app conserva esa 
 
 ![Figura 2.1](figuras/fig01_flujo_datos.png)
 
+*Figura 2.1. Flujo de datos: de las tres capas de captura al almacén, al día lógico, al panel diario y a la exportación y los análisis. Esquema, sin datos. Script: `figuras/fig01_flujo_datos.py`.*
+
 | Capa | Ejemplos | Cómo se genera | Error típico |
 |---|---|---|---|
 | **Activa** | Diario del día (valencia, activación, dolor, sueño, hábitos), avisos de ánimo («muestreo»), momentos, gastos, notas, cartas | La persona lo teclea o marca | Sesgo de recuerdo, sesgo de deseabilidad social, fatiga de registro, días sin llenar |
@@ -67,9 +69,11 @@ fun diaLogico(ahora: LocalDateTime) =
 
 **Qué va todavía por día de calendario, dicho en la exportación (entrega 10c, D.64).** No todo pudo pasar al día lógico: lo que Health Connect entrega ya sumado por día y lo que depende del calendario se queda de 0:00 a 24:00. La lista está en `Diccionario.CALENDARIO`: `fc_media`, `fc_reposo`, `spo2`, `spo2_min`, `cal_activas`, `temp_piel`, `resp_rpm`, `peso_kg` (reloj y báscula), `eventos` y `min_ocupado` (agenda), `t_max`, `t_min`, `precip_mm`, `nubes_pct`, `luz_horas`, `sol_horas`, `presion_hpa`, `aqi_us`, `pm25` (clima), `luna_ilum`, y `ciudades_dia`, `fuera_de_casa`, `extranjero`, `ciudad_nueva`, `unesco` y las familias `ciu_` y `pais_` (Mundo). En `vm_panel.csv` y `vm_panel_extendido.csv`, la descripción de cada una de esas columnas termina con «· por día de calendario (0:00 a 24:00)» (`Diccionario.conVentana`), y el `LEEME.txt` lo resume: los días empiezan a las 5:00 salvo esas variables, la pantalla y los pasos de antes de la v13, y el sueño, que va al día en que despiertas. Antes, el LEEME decía que **todo** empezaba a las 5:00, y era falso (H‑9‑4). **[Diseño propio]**.
 
-![Figura 2.3](figuras/fig03_dia_logico.png)
+![Figura 2.2](figuras/fig03_dia_logico.png)
 
-### Ejemplo sintético (Figura 2.3)
+*Figura 2.2. Un evento a las 00:40 del martes pertenece al lunes lógico: el día lógico va de las 05:00 a las 04:59 del día siguiente (`Fechas.diaLogico`). Ejemplo sintético. Script: `figuras/fig03_dia_logico.py`.*
+
+### Ejemplo sintético (Figura 2.2)
 
 | Evento | Hora real | Día calendario | **Día lógico** |
 |---|---|---|---|
@@ -156,7 +160,7 @@ Resumen por familia temática (el detalle campo a campo está en el Apéndice A)
 
 ## 2.6 El panel diario y las reglas de relleno
 
-`Estadistica.panel()` devuelve un mapa `fecha → (id de variable → Double?)`. Cada celda puede tener **tres estados** (Figura 2.2):
+`Estadistica.panel()` devuelve un mapa `fecha → (id de variable → Double?)`. Cada celda puede tener **tres estados** (Figura 2.3):
 
 | Estado | Significado | Representación |
 |---|---|---|
@@ -164,7 +168,9 @@ Resumen por familia temática (el detalle campo a campo está en el Apéndice A)
 | **Cero estructural** | Se sabe que *podría haberse registrado* y no ocurrió | `0.0` |
 | **Sin dato** | No hay información | `null` (celda vacía en CSV, `NA` en R) |
 
-![Figura 2.2](figuras/fig02_estructura_panel.png)
+![Figura 2.3](figuras/fig02_estructura_panel.png)
+
+*Figura 2.3. Panel diario sintético de 30 días con los tres estados posibles de cada celda: sin dato (null), cero estructural y valor observado. El gasto vale 0 solo desde el primer gasto y en días con diario (`Estadistica.ceroDesde`). Script: `figuras/fig02_estructura_panel.py`.*
 
 ### 2.6.1 La regla general
 

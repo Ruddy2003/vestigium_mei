@@ -37,6 +37,6 @@ bx.barh(range(len(vars_)), cov, color=estilo.AZUL, height=.7); bx.set_ylim(len(v
 bx.set_yticks([]); bx.tick_params(labelsize=8); bx.set_xlabel("% de días con dato", fontsize=8.5)
 for i, c in enumerate(cov): bx.text(c + 2, i, f"{c:.0f}%", va="center", fontsize=7.5, color=estilo.TINTA_2)
 for s in ["top", "right", "left"]: bx.spines[s].set_visible(False)
-fig.suptitle("Figura 4.3  Cobertura sintética de 90 días: claro = sin dato (null), oscuro = con dato", x=0.01, ha="left", fontsize=11.5, weight="bold", color=estilo.TINTA)
+fig.suptitle("Cobertura sintética de 90 días: claro = sin dato (null), oscuro = con dato", x=0.01, ha="left", fontsize=11.5, weight="bold", color=estilo.TINTA)
 fig.subplots_adjust(left=.2,right=.97,top=.9,bottom=.12)
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig06_cobertura.png")

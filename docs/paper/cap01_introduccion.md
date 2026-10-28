@@ -90,13 +90,13 @@ La mayor parte de la psicología y la medicina es **nomotética**: estudia a muc
 
 Se suele suponer que la respuesta de grupo sirve para el individuo. Molenaar (2004) mostró que eso solo es cierto bajo una condición matemática fuerte, la **ergodicidad**: que todas las personas sigan el mismo proceso (homogeneidad) y que ese proceso no cambie con el tiempo (estacionariedad). Si no se cumple, lo que se aprende comparando personas **no dice nada seguro** sobre cómo funciona cada una a lo largo de sus días. Fisher, Medaglia y Jeronimus (2018) lo comprobaron con datos: en varios conjuntos de mediciones intensivas, las estimaciones obtenidas del grupo aproximaron mal la variabilidad y las relaciones de cada participante. **[Validado]**: es el argumento central de la investigación idiográfica moderna.
 
-### 1.4.2 Un ejemplo de por qué importa (Figura 1.2)
+### 1.4.2 Un ejemplo de por qué importa (Figura 1.1)
 
 Seis personas inventadas, 60 días cada una. Entre personas, quien duerme más en promedio está de mejor ánimo en promedio: la recta que une sus promedios sube **+0.55 puntos de valencia por hora de sueño**. Pero dentro de una de ellas («tú»), las noches en que duerme más que su propio promedio van con días **algo peores**: **−0.34 puntos por hora**. Para esta persona, quizá dormir más es señal de que estaba enferma o de que algo la tumbó; lo que sea, la regla del grupo no la describe.
 
-![Figura 1.2](figuras/fig30_dentro_entre.png)
+![Figura 1.1](figuras/fig30_dentro_entre.png)
 
-*Figura 1.2. Seis personas sintéticas: relación entre personas (azul, discontinua) y relación dentro de una persona (naranja). Script: `figuras/fig30_dentro_entre.py`.*
+*Figura 1.1. Seis personas sintéticas: relación entre personas (azul, discontinua) y relación dentro de una persona (naranja). Script: `figuras/fig30_dentro_entre.py`.*
 
 Por eso el panel de la app compara **tus días entre sí**, y no te compara con normas de población. Donde la app usa normas (los puntos de corte del WHO-5, los umbrales de Cohen, la «recomendación» de 7 h de sueño), los capítulos lo señalan como un préstamo que hay que leer con cuidado (capítulos 3, 8 y 9).
 
@@ -158,7 +158,7 @@ La app no decide de antemano qué preguntas son interesantes: **cualquier variab
 
 ### 1.6.2 El costo
 
-Revisar todo contra todo tiene un precio que crece muy rápido (Figura 1.1, izquierda). Con *p* variables hay *p*(*p* − 1)/2 parejas: con 50 variables, 1 225; con 150, 11 175; con 300, **44 850**. Si ninguna tuviera relación real y se usara el umbral habitual p < 0.05, saldrían por puro azar unas **61**, **559** y **2 242** «relaciones».
+Revisar todo contra todo tiene un precio que crece muy rápido (Figura 1.2, izquierda). Con *p* variables hay *p*(*p* − 1)/2 parejas: con 50 variables, 1 225; con 150, 11 175; con 300, **44 850**. Si ninguna tuviera relación real y se usara el umbral habitual p < 0.05, saldrían por puro azar unas **61**, **559** y **2 242** «relaciones».
 
 La app se defiende con varias capas (capítulo 6):
 
@@ -167,11 +167,11 @@ La app se defiende con varias capas (capítulo 6):
 3. **Topes por familia**: entran las 15 personas más mencionadas (con al menos 5 días), las 12 apps con más minutos, etc. (capítulo 6, sección 6.3.3).
 4. **Quitar la tendencia** y el **número efectivo de días**, para que el p de cada pareja no sea más pequeño de lo que debe.
 
-El precio de esas defensas es la **potencia**: lo que se sostiene depende de cuántas cosas se miraron (Figura 1.1, derecha). Una pareja con 100 días independientes necesita |*r*| ≥ **0.20** si fue la única pregunta hecha de antemano, pero ≥ **0.45** si es la única relación real entre 44 850 parejas revisadas (le hace falta p < 0.10 / 44 850 ≈ 2.2 × 10⁻⁶). Con 365 días independientes, **0.10** frente a **0.24**.
+El precio de esas defensas es la **potencia**: lo que se sostiene depende de cuántas cosas se miraron (Figura 1.2, derecha). Una pareja con 100 días independientes necesita |*r*| ≥ **0.20** si fue la única pregunta hecha de antemano, pero ≥ **0.45** si es la única relación real entre 44 850 parejas revisadas (le hace falta p < 0.10 / 44 850 ≈ 2.2 × 10⁻⁶). Con 365 días independientes, **0.10** frente a **0.24**.
 
-![Figura 1.1](figuras/fig29_todo_con_todo.png)
+![Figura 1.2](figuras/fig29_todo_con_todo.png)
 
-*Figura 1.1. Izquierda: parejas posibles y «relaciones» esperadas por azar según el número de variables. Derecha: la |r| que necesita la mejor pareja para sostenerse, según los días independientes y cuántas parejas se revisaron. Script: `figuras/fig29_todo_con_todo.py` (cálculo con la aproximación de Fisher de `Estadistica.relaciones`; sin datos).*
+*Figura 1.2. Izquierda: parejas posibles y «relaciones» esperadas por azar según el número de variables. Derecha: la |r| que necesita la mejor pareja para sostenerse, según los días independientes y cuántas parejas se revisaron. Script: `figuras/fig29_todo_con_todo.py` (cálculo con la aproximación de Fisher de `Estadistica.relaciones`; sin datos).*
 
 ### 1.6.3 Lo que la corrección no cubre
 
@@ -245,7 +245,7 @@ Esta clasificación sigue la regla del plan: **no presentar heurísticas como mo
 
 1. Vestigium Mei es un sistema de **autoseguimiento de por vida para una sola persona**: combina datos activos, pasivos e importados en un panel de un renglón por día lógico (de 05:00 a 04:59), y ofrece análisis, experimentos, reportes y una exportación completa a R.
 2. Se sitúa en tres tradiciones: el **Quantified Self** (Swan, 2013; Li et al., 2010; Choe et al., 2014; Epstein et al., 2015), la **ciencia idiográfica** (Molenaar, 2004; Fisher et al., 2018) y la **medición en la vida diaria** (Trull y Ebner-Priemer, 2013; Shiffman et al., 2008), con los **ensayos N-de-1** para las preguntas causales (Guyatt et al., 1986; Kravitz et al., 2014).
-3. Lo que vale para un grupo no tiene por qué valer para una persona (Figura 1.2); por eso la app compara tus días entre sí.
+3. Lo que vale para un grupo no tiene por qué valer para una persona (Figura 1.1); por eso la app compara tus días entre sí.
 4. Un sistema **de por vida** da potencia, captura lo raro y lo lento y conserva una línea base propia; a cambio, el instrumento y la persona cambian con los años, y hay que marcar cada costura.
 5. **Todo con todo** multiplica las comparaciones (44 850 parejas con 300 variables). La app corrige con Benjamini-Hochberg, las parejas obvias, los topes por familia, quitar la tendencia y el n efectivo; aun así, las bifurcaciones del análisis y la maldición del ganador quedan fuera de la cuenta. Una relación firme es una pista seria, no una conclusión.
 6. Cada decisión se califica como **[Validado]**, **[Aproximación]** o **[Diseño propio]**, y lo no comprobado se marca **[sin verificar]**.

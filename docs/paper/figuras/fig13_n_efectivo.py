@@ -1,4 +1,4 @@
-"""Figura 6.3 - Efecto de la autocorrelación en el número de días efectivos (datos SINTÉTICOS).
+"""Figura 6.2 - Efecto de la autocorrelación en el número de días efectivos (datos SINTÉTICOS).
 Izquierda: la fórmula de Estadistica.relaciones, nEf = n (1 - ra rb) / (1 + ra rb), con ra y rb recortadas a
 [-0.5, 0.97] y nEf limitado a [4, n]. Derecha: simulación de 4000 parejas de series AR(1) INDEPENDIENTES entre sí
 (no hay relación real) con n = 90 días; se cuenta cuántas veces el intervalo de 95 % por Fisher excluye el cero

@@ -62,7 +62,7 @@ for i, p in enumerate(pasos):
         ax.scatter([i + .38 + col * .24], [-10.6 + fila * .52], s=60, color="#8d99ae")
     ax.text(i + .5, -11.25, f"{p:,}", ha="center", fontsize=7.5, color=estilo.GRIS, family="monospace")
 
-fig.suptitle("Figura 9.1  «La semana de un vistazo» del reporte semanal (imitación con datos sintéticos)", x=.01, ha="left",
+fig.suptitle("«La semana de un vistazo» del reporte semanal (imitación con datos sintéticos)", x=.01, ha="left",
              fontsize=10.5, weight="bold", color=estilo.TINTA)
 fig.text(.01, .005, "El miércoles no hay ánimo: círculo punteado. El sábado (6.5) se muestra como 7 y el lunes (4.5) como 5.\nLas cifras de arriba del reporte (días con diario, ánimo medio, sueño, pasos…) se omiten aquí.",
          fontsize=7.5, color=estilo.TINTA_2)

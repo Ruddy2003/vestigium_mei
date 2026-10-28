@@ -41,7 +41,7 @@ ax.set_xlabel("hora (de las 18:00 a las 14:00 del día siguiente, como la gráfi
 ax.text(37.8, 10, f"duración media\nlaboral {dur_lab:.1f} h\nlibre {dur_lib:.1f} h\n\nregularidad:\nla hora de dormir\nvaría ±{sd * 60:.0f} min", ha="right", fontsize=8,
         bbox=dict(fc="white", ec=estilo.GRIS_CLARO))
 ax.text(17.9, -1.0, "día en que\ndespiertas", ha="right", fontsize=7, color=estilo.GRIS)
-fig.suptitle("Figura 5.4  Jet lag social con 21 noches sintéticas", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
+fig.suptitle("Jet lag social con 21 noches sintéticas", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.text(.01, .01, "Azul: noches antes de un día laboral (despiertas de lunes a viernes). Naranja: noches que terminan en sábado o domingo. La raya blanca es el punto medio.",
          fontsize=7.5, color=estilo.TINTA_2)
 fig.tight_layout(rect=(0, .03, 1, .95))
