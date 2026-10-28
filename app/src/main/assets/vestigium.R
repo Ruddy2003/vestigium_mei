@@ -783,8 +783,9 @@ vm_laptop <- function() {
 #' autocorrelación (.vm_dif_dias), g de Hedges = d de Cohen × (1 − 3 / (4 (n1 + n2) − 9)), tendencia y cumplimiento.
 #' Prueba de aleatorización: la diferencia de medias observada contra la de cada plan que el sorteo pudo dar (por pares de
 #' semanas, una «SÍ» y una «no» en orden al azar: 2^k planes con k pares, el doble si sobra una semana), con el lavado de ese
-#' plan y los mismos datos. p_aleatorizacion = proporción de planes con |diferencia| ≥ la observada (exacto; el mínimo posible
-#' es 1 / planes). Los planes que dejan menos de 3 días medidos en una condición no tienen diferencia y no entran.
+#' plan y los mismos datos. p_aleatorizacion = proporción de planes con |diferencia| ≥ la observada (exacto). El p más chico
+#' posible es la proporción de planes con la diferencia más grande: sin lavado, el plan espejo da la misma diferencia con el
+#' signo contrario, así que nunca baja de 2 / planes (con 12 semanas, 2/64 = 0.031). Los planes que dejan menos de 3 días medidos en una condición no tienen diferencia y no entran.
 #' Antes y después: sin sorteo no hay prueba (NA).
 vm_experimento <- function(id, datos = panel, hoy = max(datos$fecha, na.rm = TRUE)) {
   if (is.null(vm$experimentos) || !nrow(vm$experimentos)) stop("No hay experimentos (vm_experimentos.csv).")
@@ -857,7 +858,8 @@ vm_experimento <- function(id, datos = panel, hoy = max(datos$fecha, na.rm = TRU
       planes <- sum(!is.na(dist))
       if (!is.na(obs) && planes > 0) p_al <- mean(abs(dist[!is.na(dist)]) >= abs(obs) - 1e-12)
       nota <- paste0("Prueba de aleatorización: ", planes, " de ", length(todos), " planes posibles con diferencia",
-                     if (planes > 0) paste0(" (el p más chico posible es 1/", planes, ").") else "; sin diferencia observada no hay prueba.")
+                     if (planes > 0) { d <- abs(dist[!is.na(dist)]); paste0(" (con estos datos, el p más chico posible es ", round(mean(d >= max(d) - 1e-12), 3), ").") }
+                     else "; sin diferencia observada no hay prueba.")
     }
   }
   r <- list(id = e$id, nombre = e$nombre, resultado = e$resultado, diseno = e$diseno, plan = plan, provisional = isTRUE(as.logical(e$activo)) && is.na(fin) && hoy <= ultimo,
