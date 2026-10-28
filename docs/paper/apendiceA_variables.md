@@ -2,7 +2,7 @@
 
 _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt` y `data/Exportar.kt` (`tablas()`). Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
 
-**Cómo leer las columnas.** *Tipo* y *Unidad* se leen del nombre que ve el usuario en la app (la app no guarda un tipo formal por variable). *Fuente* es la de todo el grupo; la procedencia exacta de cada variable está en el panel (`Estadistica.panel`). *Un valor vacío significa «sin dato»; un 0 significa «se observó y fue cero»* salvo en las reglas de relleno con ceros del capítulo 2, sección 2.6.
+**Cómo leer las columnas.** *Tipo* y *Unidad* se leen del nombre que ve el usuario en la app (la app no guarda un tipo formal por variable). *Fuente* es la de todo el grupo; la procedencia exacta de cada variable está en el panel (`Estadistica.panel`). *Un valor vacío significa «sin dato»; un 0 significa «se observó y fue cero»* salvo en las reglas de relleno con ceros del capítulo 2, sección 2.6. Las definiciones que cambiaron en la entrega 10c (cuándo vale 0 y cuándo queda vacía cada variable) están en la sección A.6.
 
 ## A.1 Variables fijas del panel analítico
 
@@ -127,7 +127,8 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
-| `personas` | Personas distintas mencionadas | numérica | — | Si hay datos de la fuente |
+| `personas` | Personas distintas mencionadas | numérica | — | Si hay datos de la fuente; vacía los días sin diario escrito ni momento con @ (10c, A.6) |
+| `presencias_revisado` | Revisaste quién estuvo y en quién solo pensaste (0/1) | binaria (0/1) | — | Días con personas en el diario o ya revisados (desde 10c) |
 | `llamadas` | Llamadas (entrantes y salientes) | numérica | — | Si hay datos de la fuente |
 | `min_hablado` | Minutos al teléfono | numérica | — | Si hay datos de la fuente |
 | `contactos` | Personas distintas por llamada o SMS | numérica | — | Si hay datos de la fuente |
@@ -374,9 +375,9 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 
 | Prefijo | Grupo | Máx. | Mín. días | Plantilla del nombre |
 |---|---|---|---|---|
-| `per_` | Personas | 15 | 5 | Aparece @‹elemento› (diario, momentos, sueños o cartas) (0/1) |
+| `per_` | Personas | 15 | 5 | Aparece @‹elemento› (diario, mejor y peor momento, momentos, sueños o cartas) (0/1); 0 solo en días con diario escrito o momento con @ (10c) |
 | `pen_` | Personas | 10 | 3 | Pensé en @‹elemento› sin verla (0/1) |
-| `tema_` | Temas | 12 | 5 | Aparece #‹elemento› (0/1) |
+| `tema_` | Temas | 12 | 5 | Aparece #‹elemento› (0/1); 0 solo en días con diario escrito o momento con #tema (10c) |
 | `hito_` | Hitos | 10 | 3 | Hito: ‹elemento› (0/1) |
 | `lug_` | Lugares | 15 | 3 | Horas en «‹elemento›» |
 | `app_` | Apps | 12 | 5 | Minutos en ‹elemento› |
@@ -398,9 +399,9 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `act_` | Cuerpo | 6 | 3 | Minutos ‹elemento› |
 | `nut_` | Nutrición | 60 | 14 | nombre del nutriente de MacroFactor traducido (p. ej. «Vitamina C (mg)»); excluye los ya fijos, los objetivos y los pasos/peso de MacroFactor |
 | `ali_` | Nutrición | 12 | 5 | Comí ‹elemento› (0/1) |
-| `esc_` | Cuestionarios | todos | — | «‹cuestionario›: ‹puntaje›»; el puntaje vale para los 14 (WHO-5) o 30 días (PSS-4, UCLA-3) previos, o hasta el siguiente (personalidad) |
+| `esc_` | Cuestionarios | todos | — | «‹cuestionario›: ‹puntaje›»; desde 10c el puntaje vale para su día y los 6 previos (WHO-5, PSS-4) o los 29 previos (UCLA-3), y un día cubierto por dos respuestas se queda con la primera; la personalidad, hasta el test siguiente. Hasta 10c: 14 o 30 días previos, ganando la última |
 | `pol_` | Política | ejes | — | «Brújula: ‹eje›»; la posición de cada test vale hasta el test siguiente (máx. 400 días) |
-| `vida_` | Etapas de vida | 14 + ciudades | — | «Etapa: ‹campo de Conocerte›»; se reconstruye con el historial de cambios |
+| `vida_` | Etapas de vida | 14 + ciudades | — | «Etapa: ‹campo de Conocerte›»; se reconstruye con el historial de cambios. Desde 10c, vacía antes del primer guardado de «Conocerte» para los campos llenados ese día (`Perfiles.primerGuardado`) |
 
 ## A.3 Tablas exportadas
 
@@ -419,7 +420,7 @@ La exportación genera 50 tablas CSV con datos (48 hasta el esquema 12; el 13 ag
 | `vm_notas.csv` | Notas sueltas: ideas, pensamientos, propósitos y recordatorios |
 | `vm_suplementos.csv` | Cada toma de suplemento (y las porciones de probióticos estimadas de tu bitácora de comidas) |
 | `vm_laptop.csv` | Minutos por app y por sitio en la laptop, por día (Cold Turkey) |
-| `vm_red_nodos.csv` | Personas de tu red: relación, cercanía, días mencionada y grado |
+| `vm_red_nodos.csv` | Personas de tu red: relación, grupo de relación (columna `grupo`, desde 10c), cercanía, días mencionada y grado |
 | `vm_red_vinculos.csv` | Pares de personas: cómo se conocen según tú y cuántos días aparecen juntas |
 | `vm_personas.csv` | Tu gente: relación, cercanía, desde cuándo, nacimiento, fallecimiento y edad (esquema 13) |
 | `vm_fechas_propias.csv` | Fechas propias que se repiten cada año (esquema 13) |
@@ -488,3 +489,43 @@ La exportación genera 50 tablas CSV con datos (48 hasta el esquema 12; el 13 ag
 
 **Cómo leer `ts_creado`.** La hora de un registro (`ts`, `inicio` o `fecha` + `hora`) dice **cuándo pasó**; `ts_creado`, **cuándo lo anotaste**. La diferencia dice si se anotó en el momento o después. En R, `vm_retraso(tabla, umbral_min = 60)` la calcula (`retraso_min`) y marca `tarde` si pasó más del umbral o cayó en otro día lógico (Apéndice C). El umbral es **[Diseño propio]**.
 
+## A.6 Definiciones que cambiaron en la entrega 10c (cálculos)
+
+No cambia lo que se guarda (`SCHEMA_V` = 14); cambia cómo se calcula el panel con lo ya guardado, **también en los días viejos**. Detalle y motivo en el Apéndice D (D.62 a D.78) y en el capítulo 2, sección 2.6.1. «Base» son los días en que la variable puede valer 0; fuera de ellos queda vacía.
+
+| Variable | Definición desde 10c | Antes |
+|---|---|---|
+| `gasto_total`, `gasto_imprevisto` | 0 en los días con diario desde el **primer gasto** (`ceroDesde`) | 0 en todos los días con diario |
+| `n_impulso` (privada) | 0 en los días con diario desde el **primer impulso** | 0 en todos los días con diario |
+| `escalada` | 0 en los días con diario desde la **primera sesión de escalada** | 0 en todos los días con diario |
+| `gimnasio` | 0 en los días con diario desde el **primer entrenamiento**, más los días con entrenamiento | 0 en cualquier fecha del panel desde el primer entrenamiento |
+| `hab_<id>` | 1 si lo marcaste; 0 desde `Habito.desde`; vacío antes (los hábitos sin esa fecha, 0 siempre) | 0 en todos los días con diario, también antes de existir (igual en `vm_dias.csv`) |
+| `sueno_recordado` | 1 si recordaste; 0 solo si ese día dijiste algo del sueño (calidad o texto); si no, vacío | 0 en cualquier día con diario sin sueño recordado |
+| `sdt_necesidad_autonomia`, `_competencia`, `_relacion` | También 1 si elegiste «las tres» | 0 con «las tres» |
+| `personas`, `vi_*`, `cercanos`, `cercania_media`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `penso_en_*` | Solo en los días con diario escrito o con un momento no privado que nombra a alguien con @ (`Dinamicas.diasSociales`); vacías en los demás | En cualquier día con documento de diario o algún momento |
+| `per_`, `pen_` | 0 en los días de `diasSociales` y en los días donde aparece otra persona; los temas del sueño cuentan solo si llevan @ | 0 en todos los días con diario o momentos no privados; cualquier etiqueta del sueño sin # contaba como persona |
+| `tema_` | 0 en los días con diario escrito o con un momento que lleva algún #tema | 0 en todos los días con diario o momentos no privados |
+| `vi_convivientes` | Compara con los convivientes pasados por `canon` (equivalencias en cadena) | Comparaba el texto tal cual |
+| `cercania_media` | La cercanía de cada día respeta «sin cercanía» en el historial | Un tramo sin cercanía usaba la cercanía actual |
+| `presencias_revisado` (nueva en el panel) | 1 si revisaste las presencias ese día; 0 si hay personas en el diario sin revisar; vacío si no | Solo en `vm_dias.csv` |
+| `ejercicio_min` | 0 los días con datos del reloj (pasos o ritmo cardiaco) y sin sesión, desde la primera sesión | Vacío esos días |
+| `distancia_km` | GPS (`Movilidad.kmPorDia`): 0 los días con ubicaciones y sin movimiento. En `vm_salud.csv`, `distancia_km` es la de Health Connect (otra fuente; el diccionario las distingue) | Vacío esos días |
+| `lugares_distintos` | Por **día lógico** de la llegada | Por fecha de calendario de la llegada |
+| `probioticos_estimado` | Solo los días con bitácora de MacroFactor (o con algo leído en ella) | 0 todos los días desde la primera toma |
+| `esc_*` | Ventana del periodo preguntado (7 o 30 días) y la primera respuesta que cubre el día | Ventana de 14 o 30 días, ganando la última respuesta |
+| `animo_cierre_valencia`, `animo_cierre_activacion` (y `animo_valencia`, `animo_activacion`, `registros_animo`) | Sin los cierres guardados otro día que el que cierran (`Estadistica.cierreFuera`) | Con todos los cierres de esa fecha |
+| `vida_*` | Vacías antes del primer guardado de «Conocerte» para los campos llenados ese día | El valor se proyectaba hacia atrás |
+| `alcohol` | 1 el día lógico de cada dosis (y el de los episodios sin cantidad); 0 los demás desde el primer registro | 1 el día del episodio, y también el día de las dosis: dos reglas a la vez |
+| `alcohol_estimado_max`, `alcohol_al_dormir` | Peso más reciente entre báscula y tendencia de MacroFactor (si no hay anterior, el primero posterior; 70 kg solo sin ningún peso) y, con peso real, sexo, estatura y (en hombres) edad, la *r* de Watson; si no, *r* fija por sexo | La báscula ganaba siempre a MacroFactor, 70 kg antes de la primera pesada, *r* fija por sexo |
+| `cafeina_total_mg`, `alcohol_bebidas` | Incluyen las tomas de MacroFactor sin hora legible (al mediodía de su día) | Esas tomas se perdían |
+| `n_momentos` (`vm_panel.csv`) | Sin cambio de cálculo; el diccionario aclara que incluye los momentos privados | Igual |
+
+**Columnas nuevas en la exportación (10c).**
+
+| Archivo | Columna | Qué es |
+|---|---|---|
+| `vm_panel.csv` | `festivo` | Día de descanso obligatorio de la Ley Federal del Trabajo de México, art. 74 (0/1); vacío si en «Conocerte» no vives en México (`Fechas.esFestivoMx`) |
+| `vm_panel.csv` | `dia_libre` | Sábado, domingo o festivo (0/1): la regla de día libre del jet lag social (`Fechas.esDiaLibre`) |
+| `vm_red_nodos.csv` | `grupo` | Grupo de la relación: familia, pareja, amistad, trabajo u otro; el que da el color en la Red |
+
+**Por día de calendario.** Las descripciones del diccionario de `vm_panel.csv` y `vm_panel_extendido.csv` terminan con «· por día de calendario (0:00 a 24:00)» en las variables de `Diccionario.CALENDARIO` y en las familias `ciu_` y `pais_` (capítulo 2, sección 2.3.2).

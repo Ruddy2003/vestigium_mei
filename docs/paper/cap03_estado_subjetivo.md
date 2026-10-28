@@ -117,6 +117,7 @@ Y una cuarta, intermedia: el **cierre del día** («cómo estás ahora», al ter
 - `muestreo_valencia` = promedio de la valencia de los registros de tipo `muestreo` de ese día lógico; `muestreo_activacion`, igual con la activación.
 - `animo_valencia` = promedio de **todos** los registros de ánimo del día (`muestreo` + `animo`, incluido el cierre).
 - `animo_cierre_valencia` = la valencia del **último** cierre del día (si lo cambiaste varias veces, el último).
+- Desde la entrega 10c, un cierre guardado **otro día** que el que cierra (el día lógico de su hora no es su fecha) no cuenta en ninguna de estas variables (`Estadistica.cierreFuera`; sección 3.7.5).
 - `valencia` = el número del diario.
 
 La app marca como «obvias» las relaciones entre estas variables (por ejemplo, `valencia` con `muestreo_valencia`), para no presentarlas como descubrimientos (capítulo 6).
@@ -152,9 +153,9 @@ El generador al azar usa como semilla la fecha (`Random(fecha.hashCode())`), as�
 | 2 | 13:40 a 17:20 | 14:25 a 16:35 |
 | 3 | 17:20 a 21:00 | 18:05 a 20:15 |
 
-Dos avisos seguidos quedan separados **al menos 90 minutos** (el margen de un tramo más el del siguiente).
+Dos avisos seguidos quedan separados al menos **2 × mín(45 min, tramo/4)**: el margen del final de un tramo más el del principio del siguiente. Con los valores por omisión, **90 minutos**.
 
-**Ojo con la promesa de los 90 minutos (H-2-7).** El comentario del código dice «separadas al menos 90 minutos», pero eso solo se cumple si cada tramo dura **3 horas o más** (porque el margen se reduce a tramo/4 cuando el tramo es corto). Con la misma ventana y **4** avisos, el tramo es de 165 minutos, el margen de 41.25 y la separación mínima de **82.5 minutos**; con **6** avisos, el tramo es de 110 minutos y la separación mínima de **55 minutos**. No es un error de cálculo, pero la descripción no es exacta. Gravedad baja.
+**La separación mínima no siempre es de 90 minutos (H-2-7).** Solo se cumple si cada tramo dura **3 horas o más** (porque el margen se reduce a tramo/4 cuando el tramo es corto). Con la misma ventana y **4** avisos, el tramo es de 165 minutos, el margen de 41.25 y la separación mínima de **82.5 minutos**; con **6** avisos, el tramo es de 110 minutos y la separación mínima de **55 minutos**. No es un error de cálculo. Hasta la entrega 10c el comentario del código decía «separadas al menos 90 minutos»; ahora dice la regla exacta, con ejemplos (`Programador.planDelDia`). Gravedad baja.
 
 ### 3.5.3 Cómo llega el aviso (y cuándo se pierde)
 
@@ -195,7 +196,7 @@ También cambió la tarjeta «N avisos de ánimo sin contestar» de Hoy (H-9-9).
 
 Cuando tú decides registrar, sueles hacerlo **porque pasó algo** (una alegría, una preocupación). Eso es un muestreo **por evento**, válido para estudiar esos eventos, pero sesgado si se usa como «cómo estoy en general». Por eso la variable más limpia del ánimo momentáneo es `muestreo_valencia` (solo avisos), y `animo_valencia` (todo junto) mezcla los dos tipos. **[Validado]** el principio.
 
-Ese mismo sesgo afecta al **mapa emocional de lugares** (pantalla Lugares): colorea cada lugar según la valencia de **todos** los registros de ánimo hechos ahí, avisos y propios, contra tu promedio general. Además, el mapa y la lista de la misma pantalla usan criterios distintos para decidir si un registro «es de ese lugar» (el mapa, solo si el registro quedó asignado al lugar; la lista, también si está dentro del radio). En R, la función `vm_mapa_animo` va más lejos: si un registro no tiene valencia, le pone **la valencia del diario de ese día**, mezclando en un mismo mapa el ánimo del momento con el recordado. Detalles menores (H-2-15).
+Ese mismo sesgo afecta al **mapa emocional de lugares** (pantalla Lugares): colorea cada lugar según la valencia de **todos** los registros de ánimo hechos ahí, avisos y propios, contra tu promedio general, con toda tu historia de ánimo (los puntos grises del mapa sí son solo de los últimos 60 días). Hasta la entrega 10c, el mapa y la lista de la misma pantalla usaban criterios distintos para decidir si un registro «es de ese lugar» (el mapa, solo si quedó asignado al lugar; la lista, también si estaba dentro del radio), y el texto decía «últimos 60 días» aunque las medias usaban toda la historia. Ahora los dos usan el mismo criterio (`enLugar`: asignado al lugar **o** a una distancia menor o igual que su radio) y el texto dice qué es de 60 días y qué no. En R, `vm_mapa_animo` les ponía a los registros sin valencia la del diario; desde 10a usa solo registros con su propia valencia. (H-2-15, resuelto en 10a y 10c, D.10 y D.74.)
 
 ---
 
@@ -277,7 +278,7 @@ Son tres preguntas de opción única (`Catalogo.CIENTIFICAS`), cada una inspirad
 **Cómo entran al panel.** Cada opción se convierte en una columna de 0/1 (`flow_flujo`, `flow_ansiedad`, `sdt_necesidad_autonomia`…), con valor **vacío** si no respondiste. Dos consecuencias del código:
 
 - Elegir «**no aplica**» deja todas las columnas de flujo en 0 (no en vacío), igual que si hubieras elegido algo que no existe. Se puede distinguir de «no respondí», pero no hay columna propia para «no aplica».
-- Elegir «**las tres**» pone `sdt_necesidad_las_tres = 1` y deja `autonomia`, `competencia` y `relacion` en **0**, aunque las tres se hayan satisfecho. Al analizar cada necesidad por separado hay que sumar esos días a mano. (Parte de H-2-4.)
+- Elegir «**las tres**» pone `sdt_necesidad_las_tres = 1` y, desde la entrega 10c, también `sdt_necesidad_autonomia`, `sdt_necesidad_competencia` y `sdt_necesidad_relacion` en **1** (antes quedaban en 0 aunque las tres se hubieran satisfecho). Así, cada necesidad por separado cuenta bien sus días. (Parte de H-2-4, resuelta en 10c, D.63.)
 
 Estas preguntas están **plegadas por omisión**, así que se responden menos y probablemente no al azar (más en días con ganas de escribir). **[Diseño propio]**.
 
@@ -286,7 +287,7 @@ Estas preguntas están **plegadas por omisión**, así que se responden menos y 
 - **Lo mejor y lo peor** del día: una línea cada uno, texto libre. No entran al panel como números.
 - **Hitos**: etiquetas cortas de cosas que no pasan todos los días; `hitos_n` cuenta cuántas.
 - **Medicamentos**: desde el módulo 10a son privados y se anotan en la pantalla Privado, no en el diario de la noche (al final hay un enlace «privado de este día»). Son etiquetas; `medicamentos_n` cuenta cuántas desde el primer día en que anotaste alguno y solo viaja a R.
-- **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** valen **0 en todos los días con diario**, también si no abriste esa sección, y los hábitos valen 0 incluso **antes de crear el hábito** (el modelo guarda la fecha `desde`, pero el panel no la usa). Así, «no lo marqué» se confunde con «no pasó» y con «aún no existía». Mismo problema de fondo que H-1-1.
+- **Contextos** (`ctx_*`) y **hábitos** (`hab_*`): 1 si lo marcaste. **Ojo (H-2-4):** los contextos valen **0 en todos los días con diario**, también si no abriste esa sección: es la convención declarada en la pantalla («marca lo que aplique»), y se mantiene. Los hábitos valían 0 incluso **antes de crear el hábito**; desde la entrega 10c, antes de `Habito.desde` (el día en que lo creaste) quedan vacíos, salvo que los hayas marcado (D.63). Los hábitos creados antes de que existiera esa fecha siguen valiendo 0 desde el principio. «No lo marqué» y «no pasó» siguen siendo lo mismo en ambos; es el problema de fondo de H-1-1.
 
 ### 3.7.4 «Retroactivo»: cuándo se llenó el día
 
@@ -296,7 +297,7 @@ Cada documento de día guarda `retroactivo`: verdadero si el día se **guardó p
 
 **Desde el esquema 13 (P-13)** cada día guarda `ts_valencia`: la hora en que la valencia pasó de vacía a llena, o en que cambió. Con ella, `retroactivo` = el día lógico de `ts_valencia` es posterior a la fecha del día (`Reglas.retroactivo`). En el ejemplo, la valencia del martes se llenó el viernes, así que el martes queda retroactivo aunque el widget lo haya creado el mismo martes. Llenarla el martes a la 1:30 de la madrugada del miércoles no cuenta como retroactivo, porque sigue siendo el día lógico del martes. Corregir la valencia días después también vuelve el día retroactivo: el número nuevo es de memoria. Los días de antes de la v13 no tienen `ts_valencia` y conservan su marca. **[Diseño propio]**.
 
-**Un aviso que no tiene efecto (H-2-14).** Si abres un día futuro, la app dice «se marcará como escrito por adelantado», pero no existe ningún campo que lo registre. Gravedad baja.
+**Un aviso que prometía una marca inexistente (H-2-14).** Si abrías un día futuro, la app decía «se marcará como escrito por adelantado», pero no existía ningún campo que lo registrara. Desde el esquema 14 el día guarda `ts_creado`, así que «escrito por adelantado» se deriva en R: el día lógico de `ts_creado` es anterior a la fecha del día. Desde la entrega 10c el aviso dice lo que pasa de verdad: «Puedes dejar notas; queda guardado cuándo las escribiste».
 
 ### 3.7.5 El cierre del día
 
@@ -305,7 +306,7 @@ Al **principio** de la hoja (hasta `VERSION_NOCHE = 1` iba al final; sección 3.
 Dos precisiones (H-2-8):
 
 - El comentario dice «a la misma hora todos los días», pero en realidad es **a la hora en que cierres** el diario, que varía. La hora queda guardada, así que se puede controlar en el análisis.
-- Hasta la entrega N4, si llenabas la hoja de **un día pasado**, el cierre se guardaba **con la fecha de ese día pero con la hora de ahora**: `animo_cierre_valencia` del martes podía ser cómo te sentías el viernes. Desde la N4, el cierre solo se ofrece en la hoja del día lógico de hoy (`cierrePermitido(fecha)`, en `data/Modelo.kt`; lo comprueba `EsquemaCatorcePrueba.cierreSoloHoy`). Los cierres tardíos de antes siguen en los datos; se reconocen porque el día de `ts` no coincide con `fecha`.
+- Hasta la entrega N4, si llenabas la hoja de **un día pasado**, el cierre se guardaba **con la fecha de ese día pero con la hora de ahora**: `animo_cierre_valencia` del martes podía ser cómo te sentías el viernes. Desde la N4, el cierre solo se ofrece en la hoja del día lógico de hoy (`cierrePermitido(fecha)`, en `data/Modelo.kt`; lo comprueba `EsquemaCatorcePrueba.cierreSoloHoy`). Los cierres tardíos de antes siguen guardados, pero desde la entrega 10c **el panel no los usa**: `Estadistica.cierreFuera(m)` es verdadero cuando el momento es un cierre y el día lógico de su hora (`Fechas.diaLogicoDeMillis(Fechas.millis(ts))`) no es su `fecha`, y esos momentos no entran en `animo_cierre_*`, `animo_valencia`, `animo_activacion` ni `registros_animo`. Así se arreglan también los datos viejos (D.74). Ejemplo: un cierre con fecha martes y hora viernes 09:00 queda fuera; uno con fecha martes y hora martes 21:00 cuenta.
 
 ---
 
@@ -365,28 +366,34 @@ Que se pidan de forma regular es importante porque estos instrumentos preguntan 
 
 ### 3.9.3 Cómo se pasan al panel: el problema principal de este capítulo (H-2-1)
 
-Un cuestionario se responde **un día**, pero habla de **un periodo**. Para poder cruzarlo con variables diarias, la app copia el puntaje a varios días (`ciencia/Dinamicas.kt`, sección «Cuestionarios»):
+Un cuestionario se responde **un día**, pero habla de **un periodo**. Para poder cruzarlo con variables diarias, la app copia el puntaje a varios días (`ciencia/Dinamicas.kt`, sección «Cuestionarios»).
+
+**Cómo era hasta la entrega 10c (H-2-1).**
 
 - **WHO-5:** al día de la respuesta y a los **13 días anteriores** (ventana de 14).
 - **PSS-4 y UCLA-3:** al día de la respuesta y a los **29 días anteriores** (ventana de 30).
-- **TIPI:** del día de la respuesta **hacia adelante**, hasta la siguiente respuesta (o un año).
+- Las respuestas se procesaban de la más antigua a la más nueva, y **cada una sobrescribía** lo que había.
 
-Las respuestas se procesan de la más antigua a la más nueva, y **cada una sobrescribe** lo que había. El comentario del código dice que cada puntaje vale «para el periodo que pregunta (dos semanas, un mes)», pero:
+Eso tenía dos problemas. Primero, los periodos no coincidían con lo que la app pregunta: WHO-5 y PSS-4 preguntan por **7 días** (adaptación de la propia app) y se copiaban a 14 y 30. Segundo, la sobrescritura hacía que cada día recibiera la respuesta más nueva que lo alcanzaba, no la que habla de él: con un PSS-4 cada semana, un día podía recibir el puntaje de una respuesta dada **hasta 29 días después**. Las correlaciones con variables diarias comparaban semanas distintas, con el «estrés» de un día viniendo del futuro, y las semanas extremas desaparecían. Gravedad **alta**.
 
-1. **Los periodos no coinciden con lo que la app pregunta.** WHO-5 y PSS-4 preguntan por **7 días** (adaptación de la propia app), y se copian a 14 y 30 días.
-2. **La sobrescritura hace que cada día reciba la respuesta más nueva que lo alcanza, no la que habla de él.** Con un PSS-4 cada semana y ventana de 30 días, un día recibe el puntaje de la respuesta dada **hasta 29 días después**, que pregunta por otra semana.
+**Cómo es ahora (entrega 10c, D.62).** La función pura `Dinamicas.porDiaCuestionario(respuestas, ventana, hoy)` recibe las respuestas (fecha, puntaje) de la más vieja a la más nueva y una ventana igual al periodo que pregunta cada instrumento (`ventanaCuestionario`, igual a `frecuenciaDias` de `Escalas.kt`):
 
-**Ejemplo (inventado, Figura 3.3).** Respondes el PSS-4 los días 1, 8, 15, 22 y 29 de marzo, con 4, 6, 9, 5 y 7. ¿Qué guarda el panel el **3 de marzo**? Las respuestas cuya ventana de 30 días lo cubre son las del 8, 15, 22 y 29; la última en escribir es la del **29 (7)**. Pero la respuesta que habla de esa semana es la del 8 de marzo (periodo 2–8 de marzo): **6**. Peor aún: del 1 al 29 de marzo **todos** los días quedan con 7, y la semana de estrés alto (9, del 15 de marzo) **desaparece** del panel.
+- **WHO-5 y PSS-4:** el día de la respuesta y los **6 anteriores** (ventana de 7).
+- **UCLA-3:** el día de la respuesta y los **29 anteriores** (ventana de 30).
+- **TIPI:** igual que antes, del día de la respuesta **hacia adelante**, hasta la siguiente respuesta (como mucho un año, y no más allá de hoy).
 
-Con el WHO-5 semanal y ventana de 14 días pasa lo mismo de forma sistemática: cada día recibe la respuesta de la semana **siguiente a la suya**. Solo los últimos días (después de la última respuesta, mientras no haya otra) reciben el valor de su propia semana.
+Si dos respuestas cubren el mismo día, se queda **la primera** que lo cubre (`putIfAbsent`): como se recorren de la más vieja a la más nueva, es la respuesta más cercana **después** de ese día, la que pregunta por él. Un día que ninguna respuesta cubre queda vacío.
 
-**Por qué importa.** Las correlaciones entre estos puntajes y cualquier variable diaria (sueño, pasos, ánimo) comparan cosas de **semanas distintas**, y en la dirección más engañosa: el «estrés» de un día viene del futuro. Además, la serie se aplana y las semanas extremas se pierden. Gravedad **alta**.
+**Ejemplo (inventado, Figura 3.3).** Respondes el PSS-4 los días 1, 8, 15, 22 y 29 de marzo, con 4, 6, 9, 5 y 7. ¿Qué guarda el panel el **3 de marzo**?
 
-**Corrección mínima que propondría:** usar como ventana el periodo que de verdad pregunta la app (7 días para WHO-5 y PSS-4, 30 para UCLA-3) y, si dos respuestas se enciman, que **cada día se quede con la respuesta más cercana posterior a él** (la primera que lo cubre), no con la última.
+- *Antes:* las respuestas cuya ventana de 30 días lo cubría eran las del 8, 15, 22 y 29; la última en escribir era la del **29 (7)**. Del 1 al 29 de marzo **todos** los días quedaban con 7, y la semana de estrés alto (9, del 15) desaparecía.
+- *Ahora:* el 3 de marzo solo lo cubre la respuesta del 8 (periodo del 2 al 8): **6**. Cada semana queda con su puntaje: 4 (del 23 de febrero al 1 de marzo), 6, 9, 5 y 7; el 30 de marzo, sin respuesta que lo cubra, queda vacío.
+
+Con UCLA-3 (ventana de 30) respondido igual cada semana, el 3 de marzo también recibiría **6**: lo cubren las respuestas del 8, 15, 22 y 29, y gana la primera. Lo comprueba la prueba JVM `CalculosPrueba.cuestionarioPorSemana`. **[Diseño propio]** la regla de asignación; **[Aproximación]** suponer que el puntaje vale igual para cada día del periodo.
 
 ![Figura 3.3](figuras/fig10_cuestionarios_ventana.png)
 
-*Figura 3.3. PSS-4 sintético respondido cada semana. Línea continua: lo que guarda el panel con la regla actual. Línea punteada: la semana a la que se refiere cada respuesta. Script: `figuras/fig10_cuestionarios_ventana.py` (replica la lógica de `Dinamicas.kt`).*
+*Figura 3.3. PSS-4 sintético respondido cada semana. Línea discontinua: lo que guardaba el panel hasta la entrega 10c (ventana de 30 días, gana la última respuesta). Línea continua: lo que guarda ahora (los 7 días que pregunta cada respuesta, gana la primera que cubre el día). Script: `figuras/fig10_cuestionarios_ventana.py` (replica las dos versiones de `Dinamicas.kt`).*
 
 La app sí evita un error relacionado: dos puntajes del **mismo** cuestionario (por ejemplo, extraversión y apertura del TIPI) se marcan como relación «obvia», porque salen de las mismas respuestas.
 
@@ -404,7 +411,7 @@ y se describe como «muy hacia…» (≤ −60 o ≥ 60), «hacia…» (de −60
 
 **Para qué sirven los signos mezclados.** Hay personas que tienden a estar de acuerdo con todo (*aquiescencia*). Si todas las afirmaciones apuntaran al mismo lado, esa tendencia se confundiría con una postura. Mezclar afirmaciones en ambos sentidos la neutraliza… **si están equilibradas**.
 
-**No lo están del todo (H-2-6).** Con 5 afirmaciones por eje el reparto es 3 contra 2. Si alguien responde «muy de acuerdo» (5) a las 25, cada eje queda en ±2 × 100 / 10 = **±20**, que la app describe como «hacia…» en los **cinco** ejes (hacia igualdad y Estado, hacia orden y autoridad, hacia cambio, hacia soberanía, hacia proteger el ambiente). El comentario del código dice que estar de acuerdo con todo «no empuja hacia ningún lado», y no es exacto. Con «de acuerdo» (4) en todo, el efecto es ±10 y queda «al centro». Gravedad baja: es un instrumento para compararte contigo mismo año con año, y ese sesgo es constante. **[Diseño propio]**: las afirmaciones no están validadas como escala.
+**No lo están del todo (H-2-6).** Con 5 afirmaciones por eje el reparto es 3 contra 2. Si alguien responde «muy de acuerdo» (5) a las 25, cada eje queda en ±2 × 100 / 10 = **±20**, que la app describe como «hacia…» en los **cinco** ejes (hacia igualdad y Estado, hacia orden y autoridad, hacia cambio, hacia soberanía, hacia proteger el ambiente). El comentario del código decía que estar de acuerdo con todo «no empuja hacia ningún lado»; desde la entrega 10c dice que sí empuja un poco (±20) y que, al ser el mismo cada año, afecta poco a compararte contigo mismo. El cálculo no cambió. Con «de acuerdo» (4) en todo, el efecto es ±10 y queda «al centro». Gravedad baja: es un instrumento para compararte contigo mismo año con año, y ese sesgo es constante. **[Diseño propio]**: las afirmaciones no están validadas como escala.
 
 En el panel, cada eje (`pol_<eje>`) vale lo mismo desde el día del test hasta el siguiente (o 400 días).
 
@@ -416,7 +423,11 @@ En el panel, cada eje (`pol_<eje>`) vale lo mismo desde el día del test hasta e
 
 Con eso, el panel crea variables de **etapa de vida** (`vida_en_pareja`, `vida_vive_solo`, `vida_trabaja`, `vida_desde_casa`, ciudad…): cada día sabe en qué etapa estabas, para comparar, por ejemplo, tu ánimo cuando vivías solo y cuando no. La función `valorEn(campo, fecha)` decide el valor de un día así: el último cambio **antes o en** esa fecha; si no hay, el valor **«antes»** del primer cambio posterior; si nunca hubo cambios en ese campo, **el valor actual**.
 
-**El valor actual se proyecta hacia atrás (H-2-5).** Si llenas el perfil por primera vez hoy (por ejemplo, «en pareja»), **todos los días anteriores**, incluidos años de historia importada, quedan como «en pareja», porque no hay ningún cambio registrado. Lo mismo si una situación cambió antes de que empezaras a usar «Conocerte». Las comparaciones «antes y después» de una etapa quedan contaminadas sin que se note. Gravedad media. Corrección mínima: no asignar etapa a los días anteriores a la primera vez que se respondió ese campo (o pedir la fecha desde la que vale).
+**El valor actual se proyectaba hacia atrás (H-2-5).** Si llenabas el perfil por primera vez (por ejemplo, «en pareja»), **todos los días anteriores**, incluidos años de historia importada, quedaban como «en pareja», porque el primer guardado no dejaba historial. Gravedad media.
+
+**Desde la entrega 10c (D.74)** el primer guardado también deja historial: `Perfiles.cambios(antes, despues)` se aplica aunque el perfil estuviera vacío, y registra cada campo llenado como un cambio de «» a su valor, con la fecha de ese día. `Perfiles.primerGuardado(historial)` reconoce esa fecha: es el primer día del historial si **todos** los cambios de ese día pasaron de vacío a algo. Para los campos llenados ese día, `valorEn` devuelve «sin dato» en las fechas anteriores, y las variables `vida_*` quedan vacías (también `vida_mascota` y `vida_idiomas`, que antes daban 0, y `vida_ciudad_*`). Ejemplo: llenas «Conocerte» por primera vez el 10 de octubre con «en pareja»; `vida_en_pareja` vale 1 desde el 10 de octubre y queda vacía antes. Ese primer llenado tampoco sale en «Antes y después» (capítulo 6), porque no es un cambio de vida.
+
+Lo que no se arregla: los perfiles llenados antes de esta versión no tienen ese primer registro, y sus valores se siguen proyectando hacia atrás. Y si la primera edición de un perfil viejo consistió solo en llenar campos vacíos, `primerGuardado` la toma por un primer guardado y deja sin dato esos campos en los días anteriores. **[Diseño propio]**.
 
 ---
 
@@ -443,7 +454,7 @@ Se basan en el sistema de **Hall y Van de Castle (1966)**, que codifica los sue�
 - `sueno_lucidez` y `sueno_vividez` se convierten en **0, 1, 2** (por ejemplo, vago = 0, moderado = 1, muy vívido = 2), solo en días con sueño recordado. Tratarlas como números supone que los saltos entre niveles son iguales. **[Aproximación]**.
 - `sueno_<categoría>` = 1/0, solo en días en que marcaste **alguna** categoría (si no marcaste ninguna, quedan vacías: bien resuelto).
 
-**`sueno_recordado` vale 0 cuando no respondiste (H-2-4).** Esta variable es 1 si marcaste que recordaste un sueño y **0 en cualquier otro caso**, incluidos los días en que no abriste la pantalla de sueño. Así, «no recordé» y «no contesté» quedan iguales, y la frecuencia de recuerdo de sueños **se subestima** en proporción a los días sin registro. Es el mismo problema que con contextos y hábitos (sección 3.7.3).
+**`sueno_recordado` valía 0 cuando no respondiste (H-2-4).** Era 1 si marcaste que recordaste un sueño y **0 en cualquier otro caso**, incluidos los días en que no abriste la pantalla de sueño, así que la frecuencia de recuerdo se subestimaba. Desde la entrega 10c (D.63) vale 1 si recordaste un sueño, **0 solo si ese día dijiste algo del sueño** (la calidad o un texto) sin marcar que lo recordaste, y queda vacía en los demás días. Ejemplo: un día con calidad 4 y sin sueño recordado → 0; un día en que no tocaste la sección del sueño → vacío.
 
 ---
 
@@ -535,7 +546,7 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 
 **Base científica.** Es una versión muy corta de la **prueba de vigilancia psicomotora (PVT)**, la medida estándar de cómo la falta de sueño afecta la atención (Basner y Dinges, 2011). La PVT estándar dura **10 minutos**, con esperas de **2 a 10 s**, cuenta como lapso un tiempo de **500 ms o más** y como **falsa salida** tanto tocar sin estímulo como responder en **menos de 100 ms** (demasiado rápido para ser una reacción real). La versión breve validada (PVT-B) dura **3 minutos**, con esperas de **1 a 4 s** (Basner, Mollicone y Dinges, 2011), y sus autores encontraron que para ella funcionaba mejor un umbral de lapso de **355 ms**.
 
-**Comparación (H-2-12).** La prueba de la app dura unos 30 segundos (10 intentos), mucho menos que cualquier versión validada; usa el umbral de 500 ms (pensado para la prueba de 10 minutos); **no marca como falsas salidas las respuestas de menos de 100 ms** (entran en la media); y mide en una pantalla táctil, con retrasos de dibujo y de detección del toque que varían entre teléfonos. La propia app advierte que solo sirve para compararte contigo mismo. **[Aproximación]**: útil para ver tendencias grandes, con mucho ruido de un día a otro. En el panel, `rt_media` es el promedio de las medias de las pruebas hechas ese día.
+**Comparación (H-2-12).** La prueba de la app dura unos 30 segundos (10 intentos), mucho menos que cualquier versión validada; usa el umbral de 500 ms (pensado para la prueba de 10 minutos); hasta la entrega 10c **no marcaba como falsas salidas las respuestas de menos de 100 ms** (entraban en la media). Desde 10c, un toque a menos de 100 ms del estímulo cuenta como anticipación (suma a `anticipaciones`), no entra en los tiempos y el intento se repite, como en la PVT (D.74). Sigue midiendo en una pantalla táctil, con retrasos de dibujo y de detección del toque que varían entre teléfonos. La propia app advierte que solo sirve para compararte contigo mismo. **[Aproximación]**: útil para ver tendencias grandes, con mucho ruido de un día a otro. En el panel, `rt_media` es el promedio de las medias de las pruebas hechas ese día.
 
 ---
 
@@ -543,14 +554,14 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 
 | Código | Amenaza | Dónde | Qué hacer al analizar | Hallazgo |
 |---|---|---|---|---|
-| L-3.1 | Cuestionarios asignados a semanas que no les corresponden | 3.9.3 | No cruzar `esc_*` con variables diarias hasta corregir | H-2-1 |
+| L-3.1 | Cuestionarios asignados a semanas que no les corresponden | 3.9.3 | Resuelto en 10c (D.62): cada puntaje cubre los días que pregunta | H-2-1 |
 | L-3.2 | Días malos sin registrar (MNAR) | 3.15 | Revisar `dia_dificil` y días sin diario; no confiar en promedios de periodos con muchos huecos | — |
 | L-3.3 | Tasa de respuesta a avisos desconocida | 3.5.3 | Usar `n_muestreos` con cautela; no hay denominador | H-2-3 |
 | L-3.4 | Recuerdo frente a experiencia | 3.4 | No tratar `valencia` y `muestreo_valencia` como intercambiables | — |
 | L-3.5 | Registros por iniciativa propia sesgados hacia eventos | 3.5.4 | Preferir `muestreo_valencia` para «cómo estoy en general» | — |
-| L-3.6 | «No respondí» codificado como 0 | 3.7.3, 3.12.3 | Interpretar `ctx_*`, `hab_*`, `sueno_recordado` como cotas inferiores | H-2-4 |
+| L-3.6 | «No respondí» codificado como 0 | 3.7.3, 3.12.3 | `sueno_recordado`, hábitos antes de existir y «las tres» resueltos en 10c (D.63); `ctx_*` y hábitos no marcados siguen como cotas inferiores | H-2-4 |
 | L-3.7 | `retroactivo` poco fiable | 3.7.4 | No usarlo como control del sesgo de recuerdo hasta corregir | H-2-2 |
-| L-3.8 | Perfil proyectado hacia atrás | 3.11 | Desconfiar de `vida_*` en días anteriores a la primera respuesta | H-2-5 |
+| L-3.8 | Perfil proyectado hacia atrás | 3.11 | Resuelto en 10c para los perfiles nuevos (D.74); en los ya llenados, desconfiar de `vida_*` antes de la primera respuesta | H-2-5 |
 | L-3.9 | Reactividad | 3.14 | Descartar o separar las primeras semanas de cada medición nueva | — |
 | L-3.10 | Instrumentos adaptados (periodo de 7 días) | 3.9.1 | Usar los puntajes para compararte contigo, no con normas | — |
 | L-3.11 | Anclaje al calificar el día | 3.4 | Tener presente que `valencia` y `muestreo_valencia` no son independientes | H-2-11 |
@@ -571,7 +582,7 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 | Flujo, necesidades, evaluación del estrés | Aproximación | Csikszentmihalyi y LeFevre (1989); Deci y Ryan (2000); Lazarus y Folkman (1984) |
 | Predicción de mañana y su error | Validado (idea) / Diseño propio (variable) | Wilson y Gilbert (2005) |
 | WHO-5, PSS-4, UCLA-3, TIPI | Validado (instrumentos) / Aproximación (periodo adaptado) | Topp et al. (2015); Cohen et al. (1983); Hughes et al. (2004); Gosling et al. (2003) |
-| Asignación de cuestionarios a días | Diseño propio (con error) | — (H-2-1) |
+| Asignación de cuestionarios a días | Diseño propio | Ventana del periodo preguntado, primera respuesta que cubre (10c) |
 | Brújula política | Diseño propio | — |
 | Etapas de vida desde el perfil | Diseño propio | — |
 | Categorías de sueños por ejes | Aproximación | Hall y Van de Castle (1966); Domhoff (2003) |
@@ -585,8 +596,8 @@ En «Medir» hay una **prueba de reacción** breve (`PantallaReaccion`, en `ui/p
 
 1. La app mide el ánimo en **dos ejes** (valencia y activación) y de **tres formas**: en el momento (avisos al azar y registros propios), al recordar el día (diario) y como creencia general (cuestionarios). Cada forma tiene sesgos distintos y **no son intercambiables**.
 2. Los avisos usan **muestreo aleatorio estratificado**: 3 al día por omisión, uno por tramo de la ventana 10:00–21:00, con margen de 45 minutos. Es un diseño estándar.
-3. El hallazgo más grave del módulo: **los puntajes de los cuestionarios se asignan en el panel a días de otras semanas** (ventanas de 14 y 30 días hacia atrás, con sobrescritura) (H-2-1). Hasta corregirlo, no conviene cruzarlos con variables diarias.
-4. Varias variables codifican «no respondí» como 0 (`sueno_recordado`, contextos, hábitos, «las tres» necesidades) (H-2-4); el perfil se proyecta hacia atrás (H-2-5); la marca `retroactivo` no refleja cuándo se llenó el ánimo (H-2-2).
+3. El hallazgo más grave del módulo era que **los puntajes de los cuestionarios se asignaban en el panel a días de otras semanas** (ventanas de 14 y 30 días hacia atrás, con sobrescritura) (H-2-1). Desde la entrega 10c, cada puntaje cubre solo los días que pregunta y cada día se queda con la primera respuesta que lo cubre (D.62).
+4. Varias variables codificaban «no respondí» como 0 (`sueno_recordado`, contextos, hábitos, «las tres» necesidades) (H-2-4); en 10c se corrigieron `sueno_recordado`, los hábitos antes de existir y «las tres» (D.63); los contextos siguen la convención de la pantalla. El perfil se proyectaba hacia atrás (H-2-5; corregido para los perfiles nuevos en 10c, D.74); la marca `retroactivo` no reflejaba cuándo se llenó el ánimo (H-2-2; corregido en 10b). Los cierres guardados otro día ya no cuentan en el panel (D.74).
 5. No se guarda cuántos avisos se mostraron, así que la tasa de respuesta no se puede calcular (H-2-3).
 6. El **registro de un toque** para días difíciles es una buena defensa contra el sesgo de los días malos sin registrar.
 7. Los cuestionarios están bien puntuados (incluidas las preguntas inversas), pero WHO-5 y PSS-4 usan un periodo de 7 días distinto al original, y algunos puntos de corte que muestra la app no los pude verificar.

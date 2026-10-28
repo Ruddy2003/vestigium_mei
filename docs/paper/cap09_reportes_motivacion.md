@@ -31,20 +31,21 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | Cifra | Cómo se calcula exactamente |
 |---|---|
 | **Días con diario** | Días con texto en el diario **o** con valencia del día. |
-| **Ánimo del día** (`valDe`) | La valencia del diario; **si no hay**, el promedio de la valencia de los registros de ánimo de ese día (avisos y propios). |
-| **Ánimo medio** | Promedio de los «ánimos del día» que existen. |
+| **Ánimo del día** (`valDe`) | La valencia del diario, como `valencia` en el panel y en R (desde la entrega 10c). Hasta entonces, si no había valencia del diario, se usaba el promedio de los registros de ánimo de ese día. |
+| **Ánimo medio** | Promedio de los «ánimos del día» que existen. El reporte lo rotula «ánimo medio del diario (de 7)» y, si en el periodo hubo días con valencia solo en los avisos (`diasSoloAvisos`), añade «*N* días solo con avisos no cuentan». |
 | **Mejor y peor día** | El día con mayor y menor «ánimo del día»; en empate, el primero. Con el mejor día se muestra su «mejor momento» (hasta 90 caracteres). |
 | **Racha de diario** | La racha más larga **dentro del periodo** de días con texto o valencia. |
 | **Hábitos cumplidos** | Hábitos activos marcados ÷ (hábitos activos × días con documento de diario). |
 | **Sueño medio** | Promedio de las noches del reloj con **más de 120 minutos** (las más cortas se descartan como siestas o errores). |
-| **Hora de dormir media** | Promedio de las horas de inicio; las anteriores a las 15:00 suman 24 (la 01:00 cuenta como 25:00) para no promediar la 01:00 con las 23:00 como si fuera mediodía. |
+| **Hora de dormir media** | Promedio de las horas de inicio, con la misma regla que el panel y R (`Exportar.horaDecimal`, desde 10c): de noche, las anteriores a las **12:00** suman 24 (la 01:00 cuenta como 25:00) para no promediar la 01:00 con las 23:00 como si fuera mediodía. Antes el corte era a las 15:00, y una siesta larga que empezara a las 13:00 contaba como 37:00. La hora se lee en la zona del teléfono. |
 | **Pasos** | Promedio de los días con pasos > 0. Km: los del reloj o, si no hay, pasos × 0.00075. |
-| **Mejor marca** | El máximo de peso × (1 + repeticiones/30) en series de 1 a 15 repeticiones: la **fórmula de Epley** para estimar la repetición máxima. |
+| **Mejor marca** | La mayor repetición máxima estimada del periodo con `Macrofactor.e1rm`, la misma que usan la exportación (`e1rm_kg`), Fuerza, Totales y `vm_fuerza` en R (desde 10c, D.72): peso × (1 + repeticiones/30) (**fórmula de Epley**), solo en series de **1 a 12** repeticiones y sin calentamientos, redondeada a 0.1 kg. Antes se aceptaban hasta 15 repeticiones y los calentamientos. Ejemplo: series de 100 × 15, 120 × 5 y un calentamiento de 130 × 8 → antes 164.7 kg (el calentamiento); ahora **140 kg**. Tus apps usa la misma función. |
+| **Gasto e ingresos** | Por el **día del diario** (`Gasto.dia`, `Ingreso.dia`: antes de las 5:00 cuenta para el día anterior), igual que el panel; los ingresos se contaban por su fecha de calendario hasta 10c, así que un ingreso de madrugada caía en otro día que su gasto. Totales usa la misma regla desde 10c (D.77). |
 | **Tazas de café** | Cafeína total ÷ 95 mg. |
 | **Personas, temas** | Las @ y # del diario (una vez por día) y de los momentos no privados. |
 | **Comparación con el periodo anterior** | Solo si el periodo anterior tiene **al menos 3 días** con dato. |
 
-**Detalle a saber** (H-8-10; también señalado en H-5-15, junto con otras diferencias de criterio entre los reportes y el panel). El «ánimo del día» mezcla dos instrumentos distintos: la valencia recordada del diario y, cuando falta, el promedio de los registros momentáneos. El capítulo 3 (sección 3.3.4) explica por qué no son la misma medida. Si un mes tiene pocos diarios y muchos avisos, su «ánimo medio» no es comparable con el de un mes con diario completo.
+**Detalle a saber** (H-8-10 y H-5-15, resueltos en 10c, D.77). Hasta la entrega 10c, el «ánimo del día» mezclaba dos instrumentos distintos: la valencia recordada del diario y, cuando faltaba, el promedio de los registros momentáneos. El capítulo 3 (sección 3.3.4) explica por qué no son la misma medida: si un mes tenía pocos diarios y muchos avisos, su «ánimo medio» no era comparable con el de un mes con diario completo, ni con `mean(panel$valencia)` en R. Ahora el ánimo medio usa solo la valencia del diario, y el reporte dice cuántos días tenían solo avisos. Ejemplo (inventado): una semana con valencia del diario 5, 6 y 4 en tres días y avisos con promedio 3 en otros dos: antes, ánimo medio (5 + 6 + 4 + 3 + 3) / 5 = 4.2; ahora (5 + 6 + 4) / 3 = **5.0**, «2 días solo con avisos no cuentan». La **activación** del día sigue completándose con los avisos cuando falta la del diario.
 
 ---
 
@@ -230,7 +231,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 
 ## 9.9 Resumen del capítulo
 
-1. Los reportes y «Tu año» usan un mismo resumen, `Periodo.calcular`; su «ánimo del día» mezcla la valencia del diario con el promedio de los avisos cuando falta el diario (H-8-10).
+1. Los reportes y «Tu año» usan un mismo resumen, `Periodo.calcular`. Hasta la entrega 10c su «ánimo del día» mezclaba la valencia del diario con el promedio de los avisos (H-8-10); ahora usa la valencia del diario, la hora de dormir y los ingresos siguen las reglas del panel, y la mejor marca es la misma 1RM de la exportación (D.72, D.77).
 2. Los reportes se generan solos (lunes y día 1) y se guardan en las carpetas públicas de imágenes y descargas; su contenido y privacidad se tratan en el capítulo 10.
 3. La visualización combina codificaciones precisas (barras con eje y números) con otras gruesas (colores, iconos); las comparaciones con el periodo anterior no tienen noción de azar (H-8-11).
 4. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas: una buena decisión para no abandonar. Dos logros secretos premian valores de la valencia (H-8-6).
