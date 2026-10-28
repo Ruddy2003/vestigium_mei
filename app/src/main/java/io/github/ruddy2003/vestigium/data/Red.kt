@@ -4,7 +4,7 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** Peticiones HTTP mínimas. Solo se usan para clima/aire (Open-Meteo), mosaicos del mapa y Google Drive. */
+/** Peticiones HTTP mínimas: clima y aire (Open-Meteo), Google Drive, Spotify y las fichas de obras (TMDB, TVmaze, RAWG, Google Books, Open Library, Crossref). */
 object Red {
     const val AGENTE = "VestigiumMei/1.0 (Android; uso personal)"
 

@@ -325,7 +325,8 @@ private fun Dinamica() {
         Cifra(d.mssd?.let { fmt(it) } ?: "—", "inestabilidad (MSSD)", Modifier.weight(1f)); Cifra(d.inercia?.let { "%.2f".format(it) } ?: "—", "inercia", Modifier.weight(1f))
     }
     Tarjeta(Modifier.padding(top = 10.dp)) {
-        Clave("dificiles", "%.0f%% de tus días con valencia 1 o 2".format(d.dificiles))
+        // «Muy difíciles» (1 o 2) no es lo mismo que la racha dura (3 o menos): por eso se nombran distinto (H-5-12).
+        Clave("muy difíciles", "%.0f%% de tus días con valencia 1 o 2".format(d.dificiles))
         Clave("racha buena", "${d.rachaBuena} días seguidos con 5 o más")
         Clave("racha dura", "${d.rachaDificil} días seguidos con 3 o menos")
         d.dentroDelDia?.let { Clave("intradía", "DE de %.2f entre avisos de un mismo día".format(it)) }

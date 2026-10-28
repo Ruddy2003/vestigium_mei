@@ -1,6 +1,6 @@
 # Capítulo 9. Reportes, visualización y motivación
 
-> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales; de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`). **Los ejemplos son inventados.** Qué datos privados llegan a cada salida está en el capítulo 10.
+> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales; de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`). **Los ejemplos son inventados.** Qué datos privados llegan a cada salida está en el capítulo 10.
 
 ---
 
@@ -49,7 +49,7 @@ La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las regla
 
 ### 9.2.3 Comparar con el periodo anterior
 
-`Reportes.cambio` escribe «+0.4 de ánimo frente al periodo anterior» cuando la diferencia es al menos **0.05** (o **0.5** en las cifras sin decimales); si no, «igual que el periodo anterior». **No hay ninguna noción de ruido** (H-8-11): una semana con 3 días de ánimo puede variar medio punto respecto de la anterior por puro azar, y el reporte lo presenta como un cambio. **[Diseño propio]**: razonable para un resumen descriptivo, pero conviene leer estas flechas como «qué pasó», no como «qué cambió de verdad».
+`Reportes.cambio` escribe «+0.4 de ánimo frente al periodo anterior» cuando la diferencia es al menos **0.05** (o **0.5** en las cifras sin decimales); si no, «igual que el periodo anterior». Hasta 10e no había ninguna noción de ruido (H-8-11). Desde 10e (D.101), si la diferencia es menor que su **error típico**, √(*s*₁²/*n*₁ + *s*₂²/*n*₂) (`Periodo.errorDif`, con al menos 3 días en cada periodo), dice «parecido al periodo anterior». *Ejemplo:* ánimo 5, 6, 4, 5 esta semana y 4, 6, 3, 5, 5 la anterior: diferencia 0.4, error típico 0.65, «parecido». **[Aproximación]**: un error típico es poco exigente y no descuenta que los días seguidos se parecen, así que el filtro se queda corto; conviene leer estas flechas como «qué pasó», no como «qué cambió de verdad».
 
 ---
 
@@ -57,7 +57,7 @@ La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las regla
 
 `TuAnio.calcular` usa el mismo `Periodo` del año y le suma equivalencias, récords, la palabra del año y otras piezas (versión completa, §9.3.5). Tres merecen atención:
 
-- **El día más raro** sale de `Analisis.atipicos` (umbral 2.8, 15 variables fijas), que solo devuelve días de los últimos 365 contados desde hoy: al ver un año pasado puede faltar.
+- **El día más raro** sale de `Analisis.atipicos` (umbral 2.8, 15 variables fijas). Desde 10e usa todos los días del año elegido (D.100); antes solo devolvía días de los últimos 365 contados desde hoy, y al ver un año pasado podía faltar.
 - **«La relación del año»** es la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días. Elegir el máximo |*r*| entre cientos de pares sobrestima su tamaño: es la que tuvo más suerte además de ser real (un sesgo de selección; capítulo 6). El *r* mostrado será, en promedio, más alto que el verdadero. **[Aproximación]**.
 - **Las predicciones de enero** (8 preguntas) incluyen tu **ánimo medio**: crean una expectativa sobre la variable que luego mides. Es una forma de **reactividad**, es decir, de que medir algo cambie lo que se mide (sección 9.6).
 
@@ -127,8 +127,8 @@ También desde el esquema 13, una campaña aceptada el miércoles ya no cuenta e
 
 1. Los reportes y «Tu año» usan un mismo resumen, `Periodo.calcular`; desde la entrega 10c su «ánimo del día» es solo la valencia del diario (H-8-10).
 2. Los reportes se generan solos (lunes y día 1) y se guardan en carpetas públicas; los automáticos van en modo discreto y sin la frase del mejor momento (capítulo 10, H-8-4).
-3. La visualización combina codificaciones precisas (barras con eje y números) con otras gruesas (colores, iconos) **[Aproximación]**; las comparaciones con el periodo anterior no tienen noción de azar (H-8-11).
+3. La visualización combina codificaciones precisas (barras con eje y números) con otras gruesas (colores, iconos) **[Aproximación]**; las comparaciones con el periodo anterior dicen «parecido» desde 10e cuando la diferencia es menor que su error típico, un filtro que se queda corto (H-8-11).
 4. «La relación del año» es el máximo |*r*| de muchos pares y sobrestima su tamaño **[Aproximación]**.
-5. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas **[Diseño propio]**. Dos logros secretos premian valores de la valencia (H-8-6).
+5. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas **[Diseño propio]**. Dos logros secretos premian valores de la valencia (H-8-6, pendiente: es una decisión del autor).
 6. Las campañas son **intervenciones**. Desde el esquema 13 son variables del panel (`campana_<reto>`, `campanas_n`), obvias con lo que cada reto mueve (H-8-7, resuelto).
 7. La gamificación puede ayudar a no abandonar, con efectos que dependen del contexto (Hamari et al., 2014); las recompensas pueden cambiar la motivación y lo que se mide (Campbell, 1979).

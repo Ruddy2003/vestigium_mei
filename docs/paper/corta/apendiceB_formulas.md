@@ -1,6 +1,6 @@
 # Apéndice B. Fórmulas
 
-_Las fórmulas esenciales del núcleo estadístico (capítulo 6), con la función de origen. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`). Se conservan las etiquetas B.n de la versión completa, que trae además la media móvil (B.17), las cifras de «Tus números» (B.19) y la ventana de los cuestionarios (B.21). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
+_Las fórmulas esenciales del núcleo estadístico (capítulo 6), con la función de origen. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`). Se conservan las etiquetas B.n de la versión completa, que trae además la media móvil (B.17), las cifras de «Tus números» (B.19) y la ventana de los cuestionarios (B.21). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
 
 ---
 
@@ -28,13 +28,13 @@ d = número de día del calendario (o de semana × 7). V = 10 días (por día) o
 
 $$ r_1 = r\big(\{x_i\},\{x_{i+1}\}\big)\quad\text{sobre los pares con } d_{i+1}-d_i=\text{paso} $$
 
-paso = 1 (por día) o 7 (por semana). Si hay menos de 10 pares, r₁ = 0. Antes de usarse se recorta a [−0.5, 0.97]. `Estadistica.ar1(serie, paso)` es la misma autocorrelación sobre una serie con fechas: devuelve `null` (y quien la usa toma 0) con menos de 10 pares.
+paso = 1 (por día) o 7 (por semana). Si hay menos de 10 pares (o la serie no varía), desde 10e r₁ = 0.3 (`Estadistica.AR1_SIN_DATO`, D.95; **[Diseño propio]**); hasta 10e, 0. Antes de usarse se recorta a [−0.5, 0.97]. `Estadistica.ar1(serie, paso)` es la misma autocorrelación sobre una serie con fechas: devuelve `null` con menos de 10 pares; las correlaciones toman entonces 0.3 desde 10e (antes, 0) y la diferencia de medias (B.11a), 0.
 
 ### B.5 Número efectivo de días — `Estadistica.relaciones`, `Estadistica.correlacionEf`; en R, `vm_relaciones` y `vm_factores`
 
 $$ n_{Ef}=\operatorname{acotar}\Big(n\,\frac{1-r_a r_b}{1+r_a r_b},\ \min(4,n),\ n\Big) $$
 
-r_a, r_b: autocorrelaciones (B.4) de cada variable, sobre restos o valores según el modo. Si n_Ef ≤ 3, la pareja no se evalúa. Referencia: Bretherton et al. (1999); Pyper y Peterman (1998).
+r_a, r_b: autocorrelaciones (B.4) de cada variable, sobre restos o valores según el modo; la que no se puede estimar vale 0.3 desde 10e (antes, 0), en la app y en R (`.vm_ar1_sin_dato`, también en `vm_cruce` y `vm_presion`). Si n_Ef ≤ 3, la pareja no se evalúa. Referencia: Bretherton et al. (1999); Pyper y Peterman (1998).
 
 ### B.6 Transformación de Fisher — `Estadistica.ic95`, `Estadistica.relaciones`, `Estadistica.correlacionEf`
 

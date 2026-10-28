@@ -1,6 +1,7 @@
 """Figura 8.2 - Resultado de un experimento SINTÉTICO calculado como Experimentos.resultado: antes de la entrega 10c
 (Welch con 1.96 fijo) y desde la 10c (Estadistica.diferenciaEnDias: t de Welch con el error estándar de cada grupo
-corregido por su autocorrelación de orden 1, ρ + (1 + 4ρ)/n, acotada en [0, 0.9]); d de Cohen con desviación agrupada;
+corregido por su autocorrelación de orden 1, ρ + (1 + 4ρ)/n, acotada en [0, 0.9]); tamaño del efecto con desviación agrupada: d de Cohen
+hasta la entrega 10e y, desde 10e (D.96), g de Hedges = d · (1 − 3 / (4 · (n₁ + n₂) − 9));
 y tasa de falsas señales por simulación con los dos métodos.
 Uso: python fig21_resultado_experimento.py [salida.png]"""
 import sys, math
@@ -134,7 +135,7 @@ txt = (f"con: {a_.mean():.2f} (n={na})   sin: {b_.mean():.2f} (n={nb})\n"
        f"  1.96 y autocorr. 0.3: {d - 1.96 * se * fac:+.2f} a {d + 1.96 * se * fac:+.2f}\n"
        f"  app desde 10c:        {n10[1]:+.2f} a {n10[2]:+.2f}\n"
        f"    (ρ con {n10[3]:.2f}, sin {n10[4]:.2f}; {n10[5]:.1f} gl)\n"
-       f"d de Cohen {dc:.2f} (Hedges: {dc * J:.2f})")
+       f"g de Hedges {dc * J:.2f} (app desde 10e; d de Cohen {dc:.2f})")
 a.text(.01, .985, txt, transform=a.transAxes, ha="left", va="top", fontsize=7.6, family="monospace", color=estilo.TINTA,
        bbox=dict(fc="white", ec=estilo.GRIS_CLARO))
 a.set_title("Un experimento inventado: 6 semanas alternas, 1 día de lavado, efecto real +0.5", loc="left", fontsize=9.3, color=estilo.TINTA)

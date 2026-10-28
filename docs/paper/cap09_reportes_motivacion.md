@@ -1,6 +1,6 @@
 # Capítulo 9. Reportes, visualización y motivación
 
-> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales. Para cada uno dice qué muestra, de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» o «desde el esquema 13» y está en el Apéndice D. **Los ejemplos son inventados.**
+> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales. Para cada uno dice qué muestra, de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10e» o «desde el esquema 13» y está en el Apéndice D. **Los ejemplos son inventados.**
 >
 > **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función; cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-8-n (este capítulo y el 10 forman el módulo 8; los H-9-n son del módulo 9) y se detallan en `hallazgos.md`. Lo relativo a qué datos privados llegan a cada salida está en el capítulo 10.
 >
@@ -95,11 +95,23 @@ La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las regla
 
 ### 9.3.4 Comparar con el periodo anterior
 
-`Reportes.cambio` escribe «+0.4 de ánimo frente al periodo anterior» cuando la diferencia es al menos **0.05** (o **0.5** en las cifras sin decimales); si no, «igual que el periodo anterior». **No hay ninguna noción de ruido** (H-8-11): una semana con 3 días de ánimo puede variar medio punto respecto de la anterior por puro azar, y el reporte lo presenta como un cambio. En los experimentos (capítulo 8) y en las correlaciones (capítulo 6) la app sí calcula intervalos; en los reportes, no. **[Diseño propio]**: es razonable para un resumen descriptivo, pero conviene leer estas flechas como «qué pasó», no como «qué cambió de verdad».
+`Reportes.cambio` compara cuatro cifras con el periodo anterior: el ánimo, las horas de sueño, los pasos y los minutos de pantalla. Decide así, en este orden:
+
+1. Si la diferencia es menor que **0.05** (o **0.5** en las cifras sin decimales: pasos y pantalla), «igual que el periodo anterior».
+2. **Desde 10e** (D.101, H-8-11): si es menor que su **error típico**, «parecido al periodo anterior (la diferencia cabe en lo que varían tus días)». El error típico (`Periodo.errorDif`) es
+
+$$EE = \sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}$$
+
+   con $s^2$ la varianza de los días de cada periodo (dividiendo entre *n* − 1) y *n* sus días con dato. Mide cuánto podría moverse la diferencia de promedios solo porque los días varían. Se calcula si los dos periodos tienen al menos 3 días; si no, se salta este paso.
+3. Si no, «+0.4 de ánimo frente al periodo anterior» (o «−», con la cifra y su unidad).
+
+*Ejemplo (inventado).* Esta semana, ánimo 5, 6, 4 y 5 (media 5.0, varianza 0.667); la anterior, 4, 5, 3, 5 y 4 (media 4.2, varianza 0.70). *EE* = √(0.667/4 + 0.70/5) = √0.307 = 0.55. La diferencia, 0.8, es mayor: «+0.8 de ánimo frente al periodo anterior». Si la anterior hubiera sido 4, 6, 3, 5 y 5 (media 4.6, varianza 1.30), *EE* = √(0.167 + 0.26) = 0.65 y la diferencia, 0.4, es menor: «parecido al periodo anterior».
+
+**Hasta 10e no había ninguna noción de ruido**: una semana con 3 días de ánimo podía variar medio punto respecto de la anterior por puro azar, y el reporte lo presentaba como un cambio. **[Aproximación]**: el umbral de un error típico es poco exigente (una diferencia así de grande sale por azar alrededor de un tercio de las veces) y, como no descuenta que los días seguidos se parecen (la autocorrelación, capítulo 6), el error real es mayor que el calculado: el filtro se queda corto, y algunas diferencias que se reportan como cambio siguen siendo ruido. Tampoco se aplica cuando el periodo actual tiene menos de 3 días con dato. En los experimentos (capítulo 8) y en las correlaciones (capítulo 6) la app calcula intervalos completos; en los reportes, solo este filtro. Conviene leer estas flechas como «qué pasó», no como «qué cambió de verdad».
 
 ### 9.3.5 «Tu año»
 
-`TuAnio.calcular` usa el mismo `Periodo` del año y le suma: equivalencias («escribiste el equivalente a *N* páginas», a 300 palabras por página), un día típico armado con lo más frecuente, lo que pasó una sola vez, **el día más raro** (`Analisis.atipicos` con umbral 2.8, sobre 15 variables fijas; `atipicos` solo devuelve días de los últimos 365 contados desde hoy, así que al ver un año pasado puede faltar o quedarse en parte del año), récords, **la relación más fuerte del año** (la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días), la palabra del año, un «arquetipo», tus medallas y cómo te fue con las **predicciones de enero** (8 preguntas: obras, países, ciudades, pasos, sueño, **ánimo medio**, persona más mencionada y palabras).
+`TuAnio.calcular` usa el mismo `Periodo` del año y le suma: equivalencias («escribiste el equivalente a *N* páginas», a 300 palabras por página), un día típico armado con lo más frecuente, lo que pasó una sola vez, **el día más raro** (`Analisis.atipicos` con umbral 2.8, sobre 15 variables fijas; desde 10e, D.100, «Tu año» le pasa `desde = null` y usa todos los días del año elegido; antes, `atipicos` solo devolvía días de los últimos 365 contados desde hoy, así que al ver un año pasado podía faltar o quedarse en parte del año, H-14-3), récords, **la relación más fuerte del año** (la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días), la palabra del año, un «arquetipo», tus medallas y cómo te fue con las **predicciones de enero** (8 preguntas: obras, países, ciudades, pasos, sueño, **ánimo medio**, persona más mencionada y palabras).
 
 Dos observaciones:
 
@@ -221,7 +233,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 | Reportes generados solos y guardados en carpetas públicas | Diseño propio | — (ver capítulo 10) |
 | Barras con eje y número para el sueño; medalla de color con número para el ánimo | Aproximación | Cleveland y McGill (1984) |
 | Línea de 7 h; alerta bajo 6.3 h | Diseño propio | 7 h: recomendación habitual [sin verificar] |
-| Comparación con el periodo anterior sin incertidumbre | Diseño propio | — |
+| Comparación con el periodo anterior: «parecido» si la diferencia es menor que su error típico (desde 10e; antes, sin incertidumbre) | Aproximación (no descuenta la autocorrelación) | — |
 | Logros de constancia (k de n días) en lugar de rachas | Diseño propio (bien fundado) | — |
 | Logros que premian valores de la valencia | Diseño propio (contrario a la ley de Campbell) | Campbell (1979) |
 | Campañas semanales como retos | Diseño propio | Hamari et al. (2014) sobre gamificación |
@@ -233,8 +245,8 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 
 1. Los reportes y «Tu año» usan un mismo resumen, `Periodo.calcular`. Hasta la entrega 10c su «ánimo del día» mezclaba la valencia del diario con el promedio de los avisos (H-8-10); ahora usa la valencia del diario, la hora de dormir y los ingresos siguen las reglas del panel, y la mejor marca es la misma 1RM de la exportación (D.72, D.77).
 2. Los reportes se generan solos (lunes y día 1) y se guardan en las carpetas públicas de imágenes y descargas; su contenido y privacidad se tratan en el capítulo 10.
-3. La visualización combina codificaciones precisas (barras con eje y números) con otras gruesas (colores, iconos); las comparaciones con el periodo anterior no tienen noción de azar (H-8-11).
-4. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas: una buena decisión para no abandonar. Dos logros secretos premian valores de la valencia (H-8-6).
+3. La visualización combina codificaciones precisas (barras con eje y números) con otras gruesas (colores, iconos); las comparaciones con el periodo anterior no tenían noción de azar; desde 10e dicen «parecido» cuando la diferencia es menor que su error típico, un filtro que se queda corto porque no descuenta la autocorrelación (H-8-11).
+4. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas: una buena decisión para no abandonar. Dos logros secretos premian valores de la valencia (H-8-6, pendiente: cambiarlos o quitarlos es una decisión del autor, porque quitarlos borraría medallas ya ganadas).
 5. Las campañas son **intervenciones**. Hasta el esquema 12 no quedaban registradas como variable y podían confundir el análisis observacional (H-8-7). Desde el 13 son variables del panel (`campana_<reto>`, `campanas_n`), obvias con lo que cada reto mueve.
 6. La gamificación puede ayudar a no abandonar, pero con efectos dependientes del contexto; las recompensas pueden cambiar la motivación y lo que se mide.
 

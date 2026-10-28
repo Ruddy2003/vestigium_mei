@@ -1,6 +1,6 @@
 # Capítulo 4. Sensores, datos pasivos e importaciones
 
-> **Para qué sirve este capítulo.** Explica, fuente por fuente, **qué mide la app sin que tú escribas nada** (datos *pasivos*: lo que el teléfono o el reloj registran solos) y **qué entra cuando cargas un archivo** (datos *importados*): cómo se obtiene, qué tan confiable es, qué pasa cuando falta y a qué día se asigna. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`). Los ejemplos son **inventados**. Los problemas se numeran H-3-n (por el módulo que los encontró) y se detallan en `hallazgos.md`.
+> **Para qué sirve este capítulo.** Explica, fuente por fuente, **qué mide la app sin que tú escribas nada** (datos *pasivos*: lo que el teléfono o el reloj registran solos) y **qué entra cuando cargas un archivo** (datos *importados*): cómo se obtiene, qué tan confiable es, qué pasa cuando falta y a qué día se asigna. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». Los ejemplos son **inventados**. Los problemas se numeran H-3-n (por el módulo que los encontró) y se detallan en `hallazgos.md`.
 
 ---
 
@@ -48,7 +48,7 @@ En cada pulso, con permiso de ubicación *en segundo plano*, la app pide una lec
 
 Según la documentación de Android (`Location.getAccuracy`), el campo `precision` es el **radio horizontal con 68 % de confianza**: hay 68 % de probabilidad de que la posición verdadera esté dentro de ese círculo. Es normal ver errores de decenas o cientos de metros. Desde la 10d, un punto importado **sin** precisión cuenta como de **100 m** (`Db.PRECISION_SIN_DATO`), no de 0 m. **[Diseño propio]**.
 
-`Movilidad.kmPorDia` suma la distancia en línea recta entre cada par de puntos consecutivos (fórmula del *haversine*, radio terrestre 6 371 km) **si** pasaron entre **1 segundo y 2 horas**, la velocidad implícita es menor a **70 m/s** (descarta saltos imposibles) y la distancia es mayor a **30 m** (descarta el «temblor» del GPS quieto). Va al día lógico del segundo punto; un día con puntos pero sin tramos que cuenten vale **0 km**. Es una **cota inferior**: la línea recta siempre es ≤ el camino real. **[Aproximación]** (**H-3-5**).
+`Movilidad.kmPorDia` suma la distancia en línea recta entre cada par de puntos consecutivos (fórmula del *haversine*, radio terrestre 6 371 km) **si** pasaron entre **1 segundo y 2 horas**, la velocidad implícita es menor a **70 m/s** (descarta saltos imposibles) y la distancia es mayor a **30 m** (descarta el «temblor» del GPS quieto). Va al día lógico del segundo punto; un día con puntos pero sin tramos que cuenten vale **0 km**. Es una **cota inferior**: la línea recta siempre es ≤ el camino real, y se queda más corta los días con menos puntos. **[Aproximación]** (**H-3-5**, resuelto por documentación: no se pondera por fuente).
 
 ### 4.4.2 Lugares y visitas (`data/Lugares.kt`)
 
@@ -151,15 +151,15 @@ Una revisión de dispositivos de consumo encontró **pasos y frecuencia cardiaca
 
 Traen datos que el teléfono no ve, con tres riesgos: llegan **a destiempo**, **parciales** y en **formatos que cambian**.
 
-**Spotify (`data/Spotify.kt`).** (a) La **conexión directa** lee cada **~25–30 min** las **últimas 50** reproducciones; si no se consulta a tiempo, las de más **se pierden**. Como Spotify da la hora en que **terminó** la canción y la app resta la duración completa, una canción parada a la mitad queda con un inicio **demasiado temprano** (**H-3-9**; error de minutos). (b) El **historial descargable** trae cuánto escuchaste de verdad y **reemplaza** lo anterior en esos días. `canciones` cuenta solo reproducciones de **≥ 30 s**.
+**Spotify (`data/Spotify.kt`).** (a) La **conexión directa** lee cada **~25–30 min** las **últimas 50** reproducciones; si no se consulta a tiempo, las de más **se pierden**. Como Spotify da la hora en que **terminó** la canción y la app resta la duración completa, una canción parada a la mitad queda con un inicio **demasiado temprano** (**H-3-9**; error de minutos; resuelto por documentación: la app solo recibe la duración de la canción). (b) El **historial descargable** trae cuánto escuchaste de verdad (`ms_played`) y **reemplaza** lo anterior en esos días, lo que corrige ese error. `canciones` cuenta solo reproducciones de **≥ 30 s**.
 
 **Google Takeout y Kindle.** Del historial de YouTube y búsquedas se quitan los anuncios; un «video visto» es un **evento** de abrirlo, **no una duración**. De comentarios **solo se guarda la fecha**. En Kindle, la fecha es **cuándo subrayaste**, no cuándo leíste.
 
-**WhatsApp.** **Solo conteos y tiempos, ningún texto**. Una **conversación nueva** es un mensaje que llega **más de 4 horas** después del anterior; un **tiempo de respuesta** cuenta **si fue en menos de 12 horas**; un chat es **de grupo** con **más de 2 autores**. **Fechas ambiguas (H-3-10):** si en todo el chat ni el primer ni el segundo número de la fecha pasan de 12, **asume día/mes**, y un chat corto en mes/día se leería al revés. **[Aproximación]**.
+**WhatsApp.** **Solo conteos y tiempos, ningún texto**. Una **conversación nueva** es un mensaje que llega **más de 4 horas** después del anterior; un **tiempo de respuesta** cuenta **si fue en menos de 12 horas**; un chat es **de grupo** con **más de 2 autores**. **Fechas ambiguas (H-3-10, resuelto en 10e, D.105):** si en todo el chat ni el primer ni el segundo número de la fecha pasan de 12, la app prueba día/mes y mes/día y se queda con la lectura en que los mensajes van en orden, como vienen en el archivo (menos retrocesos de fecha); con empate, día/mes (hasta la v90, siempre día/mes). Un chat de un solo día sigue sin poder decidirse. Los avisos de multimedia se reconocen en español, inglés, francés, portugués, italiano y alemán (`Importaciones.MULTIMEDIA`). **[Aproximación]** las medidas; **[Diseño propio]** la regla de las fechas.
 
 **Cold Turkey (laptop).** Minutos por app y sitio, repartidos en productivo, ocio, social y otro con listas de palabras. Desde la 10d (`ColdTurkey.coincide`), en los **sitios** la palabra debe ocupar **partes completas del dominio** («x.com» coincide con `m.x.com`, ya no con `dropbox.com`), lo que corrige **H-3-6**. **[Diseño propio]**.
 
-**MacroFactor (`data/Macrofactor.kt`).** Nutrición, alimentos y series de entrenamiento del `.xlsx`; la hora de la **última cafeína**; series efectivas **sin calentamientos**. Lo que registra **depende de lo que anotas**, y su gasto energético es un **algoritmo propio de MacroFactor**, no una medición. El 1RM estimado se explica en el capítulo 5. Otras importaciones, en la versión completa, §4.6.7.
+**MacroFactor (`data/Macrofactor.kt`).** Nutrición, alimentos y series de entrenamiento del `.xlsx`; la hora de la **última cafeína** (desde 10e, `cafeina_ultima_h` del panel sale de las tomas de MacroFactor y de la app, por día lógico; capítulo 5); series efectivas **sin calentamientos**. Lo que registra **depende de lo que anotas**, y su gasto energético es un **algoritmo propio de MacroFactor**, no una medición. El 1RM estimado se explica en el capítulo 5. Otras importaciones, en la versión completa, §4.6.7.
 
 ---
 
@@ -190,4 +190,4 @@ Traen datos que el teléfono no ve, con tres riesgos: llegan **a destiempo**, **
 3. Los minutos de wifi, audio, carga y luz son **estimaciones por muestreo** que **subestiman** a propósito.
 4. El **sueño** del reloj está bien cuidado en el cálculo, pero es un dato de consumo: bueno para la duración, débil para la vigilia y las etapas.
 5. **Detectar un lugar** necesita unos **30 min** reales, no 20; la distancia es una cota inferior.
-6. La 10d corrigió el barómetro (H-3-3), Cold Turkey (H-3-6) y la precisión de los puntos importados; siguen abiertos H-3-4, H-3-5, H-3-7, H-3-9, H-3-10 y el inciso a de H-3-8.
+6. La 10d corrigió el barómetro (H-3-3), Cold Turkey (H-3-6) y la precisión de los puntos importados; la 10e, las fechas ambiguas de WhatsApp (H-3-10), y H-3-5 y H-3-9 quedaron resueltos por documentación. Siguen abiertos H-3-4, H-3-7 y el inciso a de H-3-8.

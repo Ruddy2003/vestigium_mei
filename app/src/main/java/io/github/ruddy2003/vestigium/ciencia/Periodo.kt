@@ -54,6 +54,8 @@ object Periodo {
         val valAnterior: Double?, val suenoAnterior: Double?, val pasosAnterior: Double?, val pantallaAnterior: Double?,
         /** Días con ánimo solo en los avisos (sin el del diario): no cuentan en [valMedia]. */
         val diasSoloAvisos: Int = 0,
+        /** Error típico de cada diferencia con el periodo anterior ([errorDif]): «valencia», «sueno», «pasos», «pantalla». */
+        val errorAnterior: Map<String, Double> = emptyMap(),
     ) {
         val n: Int get() = fechas.size
     }
@@ -68,6 +70,16 @@ object Periodo {
 
     /** Días con valencia en los avisos pero sin la del diario: no entran en el ánimo medio, y el reporte dice cuántos son. */
     private fun soloAvisos(f: String): Boolean = Repo.dias[f]?.valencia == null && Repo.momentos.any { it.fecha == f && it.esAnimo && it.valencia != null }
+
+    /**
+     * Error típico de la diferencia de dos promedios de días, √(s₁²/n₁ + s₂²/n₂) (H-8-11): una diferencia menor no se distingue
+     * de lo que varían tus días. No descuenta que los días seguidos se parecen, así que se queda corto. Null con menos de 3 días.
+     */
+    fun errorDif(a: List<Double>, b: List<Double>): Double? {
+        if (a.size < 3 || b.size < 3) return null
+        fun v(x: List<Double>) = x.average().let { m -> x.sumOf { (it - m) * (it - m) } / (x.size - 1) }
+        return kotlin.math.sqrt(v(a) / a.size + v(b) / b.size)
+    }
 
     fun calcular(ctx: Context?, ini: String, fin: String): Datos {
         val n = (ChronoUnit.DAYS.between(Fechas.parse(ini), Fechas.parse(fin)).toInt() + 1).coerceAtLeast(1)
@@ -207,6 +219,12 @@ object Periodo {
             valAnterior = pv.takeIf { it.size >= 3 }?.average(), suenoAnterior = ps.takeIf { it.size >= 3 }?.average(),
             pasosAnterior = pp.takeIf { it.size >= 3 }?.average(), pantallaAnterior = ppa.takeIf { it.size >= 3 }?.average(),
             diasSoloAvisos = fechas.count { soloAvisos(it) },
+            errorAnterior = listOfNotNull(
+                errorDif(vals.filterNotNull(), pv)?.let { "valencia" to it },
+                errorDif(sue.mapNotNull { it.sueno_min?.div(60.0) }, ps)?.let { "sueno" to it },
+                errorDif(pasosL, pp)?.let { "pasos" to it },
+                errorDif(pant.map { it.total_min.toDouble() }, ppa)?.let { "pantalla" to it },
+            ).toMap(),
         )
     }
 }

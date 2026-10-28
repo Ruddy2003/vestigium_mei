@@ -27,7 +27,7 @@ object Dinamicas {
         "tema_" to setOf("palabras"), "hito_" to setOf("hitos_n"),
         "lug_" to setOf("lugares_distintos", "distancia_km"),
         "app_" to setOf("pantalla_min", "desbloqueos"), "ntf_" to setOf("notificaciones"),
-        "gcat_" to setOf("gasto_total", "gasto_imprevisto", "balance_dinero"), "icat_" to setOf("ingreso_total", "balance_dinero"),
+        "gcat_" to setOf("gasto_total", "gasto_imprevisto", "gasto_imprevisto_monto", "balance_dinero"), "icat_" to setOf("ingreso_total", "balance_dinero"),
         "art_" to setOf("canciones", "musica_min", "audifonos_min"), "ytc_" to setOf("yt_vistos", "busquedas"),
         "gen_" to setOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada"), "obr_" to setOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada", "calificacion_obra"),
         "med_" to setOf("medicamentos_n"), "det_" to setOf("impulso", "recaida"),

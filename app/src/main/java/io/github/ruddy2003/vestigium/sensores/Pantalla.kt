@@ -31,8 +31,8 @@ object Pantalla {
     } catch (e: Exception) { pkg }
 
     /**
-     * El uso del día lógico [fecha] (v13): de las 05:00 a las 05:00 del día siguiente, así lo de la madrugada cuenta para
-     * el día que estabas viviendo. Los días calculados antes de la v13 quedaron con el día de calendario (ver [PantallaDia.ventana]).
+     * El uso del día lógico [fecha] (esquema 13): de las 05:00 a las 05:00 del día siguiente, así lo de la madrugada cuenta para
+     * el día que estabas viviendo. Los días calculados antes del esquema 13 quedaron con el día de calendario (ver [PantallaDia.ventana]).
      */
     fun calcular(ctx: Context, fecha: String): PantallaDia? {
         if (!tienePermiso(ctx)) return null

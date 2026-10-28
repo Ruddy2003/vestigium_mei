@@ -1,6 +1,6 @@
 # Capítulo 7. Personas y red social
 
-> **Para qué sirve este capítulo.** Explica **cómo la app registra a la gente de tu vida** y qué hace con eso: cómo reconoce a una persona cuando la nombras con @, cómo guarda qué es para ti (y cómo eso cambia con los años), cómo mide qué tan cerca la sientes, cómo dibuja la **Constelación** y la **Red**, qué calcula R con `vm_red()` y cómo entran las personas en las correlaciones. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» y está en el Apéndice D. **Las personas, fechas y números de los ejemplos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo la app registra a la gente de tu vida** y qué hace con eso: cómo reconoce a una persona cuando la nombras con @, cómo guarda qué es para ti (y cómo eso cambia con los años), cómo mide qué tan cerca la sientes, cómo dibuja la **Constelación** y la **Red**, qué calcula R con `vm_red()` y cómo entran las personas en las correlaciones. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10e» y está en el Apéndice D. **Las personas, fechas y números de los ejemplos son inventados.**
 >
 > **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, pero las cifras, umbrales y condiciones del código van tal cual, con el nombre de la función de donde salen. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-6-n (el número es el del módulo 6, que escribió este capítulo) y se detallan en `hallazgos.md`.
 >
@@ -36,7 +36,7 @@ La misma persona puede «aparecer» de forma distinta según la función, porque
 | Función (archivo) | Diario (`nota`) | Momentos | Momentos privados (recaída, libido) | Sueño (texto y temas) | Mejor/peor momento | Notas del cronómetro | Cartas | Equivalencias |
 |---|---|---|---|---|---|---|---|---|
 | `Personas.menciones` (`data/Personas.kt`): lista de «Tu gente», «¿Quién es @x?», duplicados | sí | sí | no (desde 10a) | sí | no | sí | destinatario | sí |
-| Variable `personas` del panel (`Estadistica.panel`) | sí | no | no | no | no | no | no | sí |
+| Variable `personas` del panel (`Estadistica.panel`) | sí | sí (desde 10e) | no | no | no | no | no | sí |
 | `Presencias.delDia` → `personas_vistas`, `vi_*`, `penso_en_*`, `cercania_media`, `pen_*` | sí | sí | no | no | no | no | no | sí |
 | Familia `per_` (`Dinamicas.construir`) | sí | sí | no (desde 10a) | sí (en los temas del sueño, solo los que llevan @, desde 10c) | sí | no | destinatario y texto | sí |
 | Constelación (`Constelacion.calcular`) | sí | sí | no | no | no | no | no | sí |
@@ -119,7 +119,7 @@ Cada persona (`Persona` en `data/Modelo.kt`) tiene `relacion`, `cercania`, `deta
 - la relación es distinta de la anterior, **o**
 - la cercanía es distinta de la anterior, **incluido** pasar de «sin cercanía» a un valor o de un valor a «sin cercanía» (desde la entrega 10c; antes solo contaba si las dos existían).
 
-Si hay cambio, se agrega al historial `CambioRelacion(hasta = hoy, relación anterior, cercanía anterior)`. «Hoy» es el **día lógico en que guardas**. Desde 10c, la cercanía que se guarda es la que dejas en el formulario: si desmarcas los círculos, la cercanía **se borra** (antes, una cercanía vacía conservaba la anterior y no había forma de quitarla).
+Si hay cambio, se agrega al historial `CambioRelacion(hasta = hoy, relación anterior, cercanía anterior)`. Por omisión, «hoy» es el **día lógico en que guardas**. Desde la entrega 10e (D.102), cuando el formulario (`FormularioPersona`, en `ui/pantallas/Gente.kt`) detecta un cambio de relación o de cercanía en alguien ya clasificado, ofrece «cambió antes de hoy…»: eliges en un calendario el día en que cambió de verdad, y ese día se pasa como `hoy` a `Personas.guardar`. La fecha no puede ser posterior a hoy ni anterior o igual al `hasta` del cambio anterior (si eliges una así, se mueve al día siguiente de ese `hasta`), para que el historial siga en orden. A la primera clasificación no se le puede poner fecha: su `desde` es siempre el día en que la guardas. **[Diseño propio]**. Desde 10c, la cercanía que se guarda es la que dejas en el formulario: si desmarcas los círculos, la cercanía **se borra** (antes, una cercanía vacía conservaba la anterior y no había forma de quitarla).
 
 **Al consultar** (`Personas.relacionEn(nombre, fecha)`): ordena el historial por `hasta` y toma la **primera** entrada con `fecha < hasta`; si ninguna cumple, usa la relación actual. `cercaniaEn` hace lo mismo con la cercanía. Desde 10c, si esa entrada no tenía cercanía, el resultado es **«sin cercanía»** en ese tramo (antes usaba la actual, y una cercanía puesta hoy se aplicaba a todos los días pasados). En palabras: **cada entrada del historial vale para los días anteriores a su `hasta`** (y posteriores al `hasta` de la entrada anterior); el propio día del cambio ya tiene la relación nueva.
 
@@ -143,17 +143,17 @@ Si estuviste con ella el 2 abr 2026, ese día se enciende `vi_pareja` (no `vi_ex
 
 ![Figura 7.1](figuras/fig19_relacion_fecha.png)
 
-*Figura 7.1. Historial de una persona inventada. Rayado: días anteriores a la primera clasificación, a los que se les proyecta la relación más antigua. Cuadriculado: días entre la ruptura real y el día en que la anotaste, que cuentan con la relación vieja. Script: `figuras/fig19_relacion_fecha.py`.*
+*Figura 7.1. Historial de una persona inventada. Rayado: días anteriores a la primera clasificación, a los que se les proyecta la relación más antigua. Cuadriculado: días entre la ruptura real y el día en que la anotaste, que cuentan con la relación vieja si al guardar no dices cuándo fue (desde 10e se puede decir). Script: `figuras/fig19_relacion_fecha.py`.*
 
 **Razonamiento.** En un registro de años, las relaciones cambian. Si los análisis usaran la relación de hoy, todos los días con quien hoy es expareja contarían como «estuve con una expareja», incluidos los días en que era tu pareja: eso mezclaría dos situaciones opuestas. Guardar la relación por fecha es la forma correcta de tratar una **covariable que cambia con el tiempo** (*time-varying covariate*: un dato de contexto que no es fijo, sino que tiene un valor por periodo). **[Diseño propio]**, bien planteado.
 
 ### 7.4.5 Cuándo falla
 
-- **La fecha del cambio es la fecha en que lo anotas**, no la fecha en que ocurrió. No hay forma de decir «terminamos hace tres semanas». En la Figura 7.1, los 23 días entre la ruptura real (28 mar) y la anotación (20 abr) cuentan como pareja (H-6-3).
+- **La fecha del cambio es la que tú digas (resuelto en parte en 10e, D.102).** Hasta 10e era siempre el día en que lo anotabas, sin forma de decir «terminamos hace tres semanas»: en la Figura 7.1, los 23 días entre la ruptura real (28 mar) y la anotación (20 abr) cuentan como pareja (H-6-3). Desde 10e puedes poner el 28 mar con «cambió antes de hoy…», y esos 23 días pasan a «expareja». Si no lo dices, sigue valiendo el día en que guardas, así que el error de la figura sigue ocurriendo cuando se te olvida.
 - **Antes de la primera clasificación se proyecta la relación más antigua conocida.** Si clasificaste a alguien como amistad en 2025, los días de 2024 (cuando quizá era un conocido) también cuentan como amistad. Es el mismo problema que el perfil proyectado hacia atrás (H-2-5).
 - **Conocerte no tiene historial por persona.** «A quién ves más» y «quiénes viven contigo» se leen con su valor **actual** para todas las fechas (H-6-4, parte que sigue vigente). Si alguien deja de vivir contigo y lo quitas de la lista, `vi_convivientes` deja de contarlo también en los días en que sí vivía contigo; si no lo quitas, lo sigue contando en los días posteriores.
 - **Comparaciones sin canon (resuelto en 10c, D.73).** `Perfiles.relacion` buscaba en `perfil.cercanas` y en `perfil.convivientes` con el texto tal cual; ahora compara los nombres canónicos, igual que `vi_convivientes` (H-6-4).
-- **Cercanía (resuelto en 10c, D.73).** Antes no se podía borrar, y ponerle cercanía a quien no tenía no contaba como cambio, así que se aplicaba a todos los días pasados (H-6-12). Ahora se borra al desmarcarla, y el paso de «sin cercanía» a un valor queda en el historial. Lo que sigue: la fecha del cambio es la de la anotación, y una cercanía puesta antes de esta versión, sin historial, sigue valiendo hacia atrás.
+- **Cercanía (resuelto en 10c, D.73).** Antes no se podía borrar, y ponerle cercanía a quien no tenía no contaba como cambio, así que se aplicaba a todos los días pasados (H-6-12). Ahora se borra al desmarcarla, y el paso de «sin cercanía» a un valor queda en el historial. Lo que sigue: una cercanía puesta antes de 10c, sin historial, sigue valiendo hacia atrás; desde 10e, la fecha de un cambio de cercanía también se puede elegir (D.102).
 - **Varios cambios el mismo día**: si cambias dos veces en un día, la relación intermedia se pierde (las dos entradas tienen el mismo `hasta`). Es irrelevante en la práctica.
 
 ---
@@ -210,7 +210,7 @@ Se calculan solo para los días en que **se pudo nombrar a alguien** (`Dinamicas
 
 | Variable | Definición exacta | Aparece en la lista de análisis si… |
 |---|---|---|
-| `personas` | Número de @personas **distintas** (canónicas) en el **texto del diario**, sin importar su estado (vacío los días sin texto ni momento con @; 0 si ese día solo un momento nombró a alguien) | siempre |
+| `personas` | Número de @personas **distintas** (canónicas) en el **texto del diario** y en los **momentos no privados** de ese día, sin importar su estado (vacío los días sin texto ni momento con @). Desde 10e (D.93); antes solo contaba el diario, y un día en que solo un momento nombró a alguien valía 0 (H-14-2) | siempre |
 | `cercanos` | Número de personas con estado «estuve» y grupo `familia`, `pareja`, `amistad` o `casa` | hay alguien en Conocerte o en Tu gente |
 | `vi_familia`, `vi_pareja`, `vi_amistades` | 1 si estuviste con al menos una persona de ese grupo; 0 si no | igual |
 | `vi_convivientes` | 1 si estuviste con alguien cuyo nombre canónico está en la lista **actual** de convivientes (también pasada por `canon` desde 10c) **y** tiene algún grupo de relación | igual |
@@ -240,7 +240,7 @@ Un día inventado. Diario: «Desayuné con @ana y @beto. Me acordé de @caro.» 
 Relaciones de ese día: ana = familia (cercanía 6), beto = pareja (7), caro = amistad cercana (5), dani = amistad (4), eli = colega (sin cercanía).
 
 1. `Presencias.delDia`: ana → estuve, beto → estuve, caro → pensé (lo marcaste en el diario), dani → pensé (solo en un momento «pensando en», sin compañía). eli no aparece (los sueños no cuentan aquí).
-2. `personas` = 3 (ana, beto, caro: solo el diario).
+2. `personas` = 4 (ana, beto y caro del diario, dani del momento; eli no, porque los sueños no cuentan). Antes de 10e valía 3: solo contaba el diario.
 3. `personas_vistas` = 2, `personas_pensadas` = 2, `personas_mensajes` = 0.
 4. `cercanos` = 2 (ana familia, beto pareja). `vi_familia` = 1, `vi_pareja` = 1, `vi_amistades` = 0 (caro y dani fueron «pensé»).
 5. `penso_en_amistades` = 1 (caro y dani son del grupo amistad). `penso_en_familia` = 0.
@@ -391,18 +391,19 @@ Estilo: líneas declaradas de 2 dp y más opacas (punteadas si son «colegas»);
 
 Exportar con `minJuntos = 1` permite elegir el umbral en R. Pero ojo: el `grado` del archivo **no** es el que muestra la app (que usa 2 días). Desde la entrega 10d el diccionario lo dice en esa columna: «líneas que dijiste (salvo "no se conocen") o con 1 día o más juntas. La Red de la app pide 2 días y muestra 45 personas; aquí van hasta 400» (P-32, incisos c y d de H-6-7, que se documentan en vez de cambiarse).
 
-### 7.11.2 Qué hace `vm_red(declaradas = FALSE, min_juntos = 2)`
+### 7.11.2 Qué hace `vm_red(declaradas = FALSE, min_juntos = 2, min_dias = 3)`
 
 1. Quita **siempre** los pares declarados «no se conocen», aunque aparezcan juntos muchos días (como la app; desde la entrega 10d). De los demás, se queda con los declarados **o**, si `declaradas = FALSE`, con los pares con `dias_juntos ≥ min_juntos`. Si no hay ningún par (`vm_red_vinculos.csv` vacío o ausente), sigue con una red sin líneas en vez de fallar (H-9-23).
-2. Arma el grafo no dirigido con **todos** los nodos del archivo (hasta 400), tengan o no líneas.
-3. Calcula:
+2. **Elige a las personas** (desde 10e, D.106): deja fuera a quien se mencionó menos de `min_dias` días (por omisión, 3), salvo que tenga alguna línea dicha en Tu gente que no sea «no se conocen». Avisa cuántas quedan de cuántas, y se detiene si no queda nadie. Las líneas de las personas que salen también se quitan. Con `min_dias = 0` usa **todos** los nodos del archivo (hasta 400), como antes de 10e. El 3 es **[Diseño propio]**: quita a quien apareció una o dos veces sin exigir tanto que la red se vacíe.
+3. Arma el grafo no dirigido con esas personas, tengan o no líneas.
+4. Calcula:
    - **`densidad`** = `igraph::edge_density(g)`: líneas / (*n*(*n*−1)/2), sin el ego.
    - **`componentes`** = `sum(igraph::components(g)$csize > 1)`: número de grupos con al menos una línea, **sin contar a las personas sin líneas**, como la app (desde la entrega 10d; antes, `components(g)$no` contaba a cada persona aislada como un grupo).
    - **`aisladas`** = `sum(igraph::components(g)$csize == 1)`: las personas sin ninguna línea, aparte.
    - **`restriccion_burt`**: agrega un nodo «yo» unido a todas las personas y calcula `igraph::constraint` para «yo».
    - **`grado`**: grado de cada persona, de mayor a menor.
    - **`composicion`**: cuántas personas hay de cada relación (`table(relacion)`).
-4. Dibuja el grafo con tamaño 4 + 2·√(días mencionada) y color por relación.
+5. Dibuja el grafo con tamaño 4 + 2·√(días mencionada) y color por relación.
 
 Requiere el paquete `igraph`.
 
@@ -439,19 +440,19 @@ Las métricas son estándar **[Validado]** como definiciones (Burt, 2004; Perry 
 
 - Las líneas derivadas son co-menciones (sección 7.8), no relaciones confirmadas. Con `declaradas = TRUE` solo cuentan las que dijiste, que son más fiables pero quizá incompletas.
 - Los nodos son personas **mencionadas**, no tu red real.
-- **La restricción y la densidad dependen mucho del número de personas.** Con el ego unido a todas, la restricción mínima es 1/*n*: con 400 personas puede bajar hasta 0.0025 solo por haber mencionado a mucha gente una vez. Como el archivo exportado no pone un mínimo de días para los nodos, cada persona mencionada un solo día baja la densidad y la restricción sin cambiar nada de tu red de verdad (H-6-8). Para comparar en el tiempo, conviene filtrar por un mínimo de `dias_mencion` antes de calcular.
+- **La restricción y la densidad dependen mucho del número de personas.** Con el ego unido a todas, la restricción mínima es 1/*n*: con 400 personas puede bajar hasta 0.0025 solo por haber mencionado a mucha gente una vez. El archivo exportado no pone un mínimo de días para los nodos, y hasta 10e `vm_red()` tampoco: cada persona mencionada un solo día bajaba la densidad y la restricción sin cambiar nada de tu red de verdad (H-6-8). Desde 10e (D.106), `vm_red()` pide por omisión 3 días (`min_dias = 3`). La app no filtra así (toma las 45 más mencionadas); queda dicho aquí. Para comparar en el tiempo, conviene usar el mismo `min_dias` en todos los periodos.
 
 ### 7.11.5 Diferencias entre la app y R (H-6-7)
 
 | Aspecto | App (pantalla Red) | R (`vm_red`) |
 |---|---|---|
-| Personas | 45 más mencionadas + declaradas | hasta 400 + declaradas, sin mínimo de días |
+| Personas | 45 más mencionadas + declaradas | hasta 400, con al menos `min_dias` días (3 por omisión, desde 10e) + las que tienen una línea dicha |
 | Pares «no se conocen» que aparecen juntos ≥ umbral | **no** cuentan como línea | **no** cuentan (igual desde 10d; antes sí contaban) |
 | Grupos / componentes | sin contar a las personas sin líneas | sin contar a las personas sin líneas (desde 10d), y aparte `aisladas` |
 | Grado | con co-mención ≥ 2 días | en el CSV, con ≥ 1 día; en R, recalculado con `min_juntos` |
 | Relación | grupo actual (desde 10c) | `composicion` y color por la columna `grupo` desde 10c (las exportaciones viejas, sin esa columna, usan `relacion`) |
 
-Desde la entrega 10d (P-32) solo quedan dos diferencias, las de personas y de grado, y el diccionario las dice. Con los mismos datos, la app y R pueden dar todavía **densidades y número de grupos distintos** por esas dos razones, no por error de cálculo; con `min_juntos = 2` y filtrando a las mismas 45 personas, deberían coincidir (no lo comprobé con datos reales: R no corre en la compilación automática; sí corrí `vm_red()` con un archivo inventado de 3 personas, un par con 3 días juntas y otro declarado «no se conocen»: 1 grupo, 1 aislada).
+Desde la entrega 10d (P-32) solo quedan dos diferencias, las de personas y de grado, y el diccionario las dice. Con los mismos datos, la app y R pueden dar todavía **densidades y número de grupos distintos** por esas dos razones, no por error de cálculo; con `min_juntos = 2` y filtrando a las mismas 45 personas, deberían coincidir; desde 10e, ese filtro no es el que hace `min_dias`, que corta por días y no por puesto (no lo comprobé con datos reales: R no corre en la compilación automática; sí corrí `vm_red()` con un archivo inventado de 3 personas, un par con 3 días juntas y otro declarado «no se conocen»: 1 grupo, 1 aislada).
 
 ---
 
@@ -511,13 +512,13 @@ La pista 4 del plan («la constelación toma los momentos excepto el tipo `recai
 ## 7.15 Resumen del capítulo
 
 1. La app reconoce a las personas **solo por `@nombre`**, en minúsculas, con equivalencias que desde la entrega 10c se siguen en cadena (hasta 8 pasos, con los ciclos unidos). Cada función lee textos distintos (sección 7.2), así que «aparecer» no significa lo mismo en todas partes.
-2. La **relación con historial** es una buena decisión: los análisis usan la relación de cada día. Sus límites: la fecha del cambio es la de la anotación (H-6-3), lo anterior a la primera clasificación se proyecta, y Conocerte no tiene historial (H-6-4); desde 10c, al menos, sus nombres se comparan con las equivalencias, y la cercanía se puede borrar y queda en el historial.
+2. La **relación con historial** es una buena decisión: los análisis usan la relación de cada día. Sus límites: lo anterior a la primera clasificación se proyecta, y Conocerte no tiene historial (H-6-4); desde 10c, al menos, sus nombres se comparan con las equivalencias, y la cercanía se puede borrar y queda en el historial. Desde 10e se puede decir en qué día cambió de verdad la relación (H-6-3, en parte); si no se dice, vale el día de la anotación.
 3. La **cercanía** usa la escala IOS, validada, con etiquetas añadidas y respondida una vez por persona; `cercania_media` describe a quién nombras, no cómo te fue con ellos ese día.
 4. Las variables sociales del panel ponían **0 en días sin diario** pero con algún momento o documento (H-6-13); desde 10c quedan vacías los días sin diario escrito ni momento con @. **No hay variable por persona de «estuve con @x»**: `per_` mezcla presencia, pensamiento, sueños y cartas, y su etiqueta lo dice (H-6-2).
 5. La **Constelación** es una visualización de frecuencia y recencia, coloreada con la relación actual. La **Red** combina co-menciones (≥ 2 días) y vínculos declarados (con nombres unidos desde 10c), con un dibujo de fuerzas estándar; sus dos fallos de presentación (color y «solo lo que dije») se corrigieron en 10c (H-6-5, H-6-6).
-6. `vm_red()` calcula densidad, componentes, **restricción de Burt** y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8) y **diferían de la app** en cuatro puntos concretos (H-6-7). Desde la entrega 10d, `vm_red()` ya no cuenta como línea los pares «no se conocen» ni cuenta como grupo a quien no tiene líneas, y no falla sin pares; la diferencia de personas (45 frente a 400) y de grado (2 días frente a 1) se documenta en el diccionario.
+6. `vm_red()` calcula densidad, componentes, **restricción de Burt** y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8; desde 10e, `vm_red()` deja fuera por omisión a quien se mencionó menos de 3 días) y **diferían de la app** en cuatro puntos concretos (H-6-7). Desde la entrega 10d, `vm_red()` ya no cuenta como línea los pares «no se conocen» ni cuenta como grupo a quien no tiene líneas, y no falla sin pares; la diferencia de personas (45 frente a 400) y de grado (2 días frente a 1) se documenta en el diccionario.
 7. Desde 10a, los momentos privados (impulso, recaída, libido) no entran en nada de este capítulo; hasta v84, recaídas y libido entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1).
-8. En el módulo 6 se identificaron **15 hallazgos** (H-6-1 a H-6-15) y no se cambió código. Después, el módulo 10 resolvió H-6-1 (10a), H-6-2 (documentándolo), H-6-5, H-6-6, H-6-10, H-6-12, H-6-13 y H-6-14 (10c) y H-6-7 (10d), y resolvió en parte H-6-4, H-6-9 y H-6-11 (10c). Siguen pendientes H-6-3 (fecha del cambio de relación), H-6-8 (métricas dominadas por personas poco mencionadas) y H-6-15 (diferencias con la IOS original).
+8. En el módulo 6 se identificaron **15 hallazgos** (H-6-1 a H-6-15) y no se cambió código. Después, el módulo 10 resolvió H-6-1 (10a), H-6-2 (documentándolo), H-6-5, H-6-6, H-6-10, H-6-12 y H-6-14 (10c) y H-6-7 (10d), y resolvió en parte H-6-4, H-6-9, H-6-11 y H-6-13 (10c). En la entrega 10e se resolvió H-6-8 (`vm_red(min_dias = 3)`) y en parte H-6-3 (la fecha del cambio se puede elegir; lo anterior a la primera clasificación sigue proyectado), y H-6-15 (diferencias con la IOS original) se da por resuelto con su descripción en la sección 7.5. Ninguno de los 15 queda pendiente: 10 resueltos y 5 en parte (H-6-3, H-6-4, H-6-9, H-6-11 y H-6-13).
 
 ---
 

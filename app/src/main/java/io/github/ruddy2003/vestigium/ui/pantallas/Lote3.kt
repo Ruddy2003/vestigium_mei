@@ -527,7 +527,7 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
                 Text("Semanas con la acción según el plan: ${"%.2f".format(r.con.average())} · sin ella: ${"%.2f".format(r.sin.average())}. Diferencia ${"%+.2f".format(d)} (intervalo de 95 %: ${"%.2f".format(lo)} a ${"%.2f".format(hi)}).",
                     style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
                 if (!r.provisional) Ayuda(if (lo > 0 || hi < 0) "El intervalo no toca el cero: es una señal para ti." else "El intervalo incluye el cero: todavía no se distingue del azar.")
-                r.d?.let { Ayuda("Tamaño del efecto (d de Cohen): ${"%.2f".format(it)}, ${Experimentos.tamano(it)}.") }
+                r.d?.let { Ayuda("Tamaño del efecto (g de Hedges): ${"%.2f".format(it)}, ${Experimentos.tamano(it)} para cómo varían tus días; no se compara con los estudios entre personas.") }
                 Ayuda("Comparación según el plan: semanas que tocaba la acción contra semanas que no, la hayas hecho o no. Es la comparación justa; si no siempre cumpliste, el efecto real puede ser mayor. " +
                     "El intervalo cuenta que los días seguidos se parecen.", Modifier.padding(top = 2.dp))
                 // El aviso fuerte depende del plan real: un sorteo que salió en bloque también es un antes y después (P-18).
@@ -536,11 +536,12 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
                     (if (bloque) ", y como el plan quedó en bloque (primero una condición y luego la otra), pesa más." else "."), Modifier.padding(top = 2.dp))
                 else if (bloque && e.diseno != "antes_despues") Ayuda("El sorteo quedó en bloque: primero una condición y luego la otra. Se lee como un antes y después, y cualquier cambio con el tiempo se confunde con el efecto.", Modifier.padding(top = 2.dp))
             }
-            // Cuánto cumpliste, con lo que respondiste en «¿Lo hiciste hoy?» (en el Día).
+            // Cuánto cumpliste, con lo que respondiste en «¿Lo hiciste hoy?» (en el Día); en «Creatina», también con tus tomas.
             r.cumplimiento?.let { c ->
                 fun pct(p: Double?) = p?.let { "%.0f %%".format(it * 100) } ?: "sin respuestas"
                 Text("Lo hiciste: ${pct(c.pSi)} de los días que tocaba (${c.respSi} de ${c.diasSi} respondidos) y ${pct(c.pNo)} de los que no tocaba (${c.respNo} de ${c.diasNo}).",
                     style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
+                if (e.plantilla == "creatina") Ayuda("Los días sin respuesta se completan con tu registro de suplementos (si anotaste creatina ese día).")
                 if (c.sinRespuesta > 0) Ayuda("${c.sinRespuesta} días sin respuesta: no cuentan como «no».")
                 r.cociente?.let { Ayuda("Si el efecto viene de hacerlo, hacerlo de verdad cambiaría tu medida en unos ${"%+.2f".format(it)} (la diferencia según el plan entre la diferencia de cumplimiento). " +
                     "Es una aproximación: supone que saber qué semana tocaba no cambia nada por sí solo.") }

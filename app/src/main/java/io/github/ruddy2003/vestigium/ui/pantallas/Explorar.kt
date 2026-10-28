@@ -99,6 +99,8 @@ fun PantallaExplorar(nav: Nav) {
         }
     }
     fun abrirFicha(id: String) { Herramienta.actual = "factores"; Herramienta.objetivo = id; Herramienta.sinTendencia = sinTendencia; nav.ir("analisis") }
+    // Por semana, la ficha de una variable es por día: la pareja tocada se abre abajo, en «Cruzar dos variables», por semanas (H-9-40).
+    var abrirCruce by remember { mutableStateOf(0) }
 
     Hoja("Análisis", subtitulo = "Qué se mueve con qué: relaciones, herramientas y experimentos. Para modelos completos, exporta y abre vestigium.R.",
         buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
@@ -123,7 +125,8 @@ fun PantallaExplorar(nav: Nav) {
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(bottom = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 FOCOS.forEach { (id, n) -> Ficha(n, foco == id) { foco = id } }
             }
-            Interruptor("Quitar tendencias", sinTendencia, "Compara cada día con sus ~3 semanas alrededor. Así, dos cosas que solo cambiaron con el tiempo (los días se acortan mientras bajas de peso) dejan de parecer relacionadas.") { sinTendencia = it }
+            Interruptor("Quitar tendencias", sinTendencia, "Compara cada día con sus ~3 semanas alrededor. Así, dos cosas que solo cambiaron con el tiempo (los días se acortan mientras bajas de peso) dejan de parecer relacionadas. " +
+                "No quita el ritmo de la semana: dos cosas que cambian juntas el fin de semana siguen saliendo juntas (en R, vm_relaciones(sin_semana = TRUE) lo quita).") { sinTendencia = it }
             Interruptor("Mostrar también las obvias", verObvias, "Pares de la misma fuente o calculados uno del otro: calorías y proteína, eventos y minutos de agenda, pasos y minutos a pie.") { verObvias = it }
             val m = (if (porSemana) semanales else mejores)?.get(sinTendencia)
             if (m == null) Ayuda("Calculando…")
@@ -137,6 +140,9 @@ fun PantallaExplorar(nav: Nav) {
                     if (!verObvias && m.obvias > 0) append(" (dejé fuera ${m.obvias} obvias)")
                     append(". Al revisar tantas, algunas salen por puro azar; ya corregido eso, $firmes se sostienen. ")
                     if (m.lentas.isNotEmpty()) append("Sin tendencia no entran ${m.lentas.joinToString(", ") { "«" + it.nombre.lowercase() + "»" }}: casi solo cambian con las semanas. ")
+                    // Las etapas, cuestionarios y la brújula son escalones: casi siempre caen aquí (H-5-14).
+                    if (m.lentas.any { it.id.startsWith("vida_") || it.id.startsWith("pol_") || it.id.startsWith("esc_") })
+                        append("Las etapas de vida, los cuestionarios y la brújula cambian a saltos: para ellas mira «Antes y después», abajo, o apaga «Quitar tendencias» sabiendo que así las tendencias se cuelan. ")
                     if (firmes == 0) append("Con pocos días es normal que nada se sostenga; las de abajo son pistas, no hallazgos.")
                 })
                 val grupos = remember(lista) { agrupar(lista, 15) }
@@ -165,9 +171,11 @@ fun PantallaExplorar(nav: Nav) {
                                 "«${otra.nombre.lowercase()}» (${"%+.2f".format(p.r)})"
                             } + if (parecidas.size > 3) " y ${parecidas.size - 3} más" else ""
                             io.github.ruddy2003.vestigium.ui.TarjetaRelacion(c.a, c.b, c.r, detalle, q(c) >= 0.10, tambien,
-                                Modifier.clickable { abrirFicha(if (c.a.id == "valencia") c.b.id else c.a.id) })
+                                Modifier.clickable { if (porSemana) { x = c.a.id; y = c.b.id; desfase = false; abrirCruce++ } else abrirFicha(if (c.a.id == "valencia") c.b.id else c.a.id) })
                         }
                     }
+                    if (porSemana) Ayuda(if (abrirCruce > 0) "La pareja quedó abajo, en «Cruzar dos variables», por semanas." else "Toca una relación para verla abajo, en «Cruzar dos variables», por semanas.",
+                        Modifier.padding(top = 6.dp))
                     if (!todas && grupos.size > 5) TextButton(onClick = { todas = true }) {
                         Text("ver las ${grupos.size - 5} siguientes ▾", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     }
@@ -181,7 +189,7 @@ fun PantallaExplorar(nav: Nav) {
             }
         }
 
-        Seccion("Cruzar dos variables", plegable = true) {
+        Seccion("Cruzar dos variables", plegable = true, abrir = abrirCruce) {
             Tarjeta {
                 val nx = vars.firstOrNull { it.id == x }?.nombre ?: x
                 val ny = vars.firstOrNull { it.id == y }?.nombre ?: y
@@ -198,7 +206,7 @@ fun PantallaExplorar(nav: Nav) {
                     val base = if (porSemana) panelSemanal else panel
                     val paso = if (porSemana) 7L else 1L
                     val sx = io.github.ruddy2003.vestigium.ciencia.Analisis.serie(base, x); val sy = io.github.ruddy2003.vestigium.ciencia.Analisis.serie(base, y)
-                    val ef = Estadistica.correlacionEf(ps.map { it.x }, ps.map { it.y }, Estadistica.ar1(sx, paso) ?: 0.0, Estadistica.ar1(sy, paso) ?: 0.0)
+                    val ef = Estadistica.correlacionEf(ps.map { it.x }, ps.map { it.y }, Estadistica.ar1(sx, paso) ?: Estadistica.AR1_SIN_DATO, Estadistica.ar1(sy, paso) ?: Estadistica.AR1_SIN_DATO)
                     val ic = ef?.second
                     val nEf = ef?.third?.first
                     // La misma relación sin tendencia: cada valor menos el promedio de sus semanas cercanas.

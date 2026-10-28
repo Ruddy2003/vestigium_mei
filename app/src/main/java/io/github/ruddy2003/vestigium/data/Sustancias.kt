@@ -7,8 +7,8 @@ import java.time.LocalTime
  * Consumo de sustancias: episodios con nivel subjetivo (0 a 10), y dos estimaciones farmacológicas:
  * - Cafeína en el cuerpo (mg): cada dosis se absorbe en ~45 min y se elimina con la vida media que elijas (5 h por omisión).
  * - Alcohol en sangre (g/L, Widmark): absorción en ~30 min y eliminación constante de 0.15 g/L por hora.
- * Las dosis salen de MacroFactor (cada alimento con su hora) y, los días en que MacroFactor no tiene nada de esa sustancia,
- * de lo que anotes aquí. Así no se cuenta dos veces.
+ * Las dosis salen de MacroFactor (cada alimento con su hora) y de lo que anotes aquí; lo que aparece en los dos se cuenta una
+ * vez, toma por toma ([dosis]).
  */
 object Sustancias {
     /** Una bebida estándar: 14 g de alcohol puro. */
@@ -106,27 +106,42 @@ object Sustancias {
     /** La hora de un alimento de MacroFactor; si no se puede leer, el mediodía de su día, para no perder la dosis (P-20). */
     private fun msComida(fecha: String, hora: String): Long? = msDe(fecha, hora) ?: msDe(fecha, "12:00")
 
+    /** Hasta dónde un registro de aquí y uno de MacroFactor se toman por la misma toma (H-4-2). */
+    private const val MISMA_TOMA = 90 * MIN
+
     /**
-     * Cafeína (mg) y alcohol (g) con su hora entre dos días (de calendario), de MacroFactor y de tus registros.
-     * Por día y sustancia se usa una sola fuente: si MacroFactor tiene algo ese día, manda MacroFactor.
+     * Cafeína (mg) y alcohol (g) con su hora entre dos días (de calendario), de MacroFactor y de tus registros, sin contar dos
+     * veces lo que anotaste en los dos lados (H-4-2; antes, si MacroFactor tenía algo ese día, se ignoraba todo lo de aquí):
+     * - Cafeína: cada toma de aquí se empareja con una de MacroFactor a menos de 90 minutos y de cantidad parecida (de la mitad
+     *   al doble). La pareja cuenta una vez, con lo de aquí: su hora es la de la toma; la de MacroFactor, la del registro.
+     * - Alcohol: un episodio de aquí y lo de MacroFactor entre su inicio y su fin (±90 minutos) son lo mismo; cuenta la fuente
+     *   con más gramos.
      */
     fun dosis(desde: String, hasta: String, comidas: List<Comida>? = null): Pair<List<Dosis>, List<Dosis>> {
         val cs = comidas ?: runCatching { Repo.comidas(desde, hasta) }.getOrDefault(emptyList())
         val cafMf = cs.mapNotNull { c -> c.valores["cafeina_mg"]?.takeIf { it > 0 }?.let { v -> msComida(c.fecha, c.hora)?.let { Dosis(it, v) } } }
         val alcMf = cs.mapNotNull { c -> c.valores["alcohol_g"]?.takeIf { it > 0 }?.let { v -> msComida(c.fecha, c.hora)?.let { Dosis(it, v) } } }
-        val diasCaf = cafMf.map { Fechas.diaLogicoDeMillis(it.ms) }.toSet()
-        val diasAlc = alcMf.map { Fechas.diaLogicoDeMillis(it.ms) }.toSet()
         val ini = Fechas.inicioDia(desde) - 12 * H; val fin = Fechas.finDia(hasta) + 6 * H
-        val propios = Repo.consumos.filter { Fechas.millis(it.inicio) in ini..fin }
-        val cafPropia = propios.filter { it.sustancia == "cafeina" && it.fecha !in diasCaf && (it.cantidad ?: 0.0) > 0 }.map { Dosis(Fechas.millis(it.inicio), it.cantidad!!) }
+        val propios = Repo.consumos.filter { Fechas.millis(it.inicio) in ini..fin }.sortedBy { Fechas.millis(it.inicio) }
+        val cafLibres = cafMf.toMutableList()
+        val cafPropia = propios.filter { it.sustancia == "cafeina" && (it.cantidad ?: 0.0) > 0 }.map { c ->
+            val ms = Fechas.millis(c.inicio); val q = c.cantidad!!
+            cafLibres.filter { kotlin.math.abs(it.ms - ms) <= MISMA_TOMA && it.cantidad in (q * 0.5)..(q * 2.0) }.minByOrNull { kotlin.math.abs(it.ms - ms) }
+                ?.let { cafLibres.remove(it) }
+            Dosis(ms, q)
+        }
         // Las bebidas de un episodio se reparten a lo largo de la primera parte (o una cada 40 minutos si no hay fin).
-        val alcPropio = propios.filter { it.sustancia == "alcohol" && it.fecha !in diasAlc && (it.cantidad ?: 0.0) > 0 }.flatMap { c ->
+        val alcLibres = alcMf.toMutableList()
+        val alcPropio = propios.filter { it.sustancia == "alcohol" && (it.cantidad ?: 0.0) > 0 }.flatMap { c ->
             val n = c.cantidad!!; val a = Fechas.millis(c.inicio)
             val tramo = c.fin?.let { ((Fechas.millis(it) - a) * 0.7).toLong() }?.takeIf { it > 0 } ?: (40 * MIN * (n - 1).coerceAtLeast(0.0)).toLong()
             val k = kotlin.math.ceil(n).toInt().coerceAtLeast(1)
-            (0 until k).map { i -> Dosis(a + if (k == 1) 0 else tramo * i / (k - 1), (if (i == k - 1) n - (k - 1) else 1.0).coerceAtLeast(0.0) * GRAMOS_BEBIDA) }
+            val propias = (0 until k).map { i -> Dosis(a + if (k == 1) 0 else tramo * i / (k - 1), (if (i == k - 1) n - (k - 1) else 1.0).coerceAtLeast(0.0) * GRAMOS_BEBIDA) }
+            val z = c.fin?.let { Fechas.millis(it) }?.coerceAtLeast(a) ?: (a + tramo)
+            val mf = alcLibres.filter { it.ms in (a - MISMA_TOMA)..(z + MISMA_TOMA) }
+            if (mf.sumOf { it.cantidad } > propias.sumOf { it.cantidad }) emptyList<Dosis>() else { alcLibres.removeAll(mf); propias }
         }
-        return (cafMf + cafPropia).sortedBy { it.ms } to (alcMf + alcPropio).sortedBy { it.ms }
+        return (cafLibres + cafPropia).sortedBy { it.ms } to (alcLibres + alcPropio).sortedBy { it.ms }
     }
 
     /** Cafeína en el cuerpo (mg) en cada instante pedido. */

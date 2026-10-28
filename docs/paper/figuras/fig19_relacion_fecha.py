@@ -47,7 +47,7 @@ for d in dias + [None]:
 a.axvspan(d0, date(2025, 2, 1), ymin=.0, ymax=1, facecolor="none", hatch="////", edgecolor=estilo.GRIS, lw=0)
 a.text(date(2024, 12, 15), 1.07, "antes de clasificarla:\nla app proyecta «amistad»", ha="center", va="bottom", fontsize=7.5, color=estilo.TINTA_2, transform=a.get_xaxis_transform())
 a.axvspan(date.fromisoformat(REAL), date(2026, 4, 20), ymin=0, ymax=1, facecolor="none", hatch="xxxx", edgecolor=estilo.TINTA, lw=0)
-a.annotate("ruptura real (28 mar) → la anotas el 20 abr:\n23 días cuentan como «pareja»", (date(2026, 4, 8), 1.0), xytext=(date(2025, 11, 1), 1.12),
+a.annotate("ruptura real (28 mar), anotada el 20 abr sin decir cuándo fue:\n23 días cuentan como «pareja» (desde 10e se puede poner el 28 mar)", (date(2026, 4, 8), 1.0), xytext=(date(2025, 11, 1), 1.12),
            textcoords="data", xycoords=("data", "axes fraction"), fontsize=7.5, color=estilo.TINTA, arrowprops=dict(arrowstyle="-", color=estilo.GRIS, lw=.8))
 for f in ("2025-02-01", "2025-09-15", "2026-04-20"):
     a.axvline(date.fromisoformat(f), color=estilo.TINTA, lw=.8); a.text(date.fromisoformat(f), -.08, f"guardado\n{f}", ha="center", va="top", fontsize=7, transform=a.get_xaxis_transform())

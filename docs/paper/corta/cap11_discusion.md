@@ -1,6 +1,6 @@
 # Capítulo 11. Discusión, limitaciones y trabajo futuro
 
-> **Para qué sirve este capítulo.** Junta lo que dicen los capítulos 2 a 10 para responder tres preguntas: **qué se puede concluir y qué no** de los datos de Vestigium Mei; **qué amenazas a la validez quedan**, vistas en conjunto; y **qué falta**, en la app, en R y en este documento. No describe funciones nuevas: cada afirmación remite al capítulo donde está el detalle. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`); las cuentas de hallazgos son las del campo «Estado» de `hallazgos.md` al 28 de octubre de 2026. Los ejemplos son inventados.
+> **Para qué sirve este capítulo.** Junta lo que dicen los capítulos 2 a 10 para responder tres preguntas: **qué se puede concluir y qué no** de los datos de Vestigium Mei; **qué amenazas a la validez quedan**, vistas en conjunto; y **qué falta**, en la app, en R y en este documento. No describe funciones nuevas: cada afirmación remite al capítulo donde está el detalle. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`); las cuentas de hallazgos son las del campo «Estado» de `hallazgos.md` al 28 de octubre de 2026, después de 10e. Los ejemplos son inventados.
 
 ---
 
@@ -16,7 +16,7 @@ Antes de las limitaciones, conviene decir qué partes son sólidas, porque son l
 6. **Las costuras se marcan.** Cuando una regla de medición cambió, cada día guarda con qué regla se midió (`ventana_pantalla`, `ventana_pasos`, `version_noche`), y el Apéndice D de la versión completa dice qué cambió y en qué versión.
 7. **Lo privado tiene una sola regla** (`data/Privado.kt`) y una prueba que falla si algo se cuela (`PrivadoPrueba`); el respaldo se cifra con AES-256-GCM, se verifica sin restaurar y no se restaura si es de un esquema más nuevo (capítulo 10).
 
-**El saldo de la revisión.** Los módulos 1 a 9 y la revisión de navegación anotaron **158 hallazgos** (149 de los módulos y 9 H-NAV). Según su campo «Estado», revisado en el módulo 14, **97 están resueltos**, **24 resueltos en parte** y **37 abiertos**: 31 de gravedad baja (uno, baja a media) y 6 de gravedad media; ninguno de gravedad alta queda abierto del todo. Los dos de gravedad alta marcados «en parte» son H-1-1 (una función que se deja de usar sigue contando 0) y H-3-1 (las lecturas del reloj, la agenda, el clima y las ciudades siguen por día de calendario, ahora declarado en cada variable). Se suman los dos de este capítulo (H-11-1 y H-11-2, que se documentan, no se corrigen) y seis de gravedad baja o muy baja de la lectura final contra el código (H-14-1 a H-14-6).
+**El saldo de la revisión.** Los módulos 1 a 9 y la revisión de navegación anotaron **158 hallazgos** (149 de los módulos y 9 H-NAV). Según su campo «Estado», puesto al día con la entrega 10e, **119 están resueltos** (incluidos los resueltos documentándolos), **31 resueltos en parte** y **8 pendientes** (antes de 10e, 97, 24 y 37): 6 de gravedad baja (uno, baja a media) y 2 de gravedad media; ninguno de gravedad alta queda pendiente del todo. Los dos de gravedad alta marcados «en parte» son H-1-1 (una función que se deja de usar sigue contando 0) y H-3-1 (las lecturas del reloj, la agenda, el clima y las ciudades siguen por día de calendario, ahora declarado en cada variable). Se suman los dos de este capítulo (H-11-1 y H-11-2, resueltos documentándolos) y seis de gravedad baja o muy baja de la lectura final contra el código (H-14-1 a H-14-6), que 10e corrigió todos: en total, **166 hallazgos, 127 resueltos, 31 en parte y 8 pendientes**.
 
 ---
 
@@ -28,7 +28,7 @@ El capítulo 1 distinguió preguntas descriptivas, de asociación y causales. Es
 
 | Herramienta | Puede decir | No puede decir | Por qué |
 |---|---|---|---|
-| Tus números, Totales, reportes | Cuánto, cuándo y cuántos días con dato | Que una diferencia con la semana anterior sea real | Esas comparaciones no tienen noción de azar (H-8-11) |
+| Tus números, Totales, reportes | Cuánto, cuándo y cuántos días con dato | Que una diferencia con la semana anterior sea real | Desde 10e dicen «parecido» si la diferencia es menor que su error típico, un filtro que se queda corto (H-8-11) |
 | Dinámica emocional | Qué tan variable y persistente es tu valencia del diario | Lo mismo que esos índices en la literatura | Allí se calculan con mediciones momentáneas; aquí, con un valor recordado por día |
 | Las relaciones más marcadas | Qué se mueve junto **de un día a sus vecinos** | Qué causa qué; qué se mueve junto **a lo largo de semanas o meses** | Quitar la tendencia borra los efectos lentos; no hay control de confusores |
 | Lo mismo, con desfase de un día | Que lo de hoy **ayuda a predecir** lo de mañana | Que lo cause | Es causalidad de Granger (1969): precedencia y predicción |
@@ -40,7 +40,7 @@ El capítulo 1 distinguió preguntas descriptivas, de asociación y causales. Es
 
 Las protecciones de la lista atacan el **azar** y las **tendencias**, no los otros dos motivos por los que dos cosas se mueven juntas sin que una cause la otra:
 
-- **Un tercer factor** (un *confusor*) que mueve a las dos. El más común en datos diarios es **el día de la semana**: duermes más y te sientes mejor el sábado, y la lista sin tendencia lo conserva entero, porque una ventana de 21 días contiene tres semanas exactas (H-5-6; versión completa, §6.5.6). Otros probables: estar enfermo, viajar, una temporada de trabajo, la estación.
+- **Un tercer factor** (un *confusor*) que mueve a las dos. El más común en datos diarios es **el día de la semana**: duermes más y te sientes mejor el sábado, y la lista sin tendencia lo conserva entero, porque una ventana de 21 días contiene tres semanas exactas (H-5-6; en R, desde 10e, `sin_semana = TRUE` lo quita; versión completa, §6.5.6). Otros probables: estar enfermo, viajar, una temporada de trabajo, la estación.
 - **La dirección.** ¿Dormir bien mejora el ánimo, o el buen ánimo deja dormir? El desfase de un día ayuda, pero no decide: si el ánimo es persistente, el de ayer puede causar el sueño de anoche y el ánimo de hoy a la vez.
 
 Por eso la regla práctica del paper es: **una relación firme en la lista es una hipótesis; un experimento personal es la forma de probarla** (capítulo 8).
@@ -82,7 +82,7 @@ Vistos juntos, los sesgos de cada capítulo se agrupan en siete fuentes.
 |---|---|---|
 | **Qué días faltan** | Los días malos se registran menos (faltante no al azar, MNAR) | `dia_dificil`, `tasa_respuesta` (desde el esquema 13), días sin diario |
 | **Cuándo se anotó** | Lo anotado tarde es recuerdo, no experiencia (H-NAV-9) | `retroactivo`, `ts_creado` y `ts_editado` (desde el 14), `vm_retraso()` |
-| **Costuras del instrumento** | Series partidas en tramos no del todo comparables | `ventana_pantalla`, `ventana_pasos`, `version_noche`, `schema_v`; no la vida media de la cafeína (H-4-11) ni las definiciones del diccionario (H-1-8) |
+| **Costuras del instrumento** | Series partidas en tramos no del todo comparables | `ventana_pantalla`, `ventana_pasos`, `version_noche`, `schema_v`; desde 10e, el diccionario dice los parámetros vigentes, pero no su historial (H-4-11) ni desde cuándo vale cada definición (H-1-8) |
 | **Qué día es** | En una fila, unas variables cuentan la madrugada y otras no | `Diccionario.CALENDARIO`; las horas viejas se leen con la zona actual (H-1-7) |
 | **Confusores comunes** | Relaciones debidas al día de la semana, la estación, una enfermedad | `dia_semana`, `fin_de_semana`, `festivo`, `dia_libre`; de enfermedad, solo `ctx_enfermo` |
 | **Cómo se eligió el análisis** | Más hallazgos por azar; la más fuerte exagera su tamaño | Ninguna (H-11-2) |
@@ -127,12 +127,10 @@ Los días están anidados en semanas, meses y etapas. Un **modelo multinivel** (
 
 ### 11.7.2 Autocorrelación en R
 
-Hoy `vm_relaciones` y `vm_factores` corrigen como la app, y `vm_modelo_ar1` ajusta el modelo múltiple con **errores AR(1)** (`nlme::gls` con `corAR1(form = ~ t)`), que respeta que cada día se parece al anterior. Lo que falta, de lo más barato a lo más costoso:
+Hoy `vm_relaciones` y `vm_factores` corrigen como la app, y `vm_modelo_ar1` ajusta el modelo múltiple con **errores AR(1)** (`nlme::gls` con `corAR1(form = ~ t)`), que respeta que cada día se parece al anterior. Desde la entrega 10e, además, `sin_semana = TRUE` quita el ciclo semanal en `vm_relaciones` y `vm_factores`, `vm_cruce` da Pearson con el n efectivo y Spearman (H-5-7), y `vm_experimento` hace la **prueba de aleatorización** sobre todos los planes del sorteo por pares (H-7-11; el *p* mínimo real es 2/2^(N/2) sin lavado: con 12 semanas, ≈ 0.031). Lo que falta, de lo más barato a lo más costoso:
 
-1. **Usar lo que ya existe.** El ciclo semanal (H-5-6) se controla agregando `dia_libre` o `fin_de_semana` como predictor: `vm_modelo_ar1("valencia", c("sueno_h", "pasos", "dia_libre"))`. La estabilidad en el tiempo (H-11-1) se revisa pasando un periodo: `vm_relaciones(datos = filter(panel, fecha >= as.Date("2026-01-01")))`. Estas dos llamadas no se ejecutaron en la sesión que las propuso.
-2. **`vm_cruce`** sigue con Spearman y el n bruto (H-5-7).
-3. **El valor de ayer y los errores AR(1) a la vez**: hoy `vm_modelo` tiene lo primero y `vm_modelo_ar1` lo segundo.
-4. **`vm_experimento`**, con la **prueba de aleatorización** sobre todos los planes posibles (H-7-11): con el sorteo por pares, el p mínimo es 1/2^(N/2); con 12 semanas, 0.016.
+1. **Usar lo que ya existe.** El ciclo semanal (H-5-6) se quita en la lista con `sin_semana = TRUE` y, en el modelo, se controla agregando `dia_libre` o `fin_de_semana` como predictor: `vm_modelo_ar1("valencia", c("sueno_h", "pasos", "dia_libre"))`. La estabilidad en el tiempo (H-11-1) se revisa pasando un periodo: `vm_relaciones(datos = filter(panel, fecha >= as.Date("2026-01-01")))`. Estas llamadas no se ejecutaron en la sesión que las propuso.
+2. **El valor de ayer y los errores AR(1) a la vez**: hoy `vm_modelo` tiene lo primero y `vm_modelo_ar1` lo segundo.
 
 ### 11.7.3 Validar las heurísticas
 
@@ -151,9 +149,9 @@ Este flujo responde a la vez a las comparaciones múltiples (en el paso 3 hay po
 
 ### 11.7.5 Lo que queda abierto y por comprobar
 
-Los seis hallazgos de gravedad media abiertos del todo son H-1-4 (`coerceInputValues` puede convertir un valor inválido en el de omisión sin registrarlo), H-3-4 (el clima viene del pronóstico o del reanálisis sin guardar cuál), H-4-2 (si MacroFactor tiene cafeína o alcohol ese día, lo anotado en la app se ignora), H-5-6 (el ciclo semanal), H-6-3 (la fecha de un cambio de relación es la de la edición) y H-NAV-9 (los cambios de dónde y cuándo se registra cambian cuánto se registra). Once más están resueltos en parte con una parte media pendiente (versión completa, §11.7.5).
+Después de la entrega 10e, los hallazgos de gravedad media pendientes del todo son dos: H-1-4 (`coerceInputValues` puede convertir un valor inválido en el de omisión sin registrarlo) y H-3-4 (el clima viene del pronóstico o del reanálisis sin guardar cuál). 10e resolvió H-4-2 (cafeína y alcohol se juntan toma por toma) y dejó en parte H-5-6 (el ciclo semanal: en R se quita, en la app no), H-6-3 (la fecha del cambio de relación se puede elegir; lo anterior a la primera clasificación se proyecta) y H-NAV-9 (leer por tramo queda en cada análisis). En total, catorce de gravedad media están resueltos en parte con una parte pendiente (versión completa, §11.7.5).
 
-Faltan además tres comprobaciones: app frente a R con datos reales **más allá de la lista** (`vm_factores` y `vm_red`, con `min_juntos = 2` y las mismas 45 personas); **R en la compilación automática**, porque hoy un cambio en `vestigium.R` que rompa algo solo se nota al usarlo, y las afirmaciones **[sin verificar]** que sostienen umbrales que la app muestra (WHO-5 ≤ 28, UCLA-3 ≥ 6, jet lag social de 1 hora).
+Faltan además tres comprobaciones: app frente a R con datos reales **más allá de la lista** (`vm_factores` y `vm_red`, con `min_juntos = 2`, `min_dias = 0` y las mismas 45 personas, y `vm_experimento` con un experimento real); **R en la compilación automática**, porque hoy un cambio en `vestigium.R` que rompa algo solo se nota al usarlo, y las afirmaciones **[sin verificar]** que sostienen umbrales que la app muestra (WHO-5 ≤ 28, UCLA-3 ≥ 6, jet lag social de 1 hora).
 
 ---
 
@@ -167,7 +165,7 @@ Lo que no puede resolver ninguna app es la naturaleza de sus datos: **una sola p
 
 ## 11.9 En resumen
 
-1. Lo sólido: una sola regla para «cero» y «no sé», el ánimo medido de varias formas, la lista con tres protecciones, R alineado con la app, experimentos sorteados por pares con intervalos corregidos, costuras marcadas y una sola regla de privacidad. De 158 hallazgos quedan 37 abiertos (6 de gravedad media, ninguno alto).
+1. Lo sólido: una sola regla para «cero» y «no sé», el ánimo medido de varias formas, la lista con tres protecciones, R alineado con la app, experimentos sorteados por pares con intervalos corregidos, costuras marcadas y una sola regla de privacidad. De los 158 hallazgos de los módulos 1 a 9 y la navegación, después de 10e, 119 están resueltos, 31 en parte y 8 pendientes (2 de gravedad media, ninguno alto); con los del módulo 11 y los del 14, 166: 127, 31 y 8.
 2. Lo que se puede concluir depende de la herramienta: descripción, asociación de corto plazo, predicción con desfase o efecto causal en un experimento. Nada generaliza a otras personas, y solo vale para tu futuro si tu vida no cambió en lo importante.
 3. La lista usa toda la historia (H-11-1) y las maneras de mirar los datos no entran en ninguna corrección (H-11-2).
 4. Muchas variables miden algo distinto de su nombre: recuerdos, proxies, modelos o cuánto escribes.

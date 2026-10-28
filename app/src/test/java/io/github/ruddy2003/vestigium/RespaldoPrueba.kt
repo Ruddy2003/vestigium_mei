@@ -17,13 +17,21 @@ import io.github.ruddy2003.vestigium.data.SCHEMA_V
 import io.github.ruddy2003.vestigium.data.Tramo
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.security.SecureRandom
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import javax.crypto.Cipher
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.PBEKeySpec
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * El respaldo de ida y vuelta, sin teléfono: se arma un respaldo con datos de todo tipo, se mete en un .zip,
@@ -87,6 +95,57 @@ class RespaldoPrueba {
         assertEquals(120, c.ubicaciones)
         assertEquals(1, c.portadas)
         assertTrue(Respaldos.informe(c).isNotEmpty())
+    }
+
+    /** El formato 2 guarda en el encabezado las iteraciones (600 000, en 4 bytes big-endian después de la marca). */
+    @Test fun formatoNuevoGuardaIteraciones() {
+        val cifrado = Respaldos.cifrar("hola".toByteArray(), "una contraseña larga".toCharArray())
+        val marca = "VESTIGIUM-MEI-CIFRADO-2".toByteArray()
+        assertArrayEquals(marca, cifrado.copyOfRange(0, marca.size))
+        assertEquals(600_000, ByteBuffer.wrap(cifrado, marca.size, 4).int)
+    }
+
+    /**
+     * Un .vmc del formato 1 (el de antes: marca, sal, iv y cuerpo, a 210 000 iteraciones) se sigue abriendo.
+     * Se arma aquí a mano, como lo hacía la app, para no depender del código que se prueba.
+     */
+    private fun cifrarFormato1(datos: ByteArray, contrasena: CharArray): ByteArray {
+        val magia = "VESTIGIUM-MEI-CIFRADO-1".toByteArray()
+        val r = SecureRandom()
+        val sal = ByteArray(16).also { r.nextBytes(it) }
+        val iv = ByteArray(12).also { r.nextBytes(it) }
+        val f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val llave = SecretKeySpec(f.generateSecret(PBEKeySpec(contrasena, sal, 210_000, 256)).encoded, "AES")
+        val c = Cipher.getInstance("AES/GCM/NoPadding")
+        c.init(Cipher.ENCRYPT_MODE, llave, GCMParameterSpec(128, iv))
+        c.updateAAD(magia)
+        return magia + sal + iv + c.doFinal(datos)
+    }
+
+    @Test fun formatoViejoSeAbre() {
+        val r = ejemplo()
+        val zip = zip(JSON.encodeToString(Respaldo.serializer(), r), 30)
+        val viejo = cifrarFormato1(zip, "una contraseña larga".toCharArray())
+        assertTrue(Respaldos.estaCifrado(viejo))
+        assertNull(Respaldos.descifrar(viejo, "otra contraseña".toCharArray()))
+        val abierto = Respaldos.descifrar(viejo, "una contraseña larga".toCharArray())
+        assertArrayEquals(zip, abierto)
+        assertEquals(r, Respaldos.contenido(abierto!!)!!.r)
+    }
+
+    /** Un encabezado con iteraciones fuera de 100 000 a 10 000 000 es un archivo dañado: no se intenta derivar la llave. */
+    @Test fun iteracionesFueraDeRangoNoAbren() {
+        val bueno = Respaldos.cifrar("hola".toByteArray(), "una contraseña larga".toCharArray())
+        val o = "VESTIGIUM-MEI-CIFRADO-2".length
+        for (n in listOf(Int.MAX_VALUE, -1, 0, 99_999, 10_000_001)) {
+            val malo = bueno.copyOf()
+            ByteBuffer.wrap(malo, o, 4).putInt(n)
+            assertTrue(Respaldos.estaCifrado(malo))
+            assertNull(Respaldos.descifrar(malo, "una contraseña larga".toCharArray()))
+        }
+        // Lo que no lleva ninguna marca no está cifrado; y truncado tras la marca, tampoco se abre.
+        assertFalse(Respaldos.estaCifrado("PK hola".toByteArray()))
+        assertNull(Respaldos.descifrar(bueno.copyOfRange(0, o + 10), "una contraseña larga".toCharArray()))
     }
 
     @Test fun jsonSueltoTambienSeLee() {

@@ -88,7 +88,7 @@ object Analisis {
         val objCrudo = serie(panel, objetivo)
         val obj = if (sinTendencia) Estadistica.sinTendencia(objCrudo) else objCrudo
         val yDe = obj.toMap()
-        val rY = Estadistica.ar1(obj) ?: 0.0
+        val rY = Estadistica.ar1(obj) ?: Estadistica.AR1_SIN_DATO
         fun yEn(f: String) = yDe[if (desfase) Fechas.sumar(f, 1) else f]
         for (v in vars) {
             if (v.id == objetivo) continue
@@ -109,7 +109,7 @@ object Analisis {
                 val x = if (sinTendencia) Estadistica.sinTendencia(xs) else xs
                 val ps = x.mapNotNull { (f, a) -> yEn(f)?.let { a to it } }
                 if (ps.size < 14) continue
-                val c = Estadistica.correlacionEf(ps.map { it.first }, ps.map { it.second }, Estadistica.ar1(x) ?: 0.0, rY, 14) ?: continue
+                val c = Estadistica.correlacionEf(ps.map { it.first }, ps.map { it.second }, Estadistica.ar1(x) ?: Estadistica.AR1_SIN_DATO, rY, 14) ?: continue
                 out.add(Factor(v, false, c.first, c.second.first, c.second.second, ps.size, 0, 0, c.third.second, nEf = c.third.first))
             }
         }
@@ -281,8 +281,12 @@ object Analisis {
     // ---------- Días atípicos ----------
     data class Atipico(val fecha: String, val razones: List<String>, val z: Double)
 
-    /** Días que se salen de lo normal en alguna variable, con un z robusto (mediana y desviación absoluta mediana). */
-    fun atipicos(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, umbral: Double = 3.0): List<Atipico> {
+    /**
+     * Días que se salen de lo normal en alguna variable, con un z robusto (mediana y desviación absoluta mediana). Devuelve los
+     * días desde [desde] (por omisión, los últimos 365); «Tu año» pasa null para quedarse con todos los del panel que le da (H-14-3).
+     */
+    fun atipicos(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, umbral: Double = 3.0,
+                 desde: String? = Fechas.sumar(Fechas.diaLogico(), -365)): List<Atipico> {
         val ids = listOf("valencia", "sueno_horas", "pasos", "pantalla_min", "desbloqueos", "gasto_total", "notificaciones", "fotos", "distancia_km",
             "min_hablado", "wa_mios", "musica_min", "fc_reposo", "hrv", "palabras")
         val nombres = vars.associate { it.id to it.nombre }
@@ -299,8 +303,7 @@ object Analisis {
                 if (abs(z) >= umbral) porDia.getOrPut(f) { ArrayList() }.add("${nombres[id] ?: id} ${if (z > 0) "muy alto" else "muy bajo"} (%s)".format(if (abs(v) >= 100) "%,.0f".format(v) else "%.1f".format(v)) to abs(z))
             }
         }
-        val desde = Fechas.sumar(Fechas.diaLogico(), -365)
-        return porDia.filterKeys { it >= desde }.map { (f, l) -> Atipico(f, l.sortedByDescending { it.second }.map { it.first }, l.maxOf { it.second }) }
+        return porDia.filterKeys { desde == null || it >= desde }.map { (f, l) -> Atipico(f, l.sortedByDescending { it.second }.map { it.first }, l.maxOf { it.second }) }
             .sortedByDescending { it.fecha }
     }
 }

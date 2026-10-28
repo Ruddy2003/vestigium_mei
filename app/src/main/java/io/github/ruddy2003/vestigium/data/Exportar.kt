@@ -200,10 +200,10 @@ object Exportar {
         val nombres = Repo.lugares.associate { it.id to it.nombre }
         val lugarHora = HashMap<String, Pair<String, Double>>()
         porLugar.forEach { (id, m) -> m.forEach { (k, min) -> if (min > (lugarHora[k]?.second ?: 0.0)) lugarHora[k] = (nombres[id] ?: id) to min } }
-        // Lo que va por día con 24 horas: notificaciones, luz y la pantalla desde la v13 van por día de la app (de 0 a 4 es la madrugada siguiente).
+        // Lo que va por día con 24 horas: notificaciones, luz y la pantalla desde el esquema 13 van por día de la app (de 0 a 4 es la madrugada siguiente).
         val pantalla = HashMap<String, Int>(); val notifs = HashMap<String, Int>(); val luz = HashMap<String, Double>()
         fun calendario(f: String, h: Int) = if (h < 5) Fechas.sumar(f, 1) else f
-        // La pantalla de antes de la v13 va por día de calendario; la de después, por día lógico (de 0 a 4, la madrugada siguiente).
+        // La pantalla de antes del esquema 13 va por día de calendario; la de después, por día lógico (de 0 a 4, la madrugada siguiente).
         Repo.pantalla.values.forEach { p -> p.por_hora_min.forEachIndexed { h, m -> pantalla["${if (p.ventana == "logica") calendario(p.fecha, h) else p.fecha}|$h"] = m }; fechas += p.fecha }
         Repo.notifs.values.forEach { n -> n.por_hora.forEachIndexed { h, k -> notifs["${calendario(n.fecha, h)}|$h"] = k } }
         Repo.conexiones.values.forEach { c -> c.luz_n.forEachIndexed { h, k -> if (k > 0) luz["${calendario(c.fecha, h)}|$h"] = Math.round((c.luz_suma.getOrNull(h) ?: 0.0) / k * 10) / 10.0 } }
@@ -702,7 +702,8 @@ object Exportar {
             listOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "cafeina_mg", "gasto_kcal", "peso_tendencia_kg").forEach { k -> r[k] = nu?.valores?.get(k) }
             r["comidas"] = nu?.comidas?.takeIf { it > 0 }
             r["primera_comida_h"] = nu?.primera?.let { horaTexto(it) }; r["ultima_comida_h"] = nu?.ultima?.let { horaTexto(it) }
-            r["cafeina_ultima_h"] = nu?.cafeina_ultima?.let { horaTexto(it) }
+            // Como en el panel de la app (H-4-12): de todas las dosis del día lógico; si no se pudo calcular, la de MacroFactor.
+            r["cafeina_ultima_h"] = if (est[f]?.containsKey("cafeina_ultima_h") == true) est[f]!!["cafeina_ultima_h"] else nu?.cafeina_ultima?.let { horaTexto(it) }
             r["gimnasio"] = en != null && en.series > 0; r["gimnasio_min"] = en?.minutos; r["series_gimnasio"] = en?.series_efectivas; r["volumen_kg"] = en?.volumen_kg
             val x = est[f]
             nuevas.forEach { k -> r[k] = x?.get(k) }
@@ -966,8 +967,9 @@ object Exportar {
         Convenciones: texto en UTF-8; fechas AAAA-MM-DD en hora local; los días empiezan a las 5:00 (lo de la madrugada
         cuenta para el día anterior), salvo lo que va por día de calendario (0:00 a 24:00): corazón, oxígeno, calorías
         activas, temperatura de la piel, respiración y peso del reloj, la agenda, el clima, la luna y las ciudades y países
-        (el diccionario lo dice en cada una), y la pantalla y los pasos de antes de la v13 (columnas ventana_pantalla y
-        ventana_pasos). El sueño va en el día en que despiertas. fecha_hora en ISO 8601 con desfase horario (2026-10-16T08:42:10-06:00);
+        (el diccionario lo dice en cada una), y la pantalla y los pasos de antes del esquema de datos 13 (columnas
+        ventana_pantalla y ventana_pasos; el esquema de cada día está en schema_v de vm_dias.csv y no es la versión de la
+        app). El sueño va en el día en que despiertas. fecha_hora en ISO 8601 con desfase horario (2026-10-16T08:42:10-06:00);
         horas HH:MM; booleanos 0/1; listas separadas por «|»; celda vacía = dato que no existe (nunca se rellenó con promedios).
         Horas decimales (*_h): 7.5 = 7:30; en horas de dormir la madrugada suma 24 (1:00 = 25) para que el promedio tenga sentido;
         en ultimo_uso_h suma 24 solo antes de las 5:00, como el día lógico.

@@ -133,7 +133,7 @@ object TuAnio {
         val panel = runCatching { Estadistica.panel(dinamicas = false) }.getOrDefault(emptyMap())
         val vars = runCatching { Estadistica.variables(dinamicas = false) }.getOrDefault(emptyList())
         val panelAnio = panel.filterKeys { it in en }
-        val raro = runCatching { Analisis.atipicos(panelAnio, vars, 2.8) }.getOrDefault(emptyList()).filter { it.fecha in en }.maxByOrNull { it.z * it.razones.size }
+        val raro = runCatching { Analisis.atipicos(panelAnio, vars, 2.8, desde = null) }.getOrDefault(emptyList()).filter { it.fecha in en }.maxByOrNull { it.z * it.razones.size }
             ?.let { it.fecha to it.razones.take(3) }
         val records = buildList {
             p.fechas.mapNotNull { fe -> Repo.salud[fe]?.pasos?.let { fe to it } }.maxByOrNull { it.second }?.let { add("más pasos" to "${n0(it.second.toDouble())} el ${Fechas.titulo(it.first).lowercase()}") }

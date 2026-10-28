@@ -1,6 +1,6 @@
 # Capítulo 10. Privacidad, seguridad e integridad de los datos
 
-> **Para qué sirve este capítulo.** Explica **dónde viven tus datos, quién puede verlos y qué tan seguro es que no se pierdan**: el almacenamiento en el teléfono, el seguimiento privado y por dónde se filtra, el cifrado del respaldo, la verificación sin restaurar, los respaldos automáticos (carpeta y Google Drive), la restauración y los servicios externos con los que la app habla. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» o «desde el esquema 13» y está en el Apéndice D.
+> **Para qué sirve este capítulo.** Explica **dónde viven tus datos, quién puede verlos y qué tan seguro es que no se pierdan**: el almacenamiento en el teléfono, el seguimiento privado y por dónde se filtra, el cifrado del respaldo, la verificación sin restaurar, los respaldos automáticos (carpeta y Google Drive), la restauración y los servicios externos con los que la app habla. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`), la versión que describe todo el paper (en 10e cambió el formato de los respaldos cifrados, D.104); lo que cambió en el módulo 10 se marca «desde 10a…10e» o «desde el esquema 13» y está en el Apéndice D.
 >
 > **Cómo leerlo.** Igual que los capítulos anteriores. Las cifras criptográficas y las reglas vienen del código, con el nombre de la función. Los hallazgos son H-8-n (módulo 8, junto con el capítulo 9); los H-9-n son del módulo 9. Las **reglas de privacidad declaradas** vienen de la sección 7 del documento de contexto del proyecto (`VESTIGIUM_MEI_CONTEXTO.md`, v81); la sección 10.3.4 las compara con el código.
 >
@@ -112,7 +112,7 @@ La sección 7 del documento de contexto llama a estas reglas «no negociables».
 | Seguimiento privado (impulsos, recaídas, libido, detonantes, medicamentos) nunca en reportes, «Tu año», logros, mapas ni widgets; sí en la exportación a R | **Sí desde el módulo 10a**, con una regla más estricta: fuera de la pantalla Privado no aparece en ninguna salida. Hasta v84 fallaba en los impulsos y los medicamentos (H-8-1, H-8-2) | `data/Privado.kt`, `Momento.privado`, `Estadistica.variables` |
 | Sustancias no son privadas | **Sí** | Se tratan como dato normal |
 | La imagen del hall no lleva texto del diario | **Sí** | `HallImagen.kt` («Sin textos del diario ni nada privado»); la cita del diario solo aparece en el detalle del trofeo dentro de la app |
-| «Nada pasa por servidores ajenos salvo Drive, Open-Meteo y Spotify» (sección 1) | **No del todo** | También hay consultas a TMDB, RAWG, TVmaze, Open Library, Crossref y a los mosaicos de OpenStreetMap (sección 10.8; H-8-17) |
+| «Nada pasa por servidores ajenos salvo Drive, Open-Meteo y Spotify» (sección 1) | **No del todo** | También hay consultas a TMDB, RAWG, TVmaze, Google Books, Open Library, Crossref y a los mosaicos de OpenStreetMap (sección 10.8; H-8-17). Desde 10e, el texto de privacidad de la app los nombra todos (D.103); el documento de contexto, que no está en el repositorio, sigue con la lista corta |
 
 ![Figura 10.1](figuras/fig24_flujo_privacidad.png)
 
@@ -129,26 +129,28 @@ La sección 7 del documento de contexto llama a estas reglas «no negociables».
 ### 10.4.2 Cómo se cifra exactamente (`Respaldos.cifrar`)
 
 1. **Sal**: 16 bytes al azar (`SecureRandom`), nueva en cada respaldo.
-2. **Llave**: PBKDF2 con HMAC-SHA256, **210 000 iteraciones**, 256 bits (`ITERACIONES`, `llave`).
+2. **Llave**: PBKDF2 con HMAC-SHA256, **600 000 iteraciones** desde 10e (antes, 210 000), 256 bits (`ITERACIONES`, `llave`).
 3. **IV**: 12 bytes al azar, nuevo en cada respaldo.
-4. **Cifrado**: AES-256 en modo GCM con etiqueta de **128 bits**. El encabezado `VESTIGIUM-MEI-CIFRADO-1` (23 bytes) entra como **dato adicional autenticado**: no se cifra, pero si alguien lo cambia, el descifrado falla.
-5. **Formato del archivo**: encabezado (23 bytes) · sal (16) · IV (12) · datos cifrados con su etiqueta.
+4. **Cifrado**: AES-256 en modo GCM con etiqueta de **128 bits**. El encabezado completo entra como **dato adicional autenticado**: no se cifra, pero si alguien lo cambia, el descifrado falla.
+5. **Formato del archivo** (formato 2, desde 10e, D.104): encabezado de 27 bytes, que son la marca `VESTIGIUM-MEI-CIFRADO-2` (23 bytes) y el número de iteraciones (4 bytes, entero con el byte más significativo primero) · sal (16) · IV (12) · datos cifrados con su etiqueta. Como las iteraciones viajan en el archivo, se pueden subir más adelante sin inventar otro formato, y como van dentro del dato autenticado, cambiarlas hace fallar el descifrado.
+
+**Los dos formatos** (`Respaldos.formato`, `descifrar`). La app escribe siempre el formato 2, pero sigue abriendo el **formato 1** de las versiones anteriores: marca `VESTIGIUM-MEI-CIFRADO-1` (23 bytes, el único dato autenticado) · sal · IV · datos, siempre con 210 000 iteraciones (`ITERACIONES_1`). Al leer un formato 2, si las iteraciones del encabezado no están entre 100 000 y 10 000 000 (`ITER_MIN`, `ITER_MAX`), el archivo se da por dañado sin intentar descifrarlo: una cifra enorme colgaría la app derivando la llave. Lo comprueban las pruebas JVM `RespaldoPrueba` (los dos formatos y encabezados dañados; D.108). La consecuencia práctica: **una versión de la app anterior a 10e no abre un .vmc nuevo**; para restaurar en otro teléfono, primero hay que instalar esta versión.
 
 **Qué protege.** Sin la contraseña, el contenido es ilegible, y cualquier cambio o daño del archivo hace que el descifrado **falle** (no devuelve datos alterados). Como la sal y el IV son nuevos en cada respaldo, nunca se repite una combinación de llave e IV. Las elecciones (AES-GCM con IV de 96 bits y etiqueta de 128; PBKDF2 con sal de 128 bits) siguen las recomendaciones del NIST (Dworkin, 2007; Turan et al., 2010). **[Validado]**.
 
 **Qué no protege.** El tamaño del archivo y sus fechas se ven. Y el punto débil de todo cifrado con contraseña es **adivinar la contraseña**: quien tenga el .vmc puede probar contraseñas sin límite en su propia computadora.
 
-### 10.4.3 Las iteraciones (H-8-9)
+### 10.4.3 Las iteraciones (H-8-9, resuelto en 10e)
 
-Las iteraciones son el «peaje» por cada intento de adivinar. La guía de OWASP para guardar contraseñas recomienda, para PBKDF2 con HMAC-SHA256, **600 000 iteraciones** (y 220 000 para HMAC-SHA512; cifras comprobadas en la página el 28 de octubre de 2026) (OWASP, s. f.). La app usa **210 000 con SHA-256** (`PBKDF2WithHmacSHA256`, `ITERACIONES = 210_000` en `data/Respaldos.kt`): unas 2.9 veces menos peaje que lo que OWASP recomienda hoy para SHA-256. (Algunas fuentes secundarias atribuyen a una versión anterior de la guía 210 000 para SHA-512, la cifra de la app; no lo pude confirmar en la fuente **[sin verificar]**. Aunque fuera así, la app usa SHA-256.) **[Aproximación]**: es mucho mejor que nada, pero por debajo de la recomendación actual.
+Las iteraciones son el «peaje» por cada intento de adivinar. La guía de OWASP para guardar contraseñas recomienda, para PBKDF2 con HMAC-SHA256, **600 000 iteraciones** (y 220 000 para HMAC-SHA512; cifras comprobadas en la página el 28 de octubre de 2026) (OWASP, s. f.). **Desde 10e la app usa exactamente eso**: 600 000 con SHA-256 (`PBKDF2WithHmacSHA256`, `ITERACIONES = 600_000` en `data/Respaldos.kt`, D.104). **[Validado]**: sigue la recomendación actual. Hasta 10e usaba **210 000**, unas 2.9 veces menos peaje que lo recomendado para SHA-256. (Algunas fuentes secundarias atribuyen a una versión anterior de la guía 210 000 para SHA-512, la cifra que tenía la app; no lo pude confirmar en la fuente **[sin verificar]**. Aunque fuera así, la app usaba SHA-256.) Los .vmc hechos antes de 10e siguen con 210 000: no se vuelven a cifrar solos, y quedan protegidos como antes mientras existan. Cuánto tarda en el teléfono derivar la llave con 600 000 iteraciones no se midió; el código lo hace fuera del hilo principal, y su comentario lo estima en «un segundo o más» **[sin verificar]**.
 
-**Ejemplo (cuentas exactas, sin velocidades).** La app exige al menos **8 caracteres** (`ui/pantallas/Respaldo.kt`). Si fueran 8 letras minúsculas al azar, hay 26⁸ ≈ 2.1 × 10¹¹ contraseñas posibles; probarlas todas cuesta 2.1 × 10¹¹ × 210 000 ≈ 4.4 × 10¹⁶ cálculos de HMAC. Con 600 000 iteraciones serían ≈ 1.3 × 10¹⁷. Pero una contraseña humana (una palabra con un número) no es aleatoria y se adivina mucho antes. **La longitud y el azar de la contraseña importan mucho más que las iteraciones.** No doy tiempos, porque dependen del equipo del atacante y no los verifiqué.
+**Ejemplo (cuentas exactas, sin velocidades).** La app exige al menos **8 caracteres** (`ui/pantallas/Respaldo.kt`). Si fueran 8 letras minúsculas al azar, hay 26⁸ ≈ 2.1 × 10¹¹ contraseñas posibles; probarlas todas cuesta, con las 600 000 iteraciones de ahora, 2.1 × 10¹¹ × 600 000 ≈ 1.3 × 10¹⁷ cálculos de HMAC; con las 210 000 de antes de 10e eran ≈ 4.4 × 10¹⁶. Pero una contraseña humana (una palabra con un número) no es aleatoria y se adivina mucho antes. **La longitud y el azar de la contraseña importan mucho más que las iteraciones.** No doy tiempos, porque dependen del equipo del atacante y no los verifiqué.
 
 ### 10.4.4 La contraseña en el teléfono
 
 `ponerContrasena` guarda la contraseña **cifrada con una llave AES-256-GCM del Android Keystore** (en las preferencias privadas `respaldo_secreto`). Así la app puede hacer respaldos cifrados sola, cada día, sin pedírtela. La contraseña **nunca viaja** en ningún respaldo. Si la olvidas, los .vmc no se pueden abrir: la propia pantalla lo advierte.
 
-**Detalle** (H-8-15): si cambias la contraseña, las copias semanales y mensuales anteriores siguen cifradas con la **anterior**. Para restaurar una copia vieja hará falta recordar esa contraseña.
+**Detalle** (H-8-15, resuelto en 10e): si cambias la contraseña, las copias que ya existen (en Drive, las semanales y mensuales, y las que guardaste o compartiste) siguen cifradas con la **anterior**; la app no las vuelve a cifrar. Para restaurar una copia vieja hará falta recordar esa contraseña. Hasta 10e no se avisaba. Desde 10e (D.104, `ui/pantallas/Respaldo.kt`): al **cambiarla**, el diálogo de la contraseña nueva lo advierte antes de escribirla y el mensaje final lo repite; al **quitarla**, la app pide confirmar («¿Quitar la contraseña?») y explica que las copias cifradas la siguen pidiendo. **[Diseño propio]**: avisar es lo mínimo; recifrar las copias viejas no se hizo.
 
 ---
 
@@ -236,11 +238,11 @@ La app no incluye herramientas de analítica, publicidad ni reporte de errores (
 | **Google Drive** (`googleapis.com`) | Respaldos (sección 10.5), solo si lo activas | Los archivos de respaldo (cifrados o no) |
 | **Open-Meteo** (pronóstico, archivo histórico y calidad del aire) | Clima y aire del día (capítulo 4) | La **mediana de las ubicaciones del día, redondeada a 2 decimales** (`Entorno.r2`: ≈ 1.1 km en latitud) y las fechas |
 | **Spotify** | Historial de canciones (capítulo 4) | Autorización con redirección a `127.0.0.1` (solo dentro del teléfono) y luego consultas con tu permiso |
-| **Catálogos de obras**: TMDB, RAWG, TVmaze, Open Library, Crossref | Portadas y fichas de libros, películas, series, juegos y artículos | El **título o DOI** que buscas |
+| **Catálogos de obras**: TMDB, RAWG, TVmaze, Google Books, Open Library, Crossref | Portadas y fichas de libros, películas, series, juegos y artículos | El **título o DOI** que buscas |
 | **Mapas de OpenStreetMap** (osmdroid, mosaicos `MAPNIK`) | Fondo del mapa | Qué zona del mapa estás viendo (al pedir los mosaicos) |
 | **Health Connect, uso del teléfono, ubicación** | Datos pasivos (capítulo 4) | Nada: se leen **dentro** del teléfono |
 
-El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive del usuario, Open-Meteo (clima) y Spotify API»; la tabla muestra que hay más servicios, aunque los demás solo reciben títulos de obras o la zona del mapa que miras (H-8-17).
+El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive del usuario, Open-Meteo (clima) y Spotify API»; la tabla muestra que hay más servicios, aunque los demás solo reciben títulos de obras o la zona del mapa que miras (H-8-17). (Google Books, que `Portadas` consulta para buscar libros, faltaba en esta tabla hasta esta actualización.) **Desde 10e** (D.103), el texto de privacidad de la app (`ui/PrivacidadActivity.kt`) los nombra todos y dice qué recibe cada uno: Open-Meteo, la zona aproximada y las fechas; OpenStreetMap, qué zona miras; los catálogos, solo el título o el DOI que escribes; Spotify, la petición de lo que escuchaste; Drive, tus respaldos. El documento de contexto no está en el repositorio y hay que corregirlo a mano. El texto dice también que Google Drive recibe los respaldos completos, diario incluido (cifrados si pones contraseña, en claro si no; sección 10.5), y que los demás servicios no reciben tu diario, tu salud ni tu ruta.
 
 **[Validado]** como enfoque general: el procesamiento es local y solo salen las consultas necesarias, con la ubicación redondeada para el clima. Lo que no es mínimo es el respaldo sin contraseña. No verifiqué las políticas de privacidad de cada servicio en esta sesión **[sin verificar]**.
 
@@ -262,7 +264,8 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 | Datos solo en el teléfono, sin copia automática de Android | Validado (buena práctica) | — |
 | Bloqueo opcional con huella o credencial, 60 s | Diseño propio | — |
 | AES-256-GCM, IV de 12 bytes y sal de 16 nuevos en cada respaldo | Validado | Dworkin (2007); Turan et al. (2010) |
-| PBKDF2-HMAC-SHA256 con 210 000 iteraciones | Aproximación (por debajo de la recomendación actual) | OWASP (s. f.): 600 000 |
+| PBKDF2-HMAC-SHA256 con 600 000 iteraciones desde 10e, guardadas en el encabezado (formato 2); antes, 210 000 | Validado (la recomendación actual); hasta 10e, Aproximación | OWASP (s. f.): 600 000 |
+| Avisar al cambiar o quitar la contraseña que las copias viejas siguen con la anterior (10e) | Diseño propio | — |
 | Contraseña guardada con el Android Keystore, nunca en el respaldo | Diseño propio (razonable) | — |
 | Permiso `drive.file` | Validado (mínimo necesario) | — |
 | 8 copias semanales y 12 mensuales | Diseño propio | — |
@@ -280,14 +283,14 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 ## 10.11 Resumen del capítulo
 
 1. Los datos viven solo en el teléfono, sin copia automática de Android; la app puede pedir huella. Salen solo por los respaldos que tú activas y por consultas puntuales (clima con la ubicación redondeada, títulos de obras, mapas).
-2. El **respaldo cifrado** usa AES-256-GCM con sal e IV nuevos en cada archivo: bien diseñado. PBKDF2 con 210 000 iteraciones está por debajo de las 600 000 que recomienda hoy OWASP (H-8-9); lo que más importa es una contraseña larga.
+2. El **respaldo cifrado** usa AES-256-GCM con sal e IV nuevos en cada archivo: bien diseñado. Desde 10e, PBKDF2 usa las 600 000 iteraciones que recomienda hoy OWASP (antes, 210 000; H-8-9), con un formato nuevo que guarda las iteraciones en el encabezado y sigue abriendo los archivos viejos; al cambiar o quitar la contraseña, la app avisa que las copias ya hechas siguen con la anterior (H-8-15). Lo que más importa sigue siendo una contraseña larga.
 3. **Sin contraseña, todo sale en claro** a la carpeta y a Drive, incluido el texto de las cartas selladas (H-8-5). Desde el módulo 10a, si hay datos privados, el respaldo no sale sin contraseña; solo la exportación para R, que pides a mano, va en claro y lo advierte.
 4. **El seguimiento privado** (impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado) se ve, desde el módulo 10a, **solo en la pantalla Privado** y va completo a R. Hasta v84 se colaba por los impulsos, los medicamentos y el hábito ligado (H-8-1, H-8-2, H-8-3, H-9-39). Desde la entrega 10c, las rachas cuentan solo los días respondidos «no» (H-8-8, D.75).
 5. **Verificar** un respaldo es una gran idea. Hasta el esquema 12, el mensaje prometía más de lo que comprobaba y no revisaba la versión del esquema (H-8-12). Desde el 13 dice solo lo que comprueba, compara respaldo y teléfono, y un respaldo de una versión más nueva no se restaura.
 6. **Restaurar** combina con reglas distintas según la colección (H-8-13). Desde el esquema 13, los gastos e ingresos no se pisan y un experimento terminado no se reactiva. En Drive, un respaldo mucho más pobre ya no reemplaza al bueno: se guarda aparte y se avisa (H-8-14).
 7. Los reportes se guardan solos en carpetas públicas (H-8-4; capítulo 9). Hasta v84 llevaban nombres de personas y la frase del mejor momento; desde el módulo 10a, los que se guardan solos van en modo discreto y sin esa frase.
-8. Las reglas de privacidad declaradas se cumplen en casi todo (texto de WhatsApp, notificaciones, claves, fotos, seguimiento privado). Hasta v84 fallaban en los impulsos y los medicamentos (H-8-1, H-8-2, resueltos en 10a); siguen fallando en el texto de las cartas selladas dentro del JSON (H-8-5) y en la lista de servicios externos (H-8-17).
-9. El módulo 8 identificó, entre los capítulos 9 y 10, **17 hallazgos** (H-8-1 a H-8-17), sin cambiar código. Después, el módulo 10 resolvió H-8-1, H-8-2, H-8-3, H-8-7, H-8-8, H-8-10, H-8-12 y H-8-16, y en parte H-8-4, H-8-5, H-8-13 y H-8-14; siguen abiertos H-8-6, H-8-9, H-8-11, H-8-15 y H-8-17.
+8. Las reglas de privacidad declaradas se cumplen en casi todo (texto de WhatsApp, notificaciones, claves, fotos, seguimiento privado). Hasta v84 fallaban en los impulsos y los medicamentos (H-8-1, H-8-2, resueltos en 10a); siguen fallando en el texto de las cartas selladas dentro del JSON (H-8-5). La lista de servicios externos estaba incompleta (H-8-17); desde 10e, el texto de privacidad de la app la da completa, y falta corregir el documento de contexto.
+9. El módulo 8 identificó, entre los capítulos 9 y 10, **17 hallazgos** (H-8-1 a H-8-17), sin cambiar código. Después, el módulo 10 resolvió H-8-1, H-8-2, H-8-3, H-8-7, H-8-8, H-8-10, H-8-12 y H-8-16 (10a a 10c) y H-8-9, H-8-11, H-8-15 y H-8-17 (10e), y en parte H-8-4, H-8-5, H-8-13 y H-8-14. Solo sigue pendiente H-8-6 (los logros que premian valores de la valencia; capítulo 9). En total: 12 resueltos, 4 en parte y 1 pendiente.
 
 ---
 
