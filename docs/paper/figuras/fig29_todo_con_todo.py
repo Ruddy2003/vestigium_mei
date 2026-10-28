@@ -10,6 +10,7 @@ from statistics import NormalDist
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 Z = NormalDist().inv_cdf
 def rnec(nef, p): return np.tanh(Z(1 - p / 2) / np.sqrt(nef - 3))
@@ -18,11 +19,11 @@ fig, (a, b) = plt.subplots(1, 2, figsize=(12, 4.8), dpi=160)
 
 v = np.arange(10, 401)
 parejas = v * (v - 1) / 2
-a.plot(v, parejas, color="#2a6f97", lw=2.2, label="parejas posibles, p(p − 1)/2")
-a.plot(v, 0.05 * parejas, color="#b45309", lw=2.2, label="«relaciones» por azar con p < 0.05")
+a.plot(v, parejas, color=estilo.AZUL, lw=2.2, label="parejas posibles, p(p − 1)/2")
+a.plot(v, 0.05 * parejas, color=estilo.OCRE, lw=2.2, label="«relaciones» por azar con p < 0.05")
 for k in (50, 150, 300):
     m = k * (k - 1) / 2
-    a.plot([k, k], [0.05 * m, m], color="#9ca3af", lw=.8, ls=":")
+    a.plot([k, k], [0.05 * m, m], color=estilo.GRIS_MEDIO, lw=.8, ls=":")
     a.annotate(f"{k} variables: {m:,.0f} parejas;\n≈ {0.05 * m:,.0f} falsas".replace(",", " "), (k, 0.05 * m), (k + 6, 0.05 * m / 6),
                fontsize=8, ha="left")
 a.set_yscale("log"); a.set_xlim(10, 400); a.set_ylim(1, 3e5)
@@ -31,18 +32,18 @@ a.set_title("Cada variable nueva se cruza con todas las demás", fontsize=10)
 a.legend(fontsize=8, frameon=False, loc="lower right")
 
 n = np.arange(14, 731)
-casos = [(None, 0.05, "#2a6f97", "-", "una sola pregunta hecha de antemano (p < 0.05)"),
-         (100, 0.10 / 100, "#6b9e3d", "-", "la única real entre 100 parejas (q < 0.10)"),
-         (2000, 0.10 / 2000, "#b45309", "-", "la única real entre 2 000 parejas"),
-         (44850, 0.10 / 44850, "#7c2d12", "--", "la única real entre 44 850 parejas (300 variables)")]
+casos = [(None, 0.05, estilo.AZUL, "-", "una sola pregunta hecha de antemano (p < 0.05)"),
+         (100, 0.10 / 100, estilo.VERDE, "-", "la única real entre 100 parejas (q < 0.10)"),
+         (2000, 0.10 / 2000, estilo.OCRE, "-", "la única real entre 2 000 parejas"),
+         (44850, 0.10 / 44850, estilo.OCRE_OSCURO, "--", "la única real entre 44 850 parejas (300 variables)")]
 for m, p, col, ls, et in casos:
     b.plot(n, rnec(n, p), color=col, lw=2.2, ls=ls, label=et)
 for nef in (100, 365):
-    b.axvline(nef, color="#9ca3af", lw=.8, ls=":")
+    b.axvline(nef, color=estilo.GRIS_MEDIO, lw=.8, ls=":")
     b.annotate(f"nEf = {nef}: {rnec(nef, .05):.2f} frente a {rnec(nef, .10 / 44850):.2f}", (nef, rnec(nef, .10 / 44850)),
-               (nef + 25, rnec(nef, .10 / 44850) + .12), fontsize=8, arrowprops=dict(arrowstyle="->", color="#6b7280"))
+               (nef + 25, rnec(nef, .10 / 44850) + .12), fontsize=8, arrowprops=dict(arrowstyle="->", color=estilo.GRIS))
 for y, et, xt, dy in [(.1, "nula/débil", 40, -.035), (.3, "débil/moderada", 725, .01), (.5, "moderada/fuerte", 725, .01)]:
-    b.axhline(y, color="#e5e7eb", lw=1); b.text(xt, y + dy, et, ha="left" if xt < 100 else "right", fontsize=7, color="#6b7280")
+    b.axhline(y, color=estilo.REJILLA, lw=1); b.text(xt, y + dy, et, ha="left" if xt < 100 else "right", fontsize=7, color=estilo.GRIS)
 b.set_xlim(14, 730); b.set_ylim(0, 1)
 b.set_xlabel("días independientes con ambos datos (nEf)"); b.set_ylabel("|r| que necesita para sostenerse")
 b.set_title("Lo mismo se sostiene o no según cuántas cosas se miraron", fontsize=10)

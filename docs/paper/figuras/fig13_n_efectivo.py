@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 def nef(n, ra, rb):
     ra, rb = np.clip(ra, -.5, .97), np.clip(rb, -.5, .97)
@@ -37,19 +38,19 @@ for phi in phis:
 
 fig, ax = plt.subplots(1, 2, figsize=(12, 4.6), dpi=160)
 rr = np.linspace(-0.5, 0.97, 300)
-for n, c in [(30, "#9ca3af"), (90, "#2a6f97"), (365, "#111827")]:
+for n, c in [(30, estilo.GRIS_MEDIO), (90, estilo.AZUL), (365, estilo.TINTA)]:
     ax[0].plot(rr, nef(n, rr, rr), color=c, lw=2, label=f"n = {n} días")
 ax[0].set_xlabel("autocorrelación de un día al siguiente (la misma en ambas variables)")
 ax[0].set_ylabel("días efectivos (nEf)"); ax[0].set_yscale("log")
 ax[0].set_title("Si hoy se parece a ayer, dos días seguidos no son dos pruebas")
 for r1 in (0.5, 0.8):
     ax[0].annotate(f"r₁ = {r1}: 90 días ≈ {nef(90, r1, r1):.0f} efectivos", (r1, nef(90, r1, r1)), (r1 - .75, nef(90, r1, r1) * .55),
-                   fontsize=8, arrowprops=dict(arrowstyle="->", color="#6b7280"))
+                   fontsize=8, arrowprops=dict(arrowstyle="->", color=estilo.GRIS))
 ax[0].legend(fontsize=8, frameon=False)
 x = np.arange(len(phis)); w = .38
-ax[1].bar(x - w / 2, ingenuo, w, color="#b45309", label="intervalo con n (ingenuo)")
-ax[1].bar(x + w / 2, corregido, w, color="#2a6f97", label="intervalo con nEf (la app)")
-ax[1].axhline(.05, color="#111827", ls="--", lw=1); ax[1].text(len(phis) - .5, .058, "5 % esperado", ha="right", fontsize=8)
+ax[1].bar(x - w / 2, ingenuo, w, color=estilo.OCRE, label="intervalo con n (ingenuo)")
+ax[1].bar(x + w / 2, corregido, w, color=estilo.AZUL, label="intervalo con nEf (la app)")
+ax[1].axhline(.05, color=estilo.TINTA, ls="--", lw=1); ax[1].text(len(phis) - .5, .058, "5 % esperado", ha="right", fontsize=8)
 ax[1].set_xticks(x, [str(p) for p in phis]); ax[1].set_xlabel("autocorrelación real de ambas series")
 ax[1].set_ylabel("falsas alarmas (sin relación real)")
 ax[1].set_title(f"Simulación: {REP} parejas independientes de {N} días")

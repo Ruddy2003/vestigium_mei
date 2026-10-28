@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 N, INI, FIN = 3, 10 * 60, 21 * 60           # minutos desde las 00:00
 tramo = (FIN - INI) / N
@@ -26,31 +27,32 @@ def hm(m):
 fig, ax = plt.subplots(figsize=(12, 4.4), dpi=160)
 ax.set_xlim(5 * 60, 29 * 60); ax.set_ylim(0, 5.35)
 ax.axvspan(5 * 60, 29 * 60, ymin=0, ymax=1, color="#f9fafb")
-ax.axvspan(INI, FIN, ymin=0.6, ymax=0.9, color="#e5e7eb")
-ax.text(INI, 2.75, "ventana de avisos 10:00–21:00 (franjas azules = donde puede caer cada aviso)", fontsize=8.5, color="#374151")
+ax.axvspan(INI, FIN, ymin=0.6, ymax=0.9, color=estilo.REJILLA)
+ax.text(INI, 2.75, "ventana de avisos 10:00–21:00 (franjas azules = donde puede caer cada aviso)", fontsize=8.5, color=estilo.TINTA_2)
 for i in range(N):
     a0 = INI + i * tramo
-    ax.axvline(a0, ymin=0.6, ymax=0.9, color="#9ca3af", lw=0.8, ls=":")
-    ax.axvspan(a0 + margen, a0 + tramo - margen, ymin=0.6, ymax=0.9, color="#bcd4e6")
-    ax.text(a0 + tramo / 2, 4.62, f"tramo {i + 1}: puede caer\n{hm(a0 + margen)}–{hm(a0 + tramo - margen)}", ha="center", fontsize=8, color="#1f2937")
+    ax.axvline(a0, ymin=0.6, ymax=0.9, color=estilo.GRIS_MEDIO, lw=0.8, ls=":")
+    ax.axvspan(a0 + margen, a0 + tramo - margen, ymin=0.6, ymax=0.9, color=estilo.AZUL_CLARO)
+    ax.text(a0 + tramo / 2, 4.62, f"tramo {i + 1}: puede caer\n{hm(a0 + margen)}–{hm(a0 + tramo - margen)}", ha="center", fontsize=8, color=estilo.TINTA)
 for t, l in zip(plan, lat):
-    ax.plot([t, t], [3.05, 4.3], color="#2a6f97", lw=2)
-    ax.plot(t, 4.3, "v", color="#2a6f97", ms=8)
-    ax.text(t, 3.95, " aviso " + hm(t), ha="left", fontsize=8.5, color="#2a6f97")
+    ax.plot([t, t], [3.05, 4.3], color=estilo.AZUL, lw=2)
+    ax.plot(t, 4.3, "v", color=estilo.AZUL, ms=8)
+    ax.text(t, 3.95, " aviso " + hm(t), ha="left", fontsize=8.5, color=estilo.AZUL)
     if l is None:
-        ax.plot([t, t + 60], [2.35, 2.35], color="#b45309", lw=2)
-        ax.text(t + 30, 2.05, "sin respuesta: caduca\na los 60 min", ha="center", fontsize=8, color="#b45309")
+        ax.plot([t, t + 60], [2.35, 2.35], color=estilo.OCRE, lw=2)
+        ax.text(t + 30, 2.2, "sin respuesta: caduca\na los 60 min", ha="center", va="top", fontsize=8, color=estilo.OCRE)
     else:
-        ax.plot(t + l, 2.35, "o", color="#065f46", ms=7)
-        ax.text(t + l, 2.0, f"respuesta\nlatencia {l} min", ha="center", fontsize=8, color="#065f46")
+        ax.plot(t + l, 2.35, "o", color=estilo.VERDE, ms=7)
+        ax.text(t + l, 2.15, f"respuesta\nlatencia {l} min", ha="center", va="top", fontsize=8, color=estilo.VERDE)
 # Otros momentos del día
 otros = [(8 * 60, "aviso de sueño\n8:00 (dura 3 h)"), (13 * 60 + 10, "registro por\niniciativa propia"), (22 * 60, "aviso del diario\n22:00"),
-         (23 * 60 + 50, "cierre del día:\n«cómo estás ahora»")]
+         (23 * 60 + 15, "cierre del día:\n«cómo estás ahora»")]
 for t, txt in otros:
-    ax.plot(t, 1.0, "s", color="#4b5563", ms=7)
-    ax.text(t, 0.35, txt, ha="center", fontsize=8, color="#374151")
-ax.axvline(29 * 60 - 1, color="#111827", lw=1)
-ax.axvline(24 * 60, color="#9ca3af", lw=0.8, ls="--"); ax.text(24 * 60 + 5, 1.6, "medianoche", fontsize=8, color="#6b7280")
+    ax.plot(t, 1.0, "s", color=estilo.TINTA_2, ms=7)
+    arriba = t > 23 * 60   # el cierre va arriba de su marca para no pisar el aviso del diario
+    ax.text(t, 1.3 if arriba else 0.35, txt, ha="center", fontsize=8, color=estilo.TINTA_2)
+ax.axvline(29 * 60 - 1, color=estilo.TINTA, lw=1)
+ax.axvline(24 * 60, color=estilo.GRIS_MEDIO, lw=0.8, ls="--"); ax.text(24 * 60 + 5, 1.6, "medianoche", fontsize=8, color=estilo.GRIS)
 ticks = list(range(5 * 60, 29 * 60 + 1, 120))
 ax.set_xticks(ticks); ax.set_xticklabels([hm(t) for t in ticks])
 ax.set_yticks([])

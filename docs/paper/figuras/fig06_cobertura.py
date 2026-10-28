@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 rng = np.random.default_rng(5)
 D = 90
@@ -26,16 +27,16 @@ M[11] = False; M[11, 25:85] = rng.random(60) > .5     # laptop: irregular
 M[12, 0:45] = True                                     # nutrición: importada por periodos
 cov = M.mean(axis=1) * 100
 fig, (ax, bx) = plt.subplots(1, 2, figsize=(11, 5), dpi=160, gridspec_kw={"width_ratios": [4.2, 1], "wspace": .05})
-ax.imshow(M, aspect="auto", cmap=matplotlib.colors.ListedColormap(["#e5e7eb", "#2a6f97"]), interpolation="nearest")
+ax.imshow(M, aspect="auto", cmap=matplotlib.colors.ListedColormap([estilo.REJILLA, estilo.AZUL]), interpolation="nearest")
 ax.set_yticks(range(len(vars_))); ax.set_yticklabels(vars_, fontsize=8.5)
 ax.set_xticks(range(0, D, 15)); ax.set_xticklabels([f"d{i+1}" for i in range(0, D, 15)], fontsize=8)
 ax.set_xticks(np.arange(-.5, D, 1), minor=True); ax.set_yticks(np.arange(-.5, len(vars_), 1), minor=True)
 ax.grid(which="minor", color="white", lw=.6); ax.tick_params(which="both", length=0)
 for s in ax.spines.values(): s.set_visible(False)
-bx.barh(range(len(vars_)), cov, color="#2a6f97", height=.7); bx.set_ylim(len(vars_) - .5, -.5); bx.set_xlim(0, 100)
+bx.barh(range(len(vars_)), cov, color=estilo.AZUL, height=.7); bx.set_ylim(len(vars_) - .5, -.5); bx.set_xlim(0, 100)
 bx.set_yticks([]); bx.tick_params(labelsize=8); bx.set_xlabel("% de días con dato", fontsize=8.5)
-for i, c in enumerate(cov): bx.text(c + 2, i, f"{c:.0f}%", va="center", fontsize=7.5, color="#374151")
+for i, c in enumerate(cov): bx.text(c + 2, i, f"{c:.0f}%", va="center", fontsize=7.5, color=estilo.TINTA_2)
 for s in ["top", "right", "left"]: bx.spines[s].set_visible(False)
-fig.suptitle("Figura 4.3  Cobertura sintética de 90 días: claro = sin dato (null), oscuro = con dato", x=0.01, ha="left", fontsize=11.5, weight="bold", color="#1f2937")
+fig.suptitle("Figura 4.3  Cobertura sintética de 90 días: claro = sin dato (null), oscuro = con dato", x=0.01, ha="left", fontsize=11.5, weight="bold", color=estilo.TINTA)
 fig.subplots_adjust(left=.2,right=.97,top=.9,bottom=.12)
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig06_cobertura.png")

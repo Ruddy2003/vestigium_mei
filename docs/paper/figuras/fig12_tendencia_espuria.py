@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 rng = np.random.default_rng(12)
 N, VENTANA = 150, 10
@@ -31,20 +32,21 @@ def r(a, b):
 ra, rb = resto(pantalla), resto(valencia)
 r_bruta, n = r(pantalla, valencia); r_sin, _ = r(ra, rb)
 fig, ax = plt.subplots(2, 2, figsize=(12, 7.2), dpi=160, gridspec_kw={"width_ratios": [2.1, 1]})
-a = ax[0, 0]; a2 = a.twinx()
-a.plot(t, pantalla, ".", color="#2a6f97", ms=4); a2.plot(t, valencia, ".", color="#b45309", ms=4)
-a.set_ylabel("pantalla (min)", color="#2a6f97"); a2.set_ylabel("valencia", color="#b45309")
+def z(x): return (x - np.nanmean(x)) / np.nanstd(x)   # un solo eje: cada serie en desviaciones de su promedio
+a = ax[0, 0]
+a.plot(t, z(pantalla), ".", color=estilo.AZUL, ms=4, label="pantalla (min)"); a.plot(t, z(valencia), ".", color=estilo.OCRE, ms=4, label="valencia")
+a.set_ylabel("desviaciones de su promedio (z)"); a.legend(loc="upper left", fontsize=8, markerscale=2)
 a.set_title("Valores tal cual: las dos solo comparten una tendencia lenta")
-b = ax[1, 0]; b2 = b.twinx()
-b.plot(t, ra, ".", color="#2a6f97", ms=4); b2.plot(t, rb, ".", color="#b45309", ms=4)
-b.axhline(0, color="#9ca3af", lw=.8)
-b.set_ylabel("pantalla − su promedio ±10 d", color="#2a6f97"); b2.set_ylabel("valencia − su promedio ±10 d", color="#b45309")
+b = ax[1, 0]
+b.plot(t, z(ra), ".", color=estilo.AZUL, ms=4, label="pantalla − su promedio ±10 d"); b.plot(t, z(rb), ".", color=estilo.OCRE, ms=4, label="valencia − su promedio ±10 d")
+b.axhline(0, color=estilo.GRIS_MEDIO, lw=.8)
+b.set_ylabel("desviaciones de su promedio (z)"); b.legend(loc="upper left", fontsize=8, markerscale=2)
 b.set_title("Sin tendencia: lo que cada día tuvo de distinto a sus ~3 semanas vecinas"); b.set_xlabel("día")
 okb = ~np.isnan(pantalla) & ~np.isnan(valencia)
-ax[0, 1].scatter(pantalla[okb], valencia[okb], s=10, color="#6b7280")
+ax[0, 1].scatter(pantalla[okb], valencia[okb], s=10, color=estilo.GRIS)
 ax[0, 1].set_title(f"con tendencia: r = {r_bruta:+.2f} (n = {n})"); ax[0, 1].set_xlabel("pantalla"); ax[0, 1].set_ylabel("valencia")
 oks = ~np.isnan(ra) & ~np.isnan(rb)
-ax[1, 1].scatter(ra[oks], rb[oks], s=10, color="#6b7280")
+ax[1, 1].scatter(ra[oks], rb[oks], s=10, color=estilo.GRIS)
 ax[1, 1].set_title(f"sin tendencia: r = {r_sin:+.2f} (n = {oks.sum()})"); ax[1, 1].set_xlabel("resto de pantalla"); ax[1, 1].set_ylabel("resto de valencia")
 for x in ax.flat: x.spines[["top"]].set_visible(False)
 fig.suptitle("Dos cosas que solo cambian con los meses parecen relacionadas; al compararlas día contra sus vecinos, la relación desaparece", fontsize=10)

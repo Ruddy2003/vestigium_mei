@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 rng = np.random.default_rng(11)
 medias = np.array([5.9, 6.3, 6.7, 7.1, 7.5, 7.9])        # horas de sueño promedio de cada persona
@@ -21,18 +22,18 @@ for i, (mu, b) in enumerate(zip(medias, pendientes)):
     y = np.clip(y, 1, 7)
     prom.append((x.mean(), y.mean()))
     if i == TU:
-        ax.scatter(x, y, s=18, color="#b45309", alpha=.75, zorder=3, label="tus días (60)")
+        ax.scatter(x, y, s=18, color=estilo.OCRE, alpha=.75, zorder=3, label="tus días (60)")
         bb, aa = np.polyfit(x, y, 1)
         xs = np.linspace(x.min(), x.max(), 2)
-        ax.plot(xs, aa + bb * xs, color="#b45309", lw=2.2, zorder=4, label=f"dentro de ti: {bb:+.2f} puntos por hora")
+        ax.plot(xs, aa + bb * xs, color=estilo.OCRE, lw=2.2, zorder=4, label=f"dentro de ti: {bb:+.2f} puntos por hora")
         print("pendiente dentro de «tú»:", round(bb, 3))
     else:
-        ax.scatter(x, y, s=10, color="#9ca3af", alpha=.45, zorder=2, label="días de otras cinco personas" if i == 0 else None)
+        ax.scatter(x, y, s=10, color=estilo.GRIS_MEDIO, alpha=.45, zorder=2, label="días de otras cinco personas" if i == 0 else None)
 px, py = np.array(prom).T
-ax.scatter(px, py, s=70, color="#2a6f97", edgecolor="white", lw=1.5, zorder=5, label="promedio de cada persona")
+ax.scatter(px, py, s=70, color=estilo.AZUL, edgecolor="white", lw=1.5, zorder=5, label="promedio de cada persona")
 bb, aa = np.polyfit(px, py, 1)
 xs = np.linspace(5.2, 8.6, 2)
-ax.plot(xs, aa + bb * xs, color="#2a6f97", lw=2, ls="--", zorder=4, label=f"entre personas: {bb:+.2f} puntos por hora")
+ax.plot(xs, aa + bb * xs, color=estilo.AZUL, lw=2, ls="--", zorder=4, label=f"entre personas: {bb:+.2f} puntos por hora")
 print("pendiente entre personas:", round(bb, 3))
 ax.set_xlabel("horas de sueño de la noche"); ax.set_ylabel("valencia del día (1 a 7)")
 ax.set_xlim(4.2, 9.8); ax.set_ylim(1, 7)

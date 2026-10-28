@@ -5,6 +5,7 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 from matplotlib.patches import Rectangle
 
 COL = ["Pantallas\n(salvo Privado)", "Reportes\n(a mano /\nautomáticos)", "«Tu año»\n(historias para\ncompartir)",
@@ -26,19 +27,19 @@ F = {
                         ("CSV sin texto,\nJSON con texto", 2, 1), ("CSV sin texto,\nJSON con texto", 2, 1), ("cifrado", 3, 0), ("no", 0, 0)],
     "Salud, sueño, pasos": [("sí", 2, 0), ("sí", 2, 0), ("sí", 2, 0), ("sí", 2, 0), ("sí", 2, 0), ("sí", 2, 0), ("sí", 2, 0), ("cifrado", 3, 0), ("no", 0, 0)],
 }
-COLOR = {0: "#f3f4f6", 1: "#dbe7f0", 2: "#9cc0d9", 3: "#c7e3c0"}
+COLOR = {0: "#f3f4f6", 1: estilo.AZUL_PALIDO, 2: estilo.AZUL_CLARO, 3: estilo.VERDE_CLARO}
 filas = list(F)
 fig, ax = plt.subplots(figsize=(15.5, 7.4), dpi=160)
 ax.set_xlim(-2.2, len(COL)); ax.set_ylim(len(filas), -1.15); ax.axis("off")
-for j, c in enumerate(COL): ax.text(j + .5, -.12, c, ha="center", va="bottom", fontsize=7.6, color="#1f2937", weight="bold")
+for j, c in enumerate(COL): ax.text(j + .5, -.12, c, ha="center", va="bottom", fontsize=7.6, color=estilo.TINTA, weight="bold")
 for i, f in enumerate(filas):
-    ax.text(-.08, i + .5, f, ha="right", va="center", fontsize=8.5, color="#1f2937", weight="bold")
+    ax.text(-.08, i + .5, f, ha="right", va="center", fontsize=8.5, color=estilo.TINTA, weight="bold")
     for j, (t, n, h) in enumerate(F[f]):
-        ax.add_patch(Rectangle((j + .03, i + .05), .94, .9, fc=COLOR[n], ec="#c1121f" if h else "white", lw=2.2 if h else 1))
-        ax.text(j + .5, i + .5, t, ha="center", va="center", fontsize=6.6, color="#1f2937")
-ley = [Rectangle((0, 0), 1, 1, fc=COLOR[k]) for k in (0, 1, 2, 3)] + [Rectangle((0, 0), 1, 1, fc="white", ec="#c1121f", lw=2)]
+        ax.add_patch(Rectangle((j + .03, i + .05), .94, .9, fc=COLOR[n], ec=estilo.ROJO if h else "white", lw=2.2 if h else 1))
+        ax.text(j + .5, i + .5, t, ha="center", va="center", fontsize=6.6, color=estilo.TINTA)
+ley = [Rectangle((0, 0), 1, 1, fc=COLOR[k]) for k in (0, 1, 2, 3)] + [Rectangle((0, 0), 1, 1, fc="white", ec=estilo.ROJO, lw=2)]
 ax.legend(ley, ["no llega", "agregado o conteo", "contenido", "cifrado", "hallazgo abierto (H-8-5)"], loc="lower center",
           bbox_to_anchor=(.45, -.1), ncol=5, fontsize=8, frameon=False)
-fig.suptitle("Figura 10.1  Qué datos llegan a cada salida (después del módulo 10a)", x=.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
+fig.suptitle("Figura 10.1  Qué datos llegan a cada salida (después del módulo 10a)", x=.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.tight_layout(rect=(0, .03, 1, .95))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig24_flujo_privacidad.png")
