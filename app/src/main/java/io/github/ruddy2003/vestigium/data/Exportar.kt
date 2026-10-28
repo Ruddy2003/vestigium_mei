@@ -770,8 +770,9 @@ object Exportar {
         val est = runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel(dinamicas = true, extendido = true) }.getOrDefault(emptyMap())
         for ((f, r) in est) {
             val fila = filas.getOrPut(f) { linkedMapOf<String, Any?>("fecha" to f) }
-            // Los nutrientes, los minutos por app y por movimiento vienen completos de sus tablas (abajo).
-            r.forEach { (k, v) -> if (k !in fila && !k.startsWith("nut_") && !k.startsWith("act_") && !k.startsWith("app_")) fila[k] = v }
+            // Todas las del panel de la app, con su nombre: R cruza las mismas (vm_variables.csv). Los nutrientes, los minutos por
+            // app y por movimiento salen además completos de sus tablas (abajo), con su propio nombre.
+            r.forEach { (k, v) -> if (k !in fila) fila[k] = v }
         }
         fun igual(a: Any?, b: Any?): Boolean = when {
             a == null || b == null -> a == b
