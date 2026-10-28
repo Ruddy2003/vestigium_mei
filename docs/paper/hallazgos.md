@@ -34,7 +34,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** puede transformar un «sin dato» en un valor aparente (p. ej. 0 o `false`).
 - **Gravedad:** Media.
 - **Propuesta:** registrar cuántas coerciones ocurren al cargar; para campos analíticos usar tipos anulables.
-- **Estado:** Pendiente (v90).
+- **Estado:** Pendiente (v90): necesita contar las coerciones al cargar y cambiar tipos guardados; queda para una revisión con el teléfono.
 
 ### H-1-5 · `gasto_imprevisto` es binaria pero su nombre sugiere un monto
 - **Dónde:** `panel()`: `r["gasto_imprevisto"] = b(lista.any { it.imprevisto })`.
@@ -42,7 +42,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** riesgo de interpretar como dinero; mezcla de escalas en comparaciones.
 - **Gravedad:** Baja.
 - **Propuesta:** renombrar (`hubo_gasto_imprevisto`) y/o añadir `gasto_imprevisto_monto`.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.94): se agregó `gasto_imprevisto_monto`; `gasto_imprevisto` conserva su nombre para no romper la serie.
 
 ### H-1-6 · Menciones cuentan como «estuve con» por omisión
 - **Dónde:** `data/Presencias.kt`, `enDiario()` devuelve `ESTUVE` si no hay estado explícito; `panel()` calcula `personas_vistas`, `vi_*` desde ese estado.
@@ -58,7 +58,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** tras viajes o cambios de horario, la hora de dormir/uso y la asignación al día lógico pueden desplazarse.
 - **Gravedad:** Baja (sujeto con poca movilidad entre zonas) / Media (viajes largos).
 - **Propuesta:** respetar el desfase guardado en el ISO (`OffsetDateTime`) al calcular hora y día lógico.
-- **Estado:** Pendiente (v90).
+- **Estado:** Pendiente (v90): respetar el desfase guardado cambia cómo se reparte cada registro en días; es un cambio grande que conviene decidir aparte.
 
 ### H-1-8 · El diccionario no versiona definiciones por variable
 - **Dónde:** `data/Diccionario.kt` / `Exportar.kt` (`vm_diccionario.csv`).
@@ -66,7 +66,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** exportaciones de distintas fechas pueden no ser comparables sin que lo advierta el archivo.
 - **Gravedad:** Baja.
 - **Propuesta:** añadir columna `desde_version` y registro de cambios por variable.
-- **Estado:** Pendiente (v90).
+- **Estado:** Pendiente (v90): falta la columna `desde_version` por variable; el Apéndice D tiene el historial.
 
 ### H-1-9 · Los días importados no reciben sellos de tiempo ni versión
 - **Dónde:** `data/Repo.kt`, `importarDias()` (guarda `d` sin pasar por `guardarDia`).
@@ -108,7 +108,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** la serie mezcla dos tipos de fuente con sesgos distintos; puede introducir un salto artificial entre periodos.
 - **Gravedad:** Media.
 - **Propuesta:** registrar la fuente por día y, cuando sea posible, reemplazar pronóstico por reanálisis al estar disponible.
-- **Estado:** Pendiente (v90).
+- **Estado:** Pendiente (v90): registrar la fuente del clima por día cambia lo que se guarda y la consulta a Open-Meteo; no se puede comprobar sin la red.
 
 ### H-3-5 · Distancia (km) es cota inferior y mezcla fuentes de precisión distinta
 - **Dónde:** `ciencia/Estadistica.kt`, `kmPorDia`.
@@ -116,7 +116,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** subestimación sistemática, variable según densidad de muestreo.
 - **Gravedad:** Baja.
 - **Propuesta:** documentar como cota inferior; opcionalmente ponderar o filtrar por fuente.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto por documentación (sin cambio de código): la propuesta era documentarlo como cota inferior, y así se describe en el capítulo 4.
 
 ### H-3-6 · Categorías de Cold Turkey por coincidencia de texto («contiene»)
 - **Dónde:** `Lote3.kt` (ColdTurkey).
@@ -132,7 +132,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** sobreestimaría el tiempo sin wifi.
 - **Gravedad:** Baja–Media (no pude verificarlo sin el teléfono).
 - **Propuesta:** distinguir «sin permiso/dato» de «sin red»; revisar en el dispositivo.
-- **Estado:** Pendiente, con riesgo bajo: `Percepcion.wifi` solo cuenta «sin wifi» si `networkId == −1` y la IP es 0, o si no hay información, así que el mecanismo es poco probable (no comprobado en un teléfono).
+- **Estado:** Pendiente, con riesgo bajo: `Percepcion.wifi` solo cuenta «sin wifi» si `networkId == −1` y la IP es 0, o si no hay información, así que el mecanismo es poco probable (no comprobado en un teléfono). Necesita revisarse en el teléfono.
 
 ### H-3-8 · Detalles de almacenamiento de ubicación
 - **Dónde:** `sensores/Percepcion.kt`/`Ubicacion.kt` (inserta siempre una muestra por pulso, aunque el comentario dice que solo si cambió algo) y `Importaciones.kt` (puntos de Maps sin precisión).
@@ -148,7 +148,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** error de minutos; afecta solo cerca del corte de las 05:00.
 - **Gravedad:** Baja.
 - **Propuesta:** documentar; usar `ms_played` del historial extendido cuando exista.
-- **Estado:** Pendiente solo para la API: el historial descargable ya usa `ms_played` (`Importaciones.spotify`).
+- **Estado:** Resuelto por documentación (sin cambio de código): el historial descargable usa `ms_played` (`Importaciones.spotify`); la API de Spotify no da cuánto se escuchó, y el límite queda descrito en el capítulo 4.
 
 ### H-3-10 · Fechas ambiguas (día/mes vs. mes/día) y detección de multimedia solo es/en (WhatsApp)
 - **Dónde:** `Importar.kt` (WhatsApp).
@@ -156,7 +156,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** un export mes/día en chat corto se invierte; en otros idiomas, avisos de multimedia cuentan como palabras.
 - **Gravedad:** Baja.
 - **Propuesta:** pedir confirmación del formato cuando es ambiguo.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.105): en chats ambiguos decide el orden de los mensajes, sin preguntar; los avisos de multimedia se reconocen en seis idiomas.
 
 ## Módulo 2 · Medición del estado subjetivo (v81)
 
@@ -238,7 +238,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** no permite estudiar el sesgo de pronóstico afectivo (en qué dirección te equivocas).
 - **Gravedad:** Baja.
 - **Propuesta:** añadir `error_prediccion_signo = valencia − predicción`.
-- **Estado:** Pendiente (v90): ni el panel ni R tienen un error con signo.
+- **Estado:** Resuelto en 10e (D.94): `error_prediccion_signo` = valencia − predicción.
 
 ### H-2-11 · Elementos de la interfaz que pueden influir en la respuesta del día
 - **Dónde:** `ui/pantallas/Dia.kt`, `PantallaNoche` (línea «avisos: hh:mm→v» junto a la escala de valencia del día); `ui/Componentes.kt`, `Escala` (activación con `Tonos.divergente`, la misma paleta que la valencia).
@@ -288,7 +288,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** la vida media real va de 1.5 a 9.5 h entre personas (Institute of Medicine, 2001); con la misma tarde, la cafeína al dormir puede variar de 12 a 106 mg. La cifra solo es comparable contigo mismo.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar; opcionalmente, un modelo de absorción y eliminación de primer orden y mostrar la cifra como rango.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto por documentación (sin cambio de código): la propuesta era documentar; la forma de la curva y la vida media única se describen en el capítulo 5.
 
 ### H-4-2 · Cafeína y alcohol: una sola fuente por día y la hora de MacroFactor
 - **Dónde:** `data/Sustancias.kt`, `dosis()` (si MacroFactor tiene algo de esa sustancia ese día, se ignoran los registros propios del día).
@@ -296,7 +296,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** subestima `cafeina_total_mg`, `cafeina_al_dormir_mg`, `alcohol_bebidas` y `alcohol_*`, y desplaza las curvas.
 - **Gravedad:** Media.
 - **Propuesta:** combinar por toma (descartar un registro propio solo si hay uno de MacroFactor a menos de, por ejemplo, 30 min con cantidad parecida) en vez de por día.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.91): se combina toma por toma (90 minutos; en la cafeína, cantidad de la mitad al doble; en el alcohol, la fuente con más gramos).
 
 ### H-4-3 · En el hilo principal sin caché, las variables de sustancias omiten MacroFactor
 - **Dónde:** `ciencia/Estadistica.kt`, `sustancias()` (`Sustancias.dosis(ini, hoy, if (enMain) emptyList() else null)`); `ui/pantallas/Lote3.kt`, `PantallaExperimentos` (panel calculado en el hilo principal).
@@ -320,7 +320,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** subestima el máximo en noches largas.
 - **Gravedad:** Baja.
 - **Propuesta:** simular la serie continua y asignar a cada día el máximo dentro de su ventana.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.88): la simulación incluye las dosis de las 24 horas previas.
 
 ### H-4-6 · Creatina: la dosis de referencia hace el llenado más lento que el estudio de origen
 - **Dónde:** `data/Lote3.kt`, `Suplementos.carga()` y `CATALOGO` (5 g, 28 días, 35 días).
@@ -328,7 +328,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** `creatina_saturacion_pct` subestima el llenado con dosis bajas; no es una medida del músculo.
 - **Gravedad:** Baja.
 - **Propuesta:** dosis de referencia de 3 g (o documentarlo en la pantalla); solo documentar el resto.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.98): referencia de 3 g en la creatina; lo demás (saturación del modelo, sin dieta ni no respondedores) queda documentado.
 
 ### H-4-7 · Suplementos con vida media: variables poco útiles o sin fuente
 - **Dónde:** `data/Lote3.kt`, `Suplementos.cantidadEn()` y `panel()` (nivel al final del día lógico, 5:00).
@@ -336,7 +336,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** variables que ocupan lugar en los análisis sin información útil, o con unidades que se prestan a malinterpretarse.
 - **Gravedad:** Baja.
 - **Propuesta:** para vidas medias cortas, no exportar `nivel` (o calcularlo a una hora fija relevante); documentar las unidades.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en parte en 10e (D.98): sin `nivel` para vidas medias de menos de 6 h (melatonina). Las fuentes de magnesio y omega-3 y las unidades de la vitamina D siguen solo documentadas.
 
 ### H-4-8 · Probióticos por palabras clave
 - **Dónde:** `data/Lote3.kt`, `Suplementos.probioticosEstimados()`.
@@ -368,7 +368,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** exportaciones de fechas distintas pueden no ser comparables y no hay forma de saberlo (relacionado con H-1-8).
 - **Gravedad:** Baja.
 - **Propuesta:** guardar el historial de parámetros (con fecha) y escribir en el diccionario el valor vigente al exportar.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en parte en 10e (D.99): el diccionario dice los parámetros vigentes al exportar. No se guarda el historial de parámetros: cambiarlos sigue recalculando toda la historia.
 
 ### H-4-12 · Cuatro variables de cafeína con fuentes distintas
 - **Dónde:** `ciencia/Estadistica.kt` (`cafeina_mg` y `cafeina_ultima_h` de MacroFactor; `cafeina_total_mg` y `cafeina_al_dormir_mg` de MacroFactor y registros propios).
@@ -376,7 +376,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** confusión al elegir cuál cruzar; las «relaciones obvias» las agrupan, pero el usuario ve cifras distintas.
 - **Gravedad:** Baja.
 - **Propuesta:** derivar las cuatro de la misma lista de dosis (`Sustancias.dosis`).
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en parte en 10e (D.92): `cafeina_ultima_h` sale de las mismas dosis que `cafeina_total_mg` y `cafeina_al_dormir_mg`. `cafeina_mg` sigue siendo el nutriente de MacroFactor tal cual, como los demás nutrientes.
 
 ### H-4-13 · La repetición máxima estimada usa tres criterios distintos
 - **Dónde:** `data/Macrofactor.kt`, `e1rm()` (1 a 12 repeticiones, sin calentamientos; va a la exportación y a `vm_fuerza()`); `ciencia/Periodo.kt` (1 a 15 repeticiones, con calentamientos; reportes); `ui/pantallas/TusApps.kt` (sin límite).
@@ -436,7 +436,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: el día de la semana es un confusor común (sueño, ánimo, pantalla, gasto, alcohol); relaciones «firmes» pueden deberse solo al calendario.
 - Gravedad: media.
 - Propuesta: opción de restar también la media de cada día de la semana (calculada sobre los restos) antes de correlacionar, o documentarlo en la pantalla; en R, sugerir `factor(dia_semana)` en los modelos.
-- Estado: Pendiente (v90).
+- Estado: Resuelto en parte en 10e (D.103, D.106): en R, `sin_semana = TRUE` en `vm_relaciones` y `vm_factores`; en la app, la pantalla lo dice, pero no hay opción para quitarlo.
 
 ### H-5-7 · Pearson y Spearman mezclados entre pantallas y con R (pista 5 confirmada)
 - Dónde: `Estadistica.relaciones` (Pearson sobre restos), `Analisis.factores` (Spearman), Explorar «Cruzar dos variables» (muestra ambos, razona con Pearson), `vestigium.R`: `vm_cruce`, `vm_factores`, `vm_cruce_horas`, `vm_presion` (Spearman por omisión), `vm_relaciones` (Pearson).
@@ -444,7 +444,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: confusión; parece que los análisis se contradicen.
 - Gravedad: baja.
 - Propuesta: un solo coeficiente principal por tipo de análisis, nombrado siempre en pantalla; `vm_cruce` con `metodo = "pearson"` por omisión o mostrar ambos como la app.
-- Estado: Pendiente (v90).
+- Estado: Resuelto en parte en 10e (D.106): `vm_cruce` da Pearson (principal) y Spearman, como la app. «Todo lo que se mueve con algo» y `vm_factores` siguen con su coeficiente propio.
 
 ### H-5-8 · Días atípicos: la variable `km` no existe en el panel de la app
 - Dónde: `ciencia/Analisis.kt`, `atipicos()`, lista `ids`.
@@ -484,7 +484,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: inconsistencia de definiciones en la misma tarjeta; pequeñas diferencias con R.
 - Gravedad: baja.
 - Propuesta: un solo umbral (o nombrarlos distinto: «muy difíciles» ≤ 2); documentar la diferencia mensual con R.
-- Estado: Pendiente (v90).
+- Estado: Resuelto en 10e (D.103, D.106): «muy difíciles» (1 o 2) y «racha dura» (3 o menos) se nombran distinto; `vm_dinamica` ya no empareja días de meses distintos.
 
 ### H-5-13 · Límites de la corrección por autocorrelación
 - Dónde: `ciencia/Estadistica.kt`, `autocorr()` y `relaciones()`.
@@ -492,7 +492,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: en esos casos nEf = n y la relación parece más segura de lo que es.
 - Gravedad: baja.
 - Propuesta: solo documentar; opcionalmente usar un valor prudente (p. ej., 0.3) cuando no se puede estimar.
-- Estado: Pendiente (v90).
+- Estado: Resuelto en 10e (D.95): 0.3 cuando no se puede estimar, en la app y en R. La autocorrelación sigue estimándose sobre toda la serie y con AR(1) (documentado).
 
 ### H-5-14 · Las variables de etapa, cuestionario y política casi nunca entran «sin tendencia»
 - Dónde: `ciencia/Estadistica.kt`, `series()` (criterio de lenta var(resto)/var < 0.12) aplicado a `vida_*`, `pol_*`, `esc_*` de `Dinamicas.kt`.
@@ -500,7 +500,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: la promesa «cruzar todo con todo» no se cumple para estas variables en el modo recomendado; el usuario puede no notarlo (la pantalla las nombra solo en el texto de lentas).
 - Gravedad: baja.
 - Propuesta: solo documentar, o remitir desde la lista a «Antes y después» y al análisis en R para estas variables.
-- Estado: Pendiente (v90).
+- Estado: Resuelto en 10e (D.103): la lista remite a «Antes y después» cuando deja fuera etapas, cuestionarios o la brújula.
 
 ### H-5-15 · Reportes y Totales: fechas y horas con criterios distintos al panel
 - Dónde: `ciencia/Periodo.kt` (`horaDec` suma 24 a las horas < 15; lee la hora del texto ISO; ingresos por `fecha`, gastos por `dia`; `valDe` cae a los registros de ánimo si no hay diario); `ciencia/Totales.kt` (gastos e ingresos por `fecha` de calendario).
@@ -542,7 +542,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** `vi_pareja`/`vi_expareja` y `penso_en_*` quedan mal asignados alrededor de los cambios, que suelen ser justo los periodos más interesantes.
 - **Gravedad:** Media.
 - **Propuesta:** permitir elegir la fecha del cambio (por omisión, hoy) y, opcionalmente, una fecha «desde» real de la relación.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en parte en 10e (D.102): se puede elegir la fecha del cambio. Los días antes de la primera clasificación siguen con la relación más antigua.
 
 ### H-6-4 · Conocerte sin historial y sin equivalencias
 - **Dónde:** `data/Perfiles.kt`, `relacion()` (`p.cercanas.firstOrNull { it.nombre == persona }`, `persona in p.convivientes`); `ciencia/Estadistica.kt`, `panel()` (`vi_convivientes` con `perfil.convivientes` actual).
@@ -582,7 +582,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** las métricas cambian con cuánto escribes, no con la estructura de tu red; comparar periodos o versiones puede llevar a conclusiones falsas.
 - **Gravedad:** Baja.
 - **Propuesta:** argumento `min_dias` en `vm_red()` (p. ej., 3) y documentarlo; solo documentar en la app.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.106): `vm_red(min_dias = 3)`; en la app queda documentado.
 
 ### H-6-9 · Cada función usa fuentes distintas para «quién aparece»
 - **Dónde:** `Personas.menciones`, `Estadistica.panel` (`personas`), `Presencias.delDia`, `Dinamicas` (`per_`), `Constelacion.calcular`, `RedPersonas.calcular`, tarjetas de `Explorar.kt` y `Vida.kt`.
@@ -638,7 +638,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** la validez de la IOS es para la versión pictórica en un momento dado; `cercania_media` mide a quién nombras más que la cercanía de ese día.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar; opcionalmente, recordar revisar la cercanía una vez al año.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto por documentación (sin cambio de código): la propuesta era documentar; las diferencias con la IOS original se describen en el capítulo 7.
 
 ## Módulo 7 · Experimentos personales N-de-1 (v81, commit `fa527df`)
 
@@ -697,7 +697,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** con pocos días, *d* inflado; las etiquetas («mediano», «grande») sugieren comparaciones con la literatura que no aplican.
 - **Gravedad:** Baja.
 - **Propuesta:** aplicar la corrección de Hedges y aclarar en la tarjeta que la escala es relativa a tus días.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.96): g de Hedges y la escala dicha como relativa a tus días.
 
 ### H-7-8 · No se registra la adherencia
 - **Dónde:** modelo `Experimento` (`data/Modelo.kt`); aviso en `ui/pantallas/Dia.kt`.
@@ -721,7 +721,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el prerregistro queda incompleto (ver H-7-4); su valor depende de la disciplina del usuario.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar; opcionalmente, sellar también el umbral de decisión y guardar una huella (hash) del texto sellado.
-- **Estado:** Pendiente en lo principal (el sello no fija el análisis). Desde el esquema 13 (10b), `Fusion.experimento` hace que restaurar un respaldo no reescriba el texto ni el plan de un experimento que ya está en el teléfono.
+- **Estado:** Pendiente en lo principal (el sello no fija el análisis). Desde el esquema 13 (10b), `Fusion.experimento` hace que restaurar un respaldo no reescriba el texto ni el plan de un experimento que ya está en el teléfono. Sellar el criterio de decisión cambiaría lo que se guarda: queda para decidir.
 
 ### H-7-11 · No hay función de R para analizar los experimentos
 - **Dónde:** `assets/vestigium.R` (lee `vm_experimentos.csv` pero no lo usa); `data/Exportar.kt`, `filasExperimentos()`.
@@ -729,7 +729,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el resultado de la app no se puede comprobar fuera de ella; criterio (b) del módulo 9 por ausencia.
 - **Gravedad:** Baja.
 - **Propuesta:** `vm_experimento(id)` que replique `Experimentos.resultado` y añada la prueba de aleatorización sobre todos los planes posibles.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.97): `vm_experimento(id)` con prueba de aleatorización exacta.
 
 ### H-7-12 · «Antes y después» de los cambios de vida: muchas comparaciones y tarjetas repetidas
 - **Dónde:** `ui/pantallas/Explorar.kt`, `EtapasDeVida()`.
@@ -753,7 +753,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** en un antes/después, la progresión se confunde con el efecto (sección 8.8 del capítulo 8).
 - **Gravedad:** Baja.
 - **Propuesta:** medir con un ejercicio fijo de referencia (o el máximo estimado en ese ejercicio) y documentar el riesgo de tendencia.
-- **Estado:** Pendiente (v90).
+- **Estado:** Pendiente (v90): elegir un ejercicio fijo de referencia es una decisión del autor.
 
 ## Módulo 8 · Reportes, motivación, privacidad e integridad (v81, commit `fa527df`)
 
@@ -803,7 +803,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** incentivo (pequeño) a sesgar la valencia; ley de Campbell.
 - **Gravedad:** Baja.
 - **Propuesta:** reemplazarlas por logros de registro (p. ej., «registraste un día difícil con un toque») o solo documentar.
-- **Estado:** Pendiente (v90).
+- **Estado:** Pendiente (v90): cambiar o quitar los logros «Día perfecto» y «Remontada» es una decisión del autor (quitarlos borraría medallas ya ganadas).
 
 ### H-8-7 · Las campañas no quedan registradas como variable
 - **Dónde:** `ciencia/Campanas.kt`; `Config.campanas`; ausentes de `Estadistica.panel` y de la exportación tabular.
@@ -827,7 +827,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** ~2.9 veces menos costo por intento al adivinar la contraseña de un .vmc robado.
 - **Gravedad:** Baja.
 - **Propuesta:** subir a 600 000 guardando el número de iteraciones en el encabezado (nueva versión del formato, p. ej. `…-CIFRADO-2`) para seguir abriendo los archivos viejos; sugerir contraseñas largas.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.104): 600 000 iteraciones en el formato 2; los archivos del formato 1 se siguen abriendo.
 
 ### H-8-10 · El «ánimo del día» de reportes y «Tu año» mezcla instrumentos
 - **Dónde:** `ciencia/Periodo.kt`, `valDe()`.
@@ -844,7 +844,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** con pocas observaciones se reportan como cambios variaciones de azar.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar, o marcar «parecido» cuando la diferencia sea menor que el error típico de la semana.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.101): «parecido» cuando la diferencia es menor que su error típico.
 
 ### H-8-12 · «Verificar» promete más de lo que comprueba y no revisa el esquema
 - **Dónde:** `data/Respaldos.kt`, `verificar()` y `contenido()`; `data/Modelo.kt`, `JSON { ignoreUnknownKeys = true }`.
@@ -876,7 +876,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** para restaurar una copia vieja hace falta recordar la contraseña de entonces.
 - **Gravedad:** Baja.
 - **Propuesta:** avisarlo al cambiarla (o recifrar las copias existentes).
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.104): la app lo avisa al cambiar o quitar la contraseña; las copias no se recifran.
 
 ### H-8-16 · Los medicamentos no están detrás del interruptor privado
 - **Dónde:** `ui/pantallas/Dia.kt` (sección «Medicamentos» siempre visible); `ciencia/Estadistica.kt` (`medicamentos_n` siempre); `ciencia/Dinamicas.kt` (`med_`); comentario de `ciencia/Periodo.kt`.
@@ -892,7 +892,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** la descripción de qué sale del teléfono es la base para decidir qué es privado; hoy subestima las salidas, aunque las omitidas no envían datos del diario.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar (actualizar la sección 1 del documento de contexto); opcionalmente, mostrar en la app una lista de servicios externos con lo que recibe cada uno.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.103): el texto de privacidad de la app nombra todos los servicios y lo que recibe cada uno. El documento de contexto, que no está en el repositorio, hay que actualizarlo a mano.
 
 ## Módulo 9 · Revisión metodológica general (v84, commit `3abc1c9`; código igual a `fa527df`)
 
@@ -1104,7 +1104,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (e) débil.
 - **Gravedad:** Baja.
 - **Propuesta:** I-3 (en `revision_propuestas.md`).
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.96): el cumplimiento de «Creatina» se completa con `supl_creatina_tomado`.
 
 ### H-9-27 · `momentos_intensidad` mezcla la intensidad del impulso con la de otros momentos
 - **Dónde:** `ciencia/Estadistica.kt:542-547`; escala del impulso en `ui/QuickActivity.kt:364`.
@@ -1216,7 +1216,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** confusión menor.
 - **Gravedad:** Baja.
 - **Propuesta:** documentar.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.103): por semana, la pareja se abre en «Cruzar dos variables» por semanas.
 
 ## Revisión de navegación y corrección de datos (27 oct 2026, commit `87f7f2c`, esquema 13)
 
@@ -1306,7 +1306,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
   - Marcar lo anotado tarde: `retroactivo` en el día, la marca de tiempo de creación en momentos y tomas.
   - Anotar en el Apéndice D la versión de cada entrega.
   - Leer por tramo los análisis que crucen esa fecha.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en parte: las marcas que pide ya existen (`retroactivo`, `ts_creado`, `ts_editado`, `version_noche`, `vm_retraso()`) y el Apéndice D anota cada entrega. Leer por tramo queda en manos de cada análisis.
 
 ## Módulo 11 · Introducción, marco teórico, discusión y limitaciones (v90, commit `8818d5a`, esquema 14)
 
@@ -1316,7 +1316,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** en un registro de por vida, el supuesto de estacionariedad (que las reglas del proceso no cambian) es cada vez menos razonable. Una relación firme puede ser de una etapa que ya terminó, y una relación nueva puede quedar diluida por años en que no existía (capítulo 11, sección 11.2.3).
 - **Gravedad:** Media (crece con los años de registro).
 - **Propuesta:** solo documentar. En R ya se puede comparar por periodo pasando un subconjunto: `vm_relaciones(datos = filter(panel, fecha >= …))` (no ejecutado en la sesión). Opcionalmente, en una revisión futura, un selector de periodo en la lista o un modelo multinivel con la pendiente variando por año (capítulo 11, sección 11.7.1).
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto por documentación (sin cambio de código): la propuesta era documentar (capítulo 11) y en R ya se puede analizar por periodo con `datos`.
 
 ### H-11-2 · Las maneras de mirar los datos no entran en ninguna corrección
 - **Dónde:** `ui/pantallas/Explorar.kt` (interruptores «Quitar tendencias», «por semana», «Mostrar también las obvias», los ocho filtros por tema, el desfase de «Cruzar dos variables») y `ui/pantallas/Analisis.kt` («Todo lo que se mueve con algo» con cualquier objetivo); en R, los argumentos de `vm_relaciones` y `vm_factores` (`sin_tendencia`, `ventana`, `privadas`, `datos`).
@@ -1324,7 +1324,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** cuando el análisis se elige después de ver los datos, la probabilidad de un hallazgo por azar es mayor que la que dice cada prueba (Gelman y Loken, 2014). Es la única fuente de sesgo del capítulo 11 (sección 11.4) que no deja ninguna marca en los datos.
 - **Gravedad:** Media.
 - **Propuesta:** solo documentar (capítulo 1, sección 1.6.3). Usar la lista como generadora de hipótesis y confirmar con un flujo que separe explorar de confirmar: explorar en un periodo, escribir antes las pocas relaciones a confirmar y probarlas en el periodo siguiente, o con un experimento personal (capítulo 11, sección 11.7.4).
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto por documentación (sin cambio de código): la propuesta era documentar (capítulos 1 y 11).
 
 ## Módulo 14 · Lectura final de contenido (v90, commit `8818d5a`, esquema 14)
 
@@ -1334,7 +1334,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** quien lee la exportación en R puede fechar mal la costura de pantalla y pasos o la de la hoja de la noche (y `schema_v` no es una columna de `vm_panel.csv`).
 - **Gravedad:** Baja.
 - **Propuesta:** escribir «esquema 13» y «esquema 14» en el LEEME y en el diccionario (solo texto, sin cálculo).
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.107).
 
 ### H-14-2 · `personas` vale 0 los días en que solo un momento nombró a alguien
 - **Dónde:** `ciencia/Estadistica.kt`, `panel` (`r["personas"]`), frente a `Dinamicas.diasSociales`.
@@ -1342,7 +1342,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** «0 personas» se lee como «no nombré a nadie», y el promedio baja si se usan momentos sin diario. No crea relaciones espurias con `per_` (esa pareja es obvia).
 - **Gravedad:** Baja.
 - **Propuesta:** usar como base de `personas` solo los días con diario escrito, o contar también las personas de los momentos no privados; como mínimo, decirlo en el diccionario.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.93): `personas` cuenta también los momentos no privados.
 
 ### H-14-3 · «El día más raro» de un año pasado sale vacío o incompleto
 - **Dónde:** `ciencia/Analisis.kt`, `atipicos()` (`desde = Fechas.sumar(Fechas.diaLogico(), -365)`), llamado desde `ciencia/TuAnio.kt`.
@@ -1350,7 +1350,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** el mismo año da un resultado distinto según el día en que se mire, sin aviso.
 - **Gravedad:** Baja.
 - **Propuesta:** pasar el rango a `atipicos` como parámetro, o no filtrar cuando se llama desde `TuAnio`, que ya le da solo los días del año.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.100).
 
 ### H-14-4 · `alcohol` (0/1) vale 0 en el hilo principal sin caché
 - **Dónde:** `ciencia/Estadistica.kt`, `sustancias()`: el `return` temprano cuando `enMain && Repo.nutricion.isNotEmpty()` y no hay caché.
@@ -1358,7 +1358,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** contradice lo resuelto en H-4-3 (D.71: «vacío en vez de otra cifra») y deja un 0 que parece dato. Solo pasa en cálculos del panel en el hilo principal (por ejemplo, `CoberturaVariables.calcular` o las capturas), donde solo cuenta si hay dato o no.
 - **Gravedad:** Baja.
 - **Propuesta:** dejar `alcohol` vacío también en ese caso, o hacer el `return` antes de `desdePrimero("alcohol")`.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.90).
 
 ### H-14-5 · Dos máximos de alcohol para el mismo episodio
 - **Dónde:** `data/Sustancias.kt`, `alcoholMaximo` (muestras cada 5 min), frente a `alcohol_estimado_max` en `Estadistica.sustancias` (cada 10 min desde la primera dosis).
@@ -1366,7 +1366,7 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** la misma cifra con dos valores; el efecto es mínimo.
 - **Gravedad:** Muy baja.
 - **Propuesta:** muestrear cada 5 min también en el panel, o solo documentarlo (ya está en la sección 5.4.5).
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.89).
 
 ### H-14-6 · `vm_laptop()` quita menos navegadores que la app
 - **Dónde:** `app/src/main/assets/vestigium.R`, `vm_laptop()`, frente a `data/Lote3.kt` (`ColdTurkey.NAVEGADORES`, `resumen()`).
@@ -1374,4 +1374,4 @@ _Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió cód
 - **Por qué importa:** las horas por categoría de R salen infladas frente a `laptop_<cat>_min`, solo si se usa alguno de esos tres navegadores.
 - **Gravedad:** Baja.
 - **Propuesta:** usar en R la misma lista de 8, o exportar en `vm_laptop.csv` una columna `navegador` (0/1) tomada de `NAVEGADORES`.
-- **Estado:** Pendiente (v90).
+- **Estado:** Resuelto en 10e (D.106).
