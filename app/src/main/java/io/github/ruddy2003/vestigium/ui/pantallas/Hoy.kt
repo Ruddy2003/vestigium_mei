@@ -572,7 +572,7 @@ fun LineaDelTiempo(fecha: String) {
     val rojo = MaterialTheme.colorScheme.error
     val gastos = Repo.gastos.filter { it.dia == fecha }
     if (gastos.isNotEmpty()) pistas += Pista("gastos", marcas = gastos.mapNotNull { g ->
-        runCatching { java.time.LocalDateTime.of(Fechas.parse(g.fecha), LocalTime.parse(g.hora.take(5))).atZone(Fechas.zona()).toInstant().toEpochMilli() to rojo }.getOrNull()
+        runCatching { Fechas.millisDe(java.time.LocalDateTime.of(Fechas.parse(g.fecha), LocalTime.parse(g.hora.take(5)))) to rojo }.getOrNull()
     })
     if (pistas.isEmpty()) { Ayuda("Todavía no hay nada con hora en este día."); return }
 

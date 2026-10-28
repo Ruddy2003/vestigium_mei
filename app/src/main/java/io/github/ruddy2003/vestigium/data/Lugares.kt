@@ -75,7 +75,7 @@ object Lugares {
 
     /** Sugerencia de tipo según la hora en que estuviste ahí. */
     fun tipoProbable(cand: CandidatoLugar): String {
-        val h = java.time.Instant.ofEpochMilli(cand.desde_ms).atZone(Fechas.zona()).hour
+        val h = Fechas.local(cand.desde_ms).hour
         return when (h) { in 8..15 -> "trabajo"; in 19..23 -> "social"; else -> "otro" }
     }
 

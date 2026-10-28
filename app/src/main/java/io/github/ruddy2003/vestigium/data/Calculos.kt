@@ -12,7 +12,7 @@ object Luna {
 
     /** 0 = luna nueva, 0.5 = llena, de vuelta a 1. Se evalúa al mediodía local del día. */
     fun fase(fecha: String): Double {
-        val ms = Fechas.parse(fecha).atTime(12, 0).atZone(Fechas.zona()).toInstant().toEpochMilli()
+        val ms = Fechas.millisDe(Fechas.parse(fecha).atTime(12, 0))
         val dias = (ms - NUEVA_REF) / 86_400_000.0
         val edad = ((dias % SINODICO) + SINODICO) % SINODICO
         return edad / SINODICO

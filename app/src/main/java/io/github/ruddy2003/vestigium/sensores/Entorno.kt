@@ -37,6 +37,17 @@ object Entorno {
         return Punto(mediana(lats), mediana(lons))
     }
 
+    /** Pasados estos días, el clima se pide al archivo histórico (reanálisis); antes, a los modelos de pronóstico. */
+    const val DIAS_ARCHIVO = 80
+
+    /**
+     * De dónde salió el clima del día (H-3-4): «archivo» (reanálisis) o «pronostico». Lo guardado antes del esquema 15 no lo
+     * dice: se deduce de cuántos días habían pasado cuando se pidió ([EntornoDia.ts]), con la misma regla de [DIAS_ARCHIVO].
+     */
+    fun fuente(e: EntornoDia): String? = e.fuente ?: e.ts?.let { t ->
+        runCatching { if (ChronoUnit.DAYS.between(Fechas.parse(e.fecha), Fechas.parse(t)) > DIAS_ARCHIVO) "archivo" else "pronostico" }.getOrNull()
+    }
+
     private fun mediana(x: List<Double>): Double = x.sorted().let { it[it.size / 2] }
     private fun r2(x: Double) = (x * 100).roundToInt() / 100.0
 
@@ -52,7 +63,10 @@ object Entorno {
         val limite = Fechas.sumar(hoy, -365)
         val conRegistro = (Repo.dias.keys + Repo.salud.keys + Repo.momentos.map { it.fecha }).filter { it >= limite && it <= hoy }
         val recientes = (0..7).map { Fechas.sumar(hoy, -it.toLong()) }
-        val pendientes = (conRegistro + recientes).toSortedSet().filter { f -> Repo.entorno[f]?.completo != true }
+        // También los días que vinieron del pronóstico y ya están en el archivo histórico: se cambian por el reanálisis, para que
+        // la serie no mezcle las dos fuentes (H-3-4).
+        fun viejo(f: String) = ChronoUnit.DAYS.between(Fechas.parse(f), Fechas.parse(hoy)) > DIAS_ARCHIVO
+        val pendientes = (conRegistro + recientes).toSortedSet().filter { f -> Repo.entorno[f].let { e -> e == null || !e.completo || (viejo(f) && fuente(e) == "pronostico") } }
         if (pendientes.isEmpty()) return 0
 
         // Agrupa días seguidos que estén en la misma zona (~10 km) y usen la misma fuente.
@@ -61,7 +75,7 @@ object Entorno {
         for (f in pendientes) {
             val p = lugarDe(f, ultimo) ?: continue
             val pr = Punto(r2(p.lat), r2(p.lon))
-            val archivo = ChronoUnit.DAYS.between(Fechas.parse(f), Fechas.parse(hoy)) > 80
+            val archivo = viejo(f)
             val t = tramos.lastOrNull()
             if (t != null && t.archivo == archivo && Fechas.sumar(t.hasta, 1) == f && ChronoUnit.DAYS.between(Fechas.parse(t.desde), Fechas.parse(f)) < 60 &&
                 kotlin.math.abs(t.p.lat - pr.lat) < 0.1 && kotlin.math.abs(t.p.lon - pr.lon) < 0.1) t.hasta = f
@@ -75,7 +89,10 @@ object Entorno {
             for (e in dias) {
                 val a = aire[e.fecha]
                 val f = Luna.fase(e.fecha)
-                Repo.guardarEntorno(e.copy(pm25 = a?.first, pm10 = a?.second, aqi_us = a?.third, luna_fase = f, luna_ilum = Luna.iluminacion(f),
+                // El archivo no trae el índice UV y el aire puede no responder: lo que el día ya tenía se conserva.
+                val antes = Repo.entorno[e.fecha]
+                Repo.guardarEntorno(e.copy(pm25 = a?.first ?: antes?.pm25, pm10 = a?.second ?: antes?.pm10, aqi_us = a?.third ?: antes?.aqi_us,
+                    luna_fase = f, luna_ilum = Luna.iluminacion(f), uv_max = e.uv_max ?: antes?.uv_max, fuente = if (t.archivo) "archivo" else "pronostico",
                     completo = e.fecha < Fechas.sumar(hoy, -1) && (t.archivo || ChronoUnit.DAYS.between(Fechas.parse(e.fecha), Fechas.parse(hoy)) >= 2),
                     ts = Fechas.ahoraIso()))
                 n++

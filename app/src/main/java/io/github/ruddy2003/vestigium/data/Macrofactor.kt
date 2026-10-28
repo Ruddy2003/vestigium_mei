@@ -225,13 +225,27 @@ object Macrofactor {
                 l.groupBy { it.entreno }.values.mapNotNull { g -> g.firstOrNull()?.entreno_s }.takeIf { it.isNotEmpty() }?.sum()?.let { Math.round(it / 6.0) / 10.0 },
                 l.size, efectivas.size, efectivas.sumOf { it.reps ?: 0 },
                 Math.round(efectivas.sumOf { (it.peso_kg ?: 0.0) * (it.reps ?: 0) } * 10) / 10.0,
-                musSeries[f] ?: emptyMap(), musVol[f]?.mapValues { Math.round(it.value * 10) / 10.0 } ?: emptyMap())
+                musSeries[f] ?: emptyMap(), musVol[f]?.mapValues { Math.round(it.value * 10) / 10.0 } ?: emptyMap(), fuerza_ref_kg = fuerzaReferencia(l))
         }
         val todas = (dias.keys + comidas.map { it.fecha } + fechasEntreno)
         val desde = todas.min(); val hasta = todas.max()
         Repo.importarMacrofactor(desde, hasta, dias.values.toList(), comidas, series, entrenos)
         return "Importé del $desde al $hasta: ${dias.size} días de nutrición, ${comidas.size} alimentos, ${entrenos.count { it.series > 0 }} entrenamientos y ${series.size} series."
     }
+
+    /**
+     * El ejercicio fijo de referencia para medir la fuerza (H-7-14): el press inclinado con mancuernas, escrito en inglés o en
+     * español («Incline Dumbbell Press», «Press inclinado con mancuernas»). Uno solo, para que la cifra no dependa de qué
+     * entrenaste ese día: el volumen total sube o baja según la sesión.
+     */
+    fun esReferencia(ejercicio: String): Boolean {
+        val s = Texto.slug(ejercicio)
+        return "inclin" in s && ("mancuern" in s || "dumbbell" in s || Regex("(^|_)db(_|$)").containsMatchIn(s)) &&
+            ("press" in s || "banc" in s || "bench" in s)
+    }
+
+    /** La mejor 1RM estimada ([e1rm]) del día en el ejercicio de referencia; null si ese día no lo hiciste. */
+    fun fuerzaReferencia(series: List<Serie>): Double? = series.filter { esReferencia(it.ejercicio) }.mapNotNull { e1rm(it) }.maxOrNull()
 
     /** 1RM estimado (Epley) de una serie efectiva de hasta 12 repeticiones. */
     fun e1rm(s: Serie): Double? {

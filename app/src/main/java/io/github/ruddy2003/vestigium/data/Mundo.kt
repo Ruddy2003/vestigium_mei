@@ -233,16 +233,16 @@ object Mundo {
     @Volatile private var bruto: Bruto? = null
     private val ubicacionCelda = HashMap<Long, Pair<Int, String?>>()
 
-    private fun dia(ms: Long): Int = Instant.ofEpochMilli(ms).atZone(Fechas.zona()).toLocalDate().toEpochDay().toInt()
+    private fun dia(ms: Long): Int = Fechas.local(ms).toLocalDate().toEpochDay().toInt()
 
     /** Día del calendario de muchas marcas de tiempo seguidas, sin crear objetos para cada una. */
     private class Calendario {
         private var ini = Long.MAX_VALUE; private var fin = Long.MIN_VALUE; private var d = 0
         fun dia(ms: Long): Int {
             if (ms in ini until fin) return d
-            val f = Instant.ofEpochMilli(ms).atZone(Fechas.zona()).toLocalDate()
+            val f = Fechas.local(ms).toLocalDate()
             d = f.toEpochDay().toInt()
-            ini = f.atStartOfDay(Fechas.zona()).toInstant().toEpochMilli(); fin = f.plusDays(1).atStartOfDay(Fechas.zona()).toInstant().toEpochMilli()
+            ini = Fechas.inicioDia(Fechas.iso(f)); fin = Fechas.finDia(Fechas.iso(f))
             return d
         }
     }

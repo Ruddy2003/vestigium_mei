@@ -126,7 +126,7 @@ object Importaciones {
         for (f in FECHAS_KINDLE) {
             val r = runCatching { LocalDateTime.parse(t, f) }.getOrNull()
                 ?: runCatching { LocalDateTime.parse(t.replaceFirstChar { it.uppercase() }, f) }.getOrNull()
-            if (r != null) return r.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            if (r != null) return Fechas.millisDe(r)
         }
         return null
     }
@@ -420,7 +420,7 @@ object Importaciones {
                     val dia = if (mesDia) c.b else c.a; val mes = if (mesDia) c.a else c.b
                     var h = c.h
                     c.ampm?.lowercase()?.let { ap -> val pm = ap.startsWith("p"); if (pm && h < 12) h += 12; if (!pm && h == 12) h = 0 }
-                    val ms = runCatching { LocalDateTime.of(c.y, mes, dia, h, c.mi, c.se).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() }.getOrNull() ?: return@mapNotNull null
+                    val ms = runCatching { Fechas.millisDe(LocalDateTime.of(c.y, mes, dia, h, c.mi, c.se)) }.getOrNull() ?: return@mapNotNull null
                     val multi = MULTIMEDIA.any { c.txt.contains(it, true) }
                     Mensaje(ms, c.autor.removePrefix("‎").trim(), if (multi) 0 else Texto.palabras(c.txt), multi)
                 }

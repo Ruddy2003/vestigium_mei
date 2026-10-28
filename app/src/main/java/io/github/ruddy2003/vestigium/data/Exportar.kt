@@ -162,16 +162,16 @@ object Exportar {
      */
     fun filasHoras(): List<Map<String, Any?>> {
         val H = 3_600_000L
-        val zona = Fechas.zona()
-        fun clave(ms: Long): String { val t = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(ms), zona); return "${t.toLocalDate()}|${t.hour}" }
-        fun inicioHora(f: String, h: Int): Long = java.time.LocalDateTime.of(Fechas.parse(f), java.time.LocalTime.of(h, 0)).atZone(zona).toInstant().toEpochMilli()
+        // Cada hora en la hora local de entonces, con la zona que tenía el teléfono (H-1-7).
+        fun clave(ms: Long): String { val t = Fechas.local(ms); return "${t.toLocalDate()}|${t.hour}" }
+        fun inicioHora(f: String, h: Int): Long = Fechas.millisDe(java.time.LocalDateTime.of(Fechas.parse(f), java.time.LocalTime.of(h, 0)))
         /** Reparte el intervalo [a, b) entre las horas que toca, en minutos. */
         fun repartir(a: Long, b: Long, suma: HashMap<String, Double>) {
             if (b <= a || b - a > 40L * 24 * H) return
             var t = a
             while (t < b) {
-                val ldt = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(t), zona).withMinute(0).withSecond(0).withNano(0)
-                val sig = ldt.plusHours(1).atZone(zona).toInstant().toEpochMilli()
+                val ldt = Fechas.local(t).withMinute(0).withSecond(0).withNano(0)
+                val sig = Fechas.millisDe(ldt.plusHours(1)).let { if (it <= t) t + H else it }
                 val y = minOf(b, sig)
                 val k = "${ldt.toLocalDate()}|${ldt.hour}"
                 suma[k] = (suma[k] ?: 0.0) + (y - t) / 60_000.0
@@ -223,9 +223,9 @@ object Exportar {
         cons.filter { Catalogo.sustancia(it.sustancia)?.conNivel == true }.forEach { c ->
             val a = Fechas.millis(c.inicio); val b = Sustancias.finEfectivo(c)
             if (b - a > 2 * 24 * H) return@forEach
-            var t = java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(a), zona).withMinute(0).withSecond(0).withNano(0)
-            while (t.atZone(zona).toInstant().toEpochMilli() < b) {
-                val mitad = t.atZone(zona).toInstant().toEpochMilli() + 30 * 60_000L
+            var t = Fechas.local(a).withMinute(0).withSecond(0).withNano(0)
+            while (Fechas.millisDe(t) < b) {
+                val mitad = Fechas.millisDe(t) + 30 * 60_000L
                 val n = Sustancias.nivelEn(c, mitad)
                 if (n != null) { val m = niveles.getOrPut(c.sustancia) { HashMap() }; val k = "${t.toLocalDate()}|${t.hour}"; m[k] = maxOf(m[k] ?: 0.0, n) }
                 t = t.plusHours(1)
@@ -262,7 +262,7 @@ object Exportar {
         val alcohol = HashMap<String, Double>()
         alc.groupBy { Fechas.diaLogicoDeMillis(it.ms) }.forEach { (_, l) ->
             val a = l.minOf { it.ms }
-            val inst = (0 until 20).map { k -> java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(a), zona).withMinute(30).withSecond(0).withNano(0).plusHours(k.toLong()).atZone(zona).toInstant().toEpochMilli() }
+            val inst = (0 until 20).map { k -> Fechas.millisDe(Fechas.local(a).withMinute(30).withSecond(0).withNano(0).plusHours(k.toLong())) }
             Sustancias.alcoholEn(l, inst).forEachIndexed { k, g -> if (g > 0) alcohol[clave(inst[k])] = Math.round(g * 1000) / 1000.0 }
         }
         val primerCaf = caf.firstOrNull()?.ms; val primerAlc = alc.firstOrNull()?.ms
@@ -336,6 +336,7 @@ object Exportar {
         linkedMapOf<String, Any?>("id" to it.id, "nombre" to it.nombre, "pregunta" to it.pregunta, "hipotesis" to it.hipotesis, "sellada" to it.sellada, "accion" to it.accion,
             "resultado" to it.resultado, "diseno" to it.diseno, "inicio" to it.inicio, "semanas" to it.semanas, "lavado_dias" to it.lavado_dias,
             "plan" to it.plan.map { p -> if (p) 1 else 0 }, "activo" to it.activo, "plantilla" to it.plantilla, "fin" to it.fin,
+            "sentido" to it.sentido, "umbral" to it.umbral, "huella" to it.huella, "intacto" to Experimentos.intacto(it),
             "hecho" to it.hecho.entries.sortedBy { e -> e.key }.map { (f, h) -> "$f:${if (h) 1 else 0}" })
     }
 
@@ -452,7 +453,8 @@ object Exportar {
             "presion_hpa" to it.presion_hpa, "viento_max" to it.viento_max, "uv_max" to it.uv_max, "codigo_wmo" to it.codigo,
             "cielo" to it.codigo?.let { c -> Clima.descripcion(c) }, "amanecer" to it.amanecer, "atardecer" to it.atardecer,
             "luz_dia_min" to it.luz_min, "sol_min" to it.sol_min, "pm25" to it.pm25, "pm10" to it.pm10, "aqi_us" to it.aqi_us,
-            "luna_fase" to it.luna_fase, "luna_ilum" to it.luna_ilum, "lat_aprox" to it.lat, "lon_aprox" to it.lon)
+            "luna_fase" to it.luna_fase, "luna_ilum" to it.luna_ilum, "lat_aprox" to it.lat, "lon_aprox" to it.lon,
+            "fuente" to io.github.ruddy2003.vestigium.sensores.Entorno.fuente(it))
     }
 
     fun filasFotos() = Repo.fotos.values.sortedBy { it.fecha }.map {
@@ -493,7 +495,7 @@ object Exportar {
             .entries.sortedByDescending { it.value }.take(6).map { it.key }
         return Repo.conexiones.values.sortedBy { it.fecha }.map { c ->
             val m = linkedMapOf<String, Any?>("fecha" to c.fecha, "muestras" to c.muestras, "sin_wifi_min" to c.sin_wifi_min,
-                "wifi_total_min" to c.wifi_min.values.sum())
+                "wifi_total_min" to c.wifi_min.values.sum(), "wifi_sin_dato_min" to c.wifi_sin_dato_min)
             redes.forEach { r -> m["wifi_" + Texto.slug(r).ifEmpty { "red" }] = c.wifi_min[r] ?: 0 }
             m["audifonos_min"] = c.audio_min["audifonos"] ?: 0; m["coche_min"] = c.audio_min["coche"] ?: 0
             m["bocina_min"] = c.audio_min["bocina"] ?: 0; m["bluetooth_otro_min"] = c.audio_min["bluetooth"] ?: 0
@@ -572,7 +574,7 @@ object Exportar {
         val mus = Repo.entrenos.values.flatMap { it.series_musculo.keys + it.volumen_musculo.keys }.toSortedSet()
         return Repo.entrenos.values.sortedBy { it.fecha }.map { e ->
             val m = linkedMapOf<String, Any?>("fecha" to e.fecha, "entrenos" to e.entrenos, "minutos" to e.minutos, "series" to e.series,
-                "series_efectivas" to e.series_efectivas, "reps" to e.reps, "volumen_kg" to e.volumen_kg)
+                "series_efectivas" to e.series_efectivas, "reps" to e.reps, "volumen_kg" to e.volumen_kg, "fuerza_ref_kg" to e.fuerza_ref_kg)
             mus.forEach { g -> m["series_$g"] = e.series_musculo[g] }
             mus.forEach { g -> m["volumen_${g}_kg"] = e.volumen_musculo[g] }
             m
@@ -582,7 +584,7 @@ object Exportar {
     fun filasSeries() = Repo.series("0000-01-01", "9999-12-31").map {
         linkedMapOf<String, Any?>("fecha" to it.fecha, "orden" to it.orden, "entreno" to it.entreno, "entreno_min" to it.entreno_s?.let { s -> Math.round(s / 6.0) / 10.0 },
             "ejercicio" to it.ejercicio, "tipo_serie" to it.tipo, "calentamiento" to it.tipo.contains("Warm", true), "peso_kg" to it.peso_kg, "reps" to it.reps,
-            "rir" to it.rir, "e1rm_kg" to Macrofactor.e1rm(it), "duracion_s" to it.duracion_s, "distancia_m" to it.distancia_m, "peso_base_kg" to it.peso_base_kg)
+            "rir" to it.rir, "e1rm_kg" to Macrofactor.e1rm(it), "referencia" to Macrofactor.esReferencia(it.ejercicio), "duracion_s" to it.duracion_s, "distancia_m" to it.distancia_m, "peso_base_kg" to it.peso_base_kg)
     }
 
     fun filasWhatsapp() = Repo.chats.map {
@@ -666,6 +668,7 @@ object Exportar {
             val ft = Repo.fotos[f]; val ag = Repo.agenda[f]; val nt = Repo.notifs[f]; val ac = Repo.actividad[f]
             val r = linkedMapOf<String, Any?>("fecha" to f, "dia_semana" to Fechas.parse(f).dayOfWeek.value,
                 "festivo" to (if (mexico) Fechas.esFestivoMx(f) else null), "dia_libre" to Fechas.esDiaLibre(f, mexico), "con_diario" to (d != null),
+                "desfase_utc_h" to Fechas.desfaseH(Fechas.millisDe(Fechas.parse(f).atTime(12, 0))), "cambio_horario" to (Fechas.cambioDeHora(f) != null),
                 "valencia" to d?.valencia, "activacion" to d?.activacion, "dolor" to d?.dolor, "sueno_calidad" to d?.sueno_calidad, "version_noche" to d?.version_noche,
                 "valencia_muestreo" to mu[f]?.mapNotNull { it.valencia }?.average(), "n_muestreos" to (mu[f]?.size ?: 0),
                 "n_momentos" to (mo[f]?.size ?: 0))
@@ -677,6 +680,7 @@ object Exportar {
             r["fc_reposo"] = s?.fc_reposo; r["hrv_rmssd"] = s?.hrv_rmssd; r["pasos"] = s?.pasos
             r["pantalla_min"] = p?.total_min; r["desbloqueos"] = p?.desbloqueos; r["ventana_pantalla"] = p?.ventana; r["ventana_pasos"] = s?.takeIf { it.pasos != null }?.ventana_pasos; r["primer_uso"] = p?.primer_uso?.let { Fechas.horaDe(it) }; r["ultimo_uso"] = p?.ultimo_uso?.let { Fechas.horaDe(it) }
             r["t_max"] = e?.t_max; r["t_min"] = e?.t_min; r["precip_mm"] = e?.precip_mm; r["nubes_pct"] = e?.nubes_pct; r["luz_dia_min"] = e?.luz_min
+            r["clima_reanalisis"] = e?.let { x -> io.github.ruddy2003.vestigium.sensores.Entorno.fuente(x)?.let { it == "archivo" } }
             r["sol_min"] = e?.sol_min; r["aqi_us"] = e?.aqi_us; r["pm25"] = e?.pm25; r["luna_ilum"] = e?.luna_ilum ?: Luna.iluminacion(Luna.fase(f))
             r["fotos"] = ft?.fotos; r["eventos"] = ag?.eventos; r["min_ocupado"] = ag?.min_ocupado; r["notificaciones"] = nt?.total
             r["a_pie_min"] = ac?.minutos?.get("a_pie"); r["vehiculo_min"] = ac?.minutos?.get("vehiculo")
@@ -704,7 +708,7 @@ object Exportar {
             r["primera_comida_h"] = nu?.primera?.let { horaTexto(it) }; r["ultima_comida_h"] = nu?.ultima?.let { horaTexto(it) }
             // Como en el panel de la app (H-4-12): de todas las dosis del día lógico; si no se pudo calcular, la de MacroFactor.
             r["cafeina_ultima_h"] = if (est[f]?.containsKey("cafeina_ultima_h") == true) est[f]!!["cafeina_ultima_h"] else nu?.cafeina_ultima?.let { horaTexto(it) }
-            r["gimnasio"] = en != null && en.series > 0; r["gimnasio_min"] = en?.minutos; r["series_gimnasio"] = en?.series_efectivas; r["volumen_kg"] = en?.volumen_kg
+            r["gimnasio"] = en != null && en.series > 0; r["gimnasio_min"] = en?.minutos; r["series_gimnasio"] = en?.series_efectivas; r["volumen_kg"] = en?.volumen_kg; r["fuerza_ref_kg"] = en?.fuerza_ref_kg
             val x = est[f]
             nuevas.forEach { k -> r[k] = x?.get(k) }
             // Días especiales (I-6): si cae alguno y de qué tipo (mi_cumpleanos, cumpleanos, fallecimiento, aniversario, otra).
@@ -836,7 +840,7 @@ object Exportar {
 
     /** Hora como número (7.5 = 7:30). Para horas de dormir, la madrugada cuenta como 24+ (1:00 = 25). */
     fun horaDecimal(iso: String, noche: Boolean): Double? = runCatching {
-        val t = java.time.OffsetDateTime.parse(iso).atZoneSameInstant(Fechas.zona())
+        val t = Fechas.localDe(iso)
         val h = t.hour + t.minute / 60.0
         Math.round((if (noche && h < 12) h + 24 else h) * 100) / 100.0
     }.getOrNull()
@@ -959,12 +963,16 @@ object Exportar {
           ext   <- read_csv("vm_panel_extendido.csv")  # una fila por día con TODAS las variables (personas, apps, nutrientes…)
 
         vm_diccionario.csv describe cada columna de cada archivo: tipo (fecha, fecha_hora, hora, entero, numero,
-        logico, texto, lista), unidad y significado.
+        logico, texto, lista), unidad y significado, y desde_version: la versión de la app desde la que rige su definición
+        actual, con qué cambió (columna cambio). Si comparas exportaciones de fechas distintas, mira esas dos columnas;
+        vacío = sin cambios desde la v84.
 
         La exportación completa trae también vm_datos.sqlite: las mismas tablas en una sola base SQLite (formato abierto),
         más «ubicaciones» y «diccionario». En R: vm_leer_sqlite() o DBI::dbConnect(RSQLite::SQLite(), "vm_datos.sqlite").
 
-        Convenciones: texto en UTF-8; fechas AAAA-MM-DD en hora local; los días empiezan a las 5:00 (lo de la madrugada
+        Convenciones: texto en UTF-8; fechas AAAA-MM-DD en hora local, la del lugar donde estabas en ese momento (desde el
+        esquema de datos 15: si viajas o cambia el horario, lo de antes no se mueve; desfase_utc_h y cambio_horario de
+        vm_panel.csv lo marcan); los días empiezan a las 5:00 (lo de la madrugada
         cuenta para el día anterior), salvo lo que va por día de calendario (0:00 a 24:00): corazón, oxígeno, calorías
         activas, temperatura de la piel, respiración y peso del reloj, la agenda, el clima, la luna y las ciudades y países
         (el diccionario lo dice en cada una), y la pantalla y los pasos de antes del esquema de datos 13 (columnas

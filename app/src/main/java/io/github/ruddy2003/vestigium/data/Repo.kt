@@ -117,7 +117,41 @@ object Repo {
         tomas = cargar("tomas", TomaSuplemento.serializer()).sortedBy { it.ts }
         laptop = cargar("laptop", LaptopDia.serializer()).associateBy { it.fecha }
         avisos = cargar("avisos", AvisosDia.serializer()).associateBy { it.fecha }
+        Fechas.usarHistorial(config.zonas)
         listo = true
+        runCatching { registrarZona() }
+    }
+
+    /**
+     * Anota la zona del teléfono si cambió desde la última (al abrir la app, cada 15 minutos y cuando el sistema avisa de un
+     * cambio de zona). La primera vez arma el historial con lo ya guardado: los periodos en que tus notas traen un desfase que
+     * la zona de hoy no daría (al menos dos notas seguidas) quedan con ese desfase; lo demás, con la zona de hoy (H-1-7).
+     */
+    @Synchronized
+    fun registrarZona() {
+        val z = Fechas.zona().id
+        val l = config.zonas
+        if (l.isNotEmpty()) {
+            if (l.maxByOrNull { Fechas.millis(it.desde) }?.zona != z) cambiarConfig { it.copy(zonas = it.zonas + CambioZona(Fechas.ahoraIso(), z)) }
+            return
+        }
+        val zona = Fechas.zona()
+        val marcas = (momentos.map { it.ts } + respuestas.map { it.ts } + reacciones.map { it.ts } + tomas.map { it.ts })
+            .mapNotNull { t -> runCatching { java.time.OffsetDateTime.parse(t) }.getOrNull() }
+            .filter { it.offset != java.time.ZoneOffset.UTC }.sortedBy { it.toInstant() }
+        val cambios = arrayListOf(CambioZona("1970-01-01T00:00:00Z", z))
+        var actual: java.time.ZoneOffset? = null
+        for (i in marcas.indices) {
+            val t = marcas[i]
+            val propio = if (zona.rules.getOffset(t.toInstant()) == t.offset) null else t.offset
+            if (propio == actual) continue
+            // Un desfase raro suelto (una nota editada en otra zona) no abre un periodo: hacen falta dos seguidas.
+            if (marcas.getOrNull(i + 1)?.let { s -> (if (zona.rules.getOffset(s.toInstant()) == s.offset) null else s.offset) == propio } != true) continue
+            cambios += CambioZona(t.withNano(0).toString(), propio?.id ?: z)
+            actual = propio
+        }
+        if (actual != null) cambios += CambioZona(Fechas.ahoraIso(), z)
+        cambiarConfig { it.copy(zonas = cambios) }
     }
 
     fun db(): Db = db
@@ -533,6 +567,18 @@ object Repo {
     fun series(desde: String, hasta: String): List<Serie> =
         leer("series", db.porFecha("series", desde, hasta), Serie.serializer()).sortedWith(compareBy({ it.fecha }, { it.orden }))
 
+    /** Calcula la fuerza de referencia de los entrenos importados antes del esquema 15 (H-7-14). Devuelve cuántos cambió. */
+    fun completarFuerzaReferencia(): Int {
+        val porDia = series("0000-01-01", "9999-12-31").groupBy { it.fecha }
+        val nuevos = entrenos.values.mapNotNull { e ->
+            val r = Macrofactor.fuerzaReferencia(porDia[e.fecha].orEmpty())
+            if (r != e.fuerza_ref_kg) e.copy(fuerza_ref_kg = r) else null
+        }
+        nuevos.forEach { db.poner("entrenos", it.fecha, it.fecha, JSON.encodeToString(EntrenoDia.serializer(), it)) }
+        if (nuevos.isNotEmpty()) enMain { entrenos = entrenos + nuevos.associateBy { it.fecha } }
+        return nuevos.size
+    }
+
     // ---------- Escalada y biblioteca ----------
     fun guardarAscenso(a: Ascenso) {
         db.poner("ascensos", a.id, a.fecha, JSON.encodeToString(Ascenso.serializer(), a))
@@ -589,7 +635,7 @@ object Repo {
     // ---------- Configuración ----------
     @Synchronized
     /** Solo para las capturas de diseño: cambia la configuración en memoria, sin base de datos. */
-    fun configEnMemoria(c: Config) { config = c }
+    fun configEnMemoria(c: Config) { config = c; Fechas.usarHistorial(c.zonas) }
 
     /** Solo para las capturas de diseño: obras de ejemplo en memoria. */
     fun obrasEnMemoria(l: List<Obra>) { obras = l }
@@ -615,6 +661,7 @@ object Repo {
         val n = f(config)
         db.poner("config", "config", null, JSON.encodeToString(Config.serializer(), n))
         config = n
+        Fechas.usarHistorial(n.zonas)
         enMain { config = n }
     }
 

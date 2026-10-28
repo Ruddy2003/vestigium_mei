@@ -100,7 +100,7 @@ object Sustancias {
     class Dosis(val ms: Long, val cantidad: Double)
 
     private fun msDe(fecha: String, hora: String): Long? = runCatching {
-        LocalDateTime.of(Fechas.parse(fecha), LocalTime.parse(hora.take(5))).atZone(Fechas.zona()).toInstant().toEpochMilli()
+        Fechas.millisDe(LocalDateTime.of(Fechas.parse(fecha), LocalTime.parse(hora.take(5))))
     }.getOrNull()
 
     /** La hora de un alimento de MacroFactor; si no se puede leer, el mediodía de su día, para no perder la dosis (P-20). */

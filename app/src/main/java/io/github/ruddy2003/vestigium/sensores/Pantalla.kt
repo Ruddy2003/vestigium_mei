@@ -50,12 +50,11 @@ object Pantalla {
         var primero: Long? = null
         var ultimo: Long? = null
         val porHora = LongArray(24)
-        val zona = Fechas.zona()
         /** Reparte un tramo de uso entre las horas del día que toca. */
         fun repartir(a: Long, b: Long) {
             var x = a
             while (x < b) {
-                val h = java.time.Instant.ofEpochMilli(x).atZone(zona)
+                val h = java.time.Instant.ofEpochMilli(x).atZone(Fechas.zonaEn(x))
                 val finHora = h.withMinute(0).withSecond(0).withNano(0).plusHours(1).toInstant().toEpochMilli()
                 val y = minOf(b, finHora)
                 porHora[h.hour] += y - x

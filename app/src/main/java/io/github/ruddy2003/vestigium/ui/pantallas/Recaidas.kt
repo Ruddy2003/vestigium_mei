@@ -204,7 +204,7 @@ fun PantallaRecaidas(nav: Nav) {
         val libido = Repo.momentos.filter { it.tipo == "libido" }
         if (c.seguimiento_privado && libido.isNotEmpty()) Seccion("Libido", "Escala de 0 (nada) a 5 (dominante). No es lo mismo que un impulso; sirve para ver cuándo sube.") {
             Tarjeta {
-                val horas = IntArray(24).also { a -> libido.forEach { m -> runCatching { a[java.time.OffsetDateTime.parse(m.ts).atZoneSameInstant(Fechas.zona()).hour]++ } } }
+                val horas = IntArray(24).also { a -> libido.forEach { m -> runCatching { a[Fechas.localDe(m.ts).hour]++ } } }
                 Text("Registros por hora · ${libido.size}", style = MaterialTheme.typography.bodySmall)
                 Barras24(horas, MaterialTheme.colorScheme.tertiary)
                 val niv = libido.mapNotNull { it.intensidad }

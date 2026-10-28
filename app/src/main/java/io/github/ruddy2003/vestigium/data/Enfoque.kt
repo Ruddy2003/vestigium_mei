@@ -278,7 +278,7 @@ object Enfoque {
         val t = runCatching { java.time.LocalTime.parse(hora.trim().padStart(5, '0').take(5)) }.getOrNull() ?: return null
         // Antes de las 5:00 es la madrugada del día lógico: cae en la fecha de calendario siguiente.
         val dia = if (t.hour < 5) Fechas.parse(fecha).plusDays(1) else Fechas.parse(fecha)
-        val ini = dia.atTime(t).atZone(Fechas.zona()).toInstant().toEpochMilli()
+        val ini = Fechas.millisDe(dia.atTime(t))
         val tr = Tramo(Repo.nuevoId(), fecha, tipo, Fechas.isoDeMillis(ini), Fechas.isoDeMillis(ini + min * 60_000L), min, nota.trim(), origen = "manual", ts_creado = Fechas.ahoraIso())
         Repo.guardarTramo(tr)
         return tr

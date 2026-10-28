@@ -14,6 +14,8 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.wifi.WifiManager
 import android.os.BatteryManager
 import android.os.Build
@@ -91,13 +93,32 @@ object Percepcion {
         return hpa - ref.second
     }
 
+    /** Lo que se sabe del wifi en la muestra: conectado a una red, sin wifi, o sin dato (no se pudo saber; H-3-7). */
+    private sealed interface Wifi {
+        data class Red(val nombre: String) : Wifi
+        object Sin : Wifi
+        object SinDato : Wifi
+    }
+
+    /**
+     * Si hay wifi. El nombre de la red puede venir oculto (sin permiso de ubicación, o en Android reciente aunque estés
+     * conectado), así que la conexión se pregunta aparte a ConnectivityManager: si alguna red activa es wifi, cuenta como wifi
+     * aunque sea sin nombre. «Sin wifi» solo cuando el wifi está apagado o el sistema dice que no hay red wifi; si no se pudo
+     * saber, es «sin dato» y no se suma a sin_wifi_min.
+     */
     @Suppress("DEPRECATION")
-    private fun wifi(ctx: Context): String? {
-        val wm = ctx.applicationContext.getSystemService(WifiManager::class.java) ?: return null
-        val info = wm.connectionInfo ?: return null
-        if (info.networkId == -1 && info.ipAddress == 0) return null
-        val s = info.ssid?.trim('"') ?: return null
-        return if (s.isBlank() || s == "<unknown ssid>") "wifi (sin nombre)" else s
+    private fun wifi(ctx: Context): Wifi {
+        val wm = ctx.applicationContext.getSystemService(WifiManager::class.java)
+        if (runCatching { wm?.isWifiEnabled == false }.getOrDefault(false)) return Wifi.Sin
+        val cm = ctx.applicationContext.getSystemService(ConnectivityManager::class.java)
+        val enWifi: Boolean? = runCatching { cm?.allNetworks?.any { cm.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true } }.getOrNull()
+        val info = runCatching { wm?.connectionInfo }.getOrNull()
+        val conectado = info != null && !(info.networkId == -1 && info.ipAddress == 0)
+        if (enWifi == true || conectado) {
+            val s = info?.ssid?.trim('"')
+            return Wifi.Red(if (s.isNullOrBlank() || s == "<unknown ssid>") "wifi (sin nombre)" else s)
+        }
+        return if (enWifi == false) Wifi.Sin else Wifi.SinDato
     }
 
     /** Clasifica lo que está sonando por Bluetooth o cable: audífonos, coche, bocina u otro. */
@@ -145,9 +166,9 @@ object Percepcion {
         p.edit().putLong("ultimo", ahora).apply()
         if (min <= 0) return
         val fecha = Fechas.diaLogicoDeMillis(ahora)
-        val hora = Instant.ofEpochMilli(ahora).atZone(ZoneId.systemDefault()).hour
+        val hora = Fechas.local(ahora).hour
 
-        val red = runCatching { wifi(ctx) }.getOrNull()
+        val red = runCatching { wifi(ctx) }.getOrDefault(Wifi.SinDato)
         val sonidos = runCatching { audio(ctx) }.getOrDefault(emptyList())
         val musica = runCatching { ctx.getSystemService(AudioManager::class.java)?.isMusicActive == true }.getOrDefault(false)
         val bat = ctx.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
@@ -162,7 +183,7 @@ object Percepcion {
         if (enchufado && desde == 0L) p.edit().putLong("carga_desde", ahora).apply()
         if (!enchufado && desde > 0L) {
             p.edit().remove("carga_desde").apply()
-            val h = Instant.ofEpochMilli(desde).atZone(ZoneId.systemDefault()).hour
+            val h = Fechas.local(desde).hour
             if ((h >= 20 || h < 4) && ahora - desde > 3 * 3_600_000L && ahora - desde < 16 * 3_600_000L) {
                 Repo.cambiarConexion(Fechas.diaLogicoDeMillis(desde)) { it.copy(carga_noche_inicio = Fechas.isoDeMillis(desde), carga_noche_fin = Fechas.isoDeMillis(ahora)) }
             }
@@ -170,7 +191,11 @@ object Percepcion {
 
         Repo.cambiarConexion(fecha) { c ->
             var n = c.copy(muestras = c.muestras + 1)
-            n = if (red != null) n.copy(wifi_min = suma(n.wifi_min, red, min)) else n.copy(sin_wifi_min = n.sin_wifi_min + min)
+            n = when (red) {
+                is Wifi.Red -> n.copy(wifi_min = suma(n.wifi_min, red.nombre, min))
+                Wifi.Sin -> n.copy(sin_wifi_min = n.sin_wifi_min + min)
+                Wifi.SinDato -> n.copy(wifi_sin_dato_min = n.wifi_sin_dato_min + min)
+            }
             sonidos.forEach { (cat, nombre) -> n = n.copy(audio_min = suma(n.audio_min, cat, min), dispositivos_min = suma(n.dispositivos_min, nombre, min)) }
             if (musica) n = n.copy(musica_min = n.musica_min + min)
             if (enchufado) n = n.copy(cargando_min = n.cargando_min + min)

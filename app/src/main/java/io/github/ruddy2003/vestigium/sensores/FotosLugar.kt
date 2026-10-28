@@ -17,7 +17,6 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.zip.ZipInputStream
 import kotlin.math.roundToLong
@@ -141,7 +140,8 @@ object FotosLugar {
 
     private fun fechaExif(e: ExifInterface): Long? {
         val t = e.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL) ?: e.getAttribute(ExifInterface.TAG_DATETIME) ?: return null
-        return runCatching { SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.US).parse(t)?.time }.getOrNull()
+        // La hora de la cámara es local, sin zona: se lee con la zona que tenía el teléfono ese día (H-1-7).
+        return runCatching { io.github.ruddy2003.vestigium.data.Fechas.millisDe(java.time.LocalDateTime.parse(t.trim().take(19), java.time.format.DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss", Locale.US))) }.getOrNull()
     }
 
     // ------------------------------------------------------------------ Takeout

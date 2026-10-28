@@ -204,6 +204,13 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         val fase = Luna.fase(fecha)
         Text(est.comentario + "${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}",
             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // Si ese día cambió la hora del teléfono (horario de verano o un viaje), se dice: las horas son las locales de cada momento.
+        Fechas.cambioDeHora(fecha)?.let { (a, b) ->
+            fun utc(x: Double) = "UTC" + (if (x < 0) "−" else "+") + "%.1f".format(kotlin.math.abs(x)).removeSuffix(".0").removeSuffix(",0")
+            val dif = b - a
+            Text("⏱ cambio de horario: de ${utc(a)} a ${utc(b)} · el día duró ${"%.1f".format(24 - dif).removeSuffix(".0").removeSuffix(",0")} h",
+                style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }) {
         // El contador vive dentro del bloque para que la numeración se reinicie en cada recomposición.
         var k = 0
@@ -986,7 +993,7 @@ fun SuplementosDelDia(fecha: String) {
                 if (tomas.isEmpty()) {
                     // Hoy, con la hora de ahora; otro día, a tu hora habitual (o a las 9).
                     val ts = if (fecha == Fechas.diaLogico()) Fechas.ahoraIso()
-                        else Fechas.isoDeMillis(Fechas.parse(fecha).atTime((c.suplementos_hora ?: 9).coerceIn(5, 23), 0).atZone(Fechas.zona()).toInstant().toEpochMilli())
+                        else Fechas.isoDeMillis(Fechas.millisDe(Fechas.parse(fecha).atTime((c.suplementos_hora ?: 9).coerceIn(5, 23), 0)))
                     io.github.ruddy2003.vestigium.data.Suplementos.registrar(s, s.dosis, ts)
                 } else {
                     val t = tomas.maxBy { it.ts }

@@ -69,6 +69,12 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
     override suspend fun doWork(): Result {
         val ctx = applicationContext
         Repo.init(ctx)
+        runCatching { Repo.registrarZona() }
+        // Una sola vez: la fuerza de referencia de los entrenos que ya estaban (H-7-14).
+        runCatching {
+            val mig = ctx.getSharedPreferences("migraciones", Context.MODE_PRIVATE)
+            if (!mig.getBoolean("fuerza_ref", false)) { Repo.completarFuerzaReferencia(); mig.edit().putBoolean("fuerza_ref", true).apply() }
+        }
         runCatching { Ubicacion.muestrear(ctx) }
         runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.muestrear(ctx) }
         // ¿Llevas un rato en un sitio nuevo? Pregunta si es un lugar especial (máximo dos veces al día, nunca de noche).
@@ -240,6 +246,9 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
 class ArranqueReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Repo.init(context)
+        // Al cambiar de zona horaria (un viaje o el horario de verano del sistema) se anota desde cuándo rige la nueva.
+        runCatching { Repo.registrarZona() }
+        if (intent.action == Intent.ACTION_TIMEZONE_CHANGED) return
         runCatching { Geocercas.registrar(context) }
         runCatching { Actividad.registrar(context) }
         Programador.asegurar(context)

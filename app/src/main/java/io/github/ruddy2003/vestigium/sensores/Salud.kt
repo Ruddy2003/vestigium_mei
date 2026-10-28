@@ -126,7 +126,7 @@ object Salud {
         return Noche(asleep, prof, rem, lig, desp, etapas)
     }
 
-    private fun hm(t: Instant, zona: ZoneId) = t.atZone(zona).toLocalTime().let { "%02d:%02d".format(it.hour, it.minute) }
+    private fun hm(t: Instant) = Fechas.local(t.toEpochMilli()).let { "%02d:%02d".format(it.hour, it.minute) }
 
     /** Sincroniza los últimos `dias` días. El sueño se asigna al día en que despertaste. */
     suspend fun sincronizar(ctx: Context, dias: Int = 3): Int {
@@ -134,7 +134,7 @@ object Salud {
         val cliente = HealthConnectClient.getOrCreate(ctx)
         val ok = try { cliente.permissionController.getGrantedPermissions() } catch (e: Exception) { return 0 }
         if (ok.isEmpty()) return 0
-        val zona = ZoneId.systemDefault()
+        // Cada día con la zona que tenía el teléfono entonces (H-1-7).
         var n = 0
         // Lo que devolvió cada tipo de dato, para «Estado de los datos».
         val diag = LinkedHashMap<String, String>()
@@ -148,8 +148,8 @@ object Salud {
         for (i in 0 until dias) {
             val fecha = Fechas.sumar(Fechas.hoyCalendario(), -i.toLong())
             val d = Fechas.parse(fecha)
-            val ini = d.atStartOfDay(zona).toInstant()
-            val fin = d.plusDays(1).atStartOfDay(zona).toInstant()
+            val ini = Instant.ofEpochMilli(Fechas.inicioDia(fecha))
+            val fin = Instant.ofEpochMilli(Fechas.finDia(fecha))
             val rango = TimeRangeFilter.between(ini, fin)
             var s = Repo.salud[fecha] ?: SaludDia(fecha = fecha)
 
@@ -179,11 +179,11 @@ object Salud {
                 if (l.isNotEmpty()) { s = s.copy(spo2 = r(l.map { it.percentage.value }.average(), 1)); bien("oxígeno") }
             }
             // El sueño: de las 12:00 del día anterior al final de este; se queda con lo que termina este día.
-            val ventana = TimeRangeFilter.between(d.minusDays(1).atTime(12, 0).atZone(zona).toInstant(), fin)
+            val ventana = TimeRangeFilter.between(Instant.ofEpochMilli(Fechas.millisDe(d.minusDays(1).atTime(12, 0))), fin)
             var bloqueNoche: Bloque? = null
             intentar("sueño", HealthPermission.getReadPermission(SleepSessionRecord::class)) {
-                val leidas = leer(cliente, SleepSessionRecord::class, ventana).filter { it.endTime.atZone(zona).toLocalDate() == d && it.endTime > it.startTime }
-                fun clave(ses: SleepSessionRecord) = "${fuente(ses.metadata.dataOrigin.packageName)} ${hm(ses.startTime, zona)}–${hm(ses.endTime, zona)}"
+                val leidas = leer(cliente, SleepSessionRecord::class, ventana).filter { Fechas.local(it.endTime.toEpochMilli()).toLocalDate() == d && it.endTime > it.startTime }
+                fun clave(ses: SleepSessionRecord) = "${fuente(ses.metadata.dataOrigin.packageName)} ${hm(ses.startTime)}–${hm(ses.endTime)}"
                 // Lo que marcaste «no cuenta» (la siesta del sofá, una noche que no fue tuya) no entra en la cuenta (N-04).
                 val noCuentan = leidas.filter { clave(it) in s.sueno_descartadas }
                 val todas = leidas - noCuentan.toSet()
@@ -203,7 +203,7 @@ object Salud {
                     else bloques += Bloque(ses.startTime, ses.endTime, mutableListOf(ses))
                 }
                 // La noche: el bloque más largo que empezó antes del mediodía; lo demás son siestas.
-                val mediodia = d.atTime(12, 0).atZone(zona).toInstant()
+                val mediodia = Instant.ofEpochMilli(Fechas.millisDe(d.atTime(12, 0)))
                 val principal = bloques.filter { it.ini < mediodia }.maxByOrNull { it.fin.epochSecond - it.ini.epochSecond }
                 bloqueNoche = principal
                 val siestas = bloques.filter { it !== principal }
@@ -245,7 +245,7 @@ object Salud {
             val rangoNoche = bloqueNoche?.let { TimeRangeFilter.between(it.ini, it.fin) }
                 ?: s.sueno_inicio?.let { a -> s.sueno_fin?.let { b -> TimeRangeFilter.between(Instant.ofEpochMilli(Fechas.millis(a)), Instant.ofEpochMilli(Fechas.millis(b))) } }
             intentar("variabilidad (HRV)", HealthPermission.getReadPermission(HeartRateVariabilityRmssdRecord::class)) {
-                val l = leer(cliente, HeartRateVariabilityRmssdRecord::class, rangoNoche ?: TimeRangeFilter.between(d.minusDays(1).atTime(18, 0).atZone(zona).toInstant(), d.atTime(14, 0).atZone(zona).toInstant()))
+                val l = leer(cliente, HeartRateVariabilityRmssdRecord::class, rangoNoche ?: TimeRangeFilter.between(Instant.ofEpochMilli(Fechas.millisDe(d.minusDays(1).atTime(18, 0))), Instant.ofEpochMilli(Fechas.millisDe(d.atTime(14, 0)))))
                 if (l.isNotEmpty()) { s = s.copy(hrv_rmssd = r(l.map { it.heartRateVariabilityMillis }.average(), 1)); bien("variabilidad (HRV)") }
             }
             if (rangoNoche != null) {
@@ -347,8 +347,7 @@ object Salud {
 
     /** Sesiones de ejercicio del reloj, con la frecuencia cardiaca de cada una. */
     private suspend fun ejercicio(cliente: HealthConnectClient, dias: Int) {
-        val zona = ZoneId.systemDefault()
-        val ini = Fechas.parse(Fechas.sumar(Fechas.hoyCalendario(), -dias.toLong())).atStartOfDay(zona).toInstant()
+        val ini = Instant.ofEpochMilli(Fechas.inicioDia(Fechas.sumar(Fechas.hoyCalendario(), -dias.toLong())))
         val r = cliente.readRecords(ReadRecordsRequest(recordType = ExerciseSessionRecord::class, timeRangeFilter = TimeRangeFilter.after(ini)))
         for (e in r.records) {
             val rango = TimeRangeFilter.between(e.startTime, e.endTime)

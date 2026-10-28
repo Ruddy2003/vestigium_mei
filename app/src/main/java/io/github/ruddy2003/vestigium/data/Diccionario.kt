@@ -83,6 +83,10 @@ object Diccionario {
         "personas" to "@personas mencionadas (lista)", "temas" to "#temas mencionados (lista)", "palabras" to "Número de palabras",
         // Panel y días
         "dia_semana" to "1 = lunes … 7 = domingo",
+        "desfase_utc_h" to "Horas de diferencia con UTC a mediodía de ese día, en la zona donde estaba el teléfono (−6 en la Ciudad de México). Cada hora de las tablas es la hora local de entonces",
+        "cambio_horario" to "Ese día lógico cambió la hora del teléfono: horario de verano o un viaje a otra zona (0/1). El día duró más o menos de 24 horas",
+        "clima_reanalisis" to "El clima de ese día viene del archivo histórico (reanálisis tipo ERA5) (1) o de modelos de pronóstico (0). Los días de pronóstico se cambian por el reanálisis cuando pasan 80 días",
+        "vm_entorno.csv:fuente" to "De dónde salió el clima: archivo (reanálisis histórico de Open-Meteo, tipo ERA5) o pronostico (modelos de pronóstico; se cambia por el archivo a los 80 días). El índice UV solo viene del pronóstico",
         "festivo" to "Día de descanso obligatorio de la Ley Federal del Trabajo de México, art. 74 (0/1; vacío si en «Conocerte» no vives en México)",
         "dia_libre" to "Sábado, domingo o festivo (0/1): la regla de día libre del jet lag social; una noche es libre si despiertas en un día libre", "con_diario" to "Hay registro del diario ese día (0/1)",
         "valencia" to "Qué tan agradable fue (1 muy desagradable a 7 muy agradable; Russell)", "activacion" to "Energía (1 muy baja a 7 muy alta)",
@@ -169,7 +173,8 @@ object Diccionario {
         "min_hablado" to "Minutos hablando por teléfono", "llamada_max_min" to "Llamada más larga (min)", "sms_recibidos" to "SMS recibidos", "sms_enviados" to "SMS enviados",
         "contactos" to "Personas distintas con las que hubo llamada o SMS", "llamadas" to "Llamadas entrantes y salientes", "sms" to "SMS enviados y recibidos",
         // Conexiones
-        "muestras" to "Muestras tomadas (una cada ~15 min)", "sin_wifi_min" to "Minutos sin wifi (fuera de casa, normalmente)", "wifi_total_min" to "Minutos conectado a cualquier wifi",
+        "muestras" to "Muestras tomadas (una cada ~15 min)", "sin_wifi_min" to "Minutos sin wifi: el wifi estaba apagado o el sistema dijo que no había red wifi (fuera de casa, normalmente). Desde el esquema 15 no incluye los minutos sin dato; antes, sí",
+        "wifi_sin_dato_min" to "Minutos en que no se pudo saber si había wifi (sin permiso o sin respuesta del sistema); no cuentan como sin wifi (esquema 15)", "wifi_total_min" to "Minutos conectado a cualquier wifi",
         "audifonos_min" to "Minutos con audífonos conectados", "coche_min" to "Minutos conectado al coche por Bluetooth", "bocina_min" to "Minutos con bocina Bluetooth",
         "bluetooth_otro_min" to "Minutos con otro audio Bluetooth", "musica_min" to "Minutos con audio sonando", "cargando_min" to "Minutos cargando",
         "carga_noche_inicio" to "Cuándo conectaste el teléfono por la noche", "carga_noche_fin" to "Cuándo lo desconectaste en la mañana",
@@ -208,6 +213,8 @@ object Diccionario {
         "cafeina_ultima" to "Hora de la última cafeína", "primera_comida_h" to "Hora del primer alimento en decimal", "ultima_comida_h" to "Hora del último alimento en decimal",
         "cafeina_ultima_h" to "Hora de la última cafeína del día lógico en decimal, de MacroFactor y de lo anotado en la app (antes de las 5:00 suma 24)", "alimento" to "Alimento", "porcion" to "Unidad de la porción", "vm_comidas.csv:cantidad" to "Cantidad de porciones",
         "peso_porcion_g" to "Gramos por porción", "entrenos" to "Entrenamientos del día (lista)", "vm_entrenos.csv:minutos" to "Minutos de entrenamiento",
+        "fuerza_ref_kg" to "Fuerza de referencia: la mejor 1RM estimada (Epley, series de hasta 12 reps, sin calentamiento) del día en press inclinado con mancuernas; vacío si ese día no lo hiciste (esquema 15)",
+        "vm_series.csv:referencia" to "La serie es del ejercicio de referencia, press inclinado con mancuernas (0/1)",
         "series" to "Series totales (con calentamiento)", "series_efectivas" to "Series sin contar calentamiento", "reps" to "Repeticiones", "volumen_kg" to "Volumen: peso × repeticiones (kg)",
         "entreno" to "Nombre del entrenamiento", "entreno_min" to "Duración del entrenamiento (min)", "ejercicio" to "Ejercicio", "tipo_serie" to "Tipo de serie",
         "calentamiento" to "Serie de calentamiento (0/1)", "peso_kg" to "Peso (kg)", "rir" to "Repeticiones en reserva", "e1rm_kg" to "1RM estimado con Epley (kg), series de hasta 12 reps",
@@ -267,6 +274,10 @@ object Diccionario {
         "vm_experimentos.csv:lavado_dias" to "Días que no cuentan tras cada cambio de condición", "vm_experimentos.csv:plan" to "Plan por semana: 1 con la acción, 0 sin ella (lista)",
         "vm_experimentos.csv:activo" to "Sigue activo (0/1)", "vm_experimentos.csv:plantilla" to "Plantilla de la que salió (vacío = propio)",
         "vm_experimentos.csv:fin" to "Día lógico en que lo terminaste (desde el esquema 13; los días después no cuentan)",
+        "vm_experimentos.csv:sentido" to "Criterio sellado: hacia dónde esperabas el cambio (1 sube, -1 baja; vacío = no lo dijiste; esquema 15)",
+        "vm_experimentos.csv:umbral" to "Criterio sellado: diferencia mínima que contaría como efecto, en las unidades de la medida (vacío = cualquiera con el intervalo lejos del cero)",
+        "vm_experimentos.csv:huella" to "SHA-256 de lo sellado (pregunta, acción, medida, hipótesis, criterio, diseño, inicio, semanas, plan, lavado y hora del sello)",
+        "vm_experimentos.csv:intacto" to "La huella coincide con lo que hay ahora (1), cambió después del sello (0) o no tiene huella (vacío, de antes del esquema 15)",
         "vm_experimentos.csv:hecho" to "«¿Lo hiciste hoy?»: fecha:1 sí, fecha:0 no (lista; una fecha que no aparece = sin respuesta, no «no»)",
         "vm_pantalla.csv:ventana" to "logica = de las 05:00 a las 05:00 del día siguiente (desde el esquema 13); calendario = de 0:00 a 24:00 (antes)",
         "sueno_descartadas" to "Lo que llegó del reloj esa noche y marcaste que no cuenta (desde el esquema 14)",
@@ -383,26 +394,37 @@ object Diccionario {
         return "$texto · al exportar: $p (si lo cambias, se recalcula toda la historia)"
     }
 
+    private val DESDE: Map<String, Pair<Int, String>> = emptyMap() //@@DESDE@@
+
+    /** Desde qué versión rige la definición de la columna y qué cambió (H-1-8); null = sin cambios desde la v84. */
+    fun desde(archivo: String, col: String): Pair<Int, String>? {
+        DESDE["$archivo:$col"]?.let { return it }
+        // En el panel extendido, lo que viene del panel de la app o de vm_panel.csv con el mismo nombre.
+        if (archivo == "vm_panel_extendido.csv") DESDE["vm_panel.csv:$col"]?.let { return it }
+        return DESDE[col]
+    }
+
     fun csv(tablas: List<Exportar.Tabla>): String = Exportar.csv(filas(tablas))
 
-    /** Una fila por columna de cada tabla: archivo, columna, tipo, descripción y de qué tabla es. */
+    /** Una fila por columna de cada tabla: archivo, columna, tipo, descripción, de qué tabla es y desde qué versión rige (H-1-8). */
     fun filas(tablas: List<Exportar.Tabla>): List<Map<String, Any?>> {
         val filas = ArrayList<Map<String, Any?>>()
         for (t in tablas) {
             val cols = LinkedHashSet<String>(); t.filas.forEach { cols.addAll(it.keys) }
             for (c in cols) filas.add(linkedMapOf("archivo" to t.archivo, "columna" to c, "tipo" to tipo(t.filas.map { it[c] }, c),
-                "descripcion" to conParametros(c, conEquivalente(t.archivo, c, conVentana(t.archivo, c, describir(t.archivo, c)))), "tabla" to t.descripcion))
+                "descripcion" to conParametros(c, conEquivalente(t.archivo, c, conVentana(t.archivo, c, describir(t.archivo, c)))), "tabla" to t.descripcion,
+                "desde_version" to desde(t.archivo, c)?.first, "cambio" to desde(t.archivo, c)?.second))
         }
         listOf("ts" to "fecha_hora", "lat" to "numero", "lon" to "numero", "precision_m" to "numero", "fuente" to "texto", "ms" to "entero").forEach { (c, ti) ->
             filas.add(linkedMapOf("archivo" to "vm_ubicaciones.csv", "columna" to c, "tipo" to ti,
                 "descripcion" to when (c) { "fuente" -> "De dónde salió la muestra (fondo, momento, cronología, foto…)"; "ms" -> "Milisegundos desde 1970 (la misma hora exacta, para restaurar)"; else -> describir("vm_ubicaciones.csv", c) },
-                "tabla" to "Muestras de ubicación"))
+                "tabla" to "Muestras de ubicación", "desde_version" to null, "cambio" to null))
         }
         listOf("clave" to ("texto" to "Identificador de la foto (no es la foto)"), "ms" to ("entero" to "Hora de la foto en milisegundos"), "ts" to ("fecha_hora" to "Hora de la foto"),
             "lat" to ("numero" to "Latitud"), "lon" to ("numero" to "Longitud"), "aparato" to ("texto" to "Con qué cámara o teléfono se tomó"),
             "origen" to ("texto" to "Carpeta o fuente (cámara, WhatsApp, Takeout…)"), "ms_archivo" to ("entero" to "Fecha del archivo, para detectar relojes equivocados"),
             "fuente" to ("texto" to "foto (del teléfono) o foto_takeout (de Google Fotos)")).forEach { (c, td) ->
-            filas.add(linkedMapOf("archivo" to "vm_fotos_catalogo.csv", "columna" to c, "tipo" to td.first, "descripcion" to td.second, "tabla" to "Catálogo de fotos con lugar (solo hora y coordenadas)"))
+            filas.add(linkedMapOf("archivo" to "vm_fotos_catalogo.csv", "columna" to c, "tipo" to td.first, "descripcion" to td.second, "tabla" to "Catálogo de fotos con lugar (solo hora y coordenadas)", "desde_version" to null, "cambio" to null))
         }
         return filas
     }
