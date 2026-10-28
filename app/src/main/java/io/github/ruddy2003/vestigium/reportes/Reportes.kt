@@ -560,10 +560,12 @@ object Reportes {
     private fun dinero(x: Double) = "$" + n0(x)
     private fun inicial(s: String) = s.split('_', ' ', '-').filter { it.isNotBlank() }.joinToString("") { it.take(1).uppercase() + "." }
     private fun persona(p: String, discreto: Boolean) = if (discreto) inicial(p) else "@$p"
-    private fun cambio(a: Double?, b: Double?, unidad: String, dec: Boolean = true): String? {
+    /** [se]: error típico de la diferencia ([Periodo.errorDif]); si la diferencia es menor, se dice «parecido» (H-8-11). */
+    private fun cambio(a: Double?, b: Double?, unidad: String, dec: Boolean = true, se: Double? = null): String? {
         if (a == null || b == null) return null
         val d = a - b
         if (abs(d) < (if (dec) 0.05 else 0.5)) return "igual que el periodo anterior"
+        if (se != null && abs(d) < se) return "parecido al periodo anterior (la diferencia cabe en lo que varían tus días)"
         return (if (d > 0) "+" else "−") + (if (dec) n1(abs(d)) else n0(abs(d))) + " $unidad frente al periodo anterior"
     }
 
@@ -629,7 +631,7 @@ object Reportes {
             listOfNotNull(
                 d.mejorDia?.let { "optimus" to Fechas.titulo(it).lowercase() + (d.mejorMomento?.takeIf { !h.sinFrases }?.let { m -> " · «${m.take(90)}»" } ?: "") },
                 d.peorDia?.takeIf { it != d.mejorDia }?.let { "pessimus" to Fechas.titulo(it).lowercase() },
-                cambio(d.valMedia, d.valAnterior, "de ánimo")?.let { "animus" to it },
+                cambio(d.valMedia, d.valAnterior, "de ánimo", se = d.errorAnterior["valencia"])?.let { "animus" to it },
                 d.valPorSemana.maxByOrNull { it.value }?.takeIf { d.n > 13 }?.let { "dies felix" to "los " + DIAS_LARGOS[it.key - 1] + " (%.1f)".format(it.value) },
                 d.habitosPct?.let { "consuetudo" to "${(it * 100).roundToInt()}% de tus hábitos cumplidos" + (d.habitos.firstOrNull()?.let { (n, k) -> " · más: $n ($k días)" } ?: "") },
                 d.rachaDiario.takeIf { it >= 3 }?.let { "series" to "$it días seguidos escribiendo" },
@@ -644,9 +646,9 @@ object Reportes {
             listOfNotNull(
                 d.suenoH?.let { "somnus" to "${n1(it)} h de media" + (d.dormirH?.let { a -> " · te dormías a las ${hora(a)}" } ?: "") + (d.despertarH?.let { b -> ", despertabas a las ${hora(b)}" } ?: "") },
                 d.nocheLarga?.takeIf { anual }?.let { "somnus" to "la noche más larga: ${hm(it.second.toDouble())} (${Fechas.corto(it.first)}); la más corta: " + (d.nocheCorta?.let { c -> "${hm(c.second.toDouble())} (${Fechas.corto(c.first)})" } ?: "—") },
-                cambio(d.suenoH, d.suenoAnterior, "h de sueño")?.let { "somnus" to it },
+                cambio(d.suenoH, d.suenoAnterior, "h de sueño", se = d.errorAnterior["sueno"])?.let { "somnus" to it },
                 d.pasos?.let { "passus" to "${n0(it)} al día · ${n0(d.pasosTotal.toDouble())} en total · unos ${n0(d.km)} km" },
-                cambio(d.pasos, d.pasosAnterior, "pasos al día", false)?.let { "passus" to it },
+                cambio(d.pasos, d.pasosAnterior, "pasos al día", false, d.errorAnterior["pasos"])?.let { "passus" to it },
                 d.ejercicioMin.takeIf { it > 0 }?.let { "exercitatio" to hm(it.toDouble()) + " de ejercicio" },
                 d.entrenos.takeIf { it > 0 }?.let { "robur" to "$it entrenos · ${d.series} series · ${n1(d.volumenKg / 1000)} t levantadas" + (d.pr?.let { p -> " · mejor marca: ${p.first} (${n0(p.second)} kg 1RM)" } ?: "") },
                 d.kcal?.let { "nutritio" to "${n0(it)} kcal al día" + (d.proteina?.let { p -> " · ${n0(p)} g de proteína" } ?: "") },
@@ -727,7 +729,7 @@ object Reportes {
             h.titulo("Teléfono", "TELEPHONVM")
             if (d.apps.isNotEmpty()) h.barras(d.apps.take(5).map { Triple(it.first, it.second.toDouble(), hm(it.second.toDouble())) }, L.linea)
             listOfNotNull(
-                "telephonum" to hm(d.pantallaMin) + " al día" + (cambio(d.pantallaMin, d.pantallaAnterior, "min", false)?.let { " · $it" } ?: ""),
+                "telephonum" to hm(d.pantallaMin) + " al día" + (cambio(d.pantallaMin, d.pantallaAnterior, "min", false, d.errorAnterior["pantalla"])?.let { " · $it" } ?: ""),
                 d.desbloqueos?.let { "usus" to "${n0(it)} desbloqueos al día" },
                 d.notifs.takeIf { it > 0 }?.let { "monita" to "${n0(it.toDouble())} notificaciones" },
             ).forEach { (k, v) -> h.clave(k, v) }

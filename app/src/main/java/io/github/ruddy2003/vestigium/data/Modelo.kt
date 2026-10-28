@@ -13,7 +13,7 @@ val JSON = Json {
 const val SCHEMA_V = 14
 
 /**
- * Orden de las preguntas de la hoja de la noche (v14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
+ * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
  * 1 = hábitos, ánimo y cuerpo, contexto, diario, obras, foto, predicción, lo opcional y «cómo estás ahora» al final.
  * 2 (N-18) = «cómo estás ahora» primero (solo hoy), ánimo y cuerpo, predicción, contexto, hábitos, suplementos, diario y
  * lo opcional plegado.
@@ -73,13 +73,13 @@ data class Dia(
     val ts_creado: String? = null,
     val ts_editado: String? = null,
     /**
-     * Cuándo se llenó (o se cambió por última vez) la valencia del día (v13). Con ella se decide [retroactivo]: la valencia
-     * se puso otro día lógico, después. Los días de antes de la v13 no la tienen y conservan su [retroactivo].
+     * Cuándo se llenó (o se cambió por última vez) la valencia del día (esquema 13). Con ella se decide [retroactivo]: la valencia
+     * se puso otro día lógico, después. Los días de antes del esquema 13 no la tienen y conservan su [retroactivo].
      */
     val ts_valencia: String? = null,
     /**
-     * Con qué orden de preguntas se llenó la hoja de la noche (v14): 1 = el orden de hasta la v14; 2 = el orden nuevo
-     * (el ánimo del momento primero). Null = el día no pasó por la hoja de la noche o es de antes de la v14.
+     * Con qué orden de preguntas se llenó la hoja de la noche (esquema 14): 1 = el orden anterior; 2 = el orden nuevo
+     * (el ánimo del momento primero). Null = el día no pasó por la hoja de la noche o es de antes del esquema 14.
      */
     val version_noche: Int? = null,
 )
@@ -120,14 +120,14 @@ data class Momento(
     val pensamiento: String? = null,
     /** Libido (seguimiento privado): en qué está el foco (Catalogo.FOCOS: pensando, viendo, conversando, nada, otro). */
     val foco: String? = null,
-    /** Cuándo se anotó (v14). [ts] es cuándo pasó; si se anotó después, las dos difieren. Null en los registros de antes. */
+    /** Cuándo se anotó (esquema 14). [ts] es cuándo pasó; si se anotó después, las dos difieren. Null en los registros de antes. */
     val ts_creado: String? = null,
-    /** Cuándo se corrigió por última vez después de anotarlo (v14). */
+    /** Cuándo se corrigió por última vez después de anotarlo (esquema 14). */
     val ts_editado: String? = null,
 )
 
 /**
- * Los avisos de ánimo de un día (v13): cuántos se planearon, cuáles ya vencieron (pasó su hora) y cuáles se mostraron
+ * Los avisos de ánimo de un día (esquema 13): cuántos se planearon, cuáles ya vencieron (pasó su hora) y cuáles se mostraron
  * (menos de 50 minutos tarde y con permiso de notificaciones). Las horas van en ISO, igual que [Momento.aviso_ts],
  * para unir cada aviso con su respuesta. [fecha] es el día del plan (de calendario; con la ventana de avisos después
  * de las 05:00 coincide con el día lógico). Con los avisos apagados no se anota nada: el día queda sin dato, no en 0.
@@ -172,7 +172,7 @@ data class Consumo(
     /** Ya se llenó lo de la mañana siguiente. */
     val completo: Boolean = false,
     val origen: String = "app",
-    /** Cuándo se anotó (v14). */
+    /** Cuándo se anotó (esquema 14). */
     val ts_creado: String? = null,
 )
 
@@ -190,9 +190,9 @@ data class Persona(
     val desde: String = "",
     /** Cómo era antes: cada cambio con su fecha (pareja → expareja). */
     val historial: List<CambioRelacion> = emptyList(),
-    /** Cuándo nació (v13): AAAA-MM-DD, o --MM-DD si no sabes el año. Con el año se calcula su edad. */
+    /** Cuándo nació (esquema 13): AAAA-MM-DD, o --MM-DD si no sabes el año. Con el año se calcula su edad. */
     val nacimiento: String = "",
-    /** Cuándo murió (v13), en la misma forma. Su aniversario cuenta como día especial. */
+    /** Cuándo murió (esquema 13), en la misma forma. Su aniversario cuenta como día especial. */
     val fallecimiento: String = "",
 )
 
@@ -219,7 +219,7 @@ data class Tramo(
     val min: Int = 0,
     val nota: String = "",
     val origen: String = "app",
-    /** Cuándo se anotó (v14). */
+    /** Cuándo se anotó (esquema 14). */
     val ts_creado: String? = null,
 )
 
@@ -250,8 +250,8 @@ data class PlanEnfoque(
 /**
  * Una campaña de la semana: un reto opcional que aceptaste (por ejemplo, 5 noches de 7 horas).
  * [lunes] es el lunes de esa semana; [reto] el id del catálogo; [meta] cuántos días de 7.
- * [aceptada] y [abandonada] (v13) son días lógicos: los días antes de aceptarla no cuentan, y abandonarla la cierra ese día
- * en lugar de borrarla. Las de antes de la v13 no tienen [aceptada] y cuentan la semana completa.
+ * [aceptada] y [abandonada] (esquema 13) son días lógicos: los días antes de aceptarla no cuentan, y abandonarla la cierra ese día
+ * en lugar de borrarla. Las de antes del esquema 13 no tienen [aceptada] y cuentan la semana completa.
  */
 @Serializable
 data class Campana(val id: String, val lunes: String, val reto: String, val meta: Int, val tema: String = "", val clave: String = "",
@@ -267,7 +267,7 @@ data class Ingreso(
     val nota: String = "",
     /** Ingreso que se repite (sueldo, beca, renta): solo informativo, no se duplica solo. */
     val fijo: Boolean = false,
-    /** Cuándo se anotó y cuándo se corrigió por última vez (v14). */
+    /** Cuándo se anotó y cuándo se corrigió por última vez (esquema 14). */
     val ts_creado: String? = null,
     val ts_editado: String? = null,
 ) {
@@ -285,9 +285,9 @@ data class Gasto(
     val nota: String = "",
     val lat: Double? = null,
     val lon: Double? = null,
-    /** Subcategoría dentro de [categoria] (v14), por ejemplo Comida → Café. Vacía = sin subcategoría. */
+    /** Subcategoría dentro de [categoria] (esquema 14), por ejemplo Comida → Café. Vacía = sin subcategoría. */
     val subcategoria: String = "",
-    /** Cuándo se anotó y cuándo se corrigió por última vez (v14). */
+    /** Cuándo se anotó y cuándo se corrigió por última vez (esquema 14). */
     val ts_creado: String? = null,
     val ts_editado: String? = null,
 ) {
@@ -412,12 +412,12 @@ data class CambioMeta(val fecha: String, val campo: String, val antes: String, v
 @Serializable
 data class Habito(val id: String, val nombre: String, val activo: Boolean = true, val desde: String = "")
 
-/** Una subcategoría de gasto (v14). [monto] es el monto habitual fijado a mano; null = se calcula de tus últimos gastos. */
+/** Una subcategoría de gasto (esquema 14). [monto] es el monto habitual fijado a mano; null = se calcula de tus últimos gastos. */
 @Serializable
 data class Subcategoria(val nombre: String, val monto: Double? = null)
 
 /**
- * Algo borrado que se guarda 7 días en la papelera (v14): de qué colección es, su id y el documento tal como estaba.
+ * Algo borrado que se guarda 7 días en la papelera (esquema 14): de qué colección es, su id y el documento tal como estaba.
  * La papelera no viaja en los respaldos ni en la exportación.
  */
 @Serializable
@@ -456,7 +456,7 @@ data class SaludDia(
     val ts: String? = null,
     /** El sueño lo corregiste a mano: la sincronización ya no lo pisa. */
     val sueno_manual: Boolean = false,
-    /** Qué ventana usaron los pasos (v13): «logica» (de las 05:00 a las 05:00 del día siguiente) o «calendario» (los días de antes). */
+    /** Qué ventana usaron los pasos (esquema 13): «logica» (de las 05:00 a las 05:00 del día siguiente) o «calendario» (los días de antes). */
     val ventana_pasos: String = "calendario",
     /** Lo que llegó de Health Connect esa noche (fuente, horas, etapas, si se usó): para entender de dónde salió el número. */
     val sueno_fuentes: List<String> = emptyList(),
@@ -465,7 +465,7 @@ data class SaludDia(
     /** Oxígeno mínimo y frecuencia cardiaca media durante el sueño de la noche. */
     val spo2_min: Double? = null,
     val fc_sueno: Double? = null,
-    /** Lo que llegó del reloj y dijiste que no cuenta (v14): la clave de cada sesión ([claveFuenteSueno]: fuente y horas). */
+    /** Lo que llegó del reloj y dijiste que no cuenta (esquema 14): la clave de cada sesión ([claveFuenteSueno]: fuente y horas). */
     val sueno_descartadas: List<String> = emptyList(),
 )
 
@@ -492,7 +492,7 @@ data class PantallaDia(
     /** Minutos entre despertar (según el reloj) y la primera vez que usaste el teléfono. */
     val tel_tras_despertar_min: Int? = null,
     /**
-     * Qué ventana se usó (v13): «logica», de las 05:00 a las 05:00 del día siguiente (lo de la madrugada cuenta para el día
+     * Qué ventana se usó (esquema 13): «logica», de las 05:00 a las 05:00 del día siguiente (lo de la madrugada cuenta para el día
      * anterior), o «calendario», de 0:00 a 24:00 (los días de antes). En [por_hora_min], con la ventana lógica, las horas 0 a 4
      * son de la madrugada siguiente.
      */
@@ -628,10 +628,10 @@ data class Experimento(
     /** Días que no cuentan después de cada cambio, para que el efecto anterior se vaya. */
     val lavado_dias: Int = 0,
     val plantilla: String? = null,
-    /** Día lógico en que lo terminaste (v13). Los días después ya no cuentan, aunque el plan siguiera. */
+    /** Día lógico en que lo terminaste (esquema 13). Los días después ya no cuentan, aunque el plan siguiera. */
     val fin: String? = null,
     /**
-     * «¿Lo hiciste hoy?» (v13): fecha → sí o no. Se pregunta en las dos condiciones. Sin entrada = sin respuesta,
+     * «¿Lo hiciste hoy?» (esquema 13): fecha → sí o no. Se pregunta en las dos condiciones. Sin entrada = sin respuesta,
      * que no es lo mismo que «no».
      */
     val hecho: Map<String, Boolean> = emptyMap(),
@@ -641,7 +641,7 @@ data class Experimento(
 data class Config(
     val habitos: List<Habito> = emptyList(),
     val categorias: List<String> = Catalogo.CATEGORIAS,
-    /** Subcategorías de gasto por categoría (v14), cada una con su monto habitual si lo fijaste. */
+    /** Subcategorías de gasto por categoría (esquema 14), cada una con su monto habitual si lo fijaste. */
     val subcategorias: Map<String, List<Subcategoria>> = emptyMap(),
     val equivalencias: Map<String, String> = emptyMap(),
     val muestreos_por_dia: Int = 3,
@@ -663,7 +663,7 @@ data class Config(
     val drive: Boolean = false,
     val drive_carpeta: String? = null,
     val drive_ultimo: String? = null,
-    /** Cuántos días y momentos llevaba el último respaldo que reemplazó la copia de Drive (v13): para no cambiarla por una mucho más pobre. */
+    /** Cuántos días y momentos llevaba el último respaldo que reemplazó la copia de Drive (esquema 13): para no cambiarla por una mucho más pobre. */
     val drive_conteo: Map<String, Int> = emptyMap(),
     val escalada_escala: String = "V",
     val gimnasios: List<String> = emptyList(),
@@ -777,9 +777,9 @@ data class Config(
     val cafeina_vida_media_h: Double = 5.0,
     /** Quién es cada persona que mencionas. */
     val personas: List<Persona> = emptyList(),
-    /** Fechas que se repiten cada año y no son de nadie de Tu gente (v13; ver [Especiales]). */
+    /** Fechas que se repiten cada año y no son de nadie de Tu gente (esquema 13; ver [Especiales]). */
     val fechas_propias: List<FechaPropia> = emptyList(),
-    /** Aviso en la mañana de los cumpleaños, aniversarios y fechas propias (v13). */
+    /** Aviso en la mañana de los cumpleaños, aniversarios y fechas propias (esquema 13). */
     val avisos_especiales: Boolean = true,
     /** Personas que preferiste no clasificar, y pares que dijiste que no son la misma persona («a|b»). */
     val personas_omitidas: List<String> = emptyList(),
@@ -855,7 +855,7 @@ data class TomaSuplemento(
     val fecha: String,
     val cantidad: Double,
     val estimado: Boolean = false,
-    /** Cuándo se anotó (v14). [ts] es cuándo la tomaste. */
+    /** Cuándo se anotó (esquema 14). [ts] es cuándo la tomaste. */
     val ts_creado: String? = null,
 )
 

@@ -88,12 +88,12 @@ object Diccionario {
         "valencia" to "Qué tan agradable fue (1 muy desagradable a 7 muy agradable; Russell)", "activacion" to "Energía (1 muy baja a 7 muy alta)",
         "dolor" to "Dolor o molestia física (0 nada a 5 muy fuerte)", "sueno_calidad" to "Calidad del sueño percibida (1 a 5)",
         "valencia_muestreo" to "Promedio de la valencia en los avisos del día", "n_muestreos" to "Avisos de ánimo respondidos (registros «muestreo», con o sin valencia)", "n_momentos" to "Momentos registrados (sin contar avisos; incluye los privados: impulsos, recaídas y libido)",
-        "gasto_total" to "Gasto del día (tu moneda); 0 desde tu primer gasto, en días con diario; antes, vacío", "ingreso_total" to "Ingresos del día (tu moneda); 0 desde tu primer ingreso, en días con diario; antes, vacío", "fijo" to "Ingreso que se repite, como sueldo o beca (0/1)", "schema_v" to "Versión del esquema de datos (0 = importado de Obsidian o de la versión web sin versión propia)", "origen" to "De dónde vino el registro (app, web, obsidian, widget…)",
-        "retroactivo" to "La valencia se llenó otro día, después (0/1). Desde la v13 se decide con ts_valencia; los días de antes, por si el registro del día se creó después",
-        "ts_valencia" to "Cuándo se llenó o se cambió por última vez la valencia del día (desde la v13)", "dia_dificil" to "Marcado como día difícil (0/1)",
-        "ts_creado" to "Cuándo se anotó el registro. En momentos, gastos, ingresos, tomas, consumos y tramos, desde la v14 (vacío en los de antes); comparado con su hora dice si se anotó tarde",
-        "ts_editado" to "Cuándo se corrigió por última vez después de anotarlo (en momentos, gastos e ingresos, desde la v14)",
-        "version_noche" to "Con qué orden de preguntas se llenó la hoja de la noche (desde la v14): 1 = el orden de hasta la v14; 2 = el orden nuevo, con el ánimo del momento primero. Vacío = no pasó por la hoja o es de antes",
+        "gasto_total" to "Gasto del día (tu moneda); 0 desde tu primer gasto, en días con diario; antes, vacío", "vm_panel_extendido.csv:personas" to "Personas distintas nombradas con @ ese día, en el diario y en los momentos no privados; vale 0 los días con diario escrito o con un momento que nombra a alguien, y si no, vacío", "gasto_imprevisto_monto" to "Suma de los gastos imprevistos del día (tu moneda); gasto_imprevisto solo dice si hubo alguno (0/1)", "error_prediccion_signo" to "Valencia del día menos la predicción de la noche anterior (−6 a +6): positivo, el día salió mejor de lo predicho; error_prediccion es su valor absoluto", "ingreso_total" to "Ingresos del día (tu moneda); 0 desde tu primer ingreso, en días con diario; antes, vacío", "fijo" to "Ingreso que se repite, como sueldo o beca (0/1)", "schema_v" to "Versión del esquema de datos (0 = importado de Obsidian o de la versión web sin versión propia)", "origen" to "De dónde vino el registro (app, web, obsidian, widget…)",
+        "retroactivo" to "La valencia se llenó otro día, después (0/1). Desde el esquema 13 se decide con ts_valencia; los días de antes, por si el registro del día se creó después",
+        "ts_valencia" to "Cuándo se llenó o se cambió por última vez la valencia del día (desde el esquema 13)", "dia_dificil" to "Marcado como día difícil (0/1)",
+        "ts_creado" to "Cuándo se anotó el registro. En momentos, gastos, ingresos, tomas, consumos y tramos, desde el esquema 14 (vacío en los de antes); comparado con su hora dice si se anotó tarde",
+        "ts_editado" to "Cuándo se corrigió por última vez después de anotarlo (en momentos, gastos e ingresos, desde el esquema 14)",
+        "version_noche" to "Con qué orden de preguntas se llenó la hoja de la noche (desde el esquema 14): 1 = el orden anterior; 2 = el orden nuevo, con el ánimo del momento primero. Vacío = no pasó por la hoja o es de antes",
         "hitos" to "Hitos del día (lista)", "flow" to "Experiencia de flujo (Csikszentmihalyi)", "sdt_necesidad" to "Necesidad psicológica más presente (Deci y Ryan)",
         "apreciacion" to "Evaluación del estrés (Lazarus)", "sueno_recordado" to "Recordó un sueño (0/1)", "sueno_valencia" to "Qué tan agradable fue el sueño (1 a 7)",
         "sueno_lucidez" to "Lucidez del sueño", "sueno_vividez" to "Vividez del recuerdo", "sueno_tipo" to "Tipo de sueño", "sueno_temas" to "Personas y temas del sueño (lista)",
@@ -105,7 +105,7 @@ object Diccionario {
         "aviso_ts" to "Cuándo llegó el aviso que se respondió", "latencia_min" to "Minutos entre el aviso y la respuesta",
         "ruido_db" to "Ruido ambiente aproximado al registrar (dB relativos, sin calibrar)", "luz_lux" to "Luz ambiente al registrar (lux)",
         // Gastos
-        "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde la v14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)",
+        "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde el esquema 14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)",
         // Escalas y reacción
         "instrumento" to "Cuestionario (who5, pss4, ucla3, tipi)", "media_ms" to "Tiempo de reacción medio (ms)", "mediana_ms" to "Tiempo de reacción mediano (ms)",
         "lapsos" to "Respuestas de más de 500 ms", "anticipaciones" to "Toques antes del estímulo", "ensayos_ms" to "Tiempos de cada ensayo (lista, ms)",
@@ -206,7 +206,7 @@ object Diccionario {
         "objetivo_kcal" to "Objetivo de calorías", "objetivo_proteina_g" to "Objetivo de proteína (g)", "objetivo_carbohidratos_g" to "Objetivo de carbohidratos (g)",
         "objetivo_grasa_g" to "Objetivo de grasa (g)", "comidas" to "Alimentos registrados", "primera_comida" to "Hora del primer alimento", "ultima_comida" to "Hora del último alimento",
         "cafeina_ultima" to "Hora de la última cafeína", "primera_comida_h" to "Hora del primer alimento en decimal", "ultima_comida_h" to "Hora del último alimento en decimal",
-        "cafeina_ultima_h" to "Hora de la última cafeína en decimal", "alimento" to "Alimento", "porcion" to "Unidad de la porción", "vm_comidas.csv:cantidad" to "Cantidad de porciones",
+        "cafeina_ultima_h" to "Hora de la última cafeína del día lógico en decimal, de MacroFactor y de lo anotado en la app (antes de las 5:00 suma 24)", "alimento" to "Alimento", "porcion" to "Unidad de la porción", "vm_comidas.csv:cantidad" to "Cantidad de porciones",
         "peso_porcion_g" to "Gramos por porción", "entrenos" to "Entrenamientos del día (lista)", "vm_entrenos.csv:minutos" to "Minutos de entrenamiento",
         "series" to "Series totales (con calentamiento)", "series_efectivas" to "Series sin contar calentamiento", "reps" to "Repeticiones", "volumen_kg" to "Volumen: peso × repeticiones (kg)",
         "entreno" to "Nombre del entrenamiento", "entreno_min" to "Duración del entrenamiento (min)", "ejercicio" to "Ejercicio", "tipo_serie" to "Tipo de serie",
@@ -253,8 +253,8 @@ object Diccionario {
         "dias_juntos" to "Días en que aparecen las dos el mismo día", "vm_laptop.csv:minutos" to "Minutos usados ese día", "vm_laptop.csv:categoria" to "Categoría (productivo, ocio, social, otro)",
         "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista)",
         "presencias_revisado" to "Ya revisaste ese día quién estuvo y en quién solo pensaste (0/1); antes de la versión 10 todo cuenta como «estuve»",
-        // Entrega 10b (v13): avisos de ánimo, campañas, experimentos, ventana del día, días especiales y Tu gente.
-        "avisos_planeados" to "Avisos de ánimo planeados ese día (desde la v13; vacío = sin registro o con los avisos apagados)",
+        // Entrega 10b (esquema 13): avisos de ánimo, campañas, experimentos, ventana del día, días especiales y Tu gente.
+        "avisos_planeados" to "Avisos de ánimo planeados ese día (desde el esquema 13; vacío = sin registro o con los avisos apagados)",
         "avisos_mostrados" to "Avisos de ánimo que se mostraron: menos de 50 minutos tarde y con permiso de notificaciones",
         "avisos_respondidos" to "Avisos mostrados que tienen respuesta (un registro «muestreo» con esa hora de aviso, con o sin valencia)",
         "tasa_respuesta" to "avisos_respondidos entre avisos_mostrados (vacío si no se mostró ninguno)",
@@ -266,12 +266,12 @@ object Diccionario {
         "vm_experimentos.csv:inicio" to "Primer día (un lunes)", "vm_experimentos.csv:semanas" to "Semanas del plan",
         "vm_experimentos.csv:lavado_dias" to "Días que no cuentan tras cada cambio de condición", "vm_experimentos.csv:plan" to "Plan por semana: 1 con la acción, 0 sin ella (lista)",
         "vm_experimentos.csv:activo" to "Sigue activo (0/1)", "vm_experimentos.csv:plantilla" to "Plantilla de la que salió (vacío = propio)",
-        "vm_experimentos.csv:fin" to "Día lógico en que lo terminaste (desde la v13; los días después no cuentan)",
+        "vm_experimentos.csv:fin" to "Día lógico en que lo terminaste (desde el esquema 13; los días después no cuentan)",
         "vm_experimentos.csv:hecho" to "«¿Lo hiciste hoy?»: fecha:1 sí, fecha:0 no (lista; una fecha que no aparece = sin respuesta, no «no»)",
-        "vm_pantalla.csv:ventana" to "logica = de las 05:00 a las 05:00 del día siguiente (desde la v13); calendario = de 0:00 a 24:00 (antes)",
-        "sueno_descartadas" to "Lo que llegó del reloj esa noche y marcaste que no cuenta (desde la v14)",
-        "ventana_pantalla" to "Ventana del uso del teléfono ese día: logica (05:00 a 05:00, desde la v13) o calendario (0:00 a 24:00)",
-        "ventana_pasos" to "Ventana de los pasos ese día: logica (05:00 a 05:00, desde la v13) o calendario (0:00 a 24:00)",
+        "vm_pantalla.csv:ventana" to "logica = de las 05:00 a las 05:00 del día siguiente (desde el esquema 13); calendario = de 0:00 a 24:00 (antes)",
+        "sueno_descartadas" to "Lo que llegó del reloj esa noche y marcaste que no cuenta (desde el esquema 14)",
+        "ventana_pantalla" to "Ventana del uso del teléfono ese día: logica (05:00 a 05:00, desde el esquema 13) o calendario (0:00 a 24:00)",
+        "ventana_pasos" to "Ventana de los pasos ese día: logica (05:00 a 05:00, desde el esquema 13) o calendario (0:00 a 24:00)",
         "dia_especial" to "Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1)",
         "dia_especial_tipo" to "Qué cae: mi_cumpleanos, cumpleanos, fallecimiento, aniversario u otra (lista)",
         "vm_personas.csv:persona" to "Nombre con que la mencionas (sin @)", "vm_personas.csv:relacion" to "Qué es para ti ahora",
@@ -364,6 +364,25 @@ object Diccionario {
         return if (de.isEmpty()) texto else "$texto · en vm_panel.csv: ${de.joinToString()}"
     }
 
+    /**
+     * Los parámetros con que se calculó la columna en esta exportación (H-4-11): si los cambias, toda la historia se recalcula
+     * con los nuevos, así que exportaciones de fechas distintas pueden no compararse. Vacío si la columna no tiene.
+     */
+    private fun conParametros(col: String, texto: String): String {
+        fun n(x: Double) = if (x % 1.0 == 0.0) x.toLong().toString() else x.toString()
+        val c = Repo.config
+        fun deSuplemento(s: Suplemento) = if (s.modelo == "carga")
+            "llega al 95 % en ${s.carga_dias} días con ${n(Suplementos.dosisReferencia(s))} ${s.unidad} al día y se vacía en ${s.lavado_dias} días"
+            else "vida media de ${n(s.vida_media_h)} h"
+        val p = when {
+            col == "cafeina_al_dormir_mg" -> "vida media de la cafeína de ${n(c.cafeina_vida_media_h)} h"
+            col == "creatina_saturacion_pct" -> c.suplementos.firstOrNull { it.id == "creatina" }?.let { deSuplemento(it) }
+            col.startsWith("supl_") && col.endsWith("_nivel") -> c.suplementos.firstOrNull { it.id == col.removePrefix("supl_").removeSuffix("_nivel") }?.let { deSuplemento(it) }
+            else -> null
+        } ?: return texto
+        return "$texto · al exportar: $p (si lo cambias, se recalcula toda la historia)"
+    }
+
     fun csv(tablas: List<Exportar.Tabla>): String = Exportar.csv(filas(tablas))
 
     /** Una fila por columna de cada tabla: archivo, columna, tipo, descripción y de qué tabla es. */
@@ -372,7 +391,7 @@ object Diccionario {
         for (t in tablas) {
             val cols = LinkedHashSet<String>(); t.filas.forEach { cols.addAll(it.keys) }
             for (c in cols) filas.add(linkedMapOf("archivo" to t.archivo, "columna" to c, "tipo" to tipo(t.filas.map { it[c] }, c),
-                "descripcion" to conEquivalente(t.archivo, c, conVentana(t.archivo, c, describir(t.archivo, c))), "tabla" to t.descripcion))
+                "descripcion" to conParametros(c, conEquivalente(t.archivo, c, conVentana(t.archivo, c, describir(t.archivo, c)))), "tabla" to t.descripcion))
         }
         listOf("ts" to "fecha_hora", "lat" to "numero", "lon" to "numero", "precision_m" to "numero", "fuente" to "texto", "ms" to "entero").forEach { (c, ti) ->
             filas.add(linkedMapOf("archivo" to "vm_ubicaciones.csv", "columna" to c, "tipo" to ti,

@@ -7,6 +7,7 @@ import android.security.keystore.KeyProperties
 import android.util.Base64
 import androidx.documentfile.provider.DocumentFile
 import java.io.File
+import java.nio.ByteBuffer
 import java.security.KeyStore
 import java.security.SecureRandom
 import java.util.zip.ZipEntry
@@ -35,40 +36,65 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 object Respaldos {
     const val BASE = "vestigium_respaldo"
-    private val MAGIA = "VESTIGIUM-MEI-CIFRADO-1".toByteArray()
-    private const val ITERACIONES = 210_000
+    // Formato 1 (el de las versiones anteriores): marca, sal, iv y cuerpo, siempre a 210 000 iteraciones. Ya no se escribe, pero se sigue abriendo.
+    private val MAGIA_1 = "VESTIGIUM-MEI-CIFRADO-1".toByteArray()
+    private const val ITERACIONES_1 = 210_000
+    // Formato 2: marca, iteraciones (4 bytes, big-endian), sal, iv y cuerpo. Como las iteraciones viajan en el archivo,
+    // se pueden subir más adelante sin otro formato. 600 000 es lo que recomienda OWASP para PBKDF2-HMAC-SHA256 (H-8-9).
+    private val MAGIA_2 = "VESTIGIUM-MEI-CIFRADO-2".toByteArray()
+    private const val ITERACIONES = 600_000
+    // Lo que se acepta al leer: fuera de esto el archivo está dañado, y una cifra enorme colgaría la app derivando la llave.
+    private const val ITER_MIN = 100_000
+    private const val ITER_MAX = 10_000_000
 
     // ------------------------------------------------------------ cifrado
 
-    private fun llave(contrasena: CharArray, sal: ByteArray): SecretKeySpec {
+    /** PBKDF2 tarda a propósito (a 600 000 vueltas, un segundo o más en el teléfono): solo se llama fuera del hilo principal. */
+    private fun llave(contrasena: CharArray, sal: ByteArray, iteraciones: Int): SecretKeySpec {
         val f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-        return SecretKeySpec(f.generateSecret(PBEKeySpec(contrasena, sal, ITERACIONES, 256)).encoded, "AES")
+        return SecretKeySpec(f.generateSecret(PBEKeySpec(contrasena, sal, iteraciones, 256)).encoded, "AES")
     }
 
-    fun estaCifrado(b: ByteArray): Boolean = b.size > MAGIA.size + 28 && b.copyOfRange(0, MAGIA.size).contentEquals(MAGIA)
+    private fun empiezaCon(b: ByteArray, m: ByteArray) = b.size >= m.size && b.copyOfRange(0, m.size).contentEquals(m)
 
+    /** 2 o 1 según la marca del archivo; 0 si no lleva ninguna (no está cifrado). */
+    private fun formato(b: ByteArray): Int = when { empiezaCon(b, MAGIA_2) -> 2; empiezaCon(b, MAGIA_1) -> 1; else -> 0 }
+
+    /** Lo que mide el encabezado antes de la sal: la marca y, en el formato 2, las iteraciones. Va completo como AAD. */
+    private fun cabecera(v: Int): Int = if (v == 2) MAGIA_2.size + 4 else MAGIA_1.size
+
+    fun estaCifrado(b: ByteArray): Boolean = formato(b).let { it != 0 && b.size > cabecera(it) + 28 }
+
+    /** Siempre en el formato 2. */
     fun cifrar(datos: ByteArray, contrasena: CharArray): ByteArray {
         val r = SecureRandom()
         val sal = ByteArray(16).also { r.nextBytes(it) }
         val iv = ByteArray(12).also { r.nextBytes(it) }
+        val cab = MAGIA_2 + ByteBuffer.allocate(4).putInt(ITERACIONES).array()
         val c = Cipher.getInstance("AES/GCM/NoPadding")
-        c.init(Cipher.ENCRYPT_MODE, llave(contrasena, sal), GCMParameterSpec(128, iv))
-        c.updateAAD(MAGIA)
+        c.init(Cipher.ENCRYPT_MODE, llave(contrasena, sal, ITERACIONES), GCMParameterSpec(128, iv))
+        c.updateAAD(cab)
         val cuerpo = c.doFinal(datos)
-        val out = ByteArray(MAGIA.size + 28 + cuerpo.size)
-        System.arraycopy(MAGIA, 0, out, 0, MAGIA.size)
-        System.arraycopy(sal, 0, out, MAGIA.size, 16)
-        System.arraycopy(iv, 0, out, MAGIA.size + 16, 12)
-        System.arraycopy(cuerpo, 0, out, MAGIA.size + 28, cuerpo.size)
+        val o = cab.size
+        val out = ByteArray(o + 28 + cuerpo.size)
+        System.arraycopy(cab, 0, out, 0, o)
+        System.arraycopy(sal, 0, out, o, 16)
+        System.arraycopy(iv, 0, out, o + 16, 12)
+        System.arraycopy(cuerpo, 0, out, o + 28, cuerpo.size)
         return out
     }
 
-    /** null si la contraseña no es la correcta (o el archivo está dañado). */
+    /** null si la contraseña no es la correcta (o el archivo está dañado). Abre los dos formatos. */
     fun descifrar(b: ByteArray, contrasena: CharArray): ByteArray? = runCatching {
-        val o = MAGIA.size
+        val v = formato(b)
+        if (v == 0) return null
+        val o = cabecera(v)
+        if (b.size <= o + 28) return null
+        val iteraciones = if (v == 2) ByteBuffer.wrap(b, MAGIA_2.size, 4).int else ITERACIONES_1
+        if (iteraciones !in ITER_MIN..ITER_MAX) return null
         val c = Cipher.getInstance("AES/GCM/NoPadding")
-        c.init(Cipher.DECRYPT_MODE, llave(contrasena, b.copyOfRange(o, o + 16)), GCMParameterSpec(128, b.copyOfRange(o + 16, o + 28)))
-        c.updateAAD(MAGIA)
+        c.init(Cipher.DECRYPT_MODE, llave(contrasena, b.copyOfRange(o, o + 16), iteraciones), GCMParameterSpec(128, b.copyOfRange(o + 16, o + 28)))
+        c.updateAAD(b, 0, o)
         c.doFinal(b, o + 28, b.size - o - 28)
     }.getOrNull()
 

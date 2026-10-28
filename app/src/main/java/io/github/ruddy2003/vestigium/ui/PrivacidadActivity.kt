@@ -29,7 +29,9 @@ class PrivacidadActivity : ComponentActivity() {
                                     "No se envían a ningún servidor. Solo salen del teléfono cuando tú los exportas, eliges una carpeta de respaldo o activas el respaldo en tu propio Google Drive. " +
                                     "Se usan únicamente para mostrarte tus propios patrones y cruzarlos con tu diario.\n\n" +
                                     "Para el clima, la app envía a Open-Meteo solo tu zona aproximada (coordenadas redondeadas a ~1 km) y las fechas; " +
-                                    "el mapa descarga mosaicos de calles de OpenStreetMap. Ninguno de los dos recibe tu diario, tu salud ni tu ruta.",
+                                    "el mapa descarga mosaicos de calles de OpenStreetMap (así se sabe qué zona miras). Al buscar una obra, se envía solo el título " +
+                                    "o el DOI que escribes a TMDB, TVmaze, RAWG, Google Books, Open Library o Crossref, según el tipo. Si conectas Spotify, la app " +
+                                    "le pide lo que escuchaste; si activas Google Drive, sube ahí tus respaldos. Ninguno recibe tu diario, tu salud ni tu ruta.",
                                 style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 16.dp),
                             )
                         }

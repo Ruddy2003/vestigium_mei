@@ -66,8 +66,15 @@ object Suplementos {
     /** Dosis por día de un suplemento (lo anotado a mano). */
     fun dosisPorDia(id: String): Map<String, Double> = Repo.tomas.filter { it.suplemento == id && !it.estimado }.groupBy { it.fecha }.mapValues { (_, l) -> l.sumOf { it.cantidad } }
 
+    /**
+     * La dosis con la que la reserva llega al 95 % en [Suplemento.carga_dias]. En la creatina es 3 g, la del estudio del que salen
+     * los 28 días (Hultman et al., 1996): con 5 g se llena antes (H-4-6). En los demás, la dosis que pusiste.
+     */
+    fun dosisReferencia(s: Suplemento): Double = if (s.id == "creatina") 3.0 else s.dosis
+
     /** Reserva (0 a 100 %) al final de cada día, desde la primera toma hasta [hasta]. */
     fun carga(s: Suplemento, hasta: String = Fechas.diaLogico()): Map<String, Double> {
+        val ref = dosisReferencia(s).takeIf { it > 0 } ?: 1.0
         val dosis = dosisPorDia(s.id)
         val inicio = dosis.keys.minOrNull() ?: return emptyMap()
         val sube = 1 - Math.pow(0.05, 1.0 / s.carga_dias.coerceAtLeast(1))
@@ -76,7 +83,7 @@ object Suplementos {
         var nivel = 0.0; var f = inicio
         while (f <= hasta) {
             val d = dosis[f] ?: 0.0
-            nivel = if (d > 0) nivel + (1 - Math.pow(1 - sube, d / s.dosis)) * (100 - nivel) else nivel * (1 - baja)
+            nivel = if (d > 0) nivel + (1 - Math.pow(1 - sube, d / ref)) * (100 - nivel) else nivel * (1 - baja)
             out[f] = Math.round(nivel * 10) / 10.0
             f = Fechas.sumar(f, 1)
         }
@@ -88,6 +95,9 @@ object Suplementos {
         val dt = ms - Fechas.millis(t.ts)
         if (dt < 0) 0.0 else t.cantidad * Math.pow(0.5, dt / (s.vida_media_h * 3_600_000.0))
     }
+
+    /** Vida media mínima (horas) para calcular el nivel al final del día: con menos, a las 5:00 ya no queda casi nada. */
+    const val VIDA_MEDIA_MIN_NIVEL = 6.0
 
     /** Variables del día: dosis, si se tomó y el nivel según el modelo (para el panel y la exportación). */
     fun panel(c: Config = Repo.config, hoy: String = Fechas.diaLogico()): Map<String, Map<String, Double>> {
@@ -104,7 +114,8 @@ object Suplementos {
                 put(f, "supl_${s.id}_dosis", d); put(f, "supl_${s.id}_tomado", if (d > 0) 1.0 else 0.0)
                 when (s.modelo) {
                     "carga" -> niveles[f]?.let { put(f, "supl_${s.id}_nivel", it); if (s.id == "creatina") put(f, "creatina_saturacion_pct", it) }
-                    "vida_media" -> put(f, "supl_${s.id}_nivel", Math.round(cantidadEn(s, Fechas.finDia(f) + 5 * 3_600_000L - 1) * 100) / 100.0)
+                    // Con vida media corta (melatonina, 1 h), lo que queda a las 5:00 es casi siempre 0: no se exporta (H-4-7).
+                    "vida_media" -> if (s.vida_media_h >= VIDA_MEDIA_MIN_NIVEL) put(f, "supl_${s.id}_nivel", Math.round(cantidadEn(s, Fechas.finDia(f) + 5 * 3_600_000L - 1) * 100) / 100.0)
                     else -> {
                         val e = estimados[f] ?: 0.0
                         put(f, "supl_${s.id}_porciones", d + e)
@@ -474,7 +485,8 @@ object Experimentos {
             if (f > hoy || (e.fin != null && f > e.fin)) break
             val t = toca(e, f) ?: continue
             if (enLavado(e, f)) continue
-            val h = e.hecho[f]
+            // En la plantilla «Creatina», sin respuesta a «¿Lo hiciste hoy?» cuenta lo que dice el registro de suplementos (H-9-26).
+            val h = e.hecho[f] ?: if (e.plantilla == "creatina") panel[f]?.get("supl_creatina_tomado")?.let { it > 0 } else null
             if (t) { dSi++; if (h != null) { rSi++; if (h) hSi++ } } else { dNo++; if (h != null) { rNo++; if (h) hNo++ } }
             if (f == hoy) continue
             val v = panel[f]?.get(e.resultado) ?: continue
@@ -487,10 +499,11 @@ object Experimentos {
             val va = cv.sumOf { (it - cv.average()) * (it - cv.average()) } / (cv.size - 1)
             val vb = sv.sumOf { (it - sv.average()) * (it - sv.average()) } / (sv.size - 1)
             val sp = sqrt(((cv.size - 1) * va + (sv.size - 1) * vb) / (cv.size + sv.size - 2))
-            if (sp > 0) (cv.average() - sv.average()) / sp else null
+            // g de Hedges (H-7-7): la d de Cohen por 1 − 3 / (4·(n₁ + n₂) − 9), que quita lo que se infla con pocos días.
+            if (sp > 0) (cv.average() - sv.average()) / sp * (1 - 3.0 / (4 * (cv.size + sv.size) - 9)) else null
         } else null
         val (pend, clara) = tendencia(serie)
-        val cum = if (e.hecho.isEmpty()) null else Cumplimiento(dSi, rSi, hSi, dNo, rNo, hNo)
+        val cum = if (e.hecho.isEmpty() && rSi + rNo == 0) null else Cumplimiento(dSi, rSi, hSi, dNo, rNo, hNo)
         val (pSi, pNo) = diasPorCondicion(e)
         return Resultado(cv, sv, dif, d, pend, clara, cum, enCurso(e, hoy), pSi, pNo)
     }

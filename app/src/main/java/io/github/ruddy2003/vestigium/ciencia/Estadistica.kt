@@ -246,7 +246,8 @@ object Estadistica {
             Variable("spo2", "Saturación de oxígeno media (%)", "Cuerpo"), Variable("spo2_min", "Oxígeno mínimo de noche (%)", "Cuerpo"),
             Variable("pasos", "Pasos", "Cuerpo"), Variable("pantalla_min", "Minutos de pantalla", "Teléfono"),
             Variable("desbloqueos", "Desbloqueos del teléfono", "Teléfono"), Variable("gasto_total", "Gasto del día", "Dinero"),
-            Variable("gasto_imprevisto", "Hubo gasto imprevisto (0/1)", "Dinero"), Variable("palabras", "Palabras en el diario", "Texto"),
+            Variable("gasto_imprevisto", "Hubo gasto imprevisto (0/1)", "Dinero"), Variable("gasto_imprevisto_monto", "Gasto imprevisto (monto)", "Dinero"),
+            Variable("palabras", "Palabras en el diario", "Texto"),
             Variable("personas", "Personas distintas mencionadas", "Social"), Variable("hitos_n", "Número de hitos", "Texto"),
             Variable("presencias_revisado", "Revisaste quién estuvo y en quién solo pensaste (0/1)", "Social"),
             Variable("rt_media", "Tiempo de reacción (ms)", "Mente"), Variable("lugares_distintos", "Lugares distintos visitados", "Movilidad"),
@@ -293,7 +294,8 @@ object Estadistica {
             Variable("cartas_otros", "Cartas escritas a otras personas", "Social"),
             Variable("ingreso_total", "Ingresos del día", "Dinero"), Variable("balance_dinero", "Ingresos menos gastos del día", "Dinero"),
             Variable("dia_dificil", "Día difícil (0/1)", "Ánimo"), Variable("prediccion", "Predicción para mañana (1 a 7)", "Ánimo"),
-            Variable("error_prediccion", "Cuánto falló la predicción de anoche", "Ánimo"), Variable("medicamentos_n", "Medicamentos tomados", "Salud"),
+            Variable("error_prediccion", "Cuánto falló la predicción de anoche", "Ánimo"),
+            Variable("error_prediccion_signo", "El día contra la predicción de anoche (+ mejor, − peor)", "Ánimo"), Variable("medicamentos_n", "Medicamentos tomados", "Salud"),
             Variable("sueno_lucidez", "Lucidez del sueño (0 no, 1 parcial, 2 total)", "Sueño"), Variable("sueno_vividez", "Vividez del sueño (0 vago, 1 moderado, 2 muy vívido)", "Sueño"),
             Variable("n_madrugada", "Momentos de madrugada (antes de las 5)", "Momentos"), Variable("n_manana", "Momentos en la mañana (5 a 12)", "Momentos"),
             Variable("n_tarde", "Momentos en la tarde (12 a 19)", "Momentos"), Variable("n_noche", "Momentos en la noche (19 a 24)", "Momentos"),
@@ -455,7 +457,6 @@ object Estadistica {
             r["sueno_recordado"] = if (d.sueno_recordado) 1.0 else if (d.sueno_calidad != null || d.sueno_texto.isNotBlank()) 0.0 else null
             r["sueno_valencia"] = if (d.sueno_recordado) d.sueno_valencia?.toDouble() else null
             r["palabras"] = Texto.palabras(d.nota).toDouble()
-            r["personas"] = if (f in sociales) Texto.personas(d.nota).map { Texto.canon(it, eq) }.toSet().size.toDouble() else null
             r["hitos_n"] = d.hitos.size.toDouble()
             r["impulso"] = d.impulso?.toDouble(); r["recaida"] = d.recaida?.let(b)
             Catalogo.CONTEXTOS.forEach { r["ctx_${it.id}"] = b(d.ctx[it.id] == true) }
@@ -468,8 +469,11 @@ object Estadistica {
             Repo.config.habitos.forEach { h -> r["hab_${h.id}"] = if (d.habitos[h.id] == true) 1.0 else if (h.desde.isNotBlank() && f < h.desde) null else 0.0 }
             if (d.presencias_ok || Texto.personas(d.nota).isNotEmpty()) r["presencias_revisado"] = b(d.presencias_ok)
         }
+        // Personas distintas nombradas con @ en el diario y en los momentos no privados (H-14-2): los mismos días en que vale 0.
+        val personasMomentos = Repo.momentos.filter { !it.privado }.groupBy { it.fecha }.mapValues { (_, l) -> l.flatMap { Texto.personas(it.texto) } }
+        for (f in sociales) fila(f)["personas"] = (Texto.personas(Repo.dias[f]?.nota.orEmpty()) + personasMomentos[f].orEmpty()).map { Texto.canon(it, eq) }.toSet().size.toDouble()
         // «No hubo» (0) desde el primer registro de cada fuente y solo en días con diario; antes, sin dato (P-15).
-        ceroDesde(Repo.gastos.map { it.dia }, Repo.dias.keys).forEach { f -> val r = fila(f); r["gasto_total"] = 0.0; r["gasto_imprevisto"] = 0.0 }
+        ceroDesde(Repo.gastos.map { it.dia }, Repo.dias.keys).forEach { f -> val r = fila(f); r["gasto_total"] = 0.0; r["gasto_imprevisto"] = 0.0; r["gasto_imprevisto_monto"] = 0.0 }
         val primerImpulso = Repo.momentos.filter { it.tipo == "impulso" }.minOfOrNull { it.fecha }
         ceroDesde(listOfNotNull(primerImpulso), Repo.dias.keys).forEach { f -> fila(f)["n_impulso"] = 0.0 }
         val emoUsadas = emocionesUsadas(); val penUsados = pensamientosUsados()
@@ -536,6 +540,8 @@ object Estadistica {
         }
         Repo.gastos.groupBy { it.dia }.forEach { (f, lista) ->
             val r = fila(f); r["gasto_total"] = lista.sumOf { it.monto }; r["gasto_imprevisto"] = b(lista.any { it.imprevisto })
+            // El monto aparte (H-1-5): gasto_imprevisto solo dice si hubo alguno.
+            r["gasto_imprevisto_monto"] = lista.filter { it.imprevisto }.sumOf { it.monto }
         }
         Repo.salud.forEach { (f, s) ->
             val r = fila(f)
@@ -734,7 +740,8 @@ object Estadistica {
             val r = fila(f)
             r["dia_dificil"] = b(d.dia_dificil)
             r["prediccion"] = d.prediccion_manana?.toDouble()
-            Repo.dias[Fechas.sumar(f, -1)]?.prediccion_manana?.let { p -> d.valencia?.let { r["error_prediccion"] = abs(p - it).toDouble() } }
+            // Con signo (H-2-10): positivo si el día salió mejor de lo que predijiste; el absoluto pierde la dirección.
+            Repo.dias[Fechas.sumar(f, -1)]?.prediccion_manana?.let { p -> d.valencia?.let { r["error_prediccion"] = abs(p - it).toDouble(); r["error_prediccion_signo"] = (it - p).toDouble() } }
             if (conMedicamentos != null && f >= conMedicamentos) r["medicamentos_n"] = d.medicamentos.size.toDouble()
             if (d.sueno_recordado) {
                 r["sueno_lucidez"] = when (d.sueno_lucidez) { "no" -> 0.0; "parcial" -> 1.0; "total" -> 2.0; else -> null }
@@ -833,9 +840,14 @@ object Estadistica {
         val clave = "${todos.hashCode()}|${System.identityHashCode(Repo.nutricion)}|${Repo.nutricion.size}|$ini|$hoy"
         val enMain = android.os.Looper.myLooper() == android.os.Looper.getMainLooper()
         // En el hilo principal sin lo ya calculado, lo que depende de MacroFactor queda vacío: con solo lo anotado aquí saldría
-        // otra cifra que en las demás pantallas (P-21).
-        val (caf, alc) = dosisCache?.takeIf { it.first == clave }?.second
-            ?: (if (enMain && Repo.nutricion.isNotEmpty()) return else Sustancias.dosis(ini, hoy, if (enMain) emptyList() else null).also { if (!enMain) dosisCache = clave to it })
+        // otra cifra que en las demás pantallas (P-21). También «bebiste»: sin MacroFactor no se sabe si un día sin episodios
+        // fue 0 (H-14-4); los días con un episodio anotado sí bebiste.
+        val enCache = dosisCache?.takeIf { it.first == clave }?.second
+        if (enCache == null && enMain && Repo.nutricion.isNotEmpty()) {
+            desdePrimero("alcohol") { f, l -> fila(f)["alcohol"] = if (l.isEmpty()) null else 1.0 }
+            return
+        }
+        val (caf, alc) = enCache ?: Sustancias.dosis(ini, hoy, if (enMain) emptyList() else null).also { if (!enMain) dosisCache = clave to it }
         val gramos = HashMap<String, Double>()
         alc.forEach { d -> val f = Fechas.diaLogicoDeMillis(d.ms); gramos[f] = (gramos[f] ?: 0.0) + d.cantidad }
         val mg = HashMap<String, Double>()
@@ -851,13 +863,27 @@ object Estadistica {
                 r["alcohol"] = 1.0
             }
         }
-        // Máximo estimado: una simulación por día con alcohol (de la primera dosis a 12 horas después).
-        val alcPorDia = alc.groupBy { Fechas.diaLogicoDeMillis(it.ms) }
-        alcPorDia.forEach { (f, l) ->
-            val a = l.minOf { it.ms }
-            val instantes = (a..(a + 14 * 3_600_000L) step 10 * 60_000L).toList()
-            fila(f)["alcohol_estimado_max"] = Sustancias.alcoholEn(l, instantes).maxOrNull()
+        // Máximo estimado: cada día con alcohol mira de su primera dosis a 14 horas después (o hasta la primera dosis del siguiente
+        // día con alcohol, para no contar un pico en dos días). La simulación incluye las dosis de las 24 horas previas: lo que
+        // seguía en la sangre de la noche anterior cuenta (H-4-5). Muestras cada 5 minutos, como la lista de episodios (H-14-5).
+        val alcPorDia = alc.groupBy { Fechas.diaLogicoDeMillis(it.ms) }.toSortedMap()
+        val inicios = alcPorDia.values.map { l -> l.minOf { it.ms } }
+        alcPorDia.keys.forEachIndexed { k, f ->
+            val a = inicios[k]
+            val fin = minOf(a + 14 * 3_600_000L, (inicios.getOrNull(k + 1) ?: Long.MAX_VALUE) - 1)
+            val previas = alc.filter { it.ms in (a - 24 * 3_600_000L)..fin }
+            val instantes = (a..fin step 5 * 60_000L).toList()
+            fila(f)["alcohol_estimado_max"] = Sustancias.alcoholEn(previas, instantes).maxOrNull()
         }
+        // La última cafeína del día lógico sale de las mismas dosis que los totales (MacroFactor y lo anotado aquí; H-4-12), no solo de
+        // MacroFactor por día de calendario. Antes de las 5:00 suma 24, como ultimo_uso_h.
+        val ultimaCaf = caf.groupBy { Fechas.diaLogicoDeMillis(it.ms) }.mapValues { (_, l) ->
+            val t = java.time.Instant.ofEpochMilli(l.maxOf { it.ms }).atZone(Fechas.zona())
+            val h = t.hour + t.minute / 60.0
+            Math.round((if (h < 5) h + 24 else h) * 100) / 100.0
+        }
+        Repo.nutricion.keys.forEach { f -> if (f !in ultimaCaf) fila(f)["cafeina_ultima_h"] = null }
+        ultimaCaf.forEach { (f, h) -> fila(f)["cafeina_ultima_h"] = h }
         val cafDesde = caf.minOfOrNull { it.ms }?.let { Fechas.diaLogicoDeMillis(it) }
         if (cafDesde != null) dias.filter { it >= cafDesde }.forEach { f -> fila(f)["cafeina_total_mg"] = mg[f] ?: 0.0 }
         // Al dormirme: en el día del sueño (el reloj guarda la noche en el día en que despiertas).
@@ -914,7 +940,7 @@ object Estadistica {
         setOf("eventos", "min_ocupado"),
         setOf("sueno_horas", "sueno_profundo", "sueno_rem", "sueno_inicio_h", "sueno_fin_h"),
         setOf("sueno_recordado", "sueno_valencia", "sueno_lucidez", "sueno_vividez", "sueno_palabras"),
-        setOf("ingreso_total", "balance_dinero", "gasto_total"), setOf("prediccion", "error_prediccion"),
+        setOf("ingreso_total", "balance_dinero", "gasto_total"), setOf("prediccion", "error_prediccion", "error_prediccion_signo"),
         setOf("valencia", "muestreo_valencia"), setOf("activacion", "muestreo_activacion"),
         setOf("avisos_planeados", "avisos_mostrados", "avisos_respondidos", "tasa_respuesta", "muestreo_valencia", "muestreo_activacion", "n_muestreos"),
         setOf("hrv", "fc_reposo", "fc_media", "fc_sueno"), setOf("spo2", "spo2_min"),
@@ -932,7 +958,7 @@ object Estadistica {
         setOf("yt_vistos", "busquedas", "yt_megusta", "yt_comentarios"),
         setOf("t_max", "t_min", "precip_mm", "nubes_pct", "luz_horas", "sol_horas", "presion_hpa"),
         setOf("aqi_us", "pm25"),
-        setOf("gasto_total", "gasto_imprevisto"),
+        setOf("gasto_total", "gasto_imprevisto", "gasto_imprevisto_monto"),
         setOf("impulso", "recaida", "n_recaida", "n_impulso", "recaida_min", "libido_max", "n_libido"),
         setOf("presion_local_hpa", "presion_hpa", "cambio_presion_3h"),
         setOf("laptop_min", "laptop_web_min", "laptop_productivo_min", "laptop_ocio_min", "laptop_social_min", "laptop_otro_min"),
@@ -1047,11 +1073,17 @@ object Estadistica {
     /** Una variable alineada a las fechas del panel (NaN = sin dato), con su versión sin tendencia y su autocorrelación. */
     private class Serie(val crudo: DoubleArray, val resto: DoubleArray, val r1Crudo: Double, val r1Resto: Double, val lenta: Boolean, val binaria: Boolean)
 
+    /**
+     * La autocorrelación que se supone cuando no se puede estimar (menos de 10 pares de días seguidos): 0.3, un valor prudente,
+     * en vez de 0, que daría tantos días efectivos como días y una relación más segura de lo que es (H-5-13).
+     */
+    const val AR1_SIN_DATO = 0.3
+
     private fun autocorr(x: DoubleArray, dia: LongArray, paso: Long = 1L): Double {
         val a = ArrayList<Double>(); val b = ArrayList<Double>()
         for (i in 0 until x.size - 1) if (!x[i].isNaN() && !x[i + 1].isNaN() && dia[i + 1] - dia[i] == paso) { a.add(x[i]); b.add(x[i + 1]) }
-        if (a.size < 10) return 0.0
-        return pearson(a, b) ?: 0.0
+        if (a.size < 10) return AR1_SIN_DATO
+        return pearson(a, b) ?: AR1_SIN_DATO
     }
 
     private fun varianza(v: DoubleArray): Double {

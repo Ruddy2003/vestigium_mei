@@ -53,6 +53,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
     var ocupado by remember { mutableStateOf(false) }
     var cifra by remember { mutableStateOf(Respaldos.cifradoActivo(ctx)) }
     var ponerClave by remember { mutableStateOf(false) }
+    var confirmarQuitar by remember { mutableStateOf(false) }
     var confirmarRestaurar by remember { mutableStateOf<(() -> Unit)?>(null) }
     // Si el respaldo está cifrado con otra contraseña (la de otro teléfono), se pide y se reintenta.
     var pedirClave by remember { mutableStateOf<(suspend (CharArray) -> Respaldos.Lectura)?>(null) }
@@ -129,15 +130,17 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
             Interruptor("Cifrar con contraseña", cifra,
                 if (cifra) "Drive, la carpeta y el respaldo que guardes van cifrados (.vmc). Los CSV sueltos dejan de subirse; para R, usa «Exportar extendido»."
                 else "Tus respaldos van como texto: diario, cartas, seguimiento privado y chats. Con contraseña, aunque alguien entre a tu Drive no puede leerlos.") { v ->
-                if (v) ponerClave = true else { Respaldos.ponerContrasena(ctx, null); cifra = false; msg = "Cifrado apagado: el próximo respaldo vuelve a ser .zip." }
+                if (v) ponerClave = true else confirmarQuitar = true
             }
             if (cifra) TextButton(onClick = { ponerClave = true }) { Text("cambiar contraseña", style = MaterialTheme.typography.labelLarge) }
         }
     }
 
-    if (ponerClave) DialogoNuevaClave(cerrar = { ponerClave = false }) { nueva ->
+    if (ponerClave) DialogoNuevaClave(cambio = cifra, cerrar = { ponerClave = false }) { nueva ->
+        val habia = cifra
         Respaldos.ponerContrasena(ctx, nueva); cifra = true; ponerClave = false
-        msg = "Listo. Guarda esa contraseña en un lugar seguro: sin ella, los respaldos cifrados no se pueden abrir."
+        msg = "Listo. Guarda esa contraseña en un lugar seguro: sin ella, los respaldos cifrados no se pueden abrir." +
+            (if (habia) " Las copias que ya existían siguen con la contraseña anterior." else "")
         // El siguiente respaldo ya sale cifrado y borra los archivos sueltos de Drive y de la carpeta.
         scope.launch(Dispatchers.IO) { runCatching { Exportar.respaldoAutomatico(ctx) }; runCatching { Drive.automatico(ctx) } }
     }
@@ -151,6 +154,18 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
             dismissButton = { TextButton(onClick = { confirmarRestaurar = null }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
         )
     }
+    // Se pregunta antes de borrarla: después ya no hay forma de verla, y las copias cifradas de antes la siguen pidiendo (H-8-15).
+    if (confirmarQuitar) AlertDialog(
+        onDismissRequest = { confirmarQuitar = false },
+        title = { Text("¿Quitar la contraseña?", style = MaterialTheme.typography.titleLarge) },
+        text = { Ayuda("El próximo respaldo vuelve a ser .zip. Las copias que ya existen (en Drive, las semanales y mensuales, y las que guardaste o compartiste) " +
+            "siguen cifradas con esta contraseña: guárdala si quieres poder abrirlas.") },
+        confirmButton = { TextButton(onClick = {
+            confirmarQuitar = false; Respaldos.ponerContrasena(ctx, null); cifra = false
+            msg = "Cifrado apagado: el próximo respaldo vuelve a ser .zip. Las copias cifradas que ya tenías siguen pidiendo la contraseña de antes."
+        }) { Text("quitar", style = MaterialTheme.typography.labelLarge) } },
+        dismissButton = { TextButton(onClick = { confirmarQuitar = false }) { Text("cancelar", style = MaterialTheme.typography.labelLarge) } },
+    )
     pedirClave?.let { reintento ->
         var clave by remember { mutableStateOf("") }
         AlertDialog(
@@ -180,7 +195,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
 }
 
 @Composable
-private fun DialogoNuevaClave(cerrar: () -> Unit, listo: (String) -> Unit) {
+private fun DialogoNuevaClave(cambio: Boolean, cerrar: () -> Unit, listo: (String) -> Unit) {
     var a by remember { mutableStateOf("") }
     var b by remember { mutableStateOf("") }
     val error = when {
@@ -194,6 +209,8 @@ private fun DialogoNuevaClave(cerrar: () -> Unit, listo: (String) -> Unit) {
         text = {
             Column {
                 Ayuda("Se guarda solo en este teléfono. Si cambias de teléfono, la necesitarás para restaurar; si la olvidas, nadie puede recuperar los respaldos cifrados.")
+                // Las copias hechas no se vuelven a cifrar (H-8-15).
+                if (cambio) Aviso("Las copias que ya existen (en Drive, las semanales y mensuales, y las que guardaste o compartiste) siguen con la contraseña anterior: guárdala si quieres poder abrirlas.")
                 OutlinedTextField(a, { a = it }, Modifier.fillMaxWidth().padding(top = 8.dp), singleLine = true, label = { Text("contraseña") },
                     visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password))
                 OutlinedTextField(b, { b = it }, Modifier.fillMaxWidth().padding(top = 6.dp), singleLine = true, label = { Text("otra vez") },

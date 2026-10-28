@@ -150,13 +150,26 @@ vm_semana <- function(var = "valencia", datos = panel) {
   ggplot(d, aes(dia, media)) + geom_col(fill = "#2D6B63") + geom_errorbar(aes(ymin = lo, ymax = hi), width = .2) + labs(title = var, x = NULL, y = NULL) + theme_minimal()
 }
 
-#' Cruza dos variables; con desfase = 1 compara x de hoy con y de mañana.
-vm_cruce <- function(x, y, desfase = 0, datos = panel, metodo = "spearman") {
-  d <- datos |> arrange(fecha) |> transmute(fecha, x = .vm_dato(datos, x), y = lead(.vm_dato(datos, y), desfase)) |> drop_na(x, y)
+#' Cruza dos variables como «Cruzar dos variables» de la app; con desfase = 1 compara x de hoy con y de mañana.
+#' Imprime los dos coeficientes, como la app (H-5-7): r de Pearson, el principal, con su intervalo de 95 % y su p por el n efectivo;
+#' r sin tendencia y ρ de Spearman. `metodo` se sigue aceptando ("pearson", "spearman" o "kendall"): elige qué coeficiente va
+#' primero en el subtítulo de la gráfica (con "kendall" se agrega tau). La tabla queda en attr(g, "resumen").
+vm_cruce <- function(x, y, desfase = 0, datos = panel, metodo = "pearson") {
+  metodo <- match.arg(metodo, c("pearson", "spearman", "kendall"))
+  datos <- datos |> filter(!is.na(fecha)) |> arrange(fecha)
+  vx <- as.numeric(.vm_dato(datos, x)); vy <- as.numeric(.vm_dato(datos, y))
+  d <- tibble(x = vx, y = vy[match(datos$fecha + desfase, datos$fecha)]) |> drop_na(x, y)
   if (nrow(d) < 5) stop("Solo hay ", nrow(d), " días con ambos datos.")
-  print(cor.test(d$x, d$y, method = metodo, exact = FALSE))
-  ggplot(d, aes(x, y)) + geom_jitter(width = .05, height = .05, alpha = .5) + geom_smooth(method = "lm", formula = y ~ x, se = TRUE, colour = "#7C2433") +
-    labs(x = x, y = if (desfase) paste0(y, " (", desfase, " día después)") else y) + theme_minimal()
+  res <- .vm_cruce_resumen(datos$fecha, vx, vy, desfase)
+  if (metodo == "kendall") res$tau <- suppressWarnings(cor(d$x, d$y, method = "kendall"))
+  print(res)
+  co <- c(pearson = sprintf("r de Pearson = %.2f", res$r), spearman = sprintf("ρ de Spearman = %.2f", res$rho),
+          kendall = if (metodo == "kendall") sprintf("τ de Kendall = %.2f", res$tau))
+  g <- ggplot(d, aes(x, y)) + geom_jitter(width = .05, height = .05, alpha = .5) + geom_smooth(method = "lm", formula = y ~ x, se = TRUE, colour = "#7C2433") +
+    labs(x = x, y = if (desfase) paste0(y, " (", desfase, " día después)") else y,
+         subtitle = paste(c(co[metodo], co[setdiff(names(co), metodo)]), collapse = " · ")) + theme_minimal()
+  attr(g, "resumen") <- res
+  g
 }
 
 #' Columnas de la misma fuente o calculadas una de otra: su correlación es casi segura y no dice nada de ti.
@@ -245,8 +258,15 @@ vm_obvia <- function(a, b) {
 #' obvias = FALSE deja fuera las parejas obvias, las mismas que esconde la app (vm_familias.csv).
 #' Por omisión cruza las mismas variables que la app (vm_variables.csv); privadas = TRUE suma el seguimiento privado, que la app
 #' nunca cruza; variables = c(...) elige otras columnas del panel.
-vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, ventana = 10, privadas = FALSE, variables = NULL, datos = panel) {
+#' sin_semana = TRUE (solo con sin_tendencia = TRUE; R siempre va por días): a los restos de cada variable se les resta el promedio
+#' de sus restos en su día de la semana, para que dos cosas que solo cambian con el fin de semana no parezcan relacionadas (H-5-6).
+#' La autocorrelación y r usan esos restos; «lenta» se decide con los de antes. Si una autocorrelación no se puede estimar
+#' (menos de 10 pares de días seguidos), se supone 0.3 (H-5-13).
+vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, ventana = 10, privadas = FALSE, variables = NULL, datos = panel,
+                          sin_semana = FALSE) {
   datos <- arrange(datos, fecha)
+  if (sin_semana && !sin_tendencia) message("sin_semana solo actúa con sin_tendencia = TRUE.")
+  semana <- sin_semana && sin_tendencia
   if (is.null(variables)) variables <- .vm_variables(privadas)
   cand <- names(datos)[map_lgl(datos, ~ is.numeric(.x) || is.logical(.x)) & !names(datos) %in% .vm_no_cruzar]
   if (!is.null(variables)) cand <- intersect(variables, cand)
@@ -258,14 +278,15 @@ vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, vent
   }
   ac1 <- function(x) {
     a <- x[-length(x)]; b <- x[-1]; ok <- !is.na(a) & !is.na(b) & diff(dias) == 1
-    if (sum(ok) < 10) return(0)
-    r <- suppressWarnings(cor(a[ok], b[ok])); if (is.na(r)) 0 else min(max(r, -.5), .97)
+    if (sum(ok) < 10) return(.vm_ar1_sin_dato)
+    r <- suppressWarnings(cor(a[ok], b[ok])); if (is.na(r)) .vm_ar1_sin_dato else min(max(r, -.5), .97)
   }
   S <- map(set_names(cand), function(v) {
     x <- as.numeric(datos[[v]]); if (sum(!is.na(x)) < 3) return(NULL)
-    r <- quitar(x); vx <- var(x, na.rm = TRUE); vr <- var(r, na.rm = TRUE)
+    r0 <- quitar(x); vx <- var(x, na.rm = TRUE); vr <- var(r0, na.rm = TRUE)
+    r <- if (semana) .vm_sin_semana(datos$fecha, r0) else r0
     list(x = x, r = r, ac_x = ac1(x), ac_r = ac1(r), binaria = all(x %in% c(0, 1, NA)),
-         lenta = !is.na(vx) && vx > 0 && sum(!is.na(r)) >= min_n && !is.na(vr) && vr / vx < .12)
+         lenta = !is.na(vx) && vx > 0 && sum(!is.na(r0)) >= min_n && !is.na(vr) && vr / vx < .12)
   }) |> compact()
   if (sin_tendencia) {
     lentas <- names(keep(S, ~ .x$lenta))
@@ -309,6 +330,34 @@ vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, vent
   if (sum(ok) < 10) return(NULL)
   r <- suppressWarnings(cor(x[ok], x[m][ok])); if (is.na(r)) NULL else r
 }
+#' La autocorrelación que se supone para el n efectivo cuando no se puede estimar (menos de 10 pares de días seguidos o sin
+#' variación): 0.3, como AR1_SIN_DATO de la app (H-5-13). Las diferencias de medias (.vm_dif_dias) no la usan.
+.vm_ar1_sin_dato <- 0.3
+#' Los restos menos el promedio de los restos de su día de la semana (lunes a domingo, con los días con dato) (H-5-6).
+.vm_sin_semana <- function(f, r) r - ave(r, wday(f, week_start = 1), FUN = function(v) mean(v, na.rm = TRUE))
+#' El resumen de «Cruzar dos variables» (Explorar de la app): x de cada día contra y de `desfase` días después. r de Pearson
+#' con intervalo de 95 % y p por Fisher con el n efectivo (correlacionEf), r sin tendencia (±10 días) y ρ de Spearman.
+.vm_cruce_resumen <- function(f, x, y, desfase = 0, ventana = 10) {
+  x <- as.numeric(x); y <- as.numeric(y)
+  yEn <- y[match(f + desfase, f)]; ok <- !is.na(x) & !is.na(yEn); n <- sum(ok)
+  r <- if (n >= 3) suppressWarnings(cor(x[ok], yEn[ok])) else NA_real_
+  rho <- if (n >= 3) suppressWarnings(cor(x[ok], yEn[ok], method = "spearman")) else NA_real_
+  lo <- hi <- n_ef <- p <- NA_real_
+  if (n >= 5 && !is.na(r)) {
+    ra <- .vm_ar1(f, x); if (is.null(ra)) ra <- .vm_ar1_sin_dato
+    rb <- .vm_ar1(f, y); if (is.null(rb)) rb <- .vm_ar1_sin_dato
+    ra <- min(max(ra, -.5), .97); rb <- min(max(rb, -.5), .97)
+    ne <- min(max(n * (1 - ra * rb) / (1 + ra * rb), min(4, n)), n)
+    if (ne > 3) {
+      z <- atanh(min(max(r, -.9999), .9999)); se <- 1 / sqrt(ne - 3)
+      lo <- tanh(z - 1.96 * se); hi <- tanh(z + 1.96 * se); n_ef <- round(ne, 1); p <- 2 * pnorm(-abs(z / se))
+    }
+  }
+  tx <- .vm_sin_tendencia(f, x, ventana); ty <- .vm_sin_tendencia(f, y, ventana)[match(f + desfase, f)]
+  okt <- !is.na(tx) & !is.na(ty)
+  r_sin <- if (sum(okt) >= 5) suppressWarnings(cor(tx[okt], ty[okt])) else NA_real_
+  tibble(n = n, r = r, lo = lo, hi = hi, n_ef = n_ef, p = p, r_sin_tendencia = r_sin, rho = rho)
+}
 #' Diferencia de medias entre dos grupos de días (fechas fa y fb), con t de Welch y el error estándar corregido por la
 #' autocorrelación de cada grupo (más la corrección de Marriott y Pope para series cortas): diferenciaEnDias() de la app.
 .vm_dif_dias <- function(fa, ya, fb, yb) {
@@ -334,13 +383,18 @@ vm_relaciones <- function(sin_tendencia = TRUE, obvias = FALSE, min_n = 14, vent
 #' Pearson y el n efectivo (n_ef, que descuenta que un día se parece al anterior); las 0/1, con la diferencia de medias del
 #' objetivo entre los días con y sin, con t de Welch y el error estándar corregido por autocorrelación. q: corrección BH.
 #' Se omiten las parejas obvias con el objetivo (la misma medida por otra vía, una parte y su total…).
+#' sin_semana = TRUE (solo con sin_tendencia = TRUE): al objetivo y a cada variable continua, ya sin tendencia, se les resta el
+#' promedio de sus restos en su día de la semana (H-5-6). Si una autocorrelación no se puede estimar, se supone 0.3 (H-5-13).
 vm_factores <- function(objetivo = "valencia", desfase = 0, sin_tendencia = TRUE, min_n = 14, ventana = 10, privadas = FALSE,
-                        variables = NULL, datos = panel) {
+                        variables = NULL, datos = panel, sin_semana = FALSE) {
   datos <- datos |> filter(!is.na(fecha)) |> arrange(fecha)
   f <- datos$fecha
+  if (sin_semana && !sin_tendencia) message("sin_semana solo actúa con sin_tendencia = TRUE.")
+  semana <- sin_semana && sin_tendencia
   y0 <- as.numeric(.vm_dato(datos, objetivo))
   y <- if (sin_tendencia) .vm_sin_tendencia(f, y0, ventana) else y0
-  rY <- .vm_ar1(f, y); if (is.null(rY)) rY <- 0
+  if (semana) y <- .vm_sin_semana(f, y)
+  rY <- .vm_ar1(f, y); if (is.null(rY)) rY <- .vm_ar1_sin_dato
   yEn <- y[match(f + desfase, f)]
   if (is.null(variables)) variables <- .vm_variables(privadas)
   cand <- names(datos)[map_lgl(datos, ~ is.numeric(.x) || is.logical(.x)) & !names(datos) %in% c(.vm_no_cruzar, objetivo)]
@@ -360,10 +414,11 @@ vm_factores <- function(objetivo = "valencia", desfase = 0, sin_tendencia = TRUE
              n_ef = NA_real_, p = d$p)
     } else {
       x <- if (sin_tendencia) .vm_sin_tendencia(f, x0, ventana) else x0
+      if (semana) x <- .vm_sin_semana(f, x)
       ok <- !is.na(x) & !is.na(yEn); n <- sum(ok)
       if (n < min_n) return(NULL)
       r <- suppressWarnings(cor(x[ok], yEn[ok])); if (is.na(r)) return(NULL)
-      ra <- .vm_ar1(f, x); if (is.null(ra)) ra <- 0
+      ra <- .vm_ar1(f, x); if (is.null(ra)) ra <- .vm_ar1_sin_dato
       ra <- min(max(ra, -.5), .97); rb <- min(max(rY, -.5), .97)
       n_ef <- min(max(n * (1 - ra * rb) / (1 + ra * rb), min(4, n)), n)
       if (n_ef <= 3) return(NULL)
@@ -396,13 +451,23 @@ vm_modelo_ar1 <- function(objetivo = "valencia", predictores = c("sueno_h", "pas
   print(summary(m)); invisible(m)
 }
 
-#' Variabilidad, inestabilidad (MSSD) e inercia (autocorrelación de un día al siguiente) del ánimo, en total y por mes.
+#' Variabilidad, inestabilidad (MSSD) e inercia (autocorrelación de un día al siguiente) del ánimo, en total y por mes, como
+#' dinamica() de la app: solo pares de días seguidos con dato (pares); MSSD con 3 pares o más, inercia con 10 o más; pide 7 días.
+#' Cada mes usa solo sus propios pares: su último día no se empareja con el primero del siguiente (H-5-12). La app no da
+#' inercia por mes; aquí sale con la misma regla de 10 pares.
 vm_dinamica <- function(var = "valencia", datos = panel) {
-  d <- datos |> arrange(fecha) |> transmute(fecha, mes, y = .vm_dato(datos, var), y1 = lead(y))
-  f <- function(y, y1) tibble(n = sum(!is.na(y)), media = mean(y, na.rm = TRUE), de = sd(y, na.rm = TRUE),
-                              mssd = mean((y1 - y)^2, na.rm = TRUE), inercia = suppressWarnings(cor(y, y1, use = "complete.obs")))
-  print(f(d$y, d$y1))
-  d |> group_by(mes) |> summarise(f(y, y1), .groups = "drop")
+  .vm_dato(datos, var)
+  d <- datos |> filter(!is.na(fecha)) |> transmute(fecha, mes = floor_date(fecha, "month"), y = as.numeric(.data[[var]])) |>
+    filter(!is.na(y)) |> arrange(fecha)
+  if (nrow(d) < 7) stop("Solo hay ", nrow(d), " días con ", var, "; la app pide al menos 7.")
+  f <- function(fecha, y) {
+    y1 <- y[match(fecha + 1, fecha)]; ok <- !is.na(y1); k <- sum(ok)
+    tibble(n = length(y), media = mean(y), de = if (length(y) >= 2) sd(y) else NA_real_, pares = k,
+           mssd = if (k >= 3) mean((y1[ok] - y[ok])^2) else NA_real_,
+           inercia = if (k >= 10) suppressWarnings(cor(y[ok], y1[ok])) else NA_real_)
+  }
+  print(f(d$fecha, d$y))
+  d |> group_by(mes) |> summarise(f(fecha, y), .groups = "drop")
 }
 
 #' Ritmo de sueño desde el reloj: horas medias, regularidad y jet lag social (Wittmann et al., 2006).
@@ -577,8 +642,12 @@ vm_cruce_horas <- function(x = "cafeina_mg", y = "activacion", desfase = 0) {
   if (is.null(vm$horas)) stop("No hay vm_horas.csv.")
   d <- vm$horas |> arrange(fecha, hora) |> mutate(a = as.numeric(.vm_dato(vm$horas, x)), b = lead(as.numeric(.vm_dato(vm$horas, y)), desfase)) |> filter(!is.na(a), !is.na(b))
   if (nrow(d) < 10) stop("Muy pocas horas con ambos datos (", nrow(d), ").")
+  # Los dos coeficientes, como el cruce de días (H-5-7). La app no cruza horas, así que no hay n efectivo que copiar: las horas
+  # seguidas se parecen mucho y estos p salen optimistas.
+  cp <- suppressWarnings(cor.test(d$a, d$b, method = "pearson"))
   ct <- suppressWarnings(cor.test(d$a, d$b, method = "spearman", exact = FALSE))
-  cat(x, "vs", y, if (desfase) paste0("(", desfase, " h después)") else "", ": rho =", round(ct$estimate, 3), " p =", signif(ct$p.value, 3), " n =", nrow(d), "horas\n")
+  cat(x, "vs", y, if (desfase) paste0("(", desfase, " h después)") else "", ": r de Pearson =", round(cp$estimate, 3), " p =", signif(cp$p.value, 3),
+      "· rho de Spearman =", round(ct$estimate, 3), " p =", signif(ct$p.value, 3), " n =", nrow(d), "horas (p optimistas: las horas seguidas se parecen)\n")
   ggplot(d, aes(a, b)) + geom_jitter(alpha = .35, width = 0, height = .15, colour = "#7C2433") + geom_smooth(method = "loess", formula = y ~ x, colour = "#2D6B63") +
     labs(x = x, y = y) + theme_minimal()
 }
@@ -630,7 +699,10 @@ vm_retraso <- function(tabla = "momentos", umbral_min = 60) {
 vm_presion <- function() {
   if (!"cambio_presion_3h" %in% names(vm$panel)) stop("No hay datos del barómetro.")
   d <- vm$panel |> filter(!is.na(cambio_presion_3h), !is.na(valencia))
-  print(cor.test(d$cambio_presion_3h, d$valencia, method = "spearman", exact = FALSE))
+  if (nrow(d) < 5) stop("Solo hay ", nrow(d), " días con barómetro y valencia.")
+  # Como «Cruzar dos variables» de la app (H-5-7): r de Pearson con el n efectivo, r sin tendencia y ρ de Spearman.
+  p <- arrange(vm$panel, fecha)
+  print(.vm_cruce_resumen(p$fecha, p$cambio_presion_3h, p$valencia))
   ggplot(d, aes(cambio_presion_3h, valencia)) + geom_jitter(width = 0, height = .15, alpha = .5) + geom_smooth(method = "loess", se = FALSE) +
     labs(x = "cambio de presión en 3 h (hPa)", y = "valencia del día") + theme_minimal()
 }
@@ -640,13 +712,21 @@ vm_presion <- function() {
 #' Requiere igraph:  install.packages("igraph")
 #' Como la app (P-32): «no se conocen» nunca es línea, aunque aparezcan juntas; los grupos no cuentan a quien no tiene ninguna
 #' línea (van aparte, en aisladas). La app pide 2 días juntas y dibuja 45 personas; la exportación trae hasta 400.
-vm_red <- function(declaradas = FALSE, min_juntos = 2) {
+#' min_dias = 3: solo entran las personas mencionadas al menos ese número de días (dias_mencion: días distintos en que
+#' aparecen con @ en el diario o en los momentos no privados); sus líneas se van con ellas. Quien tiene alguna línea dicha
+#' en Tu gente entra siempre, aunque casi no la menciones. Así una persona nombrada una vez no baja la densidad ni la
+#' restricción (H-6-8); min_dias = 0 usa a todas, como antes.
+vm_red <- function(declaradas = FALSE, min_juntos = 2, min_dias = 3) {
   if (is.null(vm$red_nodos) || !nrow(vm$red_nodos)) stop("No hay red: menciona personas con @ o di quién conoce a quién en Tu gente.")
   v <- vm$red_vinculos
   if (is.null(v) || !nrow(v)) v <- tibble(a = character(), b = character(), tipo_declarado = character(), dias_juntos = integer())
   no <- !is.na(v$tipo_declarado) & v$tipo_declarado == "no_se_conocen"
-  v <- v[!no & (!is.na(v$tipo_declarado) | (!declaradas & v$dias_juntos >= min_juntos)), ]
-  g <- igraph::graph_from_data_frame(as.data.frame(v[, c("a", "b")]), directed = FALSE, vertices = as.data.frame(vm$red_nodos))
+  con_dicha <- unique(c(v$a[!is.na(v$tipo_declarado) & !no], v$b[!is.na(v$tipo_declarado) & !no]))
+  nodos <- vm$red_nodos[coalesce(as.numeric(vm$red_nodos$dias_mencion), 0) >= min_dias | vm$red_nodos$persona %in% con_dicha, ]
+  if (!nrow(nodos)) stop("Nadie se mencionó al menos ", min_dias, " días; prueba con un min_dias menor.")
+  if (nrow(nodos) < nrow(vm$red_nodos)) message("Quedan ", nrow(nodos), " de ", nrow(vm$red_nodos), " personas (mencionadas al menos ", min_dias, " días o con una línea dicha).")
+  v <- v[!no & (!is.na(v$tipo_declarado) | (!declaradas & v$dias_juntos >= min_juntos)) & v$a %in% nodos$persona & v$b %in% nodos$persona, ]
+  g <- igraph::graph_from_data_frame(as.data.frame(v[, c("a", "b")]), directed = FALSE, vertices = as.data.frame(nodos))
   # Tú (ego) unido a todas: así la restricción de Burt se calcula sobre tu red personal.
   g_ego <- igraph::add_vertices(g, 1, name = "yo")
   g_ego <- igraph::add_edges(g_ego, as.vector(rbind("yo", igraph::V(g)$name)))
@@ -658,21 +738,139 @@ vm_red <- function(declaradas = FALSE, min_juntos = 2) {
     grado = sort(igraph::degree(g), decreasing = TRUE),
     # Composición y color por grupo de relación (familia, pareja, amistad, trabajo…), como la Red de la app; las exportaciones
     # de antes de la columna «grupo» usan la relación tal cual.
-    composicion = table(if (!is.null(vm$red_nodos$grupo)) vm$red_nodos$grupo else vm$red_nodos$relacion, useNA = "ifany")
+    composicion = table(if (!is.null(nodos$grupo)) nodos$grupo else nodos$relacion, useNA = "ifany")
   )
   print(r[c("densidad", "componentes", "aisladas", "restriccion_burt")])
-  grupo <- if (!is.null(vm$red_nodos$grupo)) vm$red_nodos$grupo else vm$red_nodos$relacion
-  plot(g, vertex.size = 4 + 2 * sqrt(vm$red_nodos$dias_mencion), vertex.label.cex = .7, vertex.color = as.integer(factor(grupo)))
+  grupo <- if (!is.null(nodos$grupo)) nodos$grupo else nodos$relacion
+  plot(g, vertex.size = 4 + 2 * sqrt(nodos$dias_mencion), vertex.label.cex = .7, vertex.color = as.integer(factor(grupo)))
   invisible(r)
 }
 
-#' Minutos en la laptop por categoría y semana (Cold Turkey).
+#' Los navegadores, como ColdTurkey.NAVEGADORES de la app: sus minutos ya se reparten entre los sitios (H-14-6).
+.vm_navegadores <- c("chrome", "msedge", "firefox", "opera", "brave", "vivaldi", "safari", "arc")
+
+#' Minutos en la laptop por categoría y semana (Cold Turkey). Como la app, las apps que son navegadores no cuentan: sus minutos
+#' ya están en los sitios. La comparación es exacta, porque la exportación trae el nombre ya normalizado por la app
+#' (minúsculas, sin espacios a los lados ni .exe).
 vm_laptop <- function() {
   if (is.null(vm$laptop)) stop("No hay datos de Cold Turkey.")
   vm$laptop |> mutate(semana = lubridate::floor_date(fecha, "week", week_start = 1)) |>
-    filter(!(tipo == "app" & nombre %in% c("chrome", "msedge", "firefox", "opera", "brave"))) |>
+    filter(!(tipo == "app" & nombre %in% .vm_navegadores)) |>
     group_by(semana, categoria) |> summarise(horas = sum(minutos) / 60, .groups = "drop") |>
     ggplot(aes(semana, horas, fill = categoria)) + geom_col() + labs(x = NULL, y = "horas por semana") + theme_minimal()
+}
+
+#' Pendiente por día dentro de cada condición (valor ~ día + condición), como Experimentos.tendencia() de la app: «clara» si |t|
+#' pasa el cuantil 0.975 de la t con n − 3 grados (n − 2 si la condición no varía). NA con menos de 8 días.
+.vm_tendencia <- function(t, c, v) {
+  n <- length(v); if (n < 8) return(list(pendiente = NA_real_, clara = FALSE))
+  a <- t - mean(t); b <- c - mean(c); w <- v - mean(v)
+  stt <- sum(a * a); scc <- sum(b * b); stc <- sum(a * b); stv <- sum(a * w); scv <- sum(b * w); det <- stt * scc - stc^2
+  if (scc == 0 || abs(det) < 1e-9) {
+    if (stt <= 0) return(list(pendiente = NA_real_, clara = FALSE))
+    bt <- stv / stt; bc <- 0; k <- 2
+  } else { bt <- (stv * scc - scv * stc) / det; bc <- (scv * stt - stv * stc) / det; k <- 3 }
+  s2 <- sum((v - (mean(v) + bt * a + bc * b))^2) / (n - k)
+  vb <- if (k == 3) s2 * scc / det else s2 / stt
+  if (vb <= 0) return(list(pendiente = bt, clara = FALSE))
+  list(pendiente = bt, clara = abs(bt / sqrt(vb)) > qt(.975, n - k))
+}
+
+#' Un experimento de vm_experimentos.csv, como Experimentos.resultado() de la app: los días que tocaba la acción según el plan
+#' contra los que no, la hayas hecho o no. No cuentan los de lavado (los primeros lavado_dias tras cada cambio de condición y
+#' tras empezar con la acción), los posteriores a terminarlo, `hoy` (el día a medias; por omisión, el último del panel, que suele
+#' ser el de la exportación) ni los días sin dato de la variable. Diferencia con t de Welch y error estándar corregido por
+#' autocorrelación (.vm_dif_dias), g de Hedges = d de Cohen × (1 − 3 / (4 (n1 + n2) − 9)), tendencia y cumplimiento.
+#' Prueba de aleatorización: la diferencia de medias observada contra la de cada plan que el sorteo pudo dar (por pares de
+#' semanas, una «SÍ» y una «no» en orden al azar: 2^k planes con k pares, el doble si sobra una semana), con el lavado de ese
+#' plan y los mismos datos. p_aleatorizacion = proporción de planes con |diferencia| ≥ la observada (exacto; el mínimo posible
+#' es 1 / planes). Los planes que dejan menos de 3 días medidos en una condición no tienen diferencia y no entran.
+#' Antes y después: sin sorteo no hay prueba (NA).
+vm_experimento <- function(id, datos = panel, hoy = max(datos$fecha, na.rm = TRUE)) {
+  if (is.null(vm$experimentos) || !nrow(vm$experimentos)) stop("No hay experimentos (vm_experimentos.csv).")
+  e <- vm$experimentos[as.character(vm$experimentos$id) == as.character(id), ]
+  if (!nrow(e)) stop("No hay un experimento con id '", id, "'. Hay: ", paste(vm$experimentos$id, collapse = ", "))
+  e <- e[1, ]
+  inicio <- as.Date(e$inicio); semanas <- as.integer(e$semanas); lavado <- coalesce(as.integer(e$lavado_dias), 0L)
+  plan <- as.integer(vm_lista(e$plan)[[1]]) == 1
+  fin <- if (is.na(e$fin) || !nzchar(as.character(e$fin))) as.Date(NA) else as.Date(e$fin)
+  hoy <- as.Date(hoy)
+  y_todos <- as.numeric(.vm_dato(datos, e$resultado))
+  ultimo <- min(fin, inicio + semanas * 7 - 1, na.rm = TRUE)
+  i <- 0:(semanas * 7 - 1); f <- inicio + i; sem <- i %/% 7
+  # Si toca la acción cada día con el plan p (NA: fuera del plan o en lavado).
+  condicion <- function(p) {
+    t <- p[sem + 1]
+    if (lavado > 0) {
+      cambios <- c(if (isTRUE(p[1])) 0, which(p[-1] != p[-length(p)]) * 7)
+      t[map_lgl(i, ~ any(.x - cambios >= 0 & .x - cambios < lavado))] <- NA
+    }
+    t
+  }
+  dentro <- f <= hoy & (is.na(fin) | f <= fin)
+  y <- y_todos[match(f, datos$fecha)]
+  medido <- dentro & f != hoy & !is.na(y)
+  dif_medias <- function(t) { con <- medido & t %in% TRUE; sin <- medido & t %in% FALSE
+    if (sum(con) < 3 || sum(sin) < 3) NA_real_ else mean(y[con]) - mean(y[sin]) }
+  t <- condicion(plan)
+  con <- medido & t %in% TRUE; sin <- medido & t %in% FALSE
+  dif <- .vm_dif_dias(f[con], y[con], f[sin], y[sin])
+  cv <- y[con]; sv <- y[sin]; g <- NA_real_
+  if (length(cv) >= 3 && length(sv) >= 3) {
+    sp <- sqrt(((length(cv) - 1) * var(cv) + (length(sv) - 1) * var(sv)) / (length(cv) + length(sv) - 2))
+    if (sp > 0) g <- (mean(cv) - mean(sv)) / sp * (1 - 3 / (4 * (length(cv) + length(sv)) - 9))
+  }
+  ten <- .vm_tendencia(i[con | sin], as.numeric(t[con | sin]), y[con | sin])
+  # «¿Lo hiciste hoy?»: los días que cuentan hasta hoy (incluido), con y sin la acción. Sin respuesta no es «no». En la
+  # plantilla «creatina», un día sin respuesta toma lo del registro de suplementos (supl_creatina_tomado > 0), como la app.
+  h <- vm_lista(e$hecho)[[1]]
+  cumplimiento <- cociente <- NULL
+  resp <- setNames(sub(".*:", "", h) == "1", sub(":.*", "", h))[as.character(f)]
+  if (identical(as.character(e$plantilla), "creatina") && "supl_creatina_tomado" %in% names(datos))
+    resp <- coalesce(unname(resp), as.numeric(datos$supl_creatina_tomado)[match(f, datos$fecha)] > 0)
+  cuenta <- dentro & !is.na(t)
+  if (length(h) || any(cuenta & !is.na(resp))) {
+    cumplimiento <- tibble(condicion = c("con la acción", "sin la acción"), dias = c(sum(cuenta & t), sum(cuenta & !t)),
+      respondidos = c(sum(cuenta & t & !is.na(resp)), sum(cuenta & !t & !is.na(resp))),
+      hechos = c(sum(cuenta & t & resp %in% TRUE), sum(cuenta & !t & resp %in% TRUE))) |>
+      mutate(proporcion = if_else(respondidos > 0, hechos / respondidos, NA_real_))
+    pp <- cumplimiento$proporcion
+    if (!is.null(dif) && !anyNA(pp) && pp[1] - pp[2] >= .2) cociente <- dif$d / (pp[1] - pp[2])
+  }
+  hasta <- f <= ultimo
+  posible <- c(si = sum(hasta & t %in% TRUE), no = sum(hasta & t %in% FALSE))
+  # Prueba de aleatorización sobre todos los planes que el sorteo por pares pudo dar.
+  p_al <- NA_real_; planes <- 0L; dist <- numeric()
+  obs <- if (is.null(dif)) NA_real_ else dif$d
+  if (e$diseno == "antes_despues") {
+    nota <- "Antes y después: no hubo sorteo, así que no hay prueba de aleatorización (p_aleatorizacion = NA)."
+  } else {
+    k <- semanas %/% 2; impar <- semanas %% 2 == 1
+    todos <- unlist(lapply(0:(2^k - 1), function(m) {
+      p <- unlist(lapply(seq_len(k) - 1, function(j) if ((m %/% 2^j) %% 2 == 1) c(TRUE, FALSE) else c(FALSE, TRUE)))
+      if (impar) list(c(p, TRUE), c(p, FALSE)) else list(p)
+    }), recursive = FALSE)
+    if (!any(map_lgl(todos, ~ identical(.x, plan)))) {
+      nota <- "El plan no salió del sorteo por pares de semanas (¿es de antes de la entrega 10c?): no hay prueba de aleatorización."
+    } else {
+      dist <- map_dbl(todos, ~ dif_medias(condicion(.x)))
+      planes <- sum(!is.na(dist))
+      if (!is.na(obs) && planes > 0) p_al <- mean(abs(dist[!is.na(dist)]) >= abs(obs) - 1e-12)
+      nota <- paste0("Prueba de aleatorización: ", planes, " de ", length(todos), " planes posibles con diferencia",
+                     if (planes > 0) paste0(" (el p más chico posible es 1/", planes, ").") else "; sin diferencia observada no hay prueba.")
+    }
+  }
+  r <- list(id = e$id, nombre = e$nombre, resultado = e$resultado, diseno = e$diseno, plan = plan, provisional = isTRUE(as.logical(e$activo)) && is.na(fin) && hoy <= ultimo,
+            n_con = sum(con), n_sin = sum(sin), media_con = if (any(con)) mean(cv) else NA_real_, media_sin = if (any(sin)) mean(sv) else NA_real_,
+            diferencia = obs, lo = if (is.null(dif)) NA_real_ else dif$lo, hi = if (is.null(dif)) NA_real_ else dif$hi, p = if (is.null(dif)) NA_real_ else dif$p,
+            g = g, tendencia = ten$pendiente, tendencia_clara = ten$clara, cumplimiento = cumplimiento, cociente = cociente,
+            posible_si = unname(posible["si"]), posible_no = unname(posible["no"]), planes = planes, p_aleatorizacion = p_al, distribucion = dist, nota = nota)
+  cat(sprintf("%s (%s) · %s · con la acción: %d días · sin ella: %d días%s\n", e$nombre, e$diseno, e$resultado, r$n_con, r$n_sin, if (r$provisional) " · PROVISIONAL" else ""))
+  if (is.null(dif)) cat("Hacen falta al menos 3 días medidos en cada condición.\n")
+  else cat(sprintf("Diferencia %+.3f (IC 95 %%: %.3f a %.3f; p = %.3g) · g de Hedges %.2f\n", r$diferencia, r$lo, r$hi, r$p, r$g))
+  message(nota)
+  if (!is.na(p_al)) cat(sprintf("p de aleatorización = %.4g\n", p_al))
+  invisible(r)
 }
 
 #' Lee vm_datos.sqlite (la exportación completa en una sola base) como una lista de tablas, con fechas y lógicos convertidos.
@@ -710,4 +908,5 @@ message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
         "\nFunciones: vm_tendencia(), vm_semana(), vm_cruce(x, y, desfase = 1), vm_relaciones(), vm_factores(), vm_totales(), vm_buscar('texto'), vm_modelo(), vm_modelo_ar1(), vm_fuerza(),",
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
         "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(), vm_lugares(), vm_presion(), vm_retraso('momentos'),",
+        "\n           vm_red(min_dias = 3), vm_laptop(), vm_experimento('id'),",
         "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna'), vm_leer_sqlite()")

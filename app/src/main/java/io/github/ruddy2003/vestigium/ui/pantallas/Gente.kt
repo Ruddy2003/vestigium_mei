@@ -91,6 +91,11 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, extra: @Com
     var nac by remember(nombre) { mutableStateOf(Especiales.paraEditar(previo?.nacimiento.orEmpty())) }
     var fall by remember(nombre) { mutableStateOf(Especiales.paraEditar(previo?.fallecimiento.orEmpty())) }
     val nacOk = Especiales.leer(nac); val fallOk = Especiales.leer(fall)
+    // Cuándo cambió de verdad la relación (H-6-3): por omisión hoy; no antes del cambio anterior ni después de hoy.
+    val hoy = Fechas.diaLogico()
+    val minimo = previo?.historial?.maxOfOrNull { it.hasta }
+    var desde by remember(nombre) { mutableStateOf(hoy) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Etiqueta("¿Qué es para ti?")
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Personas.RELACIONES.forEach { o -> Ficha(o.nombre, rel == o.id) { rel = if (rel == o.id) null else o.id } }
@@ -111,12 +116,17 @@ private fun FormularioPersona(nombre: String, alGuardar: () -> Unit, extra: @Com
         val e = Especiales.edadDe(Persona(nombre, "", nacimiento = n, fallecimiento = fallOk))
         Ayuda("Cumple el ${Especiales.texto(n, conAnio = false)}" + (e?.let { if (fallOk.isBlank()) " · tiene $it años" else " · tenía $it años" } ?: ""), Modifier.padding(top = 4.dp))
     }
-    if (previo != null && rel != null && rel != previo.relacion)
-        Ayuda("Lo de antes (${Personas.nombreRelacion(previo.relacion).lowercase()}) queda guardado hasta hoy: los días anteriores se siguen analizando así.", Modifier.padding(top = 6.dp))
+    if (previo != null && rel != null && (rel != previo.relacion || cerca != previo.cercania)) {
+        val cuando = if (desde == hoy) "hoy" else "el ${Fechas.corto(desde)} ${desde.take(4)}"
+        Ayuda("Lo de antes (${Personas.nombreRelacion(previo.relacion).lowercase()}${previo.cercania?.let { ", cercanía $it" } ?: ""}) queda guardado hasta $cuando: los días anteriores se siguen analizando así.", Modifier.padding(top = 6.dp))
+        TextButton(onClick = {
+            io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, desde) { f -> desde = f.coerceAtMost(hoy).let { d -> if (minimo != null && d <= minimo) Fechas.sumar(minimo, 1).coerceAtMost(hoy) else d } }
+        }) { Text(if (desde == hoy) "cambió antes de hoy…" else "cambió el ${Fechas.corto(desde)} ${desde.take(4)} · cambiar", style = MaterialTheme.typography.labelLarge) }
+    }
     FlowRow(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.End), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         extra()
         BotonPrincipal("Guardar", habilitado = rel != null && nacOk != null && fallOk != null) {
-            rel?.let { Personas.guardar(nombre, it, cerca, detalle.trim(), nacimiento = nacOk, fallecimiento = fallOk); alGuardar() }
+            rel?.let { Personas.guardar(nombre, it, cerca, detalle.trim(), hoy = if (previo != null) desde else hoy, nacimiento = nacOk, fallecimiento = fallOk); alGuardar() }
         }
     }
 }

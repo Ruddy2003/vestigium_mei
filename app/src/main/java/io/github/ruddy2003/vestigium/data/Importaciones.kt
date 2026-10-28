@@ -381,7 +381,8 @@ object Importaciones {
     private val RX_ANDROID = Regex("^\\u200E?(\\d{1,2})/(\\d{1,2})/(\\d{2,4}),?\\s+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*([aApP]\\.?\\s?[mM]\\.?)?\\s*[-–]\\s+(.+?):\\s(.*)$")
     private val RX_IOS = Regex("^\\u200E?\\[(\\d{1,2})/(\\d{1,2})/(\\d{2,4}),?\\s+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?\\s*([aApP]\\.?\\s?[mM]\\.?)?\\]\\s+(.+?):\\s(.*)$")
     private val RX_FECHA = Regex("^\\u200E?\\[?\\d{1,2}/\\d{1,2}/\\d{2,4}")
-    private val MULTIMEDIA = listOf("omitido", "omitida", "omitted", "<adjunto:", "<attached:")
+    // También los avisos de otros idiomas (H-3-10): francés, portugués, italiano y alemán.
+    private val MULTIMEDIA = listOf("omitido", "omitida", "omitted", "<adjunto:", "<attached:", "<médias omis>", "<mídia oculta>", "<media omessi>", "<medien ausgeschlossen>")
 
     private fun nombreChat(archivo: String): String = archivo.removeSuffix(".txt").removeSuffix(".zip")
         .replace(Regex("^(Chat de WhatsApp con|WhatsApp Chat with|WhatsApp Chat -|Chat de WhatsApp -)\\s*", RegexOption.IGNORE_CASE), "").trim().ifEmpty { "chat" }
@@ -409,8 +410,12 @@ object Importaciones {
                     crudos.add(Crudo(g[1].toInt(), g[2].toInt(), g[3].toInt().let { if (it < 100) 2000 + it else it }, g[4].toInt(), g[5].toInt(), g[6].toIntOrNull() ?: 0, g[7].ifBlank { null }, g[8].trim(), g[9]))
                 }
                 if (crudos.isEmpty()) return@abrir
-                // ¿Día/mes o mes/día? Si algún primer número pasa de 12, es día/mes; si el segundo pasa de 12, mes/día.
-                val mesDia = crudos.any { it.b > 12 } && crudos.none { it.a > 12 }
+                // ¿Día/mes o mes/día? Si algún primer número pasa de 12, es día/mes; si el segundo pasa de 12, mes/día. Si ninguno
+                // pasa de 12 (un chat corto), se elige la lectura en que los mensajes van en orden, como vienen en el archivo; con
+                // empate, día/mes (H-3-10).
+                fun desordenes(md: Boolean) = crudos.map { c -> c.y * 10_000 + (if (md) c.a else c.b) * 100 + (if (md) c.b else c.a) }.zipWithNext().count { (x, y) -> y < x }
+                val mesDia = if (crudos.any { it.a > 12 } || crudos.any { it.b > 12 }) crudos.any { it.b > 12 } && crudos.none { it.a > 12 }
+                    else desordenes(true) < desordenes(false)
                 val msgs = crudos.mapNotNull { c ->
                     val dia = if (mesDia) c.b else c.a; val mes = if (mesDia) c.a else c.b
                     var h = c.h
