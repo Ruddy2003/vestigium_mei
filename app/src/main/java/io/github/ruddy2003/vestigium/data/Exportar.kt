@@ -661,7 +661,7 @@ object Exportar {
         val hayEspeciales = Especiales.hay()
         // Festivos solo si vives en México (I-1); el día libre es la misma regla del ritmo de sueño (P-19), y R la lee de aquí.
         val mexico = Repo.config.perfil.pais.equals("MX", ignoreCase = true)
-        return fechas.map { f ->
+        val filas = fechas.map { f ->
             val d = Repo.dias[f]; val s = Repo.salud[f]; val p = Repo.pantalla[f]; val e = Repo.entorno[f]
             val ft = Repo.fotos[f]; val ag = Repo.agenda[f]; val nt = Repo.notifs[f]; val ac = Repo.actividad[f]
             val r = linkedMapOf<String, Any?>("fecha" to f, "dia_semana" to Fechas.parse(f).dayOfWeek.value,
@@ -710,6 +710,51 @@ object Exportar {
             if (hayEspeciales) Especiales.de(f).let { l -> r["dia_especial"] = l.isNotEmpty(); r["dia_especial_tipo"] = l.map { it.tipo }.distinct() }
             emociones.forEach { k -> r["n_$k"] = x?.get("n_$k") }
             r
+        }
+        if (est.isNotEmpty()) comoLaApp(filas, est)
+        return filas
+    }
+
+    /**
+     * Las columnas de vm_panel.csv que en el panel de la app tienen otro nombre (P-30): exportada → (de la app, factor).
+     * No se renombran, para no romper scripts viejos; el diccionario y vm_familias.csv dicen cuál es cuál.
+     */
+    val EQUIVALENTES: Map<String, Pair<String, Double>> = linkedMapOf(
+        "sueno_min" to ("sueno_horas" to 60.0), "sueno_profundo_min" to ("sueno_profundo" to 1.0), "sueno_rem_min" to ("sueno_rem" to 1.0),
+        "hrv_rmssd" to ("hrv" to 1.0), "km" to ("distancia_km" to 1.0), "valencia_muestreo" to ("muestreo_valencia" to 1.0),
+        "luz_dia_min" to ("luz_horas" to 60.0), "sol_min" to ("sol_horas" to 60.0), "carga_noche_inicio_h" to ("carga_noche_h" to 1.0),
+        "temp_piel_delta" to ("temp_piel" to 1.0), "ruido_db_medio" to ("ruido_db" to 1.0))
+
+    /**
+     * R analiza el mismo panel que la app (P-30): en cada columna que comparte nombre con el panel de la app (o es su
+     * equivalente directo, ver [EQUIVALENTES]), el valor es el de la app, con sus reglas de cero y vacío (P-15) y su hora
+     * de último uso (+24 solo antes de las 5:00, P-16). Se conserva el tipo de la columna (0/1, entero o número) para no
+     * cambiar cómo la lee R. Las equivalencias con otra unidad (minutos frente a horas) se dejan como estaban: salen de la
+     * misma fuente.
+     */
+    private fun comoLaApp(filas: List<MutableMap<String, Any?>>, est: Map<String, Map<String, Double?>>) {
+        val deLaApp = HashSet<String>()
+        est.values.forEach { deLaApp.addAll(it.keys) }
+        io.github.ruddy2003.vestigium.ciencia.Estadistica.variables(dinamicas = false, privadas = true).forEach { deLaApp.add(it.id) }
+        val cols = LinkedHashSet<String>(); filas.forEach { cols.addAll(it.keys) }
+        val fuente = cols.filter { it != "fecha" }.mapNotNull { c ->
+            when {
+                c in deLaApp -> c to c
+                EQUIVALENTES[c]?.second == 1.0 -> c to EQUIVALENTES[c]!!.first
+                else -> null
+            }
+        }.toMap()
+        for ((c, k) in fuente) {
+            val antes = filas.firstNotNullOfOrNull { it[c] }
+            for (r in filas) {
+                val v = est[r["fecha"] as String]?.get(k)
+                r[c] = when {
+                    v == null -> null
+                    antes is Boolean -> v == 1.0
+                    (antes is Int || antes is Long) && v == Math.rint(v) && kotlin.math.abs(v) < Int.MAX_VALUE -> v.toInt()
+                    else -> v
+                }
+            }
         }
     }
 
@@ -762,6 +807,31 @@ object Exportar {
         return filas.values.toList()
     }
 
+    /**
+     * vm_familias.csv (P-31): las parejas que la app esconde por obvias, escritas como familias (ver [Estadistica.familias]) con los
+     * nombres del panel extendido. vm_obvia en R las lee: dos variables son obvias si comparten una familia con lado 0, o con lados
+     * distintos (1 y 2).
+     */
+    fun filasFamilias(): List<Map<String, Any?>> {
+        val vars = (io.github.ruddy2003.vestigium.ciencia.Estadistica.variables(dinamicas = false, privadas = true) +
+            runCatching { io.github.ruddy2003.vestigium.ciencia.Dinamicas.calcular(true).variables }.getOrDefault(emptyList())).distinctBy { it.id }
+        val alias = EQUIVALENTES.entries.groupBy({ it.value.first }, { it.key })
+        return io.github.ruddy2003.vestigium.ciencia.Estadistica.familias(vars, alias).flatMap { f ->
+            f.lados.entries.sortedBy { it.value }.map { (v, lado) -> linkedMapOf<String, Any?>("familia" to f.nombre, "variable" to v, "lado" to lado) }
+        }
+    }
+
+    /**
+     * vm_variables.csv (P-30): las variables que la app cruza en «Las relaciones más marcadas» y en «Todo lo que se mueve», con su
+     * nombre y su grupo. Las privadas van marcadas: la app nunca las cruza; en R se cruzan solo si se pide (privadas = TRUE).
+     */
+    fun filasVariables(): List<Map<String, Any?>> {
+        val ligado = Privado.habito()?.id
+        return io.github.ruddy2003.vestigium.ciencia.Estadistica.variables(dinamicas = true, privadas = true).distinctBy { it.id }.map {
+            linkedMapOf<String, Any?>("variable" to it.id, "nombre" to it.nombre, "grupo" to it.grupo, "privada" to Privado.esVariable(it.id, ligado))
+        }
+    }
+
     /** Hora como número (7.5 = 7:30). Para horas de dormir, la madrugada cuenta como 24+ (1:00 = 25). */
     fun horaDecimal(iso: String, noche: Boolean): Double? = runCatching {
         val t = java.time.OffsetDateTime.parse(iso).atZoneSameInstant(Fechas.zona())
@@ -808,6 +878,8 @@ object Exportar {
     fun tablas(): List<Tabla> = listOf(
         Tabla("vm_panel.csv", "Una fila por día con lo principal de todas las fuentes", filasPanel()),
         Tabla("vm_panel_extendido.csv", "Una fila por día con todas las variables: cada persona, lugar, app, categoría, artista, obra, ciudad, nutriente y más", filasPanelExtendido()),
+        Tabla("vm_variables.csv", "Las variables que la app cruza entre sí, con su nombre y su grupo (las privadas, marcadas)", filasVariables()),
+        Tabla("vm_familias.csv", "Parejas de variables que la app esconde por obvias (la misma medida, una parte y su total…), en familias", filasFamilias()),
         Tabla("vm_dias.csv", "Diario: lo que llenaste cada día", filasDias()),
         Tabla("vm_momentos.csv", "Momentos y avisos de ánimo, uno por fila", filasMomentos()),
         Tabla("vm_tramos.csv", "Cronómetro: bloques de enfoque (estudio, lectura, idiomas, tesis…) y siestas, uno por fila", filasTramos()),
@@ -896,7 +968,14 @@ object Exportar {
         (el diccionario lo dice en cada una), y la pantalla y los pasos de antes de la v13 (columnas ventana_pantalla y
         ventana_pasos). El sueño va en el día en que despiertas. fecha_hora en ISO 8601 con desfase horario (2026-10-16T08:42:10-06:00);
         horas HH:MM; booleanos 0/1; listas separadas por «|»; celda vacía = dato que no existe (nunca se rellenó con promedios).
-        Horas decimales (*_h): 7.5 = 7:30; en horas de dormir la madrugada suma 24 (1:00 = 25) para que el promedio tenga sentido.
+        Horas decimales (*_h): 7.5 = 7:30; en horas de dormir la madrugada suma 24 (1:00 = 25) para que el promedio tenga sentido;
+        en ultimo_uso_h suma 24 solo antes de las 5:00, como el día lógico.
+
+        El panel de R es el de la app (desde la entrega 10d): vestigium.R analiza vm_panel_extendido.csv, y en las columnas de
+        vm_panel.csv que comparten nombre con la app el valor es el de la app, con sus mismas reglas de 0 y vacío (por ejemplo,
+        gasto_total, escalada y gimnasio valen 0 desde el primer registro y en días con diario; antes, vacío). Once columnas de
+        vm_panel.csv se llaman distinto en la app (km = distancia_km, sueno_min = sueno_horas en minutos…): el diccionario dice
+        cuál es cuál. vm_variables.csv lista las variables que la app cruza y vm_familias.csv, las parejas que esconde por obvias.
         Escalas: ${Escalas.TODAS.joinToString("; ") { it.nombre + " — " + it.adaptacion }}
     """.trimIndent()
 

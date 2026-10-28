@@ -267,3 +267,11 @@ Marriott, F. H. C., & Pope, J. A. (1954). Bias in the estimation of autocorrelat
 Watson, P. E., Watson, I. D., & Batt, R. D. (1981). Prediction of blood alcohol concentrations in human subjects: Updating the Widmark equation. *Journal of Studies on Alcohol, 42*(7), 547–556. https://doi.org/10.15288/jsa.1981.42.547
 
 _Verificación (entrega 10c):_ los dos DOI se comprobaron en Crossref durante la sesión. De Watson et al. (1981) se comprobó, en Searle (2015), que la r de Widmark es el agua corporal total dividida entre el peso por la proporción de agua en la sangre; el valor 0.80 de esa proporción **[sin verificar]** (no se leyó el texto original). De Marriott y Pope (1954) no se leyó el texto: la corrección ρ + (1 + 4ρ)/n que usa la app es la aproximación de primer orden que se le suele atribuir **[sin verificar]**; la app la justifica por simulación (cobertura del 95 % con 30 + 30 días y ρ = 0.5).
+
+## Módulo 10d · R y exportación (apéndice D, D.79 a D.86)
+
+Bosch Sensortec. (2021). *BMP280: Digital pressure sensor. Data sheet* (BST-BMP280-DS001-26, revisión 1.26). https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp280-ds001.pdf
+
+STMicroelectronics. (2016). *LPS22HB: MEMS nano pressure sensor: 260-1260 hPa absolute digital output barometer* (DocID027083 Rev 5). Copia en https://cdn.sparkfun.com/assets/a/7/b/5/e/LPS22HB.pdf
+
+_Verificación (entrega 10d):_ las dos hojas de datos se descargaron y se leyeron en la sesión. La del BMP280 dice «300 … 1100 hPa» y lo destina a «handsets such as mobile phones, tablet PCs, GPS devices»; la del LPS22HB, «260 to 1260 hPa absolute pressure range» y «altimeters and barometers for portable devices». La página del producto de ST no abrió (error 503), así que la del LPS22HB se leyó en la copia de SparkFun; su encabezado coincide con el documento de ST (DocID027083 Rev 5, noviembre de 2016). No se comprobó qué sensor trae el teléfono del autor.

@@ -557,7 +557,6 @@ object Estadistica {
             r["luz_horas"] = e.luz_min?.let { it / 60.0 }; r["sol_horas"] = e.sol_min?.let { it / 60.0 }; r["presion_hpa"] = e.presion_hpa
             r["aqi_us"] = e.aqi_us?.toDouble(); r["pm25"] = e.pm25
         }
-        filas.keys.toList().forEach { f -> fila(f)["luna_ilum"] = io.github.ruddy2003.vestigium.data.Luna.iluminacion(io.github.ruddy2003.vestigium.data.Luna.fase(f)) }
         Repo.fotos.forEach { (f, x) -> fila(f)["fotos"] = x.fotos.toDouble() }
         Repo.notifs.forEach { (f, x) -> fila(f)["notificaciones"] = x.total.toDouble() }
         Repo.agenda.forEach { (f, x) -> val r = fila(f); r["eventos"] = x.eventos.toDouble(); r["min_ocupado"] = x.min_ocupado.toDouble() }
@@ -662,7 +661,8 @@ object Estadistica {
         Repo.momentos.filter { it.ruido_db != null }.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["ruido_db"] = l.mapNotNull { it.ruido_db }.average() }
         runCatching {
             val desde = filas.keys.firstOrNull() ?: return@runCatching
-            Repo.escuchas(desde, "9999-12-31").groupBy { it.fecha }.forEach { (f, l) -> fila(f)["canciones"] = l.size.toDouble() }
+            // Canción = escuchada 30 s o más (lo que dice el diccionario; P-30). Sin la duración escuchada, cuenta.
+            Repo.escuchas(desde, "9999-12-31").filter { (it.ms ?: 30_000) >= 30_000 }.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["canciones"] = l.size.toDouble() }
         }
         // Lo que leíste, viste y jugaste: desde el primer día con una obra marcada, los días sin nada cuentan como 0.
         val obrasPorDia = HashMap<String, MutableList<io.github.ruddy2003.vestigium.data.Obra>>()
@@ -785,6 +785,8 @@ object Estadistica {
                 r["unesco"] = b(m.sitios.isNotEmpty())
             }
         }
+        // La luna de todos los días del panel, también los que solo tienen nutrición o entreno (y así en vm_panel.csv).
+        filas.forEach { (f, r) -> r["luna_ilum"] = io.github.ruddy2003.vestigium.data.Luna.iluminacion(io.github.ruddy2003.vestigium.data.Luna.fase(f)) }
         // Días especiales (I-6): 1 si ese día cae un cumpleaños, un aniversario o una fecha propia. Es del calendario:
         // vale para todos los días del panel.
         if (io.github.ruddy2003.vestigium.data.Especiales.hay()) filas.forEach { (f, r) -> r["dia_especial"] = b(io.github.ruddy2003.vestigium.data.Especiales.de(f).isNotEmpty()) }
@@ -987,6 +989,56 @@ object Estadistica {
         // Dos puntajes del mismo cuestionario salen de las mismas respuestas.
         if (pa == "esc_" && pb == "esc_" && a.id.split('_').getOrNull(1) == b.id.split('_').getOrNull(1)) return true
         return false
+    }
+
+    /**
+     * Una familia de pares obvios para vm_familias.csv (P-31). Con lado 0, todas sus variables son obvias entre sí; con lados 1 y 2,
+     * cada variable del lado 1 lo es con cada una del lado 2, pero no las del mismo lado entre ellas (una campaña y lo que busca mover).
+     */
+    class Familia(val nombre: String, val lados: Map<String, Int>)
+
+    /** Si [a] y [b] comparten una familia en la que cuentan como obvias (la misma regla que lee vm_obvia en R). */
+    fun obviaEnFamilias(familias: List<Familia>, a: String, b: String): Boolean = familias.any { f ->
+        val la = f.lados[a]; val lb = f.lados[b]
+        la != null && lb != null && (la == 0 && lb == 0 || la != 0 && lb != 0 && la != lb)
+    }
+
+    /**
+     * Las reglas de [obvia] escritas como familias, para que R esconda las mismas parejas que la app (P-31). Para cualquier par de
+     * [vars], [obviaEnFamilias] da lo mismo que [obvia]. [alias] agrega, junto a cada variable de la app, el nombre con que va en
+     * vm_panel.csv (km junto a distancia_km), en las mismas familias, y una familia más con los dos.
+     */
+    fun familias(vars: List<Variable>, alias: Map<String, List<String>> = emptyMap()): List<Familia> {
+        val ids = vars.map { it.id }.distinct()
+        val hay = ids.toSet()
+        val out = ArrayList<Familia>()
+        fun todas(nombre: String, l: Collection<String>) { val x = l.filter { it in hay }.distinct(); if (x.size >= 2) out += Familia(nombre, x.associateWith { 0 }) }
+        fun dos(nombre: String, a: Collection<String>, b: Collection<String>) {
+            val x = a.filter { it in hay }.distinct(); val y = b.filter { it in hay && it !in x }.distinct()
+            if (x.isNotEmpty() && y.isNotEmpty()) out += Familia(nombre, x.associateWith { 1 } + y.associateWith { 2 })
+        }
+        // Campañas: el conteo con cada una, y cada una con lo que busca mover (o con su hábito).
+        val campanas = ids.filter { it.startsWith("campana_") }
+        dos("campanas_n", listOf("campanas_n"), campanas)
+        campanas.forEach { c -> val r = c.removePrefix("campana_"); dos(c, listOf(c), if (r.startsWith("hab_")) listOf(r) else Campanas.MUEVE[r].orEmpty()) }
+        // Grupos que se reparten el mismo registro.
+        listOf("Lectura del día", "Momentos", "Sentimientos", "Sueños").forEach { g -> todas("grupo:$g", vars.filter { it.grupo == g }.map { it.id }) }
+        FAMILIAS.forEachIndexed { i, f -> todas("familia_${i + 1}", f) }
+        todas("lugares", ids.filter { it.startsWith("horas_tipo_") || it.startsWith("lug_") })
+        ids.filter { it.startsWith("supl_") }.groupBy { it.removePrefix("supl_").substringBeforeLast('_') }.forEach { (s, l) -> todas("supl:$s", l) }
+        dos("sentimientos", listOf("registros_animo"), vars.filter { it.grupo == "Sentimientos" }.map { it.id })
+        val suenos = vars.filter { it.grupo == "Sueños" }.map { it.id }
+        dos("suenos", suenos, ids.filter { it.startsWith("sueno_") })
+        // Cada persona, app, categoría… con sus totales; y las familias que, entre ellas, también son obvias.
+        val porPrefijo = ids.groupBy { Dinamicas.prefijo(it) }
+        Dinamicas.AGREGADOS.forEach { (p, agregados) -> dos("total:$p", porPrefijo[p].orEmpty(), agregados) }
+        Dinamicas.ENTRE_SI.forEach { e -> todas("entre_si:" + e.joinToString("+"), e.flatMap { porPrefijo[it].orEmpty() }) }
+        porPrefijo["per_"].orEmpty().forEach { a -> val b = "pen_" + a.removePrefix("per_"); todas("persona:" + a.removePrefix("per_"), listOf(a, b)) }
+        porPrefijo["esc_"].orEmpty().groupBy { it.split('_').getOrNull(1) }.forEach { (q, l) -> todas("escala:$q", l) }
+        if (alias.isEmpty()) return out
+        // Los nombres de vm_panel.csv van con su variable de la app, y cada pareja es la misma medida.
+        val conAlias = out.map { f -> Familia(f.nombre, f.lados + f.lados.flatMap { (v, lado) -> alias[v].orEmpty().map { it to lado } }) }
+        return conAlias + alias.filterKeys { it in hay }.map { (v, l) -> Familia("igual:$v", (listOf(v) + l).associateWith { 0 }) }
     }
 
     /** Días hacia cada lado con los que se compara cada día al quitar la tendencia. */

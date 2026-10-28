@@ -10,7 +10,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** los ceros previos a la adopción reducen medias y pueden generar correlaciones espurias con variables que sí empiezan más tarde (sesgo por calendario de adopción).
 - **Gravedad:** Alta.
 - **Propuesta:** criterio único «cero desde la fecha de primer registro» (o fecha de adopción declarada); opcionalmente marcar periodos de abandono como `null`.
-- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): una sola regla, `Estadistica.ceroDesde`: `gasto_total`, `gasto_imprevisto`, `n_impulso`, `escalada` y `gimnasio` valen 0 solo desde el primer registro de su fuente y en días con diario; antes, sin dato.
+- **Estado:** Resuelto en el módulo 10c (commit `b943ec7`) (P-15): una sola regla, `Estadistica.ceroDesde`: `gasto_total`, `gasto_imprevisto`, `n_impulso`, `escalada` y `gimnasio` valen 0 solo desde el primer registro de su fuente y en días con diario; antes, sin dato. La parte de la exportación, resuelto en el módulo 10d (commit `035982c`) (P-30): `vm_panel.csv` usa los valores de la app.
 
 ### H-1-2 · Dos criterios de día en el mismo panel
 - **Dónde:** `panel()`: `lugares_distintos` agrupa por `v.entrada.take(10)` (fecha calendario); `en_casa_min` usa `Fechas.diaLogicoDeMillis`.
@@ -72,6 +72,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Propuesta:** conservar los sellos originales si existen y marcar `importado = true` con fecha de importación.
 
 ## Módulo 3 · Sensores, datos pasivos e importaciones (v81)
+- **Estado:** Resuelto en parte en el módulo 10d (commit `035982c`) (P-33): las importaciones de Obsidian y de la versión web conservan los sellos del archivo o los dejan vacíos, y `schema_v` = 0 sin versión propia; `origen` dice de dónde vino. No se agregó una marca `importado` con la fecha de importación.
 
 ### H-3-1 · Fuentes pasivas con distinto criterio de «día»
 - **Dónde:** `sensores/Pantalla.kt`, `Salud.kt` (pasos, sueño aparte), `Agenda.kt`, `Entorno.kt` (clima) usan la ventana de calendario (00:00–24:00); notificaciones, wifi, percepción, ejercicio y la mayoría de lo demás usan el día lógico (corte 05:00).
@@ -95,6 +96,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** variables de presión quedarían vacías sin aviso.
 - **Gravedad:** Alta si se vive o viaja a >1 450 m; ninguna a menor altitud (condicional; no conozco la altitud de la persona usuaria).
 - **Propuesta:** filtro relativo a la mediana local o límite inferior ~500 hPa.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-33): el filtro pasa a 300–1100 hPa, el rango del BMP280 de Bosch (el LPS22HB de ST mide de 260 a 1260 hPa).
 
 ### H-3-4 · Procedencia mixta del clima (reanálisis vs. pronóstico)
 - **Dónde:** `sensores/Entorno.kt`.
@@ -116,6 +118,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** `laptop_social_min` y similares quedan inflados por falsos positivos.
 - **Gravedad:** Baja.
 - **Propuesta:** comparar por dominio exacto o sufijo de dominio.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-33): los sitios se comparan por partes completas del dominio (`ColdTurkey.coincide`); las apps siguen con «contiene».
 
 ### H-3-7 · Wifi nulo se cuenta como «sin wifi» (posible, no comprobado)
 - **Dónde:** `sensores/Percepcion.kt` (lectura de SSID).
@@ -130,6 +133,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** (a) solo tamaño; (b) puede crear estancias falsas o inexactas.
 - **Gravedad:** Baja.
 - **Propuesta:** alinear comentario y código; asignar una precisión por defecto conservadora a puntos sin precisión.
+- **Estado:** Inciso b resuelto en el módulo 10d (commit `035982c`) (P-33): un punto sin precisión cuenta como de 100 m (`Db.PRECISION_SIN_DATO`). El inciso a (una muestra por pulso) no se cambió: no estaba en P-33.
 
 ### H-3-9 · Inicio de canción de Spotify subestimado si se interrumpe
 - **Dónde:** `Spotify.kt`.
@@ -374,6 +378,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: `vm_relaciones()` aplica el mismo algoritmo que «Las relaciones más marcadas» pero a otra tabla; no se puede usar R para verificar lo que muestra la app, y las diferencias de ceros cambian medias y correlaciones.
 - Gravedad: alta.
 - Propuesta: exportar el panel de la app (`Estadistica.panel()` con los nombres de `variables()`) como tabla de análisis (por ejemplo, que `vm_panel_extendido.csv` sea exactamente ese panel) y que el script de R lo lea por omisión; o, como mínimo, unificar nombres y reglas de ceros entre `filasPanel()` y `panel()`.
+- Estado: Resuelto en el módulo 10d (commit `035982c`) (P-30): `vestigium.R` analiza `vm_panel_extendido.csv`; en `vm_panel.csv` las columnas que comparten nombre con la app llevan el valor de la app (reglas de 0 y vacío); las 11 equivalencias de nombre se documentan en el diccionario sin renombrar; `vm_variables.csv` dice qué variables cruza la app. Falta comprobarlo con una exportación real.
 
 ### H-5-2 · La lista de relaciones «obvias» de R es mucho más corta que la de la app
 - Dónde: `vestigium.R`, `vm_familias` (19 conjuntos) y `vm_obvia`; `ciencia/Estadistica.kt`, `FAMILIAS` (56 conjuntos) y `obvia()` (reglas por grupo, lugares, suplementos, prefijos dinámicos `AGREGADOS`/`ENTRE_SI`, misma persona, mismo cuestionario).
@@ -381,6 +386,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: la lista de R se llena de trivialidades y no coincide con la de la app.
 - Gravedad: media.
 - Propuesta: exportar las familias de la app (por ejemplo, `vm_familias.csv` generado desde `FAMILIAS` y las reglas de `obvia`) y que `vm_obvia` lo lea; o una columna `obvia` precalculada para cada pareja.
+- Estado: Resuelto en el módulo 10d (commit `035982c`) (P-31): `vm_familias.csv` se genera con `Estadistica.familias` desde las reglas de `obvia()` y `vm_obvia` lo lee; una prueba JVM comprueba que esconde las mismas parejas.
 
 ### H-5-3 · «Todo lo que se mueve con algo» no quita tendencia ni descuenta la autocorrelación
 - Dónde: `ciencia/Analisis.kt`, `factores()`; `ui/pantallas/Analisis.kt`, `Factores`; mismo patrón en `vestigium.R`, `vm_factores`.
@@ -388,7 +394,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: con variables persistentes los p son mucho más pequeños de lo que deberían (en la simulación de la Figura 6.3, con autocorrelación 0.8 la tasa de falsas alarmas sube de 5 % a 35 %), y BH no lo compensa; el usuario recibe ✓ en relaciones espurias.
 - Gravedad: alta.
 - Propuesta: reutilizar en `factores` la maquinaria de `relaciones` (restos sin tendencia según el interruptor, nEf y p con nEf); para 0/1, una diferencia de medias con EE inflado por (1 + r₁)/(1 − r₁) o calculada sobre los restos. Alternativa mínima: mostrar el mismo r, IC y q que la lista para la pareja de origen.
-- Estado: Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-17): en la app, `Analisis.factores` usa los mismos restos sin tendencia que la lista (según el interruptor, que llega desde Explorar), r de Pearson con el n efectivo y p con nEf; para las 0/1, la diferencia de medias del objetivo con t de Welch y el error estándar corregido por autocorrelación. `vm_factores` en R queda para la entrega 10d.
+- Estado: Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-17): en la app, `Analisis.factores` usa los mismos restos sin tendencia que la lista (según el interruptor, que llega desde Explorar), r de Pearson con el n efectivo y p con nEf; para las 0/1, la diferencia de medias del objetivo con t de Welch y el error estándar corregido por autocorrelación. En R, resuelto en el módulo 10d (commit `035982c`) (P-17): `vm_factores` usa los mismos restos sin tendencia, el n efectivo y, en las 0/1, la diferencia con AR(1); una prueba fija que da los mismos números que la app.
 
 ### H-5-4 · «Cruzar dos variables» usa n bruto y valores con tendencia
 - Dónde: `ui/pantallas/Explorar.kt`, sección «Cruzar dos variables» (`Estadistica.pares`, `pearson`, `ic95`).
@@ -442,6 +448,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - Por qué importa: listas llamativas pero poco estables; app y R no coinciden.
 - Gravedad: baja.
 - Propuesta: mostrar n y un intervalo, o encoger la diferencia hacia 0 según n (p. ej., dif · n/(n + k)); unificar lista de vacías y referencia en R.
+- Estado: En R, resuelto en el módulo 10d (commit `035982c`) (P-32): las mismas 167 palabras vacías y la misma referencia (días con nota). La app sigue sin intervalo ni encogimiento: no lo pedía P-32.
 
 ### H-5-11 · Modelo múltiple: inferencia y etiqueta
 - Dónde: `ciencia/Analisis.kt`, `modelo()`; `ui/pantallas/Analisis.kt`, `ModeloUI`.
@@ -543,6 +550,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** densidad, grupos y grado difieren entre app y R para los mismos datos; criterio (b) del módulo 9.
 - **Gravedad:** Media.
 - **Propuesta:** en R, excluir `tipo_declarado == "no_se_conocen"` también en la rama derivada y contar componentes sin aislados (o mostrar ambos); exportar el grado con `minJuntos = 2` o documentarlo.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-32): `vm_red` excluye «no se conocen» también en la rama derivada y cuenta los grupos sin aislados (las aisladas, aparte); los incisos c y d se documentan en el diccionario (grado con 1 día y hasta 400 personas).
 
 ### H-6-8 · Densidad y restricción de Burt dominadas por personas mencionadas pocas veces
 - **Dónde:** `assets/vestigium.R`, `vm_red()` (vértices = todos los nodos exportados; ego unido a todos); `PantallaRed` (densidad con todos los nodos).
@@ -877,6 +885,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterios (a) y (b).
 - **Gravedad:** Baja.
 - **Propuesta:** P-30.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-30): la app cuenta solo las escuchas de 30 s o más.
 
 ### H-9-4 · `ultimo_uso_h` suma 24 con umbrales distintos en la app (< 5) y en R (< 12)
 - **Dónde:** `ciencia/Estadistica.kt:413`; `data/Exportar.kt:657`, `:739` (`horaDecimal`).
@@ -884,7 +893,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (b).
 - **Gravedad:** Baja.
 - **Propuesta:** P-16 y P-30.
-- **Estado:** Pendiente para la entrega 10d (P-30): la entrega 10c no cambió `ultimo_uso_h`; la misma regla de +24 en la app y en R entra con el panel de R.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-30, P-16): la exportación toma `ultimo_uso_h` de la app (+24 solo antes de las 5:00).
 
 ### H-9-5 · Importaciones con sellos y versión falsos
 - **Dónde:** `data/Importar.kt:150-158`, `:225`, `:231` (versión web y Obsidian).
@@ -892,6 +901,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (a) menor; un día importado parece escrito en la fecha de importación.
 - **Gravedad:** Baja.
 - **Propuesta:** P-33.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-33).
 
 ### H-9-6 · Coordenadas de momentos privados hacia Open-Meteo
 - **Dónde:** `sensores/Entorno.kt`, `lugarDe()` (`:32-33`) y `sincronizar()` (`:47`).
@@ -907,6 +917,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (d) menor; puede crear estancias falsas.
 - **Gravedad:** Baja.
 - **Propuesta:** P-33.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-33): el formato viejo de Takeout guarda `accuracy`.
 
 ### H-9-8 · `distancia_km` significa dos cosas
 - **Dónde:** `data/Exportar.kt:409` (Health Connect, en `vm_salud.csv`) frente a `ciencia/Estadistica.kt:352` (GPS, en el panel); `Diccionario.kt:114`.
@@ -970,7 +981,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** si no se tocan todos, aparece un desacuerdo entre la app y R, criterio (b).
 - **Gravedad:** Baja.
 - **Propuesta:** P-19.
-- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-19, I-1): en la app hay una sola regla, `Fechas.esDiaLibre` (fin de semana o festivo), que usan el ritmo, su gráfica y la columna `dia_libre` del panel; `vm_ritmo` lee esa columna. En R, `fin_de_semana` del panel y `vm_por_hora` siguen con su regla: entrega 10d.
+- **Estado:** Resuelto en parte en el módulo 10c (commit `b943ec7`) (P-19, I-1): en la app hay una sola regla, `Fechas.esDiaLibre` (fin de semana o festivo), que usan el ritmo, su gráfica y la columna `dia_libre` del panel; `vm_ritmo` lee esa columna. En R, `vm_por_hora` usa la misma columna desde el módulo 10d (commit `035982c`); `fin_de_semana` queda en el panel de R como lo que dice (sábado o domingo) y no se cruza con nada (P-32).
 
 ### H-9-16 · `ejercicio_min` y `distancia_km` quedan vacíos cuando se sabe que fueron 0
 - **Dónde:** `ciencia/Estadistica.kt:408` y `kmPorDia` (`:898-914`).
@@ -994,6 +1005,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** criterio (b); relaciones triviales o artefactos en la lista de R.
 - **Gravedad:** Baja.
 - **Propuesta:** P-32.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-32): `vm_relaciones` y `vm_factores` no cruzan `fin_de_semana`, `dia_libre`, `festivo`, `con_diario` ni `n_muestreos`.
 
 ### H-9-19 · `n_momentos` de `vm_panel` incluye recaídas y libido sin decirlo
 - **Dónde:** `data/Exportar.kt:613`, `:635`; `Diccionario.kt`.
@@ -1033,6 +1045,7 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** el script de R no es robusto con pocos datos.
 - **Gravedad:** Baja.
 - **Propuesta:** P-32.
+- **Estado:** Resuelto en el módulo 10d (commit `035982c`) (P-32): `vm_red` funciona sin ningún par.
 
 ### H-9-24 · `pesoEn` no usa el peso más reciente
 - **Dónde:** `data/Sustancias.kt:136-140`.

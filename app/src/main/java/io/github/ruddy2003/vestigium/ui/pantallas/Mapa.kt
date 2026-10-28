@@ -436,7 +436,7 @@ fun PantallaMapa(nav: Nav) {
         "lugares" -> Repo.lugares.map { l -> Puntos.P(l.lat, l.lon, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f).toArgb(), 18f, borde = true, nombre = l.nombre) }
         else -> momentos.filter { it.fecha == dia }.map { m -> Puntos.P(m.lat!!, m.lon!!, MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f).toArgb(), 12f, borde = true) }
     }
-    val ruta = if (capa == "ruta") puntos.filter { (it.precision ?: 0.0) < 150 }.map { GeoPoint(it.lat, it.lon) } else emptyList()
+    val ruta = if (capa == "ruta") puntos.filter { (it.precision ?: io.github.ruddy2003.vestigium.data.Db.PRECISION_SIN_DATO) < 150 }.map { GeoPoint(it.lat, it.lon) } else emptyList()
     val colorRuta = MaterialTheme.colorScheme.primary.toArgb()
     val tema = io.github.ruddy2003.vestigium.ui.Estilo.tema
     val cs = MaterialTheme.colorScheme

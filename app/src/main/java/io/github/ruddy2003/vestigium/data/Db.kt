@@ -10,6 +10,11 @@ import android.database.sqlite.SQLiteOpenHelper
  * y las ubicaciones, que son muchas, van en su propia tabla con columnas numéricas.
  */
 class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
+    companion object {
+        /** Precisión prudente (metros) para los puntos que no la traen, como los importados de Google Maps (P-33). */
+        const val PRECISION_SIN_DATO = 100.0
+    }
+
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("CREATE TABLE docs (col TEXT NOT NULL, id TEXT NOT NULL, fecha TEXT, json TEXT NOT NULL, editado INTEGER NOT NULL, PRIMARY KEY(col, id))")
@@ -125,10 +130,13 @@ class Db(ctx: Context) : SQLiteOpenHelper(ctx, "vestigium.db", null, 2) {
         return out
     }
 
-    /** Recorre las ubicaciones en orden sin crear un objeto por punto (para años de historial). */
+    /**
+     * Recorre las ubicaciones en orden sin crear un objeto por punto (para años de historial). Un punto sin precisión (importado
+     * de Maps) cuenta como de [PRECISION_SIN_DATO] metros, no de 0 (P-33).
+     */
     fun recorrerUbicaciones(desde: Long, hasta: Long = Long.MAX_VALUE, f: (ms: Long, lat: Double, lon: Double, precision: Double) -> Unit) {
         readableDatabase.rawQuery(
-            "SELECT ms, lat, lon, COALESCE(precision, 0) FROM ubicaciones WHERE ms >= ? AND ms < ? ORDER BY ms",
+            "SELECT ms, lat, lon, COALESCE(precision, $PRECISION_SIN_DATO) FROM ubicaciones WHERE ms >= ? AND ms < ? ORDER BY ms",
             arrayOf(desde.toString(), hasta.toString())
         ).use { c -> while (c.moveToNext()) f(c.getLong(0), c.getDouble(1), c.getDouble(2), c.getDouble(3)) }
     }

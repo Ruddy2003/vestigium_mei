@@ -54,6 +54,12 @@ object Percepcion {
     /** Si el teléfono tiene barómetro (el Pixel sí). */
     fun tieneBarometro(ctx: Context): Boolean = ctx.getSystemService(SensorManager::class.java)?.getDefaultSensor(Sensor.TYPE_PRESSURE) != null
 
+    /**
+     * Lecturas válidas del barómetro (P-33): el rango de medida de los sensores de teléfono más comunes (300 a 1 100 hPa en el
+     * BMP280 de Bosch; 260 a 1 260 hPa en el LPS22HB de ST). Antes era 850 a 1 090 y por encima de unos 1 450 m se perdía todo.
+     */
+    val RANGO_HPA = 300.0..1100.0
+
     /** Una lectura del barómetro (hPa), o null si no hay sensor. */
     suspend fun presion(ctx: Context, esperaMs: Long = 1500): Double? {
         val sm = ctx.getSystemService(SensorManager::class.java) ?: return null
@@ -67,7 +73,7 @@ object Percepcion {
                 sm.registerListener(l, sensor, SensorManager.SENSOR_DELAY_NORMAL)
                 cont.invokeOnCancellation { sm.unregisterListener(l) }
             }
-        }?.takeIf { it in 850.0..1090.0 }
+        }?.takeIf { it in RANGO_HPA }
     }
 
     /**

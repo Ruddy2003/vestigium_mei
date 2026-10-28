@@ -161,7 +161,8 @@ object Importar {
         val fecha = o["fecha"].str()!!.take(10)
         val habitos = (o["habitos"] as? JsonObject)?.mapValues { it.value.bool() }?.filterValues { it } ?: emptyMap()
         return Dia(
-            fecha = fecha, origen = o["origen"].str() ?: "web",
+            // Sin versión propia, 0: no la versión de hoy (P-33). Los sellos, los del archivo o vacíos.
+            fecha = fecha, schema_v = o["schema_v"].int() ?: 0, origen = o["origen"].str() ?: "web",
             valencia = o["valencia"].int(), activacion = o["activacion"].int(), dolor = o["dolor"].int(),
             ctx = Catalogo.CONTEXTOS.associate { it.id to o["ctx_${it.id}"].bool() }.filterValues { it },
             hitos = o["hitos"].lista(), flow = o["flow"].str(), sdt_necesidad = o["sdt_necesidad"].str(), apreciacion = o["apreciacion"].str(),
@@ -241,7 +242,8 @@ object Importar {
             hitos = l("hitos"), flow = s("flow"), sdt_necesidad = s("sdt_necesidad"), apreciacion = s("apreciacion"),
             sueno_recordado = b("sueno_recordado"), sueno_valencia = n("sueno_valencia"), sueno_lucidez = s("sueno_lucidez"),
             sueno_vividez = s("sueno_vividez"), sueno_tipo = s("sueno_tipo"), sueno_temas = l("sueno_temas"), sueno_texto = s("sueno_texto") ?: "",
-            nota = nota, ts_creado = Fechas.ahoraIso(), ts_editado = Fechas.ahoraIso(),
+            // Los sellos del encabezado si los trae; si no, vacíos: no la hora de importar (P-33).
+            nota = nota, ts_creado = s("ts_creado"), ts_editado = s("ts_editado"),
         )
     }
 
@@ -266,7 +268,7 @@ object Importar {
                     var inicio: Long? = inicioPadre
                     var tiempo: Long? = null
                     var punto: Pair<Double, Double>? = null
-                    var latE7: Long? = null; var lonE7: Long? = null; var tsViejo: Long? = null
+                    var latE7: Long? = null; var lonE7: Long? = null; var tsViejo: Long? = null; var precision: Double? = null
                     while (r.hasNext()) {
                         val k = r.nextName()
                         when (r.peek()) {
@@ -290,6 +292,8 @@ object Importar {
                                     "latitudeE7" -> latE7 = r.nextLong()
                                     "longitudeE7" -> lonE7 = r.nextLong()
                                     "timestampMs" -> tsViejo = r.nextString().toLongOrNull()
+                                    // El formato viejo trae la precisión de cada punto (metros): se conserva (P-33).
+                                    "accuracy" -> precision = r.nextDouble()
                                     else -> r.skipValue()
                                 }
                             }
@@ -305,7 +309,7 @@ object Importar {
                     }
                     val la = latE7; val lo = lonE7; val tv = tsViejo
                     if (la != null && lo != null && tv != null && !db.existeUbicacion(tv)) {
-                        db.ponerUbicacion(tv, la / 1e7, lo / 1e7, null, "takeout"); puntos++
+                        db.ponerUbicacion(tv, la / 1e7, lo / 1e7, precision?.toFloat(), "takeout"); puntos++
                     }
                 }
                 when (r.peek()) {
