@@ -5214,7 +5214,7 @@ Con ρ = 0 es la t de Welch (1947). Si EE = 0, el intervalo es el punto d. `Esta
 
 Para dos grupos de días con fecha:
 
-$$ilde\rho(S)=\hat\rho_1(S)+\frac{1+4\,\hat\rho_1(S)}{|S|}\qquad\qquad (B.11a)$$
+$$\tilde\rho(S)=\hat\rho_1(S)+\frac{1+4\,\hat\rho_1(S)}{|S|}\qquad\qquad (B.11a)$$
 
 donde ρ̂₁ es B.4 sobre días seguidos (`ar1`) y |S| el número de días de la serie. ρ_a = ρ̃(a) si a tiene 10 pares de días seguidos; si no, ρ̃ de los dos grupos juntos, cada uno centrado en su media (un valor por fecha); si tampoco, 0. Después se acota a [0, 0.9] en B.11. La corrección de sesgo es la aproximación de primer orden que se atribuye a Marriott y Pope (1954) [sin verificar en el original]; se validó por simulación (con 30 + 30 días y ρ = 0.5, cobertura del 95 %).
 
