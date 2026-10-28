@@ -556,13 +556,16 @@ vm_mapa_animo <- function() {
   ggplot(d, aes(lon, lat, colour = v)) + geom_point(alpha = .7) + scale_colour_gradient2(low = "#7C2433", mid = "grey85", high = "#2D6B63", midpoint = 4) + coord_quickmap() + theme_minimal()
 }
 
-#' El día por dentro: el promedio de una columna de vm_horas.csv en cada hora (0 a 23), entre semana y en fin de semana.
+#' El día por dentro: el promedio de una columna de vm_horas.csv en cada hora (0 a 23), en días laborables y libres.
+#' Día libre = la columna dia_libre del panel (fin de semana o festivo), la misma regla de la app; sin ella, el fin de semana.
 vm_por_hora <- function(var = "valencia") {
   if (is.null(vm$horas)) stop("No hay vm_horas.csv.")
-  d <- vm$horas |> mutate(y = as.numeric(.vm_dato(vm$horas, var)), libre = dia_semana >= 6) |> filter(!is.na(y))
+  libres <- if (!is.null(vm$panel$dia_libre)) vm$panel$fecha[vm$panel$dia_libre %in% c(TRUE, 1)] else NULL
+  d <- vm$horas |> mutate(y = as.numeric(.vm_dato(vm$horas, var)), libre = if (is.null(libres)) dia_semana >= 6 else as.Date(fecha) %in% libres) |>
+    filter(!is.na(y))
   r <- d |> group_by(hora, libre) |> summarise(media = mean(y), n = n(), .groups = "drop")
   ggplot(r, aes(hora, media, colour = libre)) + geom_line() + geom_point(aes(size = n), alpha = .6) +
-    scale_colour_manual(values = c(`FALSE` = "#7C2433", `TRUE` = "#2D6B63"), labels = c("entre semana", "fin de semana"), name = NULL) +
+    scale_colour_manual(values = c(`FALSE` = "#7C2433", `TRUE` = "#2D6B63"), labels = c("día laborable", "día libre"), name = NULL) +
     scale_x_continuous(breaks = seq(0, 23, 3)) + labs(x = "hora", y = var, size = "horas") + theme_minimal()
 }
 
