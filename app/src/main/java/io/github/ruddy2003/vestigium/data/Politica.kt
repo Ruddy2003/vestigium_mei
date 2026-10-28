@@ -1,8 +1,9 @@
 package io.github.ruddy2003.vestigium.data
 
 /**
- * La brújula política: 25 afirmaciones propias de la app, una vez al año. Cinco ejes; en cada uno la mitad de las
- * afirmaciones apunta a un lado y la mitad al otro, para que estar «de acuerdo con todo» no empuje hacia ningún lado.
+ * La brújula política: 25 afirmaciones propias de la app, una vez al año. Cinco ejes de cinco afirmaciones: en cada uno,
+ * tres apuntan a un lado y dos al otro, así que estar «de acuerdo con todo» sí empuja un poco (responder 5 a todo da ±20
+ * en cada eje). Como ese empuje es el mismo cada año, afecta poco a comparar tus posiciones contigo mismo (H-2-6).
  * No hay respuestas correctas: sirve para ver cómo cambian tus posiciones con los años.
  */
 object Politica {

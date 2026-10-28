@@ -78,7 +78,7 @@ fun PantallaVida(nav: Nav) {
             Tarjetita("Tu año", "${Repo.dias.keys.count { it.startsWith(anio) }}", "días registrados en $anio", "anno"),
             Tarjetita("Tu gente", "${io.github.ruddy2003.vestigium.data.Personas.menciones().size}",
                 io.github.ruddy2003.vestigium.data.Personas.pendientes().size.let { if (it > 0) "personas · $it por clasificar" else "personas que mencionas" }, "personas"),
-            Tarjetita("Constelación", "${Repo.dias.values.filter { it.fecha >= Fechas.sumar(hoy, -365) }.flatMap { Texto.personas(it.nota) }.toSet().size}", "personas en tu cielo este año", "constelacion"),
+            Tarjetita("Constelación", "${Repo.dias.values.filter { it.fecha >= Fechas.sumar(hoy, -365) }.flatMap { Texto.personas(it.nota).map { n -> Texto.canon(n, Repo.equivalencias()) } }.toSet().size}", "personas en tu cielo este año", "constelacion"),
             Tarjetita("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: ""), "totales"),
             Tarjetita("Mapa", "${Repo.lugares.size}", "lugares marcados", "mapa"),
         ), ir)

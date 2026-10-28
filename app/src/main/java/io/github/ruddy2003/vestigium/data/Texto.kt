@@ -11,7 +11,21 @@ object Texto {
     fun temas(t: String?): List<String> = RX_T.findAll(t ?: "").map { it.groupValues[1].lowercase() }.toList()
     fun palabras(t: String?): Int = (t ?: "").trim().split(Regex("\\s+")).count { it.isNotBlank() }
 
-    fun canon(t: String, eq: Map<String, String>): String = eq[t] ?: t
+    /**
+     * El nombre con que se cuenta una etiqueta, siguiendo las uniones encadenadas (a → b y b → c: a cuenta como c) hasta 8
+     * pasos (P-25). En un ciclo (a → b y b → a), todos sus nombres cuentan como el primero en orden alfabético.
+     */
+    fun canon(t: String, eq: Map<String, String>): String {
+        val camino = ArrayList<String>(); var x = t
+        while (camino.size < 8) {
+            val y = eq[x] ?: return x
+            camino.add(x)
+            val i = camino.indexOf(y)
+            if (i >= 0) return camino.subList(i, camino.size).min()
+            x = y
+        }
+        return x
+    }
 
     fun slug(s: String): String {
         val n = Normalizer.normalize(s.lowercase(), Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")

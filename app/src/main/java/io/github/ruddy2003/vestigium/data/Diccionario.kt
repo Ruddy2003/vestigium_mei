@@ -34,9 +34,10 @@ object Diccionario {
         "id" to "Identificador único del registro", "nota" to "Texto libre", "texto" to "Texto libre",
         "lat" to "Latitud (grados)", "lon" to "Longitud (grados)", "precision_m" to "Precisión de la ubicación (metros)",
         "con_quien" to "Con quién estabas en el aviso de ánimo (lista: solo, pareja, amigos, familia, companeros, desconocidos)",
-        "detonantes" to "Detonantes (lista)", "dispositivo" to "Recaída: en qué aparato (seguimiento privado)", "antes" to "Recaída: qué hacías justo antes (seguimiento privado)",
+        "detonantes" to "Detonantes (lista)", "dispositivo" to "Recaída: en qué aparato (seguimiento privado)", "vm_momentos.csv:antes" to "Recaída: qué hacías justo antes (seguimiento privado)",
         "duracion_min" to "Recaída: cuánto duró (minutos)", "recaida_min" to "Minutos de recaída en el día (seguimiento privado)",
-        "es_siesta" to "El tramo es una siesta (0/1)", "inicio" to "Inicio, ISO 8601", "fin" to "Fin, ISO 8601", "min" to "Minutos",
+        "es_siesta" to "El tramo es una siesta (0/1)", "vm_tramos.csv:inicio" to "Inicio, ISO 8601", "vm_tramos.csv:fin" to "Fin, ISO 8601", "vm_tramos.csv:min" to "Minutos del tramo",
+        "inicio" to "Inicio", "fin" to "Fin", "min" to "Minutos",
         "cama_min" to "Minutos de pantalla en la última hora antes de dormirte (la noche que terminó ese día, según el reloj)",
         "dormir_tras_tel_min" to "Minutos entre soltar el teléfono y quedarte dormido", "tel_tras_despertar_min" to "Minutos entre despertar y usar el teléfono",
         "por_hora_min" to "Minutos de pantalla en cada hora, de 0 a 23 (lista)",
@@ -61,7 +62,7 @@ object Diccionario {
         "sintomas" to "Síntomas al día siguiente (lista)", "alcohol_estimado_max_gl" to "Alcohol en sangre máximo estimado con Widmark (g/L ≈ por mil)",
         "completo" to "Ya se llenó lo de la mañana siguiente (0/1)", "oculta_en_pantallas" to "Esa sustancia está oculta de las pantallas (sigue en los análisis) (0/1)",
         "vm_horas.csv:fecha" to "Día de calendario (no el día de la app)", "vm_horas.csv:hora" to "Hora del día, de 0 a 23 (la fila cubre de HH:00 a HH:59)",
-        "dia_logico" to "El día de la app al que pertenece la hora (de 0 a 4 cuenta para el día anterior)",
+        "vm_horas.csv:dia_logico" to "El día de la app al que pertenece la hora (de 0 a 4 cuenta para el día anterior)",
         "dormido_min" to "Minutos dormido en esa hora (reloj)", "vm_horas.csv:lugar" to "Lugar donde pasaste más tiempo en esa hora (al menos 15 min)",
         "vm_horas.csv:en_casa_min" to "Minutos en casa en esa hora", "vm_horas.csv:pantalla_min" to "Minutos de pantalla en esa hora",
         "vm_horas.csv:notificaciones" to "Notificaciones en esa hora", "vm_horas.csv:luz_lux" to "Luz ambiente media en esa hora (lux)",
@@ -81,10 +82,12 @@ object Diccionario {
         "vi_trabajo" to "Estuvo con un colega, compañero o mentor (0/1)", "cercania_media" to "Cercanía media (1 a 7, círculos de Aron) de quien mencionó ese día",
         "personas" to "@personas mencionadas (lista)", "temas" to "#temas mencionados (lista)", "palabras" to "Número de palabras",
         // Panel y días
-        "dia_semana" to "1 = lunes … 7 = domingo", "con_diario" to "Hay registro del diario ese día (0/1)",
+        "dia_semana" to "1 = lunes … 7 = domingo",
+        "festivo" to "Día de descanso obligatorio de la Ley Federal del Trabajo de México, art. 74 (0/1; vacío si en «Conocerte» no vives en México)",
+        "dia_libre" to "Sábado, domingo o festivo (0/1): la regla de día libre del jet lag social; una noche es libre si despiertas en un día libre", "con_diario" to "Hay registro del diario ese día (0/1)",
         "valencia" to "Qué tan agradable fue (1 muy desagradable a 7 muy agradable; Russell)", "activacion" to "Energía (1 muy baja a 7 muy alta)",
         "dolor" to "Dolor o molestia física (0 nada a 5 muy fuerte)", "sueno_calidad" to "Calidad del sueño percibida (1 a 5)",
-        "valencia_muestreo" to "Promedio de la valencia en los avisos del día", "n_muestreos" to "Avisos de ánimo respondidos (registros «muestreo», con o sin valencia)", "n_momentos" to "Momentos registrados (sin contar avisos)",
+        "valencia_muestreo" to "Promedio de la valencia en los avisos del día", "n_muestreos" to "Avisos de ánimo respondidos (registros «muestreo», con o sin valencia)", "n_momentos" to "Momentos registrados (sin contar avisos; incluye los privados: impulsos, recaídas y libido)",
         "gasto_total" to "Gasto del día (tu moneda)", "ingreso_total" to "Ingresos del día (tu moneda)", "fijo" to "Ingreso que se repite, como sueldo o beca (0/1)", "schema_v" to "Versión del esquema de datos", "origen" to "De dónde vino el registro (app, web, obsidian, widget…)",
         "retroactivo" to "La valencia se llenó otro día, después (0/1). Desde la v13 se decide con ts_valencia; los días de antes, por si el registro del día se creó después",
         "ts_valencia" to "Cuándo se llenó o se cambió por última vez la valencia del día (desde la v13)", "dia_dificil" to "Marcado como día difícil (0/1)",
@@ -102,7 +105,7 @@ object Diccionario {
         "aviso_ts" to "Cuándo llegó el aviso que se respondió", "latencia_min" to "Minutos entre el aviso y la respuesta",
         "ruido_db" to "Ruido ambiente aproximado al registrar (dB relativos, sin calibrar)", "luz_lux" to "Luz ambiente al registrar (lux)",
         // Gastos
-        "monto" to "Importe (tu moneda)", "categoria" to "Categoría de gasto", "subcategoria" to "Subcategoría dentro de la categoría (desde la v14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)",
+        "monto" to "Importe (tu moneda)", "vm_gastos.csv:categoria" to "Categoría de gasto", "vm_ingresos.csv:categoria" to "Categoría de ingreso", "subcategoria" to "Subcategoría dentro de la categoría (desde la v14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)",
         // Escalas y reacción
         "instrumento" to "Cuestionario (who5, pss4, ucla3, tipi)", "media_ms" to "Tiempo de reacción medio (ms)", "mediana_ms" to "Tiempo de reacción mediano (ms)",
         "lapsos" to "Respuestas de más de 500 ms", "anticipaciones" to "Toques antes del estímulo", "ensayos_ms" to "Tiempos de cada ensayo (lista, ms)",
@@ -114,7 +117,8 @@ object Diccionario {
         "fc_reposo" to "Frecuencia cardiaca en reposo (lpm)", "hrv_rmssd" to "Variabilidad cardiaca nocturna, RMSSD (ms)", "pasos" to "Pasos",
         "spo2" to "Saturación de oxígeno (%)", "peso_kg" to "Peso (kg)", "grasa_pct" to "Grasa corporal (%)", "resp_rpm" to "Frecuencia respiratoria (respiraciones por minuto)",
         "temp_c" to "Temperatura corporal (°C)", "temp_piel_delta" to "Variación de la temperatura de la piel respecto a tu línea base (°C)",
-        "pa_sistolica" to "Presión arterial sistólica (mmHg)", "pa_diastolica" to "Presión arterial diastólica (mmHg)", "distancia_km" to "Distancia recorrida (km)",
+        "pa_sistolica" to "Presión arterial sistólica (mmHg)", "pa_diastolica" to "Presión arterial diastólica (mmHg)", "vm_salud.csv:distancia_km" to "Distancia recorrida según Health Connect (km)",
+        "vm_panel.csv:distancia_km" to "Kilómetros recorridos según tus ubicaciones (GPS, aproximado; 0 en días con ubicaciones y sin movimiento)",
         "cal_activas" to "Calorías activas (kcal)", "cal_totales" to "Calorías totales (kcal)", "pisos" to "Pisos subidos", "vo2max" to "VO2 máx. (ml/kg/min)", "agua_ml" to "Agua registrada (ml)",
         // Pantalla
         "total_min" to "Minutos de pantalla", "desbloqueos" to "Veces que desbloqueaste el teléfono", "primer_uso" to "Primer uso del día", "ultimo_uso" to "Último uso del día",
@@ -122,7 +126,7 @@ object Diccionario {
         "primer_uso_h" to "Hora del primer uso en decimal (7.5 = 7:30)", "ultimo_uso_h" to "Hora del último uso en decimal; la madrugada suma 24 (1:00 = 25)",
         "sueno_inicio_h" to "Hora de dormir en decimal; la madrugada suma 24", "sueno_fin_h" to "Hora de despertar en decimal",
         // Visitas
-        "entrada" to "Llegada al lugar", "salida" to "Salida del lugar", "minutos" to "Minutos en el lugar",
+        "entrada" to "Llegada al lugar", "salida" to "Salida del lugar", "vm_visitas.csv:minutos" to "Minutos en el lugar",
         // Entorno
         "t_max" to "Temperatura máxima (°C)", "t_min" to "Temperatura mínima (°C)", "t_media" to "Temperatura media (°C)", "sensacion_max" to "Sensación térmica máxima (°C)",
         "precip_mm" to "Lluvia (mm)", "horas_lluvia" to "Horas con lluvia", "nubes_pct" to "Nubosidad media (%)", "humedad_pct" to "Humedad media (%)",
@@ -138,22 +142,23 @@ object Diccionario {
         "total" to "Notificaciones recibidas", "por_app" to "Notificaciones por app, app:n (lista)", "notificaciones" to "Notificaciones recibidas",
         // Música
         "titulo" to "Título", "artista" to "Artista o programa", "album" to "Álbum («podcast» si es un episodio)", "app" to "App que lo reprodujo",
-        "duracion_s" to "Duración de la pista (s)", "ms_escuchado" to "Milisegundos realmente escuchados (historial de Spotify)", "saltada" to "Se saltó (0/1)",
+        "vm_musica.csv:duracion_s" to "Duración de la pista (s)", "ms_escuchado" to "Milisegundos realmente escuchados (historial de Spotify)", "saltada" to "Se saltó (0/1)",
         "fuente" to "notificacion = lo que sonó en el teléfono; spotify = historial importado; spotify_api = conexión directa con tu cuenta",
-        "dia_logico" to "Día del diario al que cuenta el gasto: antes de las 5:00 es el día anterior (fecha y hora son las reales)",
+        "vm_gastos.csv:dia_logico" to "Día del diario al que cuenta el gasto: antes de las 5:00 es el día anterior (fecha y hora son las reales)",
+        "vm_ingresos.csv:dia_logico" to "Día del diario al que cuenta el ingreso: antes de las 5:00 es el día anterior (fecha y hora son las reales)",
         "gramos" to "Gramos del alimento (cantidad × peso de la porción); vacío si se registró en ml",
         "mililitros" to "Mililitros, cuando el alimento se registró en ml",
         "contexto" to "Desde dónde sonó (conexión directa): playlist, album, artist o collection = tus «me gusta»", "es_musica" to "1 si es música; 0 si sonó en una app de video o navegador (YouTube, Chrome…) y no cuenta como canción", "canciones" to "Canciones escuchadas (30 s o más)",
         // Actividad y ejercicio
         "a_pie_min" to "Minutos a pie", "corriendo_min" to "Minutos corriendo", "bici_min" to "Minutos en bici", "vehiculo_min" to "Minutos en vehículo", "quieto_min" to "Minutos quieto",
-        "inicio" to "Inicio", "fin" to "Fin", "tipo_hc" to "Código de tipo de ejercicio de Health Connect", "min" to "Duración (minutos)", "ejercicio_min" to "Minutos de ejercicio del reloj",
+        "vm_ejercicio.csv:inicio" to "Inicio de la sesión", "vm_ejercicio.csv:fin" to "Fin de la sesión", "tipo_hc" to "Código de tipo de ejercicio de Health Connect", "vm_ejercicio.csv:min" to "Duración (minutos)", "ejercicio_min" to "Minutos de ejercicio del reloj",
         "km" to "Kilómetros aproximados según tus ubicaciones", "escalada" to "Escalaste ese día (0/1)",
         // Escalada
         "modalidad" to "boulder, cuerda, boulder_roca o cuerda_roca", "bloques" to "Bloques o vías intentados", "encadenados" to "Bloques encadenados",
         "flashes" to "Bloques a vista o flash", "intentos" to "Intentos", "grado_max" to "Grado máximo encadenado", "grado_max_num" to "Grado máximo como número (V0 = 0; YDS 5.10a = 10)",
         "grado_medio_num" to "Grado medio de lo encadenado", "energia" to "Energía al empezar (1 a 5)", "piel" to "Estado de la piel (1 a 5)", "esfuerzo" to "Esfuerzo percibido (1 a 10)",
         "satisfaccion" to "Satisfacción (1 a 5)", "sesion_reloj" to "Id de la sesión del reloj enlazada", "sesion" to "Id de la sesión", "orden" to "Orden dentro de la sesión",
-        "grado" to "Grado como lo anotaste", "grado_num" to "Grado como número (V0 = 0; Font convertido a V; YDS 5.10a = 10)", "escala" to "Escala del grado (V, Font, YDS)",
+        "vm_escalada_bloques.csv:grado" to "Grado como lo anotaste", "grado_num" to "Grado como número (V0 = 0; Font convertido a V; YDS 5.10a = 10)", "escala" to "Escala del grado (V, Font, YDS)",
         "estilo" to "a_vista, flash, encadenado, repetido o proyecto", "encadenado" to "Se encadenó (0/1)", "angulo" to "placa, vertical, desplome o techo", "rasgos" to "Rasgos del bloque (lista)",
         // Biblioteca
         "autor" to "Autor, dirección o estudio", "anio" to "Año de publicación o estreno", "estado" to "quiero, en_curso, terminado o abandonado",
@@ -201,12 +206,12 @@ object Diccionario {
         "objetivo_kcal" to "Objetivo de calorías", "objetivo_proteina_g" to "Objetivo de proteína (g)", "objetivo_carbohidratos_g" to "Objetivo de carbohidratos (g)",
         "objetivo_grasa_g" to "Objetivo de grasa (g)", "comidas" to "Alimentos registrados", "primera_comida" to "Hora del primer alimento", "ultima_comida" to "Hora del último alimento",
         "cafeina_ultima" to "Hora de la última cafeína", "primera_comida_h" to "Hora del primer alimento en decimal", "ultima_comida_h" to "Hora del último alimento en decimal",
-        "cafeina_ultima_h" to "Hora de la última cafeína en decimal", "alimento" to "Alimento", "porcion" to "Unidad de la porción", "cantidad" to "Cantidad de porciones",
-        "peso_porcion_g" to "Gramos por porción", "entrenos" to "Entrenamientos del día (lista)", "minutos" to "Minutos de entrenamiento",
+        "cafeina_ultima_h" to "Hora de la última cafeína en decimal", "alimento" to "Alimento", "porcion" to "Unidad de la porción", "vm_comidas.csv:cantidad" to "Cantidad de porciones",
+        "peso_porcion_g" to "Gramos por porción", "entrenos" to "Entrenamientos del día (lista)", "vm_entrenos.csv:minutos" to "Minutos de entrenamiento",
         "series" to "Series totales (con calentamiento)", "series_efectivas" to "Series sin contar calentamiento", "reps" to "Repeticiones", "volumen_kg" to "Volumen: peso × repeticiones (kg)",
         "entreno" to "Nombre del entrenamiento", "entreno_min" to "Duración del entrenamiento (min)", "ejercicio" to "Ejercicio", "tipo_serie" to "Tipo de serie",
         "calentamiento" to "Serie de calentamiento (0/1)", "peso_kg" to "Peso (kg)", "rir" to "Repeticiones en reserva", "e1rm_kg" to "1RM estimado con Epley (kg), series de hasta 12 reps",
-        "duracion_s" to "Duración (s)", "distancia_m" to "Distancia (m)", "peso_base_kg" to "Peso base del ejercicio (kg)",
+        "vm_series.csv:duracion_s" to "Duración de la serie (s)", "distancia_m" to "Distancia (m)", "peso_base_kg" to "Peso base del ejercicio (kg)",
         "gimnasio" to "Entrenaste en el gimnasio (0/1)", "gimnasio_min" to "Minutos de gimnasio", "series_gimnasio" to "Series efectivas en el gimnasio",
         // Cultura, mundo, cartas y personas cercanas (panel)
         "obras_dia" to "Obras a las que les dedicaste tiempo ese día", "lectura" to "Leíste un libro o artículo (0/1)", "vi_pelicula_serie" to "Viste una película o serie (0/1)",
@@ -242,10 +247,10 @@ object Diccionario {
         "laptop_min" to "Minutos en la laptop (Cold Turkey, suma de apps)", "laptop_web_min" to "Minutos en sitios web de la laptop (Cold Turkey)",
         "laptop_productivo_min" to "Minutos en apps y sitios productivos (categoría editable; sin contar el navegador mismo)",
         "laptop_ocio_min" to "Minutos en apps y sitios de ocio", "laptop_social_min" to "Minutos en apps y sitios sociales", "laptop_otro_min" to "Minutos en el resto de apps y sitios",
-        "suplemento" to "Identificador del suplemento", "cantidad" to "Cantidad tomada (en la unidad del suplemento)", "estimado" to "Inferido de tu bitácora de comidas (0/1)",
-        "dias_mencion" to "Días en que la mencionaste en el diario o los momentos", "grado" to "Con cuántas personas está unida en tu red",
+        "suplemento" to "Identificador del suplemento", "vm_suplementos.csv:cantidad" to "Cantidad tomada (en la unidad del suplemento)", "estimado" to "Inferido de tu bitácora de comidas (0/1)",
+        "dias_mencion" to "Días en que la mencionaste en el diario o los momentos", "vm_red_nodos.csv:grado" to "Con cuántas personas está unida en tu red", "vm_red_nodos.csv:grupo" to "Grupo de la relación: familia, pareja, amistad, trabajo u otro (el color de la Red)",
         "tipo_declarado" to "Cómo se conocen según tú: se_conocen, familia, pareja, colegas, no_se_conocen (vacío = no lo dijiste)",
-        "dias_juntos" to "Días en que aparecen las dos el mismo día", "minutos" to "Minutos usados ese día", "categoria" to "Categoría (productivo, ocio, social, otro)",
+        "dias_juntos" to "Días en que aparecen las dos el mismo día", "vm_laptop.csv:minutos" to "Minutos usados ese día", "vm_laptop.csv:categoria" to "Categoría (productivo, ocio, social, otro)",
         "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista)",
         "presencias_revisado" to "Ya revisaste ese día quién estuvo y en quién solo pensaste (0/1); antes de la versión 10 todo cuenta como «estuve»",
         // Entrega 10b (v13): avisos de ánimo, campañas, experimentos, ventana del día, días especiales y Tu gente.
@@ -254,6 +259,13 @@ object Diccionario {
         "avisos_respondidos" to "Avisos mostrados que tienen respuesta (un registro «muestreo» con esa hora de aviso, con o sin valencia)",
         "tasa_respuesta" to "avisos_respondidos entre avisos_mostrados (vacío si no se mostró ninguno)",
         "campanas_n" to "Campañas que tenías aceptadas ese día (vacío antes de tu primera campaña)",
+        "vm_experimentos.csv:id" to "Identificador del experimento", "vm_experimentos.csv:nombre" to "Nombre del experimento",
+        "vm_experimentos.csv:pregunta" to "La pregunta que querías responder", "vm_experimentos.csv:hipotesis" to "Lo que creías que pasaría, escrito antes de empezar",
+        "vm_experimentos.csv:sellada" to "Cuándo se selló la hipótesis (fecha y hora)", "vm_experimentos.csv:accion" to "Lo que cambiabas en las semanas «SÍ»",
+        "vm_experimentos.csv:resultado" to "La variable del panel que se mide", "vm_experimentos.csv:diseno" to "alterno (semanas sorteadas por pares) o antes_despues",
+        "vm_experimentos.csv:inicio" to "Primer día (un lunes)", "vm_experimentos.csv:semanas" to "Semanas del plan",
+        "vm_experimentos.csv:lavado_dias" to "Días que no cuentan tras cada cambio de condición", "vm_experimentos.csv:plan" to "Plan por semana: 1 con la acción, 0 sin ella (lista)",
+        "vm_experimentos.csv:activo" to "Sigue activo (0/1)", "vm_experimentos.csv:plantilla" to "Plantilla de la que salió (vacío = propio)",
         "vm_experimentos.csv:fin" to "Día lógico en que lo terminaste (desde la v13; los días después no cuentan)",
         "vm_experimentos.csv:hecho" to "«¿Lo hiciste hoy?»: fecha:1 sí, fecha:0 no (lista; una fecha que no aparece = sin respuesta, no «no»)",
         "vm_pantalla.csv:ventana" to "logica = de las 05:00 a las 05:00 del día siguiente (desde la v13); calendario = de 0:00 a 24:00 (antes)",
@@ -274,7 +286,7 @@ object Diccionario {
         "abierta" to "Ya se abrió (0/1)", "abierta_el" to "Día en que se abrió", "vm_cartas.csv:lugar" to "Ciudad donde se escribió", "vm_cartas.csv:tema" to "Tema de la app al escribirla",
         "vm_cartas.csv:texto" to "Texto de la carta (vacío mientras siga sellada)",
         // Conocerte
-        "campo" to "Qué dato de «Conocerte»", "valor" to "Cómo está ahora", "antes" to "Cómo estaba", "despues" to "Cómo quedó",
+        "campo" to "Qué dato de «Conocerte»", "valor" to "Cómo está ahora", "vm_perfil.csv:antes" to "Cómo estaba", "despues" to "Cómo quedó",
         // Brújula política
         "vm_politica.csv:economia" to "Eje economía: −100 igualdad y Estado, +100 mercado y empresa", "vm_politica.csv:autoridad" to "Eje autoridad: −100 libertad individual, +100 orden y autoridad",
         "vm_politica.csv:valores" to "Eje valores: −100 cambio, +100 tradición", "vm_politica.csv:mundo" to "Eje mundo: −100 apertura, +100 soberanía",
@@ -327,6 +339,18 @@ object Diccionario {
         }
     }
 
+    /**
+     * Las variables del panel que van por día de calendario (0:00 a 24:00) y no por día lógico (de 5:00 a 5:00): lo que el reloj
+     * y Health Connect dan por día (salvo pasos y sueño), la agenda, el clima, la luna y las ciudades (P-16).
+     */
+    val CALENDARIO: Set<String> = setOf("fc_media", "fc_reposo", "spo2", "spo2_min", "cal_activas", "temp_piel", "resp_rpm", "peso_kg",
+        "eventos", "min_ocupado", "t_max", "t_min", "precip_mm", "nubes_pct", "luz_horas", "sol_horas", "presion_hpa", "aqi_us", "pm25",
+        "luna_ilum", "ciudades_dia", "fuera_de_casa", "extranjero", "ciudad_nueva", "unesco")
+
+    private fun conVentana(archivo: String, col: String, texto: String): String =
+        if ((archivo == "vm_panel.csv" || archivo == "vm_panel_extendido.csv") && (col in CALENDARIO || col.startsWith("ciu_") || col.startsWith("pais_")))
+            "$texto · por día de calendario (0:00 a 24:00)" else texto
+
     fun csv(tablas: List<Exportar.Tabla>): String = Exportar.csv(filas(tablas))
 
     /** Una fila por columna de cada tabla: archivo, columna, tipo, descripción y de qué tabla es. */
@@ -335,7 +359,7 @@ object Diccionario {
         for (t in tablas) {
             val cols = LinkedHashSet<String>(); t.filas.forEach { cols.addAll(it.keys) }
             for (c in cols) filas.add(linkedMapOf("archivo" to t.archivo, "columna" to c, "tipo" to tipo(t.filas.map { it[c] }, c),
-                "descripcion" to describir(t.archivo, c), "tabla" to t.descripcion))
+                "descripcion" to conVentana(t.archivo, c, describir(t.archivo, c)), "tabla" to t.descripcion))
         }
         listOf("ts" to "fecha_hora", "lat" to "numero", "lon" to "numero", "precision_m" to "numero", "fuente" to "texto", "ms" to "entero").forEach { (c, ti) ->
             filas.add(linkedMapOf("archivo" to "vm_ubicaciones.csv", "columna" to c, "tipo" to ti,

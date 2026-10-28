@@ -20,7 +20,9 @@ object Dinamicas {
 
     /** Prefijo de cada familia → variables fijas que la resumen (pares obvios: «minutos en Instagram» con «minutos de pantalla»). */
     val AGREGADOS: Map<String, Set<String>> = mapOf(
-        "per_" to setOf("personas", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes", "palabras", "cartas_otros"),
+        "per_" to setOf("personas", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes", "palabras", "cartas_otros",
+            "personas_vistas", "personas_pensadas", "personas_mensajes", "vi_expareja", "vi_trabajo", "cercania_media", "presencias_revisado",
+            "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
         "pen_" to setOf("personas", "personas_pensadas", "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
         "tema_" to setOf("palabras"), "hito_" to setOf("hitos_n"),
         "lug_" to setOf("lugares_distintos", "distancia_km"),
@@ -102,9 +104,12 @@ object Dinamicas {
             return Repo.dias.keys.filter { it in a..z } + fechas
         }
         val eq = Repo.equivalencias()
-        // Lo privado no cuenta: ni sus @menciones ni sus #temas, ni sus días como «días con diario».
+        // Lo privado no cuenta: ni sus @menciones ni sus #temas, ni sus días como «días con texto».
         val publicos = Repo.momentos.filter { !it.privado }
-        val diasDiario = Repo.dias.keys + publicos.map { it.fecha }
+        // «No apareció» (0) solo en los días en que pudo aparecer (P-15): con diario escrito o con un momento que nombra a alguien
+        // (en los temas, con algún #tema). Un día sin nada escrito queda sin dato.
+        val diasPersonas = diasSociales()
+        val diasTemas = Repo.dias.filterValues { it.nota.isNotBlank() }.keys + publicos.filter { Texto.temas(it.texto).isNotEmpty() }.map { it.fecha }
 
         // ---- Personas: el diario, los momentos, los sueños y las cartas que les escribiste.
         val personas = HashMap<String, HashMap<String, Double>>(); val temas = HashMap<String, HashMap<String, Double>>()
@@ -114,11 +119,15 @@ object Dinamicas {
         }
         Repo.dias.forEach { (f, d) ->
             texto(f, d.nota); texto(f, d.sueno_texto); texto(f, d.mejor_momento + " " + d.peor_momento)
-            d.sueno_temas.forEach { t -> val x = Texto.etiqueta(t); if (t.trim().startsWith("#")) temas.getOrPut(f) { HashMap() }[Texto.canon(x, eq)] = 1.0 else personas.getOrPut(f) { HashMap() }[Texto.canon(x, eq)] = 1.0 }
+            // En el sueño, solo lo que lleva @ es una persona y lo que lleva # un tema; una etiqueta sin símbolo no cuenta (P-25).
+            d.sueno_temas.forEach { t ->
+                val x = Texto.etiqueta(t)
+                when { t.trim().startsWith("#") -> temas.getOrPut(f) { HashMap() }[Texto.canon(x, eq)] = 1.0; t.trim().startsWith("@") -> personas.getOrPut(f) { HashMap() }[Texto.canon(x, eq)] = 1.0 }
+            }
         }
         publicos.forEach { m -> texto(m.fecha, m.texto) }
         Repo.cartas.filter { it.para.isNotBlank() }.forEach { c -> personas.getOrPut(c.escrita) { HashMap() }[Texto.canon(c.para, eq)] = 1.0; texto(c.escrita, c.texto) }
-        familia("per_", "Personas", personas, diasDiario, 15, 5, { "Aparece @$it (diario, momentos, sueños o cartas) (0/1)" })
+        familia("per_", "Personas", personas, diasPersonas, 15, 5, { "Aparece @$it (diario, mejor y peor momento, momentos, sueños o cartas) (0/1)" })
         // ---- En quién pensaste sin verla (lo marcas en el diario; en los momentos, «pensando en…» estando solo).
         val pensadas = HashMap<String, HashMap<String, Double>>()
         val momentosPorDia = Repo.momentos.groupBy { it.fecha }
@@ -126,8 +135,8 @@ object Dinamicas {
             io.github.ruddy2003.vestigium.data.Presencias.delDia(f, eq, Repo.dias[f], momentosPorDia[f].orEmpty())
                 .filterValues { it == io.github.ruddy2003.vestigium.data.Presencias.PENSE }.keys.forEach { p -> pensadas.getOrPut(f) { HashMap() }[p] = 1.0 }
         }
-        if (pensadas.isNotEmpty()) familia("pen_", "Personas", pensadas, diasDiario, 10, 3, { "Pensé en @$it sin verla (0/1)" })
-        familia("tema_", "Temas", temas, diasDiario, 12, 5, { "Aparece #$it (0/1)" })
+        if (pensadas.isNotEmpty()) familia("pen_", "Personas", pensadas, diasPersonas, 10, 3, { "Pensé en @$it sin verla (0/1)" })
+        familia("tema_", "Temas", temas, diasTemas, 12, 5, { "Aparece #$it (0/1)" })
         familia("hito_", "Hitos", Repo.dias.mapValues { (_, d) -> d.hitos.associateWith { 1.0 } }, Repo.dias.keys, 10, 3, { "Hito: ${it.replace('_', ' ')} (0/1)" })
 
         // ---- Lugares marcados: horas en cada uno.
@@ -210,26 +219,19 @@ object Dinamicas {
             familia("ali_", "Nutrición", ali, Repo.nutricion.keys, 12, 5, { "Comí $it (0/1)" })
         }
 
-        // ---- Cuestionarios: cada puntaje vale para el periodo que pregunta (dos semanas, un mes) o hasta el siguiente (personalidad).
+        // ---- Cuestionarios: cada puntaje vale para los días que pregunta (los 7 o los 30 anteriores a responder) o, en la personalidad,
+        // hasta el test siguiente. Si dos respuestas cubren el mismo día, se queda la primera (la más cercana después de ese día).
         Escalas.TODAS.forEach { ins ->
             val resp = Repo.respuestas.filter { it.instrumento == ins.id }.sortedBy { it.fecha }
             if (resp.isEmpty()) return@forEach
-            val ventana = when (ins.id) { "who5" -> 14L; "pss4", "ucla3" -> 30L; else -> 0L }
+            val ventana = ventanaCuestionario(ins.id)
             val claves = resp.flatMap { it.puntajes.keys }.distinct()
             claves.forEach { p ->
                 val id = "esc_${ins.id}_${slug(p)}"
                 if (id in usados) return@forEach
                 usados += id
                 vars += Variable(id, "${ins.nombre}: ${p.replace('_', ' ')}", "Cuestionarios")
-                resp.forEachIndexed { i, r ->
-                    val v = r.puntajes[p] ?: return@forEachIndexed
-                    if (ventana > 0) for (k in 0 until ventana) pon(Fechas.sumar(r.fecha, -k), id, v)
-                    else {
-                        val hasta = minOf(resp.getOrNull(i + 1)?.fecha ?: Fechas.sumar(r.fecha, 365), Fechas.sumar(hoy, 1))
-                        var f = r.fecha; var g = 0
-                        while (f < hasta && g < 800) { pon(f, id, v); f = Fechas.sumar(f, 1); g++ }
-                    }
-                }
+                porDiaCuestionario(resp.mapNotNull { r -> r.puntajes[p]?.let { r.fecha to it } }, ventana, hoy).forEach { (f, v) -> pon(f, id, v) }
             }
         }
 
@@ -238,22 +240,27 @@ object Dinamicas {
         if (!Perfiles.vacio(perfil)) {
             val actual = Perfiles.campos(perfil)
             val hist = Repo.config.perfil_historial.sortedBy { it.fecha }
-            fun valorEn(campo: String, f: String): String =
-                hist.lastOrNull { it.campo == campo && it.fecha <= f }?.despues ?: hist.firstOrNull { it.campo == campo && it.fecha > f }?.antes ?: actual[campo].orEmpty()
+            // Antes del primer guardado (si quedó en el historial) un campo que se llenó ese día no se sabía: sin dato (P-26).
+            val primero = Perfiles.primerGuardado(hist)
+            val desdePrimero = hist.filter { it.fecha == primero }.map { it.campo }.toSet()
+            fun valorEn(campo: String, f: String): String? {
+                if (primero != null && f < primero && campo in desdePrimero) return null
+                return hist.lastOrNull { it.campo == campo && it.fecha <= f }?.despues ?: hist.firstOrNull { it.campo == campo && it.fecha > f }?.antes ?: actual[campo].orEmpty()
+            }
             val etapas = listOf<Triple<String, String, (String) -> Double?>>(
-                Triple("vida_en_pareja", "Etapa: en pareja (0/1)", { f: String -> valorEn("pareja", f).takeIf { it.isNotBlank() && it != "Prefiero no decir" }?.let { if (it in setOf("En pareja", "Casado o en unión", "Saliendo con alguien")) 1.0 else 0.0 } }),
-                Triple("vida_vive_solo", "Etapa: vivía solo (0/1)", { f: String -> valorEn("vive con", f).takeIf { it.isNotBlank() }?.let { if ("solo" in it) 1.0 else 0.0 } }),
-                Triple("vida_vive_con_pareja", "Etapa: vivía con mi pareja (0/1)", { f: String -> valorEn("vive con", f).takeIf { it.isNotBlank() }?.let { if ("pareja" in it) 1.0 else 0.0 } }),
-                Triple("vida_vive_con_familia", "Etapa: vivía con familia (0/1)", { f: String -> valorEn("vive con", f).takeIf { it.isNotBlank() }?.let { v -> if (listOf("mamá", "hermanos", "hijos", "abuelos", "familiares").any { it in v }) 1.0 else 0.0 } }),
-                Triple("vida_trabaja", "Etapa: trabajaba (0/1)", { f: String -> valorEn("a qué te dedicas", f).takeIf { it.isNotBlank() }?.let { if ("trabajo" in it || "por mi cuenta" in it) 1.0 else 0.0 } }),
-                Triple("vida_estudia", "Etapa: estudiaba (0/1)", { f: String -> valorEn("a qué te dedicas", f).takeIf { it.isNotBlank() }?.let { if ("estudio" in it) 1.0 else 0.0 } }),
-                Triple("vida_mascota", "Etapa: tenía mascota (0/1)", { f: String -> if (actual["mascotas"].isNullOrBlank() && hist.none { it.campo == "mascotas" }) null else if (valorEn("mascotas", f).isNotBlank()) 1.0 else 0.0 }),
-                Triple("vida_desde_casa", "Etapa: trabajaba o estudiaba desde casa, total o en parte (0/1)", { f: String -> valorEn("modalidad", f).takeIf { it.isNotBlank() }?.let { if (it == "Presencial") 0.0 else 1.0 } }),
-                Triple("vida_horas_semana", "Etapa: horas a la semana de trabajo o escuela", { f: String -> valorEn("horas a la semana", f).toDoubleOrNull() }),
-                Triple("vida_auto", "Etapa: me movía en auto o moto (0/1)", { f: String -> valorEn("transporte", f).takeIf { it.isNotBlank() }?.let { if (it == "Auto" || it == "Moto") 1.0 else 0.0 } }),
-                Triple("vida_sin_carne", "Etapa: comía sin carne (vegetariana o vegana) (0/1)", { f: String -> valorEn("dieta", f).takeIf { it.isNotBlank() }?.let { if (it == "Vegetariana" || it == "Vegana") 1.0 else 0.0 } }),
-                Triple("vida_hijos", "Etapa: número de hijos", { f: String -> valorEn("hijos", f).toDoubleOrNull() }),
-                Triple("vida_idiomas", "Etapa: idiomas que aprendía", { f: String -> if (actual["idiomas que aprendes"].isNullOrBlank() && hist.none { it.campo == "idiomas que aprendes" }) null else valorEn("idiomas que aprendes", f).split(",").count { it.isNotBlank() }.toDouble() }),
+                Triple("vida_en_pareja", "Etapa: en pareja (0/1)", { f: String -> valorEn("pareja", f)?.takeIf { it.isNotBlank() && it != "Prefiero no decir" }?.let { if (it in setOf("En pareja", "Casado o en unión", "Saliendo con alguien")) 1.0 else 0.0 } }),
+                Triple("vida_vive_solo", "Etapa: vivía solo (0/1)", { f: String -> valorEn("vive con", f)?.takeIf { it.isNotBlank() }?.let { if ("solo" in it) 1.0 else 0.0 } }),
+                Triple("vida_vive_con_pareja", "Etapa: vivía con mi pareja (0/1)", { f: String -> valorEn("vive con", f)?.takeIf { it.isNotBlank() }?.let { if ("pareja" in it) 1.0 else 0.0 } }),
+                Triple("vida_vive_con_familia", "Etapa: vivía con familia (0/1)", { f: String -> valorEn("vive con", f)?.takeIf { it.isNotBlank() }?.let { v -> if (listOf("mamá", "hermanos", "hijos", "abuelos", "familiares").any { it in v }) 1.0 else 0.0 } }),
+                Triple("vida_trabaja", "Etapa: trabajaba (0/1)", { f: String -> valorEn("a qué te dedicas", f)?.takeIf { it.isNotBlank() }?.let { if ("trabajo" in it || "por mi cuenta" in it) 1.0 else 0.0 } }),
+                Triple("vida_estudia", "Etapa: estudiaba (0/1)", { f: String -> valorEn("a qué te dedicas", f)?.takeIf { it.isNotBlank() }?.let { if ("estudio" in it) 1.0 else 0.0 } }),
+                Triple("vida_mascota", "Etapa: tenía mascota (0/1)", { f: String -> if (actual["mascotas"].isNullOrBlank() && hist.none { it.campo == "mascotas" }) null else valorEn("mascotas", f)?.let { if (it.isNotBlank()) 1.0 else 0.0 } }),
+                Triple("vida_desde_casa", "Etapa: trabajaba o estudiaba desde casa, total o en parte (0/1)", { f: String -> valorEn("modalidad", f)?.takeIf { it.isNotBlank() }?.let { if (it == "Presencial") 0.0 else 1.0 } }),
+                Triple("vida_horas_semana", "Etapa: horas a la semana de trabajo o escuela", { f: String -> valorEn("horas a la semana", f)?.toDoubleOrNull() }),
+                Triple("vida_auto", "Etapa: me movía en auto o moto (0/1)", { f: String -> valorEn("transporte", f)?.takeIf { it.isNotBlank() }?.let { if (it == "Auto" || it == "Moto") 1.0 else 0.0 } }),
+                Triple("vida_sin_carne", "Etapa: comía sin carne (vegetariana o vegana) (0/1)", { f: String -> valorEn("dieta", f)?.takeIf { it.isNotBlank() }?.let { if (it == "Vegetariana" || it == "Vegana") 1.0 else 0.0 } }),
+                Triple("vida_hijos", "Etapa: número de hijos", { f: String -> valorEn("hijos", f)?.toDoubleOrNull() }),
+                Triple("vida_idiomas", "Etapa: idiomas que aprendía", { f: String -> if (actual["idiomas que aprendes"].isNullOrBlank() && hist.none { it.campo == "idiomas que aprendes" }) null else valorEn("idiomas que aprendes", f)?.split(",")?.count { it.isNotBlank() }?.toDouble() }),
                 Triple("vida_estudios", "Etapa: nivel de estudios (1 secundaria … 6 doctorado)", { f: String -> Perfiles.ESTUDIOS.indexOfFirst { it.nombre == valorEn("estudios", f) }.takeIf { it >= 0 }?.let { it + 1.0 } }),
             )
             val fechas = Repo.dias.keys
@@ -268,7 +275,7 @@ object Dinamicas {
                 val id = "vida_ciudad_" + slug(c)
                 if (id in usados) return@forEach
                 usados += id; vars += Variable(id, "Etapa: vivía en $c (0/1)", "Etapas de vida")
-                fechas.forEach { f -> pon(f, id, if (valorEn("ciudad", f) == c) 1.0 else 0.0) }
+                fechas.forEach { f -> valorEn("ciudad", f)?.let { v -> pon(f, id, if (v == c) 1.0 else 0.0) } }
             }
         }
 
@@ -289,7 +296,31 @@ object Dinamicas {
         return Resultado(vars, out)
     }
 
-    /** «vitamin_c_mg» → «Vitamin c (mg)». */
+    /**
+     * Fecha → puntaje de un cuestionario, a partir de sus respuestas (fecha, puntaje) de la más vieja a la más nueva. Con [ventana] > 0,
+     * cada respuesta cubre ese día y los [ventana] − 1 anteriores, y un día cubierto por dos respuestas se queda con la primera.
+     * Con 0, cada puntaje vale desde su fecha hasta el test siguiente (como mucho un año, y no más allá de hoy).
+     */
+    fun porDiaCuestionario(resp: List<Pair<String, Double>>, ventana: Long, hoy: String): Map<String, Double> {
+        val m = HashMap<String, Double>()
+        resp.forEachIndexed { i, (fecha, v) ->
+            if (ventana > 0) for (k in 0 until ventana) m.putIfAbsent(Fechas.sumar(fecha, -k), v)
+            else {
+                val hasta = minOf(resp.getOrNull(i + 1)?.first ?: Fechas.sumar(fecha, 365), Fechas.sumar(hoy, 1))
+                var f = fecha; var g = 0
+                while (f < hasta && g < 800) { m[f] = v; f = Fechas.sumar(f, 1); g++ }
+            }
+        }
+        return m
+    }
+
+    /** Días en que se pudo nombrar a alguien: con diario escrito o con un momento no privado que nombra a alguien con @ (P-15). */
+    fun diasSociales(): Set<String> =
+        Repo.dias.filterValues { it.nota.isNotBlank() }.keys + Repo.momentos.filter { !it.privado && Texto.personas(it.texto).isNotEmpty() }.map { it.fecha }
+
+    /** Cuántos días cubre una respuesta (los que pregunta, igual a `frecuenciaDias`); 0 = vale hasta el test siguiente (personalidad). */
+    fun ventanaCuestionario(instrumento: String): Long = when (instrumento) { "who5", "pss4" -> 7L; "ucla3" -> 30L; else -> 0L }
+
     /** Nombres en español de las columnas de MacroFactor que llegan en inglés (el orden importa: «isoleucine» antes que «leucine»). */
     private val NUTRIENTES_ES = listOf(
         "thiamin" to "Vitamina B1 (tiamina)", "riboflavin" to "Vitamina B2 (riboflavina)", "niacin" to "Vitamina B3 (niacina)",

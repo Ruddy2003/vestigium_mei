@@ -258,8 +258,9 @@ private fun gimnasio(periodo: String): List<Bloque> {
     if (e.isEmpty()) return emptyList()
     val series = runCatching { Repo.series(d0, HASTA) }.getOrDefault(emptyList())
     val ejercicios = series.groupBy { it.ejercicio }.mapValues { (_, l) -> l.size.toDouble() }.entries.sortedByDescending { it.value }
-    val mejores = series.filter { (it.peso_kg ?: 0.0) > 0 && (it.reps ?: 0) > 0 }.groupBy { it.ejercicio }
-        .mapValues { (_, l) -> l.maxOf { (it.peso_kg ?: 0.0) * (1 + (it.reps ?: 0) / 30.0) } }.entries.sortedByDescending { it.value }
+    // La misma 1RM estimada que la exportación, Fuerza y R (P-22).
+    val mejores = series.mapNotNull { s -> io.github.ruddy2003.vestigium.data.Macrofactor.e1rm(s)?.let { s.ejercicio to it } }.groupBy { it.first }
+        .mapValues { (_, l) -> l.maxOf { it.second } }.entries.sortedByDescending { it.value }
     val musculos = HashMap<String, Double>()
     e.forEach { x -> x.series_musculo.forEach { (k, v) -> musculos.merge(k.replace('_', ' '), v, Double::plus) } }
     val semanas = Fechas.diasEntre(e.first().fecha, e.last().fecha) / 7.0 + 1

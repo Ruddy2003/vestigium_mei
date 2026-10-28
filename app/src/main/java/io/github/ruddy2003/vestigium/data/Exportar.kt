@@ -98,7 +98,8 @@ object Exportar {
             r["mejor_momento"] = d.mejor_momento; r["peor_momento"] = d.peor_momento
             r["impulso"] = d.impulso; r["recaida"] = d.recaida; r["detonantes"] = d.detonantes
             r["medicamentos"] = d.medicamentos; r["prediccion_manana"] = d.prediccion_manana
-            Repo.config.habitos.forEach { r["hab_${it.id}"] = d.habitos[it.id] == true }
+            // Antes de que existiera el hábito no se sabe (P-15).
+            Repo.config.habitos.forEach { h -> r["hab_${h.id}"] = if (d.habitos[h.id] == true) true else if (h.desde.isNotBlank() && d.fecha < h.desde) null else false }
             r["personas"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct()
             // Cómo estuviste con cada persona: «ana:estuve|luis:pense|mama:mensajes».
             r["presencias"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct().map { "$it:" + Presencias.enDiario(d, it, eq) }
@@ -315,7 +316,7 @@ object Exportar {
 
     fun filasRed(): Pair<List<Map<String, Any?>>, List<Map<String, Any?>>> {
         val (nodos, aristas) = RedPersonas.calcular(minJuntos = 1, max = 400)
-        return nodos.map { linkedMapOf<String, Any?>("persona" to it.nombre, "relacion" to it.relacion, "cercania" to it.cercania, "dias_mencion" to it.dias, "grado" to it.grado) } to
+        return nodos.map { linkedMapOf<String, Any?>("persona" to it.nombre, "relacion" to it.relacion, "grupo" to it.grupo, "cercania" to it.cercania, "dias_mencion" to it.dias, "grado" to it.grado) } to
             aristas.map { linkedMapOf<String, Any?>("a" to it.a, "b" to it.b, "tipo_declarado" to it.tipo, "dias_juntos" to it.juntos) }
     }
 
@@ -658,10 +659,13 @@ object Exportar {
         val emociones = (Repo.momentos.flatMap { Catalogo.emocionesDe(it) }.filter { it != Catalogo.OTRO } + Repo.momentos.mapNotNull { Catalogo.pensamientoDe(it) }).distinct().sorted()
         val est = runCatching { io.github.ruddy2003.vestigium.ciencia.Estadistica.panel() }.getOrDefault(emptyMap())
         val hayEspeciales = Especiales.hay()
+        // Festivos solo si vives en México (I-1); el día libre es la misma regla del ritmo de sueño (P-19), y R la lee de aquí.
+        val mexico = Repo.config.perfil.pais.equals("MX", ignoreCase = true)
         return fechas.map { f ->
             val d = Repo.dias[f]; val s = Repo.salud[f]; val p = Repo.pantalla[f]; val e = Repo.entorno[f]
             val ft = Repo.fotos[f]; val ag = Repo.agenda[f]; val nt = Repo.notifs[f]; val ac = Repo.actividad[f]
-            val r = linkedMapOf<String, Any?>("fecha" to f, "dia_semana" to Fechas.parse(f).dayOfWeek.value, "con_diario" to (d != null),
+            val r = linkedMapOf<String, Any?>("fecha" to f, "dia_semana" to Fechas.parse(f).dayOfWeek.value,
+                "festivo" to (if (mexico) Fechas.esFestivoMx(f) else null), "dia_libre" to Fechas.esDiaLibre(f, mexico), "con_diario" to (d != null),
                 "valencia" to d?.valencia, "activacion" to d?.activacion, "dolor" to d?.dolor, "sueno_calidad" to d?.sueno_calidad, "version_noche" to d?.version_noche,
                 "valencia_muestreo" to mu[f]?.mapNotNull { it.valencia }?.average(), "n_muestreos" to (mu[f]?.size ?: 0),
                 "n_momentos" to (mo[f]?.size ?: 0))
@@ -887,7 +891,10 @@ object Exportar {
         más «ubicaciones» y «diccionario». En R: vm_leer_sqlite() o DBI::dbConnect(RSQLite::SQLite(), "vm_datos.sqlite").
 
         Convenciones: texto en UTF-8; fechas AAAA-MM-DD en hora local; los días empiezan a las 5:00 (lo de la madrugada
-        cuenta para el día anterior); fecha_hora en ISO 8601 con desfase horario (2026-10-16T08:42:10-06:00);
+        cuenta para el día anterior), salvo lo que va por día de calendario (0:00 a 24:00): corazón, oxígeno, calorías
+        activas, temperatura de la piel, respiración y peso del reloj, la agenda, el clima, la luna y las ciudades y países
+        (el diccionario lo dice en cada una), y la pantalla y los pasos de antes de la v13 (columnas ventana_pantalla y
+        ventana_pasos). El sueño va en el día en que despiertas. fecha_hora en ISO 8601 con desfase horario (2026-10-16T08:42:10-06:00);
         horas HH:MM; booleanos 0/1; listas separadas por «|»; celda vacía = dato que no existe (nunca se rellenó con promedios).
         Horas decimales (*_h): 7.5 = 7:30; en horas de dormir la madrugada suma 24 (1:00 = 25) para que el promedio tenga sentido.
         Escalas: ${Escalas.TODAS.joinToString("; ") { it.nombre + " — " + it.adaptacion }}

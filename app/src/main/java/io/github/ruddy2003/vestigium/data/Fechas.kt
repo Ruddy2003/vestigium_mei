@@ -76,6 +76,35 @@ object Fechas {
             else -> "en $dif días"
         }
     }
+    /**
+     * Días de descanso obligatorio en México (Ley Federal del Trabajo, art. 74): 1 de enero, primer lunes de febrero, tercer lunes
+     * de marzo, 1 de mayo, 16 de septiembre, tercer lunes de noviembre, 25 de diciembre y el día de la transmisión del Poder
+     * Ejecutivo Federal (cada seis años: el 1 de octubre desde 2024; antes, el 1 de diciembre). Antes de 2006 los de febrero,
+     * marzo y noviembre iban en su fecha fija (5 de febrero, 21 de marzo y 20 de noviembre). La jornada electoral se omite
+     * (cae en domingo) y Jueves y Viernes Santo no están en la ley (I-1).
+     */
+    fun esFestivoMx(s: String): Boolean {
+        val d = parse(s); val a = d.year; val m = d.monthValue; val dia = d.dayOfMonth
+        fun lunes(n: Int) = d.dayOfWeek == DayOfWeek.MONDAY && (dia - 1) / 7 == n - 1
+        return when (m) {
+            1 -> dia == 1
+            2 -> if (a >= 2006) lunes(1) else dia == 5
+            3 -> if (a >= 2006) lunes(3) else dia == 21
+            5 -> dia == 1
+            9 -> dia == 16
+            10 -> a >= 2024 && a % 6 == 2 && dia == 1
+            11 -> if (a >= 2006) lunes(3) else dia == 20
+            12 -> dia == 25 || (a < 2024 && a % 6 == 2 && dia == 1)
+            else -> false
+        }
+    }
+
+    /**
+     * Día libre: sábado, domingo o, si vives en México ([mexico]), un festivo de la ley. Es la única regla de la app (ritmo de
+     * sueño, panel, exportación): una noche es libre si el día en que despiertas es libre (P-19).
+     */
+    fun esDiaLibre(s: String, mexico: Boolean): Boolean = parse(s).dayOfWeek.value >= 6 || (mexico && esFestivoMx(s))
+
     fun lunesDe(s: String): String = iso(parse(s).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)))
     fun mesDe(s: String): String = s.take(7)
 }

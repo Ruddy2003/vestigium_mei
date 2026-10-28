@@ -82,7 +82,14 @@ object TusNumeros {
         pon("dormir", ultimos(col("sueno_inicio_h"), n, hoy))
         pon("despertar", ultimos(col("sueno_fin_h"), n, hoy))
         // Movimiento.
-        ultimos(col("ejercicio_min"), n, hoy)?.let { out["ejercicio_sem"] = Valor(it.v * 7, it.dias, it.desde, it.hasta) }
+        // Minutos de ejercicio por semana: la suma de las últimas 4 semanas con sesiones, entre 4 (P-23). Promediar solo los días
+        // con sesión y multiplicar por 7 daba 315 min con tres sesiones de 45.
+        val sesiones = Repo.sesiones.filter { it.min > 0 }
+        if (sesiones.isNotEmpty()) {
+            val fin = sesiones.maxOf { it.fecha }; val ini = Fechas.sumar(fin, -27)
+            val en = sesiones.filter { it.fecha in ini..fin }
+            out["ejercicio_sem"] = Valor(en.sumOf { it.min } / 4.0, en.map { it.fecha }.distinct().size, ini, fin)
+        }
         // Días de fuerza por semana: en las últimas 4 semanas con entrenos.
         val fuerza = Repo.entrenos.values.filter { it.series > 0 }.map { it.fecha }.sorted()
         if (fuerza.isNotEmpty()) {

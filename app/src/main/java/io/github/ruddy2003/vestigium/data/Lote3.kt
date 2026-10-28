@@ -108,7 +108,8 @@ object Suplementos {
                     else -> {
                         val e = estimados[f] ?: 0.0
                         put(f, "supl_${s.id}_porciones", d + e)
-                        if (s.id == "probioticos") { put(f, "probioticos_porciones", d + e); put(f, "probioticos_estimado", e) }
+                        // Lo leído en la bitácora de comidas solo se sabe los días que tienen bitácora (P-15).
+                        if (s.id == "probioticos") { put(f, "probioticos_porciones", d + e); if (f in Repo.nutricion || f in estimados) put(f, "probioticos_estimado", e) }
                     }
                 }
                 f = Fechas.sumar(f, 1)
@@ -216,18 +217,36 @@ object RedPersonas {
 
     private fun par(a: String, b: String) = if (a < b) a to b else b to a
 
-    fun tipo(a: String, b: String, c: Config = Repo.config): String? { val (x, y) = par(a, b); return c.vinculos.firstOrNull { it.a == x && it.b == y }?.tipo }
+    /** Los vínculos que dijiste, con los nombres unidos (P-25): si unes @anita con @ana, lo dicho de @anita vale para @ana. */
+    fun dichos(c: Config = Repo.config): List<Vinculo> {
+        val eq = c.equivalencias
+        return c.vinculos.mapNotNull { v ->
+            val (x, y) = par(Texto.canon(v.a, eq), Texto.canon(v.b, eq))
+            if (x == y) null else Vinculo(x, y, v.tipo)
+        }.reversed().distinctBy { it.a to it.b }.reversed()
+    }
+
+    fun tipo(a: String, b: String, c: Config = Repo.config): String? {
+        val eq = c.equivalencias; val (x, y) = par(Texto.canon(a, eq), Texto.canon(b, eq))
+        return dichos(c).firstOrNull { it.a == x && it.b == y }?.tipo
+    }
 
     fun poner(a: String, b: String, tipo: String?) {
-        if (a == b) return
-        val (x, y) = par(a, b)
-        Repo.cambiarConfig { c -> c.copy(vinculos = c.vinculos.filterNot { it.a == x && it.b == y } + listOfNotNull(tipo?.let { Vinculo(x, y, it) })) }
+        Repo.cambiarConfig { c ->
+            val eq = c.equivalencias
+            val (x, y) = par(Texto.canon(a, eq), Texto.canon(b, eq))
+            if (x == y) c
+            // Se quita también lo dicho con otro nombre de las mismas dos personas.
+            else c.copy(vinculos = c.vinculos.filterNot { par(Texto.canon(it.a, eq), Texto.canon(it.b, eq)) == (x to y) } + listOfNotNull(tipo?.let { Vinculo(x, y, it) }))
+        }
     }
 
     /** El siguiente tipo al tocar la ficha: nada → se conocen → familia → pareja → colegas → no se conocen → nada. */
     fun siguiente(actual: String?): String? = if (actual == null) TIPOS[0].id else TIPOS.indexOfFirst { it.id == actual }.let { i -> TIPOS.getOrNull(i + 1)?.id }
 
-    class Nodo(val nombre: String, val dias: Int, val relacion: String?, val cercania: Int?, var grado: Int = 0, var x: Float = 0f, var y: Float = 0f)
+    /** [relacion] es la de Tu gente (o «Conocerte»); [grupo], la que da el color y la composición: familia, pareja, amistad, trabajo… */
+    class Nodo(val nombre: String, val dias: Int, val relacion: String?, val cercania: Int?, var grado: Int = 0, var x: Float = 0f, var y: Float = 0f,
+               val grupo: String? = Personas.grupo(relacion))
     class Arista(val a: String, val b: String, val tipo: String?, val juntos: Int)
 
     /** Nodos (las personas más mencionadas y las que tienen vínculos dichos) y aristas: dichas o con [minJuntos] días juntas. */
@@ -242,7 +261,7 @@ object RedPersonas {
             g.forEach { dias[it] = (dias[it] ?: 0) + 1 }
             val l = g.sorted(); for (i in l.indices) for (j in i + 1 until l.size) juntos.merge(l[i] to l[j], 1, Int::plus)
         }
-        val dichos = Repo.config.vinculos
+        val dichos = dichos()
         val nombres = (dias.entries.sortedByDescending { it.value }.take(max).map { it.key } + dichos.flatMap { listOf(it.a, it.b) }).distinct()
         val set = nombres.toSet()
         val aristas = ArrayList<Arista>()
@@ -250,18 +269,24 @@ object RedPersonas {
         claves.filter { it.first in set && it.second in set }.forEach { k ->
             aristas += Arista(k.first, k.second, dichos.firstOrNull { it.a == k.first && it.b == k.second }?.tipo, juntos[k] ?: 0)
         }
-        val conectadas = aristas.filter { it.tipo != "no_se_conocen" }
         val nodos = nombres.map { n -> val p = Personas.de(n); Nodo(n, dias[n] ?: 0, p?.relacion ?: Perfiles.relacion(n), p?.cercania) }
-        nodos.forEach { nd -> nd.grado = conectadas.count { it.a == nd.nombre || it.b == nd.nombre } }
+        grados(nodos, aristas)
         return nodos to aristas
     }
 
-    /** Cuántos grupos separados hay (sin contar a quienes no tienen ninguna línea). */
+    /** Con cuántas personas está unida cada una, contando solo [aristas] (al filtrar «solo lo que dije», se recalcula; P-25). */
+    fun grados(nodos: List<Nodo>, aristas: List<Arista>) {
+        val conectadas = aristas.filter { it.tipo != "no_se_conocen" }
+        nodos.forEach { nd -> nd.grado = conectadas.count { it.a == nd.nombre || it.b == nd.nombre } }
+    }
+
+    /** Cuántos grupos separados hay con estas [aristas] (sin contar a quienes no tienen ninguna línea). */
     fun componentes(nodos: List<Nodo>, aristas: List<Arista>): Int {
         val conectadas = aristas.filter { it.tipo != "no_se_conocen" }
         val padre = HashMap<String, String>()
         fun raiz(x: String): String { var r = x; while (padre[r] != null && padre[r] != r) r = padre[r]!!; return r }
-        nodos.filter { it.grado > 0 }.forEach { padre[it.nombre] = it.nombre }
+        val unidos = conectadas.flatMap { listOf(it.a, it.b) }.toSet()
+        nodos.filter { it.nombre in unidos }.forEach { padre[it.nombre] = it.nombre }
         conectadas.forEach { val ra = raiz(it.a); val rb = raiz(it.b); if (ra != rb) padre[ra] = rb }
         return padre.keys.map { raiz(it) }.toSet().size
     }
@@ -313,7 +338,8 @@ object Experimentos {
     class Plantilla(val id: String, val nombre: String, val pregunta: String, val accion: String, val resultado: String, val diseno: String, val semanas: Int, val lavado: Int, val nota: String)
 
     val PLANTILLAS = listOf(
-        Plantilla("creatina", "Creatina", "¿La creatina cambia mi fuerza o mi energía?", "Tomar 5 g de creatina al día", "volumen_kg", "antes_despues", 8, 28,
+        // 12 semanas: con 28 días de lavado quedan 14 días con la acción y 42 sin ella (con 8 no quedaba ninguno con la acción).
+        Plantilla("creatina", "Creatina", "¿La creatina cambia mi fuerza o mi energía?", "Tomar 5 g de creatina al día", "volumen_kg", "antes_despues", 12, 28,
             "Antes y después: la reserva del músculo tarda semanas en llenarse y en vaciarse, así que alternar semanas no sirve."),
         Plantilla("hora_dormir", "Hora de dormir", "¿Dormirme antes de las 00:00 mejora cómo me siento?", "Estar en la cama antes de las 00:00", "valencia", "alterno", 6, 1,
             "Semanas alternas sorteadas; el primer día de cada cambio no cuenta."),
@@ -334,6 +360,51 @@ object Experimentos {
 
     /** En curso: no lo terminaste y el plan no ha vencido (los que aún no empiezan también cuentan). */
     fun enCurso(e: Experimento, hoy: String = Fechas.diaLogico()): Boolean = e.activo && e.fin == null && hoy <= ultimoDia(e)
+
+    /** Días mínimos que deben contar en cada condición para poder sellar un experimento (P-18). */
+    const val MIN_DIAS = 7
+
+    /**
+     * El plan de semanas. Antes y después: la primera mitad sin la acción y la segunda con ella. Alterno: sorteado por pares de
+     * semanas, una «SÍ» y una «no» en cada par en orden al azar (P-18), para que el azar no dé «SÍ SÍ SÍ no no no», que en la
+     * práctica es un antes y después. Con un número impar de semanas, la última se sortea sola.
+     */
+    fun plan(diseno: String, semanas: Int, azar: kotlin.random.Random = kotlin.random.Random(System.currentTimeMillis())): List<Boolean> =
+        if (diseno == "antes_despues") List(semanas / 2) { false } + List(semanas - semanas / 2) { true }
+        else (0 until semanas / 2).flatMap { if (azar.nextBoolean()) listOf(true, false) else listOf(false, true) } +
+            if (semanas % 2 == 1) listOf(azar.nextBoolean()) else emptyList()
+
+    /** Días que cuentan (sin lavado) con la acción y sin ella en el plan de [e], hasta [hasta] (su último día). */
+    fun diasPorCondicion(e: Experimento, hasta: String = ultimoDia(e)): Pair<Int, Int> {
+        var si = 0; var no = 0
+        for (i in 0 until e.semanas * 7) {
+            val f = Fechas.sumar(e.inicio, i.toLong())
+            if (f > hasta) break
+            val t = toca(e, f) ?: continue
+            if (enLavado(e, f)) continue
+            if (t) si++ else no++
+        }
+        return si to no
+    }
+
+    /**
+     * Lo menos que podría quedar en una condición con ese diseño, semanas y lavado, sea cual sea el sorteo (se prueban todos
+     * los planes por pares). Si queda menos de [MIN_DIAS], no se deja sellar: el experimento nunca daría resultado.
+     */
+    fun minimoPosible(diseno: String, semanas: Int, lavado: Int): Int {
+        val base = Experimento("x", "", "", "", "2026-01-05", semanas, emptyList(), lavado_dias = lavado)
+        val planes = if (diseno == "antes_despues") listOf(plan(diseno, semanas)) else {
+            val pares = semanas / 2; val impar = semanas % 2 == 1
+            (0 until (1 shl pares)).flatMap { m ->
+                val p = (0 until pares).flatMap { if ((m shr it) and 1 == 1) listOf(true, false) else listOf(false, true) }
+                if (impar) listOf(p + true, p + false) else listOf(p)
+            }
+        }
+        return planes.minOf { p -> diasPorCondicion(base.copy(plan = p)).let { minOf(it.first, it.second) } }
+    }
+
+    /** El plan real quedó en bloque (un solo cambio de condición): se lee como un antes y después, expuesto a tendencias. */
+    fun enBloque(e: Experimento): Boolean = e.diseno == "antes_despues" || (1 until e.plan.size).count { e.plan[it] != e.plan[it - 1] } <= 1
 
     /** Si toca la acción ese día (null si el día no está en el experimento). */
     fun toca(e: Experimento, f: String): Boolean? {
@@ -362,8 +433,12 @@ object Experimentos {
         val sinRespuesta: Int get() = diasSi - respSi + diasNo - respNo
     }
 
+    /**
+     * [provisional]: el plan sigue en curso; el resultado puede cambiar y no debe leerse como señal (detenerse en la primera
+     * «señal» multiplica las falsas alarmas). [posibleSi] y [posibleNo]: días que cuentan en todo el plan, se midan o no.
+     */
     class Resultado(val con: List<Double>, val sin: List<Double>, val dif: Triple<Double, Double, Double>?, val d: Double?, val tendencia: Double?, val tendenciaClara: Boolean,
-                    val cumplimiento: Cumplimiento? = null) {
+                    val cumplimiento: Cumplimiento? = null, val provisional: Boolean = false, val posibleSi: Int = 0, val posibleNo: Int = 0) {
         /**
          * Efecto estimado de hacerlo de verdad: la diferencia según el plan entre la diferencia de cumplimiento
          * (SÍ − no). Supone que saber la condición no cambia nada por sí solo. null si el cumplimiento casi no difiere.
@@ -375,9 +450,15 @@ object Experimentos {
         }
     }
 
+    /**
+     * El resultado según el plan: los días que tocaba la acción contra los que no, sin los de lavado. Hoy no entra (aún no
+     * termina: pantalla, pasos y enfoque estarían a medias), ni lo posterior a terminarlo. La diferencia usa t de Welch y el
+     * error estándar corregido porque los días seguidos se parecen (P-17). La tendencia se mide dentro de cada condición, con
+     * el modelo valor ~ día + condición, para que el propio efecto no parezca una tendencia (P-18).
+     */
     fun resultado(e: Experimento, panel: Map<String, Map<String, Double?>>, hoy: String = Fechas.diaLogico()): Resultado {
-        val con = ArrayList<Double>(); val sin = ArrayList<Double>()
-        val serie = ArrayList<Pair<Double, Double>>()
+        val con = ArrayList<Pair<String, Double>>(); val sin = ArrayList<Pair<String, Double>>()
+        val serie = ArrayList<Triple<Double, Double, Double>>()
         var dSi = 0; var rSi = 0; var hSi = 0; var dNo = 0; var rNo = 0; var hNo = 0
         for (i in 0 until e.semanas * 7) {
             val f = Fechas.sumar(e.inicio, i.toLong())
@@ -387,31 +468,45 @@ object Experimentos {
             if (enLavado(e, f)) continue
             val h = e.hecho[f]
             if (t) { dSi++; if (h != null) { rSi++; if (h) hSi++ } } else { dNo++; if (h != null) { rNo++; if (h) hNo++ } }
+            if (f == hoy) continue
             val v = panel[f]?.get(e.resultado) ?: continue
-            if (t) con.add(v) else sin.add(v)
-            serie.add(i.toDouble() to v)
+            if (t) con.add(f to v) else sin.add(f to v)
+            serie.add(Triple(i.toDouble(), if (t) 1.0 else 0.0, v))
         }
-        val dif = io.github.ruddy2003.vestigium.ciencia.Estadistica.diferencia(con, sin)
-        val d = if (con.size >= 3 && sin.size >= 3) {
-            val va = con.sumOf { (it - con.average()) * (it - con.average()) } / (con.size - 1)
-            val vb = sin.sumOf { (it - sin.average()) * (it - sin.average()) } / (sin.size - 1)
-            val sp = sqrt(((con.size - 1) * va + (sin.size - 1) * vb) / (con.size + sin.size - 2))
-            if (sp > 0) (con.average() - sin.average()) / sp else null
+        val dif = io.github.ruddy2003.vestigium.ciencia.Estadistica.diferenciaEnDias(con, sin)?.let { Triple(it.d, it.lo, it.hi) }
+        val cv = con.map { it.second }; val sv = sin.map { it.second }
+        val d = if (cv.size >= 3 && sv.size >= 3) {
+            val va = cv.sumOf { (it - cv.average()) * (it - cv.average()) } / (cv.size - 1)
+            val vb = sv.sumOf { (it - sv.average()) * (it - sv.average()) } / (sv.size - 1)
+            val sp = sqrt(((cv.size - 1) * va + (sv.size - 1) * vb) / (cv.size + sv.size - 2))
+            if (sp > 0) (cv.average() - sv.average()) / sp else null
         } else null
-        // Tendencia: pendiente del resultado contra el día; si es clara, la diferencia puede deberse al paso del tiempo.
-        var pend: Double? = null; var clara = false
-        if (serie.size >= 8) {
-            val mx = serie.map { it.first }.average(); val my = serie.map { it.second }.average()
-            val sxx = serie.sumOf { (it.first - mx) * (it.first - mx) }
-            if (sxx > 0) {
-                val b = serie.sumOf { (it.first - mx) * (it.second - my) } / sxx
-                val res = serie.sumOf { val p = my + b * (it.first - mx); (it.second - p) * (it.second - p) } / (serie.size - 2)
-                val se = sqrt(res / sxx)
-                pend = b; clara = se > 0 && abs(b / se) > 2.0
-            }
-        }
+        val (pend, clara) = tendencia(serie)
         val cum = if (e.hecho.isEmpty()) null else Cumplimiento(dSi, rSi, hSi, dNo, rNo, hNo)
-        return Resultado(con, sin, dif, d, pend, clara, cum)
+        val (pSi, pNo) = diasPorCondicion(e)
+        return Resultado(cv, sv, dif, d, pend, clara, cum, enCurso(e, hoy), pSi, pNo)
+    }
+
+    /**
+     * Pendiente por día dentro de cada condición: mínimos cuadrados de valor ~ día + condición (filas día, condición 0/1, valor).
+     * «Clara» si |t| supera el cuantil de la t con n − 3 grados. Null con menos de 8 días.
+     */
+    fun tendencia(serie: List<Triple<Double, Double, Double>>): Pair<Double?, Boolean> {
+        if (serie.size < 8) return null to false
+        val mt = serie.map { it.first }.average(); val mc = serie.map { it.second }.average(); val mv = serie.map { it.third }.average()
+        var stt = 0.0; var scc = 0.0; var stc = 0.0; var stv = 0.0; var scv = 0.0
+        for ((t, c, v) in serie) { val a = t - mt; val b = c - mc; val y = v - mv; stt += a * a; scc += b * b; stc += a * b; stv += a * y; scv += b * y }
+        val det = stt * scc - stc * stc
+        // Sin variación en la condición (todo SÍ o todo no), queda la pendiente simple.
+        val (bt, bc) = if (scc == 0.0 || abs(det) < 1e-9) (if (stt > 0) stv / stt else return null to false) to 0.0
+            else (stv * scc - scv * stc) / det to (scv * stt - stv * stc) / det
+        val k = if (scc == 0.0 || abs(det) < 1e-9) 2 else 3
+        val sse = serie.sumOf { (t, c, v) -> val p = mv + bt * (t - mt) + bc * (c - mc); (v - p) * (v - p) }
+        val s2 = sse / (serie.size - k)
+        val varBt = if (k == 3) s2 * scc / det else s2 / stt
+        if (varBt <= 0) return bt to false
+        val tt = bt / sqrt(varBt)
+        return bt to (abs(tt) > io.github.ruddy2003.vestigium.ciencia.Estadistica.cuantilT(0.975, (serie.size - k).toDouble()))
     }
 
     fun tamano(d: Double): String = when { abs(d) < 0.2 -> "muy pequeño"; abs(d) < 0.5 -> "pequeño"; abs(d) < 0.8 -> "mediano"; else -> "grande" }
