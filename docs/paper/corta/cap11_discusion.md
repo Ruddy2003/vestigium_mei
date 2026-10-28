@@ -1,6 +1,6 @@
 # Capítulo 11. Discusión, limitaciones y trabajo futuro
 
-> **Para qué sirve este capítulo.** Junta lo que dicen los capítulos 2 a 10 para responder tres preguntas: **qué se puede concluir y qué no** de los datos de Vestigium Mei; **qué amenazas a la validez quedan**, vistas en conjunto; y **qué falta**, en la app, en R y en este documento. No describe funciones nuevas: cada afirmación remite al capítulo donde está el detalle. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`) con los cambios de la entrega 10e, posterior (sin número de versión todavía); las cuentas de hallazgos son las del campo «Estado» de `hallazgos.md` al 28 de octubre de 2026, después de 10e. Los ejemplos son inventados.
+> **Para qué sirve este capítulo.** Junta lo que dicen los capítulos 2 a 10 para responder tres preguntas: **qué se puede concluir y qué no** de los datos de Vestigium Mei; **qué amenazas a la validez quedan**, vistas en conjunto; y **qué falta**, en la app, en R y en este documento. No describe funciones nuevas: cada afirmación remite al capítulo donde está el detalle. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`); las cuentas de hallazgos son las del campo «Estado» de `hallazgos.md` al 28 de octubre de 2026, después de 10e. Los ejemplos son inventados.
 
 ---
 

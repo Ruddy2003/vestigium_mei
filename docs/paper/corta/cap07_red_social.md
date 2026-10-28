@@ -1,6 +1,6 @@
 # Capítulo 7. Personas y red social
 
-> **Para qué sirve este capítulo.** Explica **cómo la app registra a la gente de tu vida**: cómo reconoce a una persona cuando la nombras con @, cómo guarda qué es para ti y cómo eso cambia con los años, cómo mide qué tan cerca la sientes, cómo dibuja la **Constelación** y la **Red**, qué calcula R con `vm_red()` y cómo entran las personas en las correlaciones. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`) con los cambios de la entrega 10e, posterior (sin número de versión todavía). Los hallazgos se numeran H-6-n y están en `hallazgos.md`. **Las personas, fechas y números de los ejemplos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo la app registra a la gente de tu vida**: cómo reconoce a una persona cuando la nombras con @, cómo guarda qué es para ti y cómo eso cambia con los años, cómo mide qué tan cerca la sientes, cómo dibuja la **Constelación** y la **Red**, qué calcula R con `vm_red()` y cómo entran las personas en las correlaciones. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`). Los hallazgos se numeran H-6-n y están en `hallazgos.md`. **Las personas, fechas y números de los ejemplos son inventados.**
 
 ---
 

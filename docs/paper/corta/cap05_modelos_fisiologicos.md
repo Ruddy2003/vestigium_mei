@@ -1,6 +1,6 @@
 # Capítulo 5. Modelos fisiológicos y variables derivadas
 
-> **Para qué sirve este capítulo.** Algunas variables de la app no se miden: se **calculan con un modelo** a partir de otros datos. La cafeína que te queda al dormir, el alcohol en sangre, la reserva de creatina o el «jet lag social» son **estimaciones**, no mediciones. Este capítulo explica cada modelo: qué calcula, con qué fórmula y parámetros, de dónde salen y cuándo falla. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`) y la entrega 10e, posterior (todavía sin número de versión; `SCHEMA_V` sigue en 14), que se marca «desde 10e». Los ejemplos usan datos inventados, y los problemas se numeran H-4-n (por el módulo 4). **Ningún número de este capítulo es una medición de tu cuerpo**: son cuentas con parámetros promedio de la literatura.
+> **Para qué sirve este capítulo.** Algunas variables de la app no se miden: se **calculan con un modelo** a partir de otros datos. La cafeína que te queda al dormir, el alcohol en sangre, la reserva de creatina o el «jet lag social» son **estimaciones**, no mediciones. Este capítulo explica cada modelo: qué calcula, con qué fórmula y parámetros, de dónde salen y cuándo falla. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`); lo de la entrega 10e se marca «desde 10e». Los ejemplos usan datos inventados, y los problemas se numeran H-4-n (por el módulo 4). **Ningún número de este capítulo es una medición de tu cuerpo**: son cuentas con parámetros promedio de la literatura.
 
 ---
 

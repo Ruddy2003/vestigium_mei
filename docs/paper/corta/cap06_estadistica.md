@@ -1,6 +1,6 @@
 # Capítulo 6. Análisis estadístico
 
-> **Para qué sirve este capítulo.** Explica cómo la app pasa de miles de registros a frases como «cuando duermes más, tu ánimo tiende a subir»: cómo arma la tabla de un renglón por día (el *panel*), cómo compara cada variable con cada otra y qué hace para no dejarse engañar por las tendencias, por los días que se parecen a sus vecinos y por el azar de revisar miles de parejas. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), puesto al día con la entrega 10e (D.88 a D.108; lo que cambió se marca «desde 10e»). Las fórmulas están en el Apéndice B. **Los ejemplos numéricos son inventados.**
+> **Para qué sirve este capítulo.** Explica cómo la app pasa de miles de registros a frases como «cuando duermes más, tu ánimo tiende a subir»: cómo arma la tabla de un renglón por día (el *panel*), cómo compara cada variable con cada otra y qué hace para no dejarse engañar por las tendencias, por los días que se parecen a sus vecinos y por el azar de revisar miles de parejas. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`), puesto al día con la entrega 10e (D.88 a D.108; lo que cambió se marca «desde 10e»). Las fórmulas están en el Apéndice B. **Los ejemplos numéricos son inventados.**
 
 ---
 

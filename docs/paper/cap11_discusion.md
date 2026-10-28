@@ -2,7 +2,7 @@
 
 > **Para qué sirve este capítulo.** Junta lo que dicen los capítulos 2 a 10 para responder tres preguntas: **qué se puede concluir y qué no** de los datos de Vestigium Mei; **qué amenazas a la validez quedan**, vistas en conjunto y no capítulo por capítulo; y **qué falta**, tanto en la app y en R como en este propio documento. No describe funciones nuevas: cada afirmación remite al capítulo donde está el detalle, con el nombre de la función de origen.
 >
-> **Qué versión describe.** La v90 (commit `8818d5a`, `SCHEMA_V = 14`), después de las entregas 10a a 10d del módulo 10 y de la revisión de navegación, más la entrega 10e, posterior (todavía sin número de versión; `SCHEMA_V` sigue en 14), que arregló en el código todo lo que se pudo de los hallazgos abiertos (Apéndice D, D.88 a D.108). Las cuentas de hallazgos son las del campo «Estado» de `hallazgos.md` al 28 de octubre de 2026, después de 10e.
+> **Qué versión describe.** La v91 (`SCHEMA_V = 14`): la v90 (commit `8818d5a`), después de las entregas 10a a 10d del módulo 10 y de la revisión de navegación, más la entrega 10e, que arregló en el código todo lo que se pudo de los hallazgos abiertos (Apéndice D, D.88 a D.108). Las cuentas de hallazgos son las del campo «Estado» de `hallazgos.md` al 28 de octubre de 2026, después de 10e.
 >
 > **Cómo leerlo.** Igual que los demás capítulos. Las etiquetas **[Validado]**, **[Aproximación]** y **[Diseño propio]** se explican en el capítulo 1 (sección 1.8). Los ejemplos son inventados.
 

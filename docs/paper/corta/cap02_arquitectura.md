@@ -1,6 +1,6 @@
 # Capítulo 2. Inventario y arquitectura de datos
 
-> **Para qué sirve este capítulo.** Explica *cómo se obtiene, se guarda, se asigna a un día y se organiza* cada dato de Vestigium Mei, y por qué cada decisión es razonable (o no). Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». Los ejemplos numéricos son **sintéticos**. Cada decisión se marca como **[Validado]** (respaldada por literatura o por un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app sin referente directo). Los hallazgos de este capítulo son H-1-n (módulo 1); los H-9-n son de la revisión general.
+> **Para qué sirve este capítulo.** Explica *cómo se obtiene, se guarda, se asigna a un día y se organiza* cada dato de Vestigium Mei, y por qué cada decisión es razonable (o no). Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». Los ejemplos numéricos son **sintéticos**. Cada decisión se marca como **[Validado]** (respaldada por literatura o por un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app sin referente directo). Los hallazgos de este capítulo son H-1-n (módulo 1); los H-9-n son de la revisión general.
 
 ---
 

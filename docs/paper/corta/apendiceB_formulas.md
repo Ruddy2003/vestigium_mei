@@ -1,6 +1,6 @@
 # Apéndice B. Fórmulas
 
-_Las fórmulas esenciales del núcleo estadístico (capítulo 6), con la función de origen. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`). Se conservan las etiquetas B.n de la versión completa, que trae además la media móvil (B.17), las cifras de «Tus números» (B.19) y la ventana de los cuestionarios (B.21). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
+_Las fórmulas esenciales del núcleo estadístico (capítulo 6), con la función de origen. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`). Se conservan las etiquetas B.n de la versión completa, que trae además la media móvil (B.17), las cifras de «Tus números» (B.19) y la ventana de los cuestionarios (B.21). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
 
 ---
 

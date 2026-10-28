@@ -1,6 +1,6 @@
 # Capítulo 3. Medición del estado subjetivo
 
-> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento y el del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras. Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número y qué tan sólido es eso. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». **Los ejemplos numéricos son inventados.** Los hallazgos se numeran H-2-n (módulo 2). El seguimiento privado se describe solo en su mecánica.
+> **Para qué sirve este capítulo.** Explica **cómo mide la app lo que sientes y piensas**: el ánimo en el momento y el del día, las emociones con nombre, los cuestionarios, los sueños, con quién estuviste y algunas mediciones raras. Para cada cosa dice qué se pregunta, cuándo, en qué escala, cómo se convierte en número y qué tan sólido es eso. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». **Los ejemplos numéricos son inventados.** Los hallazgos se numeran H-2-n (módulo 2). El seguimiento privado se describe solo en su mecánica.
 
 ---
 
