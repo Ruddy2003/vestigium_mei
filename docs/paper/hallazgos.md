@@ -58,7 +58,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** tras viajes o cambios de horario, la hora de dormir/uso y la asignación al día lógico pueden desplazarse.
 - **Gravedad:** Baja (sujeto con poca movilidad entre zonas) / Media (viajes largos).
 - **Propuesta:** respetar el desfase guardado en el ISO (`OffsetDateTime`) al calcular hora y día lógico.
-- **Estado:** Pendiente (v90): respetar el desfase guardado cambia cómo se reparte cada registro en días; es un cambio grande que conviene decidir aparte.
+- **Estado:** Resuelto en 10f (v92, esquema 15; D.109, D.110): cada instante se lee con la zona que tenía el teléfono entonces (`Fechas.zonaEn`, historial `Config.zonas`) y cada nota con su propio desfase; `desfase_utc_h` y `cambio_horario` marcan los días con cambio de hora. Lo guardado antes de que existiera el historial usa la zona de hoy, salvo los periodos que las notas delatan con otro desfase.
 
 ### H-1-8 · El diccionario no versiona definiciones por variable
 - **Dónde:** `data/Diccionario.kt` / `Exportar.kt` (`vm_diccionario.csv`).
@@ -66,7 +66,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** exportaciones de distintas fechas pueden no ser comparables sin que lo advierta el archivo.
 - **Gravedad:** Baja.
 - **Propuesta:** añadir columna `desde_version` y registro de cambios por variable.
-- **Estado:** Pendiente (v90): falta la columna `desde_version` por variable; el Apéndice D tiene el historial.
+- **Estado:** Resuelto en 10f (v92; D.115): `vm_diccionario.csv` trae `desde_version` y `cambio` por columna, con su fila del Apéndice D. Antes de la v85 no hay registro: vacío = sin cambios desde la v84.
 
 ### H-1-9 · Los días importados no reciben sellos de tiempo ni versión
 - **Dónde:** `data/Repo.kt`, `importarDias()` (guarda `d` sin pasar por `guardarDia`).
@@ -108,7 +108,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** la serie mezcla dos tipos de fuente con sesgos distintos; puede introducir un salto artificial entre periodos.
 - **Gravedad:** Media.
 - **Propuesta:** registrar la fuente por día y, cuando sea posible, reemplazar pronóstico por reanálisis al estar disponible.
-- **Estado:** Pendiente (v90): registrar la fuente del clima por día cambia lo que se guarda y la consulta a Open-Meteo; no se puede comprobar sin la red.
+- **Estado:** Resuelto en 10f (v92, esquema 15; D.111): `EntornoDia.fuente` (deducida en lo de antes) y `clima_reanalisis` en el panel exportado; los días del último año que vinieron del pronóstico se cambian por el reanálisis a los 80 días. El índice UV solo existe en el pronóstico. No se comprobó con la red.
 
 ### H-3-5 · Distancia (km) es cota inferior y mezcla fuentes de precisión distinta
 - **Dónde:** `ciencia/Estadistica.kt`, `kmPorDia`.
@@ -132,7 +132,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** sobreestimaría el tiempo sin wifi.
 - **Gravedad:** Baja–Media (no pude verificarlo sin el teléfono).
 - **Propuesta:** distinguir «sin permiso/dato» de «sin red»; revisar en el dispositivo.
-- **Estado:** Pendiente, con riesgo bajo: `Percepcion.wifi` solo cuenta «sin wifi» si `networkId == −1` y la IP es 0, o si no hay información, así que el mecanismo es poco probable (no comprobado en un teléfono). Necesita revisarse en el teléfono.
+- **Estado:** Resuelto en 10f (v92, esquema 15; D.112): `ConnectivityManager` dice si hay wifi aunque el nombre venga oculto, y lo que no se pudo saber va a `wifi_sin_dato_min`, no a `sin_wifi_min`. No se probó en un teléfono.
 
 ### H-3-8 · Detalles de almacenamiento de ubicación
 - **Dónde:** `sensores/Percepcion.kt`/`Ubicacion.kt` (inserta siempre una muestra por pulso, aunque el comentario dice que solo si cambió algo) y `Importaciones.kt` (puntos de Maps sin precisión).
@@ -721,7 +721,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** el prerregistro queda incompleto (ver H-7-4); su valor depende de la disciplina del usuario.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar; opcionalmente, sellar también el umbral de decisión y guardar una huella (hash) del texto sellado.
-- **Estado:** Pendiente en lo principal (el sello no fija el análisis). Desde el esquema 13 (10b), `Fusion.experimento` hace que restaurar un respaldo no reescriba el texto ni el plan de un experimento que ya está en el teléfono. Sellar el criterio de decisión cambiaría lo que se guarda: queda para decidir.
+- **Estado:** Resuelto en 10f (v92, esquema 15; D.113): se sellan también el sentido esperado y la diferencia mínima, con una huella SHA-256 de todo lo sellado; al terminar el plan, la app y `vm_experimento` dicen si el criterio se cumplió, y la tarjeta avisa si lo sellado cambió. Sigue dependiendo de que se fije antes de mirar: el criterio es opcional.
 
 ### H-7-11 · No hay función de R para analizar los experimentos
 - **Dónde:** `assets/vestigium.R` (lee `vm_experimentos.csv` pero no lo usa); `data/Exportar.kt`, `filasExperimentos()`.
@@ -753,7 +753,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** en un antes/después, la progresión se confunde con el efecto (sección 8.8 del capítulo 8).
 - **Gravedad:** Baja.
 - **Propuesta:** medir con un ejercicio fijo de referencia (o el máximo estimado en ese ejercicio) y documentar el riesgo de tendencia.
-- **Estado:** Pendiente (v90): elegir un ejercicio fijo de referencia es una decisión del autor.
+- **Estado:** Resuelto en 10f (v92, esquema 15; D.114): la plantilla «Creatina» mide `fuerza_ref_kg`, la 1RM estimada en un ejercicio fijo (press inclinado con mancuernas), y su nota advierte que la progresión la sube sola.
 
 ## Módulo 8 · Reportes, motivación, privacidad e integridad (v81, commit `fa527df`)
 
@@ -803,7 +803,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** incentivo (pequeño) a sesgar la valencia; ley de Campbell.
 - **Gravedad:** Baja.
 - **Propuesta:** reemplazarlas por logros de registro (p. ej., «registraste un día difícil con un toque») o solo documentar.
-- **Estado:** Pendiente (v90): cambiar o quitar los logros «Día perfecto» y «Remontada» es una decisión del autor (quitarlos borraría medallas ya ganadas).
+- **Estado:** Resuelto por decisión del autor (10f; D.117): «Día perfecto» y «Remontada» se quedan como están; el riesgo queda documentado.
 
 ### H-8-7 · Las campañas no quedan registradas como variable
 - **Dónde:** `ciencia/Campanas.kt`; `Config.campanas`; ausentes de `Estadistica.panel` y de la exportación tabular.
@@ -892,7 +892,7 @@ _Pistas preliminares del plan: la 5 (Pearson y Spearman mezclados) se **confirma
 - **Por qué importa:** la descripción de qué sale del teléfono es la base para decidir qué es privado; hoy subestima las salidas, aunque las omitidas no envían datos del diario.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar (actualizar la sección 1 del documento de contexto); opcionalmente, mostrar en la app una lista de servicios externos con lo que recibe cada uno.
-- **Estado:** Resuelto en 10e (D.103): el texto de privacidad de la app nombra todos los servicios y lo que recibe cada uno. El documento de contexto, que no está en el repositorio, hay que actualizarlo a mano.
+- **Estado:** Resuelto en 10e y 10f (D.103, D.116): el texto de privacidad nombra todos los servicios y Ajustes › Privacidad los lista, plegados, con lo que recibe cada uno (`Red.SERVICIOS`). El autor está de acuerdo con lo que se envía.
 
 ## Módulo 9 · Revisión metodológica general (v84, commit `3abc1c9`; código igual a `fa527df`)
 
