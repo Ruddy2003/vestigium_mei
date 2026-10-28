@@ -1,4 +1,4 @@
-"""Figura 7.2 - Restricción de Burt del ego (tú) en cuatro redes SINTÉTICAS de 6 personas, calculada como vm_red()
+"""Figura 7.3 - Restricción de Burt del ego (tú) en cuatro redes SINTÉTICAS de 6 personas, calculada como vm_red()
 (ego unido a todas; igraph::constraint). Se implementa la fórmula a mano y se compara con networkx.
 Uso: python fig18_burt_puente.py [salida.png]"""
 import sys, itertools, math
@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 def restriccion(adj, i):
     """C_i = Σ_j (p_ij + Σ_q p_iq·p_qj)², con p_ij = a_ij / Σ_k a_ik (red no dirigida y sin pesos)."""
@@ -45,19 +46,19 @@ for ax, (titulo, aristas) in zip(ejes, escenarios):
         pass
     resultados.append((titulo.replace("\n", " "), C, dens))
     ax.set_aspect("equal"); ax.axis("off"); ax.set_xlim(-1.35, 1.35); ax.set_ylim(-1.45, 1.35)
-    for k in range(6): ax.plot([0, xy[k, 0]], [0, xy[k, 1]], color="#d1d5db", lw=1, zorder=1)
+    for k in range(6): ax.plot([0, xy[k, 0]], [0, xy[k, 1]], color=estilo.GRIS_CLARO, lw=1, zorder=1)
     for a, b in aristas:
         puente = (a, b) == (2, 3) and "puente" in titulo
-        ax.plot(*zip(xy[a], xy[b]), color="#bc6c25" if puente else "#2a6f97", lw=2.6 if puente else 1.8, zorder=2)
-    ax.scatter(xy[:3, 0], xy[:3, 1], s=230, color="#6a994e", zorder=3); ax.scatter(xy[3:, 0], xy[3:, 1], s=230, color="#e09f3e", zorder=3)
+        ax.plot(*zip(xy[a], xy[b]), color=estilo.OCRE if puente else estilo.AZUL, lw=2.6 if puente else 1.8, zorder=2)
+    ax.scatter(xy[:3, 0], xy[:3, 1], s=230, color=estilo.VERDE, zorder=3); ax.scatter(xy[3:, 0], xy[3:, 1], s=230, color=estilo.OCRE_CLARO, zorder=3)
     for k, t in enumerate(ALT): ax.text(*xy[k], t, ha="center", va="center", fontsize=7, color="white", zorder=4)
-    ax.scatter([0], [0], s=260, color="#1f2937", zorder=3); ax.text(0, 0, "tú", ha="center", va="center", fontsize=7.5, color="white", zorder=4)
-    ax.set_title(titulo, fontsize=9, color="#1f2937")
-    ax.text(0, -1.3, f"restricción C = {C:.3f}\ndensidad = {dens:.0%}", ha="center", va="center", fontsize=8.5, color="#1f2937")
+    ax.scatter([0], [0], s=260, color=estilo.TINTA, zorder=3); ax.text(0, 0, "tú", ha="center", va="center", fontsize=7.5, color="white", zorder=4)
+    ax.set_title(titulo, fontsize=9, color=estilo.TINTA)
+    ax.text(0, -1.3, f"restricción C = {C:.3f}\ndensidad = {dens:.0%}", ha="center", va="center", fontsize=8.5, color=estilo.TINTA)
 
 fig.text(0.01, 0.02, "Líneas grises: tú con cada persona (vm_red() las agrega siempre). Azul: se conocen entre sí. Naranja: el puente. "
-         "Menor C = tus contactos se conocen menos entre sí (más «huecos estructurales»).", fontsize=7.8, color="#374151")
-fig.suptitle("Figura 7.2  Restricción de Burt del ego en cuatro redes de 6 personas (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
+         "Menor C = tus contactos se conocen menos entre sí (más «huecos estructurales»).", fontsize=7.8, color=estilo.TINTA_2)
+fig.suptitle("Restricción de Burt del ego en cuatro redes de 6 personas (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.tight_layout(rect=(0, 0.05, 1, .93))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig18_burt_puente.png")
 for t, C, d in resultados: print(f"{t:40s} C={C:.4f} densidad={d:.3f}")

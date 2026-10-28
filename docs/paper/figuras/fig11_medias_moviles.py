@@ -1,4 +1,4 @@
-"""Figura 6.1 - Serie diaria con medias móviles de 7 y 30 días (datos SINTÉTICOS).
+"""Figura 6.5 - Serie diaria con medias móviles de 7 y 30 días (datos SINTÉTICOS).
 Replica Analisis.movil (y vm_movil en R): para cada día d del calendario se promedian los valores de los días
 d, d-1, ..., d-(ventana-1) que existan, y el punto solo se dibuja si hay al menos max(2, ventana/3) días con dato
 (división entera: 2 días para la de 7, 10 días para la de 30). La ventana es HACIA ATRÁS (no centrada).
@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 rng = np.random.default_rng(11)
 N = 200
@@ -29,10 +30,10 @@ def movil(y, ventana):
 
 m7, m30 = movil(y, 7), movil(y, 30)
 fig, ax = plt.subplots(figsize=(12, 4.4), dpi=160)
-ax.plot(t, y, "o", ms=3.2, color="#9ca3af", label="valencia del día (1 a 7)")
-ax.plot(t, m7, color="#2a6f97", lw=1.6, label="media móvil de 7 días (mín. 2 días con dato)")
-ax.plot(t, m30, color="#b45309", lw=3, label="media móvil de 30 días (mín. 10 días con dato)")
-ax.axvspan(95, 111, color="#fde68a", alpha=.5)
+ax.plot(t, y, "o", ms=3.2, color=estilo.GRIS_MEDIO, label="valencia del día (1 a 7)")
+ax.plot(t, m7, color=estilo.AZUL, lw=1.6, label="media móvil de 7 días (mín. 2 días con dato)")
+ax.plot(t, m30, color=estilo.OCRE, lw=3, label="media móvil de 30 días (mín. 10 días con dato)")
+ax.axvspan(95, 111, color=estilo.OCRE_PALIDO, alpha=.5)
 ax.text(103, 6.75, "17 días sin registro: la de 7 se corta enseguida;\nla de 30 sigue mientras su ventana tenga ≥ 10 días\ncon dato y luego también se corta", ha="center", fontsize=8)
 ax.set_ylim(0.6, 7.6); ax.set_xlabel("día"); ax.set_ylabel("valencia")
 ax.set_title("Medias móviles hacia atrás: la línea de cada día solo mira el pasado, por eso se «retrasa» frente al cambio")

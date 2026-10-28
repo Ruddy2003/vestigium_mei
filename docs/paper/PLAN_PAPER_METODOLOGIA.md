@@ -23,10 +23,10 @@ _Creado el 26 oct 2026 sobre la versión v81 (commit `fa527df`). Este archivo es
 | 8 | Reportes, motivación, privacidad e integridad | Sonnet | Medio | Caps. 9 y 10 | hecho 2026-10-27 |
 | 9 | Revisión metodológica general (diagnóstico) | Opus | Alto | Lista de cambios propuestos | hecho 2026-10-27 |
 | 10 | Aplicar los cambios aprobados | Sonnet | Alto | Código + Apéndice D | hecho 2026-10-28 (10a y 10b el 2026-10-27; 10c y 10d el 2026-10-28) |
-| 11 | Introducción, marco teórico, discusión y limitaciones | Opus | Alto | Caps. 1 y 11 | pendiente |
-| 12 | Ensamblado: figuras, formato y referencias | Sonnet | Medio | Documento completo | pendiente |
-| 13 | Corrección mecánica | Haiku | Bajo | Documento corregido | pendiente |
-| 14 | Lectura final de contenido | Opus | Medio | Versión final | pendiente |
+| 11 | Introducción, marco teórico, discusión y limitaciones | Opus | Alto | Caps. 1 y 11 | hecho 2026-10-28 (resumen en `resumen.md`) |
+| 12 | Ensamblado: figuras, formato y referencias | Sonnet | Medio | Documento completo | hecho 2026-10-28 (`ensamblado/`: .md, .docx y .pdf; también como documento de Claude) |
+| 13 | Corrección mecánica | Haiku | Bajo | Documento corregido | hecho 2026-10-28 (glosario en `apendiceE_glosario.md`; lista para el 14 en `pendientes_modulo14.md`) |
+| 14 | Lectura final de contenido | Opus | Medio | Versión final | hecho 2026-10-28 (versión completa y versión corta en `ensamblado/` y en el documento de Claude) |
 
 **Por qué este reparto.** Opus va donde un error de razonamiento arruina el capítulo: medición psicológica, modelos fisiológicos, estadística, diseño experimental, la revisión y la discusión. Sonnet va donde el trabajo es leer mucho código y describirlo con precisión, programar figuras y ensamblar. Haiku solo hace trabajo mecánico que no requiere juicio científico.
 
@@ -148,7 +148,7 @@ Distinguir siempre entre lo que es **validado en la literatura**, lo que es una 
 - **Qué hace:** ortografía, acentos, puntuación, términos usados de forma consistente (por ejemplo, siempre «valencia» y no a veces «ánimo» para la misma variable), que cada figura y tabla citada exista, que la numeración sea continua y que el glosario cubra los términos técnicos. **No cambia contenido científico**: si algo parece un error de fondo, lo anota en una lista para el módulo 14.
 
 ### Módulo 14 · Lectura final de contenido (Opus, medio)
-- **Qué hace:** lee el paper completo como lo leería un revisor; revisa la lista que dejó el módulo 13; comprueba que ningún dato real se haya colado; verifica que lo que dice el paper coincide con el código de la versión final; corrige lo necesario y entrega la versión final.
+- **Qué hace:** lee el paper completo como lo leería un revisor; revisa la lista que dejó el módulo 13 (`pendientes_modulo14.md`); comprueba que ningún dato real se haya colado; verifica que lo que dice el paper coincide con el código de la versión final; corrige lo necesario y entrega la versión final.
 
 ## Pistas preliminares para la revisión (por verificar en los módulos 5, 6, 7 y 9)
 

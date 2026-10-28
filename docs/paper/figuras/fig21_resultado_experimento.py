@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 rng = np.random.default_rng(8)
 
@@ -119,11 +120,11 @@ dias = np.arange(n)
 n10 = diferencia_10c(dias[cuenta & toca], a_, dias[cuenta & ~toca], b_)   # lo que da la app desde la entrega 10c
 
 fig, (a, b) = plt.subplots(1, 2, figsize=(12, 4.9), dpi=160, gridspec_kw={"width_ratios": [1.25, 1]})
-a.scatter(dias[cuenta & toca], y[cuenta & toca] + rng.uniform(-.08, .08, (cuenta & toca).sum()), color="#2a6f97", s=22, label="con la acción")
-a.scatter(dias[cuenta & ~toca], y[cuenta & ~toca] + rng.uniform(-.08, .08, (cuenta & ~toca).sum()), color="#e09f3e", s=22, label="sin la acción")
-a.scatter(dias[~cuenta], y[~cuenta], facecolor="none", edgecolor="#9ca3af", s=22, label="lavado (no cuenta)")
-for s, t in enumerate(plan): a.axvspan(s * 7 - .5, s * 7 + 6.5, color="#2a6f97" if t else "#e09f3e", alpha=.06)
-a.axhline(a_.mean(), color="#2a6f97", lw=1); a.axhline(b_.mean(), color="#e09f3e", lw=1)
+a.scatter(dias[cuenta & toca], y[cuenta & toca] + rng.uniform(-.08, .08, (cuenta & toca).sum()), color=estilo.AZUL, s=22, label="con la acción")
+a.scatter(dias[cuenta & ~toca], y[cuenta & ~toca] + rng.uniform(-.08, .08, (cuenta & ~toca).sum()), color=estilo.OCRE_CLARO, s=22, label="sin la acción")
+a.scatter(dias[~cuenta], y[~cuenta], facecolor="none", edgecolor=estilo.GRIS_MEDIO, s=22, label="lavado (no cuenta)")
+for s, t in enumerate(plan): a.axvspan(s * 7 - .5, s * 7 + 6.5, color=estilo.AZUL if t else estilo.OCRE_CLARO, alpha=.06)
+a.axhline(a_.mean(), color=estilo.AZUL, lw=1); a.axhline(b_.mean(), color=estilo.OCRE_CLARO, lw=1)
 a.set_ylim(.5, 9.6); a.set_yticks(range(1, 8)); a.set_xlabel("día del experimento", fontsize=8.5); a.set_ylabel("valencia del día", fontsize=8.5); a.tick_params(labelsize=8)
 a.legend(fontsize=7.5, loc="lower left", frameon=False, ncol=3)
 txt = (f"con: {a_.mean():.2f} (n={na})   sin: {b_.mean():.2f} (n={nb})\n"
@@ -134,9 +135,9 @@ txt = (f"con: {a_.mean():.2f} (n={na})   sin: {b_.mean():.2f} (n={nb})\n"
        f"  app desde 10c:        {n10[1]:+.2f} a {n10[2]:+.2f}\n"
        f"    (ρ con {n10[3]:.2f}, sin {n10[4]:.2f}; {n10[5]:.1f} gl)\n"
        f"d de Cohen {dc:.2f} (Hedges: {dc * J:.2f})")
-a.text(.01, .985, txt, transform=a.transAxes, ha="left", va="top", fontsize=7.6, family="monospace", color="#1f2937",
-       bbox=dict(fc="white", ec="#d1d5db"))
-a.set_title("Un experimento inventado: 6 semanas alternas, 1 día de lavado, efecto real +0.5", loc="left", fontsize=9.3, color="#1f2937")
+a.text(.01, .985, txt, transform=a.transAxes, ha="left", va="top", fontsize=7.6, family="monospace", color=estilo.TINTA,
+       bbox=dict(fc="white", ec=estilo.GRIS_CLARO))
+a.set_title("Un experimento inventado: 6 semanas alternas, 1 día de lavado, efecto real +0.5", loc="left", fontsize=9.3, color=estilo.TINTA)
 
 rng = np.random.default_rng(8)
 N = 3000
@@ -147,17 +148,17 @@ tasas = [np.mean([corrida(phi, mirar=m) for _ in range(N)]) for _, phi, m in cas
 # (el resultado es «provisional»): solo cuenta mirar al final.
 nuevas = [np.mean([corrida(phi, nuevo=True) for _ in range(N)]) for _, phi, m in casos[:3]]
 x = np.arange(len(casos))
-b.bar(x - .2, tasas, width=.4, color="#bc6c25", label="antes de 10c")
-b.bar(x[:3] + .2, nuevas, width=.4, color="#2a6f97", label="desde 10c")
+b.bar(x - .2, tasas, width=.4, color=estilo.OCRE, label="antes de 10c")
+b.bar(x[:3] + .2, nuevas, width=.4, color=estilo.AZUL, label="desde 10c")
 for i, t in enumerate(tasas): b.text(i - .2, t + .01, f"{t:.0%}", ha="center", fontsize=7.8)
-for i, t in enumerate(nuevas): b.text(i + .2, t + .01, f"{t:.0%}", ha="center", fontsize=7.8, color="#2a6f97")
-b.text(1.2, max(tasas) * .62, "desde 10c, mientras dura el plan\nel resultado es «provisional» y no\nhabla de «señal»: solo cuenta\nmirar al final", ha="center", fontsize=7.2, color="#2a6f97")
-b.axhline(.05, color="#1f2937", ls="--", lw=1); b.text(4.45, .057, "5 % prometido", ha="right", fontsize=7.5)
+for i, t in enumerate(nuevas): b.text(i + .2, t + .01, f"{t:.0%}", ha="center", fontsize=7.8, color=estilo.AZUL)
+b.text(1.2, max(tasas) * .62, "desde 10c, mientras dura el plan\nel resultado es «provisional» y no\nhabla de «señal»: solo cuenta\nmirar al final", ha="center", fontsize=7.2, color=estilo.AZUL)
+b.axhline(.05, color=estilo.TINTA, ls="--", lw=1); b.text(4.45, .057, "5 % prometido", ha="right", fontsize=7.5)
 b.legend(fontsize=7.5, frameon=False, loc="upper left")
 b.set_xticks(x); b.set_xticklabels([c[0] for c in casos], fontsize=7.3)
 b.set_ylabel("experimentos SIN efecto que dan «señal»", fontsize=8.3); b.tick_params(axis="y", labelsize=8); b.set_ylim(0, max(tasas) + .08)
-b.set_title(f"Falsas señales del método de la app ({N} simulaciones)", loc="left", fontsize=9.3, color="#1f2937")
-fig.suptitle("Figura 8.2  El resultado de un experimento y qué tan seguido engaña (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
+b.set_title(f"Falsas señales del método de la app ({N} simulaciones)", loc="left", fontsize=9.3, color=estilo.TINTA)
+fig.suptitle("El resultado de un experimento y qué tan seguido engaña (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.tight_layout(rect=(0, 0, 1, .93))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig21_resultado_experimento.png")
 print(txt); print(dict(zip([c[0].replace("\n", " ") for c in casos], [round(t, 3) for t in tasas]))); print("10c:", [round(t, 3) for t in nuevas])

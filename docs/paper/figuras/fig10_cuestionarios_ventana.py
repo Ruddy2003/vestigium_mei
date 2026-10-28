@@ -12,6 +12,7 @@ MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "
 def fc(d): return f"{d.day:02d} {MESES[d.month - 1]}"
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 d0 = dt.date(2026, 3, 1)
 resp = [(d0 + dt.timedelta(days=7 * k), v) for k, v in enumerate([4, 6, 9, 5, 7])]   # cada semana, puntajes 0-16
@@ -28,16 +29,16 @@ for f, v in sorted(resp):                                  # porDiaCuestionario:
 
 fig, ax = plt.subplots(figsize=(12, 4.3), dpi=160)
 da = sorted(antes)
-ax.step([(d - d0).days for d in da], [antes[d][0] for d in da], where="mid", color="#b45309", lw=1.8, ls="--",
+ax.step([(d - d0).days for d in da], [antes[d][0] for d in da], where="mid", color=estilo.OCRE, lw=1.8, ls="--",
         label="antes de la entrega 10c: ventana de 30 días hacia atrás, gana la última respuesta")
 dn = sorted(ahora)
-ax.step([(d - d0).days for d in dn], [ahora[d][0] for d in dn], where="mid", color="#2a6f97", lw=2.2,
+ax.step([(d - d0).days for d in dn], [ahora[d][0] for d in dn], where="mid", color=estilo.AZUL, lw=2.2,
         label="ahora: los 7 días que pregunta cada respuesta (gana la primera que cubre el día)")
 for f, v in resp:
-    ax.plot((f - d0).days, v, "o", color="#111827", ms=6); ax.text((f - d0).days, v + 0.5, f"responde\n{fc(f)}: {v}", ha="center", fontsize=7.5)
+    ax.plot((f - d0).days, v, "o", color=estilo.TINTA, ms=6); ax.text((f - d0).days, v + 0.5, f"responde\n{fc(f)}: {v}", ha="center", fontsize=7.5, bbox=dict(fc="white", ec="none", pad=1))
 ejemplo = d0 + dt.timedelta(days=2)
 ax.annotate(f"{fc(ejemplo)}: antes {antes[ejemplo][0]} (respuesta del {fc(antes[ejemplo][1])});\nahora {ahora[ejemplo][0]} (respuesta del {fc(ahora[ejemplo][1])})",
-            xy=((ejemplo - d0).days, ahora[ejemplo][0]), xytext=(-24, 11.5), fontsize=8, arrowprops=dict(arrowstyle="->", color="#374151"))
+            xy=((ejemplo - d0).days, ahora[ejemplo][0]), xytext=(-24, 11.5), fontsize=8, arrowprops=dict(arrowstyle="->", color=estilo.TINTA_2))
 ticks = list(range(-28, 30, 7))
 ax.set_xticks(ticks); ax.set_xticklabels([fc(d0 + dt.timedelta(days=t)) for t in ticks])
 ax.set_ylim(0, 14); ax.set_ylabel("PSS-4 (0 a 16)")

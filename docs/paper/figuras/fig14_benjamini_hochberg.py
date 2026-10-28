@@ -1,4 +1,4 @@
-"""Figura 6.4 - Corrección de Benjamini-Hochberg con 200 pruebas simuladas (datos SINTÉTICOS).
+"""Figura 6.3 - Corrección de Benjamini-Hochberg con 200 pruebas simuladas (datos SINTÉTICOS).
 180 pares sin relación real y 20 con una relación verdadera (r = 0.35) en n = 90 días independientes.
 Se calcula p con Fisher (como Estadistica.relaciones) y q con Analisis.bh: se ordenan los p de menor a mayor y
 q_(k) = min_{j>=k} p_(j) * m / j. La app llama «se sostiene» a q < 0.10. Uso: python fig14_benjamini_hochberg.py [salida.png]"""
@@ -8,6 +8,7 @@ from math import erfc, sqrt
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 rng = np.random.default_rng(14)
 N, M0, M1, RHO, Q = 90, 180, 20, 0.35, 0.10
@@ -26,9 +27,9 @@ q = bh(p)
 orden = np.argsort(p); k = np.arange(1, m + 1)
 crudo = p < 0.05; corr = q < Q
 fig, ax = plt.subplots(1, 2, figsize=(12, 4.6), dpi=160, gridspec_kw={"width_ratios": [1.6, 1]})
-ax[0].scatter(k, p[orden], s=14, c=np.where(real[orden], "#2a6f97", "#9ca3af"), zorder=3)
-ax[0].plot(k, Q * k / m, color="#b45309", lw=2, label=f"línea de BH: {Q} · k / {m}")
-ax[0].axhline(.05, color="#111827", ls="--", lw=1, label="umbral sin corregir: p < 0.05")
+ax[0].scatter(k, p[orden], s=14, c=np.where(real[orden], estilo.AZUL, estilo.GRIS_MEDIO), zorder=3)
+ax[0].plot(k, Q * k / m, color=estilo.OCRE, lw=2, label=f"línea de BH: {Q} · k / {m}")
+ax[0].axhline(.05, color=estilo.TINTA, ls="--", lw=1, label="umbral sin corregir: p < 0.05")
 ax[0].set_xlim(0, 60); ax[0].set_ylim(0, .2)
 ax[0].set_xlabel("rango k (pares ordenados por p, de menor a mayor; se muestran los primeros 60)"); ax[0].set_ylabel("p")
 ax[0].set_title("Azul: relación real · gris: sin relación")

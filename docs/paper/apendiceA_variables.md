@@ -1,6 +1,6 @@
 # Apéndice A. Variables y tablas del sistema
 
-_Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt` y `data/Exportar.kt` (`tablas()`). Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
+_Se generó a partir del código de la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper: `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt`, `data/Exportar.kt` (`tablas()`) y `data/Diccionario.kt`. Lo que cambió en el módulo 10 se marca «desde 10a…10d» y está en el Apéndice D. Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
 
 **Cómo leer las columnas.** *Tipo* y *Unidad* se leen del nombre que ve el usuario en la app (la app no guarda un tipo formal por variable). *Fuente* es la de todo el grupo; la procedencia exacta de cada variable está en el panel (`Estadistica.panel`). *Un valor vacío significa «sin dato»; un 0 significa «se observó y fue cero»* salvo en las reglas de relleno con ceros del capítulo 2, sección 2.6. Las definiciones que cambiaron en la entrega 10c (cuándo vale 0 y cuándo queda vacía cada variable) están en la sección A.6.
 
@@ -74,8 +74,8 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `sueno_palabras` | Palabras del sueño escrito | numérica | — | Si hay datos de la fuente |
 | `sueno_lucidez` | Lucidez del sueño (0 no, 1 parcial, 2 total) | numérica | — | Si hay datos de la fuente |
 | `sueno_vividez` | Vividez del sueño (0 vago, 1 moderado, 2 muy vívido) | numérica | — | Si hay datos de la fuente |
-| `siesta` | Tomé siesta (0/1) | binaria (0/1) | — | Si hay tramos del cronómetro |
-| `siesta_min` | Minutos de siesta | numérica | — | Si hay tramos del cronómetro |
+| `siesta` | Tomé siesta (0/1) | binaria (0/1) | — | Si hay siestas en el cronómetro |
+| `siesta_min` | Minutos de siesta | numérica | — | Si hay siestas en el cronómetro |
 | `cama_min` | Pantalla en la última hora antes de dormir (min) | numérica | min | Si hay datos de pantalla nocturna |
 | `dormir_tras_tel_min` | Minutos entre soltar el teléfono y dormirte | numérica | — | Si hay datos de pantalla nocturna |
 | `tel_tras_despertar_min` | Minutos entre despertar y tomar el teléfono | numérica | — | Si hay datos de uso al despertar |
@@ -291,12 +291,12 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `tabaco_n` | Cigarros o sesiones de vape | numérica | — | Si hay consumos de tabaco |
 | `otra_sustancia` | Otra sustancia (0/1) | binaria (0/1) | — | Si hay consumos de «otra» |
 | `cruda` | Cruda o bajón (0 a 5, del día anterior) | numérica | — | Si algún consumo tiene cruda |
-| `cafeina_total_mg` | Cafeína del día (MacroFactor o anotada, mg) | numérica | — | Si hay cafeína registrada o en MacroFactor |
-| `cafeina_al_dormir_mg` | Cafeína en el cuerpo al dormirme (mg, estimada) | numérica | — | Si hay cafeína registrada o en MacroFactor |
+| `cafeina_total_mg` | Cafeína del día (MacroFactor o anotada, mg) | numérica | mg | Si hay cafeína registrada o en MacroFactor |
+| `cafeina_al_dormir_mg` | Cafeína en el cuerpo al dormirme (mg, estimada) | numérica | mg | Si hay cafeína registrada o en MacroFactor |
 
 ### Privado
 
-*Fuente:* Pantalla Privado. Desde el módulo 10a estas variables **no aparecen en ninguna lista ni análisis de la app**; el panel las calcula siempre (con o sin el interruptor) y van en la exportación para R. Tampoco aparece `hab_` del hábito ligado a las recaídas.
+*Fuente:* Pantalla Privado. Desde el módulo 10a estas variables **no aparecen en ninguna lista ni análisis de la app**; el panel las calcula siempre (con o sin el interruptor) y van en la exportación para R (en `vm_variables.csv`, con `privada` = 1). La regla es `Privado.esVariable`: las de `Privado.VARIABLES`, las familias `med_` y `det_`, y el `hab_` y el `campana_hab_` del hábito ligado a las recaídas.
 
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
@@ -306,8 +306,8 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | `recaida_min` | Minutos de recaída | numérica | — | Si hay recaídas con duración |
 | `libido_max` | Libido máxima del día (0 a 5) | numérica | — | Si hay registros de libido |
 | `n_libido` | Registros de libido | numérica | — | Si hay registros de libido |
-| `n_impulso` | Momentos de impulso | numérica | — | Días con diario (hasta v84 estaba en el grupo «Momentos» y entraba siempre en los análisis) |
-| `medicamentos_n` | Medicamentos tomados | numérica | — | Desde el primer día con medicamentos (hasta v84, grupo «Salud») |
+| `n_impulso` | Momentos de impulso | numérica | — | Días con diario desde el primer impulso (10c; antes, todos los días con diario). Hasta v84 estaba en el grupo «Momentos» y entraba en los análisis |
+| `medicamentos_n` | Medicamentos tomados | numérica | — | Desde el primer día con medicamentos. En el código conserva el grupo «Salud» (así sale en `vm_variables.csv`), pero desde 10a es privada; hasta v84 entraba en los análisis |
 
 ### Enfoque
 
@@ -334,35 +334,27 @@ _Generado a partir del código de la versión v81 (commit `fa527df`): `ciencia/E
 | Identificador | Descripción | Tipo | Unidad | Existe |
 |---|---|---|---|---|
 | `laptop_min` | Minutos en la laptop | numérica | — | Si se importó Cold Turkey |
-| `laptop_web_min` | Minutos en sitios web (laptop) | numérica | — | Si se importó Cold Turkey |
+| `laptop_web_min` | Minutos en sitios web (laptop) | numérica | — | Si se importó Cold Turkey con sitios web |
 
-_Total de variables fijas listadas en el código: 177 en 22 grupos._
+_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. En la v90 son **184, con 24 nombres de grupo**. Las tablas de arriba traen **183 en 21 grupos**, porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, y 10c, `presencias_revisado`. No todas existen en cada instalación: 128 se agregan siempre (4 de ellas privadas) y el resto según la columna «Existe»._
 
 ### Variables con nombre generado
 
-Estas se crean una por cada elemento que el usuario ha usado; el identificador lleva el id del elemento.
+Estas se crean una por cada elemento que el usuario ha usado (o, en las de catálogo fijo, una por opción); el identificador lleva el id del elemento. Todas salen de `Estadistica.variables()`; las dos últimas filas tienen nombre fijo y van aquí con su grupo.
 
 | Patrón | Descripción | Grupo |
 |---|---|---|
-| `n_$id` | Registros con ${Catalogo.nombreSentimiento(id).lowercase()} | Sentimientos |
-| `n_$id` | Registros pensando: ${(Catalogo.PENSAMIENTOS.firstOrNull { it.id == id }?.nombre ?: id).lowercase()} | Momentos |
-| `sueno_$id` | Sueño: ${Catalogo.opcionSueno(id)?.nombre?.lowercase() ?: id} (0/1) | Sueños |
-| `enfoque_${t}_min` | Enfoque: ${Catalogo.nombreTramo(t).lowercase()} (min) | Enfoque |
-| `horas_tipo_$t` | Horas en lugares de tipo ${Catalogo.nombreTipoLugar(t).lowercase()} | Lugares |
-| `laptop_${o.id}_min` | Minutos en la laptop: ${o.nombre.lowercase()} | Laptop |
-| `con_${o.id}` | Avisos con ${o.nombre.lowercase()} (0 a 1) | Social |
-| `ctx_${it.id}` | Contexto: ${it.nombre} (0/1) | Contexto |
-| `${p.clave}_${o.id}` | ${o.nombre} (0/1) | Lectura del día |
-| `n_${it.id}` | Momentos de ${it.nombre.lowercase()} | Momentos |
-| `hab_${it.id}` | Hábito: ${it.nombre} (0/1) | Hábitos |
-| `ctx_<id>` | Contexto: <nombre> (0/1); 10 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia | Contexto |
-| `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1) | Lectura del día |
-| `hab_<id>` | Hábito: <nombre> (0/1) | Hábitos |
-| `sueno_<categoria>` | Categoría del sueño marcada (0/1), solo en días con categorías | Sueños |
+| `n_<sentimiento>` | Registros con ‹sentimiento› (los usados, sin «otro») | Sentimientos |
+| `n_<pensamiento>` | Registros pensando: ‹pensamiento› (los usados) | Momentos |
+| `sueno_<categoria>` | Sueño: ‹categoría› (0/1); las categorías usadas, con valor solo en días con categorías | Sueños |
+| `enfoque_<tipo>_min` | Enfoque: ‹tipo› (min); los tipos usados de estudio, lectura, idiomas, tesis, trabajo y creativo | Enfoque |
+| `horas_tipo_<tipo>` | Horas en lugares de tipo ‹tipo›; los tipos de tus lugares, de 12 posibles | Lugares |
+| `laptop_<categoria>_min` | Minutos en la laptop: ‹categoría› (productivo, ocio, social, otro); con Cold Turkey | Laptop |
+| `con_<id>` | Avisos con ‹pareja, amigos, familia, compañeros o desconocidos› (0 a 1); si hay avisos con «con quién» | Social |
+| `ctx_<id>` | Contexto: ‹nombre› (0/1); siempre, los 10 contextos: trabajo, gym, viaje, enfermo, académico, ocio inmersivo, naturaleza, amigos, romántico, familia | Contexto |
+| `flow_<id>`, `sdt_necesidad_<id>`, `apreciacion_<id>` | Opción elegida en las tres preguntas científicas del día (0/1); siempre, 13 opciones (4, 5 y 4; «No aplica» no cuenta) | Lectura del día |
+| `hab_<id>` | Hábito: ‹nombre› (0/1) | Hábitos |
 | `supl_<id>_dosis/_tomado/_nivel/_porciones` | Dosis, toma, reserva o cantidad estimada y porciones del suplemento | Suplementos |
-| `horas_tipo_<tipo>` | Horas en lugares de ese tipo (12 tipos de lugar posibles) | Lugares |
-| `enfoque_<tipo>_min` | Minutos de enfoque de ese tipo (estudio, lectura, idiomas, tesis, trabajo, creativo) | Enfoque |
-| `laptop_<categoria>_min` | Minutos en la laptop por categoría (productivo, ocio, social, otro) | Laptop |
 | `campana_<reto>`, `campana_hab_<id>` | En campaña ese día (0/1; la tenías aceptada). 0 desde tu primera campaña, vacío antes. Desde el esquema 13 | Campañas |
 | `campanas_n` | Campañas que tenías ese día. Desde el esquema 13 | Campañas |
 | `dia_especial` | Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1). Existe si hay alguna fecha guardada. Desde el esquema 13 | Calendario |
@@ -397,15 +389,15 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 | `pais_` | Mundo | 6 | 3 | Horas en ‹elemento› |
 | `musc_` | Cuerpo | 12 | 3 | Series de ‹elemento› |
 | `act_` | Cuerpo | 6 | 3 | Minutos ‹elemento› |
-| `nut_` | Nutrición | 60 | 14 | nombre del nutriente de MacroFactor traducido (p. ej. «Vitamina C (mg)»); excluye los ya fijos, los objetivos y los pasos/peso de MacroFactor |
+| `nut_` | Nutrición | 60 | 14 | nombre del nutriente de MacroFactor traducido (p. ej., «Vitamina C (mg)»); excluye los ya fijos, los objetivos y los pasos/peso de MacroFactor |
 | `ali_` | Nutrición | 12 | 5 | Comí ‹elemento› (0/1) |
-| `esc_` | Cuestionarios | todos | — | «‹cuestionario›: ‹puntaje›»; desde 10c el puntaje vale para su día y los 6 previos (WHO-5, PSS-4) o los 29 previos (UCLA-3), y un día cubierto por dos respuestas se queda con la primera; la personalidad, hasta el test siguiente. Hasta 10c: 14 o 30 días previos, ganando la última |
-| `pol_` | Política | ejes | — | «Brújula: ‹eje›»; la posición de cada test vale hasta el test siguiente (máx. 400 días) |
+| `esc_` | Cuestionarios | todos | — | «‹cuestionario›: ‹puntaje›»; desde 10c el puntaje vale para su día y los 6 previos (WHO-5, PSS-4) o los 29 previos (UCLA-3), y un día cubierto por dos respuestas se queda con la primera; la personalidad, hasta el test siguiente (máx. 365 días, `porDiaCuestionario`). Hasta 10c: 14 o 30 días previos, ganando la última |
+| `pol_` | Política | ejes | — | «Brújula: ‹eje› (−100 ‹polo›, +100 ‹polo›)»; la posición de cada test vale hasta el test siguiente (máx. 400 días) |
 | `vida_` | Etapas de vida | 14 + ciudades | — | «Etapa: ‹campo de Conocerte›»; se reconstruye con el historial de cambios. Desde 10c, vacía antes del primer guardado de «Conocerte» para los campos llenados ese día (`Perfiles.primerGuardado`) |
 
 ## A.3 Tablas exportadas
 
-La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv`, `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por CSV, con las ubicaciones y el diccionario) y un `LEEME.txt`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
@@ -485,8 +477,8 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_momentos.csv`, `vm_gastos.csv`, `vm_ingresos.csv` | `ts_creado`, `ts_editado` | Cuándo se anotó y cuándo se corrigió por última vez. Vacíos en los registros de antes del esquema 14 |
 | `vm_sustancias.csv`, `vm_tramos.csv`, `vm_suplementos.csv` | `ts_creado` | Cuándo se anotó. En `vm_suplementos.csv` va también `ts` (cuándo se tomó); las porciones estimadas de probióticos quedan vacías |
 | `vm_gastos.csv` | `subcategoria` | Subcategoría dentro de la categoría (por ejemplo, Comida → Café). Vacía = sin subcategoría |
-| `vm_dias.csv`, `vm_panel.csv` | `version_noche` | Con qué orden de preguntas se llenó la hoja de la noche: 1 = el de hasta el esquema 14; 2 = el orden nuevo (N-18, desde la entrega N4: el ánimo del momento primero; capítulo 3, sección 3.7.1). Vacío = no pasó por la hoja o es de antes |
-| `vm_salud.csv` | `sueno_descartadas` | Las sesiones del reloj de esa noche que marcaste «no cuenta» (fuente y horas, por ejemplo «Samsung Health 15:10–16:05»); no entran ni en `sueno_min` ni en `siesta_reloj_min` |
+| `vm_dias.csv`, `vm_panel.csv` | `version_noche` | Con qué orden de preguntas se llenó la hoja de la noche (`VERSION_NOCHE`): 1 = el orden con que se creó el campo en la entrega NE; 2 = el orden nuevo (N-18, desde la entrega N4: el ánimo del momento primero; capítulo 3, sección 3.7.1). Vacío = no pasó por la hoja o es de antes del esquema 14 |
+| `vm_salud.csv` | `sueno_descartadas` | Las sesiones del reloj de esa noche que marcaste «no cuenta» (fuente y horas, por ejemplo, «Samsung Health 15:10–16:05»); no entran ni en `sueno_min` ni en `siesta_reloj_min` |
 
 **Cómo leer `ts_creado`.** La hora de un registro (`ts`, `inicio` o `fecha` + `hora`) dice **cuándo pasó**; `ts_creado`, **cuándo lo anotaste**. La diferencia dice si se anotó en el momento o después. En R, `vm_retraso(tabla, umbral_min = 60)` la calcula (`retraso_min`) y marca `tarde` si pasó más del umbral o cayó en otro día lógico (Apéndice C). El umbral es **[Diseño propio]**.
 
@@ -535,7 +527,7 @@ No cambia lo que se guarda (`SCHEMA_V` = 14); cambia cómo se calcula el panel c
 
 Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de algunas columnas de `vm_panel.csv` y hay dos tablas nuevas. Detalle en el capítulo 2 (sección 2.8) y en el Apéndice D.
 
-**`vm_panel.csv` con los valores de la app (P‑30).** En cada columna que comparte nombre con el panel de la app, el valor es el de la app (`Exportar.comoLaApp`), con el mismo tipo que tenía la columna (0/1, entero o número). Las que más cambian:
+**`vm_panel.csv` con los valores de la app (P-30).** En cada columna que comparte nombre con el panel de la app, el valor es el de la app (`Exportar.comoLaApp`), con el mismo tipo que tenía la columna (0/1, entero o número). Las que más cambian:
 
 | Columna | Desde 10d (= la app) | Antes en `vm_panel.csv` |
 |---|---|---|
@@ -572,8 +564,8 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14). Cambian los valores de alguna
 | `vm_variables.csv` | `variable` | Nombre de la columna en `vm_panel_extendido.csv` |
 | `vm_variables.csv` | `nombre`, `grupo` | Qué es y su grupo, como lo dice la app |
 | `vm_variables.csv` | `privada` | Seguimiento privado (0/1): la app no lo cruza; en R, solo con `privadas = TRUE` |
-| `vm_familias.csv` | `familia` | La regla de la app que la produce (por ejemplo `familia_3`, `total:per_`, `persona:ana`, `escala:who5`, `igual:distancia_km`) |
+| `vm_familias.csv` | `familia` | La regla de la app que la produce (por ejemplo, `familia_3`, `total:per_`, `persona:ana`, `escala:who5`, `igual:distancia_km`) |
 | `vm_familias.csv` | `variable` | Columna de `vm_panel_extendido.csv`, o su nombre en `vm_panel.csv` |
 | `vm_familias.csv` | `lado` | 0 = obvia con todas las de la familia; 1 o 2 = obvia solo con las del otro lado |
 
-**Otras columnas que cambiaron (P‑33).** `vm_dias.csv:schema_v` vale 0 en los días importados de Obsidian o de la versión web que no traían versión; `ts_creado` y `ts_editado` de los días de Obsidian quedan vacíos si la nota no los traía. `vm_ubicaciones.csv:precision_m` guarda la precisión de los puntos del formato viejo de Takeout (antes vacía). La descripción de `vm_red_nodos.csv:grado` aclara que usa 1 día juntas y hasta 400 personas, frente a 2 días y 45 personas en la app.
+**Otras columnas que cambiaron (P-33).** `vm_dias.csv:schema_v` vale 0 en los días importados de Obsidian o de la versión web que no traían versión; `ts_creado` y `ts_editado` de los días de Obsidian quedan vacíos si la nota no los traía. `vm_ubicaciones.csv:precision_m` guarda la precisión de los puntos del formato viejo de Takeout (antes vacía). La descripción de `vm_red_nodos.csv:grado` aclara que usa 1 día juntas y hasta 400 personas, frente a 2 días y 45 personas en la app.

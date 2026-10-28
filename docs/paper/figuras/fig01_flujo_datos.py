@@ -4,10 +4,11 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
-INK, MUTED, SURF = "#1f2937", "#6b7280", "#ffffff"
-COL = {"activa": "#2a6f97", "pasiva": "#6a994e", "importada": "#bc6c25", "nucleo": "#4b5563", "salida": "#7b5ea7"}
+INK, MUTED, SURF = estilo.TINTA, estilo.GRIS, "#ffffff"
+COL = {"activa": estilo.AZUL, "pasiva": estilo.VERDE, "importada": estilo.OCRE, "nucleo": estilo.TINTA_2, "salida": estilo.VIOLETA}
 
 fig, ax = plt.subplots(figsize=(11, 5.3), dpi=160)
 ax.set_xlim(0, 11); ax.set_ylim(0.9, 6.2); ax.axis("off")
@@ -29,7 +30,7 @@ caja(0.2, 2.2, 2.7, 0.95, "Importada", "Takeout, WhatsApp, Cold Turkey,\nNutrici
 
 # Capa 2: almacén
 ax.text(5.0, 5.95, "2 · Almacén", ha="center", fontsize=10, color=INK, weight="bold")
-caja(3.9, 4.3, 2.2, 1.35, "Repo (memoria)", "34 colecciones\nestado observable", COL["nucleo"])
+caja(3.9, 4.3, 2.2, 1.35, "Repo (memoria)", "35 colecciones\nestado observable", COL["nucleo"])
 caja(3.9, 2.2, 2.2, 1.65, "SQLite local", "docs(col,id,fecha,json)\nubicaciones · fotos", COL["nucleo"])
 flecha(3.0, 5.1, 3.85, 5.0); flecha(3.0, 3.9, 3.85, 4.6); flecha(3.0, 2.7, 3.85, 3.0)
 flecha(5.0, 4.25, 5.0, 3.9); ax.text(5.12, 4.07, "escritura inmediata", fontsize=7, color=MUTED)
@@ -42,13 +43,13 @@ flecha(6.15, 5.0, 6.55, 5.0); flecha(7.55, 4.25, 7.55, 3.9); flecha(6.15, 3.0, 6
 
 # Capa 4: salida
 ax.text(9.85, 5.95, "4 · Salida", ha="center", fontsize=10, color=INK, weight="bold")
-caja(9.0, 4.3, 1.85, 1.35, "Exportación", "48 CSV · SQLite\ndiccionario · zip", COL["salida"])
-caja(9.0, 2.2, 1.85, 1.65, "Análisis", "vestigium.R (tidy)\nmódulos 3–5 del paper", COL["salida"])
+caja(9.0, 4.3, 1.85, 1.35, "Exportación", "51 CSV · SQLite\ndiccionario · zip", COL["salida"])
+caja(9.0, 2.2, 1.85, 1.65, "Análisis", "vestigium.R (tidy)\ncapítulo 6 y apéndice C", COL["salida"])
 flecha(8.55, 3.0, 8.95, 4.7); flecha(9.92, 4.25, 9.92, 3.9)
 
 ax.text(5.5, 1.5, "Convención de lectura: las flechas indican quién alimenta a quién.\n"
         "Los colores de borde distinguen el origen del dato (activo, pasivo, importado) y se conservan en el capítulo 2.",
         ha="center", fontsize=8, color=MUTED)
-ax.set_title("Figura 2.1  Flujo de datos de Vestigium Mei", loc="left", fontsize=11.5, color=INK, weight="bold", pad=6)
+ax.set_title("Flujo de datos de Vestigium Mei", loc="left", fontsize=11.5, color=INK, weight="bold", pad=6)
 fig.tight_layout()
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig01_flujo_datos.png")

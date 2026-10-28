@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 rng = np.random.default_rng(21)
 
@@ -109,13 +110,13 @@ ej = np.random.default_rng(SEMILLA_EJEMPLO)                       # semilla de u
 for ax, (tit, plan, lav) in zip(ejes[:2], ejemplos):
     n = len(plan) * 7; y = TEND * np.arange(n) + ej.normal(size=n); toca = np.repeat(plan, 7)
     d, senal, _ = evaluar(y, plan, lav); _, senal10, _ = evaluar_10c(y, plan, lav)
-    ax.scatter(np.arange(n)[toca], y[toca], s=14, color="#2a6f97", label="con la acción")
-    ax.scatter(np.arange(n)[~toca], y[~toca], s=14, color="#e09f3e", label="sin la acción")
-    ax.plot([0, n - 1], [0, TEND * (n - 1)], color="#6b7280", ls="--", lw=1, label="tendencia (la causa real)")
-    ax.axhline(y[toca].mean(), color="#2a6f97", lw=1); ax.axhline(y[~toca].mean(), color="#e09f3e", lw=1)
-    ax.set_title(tit, loc="left", fontsize=8.8, color="#1f2937")
+    ax.scatter(np.arange(n)[toca], y[toca], s=14, color=estilo.AZUL, label="con la acción")
+    ax.scatter(np.arange(n)[~toca], y[~toca], s=14, color=estilo.OCRE_CLARO, label="sin la acción")
+    ax.plot([0, n - 1], [0, TEND * (n - 1)], color=estilo.GRIS, ls="--", lw=1, label="tendencia (la causa real)")
+    ax.axhline(y[toca].mean(), color=estilo.AZUL, lw=1); ax.axhline(y[~toca].mean(), color=estilo.OCRE_CLARO, lw=1)
+    ax.set_title(tit, loc="left", fontsize=8.8, color=estilo.TINTA)
     ax.text(.02, .97, f"diferencia {d:+.2f}\nantes de 10c: {'«señal»' if senal else 'sin señal'}\ndesde 10c: {'«señal»' if senal10 else 'sin señal'}",
-            transform=ax.transAxes, va="top", fontsize=8.2, color="#1f2937", weight="bold")
+            transform=ax.transAxes, va="top", fontsize=8.2, color=estilo.TINTA, weight="bold")
     ax.set_xlabel("día", fontsize=8.5); ax.tick_params(labelsize=7.5); ax.legend(fontsize=7, loc="lower right", frameon=False)
 ejes[0].set_ylabel("resultado (unidades de desviación diaria)", fontsize=8.3)
 
@@ -131,18 +132,18 @@ grupos = [("«señal» falsa\ncon tendencia:\nantes/después", tasa(lambda: sim(
           ("«ojo: tendencia»\nsin tendencia, efecto\nreal: alternas", tasa(lambda: sim(plan_libre, 8, 1, efecto=0.8, que=2)), tasa(lambda: sim(plan_pares, 8, 1, efecto=0.8, que=2, nuevo=True)))]
 b = ejes[2]
 x = np.arange(len(grupos))
-b.bar(x - .2, [g[1] for g in grupos], width=.4, color="#bc6c25", label="antes de 10c (alternas: sorteo libre)")
-b.bar(x + .2, [g[2] for g in grupos], width=.4, color="#2a6f97", label="desde 10c (alternas: por pares)")
+b.bar(x - .2, [g[1] for g in grupos], width=.4, color=estilo.OCRE, label="antes de 10c (alternas: sorteo libre)")
+b.bar(x + .2, [g[2] for g in grupos], width=.4, color=estilo.AZUL, label="desde 10c (alternas: por pares)")
 for i, g in enumerate(grupos):
-    b.text(i - .2, g[1] + .01, f"{g[1]:.0%}", ha="center", fontsize=7.8); b.text(i + .2, g[2] + .01, f"{g[2]:.0%}", ha="center", fontsize=7.8, color="#2a6f97")
-b.axhline(.05, color="#1f2937", ls="--", lw=1)
+    b.text(i - .2, g[1] + .01, f"{g[1]:.0%}", ha="center", fontsize=7.8); b.text(i + .2, g[2] + .01, f"{g[2]:.0%}", ha="center", fontsize=7.8, color=estilo.AZUL)
+b.axhline(.05, color=estilo.TINTA, ls="--", lw=1)
 b.set_xticks(x); b.set_xticklabels([g[0] for g in grupos], fontsize=6.8)
-b.axvline(1.5, color="#d1d5db", lw=1)
+b.axvline(1.5, color=estilo.GRIS_CLARO, lw=1)
 b.legend(fontsize=7, frameon=False, loc="upper right")
 b.set_ylim(0, 1.05); b.tick_params(axis="y", labelsize=7.5)
 barras = [(g[0] + " (antes)", g[1]) for g in grupos] + [(g[0] + " (10c)", g[2]) for g in grupos]
-b.set_title(f"Qué tan seguido pasa ({N} simulaciones)", loc="left", fontsize=8.8, color="#1f2937")
-fig.suptitle("Figura 8.3  La tendencia y el diseño de antes y después (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color="#1f2937")
+b.set_title(f"Qué tan seguido pasa ({N} simulaciones)", loc="left", fontsize=8.8, color=estilo.TINTA)
+fig.suptitle("La tendencia y el diseño de antes y después (datos sintéticos)", x=0.01, ha="left", fontsize=11, weight="bold", color=estilo.TINTA)
 fig.tight_layout(rect=(0, 0, 1, .92))
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig22_tendencia_diseno.png")
 for n, t in barras: print(n.replace("\n", " "), round(t, 3))

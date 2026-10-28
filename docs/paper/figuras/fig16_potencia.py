@@ -9,20 +9,21 @@ from statistics import NormalDist
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
 Z = NormalDist().inv_cdf
 def rmin(nef, alfa=.05, pot=.80): return np.tanh((Z(1 - alfa / 2) + Z(pot)) / np.sqrt(nef - 3))
 n = np.arange(10, 401)
 fig, ax = plt.subplots(figsize=(11, 4.8), dpi=160)
-ax.plot(n, rmin(n), color="#2a6f97", lw=2.4, label="días independientes, α = 0.05")
-ax.plot(n, rmin(0.6 * n), color="#b45309", lw=2.4, label="autocorrelación 0.5 en ambas (nEf = 0.6 n), α = 0.05")
-ax.plot(n, rmin(0.6 * n, alfa=.001), color="#7c2d12", lw=1.8, ls="--", label="lo mismo con α = 0.001 (muchas comparaciones)")
+ax.plot(n, rmin(n), color=estilo.AZUL, lw=2.4, label="días independientes, α = 0.05")
+ax.plot(n, rmin(0.6 * n), color=estilo.OCRE, lw=2.4, label="autocorrelación 0.5 en ambas (nEf = 0.6 n), α = 0.05")
+ax.plot(n, rmin(0.6 * n, alfa=.001), color=estilo.OCRE_OSCURO, lw=1.8, ls="--", label="lo mismo con α = 0.001 (muchas comparaciones)")
 for d in (14, 30, 90):
-    ax.axvline(d, color="#9ca3af", lw=.8, ls=":")
-    ax.annotate(f"{d} días: |r| ≥ {rmin(d):.2f}\n(con r₁=0.5: {rmin(0.6 * d):.2f})", (d, rmin(d)), (d + 8, rmin(d) + .07), fontsize=8,
-                arrowprops=dict(arrowstyle="->", color="#6b7280"))
+    ax.axvline(d, color=estilo.GRIS_MEDIO, lw=.8, ls=":")
+    ax.annotate(f"{d} días: |r| ≥ {rmin(d):.2f}\n(con r₁=0.5: {rmin(0.6 * d):.2f})", (d, rmin(d)), (d + 8, rmin(d) + .07), fontsize=8, bbox=dict(fc="white", ec="none", pad=1),
+                arrowprops=dict(arrowstyle="->", color=estilo.GRIS))
 for y, et in [(.1, "nula/débil"), (.3, "débil/moderada"), (.5, "moderada/fuerte")]:
-    ax.axhline(y, color="#e5e7eb", lw=1); ax.text(400, y + .01, et, ha="right", fontsize=7, color="#6b7280")
+    ax.axhline(y, color=estilo.REJILLA, lw=1); ax.text(400, y + .01, et, ha="right", fontsize=7, color=estilo.GRIS)
 ax.set_ylim(0, 1); ax.set_xlim(10, 400)
 ax.set_xlabel("días con ambos datos (n)"); ax.set_ylabel("|r| más pequeña detectable (potencia 80 %)")
 ax.set_title("Con pocos días solo se ven relaciones enormes; con 90 días independientes, ya se ven las moderadas (|r| ≈ 0.3)")

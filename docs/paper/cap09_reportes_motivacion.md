@@ -1,8 +1,8 @@
 # Capítulo 9. Reportes, visualización y motivación
 
-> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales. Para cada uno dice qué muestra, de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Todo corresponde a la versión v81 (commit `fa527df`). **Los ejemplos son inventados.**
+> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales. Para cada uno dice qué muestra, de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» o «desde el esquema 13» y está en el Apéndice D. **Los ejemplos son inventados.**
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función; cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-8-n (este capítulo y el 10 forman el módulo 8) y se detallan en `hallazgos.md`. Lo relativo a qué datos privados llegan a cada salida está en el capítulo 10.
+> **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función; cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-8-n (este capítulo y el 10 forman el módulo 8; los H-9-n son del módulo 9) y se detallan en `hallazgos.md`. Lo relativo a qué datos privados llegan a cada salida está en el capítulo 10.
 >
 > **Fuentes.** Además del código, se leyó el documento de contexto del proyecto (`VESTIGIUM_MEI_CONTEXTO.md`, v81, que no está en el repositorio). Su sección 7 fija las **reglas de privacidad** de la app; el capítulo 10 (sección 10.3.4) las compara una por una con el código. Donde ese documento describe una intención («nunca en reportes…») y el código hace otra cosa, este capítulo y el 10 lo dicen.
 
@@ -35,7 +35,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | **Ánimo medio** | Promedio de los «ánimos del día» que existen. El reporte lo rotula «ánimo medio del diario (de 7)» y, si en el periodo hubo días con valencia solo en los avisos (`diasSoloAvisos`), añade «*N* días solo con avisos no cuentan». |
 | **Mejor y peor día** | El día con mayor y menor «ánimo del día»; en empate, el primero. Con el mejor día se muestra su «mejor momento» (hasta 90 caracteres). |
 | **Racha de diario** | La racha más larga **dentro del periodo** de días con texto o valencia. |
-| **Hábitos cumplidos** | Hábitos activos marcados ÷ (hábitos activos × días con documento de diario). |
+| **Hábitos cumplidos** | Hábitos activos marcados ÷ (hábitos activos × días con documento de diario). No cuenta el hábito ligado a las recaídas (`Privado.habitosVisibles`). |
 | **Sueño medio** | Promedio de las noches del reloj con **más de 120 minutos** (las más cortas se descartan como siestas o errores). |
 | **Hora de dormir media** | Promedio de las horas de inicio, con la misma regla que el panel y R (`Exportar.horaDecimal`, desde 10c): de noche, las anteriores a las **12:00** suman 24 (la 01:00 cuenta como 25:00) para no promediar la 01:00 con las 23:00 como si fuera mediodía. Antes el corte era a las 15:00, y una siesta larga que empezara a las 13:00 contaba como 37:00. La hora se lee en la zona del teléfono. |
 | **Pasos** | Promedio de los días con pasos > 0. Km: los del reloj o, si no hay, pasos × 0.00075. |
@@ -70,25 +70,25 @@ Arriba, hasta **9 cifras** (días con diario, ánimo medio, sueño, pasos, panta
 - **Ánimo**: gráfica de valencia (con la activación detrás) o, en el anual, un cuadro por día del color del ánimo; mejor y peor día, cambio frente al periodo anterior, el mejor día de la semana (si el periodo pasa de 13 días), hábitos y racha.
 - **Cuerpo, Mente, Gente, Mundo, Cultura, Dinero, Teléfono, Lo memorable** (hitos y logros del periodo).
 
-**El modo discreto** (`Config.discreto`, apagado por omisión) cambia los nombres de las personas por iniciales (`@ana_luisa` → «A.L.»). No toca nada más.
+**El modo discreto** (`Config.discreto`, apagado por omisión), en los reportes, cambia los nombres de las personas por iniciales (`@ana_luisa` → «A.L.», `Reportes.persona`). No toca nada más del reporte (en otras pantallas también oculta, por ejemplo, los nombres de las emociones).
 
 ### 9.3.3 Decisiones de visualización
 
 La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las reglas de `semanaVisual`:
 
-- **Ánimo**: una **medalla** por día con el color del ánimo y el número **redondeado** (`%.0f`, que redondea la mitad hacia arriba: 4.5 → 5, 6.5 → 7). El color va del color de alerta (1), pasando por un gris neutro (4), al color del tema (7) (`Lienzo.colorAnimo`). Sin dato, un círculo punteado.
+- **Ánimo**: una **medalla** por día con el color del ánimo y el número (`%.0f`). Desde 10c es la valencia del diario, un entero de 1 a 7, así que no se redondea nada; hasta entonces podía ser un promedio de avisos y se redondeaba la mitad hacia arriba (4.5 → 5, 6.5 → 7). El color va del color de alerta (1), pasando por un gris neutro (4), al color del tema (7) (`Lienzo.colorAnimo`). Sin dato, un círculo punteado.
 - **Diario**: hojas apiladas; una hoja = max(10, ⌈máximo de la semana / 10⌉) palabras, hasta 10 hojas. El día que más escribiste llega a 10 hojas.
 - **Sueño**: barras de 0 a 10 h, con una línea punteada en **7 h** y la barra en tono de alerta si la noche duró **menos de 6.3 h**.
-- **Pasos**: una huella por cada **2 000**, hasta 10.
+- **Pasos**: ⌈pasos / 2 000⌉ huellas, hasta 10.
 
 ![Figura 9.1](figuras/fig23_reporte_semanal.png)
 
-*Figura 9.1. «La semana de un vistazo», imitada con datos inventados y las mismas reglas del código. Script: `figuras/fig23_reporte_semanal.py`.*
+*Figura 9.1. «La semana de un vistazo», imitada con datos inventados y las mismas reglas del código. El ánimo de la figura trae dos días con decimales (4.5 y 6.5), como podía pasar hasta 10c; desde entonces el número de la medalla siempre es un entero. Script: `figuras/fig23_reporte_semanal.py`.*
 
 **Qué dice la investigación sobre gráficas.** Cleveland y McGill (1984) midieron qué tan bien la gente lee distintas codificaciones: la **posición sobre una escala común** (la altura de una barra con su eje) se lee con mucha más precisión que el **área** o el **color**. Aplicado a la app **[Aproximación]**:
 
 - Las barras de sueño son la codificación más precisa del reporte, y además llevan el número.
-- La medalla del ánimo codifica con **color**, que se lee mal, pero lleva el número escrito, lo que lo compensa. El número redondeado sí pierde información: un 4.5 y un 5.4 se ven igual («5»).
+- La medalla del ánimo codifica con **color**, que se lee mal, pero lleva el número escrito, lo que lo compensa. Hasta 10c, cuando el ánimo podía ser un promedio, el redondeo perdía información (un 4.5 y un 5.4 se veían igual, «5»); con la valencia del diario, que es entera, ya no.
 - Las hojas y huellas son **conteos de iconos**: se leen bien para comparaciones gruesas («el domingo escribí mucho más»), no para cifras exactas.
 - La línea de 7 h y el corte de 6.3 h son **[Diseño propio]**: 7 h coincide con la recomendación habitual mínima de sueño para adultos (no verificada en esta sesión **[sin verificar]**); el 6.3 h no tiene una fuente que yo conozca.
 - El color «de alerta» para el ánimo bajo y el sueño corto **juzga** el dato (rojo = malo). Para un resumen personal es útil, pero refuerza la idea de que hay valores «correctos», lo que se relaciona con la sección 9.7.
@@ -99,11 +99,11 @@ La Figura 9.1 imita «La semana de un vistazo» con datos inventados y las regla
 
 ### 9.3.5 «Tu año»
 
-`TuAnio.calcular` usa el mismo `Periodo` del año y le suma: equivalencias («escribiste el equivalente a *N* páginas», a 300 palabras por página), un día típico armado con lo más frecuente, lo que pasó una sola vez, **el día más raro** (`Analisis.atipicos` con umbral 2.8, sobre 15 variables fijas), récords, **la relación más fuerte del año** (la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días), la palabra del año, un «arquetipo», tus medallas y cómo te fue con las **predicciones de enero** (8 preguntas: obras, países, ciudades, pasos, sueño, **ánimo medio**, persona más mencionada y palabras).
+`TuAnio.calcular` usa el mismo `Periodo` del año y le suma: equivalencias («escribiste el equivalente a *N* páginas», a 300 palabras por página), un día típico armado con lo más frecuente, lo que pasó una sola vez, **el día más raro** (`Analisis.atipicos` con umbral 2.8, sobre 15 variables fijas; `atipicos` solo devuelve días de los últimos 365 contados desde hoy, así que al ver un año pasado puede faltar o quedarse en parte del año), récords, **la relación más fuerte del año** (la correlación no obvia con mayor |*r*|, con *q* < 0.05 y *n* ≥ 30, si el año tiene al menos 40 días), la palabra del año, un «arquetipo», tus medallas y cómo te fue con las **predicciones de enero** (8 preguntas: obras, países, ciudades, pasos, sueño, **ánimo medio**, persona más mencionada y palabras).
 
 Dos observaciones:
 
-- **«La relación del año» es la más fuerte de muchas.** Elegir el máximo |*r*| entre cientos de pares sobreestima su tamaño: es la que tuvo más suerte además de ser real (un sesgo de selección; el método y su criterio para «Tu año» están en el capítulo 6, secciones 6.8 y 6.10). Que pase la corrección por comparaciones múltiples (*q* < 0.05) ayuda, pero el valor de *r* mostrado será, en promedio, más alto que el verdadero. **[Aproximación]**.
+- **«La relación del año» es la más fuerte de muchas.** Elegir el máximo |*r*| entre cientos de pares sobrestima su tamaño: es la que tuvo más suerte además de ser real (un sesgo de selección; el método y su criterio para «Tu año» están en el capítulo 6, secciones 6.8 y 6.10). Que pase la corrección por comparaciones múltiples (*q* < 0.05) ayuda, pero el valor de *r* mostrado será, en promedio, más alto que el verdadero. **[Aproximación]**.
 - **Predecir tu ánimo medio en enero** crea una expectativa sobre la variable que luego mides. No hay forma de saber cuánto influye, pero es una forma de reactividad (sección 9.7).
 
 ---
@@ -126,7 +126,7 @@ Al abrir un logro, `comoSeConsiguio` dice en qué día de registro llegó, el á
 
 ### 9.4.2 Una buena decisión: constancia en lugar de rachas
 
-La propia app lo explica: «de constancia (25 de 30 días; no hace falta racha)». Las rachas castigan un solo día perdido con volver a cero, lo que puede desanimar justo cuando más falta hace seguir; la constancia tolera días malos. **[Diseño propio]** con buen fundamento: para un registro de por vida, lo que importa es **no abandonar**, y la meta «25 de 30» premia eso sin convertir un tropiezo en fracaso. (Hay rachas de diario, pero son pocas y no son el centro del sistema).
+La propia app lo explica: «de constancia (25 de 30 días; no hace falta racha)». Las rachas castigan un solo día perdido con volver a cero, lo que puede desanimar justo cuando más falta hace seguir; la constancia tolera días malos. **[Diseño propio]** con buen fundamento: para un registro de por vida, lo que importa es **no abandonar**, y la meta «25 de 30» premia eso sin convertir un tropiezo en fracaso. (Hay rachas de diario, pero son pocas y no son el centro del sistema.)
 
 ### 9.4.3 Lo que premian, y por qué importa para los datos
 
@@ -136,7 +136,7 @@ Conviene separar los logros por **qué** premian:
 |---|---|---|
 | **Registrar** | días de diario, avisos contestados, momentos, cuestionarios, pruebas de reacción | Menos datos faltantes (bueno: capítulo 3, sección 3.15). Riesgo: entradas de relleno para cumplir. |
 | **Una conducta** | pasos, sueño ≥ 7 h, entrenar, hábitos, enfoque | Cambian la conducta medida: es su objetivo (es una intervención). Riesgo: confundir el análisis observacional (sección 9.7). |
-| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (de ≤ 2 a ≥ 6 en menos de 3 días) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). |
+| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores, que pueden no ser seguidos) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). |
 | **Un rendimiento** | «Rayo» (reacción < 250 ms) | Incentiva practicar la prueba; los tiempos pueden mejorar por práctica y no por estar más despierto. |
 
 Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que reduce mucho el incentivo: no sabes que existen hasta que ocurren. Aun así, una vez descubiertos, son medallas por escribir cierto valor en la escala que más se analiza. **[Diseño propio]**, de bajo riesgo en la práctica, pero contrario al principio de no premiar el valor de una medida.
@@ -145,7 +145,7 @@ Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que
 
 ## 9.5 Campañas
 
-`ciencia/Campanas.kt`. Un reto de lunes a domingo con una meta de días. Los retos y sus metas:
+`ciencia/Campanas.kt`. Un reto de lunes a domingo con una meta de días. Los retos y la meta que propone cada uno (al aceptar se puede elegir de 3 a 7 días):
 
 | Reto | Cuenta el día si… | Meta |
 |---|---|---|
@@ -163,11 +163,11 @@ Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que
 
 `Campanas.estado`: cada día cumplido avanza una etapa en un «mapa» narrativo que cambia con el tema (de Roma a Alesia, de Chang'an a Antioquía…); se **gana** al llegar a la meta y se **pierde** cuando ya no da tiempo (días cumplidos + días que quedan < meta). Ganar campañas da logros (1, 5, 20 y 52 victorias).
 
-**Qué son científicamente.** Una campaña de sueño **es una intervención**: durante esa semana intentas dormir más. Eso está bien para tu vida, pero tiene una consecuencia para el análisis: **las campañas no se guardan como variable del panel ni se exportan como tal** (solo viven en los ajustes, `Config.campanas`) (H-8-7). Si en las semanas con campaña de sueño también estuviste de mejor ánimo, la app verá «dormir más se asocia con mejor ánimo», sin poder distinguir si fue el sueño o el empujón motivacional de la campaña (o qué te llevó a elegir esa campaña esa semana). Un experimento personal (capítulo 8) separa esto; una campaña, no.
+**Qué son científicamente.** Una campaña de sueño **es una intervención**: durante esa semana intentas dormir más. Eso está bien para tu vida, pero tiene una consecuencia para el análisis. **Hasta el esquema 12, las campañas no se guardaban como variable del panel ni se exportaban como tal** (solo vivían en los ajustes, `Config.campanas`) (H-8-7). Si en las semanas con campaña de sueño también estuviste de mejor ánimo, la app veía «dormir más se asocia con mejor ánimo», sin poder distinguir si fue el sueño o el empujón motivacional de la campaña (o qué te llevó a elegir esa campaña esa semana). Un experimento personal (capítulo 8) separa esto; una campaña, no; desde el esquema 13, al menos queda registrada.
 
 **Desde el esquema 13 (P-11) la campaña es una variable del panel.** Hay una columna `campana_<reto>` por cada reto que hayas tenido. Por ejemplo, `campana_sueno7`, o `campana_hab_<id>` para un hábito. Vale **1** los días que tenías ese reto aceptado y **0** los demás, desde el primer día de tu primera campaña; antes, sin dato. Además está `campanas_n`, cuántas tenías ese día, porque puede haber hasta tres a la vez. Codifica la **asignación** (la tenías aceptada), no el cumplimiento. `Campanas.diasActivos` la arma desde `Config.campanas`, que guarda la historia completa.
 
-Cada `campana_<reto>` se marca como «obvia» con lo que ese reto busca mover (`Campanas.MUEVE`; capítulo 6). La de sueño va con las horas y las horas de dormir y despertar; la de pantalla, con los minutos y desbloqueos. Así no aparece como hallazgo «en las semanas de campaña de sueño dormiste más». En R, desde la entrega 10d (P‑31), la regla sale de la misma fuente: `vm_familias.csv` se genera desde `Campanas.MUEVE` (`Estadistica.familias`; cada campaña en el lado 1 y lo que busca mover en el lado 2, así lo que mueve no queda «obvio» entre sí), y `vm_obvia` lo lee. La lista escrita a mano en R (`vm_campana_mueve`) queda solo para exportaciones viejas sin ese archivo; desde la entrega 10d tiene los mismos retos que `Campanas.MUEVE`, con los nombres de `vm_panel.csv`.
+Cada `campana_<reto>` se marca como «obvia» con lo que ese reto busca mover (`Campanas.MUEVE`; capítulo 6). La de sueño va con las horas y las horas de dormir y despertar; la de pantalla, con los minutos y desbloqueos. Así no aparece como hallazgo «en las semanas de campaña de sueño dormiste más». En R, desde la entrega 10d (P-31), la regla sale de la misma fuente: `vm_familias.csv` se genera desde `Campanas.MUEVE` (`Estadistica.familias`: cada campaña va en el lado 1 y lo que busca mover en el lado 2, y solo cuentan como obvias las parejas de lados distintos; así, dos variables que mueve la misma campaña, como las horas de sueño y la hora de dormir, no se esconden entre sí por esa razón), y `vm_obvia` lo lee. La lista escrita a mano en R (`vm_campana_mueve`) queda solo para exportaciones viejas sin ese archivo; desde la entrega 10d tiene los mismos retos que `Campanas.MUEVE`, con los nombres de `vm_panel.csv`.
 
 Lo que sí queda para el análisis es lo interesante: por ejemplo, si en las semanas de campaña de sueño cambió **otra** cosa, como el ánimo. Y la campaña sirve como control: comparar «dormir más y ánimo» con y sin campaña. **[Diseño propio]**.
 
@@ -190,8 +190,8 @@ Las campañas de antes no tienen `aceptada` y cuentan la semana completa.
 - **Qué es.** Deterding et al. (2011) definen la gamificación como el uso de elementos de diseño de juegos en contextos que no son juegos. La app la usa con medallas, retos, mapas narrativos, temas y «Tu año».
 - **¿Funciona?** La revisión de Hamari, Koivisto y Sarsa (2014) encontró que la mayoría de los estudios reportan efectos positivos, pero que dependen mucho del contexto y de quién la usa, y que muchos estudios tenían problemas de método. **[Validado]** que *puede* funcionar; no que funcione siempre.
 - **El riesgo de las recompensas.** El metaanálisis de Deci, Koestner y Ryan (1999) encontró que las recompensas **tangibles y esperadas** reducen la motivación intrínseca (hacer algo porque te interesa), mientras que la retroalimentación verbal positiva tiende a aumentarla. Las medallas de la app no son tangibles; están a medio camino entre una recompensa y una retroalimentación. **[Aproximación]**: no sé de un estudio que mida esto con medallas digitales en autorregistro, así que no puedo decir hacia qué lado cae.
-- **El autorregistro ya cambia la conducta.** En la literatura clínica, el automonitoreo es reactivo: tiende a aumentar las conductas deseables y a reducir las indeseables (Korotitsch y Nelson-Gray, 1999). Premiar ciertos valores suma un segundo empujón en la misma dirección.
-- **En los rastreadores personales.** Los modelos de *personal informatics* describen etapas (preparar, recolectar, integrar, reflexionar, actuar) y las barreras de cada una; el abandono es uno de los problemas centrales (Li et al., 2010). Quienes se automonitorean de forma intensiva suelen registrar demasiadas cosas y luego no saber qué hacer con ellas (Choe et al., 2014). La app ataca el abandono con constancia, campañas y reportes, y la reflexión con los análisis.
+- **El autorregistro ya cambia la conducta.** En la literatura clínica, el autoseguimiento es reactivo: tiende a aumentar las conductas deseables y a reducir las indeseables (Korotitsch y Nelson-Gray, 1999). Premiar ciertos valores suma un segundo empujón en la misma dirección.
+- **En los rastreadores personales.** Los modelos de *personal informatics* describen etapas (preparar, recolectar, integrar, reflexionar, actuar) y las barreras de cada una; el abandono es uno de los problemas centrales (Li et al., 2010). Quienes llevan un autoseguimiento intensivo suelen registrar demasiadas cosas y luego no saber qué hacer con ellas (Choe et al., 2014). La app ataca el abandono con constancia, campañas y reportes, y la reflexión con los análisis.
 
 ---
 
@@ -225,7 +225,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 | Logros de constancia (k de n días) en lugar de rachas | Diseño propio (bien fundado) | — |
 | Logros que premian valores de la valencia | Diseño propio (contrario a la ley de Campbell) | Campbell (1979) |
 | Campañas semanales como retos | Diseño propio | Hamari et al. (2014) sobre gamificación |
-| «Relación del año» = máximo |*r*| con *q* < 0.05 | Aproximación (sobreestima) | — |
+| «Relación del año» = máximo |*r*| con *q* < 0.05 | Aproximación (sobrestima) | — |
 
 ---
 

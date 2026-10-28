@@ -1,8 +1,8 @@
 # Capítulo 6. Análisis estadístico
 
-> **Para qué sirve este capítulo.** Explica **cómo la app pasa de miles de registros a frases como «cuando duermes más, tu ánimo tiende a subir»**: cómo arma la tabla de un renglón por día (el *panel*), cómo compara cada variable con cada otra, qué hace para no dejarse engañar por las tendencias, por los días que se parecen a sus vecinos y por el azar de revisar miles de parejas, y qué hacen las demás herramientas de análisis (modelo múltiple, dinámica emocional, palabras, días atípicos…). Al final compara **función por función** lo que hace la app con lo que hace el script de R que viaja en cada exportación. Todo corresponde a la versión v81 del código (commit `fa527df`), con los cambios del módulo 10 señalados donde corresponde; la comparación con R (6.3.4, 6.9.3 y 6.22) describe el script de la entrega 10d (commit `035982c`). **Los ejemplos numéricos son inventados.**
+> **Para qué sirve este capítulo.** Explica **cómo la app pasa de miles de registros a frases como «cuando duermes más, tu ánimo tiende a subir»**: cómo arma la tabla de un renglón por día (el *panel*), cómo compara cada variable con cada otra, qué hace para no dejarse engañar por las tendencias, por los días que se parecen a sus vecinos y por el azar de revisar miles de parejas, y qué hacen las demás herramientas de análisis (modelo múltiple, dinámica emocional, palabras, días atípicos…). Al final compara **función por función** lo que hace la app con lo que hace el script de R que viaja en cada exportación. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» y está en el Apéndice D (la comparación con R de 6.3.4, 6.9.3 y 6.22 describe el script desde la entrega 10d). **Los ejemplos numéricos son inventados.**
 >
-> **Cómo leerlo.** Está escrito para entenderse sin saber estadística, pero sin recortar la precisión. Las cifras, umbrales y fórmulas se dan tal como están en el código, con el nombre de la función de origen; las fórmulas completas están reunidas en el **Apéndice B** y las funciones de R en el **Apéndice C**. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-5-n y se detallan en `hallazgos.md`.
+> **Cómo leerlo.** Está escrito para entenderse sin saber estadística, pero sin recortar la precisión. Las cifras, umbrales y fórmulas se dan tal como están en el código, con el nombre de la función de origen; las fórmulas completas están reunidas en el **Apéndice B** y las funciones de R en el **Apéndice C**. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-5-n (por el módulo 5, que escribió el capítulo) y se detallan en `hallazgos.md`, con su estado.
 >
 > **Archivos leídos.** `ciencia/Estadistica.kt` (completo), `ciencia/Analisis.kt`, `ciencia/Dinamicas.kt`, `ciencia/Periodo.kt`, `ciencia/TusNumeros.kt`, `ciencia/Totales.kt`, `ui/pantallas/Explorar.kt`, `ui/pantallas/Analisis.kt`, `ui/Relacion.kt` (la tarjeta de relación), la parte de `data/Exportar.kt` que arma `vm_panel.csv` y todas las funciones de análisis de `app/src/main/assets/vestigium.R`.
 
@@ -62,7 +62,7 @@ Lo importante de la tabla: **«Las relaciones más marcadas» y, desde la entreg
 
 `Estadistica.panel()` devuelve un mapa `fecha → (variable → valor)`. Cada **fecha** es un día lógico (de 5:00 a 4:59 del día siguiente; capítulo 2). Cada **valor** es un número o `null`. Las variables 0/1 se guardan como 0.0 y 1.0.
 
-Qué variables entran en los análisis lo decide otra función, `Estadistica.variables()`: una lista de unas 150 variables fijas (valencia, sueño, pasos, clima…) más las que **solo aparecen si hay datos** (por ejemplo, las de alcohol solo si alguna vez registraste alcohol; las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R) y, con `dinamicas = true`, las **variables dinámicas** de `Dinamicas.calcular()`: una por persona, tema, lugar, app, artista, nutriente, cuestionario, etapa de vida… (sección 6.3.3). El panel puede tener columnas que no están en esa lista; esas no se analizan. **[Diseño propio]**.
+Qué variables entran en los análisis lo decide otra función, `Estadistica.variables()`: una lista de 184 variables con nombre fijo (valencia, sueño, pasos, clima…; capítulo 2 y Apéndice A.1): 128 existen siempre y 56 **solo aparecen si hay datos** (por ejemplo, las de alcohol solo si alguna vez registraste alcohol; las privadas nunca: desde el módulo 10a se excluyen siempre y solo viajan a R) y, con `dinamicas = true`, las **variables dinámicas** de `Dinamicas.calcular()`: una por persona, tema, lugar, app, artista, nutriente, cuestionario, etapa de vida… (sección 6.3.3). El panel puede tener columnas que no están en esa lista; esas no se analizan. **[Diseño propio]**.
 
 ### 6.3.2 Cero o faltante: la decisión más delicada del panel
 
@@ -126,7 +126,7 @@ Hasta la entrega 10d, el script de R leía `vm_panel.csv`, que **no** es `Estadi
 - **Once nombres distintos, documentados.** `sueno_min`/`sueno_horas` (en minutos frente a horas), `sueno_profundo_min`/`sueno_profundo`, `sueno_rem_min`/`sueno_rem`, `km`/`distancia_km`, `hrv_rmssd`/`hrv`, `valencia_muestreo`/`muestreo_valencia`, `luz_dia_min`/`luz_horas` (minutos frente a horas), `sol_min`/`sol_horas` (minutos frente a horas), `carga_noche_inicio_h`/`carga_noche_h`, `temp_piel_delta`/`temp_piel` y `ruido_db_medio`/`ruido_db` (`Exportar.EQUIVALENTES`). No se renombraron, para no romper scripts viejos; el diccionario dice en cada una cuál es la otra, y `vm_familias.csv` las trata como la misma medida.
 - **Mismas variables.** `vm_variables.csv` lista las que la app cruza (`Estadistica.variables()`, con las dinámicas recortadas igual que en la app); `vm_relaciones` y `vm_factores` se limitan a ellas por omisión. El seguimiento privado va marcado y solo se cruza con `privadas = TRUE`.
 
-Lo que sigue distinto: `n_momentos` y `m_<tipo>` (solo en `vm_panel.csv`) cuentan también momentos privados (H-2-13), y R completa el calendario con renglones vacíos (`complete()`), que no cambia ningún cálculo porque los vacíos no entran. **Cómo se comprobó:** `ExportacionPrueba.kt` fija que, con el mismo panel inventado, `vm_relaciones` y `vm_factores` dan los mismos números que la app; que con una exportación real den las mismas 10 primeras parejas **no se ha comprobado** (R no corre en la compilación automática; requiere el teléfono). Ver la comparación completa en la sección 6.22.
+Lo que sigue distinto: `n_momentos` y `m_<tipo>` (solo en `vm_panel.csv`) cuentan también momentos privados (H-2-13), y R completa el calendario con renglones vacíos (`complete()`), que no cambia ningún cálculo porque los vacíos no entran. **Cómo se comprobó:** `ExportacionPrueba.kt` fija que, con el mismo panel inventado, `vm_relaciones` y `vm_factores` dan los mismos números que la app; con una exportación real de la v89, el script cargó y analizó sin errores (y así se encontró lo que corrigió D.87); y después el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). Ver la comparación completa en la sección 6.22.
 
 ---
 
@@ -207,9 +207,9 @@ Con el interruptor encendido, las lentas **se omiten** y la pantalla lo dice: «
 
 ### 6.5.5 Figura
 
-![Figura 6.2](figuras/fig12_tendencia_espuria.png)
+![Figura 6.1](figuras/fig12_tendencia_espuria.png)
 
-*Figura 6.2. Dos variables sintéticas sin relación día a día que solo comparten un cambio lento: con los valores tal cual, r = −0.36; con los restos de ±10 días, r = +0.01. Script: `figuras/fig12_tendencia_espuria.py` (replica `Estadistica.series`).*
+*Figura 6.1. Dos variables sintéticas sin relación día a día que solo comparten un cambio lento: con los valores tal cual, r = −0.36; con los restos de ±10 días, r = +0.01. Script: `figuras/fig12_tendencia_espuria.py` (replica `Estadistica.series`).*
 
 ### 6.5.6 Cuándo falla
 
@@ -223,7 +223,7 @@ Con el interruptor encendido, las lentas **se omiten** y la pantalla lo dice: «
 
 ### 6.6.1 El problema
 
-Las fórmulas clásicas de intervalos y valores p suponen que cada día es una observación **independiente**. Pero tus días se parecen a sus vecinos: una semana de exámenes tiene varios días seguidos con poco sueño **y** mal ánimo. Si cuentas esos 7 días como 7 pruebas independientes, la relación parece más segura de lo que es. En la simulación de la Figura 6.3, con dos series sin relación real y autocorrelación de 0.8, el intervalo ingenuo «encuentra» una relación en el **35 %** de los casos en vez del 5 % esperado.
+Las fórmulas clásicas de intervalos y valores p suponen que cada día es una observación **independiente**. Pero tus días se parecen a sus vecinos: una semana de exámenes tiene varios días seguidos con poco sueño **y** mal ánimo. Si cuentas esos 7 días como 7 pruebas independientes, la relación parece más segura de lo que es. En la simulación de la Figura 6.2, con dos series sin relación real y autocorrelación de 0.8, el intervalo ingenuo «encuentra» una relación en el **35 %** de los casos en vez del 5 % esperado.
 
 ### 6.6.2 Cómo lo hace exactamente
 
@@ -251,9 +251,9 @@ Como 94.3 es menor que 0.8 × 120 = 96, la tarjeta escribe «120 días (≈ 94 i
 
 ### 6.6.5 Figura
 
-![Figura 6.3](figuras/fig13_n_efectivo.png)
+![Figura 6.2](figuras/fig13_n_efectivo.png)
 
-*Figura 6.3. Izquierda: días efectivos según la autocorrelación (la misma en ambas variables) para 30, 90 y 365 días. Derecha: 4000 parejas simuladas de series AR(1) independientes de 90 días; con la autocorrelación real de 0.8, el intervalo con n da falsas alarmas el 35 % de las veces y el de la app, el 4.6 %. Script: `figuras/fig13_n_efectivo.py`.*
+*Figura 6.2. Izquierda: días efectivos según la autocorrelación (la misma en ambas variables) para 30, 90 y 365 días. Derecha: 4000 parejas simuladas de series AR(1) independientes de 90 días; con la autocorrelación real de 0.8, el intervalo con n da falsas alarmas el 35 % de las veces y el de la app, el 4.6 %. Script: `figuras/fig13_n_efectivo.py`.*
 
 ### 6.6.6 Cuándo falla (H-5-13)
 
@@ -345,15 +345,15 @@ Las cinco primeras tienen q < 0.10: se sostienen. Con m = 6 la corrección es su
 
 ### 6.8.5 Figura
 
-![Figura 6.4](figuras/fig14_benjamini_hochberg.png)
+![Figura 6.3](figuras/fig14_benjamini_hochberg.png)
 
-*Figura 6.4. 200 pruebas simuladas (20 relaciones reales con r = 0.35, 180 sin relación, 90 días). Sin corregir: 19 aciertos y 9 falsas alarmas (32 % de lo marcado es falso). Con BH a q < 0.10: 15 aciertos y 1 falsa alarma (6 %). Script: `figuras/fig14_benjamini_hochberg.py` (replica `Analisis.bh`).*
+*Figura 6.3. 200 pruebas simuladas (20 relaciones reales con r = 0.35, 180 sin relación, 90 días). Sin corregir: 19 aciertos y 9 falsas alarmas (32 % de lo marcado es falso). Con BH a q < 0.10: 15 aciertos y 1 falsa alarma (6 %). Script: `figuras/fig14_benjamini_hochberg.py` (replica `Analisis.bh`).*
 
 ### 6.8.6 Cuándo falla
 
 - **El número de pruebas depende del modo.** Por día o por semana, con o sin tendencia, se prueban parejas distintas (las lentas salen, el mínimo de días cambia), así que la misma pareja puede tener q distinto en cada modo.
 - **Excluir las obvias es razonable pero no neutral**: baja *m* y hace la corrección más permisiva. Está bien porque esas parejas no son descubrimientos, pero la lista de obvias debe estar completa y ser la misma en app y R (H-5-2; desde 10d lo es, sección 6.9.3).
-- **«Todo lo que se mueve con algo» corrige con p que no descuentan la autocorrelación** (H-5-3): ahí BH trabaja con valores p demasiado pequeños.
+- **Hasta 10c, «Todo lo que se mueve con algo» corregía con p que no descontaban la autocorrelación** (H-5-3): ahí BH trabajaba con valores p demasiado pequeños. Desde 10c en la app y desde 10d en R (`vm_factores`), sus p usan nEf o el factor AR(1) (sección 6.13). Lo que queda: su BH corrige solo entre las variables revisadas contra ese objetivo.
 
 ---
 
@@ -368,7 +368,7 @@ Marca las parejas cuya correlación es casi segura por construcción, para no pr
 `Estadistica.obvia(a, b)` devuelve verdadero si se cumple **cualquiera** de estas reglas:
 
 1. Ambas son del mismo grupo y el grupo es «Lectura del día», «Momentos», «Sentimientos» o «Sueños».
-2. Ambas están en una misma familia de `Estadistica.FAMILIAS` (57 conjuntos desde el esquema 13; una variable puede estar en varios). Ejemplos: todos los nutrientes fijos; `valencia` con `muestreo_valencia`; `valencia`, `animo_valencia`, `animo_cierre_valencia`, `momentos_valencia`, `valencia_acompanado` y `valencia_solo`; las de alcohol entre sí; impulsos, recaídas y libido entre sí.
+2. Ambas están en una misma familia de `Estadistica.FAMILIAS` (58 conjuntos en la v90; 56 en la v81, más el de los avisos de ánimo y el de `presencias_revisado`; una variable puede estar en varios). Ejemplos: todos los nutrientes fijos; `valencia` con `muestreo_valencia`; `valencia`, `animo_valencia`, `momentos_valencia`, `valencia_acompanado` y `valencia_solo`; `animo_cierre_valencia` con `valencia` y `animo_valencia`; las de alcohol entre sí; impulsos, recaídas y libido entre sí.
 3. Ambas son de lugares (`horas_tipo_*` o `lug_*`).
 4. Son del mismo suplemento (`supl_<id>_dosis`, `_tomado`, `_nivel`…).
 5. Una es un sentimiento y la otra `registros_animo`; o una es una categoría de sueño y la otra empieza con `sueno_`.
@@ -415,7 +415,7 @@ Con el panel, la lista de variables, el modo (`sinTendencia`), `minN = 14`, `pas
 ### 6.10.3 Qué se muestra (Explorar.kt)
 
 - Un resumen: «Revisé N combinaciones (dejé fuera M obvias)… ya corregido eso, K se sostienen», donde K es el número con q < 0.10. Si hay lentas, las nombra.
-- Filtros por tema (`FOCOS`: con tu ánimo, con tu sueño, personas y vida, lugares y viajes, cuerpo y comida, teléfono y social, cultura, dinero). Una pareja entra si **alguna** de sus dos variables es del tema.
+- Filtros por tema (`FOCOS`: con tu ánimo, con tu sueño, personas y vida, lugares y viajes, cuerpo y comida, teléfono y social, lo que lees, ves y escuchas, dinero). Una pareja entra si **alguna** de sus dos variables es del tema.
 - `agrupar(lista, 15)`: junta las parejas **casi repetidas**. Dos parejas son «parecidas» si comparten una variable y la otra de cada una está en la misma familia de `FAMILIAS` (ánimo con horas de sueño y ánimo con sueño REM). Recorre la lista ya ordenada; la primera de cada grupo es la representante y las demás se anotan como «También con «…» (+0.31)» (máximo 3 nombradas y «y N más»). Muestra hasta **15** grupos; deja de buscar parecidas después del elemento 400.
 - La **tarjeta** (`ui/Relacion.kt`, `TarjetaRelacion`): dos recuadros con los nombres y un **lazo** entre ellos.
   - Color: verde si r ≥ 0 («suben juntas»), rojo si r < 0.
@@ -424,9 +424,9 @@ Con el panel, la lista de variables, el modo (`sinTendencia`), `minN = 14`, `pas
   - Texto de detalle: «N días»; «(≈ nEf independientes)» si nEf < 0.8 · n; la fuerza; «con tendencia: ±0.xx» si el interruptor está encendido y |bruta − r| ≥ 0.2; «obvia»; «podría ser azar».
 - Tocar una tarjeta abre «Todo lo que se mueve con algo» con una de las dos variables como objetivo (la que no es la valencia).
 
-![Figura 6.5](figuras/fig15_tarjeta_relacion.png)
+![Figura 6.4](figuras/fig15_tarjeta_relacion.png)
 
-*Figura 6.5. Tres tarjetas sintéticas: una relación positiva firme (grosor 3.09 dp), una negativa firme cuya correlación con tendencia era bastante más fuerte, y una que podría ser azar (punteada). Script: `figuras/fig15_tarjeta_relacion.py` (imita `TarjetaRelacion` y `lazo` del tema por omisión; los temas cambian la forma del lazo, no su grosor ni el punteado).*
+*Figura 6.4. Tres tarjetas sintéticas: una relación positiva firme (grosor 3.09 dp), una negativa firme cuya correlación con tendencia era bastante más fuerte, y una que podría ser azar (punteada). Script: `figuras/fig15_tarjeta_relacion.py` (imita `TarjetaRelacion` y `lazo` del tema por omisión; los temas cambian la forma del lazo, no su grosor ni el punteado).*
 
 ### 6.10.4 Ejemplo trabajado completo
 
@@ -436,7 +436,7 @@ Sueño (h) y valencia, interruptor encendido. Tras quitar la tendencia hay 120 d
 
 - Las tres protecciones solo cubren el azar y las tendencias; **no** cubren **confusores** (una tercera cosa que mueve a las dos, como el día de la semana o estar enfermo) ni la **dirección** (¿el sueño mejora el ánimo o el buen ánimo te deja dormir?). La app lo dice en «Cruzar dos variables».
 - El mínimo de 14 días con 14 restos es bajo; con 14 días solo se ven correlaciones muy grandes (sección 6.21).
-- Las variables privadas **no** entran en esta lista ni en ningún análisis de la app desde el módulo 10a (`Estadistica.variables()` las excluye; ver capítulo 10, sección 10.3). Son `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, `med_*`, `det_*` y `hab_` del hábito ligado a las recaídas. El panel las sigue calculando para la exportación, así que solo se cruzan en R. Hasta v84 entraban con el interruptor encendido, y `n_impulso` y `med_*` siempre.
+- Las variables privadas **no** entran en esta lista ni en ningún análisis de la app desde el módulo 10a (`Estadistica.variables()` las excluye; ver capítulo 10, sección 10.3). Son `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, `med_*`, `det_*`, y el `hab_` y la `campana_hab_` del hábito ligado a las recaídas (`Privado.esVariable`). El panel las sigue calculando para la exportación, así que solo se cruzan en R. Hasta v84 entraban si el seguimiento privado estaba encendido, y `n_impulso` y `med_*` siempre.
 
 ---
 
@@ -475,8 +475,6 @@ Eliges un objetivo (tu ánimo, una persona, un lugar, una app, una etapa de vida
 
 ### 6.13.2 Cómo exactamente (`Analisis.factores`)
 
-Para cada variable *v* distinta del objetivo:
-
 Desde la entrega 10c (D.66), con un interruptor «Quitar tendencias» que empieza como estaba en la lista desde la que llegaste (`Herramienta.sinTendencia`):
 
 1. Prepara el objetivo: su serie y, con el interruptor encendido, sus **restos sin tendencia** (`Estadistica.sinTendencia`, ±10 días, como en 6.5); calcula su autocorrelación (`Estadistica.ar1`).
@@ -506,7 +504,7 @@ Hasta 10c, con 1.96 y la normal, salía IC 0.46 a 1.91 y p = 0.0013: unas cinco 
 
 ### 6.13.5 Cuándo falla (H-5-3, alta)
 
-- **Resuelto en 10c (D.66):** hasta esa entrega no quitaba la tendencia ni descontaba la autocorrelación, así que sus *p* eran, para variables persistentes, mucho más pequeños de lo que debían (Figura 6.3: con autocorrelación 0.8, alrededor de un tercio de falsas alarmas), y la misma pareja podía verse **punteada** en la lista y con **✓** aquí; usaba ρ donde la lista usa r, y para 0/1 usaba 1.96 con apenas 5 días por grupo (H-5-5). Ahora usa la misma maquinaria que la lista.
+- **Resuelto en 10c (D.66):** hasta esa entrega no quitaba la tendencia ni descontaba la autocorrelación, así que sus *p* eran, para variables persistentes, mucho más pequeños de lo que debían (Figura 6.2: con autocorrelación 0.8, alrededor de un tercio de falsas alarmas), y la misma pareja podía verse **punteada** en la lista y con **✓** aquí; usaba ρ donde la lista usa r, y para 0/1 usaba 1.96 con apenas 5 días por grupo (H-5-5). Ahora usa la misma maquinaria que la lista.
 - **Lo que sigue distinto de la lista:** el *q* se calcula entre las variables revisadas contra **este** objetivo, no entre todas las parejas; la autocorrelación de cada variable se calcula con toda su serie. Por eso una pareja puede tener ✓ aquí y salir punteada en la lista (o al revés) sin contradicción: se corrigió por menos comparaciones. **[Aproximación]**.
 - Para 0/1 se comparan los **restos del objetivo** entre días con y sin, pero la variable 0/1 no se «desestaciona»: si casi todos sus 1 caen en una sola temporada, la comparación hereda esa temporada en parte (los restos ya quitan lo lento del objetivo).
 - Desde la entrega 10d, `vm_factores` en R hace lo mismo (P-17 y P-32): las mismas piezas (`.vm_sin_tendencia`, `.vm_ar1`, `.vm_dif_dias`, con la corrección de Marriott y Pope y los grados de Welch con n efectivo), las mismas variables y las mismas obvias; `ExportacionPrueba.factoresComoR` fija que da los mismos números que la app con datos inventados (Apéndice C).
@@ -536,11 +534,11 @@ Los coeficientes estandarizados permiten comparar predictores en unidades distin
 
 ### 6.14.4 Ejemplo trabajado (sintético)
 
-59 días completos; objetivo valencia; predictores horas de sueño, pasos y valencia de ayer (k = 3; 55 grados de libertad, t = 2.004). Resultado: β sueño = +0.38 [0.14, 0.62] ✓; β pasos = +0.09 [−0.15, 0.33]; β ayer = +0.41 [0.17, 0.65] ✓; R² = 27 % y R² ajustado = 1 − 0.73 × 58/55 = **23 %**, que es lo que se muestra. Lectura: un día con una DE más de sueño (≈ 1 h en estos datos) se asocia con 0.38 DE más de valencia, a igual valor de ayer y pasos; los pasos no añaden nada claro. Con 1.96 (antes de 10c) los intervalos eran apenas más estrechos ([0.15, 0.62], [−0.14, 0.32], [0.18, 0.65]): con 59 días la diferencia entre t y la normal es pequeña; con 14 días sería de ~7 %.
+59 días completos; objetivo valencia; predictores horas de sueño, pasos y valencia de ayer (k = 3; 55 grados de libertad, t = 2.004). Resultado: β sueño = +0.38 [0.14, 0.62] ✓; β pasos = +0.09 [−0.15, 0.33]; β ayer = +0.41 [0.17, 0.65] ✓; R² = 27 % y R² ajustado = 1 − 0.73 × 58/55 = **23 %**, que es lo que se muestra. Lectura: un día con una DE más de sueño (≈ 1 h en estos datos) se asocia con 0.38 DE más de valencia, a igual valor de ayer y pasos; los pasos no añaden nada claro. Con 1.96 (antes de 10c) los intervalos eran apenas más estrechos ([0.15, 0.62], [−0.14, 0.32], [0.18, 0.65]): con 59 días la diferencia entre t y la normal es pequeña. Con pocos días no: en el mínimo que admite el modelo (n = k + 10) siempre quedan 9 grados de libertad, t = 2.262, y el intervalo con 1.96 sale un 13 % más estrecho (1 − 1.96/2.262); con 14 días y un solo predictor (12 grados, t = 2.179), un 10 %.
 
 ### 6.14.5 Cuándo falla (H-5-11)
 
-- **Resuelto en 10c (D.66):** el intervalo usaba 1.96 en vez de t con n − k − 1 grados (con 14 días quedaba ~7 % estrecho); el R² no estaba ajustado; y el interruptor decía «Controlar por el **ánimo** del día anterior» aunque agrega el **objetivo** de ayer. Ahora dice «Controlar por el valor del día anterior».
+- **Resuelto en 10c (D.66):** el intervalo usaba 1.96 en vez de t con n − k − 1 grados (en el mínimo de días quedaba un 13 % más estrecho, 6.14.4); el R² no estaba ajustado; y el interruptor decía «Controlar por el **ánimo** del día anterior» aunque agrega el **objetivo** de ayer. Ahora dice «Controlar por el valor del día anterior».
 - Solo días **completos**: si un predictor falta mucho, el modelo usa pocos días y quizá no representativos.
 - No quita tendencias, y el error estándar supone residuos independientes (el valor de ayer como predictor reduce, pero no elimina, la autocorrelación de los residuos).
 - En R, `vm_modelo_ar1` agrega errores AR(1) pero no tiene la opción del valor de ayer (Apéndice C).
@@ -553,9 +551,9 @@ Los coeficientes estandarizados permiten comparar predictores en unidades distin
 
 Para cada día del calendario entre el primero y el último con dato, promedia los valores de **ese día y los `ventana − 1` anteriores** que existan; el punto se dibuja solo si hay **al menos max(2, ventana/3)** días con dato (división entera: 2 para la de 7 días, 10 para la de 30). Es una media **hacia atrás**: se «retrasa» frente a los cambios, a diferencia de la media centrada que se usa para quitar la tendencia. La gráfica muestra el último año, con líneas solo entre días consecutivos. `vm_movil` en R es idéntica. **[Diseño propio]**, técnica estándar.
 
-![Figura 6.1](figuras/fig11_medias_moviles.png)
+![Figura 6.5](figuras/fig11_medias_moviles.png)
 
-*Figura 6.1. Valencia sintética de 200 días con 18 % de días sin registro y un hueco de 17 días; medias móviles de 7 y 30 días con sus mínimos de días. Script: `figuras/fig11_medias_moviles.py` (replica `Analisis.movil`).*
+*Figura 6.5. Valencia sintética de 200 días: cada día falta con probabilidad 0.18 y además se fuerza un hueco de 17 días (sombreado), que con dos faltas al azar pegadas queda en 19 días seguidos; en total faltan 55 de los 200 días (27.5 %). Medias móviles de 7 y 30 días con sus mínimos de días. Script: `figuras/fig11_medias_moviles.py` (replica `Analisis.movil`).*
 
 ### 6.15.2 Diferencia de medias (`Estadistica.diferenciaCompleta` y `diferenciaEnDias`)
 
@@ -650,11 +648,11 @@ Días difíciles (≤ 2): 0 %. Racha buena (≥ 5): 2 días (6, 5). Racha dura (
 
 **Qué hace.** Muestra las palabras de tus días mejores y más difíciles, y las 25 más frecuentes.
 
-**Cómo exactamente (`Analisis.palabras`).** Solo días con nota. Toma las secuencias de **3 o más letras** (en minúsculas), quita una lista de ~170 palabras vacías (comparando sin acentos) y, para cada palabra, los **días distintos** en que aparece. Si aparece en al menos **5** días con valencia, calcula la media de la valencia de esos días y su diferencia con la media **de los días con nota y valencia**. Muestra las 15 de mayor y menor diferencia (la pantalla, 10).
+**Cómo exactamente (`Analisis.palabras`).** Solo días con nota. Toma las secuencias de **3 o más letras** (en minúsculas), quita las palabras vacías de `Analisis.VACIAS` (167 escritas, muchas en dos formas como «aqui» y «aquí»: 146 distintas sin acentos, que es como se comparan) y, para cada palabra, los **días distintos** en que aparece. Si aparece en al menos **5** días con valencia, calcula la media de la valencia de esos días y su diferencia con la media **de los días con nota y valencia**. Muestra las 15 de mayor y menor diferencia (la pantalla, 10).
 
 **Ejemplo.** La media de tus días con nota es 4.4. «Playa» aparece en 6 días con valencias 6, 5, 7, 6, 5, 6 (media 5.83): +1.43.
 
-**Razonamiento y límites (H-5-10).** Es un análisis de **contenido por conteo** sin diccionario de emociones (a diferencia de LIWC, Tausczik y Pennebaker, 2010) ni prueba estadística. **[Diseño propio]**. Con cientos de palabras y 5 días como mínimo, las de los extremos de la lista son, en buena parte, las que tuvieron suerte (regresión a la media): con 5 días, la media de valencia varía ±0.9 puntos solo por azar si tu DE es 1. No hay intervalo ni q. Las palabras de días malos pueden reflejar **lo que escribes** cuando estás mal más que **lo que te pone mal**. Hasta la entrega 10d, `vm_palabras` en R usaba otra lista de vacías (con acentos) y otra referencia (la media de **todos** los días); desde 10d usa las mismas 167 palabras vacías comparadas sin acentos y la misma referencia (los días con nota), así que da las mismas diferencias. Lo de la incertidumbre sigue igual en las dos.
+**Razonamiento y límites (H-5-10).** Es un análisis de **contenido por conteo** sin diccionario de emociones (a diferencia de LIWC, Tausczik y Pennebaker, 2010) ni prueba estadística. **[Diseño propio]**. Con cientos de palabras y 5 días como mínimo, las de los extremos de la lista son, en buena parte, las que tuvieron suerte (regresión a la media): con 5 días, la media de valencia varía ±0.9 puntos solo por azar si tu DE es 1. No hay intervalo ni q. Las palabras de días malos pueden reflejar **lo que escribes** cuando estás mal más que **lo que te pone mal**. Hasta la entrega 10d, `vm_palabras` en R usaba otra lista de vacías (con acentos) y otra referencia (la media de **todos** los días); desde 10d usa la misma lista de 167 palabras vacías, comparadas sin acentos y la misma referencia (los días con nota), así que da las mismas diferencias. Lo de la incertidumbre sigue igual en las dos.
 
 ---
 
@@ -666,7 +664,7 @@ Días difíciles (≤ 2): 0 %. Racha buena (≥ 5): 2 días (6, 5). Racha dura (
 
 $$ z_i=\frac{x_i-M}{1.4826\cdot \mathrm{mediana}(|x-M|)} $$
 
-Marca el día si |z| ≥ **3** («muy alto» o «muy bajo»). Si MAD = 0 (la mitad o más de los días tienen el mismo valor), salta la variable. «Tu año» usa umbral 2.8.
+Marca el día si |z| ≥ **3** («muy alto» o «muy bajo»). Si MAD = 0 (más de la mitad de los días tienen el valor de la mediana), salta la variable. «Tu año» usa umbral 2.8.
 
 **Razonamiento.** La media y la DE se dejan arrastrar por los propios atípicos; la mediana y la MAD no. El factor 1.4826 hace que la MAD equivalga a la DE si los datos fueran normales, y |z| ≥ 3 es un umbral común y conservador (Leys et al., 2013). **[Validado]**.
 
@@ -722,7 +720,7 @@ $$ |r_{\min}|=\tanh\!\Big(\frac{1.96+0.84}{\sqrt{n_{Ef}-3}}\Big) $$
 
 | Días | Días independientes | Autocorrelación 0.5 en ambas (nEf = 0.6 n) | Igual, con α = 0.001 |
 |---|---|---|---|
-| 14 | 0.69 | 0.84 | 0.95 |
+| 14 | 0.69 | 0.84 | 0.94 |
 | 30 | 0.49 | 0.62 | 0.79 |
 | 90 | **0.29** | 0.37 | 0.52 |
 | 180 | 0.21 | 0.27 | 0.38 |
@@ -736,7 +734,7 @@ Así, la frase de los 90 días es **correcta para una sola relación con días i
 
 ### 6.21.4 Cuándo falla (H-5-16)
 
-El aviso de los 90 días cuenta **días con diario** (`Repo.dias.size`), no días con ambos datos de cada pareja. Desde 10c sí dice que en la lista completa solo se sostienen las relaciones fuertes (H-5-16, resuelto en parte), aunque no menciona la autocorrelación.
+El aviso de los 90 días cuenta **días con diario** (`Repo.dias.size`), no días con ambos datos de cada pareja. Desde 10c sí dice que en la lista completa solo se sostienen las relaciones fuertes (H-5-16, resuelto en 10c con la primera opción de su propuesta: matizar el texto), aunque no menciona la autocorrelación y sigue contando días con diario.
 
 ---
 
@@ -747,16 +745,16 @@ El script `vestigium.R` reproduce casi todas las herramientas. Desde la entrega 
 | Análisis | App | R | ¿Mismo resultado? |
 |---|---|---|---|
 | Datos | `Estadistica.panel()` | Desde 10d, `vm_panel_extendido.csv` (las columnas de la app más las de `vm_panel.csv`, que en lo compartido llevan el valor de la app); variables de `vm_variables.csv` | **Sí** en las variables que la app cruza; quedan 11 nombres dobles documentados y el calendario completado (6.3.4; H-5-1 resuelto) |
-| Relaciones | `relaciones`: Pearson, ±10 d, lentas < 0.12, nEf, BH, orden por «seguro» | `vm_relaciones`: el **mismo algoritmo** (mismas cotas, mínimos y orden; p con `pnorm` exacto) | **Sí** desde 10d: mismo panel, mismas variables y mismas obvias (`vm_familias.csv`; H-5-2 resuelto); R ya no cruza calendario ni cobertura (`.vm_no_cruzar`: `fin_de_semana`, `dia_libre`, `festivo`, `con_diario`, `n_muestreos`…). Probado con datos inventados, no con una exportación real. No hay modo semanal en R. |
+| Relaciones | `relaciones`: Pearson, ±10 d, lentas < 0.12, nEf, BH, orden por «seguro» | `vm_relaciones`: el **mismo algoritmo** (mismas cotas, mínimos y orden; p con `pnorm` exacto) | **Sí** desde 10d: mismo panel, mismas variables y mismas obvias (`vm_familias.csv`; H-5-2 resuelto); R ya no cruza calendario ni cobertura (`.vm_no_cruzar`: `fin_de_semana`, `dia_libre`, `festivo`, `con_diario`, `n_muestreos`…). Probado con datos inventados; con una exportación real, el autor comprobó que las primeras parejas coinciden con la pantalla. No hay modo semanal en R. |
 | Cruzar | Pearson + Spearman; IC de Pearson con nEf; r sin tendencia al lado (desde 10c) | `vm_cruce`: **Spearman** por omisión, `cor.test` con n | Distinto coeficiente por omisión y distinto intervalo (H-5-7); la entrega 10d no lo cambió |
 | Factores | Desde 10c: restos sin tendencia (interruptor), r de Pearson con nEf; 0/1 con t de Welch y factor AR(1); mínimos 10 días (5 y 5) / 14 | `vm_factores` desde 10d: lo mismo (`sin_tendencia`, r de Pearson con `n_ef`; 0/1 con `.vm_dif_dias`: Welch, factor AR(1), Marriott y Pope, `qt`); mismos mínimos; obvias de `vm_familias.csv` | **Sí** (fijado por `ExportacionPrueba.factoresComoR` con datos inventados) |
 | Modelo | MCO estandarizado sin intercepto; IC con t(n − k − 1); R² ajustado (desde 10c) | `vm_modelo`: `lm` sobre datos estandarizados; inferencia con t | Mismos β e intervalos desde 10c (los dos usan n − k − 1 grados; R reporta el R² sin ajustar y el ajustado) |
-| Modelo con AR(1) | — | `vm_modelo_ar1`: `nlme::gls` con `corAR1(~ t)` | Solo en R |
+| Modelo con AR(1) | — | `vm_modelo_ar1`: `nlme::gls` con `corAR1(~ t)` (Pinheiro et al., 2026) | Solo en R |
 | Tendencia | `movil` | `vm_movil` | Igual |
 | Día de la semana | n ≥ 5 por día; t(n − 1) EE (desde 10c) | `vm_semana` desde 10d: n ≥ 5 por día; t(n − 1) EE | Igual |
 | Dinámica | Valencia; mínimos 7 días, 3 y 10 pares; meses sin cruzar | `vm_dinamica`: cualquier variable; sin mínimos; inercia por mes; pares que cruzan meses | Casi igual en el total |
 | Ritmo | Reloj o teléfono; últimos 56 días; `Fechas.esDiaLibre` (desde 10c) | `vm_ritmo(dias = 56)`: solo reloj; lee `dia_libre` del panel (desde 10c) | Igual con reloj |
-| Palabras | ~170 vacías sin acentos; referencia: días con nota | Desde 10d, las mismas 167 vacías sin acentos; referencia: días con nota | Igual; R devuelve todas las palabras, la app los 15 extremos |
+| Palabras | 167 vacías (146 sin acentos), comparadas sin acentos; referencia: días con nota | Desde 10d, las mismas vacías, sin acentos; referencia: días con nota | Igual; R devuelve todas las palabras, la app los 15 extremos |
 | Atípicos | 15 variables (con `distancia_km` desde 10c); mediana superior; ≥ 20 días; último año | Desde 10d, las mismas 15 variables; `median`/`mad` de R; todos los días | Parecido; distinto número de días y mediana para n par |
 
 ---
@@ -794,9 +792,9 @@ El script `vestigium.R` reproduce casi todas las herramientas. Desde la entrega 
 2. «Las relaciones más marcadas» es el análisis más cuidadoso de la app: **quita tendencias** (±10 días), **descuenta los días parecidos** (nEf) y **corrige por miles de comparaciones** (BH, q < 0.10). Una relación firme ahí es una pista seria, no una prueba de causa.
 3. Desde 10c, «Todo lo que se mueve con algo» usa la misma maquinaria, y las diferencias de medias usan **t de Welch** con el error estándar corregido porque los días seguidos se parecen (H-5-3, H-5-5, resueltos en 10c, D.65 y D.66). Antes, la ficha podía marcar como firme lo que la lista llamaba azar.
 4. **El ciclo semanal no se quita** al quitar la tendencia (H-5-6).
-5. Desde la entrega 10d, **R analiza el mismo panel que la app**, con las mismas variables y las mismas parejas obvias, y `vm_factores`, `vm_semana` y `vm_palabras` tienen las correcciones de 10c (H-5-1, H-5-2, resueltos): R sirve para verificar lo que muestra la app. Se comprobó con datos inventados, no con una exportación real. `vm_cruce` sigue con Spearman y n bruto.
+5. Desde la entrega 10d, **R analiza el mismo panel que la app**, con las mismas variables y las mismas parejas obvias, y `vm_factores`, `vm_semana` y `vm_palabras` tienen las correcciones de 10c (H-5-1, H-5-2, resueltos): R sirve para verificar lo que muestra la app. Se comprobó con datos inventados; con una exportación real, el autor comprobó que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026). `vm_cruce` sigue con Spearman y n bruto.
 6. Con 90 días independientes se ve una relación de 0.3; con miles de parejas y días parecidos, hace falta más de 0.5. Paciencia: el sistema está pensado para años.
 
 ### Referencias citadas en este capítulo
 
-Abramowitz y Stegun (1964); Benjamini y Hochberg (1995); Benjamini y Yekutieli (2001); Bretherton et al. (1999); Cohen (1988); Dejonckheere et al. (2019); Fieller et al. (1957); Fisher (1915); Granger y Newbold (1974); Hamaker y Wichers (2017); Jahng et al. (2008); Kuppens et al. (2010); Leys et al. (2013); Marriott y Pope (1954); Pyper y Peterman (1998); Storey y Tibshirani (2003); Tausczik y Pennebaker (2010); von Neumann et al. (1941); Welch (1947); Yule (1926). Datos completos y verificación en `referencias.md`.
+Abramowitz y Stegun (1964); Benjamini y Hochberg (1995); Benjamini y Yekutieli (2001); Bretherton et al. (1999); Cohen (1988); Dejonckheere et al. (2019); Fieller et al. (1957); Fisher (1915); Granger y Newbold (1974); Hamaker y Wichers (2017); Jahng et al. (2008); Kuppens et al. (2010); Leys et al. (2013); Marriott y Pope (1954); Pinheiro et al. (2026); Pyper y Peterman (1998); Storey y Tibshirani (2003); Tausczik y Pennebaker (2010); von Neumann et al. (1941); Welch (1947); Yule (1926). Datos completos y verificación en `referencias.md`.

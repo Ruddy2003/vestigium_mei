@@ -246,7 +246,7 @@ Korotitsch, W. J., & Nelson-Gray, R. O. (1999). An overview of self-monitoring r
 
 Li, I., Dey, A., & Forlizzi, J. (2010). A stage-based model of personal informatics systems. En *Proceedings of the SIGCHI Conference on Human Factors in Computing Systems* (pp. 557–566). ACM. https://doi.org/10.1145/1753326.1753409
 
-OWASP Foundation. (s. f.). *Password storage cheat sheet*. OWASP Cheat Sheet Series. Recuperado el 27 de octubre de 2026, de https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+OWASP Foundation. (s. f.). *Password storage cheat sheet*. OWASP Cheat Sheet Series. Recuperado el 28 de octubre de 2026, de https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
 
 Turan, M. S., Barker, E., Burr, W., & Chen, L. (2010). *Recommendation for password-based key derivation: Part 1: Storage applications* (NIST Special Publication 800-132). National Institute of Standards and Technology. https://doi.org/10.6028/NIST.SP.800-132
 
@@ -275,3 +275,49 @@ Bosch Sensortec. (2021). *BMP280: Digital pressure sensor. Data sheet* (BST-BMP2
 STMicroelectronics. (2016). *LPS22HB: MEMS nano pressure sensor: 260-1260 hPa absolute digital output barometer* (DocID027083 Rev 5). Copia en https://cdn.sparkfun.com/assets/a/7/b/5/e/LPS22HB.pdf
 
 _Verificación (entrega 10d):_ las dos hojas de datos se descargaron y se leyeron en la sesión. La del BMP280 dice «300 … 1100 hPa» y lo destina a «handsets such as mobile phones, tablet PCs, GPS devices»; la del LPS22HB, «260 to 1260 hPa absolute pressure range» y «altimeters and barometers for portable devices». La página del producto de ST no abrió (error 503), así que la del LPS22HB se leyó en la copia de SparkFun; su encabezado coincide con el documento de ST (DocID027083 Rev 5, noviembre de 2016). No se comprobó qué sensor trae el teléfono del autor.
+
+## Módulo 11 · Capítulos 1 y 11 y resumen
+
+Asparouhov, T., Hamaker, E. L., & Muthén, B. (2018). Dynamic structural equation models. *Structural Equation Modeling: A Multidisciplinary Journal, 25*(3), 359–388. https://doi.org/10.1080/10705511.2017.1406803
+
+Barnett, A. G., van der Pols, J. C., & Dobson, A. J. (2005). Regression to the mean: What it is and how to deal with it. *International Journal of Epidemiology, 34*(1), 215–220. https://doi.org/10.1093/ije/dyh299 [Crossref lista solo al primer autor; los coautores, de mi conocimiento, sin verificar en la sesión]
+
+Cronbach, L. J., & Meehl, P. E. (1955). Construct validity in psychological tests. *Psychological Bulletin, 52*(4), 281–302. https://doi.org/10.1037/h0040957
+
+Daza, E. J. (2018). Causal analysis of self-tracked time series data using a counterfactual framework for N-of-1 trials. *Methods of Information in Medicine, 57*(S 01), e10–e21. https://doi.org/10.3414/ME16-02-0044
+
+Epstein, D. A., Ping, A., Fogarty, J., & Munson, S. A. (2015). A lived informatics model of personal informatics. En *Proceedings of the 2015 ACM International Joint Conference on Pervasive and Ubiquitous Computing* (pp. 731–742). ACM. https://doi.org/10.1145/2750858.2804250
+
+Fisher, A. J., Medaglia, J. D., & Jeronimus, B. F. (2018). Lack of group-to-individual generalizability is a threat to human subjects research. *Proceedings of the National Academy of Sciences, 115*(27), E6106–E6115. https://doi.org/10.1073/pnas.1711978115 [páginas sin verificar: Crossref no las da]
+
+Gelman, A., Hill, J., & Yajima, M. (2012). Why we (usually) don't have to worry about multiple comparisons. *Journal of Research on Educational Effectiveness, 5*(2), 189–211. https://doi.org/10.1080/19345747.2011.618213
+
+Gelman, A., & Loken, E. (2014). The statistical crisis in science. *American Scientist, 102*(6), 460–465. https://doi.org/10.1511/2014.111.460 [Crossref da solo la página inicial; la final, sin verificar]
+
+Granger, C. W. J. (1969). Investigating causal relations by econometric models and cross-spectral methods. *Econometrica, 37*(3), 424–438. https://doi.org/10.2307/1912791 [Crossref da solo la página inicial; la final, sin verificar]
+
+Ioannidis, J. P. A. (2005). Why most published research findings are false. *PLoS Medicine, 2*(8), e124. https://doi.org/10.1371/journal.pmed.0020124
+
+Ioannidis, J. P. A. (2008). Why most discovered true associations are inflated. *Epidemiology, 19*(5), 640–648. https://doi.org/10.1097/EDE.0b013e31818131e7
+
+Meredith, W. (1993). Measurement invariance, factor analysis and factorial invariance. *Psychometrika, 58*(4), 525–543. https://doi.org/10.1007/BF02294825
+
+Messick, S. (1995). Validity of psychological assessment: Validation of inferences from persons' responses and performances as scientific inquiry into score meaning. *American Psychologist, 50*(9), 741–749. https://doi.org/10.1037/0003-066X.50.9.741
+
+Molenaar, P. C. M. (2004). A manifesto on psychology as idiographic science: Bringing the person back into scientific psychology, this time forever. *Measurement: Interdisciplinary Research and Perspectives, 2*(4), 201–218. https://doi.org/10.1207/s15366359mea0204_1
+
+Roberts, S. (2004). Self-experimentation as a source of new ideas: Ten examples about sleep, mood, health, and weight. *Behavioral and Brain Sciences, 27*(2), 227–262. https://doi.org/10.1017/S0140525X04000068
+
+Schork, N. J. (2015). Personalized medicine: Time for one-person trials. *Nature, 520*(7549), 609–611. https://doi.org/10.1038/520609a
+
+Swan, M. (2013). The Quantified Self: Fundamental disruption in big data science and biological discovery. *Big Data, 1*(2), 85–99. https://doi.org/10.1089/big.2012.0002
+
+Trull, T. J., & Ebner-Priemer, U. (2013). Ambulatory assessment. *Annual Review of Clinical Psychology, 9*, 151–176. https://doi.org/10.1146/annurev-clinpsy-050212-185510
+
+_Verificación (módulo 11):_ los 18 DOI de este bloque se comprobaron en Crossref durante la sesión del 28 oct 2026 (autores, año, título, revista, volumen, número y páginas, salvo lo marcado). Barnett et al.: Crossref fecha la versión en línea en 2004; la edición impresa es de 2005. Lo que se dice de cada obra en los capítulos 1 y 11 es su tesis principal, conocida de antemano; **no se releyeron los textos completos** en la sesión. En particular, no se repiten cifras de Fisher et al. (2018) ni detalles históricos de Swan (2013) sobre el origen del nombre Quantified Self **[sin verificar]**. Se reutilizan referencias ya comprobadas en módulos anteriores: Benjamini y Hochberg (1995), Campbell (1979), Choe et al. (2014), Cruise et al. (1996), Csikszentmihalyi y Larson (1987), Guyatt et al. (1986), Hamaker y Wichers (2017), Kahneman et al. (1993), Korotitsch y Nelson-Gray (1999), Kratochwill y Levin (2010), Kravitz et al. (2014), Li et al. (2010), Lieberman et al. (2007), Marriott y Pope (1954), Nosek et al. (2018), Parry et al. (2021), Robinson y Clore (2002), Rubin (1976), Russell (1980), Shiffman et al. (2008), Simmons et al. (2011), Watson et al. (1981) y Wilkinson et al. (2016).
+
+## Módulo 14 · Lectura final
+
+Android Developers. (s. f.). *Location: getAccuracy()* [Página web]. Android API reference. Recuperado el 28 de octubre de 2026, de https://developer.android.com/reference/android/location/Location#getAccuracy()
+
+_Verificación (módulo 14):_ la página de Android se abrió en la sesión (dice «68th percentile confidence level»). La guía de OWASP se volvió a consultar el 28 de octubre de 2026: 600 000 iteraciones para PBKDF2-HMAC-SHA256 y 220 000 para HMAC-SHA512; qué cifra daba antes para SHA-512 queda [sin verificar].

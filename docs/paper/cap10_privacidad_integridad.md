@@ -1,10 +1,10 @@
 # Capítulo 10. Privacidad, seguridad e integridad de los datos
 
-> **Para qué sirve este capítulo.** Explica **dónde viven tus datos, quién puede verlos y qué tan seguro es que no se pierdan**: el almacenamiento en el teléfono, el seguimiento privado y por dónde se filtra, el cifrado del respaldo, la verificación sin restaurar, los respaldos automáticos (carpeta y Google Drive), la restauración y los servicios externos con los que la app habla. Todo corresponde a la versión v81 (commit `fa527df`).
+> **Para qué sirve este capítulo.** Explica **dónde viven tus datos, quién puede verlos y qué tan seguro es que no se pierdan**: el almacenamiento en el teléfono, el seguimiento privado y por dónde se filtra, el cifrado del respaldo, la verificación sin restaurar, los respaldos automáticos (carpeta y Google Drive), la restauración y los servicios externos con los que la app habla. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» o «desde el esquema 13» y está en el Apéndice D.
 >
-> **Cómo leerlo.** Igual que los capítulos anteriores. Las cifras criptográficas y las reglas vienen del código, con el nombre de la función. Los hallazgos son H-8-n (módulo 8, junto con el capítulo 9). Las **reglas de privacidad declaradas** vienen de la sección 7 del documento de contexto del proyecto (`VESTIGIUM_MEI_CONTEXTO.md`, v81); la sección 10.3.4 las compara con el código.
+> **Cómo leerlo.** Igual que los capítulos anteriores. Las cifras criptográficas y las reglas vienen del código, con el nombre de la función. Los hallazgos son H-8-n (módulo 8, junto con el capítulo 9); los H-9-n son del módulo 9. Las **reglas de privacidad declaradas** vienen de la sección 7 del documento de contexto del proyecto (`VESTIGIUM_MEI_CONTEXTO.md`, v81); la sección 10.3.4 las compara con el código.
 >
-> **Privacidad del propio capítulo.** El seguimiento privado (impulsos, recaídas, libido, medicamentos) se describe **solo en su mecánica**: no hay ejemplos ni datos personales, y tampoco se reproducen las palabras clave que el código usa para reconocer ciertos hábitos. No se habla de la firma de la app.
+> **Privacidad del propio capítulo.** El seguimiento privado (impulsos, recaídas, libido, medicamentos) se describe **solo en su mecánica**: no hay ejemplos ni datos personales, y tampoco se reproducen las palabras clave que el código usa para reconocer ciertos hábitos.
 
 ---
 
@@ -43,15 +43,15 @@ _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-
   - todo momento de tipo `impulso`, `recaida` o `libido` (`Momento.privado`, que usa `Privado.TIPOS`);
   - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y los **medicamentos**;
   - el **hábito ligado a las recaídas**. Con el interruptor encendido es el que elegiste en Privacidad o, si no elegiste, un hábito activo cuyo nombre contenga ciertas palabras clave. Con el interruptor apagado, solo el que elegiste. Elegir «ninguno» funciona; hasta v84 caía de nuevo en las palabras clave.
-- **Dónde se ve: solo en la pantalla Privado** (Más → Privado; antes «Impulsos y recaídas»). Ahí se anota cada día:
-  - los medicamentos, con un botón «lo de siempre» que copia los del último día con medicamentos;
-  - con el interruptor encendido, también el impulso, la recaída, los detonantes y el hábito ligado.
+- **Dónde se ve: solo en la pantalla Privado** (Más → Privado; antes «Impulsos y recaídas»). Siempre, con el interruptor encendido o apagado (`ui/pantallas/Recaidas.kt`):
+  - los medicamentos del día, con un botón «lo de siempre» que copia los del último día con medicamentos;
+  - «Registrar un impulso ahora» (un momento de impulso con hora);
+  - los impulsos por hora, la tendencia de los últimos 12 meses (impulsos y días con medicamentos), los días que tomaste cada medicamento y el registro de los últimos 30 momentos privados, que se pueden corregir.
 
-  La pantalla trae además:
-  - el resumen privado;
-  - una tendencia de los últimos 12 meses: días con recaída, impulsos y días con medicamentos;
-  - los días que tomaste cada medicamento;
-  - el registro de los últimos 30 momentos privados, que se pueden corregir.
+  Con el interruptor encendido, además:
+  - en el día, la intensidad del impulso (0 a 5), si hubo recaída, los detonantes y el hábito ligado;
+  - los botones para registrar una recaída o la libido;
+  - el resto del resumen privado (rachas, recaídas por hora y por día de la semana, lugares, detonantes…), los días con recaída en la tendencia y la sección de libido.
 
   Desde Día, el enlace «privado de este día» abre la pantalla en esa fecha. Las correlaciones de estas variables se hacen **solo en R**, como decidiste.
 - **Dónde no se ve: en ninguna otra parte de la app**, ni con el interruptor encendido:
@@ -59,7 +59,7 @@ _Esta sección describe el código después del módulo 10a (decisiones D-1 y D-
   - reportes, «Tu año», logros (también los propios), metas, campañas y experimentos (el impulso dejó de ser una medida posible);
   - Constelación, Red, Tu gente, las sugerencias de @ y # al escribir, «Tus temas», y las variables `per_`, `pen_` y `tema_`;
   - todas las listas de análisis: `Estadistica.variables()` excluye `impulso`, `recaida`, `n_recaida`, `recaida_min`, `libido_max`, `n_libido`, `n_impulso`, `medicamentos_n`, las familias `med_` y `det_` y `hab_` del hábito ligado.
-- **El interruptor `Config.seguimiento_privado`** (apagado por omisión) solo decide qué se **ofrece** anotar: con él apagado, la pantalla Privado tiene medicamentos e impulsos; con él encendido, también recaídas, libido y detonantes. Ya no decide qué se muestra fuera de Privado: fuera, nunca se muestra.
+- **El interruptor `Config.seguimiento_privado`** (apagado por omisión) solo decide qué se **ofrece** en la pantalla Privado: con él apagado, medicamentos y momentos de impulso; con él encendido, también la intensidad del impulso del día, recaídas, libido y detonantes (la lista de arriba). Ya no decide qué se muestra fuera de Privado: fuera, nunca se muestra.
 - **La exportación para R lleva todo, siempre.** El panel calcula las variables privadas aunque el interruptor esté apagado, y `vm_momentos.csv`, `vm_dias.csv`, `vm_panel_extendido.csv` y `vm_respaldo.json` las llevan. Desde la entrega 10d, `vm_variables.csv` lista las variables que la app cruza y marca las privadas (`privada` = 1, con `Privado.esVariable`). Por omisión, `vm_relaciones()` y `vm_factores()` de R **no** las cruzan, para dar lo mismo que la app; con `privadas = TRUE` sí, y esa es la vía para hacer en R las correlaciones del seguimiento privado. Las coordenadas de un momento privado ya no se usan para pedir el clima (`Entorno.lugarDe`).
 - **Registrar una recaída** (`Recaidas.registrar`) guarda el momento con hora y lugar, marca el día con recaída y **desmarca el hábito ligado**. Se puede deshacer tal cual (`deshacer`) y cambiar la hora (`moverHora`), que busca la ubicación de esa hora (la más cercana en ±30 min) y descarta la luz y el ruido medidos al registrar. Desde el esquema 14 (H-NAV-6): cambiar solo el día, con la misma hora, también la mueve, porque se compara el minuto completo; y borrarla desde el diálogo de Privado quita la marca del día si era la única recaída de ese día (`alBorrar`; el día queda sin respuesta, porque no se sabe qué había antes).
 - **El resumen privado** (`Recaidas.resumen`):
@@ -84,7 +84,7 @@ La más larga (`rachaMaxima`) y la actual (`rachaActual`) salen de ahí, y la pa
 
 ### 10.3.3 Dónde aparecía hasta v84 y qué cambió
 
-La Figura 10.1 resume qué tipo de dato llega a cada salida. Hasta v84, el seguimiento privado se ocultaba de casi todo, pero se filtraba por seis vías. Todas quedaron resueltas en el módulo 10a:
+La Figura 10.1 resume qué tipo de dato llega a cada salida. Hasta v84, el seguimiento privado se ocultaba de casi todo, pero se filtraba por seis vías. Todas se cerraron en el módulo 10a (la 5, en lo que toca a lo privado: H-8-5 sigue abierto en lo demás):
 
 1. **Los momentos de impulso no eran «privados» para el código** (H-8-1). Contaban en el reporte, en «Tu año», en los logros de momentos, en el mapa, en un widget, en la semana, el calendario, el año, la Constelación, la Red y las presencias. Ahora `Momento.privado` incluye el impulso.
 2. **«La relación del año» podía usar variables privadas y `medicamentos_n`** (H-8-2), y `n_impulso` entraba siempre, aun con el interruptor apagado, porque estaba en el grupo «Momentos» (H-9-1). Ahora `variables()` las excluye.
@@ -95,11 +95,11 @@ La Figura 10.1 resume qué tipo de dato llega a cada salida. Hasta v84, el segui
 
 **Sobre la pregunta del plan («por qué los logros nunca se ligan a sustancias, impulsos, recaídas ni libido»).** El documento de contexto lo afirma de los 12 logros secretos y, en general, de todo el seguimiento privado. El razonamiento es correcto: un logro por «días sin recaída» o por «tomar menos alcohol» convertiría el seguimiento privado en un marcador, con la presión de la ley de Campbell (capítulo 9, sección 9.7) justo sobre los datos más delicados; y uno «por registrar impulsos» premiaría registrarlos.
 
-Hasta v84 la afirmación era **casi** cierta, por las tres vías indirectas de arriba (puntos 1 y 3). Desde el módulo 10a se cumple. Las sustancias **no** son privadas según la regla declarada («Sustancias NO son privadas: dato normal»), así que un logro propio sobre ellas no rompe ninguna regla; solo conviene recordar el riesgo de la ley de Campbell.
+Hasta v84 la afirmación era **casi** cierta, salvo por tres vías indirectas, recogidas en los puntos 1 y 3 de arriba: los impulsos contaban en los logros de momentos, el hábito ligado tenía logros de constancia y campañas, y los logros propios aceptaban variables privadas. Desde el módulo 10a se cumple. Las sustancias **no** son privadas según la regla declarada («Sustancias NO son privadas: dato normal»), así que un logro propio sobre ellas no rompe ninguna regla; solo conviene recordar el riesgo de la ley de Campbell.
 
 ### 10.3.4 Las reglas declaradas frente al código
 
-La sección 7 del documento de contexto llama a estas reglas «no negociables». Comparación con el código de v81:
+La sección 7 del documento de contexto llama a estas reglas «no negociables». Comparación con el código de v90 (donde cambió desde v81, se dice):
 
 | Regla declarada | ¿Se cumple? | Dónde se comprobó |
 |---|---|---|
@@ -108,7 +108,7 @@ La sección 7 del documento de contexto llama a estas reglas «no negociables».
 | Tokens de Spotify y claves de API solo en el teléfono | **Sí** | Preferencias privadas (`Spotify.prefs`, `Portadas.prefs` «claves_busqueda»), fuera de `Config` y por tanto fuera de los respaldos |
 | `allowBackup=false` | **Sí** | Manifiesto |
 | Fotos nunca se copian | **Sí** | El catálogo guarda hora, coordenadas y aparato, no la imagen |
-| Cartas selladas: sin contenido en búsqueda, CSV ni «Tu año» | **En parte** | El CSV y «Tu año» cumplen; `vm_respaldo.json`, que se exporta junto al CSV, lleva el texto (H-8-5). La búsqueda no la comprobé **[sin verificar]** |
+| Cartas selladas: sin contenido en búsqueda, CSV ni «Tu año» | **En parte** | El CSV, «Tu año» y la búsqueda cumplen (la búsqueda en cartas solo mira las legibles, `Carta.legible`, en `ui/pantallas/Totales.kt`); `vm_respaldo.json`, que se exporta junto al CSV, lleva el texto (H-8-5) |
 | Seguimiento privado (impulsos, recaídas, libido, detonantes, medicamentos) nunca en reportes, «Tu año», logros, mapas ni widgets; sí en la exportación a R | **Sí desde el módulo 10a**, con una regla más estricta: fuera de la pantalla Privado no aparece en ninguna salida. Hasta v84 fallaba en los impulsos y los medicamentos (H-8-1, H-8-2) | `data/Privado.kt`, `Momento.privado`, `Estadistica.variables` |
 | Sustancias no son privadas | **Sí** | Se tratan como dato normal |
 | La imagen del hall no lleva texto del diario | **Sí** | `HallImagen.kt` («Sin textos del diario ni nada privado»); la cita del diario solo aparece en el detalle del trofeo dentro de la app |
@@ -140,9 +140,9 @@ La sección 7 del documento de contexto llama a estas reglas «no negociables».
 
 ### 10.4.3 Las iteraciones (H-8-9)
 
-Las iteraciones son el «peaje» por cada intento de adivinar. La guía de OWASP para guardar contraseñas recomienda, para PBKDF2 con HMAC-SHA256, **600 000 iteraciones** (y 220 000 para HMAC-SHA512) (OWASP, s. f.). La app usa **210 000 con SHA-256**: unas 2.9 veces menos peaje que lo recomendado hoy. **[Aproximación]**: es mucho mejor que nada, pero por debajo de la recomendación actual.
+Las iteraciones son el «peaje» por cada intento de adivinar. La guía de OWASP para guardar contraseñas recomienda, para PBKDF2 con HMAC-SHA256, **600 000 iteraciones** (y 220 000 para HMAC-SHA512; cifras comprobadas en la página el 28 de octubre de 2026) (OWASP, s. f.). La app usa **210 000 con SHA-256** (`PBKDF2WithHmacSHA256`, `ITERACIONES = 210_000` en `data/Respaldos.kt`): unas 2.9 veces menos peaje que lo que OWASP recomienda hoy para SHA-256. (Algunas fuentes secundarias atribuyen a una versión anterior de la guía 210 000 para SHA-512, la cifra de la app; no lo pude confirmar en la fuente **[sin verificar]**. Aunque fuera así, la app usa SHA-256.) **[Aproximación]**: es mucho mejor que nada, pero por debajo de la recomendación actual.
 
-**Ejemplo (cuentas exactas, sin velocidades).** La app exige al menos **8 caracteres**. Si fueran 8 letras minúsculas al azar, hay 26⁸ ≈ 2.1 × 10¹¹ contraseñas posibles; probarlas todas cuesta 2.1 × 10¹¹ × 210 000 ≈ 4.4 × 10¹⁶ cálculos de HMAC. Con 600 000 iteraciones serían ≈ 1.3 × 10¹⁷. Pero una contraseña humana (una palabra con un número) no es aleatoria y se adivina mucho antes. **La longitud y el azar de la contraseña importan mucho más que las iteraciones.** No doy tiempos, porque dependen del equipo del atacante y no los verifiqué.
+**Ejemplo (cuentas exactas, sin velocidades).** La app exige al menos **8 caracteres** (`ui/pantallas/Respaldo.kt`). Si fueran 8 letras minúsculas al azar, hay 26⁸ ≈ 2.1 × 10¹¹ contraseñas posibles; probarlas todas cuesta 2.1 × 10¹¹ × 210 000 ≈ 4.4 × 10¹⁶ cálculos de HMAC. Con 600 000 iteraciones serían ≈ 1.3 × 10¹⁷. Pero una contraseña humana (una palabra con un número) no es aleatoria y se adivina mucho antes. **La longitud y el azar de la contraseña importan mucho más que las iteraciones.** No doy tiempos, porque dependen del equipo del atacante y no los verifiqué.
 
 ### 10.4.4 La contraseña en el teléfono
 
@@ -176,7 +176,7 @@ Una vez al día (la primera vez que corre la tarea diaria después de las 6:00, 
 - **Sin contraseña, todo queda en claro fuera del teléfono** (H-8-5), incluido el diario completo. Desde el módulo 10a, si hay datos privados, el respaldo no sale sin contraseña. La **exportación para R** (resumida o extendida, que pides a mano y compartes) es la excepción: R necesita leer los CSV, así que va sin cifrar, y la pantalla advierte que lleva los datos privados.
 - **El costo de esa regla:** si nunca pones contraseña, los respaldos automáticos quedan en pausa mientras haya datos privados. Por eso el aviso es visible en Hoy y llega una notificación semanal.
 - **Las cartas selladas** van **sin texto** en `vm_cartas.csv` («no se pueden leer antes de su fecha»), pero `vm_respaldo.json`, que se exporta junto, lleva **el texto completo** (H-8-5). El sello se puede saltar abriendo el JSON.
-- **Hasta el esquema 12, un respaldo malo podía reemplazar a uno bueno** (H-8-14; desde el 13, ver la sección 10.5.2). Si un día los datos del teléfono se dañan o se pierden (por ejemplo, tras reinstalar), el respaldo de ese día **sobrescribe** el anterior sin comprobar si trae muchos menos datos. La copia semanal de esa semana también será mala si es la primera de la semana. Quedan las copias semanales y mensuales anteriores, pero «Restaurar desde Drive» **toma siempre la más reciente** (`Drive.ultimaCopia`, por fecha de modificación). Para traer una anterior hay que bajarla a mano y usar «Restaurar desde un archivo».
+- **Hasta el esquema 12, un respaldo malo podía reemplazar a uno bueno** (H-8-14). Si un día los datos del teléfono se dañaban o se perdían (por ejemplo, tras reinstalar), el respaldo de ese día **sobrescribía** el anterior sin comprobar si traía muchos menos datos, y la copia semanal también salía mala si era la primera de la semana. Desde el 13, Drive aparta un respaldo mucho más pobre (sección 10.5.2). Lo que sigue igual: «Restaurar desde Drive» **toma siempre la más reciente** (`Drive.ultimaCopia`, por fecha de modificación, sin contar `vestigium_revisar`). Para traer una semanal o mensual anterior hay que bajarla a mano y usar «Restaurar desde un archivo».
 
 ### 10.5.4 Los reportes, en carpetas públicas (H-8-4)
 
@@ -285,9 +285,9 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 4. **El seguimiento privado** (impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado) se ve, desde el módulo 10a, **solo en la pantalla Privado** y va completo a R. Hasta v84 se colaba por los impulsos, los medicamentos y el hábito ligado (H-8-1, H-8-2, H-8-3, H-9-39). Desde la entrega 10c, las rachas cuentan solo los días respondidos «no» (H-8-8, D.75).
 5. **Verificar** un respaldo es una gran idea. Hasta el esquema 12, el mensaje prometía más de lo que comprobaba y no revisaba la versión del esquema (H-8-12). Desde el 13 dice solo lo que comprueba, compara respaldo y teléfono, y un respaldo de una versión más nueva no se restaura.
 6. **Restaurar** combina con reglas distintas según la colección (H-8-13). Desde el esquema 13, los gastos e ingresos no se pisan y un experimento terminado no se reactiva. En Drive, un respaldo mucho más pobre ya no reemplaza al bueno: se guarda aparte y se avisa (H-8-14).
-7. Los reportes se guardan solos en carpetas públicas con nombres y frases del diario (H-8-4; capítulo 9).
-8. Las reglas de privacidad declaradas se cumplen en casi todo (texto de WhatsApp, notificaciones, claves, fotos, recaídas, libido); fallan en los impulsos y los medicamentos (H-8-1, H-8-2), en el texto de las cartas selladas dentro del JSON (H-8-5) y en la lista de servicios externos (H-8-17).
-9. Entre los capítulos 9 y 10 se identificaron **17 hallazgos** (H-8-1 a H-8-17). No se cambió código.
+7. Los reportes se guardan solos en carpetas públicas (H-8-4; capítulo 9). Hasta v84 llevaban nombres de personas y la frase del mejor momento; desde el módulo 10a, los que se guardan solos van en modo discreto y sin esa frase.
+8. Las reglas de privacidad declaradas se cumplen en casi todo (texto de WhatsApp, notificaciones, claves, fotos, seguimiento privado). Hasta v84 fallaban en los impulsos y los medicamentos (H-8-1, H-8-2, resueltos en 10a); siguen fallando en el texto de las cartas selladas dentro del JSON (H-8-5) y en la lista de servicios externos (H-8-17).
+9. El módulo 8 identificó, entre los capítulos 9 y 10, **17 hallazgos** (H-8-1 a H-8-17), sin cambiar código. Después, el módulo 10 resolvió H-8-1, H-8-2, H-8-3, H-8-7, H-8-8, H-8-10, H-8-12 y H-8-16, y en parte H-8-4, H-8-5, H-8-13 y H-8-14; siguen abiertos H-8-6, H-8-9, H-8-11, H-8-15 y H-8-17.
 
 ---
 

@@ -29,7 +29,7 @@ Ninguna propuesta se tachó: todas quedan aprobadas. Las decisiones de la secci�
   - **10a hecha** (commit `a67bad0`, versión v85): P-01 a P-06 y P-34, detalladas en el Apéndice D.
   - **10b hecha** (esquema 13): P-07 a P-13, P-16 (ii), I-3, I-6 e I-7, detalladas en el Apéndice D. En I-6 el autor decidió registrar también las fechas de fallecimiento y avisar de los cumpleaños.
   - **10c hecha** (commit `b943ec7`; `SCHEMA_V` sigue en 14): P-14 a P-29, I-1 e I-2, detalladas en el Apéndice D (D.62 a D.78). No se cambió la corrección de Hedges (H-7-7); las partes de R de P-16 y P-17 pasan a 10d.
-  - **10d hecha** (commit `035982c`; `SCHEMA_V` sigue en 14): P-30 a P-33 y las partes de R de P-16 y P-17, detalladas en el Apéndice D (D.79 a D.86). R se probó en la sesión con CSV sintéticos, no con una exportación real.
+  - **10d hecha** (commit `035982c`; `SCHEMA_V` sigue en 14): P-30 a P-33 y las partes de R de P-16 y P-17, detalladas en el Apéndice D (D.79 a D.86). R se probó en la sesión con CSV sintéticos y después con una exportación real de la v89, que llevó a D.87 (commit `d4e8e62`); después, el autor comprobó con una exportación real que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026).
 
 ## Cómo leer y anotar este documento
 

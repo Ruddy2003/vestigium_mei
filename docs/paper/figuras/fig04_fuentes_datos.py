@@ -4,12 +4,14 @@ import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import estilo  # paleta y tipografía comunes (módulo 12)
 
-INK, MUTED = "#1f2937", "#6b7280"
-PAS, IMP = "#6a994e", "#bc6c25"   # mismos colores que la figura 2.1
+INK, MUTED = estilo.TINTA, estilo.GRIS
+PAS, IMP = estilo.VERDE, estilo.OCRE   # mismos colores que la figura 2.1
 filas = [  # fuente, cómo llega, cuándo, día, capa
-    ("Pantalla (uso de apps)", "API de uso del sistema", "mañana y 21:00", "cal", "p"),
-    ("Reloj: pasos, corazón, oxígeno", "Health Connect", "mañana y 21:00", "cal", "p"),
+    ("Pantalla (uso de apps)", "API de uso del sistema", "mañana y 21:00", "log", "p"),   # día lógico desde el esquema 13
+    ("Reloj: pasos", "Health Connect", "mañana y 21:00", "log", "p"),                    # día lógico desde el esquema 13
+    ("Reloj: corazón, oxígeno, peso", "Health Connect", "mañana y 21:00", "cal", "p"),
     ("Reloj: sueño", "Health Connect", "mañana y 21:00", "desp", "p"),
     ("Agenda (calendario)", "Calendario del teléfono", "mañana y 21:00", "cal", "p"),
     ("Clima, aire, luz solar", "Open-Meteo (internet)", "mañana", "cal", "p"),
@@ -30,7 +32,7 @@ fig, ax = plt.subplots(figsize=(11, 6.4), dpi=160)
 ax.set_xlim(0, 11); ax.set_ylim(-0.9, n + 0.6); ax.invert_yaxis(); ax.axis("off")
 for x, t in [(0.35, "Fuente"), (4.1, "Cómo llega"), (7.0, "Cuándo"), (9.1, "Día que usa")]:
     ax.text(x, -0.35, t, fontsize=9, weight="bold", color=INK, va="center")
-ax.plot([0.2, 10.9], [0.05, 0.05], color="#d1d5db", lw=1)
+ax.plot([0.2, 10.9], [0.05, 0.05], color=estilo.GRIS_CLARO, lw=1)
 for i, (f, c, w, d, k) in enumerate(filas):
     y = i + 0.6
     col = PAS if k == "p" else IMP
@@ -44,8 +46,8 @@ for i, (f, c, w, d, k) in enumerate(filas):
         ax.plot(9.2, y, "o", ms=7, mfc="white", mec=INK, mew=1.4); ax.text(9.45, y, "calendario (00:00)", fontsize=8.2, color=INK, va="center")
     else:
         ax.plot(9.2, y, "s", ms=6.5, color=INK); ax.text(9.45, y, "día en que despiertas", fontsize=8.2, color=INK, va="center")
-ax.text(0.1, n + 0.45, "Franja verde = pasiva · franja naranja = importada · ● día lógico (corte 05:00) · ○ día de calendario (00:00 a 24:00)",
+ax.text(0.1, n + 0.45, "Franja verde = pasiva · franja naranja = importada · ● día lógico (corte 05:00) · ○ día de calendario (00:00 a 24:00) · pantalla y pasos, por día lógico desde el esquema 13",
         fontsize=8, color=MUTED)
-ax.set_title("Figura 4.1  Fuentes de datos pasivos e importados y el «día» que cada una usa", loc="left", fontsize=11.5, weight="bold", color=INK)
+ax.set_title("Fuentes de datos pasivos e importados y el «día» que cada una usa", loc="left", fontsize=11.5, weight="bold", color=INK)
 fig.tight_layout()
 fig.savefig(sys.argv[1] if len(sys.argv) > 1 else "fig04_fuentes_datos.png")
