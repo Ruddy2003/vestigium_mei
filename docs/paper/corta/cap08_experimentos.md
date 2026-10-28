@@ -1,6 +1,6 @@
 # Capítulo 8. Experimentos personales (N-de-1)
 
-> **Para qué sirve este capítulo.** Explica cómo la app te ayuda a **probar algo en ti mismo** (dormirte antes, tomar creatina) y a decidir si funcionó: la lógica de estos diseños, qué hace exactamente el código (sorteo de semanas, días de lavado, diferencia de medias, tamaño del efecto, prueba de tendencia) y qué tan confiable es el resultado. También trata «Antes y después» de Explorar, que **parece** un experimento pero no lo es. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`). Los hallazgos se numeran H-7-n y están en `hallazgos.md`. Los ejemplos y las **simulaciones** (miles de experimentos inventados en los que *sabemos* la verdad) usan datos inventados.
+> **Para qué sirve este capítulo.** Explica cómo la app te ayuda a **probar algo en ti mismo** (dormirte antes, tomar creatina) y a decidir si funcionó: la lógica de estos diseños, qué hace exactamente el código (sorteo de semanas, días de lavado, diferencia de medias, tamaño del efecto, prueba de tendencia) y qué tan confiable es el resultado. También trata «Antes y después» de Explorar, que **parece** un experimento pero no lo es. Describe el código de la v90 (commit `8818d5a`, `SCHEMA_V = 14`) con los cambios de la entrega 10e, posterior (sin número de versión todavía). Los hallazgos se numeran H-7-n y están en `hallazgos.md`. Los ejemplos y las **simulaciones** (miles de experimentos inventados en los que *sabemos* la verdad) usan datos inventados.
 
 ---
 
@@ -74,17 +74,17 @@ donde $\bar{x}$ son las medias, $s^2$ las varianzas muestrales y *n* los días d
 
 **2. Mensaje.** Mientras dura el plan (`Experimentos.enCurso`), la tarjeta dice «Provisional: el plan sigue en curso. Mirar el resultado a medio camino y parar en la primera «señal» engaña; espera a que termine», sin veredicto. Al terminar: si el intervalo no toca el cero, «es una señal para ti»; si lo toca, «todavía no se distingue del azar».
 
-**3. d de Cohen**: la diferencia medida en «desviaciones estándar», cuántas veces el vaivén normal de un día a otro (Cohen, 1988), con la desviación agrupada $s_p$:
+**3. g de Hedges** (desde 10e, D.96; antes, la *d* de Cohen sin corregir): la diferencia medida en «desviaciones estándar», cuántas veces el vaivén normal de un día a otro (Cohen, 1988), con la desviación agrupada $s_p$ y la corrección de Hedges (1981), que quita lo que la *d* se infla con pocos días:
 
-$$d = \frac{\bar{x}_c - \bar{x}_s}{s_p}, \qquad s_p = \sqrt{\frac{(n_c-1)s_c^2 + (n_s-1)s_s^2}{n_c+n_s-2}}$$
+$$d = \frac{\bar{x}_c - \bar{x}_s}{s_p}, \qquad s_p = \sqrt{\frac{(n_c-1)s_c^2 + (n_s-1)s_s^2}{n_c+n_s-2}}, \qquad g = d \cdot \Big(1 - \frac{3}{4(n_c+n_s) - 9}\Big)$$
 
-La palabra (`Experimentos.tamano`): |*d*| < 0.2 «muy pequeño», < 0.5 «pequeño», < 0.8 «mediano» y desde 0.8 «grande», los puntos de referencia de Cohen (1988).
+La palabra (`Experimentos.tamano`): |*g*| < 0.2 «muy pequeño», < 0.5 «pequeño», < 0.8 «mediano» y desde 0.8 «grande», los puntos de referencia de Cohen (1988); desde 10e la tarjeta añade que es «para cómo varían tus días; no se compara con los estudios entre personas».
 
 **4. Prueba de tendencia** (sección 8.7).
 
 ### 8.5.2 Ejemplo trabajado (Figura 8.1, izquierda)
 
-Experimento inventado: 6 semanas alternas (SÍ no no SÍ SÍ no), 1 día de lavado, medida = valencia del día, con un efecto real de +0.5 y autocorrelación real de 0.3. Cuentan 19 días por condición. Medias 4.84 y 4.26: diferencia **+0.58**. Varianzas 0.474 y 0.871; $s_p$ = 0.820 y *d* = **0.71**, «mediano».
+Experimento inventado: 6 semanas alternas (SÍ no no SÍ SÍ no), 1 día de lavado, medida = valencia del día, con un efecto real de +0.5 y autocorrelación real de 0.3. Cuentan 19 días por condición. Medias 4.84 y 4.26: diferencia **+0.58**. Varianzas 0.474 y 0.871; $s_p$ = 0.820 y *d* = 0.71; con la corrección, 1 − 3/(4 × 38 − 9) = 0.979, *g* = **0.69**, «mediano» (antes de 10e, la tarjeta decía 0.71).
 
 - Autocorrelación de los pares de días seguidos: 0.098 («con») y 0.408 («sin»). Corregidas: 0.098 + (1 + 4 × 0.098)/19 = **0.172** y 0.408 + (1 + 4 × 0.408)/19 = **0.547**.
 - Varianza de cada media, inflada: 0.474/19 × 1.172/0.828 = 0.0353 y 0.871/19 × 1.547/0.453 = 0.1564; error estándar √(0.0353 + 0.1564) = **0.438**.
@@ -114,11 +114,11 @@ La autocorrelación de 0.3 a 0.5 es ilustrativa **[sin verificar]**. **El métod
 
 ### 8.5.4 Qué sería más adecuado: la prueba de aleatorización
 
-**[Validado]** en la literatura de caso único (Kratochwill y Levin, 2010; Tanious y Onghena, 2019): calcular la diferencia con el plan que de verdad se sorteó y con **cada uno de los otros planes que pudieron salir**; el valor *p* es la fracción de planes que dan una diferencia igual o mayor que la real. **No supone que los días sean independientes**, porque se apoya solo en que el sorteo fue real. Su límite: el *p* más pequeño posible es 1 / número de planes, que con el sorteo por pares es 0.25 con 4 semanas, 0.125 con 6, 0.0625 con 8 y 0.016 con 12: **con 4, 6 u 8 semanas no se puede llegar a *p* < 0.05**, por grande que sea el efecto. Es una **propuesta no aplicada**: no está en la app ni en R (H-7-11).
+**[Validado]** en la literatura de caso único (Kratochwill y Levin, 2010; Tanious y Onghena, 2019): calcular la diferencia con el plan que de verdad se sorteó y con **cada uno de los otros planes que pudieron salir**; el valor *p* es la fracción de planes que dan una diferencia igual o mayor que la real. **No supone que los días sean independientes**, porque se apoya solo en que el sorteo fue real. Su límite: el *p* más pequeño posible es 1 / número de planes, que con el sorteo por pares es 0.25 con 4 semanas, 0.125 con 6, 0.0625 con 8 y 0.016 con 12: **con 4, 6 u 8 semanas no se puede llegar a *p* < 0.05**, por grande que sea el efecto. No está en la app; desde 10e (D.97) la hace `vm_experimento(id)` en R (H-7-11): repite el resultado de la app y compara la diferencia observada con la de los 2^k planes del sorteo por pares, cada uno con su lavado, con *p* de dos colas; en «antes y después» devuelve NA. Como el plan **espejo** (cada «SÍ» cambiado por «no») da, sin lavado, la misma diferencia con el signo contrario, el mínimo real es **2 / planes**: con 12 semanas, 2/64 ≈ 0.031, todavía bajo 0.05.
 
-### 8.5.5 El d de Cohen en una sola persona
+### 8.5.5 El tamaño del efecto en una sola persona
 
-No lleva la corrección de Hedges (1981) para el *d* inflado con pocos datos, que importa solo con muy pocos días (H-7-7, documentado). Más importante: Cohen propuso 0.2, 0.5 y 0.8 para diferencias **entre personas**; aquí la desviación es la de **tus días**, que suele ser menor, así que el mismo cambio da un *d* más grande. **[Aproximación]**: útil como escala dentro de la app, no para comparar con la literatura.
+Desde 10e lleva la corrección de Hedges (1981), que importa solo con muy pocos días: con 3 + 3, el factor es 0.80 (H-7-7, resuelto). Más importante: Cohen propuso 0.2, 0.5 y 0.8 para diferencias **entre personas**; aquí la desviación es la de **tus días**, que suele ser menor, así que el mismo cambio da un *d* más grande. **[Aproximación]**: útil como escala dentro de la app, no para comparar con la literatura.
 
 ---
 
@@ -126,7 +126,7 @@ No lleva la corrección de Hedges (1981) para el *d* inflado con pocos datos, qu
 
 El resultado compara **lo asignado** por el plan: si en una semana «SÍ» te dormiste tarde tres noches, esos días cuentan igual como «con la acción». Es el análisis por **intención de tratar** de los ensayos clínicos, legítimo (estima el efecto de *intentar* la acción) **[Validado]**, pero diluye el efecto si no la cumples.
 
-«Terminar» guarda el día lógico en `Experimento.fin`, y el resultado deja de contar los días posteriores (H-7-2). Con las respuestas de «¿Lo hiciste hoy?», `Experimentos.resultado` da el **cumplimiento** sin contar el lavado: la tarjeta muestra el porcentaje de días en que lo hiciste en las semanas «SÍ» y en las «no» (H-7-8). Si el cumplimiento difiere al menos 20 puntos entre condiciones, da como dato secundario el **cociente** (`Resultado.cociente`): la diferencia según el plan entre la diferencia de cumplimiento. *Ejemplo:* diferencia +0.30; lo hiciste el 70 % de los días «SÍ» y el 10 % de los «no»; cociente = 0.30 ÷ 0.60 = **+0.50**. Estima el efecto de **hacerlo de verdad**, suponiendo que saber qué semana tocaba no cambia nada por sí solo, lo que es dudoso sin cegamiento (sección 8.9). **[Aproximación]**.
+«Terminar» guarda el día lógico en `Experimento.fin`, y el resultado deja de contar los días posteriores (H-7-2). Con las respuestas de «¿Lo hiciste hoy?», `Experimentos.resultado` da el **cumplimiento** sin contar el lavado: la tarjeta muestra el porcentaje de días en que lo hiciste en las semanas «SÍ» y en las «no» (H-7-8). En la plantilla «Creatina», desde 10e (D.96, H-9-26), los días sin respuesta se completan con el registro de suplementos (`supl_creatina_tomado`), que existe desde la primera toma anotada. Si el cumplimiento difiere al menos 20 puntos entre condiciones, da como dato secundario el **cociente** (`Resultado.cociente`): la diferencia según el plan entre la diferencia de cumplimiento. *Ejemplo:* diferencia +0.30; lo hiciste el 70 % de los días «SÍ» y el 10 % de los «no»; cociente = 0.30 ÷ 0.60 = **+0.50**. Estima el efecto de **hacerlo de verdad**, suponiendo que saber qué semana tocaba no cambia nada por sí solo, lo que es dudoso sin cegamiento (sección 8.9). **[Aproximación]**.
 
 No se calcula el análisis «por lo hecho» (días hechos contra no hechos): si cumples más en los días buenos, exagera el efecto (en una simulación del módulo 9 lo **duplicaba**).
 
@@ -190,8 +190,8 @@ Nadie sorteó cuándo mudarte, y esos cambios vienen con muchos otros. Es un **e
 1. Los experimentos siguen la lógica de los **ensayos N-de-1**: semanas con y sin la acción, **sorteadas por pares**, que empiezan en lunes, con la hipótesis **sellada**.
 2. No se deja sellar si alguna condición podría quedar con menos de 7 días; antes, la plantilla «Creatina» nunca podía dar resultado (H-7-1).
 3. El **intervalo** usa la *t* con grados de Welch y el error estándar corregido por autocorrelación: 3–4 % de falsas señales en la simulación, frente al 14–24 % del método anterior, a costa de poder. Mientras dura el plan, es **provisional**.
-4. La **prueba de aleatorización** sería lo más adecuado, pero no existe (H-7-11).
+4. La **prueba de aleatorización** es lo más adecuado; no está en la app, pero desde 10e la hace `vm_experimento()` en R (H-7-11), y con el sorteo por pares solo 12 semanas pueden dar *p* < 0.05.
 5. La **prueba de tendencia** separa tendencia y condición, pero un antes/después con tendencia real sigue dando falsas señales el 39 % de las veces.
 6. El análisis es **según el plan**; «¿Lo hiciste hoy?» da el cumplimiento. Sin cegamiento, conviene usar medidas objetivas y mirar solo al final.
 7. «Antes y después» en Explorar es **observacional**, con hasta 56 comparaciones sin corregir (H-7-12).
-8. Siguen abiertos H-7-7 (Hedges, documentado), H-7-10 (el sello no fija el análisis), H-7-11 y H-7-14; H-7-6 y H-7-12 se resolvieron solo en parte.
+8. La entrega 10e resolvió H-7-7 (*g* de Hedges) y H-7-11 (`vm_experimento`). Siguen pendientes H-7-10 (el sello no fija el análisis) y H-7-14 (la medida de «Creatina»); H-7-6 y H-7-12 se resolvieron solo en parte.
