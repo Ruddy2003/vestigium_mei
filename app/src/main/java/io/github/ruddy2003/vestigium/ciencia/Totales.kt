@@ -127,8 +127,9 @@ object Totales {
         val actividad = Repo.actividad.values.filter { en(it.fecha) }
         val nutricion = Repo.nutricion.values.filter { en(it.fecha) }
         val entrenos = Repo.entrenos.values.filter { en(it.fecha) && it.series > 0 }
-        val gastos = Repo.gastos.filter { en(it.fecha) }
-        val ingresos = Repo.ingresos.filter { en(it.fecha) }
+        // Por el día del diario (de 5:00 a 5:00), como en el panel (P-29).
+        val gastos = Repo.gastos.filter { en(it.dia) }
+        val ingresos = Repo.ingresos.filter { en(it.dia) }
         val visitas = Repo.visitas.filter { en(Fechas.diaLogicoDeMillis(Fechas.millis(it.entrada))) }
         val comidas = runCatching { Repo.comidas(desde, hasta) }.getOrDefault(emptyList())
         val series = runCatching { Repo.series(desde, hasta) }.getOrDefault(emptyList())

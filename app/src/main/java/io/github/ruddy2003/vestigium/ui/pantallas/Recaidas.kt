@@ -131,9 +131,11 @@ fun PantallaRecaidas(nav: Nav) {
         if (c.seguimiento_privado) {
             Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Cifra(r.diasDesdeUltima?.toString() ?: "—", "días desde la última", Modifier.weight(1f))
-                Cifra("${r.rachaActual}", "días seguidos sin", Modifier.weight(1f))
+                Cifra("${r.rachaActual}", "días respondidos sin", Modifier.weight(1f))
                 Cifra("${r.rachaMaxima}", "racha más larga", Modifier.weight(1f))
             }
+            if (r.sinRespuestaRacha > 0) Ayuda("Solo cuentan los días en que respondiste «no». Desde la última, ${r.sinRespuestaRacha} ${if (r.sinRespuestaRacha == 1) "día quedó" else "días quedaron"} sin respuesta: no se sabe.",
+                Modifier.padding(top = 4.dp))
             if (r.impulsos > 0) Tarjeta(Modifier.padding(top = 10.dp)) {
                 val pct = r.impulsosSuperados * 100 / r.impulsos
                 Text("$pct% de tus impulsos pasaron sin recaída", style = MaterialTheme.typography.titleMedium)

@@ -42,7 +42,11 @@ object Programador {
         WorkManager.getInstance(ctx).enqueueUniqueWork("pulso_ya", ExistingWorkPolicy.REPLACE, OneTimeWorkRequestBuilder<Pulso>().build())
     }
 
-    /** Horas aleatorias dentro de la ventana, separadas al menos 90 minutos. Lo aleatorio evita registrar solo momentos predecibles. */
+    /**
+     * Horas aleatorias dentro de la ventana: una en cada tramo igual, lejos de sus bordes. Entre dos avisos seguidos quedan al menos
+     * 2 × min(45 min, tramo/4): 90 minutos si cada tramo dura 3 h o más, menos si hay muchos avisos en una ventana corta
+     * (4 avisos de 10 a 21 h: 82.5 min; con tramos de 40 min, 20 min). Lo aleatorio evita registrar solo momentos predecibles.
+     */
     fun planDelDia(fecha: String): List<Long> {
         val c = Repo.config
         val n = c.muestreos_por_dia.coerceIn(0, 6)

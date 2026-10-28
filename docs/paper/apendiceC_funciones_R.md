@@ -1,6 +1,6 @@
 # Apéndice C. Funciones de R (`vestigium.R`)
 
-_El script `app/src/main/assets/vestigium.R` viaja con cada exportación. Se pone en la misma carpeta que los `vm_*.csv` y se ejecuta con `source("vestigium.R")`. Requiere tidyverse; algunas funciones piden además `nlme`, `igraph`, `stringi`, `DBI` y `RSQLite`. Versión descrita: v81 (commit `fa527df`). Para cada función: qué hace, cómo y en qué se diferencia de la app. Las fórmulas están en el Apéndice B._
+_El script `app/src/main/assets/vestigium.R` viaja con cada exportación. Se pone en la misma carpeta que los `vm_*.csv` y se ejecuta con `source("vestigium.R")`. Requiere tidyverse; algunas funciones piden además `nlme`, `igraph`, `stringi`, `DBI` y `RSQLite`. Versión descrita: v81 (commit `fa527df`), con los cambios de la entrega 10c (commit `b943ec7`) en `vm_ritmo` y `vm_red`. La entrega 10c corrigió varias herramientas **de la app** (t de Student, autocorrelación, tendencia en «Todo lo que se mueve», ceros); las funciones de R equivalentes se alinean en la entrega 10d (P-30 a P-33), así que mientras tanto hay diferencias nuevas, señaladas en cada función. Para cada función: qué hace, cómo y en qué se diferencia de la app. Las fórmulas están en el Apéndice B._
 
 ---
 
@@ -18,7 +18,7 @@ _El script `app/src/main/assets/vestigium.R` viaja con cada exportación. Se pon
 | `vm_describir(archivo)`, `vm_resumen()` | Diccionario de una tabla; resumen de filas, columnas y rangos de fechas. |
 | `vm_leer_sqlite(ruta)` | Lee `vm_datos.sqlite` con los mismos tipos. |
 
-**Diferencia clave con la app (H-5-1).** `vm_panel.csv` lo arma `Exportar.filasPanel()`, no `Estadistica.panel()`: otros nombres (`sueno_min`, `km`, `hrv_rmssd`, `valencia_muestreo`, `luz_dia_min`…), otras reglas de ceros y menos variables (sección 6.3.4). Las variables dinámicas están en `vm_panel_extendido.csv`, que el script **no carga** en `vm_archivos`.
+**Diferencia clave con la app (H-5-1).** `vm_panel.csv` lo arma `Exportar.filasPanel()`, no `Estadistica.panel()`: otros nombres (`sueno_min`, `km`, `hrv_rmssd`, `valencia_muestreo`, `luz_dia_min`…), otras reglas de ceros (desde 10c la app usa `ceroDesde`; el CSV todavía no) y menos variables (sección 6.3.4). Desde 10c trae `festivo` y `dia_libre` junto a `dia_semana`. La regla de +24 de `ultimo_uso_h` (antes de las 5 en la app, antes de las 12 en R) también sigue distinta. Todo esto se alinea en la entrega 10d (P-30). Las variables dinámicas están en `vm_panel_extendido.csv`, que el script **no carga** en `vm_archivos`.
 
 ---
 
@@ -31,10 +31,10 @@ Puntos diarios con medias móviles de 7 y 30 días (`vm_movil`, B.17). **Igual q
 Media hacia atrás de k renglones; como el panel está completado a todos los días, k renglones = k días. Exige max(2, k %/% 3) valores. **Igual que la app.**
 
 ### `vm_semana(var, datos)`
-Media, n, EE = DE/√n e intervalo ±1.96 EE por día de la semana; gráfica de barras. **Como** `Analisis.porDiaSemana`, pero sin el mínimo de 2 valores por día (con 1 valor, DE = NA).
+Media, n, EE = DE/√n e intervalo ±1.96 EE por día de la semana; gráfica de barras. **Diferencia desde 10c:** la app pide 5 valores por día de la semana y usa t con n − 1 grados (con 5 valores, ±2.776 EE); R no tiene mínimo (con 1 valor, DE = NA) y usa 1.96. Pendiente para 10d.
 
 ### `vm_cruce(x, y, desfase = 0, datos, metodo = "spearman")`
-`cor.test` entre x de hoy e y de `desfase` días después (con `lead` sobre el panel completado: días de calendario); exige 5 días; dispersión con recta y banda de `lm`. **Diferencia:** por omisión es **Spearman**; la app muestra Pearson y Spearman pero razona con Pearson (H-5-7). Ninguna de las dos quita tendencia ni corrige autocorrelación.
+`cor.test` entre x de hoy e y de `desfase` días después (con `lead` sobre el panel completado: días de calendario); exige 5 días; dispersión con recta y banda de `lm`. **Diferencia:** por omisión es **Spearman**; la app muestra Pearson y Spearman pero razona con Pearson (H-5-7). Desde 10c la app da el intervalo con el n efectivo y muestra la r sin tendencia; R usa el n bruto y los valores tal cual. Pendiente para 10d.
 
 ### `vm_familias`, `vm_obvia(a, b)`
 20 conjuntos de columnas «obvias» (desde el esquema 13, también los avisos de ánimo: `avisos_*`, `tasa_respuesta`, `valencia_muestreo` y `n_muestreos`) y la regla de que todas las `m_*` y `n_momentos` lo son entre sí. Desde el esquema 13 hay una regla más, la de las campañas: cada `campana_<reto>` es obvia con lo que ese reto busca mover (`vm_campana_mueve`, con los nombres de `vm_panel.csv`) y con `campanas_n`, y `campana_hab_<id>` con su `hab_<id>` (capítulo 9). **Diferencia (H-5-2):** la app tiene 57 conjuntos en `Estadistica.FAMILIAS` más reglas por grupo, por prefijo dinámico, por suplemento, por persona y por cuestionario (sección 6.9). Faltan en R, entre otras, las familias de valencia (`valencia`, `animo_valencia`, `animo_cierre_valencia`), de activación, de alcohol, de cafeína, de personas (`cercanos`, `vi_*`, `personas_*`, `penso_en_*`), de horas por tipo de lugar, de cultura, de mundo, de presión y de sentimientos con `registros_animo`.
@@ -55,10 +55,10 @@ Cada columna contra el objetivo (con desfase de `desfase` días):
 - Continua: **Spearman** con `cor.test(exact = FALSE)` (p por aproximación t); intervalo de Fisher con 1.96/√(n − 3).
 - Exige ≥ `min_n` pares y al menos 2 valores distintos; excluye las columnas de la familia del objetivo en `vm_familias`; BH, `firme = q < .1`; une la descripción del diccionario.
 
-**Diferencias con `Analisis.factores`:** la app usa z (1.96) para 0/1 y pide 10 pares en total (5 y 5); usa Fisher para el p de ρ; excluye con `FAMILIAS` y `obvia()`. Ni la app ni R quitan tendencia ni corrigen autocorrelación (H-5-3).
+**Diferencias con `Analisis.factores`:** desde 10c la app quita la tendencia (con su interruptor, encendido por omisión), usa **r de Pearson** con el n efectivo para las continuas y, para 0/1, t de Welch con el error estándar corregido por autocorrelación (apéndice B, B.11 y B.11a); pide 10 días en total (5 y 5) y excluye con `FAMILIAS` y `obvia()`. R sigue con los valores tal cual, Spearman con n bruto y Welch sin corrección: con variables persistentes, sus p son más pequeños que los de la app (H-5-3, resuelto en la app; R pendiente para 10d, P-32).
 
 ### `vm_modelo(objetivo, predictores = c("sueno_h", "pasos", "pantalla_min"), ayer = TRUE, datos)`
-Agrega `.ayer` = el objetivo del día anterior (`lag` sobre el panel completado: día de calendario anterior), deja los días completos, estandariza todo y ajusta `lm` (con intercepto, que vale 0 al estar centrado). Exige n ≥ número de predictores + 10. Imprime `summary`. **Mismos β que `Analisis.modelo`**; los errores, p e intervalos de R usan la distribución t con n − k − 1 grados de libertad; la app usa 1.96.
+Agrega `.ayer` = el objetivo del día anterior (`lag` sobre el panel completado: día de calendario anterior), deja los días completos, estandariza todo y ajusta `lm` (con intercepto, que vale 0 al estar centrado). Exige n ≥ número de predictores + 10. Imprime `summary`. **Mismos β e intervalos que `Analisis.modelo`** desde 10c: los dos usan la distribución t con n − k − 1 grados de libertad (antes la app usaba 1.96). `summary` muestra el R² y el R² ajustado; la app muestra el ajustado.
 
 ### `vm_modelo_ar1(objetivo, predictores, datos)`
 Mismo modelo sin el día anterior, ajustado con `nlme::gls(…, correlation = corAR1(form = ~ t), method = "ML")`, con t = días desde el primero. Los errores siguen un proceso AR(1): el parecido entre dos días separados por h días es φ^h. Comprobado en el código de nlme (v3.1-171): si la covariable entera tiene saltos, `corAR1` se convierte internamente en `corARMA(p = 1, q = 0)` y usa la distancia real en días, así que **los días faltantes se respetan**. No existe en la app. Es la opción más defendible para inferencia sobre efectos de un día (Hamaker y Wichers, 2017), aunque no quita tendencias ni ciclos semanales.
@@ -66,14 +66,14 @@ Mismo modelo sin el día anterior, ajustado con `nlme::gls(…, correlation = co
 ### `vm_dinamica(var = "valencia", datos)`
 n, media, DE, MSSD e inercia (con `lead` sobre el panel completado: solo pares de días consecutivos), en total y por mes. **Diferencias con `Analisis.dinamica`:** sirve para cualquier variable; no exige mínimos (la app: 7 días, 3 pares para MSSD, 10 para inercia); por mes calcula también la inercia, y el último día de un mes se empareja con el primero del siguiente (la app solo empareja dentro del mes); no calcula días difíciles, rachas ni la DE intradía.
 
-### `vm_ritmo()`
-Desde `vm_salud`: hora de dormir (madrugada + 24), despertar (+ 24), duración, punto medio; filtra 2 < duración < 16 h; agrupa en noches antes de día libre (fecha de despertar sábado o domingo) y laboral; imprime el jet lag social (diferencia absoluta de los puntos medios) y la DE de la hora de dormir. **Como `Analisis.ritmo` con reloj**; R no aproxima con el teléfono ni exige mínimos.
+### `vm_ritmo(dias = 56)`
+Desde `vm_salud`: hora de dormir (madrugada + 24), despertar (+ 24), duración, punto medio; filtra 2 < duración < 16 h; desde 10c usa solo las noches de los últimos `dias` días hasta la última fecha de `vm_salud` (`dias = Inf` para toda la historia); agrupa en noches antes de día libre y laborales: una noche es libre si el día en que despiertas tiene `dia_libre` en el panel (sábado, domingo o, si vives en México, festivo; `Fechas.esDiaLibre`), y si el panel no trae esa columna (exportaciones viejas), si cae en sábado o domingo; imprime el jet lag social (diferencia absoluta de los puntos medios) y la DE de la hora de dormir. **Como `Analisis.ritmo` con reloj** (misma ventana y misma regla de día libre desde 10c); R no aproxima con el teléfono ni exige mínimos.
 
 ### `vm_palabras(min_dias = 5)`
 Tokens de 3+ letras de las notas, sin una lista de ~110 palabras vacías (comparación con acentos), un conteo por día; para cada palabra con ≥ `min_dias` días con valencia: media y diferencia con la media de la valencia de **todos** los días de `vm_dias`. **Diferencias (H-5-10):** la app usa ~170 vacías comparadas sin acentos y su referencia es la media de los días **con nota**; la app muestra solo los 15 extremos.
 
 ### `vm_atipicos(vars = c("valencia", "sueno_h", "pasos", "pantalla_min", "gasto_total", "notificaciones", "desbloqueos", "km"), z = 3, datos)`
-z robusto con `median` y `mad` (constante 1.4826) por variable; devuelve los días con |z| ≥ 3, del más reciente al más viejo. **Diferencias (H-5-8):** otra lista de variables; sin mínimo de 20 días ni límite de un año; mediana promediada para n par; `km` sí existe en `vm_panel.csv` (en la app la variable se llama `distancia_km` y por eso nunca se revisa).
+z robusto con `median` y `mad` (constante 1.4826) por variable; devuelve los días con |z| ≥ 3, del más reciente al más viejo. **Diferencias:** otra lista de variables; sin mínimo de 20 días ni límite de un año; mediana promediada para n par. `km` existe en `vm_panel.csv`; en la app la variable se llama `distancia_km`, y desde 10c la app la revisa (antes pedía `km` y nunca la encontraba; H-5-8, resuelto).
 
 ---
 
@@ -91,7 +91,7 @@ z robusto con `median` y `mad` (constante 1.4826) por variable; devuelve los dí
 | `vm_lugares()` | Horas por tipo de lugar por semana; valencia media de los registros de ánimo por tipo de lugar. | Descriptiva. |
 | `vm_presion()` | Spearman entre `cambio_presion_3h` y valencia. | Una sola prueba, sin tendencia ni nEf. |
 | `vm_retraso(tabla, umbral_min = 60)` | Desde el esquema 14: minutos entre cuándo pasó y cuándo se anotó cada registro (`retraso_min`), si se anotó en otro día lógico (`otro_dia`) y si fue `tarde` (más del umbral u otro día). Sirve para momentos, sustancias, tramos, suplementos, gastos e ingresos. | Descriptiva. El umbral de 60 min es **[Diseño propio]**; los registros de antes del esquema 14 quedan con NA. |
-| `vm_red(declaradas, min_juntos)` | Red personal con igraph: densidad, componentes, restricción de Burt, grado, composición. | Capítulo 7. |
+| `vm_red(declaradas, min_juntos)` | Red personal con igraph: densidad, componentes, restricción de Burt, grado, composición. Desde 10c, la composición y el color usan la columna `grupo` de `vm_red_nodos.csv` (familia, pareja, amistad, trabajo…), como la Red de la app; si la exportación no la trae, la relación tal cual. | Capítulo 7. |
 | `vm_laptop()` | Horas por categoría de Cold Turkey por semana. | Descriptiva. |
 | `vm_guardar_graficas(carpeta)` | Guarda en PNG tendencia y semana de la valencia, ritmo y mapa de ánimo. | — |
 

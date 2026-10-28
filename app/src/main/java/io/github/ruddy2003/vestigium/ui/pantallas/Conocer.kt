@@ -71,7 +71,9 @@ fun PantallaConocer(nav: Nav) {
     fun cambiar(n: Perfil) { p = n }
     fun guardar() {
         val antes = Repo.config.perfil
-        val cambios = if (Perfiles.vacio(antes)) emptyList() else Perfiles.cambios(antes, p)
+        // También el primer guardado deja historial (de vacío a lo que dijiste, con la fecha de hoy): así los días de antes no
+        // reciben una etapa que entonces no habías dicho (P-26).
+        val cambios = Perfiles.cambios(antes, p)
         Repo.cambiarConfig { c -> c.copy(perfil = p, conocer_visto = true, perfil_historial = c.perfil_historial + cambios) }
         nav.atras()
     }

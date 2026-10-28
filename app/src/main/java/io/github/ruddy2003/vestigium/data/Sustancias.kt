@@ -103,14 +103,17 @@ object Sustancias {
         LocalDateTime.of(Fechas.parse(fecha), LocalTime.parse(hora.take(5))).atZone(Fechas.zona()).toInstant().toEpochMilli()
     }.getOrNull()
 
+    /** La hora de un alimento de MacroFactor; si no se puede leer, el mediodía de su día, para no perder la dosis (P-20). */
+    private fun msComida(fecha: String, hora: String): Long? = msDe(fecha, hora) ?: msDe(fecha, "12:00")
+
     /**
      * Cafeína (mg) y alcohol (g) con su hora entre dos días (de calendario), de MacroFactor y de tus registros.
      * Por día y sustancia se usa una sola fuente: si MacroFactor tiene algo ese día, manda MacroFactor.
      */
     fun dosis(desde: String, hasta: String, comidas: List<Comida>? = null): Pair<List<Dosis>, List<Dosis>> {
         val cs = comidas ?: runCatching { Repo.comidas(desde, hasta) }.getOrDefault(emptyList())
-        val cafMf = cs.mapNotNull { c -> c.valores["cafeina_mg"]?.takeIf { it > 0 }?.let { v -> msDe(c.fecha, c.hora)?.let { Dosis(it, v) } } }
-        val alcMf = cs.mapNotNull { c -> c.valores["alcohol_g"]?.takeIf { it > 0 }?.let { v -> msDe(c.fecha, c.hora)?.let { Dosis(it, v) } } }
+        val cafMf = cs.mapNotNull { c -> c.valores["cafeina_mg"]?.takeIf { it > 0 }?.let { v -> msComida(c.fecha, c.hora)?.let { Dosis(it, v) } } }
+        val alcMf = cs.mapNotNull { c -> c.valores["alcohol_g"]?.takeIf { it > 0 }?.let { v -> msComida(c.fecha, c.hora)?.let { Dosis(it, v) } } }
         val diasCaf = cafMf.map { Fechas.diaLogicoDeMillis(it.ms) }.toSet()
         val diasAlc = alcMf.map { Fechas.diaLogicoDeMillis(it.ms) }.toSet()
         val ini = Fechas.inicioDia(desde) - 12 * H; val fin = Fechas.finDia(hasta) + 6 * H
@@ -134,23 +137,66 @@ object Sustancias {
         }
     }
 
-    /** Peso (kg) más reciente hasta ese día, de la báscula o de MacroFactor; 70 si no hay. */
-    fun pesoEn(fecha: String): Double =
-        (Repo.salud.values.filter { it.fecha <= fecha && (it.peso_kg ?: 0.0) > 0 }.maxByOrNull { it.fecha }?.peso_kg
-            ?: Repo.nutricion.values.filter { it.fecha <= fecha && (it.valores["peso_tendencia_kg"] ?: 0.0) > 0 }.maxByOrNull { it.fecha }?.valores?.get("peso_tendencia_kg"))
-            ?: 70.0
+    /** Peso que se usa si no hay ninguno registrado (kg). */
+    const val PESO_OMISION = 70.0
+
+    /** Todos los pesos con fecha, de la báscula (Health Connect) y de la tendencia de MacroFactor, ordenados (el mismo día, la báscula después). */
+    fun pesos(): List<Pair<String, Double>> =
+        (Repo.nutricion.values.mapNotNull { n -> n.valores["peso_tendencia_kg"]?.takeIf { it > 0 }?.let { n.fecha to it } } +
+            Repo.salud.values.mapNotNull { s -> s.peso_kg?.takeIf { it > 0 }?.let { s.fecha to it } }).sortedBy { it.first }
+
+    /**
+     * El peso de [fecha] (P-20): el más reciente hasta ese día entre las dos fuentes (una pesada vieja de la báscula ya no le gana
+     * a la tendencia de ayer); si no hay ninguno anterior, el primero posterior. Null si no hay ningún peso.
+     */
+    fun pesoDe(fecha: String, pesos: List<Pair<String, Double>>): Double? = pesos.lastOrNull { it.first <= fecha }?.second ?: pesos.firstOrNull()?.second
+
+    /** Peso (kg) de ese día ([pesoDe]); [PESO_OMISION] si no hay ninguno. */
+    fun pesoEn(fecha: String): Double = pesoDe(fecha, pesos()) ?: PESO_OMISION
+
+    private fun sexo(c: Config = Repo.config) = c.perfil.sexo.ifBlank { c.salud_sexo }.lowercase()
 
     /** Coeficiente de Widmark según el sexo que dijiste (0.68 hombre, 0.55 mujer, 0.62 si no). */
-    fun widmarkR(): Double = when ((Repo.config.perfil.sexo.ifBlank { Repo.config.salud_sexo }).lowercase()) { "hombre" -> 0.68; "mujer" -> 0.55; else -> 0.62 }
+    fun widmarkR(sexo: String = sexo()): Double = when (sexo) { "hombre" -> 0.68; "mujer" -> 0.55; else -> 0.62 }
+
+    /** Proporción de agua en la sangre que usa la fórmula de Watson para pasar del agua corporal a r (Watson et al., 1981). */
+    const val AGUA_SANGRE = 0.80
+
+    /**
+     * La r de Widmark a partir del agua corporal total de Watson et al. (1980) (I-2): r = agua / (0.80 · peso), acotada entre 0.45
+     * y 0.95. Hombres: agua = 2.447 − 0.09516·edad + 0.1074·estatura + 0.3362·peso; mujeres: −2.097 + 0.1069·estatura + 0.2466·peso.
+     * Null si falta algo (en los hombres, la edad) o la estatura no está entre 100 y 250 cm: entonces se usa [widmarkR].
+     */
+    fun watsonR(sexo: String, edad: Int?, estaturaCm: Int?, pesoKg: Double): Double? {
+        val h = estaturaCm?.takeIf { it in 100..250 }?.toDouble() ?: return null
+        if (pesoKg <= 0) return null
+        val agua = when (sexo) {
+            "hombre" -> 2.447 - 0.09516 * (edad ?: return null) + 0.1074 * h + 0.3362 * pesoKg
+            "mujer" -> -2.097 + 0.1069 * h + 0.2466 * pesoKg
+            else -> return null
+        }
+        return (agua / (AGUA_SANGRE * pesoKg)).coerceIn(0.45, 0.95)
+    }
+
+    /**
+     * La r y el peso de un día: con un peso real ese día ([pesoDe]), la r de Watson si se puede; con el peso por omisión, siempre
+     * la r fija por sexo (Watson con un peso inventado no corrige nada).
+     */
+    fun rYPeso(fecha: String, pesos: List<Pair<String, Double>>, c: Config = Repo.config): Pair<Double, Double> {
+        val w = pesoDe(fecha, pesos) ?: return widmarkR(sexo(c)) to PESO_OMISION
+        val edad = Perfiles.edad(fecha, c.perfil)
+        return (watsonR(sexo(c), edad, c.perfil.estatura_cm, w) ?: widmarkR(sexo(c))) to w
+    }
 
     /**
      * Alcohol en sangre estimado (g/L ≈ ‰) en cada instante (ordenados). Simulación en pasos de 5 minutos:
-     * cada dosis entra en 30 minutos y el cuerpo elimina 0.15 g/L por hora.
+     * cada dosis entra en 30 minutos y el cuerpo elimina 0.15 g/L por hora. El peso y la r son los de cada día ([rYPeso]).
      */
     fun alcoholEn(dosis: List<Dosis>, instantes: List<Long>): List<Double> {
         if (dosis.isEmpty() || instantes.isEmpty()) return instantes.map { 0.0 }
         val paso = 5 * MIN
-        val r = widmarkR()
+        val todosPesos = pesos()
+        val porDia = HashMap<String, Pair<Double, Double>>()
         val salida = HashMap<Long, Double>()
         val orden = instantes.sorted()
         var t = dosis.first().ms
@@ -159,7 +205,7 @@ object Sustancias {
         val fin = orden.last()
         while (i < orden.size && orden[i] < t) { salida[orden[i]] = 0.0; i++ }
         while (t <= fin) {
-            val w = pesoEn(Fechas.diaLogicoDeMillis(t))
+            val (r, w) = porDia.getOrPut(Fechas.diaLogicoDeMillis(t)) { rYPeso(Fechas.diaLogicoDeMillis(t), todosPesos) }
             for (d in dosis) {
                 val a = t - d.ms
                 if (a in 0 until 30 * MIN) g += d.cantidad * paso / (30.0 * MIN)

@@ -98,7 +98,7 @@ fun PantallaExplorar(nav: Nav) {
             withContext(Dispatchers.Main) { panelSemanal = ps; semanales = m }
         }
     }
-    fun abrirFicha(id: String) { Herramienta.actual = "factores"; Herramienta.objetivo = id; nav.ir("analisis") }
+    fun abrirFicha(id: String) { Herramienta.actual = "factores"; Herramienta.objetivo = id; Herramienta.sinTendencia = sinTendencia; nav.ir("analisis") }
 
     Hoja("Análisis", subtitulo = "Qué se mueve con qué: relaciones, herramientas y experimentos. Para modelos completos, exporta y abre vestigium.R.",
         buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
@@ -108,7 +108,8 @@ fun PantallaExplorar(nav: Nav) {
         )) { nav.ir(it) }
         val nDias = Repo.dias.size
         Ayuda("$nDias días con diario · ${Repo.momentos.count { it.tipo != "muestreo" && !it.privado }} registros propios · ${Repo.momentos.count { it.tipo == "muestreo" }} avisos respondidos. " +
-            if (nDias >= 90) "Con 90 días o más ya se pueden detectar relaciones moderadas." else "Faltan ${90 - nDias} días para tener potencia suficiente; antes de eso, todo es pista, no evidencia.",
+            // 90 días bastan para una relación moderada en una pareja que ya sospechabas; al revisar todas a la vez, solo para las fuertes (P-28).
+            if (nDias >= 90) "Con 90 días o más ya se puede detectar una relación moderada en una pareja concreta; en esta lista, que revisa todas a la vez, solo las fuertes." else "Faltan ${90 - nDias} días para tener potencia suficiente; antes de eso, todo es pista, no evidencia.",
             Modifier.padding(top = 10.dp))
         Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("por día", !porSemana) { porSemana = false }
@@ -193,10 +194,22 @@ fun PantallaExplorar(nav: Nav) {
                 else {
                     val r = Estadistica.pearson(ps.map { it.x }, ps.map { it.y })
                     val rho = Estadistica.spearman(ps.map { it.x }, ps.map { it.y })
-                    val ic = Estadistica.ic95(r, ps.size)
+                    // El intervalo cuenta los días seguidos que se parecen (n efectivo), como la lista (P-17).
+                    val base = if (porSemana) panelSemanal else panel
+                    val paso = if (porSemana) 7L else 1L
+                    val sx = io.github.ruddy2003.vestigium.ciencia.Analisis.serie(base, x); val sy = io.github.ruddy2003.vestigium.ciencia.Analisis.serie(base, y)
+                    val ef = Estadistica.correlacionEf(ps.map { it.x }, ps.map { it.y }, Estadistica.ar1(sx, paso) ?: 0.0, Estadistica.ar1(sy, paso) ?: 0.0)
+                    val ic = ef?.second
+                    val nEf = ef?.third?.first
+                    // La misma relación sin tendencia: cada valor menos el promedio de sus semanas cercanas.
+                    val ventanaT = if (porSemana) 35 else Estadistica.VENTANA
+                    val tx = Estadistica.sinTendencia(sx, ventanaT); val ty = Estadistica.sinTendencia(sy, ventanaT).toMap()
+                    val pt = tx.mapNotNull { (f, a) -> ty[if (desfase) Fechas.sumar(f, paso) else f]?.let { a to it } }
+                    val rSin = if (pt.size >= 5) Estadistica.pearson(pt.map { it.first }, pt.map { it.second }) else null
                     Dispersion(ps, nx, ny)
                     Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Cifra(r?.let { "%.2f".format(it) } ?: "—", "Pearson r", Modifier.weight(1f))
+                        Cifra(rSin?.let { "%.2f".format(it) } ?: "—", "r sin tendencia", Modifier.weight(1f))
                         Cifra(rho?.let { "%.2f".format(it) } ?: "—", "Spearman ρ", Modifier.weight(1f))
                         Cifra("${ps.size}", if (porSemana) "semanas" else "días", Modifier.weight(1f))
                     }
@@ -204,7 +217,9 @@ fun PantallaExplorar(nav: Nav) {
                         append("Relación ${Estadistica.fuerza(r)} y ${if (r >= 0) "positiva" else "negativa"}: cuando sube «$nx», «$ny» tiende a ${if (r >= 0) "subir" else "bajar"}${if (desfase) " al día siguiente" else ""}. ")
                         if (ic != null) append(if (ic.first < 0 && ic.second > 0) "El intervalo de 95% va de ${"%.2f".format(ic.first)} a ${"%.2f".format(ic.second)} e incluye el cero: podría ser azar. "
                             else "El intervalo de 95% va de ${"%.2f".format(ic.first)} a ${"%.2f".format(ic.second)} y no incluye el cero. ")
-                        if (ps.size < 30) append("Solo son ${ps.size} días: tómalo como pista.")
+                        if (nEf != null && nEf < ps.size * 0.8) append("Como cada ${if (porSemana) "semana" else "día"} se parece al anterior, cuentan como unos ${nEf.toInt()} independientes. ")
+                        if (rSin != null && abs(rSin - r) >= 0.2) append("Sin tendencia la relación es ${"%+.2f".format(rSin)}: parte de lo que se ve es que las dos cambiaron con el tiempo. ")
+                        if (ps.size < 30) append("Solo son ${ps.size} ${if (porSemana) "semanas" else "días"}: tómalo como pista.")
                         append(" Recuerda que dos cosas que se mueven juntas no prueban que una cause la otra; para eso están los experimentos.")
                     }
                     Text(txt, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 10.dp))
@@ -432,23 +447,27 @@ private fun animoEntre(dias: List<String>): Double? = dias.mapNotNull { f ->
  */
 @Composable
 private fun EtapasDeVida(panel: Map<String, Map<String, Double?>>) {
-    val cambios = Repo.config.perfil_historial.sortedByDescending { it.fecha }.take(8)
+    // Los cambios de un mismo día (un mismo guardado) van en una sola tarjeta: los números serían los mismos (P-18).
+    // El primer llenado de «Conocerte» no es un cambio de vida: no sale aquí (P-26).
+    val primero = io.github.ruddy2003.vestigium.data.Perfiles.primerGuardado(Repo.config.perfil_historial)
+    val cambios = Repo.config.perfil_historial.filter { it.fecha != primero }.groupBy { it.fecha }.entries.sortedByDescending { it.key }.take(8)
     if (cambios.isEmpty() || panel.isEmpty()) return
     val claves = listOf("valencia" to "ánimo", "sueno_horas" to "sueño (h)", "pantalla_min" to "pantalla (min)", "pasos" to "pasos",
         "gasto_total" to "gasto", "personas" to "personas mencionadas", "palabras" to "palabras escritas")
     Seccion("Antes y después", "Cada cambio que guardaste en «Conocerte»: los 60 días anteriores contra los 60 siguientes. Muchas cosas cambian a la vez; tómalo como una pista.", plegable = true) {
-        cambios.forEach { c ->
+        cambios.forEach { (fecha, lista) ->
             Tarjeta(Modifier.padding(bottom = 8.dp)) {
-                Text("${Fechas.corto(c.fecha)} ${c.fecha.take(4)} · ${c.campo}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                Ayuda("${c.antes.ifBlank { "(vacío)" }}  →  ${c.despues.ifBlank { "(vacío)" }}")
+                Text("${Fechas.corto(fecha)} ${fecha.take(4)} · ${lista.joinToString(", ") { it.campo }}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                lista.forEach { c -> Ayuda((if (lista.size > 1) "${c.campo}: " else "") + "${c.antes.ifBlank { "(vacío)" }}  →  ${c.despues.ifBlank { "(vacío)" }}") }
                 var alguno = false
                 claves.forEach { (k, n) ->
-                    val antes = (1..60).mapNotNull { panel[Fechas.sumar(c.fecha, -it.toLong())]?.get(k) }
-                    val despues = (0 until 60).mapNotNull { panel[Fechas.sumar(c.fecha, it.toLong())]?.get(k) }
-                    val d = Estadistica.diferencia(despues, antes) ?: return@forEach
+                    val antes = (1..60).mapNotNull { i -> Fechas.sumar(fecha, -i.toLong()).let { f -> panel[f]?.get(k)?.let { f to it } } }
+                    val despues = (0 until 60).mapNotNull { i -> Fechas.sumar(fecha, i.toLong()).let { f -> panel[f]?.get(k)?.let { f to it } } }
+                    // t de Welch con el error estándar corregido porque los días seguidos se parecen (P-17).
+                    val d = Estadistica.diferenciaEnDias(despues, antes) ?: return@forEach
                     alguno = true
-                    val claro = d.second > 0 || d.third < 0
-                    io.github.ruddy2003.vestigium.ui.Clave(n, "%s → %s (%+.1f%s)".format(fmtCorto(antes.average()), fmtCorto(despues.average()), d.first, if (claro) "" else ", podría ser azar"), ancho = 12)
+                    val claro = d.lo > 0 || d.hi < 0
+                    io.github.ruddy2003.vestigium.ui.Clave(n, "%s → %s (%+.1f%s)".format(fmtCorto(antes.map { it.second }.average()), fmtCorto(despues.map { it.second }.average()), d.d, if (claro) "" else ", podría ser azar"), ancho = 12)
                 }
                 if (!alguno) Ayuda("Todavía no hay suficientes días a ambos lados del cambio.", Modifier.padding(top = 6.dp))
             }

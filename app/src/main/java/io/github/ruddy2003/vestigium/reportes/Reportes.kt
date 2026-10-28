@@ -588,7 +588,7 @@ object Reportes {
         val valTipo = runCatching { Lugares.valenciaPorTipo(d.ini, d.fin) }.getOrDefault(emptyMap()).filterValues { it.second >= 2 }
         h.cifras(listOfNotNull(
             "${d.diasDiario}/${d.n}" to "días con diario",
-            d.valMedia?.let { n1(it) to "ánimo medio (de 7)" },
+            d.valMedia?.let { n1(it) to ("ánimo medio del diario (de 7)" + if (d.diasSoloAvisos > 0) "; ${d.diasSoloAvisos} días solo con avisos no cuentan" else "") },
             d.suenoH?.let { n1(it) + " h" to "sueño por noche" },
             d.pasos?.let { n0(it) to "pasos al día" },
             d.pantallaMin?.let { hm(it) to "pantalla al día" },

@@ -12,6 +12,9 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import kotlin.math.abs
 import kotlin.math.atanh
+import kotlin.math.exp
+import kotlin.math.ln
+import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.math.tanh
 
@@ -71,15 +74,156 @@ object Estadistica {
 
     fun media(v: List<Double>) = if (v.isEmpty()) null else v.average()
 
-    /** Diferencia de medias con intervalo aproximado de 95% (Welch). */
-    fun diferencia(a: List<Double>, b: List<Double>): Triple<Double, Double, Double>? {
+    // ---------- La t de Student y los días que se parecen a sus vecinos (P-17) ----------
+
+    /** Logaritmo de la función gamma (aproximación de Lanczos, g = 7). */
+    private fun lnGamma(x: Double): Double {
+        val c = doubleArrayOf(0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+            12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7)
+        if (x < 0.5) return ln(Math.PI / abs(sin(Math.PI * x))) - lnGamma(1 - x)
+        val z = x - 1; var a = c[0]; val t = z + 7.5
+        for (i in 1 until 9) a += c[i] / (z + i)
+        return 0.5 * ln(2 * Math.PI) + (z + 0.5) * ln(t) - t + ln(a)
+    }
+
+    /** Beta incompleta regularizada I_x(a, b), por fracción continua (Lentz). */
+    private fun betaInc(a: Double, b: Double, x: Double): Double {
+        if (x <= 0.0) return 0.0
+        if (x >= 1.0) return 1.0
+        val frente = exp(lnGamma(a + b) - lnGamma(a) - lnGamma(b) + a * ln(x) + b * ln(1 - x))
+        if (x > (a + 1) / (a + b + 2)) return 1 - betaInc(b, a, 1 - x)
+        val diminuto = 1e-300
+        var f = 1.0; var c = 1.0; var d = 0.0
+        for (i in 0..400) {
+            val m = i / 2
+            val num = when {
+                i == 0 -> 1.0
+                i % 2 == 0 -> m * (b - m) * x / ((a + 2 * m - 1) * (a + 2 * m))
+                else -> -((a + m) * (a + b + m) * x) / ((a + 2 * m) * (a + 2 * m + 1))
+            }
+            d = 1 + num * d; if (abs(d) < diminuto) d = diminuto; d = 1 / d
+            c = 1 + num / c; if (abs(c) < diminuto) c = diminuto
+            val cd = c * d; f *= cd
+            if (abs(1 - cd) < 1e-12) break
+        }
+        return frente * (f - 1) / a
+    }
+
+    /** p de dos colas de un valor t con [gl] grados de libertad (admite grados no enteros, como los de Welch). */
+    fun pT(t: Double, gl: Double): Double {
+        if (t.isNaN() || gl <= 0) return 1.0
+        val g = gl.coerceAtMost(1e6)
+        return betaInc(g / 2, 0.5, g / (g + t * t)).coerceIn(0.0, 1.0)
+    }
+
+    /**
+     * El cuantil [p] (por ejemplo 0.975) de la t de Student con [gl] grados de libertad: el número que reemplaza a 1.96 cuando
+     * hay pocos datos (con 2 grados, 4.30; con 30, 2.04). Se busca por bisección sobre la distribución exacta.
+     */
+    fun cuantilT(p: Double, gl: Double): Double {
+        if (p == 0.5) return 0.0
+        if (p < 0.5) return -cuantilT(1 - p, gl)
+        val cola = 2 * (1 - p)
+        var lo = 0.0; var hi = 1.0
+        while (pT(hi, gl) > cola && hi < 1e7) hi *= 2
+        repeat(100) { val m = (lo + hi) / 2; if (pT(m, gl) > cola) lo = m else hi = m }
+        return (lo + hi) / 2
+    }
+
+    /**
+     * Autocorrelación de orden 1 de una serie con fechas: qué tanto un día se parece al siguiente, contando solo días seguidos
+     * (o semanas seguidas, con [paso] = 7).
+     * Null si hay menos de 10 pares de días seguidos (con menos, la estimación es puro ruido).
+     */
+    fun ar1(s: List<Pair<String, Double>>, paso: Long = 1L): Double? {
+        val m = s.toMap()
+        val pares = s.mapNotNull { (f, v) -> m[Fechas.sumar(f, paso)]?.let { v to it } }
+        if (pares.size < 10) return null
+        return pearson(pares.map { it.first }, pares.map { it.second })
+    }
+
+    /** Cuánto se ensancha el error estándar si cada día se parece al anterior con autocorrelación [rho]: √((1 + ρ)/(1 − ρ)). */
+    fun factorAR1(rho: Double): Double = sqrt((1 + rho) / (1 - rho))
+
+    /** Diferencia de medias: estimación, intervalo de 95 %, error estándar, grados de libertad (Welch) y p de dos colas. */
+    data class Diferencia(val d: Double, val lo: Double, val hi: Double, val se: Double, val gl: Double, val p: Double)
+
+    /**
+     * Diferencia de medias con *t* de Welch. Si los días de cada grupo se parecen a sus vecinos ([rhoA], [rhoB], autocorrelación
+     * de orden 1), el error estándar de ese grupo se multiplica por [factorAR1] y sus grados de libertad se calculan con su
+     * n efectivo, n·(1 − ρ)/(1 + ρ). Solo se corrige hacia arriba: ρ se acota entre 0 y 0.9.
+     */
+    fun diferenciaCompleta(a: List<Double>, b: List<Double>, rhoA: Double = 0.0, rhoB: Double = 0.0): Diferencia? {
         if (a.size < 3 || b.size < 3) return null
         val ma = a.average(); val mb = b.average()
         val va = a.sumOf { (it - ma) * (it - ma) } / (a.size - 1)
         val vb = b.sumOf { (it - mb) * (it - mb) } / (b.size - 1)
-        val se = sqrt(va / a.size + vb / b.size)
+        val ra = rhoA.coerceIn(0.0, 0.9); val rb = rhoB.coerceIn(0.0, 0.9)
+        val nA = (a.size * (1 - ra) / (1 + ra)).coerceAtLeast(2.0); val nB = (b.size * (1 - rb) / (1 + rb)).coerceAtLeast(2.0)
+        val sa = va / a.size * (1 + ra) / (1 - ra); val sb = vb / b.size * (1 + rb) / (1 - rb)
+        val se = sqrt(sa + sb)
         val d = ma - mb
-        return Triple(d, d - 1.96 * se, d + 1.96 * se)
+        if (se == 0.0) return Diferencia(d, d, d, 0.0, nA + nB - 2, if (d == 0.0) 1.0 else 0.0)
+        val gl = ((sa + sb) * (sa + sb) / (sa * sa / (nA - 1) + sb * sb / (nB - 1))).coerceIn(1.0, nA + nB - 2)
+        val t = cuantilT(0.975, gl)
+        return Diferencia(d, d - t * se, d + t * se, se, gl, pT(d / se, gl))
+    }
+
+    /** Diferencia de medias con intervalo de 95 % (t de Welch; ver [diferenciaCompleta]). */
+    fun diferencia(a: List<Double>, b: List<Double>, rhoA: Double = 0.0, rhoB: Double = 0.0): Triple<Double, Double, Double>? =
+        diferenciaCompleta(a, b, rhoA, rhoB)?.let { Triple(it.d, it.lo, it.hi) }
+
+    /**
+     * La autocorrelación de cada grupo, para [diferenciaCompleta]: la del grupo si tiene 10 pares de días seguidos; si no, la de
+     * los dos grupos juntos (cada uno centrado en su media); si tampoco, 0. En series cortas la autocorrelación estimada sale
+     * más baja que la real, así que se corrige: ρ + (1 + 4ρ)/n (Marriott y Pope, 1954). Sin esa corrección, con 30 + 30 días y
+     * ρ = 0.5, el intervalo de 95 % cubre el 92 %; con ella, el 95 %.
+     */
+    fun ar1Grupos(a: List<Pair<String, Double>>, b: List<Pair<String, Double>>): Pair<Double, Double> {
+        fun corregida(s: List<Pair<String, Double>>) = ar1(s)?.let { it + (1 + 4 * it) / s.size }
+        val ma = a.map { it.second }.average(); val mb = b.map { it.second }.average()
+        val juntos = (a.map { it.first to it.second - ma } + b.map { it.first to it.second - mb }).sortedBy { it.first }.distinctBy { it.first }
+        val comun = corregida(juntos) ?: 0.0
+        return (corregida(a) ?: comun) to (corregida(b) ?: comun)
+    }
+
+    /** [diferenciaCompleta] de dos grupos de días con fecha, con su autocorrelación (ver [ar1Grupos]). */
+    fun diferenciaEnDias(a: List<Pair<String, Double>>, b: List<Pair<String, Double>>): Diferencia? {
+        if (a.size < 3 || b.size < 3) return null
+        val (ra, rb) = ar1Grupos(a.sortedBy { it.first }, b.sortedBy { it.first })
+        return diferenciaCompleta(a.map { it.second }, b.map { it.second }, ra, rb)
+    }
+
+    /**
+     * La serie sin tendencia: cada día menos el promedio de sus ±[ventana] días de calendario (si hay al menos 3), como en
+     * «Las relaciones más marcadas». Queda lo que ese día tuvo de distinto a sus semanas.
+     */
+    fun sinTendencia(s: List<Pair<String, Double>>, ventana: Int = VENTANA): List<Pair<String, Double>> {
+        val l = s.sortedBy { it.first }
+        val dia = l.map { Fechas.parse(it.first).toEpochDay() }
+        val out = ArrayList<Pair<String, Double>>()
+        var lo = 0; var hi = 0; var suma = 0.0; var cnt = 0
+        for (i in l.indices) {
+            while (hi < l.size && dia[hi] <= dia[i] + ventana) { suma += l[hi].second; cnt++; hi++ }
+            while (dia[lo] < dia[i] - ventana) { suma -= l[lo].second; cnt--; lo++ }
+            if (cnt >= 3) out.add(l[i].first to l[i].second - suma / cnt)
+        }
+        return out
+    }
+
+    /**
+     * Correlación entre dos series con fecha, con el n efectivo de [relaciones]: r de Pearson, intervalo de 95 % (Fisher con nEf)
+     * y p. [ra] y [rb] son las autocorrelaciones de cada serie. Null con menos de [minN] días en común.
+     */
+    fun correlacionEf(xs: List<Double>, ys: List<Double>, ra: Double, rb: Double, minN: Int = 5): Triple<Double, Pair<Double, Double>, Pair<Double, Double>>? {
+        val n = xs.size
+        if (n < minN) return null
+        val r = pearson(xs, ys) ?: return null
+        val a = ra.coerceIn(-0.5, 0.97); val b = rb.coerceIn(-0.5, 0.97)
+        val nEf = (n * (1 - a * b) / (1 + a * b)).coerceIn(minOf(4.0, n.toDouble()), n.toDouble())
+        if (nEf <= 3.0) return null
+        val z = atanh(r.coerceIn(-0.9999, 0.9999)); val se = 1 / sqrt(nEf - 3)
+        return Triple(r, tanh(z - 1.96 * se) to tanh(z + 1.96 * se), nEf to Analisis.pBilateral(z / se))
     }
 
     // ---------- Variables diarias para cruzar ----------
@@ -104,6 +248,7 @@ object Estadistica {
             Variable("desbloqueos", "Desbloqueos del teléfono", "Teléfono"), Variable("gasto_total", "Gasto del día", "Dinero"),
             Variable("gasto_imprevisto", "Hubo gasto imprevisto (0/1)", "Dinero"), Variable("palabras", "Palabras en el diario", "Texto"),
             Variable("personas", "Personas distintas mencionadas", "Social"), Variable("hitos_n", "Número de hitos", "Texto"),
+            Variable("presencias_revisado", "Revisaste quién estuvo y en quién solo pensaste (0/1)", "Social"),
             Variable("rt_media", "Tiempo de reacción (ms)", "Mente"), Variable("lugares_distintos", "Lugares distintos visitados", "Movilidad"),
             Variable("distancia_km", "Kilómetros recorridos (aprox.)", "Movilidad"),
             Variable("t_max", "Temperatura máxima (°C)", "Entorno"), Variable("t_min", "Temperatura mínima (°C)", "Entorno"),
@@ -275,6 +420,22 @@ object Estadistica {
     private fun categoriasSuenoUsadas(): List<String> = Repo.dias.values.flatMap { it.sueno_categorias }.distinct().sorted()
 
     /**
+     * Un «Cómo estás ahora» guardado otro día que el que cierra (H-2-8, P-26): no es el ánimo de esa noche, así que no cuenta
+     * en el panel. Corrige también los cierres viejos, de antes de que solo se pudiera cerrar el día de hoy.
+     */
+    fun cierreFuera(m: io.github.ruddy2003.vestigium.data.Momento): Boolean =
+        m.esCierre && Fechas.millis(m.ts).let { it > 0 && Fechas.diaLogicoDeMillis(it) != m.fecha }
+
+    /**
+     * Los días de [base] desde el primer registro de la fuente ([fuente]): en ellos «no hubo» vale 0; antes, sin dato (P-15).
+     * Una sola regla para no confundir «no anoté» con «fue cero».
+     */
+    fun ceroDesde(fuente: Collection<String>, base: Collection<String>): List<String> {
+        val p0 = fuente.minOrNull() ?: return emptyList()
+        return base.filter { it >= p0 }
+    }
+
+    /**
      * Una fila por día con todas las variables numéricas. Lo que no existe queda en null. Con [dinamicas] incluye las de
      * cada persona, lugar, app…; con [extendido], todas las que aparecen al menos dos días (para la exportación).
      */
@@ -283,31 +444,40 @@ object Estadistica {
         val filas = sortedMapOf<String, MutableMap<String, Double?>>()
         fun fila(f: String) = filas.getOrPut(f) { mutableMapOf() }
         val b = { x: Boolean -> if (x) 1.0 else 0.0 }
+        // Las variables sociales solo valen 0 los días en que se pudo nombrar a alguien (P-15).
+        val sociales = Dinamicas.diasSociales()
 
         for ((f, d) in Repo.dias) {
             val r = fila(f)
             r["valencia"] = d.valencia?.toDouble(); r["activacion"] = d.activacion?.toDouble(); r["dolor"] = d.dolor?.toDouble()
-            r["sueno_calidad"] = d.sueno_calidad?.toDouble(); r["sueno_recordado"] = b(d.sueno_recordado)
+            r["sueno_calidad"] = d.sueno_calidad?.toDouble()
+            // «No recordé un sueño» solo si ese día dijiste algo del sueño; si no, no se sabe.
+            r["sueno_recordado"] = if (d.sueno_recordado) 1.0 else if (d.sueno_calidad != null || d.sueno_texto.isNotBlank()) 0.0 else null
             r["sueno_valencia"] = if (d.sueno_recordado) d.sueno_valencia?.toDouble() else null
             r["palabras"] = Texto.palabras(d.nota).toDouble()
-            r["personas"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.toSet().size.toDouble()
+            r["personas"] = if (f in sociales) Texto.personas(d.nota).map { Texto.canon(it, eq) }.toSet().size.toDouble() else null
             r["hitos_n"] = d.hitos.size.toDouble()
             r["impulso"] = d.impulso?.toDouble(); r["recaida"] = d.recaida?.let(b)
             Catalogo.CONTEXTOS.forEach { r["ctx_${it.id}"] = b(d.ctx[it.id] == true) }
             Catalogo.CIENTIFICAS.forEach { p ->
                 val valor = when (p.clave) { "flow" -> d.flow; "sdt_necesidad" -> d.sdt_necesidad; else -> d.apreciacion }
-                p.opciones.filter { it.id != "no_aplica" }.forEach { o -> r["${p.clave}_${o.id}"] = valor?.let { b(it == o.id) } }
+                // «Las tres» también cuenta como autonomía, competencia y relación.
+                p.opciones.filter { it.id != "no_aplica" }.forEach { o -> r["${p.clave}_${o.id}"] = valor?.let { b(it == o.id || p.clave == "sdt_necesidad" && it == "las_tres" && o.id in setOf("autonomia", "competencia", "relacion")) } }
             }
-            Repo.config.habitos.forEach { r["hab_${it.id}"] = b(d.habitos[it.id] == true) }
-            r["gasto_total"] = 0.0; r["gasto_imprevisto"] = 0.0
-            r["n_impulso"] = 0.0
+            // Un hábito vale 0 desde que existe; antes, sin dato (salvo que lo hayas marcado).
+            Repo.config.habitos.forEach { h -> r["hab_${h.id}"] = if (d.habitos[h.id] == true) 1.0 else if (h.desde.isNotBlank() && f < h.desde) null else 0.0 }
+            if (d.presencias_ok || Texto.personas(d.nota).isNotEmpty()) r["presencias_revisado"] = b(d.presencias_ok)
         }
+        // «No hubo» (0) desde el primer registro de cada fuente y solo en días con diario; antes, sin dato (P-15).
+        ceroDesde(Repo.gastos.map { it.dia }, Repo.dias.keys).forEach { f -> val r = fila(f); r["gasto_total"] = 0.0; r["gasto_imprevisto"] = 0.0 }
+        val primerImpulso = Repo.momentos.filter { it.tipo == "impulso" }.minOfOrNull { it.fecha }
+        ceroDesde(listOfNotNull(primerImpulso), Repo.dias.keys).forEach { f -> fila(f)["n_impulso"] = 0.0 }
         val emoUsadas = emocionesUsadas(); val penUsados = pensamientosUsados()
         // Desde el primer registro de ánimo, los días sin registros cuentan como 0.
         Repo.momentos.filter { Catalogo.esRegistro(it) }.minOfOrNull { it.fecha }?.let { p0 ->
             Repo.dias.keys.filter { it >= p0 }.forEach { f -> val r = fila(f); emoUsadas.forEach { r["n_$it"] = 0.0 }; penUsados.forEach { r["n_$it"] = 0.0 }; r["registros_animo"] = 0.0 }
         }
-        Repo.momentos.groupBy { it.fecha }.forEach { (f, lista) ->
+        Repo.momentos.filter { !cierreFuera(it) }.groupBy { it.fecha }.forEach { (f, lista) ->
             val r = fila(f)
             val mu = lista.filter { it.tipo == "muestreo" }
             r["muestreo_valencia"] = media(mu.mapNotNull { it.valencia?.toDouble() })
@@ -318,7 +488,7 @@ object Estadistica {
             r["registros_animo"] = regs.size.toDouble()
             emoUsadas.forEach { e -> r["n_$e"] = regs.count { e in Catalogo.emocionesDe(it) }.toDouble() }
             penUsados.forEach { t -> r["n_$t"] = regs.count { Catalogo.pensamientoDe(it) == t }.toDouble() }
-            r["n_impulso"] = lista.count { it.tipo == "impulso" }.toDouble()
+            if (primerImpulso != null && f >= primerImpulso) r["n_impulso"] = lista.count { it.tipo == "impulso" }.toDouble()
             // Con quién: la proporción de avisos de ánimo con cada compañía, y el ánimo solo o acompañado.
             val con = mu.filter { it.con_quien.isNotEmpty() }
             if (con.isNotEmpty()) {
@@ -378,7 +548,8 @@ object Estadistica {
             r["cama_min"] = p.cama_min?.toDouble(); r["dormir_tras_tel_min"] = p.dormir_tras_tel_min?.toDouble(); r["tel_tras_despertar_min"] = p.tel_tras_despertar_min?.toDouble()
         }
         Repo.reacciones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["rt_media"] = media(l.mapNotNull { it.media_ms }) }
-        Repo.visitas.groupBy { it.entrada.take(10) }.forEach { (f, l) -> fila(f)["lugares_distintos"] = l.map { it.lugar }.toSet().size.toDouble() }
+        // Por día lógico, como las horas en cada lugar: una visita que empieza a la 1:00 cuenta para el día anterior (P-16).
+        Repo.visitas.groupBy { Fechas.diaLogicoDeMillis(Fechas.millis(it.entrada)) }.forEach { (f, l) -> fila(f)["lugares_distintos"] = l.map { it.lugar }.toSet().size.toDouble() }
         runCatching { Movilidad.kmPorDia() }.getOrDefault(emptyMap()).forEach { (f, km) -> fila(f)["distancia_km"] = km }
         Repo.entorno.forEach { (f, e) ->
             val r = fila(f)
@@ -425,7 +596,7 @@ object Estadistica {
                 }
             }
         }
-        Repo.momentos.filter { it.esCierre }.groupBy { it.fecha }.forEach { (f, l) ->
+        Repo.momentos.filter { it.esCierre && !cierreFuera(it) }.groupBy { it.fecha }.forEach { (f, l) ->
             val m = l.maxBy { it.ts }; val r = fila(f); r["animo_cierre_valencia"] = m.valencia?.toDouble(); r["animo_cierre_activacion"] = m.activacion?.toDouble()
         }
         val ajusteBar = io.github.ruddy2003.vestigium.data.Barometro.ajuste()
@@ -435,7 +606,10 @@ object Estadistica {
         }
         runCatching { io.github.ruddy2003.vestigium.data.Suplementos.panel().forEach { (f, m) -> val r = fila(f); m.forEach { (k, x) -> r[k] = x } } }
         Repo.laptop.forEach { (f, d) -> val r = fila(f); io.github.ruddy2003.vestigium.data.ColdTurkey.resumen(d).forEach { (k, x) -> r[k] = x } }
-        Repo.sesiones.groupBy { it.fecha }.forEach { (f, l) -> fila(f)["ejercicio_min"] = l.sumOf { it.min }.toDouble() }
+        // Ejercicio: 0 los días con datos del reloj y sin sesión, desde la primera sesión.
+        val sesiones = Repo.sesiones.groupBy { it.fecha }
+        ceroDesde(sesiones.keys, Repo.salud.filterValues { it.pasos != null || it.fc_media != null || it.fc_reposo != null }.keys).forEach { f -> fila(f)["ejercicio_min"] = 0.0 }
+        sesiones.forEach { (f, l) -> fila(f)["ejercicio_min"] = l.sumOf { it.min }.toDouble() }
         Repo.pantalla.forEach { (f, p) ->
             val r = fila(f)
             fun h(iso: String?): Double? = iso?.let { val t = java.time.OffsetDateTime.parse(it).atZoneSameInstant(java.time.ZoneId.systemDefault()); t.hour + t.minute / 60.0 }
@@ -443,7 +617,7 @@ object Estadistica {
             r["ultimo_uso_h"] = runCatching { h(p.ultimo_uso)?.let { if (it < 5) it + 24 else it } }.getOrNull()
         }
         val diasEsc = Repo.ascensos.groupBy { it.fecha }
-        for (f in Repo.dias.keys) { fila(f)["escalada"] = if (diasEsc.containsKey(f)) 1.0 else 0.0 }
+        ceroDesde(diasEsc.keys, Repo.dias.keys).forEach { f -> fila(f)["escalada"] = if (diasEsc.containsKey(f)) 1.0 else 0.0 }
         diasEsc.forEach { (f, l) ->
             val r = fila(f); r["escalada"] = 1.0
             r["escalada_grado"] = l.flatMap { it.bloques }.filter { io.github.ruddy2003.vestigium.data.Grados.encadenado(it.estilo) }.mapNotNull { io.github.ruddy2003.vestigium.data.Grados.valor(it.grado) }.maxOrNull()
@@ -472,10 +646,7 @@ object Estadistica {
             r["cafeina_ultima_h"] = n.cafeina_ultima?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
         }
         Repo.entrenos.forEach { (f, e) -> val r = fila(f); r["volumen_kg"] = e.volumen_kg; r["series_gimnasio"] = e.series_efectivas.toDouble() }
-        if (Repo.entrenos.isNotEmpty()) {
-            val desdeG = Repo.entrenos.keys.min()
-            filas.keys.filter { it >= desdeG }.forEach { f -> fila(f)["gimnasio"] = if ((Repo.entrenos[f]?.series ?: 0) > 0) 1.0 else 0.0 }
-        }
+        (ceroDesde(Repo.entrenos.keys, Repo.dias.keys) + Repo.entrenos.keys).toSet().forEach { f -> fila(f)["gimnasio"] = if ((Repo.entrenos[f]?.series ?: 0) > 0) 1.0 else 0.0 }
         Repo.huellas.forEach { (f, h) -> val r = fila(f); r["yt_vistos"] = h.yt_vistos.toDouble(); r["busquedas"] = (h.busquedas + h.yt_busquedas).toDouble() }
         // «Me gusta» y comentarios: cuentan desde el primero que hay (antes no se sabe), en días con historial de YouTube.
         if (Repo.youtube.isNotEmpty()) {
@@ -524,7 +695,10 @@ object Estadistica {
         val perfil = Repo.config.perfil
         run {
             val momentosPorDia = Repo.momentos.groupBy { it.fecha }
+            // Con el nombre unido (P-25), como los nombres del día.
+            val convivientes = perfil.convivientes.map { Texto.canon(it.lowercase().removePrefix("@"), eq) }.toSet()
             for (f in (Repo.dias.keys + momentosPorDia.keys).toSet()) {
+                if (f !in sociales) continue
                 // Quién estuvo de verdad, en quién solo pensaste y con quién hablaste por mensaje (el diario manda).
                 val estados = io.github.ruddy2003.vestigium.data.Presencias.delDia(f, eq, Repo.dias[f], momentosPorDia[f].orEmpty())
                 val nombres = estados.keys.toList()
@@ -535,7 +709,7 @@ object Estadistica {
                 val r = fila(f)
                 r["cercanos"] = vistos.count { it.second in setOf("familia", "pareja", "amistad", "casa") }.toDouble()
                 r["vi_familia"] = b(vistos.any { it.second == "familia" }); r["vi_pareja"] = b(vistos.any { it.second == "pareja" })
-                r["vi_amistades"] = b(vistos.any { it.second == "amistad" }); r["vi_convivientes"] = b(vistos.any { it.first in perfil.convivientes })
+                r["vi_amistades"] = b(vistos.any { it.second == "amistad" }); r["vi_convivientes"] = b(vistos.any { it.first in convivientes })
                 r["vi_expareja"] = b(vistos.any { it.second == "expareja" }); r["vi_trabajo"] = b(vistos.any { it.second == "trabajo" })
                 r["cercania_media"] = media(nombres.mapNotNull { Personas.cercaniaEn(it, f)?.toDouble() })
                 r["personas_vistas"] = estados.count { it.value == io.github.ruddy2003.vestigium.data.Presencias.ESTUVE }.toDouble()
@@ -636,7 +810,9 @@ object Estadistica {
         }
         desdePrimero("alcohol") { f, l ->
             val r = fila(f)
-            r["alcohol"] = b(l.isNotEmpty())
+            // Una sola regla de día (P-20): bebiste el día lógico de cada dosis. Aquí solo cuentan los episodios sin cantidad
+            // (no tienen dosis); los demás los marca el día de sus dosis, abajo.
+            r["alcohol"] = b(l.any { (it.cantidad ?: 0.0) <= 0.0 })
             r["alcohol_nivel_max"] = if (l.isEmpty()) 0.0 else l.mapNotNull { Sustancias.maximo(it) }.maxOrNull()?.toDouble()
             r["alcohol_horas"] = if (l.isEmpty()) 0.0 else l.mapNotNull { Sustancias.horas(it) }.takeIf { it.isNotEmpty() }?.sum()
         }
@@ -651,10 +827,13 @@ object Estadistica {
         // La cruda se siente al día siguiente: va en ese día.
         todos.filter { it.cruda != null }.groupBy { Fechas.sumar(it.fecha, 1) }.forEach { (f, l) -> fila(f)["cruda"] = l.maxOf { it.cruda!! }.toDouble() }
         // Leer todos los alimentos tarda: en el hilo principal se usa lo último calculado o solo lo anotado aquí.
-        val clave = "${todos.hashCode()}|${Repo.nutricion.size}|$ini|$hoy"
+        // La clave cambia con cada importación de MacroFactor (el mapa se reemplaza), no solo cuando cambia el número de días (P-21).
+        val clave = "${todos.hashCode()}|${System.identityHashCode(Repo.nutricion)}|${Repo.nutricion.size}|$ini|$hoy"
         val enMain = android.os.Looper.myLooper() == android.os.Looper.getMainLooper()
+        // En el hilo principal sin lo ya calculado, lo que depende de MacroFactor queda vacío: con solo lo anotado aquí saldría
+        // otra cifra que en las demás pantallas (P-21).
         val (caf, alc) = dosisCache?.takeIf { it.first == clave }?.second
-            ?: Sustancias.dosis(ini, hoy, if (enMain) emptyList() else null).also { if (!enMain) dosisCache = clave to it }
+            ?: (if (enMain && Repo.nutricion.isNotEmpty()) return else Sustancias.dosis(ini, hoy, if (enMain) emptyList() else null).also { if (!enMain) dosisCache = clave to it })
         val gramos = HashMap<String, Double>()
         alc.forEach { d -> val f = Fechas.diaLogicoDeMillis(d.ms); gramos[f] = (gramos[f] ?: 0.0) + d.cantidad }
         val mg = HashMap<String, Double>()
@@ -780,6 +959,8 @@ object Estadistica {
         setOf("cafeina_mg", "cafeina_total_mg", "cafeina_ultima_h", "cafeina_al_dormir_mg"),
         setOf("cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_expareja", "vi_trabajo", "cercania_media", "personas"),
         setOf("personas", "personas_vistas", "personas_pensadas", "personas_mensajes", "cercanos"),
+        // Haber revisado las presencias solo existe en días con personas: se mueve con ellas por construcción.
+        setOf("presencias_revisado", "personas", "personas_vistas", "personas_pensadas", "personas_mensajes", "cercanos", "palabras"),
         setOf("personas_pensadas", "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
     )
 
@@ -809,7 +990,7 @@ object Estadistica {
     }
 
     /** Días hacia cada lado con los que se compara cada día al quitar la tendencia. */
-    private const val VENTANA = 10
+    const val VENTANA = 10
 
     /** Una variable alineada a las fechas del panel (NaN = sin dato), con su versión sin tendencia y su autocorrelación. */
     private class Serie(val crudo: DoubleArray, val resto: DoubleArray, val r1Crudo: Double, val r1Resto: Double, val lenta: Boolean, val binaria: Boolean)
@@ -934,7 +1115,13 @@ object Movilidad {
     fun kmPorDia(puntos: List<io.github.ruddy2003.vestigium.data.Db.Punto> = Repo.db().ubicaciones()): Map<String, Double> {
         val out = HashMap<String, Double>()
         var prev: io.github.ruddy2003.vestigium.data.Db.Punto? = null
+        // Un día con ubicaciones y sin movimiento vale 0 km, no «sin dato» (P-15).
+        var desde = Long.MAX_VALUE; var hasta = Long.MIN_VALUE
         for (p in puntos) {
+            if (p.ms < desde || p.ms >= hasta) {
+                val f = Fechas.diaLogicoDeMillis(p.ms); out.putIfAbsent(f, 0.0)
+                desde = Fechas.inicioDiaLogico(f); hasta = Fechas.finDiaLogico(f)
+            }
             val pr = prev
             if (pr != null) {
                 val dt = (p.ms - pr.ms) / 1000.0

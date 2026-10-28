@@ -1,6 +1,8 @@
 """Figura 5.2 - Alcohol en sangre estimado con la simulación de Sustancias.alcoholEn (data/Sustancias.kt): pasos de 5 min,
 cada dosis entra en 30 min, eliminación constante β = 0.15 g/L/h, volumen r·W (Widmark). Tres bebidas estándar (14 g)
-repartidas como en Sustancias.dosis (episodio de 20:00 a 23:00 → en el primer 70 %). Datos SINTÉTICOS.
+repartidas como en Sustancias.dosis (episodio de 20:00 a 23:00 → en el primer 70 %). Desde la entrega 10c, con peso real, sexo,
+estatura y (en hombres) edad, r sale del agua corporal de Watson et al. (1980): r = agua / (0.80 · peso), acotada en [0.45, 0.95]
+(Sustancias.watsonR); la curva punteada lo muestra para el mismo hombre con 30 años y 180 cm. Datos SINTÉTICOS.
 Uso: python fig26_alcohol_widmark.py [salida.png]"""
 import sys
 import numpy as np
@@ -22,7 +24,13 @@ def simular(dosis, r, peso, beta=0.15, hasta=32.0):
         ts.append(t); cs.append(g / (r * peso)); t += PASO
     return np.array(ts), np.array(cs)
 
+def watson_r(sexo, edad, estatura, peso):
+    """Copia de Sustancias.watsonR."""
+    agua = 2.447 - 0.09516 * edad + 0.1074 * estatura + 0.3362 * peso if sexo == "hombre" else -2.097 + 0.1069 * estatura + 0.2466 * peso
+    return min(max(agua / (0.80 * peso), 0.45), 0.95)
+
 d = dosis_episodio(20.0, 23.0, 3)
+rw = watson_r("hombre", 30, 180, 75)
 casos = [("hombre, 75 kg (r = 0.68)", 0.68, 75, "#2a6f97"), ("mujer, 60 kg (r = 0.55)", 0.55, 60, "#c1121f"), ("sin sexo, 70 kg por omisión (r = 0.62)", 0.62, 70, "#6b7280")]
 fig, ax = plt.subplots(figsize=(10, 4.8), dpi=160)
 salida = []
@@ -31,6 +39,10 @@ for nom, r, w, c in casos:
     ax.plot(ts, cs, color=c, lw=2, label=nom)
     i = cs.argmax(); cero = ts[(ts > ts[i]) & (cs <= 0)]
     salida.append((nom, cs.max(), ts[i], cero[0] if len(cero) else None))
+ts, cs = simular(d, rw, 75)
+ax.plot(ts, cs, color="#2a6f97", lw=1.6, ls=":", label=f"el mismo hombre con 30 años y 180 cm: r de Watson = {rw:.3f}")
+i = cs.argmax(); cero = ts[(ts > ts[i]) & (cs <= 0)]
+salida.append((f"hombre 75 kg con Watson (r = {rw:.3f})", cs.max(), ts[i], cero[0] if len(cero) else None))
 # Banda de incertidumbre para el hombre: β de 0.10 a 0.20 g/L/h (Jones, 2010)
 _, lo = simular(d, 0.68, 75, beta=0.20); ts, hi = simular(d, 0.68, 75, beta=0.10)
 n = min(len(lo), len(hi)); ax.fill_between(ts[:n], lo[:n], hi[:n], color="#2a6f97", alpha=.12, lw=0, label="hombre con β de 0.10 a 0.20 g/L/h")

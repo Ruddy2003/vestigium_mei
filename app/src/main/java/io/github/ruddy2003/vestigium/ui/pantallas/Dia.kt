@@ -302,7 +302,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         }
 
         if (esHoy && ahora < 5) Aviso("Pasa de medianoche: sigues llenando el día $fecha. Los días empiezan a las 5:00.")
-        if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas, pero se marcará como escrito por adelantado.")
+        if (fecha > hoy) Aviso("Este día todavía no llega. Puedes dejar notas; queda guardado cuándo las escribiste.")
 
         // Lo diario en el primer alto, siempre en el mismo orden (N-16):
         // 1. Lo que falta hoy.
@@ -1019,8 +1019,9 @@ private fun LoDeAnoche() {
  */
 @Composable
 private fun AvisoExperimento(e: io.github.ruddy2003.vestigium.data.Experimento, fecha: String) {
+    // Antes del inicio no hay semana (P-18): toca() devuelve null.
+    val toca = Experimentos.toca(e, fecha) ?: return
     val semana = (Fechas.diasEntre(e.inicio, fecha) / 7).toInt()
-    val toca = e.plan.getOrNull(semana) ?: return
     val lavado = Experimentos.enLavado(e, fecha)
     Aviso("Experimento «${e.nombre}», semana ${semana + 1} de ${e.semanas}: " + (if (toca) "esta semana SÍ: ${e.accion}." else "esta semana NO hagas: ${e.accion}.") +
         if (lavado) " Hoy es día de lavado: no cuenta para el resultado." else "")

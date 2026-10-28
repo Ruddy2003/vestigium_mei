@@ -317,19 +317,23 @@ vm_dinamica <- function(var = "valencia", datos = panel) {
 }
 
 #' Ritmo de sueño desde el reloj: horas medias, regularidad y jet lag social (Wittmann et al., 2006).
-vm_ritmo <- function() {
+vm_ritmo <- function(dias = 56) {
   if (is.null(vm$salud) || !all(c("sueno_inicio", "sueno_fin") %in% names(vm$salud))) stop("No hay datos de sueño del reloj.")
   h <- function(t) hour(t) + minute(t) / 60
-  s <- vm$salud |> filter(!is.na(sueno_inicio), !is.na(sueno_fin)) |>
+  # Como la app: las noches de los últimos `dias` días (dias = Inf para toda la historia). Una noche es libre si el día en que
+  # despiertas es libre; se lee de la columna dia_libre del panel (fin de semana o festivo), con la misma regla que la app.
+  hasta <- max(vm$salud$fecha, na.rm = TRUE)
+  libres <- if (!is.null(vm$panel$dia_libre)) vm$panel$fecha[vm$panel$dia_libre %in% c(TRUE, 1)] else NULL
+  s <- vm$salud |> filter(!is.na(sueno_inicio), !is.na(sueno_fin), fecha > hasta - dias) |>
     mutate(ini = h(sueno_inicio), ini = if_else(ini < 12, ini + 24, ini), fin = h(sueno_fin) + 24, dur = fin - ini,
-           medio = (ini + fin) / 2, libre = wday(fecha, week_start = 1) >= 6) |> filter(dur > 2, dur < 16)
+           medio = (ini + fin) / 2, libre = if (is.null(libres)) wday(fecha, week_start = 1) >= 6 else fecha %in% libres) |> filter(dur > 2, dur < 16)
   r <- s |> group_by(libre) |> summarise(noches = n(), dormir = mean(ini) %% 24, despertar = mean(fin) %% 24, horas = mean(dur), punto_medio = mean(medio), .groups = "drop")
   print(r)
   if (nrow(r) == 2) cat("Jet lag social:", round(abs(diff(r$punto_medio)), 2), "horas\n")
   cat("Regularidad (DE de la hora de dormir):", round(sd(s$ini) * 60), "minutos\n")
   ggplot(s, aes(y = fecha)) + geom_linerange(aes(xmin = ini, xmax = fin, colour = libre), linewidth = 2) +
     scale_x_continuous(breaks = seq(18, 38, 4), labels = function(x) paste0(x %% 24, ":00")) +
-    scale_colour_manual(values = c(`FALSE` = "#7C2433", `TRUE` = "#2D6B63"), labels = c("laboral", "fin de semana"), name = NULL) +
+    scale_colour_manual(values = c(`FALSE` = "#7C2433", `TRUE` = "#2D6B63"), labels = c("antes de laborar", "antes de un día libre"), name = NULL) +
     labs(x = NULL, y = NULL, title = "Noches") + theme_minimal()
 }
 
@@ -541,10 +545,13 @@ vm_red <- function(declaradas = FALSE, min_juntos = 2) {
     componentes = igraph::components(g)$no,
     restriccion_burt = unname(igraph::constraint(g_ego)[igraph::V(g_ego)$name == "yo"]),
     grado = sort(igraph::degree(g), decreasing = TRUE),
-    composicion = table(vm$red_nodos$relacion, useNA = "ifany")
+    # Composición y color por grupo de relación (familia, pareja, amistad, trabajo…), como la Red de la app; las exportaciones
+    # de antes de la columna «grupo» usan la relación tal cual.
+    composicion = table(if (!is.null(vm$red_nodos$grupo)) vm$red_nodos$grupo else vm$red_nodos$relacion, useNA = "ifany")
   )
   print(r[c("densidad", "componentes", "restriccion_burt")])
-  plot(g, vertex.size = 4 + 2 * sqrt(vm$red_nodos$dias_mencion), vertex.label.cex = .7, vertex.color = as.integer(factor(vm$red_nodos$relacion)))
+  grupo <- if (!is.null(vm$red_nodos$grupo)) vm$red_nodos$grupo else vm$red_nodos$relacion
+  plot(g, vertex.size = 4 + 2 * sqrt(vm$red_nodos$dias_mencion), vertex.label.cex = .7, vertex.color = as.integer(factor(grupo)))
   invisible(r)
 }
 

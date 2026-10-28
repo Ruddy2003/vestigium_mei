@@ -357,6 +357,8 @@ fun PantallaRed(nav: Nav) {
     val datos = remember(Repo.dias, Repo.momentos, Repo.config.vinculos, Repo.config.personas, soloDichas) {
         val (n, a) = RedPersonas.calcular(minJuntos = 2)
         val aa = if (soloDichas) a.filter { it.tipo != null } else a
+        // El grado y los grupos, con las líneas que se ven (P-25).
+        RedPersonas.grados(n, aa)
         RedPersonas.acomodar(n, aa); Triple(n, aa, RedPersonas.componentes(n, aa))
     }
     val (nodos, aristas, comp) = datos
@@ -390,7 +392,8 @@ fun PantallaRed(nav: Nav) {
             }
             nodos.forEach { nd ->
                 val r = (4f + 8f * kotlin.math.sqrt(nd.dias.toFloat() / maxDias)) * density
-                val col = tonos[nd.relacion] ?: cs.onSurfaceVariant
+                // Color por grupo de relación, como la Constelación: una amistad cercana es «amistad», un colega es «trabajo» (P-25).
+                val col = tonos[nd.grupo] ?: cs.onSurfaceVariant
                 drawCircle(col, r, Offset(nd.x * w, nd.y * h))
                 if (nd.nombre == elegido) drawCircle(cs.onSurface, r + 3f * density, Offset(nd.x * w, nd.y * h), style = Stroke(1.5f * density))
                 if (nd.dias >= maxDias / 4 || nd.nombre == elegido || n <= 15) {
@@ -434,7 +437,14 @@ fun PantallaExperimentos(nav: Nav) {
     var lavado by remember { mutableStateOf(0) }
     Hoja("Experimentos personales", nav.atras,
         "Escribes la pregunta y lo que crees que pasará antes de empezar (queda sellado con la hora). La app decide qué semanas haces la acción y, al final, compara.") {
-        val panel = remember(Repo.dias.size, Repo.experimentos) { if (Repo.experimentos.isEmpty()) emptyMap() else Estadistica.panel(dinamicas = false) }
+        // El panel se arma en segundo plano, como en Análisis: así las variables que dependen de MacroFactor valen lo mismo aquí
+        // que en las demás pantallas (P-21). La clave son los propios datos, no solo cuántos días hay.
+        // En las capturas (sincrono) se calcula de una vez, como en Logros y Cobertura.
+        val sinc = io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono
+        val panel by androidx.compose.runtime.produceState(if (sinc && Repo.experimentos.isNotEmpty()) Estadistica.panel(dinamicas = false) else emptyMap(),
+            Repo.dias, Repo.experimentos, Repo.salud, Repo.nutricion, Repo.momentos) {
+            if (!sinc) value = if (Repo.experimentos.isEmpty()) emptyMap() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { Estadistica.panel(dinamicas = false) }
+        }
         // Un experimento que mide algo privado no se muestra aquí: su resultado se analiza en R.
         Repo.experimentos.filter { !io.github.ruddy2003.vestigium.data.Privado.esVariable(it.resultado) }.sortedByDescending { it.inicio }
             .forEach { e -> TarjetaExperimento(e, panel, vars.firstOrNull { it.id == e.resultado }?.nombre ?: e.resultado) }
@@ -463,15 +473,19 @@ fun PantallaExperimentos(nav: Nav) {
                     Ficha("Semanas alternas sorteadas", diseno == "alterno") { diseno = "alterno" }
                     Ficha("Antes y después", diseno == "antes_despues") { diseno = "antes_despues" }
                 }
-                Ayuda(if (diseno == "alterno") "Sortear evita que lo hagas justo en las semanas en que ya ibas a estar bien." else "Primero la mitad de las semanas sin la acción y luego con ella. Úsalo cuando el efecto tarda en irse (creatina).",
+                Ayuda(if (diseno == "alterno") "Sortear evita que lo hagas justo en las semanas en que ya ibas a estar bien. Se sortea por pares de semanas: en cada par, una con la acción y otra sin ella." else "Primero la mitad de las semanas sin la acción y luego con ella. Úsalo cuando el efecto tarda en irse (creatina).",
                     Modifier.padding(top = 4.dp))
                 Etiqueta("Duración")
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(4, 6, 8, 12).forEach { s -> Ficha("$s semanas", semanas == s) { semanas = s } } }
                 Etiqueta("Días de lavado tras cada cambio")
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { listOf(0, 1, 2, 7, 28).forEach { d -> Ficha(if (d == 0) "ninguno" else "$d", lavado == d) { lavado = d } } }
-                BotonPrincipal("Sellar y empezar el lunes", Modifier.fillMaxWidth().padding(top = 12.dp), habilitado = nombre.isNotBlank() && accion.isNotBlank() && hipotesis.isNotBlank()) {
-                    val plan = if (diseno == "antes_despues") List(semanas / 2) { false } + List(semanas - semanas / 2) { true }
-                        else (List(semanas / 2) { true } + List(semanas - semanas / 2) { false }).shuffled(kotlin.random.Random(System.currentTimeMillis()))
+                // Con este lavado, ¿quedan días suficientes en cada condición, sea cual sea el sorteo? (P-18)
+                val minimo = remember(diseno, semanas, lavado) { Experimentos.minimoPosible(diseno, semanas, lavado) }
+                if (minimo < Experimentos.MIN_DIAS) Aviso("Con $lavado días de lavado tras cada cambio, en $semanas semanas podrían quedar solo $minimo días que cuentan en una condición. " +
+                    "Hacen falta al menos ${Experimentos.MIN_DIAS}: alarga el experimento o reduce el lavado.")
+                BotonPrincipal("Sellar y empezar el lunes", Modifier.fillMaxWidth().padding(top = 12.dp),
+                    habilitado = nombre.isNotBlank() && accion.isNotBlank() && hipotesis.isNotBlank() && minimo >= Experimentos.MIN_DIAS) {
+                    val plan = Experimentos.plan(diseno, semanas)
                     val lunes = Fechas.sumar(Fechas.lunesDe(Fechas.diaLogico()), 7)
                     Repo.guardarExperimento(Experimento(Repo.nuevoId(), nombre.trim(), accion.trim(), resultado, lunes, semanas, plan, pregunta = pregunta.trim(),
                         hipotesis = hipotesis.trim(), sellada = Fechas.ahoraIso(), diseno = diseno, lavado_dias = lavado, plantilla = plantilla))
@@ -501,17 +515,26 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
             Ayuda((if (e.diseno == "antes_despues") "Antes y después · " else "Semanas sorteadas · ") + "plan: " + e.plan.joinToString(" ") { if (it) "SÍ" else "no" } +
                 if (e.lavado_dias > 0) " · ${e.lavado_dias} días de lavado tras cada cambio" else "")
             val r = remember(e, panel) { Experimentos.resultado(e, panel) }
-            if (r.dif == null) Ayuda("Aún no hay suficientes días medidos en ambas condiciones (${r.con.size} con, ${r.sin.size} sin; hacen falta 3 de cada una).", Modifier.padding(top = 6.dp))
+            if (r.dif == null) Ayuda(when {
+                // Tres casos distintos (P-18): el plan nunca alcanzará, ya terminó, o falta esperar.
+                r.posibleSi < 3 || r.posibleNo < 3 -> "Este plan nunca dará resultado: con el lavado solo cuentan ${r.posibleSi} días con la acción y ${r.posibleNo} sin ella (hacen falta 3 de cada una)."
+                !r.provisional -> "El experimento terminó sin suficientes días medidos: ${r.con.size} con la acción y ${r.sin.size} sin ella (hacían falta 3 de cada una)."
+                else -> "Aún no hay suficientes días medidos en ambas condiciones (${r.con.size} con, ${r.sin.size} sin; hacen falta 3 de cada una)."
+            }, Modifier.padding(top = 6.dp))
             else {
                 val (d, lo, hi) = r.dif
-                Text("Con la acción: ${"%.2f".format(r.con.average())} · sin ella: ${"%.2f".format(r.sin.average())}. Diferencia ${"%+.2f".format(d)} (intervalo de 95 %: ${"%.2f".format(lo)} a ${"%.2f".format(hi)}).",
+                if (r.provisional) Aviso("Provisional: el plan sigue en curso. Mirar el resultado a medio camino y parar en la primera «señal» engaña; espera a que termine.")
+                Text("Semanas con la acción según el plan: ${"%.2f".format(r.con.average())} · sin ella: ${"%.2f".format(r.sin.average())}. Diferencia ${"%+.2f".format(d)} (intervalo de 95 %: ${"%.2f".format(lo)} a ${"%.2f".format(hi)}).",
                     style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
-                Ayuda(if (lo > 0 || hi < 0) "El intervalo no toca el cero: es una señal para ti." else "El intervalo incluye el cero: todavía no se distingue del azar.")
+                if (!r.provisional) Ayuda(if (lo > 0 || hi < 0) "El intervalo no toca el cero: es una señal para ti." else "El intervalo incluye el cero: todavía no se distingue del azar.")
                 r.d?.let { Ayuda("Tamaño del efecto (d de Cohen): ${"%.2f".format(it)}, ${Experimentos.tamano(it)}.") }
-                Ayuda("Comparación según el plan: semanas que tocaba la acción contra semanas que no, la hayas hecho o no. Es la comparación justa; si no siempre cumpliste, el efecto real puede ser mayor.",
-                    Modifier.padding(top = 2.dp))
-                if (r.tendenciaClara) Ayuda("Ojo: tu medida venía cambiando sola a lo largo del experimento (${"%+.3f".format(r.tendencia ?: 0.0)} por día). Parte de la diferencia puede ser esa tendencia" +
-                    (if (e.diseno == "antes_despues") ", y en un diseño de antes y después pesa más." else "."), Modifier.padding(top = 2.dp))
+                Ayuda("Comparación según el plan: semanas que tocaba la acción contra semanas que no, la hayas hecho o no. Es la comparación justa; si no siempre cumpliste, el efecto real puede ser mayor. " +
+                    "El intervalo cuenta que los días seguidos se parecen.", Modifier.padding(top = 2.dp))
+                // El aviso fuerte depende del plan real: un sorteo que salió en bloque también es un antes y después (P-18).
+                val bloque = Experimentos.enBloque(e)
+                if (r.tendenciaClara) Ayuda("Ojo: dentro de cada condición, tu medida venía cambiando sola (${"%+.3f".format(r.tendencia ?: 0.0)} por día). Parte de la diferencia puede ser esa tendencia" +
+                    (if (bloque) ", y como el plan quedó en bloque (primero una condición y luego la otra), pesa más." else "."), Modifier.padding(top = 2.dp))
+                else if (bloque && e.diseno != "antes_despues") Ayuda("El sorteo quedó en bloque: primero una condición y luego la otra. Se lee como un antes y después, y cualquier cambio con el tiempo se confunde con el efecto.", Modifier.padding(top = 2.dp))
             }
             // Cuánto cumpliste, con lo que respondiste en «¿Lo hiciste hoy?» (en el Día).
             r.cumplimiento?.let { c ->

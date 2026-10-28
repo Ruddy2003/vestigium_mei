@@ -78,6 +78,15 @@ object Perfiles {
         "metas del año" to p.metas.joinToString(" | "),
     )
 
+    /**
+     * La fecha del primer guardado de «Conocerte», si quedó en el historial (desde la v de la entrega 10c): el primer día del
+     * historial, cuando todo lo de ese día pasó de vacío a algo. Antes de esa fecha no se sabía nada de esos campos.
+     */
+    fun primerGuardado(hist: List<CambioPerfil>): String? {
+        val d = hist.minOfOrNull { it.fecha } ?: return null
+        return d.takeIf { hist.filter { it.fecha == d }.all { it.antes.isBlank() } }
+    }
+
     /** Lo que cambió de [antes] a [despues], con la fecha de hoy. */
     fun cambios(antes: Perfil, despues: Perfil, fecha: String = Fechas.diaLogico()): List<CambioPerfil> {
         val a = campos(antes); val b = campos(despues)
@@ -88,8 +97,10 @@ object Perfiles {
     fun relacion(persona: String, p: Perfil = Repo.config.perfil, fecha: String? = null): String? {
         // Primero lo que dijiste en «Tu gente» (con la relación que había ese día); luego «Conocerte».
         Personas.relacionEn(persona, fecha)?.let { return Personas.grupo(it) }
-        p.cercanas.firstOrNull { it.nombre == persona }?.let { return it.relacion.ifBlank { "otra" } }
-        if (persona in p.convivientes) return "casa"
+        // Con el nombre unido (P-25): @anita cuenta como @ana también aquí.
+        val eq = Repo.equivalencias(); val k = Texto.canon(persona.lowercase(), eq)
+        p.cercanas.firstOrNull { Texto.canon(it.nombre.lowercase(), eq) == k }?.let { return it.relacion.ifBlank { "otra" } }
+        if (p.convivientes.any { Texto.canon(it.lowercase().removePrefix("@"), eq) == k }) return "casa"
         return null
     }
 

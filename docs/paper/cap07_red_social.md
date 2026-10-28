@@ -38,10 +38,10 @@ La misma persona puede «aparecer» de forma distinta según la función, porque
 | `Personas.menciones` (`data/Personas.kt`): lista de «Tu gente», «¿Quién es @x?», duplicados | sí | sí | **sí** | sí | no | sí | destinatario | sí |
 | Variable `personas` del panel (`Estadistica.panel`) | sí | no | no | no | no | no | no | sí |
 | `Presencias.delDia` → `personas_vistas`, `vi_*`, `penso_en_*`, `cercania_media`, `pen_*` | sí | sí | no | no | no | no | no | sí |
-| Familia `per_` (`Dinamicas.construir`) | sí | sí | **sí** | sí | sí | no | destinatario y texto | sí |
+| Familia `per_` (`Dinamicas.construir`) | sí | sí | no (desde 10a) | sí (en los temas del sueño, solo los que llevan @, desde 10c) | sí | no | destinatario y texto | sí |
 | Constelación (`Constelacion.calcular`) | sí | sí | no | no | no | no | no | sí |
 | Red y exportación `vm_red_*` (`RedPersonas.calcular`) | sí | sí | no | no | no | no | no | sí |
-| Tarjeta «personas en tu cielo este año» (`Explorar.kt`, `Vida.kt`) | sí | no | no | no | no | no | no | **no** |
+| Tarjeta «personas en tu cielo este año» (`Vida.kt`) | sí | no | no | no | no | no | no | sí (desde 10c) |
 
 «Momentos privados» son los de tipo `impulso`, `recaida` o `libido` (la propiedad `Momento.privado` en `data/Modelo.kt`, que desde el módulo 10a incluye el impulso). Ninguna fila de esta tabla los usa (sección 7.13). Hasta v84 el impulso no contaba como privado y entraba en todas las filas que dicen «Momentos».
 
@@ -56,7 +56,7 @@ La app no intenta adivinar nombres en el texto libre: **solo cuenta a una person
 ### 7.3.2 Cómo lo hace exactamente
 
 - **Reconocer la mención** (`Texto.personas`): busca la expresión regular `@([\p{L}\p{N}_]+)`, es decir, una arroba seguida de letras (de cualquier alfabeto, con acentos), números o guion bajo. El nombre se pasa a **minúsculas**. `@Ana`, `@ana` y `@ANA` son lo mismo; `@ana.` termina en el punto; `@ana_m` es distinta de `@ana`.
-- **Nombre canónico** (`Texto.canon`): si el nombre está en la tabla de equivalencias, se cambia por su equivalente; si no, se queda igual. **Es un solo paso**: si dijiste `anita → ana` y luego `ana → ana_g`, `anita` se cuenta como `ana`, no como `ana_g` (H-6-11).
+- **Nombre canónico** (`Texto.canon`): si el nombre está en la tabla de equivalencias, se cambia por su equivalente, y se sigue la cadena. Hasta la entrega 10c era **un solo paso**: si dijiste `anita → ana` y luego `ana → ana_g`, `anita` se contaba como `ana`, no como `ana_g`, y un ciclo `a → b`, `b → a` nunca unía a las dos (H-6-11). Desde 10c (D.73) `canon` sigue las uniones hasta **8 pasos**: `anita → ana → ana_g` da `ana_g`. Si la cadena vuelve a un nombre ya visitado (un ciclo), todos los nombres del ciclo cuentan como **el primero en orden alfabético** (`a → b` y `b → a`: los dos cuentan como `a`). Lo comprueba `CalculosPrueba.nombresEncadenados`. **[Diseño propio]**.
 - **Detectar posibles duplicados** (`Personas.duplicados`): compara cada par de nombres mencionados y propone «¿son la misma persona?» si se cumple cualquiera de estas condiciones (`Texto.parecidos` y la regla de prefijo):
   1. son iguales al quitar los guiones bajos (`luis_m` y `luism`);
   2. ambos tienen 4 letras o más y su **distancia de Levenshtein** es ≤ 2 (cuántas letras hay que cambiar, agregar o quitar para pasar de uno a otro: `daniel` → `danie` es 1);
@@ -75,7 +75,7 @@ Durante un mes escribes `@Dani` 6 días y `@daniel` 3 días. Sin equivalencias, 
 
 - **Personas sin @**: si escribes «comí con mi mamá» sin `@`, la app no la ve. Todas las variables sociales cuentan **menciones marcadas**, no contactos reales.
 - **Homónimos**: dos personas distintas con el mismo `@nombre` se cuentan como una. La solución es escribirlas distinto (`@ana_t`, `@ana_u`).
-- **Equivalencias compartidas con los temas**: la misma tabla `Config.equivalencias` se usa para `@personas` y `#temas` (el código llama a `Texto.canon` con el mismo mapa en ambos casos). Una equivalencia `ana → ana_g` creada para personas también cambiaría un tema `#ana` (H-6-11). Es poco probable, pero posible.
+- **Equivalencias compartidas con los temas**: la misma tabla `Config.equivalencias` se usa para `@personas` y `#temas` (el código llama a `Texto.canon` con el mismo mapa en ambos casos). Una equivalencia `ana → ana_g` creada para personas también cambiaría un tema `#ana` (H-6-11, parte que sigue vigente). Es poco probable, pero posible.
 
 ---
 
@@ -108,6 +108,8 @@ Además existe la sección «Conocerte» (capítulo 3), con **«a quién ves má
 3. Si no, si está en «quiénes viven contigo», `casa`.
 4. Si no, ninguna (`null`): la persona cuenta en los totales, pero no en `vi_familia`, `vi_pareja`, etc.
 
+Desde la entrega 10c (D.73), los pasos 2 y 3 comparan **nombres canónicos**: si en Conocerte escribiste `anita` y en el diario `@ana`, y las uniste, se reconocen (antes se comparaba el texto tal cual).
+
 ### 7.4.3 Cómo se guarda el historial (exacto)
 
 Cada persona (`Persona` en `data/Modelo.kt`) tiene `relacion`, `cercania`, `detalle`, `desde` (el día en que la clasificaste por primera vez) e `historial`, una lista de `CambioRelacion(hasta, relacion, cercania)`.
@@ -115,11 +117,11 @@ Cada persona (`Persona` en `data/Modelo.kt`) tiene `relacion`, `cercania`, `deta
 **Al guardar** (`Personas.guardar`), hay «cambio» si:
 
 - la relación es distinta de la anterior, **o**
-- la cercanía anterior y la nueva existen las dos y son distintas.
+- la cercanía es distinta de la anterior, **incluido** pasar de «sin cercanía» a un valor o de un valor a «sin cercanía» (desde la entrega 10c; antes solo contaba si las dos existían).
 
-Si hay cambio, se agrega al historial `CambioRelacion(hasta = hoy, relación anterior, cercanía anterior)`. «Hoy» es el **día lógico en que guardas**. Si la nueva cercanía viene vacía, se conserva la anterior.
+Si hay cambio, se agrega al historial `CambioRelacion(hasta = hoy, relación anterior, cercanía anterior)`. «Hoy» es el **día lógico en que guardas**. Desde 10c, la cercanía que se guarda es la que dejas en el formulario: si desmarcas los círculos, la cercanía **se borra** (antes, una cercanía vacía conservaba la anterior y no había forma de quitarla).
 
-**Al consultar** (`Personas.relacionEn(nombre, fecha)`): ordena el historial por `hasta` y toma la **primera** entrada con `fecha < hasta`; si ninguna cumple, usa la relación actual. `cercaniaEn` hace lo mismo con la cercanía (si esa entrada no tenía cercanía, usa la actual). En palabras: **cada entrada del historial vale para los días anteriores a su `hasta`** (y posteriores al `hasta` de la entrada anterior); el propio día del cambio ya tiene la relación nueva.
+**Al consultar** (`Personas.relacionEn(nombre, fecha)`): ordena el historial por `hasta` y toma la **primera** entrada con `fecha < hasta`; si ninguna cumple, usa la relación actual. `cercaniaEn` hace lo mismo con la cercanía. Desde 10c, si esa entrada no tenía cercanía, el resultado es **«sin cercanía»** en ese tramo (antes usaba la actual, y una cercanía puesta hoy se aplicaba a todos los días pasados). En palabras: **cada entrada del historial vale para los días anteriores a su `hasta`** (y posteriores al `hasta` de la entrada anterior); el propio día del cambio ya tiene la relación nueva.
 
 ### 7.4.4 Ejemplo trabajado (Figura 7.3)
 
@@ -149,9 +151,9 @@ Si estuviste con ella el 2 abr 2026, ese día se enciende `vi_pareja` (no `vi_ex
 
 - **La fecha del cambio es la fecha en que lo anotas**, no la fecha en que ocurrió. No hay forma de decir «terminamos hace tres semanas». En la Figura 7.3, los 23 días entre la ruptura real (28 mar) y la anotación (20 abr) cuentan como pareja (H-6-3).
 - **Antes de la primera clasificación se proyecta la relación más antigua conocida.** Si clasificaste a alguien como amistad en 2025, los días de 2024 (cuando quizá era un conocido) también cuentan como amistad. Es el mismo problema que el perfil proyectado hacia atrás (H-2-5).
-- **Conocerte no tiene historial por persona.** «A quién ves más» y «quiénes viven contigo» se leen con su valor **actual** para todas las fechas (H-6-4). Si alguien dejó de vivir contigo, `vi_convivientes` lo sigue contando como conviviente en todos los días anteriores y posteriores.
-- **Comparaciones sin canon.** `Perfiles.relacion` busca en `perfil.cercanas` con `it.nombre == persona` y en `perfil.convivientes` con `persona in convivientes`, sin aplicar las equivalencias. Si en Conocerte escribiste `anita` y el canónico es `ana`, no se reconoce (H-6-4).
-- **Cercanía que no se puede borrar ni fechar.** Guardar con la cercanía vacía conserva la anterior (`cercania ?: previo.cercania`), así que una vez puesta no se puede quitar. Y si la persona no tenía cercanía y le pones una, no hay «cambio»: la nueva cercanía se aplica a todos los días pasados (H-6-12).
+- **Conocerte no tiene historial por persona.** «A quién ves más» y «quiénes viven contigo» se leen con su valor **actual** para todas las fechas (H-6-4, parte que sigue vigente). Si alguien dejó de vivir contigo, `vi_convivientes` lo sigue contando como conviviente en todos los días anteriores y posteriores.
+- **Comparaciones sin canon (resuelto en 10c, D.73).** `Perfiles.relacion` buscaba en `perfil.cercanas` y en `perfil.convivientes` con el texto tal cual; ahora compara los nombres canónicos, igual que `vi_convivientes` (H-6-4).
+- **Cercanía (resuelto en 10c, D.73).** Antes no se podía borrar, y ponerle cercanía a quien no tenía no contaba como cambio, así que se aplicaba a todos los días pasados (H-6-12). Ahora se borra al desmarcarla, y el paso de «sin cercanía» a un valor queda en el historial. Lo que sigue: la fecha del cambio es la de la anotación, y una cercanía puesta antes de esta versión, sin historial, sigue valiendo hacia atrás.
 - **Varios cambios el mismo día**: si cambias dos veces en un día, la relación intermedia se pierde (las dos entradas tienen el mismo `hasta`). Es irrelevante en la práctica.
 
 ---
@@ -204,26 +206,27 @@ El capítulo 3 (sección 3.13) explica las reglas de `data/Presencias.kt`. Lo qu
 
 ### 7.7.1 Variables fijas (`Estadistica.panel`)
 
-Se calculan para **cada día que tenga documento de diario o algún momento** (`Repo.dias.keys` ∪ fechas de momentos). Primero `Presencias.delDia` da el estado de cada persona; luego se busca el grupo de relación **de ese día** (sección 7.4).
+Se calculan solo para los días en que **se pudo nombrar a alguien** (`Dinamicas.diasSociales`, desde la entrega 10c): los días con texto en el diario o con un momento no privado que nombra a alguien con @. Los demás días quedan **vacíos**, no en 0 (D.63; antes se calculaban para cada día con documento de diario o algún momento). Primero `Presencias.delDia` da el estado de cada persona; luego se busca el grupo de relación **de ese día** (sección 7.4).
 
 | Variable | Definición exacta | Aparece en la lista de análisis si… |
 |---|---|---|
-| `personas` | Número de @personas **distintas** (canónicas) en el **texto del diario**, sin importar su estado | siempre |
+| `personas` | Número de @personas **distintas** (canónicas) en el **texto del diario**, sin importar su estado (vacío los días sin texto ni momento con @) | siempre |
 | `cercanos` | Número de personas con estado «estuve» y grupo `familia`, `pareja`, `amistad` o `casa` | hay alguien en Conocerte o en Tu gente |
 | `vi_familia`, `vi_pareja`, `vi_amistades` | 1 si estuviste con al menos una persona de ese grupo; 0 si no | igual |
-| `vi_convivientes` | 1 si estuviste con alguien cuyo nombre canónico está en la lista **actual** de convivientes **y** tiene algún grupo de relación | igual |
+| `vi_convivientes` | 1 si estuviste con alguien cuyo nombre canónico está en la lista **actual** de convivientes (también pasada por `canon` desde 10c) **y** tiene algún grupo de relación | igual |
 | `vi_expareja` | 1 si estuviste con alguien que **ese día** era expareja | alguien es o fue expareja |
 | `vi_trabajo` | 1 si estuviste con alguien del grupo `trabajo` | alguien de Tu gente es del grupo trabajo |
 | `personas_vistas`, `personas_pensadas`, `personas_mensajes` | Cuántas personas tuvieron cada estado (incluye personas sin clasificar) | algún día tiene un estado distinto de «estuve» marcado, o algún momento «pensando en» nombra a alguien |
 | `penso_en_pareja`, `penso_en_expareja`, `penso_en_familia`, `penso_en_amistades` | 1 si pensaste sin ver a alguien de ese grupo | lo anterior (y, para pareja y expareja, que existan) |
 | `cercania_media` | Promedio de `cercaniaEn` (cercanía de ese día) de **todas** las personas del día (cualquier estado) que tengan cercanía; vacío si ninguna | alguien tiene cercanía |
 | `cartas_otros` | Cartas escritas a otra persona ese día (0 desde la primera carta) | hay cartas a otros |
+| `presencias_revisado` | 1 si ese día revisaste quién estuvo y en quién solo pensaste; 0 si hay personas en el diario sin revisar; vacío los días sin personas ni revisión (desde 10c) | siempre (es obvia con las sociales, sección 7.12) |
 
 Hay además variables de **compañía en los avisos** (`acompanado_pct`, `con_pareja`, `con_amigos`…), que **no** salen de las @menciones sino de la pregunta «¿con quién estás?» de cada registro de ánimo. Se explican en el capítulo 3; son una segunda fuente, independiente, sobre lo mismo.
 
 ### 7.7.2 Variables dinámicas: una por persona (`Dinamicas.construir`)
 
-- **`per_<nombre>`**: «Aparece @x (diario, momentos, sueños o cartas) (0/1)». Vale 1 si la persona se menciona ese día en cualquiera de: texto del diario, texto del sueño, temas del sueño (los que no empiezan con `#`), «mejor momento» o «peor momento», el texto de **cualquier** momento, o una carta (como destinataria o dentro del texto). Vale 0 en los demás días con diario o momentos.
+- **`per_<nombre>`**: «Aparece @x (diario, mejor y peor momento, momentos, sueños o cartas) (0/1)» (la etiqueta menciona el mejor y el peor momento desde 10c). Vale 1 si la persona se menciona ese día en cualquiera de: texto del diario, texto del sueño, temas del sueño que empiezan con `@` (desde 10c; antes contaba cualquier etiqueta sin `#`, también las de lugares o cosas), «mejor momento» o «peor momento», el texto de un momento **no privado**, o una carta (como destinataria o dentro del texto). Vale 0 en los días en que se pudo nombrar a alguien (diario escrito o momento con @; `Dinamicas.diasSociales`) y en los días donde aparece otra persona; en los demás, vacío (D.63). `pen_` usa la misma base; `tema_`, los días con diario escrito o con un momento que lleva algún #tema.
   - En los análisis entran las **15** personas con más días, siempre que tengan **al menos 5 días**. En la exportación extendida, todas las que tengan al menos 2 días (hasta 400).
 - **`pen_<nombre>`**: «Pensé en @x sin verla (0/1)». Vale 1 si `Presencias.delDia` le da estado «pensé» ese día. Entran las **10** con más días, con **al menos 3 días** (en la exportación extendida, desde 2).
 - El nombre de la variable es el `slug` del nombre canónico (minúsculas sin acentos, con `_`), hasta 40 caracteres; si dos coinciden, se agrega `_2`, `_3`…
@@ -242,11 +245,12 @@ Relaciones de ese día: ana = familia (cercanía 6), beto = pareja (7), caro = a
 4. `cercanos` = 2 (ana familia, beto pareja). `vi_familia` = 1, `vi_pareja` = 1, `vi_amistades` = 0 (caro y dani fueron «pensé»).
 5. `penso_en_amistades` = 1 (caro y dani son del grupo amistad). `penso_en_familia` = 0.
 6. `cercania_media` = (6 + 7 + 5 + 4) / 4 = **5.5** (incluye a las pensadas).
-7. `per_ana` = `per_beto` = `per_caro` = `per_dani` = `per_eli` = 1 (eli por el sueño). `pen_caro` = `pen_dani` = 1.
+7. `per_ana` = `per_beto` = `per_caro` = `per_dani` = `per_eli` = 1 (eli por el sueño, si en los temas del sueño la escribiste `@eli`; una etiqueta `eli` sin @ ya no cuenta desde 10c). `pen_caro` = `pen_dani` = 1.
+8. Al día siguiente solo respondes un aviso de ánimo, sin escribir el diario ni nombrar a nadie: desde 10c, todas estas variables quedan **vacías** ese día (antes, `vi_familia = 0`, `personas_vistas = 0`…).
 
 ### 7.7.4 Cuándo falla
 
-- **Un 0 no siempre quiere decir «no la vi».** El panel pone `vi_familia = 0`, `personas_vistas = 0`, etc. en **cualquier día con documento de diario o con algún momento**, aunque ese día no hayas escrito el diario (por ejemplo, un día en que solo respondiste un aviso de ánimo o solo anotaste el sueño). Ese 0 significa «no la nombré», no «no la vi», y se confunde con los días en que de verdad no viste a nadie (H-6-13). Es un caso de dato faltante que se convierte en 0 (H-2-4).
+- **Un 0 no siempre quería decir «no la vi» (resuelto en parte en 10c, D.63).** El panel ponía `vi_familia = 0`, `personas_vistas = 0`, etc. en **cualquier día con documento de diario o con algún momento**, aunque ese día no hubieras escrito el diario (H-6-13). Ahora el 0 solo aparece los días con diario escrito o con un momento que nombra a alguien. Sigue siendo «no la nombré»: un diario escrito sin @ cuenta como «no vi a nadie», y quien no escribe nombres en el diario sale sin compañía.
 - **Lo que no se nombra no existe** (sección 7.3.4).
 - **«Estuve» por omisión** infla las presencias (H-1-6).
 - **Relaciones proyectadas** hacia atrás o con fecha de cambio tardía (sección 7.4.5).
@@ -290,7 +294,7 @@ $$d = \left(0.30 + 0.64\cdot \min\!\left(1, \frac{\text{días desde la última m
 
    donde *P* es el periodo en días (para «siempre», los días desde el primer diario, con mínimo 30). Así, alguien mencionado hoy queda a 0.28 del radio, y alguien no mencionado en todo el periodo, a 0.88. El exponente 0.6 abre más espacio entre los recientes.
 
-6. **Ángulo**: el «ángulo de girasol» (2.399963 radianes ≈ 137.5° entre una estrella y la siguiente, por orden de días) más un pequeño ajuste fijo por nombre (hasta 0.35 radianes, según el `hashCode` del nombre). Sirve **solo para que no se encimen**: el ángulo **no significa nada**, y cambia si cambia el orden de las personas.
+6. **Ángulo**: el «ángulo de girasol» (2.399963 radianes ≈ 137.5° entre una estrella y la siguiente, por orden de días) más un pequeño ajuste fijo por nombre (hasta 0.35 radianes, según el `hashCode` del nombre). Sirve **solo para que no se encimen**: el ángulo **no significa nada**, y cambia si cambia el orden de las personas. El comentario del código decía «ángulo fijo por su nombre»; desde 10c dice esto (H-6-14).
 7. **Tamaño**: radio = 2.5 + 7·√(días / días de la más mencionada), en dp (unidades de pantalla), con un halo de 2.2 veces ese radio.
 8. **Líneas**: opacidad = min(0.12 + 0.06·*n*, 0.5) y grosor = min(0.6 + 0.15·*n*, 2) dp, con *n* = días juntas.
 9. **Color**: grupo de relación **actual** (`Perfiles.relacion(p)` sin fecha): casa, familia, pareja, amistad, trabajo y expareja (tenue); las demás, del color del texto.
@@ -314,7 +318,7 @@ Límites:
 - **Color con la relación de hoy** (pista 6 del plan, confirmada). Una expareja aparece en rosa tenue aunque en el periodo mostrado haya sido tu pareja casi todo el tiempo. Para un dibujo de «cómo está hoy tu cielo» es razonable; solo hay que saberlo (H-6-14).
 - **La distancia premia la última mención.** Una persona que viste a diario durante 11 meses y no mencionas desde hace 30 días queda más lejos que alguien que nombraste una vez ayer.
 - **Las líneas son co-menciones** (sección 7.8).
-- **Momentos de impulso**: al no ser «privados» para el código, sus @menciones cuentan (sección 7.13).
+- **Momentos de impulso**: hasta v84 no eran «privados» para el código y sus @menciones contaban; desde 10a no (sección 7.13).
 
 ---
 
@@ -327,6 +331,8 @@ Quién conoce a quién, como un grafo. Las **líneas firmes** son lo que **dijis
 ### 7.10.2 Vínculos declarados
 
 En la ficha de una persona, «¿A quién conoce?» muestra hasta 24 personas (las clasificadas y las 20 más mencionadas). Cada toque avanza: sin decir → se conocen → familia entre sí → pareja → colegas → no se conocen → sin decir (`RedPersonas.siguiente`). Se guarda un `Vinculo(a, b, tipo)` con el par ordenado alfabéticamente, así que es **simétrico** (si A conoce a B, B conoce a A). «No se conocen» es información explícita: ese par **no** se dibuja ni cuenta como unido, aunque aparezcan juntas.
+
+Desde la entrega 10c (D.73, H-9-22), los vínculos pasan por los nombres canónicos: `RedPersonas.dichos()` traduce cada par con `canon`, descarta los que quedan como la misma persona y, si dos vínculos dichos con nombres distintos caen en el mismo par, se queda con el último. Al guardar (`poner`), se quita también lo dicho antes con otro nombre de las mismas dos personas. Antes, si uniste `@anita` con `@ana`, lo dicho de `@anita` no aparecía en la Red.
 
 ### 7.10.3 Cómo se calcula (`RedPersonas.calcular(minJuntos = 2, max = 45)`)
 
@@ -341,7 +347,7 @@ En la ficha de una persona, «¿A quién conoce?» muestra hasta 24 personas (la
 
 - **Personas**: número de nodos *n*.
 - **Densidad**: líneas que cuentan / (*n*(*n*−1)/2), en porcentaje. Incluye en *n* a las personas sin ninguna línea.
-- **Grupos** (`componentes`): número de componentes conectadas **sin contar a quienes no tienen ninguna línea**. Usa la técnica de *unión-búsqueda* (cada nodo apunta a un «representante» de su grupo; al encontrar una línea se juntan los dos grupos).
+- **Grupos** (`componentes`): número de componentes conectadas **sin contar a quienes no tienen ninguna línea** de las que se muestran. Usa la técnica de *unión-búsqueda* (cada nodo apunta a un «representante» de su grupo; al encontrar una línea se juntan los dos grupos). Desde 10c, la función decide quién «tiene líneas» con las aristas que recibe, no con el grado guardado.
 
 **Ejemplo.** 10 personas; líneas: un triángulo (A-B, B-C, A-C), una pareja de líneas (D-E, E-F), una línea G-H; I y J sin líneas. Densidad = 6 / 45 = **13 %**. Grupos = **3** ({A,B,C}, {D,E,F}, {G,H}); I y J no cuentan como grupo.
 
@@ -363,13 +369,13 @@ Estilo: líneas declaradas de 2 dp y más opacas (punteadas si son «colegas»);
 | Posición | ángulo decorativo; distancia = recencia | modelo de fuerzas: cerca = conectadas |
 | Tamaño | días mencionada | días mencionada |
 | Líneas | solo co-mención (≥ 2 días) | co-mención (≥ 2 días) + vínculos declarados |
-| Color | grupo de relación actual (agrupado) | relación actual **sin agrupar** (ver abajo) |
+| Color | grupo de relación actual (agrupado) | grupo de relación actual (agrupado, desde 10c) |
 | Cifras | ninguna | personas, densidad, grupos |
 
 ### 7.10.7 Cuándo falla
 
-- **Colores incompletos.** En la Red, el color sale de `p?.relacion ?: Perfiles.relacion(n)`: para quien está en Tu gente se usa la relación **tal cual** (`amistad_cercana`, `colega`, `companero`, `mentor`) y no el grupo. La tabla de colores solo tiene `familia`, `pareja`, `amistad`, `casa`, `trabajo` y `expareja`, así que una amistad cercana o un colega salen **sin color de relación**, aunque el texto de ayuda dice «como en la Constelación» (H-6-5).
-- **«Solo lo que dije» cuenta grupos de más.** Al activar ese filtro, el grado de cada nodo sigue siendo el calculado con **todas** las líneas. `componentes` incluye como grupo a cada persona con grado > 0, así que alguien que solo tenía líneas derivadas (ya ocultas) cuenta como un grupo de una sola persona. La ficha «unida a N» también muestra ese grado completo (H-6-6).
+- **Colores incompletos (resuelto en 10c, D.73).** Hasta 10c, el color salía de la relación **tal cual** (`amistad_cercana`, `colega`, `companero`, `mentor`), que no estaba en la tabla de colores, y una amistad cercana o un colega salían sin color (H-6-5). Ahora cada nodo tiene `grupo = Personas.grupo(relacion)` y el color sale de ahí, como en la Constelación.
+- **«Solo lo que dije» contaba grupos de más (resuelto en 10c, D.73).** Al activar ese filtro, el grado seguía siendo el de todas las líneas, y alguien que solo tenía líneas derivadas (ya ocultas) contaba como un grupo de una sola persona (H-6-6). Ahora `RedPersonas.grados(nodos, aristas)` recalcula el grado con las líneas que se ven, y `componentes` solo cuenta a quien tiene alguna de esas líneas. Ejemplo (prueba `CalculosPrueba.redConLineasFiltradas`): A-B dicha y C-D solo por co-mención; con todo, 2 grupos; con «solo lo que dije», 1 grupo, y C queda con grado 0.
 - **La densidad depende de cuántas personas sueltas haya.** Con 45 nodos hay 990 pares posibles; muchas personas mencionadas pocas veces y sin líneas bajan la densidad sin que tu red sea «menos unida».
 
 ---
@@ -380,7 +386,7 @@ Estilo: líneas declaradas de 2 dp y más opacas (punteadas si son «colegas»);
 
 `Exportar.filasRed` llama a `RedPersonas.calcular(minJuntos = 1, max = 400)`:
 
-- `vm_red_nodos.csv`: `persona`, `relacion` (actual, sin agrupar para Tu gente; agrupada para Conocerte), `cercania` (actual), `dias_mencion`, `grado` (calculado con **cualquier** co-mención, `minJuntos = 1`).
+- `vm_red_nodos.csv`: `persona`, `relacion` (actual, sin agrupar para Tu gente; agrupada para Conocerte), `grupo` (desde 10c: el grupo de relación, el mismo que da el color en la app), `cercania` (actual), `dias_mencion`, `grado` (calculado con **cualquier** co-mención, `minJuntos = 1`).
 - `vm_red_vinculos.csv`: `a`, `b`, `tipo_declarado` (vacío si no lo dijiste), `dias_juntos`.
 
 Exportar con `minJuntos = 1` permite elegir el umbral en R. Pero ojo: el `grado` del archivo **no** es el que muestra la app (que usa 2 días).
@@ -442,7 +448,7 @@ Las métricas son estándar **[Validado]** como definiciones (Burt, 2004; Perry 
 | Pares «no se conocen» que aparecen juntos ≥ umbral | **no** cuentan como línea | **sí** cuentan (la condición es «declarada y no "no se conocen"» **o** `dias_juntos ≥ min_juntos`) |
 | Grupos / componentes | sin contar a las personas sin líneas | contando a cada persona sin líneas como componente |
 | Grado | con co-mención ≥ 2 días | en el CSV, con ≥ 1 día; en R, recalculado con `min_juntos` |
-| Relación | actual, sin agrupar | actual, sin agrupar (`composicion` separa «amistad» de «amistad_cercana») |
+| Relación | grupo actual (desde 10c) | `composicion` y color por la columna `grupo` desde 10c (las exportaciones viejas, sin esa columna, usan `relacion`) |
 
 Con los mismos datos, la app y R pueden dar **densidades y número de grupos distintos** por estas razones, no por error de cálculo.
 
@@ -454,12 +460,12 @@ Las variables de las secciones 7.7.1 y 7.7.2 entran en la lista de relaciones de
 
 - **Cuántas entran**: 15 `per_` (≥ 5 días) y 10 `pen_` (≥ 3 días). Es un filtro razonable para no llenar la lista de casos raros, pero significa que las relaciones con personas poco frecuentes **no se buscan** en la app (sí en R con la exportación extendida).
 - **Pares «obvios» que se excluyen** (`Estadistica.obvia`), porque se mueven juntos por construcción:
-  - cada `per_` con `personas`, `cercanos`, `vi_familia`, `vi_pareja`, `vi_amistades`, `vi_convivientes`, `palabras` y `cartas_otros` (`Dinamicas.AGREGADOS["per_"]`);
+  - cada `per_` con `personas`, `cercanos`, `vi_familia`, `vi_pareja`, `vi_amistades`, `vi_convivientes`, `palabras`, `cartas_otros` y, desde 10c, también `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `vi_expareja`, `vi_trabajo`, `cercania_media`, `presencias_revisado` y los `penso_en_*` (`Dinamicas.AGREGADOS["per_"]`);
   - cada `pen_` con `personas`, `personas_pensadas` y los `penso_en_*`;
   - `per_x` con `pen_x` de la misma persona;
-  - y las familias fijas: {`cercanos`, `vi_*`, `personas`, `palabras`}, {`cercanos`, `vi_*`, `cercania_media`, `personas`}, {`personas`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `cercanos`}, {`personas_pensadas`, `penso_en_*`}.
+  - y las familias fijas: {`cercanos`, `vi_*`, `personas`, `palabras`}, {`cercanos`, `vi_*`, `cercania_media`, `personas`}, {`personas`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `cercanos`}, {`personas_pensadas`, `penso_en_*`} y, desde 10c, {`presencias_revisado`, `personas`, `personas_vistas`, `personas_pensadas`, `personas_mensajes`, `cercanos`, `palabras`}.
 - **Atención: R usa otra lista.** La lista de pares obvios de R es mucho más corta que la de la app (H-5-2), así que en `vm_relaciones()` varios de estos pares sí aparecen.
-- **Lo que no se excluye y quizá debería**: `per_x` con `personas_vistas`, `personas_mensajes`, `vi_expareja`, `vi_trabajo` y `cercania_media` (no están en `AGREGADOS["per_"]`). Si `@ana` es tu pareja, `per_ana` y `vi_pareja` se excluyen, pero `per_ana` con `personas_vistas` no, y saldrá como relación aunque sea por construcción (H-6-10).
+- **Lo que no se excluía y debía (resuelto en 10c, D.73)**: `per_x` con `personas_vistas`, `personas_mensajes`, `vi_expareja`, `vi_trabajo` y `cercania_media` no estaban en `AGREGADOS["per_"]`, y salían como relación aunque fueran por construcción (H-6-10). Ahora sí están.
 - **Dos personas entre sí** (`per_ana` con `per_beto`) **no** se excluyen: una relación positiva entre ellas es su co-mención, que es la misma información de la Red. No es un error, pero no es un hallazgo nuevo.
 - **La relación de cada día sí se usa** en `vi_*`, `penso_en_*` y `cercania_media` (sección 7.4). Las variables `per_`/`pen_` son por persona, sin relación.
 
@@ -503,13 +509,13 @@ La pista 4 del plan («la constelación toma los momentos excepto el tipo `recai
 
 ## 7.15 Resumen del capítulo
 
-1. La app reconoce a las personas **solo por `@nombre`**, en minúsculas, con equivalencias de un solo paso. Cada función lee textos distintos (sección 7.2), así que «aparecer» no significa lo mismo en todas partes.
-2. La **relación con historial** es una buena decisión: los análisis usan la relación de cada día. Sus límites: la fecha del cambio es la de la anotación (H-6-3), lo anterior a la primera clasificación se proyecta, y Conocerte no tiene historial (H-6-4).
+1. La app reconoce a las personas **solo por `@nombre`**, en minúsculas, con equivalencias que desde la entrega 10c se siguen en cadena (hasta 8 pasos, con los ciclos unidos). Cada función lee textos distintos (sección 7.2), así que «aparecer» no significa lo mismo en todas partes.
+2. La **relación con historial** es una buena decisión: los análisis usan la relación de cada día. Sus límites: la fecha del cambio es la de la anotación (H-6-3), lo anterior a la primera clasificación se proyecta, y Conocerte no tiene historial (H-6-4); desde 10c, al menos, sus nombres se comparan con las equivalencias, y la cercanía se puede borrar y queda en el historial.
 3. La **cercanía** usa la escala IOS, validada, con etiquetas añadidas y respondida una vez por persona; `cercania_media` describe a quién nombras, no cómo te fue con ellos ese día.
-4. Las variables sociales del panel ponen **0 en días sin diario** pero con algún momento o documento (H-6-13), y **no hay variable por persona de «estuve con @x»**: `per_` mezcla presencia, pensamiento, sueños y cartas (H-6-2).
-5. La **Constelación** es una visualización de frecuencia y recencia, coloreada con la relación actual. La **Red** combina co-menciones (≥ 2 días) y vínculos declarados, con un dibujo de fuerzas estándar; tiene dos fallos menores de presentación (H-6-5, H-6-6).
+4. Las variables sociales del panel ponían **0 en días sin diario** pero con algún momento o documento (H-6-13); desde 10c quedan vacías los días sin diario escrito ni momento con @. **No hay variable por persona de «estuve con @x»**: `per_` mezcla presencia, pensamiento, sueños y cartas, y su etiqueta lo dice (H-6-2).
+5. La **Constelación** es una visualización de frecuencia y recencia, coloreada con la relación actual. La **Red** combina co-menciones (≥ 2 días) y vínculos declarados (con nombres unidos desde 10c), con un dibujo de fuerzas estándar; sus dos fallos de presentación (color y «solo lo que dije») se corrigieron en 10c (H-6-5, H-6-6).
 6. `vm_red()` calcula densidad, componentes, **restricción de Burt** y composición. Las definiciones son estándar, pero los resultados dependen mucho del número de personas incluidas (H-6-8) y **difieren de la app** en tres puntos concretos (H-6-7).
-7. Los momentos privados no entran en la Constelación ni en la Red, pero **sí en `per_` y en «Tu gente»**, y los impulsos entran en todo (H-6-1).
+7. Los momentos privados no entran en la Constelación ni en la Red; hasta v84 entraban en `per_` y en «Tu gente», y los impulsos en todo (H-6-1, resuelto en 10a).
 8. Se identificaron **15 hallazgos** (H-6-1 a H-6-15). No se cambió código.
 
 ---

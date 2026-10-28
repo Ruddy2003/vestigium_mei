@@ -33,11 +33,16 @@ object Personas {
     fun cercaniaEn(nombre: String, fecha: String? = null, c: Config = Repo.config): Int? {
         val p = de(nombre, c) ?: return null
         if (fecha == null) return p.cercania
-        return p.historial.sortedBy { it.hasta }.firstOrNull { fecha < it.hasta }?.let { it.cercania ?: p.cercania } ?: p.cercania
+        // Una cercanía vacía en el historial es «sin cercanía» en ese tramo (P-25), no la de ahora.
+        val tramo = p.historial.sortedBy { it.hasta }.firstOrNull { fecha < it.hasta } ?: return p.cercania
+        return tramo.cercania
     }
 
-    /** Guarda o cambia a alguien. Si cambia la relación o la cercanía, lo de antes queda en el historial hasta hoy. */
-    /** [nacimiento] y [fallecimiento] en la forma de [Especiales] ("" = borrar; null = dejar como estaba). */
+    /**
+     * Guarda o cambia a alguien. Si cambia la relación o la cercanía (también de «sin cercanía» a un valor, o al revés: [cercania]
+     * null la borra), lo de antes queda en el historial hasta hoy (P-25).
+     * [nacimiento] y [fallecimiento] en la forma de [Especiales] ("" = borrar; null = dejar como estaba).
+     */
     fun guardar(nombre: String, relacion: String, cercania: Int?, detalle: String = "", hoy: String = Fechas.diaLogico(),
                 nacimiento: String? = null, fallecimiento: String? = null) {
         Repo.cambiarConfig { c ->
@@ -45,8 +50,8 @@ object Personas {
             val n = if (previo == null) Persona(nombre.lowercase().removePrefix("@"), relacion, detalle, cercania, hoy,
                 nacimiento = nacimiento.orEmpty(), fallecimiento = fallecimiento.orEmpty())
             else {
-                val cambio = previo.relacion != relacion || (previo.cercania != null && cercania != null && previo.cercania != cercania)
-                previo.copy(relacion = relacion, cercania = cercania ?: previo.cercania, detalle = detalle.ifBlank { previo.detalle },
+                val cambio = previo.relacion != relacion || previo.cercania != cercania
+                previo.copy(relacion = relacion, cercania = cercania, detalle = detalle.ifBlank { previo.detalle },
                     historial = if (cambio) previo.historial + CambioRelacion(hoy, previo.relacion, previo.cercania) else previo.historial,
                     nacimiento = nacimiento ?: previo.nacimiento, fallecimiento = fallecimiento ?: previo.fallecimiento)
             }

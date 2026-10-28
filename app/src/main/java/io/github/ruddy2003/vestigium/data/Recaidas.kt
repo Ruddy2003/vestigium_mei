@@ -81,7 +81,32 @@ object Recaidas {
         val diasDesdeUltima: Int?, val rachaMaxima: Int, val rachaActual: Int, val totalDias: Int, val diasConRespuesta: Int,
         /** Duraciones anotadas (minutos). */
         val duraciones: List<Int> = emptyList(),
+        /** Días sin respuesta desde la última recaída: no cuentan como limpios ni rompen la racha (P-27). */
+        val sinRespuestaRacha: Int = 0,
     )
+
+    /** Rachas sin recaída: la más larga, la actual y los días sin respuesta dentro de la actual. */
+    class Racha(val mejor: Int, val actual: Int, val sinRespuesta: Int)
+
+    /**
+     * Las rachas, como función pura (P-27). Un día cuenta como limpio solo si respondiste «no» ese día ([limpios]); un día con
+     * recaída ([recaidas]) la reinicia; un día sin respuesta no suma ni reinicia, y se cuenta aparte (hoy, mientras no
+     * respondas, no cuenta como sin respuesta). Antes, todo día sin recaída contaba como limpio, aunque no lo hubieras contestado.
+     */
+    fun rachas(recaidas: Set<String>, limpios: Set<String>, hoy: String): Racha {
+        val primero = (recaidas + limpios).minOrNull() ?: return Racha(0, 0, 0)
+        var mejor = 0; var actual = 0; var sin = 0
+        var f = primero
+        while (f <= hoy) {
+            when {
+                f in recaidas -> { actual = 0; sin = 0 }
+                f in limpios -> { actual++; if (actual > mejor) mejor = actual }
+                f < hoy -> sin++
+            }
+            f = Fechas.sumar(f, 1)
+        }
+        return Racha(mejor, actual, sin)
+    }
 
     fun resumen(hoy: String = Fechas.diaLogico()): Resumen {
         val imp = Repo.momentos.filter { it.tipo == "impulso" }
@@ -103,18 +128,10 @@ object Recaidas {
         val superados = impMs.count { i -> recMs.none { it >= i && it - i <= 3 * 3_600_000L } }
         val ultima = dias.maxOrNull()
         val respondidos = diasConRespuesta()
-        // Rachas sin recaída: desde el primer día con seguimiento, los días sin recaída cuentan como limpios.
-        var mejor = 0; var actual = 0
-        val primero = respondidos.minOrNull()
-        if (primero != null) {
-            var f: String = primero
-            while (f <= hoy) {
-                if (f in dias) actual = 0 else { actual++; if (actual > mejor) mejor = actual }
-                f = Fechas.sumar(f, 1)
-            }
-        }
+        val limpios = Repo.dias.values.filter { it.recaida == false }.map { it.fecha }.toSet() - dias
+        val racha = rachas(dias, limpios, hoy)
         return Resumen(ih, rh, sem, lugares, det, antes, aparatos, entre, impMs.size, superados,
-            ultima?.let { Fechas.diasEntre(it, hoy).toInt() }, mejor, if (primero == null) 0 else actual, dias.size, respondidos.size,
-            rec.mapNotNull { it.duracion_min }.filter { it > 0 })
+            ultima?.let { Fechas.diasEntre(it, hoy).toInt() }, racha.mejor, racha.actual, dias.size, respondidos.size,
+            rec.mapNotNull { it.duracion_min }.filter { it > 0 }, racha.sinRespuesta)
     }
 }

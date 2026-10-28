@@ -181,6 +181,8 @@ fun PantallaReaccion(nav: Nav) {
             "espera" -> { anticipaciones++; mensaje = "Muy pronto. Espera a que aparezca el círculo."; fase = "pausa"; scope.launch { delay(900); fase = "espera" } }
             "estimulo" -> {
                 val rt = (SystemClock.uptimeMillis() - inicioEstimulo).toInt()
+                // Menos de 100 ms no es una reacción a lo que viste, sino un toque anticipado: no cuenta y se repite (P-26).
+                if (rt < 100) { anticipaciones++; mensaje = "Muy pronto. Espera a que aparezca el círculo."; fase = "pausa"; scope.launch { delay(900); fase = "espera" }; return }
                 tiempos.value = tiempos.value + rt
                 mensaje = "$rt ms"
                 if (tiempos.value.size >= total) {
@@ -245,7 +247,7 @@ fun PantallaLugares(nav: Nav) {
 
     Hoja("Lugares", nav.atras, "Marca tus lugares frecuentes. La app registra cuándo llegas y te vas, y cruza tu ánimo con cada lugar.") {
         if (!Ubicacion.tieneSegundoPlano(ctx)) Aviso("Para registrar llegadas y salidas automáticamente necesitas permitir la ubicación «todo el tiempo» en Más → Permisos y sensores.")
-        Seccion("Mapa emocional", "Últimos 60 días. Cada punto gris es una muestra de ubicación; los círculos son tus lugares, en verde si ahí sueles sentirte mejor que tu promedio y en rojo si peor.") {
+        Seccion("Mapa emocional", "Cada punto gris es una muestra de ubicación de los últimos 60 días; los círculos son tus lugares, en verde si ahí sueles sentirte mejor que tu promedio y en rojo si peor (con todo tu historial de ánimo).") {
             Tarjeta { Mapa(puntos, Repo.lugares, muestreos) }
             io.github.ruddy2003.vestigium.ui.BotonSecundario("ver con calles →", Modifier.padding(top = 8.dp)) { nav.ir("mapa") }
         }
@@ -280,7 +282,7 @@ fun PantallaLugares(nav: Nav) {
                 var cambiarTipo by remember(l.id) { mutableStateOf(false) }
                 val vis = Repo.visitas.filter { it.lugar == l.id && it.entrada >= Fechas.sumar(Fechas.hoyCalendario(), -30) }
                 val horas = vis.sumOf { v -> v.salida?.let { (Fechas.millis(it) - Fechas.millis(v.entrada)) / 3_600_000.0 } ?: 0.0 }
-                val aqui = muestreos.filter { m -> m.lugar == l.id || (m.lat != null && m.lon != null && Geo.distanciaM(m.lat, m.lon, l.lat, l.lon) <= l.radio_m) }
+                val aqui = muestreos.filter { m -> enLugar(m, l) }
                 val media = aqui.mapNotNull { it.valencia?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
                 val act = aqui.mapNotNull { it.activacion?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
                 Tarjeta(Modifier.padding(bottom = 8.dp)) {
@@ -379,7 +381,7 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
         fun p(la: Double, lo: Double) = Offset((cx + (lo - mLo) * Math.cos(Math.toRadians(mLa)) * esc).toFloat(), (cy - (la - mLa) * esc).toFloat())
         puntos.forEach { drawCircle(tenue.copy(alpha = 0.18f), 4f, p(it.lat, it.lon)) }
         lugares.forEach { l ->
-            val aqui = muestreos.filter { it.lugar == l.id }.mapNotNull { it.valencia?.toDouble() }
+            val aqui = muestreos.filter { enLugar(it, l) }.mapNotNull { it.valencia?.toDouble() }
             val color = if (aqui.size >= 5 && general != null) {
                 val d = (aqui.average() - general).coerceIn(-1.5, 1.5) / 1.5
                 if (d >= 0) Color(0xFF2E8B57).copy(alpha = 0.35f + d.toFloat() * 0.6f) else Color(0xFFC0392B).copy(alpha = 0.35f + (-d).toFloat() * 0.6f)
@@ -393,6 +395,10 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
         lugares.take(6).forEach { Text(it.nombre, fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = tenue) }
     }
 }
+
+/** Un registro de ánimo cuenta para un lugar si lo marcaste ahí o si su ubicación cae dentro del radio: el mismo criterio en la lista y en el mapa (P-26). */
+private fun enLugar(m: io.github.ruddy2003.vestigium.data.Momento, l: io.github.ruddy2003.vestigium.data.Lugar): Boolean =
+    m.lugar == l.id || (m.lat != null && m.lon != null && Geo.distanciaM(m.lat, m.lon, l.lat, l.lon) <= l.radio_m)
 
 /** Una visita de un día (N-05): «fue en…» otro de tus lugares, o «no estuve aquí». Las dos con Deshacer. */
 @Composable

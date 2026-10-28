@@ -66,6 +66,8 @@ object Herramienta {
     var actual by mutableStateOf("tendencia")
     /** Con qué abrir «Todo lo que se mueve con algo» (una persona, un lugar…), si se llega desde otra pantalla. */
     var objetivo by mutableStateOf<String?>(null)
+    /** Si la lista de relaciones de donde se llegó quitaba tendencias: «Todo lo que se mueve» empieza igual. */
+    var sinTendencia by mutableStateOf(true)
 }
 
 val HERRAMIENTAS = listOf(
@@ -236,10 +238,12 @@ private fun Semana(panel: Map<String, Map<String, Double?>>, vars: List<Variable
 private fun Factores(panel: Map<String, Map<String, Double?>>, vars: List<Variable>, elegir: (((String) -> Unit)) -> Unit) {
     var objetivo by remember { mutableStateOf(Herramienta.objetivo?.takeIf { o -> vars.any { it.id == o } } ?: "valencia") }
     var desfase by remember { mutableStateOf(false) }
+    var sinTendencia by remember { mutableStateOf(Herramienta.sinTendencia) }
     var lista by remember { mutableStateOf<List<Analisis.Factor>?>(null) }
-    LaunchedEffect(objetivo, desfase, panel) { lista = withContext(Dispatchers.Default) { Analisis.factores(panel, vars, objetivo, desfase) } }
+    LaunchedEffect(objetivo, desfase, sinTendencia, panel) { lista = withContext(Dispatchers.Default) { Analisis.factores(panel, vars, objetivo, desfase, sinTendencia) } }
     Selector("objetivo", objetivo, vars, elegir) { objetivo = it }
     Interruptor("Medir el objetivo al día siguiente", desfase, "¿Lo de hoy se asocia con cómo estás mañana? Así se evita que el ánimo cause lo otro.") { desfase = it }
+    Interruptor("Quitar tendencias", sinTendencia, "Como en «Las relaciones más marcadas»: cada día se compara con sus ~3 semanas alrededor.") { sinTendencia = it; Herramienta.sinTendencia = it }
     val l = lista
     if (l == null) { Ayuda("Calculando…"); return }
     if (l.isEmpty()) { Vacio("Hacen falta al menos 14 días con datos en común."); return }
@@ -255,7 +259,7 @@ private fun Factores(panel: Map<String, Map<String, Double?>>, vars: List<Variab
                     if (f.q < 0.1) Text("✓", style = MaterialTheme.typography.labelLarge, color = c)
                 }
                 val texto = if (f.binaria) "%s%.2f puntos los días con (%d) frente a sin (%d)".format(if (f.efecto >= 0) "+" else "", f.efecto, f.nCon, f.nSin)
-                else "ρ = %+.2f · %s · %d días".format(f.efecto, Estadistica.fuerza(f.efecto), f.n)
+                else "r = %+.2f · %s · %d días".format(f.efecto, Estadistica.fuerza(f.efecto), f.n) + if (f.nEf < f.n * 0.8) " (≈ ${f.nEf.toInt()} independientes)" else ""
                 Text(texto, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 // Intervalo como barra: el centro es cero.
                 val escala = if (f.binaria) maxOf(1.0, l.filter { it.binaria }.maxOfOrNull { maxOf(abs(it.lo), abs(it.hi)) } ?: 1.0) else 1.0
@@ -269,7 +273,7 @@ private fun Factores(panel: Map<String, Map<String, Double?>>, vars: List<Variab
             }
         }
     }
-    Ayuda("La barra es el intervalo de 95%; si cruza la línea del centro, podría ser azar. Que dos cosas vayan juntas no prueba que una cause la otra.", Modifier.padding(top = 6.dp))
+    Ayuda("La barra es el intervalo de 95%; si cruza la línea del centro, podría ser azar. Cuenta que los días seguidos se parecen: no cada día es una prueba nueva. Que dos cosas vayan juntas no prueba que una cause la otra.", Modifier.padding(top = 6.dp))
 }
 
 // ---------------- Modelo ----------------
@@ -284,11 +288,11 @@ private fun ModeloUI(panel: Map<String, Map<String, Double?>>, vars: List<Variab
         pred.forEach { p -> Ficha((vars.firstOrNull { it.id == p }?.nombre ?: p) + "  ×", true) { pred = pred - p } }
         if (pred.size < 6) Ficha("+ añadir", false) { elegir { id -> if (id !in pred && id != objetivo) pred = pred + id } }
     }
-    Interruptor("Controlar por el ánimo del día anterior", ayer, "Los días se parecen a sus vecinos; incluir el día anterior evita confundir esa inercia con un efecto.") { ayer = it }
+    Interruptor("Controlar por el valor del día anterior", ayer, "Los días se parecen a sus vecinos; incluir el día anterior evita confundir esa inercia con un efecto.") { ayer = it }
     val m = remember(panel, objetivo, pred, ayer) { Analisis.modelo(panel, objetivo, pred, ayer) }
     if (m == null) { Vacio("No hay suficientes días con todas estas variables a la vez (hacen falta unos ${pred.size + 11}). Prueba con menos predictores."); return }
     Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Cifra("${m.n}", "días completos", Modifier.weight(1f)); Cifra("%.0f%%".format(m.r2 * 100), "varianza explicada", Modifier.weight(1f))
+        Cifra("${m.n}", "días completos", Modifier.weight(1f)); Cifra("%.0f%%".format(m.r2Ajustado.coerceAtLeast(0.0) * 100), "varianza explicada (ajustada)", Modifier.weight(1f))
     }
     val c = MaterialTheme.colorScheme.primary; val c2 = MaterialTheme.colorScheme.outline
     Tarjeta(Modifier.padding(top = 8.dp)) {
@@ -344,16 +348,21 @@ private fun Dinamica() {
 // ---------------- Ritmo ----------------
 @Composable
 private fun Ritmo() {
-    val r = remember(Repo.salud.size, Repo.pantalla.size) { Analisis.ritmo() }
-    if (r == null) { Vacio("Hacen falta al menos 5 noches registradas por el reloj (o por el uso del teléfono)."); return }
-    if (r.fuente == "teléfono") Aviso("Sin datos del reloj: las noches se aproximan con el último uso del teléfono y el primero del día siguiente.")
+    val mexico = Repo.config.perfil.pais.equals("MX", ignoreCase = true)
+    val r = remember(Repo.salud, Repo.pantalla, mexico) { Analisis.ritmo(mexico = mexico) }
+    if (r == null) { Vacio("Hacen falta al menos 5 noches de las últimas 8 semanas registradas por el reloj (o por el uso del teléfono)."); return }
+    when (r.fuente) {
+        "teléfono" -> Aviso("Sin datos del reloj en las últimas 8 semanas: las noches se aproximan con el último uso del teléfono y el primero del día siguiente.")
+        "mezcla" -> Aviso("Solo ${r.nochesReloj} ${if (r.nochesReloj == 1) "noche" else "noches"} del reloj en las últimas 8 semanas: las demás se aproximan con el último uso del teléfono y el primero del día siguiente.")
+    }
+    Ayuda("Con las noches de las últimas 8 semanas.", Modifier.padding(top = 4.dp))
     Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Cifra(hora(r.dormirMedio), "te duermes", Modifier.weight(1f)); Cifra(hora(r.despertarMedio), "despiertas", Modifier.weight(1f))
         Cifra(r.jetLag?.let { "%.1f h".format(it) } ?: "—", "jet lag social", Modifier.weight(1f))
     }
     Tarjeta(Modifier.padding(top = 10.dp)) {
-        r.duracionLaboral?.let { Clave("entre semana", "%.1f h de sueño".format(it)) }
-        r.duracionLibre?.let { Clave("fin de semana", "%.1f h de sueño".format(it)) }
+        r.duracionLaboral?.let { Clave("antes de laborar", "%.1f h de sueño".format(it)) }
+        r.duracionLibre?.let { Clave("antes de un día libre", "%.1f h de sueño".format(it)) }
         r.sdDormir?.let { Clave("regularidad", "la hora de dormir varía ±%.0f min".format(it * 60)) }
     }
     // Cada noche es una barra de las 18:00 a las 14:00.
@@ -366,11 +375,11 @@ private fun Ritmo() {
         val pin = Paint().apply { color = txt; textSize = 22f; isAntiAlias = true }
         listOf(18.0, 22.0, 26.0, 30.0, 34.0, 38.0).forEach { h -> drawLine(fondo, Offset(px(h), 0f), Offset(px(h), size.height - 24f), 1f); drawContext.canvas.nativeCanvas.drawText(hora(h), px(h) + 2, size.height - 4f, pin) }
         r.noches.forEachIndexed { i, n ->
-            val libre = Fechas.parse(n.fecha).dayOfWeek.value >= 6
+            val libre = Fechas.esDiaLibre(n.fecha, mexico)
             drawRect(if (libre) c2 else c, Offset(px(n.inicio), i * alto + 1), Size((px(n.fin) - px(n.inicio)).coerceAtLeast(2f), alto - 2))
         }
     }
-    Ayuda("Barras de color fuerte: noches antes de un día laboral; de otro color: antes de sábado y domingo. El jet lag social es la diferencia del punto medio del sueño entre ambos (Wittmann et al., 2006); más de 1 hora se ha asociado con peor ánimo y salud.", Modifier.padding(top = 6.dp))
+    Ayuda("Barras de color fuerte: noches antes de un día laboral; de otro color: antes de un día libre (sábado, domingo${if (mexico) " o festivo" else ""}). El jet lag social es la diferencia del punto medio del sueño entre ambos (Wittmann et al., 2006); más de 1 hora se ha asociado con peor ánimo y salud.", Modifier.padding(top = 6.dp))
 }
 
 // ---------------- Palabras ----------------

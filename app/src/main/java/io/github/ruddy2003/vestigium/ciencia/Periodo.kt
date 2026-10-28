@@ -5,6 +5,7 @@ import io.github.ruddy2003.vestigium.data.esAnimo
 import android.content.Context
 import io.github.ruddy2003.vestigium.data.Catalogo
 import io.github.ruddy2003.vestigium.data.Fechas
+import io.github.ruddy2003.vestigium.data.Macrofactor
 import io.github.ruddy2003.vestigium.data.FraseGuardada
 import io.github.ruddy2003.vestigium.data.Mundo
 import io.github.ruddy2003.vestigium.data.Obra
@@ -51,21 +52,22 @@ object Periodo {
         val apps: List<Pair<String, Long>>,
         // ---- comparación con el periodo anterior (misma duración)
         val valAnterior: Double?, val suenoAnterior: Double?, val pasosAnterior: Double?, val pantallaAnterior: Double?,
+        /** Días con ánimo solo en los avisos (sin el del diario): no cuentan en [valMedia]. */
+        val diasSoloAvisos: Int = 0,
     ) {
         val n: Int get() = fechas.size
     }
 
     private fun <T> top(l: List<T>, k: Int = 6): List<Pair<T, Int>> = l.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(k).map { it.key to it.value }
 
-    /** Hora decimal de un ISO; las de la madrugada suman 24 para promediar la hora de dormir. */
-    private fun horaDec(iso: String?, noche: Boolean): Double? = runCatching {
-        val h = iso!!.substring(11, 13).toInt(); val m = iso.substring(14, 16).toInt()
-        val x = h + m / 60.0
-        if (noche && x < 15) x + 24 else x
-    }.getOrNull()
+    /** Hora decimal de un ISO, la misma del panel y de R ([Exportar.horaDecimal]: de noche, antes de las 12 suma 24) (P-29). */
+    private fun horaDec(iso: String?, noche: Boolean): Double? = iso?.let { io.github.ruddy2003.vestigium.data.Exportar.horaDecimal(it, noche) }
 
+    /** La valencia del día: la del diario, como `valencia` en el panel y en R (P-29). Los días con solo avisos no cuentan aquí. */
     private fun valDe(f: String): Double? = Repo.dias[f]?.valencia?.toDouble()
-        ?: Repo.momentos.filter { it.fecha == f && it.esAnimo }.mapNotNull { it.valencia?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
+
+    /** Días con valencia en los avisos pero sin la del diario: no entran en el ánimo medio, y el reporte dice cuántos son. */
+    private fun soloAvisos(f: String): Boolean = Repo.dias[f]?.valencia == null && Repo.momentos.any { it.fecha == f && it.esAnimo && it.valencia != null }
 
     fun calcular(ctx: Context?, ini: String, fin: String): Datos {
         val n = (ChronoUnit.DAYS.between(Fechas.parse(ini), Fechas.parse(fin)).toInt() + 1).coerceAtLeast(1)
@@ -104,7 +106,8 @@ object Periodo {
         val ses = Repo.sesiones.filter { it.fecha in en }
         val ent = fechas.mapNotNull { Repo.entrenos[it] }.filter { it.series > 0 }
         val series = runCatching { Repo.series(ini, fin) }.getOrDefault(emptyList())
-        val pr = series.filter { (it.peso_kg ?: 0.0) > 0 && (it.reps ?: 0) in 1..15 }.map { it.ejercicio to it.peso_kg!! * (1 + it.reps!! / 30.0) }.maxByOrNull { it.second }
+        // La misma 1RM estimada que la exportación, Fuerza y R: Epley con 1 a 12 repeticiones, sin calentamientos (P-22).
+        val pr = series.mapNotNull { s -> Macrofactor.e1rm(s)?.let { s.ejercicio to it } }.maxByOrNull { it.second }
         val pesos = fechas.mapNotNull { f -> (Repo.salud[f]?.peso_kg ?: Repo.nutricion[f]?.valores?.get("peso_tendencia_kg"))?.let { f to it } }
         val nut = fechas.mapNotNull { Repo.nutricion[it] }.filter { (it.valores["kcal"] ?: 0.0) > 300 }
         val comidas = runCatching { Repo.comidas(ini, fin) }.getOrDefault(emptyList())
@@ -196,12 +199,14 @@ object Periodo {
             ytVideos = yt.size, ytCanales = ytCanales, ytMadrugada = madrugada,
             ytMegusta = Repo.youtube.count { it.tipo == "megusta" && it.fecha in en }, subrayados = Repo.subrayados.count { it.fecha in en },
             gasto = gastos.sumOf { it.monto }, gastoImprevisto = gastos.filter { it.imprevisto }.sumOf { it.monto }, gastoCategorias = cats,
-            ingresos = Repo.ingresos.filter { it.fecha in en }.sumOf { it.monto },
+            // Por el día del diario, como los gastos: un ingreso de madrugada cuenta para el día anterior (P-29).
+            ingresos = Repo.ingresos.filter { it.dia in en }.sumOf { it.monto },
             pantallaMin = pant.map { it.total_min.toDouble() }.takeIf { it.isNotEmpty() }?.average(), pantallaTotalMin = pant.sumOf { it.total_min.toLong() },
             desbloqueos = pant.map { it.desbloqueos.toDouble() }.takeIf { it.isNotEmpty() }?.average(), desbloqueosTotal = pant.sumOf { it.desbloqueos.toLong() },
             notifs = ntf.sumOf { it.total.toLong() }, apps = apps.entries.sortedByDescending { it.value }.take(6).map { it.key to it.value },
             valAnterior = pv.takeIf { it.size >= 3 }?.average(), suenoAnterior = ps.takeIf { it.size >= 3 }?.average(),
             pasosAnterior = pp.takeIf { it.size >= 3 }?.average(), pantallaAnterior = ppa.takeIf { it.size >= 3 }?.average(),
+            diasSoloAvisos = fechas.count { soloAvisos(it) },
         )
     }
 }

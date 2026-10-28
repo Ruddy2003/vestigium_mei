@@ -106,8 +106,9 @@ fun PantallaConstelacion(nav: Nav) {
             val azar = java.util.Random(11)
             repeat(90) { val p = Offset(azar.nextFloat() * size.width, azar.nextFloat() * size.height); drawCircle(cs.onSurface.copy(alpha = 0.10f + azar.nextFloat() * 0.12f), 1.2f, p) }
             listOf(0.33f, 0.66f, 1f).forEach { k -> drawCircle(cs.outline.copy(alpha = 0.25f), radio * 0.94f * k, c, style = Stroke(1f)) }
-            // Cada estrella: ángulo fijo por su nombre; distancia según hace cuánto apareció.
-            // Ángulo de girasol (137.5° entre una y otra, por orden de presencia) con un poco de azar fijo por nombre: nunca se enciman.
+            // Cada estrella: la distancia dice hace cuánto apareció; el ángulo no significa nada (H-6-14). Es el de girasol
+            // (137.5° entre una y otra, por su lugar en el orden por días) con un poco de azar fijo por nombre, para que no se encimen:
+            // si cambia el orden, cambia el ángulo.
             estrellas.forEachIndexed { i, e ->
                 val h = (e.nombre.hashCode() and 0x7fffffff)
                 val ang = i * 2.399963 + (h % 1000) / 1000.0 * 0.35

@@ -1,6 +1,6 @@
 # Apéndice B. Fórmulas
 
-_Todas las fórmulas del núcleo estadístico (capítulo 6), tal como están en el código de v81 (commit `fa527df`). Cada una lleva la función de origen. Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
+_Todas las fórmulas del núcleo estadístico (capítulo 6), tal como están en el código de v81 (commit `fa527df`), con los cambios de la entrega 10c (commit `b943ec7`; apéndice D, D.63 a D.72) marcados «desde 10c». Cada una lleva la función de origen. Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
 
 ---
 
@@ -30,17 +30,19 @@ $$ r_1 = r\big(\{x_i\},\{x_{i+1}\}\big)\quad\text{sobre los pares con } d_{i+1}-
 
 paso = 1 (por día) o 7 (por semana). Si hay menos de 10 pares, r₁ = 0. Antes de usarse se recorta a [−0.5, 0.97].
 
+**Desde 10c**, la misma autocorrelación sobre una serie con fechas es pública: `Estadistica.ar1(serie, paso)`, que devuelve `null` (y quien la usa toma 0) con menos de 10 pares. La usan «Cruzar dos variables», «Todo lo que se mueve con algo» y la diferencia de medias (B.11a).
+
 ## B.5 Número efectivo de días — `Estadistica.relaciones`
 
 $$ n_{Ef}=\operatorname{acotar}\Big(n\,\frac{1-r_a r_b}{1+r_a r_b},\ \min(4,n),\ n\Big) $$
 
 r_a, r_b: autocorrelaciones (B.4) de cada variable, sobre restos o valores según el modo. Si n_Ef ≤ 3, la pareja no se evalúa. Referencia: Bretherton et al. (1999); Pyper y Peterman (1998).
 
-## B.6 Transformación de Fisher — `Estadistica.ic95`, `Estadistica.relaciones`, `Analisis.factores`
+## B.6 Transformación de Fisher — `Estadistica.ic95`, `Estadistica.relaciones`, `Estadistica.correlacionEf`
 
 $$ z=\operatorname{atanh}(r)=\tfrac12\ln\frac{1+r}{1-r},\qquad EE_z=\frac{1}{\sqrt{N-3}} $$
 
-N = n (en `ic95` y `factores`) o n_Ef (en `relaciones`). r se recorta a ±0.9999 (±0.999 en el p de `factores`).
+N = n (en `ic95`) o n_Ef (en `relaciones` y, desde 10c, en `correlacionEf`, que usan «Cruzar dos variables» y «Todo lo que se mueve con algo» con la misma fórmula B.5). r se recorta a ±0.9999. Hasta 10c, `factores` usaba N = n con ρ de Spearman.
 
 ## B.7 Intervalo de 95 % de una correlación
 
@@ -80,17 +82,31 @@ $$ \bar x_{s}=\frac{1}{|D_s|}\sum_{f\in D_s}x_f,\qquad D_s=\{\text{días de la s
 
 Para una variable 0/1 es la proporción de días con 1.
 
-## B.11 Diferencia de medias — `Estadistica.diferencia`
+## B.11 Diferencia de medias — `Estadistica.diferenciaCompleta` (desde 10c)
 
-Con n_a, n_b ≥ 3:
+Con n_a, n_b ≥ 3 y autocorrelaciones ρ_a, ρ_b acotadas a [0, 0.9] (0 si no se dan):
 
-$$ d=\bar a-\bar b,\qquad EE=\sqrt{\frac{s_a^2}{n_a}+\frac{s_b^2}{n_b}},\qquad IC_{95}=d\pm1.96\,EE $$
+$$ d=\bar a-\bar b,\qquad S_a=\frac{s_a^2}{n_a}\cdot\frac{1+\rho_a}{1-\rho_a},\qquad S_b=\frac{s_b^2}{n_b}\cdot\frac{1+\rho_b}{1-\rho_b},\qquad EE=\sqrt{S_a+S_b} $$
 
-En `factores` (0/1): p = 2(1 − Φ(|d|/EE)), con EE recuperado como (hi − lo)/(2·1.96).
+$$ n^{*}_a=\max\!\Big(2,\ n_a\frac{1-\rho_a}{1+\rho_a}\Big),\qquad gl=\operatorname{acotar}\Big(\frac{(S_a+S_b)^2}{S_a^2/(n^{*}_a-1)+S_b^2/(n^{*}_b-1)},\ 1,\ n^{*}_a+n^{*}_b-2\Big) $$
 
-**Día de la semana** (`Analisis.porDiaSemana`), con n ≥ 2: x̄ ± 1.96 · s/√n.
+$$ IC_{95}=d\pm t_{0.975;\,gl}\,EE,\qquad p=p_T(d/EE,\ gl) $$
 
-**Cambio reciente** (`Analisis.cambio`): a = días con fecha > hoy − 30; b = días con hoy − 60 < fecha ≤ hoy − 30.
+Con ρ = 0 es la t de Welch (1947). Si EE = 0, el intervalo es el punto d. `Estadistica.diferencia(a, b)` devuelve (d, lo, hi). Hasta 10c: IC = d ± 1.96 · √(s_a²/n_a + s_b²/n_b), y en `factores` p = 2(1 − Φ(|d|/EE)).
+
+## B.11a Autocorrelación de cada grupo — `Estadistica.ar1Grupos`, `diferenciaEnDias` (desde 10c)
+
+Para dos grupos de días con fecha:
+
+$$ 	ilde\rho(S)=\hat\rho_1(S)+\frac{1+4\,\hat\rho_1(S)}{|S|} $$
+
+donde ρ̂₁ es B.4 sobre días seguidos (`ar1`) y |S| el número de días de la serie. ρ_a = ρ̃(a) si a tiene 10 pares de días seguidos; si no, ρ̃ de los dos grupos juntos, cada uno centrado en su media (un valor por fecha); si tampoco, 0. Después se acota a [0, 0.9] en B.11. La corrección de sesgo es la aproximación de primer orden que se atribuye a Marriott y Pope (1954) [sin verificar en el original]; se validó por simulación (con 30 + 30 días y ρ = 0.5, cobertura del 95 %).
+
+**Día de la semana** (`Analisis.porDiaSemana`), con n ≥ 5 (desde 10c; antes n ≥ 2 y 1.96): x̄ ± t₀.₉₇₅;ₙ₋₁ · s/√n.
+
+**Cambio reciente** (`Analisis.cambio`, con `diferenciaEnDias`): a = días con hoy − 30 < fecha ≤ hoy; b = días con hoy − 60 < fecha ≤ hoy − 30.
+
+**Todo lo que se mueve con algo** (`Analisis.factores`, desde 10c): para una variable 0/1, `diferenciaEnDias` del objetivo (resto sin tendencia B.3, o valor) entre los días con 1 y con 0; para una continua, r de Pearson entre restos (o valores) con N = n_Ef (B.5 y B.6) y el p de B.8.
 
 ## B.12 Inestabilidad (MSSD) — `Analisis.dinamica`
 
@@ -114,13 +130,23 @@ $$ |r_{\min}|=\tanh\!\Big(\frac{z_{1-\alpha/2}+z_{1-\beta}}{\sqrt{n_{Ef}-3}}\Big
 
 Con α = 0.05 y potencia 1 − β = 0.80: z = 1.96 + 0.84. No está en el código; sirve para interpretar los umbrales de 14, 30 y 90 días (sección 6.21).
 
+## B.14a Distribución t de Student — `Estadistica.pT`, `Estadistica.cuantilT` (desde 10c)
+
+p de dos colas de un valor t con gl grados de libertad (gl real > 0, acotado a 10⁶):
+
+$$ p_T(t,gl)=I_{\,gl/(gl+t^2)}\Big(\frac{gl}{2},\ \frac12\Big) $$
+
+I_x(a, b) es la beta incompleta regularizada, calculada con la fracción continua de Lentz (hasta 400 términos, tolerancia 10⁻¹²; si x > (a + 1)/(a + b + 2) se usa I_x(a, b) = 1 − I₁₋ₓ(b, a)) y ln Γ con la aproximación de Lanczos (g = 7, 9 coeficientes). El cuantil t_p (p > 0.5) es el t ≥ 0 con p_T(t, gl) = 2(1 − p), buscado por bisección (100 pasos); para p < 0.5, t_p = −t₁₋ₚ. Comprobado: t₀.₉₇₅ = 12.706 (gl 1), 4.303 (2), 2.571 (5), 2.042 (30).
+
 ## B.16 Modelo múltiple — `Analisis.modelo`
 
 Con las k columnas de predictores X y el objetivo y, todos estandarizados (media 0, DE 1) en los n días completos (n ≥ k + 10):
 
 $$ \hat\beta=(X^\top X)^{-1}X^\top y,\qquad s^2=\frac{\sum (y-X\hat\beta)^2}{n-k-1},\qquad EE(\hat\beta_j)=\sqrt{s^2\,[(X^\top X)^{-1}]_{jj}} $$
 
-$$ IC_{95}(\beta_j)=\hat\beta_j\pm1.96\,EE(\hat\beta_j),\qquad R^2=1-\frac{\sum (y-X\hat\beta)^2}{\sum y^2} $$
+$$ IC_{95}(\beta_j)=\hat\beta_j\pm t_{0.975;\,n-k-1}\,EE(\hat\beta_j),\qquad R^2=1-\frac{\sum (y-X\hat\beta)^2}{\sum y^2},\qquad R^2_{aj}=1-(1-R^2)\frac{n-1}{n-k-1} $$
+
+(desde 10c; antes, 1.96 y solo R²). La pantalla muestra R²_aj, con 0 como mínimo.
 
 Sin intercepto. Inversa por Gauss-Jordan con pivoteo parcial; si |pivote| < 10⁻¹⁰, no hay modelo. Con `conAyer`, se agrega como predictor el objetivo del día de calendario anterior.
 
@@ -140,4 +166,18 @@ $$ \text{dif}_w=\overline{\text{valencia}}_{\{\text{días con } w\}}-\overline{\
 
 $$ \bar x=\frac{1}{|U|}\sum_{f\in U}x_f,\qquad U=\text{los últimos 30 días con dato entre hoy}-365\text{ y hoy} $$
 
-Derivadas: km/año = x̄_km · 365; ejercicio/semana = x̄_ejercicio · 7; fuerza/semana = #entrenos en [último − 27, último] / 4; tazas de café (reportes) = mg de cafeína / 95.
+Derivadas: km/año = x̄_km · 365; ejercicio/semana = Σ minutos de las sesiones en [última − 27, última] / 4 (desde 10c; antes x̄_ejercicio · 7); fuerza/semana = #entrenos en [último − 27, último] / 4; tazas de café (reportes) = mg de cafeína / 95.
+
+## B.20 Cero o faltante — `Estadistica.ceroDesde` (desde 10c)
+
+$$ \text{ceroDesde}(F, B)=\{\,f\in B:\ f\ge\min F\,\} $$
+
+F = fechas de la fuente (gastos, impulsos, escalada, entrenamientos, sesiones del reloj); B = días en que la sección se pudo responder (días con diario; para el ejercicio, días con datos del reloj). En esos días «no hubo» = 0; en los demás, faltante. Las variables sociales usan B = días sociales (diario escrito o momento no privado con @; `Dinamicas.diasSociales`).
+
+## B.21 Ventana de los cuestionarios — `Dinamicas.porDiaCuestionario` (desde 10c)
+
+Con respuestas (f_k, v_k) ordenadas por fecha y ventana w (7 en WHO-5 y PSS-4, 30 en UCLA-3):
+
+$$ \text{esc}(d)=v_{k^*},\qquad k^*=\min\{\,k:\ 0\le f_k-d\le w-1\,\} $$
+
+(la primera respuesta que cubre el día d). Con w = 0 (TIPI), cada puntaje vale desde su fecha hasta el test siguiente, como mucho 365 días y no más allá de hoy.
