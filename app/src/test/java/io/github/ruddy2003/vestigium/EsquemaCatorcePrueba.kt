@@ -20,7 +20,8 @@ import org.junit.Test
 
 /** Lo que el esquema 14 empezó a guardar (revisión de navegación): los registros viejos se siguen leyendo igual. */
 class EsquemaCatorcePrueba {
-    @Test fun esquema() = assertEquals(14, SCHEMA_V)
+    // El esquema 15 (10f) agregó el historial de zonas, la fuente del clima, el wifi sin dato, el criterio sellado y la fuerza de referencia.
+    @Test fun esquema() = assertEquals(15, SCHEMA_V)
 
     @Test fun registrosViejosSinMarca() {
         // Un momento, un gasto, una toma y un día guardados antes del esquema 14 no traen los campos nuevos.
