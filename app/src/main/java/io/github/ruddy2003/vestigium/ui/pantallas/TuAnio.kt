@@ -60,6 +60,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -555,6 +557,8 @@ private fun HistoriasAnio(d: TuAnio.Datos, nav: Nav, cerrar: () -> Unit) {
     val n = todas.size
     var idx by remember { mutableIntStateOf(0) }
     var pausado by remember { mutableStateOf(false) }
+    // Pausa con botón (N-24): se queda hasta que la quites, no solo mientras mantienes el dedo.
+    var pausaFija by remember { mutableStateOf(false) }
     var exportando by remember { mutableStateOf(false) }
     var aviso by remember { mutableStateOf<String?>(null) }
     var menu by remember { mutableStateOf(false) }
@@ -574,8 +578,8 @@ private fun HistoriasAnio(d: TuAnio.Datos, nav: Nav, cerrar: () -> Unit) {
         if (idx == n - 1) { Fiesta.lanzar(); Sentidos.vibrarEvento(ctx, Sentidos.Evento.LOGRO) }
     }
     val avance = remember(idx) { Animatable(0f) }
-    LaunchedEffect(idx, pausado, esperando, exportando) {
-        if (pausado || esperando || exportando) return@LaunchedEffect
+    LaunchedEffect(idx, pausado, pausaFija, esperando, exportando) {
+        if (pausado || pausaFija || esperando || exportando) return@LaunchedEffect
         avance.animateTo(1f, tween(((1f - avance.value) * DURACION).toInt().coerceAtLeast(1), easing = LinearEasing))
         if (idx < n - 1) idx++
     }
@@ -634,7 +638,14 @@ private fun HistoriasAnio(d: TuAnio.Datos, nav: Nav, cerrar: () -> Unit) {
                             androidx.compose.material3.DropdownMenuItem(text = { Text("Guardar todas (PNG)") }, onClick = { menu = false; exportar(true) })
                         }
                     }
-                    Text("✕", fontSize = 20.sp, color = cs.onBackground, modifier = Modifier.clickable { cerrar() }.padding(horizontal = 10.dp, vertical = 4.dp))
+                    Text("✕", fontSize = 20.sp, color = cs.onBackground, modifier = Modifier.clickable { cerrar() }.padding(horizontal = 10.dp, vertical = 4.dp)
+                        .semantics { contentDescription = "Cerrar" })
+                }
+                // Flechas y pausa visibles, además de tocar los lados y mantener presionado (N-24).
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.TextButton(onClick = { ir(idx - 1) }, enabled = idx > 0) { Text("‹ anterior") }
+                    androidx.compose.material3.TextButton(onClick = { pausaFija = !pausaFija }) { Text(if (pausaFija) "▶ seguir" else "❚❚ pausa") }
+                    androidx.compose.material3.TextButton(onClick = { if (idx < n - 1) ir(idx + 1) else cerrar() }, enabled = !esperando) { Text("siguiente ›") }
                 }
                 if (!d.completo) Text("Año incompleto: faltan ${d.faltan} días", style = MaterialTheme.typography.labelMedium, color = cs.onSecondaryContainer,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp).background(cs.secondaryContainer, MaterialTheme.shapes.small).padding(horizontal = 10.dp, vertical = 4.dp))
@@ -660,7 +671,7 @@ private fun HistoriasAnio(d: TuAnio.Datos, nav: Nav, cerrar: () -> Unit) {
                                 cerrar(); nav.ir("carta_nueva")
                             })
                         CuerpoTarjeta(d, actual, vista)
-                        if (pausado) Text("❚❚", fontSize = 28.sp, color = cs.onBackground.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center))
+                        if (pausado || pausaFija) Text("❚❚", fontSize = 28.sp, color = cs.onBackground.copy(alpha = 0.6f), modifier = Modifier.align(Alignment.Center))
                     }
                 }
                 aviso?.let { a ->

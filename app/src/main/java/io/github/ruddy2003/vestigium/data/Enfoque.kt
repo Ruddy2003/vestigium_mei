@@ -170,7 +170,7 @@ object Enfoque {
         if (ms < MIN) return null
         val ini = p.seg_primer_inicio ?: (fin - ms)
         val t = Tramo(prefijo(p) + p.segmento, Fechas.diaLogicoDeMillis(ini), p.tipo, Fechas.isoDeMillis(ini), Fechas.isoDeMillis(fin), Math.round(ms / 60_000.0).toInt(),
-            nota = nota.trim(), origen = if (p.meta_min != null) "plan" else "cronometro")
+            nota = nota.trim(), origen = if (p.meta_min != null) "plan" else "cronometro", ts_creado = Fechas.ahoraIso())
         Repo.guardarTramo(t)
         return t
     }
@@ -279,7 +279,7 @@ object Enfoque {
         // Antes de las 5:00 es la madrugada del día lógico: cae en la fecha de calendario siguiente.
         val dia = if (t.hour < 5) Fechas.parse(fecha).plusDays(1) else Fechas.parse(fecha)
         val ini = dia.atTime(t).atZone(Fechas.zona()).toInstant().toEpochMilli()
-        val tr = Tramo(Repo.nuevoId(), fecha, tipo, Fechas.isoDeMillis(ini), Fechas.isoDeMillis(ini + min * 60_000L), min, nota.trim(), origen = "manual")
+        val tr = Tramo(Repo.nuevoId(), fecha, tipo, Fechas.isoDeMillis(ini), Fechas.isoDeMillis(ini + min * 60_000L), min, nota.trim(), origen = "manual", ts_creado = Fechas.ahoraIso())
         Repo.guardarTramo(tr)
         return tr
     }
@@ -287,7 +287,7 @@ object Enfoque {
     /** Un tramo que ya pasó, con su inicio exacto. */
     fun agregarMs(tipo: String, inicioMs: Long, min: Int, nota: String = ""): Tramo? {
         if (min <= 0) return null
-        val tr = Tramo(Repo.nuevoId(), Fechas.diaLogicoDeMillis(inicioMs), tipo, Fechas.isoDeMillis(inicioMs), Fechas.isoDeMillis(inicioMs + min * 60_000L), min, nota.trim(), origen = "manual")
+        val tr = Tramo(Repo.nuevoId(), Fechas.diaLogicoDeMillis(inicioMs), tipo, Fechas.isoDeMillis(inicioMs), Fechas.isoDeMillis(inicioMs + min * 60_000L), min, nota.trim(), origen = "manual", ts_creado = Fechas.ahoraIso())
         Repo.guardarTramo(tr)
         return tr
     }

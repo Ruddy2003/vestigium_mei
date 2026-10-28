@@ -8,6 +8,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.clickable
+import io.github.ruddy2003.vestigium.ui.aMillis
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -81,23 +83,38 @@ fun PantallaSuplementos(nav: Nav) {
     val c = Repo.config
     val hoy = Fechas.diaLogico()
     var editando by remember { mutableStateOf<Suplemento?>(null) }
+    var toma by remember { mutableStateOf<io.github.ruddy2003.vestigium.data.TomaSuplemento?>(null) }
+    // Cuándo la tomaste: null = ahora. «ayer» o «otra fecha u hora…» para lo que olvidaste anotar (N-07).
+    var cuando by remember { mutableStateOf<java.time.LocalDateTime?>(null) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
     Hoja("Suplementos", nav.atras, "Lo que tomas, en un toque. La app estima cuánto queda en tu cuerpo con un modelo simple; no es una medición ni un consejo médico.") {
         val activos = Suplementos.activos(c)
         if (activos.isEmpty()) Vacio("No tienes suplementos activos. Agrega uno abajo.")
+        val dia = cuando?.let { Fechas.diaLogicoDeMillis(it.aMillis()) } ?: hoy
+        if (activos.isNotEmpty()) {
+            Etiqueta("¿Cuándo la tomaste?")
+            io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true) { cuando = it }
+        }
+        fun tomar(s: Suplemento, cantidad: Double) {
+            val t = Suplementos.registrar(s, cantidad, cuando?.let { Fechas.isoDeMillis(it.aMillis()) } ?: Fechas.ahoraIso())
+            if (cuando != null) android.widget.Toast.makeText(ctx, "Anotado para el ${Fechas.titulo(t.fecha).lowercase()} a las ${Fechas.horaDe(t.ts)}", android.widget.Toast.LENGTH_SHORT).show()
+            cuando = null
+        }
         activos.forEach { s ->
             Tarjeta(Modifier.padding(top = 10.dp)) {
-                val tomas = Repo.tomas.filter { it.suplemento == s.id && it.fecha == hoy }
+                val tomas = Repo.tomas.filter { it.suplemento == s.id && it.fecha == dia }
+                val ese = if (dia == hoy) "Hoy" else Fechas.titulo(dia)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         Text(s.nombre, style = MaterialTheme.typography.titleMedium)
-                        Ayuda(if (tomas.isEmpty()) "Hoy todavía no" else "Hoy: " + tomas.joinToString(" + ") { "${cifra(it.cantidad)} ${s.unidad} a las ${Fechas.horaDe(it.ts)}" })
+                        Ayuda(if (tomas.isEmpty()) "$ese: todavía no" else "$ese: " + tomas.joinToString(" + ") { "${cifra(it.cantidad)} ${s.unidad} a las ${Fechas.horaDe(it.ts)}" })
                     }
                     TextButton(onClick = { editando = s }) { Text("ajustar") }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    BotonPrincipal("Tomé ${cifra(s.dosis)} ${s.unidad}", Modifier.weight(1f)) { Suplementos.registrar(s) }
-                    if (s.modelo == "carga") BotonSecundario("Carga ×4") { Suplementos.registrar(s, s.dosis * 4) }
-                    if (tomas.isNotEmpty()) BotonSecundario("deshacer") { Repo.borrarToma(tomas.last().id) }
+                    BotonPrincipal("Tomé ${cifra(s.dosis)} ${s.unidad}" + if (cuando != null) " · ${Fechas.corto(dia)}" else "", Modifier.weight(1f)) { tomar(s, s.dosis) }
+                    if (s.modelo == "carga") BotonSecundario("Carga ×4") { tomar(s, s.dosis * 4) }
+                    if (tomas.isNotEmpty()) BotonSecundario("corregir") { toma = tomas.last() }
                 }
                 NivelSuplemento(s, hoy)
             }
@@ -135,18 +152,23 @@ fun PantallaSuplementos(nav: Nav) {
                 }
             }
         }
-        val pasadas = Repo.tomas.filter { it.fecha != hoy }.takeLast(10).reversed()
-        if (pasadas.isNotEmpty()) Seccion("Últimas tomas") {
+        val pasadas = Repo.tomas.sortedBy { it.ts }.takeLast(14).reversed()
+        if (pasadas.isNotEmpty()) Seccion("Últimas tomas", "Toca una para corregir la cantidad o la hora, o para quitarla.") {
             Tarjeta {
                 pasadas.forEachIndexed { i, t ->
                     if (i > 0) HorizontalDivider()
                     val s = Suplementos.de(t.suplemento)
-                    Text("${s?.nombre ?: t.suplemento} · ${cifra(t.cantidad)} ${s?.unidad ?: ""} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 4.dp))
+                    Row(Modifier.fillMaxWidth().clickable { toma = t }.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text("${s?.nombre ?: t.suplemento} · ${cifra(t.cantidad)} ${s?.unidad ?: ""} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}", style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.weight(1f))
+                        Text("›", color = MaterialTheme.colorScheme.outline)
+                    }
                 }
             }
         }
     }
     editando?.let { s -> EditorSuplemento(s) { editando = null } }
+    toma?.let { t -> DialogoToma(t) { toma = null } }
 }
 
 /** El nivel de los últimos 60 días: reserva en % (carga), cantidad en el cuerpo (vida media) o porciones. */
@@ -511,7 +533,7 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
 @Composable
 fun PantallaGuiaUso(nav: Nav, seccion: String = "") {
     val sola = io.github.ruddy2003.vestigium.data.GuiaUso.de(seccion)
-    Hoja("Guía", nav.atras, if (sola != null) null else "Cómo usar la app para que tus datos digan algo. Los ejemplos marcan las @personas y los #temas como el tema de hoy.") {
+    Hoja("Cómo usar la app", nav.atras, if (sola != null) null else "Cómo usar la app para que tus datos digan algo. Los ejemplos marcan las @personas y los #temas como el tema de hoy.") {
         val lista = if (sola != null) listOf(sola) else io.github.ruddy2003.vestigium.data.GuiaUso.SECCIONES
         lista.forEach { s ->
             Seccion(s.titulo, plegable = sola == null, plegadaPorDefecto = sola == null && s.id != "principios") {
@@ -525,6 +547,42 @@ fun PantallaGuiaUso(nav: Nav, seccion: String = "") {
             }
         }
         if (sola != null) BotonSecundario("Ver toda la guía", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.reemplazar("guia_uso") }
-        else BotonSecundario("Guía científica: por qué se mide lo que se mide", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.ir("guia") }
+        else BotonSecundario("Cómo leer tus datos: por qué se mide lo que se mide", Modifier.fillMaxWidth().padding(top = 12.dp)) { nav.ir("guia") }
     }
+}
+
+/** Corregir una toma: cantidad y cuándo (el día lógico sale de la hora), o quitarla con confirmación y Deshacer. */
+@Composable
+fun DialogoToma(t: io.github.ruddy2003.vestigium.data.TomaSuplemento, cerrar: () -> Unit) {
+    val s = Suplementos.de(t.suplemento)
+    var cantidad by remember(t.id) { mutableStateOf(cifra(t.cantidad)) }
+    var cuando by remember(t.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(t.ts))) }
+    var confirmar by remember(t.id) { mutableStateOf(false) }
+    val v = cantidad.replace(',', '.').toDoubleOrNull()
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = cerrar,
+        title = { Text("${s?.nombre ?: t.suplemento} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}") },
+        text = {
+            Column {
+                OutlinedTextField(cantidad, { cantidad = it }, Modifier.fillMaxWidth(), singleLine = true, suffix = { Text(s?.unidad ?: "") },
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
+                Etiqueta("Cuándo")
+                io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, ayer = true) { cuando = it }
+            }
+        },
+        confirmButton = {
+            TextButton(enabled = v != null && v > 0, onClick = {
+                val ms = (cuando ?: java.time.LocalDateTime.now()).aMillis()
+                val n = t.copy(cantidad = v ?: t.cantidad, ts = Fechas.isoDeMillis(ms), fecha = Fechas.diaLogicoDeMillis(ms))
+                if (n != t) Repo.guardarToma(n)
+                cerrar()
+            }) { Text("Guardar") }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                if (!confirmar) { confirmar = true; return@TextButton }
+                Repo.borrarToma(t.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Toma quitada") { Repo.guardarToma(t) }
+            }) { Text(if (confirmar) "¿quitar de verdad?" else "Quitar", color = MaterialTheme.colorScheme.error) }
+        },
+    )
 }

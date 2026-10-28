@@ -6,6 +6,7 @@ import io.github.ruddy2003.vestigium.data.privado
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -67,14 +68,21 @@ fun PantallaMomentos(nav: Nav) {
         ctx.startActivity(i)
     }
 
-    Hoja("Momentos", subtitulo = "Lo que piensas o sientes en el instante. Un toque y se guarda con la hora y el lugar.") {
-        if (!conUbicacion) Aviso("Sin permiso de ubicación, los momentos se guardan sin lugar. Actívalo en Más → Permisos y sensores.")
+    // «Todos tus registros» (N-25): la lista editable de 30 días, con filtro por día. Lo privado no sale aquí.
+    var dia by remember { mutableStateOf<String?>(null) }
+    Hoja("Todos tus registros", nav.atras, subtitulo = "Tus registros de ánimo de los últimos 30 días. Toca uno para cambiar lo que sentías, su hora o su día, o para borrarlo.") {
+        if (!conUbicacion) Aviso("Sin permiso de ubicación, los registros se guardan sin lugar. Actívalo en Más → Permisos y sensores.")
         BotonAnimo(Modifier.padding(top = 14.dp)) { abrir(QuickActivity.M_ANIMO) }
-        Ayuda("También puedes agregar los widgets de Vestigium a tu pantalla de inicio o el botón al panel de ajustes rápidos.", Modifier.padding(top = 8.dp))
 
-        val recientes = Repo.momentos.filter { it.fecha >= Fechas.sumar(Fechas.diaLogico(), -30) && !it.privado }.sortedByDescending { it.ts }
+        val todos = Repo.momentos.filter { it.fecha >= Fechas.sumar(Fechas.diaLogico(), -30) && !it.privado }.sortedByDescending { it.ts }
+        val dias = todos.map { it.fecha }.distinct()
+        if (dias.size > 1) Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            io.github.ruddy2003.vestigium.ui.Ficha("todos", dia == null) { dia = null }
+            dias.forEach { f -> io.github.ruddy2003.vestigium.ui.Ficha(Fechas.corto(f), dia == f) { dia = if (dia == f) null else f } }
+        }
+        val recientes = todos.filter { dia == null || it.fecha == dia }
         Seccion("Últimos 30 días", "${recientes.size} registros. Toca uno para editarlo.") {
-            if (recientes.isEmpty()) Vacio("Todavía no hay momentos. Toca «¿Cómo estás ahora?» cuando algo te pase por la cabeza.")
+            if (recientes.isEmpty()) Vacio("Todavía no hay registros. Toca «¿Cómo estás ahora?» cuando algo te pase por la cabeza.")
             var ultimoDia = ""
             recientes.take(200).forEach { m ->
                 if (m.fecha != ultimoDia) {
@@ -114,13 +122,13 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
     var pensamiento by remember(m.id) { mutableStateOf(Catalogo.pensamientoDe(m)) }
     var confirmar by remember(m.id) { mutableStateOf(false) }
     val registro = Catalogo.esRegistro(m)
-    // En una recaída también se corrigen la hora de inicio y cuánto duró (con los selectores de siempre).
+    // Se corrigen la fecha y la hora de cualquier registro; en una recaída, además, cuánto duró.
     val esRecaida = m.tipo == "recaida"
     var cuando by remember(m.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(m.ts))) }
     var dur by remember(m.id) { mutableStateOf(m.duracion_min) }
     AlertDialog(
         onDismissRequest = { cerrar() },
-        title = { Text("${Catalogo.titulo(m, discreto)} · ${Fechas.horaDe(m.ts)}") },
+        title = { Text("${Catalogo.titulo(m, discreto)} · ${Fechas.corto(m.fecha)} ${Fechas.horaDe(m.ts)}") },
         text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             OutlinedTextField(value = texto, onValueChange = { texto = it }, modifier = Modifier.fillMaxWidth(), minLines = 2, visualTransformation = io.github.ruddy2003.vestigium.ui.rememberMarcas())
@@ -139,29 +147,43 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
                     Catalogo.PENSAMIENTOS.forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(if (discreto) "·" else o.nombre, pensamiento == o.id) { pensamiento = if (pensamiento == o.id) null else o.id } }
                 }
             } else { Etiqueta("Intensidad"); Escala(intensidad, 1, 5) { intensidad = it } }
+            Etiqueta(if (esRecaida) "Empezó" else "Cuándo")
+            io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, atajos = listOf(15, 30, 60, 120)) { cuando = it }
             if (esRecaida) {
-                Etiqueta("Empezó")
-                io.github.ruddy2003.vestigium.ui.SelectorHora(cuando, atajos = listOf(15, 30, 60, 120)) { cuando = it }
                 Etiqueta("Duró")
                 io.github.ruddy2003.vestigium.ui.SelectorDuracion(dur) { dur = it }
-                Ayuda("Si cambias la hora, el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
             }
+            Ayuda("Si cambias la hora, el día se ajusta (empieza a las 5:00) y el lugar se toma de tus ubicaciones de esa hora.", Modifier.padding(top = 4.dp))
         }
         },
         confirmButton = { TextButton(onClick = {
-            val n = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
+            val base = m.copy(texto = texto, intensidad = intensidad, valencia = valencia, activacion = activacion,
                 emociones = if (registro) emociones else m.emociones, pensamiento = if (registro) pensamiento else m.pensamiento,
                 duracion_min = if (esRecaida) dur else m.duracion_min)
-            val ms = if (esRecaida) (cuando ?: java.time.LocalDateTime.now()).aMillis() else null
-            if (ms != null && Fechas.horaDe(Fechas.isoDeMillis(ms)) != Fechas.horaDe(m.ts)) io.github.ruddy2003.vestigium.data.Recaidas.moverHora(n, ms)
-            else Repo.guardarMomento(n)
+            val ms = (cuando ?: io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(m.ts))).aMillis()
+            // Se compara el minuto completo (fecha y hora): cambiar solo el día, con la misma hora, también lo mueve.
+            val mover = ms / 60_000L != Fechas.millis(m.ts) / 60_000L
+            if (base != m || mover) {
+                // Un momento de antes («idea», «alegría» como tipo) pasa a registro de ánimo: lo que sentías y pensabas ya va
+                // explícito en sus campos, y así el tipo viejo deja de contar como pensamiento o sentimiento.
+                val viejo = registro && m.tipo != "animo" && m.tipo != "muestreo"
+                val n = (if (viejo) base.copy(tipo = "animo") else base).copy(ts_editado = Fechas.ahoraIso())
+                when {
+                    mover && esRecaida -> io.github.ruddy2003.vestigium.data.Recaidas.moverHora(n, ms)
+                    mover -> Repo.guardarMomento(io.github.ruddy2003.vestigium.data.Recaidas.aOtraHora(n, ms))
+                    else -> Repo.guardarMomento(n)
+                }
+            }
             cerrar()
         }) { Text("Guardar") } },
         dismissButton = {
         TextButton(onClick = {
             if (confirmar) {
-                Repo.borrarMomento(m.id); cerrar()
-                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") { Repo.guardarMomento(m) }
+                Repo.borrarMomento(m.id); io.github.ruddy2003.vestigium.data.Recaidas.alBorrar(m); cerrar()
+                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Momento borrado") {
+                    Repo.guardarMomento(m)
+                    if (m.tipo == "recaida") io.github.ruddy2003.vestigium.data.Recaidas.registrar(m)
+                }
             } else confirmar = true
         }) {
             Text(if (confirmar) "¿Borrar de verdad?" else "Borrar", color = MaterialTheme.colorScheme.error)

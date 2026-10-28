@@ -181,7 +181,8 @@ fun SolVergina(modifier: Modifier = Modifier, color: Color = MaterialTheme.color
 /** Encabezado de sección: numeral y nombre según el tema, con el nombre en español como comentario. */
 @Composable
 fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: String? = Romano.latin(titulo), modifier: Modifier = Modifier,
-            plegable: Boolean = false, plegadaPorDefecto: Boolean = false, autoPlegar: Boolean = false, content: @Composable () -> Unit) {
+            plegable: Boolean = false, plegadaPorDefecto: Boolean = false, autoPlegar: Boolean = false, abrir: Int = 0, resumen: String? = null,
+            content: @Composable () -> Unit) {
     val (nombre, comentario) = Estilo.seccion(titulo, latin)
     // Las secciones plegables recuerdan si las cerraste (se guarda en tu configuración). Las que empiezan plegadas
     // guardan «+título» cuando las abres. Las de [autoPlegar] se vuelven a plegar al cerrar la app o al cambiar de día.
@@ -190,6 +191,12 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
     var abiertaAuto by androidx.compose.runtime.remember(claveAuto) { mutableStateOf(false) }
     val plegable = plegable || autoPlegar
     val plegada = if (autoPlegar) !abiertaAuto else plegable && if (plegadaPorDefecto) "+$titulo" !in plegadas else titulo in plegadas
+    // [abrir] sube cuando otra parte de la pantalla quiere mostrar lo de adentro (por ejemplo, al tocar una cifra del Tablero).
+    androidx.compose.runtime.LaunchedEffect(abrir) {
+        if (abrir == 0 || !plegada) return@LaunchedEffect
+        if (autoPlegar) abiertaAuto = true
+        else io.github.ruddy2003.vestigium.data.Repo.cambiarConfig { c -> c.copy(plegadas = if (plegadaPorDefecto) c.plegadas + "+$titulo" else c.plegadas - titulo) }
+    }
     Column(modifier.fillMaxWidth().padding(top = 26.dp).entrada(numero ?: 0)) {
         Row(
             verticalAlignment = if (Estilo.tema == TemaId.MEDIEVAL || Estilo.tema == TemaId.DISTOPIA) Alignment.CenterVertically else Alignment.Bottom,
@@ -225,6 +232,8 @@ fun Seccion(titulo: String, ayuda: String? = null, numero: Int? = null, latin: S
             if (plegable) Text(if (plegada) "▸" else "▾", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (comentario != null) Text(comentario, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
+        // Plegada, una línea dice qué hay adentro (por ejemplo, «5 registros con hora»).
+        if (plegada && resumen != null) Text(resumen, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
         androidx.compose.animation.AnimatedVisibility(!plegada) {
             Column {
                 if (ayuda != null) Text(ayuda, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 10.dp))
@@ -251,6 +260,20 @@ fun Etiqueta(texto: String) {
     }
 }
 
+
+/**
+ * Antes de las 5:00 dice, en palabras, a qué día va lo que anotas: el día lógico empieza a las 5:00 (N-10).
+ * Fuera de la madrugada no ocupa nada.
+ */
+@Composable
+fun AvisoMadrugada(modifier: Modifier = Modifier) {
+    val ahora = java.time.LocalTime.now()
+    if (ahora.hour >= 5) return
+    val dia = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+    Ayuda("Son las ${"%02d:%02d".format(ahora.hour, ahora.minute)}: lo que anotes va al ${io.github.ruddy2003.vestigium.data.Fechas.titulo(dia).lowercase()} " +
+        "(los días empiezan a las 5:00).", modifier.padding(top = 2.dp))
+}
+
 @Composable
 fun Ayuda(texto: String, modifier: Modifier = Modifier) {
     Text(texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = modifier)
@@ -271,12 +294,13 @@ fun Clave(clave: String, valor: String, ancho: Int = 14) {
 }
 
 @Composable
-fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null, onCambio: (Int?) -> Unit) {
+fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null, secuencial: Boolean = false, onCambio: (Int?) -> Unit) {
     val sentir = rememberSentir()
     val oscuro = esOscuro()
     val n = hasta - desde + 1
-    // Las escalas desde 0 son de intensidad (dolor, impulso); las demás van de desagradable a agradable.
-    fun tono(i: Int): Color = if (desde == 0) Tonos.secuencial((i - desde).toFloat() / (n - 1), oscuro) else Tonos.divergente((i - desde).toFloat() / (n - 1), oscuro)
+    // Las escalas desde 0 son de intensidad (dolor, impulso), igual que las [secuencial] (la activación: más energía no es
+    // «mejor»); las demás van de desagradable a agradable.
+    fun tono(i: Int): Color = if (desde == 0 || secuencial) Tonos.secuencial((i - desde).toFloat() / (n - 1), oscuro) else Tonos.divergente((i - desde).toFloat() / (n - 1), oscuro)
     val actual by androidx.compose.runtime.rememberUpdatedState(valor)
     Column {
         // Se puede tocar un número o deslizar el dedo sobre la fila.

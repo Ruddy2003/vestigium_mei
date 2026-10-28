@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -1240,7 +1241,8 @@ fun BotonModo(modifier: Modifier = Modifier) {
     val fondo = MaterialTheme.colorScheme.background
     val borde = MaterialTheme.colorScheme.outline
     Box(
-        modifier.padding(start = 4.dp).size(36.dp).clip(CircleShape).border(1.dp, borde, CircleShape).clickable {
+        // 48 dp de espacio para el dedo alrededor del círculo de 36 (N-27).
+        modifier.padding(start = 4.dp).minimumInteractiveComponentSize().size(36.dp).clip(CircleShape).border(1.dp, borde, CircleShape).clickable {
             sentir(Sentidos.Evento.CAMBIO)
             Repo.cambiarConfig { c -> c.copy(modo = if (oscuro) "claro" else "oscuro") }
         }.semantics { contentDescription = if (oscuro) "Cambiar a modo claro" else "Cambiar a modo oscuro" },
@@ -1267,7 +1269,7 @@ fun BotonBuscar(modifier: Modifier = Modifier, onClick: () -> Unit) {
     val borde = MaterialTheme.colorScheme.outline
     val sentir = rememberSentir()
     Box(
-        modifier.size(36.dp).clip(CircleShape).border(1.dp, borde, CircleShape).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
+        modifier.minimumInteractiveComponentSize().size(36.dp).clip(CircleShape).border(1.dp, borde, CircleShape).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
             .semantics { contentDescription = "Buscar en todo" },
         contentAlignment = Alignment.Center,
     ) {
@@ -1359,13 +1361,17 @@ fun CapaFiesta() {
 @Composable
 fun BotonAjustes(modifier: Modifier = Modifier, onClick: () -> Unit) {
     val sentir = rememberSentir()
-    Box(
-        modifier.size(36.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
-            .semantics { contentDescription = "Ajustes y más" },
-        contentAlignment = Alignment.Center,
+    // 48 dp para el dedo y la palabra «Más» debajo, para que no sea solo un ícono (N-21).
+    androidx.compose.foundation.layout.Column(
+        modifier.size(48.dp).clip(MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
+            .semantics { contentDescription = "Más: ajustes y todas las pantallas" },
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
     ) {
-        androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary) {
-            Box(Modifier.size(20.dp), contentAlignment = Alignment.Center) { IconoPestana("ajustes", nombre = "Ajustes y más") }
+        Box(Modifier.size(30.dp).clip(CircleShape).border(1.dp, MaterialTheme.colorScheme.outline, CircleShape), contentAlignment = Alignment.Center) {
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary) {
+                Box(Modifier.size(18.dp), contentAlignment = Alignment.Center) { IconoPestana("ajustes", nombre = "Más") }
+            }
         }
+        androidx.compose.material3.Text("Más", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
     }
 }

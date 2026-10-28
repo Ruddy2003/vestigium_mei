@@ -201,6 +201,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** contamina una variable pensada como comparable entre días.
 - **Gravedad:** Baja–Media.
 - **Propuesta:** mostrar el cierre solo si `fecha` es el día lógico actual (o marcar los cierres tardíos).
+- **Estado:** Resuelto en la entrega N4 de la revisión de navegación: el cierre va al principio de la hoja y solo en la del día de hoy (`cierrePermitido`).
 
 ### H-2-9 · Editar un registro de ánimo no deja rastro
 - **Dónde:** `ui/pantallas/Momentos.kt`, `DialogoMomento`; modelo `Momento` sin sello de edición.
@@ -208,6 +209,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** un dato momentáneo puede volverse retrospectivo sin saberlo.
 - **Gravedad:** Baja.
 - **Propuesta:** añadir `ts_editado` a `Momento`.
+- **Estado:** Resuelto en el esquema 14 (revisión de navegación, entregas NE y N1): `Momento.ts_editado` y `ts_creado`.
 
 ### H-2-10 · `error_prediccion` es absoluto y pierde la dirección
 - **Dónde:** `ciencia/Estadistica.kt`, `panel()`: `abs(p - valencia)`.
@@ -222,6 +224,7 @@ _Solo se documentan; ningún módulo de contenido modifica el código. Gravedad:
 - **Por qué importa:** reduce la independencia entre `valencia` y `muestreo_valencia`; posible sesgo leve en la activación.
 - **Gravedad:** Baja.
 - **Propuesta:** solo documentar, o mostrar los avisos después de elegir la valencia y usar una paleta secuencial para la activación.
+- **Estado:** Resuelto en la entrega N4 de la revisión de navegación: los avisos se ven después de elegir la valencia y la activación usa la paleta secuencial.
 
 ### H-2-12 · Prueba de reacción: diferencias con la PVT
 - **Dónde:** `ui/pantallas/Medir.kt`, `PantallaReaccion`.
@@ -1104,3 +1107,92 @@ _El veredicto de cada hallazgo anterior (confirmado, con matices, parcial) y la 
 - **Por qué importa:** confusión menor.
 - **Gravedad:** Baja.
 - **Propuesta:** documentar.
+
+## Revisión de navegación y corrección de datos (27 oct 2026, commit `87f7f2c`, esquema 13)
+
+_Salen de `docs/navegacion/revision_navegacion.md`. La revisión no cambió código: solo anota. Las propuestas N-xx están en ese informe._
+
+### H-NAV-1 · Las tomas olvidadas no se pueden anotar y las de más no se pueden quitar
+- **Dónde:** `data/Lote3.kt`, `Suplementos.registrar` (acepta `ts`, pero ninguna pantalla se lo pasa); `ui/pantallas/Lote3.kt:100` (solo se borra la última toma de hoy) y `:138-147` («Últimas tomas» es de solo lectura); `ui/QuickActivity.kt:234` (cada toque en «Tomé…» suma otra toma, aunque ya diga «✓»).
+- **Qué pasa:** si olvidas marcar la creatina de ayer, no hay forma de ponerla en ayer. Una toma de más, por un toque doble en ⊕, tampoco se puede quitar.
+- **Por qué importa:** los niveles derivados (`supl_*_nivel`, modelos de carga y de vida media, capítulo 5) tratan un olvido de registro como un día sin tomar, y una toma doble como doble dosis. El error no se ve en ningún lado.
+- **Gravedad:** Alta.
+- **Propuesta:** N-07 (anotar en otra fecha y corregir o quitar tomas pasadas, con Deshacer).
+- **Estado:** Resuelto en la entrega N2 de la revisión de navegación (esquema 14): fecha y hora al tomar, «Últimas tomas» corregibles, Deshacer en el aviso.
+
+### H-NAV-2 · La hora y la fecha de un registro de ánimo no se corrigen
+- **Dónde:** `ui/pantallas/Momentos.kt:107-158` (`DialogoMomento`: la hora solo se edita en recaídas); `ui/QuickActivity.kt:163-168` (`crear` usa siempre la hora actual); `data/Catalogo.kt:124-125`.
+- **Qué pasa:**
+  - Un registro con la hora equivocada se queda así.
+  - En los momentos viejos (tipo «idea», «alegría»…), la emoción o el pensamiento se pueden cambiar, pero el tipo original sigue contando: `pensamientoDe` cae al tipo viejo.
+  - La edición solo se abre desde Diario → «Línea de tiempo», que está plegada.
+- **Por qué importa:** la hora decide el día lógico, el bloque horario (capítulo 3, sección 3.5) y la cercanía al aviso. Un error de hora mueve el registro de día o de franja sin que se pueda arreglar. Si se agrega la corrección, debe quedar marcada (H-2-9).
+- **Gravedad:** Media.
+- **Propuesta:** N-02 y N-03 (editar desde donde se ve, con hora y fecha), junto con `ts_editado` (H-2-9).
+- **Estado:** Resuelto en la entrega N1 de la revisión de navegación (esquema 14).
+
+### H-NAV-3 · La siesta del reloj no se puede descartar, y se congela al corregir la noche
+- **Dónde:** `sensores/Salud.kt:186` (con `sueno_manual`, la lectura sale antes de recalcular la siesta) y `:197-231` (cálculo de `siesta_reloj_min`); `ui/EditarSueno.kt:33-82` (no trata siestas).
+- **Qué pasa:** un rato quieto en el sofá que el reloj tomó por siesta no se puede quitar. Si además la noche se corrigió a mano, la siesta conserva el último valor leído, aunque el reloj cambie después.
+- **Por qué importa:** `siesta_reloj_min` entra al panel y a los modelos de sueño (capítulo 4, sección del sueño; capítulo 5). Un falso positivo no se puede limpiar.
+- **Gravedad:** Media.
+- **Propuesta:** N-04 (descartar una siesta en `EditarSueno`). Obliga a guardar qué se descartó y sube `SCHEMA_V`.
+- **Estado:** Resuelto en la entrega N7 de la revisión de navegación (esquema 14): «no cuenta» en cada sesión del reloj (`sueno_descartadas`) y las siestas se vuelven a contar aunque la noche esté corregida.
+
+### H-NAV-4 · Las visitas no se corrigen, y borrar un lugar las deja huérfanas
+- **Dónde:** `data/Repo.kt:305` (`borrarLugar` no toca las visitas); `ui/pantallas/Medir.kt:288-295` (de un lugar solo se cambia el tipo o se borra); `ui/pantallas/Dia.kt:620` («?» para una visita sin lugar); `data/Lugares.kt:140`.
+- **Qué pasa:** no se puede decir «esa visita fue en Café Centro, no en Gimnasio». Tampoco se puede renombrar un lugar ni achicar su radio. Si se borra el lugar, sus visitas quedan apuntando a un id que ya no existe.
+- **Por qué importa:** las variables de lugar (`en_casa_min`, minutos por tipo, `lugares_distintos`; H-1-2) cuentan visitas mal asignadas, y las huérfanas desaparecen de unas variables pero no de otras.
+- **Gravedad:** Media.
+- **Propuesta:** N-05 (renombrar, cambiar el radio, reasignar o quitar una visita; al borrar un lugar, decidir qué pasa con sus visitas).
+- **Estado:** Resuelto en la entrega N7 de la revisión de navegación: renombrar, radio, ignorar; visitas con «fue en…» y «no estuve aquí»; al quitar un lugar, sus visitas pasan a otro o se quitan. Queda abierto que «no estuve aquí» no se recuerda (ver capítulo 4).
+
+### H-NAV-5 · La corrección manual del sueño se puede perder sin aviso
+- **Dónde:** `ui/EditarSueno.kt:63-67` («quitar la corrección y volver a lo del reloj»: un toque, sin confirmar); `sensores/Salud.kt:226-231` (si el reloj no tiene esa noche, la relectura deja `sueno_min = null`); `data/Importar.kt:72` (restaurar un respaldo reemplaza el registro de salud del día).
+- **Qué pasa:** una noche anotada a mano, sin reloj, se borra con un solo toque. Y restaurar un respaldo anterior a la corrección la deshace.
+- **Por qué importa:** se pierde un dato que el usuario corrigió a propósito; la noche queda como faltante.
+- **Gravedad:** Media.
+- **Propuesta:** N-04 (confirmar antes y ofrecer Deshacer) y respetar `sueno_manual` al restaurar.
+- **Estado:** Resuelto en la entrega N0 de la revisión de navegación (esquema 14): confirmación, aviso si el reloj no tiene la noche, Deshacer, y `Fusion.salud` al restaurar.
+
+### H-NAV-6 · Seguimiento privado: dos fallas al corregir una recaída (solo la mecánica)
+- **Dónde:** `ui/pantallas/Momentos.kt:156` (solo compara la hora «HH:mm») y `:161-165` (borrar); `data/Recaidas.kt` (`deshacer` solo se llama desde `QuickActivity`).
+- **Qué pasa:**
+  - Si se cambia el día de una recaída y se deja la misma hora y minuto, el cambio no se guarda, y no hay aviso.
+  - Si se borra una recaída desde el diálogo, el día sigue marcado con recaída y el hábito ligado sigue en 0.
+- **Por qué importa:** `recaida`, `n_recaida` y el hábito ligado quedan distintos de los registros. Solo afecta a la exportación para R (`data/Privado.kt`).
+- **Gravedad:** Media.
+- **Propuesta:** comparar la marca de tiempo completa y llamar a `Recaidas.deshacer` también al borrar desde el diálogo. Es una corrección de error y no requiere aprobación de navegación.
+- **Estado:** Resuelto en la entrega N0 de la revisión de navegación (esquema 14): se compara el minuto completo, y `Recaidas.alBorrar` quita la marca del día.
+
+### H-NAV-7 · La calidad del sueño anotada antes de las 05:00 va al día anterior
+- **Dónde:** `ui/QuickActivity.kt:110` (widget de sueño) y `:666` (`SuenoRapido`): `Fechas.diaLogico()`; las horas del reloj van con la fecha del despertar (`sensores/Salud.kt:181-182`).
+- **Qué pasa:** quien despierta a las 04:30 y califica la noche desde el widget la deja en el día de ayer. El sueño medido de esa misma noche va al día de hoy.
+- **Por qué importa:** la calidad subjetiva y las horas medidas de la misma noche quedan en días distintos (capítulo 3, sección 3.12). Es raro, pero sesga a quienes despiertan muy temprano.
+- **Gravedad:** Baja.
+- **Propuesta:** guardar la calidad en la fecha del despertar (la del calendario) cuando se anota entre las 00:00 y las 05:00, o preguntarlo (N-10).
+- **Estado:** Resuelto en la entrega N2 de la revisión de navegación (esquema 14): el widget y la hoja rápida usan `Fechas.hoyCalendario()`.
+
+### H-NAV-8 · «Día difícil» no se puede quitar
+- **Dónde:** `ui/QuickActivity.kt:702` es el único lugar que escribe `dia_dificil`.
+- **Qué pasa:** un toque equivocado en la acción del aviso deja el día marcado para siempre.
+- **Por qué importa:** `dia_dificil` viaja en la exportación.
+- **Gravedad:** Baja.
+- **Propuesta:** mostrar la marca en la hoja de la noche con la opción de quitarla.
+- **Estado:** Resuelto en la entrega N0 de la revisión de navegación (esquema 14).
+
+### H-NAV-9 · Cambiar dónde y cuándo se registra cambia cuánto se registra
+- **Dónde:** propuestas del informe de navegación:
+  - N-07, N-08, N-09 y N-26: registrar en otra fecha;
+  - N-16 y N-18: reordenar Hoy y la hoja de la noche (N-18 guarda `version_noche`);
+  - N-28: el historial de ánimo a la vista en Hoy;
+  - N-29: gastos en un toque.
+- **Qué pasa:** hoy, lo olvidado casi nunca se recupera. Con estas propuestas se recuperaría, y lo que suba o baje en Hoy o en la noche se llenará más o menos. Ya pasó con el impulso (capítulo 3, sección 3.16).
+- **Por qué importa:**
+  - La completitud y la mezcla de datos momentáneos y retrospectivos cambian a partir de la fecha de la entrega.
+  - Las series se parten en dos tramos, como con la ventana de pantalla (capítulo 2).
+- **Gravedad:** Media.
+- **Propuesta:**
+  - Marcar lo anotado tarde: `retroactivo` en el día, la marca de tiempo de creación en momentos y tomas.
+  - Anotar en el Apéndice D la versión de cada entrega.
+  - Leer por tramo los análisis que crucen esa fecha.

@@ -205,7 +205,10 @@ fun PantallaLugarNuevo(nav: Nav) {
                     if (i > 0) HorizontalDivider()
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("%.4f, %.4f · desde %s".format(x.lat, x.lon, x.desde.ifBlank { "?" }), style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados - x) } }) { Text("quitar") }
+                        TextButton(onClick = {
+                            Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados - x) }
+                            io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sitio quitado de los ignorados") { Repo.cambiarConfig { cc -> if (x in cc.lugares_ignorados) cc else cc.copy(lugares_ignorados = cc.lugares_ignorados + x) } }
+                        }) { Text("quitar") }
                     }
                 }
             }
@@ -249,6 +252,8 @@ fun PantallaNotas(nav: Nav) {
     var texto by remember { mutableStateOf("") }
     var tipo by remember { mutableStateOf("idea") }
     var recordar by remember { mutableStateOf<String?>(null) }
+    // null = el día lógico de hoy; se puede mover a otro día (N-11).
+    var paraDia by remember { mutableStateOf<String?>(Seleccion.notaPara.also { Seleccion.notaPara = null }) }
     var buscar by remember { mutableStateOf("") }
     var filtro by remember { mutableStateOf("todas") }
     var editando by remember { mutableStateOf<Nota?>(null) }
@@ -264,9 +269,16 @@ fun PantallaNotas(nav: Nav) {
                 Ficha(recordar?.let { "el ${Fechas.corto(it)}" } ?: "¿qué día?", recordar != null) { elegirFecha(ctx, recordar, desdeManana = false) { recordar = it } }
                 Ayuda("  Te aviso ese día a las ${Repo.config.metas_hora}:00.")
             }
+            val dia = paraDia ?: Fechas.diaLogico()
+            Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Ayuda("Para el ${Fechas.titulo(dia).lowercase()}", Modifier.weight(1f))
+                Text("cambiar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable { elegirFecha(ctx, dia) { paraDia = it.takeIf { f -> f != Fechas.diaLogico() } } }.padding(6.dp))
+            }
+            if (paraDia == null) io.github.ruddy2003.vestigium.ui.AvisoMadrugada()
             BotonPrincipal("Guardar nota", Modifier.fillMaxWidth().padding(top = 10.dp), habilitado = texto.isNotBlank()) {
-                Repo.guardarNota(Nota(Repo.nuevoId(), Fechas.ahoraIso(), Fechas.diaLogico(), texto.trim(), tipo, recordar_el = recordar.takeIf { tipo == "recordatorio" }))
-                texto = ""; recordar = null
+                Repo.guardarNota(Nota(Repo.nuevoId(), Fechas.ahoraIso(), dia, texto.trim(), tipo, recordar_el = recordar.takeIf { tipo == "recordatorio" }))
+                texto = ""; recordar = null; paraDia = null
             }
         }
         OutlinedTextField(value = buscar, onValueChange = { buscar = it }, modifier = Modifier.fillMaxWidth().padding(top = 14.dp), singleLine = true,
@@ -281,13 +293,48 @@ fun PantallaNotas(nav: Nav) {
         if (lista.isEmpty()) Vacio(if (Repo.notas.isEmpty()) "Todavía no hay notas." else "Nada con eso.")
         lista.forEach { n -> FilaNota(n, onEditar = { editando = n }) }
     }
-    editando?.let { n ->
-        var t by remember(n.id) { mutableStateOf(n.texto) }
-        AlertDialog(onDismissRequest = { editando = null }, title = { Text("Editar nota") },
-            text = { OutlinedTextField(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth()) },
-            confirmButton = { TextButton(onClick = { Repo.guardarNota(n.copy(texto = t.trim(), editada = Fechas.ahoraIso())); editando = null }) { Text("guardar") } },
-            dismissButton = { TextButton(onClick = { Repo.borrarNota(n.id); editando = null }) { Text("borrar", color = MaterialTheme.colorScheme.error) } })
-    }
+    editando?.let { n -> DialogoNota(n) { editando = null } }
+}
+
+/** Corregir una nota: texto, tipo, fecha y recordatorio; borrar pide confirmación y deja deshacer (N-11). */
+@Composable
+fun DialogoNota(n: Nota, cerrar: () -> Unit) {
+    val ctx = LocalContext.current
+    val marcas = rememberMarcas()
+    var t by remember(n.id) { mutableStateOf(n.texto) }
+    var tp by remember(n.id) { mutableStateOf(n.tipo) }
+    var f by remember(n.id) { mutableStateOf(n.fecha) }
+    var rec by remember(n.id) { mutableStateOf(n.recordar_el) }
+    AlertDialog(onDismissRequest = { cerrar() }, title = { Text("Editar nota") },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Catalogo.TIPOS_NOTA.forEach { o -> Ficha(o.nombre, tp == o.id) { tp = o.id } }
+                }
+                OutlinedTextField(value = t, onValueChange = { t = it }, minLines = 4, visualTransformation = marcas, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+                Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Ayuda("Del ${Fechas.titulo(f).lowercase()}", Modifier.weight(1f))
+                    Text("cambiar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable { elegirFecha(ctx, f) { f = it } }.padding(6.dp))
+                }
+                if (tp == "recordatorio") Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Ficha(rec?.let { "recordar el ${Fechas.corto(it)}" } ?: "¿qué día te aviso?", rec != null) { elegirFecha(ctx, rec) { rec = it } }
+                    if (rec != null) Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.clickable { rec = null }.padding(6.dp))
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = {
+            Repo.guardarNota(n.copy(texto = t.trim(), tipo = tp, fecha = f, recordar_el = rec.takeIf { tp == "recordatorio" }, editada = Fechas.ahoraIso()))
+            cerrar()
+        }, enabled = t.isNotBlank()) { Text("guardar") } },
+        dismissButton = {
+            var confirmar by remember(n.id) { mutableStateOf(false) }
+            TextButton(onClick = {
+                if (!confirmar) { confirmar = true; return@TextButton }
+                Repo.borrarNota(n.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Nota borrada") { Repo.guardarNota(n) }
+            }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
+        })
 }
 
 @Composable
@@ -476,7 +523,11 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
         confirmButton = { TextButton(onClick = { if (m.nombre.isNotBlank()) { Metas.cambiar(previa, m.copy(nombre = m.nombre.trim())); cerrar() } }) { Text("guardar") } },
         dismissButton = {
             Row {
-                if (previa != null) TextButton(onClick = { Repo.borrarMeta(previa.id); cerrar() }) { Text("borrar", color = MaterialTheme.colorScheme.error) }
+                var confirmar by remember { mutableStateOf(false) }
+                if (previa != null) TextButton(onClick = {
+                    if (!confirmar) { confirmar = true; return@TextButton }
+                    Repo.borrarMeta(previa.id); cerrar(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Meta borrada") { Repo.guardarMeta(previa) }
+                }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
                 TextButton(onClick = cerrar) { Text("cancelar") }
             }
         })
@@ -492,15 +543,16 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
  */
 @Composable
 fun BloqueCierre(fecha: String) {
+    if (!io.github.ruddy2003.vestigium.data.cierrePermitido(fecha)) return
     val previo = Repo.momentos.lastOrNull { it.fecha == fecha && it.esCierre }
     var v by remember(fecha, previo?.id) { mutableStateOf(previo?.valencia) }
     var a by remember(fecha, previo?.id) { mutableStateOf(previo?.activacion) }
     Tarjeta {
-        Text("Cómo estás ahora", style = MaterialTheme.typography.titleMedium)
-        Ayuda(previo?.let { "Anotado a las ${Fechas.horaDe(it.ts)}. Si lo cambias, se guarda con la hora de ahora." } ?: "Un toque: qué tan agradable y cuánta energía, ahora que cierras el día.")
+        // El título ya lo pone la sección de la hoja de la noche.
+        Ayuda(previo?.let { "Anotado a las ${Fechas.horaDe(it.ts)}. Si lo cambias, se guarda con la hora de ahora." } ?: "Un toque: qué tan agradable y cuánta energía, ahora, antes de repasar el día.")
         CuadriculaAfecto(v, a, Modifier.padding(top = 8.dp)) { nv, na ->
             v = nv; a = na
-            val base = previo ?: Momento(Repo.nuevoId(), Fechas.ahoraIso(), fecha, "animo", origen = "cierre")
+            val base = previo ?: Momento(Repo.nuevoId(), Fechas.ahoraIso(), fecha, "animo", origen = "cierre", ts_creado = Fechas.ahoraIso())
             Repo.guardarMomento(base.copy(ts = Fechas.ahoraIso(), valencia = nv, activacion = na))
         }
     }
@@ -521,6 +573,7 @@ fun SemanaCorta(d: Dia, abrirNoche: () -> Unit) {
     val enfoque = Enfoque.delDia(f).filterKeys { it != "siesta" }.values.sum()
     val pasos = Repo.salud[f]?.pasos
     Column(Modifier.padding(top = 12.dp)) {
+        if (f == Fechas.diaLogico()) io.github.ruddy2003.vestigium.ui.AvisoMadrugada(Modifier.padding(bottom = 6.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Cifra(animo?.let { "$it/7" } ?: "—", "valencia", Modifier.weight(1f))
             Cifra(sueno?.let { "${it / 60}h${"%02d".format(it % 60)}" } ?: "—", "sueño", Modifier.weight(1f))

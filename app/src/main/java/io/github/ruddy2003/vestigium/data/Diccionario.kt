@@ -88,7 +88,9 @@ object Diccionario {
         "gasto_total" to "Gasto del día (tu moneda)", "ingreso_total" to "Ingresos del día (tu moneda)", "fijo" to "Ingreso que se repite, como sueldo o beca (0/1)", "schema_v" to "Versión del esquema de datos", "origen" to "De dónde vino el registro (app, web, obsidian, widget…)",
         "retroactivo" to "La valencia se llenó otro día, después (0/1). Desde la v13 se decide con ts_valencia; los días de antes, por si el registro del día se creó después",
         "ts_valencia" to "Cuándo se llenó o se cambió por última vez la valencia del día (desde la v13)", "dia_dificil" to "Marcado como día difícil (0/1)",
-        "ts_creado" to "Cuándo se creó el registro", "ts_editado" to "Última edición",
+        "ts_creado" to "Cuándo se anotó el registro. En momentos, gastos, ingresos, tomas, consumos y tramos, desde la v14 (vacío en los de antes); comparado con su hora dice si se anotó tarde",
+        "ts_editado" to "Cuándo se corrigió por última vez después de anotarlo (en momentos, gastos e ingresos, desde la v14)",
+        "version_noche" to "Con qué orden de preguntas se llenó la hoja de la noche (desde la v14): 1 = el orden de hasta la v14; 2 = el orden nuevo, con el ánimo del momento primero. Vacío = no pasó por la hoja o es de antes",
         "hitos" to "Hitos del día (lista)", "flow" to "Experiencia de flujo (Csikszentmihalyi)", "sdt_necesidad" to "Necesidad psicológica más presente (Deci y Ryan)",
         "apreciacion" to "Evaluación del estrés (Lazarus)", "sueno_recordado" to "Recordó un sueño (0/1)", "sueno_valencia" to "Qué tan agradable fue el sueño (1 a 7)",
         "sueno_lucidez" to "Lucidez del sueño", "sueno_vividez" to "Vividez del recuerdo", "sueno_tipo" to "Tipo de sueño", "sueno_temas" to "Personas y temas del sueño (lista)",
@@ -100,7 +102,7 @@ object Diccionario {
         "aviso_ts" to "Cuándo llegó el aviso que se respondió", "latencia_min" to "Minutos entre el aviso y la respuesta",
         "ruido_db" to "Ruido ambiente aproximado al registrar (dB relativos, sin calibrar)", "luz_lux" to "Luz ambiente al registrar (lux)",
         // Gastos
-        "monto" to "Importe (tu moneda)", "categoria" to "Categoría de gasto", "imprevisto" to "Gasto no planeado (0/1)",
+        "monto" to "Importe (tu moneda)", "categoria" to "Categoría de gasto", "subcategoria" to "Subcategoría dentro de la categoría (desde la v14; vacío = sin subcategoría)", "imprevisto" to "Gasto no planeado (0/1)",
         // Escalas y reacción
         "instrumento" to "Cuestionario (who5, pss4, ucla3, tipi)", "media_ms" to "Tiempo de reacción medio (ms)", "mediana_ms" to "Tiempo de reacción mediano (ms)",
         "lapsos" to "Respuestas de más de 500 ms", "anticipaciones" to "Toques antes del estímulo", "ensayos_ms" to "Tiempos de cada ensayo (lista, ms)",
@@ -255,6 +257,7 @@ object Diccionario {
         "vm_experimentos.csv:fin" to "Día lógico en que lo terminaste (desde la v13; los días después no cuentan)",
         "vm_experimentos.csv:hecho" to "«¿Lo hiciste hoy?»: fecha:1 sí, fecha:0 no (lista; una fecha que no aparece = sin respuesta, no «no»)",
         "vm_pantalla.csv:ventana" to "logica = de las 05:00 a las 05:00 del día siguiente (desde la v13); calendario = de 0:00 a 24:00 (antes)",
+        "sueno_descartadas" to "Lo que llegó del reloj esa noche y marcaste que no cuenta (desde la v14)",
         "ventana_pantalla" to "Ventana del uso del teléfono ese día: logica (05:00 a 05:00, desde la v13) o calendario (0:00 a 24:00)",
         "ventana_pasos" to "Ventana de los pasos ese día: logica (05:00 a 05:00, desde la v13) o calendario (0:00 a 24:00)",
         "dia_especial" to "Ese día cae un cumpleaños, un aniversario o una fecha propia (0/1)",

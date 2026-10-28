@@ -121,7 +121,7 @@ fun PantallaConocer(nav: Nav) {
                 p.mascotas.forEachIndexed { i, m ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(m.nombre + (Perfiles.ESPECIES.firstOrNull { it.id == m.especie }?.let { " · ${it.nombre.lowercase()}" } ?: ""), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { cambiar(p.copy(mascotas = p.mascotas.filterIndexed { j, _ -> j != i })) }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        TextButton(onClick = { val antes = p; cambiar(p.copy(mascotas = p.mascotas.filterIndexed { j, _ -> j != i })); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Mascota quitada") { cambiar(antes) } }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
                 }
                 var mascota by remember { mutableStateOf("") }
@@ -142,7 +142,7 @@ fun PantallaConocer(nav: Nav) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("@${c.nombre}" + (Perfiles.RELACIONES.firstOrNull { it.id == c.relacion }?.let { " · ${it.nombre.lowercase()}" } ?: ""),
                             style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                        TextButton(onClick = { cambiar(p.copy(cercanas = p.cercanas.filterIndexed { j, _ -> j != i })) }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        TextButton(onClick = { val antes = p; cambiar(p.copy(cercanas = p.cercanas.filterIndexed { j, _ -> j != i })); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Persona quitada") { cambiar(antes) } }) { Text("quitar", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     }
                 }
                 var quien by remember { mutableStateOf("") }

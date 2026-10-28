@@ -159,6 +159,22 @@ fun PantallaPersonas(nav: Nav) {
             FilaMenu("¿Estuviste o solo pensaste?", "$porRevisar días con personas por revisar: ver a alguien no es lo mismo que pensar en esa persona") { nav.ir("presencias") }
         }
         val clasif = c.personas.sortedByDescending { menc[it.nombre]?.first ?: 0 }
+        // Alguien que aún no mencionas (N-25): nombre, y después relación y nacimiento en su ficha.
+        var nueva by remember { mutableStateOf<String?>(null) }
+        TextButton(onClick = { nueva = "" }, modifier = Modifier.padding(top = 8.dp)) { Text("+ persona", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+        nueva?.let { t ->
+            androidx.compose.material3.AlertDialog(onDismissRequest = { nueva = null }, title = { Text("Nueva persona") },
+                text = {
+                    Column {
+                        androidx.compose.material3.OutlinedTextField(value = t, onValueChange = { nueva = it }, singleLine = true, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nombre, como la escribirías con @") })
+                        Ayuda("Después eliges su relación, su cercanía y su nacimiento. No tendrá días hasta que la menciones.", Modifier.padding(top = 6.dp))
+                    }
+                },
+                confirmButton = { TextButton(enabled = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t).isNotEmpty(), onClick = {
+                    editando = io.github.ruddy2003.vestigium.data.Texto.etiqueta(t); nueva = null
+                }) { Text("Seguir") } },
+                dismissButton = { TextButton(onClick = { nueva = null }) { Text("Cancelar") } })
+        }
         Seccion("Clasificadas", "${clasif.size} personas. Toca una para cambiarla.") {
             if (clasif.isEmpty()) Vacio("Todavía nadie. Responde arriba o toca a alguien de la lista de abajo.")
             Personas.RELACIONES.forEach { r ->
@@ -269,7 +285,12 @@ private fun DiasEspeciales() {
             },
             dismissButton = {
                 Row {
-                    if (existe) TextButton(onClick = { Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != fp0.id }) }; editando = null }) { Text("borrar") }
+                    var confirmar by remember(fp0.id) { mutableStateOf(false) }
+                    if (existe) TextButton(onClick = {
+                        if (!confirmar) { confirmar = true; return@TextButton }
+                        Repo.cambiarConfig { cc -> cc.copy(fechas_propias = cc.fechas_propias.filter { it.id != fp0.id }) }; editando = null
+                        io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Fecha borrada") { Repo.cambiarConfig { cc -> if (cc.fechas_propias.any { it.id == fp0.id }) cc else cc.copy(fechas_propias = cc.fechas_propias + fp0) } }
+                    }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar", color = MaterialTheme.colorScheme.error) }
                     TextButton(onClick = { editando = null }) { Text("cancelar") }
                 }
             },

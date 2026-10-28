@@ -448,7 +448,11 @@ fun PantallaMapa(nav: Nav) {
             TextButton(onClick = nav.atras) { Text(io.github.ruddy2003.vestigium.ui.Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
                 Text(io.github.ruddy2003.vestigium.ui.Estilo.pantalla("Mapa", "MAPPA").first, style = MaterialTheme.typography.headlineSmall)
-                Text("// mapa · mantén presionado para marcar un lugar", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("// mapa · «＋ lugar aquí» marca el centro (o mantén presionado un punto)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            // La alternativa visible al toque largo (N-24): marca el centro del mapa.
+            TextButton(onClick = { mapa.value?.mapCenter?.let { c -> nuevoLugar = GeoPoint(c.latitude, c.longitude) } }) {
+                Text("＋ lugar aquí", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
             }
         }
         Meandro(Modifier.padding(horizontal = 16.dp, vertical = 6.dp))

@@ -128,8 +128,9 @@ fun PantallaSemana(nav: Nav) {
         val hitos = dias.flatMap { f -> Repo.dias[f]?.hitos.orEmpty() }
         if (personas.isNotEmpty() || temas.isNotEmpty() || hitos.isNotEmpty()) Seccion("Personas, temas e hitos") {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                personas.take(8).forEach { (p, n) -> Ficha("@$p · $n", false) { nav.ir("buscar") } }
-                temas.take(8).forEach { (t, n) -> Ficha("#$t · $n", false) { nav.ir("buscar") } }
+                // Llevan su texto al buscador (N-22).
+                personas.take(8).forEach { (p, n) -> Ficha("@$p · $n", false) { Seleccion.buscar = "@$p"; nav.ir("buscar") } }
+                temas.take(8).forEach { (t, n) -> Ficha("#$t · $n", false) { Seleccion.buscar = "#$t"; nav.ir("buscar") } }
                 hitos.distinct().forEach { h -> Ficha("★ ${h.replace('_', ' ')}", true) {} }
             }
         }

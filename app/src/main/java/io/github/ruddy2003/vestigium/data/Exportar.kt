@@ -86,7 +86,7 @@ object Exportar {
         return Repo.dias.values.sortedBy { it.fecha }.map { d ->
             val r = linkedMapOf<String, Any?>(
                 "fecha" to d.fecha, "schema_v" to d.schema_v, "origen" to d.origen, "retroactivo" to d.retroactivo, "ts_valencia" to d.ts_valencia,
-                "dia_dificil" to d.dia_dificil, "ts_creado" to d.ts_creado, "ts_editado" to d.ts_editado,
+                "dia_dificil" to d.dia_dificil, "ts_creado" to d.ts_creado, "ts_editado" to d.ts_editado, "version_noche" to d.version_noche,
                 "valencia" to d.valencia, "activacion" to d.activacion, "dolor" to d.dolor,
             )
             Catalogo.CONTEXTOS.forEach { r["ctx_${it.id}"] = d.ctx[it.id] == true }
@@ -132,7 +132,8 @@ object Exportar {
             "ruido_db" to it.ruido_db, "luz_lux" to it.luz_lux,
             "con_quien" to it.con_quien, "detonantes" to it.detonantes, "dispositivo" to it.dispositivo, "antes" to it.antes, "duracion_min" to it.duracion_min, "foco" to it.foco, "cierre" to it.esCierre,
             "tipo_lugar" to Repo.lugares.firstOrNull { l -> l.id == it.lugar }?.tipo,
-            "alcohol_nivel" to nivelSustancia("alcohol", ms, cons), "cannabis_nivel" to nivelSustancia("cannabis", ms, cons), "otra_nivel" to nivelSustancia("otra", ms, cons))
+            "alcohol_nivel" to nivelSustancia("alcohol", ms, cons), "cannabis_nivel" to nivelSustancia("cannabis", ms, cons), "otra_nivel" to nivelSustancia("otra", ms, cons),
+            "ts_creado" to it.ts_creado, "ts_editado" to it.ts_editado)
         }
     }
 
@@ -149,7 +150,7 @@ object Exportar {
                 "via" to c.via, "con_quien" to c.con_quien, "lat" to c.lat, "lon" to c.lon, "lugar" to (Repo.lugares.firstOrNull { it.id == c.lugar }?.nombre ?: c.lugar),
                 "cruda" to c.cruda, "sintomas" to c.sintomas, "nota" to c.nota, "personas" to Texto.personas(c.nota), "temas" to Texto.temas(c.nota),
                 "alcohol_estimado_max_gl" to Sustancias.alcoholMaximo(c, alc)?.let { Math.round(it * 1000) / 1000.0 },
-                "completo" to c.completo, "oculta_en_pantallas" to (c.sustancia in ocultas), "origen" to c.origen)
+                "completo" to c.completo, "oculta_en_pantallas" to (c.sustancia in ocultas), "origen" to c.origen, "ts_creado" to c.ts_creado)
         }
     }
 
@@ -292,15 +293,17 @@ object Exportar {
 
     fun filasTramos() = Repo.tramos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "tipo" to it.tipo, "es_siesta" to (it.tipo == "siesta"), "inicio" to it.inicio, "fin" to it.fin,
-            "hora" to Fechas.horaDe(it.inicio), "min" to it.min, "nota" to it.nota, "personas" to Texto.personas(it.nota), "temas" to Texto.temas(it.nota), "origen" to it.origen)
+            "hora" to Fechas.horaDe(it.inicio), "min" to it.min, "nota" to it.nota, "personas" to Texto.personas(it.nota), "temas" to Texto.temas(it.nota), "origen" to it.origen,
+            "ts_creado" to it.ts_creado)
     }
 
     fun filasSuplementos(): List<Map<String, Any?>> {
         val nombres = Repo.config.suplementos.associate { it.id to it }
         val manual = Repo.tomas.map { linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to Fechas.horaDe(it.ts), "suplemento" to it.suplemento,
-            "nombre" to (nombres[it.suplemento]?.nombre ?: it.suplemento), "cantidad" to it.cantidad, "unidad" to nombres[it.suplemento]?.unidad, "estimado" to false) }
+            "nombre" to (nombres[it.suplemento]?.nombre ?: it.suplemento), "cantidad" to it.cantidad, "unidad" to nombres[it.suplemento]?.unidad, "estimado" to false,
+            "ts" to it.ts, "ts_creado" to it.ts_creado) }
         val estimadas = if (nombres.containsKey("probioticos")) Suplementos.probioticosEstimados().map { (f, n) ->
-            linkedMapOf<String, Any?>("id" to "est_$f", "fecha" to f, "hora" to null, "suplemento" to "probioticos", "nombre" to "Probióticos", "cantidad" to n, "unidad" to "porción", "estimado" to true)
+            linkedMapOf<String, Any?>("id" to "est_$f", "fecha" to f, "hora" to null, "suplemento" to "probioticos", "nombre" to "Probióticos", "cantidad" to n, "unidad" to "porción", "estimado" to true, "ts" to null, "ts_creado" to null)
         } else emptyList()
         return (manual + estimadas).sortedBy { (it["fecha"] as String) + (it["hora"] ?: "") }
     }
@@ -355,7 +358,8 @@ object Exportar {
 
     fun filasGastos() = Repo.gastos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "dia_logico" to it.dia, "monto" to it.monto, "categoria" to it.categoria,
-            "imprevisto" to it.imprevisto, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon)
+            "subcategoria" to it.subcategoria.ifBlank { null }, "imprevisto" to it.imprevisto, "nota" to it.nota, "lat" to it.lat, "lon" to it.lon,
+            "ts_creado" to it.ts_creado, "ts_editado" to it.ts_editado)
     }
 
     /** Lo marcado a mano en «Mundo»: ciudades añadidas, países rascados o tapados y sitios del Patrimonio Mundial. */
@@ -400,7 +404,7 @@ object Exportar {
 
     fun filasIngresos() = Repo.ingresos.map {
         linkedMapOf<String, Any?>("id" to it.id, "fecha" to it.fecha, "hora" to it.hora, "dia_logico" to it.dia, "monto" to it.monto, "categoria" to it.categoria,
-            "fijo" to it.fijo, "nota" to it.nota)
+            "fijo" to it.fijo, "nota" to it.nota, "ts_creado" to it.ts_creado, "ts_editado" to it.ts_editado)
     }
 
     fun filasEscalas() = Repo.respuestas.map { r ->
@@ -424,7 +428,7 @@ object Exportar {
             "pa_sistolica" to it.pa_sistolica, "pa_diastolica" to it.pa_diastolica, "distancia_km" to it.distancia_km, "cal_activas" to it.cal_activas,
             "cal_totales" to it.cal_totales, "pisos" to it.pisos, "vo2max" to it.vo2max, "agua_ml" to it.agua_ml,
             "spo2_min" to it.spo2_min, "fc_sueno" to it.fc_sueno, "siesta_reloj_min" to it.siesta_reloj_min, "sueno_manual" to it.sueno_manual,
-            "sueno_fuentes" to it.sueno_fuentes, "ventana_pasos" to it.ventana_pasos)
+            "sueno_fuentes" to it.sueno_fuentes, "ventana_pasos" to it.ventana_pasos, "sueno_descartadas" to it.sueno_descartadas)
     }
 
     fun filasPantalla() = Repo.pantalla.values.sortedBy { it.fecha }.map {
@@ -658,7 +662,7 @@ object Exportar {
             val d = Repo.dias[f]; val s = Repo.salud[f]; val p = Repo.pantalla[f]; val e = Repo.entorno[f]
             val ft = Repo.fotos[f]; val ag = Repo.agenda[f]; val nt = Repo.notifs[f]; val ac = Repo.actividad[f]
             val r = linkedMapOf<String, Any?>("fecha" to f, "dia_semana" to Fechas.parse(f).dayOfWeek.value, "con_diario" to (d != null),
-                "valencia" to d?.valencia, "activacion" to d?.activacion, "dolor" to d?.dolor, "sueno_calidad" to d?.sueno_calidad,
+                "valencia" to d?.valencia, "activacion" to d?.activacion, "dolor" to d?.dolor, "sueno_calidad" to d?.sueno_calidad, "version_noche" to d?.version_noche,
                 "valencia_muestreo" to mu[f]?.mapNotNull { it.valencia }?.average(), "n_muestreos" to (mu[f]?.size ?: 0),
                 "n_momentos" to (mo[f]?.size ?: 0))
             Catalogo.MOMENTOS.forEach { t -> r["m_${t.id}"] = mo[f]?.count { it.tipo == t.id } ?: 0 }

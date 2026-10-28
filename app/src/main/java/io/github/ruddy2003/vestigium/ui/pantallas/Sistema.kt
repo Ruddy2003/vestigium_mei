@@ -312,7 +312,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
-                Interruptor("Personaje del tema", c.personaje, "Un personaje en Día que se ve cansado si dormiste poco, sonríe con tu ánimo, presume tu racha y se viste para el clima.") { v -> cambiar { it.copy(personaje = v) } }
+                Interruptor("Tus últimos días", c.personaje, "Una franja en Hoy con tus últimos 14 días: el color es el ánimo del día; el alto, cuánto dormiste frente a tu normal; el remate, si lo sellaste. Hoy no se colorea hasta que lo llenas.") { v -> cambiar { it.copy(personaje = v) } }
+                Interruptor("Semana corta", c.semana_corta, "Hoy con lo mínimo: cuatro cifras y tres botones, para las semanas pesadas.") { v -> cambiar { it.copy(semana_corta = v) } }
                 Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }
                 if (c.animaciones) Interruptor("Fondo vivo", c.fondo_vivo, "Algo se mueve muy despacio detrás de todo: estrellas que titilan, luz de vitral, luciérnagas, nieve, nubes de la estepa, reflejos de agua. Gasta un poco más de batería.") { v -> cambiar { it.copy(fondo_vivo = v) } }
                 Interruptor("Vibraciones", c.vibracion, "Cada tema vibra distinto: cincel, sello de cera, máquina de escribir, relé, armadura, madera…") { v -> cambiar { it.copy(vibracion = v) } }
@@ -519,6 +520,8 @@ fun PantallaDatos(nav: Nav) {
     Hoja("Datos", nav.atras, "Todo lo que guarda la app, listo para R.") {
         msg?.let { Aviso(it) }
         if (ocupado) Ayuda("Trabajando…", Modifier.padding(top = 8.dp))
+        // Lo borrado en los últimos 7 días (N-14).
+        Tarjeta(Modifier.padding(top = 10.dp)) { io.github.ruddy2003.vestigium.ui.FilaMenu("Papelera", "Lo que borraste en los últimos 7 días, para recuperarlo") { nav.ir("papelera") } }
         Seccion("Recordatorios de importación", "Un solo aviso a la semana con lo que toca importar. Cada fuente se puede posponer o apagar.", plegable = true) {
             RecordatoriosImportacion { id ->
                 when (id) {
@@ -609,7 +612,7 @@ fun PantallaDatos(nav: Nav) {
         Seccion("Etiquetas equivalentes", "Unifica variantes de una misma persona o tema (tianita → tia_anita). Se aplica en Explorar, reportes y exportación; tus textos no cambian.") {
             Equivalencias()
         }
-        Seccion("Categorías de gasto") { Categorias() }
+        Seccion("Categorías de gasto") { Ayuda("Las categorías y subcategorías de gasto, con su monto habitual, se editan en Gastos (al final de la pantalla).") }
         Seccion("Resumen") {
             Tarjeta {
                 Clave("dies", "${Repo.dias.size}"); Clave("momenta", "${Repo.momentos.size}"); Clave("svmptvs", "${Repo.gastos.size}")
@@ -710,7 +713,10 @@ private fun Equivalencias() {
         eq.forEach { (k, v) ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("$k → $v", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f))
-                TextButton(onClick = { Repo.cambiarConfig { it.copy(equivalencias = it.equivalencias - k) } }) { Text("Quitar") }
+                TextButton(onClick = {
+                    Repo.cambiarConfig { it.copy(equivalencias = it.equivalencias - k) }
+                    io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Regla quitada") { Repo.cambiarConfig { c -> c.copy(equivalencias = c.equivalencias + (k to v)) } }
+                }) { Text("Quitar") }
             }
         }
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -723,22 +729,6 @@ private fun Equivalencias() {
         }
     }
 }
-
-@Composable
-private fun Categorias() {
-    var nueva by remember { mutableStateOf("") }
-    Tarjeta {
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Repo.config.categorias.forEach { c -> Ficha("$c ×", false) { Repo.cambiarConfig { it.copy(categorias = it.categorias - c) } } }
-        }
-        Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(value = nueva, onValueChange = { nueva = it }, modifier = Modifier.weight(1f), singleLine = true, placeholder = { Text("Nueva categoría") })
-            TextButton(onClick = { val n = nueva.trim(); if (n.isNotEmpty() && n !in Repo.config.categorias) { Repo.cambiarConfig { it.copy(categorias = it.categorias + n) }; nueva = "" } }) { Text("Añadir") }
-        }
-        Ayuda("Tocar una categoría la quita de la lista; los gastos ya registrados la conservan.", Modifier.padding(top = 6.dp))
-    }
-}
-
 
 /** Huella SHA-1 del certificado con que está firmada esta app (la que pide Google Cloud). */
 @Suppress("DEPRECATION")

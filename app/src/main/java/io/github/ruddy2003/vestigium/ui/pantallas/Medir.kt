@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package io.github.ruddy2003.vestigium.ui.pantallas
 
 import io.github.ruddy2003.vestigium.data.esAnimo
@@ -292,9 +294,64 @@ fun PantallaLugares(nav: Nav) {
                             Ayuda(if (aqui.size < 5) "Pocos datos de ánimo aquí (${aqui.size}); se necesitan 5." else
                                 "Valencia aquí ${"%.1f".format(media)}" + (general?.let { g -> " (tu promedio ${"%.1f".format(g)})" } ?: "") + (act?.let { " · energía ${"%.1f".format(it)}" } ?: ""))
                         }
-                        TextButton(onClick = { if (borrar) { Repo.borrarLugar(l.id); Geocercas.registrar(ctx); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Lugar borrado") { Repo.guardarLugar(l); Geocercas.registrar(ctx) } } else borrar = true }) {
-                            Text(if (borrar) "¿Borrar?" else "Quitar", color = if (borrar) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    // Corregir un lugar ya guardado (N-05): nombre, radio, ignorarlo para siempre o quitarlo.
+                    var renombrar by remember(l.id) { mutableStateOf<String?>(null) }
+                    var radioAbierto by remember(l.id) { mutableStateOf(false) }
+                    Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        TextButton(onClick = { renombrar = l.nombre }) { Text("renombrar", style = MaterialTheme.typography.labelMedium) }
+                        TextButton(onClick = { radioAbierto = !radioAbierto }) { Text("radio ${l.radio_m} m", style = MaterialTheme.typography.labelMedium) }
+                        TextButton(onClick = { borrar = true }) { Text("quitar", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.error) }
+                    }
+                    if (radioAbierto) {
+                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(80, 120, 200, 300, 400).forEach { r ->
+                                io.github.ruddy2003.vestigium.ui.Ficha("$r m", l.radio_m == r) {
+                                    val n = l.copy(radio_m = r); Repo.guardarLugar(n); Geocercas.registrar(ctx); radioAbierto = false
+                                    // Con un radio mayor, se buscan las visitas de los últimos 30 días que antes quedaban fuera (no se tocan las que ya hay).
+                                    if (r > l.radio_m) scope.launch(Dispatchers.IO) { runCatching { io.github.ruddy2003.vestigium.data.Lugares.reconstruir(n) } }
+                                }
+                            }
                         }
+                        Ayuda("Agrandar el radio busca las visitas de los últimos 30 días que antes quedaban fuera; achicarlo no quita las que ya hay.")
+                    }
+                    renombrar?.let { t ->
+                        androidx.compose.material3.AlertDialog(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
+                            text = { OutlinedTextField(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
+                            confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = { Repo.guardarLugar(l.copy(nombre = t.trim())); renombrar = null }) { Text("Guardar") } },
+                            dismissButton = { TextButton(onClick = { renombrar = null }) { Text("Cancelar") } })
+                    }
+                    if (borrar) {
+                        val suyas = Repo.visitas.filter { it.lugar == l.id }
+                        val otros = Repo.lugares.filter { it.id != l.id }
+                        fun quitar(pasarA: String?, ignorar: Boolean) {
+                            if (ignorar) io.github.ruddy2003.vestigium.data.Lugares.ignorarLugar(l)
+                            Repo.borrarLugar(l.id, pasarA); Geocercas.registrar(ctx); borrar = false
+                            io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Lugar quitado") {
+                                Repo.guardarLugar(l); suyas.forEach { Repo.guardarVisita(it) }; Geocercas.registrar(ctx)
+                                if (ignorar) Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados.dropLast(1)) }
+                            }
+                        }
+                        androidx.compose.material3.AlertDialog(onDismissRequest = { borrar = false }, title = { Text("Quitar «${l.nombre}»") },
+                            text = {
+                                Column {
+                                    if (suyas.isEmpty()) Ayuda("No tiene visitas guardadas.")
+                                    else {
+                                        Text("¿Qué hago con sus ${suyas.size} visitas?", style = MaterialTheme.typography.bodyMedium)
+                                        if (otros.isNotEmpty()) {
+                                            Etiqueta("Pasarlas a…")
+                                            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                                otros.forEach { o -> io.github.ruddy2003.vestigium.ui.Ficha(o.nombre, false) { quitar(o.id, false) } }
+                                            }
+                                        }
+                                    }
+                                    TextButton(onClick = { quitar(null, true) }, modifier = Modifier.padding(top = 8.dp)) {
+                                        Text("quitarlo e ignorar este sitio para siempre", color = MaterialTheme.colorScheme.error)
+                                    }
+                                }
+                            },
+                            confirmButton = { TextButton(onClick = { quitar(null, false) }) { Text(if (suyas.isEmpty()) "Quitar" else "Quitar con sus visitas", color = MaterialTheme.colorScheme.error) } },
+                            dismissButton = { TextButton(onClick = { borrar = false }) { Text("Cancelar") } })
                     }
                 }
             }
@@ -336,3 +393,36 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
         lugares.take(6).forEach { Text(it.nombre, fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 11.sp, color = tenue) }
     }
 }
+
+/** Una visita de un día (N-05): «fue en…» otro de tus lugares, o «no estuve aquí». Las dos con Deshacer. */
+@Composable
+fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Unit) {
+    val actual = Repo.lugares.firstOrNull { it.id == v.lugar }
+    androidx.compose.material3.AlertDialog(onDismissRequest = cerrar,
+        title = { Text("${actual?.nombre ?: "Lugar quitado"} · ${Fechas.horaDe(v.entrada)}" + (v.salida?.let { "–${Fechas.horaDe(it)}" } ?: "")) },
+        text = {
+            Column {
+                Etiqueta("Fue en…")
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Repo.lugares.forEach { l ->
+                        io.github.ruddy2003.vestigium.ui.Ficha(l.nombre, l.id == v.lugar) {
+                            if (l.id != v.lugar) {
+                                Repo.guardarVisita(v.copy(lugar = l.id))
+                                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita pasada a ${l.nombre}") { Repo.guardarVisita(v) }
+                            }
+                            cerrar()
+                        }
+                    }
+                }
+                Ayuda("Si no fue en ninguno de tus lugares, «no estuve aquí» la quita.", Modifier.padding(top = 6.dp))
+            }
+        },
+        confirmButton = { TextButton(onClick = cerrar) { Text("Listo") } },
+        dismissButton = {
+            TextButton(onClick = {
+                Repo.borrarVisita(v.id); cerrar()
+                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Visita quitada") { Repo.guardarVisita(v) }
+            }) { Text("no estuve aquí", color = MaterialTheme.colorScheme.error) }
+        })
+}
+

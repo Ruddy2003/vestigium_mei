@@ -436,7 +436,10 @@ fun PantallaMundo(nav: Nav) {
             borrar?.let { b ->
                 AlertDialog(onDismissRequest = { borrar = null }, title = { Text("¿Quitar ${b.nombre}?") },
                     text = { Text("Se borra lo que anotaste a mano. Si tus ubicaciones pasan por ahí, la ciudad seguirá apareciendo.") },
-                    confirmButton = { TextButton(onClick = { Repo.cambiarConfig { c -> c.copy(ciudades_visitadas = c.ciudades_visitadas.filter { it.id != b.id }) }; borrar = null }) { Text("quitar") } },
+                    confirmButton = { TextButton(onClick = {
+                        Repo.cambiarConfig { c -> c.copy(ciudades_visitadas = c.ciudades_visitadas.filter { it.id != b.id }) }; borrar = null
+                        io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Ciudad quitada") { Repo.cambiarConfig { c -> if (c.ciudades_visitadas.any { it.id == b.id }) c else c.copy(ciudades_visitadas = c.ciudades_visitadas + b) } }
+                    }) { Text("quitar") } },
                     dismissButton = { TextButton(onClick = { borrar = null }) { Text("cancelar") } })
             }
         }
@@ -708,8 +711,12 @@ fun PantallaRascar(nav: Nav) {
             TextButton(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
                 Text(Estilo.pantalla("Mapa para rascar", io.github.ruddy2003.vestigium.ui.Romano.latin("Mapa para rascar")).first, style = MaterialTheme.typography.titleLarge)
-                Ayuda("${visitados.size} países · toca un país para verlo; pellizca para acercarte")
+                Ayuda("${visitados.size} países · toca un país para verlo; pellizca o usa − y +")
             }
+            // Alternativa visible a pellizcar y al doble toque (N-24).
+            TextButton(onClick = { zoom = (zoom / 1.6f).coerceAtLeast(1f); if (zoom == 1f) pan = Offset.Zero }) { Text("−", style = MaterialTheme.typography.titleLarge) }
+            TextButton(onClick = { zoom = (zoom * 1.6f).coerceAtMost(16f) }) { Text("+", style = MaterialTheme.typography.titleLarge) }
+            TextButton(onClick = { zoom = 1f; pan = Offset.Zero }) { Text("todo", style = MaterialTheme.typography.labelLarge) }
         }
         Box(Modifier.weight(1f).fillMaxWidth().onSizeChanged { area = it }
             .pointerInput(Unit) {
@@ -928,7 +935,10 @@ fun PantallaUnesco(nav: Nav) {
                     Repo.cambiarConfig { c ->
                         when {
                             !visto -> c.copy(unesco_marcados = c.unesco_marcados + SitioMarcado(s.i, Fechas.diaLogico()), unesco_descartados = c.unesco_descartados - s.i)
-                            manual -> c.copy(unesco_marcados = c.unesco_marcados.filter { it.id != s.i })
+                            manual -> c.copy(unesco_marcados = c.unesco_marcados.filter { it.id != s.i }).also { _ ->
+                                val previo = c.unesco_marcados.filter { it.id == s.i }
+                                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Sitio quitado") { Repo.cambiarConfig { cc -> cc.copy(unesco_marcados = cc.unesco_marcados + previo.filter { p -> cc.unesco_marcados.none { it.id == p.id } }) } }
+                            }
                             else -> c.copy(unesco_descartados = (c.unesco_descartados + s.i).distinct())
                         }
                     }

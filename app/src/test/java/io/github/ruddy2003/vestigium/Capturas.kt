@@ -522,7 +522,7 @@ class Capturas {
     @Test fun sobres3() = sobres(listOf(TemaId.GOTICO, TemaId.ESPACIO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.CIBER))
 
     private fun cartaLectura(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 2400) {
-        Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Javier")))
+        Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Ana")))
         cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.carta = "k4"
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(navVacia)
     }
@@ -761,13 +761,12 @@ class Capturas {
     @Test fun campanasEspacio() = campanas(TemaId.ESPACIO, true)
     @Test fun campanasRomano() = campanas(TemaId.ROMANO, false)
     @Test fun campanasSeda() = campanas(TemaId.SEDA, true)
+    // El hall vive dentro de Logros (la pantalla PantallaHall se quitó en N-25; la ruta «hall» abre Logros).
     private fun hall(tema: TemaId, oscuro: Boolean) = v67(tema, oscuro, 3400, { it.copy(hall_logros = listOf("diario_30", "ciudades_2", "paises_5", "unesco_1", "continentes_2", "pasos_dia_10000", "racha_diario_7", "diario_7")) }) {
         mundoEjemplo(); io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
-        io.github.ruddy2003.vestigium.ui.pantallas.PantallaHall(navVacia)
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia)
     }
     @Test fun hallRomano() = hall(TemaId.ROMANO, false)
-    @Test fun hallMedieval() = hall(TemaId.MEDIEVAL, false)
-    @Test fun hallCiber() = hall(TemaId.CIBER, true)
     @Test fun hallBotanico() = hall(TemaId.BOTANICO, false)
     @Test fun hallAndalus() = hall(TemaId.ANDALUS, true)
 

@@ -226,9 +226,13 @@ private fun FilaLogro(g: Logros.Logro) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+            var confirmar by remember(g.id) { mutableStateOf(false) }
             if (abierto && g.propio) TextButton(onClick = {
+                if (!confirmar) { confirmar = true; return@TextButton }
+                val previos = Repo.config.logros_propios.filter { "p_" + it.id == g.id }
                 Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios.filterNot { "p_" + it.id == g.id }) }
-            }) { Text("borrar este logro", style = MaterialTheme.typography.labelMedium) }
+                io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Logro borrado") { Repo.cambiarConfig { c -> c.copy(logros_propios = c.logros_propios + previos.filter { p -> c.logros_propios.none { it.id == p.id } }) } }
+            }) { Text(if (confirmar) "¿borrar de verdad?" else "borrar este logro", style = MaterialTheme.typography.labelMedium) }
         }
     }
 }

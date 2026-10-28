@@ -90,20 +90,23 @@ fun CorazonFrase(f: Frases.Frase, color: Color, modifier: Modifier = Modifier, f
 }
 
 /** Una frase en la lista: del día, de Kindle o copiada de una obra. [quitar] la saca de la lista. */
-private class ItemFrase(val clave: String, val original: String?, val texto: String, val autor: String, val origen: String, val fecha: String, val obra: String?, val quitar: () -> Unit)
+private class ItemFrase(val clave: String, val original: String?, val texto: String, val autor: String, val origen: String, val fecha: String, val obra: String?,
+                        val restaurar: () -> Unit = {}, val quitar: () -> Unit)
 
 /** Las frases que guardaste con el corazón: las del día (de todos los temas), los subrayados de Kindle y las citas de tus obras. */
 @Composable
 fun PantallaFrasesGuardadas(nav: Nav) {
     val delDia = Repo.config.frases_guardadas.map { g ->
         ItemFrase("f" + g.texto + g.autor, g.original, g.texto, g.autor,
-            if (g.tema == "kindle") "Subrayado de Kindle" else "Frase del día · " + (TemaId.entries.firstOrNull { it.id == g.tema }?.nombre ?: g.tema), g.fecha, null) {
+            if (g.tema == "kindle") "Subrayado de Kindle" else "Frase del día · " + (TemaId.entries.firstOrNull { it.id == g.tema }?.nombre ?: g.tema), g.fecha, null,
+            restaurar = { Repo.cambiarConfig { c -> if (c.frases_guardadas.any { it.texto == g.texto && it.autor == g.autor }) c else c.copy(frases_guardadas = c.frases_guardadas + g) } }) {
             Repo.cambiarConfig { c -> c.copy(frases_guardadas = c.frases_guardadas.filterNot { it.texto == g.texto && it.autor == g.autor }) }
         }
     }
     val deObras = Repo.obras.flatMap { o -> o.citas.filter { it.favorita }.map { c ->
         ItemFrase("c" + c.id, null, c.texto, listOfNotNull(o.autor.ifBlank { null }, o.titulo).joinToString(", ") + (c.pagina.ifBlank { null }?.let { if (it.all { ch -> ch.isDigit() }) ", p. $it" else ", $it" } ?: ""),
-            "Cita de " + (TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre?.lowercase() ?: "obra"), c.fecha.ifBlank { o.agregado }, o.id) {
+            "Cita de " + (TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre?.lowercase() ?: "obra"), c.fecha.ifBlank { o.agregado }, o.id,
+            restaurar = { Repo.obras.firstOrNull { it.id == o.id }?.let { x -> Repo.guardarObra(x.copy(citas = x.citas.map { if (it.id == c.id) it.copy(favorita = true) else it })) } }) {
             Repo.obras.firstOrNull { it.id == o.id }?.let { x -> Repo.guardarObra(x.copy(citas = x.citas.map { if (it.id == c.id) it.copy(favorita = false) else it })) }
         }
     } }
@@ -130,7 +133,7 @@ fun PantallaFrasesGuardadas(nav: Nav) {
                     Row(Modifier.fillMaxWidth().padding(top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text("${g.origen} · ${Fechas.relativo(g.fecha)}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
                         TextButton(onClick = {
-                            if (armado == g.clave) { sentir(Sentidos.Evento.TOQUE); g.quitar(); armado = null } else armado = g.clave
+                            if (armado == g.clave) { sentir(Sentidos.Evento.TOQUE); g.quitar(); armado = null; io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Frase quitada") { g.restaurar() } } else armado = g.clave
                         }) {
                             Text(if (armado == g.clave) "¿Quitar?" else "Quitar", color = if (armado == g.clave) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                         }

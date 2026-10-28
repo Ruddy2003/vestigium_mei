@@ -169,8 +169,9 @@ object Avisos {
         val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_DIARIO))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("¿Cómo estuvo tu día?")
-            .setContentText("Llena tu diario. Si fue un día difícil, basta con un número.")
-            .setContentIntent(abrirApp(ctx, 2002, "dia"))
+            .setContentText("Llena el día. Si fue un día difícil, basta con un número.")
+            // Abre «Llenar el día» (la hoja de la noche de hoy), no solo la pestaña (N-23).
+            .setContentIntent(abrirApp(ctx, 2002, "diario"))
             .addAction(0, "Día difícil: solo un número", quick(ctx, 2003, QuickActivity.M_MINIMO))
             .setAutoCancel(true)
         mostrar(ctx, 2002, b)
@@ -298,6 +299,23 @@ object Avisos {
             .setContentIntent(abrirApp(ctx, ID_SUPLEMENTOS, "suplementos"))
             .addAction(0, "Ya los tomé", accion(2041, Recordatorios.TOME))
             .addAction(0, "En una hora", accion(2042, Recordatorios.UNA_HORA))
+            .setAutoCancel(true)
+        mostrar(ctx, ID_SUPLEMENTOS, b)
+    }
+
+    /** Lo que anotaron «Ya los tomé» o el mosaico, con «deshacer» durante 10 minutos. */
+    fun tomasAnotadas(ctx: Context, tomas: List<io.github.ruddy2003.vestigium.data.TomaSuplemento>) {
+        crearCanales(ctx)
+        val quitar = PendingIntent.getBroadcast(ctx, 2043, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, Recordatorios.DESHACER_TOMAS)
+            .putExtra(Recordatorios.TOMAS, tomas.map { it.id }.toTypedArray()), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle("Anotado")
+            .setContentText(io.github.ruddy2003.vestigium.data.Suplementos.resumen(tomas))
+            .setContentIntent(abrirApp(ctx, ID_SUPLEMENTOS, "suplementos"))
+            .addAction(0, "Deshacer", quitar)
+            .setTimeoutAfter(10 * 60_000L)
+            .setOnlyAlertOnce(true).setSilent(true)
             .setAutoCancel(true)
         mostrar(ctx, ID_SUPLEMENTOS, b)
     }

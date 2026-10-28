@@ -187,7 +187,8 @@ fun PantallaBiblioteca(nav: Nav) {
     // Lo que se abrió para añadir y se dejó sin título no se queda.
     LaunchedEffect(Unit) { Repo.obras.filter { it.titulo.isBlank() }.forEach { Repo.borrarObra(it.id) } }
 
-    Hoja("Obras", nav.atras, "Libros, películas, series, juegos y artículos: qué empezaste, qué terminaste, qué te dejó y qué frases te quedaron.") {
+    // «Lista y pendientes», para no confundirla con la galería «Obras» (N-23).
+    Hoja("Lista y pendientes", nav.atras, "Libros, películas, series, juegos y artículos: qué tienes pendiente, qué empezaste, qué terminaste, qué te dejó y qué frases te quedaron.", latin = "INDEX OPERVM") {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("todo", filtro == null) { filtro = null }
             TIPOS_OBRA.forEach { t -> Ficha(t.nombre.lowercase(), filtro == t.id) { filtro = if (filtro == t.id) null else t.id } }
@@ -546,7 +547,10 @@ private fun Citas(o: Obra, sentir: (Sentidos.Evento) -> Unit) {
                     sentir(Sentidos.Evento.ELEGIR)
                     Repo.guardarObra(o.copy(citas = o.citas.map { if (it.id == c.id) it.copy(favorita = !it.favorita) else it }))
                 }) { Text(if (c.favorita) "♥" else "♡", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleLarge) }
-                TextButton(onClick = { if (armado == c.id) { Repo.guardarObra(o.copy(citas = o.citas.filterNot { it.id == c.id })); armado = null } else armado = c.id }) {
+                TextButton(onClick = { if (armado == c.id) {
+                    Repo.guardarObra(o.copy(citas = o.citas.filterNot { it.id == c.id })); armado = null
+                    io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Cita borrada") { Repo.obras.firstOrNull { it.id == o.id }?.let { x -> if (x.citas.none { it.id == c.id }) Repo.guardarObra(x.copy(citas = x.citas + c)) } }
+                } else armado = c.id }) {
                     Text(if (armado == c.id) "¿borrar?" else "×", color = if (armado == c.id) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }

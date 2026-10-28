@@ -17,6 +17,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -38,23 +41,31 @@ fun Hoja(titulo: String, atras: (() -> Unit)? = null, subtitulo: String? = null,
          ajustes: (() -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
     Column(modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 16.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (atras != null) TextButton(onClick = atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
+            // El texto cambia con el tema («← tornar», «cd ..»); para TalkBack siempre dice «Volver» (N-27).
+            if (atras != null) TextButton(onClick = atras, modifier = Modifier.semantics { contentDescription = "Volver" }) {
+                Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clearAndSetSemantics { })
+            }
         }
         if (encabezado != null) encabezado()
         else {
-            val (nombre, comentario) = Estilo.pantalla(titulo, latin)
+            val (nombre, espanol, comentario) = Estilo.pantallaEnLinea(titulo, latin)
             Row(Modifier.fillMaxWidth().padding(top = if (atras == null) 14.dp else 2.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     buildAnnotatedString {
-                        append(nombre)
+                        // El nombre del tema con más contraste y el español al lado, del mismo tamaño y un poco más tenue (P-1).
+                        if (espanol != null) withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)) { append(nombre) }
+                        else append(nombre)
                         // En cyberpunk el título termina con un cursor de terminal.
                         if (Estilo.tema == TemaId.CIBER) withStyle(SpanStyle(color = MaterialTheme.colorScheme.secondary)) { append("_") }
+                        if (espanol != null) withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · $espanol") }
                     },
                     style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f),
                 )
                 val guia = LocalGuia.current
                 val seccionGuia = io.github.ruddy2003.vestigium.data.GuiaUso.PANTALLAS[titulo]
-                if (guia != null && seccionGuia != null) TextButton(onClick = { guia(seccionGuia) }) { Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) }
+                if (guia != null && seccionGuia != null) TextButton(onClick = { guia(seccionGuia) }, modifier = Modifier.semantics { contentDescription = "Ayuda de esta pantalla" }) {
+                    Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clearAndSetSemantics { })
+                }
                 if (buscar != null) BotonBuscar(onClick = buscar)
                 if (ajustes != null) BotonAjustes(Modifier.padding(start = 4.dp), onClick = ajustes)
                 BotonModo()

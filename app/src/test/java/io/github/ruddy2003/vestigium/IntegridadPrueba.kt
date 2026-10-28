@@ -7,6 +7,7 @@ import io.github.ruddy2003.vestigium.data.Gasto
 import io.github.ruddy2003.vestigium.data.Importar
 import io.github.ruddy2003.vestigium.data.Respaldos
 import io.github.ruddy2003.vestigium.data.SCHEMA_V
+import io.github.ruddy2003.vestigium.data.SaludDia
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -50,6 +51,18 @@ class IntegridadPrueba {
         // Las respuestas se suman; si chocan, manda lo de aquí.
         val h = Fusion.experimento(exp(hecho = mapOf("2026-09-08" to true)), exp(hecho = mapOf("2026-09-08" to false, "2026-09-09" to true)))!!
         assertEquals(mapOf("2026-09-08" to true, "2026-09-09" to true), h.hecho)
+    }
+
+    @Test fun suenoCorregidoNoLoPisaElRespaldo() {
+        val aqui = SaludDia("2026-10-20", sueno_min = 420, sueno_inicio = "2026-10-19T23:30:00-06:00", sueno_fin = "2026-10-20T06:30:00-06:00", sueno_manual = true, pasos = 100)
+        val respaldo = SaludDia("2026-10-20", sueno_min = 180, sueno_inicio = "2026-10-19T23:30:00-06:00", sueno_fin = "2026-10-20T02:30:00-06:00", pasos = 9000)
+        val n = Fusion.salud(aqui, respaldo)
+        // El sueño corregido se queda; lo demás viene del respaldo.
+        assertEquals(420, n.sueno_min); assertTrue(n.sueno_manual); assertEquals(9000L, n.pasos)
+        // Sin corrección aquí, o si el respaldo también estaba corregido, manda el respaldo.
+        assertEquals(180, Fusion.salud(aqui.copy(sueno_manual = false), respaldo).sueno_min)
+        assertEquals(300, Fusion.salud(aqui, respaldo.copy(sueno_min = 300, sueno_manual = true)).sueno_min)
+        assertEquals(180, Fusion.salud(null, respaldo).sueno_min)
     }
 
     @Test fun driveNoSeEmpobrece() {

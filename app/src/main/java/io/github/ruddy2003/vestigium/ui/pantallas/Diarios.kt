@@ -137,6 +137,8 @@ fun PantallaDiario(nav: Nav) {
                 BotonSecundario("✦  momentos", Modifier.weight(1f)) { nav.ir("biblioteca_momentos") }
                 BotonSecundario("✉  cartas", Modifier.weight(1f)) { nav.ir("cartas") }
             }
+            // La lista editable de tus registros de ánimo (N-25).
+            BotonSecundario("✦  todos tus registros", Modifier.fillMaxWidth().padding(top = 8.dp)) { nav.ir("momentos") }
         }
         // La línea de tiempo y la exportación empiezan plegadas, y se vuelven a plegar al cerrar la app o al cambiar de día.
         Seccion("Línea de tiempo", "Entradas, momentos y sueños, día por día, con buscador y filtros.", autoPlegar = true) { Column {

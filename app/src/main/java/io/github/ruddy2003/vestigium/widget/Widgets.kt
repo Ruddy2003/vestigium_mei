@@ -167,7 +167,8 @@ object Widgets {
             clic(v, BOTONES_MOMENTO[i], pi(ctx, 3200 + i, quick(ctx, QuickActivity.M_MOMENTO).putExtra(QuickActivity.TIPO, id)))
         }
         clic(v, R.id.m_mas, pi(ctx, 3301, quick(ctx, QuickActivity.M_MENU)))
-        clic(v, R.id.m_diario, pi(ctx, 3302, abrir(ctx, "dia")))
+        // «✎ diario» abre «Llenar el día» (la hoja de la noche de hoy), como el aviso de la noche (N-23).
+        clic(v, R.id.m_diario, pi(ctx, 3302, abrir(ctx, "diario")))
         return v
     }
 
@@ -185,16 +186,27 @@ object Widgets {
         val gHoy = Repo.gastos.filter { it.fecha == hoy }.sumOf { it.monto }
         val gMes = Repo.gastos.filter { it.fecha.startsWith(hoy.take(7)) }.sumOf { it.monto }
         v.setTextViewText(R.id.sub_gasto, if (Repo.config.discreto) "" else "hoy ${dinero(gHoy)} · mes ${dinero(gMes)}")
-        // Las categorías que más usas primero; si aún no hay historia, el orden de tus ajustes.
+        // Primero tus frecuentes con su monto: un toque registra (N-29). Si sobran botones, las categorías que más usas
+        // (o el orden de tus ajustes), que abren la hoja con la categoría puesta.
+        val frecuentes = io.github.ruddy2003.vestigium.data.Dinero.frecuentes(6, hoy)
         val usadas = Repo.gastos.filter { it.fecha >= Fechas.sumar(hoy, -90) }.groupingBy { it.categoria }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
-        val cats = (usadas + Repo.config.categorias).distinct().take(6)
+        val cats = (usadas + Repo.config.categorias).distinct().take(6 - frecuentes.size)
         BOTONES_GASTO.forEachIndexed { i, id ->
-            val c = cats.getOrNull(i)
-            if (c == null) v.setViewVisibility(id, android.view.View.INVISIBLE)
-            else {
-                v.setViewVisibility(id, android.view.View.VISIBLE)
-                v.setTextViewText(id, c)
-                clic(v, id, pi(ctx, 3500 + i, quick(ctx, QuickActivity.M_GASTO).putExtra(QuickActivity.CATEGORIA, c)))
+            val f = frecuentes.getOrNull(i)
+            val c = cats.getOrNull(i - frecuentes.size)
+            when {
+                f != null -> {
+                    v.setViewVisibility(id, android.view.View.VISIBLE)
+                    v.setTextViewText(id, "${f.sub}\n${dinero(f.monto)}")
+                    clic(v, id, pi(ctx, 3500 + i, quick(ctx, QuickActivity.M_GASTO).putExtra(QuickActivity.CATEGORIA, f.categoria)
+                        .putExtra(QuickActivity.SUBCATEGORIA, f.sub).putExtra(QuickActivity.MONTO, f.monto)))
+                }
+                c != null -> {
+                    v.setViewVisibility(id, android.view.View.VISIBLE)
+                    v.setTextViewText(id, c)
+                    clic(v, id, pi(ctx, 3500 + i, quick(ctx, QuickActivity.M_GASTO).putExtra(QuickActivity.CATEGORIA, c)))
+                }
+                else -> v.setViewVisibility(id, android.view.View.INVISIBLE)
             }
         }
         clic(v, R.id.g_otro, pi(ctx, 3510, quick(ctx, QuickActivity.M_GASTO)))
@@ -209,7 +221,8 @@ object Widgets {
         v.setTextViewText(R.id.titulo_sueno, Estilo.widget("sueno"))
         val col = colores()
         val tonos = intArrayOf(col.animo[0], col.animo[2], col.animo[3], col.animo[5], col.animo[6])
-        val f = Fechas.diaLogico()
+        // El día del despertar, igual que al guardar la calidad (H-NAV-7).
+        val f = Fechas.hoyCalendario()
         val d = Repo.dias[f]
         val reloj = Repo.salud[f]?.sueno_min
         v.setTextViewText(R.id.sub_sueno, listOfNotNull(reloj?.let { "reloj ${it / 60} h ${"%02d".format(it % 60)}" }, d?.sueno_calidad?.let { "calidad $it" }).joinToString(" · "))

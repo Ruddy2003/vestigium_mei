@@ -64,6 +64,14 @@ object Seleccion {
     /** Día que se está llenando en la hoja de la noche, y día al que vuelve Día al cerrarla. */
     var noche by mutableStateOf<String?>(null)
     var diaAbierto by mutableStateOf<String?>(null)
+    /** Días sin llenar que se están rellenando juntos en la hoja de la noche («ponerte al día», N-09). */
+    var ponerse by mutableStateOf<List<String>>(emptyList())
+    /** El Día se abre con la corrección del sueño abierta (acción del buscador, N-22). */
+    var editarSueno by mutableStateOf(false)
+    /** Texto con el que se abre el buscador (una @persona o un #tema del resumen semanal). */
+    var buscar: String? = null
+    /** Día para el que se abre Notas desde «＋ agregar a este día» (N-26). */
+    var notaPara: String? = null
     /** Entrada abierta en la biblioteca del diario. */
     var entrada by mutableStateOf<String?>(null)
     /** Sueño abierto en la biblioteca de sueños, y carta abierta en la de cartas. */
@@ -75,7 +83,14 @@ object Seleccion {
     var cinta by mutableStateOf<String?>(null)
     /** Día abierto en la libreta de momentos. */
     var momentos by mutableStateOf<String?>(null)
-    fun abrir(nav: Nav, fecha: String) { pedida = fecha; ultimoMes = Fechas.mesDe(fecha); nav.pestana("dia") }
+    /**
+     * Abre el Día de [fecha] encima de la pantalla actual, para que «atrás» regrese a ella (N-12). La pestaña Hoy no cambia
+     * de fecha por esto.
+     */
+    fun abrir(nav: Nav, fecha: String) { pedida = fecha; ultimoMes = Fechas.mesDe(fecha); nav.ir("dia_fecha") }
+
+    /** Olvida las fechas que quedaron de la última vez (noche, cinta, libreta), para abrir esas pantallas en hoy. */
+    fun limpiarFechas() { noche = null; cinta = null; momentos = null }
 }
 
 private data class CapaCal(val id: String, val nombre: String, val divergente: Boolean, val valor: (String) -> Double?, val rango: (List<Double>) -> Pair<Double, Double>, val texto: (Double) -> String)

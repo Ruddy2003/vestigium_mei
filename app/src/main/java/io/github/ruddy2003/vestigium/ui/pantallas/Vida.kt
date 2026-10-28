@@ -68,7 +68,7 @@ fun PantallaVida(nav: Nav) {
     val mes = hoy.take(7)
     val diasMes = Repo.dias.keys.count { it.startsWith(mes) && Repo.dias[it]?.let { d -> d.valencia != null || d.nota.isNotBlank() } == true }
     val anio = hoy.take(4)
-    val ir: (String) -> Unit = { nav.ir(it) }
+    val ir: (String) -> Unit = { if (it == "cinta") Seleccion.cinta = null; nav.ir(it) }
     Hoja("Vida", subtitulo = "Tu vida vista de lejos: la semana, el año, tu gente, tus lugares y tus logros.", buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }) {
         RejillaTarjetas(listOf(
             Tarjetita("Resumen semanal", a?.let { "%.1f".format(it) + flecha } ?: "—", "ánimo de esta semana", "semana"),
@@ -82,14 +82,8 @@ fun PantallaVida(nav: Nav) {
             Tarjetita("Totales", "${Repo.dias.size}", "días de datos" + (Repo.dias.keys.minOrNull()?.let { " desde ${Fechas.corto(it)}" } ?: ""), "totales"),
             Tarjetita("Mapa", "${Repo.lugares.size}", "lugares marcados", "mapa"),
         ), ir)
-        Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            RecuadroTuAnio(nav)
-            RecuadroLogros(nav)
-            RecuadroCampanas(nav)
-            RecuadroMapas(nav)
-            RecuadroObras(nav)
-            RecuadroOtrasVidas(nav)
-        }
+        // Lo semanal arriba; las galerías juntas y plegadas abajo (N-20).
+        Column(Modifier.padding(top = 16.dp)) { RecuadroCampanas(nav) }
         Seccion("Dinero y sustancias") {
             val gasto = Repo.gastos.filter { it.dia.startsWith(mes) }.sumOf { it.monto }
             val ingreso = Repo.ingresos.filter { it.dia.startsWith(mes) }.sumOf { it.monto }
@@ -99,6 +93,15 @@ fun PantallaVida(nav: Nav) {
                 Tarjetita("Sustancias", "${semanaSus.map { it.fecha }.distinct().size}", "días con algo en 7 días", "sustancias"),
                 Tarjetita("Enfoque y siestas", horasMin(io.github.ruddy2003.vestigium.data.Enfoque.delDia(hoy).filterKeys { it != "siesta" }.values.sum()), "de enfoque hoy", "enfoque"),
             ), ir)
+        }
+        Seccion("Galerías", "Tu año en historias, logros, mapas, obras y otras vidas.", plegable = true, plegadaPorDefecto = true) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                RecuadroTuAnio(nav)
+                RecuadroLogros(nav)
+                RecuadroMapas(nav)
+                RecuadroObras(nav)
+                RecuadroOtrasVidas(nav)
+            }
         }
     }
 }

@@ -98,7 +98,8 @@ fun PantallaAnalisis(nav: Nav) {
     val h = Herramienta.actual
     val info = HERRAMIENTAS.first { it.first == h }
 
-    Hoja("Análisis", nav.atras, subtitulo = "Pistas para entenderte. Ninguna prueba causas: para eso están los experimentos personales y los modelos en R.", latin = "ANALYSIS") {
+    // Cada herramienta con su nombre (N-23).
+    Hoja(info.second, nav.atras, subtitulo = "Pistas para entenderte. Ninguna prueba causas: para eso están los experimentos personales y los modelos en R.", latin = LATIN_H[h] ?: "ANALYSIS") {
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             HERRAMIENTAS.forEach { (id, n, _) -> Ficha(n, id == h) { Herramienta.actual = id } }
         }

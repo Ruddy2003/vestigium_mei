@@ -54,6 +54,16 @@ object Recaidas {
         return n
     }
 
+    /**
+     * Al borrar una recaída: si era la única de su día, el día deja de estar marcado (queda sin respuesta, porque no se sabe
+     * qué había antes). El hábito ligado se queda sin marcar, como lo dejó la recaída.
+     */
+    fun alBorrar(m: Momento) {
+        if (m.tipo != "recaida") return
+        val d = Repo.dias[m.fecha] ?: return
+        if (d.recaida == true && Repo.momentos.none { it.tipo == "recaida" && it.fecha == m.fecha && it.id != m.id }) Repo.guardarDia(d.copy(recaida = null))
+    }
+
     /** Días con recaída: los marcados en el día y los que tienen una recaída registrada con hora. */
     fun dias(): Set<String> = Repo.dias.values.filter { it.recaida == true }.map { it.fecha }.toSet() +
         Repo.momentos.filter { it.tipo == "recaida" }.map { it.fecha }
