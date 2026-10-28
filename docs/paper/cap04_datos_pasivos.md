@@ -1,6 +1,6 @@
 # Capítulo 4. Sensores, datos pasivos e importaciones
 
-> **Para qué sirve este capítulo.** Explica, fuente por fuente, **qué mide la app sin que tú escribas nada** (datos *pasivos*) y **qué datos entran cuando tú cargas un archivo** (datos *importados*): qué dato es, cómo se obtiene exactamente, qué tan confiable es, qué hace la app cuando falta y a qué día se asigna. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» (o «desde el esquema 13»), lo de la entrega 10e, posterior al módulo 14, «desde 10e», y todo está en el Apéndice D. Los ejemplos numéricos son **inventados**; no hay datos reales aquí.
+> **Para qué sirve este capítulo.** Explica, fuente por fuente, **qué mide la app sin que tú escribas nada** (datos *pasivos*) y **qué datos entran cuando tú cargas un archivo** (datos *importados*): qué dato es, cómo se obtiene exactamente, qué tan confiable es, qué hace la app cuando falta y a qué día se asigna. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v92 (la v91 más la entrega 10f; `SCHEMA_V = 15`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10d» (o «desde el esquema 13»), lo de la entrega 10e, posterior al módulo 14, «desde 10e», lo de la entrega 10f (las decisiones del autor sobre los hallazgos pendientes) «desde 10f», y todo está en el Apéndice D. Los ejemplos numéricos son **inventados**; no hay datos reales aquí.
 >
 > **Cómo leerlo.** Está escrito para entenderse sin ser experto, pero sin recortar la precisión: cuando una cifra o regla viene del código, se da tal cual (umbrales, ventanas de tiempo, mínimos). Cuando algo es una suposición mía o no pude comprobarlo, lo digo. Cada decisión se marca como **[Validado]** (respaldada por literatura o un estándar), **[Aproximación]** (razonable, pero con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app, sin estándar detrás). Los problemas encontrados se numeran H-3-n (el 3 es el número del módulo que los encontró, no del capítulo) y se detallan en `hallazgos.md`.
 
@@ -18,6 +18,7 @@
 | **RMSSD** | Una forma de medir la variabilidad del corazón (sección 4.5.2). |
 | **Día lógico** | El día de la app: empieza a las 05:00 (capítulo 2, sección 2.3). Un evento a las 01:00 cuenta para el día *anterior*. |
 | **Día de calendario** | El día normal, de 00:00 a 24:00. |
+| **Zona horaria y desfase con UTC** | La zona es la regla de hora de un lugar («America/Mexico_City»); el desfase, cuántas horas va ese lugar respecto a la hora universal (UTC): −6 en la Ciudad de México, +2 en Madrid en verano. Un mismo instante es las 15:30 en un sitio y las 23:30 en el otro (sección 4.3). |
 | **Pulso** | La tarea que la app ejecuta cada ~15 minutos en segundo plano (sección 4.2). |
 
 ---
@@ -74,6 +75,31 @@ Resultado: dentro de una misma fila del panel (digamos «martes»), la pantalla 
 
 Una consecuencia concreta (**H-3-2**), hasta el esquema 12: `primer_uso_h` (hora del primer uso del día) se calculaba con la ventana de calendario, así que el uso de las 01:00 de la madrugada aparecía como «primer uso» a la 01:00, no a la hora real en que te levantaste. Y la corrección «+24 si la hora es menor a 5» de `ultimo_uso_h` casi nunca llegaba a actuar, porque la ventana de calendario termina a las 24:00. Desde el esquema 13, con la ventana del día lógico, el primer uso es el de después de las 05:00 y la corrección sí actúa (`Estadistica.panel`); los días anteriores quedan como estaban y se reconocen por `ventana_pantalla`.
 
+**La hora local de entonces (desde 10f; H-1-7, D.109 y D.110).** Además del corte del día, importa **en qué zona horaria** se lee cada hora. Casi todo lo que guarda el teléfono es un **instante** (milisegundos desde 1970, igual en todo el mundo); la hora y el día salen de convertir ese instante con una zona. Hasta la v91, `Fechas.zona()` era la zona que el teléfono tiene **hoy** (`ZoneId.systemDefault()`), y con ella se convertía todo, también lo de hace meses (H-1-7).
+
+*Ejemplo (inventado).* Vives en UTC−6 y pasas una semana en Madrid (UTC+2). Allá te duermes a las 23:30, hora de Madrid. El reloj guarda la hora de dormir con su desfase (`…T23:30:00+02:00`). Al volver, la app convertía esa marca a la zona de hoy: 15:30, y `sueno_inicio_h` salía 15.5 en vez de 23.5. Del mismo modo, un punto de ubicación de las 09:00 del miércoles en Madrid (01:00 del miércoles en UTC−6) pasaba a contar para el día lógico del **martes**.
+
+**Cómo es desde 10f.**
+- **El historial de zonas.** La app guarda cada cambio de zona del teléfono en `Config.zonas`: una lista de «desde este instante, esta zona» (`CambioZona`). `Repo.registrarZona` anota la zona si cambió: al abrir la app, en cada pulso de 15 minutos y cuando Android avisa de un cambio de zona (`TIMEZONE_CHANGED`, en `ArranqueReceiver`).
+- **Cada instante con su zona.** `Fechas.zonaEn(ms)` busca en el historial la zona que regía en ese instante; antes del primer cambio guardado usa la primera zona de la lista, y con el historial vacío, la de hoy. Con ella se calculan la hora local (`local`), el día de calendario (`diaDeMillis`), el día lógico (`diaLogicoDeMillis`) y la marca ISO (`isoDeMillis`).
+- **Al revés: de una hora local a un instante.** `Fechas.millisDe` usa la zona que regía ese día. Así se calculan los bordes de cada día (`inicioDiaLogico`, `finDiaLogico`, `inicioDia`, `finDia`), cada uno con la zona de esa hora. Por eso un día con cambio de horario dura 23 o 25 horas, y el día de un viaje, las horas que toque: de UTC−6 a UTC+2, un día lógico dura 16 horas.
+- **Las marcas con desfase y las marcas en UTC.** Una nota guardada con su desfase se lee con **ese** desfase (`localDe`, `horaDe`, y en el panel `Exportar.horaDecimal`). Una marca en UTC (las que traen las importaciones, como el historial de Spotify) se pasa a la zona de entonces.
+
+**Lo guardado antes del historial.** La primera vez, `registrarZona` arma el historial con lo que ya hay: revisa las marcas de los momentos, las respuestas, las reacciones y las tomas de suplementos, en orden. Si **dos o más notas seguidas** traen un desfase que la zona de hoy no daría en ese instante, ese periodo queda con ese desfase (un desfase fijo, como «+02:00»); todo lo demás, con la zona de hoy. Una nota suelta con un desfase raro (por ejemplo, editada en otra zona) no abre un periodo. **[Diseño propio]**: reconstruye bien los viajes en que escribiste al menos dos notas; uno sin notas, o con una sola, se queda con la zona de hoy.
+
+**Las marcas en la exportación.** `vm_panel.csv` trae `desfase_utc_h` (el desfase con UTC a mediodía de ese día, `Fechas.desfaseH`: −6 en la Ciudad de México) y `cambio_horario` (1 si el desfase al empezar el día lógico no es el mismo que al terminar, `Fechas.cambioDeHora`: horario de verano o viaje). El Día lo dice debajo de la fecha, por ejemplo «cambio de horario: de UTC−6 a UTC+2 · el día duró 16 h». En R, `vm_hora_local(ts)` da la hora de una marca con su propio desfase (7.5 = 7:30); `vm_fecha_hora` sigue pasando todo a `vm_zona` (es el mismo instante, mostrado con otra hora).
+
+**Quiénes lo usan.** Health Connect, la pantalla, las fotos, WhatsApp, Kindle, las ubicaciones, Spotify y Google, además de la tabla por hora, la cinta y la estadística (cada ficha lo dice abajo).
+
+**Cuándo falla.**
+- Es la zona **del teléfono**, no la tuya: si el teléfono no ajusta la hora solo al viajar, la app no se entera del viaje.
+- Si Android no avisa del cambio, se anota en el siguiente pulso o al abrir la app. Lo de ese rato queda con la zona anterior.
+- Lo que el teléfono ya había guardado **por día** antes de 10f (sueño, pasos, pantalla, notificaciones, wifi) se calculó con la zona que tenía al sincronizar o al anotarlo, y no se recalcula. Lo que sí cambia es lo que la app saca de un instante al leer: las horas del panel, la tabla por hora, los kilómetros por día y los días del Mundo.
+- Los días de 23 o 25 horas (y los de un viaje) acumulan más o menos minutos que un día normal en las variables que suman tiempo. `cambio_horario` permite separarlos.
+- No se probó en un teléfono que llegue el aviso `TIMEZONE_CHANGED` (Apéndice D, D.118: solo hay pruebas JVM del historial y de los bordes del día).
+
+Mientras el teléfono no cambie de zona, nada de esto mueve una sola cifra.
+
 ---
 
 ## 4.4 Fuente por fuente: teléfono
@@ -106,7 +132,7 @@ Resultado: A = 30 min, B = 30 min, total 60 min. Por hora: 22:00–23:00 → 50 
 
 **Relación con el autorreporte.** Una revisión sistemática de 106 tamaños de efecto encontró que lo que la gente *dice* que usa los medios digitales **solo se correlaciona moderadamente** con lo que registran los dispositivos, y que los autorreportes rara vez reflejan con exactitud el uso real (Parry et al., 2021). Esa es la razón principal para medirla de forma pasiva. **[Validado]**.
 
-**Día y cobertura.** Hasta el esquema 12, ventana de **calendario** (H-3-1, H-3-2). Desde el esquema 13, ventana del **día lógico**: de las 05:00 de ese día a las 05:00 del siguiente, y en `por_hora_min` las horas 0 a 4 son de la madrugada siguiente. La sincronización recalcula el día lógico de hoy y el de ayer (2 días).
+**Día y cobertura.** Hasta el esquema 12, ventana de **calendario** (H-3-1, H-3-2). Desde el esquema 13, ventana del **día lógico**: de las 05:00 de ese día a las 05:00 del siguiente, y en `por_hora_min` las horas 0 a 4 son de la madrugada siguiente. La sincronización recalcula el día lógico de hoy y el de ayer (2 días). Desde 10f (D.109), los bordes de la ventana y el reparto por hora usan la zona que tenía el teléfono en cada instante (`Fechas.zonaEn`, sección 4.3): en un día de 25 horas, la hora que se repite suma sus dos vueltas en el mismo casillero de `por_hora_min`, y en uno de 23, la hora que se salta queda en 0. `primer_uso_h` y `ultimo_uso_h` se leen con el desfase guardado en cada marca.
 
 **Cuando falta.** Sin permiso de «acceso a uso», la función devuelve nulo y esa fecha no se guarda.
 
@@ -139,7 +165,7 @@ Solo si el reloj registró el sueño de esa noche (`sueno_inicio`, `sueno_fin`):
 2. la velocidad implícita es menor a **70 m/s** (252 km/h: descarta saltos imposibles), y
 3. la distancia es mayor a **30 m** (descarta el «temblor» del GPS quieto).
 
-La distancia se asigna al **día lógico** del segundo punto. Desde la entrega 10c (P-15, D.63), un día con puntos de ubicación pero sin ningún tramo que cuente vale **0 km**, no «sin dato».
+La distancia se asigna al **día lógico** del segundo punto (desde 10f, con la zona que tenía el teléfono en ese instante, sección 4.3; también la hora `ts` de `vm_ubicaciones.csv`). Desde la entrega 10c (P-15, D.63), un día con puntos de ubicación pero sin ningún tramo que cuente vale **0 km**, no «sin dato».
 
 *Cómo interpretarlo.* Es una **cota inferior**: la línea recta entre dos puntos siempre es ≤ el camino real, y los tramos con huecos de más de 2 horas se pierden. Además, mezcla puntos de varias fuentes con precisiones distintas (fotos, importaciones de Maps), y cuánto se queda corta depende de cuántos puntos haya ese día: un día con pulsos retrasados o con huecos pierde más camino que uno bien muestreado. Úsala para comparar días entre sí con esa cautela, no como los kilómetros reales. **[Aproximación]** (**H-3-5**, resuelto por documentación: la propuesta era describirla como cota inferior, que es lo que hace este párrafo; la app no pondera ni filtra los puntos por fuente).
 
@@ -204,13 +230,13 @@ Cada pulso toma una **muestra** del estado del teléfono. Las variables resultan
 | 10:31 | 15 min | 15 |
 | 12:45 | 134 min (> 2 h) | **15** (no 134) |
 
-Total: 61 min contados. Entre 10:31 y 12:45 pasaron 134 min, pero solo 15 se contaron. La app prefiere **subestimar** a inventar. Consecuencia clave: `wifi_min + sin_wifi_min` **no suma 1 440**; son **«minutos observados»**, no minutos del día. Un día con el teléfono apagado seis horas simplemente tiene menos minutos. Esto es un **sesgo de subestimación conocido** y deliberado. **[Diseño propio]** (similar a la lógica de «último valor conocido» de la minería de series de tiempo; no tiene un referente estándar específico).
+Total: 61 min contados. Entre 10:31 y 12:45 pasaron 134 min, pero solo 15 se contaron. La app prefiere **subestimar** a inventar. Consecuencia clave: `wifi_min + sin_wifi_min` (más `wifi_sin_dato_min`, desde 10f) **no suma 1 440**; son **«minutos observados»**, no minutos del día. Un día con el teléfono apagado seis horas simplemente tiene menos minutos. Esto es un **sesgo de subestimación conocido** y deliberado. **[Diseño propio]** (similar a la lógica de «último valor conocido» de la minería de series de tiempo; no tiene un referente estándar específico).
 
 **Qué se mide en cada muestra** (todas con *try/catch*: si algo falla, esa pieza queda vacía):
 
 | Variable | Qué hace exactamente |
 |---|---|
-| **Wifi** | Nombre de la red (SSID). Si no hay red → suma a `sin_wifi_min`. Si hay red pero Android oculta el nombre → «wifi (sin nombre)». *(H-3-7: el módulo 3 temía que un dato «censurado» de Android se contara como «sin wifi». Según el código (`Percepcion.wifi`), solo cuenta «sin wifi» si la conexión no tiene red **ni** dirección IP (`networkId == −1` y `ipAddress == 0`) o si el sistema no da ninguna información; un nombre oculto cuenta como «wifi (sin nombre)». El riesgo es, por eso, poco probable; no lo pude comprobar en un teléfono.)* |
+| **Wifi** | Desde 10f (D.112; `Percepcion.wifi`), cada muestra cae en uno de tres casos. **Con wifi**: alguna red activa es wifi según `ConnectivityManager` (`TRANSPORT_WIFI`), o la conexión tiene red o dirección IP; se suma a esa red por su nombre (SSID) o, si Android lo oculta, a «wifi (sin nombre)». **Sin wifi** (`sin_wifi_min`): el wifi está apagado o el sistema dice que ninguna red activa es wifi. **Sin dato** (`wifi_sin_dato_min`, en `vm_conexiones.csv`): no se pudo saber (el sistema no respondió o la lectura falló). **[Diseño propio]** los tres casos. *(H-3-7: hasta la v91, «no hay información» y «no hay red» iban juntos a `sin_wifi_min`, que podía inflarse; desde 10f puede bajar, así que los días de antes y de después no son del todo comparables. Que `ConnectivityManager` responda así cuando Android esconde el nombre no se probó en un teléfono.)* |
 | **Audio** | Dispositivos de salida activos: audífonos (cable, USB o Bluetooth clase «headphones»), coche (Bluetooth clase «car audio/handsfree»), bocina, USB, pantalla HDMI, «bluetooth» genérico. Se guarda la categoría y el **nombre** del dispositivo. |
 | **Música** | `isMusicActive` del sistema de audio: ¿suena algo ahora? |
 | **Carga** | ¿Está enchufado? Más **carga nocturna**: si se enchufó entre las **20:00 y las 04:00** y estuvo enchufado **> 3 h y < 16 h**, se guarda inicio y fin como marca aproximada de cuándo dormiste. |
@@ -262,7 +288,7 @@ Qué **no** cuenta: notificaciones de la propia app, notificaciones «en curso»
 
 **Conteo diario.** Lee solo los **metadatos** de las fotos en la galería: cuántas hubo ese día lógico, de qué tipo (cámara: carpeta que empieza con `DCIM/`; captura de pantalla; otras) y cuántos videos. **Las imágenes nunca se copian ni salen del teléfono.** Con el acceso parcial de Android 14 («solo algunas fotos») la app **no cuenta** (lo considera poco confiable, porque solo vería las fotos que elegiste).
 
-**Fotos con lugar (para el mapa).** La app puede leer, de cada foto, el lugar y la hora que la cámara guarda dentro del archivo (**EXIF**), en el teléfono o en un Takeout de Google Fotos. Guarda una fila por foto: hora, lat, lon, aparato u origen. Reglas:
+**Fotos con lugar (para el mapa).** La app puede leer, de cada foto, el lugar y la hora que la cámara guarda dentro del archivo (**EXIF**), en el teléfono o en un Takeout de Google Fotos. La hora EXIF es local y no dice de qué zona: desde 10f (D.109) se lee con la zona que regía ese día (`Fechas.millisDe`, en `FotosLugar.fechaExif`); antes se leía con la de hoy, y las fotos de un viaje se corrían de hora. Guarda una fila por foto: hora, lat, lon, aparato u origen. Reglas:
 - La **clave** de cada foto es *(segundo, lat redondeada a 4 decimales, lon redondeada)*, así la misma foto en el teléfono y en Takeout no se duplica (el redondeo equivale a ~10 m).
 - **Solo cuentan fotos de tus aparatos** (si eliges aparatos) y, opcionalmente, no las «compartidas».
 - Se descartan fechas imposibles (antes de 2004 o más de 1 día en el futuro) y coordenadas (0, 0).
@@ -280,21 +306,29 @@ Qué **no** cuenta: notificaciones de la propia app, notificaciones «en curso»
 
 ### 4.4.10 Clima, aire y luna (`sensores/Entorno.kt`, `data/Calculos.kt`)
 
-**De dónde viene.** De **Open-Meteo**, un servicio gratuito sin cuenta. Solo se envían **coordenadas redondeadas a 0.01°** (~1 km) y fechas; **nunca tu ruta**.
+**De dónde viene.** De **Open-Meteo**, un servicio gratuito sin cuenta. Solo se envían **coordenadas redondeadas a 0.01°** (~1 km) y fechas; **nunca tu ruta**. Desde 10f (D.116; H-8-17), Ajustes › Privacidad › «Qué sale del teléfono» lo dice así, junto con los demás servicios externos (`Red.SERVICIOS`).
 
 **Dónde estabas.** `lugarDe` toma la **mediana** de latitud y la **mediana** de longitud de los puntos de ese día de calendario (si no hay, de tus momentos no privados con coordenadas; si no, la última ubicación conocida). Se piden varios días seguidos de golpe mientras estén a < 0.1° (≈ 10 km), a < 60 días de distancia y usen la misma fuente (archivo o pronóstico).
 
-**Qué se pide.** Diarios: código de clima, temperatura máxima y mínima, sensación térmica máxima, precipitación, horas de lluvia, amanecer, atardecer, duración de luz y de sol, viento máximo (y **índice UV máximo**, solo en el modo «pronóstico»). Por hora, de las que se saca el **promedio diario**: temperatura, humedad, nubosidad y **presión de superficie**. De la API de calidad del aire: **PM2.5** y **PM10** (promedio diario, partículas de menos de 2.5 y 10 micrómetros) y el **índice de calidad del aire de EE. UU.** (máximo del día).
+**Qué se pide.** Diarios: código de clima, temperatura máxima y mínima, sensación térmica máxima, precipitación, horas de lluvia, amanecer, atardecer, duración de luz y de sol, viento máximo (y **índice UV máximo**, que solo da el pronóstico: el archivo no lo trae). Por hora, de las que se saca el **promedio diario**: temperatura, humedad, nubosidad y **presión de superficie**. De la API de calidad del aire: **PM2.5** y **PM10** (promedio diario, partículas de menos de 2.5 y 10 micrómetros) y el **índice de calidad del aire de EE. UU.** (máximo del día).
 
-**Dos fuentes mezcladas (hallazgo H-3-4).** Si el día tiene **más de 80 días** de antigüedad, la app pide el **archivo histórico** (reanálisis; Open-Meteo indica que usa conjuntos como ERA5, un reanálisis global del centro europeo ECMWF, Hersbach et al., 2020, con resolución del orden de 10–25 km y hasta ~5 días de retraso). Si es **más reciente**, pide el **pronóstico** (modelos de pronóstico). Un día se marca **completo** (y **ya no se vuelve a pedir**) cuando tiene **al menos 2 días** de antigüedad; mientras tanto se vuelve a pedir en cada sincronización. Consecuencias:
+**Dos fuentes (hallazgo H-3-4).** Si el día tiene **más de 80 días** de antigüedad (`Entorno.DIAS_ARCHIVO`), la app pide el **archivo histórico** (reanálisis: el clima pasado reconstruido con modelos y observaciones; Open-Meteo indica que usa conjuntos como ERA5, un reanálisis global del centro europeo ECMWF, Hersbach et al., 2020, con resolución del orden de 10–25 km y hasta ~5 días de retraso). Si es **más reciente**, pide el **pronóstico** (modelos de pronóstico). Un día se marca **completo** (y deja de pedirse en cada sincronización) cuando tiene **al menos 2 días** de antigüedad.
 
-1. Los días que la app sincronizó cuando tenían entre 2 y 80 días **quedan para siempre con los valores del servicio de pronóstico**, no con los del reanálisis.
-2. Los días antiguos rellenados con el archivo no tienen `uv_max` (ese dato solo se pide en modo pronóstico).
-3. Por lo tanto, **la fuente de cada día depende de cuándo sincronizó la app**, y los valores de los días recientes y antiguos **no son del todo comparables** (distinto modelo y resolución). Aunque las diferencias típicas sean pequeñas, es un posible **sesgo de procedencia mixta** (**[Aproximación]**).
+*Lo que pasaba hasta la v91.* Un día completo ya no se volvía a pedir. Los días que la app sincronizó con entre 2 y 80 días **se quedaban para siempre con los valores del pronóstico**, y los antiguos, rellenados con el archivo, venían del reanálisis. La fuente de cada día dependía de cuándo sincronizó la app, y no quedaba anotada: la serie mezclaba dos fuentes con modelos y resolución distintos sin poder separarlas.
+
+*Desde 10f (D.111).*
+1. **Cada día guarda su fuente** (`EntornoDia.fuente`: «archivo» o «pronostico»). En lo guardado antes, `Entorno.fuente` la deduce de cuántos días habían pasado entre el día y su última petición (`EntornoDia.ts`), con la misma regla de 80 días. Sin `ts`, queda sin fuente.
+2. **El pronóstico se cambia por el reanálisis.** En cada sincronización, los días del último año (hasta 365 días atrás, con algún registro) que vinieron del pronóstico y ya tienen más de 80 días se vuelven a pedir al archivo. Se piden primero los más recientes, hasta 8 peticiones en la sincronización diaria (20 en la mensual y en el botón del clima); cada petición cubre hasta 60 días seguidos en un mismo lugar, pero la primera vez el cambio puede tardar más de una sincronización. Los días de hace más de un año que vinieron del pronóstico se quedan así.
+3. **Lo que el archivo no trae se conserva.** El archivo no da el índice UV: si el día ya lo tenía del pronóstico, `uv_max` se queda. También se conservan PM2.5, PM10 y el índice de calidad del aire si ese servicio no responde.
+4. **Columnas:** `fuente` en `vm_entorno.csv` y `clima_reanalisis` (1 = archivo, 0 = pronóstico, vacío si no se sabe) en `vm_panel.csv`.
+
+*Ejemplo (inventado).* El 1 de marzo la app pidió el clima del 27 de febrero (2 días: pronóstico) y lo marcó completo. Hasta la v91 se quedaba así. Desde 10f, en la primera sincronización desde el 19 de mayo (81 días después, más de 80), se pide de nuevo al archivo: `t_max` puede pasar, digamos, de 24.1 a 23.6 °C, `clima_reanalisis` pasa de 0 a 1 y `uv_max` sigue siendo el del pronóstico.
+
+*Cuándo falla.* (a) Un día del reanálisis puede traer `uv_max` del pronóstico, y los días que siempre vinieron del archivo no tienen `uv_max`: el índice UV **sigue siendo solo del pronóstico** y no se puede usar en una serie larga sin cuidado. (b) Los días de los últimos 80 siguen siendo de pronóstico: `clima_reanalisis` sirve para separarlos o para controlar la fuente en un modelo. (c) Que el archivo ya tenga los días de más de 80 días es lo que la app supone desde antes; no se consultó en la sesión, y el cambio no se probó con la red (Apéndice D, D.111). **[Aproximación]**: las diferencias típicas entre las dos fuentes deberían ser pequeñas, pero no las medí.
 
 **Datos de clima = «clima de la zona», no de tu cuerpo.** No miden temperatura *donde estuviste* (adentro, afuera), sino una estimación del lugar en una rejilla. Una persona que pasa el día en interiores climatizados tiene una exposición distinta a la reportada.
 
-**La luna.** No viene de internet; se **calcula** (`Luna.fase`): edad de la luna = (días desde una luna nueva de referencia, 6-ene-2000 18:14 UTC) **módulo 29.530588853** (el mes sinódico medio); fase = edad / 29.53; **iluminación = (1 − cos(2π·fase)) / 2**, evaluada al mediodía local. Usa el **promedio** del mes lunar (la luna real adelanta o atrasa unas horas), así que es una aproximación. Es una variable **determinista**: no depende de ti, por eso sirve de **control negativo** (si algo «se asocia con la luna», sospecha de azar).
+**La luna.** No viene de internet; se **calcula** (`Luna.fase`): edad de la luna = (días desde una luna nueva de referencia, 6-ene-2000 18:14 UTC) **módulo 29.530588853** (el mes sinódico medio); fase = edad / 29.53; **iluminación = (1 − cos(2π·fase)) / 2**, evaluada al mediodía local (desde 10f, con la zona que regía ese día). Usa el **promedio** del mes lunar (la luna real adelanta o atrasa unas horas), así que es una aproximación. Es una variable **determinista**: no depende de ti, por eso sirve de **control negativo** (si algo «se asocia con la luna», sospecha de azar).
 
 ---
 
@@ -318,7 +352,7 @@ La app lee los datos de tu reloj a través de **Health Connect**, el sistema de 
 
 **Ejemplo (inventado).** Una sesión de 23:40 a 07:10 dura **450 min**. Las etapas registradas suman 400 min (≥ 60 % de 450 = 270, así que se usan las etapas): profundo 70 + REM 95 + ligero 210 = **375 min dormidos**, más 25 min despierto dentro de las etapas. El panel guarda `sueno_horas = 375 / 60 = 6.25` h y `sueno_profundo = 70`, `sueno_rem = 95`. Si las etapas solo hubieran cubierto 200 min (< 270), se habría usado 450 − (despierto registrado).
 
-**Día asignado.** El **día de calendario en que termina** la sesión (el día en que despiertas). Si hay una corrección **manual** del sueño (`sueno_manual`), la sincronización no la sobrescribe, y desde el esquema 14 tampoco un respaldo que no la tenía (`Fusion.salud`). Quitar la corrección («volver a lo del reloj») pide confirmación, avisa si el reloj no tiene esa noche (quedaría vacía) y se puede deshacer; la relectura del reloj espera a que pase el «deshacer» (H-NAV-5).
+**Día asignado.** El **día de calendario en que termina** la sesión (el día en que despiertas). Desde 10f (D.109), ese día, los bordes del día de calendario, el mediodía que separa la noche de las siestas y la ventana de 18:00 a 14:00 de la variabilidad se calculan con la zona que tenía el teléfono entonces (sección 4.3), y lo mismo el resto de Health Connect. Si hay una corrección **manual** del sueño (`sueno_manual`), la sincronización no la sobrescribe, y desde el esquema 14 tampoco un respaldo que no la tenía (`Fusion.salud`). Quitar la corrección («volver a lo del reloj») pide confirmación, avisa si el reloj no tiene esa noche (quedaría vacía) y se puede deshacer; la relectura del reloj espera a que pase el «deshacer» (H-NAV-5).
 
 **Confiabilidad.** Los relojes y anillos de consumo **detectan bien el sueño** pero **detectan mal la vigilia**: en una comparación contra la polisomnografía (el estándar de laboratorio) de siete dispositivos, la sensibilidad para detectar sueño fue ≥ 0.93, mientras que la **especificidad para detectar vigilia fue de solo 0.18–0.54**; tres de ellos **sobrestimaron** significativamente el tiempo total de sueño (dos relojes Garmin, en ~44 y ~47 minutos por noche, y un sensor de cama, ~14 minutos) (Chinoy et al., 2021; dispositivos distintos al reloj de la app). **[Validado]** el patrón general; **no hay una validación del reloj específico de esta app**. Las **etapas** (profundo/REM) son las menos fiables de todas las salidas del reloj.
 
@@ -370,7 +404,7 @@ Las importaciones tienen una ventaja (traen datos que el teléfono no ve) y tres
 
 Spotify entrega la hora en que **terminó** cada canción (`played_at`); la app calcula el **inicio = fin − duración** de la canción. **Ojo (H-3-9):** si paraste la canción a la mitad, el inicio calculado queda **demasiado temprano** (resta la duración completa y no lo que realmente escuchaste). El error es de minutos y solo importa cerca del corte de las 05:00. No hay con qué corregirlo: de cada reproducción, `Spotify.sincronizar` lee la hora de fin (`played_at`) y la duración de la canción (`duration_ms`), no cuánto se escuchó (no comprobé en esta sesión, en la documentación de Spotify, que la API no lo dé). El historial descargable (b) no tiene este problema: resta lo que de verdad escuchaste (`ms_played`, `Importaciones.spotify`), y al importarlo **reemplaza** lo que había llegado por la API en esos días. Por eso H-3-9 queda **resuelto por documentación**: el límite es de la conexión directa y se corrige importando el historial.
 
-**(b) Historial descargable.** El «historial de reproducción ampliado» (`Streaming_History_Audio_*.json`) trae **cuántos milisegundos escuchaste** y si **saltaste** la canción. Las horas vienen en **UTC** y se convierten a hora local. La app **reemplaza** lo de Spotify anotado antes por notificaciones o por la API en esos días (el historial es más preciso) y no duplica (identificador por huella de *hora de fin + título + artista*). Distingue las reproducciones de **≥ 30 s** («reales»; 30 s es el umbral habitual con que Spotify cuenta una reproducción, dato que no comprobé en esta sesión). La variable `canciones` del panel cuenta solo esas, en la app y en la exportación (desde la entrega 10d, P-30; antes la app contaba todas las escuchas y la exportación solo las de 30 s o más, H-9-3). Una escucha sin la duración escuchada (por notificaciones o por la API) cuenta.
+**(b) Historial descargable.** El «historial de reproducción ampliado» (`Streaming_History_Audio_*.json`) trae **cuántos milisegundos escuchaste** y si **saltaste** la canción. Las horas vienen en **UTC** y se convierten a la hora local de entonces (desde 10f, con la zona que tenía el teléfono en ese instante; sección 4.3). La app **reemplaza** lo de Spotify anotado antes por notificaciones o por la API en esos días (el historial es más preciso) y no duplica (identificador por huella de *hora de fin + título + artista*). Distingue las reproducciones de **≥ 30 s** («reales»; 30 s es el umbral habitual con que Spotify cuenta una reproducción, dato que no comprobé en esta sesión). La variable `canciones` del panel cuenta solo esas, en la app y en la exportación (desde la entrega 10d, P-30; antes la app contaba todas las escuchas y la exportación solo las de 30 s o más, H-9-3). Una escucha sin la duración escuchada (por notificaciones o por la API) cuenta.
 
 **Música vs. «lo que sonó».** `Escucha.esMusica`: todo lo de Spotify cuenta; lo que viene de notificaciones cuenta salvo apps de video o navegadores.
 
@@ -388,7 +422,7 @@ Spotify entrega la hora en que **terminó** cada canción (`played_at`); la app 
 
 ### 4.6.3 Kindle (`Importaciones.kindle`)
 
-Lee `My Clippings.txt` (subrayados, notas y marcadores). Reconoce los formatos de fecha en inglés y español. La fecha del subrayado es **cuándo subrayaste**, no cuándo leíste. Cada fila se identifica por una **huella** (libro + metadatos + texto) para no duplicar al reimportar. El **texto** del subrayado **sí se guarda** (a diferencia de WhatsApp y comentarios).
+Lee `My Clippings.txt` (subrayados, notas y marcadores). Reconoce los formatos de fecha en inglés y español. La fecha del subrayado es **cuándo subrayaste**, no cuándo leíste. La hora del archivo no dice de qué zona es: desde 10f se lee con la zona que regía ese día (`Fechas.millisDe`). Cada fila se identifica por una **huella** (libro + metadatos + texto) para no duplicar al reimportar. El **texto** del subrayado **sí se guarda** (a diferencia de WhatsApp y comentarios).
 
 ### 4.6.4 WhatsApp (`Importaciones.whatsappLeer / whatsappGuardar`)
 
@@ -399,7 +433,7 @@ Lee `My Clippings.txt` (subrayados, notas y marcadores). Reconoce los formatos d
 - Un **tiempo de respuesta** es el tiempo entre el último mensaje de la otra persona y tu primera respuesta, **si fue en menos de 12 horas**.
 - Un chat es **de grupo** si tiene **más de 2 autores**.
 - Hay que **decir cuál autor eres tú** para separar «míos» y «de otros».
-- El **día** es el **día lógico**.
+- El **día** es el **día lógico**. Las horas del export no dicen de qué zona son: desde 10f se leen con la zona que regía ese día (`Fechas.millisDe`, sección 4.3).
 
 **La ambigüedad de las fechas (H-3-10).** Un export puede venir como día/mes o mes/día («3/5/26»). La app lo decide así, chat por chat (`Importaciones.whatsappLeer`): si algún primer número pasa de 12, es día/mes; si algún segundo número pasa de 12 y ningún primero, es mes/día. Hasta la v90, **si todo era ≤ 12 asumía día/mes**, y un chat corto en mes/día se leía al revés.
 
@@ -484,13 +518,14 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 |---|---|---|---|---|
 | L-4.1 | **No se guarda el motivo de un hueco** | Todas las fuentes pasivas | Estado en vivo | Marcar «hueco por permiso/apagado» en el histórico |
 | L-4.2 | **Dos criterios de día** (calendario vs. lógico) | 4.3 | Desde el esquema 13, pantalla y pasos por día lógico, con `ventana_pantalla` y `ventana_pasos`; desde 10c, el diccionario marca las variables por calendario (`Diccionario.CALENDARIO`) | Corazón, oxígeno, agenda, clima y ciudades siguen por calendario, y los días de antes del esquema 13 no se recalculan solos (H-3-1, resuelto en parte; H-3-2, resuelto en los días nuevos) |
-| L-4.3 | **Muestreo cada ~15 min con mínimos** (minutos «observados») | 4.4.5 | Tope de 15 min tras huecos | Guardar también las horas cubiertas por muestras |
+| L-4.3 | **Muestreo cada ~15 min con mínimos** (minutos «observados») | 4.4.5 | Tope de 15 min tras huecos; desde 10f, lo que no se pudo saber del wifi va a `wifi_sin_dato_min` (H-3-7, resuelto) | Guardar también las horas cubiertas por muestras |
 | L-4.4 | **Proxies** (luz → aire libre; notificaciones → interrupciones; pantalla de apps ≠ pantalla encendida) | 4.4 | Variables separadas | Validar contra autorreportes |
 | L-4.5 | **Instrumentos de consumo** (reloj, micrófono, clasificador de actividad) | 4.5, 4.4.6 | — | Sin calibración propia |
 | L-4.6 | **Importaciones tardías y parciales** | 4.6 | Recordatorios | Fecha de «cubierto hasta» por fuente |
-| L-4.7 | **Procedencia mixta de clima** | 4.4.10 | — | H-3-4 |
+| L-4.7 | **Procedencia mixta de clima** | 4.4.10 | Desde 10f, fuente por día (`clima_reanalisis`) y el pronóstico se cambia por el reanálisis a los 80 días (H-3-4, resuelto) | Los últimos 80 días siguen siendo de pronóstico, y el índice UV solo existe en el pronóstico |
 | L-4.8 | **Presión descartada en altura** (hasta 10d) | 4.4.5 | Desde 10d acepta 300–1 100 hPa (`Percepcion.RANGO_HPA`) | — (H-3-3, resuelto) |
 | L-4.9 | **Medir cambia la conducta** (saber que te miden) | Todas | — | Inevitable en N-de-1 |
+| L-4.10 | **Hora local tras viajes o cambios de horario** | 4.3 | Desde 10f, cada instante con la zona que tenía el teléfono entonces; `desfase_utc_h` y `cambio_horario` (H-1-7, resuelto) | Antes de 10f, el historial se reconstruye con las notas; un viaje sin dos notas seguidas queda con la zona de hoy |
 
 ---
 
@@ -508,7 +543,7 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 | Sueño del reloj (cálculo, bloques, siestas) | Aproximación | Dispositivos de consumo sobrestiman sueño (Chinoy et al., 2021) |
 | RMSSD nocturno | Validado (concepto) | Task Force (1996); Shaffer y Ginsberg (2017) |
 | Pasos y corazón del reloj | Validado (laboratorio) | Fuller et al. (2020) |
-| Clima de Open-Meteo (reanálisis/pronóstico) | Aproximación | Hersbach et al. (2020) para el reanálisis |
+| Clima de Open-Meteo (reanálisis/pronóstico); desde 10f, fuente por día y reanálisis a los 80 días | Aproximación | Hersbach et al. (2020) para el reanálisis |
 | Fase lunar con mes sinódico medio | Aproximación | Fórmula astronómica simple |
 | Calibración del barómetro por mediana de 60 días | Diseño propio | Corrige sesgo constante |
 | Filtro del barómetro 300–1 100 hPa (10d) | Aproximación | Rango de medida del BMP280 (Bosch Sensortec, 2021); el LPS22HB mide 260–1 260 hPa (STMicroelectronics, 2016) |
@@ -516,18 +551,20 @@ Cada fuente empieza cuando le das el permiso (o cuando importas), tiene huecos (
 | Cold Turkey por partes completas del dominio (10d) | Diseño propio | Corrige H-3-6 |
 | Importar solo conteos de WhatsApp | Diseño propio | Privacidad |
 | Fechas ambiguas de WhatsApp por el orden de los mensajes (10e) | Diseño propio | Corrige H-3-10 sin preguntar |
+| Wifi en tres casos: con red, sin red, sin dato (10f) | Diseño propio | Corrige H-3-7 |
+| Historial de zonas de lo de antes armado con «dos notas seguidas» (10f) | Diseño propio | Corrige H-1-7 en lo ya guardado, hasta donde las notas lo permiten |
 
 ---
 
 ## 4.11 Resumen del capítulo
 
 1. Los datos pasivos llegan por un **pulso de ~15 min** (ubicación y estados del teléfono) y una **sincronización diaria** (reloj, pantalla, fotos, agenda, llamadas, clima). Los importados llegan **cuando tú los cargas**.
-2. **No todas las fuentes usan el mismo «día»:** hasta el esquema 12, pantalla, reloj, agenda y clima usaban el día de calendario, y casi todo lo demás, el día lógico (H-3-1, H-3-2); fue el hallazgo más importante del módulo 3. Desde el esquema 13 (10b), la pantalla y los pasos van por día lógico; siguen por calendario el corazón, el oxígeno y las demás lecturas del reloj (salvo pasos, sueño y ejercicio), la agenda, el clima y las ciudades, y desde 10c el diccionario lo marca en cada variable.
-3. Los minutos de wifi, audio, carga y luz son **estimaciones por muestreo** con una regla que **subestima** a propósito; no son minutos del día.
+2. **No todas las fuentes usan el mismo «día»:** hasta el esquema 12, pantalla, reloj, agenda y clima usaban el día de calendario, y casi todo lo demás, el día lógico (H-3-1, H-3-2); fue el hallazgo más importante del módulo 3. Desde el esquema 13 (10b), la pantalla y los pasos van por día lógico; siguen por calendario el corazón, el oxígeno y las demás lecturas del reloj (salvo pasos, sueño y ejercicio), la agenda, el clima y las ciudades, y desde 10c el diccionario lo marca en cada variable. Desde 10f, además, cada instante se lee con la zona horaria que tenía el teléfono entonces, no con la de hoy (H-1-7): un viaje ya no mueve lo que pasó a otra hora ni a otro día, y `cambio_horario` marca los días de 23, 25 u otras horas.
+3. Los minutos de wifi, audio, carga y luz son **estimaciones por muestreo** con una regla que **subestima** a propósito; no son minutos del día. Desde 10f, lo que no se pudo saber del wifi va aparte (`wifi_sin_dato_min`) y no a `sin_wifi_min` (H-3-7).
 4. El **sueño** del reloj está bien cuidado en el cálculo, pero el dato en sí es una estimación de consumo (buena para duración, débil para etapas).
 5. **Detectar un lugar** necesita ~**30 min** reales, no 20.
-6. El módulo 3 encontró además defectos concretos: barómetro descartado a gran altura (H-3-3), procedencia mixta del clima (H-3-4), categorías de Cold Turkey por coincidencia de texto (H-3-6). La entrega 10d corrigió el barómetro (300–1 100 hPa), Cold Turkey (partes completas del dominio) y la precisión de los puntos importados (H-3-8, inciso b); la procedencia mixta del clima sigue igual. La entrega 10e corrigió las fechas ambiguas y el idioma de los avisos de multimedia de WhatsApp (H-3-10).
-7. El módulo 3 identificó **10 hallazgos** (H-3-1 a H-3-10) y, como todo módulo de contenido, no cambió código. Después, el módulo 10 resolvió H-3-3 y H-3-6, H-3-2 en los días nuevos, el inciso b de H-3-8 y H-3-1 en parte; la entrega 10e resolvió H-3-10 (D.105), y H-3-5 y H-3-9 quedaron resueltos por documentación (este capítulo los describe; el código no cambió). Siguen abiertos H-3-4, H-3-7 y el inciso a de H-3-8.
+6. El módulo 3 encontró además defectos concretos: barómetro descartado a gran altura (H-3-3), procedencia mixta del clima (H-3-4), categorías de Cold Turkey por coincidencia de texto (H-3-6). La entrega 10d corrigió el barómetro (300–1 100 hPa), Cold Turkey (partes completas del dominio) y la precisión de los puntos importados (H-3-8, inciso b). La entrega 10e corrigió las fechas ambiguas y el idioma de los avisos de multimedia de WhatsApp (H-3-10). La entrega 10f anotó la fuente del clima de cada día y cambia el pronóstico por el reanálisis a los 80 días (H-3-4; el índice UV sigue siendo solo del pronóstico), y separó el wifi sin dato (H-3-7).
+7. El módulo 3 identificó **10 hallazgos** (H-3-1 a H-3-10) y, como todo módulo de contenido, no cambió código. Después, el módulo 10 resolvió H-3-3 y H-3-6, H-3-2 en los días nuevos, el inciso b de H-3-8 y H-3-1 en parte; la entrega 10e resolvió H-3-10 (D.105); la entrega 10f, H-3-4 y H-3-7 (D.111 y D.112), y H-3-5 y H-3-9 quedaron resueltos por documentación (este capítulo los describe; el código no cambió). Quedan **8 resueltos** y **2 resueltos en parte** (H-3-1 y H-3-8, cuyo inciso a no se cambió); ninguno pendiente.
 
 **Siguiente capítulo.** Capítulo 5: modelos fisiológicos (cafeína, alcohol, creatina…) y variables derivadas.
 

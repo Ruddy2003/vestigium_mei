@@ -28,10 +28,9 @@ class PrivacidadActivity : ComponentActivity() {
                                     "variabilidad cardiaca, pasos, oxígeno y sesiones de ejercicio) se guardan solo en este teléfono, en la base de datos privada de la app. " +
                                     "No se envían a ningún servidor. Solo salen del teléfono cuando tú los exportas, eliges una carpeta de respaldo o activas el respaldo en tu propio Google Drive. " +
                                     "Se usan únicamente para mostrarte tus propios patrones y cruzarlos con tu diario.\n\n" +
-                                    "Para el clima, la app envía a Open-Meteo solo tu zona aproximada (coordenadas redondeadas a ~1 km) y las fechas; " +
-                                    "el mapa descarga mosaicos de calles de OpenStreetMap (así se sabe qué zona miras). Al buscar una obra, se envía solo el título " +
-                                    "o el DOI que escribes a TMDB, TVmaze, RAWG, Google Books, Open Library o Crossref, según el tipo. Si conectas Spotify, la app " +
-                                    "le pide lo que escuchaste; si activas Google Drive, sube ahí tus respaldos completos (cifrados si pones contraseña). Los demás no reciben tu diario, tu salud ni tu ruta.",
+                                    "Lo que sale hacia otros servicios y qué recibe cada uno:\n" +
+                                    io.github.ruddy2003.vestigium.data.Red.SERVICIOS.joinToString("\n") { (s, q) -> "• $s: $q." } +
+                                    "\n\nFuera de Google Drive, ninguno recibe tu diario, tu salud ni tu ruta.",
                                 style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 16.dp),
                             )
                         }

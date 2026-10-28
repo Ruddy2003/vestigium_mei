@@ -283,6 +283,7 @@ object Estadistica {
             Variable("primera_comida_h", "Hora del primer alimento", "Nutrición"), Variable("ultima_comida_h", "Hora del último alimento", "Nutrición"),
             Variable("cafeina_ultima_h", "Hora de la última cafeína", "Nutrición"), Variable("gimnasio", "Entrené en el gimnasio (0/1)", "Cuerpo"),
             Variable("volumen_kg", "Volumen del entrenamiento (kg)", "Cuerpo"), Variable("series_gimnasio", "Series efectivas de gimnasio", "Cuerpo"),
+            Variable("fuerza_ref_kg", "Fuerza de referencia: 1RM estimada en press inclinado con mancuernas (kg)", "Cuerpo"),
             Variable("obras_dia", "Obras a las que les dediqué tiempo", "Cultura"), Variable("lectura", "Leí un libro o artículo (0/1)", "Cultura"),
             Variable("vi_pelicula_serie", "Vi una película o serie (0/1)", "Cultura"), Variable("jugue", "Jugué un videojuego (0/1)", "Cultura"),
             Variable("obra_terminada", "Terminé un libro, película, serie o juego (0/1)", "Cultura"), Variable("calificacion_obra", "Calificación de lo que terminé (1 a 10)", "Cultura"),
@@ -617,7 +618,7 @@ object Estadistica {
         sesiones.forEach { (f, l) -> fila(f)["ejercicio_min"] = l.sumOf { it.min }.toDouble() }
         Repo.pantalla.forEach { (f, p) ->
             val r = fila(f)
-            fun h(iso: String?): Double? = iso?.let { val t = java.time.OffsetDateTime.parse(it).atZoneSameInstant(java.time.ZoneId.systemDefault()); t.hour + t.minute / 60.0 }
+            fun h(iso: String?): Double? = iso?.let { val t = Fechas.localDe(it); t.hour + t.minute / 60.0 }
             r["primer_uso_h"] = runCatching { h(p.primer_uso) }.getOrNull()
             r["ultimo_uso_h"] = runCatching { h(p.ultimo_uso)?.let { if (it < 5) it + 24 else it } }.getOrNull()
         }
@@ -650,7 +651,7 @@ object Estadistica {
             r["ultima_comida_h"] = n.ultima?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
             r["cafeina_ultima_h"] = n.cafeina_ultima?.let { io.github.ruddy2003.vestigium.data.Exportar.horaTexto(it) }
         }
-        Repo.entrenos.forEach { (f, e) -> val r = fila(f); r["volumen_kg"] = e.volumen_kg; r["series_gimnasio"] = e.series_efectivas.toDouble() }
+        Repo.entrenos.forEach { (f, e) -> val r = fila(f); r["volumen_kg"] = e.volumen_kg; r["series_gimnasio"] = e.series_efectivas.toDouble(); e.fuerza_ref_kg?.let { r["fuerza_ref_kg"] = it } }
         (ceroDesde(Repo.entrenos.keys, Repo.dias.keys) + Repo.entrenos.keys).toSet().forEach { f -> fila(f)["gimnasio"] = if ((Repo.entrenos[f]?.series ?: 0) > 0) 1.0 else 0.0 }
         Repo.huellas.forEach { (f, h) -> val r = fila(f); r["yt_vistos"] = h.yt_vistos.toDouble(); r["busquedas"] = (h.busquedas + h.yt_busquedas).toDouble() }
         // «Me gusta» y comentarios: cuentan desde el primero que hay (antes no se sabe), en días con historial de YouTube.
@@ -880,7 +881,7 @@ object Estadistica {
         // La última cafeína del día lógico sale de las mismas dosis que los totales (MacroFactor y lo anotado aquí; H-4-12), no solo de
         // MacroFactor por día de calendario. Antes de las 5:00 suma 24, como ultimo_uso_h.
         val ultimaCaf = caf.groupBy { Fechas.diaLogicoDeMillis(it.ms) }.mapValues { (_, l) ->
-            val t = java.time.Instant.ofEpochMilli(l.maxOf { it.ms }).atZone(Fechas.zona())
+            val t = Fechas.local(l.maxOf { it.ms })
             val h = t.hour + t.minute / 60.0
             Math.round((if (h < 5) h + 24 else h) * 100) / 100.0
         }
@@ -948,7 +949,7 @@ object Estadistica {
         setOf("hrv", "fc_reposo", "fc_media", "fc_sueno"), setOf("spo2", "spo2_min"),
         setOf("pasos", "a_pie_min", "cal_activas", "ejercicio_min", "distancia_km"),
         setOf("distancia_km", "vehiculo_min", "coche_min", "sin_wifi_min", "lugares_distintos"),
-        setOf("gimnasio", "volumen_kg", "series_gimnasio", "ejercicio_min", "cal_activas"),
+        setOf("gimnasio", "volumen_kg", "series_gimnasio", "fuerza_ref_kg", "ejercicio_min", "cal_activas"),
         setOf("escalada", "escalada_grado", "ejercicio_min", "cal_activas"),
         setOf("pantalla_min", "desbloqueos", "notificaciones", "primer_uso_h", "ultimo_uso_h"),
         setOf("ultimo_uso_h", "carga_noche_h", "sueno_inicio_h"),

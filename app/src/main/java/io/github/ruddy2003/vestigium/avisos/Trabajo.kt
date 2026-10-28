@@ -51,10 +51,9 @@ object Programador {
         val c = Repo.config
         val n = c.muestreos_por_dia.coerceIn(0, 6)
         if (n == 0 || c.ventana_fin <= c.ventana_inicio) return emptyList()
-        val zona = ZoneId.systemDefault()
-        val base = Fechas.parse(fecha).atStartOfDay(zona).toInstant().toEpochMilli()
-        val ini = base + c.ventana_inicio * 3_600_000L
-        val fin = base + c.ventana_fin * 3_600_000L
+        // La ventana en la hora local de ese día (un día con cambio de horario no la corre una hora; H-1-7).
+        val ini = Fechas.millisDe(Fechas.parse(fecha).atTime(c.ventana_inicio, 0))
+        val fin = Fechas.millisDe(Fechas.parse(fecha).atTime(c.ventana_fin.coerceAtMost(23), 0)) + if (c.ventana_fin >= 24) 3_600_000L else 0L
         val tramo = (fin - ini) / n
         val rnd = Random(fecha.hashCode())
         return (0 until n).map { i ->
@@ -69,6 +68,12 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
     override suspend fun doWork(): Result {
         val ctx = applicationContext
         Repo.init(ctx)
+        runCatching { Repo.registrarZona() }
+        // Una sola vez: la fuerza de referencia de los entrenos que ya estaban (H-7-14).
+        runCatching {
+            val mig = ctx.getSharedPreferences("migraciones", Context.MODE_PRIVATE)
+            if (!mig.getBoolean("fuerza_ref", false)) { Repo.completarFuerzaReferencia(); mig.edit().putBoolean("fuerza_ref", true).apply() }
+        }
         runCatching { Ubicacion.muestrear(ctx) }
         runCatching { io.github.ruddy2003.vestigium.sensores.Percepcion.muestrear(ctx) }
         // ¿Llevas un rato en un sitio nuevo? Pregunta si es un lugar especial (máximo dos veces al día, nunca de noche).
@@ -240,6 +245,9 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
 class ArranqueReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Repo.init(context)
+        // Al cambiar de zona horaria (un viaje o el horario de verano del sistema) se anota desde cuándo rige la nueva.
+        runCatching { Repo.registrarZona() }
+        if (intent.action == Intent.ACTION_TIMEZONE_CHANGED) return
         runCatching { Geocercas.registrar(context) }
         runCatching { Actividad.registrar(context) }
         Programador.asegurar(context)

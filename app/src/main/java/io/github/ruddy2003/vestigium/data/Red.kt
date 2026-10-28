@@ -8,6 +8,18 @@ import java.net.URL
 object Red {
     const val AGENTE = "VestigiumMei/1.0 (Android; uso personal)"
 
+    /**
+     * Todo lo que sale del teléfono hacia un servicio ajeno y qué recibe cada uno (H-8-17). Lo muestran la política de privacidad
+     * y Ajustes › Privacidad; si se agrega un servicio, va aquí.
+     */
+    val SERVICIOS: List<Pair<String, String>> = listOf(
+        "Open-Meteo (clima y aire)" to "tu zona aproximada (coordenadas redondeadas a ~1 km) y las fechas",
+        "OpenStreetMap (mapa)" to "los mosaicos de calles de la zona que miras en el mapa",
+        "TMDB, TVmaze, RAWG, Google Books, Open Library y Crossref" to "solo el título o el DOI que escribes al buscar una obra, según el tipo",
+        "Spotify (si lo conectas)" to "tu permiso para leer lo que escuchaste; la app le pide tu historial reciente",
+        "Google Drive (si lo activas)" to "tus respaldos completos, cifrados si pones contraseña",
+    )
+
     fun get(url: String, encabezados: Map<String, String> = emptyMap(), tiempo: Int = 20_000): String {
         val c = URL(url).openConnection() as HttpURLConnection
         c.connectTimeout = tiempo; c.readTimeout = tiempo

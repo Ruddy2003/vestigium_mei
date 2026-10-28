@@ -32,7 +32,7 @@ APENDICES = ["apendiceA_variables.md", "apendiceB_formulas.md", "apendiceC_funci
 PORTADA = """---
 title: "Vestigium Mei"
 subtitle: "Qué hace la app, cómo y por qué: el paper metodológico"
-date: "Versión de la app: v91 (v90 más la entrega 10e, esquema 14) · 28 de octubre de 2026"
+date: "Versión de la app: v92 (v91 más la entrega 10f, esquema 15) · 28 de octubre de 2026"
 lang: es-MX
 toc-title: "Índice"
 ---

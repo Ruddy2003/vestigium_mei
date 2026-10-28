@@ -1,6 +1,6 @@
 # Capítulo 9. Reportes, visualización y motivación
 
-> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales. Para cada uno dice qué muestra, de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10e» o «desde el esquema 13» y está en el Apéndice D. **Los ejemplos son inventados.**
+> **Para qué sirve este capítulo.** Explica qué te devuelve la app a cambio de registrar: los **reportes** (semanal, mensual y anual), **«Tu año»**, los **logros** y las **campañas** semanales. Para cada uno dice qué muestra, de dónde sale cada cifra y qué decisiones de visualización se tomaron. Después discute el lado científico: un sistema de motivación ayuda a que no falten datos, pero también puede **cambiar lo que se mide**. Se escribió sobre la v81 (commit `fa527df`) y está al día con el código de la v92 (la v91 más la entrega 10f; `SCHEMA_V = 15`), la versión que describe todo el paper; lo que cambió en el módulo 10 se marca «desde 10a…10f» o «desde el esquema 13» y está en el Apéndice D. **Los ejemplos son inventados.**
 >
 > **Cómo leerlo.** Igual que los capítulos anteriores: lenguaje sencillo, cifras y condiciones del código tal cual, con el nombre de la función; cada decisión se marca como **[Validado]**, **[Aproximación]** o **[Diseño propio]**. Los problemas se numeran H-8-n (este capítulo y el 10 forman el módulo 8; los H-9-n son del módulo 9) y se detallan en `hallazgos.md`. Lo relativo a qué datos privados llegan a cada salida está en el capítulo 10.
 >
@@ -37,7 +37,7 @@ Los reportes y «Tu año» no calculan nada por su cuenta: usan un mismo resumen
 | **Racha de diario** | La racha más larga **dentro del periodo** de días con texto o valencia. |
 | **Hábitos cumplidos** | Hábitos activos marcados ÷ (hábitos activos × días con documento de diario). No cuenta el hábito ligado a las recaídas (`Privado.habitosVisibles`). |
 | **Sueño medio** | Promedio de las noches del reloj con **más de 120 minutos** (las más cortas se descartan como siestas o errores). |
-| **Hora de dormir media** | Promedio de las horas de inicio, con la misma regla que el panel y R (`Exportar.horaDecimal`, desde 10c): de noche, las anteriores a las **12:00** suman 24 (la 01:00 cuenta como 25:00) para no promediar la 01:00 con las 23:00 como si fuera mediodía. Antes el corte era a las 15:00, y una siesta larga que empezara a las 13:00 contaba como 37:00. La hora se lee en la zona del teléfono. |
+| **Hora de dormir media** | Promedio de las horas de inicio, con la misma regla que el panel y R (`Exportar.horaDecimal`, desde 10c): de noche, las anteriores a las **12:00** suman 24 (la 01:00 cuenta como 25:00) para no promediar la 01:00 con las 23:00 como si fuera mediodía. Antes el corte era a las 15:00, y una siesta larga que empezara a las 13:00 contaba como 37:00. Desde 10f (D.109), cada hora es la hora local del lugar donde estabas esa noche: se lee con el desfase guardado en la propia marca (`Fechas.localDe`). Antes se pasaba a la zona que tenía el teléfono al calcular el reporte, y una noche de viaje salía corrida tantas horas como la diferencia de zona. |
 | **Pasos** | Promedio de los días con pasos > 0. Km: los del reloj o, si no hay, pasos × 0.00075. |
 | **Mejor marca** | La mayor repetición máxima estimada del periodo con `Macrofactor.e1rm`, la misma que usan la exportación (`e1rm_kg`), Fuerza, Totales y `vm_fuerza` en R (desde 10c, D.72): peso × (1 + repeticiones/30) (**fórmula de Epley**), solo en series de **1 a 12** repeticiones y sin calentamientos, redondeada a 0.1 kg. Antes se aceptaban hasta 15 repeticiones y los calentamientos. Ejemplo: series de 100 × 15, 120 × 5 y un calentamiento de 130 × 8 → antes 164.7 kg (el calentamiento); ahora **140 kg**. Tus apps usa la misma función. |
 | **Gasto e ingresos** | Por el **día del diario** (`Gasto.dia`, `Ingreso.dia`: antes de las 5:00 cuenta para el día anterior), igual que el panel; los ingresos se contaban por su fecha de calendario hasta 10c, así que un ingreso de madrugada caía en otro día que su gasto. Totales usa la misma regla desde 10c (D.77). |
@@ -148,10 +148,12 @@ Conviene separar los logros por **qué** premian:
 |---|---|---|
 | **Registrar** | días de diario, avisos contestados, momentos, cuestionarios, pruebas de reacción | Menos datos faltantes (bueno: capítulo 3, sección 3.15). Riesgo: entradas de relleno para cumplir. |
 | **Una conducta** | pasos, sueño ≥ 7 h, entrenar, hábitos, enfoque | Cambian la conducta medida: es su objetivo (es una intervención). Riesgo: confundir el análisis observacional (sección 9.7). |
-| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores, que pueden no ser seguidos) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). |
+| **Un valor de la medida subjetiva** | «Día perfecto» (calificar un día con 7 de 7), «Remontada» (un ≥ 6 tras un ≤ 2 en alguno de los 3 días con valencia anteriores, que pueden no ser seguidos) | Premian **un número que tú escribes**. Riesgo directo de sesgar la valencia (H-8-6). Se quedan por decisión del autor (D.117). |
 | **Un rendimiento** | «Rayo» (reacción < 250 ms) | Incentiva practicar la prueba; los tiempos pueden mejorar por práctica y no por estar más despierto. |
 
 Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que reduce mucho el incentivo: no sabes que existen hasta que ocurren. Aun así, una vez descubiertos, son medallas por escribir cierto valor en la escala que más se analiza. **[Diseño propio]**, de bajo riesgo en la práctica, pero contrario al principio de no premiar el valor de una medida.
+
+**Se quedan, por decisión del autor (10f, D.117; H-8-6).** El módulo 8 propuso cambiarlos para que premiaran registrar y no un valor, o quitarlos; el autor decidió dejarlos como están (`Logros.kt` no cambió). El riesgo que queda, dicho con precisión: **un incentivo pequeño a sesgar la valencia**, por ejemplo a poner un 7 en lugar de un 6, o un 6 en lugar de un 5 justo después de un día de 2. Lo acotan tres cosas del código: cada uno se gana **una sola vez** (meta 1, `dia_perfecto` con el primer día de valencia 7 y `remontada` con la primera remontada), así que el empujón desaparece en cuanto se consigue; no hay niveles que perseguir; y la valencia que piden es la del diario de la noche, no la de los avisos al azar (`muestreo_valencia`), que ningún logro premia. Lo que **no** lo acota: la protección de ser «secreto» casi no vale aquí, porque el único usuario es el autor, que sabe que existen y qué piden. **Cómo leerlo en los datos**: si alguna vez sospechas el efecto, compara la proporción de 7 (y de subidas a ≥ 6 tras un ≤ 2) antes y después de la fecha en que se ganó cada logro (`Logro.conseguido`: el primer día que lo cumplió), y contrasta la valencia del diario con `muestreo_valencia` esos días. No lo comprobé con datos reales.
 
 ---
 
@@ -162,7 +164,7 @@ Los dos logros del tercer grupo son **secretos** y se ganan una sola vez, lo que
 | Reto | Cuenta el día si… | Meta |
 |---|---|---|
 | Noches de 7 horas | el reloj marca ≥ 420 min de sueño | 5 |
-| Dormir antes de medianoche | el sueño empieza entre las 18:00 y las 23:59 | 4 |
+| Dormir antes de medianoche | el sueño empieza entre las 18:00 y las 23:59 (desde 10f, en la hora local de esa noche, `Fechas.localDe`) | 4 |
 | 8000 pasos | pasos ≥ 8000 | 5 |
 | Escribir el diario | hay texto en el diario | 6 |
 | Una hora de enfoque | ≥ 60 min con el cronómetro (sin siestas) | 5 |
@@ -219,7 +221,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 - **Bien**: la mayoría de los logros premian **registrar** o **conductas objetivas medidas por sensores** (pasos y sueño del reloj, pantalla del teléfono), no lo que escribes. Un reloj no se deja convencer por una medalla.
 - **Bien**: la constancia tolera días malos, así que no hay incentivo para inventar un día con tal de no romper la racha… salvo en las rachas de diario, donde sí lo hay.
 - **Bien**: el registro de un toque para días difíciles (capítulo 3) hace que registrar un día malo cuente igual que uno bueno para los logros de diario.
-- **Mejorable**: «Día perfecto» y «Remontada» premian valores de la valencia (H-8-6); las predicciones de enero incluyen el ánimo medio. Las campañas, desde el esquema 13, sí quedan como variable (H-8-7, resuelto).
+- **Mejorable**: «Día perfecto» y «Remontada» premian valores de la valencia (H-8-6); se quedan por decisión del autor (D.117), con el riesgo descrito en la sección 9.4.3. Las predicciones de enero incluyen el ánimo medio. Las campañas, desde el esquema 13, sí quedan como variable (H-8-7, resuelto).
 - **No se puede evitar**: que ver tus reportes cambie tu conducta. Es, en parte, el propósito de la app.
 
 **Recomendación práctica para leer los datos** (no requiere cambiar código): al analizar una variable que también fue meta de una campaña o un logro, mirar si su relación con otras cambia antes y después de empezar a perseguir esa meta.
@@ -235,7 +237,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 | Línea de 7 h; alerta bajo 6.3 h | Diseño propio | 7 h: recomendación habitual [sin verificar] |
 | Comparación con el periodo anterior: «parecido» si la diferencia es menor que su error típico (desde 10e; antes, sin incertidumbre) | Aproximación (no descuenta la autocorrelación) | — |
 | Logros de constancia (k de n días) en lugar de rachas | Diseño propio (bien fundado) | — |
-| Logros que premian valores de la valencia | Diseño propio (contrario a la ley de Campbell) | Campbell (1979) |
+| Logros que premian valores de la valencia; se quedan por decisión del autor (10f, D.117) | Diseño propio (contrario a la ley de Campbell) | Campbell (1979) |
 | Campañas semanales como retos | Diseño propio | Hamari et al. (2014) sobre gamificación |
 | «Relación del año» = máximo |*r*| con *q* < 0.05 | Aproximación (sobrestima) | — |
 
@@ -246,7 +248,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 1. Los reportes y «Tu año» usan un mismo resumen, `Periodo.calcular`. Hasta la entrega 10c su «ánimo del día» mezclaba la valencia del diario con el promedio de los avisos (H-8-10); ahora usa la valencia del diario, la hora de dormir y los ingresos siguen las reglas del panel, y la mejor marca es la misma 1RM de la exportación (D.72, D.77).
 2. Los reportes se generan solos (lunes y día 1) y se guardan en las carpetas públicas de imágenes y descargas; su contenido y privacidad se tratan en el capítulo 10.
 3. La visualización combina codificaciones precisas (barras con eje y números) con otras gruesas (colores, iconos); las comparaciones con el periodo anterior no tenían noción de azar; desde 10e dicen «parecido» cuando la diferencia es menor que su error típico, un filtro que se queda corto porque no descuenta la autocorrelación (H-8-11).
-4. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas: una buena decisión para no abandonar. Dos logros secretos premian valores de la valencia (H-8-6, pendiente: cambiarlos o quitarlos es una decisión del autor, porque quitarlos borraría medallas ya ganadas).
+4. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas: una buena decisión para no abandonar. Dos logros secretos premian valores de la valencia (H-8-6). Desde 10f se quedan como están por decisión del autor (D.117); el riesgo, un incentivo pequeño a sesgar la valencia que desaparece al ganarlos, queda descrito en la sección 9.4.3.
 5. Las campañas son **intervenciones**. Hasta el esquema 12 no quedaban registradas como variable y podían confundir el análisis observacional (H-8-7). Desde el 13 son variables del panel (`campana_<reto>`, `campanas_n`), obvias con lo que cada reto mueve.
 6. La gamificación puede ayudar a no abandonar, pero con efectos dependientes del contexto; las recompensas pueden cambiar la motivación y lo que se mide.
 

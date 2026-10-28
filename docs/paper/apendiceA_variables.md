@@ -1,6 +1,6 @@
 # Apéndice A. Variables y tablas del sistema
 
-_Se generó a partir del código de la v81 (commit `fa527df`) y está al día con el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`), la versión que describe todo el paper: `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt`, `data/Exportar.kt` (`tablas()`) y `data/Diccionario.kt`. Lo que cambió en el módulo 10 se marca «desde 10a…10d», lo de la entrega 10e, «desde 10e» (sección A.8), y todo está en el Apéndice D. Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
+_Se generó a partir del código de la v81 (commit `fa527df`) y está al día con el código de la v92 (la v91 más la entrega 10f; `SCHEMA_V = 15`), la versión que describe todo el paper: `ciencia/Estadistica.kt` (`variables()`), `ciencia/Dinamicas.kt`, `data/Exportar.kt` (`tablas()`) y `data/Diccionario.kt`. Lo que cambió en el módulo 10 se marca «desde 10a…10d», lo de la entrega 10e, «desde 10e» (sección A.8), lo de la 10f, «desde 10f» (sección A.9), y todo está en el Apéndice D. Lo que dice «Si hay datos…» describe cuándo la variable existe en una instalación concreta: el catálogo se arma con lo que el usuario ha registrado._
 
 **Cómo leer las columnas.** *Tipo* y *Unidad* se leen del nombre que ve el usuario en la app (la app no guarda un tipo formal por variable). *Fuente* es la de todo el grupo; la procedencia exacta de cada variable está en el panel (`Estadistica.panel`). *Un valor vacío significa «sin dato»; un 0 significa «se observó y fue cero»* salvo en las reglas de relleno con ceros del capítulo 2, sección 2.6. Las definiciones que cambiaron en la entrega 10c (cuándo vale 0 y cuándo queda vacía cada variable) están en la sección A.6.
 
@@ -56,6 +56,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `gimnasio` | Entrené en el gimnasio (0/1) | binaria (0/1) | — | Si hay datos de la fuente |
 | `volumen_kg` | Volumen del entrenamiento (kg) | numérica | kg | Si hay datos de la fuente |
 | `series_gimnasio` | Series efectivas de gimnasio | numérica | — | Si hay datos de la fuente |
+| `fuerza_ref_kg` | Fuerza de referencia: 1RM estimada en press inclinado con mancuernas (kg). La mejor del día con Epley, en series de 1 a 12 repeticiones sin calentamiento (`Macrofactor.fuerzaReferencia`, A.9) | numérica | kg | Si hay datos de la fuente: solo los días en que hiciste ese ejercicio; vacía los demás. Desde 10f (D.114) |
 
 ### Sueño
 
@@ -174,7 +175,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `a_pie_min` | Minutos a pie | numérica | — | Si hay datos de la fuente |
 | `vehiculo_min` | Minutos en vehículo | numérica | — | Si hay datos de la fuente |
 | `coche_min` | Minutos en el coche (Bluetooth) | numérica | — | Si hay datos de la fuente |
-| `sin_wifi_min` | Minutos sin wifi (fuera) | numérica | — | Si hay datos de la fuente |
+| `sin_wifi_min` | Minutos sin wifi (fuera). Desde 10f, solo cuando el wifi estaba apagado o el sistema dijo que no había red wifi; los minutos sin dato van a `wifi_sin_dato_min` de `vm_conexiones.csv` (D.112, A.9) | numérica | min | Si hay datos de la fuente |
 | `en_casa_min` | Minutos en casa | numérica | — | Si hay un lugar de tipo casa |
 
 ### Entorno
@@ -338,7 +339,7 @@ _Se generó a partir del código de la v81 (commit `fa527df`) y está al día co
 | `laptop_min` | Minutos en la laptop | numérica | — | Si se importó Cold Turkey |
 | `laptop_web_min` | Minutos en sitios web (laptop) | numérica | — | Si se importó Cold Turkey con sitios web |
 
-_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. Desde 10e son **186, con 24 nombres de grupo** (184 en la v90). Las tablas de arriba traen **185 en 21 grupos**, porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, 10c, `presencias_revisado`, y 10e, `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94). No todas existen en cada instalación: 130 se agregan siempre (entre ellas, las dos de 10e y 4 privadas) y las otras 56, según la columna «Existe»._
+_Cuántas son. Regla de conteo: una variable fija es un `Variable("id", …)` con el identificador escrito tal cual en `Estadistica.variables()`. Desde 10f son **187, con 24 nombres de grupo** (186 en la v91 y 184 en la v90). Las tablas de arriba traen **186 en 21 grupos**, porque: `dia_especial` («Calendario») y `campanas_n` («Campañas») van en la tabla siguiente, junto a las de su grupo; `n_impulso` se agrega aquí aunque el código la arma con una plantilla (`n_${it.id}` sobre `Catalogo.MOMENTOS`, que solo da esa), y `medicamentos_n`, la única del grupo «Salud», se lista en Privado. En la v81 eran 177 en 22 grupos; el esquema 13 (10b) agregó `avisos_planeados`, `avisos_mostrados`, `avisos_respondidos`, `tasa_respuesta`, `campanas_n` y `dia_especial`, 10c, `presencias_revisado`, 10e, `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94), y 10f, `fuerza_ref_kg` (D.114). No todas existen en cada instalación: 130 se agregan siempre (entre ellas, las dos de 10e y 4 privadas) y las otras 57 (entre ellas, la de 10f), según la columna «Existe»._
 
 ### Variables con nombre generado
 
@@ -399,7 +400,7 @@ Cada familia crea una variable por cada elemento (persona, tema, lugar, app…) 
 
 ## A.3 Tablas exportadas
 
-La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
+La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`: 49 antes de la entrega 10d, que agregó `vm_variables.csv` y `vm_familias.csv`; el esquema 13 había agregado `vm_personas.csv` y `vm_fechas_propias.csv`), más `vm_ubicaciones.csv`, `vm_fotos_catalogo.csv`, `vm_diccionario.csv` (columnas `archivo`, `columna`, `tipo`, `descripcion` y `tabla`; desde 10f, también `desde_version` y `cambio`, A.9), `vm_respaldo.json`, `vm_datos.sqlite` (una tabla por cada CSV con datos, sin el «vm_», más `ubicaciones` y `diccionario`; no lleva el catálogo de fotos), un `LEEME.txt`, el propio `vestigium.R` y la carpeta `portadas/` (`Exportar.archivos` y `Exportar.zip`). La exportación resumida (`Exportar.zipResumido`) trae solo `vm_panel.csv`, su diccionario, el `LEEME.txt` y `vestigium.R`. Todos los CSV usan UTF-8 con BOM, fechas AAAA-MM-DD, booleanos 0/1, listas separadas por «|» y vacío para el dato faltante.
 
 | Archivo | Contenido |
 |---|---|
@@ -420,7 +421,7 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_red_vinculos.csv` | Pares de personas: cómo se conocen según tú y cuántos días aparecen juntas |
 | `vm_personas.csv` | Tu gente: relación, cercanía, desde cuándo, nacimiento, fallecimiento y edad (esquema 13) |
 | `vm_fechas_propias.csv` | Fechas propias que se repiten cada año (esquema 13) |
-| `vm_experimentos.csv` | Experimentos personales: pregunta, hipótesis sellada, diseño, lavado y plan por semana (1 = con la acción); desde el esquema 13, también `fin` y `hecho` («¿Lo hiciste hoy?») |
+| `vm_experimentos.csv` | Experimentos personales: pregunta, hipótesis sellada, diseño, lavado y plan por semana (1 = con la acción); desde el esquema 13, también `fin` y `hecho` («¿Lo hiciste hoy?»); desde el 15, el criterio sellado (`sentido`, `umbral`) y la huella (`huella`, `intacto`) |
 | `vm_metas.csv` | Metas: horizonte, fecha objetivo, estado, medida, progreso e historial de cambios |
 | `vm_ingresos.csv` | Ingresos, uno por fila |
 | `vm_escalas.csv` | Cuestionarios validados (WHO-5, PSS-4, UCLA-3, TIPI) |
@@ -428,7 +429,7 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_salud.csv` | Health Connect por día (reloj y báscula) |
 | `vm_pantalla.csv` | Tiempo en pantalla por día |
 | `vm_visitas.csv` | Llegadas y salidas de tus lugares |
-| `vm_entorno.csv` | Clima, luz, aire y luna por día |
+| `vm_entorno.csv` | Clima, luz, aire y luna por día; desde el esquema 15, de dónde salió el clima (`fuente`) |
 | `vm_fotos.csv` | Fotos tomadas por día |
 | `vm_agenda.csv` | Agenda por día |
 | `vm_notificaciones.csv` | Notificaciones por día (solo conteos) |
@@ -444,7 +445,7 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_perfil.csv` | Conocerte: cómo está ahora y cada cambio con su fecha |
 | `vm_politica.csv` | Brújula política: un test por año, ejes y respuestas |
 | `vm_comunicacion.csv` | Llamadas y SMS por día (solo conteos) |
-| `vm_conexiones.csv` | Wifi, audio, carga, batería y luz por día |
+| `vm_conexiones.csv` | Wifi, audio, carga, batería y luz por día; desde el esquema 15, los minutos sin dato de wifi aparte (`wifi_sin_dato_min`) |
 | `vm_subrayados.csv` | Subrayados y notas de Kindle |
 | `vm_google_dia.csv` | YouTube y búsquedas de Google por día |
 | `vm_google.csv` | YouTube y búsquedas de Google, una por fila |
@@ -452,8 +453,8 @@ La exportación genera 51 tablas CSV con datos (contadas en `Exportar.tablas()`:
 | `vm_whatsapp.csv` | WhatsApp: un chat por día por fila (solo conteos) |
 | `vm_nutricion.csv` | MacroFactor: nutrición, gasto energético y peso por día |
 | `vm_comidas.csv` | MacroFactor: cada alimento registrado |
-| `vm_entrenos.csv` | MacroFactor Workouts: resumen por día y por grupo muscular |
-| `vm_series.csv` | MacroFactor Workouts: cada serie |
+| `vm_entrenos.csv` | MacroFactor Workouts: resumen por día y por grupo muscular; desde el esquema 15, `fuerza_ref_kg` |
+| `vm_series.csv` | MacroFactor Workouts: cada serie; desde el esquema 15, si es del ejercicio de referencia (`referencia`) |
 
 ## A.4 Columnas nuevas del esquema 13 (entrega 10b)
 
@@ -589,3 +590,22 @@ Tampoco cambia lo que se guarda (`SCHEMA_V` = 14): cambia cómo se calculan algu
 | `supl_<id>_nivel` | Solo en los suplementos con vida media de 6 horas o más (`Suplementos.VIDA_MEDIA_MIN_NIVEL`); la melatonina del catálogo (1 hora) ya no lo tiene (D.98) | También en los de vida media corta, que a las 5:00 casi siempre valían 0 (H-4-7, en parte) |
 
 **El diccionario y el LEEME (10e).** La descripción de `cafeina_al_dormir_mg`, `creatina_saturacion_pct` y cada `supl_<id>_nivel` termina con los parámetros vigentes al exportar (vida media, o días de carga y de lavado con la dosis de referencia) y con el aviso de que cambiarlos recalcula toda la historia (`Diccionario.conParametros`, D.99; H-4-11, en parte). El LEEME y el diccionario dicen «esquema 13» y «esquema 14» donde decían «v13» y «v14», y el LEEME dice que el esquema de cada día está en `schema_v` de `vm_dias.csv` (D.107, H-14-1). Las descripciones nuevas del diccionario son las de `error_prediccion_signo`, `gasto_imprevisto_monto`, `cafeina_ultima_h` y `vm_panel_extendido.csv:personas`.
+
+## A.9 Columnas nuevas del esquema 15 (entrega 10f)
+
+Cambia lo que se guarda: `SCHEMA_V` = 15. Una variable nueva en el panel de la app (`fuerza_ref_kg`) y columnas nuevas en la exportación, que no son variables del panel. Detalle y motivo en el Apéndice D (D.109 a D.118).
+
+| Archivo | Columna | Qué es |
+|---|---|---|
+| `vm_panel.csv` | `desfase_utc_h` | Horas de diferencia con UTC a mediodía de ese día, con la zona que tenía el teléfono entonces (`Fechas.desfaseH`; −6 en la Ciudad de México). Desde 10f, cada hora y cada fecha de las tablas es la hora local de entonces (D.109, D.110; capítulo 2, sección 2.3.1) |
+| `vm_panel.csv` | `cambio_horario` | 0/1: el desfase con UTC al empezar el día lógico no es el de su último instante (`Fechas.cambioDeHora`): horario de verano o un viaje. Ese día no duró 24 horas (fórmula B.24) |
+| `vm_panel.csv` | `clima_reanalisis` | 0/1: el clima del día viene del archivo histórico de Open-Meteo (reanálisis, tipo ERA5) (1) o de los modelos de pronóstico (0); vacío si no hay clima o no se sabe de dónde vino (D.111; capítulo 4) |
+| `vm_entorno.csv` | `fuente` | `archivo` o `pronostico`. Lo guardado antes del esquema 15 se deduce (`Entorno.fuente`): `archivo` si se pidió más de 80 días después de la fecha (`Entorno.DIAS_ARCHIVO`). Los días del último año que vinieron del pronóstico se vuelven a pedir al archivo cuando pasan de 80 días; el índice UV (`uv_max`), que el archivo no trae, se conserva del pronóstico (D.111) |
+| `vm_conexiones.csv` | `wifi_sin_dato_min` | Minutos en que no se pudo saber si había wifi (sin permiso o sin respuesta del sistema). Desde 10f no cuentan en `sin_wifi_min`, que puede bajar desde esta versión; antes, sí contaban (D.112; capítulo 4) |
+| `vm_experimentos.csv` | `sentido`, `umbral` | El criterio sellado: hacia dónde esperabas el cambio (1 sube, −1 baja; vacío = no lo dijiste) y la diferencia mínima que contaría como efecto, en las unidades de la medida (vacío = cualquiera con el intervalo lejos del cero). Fórmula B.22 (D.113; capítulo 8) |
+| `vm_experimentos.csv` | `huella`, `intacto` | SHA-256 de lo sellado (`Experimentos.huella`) y si sigue coincidiendo con lo que hay ahora (1), si cambió después del sello (0) o si no tiene huella (vacío, experimentos de antes del esquema 15) |
+| `vm_entrenos.csv`, `vm_panel.csv` | `fuerza_ref_kg` | La mejor 1RM estimada del día en el press inclinado con mancuernas (fórmula B.23); vacía los días sin ese ejercicio (D.114) |
+| `vm_series.csv` | `referencia` | 0/1: la serie es del ejercicio de referencia (`Macrofactor.esReferencia`) |
+| `vm_diccionario.csv` | `desde_version`, `cambio` | Desde qué versión de la app rige la definición actual de la columna y qué cambió entonces, con su fila del Apéndice D; vacío = sin cambios desde la v84 (`Diccionario.desde`; D.115, H-1-8). La tabla que las llena (`Diccionario.DESDE`, 165 entradas, con comodines como `per_*`) se armó con las filas del Apéndice D (capítulo 2, sección 2.8) |
+
+**Lo que cambia sin columna nueva.** `sin_wifi_min` (arriba) y todas las horas que la app saca de un instante: `primer_uso_h`, `ultimo_uso_h`, `cafeina_ultima_h`, las horas de `vm_horas.csv` y las demás `*_h` se calculan con la zona que tenía el teléfono entonces, o con el desfase de la propia nota (`Fechas.local`, `Fechas.localDe`). Mientras no viajes, nada cambia. Lo que el teléfono ya guardó sumado por día (sueño, pasos, pantalla, ubicaciones) no se recalcula. La plantilla «Creatina» mide desde 10f `fuerza_ref_kg` en lugar de `volumen_kg`; un experimento creado con la plantilla de antes sigue midiendo `volumen_kg`.

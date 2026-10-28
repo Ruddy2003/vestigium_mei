@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 14
+const val SCHEMA_V = 15
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -635,6 +635,14 @@ data class Experimento(
      * que no es lo mismo que «no».
      */
     val hecho: Map<String, Boolean> = emptyMap(),
+    /**
+     * Lo que se sella además de la hipótesis (esquema 15, H-7-10): la diferencia mínima que contaría como efecto, en las
+     * unidades de la medida, y si la esperas a favor o en contra (1 sube, −1 baja). Null = no se fijó.
+     */
+    val umbral: Double? = null,
+    val sentido: Int? = null,
+    /** Huella SHA-256 de lo sellado (`Experimentos.textoSellado`: pregunta, acción, medida, hipótesis, criterio, diseño, inicio, semanas, plan, lavado y hora), para notar cambios. */
+    val huella: String? = null,
 )
 
 @Serializable
@@ -826,7 +834,13 @@ data class Config(
     val laptop_categorias: Map<String, String> = emptyMap(),
     /** Ya se reabrieron los días que se habían dado por revisados al tocar un nombre (v82). */
     val presencias_reabiertas: Boolean = false,
+    /** Cada cambio de zona horaria del teléfono (esquema 15, H-1-7): cada instante se lee con la zona que tenía entonces. */
+    val zonas: List<CambioZona> = emptyList(),
 )
+
+/** Desde [desde] (ISO) el teléfono estuvo en la zona [zona] («America/Mexico_City», o un desfase fijo como «-05:00»). */
+@Serializable
+data class CambioZona(val desde: String, val zona: String)
 
 /**
  * Un suplemento y cómo se modela en el cuerpo: «vida_media» (lo que queda de cada dosis decae a la mitad cada [vida_media_h] horas),
@@ -924,7 +938,10 @@ data class ConexionDia(
     val fecha: String,
     val muestras: Int = 0,
     val wifi_min: Map<String, Int> = emptyMap(),
+    /** Minutos en que el teléfono dijo que no había wifi conectada (desde el esquema 15, solo cuando se pudo saber). */
     val sin_wifi_min: Int = 0,
+    /** Minutos en que no se pudo saber si había wifi (sin permiso o sin respuesta del sistema; esquema 15, H-3-7). */
+    val wifi_sin_dato_min: Int = 0,
     val audio_min: Map<String, Int> = emptyMap(),
     val dispositivos_min: Map<String, Int> = emptyMap(),
     val musica_min: Int = 0,
@@ -1049,6 +1066,11 @@ data class EntornoDia(
     val luna_ilum: Double? = null,
     val completo: Boolean = false,
     val ts: String? = null,
+    /**
+     * De dónde salió el clima (esquema 15, H-3-4): «archivo» (reanálisis histórico de Open-Meteo, tipo ERA5) o «pronostico»
+     * (modelos de pronóstico). Null en lo guardado antes: se deduce de [ts] con `Entorno.fuente`.
+     */
+    val fuente: String? = null,
 )
 
 /** Cuántas fotos tomaste. Solo se guardan cifras e identificadores; las fotos no salen de tu galería. */
@@ -1261,4 +1283,6 @@ data class EntrenoDia(
     val volumen_kg: Double = 0.0,
     val series_musculo: Map<String, Double> = emptyMap(),
     val volumen_musculo: Map<String, Double> = emptyMap(),
+    /** La mejor 1RM estimada del día en el ejercicio fijo de referencia (esquema 15, H-7-14; ver `Macrofactor.esReferencia`). */
+    val fuerza_ref_kg: Double? = null,
 )

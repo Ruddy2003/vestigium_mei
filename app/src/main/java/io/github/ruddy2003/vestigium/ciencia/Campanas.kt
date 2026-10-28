@@ -17,7 +17,7 @@ object Campanas {
         val base = listOf(
             Reto("sueno7", "Noches de 7 horas", "Dormir 7 horas o más (según el reloj)", 5) { f -> Repo.salud[f]?.sueno_min?.let { it >= 420 } },
             Reto("temprano", "Dormir antes de medianoche", "Quedarte dormido antes de las 00:00", 4) { f ->
-                Repo.salud[f]?.sueno_inicio?.let { s -> runCatching { java.time.OffsetDateTime.parse(s).atZoneSameInstant(Fechas.zona()).hour in 18..23 }.getOrNull() }
+                Repo.salud[f]?.sueno_inicio?.let { s -> runCatching { Fechas.localDe(s).hour in 18..23 }.getOrNull() }
             },
             Reto("pasos", "8,000 pasos", "Caminar 8,000 pasos o más", 5) { f -> Repo.salud[f]?.pasos?.let { it >= 8000 } },
             Reto("diario", "Escribir el diario", "Escribir la nota del día", 6) { f -> Repo.dias[f]?.nota?.isNotBlank() ?: false },
@@ -81,7 +81,7 @@ object Campanas {
         "diario" to setOf("palabras", "personas", "hitos_n"),
         "enfoque" to setOf("enfoque_min", "enfoque_estudio_min", "enfoque_lectura_min", "enfoque_idiomas_min", "enfoque_tesis_min", "enfoque_trabajo_min", "enfoque_creativo_min", "laptop_productivo_min"),
         "pantalla" to setOf("pantalla_min", "desbloqueos", "primer_uso_h", "ultimo_uso_h", "notificaciones"),
-        "movimiento" to setOf("ejercicio_min", "gimnasio", "volumen_kg", "series_gimnasio", "escalada", "escalada_grado", "cal_activas"),
+        "movimiento" to setOf("ejercicio_min", "gimnasio", "volumen_kg", "series_gimnasio", "fuerza_ref_kg", "escalada", "escalada_grado", "cal_activas"),
         "leer" to setOf("lectura", "enfoque_lectura_min", "obras_dia"),
         "reaccion" to setOf("rt_media"),
         "animo" to setOf("muestreo_valencia", "muestreo_activacion", "avisos_respondidos", "tasa_respuesta", "n_muestreos", "registros_animo"),

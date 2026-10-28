@@ -1,6 +1,6 @@
 # Capítulo 2. Inventario y arquitectura de datos
 
-> **Para qué sirve este capítulo.** Explica *cómo se obtiene, se guarda, se asigna a un día y se organiza* cada dato de Vestigium Mei, y por qué cada decisión es razonable (o no). Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`); lo que cambió después, en la entrega 10e, se marca «desde 10e». Los ejemplos numéricos son **sintéticos**. Cada decisión se marca como **[Validado]** (respaldada por literatura o por un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app sin referente directo). Los hallazgos de este capítulo son H-1-n (módulo 1); los H-9-n son de la revisión general.
+> **Para qué sirve este capítulo.** Explica *cómo se obtiene, se guarda, se asigna a un día y se organiza* cada dato de Vestigium Mei, y por qué cada decisión es razonable (o no). Describe el código de la v92 (la v91 más la entrega 10f; `SCHEMA_V = 15`); lo que cambió en las entregas 10e y 10f se marca «desde 10e» y «desde 10f». Los ejemplos numéricos son **sintéticos**. Cada decisión se marca como **[Validado]** (respaldada por literatura o por un estándar), **[Aproximación]** (razonable, con supuestos que conviene conocer) o **[Diseño propio]** (decisión de la app sin referente directo). Los hallazgos de este capítulo son H-1-n (módulo 1); los H-9-n son de la revisión general.
 
 ---
 
@@ -40,7 +40,7 @@ El origen de un dato determina su tipo de error, por lo que la app conserva esa 
 
 `Fechas.ahoraIso()` genera, por ejemplo, `2026-10-16T08:42:10-06:00`: fecha y hora **locales con el desfase respecto a UTC** (el horario universal de referencia). Las fechas «de día» son `YYYY-MM-DD`. Este formato ISO-8601 identifica un instante físico sin ambigüedad y conserva la hora «de reloj de pared», necesaria para ritmos circadianos (a qué hora se duerme, cuándo se usa el teléfono). **[Validado]** (estándar ISO 8601).
 
-*Cuándo falla:* los eventos pasados se interpretan con la zona **actual** del teléfono (`Fechas.zona()` = `ZoneId.systemDefault()`). Tras un viaje, la hora local de un evento antiguo con otro desfase se reconvierte a la zona actual (H-1-7, abierto). En viajes largos, la hora de dormir puede desplazarse artificialmente.
+**La hora local de entonces (desde 10f, D.109 y D.110; H-1-7, resuelto).** Hasta 10f, los eventos pasados se interpretaban con la zona **actual** del teléfono (`Fechas.zona()`): tras un viaje, un evento antiguo con otro desfase se reconvertía a la hora de hoy, y la hora de dormir o el día de una nota podían moverse. Ahora la configuración guarda cada cambio de zona horaria (`Config.zonas`, «desde este instante, esta zona»), y cada instante se lee con la zona que tenía el teléfono entonces (`Fechas.zonaEn`); una nota con su desfase se lee con ese desfase (`Fechas.localDe`). El cambio se anota al abrir la app, cada 15 minutos y cuando Android avisa (`TIMEZONE_CHANGED`). Para lo guardado antes, el historial se arma con las notas: un periodo con otro desfase empieza si **dos notas seguidas** lo traen. *Ejemplo sintético:* una toma de cafeína anotada en Madrid como `…T08:00:00+02:00` antes se leía a las 00:00 en la Ciudad de México y caía en el día lógico anterior; ahora se lee a las 08:00 y cuenta para su día. `vm_panel.csv` marca los días con cambio de horario o de zona (`cambio_horario`, con `desfase_utc_h`); un día así no dura 24 horas sino 24 − (desfase final − desfase inicial): 23 o 25 con el horario de verano, 16 en un viaje de UTC−6 a UTC+2. **[Validado]** el principio; **[Diseño propio]** cómo se arma el historial. *Cuándo falla:* lo que el teléfono ya guardó sumado por día (sueño, pasos, pantalla) no se recalcula, y el historial reconstruido solo ve los periodos en que anotaste algo.
 
 ### 2.3.2 Día lógico (corte a las 05:00)
 
@@ -127,7 +127,7 @@ Las escalas del diario (valencia y activación, 1–7) son **ordinales**: la dis
 
 ## 2.7 Familias de variables dinámicas
 
-Hay **186** variables fijas desde 10e (cada identificador que `Estadistica.variables()` escribe con su nombre; 184 en la v90): 130 existen siempre y 56 solo si hay datos de su fuente. Las dos nuevas son `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94). Siete son privadas: la app no las cruza y van a R. Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por persona (`per_*`, `pen_*`), tema, lugar, app, categoría de gasto, artista, ciudad, nutriente… (27 prefijos, Apéndice A), y también hábitos, emociones usadas y campañas.
+Hay **187** variables fijas desde 10f (cada identificador que `Estadistica.variables()` escribe con su nombre; 186 en la v91 y 184 en la v90): 130 existen siempre y 57 solo si hay datos de su fuente. Las de 10e son `error_prediccion_signo` y `gasto_imprevisto_monto` (D.94); la de 10f, `fuerza_ref_kg`, la mejor 1RM estimada del día en press inclinado con mancuernas (D.114; capítulo 8). Siete son privadas: la app no las cruza y van a R. Además, el sistema crea **variables dinámicas** por cada elemento que la persona usa: una por persona (`per_*`, `pen_*`), tema, lugar, app, categoría de gasto, artista, ciudad, nutriente… (27 prefijos, Apéndice A), y también hábitos, emociones usadas y campañas.
 
 - **Análisis:** entran solo las más frecuentes de cada familia, con un tope y un mínimo de días (por ejemplo, `per_`: máx. 15, mín. 5 días; `Dinamicas.familia`).
 - **Exportación extendida (`vm_panel_extendido.csv`):** todas las que aparecen en al menos 2 días, hasta 400 por familia.
@@ -154,7 +154,7 @@ La app exporta **51 tablas CSV** de datos (`Exportar.tablas()`, Apéndice A), m�
 
 Una prueba JVM (`ExportacionPrueba`) comprueba con datos inventados que la app da los mismos números que R, y con una exportación real el autor comprobó que las primeras parejas de `vm_relaciones()` coinciden con las de «Las relaciones más marcadas» (28 oct 2026).
 
-**Cuándo falla.** El diccionario describe el *significado* pero no versiona cada variable: si una definición cambia entre versiones, solo refleja la actual, y una exportación antigua puede no ser comparable (`schema_v` ayuda, pero no a nivel de variable) (H-1-8, abierto). Desde 10e, el diccionario dice los parámetros con que se calcularon las variables de modelos (vida media, carga y lavado; D.99), y el LEEME dice «esquema 13» y «esquema 14», no «v13» y «v14», y dónde está el esquema de cada día (`schema_v` de `vm_dias.csv`; D.107).
+**Desde qué versión rige cada columna (desde 10f, D.115; H-1-8).** Hasta 10f, el diccionario describía el *significado* pero no versionaba cada variable: si una definición cambiaba, solo reflejaba la actual, y una exportación antigua podía no ser comparable. Ahora `vm_diccionario.csv` trae `desde_version` y `cambio` (con su fila del Apéndice D; vacío = sin cambios desde la v84). La tabla (`Diccionario.DESDE`, 165 entradas armadas con el Apéndice D, con comodines como `per_*`) se escribe a mano: un cambio que no se anote ahí deja «vacío». Desde 10e, el diccionario dice los parámetros con que se calcularon las variables de modelos (vida media, carga y lavado; D.99), y el LEEME dice «esquema 13» y «esquema 14», no «v13» y «v14», y dónde está el esquema de cada día (`schema_v` de `vm_dias.csv`; D.107).
 
 ---
 
@@ -175,7 +175,7 @@ Una prueba JVM (`ExportacionPrueba`) comprueba con datos inventados que la app d
 | L-2 | Cero frente a nulo | Una sola regla, `ceroDesde`; el abandono sigue contando como 0 |
 | L-3 | Autoselección del registro | `retroactivo`; `con_diario` en `vm_panel.csv` |
 | L-4 | Medición reactiva (medirse cambia lo medido) | Inevitable; documentar periodos de adaptación |
-| L-5 | Cambios de instrumento | `schema_v`; `ventana_pantalla` y `ventana_pasos` |
+| L-5 | Cambios de instrumento (también viajes y cambios de horario) | `schema_v`; `ventana_pantalla` y `ventana_pasos`; desde el esquema 15, `cambio_horario` |
 | L-6 | Multiplicidad por variables dinámicas | Filtros por frecuencia; corrección en el capítulo 6 |
 | L-7 | Autocorrelación (días seguidos no son independientes) | Tratada en el capítulo 6 |
 | L-8 | Generalización (un solo sujeto) | Los resultados describen a esa persona |
@@ -185,9 +185,9 @@ Una prueba JVM (`ExportacionPrueba`) comprueba con datos inventados que la app d
 ## 2.11 En resumen
 
 1. La app conserva el origen de cada dato (activo, pasivo o importado), y así puede comparar autorreporte con medición objetiva.
-2. El **día lógico** (corte 05:00) asigna los eventos nocturnos al día vivido. Pantalla y pasos lo usan desde el esquema 13 (la serie se parte en dos tramos); otras variables siguen por día de calendario, y la exportación lo declara.
+2. El **día lógico** (corte 05:00) asigna los eventos nocturnos al día vivido; desde 10f, cada instante se lee con la zona que tenía el teléfono entonces. Pantalla y pasos lo usan desde el esquema 13 (la serie se parte en dos tramos); otras variables siguen por día de calendario, y la exportación lo declara.
 3. El almacén (SQLite + documentos JSON + `Repo` con escritura inmediata) privilegia flexibilidad y pérdida mínima de datos; su lectura tolerante puede convertir un «sin dato» en un valor por omisión (H-1-4).
 4. El panel distingue **valor, cero estructural y sin dato**; desde la entrega 10c hay una sola regla, `ceroDesde`: 0 desde el primer registro de la fuente y solo en los días que se pudieron responder.
 5. Las variables dinámicas (una por persona, lugar, tema…) exigen control de multiplicidad.
 6. La exportación sigue principios tidy y FAIR, y desde la entrega 10d R analiza el mismo panel que la app.
-7. El módulo 1 anotó 9 hallazgos (H-1-1 a H-1-9). El módulo 10 resolvió H-1-1 (salvo el abandono de una función), H-1-2, H-1-3 y H-1-6, y en parte H-1-9; la entrega 10e, H-1-5. Siguen abiertos H-1-4, H-1-7 y H-1-8.
+7. El módulo 1 anotó 9 hallazgos (H-1-1 a H-1-9). El módulo 10 resolvió H-1-1 (salvo el abandono de una función), H-1-2, H-1-3 y H-1-6, y en parte H-1-9; la entrega 10e, H-1-5, y la 10f, H-1-7 y H-1-8. Sigue abierto solo H-1-4.

@@ -1,6 +1,6 @@
 # Apéndice B. Fórmulas
 
-_Las fórmulas esenciales del núcleo estadístico (capítulo 6), con la función de origen. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`). Se conservan las etiquetas B.n de la versión completa, que trae además la media móvil (B.17), las cifras de «Tus números» (B.19) y la ventana de los cuestionarios (B.21). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
+_Las fórmulas esenciales del núcleo estadístico (capítulo 6), con la función de origen. Describe el código de la v92 (la v91 más la entrega 10f; `SCHEMA_V = 15`). Se conservan las etiquetas B.n de la versión completa, que trae además la media móvil (B.17), las cifras de «Tus números» (B.19), la ventana de los cuestionarios (B.21) y dos fórmulas de la entrega 10f fuera del núcleo estadístico: la fuerza de referencia con Epley (B.23) y la duración de un día con cambio de hora (B.24). Notación: n = número de días (o semanas) con ambos datos; x̄ = promedio; s² = varianza muestral con n − 1; atanh y tanh son la tangente hiperbólica inversa y directa._
 
 ---
 
@@ -137,3 +137,11 @@ $$ \text{dif}_w=\overline{\text{valencia}}_{\{\text{días con } w\}}-\overline{\
 $$ \text{ceroDesde}(F, B)=\{\,f\in B:\ f\ge\min F\,\} $$
 
 F = fechas de la fuente (gastos, impulsos, escalada, entrenamientos, sesiones del reloj); B = días en que la sección se pudo responder (días con diario; para el ejercicio, días con datos del reloj). En esos días «no hubo» = 0; en los demás, faltante. Las variables sociales usan B = días sociales (diario escrito o momento no privado con @; `Dinamicas.diasSociales`).
+
+### B.22 Criterio sellado de un experimento — `Experimentos.criterio` (desde 10f); `criterio` en `vm_experimento`
+
+Con la diferencia d y su intervalo [lo, hi] de B.11, el sentido sellado s (+1 sube, −1 baja) y el umbral u ≥ 0 (0 si no se puso):
+
+$$ \text{se cumple}\iff d\cdot s\ \ge\ u\ \ \text{y}\ \ \begin{cases}\text{lo}>0&\text{si } s=+1\\ \text{hi}<0&\text{si } s=-1\end{cases} $$
+
+Sin sentido, sin diferencia o con el plan en curso, no hay veredicto. Lo sellado lleva una huella SHA-256 (`Experimentos.huella`) que delata cualquier cambio posterior. **[Diseño propio]** la regla; **[Validado]** SHA-256 como función hash criptográfica estándar.

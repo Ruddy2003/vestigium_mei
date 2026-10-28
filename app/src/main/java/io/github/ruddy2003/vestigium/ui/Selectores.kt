@@ -83,8 +83,9 @@ fun elegirFecha(ctx: android.content.Context, inicial: String?, desdeManana: Boo
         .apply { if (desdeManana) datePicker.minDate = System.currentTimeMillis() + 86_400_000L }.show()
 }
 
-fun LocalDateTime.aMillis(): Long = atZone(Fechas.zona()).toInstant().toEpochMilli()
-fun horaLocal(ms: Long): LocalDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(ms), Fechas.zona()).withSecond(0).withNano(0)
+/** Hora local → instante, con la zona que regía entonces (H-1-7). */
+fun LocalDateTime.aMillis(): Long = Fechas.millisDe(this)
+fun horaLocal(ms: Long): LocalDateTime = Fechas.local(ms).withSecond(0).withNano(0)
 
 /** El único selector de duración: atajos y «otra» en minutos. */
 @Composable

@@ -35,13 +35,22 @@ vm_dic <- local({
   fecha = col_date(format = "%Y-%m-%d"), hora = col_time(format = ""), entero = col_double(), numero = col_double(),
   logico = col_double(), col_character())
 
-#' Convierte texto ISO 8601 con desfase (2026-10-16T08:42:10-06:00) a fecha-hora en tu zona.
+#' Convierte texto ISO 8601 con desfase (2026-10-16T08:42:10-06:00) a fecha-hora en tu zona (vm_zona). Es el mismo instante, pero
+#' si estuviste en otra zona se muestra con la hora de vm_zona: la hora local de entonces está en las columnas *_h y en las fechas,
+#' que la app calcula con la zona que tenía el teléfono (esquema 15), y en vm_hora_local().
 vm_fecha_hora <- function(x) {
   x <- as.character(x)
   x[!is.na(x) & !nzchar(x)] <- NA
   # Java omite los segundos cuando son :00; se agregan para que el formato sea uniforme.
   x <- sub("^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2})(Z|[+-]\\d{2}:\\d{2})$", "\\1:00\\2", x, perl = TRUE)
   with_tz(ymd_hms(x, quiet = TRUE), vm_zona)
+}
+
+#' Hora local de una marca ISO 8601 tal como se tomó, con su propio desfase (7.5 = 7:30), sin pasarla a vm_zona. Recibe el texto
+#' de la exportación (no la columna ya convertida a fecha-hora): por ejemplo read_csv("vm_momentos.csv", col_types = cols(ts = "c")).
+vm_hora_local <- function(x) {
+  m <- str_match(as.character(x), "T(\\d{2}):(\\d{2})")
+  as.numeric(m[, 2]) + as.numeric(m[, 3]) / 60
 }
 
 #' Separa una columna tipo lista ("a|b|c") en una lista de vectores.
@@ -787,6 +796,10 @@ vm_laptop <- function() {
 #' posible es la proporción de planes con la diferencia más grande: sin lavado, el plan espejo da la misma diferencia con el
 #' signo contrario, así que nunca baja de 2 / planes (con 12 semanas, 2/64 = 0.031). Los planes que dejan menos de 3 días medidos en una condición no tienen diferencia y no entran.
 #' Antes y después: sin sorteo no hay prueba (NA).
+#' Criterio sellado (esquema 15): si al sellar dijiste hacia dónde esperabas el cambio (sentido 1 sube, -1 baja) y quizá una
+#' diferencia mínima (umbral), `criterio` es TRUE si la diferencia va en ese sentido, mide al menos el umbral (0 si no hay) y su
+#' intervalo de 95 % no toca el cero; NA si no hay sentido, si no hay diferencia o si el plan sigue en curso. `intacto` dice si
+#' lo sellado sigue igual (la huella SHA-256 que guardó la app coincide).
 vm_experimento <- function(id, datos = panel, hoy = max(datos$fecha, na.rm = TRUE)) {
   if (is.null(vm$experimentos) || !nrow(vm$experimentos)) stop("No hay experimentos (vm_experimentos.csv).")
   e <- vm$experimentos[as.character(vm$experimentos$id) == as.character(id), ]
@@ -867,11 +880,21 @@ vm_experimento <- function(id, datos = panel, hoy = max(datos$fecha, na.rm = TRU
             diferencia = obs, lo = if (is.null(dif)) NA_real_ else dif$lo, hi = if (is.null(dif)) NA_real_ else dif$hi, p = if (is.null(dif)) NA_real_ else dif$p,
             g = g, tendencia = ten$pendiente, tendencia_clara = ten$clara, cumplimiento = cumplimiento, cociente = cociente,
             posible_si = unname(posible["si"]), posible_no = unname(posible["no"]), planes = planes, p_aleatorizacion = p_al, distribucion = dist, nota = nota)
+  sentido <- if ("sentido" %in% names(e)) suppressWarnings(as.numeric(e$sentido)) else NA_real_
+  umbral <- if ("umbral" %in% names(e)) suppressWarnings(as.numeric(e$umbral)) else NA_real_
+  r$sentido <- sentido; r$umbral <- umbral
+  r$intacto <- if ("intacto" %in% names(e)) as.logical(e$intacto) else NA
+  r$criterio <- if (is.na(sentido) || is.na(obs) || r$provisional) NA else
+    obs * sentido >= coalesce(umbral, 0) && (if (sentido > 0) r$lo > 0 else r$hi < 0)
   cat(sprintf("%s (%s) · %s · con la acción: %d días · sin ella: %d días%s\n", e$nombre, e$diseno, e$resultado, r$n_con, r$n_sin, if (r$provisional) " · PROVISIONAL" else ""))
   if (is.null(dif)) cat("Hacen falta al menos 3 días medidos en cada condición.\n")
   else cat(sprintf("Diferencia %+.3f (IC 95 %%: %.3f a %.3f; p = %.3g) · g de Hedges %.2f\n", r$diferencia, r$lo, r$hi, r$p, r$g))
   message(nota)
   if (!is.na(p_al)) cat(sprintf("p de aleatorización = %.4g\n", p_al))
+  if (!is.na(sentido)) cat(sprintf("Criterio sellado: hacia %s%s, con el intervalo lejos del cero · %s\n", if (sentido > 0) "arriba" else "abajo",
+    if (!is.na(umbral) && umbral > 0) sprintf(" al menos %g", umbral) else "",
+    if (is.na(r$criterio)) "se decide al terminar" else if (r$criterio) "se cumple" else "no se cumple"))
+  if (isFALSE(r$intacto)) message("Ojo: lo sellado cambió después del sello (la huella no coincide).")
   invisible(r)
 }
 
@@ -911,4 +934,4 @@ message("\nListo. Tablas: ", paste(names(vm), collapse = ", "),
         "\n           vm_dinamica(), vm_ritmo(), vm_palabras(), vm_atipicos(), vm_mapa_animo(), vm_guardar_graficas(),",
         "\n           vm_por_hora('valencia'), vm_cruce_horas('cafeina_mg', 'activacion'), vm_sustancias(), vm_lugares(), vm_presion(), vm_retraso('momentos'),",
         "\n           vm_red(min_dias = 3), vm_laptop(), vm_experimento('id'),",
-        "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna'), vm_leer_sqlite()")
+        "\n           vm_describir('vm_panel.csv'), vm_lista(), vm_pares(tabla, 'columna'), vm_hora_local(ts), vm_leer_sqlite()")

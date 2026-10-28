@@ -33,7 +33,7 @@ object Dinamicas {
         "med_" to setOf("medicamentos_n"), "det_" to setOf("impulso", "recaida"),
         "ciu_" to setOf("ciudades_dia", "fuera_de_casa", "extranjero", "ciudad_nueva", "distancia_km", "vehiculo_min", "unesco"),
         "pais_" to setOf("ciudades_dia", "fuera_de_casa", "extranjero", "ciudad_nueva", "distancia_km", "vehiculo_min", "unesco"),
-        "musc_" to setOf("gimnasio", "volumen_kg", "series_gimnasio", "ejercicio_min", "cal_activas"),
+        "musc_" to setOf("gimnasio", "volumen_kg", "series_gimnasio", "fuerza_ref_kg", "ejercicio_min", "cal_activas"),
         "act_" to setOf("ejercicio_min", "pasos", "cal_activas", "a_pie_min", "distancia_km"),
         "nut_" to setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "azucares_g", "cafeina_mg", "balance_kcal"),
         "ali_" to setOf("kcal", "proteina_g", "carbohidratos_g", "grasa_g", "fibra_g", "alcohol_g", "azucares_g", "cafeina_mg", "comidas"),

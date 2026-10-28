@@ -358,8 +358,11 @@ object Experimentos {
 
     val PLANTILLAS = listOf(
         // 12 semanas: con 28 días de lavado quedan 14 días con la acción y 42 sin ella (con 8 no quedaba ninguno con la acción).
-        Plantilla("creatina", "Creatina", "¿La creatina cambia mi fuerza o mi energía?", "Tomar 5 g de creatina al día", "volumen_kg", "antes_despues", 12, 28,
-            "Antes y después: la reserva del músculo tarda semanas en llenarse y en vaciarse, así que alternar semanas no sirve."),
+        Plantilla("creatina", "Creatina", "¿La creatina cambia mi fuerza o mi energía?", "Tomar 5 g de creatina al día", "fuerza_ref_kg", "antes_despues", 12, 28,
+            "Antes y después: la reserva del músculo tarda semanas en llenarse y en vaciarse, así que alternar semanas no sirve. Se mide con un " +
+                "ejercicio fijo, el press inclinado con mancuernas (la 1RM estimada de tu mejor serie), para que no dependa de qué entrenaste ese " +
+                "día; solo cuentan los días en que lo hiciste, así que hazlo al menos dos veces por semana (con una, apenas quedan días con la acción). " +
+                "Si vas subiendo de peso, la cifra sube sola: una mejora no prueba que fue la creatina."),
         Plantilla("hora_dormir", "Hora de dormir", "¿Dormirme antes de las 00:00 mejora cómo me siento?", "Estar en la cama antes de las 00:00", "valencia", "alterno", 6, 1,
             "Semanas alternas sorteadas; el primer día de cada cambio no cuenta."),
         Plantilla("pantalla_noche", "Pantalla antes de dormir", "¿Soltar el teléfono una hora antes de dormir mejora mi sueño?", "Sin pantalla en la última hora antes de dormir", "sueno_calidad", "alterno", 6, 1,
@@ -528,6 +531,35 @@ object Experimentos {
         if (varBt <= 0) return bt to false
         val tt = bt / sqrt(varBt)
         return bt to (abs(tt) > io.github.ruddy2003.vestigium.ciencia.Estadistica.cuantilT(0.975, (serie.size - k).toDouble()))
+    }
+
+    /**
+     * Lo que queda sellado antes de empezar (H-7-10), en un orden fijo: pregunta, acción, medida, hipótesis, criterio (umbral y
+     * sentido), diseño, inicio, semanas, plan, lavado y la hora del sello. La huella es su SHA-256: si alguno cambia después
+     * (una edición o un respaldo que lo reescribe), la huella ya no coincide y la app lo dice.
+     */
+    fun textoSellado(e: Experimento): String = listOf(e.pregunta, e.accion, e.resultado, e.hipotesis, e.umbral?.toString().orEmpty(), e.sentido?.toString().orEmpty(),
+        e.diseno, e.inicio, e.semanas.toString(), e.plan.joinToString("") { if (it) "1" else "0" }, e.lavado_dias.toString(), e.sellada.orEmpty()).joinToString("\u001F")
+
+    fun huella(e: Experimento): String =
+        java.security.MessageDigest.getInstance("SHA-256").digest(textoSellado(e).toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+
+    /** El experimento con su huella puesta. Se llama al sellar. */
+    fun sellar(e: Experimento): Experimento = e.copy(huella = huella(e))
+
+    /** true = lo sellado no cambió; false = cambió después del sello; null = no tiene huella (de antes del esquema 15). */
+    fun intacto(e: Experimento): Boolean? = e.huella?.let { it == huella(e) }
+
+    /**
+     * El criterio sellado aplicado al resultado final (H-7-10): cuenta como efecto si la diferencia va en el sentido que dijiste,
+     * mide al menos el umbral (0 si no pusiste uno) y su intervalo de 95 % no toca el cero. Null si no fijaste un sentido, si
+     * no hay resultado o si el plan sigue en curso (el criterio se decide al terminar, no a medio camino).
+     */
+    fun criterio(e: Experimento, r: Resultado): Boolean? {
+        val s = e.sentido ?: return null
+        val (d, lo, hi) = r.dif ?: return null
+        if (r.provisional) return null
+        return d * s >= (e.umbral ?: 0.0) && (if (s > 0) lo > 0 else hi < 0)
     }
 
     fun tamano(d: Double): String = when { abs(d) < 0.2 -> "muy pequeño"; abs(d) < 0.5 -> "pequeño"; abs(d) < 0.8 -> "mediano"; else -> "grande" }

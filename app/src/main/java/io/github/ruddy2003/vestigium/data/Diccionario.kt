@@ -83,6 +83,10 @@ object Diccionario {
         "personas" to "@personas mencionadas (lista)", "temas" to "#temas mencionados (lista)", "palabras" to "Número de palabras",
         // Panel y días
         "dia_semana" to "1 = lunes … 7 = domingo",
+        "desfase_utc_h" to "Horas de diferencia con UTC a mediodía de ese día, en la zona donde estaba el teléfono (−6 en la Ciudad de México). Cada hora de las tablas es la hora local de entonces",
+        "cambio_horario" to "Ese día lógico cambió la hora del teléfono: horario de verano o un viaje a otra zona (0/1). El día duró más o menos de 24 horas",
+        "clima_reanalisis" to "El clima de ese día viene del archivo histórico (reanálisis tipo ERA5) (1) o de modelos de pronóstico (0). Los días de pronóstico se cambian por el reanálisis cuando pasan 80 días",
+        "vm_entorno.csv:fuente" to "De dónde salió el clima: archivo (reanálisis histórico de Open-Meteo, tipo ERA5) o pronostico (modelos de pronóstico; se cambia por el archivo a los 80 días). El índice UV solo viene del pronóstico",
         "festivo" to "Día de descanso obligatorio de la Ley Federal del Trabajo de México, art. 74 (0/1; vacío si en «Conocerte» no vives en México)",
         "dia_libre" to "Sábado, domingo o festivo (0/1): la regla de día libre del jet lag social; una noche es libre si despiertas en un día libre", "con_diario" to "Hay registro del diario ese día (0/1)",
         "valencia" to "Qué tan agradable fue (1 muy desagradable a 7 muy agradable; Russell)", "activacion" to "Energía (1 muy baja a 7 muy alta)",
@@ -169,7 +173,8 @@ object Diccionario {
         "min_hablado" to "Minutos hablando por teléfono", "llamada_max_min" to "Llamada más larga (min)", "sms_recibidos" to "SMS recibidos", "sms_enviados" to "SMS enviados",
         "contactos" to "Personas distintas con las que hubo llamada o SMS", "llamadas" to "Llamadas entrantes y salientes", "sms" to "SMS enviados y recibidos",
         // Conexiones
-        "muestras" to "Muestras tomadas (una cada ~15 min)", "sin_wifi_min" to "Minutos sin wifi (fuera de casa, normalmente)", "wifi_total_min" to "Minutos conectado a cualquier wifi",
+        "muestras" to "Muestras tomadas (una cada ~15 min)", "sin_wifi_min" to "Minutos sin wifi: el wifi estaba apagado o el sistema dijo que no había red wifi (fuera de casa, normalmente). Desde el esquema 15 no incluye los minutos sin dato; antes, sí",
+        "wifi_sin_dato_min" to "Minutos en que no se pudo saber si había wifi (sin permiso o sin respuesta del sistema); no cuentan como sin wifi (esquema 15)", "wifi_total_min" to "Minutos conectado a cualquier wifi",
         "audifonos_min" to "Minutos con audífonos conectados", "coche_min" to "Minutos conectado al coche por Bluetooth", "bocina_min" to "Minutos con bocina Bluetooth",
         "bluetooth_otro_min" to "Minutos con otro audio Bluetooth", "musica_min" to "Minutos con audio sonando", "cargando_min" to "Minutos cargando",
         "carga_noche_inicio" to "Cuándo conectaste el teléfono por la noche", "carga_noche_fin" to "Cuándo lo desconectaste en la mañana",
@@ -208,6 +213,8 @@ object Diccionario {
         "cafeina_ultima" to "Hora de la última cafeína", "primera_comida_h" to "Hora del primer alimento en decimal", "ultima_comida_h" to "Hora del último alimento en decimal",
         "cafeina_ultima_h" to "Hora de la última cafeína del día lógico en decimal, de MacroFactor y de lo anotado en la app (antes de las 5:00 suma 24)", "alimento" to "Alimento", "porcion" to "Unidad de la porción", "vm_comidas.csv:cantidad" to "Cantidad de porciones",
         "peso_porcion_g" to "Gramos por porción", "entrenos" to "Entrenamientos del día (lista)", "vm_entrenos.csv:minutos" to "Minutos de entrenamiento",
+        "fuerza_ref_kg" to "Fuerza de referencia: la mejor 1RM estimada (Epley, series de hasta 12 reps, sin calentamiento) del día en press inclinado con mancuernas; vacío si ese día no lo hiciste (esquema 15)",
+        "vm_series.csv:referencia" to "La serie es del ejercicio de referencia, press inclinado con mancuernas (0/1)",
         "series" to "Series totales (con calentamiento)", "series_efectivas" to "Series sin contar calentamiento", "reps" to "Repeticiones", "volumen_kg" to "Volumen: peso × repeticiones (kg)",
         "entreno" to "Nombre del entrenamiento", "entreno_min" to "Duración del entrenamiento (min)", "ejercicio" to "Ejercicio", "tipo_serie" to "Tipo de serie",
         "calentamiento" to "Serie de calentamiento (0/1)", "peso_kg" to "Peso (kg)", "rir" to "Repeticiones en reserva", "e1rm_kg" to "1RM estimado con Epley (kg), series de hasta 12 reps",
@@ -267,6 +274,10 @@ object Diccionario {
         "vm_experimentos.csv:lavado_dias" to "Días que no cuentan tras cada cambio de condición", "vm_experimentos.csv:plan" to "Plan por semana: 1 con la acción, 0 sin ella (lista)",
         "vm_experimentos.csv:activo" to "Sigue activo (0/1)", "vm_experimentos.csv:plantilla" to "Plantilla de la que salió (vacío = propio)",
         "vm_experimentos.csv:fin" to "Día lógico en que lo terminaste (desde el esquema 13; los días después no cuentan)",
+        "vm_experimentos.csv:sentido" to "Criterio sellado: hacia dónde esperabas el cambio (1 sube, -1 baja; vacío = no lo dijiste; esquema 15)",
+        "vm_experimentos.csv:umbral" to "Criterio sellado: diferencia mínima que contaría como efecto, en las unidades de la medida (vacío = cualquiera con el intervalo lejos del cero)",
+        "vm_experimentos.csv:huella" to "SHA-256 de lo sellado (pregunta, acción, medida, hipótesis, criterio, diseño, inicio, semanas, plan, lavado y hora del sello)",
+        "vm_experimentos.csv:intacto" to "La huella coincide con lo que hay ahora (1), cambió después del sello (0) o no tiene huella (vacío, de antes del esquema 15)",
         "vm_experimentos.csv:hecho" to "«¿Lo hiciste hoy?»: fecha:1 sí, fecha:0 no (lista; una fecha que no aparece = sin respuesta, no «no»)",
         "vm_pantalla.csv:ventana" to "logica = de las 05:00 a las 05:00 del día siguiente (desde el esquema 13); calendario = de 0:00 a 24:00 (antes)",
         "sueno_descartadas" to "Lo que llegó del reloj esa noche y marcaste que no cuenta (desde el esquema 14)",
@@ -383,26 +394,213 @@ object Diccionario {
         return "$texto · al exportar: $p (si lo cambias, se recalcula toda la historia)"
     }
 
+    /**
+     * Desde qué versión de la app rige la definición actual de cada columna (H-1-8), con qué cambió y su fila del Apéndice D del paper.
+     * Clave «archivo:columna» o solo «columna» (vale en todas las tablas que la tengan). Sin entrada = sin cambios desde la v84.
+     * Una clave con «*» vale para toda una familia de columnas (por ejemplo «per_*» o «supl_*_nivel»); si dos coinciden, la más larga.
+     */
+    private val DESDE: Map<String, Pair<Int, String>> = mapOf(
+        "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
+        "n_madrugada" to (85 to "sin momentos privados: ya no cuenta impulsos (D.4)"),
+        "n_manana" to (85 to "sin momentos privados: ya no cuenta impulsos (D.4)"),
+        "n_noche" to (85 to "sin momentos privados: ya no cuenta impulsos (D.4)"),
+        "n_tarde" to (85 to "sin momentos privados: ya no cuenta impulsos (D.4)"),
+        "avisos_mostrados" to (86 to "nueva: avisos de ánimo mostrados en el día (D.15)"),
+        "avisos_planeados" to (86 to "nueva: avisos de ánimo planeados en el día (D.15)"),
+        "avisos_respondidos" to (86 to "nueva: avisos mostrados que se respondieron (D.15)"),
+        "campana_*" to (86 to "nueva: 1 los días con el reto aceptado, desde la primera campaña (D.16)"),
+        "campanas_n" to (86 to "nueva: campañas aceptadas ese día (D.16)"),
+        "desbloqueos" to (86 to "por día lógico, de 05:00 a 05:00 (D.19)"),
+        "dia_especial" to (86 to "nueva: cumpleaños, aniversario o fecha propia (D.20)"),
+        "dia_especial_tipo" to (86 to "nueva: tipos de día especial que caen ese día (D.20)"),
+        "n_muestreos" to (86 to "cuenta todos los avisos respondidos, también sin valencia (D.15)"),
+        "pantalla_min" to (86 to "por día lógico, de 05:00 a 05:00 (ver ventana_pantalla) (D.19)"),
+        "pasos" to (86 to "por día lógico, de 05:00 a 05:00 (ver ventana_pasos) (D.19)"),
+        "por_hora_min" to (86 to "por día lógico: las horas 0 a 4 son de la madrugada siguiente (D.19)"),
+        "primer_uso" to (86 to "primer uso del día lógico, desde las 05:00 (D.19)"),
+        "primer_uso_h" to (86 to "primer uso del día lógico, desde las 05:00 (D.19)"),
+        "tasa_respuesta" to (86 to "nueva: respondidos entre mostrados (D.15)"),
+        "top_apps" to (86 to "por día lógico, de 05:00 a 05:00 (D.19)"),
+        "total_min" to (86 to "por día lógico, de 05:00 a 05:00 (D.19)"),
+        "ultimo_uso" to (86 to "último uso del día lógico, hasta las 05:00 siguientes (D.19)"),
+        "ventana" to (86 to "nueva: logica o calendario, el día que cubre la pantalla (D.19)"),
+        "ventana_pantalla" to (86 to "nueva: logica o calendario, el día que cubre la pantalla (D.19)"),
+        "ventana_pasos" to (86 to "nueva: logica o calendario, el día que cubren los pasos (D.19)"),
+        "vm_dias.csv:retroactivo" to (86 to "según el día lógico de la hora en que se guardó la valencia (D.18)"),
+        "vm_dias.csv:ts_valencia" to (86 to "nueva: cuándo se guardó la valencia (D.18)"),
+        "vm_experimentos.csv:fin" to (86 to "nueva: día en que terminó el experimento (D.17)"),
+        "vm_experimentos.csv:hecho" to (86 to "nueva: respuestas a «¿Lo hiciste hoy?» (D.17)"),
+        "vm_fechas_propias.csv:anio" to (86 to "nueva: tabla de fechas propias (D.20)"),
+        "vm_fechas_propias.csv:fecha" to (86 to "nueva: tabla de fechas propias (D.20)"),
+        "vm_fechas_propias.csv:mes_dia" to (86 to "nueva: tabla de fechas propias (D.20)"),
+        "vm_fechas_propias.csv:nombre" to (86 to "nueva: tabla de fechas propias (D.20)"),
+        "vm_fechas_propias.csv:tipo" to (86 to "nueva: tabla de fechas propias (D.20)"),
+        "vm_panel_extendido.csv:app_min_*" to (86 to "por día lógico, de 05:00 a 05:00 (D.19)"),
+        "vm_personas.csv:cercania" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "vm_personas.csv:desde" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "vm_personas.csv:detalle" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "vm_personas.csv:edad" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "vm_personas.csv:fallecimiento" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "vm_personas.csv:historial" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "vm_personas.csv:nacimiento" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "vm_personas.csv:persona" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "vm_personas.csv:relacion" to (86 to "nueva: tabla de Tu gente (D.20)"),
+        "siesta_reloj_min" to (87 to "respeta «no cuenta» y ya no se congela en noches corregidas (D.57)"),
+        "subcategoria" to (87 to "nueva: subcategoría del gasto (D.27)"),
+        "sueno_calidad" to (87 to "la del widget y la hoja rápida va al día del despertar (D.36)"),
+        "sueno_descartadas" to (87 to "nueva: sesiones del reloj que marcaste que no cuentan (D.57)"),
+        "ts_creado" to (87 to "nueva: cuándo se anotó el registro (D.25)"),
+        "ts_editado" to (87 to "nueva: cuándo se corrigió el registro (D.25)"),
+        "version_noche" to (87 to "nueva: orden de la hoja de la noche; vale 2 desde N4 (D.46)"),
+        "animo_activacion" to (88 to "sin los «Cómo estás ahora» guardados otro día que el que cierran (D.74)"),
+        "animo_cierre_activacion" to (88 to "sin los «Cómo estás ahora» guardados otro día que el que cierran (D.74)"),
+        "animo_cierre_valencia" to (88 to "sin los «Cómo estás ahora» guardados otro día que el que cierran (D.74)"),
+        "animo_valencia" to (88 to "sin los «Cómo estás ahora» guardados otro día que el que cierran (D.74)"),
+        "cercania_media" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "cercanos" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "dia_libre" to (88 to "nueva: sábado, domingo o festivo (D.69)"),
+        "esc_*" to (88 to "cada cuestionario cubre solo los días que pregunta (7 o 30) (D.62)"),
+        "festivo" to (88 to "nueva: festivo de la Ley Federal del Trabajo, solo si vives en México (D.69)"),
+        "gasto_imprevisto" to (88 to "0 desde el primer gasto, en días con diario; antes, vacío (D.63)"),
+        "hab_*" to (88 to "vacío antes de que existiera el hábito, salvo marcado (D.63)"),
+        "lugares_distintos" to (88 to "por día lógico: una visita antes de las 05:00 cuenta para el anterior (D.64)"),
+        "n_impulso" to (88 to "0 desde el primer impulso, en días con diario; antes, vacío (D.63)"),
+        "pen_*" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "penso_en_amistades" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "penso_en_expareja" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "penso_en_familia" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "penso_en_pareja" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "per_*" to (88 to "con el nombre unido y sin momentos privados ni días sin nombrar (D.73)"),
+        "personas_mensajes" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "personas_pensadas" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "personas_vistas" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "probioticos_estimado" to (88 to "vacío sin bitácora de MacroFactor (D.63)"),
+        "registros_animo" to (88 to "sin los «Cómo estás ahora» guardados otro día que el que cierran (D.74)"),
+        "rt_media" to (88 to "un toque a menos de 100 ms es anticipación y se repite (D.74)"),
+        "sdt_necesidad_*" to (88 to "«las tres» cuenta en autonomía, competencia y relación (D.63)"),
+        "tema_*" to (88 to "vacío los días sin diario ni momento con un #tema (D.63)"),
+        "vi_amistades" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "vi_convivientes" to (88 to "con el nombre unido y vacío en días sin nombrar a nadie (D.73)"),
+        "vi_expareja" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "vi_familia" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "vi_pareja" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "vi_trabajo" to (88 to "vacío los días sin diario ni momento que nombre a alguien (D.63)"),
+        "vida_*" to (88 to "sin etapa antes del primer guardado de «Conocerte» (D.74)"),
+        "vm_dias.csv:personas" to (88 to "nombres unidos siguiendo uniones encadenadas (D.73)"),
+        "vm_dias.csv:presencias" to (88 to "nombres unidos siguiendo uniones encadenadas (D.73)"),
+        "vm_dias.csv:temas" to (88 to "nombres unidos siguiendo uniones encadenadas (D.73)"),
+        "vm_panel.csv:km" to (88 to "0 en días con ubicaciones y sin movimiento (D.63)"),
+        "vm_panel_extendido.csv:distancia_km" to (88 to "0 en días con ubicaciones y sin movimiento (D.63)"),
+        "vm_panel_extendido.csv:presencias_revisado" to (88 to "nueva en el panel: solo días con diario que nombra a alguien (D.63)"),
+        "vm_panel_extendido.csv:sueno_recordado" to (88 to "vacío si ese día no dijiste nada del sueño (D.63)"),
+        "vm_reaccion.csv:anticipaciones" to (88 to "incluye los toques a menos de 100 ms del estímulo (D.74)"),
+        "vm_reaccion.csv:ensayos_ms" to (88 to "sin toques a menos de 100 ms: se repiten (D.74)"),
+        "vm_reaccion.csv:media_ms" to (88 to "sin toques a menos de 100 ms: cuentan como anticipación (D.74)"),
+        "vm_reaccion.csv:mediana_ms" to (88 to "sin toques a menos de 100 ms: cuentan como anticipación (D.74)"),
+        "vm_red_nodos.csv:dias_mencion" to (88 to "cuenta con el nombre unido (D.73)"),
+        "vm_red_nodos.csv:grado" to (88 to "cuenta con el nombre unido (D.73)"),
+        "vm_red_nodos.csv:grupo" to (88 to "nueva: grupo de la relación (D.73)"),
+        "vm_red_nodos.csv:persona" to (88 to "nombres unidos siguiendo uniones encadenadas (D.73)"),
+        "vm_red_nodos.csv:relacion" to (88 to "relación del nombre unido (D.73)"),
+        "vm_red_vinculos.csv:a" to (88 to "nombres unidos siguiendo uniones encadenadas (D.73)"),
+        "vm_red_vinculos.csv:b" to (88 to "nombres unidos siguiendo uniones encadenadas (D.73)"),
+        "vm_red_vinculos.csv:dias_juntos" to (88 to "cuenta con el nombre unido (D.73)"),
+        "cambio_presion_3h" to (89 to "el barómetro acepta de 300 a 1100 hPa; antes, 850 a 1090 (D.85)"),
+        "ejercicio_min" to (89 to "valor de la app: 0 en días con datos del reloj y sin sesión (D.80)"),
+        "escalada" to (89 to "valor de la app: 0 desde la primera sesión, en días con diario (D.80)"),
+        "gasto_total" to (89 to "valor de la app: 0 desde el primer gasto, en días con diario (D.80)"),
+        "gimnasio" to (89 to "valor de la app: 0 desde el primer entreno, en días con diario (D.80)"),
+        "ingreso_total" to (89 to "valor de la app: 0 desde el primer ingreso, en días con diario (D.80)"),
+        "laptop_ocio_min" to (89 to "los sitios se comparan por partes completas del dominio (D.85)"),
+        "laptop_otro_min" to (89 to "los sitios se comparan por partes completas del dominio (D.85)"),
+        "laptop_productivo_min" to (89 to "los sitios se comparan por partes completas del dominio (D.85)"),
+        "laptop_social_min" to (89 to "los sitios se comparan por partes completas del dominio (D.85)"),
+        "presion_local_hpa" to (89 to "el barómetro acepta de 300 a 1100 hPa; antes, 850 a 1090 (D.85)"),
+        "presion_max" to (89 to "el barómetro acepta de 300 a 1100 hPa; antes, 850 a 1090 (D.85)"),
+        "presion_media" to (89 to "el barómetro acepta de 300 a 1100 hPa; antes, 850 a 1090 (D.85)"),
+        "presion_min" to (89 to "el barómetro acepta de 300 a 1100 hPa; antes, 850 a 1090 (D.85)"),
+        "ultimo_uso_h" to (89 to "suma 24 solo antes de las 5:00; antes, antes de las 12 (D.80)"),
+        "vm_dias.csv:schema_v" to (89 to "0 en lo importado de la web u Obsidian sin versión propia (D.85)"),
+        "vm_familias.csv:familia" to (89 to "nueva: tabla de parejas obvias (D.83)"),
+        "vm_familias.csv:lado" to (89 to "nueva: tabla de parejas obvias (D.83)"),
+        "vm_familias.csv:variable" to (89 to "nueva: tabla de parejas obvias (D.83)"),
+        "vm_laptop.csv:categoria" to (89 to "los sitios se comparan por partes completas del dominio (D.85)"),
+        "vm_panel.csv:a_pie_min" to (89 to "valor de la app: 0 si hay actividad sin ese movimiento (D.80)"),
+        "vm_panel.csv:ruido_db_medio" to (89 to "valor de la app: media de todos los registros, también los avisos (D.80)"),
+        "vm_panel.csv:vehiculo_min" to (89 to "valor de la app: 0 si hay actividad sin ese movimiento (D.80)"),
+        "vm_variables.csv:grupo" to (89 to "nueva: tabla de variables que la app cruza (D.82)"),
+        "vm_variables.csv:nombre" to (89 to "nueva: tabla de variables que la app cruza (D.82)"),
+        "vm_variables.csv:privada" to (89 to "nueva: tabla de variables que la app cruza (D.82)"),
+        "vm_variables.csv:variable" to (89 to "nueva: tabla de variables que la app cruza (D.82)"),
+        "vm_panel_extendido.csv:act_*" to (90 to "nueva con el nombre de la app (D.87)"),
+        "vm_panel_extendido.csv:app_*" to (90 to "nueva con el nombre de la app (D.87)"),
+        "vm_panel_extendido.csv:nut_*" to (90 to "nueva con el nombre de la app (D.87)"),
+        "alcohol" to (91 to "vacío sin dosis calculadas ni episodio anotado; antes, 0 (D.90)"),
+        "alcohol_al_dormir" to (91 to "MacroFactor y la app se juntan toma por toma (D.91)"),
+        "alcohol_bebidas" to (91 to "MacroFactor y la app se juntan toma por toma (D.91)"),
+        "alcohol_estimado_max" to (91 to "de la primera dosis a 14 h, con dosis previas, cada 5 min (D.88)"),
+        "cafeina_al_dormir_mg" to (91 to "MacroFactor y la app se juntan toma por toma (D.91)"),
+        "cafeina_total_mg" to (91 to "MacroFactor y la app se juntan toma por toma (D.91)"),
+        "creatina_saturacion_pct" to (91 to "la reserva se llena con 3 g al día, no con tu dosis (D.98)"),
+        "error_prediccion_signo" to (91 to "nueva: valencia menos la predicción de la noche anterior (D.94)"),
+        "gasto_imprevisto_monto" to (91 to "nueva: suma de los gastos imprevistos del día (D.94)"),
+        "supl_*_nivel" to (91 to "creatina con 3 g de referencia; sin columna si la vida media < 6 h (D.98)"),
+        "vm_horas.csv:alcohol_gl" to (91 to "MacroFactor y la app se juntan toma por toma (D.91)"),
+        "vm_horas.csv:cafeina_mg" to (91 to "MacroFactor y la app se juntan toma por toma (D.91)"),
+        "vm_panel.csv:cafeina_ultima_h" to (91 to "sale de las mismas dosis que los totales, por día lógico (D.92)"),
+        "vm_panel_extendido.csv:personas" to (91 to "cuenta también a quien nombras en los momentos no privados (D.93)"),
+        "vm_sustancias.csv:alcohol_estimado_max_gl" to (91 to "MacroFactor y la app se juntan toma por toma (D.91)"),
+        "vm_whatsapp.csv:multimedia" to (91 to "reconoce también avisos en francés, portugués, italiano y alemán (D.105)"),
+        "fuerza_ref_kg" to (92 to "nueva: 1RM estimada en press inclinado con mancuernas (D.114)"),
+        "sin_wifi_min" to (92 to "ya no incluye los minutos sin dato (D.112)"),
+        "vm_entorno.csv:fuente" to (92 to "nueva: archivo (reanálisis) o pronostico (D.111)"),
+        "vm_experimentos.csv:huella" to (92 to "nueva: SHA-256 de lo sellado (D.113)"),
+        "vm_experimentos.csv:intacto" to (92 to "nueva: la huella coincide con lo que hay ahora (D.113)"),
+        "vm_experimentos.csv:sentido" to (92 to "nueva: sentido del cambio esperado, sellado (D.113)"),
+        "vm_experimentos.csv:umbral" to (92 to "nueva: diferencia mínima que contaría, sellada (D.113)"),
+        "vm_panel.csv:cambio_horario" to (92 to "nueva: la hora del teléfono cambió ese día lógico (D.110)"),
+        "vm_panel.csv:clima_reanalisis" to (92 to "nueva: el clima viene del reanálisis (1) o del pronóstico (0) (D.111)"),
+        "vm_panel.csv:desfase_utc_h" to (92 to "nueva: horas de diferencia con UTC a mediodía (D.110)"),
+        "vm_panel_extendido.csv:fuente" to (92 to "nueva: de vm_entorno, archivo (reanálisis) o pronostico (D.111)"),
+        "vm_series.csv:referencia" to (92 to "nueva: la serie es del ejercicio de referencia (D.114)"),
+        "wifi_sin_dato_min" to (92 to "nueva: minutos en que no se supo si había wifi (D.112)"),
+        "wifi_total_min" to (92 to "cuenta también el wifi con el nombre oculto (D.112)"),
+    )
+
+    // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».
+    private val DESDE_PATRONES: List<Pair<Regex, String>> = DESDE.keys.filter { '*' in it }.sortedByDescending { it.length }
+        .map { k -> Regex(k.split('*').joinToString(".*") { Regex.escape(it) }) to k }
+
+    /** Desde qué versión rige la definición de la columna y qué cambió (H-1-8); null = sin cambios desde la v84. */
+    fun desde(archivo: String, col: String): Pair<Int, String>? {
+        DESDE["$archivo:$col"]?.let { return it }
+        // En el panel extendido, lo que viene del panel de la app o de vm_panel.csv con el mismo nombre.
+        if (archivo == "vm_panel_extendido.csv") DESDE["vm_panel.csv:$col"]?.let { return it }
+        DESDE[col]?.let { return it }
+        return DESDE_PATRONES.firstOrNull { (r, k) -> r.matches(if (':' in k) "$archivo:$col" else col) }?.let { DESDE[it.second] }
+    }
+
     fun csv(tablas: List<Exportar.Tabla>): String = Exportar.csv(filas(tablas))
 
-    /** Una fila por columna de cada tabla: archivo, columna, tipo, descripción y de qué tabla es. */
+    /** Una fila por columna de cada tabla: archivo, columna, tipo, descripción, de qué tabla es y desde qué versión rige (H-1-8). */
     fun filas(tablas: List<Exportar.Tabla>): List<Map<String, Any?>> {
         val filas = ArrayList<Map<String, Any?>>()
         for (t in tablas) {
             val cols = LinkedHashSet<String>(); t.filas.forEach { cols.addAll(it.keys) }
             for (c in cols) filas.add(linkedMapOf("archivo" to t.archivo, "columna" to c, "tipo" to tipo(t.filas.map { it[c] }, c),
-                "descripcion" to conParametros(c, conEquivalente(t.archivo, c, conVentana(t.archivo, c, describir(t.archivo, c)))), "tabla" to t.descripcion))
+                "descripcion" to conParametros(c, conEquivalente(t.archivo, c, conVentana(t.archivo, c, describir(t.archivo, c)))), "tabla" to t.descripcion,
+                "desde_version" to desde(t.archivo, c)?.first, "cambio" to desde(t.archivo, c)?.second))
         }
         listOf("ts" to "fecha_hora", "lat" to "numero", "lon" to "numero", "precision_m" to "numero", "fuente" to "texto", "ms" to "entero").forEach { (c, ti) ->
             filas.add(linkedMapOf("archivo" to "vm_ubicaciones.csv", "columna" to c, "tipo" to ti,
                 "descripcion" to when (c) { "fuente" -> "De dónde salió la muestra (fondo, momento, cronología, foto…)"; "ms" -> "Milisegundos desde 1970 (la misma hora exacta, para restaurar)"; else -> describir("vm_ubicaciones.csv", c) },
-                "tabla" to "Muestras de ubicación"))
+                "tabla" to "Muestras de ubicación", "desde_version" to null, "cambio" to null))
         }
         listOf("clave" to ("texto" to "Identificador de la foto (no es la foto)"), "ms" to ("entero" to "Hora de la foto en milisegundos"), "ts" to ("fecha_hora" to "Hora de la foto"),
             "lat" to ("numero" to "Latitud"), "lon" to ("numero" to "Longitud"), "aparato" to ("texto" to "Con qué cámara o teléfono se tomó"),
             "origen" to ("texto" to "Carpeta o fuente (cámara, WhatsApp, Takeout…)"), "ms_archivo" to ("entero" to "Fecha del archivo, para detectar relojes equivocados"),
             "fuente" to ("texto" to "foto (del teléfono) o foto_takeout (de Google Fotos)")).forEach { (c, td) ->
-            filas.add(linkedMapOf("archivo" to "vm_fotos_catalogo.csv", "columna" to c, "tipo" to td.first, "descripcion" to td.second, "tabla" to "Catálogo de fotos con lugar (solo hora y coordenadas)"))
+            filas.add(linkedMapOf("archivo" to "vm_fotos_catalogo.csv", "columna" to c, "tipo" to td.first, "descripcion" to td.second, "tabla" to "Catálogo de fotos con lugar (solo hora y coordenadas)", "desde_version" to null, "cambio" to null))
         }
         return filas
     }

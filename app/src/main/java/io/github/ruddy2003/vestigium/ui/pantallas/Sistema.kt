@@ -437,6 +437,18 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Ayuda("En adultos suele ir de 3 a 7 horas (5 es lo típico). Fumar la acorta; el embarazo y algunos anticonceptivos la alargan.", Modifier.padding(top = 4.dp))
             }
         }
+        // Al final y plegada: se puede consultar sin que estorbe (H-8-17).
+        if (parte == "privacidad") Seccion("Qué sale del teléfono", plegable = true, plegadaPorDefecto = true,
+            resumen = "${io.github.ruddy2003.vestigium.data.Red.SERVICIOS.size} servicios y qué recibe cada uno") {
+            Tarjeta {
+                io.github.ruddy2003.vestigium.data.Red.SERVICIOS.forEach { (s, q) ->
+                    Text(s, style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 6.dp))
+                    Ayuda(q)
+                }
+                Ayuda("Health Connect, tus fotos, tu ubicación y tu diario se quedan en el teléfono. Solo salen cuando exportas, eliges una carpeta de respaldo o activas Google Drive.",
+                    Modifier.padding(top = 8.dp))
+            }
+        }
     }
 }
 

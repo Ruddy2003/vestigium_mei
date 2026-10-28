@@ -85,7 +85,7 @@ fun PantallaCinta(nav: Nav) {
             runCatching {
                 Repo.comidas(fecha, fecha).mapNotNull { c ->
                     val h = runCatching { LocalTime.parse(c.hora.take(5)) }.getOrNull() ?: return@mapNotNull null
-                    java.time.LocalDateTime.of(Fechas.parse(c.fecha), h).atZone(Fechas.zona()).toInstant().toEpochMilli() to c.alimento
+                    Fechas.millisDe(java.time.LocalDateTime.of(Fechas.parse(c.fecha), h)) to c.alimento
                 }
             }.getOrDefault(emptyList())
         }
@@ -143,7 +143,7 @@ fun PantallaCinta(nav: Nav) {
         ses.forEach { s -> val a = Fechas.millis(s.inicio); val b = Fechas.millis(s.fin); cosas += Cosa(p, a, b, cs.tertiary, s.tipo_nombre.lowercase(), "${s.tipo_nombre}: ${s.min} min desde las ${hm(a)}") }
         esc.forEach { x ->
             val h = runCatching { LocalTime.parse(x.inicio!!.take(5)) }.getOrNull() ?: return@forEach
-            val a = java.time.LocalDateTime.of(Fechas.parse(x.fecha), h).atZone(Fechas.zona()).toInstant().toEpochMilli()
+            val a = Fechas.millisDe(java.time.LocalDateTime.of(Fechas.parse(x.fecha), h))
             cosas += Cosa(p, a, a + (x.min ?: 90) * 60_000L, cs.primary, "escalada", "Escalada en ${x.lugar.ifBlank { "el muro" }}: ${x.bloques.size} bloques")
         }
     }
@@ -225,7 +225,7 @@ fun PantallaCinta(nav: Nav) {
     if (gastos.isNotEmpty()) {
         val p = pista("gastos", "gastos")
         gastos.forEach { g ->
-            runCatching { java.time.LocalDateTime.of(Fechas.parse(g.fecha), LocalTime.parse(g.hora.take(5))).atZone(Fechas.zona()).toInstant().toEpochMilli() }.getOrNull()?.let { t ->
+            runCatching { Fechas.millisDe(java.time.LocalDateTime.of(Fechas.parse(g.fecha), LocalTime.parse(g.hora.take(5)))) }.getOrNull()?.let { t ->
                 cosas += Cosa(p, t, null, cs.error, "", "${g.hora} · $" + "%,.0f".format(g.monto) + " en ${g.categoria.lowercase()}" + if (g.nota.isNotBlank()) " — ${g.nota}" else "")
             }
         }

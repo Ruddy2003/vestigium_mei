@@ -1,6 +1,6 @@
 # Capítulo 10. Privacidad, seguridad e integridad de los datos
 
-> **Para qué sirve este capítulo.** Explica **dónde viven tus datos, quién puede verlos y qué tan seguro es que no se pierdan**: el almacenamiento en el teléfono, el seguimiento privado, el cifrado del respaldo, los respaldos automáticos, la verificación, la restauración y los servicios externos. Describe el código de la v91 (la v90, commit `8818d5a`, más la entrega 10e; `SCHEMA_V = 14`). El seguimiento privado (impulsos, recaídas, libido, medicamentos) se describe **solo en su mecánica**, sin ejemplos ni datos personales, y sin reproducir las palabras clave que el código usa para reconocer ciertos hábitos.
+> **Para qué sirve este capítulo.** Explica **dónde viven tus datos, quién puede verlos y qué tan seguro es que no se pierdan**: el almacenamiento en el teléfono, el seguimiento privado, el cifrado del respaldo, los respaldos automáticos, la verificación, la restauración y los servicios externos. Describe el código de la v92 (la v91 más la entrega 10f; `SCHEMA_V = 15`). El seguimiento privado (impulsos, recaídas, libido, medicamentos) se describe **solo en su mecánica**, sin ejemplos ni datos personales, y sin reproducir las palabras clave que el código usa para reconocer ciertos hábitos.
 
 ---
 
@@ -61,7 +61,7 @@ La Figura 10.1 resume qué tipo de dato llega a cada salida. Comparadas con el c
 | Fotos nunca se copian | **Sí** (el catálogo guarda hora, coordenadas y aparato) |
 | Cartas selladas: sin contenido en búsqueda, CSV ni «Tu año» | **En parte**: `vm_respaldo.json` lleva el texto (H-8-5) |
 | Seguimiento privado nunca en reportes, «Tu año», logros, mapas ni widgets; sí en R | **Sí desde el módulo 10a**, con una regla más estricta |
-| «Nada pasa por servidores ajenos salvo Drive, Open-Meteo y Spotify» | **No del todo** (sección 10.7; H-8-17); desde 10e, el texto de privacidad de la app nombra todos los servicios |
+| «Nada pasa por servidores ajenos salvo Drive, Open-Meteo y Spotify» | **No del todo** (sección 10.7; H-8-17); desde 10e, el texto de privacidad de la app nombra todos los servicios, y desde 10f también Ajustes › Privacidad |
 
 ![Figura 10.1](figuras/fig24_flujo_privacidad.png)
 
@@ -119,7 +119,7 @@ La Figura 10.1 resume qué tipo de dato llega a cada salida. Comparadas con el c
 
 **Qué garantiza.** Que el archivo se abre, que no fue alterado (si está cifrado) y que el JSON se puede leer de punta a punta. **Un respaldo que nunca se probó no es un respaldo**: **[Validado]** como práctica. Que Java compruebe la suma CRC-32 de cada entrada del .zip no se verificó en la documentación **[sin verificar]**.
 
-**Qué no garantizaba** (H-8-12). Hasta el esquema 12 el mensaje decía «El respaldo se lee completo y no le falta nada», pero la app **no comparaba** nada. Desde el 13 (P-08) dice solo «El respaldo se lee completo» y pone lado a lado respaldo / teléfono en días, momentos, gastos y experimentos. Además, como el lector de JSON ignora los campos que no conoce (`ignoreUnknownKeys = true`), restaurar en una versión vieja un respaldo más nuevo **perdía en silencio** los campos nuevos. Desde el esquema 13, `Importar.esquemaFuturo` **rechaza** restaurar un respaldo con `schema_v` mayor que el de la app, antes de tocar nada. **[Validado]** como práctica.
+**Qué no garantizaba** (H-8-12). Hasta el esquema 12 el mensaje decía «El respaldo se lee completo y no le falta nada», pero la app **no comparaba** nada. Desde el 13 (P-08) dice solo «El respaldo se lee completo» y pone lado a lado respaldo / teléfono en días, momentos, gastos y experimentos. Además, como el lector de JSON ignora los campos que no conoce (`ignoreUnknownKeys = true`), restaurar en una versión vieja un respaldo más nuevo **perdía en silencio** los campos nuevos. Desde el esquema 13, `Importar.esquemaFuturo` **rechaza** restaurar un respaldo con `schema_v` mayor que el de la app, antes de tocar nada: desde 10f, una app de la v91 o anterior (esquema 14) no restaura un respaldo de la v92 (esquema 15). **[Validado]** como práctica.
 
 ---
 
@@ -154,7 +154,7 @@ La app no incluye analítica, publicidad ni reporte de errores (no hay dependenc
 | **Mosaicos de OpenStreetMap** | Qué zona del mapa estás viendo |
 | **Health Connect, uso del teléfono, ubicación** | Nada: se leen **dentro** del teléfono |
 
-El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive del usuario, Open-Meteo (clima) y Spotify API»; hay más, aunque los demás solo reciben títulos de obras o la zona del mapa (H-8-17). Desde 10e, el texto de privacidad de la app los nombra todos con lo que recibe cada uno (D.103), y dice que Drive recibe los respaldos completos (cifrados si pones contraseña) y que los demás no reciben tu diario, tu salud ni tu ruta. **[Validado]** como enfoque general: el procesamiento es local y solo salen las consultas necesarias. Las políticas de privacidad de cada servicio no se verificaron **[sin verificar]**.
+El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive del usuario, Open-Meteo (clima) y Spotify API»; hay más, aunque los demás solo reciben títulos de obras o la zona del mapa (H-8-17). Desde 10e, el texto de privacidad de la app los nombra todos con lo que recibe cada uno (D.103), y dice que Drive recibe los respaldos completos (cifrados si pones contraseña) y que los demás no reciben tu diario, tu salud ni tu ruta. **Desde 10f** (D.116), Ajustes › Privacidad termina con «Qué sale del teléfono», una sección plegada que lista cada servicio y qué recibe; sale de la misma lista que el texto de privacidad (`Red.SERVICIOS`), así que los dos dicen lo mismo, aunque nada obliga a anotar ahí un servicio nuevo. El autor está de acuerdo con lo que se envía (H-8-17, resuelto). **[Validado]** como enfoque general: el procesamiento es local y solo salen las consultas necesarias. Las políticas de privacidad de cada servicio no se verificaron **[sin verificar]**.
 
 ---
 
@@ -167,4 +167,4 @@ El documento de contexto dice que «nada pasa por servidores ajenos salvo Drive 
 5. **Verificar** un respaldo es una buena práctica **[Validado]**; desde el esquema 13 dice solo lo que comprueba y no restaura un respaldo de un esquema más nuevo (H-8-12).
 6. **Restaurar** combina con reglas distintas según la colección (H-8-13); en Drive, un respaldo mucho más pobre ya no reemplaza al bueno (H-8-14).
 7. Los reportes automáticos se guardan en carpetas públicas, en modo discreto y sin la frase del mejor momento (H-8-4).
-8. La entrega 10e resolvió H-8-9, H-8-11, H-8-15 y H-8-17. Solo sigue pendiente H-8-6 (logros que premian la valencia); H-8-4, H-8-5, H-8-13 y H-8-14 están resueltos solo en parte.
+8. La entrega 10e resolvió H-8-9, H-8-11 y H-8-15, y 10e y 10f, H-8-17 (la lista de servicios, ahora también en los ajustes). En 10f, H-8-6 (logros que premian la valencia) se resolvió por decisión del autor: se quedan, con el riesgo documentado (capítulo 9). Ninguno de H-8 sigue pendiente; H-8-4, H-8-5, H-8-13 y H-8-14 están resueltos solo en parte.

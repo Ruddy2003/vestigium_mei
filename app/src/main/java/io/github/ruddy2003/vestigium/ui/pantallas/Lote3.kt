@@ -435,6 +435,8 @@ fun PantallaExperimentos(nav: Nav) {
     var semanas by remember { mutableStateOf(6) }
     var diseno by remember { mutableStateOf("alterno") }
     var lavado by remember { mutableStateOf(0) }
+    var sentido by remember { mutableStateOf<Int?>(null) }
+    var umbral by remember { mutableStateOf("") }
     Hoja("Experimentos personales", nav.atras,
         "Escribes la pregunta y lo que crees que pasará antes de empezar (queda sellado con la hora). La app decide qué semanas haces la acción y, al final, compara.") {
         // El panel se arma en segundo plano, como en Análisis: así las variables que dependen de MacroFactor valen lo mismo aquí
@@ -465,9 +467,21 @@ fun PantallaExperimentos(nav: Nav) {
                 OutlinedTextField(hipotesis, { hipotesis = it }, Modifier.fillMaxWidth().padding(top = 6.dp), label = { Text("Qué crees que pasará (hipótesis)") })
                 Etiqueta("Qué vas a medir")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    (listOf("valencia", "activacion", "sueno_calidad", "sueno_horas", "muestreo_valencia", "pantalla_min", "rt_media", "volumen_kg", "enfoque_min") +
+                    (listOf("valencia", "activacion", "sueno_calidad", "sueno_horas", "muestreo_valencia", "pantalla_min", "rt_media", "volumen_kg", "fuerza_ref_kg", "enfoque_min") +
                         listOf(resultado)).distinct().forEach { id -> vars.firstOrNull { it.id == id }?.let { v -> Ficha(v.nombre, resultado == id) { resultado = id } } }
                 }
+                // El criterio de decisión también se sella (H-7-10): decidirlo después, viendo los datos, es acomodarlo.
+                Etiqueta("Qué contaría como efecto (se sella)")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("debería subir", sentido == 1) { sentido = if (sentido == 1) null else 1 }
+                    Ficha("debería bajar", sentido == -1) { sentido = if (sentido == -1) null else -1 }
+                }
+                if (sentido != null) OutlinedTextField(umbral, { umbral = it.replace(',', '.') }, Modifier.fillMaxWidth().padding(top = 6.dp),
+                    label = { Text("Diferencia mínima que te importaría (opcional, en las unidades de la medida)") }, singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
+                Ayuda(if (sentido == null) "Opcional, pero recomendable: di antes de empezar hacia dónde esperas el cambio. Al final la app te dirá si se cumplió."
+                    else "Al terminar, contará como efecto si la diferencia va hacia " + (if (sentido == 1) "arriba" else "abajo") +
+                        (umbral.toDoubleOrNull()?.let { ", mide al menos ${kotlin.math.abs(it)}" } ?: "") + " y su intervalo de 95 % no toca el cero.", Modifier.padding(top = 4.dp))
                 Etiqueta("Diseño")
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Ficha("Semanas alternas sorteadas", diseno == "alterno") { diseno = "alterno" }
@@ -487,9 +501,10 @@ fun PantallaExperimentos(nav: Nav) {
                     habilitado = nombre.isNotBlank() && accion.isNotBlank() && hipotesis.isNotBlank() && minimo >= Experimentos.MIN_DIAS) {
                     val plan = Experimentos.plan(diseno, semanas)
                     val lunes = Fechas.sumar(Fechas.lunesDe(Fechas.diaLogico()), 7)
-                    Repo.guardarExperimento(Experimento(Repo.nuevoId(), nombre.trim(), accion.trim(), resultado, lunes, semanas, plan, pregunta = pregunta.trim(),
-                        hipotesis = hipotesis.trim(), sellada = Fechas.ahoraIso(), diseno = diseno, lavado_dias = lavado, plantilla = plantilla))
-                    nombre = ""; accion = ""; pregunta = ""; hipotesis = ""; plantilla = null
+                    Repo.guardarExperimento(Experimentos.sellar(Experimento(Repo.nuevoId(), nombre.trim(), accion.trim(), resultado, lunes, semanas, plan, pregunta = pregunta.trim(),
+                        hipotesis = hipotesis.trim(), sellada = Fechas.ahoraIso(), diseno = diseno, lavado_dias = lavado, plantilla = plantilla,
+                        sentido = sentido, umbral = if (sentido != null) umbral.toDoubleOrNull()?.let { kotlin.math.abs(it) } else null)))
+                    nombre = ""; accion = ""; pregunta = ""; hipotesis = ""; plantilla = null; sentido = null; umbral = ""
                 }
                 if (hipotesis.isBlank()) Ayuda("Escribe tu hipótesis: sin ella no se puede sellar.", Modifier.padding(top = 4.dp))
             }
@@ -504,6 +519,13 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
             if (e.pregunta.isNotBlank()) Text(e.pregunta, style = MaterialTheme.typography.titleSmall)
             Text("Acción: ${e.accion} · mides: $nombreResultado", style = MaterialTheme.typography.bodyMedium)
             if (e.hipotesis.isNotBlank()) Ayuda("Hipótesis: «${e.hipotesis}»" + (e.sellada?.let { " · sellada el ${Fechas.corto(it.take(10))} a las ${Fechas.horaDe(it)}" } ?: ""), Modifier.padding(top = 4.dp))
+            e.sentido?.let { s -> Ayuda("Criterio sellado: un cambio hacia " + (if (s > 0) "arriba" else "abajo") + (e.umbral?.takeIf { it > 0 }?.let { " de al menos ${"%.2f".format(java.util.Locale.US, it).removeSuffix("0").removeSuffix(".0")}" } ?: "") +
+                ", con un intervalo de 95 % que no toque el cero.") }
+            when (Experimentos.intacto(e)) {
+                true -> Ayuda("Huella del sello: ${e.huella!!.take(8)} (coincide: nada de lo sellado cambió).")
+                false -> Aviso("Lo sellado cambió después del sello (la huella ${e.huella!!.take(8)} ya no coincide): la pregunta, la hipótesis, el criterio o el plan no son los del principio.")
+                null -> {}
+            }
             val hoy = Fechas.diaLogico()
             val sem = (Fechas.diasEntre(e.inicio, hoy) / 7).toInt()
             Ayuda(when {
@@ -527,6 +549,8 @@ private fun TarjetaExperimento(e: Experimento, panel: Map<String, Map<String, Do
                 Text("Semanas con la acción según el plan: ${"%.2f".format(r.con.average())} · sin ella: ${"%.2f".format(r.sin.average())}. Diferencia ${"%+.2f".format(d)} (intervalo de 95 %: ${"%.2f".format(lo)} a ${"%.2f".format(hi)}).",
                     style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
                 if (!r.provisional) Ayuda(if (lo > 0 || hi < 0) "El intervalo no toca el cero: es una señal para ti." else "El intervalo incluye el cero: todavía no se distingue del azar.")
+                Experimentos.criterio(e, r)?.let { ok -> Text(if (ok) "Según el criterio que sellaste: se cumple." else "Según el criterio que sellaste: no se cumple.",
+                    style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 2.dp)) }
                 r.d?.let { Ayuda("Tamaño del efecto (g de Hedges): ${"%.2f".format(it)}, ${Experimentos.tamano(it)} para cómo varían tus días; no se compara con los estudios entre personas.") }
                 Ayuda("Comparación según el plan: semanas que tocaba la acción contra semanas que no, la hayas hecho o no. Es la comparación justa; si no siempre cumpliste, el efecto real puede ser mayor. " +
                     "El intervalo cuenta que los días seguidos se parecen.", Modifier.padding(top = 2.dp))
