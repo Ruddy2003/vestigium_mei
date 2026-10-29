@@ -940,7 +940,13 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             }
             drawPath(p, fondo); drawPath(p, borde, style = fino)
         }
-        TemaId.NAPOLEON -> { drawOval(fondo, Offset.Zero, size); drawOval(ac, Offset.Zero, size, style = Stroke(1.5f * d)); drawOval(borde, Offset(3 * d, 3 * d), Size(w - 6 * d, h - 6 * d), style = fino) }
+        TemaId.NAPOLEON -> {
+            // Cartela de esquinas muy redondas (el óvalo entero dejaba el texto fuera) con un medallón oval arriba.
+            val r = CornerRadius(minOf(16 * d, h / 2.5f))
+            drawRoundRect(fondo, Offset.Zero, size, r); drawRoundRect(ac, Offset.Zero, size, r, style = Stroke(1.5f * d))
+            drawRoundRect(borde, Offset(3 * d, 3 * d), Size(w - 6 * d, h - 6 * d), CornerRadius(r.x - 3 * d), style = fino)
+            drawOval(ac, Offset(w / 2 - 5 * d, -2.5f * d), Size(10 * d, 6 * d))
+        }
         TemaId.BOTANICO -> {
             drawRect(fondo, Offset.Zero, size); drawRect(borde, Offset.Zero, size, style = fino)
             var y = 14 * d; while (y < h) { drawLine(tinta.copy(alpha = 0.12f * f), Offset(4 * d, y), Offset(w - 4 * d, y), d); y += 12 * d }
