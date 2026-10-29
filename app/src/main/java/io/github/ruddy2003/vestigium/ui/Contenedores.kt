@@ -78,6 +78,9 @@ object Contenedores {
     private val PAPIRO = Color(0xFFE9D9A9)
     private val CERA = Color(0xFFE2C482)
     private val PERGAMINO = Color(0xFFF1E6C8)
+    /** La vitela fina y blanca del libro de horas (el códice va en pergamino más grueso y amarillo). */
+    private val VITELA = Color(0xFFF7F1E3)
+    private val AZUR = Color(0xFF1F3A9E)
     private val ORO = Color(0xFFD4AF37)
     private val ORO_OSCURO = Color(0xFF8E6A1F)
     private val LACRE = Color(0xFFA3172E)
@@ -87,11 +90,14 @@ object Contenedores {
         Contenedor.ESPIRAL -> if (oscuro) lerp(cs.surface, Color.White, 0.06f) else lerp(cs.surface, Color.White, 0.65f)
         Contenedor.ROLLO -> if (oscuro) lerp(PAPIRO, Color.Black, 0.72f) else PAPIRO
         Contenedor.TABLILLA -> if (oscuro) lerp(CERA, Color.Black, 0.75f) else CERA
-        Contenedor.CODICE, Contenedor.HORAS -> if (oscuro) lerp(PERGAMINO, Color.Black, 0.76f) else PERGAMINO
+        Contenedor.CODICE -> if (oscuro) lerp(PERGAMINO, Color.Black, 0.76f) else PERGAMINO
+        Contenedor.HORAS -> if (oscuro) lerp(VITELA, Color.Black, 0.8f) else VITELA
         Contenedor.TALLER -> if (oscuro) lerp(Color(0xFFEAD9B0), Color.Black, 0.74f) else Color(0xFFEAD9B0)
         Contenedor.LEGAJO -> if (oscuro) lerp(Color(0xFFF3EEDF), Color.Black, 0.78f) else Color(0xFFF7F2E4)
         Contenedor.CAHIER -> if (oscuro) lerp(Color(0xFFF8F6EE), Color.Black, 0.8f) else Color(0xFFF8F6EE)
-        else -> ContenedoresMas.papel(c, cs, oscuro)
+        // Las libretas del lote 2 tienen su papel en [ContenedoresMas].
+        Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
+            Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> ContenedoresMas.papel(c, cs, oscuro)
     }
 
     // ================================================================== cerrado
@@ -104,12 +110,13 @@ object Contenedores {
             Contenedor.ROLLO -> rolloCerrado(hojas, d)
             Contenedor.TABLILLA -> tablillasCerradas(grosor, d)
             Contenedor.CODICE -> libroCerrado(grosor, d, Color(0xFF6B3A1F), ORO_OSCURO, bandas = true, broches = true)
-            Contenedor.HORAS -> libroCerrado(grosor, d, Color(0xFF1F2E6E), ORO, bandas = false, broches = true, roseta = true)
+            Contenedor.HORAS -> horasCerrado(grosor, d)
             Contenedor.TALLER -> tallerCerrado(grosor, d, oscuro)
             Contenedor.LEGAJO -> legajoCerrado(grosor, d, tapa)
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
             Contenedor.ESPIRAL -> {}
-            else -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
+            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
+            Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
         }
     }
 
@@ -197,6 +204,23 @@ object Contenedores {
         if (broches) listOf(0.32f, 0.68f).forEach { f ->
             drawRect(lerp(piel, Color.Black, 0.3f), Offset(w - 4 * d, h * f - 4 * d), Size(10 * d + grosor, 8 * d))
             drawRoundRect(metal, Offset(w - 2 * d, h * f - 5 * d), Size(9 * d, 10 * d), CornerRadius(2 * d))
+        }
+    }
+
+    /**
+     * El libro de horas cerrado: terciopelo azul con la roseta y los broches de oro, el canto dorado y las tres cintas de
+     * seda (los registros) que asoman por abajo para marcar las horas.
+     */
+    private fun DrawScope.horasCerrado(grosor: Float, d: Float) {
+        val w = size.width - grosor; val h = size.height - grosor
+        libroCerrado(grosor, d, Color(0xFF1F2E6E), ORO, bandas = false, broches = true, roseta = true)
+        // El canto dorado.
+        drawRect(ORO.copy(alpha = 0.55f), Offset(w, grosor + 6 * d), Size(grosor, h - 6 * d))
+        drawRect(ORO.copy(alpha = 0.45f), Offset(grosor + 6 * d, h), Size(w - 6 * d, grosor))
+        // Los registros: tres cintas de seda con la punta cortada en V.
+        listOf(0.36f to LACRE, 0.44f to ORO, 0.52f to AZUR).forEachIndexed { i, (f, col) ->
+            val x = w * f; val largo = 16 * d + i * 5 * d; val ancho = 4 * d
+            drawPath(Path().apply { moveTo(x, h - 2 * d); lineTo(x + ancho, h - 2 * d); lineTo(x + ancho, h + grosor + largo); lineTo(x + ancho / 2, h + grosor + largo - 3 * d); lineTo(x, h + grosor + largo); close() }, col)
         }
     }
 
@@ -306,20 +330,28 @@ object Contenedores {
                 drawRect(MADERA, Offset(size.width - m, 0f), Size(m, size.height))
                 var y = 96 * d; while (y < size.height - m) { drawLine(tinta.copy(alpha = 0.06f), Offset(margen, y), Offset(size.width - m, y), 0.8f * d); y += renglon }
             }
-            Contenedor.CODICE, Contenedor.HORAS -> {
-                // Pinchazos del margen y reglado a punta seca; en el libro de horas, en rojo y con cenefa.
-                val regla = if (c == Contenedor.HORAS) Color(0xFFA3172E).copy(alpha = 0.22f) else Color(0xFF6E5530).copy(alpha = 0.12f)
-                var y = 96 * d; while (y < size.height) { drawLine(regla, Offset(margen - 10 * d, y), Offset(size.width - 10 * d, y), 0.7f * d); drawCircle(Color(0xFF6E5530).copy(alpha = 0.3f), 1 * d, Offset(size.width - 5 * d, y)); y += renglon }
-                drawLine(regla, Offset(margen - 10 * d, 0f), Offset(margen - 10 * d, size.height), 0.7f * d)
-                if (c == Contenedor.HORAS) {
-                    // La cenefa: un tallo con hojas de oro y azul a lo largo del margen exterior.
-                    val x = size.width - 6 * d
-                    drawLine(ORO_OSCURO.copy(alpha = 0.6f), Offset(x, 20 * d), Offset(x, size.height - 20 * d), 1.2f * d)
-                    var yy = 30 * d; var i = 0
-                    while (yy < size.height - 30 * d) {
-                        drawCircle(if (i % 2 == 0) ORO.copy(alpha = 0.8f) else Color(0xFF1F3A9E).copy(alpha = 0.7f), 3 * d, Offset(x + if (i % 2 == 0) -5 * d else 5 * d, yy))
-                        yy += 22 * d; i++
-                    }
+            Contenedor.CODICE -> {
+                // Los pinchazos del margen y el reglado a punta seca, con las dos líneas de justificación a cada lado.
+                val regla = Color(0xFF6E5530).copy(alpha = if (oscuro) 0.2f else 0.12f)
+                var y = 96 * d; while (y < size.height) { drawLine(regla, Offset(margen - 10 * d, y), Offset(size.width - 18 * d, y), 0.7f * d); drawCircle(Color(0xFF6E5530).copy(alpha = 0.3f), 1 * d, Offset(size.width - 6 * d, y)); y += renglon }
+                listOf(margen - 10 * d, margen - 14 * d, size.width - 18 * d, size.width - 14 * d).forEach { x -> drawLine(regla, Offset(x, 0f), Offset(x, size.height), 0.7f * d) }
+            }
+            Contenedor.HORAS -> {
+                // Reglado en tinta roja, la barra de oro y azul del margen interior y la cenefa de hiedra del exterior.
+                val regla = Color(0xFFA3172E).copy(alpha = 0.22f)
+                var y = 96 * d; while (y < size.height) { drawLine(regla, Offset(margen - 6 * d, y), Offset(size.width - 22 * d, y), 0.7f * d); y += renglon }
+                drawRect(ORO.copy(alpha = 0.7f), Offset(margen - 16 * d, 60 * d), Size(3 * d, size.height - 100 * d))
+                drawRect(AZUR.copy(alpha = 0.6f), Offset(margen - 12 * d, 60 * d), Size(2 * d, size.height - 100 * d))
+                // La cenefa: un tallo que ondula con hojas de hiedra de oro y bayas azules a lo largo del margen exterior.
+                val x = size.width - 10 * d
+                val tallo = Path().apply { moveTo(x, 20 * d); var yy = 20 * d; var s = 1f; while (yy < size.height - 30 * d) { quadraticTo(x + s * 6 * d, yy + 11 * d, x, yy + 22 * d); yy += 22 * d; s = -s } }
+                drawPath(tallo, ORO_OSCURO.copy(alpha = 0.6f), style = Stroke(1.1f * d))
+                var yy = 31 * d; var i = 0
+                while (yy < size.height - 30 * d) {
+                    val c = Offset(x + if (i % 2 == 0) -5 * d else 5 * d, yy)
+                    if (i % 2 == 0) drawPath(Path().apply { moveTo(c.x, c.y - 4 * d); lineTo(c.x + 3.5f * d, c.y); lineTo(c.x, c.y + 4 * d); lineTo(c.x - 3.5f * d, c.y); close() }, ORO.copy(alpha = 0.85f))
+                    else drawCircle(AZUR.copy(alpha = 0.7f), 2.4f * d, c)
+                    yy += 22 * d; i++
                 }
             }
             Contenedor.TALLER -> {
@@ -345,7 +377,8 @@ object Contenedores {
                 var x = margen; while (x < size.width) { drawLine(malva.copy(alpha = 0.14f), Offset(x, 96 * d), Offset(x, size.height), 0.5f * d); x += renglon }
                 drawLine(Color(0xFFB22234).copy(alpha = 0.5f), Offset(margen - 6 * d, 0f), Offset(margen - 6 * d, size.height), 1.2f * d)
             }
-            else -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
+            Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
         }
     }
 
@@ -374,10 +407,17 @@ object Contenedores {
                 drawRect(MADERA, Offset(10 * d, 4 * d), Size(18 * d, size.height - 8 * d))
                 listOf(0.25f, 0.75f).forEach { f -> val y = size.height * f; drawCircle(MADERA_OSCURA, 3.4f * d, Offset(19 * d, y)); drawLine(Color(0xFFCDB58A), Offset(0f, y), Offset(19 * d, y), 2.4f * d) }
             }
-            Contenedor.CODICE, Contenedor.HORAS -> {
+            Contenedor.CODICE -> {
                 // El pliegue del cuadernillo: sombra del lomo y las puntadas.
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.28f), Color.Transparent), 10 * d, 34 * d), Offset(10 * d, 4 * d), Size(24 * d, size.height - 8 * d))
                 var y = 30 * d; while (y < size.height - 20 * d) { drawLine(Color(0xFF8A6A44), Offset(16 * d, y), Offset(16 * d, y + 10 * d), 1.6f * d); y += 48 * d }
+            }
+            Contenedor.HORAS -> {
+                // El lomo de terciopelo azul con su cadenilla de oro y el registro de seda roja que cruza la esquina.
+                val terciopelo = if (oscuro) Color(0xFF141E4A) else Color(0xFF1F2E6E)
+                drawRect(Brush.horizontalGradient(listOf(lerp(terciopelo, Color.White, 0.12f), terciopelo, lerp(terciopelo, Color.Black, 0.3f)), 6 * d, 24 * d), Offset(6 * d, 0f), Size(18 * d, size.height))
+                var y = 12 * d; var i = 0; while (y < size.height - 8 * d) { drawCircle(ORO.copy(alpha = if (i % 2 == 0) 0.9f else 0.6f), (if (i % 2 == 0) 2.2f else 1.4f) * d, Offset(15 * d, y)); y += 9 * d; i++ }
+                drawPath(Path().apply { moveTo(20 * d, 0f); lineTo(26 * d, 0f); lineTo(70 * d, 60 * d); lineTo(64 * d, 64 * d); close() }, LACRE.copy(alpha = 0.85f))
             }
             Contenedor.TALLER -> {
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent), 10 * d, 30 * d), Offset(10 * d, 4 * d), Size(20 * d, size.height - 8 * d))
@@ -392,7 +432,8 @@ object Contenedores {
                 // El hilo de la costura del cuaderno.
                 var y = 20 * d; while (y < size.height - 20 * d) { drawLine(Color(0xFF1F3A6E).copy(alpha = 0.7f), Offset(16 * d, y), Offset(16 * d, y + 8 * d), 1.4f * d); y += 22 * d }
             }
-            else -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
+            Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
         }
     }
 }

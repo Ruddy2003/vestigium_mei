@@ -1342,6 +1342,13 @@ class Capturas {
             }
         }
     }
+    /** La carta abierta (papelería, capitular, filete y sello) y la hoja de la libreta de momentos. */
+    @Test fun temaCartaAbierta() = porTema("cartaAbierta") { t, o, n -> pantalla(t, o, 2400, n) {
+        Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Ana")))
+        cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.carta = "k4"
+        io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(navVacia)
+    } }
+    @Test fun temaHojaLibreta() = porTema("hojaLibreta") { t, o, n -> v73(t, o, 2400, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(navVacia) } }
     @Test fun temaLibrosAnio() = porTema("librosAnio") { t, o, n -> tarjetaAnio(t, o, "libros", n) }
     @Test fun temaCosasAnio() = porTema("cosasAnio") { t, o, n -> tarjetaAnio(t, o, "cosas", n) }
     /** «Más» (recuadros con el marco del tema), «Mapas» y la galería de obras. */

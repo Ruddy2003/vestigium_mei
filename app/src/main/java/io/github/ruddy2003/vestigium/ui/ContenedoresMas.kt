@@ -48,7 +48,8 @@ object ContenedoresMas {
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
             Contenedor.TETRAD -> Color(0xFFF7F3E6)
-            else -> PERGAMINO
+            // Las libretas de [Contenedores] tienen su papel allá.
+            Contenedor.ESPIRAL, Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
     }
@@ -363,7 +364,8 @@ object ContenedoresMas {
                 drawRect(lerp(verde, Color.Black, 0.25f), Offset(0f, 0f), Size(W * 0.05f, H))
                 listOf(0.3f, 0.7f).forEach { f -> drawRect(Color(0xFFC3C6CA), Offset(W * 0.015f, H * f - 6 * d), Size(2 * d, 12 * d)) }
             }
-            else -> {}
+            // Estas las dibuja [Contenedores].
+            Contenedor.ESPIRAL, Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 
@@ -505,17 +507,36 @@ object ContenedoresMas {
                 var y = 0f; while (y < size.height) { drawLine(cuadro.copy(alpha = 0.12f), Offset(0f, y), Offset(size.width, y), 0.5f * d); y += paso }
                 drawLine(Color(0xFFC1121F).copy(alpha = 0.55f), Offset(size.width - 26 * d, 0f), Offset(size.width - 26 * d, size.height), 1.2f * d)
             }
-            else -> {}
+            // Estas las dibuja [Contenedores].
+            Contenedor.ESPIRAL, Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 
     fun DrawScope.encuadernacionMas(c: Contenedor, cs: ColorScheme, oscuro: Boolean) {
         val d = density
         when (c) {
-            Contenedor.MANUSCRITO, Contenedor.MAPAS -> {
+            Contenedor.MANUSCRITO -> {
+                // El pliegue del cuadernillo con la cabezada de seda: un zigzag de puntadas rojas y verdes y puntos de oro.
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.28f), Color.Transparent), 10 * d, 34 * d), Offset(10 * d, 4 * d), Size(24 * d, size.height - 8 * d))
-                if (c == Contenedor.MAPAS) { var y = 30 * d; while (y < size.height - 20 * d) { drawCircle(HIERRO, 5 * d, Offset(16 * d, y), style = Stroke(2 * d)); y += 70 * d } }
-                else { var y = 30 * d; while (y < size.height - 20 * d) { drawLine(ORO.copy(alpha = 0.7f), Offset(16 * d, y), Offset(16 * d, y + 10 * d), 1.6f * d); y += 48 * d } }
+                var y = 14 * d; var k = 0
+                while (y < size.height - 14 * d) {
+                    val col = if (k % 2 == 0) Color(0xFF9E2B25) else Color(0xFF1E6B5C)
+                    drawLine(col.copy(alpha = 0.8f), Offset(12 * d, y), Offset(17 * d, y + 5 * d), 1.4f * d, StrokeCap.Round)
+                    drawLine(col.copy(alpha = 0.8f), Offset(17 * d, y + 5 * d), Offset(22 * d, y), 1.4f * d, StrokeCap.Round)
+                    if (k % 3 == 0) drawCircle(ORO.copy(alpha = 0.8f), 1.3f * d, Offset(17 * d, y + 9 * d))
+                    y += 12 * d; k++
+                }
+            }
+            Contenedor.MAPAS -> {
+                // La tira de cuero clavada al lomo, con sus anillas de hierro y los clavos.
+                val cuero = if (oscuro) lerp(CUERO, Color.Black, 0.35f) else CUERO
+                drawRect(Brush.horizontalGradient(listOf(lerp(cuero, Color.White, 0.1f), cuero, lerp(cuero, Color.Black, 0.3f)), 6 * d, 26 * d), Offset(6 * d, 0f), Size(20 * d, size.height))
+                var y = 30 * d
+                while (y < size.height - 20 * d) {
+                    drawCircle(HIERRO, 5 * d, Offset(24 * d, y), style = Stroke(2 * d))
+                    listOf(-12f, 12f).forEach { dy -> drawCircle(Color(0xFF8A8D91), 1.5f * d, Offset(12 * d, y + dy * d)) }
+                    y += 70 * d
+                }
             }
             Contenedor.EXPEDIENTE -> {
                 // Las perforaciones del archivador y el broche metálico.
@@ -580,7 +601,8 @@ object ContenedoresMas {
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent), 10 * d, 30 * d), Offset(10 * d, 4 * d), Size(20 * d, size.height - 8 * d))
                 listOf(0.3f, 0.7f).forEach { f -> val y = size.height * f; drawRect(Color(0xFFC3C6CA), Offset(14 * d, y - 9 * d), Size(3 * d, 18 * d)); drawRect(Color.Black.copy(alpha = 0.25f), Offset(17 * d, y - 9 * d), Size(1 * d, 18 * d)) }
             }
-            else -> {}
+            // Estas las dibuja [Contenedores].
+            Contenedor.ESPIRAL, Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 }
