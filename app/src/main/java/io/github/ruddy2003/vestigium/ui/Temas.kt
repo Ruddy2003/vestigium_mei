@@ -379,7 +379,7 @@ object Temas {
     private val LABORATORIO = mapOf(
         "Mundo" to "DISPERSIÓN GEOGRÁFICA", "Patrimonio Mundial" to "MUESTRAS DE REFERENCIA", "Mapa para rascar" to "COBERTURA", "Ciudades visitadas" to "LOCALIDADES",
         "Biblioteca de sueños" to "REGISTRO DE SUEÑOS", "Cartas" to "CORRESPONDENCIA", "Escribir una carta" to "NUEVA CARTA", "Carta" to "CARTA", "Conocerte" to "DATOS DEL SUJETO", "Brújula política" to "ESCALA POLÍTICA", "Mapas" to "MAPAS", "Salud" to "PANEL CLÍNICO", "Tus apps" to "TELEMETRÍA", "Otras vidas" to "SUJETOS DE COMPARACIÓN", "Logros" to "HITOS DEL SUJETO", "Tu año en historias" to "INFORME ANUAL", "Anoche" to "ÚLTIMA NOCHE", "Selladas" to "MUESTRAS SELLADAS", "Listas para abrir" to "LISTAS PARA ABRIR", "A otras personas" to "A OTRAS PERSONAS", "Del pasado" to "ABIERTAS",
-        "Hoy" to "Registro de hoy", "Línea de tiempo" to "Serie temporal", "Ahora mismo estoy…" to "Observación inmediata",
+        "Hoy" to "REGISTRO DE HOY", "Línea de tiempo" to "SERIE TEMPORAL", "Ahora mismo estoy…" to "OBSERVACIÓN INMEDIATA",
         "Entender" to "RESULTADOS", "Registros especiales" to "PROTOCOLOS ESPECIALES", "Apariencia" to "INTERFAZ", "Avisos y recordatorios" to "ALERTAS",
         "Llenar el día" to "CIERRE DE SESIÓN", "Biblioteca del diario" to "CUADERNOS", "Entrada" to "REGISTRO",
         "Día" to "SESIÓN", "Momentos" to "OBSERVACIONES", "Gastos" to "RECURSOS", "Explorar" to "HALLAZGOS", "Más" to "DIVISIONES",
@@ -486,7 +486,7 @@ object Temas {
     private val ESPACIO = mapOf(
         "Mundo" to "ÓRBITA TERRESTRE", "Patrimonio Mundial" to "PUNTOS DE INTERÉS", "Mapa para rascar" to "PLANETA EXPLORADO", "Ciudades visitadas" to "BASES",
         "Biblioteca de sueños" to "SUEÑOS EN ÓRBITA", "Cartas" to "TRANSMISIONES", "Escribir una carta" to "NUEVA TRANSMISIÓN", "Carta" to "TRANSMISIÓN", "Conocerte" to "PERFIL DE LA TRIPULACIÓN", "Brújula política" to "COORDENADAS POLÍTICAS", "Mapas" to "CARTAS ESTELARES", "Salud" to "SOPORTE VITAL", "Tus apps" to "TELEMETRÍA", "Otras vidas" to "OTRAS TRIPULACIONES", "Logros" to "INSIGNIAS DE MISIÓN", "Tu año en historias" to "BITÁCORA DEL CICLO", "Anoche" to "ÚLTIMA NOCHE", "Selladas" to "CÁPSULAS SELLADAS", "Listas para abrir" to "LISTAS PARA ABRIR", "A otras personas" to "A OTRAS ESTACIONES", "Del pasado" to "RECIBIDAS",
-        "Hoy" to "Bitácora de hoy", "Línea de tiempo" to "Registro de la misión", "Ahora mismo estoy…" to "Telemetría inmediata",
+        "Hoy" to "BITÁCORA DE HOY", "Línea de tiempo" to "REGISTRO DE LA MISIÓN", "Ahora mismo estoy…" to "TELEMETRÍA INMEDIATA",
         "Día" to "ÓRBITA DEL DÍA", "Diario" to "BITÁCORA", "Gastos" to "COMBUSTIBLE", "Entender" to "OBSERVATORIO", "Más" to "BASE",
         "Llenar el día" to "REPORTE DE MISIÓN", "Biblioteca del diario" to "ARCHIVO DE VUELO", "Entrada" to "REGISTRO", "Tablero" to "TELEMETRÍA",
         "Te falta hoy" to "SECUENCIA PENDIENTE", "Hábitos" to "RUTINAS", "Sueño" to "PERIODO DE SUEÑO", "Ánimo y cuerpo" to "SIGNOS VITALES", "Hitos" to "HITOS DE MISIÓN",

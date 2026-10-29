@@ -187,7 +187,7 @@ internal val colonosClaro = esquema(false, 0xFFF2EBDC, 0xFFF8F3E8, 0xFFE7DDC8, 0
     0xFF1F3A5F, 0xFFFFFFFF, 0xFFD4DEEC, 0xFF1F2A3A, 0xFFA23B2A, 0xFFF2D8D1, 0xFF7A5A2E, 0xFF8A1A1A)
 internal val colonosOscuro = esquema(true, 0xFF0E1420, 0xFF151D2B, 0xFF1E2838, 0xFF2E3B50, 0xFFEEE7D7, 0xFFA9B0BC,
     0xFFE3C27A, 0xFF1C1405, 0xFF2B3A55, 0xFFEEE7D7, 0xFFE07A62, 0xFF3A1E18, 0xFFB89463, 0xFFFF8A80)
-internal val tipoColonos = tipografia(LetraExtra.fell, FontWeight.Normal, 1.12f, 0.8f, LetraExtra.gaceta, 1.02f, LetraExtra.gaceta, 1.04f, cifrasAlineadas = true)
+internal val tipoColonos = tipografia(LetraExtra.fell, FontWeight.Normal, 1.12f, 0.8f, LetraExtra.gaceta, 1.08f, LetraExtra.gaceta, 1.12f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Napoleónico: azul imperial, oro y carmesí sobre papel de despacho; de noche, terciopelo azul.
