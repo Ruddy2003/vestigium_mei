@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,36 +30,43 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
-import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Fechas
-import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /**
  * El único selector de hora de la app (el de gastos): «ahora» o «otra fecha u hora…», con atajos opcionales
- * («hace 15 min»…). [valor] null = ahora. Lo de madrugada avisa a qué día cuenta.
+ * («hace 15 min»…). [valor] null = ahora. Lo de madrugada avisa a qué día cuenta. «Otra fecha u hora…» abre primero
+ * el calendario y luego el reloj de 24 h, los dos con el cuerpo de diálogo del tema.
  */
 @Composable
 fun SelectorHora(valor: LocalDateTime?, atajos: List<Int> = emptyList(), etiquetaAhora: String = "ahora", permitirFuturo: Boolean = false,
                  ayer: Boolean = false, onCambio: (LocalDateTime?) -> Unit) {
-    val ctx = LocalContext.current
     val ahora = remember { LocalDateTime.now().withSecond(0).withNano(0) }
-    fun elegir() {
-        val base = valor ?: LocalDateTime.now()
-        DatePickerDialog(ctx, { _, y, m, d ->
-            TimePickerDialog(ctx, { _, h, min -> onCambio(LocalDateTime.of(y, m + 1, d, h, min)) }, base.hour, base.minute, true).show()
-        }, base.year, base.monthValue - 1, base.dayOfMonth).apply { if (!permitirFuturo) datePicker.maxDate = System.currentTimeMillis() }.show()
-    }
+    // 0: nada abierto; 1: eligiendo el día; 2: eligiendo la hora de [dia].
+    var paso by remember { mutableStateOf(0) }
+    var base by remember { mutableStateOf(ahora) }
+    var dia by remember { mutableStateOf(ahora.toLocalDate()) }
+    fun elegir() { base = valor ?: LocalDateTime.now(); paso = 1 }
     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Ficha(etiquetaAhora, valor == null) { onCambio(null) }
         atajos.forEach { m ->
@@ -74,13 +82,74 @@ fun SelectorHora(valor: LocalDateTime?, atajos: List<Int> = emptyList(), etiquet
     valor?.takeIf { it.hour < 5 }?.let {
         Ayuda("De madrugada: cuenta para el ${Fechas.corto(Fechas.iso(it.toLocalDate().minusDays(1)))}.", Modifier.padding(top = 4.dp))
     }
+    // Sin futuro, se puede hasta hoy (como el calendario de Android con maxDate = ahora).
+    if (paso == 1) DialogoFecha(inicial = base.toLocalDate(), maximo = if (permitirFuturo) null else LocalDate.now(), onCerrar = { paso = 0 }) { d -> dia = d; paso = 2 }
+    if (paso == 2) DialogoHora(base.hour, base.minute, onCerrar = { paso = 0 }) { h, min ->
+        paso = 0
+        onCambio(LocalDateTime.of(dia.year, dia.monthValue, dia.dayOfMonth, h, min))
+    }
 }
 
-/** Abre el calendario de Android para elegir un día (AAAA-MM-DD). Con [desdeManana], solo días futuros. */
-fun elegirFecha(ctx: android.content.Context, inicial: String?, desdeManana: Boolean = false, onFecha: (String) -> Unit) {
-    val base = inicial?.let { runCatching { Fechas.parse(it) }.getOrNull() } ?: java.time.LocalDate.now().plusDays(if (desdeManana) 1 else 0)
-    DatePickerDialog(ctx, { _, y, m, d -> onFecha(Fechas.iso(java.time.LocalDate.of(y, m + 1, d))) }, base.year, base.monthValue - 1, base.dayOfMonth)
-        .apply { if (desdeManana) datePicker.minDate = System.currentTimeMillis() + 86_400_000L }.show()
+/**
+ * Pedidos de día u hora que vienen de fuera de la composición (un toque que llama a [elegirFecha] o [elegirHora]).
+ * Los atiende [AnfitrionSelectores], que va dentro de la capa de Deshacer de cada actividad; si no hay ninguno, se usa
+ * el selector de Android.
+ */
+internal object PedidoSelector {
+    class Fecha(val inicial: LocalDate, val minimo: LocalDate?, val maximo: LocalDate?, val listo: (LocalDate) -> Unit)
+    class Hora(val hora: Int, val minuto: Int, val listo: (Int, Int) -> Unit)
+
+    var fecha by mutableStateOf<Fecha?>(null)
+    var hora by mutableStateOf<Hora?>(null)
+    /** Cuántos anfitriones hay en pantalla. */
+    var anfitriones = 0
+}
+
+/** Muestra los diálogos de día y hora que se pidieron con [elegirFecha] y [elegirHora]. */
+@Composable
+internal fun AnfitrionSelectores() {
+    DisposableEffect(Unit) { PedidoSelector.anfitriones++; onDispose { PedidoSelector.anfitriones-- } }
+    PedidoSelector.fecha?.let { p ->
+        DialogoFecha(inicial = p.inicial, minimo = p.minimo, maximo = p.maximo, onCerrar = { PedidoSelector.fecha = null }) { d ->
+            PedidoSelector.fecha = null
+            p.listo(d)
+        }
+    }
+    PedidoSelector.hora?.let { p ->
+        DialogoHora(p.hora, p.minuto, onCerrar = { PedidoSelector.hora = null }) { h, m ->
+            PedidoSelector.hora = null
+            p.listo(h, m)
+        }
+    }
+}
+
+/**
+ * Abre el calendario del tema para elegir un día (AAAA-MM-DD). Con [desdeManana], solo días futuros; [minimo] y
+ * [maximo] limitan más. Si no hay dónde dibujarlo (una actividad sin la capa de Deshacer), abre el de Android.
+ */
+fun elegirFecha(ctx: android.content.Context, inicial: String?, desdeManana: Boolean = false, minimo: LocalDate? = null, maximo: LocalDate? = null,
+                onFecha: (String) -> Unit) {
+    val base = inicial?.let { runCatching { Fechas.parse(it) }.getOrNull() } ?: LocalDate.now().plusDays(if (desdeManana) 1 else 0)
+    val manana = if (desdeManana) LocalDate.now().plusDays(1) else null
+    val desde = if (manana != null && (minimo == null || manana.isAfter(minimo))) manana else minimo
+    if (PedidoSelector.anfitriones > 0) {
+        PedidoSelector.fecha = PedidoSelector.Fecha(base, desde, maximo) { d -> onFecha(Fechas.iso(d)) }
+        return
+    }
+    DatePickerDialog(ctx, { _, y, m, d -> onFecha(Fechas.iso(LocalDate.of(y, m + 1, d))) }, base.year, base.monthValue - 1, base.dayOfMonth).apply {
+        if (desdeManana) datePicker.minDate = System.currentTimeMillis() + 86_400_000L
+        else if (minimo != null) datePicker.minDate = Fechas.millisDe(minimo.atStartOfDay())
+        if (maximo != null) datePicker.maxDate = Fechas.millisDe(maximo.atTime(23, 59))
+    }.show()
+}
+
+/** Abre el reloj de 24 h del tema para elegir una hora. Sin anfitrión, abre el de Android. */
+fun elegirHora(ctx: android.content.Context, hora: Int, minuto: Int, onHora: (Int, Int) -> Unit) {
+    if (PedidoSelector.anfitriones > 0) {
+        PedidoSelector.hora = PedidoSelector.Hora(hora, minuto, onHora)
+        return
+    }
+    TimePickerDialog(ctx, { _, h, m -> onHora(h, m) }, hora, minuto, true).show()
 }
 
 /** Hora local → instante, con la zona que regía entonces (H-1-7). */
@@ -105,7 +174,8 @@ fun duracionTexto(min: Int): String = if (min < 60) "$min min" else if (min % 60
 
 /**
  * La cuadrícula de afecto (Russell): un solo toque dice qué tan agradable (de izquierda a derecha, 1 a 7)
- * y cuánta energía (de abajo arriba, 1 a 7). Las esquinas llevan palabras de guía.
+ * y cuánta energía (de abajo arriba, 1 a 7). Las esquinas llevan palabras de guía. Cada celda tiene la forma del
+ * tema (tesela, píxel, frontón, rombo, lanceta, hexágono, estrella de ocho puntas…); los colores no cambian.
  */
 @Composable
 fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modifier, onCambio: (Int, Int) -> Unit) {
@@ -114,6 +184,9 @@ fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modi
     val medidor = rememberTextMeasurer()
     val estilo = MaterialTheme.typography.labelSmall.copy(color = cs.onSurfaceVariant)
     val sentir = rememberSentir()
+    val tema = Estilo.tema
+    val forma = formaCeldaAfecto(tema)
+    val fondo = cs.surface
     Column(modifier) {
         Text("más energía ↑", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
         // Para TalkBack (N-27): qué es, qué tiene marcado y cuatro acciones para moverse sin ver la cuadrícula.
@@ -135,14 +208,20 @@ fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modi
             }
         }) {
             val w = size.width / 7; val h = size.height / 7
+            // Todas las celdas miden lo mismo: la forma del tema se calcula una vez.
+            val celda = Size(w - 4, h - 4)
+            val contorno = forma.createOutline(celda, layoutDirection, this)
             for (i in 0 until 7) for (j in 0 until 7) {
                 val v = i + 1; val a = 7 - j
                 val base = Tonos.divergente(i / 6f, oscuro)
                 // Más energía, color más intenso.
                 val alfa = 0.18f + 0.62f * (a - 1) / 6f
                 val sel = valencia == v && activacion == a
-                drawRoundRect(base.copy(alpha = if (sel) 1f else alfa), Offset(i * w + 2, j * h + 2), Size(w - 4, h - 4), CornerRadius(6f, 6f))
-                if (sel) drawRoundRect(cs.onSurface, Offset(i * w + 2, j * h + 2), Size(w - 4, h - 4), CornerRadius(6f, 6f), style = Stroke(3.dp.toPx()))
+                translate(i * w + 2, j * h + 2) {
+                    drawOutline(contorno, base.copy(alpha = if (sel) 1f else alfa))
+                    detalleCelda(tema, celda, fondo)
+                    if (sel) drawOutline(contorno, cs.onSurface, style = Stroke(3.dp.toPx()))
+                }
             }
             // Ejes que se cruzan en el centro (neutral).
             drawLine(cs.outline, Offset(size.width / 2, 0f), Offset(size.width / 2, size.height), 1.dp.toPx())
@@ -162,5 +241,114 @@ fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modi
         }
         if (valencia != null) Text("agrado $valencia/7" + (activacion?.let { " · energía $it/7" } ?: " · toca otra vez para la energía"),
             style = MaterialTheme.typography.labelMedium, color = cs.primary, modifier = Modifier.padding(top = 4.dp))
+    }
+}
+
+/** La forma de cada celda de la cuadrícula de afecto. Las medidas van en proporción a la celda. */
+private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
+    // Tesela de mosaico, apenas irregular.
+    TemaId.ROMANO -> GenericShape { s, _ -> moveTo(s.width * 0.03f, 0f); lineTo(s.width, s.height * 0.04f); lineTo(s.width * 0.97f, s.height); lineTo(0f, s.height * 0.96f); close() }
+    // Píxel con una esquina cortada.
+    TemaId.CIBER -> CutCornerShape(topEndPercent = 28)
+    // Frontón.
+    TemaId.HELENO -> GenericShape { s, _ -> moveTo(0f, s.height * 0.24f); lineTo(s.width / 2, 0f); lineTo(s.width, s.height * 0.24f); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
+    // Esquinas cóncavas de miniatura.
+    TemaId.MEDIEVAL -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val r = minOf(w, h) * 0.22f
+        moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h - r); quadraticTo(w - r, h - r, w - r, h)
+        lineTo(r, h); quadraticTo(r, h - r, 0f, h - r); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
+    }
+    // Casilla de formulario.
+    TemaId.DISTOPIA -> RectangleShape
+    // Píldora de luz de tablero.
+    TemaId.REFUGIO -> RoundedCornerShape(50)
+    // Placa ochavada.
+    TemaId.ORDEN -> CutCornerShape(22)
+    // Pocillo de placa de ensayo.
+    TemaId.LABORATORIO -> RoundedCornerShape(35)
+    // Boleto con una muesca a cada lado.
+    TemaId.COLONOS -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val n = minOf(w, h) * 0.18f
+        moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h * 0.36f); quadraticTo(w - n, h / 2, w, h * 0.64f); lineTo(w, h)
+        lineTo(0f, h); lineTo(0f, h * 0.64f); quadraticTo(n, h / 2, 0f, h * 0.36f); close()
+    }
+    // Rombo de condecoración.
+    TemaId.NAPOLEON -> GenericShape { s, _ -> moveTo(s.width / 2, 0f); lineTo(s.width, s.height / 2); lineTo(s.width / 2, s.height); lineTo(0f, s.height / 2); close() }
+    // Hoja.
+    TemaId.BOTANICO -> RoundedCornerShape(topStartPercent = 50, topEndPercent = 6, bottomEndPercent = 50, bottomStartPercent = 6)
+    // Caja de regalo (el lazo se dibuja aparte).
+    TemaId.NAVIDAD -> RoundedCornerShape(12)
+    // Moneda (el agujero se dibuja aparte).
+    TemaId.SEDA -> GenericShape { s, _ -> val r = minOf(s.width, s.height) / 2; addOval(Rect(Offset(s.width / 2, s.height / 2), r)) }
+    // Lanceta.
+    TemaId.GOTICO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0f, h); lineTo(0f, h * 0.45f); quadraticTo(0f, h * 0.05f, w / 2, 0f); quadraticTo(w, h * 0.05f, w, h * 0.45f); lineTo(w, h); close()
+    }
+    // Hexágono, como los espejos de un telescopio.
+    TemaId.ESPACIO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(w * 0.25f, 0f); lineTo(w * 0.75f, 0f); lineTo(w, h / 2); lineTo(w * 0.75f, h); lineTo(w * 0.25f, h); lineTo(0f, h / 2); close()
+    }
+    // Estrella de ocho puntas.
+    TemaId.ANDALUS -> GenericShape { s, _ ->
+        val c = Offset(s.width / 2, s.height / 2); val r = minOf(s.width, s.height) / 2
+        for (k in 0 until 16) {
+            val rr = if (k % 2 == 0) r else r * 0.77f
+            val ang = Math.toRadians(-90.0 + 22.5 * k)
+            val x = c.x + rr * kotlin.math.cos(ang).toFloat(); val y = c.y + rr * kotlin.math.sin(ang).toFloat()
+            if (k == 0) moveTo(x, y) else lineTo(x, y)
+        }
+        close()
+    }
+    // Cúpula de ger.
+    TemaId.MONGOL -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0f, h); lineTo(0f, h * 0.45f); cubicTo(0f, -h * 0.1f, w, -h * 0.1f, w, h * 0.45f); lineTo(w, h); close()
+    }
+    // Hoja con la esquina doblada.
+    TemaId.RENACIMIENTO -> CutCornerShape(bottomEndPercent = 30)
+    // Paralelogramo de cartel.
+    TemaId.URSS -> GenericShape { s, _ -> moveTo(s.width * 0.18f, 0f); lineTo(s.width, 0f); lineTo(s.width * 0.82f, s.height); lineTo(0f, s.height); close() }
+    // Banderola con cola de golondrina.
+    TemaId.REVOLUCION -> GenericShape { s, _ -> moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width * 0.8f, s.height / 2); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
+    // Piedra irregular.
+    TemaId.ANTIGUAS -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(w * 0.12f, 0f); lineTo(w * 0.94f, h * 0.08f); lineTo(w, h * 0.74f); lineTo(w * 0.82f, h); lineTo(w * 0.06f, h * 0.92f); lineTo(0f, h * 0.22f); close()
+    }
+}
+
+/** Lo que va encima de la celda en algunos temas: el lazo del regalo, el agujero de la moneda. [fondo] es el color de detrás. */
+private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
+    when (t) {
+        TemaId.NAVIDAD -> {
+            val g = minOf(s.width, s.height) * 0.09f
+            drawLine(fondo.copy(alpha = 0.75f), Offset(s.width / 2, 0f), Offset(s.width / 2, s.height), g)
+            drawLine(fondo.copy(alpha = 0.75f), Offset(0f, s.height / 2), Offset(s.width, s.height / 2), g)
+        }
+        TemaId.SEDA -> {
+            val l = minOf(s.width, s.height) * 0.22f
+            drawRect(fondo, Offset(s.width / 2 - l / 2, s.height / 2 - l / 2), Size(l, l))
+        }
+        TemaId.ROMANO -> {}
+        TemaId.CIBER -> {}
+        TemaId.HELENO -> {}
+        TemaId.MEDIEVAL -> {}
+        TemaId.DISTOPIA -> {}
+        TemaId.REFUGIO -> {}
+        TemaId.ORDEN -> {}
+        TemaId.LABORATORIO -> {}
+        TemaId.COLONOS -> {}
+        TemaId.NAPOLEON -> {}
+        TemaId.BOTANICO -> {}
+        TemaId.GOTICO -> {}
+        TemaId.ESPACIO -> {}
+        TemaId.ANDALUS -> {}
+        TemaId.MONGOL -> {}
+        TemaId.RENACIMIENTO -> {}
+        TemaId.URSS -> {}
+        TemaId.REVOLUCION -> {}
+        TemaId.ANTIGUAS -> {}
     }
 }

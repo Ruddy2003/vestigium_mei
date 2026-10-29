@@ -14,6 +14,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,8 +42,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -63,6 +62,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -514,17 +514,23 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
     }
 }
 
+/** Ficha que se elige: la forma de los botones del tema y, elegida, la perilla del tema delante (sello, gota, moneda, gema…). */
 @Composable
 fun Ficha(texto: String, activa: Boolean, onClick: () -> Unit) {
     val sentir = rememberSentir()
     val toque = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val tema = Estilo.tema
+    val e = MaterialTheme.colorScheme
     Surface(
-        onClick = { sentir(Sentidos.Evento.ELEGIR); onClick() }, shape = R4, interactionSource = toque, modifier = Modifier.presion(toque, 0.93f),
-        color = if (activa) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, if (activa) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
+        onClick = { sentir(Sentidos.Evento.ELEGIR); onClick() }, shape = formaBoton(tema), interactionSource = toque, modifier = Modifier.presion(toque, 0.93f),
+        color = if (activa) e.primaryContainer else e.surface,
+        border = BorderStroke(1.dp, if (activa) e.primary else e.outline),
     ) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (activa) { Box(Modifier.size(6.dp).background(MaterialTheme.colorScheme.primary)); Spacer(Modifier.width(8.dp)) }
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (activa) {
+                Canvas(Modifier.size(11.dp)) { perillaTema(tema, e, center, size.minDimension / 2f, e.primary, e.primaryContainer) }
+                Spacer(Modifier.width(7.dp))
+            }
             Text(texto, style = MaterialTheme.typography.labelLarge.copy(fontWeight = if (activa) FontWeight.SemiBold else FontWeight.Normal))
         }
     }
@@ -557,21 +563,22 @@ fun Opciones(opciones: List<Opcion>, valor: String?, onCambio: (String?) -> Unit
     }
 }
 
+/**
+ * Fila con texto y el conmutador del tema (forma de los botones, perilla del tema y, encendido, el glifo de «elegido»
+ * en el riel). Toda la fila se toca; para TalkBack es un interruptor.
+ */
 @Composable
 fun Interruptor(texto: String, valor: Boolean, detalle: String? = null, onCambio: (Boolean) -> Unit) {
     val sentir = rememberSentir()
-    val piel = pielDe(Estilo.tema)
-    val riel = piel.riel.color()
-    // Encendido, la perilla lleva el glifo de «elegido» del tema.
-    val perilla: (@Composable () -> Unit)? = if (valor) ({ Text(piel.elegido, fontSize = 11.sp, lineHeight = 11.sp) }) else null
-    Row(Modifier.fillMaxWidth().clickable { sentir(Sentidos.Evento.ELEGIR); onCambio(!valor) }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth().toggleable(value = valor, role = Role.Switch) { sentir(Sentidos.Evento.ELEGIR); onCambio(it) }.padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Column(Modifier.weight(1f)) {
             Text(texto, style = MaterialTheme.typography.bodyLarge)
             if (detalle != null) Ayuda(detalle)
         }
-        Switch(checked = valor, onCheckedChange = { sentir(Sentidos.Evento.ELEGIR); onCambio(it) }, thumbContent = perilla,
-            colors = SwitchDefaults.colors(checkedTrackColor = riel, checkedThumbColor = MaterialTheme.colorScheme.surface, checkedIconColor = riel,
-                uncheckedBorderColor = MaterialTheme.colorScheme.outline))
+        Conmutador(checked = valor, onCheckedChange = null)
     }
 }
 
@@ -867,6 +874,17 @@ private class PielComponentes(
 private val PIELES: Map<TemaId, PielComponentes> by lazy { TemaId.entries.associateWith { crearPiel(it) } }
 
 private fun pielDe(t: TemaId): PielComponentes = PIELES.getValue(t)
+
+// Para los controles de ControlesTema.kt: la piel es privada de este archivo y estos son los rasgos que comparten.
+/** La forma de los botones del tema (también la del conmutador, el botón de confirmar de los diálogos y la barra de Deshacer). */
+internal fun formaBotonTema(t: TemaId): Shape = formaBoton(t)
+/** El glifo de «elegido» del tema. */
+internal fun glifoElegido(t: TemaId): String = pielDe(t).elegido
+/** La flecha de las filas de menú del tema. */
+internal fun glifoFlecha(t: TemaId): String = pielDe(t).flecha
+/** El color del riel del interruptor encendido. */
+@Composable
+internal fun rielInterruptor(t: TemaId): Color = pielDe(t).riel.color()
 
 private fun crearPiel(t: TemaId): PielComponentes = when (t) {
     TemaId.ROMANO -> PielComponentes(sep = "  ·  ", cerrada = "⊕", abierta = "⊖", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
