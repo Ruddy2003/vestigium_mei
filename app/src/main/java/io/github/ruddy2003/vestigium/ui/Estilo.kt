@@ -236,6 +236,62 @@ object Estilo {
         TemaId.GOTICO -> "✠ "; TemaId.ESPACIO -> "◦ "; TemaId.ANDALUS -> "◈ "; TemaId.MONGOL -> "▹ "; TemaId.RENACIMIENTO -> "✎ "; TemaId.REVOLUCION -> "• "; TemaId.ANTIGUAS -> "◆ "
     }
 
+    /**
+     * Lo que remata el título de Día y de Hoy, pegado al nombre de la pantalla. Casi todos los temas no llevan nada;
+     * la terminal deja su cursor.
+     */
+    val sufijoTitulo: String get() = when (tema) {
+        TemaId.ROMANO -> ""
+        TemaId.CIBER -> "_"
+        TemaId.HELENO -> ""
+        TemaId.MEDIEVAL -> ""
+        TemaId.DISTOPIA -> ""
+        TemaId.REFUGIO -> ""
+        TemaId.ORDEN -> ""
+        TemaId.LABORATORIO -> ""
+        TemaId.COLONOS -> ""
+        TemaId.NAPOLEON -> ""
+        TemaId.BOTANICO -> ""
+        TemaId.NAVIDAD -> ""
+        TemaId.SEDA -> ""
+        TemaId.GOTICO -> ""
+        TemaId.ESPACIO -> ""
+        TemaId.ANDALUS -> ""
+        TemaId.MONGOL -> ""
+        TemaId.RENACIMIENTO -> ""
+        TemaId.URSS -> ""
+        TemaId.REVOLUCION -> ""
+        TemaId.ANTIGUAS -> ""
+    }
+
+    /**
+     * Cómo se ve la fecha grande de Día (la que abre el calendario): la inscripción romana grande y espaciada, la terminal
+     * sin adornos, la cursiva de la gaceta, el cartel en negrita… Ver [EstiloFecha].
+     */
+    val fechaGrande: EstiloFecha get() = when (tema) {
+        TemaId.ROMANO -> EstiloFecha(1.27f, 1.8f, peso = 400)
+        TemaId.CIBER -> EstiloFecha(1.0f, 0.4f, abre = "↓")
+        TemaId.HELENO -> EstiloFecha(1.12f, 3.0f, peso = 500, abre = "▿")
+        TemaId.MEDIEVAL -> EstiloFecha(1.1f, 0.3f)
+        TemaId.DISTOPIA -> EstiloFecha(1.12f, 1.6f, peso = 700, abre = "▼")
+        TemaId.REFUGIO -> EstiloFecha(1.15f, 0.8f, abre = "▼")
+        TemaId.ORDEN -> EstiloFecha(1.08f, 2.4f)
+        TemaId.LABORATORIO -> EstiloFecha(0.96f, 2.6f, peso = 400, abre = "▿")
+        TemaId.COLONOS -> EstiloFecha(1.06f, 0.5f, cursiva = true)
+        TemaId.NAPOLEON -> EstiloFecha(1.04f, 2.2f, peso = 600)
+        TemaId.BOTANICO -> EstiloFecha(1.0f, 0.2f, cursiva = true, abre = "▿")
+        TemaId.NAVIDAD -> EstiloFecha(1.1f, 1.4f)
+        TemaId.SEDA -> EstiloFecha(1.08f, 0.6f, abre = "▿")
+        TemaId.GOTICO -> EstiloFecha(1.16f, 0.6f)
+        TemaId.ESPACIO -> EstiloFecha(0.92f, 2.8f, peso = 500, abre = "▼")
+        TemaId.ANDALUS -> EstiloFecha(1.06f, 1.0f, peso = 500)
+        TemaId.MONGOL -> EstiloFecha(1.1f, 1.8f, peso = 700, abre = "▼")
+        TemaId.RENACIMIENTO -> EstiloFecha(1.14f, 0f)
+        TemaId.URSS -> EstiloFecha(1.18f, 1.2f, abre = "▼")
+        TemaId.REVOLUCION -> EstiloFecha(1.08f, 2.0f, cursiva = true)
+        TemaId.ANTIGUAS -> EstiloFecha(1.1f, 2.6f, peso = 600)
+    }
+
     /** Rótulos de los widgets. */
     fun widget(clave: String): String = when (tema) {
         TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO", "enfoque" to "STVDIVM")[clave] ?: clave.uppercase()
@@ -311,6 +367,13 @@ object Estilo {
     private val MESES_ES = listOf("ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC")
     private val MESES_LARGOS = listOf("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre")
 }
+
+/**
+ * La fecha grande de Día. [escala] multiplica el tamaño de `titleLarge` del tema; [espaciado] (en sp) separa las letras;
+ * [peso] (100–900) cambia el grueso o, si es null, deja el del tema; [cursiva] la inclina; [abre] es el signo que invita a
+ * abrir el calendario.
+ */
+data class EstiloFecha(val escala: Float, val espaciado: Float, val peso: Int? = null, val cursiva: Boolean = false, val abre: String = "▾")
 
 /** Griego antiguo: nombres de secciones, numerales jónicos y el calendario macedonio de Alejandro. */
 object Griego {

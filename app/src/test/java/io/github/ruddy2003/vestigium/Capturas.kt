@@ -1299,6 +1299,19 @@ class Capturas {
             io.github.ruddy2003.vestigium.ui.pantallas.MapaRascar(setOf("MX", "ES", "FR", "JP"), Modifier.fillMaxWidth().aspectRatio(2.1f))
         }
     } }
+    @Test fun temaDia() = porTema("dia") { t, o, n -> v73(t, o, 4200, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
+    /** Frase, franja y cifras de Hoy; en oscuro la frase va guardada, para ver el corazón relleno. */
+    @Test fun temaHoy() = porTema("hoy") { t, o, n ->
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        v73(t, o, 2600, extra = { c -> if (o) c.copy(frases_guardadas = listOf(io.github.ruddy2003.vestigium.ui.Frases.del(hoy, t).let { f ->
+            io.github.ruddy2003.vestigium.data.FraseGuardada(f.texto, f.original, f.autor, t.id, hoy) })) else c }, nombre = n) {
+            Column(Modifier.padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.pantallas.FraseDelDia(hoy)
+                io.github.ruddy2003.vestigium.ui.pantallas.FranjaDias(hoy, abrir = {}, ponerse = {})
+                io.github.ruddy2003.vestigium.ui.pantallas.Tablero(hoy, max = 4)
+            }
+        }
+    }
     @Test fun temaLibrosAnio() = porTema("librosAnio") { t, o, n -> tarjetaAnio(t, o, "libros", n) }
     @Test fun temaCosasAnio() = porTema("cosasAnio") { t, o, n -> tarjetaAnio(t, o, "cosas", n) }
     /** «Más» (recuadros con el marco del tema), «Mapas» y la galería de obras. */

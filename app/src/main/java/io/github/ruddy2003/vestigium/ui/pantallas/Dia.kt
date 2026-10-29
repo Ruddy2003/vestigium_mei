@@ -177,7 +177,6 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
 
     Hoja("Día", modifier = deslizar, encabezado = {
         val est = io.github.ruddy2003.vestigium.ui.Estilo
-        val tema = est.tema
         fun abrirCalendario() { Seleccion.ultimoMes = Fechas.mesDe(fecha); if (sucio) Repo.guardarDia(d); nav.ir("calendario") }
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             if (apilado) TextButton(onClick = nav.atras, contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 4.dp),
@@ -189,7 +188,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
             Text(androidx.compose.ui.text.buildAnnotatedString {
                 if (espanolT != null) withStyle(androidx.compose.ui.text.SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Medium)) { append(nombreT) }
                 else append(nombreT)
-                if (tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER) append("_")
+                append(est.sufijoTitulo)
                 if (espanolT != null) withStyle(androidx.compose.ui.text.SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) { append(" · $espanolT") }
             }, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
             io.github.ruddy2003.vestigium.ui.LocalGuia.current?.let { guia -> TextButton(onClick = { guia("principios") }) { Text("?", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary) } }
@@ -199,8 +198,16 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
             io.github.ruddy2003.vestigium.ui.Emblema(tam = 34.dp, modifier = Modifier.padding(start = 4.dp))
         }
         // La fecha grande abre el calendario.
-        Text(est.fecha(fecha) + "  ▾", style = if (tema == io.github.ruddy2003.vestigium.ui.TemaId.ROMANO) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { abrirCalendario() })
+        // Su tamaño, espaciado, peso, inclinación y el signo que la abre son de cada tema (Estilo.fechaGrande).
+        val ef = est.fechaGrande
+        val base = MaterialTheme.typography.titleLarge
+        Text(est.fecha(fecha) + "  " + ef.abre, style = base.copy(
+            fontSize = base.fontSize * ef.escala,
+            lineHeight = if (base.lineHeight.type == androidx.compose.ui.unit.TextUnitType.Unspecified) base.lineHeight else base.lineHeight * ef.escala,
+            letterSpacing = ef.espaciado.sp,
+            fontWeight = ef.peso?.let { androidx.compose.ui.text.font.FontWeight(it) } ?: base.fontWeight,
+            fontStyle = if (ef.cursiva) androidx.compose.ui.text.font.FontStyle.Italic else base.fontStyle,
+        ), color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { abrirCalendario() })
         val fase = Luna.fase(fecha)
         Text(est.comentario + "${Fechas.titulo(fecha).lowercase()} · ${Fechas.relativo(fecha)} · ${Luna.glifo(fase)}",
             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -25,8 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.contentDescription
@@ -35,6 +40,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Frases
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
@@ -48,7 +54,12 @@ import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 
-/** El corazón de la frase del día: late al tocarlo y suelta una chispa de puntos cuando se guarda. */
+/**
+ * El «corazón» de la frase del día, con la forma de cada tema (laurel, corazón de píxeles, sol de Vergina, cuadrifolio,
+ * ojo, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
+ * ocho puntas, yurta, corazón con trazos de construcción, estrella roja, escarapela, gema): late al tocarlo y suelta una
+ * chispa de puntos cuando se guarda. Guardada, va rellena; sin guardar, solo el contorno.
+ */
 @Composable
 fun CorazonFrase(f: Frases.Frase, color: Color, modifier: Modifier = Modifier, fecha: String = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) {
     val guardada = Frases.guardada(f)
@@ -57,6 +68,7 @@ fun CorazonFrase(f: Frases.Frase, color: Color, modifier: Modifier = Modifier, f
     val escala = remember { Animatable(1f) }
     val brote = remember { Animatable(1f) }
     val animar = Repo.config.animaciones
+    val tema = Estilo.tema
     Box(
         modifier.size(40.dp).clip(CircleShape).clickable {
             val ahora = Frases.alternar(f, fecha = fecha)
@@ -68,23 +80,184 @@ fun CorazonFrase(f: Frases.Frase, color: Color, modifier: Modifier = Modifier, f
     ) {
         Canvas(Modifier.size(24.dp).graphicsLayer { scaleX = escala.value; scaleY = escala.value }) {
             val u = size.minDimension / 24f
-            val p = Path().apply {
-                moveTo(12f * u, 21f * u)
-                cubicTo(5f * u, 15.5f * u, 2f * u, 12f * u, 2f * u, 8.5f * u)
-                cubicTo(2f * u, 5.5f * u, 4.5f * u, 3f * u, 7.5f * u, 3f * u)
-                cubicTo(9.5f * u, 3f * u, 11f * u, 4f * u, 12f * u, 5.8f * u)
-                cubicTo(13f * u, 4f * u, 14.5f * u, 3f * u, 16.5f * u, 3f * u)
-                cubicTo(19.5f * u, 3f * u, 22f * u, 5.5f * u, 22f * u, 8.5f * u)
-                cubicTo(22f * u, 12f * u, 19f * u, 15.5f * u, 12f * u, 21f * u)
-                close()
-            }
-            if (guardada) drawPath(p, color) else drawPath(p, color.copy(alpha = 0.7f), style = Stroke(1.8f * u))
+            formaCorazon(tema, u, color, guardada)
             val b = brote.value
             if (b < 1f) for (i in 0 until 8) {
                 val a = Math.toRadians(45.0 * i - 90).toFloat()
                 val r = (8f + 10f * b) * u
                 drawCircle(color.copy(alpha = 1f - b), (1.6f - b) * u * 1.2f, Offset(center.x + r * cos(a), center.y + r * sin(a)))
             }
+        }
+    }
+}
+
+/** Dibuja la forma del tema en una cuadrícula de 24 × 24 (cada unidad mide [u]). */
+private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: Boolean) {
+    fun p(x: Float, y: Float) = Offset(x * u, y * u)
+    // Rellena si está guardada; si no, el contorno.
+    fun pinta(path: Path, trazo: Float = 1.6f) { if (lleno) drawPath(path, color) else drawPath(path, color.copy(alpha = 0.7f), style = Stroke(trazo * u)) }
+    fun poligono(vararg xy: Float, hueco: Boolean = false) = Path().apply {
+        if (hueco) fillType = PathFillType.EvenOdd
+        moveTo(xy[0] * u, xy[1] * u)
+        var i = 2
+        while (i + 1 < xy.size) { lineTo(xy[i] * u, xy[i + 1] * u); i += 2 }
+        close()
+    }
+    fun estrella(cx: Float, cy: Float, puntas: Int, rExt: Float, rInt: Float, path: Path = Path()) = path.apply {
+        for (i in 0 until puntas * 2) {
+            val a = -Math.PI / 2 + i * Math.PI / puntas
+            val r = if (i % 2 == 0) rExt else rInt
+            val x = (cx + r * cos(a).toFloat()) * u; val y = (cy + r * sin(a).toFloat()) * u
+            if (i == 0) moveTo(x, y) else lineTo(x, y)
+        }
+        close()
+    }
+    fun circulo(path: Path, cx: Float, cy: Float, r: Float) = path.addOval(Rect((cx - r) * u, (cy - r) * u, (cx + r) * u, (cy + r) * u))
+    // El corazón clásico, el de siempre.
+    fun corazon() = Path().apply {
+        moveTo(12f * u, 21f * u)
+        cubicTo(5f * u, 15.5f * u, 2f * u, 12f * u, 2f * u, 8.5f * u)
+        cubicTo(2f * u, 5.5f * u, 4.5f * u, 3f * u, 7.5f * u, 3f * u)
+        cubicTo(9.5f * u, 3f * u, 11f * u, 4f * u, 12f * u, 5.8f * u)
+        cubicTo(13f * u, 4f * u, 14.5f * u, 3f * u, 16.5f * u, 3f * u)
+        cubicTo(19.5f * u, 3f * u, 22f * u, 5.5f * u, 22f * u, 8.5f * u)
+        cubicTo(22f * u, 12f * u, 19f * u, 15.5f * u, 12f * u, 21f * u)
+        close()
+    }
+    // Una hoja de a (base) a b (punta) que se abre [ancho] a cada lado; todas giran en el mismo sentido, así se suman al rellenar.
+    fun hoja(path: Path, a: Offset, b: Offset, ancho: Float) {
+        val d = b - a; val l = d.getDistance().coerceAtLeast(0.01f); val n = Offset(-d.y / l, d.x / l) * (2 * ancho * u)
+        val m = (a + b) / 2f
+        path.moveTo(a.x, a.y); path.quadraticTo(m.x + n.x, m.y + n.y, b.x, b.y); path.quadraticTo(m.x - n.x, m.y - n.y, a.x, a.y); path.close()
+    }
+    when (tema) {
+        // Corona de laurel: dos ramas de cinco hojas atadas abajo.
+        TemaId.ROMANO -> {
+            val c = Path()
+            listOf(115f, 145f, 175f, 205f, 235f).forEach { g ->
+                val a = Math.toRadians(g.toDouble()); val b = Math.toRadians(g + 24.0)
+                hoja(c, p(12f + 8f * cos(a).toFloat(), 12.5f + 8f * sin(a).toFloat()), p(12f + 9.5f * cos(b).toFloat(), 12.5f + 9.5f * sin(b).toFloat()), 1.3f)
+                val a2 = Math.toRadians(180.0 - g); val b2 = Math.toRadians(180.0 - g - 24.0)
+                hoja(c, p(12f + 8f * cos(a2).toFloat(), 12.5f + 8f * sin(a2).toFloat()), p(12f + 9.5f * cos(b2).toFloat(), 12.5f + 9.5f * sin(b2).toFloat()), 1.3f)
+            }
+            pinta(c, 1.2f)
+            drawCircle(if (lleno) color else color.copy(alpha = 0.7f), 1.3f * u, p(12f, 21.2f))
+        }
+        // Un corazón de píxeles, como en la consola; sin guardar, solo los píxeles del borde.
+        TemaId.CIBER -> {
+            val filas = listOf(".XX.XX.", "XXXXXXX", "XXXXXXX", ".XXXXX.", "..XXX..", "...X...")
+            fun hay(f: Int, c: Int) = f in filas.indices && c in 0 until 7 && filas[f][c] == 'X'
+            val px = 3f
+            filas.forEachIndexed { f, fila ->
+                fila.forEachIndexed { c, ch ->
+                    val borde = !hay(f - 1, c) || !hay(f + 1, c) || !hay(f, c - 1) || !hay(f, c + 1)
+                    if (ch == 'X' && (lleno || borde)) drawRect(if (lleno) color else color.copy(alpha = 0.7f), p(1.5f + c * px + 0.15f, 3f + f * px + 0.15f), Size((px - 0.3f) * u, (px - 0.3f) * u))
+                }
+            }
+        }
+        // Sol de Vergina: dieciséis rayos y el disco al centro.
+        TemaId.HELENO -> pinta(estrella(12f, 12f, 16, 11f, 5.6f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 2.6f) }, 1.2f)
+        // Cuadrifolio de las tracerías.
+        TemaId.MEDIEVAL -> pinta(Path().also { c -> circulo(c, 12f, 7.4f, 5f); circulo(c, 16.6f, 12f, 5f); circulo(c, 12f, 16.6f, 5f); circulo(c, 7.4f, 12f, 5f) }, 1.3f)
+        // El ojo que todo lo ve.
+        TemaId.DISTOPIA -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
+            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
+        }, 1.4f)
+        // Estrella atómica de los cincuenta: rayos largos y cortos alternados.
+        TemaId.REFUGIO -> pinta(Path().apply {
+            for (i in 0 until 16) {
+                val a = -Math.PI / 2 + i * Math.PI / 8
+                val r = if (i % 2 == 1) 3.6f else if (i % 4 == 0) 11.5f else 7.5f
+                val x = (12f + r * cos(a).toFloat()) * u; val y = (12f + r * sin(a).toFloat()) * u
+                if (i == 0) moveTo(x, y) else lineTo(x, y)
+            }
+            close()
+        }, 1.3f)
+        // Escudo con la cruz de la orden.
+        TemaId.ORDEN -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(3f * u, 3f * u); lineTo(21f * u, 3f * u); lineTo(21f * u, 11f * u); quadraticTo(21f * u, 18f * u, 12f * u, 22f * u); quadraticTo(3f * u, 18f * u, 3f * u, 11f * u); close()
+            addPath(poligono(11f, 6f, 13f, 6f, 13f, 9.5f, 17f, 9.5f, 17f, 11.5f, 13f, 11.5f, 13f, 17f, 11f, 17f, 11f, 11.5f, 7f, 11.5f, 7f, 9.5f, 11f, 9.5f))
+        })
+        // Anillo de benceno: hexágono con su círculo.
+        TemaId.LABORATORIO -> pinta(estrella(12f, 12f, 3, 10.5f, 10.5f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 5f) })
+        // Una casa con chimenea: el pueblo que se reconstruye.
+        TemaId.COLONOS -> pinta(poligono(12f, 2.5f, 15.5f, 5.6f, 15.5f, 3.5f, 18f, 3.5f, 18f, 7.8f, 21.5f, 11f, 19f, 11f, 19f, 21f, 5f, 21f, 5f, 11f, 2.5f, 11f, hueco = true)
+            .also { it.addPath(poligono(10.3f, 14.5f, 13.7f, 14.5f, 13.7f, 19.5f, 10.3f, 19.5f)) })
+        // La abeja imperial.
+        TemaId.NAPOLEON -> {
+            pinta(Path().also { c ->
+                c.addOval(Rect(9f * u, 9f * u, 15f * u, 21f * u)); c.addOval(Rect(10.2f * u, 4.8f * u, 13.8f * u, 8.6f * u))
+                c.addOval(Rect(3f * u, 6.5f * u, 10.5f * u, 12f * u)); c.addOval(Rect(13.5f * u, 6.5f * u, 21f * u, 12f * u))
+            }, 1.3f)
+            listOf(13.5f, 16.5f).forEach { y -> drawLine(if (lleno) Color.Black.copy(alpha = 0.35f) else color.copy(alpha = 0.7f), p(9.6f, y), p(14.4f, y), 1f * u) }
+        }
+        // Una hoja de cuaderno de campo, con su nervio.
+        TemaId.BOTANICO -> {
+            pinta(Path().also { c -> hoja(c, p(5f, 20f), p(19.5f, 3.5f), 3.6f) })
+            drawLine(if (lleno) Color.White.copy(alpha = 0.55f) else color.copy(alpha = 0.7f), p(4f, 21f), p(17.5f, 5.8f), 1f * u)
+        }
+        // Copo de nieve: seis brazos con sus ramitas.
+        TemaId.NAVIDAD -> {
+            val k = if (lleno) color else color.copy(alpha = 0.7f); val t = (if (lleno) 2.2f else 1.4f) * u
+            for (i in 0 until 6) {
+                val a = i * Math.PI / 3
+                val dx = cos(a).toFloat(); val dy = sin(a).toFloat()
+                drawLine(k, p(12f, 12f), p(12f + 10.5f * dx, 12f + 10.5f * dy), t, cap = StrokeCap.Round)
+                listOf(Math.PI / 4, -Math.PI / 4).forEach { g ->
+                    val ex = cos(a + g).toFloat(); val ey = sin(a + g).toFloat()
+                    drawLine(k, p(12f + 6.5f * dx, 12f + 6.5f * dy), p(12f + 6.5f * dx + 3.6f * ex, 12f + 6.5f * dy + 3.6f * ey), t * 0.8f, cap = StrokeCap.Round)
+                }
+            }
+        }
+        // Moneda con agujero cuadrado.
+        TemaId.SEDA -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            circulo(this, 12f, 12f, 10.5f)
+            addPath(poligono(9f, 9f, 15f, 9f, 15f, 15f, 9f, 15f))
+        }, 1.4f)
+        // Flor de lis.
+        TemaId.GOTICO -> pinta(Path().apply {
+            moveTo(12f * u, 2f * u); quadraticTo(16.5f * u, 8f * u, 12f * u, 14.5f * u); quadraticTo(7.5f * u, 8f * u, 12f * u, 2f * u); close()
+            moveTo(11f * u, 14.5f * u); cubicTo(4f * u, 14.5f * u, 0.5f * u, 9f * u, 4.5f * u, 7f * u); cubicTo(6.5f * u, 6f * u, 7.5f * u, 9f * u, 5.8f * u, 10f * u); cubicTo(7f * u, 12.5f * u, 9.5f * u, 12.5f * u, 11f * u, 12f * u); close()
+            moveTo(13f * u, 12f * u); cubicTo(14.5f * u, 12.5f * u, 17f * u, 12.5f * u, 18.2f * u, 10f * u); cubicTo(16.5f * u, 9f * u, 17.5f * u, 6f * u, 19.5f * u, 7f * u); cubicTo(23.5f * u, 9f * u, 20f * u, 14.5f * u, 13f * u, 14.5f * u); close()
+            addPath(poligono(7.5f, 14.5f, 16.5f, 14.5f, 16.5f, 16.5f, 7.5f, 16.5f))
+            addPath(poligono(12f, 16.5f, 14.5f, 22f, 9.5f, 22f))
+        }, 1.3f)
+        // Destello de estrella de cuatro puntas.
+        TemaId.ESPACIO -> pinta(Path().apply {
+            moveTo(12f * u, 1f * u); quadraticTo(13f * u, 11f * u, 23f * u, 12f * u); quadraticTo(13f * u, 13f * u, 12f * u, 23f * u)
+            quadraticTo(11f * u, 13f * u, 1f * u, 12f * u); quadraticTo(11f * u, 11f * u, 12f * u, 1f * u); close()
+        }, 1.4f)
+        // Estrella de ocho puntas de los alicatados, con el centro abierto.
+        TemaId.ANDALUS -> pinta(estrella(12f, 12f, 8, 11f, 8.4f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 3.2f) }, 1.3f)
+        // La yurta: cúpula, muro y puerta.
+        TemaId.MONGOL -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(2f * u, 13f * u); quadraticTo(12f * u, 1f * u, 22f * u, 13f * u); lineTo(20.5f * u, 13f * u); lineTo(20.5f * u, 21f * u); lineTo(3.5f * u, 21f * u); lineTo(3.5f * u, 13f * u); close()
+            addPath(poligono(10.2f, 15f, 13.8f, 15f, 13.8f, 20f, 10.2f, 20f))
+        }, 1.4f)
+        // El corazón de siempre, con sus trazos de construcción: el círculo que lo contiene y los centros de los lóbulos.
+        TemaId.RENACIMIENTO -> {
+            val k = color.copy(alpha = 0.35f)
+            drawCircle(k, 11f * u, p(12f, 12f), style = Stroke(0.6f * u))
+            drawCircle(k, 4.6f * u, p(7.5f, 8.2f), style = Stroke(0.6f * u)); drawCircle(k, 4.6f * u, p(16.5f, 8.2f), style = Stroke(0.6f * u))
+            drawLine(k, p(12f, 1f), p(12f, 23f), 0.6f * u)
+            pinta(corazon(), 1.5f)
+        }
+        // Estrella roja de cinco puntas.
+        TemaId.URSS -> pinta(estrella(12f, 12.8f, 5, 11f, 4.4f), 1.4f)
+        // Escarapela: anillos concéntricos.
+        TemaId.REVOLUCION -> pinta(Path().apply { fillType = PathFillType.EvenOdd; circulo(this, 12f, 12f, 10.5f); circulo(this, 12f, 12f, 7f); circulo(this, 12f, 12f, 3.5f) }, 1.3f)
+        // Una gema tallada, con sus facetas.
+        TemaId.ANTIGUAS -> {
+            pinta(poligono(6.5f, 4f, 17.5f, 4f, 22f, 9.5f, 12f, 21.5f, 2f, 9.5f), 1.4f)
+            val k = if (lleno) Color.White.copy(alpha = 0.45f) else color.copy(alpha = 0.5f)
+            drawLine(k, p(2f, 9.5f), p(22f, 9.5f), 0.7f * u)
+            drawPath(Path().apply { moveTo(6.5f * u, 4f * u); lineTo(9f * u, 9.5f * u); lineTo(12f * u, 21.5f * u); lineTo(15f * u, 9.5f * u); lineTo(17.5f * u, 4f * u)
+                moveTo(9f * u, 9.5f * u); lineTo(12f * u, 4f * u); lineTo(15f * u, 9.5f * u) }, k, style = Stroke(0.7f * u))
         }
     }
 }
