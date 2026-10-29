@@ -1,6 +1,19 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
 import androidx.compose.foundation.Canvas
+import kotlin.math.roundToInt
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -280,39 +293,237 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
     drawRect(fondo.copy(alpha = 0.12f), o, Size(w, 1f * d))
 }
 
-/** Cifras del año como objetos que se cuentan de un vistazo: lunas, huellas, alfileres, pesas, tazas, estrellas y sobres, a la manera del tema. */
+/**
+ * Las cifras del año como pequeñas gráficas que se leen de un vistazo, cada una con algo con qué compararla: la parte
+ * del año que pasaste dormido, el camino que caminaste medido en maratones o rutas conocidas, las ciudades como sellos
+ * de pasaporte, los entrenamientos mes por mes, el café en garrafones, los sueños como estrellas en el cielo del año y
+ * las cartas en abanico. Cada cifra tiene su forma propia; el tema pone colores, letra y el objeto de la esquina.
+ * Solo es presentación: las cifras son las mismas de [TuAnio.Datos].
+ */
 @Composable
 internal fun CosasDelAnio(d: TuAnio.Datos, tema: TemaId = Estilo.tema) {
     val p = d.p
-    val filas = listOfNotNull(
-        (d.suenoDias.takeIf { it >= 1 })?.let { Triple("luna", it, "días enteros dormido") },
-        (p.pasosTotal.toDouble().takeIf { it > 0 })?.let { Triple("huella", it, "pasos") },
-        (p.ciudades.size.toDouble().takeIf { it > 0 })?.let { Triple("alfiler", it, "ciudades") },
-        (p.entrenos.toDouble().takeIf { it > 0 })?.let { Triple("pesa", it, "entrenamientos") },
-        (p.tazasCafe.takeIf { it >= 1 })?.let { Triple("taza", it, "tazas de café") },
-        (p.suenosRecordados.toDouble().takeIf { it > 0 })?.let { Triple("estrella", it, "sueños recordados") },
-        (p.cartas.toDouble().takeIf { it > 0 })?.let { Triple("sobre", it, "cartas escritas") },
-    )
-    if (filas.isEmpty()) return
+    // Entrenamientos por mes y noches con sueño recordado, del mismo año que cuenta el periodo.
+    val porMes = remember(d, Repo.entrenos) {
+        val m = IntArray(12)
+        p.fechas.forEach { f -> if ((Repo.entrenos[f]?.series ?: 0) > 0) m[f.substring(5, 7).toInt() - 1]++ }
+        m
+    }
+    val noches = remember(d, Repo.dias) { p.fechas.map { Repo.dias[it]?.sueno_recordado == true } }
+    val fichas = buildList<@Composable (Modifier) -> Unit> {
+        if (d.suenoDias >= 1) add { m -> FichaSueno(d, tema, m) }
+        if (p.pasosTotal > 0 && p.km > 0) add { m -> FichaCamino(d, tema, m) }
+        if (p.ciudades.isNotEmpty()) add { m -> FichaCiudades(d, tema, m) }
+        if (p.entrenos > 0) add { m -> FichaEntrenos(d, porMes, tema, m) }
+        if (p.tazasCafe >= 1) add { m -> FichaCafe(d, tema, m) }
+        if (p.suenosRecordados > 0) add { m -> FichaSuenos(d, noches, tema, m) }
+        if (p.cartas > 0) add { m -> FichaCartas(d, tema, m) }
+    }.take(6)
+    if (fichas.isEmpty()) return
+    Column(Modifier.fillMaxWidth().padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        fichas.chunked(2).forEach { par ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                par.forEach { it(Modifier.weight(1f)) }
+                if (par.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/** El marco común de cada ficha: la gráfica arriba, la cifra con el objeto del tema, qué es y con qué se compara. */
+@Composable
+private fun FichaCosa(tema: TemaId, forma: String, cifra: String, que: String, compara: String?, modifier: Modifier, grafica: @Composable () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        filas.forEach { (forma, total, etiqueta) ->
-            val u = unidadRedonda(total, 30)
-            val n = ceil(total / u).toInt().coerceAtMost(30)
-            Column {
-                Canvas(Modifier.fillMaxWidth().height(if (n > 15) 44.dp else 22.dp)) {
-                    val paso = size.width / 15f; val r = minOf(paso, 22 * density) * 0.47f
-                    for (i in 0 until n) {
-                        val c = Offset(paso * (i % 15) + paso / 2, (i / 15) * 22 * density + 11 * density)
-                        objeto(tema, forma, c, r, if (i % 2 == 0) cs.primary else cs.secondary, cs.background)
-                    }
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("${miles(total.toLong())} $etiqueta", style = MaterialTheme.typography.labelLarge, color = cs.onBackground, modifier = Modifier.weight(1f))
-                    if (u > 1) Text("cada uno = ${miles(u)}", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.width(140.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.End)
+    Column(modifier.clip(MaterialTheme.shapes.small).background(cs.surface.copy(alpha = 0.55f)).border(0.8.dp, cs.outline.copy(alpha = 0.35f), MaterialTheme.shapes.small)
+        .padding(horizontal = 9.dp, vertical = 8.dp)) {
+        Box(Modifier.fillMaxWidth().height(54.dp), contentAlignment = Alignment.Center) { grafica() }
+        Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Canvas(Modifier.size(18.dp)) { objeto(tema, forma, center, size.minDimension / 2, cs.primary, cs.background) }
+            Spacer(Modifier.width(5.dp))
+            Text(cifra, style = MaterialTheme.typography.titleMedium, color = cs.primary, maxLines = 1)
+        }
+        Text(que, style = MaterialTheme.typography.labelMedium, color = cs.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        compara?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis) }
+    }
+}
+
+private fun f1(x: Double) = "%.1f".format(x)
+private fun f0(x: Double) = "%,.0f".format(x)
+
+/** Sueño: un anillo con el año y, en negro de noche, la parte que pasaste dormido; la luna del tema en medio. */
+@Composable
+private fun FichaSueno(d: TuAnio.Datos, tema: TemaId, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val fr = (d.suenoDias / d.p.n.coerceAtLeast(1)).coerceIn(0.0, 1.0).toFloat()
+    val porNoche = d.p.suenoH?.let { " · ${f1(it)} h por noche" } ?: ""
+    FichaCosa(tema, "luna", f1(d.suenoDias), "días enteros dormido", "${(fr * 100).roundToInt()} % de tu año$porNoche", modifier) {
+        Canvas(Modifier.size(54.dp)) {
+            val r = size.minDimension / 2 - 4 * density; val g = 7 * density
+            drawCircle(cs.primary.copy(alpha = 0.14f), r, center, style = Stroke(g))
+            drawArc(lerp(cs.primary, Color(0xFF1B2140), 0.45f), -90f, 360f * fr, false, Offset(center.x - r, center.y - r), Size(2 * r, 2 * r), style = Stroke(g, cap = StrokeCap.Round))
+            objeto(tema, "luna", center, r * 0.55f, cs.primary, cs.background)
+        }
+    }
+}
+
+/** Distancias conocidas para medir lo caminado (aproximadas y redondas, solo para dar escala). */
+private val CAMINOS = listOf(
+    40_075.0 to ("vueltas al mundo por el ecuador" to "vuelta al mundo por el ecuador"),
+    3_940.0 to ("Rutas 66 de punta a punta" to "Ruta 66 de punta a punta"),
+    780.0 to ("Caminos de Santiago" to "Camino de Santiago"),
+    42.195 to ("maratones" to "maratón"),
+)
+
+/** Pasos: el camino recorrido partido en tramos de una distancia conocida, con un banderín en cada meta y tu huella al final. */
+@Composable
+private fun FichaCamino(d: TuAnio.Datos, tema: TemaId, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val km = d.p.km
+    val (largo, nombres) = CAMINOS.firstOrNull { km >= it.first } ?: CAMINOS.last()
+    val veces = km / largo
+    val texto = if (veces < 1) "${(veces * 100).roundToInt()} % de un ${nombres.second}" else "≈ ${f1(veces)} ${if (veces < 1.95) nombres.second else nombres.first}"
+    FichaCosa(tema, "huella", f0(km) + " km", "${miles(d.p.pasosTotal)} pasos", texto, modifier) {
+        Canvas(Modifier.fillMaxWidth().height(54.dp)) {
+            val dd = density; val y = size.height * 0.68f; val x0 = 6 * dd; val x1 = size.width - 6 * dd
+            val tramos = minOf(8, maxOf(1, ceil(veces).toInt()))
+            val escala = if (veces <= 8) (x1 - x0) / maxOf(veces, 1.0).toFloat() else (x1 - x0) / 8f
+            val fin = x0 + (if (veces <= 8) veces.toFloat() else 8f) * escala
+            // El camino entero (punteado) y lo recorrido (lleno), con una ondulación suave.
+            fun camino(hasta: Float) = Path().apply {
+                moveTo(x0, y); var x = x0
+                while (x < hasta) { val nx = minOf(hasta, x + 4 * dd); lineTo(nx, y + sin(nx / (18 * dd)) * 3 * dd); x = nx }
+            }
+            drawPath(camino(x1), cs.outline.copy(alpha = 0.45f), style = Stroke(1.5f * dd, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(3 * dd, 3 * dd))))
+            drawPath(camino(fin), cs.primary, style = Stroke(3.2f * dd, cap = StrokeCap.Round))
+            // Un banderín en cada meta cumplida.
+            for (k in 1..tramos) {
+                val bx = x0 + k * escala
+                if (bx > fin + 0.5f || bx > x1) break
+                val by = y + sin(bx / (18 * dd)) * 3 * dd
+                drawLine(cs.onSurfaceVariant, Offset(bx, by), Offset(bx, by - 18 * dd), 1.2f * dd)
+                drawPath(Path().apply { moveTo(bx, by - 18 * dd); lineTo(bx + 9 * dd, by - 14.5f * dd); lineTo(bx, by - 11 * dd); close() }, if (k % 2 == 0) cs.secondary else cs.tertiary)
+            }
+            drawCircle(cs.primary, 3.5f * dd, Offset(x0, y))
+            objeto(tema, "huella", Offset(fin, y - 13 * dd), 9 * dd, cs.primary, cs.background)
+        }
+    }
+}
+
+/** Ciudades: sellos de pasaporte con las primeras letras de cada ciudad, de formas distintas y un poco torcidos. */
+@Composable
+private fun FichaCiudades(d: TuAnio.Datos, tema: TemaId, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val c = d.p.ciudades
+    val formas = listOf(CircleShape, RoundedCornerShape(3.dp), CutCornerShape(5.dp), RoundedCornerShape(50), RoundedCornerShape(topStart = 9.dp, bottomEnd = 9.dp))
+    val colores = listOf(cs.primary, cs.secondary, cs.tertiary)
+    val nuevas = d.p.ciudadesNuevas.size
+    val compara = listOfNotNull("${d.p.paises.size} " + if (d.p.paises.size == 1) "país" else "países", nuevas.takeIf { it > 0 }?.let { "$it nuevas" }).joinToString(" · ")
+    FichaCosa(tema, "alfiler", "${c.size}", if (c.size == 1) "ciudad" else "ciudades", compara, modifier) {
+        Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
+            c.take(4).forEachIndexed { i, (nombre, _) ->
+                val col = colores[i % colores.size]
+                Box(Modifier.graphicsLayer { rotationZ = listOf(-9f, 6f, -4f, 10f)[i] }.size(if (i % 2 == 0) 38.dp else 34.dp)
+                    .border(1.6.dp, col.copy(alpha = 0.85f), formas[i % formas.size]).padding(3.dp)
+                    .border(0.7.dp, col.copy(alpha = 0.5f), formas[i % formas.size]), contentAlignment = Alignment.Center) {
+                    Text(nombre.filter { it.isLetter() }.take(3).uppercase(), style = MaterialTheme.typography.labelSmall, color = col, maxLines = 1)
                 }
             }
+            if (c.size > 4) Text("+${c.size - 4}", style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.padding(start = 8.dp))
+        }
+    }
+}
+
+/** Entrenamientos: una barra por mes, alta según cuántos hiciste, y el promedio por semana. */
+@Composable
+private fun FichaEntrenos(d: TuAnio.Datos, porMes: IntArray, tema: TemaId, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val semanas = d.p.n / 7.0
+    val meses = porMes.count { it > 0 }
+    val compara = (if (semanas >= 1) "≈ ${f1(d.p.entrenos / semanas)} por semana · " else "") + "$meses de 12 meses"
+    FichaCosa(tema, "pesa", "${d.p.entrenos}", "entrenamientos", compara, modifier) {
+        Canvas(Modifier.fillMaxWidth().height(54.dp)) {
+            val dd = density; val max = (porMes.maxOrNull() ?: 1).coerceAtLeast(1)
+            val ancho = size.width / 12f; val base = size.height - 4 * dd
+            drawLine(cs.outline.copy(alpha = 0.5f), Offset(0f, base), Offset(size.width, base), 1f * dd)
+            porMes.forEachIndexed { i, k ->
+                val x = i * ancho + ancho * 0.2f; val w = ancho * 0.6f
+                val h = if (k == 0) 2 * dd else (base - 4 * dd) * k / max
+                drawRoundRect(if (k == max) cs.primary else cs.primary.copy(alpha = 0.45f), Offset(x, base - h), Size(w, h), CornerRadius(w / 3))
+            }
+        }
+    }
+}
+
+/** Café: las tazas en litros y los litros en garrafones de 20 L que se van llenando. */
+@Composable
+private fun FichaCafe(d: TuAnio.Datos, tema: TemaId, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val litros = d.p.tazasCafe * 0.24
+    val garrafones = litros / 20.0
+    val compara = "≈ ${f0(litros)} litros · " + if (garrafones < 1) "${(garrafones * 100).roundToInt()} % de un garrafón" else "${f1(garrafones)} garrafones"
+    val cafe = lerp(Color(0xFF6B4226), cs.primary, 0.25f)
+    FichaCosa(tema, "taza", f0(d.p.tazasCafe), "tazas de café", compara, modifier) {
+        Canvas(Modifier.fillMaxWidth().height(54.dp)) {
+            val dd = density; val n = minOf(6, maxOf(1, ceil(garrafones).toInt()))
+            val w = minOf(26 * dd, size.width / 6.4f); val h = size.height - 6 * dd
+            val total = n * w + (n - 1) * 4 * dd; var x = (size.width - total) / 2
+            for (k in 0 until n) {
+                val lleno = (garrafones - k).coerceIn(0.0, 1.0).toFloat()
+                val cuerpo = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(x, 6 * dd + h * 0.18f, x + w, 6 * dd + h, CornerRadius(w * 0.28f))) }
+                // El café hasta donde llega este garrafón.
+                val top = 6 * dd + h * 0.18f + (h * 0.82f) * (1 - lleno)
+                clipPath(cuerpo) { drawRect(cafe, Offset(x, top), Size(w, 6 * dd + h - top)) }
+                drawPath(cuerpo, cs.onSurfaceVariant.copy(alpha = 0.7f), style = Stroke(1.2f * dd))
+                // Cuello y tapa.
+                drawRect(cs.onSurfaceVariant.copy(alpha = 0.7f), Offset(x + w * 0.35f, 6 * dd + h * 0.04f), Size(w * 0.3f, h * 0.14f), style = Stroke(1.2f * dd))
+                drawRect(cs.secondary, Offset(x + w * 0.3f, 3 * dd), Size(w * 0.4f, 3 * dd))
+                x += w + 4 * dd
+            }
+        }
+    }
+}
+
+/** Sueños recordados: el cielo del año, un punto por noche y una estrella en cada noche con un sueño. */
+@Composable
+private fun FichaSuenos(d: TuAnio.Datos, noches: List<Boolean>, tema: TemaId, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val n = d.p.suenosRecordados
+    val cada = d.p.n.toDouble() / n
+    FichaCosa(tema, "estrella", "$n", if (n == 1) "sueño recordado" else "sueños recordados", "1 de cada ${f0(cada)} noches", modifier) {
+        Canvas(Modifier.fillMaxWidth().height(54.dp)) {
+            val dd = density
+            drawRoundRect(lerp(Color(0xFF141A33), cs.primary, 0.15f), Offset.Zero, size, CornerRadius(6 * dd))
+            val filas = 9; val cols = ceil(noches.size / filas.toDouble()).toInt().coerceAtLeast(1)
+            val px = (size.width - 8 * dd) / cols; val py = (size.height - 8 * dd) / filas
+            noches.forEachIndexed { i, sono ->
+                val c = Offset(4 * dd + (i / filas) * px + px / 2, 4 * dd + (i % filas) * py + py / 2)
+                if (sono) drawPath(estrellaCosa(c, minOf(px, py) * 1.1f, 4, 0.35f), Color(0xFFFFE9A8))
+                else drawCircle(Color.White.copy(alpha = 0.18f), 0.7f * dd, c)
+            }
+        }
+    }
+}
+
+/** Cartas: los sobres en abanico, uno por carta (hasta siete). */
+@Composable
+private fun FichaCartas(d: TuAnio.Datos, tema: TemaId, modifier: Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val n = d.p.cartas
+    val compara = if (d.dirigidas > 0) "${d.dirigidas} a otras personas" else "para tu yo del futuro"
+    FichaCosa(tema, "sobre", "$n", if (n == 1) "carta escrita" else "cartas escritas", compara, modifier) {
+        Canvas(Modifier.fillMaxWidth().height(54.dp)) {
+            val dd = density; val k = minOf(7, n)
+            val w = 30 * dd; val h = 20 * dd; val c = Offset(size.width / 2, size.height * 0.62f)
+            for (i in 0 until k) {
+                val ang = if (k == 1) 0f else -24f + 48f * i / (k - 1)
+                rotate(ang, Offset(c.x, c.y + 26 * dd)) {
+                    val o = Offset(c.x - w / 2, c.y - h / 2)
+                    drawRect(lerp(cs.background, cs.primary, 0.1f + 0.05f * i), o, Size(w, h))
+                    drawRect(cs.primary.copy(alpha = 0.7f), o, Size(w, h), style = Stroke(1f * dd))
+                    drawPath(Path().apply { moveTo(o.x, o.y); lineTo(c.x, c.y + h * 0.1f); lineTo(o.x + w, o.y) }, cs.primary.copy(alpha = 0.7f), style = Stroke(1f * dd))
+                }
+            }
+            if (n > 7) drawCircle(cs.secondary, 3 * dd, Offset(c.x, c.y - h))
         }
     }
 }
