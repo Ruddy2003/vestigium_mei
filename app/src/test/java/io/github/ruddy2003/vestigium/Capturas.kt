@@ -919,7 +919,7 @@ class Capturas {
     @Test fun diaRevolucion() = dia(TemaId.REVOLUCION, false)
 
     /** Los trofeos de las nueve categorías en los siete temas históricos (el último de cada fila, sin conseguir). */
-    private fun trofeosTemas(oscuro: Boolean) = hojaTemas(io.github.ruddy2003.vestigium.ui.TrofeosTema.TEMAS.toList(), porParte = 12, alto = { 100 + it * 415 }, oscuro = oscuro) { temas ->
+    private fun trofeosTemas(oscuro: Boolean) = hojaTemas(io.github.ruddy2003.vestigium.ui.TrofeosTema.TEMAS.toList(), porParte = 24, alto = { 100 + it * 200 }, oscuro = oscuro) { temas ->
         Column(Modifier.padding(6.dp)) {
             temas.forEach { t ->
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, oscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, oscuro)) {
@@ -1118,6 +1118,7 @@ class Capturas {
      * una lista separada por comas («huella,campana») o «todas». En Actions se pasa con la entrada `superficies` de
      * capturas.yml; sin ella, estas pruebas se saltan y las capturas de siempre no cambian.
      */
+    // Un alto menor que el ancho (1080) hace que Paparazzi gire la captura: aquí ninguna baja de 1200.
     private fun porTema(superficie: String, captura: (tema: TemaId, oscuro: Boolean, nombre: String) -> Unit) {
         val pedidas = (System.getenv("CAPTURAS") ?: "").split(',').map { it.trim() }
         org.junit.Assume.assumeTrue("«$superficie» no está en CAPTURAS", "todas" in pedidas || superficie in pedidas)
@@ -1151,7 +1152,7 @@ class Capturas {
         pantalla(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
     }
     /** El ícono del lanzador (fondo + huella; cuadrado completo y recortado en círculo), el de las notificaciones y los de las pestañas. */
-    @Test fun temaIcono() = porTema("icono") { t, o, n -> captura(t, o, 1100, n) {
+    @Test fun temaIcono() = porTema("icono") { t, o, n -> captura(t, o, 1200, n) {
         val ctx = androidx.compose.ui.platform.LocalContext.current
         fun id(nombre: String) = ctx.resources.getIdentifier(nombre, "drawable", ctx.packageName)
         val capas: @Composable (Modifier) -> Unit = { m ->
@@ -1163,8 +1164,8 @@ class Capturas {
         }
         Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                capas(Modifier.size(170.dp))
-                Box(Modifier.size(150.dp).clip(androidx.compose.foundation.shape.CircleShape)) { capas(Modifier.fillMaxSize().graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)) }
+                capas(Modifier.size(130.dp))
+                Box(Modifier.size(120.dp).clip(androidx.compose.foundation.shape.CircleShape)) { capas(Modifier.fillMaxSize().graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)) }
                 id("ic_stat").takeIf { it != 0 }?.let {
                     androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(it), null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onBackground)
                 }
@@ -1194,7 +1195,7 @@ class Capturas {
     } }
 
     // Galerías, reportes y Tu año.
-    @Test fun temaCalificacion() = porTema("calificacion") { t, o, n -> captura(t, o, 700, n) {
+    @Test fun temaCalificacion() = porTema("calificacion") { t, o, n -> captura(t, o, 1200, n) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             listOf(2, 7, 10).forEach { v -> io.github.ruddy2003.vestigium.ui.pantallas.Calificacion(v, tam = 26.dp, tema = t) }
         }
@@ -1207,7 +1208,7 @@ class Capturas {
     @Test fun temaCalendario() = porTema("calendario") { t, o, n -> v73(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCalendario(navVacia) } }
     @Test fun temaConstelacion() = porTema("constelacion") { t, o, n -> v67(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) } }
     /** Las medallas de logro (los cuatro niveles y una a medias) y las de las otras vidas. */
-    @Test fun temaMedalla() = porTema("medalla") { t, o, n -> captura(t, o, 900, n) {
+    @Test fun temaMedalla() = porTema("medalla") { t, o, n -> captura(t, o, 1200, n) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 (1..5).forEach { k ->
@@ -1229,10 +1230,10 @@ class Capturas {
      */
     @Test fun temaDialogo() = porTema("dialogo") { t, o, n ->
         io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Se borró un momento") {}
-        captura(t, o, 900, n) { Box(Modifier.fillMaxSize()) { CapaDeshacer() } }
+        captura(t, o, 1200, n) { Box(Modifier.fillMaxSize()) { CapaDeshacer() } }
         io.github.ruddy2003.vestigium.ui.Deshacer.deshacer()
     }
-    @Test fun temaBarra() = porTema("barra") { t, o, n -> captura(t, o, 700, n) {
+    @Test fun temaBarra() = porTema("barra") { t, o, n -> captura(t, o, 1200, n) {
         Column(Modifier.padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             listOf("dia", "diario", "vida").forEach { io.github.ruddy2003.vestigium.ui.BarraPestanas(it, t, {}, {}) }
         }

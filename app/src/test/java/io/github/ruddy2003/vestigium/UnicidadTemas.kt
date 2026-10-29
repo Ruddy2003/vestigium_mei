@@ -80,6 +80,21 @@ class UnicidadTemas {
         val PANTALLAS = listOf("Hoy", "Diario", "Momentos", "Gastos", "Logros", "Cartas", "Salud", "Mapas", "Campañas", "Línea de tiempo", "Tu gente", "Más")
 
         /** Lo repetido hoy, por superficie. Cada lote borra lo que vuelve propio. */
-        val PENDIENTES: Map<String, Set<String>> = mapOf()
+        val PENDIENTES: Map<String, Set<String>> = mapOf(
+            "atras" to setOf("laboratorio", "colonos", "botanico", "navidad", "seda"),
+            "campana_etapas" to setOf("refugio", "orden", "colonos", "napoleon", "botanico", "navidad", "urss"),
+            "clave" to setOf("romano", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "urss", "revolucion", "antiguas"),
+            "comentario" to setOf("romano", "ciber", "heleno", "orden", "napoleon"),
+            "escala_toque" to setOf("romano", "ciber", "heleno", "colonos", "gotico", "espacio"),
+            "letra_texto" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "colonos", "botanico", "navidad", "seda", "gotico", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
+            "letra_titulo" to setOf("romano", "colonos", "revolucion", "antiguas"),
+            "mes_10" to setOf("ciber", "refugio", "orden", "colonos", "napoleon", "botanico", "navidad", "espacio", "revolucion"),
+            "numeral_17" to setOf("romano", "orden", "laboratorio", "napoleon", "botanico", "navidad", "mongol", "renacimiento", "antiguas"),
+            "pantallas" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
+            "radio" to setOf("ciber", "heleno", "medieval", "distopia", "refugio", "orden", "napoleon", "navidad", "seda", "gotico", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
+            "semana" to setOf("ciber", "distopia", "refugio", "orden", "colonos", "napoleon", "botanico", "navidad", "espacio", "revolucion", "antiguas"),
+            "semana_corta" to setOf("ciber", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
+            "trofeos_nombres" to setOf("romano", "napoleon", "andalus", "renacimiento"),
+        )
     }
 }

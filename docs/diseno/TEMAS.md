@@ -58,27 +58,27 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 36 | 4 | 27 | 47 | 6 |
-| CIB | 34 | 4 | 23 | 48 | 9 |
-| HEL | 35 | 4 | 25 | 49 | 7 |
-| MED | 41 | 3 | 26 | 43 | 7 |
-| DIS | 43 | 7 | 17 | 43 | 8 |
-| REF | 34 | 7 | 19 | 49 | 9 |
-| ORD | 26 | 6 | 23 | 56 | 9 |
-| LAB | 29 | 9 | 16 | 58 | 8 |
-| COL | 31 | 8 | 24 | 50 | 7 |
-| NAP | 37 | 3 | 21 | 50 | 7 |
-| BOT | 51 | 1 | 12 | 50 | 6 |
-| NAV | 38 | 6 | 19 | 48 | 7 |
-| SED | 45 | 7 | 15 | 47 | 6 |
-| GOT | 44 | 3 | 24 | 43 | 6 |
-| ESP | 34 | 4 | 17 | 56 | 7 |
-| AND | 47 | 6 | 14 | 47 | 6 |
-| MON | 47 | 4 | 14 | 48 | 7 |
-| REN | 45 | 2 | 19 | 47 | 7 |
-| URS | 29 | 6 | 19 | 58 | 8 |
-| REV | 42 | 2 | 18 | 52 | 6 |
-| ANT | 41 | 3 | 18 | 51 | 7 |
+| ROM | 37 | 4 | 27 | 47 | 6 |
+| CIB | 33 | 4 | 24 | 49 | 9 |
+| HEL | 35 | 4 | 26 | 49 | 7 |
+| MED | 43 | 3 | 25 | 43 | 7 |
+| DIS | 43 | 7 | 18 | 43 | 8 |
+| REF | 33 | 7 | 21 | 49 | 9 |
+| ORD | 26 | 6 | 24 | 56 | 9 |
+| LAB | 29 | 9 | 17 | 58 | 8 |
+| COL | 30 | 8 | 26 | 50 | 7 |
+| NAP | 36 | 3 | 23 | 50 | 7 |
+| BOT | 50 | 1 | 14 | 50 | 6 |
+| NAV | 37 | 6 | 21 | 48 | 7 |
+| SED | 45 | 7 | 16 | 47 | 6 |
+| GOT | 47 | 3 | 22 | 43 | 6 |
+| ESP | 34 | 4 | 18 | 56 | 7 |
+| AND | 47 | 6 | 15 | 47 | 6 |
+| MON | 47 | 4 | 15 | 48 | 7 |
+| REN | 45 | 2 | 20 | 47 | 7 |
+| URS | 29 | 6 | 20 | 58 | 8 |
+| REV | 42 | 2 | 19 | 52 | 6 |
+| ANT | 41 | 2 | 20 | 51 | 7 |
 
 Los 6 temas del lote 2 (CIB, REF, ORD, LAB, ESP y URS) son los que más dependen de respaldos genéricos; BOT, AND, MON, SED y REN, los más completos.
 
@@ -104,7 +104,7 @@ CIB, REF, ORD, LAB, ESP y URS caen en respaldos por familia (`salonDe`, `dibujar
 | Trofeos: nombres | `TrofeosTema.nombre` | C | ✗ | P | P | P | ✗ | ✗ | ✗ | P | C | P | P | P | P | ✗ | C | P | C | ✗ | P | P | «Arco de triunfo» ROM y NAP; «Cúpula» ROM y REN; «Astrolabio» REN y AND. Los 6 no tienen nombres. |
 | Salón del hall: escena | `ui/SalonesTema.kt`, `ui/SalonesMas.kt`, respaldo `salonDe` (`pantallas/Hall.kt:79`) | P | G | P | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Respaldo: CIB, REF, LAB y ESP salen idénticos (laboratorio); ORD, castillo; URS, taller. |
 | Campaña: mapa, ruta y etapas dibujadas | `ui/MapasCampana.kt`, `ui/MapasMas.kt` | P | G | P | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Los 6 usan la ruta en zigzag y la bandera genéricas. |
-| Campaña: títulos y nombres de etapas | `ciencia/Campanas.kt:132-178` | P | S | P | P | S | P | S | S | P | P | P | P | P | P | P | P | P | P | S | P | P | LAB «Día 1…6», CIB «NODO 01…06», DIS «SECTOR n», URS no cuadra con el mapa nuevo, ORD termina en «Reliquia». |
+| Campaña: títulos y nombres de etapas | `ciencia/Campanas.kt:132-178` | P | S | P | P | S | C | S | S | C | C | C | C | P | P | P | P | P | P | S | P | P | LAB «Día 1…6», CIB «NODO 01…06», DIS «SECTOR n», URS no cuadra con el mapa nuevo, ORD termina en «Reliquia». Repiten nombres de etapa con otro tema: REF, ORD, COL, NAP, BOT, NAV y URS. |
 | Libreta de momentos (contenedor) | `contenedorDe` (`ui/Contenedores.kt:45`) | P | G | P | C | P | G | G | G | P | P | P | P | P | C | G | C | P | P | G | P | C | Los 6 caen en `ESPIRAL`. MED y GOT (códice y horas) comparten papel y encuadernación; AND y ANT (manuscrito y mapas) comparten encuadernación. |
 | Imagen del hall: escena | `pantallas/HallImagen.kt:53` | P | G | P | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Los 6 usan `fondoFamilia` (por `salonDe`). |
 
@@ -212,11 +212,12 @@ Las filas con valor comparable las vigila `UnicidadTemas` (y las que faltan, `Co
 | Diccionario de nombres de pantalla | `ui/Temas.kt`, `ui/NombresNuevos.kt` | P | ✗ | P | S | P | P | P | S | S | P | P | S | S | P | P | S | P | P | S | P | P | CIB no tiene; NAV, URS, SED y AND son pobres; MED, LAB, COL, NAV, SED y URS tienen entradas iguales al español. |
 | Prefijo del comentario | `Estilo.comentario` (`Estilo.kt:22`) | C | C | C | P | P | P | C | P | P | C | P | P | P | P | P | P | P | P | P | P | P | ROM = CIB = ORD («// »); HEL = NAP («— »). |
 | Comentario bajo el título | `Estilo.comentarioNuevo` (`Estilo.kt:50`) | G | G | G | P | P | P | P | P | P | G | G | G | G | G | G | G | G | G | G | G | G | 12 temas caen en `else`; ROM, CIB y HEL no ponen comentario. |
-| Numeral | `Estilo.numeral` (`Estilo.kt:98`) | C | P | P | C | P | P | C | C | P | C | G | G | P | C | P | P | G | G | P | P | C | Según el plan: ORD = LAB, NAP = ROM, ANT = ROM, GOT ≈ ROM ≈ MED; BOT, NAV, MON y REN sin numeral propio. |
-| Mes | `Estilo.mes` (`Estilo.kt:159`) | C | C | P | P | S | C | C | S | C | C | C | C | P | C | C | P | S | P | P | C | P | CIB, REF, ORD y ESP: español abreviado; COL, BOT y NAV: español largo; REV = NAP (francés); GOT y ROM en latín; DIS, LAB y MON, pobres. |
-| Semana | `Estilo.semana` (`Estilo.kt:185`) | P | C | P | C | C | C | C | S | C | C | C | C | P | C | C | P | P | P | P | C | S | CIB = DIS = REF = ORD = ESP; COL = BOT = NAV; NAP = REV; MED ≈ GOT; ANT y LAB copian el español. |
-| Semana corta (widget del mes) | `Estilo.semanaCorta` (`Estilo.kt:203`) | P | P | P | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | 18 temas caen en `else`. |
+| Numeral | `Estilo.numeral` (`Estilo.kt:98`) | C | P | P | P | P | P | C | C | P | C | G | G | P | P | P | P | G | G | P | P | C | Con 17: ORD = LAB, NAP = ROM = ANT; BOT, NAV, MON y REN escriben la cifra sin más. GOT y MED no coinciden con ROM, pero se le parecen (plan). |
+| Mes | `Estilo.mes` (`Estilo.kt:159`) | P | C | P | P | S | C | C | S | C | C | C | C | P | P | C | P | S | P | P | C | P | CIB, REF, ORD y ESP: español abreviado; COL, BOT y NAV: español largo; REV = NAP (francés). DIS, LAB y MON son pobres. GOT y ROM no coinciden, pero los dos van en latín. |
+| Semana | `Estilo.semana` (`Estilo.kt:185`) | P | C | P | P | C | C | C | S | C | C | C | C | P | P | C | P | P | P | P | C | C | CIB = DIS = REF = ORD = ESP = ANT; COL = BOT = NAV; NAP = REV. MED y GOT casi iguales; LAB copia el español. |
+| Semana corta (widget del mes) | `Estilo.semanaCorta` (`Estilo.kt:203`) | P | G | P | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | 18 temas caen en `else`; la de CIB sale igual que esas. |
 | «Atrás» | `Estilo.atras` (`Estilo.kt:215`) | P | P | P | P | P | P | P | C | C | P | C | C | C | P | P | P | P | P | P | P | P | LAB = COL = NAV; BOT = SED. |
+| Nombres de pantalla | `Estilo.pantalla` con 12 títulos comunes (`UnicidadTemas.PANTALLAS`) | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | Todos los temas repiten al menos uno con otro tema (casi siempre el español en mayúsculas). |
 | Prefijo de etiqueta | `Estilo.prefijo` (`Estilo.kt:221`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |  |
 | Claves «clave = valor» | `Estilo.clave` (`Estilo.kt:237`) | C | P | P | C | C | C | C | C | C | C | C | C | C | C | C | C | C | P | C | C | C | Latín en ROM, MED y GOT; español en mayúsculas en DIS, ORD, URS, ESP, MON, REV y ANT; español en minúsculas en REF, LAB, COL, NAP, BOT, NAV, SED y AND. |
 | Marcas del calendario | `Estilo.marca`, `Temas.MARCAS` | P | ✗ | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | P | P | P | S | P | P | P | P | P | P | P | P | SED tiene solo dos. |
