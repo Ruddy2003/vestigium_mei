@@ -1268,8 +1268,38 @@ class Capturas {
             }
         }
     } }
-    /** La muestra de componentes (sección, tarjeta, etiqueta, clave, escala, botones…). */
-    @Test fun temaComponentes() = porTema("componentes") { t, o, n -> captura(t, o, 2400, n) }
+    /** Los componentes en columna: banda, secciones (abierta y plegada), tarjeta, campos, escala, opciones, listas, editor, cifras, menú, pastillas, vacío, aviso y botones. */
+    @Test fun temaComponentes() = porTema("componentes") { t, o, n -> captura(t, o, 3800, n) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            io.github.ruddy2003.vestigium.ui.Meandro(Modifier.padding(top = 12.dp))
+            Seccion("Sueño", "Lo que recuerdas al despertar.", numero = 1, plegable = true) {
+                Tarjeta {
+                    Etiqueta("Calidad")
+                    io.github.ruddy2003.vestigium.ui.Escala(4, 1, 7, anclas = mapOf(1 to "muy mal", 4 to "regular", 7 to "muy bien")) {}
+                    Clave("somnus", "7 h 24 · profundo 1 h 32")
+                    Interruptor("Recordé un sueño", true, "Se guarda con su valencia y temas.") {}
+                    Interruptor("Fue una pesadilla", false) {}
+                }
+            }
+            Seccion("Notas", numero = 2, plegable = true, plegadaPorDefecto = true, resumen = "3 notas") {}
+            Seccion("Registro", numero = 3) {
+                io.github.ruddy2003.vestigium.ui.Opciones(listOf(io.github.ruddy2003.vestigium.data.Opcion("a", "En casa", "Sin salir"), io.github.ruddy2003.vestigium.data.Opcion("b", "Fuera", "Calle o trabajo")), "a") {}
+                Etiqueta("Etiquetas")
+                io.github.ruddy2003.vestigium.ui.ListaEtiquetas(listOf("tesis", "escalar"), "nueva etiqueta", prefijo = "#", normalizar = { it.trim() }) {}
+                io.github.ruddy2003.vestigium.ui.ListaEtiquetas(emptyList(), "nueva etiqueta", normalizar = { it.trim() }) {}
+                Etiqueta("Diario")
+                io.github.ruddy2003.vestigium.ui.Editor("Hoy avancé el capítulo dos.\nEn la tarde fui a escalar.", "somnium.txt", "Escribe…", minimo = 110, pie = "9 verba") {}
+                Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Cifra("7.4 h", "sueño", Modifier.weight(1f)); Cifra("9,812", "pasos", Modifier.weight(1f)); Cifra("\$245", "gasto", Modifier.weight(1f))
+                }
+                io.github.ruddy2003.vestigium.ui.FilaMenu("Respaldos", "Copia en el teléfono") {}
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) { io.github.ruddy2003.vestigium.ui.Pastilla("nuevo"); io.github.ruddy2003.vestigium.ui.Pastilla("3 días", MaterialTheme.colorScheme.secondary) }
+                io.github.ruddy2003.vestigium.ui.Vacio("Aún no hay registros este mes.")
+                io.github.ruddy2003.vestigium.ui.Aviso("Hay 2 días sin respaldo.")
+                Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) { BotonPrincipal("Guardar") {}; BotonSecundario("cancelar") {} }
+            }
+        }
+    } }
     /** La vista previa del tema, sin elegir y elegida. */
     @Test fun temaPrevia() = porTema("previa") { t, o, n -> captura(t, o, 1200, n) {
         Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
