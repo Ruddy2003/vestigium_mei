@@ -402,13 +402,14 @@ private fun FichaCamino(d: TuAnio.Datos, tema: TemaId, modifier: Modifier) {
             // Un banderín en cada meta cumplida.
             for (k in 1..tramos) {
                 val bx = x0 + k * escala
-                if (bx > fin - 14 * dd) break // la huella ocupa la última meta
+                if (bx > fin + 0.5f) break
                 val by = y + sin(bx / (18 * dd)) * 3 * dd
                 drawLine(cs.onSurfaceVariant, Offset(bx, by), Offset(bx, by - 18 * dd), 1.2f * dd)
                 drawPath(Path().apply { moveTo(bx, by - 18 * dd); lineTo(bx + 9 * dd, by - 14.5f * dd); lineTo(bx, by - 11 * dd); close() }, if (k % 2 == 0) cs.secondary else cs.tertiary)
             }
             drawCircle(cs.primary, 3.5f * dd, Offset(x0, y))
-            objeto(tema, "huella", Offset(fin, y - 13 * dd), 9 * dd, cs.primary, cs.background)
+            // La huella va bajo el camino, donde terminaste, para no tapar los banderines.
+            objeto(tema, "huella", Offset(fin, y + 9 * dd), 7 * dd, cs.primary, cs.background)
         }
     }
 }
@@ -501,7 +502,8 @@ private fun FichaSuenos(d: TuAnio.Datos, noches: List<Boolean>, tema: TemaId, mo
             val px = (size.width - 8 * dd) / cols; val py = (size.height - 8 * dd) / filas
             noches.forEachIndexed { i, sono ->
                 val c = Offset(4 * dd + (i / filas) * px + px / 2, 4 * dd + (i % filas) * py + py / 2)
-                if (sono) drawPath(estrellaCosa(c, minOf(px, py) * 1.1f, 4, 0.35f), Color(0xFFFFE9A8))
+                // Cada estrella cabe en su noche (las seguidas no se funden) y lleva un halo suave.
+                if (sono) { val r = minOf(px, py) * 0.62f; drawCircle(Color(0xFFFFE9A8).copy(alpha = 0.22f), r * 1.5f, c); drawPath(estrellaCosa(c, r, 4, 0.35f), Color(0xFFFFE9A8)) }
                 else drawCircle(Color.White.copy(alpha = 0.18f), 0.7f * dd, c)
             }
         }
