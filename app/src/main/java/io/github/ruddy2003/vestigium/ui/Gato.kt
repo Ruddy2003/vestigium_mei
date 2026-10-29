@@ -137,8 +137,15 @@ object Gato {
 
     fun clave(tema: TemaId, oscuro: Boolean) = tema.id + if (oscuro || tema.soloOscuro) "_o" else "_c"
 
+    /** El último tema cargado: volver a Día no lo decodifica otra vez. */
+    @Volatile private var ultimo: Pair<String, Recursos>? = null
+
+    fun enCache(tema: TemaId, oscuro: Boolean): Recursos? = ultimo?.takeIf { it.first == clave(tema, oscuro) }?.second
+
     /** Carga los recursos de un tema (unos 10 MB en memoria). Devuelve null si faltan. */
-    fun cargar(ctx: Context, tema: TemaId, oscuro: Boolean): Recursos? = runCatching {
+    fun cargar(ctx: Context, tema: TemaId, oscuro: Boolean): Recursos? = enCache(tema, oscuro) ?: cargarDeAssets(ctx, tema, oscuro)?.also { ultimo = clave(tema, oscuro) to it }
+
+    private fun cargarDeAssets(ctx: Context, tema: TemaId, oscuro: Boolean): Recursos? = runCatching {
         val ind = indice(ctx) ?: return null
         val clave = clave(tema, oscuro)
         val meta = ind.temas[clave] ?: return null
@@ -450,8 +457,11 @@ fun BandaGato(humor: Gato.Humor, modifier: Modifier = Modifier, tema: TemaId = E
     val ctx = LocalContext.current
     val oscuro = esOscuro() || tema.soloOscuro
     val vistaPrevia = LocalInspectionMode.current
-    val rec: Gato.Recursos? = if (vistaPrevia) remember(tema, oscuro) { Gato.cargar(ctx, tema, oscuro) }
-    else produceState<Gato.Recursos?>(null, tema, oscuro) { value = withContext(Dispatchers.IO) { Gato.cargar(ctx, tema, oscuro) } }.value
+    // Sin animaciones (y en las capturas) se carga de una vez; si no, en segundo plano para no trabar la pantalla.
+    val rec: Gato.Recursos? = if (vistaPrevia || !Repo.config.animaciones) remember(tema, oscuro) { Gato.cargar(ctx, tema, oscuro) }
+    else produceState(Gato.enCache(tema, oscuro), tema, oscuro) {
+        value = Gato.enCache(tema, oscuro) ?: run { value = null; withContext(Dispatchers.IO) { Gato.cargar(ctx, tema, oscuro) } }
+    }.value
     val forma = MaterialTheme.shapes.medium
     val cs = MaterialTheme.colorScheme
     val animar = fijo == null && !vistaPrevia && Repo.config.animaciones && !ahorroDeEnergia(ctx)
@@ -480,7 +490,7 @@ fun BandaGato(humor: Gato.Humor, modifier: Modifier = Modifier, tema: TemaId = E
         val r = rec
         if (r == null) {
             drawRect(cs.surfaceVariant)
-            if (vistaPrevia) drawIntoCanvas { c ->
+            if (vistaPrevia || !Repo.config.animaciones) drawIntoCanvas { c ->
                 c.nativeCanvas.drawText((Gato.error ?: "sin recursos").take(120), 12f, size.height / 2, Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 24f; color = android.graphics.Color.RED })
             }
             return@Canvas
