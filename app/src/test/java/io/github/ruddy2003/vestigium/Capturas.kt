@@ -1235,15 +1235,47 @@ class Capturas {
     @Test fun temaGraficas() = porTema("graficas") { t, o, n -> pantalla(t, o, 3000, n) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaSalud(navVacia) } }
 
     // Controles, barra, enfoque, bloqueo y cartas.
-    /**
-     * Los diálogos de Material se abren en otra ventana y Paparazzi no los dibuja; hasta que el lote 4 cree `Dialogo` con su
-     * contenido a la vista, aquí sale la barra de Deshacer, que es el otro control que flota sobre la pantalla.
-     */
-    @Test fun temaDialogo() = porTema("dialogo") { t, o, n ->
-        io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Se borró un momento") {}
-        captura(t, o, 1200, n) { Box(Modifier.fillMaxSize()) { CapaDeshacer() } }
-        io.github.ruddy2003.vestigium.ui.Deshacer.deshacer()
-    }
+    /** El cuerpo del diálogo del tema (Paparazzi no dibuja la ventana) y la barra de Deshacer. */
+    @Test fun temaDialogo() = porTema("dialogo") { t, o, n -> captura(t, o, 1600, n) {
+        Column(Modifier.fillMaxWidth().padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            io.github.ruddy2003.vestigium.ui.CuerpoDialogo(
+                confirmButton = { androidx.compose.material3.TextButton(onClick = {}) { Text("borrar") } },
+                dismissButton = { androidx.compose.material3.TextButton(onClick = {}) { Text("cancelar") } },
+                title = { Text("¿Borrar este momento?") },
+                text = { Text("Se borra de este día. Tendrás 5 segundos para deshacerlo.") },
+            )
+            io.github.ruddy2003.vestigium.ui.BarraDeshacer("Se borró un momento", {})
+        }
+    } }
+    /** Deslizador, progreso, interruptores, fichas, cuadrícula de afecto y menú abierto. */
+    @Test fun temaControles() = porTema("controles") { t, o, n -> captura(t, o, 3000, n) {
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            io.github.ruddy2003.vestigium.ui.Deslizador(value = 0.6f, onValueChange = {}, valueRange = 0f..1f, steps = 4)
+            io.github.ruddy2003.vestigium.ui.Deslizador(value = 0.25f, onValueChange = {})
+            io.github.ruddy2003.vestigium.ui.Progreso(progress = { 0.35f }, modifier = Modifier.fillMaxWidth().height(6.dp))
+            io.github.ruddy2003.vestigium.ui.Progreso(progress = { 0.8f }, modifier = Modifier.fillMaxWidth(0.8f).height(3.dp))
+            Interruptor("Recordé un sueño", true, "Se guarda con su valencia y temas.") {}
+            Interruptor("Fue una pesadilla", false) {}
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Ficha("ahora", false) {}
+                Ficha("hace 15 min", true) {}
+                Ficha("ayer", false) {}
+            }
+            io.github.ruddy2003.vestigium.ui.CuadriculaAfecto(5, 6) { _, _ -> }
+            io.github.ruddy2003.vestigium.ui.MenuVista {
+                io.github.ruddy2003.vestigium.ui.OpcionMenu(text = { Text("Guardar y compartir esta") }, onClick = {})
+                io.github.ruddy2003.vestigium.ui.OpcionMenu(text = { Text("Guardar todas (PNG)") }, onClick = {})
+            }
+        }
+    } }
+    /** Los selectores de día y de hora, sin la ventana. */
+    @Test fun temaSelectorFecha() = porTema("selectorFecha") { t, o, n -> captura(t, o, 3400, n) {
+        Column(Modifier.fillMaxWidth().padding(12.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            io.github.ruddy2003.vestigium.ui.CuerpoSelectorFecha(java.time.LocalDate.of(2026, 10, 19), maximo = java.time.LocalDate.of(2026, 10, 29))
+            io.github.ruddy2003.vestigium.ui.CuerpoSelectorHora(22, 30)
+        }
+    } }
+    @Test fun temaGraficasAnno() = porTema("graficasAnno") { t, o, n -> pantalla(t, o, 2600, n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaAnno(navVacia) } }
     @Test fun temaBarra() = porTema("barra") { t, o, n -> captura(t, o, 1200, n) {
         Column(Modifier.padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             listOf("dia", "diario", "vida").forEach { io.github.ruddy2003.vestigium.ui.BarraPestanas(it, t, {}, {}) }
