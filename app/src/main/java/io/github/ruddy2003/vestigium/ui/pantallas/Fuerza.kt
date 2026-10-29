@@ -35,6 +35,12 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -66,14 +72,15 @@ fun PantallaFuerza(nav: Nav) {
             else Tarjeta {
                 val max = maxOf(20.0, porGrupo.maxOf { it.value })
                 val c = MaterialTheme.colorScheme.primary; val banda = MaterialTheme.colorScheme.secondaryContainer
+                val eg = estiloGrafica()
                 porGrupo.forEach { (g, v) ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(g.replace('_', ' '), style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(120.dp))
                         Canvas(Modifier.weight(1f).height(12.dp)) {
                             drawRect(banda, Offset((10 / max * size.width).toFloat(), 0f), Size((10 / max * size.width).toFloat(), size.height))
-                            drawRect(c, Offset(0f, 2f), Size((v / max * size.width).toFloat(), size.height - 4))
+                            barraGrafica(eg, Offset(0f, 2f), Size((v / max * size.width).toFloat(), size.height - 4), c, horizontal = true)
                         }
-                        Text("%.1f".format(v), style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(40.dp).padding(start = 6.dp))
+                        Text("%.1f".format(v), style = estiloCifras(MaterialTheme.typography.labelMedium), modifier = Modifier.width(40.dp).padding(start = 6.dp))
                     }
                 }
                 Ayuda("La franja de fondo marca de 10 a 20 series.", Modifier.padding(top = 6.dp))
@@ -97,14 +104,15 @@ fun PantallaFuerza(nav: Nav) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (abierto == ej && porSesion.size >= 2) {
                             val c = MaterialTheme.colorScheme.primary; val rej = MaterialTheme.colorScheme.outline
+                            val eg = estiloGrafica()
                             val vals = porSesion.values.toList(); val lo = vals.min(); val hi = vals.max().let { if (it == lo) lo + 1 else it }
                             Canvas(Modifier.fillMaxWidth().height(90.dp).padding(top = 8.dp)) {
-                                drawLine(rej, Offset(0f, size.height), Offset(size.width, size.height), 1f)
+                                ejeGrafica(eg, Offset(0f, size.height), Offset(size.width, size.height), rej)
                                 val pts = vals.mapIndexed { k, v -> Offset(size.width * k / (vals.size - 1), (size.height * (1 - (v - lo) / (hi - lo))).toFloat()) }
-                                for (k in 1 until pts.size) drawLine(c, pts[k - 1], pts[k], 4f)
-                                pts.forEach { drawRect(c, Offset(it.x - 4f, it.y - 4f), Size(8f, 8f)) }
+                                lineaGrafica(eg, pts, c, 4f)
+                                pts.forEach { puntoGrafica(eg, it, 4f, c) }
                             }
-                            Text("%.1f → %.1f kg".format(vals.first(), vals.last()), style = MaterialTheme.typography.labelSmall)
+                            Text("%.1f → %.1f kg".format(vals.first(), vals.last()), style = estiloCifras())
                         }
                     }
                 }

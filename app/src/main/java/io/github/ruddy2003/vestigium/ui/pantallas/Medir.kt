@@ -68,6 +68,10 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -143,16 +147,14 @@ private fun Cuestionario(i: Instrumento, cerrar: () -> Unit) {
 private fun Linea(v: List<Double>) {
     val c = MaterialTheme.colorScheme.primary
     val l = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().height(90.dp)) {
         if (v.size < 2) return@Canvas
         val min = v.min(); val max = v.max().let { if (it == min) min + 1 else it }
-        drawLine(l, Offset(0f, size.height - 1), Offset(size.width, size.height - 1), 1.5f)
-        var prev: Offset? = null
-        v.forEachIndexed { k, x ->
-            val p = Offset(k * size.width / (v.size - 1), (size.height - 8 - (x - min) / (max - min) * (size.height - 16)).toFloat())
-            prev?.let { drawLine(c, it, p, 5f) }
-            drawCircle(c, 7f, p); prev = p
-        }
+        ejeGrafica(eg, Offset(0f, size.height - 1), Offset(size.width, size.height - 1), l)
+        val pts = v.mapIndexed { k, x -> Offset(k * size.width / (v.size - 1), (size.height - 8 - (x - min) / (max - min) * (size.height - 16)).toFloat()) }
+        lineaGrafica(eg, pts, c, 5f)
+        pts.forEach { puntoGrafica(eg, it, 7f, c) }
     }
 }
 
@@ -366,6 +368,7 @@ fun PantallaLugares(nav: Nav) {
 private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<io.github.ruddy2003.vestigium.data.Momento>) {
     val tenue = MaterialTheme.colorScheme.onSurfaceVariant
     val neutro = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
     val general = muestreos.mapNotNull { it.valencia?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
     if (puntos.isEmpty() && lugares.isEmpty()) { Ayuda("Aparecerá cuando haya ubicaciones guardadas."); return }
     val lats = puntos.map { it.lat } + lugares.map { it.lat }
@@ -379,6 +382,7 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
         val cx = size.width / 2; val cy = size.height / 2
         val mLa = (la0 + la1) / 2; val mLo = (lo0 + lo1) / 2
         fun p(la: Double, lo: Double) = Offset((cx + (lo - mLo) * Math.cos(Math.toRadians(mLa)) * esc).toFloat(), (cy - (la - mLa) * esc).toFloat())
+        // Pueden ser miles de muestras: van como círculos simples, sin la forma del tema (que arma un Path por punto).
         puntos.forEach { drawCircle(tenue.copy(alpha = 0.18f), 4f, p(it.lat, it.lon)) }
         lugares.forEach { l ->
             val aqui = muestreos.filter { enLugar(it, l) }.mapNotNull { it.valencia?.toDouble() }

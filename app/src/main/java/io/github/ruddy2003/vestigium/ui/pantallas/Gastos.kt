@@ -5,14 +5,11 @@ package io.github.ruddy2003.vestigium.ui.pantallas
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import java.time.LocalDateTime
 import androidx.compose.foundation.layout.Arrangement
@@ -26,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedIconButton
@@ -41,7 +37,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
@@ -63,6 +58,10 @@ import io.github.ruddy2003.vestigium.ui.Interruptor
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.pincelDeCifras
 import kotlinx.coroutines.launch
 
 fun dinero(v: Double): String = "$" + String.format(java.util.Locale.US, "%,.2f", v).removeSuffix(".00")
@@ -204,6 +203,9 @@ fun PantallaGastos(nav: Nav? = null) {
             Box(Modifier.padding(top = 12.dp)) { Tarjeta { GastoPorDia(mes, items) } }
             val porCat = items.groupBy { it.categoria }.mapValues { e -> e.value.sumOf { it.monto } }.entries.sortedByDescending { it.value }
             val max = porCat.first().value
+            val eg = estiloGrafica()
+            val barraCat = MaterialTheme.colorScheme.primary
+            val cifrasCat = estiloCifras(MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
             Box(Modifier.padding(top = 12.dp)) {
                 Tarjeta {
                     // Cada categoría se despliega por subcategoría al tocarla (Comida $2,300 → Café $620).
@@ -212,9 +214,9 @@ fun PantallaGastos(nav: Nav? = null) {
                         Row(Modifier.fillMaxWidth().clickable(enabled = porSub.isNotEmpty()) { abiertaCat = if (abiertaCat == c) null else c }.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(c + if (porSub.isNotEmpty()) (if (abiertaCat == c) " ▾" else " ▸") else "", style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(100.dp))
                             Box(Modifier.weight(1f)) {
-                                Box(Modifier.fillMaxWidth((v / max).toFloat().coerceAtLeast(0.03f)).height(9.dp).clip(RoundedCornerShape(1.dp)).background(MaterialTheme.colorScheme.primary))
+                                Canvas(Modifier.fillMaxWidth((v / max).toFloat().coerceAtLeast(0.03f)).height(9.dp)) { barraGrafica(eg, Offset.Zero, size, barraCat, horizontal = true) }
                             }
-                            Text(dinero(v), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 12.sp, modifier = Modifier.width(80.dp), textAlign = TextAlign.End)
+                            Text(dinero(v), style = cifrasCat, modifier = Modifier.width(80.dp), textAlign = TextAlign.End)
                         }
                         if (abiertaCat == c) {
                             val sin = v - porSub.values.sum()
@@ -413,14 +415,16 @@ private fun Balanza(ingresos: Double, gastos: Double) {
     val p by androidx.compose.animation.core.animateFloatAsState(if (listo) 1f else 0f, androidx.compose.animation.core.tween(if (animar) 700 else 0), label = "balanza")
     val max = maxOf(ingresos, gastos).takeIf { it > 0 } ?: 1.0
     val verde = io.github.ruddy2003.vestigium.ui.Tonos.ingreso(io.github.ruddy2003.vestigium.ui.esOscuro())
+    val eg = estiloGrafica()
+    val cifras = estiloCifras(MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
     Etiqueta("balance del mes")
     listOf(Triple("entró", ingresos, verde), Triple("salió", gastos, io.github.ruddy2003.vestigium.ui.Tonos.gasto(io.github.ruddy2003.vestigium.ui.esOscuro()))).forEach { (t, v, c) ->
         Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(t, style = MaterialTheme.typography.bodySmall, modifier = Modifier.width(56.dp))
             Box(Modifier.weight(1f)) {
-                Box(Modifier.fillMaxWidth(((v / max).toFloat() * p).coerceIn(0.02f, 1f)).height(12.dp).clip(RoundedCornerShape(2.dp)).background(c))
+                Canvas(Modifier.fillMaxWidth(((v / max).toFloat() * p).coerceIn(0.02f, 1f)).height(12.dp)) { barraGrafica(eg, Offset.Zero, size, c, horizontal = true) }
             }
-            Text(dinero(v), fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 12.sp, modifier = Modifier.width(90.dp), textAlign = TextAlign.End)
+            Text(dinero(v), style = cifras, modifier = Modifier.width(90.dp), textAlign = TextAlign.End)
         }
     }
     val saldo = ingresos - gastos
@@ -439,17 +443,17 @@ private fun GastoPorDia(mes: String, items: List<Gasto>) {
     val diasConGasto = porDia.count { it > 0 }
     val barra = MaterialTheme.colorScheme.primary
     val alerta = MaterialTheme.colorScheme.error
-    val texto = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val eg = estiloGrafica()
+    val pincel = pincelDeCifras(MaterialTheme.colorScheme.onSurfaceVariant, 22f, android.graphics.Paint.Align.CENTER)
     Etiqueta("por día")
     Canvas(Modifier.fillMaxWidth().aspectRatio(2.8f)) {
         val abajo = 26f
         val w = size.width / dias
-        val pincel = android.graphics.Paint().apply { color = texto; textSize = 22f; isAntiAlias = true; textAlign = android.graphics.Paint.Align.CENTER }
         for (k in 0 until dias) {
             val h = (size.height - abajo) * (porDia[k] / max).toFloat()
-            if (h > 0) drawRoundRect(barra, Offset(k * w + w * 0.15f, size.height - abajo - h), Size(w * 0.7f, h), CornerRadius(2f, 2f))
+            if (h > 0) barraGrafica(eg, Offset(k * w + w * 0.15f, size.height - abajo - h), Size(w * 0.7f, h), barra)
             val hi = (size.height - abajo) * (imp[k] / max).toFloat()
-            if (hi > 0) drawRoundRect(alerta, Offset(k * w + w * 0.15f, size.height - abajo - hi), Size(w * 0.7f, hi), CornerRadius(2f, 2f))
+            if (hi > 0) barraGrafica(eg, Offset(k * w + w * 0.15f, size.height - abajo - hi), Size(w * 0.7f, hi), alerta)
             if (k == 0 || (k + 1) % 5 == 0) drawContext.canvas.nativeCanvas.drawText("${k + 1}", k * w + w / 2, size.height - 4f, pincel)
         }
     }

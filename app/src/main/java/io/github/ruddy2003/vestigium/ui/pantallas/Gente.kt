@@ -48,6 +48,7 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.estiloCifras
 
 /** Lo que dice cada nivel de la escala de cercanía (círculos de Aron: qué tanto se enciman tú y esa persona). */
 private val CERCANIA = mapOf(1 to "Casi nada en común", 2 to "Poco", 3 to "Algo", 4 to "Bastante", 5 to "Mucho", 6 to "Muy cercana", 7 to "Casi parte de mí")
@@ -72,7 +73,7 @@ fun CirculosCercania(valor: Int?, onCambio: (Int?) -> Unit) {
                         drawCircle(if (sel) cs.primary else cs.onSurfaceVariant, r, Offset(cx - d / 2, cy), style = t)
                         drawCircle(if (sel) cs.primary else cs.onSurfaceVariant, r, Offset(cx + d / 2, cy), style = t)
                     }
-                    Text("$i", style = MaterialTheme.typography.labelSmall, color = if (sel) cs.primary else cs.onSurfaceVariant)
+                    Text("$i", style = estiloCifras(), color = if (sel) cs.primary else cs.onSurfaceVariant)
                 }
             }
         }
