@@ -212,6 +212,17 @@ object Estilo {
         else -> Temas.marca(tema, fecha)
     }
 
+    /** Los días seguidos sellados, bajo el sello del día (n ≥ 2). */
+    fun racha(n: Int): String = when (tema) {
+        TemaId.ROMANO -> "DIES CONTINVI · ${Romano.de(n)}"; TemaId.CIBER -> "> streak --días $n"; TemaId.HELENO -> "ΣΥΝΕΧΕΙΣ ΗΜΕΡΑΙ · $n"
+        TemaId.MEDIEVAL -> "$n días seguidos en el libro"; TemaId.DISTOPIA -> "CONTINUIDAD ACREDITADA: $n DÍAS"; TemaId.REFUGIO -> "DÍAS SIN INCIDENTES: $n"
+        TemaId.ORDEN -> "$n VIGILIAS SIN FALTA"; TemaId.LABORATORIO -> "serie de $n sesiones"; TemaId.COLONOS -> "$n jornadas seguidas"
+        TemaId.NAPOLEON -> "$n JOURS DE CAMPAGNE"; TemaId.BOTANICO -> "$n días de herbario"; TemaId.NAVIDAD -> "$n noches junto al fuego"
+        TemaId.SEDA -> "$n jornadas de caravana"; TemaId.GOTICO -> "$n días de oficio sin falta"; TemaId.ESPACIO -> "T+$n DÍAS EN ÓRBITA"
+        TemaId.ANDALUS -> "$n días seguidos · متتالية"; TemaId.MONGOL -> "$n ӨДӨР ДАРААЛАН"; TemaId.RENACIMIENTO -> "$n giorni di fila"
+        TemaId.URSS -> "ПЛАН: $n ДНЕЙ ПОДРЯД"; TemaId.REVOLUCION -> "$n JOURS DE VERTU"; TemaId.ANTIGUAS -> "$n JORNADAS DE CAMINO"
+    }
+
     val atras: String get() = when (tema) {
         TemaId.ROMANO -> "← cd .."; TemaId.CIBER -> "<< cd .."; TemaId.HELENO -> "← ὀπίσω"; TemaId.MEDIEVAL -> "← tornar"
         TemaId.DISTOPIA -> "◄ RETROCEDER"; TemaId.REFUGIO -> "< SALIR"; TemaId.ORDEN -> "« REPLEGARSE"; TemaId.LABORATORIO -> "← volver"; TemaId.COLONOS -> "← volver"

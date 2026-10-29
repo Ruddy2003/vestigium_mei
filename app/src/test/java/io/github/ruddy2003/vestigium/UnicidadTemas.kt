@@ -30,6 +30,7 @@ class UnicidadTemas {
         conEstilo("atras") { Estilo.atras }
         conEstilo("prefijo") { Estilo.prefijo }
         conEstilo("clave") { Estilo.clave("somnus") }
+        conEstilo("racha") { Estilo.racha(5) }
         conEstilo("widget_rotulos") { CoberturaTemas.CLAVES_WIDGET.joinToString(" | ") { Estilo.widget(it) } }
         r["pantallas"] = PANTALLAS.flatMap { p -> iguales { t -> Pendientes.conTema(t) { Estilo.pantalla(p, null).first } } }.toSet()
 
