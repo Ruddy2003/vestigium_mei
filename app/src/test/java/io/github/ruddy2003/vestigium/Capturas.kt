@@ -1427,6 +1427,35 @@ class Capturas {
             io.github.ruddy2003.vestigium.ui.pantallas.MapaRascar(setOf("MX", "ES", "FR", "JP"), Modifier.fillMaxWidth().aspectRatio(2.1f))
         }
     } }
+    /** Lote 5: letras, nombres, fechas, números, claves, textos cortos y esquinas del tema, en una hoja. */
+    @Test fun temaTextos() = porTema("textos") { t, o, n -> captura(t, o, 2600, n) {
+        val E = io.github.ruddy2003.vestigium.ui.Estilo
+        val ty = androidx.compose.material3.MaterialTheme.typography
+        val cs = androidx.compose.material3.MaterialTheme.colorScheme
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val (nombre, com) = E.pantalla("Hoy", null)
+            Text(nombre + E.sufijoTitulo, style = ty.headlineMedium, color = cs.primary)
+            com?.let { Text(it, style = ty.labelSmall, color = cs.onSurfaceVariant) }
+            Text(E.fecha("2026-10-17"), style = ty.titleLarge)
+            Text(UnicidadTemas.PANTALLAS.joinToString("  ·  ") { E.pantalla(it, null).first }, style = ty.titleMedium)
+            Text("Un día cualquiera también deja rastro: lo que comiste, con quién hablaste, cómo dormiste. 0123456789 ¿Ñandú? ¡Sí!", style = ty.bodyLarge)
+            Text("Texto mediano para leer con calma, y una línea más pequeña debajo.", style = ty.bodyMedium)
+            Text(E.prefijo + "etiqueta · " + E.comentario + "comentario · " + E.atras, style = ty.labelLarge, color = cs.primary)
+            Text("numeral(17) = ${E.numeral(17)}   año ${E.numeral(2026)}   mes ${E.mes(10)} · ${E.mes(10, 2026)}", style = ty.labelLarge)
+            Text(E.semana.joinToString("  "), style = ty.labelMedium)
+            Text(E.semanaCorta.joinToString("  "), style = ty.labelSmall)
+            Text(UnicidadTemas.CLAVES_DIA.joinToString("\n") { E.clave(it).padEnd(12) + "= 7" }, style = ty.labelMedium)
+            Text(listOf("dia", "diario", "registrar", "vida", "entender").joinToString("  |  ") { E.texto("pestana_$it") }, style = ty.labelLarge, color = cs.secondary)
+            Text(io.github.ruddy2003.vestigium.ui.Textos.CLAVES.drop(5).joinToString("\n") { E.texto(it).replace("%d", "120") }, style = ty.bodySmall)
+            Text(E.racha(5) + "   " + (E.marca("2026-12-21") ?: E.marca("2026-07-16") ?: E.marca("2026-10-23") ?: "—"), style = ty.labelMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                androidx.compose.material3.Surface(shape = androidx.compose.material3.MaterialTheme.shapes.small, color = cs.primaryContainer, modifier = Modifier.size(64.dp)) {}
+                androidx.compose.material3.Surface(shape = androidx.compose.material3.MaterialTheme.shapes.medium, color = cs.secondaryContainer, modifier = Modifier.size(64.dp)) {}
+                androidx.compose.material3.Surface(shape = androidx.compose.material3.MaterialTheme.shapes.large, color = cs.tertiaryContainer, modifier = Modifier.size(64.dp)) {}
+                androidx.compose.material3.Button(onClick = {}) { Text(io.github.ruddy2003.vestigium.ui.textoGuardar(t)) }
+            }
+        }
+    } }
     @Test fun temaDia() = porTema("dia") { t, o, n -> v73(t, o, 4200, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
     /** Frase, franja y cifras de Hoy; en oscuro la frase va guardada, para ver el corazón relleno. */
     @Test fun temaHoy() = porTema("hoy") { t, o, n ->

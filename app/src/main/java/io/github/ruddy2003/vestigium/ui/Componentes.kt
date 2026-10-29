@@ -509,7 +509,7 @@ fun Escala(valor: Int?, desde: Int, hasta: Int, anclas: Map<Int, String>? = null
         }
         if (anclas != null) Row(Modifier.padding(top = 7.dp)) {
             Text(piel.igual + (valor?.toString() ?: piel.nulo), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-            Text(if (valor == null) "  sin marcar · toca o desliza" else "  ${anclas[valor] ?: ""}".lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(if (valor == null) "  " + Estilo.texto("escala_vacia") else "  ${anclas[valor] ?: ""}".lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -612,7 +612,7 @@ fun ListaEtiquetas(lista: List<String>, pista: String, prefijo: String = "", nor
                 keyboardActions = KeyboardActions(onDone = { agregar() }),
             )
             Spacer(Modifier.width(8.dp))
-            BotonSecundario("+ añadir") { agregar() }
+            BotonSecundario(Estilo.texto("lista_anadir")) { agregar() }
         }
     }
 }
@@ -767,7 +767,7 @@ fun Vacio(texto: String) {
     Box(
         Modifier.fillMaxWidth().drawBehind {
             val guiones = FloatArray(piel.guiones.size) { piel.guiones[it] * 1.dp.toPx() }
-            drawRoundRect(linea, cornerRadius = CornerRadius(minOf(radioDe(tema), 8).dp.toPx()), style = Stroke(width = 1.5f, pathEffect = PathEffect.dashPathEffect(guiones)))
+            drawRoundRect(linea, cornerRadius = CornerRadius(minOf(radioDe(tema).radio, 8).dp.toPx()), style = Stroke(width = 1.5f, pathEffect = PathEffect.dashPathEffect(guiones)))
         }.padding(18.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -1195,7 +1195,7 @@ private fun DrawScope.romboComp(c: Offset, rx: Float, ry: Float, color: Color, e
 
 /** Las esquinas de una tarjeta ([k] = 1) o de una cifra ([k] < 1). Se apartan del borde según el radio del tema. */
 private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
-    val i = (3f + radioDe(t) * 0.3f).dp.toPx() * k
+    val i = (3f + radioDe(t).radio * 0.3f).dp.toPx() * k
     val u = 6.dp.toPx() * k
     val fino = 1.dp.toPx() * k
     val w = size.width; val h = size.height

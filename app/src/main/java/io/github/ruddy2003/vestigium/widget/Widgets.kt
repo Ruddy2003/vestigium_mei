@@ -204,7 +204,7 @@ object Widgets {
         val hoy = Repo.momentos.count { it.tipo == "muestreo" && it.fecha == Fechas.diaLogico() }
         val discreto = Repo.config.discreto
         v.setTextViewText(R.id.titulo_animo, if (discreto) tituloDiscreto(Estilo.tema).first else Estilo.widget("animo"))
-        v.setTextViewText(R.id.pregunta_animo, com + if (discreto) "ahora" else "¿qué tan agradable se siente ahora?")
+        v.setTextViewText(R.id.pregunta_animo, com + Estilo.texto(if (discreto) "widget_discreto_animo" else "widget_animo"))
         v.setTextViewText(R.id.sub_animo, if (hoy == 0) Estilo.fecha(Fechas.diaLogico()) else "$hoy hoy")
         BOTONES_ANIMO.forEachIndexed { i, id ->
             v.setTextColor(id, colores().animo[i])
@@ -219,7 +219,7 @@ object Widgets {
         val discreto = Repo.config.discreto
         val hoy = Repo.momentos.count { Catalogo.esRegistro(it) && it.fecha == Fechas.diaLogico() }
         v.setTextViewText(R.id.titulo_momento, if (discreto) tituloDiscreto(Estilo.tema).second else Estilo.widget("momento"))
-        v.setTextViewText(R.id.pregunta_momento, com + if (discreto) "registrar" else "ahora siento…")
+        v.setTextViewText(R.id.pregunta_momento, com + Estilo.texto(if (discreto) "widget_discreto_momento" else "widget_momento"))
         v.setTextViewText(R.id.sub_momento, if (hoy == 0) "" else "$hoy hoy")
         // Ocho sentimientos: un toque y queda registrado (luego se puede agregar en qué pensabas y cómo te sientes).
         Catalogo.SENTIMIENTOS_WIDGET.take(BOTONES_MOMENTO.size).forEachIndexed { i, id ->

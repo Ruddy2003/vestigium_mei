@@ -11,6 +11,7 @@ import io.github.ruddy2003.vestigium.ui.NombresNuevos
 import io.github.ruddy2003.vestigium.ui.SalonesTema
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.Textos
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
 import io.github.ruddy2003.vestigium.ui.contenedorDe
 import kotlinx.serialization.json.Json
@@ -50,6 +51,7 @@ class CoberturaTemas {
         }
         superficie("vidas") { t -> OtrasVidas.DE_TEMAS.none { it.tema == t.id } }
         superficie("frases_20") { Frases.de(it).size < 20 }
+        superficie("textos") { t -> Textos.CLAVES.any { Textos.de(t, it) == null } }
 
         // Lotes de diseño: trofeos, salón, campaña y libreta propios.
         superficie("trofeos") { it !in TrofeosTema.TEMAS }
@@ -99,8 +101,6 @@ class CoberturaTemas {
             "escala_toque" to setOf("medieval", "distopia", "refugio", "orden", "napoleon", "navidad", "seda", "urss", "mongol", "renacimiento", "revolucion", "antiguas"),
             "frases_20" to setOf("refugio", "orden", "laboratorio", "napoleon", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion"),
             "gato" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "marcas_calendario" to setOf("ciber", "heleno", "distopia", "refugio", "orden", "laboratorio", "colonos"),
-            "nombres" to setOf("ciber"),
             "papel" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento"),
             "sonido_cambio" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
             "sonido_error" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
@@ -111,17 +111,11 @@ class CoberturaTemas {
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */
         val DESPACHOS: Map<String, Int> = mapOf(
             "ui/Bases.kt · agrupadas" to 6,
-            "ui/Estilo.kt · agrupadas" to 10,
-            "ui/Estilo.kt · comparaciones" to 3,
-            "ui/Estilo.kt · else" to 7,
-            "ui/Hoja.kt · comparaciones" to 1,
             "ui/IconoApp.kt · comparaciones" to 2,
             "ui/SalonesMas.kt · else" to 2,
             "ui/Sentidos.kt · agrupadas" to 9,
             "ui/Sentidos.kt · comparaciones" to 2,
             "ui/Sentidos.kt · else" to 5,
-            "ui/Temas.kt · comparaciones" to 1,
-            "ui/Temas.kt · else" to 2,
             "ui/TrofeosMas.kt · else" to 2,
         )
     }

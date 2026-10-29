@@ -20,11 +20,13 @@ object Estilo {
 
     /** Prefijo de los comentarios (la línea pequeña bajo los títulos). */
     val comentario: String get() = when (tema) {
-        TemaId.ROMANO, TemaId.CIBER, TemaId.ORDEN -> "// "
-        TemaId.HELENO -> "— "
+        TemaId.ROMANO -> "// "
+        TemaId.CIBER -> "# "
+        TemaId.HELENO -> "∴ "
         TemaId.MEDIEVAL -> "¶ "
         TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "
+        TemaId.ORDEN -> "‡ "
         TemaId.LABORATORIO -> "· "
         TemaId.COLONOS -> "~ "
         TemaId.NAPOLEON -> "— "
@@ -41,35 +43,123 @@ object Estilo {
         TemaId.ANTIGUAS -> "⟡ "
     }
 
-    /** ¿Los títulos van en mayúsculas? La gótica y la letra de imprenta antigua se leen mejor en minúsculas. */
-    val mayusculas: Boolean get() = tema !in setOf(TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.NAVIDAD, TemaId.SEDA, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.BOTANICO)
+    /**
+     * ¿Los títulos van en mayúsculas? Las capitales de inscripción, los carteles y las pantallas sí; la gótica, la letra de
+     * imprenta antigua, la caligrafía y la letra de mano se leen mejor en minúsculas.
+     */
+    val mayusculas: Boolean get() = when (tema) {
+        TemaId.ROMANO -> true          // capitales de inscripción
+        TemaId.CIBER -> true           // consola
+        TemaId.HELENO -> true          // capitales epigráficas
+        TemaId.MEDIEVAL -> false       // gótica de libro
+        TemaId.DISTOPIA -> true        // cartel
+        TemaId.REFUGIO -> true         // pantalla de fósforo
+        TemaId.ORDEN -> true           // estarcido
+        TemaId.LABORATORIO -> true     // rótulo de protocolo
+        TemaId.COLONOS -> false        // imprenta de pueblo
+        TemaId.NAPOLEON -> true        // capitales de Bodoni
+        TemaId.BOTANICO -> false       // lámina de herbario
+        TemaId.NAVIDAD -> false        // tarjeta escrita a mano
+        TemaId.SEDA -> false           // manuscrito de caravana
+        TemaId.URSS -> true            // cartel constructivista
+        TemaId.GOTICO -> false         // textura
+        TemaId.ESPACIO -> true         // tablero de misión
+        TemaId.ANDALUS -> true         // cúfica de friso
+        TemaId.MONGOL -> true          // cirílico de rótulo
+        TemaId.RENACIMIENTO -> false   // cancilleresca
+        TemaId.REVOLUCION -> true      // cartel de la Convención
+        TemaId.ANTIGUAS -> true        // capitales grabadas
+    }
 
     /** Nombre del tema para un título en español, o null si ese tema no lo renombra. */
     private fun nombreNuevo(titulo: String): String? = Temas.nombre(tema, titulo)
 
     private fun comentarioNuevo(titulo: String, nombre: String, pantalla: Boolean): String? {
         val t = titulo.lowercase()
+        val igual = nombre.equals(titulo, true)
         return when (tema) {
-            TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (nombre.equals(titulo, true)) null else "▪ $t"
-            TemaId.LABORATORIO -> if (pantalla) "protocolo VM-%03d · %s".format(folio(titulo, 100, 900), t) else if (nombre.equals(titulo, true)) null else "· $t"
-            TemaId.REFUGIO -> if (nombre.equals(titulo, true)) null else "[ $t ]"
-            TemaId.ORDEN -> if (nombre.equals(titulo, true)) null else "— $t —"
-            TemaId.COLONOS -> if (nombre.equals(titulo, true)) null else "~ $t ~"
-            TemaId.MEDIEVAL -> if (nombre.equals(titulo, true)) null else "¶ $t"
-            TemaId.ROMANO, TemaId.CIBER, TemaId.HELENO -> null
-            else -> if (nombre.equals(titulo, true)) null else comentario + t
+            // Romano, terminal y heleno arman su comentario en [pantalla] y [seccion].
+            TemaId.ROMANO -> null
+            TemaId.CIBER -> null
+            TemaId.HELENO -> null
+            TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (igual) null else "▪ $t"
+            TemaId.LABORATORIO -> if (pantalla) "protocolo VM-%03d · %s".format(folio(titulo, 100, 900), t) else if (igual) null else "· $t"
+            TemaId.REFUGIO -> if (igual) null else "[ $t ]"
+            TemaId.ORDEN -> if (igual) null else "— $t —"
+            TemaId.COLONOS -> if (igual) null else "~ $t ~"
+            TemaId.MEDIEVAL -> if (igual) null else "¶ $t"
+            TemaId.NAPOLEON -> if (igual) null else "« $t »"
+            TemaId.BOTANICO -> if (igual) null else "⁂ $t"
+            TemaId.NAVIDAD -> if (igual) null else "✦ $t ✦"
+            TemaId.SEDA -> if (igual) null else "◇ $t ◇"
+            TemaId.URSS -> if (igual) null else "★ $t"
+            TemaId.GOTICO -> if (igual) null else "✠ $t"
+            TemaId.ESPACIO -> if (igual) null else "⋆ $t ⋆"
+            TemaId.ANDALUS -> if (igual) null else "❋ $t ❋"
+            TemaId.MONGOL -> if (igual) null else "◆ $t"
+            TemaId.RENACIMIENTO -> if (igual) null else "❧ $t"
+            TemaId.REVOLUCION -> if (igual) null else "✶ $t ✶"
+            TemaId.ANTIGUAS -> if (igual) null else "⟡ $t"
         }
     }
 
-    /** Título grande y comentario de una pantalla. */
-    fun pantalla(titulo: String, latin: String?): Pair<String, String?> = when (tema) {
-        TemaId.ROMANO -> (latin ?: titulo.uppercase()) to (if (latin != null) "// ${titulo.lowercase()}" else null)
-        TemaId.CIBER -> titulo.uppercase() to "// sys.${slug(latin ?: titulo)}"
-        TemaId.HELENO -> Griego.nombre(titulo)?.let { it to "— ${titulo.lowercase()}" } ?: (titulo.uppercase() to null)
-        else -> {
-            val n = nombreNuevo(titulo) ?: if (mayusculas) titulo.uppercase() else titulo
-            n to comentarioNuevo(titulo, n, true)
+    /** Título grande y comentario de una pantalla. Sin [latin], el romano busca el suyo en [Romano.latin]. */
+    fun pantalla(titulo: String, latin: String?): Pair<String, String?> {
+        val la = latin ?: Romano.latin(titulo)
+        return when (tema) {
+            TemaId.ROMANO -> (la ?: titulo.uppercase()) to (if (la != null) comentario + titulo.lowercase() else null)
+            TemaId.CIBER -> (nombreNuevo(titulo) ?: titulo.uppercase()) to "${comentario}sys.${slug(la ?: titulo)}"
+            TemaId.HELENO -> Griego.nombre(titulo)?.let { it to comentario + titulo.lowercase() } ?: (titulo.uppercase() to null)
+            TemaId.MEDIEVAL -> propio(titulo, true)
+            TemaId.DISTOPIA -> propio(titulo, true)
+            TemaId.REFUGIO -> propio(titulo, true)
+            TemaId.ORDEN -> propio(titulo, true)
+            TemaId.LABORATORIO -> propio(titulo, true)
+            TemaId.COLONOS -> propio(titulo, true)
+            TemaId.NAPOLEON -> propio(titulo, true)
+            TemaId.BOTANICO -> propio(titulo, true)
+            TemaId.NAVIDAD -> propio(titulo, true)
+            TemaId.SEDA -> propio(titulo, true)
+            TemaId.URSS -> propio(titulo, true)
+            TemaId.GOTICO -> propio(titulo, true)
+            TemaId.ESPACIO -> propio(titulo, true)
+            TemaId.ANDALUS -> propio(titulo, true)
+            TemaId.MONGOL -> propio(titulo, true)
+            TemaId.RENACIMIENTO -> propio(titulo, true)
+            TemaId.REVOLUCION -> propio(titulo, true)
+            TemaId.ANTIGUAS -> propio(titulo, true)
         }
+    }
+
+    /** El nombre del diccionario del tema (o el español, en mayúsculas si el tema las usa) y su comentario. */
+    private fun propio(titulo: String, pantalla: Boolean): Pair<String, String?> {
+        val n = nombreNuevo(titulo) ?: if (mayusculas) titulo.uppercase() else titulo
+        return n to comentarioNuevo(titulo, n, pantalla)
+    }
+
+    /** ¿El comentario de la pantalla dice algo más que el nombre en español? (el número de expediente, el protocolo). */
+    private val comentarioConFolio: Boolean get() = when (tema) {
+        TemaId.DISTOPIA -> true
+        TemaId.LABORATORIO -> true
+        TemaId.ROMANO -> false
+        TemaId.CIBER -> false
+        TemaId.HELENO -> false
+        TemaId.MEDIEVAL -> false
+        TemaId.REFUGIO -> false
+        TemaId.ORDEN -> false
+        TemaId.COLONOS -> false
+        TemaId.NAPOLEON -> false
+        TemaId.BOTANICO -> false
+        TemaId.NAVIDAD -> false
+        TemaId.SEDA -> false
+        TemaId.URSS -> false
+        TemaId.GOTICO -> false
+        TemaId.ESPACIO -> false
+        TemaId.ANDALUS -> false
+        TemaId.MONGOL -> false
+        TemaId.RENACIMIENTO -> false
+        TemaId.REVOLUCION -> false
+        TemaId.ANTIGUAS -> false
     }
 
     /**
@@ -80,18 +170,35 @@ object Estilo {
     fun pantallaEnLinea(titulo: String, latin: String?): Triple<String, String?, String?> {
         val (n, c) = pantalla(titulo, latin)
         val renombra = slug(n) != slug(titulo)
-        val extra = if (renombra && tema !in setOf(TemaId.DISTOPIA, TemaId.LABORATORIO)) null else c
+        val extra = if (renombra && !comentarioConFolio) null else c
         return Triple(n, titulo.takeIf { renombra }, extra)
     }
 
     /** Título y comentario de una sección. */
-    fun seccion(titulo: String, latin: String?): Pair<String, String?> = when (tema) {
-        TemaId.ROMANO -> (latin ?: titulo.uppercase()) to (if (latin != null) "// ${titulo.lowercase()}" else null)
-        TemaId.CIBER -> "> ${titulo.lowercase()}" to null
-        TemaId.HELENO -> Griego.nombre(titulo)?.let { it to "— ${titulo.lowercase()}" } ?: (titulo.uppercase() to null)
-        else -> {
-            val n = nombreNuevo(titulo) ?: if (mayusculas) titulo.uppercase() else titulo
-            n to comentarioNuevo(titulo, n, false)
+    fun seccion(titulo: String, latin: String?): Pair<String, String?> {
+        val la = latin ?: Romano.latin(titulo)
+        return when (tema) {
+            TemaId.ROMANO -> (la ?: titulo.uppercase()) to (if (la != null) comentario + titulo.lowercase() else null)
+            TemaId.CIBER -> nombreNuevo(titulo)?.let { "> $it" to comentario + titulo.lowercase() } ?: ("> ${titulo.lowercase()}" to null)
+            TemaId.HELENO -> Griego.nombre(titulo)?.let { it to comentario + titulo.lowercase() } ?: (titulo.uppercase() to null)
+            TemaId.MEDIEVAL -> propio(titulo, false)
+            TemaId.DISTOPIA -> propio(titulo, false)
+            TemaId.REFUGIO -> propio(titulo, false)
+            TemaId.ORDEN -> propio(titulo, false)
+            TemaId.LABORATORIO -> propio(titulo, false)
+            TemaId.COLONOS -> propio(titulo, false)
+            TemaId.NAPOLEON -> propio(titulo, false)
+            TemaId.BOTANICO -> propio(titulo, false)
+            TemaId.NAVIDAD -> propio(titulo, false)
+            TemaId.SEDA -> propio(titulo, false)
+            TemaId.URSS -> propio(titulo, false)
+            TemaId.GOTICO -> propio(titulo, false)
+            TemaId.ESPACIO -> propio(titulo, false)
+            TemaId.ANDALUS -> propio(titulo, false)
+            TemaId.MONGOL -> propio(titulo, false)
+            TemaId.RENACIMIENTO -> propio(titulo, false)
+            TemaId.REVOLUCION -> propio(titulo, false)
+            TemaId.ANTIGUAS -> propio(titulo, false)
         }
     }
 
@@ -102,18 +209,29 @@ object Estilo {
         TemaId.MEDIEVAL -> Temas.copista(n)
         TemaId.DISTOPIA -> if (n < 100) "Nº%02d".format(n) else "Nº$n"
         TemaId.REFUGIO -> if (n < 100) "#%02d".format(n) else "#$n"
-        TemaId.ORDEN -> if (n < 100) "%02d".format(n) else "$n"
-        TemaId.LABORATORIO -> if (n < 100) "%02d".format(n) else "$n"
+        // Ordinal de regimiento y de batallón: «17º».
+        TemaId.ORDEN -> if (n in 1..999) "${n}º" else "$n"
+        // Muestra numerada del cuaderno: «M-17».
+        TemaId.LABORATORIO -> if (n in 1..999) "M-%02d".format(n) else "$n"
         TemaId.COLONOS -> if (n < 100) "§ $n" else "$n"
-        TemaId.NAPOLEON -> Romano.de(n)
-        TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.MONGOL, TemaId.RENACIMIENTO -> "$n"
+        // El ordinal francés de las unidades («17ᵉ régiment», «1ᵉʳ corps»); los años, en romanos como en las medallas del Imperio.
+        TemaId.NAPOLEON -> when { n == 1 -> "1ᵉʳ"; n in 2..999 -> "${n}ᵉ"; n in 1000..3999 -> Romano.de(n); else -> "$n" }
+        // Número de pliego del herbario: «n.º 17».
+        TemaId.BOTANICO -> if (n in 1..999) "n.º $n" else "$n"
+        // La puertita del calendario de Adviento.
+        TemaId.NAVIDAD -> if (n in 1..999) "✦$n" else "$n"
+        // Cifras mongolas tradicionales: ᠑᠗.
+        TemaId.MONGOL -> Temas.mongol(n)
+        // Los numerales entre puntos de los manuscritos italianos: «.xvii.».
+        TemaId.RENACIMIENTO -> if (n in 1..3999) "." + Romano.de(n).lowercase() + "." else "$n"
         TemaId.SEDA -> Temas.chino(n)
         TemaId.URSS -> "№ $n"
         TemaId.GOTICO -> if (n in 1..3999) Romano.de(n).lowercase() else "$n"
         TemaId.ESPACIO -> "%03d".format(n)
         TemaId.ANDALUS -> Temas.arabe(n)
         TemaId.REVOLUCION -> if (n < 100) "N° $n" else "$n"
-        TemaId.ANTIGUAS -> if (n in 1..3999) Romano.de(n) else "$n"
+        // La cuenta de jornadas y lunas del camino: «17ª».
+        TemaId.ANTIGUAS -> if (n in 1..999) "${n}ª" else "$n"
     }
 
     /** Días desde el primer registro: «día N en el refugio», «T+N» en el laboratorio. */
@@ -160,57 +278,95 @@ object Estilo {
         val i = (n - 1).coerceIn(0, 11)
         return when (tema) {
             TemaId.ROMANO -> Romano.mes(n)
-            TemaId.CIBER -> MESES_ES[i] + (anio?.let { ".$it" } ?: "")
+            TemaId.CIBER -> MESES_ES[i].lowercase() + (anio?.let { ".$it" } ?: "")
             TemaId.HELENO -> Griego.MESES[i]
             TemaId.MEDIEVAL -> Temas.MESES_MEDIEVALES[i]
             TemaId.DISTOPIA -> "MES %02d".format(n) + (anio?.let { " · $it" } ?: "")
-            TemaId.REFUGIO, TemaId.ORDEN -> MESES_ES[i] + (anio?.let { " $it" } ?: "")
-            TemaId.LABORATORIO -> MESES_LARGOS[i].uppercase() + (anio?.let { " $it" } ?: "")
+            TemaId.REFUGIO -> MESES_LARGOS[i].uppercase() + (anio?.let { " $it" } ?: "")
+            // Mes y número, como en los partes: «OCT-10».
+            TemaId.ORDEN -> MESES_ES[i] + "-%02d".format(n) + (anio?.let { " · $it" } ?: "")
+            // Número y abreviatura del cuaderno de laboratorio: «10 · oct», «2026-10 · oct».
+            TemaId.LABORATORIO -> (anio?.let { "$it-" } ?: "") + "%02d".format(n) + " · " + MESES_ES[i].lowercase()
             TemaId.COLONOS -> MESES_LARGOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " de $it" } ?: "")
             TemaId.NAPOLEON -> Temas.MESES_FRANCESES[i].uppercase() + (anio?.let { " $it" } ?: "")
-            TemaId.BOTANICO, TemaId.NAVIDAD -> MESES_LARGOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " $it" } ?: "")
+            // Las etiquetas de herbario escriben el mes en romanos: «X-2026».
+            TemaId.BOTANICO -> Romano.de(n) + (anio?.let { "-$it" } ?: "")
+            TemaId.NAVIDAD -> (if (n == 12) "Mes de la Navidad" else "Mes de " + MESES_LARGOS[i]) + (anio?.let { " de $it" } ?: "")
             TemaId.SEDA -> (anio?.let { Temas.anioChino(it) + " " } ?: "") + Temas.chino(n) + "月"
             TemaId.URSS -> Temas.MESES_RUSOS[i] + (anio?.let { " $it" } ?: "")
-            TemaId.GOTICO -> Temas.MESES_LATINOS[i] + (anio?.let { " " + Romano.de(it) } ?: "")
+            // En genitivo, como en las rúbricas del calendario litúrgico: «Octobris».
+            TemaId.GOTICO -> Temas.MESES_LATINOS_GEN[i].replaceFirstChar { it.uppercase() } + (anio?.let { " " + Romano.de(it).lowercase() } ?: "")
             TemaId.ESPACIO -> MESES_ES[i] + (anio?.let { " · $it" } ?: "")
             // Los andalusíes nombraban los meses del sol con palabras salidas del latín: yannayr, fibrayr, mars…
             TemaId.ANDALUS -> MESES_ANDALUSIES[i] + (anio?.let { " $it" } ?: "")
-            TemaId.MONGOL -> "$n-р сар" + (anio?.let { " · $it" } ?: "")
+            // Los meses de la estepa se nombran por la estación: primero, medio y último mes del otoño…
+            TemaId.MONGOL -> Temas.MESES_MONGOLES[i] + (anio?.let { " · $it" } ?: "")
             TemaId.RENACIMIENTO -> Temas.MESES_ITALIANOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " $it" } ?: "")
-            TemaId.REVOLUCION -> Temas.MESES_FRANCESES[i].uppercase() + (anio?.let { " " + Temas.anRepublicano(it, n) } ?: "")
+            // El mes republicano que ocupa la mayor parte del mes gregoriano (octubre ≈ vendémiaire).
+            TemaId.REVOLUCION -> Temas.mesRepublicano(n).uppercase() + (anio?.let { " " + Temas.anRepublicano(it, n) } ?: "")
             TemaId.ANTIGUAS -> Temas.LUNAS[i] + (anio?.let { " · $it" } ?: "")
         }
     }
 
+    /** Los días de la semana, de lunes a domingo (cortos: van en columnas de calendario). */
     val semana: List<String> get() = when (tema) {
-        TemaId.ROMANO -> Romano.SEMANA; TemaId.CIBER, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.ORDEN -> SEMANA_ES; TemaId.HELENO -> Griego.SEMANA
+        TemaId.ROMANO -> Romano.SEMANA
+        TemaId.CIBER -> listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
+        TemaId.HELENO -> Griego.SEMANA
         // Los monjes contaban «ferias»: el lunes es la segunda, el martes la tercera…
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iiij", "v", "vj", "Sab", "Dom")
+        // Las letras de los formularios oficiales (con la X del miércoles).
+        TemaId.DISTOPIA -> listOf("L", "M", "X", "J", "V", "S", "D")
+        TemaId.REFUGIO -> listOf("LU", "MA", "MI", "JU", "VI", "SA", "DO")
+        // Abreviatura de parte militar, solo consonantes.
+        TemaId.ORDEN -> listOf("LNS", "MRT", "MCL", "JVS", "VRN", "SBD", "DMG")
         TemaId.LABORATORIO -> listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do")
-        TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
-        TemaId.NAPOLEON, TemaId.REVOLUCION -> listOf("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM")
-        TemaId.ANTIGUAS -> listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")
+        // Con punto, como en la gaceta del pueblo.
+        TemaId.COLONOS -> listOf("Lu.", "Ma.", "Mi.", "Ju.", "Vi.", "Sá.", "Do.")
+        TemaId.NAPOLEON -> listOf("LUN", "MAR", "MER", "JEU", "VEN", "SAM", "DIM")
+        // Los signos de los planetas que Linneo usaba en sus cuadernos: ☽ lunes, ♂ martes, ☿ miércoles…
+        TemaId.BOTANICO -> listOf("☽ lu", "♂ ma", "☿ mi", "♃ ju", "♀ vi", "♄ sá", "☉ do")
+        TemaId.NAVIDAD -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
         TemaId.SEDA -> listOf("一", "二", "三", "四", "五", "六", "日")
         TemaId.URSS -> listOf("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС")
-        TemaId.GOTICO -> listOf("ij", "iij", "iv", "v", "vj", "Sab", "Dom")
-        TemaId.ESPACIO -> SEMANA_ES
+        // Las ferias de la liturgia, en romanos: feria II es el lunes.
+        TemaId.GOTICO -> listOf("F.II", "F.III", "F.IV", "F.V", "F.VI", "Sab.", "Dom.")
+        TemaId.ESPACIO -> listOf("LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM")
         TemaId.ANDALUS -> listOf("اثن", "ثلا", "أرب", "خمي", "جمع", "سبت", "أحد")
         TemaId.MONGOL -> listOf("ДА", "МЯ", "ЛХ", "ПҮ", "БА", "БЯ", "НЯ")
         TemaId.RENACIMIENTO -> listOf("Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom")
+        TemaId.REVOLUCION -> listOf("lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim.")
+        // Los días del camino, de invención propia: de la Luna, de la Forja, del Viento, del Roble, del Hogar, de la Piedra y del Sol.
+        TemaId.ANTIGUAS -> listOf("Luna", "Forja", "Viento", "Roble", "Hogar", "Piedra", "Sol")
     }
 
-    /** Dos letras por día, para el widget del mes. */
+    /** Dos o tres letras por día, para el widget del mes. */
     val semanaCorta: List<String> get() = when (tema) {
-        TemaId.ROMANO, TemaId.CIBER, TemaId.HELENO -> semana.map { it.take(2) }
-        else -> listOf("Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do").let { l -> if (mayusculas) l.map { it.uppercase() } else l }
+        TemaId.ROMANO -> semana.map { it.take(2) }
+        TemaId.CIBER -> listOf("lu", "ma", "mi", "ju", "vi", "sá", "do")
+        TemaId.HELENO -> semana.map { it.take(2) }
+        TemaId.MEDIEVAL -> listOf("ij", "iij", "iv", "v", "vj", "Sb", "Dm")
+        TemaId.DISTOPIA -> semana
+        TemaId.REFUGIO -> semana
+        TemaId.ORDEN -> semana.map { it.take(2) }
+        TemaId.LABORATORIO -> semana
+        TemaId.COLONOS -> semana
+        TemaId.NAPOLEON -> semana.map { it.take(2) }
+        TemaId.BOTANICO -> semana.map { it.take(1) }
+        TemaId.NAVIDAD -> listOf("L", "M", "M", "J", "V", "S", "D")
+        TemaId.SEDA -> semana
+        TemaId.URSS -> semana
+        TemaId.GOTICO -> listOf("II", "III", "IV", "V", "VI", "SB", "DM")
+        TemaId.ESPACIO -> semana
+        TemaId.ANDALUS -> semana.map { it.take(2) }
+        TemaId.MONGOL -> semana
+        TemaId.RENACIMIENTO -> semana.map { it.take(2) }
+        TemaId.REVOLUCION -> semana.map { it.take(2) }
+        TemaId.ANTIGUAS -> semana.map { it.take(2) }
     }
 
     /** Marcas del calendario: calendas, nonas e idus (romano); las fiestas que dividían el año (medieval). */
-    fun marca(fecha: String): String? = when (tema) {
-        TemaId.ROMANO -> Romano.marca(fecha)
-        TemaId.MEDIEVAL -> Temas.FIESTAS[fecha.takeLast(5)]
-        else -> Temas.marca(tema, fecha)
-    }
+    fun marca(fecha: String): String? = Temas.marca(tema, fecha)
 
     /** Los días seguidos sellados, bajo el sello del día (n ≥ 2). */
     fun racha(n: Int): String = when (tema) {
@@ -225,8 +381,8 @@ object Estilo {
 
     val atras: String get() = when (tema) {
         TemaId.ROMANO -> "← cd .."; TemaId.CIBER -> "<< cd .."; TemaId.HELENO -> "← ὀπίσω"; TemaId.MEDIEVAL -> "← tornar"
-        TemaId.DISTOPIA -> "◄ RETROCEDER"; TemaId.REFUGIO -> "< SALIR"; TemaId.ORDEN -> "« REPLEGARSE"; TemaId.LABORATORIO -> "← volver"; TemaId.COLONOS -> "← volver"
-        TemaId.NAPOLEON -> "← retirada"; TemaId.BOTANICO -> "← regresar"; TemaId.NAVIDAD -> "← volver"; TemaId.SEDA -> "← regresar"; TemaId.URSS -> "◄ НАЗАД"
+        TemaId.DISTOPIA -> "◄ RETROCEDER"; TemaId.REFUGIO -> "< SALIR"; TemaId.ORDEN -> "« REPLEGARSE"; TemaId.LABORATORIO -> "← anterior"; TemaId.COLONOS -> "← pa' atrás"
+        TemaId.NAPOLEON -> "← retirada"; TemaId.BOTANICO -> "← regresar"; TemaId.NAVIDAD -> "← volver a casa"; TemaId.SEDA -> "← desandar"; TemaId.URSS -> "◄ НАЗАД"
         TemaId.GOTICO -> "← redire"; TemaId.ESPACIO -> "◄ RETORNO"; TemaId.ANDALUS -> "← رجوع"; TemaId.MONGOL -> "◄ БУЦАХ"; TemaId.RENACIMIENTO -> "← indietro"; TemaId.REVOLUCION -> "← retour"; TemaId.ANTIGUAS -> "← volver al camino"
     }
     val prefijo: String get() = when (tema) {
@@ -292,25 +448,43 @@ object Estilo {
         TemaId.ANTIGUAS -> EstiloFecha(1.1f, 2.6f, peso = 600)
     }
 
-    /** Rótulos de los widgets. */
-    fun widget(clave: String): String = when (tema) {
-        TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO", "enfoque" to "STVDIVM")[clave] ?: clave.uppercase()
-        TemaId.CIBER -> "> " + (mapOf("sueno" to "sueño", "habitos" to "hábitos", "animo" to "ánimo")[clave] ?: clave)
-        TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ", "enfoque" to "ΣΧΟΛΗ")[clave] ?: clave.uppercase()
-        else -> Temas.widget(tema, clave)
-    }
+    /** Un texto corto del tema (ver [Textos]); si faltara, la clave misma. */
+    fun texto(clave: String): String = Textos.de(tema, clave) ?: clave
 
-    /** Claves en latín de las líneas «clave = valor» (Día, widget «hoy»), traducidas al tema. */
+    /** Rótulos de los widgets. */
+    fun widget(clave: String): String = Temas.widget(tema, clave)
+
+    /**
+     * Claves en latín de las líneas «clave = valor» (Día, widget «hoy»), en la lengua o la jerga del tema: latín en el
+     * romano, latín litúrgico en el gótico, castellano antiguo en el scriptorium, francés en el Imperio y la Revolución,
+     * chino, árabe, ruso y mongol en sus temas, y el español de cada oficio en los demás. Ver [Claves].
+     */
     fun clave(c: String): String {
-        if (tema == TemaId.ROMANO || tema == TemaId.MEDIEVAL || tema == TemaId.GOTICO) return c  // en el scriptorium también se escribía en latín
         val sangria = c.takeWhile { it == ' ' }
         val k = c.trim()
+        fun es(jerga: Map<String, String>) = jerga[k] ?: CLAVES_ES[k]
         val v = when (tema) {
+            TemaId.ROMANO -> k
             TemaId.CIBER -> CLAVES_CIBER[k]
             TemaId.HELENO -> CLAVES_GRIEGO[k]
-            TemaId.DISTOPIA, TemaId.ORDEN, TemaId.URSS, TemaId.ESPACIO, TemaId.MONGOL, TemaId.REVOLUCION, TemaId.ANTIGUAS -> CLAVES_ES[k]?.uppercase()
+            TemaId.MEDIEVAL -> Claves.CASTELLANO_ANTIGUO[k]
+            TemaId.DISTOPIA -> es(Claves.DISTOPIA)?.uppercase()
+            TemaId.REFUGIO -> es(Claves.REFUGIO)
+            TemaId.ORDEN -> es(Claves.ORDEN)?.uppercase()
+            TemaId.LABORATORIO -> es(Claves.LABORATORIO)
+            TemaId.COLONOS -> es(Claves.COLONOS)
+            TemaId.NAPOLEON -> Claves.NAPOLEON[k] ?: Claves.FRANCES[k]
+            TemaId.BOTANICO -> es(Claves.BOTANICO)
+            TemaId.NAVIDAD -> es(Claves.NAVIDAD)
+            TemaId.SEDA -> Claves.CHINO[k]
+            TemaId.URSS -> Claves.RUSO[k]
+            TemaId.GOTICO -> Claves.GOTICO[k] ?: k
+            TemaId.ESPACIO -> es(Claves.ESPACIO)?.uppercase()
+            TemaId.ANDALUS -> Claves.ARABE[k]
+            TemaId.MONGOL -> Claves.MONGOL[k]
             TemaId.RENACIMIENTO -> CLAVES_IT[k]
-            else -> CLAVES_ES[k]
+            TemaId.REVOLUCION -> (Claves.REVOLUCION[k] ?: Claves.FRANCES[k])?.uppercase()
+            TemaId.ANTIGUAS -> es(Claves.ANTIGUAS)?.uppercase()
         }
         return sangria + (v ?: k)
     }
@@ -432,5 +606,5 @@ object Griego {
         "Tablero" to "ΠΙΝΑΞ", "Buscar" to "ΖΗΤΗΣΙΣ", "Cifras" to "ΑΡΙΘΜΟΙ", "Momentos de la semana" to "ΚΑΙΡΟΙ ΤΗΣ ΕΒΔΟΜΑΔΟΣ", "Tu día en 24 horas" to "ΤΟ ΗΜΕΡΟΝΥΚΤΙΟΝ", "Resumen semanal" to "ΕΒΔΟΜΑΣ",
         "Llenar el día" to "ΕΣΠΕΡΑ", "Entender" to "ΓΙΓΝΩΣΚΕΙΝ", "Registros especiales" to "ΑΝΑΓΡΑΦΑΙ", "Apariencia" to "ΚΟΣΜΟΣ", "Avisos y recordatorios" to "ΣΗΜΕΙΑ", "Biblioteca del diario" to "ΒΙΒΛΟΣ ΗΜΕΡΩΝ", "Entrada" to "ΣΕΛΙΣ", "Hoy" to "ΣΗΜΕΡΟΝ", "Línea de tiempo" to "ΧΡΟΝΟΣ", "Ahora mismo estoy…" to "ΝΥΝ",
     )
-    fun nombre(titulo: String): String? = NOMBRES[titulo] ?: NombresNuevos.de(TemaId.HELENO, titulo)
+    fun nombre(titulo: String): String? = io.github.ruddy2003.vestigium.ui.nombres.NombresCompletos.de(TemaId.HELENO, titulo) ?: NOMBRES[titulo] ?: NombresNuevos.de(TemaId.HELENO, titulo)
 }

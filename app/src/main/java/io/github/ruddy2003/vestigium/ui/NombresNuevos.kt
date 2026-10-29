@@ -1,5 +1,7 @@
 package io.github.ruddy2003.vestigium.ui
 
+import io.github.ruddy2003.vestigium.ui.nombres.NombresCompletos
+
 /**
  * Nombres por tema de las pantallas y secciones nuevas (la cinta, la constelación, el hall, las campañas, el enfoque…).
  * Se consultan después de los diccionarios de cada tema; todo es invención propia o vocabulario histórico general.
@@ -72,5 +74,5 @@ object NombresNuevos {
         TemaId.CIBER to emptyMap(),
     )
 
-    fun de(tema: TemaId, titulo: String): String? = M[tema]?.get(titulo)
+    fun de(tema: TemaId, titulo: String): String? = NombresCompletos.de(tema, titulo) ?: M[tema]?.get(titulo)
 }

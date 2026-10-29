@@ -836,7 +836,7 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
         }, LetraExtra.jost, 13f)
         TemaId.GOTICO -> libro({ libroCerrado(m) { g -> tapaGotico(m, g) } }, LetraExtra.textura, 14f)
         TemaId.ANDALUS -> libro({ libroCerrado(m) { g -> tapaAndalus(m, g) } }, LetraExtra.amiri, 14f)
-        TemaId.REVOLUCION -> libro({ libroCerrado(m) { g -> tapaRevolucion(m, g) } }, LetraExtra.fell, 13.5f)
+        TemaId.REVOLUCION -> libro({ libroCerrado(m) { g -> tapaRevolucion(m, g) } }, LetraExtra.convencion, 13.5f)
         TemaId.ANTIGUAS -> libro({ libroCerrado(m) { g -> tapaAntiguas(m, g) } }, LetraExtra.almendra, 13.5f)
         TemaId.COLONOS -> libro({ libroRegistro(m) }, LetraExtra.oswald, 13f, caja = listOf(0.27f, 0.24f, 0.17f, 0.24f))
         TemaId.URSS -> libro({ libretaInforme(m) }, LetraExtra.russo, 12f, caja = listOf(0.37f, 0.27f, 0.1f, 0.18f),
@@ -1838,9 +1838,9 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.ROMANO -> Pagina(R.drawable.papel_papiro, c(0xFFE8D4A2), c(0xFF2A1E14), c(0xFF6B5536), c(0xFF8E2B1F), c(0xFF6B4423), Letra.inscripcion, 16.5f, 27f, false, capitular = Letra.inscripcion)
     // Pergamino de Pérgamo (dibujado en FondoPagina): más claro y liso que el papiro romano.
     TemaId.HELENO -> Pagina(null, c(0xFFF3E9D2), c(0xFF1F1712), c(0xFF6B5536), c(0xFFA8471F), c(0xFF1A1410), Letra.garamond, 18.5f, 27f, false)
-    TemaId.SEDA -> Pagina(R.drawable.papel_seda, c(0xFF1F3578), c(0xFFF2EAD3), c(0xFFB9B29F), c(0xFFE0B04F), c(0xFFE26A50), LetraExtra.kufi, 17f, 27f, true, capitular = LetraExtra.almendra)
+    TemaId.SEDA -> Pagina(R.drawable.papel_seda, c(0xFF1F3578), c(0xFFF2EAD3), c(0xFFB9B29F), c(0xFFE0B04F), c(0xFFE26A50), LetraExtra.alegreya, 17.5f, 27f, true, capitular = LetraExtra.almendra)
     TemaId.MEDIEVAL -> Pagina(R.drawable.papel_pergamino, c(0xFFEDDDB8), c(0xFF2B1D12), c(0xFF6E5639), c(0xFFB3261E), c(0xFF1F3A93), LetraExtra.gotica, 19.5f, 28f, false, capitular = LetraExtra.gotica)
-    TemaId.COLONOS -> Pagina(null, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), LetraExtra.oswald, 17.5f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
+    TemaId.COLONOS -> Pagina(null, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), LetraExtra.gaceta, 17.5f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
     TemaId.ORDEN -> Pagina(null, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), LetraExtra.estarcido, 16f, 25f, true, Rayas.NADA)
     TemaId.BOTANICO -> Pagina(R.drawable.papel_lamina, c(0xFFF1E9D2), c(0xFF2A2318), c(0xFF6B5E45), c(0xFF3F5A2C), c(0xFF8C4A22), LetraExtra.fraunces, 17.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
     TemaId.GOTICO -> Pagina(R.drawable.papel_vitela, c(0xFFF1E8D2), c(0xFF1A1630), c(0xFF5E5870), c(0xFFB3122E), c(0xFF1F3A9E), LetraExtra.textura, 19.5f, 28f, false, capitular = LetraExtra.textura)
@@ -1857,8 +1857,8 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.DISTOPIA -> Pagina(null, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
     TemaId.CIBER -> Pagina(null, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
     TemaId.REFUGIO -> Pagina(null, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
-    TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.fell, 18.5f, 28f, false, Rayas.NADA, LetraExtra.fell)
-    TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), LetraExtra.almendra, 18.5f, 27f, false, Rayas.NADA, Letra.inscripcion)
+    TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.ciudadana, 17.5f, 28f, false, Rayas.NADA, LetraExtra.convencion)
+    TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), LetraExtra.vollkorn, 18f, 27f, false, Rayas.NADA, LetraExtra.camino)
 }
 
 /** Fondo de la página: papel, papiro, seda, pantalla… y el adorno de cada tema. En modo oscuro, el papel claro se atenúa un poco para no deslumbrar. */
@@ -2103,8 +2103,8 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
                 Text("Quaderno di note · c. $nDia", fontFamily = LetraExtra.italianno, fontSize = 26.sp, color = p.acento, modifier = Modifier.padding(start = 8.dp))
             }
             TemaId.URSS -> Text("ОТЧЁТ · INFORME DE JORNADA", fontFamily = LetraExtra.russo, fontSize = 12.sp, color = p.acento, modifier = Modifier.border(2.dp, p.acento).padding(horizontal = 8.dp, vertical = 2.dp))
-            TemaId.REVOLUCION -> { emblema(); Rubrica("CAHIER DE DOLÉANCES", LetraExtra.fell, 15f, p.acento, 2f); Rubrica("de la commune · Nº $nDia", LetraExtra.cormorant, 12f, p.tenue) }
-            TemaId.ANTIGUAS -> { emblema(); Rubrica("CRÓNICA DE LA COMPAÑÍA", Letra.inscripcion, 12f, p.acento, 2.5f) }
+            TemaId.REVOLUCION -> { emblema(); Rubrica("CAHIER DE DOLÉANCES", LetraExtra.convencion, 15f, p.acento, 2f); Rubrica("de la commune · Nº $nDia", LetraExtra.ciudadana, 12f, p.tenue) }
+            TemaId.ANTIGUAS -> { emblema(); Rubrica("CRÓNICA DE LA COMPAÑÍA", LetraExtra.camino, 13f, p.acento, 1.5f) }
         }
         Text(Estilo.fecha(fecha), style = ty.headlineSmall, color = if (p.oscura) p.acento else p.tinta, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
         Text(Fechas.titulo(fecha).lowercase() + " · " + Fechas.relativo(fecha), style = ty.labelMedium, color = p.tenue, textAlign = TextAlign.Center)
@@ -2294,7 +2294,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
             FondoPagina(tema, p, noche = modo == Escrito.SUENO)
             // Arriba y a los lados, la barra del sistema; abajo, el teclado del teléfono o la barra de navegación (sin contarlas dos veces).
             Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)).imePadding()) {
-                BarraPagina(p, guardar, "${Texto.palabras(campo.text)} palabras") {
+                BarraPagina(p, guardar, Estilo.texto("palabras").format(Texto.palabras(campo.text))) {
                     Text(textoBoton ?: textoGuardar(tema), style = MaterialTheme.typography.labelLarge, color = if (p.oscura) p.color else Color.White,
                         modifier = Modifier.padding(end = 6.dp).background(p.acento, MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.GUARDAR); guardar() }
                             .padding(horizontal = 14.dp, vertical = 8.dp))

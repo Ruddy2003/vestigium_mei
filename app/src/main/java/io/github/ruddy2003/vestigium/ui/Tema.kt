@@ -198,9 +198,29 @@ internal val tipoHeleno = Typography(
     labelSmall = TextStyle(fontFamily = Letra.garamond, fontSize = 12.5.sp, letterSpacing = 0.4.sp, fontFeatureSettings = "lnum, tnum"),
 )
 
-private fun formas(r: Int) = Shapes(
-    extraSmall = RoundedCornerShape((r * 0.75f).dp), small = RoundedCornerShape(r.dp), medium = RoundedCornerShape((r * 1.5f).dp),
-    large = RoundedCornerShape((r * 2).dp), extraLarge = RoundedCornerShape((r * 2.5f).dp),
+/**
+ * Cómo dobla la esquina de las tarjetas, botones y diálogos de un tema: [REDONDA] (las cuatro iguales), [CORTADA] (en
+ * chaflán, como una carpeta o una placa de acero), [HOJA] (dos esquinas opuestas redondas y dos casi rectas, como una hoja
+ * o una página) y [ARCO] (redondas arriba y casi rectas abajo, como un arco o una ventana).
+ */
+enum class Esquina { REDONDA, CORTADA, HOJA, ARCO }
+
+/** El radio (en dp, el de la forma «small») y la forma de las esquinas de un tema. Ningún tema repite la pareja. */
+data class Esquinas(val radio: Int, val forma: Esquina)
+
+private fun forma(e: Esquinas, k: Float): androidx.compose.foundation.shape.CornerBasedShape {
+    val r = (e.radio * k).dp
+    val poco = (e.radio * k * 0.25f).dp
+    return when (e.forma) {
+        Esquina.REDONDA -> RoundedCornerShape(r)
+        Esquina.CORTADA -> CutCornerShape(r)
+        Esquina.HOJA -> RoundedCornerShape(topStart = r, topEnd = poco, bottomEnd = r, bottomStart = poco)
+        Esquina.ARCO -> RoundedCornerShape(topStart = r, topEnd = r, bottomEnd = poco, bottomStart = poco)
+    }
+}
+
+private fun formas(e: Esquinas) = Shapes(
+    extraSmall = forma(e, 0.75f), small = forma(e, 1f), medium = forma(e, 1.5f), large = forma(e, 2f), extraLarge = forma(e, 2.5f),
 )
 
 /** Colores, letra y redondez de cada tema. */
@@ -264,8 +284,8 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.MONGOL -> 62f to 1f          // Filosofo
     TemaId.RENACIMIENTO -> 88f to 0f    // Italianno, caligráfica y chica
     TemaId.URSS -> 56f to 1f            // Russo One, ancha
-    TemaId.REVOLUCION -> 64f to 1f      // Fell
-    TemaId.ANTIGUAS -> 56f to 1.5f      // Cinzel seminegrita
+    TemaId.REVOLUCION -> 60f to 1f      // Convención (Playfair)
+    TemaId.ANTIGUAS -> 56f to 1f        // uncial del camino
 }
 
 private fun Typography.conReloj(tema: TemaId): Typography {
@@ -273,11 +293,28 @@ private fun Typography.conReloj(tema: TemaId): Typography {
     return copy(displayLarge = displaySmall.copy(fontSize = tam.sp, lineHeight = (tam * 1.15f).sp, letterSpacing = esp.sp, fontFeatureSettings = "lnum, tnum"))
 }
 
-internal fun radioDe(tema: TemaId) = when (tema) {
-    TemaId.ROMANO -> 4; TemaId.CIBER -> 1; TemaId.HELENO -> 6; TemaId.MEDIEVAL -> 3; TemaId.DISTOPIA -> 0
-    TemaId.REFUGIO -> 10; TemaId.ORDEN -> 2; TemaId.LABORATORIO -> 14; TemaId.COLONOS -> 5
-    TemaId.NAPOLEON -> 3; TemaId.BOTANICO -> 12; TemaId.NAVIDAD -> 8; TemaId.SEDA -> 6; TemaId.URSS -> 0
-    TemaId.GOTICO -> 2; TemaId.ESPACIO -> 16; TemaId.ANDALUS -> 10; TemaId.MONGOL -> 8; TemaId.RENACIMIENTO -> 2; TemaId.REVOLUCION -> 1; TemaId.ANTIGUAS -> 3
+internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
+    TemaId.ROMANO -> Esquinas(4, Esquina.REDONDA)
+    TemaId.CIBER -> Esquinas(1, Esquina.REDONDA)
+    TemaId.HELENO -> Esquinas(6, Esquina.REDONDA)
+    TemaId.MEDIEVAL -> Esquinas(3, Esquina.REDONDA)
+    TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
+    TemaId.REFUGIO -> Esquinas(10, Esquina.REDONDA)
+    TemaId.ORDEN -> Esquinas(6, Esquina.CORTADA)           // placa de acero
+    TemaId.LABORATORIO -> Esquinas(14, Esquina.REDONDA)
+    TemaId.COLONOS -> Esquinas(5, Esquina.REDONDA)
+    TemaId.NAPOLEON -> Esquinas(2, Esquina.REDONDA)
+    TemaId.BOTANICO -> Esquinas(12, Esquina.HOJA)          // la hoja
+    TemaId.NAVIDAD -> Esquinas(8, Esquina.REDONDA)
+    TemaId.SEDA -> Esquinas(7, Esquina.REDONDA)
+    TemaId.URSS -> Esquinas(0, Esquina.REDONDA)
+    TemaId.GOTICO -> Esquinas(8, Esquina.ARCO)             // el ventanal
+    TemaId.ESPACIO -> Esquinas(16, Esquina.REDONDA)
+    TemaId.ANDALUS -> Esquinas(12, Esquina.ARCO)           // el arco de herradura
+    TemaId.MONGOL -> Esquinas(9, Esquina.REDONDA)          // la yurta
+    TemaId.RENACIMIENTO -> Esquinas(3, Esquina.HOJA)       // la página del cuaderno
+    TemaId.REVOLUCION -> Esquinas(2, Esquina.CORTADA)      // el cartel recortado
+    TemaId.ANTIGUAS -> Esquinas(4, Esquina.ARCO)           // la puerta de piedra
 }
 
 /** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); el cyberpunk siempre es oscuro. */
@@ -398,7 +435,7 @@ object Romano {
         "Gimnasio" to "ROBVR", "Análisis" to "ANALYSIS", "Buscar" to "QVAERERE", "Cifras" to "NVMERI", "Momentos de la semana" to "MOMENTA HEBDOMADIS",
         "Llenar el día" to "VESPERA", "Entender" to "INTELLEGERE", "Registros especiales" to "TABVLAE", "Apariencia" to "SPECIES", "Avisos y recordatorios" to "MONITIONES", "Biblioteca del diario" to "LIBRI DIERVM", "Entrada" to "PAGINA", "Hoy" to "HODIE", "Línea de tiempo" to "ORDO TEMPORVM", "Ahora mismo estoy…" to "NVNC",
     )
-    fun latin(titulo: String): String? = LATIN[titulo] ?: NombresNuevos.de(TemaId.ROMANO, titulo)
+    fun latin(titulo: String): String? = io.github.ruddy2003.vestigium.ui.nombres.NombresCompletos.de(TemaId.ROMANO, titulo) ?: LATIN[titulo] ?: NombresNuevos.de(TemaId.ROMANO, titulo)
 
     val MESES = listOf("IANVARIVS", "FEBRVARIVS", "MARTIVS", "APRILIS", "MAIVS", "IVNIVS", "IVLIVS", "AVGVSTVS", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER")
     /** Días de la semana romanos, de lunes a domingo: de ahí vienen lunes (Lunae), martes (Martis), miércoles (Mercurii)… */

@@ -932,8 +932,8 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.MONGOL -> LetraExtra.filosofo
     TemaId.RENACIMIENTO -> LetraExtra.cormorant
     TemaId.URSS -> LetraExtra.russo
-    TemaId.REVOLUCION -> LetraExtra.bodoni
-    TemaId.ANTIGUAS -> Letra.inscripcion
+    TemaId.REVOLUCION -> LetraExtra.convencion
+    TemaId.ANTIGUAS -> LetraExtra.camino
 }
 
 /** A quién va, en pocas palabras, en la voz del tema. */

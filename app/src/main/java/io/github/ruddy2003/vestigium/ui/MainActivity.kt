@@ -613,48 +613,8 @@ private val PESTANAS = listOf(
     Pestana("dia", "Hoy"), Pestana("diario", "Diario"), Pestana("registrar", "Registrar"), Pestana("vida", "Vida"), Pestana("entender", "Análisis"),
 )
 
-/** De dónde saca cada tema los nombres de las pestañas y si escribe en mayúsculas lo que no renombra. */
-private class VozBarra(val busca: (String) -> String?, val mayusculas: Boolean, val hoy: String? = null)
-
-/**
- * Nombres de las pestañas en la voz del tema, tomados tal cual de los diccionarios que ya existen: el latín de [Romano],
- * el griego de [Griego], los nombres de [Temas] (y [NombresNuevos]) y, para «Hoy», el rótulo corto de [Temas.widget].
- * Si el tema no tiene nombre para una pestaña, queda el de siempre (en mayúsculas si el tema las usa en sus títulos).
- */
-private fun nombresPestanas(tema: TemaId): List<Pestana> {
-    val voz = when (tema) {
-        TemaId.ROMANO -> VozBarra({ Romano.latin(it) }, true)
-        TemaId.CIBER -> VozBarra({ Temas.nombre(tema, it) }, true)
-        TemaId.HELENO -> VozBarra({ Griego.nombre(it) }, true)
-        TemaId.MEDIEVAL -> VozBarra({ Temas.nombre(tema, it) }, false, Temas.widget(tema, "hoy"))
-        TemaId.DISTOPIA -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.REFUGIO -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.ORDEN -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.LABORATORIO -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.COLONOS -> VozBarra({ Temas.nombre(tema, it) }, false, Temas.widget(tema, "hoy"))
-        TemaId.NAPOLEON -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.BOTANICO -> VozBarra({ Temas.nombre(tema, it) }, false, Temas.widget(tema, "hoy"))
-        TemaId.NAVIDAD -> VozBarra({ Temas.nombre(tema, it) }, false, Temas.widget(tema, "hoy"))
-        TemaId.SEDA -> VozBarra({ Temas.nombre(tema, it) }, false, Temas.widget(tema, "hoy"))
-        TemaId.GOTICO -> VozBarra({ Temas.nombre(tema, it) }, false, Temas.widget(tema, "hoy"))
-        TemaId.ESPACIO -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.ANDALUS -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.MONGOL -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.RENACIMIENTO -> VozBarra({ Temas.nombre(tema, it) }, false, Temas.widget(tema, "hoy"))
-        TemaId.URSS -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.REVOLUCION -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-        TemaId.ANTIGUAS -> VozBarra({ Temas.nombre(tema, it) }, true, Temas.widget(tema, "hoy"))
-    }
-    return PESTANAS.map { p ->
-        val propio = when (p.id) {
-            "dia" -> voz.hoy ?: voz.busca("Hoy")
-            // La pestaña abre «Entender»; si el tema no nombra «Análisis», usa ese.
-            "entender" -> voz.busca("Análisis") ?: voz.busca("Entender")
-            else -> voz.busca(p.nombre)
-        }
-        Pestana(p.id, propio ?: if (voz.mayusculas) p.nombre.uppercase() else p.nombre)
-    }
-}
+/** Nombres cortos de las pestañas en la voz del tema (claves `pestana_<id>` de [Textos]). */
+private fun nombresPestanas(tema: TemaId): List<Pestana> = PESTANAS.map { p -> Pestana(p.id, Textos.de(tema, "pestana_${p.id}") ?: p.nombre) }
 
 /**
  * Barra inferior propia: íconos del tema, un indicador de la pestaña activa con la figura del tema (subrayado de oro,

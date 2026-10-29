@@ -5,6 +5,7 @@ import io.github.ruddy2003.vestigium.ui.Contenedor
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.Textos
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
 import io.github.ruddy2003.vestigium.ui.contenedorDe
 import io.github.ruddy2003.vestigium.ui.radioDe
@@ -32,6 +33,9 @@ class UnicidadTemas {
         conEstilo("clave") { Estilo.clave("somnus") }
         conEstilo("racha") { Estilo.racha(5) }
         conEstilo("widget_rotulos") { CoberturaTemas.CLAVES_WIDGET.joinToString(" | ") { Estilo.widget(it) } }
+        conEstilo("textos") { Textos.CLAVES.joinToString(" | ") { Estilo.texto(it) } }
+        conEstilo("pestanas") { listOf("dia", "diario", "registrar", "vida", "entender").joinToString(" | ") { Estilo.texto("pestana_$it") } }
+        conEstilo("claves_dia") { CLAVES_DIA.joinToString(" ") { Estilo.clave(it) } }
         r["pantallas"] = PANTALLAS.flatMap { p -> iguales { t -> Pendientes.conTema(t) { Estilo.pantalla(p, null).first } } }.toSet()
 
         // Números y fechas.
@@ -77,23 +81,15 @@ class UnicidadTemas {
         /** Las nueve categorías de logros (las de `Logros.CATEGORIAS`). */
         val CATEGORIAS = listOf("Diario", "Mundo", "Cuerpo", "Mente", "Cultura", "Gente", "Constancia", "Curiosos", "Tuyos")
 
+        /** Claves de las líneas «clave = valor» de Día que se comparan juntas. */
+        val CLAVES_DIA = listOf("somnus", "passus", "cor", "animus", "svmptvs", "loca", "personae", "palmae")
+
         /** Títulos de pantalla que todos los temas muestran. */
         val PANTALLAS = listOf("Hoy", "Diario", "Momentos", "Gastos", "Logros", "Cartas", "Salud", "Mapas", "Campañas", "Línea de tiempo", "Tu gente", "Más")
 
         /** Lo repetido hoy, por superficie. Cada lote borra lo que vuelve propio. */
         val PENDIENTES: Map<String, Set<String>> = mapOf(
-            "atras" to setOf("laboratorio", "colonos", "botanico", "navidad", "seda"),
-            "clave" to setOf("romano", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "urss", "revolucion", "antiguas"),
-            "comentario" to setOf("romano", "ciber", "heleno", "orden", "napoleon"),
             "escala_toque" to setOf("romano", "ciber", "heleno", "colonos", "gotico", "espacio"),
-            "letra_texto" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "colonos", "botanico", "navidad", "seda", "gotico", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
-            "letra_titulo" to setOf("romano", "colonos", "revolucion", "antiguas"),
-            "mes_10" to setOf("ciber", "refugio", "orden", "colonos", "napoleon", "botanico", "navidad", "espacio", "revolucion"),
-            "numeral_17" to setOf("romano", "orden", "laboratorio", "napoleon", "botanico", "navidad", "mongol", "renacimiento", "antiguas"),
-            "pantallas" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
-            "radio" to setOf("ciber", "heleno", "medieval", "distopia", "refugio", "orden", "napoleon", "navidad", "seda", "gotico", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
-            "semana" to setOf("ciber", "distopia", "refugio", "orden", "colonos", "napoleon", "botanico", "navidad", "espacio", "revolucion", "antiguas"),
-            "semana_corta" to setOf("ciber", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
         )
     }
 }

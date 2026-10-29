@@ -37,6 +37,38 @@ object LetraExtra {
     val cinzelDeco = FontFamily(Font(R.font.cinzel_deco_regular, FontWeight.Normal), Font(R.font.cinzel_deco_bold, FontWeight.Bold))
     val almendra = FontFamily(Font(R.font.almendra_regular, FontWeight.Normal), Font(R.font.almendra_bold, FontWeight.Bold))
     val russo = FontFamily(Font(R.font.russo, FontWeight.Normal))
+
+    // Letras de texto propias de cada tema (lote 5; ver herramientas/fuentes.py).
+    /** Courier Prime: la máquina de escribir del refugio. */
+    val maquina = FontFamily(Font(R.font.courier_regular, FontWeight.Normal), Font(R.font.courier_bold, FontWeight.Bold), Font(R.font.courier_bold, FontWeight.SemiBold))
+    /** Cardo: la letra de los medievalistas. */
+    val cardo = FontFamily(Font(R.font.cardo_regular, FontWeight.Normal), Font(R.font.cardo_bold, FontWeight.Bold), Font(R.font.cardo_bold, FontWeight.SemiBold))
+    /** Barlow: la grotesca de los rótulos oficiales. */
+    val barlow = FontFamily(Font(R.font.barlow_regular, FontWeight.Normal), Font(R.font.barlow_semibold, FontWeight.SemiBold))
+    /** Saira: la hermana de texto del estarcido de la orden. */
+    val saira = FontFamily(Font(R.font.saira_regular, FontWeight.Normal), Font(R.font.saira_semibold, FontWeight.SemiBold))
+    /** Old Standard: la letra de los periódicos del siglo XIX. */
+    val gaceta = FontFamily(Font(R.font.oldstandard_regular, FontWeight.Normal), Font(R.font.oldstandard_bold, FontWeight.Bold), Font(R.font.oldstandard_bold, FontWeight.SemiBold))
+    /** Crimson Pro: el libro del naturalista. */
+    val crimson = FontFamily(Font(R.font.crimson_regular, FontWeight.Normal), Font(R.font.crimson_semibold, FontWeight.SemiBold))
+    /** «Calida Vestigium» (Lora renombrada): cálida, de cuento de Navidad. */
+    val calida = FontFamily(Font(R.font.calida_regular, FontWeight.Normal), Font(R.font.calida_semibold, FontWeight.SemiBold))
+    /** Alegreya: humanista caligráfica, para las crónicas de la caravana. */
+    val alegreya = FontFamily(Font(R.font.alegreya_regular, FontWeight.Normal), Font(R.font.alegreya_semibold, FontWeight.SemiBold))
+    /** «Obrera Vestigium» (PT Sans renombrada): hecha para el ruso. */
+    val obrera = FontFamily(Font(R.font.obrera_regular, FontWeight.Normal), Font(R.font.obrera_bold, FontWeight.Bold), Font(R.font.obrera_bold, FontWeight.SemiBold))
+    /** Fira Sans: sans con cirílico para la estepa. */
+    val fira = FontFamily(Font(R.font.fira_regular, FontWeight.Normal), Font(R.font.fira_semibold, FontWeight.SemiBold))
+    /** Sorts Mill Goudy: libro antiguo para la capilla. */
+    val goudy = FontFamily(Font(R.font.goudy_regular, FontWeight.Normal))
+    /** «Ciudadana Vestigium» (Libre Baskerville renombrada): la letra del siglo de la Revolución. */
+    val ciudadana = FontFamily(Font(R.font.ciudadana_regular, FontWeight.Normal), Font(R.font.ciudadana_semibold, FontWeight.SemiBold))
+    /** Vollkorn: el libro de crónicas de las Tierras Antiguas. */
+    val vollkorn = FontFamily(Font(R.font.vollkorn_regular, FontWeight.Normal), Font(R.font.vollkorn_semibold, FontWeight.SemiBold))
+    /** «Camino Vestigium» (Uncial Antiqua renombrada): títulos de las Tierras Antiguas. */
+    val camino = FontFamily(Font(R.font.camino_titulo, FontWeight.Normal))
+    /** «Convencion Vestigium» (Playfair Display renombrada): los carteles de la Convención. */
+    val convencion = FontFamily(Font(R.font.convencion_titulo, FontWeight.Normal), Font(R.font.convencion_negrita, FontWeight.Bold), Font(R.font.convencion_negrita, FontWeight.SemiBold))
 }
 
 /** Arma un esquema de color a partir de sus piezas. */
@@ -109,7 +141,7 @@ internal val medievalClaro = esquema(false, 0xFFEFE3C8, 0xFFF6ECD6, 0xFFE5D6B4, 
     0xFF9E1B1B, 0xFFFFF6E6, 0xFFF2D5C4, 0xFF2A1B10, 0xFF1F3F8F, 0xFFD5DDF0, 0xFFA97C1E, 0xFF8B1A1A)
 internal val medievalOscuro = esquema(true, 0xFF15100A, 0xFF1E1710, 0xFF2A2016, 0xFF3F3122, 0xFFEDDFC2, 0xFFB7A587,
     0xFFD5A84A, 0xFF1C1405, 0xFF3A1717, 0xFFF3E4C8, 0xFF8DA5E0, 0xFF1B2645, 0xFFC9473B, 0xFFE58C86)
-internal val tipoMedieval = tipografia(LetraExtra.gotica, FontWeight.Normal, 1.18f, 0.6f, Letra.garamond, 1.12f, Letra.garamond, 1.15f, cifrasAlineadas = true)
+internal val tipoMedieval = tipografia(LetraExtra.gotica, FontWeight.Normal, 1.18f, 0.6f, LetraExtra.cardo, 1.06f, LetraExtra.cardo, 1.08f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Distopía: papel de periódico gris, tinta negra y rojo de cartel.
@@ -118,7 +150,7 @@ internal val distopiaClaro = esquema(false, 0xFFDEDBD2, 0xFFECE9E1, 0xFFCFCBC0, 
     0xFFB3121B, 0xFFFFFFFF, 0xFFF0D2D0, 0xFF141414, 0xFF2E3B44, 0xFFC9D1D6, 0xFF5E5E33, 0xFF8A0E14)
 internal val distopiaOscuro = esquema(true, 0xFF0F1011, 0xFF17191A, 0xFF222527, 0xFF34383B, 0xFFE8E6E0, 0xFFA8A8A1,
     0xFFE0262F, 0xFFFFFFFF, 0xFF3A1012, 0xFFF2E0DF, 0xFF9FB0BA, 0xFF24313A, 0xFFB7B37A, 0xFFFF6B6B)
-internal val tipoDistopia = tipografia(LetraExtra.oswald, FontWeight.Bold, 1.05f, 1.4f, Letra.texto, 1f, Letra.codigo, 1f)
+internal val tipoDistopia = tipografia(LetraExtra.oswald, FontWeight.Bold, 1.05f, 1.4f, LetraExtra.barlow, 1.02f, LetraExtra.barlow, 1.04f)
 
 // ---------------------------------------------------------------------
 //  Refugio: optimismo atómico de los cincuenta de día; pantalla de fósforo verde de noche.
@@ -127,8 +159,8 @@ internal val refugioClaro = esquema(false, 0xFFF1E8D0, 0xFFF8F1DE, 0xFFE6DAB8, 0
     0xFF1C6E6A, 0xFFFFFFFF, 0xFFCFE6E1, 0xFF1F2A2A, 0xFFD9572B, 0xFFF6D6C6, 0xFFB98A15, 0xFFA3312F)
 internal val refugioOscuro = esquema(true, 0xFF070D08, 0xFF0B140D, 0xFF112016, 0xFF1C3A24, 0xFF9CF5B0, 0xFF55B872,
     0xFF3DFF7F, 0xFF021407, 0xFF0F2D18, 0xFFB8FFC9, 0xFFFFB23F, 0xFF2C2008, 0xFF7CFFD0, 0xFFFF6B5B)
-internal val tipoRefugioClaro = tipografia(LetraExtra.vt323, FontWeight.Normal, 1.4f, 1f, Letra.codigo, 0.97f, Letra.codigo, 1f)
-internal val tipoRefugioOscuro = tipografia(LetraExtra.vt323, FontWeight.Normal, 1.4f, 1f, Letra.codigo, 0.97f, Letra.codigo, 1f, brillo = Color(0xFF3DFF7F))
+internal val tipoRefugioClaro = tipografia(LetraExtra.vt323, FontWeight.Normal, 1.4f, 1f, LetraExtra.maquina, 0.98f, LetraExtra.maquina, 1f)
+internal val tipoRefugioOscuro = tipografia(LetraExtra.vt323, FontWeight.Normal, 1.4f, 1f, LetraExtra.maquina, 0.98f, LetraExtra.maquina, 1f, brillo = Color(0xFF3DFF7F))
 
 // ---------------------------------------------------------------------
 //  Orden: acero cepillado, carmesí y latón; letra de estarcido militar.
@@ -137,7 +169,7 @@ internal val ordenClaro = esquema(false, 0xFFE2E5E8, 0xFFEEF0F2, 0xFFD3D7DC, 0xF
     0xFF9E1B22, 0xFFFFFFFF, 0xFFEED3D4, 0xFF15181B, 0xFF7E6219, 0xFFEEE1BF, 0xFF2F4858, 0xFF8A0E14)
 internal val ordenOscuro = esquema(true, 0xFF101215, 0xFF171A1E, 0xFF22262B, 0xFF3A4048, 0xFFDDE2E7, 0xFF9DA6B0,
     0xFFD0333B, 0xFFFFFFFF, 0xFF3A1416, 0xFFF5DADB, 0xFFD6B25A, 0xFF33290F, 0xFF8FB3C8, 0xFFFF7A7A)
-internal val tipoOrden = tipografia(LetraExtra.estarcido, FontWeight.Normal, 1.05f, 1.6f, Letra.texto, 1f, Letra.codigo, 1f)
+internal val tipoOrden = tipografia(LetraExtra.estarcido, FontWeight.Normal, 1.05f, 1.6f, LetraExtra.saira, 0.98f, LetraExtra.saira, 1f)
 
 // ---------------------------------------------------------------------
 //  Laboratorio: blanco clínico, cian y violeta; geometría limpia.
@@ -155,7 +187,7 @@ internal val colonosClaro = esquema(false, 0xFFF2EBDC, 0xFFF8F3E8, 0xFFE7DDC8, 0
     0xFF1F3A5F, 0xFFFFFFFF, 0xFFD4DEEC, 0xFF1F2A3A, 0xFFA23B2A, 0xFFF2D8D1, 0xFF7A5A2E, 0xFF8A1A1A)
 internal val colonosOscuro = esquema(true, 0xFF0E1420, 0xFF151D2B, 0xFF1E2838, 0xFF2E3B50, 0xFFEEE7D7, 0xFFA9B0BC,
     0xFFE3C27A, 0xFF1C1405, 0xFF2B3A55, 0xFFEEE7D7, 0xFFE07A62, 0xFF3A1E18, 0xFFB89463, 0xFFFF8A80)
-internal val tipoColonos = tipografia(LetraExtra.fell, FontWeight.Normal, 1.12f, 0.8f, Letra.garamond, 1.12f, Letra.garamond, 1.15f, cifrasAlineadas = true)
+internal val tipoColonos = tipografia(LetraExtra.fell, FontWeight.Normal, 1.12f, 0.8f, LetraExtra.gaceta, 1.02f, LetraExtra.gaceta, 1.04f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Napoleónico: azul imperial, oro y carmesí sobre papel de despacho; de noche, terciopelo azul.
@@ -174,7 +206,7 @@ internal val botanicoClaro = esquema(false, 0xFFEFE8D6, 0xFFF7F2E4, 0xFFE3D9C0, 
     0xFF3F5A2C, 0xFFFFFFFF, 0xFFDCE3C8, 0xFF1E2A14, 0xFF8C4A22, 0xFFF0D9C4, 0xFF2E5E5A, 0xFF8A1A1A)
 internal val botanicoOscuro = esquema(true, 0xFF14120D, 0xFF1C1912, 0xFF2A251B, 0xFF4A4231, 0xFFEDE4CF, 0xFFB8AC90,
     0xFFA9C27A, 0xFF16200A, 0xFF33421F, 0xFFEDE4CF, 0xFFE09A5E, 0xFF4A2A14, 0xFF6FC2B0, 0xFFFF8A80)
-internal val tipoBotanico = tipografia(LetraExtra.fraunces, FontWeight.Medium, 1.04f, 0.2f, Letra.garamond, 1.12f, Letra.garamond, 1.14f, cifrasAlineadas = true)
+internal val tipoBotanico = tipografia(LetraExtra.fraunces, FontWeight.Medium, 1.04f, 0.2f, LetraExtra.crimson, 1.12f, LetraExtra.crimson, 1.14f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Navidad: nieve y crema, rojo, verde pino y oro; de noche, el bosque nevado.
@@ -183,7 +215,7 @@ internal val navidadClaro = esquema(false, 0xFFF6F1E7, 0xFFFFFFFF, 0xFFECE4D6, 0
     0xFFB71C1C, 0xFFFFFFFF, 0xFFF6D5D3, 0xFF1E2A22, 0xFF1B5E20, 0xFFD5EBD6, 0xFFC9A227, 0xFF8A1A1A)
 internal val navidadOscuro = esquema(true, 0xFF0E1A14, 0xFF14241B, 0xFF1C3125, 0xFF2E4A39, 0xFFF3EFE6, 0xFFB5C2B8,
     0xFFE5484D, 0xFFFFFFFF, 0xFF4A1416, 0xFFF3EFE6, 0xFF66BB6A, 0xFF1D3A22, 0xFFF2C94C, 0xFFFF8A80)
-internal val tipoNavidad = tipografia(LetraExtra.cinzelDeco, FontWeight.Normal, 1.02f, 1.0f, Letra.garamond, 1.12f, Letra.garamond, 1.15f, cifrasAlineadas = true)
+internal val tipoNavidad = tipografia(LetraExtra.cinzelDeco, FontWeight.Normal, 1.02f, 1.0f, LetraExtra.calida, 1.0f, LetraExtra.calida, 1.02f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Ruta de la Seda: seda cruda, lapislázuli, cinabrio y turquesa; de noche, el desierto bajo las estrellas.
@@ -192,7 +224,7 @@ internal val sedaClaro = esquema(false, 0xFFF5EEDC, 0xFFFBF6E9, 0xFFEADFC3, 0xFF
     0xFF23408E, 0xFFFFFFFF, 0xFFD9E0F4, 0xFF1F1B3A, 0xFFC0392B, 0xFFF5D5CF, 0xFF1A8C8C, 0xFF8A1A1A)
 internal val sedaOscuro = esquema(true, 0xFF0F1426, 0xFF161D35, 0xFF1F2846, 0xFF33406A, 0xFFF2EAD3, 0xFFB9B29F,
     0xFFE0B04F, 0xFF1A1405, 0xFF2B3A6E, 0xFFF2EAD3, 0xFFE26A50, 0xFF3D1E18, 0xFF4FC3C3, 0xFFFF8A80)
-internal val tipoSeda = tipografia(LetraExtra.almendra, FontWeight.Normal, 1.12f, 0.4f, Letra.garamond, 1.12f, Letra.garamond, 1.15f, cifrasAlineadas = true)
+internal val tipoSeda = tipografia(LetraExtra.almendra, FontWeight.Normal, 1.12f, 0.4f, LetraExtra.alegreya, 1.06f, LetraExtra.alegreya, 1.08f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Soviético: papel de cartel, rojo y negro en diagonales constructivistas.
@@ -201,7 +233,7 @@ internal val urssClaro = esquema(false, 0xFFEFE6D2, 0xFFF7F0DE, 0xFFE3D6B8, 0xFF
     0xFFC1121F, 0xFFFFFFFF, 0xFFF3D0D0, 0xFF161414, 0xFF1D1D1B, 0xFFDDD3BC, 0xFFD4A017, 0xFF8A0E14)
 internal val urssOscuro = esquema(true, 0xFF121010, 0xFF1B1717, 0xFF262020, 0xFF3D3333, 0xFFF1E7D2, 0xFFB7AA95,
     0xFFE5252F, 0xFFFFFFFF, 0xFF4A1013, 0xFFF1E7D2, 0xFFE8D9B5, 0xFF3A3328, 0xFFE8B923, 0xFFFF6B6B)
-internal val tipoUrss = tipografia(LetraExtra.russo, FontWeight.Normal, 1.0f, 1.0f, Letra.texto, 1f, Letra.codigo, 1f)
+internal val tipoUrss = tipografia(LetraExtra.russo, FontWeight.Normal, 1.0f, 1.0f, LetraExtra.obrera, 1.0f, LetraExtra.obrera, 1.02f)
 
 // ---------------------------------------------------------------------
 //  Gótico: una capilla de vitrales. De día, piedra caliza con cristal zafiro y rubí; de noche, la bóveda azul con estrellas de oro.
@@ -210,7 +242,7 @@ internal val goticoClaro = esquema(false, 0xFFEDE7DA, 0xFFF7F3EA, 0xFFE2D9C6, 0x
     0xFF1F3A9E, 0xFFFFFFFF, 0xFFDCE2F6, 0xFF141A33, 0xFFB3122E, 0xFFF4D3D8, 0xFFB8892B, 0xFF8A1A1A)
 internal val goticoOscuro = esquema(true, 0xFF0A0F2A, 0xFF111842, 0xFF1A2356, 0xFF2E3A7A, 0xFFF0E9D8, 0xFFB0AFC8,
     0xFFE2B34A, 0xFF1A1405, 0xFF26306E, 0xFFF0E9D8, 0xFFE0405E, 0xFF3A1222, 0xFF5C8DFF, 0xFFFF8A80)
-internal val tipoGotico = tipografia(LetraExtra.textura, FontWeight.Normal, 1.16f, 0.3f, Letra.garamond, 1.12f, Letra.garamond, 1.15f, cifrasAlineadas = true)
+internal val tipoGotico = tipografia(LetraExtra.textura, FontWeight.Normal, 1.16f, 0.3f, LetraExtra.goudy, 1.08f, LetraExtra.goudy, 1.1f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Espacio: de día, la sala de control (blanco, azul marino y naranja); de noche, estrellas y nebulosas.
@@ -219,8 +251,8 @@ internal val espacioClaro = esquema(false, 0xFFEEF1F6, 0xFFFFFFFF, 0xFFE1E6EF, 0
     0xFF1B3A8C, 0xFFFFFFFF, 0xFFD7E0F5, 0xFF0D1526, 0xFFE8601C, 0xFFFBDCCB, 0xFF6B4FD6, 0xFFB3261E)
 internal val espacioOscuro = esquema(true, 0xFF03050C, 0xFF0A0F1E, 0xFF121A31, 0xFF26324F, 0xFFE8ECF8, 0xFF8E9AB8,
     0xFF8AB4FF, 0xFF020818, 0xFF18264D, 0xFFE8ECF8, 0xFFFFB86B, 0xFF3A2410, 0xFFC59BFF, 0xFFFF8A80)
-internal val tipoEspacio = tipografia(LetraExtra.orbita, FontWeight.Bold, 0.96f, 2.0f, LetraExtra.grotesk, 1.02f, Letra.codigo, 1f)
-internal val tipoEspacioOscuro = tipografia(LetraExtra.orbita, FontWeight.Bold, 0.96f, 2.0f, LetraExtra.grotesk, 1.02f, Letra.codigo, 1f, brillo = Color(0xFF8AB4FF))
+internal val tipoEspacio = tipografia(LetraExtra.orbita, FontWeight.Bold, 0.96f, 2.0f, LetraExtra.grotesk, 1.02f, LetraExtra.grotesk, 1.02f)
+internal val tipoEspacioOscuro = tipografia(LetraExtra.orbita, FontWeight.Bold, 0.96f, 2.0f, LetraExtra.grotesk, 1.02f, LetraExtra.grotesk, 1.02f, brillo = Color(0xFF8AB4FF))
 
 // ---------------------------------------------------------------------
 //  Al-Ándalus: yeso tallado, azulejo verde y almagre; de noche, el jardín del Generalife con oro y turquesa.
@@ -238,7 +270,7 @@ internal val mongolClaro = esquema(false, 0xFFF1EDE3, 0xFFFAF7F0, 0xFFE6DFCF, 0x
     0xFF1F5FA8, 0xFFFFFFFF, 0xFFD5E4F5, 0xFF18202E, 0xFFC2412D, 0xFFF5D6CF, 0xFFC48A1E, 0xFF8A1A1A)
 internal val mongolOscuro = esquema(true, 0xFF0A1220, 0xFF101B2E, 0xFF18263F, 0xFF2B3E5E, 0xFFF0EBDD, 0xFFAAB0BD,
     0xFF6FB1FF, 0xFF041427, 0xFF1B3456, 0xFFF0EBDD, 0xFFFF7A59, 0xFF3E1E16, 0xFFF2C14E, 0xFFFF8A80)
-internal val tipoMongol = tipografia(LetraExtra.filosofo, FontWeight.Bold, 1.04f, 1.2f, Letra.texto, 1f, LetraExtra.filosofo, 1.06f)
+internal val tipoMongol = tipografia(LetraExtra.filosofo, FontWeight.Bold, 1.04f, 1.2f, LetraExtra.fira, 0.98f, LetraExtra.filosofo, 1.06f)
 
 // ---------------------------------------------------------------------
 //  Renacimiento: los cuadernos de Leonardo. Papel envejecido, tinta sepia y sanguina; de noche, nogal y pergamino.
@@ -257,14 +289,14 @@ internal val revolucionClaro = esquema(false, 0xFFF2ECDD, 0xFFFAF6EC, 0xFFE6DDC8
     0xFFB22234, 0xFFFFFFFF, 0xFFF4D6D8, 0xFF1C1A17, 0xFF1F3A6E, 0xFFD8E0EF, 0xFF3F6B3A, 0xFF8A1A1A)
 internal val revolucionOscuro = esquema(true, 0xFF131417, 0xFF1B1D22, 0xFF25282F, 0xFF3A3F4A, 0xFFF0EADB, 0xFFB2AC9E,
     0xFFE5525E, 0xFF1A0508, 0xFF4A161C, 0xFFF0EADB, 0xFF8FAEE8, 0xFF1E2A44, 0xFF8CC08A, 0xFFFF8A80)
-internal val tipoRevolucion = tipografia(LetraExtra.fell, FontWeight.Normal, 1.1f, 1.6f, LetraExtra.cormorant, 1.18f, LetraExtra.cormorant, 1.2f, cifrasAlineadas = true)
+internal val tipoRevolucion = tipografia(LetraExtra.convencion, FontWeight.Normal, 1.04f, 1.4f, LetraExtra.ciudadana, 0.96f, LetraExtra.ciudadana, 0.98f, cifrasAlineadas = true)
 
-/** Tierras Antiguas: piedra gris, verde de bosque viejo, oro gastado y rubí; títulos tallados (Cinzel), texto en Garamond y rótulos a mano. */
+/** Tierras Antiguas: piedra gris, verde de bosque viejo, oro gastado y rubí; títulos en uncial, texto y rótulos en Vollkorn. */
 internal val antiguasClaro = esquema(false, 0xFFE9E3D4, 0xFFF4F0E4, 0xFFDCD5C3, 0xFFB9B09A, 0xFF1E1D1A, 0xFF57534A,
     0xFF2E5A3E, 0xFFFFFFFF, 0xFFD3E2D2, 0xFF13241A, 0xFF9A7B2E, 0xFFEFE2BC, 0xFF8E1B24, 0xFF8A1A1A)
 internal val antiguasOscuro = esquema(true, 0xFF151618, 0xFF1F2023, 0xFF2A2B2F, 0xFF45464C, 0xFFEDE7D8, 0xFFB0AA9C,
     0xFF8CC79A, 0xFF0D1F14, 0xFF1F3A28, 0xFFEDE7D8, 0xFFD9BC6A, 0xFF3A3018, 0xFFE06A72, 0xFFFF8A80)
-internal val tipoAntiguas = tipografia(Letra.inscripcion, FontWeight.SemiBold, 1.0f, 1.8f, Letra.garamond, 1.12f, LetraExtra.almendra, 1.1f, cifrasAlineadas = true)
+internal val tipoAntiguas = tipografia(LetraExtra.camino, FontWeight.Normal, 1.0f, 1.2f, LetraExtra.vollkorn, 1.02f, LetraExtra.vollkorn, 1.04f, cifrasAlineadas = true)
 
 /** Juegos de color para gráficas: bajo, medio, alto y el color fuerte (secuencial). */
 internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema) {

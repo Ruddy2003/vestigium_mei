@@ -1,6 +1,7 @@
 package io.github.ruddy2003.vestigium.ui
 
 import io.github.ruddy2003.vestigium.data.Fechas
+import io.github.ruddy2003.vestigium.ui.nombres.NombresCompletos
 
 /**
  * Nombres de pantallas y secciones de los seis temas nuevos. Todo es invención propia:
@@ -43,6 +44,12 @@ object Temas {
         val dia = if (i < 360) "${i % 30 + 1} ${REPUBLICANOS[i / 30]}" else "jour complémentaire ${i - 359}"
         "$dia an ${Romano.de(an)}"
     }.getOrDefault(iso)
+
+    /**
+     * El mes republicano que ocupa la mayor parte de un mes gregoriano: nivôse en enero, pluviôse en febrero… vendémiaire en
+     * octubre (del 22 de septiembre al 21 de octubre), brumaire en noviembre y frimaire en diciembre.
+     */
+    fun mesRepublicano(mes: Int): String = REPUBLICANOS[Math.floorMod(mes + 2, 12)]
 
     /** «an CCXXXV»: el año de la República al que pertenece un mes gregoriano (el que tiene la mayor parte del mes). */
     fun anRepublicano(anio: Int, mes: Int): String = "an " + Romano.de(if (mes >= 10) anio - 1791 else anio - 1792)
@@ -93,29 +100,71 @@ object Temas {
         return when (n) { 0L -> "¡$nombre!"; 1L -> "mañana es $corto"; else -> "faltan $n días para $corto" }
     }
 
-    private val MARCAS = mapOf(
-        TemaId.NAPOLEON to mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "05-18" to "Imperio",
-            "10-14" to "Jena", "06-14" to "Friedland", "03-20" to "Cien Días", "07-06" to "Wagram"),
-        TemaId.ANTIGUAS to mapOf("12-21" to "Noche larga", "06-21" to "Día largo", "03-20" to "Deshielo", "09-22" to "Cosecha", "10-31" to "Víspera", "01-01" to "Año nuevo"),
-        TemaId.REVOLUCION to mapOf("07-14" to "Bastilla", "06-20" to "Juego de pelota", "08-04" to "Privilegios", "08-26" to "Derechos", "10-05" to "Versalles",
-            "09-22" to "República", "07-27" to "Termidor", "09-20" to "Valmy"),
-        TemaId.BOTANICO to mapOf("05-23" to "Linneo", "02-12" to "Darwin", "09-14" to "Humboldt", "04-22" to "Tierra", "03-20" to "Equinoccio",
-            "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "07-20" to "Mendel"),
-        TemaId.GOTICO to mapOf("04-26" to "Consagr.", "08-25" to "S. Luis", "08-15" to "Asunción", "12-25" to "Navidad", "01-06" to "Epifanía", "11-01" to "Todos Santos", "09-29" to "S. Miguel"),
-        TemaId.ESPACIO to mapOf("04-12" to "Gagarin", "07-20" to "Apolo 11", "10-04" to "Sputnik", "02-18" to "Plutón", "12-24" to "Earthrise",
-            "03-20" to "Equinoccio", "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "04-24" to "Hubble"),
-        TemaId.ANDALUS to mapOf("01-02" to "Granada", "04-30" to "Tariq", "03-30" to "Alhambra"),
-        TemaId.MONGOL to mapOf("07-11" to "Naadam", "07-12" to "Naadam", "07-13" to "Naadam", "12-29" to "Independ.", "11-26" to "Repúbl."),
-        TemaId.RENACIMIENTO to mapOf("04-15" to "Leonardo", "05-02" to "Leonardo †", "03-06" to "Michelangelo", "03-25" to "Capodanno", "06-24" to "S. Giovanni", "04-06" to "Rafael"),
-        TemaId.NAVIDAD to mapOf("12-12" to "Guadalupe", "12-16" to "Posadas", "12-24" to "Nochebuena", "12-25" to "Navidad", "12-28" to "Inocentes", "12-31" to "Año nuevo", "01-06" to "Reyes"),
-        TemaId.SEDA to mapOf("03-21" to "Nowruz", "09-21" to "Luna"),
-        TemaId.URSS to mapOf("05-01" to "1º mayo", "04-12" to "Cosmos", "05-09" to "Victoria", "11-07" to "Octubre", "03-08" to "Mujer"),
-    )
-    fun marca(tema: TemaId, fecha: String): String? = MARCAS[tema]?.get(fecha.takeLast(5)) ?: if (tema == TemaId.ANDALUS) fiestaHegira(fecha) else null
+    // Marcas del calendario: días que cada tema celebra o recuerda (cortas: van dentro de la celda del día).
+    private val MARCAS_CIBER = mapOf("01-01" to "epoch", "03-14" to "π", "06-23" to "Turing", "08-06" to "www", "10-29" to "ARPANET",
+        "11-30" to "seguridad", "12-09" to "Hopper", "12-10" to "Lovelace")
+    private val MARCAS_HELENO = mapOf("03-20" to "Equinoccio", "06-21" to "Año ático", "08-15" to "Panateneas", "08-20" to "Termópilas",
+        "09-12" to "Maratón", "09-25" to "Misterios", "09-28" to "Salamina", "12-21" to "Solsticio")
+    private val MARCAS_DISTOPIA = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
+        "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
+    private val MARCAS_REFUGIO = mapOf("01-15" to "FILTROS", "04-01" to "SIMULACRO", "06-01" to "INVENTARIO", "07-16" to "TRINITY",
+        "10-23" to "SIMULACRO", "12-02" to "REACTOR")
+    private val MARCAS_ORDEN = mapOf("01-15" to "JURAMENTO", "03-01" to "LEVA", "04-23" to "S. JORGE", "06-15" to "TORNEO",
+        "09-01" to "CAMPAÑA", "11-11" to "ARMISTICIO", "12-21" to "VIGILIA")
+    private val MARCAS_LABORATORIO = mapOf("02-11" to "Científicas", "03-14" to "Einstein", "04-25" to "ADN", "05-20" to "Metrología",
+        "10-21" to "Nobel", "10-23" to "Mol", "11-07" to "Curie")
+    private val MARCAS_COLONOS = mapOf("03-19" to "Siembra", "05-15" to "S. Isidro", "05-20" to "Tierras", "06-24" to "S. Juan",
+        "09-29" to "S. Miguel", "10-15" to "Cosecha", "12-24" to "Nochebuena")
+    private val MARCAS_NAPOLEON = mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "05-18" to "Imperio",
+        "10-14" to "Jena", "06-14" to "Friedland", "03-20" to "Cien Días", "07-06" to "Wagram")
+    private val MARCAS_ANTIGUAS = mapOf("12-21" to "Noche larga", "06-21" to "Día largo", "03-20" to "Deshielo", "09-22" to "Cosecha", "10-31" to "Víspera", "01-01" to "Año nuevo")
+    private val MARCAS_REVOLUCION = mapOf("07-14" to "Bastilla", "06-20" to "Juego de pelota", "08-04" to "Privilegios", "08-26" to "Derechos", "10-05" to "Versalles",
+        "09-22" to "República", "07-27" to "Termidor", "09-20" to "Valmy")
+    private val MARCAS_BOTANICO = mapOf("05-23" to "Linneo", "02-12" to "Darwin", "09-14" to "Humboldt", "04-22" to "Tierra", "03-20" to "Equinoccio",
+        "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "07-20" to "Mendel")
+    private val MARCAS_GOTICO = mapOf("04-26" to "Consagr.", "08-25" to "S. Luis", "08-15" to "Asunción", "12-25" to "Navidad", "01-06" to "Epifanía", "11-01" to "Todos Santos", "09-29" to "S. Miguel")
+    private val MARCAS_ESPACIO = mapOf("04-12" to "Gagarin", "07-20" to "Apolo 11", "10-04" to "Sputnik", "02-18" to "Plutón", "12-24" to "Earthrise",
+        "03-20" to "Equinoccio", "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "04-24" to "Hubble")
+    private val MARCAS_ANDALUS = mapOf("01-02" to "Granada", "04-30" to "Tariq", "03-30" to "Alhambra")
+    private val MARCAS_MONGOL = mapOf("07-11" to "Naadam", "07-12" to "Naadam", "07-13" to "Naadam", "12-29" to "Independ.", "11-26" to "Repúbl.")
+    private val MARCAS_RENACIMIENTO = mapOf("04-15" to "Leonardo", "05-02" to "Leonardo †", "03-06" to "Michelangelo", "03-25" to "Capodanno", "06-24" to "S. Giovanni", "04-06" to "Rafael")
+    private val MARCAS_NAVIDAD = mapOf("12-12" to "Guadalupe", "12-16" to "Posadas", "12-24" to "Nochebuena", "12-25" to "Navidad", "12-28" to "Inocentes", "12-31" to "Año nuevo", "01-06" to "Reyes")
+    // Nowruz, el equinoccio de otoño y tres de los veinticuatro términos solares chinos; y el día en que la ruta entró al Patrimonio Mundial.
+    private val MARCAS_SEDA = mapOf("03-21" to "Nowruz", "09-21" to "Luna", "04-05" to "Qingming", "06-21" to "Xiazhi", "06-22" to "Ruta",
+        "12-22" to "Dongzhi")
+    private val MARCAS_URSS = mapOf("05-01" to "1º mayo", "04-12" to "Cosmos", "05-09" to "Victoria", "11-07" to "Octubre", "03-08" to "Mujer")
+
+    /** Marca de [fecha] en el calendario del tema, o null. */
+    fun marca(tema: TemaId, fecha: String): String? {
+        val md = fecha.takeLast(5)
+        return when (tema) {
+            TemaId.ROMANO -> Romano.marca(fecha)
+            TemaId.CIBER -> MARCAS_CIBER[md]
+            TemaId.HELENO -> MARCAS_HELENO[md]
+            TemaId.MEDIEVAL -> FIESTAS[md]
+            TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
+            TemaId.REFUGIO -> MARCAS_REFUGIO[md]
+            TemaId.ORDEN -> MARCAS_ORDEN[md]
+            TemaId.LABORATORIO -> MARCAS_LABORATORIO[md]
+            TemaId.COLONOS -> MARCAS_COLONOS[md]
+            TemaId.NAPOLEON -> MARCAS_NAPOLEON[md]
+            TemaId.BOTANICO -> MARCAS_BOTANICO[md]
+            TemaId.NAVIDAD -> MARCAS_NAVIDAD[md]
+            TemaId.SEDA -> MARCAS_SEDA[md]
+            TemaId.URSS -> MARCAS_URSS[md]
+            TemaId.GOTICO -> MARCAS_GOTICO[md]
+            TemaId.ESPACIO -> MARCAS_ESPACIO[md]
+            TemaId.ANDALUS -> MARCAS_ANDALUS[md] ?: fiestaHegira(fecha)
+            TemaId.MONGOL -> MARCAS_MONGOL[md]
+            TemaId.RENACIMIENTO -> MARCAS_RENACIMIENTO[md]
+            TemaId.REVOLUCION -> MARCAS_REVOLUCION[md]
+            TemaId.ANTIGUAS -> MARCAS_ANTIGUAS[md]
+        }
+    }
 
     // ------------------------------------------------------------ calendarios de los temas gótico, espacio, Al-Ándalus, mongol, Renacimiento y botánico
 
-    private val MESES_LATINOS_GEN = listOf("ianuarii", "februarii", "martii", "aprilis", "maii", "iunii", "iulii", "augusti", "septembris", "octobris", "novembris", "decembris")
+    val MESES_LATINOS_GEN = listOf("ianuarii", "februarii", "martii", "aprilis", "maii", "iunii", "iulii", "augusti", "septembris", "octobris", "novembris", "decembris")
     val MESES_LATINOS = listOf("Ianuarius", "Februarius", "Martius", "Aprilis", "Maius", "Iunius", "Iulius", "Augustus", "September", "October", "November", "December")
 
     /** «die XVII octobris · A.D. MMXXVI», como en los cartularios. */
@@ -164,6 +213,14 @@ object Temas {
         return "$color $animal жил".replaceFirstChar { it.uppercase() }
     }
 
+    /**
+     * Meses mongoles nombrados por la estación: el primero (тэргүүн), el de en medio (дунд) y el último (сүүл) de cada una.
+     * El año empieza con la primavera, en el Цагаан сар (hacia febrero); aquí cada mes gregoriano toma el nombre del mes
+     * lunar que más se le parece, así que es aproximado: octubre es el último del otoño.
+     */
+    val MESES_MONGOLES = listOf("Өвлийн сүүл сар", "Хаврын тэргүүн сар", "Хаврын дунд сар", "Хаврын сүүл сар", "Зуны тэргүүн сар", "Зуны дунд сар",
+        "Зуны сүүл сар", "Намрын тэргүүн сар", "Намрын дунд сар", "Намрын сүүл сар", "Өвлийн тэргүүн сар", "Өвлийн дунд сар")
+
     fun fechaMongol(d: java.time.LocalDate) = "${d.year} оны ${d.monthValue}-р сарын ${d.dayOfMonth}"
 
     val MESES_ITALIANOS = listOf("gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre")
@@ -182,9 +239,13 @@ object Temas {
         return "$nombre, día ${java.time.temporal.ChronoUnit.DAYS.between(ini, d) + 1}"
     }
 
-    fun nombre(tema: TemaId, titulo: String): String? = nombreBase(tema, titulo) ?: NombresNuevos.de(tema, titulo)
+    fun nombre(tema: TemaId, titulo: String): String? = NombresCompletos.de(tema, titulo) ?: nombreBase(tema, titulo) ?: NombresNuevos.de(tema, titulo)
 
     private fun nombreBase(tema: TemaId, titulo: String): String? = when (tema) {
+        // El romano y el heleno tienen su diccionario en `Romano` y `Griego`; la terminal solo usa el de [NombresNuevos].
+        TemaId.ROMANO -> null
+        TemaId.CIBER -> null
+        TemaId.HELENO -> null
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
@@ -203,11 +264,13 @@ object Temas {
         TemaId.URSS -> URSS[titulo]
         TemaId.REVOLUCION -> REVOLUCION[titulo]
         TemaId.ANTIGUAS -> ANTIGUAS[titulo]
-        else -> null
     }
 
     fun widget(tema: TemaId, clave: String): String {
         val m = when (tema) {
+            TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO", "enfoque" to "STVDIVM")
+            TemaId.CIBER -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
+            TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ", "enfoque" to "ΣΧΟΛΗ")
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")
@@ -226,7 +289,6 @@ object Temas {
             TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO", "enfoque" to "TRABAJO")
             TemaId.REVOLUCION -> mapOf("animo" to "ESPÍRITU", "momento" to "SUCESO", "gasto" to "ASIGNADOS", "sueno" to "REPOSO", "habitos" to "VIRTUDES", "hoy" to "CAHIER", "cifra" to "CIFRA", "foto" to "ESTAMPA", "enfoque" to "ESTUDIO")
             TemaId.ANTIGUAS -> mapOf("animo" to "TEMPLE", "momento" to "SUCESO", "gasto" to "MONEDAS", "sueno" to "VIGILIA", "habitos" to "JURAMENTOS", "hoy" to "CRÓNICA", "cifra" to "CUENTA", "foto" to "GRABADO", "enfoque" to "ESTUDIO")
-            else -> emptyMap()
         }
         return m[clave] ?: clave.uppercase()
     }
