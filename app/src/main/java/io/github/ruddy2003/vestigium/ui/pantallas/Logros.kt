@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -87,6 +86,7 @@ import io.github.ruddy2003.vestigium.ui.polarFig
 import io.github.ruddy2003.vestigium.ui.rememberSentir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import io.github.ruddy2003.vestigium.ui.Progreso
 
 private val METALES = listOf(Color(0xFFB27A45), Color(0xFFBFC6CF), Color(0xFFE3B748), Color(0xFF9AD8E6))
 
@@ -381,7 +381,7 @@ fun PantallaLogros(nav: Nav) {
                     }
                 }
             }
-            LinearProgressIndicator(progress = { hechos.size.toFloat() / maxOf(1, l.size) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
+            Progreso(progress = { hechos.size.toFloat() / maxOf(1, l.size) }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
         }
         Seccion("Hall de logros", "Tus favoritos, en exhibición. Toca «elegir piezas» para cambiarlos.") { CuerpoHall(l) }
         if (nuevos.isNotEmpty()) Tarjeta(Modifier.padding(top = 10.dp)) {
@@ -431,7 +431,7 @@ private fun FilaLogro(g: Logros.Logro) {
             when {
                 g.hecho -> Text("✓ " + Fechas.titulo(g.conseguido!!).lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                 !secreto -> {
-                    LinearProgressIndicator(progress = { g.fraccion }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(5.dp))
+                    Progreso(progress = { g.fraccion }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(5.dp))
                     Text(cuanto(g.progreso) + " / " + cuanto(g.meta) + if (g.unidad.isNotEmpty()) " ${g.unidad}" else "", style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }

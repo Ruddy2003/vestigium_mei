@@ -32,11 +32,20 @@ import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.LibroDiario
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.esquemaDe
+import io.github.ruddy2003.vestigium.ui.EstiloGrafica
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.lineaMeta
+import io.github.ruddy2003.vestigium.ui.pincelCifras
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
+import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** Colores y letras del tema para dibujar fuera de la pantalla (reportes, imágenes para compartir). */
-class Lienzo(ctx: Context, val tema: TemaId = Estilo.tema, val oscuro: Boolean = oscuroFuera(ctx, tema)) {
+class Lienzo(private val ctx: Context, val tema: TemaId = Estilo.tema, val oscuro: Boolean = oscuroFuera(ctx, tema)) {
     private val e = esquemaDe(tema, oscuro)
     val fondo = e.background.toArgb()
     val superficie = e.surface.toArgb()
@@ -54,10 +63,14 @@ class Lienzo(ctx: Context, val tema: TemaId = Estilo.tema, val oscuro: Boolean =
     val mono: Typeface = runCatching { ResourcesCompat.getFont(ctx, R.font.plex_mono_regular) }.getOrNull() ?: Typeface.MONOSPACE
     /** Las cifras grandes: cada tema con su letra ([letraCifra]); si no carga, la del título. */
     val cifra: Typeface = runCatching { ResourcesCompat.getFont(ctx, letraCifra(tema)) }.getOrNull() ?: titulo
+    /** El estilo de las gráficas del tema: punto, trazo, rejilla, eje, barra y letra de las cifras chicas. */
+    val grafica: EstiloGrafica = estiloGrafica(tema)
 
     fun p(color: Int, tam: Float, tf: Typeface = texto, espacio: Float = 0f) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         this.color = color; textSize = tam; typeface = tf; letterSpacing = espacio
     }
+    /** Pincel de las cifras chicas de las gráficas (ejes y valores), con la letra de cifras del tema. */
+    fun pc(color: Int, tam: Float): TextPaint = p(color, tam).also { grafica.pincelCifras(it, ctx) }
     fun relleno(color: Int) = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color; style = Paint.Style.FILL }
     fun trazo(color: Int, ancho: Float) = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color; style = Paint.Style.STROKE; strokeWidth = ancho; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
 
@@ -146,6 +159,7 @@ object Reportes {
         var y = 0f
         var seccion = 0
         val ancho = W - 2 * M
+        val eg = L.grafica
 
         fun envolver(t: CharSequence, p: TextPaint, w: Float = ancho, alinear: Layout.Alignment = Layout.Alignment.ALIGN_NORMAL, max: Int = 50): StaticLayout =
             StaticLayout.Builder.obtain(t, 0, t.length, p, w.toInt()).setAlignment(alinear).setLineSpacing(0f, 1.18f).setIncludePad(false).setMaxLines(max)
@@ -534,13 +548,13 @@ object Reportes {
 
         fun barras(l: List<Triple<String, Double, String>>, color: Int = L.primario) {
             val max = l.maxOfOrNull { it.second }?.takeIf { it > 0 } ?: return
-            val pe = L.p(L.tinta, 22f, L.texto); val pv = L.p(L.tenue, 20f, L.mono)
+            val pe = L.p(L.tinta, 22f, L.texto); val pv = L.pc(L.tenue, 20f)
             l.forEach { (et, v, txt) ->
                 val etq = recortar(et, pe, 300f)
                 c.drawText(etq, M, y + 26f, pe)
                 val bx = M + 320f; val bwMax = W - M - bx - 150f
                 val bw = (bwMax * v / max).toFloat().coerceAtLeast(6f)
-                c.drawRoundRect(RectF(bx, y + 8f, bx + bw, y + 30f), 6f, 6f, L.relleno(color))
+                c.barraGrafica(eg, RectF(bx, y + 8f, bx + bw, y + 30f), L.relleno(color), horizontal = true)
                 c.drawText(txt, bx + bw + 12f, y + 27f, pv)
                 y += 40f
             }
@@ -551,10 +565,11 @@ object Reportes {
         fun graficaAnimo(d: Periodo.Datos) {
             val gx0 = M + 34f; val gx1 = W - M; val gy0 = y + 10f; val gy1 = y + 260f
             val ej = L.trazo(L.linea, 1.6f)
+            c.rejillaGrafica(eg, (1..7).map { v -> gy1 - (v - 1) / 6f * (gy1 - gy0) }, ej, RectF(gx0, gy0, gx1, gy1))
+            val pcEje = L.pc(L.tenue, 18f)
             for (v in 1..7) {
                 val yy = gy1 - (v - 1) / 6f * (gy1 - gy0)
-                c.drawLine(gx0, yy, gx1, yy, ej)
-                if (v % 2 == 1) c.drawText("$v", M, yy + 8f, L.p(L.tenue, 18f, L.mono))
+                if (v % 2 == 1) c.drawText("$v", M, yy + 8f, pcEje)
             }
             val n = d.fechas.size
             fun x(i: Int) = if (n == 1) (gx0 + gx1) / 2 else gx0 + i * (gx1 - gx0) / (n - 1)
@@ -564,12 +579,13 @@ object Reportes {
                     if (v == null) { abierto = false; return@forEachIndexed }
                     val yy = gy1 - ((v - 1) / 6.0 * (gy1 - gy0)).toFloat()
                     if (!abierto) { path.moveTo(x(i), yy); abierto = true } else path.lineTo(x(i), yy)
-                    if (puntos && n <= 40) c.drawCircle(x(i), yy, 6f, L.relleno(L.colorAnimo(v)))
+                    if (puntos && n <= 40) c.puntoGrafica(eg, x(i), yy, 6f, L.relleno(L.colorAnimo(v)))
                 }
-                c.drawPath(path, L.trazo(color, if (n > 60) 2.5f else 4f))
+                c.lineaGrafica(eg, path, L.trazo(color, if (n > 60) 2.5f else 4f))
             }
             serie(d.activacion, L.terciario, false); serie(d.valencia, L.primario, true)
-            val pe = L.p(L.tenue, 18f, L.mono)
+            // Los nombres de los días siguen con su letra; los números de día, con la de las cifras.
+            val pe = if (n <= 8) L.p(L.tenue, 18f, L.mono) else L.pc(L.tenue, 18f)
             val paso = maxOf(1, n / 7)
             d.fechas.forEachIndexed { i, f ->
                 if (i % paso != 0) return@forEachIndexed
@@ -589,13 +605,13 @@ object Reportes {
             val gx0 = M; val gx1 = W - M; val alto = 150f; val base = y + alto
             val max = maxOf(vals.filterNotNull().maxOrNull() ?: 1.0, meta ?: 0.0) * 1.1
             val n = vals.size; val bw = (gx1 - gx0) / n
-            meta?.let { val yy = base - (it / max * alto).toFloat(); c.drawLine(gx0, yy, gx1, yy, L.trazo(L.linea, 2f)); }
+            meta?.let { val yy = base - (it / max * alto).toFloat(); c.lineaMeta(eg, gx0, yy, gx1, yy, L.trazo(L.linea, 2f)) }
             vals.forEachIndexed { i, v ->
                 v ?: return@forEachIndexed
                 val h = (v / max * alto).toFloat()
-                c.drawRoundRect(RectF(gx0 + i * bw + bw * 0.18f, base - h, gx0 + (i + 1) * bw - bw * 0.18f, base), 4f, 4f,
+                c.barraGrafica(eg, RectF(gx0 + i * bw + bw * 0.18f, base - h, gx0 + (i + 1) * bw - bw * 0.18f, base),
                     L.relleno(if (meta != null && v < meta * 0.9) L.mezcla(L.error, L.linea, 0.3) else L.primario))
-                if (n <= 8) c.drawText("%.1f".format(v), gx0 + i * bw + bw / 2 - 20f, base - h - 8f, L.p(L.tinta, 18f, L.mono))
+                if (n <= 8) c.drawText("%.1f".format(v), gx0 + i * bw + bw / 2 - 20f, base - h - 8f, L.pc(L.tinta, 18f))
             }
             if (n <= 8) fechas.forEachIndexed { i, f ->
                 val t = Estilo.semana[Fechas.parse(f).dayOfWeek.value - 1]
@@ -652,7 +668,7 @@ object Reportes {
                     }
                     if (hojas > 0) c.drawRect(RectF(o - hw * 0.6f, base - hojas * 9.5f - 4f, o - hw * 0.45f, base - hojas * 9.5f + 6f), L.relleno(L.primario))
                     val tv = if (d.palabras >= 1000) "%.1fk".format(d.palabras / 1000.0) else "${d.palabras}"
-                    val pv = L.p(L.tenue, 18f, L.mono)
+                    val pv = L.pc(L.tenue, 18f)
                     if (d.palabras > 0) c.drawText(tv, o - pv.measureText(tv) / 2, base + 24f, pv)
                 }
                 y = base + 36f
@@ -661,16 +677,16 @@ object Reportes {
             if (dias.any { it.suenoH != null }) {
                 rotulo("sueño")
                 val alto = 110f; val base = y + alto
-                c.drawLine(M, base - alto * 7f / 10f, W - M, base - alto * 7f / 10f, L.trazo(L.linea, 1.2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(8f, 8f), 0f) })
+                c.lineaMeta(eg, M, base - alto * 7f / 10f, W - M, base - alto * 7f / 10f, L.trazo(L.linea, 1.2f))
                 dias.forEachIndexed { i, d ->
                     val h0 = d.suenoH ?: return@forEachIndexed
                     val o = cx(i); val bw = col * 0.24f
                     val hh = (h0.coerceIn(0.0, 10.0) / 10.0 * alto).toFloat()
-                    c.drawRoundRect(RectF(o - bw, base - hh, o + bw, base), 6f, 6f, L.relleno(if (h0 < 6.3) L.mezcla(L.error, L.linea, 0.3) else L.secundario))
+                    c.barraGrafica(eg, RectF(o - bw, base - hh, o + bw, base), L.relleno(if (h0 < 6.3) L.mezcla(L.error, L.linea, 0.3) else L.secundario))
                     // Media luna arriba de la barra.
                     val lr = bw * 0.75f; val ly = base - hh - lr - 6f
                     c.drawCircle(o, ly, lr, L.relleno(L.terciario)); c.drawCircle(o + lr * 0.45f, ly - lr * 0.2f, lr * 0.85f, L.relleno(L.fondo))
-                    val tv = "%.1f".format(h0); val pv = L.p(L.tenue, 18f, L.mono)
+                    val tv = "%.1f".format(h0); val pv = L.pc(L.tenue, 18f)
                     c.drawText(tv, o - pv.measureText(tv) / 2, base + 24f, pv)
                 }
                 y = base + 36f
@@ -689,7 +705,7 @@ object Reportes {
                         c.drawOval(RectF(xx - 6f, yy - 11f, xx + 6f, yy + 5f), L.relleno(L.primario))
                         c.drawOval(RectF(xx - 4.5f, yy + 7f, xx + 4.5f, yy + 13f), L.relleno(L.primario))
                     }
-                    val tv = if (p0 >= 1000) "%.1fk".format(p0 / 1000.0) else "$p0"; val pv = L.p(L.tenue, 18f, L.mono)
+                    val tv = if (p0 >= 1000) "%.1fk".format(p0 / 1000.0) else "$p0"; val pv = L.pc(L.tenue, 18f)
                     c.drawText(tv, o - pv.measureText(tv) / 2, base + 40f, pv)
                 }
                 y = base + 54f
@@ -701,7 +717,7 @@ object Reportes {
                     val k = d.momentos.coerceAtMost(12); val o = cx(i)
                     for (j in 0 until k) {
                         val fila = j / 4; val pos = j % 4
-                        c.drawCircle(o - 21f + pos * 14f, y + 8f + fila * 14f, 5f, L.relleno(L.terciario))
+                        c.puntoGrafica(eg, o - 21f + pos * 14f, y + 8f + fila * 14f, 5f, L.relleno(L.terciario))
                     }
                 }
                 y += 14f * ((dias.maxOf { it.momentos.coerceAtMost(12) } + 3) / 4) + 16f
@@ -729,7 +745,7 @@ object Reportes {
                 if (v != null) {
                     c.drawRoundRect(r, 10f, 10f, L.relleno(L.colorAnimo(v)))
                     pn = L.p(L.fondo, 26f, L.cifra)
-                    val tv = n1(v); val pv = L.p(L.fondo, 18f, L.mono)
+                    val tv = n1(v); val pv = L.pc(L.fondo, 18f)
                     c.drawText(tv, r.right - pv.measureText(tv) - 10f, r.bottom - 10f, pv)
                 } else {
                     c.drawRoundRect(r, 10f, 10f, L.trazo(L.linea, 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(6f, 6f), 0f) })
@@ -741,7 +757,7 @@ object Reportes {
             // Leyenda: la escala de colores del ánimo.
             val lw = 260f; val lx = W - M - lw
             for (k in 0 until 26) c.drawRect(lx + k * lw / 26, y, lx + (k + 1) * lw / 26 + 1, y + 12f, L.relleno(L.colorAnimo(1 + 6.0 * k / 25)))
-            val pl = L.p(L.tenue, 17f, L.mono)
+            val pl = L.pc(L.tenue, 17f)
             c.drawText("1", lx - 18f, y + 12f, pl); c.drawText("7", lx + lw + 8f, y + 12f, pl)
             c.drawText("ánimo del día", M, y + 12f, L.p(L.tenue, 18f, L.texto))
             y += 34f
@@ -755,9 +771,13 @@ object Reportes {
             fun yy(v: Double) = gy1 - ((v.coerceIn(lo, hi) - lo) / (hi - lo) * (gy1 - gy0)).toFloat()
             val n = vals.size
             fun x(i: Int) = if (n == 1) (gx0 + gx1) / 2 else gx0 + i * (gx1 - gx0) / (n - 1)
-            val pe = L.p(L.tenue, 17f, L.mono)
-            for (h0 in listOf(4, 6, 8, 10)) { if (h0 > hi) continue; c.drawLine(gx0, yy(h0.toDouble()), gx1, yy(h0.toDouble()), L.trazo(L.mezcla(L.linea, L.fondo, 0.4), 1.2f)); c.drawText("$h0", M, yy(h0.toDouble()) + 6f, pe) }
-            c.drawLine(gx0, yy(7.0), gx1, yy(7.0), L.trazo(L.linea, 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(10f, 8f), 0f) })
+            val pe = L.pc(L.tenue, 17f)
+            val guias = listOf(4, 6, 8, 10).filter { it <= hi }
+            c.rejillaGrafica(eg, guias.map { yy(it.toDouble()) }, L.trazo(L.mezcla(L.linea, L.fondo, 0.4), 1.2f), RectF(gx0, gy0, gx1, gy1))
+            guias.forEach { h0 -> c.drawText("$h0", M, yy(h0.toDouble()) + 6f, pe) }
+            // Las dos referencias con el guion de referencia del tema; se distinguen por el color (y la leyenda de abajo).
+            c.lineaMeta(eg, gx0, yy(7.0), gx1, yy(7.0), L.trazo(L.linea, 2f))
+            // El mes anterior conserva su punteado propio: así no se confunde con la línea de 7 h aunque el tema la puntee.
             d.suenoAnterior?.let { a -> c.drawLine(gx0, yy(a), gx1, yy(a), L.trazo(L.mezcla(L.terciario, L.fondo, 0.35), 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(3f, 7f), 0f) }) }
             // Relleno bajo la curva y la curva.
             val linea = Path(); val area = Path(); var abierto = false; var primero = 0f; var ultimo = 0f
@@ -770,11 +790,11 @@ object Reportes {
             }
             cerrar()
             c.drawPath(area, L.relleno(L.mezcla(L.secundario, L.fondo, 0.78)))
-            c.drawPath(linea, L.trazo(L.secundario, 3.5f))
-            vals.forEachIndexed { i, v -> if (v != null && v < 6.3) c.drawCircle(x(i), yy(v), 5f, L.relleno(L.mezcla(L.error, L.linea, 0.3))) }
+            c.lineaGrafica(eg, linea, L.trazo(L.secundario, 3.5f))
+            vals.forEachIndexed { i, v -> if (v != null && v < 6.3) c.puntoGrafica(eg, x(i), yy(v), 5f, L.relleno(L.mezcla(L.error, L.linea, 0.3))) }
             for (i in vals.indices step 5) { val t = "${i + 1}"; c.drawText(t, x(i) - pe.measureText(t) / 2, gy1 + 26f, pe) }
             y = gy1 + 46f
-            c.drawLine(M, y - 6f, M + 34f, y - 6f, L.trazo(L.linea, 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(10f, 8f), 0f) })
+            c.lineaMeta(eg, M, y - 6f, M + 34f, y - 6f, L.trazo(L.linea, 2f))
             c.drawText("7 h", M + 44f, y, L.p(L.tenue, 18f, L.texto))
             if (d.suenoAnterior != null) {
                 c.drawLine(M + 140f, y - 6f, M + 174f, y - 6f, L.trazo(L.mezcla(L.terciario, L.fondo, 0.35), 2f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(3f, 7f), 0f) })
@@ -789,12 +809,12 @@ object Reportes {
          */
         fun comparacion(filas: List<Triple<String, Double, Double>>, formato: List<(Double) -> String>) {
             if (filas.isEmpty()) return
-            val pe = L.p(L.tinta, 22f, L.texto); val pv = L.p(L.tenue, 19f, L.mono)
+            val pe = L.p(L.tinta, 22f, L.texto); val pv = L.pc(L.tenue, 19f)
             val textos = filas.mapIndexed { i, (_, ahora, antes) -> "${formato[i](antes)} → ${formato[i](ahora)}" }
             val bx = M + 150f; val bw = W - M - bx - (textos.maxOf { pv.measureText(it) } + 30f)
             val cx = bx + bw / 2
-            val pm = L.p(L.tenue, 16f, L.mono)
-            c.drawText("−50 %", bx - 4f, y + 12f, pm); c.drawText("+50 %", bx + bw - pm.measureText("+50 %"), y + 12f, pm)
+            val pm = L.p(L.tenue, 16f, L.mono); val pmc = L.pc(L.tenue, 16f)
+            c.drawText("−50 %", bx - 4f, y + 12f, pmc); c.drawText("+50 %", bx + bw - pmc.measureText("+50 %"), y + 12f, pmc)
             val t0 = "igual"; c.drawText(t0, cx - pm.measureText(t0) / 2, y + 12f, pm)
             y += 20f
             filas.forEachIndexed { i, (et, ahora, antes) ->
@@ -802,16 +822,17 @@ object Reportes {
                 val xn = cx + (pct / 0.5 * bw / 2).toFloat()
                 val yy = y + 20f
                 c.drawText(et, M, yy + 7f, pe)
-                c.drawLine(bx, yy, bx + bw, yy, L.trazo(L.mezcla(L.linea, L.fondo, 0.4), 2f))
+                c.ejeGrafica(eg, bx, yy, bx + bw, yy, L.trazo(L.mezcla(L.linea, L.fondo, 0.4), 2f))
                 c.drawLine(cx, yy - 10f, cx, yy + 10f, L.trazo(L.linea, 1.5f))
-                c.drawLine(cx, yy, xn, yy, L.trazo(L.primario, 6f))
-                c.drawCircle(cx, yy, 9f, L.relleno(L.fondo)); c.drawCircle(cx, yy, 9f, L.trazo(L.tenue, 2.5f))
-                c.drawCircle(xn, yy, 11f, L.relleno(L.primario))
+                if (xn != cx) c.lineaGrafica(eg, Path().apply { moveTo(cx, yy); lineTo(xn, yy) }, L.trazo(L.primario, 6f))
+                c.puntoGrafica(eg, cx, yy, 9f, L.relleno(L.fondo)); c.puntoGrafica(eg, cx, yy, 9f, L.trazo(L.tenue, 2.5f))
+                c.puntoGrafica(eg, xn, yy, 11f, L.relleno(L.primario))
                 c.drawText(textos[i], W - M - pv.measureText(textos[i]), yy + 7f, pv)
                 y += 46f
             }
-            c.drawCircle(M + 8f, y + 4f, 7f, L.trazo(L.tenue, 2f)); c.drawText("mes anterior", M + 24f, y + 10f, L.p(L.tenue, 18f, L.texto))
-            c.drawCircle(M + 190f, y + 4f, 8f, L.relleno(L.primario)); c.drawText("este mes", M + 206f, y + 10f, L.p(L.tenue, 18f, L.texto))
+            // La leyenda repite la forma de los puntos (hueco: mes anterior; lleno: este mes).
+            c.puntoGrafica(eg, M + 8f, y + 4f, 7f, L.trazo(L.tenue, 2f)); c.drawText("mes anterior", M + 24f, y + 10f, L.p(L.tenue, 18f, L.texto))
+            c.puntoGrafica(eg, M + 190f, y + 4f, 8f, L.relleno(L.primario)); c.drawText("este mes", M + 206f, y + 10f, L.p(L.tenue, 18f, L.texto))
             y += 34f
         }
 
@@ -838,8 +859,8 @@ object Reportes {
             val alto = 440f; val x0 = M; val x1 = W - M; val y0 = y; val y1 = y + alto
             c.drawRoundRect(RectF(x0, y0, x1, y1), 14f, 14f, L.relleno(L.superficie2))
             val cuad = L.trazo(L.mezcla(L.linea, L.superficie2, 0.5), 1.2f)
-            for (k in 1 until 8) { val xx = x0 + (x1 - x0) * k / 8; c.drawLine(xx, y0 + 10f, xx, y1 - 10f, cuad) }
-            for (k in 1 until 4) { val yy = y0 + alto * k / 4; c.drawLine(x0 + 10f, yy, x1 - 10f, yy, cuad) }
+            c.rejillaGrafica(eg, (1 until 4).map { k -> y0 + alto * k / 4 }, cuad, RectF(x0 + 10f, y0 + 10f, x1 - 10f, y1 - 10f),
+                xs = (1 until 8).map { k -> x0 + (x1 - x0) * k / 8 })
             val lat0 = pts.minOf { it.first }; val lat1 = pts.maxOf { it.first }
             val lon0 = pts.minOf { it.second }; val lon1 = pts.maxOf { it.second }
             val k = kotlin.math.cos(Math.toRadians((lat0 + lat1) / 2))
@@ -855,7 +876,8 @@ object Reportes {
                 val col = colorTipo(th.first)
                 c.drawCircle(px, py, r, L.relleno(L.mezcla(col, L.superficie2, 0.45)))
                 c.drawCircle(px, py, r, L.trazo(col, 3f))
-                c.drawCircle(px, py, 4f, L.relleno(col))
+                // Las burbujas siguen redondas (su área es la medida: horas); el centro lleva el punto del tema.
+                c.puntoGrafica(eg, px, py, 4f, L.relleno(col))
             }
             y = y1 + 20f
             // Leyenda: horas por tipo de lugar.
@@ -1121,8 +1143,8 @@ object Reportes {
             val v = d.valPorMes[mes] ?: continue
             val x = M + (mes - 1) * anchoM
             val hh = ((v - 1) / 6 * altoB).toFloat()
-            c.drawRoundRect(RectF(x + 8f, h.y + altoB - hh, x + anchoM - 8f, h.y + altoB), 5f, 5f, L.relleno(L.colorAnimo(v)))
-            c.drawText(n1(v), x + 10f, h.y + altoB - hh - 8f, L.p(L.tinta, 17f, L.mono))
+            c.barraGrafica(h.eg, RectF(x + 8f, h.y + altoB - hh, x + anchoM - 8f, h.y + altoB), L.relleno(L.colorAnimo(v)))
+            c.drawText(n1(v), x + 10f, h.y + altoB - hh - 8f, L.pc(L.tinta, 17f))
         }
         for (mes in 1..12) c.drawText(Estilo.mes(mes).take(3), M + (mes - 1) * anchoM + 10f, h.y + altoB + 26f, L.p(L.tenue, 16f, L.texto))
         h.y += altoB + 50f

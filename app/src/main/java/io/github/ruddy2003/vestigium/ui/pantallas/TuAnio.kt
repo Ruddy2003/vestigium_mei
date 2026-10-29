@@ -118,6 +118,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import io.github.ruddy2003.vestigium.ui.Menu
+import io.github.ruddy2003.vestigium.ui.OpcionMenu
 
 // =====================================================================
 //  «Tu año»: historias a pantalla completa con la música, la voz y los colores del tema
@@ -657,9 +659,9 @@ private fun HistoriasAnio(d: TuAnio.Datos, nav: Nav, cerrar: () -> Unit) {
                     if (actual.id in Repo.config.anio_ocultas) Text("oculta al exportar  ", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                     Box {
                         Text("⤓", fontSize = 22.sp, color = cs.primary, modifier = Modifier.clickable(enabled = !exportando) { menu = true }.padding(horizontal = 10.dp, vertical = 4.dp))
-                        androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            androidx.compose.material3.DropdownMenuItem(text = { Text("Guardar y compartir esta") }, onClick = { menu = false; exportar(false) })
-                            androidx.compose.material3.DropdownMenuItem(text = { Text("Guardar todas (PNG)") }, onClick = { menu = false; exportar(true) })
+                        Menu(expanded = menu, onDismissRequest = { menu = false }) {
+                            OpcionMenu(text = { Text("Guardar y compartir esta") }, onClick = { menu = false; exportar(false) })
+                            OpcionMenu(text = { Text("Guardar todas (PNG)") }, onClick = { menu = false; exportar(true) })
                         }
                     }
                     Text("✕", fontSize = 20.sp, color = cs.onBackground, modifier = Modifier.clickable { cerrar() }.padding(horizontal = 10.dp, vertical = 4.dp)

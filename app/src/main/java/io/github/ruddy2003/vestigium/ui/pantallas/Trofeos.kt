@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,6 +59,8 @@ import io.github.ruddy2003.vestigium.ui.esOscuro
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import io.github.ruddy2003.vestigium.ui.Dialogo
+import io.github.ruddy2003.vestigium.ui.Progreso
 
 /** Los metales de cada nivel: oscuro, base y brillo. Bronce, plata, oro y cristal (legendario). */
 private val METAL = listOf(
@@ -298,7 +298,7 @@ private fun Placa(l: Logros.Logro, tema: TemaId, modifier: Modifier = Modifier) 
             secreto -> Text("aparece cuando lo logras", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, color = cs.onSurfaceVariant)
             else -> {
                 Text(singular(l.descripcion), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurfaceVariant)
-                LinearProgressIndicator(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth(0.8f).padding(top = 3.dp).height(3.dp))
+                Progreso(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth(0.8f).padding(top = 3.dp).height(3.dp))
             }
         }
     }
@@ -343,7 +343,7 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit
     val secreto = l.secreto && !l.hecho
     val serie = l.id.substringBeforeLast('_')
     val siguiente = todos.filter { it.id != l.id && it.id.substringBeforeLast('_') == serie && it.categoria == l.categoria && !it.hecho }.minByOrNull { it.meta }
-    AlertDialog(onDismissRequest = cerrar, confirmButton = { TextButton(onClick = cerrar) { Text("cerrar") } },
+    Dialogo(onDismissRequest = cerrar, confirmButton = { TextButton(onClick = cerrar) { Text("cerrar") } },
         dismissButton = {
             if (l.hecho) {
                 val enHall = l.id in Repo.config.hall_logros
@@ -376,7 +376,7 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit
                     secreto -> Text("Sigue viviendo y escribiendo: aparece cuando lo logras.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                     else -> {
                         Text("Reto: " + singular(l.descripcion).replaceFirstChar { it.lowercase() } + ".", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
-                        LinearProgressIndicator(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(6.dp))
+                        Progreso(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(6.dp))
                         Text("llevas ${cifraLogro(l.progreso)} de ${cifraLogro(l.meta)}" + if (l.unidad.isNotEmpty()) " ${l.unidad}" else "", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
                     }
                 }

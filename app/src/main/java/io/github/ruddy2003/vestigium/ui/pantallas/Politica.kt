@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -58,6 +57,12 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
+import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import io.github.ruddy2003.vestigium.ui.rememberSentir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -179,7 +184,8 @@ private fun Brujula(tests: List<TestPolitico>) {
     val medidor = rememberTextMeasurer()
     val eco = Politica.EJES.first { it.id == "economia" }; val aut = Politica.EJES.first { it.id == "autoridad" }
     val estilo = TextStyle(fontSize = 10.sp, color = cs.onSurfaceVariant)
-    val estiloAnio = TextStyle(fontSize = 10.sp, color = cs.primary)
+    val estiloAnio = estiloCifras(TextStyle(fontSize = 10.sp, color = cs.primary))
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().aspectRatio(1f).padding(6.dp)) {
         val w = size.width; val h = size.height
         val m = 26.dp.toPx()
@@ -191,12 +197,12 @@ private fun Brujula(tests: List<TestPolitico>) {
             drawRect(c, Offset(x0, y0), androidx.compose.ui.geometry.Size((r - l) / 2, (b - t) / 2))
         }
         drawRect(cs.outline, Offset(l, t), androidx.compose.ui.geometry.Size(r - l, b - t), style = Stroke(1f))
-        drawLine(cs.outline, Offset((l + r) / 2, t), Offset((l + r) / 2, b), 1f)
-        drawLine(cs.outline, Offset(l, (t + b) / 2), Offset(r, (t + b) / 2), 1f)
-        for (k in listOf(-50.0, 50.0)) {
-            drawLine(cs.outline.copy(alpha = 0.5f), p(k, -100.0), p(k, 100.0), 1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)))
-            drawLine(cs.outline.copy(alpha = 0.5f), p(-100.0, k), p(100.0, k), 1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f)))
-        }
+        // Las guías de ±50 en los dos ejes y la cruz del centro (cada eje apunta hacia su polo «más»).
+        val guias = listOf(-50.0, 50.0)
+        rejillaGrafica(eg, guias.map { p(-100.0, it).y }, cs.outline.copy(alpha = 0.5f), xs = guias.map { p(it, -100.0).x },
+            area = androidx.compose.ui.geometry.Rect(l, t, r, b))
+        ejeGrafica(eg, Offset((l + r) / 2, b), Offset((l + r) / 2, t), cs.outline)
+        ejeGrafica(eg, Offset(l, (t + b) / 2), Offset(r, (t + b) / 2), cs.outline)
         // Rótulos de los polos.
         val izq = medidor.measure(eco.menos, estilo); val der = medidor.measure(eco.mas, estilo)
         drawText(izq, topLeft = Offset(l, b + 4.dp.toPx()))
@@ -208,13 +214,13 @@ private fun Brujula(tests: List<TestPolitico>) {
         val puntos = tests.mapNotNull { x -> val e = x.ejes["economia"]; val a = x.ejes["autoridad"]; if (e != null && a != null) x.fecha to p(e, a) else null }
         if (puntos.size >= 2) {
             val camino = Path().apply { moveTo(puntos[0].second.x, puntos[0].second.y); puntos.drop(1).forEach { lineTo(it.second.x, it.second.y) } }
-            drawPath(camino, cs.primary.copy(alpha = 0.55f), style = Stroke(2.dp.toPx()))
+            lineaGrafica(eg, camino, cs.primary.copy(alpha = 0.55f), 2.dp.toPx())
         }
         puntos.forEachIndexed { i, (f, o) ->
             val ultimo = i == puntos.lastIndex
             val alfa = if (ultimo) 1f else 0.35f + 0.5f * i / puntos.size.coerceAtLeast(1)
-            drawCircle(cs.primary.copy(alpha = alfa), if (ultimo) 8.dp.toPx() else 5.dp.toPx(), o)
-            if (ultimo) drawCircle(cs.surface, 3.dp.toPx(), o)
+            puntoGrafica(eg, o, if (ultimo) 8.dp.toPx() else 5.dp.toPx(), cs.primary.copy(alpha = alfa))
+            if (ultimo) puntoGrafica(eg, o, 3.dp.toPx(), cs.surface)
             val et = medidor.measure(f.take(4), estiloAnio)
             drawText(et, topLeft = Offset(o.x + 8.dp.toPx(), o.y - et.size.height - 2.dp.toPx()), alpha = alfa)
         }
@@ -227,6 +233,8 @@ private fun EjeAnual(e: Politica.Eje, tests: List<TestPolitico>) {
     val cs = MaterialTheme.colorScheme
     val medidor = rememberTextMeasurer()
     val ultimo = tests.lastOrNull()?.ejes?.get(e.id)
+    val eg = estiloGrafica()
+    val estiloAnio = estiloCifras(TextStyle(fontSize = 8.sp, color = cs.onSurfaceVariant))
     Column {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(e.nombre, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
@@ -234,15 +242,16 @@ private fun EjeAnual(e: Politica.Eje, tests: List<TestPolitico>) {
         }
         Canvas(Modifier.fillMaxWidth().height(40.dp).padding(top = 6.dp)) {
             val w = size.width; val y = size.height * 0.6f
-            drawLine(cs.outline, Offset(0f, y), Offset(w, y), 2f)
-            listOf(0f, 0.25f, 0.5f, 0.75f, 1f).forEach { f -> drawLine(cs.outline, Offset(w * f, y - if (f == 0.5f) 8f else 4f), Offset(w * f, y + if (f == 0.5f) 8f else 4f), 1.5f) }
+            ejeGrafica(eg, Offset(0f, y), Offset(w, y), cs.outline, marcas = listOf(0f, 0.25f, 0.5f, 0.75f, 1f).map { w * it })
+            // El centro (0) conserva su raya larga que cruza el eje.
+            drawLine(cs.outline, Offset(w * 0.5f, y - 8f), Offset(w * 0.5f, y + 8f), 1.5f)
             tests.forEachIndexed { i, t ->
                 val v = t.ejes[e.id] ?: return@forEachIndexed
                 val x = ((v + 100) / 200 * w).toFloat()
                 val es = i == tests.lastIndex
-                drawCircle(cs.primary.copy(alpha = if (es) 1f else 0.3f + 0.4f * i / tests.size), if (es) 7.dp.toPx() else 4.5.dp.toPx(), Offset(x, y))
+                puntoGrafica(eg, Offset(x, y), if (es) 7.dp.toPx() else 4.5.dp.toPx(), cs.primary.copy(alpha = if (es) 1f else 0.3f + 0.4f * i / tests.size))
                 if (!es && tests.size <= 6) {
-                    val et = medidor.measure(t.fecha.take(4), TextStyle(fontSize = 8.sp, color = cs.onSurfaceVariant))
+                    val et = medidor.measure(t.fecha.take(4), estiloAnio)
                     drawText(et, topLeft = Offset((x - et.size.width / 2).coerceIn(0f, w - et.size.width), 0f))
                 }
             }

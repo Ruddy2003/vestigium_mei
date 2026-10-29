@@ -22,7 +22,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -82,6 +81,9 @@ import io.github.ruddy2003.vestigium.widget.Widgets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import io.github.ruddy2003.vestigium.ui.Conmutador
+import io.github.ruddy2003.vestigium.ui.Deslizador
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 // ---------------- Permisos ----------------
 @Composable
@@ -349,7 +351,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 Etiqueta("Tamaño del texto: ${(c.letra * 100).toInt()}%")
-                Slider(value = c.letra, onValueChange = { v -> cambiar { it.copy(letra = (Math.round(v * 20) / 20f)) } }, valueRange = 0.8f..1.4f, steps = 11)
+                Deslizador(value = c.letra, onValueChange = { v -> cambiar { it.copy(letra = (Math.round(v * 20) / 20f)) } }, valueRange = 0.8f..1.4f, steps = 11)
                 Text("Así se lee un renglón del diario con este tamaño.", style = MaterialTheme.typography.bodyLarge)
                 Interruptor("Modo nocturno cálido", c.nocturno, "De 22:00 a 5:00 la pantalla se entibia y baja un poco el brillo, para escribir el diario sin despabilarte.") { v -> cambiar { it.copy(nocturno = v) } }
             }
@@ -380,25 +382,25 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Tarjeta {
                 Interruptor("Avisos activos", c.avisos) { v -> cambiar { it.copy(avisos = v) } }
                 Etiqueta("Avisos por día: ${c.muestreos_por_dia}")
-                Slider(value = c.muestreos_por_dia.toFloat(), onValueChange = { v -> cambiar { it.copy(muestreos_por_dia = v.toInt(), plan_muestreo = emptyMap()) } }, valueRange = 0f..6f, steps = 5)
+                Deslizador(value = c.muestreos_por_dia.toFloat(), onValueChange = { v -> cambiar { it.copy(muestreos_por_dia = v.toInt(), plan_muestreo = emptyMap()) } }, valueRange = 0f..6f, steps = 5)
                 Etiqueta("Ventana: de ${c.ventana_inicio}:00 a ${c.ventana_fin}:00")
-                Slider(value = c.ventana_inicio.toFloat(), onValueChange = { v -> cambiar { it.copy(ventana_inicio = v.toInt().coerceAtMost(it.ventana_fin - 2), plan_muestreo = emptyMap()) } }, valueRange = 6f..20f, steps = 13)
-                Slider(value = c.ventana_fin.toFloat(), onValueChange = { v -> cambiar { it.copy(ventana_fin = v.toInt().coerceAtLeast(it.ventana_inicio + 2), plan_muestreo = emptyMap()) } }, valueRange = 9f..23f, steps = 13)
+                Deslizador(value = c.ventana_inicio.toFloat(), onValueChange = { v -> cambiar { it.copy(ventana_inicio = v.toInt().coerceAtMost(it.ventana_fin - 2), plan_muestreo = emptyMap()) } }, valueRange = 6f..20f, steps = 13)
+                Deslizador(value = c.ventana_fin.toFloat(), onValueChange = { v -> cambiar { it.copy(ventana_fin = v.toInt().coerceAtLeast(it.ventana_inicio + 2), plan_muestreo = emptyMap()) } }, valueRange = 9f..23f, steps = 13)
                 Ayuda("Los cambios aplican desde mañana, o desde hoy si todavía no te llegó ningún aviso.")
             }
         }
         if (parte == "avisos") Seccion("Recordatorios") {
             Tarjeta {
                 Etiqueta("Sueños por la mañana: ${c.hora_sueno}:00")
-                Slider(value = c.hora_sueno.toFloat(), onValueChange = { v -> cambiar { it.copy(hora_sueno = v.toInt()) } }, valueRange = 5f..12f, steps = 6)
+                Deslizador(value = c.hora_sueno.toFloat(), onValueChange = { v -> cambiar { it.copy(hora_sueno = v.toInt()) } }, valueRange = 5f..12f, steps = 6)
                 Etiqueta("Diario por la noche: ${c.hora_diario}:00")
-                Slider(value = c.hora_diario.toFloat(), onValueChange = { v -> cambiar { it.copy(hora_diario = v.toInt()) } }, valueRange = 18f..23f, steps = 4)
+                Deslizador(value = c.hora_diario.toFloat(), onValueChange = { v -> cambiar { it.copy(hora_diario = v.toInt()) } }, valueRange = 18f..23f, steps = 4)
             }
         }
         if (parte == "avisos") Seccion("Cuestionarios", "WHO-5 y PSS-4 cada semana, UCLA-3 cada mes y TIPI cada año, contando desde tu última respuesta.") {
             Tarjeta {
                 Etiqueta("Aviso el día que toca: ${c.escalas_hora}:00")
-                Slider(value = c.escalas_hora.toFloat(), onValueChange = { v -> cambiar { it.copy(escalas_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
+                Deslizador(value = c.escalas_hora.toFloat(), onValueChange = { v -> cambiar { it.copy(escalas_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
                 Interruptor("Insistir si me atraso", c.escalas_insistir, "Con 1 a 3 días de atraso avisa dos veces al día (12:00 y tu hora); con 4 o más, tres veces (10:00, 15:00 y 20:00) hasta que respondas.") { v ->
                     cambiar { it.copy(escalas_insistir = v) }
                 }
@@ -434,7 +436,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     }
                 }
                 Etiqueta("Vida media de la cafeína: ${"%.1f".format(c.cafeina_vida_media_h).removeSuffix(".0")} h")
-                Slider(value = c.cafeina_vida_media_h.toFloat(), onValueChange = { v -> cambiar { it.copy(cafeina_vida_media_h = Math.round(v * 2) / 2.0) } }, valueRange = 2f..10f, steps = 15)
+                Deslizador(value = c.cafeina_vida_media_h.toFloat(), onValueChange = { v -> cambiar { it.copy(cafeina_vida_media_h = Math.round(v * 2) / 2.0) } }, valueRange = 2f..10f, steps = 15)
                 Ayuda("En adultos suele ir de 3 a 7 horas (5 es lo típico). Fumar la acorta; el embarazo y algunos anticonceptivos la alargan.", Modifier.padding(top = 4.dp))
             }
         }
@@ -639,7 +641,7 @@ fun PantallaDatos(nav: Nav) {
     }
     chatsLeidos?.let { l ->
         val autores = l.flatMap { it.autores }.groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.map { it.key }
-        androidx.compose.material3.AlertDialog(
+        Dialogo(
             onDismissRequest = { chatsLeidos = null },
             title = { Text("¿Cuál eres tú?", style = MaterialTheme.typography.titleLarge) },
             text = {
@@ -677,7 +679,7 @@ private fun RecordatoriosImportacion(importar: (String) -> Unit) {
                             (R.pospuesta(f.id, hoy)?.let { " · pospuesto al ${Fechas.corto(it)}" } ?: "")
                     }, style = MaterialTheme.typography.bodySmall, color = if (f.activa && !apagada && R.toca(f, hoy)) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                if (f.activa) androidx.compose.material3.Switch(checked = !apagada, onCheckedChange = { R.apagar(f.id, !it) })
+                if (f.activa) Conmutador(checked = !apagada, onCheckedChange = { R.apagar(f.id, !it) })
             }
             if (f.activa && !apagada) FlowRow(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Ficha("importar ahora", false) { importar(f.id) }
@@ -691,7 +693,7 @@ private fun RecordatoriosImportacion(importar: (String) -> Unit) {
             listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom").forEachIndexed { k, n -> Ficha(n, c.importar_dia == k + 1) { Repo.cambiarConfig { it.copy(importar_dia = k + 1) } } }
         }
         Etiqueta("Hora: ${c.importar_hora}:00")
-        Slider(value = c.importar_hora.toFloat(), onValueChange = { v -> Repo.cambiarConfig { it.copy(importar_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
+        Deslizador(value = c.importar_hora.toFloat(), onValueChange = { v -> Repo.cambiarConfig { it.copy(importar_hora = v.toInt()) } }, valueRange = 8f..22f, steps = 13)
         Ayuda("WhatsApp y Kindle no tienen recordatorio.")
     }
 }

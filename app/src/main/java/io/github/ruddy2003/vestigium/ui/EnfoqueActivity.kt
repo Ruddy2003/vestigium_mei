@@ -26,7 +26,6 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -229,7 +228,7 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
     if (terminando) {
         var nota by remember { mutableStateOf("") }
         val min = (Enfoque.enfoqueTotal(p) / 60_000).toInt()
-        AlertDialog(onDismissRequest = { terminando = false },
+        Dialogo(onDismissRequest = { terminando = false },
             title = { Text(if (p.tipo == "siesta") "¿Terminar la siesta?" else "¿Terminar ya?") },
             text = {
                 Column {

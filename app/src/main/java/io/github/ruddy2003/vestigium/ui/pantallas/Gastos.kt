@@ -63,6 +63,7 @@ import io.github.ruddy2003.vestigium.ui.estiloCifras
 import io.github.ruddy2003.vestigium.ui.estiloGrafica
 import io.github.ruddy2003.vestigium.ui.pincelDeCifras
 import kotlinx.coroutines.launch
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 fun dinero(v: Double): String = "$" + String.format(java.util.Locale.US, "%,.2f", v).removeSuffix(".00")
 
@@ -315,7 +316,7 @@ fun EditorCategorias() {
         var t by remember(cat, sb) { mutableStateOf(sb ?: cat) }
         val n = D.cuantos(cat, sb)
         var tambien by remember(cat, sb) { mutableStateOf(true) }
-        androidx.compose.material3.AlertDialog(onDismissRequest = { renombrar = null }, title = { Text(if (sb == null) "Renombrar categoría" else "Renombrar subcategoría") },
+        Dialogo(onDismissRequest = { renombrar = null }, title = { Text(if (sb == null) "Renombrar categoría" else "Renombrar subcategoría") },
             text = {
                 Column {
                     OutlinedTextField(value = t, onValueChange = { t = it }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -367,7 +368,7 @@ private fun DialogoDinero(
     var m by remember { mutableStateOf(marca0) }
     var confirmar by remember { mutableStateOf(false) }
     val v = monto.toDoubleOrNull()
-    androidx.compose.material3.AlertDialog(
+    Dialogo(
         onDismissRequest = cerrar,
         title = { Text("$titulo · ${Fechas.corto(fecha0)} ${hora0.take(5)}") },
         text = {

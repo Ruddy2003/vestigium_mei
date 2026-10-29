@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -41,6 +40,7 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TextoMarcado
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 /**
  * Tus #temas en orden: cuántos días aparece cada uno, los que parecen el mismo escrito distinto, los de un solo día
@@ -111,7 +111,7 @@ fun PantallaTusTemas(nav: Nav) {
         val destino = Texto.etiqueta(nuevo)
         val previa = remember(t.nombre, destino) { if (destino.isNotBlank() && destino != t.nombre) TusTemas.vistaPrevia(t.nombre, destino) else null }
         val existe = lista.any { it.nombre == destino && destino != t.nombre }
-        AlertDialog(onDismissRequest = { editando = null },
+        Dialogo(onDismissRequest = { editando = null },
             title = { TextoMarcado("#${t.nombre}", style = MaterialTheme.typography.titleLarge) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {

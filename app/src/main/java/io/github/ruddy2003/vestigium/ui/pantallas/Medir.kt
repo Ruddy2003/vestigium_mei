@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -77,6 +76,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
+import io.github.ruddy2003.vestigium.ui.Deslizador
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 // ---------------- Cuestionarios ----------------
 @Composable
@@ -263,7 +264,7 @@ fun PantallaLugares(nav: Nav) {
                 OutlinedTextField(value = nombre, onValueChange = { nombre = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre (ej. SEDECO, casa de mis abuelos)") }, singleLine = true)
                 Etiqueta("Tipo"); FilaFichas(Catalogo.TIPOS_LUGAR, tipo) { tipo = it }
                 Etiqueta("Radio: ${radio.toInt()} m")
-                Slider(value = radio, onValueChange = { radio = it }, valueRange = 80f..400f)
+                Deslizador(value = radio, onValueChange = { radio = it }, valueRange = 80f..400f)
                 msg?.let { Ayuda(it) }
                 BotonPrincipal("Guardar este lugar", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = nombre.isNotBlank()) {
                     scope.launch {
@@ -320,7 +321,7 @@ fun PantallaLugares(nav: Nav) {
                         Ayuda("Agrandar el radio busca las visitas de los últimos 30 días que antes quedaban fuera; achicarlo no quita las que ya hay.")
                     }
                     renombrar?.let { t ->
-                        androidx.compose.material3.AlertDialog(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
+                        Dialogo(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
                             text = { OutlinedTextField(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
                             confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = { Repo.guardarLugar(l.copy(nombre = t.trim())); renombrar = null }) { Text("Guardar") } },
                             dismissButton = { TextButton(onClick = { renombrar = null }) { Text("Cancelar") } })
@@ -336,7 +337,7 @@ fun PantallaLugares(nav: Nav) {
                                 if (ignorar) Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados.dropLast(1)) }
                             }
                         }
-                        androidx.compose.material3.AlertDialog(onDismissRequest = { borrar = false }, title = { Text("Quitar «${l.nombre}»") },
+                        Dialogo(onDismissRequest = { borrar = false }, title = { Text("Quitar «${l.nombre}»") },
                             text = {
                                 Column {
                                     if (suyas.isEmpty()) Ayuda("No tiene visitas guardadas.")
@@ -408,7 +409,7 @@ private fun enLugar(m: io.github.ruddy2003.vestigium.data.Momento, l: io.github.
 @Composable
 fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Unit) {
     val actual = Repo.lugares.firstOrNull { it.id == v.lugar }
-    androidx.compose.material3.AlertDialog(onDismissRequest = cerrar,
+    Dialogo(onDismissRequest = cerrar,
         title = { Text("${actual?.nombre ?: "Lugar quitado"} · ${Fechas.horaDe(v.entrada)}" + (v.salida?.let { "–${Fechas.horaDe(it)}" } ?: "")) },
         text = {
             Column {

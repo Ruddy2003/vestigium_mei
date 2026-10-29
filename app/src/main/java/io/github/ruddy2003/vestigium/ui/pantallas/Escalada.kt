@@ -2,7 +2,6 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import android.app.DatePickerDialog
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -65,6 +64,7 @@ import io.github.ruddy2003.vestigium.ui.puntoGrafica
 import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 /** Sesión que se está editando (la elige la lista y la lee el editor). */
 object EdicionEscalada { var id by mutableStateOf<String?>(null) }
@@ -214,8 +214,7 @@ fun PantallaAscenso(nav: Nav) {
                     Clave("dies", Fechas.titulo(a.fecha).lowercase(), ancho = 6)
                 }
                 BotonSecundario("cambiar fecha", Modifier.padding(top = 4.dp)) {
-                    val p = Fechas.parse(a.fecha)
-                    DatePickerDialog(ctx, { _, y, m, d -> g(a.copy(fecha = Fechas.iso(LocalDate.of(y, m + 1, d)))) }, p.year, p.monthValue - 1, p.dayOfMonth).show()
+                    elegirFecha(ctx, a.fecha) { g(a.copy(fecha = it)) }
                 }
                 Etiqueta("Lugar")
                 OutlinedTextField(a.lugar, { g(a.copy(lugar = it)) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("gimnasio o zona", style = MaterialTheme.typography.labelLarge) })

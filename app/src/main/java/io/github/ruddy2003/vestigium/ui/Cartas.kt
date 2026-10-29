@@ -25,8 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -1117,8 +1115,8 @@ fun LecturaCarta(c: Carta, volver: () -> Unit, acciones: List<Pair<String, () ->
                 BarraPagina(p, volver, "${Texto.palabras(c.texto)} palabras") {
                     Box {
                         Text("⋯", fontSize = 22.sp, color = p.acento, modifier = Modifier.clickable { menu = true }.padding(horizontal = 10.dp))
-                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = p.color) {
-                            acciones.forEach { (t, f) -> DropdownMenuItem(text = { Text(t, color = p.tinta) }, onClick = { menu = false; f() }) }
+                        Menu(expanded = menu, onDismissRequest = { menu = false }, containerColor = p.color) {
+                            acciones.forEach { (t, f) -> OpcionMenu(text = { Text(t, color = p.tinta) }, onClick = { menu = false; f() }) }
                         }
                     }
                 }

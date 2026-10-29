@@ -3,7 +3,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
 import io.github.ruddy2003.vestigium.data.privado
-import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -93,6 +91,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.ui.Dialogo
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 /** Minúsculas y sin acentos, para buscar sin importar cómo se escribió. */
 private fun sinAcentos(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
@@ -459,9 +459,7 @@ fun PantallaCartaNueva(nav: Nav) {
                         Ficha(n, b.fecha == null && b.plazo == d) { b.plazo = d; b.fecha = null }
                     }
                     Ficha(b.fecha?.let { "el ${Fechas.corto(it)} ${it.take(4)}" } ?: "otra fecha…", b.fecha != null) {
-                        val d = Fechas.parse(b.abrirEn(hoy))
-                        DatePickerDialog(ctx, { _, y, m, dd -> b.fecha = Fechas.iso(LocalDate.of(y, m + 1, dd)).let { f -> if (f <= hoy) Fechas.sumar(hoy, 1) else f } },
-                            d.year, d.monthValue - 1, d.dayOfMonth).apply { datePicker.minDate = Fechas.finDia(hoy) }.show()
+                        elegirFecha(ctx, b.abrirEn(hoy), minimo = Fechas.parse(Fechas.sumar(hoy, 1))) { f -> b.fecha = if (f <= hoy) Fechas.sumar(hoy, 1) else f }
                     }
                 }
                 Ayuda("Se abrirá el ${Fechas.titulo(b.abrirEn(hoy)).lowercase()} de ${b.abrirEn(hoy).take(4)}. Ese día te llegará un aviso.", Modifier.padding(top = 8.dp))
@@ -530,7 +528,7 @@ fun PantallaCarta(nav: Nav) {
                 modo = Escrito.CARTA, encabezado = { p -> io.github.ruddy2003.vestigium.ui.EncabezadoCarta(Estilo.tema, p, c.escrita, c.hora, c.lugar, c.para, null) }, textoBoton = "listo")
         }
     }
-    if (borrar) AlertDialog(onDismissRequest = { borrar = false },
+    if (borrar) Dialogo(onDismissRequest = { borrar = false },
         title = { Text("¿Borrar esta carta?") }, text = { Text("Tendrás unos segundos para deshacerlo.") },
         confirmButton = { TextButton(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { borrar = false }) { Text("Cancelar") } })

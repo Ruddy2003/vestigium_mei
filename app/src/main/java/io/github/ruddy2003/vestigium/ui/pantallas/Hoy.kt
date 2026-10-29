@@ -93,6 +93,13 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaMeta
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
+import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -716,6 +723,7 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
     val normal = if (previos.size >= 5) previos.average() else null
     val color = MaterialTheme.colorScheme.primary
     val tenue = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
     // Las barras crecen al abrir el día.
     val crecer = remember(fecha, m.id) { androidx.compose.animation.core.Animatable(if (Repo.config.animaciones) 0f else 1f) }
     androidx.compose.runtime.LaunchedEffect(fecha, m.id) {
@@ -746,13 +754,13 @@ private fun TarjetaMetrica(m: Metrica, fecha: String, extra: Map<String, Map<Str
             Canvas(Modifier.fillMaxWidth().height(26.dp).padding(top = 4.dp)) {
                 val w = size.width / 7
                 semana.forEachIndexed { i, x ->
-                    if (x == null) drawCircle(tenue, 2f, Offset(i * w + w / 2, size.height - 2f))
+                    if (x == null) puntoGrafica(eg, Offset(i * w + w / 2, size.height - 2f), 2f, tenue)
                     else {
                         val h = (size.height * (x / max) * crecer.value).toFloat().coerceAtLeast(2f)
-                        drawRoundRect(if (i == 6) color else color.copy(alpha = 0.35f), Offset(i * w + w * 0.2f, size.height - h), Size(w * 0.6f, h), CornerRadius(2f, 2f))
+                        barraGrafica(eg, Offset(i * w + w * 0.2f, size.height - h), Size(w * 0.6f, h), if (i == 6) color else color.copy(alpha = 0.35f))
                     }
                 }
-                normal?.let { n -> val y = size.height - (size.height * (n / max)).toFloat(); if (y in 0f..size.height) drawLine(tenue, Offset(0f, y), Offset(size.width, y), 1f) }
+                normal?.let { n -> val y = size.height - (size.height * (n / max)).toFloat(); if (y in 0f..size.height) lineaMeta(eg, Offset(0f, y), Offset(size.width, y), tenue) }
             }
         }
     }
@@ -858,7 +866,8 @@ fun LineaDelTiempo(fecha: String) {
         }
         val medidor = androidx.compose.ui.text.rememberTextMeasurer()
         val estiloEtq = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onPrimary)
-        val estiloEje = MaterialTheme.typography.labelSmall.copy(color = texto)
+        val estiloEje = estiloCifras(MaterialTheme.typography.labelSmall.copy(color = texto))
+        val eg = estiloGrafica()
         Canvas(Modifier.weight(1f).height(alto * (pistas.size + 1))) {
             val h = alto.toPx()
             fun x(ms: Long) = ((ms - ini).toFloat() / (fin - ini)) * size.width
@@ -868,12 +877,16 @@ fun LineaDelTiempo(fecha: String) {
                 drawRect(noche, Offset(0f, 0f), Size(a, h * pistas.size))
                 drawRect(noche, Offset(t, 0f), Size(size.width - t, h * pistas.size))
             }
+            // La rejilla del tema: un renglón por pista y una guía cada 6 horas; abajo, el eje de las horas.
+            val horas = listOf(0, 6, 12, 18, 24)
+            val fondo = h * pistas.size
+            rejillaGrafica(eg, (1 until pistas.size).map { it * h }, linea, xs = horas.map { x(ini + it * 3_600_000L) }, area = Rect(0f, 0f, size.width, fondo))
+            ejeGrafica(eg, Offset(0f, fondo), Offset(size.width, fondo), linea)
             pistas.forEachIndexed { i, p ->
                 val y = i * h
-                drawLine(linea, Offset(0f, y + h), Offset(size.width, y + h), 0.6f)
                 p.bloques.forEach { (a, b, c) ->
                     val xa = x(a).coerceIn(0f, size.width); val xb = x(b).coerceIn(0f, size.width)
-                    if (xb > xa) drawRoundRect(c.copy(alpha = 0.75f), Offset(xa, y + h * 0.2f), Size(xb - xa, h * 0.6f), CornerRadius(3f, 3f))
+                    if (xb > xa) barraGrafica(eg, Offset(xa, y + h * 0.2f), Size(xb - xa, h * 0.6f), c.copy(alpha = 0.75f), horizontal = true)
                 }
                 p.etiquetas.forEach { (a, t) ->
                     val xa = x(a)
@@ -894,14 +907,13 @@ fun LineaDelTiempo(fecha: String) {
                 }
             }
             // Eje de horas y la hora actual.
-            listOf(0, 6, 12, 18, 24).forEach { hh ->
+            horas.forEach { hh ->
                 val xa = x(ini + hh * 3_600_000L)
-                drawLine(linea, Offset(xa, 0f), Offset(xa, h * pistas.size), 0.6f)
                 val r = medidor.measure(if (hh == 24) "0" else "$hh", estiloEje)
                 drawText(r, topLeft = Offset((xa - r.size.width / 2).coerceIn(0f, size.width - r.size.width), h * pistas.size + 2f))
             }
             val ahora = System.currentTimeMillis()
-            if (ahora in ini..fin) { val xa = x(ahora); drawLine(sec, Offset(xa, 0f), Offset(xa, h * pistas.size), 2f) }
+            if (ahora in ini..fin) { val xa = x(ahora); lineaMeta(eg, Offset(xa, 0f), Offset(xa, h * pistas.size), sec, 2f) }
         }
     }
     Ayuda("De 0:00 a las 5:00 del día siguiente. Lo sombreado es de noche.", Modifier.padding(top = 4.dp))

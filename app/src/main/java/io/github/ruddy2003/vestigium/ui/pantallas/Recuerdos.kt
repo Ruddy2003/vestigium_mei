@@ -26,6 +26,9 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.TextoMarcado
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -80,6 +83,7 @@ fun HaceUnAnio(fecha: String, nav: Nav) {
     if (anios.isEmpty()) return
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
+    val eg = estiloGrafica()
     Seccion("Este día hace un año", if (anios.size > 1) "Y más atrás: lo que pasaba en esta misma fecha." else null, plegable = true) {
         anios.forEach { r ->
             Surface(shape = MaterialTheme.shapes.medium, color = cs.surface, border = androidx.compose.foundation.BorderStroke(1.dp, cs.outline),
@@ -92,10 +96,13 @@ fun HaceUnAnio(fecha: String, nav: Nav) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(if (r.anios == 1) "Hace un año" else "Hace ${r.anios} años", style = MaterialTheme.typography.titleMedium, color = cs.primary, modifier = Modifier.weight(1f))
                             r.animo?.let { a ->
-                                Box(Modifier.size(12.dp).clip(RoundedCornerShape(6.dp)).then(Modifier.padding(0.dp))) {
-                                    androidx.compose.foundation.Canvas(Modifier.size(12.dp)) { drawCircle(Tonos.valencia(a.toDouble(), oscuro) ?: cs.outline) }
+                                // Sin recorte redondo: el punto toma la forma del tema y algunas asoman un poco del círculo.
+                                Box(Modifier.size(12.dp)) {
+                                    androidx.compose.foundation.Canvas(Modifier.size(12.dp)) {
+                                        puntoGrafica(eg, center, size.minDimension / 2, Tonos.valencia(a.toDouble(), oscuro) ?: cs.outline)
+                                    }
                                 }
-                                Text(" $a/7", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                                Text(" $a/7", style = estiloCifras(MaterialTheme.typography.labelMedium), color = cs.onSurfaceVariant)
                             }
                         }
                         Text(Fechas.titulo(r.fecha).lowercase() + (r.clima?.let { " · $it" } ?: ""), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)

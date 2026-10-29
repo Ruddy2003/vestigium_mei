@@ -2,7 +2,6 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import android.app.DatePickerDialog
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -100,6 +99,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 object EdicionObra { var id by mutableStateOf<String?>(null) }
 
@@ -586,8 +586,7 @@ fun PantallaObra(nav: Nav) {
         if (uri != null) Portadas.desdeFoto(ctx, uri, o.id)?.let { n -> Repo.obras.firstOrNull { it.id == o.id }?.let { g(it.copy(portada = n, portada_url = null)) } }
     }
     fun fecha(actual: String?, poner: (String?) -> Unit) {
-        val p = Fechas.parse(actual ?: hoy)
-        DatePickerDialog(ctx, { _, y, m, d -> poner(Fechas.iso(LocalDate.of(y, m + 1, d))) }, p.year, p.monthValue - 1, p.dayOfMonth).show()
+        elegirFecha(ctx, actual ?: hoy) { poner(it) }
     }
 
     Hoja(TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre ?: "Obra", nav.atras, latin = "OPVS", subtitulo = "Se guarda sola mientras escribes.") {

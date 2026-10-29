@@ -3,7 +3,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
 import io.github.ruddy2003.vestigium.data.privado
-import android.app.DatePickerDialog
 import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -31,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.nativeCanvas
@@ -52,11 +49,16 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import io.github.ruddy2003.vestigium.data.alFuturo
 import io.github.ruddy2003.vestigium.data.legible
+import io.github.ruddy2003.vestigium.ui.Dialogo
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 @Composable
 fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
@@ -90,8 +92,7 @@ fun PantallaTotales(nav: Nav, buscar: Boolean = false) {
             Ficha("este mes", periodo == "mes") { periodo = "mes" }
             Ficha("30 días", periodo == "30") { periodo = "30" }
             Ficha(if (periodo == "desde" && propio != null) "desde ${Totales.fecha(propio!!)}" else "desde…", periodo == "desde") {
-                val d = Fechas.parse(propio ?: Fechas.sumar(hoy, -90))
-                DatePickerDialog(ctx, { _, y, m, dd -> propio = Fechas.iso(LocalDate.of(y, m + 1, dd)); periodo = "desde" }, d.year, d.monthValue - 1, d.dayOfMonth).show()
+                elegirFecha(ctx, propio ?: Fechas.sumar(hoy, -90)) { propio = it; periodo = "desde" }
             }
         }
         Ayuda(if (periodo == "todo") "Desde el primer dato que tengas hasta hoy." else "Del ${Totales.fecha(desde)} a hoy.", Modifier.padding(top = 4.dp))
@@ -188,7 +189,7 @@ private fun Resultados(r: Totales.Resultado, q: String, abrir: (Totales.Indice, 
 
 @Composable
 private fun Detalle(i: Totales.Indice, e: Totales.Entrada, cerrar: () -> Unit) {
-    AlertDialog(
+    Dialogo(
         onDismissRequest = cerrar,
         title = { Text(e.nombre, style = MaterialTheme.typography.titleLarge) },
         text = {
@@ -225,6 +226,8 @@ private fun Meses(porMes: Map<String, Double>, unidad: String) {
     val texto = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
     val max = meses.maxOf { it.second }.coerceAtLeast(1e-9)
     val pico = meses.maxBy { it.second }
+    val linea = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
     Etiqueta("por mes")
     Canvas(Modifier.fillMaxWidth().aspectRatio(2.6f).padding(top = 4.dp)) {
         val abajo = 30f
@@ -232,9 +235,10 @@ private fun Meses(porMes: Map<String, Double>, unidad: String) {
         val pincel = Paint().apply { color = texto; textSize = 22f; isAntiAlias = true; textAlign = Paint.Align.CENTER }
         meses.forEachIndexed { k, (m, v) ->
             val h = (size.height - abajo) * (v / max).toFloat()
-            if (v > 0) drawRoundRect(barra, Offset(k * w + w * 0.15f, size.height - abajo - h), Size(w * 0.7f, h), CornerRadius(3f, 3f))
+            if (v > 0) barraGrafica(eg, Offset(k * w + w * 0.15f, size.height - abajo - h), Size(w * 0.7f, h), barra)
             if (meses.size <= 12 || k % 2 == 0) drawContext.canvas.nativeCanvas.drawText("EFMAMJJASOND"[m.takeLast(2).toInt() - 1].toString(), k * w + w / 2, size.height - 6f, pincel)
         }
+        ejeGrafica(eg, Offset(0f, size.height - abajo), Offset(size.width, size.height - abajo), linea)
     }
     Ayuda("${Fechas.mesTitulo(meses.first().first)} a ${Fechas.mesTitulo(meses.last().first)} · más alto: ${Totales.formato(pico.second, unidad)} en ${Fechas.mesTitulo(pico.first).lowercase()}")
 }

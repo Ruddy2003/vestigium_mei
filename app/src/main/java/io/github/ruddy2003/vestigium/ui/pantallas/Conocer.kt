@@ -2,7 +2,6 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import android.app.DatePickerDialog
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -51,6 +50,8 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.ui.elegirFecha
+import io.github.ruddy2003.vestigium.ui.elegirHora
 
 @Composable
 private fun Varias(opciones: List<Opcion>, elegidas: List<String>, onCambio: (List<String>) -> Unit) {
@@ -95,8 +96,7 @@ fun PantallaConocer(nav: Nav) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     BotonSecundario(if (p.nacimiento.isBlank()) "elegir fecha" else Fechas.larga(p.nacimiento)) {
                         val d = runCatching { Fechas.parse(p.nacimiento) }.getOrDefault(LocalDate.now().minusYears(25))
-                        DatePickerDialog(ctx, { _, y, m, dd -> cambiar(p.copy(nacimiento = Fechas.iso(LocalDate.of(y, m + 1, dd)))) }, d.year, d.monthValue - 1, d.dayOfMonth)
-                            .apply { datePicker.maxDate = System.currentTimeMillis() }.show()
+                        elegirFecha(ctx, Fechas.iso(d), maximo = LocalDate.now()) { cambiar(p.copy(nacimiento = it)) }
                     }
                     Perfiles.edad(p = p)?.let { Text("  $it años", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
                 }
@@ -205,7 +205,7 @@ fun PantallaConocer(nav: Nav) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     fun reloj(valor: String, poner: (String) -> Unit) {
                         val (h, m) = valor.split(":").mapNotNull { it.toIntOrNull() }.let { (it.getOrNull(0) ?: 23) to (it.getOrNull(1) ?: 0) }
-                        android.app.TimePickerDialog(ctx, { _, hh, mm -> poner("%02d:%02d".format(hh, mm)) }, h, m, true).show()
+                        elegirHora(ctx, h, m) { hh, mm -> poner("%02d:%02d".format(hh, mm)) }
                     }
                     BotonSecundario(if (p.dormir_ideal.isBlank()) "me duermo a…" else "me duermo a las ${p.dormir_ideal}") { reloj(p.dormir_ideal.ifBlank { "23:00" }) { cambiar(p.copy(dormir_ideal = it)) } }
                     BotonSecundario(if (p.despertar_ideal.isBlank()) "despierto a…" else "despierto a las ${p.despertar_ideal}") { reloj(p.despertar_ideal.ifBlank { "07:00" }) { cambiar(p.copy(despertar_ideal = it)) } }

@@ -48,6 +48,7 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TextoMarcado
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 fun horasMin(min: Int): String = if (min >= 60) "${min / 60} h ${"%02d".format(min % 60)}" else "$min min"
 
@@ -134,7 +135,7 @@ fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit
     var min by remember(t.id) { mutableStateOf<Int?>(t.min) }
     var nota by remember(t.id) { mutableStateOf(t.nota) }
     var confirmar by remember(t.id) { mutableStateOf(false) }
-    androidx.compose.material3.AlertDialog(
+    Dialogo(
         onDismissRequest = cerrar,
         title = { Text("${Catalogo.nombreTramo(t.tipo)} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.inicio)}") },
         text = {

@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
@@ -33,7 +32,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -98,6 +96,9 @@ import java.util.UUID
 import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
+import io.github.ruddy2003.vestigium.ui.Conmutador
+import io.github.ruddy2003.vestigium.ui.Dialogo
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 // =====================================================================
 //  Geometría del mapa: proyección Natural Earth y contornos ya proyectados
@@ -741,7 +742,7 @@ fun PantallaMundo(nav: Nav) {
                 if (lista.size > 12) TextButton(onClick = { abiertas = !abiertas }) { Text(if (abiertas) "ver menos" else "ver las ${lista.size}") }
             }
             borrar?.let { b ->
-                AlertDialog(onDismissRequest = { borrar = null }, title = { Text("¿Quitar ${b.nombre}?") },
+                Dialogo(onDismissRequest = { borrar = null }, title = { Text("¿Quitar ${b.nombre}?") },
                     text = { Text("Se borra lo que anotaste a mano. Si tus ubicaciones pasan por ahí, la ciudad seguirá apareciendo.") },
                     confirmButton = { TextButton(onClick = {
                         Repo.cambiarConfig { c -> c.copy(ciudades_visitadas = c.ciudades_visitadas.filter { it.id != b.id }) }; borrar = null
@@ -907,7 +908,7 @@ private fun OrigenFotos(cuenta: Int, cambio: () -> Unit) {
                 }
                 if (a.imposibles > 0 || a.nombre in c.fotos_sin_fecha) Row(Modifier.padding(start = 48.dp), verticalAlignment = Alignment.CenterVertically) {
                     val malo = a.nombre in c.fotos_sin_fecha
-                    androidx.compose.material3.Switch(checked = malo, onCheckedChange = { v -> cambiar { it.copy(fotos_sin_fecha = if (v) it.fotos_sin_fecha + a.nombre else it.fotos_sin_fecha - a.nombre) } })
+                    Conmutador(checked = malo, onCheckedChange = { v -> cambiar { it.copy(fotos_sin_fecha = if (v) it.fotos_sin_fecha + a.nombre else it.fotos_sin_fecha - a.nombre) } })
                     Text("su reloj estaba mal: usar la fecha del archivo", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
                 }
             }
@@ -1106,8 +1107,7 @@ fun PantallaCiudadNueva(nav: Nav) {
         resultados = withContext(Dispatchers.IO) { runCatching { Mundo.buscarCiudad(ctx, texto) }.getOrDefault(emptyList()) }
     }
     fun fecha(actual: String?, poner: (String) -> Unit) {
-        val p = actual?.let { Fechas.parse(it) } ?: LocalDate.now()
-        DatePickerDialog(ctx, { _, y, m, d -> poner(Fechas.iso(LocalDate.of(y, m + 1, d))) }, p.year, p.monthValue - 1, p.dayOfMonth).show()
+        elegirFecha(ctx, actual) { poner(it) }
     }
     Hoja("Añadir ciudad", nav.atras, "Busca la ciudad por su nombre. Si sabes cuándo fuiste, ponlo: así cuenta en el tiempo de cada ciudad y país.") {
         val c = remember { Mundo.ciudades(ctx) }
@@ -1223,7 +1223,7 @@ fun PantallaUnesco(nav: Nav) {
     detalle?.let { s ->
         val visto = s.i in vistos
         val manual = Repo.config.unesco_marcados.any { it.id == s.i }
-        AlertDialog(onDismissRequest = { detalle = null },
+        Dialogo(onDismissRequest = { detalle = null },
             title = { Text(s.n) },
             text = {
                 Column {

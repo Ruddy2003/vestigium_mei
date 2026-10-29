@@ -21,13 +21,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -75,6 +72,8 @@ import io.github.ruddy2003.vestigium.ui.elegirFecha
 import io.github.ruddy2003.vestigium.ui.rememberMarcas
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import io.github.ruddy2003.vestigium.ui.Deslizador
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 // =====================================================================
 //  Cobertura por variable
@@ -177,7 +176,7 @@ fun PantallaLugarNuevo(nav: Nav) {
                     Catalogo.TIPOS_LUGAR.forEach { o -> Ficha(o.nombre, tipo == o.id) { tipo = o.id } }
                 }
                 Etiqueta("Radio: ${radio.toInt()} m")
-                Slider(value = radio, onValueChange = { radio = it }, valueRange = 50f..300f, steps = 9)
+                Deslizador(value = radio, onValueChange = { radio = it }, valueRange = 50f..300f, steps = 9)
                 BotonPrincipal("Guardar", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = nombre.isNotBlank()) {
                     val n = Lugares.guardar(ctx, cand, nombre, tipo, radio.toInt())
                     msg = "Guardado «${nombre.trim()}»." + if (n > 0) " Encontré $n visita${if (n > 1) "s" else ""} de los últimos 30 días." else ""
@@ -193,9 +192,9 @@ fun PantallaLugarNuevo(nav: Nav) {
             Tarjeta {
                 Interruptor("Preguntar por lugares nuevos", c.lugares_detectar) { v -> Repo.cambiarConfig { it.copy(lugares_detectar = v) } }
                 Etiqueta("Tiempo en el sitio: ${c.lugar_minutos} min")
-                Slider(value = c.lugar_minutos.toFloat(), onValueChange = { v -> Repo.cambiarConfig { it.copy(lugar_minutos = v.toInt()) } }, valueRange = 15f..60f, steps = 8)
+                Deslizador(value = c.lugar_minutos.toFloat(), onValueChange = { v -> Repo.cambiarConfig { it.copy(lugar_minutos = v.toInt()) } }, valueRange = 15f..60f, steps = 8)
                 Etiqueta("Radio del sitio: ${c.lugar_radio_m} m")
-                Slider(value = c.lugar_radio_m.toFloat(), onValueChange = { v -> Repo.cambiarConfig { it.copy(lugar_radio_m = v.toInt()) } }, valueRange = 40f..200f, steps = 15)
+                Deslizador(value = c.lugar_radio_m.toFloat(), onValueChange = { v -> Repo.cambiarConfig { it.copy(lugar_radio_m = v.toInt()) } }, valueRange = 40f..200f, steps = 15)
                 Ayuda("El sonido del aviso es el del canal «Lugares especiales»; se cambia desde los ajustes de notificaciones de Android.")
             }
         }
@@ -305,7 +304,7 @@ fun DialogoNota(n: Nota, cerrar: () -> Unit) {
     var tp by remember(n.id) { mutableStateOf(n.tipo) }
     var f by remember(n.id) { mutableStateOf(n.fecha) }
     var rec by remember(n.id) { mutableStateOf(n.recordar_el) }
-    AlertDialog(onDismissRequest = { cerrar() }, title = { Text("Editar nota") },
+    Dialogo(onDismissRequest = { cerrar() }, title = { Text("Editar nota") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -451,7 +450,7 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
     val vars = remember { Estadistica.variables(dinamicas = false).filter { it.grupo != "Privado" } }
     var objetivoTexto by remember(previa?.id) { mutableStateOf(previa?.objetivo?.let { "%.0f".format(it) } ?: "") }
     var umbralTexto by remember(previa?.id) { mutableStateOf(previa?.umbral?.takeIf { it > 0 }?.let { "%.0f".format(it) } ?: "") }
-    AlertDialog(onDismissRequest = cerrar, title = { Text(if (previa == null) "Nueva meta" else "Meta") },
+    Dialogo(onDismissRequest = cerrar, title = { Text(if (previa == null) "Nueva meta" else "Meta") },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(value = m.nombre, onValueChange = { m = m.copy(nombre = it) }, label = { Text("Qué quieres lograr") }, modifier = Modifier.fillMaxWidth())
@@ -473,7 +472,7 @@ private fun EditorMeta(previa: Meta?, cerrar: () -> Unit) {
                 when (m.medida_tipo) {
                     null -> {
                         Etiqueta("Progreso: ${m.progreso_manual ?: 0}%")
-                        Slider(value = (m.progreso_manual ?: 0).toFloat(), onValueChange = { m = m.copy(progreso_manual = it.toInt()) }, valueRange = 0f..100f, steps = 19)
+                        Deslizador(value = (m.progreso_manual ?: 0).toFloat(), onValueChange = { m = m.copy(progreso_manual = it.toInt()) }, valueRange = 0f..100f, steps = 19)
                     }
                     "habito" -> FlowRow(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         io.github.ruddy2003.vestigium.data.Privado.habitosVisibles().filter { it.activo }.forEach { h -> Ficha(h.nombre, m.medida_clave == h.id) { m = m.copy(medida_clave = h.id) } }

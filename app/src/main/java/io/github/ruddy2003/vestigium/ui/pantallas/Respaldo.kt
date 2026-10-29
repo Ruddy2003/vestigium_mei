@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -40,6 +39,7 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 /**
  * Respaldo completo de un toque: guardar todo en un archivo, restaurarlo desde un archivo o traer la copia más reciente de Drive,
@@ -145,7 +145,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
         scope.launch(Dispatchers.IO) { runCatching { Exportar.respaldoAutomatico(ctx) }; runCatching { Drive.automatico(ctx) } }
     }
     confirmarRestaurar?.let { seguir ->
-        AlertDialog(
+        Dialogo(
             onDismissRequest = { confirmarRestaurar = null },
             title = { Text("¿Restaurar un respaldo?", style = MaterialTheme.typography.titleLarge) },
             text = { Ayuda(if (Repo.dias.isEmpty()) "La app está vacía: se traerá todo, también tus ajustes." else
@@ -155,7 +155,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
         )
     }
     // Se pregunta antes de borrarla: después ya no hay forma de verla, y las copias cifradas de antes la siguen pidiendo (H-8-15).
-    if (confirmarQuitar) AlertDialog(
+    if (confirmarQuitar) Dialogo(
         onDismissRequest = { confirmarQuitar = false },
         title = { Text("¿Quitar la contraseña?", style = MaterialTheme.typography.titleLarge) },
         text = { Ayuda("El próximo respaldo vuelve a ser .zip. Las copias que ya existen (en Drive, las semanales y mensuales, y las que guardaste o compartiste) " +
@@ -168,7 +168,7 @@ fun RespaldoCompleto(soloRestaurar: Boolean = false) {
     )
     pedirClave?.let { reintento ->
         var clave by remember { mutableStateOf("") }
-        AlertDialog(
+        Dialogo(
             onDismissRequest = { pedirClave = null },
             title = { Text("Respaldo cifrado", style = MaterialTheme.typography.titleLarge) },
             text = {
@@ -203,7 +203,7 @@ private fun DialogoNuevaClave(cambio: Boolean, cerrar: () -> Unit, listo: (Strin
         b.isNotEmpty() && a != b -> "No coinciden."
         else -> null
     }
-    AlertDialog(
+    Dialogo(
         onDismissRequest = cerrar,
         title = { Text("Contraseña de respaldo", style = MaterialTheme.typography.titleLarge) },
         text = {

@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -31,11 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontFamily
@@ -59,6 +56,14 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaMeta
+import io.github.ruddy2003.vestigium.ui.pincelDeCifras
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
+import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.DayOfWeek
@@ -347,12 +352,14 @@ private fun Lista(titulo: String, conteo: Map<String, Int>, prefijo: String, id:
         Text(titulo, style = MaterialTheme.typography.titleMedium)
         val top = conteo.entries.sortedByDescending { it.value }.take(12)
         if (top.isEmpty()) Ayuda("Nada aún.")
+        val base = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp)
+        val cifras = estiloCifras(base)
         top.forEach { (k, v) ->
             val vid = id(k)
             Row(Modifier.fillMaxWidth().then(if (vid != null) Modifier.clickable { abrir(vid) } else Modifier).padding(vertical = 3.dp)) {
-                Text(prefijo + k + if (vid != null) "  ›" else "", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp, modifier = Modifier.weight(1f),
+                Text(prefijo + k + if (vid != null) "  ›" else "", style = base, modifier = Modifier.weight(1f),
                     color = if (vid != null) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Unspecified)
-                Text("$v ${if (v == 1) "día" else "días"}", fontFamily = io.github.ruddy2003.vestigium.ui.Letra.codigo, fontSize = 13.sp)
+                Text("$v ${if (v == 1) "día" else "días"}", style = cifras)
             }
         }
     }
@@ -362,13 +369,14 @@ private fun Lista(titulo: String, conteo: Map<String, Int>, prefijo: String, id:
 private fun Horas(v: IntArray) {
     val color = MaterialTheme.colorScheme.primary
     val fondo = MaterialTheme.colorScheme.surfaceVariant
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().aspectRatio(10f)) {
         val max = (v.maxOrNull() ?: 1).coerceAtLeast(1)
         val w = size.width / 24
         for (i in 0 until 24) {
-            drawRoundRect(fondo, Offset(i * w + 1, 0f), Size(w - 2, size.height), CornerRadius(3f, 3f))
+            barraGrafica(eg, Offset(i * w + 1, 0f), Size(w - 2, size.height), fondo, pista = true)
             val h = size.height * v[i] / max
-            if (v[i] > 0) drawRoundRect(color, Offset(i * w + 1, size.height - h), Size(w - 2, h), CornerRadius(3f, 3f))
+            if (v[i] > 0) barraGrafica(eg, Offset(i * w + 1, size.height - h), Size(w - 2, h), color)
         }
     }
 }
@@ -382,6 +390,7 @@ private fun Cobertura() {
     val inicio = hoy.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).minusWeeks(15)
     var registrados = 0
     for (i in 0..((hoy.toEpochDay() - inicio.toEpochDay()).toInt())) if (Repo.dias.containsKey(Fechas.iso(inicio.plusDays(i.toLong())))) registrados++
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().aspectRatio(16f / 7.6f)) {
         val izq = 34f
         val celda = (size.width - izq) / 16
@@ -393,7 +402,8 @@ private fun Cobertura() {
             if (f.isAfter(hoy)) continue
             val dia = Repo.dias[Fechas.iso(f)]
             val col = if (dia == null) vacio else acento.copy(alpha = dia.valencia?.let { 0.25f + (it - 1) / 6f * 0.75f } ?: 0.35f)
-            drawRoundRect(col, Offset(izq + w * celda, dd * celda), Size(lado, lado), CornerRadius(5f, 5f))
+            // Cada día es una celda con la silueta de barra del tema (sin adornos internos: son muy chicas).
+            barraGrafica(eg, Offset(izq + w * celda, dd * celda), Size(lado, lado), col, pista = true)
         }
     }
     Ayuda("$registrados días registrados en este periodo.", Modifier.padding(top = 6.dp))
@@ -404,6 +414,8 @@ private fun Dispersion(ps: List<Par>, nx: String, ny: String) {
     val acento = MaterialTheme.colorScheme.primary
     val linea = MaterialTheme.colorScheme.outline
     val texto = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val eg = estiloGrafica()
+    val cifras = pincelDeCifras(MaterialTheme.colorScheme.onSurfaceVariant, 26f)
     Ayuda("↑ $ny", Modifier.padding(top = 12.dp, bottom = 4.dp))
     Canvas(Modifier.fillMaxWidth().aspectRatio(1.45f)) {
         val l = 70f; val r = 14f; val t = 14f; val b = 56f
@@ -415,12 +427,13 @@ private fun Dispersion(ps: List<Par>, nx: String, ny: String) {
         fun py(v: Double) = (size.height - b - (v - y0) / (y1 - y0) * (size.height - t - b)).toFloat()
         val pincel = Paint().apply { color = texto; textSize = 26f; isAntiAlias = true }
         fun fmt(v: Double) = if (abs(v) >= 1000) "%,.0f".format(v) else if (v % 1.0 == 0.0) v.toInt().toString() else "%.1f".format(v)
-        listOf(y0, (y0 + y1) / 2, y1).forEach { v ->
-            drawLine(linea, Offset(l, py(v)), Offset(size.width - r, py(v)), 1.5f)
-            drawContext.canvas.nativeCanvas.drawText(fmt(v), 0f, py(v) + 9f, pincel)
-        }
-        listOf(x0, (x0 + x1) / 2, x1).forEach { v ->
-            val s = fmt(v); drawContext.canvas.nativeCanvas.drawText(s, px(v) - pincel.measureText(s) / 2, size.height - b + 34f, pincel)
+        val marcasY = listOf(y0, (y0 + y1) / 2, y1)
+        val marcasX = listOf(x0, (x0 + x1) / 2, x1)
+        rejillaGrafica(eg, marcasY.map { py(it) }, linea, area = Rect(l, t, size.width - r, size.height - b))
+        ejeGrafica(eg, Offset(l, size.height - b), Offset(size.width - r, size.height - b), linea, marcas = marcasX.map { px(it) })
+        marcasY.forEach { v -> drawContext.canvas.nativeCanvas.drawText(fmt(v), 0f, py(v) + 9f, cifras) }
+        marcasX.forEach { v ->
+            val s = fmt(v); drawContext.canvas.nativeCanvas.drawText(s, px(v) - cifras.measureText(s) / 2, size.height - b + 34f, cifras)
         }
         // Recta de tendencia
         val mx = xs.average(); val my = ys.average()
@@ -428,14 +441,14 @@ private fun Dispersion(ps: List<Par>, nx: String, ny: String) {
         if (sxx > 0) {
             val m = xs.indices.sumOf { (xs[it] - mx) * (ys[it] - my) } / sxx; val c = my - m * mx
             fun cl(v: Double) = v.coerceIn(y0, y1)
-            drawLine(acento, Offset(px(x0), py(cl(m * x0 + c))), Offset(px(x1), py(cl(m * x1 + c))), 4f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f)))
+            lineaMeta(eg, Offset(px(x0), py(cl(m * x0 + c))), Offset(px(x1), py(cl(m * x1 + c))), acento, 4f)
         }
         ps.forEachIndexed { i, p ->
             val jx = if (discX) ((sin(i * 12.9898 + 1) * 43758.5453) % 1) * 0.3 else 0.0
             val jy = if (discY) ((sin(i * 78.233 + 7) * 12543.231) % 1) * 0.3 else 0.0
             val c = Offset(px(p.x + jx), py(p.y + jy))
-            drawCircle(acento.copy(alpha = 0.45f), 9f, c)
-            drawCircle(acento, 9f, c, style = Stroke(2f))
+            puntoGrafica(eg, c, 9f, acento.copy(alpha = 0.45f))
+            puntoGrafica(eg, c, 9f, acento, hueco = true)
         }
         val etq = (if (nx.length > 40) nx.take(39) + "…" else nx) + " →"
         drawContext.canvas.nativeCanvas.drawText(etq, (size.width - pincel.measureText(etq)) / 2 + l / 2, size.height - 6f, pincel)
@@ -497,6 +510,8 @@ private fun ConQuien() {
             val general = mu.mapNotNull { it.valencia }.average()
             val cs = MaterialTheme.colorScheme
             val oscuro = io.github.ruddy2003.vestigium.ui.esOscuro()
+            val eg = estiloGrafica()
+            val cifras = estiloCifras(MaterialTheme.typography.labelMedium)
             io.github.ruddy2003.vestigium.data.Catalogo.CON_QUIEN.forEach { o ->
                 val l = mu.filter { o.id in it.con_quien }.mapNotNull { it.valencia }
                 if (l.isEmpty()) return@forEach
@@ -504,12 +519,12 @@ private fun ConQuien() {
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Text(o.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(0.32f))
                     Canvas(Modifier.weight(0.48f).aspectRatio(10f)) {
-                        drawRoundRect(cs.surfaceVariant, Offset.Zero, size, CornerRadius(4f, 4f))
-                        drawRoundRect(io.github.ruddy2003.vestigium.ui.Tonos.valencia(m, oscuro) ?: cs.primary, Offset.Zero, Size(size.width * ((m - 1) / 6).toFloat(), size.height), CornerRadius(4f, 4f))
+                        barraGrafica(eg, Offset.Zero, size, cs.surfaceVariant, horizontal = true, pista = true)
+                        barraGrafica(eg, Offset.Zero, Size(size.width * ((m - 1) / 6).toFloat(), size.height), io.github.ruddy2003.vestigium.ui.Tonos.valencia(m, oscuro) ?: cs.primary, horizontal = true)
                         val xg = size.width * ((general - 1) / 6).toFloat()
-                        drawLine(cs.onSurface, Offset(xg, 0f), Offset(xg, size.height), 2f)
+                        lineaMeta(eg, Offset(xg, 0f), Offset(xg, size.height), cs.onSurface, 2f)
                     }
-                    Text("%.1f · %d".format(m, l.size), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(0.2f).padding(start = 8.dp))
+                    Text("%.1f · %d".format(m, l.size), style = cifras, modifier = Modifier.weight(0.2f).padding(start = 8.dp))
                 }
             }
             Ayuda("La raya es tu promedio general (%.1f). Cuidado: con quién estás también depende de la hora y el lugar.".format(general), Modifier.padding(top = 6.dp))

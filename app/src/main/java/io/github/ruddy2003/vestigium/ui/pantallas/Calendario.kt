@@ -2,7 +2,6 @@ package io.github.ruddy2003.vestigium.ui.pantallas
 
 import io.github.ruddy2003.vestigium.data.privado
 import io.github.ruddy2003.vestigium.data.esAnimo
-import android.app.DatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -70,6 +69,7 @@ import io.github.ruddy2003.vestigium.ui.figOndulado
 import io.github.ruddy2003.vestigium.ui.figPoligono
 import io.github.ruddy2003.vestigium.ui.figuraTema
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 /** Fecha que otra pantalla le pide abrir al Día. */
 object Seleccion {
@@ -195,8 +195,7 @@ fun PantallaCalendario(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             BotonSecundario("hoy") { ir(hoy) }
             BotonSecundario("ir a una fecha…") {
-                val p = Fechas.parse(hoy)
-                DatePickerDialog(ctx, { _, y, m, d -> ir(Fechas.iso(LocalDate.of(y, m + 1, d))) }, p.year, p.monthValue - 1, p.dayOfMonth).show()
+                elegirFecha(ctx, hoy) { ir(it) }
             }
         }
 

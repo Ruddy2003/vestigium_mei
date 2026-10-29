@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -72,6 +71,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Overlay
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 /**
  * Mosaicos estándar de OpenStreetMap (no piden clave). Para que combinen con la app se tiñen en el teléfono:
@@ -608,7 +608,7 @@ fun PantallaMapa(nav: Nav) {
     nuevoLugar?.let { p ->
         var nombre by remember(p) { mutableStateOf("") }
         var tipoNuevo by remember(p) { mutableStateOf("otro") }
-        AlertDialog(
+        Dialogo(
             onDismissRequest = { nuevoLugar = null },
             title = { Text("Marcar este lugar", style = MaterialTheme.typography.titleLarge) },
             text = {
