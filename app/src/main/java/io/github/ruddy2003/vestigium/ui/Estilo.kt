@@ -263,8 +263,8 @@ object Estilo {
         TemaId.MONGOL -> if (n in 1..999) "◆$n" else "$n"
         // Los numerales entre puntos de los manuscritos italianos: «.xvii.».
         TemaId.RENACIMIENTO -> if (n in 1..3999) "." + Romano.de(n).lowercase() + "." else "$n"
-        // El 第 de los ordinales chinos delante de la cifra: «第17».
-        TemaId.SEDA -> if (n in 1..999) "第$n" else "$n"
+        // La moneda con agujero de las caravanas delante de la cifra: «◎17».
+        TemaId.SEDA -> if (n in 1..999) "◎$n" else "$n"
         TemaId.URSS -> "№ $n"
         TemaId.GOTICO -> if (n in 1..3999) Romano.de(n).lowercase() else "$n"
         TemaId.ESPACIO -> "%03d".format(n)
@@ -355,8 +355,8 @@ object Estilo {
     val semana: List<String> get() = when (tema) {
         TemaId.ROMANO -> Romano.SEMANA
         TemaId.CIBER -> listOf("lun", "mar", "mié", "jue", "vie", "sáb", "dom")
-        // La letra griega del día (α el primero) y su nombre corto.
-        TemaId.HELENO -> listOf("α lu", "β ma", "γ mi", "δ ju", "ε vi", "ζ sá", "η do")
+        // Con la keraia (ʹ), la tilde con que los griegos marcaban las abreviaturas y los números.
+        TemaId.HELENO -> listOf("luʹ", "maʹ", "miʹ", "juʹ", "viʹ", "sáʹ", "doʹ")
         // Con punto de abreviatura y sin tilde, como en los códices.
         TemaId.MEDIEVAL -> listOf("lun.", "mart.", "mierc.", "iuev.", "vier.", "sab.", "dom.")
         // Las letras de los formularios oficiales (con la X del miércoles).
@@ -421,7 +421,7 @@ object Estilo {
         TemaId.ORDEN -> "$n VIGILIAS SIN FALTA"; TemaId.LABORATORIO -> "serie de $n sesiones"; TemaId.COLONOS -> "$n jornadas seguidas"
         TemaId.NAPOLEON -> "$n DÍAS DE CAMPAÑA"; TemaId.BOTANICO -> "$n días de herbario"; TemaId.NAVIDAD -> "$n noches junto al fuego"
         TemaId.SEDA -> "$n jornadas de caravana"; TemaId.GOTICO -> "$n días de oficio sin falta"; TemaId.ESPACIO -> "T+$n DÍAS EN ÓRBITA"
-        TemaId.ANDALUS -> "$n días seguidos · متتالية"; TemaId.MONGOL -> "$n DÍAS SEGUIDOS EN LA ESTEPA"; TemaId.RENACIMIENTO -> "$n giorni di fila"
+        TemaId.ANDALUS -> "$n días seguidos, cuenta tras cuenta"; TemaId.MONGOL -> "$n DÍAS SEGUIDOS EN LA ESTEPA"; TemaId.RENACIMIENTO -> "$n giorni di fila"
         TemaId.URSS -> "PLAN: $n DÍAS SEGUIDOS"; TemaId.REVOLUCION -> "$n DÍAS DE VIRTUD"; TemaId.ANTIGUAS -> "$n JORNADAS DE CAMINO"
     }
 

@@ -59,6 +59,8 @@ internal class FichaDia(
     val icono: String,
     /** Clave latina de la ficha: su rótulo sale de `Estilo.clave`, en la jerga del tema. */
     val clave: String,
+    /** Lo que mide, en español: va junto al rótulo del tema cuando este dice otra cosa («somnus · sueño»). */
+    val nombre: String,
     val cifra: String,
     val nota: String?,
     val dibujo: DibujoFicha,
@@ -118,21 +120,21 @@ internal fun fichasDelDia(fecha: String, km: Double?, canciones: Int, artista: S
         val horario = if (s.sueno_inicio != null) "${Fechas.horaDe(s.sueno_inicio)} → ${s.sueno_fin?.let { Fechas.horaDe(it) } ?: "?"}" else null
         val nota = listOfNotNull(horario, comparar(m.toDouble(), normal(fecha) { f -> Repo.salud[f]?.sueno_min?.toDouble() }),
             if (s.sueno_manual) "corregido a mano" else null, s.siesta_reloj_min?.let { "siesta ${hm(it)}" }).joinToString(" · ")
-        l += FichaDia("sueno", "somnus", hm(m), nota.ifBlank { null },
+        l += FichaDia("sueno", "somnus", "sueño", hm(m), nota.ifBlank { null },
             DibujoFicha.Noche(horasNoche(fecha, s.sueno_inicio), horasNoche(fecha, s.sueno_fin), fases), ancha = true)
     }
     // Pasos: los 7 días con la raya de tu normal.
     s?.pasos?.let { p ->
         val n = normal(fecha) { f -> Repo.salud[f]?.pasos?.toDouble() }
         val nota = listOfNotNull(km?.takeIf { it >= 0.2 }?.let { "%.1f km".format(it) }, comparar(p.toDouble(), n)).joinToString(" · ")
-        l += FichaDia("pasos", "passus", "%,d".format(p), nota.ifBlank { null }, DibujoFicha.Semana(semana(fecha) { f -> Repo.salud[f]?.pasos?.toDouble() }, n))
+        l += FichaDia("pasos", "passus", "pasos", "%,d".format(p), nota.ifBlank { null }, DibujoFicha.Semana(semana(fecha) { f -> Repo.salud[f]?.pasos?.toDouble() }, n))
     }
     // Corazón: el rango del día con la media y el reposo.
     if (s != null && (s.fc_media != null || s.fc_reposo != null)) {
         val principal = s.fc_reposo ?: s.fc_media!!
         val nota = listOfNotNull(if (s.fc_reposo != null) "en reposo" else "media del día", s.hrv_rmssd?.let { "variabilidad %.0f ms".format(it) },
             s.spo2?.let { "oxígeno %.0f%%".format(it) }).joinToString(" · ")
-        l += FichaDia("corazon", "cor", "%.0f lpm".format(principal), nota, DibujoFicha.Rango(s.fc_min, s.fc_max, s.fc_media, s.fc_reposo, 40.0, 180.0))
+        l += FichaDia("corazon", "cor", "corazón", "%.0f lpm".format(principal), nota, DibujoFicha.Rango(s.fc_min, s.fc_max, s.fc_media, s.fc_reposo, 40.0, 180.0))
     }
     // Pantalla: el reparto entre tus apps más usadas.
     Repo.pantalla[fecha]?.let { p ->
@@ -140,13 +142,13 @@ internal fun fichasDelDia(fecha: String, km: Double?, canciones: Int, artista: S
         val otros = p.total_min - top.sumOf { it.value }
         val partes = top.map { it.key to it.value.toDouble() } + if (otros > 0) listOf("otras" to otros.toDouble()) else emptyList()
         val nota = listOfNotNull("${p.desbloqueos} desbloqueos", comparar(p.total_min.toDouble(), normal(fecha) { f -> Repo.pantalla[f]?.total_min?.toDouble() })).joinToString(" · ")
-        l += FichaDia("pantalla", "telephonum", hm(p.total_min), nota,
+        l += FichaDia("pantalla", "telephonum", "pantalla", hm(p.total_min), nota,
             if (partes.size >= 2) DibujoFicha.Partes(partes) { hm(it.toInt()) } else DibujoFicha.Semana(semana(fecha) { f -> Repo.pantalla[f]?.total_min?.toDouble() }, null))
     }
     // Movimiento: cómo repartiste el tiempo activo.
     Repo.actividad[fecha]?.minutos?.filterKeys { it != "quieto" }?.filterValues { it > 0 }?.takeIf { it.isNotEmpty() }?.let { m ->
         val total = m.values.sum()
-        l += FichaDia("ejercicio", "motus", hm(total), "en movimiento",
+        l += FichaDia("ejercicio", "motus", "movimiento", hm(total), "en movimiento",
             DibujoFicha.Partes(m.entries.sortedByDescending { it.value }.map { (Actividad.NOMBRES[it.key] ?: it.key) to it.value.toDouble() }) { hm(it.toInt()) }, ancha = true)
     }
     // Lugares: dónde pasaste el día.
@@ -155,53 +157,53 @@ internal fun fichasDelDia(fecha: String, km: Double?, canciones: Int, artista: S
         val porLugar = visitas.groupBy { it.lugar }.mapValues { (_, v) -> v.sumOf { x -> ((Fechas.millis(x.salida ?: Fechas.ahoraIso()) - Fechas.millis(x.entrada)) / 60000).toInt() } }
             .entries.sortedByDescending { it.value }
         val partes = porLugar.take(4).map { (id, m) -> (Repo.lugares.firstOrNull { it.id == id }?.nombre ?: "?") to m.toDouble() }
-        l += FichaDia("lugares", "loca", "${porLugar.size} ${if (porLugar.size == 1) "lugar" else "lugares"}", null, DibujoFicha.Partes(partes) { hm(it.toInt()) }, ancha = true)
+        l += FichaDia("lugares", "loca", "lugares", "${porLugar.size} ${if (porLugar.size == 1) "lugar" else "lugares"}", null, DibujoFicha.Partes(partes) { hm(it.toInt()) }, ancha = true)
     }
     // El cielo del día.
     Repo.entorno[fecha]?.let { e ->
         val temp = if (e.t_max != null) "%.0f° / %.0f°".format(e.t_max, e.t_min ?: e.t_max) else null
         val nota = listOfNotNull(e.codigo?.let { io.github.ruddy2003.vestigium.data.Clima.descripcion(it) }, e.precip_mm?.takeIf { it > 0.05 }?.let { "lluvia %.1f mm".format(it) },
             e.luz_min?.let { "${hm(it)} de luz" }).joinToString(" · ")
-        if (temp != null || e.codigo != null) l += FichaDia("clima", "caelum", temp ?: "—", nota.ifBlank { null }, DibujoFicha.Cielo(e.codigo))
+        if (temp != null || e.codigo != null) l += FichaDia("clima", "caelum", "cielo", temp ?: "—", nota.ifBlank { null }, DibujoFicha.Cielo(e.codigo))
     }
     // Lo que comiste: calorías y el reparto entre proteína, carbohidratos y grasa.
     Repo.nutricion[fecha]?.valores?.takeIf { it["kcal"] != null }?.let { v ->
         val p = v["proteina_g"] ?: 0.0; val c = v["carbohidratos_g"] ?: 0.0; val g = v["grasa_g"] ?: 0.0
         val partes = listOf("proteína" to p * 4, "carbohidratos" to c * 4, "grasa" to g * 9).filter { it.second > 0 }
-        l += FichaDia("comidas", "nutritio", "%,.0f kcal".format(v["kcal"]), "P %.0f · C %.0f · G %.0f g".format(p, c, g),
+        l += FichaDia("comidas", "nutritio", "comida", "%,.0f kcal".format(v["kcal"]), "P %.0f · C %.0f · G %.0f g".format(p, c, g),
             if (partes.size >= 2) DibujoFicha.Partes(partes) { "%.0f kcal".format(it) } else DibujoFicha.Nada)
     }
     // Ejercicio del reloj y gimnasio.
     val ses = Repo.sesiones.filter { it.fecha == fecha }
     if (ses.isNotEmpty()) {
         val min = ses.sumOf { it.min }
-        l += FichaDia("ejercicio", "exercitatio", hm(min), ses.joinToString(" · ") { it.tipo_nombre }.take(60),
+        l += FichaDia("ejercicio", "exercitatio", "ejercicio", hm(min), ses.joinToString(" · ") { it.tipo_nombre }.take(60),
             DibujoFicha.Semana(semana(fecha) { f -> Repo.sesiones.filter { it.fecha == f }.sumOf { it.min }.toDouble().takeIf { it > 0 } }, null))
     }
     Repo.entrenos[fecha]?.takeIf { it.series > 0 }?.let { e ->
-        l += FichaDia("gimnasio", "robur", "${e.series_efectivas} series", "%,.0f kg en total".format(e.volumen_kg),
+        l += FichaDia("gimnasio", "robur", "gimnasio", "${e.series_efectivas} series", "%,.0f kg en total".format(e.volumen_kg),
             DibujoFicha.Partes(e.series_musculo.entries.sortedByDescending { it.value }.take(4).map { it.key.replace('_', ' ') to it.value.toDouble() }) { "%.0f".format(it) })
     }
     // Llamadas y mensajes.
     Repo.comunicacion[fecha]?.let { co ->
         val ll = co.entrantes + co.salientes
-        if (ll + co.perdidas > 0) l += FichaDia("voces", "voces", "$ll ${if (ll == 1) "llamada" else "llamadas"}",
+        if (ll + co.perdidas > 0) l += FichaDia("voces", "voces", "llamadas", "$ll ${if (ll == 1) "llamada" else "llamadas"}",
             listOfNotNull(hm(co.min_hablado.toInt()) + " hablando", co.perdidas.takeIf { it > 0 }?.let { "$it perdidas" }).joinToString(" · "),
             DibujoFicha.Partes(listOf("entrantes" to co.entrantes.toDouble(), "salientes" to co.salientes.toDouble(), "perdidas" to co.perdidas.toDouble()).filter { it.second > 0 }) { "%.0f".format(it) })
     }
     // Música, fotos y avisos: cifras con su reparto.
-    if (canciones > 0) l += FichaDia("musica", "musica", "$canciones ${if (canciones == 1) "canción" else "canciones"}", artista?.let { "más: $it" }, DibujoFicha.Nada)
+    if (canciones > 0) l += FichaDia("musica", "musica", "música", "$canciones ${if (canciones == 1) "canción" else "canciones"}", artista?.let { "más: $it" }, DibujoFicha.Nada)
     Repo.fotos[fecha]?.takeIf { it.fotos + it.capturas + it.videos > 0 }?.let { f ->
-        l += FichaDia("fotos", "imagines", "${f.fotos} fotos", "${f.capturas} capturas · ${f.videos} videos",
+        l += FichaDia("fotos", "imagines", "fotos", "${f.fotos} fotos", "${f.capturas} capturas · ${f.videos} videos",
             DibujoFicha.Partes(listOf("fotos" to f.fotos.toDouble(), "capturas" to f.capturas.toDouble(), "videos" to f.videos.toDouble()).filter { it.second > 0 }) { "%.0f".format(it) })
     }
     Repo.notifs[fecha]?.takeIf { it.total > 0 }?.let { nt ->
         val top = nt.por_app.entries.sortedByDescending { it.value }.take(3)
-        l += FichaDia("avisos", "monita", "${nt.total}", "notificaciones", DibujoFicha.Partes(top.map { it.key to it.value.toDouble() }) { "%.0f".format(it) })
+        l += FichaDia("avisos", "monita", "avisos", "${nt.total}", "notificaciones", DibujoFicha.Partes(top.map { it.key to it.value.toDouble() }) { "%.0f".format(it) })
     }
     // La luna, siempre.
     val fase = Luna.fase(fecha)
-    l += FichaDia("luna", "luna", "${(Luna.iluminacion(fase) * 100).toInt()}%", Luna.nombre(fase), DibujoFicha.Fase(fase))
+    l += FichaDia("luna", "luna", "luna", "${(Luna.iluminacion(fase) * 100).toInt()}%", Luna.nombre(fase), DibujoFicha.Fase(fase))
     return l
 }
 
@@ -209,12 +211,17 @@ internal fun fichasDelDia(fecha: String, km: Double?, canciones: Int, artista: S
 @Composable
 internal fun RejillaFichas(fichas: List<FichaDia>) {
     val filas = remember(fichas) {
-        val r = mutableListOf<List<FichaDia>>(); var par = mutableListOf<FichaDia>()
+        // Las angostas van de dos en dos; si una queda sola cuando llega una ancha, la ancha espera a que llegue su pareja.
+        val r = mutableListOf<List<FichaDia>>(); val par = mutableListOf<FichaDia>(); val anchas = mutableListOf<FichaDia>()
         fichas.forEach { f ->
-            if (f.ancha) { if (par.isNotEmpty()) { r += par; par = mutableListOf() }; r += listOf(f) }
-            else { par += f; if (par.size == 2) { r += par; par = mutableListOf() } }
+            if (f.ancha) { if (par.isEmpty()) r += listOf(f) else anchas += f }
+            else {
+                par += f
+                if (par.size == 2) { r += par.toList(); par.clear(); anchas.forEach { r += listOf(it) }; anchas.clear() }
+            }
         }
-        if (par.isNotEmpty()) r += par
+        if (par.isNotEmpty()) r += par.toList()
+        anchas.forEach { r += listOf(it) }
         r
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -235,7 +242,7 @@ private fun FichaVista(f: FichaDia, modifier: Modifier) {
         Column(Modifier.padding(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconoPista(f.icono, cs.primary, tam = 22.dp, tema = tema)
-                Text(Estilo.clave(f.clave), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 1,
+                Text(rotulo(f), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 1,
                     overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 6.dp).weight(1f))
             }
             Text(f.cifra, style = estiloCifra(), maxLines = 1, modifier = Modifier.padding(top = 4.dp))
@@ -243,6 +250,13 @@ private fun FichaVista(f: FichaDia, modifier: Modifier) {
             DibujoVista(f.dibujo, Modifier.padding(top = 6.dp))
         }
     }
+}
+
+/** El rótulo del tema y, si dice otra cosa, lo que mide en español: «somnus · sueño», «MARCHA · pasos». */
+private fun rotulo(f: FichaDia): String {
+    val k = Estilo.clave(f.clave)
+    fun llano(x: String) = java.text.Normalizer.normalize(x.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "").replace('_', ' ')
+    return if (llano(k) == llano(f.nombre)) k else "$k · ${f.nombre}"
 }
 
 /** Los colores de los repartos: los del tema, del más fuerte al más tenue. */
@@ -261,6 +275,12 @@ private fun DibujoVista(d: DibujoFicha, modifier: Modifier) {
         is DibujoFicha.Semana -> Canvas(modifier.fillMaxWidth().height(34.dp)) { semanaFicha(eg, d, cs.primary, cs.outline) }
         is DibujoFicha.Noche -> {
             Canvas(modifier.fillMaxWidth().height(30.dp)) { nocheFicha(eg, d, cs.primary, cs.outline, cs.onSurfaceVariant) }
+            // Las horas de la pista: empieza a las 18:00 y cada marca son 2 horas (6 h hasta medianoche, 6 hasta las 6:00…).
+            Row(Modifier.fillMaxWidth()) {
+                listOf("18 h" to 6f, "0 h" to 6f, "6 h" to 6f, "12 h" to 2f).forEach { (h, peso) ->
+                    Text(h, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1, modifier = Modifier.weight(peso))
+                }
+            }
             if (d.fases.isNotEmpty()) Partes(d.fases.map { it.first to it.second.toDouble() }, { hm(it.toInt()) }, Modifier.padding(top = 6.dp))
         }
         is DibujoFicha.Anillo -> Canvas(modifier.size(46.dp)) { anillo(d.fraccion, cs.primary, cs.outline) }
