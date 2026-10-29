@@ -27,7 +27,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 
 - **Las pruebas** (`app/src/test/.../CoberturaTemas.kt` y `UnicidadTemas.kt`) miden lo que se puede medir: entradas en los mapas, recursos, sonidos, ícono, gato, frases, nombres, letras, esquinas, vibración. Su lista de pendientes es la fuente de verdad de esas filas; aquí se copian para tenerlas a la vista. Si una fila de esta matriz y la lista de la prueba no coinciden, manda la prueba.
 - **La cuenta de despachos** (`CoberturaTemas.despachosPorTema`) dice, por archivo, cuántas ramas juntan temas, cuántas comparaciones `== TemaId.X` o `in setOf(TemaId.…)` y cuántos `else ->` en un `when (tema)` quedan. Ninguna cuenta puede subir; al final del lote 7 quedan en cero.
-- **Los dibujos** se revisan en las capturas por tema (`Capturas.kt`, sección «capturas por tema»). Se piden con la entrada `superficies` de `capturas.yml`, por ejemplo `campana,libreta`, o `todas`. Cada imagen se llama `io.github.ruddy2003.vestigium_Capturas_tema<Superficie>_<tema>_<claro|oscuro>.png` en la rama `capturas`. Las superficies son: `trofeos`, `salon`, `piezas`, `hallImagen`, `campana`, `libreta`, `fondoVivo`, `fiesta`, `relacion`, `huella`, `icono`, `mapaFormas`, `calificacion`, `reporte`, `reporteMes`, `vozAnio`, `calendario`, `constelacion`, `medalla`, `graficas`, `dialogo`, `barra`, `enfoque`, `bloqueo` y `cartas`. La del registro rápido (`quick`) no se puede capturar todavía: sus pantallas son funciones privadas de `QuickActivity`; se agrega en el lote 4, cuando su hoja salga a un componente. Los diálogos tampoco: Paparazzi no dibuja otra ventana, así que `dialogo` muestra por ahora la barra de Deshacer.
+- **Los dibujos** se revisan en las capturas por tema (`Capturas.kt`, sección «capturas por tema»). Se piden con la entrada `superficies` de `capturas.yml`, por ejemplo `campana,libreta`, o `todas`. Cada imagen se llama `io.github.ruddy2003.vestigium_Capturas_tema<Superficie>_<tema>_<claro|oscuro>.png` en la rama `capturas`. Las superficies son: `trofeos`, `salon`, `piezas`, `hallImagen`, `campana`, `libreta`, `fondoVivo`, `fiesta`, `relacion`, `huella`, `icono`, `mapaFormas`, `calificacion`, `reporte`, `reporteMes`, `vozAnio`, `calendario`, `constelacion`, `medalla`, `graficas`, `dialogo`, `barra`, `enfoque`, `bloqueo` y `cartas`; desde el lote 3, además, `campanaVictoria`, `decoracion`, `componentes`, `previa`, `fondoTelefono`, `personaje`, `lamina`, `librosAnio`, `cosasAnio`, `galerias`, `bibliotecas`, `widgets`, `dia`, `hoy`, `cartaAbierta`, `hojaLibreta` y `libros`. La del registro rápido (`quick`) no se puede capturar todavía: sus pantallas son funciones privadas de `QuickActivity`; se agrega en el lote 4, cuando su hoja salga a un componente. Los diálogos tampoco: Paparazzi no dibuja otra ventana, así que `dialogo` muestra por ahora la barra de Deshacer.
 - **El estado de las pruebas** de cada corrida de capturas queda en la rama `capturas`: `cobertura.txt`, `unicidad.txt` y `despachos.txt`, listos para pegar en la prueba.
 
 ## Cómo se usa en cada lote
@@ -44,7 +44,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 0 | Base de trabajo: esta matriz, pruebas de cobertura y unicidad, capturas por tema, CI sin publicar, hoja de contacto de N temas, colores de Deshacer | hecho 29 oct 2026 |
 | 1 | Una sola huella (ícono, sello, monocromo, notificaciones) | hecho 29 oct 2026 |
 | 2 | Los 6 temas sin diseño completo (CIB como Terminal, REF, ORD, LAB, ESP, URS) | hecho 29 oct 2026 |
-| 3 | Completar las superficies que ya existen | pendiente |
+| 3 | Completar las superficies que ya existen | hecho 29 oct 2026 |
 | 4 | Pantallas genéricas, gráficas, controles y arranque | pendiente |
 | 5 | Textos y tipografía | pendiente |
 | 6 | Sonido y vibración | pendiente |
@@ -58,27 +58,27 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 40 | 4 | 27 | 47 | 4 |
-| CIB | 48 | 3 | 23 | 40 | 6 |
-| HEL | 39 | 4 | 25 | 49 | 5 |
-| MED | 47 | 3 | 24 | 43 | 5 |
-| DIS | 48 | 5 | 18 | 43 | 6 |
-| REF | 48 | 7 | 19 | 40 | 6 |
-| ORD | 41 | 5 | 23 | 47 | 6 |
-| LAB | 44 | 8 | 16 | 49 | 5 |
-| COL | 35 | 7 | 25 | 50 | 5 |
-| NAP | 39 | 3 | 23 | 50 | 5 |
-| BOT | 53 | 1 | 14 | 50 | 4 |
-| NAV | 42 | 5 | 20 | 48 | 5 |
-| SED | 48 | 7 | 16 | 47 | 4 |
-| GOT | 50 | 3 | 22 | 43 | 4 |
-| ESP | 48 | 4 | 17 | 47 | 4 |
-| AND | 51 | 6 | 14 | 47 | 4 |
-| MON | 51 | 4 | 14 | 48 | 5 |
-| REN | 49 | 2 | 19 | 47 | 5 |
-| URS | 44 | 5 | 19 | 49 | 5 |
-| REV | 46 | 2 | 18 | 52 | 4 |
-| ANT | 45 | 2 | 19 | 51 | 5 |
+| ROM | 99 | 1 | 8 | 10 | 4 |
+| CIB | 94 | 1 | 8 | 11 | 6 |
+| HEL | 100 | 1 | 6 | 10 | 5 |
+| MED | 100 | 2 | 5 | 10 | 5 |
+| DIS | 95 | 3 | 6 | 10 | 6 |
+| REF | 94 | 3 | 7 | 10 | 6 |
+| ORD | 93 | 4 | 9 | 10 | 6 |
+| LAB | 96 | 6 | 5 | 10 | 5 |
+| COL | 95 | 3 | 9 | 10 | 5 |
+| NAP | 93 | 3 | 8 | 11 | 5 |
+| BOT | 98 | 1 | 7 | 12 | 4 |
+| NAV | 91 | 4 | 8 | 12 | 5 |
+| SED | 96 | 4 | 7 | 11 | 4 |
+| GOT | 99 | 2 | 6 | 11 | 4 |
+| ESP | 96 | 3 | 6 | 11 | 4 |
+| AND | 100 | 3 | 4 | 11 | 4 |
+| MON | 97 | 3 | 5 | 12 | 5 |
+| REN | 99 | 2 | 4 | 12 | 5 |
+| URS | 96 | 5 | 5 | 11 | 5 |
+| REV | 97 | 2 | 8 | 11 | 4 |
+| ANT | 96 | 1 | 9 | 11 | 5 |
 
 Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
 
@@ -101,93 +101,93 @@ CIB, REF, ORD, LAB, ESP y URS caían en respaldos por familia (`salonDe`, `dibuj
 | Superficie | Dónde | ROM | CIB | HEL | MED | DIS | REF | ORD | LAB | COL | NAP | BOT | NAV | SED | GOT | ESP | AND | MON | REN | URS | REV | ANT | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | Trofeos: figuras de las 9 categorías | `ui/TrofeosTema.kt`, `ui/TrofeosMas.kt`, respaldo `pantallas/Trofeos.kt:117` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: los 6 ya tienen sus figuras (ASCII en consola, chapa con el átomo, piezas forjadas, vidrio de laboratorio, misiones espaciales, medallas soviéticas). |
-| Trofeos: pedestal | `ui/TrofeosTema.kt:71` | C | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | C | P | P | P | ROM y REN comparten rama (solo cambia el color de la piedra). Lote 2: los 6 con pedestal propio. |
-| Trofeos: nombres | `TrofeosTema.nombre` | C | P | P | P | P | P | P | P | P | C | P | P | P | P | P | C | P | C | P | P | P | «Arco de triunfo» ROM y NAP; «Cúpula» ROM y REN; «Astrolabio» REN y AND. Lote 2: los 6 con nombres que no repite nadie. |
+| Trofeos: pedestal | `ui/TrofeosTema.kt:71` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: los 6 con pedestal propio. Lote 3: ROM (basa de travertino con tabla ansada) y REN (losa sobre balaustres) se separan. |
+| Trofeos: nombres | `TrofeosTema.nombre` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: los 6 con nombres que no repite nadie. Lote 3: Panteón (ROM), Arco de la Estrella (NAP) y Nocturlabio (REN); ninguno se repite. |
 | Salón del hall: escena | `ui/SalonesTema.kt`, `ui/SalonesMas.kt`, respaldo `salonDe` (`pantallas/Hall.kt:79`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: sala de computadoras centrales (CIB), sala común con puertas de engranaje (REF), sala capitular de acero (ORD), laboratorio limpio (LAB), cúpula del observatorio (ESP) y estación de metro (URS). |
 | Campaña: mapa, ruta y etapas dibujadas | `ui/MapasCampana.kt`, `ui/MapasMas.kt` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: traza de red, corte del refugio, mapa táctico, microplaca, sistema solar y Transiberiano. |
-| Campaña: títulos y nombres de etapas | `ciencia/Campanas.kt:132-178` | P | P | P | P | P | P | P | P | C | C | C | C | P | P | P | P | P | P | P | P | P | Lote 2: etapas nuevas de CIB, DIS, REF, ORD, LAB y URS, alineadas con su mapa. Repiten nombres de etapa con otro tema: COL y BOT («Pradera»), NAP y NAV («Estrasburgo», «Viena»). |
-| Libreta de momentos (contenedor) | `contenedorDe` (`ui/Contenedores.kt:45`) | P | P | P | C | P | P | P | P | P | P | P | P | P | C | P | C | P | P | P | P | C | Lote 2: consola de registro, carpeta del supervisor, códice técnico, cuaderno de laboratorio, bitácora de vuelo y cuaderno escolar; ya ningún tema cae en `ESPIRAL`. MED y GOT (códice y horas) comparten papel y encuadernación; AND y ANT (manuscrito y mapas) comparten encuadernación. |
+| Campaña: títulos y nombres de etapas | `ciencia/Campanas.kt:132-178` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: etapas nuevas de CIB, DIS, REF, ORD, LAB y URS. Lote 3: siete etapas en todos, alineadas con sus puntos; BOT «Sabana», NAP «Kehl» y «Schönbrunn»; ningún nombre se repite. |
+| Libreta de momentos (contenedor) | `contenedorDe` (`ui/Contenedores.kt:45`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: consola, carpeta, códice técnico, cuaderno de laboratorio, bitácora y cuaderno escolar. Lote 3: el libro de horas (GOT) se separa del códice (MED) en papel y encuadernación, y el manuscrito (AND) de los mapas (ANT) en encuadernación; `papel` ya no tiene respaldo. |
 | Imagen del hall: escena | `pantallas/HallImagen.kt:53` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: los 6 ya usan su salón (antes `fondoFamilia`). |
 
 ## Lote 3 · Completar las superficies que ya existen
 
-Lo que ya tiene diseño por tema, pero compartido, por grupos o pobre.
+Lo que ya tiene diseño por tema, pero compartido, por grupos o pobre. Desde el lote 3, los archivos de estas superficies no tienen ramas agrupadas, comparaciones ni `else` por tema (la prueba `despachosPorTema` pasó de 52 cuentas a 13). Quedan fuera de P: la materia y la página de noche de 18 temas (S), el papel sin imagen de 10 temas (S) y la letra del diario exportado de SED y ANT, que comparten familia (C).
 
 | Superficie | Dónde | ROM | CIB | HEL | MED | DIS | REF | ORD | LAB | COL | NAP | BOT | NAV | SED | GOT | ESP | AND | MON | REN | URS | REV | ANT | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Campaña: marcador | `MapasMas.kt:218` | G | P | P | G | P | P | P | P | P | P | P | P | P | G | P | P | P | G | P | P | P | Punto simple en ROM, MED, GOT y REN. Lote 2: cursor (CIB), ficha amarilla (REF), banderín (ORD), pipeta (LAB), nave (ESP) y locomotora (URS). |
-| Campaña: victoria | `MapasCampana.kt:154`, `MapasMas.kt:188` | C | P | C | C | S | P | P | P | S | S | S | S | S | C | P | S | S | P | P | S | S | ROM y HEL comparten; MED y GOT comparten. REN, NAP y REV tienen la suya, pero el plan pide enriquecer las simples. Lote 2: «ACCESO CONCEDIDO», salida al sol, fortaleza tomada, cultivo completo, aterrizaje y estrella roja. |
-| Campaña: puntos de la ruta | `MapasMas.puntos` (`:27`) | G | P | G | G | P | P | P | P | P | G | P | P | P | G | P | P | P | G | P | G | P | Los demás usan el zigzag de `pantallas/Campanas.kt:80`. Lote 2: los 6 con sus paradas (URS con coordenadas reales). |
-| Salón: atrio (ROM) y stoa (HEL) | `SalonesTema.kt:99-122` | S | G | S | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Pobres; se enriquecen. |
-| Sala de trofeos: pared, repisa, destellos y placa | `pantallas/Trofeos.kt:140, 280, 309-322` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | La repisa es de la misma madera en todos. |
-| Hall: techos de ciudad | `pantallas/Hall.kt:155` | C | C | C | C | C | C | C | C | G | C | G | G | C | C | C | C | C | C | G | G | G | Grupos: ROM·HEL·REN; AND·SED·MON; GOT·MED·ORD·NAP; CIB·ESP·LAB·DIS·REF. El resto cae en `else`. |
-| Hall: templo | `pantallas/Hall.kt:192` | G | G | G | C | G | G | G | G | G | G | G | G | C | C | G | P | C | G | G | G | G | SED y MON comparten; GOT y MED comparten; los otros 16, el templo clásico. |
-| Hall: borde de medalla y sello de pasaporte | `pantallas/Hall.kt:104, 171` | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | Por familia de `salonDe` (4 familias). |
-| Hall: las otras 17 piezas y sus metales | `pantallas/Hall.kt:204-319`, `METALES_HALL` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Iguales en todos; los metales van por nivel, no por tema. |
-| Imagen del hall: marca | `HallImagen.kt:59` | P | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Solo ROM escribe «VESTIGIVM MEI». |
-| Fondo vivo de la app | `ui/Animaciones.kt:101-114` | G | P | C | G | G | S | G | G | G | G | P | P | P | P | P | P | P | P | G | G | G | HEL de noche usa las estrellas de ESP; REF solo tiene barrido de noche; 10 temas no tienen nada (y el «polen» no lo usa nadie). |
-| Fondo de pantalla vivo del teléfono | `ui/FondosTelefono.kt:408-413` | C | P | C | C | C | C | C | P | C | C | P | P | P | P | P | P | P | C | C | C | C | «Polvo» en REN, HEL (claro), MED, ROM, COL, NAP, REV y ANT; «barrido» en REF, ORD, DIS y URS. No coincide con el fondo vivo de la app. |
-| Lluvia de celebración | `ui/Decoracion.kt:1297` (`CapaFiesta`) | P | C | C | G | C | P | C | P | G | C | P | P | P | P | P | P | P | P | C | P | P | CIB y DIS: cuadritos; HEL y ORD: rayas; URS y NAP: estrellas; MED y COL: círculo del `else`. |
-| Celebración de logro: rayos y nombres de nivel | `ui/Celebracion.kt:113-140` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | 16 rayos y «bronce, plata, oro, legendario» en todos. |
-| Transición entre pantallas | `ui/MainActivity.kt:435-484` | C | P | C | P | P | P | P | C | C | P | P | C | P | P | P | P | P | P | P | P | C | Cada tema tiene su rama, pero HEL, LAB, NAV y ANT se ven casi iguales, y ROM se parece a COL (auditoría del plan). |
-| Cambio de tema, entrada y presión | `ui/Animaciones.kt:50-65, 227-248` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | El mismo círculo y los mismos resortes; solo cambia el color. |
-| `periodo` de la decoración | `ui/Decoracion.kt:65-71` | C | P | P | P | C | P | P | P | P | P | P | P | P | C | C | P | P | C | P | C | P | ROM = REN (6000), DIS = GOT (7000), ESP = REV (9000). |
-| Tarjeta de relación (marco, adorno y lazo) | `ui/Relacion.kt:78-169` | C | C | C | C | C | C | C | C | C | C | P | P | P | P | C | P | P | C | C | C | C | Tarjetas idénticas: LAB = ESP; ORD = URS = REF; MED = NAP = COL = REN; ROM = HEL = REV = ANT. CIB y DIS comparten piezas con otros. |
-| Hoy: frase del día | `pantallas/Hoy.kt:319-370` | G | C | G | P | P | C | C | C | G | G | G | G | G | G | G | G | G | G | G | G | G | REF, ORD, LAB y CIB comparten el marco; los otros 15, la raya a la izquierda. |
-| Hoy: cifras del tablero | `Hoy.kt:520` (`estiloCifra`) | P | G | G | C | G | G | G | G | G | G | G | C | G | C | G | G | G | P | G | G | G | MED, NAV y GOT comparten Garamond. |
-| Hoy: franja de los últimos días | `Hoy.kt:695` (`FranjaDias`) | P | P | G | C | G | G | G | G | G | G | G | G | G | C | G | G | G | G | G | G | G | MED y GOT comparten el arco. |
-| Hoy: corazón de frase guardada | `FrasesGuardadas.kt:53` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G |  |
-| Día: sufijo del título y tamaño de la fecha | `pantallas/Dia.kt:192, 202` | P | P | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | El «_» de CIB y la fecha grande de ROM son casos sueltos. |
-| Mundo: lámina para rascar | `pantallas/Mundo.kt:201` | C | P | C | C | C | C | C | G | C | C | P | G | C | C | G | C | G | C | C | G | G | Oro: ROM, HEL, MED, GOT, AND, NAP, SED, URS; cobre: REN, COL; acero: DIS, REF, ORD; plata (`else`): LAB, NAV, ESP, MON, REV, ANT. |
-| Tu año: voz | `pantallas/TuAnio.kt:126` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Todos tienen rama; el plan pide repasarla (AND con fecha hégira, sin repetir «Crónica»). |
-| Tu año: libros del año | `pantallas/TuAnioVisual.kt:62-133` | P | C | C | C | P | C | C | C | C | P | P | C | P | P | C | C | C | C | C | C | C | Van por `Bases.de`: cada tema toma el libro de su base. |
-| Tu año: cosas del año, rascar y meses de ánimo | `TuAnioVisual.kt:138-187`, `TuAnio.kt:225-262` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G |  |
-| Libros: objeto cerrado del diario | `ui/Libros.kt:307` (por `soporte`) | S | C | S | P | P | P | P | P | S | G | P | P | P | P | C | P | P | S | S | P | P | CIB y ESP comparten la terminal; NAP cae en el sobre genérico; el plan pide rehacer ROM, HEL, COL, REN y URS. |
-| Libros: materia y página de noche | `Libros.kt:166-190` | G | P | G | G | G | P | G | G | G | G | G | G | G | G | P | G | G | G | G | G | G | Los 18 restantes oscurecen su color con la misma fórmula. |
-| Libros: cielo de noche y encabezado del sueño | `Libros.kt:237, 1042` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Misma luna y estrellas; solo cambian el color y la letra en REF y CIB. |
-| Libros: papel de la página | `Libros.kt:868` (`pagina`) | C | S | C | P | S | S | S | S | S | S | P | S | P | P | S | P | P | P | S | P | P | ROM y HEL comparten el papiro; 10 temas no tienen imagen de papel. |
-| Libros: adorno de la página | `Libros.kt:903` (`FondoPagina`) | G | P | G | P | G | P | P | G | C | P | P | P | G | P | P | P | P | P | C | P | P | COL y URS comparten rama. |
-| Libros: estante (madera) | `Libros.kt:641` | G | · | G | G | · | · | P | P | G | · | P | · | P | P | · | G | P | P | G | G | G | Madera por defecto; el estante no se dibuja en los temas de sobre, carpeta o pantalla. |
-| Libros: lomo o rollo | `Libros.kt:698-760` | S | · | P | S | · | · | S | S | S | · | P | · | P | P | · | P | P | P | P | P | P | Lomo liso en MED, COL, ORD y LAB; rollo liso en ROM. |
-| Libros: encabezado de página | `Libros.kt:1022` | G | P | G | G | P | P | G | P | G | G | G | G | G | G | G | G | G | G | P | G | G | Los 16 restantes ponen solo su emblema. |
-| Libros: «guardar» y textos de lectura y escritura | `Libros.kt:254, 1127-1216` | P | P | C | C | P | P | P | P | C | P | C | P | P | P | P | P | P | P | P | P | P | `textoGuardar`: HEL = BOT («guardar») y MED = COL («asentar»). El texto de ayuda del escritor es el mismo en 20 temas. |
-| Libros: pistas | `Libros.kt:275-287` | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | Una por soporte (5), no por tema. |
-| Cartas: forma del sobre y sello | `ui/Cartas.kt:142` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Una sola geometría y una gota de cera con el emblema. |
-| Cartas: papelería | `Cartas.kt:110` | G | C | G | G | P | P | G | G | G | C | G | C | G | G | C | G | G | G | G | G | G | NAP y NAV (sobre) y CIB y ESP (pantalla) comparten; los demás usan una fórmula. |
-| Diario exportado: fuentes | `ui/LibroDiario.kt:130` | C | P | P | P | P | P | P | P | C | P | P | P | P | P | P | P | P | P | P | C | C | COL y REV comparten título (Fell); ROM y ANT, la letra de inscripción. |
-| Diario exportado: capitular | `LibroDiario.kt:279, 392` | G | G | G | P | G | G | G | G | G | G | G | G | G | S | G | G | G | G | G | G | G | Solo MED en el diario; MED y GOT en la carta. |
-| Diario exportado: filete y CSS | `LibroDiario.kt:158-188, 266, 387` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Mismo marco y mismo CSS; solo cambian colores y letra. |
-| Emblema | `ui/Decoracion.kt:90-460` | P | S | S | S | P | S | P | S | P | C | P | S | P | P | P | S | P | P | P | P | P | NAP reutiliza el laurel de ROM; el plan pide mejorar CIB, HEL, MED, REF, LAB, NAV y AND. |
-| Textura de fondo (`fondoTema`) | `Decoracion.kt:1023-1228` | G | P | G | P | P | S | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | ROM y HEL no tienen; REF solo de noche. Falta en `PrivacidadActivity` y `QuickActivity`. |
-| Banda bajo los títulos | `ui/Componentes.kt:90-127` (`Meandro`) | C | P | C | P | S | P | P | S | S | P | P | P | S | P | P | P | S | P | P | P | P | La de ROM es casi la greca de HEL; el plan pide enriquecer DIS, LAB, COL, SED y MON. |
-| Sección (título, separador, ▸/▾) | `Componentes.kt:183-245` | G | S | G | P | P | P | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | CIB solo cambia el color del número y el separador. |
-| Botones principal y secundario | `Componentes.kt:506-521` | G | G | G | C | G | G | G | G | G | G | G | G | G | C | G | G | G | P | G | G | G | MED y GOT solo cambian el tamaño. |
-| Tarjeta, Vacío, Aviso, Escala, Opciones, Interruptor, Etiquetas, Editor, Cifra, FilaMenu y Pastilla | `ui/Componentes.kt` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Solo cambian colores, letra y radio. El editor es una barra de «archivo de código» para todos. |
-| Personaje: atuendo | `ui/Personaje.kt:86-108` | P | P | P | P | P | P | P | P | P | P | P | P | S | S | P | S | P | P | P | P | S | Ninguno es idéntico, pero ANT, SED, AND y GOT repiten sombrero u objeto (capucha, turbante, farol); `LAUREL` y `YELMO` no se usan. |
-| Personaje: frases y globo | `Personaje.kt:65-77, 345` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G |  |
-| Marcas de @persona y #tema | `ui/Marcas.kt:54-79` | C | C | C | P | C | P | C | C | C | P | C | C | C | C | C | C | C | P | C | C | C | HEL = AND (idénticas); NAV como HEL; GOT ≈ ANT; ORD ≈ REV; LAB ≈ BOT; CIB ≈ ESP; persona en sello en DIS, SED y URS; persona subrayada en ROM, MON, ORD y COL. |
-| Fondo del teléfono: marca | `ui/FondosTelefono.kt:149-156` | P | P | P | C | P | P | G | G | G | G | G | G | G | C | P | P | P | C | P | P | P | MED, GOT y REN escriben lo mismo; 7 temas caen en «Vestigium Mei». |
-| Fondo del teléfono: marco | `FondosTelefono.kt:194-215` | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | Hay 2 marcos: esquinas (CIB, ESP, LAB, REF, ORD) y doble filete (los demás). |
-| Íconos de pestaña: día y diario | `ui/IconosPestana.kt:66-148` | C | G | C | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | El «día» de HEL se parece al sol de ROM; el «diario» de CIB es el documento genérico. |
-| Íconos de pestaña: registrar y ajustes | `IconosPestana.kt:72-73` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | El mismo «+» y el mismo engrane. «más» es igual a «vida» en todos. |
-| Botones de modo, buscar y ajustes; texto «Más» | `Decoracion.kt:1236-1380` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G |  |
-| Barra inferior: indicador, botón central y divisor | `MainActivity.kt:198-234` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Solo cambian los íconos y el radio. |
-| Pantalla de bloqueo | `MainActivity.kt:176-186` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Mismos textos y composición; el sello sí es del tema. |
-| Vista previa del tema | `ui/Tema.kt:381-415` | P | P | P | P | P | P | P | P | C | P | P | P | C | P | P | P | P | P | P | P | P | COL y SED comparten el título «Jornada»; la tarjeta tiene 6 dp fijos. |
-| Mapa: filtro de colores | `pantallas/Mapa.kt:76-146` | G | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | ROM cae en el caso por defecto. |
-| Mapa: formas de los lugares | `Mapa.kt:166-206` (`Formas`) | S | C | S | C | S | S | S | C | S | C | P | C | S | P | S | S | C | C | C | P | P | Comparten forma CIB y LAB, MED y NAP, NAV y URS, MON y REN; solo GOT, BOT, REV y ANT tienen detalle. |
-| Mapa: marco y rosa de los vientos | `Mapa.kt:559-590` (`MarcoMapa`) | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | Dos marcos; rosa de 8 puntas en AND y de 4 en el resto. |
-| Galerías: símbolo de calificación | `pantallas/Galerias.kt:105` | P | P | P | P | P | P | C | P | P | C | P | P | P | P | P | P | P | P | C | P | P | ORD, URS y NAP son estrellas de 5 puntas. |
-| Galerías: recuadro, mapa y tarjeta de mapa | `Galerias.kt:170-273` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G |  |
-| Bibliotecas: íconos de pestañas y portada de respaldo | `Bibliotecas.kt:171`, `Biblioteca.kt:150` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G |  |
-| Reportes: cifra | `reportes/Reportes.kt:56` | G | C | G | C | G | C | G | G | C | G | G | C | C | C | G | G | G | C | G | G | G | Grupos: REN·GOT·MED·SED·COL·NAV (letra de texto) y CIB·REF (mono). |
-| Reportes: ornamento | `Reportes.kt:111` | C | C | C | G | C | C | C | G | G | G | G | G | G | G | G | G | G | G | C | G | G | ROM = HEL; CIB = REF; DIS = URS = ORD. |
-| Reportes: marca y mes | `Reportes.kt:146, 555, 855` | P | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Solo ROM escribe su marca; el mes no usa `Estilo.mes`. |
+| Campaña: marcador | `MapasMas.kt:218` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: legionario con el vexilo (ROM), vela en su palmatoria (MED), peregrino con venera (GOT) y estilete de punta de plata (REN). Lote 2: cursor, ficha amarilla, banderín, pipeta, nave y locomotora. |
+| Campaña: victoria | `MapasCampana.kt:154`, `MapasMas.kt:188` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: una escena por tema en un solo `when` (corona de laurel en ROM, sol de Vergina en HEL, cruz de Santiago en MED, campana en GOT; enriquecidas COL, NAP, BOT, NAV, SED, AND, MON, REN, REV, ANT y DIS). |
+| Campaña: puntos de la ruta | `MapasMas.puntos` (`:27`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `MapasMas.puntos` devuelve `List<Offset>` con siete paradas propias en los 21 temas; ya no hay zigzag. |
+| Salón: atrio (ROM) y stoa (HEL) | `SalonesTema.kt:99-122` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: atrio con compluvio, pilastras corintias y paneles pompeyanos; stoa con el Egeo al fondo, escudos de bronce y columnas jónicas. Los demás, desde el lote 2. |
+| Sala de trofeos: pared, repisa, destellos y placa | `pantallas/Trofeos.kt:140, 280, 309-322` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `tonoPared`, `paredTema`, `repisaTema`, `chispa` y `Placa` por tema (mármol, riel de servidores, estante de vidrio, anaquel de bambú, repisa de chimenea…). |
+| Hall: techos de ciudad | `pantallas/Hall.kt:155` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: un `when` de 21 ramas. |
+| Hall: templo | `pantallas/Hall.kt:192` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: uno por tema (anfiteatro, torre de servidores, ger, trilito, invernadero, árbol…). |
+| Hall: borde de medalla y sello de pasaporte | `pantallas/Hall.kt:104, 171` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: uno por tema; `pieza` ya no usa `salonDe`. |
+| Hall: las otras 17 piezas y sus metales | `pantallas/Hall.kt:204-319`, `METALES_HALL` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `trazoTema` (grosor, punta, guiones, línea doble y material) en las 17; estandarte, moneda, libro y sobre con figura propia; las otras 13 comparten figura y cambian trazo y material. `metalHall` tiñe el metal del nivel con el matiz del tema. |
+| Imagen del hall: marca | `HallImagen.kt:59` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `marcaHall` con marca y colofón en la voz de cada tema. |
+| Fondo vivo de la app | `ui/Animaciones.kt:101-114` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: un solo despacho (`vivoTema`) para la app y el teléfono, con un movimiento propio por tema; el barrido queda solo en REF. |
+| Fondo de pantalla vivo del teléfono | `ui/FondosTelefono.kt:408-413` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: el mismo de la app (`pintarVivoTema`); ya no se contradicen. |
+| Lluvia de celebración | `ui/Decoracion.kt:1297` (`CapaFiesta`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: 21 ramas; separadas CIB/DIS, HEL/ORD y NAP/URS; MED con gotas de tinta y COL con brasas. |
+| Celebración de logro: rayos y nombres de nivel | `ui/Celebracion.kt:113-140` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `motivoLogro` y `nivelesLogro` por tema. |
+| Transición entre pantallas | `ui/MainActivity.kt:435-484` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: HEL, LAB, NAV, ANT, COL, ORD, NAP, MON, REN y SED cambiaron; ya ninguna se parece a otra. |
+| Cambio de tema, entrada y presión | `ui/Animaciones.kt:50-65, 227-248` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `matizDe` da por tema la forma de la apertura, la entrada de las secciones y el resorte del botón. |
+| `periodo` de la decoración | `ui/Decoracion.kt:65-71` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: un valor distinto por tema. |
+| Tarjeta de relación (marco, adorno y lazo) | `ui/Relacion.kt:78-169` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: recuadro, adorno y lazo propios en los 21. |
+| Hoy: frase del día | `pantallas/Hoy.kt:319-370` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: un marco por tema. |
+| Hoy: cifras del tablero | `Hoy.kt:520` (`estiloCifra`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: una letra por tema; NAP y REV comparten la casa Bodoni (derecha y espaciada frente a cursiva). |
+| Hoy: franja de los últimos días | `Hoy.kt:695` (`FranjaDias`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: una barra por tema. |
+| Hoy: corazón de frase guardada | `FrasesGuardadas.kt:53` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: una forma por tema (`formaCorazon`). |
+| Día: sufijo del título y tamaño de la fecha | `pantallas/Dia.kt:192, 202` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `Estilo.sufijoTitulo` y `Estilo.fechaGrande`. |
+| Mundo: lámina para rascar | `pantallas/Mundo.kt:201` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `laminaRascar` y `teselaLamina`: metal y motivo grabado por tema; `TuAnio.Rascar` usa la misma. |
+| Tu año: voz | `pantallas/TuAnio.kt:126` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: repasada; AND con la hégira (`Temas.hegira`) y sin «Crónica» repetida. |
+| Tu año: libros del año | `pantallas/TuAnioVisual.kt:62-133` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `volumen` con 21 ramas; ya no usa `Bases.de`. |
+| Tu año: cosas del año, rascar y meses de ánimo | `TuAnioVisual.kt:138-187`, `TuAnio.kt:225-262` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: ficha propia y tres objetos por tema; la lámina de Mundo; `MesesAnimo` con `Estilo.mes`. |
+| Libros: objeto cerrado del diario | `ui/Libros.kt:307` (por `soporte`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `formaObjeto` por tema, con su letra y su pista (rollo con umbilicus en ROM, boletín con lacre en NAP, tableta de control en ESP…). |
+| Libros: materia y página de noche | `Libros.kt:166-190` | S | P | S | S | S | P | S | S | S | S | S | S | S | S | P | S | S | S | S | S | S | Lote 3: cada tema tiene su cielo y su luz (`nocheDe`), pero 18 temas siguen oscureciendo materia y página con la misma fórmula. |
+| Libros: cielo de noche y encabezado del sueño | `Libros.kt:237, 1042` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: luna, estrellas y letra del sueño por tema. |
+| Libros: papel de la página | `Libros.kt:868` (`pagina`) | P | S | P | P | S | S | S | S | S | S | P | S | P | P | S | P | P | P | S | P | P | Lote 3: HEL deja el papiro de ROM (pergamino dibujado) y cada tema tiene su letra de página. Siguen sin imagen de papel los que no la tenían. |
+| Libros: adorno de la página | `Libros.kt:903` (`FondoPagina`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: nuevo en ROM, HEL, SED, LAB y DIS; COL y URS separados. |
+| Libros: estante (madera) | `Libros.kt:641` | P | · | P | P | · | · | P | P | P | · | P | · | P | P | · | P | P | P | P | P | P | Lote 3: `TablaEstante` con color y canto por tema. |
+| Libros: lomo o rollo | `Libros.kt:698-760` | P | · | P | P | · | · | P | P | P | · | P | · | P | P | · | P | P | P | P | P | P | Lote 3: nervios, escudo, código de barras y tejuelo; el rollo de ROM con cornua y sillybos; el mes sale de `Estilo.mes`. |
+| Libros: encabezado de página | `Libros.kt:1022` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: rótulo propio además del emblema. |
+| Libros: «guardar» y textos de lectura y escritura | `Libros.kt:254, 1127-1216` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: los 21 `textoGuardar` son distintos; textos de día vacío, noche sin sueño, «Lo mejor / Lo peor» y ayuda del escritor por tema. |
+| Libros: pistas | `Libros.kt:275-287` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: por tema (`pistaDia`, `pistaNoche`). |
+| Cartas: forma del sobre y sello | `ui/Cartas.kt:142` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `formaSobre` (solapa, esquinas y cierre), `adornoSobre` y `selloCarta` por tema. |
+| Cartas: papelería | `Cartas.kt:110` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `papeleria` con una rama por tema; textos en `vozCarta`. |
+| Diario exportado: fuentes | `ui/LibroDiario.kt:130` | P | P | P | P | P | P | P | P | P | P | P | P | C | P | P | P | P | P | P | P | C | Lote 3: separadas COL/REV y ROM/ANT. SED y ANT usan la misma familia Almendra (regular y negrita). |
+| Diario exportado: capitular | `LibroDiario.kt:279, 392` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `inicial` y `conInicial`, con el mismo criterio en el diario y en la carta. |
+| Diario exportado: filete y CSS | `LibroDiario.kt:158-188, 266, 387` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `filete`, `marco` y `cssTema` por tema. |
+| Emblema | `ui/Decoracion.kt:90-460` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: nuevos o mejorados en CIB, HEL (sol de Vergina animado), MED, REF, LAB, NAV y AND; NAP con la N imperial y abejas. |
+| Textura de fondo (`fondoTema`) | `Decoracion.kt:1023-1228` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: ROM (mármol), HEL (guijarros) y REF de día (papel tapiz atómico); también en Privacidad y en el registro rápido. |
+| Banda bajo los títulos | `ui/Componentes.kt:90-127` (`Meandro`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: ovas y dardos en ROM; DIS, LAB, COL, SED y MON enriquecidas. |
+| Sección (título, separador, ▸/▾) | `Componentes.kt:183-245` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: estilo, separador y par de glifos por tema. |
+| Botones principal y secundario | `Componentes.kt:506-521` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: forma y adorno por tema. |
+| Tarjeta, Vacío, Aviso, Escala, Opciones, Interruptor, Etiquetas, Editor, Cifra, FilaMenu y Pastilla | `ui/Componentes.kt` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `pielDe(t)` con los rasgos de cada tema; el editor deja la barra de «archivo de código» (tablilla de cera, consola, pluma y tintero, máquina de escribir…). |
+| Personaje: atuendo | `ui/Personaje.kt:86-108` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: 21 sombreros y 21 objetos sin repetir; `YELMO` en ANT; `LAUREL` y `CAPUCHA_NEON` se borraron. |
+| Personaje: frases y globo | `Personaje.kt:65-77, 345` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: frases (`Voz`) y globo por tema. Hoy la tarjeta no se usa en ninguna pantalla; solo sale en las capturas. |
+| Marcas de @persona y #tema | `ui/Marcas.kt:54-79` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `Forma` pasa de 7 a 31; la forma de la persona es distinta en cada tema. |
+| Fondo del teléfono: marca | `ui/FondosTelefono.kt:149-156` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: una por tema. |
+| Fondo del teléfono: marco | `FondosTelefono.kt:194-215` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: uno por tema. |
+| Íconos de pestaña: día y diario | `ui/IconosPestana.kt:66-148` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: HEL con reloj de sol; CIB con papel de teletipo. |
+| Íconos de pestaña: registrar y ajustes | `IconosPestana.kt:72-73` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: propios en los 21; «vida» deja de ser igual a «más»; `gastos()` se borró. |
+| Botones de modo, buscar y ajustes; texto «Más» | `Decoracion.kt:1236-1380` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `formaBoton`, `astroModo`, `lupaTema` y `textoMas` por tema (el engrane sale de `IconoPestana`). |
+| Barra inferior: indicador, botón central y divisor | `MainActivity.kt:198-234` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: los tres por tema; nombres de las pestañas desde los diccionarios del tema. |
+| Pantalla de bloqueo | `MainActivity.kt:176-186` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: textos y composición por tema (once disposiciones); el sello no cambia. |
+| Vista previa del tema | `ui/Tema.kt:381-415` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: forma de la tarjeta y cuadritos por tema; SED pasa a «Etapa». |
+| Mapa: filtro de colores | `pantallas/Mapa.kt:76-146` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `when` exhaustivo con rama de ROM. |
+| Mapa: formas de los lugares | `Mapa.kt:166-206` (`Formas`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: una forma con detalle por tema. |
+| Mapa: marco y rosa de los vientos | `Mapa.kt:559-590` (`MarcoMapa`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `marcoDelMapa` y `rosaDelMapa` por tema. |
+| Galerías: símbolo de calificación | `pantallas/Galerias.kt:105` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: ORD cruz de malta, NAP abeja, URS engrane con estrella. |
+| Galerías: recuadro, mapa y tarjeta de mapa | `Galerias.kt:170-273` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: con el marco, las formas y la rosa del tema. El `Recuadro` lo usan también Campañas, Logros, Tu año y Otras vidas. |
+| Bibliotecas: íconos de pestañas y portada de respaldo | `Bibliotecas.kt:171`, `Biblioteca.kt:150` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: cada pictograma lleva el símbolo de calificación del tema; la portada, su letra y un adorno propio. |
+| Reportes: cifra | `reportes/Reportes.kt:56` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `letraCifra` con un archivo de letra distinto por tema. |
+| Reportes: ornamento | `Reportes.kt:111` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: una figura por tema. |
+| Reportes: marca y mes | `Reportes.kt:146, 555, 855` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `marcaReporte` por tema; el mes sale de `Estilo.mes` (hereda lo que ese despacho tenga, lote 5). |
 | Widgets: colores | `widget/Widgets.kt:28` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |  |
-| Widgets: forma | `res/drawable/widget_*`, `drawable-v31` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | En Android 12+ la copia de `drawable-v31` impone el radio del sistema a todos. |
-| Widgets: títulos del modo discreto y letra del calendario | `Widgets.kt:146, 161, 281` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | «NVNC», «SCRIBERE» y monoespaciada en todos. |
-| Notificaciones: color y textos | `avisos/Avisos.kt:133-364`, `data/Enfoque.kt:221-266` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Sin `setColor`; los textos no cambian con el tema (el sonido sí). |
-| Accesos directos | `res/drawable/ic_sc_*` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Color fijo. |
+| Widgets: forma | `res/drawable/widget_*`, `drawable-v31` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: silueta, filete y adorno por tema en `layer-list`; la copia de `drawable-v31` ya no impone el radio del sistema. |
+| Widgets: títulos del modo discreto y letra del calendario | `Widgets.kt:146, 161, 281` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `tituloDiscreto` por tema; el calendario usa la letra del tema. Los rótulos repetidos entre temas (ESTADO, DESCANSO…) viven en `Estilo`/`Temas` y van en el lote 5. |
+| Notificaciones: color y textos | `avisos/Avisos.kt:133-364`, `data/Enfoque.kt:221-266` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `setColor` con el primario del tema; voz por tema en `Avisos.voz` y `vozEnfoque`; el fin de bloque de Enfoque suena con el aviso del tema (un canal por tema). |
+| Accesos directos | `res/drawable/ic_sc_*` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 3: `AccesosDirectos.publicar` los genera con el color del tema; `accesos.xml` queda vacío. Los accesos ya fijados en la pantalla de inicio quedan deshabilitados y hay que volver a fijarlos. |
 
 ## Lote 4 · Pantallas genéricas, gráficas, controles y arranque
 
@@ -257,4 +257,5 @@ Lo que la prueba `CoberturaTemas` exige por tema. Los recursos que ya existen sa
 - **La vista previa del widget en el selector** es un XML estático y se queda en ROM (Android no deja cambiarla).
 - **La miniatura del fondo vivo** (`res/xml/fondo_vivo.xml`) se queda fija por la misma razón.
 - **`Bases.kt`** solo lo usa hoy `TuAnioVisual` (los libros del año); `Bases.TODAS` no lo usa nadie. Se borra en el lote 7.
+- **Código que el lote 3 dejó sin uso o a medias** (se revisa en el lote 7): las bandas `Filete`, `Regla`, `Vineta`, `Monedas` y `Alhan` de `Decoracion.kt`; `TarjetaPersonaje` y `FiguraPersonaje`, que solo usan las capturas; `Avisos.SONIDOS`, que ahora se deriva de `sonidosDe` (la superficie `avisos_mapa` de la prueba ya no puede fallar); `salonDe` (por familia), que siguen usando `Hall.kt` y `HallImagen.kt` como ayudante; `soporte()`, que usa `Cartas.kt`.
 - **Código muerto encontrado en la auditoría** (se quita en el lote 7): el `else -> PERGAMINO` de `ContenedoresMas.papel` (todos los contenedores tienen rama); la rama de DIS en `MapasMas.marcador` (la tapa un `if` anterior); los `else` de `cerradoMas`, `victoriaMas`, `escenaMas`, `pedestalMas` y `TrofeosMas.pedestalMas`, que nunca se alcanzan porque quien los llama ya filtra por `*.TEMAS`; el tipo «polen» de `FondoVivo`, que ningún tema usa en la app.
