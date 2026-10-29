@@ -228,7 +228,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ANTIGUAS -> if (oscuro) antiguasOscuro else antiguasClaro
 }
 
-internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
+internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.ROMANO -> tipoRomano; TemaId.CIBER -> tipoCiber; TemaId.HELENO -> tipoHeleno
     TemaId.MEDIEVAL -> tipoMedieval; TemaId.DISTOPIA -> tipoDistopia
     TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
@@ -236,6 +236,41 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.NAPOLEON -> tipoNapoleon; TemaId.BOTANICO -> tipoBotanico; TemaId.NAVIDAD -> tipoNavidad; TemaId.SEDA -> tipoSeda; TemaId.URSS -> tipoUrss
     TemaId.GOTICO -> tipoGotico; TemaId.ESPACIO -> if (oscuro) tipoEspacioOscuro else tipoEspacio; TemaId.ANDALUS -> tipoAndalus
     TemaId.MONGOL -> tipoMongol; TemaId.RENACIMIENTO -> tipoRenacimiento; TemaId.REVOLUCION -> tipoRevolucion; TemaId.ANTIGUAS -> tipoAntiguas
+}.conReloj(tema)
+
+/**
+ * La letra grande (`displayLarge`): la del reloj de Enfoque y la del año en «Tu año». Es la letra de título del tema
+ * (familia, peso y, si lo tiene, el resplandor de su `displaySmall`) con cifras de ancho fijo, para que el reloj no
+ * baile al pasar los segundos. El tamaño, en sp, compensa lo ancha o angosta que es cada letra: «25:00» ocupa más o
+ * menos lo mismo en todos los temas. El segundo número es el espaciado entre letras, en sp.
+ */
+private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
+    TemaId.ROMANO -> 58f to 1f          // Cinzel: capitales anchas
+    TemaId.CIBER -> 62f to 0f           // Share Tech Mono
+    TemaId.HELENO -> 66f to 1f          // Garamond, cifras alineadas
+    TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
+    TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
+    TemaId.REFUGIO -> 74f to 0f         // VT323, de píxeles
+    TemaId.ORDEN -> 60f to 1.5f         // estarcido
+    TemaId.LABORATORIO -> 58f to 1f     // Jost, geométrica
+    TemaId.COLONOS -> 64f to 0.5f       // Fell
+    TemaId.NAPOLEON -> 64f to 1f        // Bodoni
+    TemaId.BOTANICO -> 62f to 0f        // Fraunces
+    TemaId.NAVIDAD -> 54f to 1f         // Cinzel Decorative, muy ancha
+    TemaId.SEDA -> 64f to 0.5f          // Almendra
+    TemaId.GOTICO -> 66f to 0.5f        // textura
+    TemaId.ESPACIO -> 48f to 2f         // Orbitron, ancha y gruesa
+    TemaId.ANDALUS -> 60f to 0.5f       // Kufi
+    TemaId.MONGOL -> 62f to 1f          // Filosofo
+    TemaId.RENACIMIENTO -> 88f to 0f    // Italianno, caligráfica y chica
+    TemaId.URSS -> 56f to 1f            // Russo One, ancha
+    TemaId.REVOLUCION -> 64f to 1f      // Fell
+    TemaId.ANTIGUAS -> 56f to 1.5f      // Cinzel seminegrita
+}
+
+private fun Typography.conReloj(tema: TemaId): Typography {
+    val (tam, esp) = letraReloj(tema)
+    return copy(displayLarge = displaySmall.copy(fontSize = tam.sp, lineHeight = (tam * 1.15f).sp, letterSpacing = esp.sp, fontFeatureSettings = "lnum, tnum"))
 }
 
 internal fun radioDe(tema: TemaId) = when (tema) {

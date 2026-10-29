@@ -12,6 +12,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -24,9 +25,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -40,9 +43,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.app.NotificationManagerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
@@ -54,6 +73,9 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.sensores.Ubicacion
 import io.github.ruddy2003.vestigium.widget.Widgets
 import kotlinx.coroutines.launch
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Captura instantánea, sin abrir la app completa. Se abre desde widgets, el panel de ajustes rápidos,
@@ -129,34 +151,26 @@ class QuickActivity : FragmentActivity() {
                     Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { tocarFuera() },
                     contentAlignment = Alignment.BottomCenter,
                 ) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
-                            .navigationBarsPadding().imePadding(),
-                        shape = RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp),
-                        color = MaterialTheme.colorScheme.background,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                    ) {
-                        var pantalla by remember { mutableStateOf(pantallaInicial) }
-                        var privado by remember { mutableStateOf(inicial?.takeIf { pantallaInicial == "privado" }) }
-                        Column(Modifier.fondoTema(Estilo.tema, MaterialTheme.colorScheme).padding(18.dp).verticalScroll(rememberScrollState())) {
-                            Meandro(Modifier.padding(bottom = 12.dp))
-                            val ir: (String) -> Unit = { destino ->
-                                when (destino) {
-                                    "impulso", "recaida", "libido" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
-                                    else -> pantalla = destino
-                                }
+                    var pantalla by remember { mutableStateOf(pantallaInicial) }
+                    var privado by remember { mutableStateOf(inicial?.takeIf { pantallaInicial == "privado" }) }
+                    HojaQuick(Modifier.fillMaxWidth().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { }
+                        .navigationBarsPadding().imePadding()) {
+                        val ir: (String) -> Unit = { destino ->
+                            when (destino) {
+                                "impulso", "recaida", "libido" -> { privado = crear(destino, origen, null, null); pantalla = "privado" }
+                                else -> pantalla = destino
                             }
-                            when (pantalla) {
-                                M_ANIMO -> Animo(inicial, origen, avisoMs, ir)
-                                "privado" -> privado?.let { MomentoCaptura(it) } ?: Animo(null, origen, avisoMs, ir)
-                                M_MENU -> Registrar(ir)
-                                M_GASTO -> GastoRapido(catInicial, subInicial, gastoInicial)
-                                M_SUENO -> SuenoRapido()
-                                M_MINIMO -> Minimo()
-                                M_ENFOQUE, M_SIESTA -> androidx.compose.runtime.LaunchedEffect(Unit) { abrirReloj(pantalla == M_SIESTA); terminar() }
-                                M_CONSUMO -> ConsumoRapido(consumoId, sustanciaInicial, origen)
-                                else -> Registrar(ir)
-                            }
+                        }
+                        when (pantalla) {
+                            M_ANIMO -> Animo(inicial, origen, avisoMs, ir)
+                            "privado" -> privado?.let { MomentoCaptura(it) } ?: Animo(null, origen, avisoMs, ir)
+                            M_MENU -> Registrar(ir)
+                            M_GASTO -> GastoRapido(catInicial, subInicial, gastoInicial)
+                            M_SUENO -> SuenoRapido()
+                            M_MINIMO -> Minimo()
+                            M_ENFOQUE, M_SIESTA -> androidx.compose.runtime.LaunchedEffect(Unit) { abrirReloj(pantalla == M_SIESTA); terminar() }
+                            M_CONSUMO -> ConsumoRapido(consumoId, sustanciaInicial, origen)
+                            else -> Registrar(ir)
                         }
                     }
                     // La barra de «deshacer» también aquí (por ejemplo, al borrar un consumo).
@@ -221,42 +235,29 @@ class QuickActivity : FragmentActivity() {
 
     @Composable
     private fun Encabezado(titulo: String, sub: String, fecha: String? = null) {
-        Text(titulo, style = MaterialTheme.typography.titleMedium.copy(fontSize = 19.sp))
         // El día va también en palabras: con algunos temas la fecha del estilo no se lee de un vistazo (N-08).
         val dia = fecha ?: Fechas.diaLogico()
-        Text(io.github.ruddy2003.vestigium.ui.Estilo.comentario + Fechas.horaAhora() + " · " + io.github.ruddy2003.vestigium.ui.Estilo.fecha(dia) +
-            " · " + Fechas.titulo(dia).lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        // Con una fecha propia (el sueño va al día del despertar) el aviso del día lógico no aplica.
-        if (fecha == null) io.github.ruddy2003.vestigium.ui.AvisoMadrugada()
-        Ayuda(sub, Modifier.padding(top = 2.dp, bottom = 12.dp))
+        EncabezadoQuick(titulo, Fechas.horaAhora() + " · " + io.github.ruddy2003.vestigium.ui.Estilo.fecha(dia) + " · " + Fechas.titulo(dia).lowercase(), sub) {
+            // Con una fecha propia (el sueño va al día del despertar) el aviso del día lógico no aplica.
+            if (fecha == null) io.github.ruddy2003.vestigium.ui.AvisoMadrugada()
+        }
     }
 
     /** El menú del botón ⊕: todo lo que se registra, en botones grandes. */
     @Composable
     private fun Registrar(ir: (String) -> Unit) {
         val cs = MaterialTheme.colorScheme
+        val forma = formaPiezaQuick(Estilo.tema)
         Encabezado("Registrar", "Lo de todos los días en un toque. Lo demás, cuando quieras.")
-        Surface(onClick = { ir(M_ANIMO) }, modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp), shape = RoundedCornerShape(6.dp), color = cs.primary) {
-            Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Ánimo ahora", style = MaterialTheme.typography.titleLarge, color = cs.onPrimary)
-                Text("cómo estás, qué sientes y qué piensas", style = MaterialTheme.typography.labelMedium, color = cs.onPrimary.copy(alpha = 0.85f))
-            }
-        }
         val botones = listOfNotNull(
             "Enfoque" to M_ENFOQUE, "Siesta" to M_SIESTA, "Sustancias" to M_CONSUMO, "Gasto o ingreso" to M_GASTO, "Sueño" to M_SUENO, "Llenar el día" to "diario",
             "Nota" to "notas", "Impulso" to "impulso", if (Repo.config.seguimiento_privado) "Recaída" to "recaida" else null,
             if (Repo.config.seguimiento_privado) "Libido" to "libido" else null,
         )
-        FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
-            botones.forEach { (t, d) ->
-                Surface(onClick = {
-                    if (d == "diario" || d == "notas") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, d)
-                        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
-                    else ir(d)
-                }, modifier = Modifier.weight(1f).heightIn(min = 56.dp), shape = RoundedCornerShape(4.dp), color = cs.surface, border = BorderStroke(1.dp, cs.outline)) {
-                    Box(contentAlignment = Alignment.Center) { Text(t, style = MaterialTheme.typography.titleSmall) }
-                }
-            }
+        MenuQuick(botones) { d ->
+            if (d == "diario" || d == "notas") { startActivity(android.content.Intent(this@QuickActivity, MainActivity::class.java).putExtra(MainActivity.PANTALLA, d)
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
+            else ir(d)
         }
         // Suplementos: un toque anota la dosis habitual.
         val supl = io.github.ruddy2003.vestigium.data.Suplementos.activos()
@@ -269,7 +270,7 @@ class QuickActivity : FragmentActivity() {
                     val dosis = if (sp.dosis == Math.floor(sp.dosis)) "%.0f".format(sp.dosis) else "%.1f".format(sp.dosis)
                     // Si ya lo tomaste hoy, un toque pregunta (otra toma o quitar la de hoy) en vez de sumar otra sin querer.
                     Surface(onClick = { if (ya) duda = if (duda == sp.id) null else sp.id else { io.github.ruddy2003.vestigium.data.Suplementos.registrar(sp); tomados = tomados + sp.id } },
-                        modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = RoundedCornerShape(4.dp), color = if (ya) cs.primary.copy(alpha = 0.12f) else cs.surface,
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp), shape = forma, color = if (ya) cs.primary.copy(alpha = 0.12f) else cs.surface,
                         border = BorderStroke(1.dp, if (ya) cs.primary else cs.outline)) {
                         Box(contentAlignment = Alignment.Center) { Text((if (ya) "✓ " else "Tomé ") + sp.nombre.lowercase() + " · $dosis ${sp.unidad}", style = MaterialTheme.typography.labelLarge) }
                     }
@@ -400,7 +401,7 @@ class QuickActivity : FragmentActivity() {
         val cs = MaterialTheme.colorScheme
         abiertos.forEach { c ->
             var nivel by remember(c.id) { mutableStateOf(c.niveles.lastOrNull()?.nivel) }
-            Surface(color = cs.secondaryContainer, shape = RoundedCornerShape(6.dp), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
+            Surface(color = cs.secondaryContainer, shape = formaPiezaQuick(Estilo.tema), modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)) {
                 Column(Modifier.padding(12.dp)) {
                     val nombre = if (io.github.ruddy2003.vestigium.data.Sustancias.visible(c)) Catalogo.nombreSustancia(c) else "Registro en curso"
                     Text("$nombre desde las ${Fechas.horaDe(c.inicio)} · ¿cómo vas?", style = MaterialTheme.typography.titleSmall, color = cs.onSecondaryContainer)
@@ -733,7 +734,7 @@ class QuickActivity : FragmentActivity() {
         // Lo que acaba de registrar un frecuente: se ve, se corrige o se deshace.
         registrado?.let { r ->
             val g = Repo.gasto(r.id) ?: r
-            Surface(shape = RoundedCornerShape(6.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f), modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
+            Surface(shape = formaPiezaQuick(Estilo.tema), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.10f), modifier = Modifier.fillMaxWidth().padding(top = 6.dp)) {
                 Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("${g.subcategoria.ifBlank { g.categoria }} ${dinero(g.monto)} registrado", style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f))
                     TextButton(onClick = { corrigiendo = true }) { Text("cambiar monto") }
@@ -869,5 +870,474 @@ class QuickActivity : FragmentActivity() {
             Spacer(Modifier.width(1.dp))
             BotonPrincipal("Listo", habilitado = d.valencia != null) { terminar() }
         }
+    }
+}
+
+// =====================================================================
+//  La hoja del registro rápido, fuera de la Activity, para que se pueda capturar en Paparazzi con datos de ejemplo.
+// =====================================================================
+
+/**
+ * El marco de la hoja del registro rápido: el borde de arriba con la silueta del tema (frontón, arco polilobulado, alero de
+ * pagoda, pestaña de carpeta, cartel arrancado…), la textura del fondo, el adorno de ese borde y la banda del tema.
+ * [contenido] va debajo y se desplaza; el adorno se queda quieto arriba.
+ */
+@Composable
+internal fun HojaQuick(modifier: Modifier = Modifier, contenido: @Composable ColumnScope.() -> Unit) {
+    val t = Estilo.tema
+    val e = MaterialTheme.colorScheme
+    Surface(modifier = modifier, shape = formaHojaQuick(t), color = e.background, border = BorderStroke(1.dp, e.outline)) {
+        Column(
+            Modifier.fondoTema(t, e).drawWithContent { drawContent(); adornoHojaQuick(t, e) }
+                .padding(start = 18.dp, end = 18.dp, bottom = 18.dp, top = 12.dp + perfilHojaQuick(t))
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Meandro(Modifier.padding(bottom = 12.dp))
+            contenido()
+        }
+    }
+}
+
+/**
+ * El título de cada vista de la hoja, con el nombre que le da el tema (`Estilo.pantallaEnLinea`). Debajo, una línea con el
+ * nombre en español (si el tema lo cambia) o el folio del tema, y [linea] (hora y día); luego [aviso] y la ayuda [sub].
+ */
+@Composable
+internal fun EncabezadoQuick(titulo: String, linea: String, sub: String, aviso: @Composable () -> Unit = {}) {
+    val (nombre, espanol, extra) = Estilo.pantallaEnLinea(titulo, Romano.latin(titulo))
+    Text(nombre, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onBackground)
+    val cabeza = extra?.let { "$it · " } ?: (Estilo.comentario + (espanol?.let { it.lowercase() + " · " } ?: ""))
+    Text(cabeza + linea, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+    aviso()
+    Ayuda(sub, Modifier.padding(top = 2.dp, bottom = 12.dp))
+}
+
+/** El menú del botón ⊕: «Ánimo ahora» grande y [botones] (texto y destino) de dos en dos, con la forma del tema. */
+@Composable
+internal fun MenuQuick(botones: List<Pair<String, String>>, alElegir: (String) -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val forma = formaPiezaQuick(Estilo.tema)
+    Surface(onClick = { alElegir(QuickActivity.M_ANIMO) }, modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp), shape = forma, color = cs.primary) {
+        Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("Ánimo ahora", style = MaterialTheme.typography.titleLarge, color = cs.onPrimary)
+            Text("cómo estás, qué sientes y qué piensas", style = MaterialTheme.typography.labelMedium, color = cs.onPrimary.copy(alpha = 0.85f))
+        }
+    }
+    FlowRow(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), maxItemsInEachRow = 2) {
+        botones.forEach { (texto, destino) ->
+            Surface(onClick = { alElegir(destino) }, modifier = Modifier.weight(1f).heightIn(min = 56.dp), shape = forma, color = cs.surface, border = BorderStroke(1.dp, cs.outline)) {
+                Box(contentAlignment = Alignment.Center) { Text(texto, style = MaterialTheme.typography.titleSmall) }
+            }
+        }
+    }
+}
+
+/** Una forma que se traza en píxeles con [u] = píxeles por dp, para que las medidas no dependan del tamaño de la pieza. */
+private fun formaDp(trazo: Path.(w: Float, h: Float, u: Float) -> Unit): Shape = object : Shape {
+    override fun createOutline(size: Size, layoutDirection: LayoutDirection, density: Density): Outline =
+        Outline.Generic(Path().apply { trazo(size.width, size.height, density.density) })
+}
+
+/** Cuánto baja, desde lo más alto, el borde de arriba de la hoja: lo que la hoja deja libre arriba para su adorno. */
+private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
+    TemaId.ROMANO -> 12.dp
+    TemaId.CIBER -> 4.dp
+    TemaId.HELENO -> 14.dp
+    TemaId.MEDIEVAL -> 10.dp
+    TemaId.DISTOPIA -> 12.dp
+    TemaId.REFUGIO -> 6.dp
+    TemaId.ORDEN -> 6.dp
+    TemaId.LABORATORIO -> 8.dp
+    TemaId.COLONOS -> 4.dp
+    TemaId.NAPOLEON -> 14.dp
+    TemaId.BOTANICO -> 8.dp
+    TemaId.NAVIDAD -> 7.dp
+    TemaId.SEDA -> 14.dp
+    TemaId.GOTICO -> 18.dp
+    TemaId.ESPACIO -> 12.dp
+    TemaId.ANDALUS -> 18.dp
+    TemaId.MONGOL -> 14.dp
+    TemaId.RENACIMIENTO -> 6.dp
+    TemaId.URSS -> 20.dp
+    TemaId.REVOLUCION -> 9.dp
+    TemaId.ANTIGUAS -> 16.dp
+}
+
+/** La silueta de la hoja: solo cambia el borde de arriba; abajo llega al borde de la pantalla. */
+private fun formaHojaQuick(t: TemaId): Shape = when (t) {
+    // Cartela de esquinas cóncavas, como una placa con inscripción.
+    TemaId.ROMANO -> formaDp { w, h, u ->
+        val r = 12 * u
+        moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h); lineTo(0f, h); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
+    }
+    // Ventana de consola con una esquina cortada.
+    TemaId.CIBER -> formaDp { w, h, u ->
+        val c = 18 * u
+        moveTo(0f, 0f); lineTo(w - c, 0f); lineTo(w, c); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Frontón de templo de lado a lado.
+    TemaId.HELENO -> formaDp { w, h, u ->
+        val f = 14 * u
+        moveTo(0f, f); lineTo(w / 2, 0f); lineTo(w, f); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Borde de pergamino que ondula, como un rollo a medio abrir.
+    TemaId.MEDIEVAL -> formaDp { w, h, u ->
+        val a = 5 * u
+        moveTo(0f, a)
+        var x = 0f
+        while (x < w) { lineTo(x, a + a * sin(2 * PI * 3 * x / w).toFloat()); x += 3 * u }
+        lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Carpeta de expediente con su pestaña a la izquierda.
+    TemaId.DISTOPIA -> formaDp { w, h, u ->
+        val p = 12 * u; val a = w * 0.38f
+        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Pantalla de tubo, de esquinas muy redondas.
+    TemaId.REFUGIO -> formaDp { w, h, u ->
+        addRoundRect(RoundRect(0f, 0f, w, h, topLeftCornerRadius = CornerRadius(26 * u), topRightCornerRadius = CornerRadius(26 * u),
+            bottomRightCornerRadius = CornerRadius.Zero, bottomLeftCornerRadius = CornerRadius.Zero))
+    }
+    // Compuerta de esquinas cortadas.
+    TemaId.ORDEN -> formaDp { w, h, u ->
+        val c = 14 * u
+        moveTo(c, 0f); lineTo(w - c, 0f); lineTo(w, c); lineTo(w, h); lineTo(0f, h); lineTo(0f, c); close()
+    }
+    // Vaso de precipitados: el pico para verter, a la izquierda.
+    TemaId.LABORATORIO -> formaDp { w, h, u ->
+        val p = 8 * u; val r = 3 * u
+        moveTo(0f, 0f); quadraticTo(6 * u, p, 22 * u, p); lineTo(w - r, p); quadraticTo(w, p, w, p + r); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Boleto de gaceta: una muesca a cada lado.
+    TemaId.COLONOS -> formaDp { w, h, u ->
+        val r = 6 * u; val m = 16 * u
+        moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, m - r)
+        arcTo(Rect(Offset(w, m), r), 270f, -180f, false)
+        lineTo(w, h); lineTo(0f, h); lineTo(0f, m + r)
+        arcTo(Rect(Offset(0f, m), r), 90f, -180f, false)
+        close()
+    }
+    // Chapa con un medallón al centro, para la estrella.
+    TemaId.NAPOLEON -> formaDp { w, h, u ->
+        val p = 14 * u
+        moveTo(0f, p); lineTo(w / 2 - p, p)
+        arcTo(Rect(Offset(w / 2, p), p), 180f, 180f, false)
+        lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Hoja: una esquina muy redonda y la otra en punta.
+    TemaId.BOTANICO -> formaDp { w, h, u ->
+        addRoundRect(RoundRect(0f, 0f, w, h, topLeftCornerRadius = CornerRadius(30 * u), topRightCornerRadius = CornerRadius(2 * u),
+            bottomRightCornerRadius = CornerRadius.Zero, bottomLeftCornerRadius = CornerRadius.Zero))
+    }
+    // Glaseado de nieve: festones arriba.
+    TemaId.NAVIDAD -> formaDp { w, h, u ->
+        val f = 7 * u; val n = (w / (44 * u)).toInt().coerceAtLeast(3); val paso = w / n
+        moveTo(0f, f)
+        for (i in 0 until n) quadraticTo(i * paso + paso / 2, -f, (i + 1) * paso, f)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Alero de pagoda con las puntas hacia arriba.
+    TemaId.SEDA -> formaDp { w, h, u ->
+        val p = 12 * u
+        moveTo(0f, 0f); quadraticTo(w * 0.1f, p, w * 0.28f, p); lineTo(w * 0.72f, p); quadraticTo(w * 0.9f, p, w, 0f)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Gablete apuntado al centro, como sobre una portada.
+    TemaId.GOTICO -> formaDp { w, h, u ->
+        val a = 18 * u; val b = 36 * u
+        moveTo(0f, a); lineTo(w / 2 - b, a)
+        quadraticTo(w / 2 - b, a * 0.3f, w / 2, 0f); quadraticTo(w / 2 + b, a * 0.3f, w / 2 + b, a)
+        lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Consola de mando: la parte central más alta.
+    TemaId.ESPACIO -> formaDp { w, h, u ->
+        val p = 12 * u; val a = w * 0.3f; val r = 14 * u
+        moveTo(0f, p + r); quadraticTo(0f, p, r, p); lineTo(a, p); lineTo(a + p, 0f); lineTo(w - a - p, 0f); lineTo(w - a, p)
+        lineTo(w - r, p); quadraticTo(w, p, w, p + r); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Arco polilobulado al centro: cinco lóbulos que suben hacia la clave.
+    TemaId.ANDALUS -> formaDp { w, h, u ->
+        val p = 18 * u; val r = 8 * u; val x0 = w / 2 - 5 * r
+        moveTo(0f, p); lineTo(x0, p)
+        floatArrayOf(2f, 6f, 8f, 6f, 2f).forEachIndexed { i, k -> arcTo(Rect(Offset(x0 + r + 2 * r * i, p - k * u), r), 180f, 180f, false) }
+        lineTo(x0 + 10 * r, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Esquinas escalonadas, como la orilla de un fieltro bordado.
+    TemaId.MONGOL -> formaDp { w, h, u ->
+        val s = 7 * u
+        moveTo(0f, 2 * s); lineTo(s, 2 * s); lineTo(s, s); lineTo(2 * s, s); lineTo(2 * s, 0f)
+        lineTo(w - 2 * s, 0f); lineTo(w - 2 * s, s); lineTo(w - s, s); lineTo(w - s, 2 * s); lineTo(w, 2 * s)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Hoja vista en perspectiva: un trapecio.
+    TemaId.RENACIMIENTO -> formaDp { w, h, u ->
+        val d = 14 * u
+        moveTo(d, 0f); lineTo(w - d, 0f); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Diagonal de cartel: el borde baja de izquierda a derecha.
+    TemaId.URSS -> formaDp { w, h, u -> moveTo(0f, 0f); lineTo(w, 20 * u); lineTo(w, h); lineTo(0f, h); close() }
+    // Cartel arrancado: el borde de arriba en jirones.
+    TemaId.REVOLUCION -> formaDp { w, h, u ->
+        val f = 9 * u; val paso = 7 * u
+        val jirones = floatArrayOf(0.1f, 0.9f, 0.3f, 1f, 0f, 0.7f, 0.4f, 0.95f, 0.15f, 0.6f, 0.05f)
+        moveTo(0f, f * 0.5f)
+        var x = 0f; var i = 0
+        while (x < w) { x = (x + paso).coerceAtMost(w); lineTo(x, f * jirones[i % jirones.size]); i++ }
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Losa de piedra tallada a golpes.
+    TemaId.ANTIGUAS -> formaDp { w, h, u ->
+        moveTo(0f, 16 * u); lineTo(16 * u, 0f); lineTo(w * 0.42f, 3 * u); lineTo(w * 0.58f, 0f); lineTo(w - 16 * u, 4 * u); lineTo(w, 16 * u)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+}
+
+/** El adorno del borde de arriba de la hoja; cabe en el aire que deja [perfilHojaQuick] más 12 dp. */
+private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
+    val w = size.width; val u = 1.dp.toPx()
+    when (t) {
+        // Filete interior con una cola de milano en cada punta, como una tabula ansata.
+        TemaId.ROMANO -> {
+            val y = 5 * u; val x0 = 16 * u; val x1 = w - 16 * u; val col = e.primary.copy(alpha = 0.45f)
+            drawLine(col, Offset(x0 + 6 * u, y), Offset(x1 - 6 * u, y), 0.8f * u)
+            drawPath(Path().apply { moveTo(x0, y); lineTo(x0 + 6 * u, y - 3.5f * u); lineTo(x0 + 6 * u, y + 3.5f * u); close() }, col)
+            drawPath(Path().apply { moveTo(x1, y); lineTo(x1 - 6 * u, y - 3.5f * u); lineTo(x1 - 6 * u, y + 3.5f * u); close() }, col)
+        }
+        // Barra de estado de la consola: la línea, tres rayas de señal y el cursor.
+        TemaId.CIBER -> {
+            val y = 7 * u; val x = w * 0.55f
+            drawLine(e.primary.copy(alpha = 0.5f), Offset(10 * u, y), Offset(x, y), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u)))
+            (0 until 3).forEach { k -> drawRect(e.primary.copy(alpha = 0.75f - k * 0.2f), Offset(x + (6 + k * 6) * u, y - 2.5f * u), Size(4 * u, 5 * u)) }
+            drawRect(e.secondary, Offset(x + 26 * u, y - 3 * u), Size(7 * u, 6 * u))
+        }
+        // El tímpano del frontón con su roseta y el arquitrabe debajo.
+        TemaId.HELENO -> {
+            val f = 14 * u; val col = e.tertiary.copy(alpha = 0.7f)
+            drawPath(Path().apply { moveTo(12 * u, f + u); lineTo(w / 2, 4 * u); lineTo(w - 12 * u, f + u) }, col, style = Stroke(u))
+            drawLine(col, Offset(12 * u, f + 4 * u), Offset(w - 12 * u, f + 4 * u), u)
+            drawCircle(e.tertiary, 2.2f * u, Offset(w / 2, 10.5f * u))
+        }
+        // Doble filete de rúbrica y tres puntos de oro.
+        TemaId.MEDIEVAL -> {
+            val y = 14 * u
+            drawLine(e.primary.copy(alpha = 0.7f), Offset(14 * u, y), Offset(w - 14 * u, y), 1.4f * u)
+            drawLine(e.primary.copy(alpha = 0.5f), Offset(14 * u, y + 3 * u), Offset(w - 14 * u, y + 3 * u), 0.6f * u)
+            listOf(-8f, 0f, 8f).forEach { dx -> drawCircle(e.tertiary, 1.8f * u, Offset(w / 2 + dx * u, 9 * u)) }
+        }
+        // Renglones del rótulo en la pestaña y el ojo que vigila a la derecha.
+        TemaId.DISTOPIA -> {
+            val a = w * 0.38f; val tinta = e.onBackground.copy(alpha = 0.45f)
+            listOf(4f, 7f, 10f).forEachIndexed { k, y -> drawLine(tinta, Offset(12 * u, y * u), Offset(a - (12 + k * 14) * u, y * u), 0.8f * u) }
+            val c = Offset(w - 30 * u, 18 * u)
+            drawPath(Path().apply {
+                moveTo(c.x - 11 * u, c.y); quadraticTo(c.x, c.y - 9 * u, c.x + 11 * u, c.y); quadraticTo(c.x, c.y + 9 * u, c.x - 11 * u, c.y); close()
+            }, tinta, style = Stroke(1.2f * u))
+            drawCircle(e.primary, 2.6f * u, c)
+        }
+        // Rejilla de ventilación al centro y una luz piloto, como en un aparato de los cincuenta.
+        TemaId.REFUGIO -> {
+            (0 until 3).forEach { k -> drawRoundRect(e.primary.copy(alpha = 0.45f), Offset(w / 2 - 22 * u, (4 + k * 4) * u), Size(44 * u, 2 * u), CornerRadius(u)) }
+            drawCircle(e.secondary.copy(alpha = 0.85f), 2.5f * u, Offset(w / 2 + 32 * u, 8 * u))
+        }
+        // Remaches a lo largo del borde.
+        TemaId.ORDEN -> {
+            var x = 24 * u
+            while (x < w - 20 * u) {
+                drawCircle(e.secondary.copy(alpha = 0.75f), 1.8f * u, Offset(x, 8 * u))
+                drawCircle(e.background.copy(alpha = 0.5f), 0.7f * u, Offset(x - 0.5f * u, 7.5f * u))
+                x += 34 * u
+            }
+        }
+        // Graduación a lo largo del borde.
+        TemaId.LABORATORIO -> {
+            var x = 30 * u; var n = 0
+            while (x < w - 10 * u) { drawLine(e.secondary.copy(alpha = 0.6f), Offset(x, 10 * u), Offset(x, (if (n % 5 == 0) 17 else 13) * u), 0.8f * u); x += 8 * u; n++ }
+        }
+        // Raya inglesa de gaceta: gruesa y fina.
+        TemaId.COLONOS -> {
+            drawRect(e.onBackground.copy(alpha = 0.8f), Offset(12 * u, 5 * u), Size(w - 24 * u, 1.6f * u))
+            drawRect(e.onBackground.copy(alpha = 0.8f), Offset(12 * u, 8.5f * u), Size(w - 24 * u, 0.6f * u))
+        }
+        // Estrella de oro en el medallón y un filete de oro a cada lado.
+        TemaId.NAPOLEON -> {
+            estrellaHoja(Offset(w / 2, 10 * u), 7 * u, e.tertiary)
+            drawLine(e.tertiary.copy(alpha = 0.6f), Offset(12 * u, 19 * u), Offset(w / 2 - 18 * u, 19 * u), u)
+            drawLine(e.tertiary.copy(alpha = 0.6f), Offset(w / 2 + 18 * u, 19 * u), Offset(w - 12 * u, 19 * u), u)
+        }
+        // Un tallo con hojitas a lo largo del borde.
+        TemaId.BOTANICO -> {
+            val y = 9 * u; val col = e.primary.copy(alpha = 0.7f); val fin = w * 0.45f
+            drawLine(col, Offset(34 * u, y), Offset(fin, y), 0.9f * u)
+            var x = 40 * u; var k = 0
+            while (x < fin - 6 * u) {
+                val dy = if (k % 2 == 0) -3.2f * u else 3.2f * u
+                drawOval(col, Offset(x - 3 * u, y + dy - 1.8f * u), Size(6 * u, 3.6f * u)); x += 9 * u; k++
+            }
+        }
+        // Nieve en cada festón y una baya roja entre dos.
+        TemaId.NAVIDAD -> {
+            val n = (w / (44 * u)).toInt().coerceAtLeast(3); val paso = w / n
+            (0 until n).forEach { i ->
+                drawCircle(Color.White.copy(alpha = 0.85f), 2.2f * u, Offset(i * paso + paso / 2, 4 * u))
+                if (i < n - 1) drawCircle(e.primary.copy(alpha = 0.75f), 1.6f * u, Offset((i + 1) * paso, 12 * u))
+            }
+        }
+        // El alero a tinta y un sello de cinabrio.
+        TemaId.SEDA -> {
+            drawPath(Path().apply { moveTo(4 * u, 3 * u); quadraticTo(w * 0.1f, 15 * u, w * 0.28f, 15 * u); lineTo(w * 0.72f, 15 * u); quadraticTo(w * 0.9f, 15 * u, w - 4 * u, 3 * u) },
+                e.primary.copy(alpha = 0.5f), style = Stroke(u))
+            drawRect(e.secondary, Offset(w - 40 * u, 17 * u), Size(8 * u, 8 * u))
+            drawRect(e.background, Offset(w - 38.5f * u, 18.5f * u), Size(5 * u, 5 * u), style = Stroke(0.8f * u))
+        }
+        // Trébol de tracería bajo la punta del gablete y un filete.
+        TemaId.GOTICO -> {
+            val c = Offset(w / 2, 12 * u); val r = 3 * u
+            listOf(Offset(0f, -r), Offset(-r * 0.9f, r * 0.6f), Offset(r * 0.9f, r * 0.6f)).forEach { o -> drawCircle(e.tertiary, r, c + o, style = Stroke(u)) }
+            drawLine(e.tertiary.copy(alpha = 0.5f), Offset(10 * u, 23 * u), Offset(w - 10 * u, 23 * u), 0.8f * u)
+        }
+        // Tres luces de consola y una línea de telemetría.
+        TemaId.ESPACIO -> {
+            listOf(e.primary, e.tertiary, e.secondary).forEachIndexed { k, col -> drawCircle(col, 2.4f * u, Offset(w / 2 + (k - 1) * 14 * u, 6 * u)) }
+            drawLine(e.primary.copy(alpha = 0.45f), Offset(16 * u, 18 * u), Offset(w - 16 * u, 18 * u), 0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 4 * u)))
+        }
+        // Estrella de ocho puntas en el lóbulo de la clave y un filete de oro.
+        TemaId.ANDALUS -> {
+            estrellaHoja(Offset(w / 2, 11 * u), 5 * u, e.tertiary, puntas = 8, dentro = 0.6f)
+            drawLine(e.tertiary.copy(alpha = 0.6f), Offset(12 * u, 23 * u), Offset(w - 12 * u, 23 * u), 0.8f * u)
+        }
+        // La rueda del techo de la yurta al centro y la costura del fieltro.
+        TemaId.MONGOL -> {
+            val c = Offset(w / 2, 9 * u)
+            drawCircle(e.tertiary, 5 * u, c, style = Stroke(1.2f * u))
+            drawLine(e.tertiary, Offset(c.x - 5 * u, c.y), Offset(c.x + 5 * u, c.y), u)
+            drawLine(e.tertiary, Offset(c.x, c.y - 5 * u), Offset(c.x, c.y + 5 * u), u)
+            drawLine(e.primary.copy(alpha = 0.5f), Offset(20 * u, 20 * u), Offset(w - 20 * u, 20 * u), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * u, 3 * u)))
+        }
+        // Trazos de construcción: un golpe de compás en la esquina, una línea guía y una cruz de centro.
+        TemaId.RENACIMIENTO -> {
+            val col = e.primary.copy(alpha = 0.55f)
+            drawArc(col, 0f, 90f, false, Offset(2 * u, -12 * u), Size(24 * u, 24 * u), style = Stroke(0.8f * u))
+            drawLine(col, Offset(14 * u, 5 * u), Offset(w - 14 * u, 5 * u), 0.6f * u)
+            val c = Offset(w / 2, 10 * u)
+            drawCircle(col, 4 * u, c, style = Stroke(0.8f * u))
+            drawLine(col, Offset(c.x - 7 * u, c.y), Offset(c.x + 7 * u, c.y), 0.6f * u)
+            drawLine(col, Offset(c.x, c.y - 7 * u), Offset(c.x, c.y + 7 * u), 0.6f * u)
+        }
+        // Una franja roja y otra negra, paralelas a la diagonal.
+        TemaId.URSS -> {
+            val k = 20 * u / w
+            drawPath(Path().apply { moveTo(0f, 4 * u); lineTo(w, 24 * u); lineTo(w, 29 * u); lineTo(0f, 9 * u); close() }, e.primary)
+            val x0 = w * 0.06f; val x1 = w * 0.4f
+            drawPath(Path().apply { moveTo(x0, 12 * u + k * x0); lineTo(x1, 12 * u + k * x1); lineTo(x1, 14.5f * u + k * x1); lineTo(x0, 14.5f * u + k * x0); close() }, e.onBackground)
+        }
+        // Tramo azul, blanco y rojo bajo el borde roto.
+        TemaId.REVOLUCION -> {
+            val tercio = 28 * u; val y = 13 * u
+            listOf(e.secondary, Color.White, e.primary).forEachIndexed { k, c -> drawRect(c, Offset(14 * u + k * tercio, y), Size(tercio, 3 * u)) }
+            drawRect(e.onBackground.copy(alpha = 0.3f), Offset(14 * u, y), Size(3 * tercio, 3 * u), style = Stroke(0.5f * u))
+        }
+        // Línea tallada con runas pequeñas y una gema al centro.
+        TemaId.ANTIGUAS -> {
+            val y = 14 * u; val col = e.secondary.copy(alpha = 0.7f)
+            drawLine(col, Offset(24 * u, y), Offset(w / 2 - 9 * u, y), u)
+            drawLine(col, Offset(w / 2 + 9 * u, y), Offset(w - 24 * u, y), u)
+            listOf(1f, -1f).forEach { s ->
+                (0 until 4).forEach { k ->
+                    val x = if (s > 0f) (34 + k * 16) * u else w - (34 + k * 16) * u
+                    drawLine(col, Offset(x, y - 5 * u), Offset(x, y - u), u)
+                    drawLine(col, Offset(x, y - 5 * u), Offset(x + s * (if (k % 2 == 0) 3f else -3f) * u, y - 3 * u), u)
+                }
+            }
+            drawPath(Path().apply { moveTo(w / 2, y - 7 * u); lineTo(w / 2 + 5 * u, y); lineTo(w / 2, y + 7 * u); lineTo(w / 2 - 5 * u, y); close() }, e.primary)
+        }
+    }
+}
+
+/** Estrella de [puntas] puntas; [dentro] es el radio de los valles respecto al de las puntas. */
+private fun DrawScope.estrellaHoja(c: Offset, r: Float, color: Color, puntas: Int = 5, dentro: Float = 0.45f) {
+    val p = Path()
+    for (i in 0 until puntas * 2) {
+        val rr = if (i % 2 == 0) r else r * dentro
+        val a = Math.toRadians(-90.0 + 180.0 / puntas * i)
+        val x = c.x + rr * cos(a).toFloat(); val y = c.y + rr * sin(a).toFloat()
+        if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
+    }
+    p.close()
+    drawPath(p, color)
+}
+
+/**
+ * La forma de las piezas de la hoja (el botón grande, los del menú y los avisos), en el mismo lenguaje que los botones
+ * del tema: frontón bajo, arco apuntado, boleto con muescas, banderola… Las medidas van en dp, no en proporción, para
+ * que sirvan igual en un botón que en un aviso alto.
+ */
+private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
+    TemaId.ROMANO -> RoundedCornerShape(2.dp)
+    TemaId.CIBER -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
+    // Frontón muy bajo.
+    TemaId.HELENO -> formaDp { w, h, u -> val f = 8 * u; moveTo(0f, f); lineTo(w / 2, 0f); lineTo(w, f); lineTo(w, h); lineTo(0f, h); close() }
+    // Esquinas cóncavas, como un marco de miniatura.
+    TemaId.MEDIEVAL -> formaDp { w, h, u ->
+        val r = 7 * u
+        moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h - r); quadraticTo(w - r, h - r, w - r, h)
+        lineTo(r, h); quadraticTo(r, h - r, 0f, h - r); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
+    }
+    TemaId.DISTOPIA -> RectangleShape
+    TemaId.REFUGIO -> RoundedCornerShape(18.dp)
+    TemaId.ORDEN -> CutCornerShape(8.dp)
+    TemaId.LABORATORIO -> RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
+    // Boleto: una muesca a cada lado, a media altura.
+    TemaId.COLONOS -> formaDp { w, h, u ->
+        val r = 6 * u; val m = h / 2
+        moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, m - r)
+        arcTo(Rect(Offset(w, m), r), 270f, -180f, false)
+        lineTo(w, h); lineTo(0f, h); lineTo(0f, m + r)
+        arcTo(Rect(Offset(0f, m), r), 90f, -180f, false)
+        close()
+    }
+    // Placa de puntas, como una chapa de chacó.
+    TemaId.NAPOLEON -> formaDp { w, h, u ->
+        val c = minOf(h / 2, 12 * u)
+        moveTo(c, 0f); lineTo(w - c, 0f); lineTo(w, h / 2); lineTo(w - c, h); lineTo(c, h); lineTo(0f, h / 2); close()
+    }
+    // Hoja: dos esquinas redondas y dos en punta.
+    TemaId.BOTANICO -> RoundedCornerShape(topStart = 16.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 2.dp)
+    // Caja de regalo con su cinta: esquinas suaves y una muesca arriba al centro.
+    TemaId.NAVIDAD -> formaDp { w, h, u ->
+        val r = 8 * u; val n = 5 * u
+        moveTo(r, 0f); lineTo(w / 2 - n, 0f); lineTo(w / 2, n * 0.8f); lineTo(w / 2 + n, 0f); lineTo(w - r, 0f); quadraticTo(w, 0f, w, r)
+        lineTo(w, h - r); quadraticTo(w, h, w - r, h); lineTo(r, h); quadraticTo(0f, h, 0f, h - r); lineTo(0f, r); quadraticTo(0f, 0f, r, 0f); close()
+    }
+    // Tablilla con alero, como el rótulo de una puerta.
+    TemaId.SEDA -> formaDp { w, h, u ->
+        val a = 5 * u
+        moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - a, 8 * u); lineTo(w - a, h); lineTo(a, h); lineTo(a, 8 * u); close()
+    }
+    // Arco apuntado.
+    TemaId.GOTICO -> formaDp { w, h, u ->
+        val a = 14 * u
+        moveTo(0f, h); lineTo(0f, a); quadraticTo(0f, a * 0.25f, w / 2, 0f); quadraticTo(w, a * 0.25f, w, a); lineTo(w, h); close()
+    }
+    // Tecla de consola, más angosta arriba.
+    TemaId.ESPACIO -> formaDp { w, h, u -> val d = 6 * u; moveTo(d, 0f); lineTo(w - d, 0f); lineTo(w, h); lineTo(0f, h); close() }
+    // Arco de medio punto, de radio fijo.
+    TemaId.ANDALUS -> RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
+    // Esquinas escalonadas, como la orilla del fieltro.
+    TemaId.MONGOL -> formaDp { w, h, u ->
+        val s = 4 * u
+        moveTo(2 * s, 0f); lineTo(w - 2 * s, 0f); lineTo(w - 2 * s, s); lineTo(w - s, s); lineTo(w - s, 2 * s); lineTo(w, 2 * s)
+        lineTo(w, h - 2 * s); lineTo(w - s, h - 2 * s); lineTo(w - s, h - s); lineTo(w - 2 * s, h - s); lineTo(w - 2 * s, h)
+        lineTo(2 * s, h); lineTo(2 * s, h - s); lineTo(s, h - s); lineTo(s, h - 2 * s); lineTo(0f, h - 2 * s)
+        lineTo(0f, 2 * s); lineTo(s, 2 * s); lineTo(s, s); lineTo(2 * s, s); close()
+    }
+    // Hoja con la esquina doblada.
+    TemaId.RENACIMIENTO -> CutCornerShape(bottomEnd = 12.dp)
+    // Paralelogramo de cartel.
+    TemaId.URSS -> formaDp { w, h, u -> val d = 10 * u; moveTo(d, 0f); lineTo(w, 0f); lineTo(w - d, h); lineTo(0f, h); close() }
+    // Banderola con cola de golondrina.
+    TemaId.REVOLUCION -> formaDp { w, h, u -> val d = minOf(h * 0.25f, 10 * u); moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - d, h / 2); lineTo(w, h); lineTo(0f, h); close() }
+    // Losa de piedra irregular.
+    TemaId.ANTIGUAS -> formaDp { w, h, u ->
+        moveTo(6 * u, 0f); lineTo(w - 2 * u, 3 * u); lineTo(w, h - 10 * u); lineTo(w - 8 * u, h); lineTo(2 * u, h - 3 * u); lineTo(0f, 8 * u); close()
     }
 }
