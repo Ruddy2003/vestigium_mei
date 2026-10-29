@@ -423,7 +423,10 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     ) {
         androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(start = lados.dp, end = lados.dp, top = arriba.dp, bottom = abajo.dp)) {
             androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                androidx.compose.material3.Text(titulo, style = t.headlineSmall.copy(fontSize = t.headlineSmall.fontSize * 0.82f), color = e.onBackground, maxLines = 1, modifier = androidx.compose.ui.Modifier.weight(1f))
+                // Los títulos de más de seis letras se achican para caber junto al emblema en las tarjetas de tres en fila.
+                val escala = if (titulo.length > 6) 0.82f * 6f / titulo.length else 0.82f
+                androidx.compose.material3.Text(titulo, style = t.headlineSmall.copy(fontSize = t.headlineSmall.fontSize * escala), color = e.onBackground, maxLines = 1,
+                    softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Clip, modifier = androidx.compose.ui.Modifier.weight(1f))
                 Emblema(tema, 22.dp, e, animado = false)
             }
             androidx.compose.material3.Text(linea, style = t.labelSmall, color = e.primary, maxLines = 1)
