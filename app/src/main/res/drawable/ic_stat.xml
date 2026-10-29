@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Huella dactilar simple para la barra de estado: crestas concéntricas abiertas abajo. -->
+<!-- La huella maestra, simplificada para la barra de estado. Lo genera herramientas/notificacion.py. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.6" android:strokeLineCap="round"
-        android:pathData="M5.2,7.6 C7,5 9.3,3.6 12,3.6 C14.7,3.6 17,5 18.8,7.6" />
-    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.6" android:strokeLineCap="round"
-        android:pathData="M7.4,19.2 C6.1,17.3 5.5,15 5.5,12.6 C5.5,9 8.4,6.1 12,6.1 C15.6,6.1 18.5,9 18.5,12.6 C18.5,14.2 18.3,15.6 17.8,17" />
-    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.6" android:strokeLineCap="round"
-        android:pathData="M10,20.4 C8.7,18.4 8.1,15.8 8.1,12.9 C8.1,10.7 9.8,8.8 12,8.8 C14.2,8.8 15.9,10.6 15.9,12.8 C15.9,15.1 15.4,17.3 14.6,19.2" />
-    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.6" android:strokeLineCap="round"
-        android:pathData="M12.7,20.6 C11.4,18.4 10.7,15.8 10.7,13.1 C10.7,12.2 11.3,11.5 12,11.5 C12.7,11.5 13.3,12.1 13.3,12.9 C13.3,14.6 13,16.3 12.4,17.9" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.5" android:strokeLineCap="round"
+        android:strokeLineJoin="round" android:pathData="M5.35,9.69 L5.74,8.05 L6.28,6.77 L7.11,5.57 L8.03,4.70 L9.30,3.94 L10.69,3.47 L12.00,3.33 L13.54,3.53 L14.67,3.97 L15.85,4.70 L16.70,5.48 L17.66,6.89 L18.14,8.15 L18.49,9.88 L18.65,11.42 L18.65,12.87 L18.55,13.35" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.5" android:strokeLineCap="round"
+        android:strokeLineJoin="round" android:pathData="M5.54,15.28 L6.30,14.92 L7.16,14.29 L7.64,13.81 L8.20,13.02 L8.56,11.94 L8.82,9.47 L9.14,8.63 L9.61,7.89 L10.24,7.35 L11.13,6.97 L12.58,6.91 L13.12,7.07 L13.78,7.43 L14.29,7.89 L14.68,8.46 L14.90,9.01 L15.12,9.98 L15.28,11.90 L15.28,13.54 L15.63,15.18 L16.00,15.97 L16.56,16.70 L17.28,17.23 L18.07,17.59" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.5" android:strokeLineCap="round"
+        android:strokeLineJoin="round" android:pathData="M11.90,10.46 L11.99,11.13 L11.70,12.87 L10.94,14.51" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.5" android:strokeLineCap="round"
+        android:strokeLineJoin="round" android:pathData="M16.72,20.00 L16.03,19.59 L13.81,17.82 L13.25,17.58 L12.39,17.49 L11.90,17.57 L11.26,17.85 L9.19,19.26 L7.18,20.29" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="1.5" android:strokeLineCap="round"
+        android:strokeLineJoin="round" android:pathData="M14.22,22.02 L14.01,21.73 L13.30,21.11 L12.77,20.85 L12.10,20.77 L11.33,20.98 L9.59,22.12" />
 </vector>

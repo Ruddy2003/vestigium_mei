@@ -35,14 +35,14 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 1. Antes de empezar, busca en esta matriz las filas del lote y anota en el PR qué celdas va a cambiar.
 2. Al terminar, cambia esas celdas (normalmente a **P**), borra de las listas de pendientes de las pruebas lo que ya no falta y baja las cuentas de despachos de los archivos que tocaste.
 3. Lanza `capturas.yml` con las superficies del lote y revisa cada tema en claro y en oscuro.
-4. Marca la fila del lote en «Estado por lote».
+4. Marca la fila del lote en «Estado por lote» y recalcula el resumen: `python3 herramientas/resumen_temas.py docs/diseno/TEMAS.md`.
 
 ## Estado por lote
 
 | Lote | Qué hace | Estado |
 |---|---|---|
 | 0 | Base de trabajo: esta matriz, pruebas de cobertura y unicidad, capturas por tema, CI sin publicar, hoja de contacto de N temas, colores de Deshacer | hecho 29 oct 2026 |
-| 1 | Una sola huella (ícono, sello, monocromo) | pendiente |
+| 1 | Una sola huella (ícono, sello, monocromo, notificaciones) | hecho 29 oct 2026 |
 | 2 | Los 6 temas sin diseño completo (CIB como Terminal, REF, ORD, LAB, ESP, URS), un PR por tema | pendiente |
 | 3 | Completar las superficies que ya existen | pendiente |
 | 4 | Pantallas genéricas, gráficas, controles y arranque | pendiente |
@@ -58,27 +58,27 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 37 | 4 | 27 | 47 | 6 |
-| CIB | 33 | 4 | 24 | 49 | 9 |
-| HEL | 35 | 4 | 26 | 49 | 7 |
-| MED | 43 | 3 | 25 | 43 | 7 |
-| DIS | 43 | 7 | 18 | 43 | 8 |
-| REF | 33 | 7 | 21 | 49 | 9 |
-| ORD | 26 | 6 | 24 | 56 | 9 |
-| LAB | 29 | 9 | 17 | 58 | 8 |
-| COL | 30 | 8 | 26 | 50 | 7 |
-| NAP | 36 | 3 | 23 | 50 | 7 |
-| BOT | 50 | 1 | 14 | 50 | 6 |
-| NAV | 37 | 6 | 21 | 48 | 7 |
-| SED | 45 | 7 | 16 | 47 | 6 |
-| GOT | 47 | 3 | 22 | 43 | 6 |
-| ESP | 34 | 4 | 18 | 56 | 7 |
-| AND | 47 | 6 | 15 | 47 | 6 |
-| MON | 47 | 4 | 15 | 48 | 7 |
-| REN | 45 | 2 | 20 | 47 | 7 |
-| URS | 29 | 6 | 20 | 58 | 8 |
-| REV | 42 | 2 | 19 | 52 | 6 |
-| ANT | 41 | 2 | 20 | 51 | 7 |
+| ROM | 40 | 4 | 27 | 47 | 4 |
+| CIB | 37 | 4 | 23 | 49 | 7 |
+| HEL | 39 | 4 | 25 | 49 | 5 |
+| MED | 47 | 3 | 24 | 43 | 5 |
+| DIS | 47 | 6 | 18 | 43 | 6 |
+| REF | 37 | 7 | 20 | 49 | 7 |
+| ORD | 30 | 6 | 23 | 56 | 7 |
+| LAB | 33 | 9 | 16 | 58 | 6 |
+| COL | 35 | 7 | 25 | 50 | 5 |
+| NAP | 39 | 3 | 23 | 50 | 5 |
+| BOT | 53 | 1 | 14 | 50 | 4 |
+| NAV | 42 | 5 | 20 | 48 | 5 |
+| SED | 48 | 7 | 16 | 47 | 4 |
+| GOT | 50 | 3 | 22 | 43 | 4 |
+| ESP | 38 | 4 | 17 | 56 | 5 |
+| AND | 51 | 6 | 14 | 47 | 4 |
+| MON | 51 | 4 | 14 | 48 | 5 |
+| REN | 49 | 2 | 19 | 47 | 5 |
+| URS | 33 | 6 | 19 | 58 | 6 |
+| REV | 46 | 2 | 18 | 52 | 4 |
+| ANT | 45 | 2 | 19 | 51 | 5 |
 
 Los 6 temas del lote 2 (CIB, REF, ORD, LAB, ESP y URS) son los que más dependen de respaldos genéricos; BOT, AND, MON, SED y REN, los más completos.
 
@@ -88,10 +88,11 @@ La huella del ícono pasa a ser la única (ícono, monocromo, notificaciones, se
 
 | Superficie | Dónde | ROM | CIB | HEL | MED | DIS | REF | ORD | LAB | COL | NAP | BOT | NAV | SED | GOT | ESP | AND | MON | REN | URS | REV | ANT | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Ícono: textura del fondo | `herramientas/iconos.py` (`TEMAS`) | P | C | C | C | P | C | C | C | C | P | P | C | P | P | C | C | C | C | C | C | C | Hoy hay 6 texturas, una por tema base; los demás usan la de su base con otro color (CIB, ESP, LAB, REF y URS la de DIS; MED, REN, ANT y ORD la de GOT; REV la de NAP; HEL la de ROM; MON y AND la de SED; COL y NAV la de BOT). |
-| Ícono: tinta y filete con el motivo del tema | `herramientas/iconos.py` | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | Hoy la huella es de un solo color plano y no hay filete. |
-| Sello del día: la huella es la del ícono | `ui/Huella.kt:84` (`recursosHuella`), `herramientas/arte.py` | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | El ornamento de cada sello es propio y se conserva; lo que falta es cambiar la huella. |
-| Sello del día: fondo | `huella_fondo_<id>.jpg` | P | P | P | P | S | P | P | P | S | P | P | S | P | P | P | P | P | P | P | P | P | REF y ESP: revisar si quedan planos. |
+| Ícono: textura del fondo | `herramientas/iconos.py` (`TEMAS`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 1: una textura propia y tenue por tema (travertino, pantalla, mármol de Paros, vitela, papel, hormigón, acero cepillado, cuadrícula, gaceta, mármol, herbario, fieltro con nieve, seda, piedra, polvo de estrellas, lazo de ocho, fieltro de yurta, trazos de construcción, cartel, verjurado y pizarra). |
+| Ícono: tinta y anillo con el motivo del tema | `herramientas/iconos.py` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 1: tinta del tema con acabado (dorado, ferrogálica, fósforo, esmalte o tinta) y un anillo fino de radio y grosor fijos con su motivo (laurel, barra de carga, perlas, cuadrifolios, muescas, engrane, remaches, escala, cuerda, estrellas, hojas, copos, monedas, tréboles, órbita, estrella de ocho, rombos, compás, estrellas rojas, tricolor y runas). Algunos motivos comparten figura y cambian en número y tamaño (DIS y LAB: muescas; NAP, AND y URS: estrellas). |
+| Sello del día: la huella es la del ícono | `herramientas/sellos.py`, `ui/Huella.kt` (`recursosHuella`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 1: la huella maestra a la escala y en la posición de la vieja, con el material de cada tema; los ornamentos se conservan. |
+| Sello del día: fondo | `huella_fondo_<id>.jpg` (`sellos.py`, `fuentes/fondo_sello_<id>.jpg`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 1: COL (gaceta con columnas), DIS (grano y sellos tenues), NAV (nieve fina) y REF (líneas de barrido) se enriquecieron; ESP no hacía falta. |
+| Sello del día: texto de la racha | `Estilo.racha` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 1: antes «racha de N días» en todos. |
 
 ## Lote 2 · Los 6 temas sin diseño completo
 
@@ -252,7 +253,7 @@ Lo que la prueba `CoberturaTemas` exige por tema. Los recursos que ya existen sa
 
 ## Fuera de la matriz
 
-- **`logo_mono`, `ic_stat` y los mosaicos de ajustes rápidos** son uno solo para todos los temas, a propósito; en el lote 1 pasan a la huella maestra.
+- **`logo_mono`, `ic_stat` y los mosaicos de ajustes rápidos** son uno solo para todos los temas, a propósito. Desde el lote 1 son la huella maestra (`ic_stat` lo genera `herramientas/notificacion.py`).
 - **La vista previa del widget en el selector** es un XML estático y se queda en ROM (Android no deja cambiarla).
 - **La miniatura del fondo vivo** (`res/xml/fondo_vivo.xml`) se queda fija por la misma razón.
 - **`Bases.kt`** solo lo usa hoy `TuAnioVisual` (los libros del año); `Bases.TODAS` no lo usa nadie. Se borra en el lote 7.

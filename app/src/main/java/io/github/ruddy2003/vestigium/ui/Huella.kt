@@ -144,7 +144,7 @@ fun VistaHuella(progreso: Float, fecha: String, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(top = 22.dp).graphicsLayer { alpha = texto; translationY = (1 - texto) * 24f })
             if (fecha.isNotBlank()) {
                 val r = racha(fecha)
-                Text(Estilo.fecha(fecha) + if (r >= 2) "\nracha de $r días" else "", style = MaterialTheme.typography.labelLarge, color = cs.primary,
+                Text(Estilo.fecha(fecha) + if (r >= 2) "\n" + Estilo.racha(r) else "", style = MaterialTheme.typography.labelLarge, color = cs.primary,
                     textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp).graphicsLayer { alpha = texto })
             }
         }
