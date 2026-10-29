@@ -55,8 +55,10 @@ object HallImagen {
 
         // Encabezado.
         val c = lienzo.nativeCanvas
+        val (textoMarca, colofon) = marcaHall(tema)
         val marca = L.p(L.tenue, 30f, L.titulo, 0.2f)
-        c.drawText(if (tema == TemaId.ROMANO) "VESTIGIVM MEI" else "Vestigium Mei", 64f, 92f, marca)
+        while (marca.measureText(textoMarca) > ANCHO - 128f && marca.textSize > 18f) marca.textSize = marca.textSize - 1f
+        c.drawText(textoMarca, 64f, 92f, marca)
         val (titulo, _) = Estilo.pantalla("Hall de logros", "ATRIVM PALMARVM")
         val pt = L.p(L.primario, if (titulo.length > 20) 58f else 72f, L.titulo, 0.03f)
         c.drawText(titulo, 64f, 170f, pt)
@@ -74,7 +76,7 @@ object HallImagen {
             val y0 = arriba + fila * celdaH + 18f
             val cx = x0 + celdaW / 2
             zona(cx - diam * 0.41f, y0, diam * 0.82f, diam) { dibujarTrofeoDe(g, tema, cs.background.luminance() < 0.5f, cs.onSurface) }
-            val metal = METALES_HALL[(g.nivel - 1).coerceIn(0, 3)]
+            val metal = metalHall(tema, g.nivel)
             zona(cx - diam * 0.55f, y0 + diam + 4f, diam * 1.1f, 30f) {
                 if (tema in SalonesTema.TEMAS) with(SalonesTema) { pedestal(tema, cs, metal) }
                 else drawRect(metal.copy(alpha = 0.6f), Offset(size.width * 0.1f, 0f), Size(size.width * 0.8f, size.height))
@@ -90,14 +92,43 @@ object HallImagen {
         }
 
         // Pie.
-        val pie = if (conTextos) "Vestigium Mei · " + Estilo.fecha(Fechas.diaLogico()) else "Vestigium Mei"
+        val pie = if (conTextos) colofon + " · " + Estilo.fecha(Fechas.diaLogico()) else colofon
         val pp = L.p(L.tenue, 24f, L.texto)
+        while (pp.measureText(pie) > ANCHO - 128f && pp.textSize > 16f) pp.textSize = pp.textSize - 1f
         c.drawText(pie, ANCHO / 2f - pp.measureText(pie) / 2, ALTO - 40f, pp)
 
         val dir = File(File(ctx.cacheDir, "export"), "hall").apply { mkdirs(); listFiles()?.forEach { it.delete() } }
         val f = File(dir, "hall_${Fechas.diaLogico()}.png")
         f.outputStream().use { img.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it) }
         return f
+    }
+
+    /**
+     * La marca del encabezado y el colofón del pie, en la voz de cada tema: latín epigráfico, una orden de consola,
+     * griego, el explicit del copista, un número de expediente, árabe, mongol, ruso, francés, chino… (textos propios).
+     */
+    private fun marcaHall(tema: TemaId): Pair<String, String> = when (tema) {
+        TemaId.ROMANO -> "VESTIGIVM MEI" to "SCRIPSIT ET SERVAVIT"
+        TemaId.CIBER -> "usuario@vestigium:~/hall$ ls" to "[proceso terminado · código 0]"
+        TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · VESTIGIUM MEI" to "ΜΝΗΜΗΣ ΧΑΡΙΝ"
+        TemaId.MEDIEVAL -> "Liber vestigiorum meorum" to "Explicit liber · Deo gratias"
+        TemaId.DISTOPIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
+        TemaId.REFUGIO -> "REFUGIO · REGISTRO DEL RESIDENTE" to "Todo en orden bajo tierra"
+        TemaId.ORDEN -> "CODEX ORDINIS · VESTIGIUM MEI" to "AD SCIENTIAM CUSTODIENDAM"
+        TemaId.LABORATORIO -> "VESTIGIUM MEI · LAB. 3 · LOTE 001" to "Fin del informe · n = 1"
+        TemaId.COLONOS -> "La Gaceta del Pueblo · Vestigium Mei" to "Impreso en el taller del pueblo"
+        TemaId.NAPOLEON -> "Bulletin de la Grande Armée · Vestigium Mei" to "Fait au quartier général"
+        TemaId.BOTANICO -> "Herbarium Vestigii Mei" to "Leg. et det. ipse"
+        TemaId.NAVIDAD -> "Vestigium Mei · Felices fiestas" to "Escrito junto al fuego"
+        TemaId.SEDA -> "我的足迹 · Vestigium Mei" to "丝路行记"
+        TemaId.GOTICO -> "Vestigium Mei · Horae" to "Per vitrum lux"
+        TemaId.ESPACIO -> "CONTROL DE MISIÓN · VESTIGIUM MEI" to "Fin de la transmisión"
+        TemaId.ANDALUS -> "آثاري · Vestigium Mei" to "تمّ الكتاب"
+        TemaId.MONGOL -> "Миний мөр · Vestigium Mei" to "Мөнх тэнгэрийн хүчин дор"
+        TemaId.RENACIMIENTO -> "Taccuino · Vestigium Mei" to "Fatto di mia mano"
+        TemaId.URSS -> "МОЙ СЛЕД · VESTIGIUM MEI" to "План выполнен!"
+        TemaId.REVOLUCION -> "Cahier du citoyen · Vestigium Mei" to "Liberté · Égalité · Fraternité"
+        TemaId.ANTIGUAS -> "Libro de la compañía · Vestigium Mei" to "Aquí termina el relato, por ahora"
     }
 
     private fun recortar(s: String, p: Paint, ancho: Float): String {
