@@ -42,6 +42,8 @@ object ContenedoresMas {
             Contenedor.EXPEDIENTE -> Color(0xFFF2EFE6)
             // La pantalla: al oscurecerse queda casi negra (Terminal solo existe en oscuro).
             Contenedor.CONSOLA -> Color(0xFF22303A)
+            Contenedor.CARPETA -> Color(0xFFF6EFD9)
+            Contenedor.TECNICO -> Color(0xFFEDEDE8)
             else -> PERGAMINO
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
@@ -236,6 +238,59 @@ object ContenedoresMas {
                 drawCircle(cian, 2 * d, Offset(W * 0.64f, H * 0.56f))
                 drawPath(Path().apply { moveTo(W * 0.26f, H * 0.62f); lineTo(W * 0.48f, H * 0.62f); lineTo(W * 0.54f, H * 0.7f); lineTo(W * 0.2f, H * 0.7f); close() }, Color(0xFF111925))
             }
+            Contenedor.CARPETA -> {
+                // La carpeta del supervisor: cartón verde azulado con su pestaña naranja, las hojas que asoman, el broche
+                // de metal arriba y la etiqueta amarilla con el átomo.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d)
+                val n = (grosor / (1.8f * d)).toInt().coerceAtLeast(2)
+                for (k in n downTo 1) { val o = k * grosor / (n + 1); drawRect(lerp(Color(0xFFF6EFD9), Color.Black, 0.05f * (k % 3)), Offset(o, o), Size(w, h)) }
+                val carton = Color(0xFF1C6E6A)
+                drawRect(Color(0xFFD9572B), Offset(w * 0.08f, -6 * d), Size(w * 0.24f, 10 * d))
+                drawRoundRect(Brush.linearGradient(listOf(lerp(carton, Color.White, 0.14f), carton, lerp(carton, Color.Black, 0.22f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(3 * d))
+                // Las esquinas reforzadas.
+                listOf(Offset(0f, 0f) to 0f, Offset(w, 0f) to 90f, Offset(w, h) to 180f, Offset(0f, h) to 270f).forEach { (o, a) ->
+                    val r = Math.toRadians(a.toDouble()); val e = w * 0.1f
+                    fun pt(x: Float, y: Float) = Offset(o.x + (x * cos(r) - y * sin(r)).toFloat(), o.y + (x * sin(r) + y * cos(r)).toFloat())
+                    drawPath(Path().apply { moveTo(pt(0f, 0f).x, pt(0f, 0f).y); lineTo(pt(e, 0f).x, pt(e, 0f).y); lineTo(pt(0f, e).x, pt(0f, e).y); close() }, Color(0xFF0C3431))
+                }
+                // El broche de presión de metal, arriba al centro.
+                drawRoundRect(Brush.verticalGradient(listOf(Color(0xFFD5D8DC), Color(0xFF8A8D91))), Offset(w * 0.3f, -4 * d), Size(w * 0.4f, 16 * d), CornerRadius(4 * d))
+                drawCircle(Color(0xFF5A5E64), 3 * d, Offset(w * 0.5f, 4 * d))
+                // La etiqueta amarilla: el átomo y los renglones del nombre y del nivel.
+                drawRoundRect(Color(0xFFE8B83A), Offset(w * 0.16f, h * 0.2f), Size(w * 0.68f, h * 0.3f), CornerRadius(4 * d))
+                drawRoundRect(Color(0xFF1F2A2A).copy(alpha = 0.6f), Offset(w * 0.16f, h * 0.2f), Size(w * 0.68f, h * 0.3f), CornerRadius(4 * d), style = Stroke(1.2f * d))
+                with(TrofeosMas) { atomo(Offset(w * 0.3f, h * 0.35f), w * 0.09f, Color(0xFF1F2A2A), 1.2f * d, Color(0xFFD9572B)) }
+                for (k in 0 until 3) drawLine(Color(0xFF1F2A2A).copy(alpha = 0.55f), Offset(w * 0.44f, h * (0.28f + k * 0.07f)), Offset(w * (0.76f - k * 0.08f), h * (0.28f + k * 0.07f)), 1.4f * d)
+                // La franja de clasificación abajo.
+                drawRect(Color(0xFFD9572B), Offset(0f, h * 0.62f), Size(w, h * 0.04f))
+            }
+            Contenedor.TECNICO -> {
+                // El códice técnico: tapas de chapa de acero con el borde remachado, lomo de cuero carmesí, esquineras de
+                // latón, el escudo con el engrane al centro y dos bisagras que lo cierran.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d); canto(w, h, grosor, d, Color(0xFFEDEDE8))
+                val acero = Color(0xFF6E757D); val carmesi = Color(0xFF9E1B22); val laton = Color(0xFFD6B25A)
+                drawRect(Brush.linearGradient(listOf(lerp(acero, Color.White, 0.25f), acero, lerp(acero, Color.Black, 0.3f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h))
+                drawRect(Brush.horizontalGradient(listOf(lerp(carmesi, Color.Black, 0.3f), carmesi, lerp(carmesi, Color.Black, 0.3f)), 0f, w * 0.12f), Offset.Zero, Size(w * 0.12f, h))
+                val m = w * 0.06f
+                var x = w * 0.18f; while (x < w - m) { drawCircle(Color(0xFF2A2E33), 1.6f * d, Offset(x, m)); drawCircle(Color(0xFF2A2E33), 1.6f * d, Offset(x, h - m)); x += 10 * d }
+                var y = m + 10 * d; while (y < h - m) { drawCircle(Color(0xFF2A2E33), 1.6f * d, Offset(w - m, y)); y += 10 * d }
+                listOf(Offset(w * 0.12f, 0f) to 0f, Offset(w, 0f) to 90f, Offset(w, h) to 180f, Offset(w * 0.12f, h) to 270f).forEach { (o, a) ->
+                    val r = Math.toRadians(a.toDouble()); val e = w * 0.12f
+                    fun pt(x: Float, y: Float) = Offset(o.x + (x * cos(r) - y * sin(r)).toFloat(), o.y + (x * sin(r) + y * cos(r)).toFloat())
+                    drawPath(Path().apply { moveTo(pt(0f, 0f).x, pt(0f, 0f).y); lineTo(pt(e, 0f).x, pt(e, 0f).y); lineTo(pt(0f, e).x, pt(0f, e).y); close() }, laton)
+                }
+                // El escudo con el engrane.
+                val c = Offset(w * 0.56f, h * 0.4f); val R = w * 0.2f
+                val escudo = Path().apply { moveTo(c.x - R, c.y - R); lineTo(c.x + R, c.y - R); lineTo(c.x + R, c.y); quadraticTo(c.x + R, c.y + R * 0.8f, c.x, c.y + R * 1.25f); quadraticTo(c.x - R, c.y + R * 0.8f, c.x - R, c.y); close() }
+                drawPath(escudo, carmesi); drawPath(escudo, laton, style = Stroke(1.6f * d))
+                for (k in 0 until 8) { val a = k * PI / 4; drawLine(laton, c, Offset(c.x + (R * 0.55f * cos(a)).toFloat(), c.y + (R * 0.55f * sin(a)).toFloat()), 3 * d) }
+                drawCircle(laton, R * 0.42f, c); drawCircle(carmesi, R * 0.16f, c)
+                // Las bisagras de acero que lo cierran por el canto.
+                listOf(0.26f, 0.74f).forEach { f ->
+                    drawRect(Color(0xFF4B525A), Offset(w - 8 * d, h * f - 5 * d), Size(10 * d + grosor, 10 * d))
+                    drawCircle(Color(0xFF2A2E33), 2 * d, Offset(w - 3 * d, h * f))
+                }
+            }
             else -> {}
         }
     }
@@ -327,6 +382,26 @@ object ContenedoresMas {
                     while (yy < size.height - 8 * d) { mono("%03d".format(k), 21 * d, yy, 8 * d, cian.copy(alpha = 0.35f), android.graphics.Paint.Align.RIGHT); yy += renglon; k++ }
                 }
             }
+            Contenedor.CARPETA -> {
+                // El formato del refugio: cabecera con casillas de turno y nivel, renglones verde azulado y la franja naranja.
+                val linea = if (oscuro) Color(0xFF3DFF7F) else Color(0xFF1C6E6A)
+                drawRect(Color(0xFFD9572B).copy(alpha = 0.5f), Offset(0f, 0f), Size(size.width, 5 * d))
+                drawRect(linea.copy(alpha = 0.35f), Offset(margen - 10 * d, 72 * d), Size(size.width - margen - 2 * d, 18 * d), style = Stroke(0.9f * d))
+                listOf(0.45f, 0.7f).forEach { f -> val x = margen - 10 * d + (size.width - margen - 2 * d) * f; drawLine(linea.copy(alpha = 0.35f), Offset(x, 72 * d), Offset(x, 90 * d), 0.9f * d) }
+                var y = 96 * d + renglon; while (y < size.height - 16 * d) { drawLine(linea.copy(alpha = 0.14f), Offset(margen - 10 * d, y), Offset(size.width - 12 * d, y), 0.7f * d); y += renglon }
+                with(TrofeosMas) { atomo(Offset(size.width - 40 * d, size.height - 50 * d), 26 * d, linea.copy(alpha = if (oscuro) 0.1f else 0.07f), 2 * d) }
+            }
+            Contenedor.TECNICO -> {
+                // La lámina técnica: cuadrícula fina de dibujo, el margen carmesí y el cajetín de rótulo abajo a la derecha.
+                val linea = if (oscuro) Color(0xFF8FB3C8) else Color(0xFF2F4858)
+                var x = margen - 10 * d; while (x < size.width) { drawLine(linea.copy(alpha = 0.06f), Offset(x, 70 * d), Offset(x, size.height), 0.5f * d); x += renglon / 3 }
+                var y = 70 * d; var k = 0; while (y < size.height) { drawLine(linea.copy(alpha = if (k % 3 == 0) 0.12f else 0.05f), Offset(margen - 10 * d, y), Offset(size.width, y), 0.5f * d); y += renglon / 3; k++ }
+                drawLine(Color(0xFF9E1B22).copy(alpha = 0.45f), Offset(margen - 10 * d, 0f), Offset(margen - 10 * d, size.height), 1.2f * d)
+                val r = Rect(size.width - 150 * d, size.height - 56 * d, size.width - 12 * d, size.height - 12 * d)
+                drawRect(linea.copy(alpha = 0.3f), r.topLeft, r.size, style = Stroke(1f * d))
+                drawLine(linea.copy(alpha = 0.3f), Offset(r.left, r.top + r.height / 2), Offset(r.right, r.top + r.height / 2), 0.8f * d)
+                drawLine(linea.copy(alpha = 0.3f), Offset(r.left + r.width * 0.6f, r.top), Offset(r.left + r.width * 0.6f, r.bottom), 0.8f * d)
+            }
             else -> {}
         }
     }
@@ -371,6 +446,19 @@ object ContenedoresMas {
                 drawRect(Color(0xFFD9DEE3).copy(alpha = if (oscuro) 0.16f else 0.6f), Offset(2 * d, 0f), Size(16 * d, size.height))
                 var y = 8 * d; while (y < size.height) { drawCircle(Color.Black.copy(alpha = 0.6f), 2.4f * d, Offset(10 * d, y)); y += 13 * d }
                 drawLine(Color(0xFF00E5FF).copy(alpha = 0.3f), Offset(18 * d, 0f), Offset(18 * d, size.height), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 2 * d)))
+            }
+            Contenedor.CARPETA -> {
+                // El broche de dos patas que pasa por los agujeros de las hojas, con su placa de metal.
+                val metal = if (oscuro) Color(0xFF6E7478) else Color(0xFF9EA3A8)
+                listOf(0.2f, 0.8f).forEach { f -> val y = size.height * f; drawCircle(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.25f), 4 * d, Offset(20 * d, y)); drawLine(metal, Offset(20 * d, y), Offset(20 * d, y + if (f < 0.5f) 24 * d else -24 * d), 2.4f * d) }
+                drawRoundRect(metal, Offset(14 * d, size.height * 0.2f - 6 * d), Size(12 * d, size.height * 0.6f + 12 * d), CornerRadius(3 * d), style = Stroke(1.4f * d))
+            }
+            Contenedor.TECNICO -> {
+                // La bisagra de piano de acero del lomo, con sus nudillos y el pasador.
+                val acero = if (oscuro) Color(0xFF5A626B) else Color(0xFF8A929B)
+                var y = 0f; var k = 0
+                while (y < size.height) { drawRoundRect(if (k % 2 == 0) acero else lerp(acero, Color.Black, 0.2f), Offset(10 * d, y), Size(12 * d, 18 * d), CornerRadius(3 * d)); y += 18 * d; k++ }
+                drawLine(lerp(acero, Color.White, 0.3f), Offset(16 * d, 0f), Offset(16 * d, size.height), 1f * d)
             }
             else -> {}
         }
