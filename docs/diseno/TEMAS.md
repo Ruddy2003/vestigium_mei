@@ -58,27 +58,27 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 107 | 1 | 8 | 3 | 3 |
-| CIB | 102 | 1 | 8 | 4 | 5 |
-| HEL | 108 | 1 | 6 | 3 | 4 |
-| MED | 108 | 2 | 5 | 3 | 4 |
-| DIS | 103 | 3 | 6 | 3 | 5 |
-| REF | 102 | 3 | 7 | 3 | 5 |
-| ORD | 101 | 4 | 9 | 3 | 5 |
-| LAB | 104 | 6 | 5 | 3 | 4 |
-| COL | 103 | 3 | 9 | 3 | 4 |
-| NAP | 101 | 3 | 8 | 4 | 4 |
-| BOT | 106 | 1 | 7 | 5 | 3 |
-| NAV | 99 | 4 | 8 | 5 | 4 |
-| SED | 104 | 4 | 7 | 4 | 3 |
-| GOT | 107 | 2 | 6 | 4 | 3 |
-| ESP | 104 | 3 | 6 | 4 | 3 |
-| AND | 108 | 3 | 4 | 4 | 3 |
-| MON | 105 | 3 | 5 | 5 | 4 |
-| REN | 107 | 2 | 4 | 5 | 4 |
-| URS | 104 | 5 | 5 | 4 | 4 |
-| REV | 105 | 2 | 8 | 4 | 3 |
-| ANT | 104 | 1 | 9 | 4 | 4 |
+| ROM | 116 | 1 | 2 | 2 | 3 |
+| CIB | 114 | 1 | 2 | 2 | 3 |
+| HEL | 116 | 1 | 2 | 2 | 3 |
+| MED | 116 | 1 | 1 | 2 | 4 |
+| DIS | 113 | 2 | 1 | 2 | 4 |
+| REF | 113 | 2 | 1 | 2 | 4 |
+| ORD | 114 | 3 | 1 | 2 | 4 |
+| LAB | 116 | 2 | 1 | 2 | 3 |
+| COL | 115 | 2 | 2 | 2 | 3 |
+| NAP | 113 | 2 | 1 | 2 | 4 |
+| BOT | 117 | 1 | 1 | 2 | 3 |
+| NAV | 113 | 2 | 1 | 2 | 4 |
+| SED | 116 | 1 | 2 | 2 | 3 |
+| GOT | 116 | 1 | 2 | 2 | 3 |
+| ESP | 113 | 2 | 2 | 2 | 3 |
+| AND | 117 | 1 | 1 | 2 | 3 |
+| MON | 116 | 1 | 1 | 2 | 4 |
+| REN | 116 | 1 | 1 | 2 | 4 |
+| URS | 114 | 3 | 1 | 2 | 4 |
+| REV | 117 | 1 | 1 | 2 | 3 |
+| ANT | 115 | 1 | 2 | 2 | 4 |
 
 Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
 
@@ -227,7 +227,7 @@ Las filas con valor comparable las vigila `UnicidadTemas` (y las que faltan, `Co
 | Letra de título | `tipoDe` (`ui/Disenios.kt`, `ui/Tema.kt`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: ANT pasa a una uncial («Camino Vestigium») y REV a una Didot de cartel («Convencion Vestigium»). |
 | Letra de texto | `tipoDe`, `pagina()`, `LibroDiario.fuentes` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: 15 familias nuevas (Cardo, Barlow, Courier Prime, Saira, Old Standard, Crimson Pro, Lora, Alegreya, PT Sans, Fira Sans, Goudy, Baskerville, Vollkorn…) recortadas con `herramientas/fuentes.py`; la etiqueta usa la letra de texto o de título salvo en ROM, CIB y REF. |
 | Esquinas | `radioDe` (`ui/Tema.kt`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: `Esquinas(radio, forma)` con cuatro formas (redonda, cortada, hoja, arco); ninguna pareja se repite. |
-| Frases del día (al menos 20) | `ui/Frases.kt` | P | P | P | P | P | S | S | S | P | S | P | S | S | S | S | S | S | S | S | S | P | Con menos de 20: MON 10, AND 13, ORD 13, REF 14, GOT, NAV, REN y SED 15, ESP, REV y URS 17, LAB y NAP 18. |
+| Frases del día (al menos 20) | `ui/Frases.kt` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: los 13 temas que tenían menos llegan a 22, con 89 citas reales comprobadas en fuentes en línea (autor y fuente en cada una; las dudosas lo dicen). |
 
 ## Lote 6 · Sonido y vibración
 

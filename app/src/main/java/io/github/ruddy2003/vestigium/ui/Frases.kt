@@ -196,6 +196,14 @@ object Frases {
         f("There will come soft rains and the smell of the ground.", "Vendrán lluvias suaves y el olor de la tierra.", "Sara Teasdale, 1918"),
         f(null, "Al hombre se le puede arrebatar todo salvo una cosa: la última de las libertades humanas, la elección de su actitud ante cualquier circunstancia.",
             "Viktor Frankl, El hombre en busca de sentido, 1946"),
+        f("All this will not be finished in the first one hundred days. Nor will it be finished in the first one thousand days, nor in the life of this Administration, nor even perhaps in our lifetime on this planet. But let us begin.", "Todo esto no se terminará en los primeros cien días. Tampoco en los primeros mil días, ni en la vida de este gobierno, ni quizá en nuestra vida en este planeta. Pero empecemos.", "John F. Kennedy, discurso inaugural, 20 de enero de 1961"),
+        f("Meanwhile, never flinch, never weary, never despair.", "Mientras tanto, nunca retrocedas, nunca te canses, nunca desesperes.", "Winston Churchill, último gran discurso en la Cámara de los Comunes, 1 de marzo de 1955"),
+        f("The only limit to our realization of tomorrow will be our doubts of today.", "El único límite para lo que logremos mañana serán nuestras dudas de hoy.", "Franklin D. Roosevelt, discurso para el Día de Jefferson, escrito para el 13 de abril de 1945 y nunca pronunciado"),
+        f("You must do the thing you think you cannot do.", "Tienes que hacer aquello que crees que no puedes hacer.", "Eleanor Roosevelt, Aprender viviendo (You Learn by Living), 1960"),
+        f("Beim Menschen ist es wie beim Velo. Nur wenn er fährt, kann er bequem die Balance halten.", "Con las personas pasa como con la bicicleta: solo mientras avanzan pueden mantener bien el equilibrio.", "Albert Einstein, carta a su hijo Eduard, 5 de febrero de 1930"),
+        f("We — you and I, and our government — must avoid the impulse to live only for today, plundering for our own ease and convenience the precious resources of tomorrow.", "Debemos evitar el impulso de vivir solo para hoy, saqueando para nuestra comodidad los valiosos recursos del mañana.", "Dwight D. Eisenhower, discurso de despedida, 17 de enero de 1961"),
+        f("Mät aldrig bergets höjd förrän du nått toppen. Då skall du se hur lågt det var.", "No midas nunca la altura de una montaña hasta haber llegado a la cima. Entonces verás qué baja era.", "Dag Hammarskjöld, Marcas en el camino (Vägmärken), anotación de 1925–1930, publicada en 1963"),
+        f("Good night, and good luck.", "Buenas noches, y buena suerte.", "Edward R. Murrow, despedida de sus programas de radio y televisión en la CBS"),
     )
 
     val ORDEN = listOf(
@@ -212,6 +220,15 @@ object Frases {
         f(null, "La pluma es lengua del alma.", "Miguel de Cervantes, Don Quijote II, 16"),
         f(null, "El que lee mucho y anda mucho, ve mucho y sabe mucho.", "Miguel de Cervantes, Don Quijote II, 25"),
         f(null, "Cada uno es artífice de su ventura.", "Miguel de Cervantes, Don Quijote II, 66"),
+        f(null, "No hay nada más que el propósito único del momento presente. Toda la vida de una persona es una sucesión de momento tras momento.", "Yamamoto Tsunetomo, Hagakure (dictado entre 1709 y 1716)"),
+        f(null, "Presta atención incluso a las cosas pequeñas. No hagas nada que no sirva.", "Miyamoto Musashi, El libro de los cinco anillos, libro de la Tierra (reglas octava y novena), 1645"),
+        f("七転び八起き", "Caer siete veces, levantarse ocho.", "Proverbio japonés"),
+        f(null, "Son dignos de alabanza; sin embargo, quien hace más vale más.", "Geoffroi de Charny, Libro de la caballería, hacia 1350, estribillo que repite a lo largo de la obra (algunos estudiosos lo atribuyen a su hijo homónimo)"),
+        f("Non nobis, Domine, non nobis, sed nomini tuo da gloriam.", "No a nosotros, Señor, no a nosotros, sino a tu nombre da la gloria.", "Salmo 113 (115), 1, Vulgata; según la tradición, divisa de los templarios"),
+        f(null, "La diligencia es madre de la buena ventura, y la pereza, su contraria, jamás llegó al término que pide un buen deseo.", "Miguel de Cervantes, Don Quijote II, 43"),
+        f(null, "Paciencia y barajar.", "Miguel de Cervantes, Don Quijote II, 23 (lo dice Durandarte en la cueva de Montesinos)"),
+        f("Nemo facere metuit quod se bene didicisse confidit.", "Nadie teme hacer lo que está seguro de haber aprendido bien.", "Vegecio, Compendio de técnica militar I, 1"),
+        f("Nihil enim est quod non adsidua meditatio facillimum reddat.", "No hay nada que la práctica constante no vuelva facilísimo.", "Vegecio, Compendio de técnica militar I, 19"),
     )
 
     val LABORATORIO = listOf(
@@ -238,6 +255,10 @@ object Frases {
         f("The first principle is that you must not fool yourself — and you are the easiest person to fool.",
             "El primer principio es que no debes engañarte a ti mismo, y tú eres la persona más fácil de engañar.", "Richard Feynman, «Cargo Cult Science», 1974"),
         f("All models are wrong, but some are useful.", "Todos los modelos están equivocados, pero algunos son útiles.", "George E. P. Box, 1979"),
+        f(null, "Toda obra grande es el fruto de la paciencia y de la perseverancia, combinadas con una atención orientada tenazmente, durante meses y aun años, hacia un objeto particular.", "Santiago Ramón y Cajal, Reglas y consejos sobre investigación científica, cap. III, 1897"),
+        f("Douter de tout ou tout croire, ce sont deux solutions également commodes, qui l'une et l'autre nous dispensent de réfléchir.", "Dudar de todo o creerlo todo son dos soluciones igual de cómodas: las dos nos ahorran pensar.", "Henri Poincaré, La ciencia y la hipótesis, introducción, 1902"),
+        f("False facts are highly injurious to the progress of science, for they often endure long; but false views, if supported by some evidence, do little harm, for every one takes a salutary pleasure in proving their falseness.", "Los hechos falsos dañan mucho al progreso de la ciencia, porque suelen durar mucho; pero las ideas falsas, si se apoyan en alguna evidencia, hacen poco daño, porque todos sienten un placer saludable en demostrar que son falsas.", "Charles Darwin, El origen del hombre, cap. XXI, 1871"),
+        f(null, "Hay que hacer de la vida un sueño, y de un sueño, una realidad.", "Pierre Curie, de su diario de juventud, citado por Marie Curie en Pierre Curie, 1923"),
     )
 
     val COLONOS = listOf(
@@ -286,6 +307,10 @@ object Frases {
         f("Wer nicht von dreitausend Jahren sich weiß Rechenschaft zu geben, bleib im Dunkeln unerfahren, mag von Tag zu Tage leben.",
             "Quien no sabe dar cuenta de tres mil años se queda a oscuras, sin experiencia, viviendo al día.", "Goethe, Diván de Oriente y Occidente, 1819"),
         f("Le génie n'est qu'une plus grande aptitude à la patience.", "El genio no es más que una mayor aptitud para la paciencia.", "Atribuida a Buffon"),
+        f("Il n'y a que deux puissances dans le monde, le sabre et l'esprit. […] À la longue, le sabre est toujours battu par l'esprit.", "Solo hay dos poderes en el mundo: el sable y el espíritu. A la larga, el sable siempre es vencido por el espíritu.", "Napoleón a Fontanes, entre Jena y Wagram, según la noticia de Sainte-Beuve en las Obras de Fontanes, 1839"),
+        f("Les vraies conquêtes, les seules qui ne donnent aucun regret, sont celles que l'on fait sur l'ignorance.", "Las verdaderas conquistas, las únicas que no dejan ningún pesar, son las que se hacen sobre la ignorancia.", "Bonaparte, carta a Camus al ser elegido miembro del Instituto de Francia, diciembre de 1797"),
+        f("J'écris principalement pour rendre compte de moi à moi-même.", "Escribo, sobre todo, para rendirme cuentas de mí a mí mismo.", "Chateaubriand, manuscrito de 1826 de las Memorias de ultratumba"),
+        f("Je désire que mes cendres reposent sur les bords de la Seine, au milieu de ce peuple français que j'ai tant aimé.", "Deseo que mis cenizas reposen a orillas del Sena, en medio de ese pueblo francés al que tanto he amado.", "Napoleón, testamento, art. 2, Santa Elena, 15 de abril de 1821"),
     )
 
     /** Tierras Antiguas: dichos propios del tema, escritos para la app (no citan ninguna obra). */
@@ -337,6 +362,11 @@ object Frases {
         f("Nous sommes ici par la volonté du peuple.", "Estamos aquí por la voluntad del pueblo.", "Atribuida a Mirabeau, 23 de junio de 1789"),
         f("Rien ne se perd, rien ne se crée, tout se transforme.", "Nada se pierde, nada se crea, todo se transforma.", "Atribuida a Lavoisier, a partir de su Tratado elemental de química, 1789"),
         f("Notre histoire n'est pas notre code.", "Nuestra historia no es nuestro código.", "Rabaut Saint-Étienne, 1788"),
+        f("Après le pain, l'éducation est le premier besoin du peuple.", "Después del pan, la educación es la primera necesidad del pueblo.", "Georges Danton, discurso sobre la instrucción pública ante la Convención, 13 de agosto de 1793"),
+        f("La libre communication des pensées et des opinions est un des droits les plus précieux de l'homme : tout citoyen peut donc parler, écrire, imprimer librement…", "La libre comunicación de los pensamientos y de las opiniones es uno de los derechos más preciosos del hombre: todo ciudadano puede, pues, hablar, escribir e imprimir libremente…", "Declaración de los Derechos del Hombre y del Ciudadano, art. 11, 1789"),
+        f("Une génération ne peut assujettir à ses lois les générations futures.", "Una generación no puede someter a sus leyes a las generaciones futuras.", "Declaración de los Derechos del Hombre y del Ciudadano de 1793, art. 28"),
+        f("Ce n'est point ce que l'on a appris qui est utile, mais ce que l'on a retenu, et surtout ce que l'on s'est rendu propre, soit par la réflexion, soit par l'habitude.", "Lo útil no es lo que uno ha aprendido, sino lo que ha retenido, y sobre todo lo que ha hecho suyo, ya sea por la reflexión, ya por la costumbre.", "Condorcet, Cinco memorias sobre la instrucción pública, primera memoria, 1791"),
+        f("La plus perdue de toutes les journées est celle où l'on n'a pas ri.", "El más perdido de todos los días es aquel en que no se ha reído.", "Chamfort, máximas sacadas de sus manuscritos, Mercure français, 1795"),
     )
 
     val NAVIDAD = listOf(
@@ -358,6 +388,13 @@ object Frases {
         f("Christmas won't be Christmas without any presents.", "La Navidad no será Navidad sin regalos.", "Louisa May Alcott, Mujercitas, 1868, primera línea"),
         f("Yes, Virginia, there is a Santa Claus.", "Sí, Virginia, Santa Claus existe.", "Francis P. Church, The Sun, Nueva York, 1897"),
         f("Christmas is not a time nor a season, but a state of mind.", "La Navidad no es una fecha ni una temporada, sino un estado de ánimo.", "Calvin Coolidge, mensaje de Navidad, 1927"),
+        f("Happy, happy Christmas, that can win us back to the delusions of our childish days; that can recall to the old man the pleasures of his youth; that can transport the sailor and the traveller, thousands of miles away, back to his own fireside and his quiet home!", "¡Feliz, feliz Navidad, que puede devolvernos las ilusiones de la infancia, recordarle al anciano los placeres de su juventud y llevar al marinero y al viajero, a miles de millas, de vuelta a su chimenea y a su casa tranquila!", "Charles Dickens, Los papeles póstumos del Club Pickwick, cap. XXVIII, 1837"),
+        f("I have always thought of Christmas time, when it has come round… as a good time; a kind, forgiving, charitable, pleasant time; the only time I know of, in the long calendar of the year, when men and women seem by one consent to open their shut-up hearts freely.", "Siempre he pensado en la Navidad, cada vez que llega, como un buen tiempo: amable, de perdón, de caridad, alegre; el único que conozco, en el largo calendario del año, en que hombres y mujeres parecen ponerse de acuerdo para abrir libremente sus corazones cerrados.", "Fred, el sobrino de Scrooge, en Canción de Navidad de Charles Dickens, 1843, estrofa I"),
+        f("I don't know what to do! I am as light as a feather, I am as happy as an angel, I am as merry as a schoolboy.", "¡No sé qué hacer! Estoy ligero como una pluma, feliz como un ángel, alegre como un colegial.", "Scrooge, en Canción de Navidad de Charles Dickens, 1843, estrofa V"),
+        f("Welcome, everything! Welcome, alike what has been, and what never was, and what we hope may be, to your shelter underneath the holly, to your places round the Christmas fire, where what is sits open-hearted!", "¡Bienvenido todo! Bienvenido por igual lo que fue, lo que nunca fue y lo que esperamos que sea, a vuestro refugio bajo el acebo, a vuestro sitio junto al fuego de Navidad, donde lo que es se sienta con el corazón abierto.", "Charles Dickens, «Lo que es la Navidad a medida que envejecemos», Household Words, 1851"),
+        f("Ring out the old, ring in the new, / Ring, happy bells, across the snow: / The year is going, let him go; / Ring out the false, ring in the true.", "Despedid lo viejo, recibid lo nuevo; tañed, campanas alegres, sobre la nieve: el año se va, dejadlo ir; despedid lo falso, recibid lo verdadero.", "Alfred Tennyson, In Memoriam A. H. H. CVI, 1850"),
+        f("The hopes and fears of all the years / Are met in thee tonight.", "Las esperanzas y los miedos de todos los años se encuentran en ti esta noche.", "Phillips Brooks, «O Little Town of Bethlehem», 1868"),
+        f("What can I give Him, poor as I am? / If I were a shepherd, I would bring a lamb; / If I were a Wise Man, I would do my part; / Yet what I can I give Him: give my heart.", "¿Qué puedo darle, pobre como soy? Si fuera pastor, le traería un cordero; si fuera un sabio de Oriente, haría mi parte; pero lo que puedo, se lo doy: le doy mi corazón.", "Christina Rossetti, «A Christmas Carol» («In the Bleak Midwinter»), 1872"),
     )
 
     val SEDA = listOf(
@@ -377,6 +414,13 @@ object Frases {
         f(null, "Dos se afanaron en vano: el que juntó y no disfrutó, y el que aprendió y no puso en práctica.", "Saadi, Gulistán VIII"),
         f(null, "Este cuerpo es una posada, muchacho: cada mañana llega corriendo un huésped nuevo.", "Rumi, Masnavi V"),
         f("Non ho scritto la metà di quello che ho visto.", "No he contado ni la mitad de lo que vi.", "Atribuida a Marco Polo por Jacopo d'Acqui"),
+        f("學而時習之，不亦說乎？", "Aprender y repasar a su tiempo lo aprendido, ¿no es acaso una alegría?", "Confucio, Analectas I, 1"),
+        f("逝者如斯夫！不舍晝夜。", "¡Así pasa todo, como este río! No se detiene ni de día ni de noche.", "Confucio, a la orilla de un río, Analectas IX, 17"),
+        f("溫故而知新，可以爲師矣。", "Quien repasa lo antiguo y descubre en ello algo nuevo puede ser maestro.", "Confucio, Analectas II, 11"),
+        f("合抱之木，生於毫末；九層之臺，起於累土。", "El árbol que apenas abarcan los brazos nació de un brote fino como un pelo; la torre de nueve pisos empezó con un montón de tierra.", "Laozi, Tao Te Ching 64"),
+        f("不積跬步，無以至千里；不積小流，無以成江海。", "Sin juntar medio paso tras medio paso no se llega a mil li; sin juntar pequeños arroyos no se forman ríos ni mares.", "Xunzi, «Exhortación al estudio»"),
+        f("吾生也有涯，而知也无涯。", "Mi vida tiene orilla; el saber no tiene orilla.", "Zhuangzi, cap. 3, «Lo esencial para nutrir la vida»"),
+        f("Ah, fill the Cup: — what boots it to repeat / How Time is slipping underneath our Feet: / Unborn To-morrow and dead Yesterday, / Why fret about them if To-day be sweet!", "Ah, llena la copa: ¿de qué sirve repetir cómo se nos escurre el tiempo bajo los pies? Mañana aún no ha nacido y ayer está muerto: ¿por qué inquietarse por ellos si hoy es dulce?", "Rubaiyat de Omar Jayam, versión de Edward FitzGerald, 1859, XXXVII"),
     )
 
     val BOTANICO = listOf(
@@ -442,6 +486,13 @@ object Frases {
         f("We may live without her, and worship without her, but we cannot remember without her.", "Podemos vivir sin la arquitectura y rezar sin ella, pero no podemos recordar sin ella.",
             "John Ruskin, Las siete lámparas de la arquitectura, 1849"),
         f("When we build, let us think that we build for ever.", "Cuando construyamos, pensemos que construimos para siempre.", "John Ruskin, Las siete lámparas de la arquitectura, 1849"),
+        f("Quoniam mille anni ante oculos tuos tamquam dies hesterna quae praeteriit.", "Porque mil años ante tus ojos son como el día de ayer, que ya pasó.", "Salmo 89 (90), 4, Vulgata"),
+        f("Septies in die laudem dixi tibi.", "Siete veces al día te alabo.", "Salmo 118 (119), 164, Vulgata; la Regla de san Benito (cap. 16) funda en este verso las horas del día"),
+        f("Omnia tempus habent, et suis spatiis transeunt universa sub caelo.", "Todo tiene su tiempo, y todas las cosas bajo el cielo pasan en su plazo.", "Eclesiastés 3, 1, Vulgata"),
+        f("Magna ista vis est memoriae, magna nimis, deus meus, penetrale amplum et infinitum.", "Grande es esta fuerza de la memoria, grande en exceso, Dios mío: un santuario amplio e infinito.", "San Agustín, Confesiones X, 8, 15"),
+        f("Si omni anno unum vitium extirparemus, cito viri perfecti efficeremur.", "Si cada año arrancáramos un solo vicio, pronto llegaríamos a ser perfectos.", "Tomás de Kempis, Imitación de Cristo I, 11"),
+        f("Imperfection is in some sort essential to all that we know of life. It is the sign of life in a mortal body, that is to say, of a state of progress and change.", "La imperfección es en cierto modo esencial a todo lo que conocemos de la vida. Es la señal de la vida en un cuerpo mortal, es decir, de un estado de progreso y de cambio.", "John Ruskin, «La naturaleza del gótico», en Las piedras de Venecia II, 1853"),
+        f("Experto crede: aliquid amplius invenies in silvis quam in libris. Ligna et lapides docebunt te quod a magistris audire non possis.", "Créele a quien lo ha probado: encontrarás algo más en los bosques que en los libros. Los árboles y las piedras te enseñarán lo que no puedes oír de los maestros.", "Bernardo de Claraval, Carta 106, 2"),
     )
 
     val ESPACIO = listOf(
@@ -466,6 +517,11 @@ object Frases {
         f("Houston, we've had a problem.", "Houston, hemos tenido un problema.", "Jack Swigert y Jim Lovell, Apolo 13, 1970"),
         f("The cosmos is within us. We are made of star-stuff.", "El cosmos está dentro de nosotros. Estamos hechos de materia de estrellas.", "Carl Sagan, Cosmos, 1980"),
         f("Look again at that dot. That's here. That's home. That's us.", "Mira otra vez ese punto. Eso es aquí. Es nuestra casa. Somos nosotros.", "Carl Sagan, Un punto azul pálido, 1994"),
+        f("Ne frustra vixisse videar.", "Que no parezca que he vivido en vano.", "Tycho Brahe, últimas palabras, 1601, según el relato de Kepler recogido por J. L. E. Dreyer, 1890"),
+        f("This is a present from a small distant world, a token of our sounds, our science, our images, our music, our thoughts, and our feelings.", "Este es un regalo de un mundo pequeño y lejano: una muestra de nuestros sonidos, nuestra ciencia, nuestras imágenes, nuestra música, nuestros pensamientos y nuestros sentimientos.", "Jimmy Carter, mensaje grabado en las sondas Voyager, 1977"),
+        f("We leave as we came and, God willing, as we shall return, with peace and hope for all mankind.", "Nos vamos como vinimos y, si Dios quiere, como volveremos: con paz y esperanza para toda la humanidad.", "Eugene Cernan, Apolo 17, al dejar la Luna, 14 de diciembre de 1972"),
+        f("We choose to go to the moon in this decade and do the other things, not because they are easy, but because they are hard.", "Elegimos ir a la Luna en esta década, y hacer las otras cosas, no porque sean fáciles, sino porque son difíciles.", "John F. Kennedy, discurso en la Universidad Rice, 12 de septiembre de 1962"),
+        f("Veniet tempus quo ista quae nunc latent in lucem dies extrahat et longioris aevi diligentia.", "Llegará un tiempo en que lo que ahora está oculto lo saquen a la luz los días y la diligencia de una época más larga.", "Séneca, Cuestiones naturales VII, 25, 4, sobre los cometas"),
     )
 
     val ANDALUS = listOf(
@@ -487,6 +543,15 @@ object Frases {
         f(null, "Escucha la verdad, venga de quien venga.", "Maimónides, Ocho capítulos, prólogo"),
         f("لقد صار قلبي قابلا كل صورة فمرعى لغزلان ودير لرهبان", "Mi corazón se ha vuelto capaz de toda forma: pradera para gacelas y convento para monjes.",
             "Ibn Arabi de Murcia, El intérprete de los deseos"),
+        f("לבי במזרח ואנכי בסוף מערב", "Mi corazón está en Oriente, y yo en el extremo de Occidente.", "Yehudá ha-Leví, «Mi corazón está en Oriente», siglo XII"),
+        f("ותהיה העת ההיא לב זמנו ופריו, ויהיו שאר עתותיו כדרכים המגיעים אל העת ההיא", "Que ese momento sea el corazón y el fruto de su tiempo, y las demás horas, caminos que llevan hasta él.", "Yehudá ha-Leví, El Cuzarí III, 5, sobre la hora de la oración (versión hebrea de Yehudá ibn Tibón; el original es árabe)"),
+        f("لكل شيء إذا ما تم نقصان فلا يغر بطيب العيش إنسان", "Todo lo que llega a su plenitud empieza a menguar: que nadie se deje engañar por la dulzura de la vida.", "Abu l-Baqá al-Rundí, elegía por al-Ándalus, c. 1267"),
+        f("תחלת החכמה שתיקה. שניה לה שמיעה. שלישית זכרון. רביעית מעשה. חמישית מורה", "El principio de la sabiduría es el silencio; el segundo paso, escuchar; el tercero, recordar; el cuarto, hacer; el quinto, enseñar.", "Selección de perlas I, 39, atribuida a Salomón ibn Gabirol (versión hebrea de Yehudá ibn Tibón)"),
+        f("يجب علينا أن نستعين على ما نحن بسبيله بما قاله من تقدمنا في ذلك، وسواء كان ذلك الغير مشاركا لنا أو غير مشارك في الملة", "Debemos ayudarnos, en lo que emprendemos, de lo que dijeron quienes nos precedieron, compartan o no nuestra fe.", "Averroes, Tratado decisivo, 1179"),
+        f("הימים מגלות, כתבו בהם מה שתחפצו שיזכר לכם", "Los días son rollos: escribid en ellos lo que queráis que se recuerde de vosotros.", "Bahya ibn Paquda, Los deberes de los corazones VIII, 3, citando un dicho («ya se ha dicho»); versión hebrea de Yehudá ibn Tibón"),
+        f("לפיכך צוו חכמים הראשונים שיהא אדם שם דעותיו תמיד ומשער אותם ומכון אותם בדרך האמצעית", "Por eso mandaron los sabios antiguos que uno revise siempre sus disposiciones, las mida y las encamine por la vía del medio.", "Maimónides, Mishné Torá, Leyes de las disposiciones 1, 4"),
+        f("ודע שאלו המעלות והפחיתויות אשר למידות לא יגיעו ולא יתישבו בנפש, רק בכפול הפעולות הבאות מן המידה ההיא פעמים רבות ובזמן ארוך והרגילות בהן", "Sabe que las virtudes y los defectos del carácter no llegan ni se asientan en el alma sino repitiendo muchas veces, durante largo tiempo, los actos que nacen de ellos, hasta acostumbrarse.", "Maimónides, Ocho capítulos 4 (versión hebrea de Samuel ibn Tibón; el original es árabe)"),
+        f("עד אימתי חיב ללמד תורה? עד יום מותו… וכל זמן שלא יעסק בלמוד הוא שוכח", "¿Hasta cuándo hay que estudiar? Hasta el día de la muerte… y todo el tiempo que uno deja de estudiar, olvida.", "Maimónides, Mishné Torá, Leyes del estudio de la Torá 1, 10"),
     )
 
     val MONGOL = listOf(
@@ -504,6 +569,18 @@ object Frases {
         f(null, "Si bebes de un agua, sigue la costumbre del agua; si vives en una tierra, sigue la costumbre de esa tierra.", "Proverbio mongol"),
         f(null, "Se terminó de escribir en el año de la rata, en la luna del corzo, cuando la gran asamblea estaba reunida junto al Kerulén.",
             "Colofón de la Historia secreta de los mongoles §282"),
+        f(null, "Amigo, viniste a mí en un gran apuro, pero los apuros de los hombres son los mismos para todos. Seré tu compañero.", "Bo'orchu al joven Temüjin, Historia secreta de los mongoles §90"),
+        f(null, "Ustedes dos, muchachos, sigan viéndose: ¡no se abandonen nunca!", "Naqu Bayan a su hijo Bo'orchu y a Temüjin, Historia secreta de los mongoles §93"),
+        f(null, "Los amigos jurados, los dos, comparten una sola vida; no se abandonan: cada uno es la salvaguarda de la vida del otro.", "Dicho de los ancianos de otros tiempos, recordado por Temüjin y Jamuqa, Historia secreta de los mongoles §117"),
+        f(null, "Escribe en un registro de letra azul todas las decisiones y haz con ellas un libro. Hasta los hijos de mis hijos, que nadie altere lo escrito en azul sobre papel blanco.", "Gengis Kan a Shigi Qutuqu, Historia secreta de los mongoles §203"),
+        f(null, "La caza que uno ha matado solo con la boca no se puede cargar en la montura; la presa abatida solo con palabras no se puede desollar.", "Chagatái ante su padre Gengis Kan, Historia secreta de los mongoles §255"),
+        f(null, "He añadido cuatro buenas obras a las de mi padre. Pero, puesto en el gran trono y cargando con mis muchos pueblos, fue falta mía dejarme vencer por el vino.", "Ögödei Kan, haciendo balance de su reinado, Historia secreta de los mongoles §281"),
+        f(null, "Diciéndose unos a otros «¡alimentemos a nuestra madre!», se sentaban a la orilla de la madre Onón y, doblando agujas en anzuelos, pescaban salmones y tímalos.", "Los hijos de Hoelún en los años de pobreza, Historia secreta de los mongoles §75"),
+        f(null, "Si sigues con vida, beberás agua de un cuenco de oro.", "Proverbio mongol: mientras hay vida, hay esperanza"),
+        f(null, "Ese día todos van vestidos de blanco, hombres y mujeres, grandes y pequeños, para que les vaya bien todo el año; y se desean unos a otros felicidad y buena suerte para el año que llega.", "Marco Polo, sobre la Fiesta Blanca del año nuevo en la corte de Kublai, Libro de las maravillas II, 15"),
+        f(null, "Cuando me encontré entre ellos, me pareció de verdad que me habían llevado a otro siglo.", "Guillermo de Rubruck, al llegar a los mongoles, Itinerario, 1253"),
+        f(null, "Cada jefe, según tenga más o menos gente a su cargo, conoce los límites de sus pastos y dónde apacentar en invierno y en verano, en primavera y en otoño.", "Guillermo de Rubruck, sobre los mongoles, Itinerario, 1253"),
+        f(null, "Si hay que beber, que sea tres veces al mes, porque más es malo. Emborracharse dos veces al mes es mejor; una vez, mejor aún; y no beber nada es lo mejor de todo.", "Dichos de Gengis Kan, recogidos por Rashid al-Din, Compendio de crónicas"),
     )
 
     val RENACIMIENTO = listOf(
@@ -530,6 +607,13 @@ object Frases {
             "¡Qué bella es la juventud, que se escapa sin remedio! Quien quiera estar alegre, que lo esté: del mañana no hay certeza.", "Lorenzo de Médici, «Triunfo de Baco y Ariadna», 1490"),
         f(null, "Llegada la noche, vuelvo a casa y entro en mi escritorio; en el umbral me quito la ropa del día, llena de barro y de lodo, y me visto con paños reales y curiales.",
             "Nicolás Maquiavelo, carta a Francesco Vettori, 1513"),
+        f("La vita bene spesa lunga è.", "La vida bien empleada es larga.", "Leonardo da Vinci, cuadernos (recogida en Aforismi, novelle e profezie)"),
+        f("No' si volta chi a stella è fisso.", "No se desvía quien tiene la mirada fija en una estrella.", "Leonardo da Vinci, cuadernos (recogida en Aforismi, novelle e profezie)"),
+        f("O tempo, consumatore delle cose, e, o invidiosa antichità, tu distruggi tutte le cose, e consumate tutte le cose dai duri denti della vecchiezza, a poco a poco, con lenta morte.", "Oh tiempo, devorador de las cosas, y tú, envidiosa antigüedad: lo destruyes todo, y todo lo consumes con los duros dientes de la vejez, poco a poco, con lenta muerte.", "Leonardo da Vinci, cuadernos, glosando a Ovidio (Metamorfosis XV)"),
+        f("La mattina ordino me a tutto il dí, il giorno seguo quanto mi si richiede, e poi la sera inanzi che io mi riposi ricolgo in me quanto feci il dí.", "Por la mañana me organizo para todo el día; durante el día hago lo que me toca; y por la noche, antes de descansar, repaso dentro de mí lo que hice en el día.", "Leon Battista Alberti, Los libros de la familia III (habla Giannozzo), c. 1433-1440"),
+        f("Chi sa non perdere tempo sa fare quasi ogni cosa, e chi sa adoperare il tempo, costui sarà signore di qualunque cosa e' voglia.", "Quien sabe no perder el tiempo sabe hacer casi cualquier cosa; y quien sabe emplear el tiempo será dueño de cuanto quiera.", "Leon Battista Alberti, Los libros de la familia III (habla Giannozzo), c. 1433-1440"),
+        f("La vita fugge, et non s'arresta una hora, / et la morte vien dietro a gran giornate.", "La vida huye y no se detiene ni una hora, y la muerte viene detrás a grandes jornadas.", "Francesco Petrarca, Cancionero 272"),
+        f("Tutti gli uomini d'ogni sorte, che hanno fatto qualche cosa che sia virtuosa… doverieno, essendo veritieri e da bene, di lor propia mano descrivere la loro vita; ma non si doverrebbe cominciare una tal bella impresa prima che passato l'età de' quarant'anni.", "Todos los hombres, de cualquier condición, que hayan hecho algo de valor deberían, si son sinceros y de bien, escribir su vida de su propia mano; pero no habría que empezar tan bella empresa antes de pasados los cuarenta años.", "Benvenuto Cellini, Vida I, 1, 1558"),
     )
 
     val URSS = listOf(
@@ -550,6 +634,11 @@ object Frases {
         f("Никто не обнимет необъятного.", "Nadie abarca lo inabarcable.", "Kozmá Prutkov, Frutos de la meditación"),
         f("Знать — значит предсказывать.", "Saber es predecir.", "Atribuida a Dmitri Mendeléyev"),
         f("Eight hours' labour, eight hours' recreation, eight hours' rest.", "Ocho horas de trabajo, ocho de recreo, ocho de descanso.", "Robert Owen, 1817, consigna que adoptaron los obreros de todo el mundo"),
+        f("Изучайте, сопоставляйте, накопляйте факты.", "Estudien, comparen, acumulen hechos.", "Iván Pávlov, Carta a la juventud, 1936"),
+        f("Всем хорошим во мне я обязан книгам.", "Todo lo bueno que hay en mí se lo debo a los libros.", "Máximo Gorki, prefacio a la Historia general de las literaturas extranjeras de P. Mortier, 1925"),
+        f("Вперед, время! Время, вперед!", "¡Adelante, tiempo! ¡Tiempo, adelante!", "Vladímir Maiakovski, «Marcha del tiempo», en La casa de baños, 1930"),
+        f("Самое дорогое у человека — это жизнь. Она даётся ему один раз, и прожить её надо так, чтобы не было мучительно больно за бесцельно прожитые годы.", "Lo más valioso que tiene una persona es la vida. Se le da una sola vez, y hay que vivirla de modo que no duelan como un tormento los años vividos sin propósito.", "Nikolái Ostrovski, Así se templó el acero, 1934"),
+        f("Невозможное сегодня станет возможным завтра.", "Lo imposible hoy será posible mañana.", "Konstantín Tsiolkovski, La exploración del espacio cósmico con aparatos a reacción, 1911–1912"),
     )
 
     fun de(tema: TemaId): List<Frase> = when (tema) {
