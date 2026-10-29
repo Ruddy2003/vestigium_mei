@@ -127,9 +127,13 @@ object Gato {
     private val json = Json { ignoreUnknownKeys = true }
     @Volatile private var indice: Indice? = null
 
+    /** Por qué no se pudo cargar el último tema (se muestra en las vistas previas y capturas). */
+    var error: String? = null
+        private set
+
     private fun indice(ctx: Context): Indice? = indice ?: runCatching {
         json.decodeFromString(Indice.serializer(), ctx.assets.open("gato/gato.json").use { it.readBytes().decodeToString() })
-    }.getOrNull()?.also { indice = it }
+    }.onFailure { error = "gato.json: $it" }.getOrNull()?.also { indice = it }
 
     fun clave(tema: TemaId, oscuro: Boolean) = tema.id + if (oscuro || tema.soloOscuro) "_o" else "_c"
 
@@ -139,13 +143,15 @@ object Gato {
         val clave = clave(tema, oscuro)
         val meta = ind.temas[clave] ?: return null
         val op = BitmapFactory.Options().apply { inScaled = false; inPreferredConfig = Bitmap.Config.ARGB_8888 }
-        fun img(nombre: String): Bitmap? = runCatching { ctx.assets.open("gato/${clave}_$nombre.webp").use { BitmapFactory.decodeStream(it, null, op) } }.getOrNull()
-        val gato = img("gato") ?: return null
+        fun img(nombre: String): Bitmap? = runCatching { ctx.assets.open("gato/${clave}_$nombre.webp").use { BitmapFactory.decodeStream(it, null, op) } }
+            .onFailure { error = "${clave}_$nombre: $it" }.getOrNull()
+        val gato = img("gato") ?: run { if (error == null) error = "${clave}_gato.webp no se pudo decodificar"; return null }
         val fondo = img("fondo") ?: return null
         val mov = if (meta.bucle > 0) runCatching { movimiento(ctx.assets.open("gato/${clave}_mov.bin").use { it.readBytes() }) }.getOrNull() else null
         val luz = meta.luz?.let { l -> (0..(l.maxOrNull() ?: -1)).mapNotNull { img("luz$it") } } ?: emptyList()
+        error = null
         Recursos(ind, meta, gato, fondo, img("atras"), img("delante"), mov, luz, if (meta.post) img("post") else null)
-    }.getOrNull()
+    }.onFailure { error = "cargar: $it" }.getOrNull()
 
     private fun movimiento(b: ByteArray): Movimiento {
         val bb = ByteBuffer.wrap(b).order(ByteOrder.LITTLE_ENDIAN)
@@ -472,7 +478,13 @@ fun BandaGato(humor: Gato.Humor, modifier: Modifier = Modifier, tema: TemaId = E
             .clip(forma).border(1.dp, cs.outline, forma)
     ) {
         val r = rec
-        if (r == null) { drawRect(cs.surfaceVariant); return@Canvas }
+        if (r == null) {
+            drawRect(cs.surfaceVariant)
+            if (vistaPrevia) drawIntoCanvas { c ->
+                c.nativeCanvas.drawText((Gato.error ?: "sin recursos").take(120), 12f, size.height / 2, Paint(Paint.ANTI_ALIAS_FLAG).apply { textSize = 24f; color = android.graphics.Color.RED })
+            }
+            return@Canvas
+        }
         val centro = ventana?.let { (it.first + it.second) / 2 - 32 } ?: 174f
         val p = fijo ?: paso ?: Gato.Paso("sentado", 0, centro, 1)
         drawIntoCanvas { Gato.dibujar(it.nativeCanvas, r, p, tick, size.width, size.height) }
