@@ -46,7 +46,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 2 | Los 6 temas sin diseño completo (CIB como Terminal, REF, ORD, LAB, ESP, URS) | hecho 29 oct 2026 |
 | 3 | Completar las superficies que ya existen | hecho 29 oct 2026 |
 | 4 | Pantallas genéricas, gráficas, controles y arranque | hecho 29 oct 2026 |
-| 5 | Textos y tipografía | pendiente |
+| 5 | Textos y tipografía | hecho 29 oct 2026 |
 | 6 | Sonido y vibración | pendiente |
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | pendiente |
 | 8 | Terminal y 13 temas nuevos (de 21 a 34) | pendiente |
@@ -210,21 +210,23 @@ Las filas con valor comparable las vigila `UnicidadTemas` (y las que faltan, `Co
 
 | Superficie | Dónde | ROM | CIB | HEL | MED | DIS | REF | ORD | LAB | COL | NAP | BOT | NAV | SED | GOT | ESP | AND | MON | REN | URS | REV | ANT | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Diccionario de nombres de pantalla | `ui/Temas.kt`, `ui/NombresNuevos.kt` | P | ✗ | P | S | P | P | P | S | S | P | P | S | S | P | P | S | P | P | S | P | P | CIB no tiene; NAV, URS, SED y AND son pobres; MED, LAB, COL, NAV, SED y URS tienen entradas iguales al español. |
-| Prefijo del comentario | `Estilo.comentario` (`Estilo.kt:22`) | C | C | C | P | P | P | C | P | P | C | P | P | P | P | P | P | P | P | P | P | P | ROM = CIB = ORD («// »); HEL = NAP («— »). |
-| Comentario bajo el título | `Estilo.comentarioNuevo` (`Estilo.kt:50`) | G | G | G | P | P | P | P | P | P | G | G | G | G | G | G | G | G | G | G | G | G | 12 temas caen en `else`; ROM, CIB y HEL no ponen comentario. |
-| Numeral | `Estilo.numeral` (`Estilo.kt:98`) | C | P | P | P | P | P | C | C | P | C | G | G | P | P | P | P | G | G | P | P | C | Con 17: ORD = LAB, NAP = ROM = ANT; BOT, NAV, MON y REN escriben la cifra sin más. GOT y MED no coinciden con ROM, pero se le parecen (plan). |
-| Mes | `Estilo.mes` (`Estilo.kt:159`) | P | C | P | P | S | C | C | S | C | C | C | C | P | P | C | P | S | P | P | C | P | CIB, REF, ORD y ESP: español abreviado; COL, BOT y NAV: español largo; REV = NAP (francés). DIS, LAB y MON son pobres. GOT y ROM no coinciden, pero los dos van en latín. |
-| Semana | `Estilo.semana` (`Estilo.kt:185`) | P | C | P | P | C | C | C | S | C | C | C | C | P | P | C | P | P | P | P | C | C | CIB = DIS = REF = ORD = ESP = ANT; COL = BOT = NAV; NAP = REV. MED y GOT casi iguales; LAB copia el español. |
-| Semana corta (widget del mes) | `Estilo.semanaCorta` (`Estilo.kt:203`) | P | G | P | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | 18 temas caen en `else`; la de CIB sale igual que esas. |
-| «Atrás» | `Estilo.atras` (`Estilo.kt:215`) | P | P | P | P | P | P | P | C | C | P | C | C | C | P | P | P | P | P | P | P | P | LAB = COL = NAV; BOT = SED. |
-| Nombres de pantalla | `Estilo.pantalla` con 12 títulos comunes (`UnicidadTemas.PANTALLAS`) | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | C | Todos los temas repiten al menos uno con otro tema (casi siempre el español en mayúsculas). |
-| Prefijo de etiqueta | `Estilo.prefijo` (`Estilo.kt:221`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |  |
-| Claves «clave = valor» | `Estilo.clave` (`Estilo.kt:237`) | C | P | P | C | C | C | C | C | C | C | C | C | C | C | C | C | C | P | C | C | C | Latín en ROM, MED y GOT; español en mayúsculas en DIS, ORD, URS, ESP, MON, REV y ANT; español en minúsculas en REF, LAB, COL, NAP, BOT, NAV, SED y AND. |
-| Marcas del calendario | `Estilo.marca`, `Temas.MARCAS` | P | ✗ | ✗ | P | ✗ | ✗ | ✗ | ✗ | ✗ | P | P | P | S | P | P | P | P | P | P | P | P | SED tiene solo dos. |
-| Letra de título | `tipoDe` (`ui/Tema.kt`) | C | P | P | P | P | P | P | P | C | P | P | P | P | P | P | P | P | P | P | C | C | COL = REV (Fell); ROM = ANT (Cinzel). |
-| Letra de texto | `tipoDe` | C | C | C | C | C | C | C | P | C | P | C | C | C | C | P | P | C | C | C | C | C | Garamond: HEL, MED, COL, BOT, NAV, SED, GOT, ANT; Plex Sans: ROM, DIS, ORD, URS, MON; Cormorant: REN, REV; Plex Mono: CIB, REF. |
-| Radio de las esquinas | `radioDe` (`Tema.kt:232`) | P | C | C | C | C | C | C | P | P | C | P | C | C | C | P | C | C | C | C | C | C | DIS = URS (0); CIB = REV (1); ORD = GOT = REN (2); MED = NAP = ANT (3); HEL = SED (6); NAV = MON (8); REF = AND (10). |
+| Diccionario de nombres de pantalla | `ui/nombres/`, `ui/Temas.kt`, `ui/NombresNuevos.kt` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: los 294 títulos de pantalla y de sección tienen nombre en los 21 temas (`NombresCompletos`, un archivo por tema, que va antes de los diccionarios de siempre). Ninguno es igual al español; la terminal ya tiene los suyos. |
+| Prefijo del comentario | `Estilo.comentario` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: CIB «# », HEL «∴ », ORD «‡ ». |
+| Comentario bajo el título | `Estilo.comentarioNuevo` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: `when` exhaustivo, con marco propio en los 21 («« … »» NAP, «✦ … ✦» NAV…); ROM, CIB y HEL lo arman en `pantalla` y `seccion` con su prefijo. |
+| Mayúsculas en títulos | `Estilo.mayusculas` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: una decisión explícita por tema, con su razón. |
+| Numeral | `Estilo.numeral` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: ORD «17º», LAB «M-17», NAP «17ᵉ», BOT «n.º 17», NAV «✦17», MON cifras mongolas, REN «.xvii.», ANT «17ª». |
+| Mes | `Estilo.mes` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: CIB «oct», REF «OCTUBRE», ORD «OCT-10», LAB «10 · oct», BOT «X-2026» (herbario), NAV «Mes de octubre», GOT en genitivo, MON por estación, REV con el mes republicano. |
+| Semana | `Estilo.semana` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: DIS «L M X J V S D», ORD consonantes, COL con punto, BOT con los signos de Linneo, GOT ferias, REV en francés, ANT días del camino. |
+| Semana corta (widget del mes) | `Estilo.semanaCorta` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: `when` exhaustivo, ninguna igual a otra. |
+| «Atrás» | `Estilo.atras` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: LAB «← anterior», COL «← pa' atrás», NAV «← volver a casa», SED «← desandar». |
+| Nombres de pantalla | `Estilo.pantalla` con 12 títulos comunes (`UnicidadTemas.PANTALLAS`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: ningún tema repite nombre con otro en esas 12 pantallas. Sin `latin`, el romano busca el suyo en `Romano.latin`. |
+| Prefijo de etiqueta | `Estilo.prefijo` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |  |
+| Claves «clave = valor» | `Estilo.clave`, `ui/Claves.kt` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: latín (ROM), latín litúrgico (GOT), castellano antiguo (MED), francés (NAP y REV, cada uno con sus palabras), chino, ruso, árabe y mongol en sus temas, y la jerga de cada oficio en los temas en español. |
+| Marcas del calendario | `Temas.marca` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: `when` exhaustivo; CIB, HEL, DIS, REF, ORD, LAB y COL tienen las suyas y SED pasa de 2 a 6. |
+| Textos cortos (pestañas, escala, añadir, palabras, widgets) | `ui/Textos.kt`, `Estilo.texto` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: nuevo. Nombres cortos de las 5 pestañas, «sin marcar» de la escala, «+ añadir» de las listas, contador de palabras del escritor y preguntas del widget (y las del modo discreto). |
+| Letra de título | `tipoDe` (`ui/Disenios.kt`, `ui/Tema.kt`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: ANT pasa a una uncial («Camino Vestigium») y REV a una Didot de cartel («Convencion Vestigium»). |
+| Letra de texto | `tipoDe`, `pagina()`, `LibroDiario.fuentes` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: 15 familias nuevas (Cardo, Barlow, Courier Prime, Saira, Old Standard, Crimson Pro, Lora, Alegreya, PT Sans, Fira Sans, Goudy, Baskerville, Vollkorn…) recortadas con `herramientas/fuentes.py`; la etiqueta usa la letra de texto o de título salvo en ROM, CIB y REF. |
+| Esquinas | `radioDe` (`ui/Tema.kt`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: `Esquinas(radio, forma)` con cuatro formas (redonda, cortada, hoja, arco); ninguna pareja se repite. |
 | Frases del día (al menos 20) | `ui/Frases.kt` | P | P | P | P | P | S | S | S | P | S | P | S | S | S | S | S | S | S | S | S | P | Con menos de 20: MON 10, AND 13, ORD 13, REF 14, GOT, NAV, REN y SED 15, ESP, REV y URS 17, LAB y NAP 18. |
 
 ## Lote 6 · Sonido y vibración
