@@ -52,9 +52,8 @@ class Lienzo(ctx: Context, val tema: TemaId = Estilo.tema, val oscuro: Boolean =
     val titulo: Typeface = runCatching { ResourcesCompat.getFont(ctx, fu.titulo) }.getOrNull() ?: Typeface.SERIF
     val texto: Typeface = runCatching { ResourcesCompat.getFont(ctx, fu.texto) }.getOrNull() ?: Typeface.SANS_SERIF
     val mono: Typeface = runCatching { ResourcesCompat.getFont(ctx, R.font.plex_mono_regular) }.getOrNull() ?: Typeface.MONOSPACE
-    /** Las cifras: en temas de letra caligráfica o gótica, la del texto (se leen mejor). */
-    val cifra: Typeface = if (tema in setOf(TemaId.RENACIMIENTO, TemaId.GOTICO, TemaId.MEDIEVAL, TemaId.SEDA, TemaId.COLONOS, TemaId.NAVIDAD)) texto
-        else if (tema in setOf(TemaId.CIBER, TemaId.REFUGIO)) mono else titulo
+    /** Las cifras grandes: cada tema con su letra ([letraCifra]); si no carga, la del título. */
+    val cifra: Typeface = runCatching { ResourcesCompat.getFont(ctx, letraCifra(tema)) }.getOrNull() ?: titulo
 
     fun p(color: Int, tam: Float, tf: Typeface = texto, espacio: Float = 0f) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         this.color = color; textSize = tam; typeface = tf; letterSpacing = espacio
@@ -78,6 +77,59 @@ class Lienzo(ctx: Context, val tema: TemaId = Estilo.tema, val oscuro: Boolean =
             else -> (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         }
     }
+}
+
+/**
+ * La letra de las cifras de cada tema. Ninguna se repite entre temas; en los de letra gótica o caligráfica se escoge
+ * el corte cuyos números se leen bien (la gótica seminegrita, la textura del título gótico, la Almendra negrita, la Cormorant).
+ */
+private fun letraCifra(tema: TemaId): Int = when (tema) {
+    TemaId.ROMANO -> R.font.cinzel_regular          // capitales romanas, como sus títulos
+    TemaId.CIBER -> R.font.sharetech_mono           // la consola: monoespaciada de terminal
+    TemaId.HELENO -> R.font.garamond_medium
+    TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
+    TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
+    TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
+    TemaId.ORDEN -> R.font.saira_stencil            // estarcido
+    TemaId.LABORATORIO -> R.font.jost_medium
+    TemaId.COLONOS -> R.font.garamond_semibold      // el tipo de la gaceta
+    TemaId.NAPOLEON -> R.font.bodoni_titulo         // Didot
+    TemaId.BOTANICO -> R.font.fraunces_titulo
+    TemaId.NAVIDAD -> R.font.cinzel_deco_bold
+    TemaId.SEDA -> R.font.almendra_bold
+    TemaId.GOTICO -> R.font.gotica_textura          // la textura del vitral; sus números se leen bien
+    TemaId.ESPACIO -> R.font.orbitron_bold
+    TemaId.ANDALUS -> R.font.kufi_medium
+    TemaId.MONGOL -> R.font.philosopher_bold
+    TemaId.RENACIMIENTO -> R.font.cormorant_medium  // números de cuaderno, con trazos de pluma
+    TemaId.URSS -> R.font.russo
+    TemaId.REVOLUCION -> R.font.fell                // tipos de imprenta de cartel
+    TemaId.ANTIGUAS -> R.font.cinzel_semibold       // números tallados en piedra
+}
+
+/** El nombre de la app como lo firma cada tema arriba del reporte. */
+private fun marcaReporte(tema: TemaId): String = when (tema) {
+    TemaId.ROMANO -> "VESTIGIVM MEI"
+    TemaId.CIBER -> "vestigium@mei:~\$"
+    TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · Vestigium Mei"
+    TemaId.MEDIEVAL -> "Liber vestigii mei"
+    TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
+    TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
+    TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
+    TemaId.LABORATORIO -> "Vestigium Mei — cuaderno de laboratorio"
+    TemaId.COLONOS -> "La Gaceta de Vestigium Mei"
+    TemaId.NAPOLEON -> "BULLETIN DE VESTIGIUM MEI"
+    TemaId.BOTANICO -> "Herbarium · Vestigium Mei"
+    TemaId.NAVIDAD -> "Cartas al fuego · Vestigium Mei"
+    TemaId.SEDA -> "Vestigium Mei · diario de caravana"
+    TemaId.GOTICO -> "Liber horarum · Vestigium mei"
+    TemaId.ESPACIO -> "VESTIGIUM MEI / MISIÓN"
+    TemaId.ANDALUS -> "Vestigium Mei · أثري"
+    TemaId.MONGOL -> "МИНИЙ МӨР · Vestigium Mei"
+    TemaId.RENACIMIENTO -> "Il taccuino di Vestigium Mei"
+    TemaId.URSS -> "ДНЕВНИК · VESTIGIUM MEI"
+    TemaId.REVOLUCION -> "Cahier de Vestigium Mei"
+    TemaId.ANTIGUAS -> "Crónica de Vestigium Mei"
 }
 
 /**
@@ -105,11 +157,18 @@ object Reportes {
             return l.height.toFloat()
         }
 
-        /** Adorno del tema entre secciones: la greca en los clásicos, una línea con su signo en los demás. */
+        /** Adorno del tema entre secciones: cada tema tiene su figura (greca, ola, cenefa, cursor, ojo, átomo, engranaje…). */
         fun ornamento() {
             val yy = y + 10f
-            when (L.tema) {
-                TemaId.ROMANO, TemaId.HELENO -> {
+            val cx = W / 2
+            // Las dos líneas a los lados de una figura central de medio ancho [medio].
+            fun flancos(yc: Float, medio: Float, pa: Paint) {
+                c.drawLine(M, yc, cx - medio, yc, pa); c.drawLine(cx + medio, yc, W - M, yc, pa)
+            }
+            val tema = L.tema
+            when (tema) {
+                TemaId.ROMANO -> {
+                    // La greca (meandro) de los mosaicos, de orilla a orilla.
                     val u = 8f; val paso = u * 4
                     val pa = L.trazo(L.primario, 2.4f).apply { strokeCap = Paint.Cap.SQUARE; strokeJoin = Paint.Join.MITER }
                     val path = Path(); var x = M
@@ -120,22 +179,303 @@ object Reportes {
                     }
                     c.drawPath(path, pa); y += 3 * u + 34f
                 }
-                TemaId.CIBER, TemaId.REFUGIO -> {
-                    val p = L.p(L.primario, 22f, L.mono)
-                    val s = "─".repeat(64)
-                    c.drawText(s, M, yy + 10f, p.apply { textSize = 22f }); y += 44f
+                TemaId.CIBER -> {
+                    // La línea de órdenes: el indicador, una fila de puntos de fósforo y el cursor en bloque.
+                    c.drawText(">", M, yy + 24f, L.p(L.primario, 28f, L.mono))
+                    val punto = L.relleno(L.mezcla(L.primario, L.fondo, 0.45))
+                    var x = M + 34f
+                    while (x + 6f < W - M - 34f) { c.drawRect(x, yy + 14f, x + 6f, yy + 20f, punto); x += 16f }
+                    c.drawRect(W - M - 16f, yy + 2f, W - M, yy + 26f, L.relleno(L.primario))
+                    y += 48f
                 }
-                TemaId.DISTOPIA, TemaId.URSS, TemaId.ORDEN -> {
-                    c.drawRect(M, yy, W - M, yy + 8f, L.relleno(L.primario)); y += 38f
+                TemaId.HELENO -> {
+                    // La ola que corre de los vasos griegos: cada onda sube y se enrolla, con un punto en el ojo.
+                    val r = 9f; val paso = 40f; val base = yy + 26f
+                    val pa = L.trazo(L.primario, 2.4f)
+                    val ojo = L.relleno(L.terciario)
+                    val path = Path(); var x = M
+                    path.moveTo(x, base)
+                    while (x + paso <= W - M) {
+                        val ox = x + paso * 0.62f; val oy = base - r
+                        path.quadTo(x + paso * 0.3f, base, ox - r, oy)
+                        path.arcTo(RectF(ox - r, oy - r, ox + r, oy + r), 180f, 270f)
+                        path.lineTo(x + paso, base)
+                        c.drawCircle(ox, oy, 2.6f, ojo)
+                        x += paso
+                    }
+                    c.drawPath(path, pa)
+                    c.drawLine(M, base + 7f, x, base + 7f, L.trazo(L.primario, 1.2f))
+                    y += 62f
                 }
-                else -> {
-                    val signo = Estilo.comentario.trim().ifEmpty { "◆" }
-                    val ps = L.p(L.primario, 30f, L.texto)
-                    val sw = ps.measureText(signo)
-                    val cx = W / 2
-                    c.drawLine(M, yy + 2f, cx - sw / 2 - 18f, yy + 2f, L.trazo(L.linea, 2f))
-                    c.drawLine(cx + sw / 2 + 18f, yy + 2f, W - M, yy + 2f, L.trazo(L.linea, 2f))
-                    c.drawText(signo, cx - sw / 2, yy + 12f, ps); y += 40f
+                TemaId.MEDIEVAL -> {
+                    // Cenefa de copista: dos filetes de tinta y, entre ellos, rombos de rúbrica que alternan con puntos de oro.
+                    val a = yy + 2f; val b = yy + 26f; val mid = (a + b) / 2
+                    val fil = L.trazo(L.tinta, 1.4f)
+                    c.drawLine(M, a, W - M, a, fil); c.drawLine(M, b, W - M, b, fil)
+                    val rubrica = L.relleno(L.primario); val oro = L.relleno(L.terciario)
+                    var x = M + 14f; var i = 0
+                    while (x + 7f <= W - M) {
+                        if (i % 2 == 0) {
+                            val rombo = Path().apply { moveTo(x, mid - 8f); lineTo(x + 7f, mid); lineTo(x, mid + 8f); lineTo(x - 7f, mid); close() }
+                            c.drawPath(rombo, rubrica)
+                        } else c.drawCircle(x, mid, 3f, oro)
+                        x += 22f; i++
+                    }
+                    y += 50f
+                }
+                TemaId.DISTOPIA -> {
+                    // La barra del expediente se abre en el centro para el ojo que lo mira todo.
+                    val yc = yy + 16f
+                    val barra = L.relleno(L.primario)
+                    c.drawRect(M, yc - 4f, cx - 70f, yc + 4f, barra); c.drawRect(cx + 70f, yc - 4f, W - M, yc + 4f, barra)
+                    val ojo = Path().apply { moveTo(cx - 54f, yc); quadTo(cx, yc - 34f, cx + 54f, yc); quadTo(cx, yc + 34f, cx - 54f, yc); close() }
+                    c.drawPath(ojo, L.relleno(L.superficie2))
+                    c.drawPath(ojo, L.trazo(L.tinta, 3f))
+                    c.drawCircle(cx, yc, 10f, barra); c.drawCircle(cx, yc, 4f, L.relleno(L.tinta))
+                    y += 54f
+                }
+                TemaId.REFUGIO -> {
+                    // Optimismo atómico: el átomo al centro de una línea discontinua, como las marcas del pasillo del refugio.
+                    val yc = yy + 20f
+                    flancos(yc, 46f, L.trazo(L.linea, 2.4f).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(14f, 8f), 0f) })
+                    val orbita = L.trazo(L.primario, 2.2f)
+                    for (k in 0 until 3) {
+                        c.save(); c.rotate(k * 60f, cx, yc)
+                        c.drawOval(RectF(cx - 28f, yc - 9f, cx + 28f, yc + 9f), orbita)
+                        c.restore()
+                    }
+                    c.drawCircle(cx, yc, 5f, L.relleno(L.secundario))
+                    y += 60f
+                }
+                TemaId.ORDEN -> {
+                    // Viga de acero remachada y, al centro, el engranaje de la orden que custodia el saber técnico.
+                    val yc = yy + 18f
+                    val viga = L.relleno(L.mezcla(L.linea, L.tinta, 0.35))
+                    c.drawRect(M, yc - 5f, cx - 34f, yc + 5f, viga); c.drawRect(cx + 34f, yc - 5f, W - M, yc + 5f, viga)
+                    val remache = L.relleno(L.terciario)
+                    var x = M + 16f
+                    while (x < W - M - 10f) { if (abs(x - cx) > 48f) c.drawCircle(x, yc, 2.6f, remache); x += 36f }
+                    val acero = L.relleno(L.primario)
+                    for (k in 0 until 8) {
+                        c.save(); c.rotate(k * 45f, cx, yc)
+                        c.drawRect(cx - 5f, yc - 24f, cx + 5f, yc - 14f, acero)
+                        c.restore()
+                    }
+                    c.drawCircle(cx, yc, 17f, acero); c.drawCircle(cx, yc, 6f, L.relleno(L.fondo))
+                    y += 58f
+                }
+                TemaId.LABORATORIO -> {
+                    // Una regla graduada: una marca cada 12 px, más larga cada cinco y numerada cada diez, porque aquí todo se mide.
+                    val base = yy + 4f
+                    val fina = L.trazo(L.primario, 1.6f); val gruesa = L.trazo(L.primario, 2.4f)
+                    val pn = L.p(L.tenue, 13f, L.mono)
+                    c.drawLine(M, base, W - M, base, gruesa)
+                    var x = M; var i = 0
+                    while (x <= W - M + 0.5f) {
+                        val largo = if (i % 10 == 0) 20f else if (i % 5 == 0) 13f else 7f
+                        c.drawLine(x, base, x, base + largo, if (i % 5 == 0) gruesa else fina)
+                        if (i % 10 == 0 && i > 0) c.drawText("${i / 10}", x + 3f, base + 22f, pn)
+                        x += 12f; i++
+                    }
+                    y += 44f
+                }
+                TemaId.COLONOS -> {
+                    // Filete de gaceta: el filete inglés, grueso al centro y afilado en las puntas, sobre un filete fino.
+                    val yc = yy + 8f
+                    val filete = Path().apply { moveTo(M, yc); quadTo(cx, yc - 10f, W - M, yc); quadTo(cx, yc + 10f, M, yc); close() }
+                    c.drawPath(filete, L.relleno(L.tinta))
+                    c.drawLine(M + 40f, yc + 13f, W - M - 40f, yc + 13f, L.trazo(L.primario, 1.4f))
+                    y += 42f
+                }
+                TemaId.NAPOLEON -> {
+                    // Las abejas del manto imperial: tres al centro, entre dos filetes.
+                    val yc = yy + 14f
+                    val oro = if (L.oscuro) L.primario else L.terciario
+                    flancos(yc, 92f, L.trazo(oro, 2f))
+                    for (k in -1..1) {
+                        val x = cx + k * 58f
+                        val ala = L.trazo(oro, 1.8f)
+                        c.drawOval(RectF(x - 15f, yc - 12f, x - 2f, yc - 3f), ala)
+                        c.drawOval(RectF(x + 2f, yc - 12f, x + 15f, yc - 3f), ala)
+                        val cuerpo = L.relleno(oro)
+                        c.drawCircle(x, yc - 10f, 3.4f, cuerpo)
+                        c.drawCircle(x, yc - 4f, 4f, cuerpo)
+                        c.drawOval(RectF(x - 5f, yc - 1f, x + 5f, yc + 16f), cuerpo)
+                        val raya = L.trazo(L.fondo, 1.4f)
+                        c.drawLine(x - 4f, yc + 5f, x + 4f, yc + 5f, raya); c.drawLine(x - 4f, yc + 10f, x + 4f, yc + 10f, raya)
+                    }
+                    y += 50f
+                }
+                TemaId.BOTANICO -> {
+                    // Una fronda a tinta: el tallo cruza la hoja con hojitas alternas, más grandes al centro, como en un herbario.
+                    val yc = yy + 14f
+                    c.drawLine(M, yc, W - M, yc, L.trazo(L.tinta, 1.6f))
+                    val hoja = L.relleno(L.primario)
+                    var x = M + 10f; var i = 0
+                    while (x < W - M - 24f) {
+                        val s = 1f - 0.45f * abs(x - cx) / (cx - M)
+                        c.save(); c.rotate(if (i % 2 == 0) -35f else 35f, x, yc); c.scale(s, s, x, yc)
+                        val p = Path().apply { moveTo(x, yc); quadTo(x + 9f, yc - 8f, x + 22f, yc); quadTo(x + 9f, yc + 8f, x, yc); close() }
+                        c.drawPath(p, hoja); c.restore()
+                        x += 26f; i++
+                    }
+                    y += 46f
+                }
+                TemaId.NAVIDAD -> {
+                    // Guirnalda de pino colgada en festones, con una esfera en cada nudo.
+                    val top = yy + 2f; val paso = 68f
+                    val n = ((W - 2 * M) / paso).toInt(); val x0 = M + (W - 2 * M - n * paso) / 2
+                    val path = Path(); path.moveTo(x0, top)
+                    for (k in 0 until n) path.quadTo(x0 + k * paso + paso / 2, top + 30f, x0 + (k + 1) * paso, top)
+                    c.drawPath(path, L.trazo(L.secundario, 3.2f))
+                    for (k in 0..n) {
+                        val bx = x0 + k * paso
+                        c.drawRect(bx - 2.5f, top + 1f, bx + 2.5f, top + 5f, L.relleno(L.terciario))
+                        c.drawCircle(bx, top + 12f, 7f, L.relleno(if (k % 2 == 0) L.primario else L.terciario))
+                    }
+                    y += 48f
+                }
+                TemaId.SEDA -> {
+                    // Una sarta de monedas de bronce con agujero cuadrado, ensartadas en un cordón de seda.
+                    val yc = yy + 16f
+                    val cordon = L.trazo(L.secundario, 2f)
+                    c.drawLine(M, yc, W - M, yc, cordon)
+                    c.drawCircle(M + 4f, yc, 4f, L.relleno(L.secundario)); c.drawCircle(W - M - 4f, yc, 4f, L.relleno(L.secundario))
+                    val bronce = 0xFFB3863A.toInt()
+                    for (k in -2..2) {
+                        val mx = cx + k * 44f; val r = 16f
+                        c.drawCircle(mx, yc, r, L.relleno(bronce))
+                        c.drawCircle(mx, yc, r - 3.5f, L.trazo(L.mezcla(bronce, L.tinta, 0.4), 1.4f))
+                        c.drawRect(mx - 5f, yc - 5f, mx + 5f, yc + 5f, L.relleno(L.fondo))
+                        c.drawLine(mx - 5f, yc, mx + 5f, yc, cordon)
+                    }
+                    y += 52f
+                }
+                TemaId.GOTICO -> {
+                    // Una arquería de ojivas, como el triforio de una capilla, con un punto de oro entre arco y arco.
+                    val vano = 36f; val alto = 26f; val base = yy + 30f; val arranque = base - alto * 0.45f
+                    val n = ((W - 2 * M) / vano).toInt(); val x0 = M + (W - 2 * M - n * vano) / 2
+                    val pa = L.trazo(L.primario, 2f)
+                    val path = Path()
+                    for (k in 0 until n) {
+                        val a = x0 + k * vano; val b = a + vano; val m = (a + b) / 2; val cima = base - alto
+                        path.moveTo(a, base); path.lineTo(a, arranque)
+                        path.cubicTo(a, arranque - alto * 0.35f, m - vano * 0.15f, cima + alto * 0.15f, m, cima)
+                        path.cubicTo(m + vano * 0.15f, cima + alto * 0.15f, b, arranque - alto * 0.35f, b, arranque)
+                        path.lineTo(b, base)
+                        if (k < n - 1) c.drawCircle(b, cima + 2f, 2.4f, L.relleno(L.terciario))
+                    }
+                    c.drawPath(path, pa)
+                    c.drawLine(x0, base, x0 + n * vano, base, L.trazo(L.primario, 2.6f))
+                    y += 56f
+                }
+                TemaId.ESPACIO -> {
+                    // Un planeta con su anillo al centro y, a los lados, estrellas de varios brillos.
+                    val yc = yy + 16f
+                    val estrella = L.relleno(L.mezcla(L.primario, L.fondo, 0.25))
+                    var x = M; var i = 0
+                    while (x < W - M) {
+                        if (abs(x - cx) > 60f) c.drawCircle(x, yc + ((i * 7) % 5 - 2) * 2.4f, 1.2f + (i * 13 % 4) * 0.7f, estrella)
+                        x += 19f; i++
+                    }
+                    c.drawCircle(cx, yc, 13f, L.relleno(L.primario))
+                    c.save(); c.rotate(-18f, cx, yc)
+                    c.drawOval(RectF(cx - 30f, yc - 7f, cx + 30f, yc + 7f), L.trazo(L.terciario, 2.4f))
+                    c.restore()
+                    y += 50f
+                }
+                TemaId.ANDALUS -> {
+                    // Lazo de azulejo: estrellas de ocho puntas (dos cuadrados girados) unidas por una cinta doble.
+                    val yc = yy + 18f; val paso = 96f
+                    val n = ((W - 2 * M) / paso).toInt(); val x0 = M + (W - 2 * M - (n - 1) * paso) / 2
+                    val cinta = L.trazo(L.secundario, 1.6f)
+                    c.drawLine(M, yc - 4f, W - M, yc - 4f, cinta); c.drawLine(M, yc + 4f, W - M, yc + 4f, cinta)
+                    val estrella = L.relleno(L.primario)
+                    for (k in 0 until n) {
+                        val sx = x0 + k * paso
+                        for (g in 0..1) {
+                            c.save(); c.rotate(g * 45f, sx, yc)
+                            c.drawRect(sx - 11f, yc - 11f, sx + 11f, yc + 11f, estrella)
+                            c.restore()
+                        }
+                        c.drawCircle(sx, yc, 5f, L.relleno(L.fondo))
+                    }
+                    y += 52f
+                }
+                TemaId.MONGOL -> {
+                    // El enrejado de la pared de una ger: listones cruzados en diagonal entre dos cintas de fieltro.
+                    val a = yy + 2f; val b = yy + 26f; val paso = 24f
+                    val liston = L.trazo(L.terciario, 1.8f)
+                    val nudo = L.relleno(L.primario)
+                    var x = M
+                    while (x + paso <= W - M) {
+                        c.drawLine(x, a, x + paso, b, liston); c.drawLine(x, b, x + paso, a, liston)
+                        c.drawCircle(x + paso / 2, (a + b) / 2, 2.2f, nudo)
+                        x += paso
+                    }
+                    val cinta = L.trazo(L.primario, 2.6f)
+                    c.drawLine(M, a, W - M, a, cinta); c.drawLine(M, b, W - M, b, cinta)
+                    y += 50f
+                }
+                TemaId.RENACIMIENTO -> {
+                    // Trazos de construcción del cuaderno: círculo y cuadrado a compás, sus ejes y cruces de medida en la línea.
+                    val yc = yy + 22f; val r = 18f
+                    val fino = L.trazo(L.mezcla(L.primario, L.fondo, 0.35), 1.1f)
+                    c.drawLine(M, yc, W - M, yc, fino)
+                    c.drawLine(cx, yc - r - 8f, cx, yc + r + 8f, fino)
+                    c.drawCircle(cx, yc, r, L.trazo(L.primario, 1.8f))
+                    val l = r * 0.82f
+                    c.drawRect(cx - l, yc + r - 2 * l, cx + l, yc + r, L.trazo(L.secundario, 1.4f))
+                    for (k in 0..8) {
+                        val xx = M + k * (W - 2 * M) / 8
+                        if (abs(xx - cx) > r + 16f) { c.drawLine(xx - 6f, yc - 6f, xx + 6f, yc + 6f, fino); c.drawLine(xx - 6f, yc + 6f, xx + 6f, yc - 6f, fino) }
+                    }
+                    y += 62f
+                }
+                TemaId.URSS -> {
+                    // Constructivismo: una cuña roja que entra desde la orilla, un círculo negro y una línea que sigue sola.
+                    val yc = yy + 14f
+                    val rojo = L.relleno(L.primario)
+                    val cuna = Path().apply { moveTo(M, yc - 9f); lineTo(cx + 40f, yc - 9f); lineTo(cx + 110f, yc); lineTo(cx + 40f, yc + 9f); lineTo(M, yc + 9f); close() }
+                    c.drawPath(cuna, rojo)
+                    c.drawCircle(cx + 150f, yc, 12f, L.relleno(L.tinta))
+                    c.drawLine(cx + 176f, yc, W - M, yc, L.trazo(L.tinta, 3f))
+                    c.drawRect(W - M - 60f, yc + 8f, W - M, yc + 14f, rojo)
+                    y += 46f
+                }
+                TemaId.REVOLUCION -> {
+                    // La escarapela plisada (rojo, blanco y azul) al centro de un filete doble de cartel.
+                    val yc = yy + 18f
+                    val fil = L.trazo(L.tinta, 1.6f)
+                    flancos(yc - 3f, 32f, fil); flancos(yc + 3f, 32f, fil)
+                    c.drawCircle(cx, yc, 20f, L.relleno(L.primario))
+                    c.drawCircle(cx, yc, 13.5f, L.relleno(0xFFF8F5EE.toInt()))
+                    c.drawCircle(cx, yc, 7f, L.relleno(L.secundario))
+                    val pliegue = L.trazo(L.mezcla(L.primario, L.tinta, 0.35), 1f)
+                    for (k in 0 until 16) {
+                        c.save(); c.rotate(k * 22.5f, cx, yc)
+                        c.drawLine(cx, yc - 20f, cx, yc - 14f, pliegue)
+                        c.restore()
+                    }
+                    y += 56f
+                }
+                TemaId.ANTIGUAS -> {
+                    // Una fila de runas inventadas, talladas entre dos líneas: un palo con ramas en distinta posición.
+                    val a = yy; val b = yy + 28f
+                    val pa = L.trazo(L.primario, 2.2f).apply { strokeCap = Paint.Cap.SQUARE }
+                    val runas = 7; val paso = 30f; val x0 = cx - (runas - 1) * paso / 2
+                    flancos((a + b) / 2, (runas - 1) * paso / 2 + 26f, L.trazo(L.linea, 2f))
+                    for (k in 0 until runas) {
+                        val x = x0 + k * paso
+                        c.drawLine(x, a, x, b, pa)
+                        when (k % 4) {
+                            0 -> { c.drawLine(x, a, x + 9f, a + 9f, pa); c.drawLine(x, a + 12f, x + 9f, a + 21f, pa) }
+                            1 -> c.drawLine(x - 8f, a + 6f, x + 8f, a + 18f, pa)
+                            2 -> { c.drawLine(x, a + 8f, x - 9f, a + 16f, pa); c.drawLine(x, a + 8f, x + 9f, a + 16f, pa) }
+                            3 -> { c.drawLine(x, b - 10f, x + 9f, b - 19f, pa); c.drawLine(x, a, x - 8f, a + 8f, pa) }
+                        }
+                    }
+                    y += 50f
                 }
             }
         }
@@ -143,8 +483,8 @@ object Reportes {
         fun encabezado(titulo: String, latin: String?, rango: String) {
             c.drawColor(L.fondo)
             y = 92f
-            val marca = if (L.tema == TemaId.ROMANO) "VESTIGIVM MEI" else "Vestigium Mei"
-            c.drawText(marca, M, y, L.p(L.tenue, 26f, L.titulo, 0.2f)); y += 30f
+            val pm = L.p(L.tenue, 26f, L.titulo, 0.2f)
+            c.drawText(recortar(marcaReporte(L.tema), pm, ancho), M, y, pm); y += 30f
             val (t, com) = Estilo.pantalla(titulo, latin)
             texto(t, L.p(L.primario, if (t.length > 22) 60f else 76f, L.titulo, 0.03f), max = 2); y += 8f
             com?.let { texto(it, L.p(L.tenue, 24f, L.texto), max = 1); y += 4f }
@@ -552,7 +892,8 @@ object Reportes {
         return "$t…"
     }
 
-    private fun mesNombre(m: Int) = java.time.Month.of(m).getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)
+    /** El nombre del mes en la voz del tema. */
+    private fun mesNombre(m: Int) = Estilo.mes(m)
     private fun n0(x: Double) = "%,.0f".format(x)
     private fun n1(x: Double) = "%.1f".format(x)
     private fun hm(min: Double) = "${(min / 60).toInt()} h ${(min % 60).toInt()} min"
