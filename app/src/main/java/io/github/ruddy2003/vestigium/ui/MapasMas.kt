@@ -22,11 +22,35 @@ import kotlin.math.sin
 /**
  * El motor de rutas: cada campaña es un mapa con su punto de partida, siete paradas con nombre del tema, el trazo del
  * camino (calzada, ruta de caravanas, postas del yam, huellas de carreta…) y el destino. El marcador del tema avanza por
- * la ruta con los días cumplidos. Aquí están los siete temas del lote 2 y el marcador de todos.
+ * la ruta con los días cumplidos. Aquí están los fondos, los caminos, las paradas y el marcador de los 21 temas; la escena
+ * de la victoria está en [MapasCampana].
  */
 object MapasMas {
-    /** Las siete paradas de cada tema, en fracciones del mapa (más o menos donde quedan en la geografía). Null = el zigzag de siempre. */
-    fun puntos(tema: TemaId): List<Offset>? = when (tema) {
+    /**
+     * Las siete paradas de cada tema, en fracciones del mapa (más o menos donde quedan en su geografía o en su dibujo de
+     * fondo). Son siempre siete, una por etapa de `Campanas.etapas`.
+     */
+    fun puntos(tema: TemaId): List<Offset> = when (tema) {
+        // La calzada: Roma → Ostia → Massilia → Lugdunum → Durocortorum → Lutetia → Alesia. Italia queda a la izquierda y la
+        // Galia a la derecha; Ostia y Massilia sobre la costa, Lugdunum sobre el Ródano y Lutetia sobre el Sena.
+        TemaId.ROMANO -> listOf(Offset(0.07f, 0.58f), Offset(0.17f, 0.74f), Offset(0.35f, 0.77f), Offset(0.48f, 0.48f), Offset(0.64f, 0.2f), Offset(0.8f, 0.36f), Offset(0.92f, 0.6f))
+        // La marcha de Alejandro: Pella y Anfípolis al norte del Egeo, Troya en la costa de Asia, Sardes, Gordio, Tarso junto
+        // al mar del sur y Babilonia sobre el Éufrates.
+        TemaId.HELENO -> listOf(Offset(0.07f, 0.17f), Offset(0.19f, 0.13f), Offset(0.31f, 0.36f), Offset(0.42f, 0.62f), Offset(0.55f, 0.3f), Offset(0.71f, 0.72f), Offset(0.91f, 0.48f))
+        // El Camino de Santiago, de los Pirineos a Galicia (el este queda a la izquierda): Roncesvalles, Pamplona, Logroño,
+        // Burgos, León, Astorga y Santiago.
+        TemaId.MEDIEVAL -> geo(listOf(-1.32 to 43.01, -1.64 to 42.81, -2.45 to 42.47, -3.7 to 42.34, -5.57 to 42.6, -6.06 to 42.46, -8.54 to 42.88), -1.0, -9.0, 41.8, 43.6)
+        // La obra de la catedral, vista de lado: de los cimientos junto al ábside, por los muros, las columnas, los arbotantes
+        // y la bóveda, al rosetón del crucero y a las campanas de la torre.
+        TemaId.GOTICO -> listOf(Offset(0.07f, 0.9f), Offset(0.18f, 0.66f), Offset(0.29f, 0.84f), Offset(0.4f, 0.62f), Offset(0.5f, 0.42f), Offset(0.62f, 0.54f), Offset(0.77f, 0.24f))
+        // Del papel al cuadro: el boceto y el estudio en las hojas de la izquierda, y en el lienzo el cartón, la imprimación,
+        // el color, la veladura y la firma en la esquina de abajo.
+        TemaId.RENACIMIENTO -> listOf(Offset(0.08f, 0.66f), Offset(0.19f, 0.3f), Offset(0.35f, 0.6f), Offset(0.45f, 0.26f), Offset(0.55f, 0.66f), Offset(0.61f, 0.3f), Offset(0.66f, 0.82f))
+        // La campaña de 1805: de Boulogne, junto al canal de la Mancha, se cruza el Rin en Kehl, se baja al Danubio en Ulm,
+        // Múnich, Viena (Schönbrunn), y al norte a Brünn y Austerlitz.
+        TemaId.NAPOLEON -> listOf(Offset(0.07f, 0.22f), Offset(0.245f, 0.44f), Offset(0.4f, 0.82f), Offset(0.53f, 0.6f), Offset(0.69f, 0.78f), Offset(0.8f, 0.4f), Offset(0.93f, 0.52f))
+        // Las jornadas de París, cruzando el Sena de una orilla a la otra en cada tramo.
+        TemaId.REVOLUCION -> listOf(Offset(0.07f, 0.2f), Offset(0.17f, 0.7f), Offset(0.33f, 0.22f), Offset(0.47f, 0.84f), Offset(0.6f, 0.32f), Offset(0.76f, 0.76f), Offset(0.93f, 0.2f))
         // Toledo → Calatrava → Córdoba → Sevilla → Málaga → Almería → Granada.
         TemaId.ANDALUS -> geo(listOf(-4.02 to 39.86, -3.83 to 38.9, -4.78 to 37.88, -5.98 to 37.39, -4.42 to 36.72, -2.46 to 36.84, -3.6 to 37.18), -6.4, -2.1, 36.4, 40.2)
         // Chang'an → Dunhuang → Turfán → Kashgar → Samarcanda → Bujará → Antioquía (de oriente a occidente).
@@ -55,7 +79,6 @@ object MapasMas {
         TemaId.ESPACIO -> listOf(Offset(0.1f, 0.62f), Offset(0.2f, 0.4f), Offset(0.32f, 0.7f), Offset(0.47f, 0.34f), Offset(0.66f, 0.64f), Offset(0.78f, 0.38f), Offset(0.91f, 0.56f))
         // El Transiberiano: Moscú → Ekaterimburgo → Novosibirsk → Krasnoyarsk → Irkutsk → Chitá → Vladivostok.
         TemaId.URSS -> geo(listOf(37.6 to 55.75, 60.6 to 56.84, 82.9 to 55.03, 92.87 to 56.01, 104.3 to 52.29, 113.5 to 52.03, 131.9 to 43.12), 33.0, 136.0, 40.0, 60.0)
-        else -> null
     }
 
     /** Llama a [f] cada [paso] a lo largo de [p] con el punto y la dirección (para traviesas, paquetes, flechas…). */
@@ -261,8 +284,116 @@ object MapasMas {
                 // La estrella de la meta se enciende con los días cumplidos.
                 with(TrofeosTema) { estrella(Offset(lon(131.9), lat(43.12) - 14 * d), 5 * d, 2 * d, 5, Brush.linearGradient(listOf(Color(0xFFC1121F).copy(alpha = 0.2f + 0.6f * avance), Color(0xFFC1121F).copy(alpha = 0.2f + 0.6f * avance)))) }
             }
-            else -> {}
+            TemaId.ROMANO -> {
+                // La retícula de las centurias; Italia a la izquierda y la Galia a la derecha (el este queda a la izquierda).
+                var x = 0f; while (x < w) { drawLine(tinta.copy(alpha = 0.08f), Offset(x, 0f), Offset(x, h), 1f); x += 22 * d }
+                // El Tirreno y el golfo de León abajo, con Ostia y Massilia en la costa.
+                drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.7f); cubicTo(w * 0.12f, h * 0.62f, w * 0.2f, h * 0.9f, w * 0.34f, h * 0.82f); cubicTo(w * 0.4f, h * 0.8f, w * 0.44f, h * 0.9f, w * 0.48f, h); close() }, agua)
+                // Los Alpes, entre Italia y la Galia.
+                for (k in 0 until 5) monte(w * (0.2f + k * 0.04f), h * (0.38f - (k % 2) * 0.05f), 7 * d, tinta)
+                // El Ródano sube de Massilia a Lugdunum y sigue como Saona; el Sena pasa por Lutetia hacia el mar del norte.
+                drawPath(Path().apply { moveTo(w * 0.36f, h * 0.82f); cubicTo(w * 0.4f, h * 0.7f, w * 0.44f, h * 0.6f, w * 0.48f, h * 0.48f); cubicTo(w * 0.5f, h * 0.36f, w * 0.53f, h * 0.22f, w * 0.5f, 0f) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(1.6f * d))
+                drawPath(Path().apply { moveTo(w * 0.62f, h * 0.66f); cubicTo(w * 0.7f, h * 0.52f, w * 0.74f, h * 0.36f, w * 0.8f, h * 0.36f); cubicTo(w * 0.86f, h * 0.36f, w * 0.9f, h * 0.2f, w, h * 0.16f) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(1.6f * d))
+            }
+            TemaId.HELENO -> {
+                // Tierra de color arena: Macedonia arriba y Asia Menor a la derecha. El Egeo abajo a la izquierda, con sus islas y
+                // sus olas, y el mar del sur bajo Tarso; al final, el Éufrates y el Tigris.
+                drawRect(Color(0xFFE6D3A6).copy(alpha = if (oscuro) 0.1f else 0.28f), Offset.Zero, size)
+                val mar = Path().apply {
+                    moveTo(0f, h); lineTo(0f, h * 0.3f); cubicTo(w * 0.1f, h * 0.24f, w * 0.18f, h * 0.3f, w * 0.26f, h * 0.26f)
+                    cubicTo(w * 0.3f, h * 0.44f, w * 0.33f, h * 0.62f, w * 0.36f, h * 0.82f); cubicTo(w * 0.48f, h * 0.88f, w * 0.62f, h * 0.8f, w * 0.76f, h * 0.84f); lineTo(w * 0.78f, h); close()
+                }
+                drawPath(mar, Brush.verticalGradient(listOf(agua.copy(alpha = agua.alpha * 0.7f), agua.copy(alpha = agua.alpha * 1.3f)), h * 0.25f, h))
+                listOf(0.08f to 0.52f, 0.16f to 0.64f, 0.22f to 0.44f, 0.11f to 0.82f, 0.27f to 0.7f, 0.2f to 0.92f).forEachIndexed { i, (x, y) ->
+                    drawOval(Color(0xFFE6D3A6).copy(alpha = if (oscuro) 0.3f else 0.7f), Offset(w * x - 6 * d, h * y - 3 * d), Size((10 + (i % 3) * 4) * d, 6 * d))
+                }
+                val az = java.util.Random(7)
+                repeat(12) { val c = Offset(w * (0.02f + az.nextFloat() * 0.26f), h * (0.4f + az.nextFloat() * 0.56f)); drawArc(Color.White.copy(alpha = 0.4f), 200f, 140f, false, Offset(c.x - 5 * d, c.y - 3 * d), Size(10 * d, 6 * d), style = Stroke(1f * d)) }
+                // Los montes Tauro, entre Gordio y Tarso.
+                for (k in 0 until 6) monte(w * (0.5f + k * 0.035f), h * (0.56f + (k % 2) * 0.05f), 7 * d, tinta)
+                drawPath(Path().apply { moveTo(w * 0.84f, 0f); cubicTo(w * 0.87f, h * 0.24f, w * 0.89f, h * 0.38f, w * 0.91f, h * 0.48f); cubicTo(w * 0.93f, h * 0.62f, w * 0.95f, h * 0.8f, w * 0.97f, h) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(1.8f * d))
+                drawPath(Path().apply { moveTo(w * 0.93f, 0f); cubicTo(w * 0.95f, h * 0.3f, w * 0.97f, h * 0.6f, w * 0.99f, h) }, agua.copy(alpha = agua.alpha * 1.6f), style = Stroke(1.4f * d))
+            }
+            TemaId.MEDIEVAL -> {
+                // Pergamino con el mar Cantábrico arriba, el Atlántico a la derecha, los Pirineos al principio, los montes de la meseta
+                // y la rosa de los vientos.
+                drawPath(Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h * 0.12f); cubicTo(w * 0.7f, h * 0.06f, w * 0.5f, h * 0.18f, w * 0.3f, h * 0.1f); cubicTo(w * 0.18f, h * 0.05f, w * 0.08f, h * 0.14f, 0f, h * 0.1f); close() }, agua)
+                drawPath(Path().apply { moveTo(w, 0f); lineTo(w * 0.95f, 0f); cubicTo(w * 0.97f, h * 0.3f, w * 0.94f, h * 0.6f, w * 0.96f, h); lineTo(w, h); close() }, agua)
+                for (k in 0 until 4) monte(w * (0.03f + k * 0.035f), h * (0.3f - (k % 2) * 0.04f), 6 * d, tinta)
+                for (k in 0 until 4) { val x = w * (0.2f + k * 0.18f); drawArc(tinta, 200f, 140f, false, Offset(x, h * 0.8f), Size(26 * d, 18 * d), style = Stroke(1.2f * d)) }
+                val c = Offset(w * 0.86f, h * 0.8f); val r = 12 * d
+                for (k in 0 until 8) { val a = k * PI / 4; val rr = if (k % 2 == 0) r else r * 0.5f; drawLine(tinta.copy(alpha = 0.4f), c, Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat()), 1.2f * d) }
+            }
+            TemaId.GOTICO -> {
+                // La catedral, vista de lado, se levanta con los días cumplidos: la silueta completa tenue y lo construido con más fuerza.
+                val silueta = catedral(w, h)
+                drawPath(silueta, tinta.copy(alpha = 0.08f))
+                drawPath(silueta, tinta.copy(alpha = 0.25f), style = Stroke(1f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3 * d))))
+                val alto = h * avance.coerceIn(0f, 1f)
+                clipRect(0f, h - alto, w, h) { drawPath(silueta, cs.primary.copy(alpha = if (oscuro) 0.16f else 0.14f)) }
+                drawLine(tinta.copy(alpha = 0.4f), Offset(0f, h * 0.97f), Offset(w, h * 0.97f), 1f * d)
+            }
+            TemaId.RENACIMIENTO -> {
+                // Las hojas del boceto y del estudio a la izquierda, el cuadro sobre el caballete (primero la retícula del boceto,
+                // luego el color que va entrando) y la paleta a la derecha.
+                val hoja = Color(0xFFF2E6C8).copy(alpha = if (oscuro) 0.08f else 0.5f)
+                listOf(Rect(w * 0.02f, h * 0.48f, w * 0.15f, h * 0.9f), Rect(w * 0.13f, h * 0.1f, w * 0.26f, h * 0.5f)).forEach { r ->
+                    drawRect(hoja, r.topLeft, r.size); drawRect(tinta.copy(alpha = 0.3f), r.topLeft, r.size, style = Stroke(0.8f * d))
+                    for (k in 1..4) drawLine(Color(0xFF8C3B1E).copy(alpha = 0.18f), Offset(r.left + r.width * 0.15f, r.top + r.height * k / 5), Offset(r.right - r.width * (0.1f + 0.1f * (k % 2)), r.top + r.height * k / 5 - 3 * d), 0.8f * d)
+                }
+                val r = Rect(w * 0.3f, h * 0.08f, w * 0.7f, h * 0.92f)
+                drawLine(Color(0xFF9A7A50).copy(alpha = 0.35f), Offset(r.left + r.width * 0.2f, r.bottom), Offset(r.left + r.width * 0.1f, h), 2 * d)
+                drawLine(Color(0xFF9A7A50).copy(alpha = 0.35f), Offset(r.right - r.width * 0.2f, r.bottom), Offset(r.right - r.width * 0.1f, h), 2 * d)
+                drawRect(Color(0xFF9A7A50).copy(alpha = 0.35f), r.topLeft, r.size, style = Stroke(3 * d))
+                for (k in 1..3) { drawLine(tinta.copy(alpha = 0.18f), Offset(r.left + r.width * k / 4, r.top), Offset(r.left + r.width * k / 4, r.bottom), 1f); drawLine(tinta.copy(alpha = 0.18f), Offset(r.left, r.top + r.height * k / 4), Offset(r.right, r.top + r.height * k / 4), 1f) }
+                val colores = listOf(Color(0xFF8C3B1E), Color(0xFF2F4F6F), Color(0xFF9C7A2E), Color(0xFF5E7A4A))
+                val manchas = (avance * 8).toInt()
+                val az = java.util.Random(3)
+                clipRect(r.left, r.top, r.right, r.bottom) {
+                    repeat(manchas) { k -> val c = Offset(r.left + az.nextFloat() * r.width, r.top + az.nextFloat() * r.height); drawCircle(colores[k % 4].copy(alpha = 0.22f), r.width * (0.12f + az.nextFloat() * 0.1f), c) }
+                }
+                // La paleta con su agujero para el pulgar y las manchas de pintura.
+                val pc = Offset(w * 0.86f, h * 0.52f); val pw = minOf(w * 0.18f, h * 0.7f)
+                drawOval(Color(0xFFB08A5A).copy(alpha = if (oscuro) 0.2f else 0.35f), Offset(pc.x - pw / 2, pc.y - pw * 0.32f), Size(pw, pw * 0.64f))
+                drawCircle(cs.surface, pw * 0.06f, Offset(pc.x - pw * 0.26f, pc.y + pw * 0.08f))
+                colores.forEachIndexed { k, c -> drawCircle(c.copy(alpha = 0.5f), pw * 0.06f, Offset(pc.x - pw * 0.12f + k * pw * 0.12f, pc.y - pw * 0.14f + (k % 2) * pw * 0.06f)) }
+            }
+            TemaId.NAPOLEON -> {
+                // El canal de la Mancha junto a Boulogne, el Rin y el Danubio, y las fronteras punteadas del teatro de operaciones.
+                drawPath(Path().apply { moveTo(0f, 0f); lineTo(w * 0.14f, 0f); cubicTo(w * 0.1f, h * 0.08f, w * 0.05f, h * 0.12f, 0f, h * 0.18f); close() }, agua)
+                drawPath(Path().apply { moveTo(w * 0.24f, 0f); cubicTo(w * 0.2f, h * 0.3f, w * 0.3f, h * 0.6f, w * 0.22f, h) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(2.4f * d))
+                drawPath(Path().apply { moveTo(w * 0.3f, h * 0.9f); cubicTo(w * 0.5f, h * 0.8f, w * 0.6f, h * 0.95f, w * 0.8f, h * 0.78f); lineTo(w, h * 0.72f) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(2.4f * d))
+                drawPath(Path().apply { moveTo(w * 0.1f, h * 0.05f); lineTo(w * 0.4f, h * 0.15f); lineTo(w * 0.62f, h * 0.05f); lineTo(w * 0.95f, h * 0.2f) }, tinta, style = Stroke(1f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5 * d, 2 * d, 1 * d, 2 * d))))
+                // Los altos de Pratzen, junto a Austerlitz.
+                for (k in 0 until 3) monte(w * (0.86f + k * 0.035f), h * 0.7f, 6 * d, tinta)
+            }
+            TemaId.REVOLUCION -> {
+                // París: el Sena en curva, la cuadrícula de las secciones y la silueta de la Bastilla junto a su jornada.
+                var x = 0f; while (x < w) { drawLine(tinta.copy(alpha = 0.1f), Offset(x, 0f), Offset(x, h), 1f); x += 18 * d }
+                var y = 0f; while (y < h) { drawLine(tinta.copy(alpha = 0.1f), Offset(0f, y), Offset(w, y), 1f); y += 18 * d }
+                drawPath(Path().apply { moveTo(0f, h * 0.48f); cubicTo(w * 0.25f, h * 0.2f, w * 0.45f, h * 0.85f, w * 0.7f, h * 0.5f); cubicTo(w * 0.82f, h * 0.32f, w * 0.9f, h * 0.5f, w, h * 0.44f) },
+                    agua.copy(alpha = agua.alpha * 2.2f), style = Stroke(5 * d, cap = StrokeCap.Round))
+                val b = Offset(w * 0.33f, h * 0.22f); val muro = tinta.copy(alpha = 0.3f)
+                drawRect(muro, Offset(b.x - 16 * d, b.y - 8 * d), Size(32 * d, 12 * d))
+                for (k in 0 until 4) { val tx = b.x - 16 * d + k * 10.6f * d; drawRect(muro, Offset(tx - 2.5f * d, b.y - 12 * d), Size(5 * d, 16 * d)); drawArc(muro, 180f, 180f, true, Offset(tx - 2.5f * d, b.y - 14.5f * d), Size(5 * d, 5 * d)) }
+            }
         }
+    }
+
+    /**
+     * La catedral vista de lado: el ábside a la izquierda, la nave con sus pináculos (de donde salen los arbotantes), el
+     * hastial del crucero con su rosetón y la torre del campanario con su aguja a la derecha. Cada parada cae en su parte.
+     */
+    private fun catedral(w: Float, h: Float): Path = Path().apply {
+        val b = h * 0.97f
+        moveTo(w * 0.04f, b); lineTo(w * 0.04f, h * 0.62f); lineTo(w * 0.1f, h * 0.48f); lineTo(w * 0.14f, h * 0.48f)
+        lineTo(w * 0.14f, h * 0.34f); lineTo(w * 0.57f, h * 0.34f); lineTo(w * 0.62f, h * 0.2f); lineTo(w * 0.67f, h * 0.34f)
+        lineTo(w * 0.7f, h * 0.34f); lineTo(w * 0.7f, h * 0.16f); lineTo(w * 0.77f, h * 0.02f); lineTo(w * 0.84f, h * 0.16f); lineTo(w * 0.84f, b); close()
+        // Los pináculos de los contrafuertes, que asoman sobre el tejado.
+        for (k in 0 until 5) { val x = w * (0.17f + k * 0.09f); moveTo(x - w * 0.008f, b); lineTo(x - w * 0.008f, h * 0.3f); lineTo(x, h * 0.22f); lineTo(x + w * 0.008f, h * 0.3f); lineTo(x + w * 0.008f, b); close() }
+        // El rosetón del crucero y los vanos del campanario.
+        addOval(Rect(Offset(w * 0.62f, h * 0.54f), h * 0.1f))
+        addRect(Rect(w * 0.75f, h * 0.2f, w * 0.79f, h * 0.3f))
     }
 
     // ================================================================== rutas
@@ -326,7 +457,20 @@ object MapasMas {
                 drawPath(p, Color(0xFF161414), style = Stroke(3.4f * d))
                 drawPath(p, cs.surface, style = Stroke(1.4f * d))
             }
-            else -> drawPath(p, cs.outline, style = Stroke(2 * d))
+            // La calzada: borde de piedra y losas.
+            TemaId.ROMANO -> { drawPath(p, Color(0xFF8C8478).copy(alpha = 0.7f), style = Stroke(5 * d)); drawPath(p, cs.surface, style = Stroke(3 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 1.2f * d)))) }
+            // La ruta de la marcha, punteada en púrpura macedonio sobre un filete blanco.
+            TemaId.HELENO -> { drawPath(p, Color.White.copy(alpha = 0.6f), style = Stroke(3.4f * d)); drawPath(p, Color(0xFF5B2A6E), style = Stroke(1.6f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 4 * d)))) }
+            // Los pasos del peregrino, en tinta parda.
+            TemaId.MEDIEVAL -> drawPath(p, Color(0xFF6B2E1A).copy(alpha = 0.7f), style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 3 * d))))
+            // El cordel del maestro de obras.
+            TemaId.GOTICO -> drawPath(p, cs.tertiary.copy(alpha = 0.7f), style = Stroke(1.6f * d))
+            // Un trazo de sanguina, con el lápiz de la construcción debajo.
+            TemaId.RENACIMIENTO -> { drawPath(p, cs.onSurfaceVariant.copy(alpha = 0.25f), style = Stroke(0.8f * d)); drawPath(p, Color(0xFF8C3B1E).copy(alpha = 0.8f), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 3 * d)))) }
+            // La flecha roja de los mapas de campaña.
+            TemaId.NAPOLEON -> { drawPath(p, Color(0xFFA3172E).copy(alpha = 0.35f), style = Stroke(7 * d)); drawPath(p, Color(0xFFA3172E), style = Stroke(1.6f * d)) }
+            // El cortejo: tres líneas, azul, blanca y roja.
+            TemaId.REVOLUCION -> { drawPath(p, Color(0xFF1F3A6E), style = Stroke(6 * d)); drawPath(p, Color.White, style = Stroke(4 * d)); drawPath(p, Color(0xFFB22234), style = Stroke(2 * d)) }
         }
     }
 
@@ -395,129 +539,175 @@ object MapasMas {
                 with(TrofeosTema) { estrella(Offset(c.x, c.y - r * 0.6f), r * 0.32f, r * 0.13f, 5, Brush.linearGradient(listOf(Color(0xFFC1121F), Color(0xFFC1121F)))) }
                 drawRect(Color(0xFF161414).copy(alpha = 0.5f), Offset(c.x - r * 0.25f, c.y + r * 0.2f), Size(r * 0.5f, r * 0.6f))
             }
-            else -> drawCircle(col, r, c)
-        }
-    }
-
-    fun DrawScope.victoriaMas(tema: TemaId, cs: ColorScheme, m: Offset) {
-        val d = density
-        when (tema) {
-            // Un arco de herradura sobre la meta.
-            TemaId.ANDALUS -> drawArc(Color(0xFFC9A04A), 150f, 240f, false, Offset(m.x - 14 * d, m.y - 30 * d), Size(28 * d, 28 * d), style = Stroke(3 * d))
-            // Un farolillo rojo.
-            TemaId.SEDA -> { drawLine(cs.onSurface, m, m + Offset(0f, -20 * d), 1f * d); drawOval(Color(0xFFC0392B), Offset(m.x - 6 * d, m.y - 32 * d), Size(12 * d, 14 * d)) }
-            // La bufanda azul en su vara.
-            TemaId.MONGOL -> { drawLine(cs.onSurface, m, m + Offset(0f, -22 * d), 1f * d); drawPath(Path().apply { moveTo(m.x, m.y - 22 * d); cubicTo(m.x + 8 * d, m.y - 26 * d, m.x + 12 * d, m.y - 16 * d, m.x + 20 * d, m.y - 20 * d); lineTo(m.x + 18 * d, m.y - 14 * d); cubicTo(m.x + 10 * d, m.y - 10 * d, m.x + 6 * d, m.y - 18 * d, m.x, m.y - 16 * d); close() }, Color(0xFF2E6DB4)) }
-            // La bandera del pueblo nuevo.
-            TemaId.COLONOS -> { drawLine(cs.onSurface, m, m + Offset(0f, -22 * d), 1f * d); drawRect(Color(0xFF1F3A6E), Offset(m.x, m.y - 22 * d), Size(12 * d, 8 * d)) }
-            // Una flor que se abre.
-            TemaId.BOTANICO -> { for (k in 0 until 6) { val a = k * PI / 3; drawCircle(Color(0xFFC86A7A), 4 * d, Offset(m.x + (7 * d * cos(a)).toFloat(), m.y - 20 * d + (7 * d * sin(a)).toFloat())) }; drawCircle(Color(0xFFE2B34A), 3 * d, Offset(m.x, m.y - 20 * d)) }
-            // El árbol de Navidad con su estrella.
-            TemaId.NAVIDAD -> {
-                drawPath(Path().apply { moveTo(m.x - 12 * d, m.y - 8 * d); lineTo(m.x, m.y - 34 * d); lineTo(m.x + 12 * d, m.y - 8 * d); close() }, Color(0xFF1F6B3A))
-                with(TrofeosTema) { estrella(Offset(m.x, m.y - 36 * d), 5 * d, 2 * d, 5, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37)))) }
+            // Miliario: una columnita con su base.
+            TemaId.ROMANO -> { drawRect(col, Offset(c.x - r * 0.55f, c.y - r), Size(r * 1.1f, r * 1.8f)); drawOval(col, Offset(c.x - r * 0.55f, c.y - r * 1.25f), Size(r * 1.1f, r * 0.5f)); drawRect(col, Offset(c.x - r * 0.8f, c.y + r * 0.7f), Size(r * 1.6f, r * 0.35f)) }
+            // Una isla en el mar o una ciudad en tierra: un círculo con la greca alrededor.
+            TemaId.HELENO -> { drawCircle(col, r, c); drawCircle(Color(0xFFC9A04A), r * 1.25f, c, style = Stroke(1.2f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 1.5f * d)))) }
+            // La venera del peregrino.
+            TemaId.MEDIEVAL -> {
+                val p = Path().apply { moveTo(c.x, c.y + r); for (k in 0..6) { val a = PI + k * PI / 6; val x = c.x + (r * 1.15f * cos(a)).toFloat(); val y = c.y - r * 0.1f + (r * 1.1f * sin(a)).toFloat(); lineTo(x, y) }; close() }
+                drawPath(p, col)
+                for (k in 1..5) { val a = PI + k * PI / 6; drawLine(Color.Black.copy(alpha = 0.25f), Offset(c.x, c.y + r * 0.9f), Offset(c.x + (r * 1.05f * cos(a)).toFloat(), c.y - r * 0.1f + (r * sin(a)).toFloat()), 0.8f * d) }
             }
-            // El estandarte en lo alto de la fortaleza.
-            TemaId.ANTIGUAS -> { drawLine(cs.onSurface, m, m + Offset(0f, -24 * d), 1f * d); drawPath(Path().apply { moveTo(m.x, m.y - 24 * d); lineTo(m.x + 14 * d, m.y - 24 * d); lineTo(m.x + 14 * d, m.y - 12 * d); lineTo(m.x + 7 * d, m.y - 15 * d); lineTo(m.x, m.y - 12 * d); close() }, Color(0xFF1F3A5A)) }
-            // El sello rojo de «aprobado» sobre el Ministerio.
-            TemaId.DISTOPIA -> { drawRect(Color(0xFFC8102E), Offset(m.x - 14 * d, m.y - 34 * d), Size(28 * d, 14 * d), style = Stroke(2 * d)); drawLine(Color(0xFFC8102E), Offset(m.x - 10 * d, m.y - 27 * d), Offset(m.x + 10 * d, m.y - 27 * d), 2 * d) }
-            // «ACCESO CONCEDIDO» en un recuadro de consola sobre la raíz.
-            TemaId.CIBER -> with(TrofeosMas) {
-                val cian = Color(0xFF00E5FF); val t = "ACCESO CONCEDIDO"; val tam = 8 * d
-                val tw = t.length * tam * 0.6f; val x = (m.x - tw / 2).coerceIn(3 * d, size.width - tw - 3 * d); val y = m.y - 30 * d
-                drawRect(Color(0xFF05070B), Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f))
-                drawRect(cian, Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f), style = Stroke(1f * d))
-                mono(t, x, y, tam, cian, negrita = true)
-            }
-            // La salida a la superficie: el sol que asoma sobre la compuerta abierta.
-            TemaId.REFUGIO -> {
-                val sol = Offset(m.x, m.y - 18 * d)
-                for (k in 0 until 9) { val a = PI + k * PI / 8; drawLine(Color(0xFFE8B83A), Offset(sol.x + (10 * d * cos(a)).toFloat(), sol.y + (10 * d * sin(a)).toFloat()), Offset(sol.x + (16 * d * cos(a)).toFloat(), sol.y + (16 * d * sin(a)).toFloat()), 1.6f * d) }
-                drawArc(Color(0xFFE8B83A), 180f, 180f, true, Offset(sol.x - 8 * d, sol.y - 8 * d), Size(16 * d, 16 * d))
-                drawLine(Color(0xFF6B8A3A), Offset(sol.x - 18 * d, sol.y), Offset(sol.x + 18 * d, sol.y), 2 * d)
-            }
-            // La fortaleza tomada: la torre almenada con el estandarte carmesí y el engrane de latón.
-            TemaId.ORDEN -> {
-                drawRect(Color(0xFF6E757D), Offset(m.x - 9 * d, m.y - 22 * d), Size(18 * d, 12 * d))
-                for (k in 0 until 3) drawRect(Color(0xFF6E757D), Offset(m.x - 9 * d + k * 7 * d, m.y - 26 * d), Size(4 * d, 4 * d))
-                drawLine(cs.onSurface, Offset(m.x, m.y - 26 * d), Offset(m.x, m.y - 44 * d), 1.2f * d)
-                drawPath(Path().apply { moveTo(m.x, m.y - 44 * d); lineTo(m.x + 16 * d, m.y - 44 * d); lineTo(m.x + 16 * d, m.y - 32 * d); lineTo(m.x + 8 * d, m.y - 35 * d); lineTo(m.x, m.y - 32 * d); close() }, Color(0xFF9E1B22))
-                drawCircle(Color(0xFFD6B25A), 2.6f * d, Offset(m.x + 8 * d, m.y - 39.5f * d))
-            }
-            // El cultivo completo: las colonias que llenan la placa de Petri.
-            TemaId.LABORATORIO -> {
-                val az = java.util.Random(13)
-                val c = m; val R = minOf(size.height * 0.32f, size.width * 0.08f)
-                repeat(26) { val a = az.nextDouble() * 2 * PI; val rr = R * kotlin.math.sqrt(az.nextFloat())
-                    drawCircle(listOf(Color(0xFF0B8FA1), Color(0xFF5E4FD1), Color(0xFF1E8E5A))[it % 3].copy(alpha = 0.8f), (1.5f + az.nextFloat() * 2.5f) * d, Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat())) }
-            }
-            // El aterrizaje en Marte: el módulo con sus patas y la bandera naranja.
-            TemaId.ESPACIO -> {
-                val b = Offset(m.x, m.y - 12 * d)
-                drawPath(Path().apply { moveTo(b.x - 7 * d, b.y); lineTo(b.x + 7 * d, b.y); lineTo(b.x + 5 * d, b.y - 8 * d); lineTo(b.x - 5 * d, b.y - 8 * d); close() }, Color(0xFFC9A04A))
-                listOf(-1f, 1f).forEach { s -> drawLine(cs.onSurface, Offset(b.x + s * 5 * d, b.y), Offset(b.x + s * 10 * d, b.y + 8 * d), 1.2f * d) }
-                drawLine(cs.onSurface, Offset(b.x + 14 * d, b.y + 8 * d), Offset(b.x + 14 * d, b.y - 14 * d), 1f * d)
-                drawRect(Color(0xFFE8601C), Offset(b.x + 14 * d, b.y - 14 * d), Size(10 * d, 6 * d))
-            }
-            // La gran estrella roja de la llegada a Vladivostok.
-            TemaId.URSS -> with(TrofeosTema) {
-                val c = Offset(m.x, m.y - 24 * d)
-                estrella(c, 15 * d, 6 * d, 5, Brush.linearGradient(listOf(Color(0xFFD4A017), Color(0xFFD4A017))))
-                estrella(c, 12 * d, 4.8f * d, 5, Brush.linearGradient(listOf(Color(0xFFE5252F), Color(0xFFC1121F)), Offset(c.x, c.y - 12 * d), Offset(c.x, c.y + 12 * d)))
-            }
-            else -> {}
+            // Un arco apuntado.
+            TemaId.GOTICO -> drawPath(Path().apply { moveTo(c.x - r * 0.8f, c.y + r); lineTo(c.x - r * 0.8f, c.y); quadraticTo(c.x - r * 0.8f, c.y - r * 0.8f, c.x, c.y - r * 1.3f); quadraticTo(c.x + r * 0.8f, c.y - r * 0.8f, c.x + r * 0.8f, c.y); lineTo(c.x + r * 0.8f, c.y + r); close() }, col)
+            // Un punto de compás con su cruz de construcción.
+            TemaId.RENACIMIENTO -> { drawCircle(col, r, c); drawLine(Color(0xFF3A2614).copy(alpha = 0.5f), Offset(c.x - r * 1.6f, c.y), Offset(c.x + r * 1.6f, c.y), 0.8f * d); drawLine(Color(0xFF3A2614).copy(alpha = 0.5f), Offset(c.x, c.y - r * 1.6f), Offset(c.x, c.y + r * 1.6f), 0.8f * d) }
+            // El banderín de la división; en la meta, el sol de Austerlitz.
+            TemaId.NAPOLEON -> if (meta) {
+                for (k in 0 until 12) { val a = k * PI / 6; drawLine(Color(0xFFD4AF37), Offset(c.x + (r * 1.1f * cos(a)).toFloat(), c.y + (r * 1.1f * sin(a)).toFloat()), Offset(c.x + (r * 1.7f * cos(a)).toFloat(), c.y + (r * 1.7f * sin(a)).toFloat()), 1.2f * d) }
+                drawCircle(col, r, c)
+            } else { drawRect(col, Offset(c.x - r, c.y - r * 0.7f), Size(r * 2, r * 1.4f)); drawLine(cs.onSurface.copy(alpha = 0.6f), Offset(c.x - r, c.y - r * 0.7f), Offset(c.x - r, c.y + r * 1.4f), 1f * d) }
+            // La escarapela: rojo afuera, el color del día en medio y azul al centro.
+            TemaId.REVOLUCION -> { drawCircle(Color(0xFFB22234), r * 1.15f, c); drawCircle(col, r * 0.8f, c); drawCircle(Color(0xFF1F3A6E), r * 0.38f, c) }
         }
     }
 
     // ================================================================== el marcador que avanza
 
     /**
-     * El marcador de la campaña: un alfiler con el emblema del tema, sobre la parada a la que llegaste.
-     * [salto] lo hace brincar un poco mientras hoy falta cumplir.
+     * El marcador de la campaña, sobre la parada a la que llegaste. En la mayoría de los temas es un alfiler con el emblema
+     * del tema; en otros es una figura entera: el legionario con su estandarte, la vela del scriptorium, el peregrino con su
+     * venera, la punta de plata y el banderín del punto de control. [salto] lo hace brincar un poco mientras hoy falta cumplir.
      */
     fun DrawScope.marcador(tema: TemaId, cs: ColorScheme, c: Offset, salto: Float = 0f) {
         val d = density
-        val base = Offset(c.x, c.y - 10 * d - salto * 3 * d)
+        val alto = salto * 3 * d
+        val base = Offset(c.x, c.y - 10 * d - alto)
         val color = cs.tertiary
         drawOval(Color.Black.copy(alpha = 0.18f), Offset(c.x - 5 * d, c.y - 2 * d), Size(10 * d, 4 * d))
-        // Distopía: no un alfiler, sino el banderín rojo del punto de control.
-        if (tema == TemaId.DISTOPIA) {
-            val top = c.y - 24 * d - salto * 3 * d
-            drawLine(Color(0xFF141414), Offset(c.x, c.y), Offset(c.x, top), 1.6f * d)
-            drawRect(Color(0xFFC8102E), Offset(c.x, top), Size(13 * d, 9 * d))
-            drawRect(Color(0xFFF2EFE6), Offset(c.x + 2 * d, top + 3.5f * d), Size(9 * d, 2 * d))
-            return
-        }
-        drawPath(Path().apply { moveTo(base.x, base.y + 9 * d); cubicTo(base.x - 9 * d, base.y - 2 * d, base.x - 7 * d, base.y - 13 * d, base.x, base.y - 13 * d); cubicTo(base.x + 7 * d, base.y - 13 * d, base.x + 9 * d, base.y - 2 * d, base.x, base.y + 9 * d); close() }, color)
         val g = Offset(base.x, base.y - 5 * d); val r = 4.2f * d
         val tinta = if (color.luminance() > 0.5f) Color(0xFF2A1E0E) else Color.White
-        drawCircle(tinta.copy(alpha = 0.25f), r + 0.8f * d, g)
-        when (tema) {
-            // Gorro frigio, bicornio, vela, venera… un emblema chico de cada tema.
-            TemaId.REVOLUCION -> drawPath(Path().apply { moveTo(g.x - r * 0.7f, g.y + r * 0.6f); cubicTo(g.x - r * 0.8f, g.y - r * 0.4f, g.x, g.y - r, g.x + r * 0.7f, g.y - r * 0.4f); lineTo(g.x + r * 0.5f, g.y); lineTo(g.x + r * 0.7f, g.y + r * 0.6f); close() }, Color(0xFFB22234))
-            TemaId.NAPOLEON -> drawPath(Path().apply { moveTo(g.x - r, g.y + r * 0.3f); quadraticTo(g.x, g.y - r * 1.2f, g.x + r, g.y + r * 0.3f); close() }, Color(0xFF1A1A22))
-            TemaId.HELENO -> drawPath(Path().apply { moveTo(g.x - r * 0.6f, g.y - r * 0.6f); lineTo(g.x + r * 0.6f, g.y - r * 0.6f); lineTo(g.x + r * 0.7f, g.y + r * 0.4f); lineTo(g.x - r * 0.7f, g.y + r * 0.4f); close() }, Color.White)
-            TemaId.SEDA -> drawOval(Color(0xFFC0392B), Offset(g.x - r * 0.6f, g.y - r * 0.8f), Size(r * 1.2f, r * 1.6f))
-            TemaId.MONGOL -> drawRoundRect(Color(0xFFD4AF37), Offset(g.x - r * 0.45f, g.y - r * 0.9f), Size(r * 0.9f, r * 1.8f), androidx.compose.ui.geometry.CornerRadius(r * 0.45f))
-            TemaId.NAVIDAD -> with(TrofeosTema) { estrella(g, r * 0.9f, r * 0.38f, 5, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37)))) }
-            TemaId.ANDALUS -> with(TrofeosMas) { estrellaLazo(g, r * 0.85f, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37))), null, 0f) }
-            TemaId.BOTANICO -> drawPath(Path().apply { moveTo(g.x - r * 0.8f, g.y + r * 0.4f); quadraticTo(g.x - r * 0.4f, g.y - r, g.x + r * 0.8f, g.y - r * 0.5f); quadraticTo(g.x + r * 0.3f, g.y + r * 0.8f, g.x - r * 0.8f, g.y + r * 0.4f); close() }, Color(0xFF3F7A3A))
-            TemaId.COLONOS -> { drawArc(Color(0xFFF1E6C8), 180f, 180f, true, Offset(g.x - r * 0.8f, g.y - r * 0.8f), Size(r * 1.6f, r * 1.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x - r * 0.4f, g.y + r * 0.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x + r * 0.4f, g.y + r * 0.4f)) }
-            TemaId.ANTIGUAS -> with(TrofeosMas) { runas(Offset(g.x - r * 0.3f, g.y), r * 0.6f, r * 1.2f, tinta, 1f * d, 1, 4) }
-            TemaId.DISTOPIA -> { drawRect(Color(0xFFC8102E), Offset(g.x - r * 0.7f, g.y - r * 0.7f), Size(r * 1.4f, r * 1.4f)); drawLine(Color(0xFFF2EFE6), Offset(g.x - r * 0.45f, g.y), Offset(g.x + r * 0.45f, g.y), 1.2f * d) }
-            // La ficha amarilla del vecino.
-            TemaId.REFUGIO -> { drawCircle(Color(0xFFE8B83A), r * 0.85f, g); drawCircle(Color(0xFF1F2A2A), r * 0.85f, g, style = Stroke(0.8f * d)); with(TrofeosMas) { atomo(g, r * 0.55f, Color(0xFF1F2A2A), 0.6f * d) } }
-            // El banderín de avance.
-            TemaId.ORDEN -> { drawLine(Color(0xFF15181B), Offset(g.x - r * 0.5f, g.y + r * 0.8f), Offset(g.x - r * 0.5f, g.y - r * 0.8f), 1f * d); drawPath(Path().apply { moveTo(g.x - r * 0.5f, g.y - r * 0.8f); lineTo(g.x + r * 0.8f, g.y - r * 0.35f); lineTo(g.x - r * 0.5f, g.y + r * 0.1f); close() }, Color(0xFF9E1B22)) }
-            // La pipeta.
-            TemaId.LABORATORIO -> { drawRect(Color.White, Offset(g.x - r * 0.18f, g.y - r * 0.9f), Size(r * 0.36f, r * 1.3f)); drawPath(Path().apply { moveTo(g.x - r * 0.18f, g.y + r * 0.4f); lineTo(g.x + r * 0.18f, g.y + r * 0.4f); lineTo(g.x, g.y + r * 0.95f); close() }, Color.White); drawRect(Color(0xFF5E4FD1), Offset(g.x - r * 0.3f, g.y - r * 0.95f), Size(r * 0.6f, r * 0.3f)) }
-            // La nave.
-            TemaId.ESPACIO -> { drawPath(Path().apply { moveTo(g.x, g.y - r); quadraticTo(g.x + r * 0.45f, g.y - r * 0.4f, g.x + r * 0.3f, g.y + r * 0.6f); lineTo(g.x - r * 0.3f, g.y + r * 0.6f); quadraticTo(g.x - r * 0.45f, g.y - r * 0.4f, g.x, g.y - r); close() }, Color.White); drawCircle(Color(0xFF1B3A8C), r * 0.18f, Offset(g.x, g.y - r * 0.2f)); drawLine(Color(0xFFE8601C), Offset(g.x, g.y + r * 0.6f), Offset(g.x, g.y + r * 0.95f), 1.4f * d) }
-            // La locomotora vista de lado.
-            TemaId.URSS -> { drawRect(Color(0xFF161414), Offset(g.x - r * 0.8f, g.y - r * 0.3f), Size(r * 1.4f, r * 0.7f)); drawRect(Color(0xFF161414), Offset(g.x + r * 0.1f, g.y - r * 0.8f), Size(r * 0.5f, r * 0.6f)); drawRect(Color(0xFF161414), Offset(g.x - r * 0.6f, g.y - r * 0.75f), Size(r * 0.2f, r * 0.45f)); drawRect(Color(0xFFC1121F), Offset(g.x - r * 0.8f, g.y + r * 0.05f), Size(r * 1.4f, r * 0.12f)); listOf(-0.45f, 0.05f).forEach { dx -> drawCircle(Color(0xFFC1121F), r * 0.22f, Offset(g.x + dx * r, g.y + r * 0.5f)) } }
-            // El cursor de la consola.
-            TemaId.CIBER -> { drawCircle(Color(0xFF05070B), r * 0.95f, g); drawRect(Color(0xFF00E5FF), Offset(g.x - r * 0.32f, g.y - r * 0.55f), Size(r * 0.64f, r * 1.1f)) }
-            else -> drawCircle(tinta, r * 0.45f, g)
+        // El alfiler, con el círculo donde va el emblema.
+        fun alfiler() {
+            drawPath(Path().apply { moveTo(base.x, base.y + 9 * d); cubicTo(base.x - 9 * d, base.y - 2 * d, base.x - 7 * d, base.y - 13 * d, base.x, base.y - 13 * d); cubicTo(base.x + 7 * d, base.y - 13 * d, base.x + 9 * d, base.y - 2 * d, base.x, base.y + 9 * d); close() }, color)
+            drawCircle(tinta.copy(alpha = 0.25f), r + 0.8f * d, g)
         }
+        when (tema) {
+            TemaId.ROMANO -> legionario(c, alto)
+            TemaId.MEDIEVAL -> vela(c, alto)
+            TemaId.GOTICO -> peregrino(c, alto)
+            TemaId.RENACIMIENTO -> puntaDePlata(c, alto)
+            // Distopía: no un alfiler, sino el banderín rojo del punto de control.
+            TemaId.DISTOPIA -> {
+                val top = c.y - 24 * d - alto
+                drawLine(Color(0xFF141414), Offset(c.x, c.y), Offset(c.x, top), 1.6f * d)
+                drawRect(Color(0xFFC8102E), Offset(c.x, top), Size(13 * d, 9 * d))
+                drawRect(Color(0xFFF2EFE6), Offset(c.x + 2 * d, top + 3.5f * d), Size(9 * d, 2 * d))
+            }
+            // Gorro frigio, bicornio, casco, farolillo… un emblema chico de cada tema dentro del alfiler.
+            TemaId.REVOLUCION -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.7f, g.y + r * 0.6f); cubicTo(g.x - r * 0.8f, g.y - r * 0.4f, g.x, g.y - r, g.x + r * 0.7f, g.y - r * 0.4f); lineTo(g.x + r * 0.5f, g.y); lineTo(g.x + r * 0.7f, g.y + r * 0.6f); close() }, Color(0xFFB22234)) }
+            TemaId.NAPOLEON -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r, g.y + r * 0.3f); quadraticTo(g.x, g.y - r * 1.2f, g.x + r, g.y + r * 0.3f); close() }, Color(0xFF1A1A22)) }
+            TemaId.HELENO -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.6f, g.y - r * 0.6f); lineTo(g.x + r * 0.6f, g.y - r * 0.6f); lineTo(g.x + r * 0.7f, g.y + r * 0.4f); lineTo(g.x - r * 0.7f, g.y + r * 0.4f); close() }, Color.White) }
+            TemaId.SEDA -> { alfiler(); drawOval(Color(0xFFC0392B), Offset(g.x - r * 0.6f, g.y - r * 0.8f), Size(r * 1.2f, r * 1.6f)) }
+            TemaId.MONGOL -> { alfiler(); drawRoundRect(Color(0xFFD4AF37), Offset(g.x - r * 0.45f, g.y - r * 0.9f), Size(r * 0.9f, r * 1.8f), androidx.compose.ui.geometry.CornerRadius(r * 0.45f)) }
+            TemaId.NAVIDAD -> { alfiler(); with(TrofeosTema) { estrella(g, r * 0.9f, r * 0.38f, 5, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37)))) } }
+            TemaId.ANDALUS -> { alfiler(); with(TrofeosMas) { estrellaLazo(g, r * 0.85f, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37))), null, 0f) } }
+            TemaId.BOTANICO -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.8f, g.y + r * 0.4f); quadraticTo(g.x - r * 0.4f, g.y - r, g.x + r * 0.8f, g.y - r * 0.5f); quadraticTo(g.x + r * 0.3f, g.y + r * 0.8f, g.x - r * 0.8f, g.y + r * 0.4f); close() }, Color(0xFF3F7A3A)) }
+            TemaId.COLONOS -> { alfiler(); drawArc(Color(0xFFF1E6C8), 180f, 180f, true, Offset(g.x - r * 0.8f, g.y - r * 0.8f), Size(r * 1.6f, r * 1.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x - r * 0.4f, g.y + r * 0.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x + r * 0.4f, g.y + r * 0.4f)) }
+            TemaId.ANTIGUAS -> { alfiler(); with(TrofeosMas) { runas(Offset(g.x - r * 0.3f, g.y), r * 0.6f, r * 1.2f, tinta, 1f * d, 1, 4) } }
+            // La ficha amarilla del vecino.
+            TemaId.REFUGIO -> { alfiler(); drawCircle(Color(0xFFE8B83A), r * 0.85f, g); drawCircle(Color(0xFF1F2A2A), r * 0.85f, g, style = Stroke(0.8f * d)); with(TrofeosMas) { atomo(g, r * 0.55f, Color(0xFF1F2A2A), 0.6f * d) } }
+            // El banderín de avance.
+            TemaId.ORDEN -> { alfiler(); drawLine(Color(0xFF15181B), Offset(g.x - r * 0.5f, g.y + r * 0.8f), Offset(g.x - r * 0.5f, g.y - r * 0.8f), 1f * d); drawPath(Path().apply { moveTo(g.x - r * 0.5f, g.y - r * 0.8f); lineTo(g.x + r * 0.8f, g.y - r * 0.35f); lineTo(g.x - r * 0.5f, g.y + r * 0.1f); close() }, Color(0xFF9E1B22)) }
+            // La pipeta.
+            TemaId.LABORATORIO -> { alfiler(); drawRect(Color.White, Offset(g.x - r * 0.18f, g.y - r * 0.9f), Size(r * 0.36f, r * 1.3f)); drawPath(Path().apply { moveTo(g.x - r * 0.18f, g.y + r * 0.4f); lineTo(g.x + r * 0.18f, g.y + r * 0.4f); lineTo(g.x, g.y + r * 0.95f); close() }, Color.White); drawRect(Color(0xFF5E4FD1), Offset(g.x - r * 0.3f, g.y - r * 0.95f), Size(r * 0.6f, r * 0.3f)) }
+            // La nave.
+            TemaId.ESPACIO -> { alfiler(); drawPath(Path().apply { moveTo(g.x, g.y - r); quadraticTo(g.x + r * 0.45f, g.y - r * 0.4f, g.x + r * 0.3f, g.y + r * 0.6f); lineTo(g.x - r * 0.3f, g.y + r * 0.6f); quadraticTo(g.x - r * 0.45f, g.y - r * 0.4f, g.x, g.y - r); close() }, Color.White); drawCircle(Color(0xFF1B3A8C), r * 0.18f, Offset(g.x, g.y - r * 0.2f)); drawLine(Color(0xFFE8601C), Offset(g.x, g.y + r * 0.6f), Offset(g.x, g.y + r * 0.95f), 1.4f * d) }
+            // La locomotora vista de lado.
+            TemaId.URSS -> { alfiler(); drawRect(Color(0xFF161414), Offset(g.x - r * 0.8f, g.y - r * 0.3f), Size(r * 1.4f, r * 0.7f)); drawRect(Color(0xFF161414), Offset(g.x + r * 0.1f, g.y - r * 0.8f), Size(r * 0.5f, r * 0.6f)); drawRect(Color(0xFF161414), Offset(g.x - r * 0.6f, g.y - r * 0.75f), Size(r * 0.2f, r * 0.45f)); drawRect(Color(0xFFC1121F), Offset(g.x - r * 0.8f, g.y + r * 0.05f), Size(r * 1.4f, r * 0.12f)); listOf(-0.45f, 0.05f).forEach { dx -> drawCircle(Color(0xFFC1121F), r * 0.22f, Offset(g.x + dx * r, g.y + r * 0.5f)) } }
+            // El cursor de la consola.
+            TemaId.CIBER -> { alfiler(); drawCircle(Color(0xFF05070B), r * 0.95f, g); drawRect(Color(0xFF00E5FF), Offset(g.x - r * 0.32f, g.y - r * 0.55f), Size(r * 0.64f, r * 1.1f)) }
+        }
+    }
+
+    /** El legionario con el estandarte: túnica roja y loriga, casco con cresta, el escudo con su umbo y el vexilo con el águila. */
+    private fun DrawScope.legionario(c: Offset, alto: Float) {
+        val d = density
+        val pie = c.y - alto
+        val rojo = Color(0xFFA3172E); val oro = Color(0xFFD4AF37); val hierro = Color(0xFF6E6A64); val cuero = Color(0xFF3A2A1C); val madera = Color(0xFF5A3A22)
+        // El asta del estandarte, detrás de la figura.
+        val asta = c.x + 6 * d
+        drawLine(madera, Offset(asta, pie + 0.5f * d), Offset(asta, pie - 29 * d), 1.2f * d)
+        // Piernas, túnica y loriga.
+        listOf(-1.6f, 1.6f).forEach { dx -> drawLine(cuero, Offset(c.x + dx * d, pie), Offset(c.x + dx * d, pie - 6 * d), 1.4f * d) }
+        drawPath(Path().apply { moveTo(c.x - 4 * d, pie - 5.5f * d); lineTo(c.x + 4 * d, pie - 5.5f * d); lineTo(c.x + 3 * d, pie - 14 * d); lineTo(c.x - 3 * d, pie - 14 * d); close() }, rojo)
+        for (k in 0 until 3) drawLine(hierro, Offset(c.x - 3 * d, pie - (9 + k * 1.6f) * d), Offset(c.x + 3 * d, pie - (9 + k * 1.6f) * d), 1f * d)
+        // El brazo que sostiene el asta.
+        drawLine(rojo, Offset(c.x + 2.6f * d, pie - 13 * d), Offset(asta, pie - 11.5f * d), 1.4f * d)
+        // La cabeza con el casco y su cresta roja.
+        drawCircle(Color(0xFFC89A6E), 2.4f * d, Offset(c.x, pie - 16.5f * d))
+        drawArc(hierro, 180f, 180f, true, Offset(c.x - 2.8f * d, pie - 19.6f * d), Size(5.6f * d, 5.6f * d))
+        drawArc(rojo, 200f, 140f, false, Offset(c.x - 3.4f * d, pie - 22.6f * d), Size(6.8f * d, 5 * d), style = Stroke(1.6f * d))
+        // El escudo: rectangular y curvo, con el umbo de bronce.
+        drawRoundRect(rojo, Offset(c.x - 8.5f * d, pie - 15 * d), Size(5 * d, 10 * d), androidx.compose.ui.geometry.CornerRadius(1.6f * d))
+        drawRoundRect(oro, Offset(c.x - 8.5f * d, pie - 15 * d), Size(5 * d, 10 * d), androidx.compose.ui.geometry.CornerRadius(1.6f * d), style = Stroke(0.7f * d))
+        drawCircle(oro, 1.2f * d, Offset(c.x - 6 * d, pie - 10 * d))
+        // El vexilo con sus flecos y el águila de oro en la punta.
+        drawLine(oro, Offset(asta - 4.5f * d, pie - 24 * d), Offset(asta + 4.5f * d, pie - 24 * d), 1f * d)
+        drawRect(rojo, Offset(asta - 4 * d, pie - 24 * d), Size(8 * d, 6.5f * d))
+        for (k in 0 until 4) { val x = asta - 3.4f * d + k * 2.3f * d; drawLine(oro, Offset(x, pie - 17.5f * d), Offset(x, pie - 16 * d), 0.6f * d) }
+        drawPath(Path().apply { moveTo(asta, pie - 26.5f * d); lineTo(asta - 4.5f * d, pie - 31 * d); lineTo(asta - 1.4f * d, pie - 28.4f * d); lineTo(asta, pie - 32 * d); lineTo(asta + 1.4f * d, pie - 28.4f * d); lineTo(asta + 4.5f * d, pie - 31 * d); close() }, oro)
+    }
+
+    /** La vela del scriptorium en su palmatoria de latón, con la cera escurrida, la llama y su resplandor. */
+    private fun DrawScope.vela(c: Offset, alto: Float) {
+        val d = density
+        val pie = c.y - alto
+        val laton = Color(0xFFC9A04A); val cera = Color(0xFFF1E6C8)
+        drawArc(laton, -90f, 180f, false, Offset(c.x + 5 * d, pie - 5.6f * d), Size(4.6f * d, 4.2f * d), style = Stroke(1.2f * d))
+        drawOval(laton, Offset(c.x - 7 * d, pie - 3 * d), Size(14 * d, 3.6f * d))
+        drawRect(laton, Offset(c.x - 3 * d, pie - 5.4f * d), Size(6 * d, 3 * d))
+        drawRect(cera, Offset(c.x - 2.2f * d, pie - 18 * d), Size(4.4f * d, 13 * d))
+        drawRect(Color(0xFFB79A6A).copy(alpha = 0.6f), Offset(c.x - 2.2f * d, pie - 18 * d), Size(4.4f * d, 13 * d), style = Stroke(0.6f * d))
+        drawOval(cera, Offset(c.x + 1.2f * d, pie - 17.5f * d), Size(2 * d, 4.4f * d))
+        val llama = Offset(c.x, pie - 22 * d)
+        drawCircle(Brush.radialGradient(listOf(Color(0xFFFFD27A).copy(alpha = 0.45f), Color.Transparent), llama, 9 * d), 9 * d, llama)
+        drawLine(Color(0xFF2A1E0E), Offset(c.x, pie - 18 * d), Offset(c.x, pie - 19.6f * d), 0.8f * d)
+        drawPath(Path().apply { moveTo(c.x, pie - 26.5f * d); quadraticTo(c.x + 2.6f * d, pie - 21.5f * d, c.x, pie - 19 * d); quadraticTo(c.x - 2.6f * d, pie - 21.5f * d, c.x, pie - 26.5f * d); close() }, Color(0xFFFFB347))
+        drawPath(Path().apply { moveTo(c.x, pie - 24 * d); quadraticTo(c.x + 1.2f * d, pie - 21 * d, c.x, pie - 19.6f * d); quadraticTo(c.x - 1.2f * d, pie - 21 * d, c.x, pie - 24 * d); close() }, Color(0xFFFFF1B8))
+    }
+
+    /** El peregrino: la esclavina parda, el sombrero de ala ancha con la venera y el bordón con su calabaza. */
+    private fun DrawScope.peregrino(c: Offset, alto: Float) {
+        val d = density
+        val pie = c.y - alto
+        val capa = Color(0xFF6B4A2A); val ala = Color(0xFF4A3420); val madera = Color(0xFF5A3A22); val calabaza = Color(0xFFC9963A)
+        // El bordón, más alto que el peregrino, con la calabaza colgada.
+        val b = c.x + 6 * d
+        drawLine(madera, Offset(b, pie + 0.5f * d), Offset(b, pie - 28 * d), 1.3f * d)
+        drawCircle(madera, 1.3f * d, Offset(b, pie - 28 * d))
+        drawOval(calabaza, Offset(b + 0.4f * d, pie - 24.5f * d), Size(3 * d, 4.4f * d))
+        drawCircle(calabaza, 1.1f * d, Offset(b + 1.9f * d, pie - 25.4f * d))
+        // El hábito hasta los pies y la esclavina sobre los hombros.
+        drawPath(Path().apply { moveTo(c.x - 5 * d, pie); lineTo(c.x + 5 * d, pie); lineTo(c.x + 3 * d, pie - 13 * d); quadraticTo(c.x, pie - 15.5f * d, c.x - 3 * d, pie - 13 * d); close() }, capa)
+        drawPath(Path().apply { moveTo(c.x - 5.5f * d, pie - 9 * d); quadraticTo(c.x, pie - 7 * d, c.x + 5.5f * d, pie - 9 * d); lineTo(c.x + 3.4f * d, pie - 14 * d); quadraticTo(c.x, pie - 16 * d, c.x - 3.4f * d, pie - 14 * d); close() }, lerp(capa, Color.Black, 0.2f))
+        drawLine(capa, Offset(c.x + 2.5f * d, pie - 11 * d), Offset(b, pie - 13 * d), 1.6f * d)
+        // La cara y el sombrero de ala ancha.
+        drawCircle(Color(0xFFC89A6E), 2.3f * d, Offset(c.x, pie - 17.5f * d))
+        drawOval(ala, Offset(c.x - 6 * d, pie - 20.6f * d), Size(12 * d, 2.6f * d))
+        drawArc(ala, 180f, 180f, true, Offset(c.x - 2.8f * d, pie - 23.2f * d), Size(5.6f * d, 5 * d))
+        // La venera blanca en el sombrero.
+        val v = Offset(c.x, pie - 20.6f * d)
+        drawPath(Path().apply { moveTo(v.x, v.y + 1.4f * d); for (k in 0..6) { val a = PI + k * PI / 6; lineTo(v.x + (2.2f * d * cos(a)).toFloat(), v.y + (2.2f * d * sin(a)).toFloat()) }; close() }, Color(0xFFF2EFE6))
+    }
+
+    /** La punta de plata: el estilete de madera con su virola, apoyado en la parada, y la línea gris que deja sobre el papel. */
+    private fun DrawScope.puntaDePlata(c: Offset, alto: Float) {
+        val d = density
+        val punta = Offset(c.x, c.y - 1.5f * d - alto)
+        drawPath(Path().apply { moveTo(punta.x - 12 * d, punta.y + 1.5f * d); quadraticTo(punta.x - 6 * d, punta.y - 2.5f * d, punta.x, punta.y) }, Color(0xFF8A8F96), style = Stroke(0.8f * d))
+        // El estilete va inclinado hacia arriba a la derecha: punta de plata, virola de latón y mango.
+        val dx = 0.42f; val dy = -0.91f
+        fun en(t: Float) = Offset(punta.x + dx * t * d, punta.y + dy * t * d)
+        fun tramo(t0: Float, t1: Float, a0: Float, a1: Float, col: Color) {
+            val p0 = en(t0); val p1 = en(t1); val nx = -dy * d; val ny = dx * d
+            drawPath(Path().apply { moveTo(p0.x + nx * a0, p0.y + ny * a0); lineTo(p1.x + nx * a1, p1.y + ny * a1); lineTo(p1.x - nx * a1, p1.y - ny * a1); lineTo(p0.x - nx * a0, p0.y - ny * a0); close() }, col)
+        }
+        tramo(0f, 6f, 0.1f, 0.9f, Color(0xFFC9CDD3))
+        tramo(6f, 9f, 1.2f, 1.2f, Color(0xFFC9A04A))
+        tramo(9f, 28f, 1.4f, 1.6f, Color(0xFF8A5A2B))
+        drawCircle(Color(0xFF8A5A2B), 1.6f * d, en(28f))
+        drawLine(Color.White.copy(alpha = 0.8f), en(1.5f), en(5f), 0.5f * d)
     }
 }

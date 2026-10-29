@@ -34,7 +34,7 @@ object TrofeosTema {
     fun nombre(tema: TemaId, categoria: String): String? = (NOMBRES[tema] ?: TrofeosMas.NOMBRES[tema])?.let { it[categoria] ?: it["Tuyos"] }
 
     private val NOMBRES: Map<TemaId, Map<String, String>> = mapOf(
-        TemaId.ROMANO to mapOf("Diario" to "Columna conmemorativa", "Mundo" to "Miliario", "Cuerpo" to "Acueducto", "Mente" to "Cúpula", "Cultura" to "Arco de triunfo",
+        TemaId.ROMANO to mapOf("Diario" to "Columna conmemorativa", "Mundo" to "Miliario", "Cuerpo" to "Acueducto", "Mente" to "Panteón", "Cultura" to "Arco de triunfo",
             "Gente" to "Puente", "Constancia" to "Faro", "Curiosos" to "Anfiteatro", "Tuyos" to "Templo"),
         TemaId.HELENO to mapOf("Diario" to "Ánfora", "Mundo" to "Trirreme", "Cuerpo" to "Corona de olivo", "Mente" to "Columna jónica", "Cultura" to "Lira",
             "Gente" to "Crátera", "Constancia" to "Columna dórica", "Curiosos" to "Trípode", "Tuyos" to "Columna corintia"),
@@ -43,8 +43,8 @@ object TrofeosTema {
         TemaId.GOTICO to mapOf("Diario" to "Vitral del libro", "Mundo" to "Rosetón", "Cuerpo" to "Vitral de la cruz", "Mente" to "Vitral de la estrella", "Cultura" to "Vitral del lirio",
             "Gente" to "Vitral de la rosa", "Constancia" to "Vitral de la campana", "Curiosos" to "Vitral del cáliz", "Tuyos" to "Vitral de la llave"),
         TemaId.RENACIMIENTO to mapOf("Diario" to "Tipos móviles", "Mundo" to "Esfera armilar", "Cuerpo" to "Compás y escuadra", "Mente" to "Dodecaedro", "Cultura" to "Cúpula",
-            "Gente" to "Florín", "Constancia" to "Reloj de arena", "Curiosos" to "Astrolabio", "Tuyos" to "Tornillo aéreo"),
-        TemaId.NAPOLEON to mapOf("Diario" to "Código", "Mundo" to "Mapa de campaña", "Cuerpo" to "Tambor", "Mente" to "Columna triunfal", "Cultura" to "Arco de triunfo",
+            "Gente" to "Florín", "Constancia" to "Reloj de arena", "Curiosos" to "Nocturlabio", "Tuyos" to "Tornillo aéreo"),
+        TemaId.NAPOLEON to mapOf("Diario" to "Código", "Mundo" to "Mapa de campaña", "Cuerpo" to "Tambor", "Mente" to "Columna triunfal", "Cultura" to "Arco de la Estrella",
             "Gente" to "Legión de Honor", "Constancia" to "Laurel", "Curiosos" to "Bicornio", "Tuyos" to "Monograma"),
         TemaId.REVOLUCION to mapOf("Diario" to "Declaración", "Mundo" to "Árbol de la libertad", "Cuerpo" to "Escarapela", "Mente" to "Balanza", "Cultura" to "Pluma",
             "Gente" to "Gorro frigio", "Constancia" to "Llave de la Bastilla", "Curiosos" to "Fasces", "Tuyos" to "Nivel"),
@@ -68,10 +68,35 @@ object TrofeosTema {
         fun piedra(c: Color) = Brush.verticalGradient(listOf(lerp(c, Color.White, 0.18f), c, lerp(c, Color.Black, 0.2f)), h * 0.77f, h * 0.96f)
         drawRoundRect(Color.Black.copy(alpha = if (p.hecho) 0.18f else 0.05f), Offset(w * 0.12f, h * 0.955f), Size(w * 0.76f, h * 0.04f), CornerRadius(h * 0.02f))
         when (tema) {
-            TemaId.ROMANO, TemaId.RENACIMIENTO -> {
-                val c = if (p.hecho) (if (tema == TemaId.ROMANO) Color(0xFFCDBD9A) else Color(0xFF8C9188)) else ped
-                drawRect(piedra(c), Offset(w * 0.16f, h * 0.79f), Size(w * 0.68f, h * 0.17f))
-                drawRect(piedra(c), Offset(w * 0.12f, h * 0.77f), Size(w * 0.76f, h * 0.03f))
+            TemaId.ROMANO -> {
+                // Basa de travertino con cornisa y plinto y, al frente, la tabla ansada de pórfido donde iría la dedicatoria.
+                val c = if (p.hecho) Color(0xFFCDBD9A) else ped
+                drawRect(piedra(c), Offset(w * 0.16f, h * 0.79f), Size(w * 0.68f, h * 0.15f))
+                drawRect(piedra(c), Offset(w * 0.12f, h * 0.77f), Size(w * 0.76f, h * 0.025f))
+                drawRect(piedra(lerp(c, Color.Black, 0.08f)), Offset(w * 0.1f, h * 0.935f), Size(w * 0.8f, h * 0.025f))
+                if (p.hecho) {
+                    val porfido = Color(0xFF7C2433); val y0 = h * 0.815f; val y1 = h * 0.905f
+                    drawRect(porfido, Offset(w * 0.32f, y0), Size(w * 0.36f, y1 - y0))
+                    listOf(-1f, 1f).forEach { s ->
+                        val x = w * (0.5f + s * 0.18f)
+                        drawPath(Path().apply { moveTo(x, y0 + (y1 - y0) * 0.3f); lineTo(x + s * w * 0.06f, y0); lineTo(x + s * w * 0.06f, y1); lineTo(x, y1 - (y1 - y0) * 0.3f); close() }, porfido)
+                    }
+                    drawLine(Color(0xFFD4AF37).copy(alpha = 0.8f), Offset(w * 0.36f, (y0 + y1) / 2), Offset(w * 0.64f, (y0 + y1) / 2), h * 0.008f)
+                }
+            }
+            TemaId.RENACIMIENTO -> {
+                // Pedestal de pietra serena: la losa moldurada sobre dos balaustres en forma de jarrón y el plinto abajo.
+                val c = if (p.hecho) Color(0xFF8C9188) else ped
+                listOf(0.32f, 0.68f).forEach { cx ->
+                    drawPath(Path().apply {
+                        moveTo(w * (cx - 0.04f), h * 0.805f); lineTo(w * (cx + 0.04f), h * 0.805f); lineTo(w * (cx + 0.025f), h * 0.825f)
+                        cubicTo(w * (cx + 0.075f), h * 0.86f, w * (cx + 0.075f), h * 0.9f, w * (cx + 0.035f), h * 0.92f); lineTo(w * (cx + 0.05f), h * 0.935f)
+                        lineTo(w * (cx - 0.05f), h * 0.935f); lineTo(w * (cx - 0.035f), h * 0.92f)
+                        cubicTo(w * (cx - 0.075f), h * 0.9f, w * (cx - 0.075f), h * 0.86f, w * (cx - 0.025f), h * 0.825f); close()
+                    }, piedra(c))
+                }
+                drawRect(piedra(lerp(c, Color.White, 0.15f)), Offset(w * 0.14f, h * 0.77f), Size(w * 0.72f, h * 0.035f))
+                if (p.hecho) drawLine(lerp(c, Color.Black, 0.3f), Offset(w * 0.14f, h * 0.795f), Offset(w * 0.86f, h * 0.795f), h * 0.004f)
                 drawRect(piedra(c), Offset(w * 0.12f, h * 0.935f), Size(w * 0.76f, h * 0.025f))
             }
             TemaId.HELENO -> {
@@ -105,7 +130,20 @@ object TrofeosTema {
                 drawRect(piedra(c), Offset(w * 0.2f, h * 0.79f), Size(w * 0.6f, h * 0.16f))
                 if (p.hecho) listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, Offset(w * (0.2f + i * 0.2f), h * 0.79f), Size(w * 0.2f, h * 0.03f)) }
             }
-            else -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.ANDALUS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.SEDA -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.MONGOL -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.COLONOS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.BOTANICO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.NAVIDAD -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.ANTIGUAS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.DISTOPIA -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.CIBER -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.REFUGIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.ORDEN -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.LABORATORIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.ESPACIO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.URSS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
         }
     }
 
@@ -121,7 +159,20 @@ object TrofeosTema {
             TemaId.RENACIMIENTO -> renacimiento(categoria, p)
             TemaId.NAPOLEON -> napoleon(categoria, p)
             TemaId.REVOLUCION -> revolucion(categoria, p)
-            else -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.ANDALUS -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.SEDA -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.MONGOL -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.COLONOS -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.BOTANICO -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.NAVIDAD -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.ANTIGUAS -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.DISTOPIA -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.CIBER -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.REFUGIO -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.ORDEN -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.LABORATORIO -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.ESPACIO -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.URSS -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
         }
         return true
     }
@@ -215,7 +266,7 @@ object TrofeosTema {
                 if (p.hecho) drawLine(Color(0xFF5FA8D8), Offset(p.x(0.06f), p.y(0.175f)), Offset(p.x(0.94f), p.y(0.175f)), p.h * 0.01f)
             }
             "Mente" -> {
-                // El Panteón: cúpula con óculo, tambor, frontón y columnas.
+                // El Panteón: la cúpula con su óculo, el tambor, el frontón y las columnas del pórtico.
                 drawArc(p.metal(0.18f, 0.82f), 180f, 180f, true, Offset(p.x(0.18f), p.y(0.14f)), Size(p.x(0.64f), p.x(0.64f)))
                 caja(p, 0.18f, 0.14f + 0.32f * p.w / p.h, 0.82f, 0.5f)
                 if (p.hecho) drawCircle(p.linea, p.w * 0.03f, Offset(p.x(0.5f), p.y(0.15f)))
@@ -588,13 +639,25 @@ object TrofeosTema {
                 listOf(0.3f, 0.7f).forEach { xx -> caja(p, xx - 0.015f, 0.14f, xx + 0.015f, 0.7f) }
             }
             "Curiosos" -> {
-                // Astrolabio: el disco con su red de estrellas y la alidada.
-                val c = Offset(p.x(0.5f), p.y(0.42f)); val R = p.w * 0.3f
-                drawCircle(p.metal(0.2f, 0.8f), R, c); drawCircle(p.linea, R * 0.86f, c, style = Stroke(lw * 0.6f))
-                for (k in 0 until 24) { val a = k * PI / 12; drawLine(p.linea, Offset(c.x + (R * 0.86f * cos(a)).toFloat(), c.y + (R * 0.86f * sin(a)).toFloat()), Offset(c.x + (R * 0.96f * cos(a)).toFloat(), c.y + (R * 0.96f * sin(a)).toFloat()), lw * 0.5f) }
-                drawCircle(p.linea, R * 0.5f, Offset(c.x, c.y + R * 0.1f), style = Stroke(lw * 0.6f))
-                drawLine(p.linea, Offset(c.x - R * 0.8f, c.y + R * 0.3f), Offset(c.x + R * 0.8f, c.y - R * 0.3f), lw * 1.4f)
-                drawCircle(p.metal(0.44f, 0.56f), p.w * 0.05f, Offset(c.x, c.y - R - p.w * 0.04f), style = Stroke(lw))
+                // Nocturlabio: el reloj de noche. El disco de las horas con sus doce dientes (el más largo marca la medianoche)
+                // para contarlas a tientas, el mango abajo, el agujero del centro para mirar la Estrella Polar y el brazo largo
+                // que se gira hasta la Osa Mayor.
+                val c = Offset(p.x(0.5f), p.y(0.36f)); val R = p.w * 0.25f
+                caja(p, 0.455f, 0.36f + 0.25f * p.w / p.h, 0.545f, 0.74f); caja(p, 0.38f, 0.74f, 0.62f, 0.77f)
+                for (k in 0 until 12) {
+                    val a = -PI / 2 + k * PI / 6; val rr = R + p.w * (if (k == 0) 0.055f else 0.03f)
+                    drawCircle(p.metal(0.2f, 0.8f), p.w * (if (k == 0) 0.032f else 0.022f), Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat()))
+                }
+                drawCircle(p.metal(0.25f, 0.75f), R, c)
+                drawCircle(p.linea, R * 0.64f, c, style = Stroke(lw * 0.6f))
+                if (p.hecho) for (k in 0 until 12) { val a = -PI / 2 + k * PI / 6; drawLine(p.linea, Offset(c.x + (R * 0.64f * cos(a)).toFloat(), c.y + (R * 0.64f * sin(a)).toFloat()), Offset(c.x + (R * 0.8f * cos(a)).toFloat(), c.y + (R * 0.8f * sin(a)).toFloat()), lw * 0.5f) }
+                val g = -PI / 3; val punta = Offset(c.x + (R * 1.6f * cos(g)).toFloat(), c.y + (R * 1.6f * sin(g)).toFloat())
+                drawPath(Path().apply {
+                    val nx = (-sin(g) * p.w * 0.03f).toFloat(); val ny = (cos(g) * p.w * 0.03f).toFloat()
+                    moveTo(c.x + nx, c.y + ny); lineTo(punta.x, punta.y); lineTo(c.x - nx, c.y - ny); close()
+                }, p.metal(0.5f, 0.9f))
+                drawCircle(p.metal(0.44f, 0.56f), p.w * 0.05f, c)
+                drawCircle(if (p.hecho) Color(0xFF1C1A16) else p.sombra, p.w * 0.022f, c)
             }
             else -> {
                 // El tornillo aéreo de Leonardo: una hélice de lona sobre su eje.
@@ -649,7 +712,7 @@ object TrofeosTema {
                 laurel(p, Offset(p.x(0.5f), p.y(0.05f)), p.w * 0.07f, oro)
             }
             "Cultura" -> {
-                // Un gran arco de triunfo de un solo vano.
+                // El Arco de la Estrella: un gran arco de triunfo de un solo vano.
                 val contorno = Path().apply { addRect(p.r(0.12f, 0.2f, 0.88f, 0.76f)) }
                 conHuecos(p, 0.12f, 0.88f, contorno) { arco(p, 0.34f, 0.66f, 0.42f, 0.76f) }
                 caja(p, 0.1f, 0.12f, 0.9f, 0.2f)

@@ -4,6 +4,7 @@ import io.github.ruddy2003.vestigium.data.Campana
 import io.github.ruddy2003.vestigium.data.Enfoque
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.ui.TemaId
 
 /**
  * Campañas semanales: retos opcionales de lunes a domingo («5 noches de 7 horas»). Cada día que cumples avanzas una
@@ -120,60 +121,72 @@ object Campanas {
 
     // ---------------------------------------------------------------- narrativa por tema
 
-    /** Nombres de campaña de cada tema (se elige uno por semana) y las siete etapas del mapa. Todo inventado o histórico general. */
+    /**
+     * Nombres de campaña de cada tema (se elige uno por semana) y las siete etapas del mapa. Todo inventado o histórico
+     * general. Ningún nombre se repite entre temas. Un id de tema que ya no exista cae en el romano.
+     */
     fun titulo(tema: String, lunes: String, reto: String): String {
-        val l = TITULOS[tema] ?: TITULOS.getValue("romano")
+        val l = titulos(temaDe(tema))
         val i = ((lunes + reto).hashCode() and 0x7fffffff) % l.size
         return l[i]
     }
 
-    fun etapas(tema: String): List<String> = ETAPAS[tema] ?: ETAPAS.getValue("romano")
+    fun etapas(tema: String): List<String> = etapas(temaDe(tema))
 
-    internal val TITULOS = mapOf(
-        "romano" to listOf("Campaña de las Galias", "Marcha a Britania", "La vía Apia", "Expedición a Dacia"),
-        "heleno" to listOf("La marcha de los diez mil", "Hacia el Indo", "La travesía del Egeo", "Los juegos de Olimpia"),
-        "medieval" to listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña"),
-        "distopia" to listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451"),
-        "refugio" to listOf("Expedición a la superficie", "Reparar el purificador", "Turno de mantenimiento", "Ruta de suministros"),
-        "ciber" to listOf("OP: NEON RUN", "RUTINA_7DIAS.EXE", "HACK DEL HÁBITO", "PROTOCOLO NOCTURNO"),
-        "orden" to listOf("Vigilia del archivo", "Patrulla del páramo", "Recuperar la reliquia", "La forja"),
-        "laboratorio" to listOf("Ensayo semanal", "Protocolo de siete días", "Serie experimental B", "Cultivo controlado"),
-        "colonos" to listOf("La caravana de carretas", "Fundar el pueblo", "Cruzar el río", "El camino del oeste"),
-        "napoleon" to listOf("La campaña de 1805", "De Boulogne a Austerlitz", "La marcha sobre Ulm", "El sol de Austerlitz"),
-        "revolucion" to listOf("Las jornadas de 1789", "La toma de la Bastilla", "La fiesta de la Federación", "El cuaderno de quejas"),
-        "antiguas" to listOf("La travesía de la compañía", "El paso de las montañas", "La mina olvidada", "Rumbo a la fortaleza"),
-        "botanico" to listOf("Expedición por los biomas", "Del jardín a la selva", "Herbario de la semana", "La ruta de las semillas"),
-        "navidad" to listOf("La ruta de los mercados", "De Estrasburgo a Salzburgo", "Pueblo por pueblo", "Los mercados de Adviento"),
-        "seda" to listOf("De Chang'an a Antioquía", "La caravana de Kashgar", "Hacia Samarcanda", "El oasis de Dunhuang"),
-        "gotico" to listOf("La construcción de la catedral", "El vitral del rosetón", "Las horas canónicas", "La peregrinación"),
-        "espacio" to listOf("Misión a Marte", "Órbita lunar", "Cinturón de asteroides", "Estación profunda"),
-        "andalus" to listOf("De Toledo a Granada", "La ruta de las ciudades", "La biblioteca de los califas", "Del Guadalquivir a la Alhambra"),
-        "mongol" to listOf("La ruta del yam", "Las postas de la estepa", "Rumbo a Karakórum", "El correo del imperio"),
-        "renacimiento" to listOf("El taller de Florencia", "El cuaderno de las máquinas", "La cúpula", "El retrato"),
-        "urss" to listOf("PLAN QUINQUENAL", "LA COSECHA DEL KOLJÓS", "EL TRANSIBERIANO", "LA PRESA"),
-    )
+    private fun temaDe(id: String): TemaId = TemaId.entries.firstOrNull { it.id == id } ?: TemaId.ROMANO
 
-    internal val ETAPAS = mapOf(
-        "romano" to listOf("Roma", "Ostia", "Massilia", "Lugdunum", "Durocortorum", "Lutetia", "Alesia"),
-        "heleno" to listOf("Pella", "Anfípolis", "Troya", "Sardes", "Gordio", "Tarso", "Babilonia"),
-        "medieval" to listOf("Roncesvalles", "Pamplona", "Logroño", "Burgos", "León", "Astorga", "Santiago"),
-        "distopia" to listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO"),
-        "refugio" to listOf("Dormitorios", "Comedor", "Hidroponía", "Taller", "Purificador", "Esclusa", "Superficie"),
-        "ciber" to listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz"),
-        "orden" to listOf("Campamento", "Puente de hierro", "Cota 214", "Desfiladero", "Trincheras", "Bastión", "Fortaleza"),
-        "laboratorio" to listOf("Hipótesis", "Reactivos", "Siembra", "Incubación", "Medición", "Análisis", "Cultivo completo"),
-        "colonos" to listOf("Puerto", "Vado del río", "Pradera", "Cruce", "Colina", "Valle", "Pueblo nuevo"),
-        "napoleon" to listOf("Boulogne", "Estrasburgo", "Ulm", "Múnich", "Viena", "Brünn", "Austerlitz"),
-        "revolucion" to listOf("Estados Generales", "Juego de pelota", "Bastilla", "4 de agosto", "Declaración", "Versalles", "Federación"),
-        "botanico" to listOf("Jardín botánico", "Bosque templado", "Pradera", "Desierto", "Selva", "Manglar", "Invernadero"),
-        "navidad" to listOf("Estrasburgo", "Colmar", "Núremberg", "Dresde", "Praga", "Viena", "Salzburgo"),
-        "seda" to listOf("Chang'an", "Dunhuang", "Turfán", "Kashgar", "Samarcanda", "Bujará", "Antioquía"),
-        "gotico" to listOf("Cimientos", "Muros", "Columnas", "Arbotantes", "Bóveda", "Vitrales", "Campanas"),
-        "espacio" to listOf("Plataforma", "Órbita baja", "Luna", "Lagrange", "Fobos", "Órbita marciana", "Marte"),
-        "andalus" to listOf("Toledo", "Calatrava", "Córdoba", "Sevilla", "Málaga", "Almería", "Granada"),
-        "mongol" to listOf("Janbalic", "Shangdu", "Posta del Gobi", "Posta del pozo", "Kerulen", "Valle del Orjón", "Karakórum"),
-        "antiguas" to listOf("La aldea", "El bosque viejo", "El vado", "Las montañas", "La mina", "El puente de piedra", "La fortaleza"),
-        "renacimiento" to listOf("Boceto", "Estudio", "Cartón", "Imprimación", "Color", "Veladura", "Firma"),
-        "urss" to listOf("MOSCÚ", "EKATERIMBURGO", "NOVOSIBIRSK", "KRASNOYARSK", "IRKUTSK", "CHITÁ", "VLADIVOSTOK"),
-    )
+    /** Los títulos de campaña por id de tema (para quien los busca por texto). */
+    internal val TITULOS: Map<String, List<String>> by lazy { TemaId.entries.associate { it.id to titulos(it) } }
+
+    /** Las siete etapas por id de tema. */
+    internal val ETAPAS: Map<String, List<String>> by lazy { TemaId.entries.associate { it.id to etapas(it) } }
+
+    fun titulos(t: TemaId): List<String> = when (t) {
+        TemaId.ROMANO -> listOf("Campaña de las Galias", "Marcha a Britania", "La vía Apia", "Expedición a Dacia")
+        TemaId.CIBER -> listOf("OP: NEON RUN", "RUTINA_7DIAS.EXE", "HACK DEL HÁBITO", "PROTOCOLO NOCTURNO")
+        TemaId.HELENO -> listOf("La marcha de los diez mil", "Hacia el Indo", "La travesía del Egeo", "Los juegos de Olimpia")
+        TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
+        TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
+        TemaId.REFUGIO -> listOf("Expedición a la superficie", "Reparar el purificador", "Turno de mantenimiento", "Ruta de suministros")
+        TemaId.ORDEN -> listOf("Vigilia del archivo", "Patrulla del páramo", "Recuperar la reliquia", "La forja")
+        TemaId.LABORATORIO -> listOf("Ensayo semanal", "Protocolo de siete días", "Serie experimental B", "Cultivo controlado")
+        TemaId.COLONOS -> listOf("La caravana de carretas", "Fundar el pueblo", "Cruzar el río", "El camino del oeste")
+        TemaId.NAPOLEON -> listOf("La campaña de 1805", "De Boulogne a Austerlitz", "La marcha sobre Ulm", "El sol de Austerlitz")
+        TemaId.BOTANICO -> listOf("Expedición por los biomas", "Del jardín a la selva", "Herbario de la semana", "La ruta de las semillas")
+        TemaId.NAVIDAD -> listOf("La ruta de los mercados", "De Estrasburgo a Salzburgo", "Pueblo por pueblo", "Los mercados de Adviento")
+        TemaId.SEDA -> listOf("De Chang'an a Antioquía", "La caravana de Kashgar", "Hacia Samarcanda", "El oasis de Dunhuang")
+        TemaId.GOTICO -> listOf("La construcción de la catedral", "El vitral del rosetón", "Las horas canónicas", "La peregrinación")
+        TemaId.ESPACIO -> listOf("Misión a Marte", "Órbita lunar", "Cinturón de asteroides", "Estación profunda")
+        TemaId.ANDALUS -> listOf("De Toledo a Granada", "La ruta de las ciudades", "La biblioteca de los califas", "Del Guadalquivir a la Alhambra")
+        TemaId.MONGOL -> listOf("La ruta del yam", "Las postas de la estepa", "Rumbo a Karakórum", "El correo del imperio")
+        TemaId.RENACIMIENTO -> listOf("El taller de Florencia", "El cuaderno de las máquinas", "La cúpula", "El retrato")
+        TemaId.URSS -> listOf("PLAN QUINQUENAL", "LA COSECHA DEL KOLJÓS", "EL TRANSIBERIANO", "LA PRESA")
+        TemaId.REVOLUCION -> listOf("Las jornadas de 1789", "La toma de la Bastilla", "La fiesta de la Federación", "El cuaderno de quejas")
+        TemaId.ANTIGUAS -> listOf("La travesía de la compañía", "El paso de las montañas", "La mina olvidada", "Rumbo a la fortaleza")
+    }
+
+    /** Las siete etapas del mapa, en el orden de la ruta (cuadran con `MapasMas.puntos`). */
+    fun etapas(t: TemaId): List<String> = when (t) {
+        TemaId.ROMANO -> listOf("Roma", "Ostia", "Massilia", "Lugdunum", "Durocortorum", "Lutetia", "Alesia")
+        TemaId.CIBER -> listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz")
+        TemaId.HELENO -> listOf("Pella", "Anfípolis", "Troya", "Sardes", "Gordio", "Tarso", "Babilonia")
+        TemaId.MEDIEVAL -> listOf("Roncesvalles", "Pamplona", "Logroño", "Burgos", "León", "Astorga", "Santiago")
+        TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
+        TemaId.REFUGIO -> listOf("Dormitorios", "Comedor", "Hidroponía", "Taller", "Purificador", "Esclusa", "Superficie")
+        TemaId.ORDEN -> listOf("Campamento", "Puente de hierro", "Cota 214", "Desfiladero", "Trincheras", "Bastión", "Fortaleza")
+        TemaId.LABORATORIO -> listOf("Hipótesis", "Reactivos", "Siembra", "Incubación", "Medición", "Análisis", "Cultivo completo")
+        TemaId.COLONOS -> listOf("Puerto", "Vado del río", "Pradera", "Cruce", "Colina", "Valle", "Pueblo nuevo")
+        TemaId.NAPOLEON -> listOf("Boulogne", "Kehl", "Ulm", "Múnich", "Schönbrunn", "Brünn", "Austerlitz")
+        TemaId.BOTANICO -> listOf("Jardín botánico", "Bosque templado", "Sabana", "Desierto", "Selva", "Manglar", "Invernadero")
+        TemaId.NAVIDAD -> listOf("Estrasburgo", "Colmar", "Núremberg", "Dresde", "Praga", "Viena", "Salzburgo")
+        TemaId.SEDA -> listOf("Chang'an", "Dunhuang", "Turfán", "Kashgar", "Samarcanda", "Bujará", "Antioquía")
+        TemaId.GOTICO -> listOf("Cimientos", "Muros", "Columnas", "Arbotantes", "Bóveda", "Vitrales", "Campanas")
+        TemaId.ESPACIO -> listOf("Plataforma", "Órbita baja", "Luna", "Lagrange", "Fobos", "Órbita marciana", "Marte")
+        TemaId.ANDALUS -> listOf("Toledo", "Calatrava", "Córdoba", "Sevilla", "Málaga", "Almería", "Granada")
+        TemaId.MONGOL -> listOf("Janbalic", "Shangdu", "Posta del Gobi", "Posta del pozo", "Kerulen", "Valle del Orjón", "Karakórum")
+        TemaId.RENACIMIENTO -> listOf("Boceto", "Estudio", "Cartón", "Imprimación", "Color", "Veladura", "Firma")
+        TemaId.URSS -> listOf("MOSCÚ", "EKATERIMBURGO", "NOVOSIBIRSK", "KRASNOYARSK", "IRKUTSK", "CHITÁ", "VLADIVOSTOK")
+        TemaId.REVOLUCION -> listOf("Estados Generales", "Juego de pelota", "Bastilla", "4 de agosto", "Declaración", "Versalles", "Federación")
+        TemaId.ANTIGUAS -> listOf("La aldea", "El bosque viejo", "El vado", "Las montañas", "La mina", "El puente de piedra", "La fortaleza")
+    }
 }
