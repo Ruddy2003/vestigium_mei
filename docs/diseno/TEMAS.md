@@ -27,7 +27,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 
 - **Las pruebas** (`app/src/test/.../CoberturaTemas.kt` y `UnicidadTemas.kt`) miden lo que se puede medir: entradas en los mapas, recursos, sonidos, ícono, gato, frases, nombres, letras, esquinas, vibración. Su lista de pendientes es la fuente de verdad de esas filas; aquí se copian para tenerlas a la vista. Si una fila de esta matriz y la lista de la prueba no coinciden, manda la prueba.
 - **La cuenta de despachos** (`CoberturaTemas.despachosPorTema`) dice, por archivo, cuántas ramas juntan temas, cuántas comparaciones `== TemaId.X` o `in setOf(TemaId.…)` y cuántos `else ->` en un `when (tema)` quedan. Ninguna cuenta puede subir; al final del lote 7 quedan en cero.
-- **Los dibujos** se revisan en las capturas por tema (`Capturas.kt`, sección «capturas por tema»). Se piden con la entrada `superficies` de `capturas.yml`, por ejemplo `campana,libreta`, o `todas`. Cada imagen se llama `io.github.ruddy2003.vestigium_Capturas_tema<Superficie>_<tema>_<claro|oscuro>.png` en la rama `capturas`. Las superficies son: `trofeos`, `salon`, `piezas`, `hallImagen`, `campana`, `libreta`, `fondoVivo`, `fiesta`, `relacion`, `huella`, `icono`, `mapaFormas`, `calificacion`, `reporte`, `reporteMes`, `vozAnio`, `calendario`, `constelacion`, `medalla`, `graficas`, `dialogo`, `barra`, `enfoque`, `bloqueo` y `cartas`; desde el lote 3, además, `campanaVictoria`, `decoracion`, `componentes`, `previa`, `fondoTelefono`, `personaje`, `lamina`, `librosAnio`, `cosasAnio`, `galerias`, `bibliotecas`, `widgets`, `dia`, `hoy`, `cartaAbierta`, `hojaLibreta` y `libros`. La del registro rápido (`quick`) no se puede capturar todavía: sus pantallas son funciones privadas de `QuickActivity`; se agrega en el lote 4, cuando su hoja salga a un componente. Los diálogos tampoco: Paparazzi no dibuja otra ventana, así que `dialogo` muestra por ahora la barra de Deshacer.
+- **Los dibujos** se revisan en las capturas por tema (`Capturas.kt`, sección «capturas por tema»). Se piden con la entrada `superficies` de `capturas.yml`, por ejemplo `campana,libreta`, o `todas`. Cada imagen se llama `io.github.ruddy2003.vestigium_Capturas_tema<Superficie>_<tema>_<claro|oscuro>.png` en la rama `capturas`. Las superficies son: `trofeos`, `salon`, `piezas`, `hallImagen`, `campana`, `libreta`, `fondoVivo`, `fiesta`, `relacion`, `huella`, `icono`, `mapaFormas`, `calificacion`, `reporte`, `reporteMes`, `vozAnio`, `calendario`, `constelacion`, `medalla`, `graficas`, `dialogo`, `barra`, `enfoque`, `bloqueo` y `cartas`; desde el lote 3, además, `campanaVictoria`, `decoracion`, `componentes`, `previa`, `fondoTelefono`, `personaje`, `lamina`, `librosAnio`, `cosasAnio`, `galerias`, `bibliotecas`, `widgets`, `dia`, `hoy`, `cartaAbierta`, `hojaLibreta` y `libros`; desde el lote 4, `presentacion`, `quick`, `cinta`, `otrasVidas`, `estiloGrafica`, `controles`, `selectorFecha` y `graficasAnno`. Paparazzi no dibuja otra ventana, así que `dialogo`, `controles` y `selectorFecha` muestran el cuerpo de los diálogos y del menú (`CuerpoDialogo`, `MenuVista`, `CuerpoSelectorFecha`) sin la ventana.
 - **El estado de las pruebas** de cada corrida de capturas queda en la rama `capturas`: `cobertura.txt`, `unicidad.txt` y `despachos.txt`, listos para pegar en la prueba.
 
 ## Cómo se usa en cada lote
@@ -45,7 +45,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 1 | Una sola huella (ícono, sello, monocromo, notificaciones) | hecho 29 oct 2026 |
 | 2 | Los 6 temas sin diseño completo (CIB como Terminal, REF, ORD, LAB, ESP, URS) | hecho 29 oct 2026 |
 | 3 | Completar las superficies que ya existen | hecho 29 oct 2026 |
-| 4 | Pantallas genéricas, gráficas, controles y arranque | pendiente |
+| 4 | Pantallas genéricas, gráficas, controles y arranque | hecho 29 oct 2026 |
 | 5 | Textos y tipografía | pendiente |
 | 6 | Sonido y vibración | pendiente |
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | pendiente |
@@ -58,27 +58,27 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 99 | 1 | 8 | 10 | 4 |
-| CIB | 94 | 1 | 8 | 11 | 6 |
-| HEL | 100 | 1 | 6 | 10 | 5 |
-| MED | 100 | 2 | 5 | 10 | 5 |
-| DIS | 95 | 3 | 6 | 10 | 6 |
-| REF | 94 | 3 | 7 | 10 | 6 |
-| ORD | 93 | 4 | 9 | 10 | 6 |
-| LAB | 96 | 6 | 5 | 10 | 5 |
-| COL | 95 | 3 | 9 | 10 | 5 |
-| NAP | 93 | 3 | 8 | 11 | 5 |
-| BOT | 98 | 1 | 7 | 12 | 4 |
-| NAV | 91 | 4 | 8 | 12 | 5 |
-| SED | 96 | 4 | 7 | 11 | 4 |
-| GOT | 99 | 2 | 6 | 11 | 4 |
-| ESP | 96 | 3 | 6 | 11 | 4 |
-| AND | 100 | 3 | 4 | 11 | 4 |
-| MON | 97 | 3 | 5 | 12 | 5 |
-| REN | 99 | 2 | 4 | 12 | 5 |
-| URS | 96 | 5 | 5 | 11 | 5 |
-| REV | 97 | 2 | 8 | 11 | 4 |
-| ANT | 96 | 1 | 9 | 11 | 5 |
+| ROM | 107 | 1 | 8 | 3 | 3 |
+| CIB | 102 | 1 | 8 | 4 | 5 |
+| HEL | 108 | 1 | 6 | 3 | 4 |
+| MED | 108 | 2 | 5 | 3 | 4 |
+| DIS | 103 | 3 | 6 | 3 | 5 |
+| REF | 102 | 3 | 7 | 3 | 5 |
+| ORD | 101 | 4 | 9 | 3 | 5 |
+| LAB | 104 | 6 | 5 | 3 | 4 |
+| COL | 103 | 3 | 9 | 3 | 4 |
+| NAP | 101 | 3 | 8 | 4 | 4 |
+| BOT | 106 | 1 | 7 | 5 | 3 |
+| NAV | 99 | 4 | 8 | 5 | 4 |
+| SED | 104 | 4 | 7 | 4 | 3 |
+| GOT | 107 | 2 | 6 | 4 | 3 |
+| ESP | 104 | 3 | 6 | 4 | 3 |
+| AND | 108 | 3 | 4 | 4 | 3 |
+| MON | 105 | 3 | 5 | 5 | 4 |
+| REN | 107 | 2 | 4 | 5 | 4 |
+| URS | 104 | 5 | 5 | 4 | 4 |
+| REV | 105 | 2 | 8 | 4 | 3 |
+| ANT | 104 | 1 | 9 | 4 | 4 |
 
 Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
 
@@ -195,14 +195,14 @@ Hoy son iguales en todos los temas salvo colores, letra y radio.
 
 | Superficie | Dónde | ROM | CIB | HEL | MED | DIS | REF | ORD | LAB | COL | NAP | BOT | NAV | SED | GOT | ESP | AND | MON | REN | URS | REV | ANT | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Calendario, cinta, constelación, medalla de logro y barras de Otras vidas | `Calendario.kt:208`, `Cinta.kt`, `IconosCinta.kt`, `Constelacion.kt`, `Logros.kt:77`, `OtrasVidas.kt:426-464` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G |  |
-| Gráficas (punto, trazo, rejilla, eje, cifras) | todas las pantallas con gráficas | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Falta `EstiloGrafica(tema)`. |
-| Diálogos, deslizadores, progreso, menús, barra de Deshacer y selectores de fecha | 29 `AlertDialog`, `Selectores.kt`, `ui/Deshacer.kt` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | La barra de Deshacer ya toma sus colores del tema (lote 0). |
-| Hoja del registro rápido | `ui/QuickActivity.kt:135, 239, 403, 736` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | 6 dp fijos y sin textura. |
-| Enfoque: esfera y tira | `ui/EnfoqueActivity.kt:113-159` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | El reloj usa `displayLarge`, que ningún tema define. |
-| Pantalla de arranque | `res/values/themes.xml` | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | No hay `Theme.Vestigium.Arranque.<Id>`; la prueba `arranque` lo vigila. |
-| Presentación del tema | `ui/Musica.kt:208-238` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | Composición y «toca para seguir» iguales; cambian emblema, frase y música. |
-| Selector de temas | `pantallas/Sistema.kt:265-306` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | En orden del enum, de 3 en 3; las vistas previas usan `modoOscuro(ROMANO)`. |
+| Calendario, cinta, constelación, medalla de logro y barras de Otras vidas | `Calendario.kt:208`, `Cinta.kt`, `IconosCinta.kt`, `Constelacion.kt`, `Logros.kt:77`, `OtrasVidas.kt:426-464` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 4: `figuraTema` (IconosCinta.kt), una figura por tema que comparten las cuatro pantallas; celda, marco, día de hoy y sello del día sellado (ánimo y diario) en el calendario; bloques, nodos y marcos de íconos en la cinta; `medallaTema`; barras y reloj de 24 h de Otras vidas sin cambiar largos ni horas. |
+| Gráficas (punto, trazo, rejilla, eje, cifras) | todas las pantallas con gráficas | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 4: `EstiloGrafica` (ui/EstiloGrafica.kt) con punto, trazo, rejilla, eje, barra y letra de cifras propios; aplicado en todas las pantallas con gráficas y en los reportes. Se quedan como estaban las formas que codifican datos (burbujas por área, geocercas, círculos de cercanía) y las cifras grandes de los tableros. |
+| Diálogos, deslizadores, progreso, menús, barra de Deshacer y selectores de fecha | 29 `AlertDialog`, `Selectores.kt`, `ui/Deshacer.kt` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 4: `ControlesTema.kt` (`Dialogo`, `Deslizador`, `Progreso`, `Conmutador`, `Menu`, `DialogoFecha`, `DialogoHora`) con forma y adorno por tema; ya no queda ningún control de Material sin capa en `ui/`. `Ficha`, `Interruptor`, `CuadriculaAfecto` y `BarraDeshacer` también por tema. |
+| Hoja del registro rápido | `ui/QuickActivity.kt:135, 239, 403, 736` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 4: silueta y adorno de la hoja, piezas y encabezado por tema, con `fondoTema` y títulos desde `Estilo`; `HojaQuick`, `EncabezadoQuick` y `MenuQuick` se pueden capturar. |
+| Enfoque: esfera y tira | `ui/EnfoqueActivity.kt:113-159` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 4: 21 esferas (reloj de arena, matraz, radar, astrolabio, reloj decimal…) y 21 piezas de tira; el reloj usa `displayLarge`, ya definido por tema. |
+| Pantalla de arranque | `res/values/themes.xml` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 4: `Theme.Vestigium.Arranque.<Id>` (y `.Oscuro`) con su fondo e ícono; `ArranqueTema.aplicar` lo elige para el siguiente arranque (API 33+). En API 30-32 queda un neutro oscuro. |
+| Presentación del tema | `ui/Musica.kt:208-238` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 4: composición, marco y «toca para seguir» propios en los 21 (`disenoPresentacion`). |
+| Selector de temas | `pantallas/Sistema.kt:265-306` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 4: la vista previa usa el modo de cada tema y el aviso de «solo oscuro» vale para cualquier tema. Agruparlos por época queda para el lote 8e. |
 
 ## Lote 5 · Textos y tipografía
 
