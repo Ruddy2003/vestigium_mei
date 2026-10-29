@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import kotlin.math.PI
@@ -44,6 +45,9 @@ object ContenedoresMas {
             Contenedor.CONSOLA -> Color(0xFF22303A)
             Contenedor.CARPETA -> Color(0xFFF6EFD9)
             Contenedor.TECNICO -> Color(0xFFEDEDE8)
+            Contenedor.CUADERNO -> Color(0xFFFBFCFD)
+            Contenedor.VUELO -> Color(0xFFF4F6FA)
+            Contenedor.TETRAD -> Color(0xFFF7F3E6)
             else -> PERGAMINO
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
@@ -291,6 +295,74 @@ object ContenedoresMas {
                     drawCircle(Color(0xFF2A2E33), 2 * d, Offset(w - 3 * d, h * f))
                 }
             }
+            Contenedor.CUADERNO -> {
+                // El cuaderno de laboratorio: tapa dura blanca con lomo de tela cian, la etiqueta con sus campos, la molécula
+                // impresa y las tiras de cinta de muestras de colores pegadas en el canto.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d); canto(w, h, grosor, d, Color(0xFFFBFCFD))
+                val cian = Color(0xFF0B8FA1); val violeta = Color(0xFF5E4FD1); val verde = Color(0xFF1E8E5A); val tinta = Color(0xFF12202B)
+                drawRect(Brush.linearGradient(listOf(Color.White, Color(0xFFE6EDF2), Color(0xFFCBD6DF)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h))
+                drawRect(Brush.horizontalGradient(listOf(lerp(cian, Color.Black, 0.25f), cian, lerp(cian, Color.Black, 0.2f)), 0f, w * 0.14f), Offset.Zero, Size(w * 0.14f, h))
+                // La etiqueta: proyecto, número y fechas.
+                drawRect(Color.White, Offset(w * 0.24f, h * 0.12f), Size(w * 0.64f, h * 0.3f))
+                drawRect(tinta.copy(alpha = 0.6f), Offset(w * 0.24f, h * 0.12f), Size(w * 0.64f, h * 0.3f), style = Stroke(1 * d))
+                for (k in 1..3) drawLine(tinta.copy(alpha = 0.3f), Offset(w * 0.27f, h * (0.12f + k * 0.075f)), Offset(w * 0.85f, h * (0.12f + k * 0.075f)), 0.8f * d)
+                drawRect(cian, Offset(w * 0.24f, h * 0.12f), Size(w * 0.64f, h * 0.04f))
+                // La molécula de la portada.
+                val a = Offset(w * 0.46f, h * 0.56f); val b = Offset(w * 0.66f, h * 0.52f); val c = Offset(w * 0.58f, h * 0.68f)
+                listOf(a to b, b to c, c to a).forEach { (u, v) -> drawLine(tinta.copy(alpha = 0.5f), u, v, 1.6f * d) }
+                drawCircle(cian, w * 0.05f, a); drawCircle(violeta, w * 0.06f, b); drawCircle(verde, w * 0.045f, c)
+                // La cinta de muestras: tiras de colores que asoman por el canto, con su rayita escrita.
+                listOf(0.2f to cian, 0.34f to violeta, 0.48f to verde, 0.8f to Color(0xFFD9572B)).forEach { (f, col) ->
+                    drawRect(col, Offset(w * 0.86f, h * f), Size(w * 0.14f + grosor + 4 * d, h * 0.05f))
+                    drawLine(Color.White.copy(alpha = 0.8f), Offset(w * 0.9f, h * (f + 0.025f)), Offset(w * 0.98f, h * (f + 0.025f)), 1 * d)
+                }
+            }
+            Contenedor.VUELO -> {
+                // La bitácora de vuelo: carpeta de tela azul marino con anillos arriba, la franja reflejante, la cinta de
+                // velcro y el parche bordado de la misión con su cohete.
+                val marino = Color(0xFF1B3A8C); val naranja = Color(0xFFE8601C)
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 4 * d)
+                val n = (grosor / (1.8f * d)).toInt().coerceAtLeast(2)
+                for (k in n downTo 1) { val o = k * grosor / (n + 1); drawRect(lerp(Color(0xFFF4F6FA), Color.Black, 0.05f * (k % 3)), Offset(o, o), Size(w, h)) }
+                drawRoundRect(Brush.linearGradient(listOf(lerp(marino, Color.White, 0.12f), marino, lerp(marino, Color.Black, 0.3f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(5 * d))
+                // La textura de la tela.
+                var y = 0f; while (y < h) { drawLine(Color.White.copy(alpha = 0.04f), Offset(0f, y), Offset(w, y), 1f); y += 2.5f * d }
+                // Los anillos de la encuadernación de arriba.
+                listOf(0.3f, 0.7f).forEach { f -> drawArc(Color(0xFFC3CCDA), 180f, 180f, false, Offset(w * f - 6 * d, -6 * d), Size(12 * d, 12 * d), style = Stroke(2.4f * d)) }
+                drawRect(Brush.horizontalGradient(listOf(Color(0xFFC3CCDA), Color.White, Color(0xFF8E9AB8))), Offset(0f, h * 0.12f), Size(w, h * 0.04f))
+                // La cinta de velcro y el parche de la misión.
+                drawRoundRect(Color(0xFF26324F), Offset(w * 0.18f, h * 0.26f), Size(w * 0.64f, h * 0.38f), CornerRadius(4 * d))
+                var x = w * 0.2f; while (x < w * 0.8f) { drawLine(Color.Black.copy(alpha = 0.25f), Offset(x, h * 0.27f), Offset(x, h * 0.63f), 1f); x += 2 * d }
+                val c = Offset(w / 2, h * 0.45f); val R = w * 0.18f
+                drawCircle(naranja, R, c); drawCircle(Color(0xFF0A0F1E), R * 0.84f, c)
+                val az = java.util.Random(8); repeat(10) { drawCircle(Color.White.copy(alpha = 0.8f), (0.6f + az.nextFloat()) * d, Offset(c.x + (az.nextFloat() - 0.5f) * R * 1.3f, c.y + (az.nextFloat() - 0.5f) * R * 1.3f)) }
+                drawPath(Path().apply { moveTo(c.x, c.y - R * 0.6f); lineTo(c.x + R * 0.14f, c.y - R * 0.3f); lineTo(c.x + R * 0.14f, c.y + R * 0.3f); lineTo(c.x - R * 0.14f, c.y + R * 0.3f); lineTo(c.x - R * 0.14f, c.y - R * 0.3f); close() }, Color.White)
+                rotate(-20f, c) { drawOval(Color(0xFF8AB4FF), Offset(c.x - R * 0.7f, c.y - R * 0.15f), Size(R * 1.4f, R * 0.4f), style = Stroke(1.2f * d)) }
+                // La lengüeta naranja para tirar.
+                drawRect(naranja, Offset(w - 4 * d, h * 0.74f), Size(8 * d + grosor, 14 * d))
+            }
+            Contenedor.TETRAD -> {
+                // El cuaderno escolar (тетрадь): tapa delgada de papel verde con la etiqueta enmarcada y su palabra en
+                // ruso, la estrella roja, el lomo con las grapas y, como engorda poco, pocas hojas en el canto.
+                val verde = Color(0xFF4E7A5A); val rojo = Color(0xFFC1121F); val tinta = Color(0xFF161414)
+                val g = min(grosor, 6 * d)
+                sombra(Offset(g + 4 * d, g + 6 * d), Size(size.width - g, size.height - g), 2 * d)
+                drawRect(Color(0xFFF7F3E6), Offset(g, g), Size(size.width - g, size.height - g))
+                val W = size.width - g; val H = size.height - g
+                drawRect(Brush.linearGradient(listOf(lerp(verde, Color.White, 0.15f), verde, lerp(verde, Color.Black, 0.15f)), Offset.Zero, Offset(W, H)), Offset.Zero, Size(W, H))
+                // El patrón impreso de la tapa: rombos tenues.
+                var y = 0f; var k = 0; while (y < H) { var x = if (k % 2 == 0) 0f else 7 * d; while (x < W) { drawCircle(Color.White.copy(alpha = 0.08f), 1.4f * d, Offset(x, y)); x += 14 * d }; y += 7 * d; k++ }
+                // La etiqueta con marco doble, la palabra impresa y los renglones para el nombre.
+                drawRect(Color(0xFFF7F3E6), Offset(W * 0.16f, H * 0.16f), Size(W * 0.68f, H * 0.38f))
+                drawRect(tinta.copy(alpha = 0.7f), Offset(W * 0.16f + 3 * d, H * 0.16f + 3 * d), Size(W * 0.68f - 6 * d, H * 0.38f - 6 * d), style = Stroke(1 * d))
+                val pt = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.rgb(22, 20, 20); textSize = W * 0.1f; textAlign = android.graphics.Paint.Align.CENTER; typeface = android.graphics.Typeface.create(android.graphics.Typeface.SERIF, android.graphics.Typeface.BOLD); letterSpacing = 0.12f }
+                drawContext.canvas.nativeCanvas.drawText("ТЕТРАДЬ", W / 2, H * 0.27f, pt)
+                for (j in 0 until 3) drawLine(tinta.copy(alpha = 0.45f), Offset(W * 0.24f, H * (0.34f + j * 0.06f)), Offset(W * 0.76f, H * (0.34f + j * 0.06f)), 0.8f * d)
+                with(TrofeosTema) { estrella(Offset(W * 0.5f, H * 0.66f), W * 0.09f, W * 0.036f, 5, Brush.linearGradient(listOf(rojo, rojo))) }
+                // El lomo con sus dos grapas.
+                drawRect(lerp(verde, Color.Black, 0.25f), Offset(0f, 0f), Size(W * 0.05f, H))
+                listOf(0.3f, 0.7f).forEach { f -> drawRect(Color(0xFFC3C6CA), Offset(W * 0.015f, H * f - 6 * d), Size(2 * d, 12 * d)) }
+            }
             else -> {}
         }
     }
@@ -402,6 +474,37 @@ object ContenedoresMas {
                 drawLine(linea.copy(alpha = 0.3f), Offset(r.left, r.top + r.height / 2), Offset(r.right, r.top + r.height / 2), 0.8f * d)
                 drawLine(linea.copy(alpha = 0.3f), Offset(r.left + r.width * 0.6f, r.top), Offset(r.left + r.width * 0.6f, r.bottom), 0.8f * d)
             }
+            Contenedor.CUADERNO -> {
+                // La hoja cuadriculada del cuaderno de laboratorio, con el pie de «firma y testigo» y una tira de cinta de muestras.
+                val cuadro = if (oscuro) Color(0xFF3CD2E5) else Color(0xFF0B8FA1)
+                val paso = renglon / 2
+                var x = 0f; while (x < size.width) { drawLine(cuadro.copy(alpha = 0.08f), Offset(x, 0f), Offset(x, size.height), 0.5f * d); x += paso }
+                var y = 0f; while (y < size.height) { drawLine(cuadro.copy(alpha = 0.08f), Offset(0f, y), Offset(size.width, y), 0.5f * d); y += paso }
+                val pie = size.height - 30 * d
+                listOf(0.08f to 0.46f, 0.54f to 0.92f).forEach { (a, b) -> drawLine(tinta.copy(alpha = 0.3f), Offset(size.width * a, pie), Offset(size.width * b, pie), 0.8f * d) }
+                drawRect(Color(0xFF5E4FD1).copy(alpha = 0.35f), Offset(size.width - 70 * d, 18 * d), Size(56 * d, 12 * d))
+                drawLine(Color.White.copy(alpha = 0.7f), Offset(size.width - 64 * d, 24 * d), Offset(size.width - 22 * d, 24 * d), 1 * d)
+            }
+            Contenedor.VUELO -> {
+                // La hoja de la lista de vuelo: la barra marina con la franja naranja, la casilla de cada renglón y la marca de tiempo.
+                val marino = if (oscuro) Color(0xFF8AB4FF) else Color(0xFF1B3A8C)
+                drawRect(marino.copy(alpha = 0.22f), Offset(0f, 0f), Size(size.width, 10 * d))
+                drawRect(Color(0xFFE8601C).copy(alpha = 0.6f), Offset(0f, 10 * d), Size(size.width, 2 * d))
+                with(TrofeosMas) { mono("T+ 00:00:00", size.width - 12 * d, 30 * d, 8 * d, marino.copy(alpha = 0.5f), android.graphics.Paint.Align.RIGHT) }
+                var y = 96 * d; while (y < size.height - 12 * d) {
+                    drawLine(marino.copy(alpha = 0.1f), Offset(margen - 10 * d, y), Offset(size.width - 12 * d, y), 0.7f * d)
+                    drawRect(marino.copy(alpha = 0.25f), Offset(13 * d, y - 12 * d), Size(9 * d, 9 * d), style = Stroke(0.8f * d))
+                    y += renglon
+                }
+            }
+            Contenedor.TETRAD -> {
+                // La hoja «en cuadritos» del cuaderno escolar ruso, con el margen rojo del lado de afuera (a la derecha).
+                val cuadro = if (oscuro) Color(0xFF7A9AC8) else Color(0xFF5A7AB0)
+                val paso = renglon / 2
+                var x = 0f; while (x < size.width) { drawLine(cuadro.copy(alpha = 0.12f), Offset(x, 0f), Offset(x, size.height), 0.5f * d); x += paso }
+                var y = 0f; while (y < size.height) { drawLine(cuadro.copy(alpha = 0.12f), Offset(0f, y), Offset(size.width, y), 0.5f * d); y += paso }
+                drawLine(Color(0xFFC1121F).copy(alpha = 0.55f), Offset(size.width - 26 * d, 0f), Offset(size.width - 26 * d, size.height), 1.2f * d)
+            }
             else -> {}
         }
     }
@@ -459,6 +562,23 @@ object ContenedoresMas {
                 var y = 0f; var k = 0
                 while (y < size.height) { drawRoundRect(if (k % 2 == 0) acero else lerp(acero, Color.Black, 0.2f), Offset(10 * d, y), Size(12 * d, 18 * d), CornerRadius(3 * d)); y += 18 * d; k++ }
                 drawLine(lerp(acero, Color.White, 0.3f), Offset(16 * d, 0f), Offset(16 * d, size.height), 1f * d)
+            }
+            Contenedor.CUADERNO -> {
+                // El lomo cosido con tela cian y el hilo de la costura.
+                val cian = if (oscuro) Color(0xFF0C3640) else Color(0xFF0B8FA1)
+                drawRect(cian, Offset(8 * d, 0f), Size(14 * d, size.height))
+                var y = 14 * d; while (y < size.height - 10 * d) { drawLine(Color.White.copy(alpha = 0.7f), Offset(15 * d, y), Offset(15 * d, y + 8 * d), 1.2f * d); y += 20 * d }
+            }
+            Contenedor.VUELO -> {
+                // La tira de velcro a lo largo del borde (así se sujetaba la bitácora en la cabina).
+                drawRect(Color(0xFF26324F).copy(alpha = if (oscuro) 0.9f else 0.7f), Offset(6 * d, 0f), Size(16 * d, size.height))
+                var y = 0f; while (y < size.height) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(6 * d, y), Offset(22 * d, y), 1f); y += 2 * d }
+                drawLine(Color(0xFFE8601C).copy(alpha = 0.7f), Offset(22 * d, 0f), Offset(22 * d, size.height), 1.2f * d)
+            }
+            Contenedor.TETRAD -> {
+                // El pliegue del cuadernillo con sus dos grapas.
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent), 10 * d, 30 * d), Offset(10 * d, 4 * d), Size(20 * d, size.height - 8 * d))
+                listOf(0.3f, 0.7f).forEach { f -> val y = size.height * f; drawRect(Color(0xFFC3C6CA), Offset(14 * d, y - 9 * d), Size(3 * d, 18 * d)); drawRect(Color.Black.copy(alpha = 0.25f), Offset(17 * d, y - 9 * d), Size(1 * d, 18 * d)) }
             }
             else -> {}
         }

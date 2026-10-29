@@ -97,19 +97,15 @@ class CoberturaTemas {
         /** Lo que falta hoy, por superficie. Cada lote borra lo que completa. */
         val PENDIENTES: Map<String, Set<String>> = mapOf(
             "arranque" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "campana_mapa" to setOf("laboratorio", "urss", "espacio"),
             "escala_toque" to setOf("medieval", "distopia", "refugio", "orden", "napoleon", "navidad", "seda", "urss", "mongol", "renacimiento", "revolucion", "antiguas"),
             "frases_20" to setOf("refugio", "orden", "laboratorio", "napoleon", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion"),
             "gato" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "libreta" to setOf("laboratorio", "urss", "espacio"),
             "marcas_calendario" to setOf("ciber", "heleno", "distopia", "refugio", "orden", "laboratorio", "colonos"),
             "nombres" to setOf("ciber"),
             "papel" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento"),
-            "salon" to setOf("laboratorio", "urss", "espacio"),
             "sonido_cambio" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
             "sonido_error" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
             "sonido_tecla" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "trofeos" to setOf("laboratorio", "urss", "espacio"),
             "vidas" to setOf("antiguas"),
         )
 
@@ -123,7 +119,6 @@ class CoberturaTemas {
             "ui/Componentes.kt · agrupadas" to 1,
             "ui/Componentes.kt · comparaciones" to 7,
             "ui/Componentes.kt · else" to 2,
-            "ui/Contenedores.kt · else" to 1,
             "ui/Decoracion.kt · agrupadas" to 3,
             "ui/Decoracion.kt · comparaciones" to 1,
             "ui/Decoracion.kt · else" to 2,

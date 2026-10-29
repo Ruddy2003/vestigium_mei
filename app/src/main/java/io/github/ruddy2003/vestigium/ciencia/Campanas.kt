@@ -157,11 +157,11 @@ object Campanas {
         "romano" to listOf("Roma", "Ostia", "Massilia", "Lugdunum", "Durocortorum", "Lutetia", "Alesia"),
         "heleno" to listOf("Pella", "Anfípolis", "Troya", "Sardes", "Gordio", "Tarso", "Babilonia"),
         "medieval" to listOf("Roncesvalles", "Pamplona", "Logroño", "Burgos", "León", "Astorga", "Santiago"),
-        "distopia" to listOf("SECTOR 1", "SECTOR 2", "SECTOR 3", "SECTOR 4", "SECTOR 5", "SECTOR 6", "MINISTERIO"),
+        "distopia" to listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO"),
         "refugio" to listOf("Dormitorios", "Comedor", "Hidroponía", "Taller", "Purificador", "Esclusa", "Superficie"),
         "ciber" to listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz"),
         "orden" to listOf("Campamento", "Puente de hierro", "Cota 214", "Desfiladero", "Trincheras", "Bastión", "Fortaleza"),
-        "laboratorio" to listOf("Día 1", "Día 2", "Día 3", "Día 4", "Día 5", "Día 6", "Resultado"),
+        "laboratorio" to listOf("Hipótesis", "Reactivos", "Siembra", "Incubación", "Medición", "Análisis", "Cultivo completo"),
         "colonos" to listOf("Puerto", "Vado del río", "Pradera", "Cruce", "Colina", "Valle", "Pueblo nuevo"),
         "napoleon" to listOf("Boulogne", "Estrasburgo", "Ulm", "Múnich", "Viena", "Brünn", "Austerlitz"),
         "revolucion" to listOf("Estados Generales", "Juego de pelota", "Bastilla", "4 de agosto", "Declaración", "Versalles", "Federación"),
@@ -174,6 +174,6 @@ object Campanas {
         "mongol" to listOf("Janbalic", "Shangdu", "Posta del Gobi", "Posta del pozo", "Kerulen", "Valle del Orjón", "Karakórum"),
         "antiguas" to listOf("La aldea", "El bosque viejo", "El vado", "Las montañas", "La mina", "El puente de piedra", "La fortaleza"),
         "renacimiento" to listOf("Boceto", "Estudio", "Cartón", "Imprimación", "Color", "Veladura", "Firma"),
-        "urss" to listOf("FÁBRICA", "KOLJÓS", "MINA", "PRESA", "VÍA", "PUERTO", "META"),
+        "urss" to listOf("MOSCÚ", "EKATERIMBURGO", "NOVOSIBIRSK", "KRASNOYARSK", "IRKUTSK", "CHITÁ", "VLADIVOSTOK"),
     )
 }

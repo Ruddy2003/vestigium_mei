@@ -21,7 +21,7 @@ import kotlin.math.sin
  * La unidad que guarda tus momentos, según el tema: la misma lógica (una hoja por día, que engorda con lo escrito),
  * con otra forma. Un rollo de papiro en Roma, tablillas de cera en Grecia, un códice en el scriptorium, un libro de
  * horas en la catedral, el cuaderno de taller del Renacimiento, el legajo de despachos del Imperio y el cahier de la
- * Revolución. Los demás temas siguen con la libreta de espiral.
+ * Revolución; los demás, en [ContenedoresMas]. La libreta de espiral queda como respaldo (ningún tema la usa ya).
  */
 enum class Contenedor(val nombre: String, val hoja: String) {
     ESPIRAL("Libreta de momentos", "hoja"),
@@ -43,6 +43,9 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     CONSOLA("Consola de registro", "entrada"),
     CARPETA("Carpeta del supervisor", "informe"),
     TECNICO("Códice técnico", "lámina"),
+    CUADERNO("Cuaderno de laboratorio", "experimento"),
+    VUELO("Bitácora de vuelo", "órbita"),
+    TETRAD("Cuaderno escolar", "hoja"),
 }
 
 fun contenedorDe(t: TemaId): Contenedor = when (t) {
@@ -64,7 +67,9 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.CIBER -> Contenedor.CONSOLA
     TemaId.REFUGIO -> Contenedor.CARPETA
     TemaId.ORDEN -> Contenedor.TECNICO
-    else -> Contenedor.ESPIRAL
+    TemaId.LABORATORIO -> Contenedor.CUADERNO
+    TemaId.ESPACIO -> Contenedor.VUELO
+    TemaId.URSS -> Contenedor.TETRAD
 }
 
 object Contenedores {

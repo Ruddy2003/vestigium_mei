@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -39,6 +40,9 @@ object SalonesMas {
             TemaId.CIBER -> salaCentral(cs, oscuro, n)
             TemaId.REFUGIO -> salaComun(cs, oscuro, n)
             TemaId.ORDEN -> salaCapitular(cs, oscuro, n)
+            TemaId.LABORATORIO -> laboratorioLimpio(cs, oscuro, n)
+            TemaId.ESPACIO -> observatorio(cs, oscuro, n)
+            TemaId.URSS -> estacionMetro(cs, oscuro, n)
             else -> {}
         }
     }
@@ -87,6 +91,24 @@ object SalonesMas {
                 drawRect(Color(0xFF9E1B22), Offset(w * 0.38f, 0f), Size(w * 0.24f, h))
                 drawRect(Color(0xFFD6B25A), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.12f))
                 listOf(0.18f, 0.3f, 0.7f, 0.82f).forEach { x -> drawCircle(Color(0xFF2A2E33), h * 0.1f, Offset(w * x, h * 0.55f)) }
+            }
+            TemaId.LABORATORIO -> {
+                // La cubierta blanca de la mesa con su canto cian.
+                drawRoundRect(piedra(Color(0xFFE6EDF2)), Offset(w * 0.1f, 0f), Size(w * 0.8f, h), CornerRadius(h * 0.2f))
+                drawRect(Color(0xFF0B8FA1), Offset(w * 0.1f, h * 0.78f), Size(w * 0.8f, h * 0.12f))
+                drawRect(Color.White, Offset(w * 0.42f, h * 0.25f), Size(w * 0.16f, h * 0.35f))
+            }
+            TemaId.ESPACIO -> {
+                // La base de la montura del telescopio: concreto, franja marina y las luces naranjas.
+                drawRect(piedra(Color(0xFF9AA3B2)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h))
+                drawRect(Color(0xFF1B3A8C), Offset(w * 0.12f, h * 0.7f), Size(w * 0.76f, h * 0.18f))
+                listOf(0.2f, 0.8f).forEach { x -> drawCircle(Color(0xFFE8601C), h * 0.13f, Offset(w * x, h * 0.35f)) }
+            }
+            TemaId.URSS -> {
+                // El zócalo de granito rojo con su franja dorada y la estrella.
+                drawRect(piedra(Color(0xFF7A2A26)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h))
+                drawRect(Color(0xFFD4A017), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.12f))
+                with(TrofeosTema) { estrella(Offset(w * 0.5f, h * 0.55f), h * 0.32f, h * 0.13f, 5, Brush.linearGradient(listOf(Color(0xFFD4A017), Color(0xFFD4A017)))) }
             }
             TemaId.ANTIGUAS -> { drawRect(piedra(Color(0xFF7D7A72)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); with(TrofeosMas) { runas(Offset(w * 0.22f, h * 0.5f), w * 0.56f, h * 0.5f, Color(0xFF2B2A28).copy(alpha = 0.5f), h * 0.06f, 6) } }
             else -> drawRect(metal, Offset(0f, 0f), Size(w, h))
@@ -522,5 +544,146 @@ object SalonesMas {
         // El piso de placa antiderrapante.
         drawRect(acero.copy(alpha = acero.alpha * 0.6f), Offset(0f, h - 14 * d), Size(w, 14 * d))
         var xr = 4 * d; var k = 0; while (xr < w) { val yy = h - 7 * d; drawLine(sombraA, Offset(xr - 2 * d, yy + (if (k % 2 == 0) 2 else -2) * d), Offset(xr + 2 * d, yy - (if (k % 2 == 0) 2 else -2) * d), 1.2f * d); xr += 8 * d; k++ }
+    }
+
+    /**
+     * Laboratorio: el laboratorio limpio. Una campana de extracción enmarca cada columna de piezas; entre las columnas hay
+     * vitrinas de vidrio con matraces en sus repisas; arriba, los paneles de luz y el ducto; abajo, la mesa con su canto cian.
+     */
+    private fun DrawScope.laboratorioLimpio(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val linea = (if (oscuro) Color(0xFF97A8B9) else Color(0xFF4D5D6B)).copy(alpha = 0.35f)
+        val cian = (if (oscuro) Color(0xFF3CD2E5) else Color(0xFF0B8FA1)).copy(alpha = 0.55f)
+        val vidrio = Color(0xFFCFE6F0).copy(alpha = if (oscuro) 0.06f else 0.22f)
+        val liquidos = listOf(Color(0xFF0B8FA1), Color(0xFF5E4FD1), Color(0xFF1E8E5A)).map { it.copy(alpha = if (oscuro) 0.5f else 0.45f) }
+        // Los azulejos clínicos de la pared.
+        var y = 0f; while (y < h) { drawLine(linea.copy(alpha = 0.08f), Offset(0f, y), Offset(w, y), 1f); y += 22 * d }
+        var x = 0f; while (x < w) { drawLine(linea.copy(alpha = 0.08f), Offset(x, 0f), Offset(x, h), 1f); x += 22 * d }
+        // Los paneles de luz del techo y el ducto de la extracción.
+        drawRect(linea.copy(alpha = 0.25f), Offset(0f, 0f), Size(w, 8 * d))
+        val paso = w / n
+        for (i in 0 until n) {
+            val x0 = i * paso + 12 * d; val x1 = (i + 1) * paso - 12 * d; val cx = (x0 + x1) / 2
+            drawRect(Color.White.copy(alpha = if (oscuro) 0.25f else 0.9f), Offset(cx - 30 * d, 8 * d), Size(60 * d, 4 * d))
+            // La campana: el ducto, el cuerpo inclinado, el marco de la guillotina y su vidrio.
+            drawRect(linea, Offset(cx - 8 * d, 12 * d), Size(16 * d, 14 * d))
+            val cuerpo = Path().apply { moveTo(cx - 10 * d, 26 * d); lineTo(cx + 10 * d, 26 * d); lineTo(x1, 50 * d); lineTo(x0, 50 * d); close() }
+            drawPath(cuerpo, linea.copy(alpha = 0.18f)); drawPath(cuerpo, linea, style = Stroke(1.5f * d))
+            drawRect(vidrio, Offset(x0, 50 * d), Size(x1 - x0, 40 * d))
+            drawRect(linea, Offset(x0, 50 * d), Size(x1 - x0, 40 * d), style = Stroke(2 * d))
+            drawLine(cian, Offset(x0, 90 * d), Offset(x1, 90 * d), 2 * d)
+            // Las jambas laterales de la campana, que bajan a la mesa.
+            listOf(x0, x1).forEach { xx -> drawLine(linea, Offset(xx, 90 * d), Offset(xx, h - 22 * d), 1.4f * d) }
+        }
+        // Las vitrinas entre las columnas: vidrio, repisas y matraces.
+        for (i in 0..n) {
+            val cx = i * paso; val an = 24 * d; val y0 = 40 * d; val y1 = h - 22 * d
+            drawRect(vidrio, Offset(cx - an / 2, y0), Size(an, y1 - y0))
+            drawRect(linea, Offset(cx - an / 2, y0), Size(an, y1 - y0), style = Stroke(1.2f * d))
+            var yy = y0 + 46 * d; var k = 0
+            while (yy < y1 - 10 * d) {
+                drawLine(linea, Offset(cx - an / 2, yy), Offset(cx + an / 2, yy), 1.2f * d)
+                val c = liquidos[(i + k) % 3]
+                when (k % 3) {
+                    0 -> { drawCircle(c, 6 * d, Offset(cx, yy - 7 * d)); drawRect(linea, Offset(cx - 1.5f * d, yy - 20 * d), Size(3 * d, 8 * d)) }
+                    1 -> drawPath(Path().apply { moveTo(cx - 2 * d, yy - 20 * d); lineTo(cx + 2 * d, yy - 20 * d); lineTo(cx + 2 * d, yy - 12 * d); lineTo(cx + 7 * d, yy); lineTo(cx - 7 * d, yy); lineTo(cx - 2 * d, yy - 12 * d); close() }, c)
+                    else -> listOf(-6f, 0f, 6f).forEach { dx -> drawRect(c, Offset(cx + dx * d - 1.5f * d, yy - 16 * d), Size(3 * d, 16 * d)) }
+                }
+                yy += 46 * d; k++
+            }
+        }
+        // La mesa corrida con su canto cian.
+        drawRect(linea.copy(alpha = 0.2f), Offset(0f, h - 22 * d), Size(w, 22 * d))
+        drawLine(cian, Offset(0f, h - 22 * d), Offset(w, h - 22 * d), 2 * d)
+    }
+
+    /**
+     * Espacio: la cúpula del observatorio. Sobre cada columna de piezas, una cúpula con sus costillas y la ranura abierta
+     * al cielo estrellado; entre las columnas, telescopios en su montura; abajo, el riel circular de la cúpula.
+     */
+    private fun DrawScope.observatorio(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val linea = (if (oscuro) Color(0xFF8E9AB8) else Color(0xFF4E5A70)).copy(alpha = 0.4f)
+        val naranja = (if (oscuro) Color(0xFFFFB86B) else Color(0xFFE8601C)).copy(alpha = 0.6f)
+        val az = java.util.Random(52)
+        // El cielo que se ve por arriba (más estrellas de noche).
+        repeat(if (oscuro) 70 else 25) { drawCircle(if (oscuro) Color.White.copy(alpha = 0.5f) else linea, (0.6f + az.nextFloat()) * d, Offset(az.nextFloat() * w, az.nextFloat() * h * 0.35f)) }
+        val paso = w / n
+        for (i in 0 until n) {
+            val x0 = i * paso + 8 * d; val x1 = (i + 1) * paso - 8 * d; val cx = (x0 + x1) / 2; val r = (x1 - x0) / 2
+            val cy = 12 * d + r
+            // La cúpula: el casco, las costillas, la ranura abierta con estrellas dentro.
+            drawArc(linea.copy(alpha = linea.alpha * 0.35f), 180f, 180f, true, Offset(x0, 12 * d), Size(2 * r, 2 * r))
+            drawArc(linea, 180f, 180f, false, Offset(x0, 12 * d), Size(2 * r, 2 * r), style = Stroke(3 * d))
+            for (k in 1..4) { val f = k / 5f; drawArc(linea.copy(alpha = linea.alpha * 0.6f), 180f, 180f, false, Offset(cx - r * f, 12 * d), Size(2 * r * f, 2 * r), style = Stroke(1f * d)) }
+            val ranura = Path().apply { moveTo(cx - 8 * d, cy); lineTo(cx - 8 * d, 14 * d); lineTo(cx + 8 * d, 14 * d); lineTo(cx + 8 * d, cy); close() }
+            drawPath(ranura, Color(0xFF03050C).copy(alpha = if (oscuro) 0.8f else 0.55f))
+            clipPath(ranura) { repeat(8) { drawCircle(Color.White.copy(alpha = 0.85f), (0.6f + az.nextFloat() * 0.8f) * d, Offset(cx - 7 * d + az.nextFloat() * 14 * d, 14 * d + az.nextFloat() * (cy - 14 * d))) } }
+            drawLine(linea, Offset(x0, cy), Offset(x1, cy), 2 * d)
+            listOf(x0, x1).forEach { xx -> drawLine(linea, Offset(xx, cy), Offset(xx, h - 14 * d), 1.6f * d) }
+        }
+        // Los telescopios entre las columnas, en su montura ecuatorial.
+        for (i in 0..n) {
+            val cx = i * paso
+            var yy = h * 0.5f
+            while (yy < h - 40 * d) {
+                drawLine(linea, Offset(cx, yy + 30 * d), Offset(cx, yy + 6 * d), 3 * d)
+                drawLine(linea, Offset(cx - 10 * d, yy + 30 * d), Offset(cx + 10 * d, yy + 30 * d), 2 * d)
+                val a = -PI / 3
+                val t0 = Offset(cx - (14 * d * cos(a)).toFloat(), yy + 6 * d - (14 * d * sin(a)).toFloat()); val t1 = Offset(cx + (20 * d * cos(a)).toFloat(), yy + 6 * d + (20 * d * sin(a)).toFloat())
+                drawLine(linea.copy(alpha = linea.alpha * 1.6f), t0, t1, 6 * d, StrokeCap.Round)
+                drawCircle(naranja, 2.4f * d, Offset(cx, yy + 6 * d))
+                yy += 240 * d
+            }
+        }
+        // El riel circular de la cúpula y el piso.
+        drawRect(linea.copy(alpha = linea.alpha * 0.4f), Offset(0f, h - 14 * d), Size(w, 14 * d))
+        var xr = 0f; while (xr < w) { drawCircle(naranja.copy(alpha = 0.4f), 1.6f * d, Offset(xr, h - 7 * d)); xr += 30 * d }
+    }
+
+    /**
+     * Soviético: una estación de metro constructivista. Sobre cada columna de piezas, una bóveda en escalones con una
+     * banda roja en diagonal y el medallón de la estrella; entre las columnas, pilones de mármol con franjas y lámparas
+     * de brazo; abajo, el andén con la línea de seguridad y las vías.
+     */
+    private fun DrawScope.estacionMetro(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val marmol = (if (oscuro) Color(0xFF3D3333) else Color(0xFFE3D6B8)).copy(alpha = 0.6f)
+        val veta = (if (oscuro) Color.Black else Color(0xFF8A7A60)).copy(alpha = 0.18f)
+        val rojo = Color(0xFFC1121F).copy(alpha = if (oscuro) 0.6f else 0.55f)
+        val oro = Color(0xFFD4A017).copy(alpha = 0.75f)
+        val negro = Color(0xFF161414).copy(alpha = if (oscuro) 0.7f else 0.5f)
+        val paso = w / n
+        // Las bóvedas en escalones, con la banda roja en diagonal y el medallón.
+        for (i in 0 until n) {
+            val x0 = i * paso + 10 * d; val x1 = (i + 1) * paso - 10 * d; val cx = (x0 + x1) / 2; val an = x1 - x0
+            val boveda = Path().apply { moveTo(x0, 90 * d); lineTo(x0, 50 * d); lineTo(x0 + an * 0.15f, 30 * d); lineTo(x0 + an * 0.35f, 30 * d); lineTo(x0 + an * 0.45f, 16 * d); lineTo(x1 - an * 0.45f, 16 * d); lineTo(x1 - an * 0.35f, 30 * d); lineTo(x1 - an * 0.15f, 30 * d); lineTo(x1, 50 * d); lineTo(x1, 90 * d) }
+            drawPath(boveda, marmol, style = Stroke(6 * d))
+            drawLine(rojo, Offset(x0 + an * 0.05f, 80 * d), Offset(x0 + an * 0.3f, 34 * d), 5 * d)
+            drawLine(negro, Offset(x1 - an * 0.05f, 80 * d), Offset(x1 - an * 0.2f, 52 * d), 3 * d)
+            drawCircle(oro, 11 * d, Offset(cx, 32 * d), style = Stroke(2 * d))
+            with(TrofeosTema) { estrella(Offset(cx, 32 * d), 8 * d, 3.2f * d, 5, Brush.linearGradient(listOf(rojo, rojo))) }
+        }
+        // Los pilones de mármol entre las columnas: vetas, franjas rojas y la lámpara de brazo.
+        for (i in 0..n) {
+            val x = i * paso; val an = 22 * d
+            drawRect(marmol, Offset(x - an / 2, 0f), Size(an, h - 26 * d))
+            val az = java.util.Random(i + 40L)
+            repeat(6) { val y = az.nextFloat() * h; drawLine(veta, Offset(x - an / 2, y), Offset(x + an / 2, y + (az.nextFloat() - 0.5f) * 30 * d), 1f * d) }
+            listOf(0.18f, 0.2f).forEach { f -> drawRect(rojo, Offset(x - an / 2, h * f), Size(an, 3 * d)) }
+            drawRect(oro, Offset(x - an / 2 - 2 * d, h - 32 * d), Size(an + 4 * d, 6 * d))
+            var yy = h * 0.36f
+            while (yy < h - 60 * d) {
+                drawLine(oro, Offset(x, yy), Offset(x + 14 * d, yy - 10 * d), 1.6f * d); drawLine(oro, Offset(x, yy), Offset(x - 14 * d, yy - 10 * d), 1.6f * d)
+                listOf(-14f, 14f).forEach { dx -> drawCircle(Brush.radialGradient(listOf(Color(0xFFFFE6A3).copy(alpha = 0.35f), Color.Transparent), Offset(x + dx * d, yy - 12 * d), 16 * d), 16 * d, Offset(x + dx * d, yy - 12 * d)); drawCircle(Color(0xFFFFE6A3).copy(alpha = 0.8f), 3 * d, Offset(x + dx * d, yy - 12 * d)) }
+                yy += 220 * d
+            }
+        }
+        // El andén: la línea de seguridad, el borde y las vías con sus durmientes.
+        drawRect(marmol.copy(alpha = marmol.alpha * 0.5f), Offset(0f, h - 26 * d), Size(w, 14 * d))
+        drawRect(oro, Offset(0f, h - 22 * d), Size(w, 2 * d))
+        drawRect(negro.copy(alpha = 0.3f), Offset(0f, h - 12 * d), Size(w, 12 * d))
+        var xt = 0f; while (xt < w) { drawRect(negro, Offset(xt, h - 9 * d), Size(4 * d, 9 * d)); xt += 10 * d }
+        listOf(h - 8 * d, h - 3 * d).forEach { y -> drawLine(Color(0xFF8A8D91).copy(alpha = 0.7f), Offset(0f, y), Offset(w, y), 1.4f * d) }
     }
 }
