@@ -630,74 +630,39 @@ private fun BarraNoche(pasos: List<Pair<String, Boolean>>, completo: Boolean, mo
 
 private fun hm(min: Int): String = if (min >= 60) "${min / 60} h ${"%02d".format(min % 60)} min" else "$min min"
 
-/** Todo lo automático del día, en formato clave = valor. */
+/** Todo lo automático del día: las fichas del reporte (ver ReporteDia.kt) y debajo lo demás, en formato clave = valor. */
 @Composable
 private fun Vestigios(fecha: String, nav: Nav) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var msg by remember { mutableStateOf<String?>(null) }
     var ocupado by remember { mutableStateOf(false) }
-    val s = Repo.salud[fecha]; val p = Repo.pantalla[fecha]; val e = Repo.entorno[fecha]; val ft = Repo.fotos[fecha]
-    val ag = Repo.agenda[fecha]; val nt = Repo.notifs[fecha]; val ac = Repo.actividad[fecha]
-    val ses = Repo.sesiones.filter { it.fecha == fecha }
-    val visitas = Repo.visitas.filter { it.entrada.take(10) == fecha }
+    val s = Repo.salud[fecha]; val p = Repo.pantalla[fecha]; val e = Repo.entorno[fecha]; val ag = Repo.agenda[fecha]
     val km by produceState<Double?>(null, fecha) { value = withContext(Dispatchers.IO) { runCatching { Movilidad.kmDe(fecha) }.getOrNull() } }
     val musica by produceState(emptyList<io.github.ruddy2003.vestigium.data.Escucha>(), fecha, Repo.notifs[fecha]) {
         value = withContext(Dispatchers.IO) { runCatching { Repo.escuchas(fecha, fecha) }.getOrDefault(emptyList()) }
     }
-    val fase = Luna.fase(fecha)
     val mundo by produceState<io.github.ruddy2003.vestigium.data.Mundo.DiaMundo?>(null, fecha, io.github.ruddy2003.vestigium.data.Mundo.version) {
         value = withContext(Dispatchers.IO) { runCatching { io.github.ruddy2003.vestigium.data.Mundo.delDia(ctx, fecha) }.getOrNull() }
     }
 
+    // Las fichas del reporte: lo principal del día con su cifra, su comparación y una gráfica pequeña.
+    val artista = musica.groupBy { it.artista.ifBlank { "?" } }.maxByOrNull { it.value.size }?.key
+    val fichas = fichasDelDia(fecha, km, musica.size, artista)
+    if (fichas.size > 1) { RejillaFichas(fichas); Spacer(Modifier.height(8.dp)) }
     Tarjeta {
-        var algo = false
+        // La luna siempre sale; «algo» cuenta lo que vino de los sensores.
+        var algo = fichas.size > 1
         if (s != null) {
-            val m = s.sueno_min
-            if (m != null) {
-                algo = true
-                val ini = s.sueno_inicio; val fin = s.sueno_fin
-                Clave("somnus", hm(m) + (if (ini != null) " · ${Fechas.horaDe(ini)}→${if (fin != null) Fechas.horaDe(fin) else "?"}" else "") + if (s.sueno_manual) " · a mano" else "")
-                val prof = s.sueno_profundo_min
-                if (prof != null) Clave("  stadia", "profundo ${hm(prof)} · rem ${hm(s.sueno_rem_min ?: 0)} · ligero ${hm(s.sueno_ligero_min ?: 0)}")
-            }
-            s.siesta_reloj_min?.let { algo = true; Clave("  siesta", "${hm(it)} según el reloj") }
-            // Corazón: la media del día y su rango, en reposo, de noche y la variabilidad (lo que haya).
-            val cor = listOfNotNull(s.fc_media?.let { "media %.0f lpm".format(it) + (if (s.fc_min != null && s.fc_max != null) " (%.0f–%.0f)".format(s.fc_min, s.fc_max) else "") },
-                s.fc_reposo?.let { "reposo %.0f".format(it) }, s.fc_sueno?.let { "dormido %.0f".format(it) }, s.hrv_rmssd?.let { "hrv %.0f ms".format(it) })
-            if (cor.isNotEmpty()) { algo = true; Clave("cor", cor.joinToString(" · ")) }
-            if (s.spo2 != null) { algo = true; Clave("oxygenium", "spo₂ media %.1f%%".format(s.spo2) + (s.spo2_min?.let { " · mínima de noche %.0f%%".format(it) } ?: "")) }
-            s.pasos?.let { algo = true; Clave("passus", "%,d pasos".format(it)) }
+            if (s.spo2_min != null) { algo = true; Clave("oxygenium", "mínima de noche %.0f%%".format(s.spo2_min)) }
         }
-        ac?.minutos?.filterKeys { it != "quieto" }?.filterValues { it > 0 }?.takeIf { it.isNotEmpty() }?.let { m ->
-            algo = true; Clave("motus", m.entries.sortedByDescending { it.value }.joinToString(" · ") { "${Actividad.NOMBRES[it.key] ?: it.key} ${hm(it.value)}" })
-        }
-        km?.takeIf { it >= 0.2 }?.let { algo = true; Clave("iter", "%.1f km recorridos".format(it)) }
-        if (ses.isNotEmpty()) { algo = true; Clave("exercitatio", ses.joinToString(" · ") { x -> "${x.tipo_nombre} ${hm(x.min)}" + (x.fc_media?.let { " (%.0f lpm)".format(it) } ?: "") }) }
-        if (visitas.isNotEmpty()) {
-            algo = true
-            val porLugar = visitas.groupBy { it.lugar }.mapValues { (_, l) -> l.sumOf { v -> ((Fechas.millis(v.salida ?: Fechas.ahoraIso()) - Fechas.millis(v.entrada)) / 60000).toInt() } }
-            Clave("loca", porLugar.entries.sortedByDescending { it.value }.joinToString(" · ") { (id, m) -> (Repo.lugares.firstOrNull { it.id == id }?.nombre ?: "?") + " " + hm(m) })
-        }
+        if (s?.pasos == null) km?.takeIf { it >= 0.2 }?.let { algo = true; Clave("iter", "%.1f km recorridos".format(it)) }
         p?.let {
-            algo = true
-            Clave("telephonum", "${hm(it.total_min)} · ${it.desbloqueos} desbloqueos")
-            if (it.primer_uso != null) Clave("  usus", "primer uso ${Fechas.horaDe(it.primer_uso)} · último ${it.ultimo_uso?.let { u -> Fechas.horaDe(u) } ?: "?"}")
-            it.por_app_min.entries.take(3).takeIf { l -> l.isNotEmpty() }?.let { l -> Clave("  apps", l.joinToString(" · ") { a -> "${a.key} ${hm(a.value)}" }) }
+            if (it.primer_uso != null) { algo = true; Clave("usus", "primer uso ${Fechas.horaDe(it.primer_uso)} · último ${it.ultimo_uso?.let { u -> Fechas.horaDe(u) } ?: "?"}") }
         }
-        nt?.let { algo = true; Clave("monita", "${it.total} notificaciones · " + it.por_app.entries.sortedByDescending { x -> x.value }.take(3).joinToString(" · ") { x -> "${x.key} ${x.value}" }) }
-        if (musica.isNotEmpty()) {
-            algo = true
-            val top = musica.groupBy { it.artista.ifBlank { "?" } }.maxByOrNull { it.value.size }?.key
-            Clave("musica", "${musica.size} canciones" + (top?.let { " · más: $it" } ?: ""))
-        }
-        ft?.let { if (it.fotos + it.capturas + it.videos > 0) { algo = true; Clave("imagines", "${it.fotos} fotos · ${it.capturas} capturas · ${it.videos} videos") } }
         ag?.let { if (it.eventos + it.todo_el_dia > 0) { algo = true; Clave("fasti", "${it.eventos} eventos · ${hm(it.min_ocupado)} ocupado" + if (it.titulos.isNotEmpty()) " · " + it.titulos.take(3).joinToString(", ") else "") } }
         e?.let {
-            algo = true
-            Clave("caelum", listOfNotNull(it.codigo?.let { c -> Clima.descripcion(c) }, if (it.t_max != null) "%.0f° / %.0f°".format(it.t_max, it.t_min ?: it.t_max) else null,
-                it.precip_mm?.takeIf { x -> x > 0.05 }?.let { x -> "lluvia %.1f mm".format(x) }, it.nubes_pct?.let { x -> "nubes %.0f%%".format(x) }).joinToString(" · "))
-            if (it.luz_min != null) Clave("lux", "${it.amanecer ?: "?"} → ${it.atardecer ?: "?"} · ${hm(it.luz_min)} de luz" + (it.sol_min?.let { x -> " · ${hm(x)} de sol" } ?: ""))
+            if (it.amanecer != null) Clave("lux", "${it.amanecer} → ${it.atardecer ?: "?"}" + (it.sol_min?.let { x -> " · ${hm(x)} de sol" } ?: ""))
             if (it.aqi_us != null) Clave("aer", "calidad del aire ${it.aqi_us} (${aqiTexto(it.aqi_us)})" + (it.pm25?.let { x -> " · pm2.5 %.0f".format(x) } ?: ""))
         }
         if (s != null) {
@@ -708,28 +673,13 @@ private fun Vestigios(fecha: String, nav: Nav) {
         }
         Repo.nutricion[fecha]?.let { nu ->
             val v = nu.valores
-            if (v.isNotEmpty()) {
-                algo = true
-                Clave("nutritio", listOfNotNull(v["kcal"]?.let { "%.0f kcal".format(it) }, v["proteina_g"]?.let { "P %.0f".format(it) }, v["carbohidratos_g"]?.let { "C %.0f".format(it) },
-                    v["grasa_g"]?.let { "G %.0f".format(it) }, v["fibra_g"]?.let { "fibra %.0f".format(it) }).joinToString(" · "))
-                val extra = listOfNotNull(v["gasto_kcal"]?.let { g -> v["kcal"]?.let { k -> "balance %+.0f".format(k - g) } }, v["cafeina_mg"]?.takeIf { it > 0 }?.let { "cafeína %.0f mg".format(it) + (nu.cafeina_ultima?.let { h -> " (última $h)" } ?: "") },
-                    v["alcohol_g"]?.takeIf { it > 0 }?.let { "alcohol %.0f g".format(it) }, if (nu.primera != null) "comiste de ${nu.primera} a ${nu.ultima}" else null)
-                if (extra.isNotEmpty()) Clave("  cibus", extra.joinToString(" · "))
-            }
-        }
-        Repo.entrenos[fecha]?.takeIf { it.series > 0 }?.let { e ->
-            algo = true
-            Clave("robur", (e.entrenos.joinToString(", ").ifBlank { "gimnasio" }) + (e.minutos?.let { " · ${hm(it.toInt())}" } ?: "") +
-                " · ${e.series_efectivas} series · %,.0f kg".format(e.volumen_kg))
-            e.series_musculo.entries.sortedByDescending { it.value }.take(4).takeIf { it.isNotEmpty() }?.let { m -> Clave("  musculi", m.joinToString(" · ") { "${it.key.replace('_', ' ')} %.0f".format(it.value) }) }
+            val extra = listOfNotNull(v["gasto_kcal"]?.let { g -> v["kcal"]?.let { k -> "balance %+.0f".format(k - g) } }, v["fibra_g"]?.let { "fibra %.0f g".format(it) },
+                v["cafeina_mg"]?.takeIf { it > 0 }?.let { "cafeína %.0f mg".format(it) + (nu.cafeina_ultima?.let { h -> " (última $h)" } ?: "") },
+                v["alcohol_g"]?.takeIf { it > 0 }?.let { "alcohol %.0f g".format(it) }, if (nu.primera != null) "comiste de ${nu.primera} a ${nu.ultima}" else null)
+            if (extra.isNotEmpty()) { algo = true; Clave("cibus", extra.joinToString(" · ")) }
         }
         Repo.comunicacion[fecha]?.let { co ->
-            val ll = co.entrantes + co.salientes
-            if (ll + co.perdidas + co.sms_enviados + co.sms_recibidos > 0) {
-                algo = true
-                Clave("voces", "$ll llamadas · ${hm(co.min_hablado.toInt())}" + (if (co.perdidas > 0) " · ${co.perdidas} perdidas" else "") +
-                    (if (co.sms_enviados + co.sms_recibidos > 0) " · ${co.sms_enviados + co.sms_recibidos} sms" else "") + " · ${co.contactos} personas")
-            }
+            if (co.sms_enviados + co.sms_recibidos > 0 || co.contactos > 0) { algo = true; Clave("voces", (if (co.sms_enviados + co.sms_recibidos > 0) "${co.sms_enviados + co.sms_recibidos} sms · " else "") + "${co.contactos} personas") }
         }
         val wa = Repo.chats.filter { it.fecha == fecha }
         if (wa.isNotEmpty()) {
@@ -782,7 +732,6 @@ private fun Vestigios(fecha: String, nav: Nav) {
         val cartas = Repo.cartas.filter { it.escrita == fecha }
         if (cartas.isNotEmpty()) { algo = true; Clave("epistulae", cartas.joinToString(" · ") { if (it.para.isBlank()) "sellaste una carta hasta el ${Fechas.corto(it.abrir_en)} ${it.abrir_en.take(4)}" else "carta a @${it.para}" }) }
         Repo.cartas.filter { it.para.isBlank() && it.abierta_el == fecha }.forEach { Clave("  aperta", "abriste la carta que te escribiste el ${Fechas.larga(it.escrita)}") }
-        Clave("luna", "${Luna.nombre(fase)} · ${(Luna.iluminacion(fase) * 100).toInt()}% iluminada")
         if (!algo) Ayuda("Aún no hay datos automáticos de este día. Activa fuentes en Más → Permisos y sensores.", Modifier.padding(top = 8.dp))
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             BotonSecundario(if (ocupado) "sincronizando…" else "↻ sincronizar", habilitado = !ocupado) {

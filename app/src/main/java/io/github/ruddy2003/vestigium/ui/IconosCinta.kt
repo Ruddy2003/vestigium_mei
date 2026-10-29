@@ -417,6 +417,39 @@ fun DrawScope.iconoPista(id: String, c: Color) {
             drawLine(c, Offset(w * 0.34f, h * 0.22f), Offset(w * 0.38f, h * 0.06f), t.width * 0.7f, StrokeCap.Round)
             drawLine(c, Offset(w * 0.5f, h * 0.22f), Offset(w * 0.54f, h * 0.06f), t.width * 0.7f, StrokeCap.Round)
         }
+        // Los del reporte del día (Día → «Lo que registró el teléfono»).
+        "pasos" -> {
+            drawOval(c, Offset(w * 0.14f, h * 0.08f), Size(w * 0.26f, h * 0.4f), style = t)
+            drawCircle(c, w * 0.09f, Offset(w * 0.27f, h * 0.6f))
+            drawOval(c, Offset(w * 0.58f, h * 0.3f), Size(w * 0.26f, h * 0.4f), style = t)
+            drawCircle(c, w * 0.09f, Offset(w * 0.71f, h * 0.82f))
+        }
+        "corazon" -> drawPath(Path().apply {
+            moveTo(w * 0.5f, h * 0.86f)
+            cubicTo(w * 0.04f, h * 0.56f, w * 0.1f, h * 0.1f, w * 0.5f, h * 0.32f)
+            cubicTo(w * 0.9f, h * 0.1f, w * 0.96f, h * 0.56f, w * 0.5f, h * 0.86f); close()
+        }, c, style = t)
+        "clima" -> {
+            drawCircle(c, w * 0.2f, o, style = t)
+            for (k in 0 until 8) {
+                val a = Math.toRadians(k * 45.0)
+                val x = kotlin.math.cos(a).toFloat(); val y = kotlin.math.sin(a).toFloat()
+                drawLine(c, Offset(o.x + x * w * 0.3f, o.y + y * h * 0.3f), Offset(o.x + x * w * 0.44f, o.y + y * h * 0.44f), t.width * 0.8f, StrokeCap.Round)
+            }
+        }
+        "luna" -> {
+            drawCircle(c, w * 0.38f, o, style = t)
+            drawArc(c, 90f, 180f, true, Offset(w * 0.12f, h * 0.12f), Size(w * 0.76f, h * 0.76f))
+        }
+        "voces" -> {
+            drawRoundRect(c, Offset(w * 0.1f, h * 0.14f), Size(w * 0.8f, h * 0.54f), androidx.compose.ui.geometry.CornerRadius(w * 0.16f), style = t)
+            drawPath(Path().apply { moveTo(w * 0.3f, h * 0.66f); lineTo(w * 0.24f, h * 0.9f); lineTo(w * 0.5f, h * 0.68f) }, c, style = t)
+        }
+        "gimnasio" -> {
+            drawLine(c, Offset(w * 0.2f, o.y), Offset(w * 0.8f, o.y), t.width, StrokeCap.Round)
+            drawRect(c, Offset(w * 0.12f, h * 0.28f), Size(w * 0.14f, h * 0.44f))
+            drawRect(c, Offset(w * 0.74f, h * 0.28f), Size(w * 0.14f, h * 0.44f))
+        }
         else -> drawCircle(c, w * 0.3f, o, style = t)
     }
 }

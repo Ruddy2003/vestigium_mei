@@ -1456,6 +1456,28 @@ class Capturas {
             }
         }
     } }
+    /** El reporte del día (Día → «Lo que registró el teléfono») con un día completo: fases del sueño, corazón, apps, cielo y comida. */
+    @Test fun temaReporteDia() = porTema("reporteDia") { t, o, n ->
+        Ejemplo.cargar()
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        val salud = Repo.salud.toMutableMap()
+        salud[hoy] = salud.getValue(hoy).copy(sueno_profundo_min = 82, sueno_rem_min = 96, sueno_ligero_min = 220, sueno_despierto_min = 14,
+            fc_media = 71.0, fc_min = 52.0, fc_max = 148.0, fc_reposo = 58.0, spo2 = 96.4)
+        val pantalla = Repo.pantalla.toMutableMap()
+        pantalla[hoy] = pantalla.getValue(hoy).copy(por_app_min = mapOf("Mensajes" to 64, "Mapas" to 31, "Lector" to 48))
+        val entorno = Repo.entorno.toMutableMap()
+        entorno[hoy] = entorno.getValue(hoy).copy(codigo = 2, luz_min = 706)
+        val nutricion = Repo.nutricion.toMutableMap()
+        nutricion[hoy] = io.github.ruddy2003.vestigium.data.NutricionDia(hoy, mapOf("kcal" to 2140.0, "proteina_g" to 118.0, "carbohidratos_g" to 240.0, "grasa_g" to 72.0))
+        val notifs = Repo.notifs.toMutableMap()
+        notifs[hoy] = io.github.ruddy2003.vestigium.data.NotifDia(hoy, 143, mapOf("Mensajes" to 61, "Correo" to 22, "Noticias" to 14))
+        Repo.ejemploEnMemoria(Repo.dias, salud, pantalla, Repo.gastos, Repo.momentos, notifs, entorno, nutricion, Repo.lugares, Repo.visitas, Repo.sesiones, Repo.ingresos)
+        captura(t, o, 2400, n) {
+            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.pantallas.RejillaFichas(io.github.ruddy2003.vestigium.ui.pantallas.fichasDelDia(hoy, 6.4, 37, "La banda de ejemplo"))
+            }
+        }
+    }
     @Test fun temaDia() = porTema("dia") { t, o, n -> v73(t, o, 4200, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
     /** Frase, franja y cifras de Hoy; en oscuro la frase va guardada, para ver el corazón relleno. */
     @Test fun temaHoy() = porTema("hoy") { t, o, n ->
