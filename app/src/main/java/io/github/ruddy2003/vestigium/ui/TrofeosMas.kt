@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -26,7 +28,7 @@ import kotlin.math.sin
  * mapas, llaves y cristales). Sin figuras humanas ni animales, sin letras reales: los signos son inventados.
  */
 object TrofeosMas {
-    val TEMAS = setOf(TemaId.ANDALUS, TemaId.SEDA, TemaId.MONGOL, TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ANTIGUAS, TemaId.DISTOPIA)
+    val TEMAS = setOf(TemaId.ANDALUS, TemaId.SEDA, TemaId.MONGOL, TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ANTIGUAS, TemaId.DISTOPIA, TemaId.CIBER)
 
     val NOMBRES: Map<TemaId, Map<String, String>> = mapOf(
         TemaId.ANDALUS to mapOf("Diario" to "Libro de lacería", "Mundo" to "Astrolabio", "Cuerpo" to "Fuente del patio", "Mente" to "Estrella de ocho puntas",
@@ -45,6 +47,8 @@ object TrofeosMas {
             "Cultura" to "Arpa", "Gente" to "Estandarte", "Constancia" to "Llave de hierro", "Curiosos" to "Gema", "Tuyos" to "Linterna de mina"),
         TemaId.DISTOPIA to mapOf("Diario" to "Expediente sellado", "Mundo" to "Pase de control", "Cuerpo" to "Insignia numerada", "Mente" to "Tarjeta perforada",
             "Cultura" to "Documento censurado", "Gente" to "Credencial", "Constancia" to "Sello de goma", "Curiosos" to "Cámara de vigilancia", "Tuyos" to "Altavoz"),
+        TemaId.CIBER to mapOf("Diario" to "Registro del sistema", "Mundo" to "Mapa de la red", "Cuerpo" to "Monitor de pulso", "Mente" to "Árbol de directorios",
+            "Cultura" to "Disquete", "Gente" to "Canal de charla", "Constancia" to "Tiempo en línea", "Curiosos" to "Laberinto ASCII", "Tuyos" to "Llave de raíz"),
     )
 
     private fun TrofeosTema.Pincel.c(c: Color): Color = if (hecho) c else sombra
@@ -113,6 +117,16 @@ object TrofeosMas {
                     for (k in 0 until 6) drawRect(Color(0xFF141414).copy(alpha = 0.55f), Offset(w * (0.3f + k * 0.07f), h * 0.85f), Size(w * 0.035f, h * 0.05f))
                 }
             }
+            TemaId.CIBER -> {
+                // Una unidad de rack: chapa negra con rejilla de ventilación y sus luces de estado.
+                val c = if (p.hecho) Color(0xFF111925) else ped
+                drawRect(piedra(c), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f))
+                if (p.hecho) {
+                    drawRect(Color(0xFF15404A), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f), style = Stroke(w * 0.008f))
+                    for (k in 0 until 8) drawLine(Color(0xFF05070B), Offset(w * (0.2f + k * 0.035f), h * 0.82f), Offset(w * (0.2f + k * 0.035f), h * 0.92f), w * 0.014f)
+                    for (k in 0 until 4) drawCircle(if (k == 2) Color(0xFF86A0B3) else Color(0xFF00E5FF), w * 0.016f, Offset(w * (0.6f + k * 0.06f), h * 0.87f))
+                }
+            }
             TemaId.ANTIGUAS -> {
                 // Un sillar con runas inventadas.
                 val c = if (p.hecho) Color(0xFF7D7A72) else ped
@@ -137,6 +151,29 @@ object TrofeosMas {
                 else -> { drawLine(color, Offset(x + ww / 2, o.y - alto / 6), Offset(x + ww, o.y + alto / 6), grosor, StrokeCap.Round); drawLine(color, Offset(x + ww / 2, o.y - alto / 6), Offset(x, o.y + alto / 6), grosor, StrokeCap.Round) }
             }
         }
+    }
+
+    /** Texto en letra monoespaciada con la base en [y] (consolas, letreros de máquina). */
+    fun DrawScope.mono(t: String, x: Float, y: Float, tam: Float, color: Color, alinear: android.graphics.Paint.Align = android.graphics.Paint.Align.LEFT, negrita: Boolean = false) {
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = color.toArgb(); textSize = tam; textAlign = alinear
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.MONOSPACE, if (negrita) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+        }
+        drawContext.canvas.nativeCanvas.drawText(t, x, y, paint)
+    }
+
+    /** Arte ASCII: las [lineas] en letra monoespaciada, del tamaño que quepa en el rectángulo (en fracciones del pincel) y centradas. */
+    private fun DrawScope.ascii(p: TrofeosTema.Pincel, lineas: List<String>, x0: Float, y0: Float, x1: Float, y1: Float, color: Color) {
+        val cols = lineas.maxOf { it.length }.coerceAtLeast(1)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { this.color = color.toArgb(); typeface = android.graphics.Typeface.MONOSPACE; textSize = 100f }
+        val anchoLetra = paint.measureText("M") / 100f
+        val interlinea = 1.16f
+        val tam = minOf(p.x(x1 - x0) / (cols * anchoLetra), p.y(y1 - y0) / (lineas.size * interlinea))
+        paint.textSize = tam
+        val izq = p.x((x0 + x1) / 2) - cols * anchoLetra * tam / 2
+        var y = p.y((y0 + y1) / 2) - lineas.size * interlinea * tam / 2 + tam * 0.9f
+        val lienzo = drawContext.canvas.nativeCanvas
+        lineas.forEach { l -> lienzo.drawText(l, izq, y, paint); y += tam * interlinea }
     }
 
     /** Una estrella de [puntas] hecha con [capas] cuadrados girados (la lacería). */
@@ -165,6 +202,7 @@ object TrofeosMas {
             TemaId.NAVIDAD -> navidad(cat, p)
             TemaId.ANTIGUAS -> antiguas(cat, p)
             TemaId.DISTOPIA -> distopia(cat, p)
+            TemaId.CIBER -> terminal(cat, p)
             else -> return false
         }
         return true
@@ -1013,5 +1051,37 @@ object TrofeosMas {
                 }
             }
         }
+    }
+
+    // ---------------------------------------------------------------- Terminal: arte ASCII en ventanas de consola
+
+    private fun DrawScope.terminal(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val cian = Color(0xFF00E5FF); val negro = p.c(Color(0xFF05070B))
+        val (titulo, dibujo) = when (cat) {
+            "Diario" -> "syslog" to listOf("$ tail diario", "[ok] 07:10", "[ok] 13:42", "[ok] 22:05", "> _")
+            "Mundo" -> "red" to listOf("  .-'''-.", " /|  |  |\\", "|-+--+--+-|", " \\|  |  |/", "  '-...-'")
+            "Cuerpo" -> "pulso" to listOf("BPM 064", "    /\\", "___/  \\  ___", "       \\/")
+            "Mente" -> "árbol" to listOf("~/mente", "+-- ideas/", "|   +-- a.txt", "|   `-- b.txt", "`-- dudas/")
+            "Cultura" -> "disco" to listOf(" _________", "| |_____| |", "|  _____  |", "| |     | |", "|_|_____|_|")
+            "Gente" -> "charla" to listOf("<tú> hola", "<yo> hola :)", "<tú> ¿café?", "<yo> va <3")
+            "Constancia" -> "uptime" to listOf("UPTIME", "[#########-]", "  99.9 %", " 7d 00:00")
+            "Curiosos" -> "laberinto" to listOf("+--+--+--+", "|  |     |", "+  +  +--+", "|     |  |", "+--+--+--+")
+            else -> "raíz" to listOf(" .--.", "(    )----+-+", " '--'     ' '", "root@vm # _")
+        }
+        // La ventana: marco de metal, barra de título con su nombre y sus botones, y la pantalla negra.
+        caja(p, 0.08f, 0.06f, 0.92f, 0.7f)
+        caja(p, 0.11f, 0.14f, 0.89f, 0.67f, SolidColor(negro))
+        if (p.hecho) {
+            drawCircle(Brush.radialGradient(listOf(cian.copy(alpha = 0.16f), Color.Transparent), p.o(0.5f, 0.4f), p.w * 0.42f), p.w * 0.42f, p.o(0.5f, 0.4f))
+            mono(titulo, p.x(0.13f), p.y(0.122f), p.w * 0.06f, Color(0xFF05070B), negrita = true)
+            for (k in 0 until 3) drawRect(Color(0xFF05070B), Offset(p.x(0.7f + k * 0.06f), p.y(0.083f)), Size(p.x(0.04f), p.y(0.035f)), style = Stroke(lw * 0.6f))
+            // Las líneas de barrido de la pantalla.
+            var y = p.y(0.15f); while (y < p.y(0.66f)) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(p.x(0.11f), y), Offset(p.x(0.89f), y), lw * 0.25f); y += lw * 0.9f }
+        }
+        ascii(p, dibujo, 0.15f, 0.17f, 0.85f, 0.64f, if (p.hecho) cian else p.linea)
+        // El cuello y la base del monitor.
+        caja(p, 0.42f, 0.7f, 0.58f, 0.74f)
+        caja(p, 0.3f, 0.74f, 0.7f, 0.77f)
     }
 }

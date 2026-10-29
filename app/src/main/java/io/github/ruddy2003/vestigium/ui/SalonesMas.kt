@@ -36,6 +36,7 @@ object SalonesMas {
             TemaId.NAVIDAD -> chimenea(cs, oscuro, n)
             TemaId.ANTIGUAS -> salonPiedra(cs, oscuro, n)
             TemaId.DISTOPIA -> archivo(cs, oscuro, n)
+            TemaId.CIBER -> salaCentral(cs, oscuro, n)
             else -> {}
         }
     }
@@ -65,6 +66,12 @@ object SalonesMas {
                 drawRect(Color(0xFFC8102E), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.12f))
                 drawRect(Color(0xFFF2EFE6), Offset(w * 0.42f, h * 0.3f), Size(w * 0.16f, h * 0.3f))
                 drawRect(Color(0xFF3A3C40), Offset(w * 0.44f, h * 0.68f), Size(w * 0.12f, h * 0.12f))
+            }
+            TemaId.CIBER -> {
+                // La tapa de un gabinete: chapa negra, filo cian y una hilera de luces de estado.
+                drawRect(piedra(Color(0xFF111925)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h))
+                drawRect(Color(0xFF00E5FF).copy(alpha = 0.8f), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.1f))
+                for (k in 0 until 6) drawRect(Color(0xFF00E5FF).copy(alpha = if (k % 3 == 1) 0.3f else 0.85f), Offset(w * (0.2f + k * 0.1f), h * 0.42f), Size(w * 0.05f, h * 0.22f))
             }
             TemaId.ANTIGUAS -> { drawRect(piedra(Color(0xFF7D7A72)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); with(TrofeosMas) { runas(Offset(w * 0.22f, h * 0.5f), w * 0.56f, h * 0.5f, Color(0xFF2B2A28).copy(alpha = 0.5f), h * 0.06f, 6) } }
             else -> drawRect(metal, Offset(0f, 0f), Size(w, h))
@@ -350,5 +357,56 @@ object SalonesMas {
             }
         }
         drawLine(linea, Offset(0f, h - 10 * d), Offset(w, h - 10 * d), 1f * d)
+    }
+
+    /**
+     * Terminal: la sala de las computadoras centrales. Gabinetes entre las columnas de piezas con dos carretes de cinta
+     * y la rejilla de luces de estado, la charola de cables arriba y el piso técnico de losetas abajo. Todo en cian sobre negro.
+     */
+    private fun DrawScope.salaCentral(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val cian = Color(0xFF00E5FF)
+        val chapa = Color(0xFF111925).copy(alpha = 0.85f)
+        val filo = Color(0xFF15404A)
+        // El piso técnico: losetas con sus juntas, que se pierden hacia arriba.
+        val piso = 34 * d
+        drawRect(Color(0xFF0A0E15), Offset(0f, h - piso), Size(w, piso))
+        var x = 0f; while (x < w) { drawLine(filo.copy(alpha = 0.6f), Offset(x, h - piso), Offset(x, h), 1f); x += 24 * d }
+        listOf(0.35f, 0.7f).forEach { f -> drawLine(filo.copy(alpha = 0.6f), Offset(0f, h - piso * (1 - f)), Offset(w, h - piso * (1 - f)), 1f) }
+        drawLine(cian.copy(alpha = 0.35f), Offset(0f, h - piso), Offset(w, h - piso), 1f * d)
+        // La charola de cables del techo.
+        drawRect(Color(0xFF0A0E15), Offset(0f, 0f), Size(w, 14 * d))
+        for (k in 0 until 3) drawLine(cian.copy(alpha = 0.12f + 0.08f * k), Offset(0f, (4 + k * 3) * d), Offset(w, (4 + k * 3) * d), 1f * d)
+        drawLine(filo, Offset(0f, 14 * d), Offset(w, 14 * d), 1.2f * d)
+        val paso = w / n
+        // Sobre cada columna, el letrero del nodo.
+        for (i in 0 until n) with(TrofeosMas) { mono("[ NODO_0${i + 1} ]", (i + 0.5f) * paso, 28 * d, 8 * d, cian.copy(alpha = 0.45f), android.graphics.Paint.Align.CENTER) }
+        // Los gabinetes entre las columnas: carretes arriba, luces de estado y la rejilla de ventilación abajo.
+        val az = java.util.Random(64)
+        for (i in 0..n) {
+            val cx = i * paso; val ancho = 26 * d
+            val y0 = 36 * d; val y1 = h - piso
+            drawRect(chapa, Offset(cx - ancho / 2, y0), Size(ancho, y1 - y0))
+            drawRect(filo, Offset(cx - ancho / 2, y0), Size(ancho, y1 - y0), style = Stroke(1f * d))
+            // Los dos carretes de cinta, con sus rayos y la cinta enrollada.
+            listOf(y0 + 16 * d, y0 + 42 * d).forEachIndexed { k, cy ->
+                val c = Offset(cx, cy); val r = 9 * d
+                drawCircle(Color(0xFF05070B), r, c)
+                drawCircle(cian.copy(alpha = 0.18f), r * (0.55f + 0.25f * k), c)
+                drawCircle(cian.copy(alpha = 0.55f), r, c, style = Stroke(1f * d))
+                for (j in 0 until 3) { val a = j * 2 * PI / 3 + k * 0.5; drawLine(cian.copy(alpha = 0.5f), c, Offset(c.x + (r * 0.5f * cos(a)).toFloat(), c.y + (r * 0.5f * sin(a)).toFloat()), 1f * d) }
+                drawCircle(Color(0xFF05070B), 1.6f * d, c)
+            }
+            // Las luces de estado: una rejilla de tres por muchas, unas encendidas y otras no.
+            var y = y0 + 62 * d; var fila = 0
+            while (y < y1 - 30 * d) {
+                if (fila % 10 == 9) drawLine(filo, Offset(cx - ancho / 2, y), Offset(cx + ancho / 2, y), 1f * d)
+                else for (j in 0 until 3) { val on = az.nextInt(3) > 0
+                    drawRect(cian.copy(alpha = if (on) 0.55f + 0.35f * az.nextFloat() else 0.1f), Offset(cx - 7 * d + j * 6 * d, y), Size(3 * d, 2 * d)) }
+                y += 6 * d; fila++
+            }
+            // La rejilla de ventilación.
+            var yv = y1 - 24 * d; while (yv < y1 - 4 * d) { drawLine(Color(0xFF05070B), Offset(cx - ancho / 2 + 4 * d, yv), Offset(cx + ancho / 2 - 4 * d, yv), 1.4f * d); yv += 4 * d }
+        }
     }
 }

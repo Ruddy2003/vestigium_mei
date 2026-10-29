@@ -40,6 +40,8 @@ object ContenedoresMas {
             Contenedor.ADVIENTO -> Color(0xFFFBF7EE)
             Contenedor.MAPAS -> Color(0xFFE9DCC0)
             Contenedor.EXPEDIENTE -> Color(0xFFF2EFE6)
+            // La pantalla: al oscurecerse queda casi negra (Terminal solo existe en oscuro).
+            Contenedor.CONSOLA -> Color(0xFF22303A)
             else -> PERGAMINO
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
@@ -198,6 +200,42 @@ object ContenedoresMas {
                 drawRect(Color(0xFF8A8D91), Offset(w * 0.06f, h * 0.05f), Size(w * 0.12f, 3 * d))
                 drawRect(Color(0xFFC8102E), Offset(0f, h * 0.9f), Size(w, h * 0.03f))
             }
+            Contenedor.CONSOLA -> {
+                // La consola de registro: el monitor con su pantalla y, a la derecha, el papel continuo de la impresora,
+                // que cuelga del alimentador y se apila en pliegues; la pila crece con lo escrito.
+                val W = size.width; val H = size.height
+                val cian = Color(0xFF00E5FF); val negro = Color(0xFF05070B)
+                val papelC = Color(0xFFD9DEE3)
+                // El papel continuo: la tira que baja con sus perforaciones y la pila de pliegues en el piso.
+                val px = W * 0.74f; val pw = W * 0.24f
+                val pliegues = (3 + hojas / 8).coerceAtMost(18)
+                val pisoY = H * 0.97f
+                sombra(Offset(px + 3 * d, pisoY - pliegues * 2.6f * d + 3 * d), Size(pw, pliegues * 2.6f * d), 1 * d)
+                for (k in 0 until pliegues) { val y = pisoY - (k + 1) * 2.6f * d
+                    drawRect(if (k % 2 == 0) papelC else lerp(papelC, Color.Black, 0.18f), Offset(px + (if (k % 2 == 0) 0f else 1.5f * d), y), Size(pw, 2.6f * d)) }
+                val tope = pisoY - pliegues * 2.6f * d
+                drawRect(papelC, Offset(px + pw * 0.1f, H * 0.2f), Size(pw * 0.8f, tope - H * 0.2f))
+                var yy = H * 0.22f; while (yy < tope - 3 * d) { listOf(px + pw * 0.18f, px + pw * 0.82f).forEach { xx -> drawCircle(negro.copy(alpha = 0.55f), 1.3f * d, Offset(xx, yy)) }; yy += 7 * d }
+                yy = H * 0.26f; var k = 0; while (yy < tope - 6 * d) { drawLine(negro.copy(alpha = 0.35f), Offset(px + pw * 0.3f, yy), Offset(px + pw * (if (k % 3 == 2) 0.55f else 0.72f), yy), 0.8f * d); yy += 5 * d; k++ }
+                // El monitor: caja, pantalla negra con el registro en cian y el cursor, y su base.
+                sombra(Offset(6 * d, 8 * d), Size(W * 0.74f, H * 0.62f), 6 * d)
+                drawRoundRect(Brush.linearGradient(listOf(Color(0xFF2A3644), Color(0xFF1B2430), Color(0xFF111925)), Offset.Zero, Offset(W * 0.74f, H * 0.62f)), Offset.Zero, Size(W * 0.74f, H * 0.62f), CornerRadius(6 * d))
+                drawRoundRect(Color(0xFF15404A), Offset.Zero, Size(W * 0.74f, H * 0.62f), CornerRadius(6 * d), style = Stroke(1.2f * d))
+                val sx = W * 0.06f; val sy = H * 0.05f; val sw = W * 0.62f; val sh = H * 0.46f
+                drawRoundRect(negro, Offset(sx, sy), Size(sw, sh), CornerRadius(4 * d))
+                drawRoundRect(Brush.radialGradient(listOf(cian.copy(alpha = 0.14f), Color.Transparent), Offset(sx + sw / 2, sy + sh / 2), sw * 0.7f), Offset(sx, sy), Size(sw, sh), CornerRadius(4 * d))
+                with(TrofeosMas) {
+                    val tam = sh / 9
+                    mono("> registro", sx + 4 * d, sy + tam * 1.4f, tam, cian, negrita = true)
+                    listOf(0.82f, 0.64f, 0.9f, 0.5f, 0.72f).forEachIndexed { i, f -> mono("[ok] " + "-".repeat((f * 12).toInt()), sx + 4 * d, sy + tam * (2.8f + i * 1.25f), tam * 0.85f, cian.copy(alpha = 0.7f)) }
+                    drawRect(cian, Offset(sx + 4 * d, sy + tam * 9.1f - tam), Size(tam * 0.55f, tam))
+                }
+                var ys = sy; while (ys < sy + sh) { drawLine(Color.Black.copy(alpha = 0.35f), Offset(sx, ys), Offset(sx + sw, ys), 0.6f * d); ys += 2.4f * d }
+                // La ranura del alimentador del papel y la luz de encendido.
+                drawRect(negro, Offset(W * 0.7f, H * 0.18f), Size(W * 0.08f, 3 * d))
+                drawCircle(cian, 2 * d, Offset(W * 0.64f, H * 0.56f))
+                drawPath(Path().apply { moveTo(W * 0.26f, H * 0.62f); lineTo(W * 0.48f, H * 0.62f); lineTo(W * 0.54f, H * 0.7f); lineTo(W * 0.2f, H * 0.7f); close() }, Color(0xFF111925))
+            }
             else -> {}
         }
     }
@@ -277,6 +315,18 @@ object ContenedoresMas {
                     y += renglon; k++
                 }
             }
+            Contenedor.CONSOLA -> {
+                // La pantalla de registro: líneas de barrido, la columna con el número de cada línea y la barra de estado arriba.
+                val cian = Color(0xFF00E5FF)
+                var y = 0f; while (y < size.height) { drawLine(cian.copy(alpha = 0.03f), Offset(0f, y), Offset(size.width, y), 1f); y += 3 * d }
+                drawRect(cian.copy(alpha = 0.1f), Offset(0f, 0f), Size(size.width, 12 * d))
+                with(TrofeosMas) {
+                    mono("registro.log  -- solo lectura --", 26 * d, 9 * d, 8 * d, cian.copy(alpha = 0.5f))
+                    drawLine(cian.copy(alpha = 0.2f), Offset(24 * d, 12 * d), Offset(24 * d, size.height), 0.8f * d)
+                    var yy = 96 * d; var k = 1
+                    while (yy < size.height - 8 * d) { mono("%03d".format(k), 21 * d, yy, 8 * d, cian.copy(alpha = 0.35f), android.graphics.Paint.Align.RIGHT); yy += renglon; k++ }
+                }
+            }
             else -> {}
         }
     }
@@ -315,6 +365,12 @@ object ContenedoresMas {
                 val y = 60 * d
                 listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(16 * d, y); quadraticTo(16 * d + s * 14 * d, y - 12 * d, 16 * d + s * 16 * d, y + 4 * d); close() }, Color(0xFFB3122E)) }
                 drawCircle(Color(0xFFD4AF37), 3 * d, Offset(16 * d, y))
+            }
+            Contenedor.CONSOLA -> {
+                // La tira de arrastre del papel continuo: los agujeros del tractor y la línea perforada.
+                drawRect(Color(0xFFD9DEE3).copy(alpha = if (oscuro) 0.16f else 0.6f), Offset(2 * d, 0f), Size(16 * d, size.height))
+                var y = 8 * d; while (y < size.height) { drawCircle(Color.Black.copy(alpha = 0.6f), 2.4f * d, Offset(10 * d, y)); y += 13 * d }
+                drawLine(Color(0xFF00E5FF).copy(alpha = 0.3f), Offset(18 * d, 0f), Offset(18 * d, size.height), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 2 * d)))
             }
             else -> {}
         }

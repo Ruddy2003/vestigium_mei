@@ -159,7 +159,7 @@ object Campanas {
         "medieval" to listOf("Roncesvalles", "Pamplona", "Logroño", "Burgos", "León", "Astorga", "Santiago"),
         "distopia" to listOf("SECTOR 1", "SECTOR 2", "SECTOR 3", "SECTOR 4", "SECTOR 5", "SECTOR 6", "MINISTERIO"),
         "refugio" to listOf("Esclusa", "Túnel", "Ruinas", "Gasolinera", "Puente", "Torre", "Superficie"),
-        "ciber" to listOf("NODO 01", "NODO 02", "NODO 03", "NODO 04", "NODO 05", "NODO 06", "NÚCLEO"),
+        "ciber" to listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz"),
         "orden" to listOf("Ciudadela", "Páramo", "Puesto", "Ruinas", "Búnker", "Archivo", "Reliquia"),
         "laboratorio" to listOf("Día 1", "Día 2", "Día 3", "Día 4", "Día 5", "Día 6", "Resultado"),
         "colonos" to listOf("Puerto", "Vado del río", "Pradera", "Cruce", "Colina", "Valle", "Pueblo nuevo"),
