@@ -42,6 +42,17 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TemaVestigium
 import io.github.ruddy2003.vestigium.ui.Tonos
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.lineaMeta
+import io.github.ruddy2003.vestigium.ui.pincelDeCifras
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
+import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import io.github.ruddy2003.vestigium.ui.VistaPreviaTema
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.fondoTema
@@ -1242,6 +1253,61 @@ class Capturas {
         v73(t, o, 2400, { it.copy(enfoque_plan = planEnfoque(0, 12)) }, n) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
     }
     @Test fun temaBloqueo() = porTema("bloqueo") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.Bloqueo {} } }
+
+    // Lote 4: presentación del tema, registro rápido, cinta, Otras vidas y estilo de gráfica.
+    @Test fun temaPresentacion() = porTema("presentacion") { t, o, n -> captura(t, o, 2400, n) {
+        io.github.ruddy2003.vestigium.ui.PresentacionTema.frase = io.github.ruddy2003.vestigium.ui.Frases.de(t).first()
+        io.github.ruddy2003.vestigium.ui.PresentacionTema.tema = t
+        io.github.ruddy2003.vestigium.ui.CapaPresentacionTema()
+    } }
+    /** La hoja del registro rápido con el menú de Registrar, sobre el fondo del tema. */
+    @Test fun temaQuick() = porTema("quick") { t, o, n -> captura(t, o, 2000, n) {
+        Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.BottomCenter) {
+            io.github.ruddy2003.vestigium.ui.HojaQuick(Modifier.fillMaxWidth()) {
+                io.github.ruddy2003.vestigium.ui.EncabezadoQuick("Registrar", "10:32 · " + io.github.ruddy2003.vestigium.ui.Estilo.fecha("2026-10-17") + " · sábado 17 de octubre",
+                    "Lo de todos los días en un toque. Lo demás, cuando quieras.")
+                io.github.ruddy2003.vestigium.ui.MenuQuick(listOf("Enfoque" to "enfoque", "Siesta" to "siesta", "Sustancias" to "consumo", "Gasto o ingreso" to "gasto",
+                    "Sueño" to "sueno", "Llenar el día" to "diario", "Nota" to "notas", "Impulso" to "impulso")) {}
+            }
+        }
+    } }
+    @Test fun temaCinta() = porTema("cinta") { t, o, n -> v73(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) } }
+    @Test fun temaOtrasVidas() = porTema("otrasVidas") { t, o, n -> pantalla(t, o, 6400, n) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia) } }
+    /** El estilo de gráfica del tema: serie con puntos (uno hueco) y meta, rejilla, ejes, cifras, barras con su carril y una barra horizontal. */
+    @Test fun temaEstiloGrafica() = porTema("estiloGrafica") { t, o, n -> captura(t, o, 1400, n) {
+        val e = estiloGrafica(t)
+        val cs = MaterialTheme.colorScheme
+        val cifras = estiloCifras(MaterialTheme.typography.labelMedium, t)
+        val pincel = pincelDeCifras(cs.onSurfaceVariant, 30f, tema = t)
+        val serie = listOf(3.2f, 4.1f, null, 5.6f, 4.8f, 6.3f, 5.1f)
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("4,7", style = cifras.copy(fontSize = MaterialTheme.typography.titleLarge.fontSize), color = cs.onSurface)
+            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(200.dp)) {
+                val izq = 36.dp.toPx(); val arriba = 8.dp.toPx(); val abajo = size.height - 22.dp.toPx(); val der = size.width - 6.dp.toPx()
+                fun px(i: Int) = izq + i * (der - izq) / 6f
+                fun py(v: Float) = abajo - (v - 1f) / 6f * (abajo - arriba)
+                val niveles = listOf(1f, 3f, 5f, 7f)
+                rejillaGrafica(e, niveles.map { py(it) }, cs.outline, (0..6).map { px(it) }, androidx.compose.ui.geometry.Rect(izq, arriba, der, abajo))
+                ejeGrafica(e, Offset(izq, abajo), Offset(der, abajo), cs.onSurfaceVariant, (0..6).map { px(it) })
+                ejeGrafica(e, Offset(izq, abajo), Offset(izq, arriba), cs.onSurfaceVariant, niveles.map { py(it) })
+                lineaMeta(e, Offset(izq, py(4.5f)), Offset(der, py(4.5f)), cs.tertiary)
+                lineaGrafica(e, serie.mapIndexed { i, v -> v?.let { Offset(px(i), py(it)) } }, cs.primary)
+                serie.forEachIndexed { i, v -> if (v != null) puntoGrafica(e, Offset(px(i), py(v)), 5.dp.toPx(), cs.primary, hueco = i == 1) }
+                niveles.forEach { v -> drawContext.canvas.nativeCanvas.drawText(v.toInt().toString(), 4.dp.toPx(), py(v) + 10f, pincel) }
+            }
+            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(110.dp)) {
+                val w = size.width / 7
+                listOf(0.35f, 0.8f, 0.55f, 1f, 0.15f, 0.65f, 0.45f).forEachIndexed { i, f ->
+                    barraGrafica(e, Offset(i * w + w * 0.18f, 0f), Size(w * 0.64f, size.height), cs.surfaceVariant, pista = true)
+                    barraGrafica(e, Offset(i * w + w * 0.18f, size.height * (1 - f)), Size(w * 0.64f, size.height * f), Tonos.secuencial(f, o))
+                }
+            }
+            androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(14.dp)) {
+                barraGrafica(e, Offset.Zero, size, cs.surfaceVariant, horizontal = true, pista = true)
+                barraGrafica(e, Offset.Zero, Size(size.width * 0.62f, size.height), cs.primary, horizontal = true)
+            }
+        }
+    } }
     @Test fun temaCartas() = porTema("cartas") { t, o, n -> cartas(t, o, n) }
 
     // Lote 3: superficies que antes no tenían captura por tema.
