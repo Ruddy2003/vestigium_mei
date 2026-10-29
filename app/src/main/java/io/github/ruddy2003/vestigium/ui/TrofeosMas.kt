@@ -1150,7 +1150,7 @@ object TrofeosMas {
             // Las líneas de barrido de la pantalla.
             var y = p.y(0.15f); while (y < p.y(0.66f)) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(p.x(0.11f), y), Offset(p.x(0.89f), y), lw * 0.25f); y += lw * 0.9f }
         }
-        ascii(p, dibujo, 0.15f, 0.17f, 0.85f, 0.64f, if (p.hecho) cian else p.linea)
+        ascii(p, dibujo, 0.15f, 0.17f, 0.85f, 0.64f, if (p.hecho) cian else p.sombra)
         // El cuello y la base del monitor.
         caja(p, 0.42f, 0.7f, 0.58f, 0.74f)
         caja(p, 0.3f, 0.74f, 0.7f, 0.77f)

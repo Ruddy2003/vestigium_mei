@@ -43,7 +43,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 |---|---|---|
 | 0 | Base de trabajo: esta matriz, pruebas de cobertura y unicidad, capturas por tema, CI sin publicar, hoja de contacto de N temas, colores de Deshacer | hecho 29 oct 2026 |
 | 1 | Una sola huella (ícono, sello, monocromo, notificaciones) | hecho 29 oct 2026 |
-| 2 | Los 6 temas sin diseño completo (CIB como Terminal, REF, ORD, LAB, ESP, URS), un PR por tema | pendiente |
+| 2 | Los 6 temas sin diseño completo (CIB como Terminal, REF, ORD, LAB, ESP, URS) | hecho 29 oct 2026 |
 | 3 | Completar las superficies que ya existen | pendiente |
 | 4 | Pantallas genéricas, gráficas, controles y arranque | pendiente |
 | 5 | Textos y tipografía | pendiente |
@@ -59,28 +59,28 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
 | ROM | 40 | 4 | 27 | 47 | 4 |
-| CIB | 37 | 4 | 23 | 49 | 7 |
+| CIB | 48 | 3 | 23 | 40 | 6 |
 | HEL | 39 | 4 | 25 | 49 | 5 |
 | MED | 47 | 3 | 24 | 43 | 5 |
-| DIS | 47 | 6 | 18 | 43 | 6 |
-| REF | 37 | 7 | 20 | 49 | 7 |
-| ORD | 30 | 6 | 23 | 56 | 7 |
-| LAB | 33 | 9 | 16 | 58 | 6 |
+| DIS | 48 | 5 | 18 | 43 | 6 |
+| REF | 48 | 7 | 19 | 40 | 6 |
+| ORD | 41 | 5 | 23 | 47 | 6 |
+| LAB | 44 | 8 | 16 | 49 | 5 |
 | COL | 35 | 7 | 25 | 50 | 5 |
 | NAP | 39 | 3 | 23 | 50 | 5 |
 | BOT | 53 | 1 | 14 | 50 | 4 |
 | NAV | 42 | 5 | 20 | 48 | 5 |
 | SED | 48 | 7 | 16 | 47 | 4 |
 | GOT | 50 | 3 | 22 | 43 | 4 |
-| ESP | 38 | 4 | 17 | 56 | 5 |
+| ESP | 48 | 4 | 17 | 47 | 4 |
 | AND | 51 | 6 | 14 | 47 | 4 |
 | MON | 51 | 4 | 14 | 48 | 5 |
 | REN | 49 | 2 | 19 | 47 | 5 |
-| URS | 33 | 6 | 19 | 58 | 6 |
+| URS | 44 | 5 | 19 | 49 | 5 |
 | REV | 46 | 2 | 18 | 52 | 4 |
 | ANT | 45 | 2 | 19 | 51 | 5 |
 
-Los 6 temas del lote 2 (CIB, REF, ORD, LAB, ESP y URS) son los que más dependen de respaldos genéricos; BOT, AND, MON, SED y REN, los más completos.
+Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
 
 ## Lote 1 · Una sola huella
 
@@ -96,18 +96,18 @@ La huella del ícono pasa a ser la única (ícono, monocromo, notificaciones, se
 
 ## Lote 2 · Los 6 temas sin diseño completo
 
-CIB, REF, ORD, LAB, ESP y URS caen en respaldos por familia (`salonDe`, `dibujarTrofeo`, `Contenedor.ESPIRAL`). La prueba `CoberturaTemas` los vigila (`trofeos`, `salon`, `campana_mapa`, `libreta`).
+CIB, REF, ORD, LAB, ESP y URS caían en respaldos por familia (`salonDe`, `dibujarTrofeo`, `Contenedor.ESPIRAL`). La prueba `CoberturaTemas` los vigila (`trofeos`, `salon`, `campana_mapa`, `libreta`); desde el lote 2 esas cuatro superficies no tienen pendientes.
 
 | Superficie | Dónde | ROM | CIB | HEL | MED | DIS | REF | ORD | LAB | COL | NAP | BOT | NAV | SED | GOT | ESP | AND | MON | REN | URS | REV | ANT | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Trofeos: figuras de las 9 categorías | `ui/TrofeosTema.kt`, `ui/TrofeosMas.kt`, respaldo `pantallas/Trofeos.kt:117` | P | G | P | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Los 6 dibujan el mismo trofeo genérico. |
-| Trofeos: pedestal | `ui/TrofeosTema.kt:71` | C | G | P | P | P | G | G | G | P | P | P | P | P | P | G | P | P | C | G | P | P | ROM y REN comparten rama (solo cambia el color de la piedra). |
-| Trofeos: nombres | `TrofeosTema.nombre` | C | ✗ | P | P | P | ✗ | ✗ | ✗ | P | C | P | P | P | P | ✗ | C | P | C | ✗ | P | P | «Arco de triunfo» ROM y NAP; «Cúpula» ROM y REN; «Astrolabio» REN y AND. Los 6 no tienen nombres. |
-| Salón del hall: escena | `ui/SalonesTema.kt`, `ui/SalonesMas.kt`, respaldo `salonDe` (`pantallas/Hall.kt:79`) | P | G | P | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Respaldo: CIB, REF, LAB y ESP salen idénticos (laboratorio); ORD, castillo; URS, taller. |
-| Campaña: mapa, ruta y etapas dibujadas | `ui/MapasCampana.kt`, `ui/MapasMas.kt` | P | G | P | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Los 6 usan la ruta en zigzag y la bandera genéricas. |
-| Campaña: títulos y nombres de etapas | `ciencia/Campanas.kt:132-178` | P | S | P | P | S | C | S | S | C | C | C | C | P | P | P | P | P | P | S | P | P | LAB «Día 1…6», CIB «NODO 01…06», DIS «SECTOR n», URS no cuadra con el mapa nuevo, ORD termina en «Reliquia». Repiten nombres de etapa con otro tema: REF, ORD, COL, NAP, BOT, NAV y URS. |
-| Libreta de momentos (contenedor) | `contenedorDe` (`ui/Contenedores.kt:45`) | P | G | P | C | P | G | G | G | P | P | P | P | P | C | G | C | P | P | G | P | C | Los 6 caen en `ESPIRAL`. MED y GOT (códice y horas) comparten papel y encuadernación; AND y ANT (manuscrito y mapas) comparten encuadernación. |
-| Imagen del hall: escena | `pantallas/HallImagen.kt:53` | P | G | P | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Los 6 usan `fondoFamilia` (por `salonDe`). |
+| Trofeos: figuras de las 9 categorías | `ui/TrofeosTema.kt`, `ui/TrofeosMas.kt`, respaldo `pantallas/Trofeos.kt:117` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: los 6 ya tienen sus figuras (ASCII en consola, chapa con el átomo, piezas forjadas, vidrio de laboratorio, misiones espaciales, medallas soviéticas). |
+| Trofeos: pedestal | `ui/TrofeosTema.kt:71` | C | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | C | P | P | P | ROM y REN comparten rama (solo cambia el color de la piedra). Lote 2: los 6 con pedestal propio. |
+| Trofeos: nombres | `TrofeosTema.nombre` | C | P | P | P | P | P | P | P | P | C | P | P | P | P | P | C | P | C | P | P | P | «Arco de triunfo» ROM y NAP; «Cúpula» ROM y REN; «Astrolabio» REN y AND. Lote 2: los 6 con nombres que no repite nadie. |
+| Salón del hall: escena | `ui/SalonesTema.kt`, `ui/SalonesMas.kt`, respaldo `salonDe` (`pantallas/Hall.kt:79`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: sala de computadoras centrales (CIB), sala común con puertas de engranaje (REF), sala capitular de acero (ORD), laboratorio limpio (LAB), cúpula del observatorio (ESP) y estación de metro (URS). |
+| Campaña: mapa, ruta y etapas dibujadas | `ui/MapasCampana.kt`, `ui/MapasMas.kt` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: traza de red, corte del refugio, mapa táctico, microplaca, sistema solar y Transiberiano. |
+| Campaña: títulos y nombres de etapas | `ciencia/Campanas.kt:132-178` | P | P | P | P | P | P | P | P | C | C | C | C | P | P | P | P | P | P | P | P | P | Lote 2: etapas nuevas de CIB, DIS, REF, ORD, LAB y URS, alineadas con su mapa. Repiten nombres de etapa con otro tema: COL y BOT («Pradera»), NAP y NAV («Estrasburgo», «Viena»). |
+| Libreta de momentos (contenedor) | `contenedorDe` (`ui/Contenedores.kt:45`) | P | P | P | C | P | P | P | P | P | P | P | P | P | C | P | C | P | P | P | P | C | Lote 2: consola de registro, carpeta del supervisor, códice técnico, cuaderno de laboratorio, bitácora de vuelo y cuaderno escolar; ya ningún tema cae en `ESPIRAL`. MED y GOT (códice y horas) comparten papel y encuadernación; AND y ANT (manuscrito y mapas) comparten encuadernación. |
+| Imagen del hall: escena | `pantallas/HallImagen.kt:53` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 2: los 6 ya usan su salón (antes `fondoFamilia`). |
 
 ## Lote 3 · Completar las superficies que ya existen
 
@@ -115,9 +115,9 @@ Lo que ya tiene diseño por tema, pero compartido, por grupos o pobre.
 
 | Superficie | Dónde | ROM | CIB | HEL | MED | DIS | REF | ORD | LAB | COL | NAP | BOT | NAV | SED | GOT | ESP | AND | MON | REN | URS | REV | ANT | Nota |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Campaña: marcador | `MapasMas.kt:218` | G | G | P | G | P | G | G | G | P | P | P | P | P | G | G | P | P | G | G | P | P | Punto simple en ROM, MED, GOT, REN y los 6. |
-| Campaña: victoria | `MapasCampana.kt:154`, `MapasMas.kt:188` | C | G | C | C | S | G | G | G | S | S | S | S | S | C | G | S | S | P | G | S | S | ROM y HEL comparten; MED y GOT comparten; los 6 usan la bandera genérica. REN, NAP y REV tienen la suya, pero el plan pide enriquecer las simples. |
-| Campaña: puntos de la ruta | `MapasMas.puntos` (`:27`) | G | G | G | G | P | G | G | G | P | G | P | P | P | G | G | P | P | G | G | G | P | Los demás usan el zigzag de `pantallas/Campanas.kt:80`. |
+| Campaña: marcador | `MapasMas.kt:218` | G | P | P | G | P | P | P | P | P | P | P | P | P | G | P | P | P | G | P | P | P | Punto simple en ROM, MED, GOT y REN. Lote 2: cursor (CIB), ficha amarilla (REF), banderín (ORD), pipeta (LAB), nave (ESP) y locomotora (URS). |
+| Campaña: victoria | `MapasCampana.kt:154`, `MapasMas.kt:188` | C | P | C | C | S | P | P | P | S | S | S | S | S | C | P | S | S | P | P | S | S | ROM y HEL comparten; MED y GOT comparten. REN, NAP y REV tienen la suya, pero el plan pide enriquecer las simples. Lote 2: «ACCESO CONCEDIDO», salida al sol, fortaleza tomada, cultivo completo, aterrizaje y estrella roja. |
+| Campaña: puntos de la ruta | `MapasMas.puntos` (`:27`) | G | P | G | G | P | P | P | P | P | G | P | P | P | G | P | P | P | G | P | G | P | Los demás usan el zigzag de `pantallas/Campanas.kt:80`. Lote 2: los 6 con sus paradas (URS con coordenadas reales). |
 | Salón: atrio (ROM) y stoa (HEL) | `SalonesTema.kt:99-122` | S | G | S | P | P | G | G | G | P | P | P | P | P | P | G | P | P | P | G | P | P | Pobres; se enriquecen. |
 | Sala de trofeos: pared, repisa, destellos y placa | `pantallas/Trofeos.kt:140, 280, 309-322` | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | G | La repisa es de la misma madera en todos. |
 | Hall: techos de ciudad | `pantallas/Hall.kt:155` | C | C | C | C | C | C | C | C | G | C | G | G | C | C | C | C | C | C | G | G | G | Grupos: ROM·HEL·REN; AND·SED·MON; GOT·MED·ORD·NAP; CIB·ESP·LAB·DIS·REF. El resto cae en `else`. |

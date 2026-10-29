@@ -416,8 +416,6 @@ object SalonesMas {
         for (k in 0 until 3) drawLine(cian.copy(alpha = 0.12f + 0.08f * k), Offset(0f, (4 + k * 3) * d), Offset(w, (4 + k * 3) * d), 1f * d)
         drawLine(filo, Offset(0f, 14 * d), Offset(w, 14 * d), 1.2f * d)
         val paso = w / n
-        // Sobre cada columna, el letrero del nodo.
-        for (i in 0 until n) with(TrofeosMas) { mono("[ NODO_0${i + 1} ]", (i + 0.5f) * paso, 28 * d, 8 * d, cian.copy(alpha = 0.45f), android.graphics.Paint.Align.CENTER) }
         // Los gabinetes entre las columnas: carretes arriba, luces de estado y la rejilla de ventilación abajo.
         val az = java.util.Random(64)
         for (i in 0..n) {
