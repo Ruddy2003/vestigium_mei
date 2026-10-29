@@ -129,7 +129,7 @@ object Campanas {
 
     fun etapas(tema: String): List<String> = ETAPAS[tema] ?: ETAPAS.getValue("romano")
 
-    private val TITULOS = mapOf(
+    internal val TITULOS = mapOf(
         "romano" to listOf("Campaña de las Galias", "Marcha a Britania", "La vía Apia", "Expedición a Dacia"),
         "heleno" to listOf("La marcha de los diez mil", "Hacia el Indo", "La travesía del Egeo", "Los juegos de Olimpia"),
         "medieval" to listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña"),
@@ -153,7 +153,7 @@ object Campanas {
         "urss" to listOf("PLAN QUINQUENAL", "LA COSECHA DEL KOLJÓS", "EL TRANSIBERIANO", "LA PRESA"),
     )
 
-    private val ETAPAS = mapOf(
+    internal val ETAPAS = mapOf(
         "romano" to listOf("Roma", "Ostia", "Massilia", "Lugdunum", "Durocortorum", "Lutetia", "Alesia"),
         "heleno" to listOf("Pella", "Anfípolis", "Troya", "Sardes", "Gordio", "Tarso", "Babilonia"),
         "medieval" to listOf("Roncesvalles", "Pamplona", "Logroño", "Burgos", "León", "Astorga", "Santiago"),

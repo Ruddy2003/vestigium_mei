@@ -173,7 +173,7 @@ class MainActivity : FragmentActivity() {
 }
 
 @Composable
-private fun Bloqueo(reintentar: () -> Unit) {
+internal fun Bloqueo(reintentar: () -> Unit) {
     Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             SelloHuella(Modifier.padding(bottom = 4.dp).size(170.dp))

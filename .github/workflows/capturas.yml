@@ -6,6 +6,11 @@ on:
     # Cambios solo de documentación no compilan ni publican una versión nueva.
     paths-ignore: ['docs/**', 'CLAUDE.md', 'README.md']
   workflow_dispatch:
+    inputs:
+      superficies:
+        description: "Capturas por tema (lista separada por comas, o «todas»); vacío = solo las de siempre"
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -25,6 +30,8 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - name: Generar capturas
+        env:
+          CAPTURAS: ${{ inputs.superficies }}
         run: |
           chmod +x gradlew
           ./gradlew :app:recordPaparazziDebug --no-daemon 2>&1 | tee capturas.log || true
@@ -33,10 +40,12 @@ jobs:
         run: |
           mkdir -p /tmp/cap && cd /tmp/cap
           cp "$GITHUB_WORKSPACE"/app/src/test/snapshots/images/*.png . 2>/dev/null || true
+          # Estado de las pruebas de cobertura y unicidad de los temas (plan de diseño).
+          cp "$GITHUB_WORKSPACE"/app/build/temas/*.txt . 2>/dev/null || true
           for f in "$GITHUB_WORKSPACE"/app/build/test-results/testDebugUnitTest/*.xml; do grep -A 25 "<failure" "$f" | head -60; done > fallas.txt 2>/dev/null || true
           grep -E "^e: |FAILED|Exception|error:|What went wrong" "$GITHUB_WORKSPACE/capturas.log" | head -100 > errores.txt || true
           tail -80 "$GITHUB_WORKSPACE/capturas.log" > final.txt
-          echo "${{ github.sha }} run ${{ github.run_number }}" > commit.txt
+          echo "${{ github.sha }} run ${{ github.run_number }} ${{ github.ref_name }}" > commit.txt
           git init -q && git checkout -q -b capturas
           git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
           git add . && git commit -qm "capturas ${{ github.run_number }}"

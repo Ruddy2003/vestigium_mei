@@ -1292,14 +1292,17 @@ object Fiesta {
 
 private class Particula(val ang: Float, val vel: Float, val giro: Float, val tam: Float, val tono: Int, val retraso: Float)
 
-/** Lluvia breve de figuras del tema: hojas de laurel, píxeles, rayos, gotas de tinta, chispas, burbujas o brasas. */
+/**
+ * Lluvia breve de figuras del tema: hojas de laurel, píxeles, rayos, gotas de tinta, chispas, burbujas o brasas.
+ * [fijo]: un instante quieto de la lluvia (entre 0 y 1), para las capturas de diseño.
+ */
 @Composable
-fun CapaFiesta() {
-    val n = Fiesta.n
-    if (n == 0 || !Repo.config.animaciones) return
-    val progreso = remember(n) { androidx.compose.animation.core.Animatable(0f) }
+fun CapaFiesta(fijo: Float? = null) {
+    val n = if (fijo != null) 1 else Fiesta.n
+    if (n == 0 || (fijo == null && !Repo.config.animaciones)) return
+    val progreso = remember(n) { androidx.compose.animation.core.Animatable(fijo ?: 0f) }
     var activa by remember(n) { mutableStateOf(true) }
-    LaunchedEffect(n) { progreso.animateTo(1f, tween(1600, easing = LinearEasing)); activa = false }
+    LaunchedEffect(n) { if (fijo == null) { progreso.animateTo(1f, tween(1600, easing = LinearEasing)); activa = false } }
     if (!activa) return
     val tema = Estilo.tema
     val e = MaterialTheme.colorScheme

@@ -149,7 +149,7 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
  * La forma de los marcadores en cada tema: sello de cera, hexágono de neón, hoja, vitral, estrella de ocho puntas,
  * destello, corona de yurta, compás… Se dibujan directo en el lienzo del mapa (rápido aunque sean miles).
  */
-private object Formas {
+internal object Formas {
     private val p = android.graphics.Path()
     private fun poligono(x: Float, y: Float, r: Float, n: Int, giro: Double = -90.0, interior: Float? = null) {
         p.reset()
@@ -556,7 +556,7 @@ fun PantallaMapa(nav: Nav) {
 
 /** Marco del mapa y rosa de los vientos, dibujados con los colores y adornos del tema. */
 @Composable
-private fun MarcoMapa(tema: TemaId, modifier: Modifier) {
+internal fun MarcoMapa(tema: TemaId, modifier: Modifier) {
     val e = MaterialTheme.colorScheme
     val oscuro = esOscuro()
     androidx.compose.foundation.Canvas(modifier) {
