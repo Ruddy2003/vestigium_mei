@@ -223,7 +223,7 @@ fun TeFaltaHoy(d: Dia, hoy: String, ocultar: Set<String> = emptySet(), accion: (
     }
     Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
         Column(Modifier.padding(12.dp)) {
-            Text(Estilo.seccion("Te falta hoy", null).first, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            Text(Estilo.seccionLegible("Te falta hoy", null), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
             FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 l.forEach { p -> Ficha("${p.texto} →", false) { accion(p.accion) } }
             }
@@ -310,7 +310,7 @@ fun DatosQueFaltan(nav: io.github.ruddy2003.vestigium.ui.Nav, compacto: Boolean 
         return
     }
     Tarjeta(Modifier.padding(top = 10.dp)) {
-        Text(Estilo.seccion("Datos que faltan", null).first, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
+        Text(Estilo.seccionLegible("Datos que faltan", null), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.error)
         faltas.forEachIndexed { i, f ->
             if (i > 0) HorizontalDivider(Modifier.padding(vertical = 6.dp))
             Text(f.texto, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))

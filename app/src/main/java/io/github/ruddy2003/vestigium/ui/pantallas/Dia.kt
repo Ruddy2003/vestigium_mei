@@ -381,7 +381,7 @@ private fun TarjetaNoche(d: Dia, fecha: String, c: io.github.ruddy2003.vestigium
         modifier = Modifier.fillMaxWidth().padding(top = 18.dp)) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(io.github.ruddy2003.vestigium.ui.Estilo.seccion("Llenar el día", Romano.latin("Llenar el día")).first, style = MaterialTheme.typography.titleLarge)
+                Text(io.github.ruddy2003.vestigium.ui.Estilo.seccionLegible("Llenar el día", Romano.latin("Llenar el día")), style = MaterialTheme.typography.titleLarge)
                 Text(partes.joinToString("  ") { (t, ok) -> (if (ok) "✓ " else "○ ") + t }, style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
                 if (listo) Text("día sellado", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)

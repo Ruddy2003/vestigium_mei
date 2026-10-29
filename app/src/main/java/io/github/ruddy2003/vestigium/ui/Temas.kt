@@ -28,7 +28,6 @@ object Temas {
     // ------------------------------------------------------------ calendarios y números de los temas nuevos
 
     val MESES_FRANCESES = listOf("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre")
-    val MESES_RUSOS = listOf("ЯНВАРЬ", "ФЕВРАЛЬ", "МАРТ", "АПРЕЛЬ", "МАЙ", "ИЮНЬ", "ИЮЛЬ", "АВГУСТ", "СЕНТЯБРЬ", "ОКТЯБРЬ", "НОЯБРЬ", "ДЕКАБРЬ")
     private val REPUBLICANOS = listOf("vendémiaire", "brumaire", "frimaire", "nivôse", "pluviôse", "ventôse", "germinal", "floréal", "prairial", "messidor", "thermidor", "fructidor")
 
     /**
@@ -71,26 +70,6 @@ object Temas {
         val d = Fechas.parse(iso)
         "${d.dayOfMonth} de la " + LUNAS[d.monthValue - 1].lowercase().replaceFirstChar { it.uppercase() }
     }.getOrDefault(iso)
-
-    private val CIFRAS_CHINAS = listOf("〇", "一", "二", "三", "四", "五", "六", "七", "八", "九")
-
-    /** Números chinos tradicionales: 十七, 二十三, 一百二十… */
-    fun chino(n: Int): String {
-        if (n <= 0) return "〇"
-        if (n >= 10000) return n.toString()
-        val partes = StringBuilder()
-        val mil = n / 1000; val cien = (n / 100) % 10; val diez = (n / 10) % 10; val uno = n % 10
-        if (mil > 0) partes.append(CIFRAS_CHINAS[mil] + "千")
-        if (cien > 0) partes.append(CIFRAS_CHINAS[cien] + "百") else if (mil > 0 && (diez > 0 || uno > 0)) partes.append("〇")
-        if (diez > 0) partes.append((if (diez == 1 && n < 20) "" else CIFRAS_CHINAS[diez]) + "十") else if (cien > 0 && uno > 0) partes.append("〇")
-        if (uno > 0) partes.append(CIFRAS_CHINAS[uno])
-        return partes.toString()
-    }
-
-    /** Año escrito cifra por cifra, como en las fechas chinas: 二〇二六年. */
-    fun anioChino(a: Int): String = a.toString().map { CIFRAS_CHINAS[it - '0'] }.joinToString("") + "年"
-
-    fun fechaChina(a: Int, m: Int, d: Int) = anioChino(a) + " " + chino(m) + "月" + chino(d) + "日"
 
     /** «faltan N días para …», o el nombre del día cuando llega. */
     fun cuentaAtras(d: java.time.LocalDate, mes: Int, dia: Int, nombre: String, corto: String): String {
@@ -194,34 +173,17 @@ object Temas {
         when { m == 1 && dd == 1 -> "Año nuevo"; m == 9 && dd == 1 -> "Ramadán"; m == 10 && dd == 1 -> "Fitr"; m == 12 && dd == 10 -> "Adha"; else -> null }
     }
 
-    private val CIFRAS_ARABES = "٠١٢٣٤٥٦٧٨٩"
-    fun arabe(n: Int): String = n.toString().map { if (it.isDigit()) CIFRAS_ARABES[it - '0'] else it }.joinToString("")
-
-    private val CIFRAS_MONGOLAS = "᠐᠑᠒᠓᠔᠕᠖᠗᠘᠙"
-    fun mongol(n: Int): String = n.toString().map { if (it.isDigit()) CIFRAS_MONGOLAS[it - '0'] else it }.joinToString("")
-
-    private val ANIMALES = listOf("хулгана", "үхэр", "бар", "туулай", "луу", "могой", "морин", "хонин", "бичин", "тахиа", "нохой", "гахай")
-    private val COLOR_MACHO = listOf("цагаан", "хар", "хөх", "улаан", "шар")
-    private val COLOR_HEMBRA = listOf("цагаагчин", "харагчин", "хөхөгчин", "улаагчин", "шарагчин")
-
-    /** Año del calendario mongol: color del elemento y animal («улаан морин жил», año del caballo rojo). Cambia, aproximadamente, a inicios de febrero. */
-    fun anioMongol(d: java.time.LocalDate): String {
-        val a = if (d.monthValue == 1 || (d.monthValue == 2 && d.dayOfMonth < 4)) d.year - 1 else d.year
-        val animal = ANIMALES[Math.floorMod(a - 2020, 12)]
-        val elemento = (Math.floorMod(a, 10)) / 2
-        val color = if (a % 2 == 0) COLOR_MACHO[elemento] else COLOR_HEMBRA[elemento]
-        return "$color $animal жил".replaceFirstChar { it.uppercase() }
-    }
+    private val ANIMALES_ES = listOf("ratón", "buey", "tigre", "liebre", "dragón", "serpiente", "caballo", "oveja", "mono", "gallo", "perro", "cerdo")
+    private val COLORES_ES = listOf("blanco", "negro", "azul", "rojo", "amarillo")
 
     /**
-     * Meses mongoles nombrados por la estación: el primero (тэргүүн), el de en medio (дунд) y el último (сүүл) de cada una.
-     * El año empieza con la primavera, en el Цагаан сар (hacia febrero); aquí cada mes gregoriano toma el nombre del mes
-     * lunar que más se le parece, así que es aproximado: octubre es el último del otoño.
+     * Año del calendario mongol, en español: el animal y el color de su elemento («Año del caballo rojo»). Cambia,
+     * aproximadamente, a inicios de febrero.
      */
-    val MESES_MONGOLES = listOf("Өвлийн сүүл сар", "Хаврын тэргүүн сар", "Хаврын дунд сар", "Хаврын сүүл сар", "Зуны тэргүүн сар", "Зуны дунд сар",
-        "Зуны сүүл сар", "Намрын тэргүүн сар", "Намрын дунд сар", "Намрын сүүл сар", "Өвлийн тэргүүн сар", "Өвлийн дунд сар")
-
-    fun fechaMongol(d: java.time.LocalDate) = "${d.year} оны ${d.monthValue}-р сарын ${d.dayOfMonth}"
+    fun anioMongolEs(d: java.time.LocalDate): String {
+        val a = if (d.monthValue == 1 || (d.monthValue == 2 && d.dayOfMonth < 4)) d.year - 1 else d.year
+        return "Año del ${ANIMALES_ES[Math.floorMod(a - 2020, 12)]} ${COLORES_ES[Math.floorMod(a, 10) / 2]}"
+    }
 
     val MESES_ITALIANOS = listOf("gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre")
     /** «a dì 17 d'ottobre 2026», como fechaba Leonardo sus apuntes. */
@@ -270,7 +232,7 @@ object Temas {
         val m = when (tema) {
             TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO", "enfoque" to "STVDIVM")
             TemaId.CIBER -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
-            TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ", "enfoque" to "ΣΧΟΛΗ")
+            TemaId.HELENO -> mapOf("animo" to "ÁNIMO", "momento" to "INSTANTE", "gasto" to "DRACMAS", "sueno" to "MORFEO", "habitos" to "COSTUMBRES", "hoy" to "EL DÍA", "cifra" to "CIFRA", "foto" to "ESTAMPA", "enfoque" to "ESCUELA")
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")
@@ -281,8 +243,8 @@ object Temas {
             TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina", "enfoque" to "Estudio")
             TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera", "enfoque" to "Lectio")
             TemaId.ESPACIO -> mapOf("animo" to "ESTADO", "momento" to "EVENTO", "gasto" to "COMBUSTIBLE", "sueno" to "SUEÑO", "habitos" to "RUTINAS", "hoy" to "ÓRBITA", "cifra" to "TELEMETRÍA", "foto" to "IMAGEN", "enfoque" to "CONCENTRACIÓN")
-            TemaId.ANDALUS -> mapOf("animo" to "الروح", "momento" to "لحظة", "gasto" to "النفقات", "sueno" to "النوم", "habitos" to "العادات", "hoy" to "النهار", "cifra" to "الحساب", "foto" to "صورة", "enfoque" to "دراسة")
-            TemaId.MONGOL -> mapOf("animo" to "СЭТГЭЛ", "momento" to "АГШИН", "gasto" to "ЗАРДАЛ", "sueno" to "НОЙР", "habitos" to "ЗАНШИЛ", "hoy" to "ӨДӨР", "cifra" to "ТОО", "foto" to "ЗУРАГ", "enfoque" to "СУРАЛЦАХ")
+            TemaId.ANDALUS -> mapOf("animo" to "Ánimo", "momento" to "Instante", "gasto" to "Maravedís", "sueno" to "Almohada", "habitos" to "Costumbres", "hoy" to "El día", "cifra" to "Cifra", "foto" to "Azulejo", "enfoque" to "Estudio")
+            TemaId.MONGOL -> mapOf("animo" to "ÁNIMO", "momento" to "SUCESO", "gasto" to "GASTOS", "sueno" to "YURTA", "habitos" to "COSTUMBRES", "hoy" to "JORNADA", "cifra" to "CUENTA", "foto" to "RETRATO", "enfoque" to "ESTUDIO")
             TemaId.RENACIMIENTO -> mapOf("animo" to "Animo", "momento" to "Nota", "gasto" to "Conti", "sueno" to "Sonno", "habitos" to "Esercizi", "hoy" to "Giornata", "cifra" to "Misura", "foto" to "Ritratto", "enfoque" to "Studio")
             TemaId.NAVIDAD -> mapOf("animo" to "Ánimo", "momento" to "Momento", "gasto" to "Regalos", "sueno" to "Noche de paz", "habitos" to "Propósitos", "hoy" to "El día", "cifra" to "Número", "foto" to "Postal", "enfoque" to "Taller")
             TemaId.SEDA -> mapOf("animo" to "Espíritu", "momento" to "Relato", "gasto" to "Mercancías", "sueno" to "Reposo", "habitos" to "Ritos", "hoy" to "Jornada", "cifra" to "Cuenta", "foto" to "Estampa", "enfoque" to "Estudio")

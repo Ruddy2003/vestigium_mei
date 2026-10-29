@@ -83,6 +83,12 @@ Lo que pidió el autor:
    - Se recortan a un subconjunto con `pyftsubset`. `fontTools` no está instalado: se instala con `pip` en el lote 0.
    - Se renombran si su licencia reserva el nombre, como ya hace el repo («Gaceta Vestigium», «Orbita Vestigium»).
    - Su licencia se agrega a `app/src/main/assets/licencias/` (la OFL en `fuentes_OFL.txt` y la de Apache en un archivo aparte).
+7. **Lo que se lee para entender un dato se entiende.** Lo pidió el autor después del lote 5.
+   - Las claves de Día (sueño, pasos…), las pestañas, los días de la semana, los meses, los números, la fecha, la racha, «atrás», los rótulos de los widgets y los textos cortos se entienden sin saber otra lengua.
+   - Valen el español, el inglés y lo que se le parece: latín, italiano, francés y castellano antiguo.
+   - El griego, el árabe, el cirílico, el mongol y el chino solo van de adorno (marcas, colofones, sellos) o junto a su traducción («guardar · حفظ»).
+   - Los nombres de pantalla de Heleno, Al-Ándalus y Mongol pueden ir en su lengua, pero donde van solos llevan el español al lado (`Estilo.pantallaLegible`, `Estilo.seccionLegible`).
+   - Lo vigila `LegibilidadTemas`.
 
 ## Lote 0: base de trabajo
 

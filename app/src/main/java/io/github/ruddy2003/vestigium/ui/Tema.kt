@@ -470,10 +470,10 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.GOTICO -> "Laudes"; TemaId.ESPACIO -> "ÓRBITA"; TemaId.ANDALUS -> "النهار"; TemaId.MONGOL -> "ӨДӨР"; TemaId.RENACIMIENTO -> "Giornata"; TemaId.REVOLUCION -> "CAHIER"; TemaId.ANTIGUAS -> "CRÓNICA"
     }
     val linea = when (tema) {
-        TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."; TemaId.MEDIEVAL -> "xvij de otubre"
+        TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "17ʹ Októvrios"; TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.DISTOPIA -> "EXP. 0290"; TemaId.REFUGIO -> "DÍA 290"; TemaId.ORDEN -> "17 OCT 26"; TemaId.LABORATORIO -> "T+290"; TemaId.COLONOS -> "17 de octubre"
-        TemaId.NAPOLEON -> "samedi 17 octobre"; TemaId.BOTANICO -> "otoño · día 26"; TemaId.NAVIDAD -> "faltan 69 días"; TemaId.SEDA -> "十月十七日"; TemaId.URSS -> "ОКТЯБРЬ"
-        TemaId.GOTICO -> "hora de vísperas"; TemaId.ESPACIO -> "JD 2461331"; TemaId.ANDALUS -> "1448 H"; TemaId.MONGOL -> "Морин жил"; TemaId.RENACIMIENTO -> "addì 17 d'ottobre"; TemaId.REVOLUCION -> "26 vendémiaire"; TemaId.ANTIGUAS -> "17 de la Luna de las Hojas"
+        TemaId.NAPOLEON -> "samedi 17 octobre"; TemaId.BOTANICO -> "otoño · día 26"; TemaId.NAVIDAD -> "faltan 69 días"; TemaId.SEDA -> "10.ª luna · día 17"; TemaId.URSS -> "17.X · OCTUBRE"
+        TemaId.GOTICO -> "hora de vísperas"; TemaId.ESPACIO -> "JD 2461331"; TemaId.ANDALUS -> "1448 H"; TemaId.MONGOL -> "Año del caballo"; TemaId.RENACIMIENTO -> "addì 17 d'ottobre"; TemaId.REVOLUCION -> "26 vendémiaire"; TemaId.ANTIGUAS -> "17 de la Luna de las Hojas"
     }
     val forma = formaPrevia(tema)
     // Las formas con arco, frontón o punta necesitan más aire arriba o abajo para que nada quede cortado; la suma es la misma en todas, para que las filas queden parejas.

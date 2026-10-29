@@ -683,14 +683,14 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
 private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.ROMANO -> "Optimum — " to "Pessimum — "
     TemaId.CIBER -> "// mejor: " to "// peor: "
-    TemaId.HELENO -> "Τὸ ἄριστον — " to "Τὸ χείριστον — "
+    TemaId.HELENO -> "Lo mejor (τὸ ἄριστον) — " to "Lo peor (τὸ χείριστον) — "
     TemaId.MEDIEVAL -> "Lo bueno del día — " to "Lo amargo del día — "
     TemaId.DISTOPIA -> "MÉRITO — " to "FALTA — "
     TemaId.REFUGIO -> "LO MEJOR > " to "LO PEOR > "
     TemaId.ORDEN -> "Acierto — " to "Baja — "
     TemaId.LABORATORIO -> "Resultado positivo — " to "Resultado negativo — "
     TemaId.COLONOS -> "Lo que salió bien — " to "Lo que salió mal — "
-    TemaId.NAPOLEON -> "Victoire — " to "Revers — "
+    TemaId.NAPOLEON -> "Victoria — " to "Revés — "
     TemaId.BOTANICO -> "Hallazgo — " to "Plaga — "
     TemaId.NAVIDAD -> "Lo más bonito — " to "Lo más frío — "
     TemaId.SEDA -> "Lo más dulce — " to "Lo más amargo — "
@@ -700,7 +700,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.MONGOL -> "Сайн · lo bueno — " to "Муу · lo malo — "
     TemaId.RENACIMIENTO -> "Il meglio — " to "Il peggio — "
     TemaId.URSS -> "ДОСТИЖЕНИЕ · logro — " to "НЕДОСТАТОК · falla — "
-    TemaId.REVOLUCION -> "Bonheur — " to "Doléance — "
+    TemaId.REVOLUCION -> "Dicha — " to "Queja — "
     TemaId.ANTIGUAS -> "La hazaña — " to "El tropiezo — "
 }
 

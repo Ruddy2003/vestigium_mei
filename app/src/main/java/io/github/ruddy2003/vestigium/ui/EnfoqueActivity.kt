@@ -178,7 +178,7 @@ private fun Corriendo(p: PlanEnfoque, ahora: Long, cerrar: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = cerrar) { Text("✕", style = MaterialTheme.typography.titleLarge, color = cs.onSurfaceVariant) }
-            Text(Estilo.pantalla(nombre, Romano.latin(nombre)).first, style = MaterialTheme.typography.titleLarge, color = cs.primary, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
+            Text(Estilo.pantallaLegible(nombre, Romano.latin(nombre)), style = MaterialTheme.typography.titleLarge, color = cs.primary, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
             Spacer(Modifier.widthIn(min = 48.dp))
         }
         Text(when {
@@ -273,7 +273,7 @@ private fun Planear(siestaInicial: Boolean, cerrar: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = cerrar) { Text("✕", style = MaterialTheme.typography.titleLarge, color = cs.onSurfaceVariant) }
-            Text(Estilo.pantalla(if (siesta) "Siesta" else "Enfoque", null).first, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+            Text(Estilo.pantallaLegible(if (siesta) "Siesta" else "Enfoque", null), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
         }
         Etiqueta("¿En qué?")
         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {

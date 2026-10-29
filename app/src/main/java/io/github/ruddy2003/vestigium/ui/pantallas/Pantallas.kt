@@ -139,7 +139,7 @@ object Pantallas {
      * Pantallas y acciones que tienen **todas** las palabras de [q], en cualquier orden y sin acentos («gastos mes»,
      * «corregir sueño»). Las acciones van primero. [nombreDelTema] da el título en el tema (en las pruebas, nada).
      */
-    fun buscar(q: String, nombreDelTema: (P) -> String = { Estilo.pantalla(it.titulo, Romano.latin(it.titulo)).first }): List<P> {
+    fun buscar(q: String, nombreDelTema: (P) -> String = { Estilo.pantallaLegible(it.titulo, Romano.latin(it.titulo)) }): List<P> {
         val palabras = normal(q).split(Regex("\\s+")).filter { it.length >= 2 }
         if (palabras.isEmpty()) return emptyList()
         return (ACCIONES + TODAS).filter { p ->
@@ -163,7 +163,7 @@ fun EnPantallas(q: String, ir: (String) -> Unit) {
                 if (i > 0) HorizontalDivider()
                 Row(Modifier.fillMaxWidth().clickable { Seleccion.limpiarFechas(); p.antes?.invoke(); ir(p.ruta) }.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text((if (p.accion) "✎ " + p.titulo else Estilo.pantalla(p.titulo, Romano.latin(p.titulo)).first), style = MaterialTheme.typography.bodyLarge)
+                        Text((if (p.accion) "✎ " + p.titulo else Estilo.pantallaLegible(p.titulo, Romano.latin(p.titulo))), style = MaterialTheme.typography.bodyLarge)
                         Text(p.detalle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Text("→", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
@@ -202,7 +202,7 @@ fun AtajosFijos(ir: (String) -> Unit) {
                 Surface(onClick = { Seleccion.limpiarFechas(); ir(p.ruta) }, shape = MaterialTheme.shapes.medium, color = cs.surface, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.6f)),
                     modifier = Modifier.widthIn(min = 96.dp, max = 172.dp)) {
                     Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                        Text(Estilo.seccion(p.titulo, Romano.latin(p.titulo)).first, style = MaterialTheme.typography.labelLarge, color = cs.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(Estilo.seccionLegible(p.titulo, Romano.latin(p.titulo)), style = MaterialTheme.typography.labelLarge, color = cs.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(p.detalle, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }

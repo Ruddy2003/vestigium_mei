@@ -3,8 +3,9 @@ package io.github.ruddy2003.vestigium.ui
 /**
  * Textos cortos que antes eran iguales en todos los temas, ahora en la voz de cada uno: los nombres de las pestañas, la
  * escala sin marcar, el «+ añadir» de las listas, el contador de palabras del escritor y las preguntas de los widgets (y
- * las del modo discreto, que no dicen qué se registra). Se leen con [Estilo.texto]; la prueba de cobertura exige todas
- * las claves de [CLAVES] en todos los temas.
+ * las del modo discreto, que no dicen qué se registra). Todos se leen sin saber otra lengua: el latín, el italiano y el
+ * francés de algunos temas son los que se parecen al español. Se leen con [Estilo.texto]; la prueba de cobertura exige
+ * todas las claves de [CLAVES] en todos los temas.
  */
 object Textos {
     /** Todas las claves; `palabras` lleva un `%d` para el número. */
@@ -41,18 +42,18 @@ object Textos {
     )
 
     private val HELENO: Map<String, String> = mapOf(
-        "pestana_dia" to "ΣΗΜΕΡΟΝ",
-        "pestana_diario" to "ΗΜΕΡΑΙ",
-        "pestana_registrar" to "ΓΡΑΦΕ",
-        "pestana_vida" to "ΒΙΟΣ",
-        "pestana_entender" to "ΛΟΓΟΣ",
-        "escala_vacia" to "οὐδέν · toca o desliza",
-        "lista_anadir" to "+ πρόσθες",
-        "palabras" to "%d λέξεις",
-        "widget_animo" to "πῶς ἔχεις νῦν;",
-        "widget_momento" to "νῦν αἰσθάνομαι…",
-        "widget_discreto_animo" to "νῦν",
-        "widget_discreto_momento" to "γράφε",
+        "pestana_dia" to "HOY",
+        "pestana_diario" to "ANALES",
+        "pestana_registrar" to "ESCRIBE",
+        "pestana_vida" to "BIOS",
+        "pestana_entender" to "LOGOS",
+        "escala_vacia" to "nada aún · toca o desliza",
+        "lista_anadir" to "+ añadir",
+        "palabras" to "%d palabras escritas",
+        "widget_animo" to "¿cómo te sientes ahora?",
+        "widget_momento" to "ahora siento…",
+        "widget_discreto_animo" to "ahora",
+        "widget_discreto_momento" to "escribir",
     )
 
     private val MEDIEVAL: Map<String, String> = mapOf(
@@ -151,13 +152,13 @@ object Textos {
         "pestana_registrar" to "DÉPÊCHE",
         "pestana_vida" to "ÉPOPÉE",
         "pestana_entender" to "ÉTAT-MAJOR",
-        "escala_vacia" to "SANS RAPPORT · toca o desliza",
-        "lista_anadir" to "+ AJOUTER",
-        "palabras" to "%d MOTS",
-        "widget_animo" to "¿MORAL DE LA GARDE?",
-        "widget_momento" to "LE CŒUR DIT…",
+        "escala_vacia" to "SIN PARTE · toca o desliza",
+        "lista_anadir" to "+ AÑADIR",
+        "palabras" to "%d PALABRAS AL BOLETÍN",
+        "widget_animo" to "¿MORAL DE LA GUARDIA?",
+        "widget_momento" to "EL CORAZÓN DICE…",
         "widget_discreto_animo" to "MORAL",
-        "widget_discreto_momento" to "DÉPÊCHE",
+        "widget_discreto_momento" to "DESPACHO",
     )
 
     private val BOTANICO: Map<String, String> = mapOf(
@@ -251,33 +252,33 @@ object Textos {
     )
 
     private val ANDALUS: Map<String, String> = mapOf(
-        "pestana_dia" to "اليوم",
-        "pestana_diario" to "اليوميات",
-        "pestana_registrar" to "دوّن",
-        "pestana_vida" to "الحياة",
-        "pestana_entender" to "الحكمة",
-        "escala_vacia" to "فارغ · toca o desliza",
-        "lista_anadir" to "+ أضف",
-        "palabras" to "%d كلمة",
-        "widget_animo" to "كيف حالك الآن؟",
-        "widget_momento" to "أشعر الآن…",
-        "widget_discreto_animo" to "الآن",
-        "widget_discreto_momento" to "دوّن",
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Diván",
+        "pestana_registrar" to "Anotar",
+        "pestana_vida" to "Vida",
+        "pestana_entender" to "Ciencia",
+        "escala_vacia" to "vacío · toca o desliza",
+        "lista_anadir" to "+ añadir al cofre",
+        "palabras" to "%d palabras en el cuaderno",
+        "widget_animo" to "¿cómo está el ánimo ahora?",
+        "widget_momento" to "ahora siento…",
+        "widget_discreto_animo" to "en este instante",
+        "widget_discreto_momento" to "escribir",
     )
 
     private val MONGOL: Map<String, String> = mapOf(
-        "pestana_dia" to "ӨНӨӨДӨР",
-        "pestana_diario" to "ДЭВТЭР",
-        "pestana_registrar" to "БИЧИХ",
-        "pestana_vida" to "АМЬДРАЛ",
-        "pestana_entender" to "ШИНЖИЛГЭЭ",
-        "escala_vacia" to "ХООСОН · toca o desliza",
-        "lista_anadir" to "+ НЭМЭХ",
-        "palabras" to "%d ҮГ",
-        "widget_animo" to "СЭТГЭЛ ЯМАР БАЙНА?",
-        "widget_momento" to "ОДОО МЭДРЭХ НЬ…",
-        "widget_discreto_animo" to "ОДОО",
-        "widget_discreto_momento" to "БИЧИХ",
+        "pestana_dia" to "HOY",
+        "pestana_diario" to "CRÓNICA",
+        "pestana_registrar" to "ANOTAR",
+        "pestana_vida" to "ESTEPA",
+        "pestana_entender" to "SABER",
+        "escala_vacia" to "VACÍO · TOCA O DESLIZA",
+        "lista_anadir" to "+ A LA YURTA",
+        "palabras" to "%d PALABRAS ANOTADAS",
+        "widget_animo" to "¿CÓMO VA EL ESPÍRITU?",
+        "widget_momento" to "EN LA YURTA SIENTO…",
+        "widget_discreto_animo" to "AL GALOPE",
+        "widget_discreto_momento" to "NOTA",
     )
 
     private val RENACIMIENTO: Map<String, String> = mapOf(

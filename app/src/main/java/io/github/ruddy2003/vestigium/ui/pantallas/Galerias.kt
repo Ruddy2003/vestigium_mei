@@ -216,7 +216,7 @@ internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modi
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleLarge)
+                    Text(Estilo.seccionLegible(titulo, Romano.latin(titulo)), style = MaterialTheme.typography.titleLarge)
                     Text(detalle, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 Text("→", style = MaterialTheme.typography.titleLarge, color = cs.primary)
@@ -330,7 +330,7 @@ private fun TarjetaMapa(id: String, titulo: String, detalle: String, modifier: M
                 dibujoMapa(id, cs.primary, cs.secondary, tema, cs.surface)
                 marcoDelMapa(tema, 0.55.dp.toPx(), cs.onSurface.copy(alpha = 0.7f), cs.primary, cs.surface)
             }
-            Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(Estilo.seccionLegible(titulo, Romano.latin(titulo)), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(detalle, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
     }
