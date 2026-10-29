@@ -258,14 +258,14 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
     val titulo = when (parte) { "avisos" -> "Avisos y recordatorios"; "privacidad" -> "Privacidad"; else -> "Apariencia" }
     Hoja(titulo, nav.atras) {
         if (parte == "apariencia") Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
-            val oscuroAhora = io.github.ruddy2003.vestigium.ui.modoOscuro(io.github.ruddy2003.vestigium.ui.TemaId.ROMANO)
             // Los temas en una cuadrícula de tres por fila.
             val vista = androidx.compose.ui.platform.LocalView.current
             val centros = remember { HashMap<String, androidx.compose.ui.geometry.Offset>() }
             io.github.ruddy2003.vestigium.ui.TemaId.entries.chunked(3).forEach { fila ->
                 Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     fila.forEach { t ->
-                        io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, oscuroAhora, c.tema == t.id,
+                        // Cada muestra en el modo que tendría ese tema (el que solo existe en oscuro, siempre oscuro).
+                        io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, io.github.ruddy2003.vestigium.ui.modoOscuro(t), c.tema == t.id,
                             Modifier.weight(1f).onGloballyPositioned { centros[t.id] = it.boundsInWindow().center }) {
                             if (c.tema != t.id) {
                                 // Foto del tema de ahora, cambio de tema, y el nuevo se abre en círculo desde la tarjeta con su propio sonido.
@@ -303,7 +303,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Ayuda("Mañana te toca: ${manana.nombre}.")
             }
             Etiqueta("Claro u oscuro")
-            if (io.github.ruddy2003.vestigium.ui.Estilo.tema.soloOscuro) Ayuda("El cyberpunk solo existe en oscuro.")
+            val temaActual = io.github.ruddy2003.vestigium.ui.Estilo.tema
+            if (temaActual.soloOscuro) Ayuda("El tema ${temaActual.nombre} solo existe en oscuro.")
             else Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro").forEach { (id, nombre) ->
                     Ficha(nombre, c.modo == id) { cambiar { it.copy(modo = id) } }

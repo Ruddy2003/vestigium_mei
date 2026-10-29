@@ -139,12 +139,18 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         Repo.init(this)
         RotacionTema.revisar()
+        // Pantalla de arranque: el fondo del tema en la ventana ya, y el arranque del tema para la próxima vez.
+        Estilo.tema.let { t -> ArranqueTema.aplicar(this, t, ArranqueTema.oscuro(this, t)) }
         Programador.asegurar(this)
         Sentidos.preparar(this)
         pedida = intent?.getStringExtra(PANTALLA)
         desbloqueado = !Repo.config.bloqueo
         setContent {
             TemaVestigium {
+                // Al cambiar de tema o de claro a oscuro, el próximo arranque ya sale con el tema nuevo.
+                val temaArranque = Estilo.tema
+                val oscuroArranque = modoOscuro(temaArranque)
+                LaunchedEffect(temaArranque, oscuroArranque) { ArranqueTema.aplicar(this@MainActivity, temaArranque, oscuroArranque) }
                 if (!desbloqueado) Bloqueo { pedirHuella() }
                 else Raiz(pedida) { pedida = null }
             }
