@@ -93,7 +93,7 @@ internal val romanoClaro = lightColorScheme(
     error = Color(0xFFA3312F),
     surfaceContainer = Paleta.marmolClaro, surfaceContainerHigh = Paleta.marmolVeta, surfaceContainerHighest = Paleta.marmolVeta,
     surfaceContainerLow = Paleta.marmolClaro, surfaceContainerLowest = Paleta.marmolClaro,
-)
+).conInversos()
 
 internal val romanoOscuro = darkColorScheme(
     primary = Paleta.oro, onPrimary = Color(0xFF1A1405), primaryContainer = Paleta.oroSuave, onPrimaryContainer = Paleta.marfil,
@@ -104,7 +104,7 @@ internal val romanoOscuro = darkColorScheme(
     error = Color(0xFFE58C86),
     surfaceContainer = Paleta.basaltoAlto, surfaceContainerHigh = Paleta.basaltoVeta, surfaceContainerHighest = Paleta.basaltoVeta,
     surfaceContainerLow = Paleta.basaltoAlto, surfaceContainerLowest = Paleta.basalto,
-)
+).conInversos()
 
 /** Neón cian y magenta sobre negro azulado. */
 internal val ciber = darkColorScheme(
@@ -116,7 +116,7 @@ internal val ciber = darkColorScheme(
     error = Color(0xFFFF5470),
     surfaceContainer = Color(0xFF0A0E15), surfaceContainerHigh = Color(0xFF111925), surfaceContainerHighest = Color(0xFF111925),
     surfaceContainerLow = Color(0xFF0A0E15), surfaceContainerLowest = Color(0xFF05070B),
-)
+).conInversos()
 
 /** Pergamino y mármol con púrpura macedonio y azul del Egeo. */
 internal val helenoClaro = lightColorScheme(
@@ -128,7 +128,7 @@ internal val helenoClaro = lightColorScheme(
     error = Color(0xFFA3312F),
     surfaceContainer = Color(0xFFFBF8F1), surfaceContainerHigh = Color(0xFFEAE3D4), surfaceContainerHighest = Color(0xFFEAE3D4),
     surfaceContainerLow = Color(0xFFFBF8F1), surfaceContainerLowest = Color(0xFFFBF8F1),
-)
+).conInversos()
 
 /** Noche púrpura con el oro del sol de Vergina. */
 internal val helenoOscuro = darkColorScheme(
@@ -140,7 +140,7 @@ internal val helenoOscuro = darkColorScheme(
     error = Color(0xFFE58C86),
     surfaceContainer = Color(0xFF161222), surfaceContainerHigh = Color(0xFF211B33), surfaceContainerHighest = Color(0xFF211B33),
     surfaceContainerLow = Color(0xFF161222), surfaceContainerLowest = Color(0xFF0E0B17),
-)
+).conInversos()
 
 internal val tipoRomano = Typography(
     displaySmall = TextStyle(fontFamily = Letra.inscripcion, fontWeight = FontWeight.Normal, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 2.sp),

@@ -25,7 +25,7 @@ object Sentidos {
     enum class Evento { TOQUE, ELEGIR, GUARDAR, LOGRO, PASAR, CAMBIO, ERROR, ABRIR, TEMA }
 
     /** Un golpe de vibración: primitiva, intensidad (0–1) y espera en ms antes de él. */
-    private class Golpe(val prim: Int, val fuerza: Float, val espera: Int = 0)
+    internal data class Golpe(val prim: Int, val fuerza: Float, val espera: Int = 0)
 
     @SuppressLint("InlinedApi") private const val CLICK = VibrationEffect.Composition.PRIMITIVE_CLICK
     @SuppressLint("InlinedApi") private const val THUD = VibrationEffect.Composition.PRIMITIVE_THUD
@@ -38,7 +38,7 @@ object Sentidos {
 
     private fun g(p: Int, f: Float, e: Int = 0) = Golpe(p, f, e)
 
-    private fun patron(tema: TemaId, e: Evento): List<Golpe> = when (e) {
+    internal fun patron(tema: TemaId, e: Evento): List<Golpe> = when (e) {
         Evento.ELEGIR -> when (tema) {
             TemaId.CIBER -> listOf(g(TICK, 0.8f))
             TemaId.DISTOPIA -> listOf(g(CLICK, 0.45f))
@@ -238,7 +238,7 @@ object Sentidos {
     // ---------------------------------------------------------------- sonido
 
     /** Por tema: toque, guardar, logro, pasar (cambiar de pantalla), elegir, abrir y el sonido del propio tema (al elegirlo). */
-    private val SONIDOS = mapOf(
+    internal val SONIDOS = mapOf(
         "romano" to intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir, R.raw.s_romano_tema),
         "ciber" to intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir, R.raw.s_ciber_tema),
         "heleno" to intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir, R.raw.s_heleno_tema),
@@ -299,7 +299,7 @@ object Sentidos {
     private val HIYAZ = floatArrayOf(1f, 1.0595f, 1.2599f, 1.3348f, 1.4983f)
     /** I, IV y V (y la quinta grave): sirve para acordes y frases enteras, no solo para notas sueltas. */
     private val CUARTAS = floatArrayOf(0.7492f, 1f, 1.3348f, 1.4983f)
-    private fun acordeToque(tema: TemaId): FloatArray? = when (tema) {
+    internal fun acordeToque(tema: TemaId): FloatArray? = when (tema) {
         TemaId.ROMANO, TemaId.ESPACIO -> MAYOR
         TemaId.LABORATORIO -> MISTERIO
         TemaId.CIBER, TemaId.GOTICO -> MENOR

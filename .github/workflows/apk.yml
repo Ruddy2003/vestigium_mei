@@ -5,13 +5,19 @@ on:
     branches: [main]
     # Cambios solo de documentación no compilan ni publican una versión nueva.
     paths-ignore: ['docs/**', 'CLAUDE.md', 'README.md']
+  # Lanzado a mano desde una rama, solo compila: nunca publica un Release fuera de `main`.
   workflow_dispatch:
+    inputs:
+      publicar:
+        description: "Publicar el Release (solo cuenta en main)"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
 
 concurrency:
-  group: apk
+  group: apk-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -41,7 +47,7 @@ jobs:
           tail -200 "$GITHUB_WORKSPACE/build.log" > final.txt
           git init -q && git checkout -q -b ci-log
           git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
-          echo "${{ github.sha }} run ${{ github.run_number }}" > commit.txt
+          echo "${{ github.sha }} run ${{ github.run_number }} ${{ github.ref_name }}" > commit.txt
           git add . && git commit -qm "log ${{ github.run_number }}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-log
 
@@ -54,6 +60,7 @@ jobs:
           path: vestigium-mei-*.apk
 
       - name: Publicar en Releases
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.publicar)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

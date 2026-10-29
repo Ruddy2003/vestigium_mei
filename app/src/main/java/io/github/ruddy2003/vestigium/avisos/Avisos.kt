@@ -30,7 +30,7 @@ object Avisos {
     const val ID_SUPLEMENTOS = 2040
 
     /** Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). */
-    private val SONIDOS = mapOf(
+    internal val SONIDOS = mapOf(
         "romano" to (R.raw.n_romano_aviso to R.raw.n_romano_solemne), "ciber" to (R.raw.n_ciber_aviso to R.raw.n_ciber_solemne),
         "heleno" to (R.raw.n_heleno_aviso to R.raw.n_heleno_solemne), "medieval" to (R.raw.n_medieval_aviso to R.raw.n_medieval_solemne),
         "distopia" to (R.raw.n_distopia_aviso to R.raw.n_distopia_solemne), "refugio" to (R.raw.n_refugio_aviso to R.raw.n_refugio_solemne),

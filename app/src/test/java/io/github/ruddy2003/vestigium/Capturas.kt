@@ -8,12 +8,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
@@ -23,6 +30,7 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.BotonSecundario
+import io.github.ruddy2003.vestigium.ui.CapaDeshacer
 import io.github.ruddy2003.vestigium.ui.Cifra
 import io.github.ruddy2003.vestigium.ui.Clave
 import io.github.ruddy2003.vestigium.ui.Etiqueta
@@ -65,10 +73,22 @@ class Capturas {
     private fun config(tema: TemaId, oscuro: Boolean) =
         Config(tema = tema.id, modo = if (oscuro) "oscuro" else "claro", animaciones = false, bienvenida_vista = true, widget_cifra = "racha")
 
-    private fun captura(tema: TemaId, oscuro: Boolean, alto: Int = 2400, contenido: @Composable () -> Unit = { Muestra() }) {
+    /** [nombre]: para varias capturas en una misma prueba (cada una con su nombre). */
+    private fun captura(tema: TemaId, oscuro: Boolean, alto: Int = 2400, nombre: String? = null, contenido: @Composable () -> Unit = { Muestra() }) {
         Repo.configEnMemoria(config(tema, oscuro))
         paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = alto, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
-        paparazzi.snapshot { Lienzo(contenido) }
+        paparazzi.snapshot(nombre) { Lienzo(contenido) }
+    }
+
+    /**
+     * Una hoja con muchos temas a la vez. Se reparte en partes de [porParte] temas para que ninguna captura pase de unos
+     * 5000 px (memoria del CI), y [alto] calcula el alto de cada parte según cuántos temas lleva: crece sola al agregar temas.
+     * Con una sola parte, la captura conserva su nombre de siempre.
+     */
+    private fun hojaTemas(temas: List<TemaId> = TemaId.entries, porParte: Int, alto: (Int) -> Int, base: TemaId = TemaId.ROMANO, oscuro: Boolean = false,
+                          contenido: @Composable (List<TemaId>) -> Unit) {
+        val partes = temas.chunked(porParte)
+        partes.forEachIndexed { i, parte -> captura(base, oscuro, alto(parte.size), if (partes.size > 1) "parte${i + 1}" else null) { contenido(parte) } }
     }
 
     @Test fun romanoClaro() = captura(TemaId.ROMANO, false)
@@ -194,11 +214,11 @@ class Capturas {
     @Test fun widgetsUrss() = widgets(TemaId.URSS)
     @Test fun widgetsRevolucion() = widgets(TemaId.REVOLUCION)
 
-    private fun pantalla(tema: TemaId, oscuro: Boolean, alto: Int, cont: @Composable () -> Unit) {
+    private fun pantalla(tema: TemaId, oscuro: Boolean, alto: Int, nombre: String? = null, cont: @Composable () -> Unit) {
         Ejemplo.cargar()
         Repo.configEnMemoria(config(tema, oscuro).copy(habitos = listOf(io.github.ruddy2003.vestigium.data.Habito("h1", "Leer 20 min"), io.github.ruddy2003.vestigium.data.Habito("h2", "Sin pantalla después de las 23"))))
         paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = alto, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
-        paparazzi.snapshot { Lienzo(cont) }
+        paparazzi.snapshot(nombre) { Lienzo(cont) }
     }
     private val navVacia = io.github.ruddy2003.vestigium.ui.Nav(ir = {}, atras = {})
     @Test fun nocheMedieval() = pantalla(TemaId.MEDIEVAL, false, 5200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
@@ -207,9 +227,9 @@ class Capturas {
     @Test fun masLaboratorio() = pantalla(TemaId.LABORATORIO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
     @Test fun aparienciaOrden() = pantalla(TemaId.ORDEN, true, 3600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaAjustes(navVacia, "apariencia") }
     /** La barra inferior en cada tema, con «Día» activa. */
-    @Test fun barras() = captura(TemaId.ROMANO, false, alto = 3400) {
+    @Test fun barras() = hojaTemas(porParte = 28, alto = { 100 + it * 157 }) { temas ->
         Column(Modifier.padding(vertical = 16.dp)) {
-            TemaId.entries.forEach { t ->
+            temas.forEach { t ->
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
                     Box(Modifier.padding(bottom = 10.dp)) { io.github.ruddy2003.vestigium.ui.BarraPestanas(if (t.ordinal % 2 == 0) "dia" else "diario", t, {}, {}) }
                 }
@@ -224,9 +244,9 @@ class Capturas {
     @Test fun huellaRomano() = pantalla(TemaId.ROMANO, false, 2400) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
 
     /** Los íconos de la barra inferior en cada tema. */
-    @Test fun iconos() = captura(TemaId.ROMANO, false, alto = 2800) {
+    @Test fun iconos() = hojaTemas(porParte = 30, alto = { 100 + it * 129 }) { temas ->
         Column(Modifier.padding(16.dp)) {
-            TemaId.entries.forEach { t ->
+            temas.forEach { t ->
                 val e = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro)
                 Row(Modifier.fillMaxWidth().background(e.surface).padding(10.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                     androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides e.primary) {
@@ -238,17 +258,17 @@ class Capturas {
     }
 
     /** Los nueve temas en claro y en oscuro, con sus emblemas grandes. */
-    @Test fun selectorTemas() = captura(TemaId.ROMANO, false, alto = 5600) {
+    @Test fun selectorTemas() = hojaTemas(porParte = 21, alto = { 100 + 2 * ((it + 2) / 3) * 370 + (it + 6) / 7 * 130 }) { temas ->
         Column(Modifier.padding(16.dp)) {
             listOf(false, true).forEach { o ->
-                TemaId.entries.chunked(3).forEach { fila ->
+                temas.chunked(3).forEach { fila ->
                     Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         fila.forEach { VistaPreviaTema(it, o, it == TemaId.ROMANO, Modifier.weight(1f)) {} }
                         repeat(3 - fila.size) { Box(Modifier.weight(1f)) }
                     }
                 }
             }
-            TemaId.entries.chunked(7).forEach { fila -> Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            temas.chunked(7).forEach { fila -> Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 fila.forEach { t ->
                     val e = io.github.ruddy2003.vestigium.ui.esquemaDe(t, true)
                     Box(Modifier.weight(1f).background(e.background).padding(4.dp)) { io.github.ruddy2003.vestigium.ui.Emblema(t, 40.dp, e, animado = false) }
@@ -260,9 +280,9 @@ class Capturas {
     // ------------------------------------------------------------ huellas, diario y biblioteca con el diseño de cada tema
 
     /** Los sellos de huella de todos los temas. */
-    @Test fun sellos() = captura(TemaId.ROMANO, false, alto = 2600) {
+    @Test fun sellos() = hojaTemas(porParte = 40, alto = { 100 + (it + 3) / 4 * 417 }) { temas ->
         Column(Modifier.padding(12.dp)) {
-            TemaId.entries.chunked(4).forEach { fila ->
+            temas.chunked(4).forEach { fila ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 8.dp)) {
                     fila.forEach { t -> io.github.ruddy2003.vestigium.ui.SelloHuella(Modifier.weight(1f).aspectRatio(1f), t) }
                     repeat(4 - fila.size) { Box(Modifier.weight(1f)) }
@@ -274,14 +294,13 @@ class Capturas {
     private val TEXTO = "Hoy fue un día largo pero bueno. En la mañana salí a caminar con @ana por el parque y hablamos de los planes para el viaje. " +
         "Después trabajé casi toda la tarde en el proyecto; avancé más de lo que esperaba. En la noche leí un rato antes de dormir. #lectura #trabajo"
 
-    private fun objetos(temas: List<TemaId>) = captura(temas.first(), false, alto = 2800) {
+    private fun objetos(temas: List<TemaId>, nombre: String) = captura(temas.first(), false, alto = 2800, nombre = nombre) {
         Column(Modifier.padding(16.dp)) {
             temas.forEachIndexed { i, t -> io.github.ruddy2003.vestigium.ui.ObjetoDiario("2026-10-16", if (i == 1) "" else TEXTO, Modifier.padding(bottom = 14.dp), t) {} }
         }
     }
-    @Test fun objetos1() = objetos(listOf(TemaId.MEDIEVAL, TemaId.ROMANO, TemaId.HELENO, TemaId.SEDA, TemaId.COLONOS, TemaId.ORDEN, TemaId.BOTANICO))
-    @Test fun objetos2() = objetos(listOf(TemaId.CIBER, TemaId.URSS, TemaId.LABORATORIO, TemaId.NAPOLEON, TemaId.NAVIDAD, TemaId.DISTOPIA, TemaId.REFUGIO))
-    @Test fun objetos3() = objetos(listOf(TemaId.GOTICO, TemaId.ESPACIO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.BOTANICO))
+    /** El diario cerrado en todos los temas, siete por captura. */
+    @Test fun objetos() = TemaId.entries.chunked(7).forEachIndexed { i, temas -> objetos(temas, "parte${i + 1}") }
 
     private fun biblioteca(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") }
     @Test fun bibliotecaMedieval() = biblioteca(TemaId.MEDIEVAL, false)
@@ -373,7 +392,7 @@ class Capturas {
     }
     @Test fun frasesConCitas() = pantalla(TemaId.GOTICO, false, 2400) { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaFrasesGuardadas(navVacia) }
 
-    private fun relaciones(tema: TemaId, oscuro: Boolean) = captura(tema, oscuro, alto = 1500) {
+    private fun relaciones(tema: TemaId, oscuro: Boolean, nombre: String? = null) = captura(tema, oscuro, alto = 1500, nombre = nombre) {
         fun V(id: String, n: String, g: String) = io.github.ruddy2003.vestigium.ciencia.Variable(id, n, g)
         Hoja("Relaciones", subtitulo = null) {
             Seccion("Las relaciones más marcadas") {
@@ -494,7 +513,7 @@ class Capturas {
             io.github.ruddy2003.vestigium.data.Carta("k6", d(-3), d(1826), "Para dentro de cinco años: ¿dónde vives?", hora = "10:12"),
         ))
     }
-    private fun cartas(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 3400) { cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "cartas") }
+    private fun cartas(tema: TemaId, oscuro: Boolean, nombre: String? = null) = pantalla(tema, oscuro, 3400, nombre) { cartasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "cartas") }
     @Test fun cartasMedieval() = cartas(TemaId.MEDIEVAL, false)
     @Test fun cartasCiber() = cartas(TemaId.CIBER, true)
     @Test fun cartasNavidad() = cartas(TemaId.NAVIDAD, false)
@@ -502,7 +521,7 @@ class Capturas {
     @Test fun cartasDistopia() = cartas(TemaId.DISTOPIA, false)
     @Test fun cartasSeda() = cartas(TemaId.SEDA, true)
 
-    private fun sobres(temas: List<TemaId>) = captura(TemaId.ROMANO, false, alto = 3000) {
+    private fun sobres(temas: List<TemaId>, nombre: String) = captura(TemaId.ROMANO, false, alto = 3000, nombre = nombre) {
         cartasEjemplo()
         val l = Repo.cartas
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -517,9 +536,8 @@ class Capturas {
             }
         }
     }
-    @Test fun sobres1() = sobres(listOf(TemaId.ROMANO, TemaId.HELENO, TemaId.MEDIEVAL, TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.ORDEN, TemaId.LABORATORIO))
-    @Test fun sobres2() = sobres(listOf(TemaId.COLONOS, TemaId.NAPOLEON, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.SEDA, TemaId.URSS))
-    @Test fun sobres3() = sobres(listOf(TemaId.GOTICO, TemaId.ESPACIO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO, TemaId.CIBER))
+    /** Los sobres de las cartas en todos los temas, siete por captura. */
+    @Test fun sobres() = TemaId.entries.chunked(7).forEachIndexed { i, temas -> sobres(temas, "parte${i + 1}") }
 
     private fun cartaLectura(tema: TemaId, oscuro: Boolean) = pantalla(tema, oscuro, 2400) {
         Repo.configEnMemoria(Repo.config.copy(perfil = io.github.ruddy2003.vestigium.data.Perfil(nombre = "Ana")))
@@ -577,9 +595,9 @@ class Capturas {
     @Test fun masGotico() = pantalla(TemaId.GOTICO, false, 3600) { mundoEjemplo(); obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
     @Test fun obrasGaleriaMedieval() = pantalla(TemaId.MEDIEVAL, false, 3000) { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(navVacia) }
     @Test fun obrasGaleriaCiber() = pantalla(TemaId.CIBER, true, 3000) { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(navVacia) }
-    @Test fun calificaciones() = captura(TemaId.ROMANO, false, alto = 2000) {
+    @Test fun calificaciones() = hojaTemas(porParte = 40, alto = { 100 + it * 91 }) { temas ->
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            TemaId.entries.forEach { t ->
+            temas.forEach { t ->
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
                     Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(6.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Text(t.nombre, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.weight(1f))
@@ -682,7 +700,7 @@ class Capturas {
         io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia)
     }
-    private fun tarjetaAnio(tema: TemaId, oscuro: Boolean, id: String) = pantalla(tema, oscuro, 2340) {
+    private fun tarjetaAnio(tema: TemaId, oscuro: Boolean, id: String, nombre: String? = null) = pantalla(tema, oscuro, 2340, nombre) {
         val ctx = androidx.compose.ui.platform.LocalContext.current
         val d = androidx.compose.runtime.remember { io.github.ruddy2003.vestigium.ciencia.TuAnio.calcular(ctx, io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(4).toInt()) }
         io.github.ruddy2003.vestigium.ui.pantallas.MuestraTarjetaAnio(d, id)
@@ -695,7 +713,7 @@ class Capturas {
     @Test fun anioCartelCiber() = tarjetaAnio(TemaId.CIBER, true, "cartel")
     @Test fun anioTelefonoLaboratorio() = tarjetaAnio(TemaId.LABORATORIO, false, "telefono")
     @Test fun anioPantallaMedieval() = pantalla(TemaId.MEDIEVAL, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaTuAnio(navVacia) }
-    private fun reporte(tema: TemaId, oscuro: Boolean, alto: Int, anual: Boolean) = pantalla(tema, oscuro, alto) {
+    private fun reporte(tema: TemaId, oscuro: Boolean, alto: Int, anual: Boolean, nombre: String? = null) = pantalla(tema, oscuro, alto, nombre) {
         val ctx = androidx.compose.ui.platform.LocalContext.current
         val r = androidx.compose.runtime.remember {
             runCatching {
@@ -737,11 +755,11 @@ class Capturas {
         Repo.ejemploEnMemoria(Repo.dias, Repo.salud, Repo.pantalla.mapValues { (_, p) -> p.copy(por_hora_min = List(24) { h -> if (h in 8..23) (h * 7) % 45 else 0 }) }, Repo.gastos,
             momentos, Repo.notifs, Repo.entorno, Repo.nutricion, Repo.lugares, Repo.visitas, Repo.sesiones, Repo.ingresos)
     }
-    private fun v67(tema: TemaId, oscuro: Boolean, alto: Int, extra: (Config) -> Config = { it }, cont: @Composable () -> Unit) {
+    private fun v67(tema: TemaId, oscuro: Boolean, alto: Int, extra: (Config) -> Config = { it }, nombre: String? = null, cont: @Composable () -> Unit) {
         Ejemplo.cargar(); ejemploV67()
         Repo.configEnMemoria(extra(config(tema, oscuro).copy(seguimiento_privado = true, habitos = listOf(io.github.ruddy2003.vestigium.data.Habito("h1", "Leer 20 min"), io.github.ruddy2003.vestigium.data.Habito("h2", "No ver contenido adulto")))))
         paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = alto, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
-        paparazzi.snapshot { Lienzo(cont) }
+        paparazzi.snapshot(nombre) { Lienzo(cont) }
     }
     @Test fun cintaRomano() = v67(TemaId.ROMANO, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
     @Test fun cintaCiber() = v67(TemaId.CIBER, true, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCinta(navVacia) }
@@ -752,17 +770,17 @@ class Capturas {
     @Test fun estadoDatosOrden() = v67(TemaId.ORDEN, true, 2400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaEstadoDatos(navVacia) }
     @Test fun nocheV67Seda() = v67(TemaId.SEDA, true, 4400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaNoche(navVacia) }
     @Test fun masV67Romano() = v67(TemaId.ROMANO, false, 4400, { it.copy(favoritos_mas = listOf("cinta", "enfoque", "estado_datos")) }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaMas(navVacia) }
-    private fun campanas(tema: TemaId, oscuro: Boolean) = v67(tema, oscuro, 3000, { c ->
+    private fun campanas(tema: TemaId, oscuro: Boolean, nombre: String? = null) = v67(tema, oscuro, 3000, { c ->
         val l = io.github.ruddy2003.vestigium.data.Fechas.lunesDe(io.github.ruddy2003.vestigium.data.Fechas.diaLogico())
         c.copy(campanas = listOf(io.github.ruddy2003.vestigium.data.Campana("c1", l, "diario", 5, tema.id), io.github.ruddy2003.vestigium.data.Campana("c2", l, "sueno7", 4, tema.id),
             io.github.ruddy2003.vestigium.data.Campana("c0", io.github.ruddy2003.vestigium.data.Fechas.sumar(l, -7), "pasos", 5, tema.id)))
-    }) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCampanas(navVacia) }
+    }, nombre) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCampanas(navVacia) }
     @Test fun campanasNapoleon() = campanas(TemaId.NAPOLEON, false)
     @Test fun campanasEspacio() = campanas(TemaId.ESPACIO, true)
     @Test fun campanasRomano() = campanas(TemaId.ROMANO, false)
     @Test fun campanasSeda() = campanas(TemaId.SEDA, true)
     // El hall vive dentro de Logros (la pantalla PantallaHall se quitó en N-25; la ruta «hall» abre Logros).
-    private fun hall(tema: TemaId, oscuro: Boolean) = v67(tema, oscuro, 3400, { it.copy(hall_logros = listOf("diario_30", "ciudades_2", "paises_5", "unesco_1", "continentes_2", "pasos_dia_10000", "racha_diario_7", "diario_7")) }) {
+    private fun hall(tema: TemaId, oscuro: Boolean, nombre: String? = null) = v67(tema, oscuro, 3400, { it.copy(hall_logros = listOf("diario_30", "ciudades_2", "paises_5", "unesco_1", "continentes_2", "pasos_dia_10000", "racha_diario_7", "diario_7")) }, nombre) {
         mundoEjemplo(); io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia)
     }
@@ -771,7 +789,7 @@ class Capturas {
     @Test fun hallAndalus() = hall(TemaId.ANDALUS, true)
 
     /** Todas las piezas de logros, en cuatro temas. */
-    private fun piezas(tema: TemaId, oscuro: Boolean) = captura(tema, oscuro, alto = 2400) {
+    private fun piezas(tema: TemaId, oscuro: Boolean, nombre: String? = null) = captura(tema, oscuro, alto = 2400, nombre = nombre) {
         val ids = listOf("ciudades_10", "paises_5", "continentes_3", "unesco_1", "lejos_500", "pasos_dia_10000", "entrenos_10", "escalada_1", "diario_100", "suenos_10", "carta_1",
             "momentos_100", "reaccion_1", "brujula", "obras_10", "frases_10", "personas_10", "c_hab_h1_20_30", "campanas_5", "madrugador", "gastos_100", "enfoque_10", "p_x", "lucido")
         Column(Modifier.padding(12.dp)) {
@@ -791,7 +809,7 @@ class Capturas {
     @Test fun piezasGotico() = piezas(TemaId.GOTICO, true)
 
     /** El personaje de cada tema, con estados distintos (cansado, feliz, lluvia, frío, calor, noche, racha). */
-    @Test fun personajes() = captura(TemaId.ROMANO, false, alto = 3200) {
+    @Test fun personajes() = hojaTemas(porParte = 36, alto = { 100 + (it + 3) / 4 * 517 }) { temas ->
         val estados = listOf(
             io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.5, 8, false, false, false, false, ""),
             io.github.ruddy2003.vestigium.ui.Personaje.Estado(true, 3.0, 2, false, false, false, false, ""),
@@ -800,7 +818,7 @@ class Capturas {
             io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.0, 3, false, false, true, false, ""),
         )
         Column(Modifier.padding(8.dp)) {
-            TemaId.entries.chunked(4).forEachIndexed { f, fila ->
+            temas.chunked(4).forEachIndexed { f, fila ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                     fila.forEachIndexed { k, t ->
                         androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
@@ -815,9 +833,9 @@ class Capturas {
     }
 
     /** Las @personas y los #temas marcados en cada tema. */
-    @Test fun marcas() = captura(TemaId.ROMANO, false, alto = 3600) {
+    @Test fun marcas() = hojaTemas(porParte = 28, alto = { 100 + it * 167 }) { temas ->
         Column(Modifier.padding(12.dp)) {
-            TemaId.entries.forEach { t ->
+            temas.forEach { t ->
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
                     Box(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = 10.dp, vertical = 6.dp)) {
                         io.github.ruddy2003.vestigium.ui.TextoMarcado("${t.nombre}: café con @ana y @luis_m después del #protocolo de la #tesis", style = MaterialTheme.typography.bodyLarge, tema = t)
@@ -859,13 +877,13 @@ class Capturas {
             sueno_categorias = listOf("tema_regreso", "per_familia", "est_conexion"))), Repo.salud, Repo.pantalla, Repo.gastos,
             momentos, Repo.notifs, Repo.entorno, Repo.nutricion, Repo.lugares, Repo.visitas, Repo.sesiones, Repo.ingresos)
     }
-    private fun v73(tema: TemaId, oscuro: Boolean, alto: Int, extra: (Config) -> Config = { it }, cont: @Composable () -> Unit) {
+    private fun v73(tema: TemaId, oscuro: Boolean, alto: Int, extra: (Config) -> Config = { it }, nombre: String? = null, cont: @Composable () -> Unit) {
         Ejemplo.cargar(); ejemploV67(); ejemploV73()
         Repo.configEnMemoria(extra(config(tema, oscuro).copy(personas = listOf(
             io.github.ruddy2003.vestigium.data.Persona("ana", "amistad_cercana", "de la prepa", 6, "2026-01-01"),
             io.github.ruddy2003.vestigium.data.Persona("luis", "colega", "", 4, "2026-01-01", listOf(io.github.ruddy2003.vestigium.data.CambioRelacion("2026-06-01", "amistad", 5)))))))
         paparazzi.unsafeUpdateConfig(deviceConfig = DeviceConfig.PIXEL_6.copy(screenHeight = alto, nightMode = if (oscuro) NightMode.NIGHT else NightMode.NOTNIGHT))
-        paparazzi.snapshot { Lienzo(cont) }
+        paparazzi.snapshot(nombre) { Lienzo(cont) }
     }
     @Test fun vidaRomano() = v73(TemaId.ROMANO, false, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
     @Test fun vidaCiber() = v73(TemaId.CIBER, true, 4200) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaVida(navVacia) }
@@ -901,9 +919,9 @@ class Capturas {
     @Test fun diaRevolucion() = dia(TemaId.REVOLUCION, false)
 
     /** Los trofeos de las nueve categorías en los siete temas históricos (el último de cada fila, sin conseguir). */
-    private fun trofeosTemas(oscuro: Boolean) = captura(TemaId.ROMANO, oscuro, alto = 3000) {
+    private fun trofeosTemas(oscuro: Boolean) = hojaTemas(io.github.ruddy2003.vestigium.ui.TrofeosTema.TEMAS.toList(), porParte = 24, alto = { 100 + it * 200 }, oscuro = oscuro) { temas ->
         Column(Modifier.padding(6.dp)) {
-            io.github.ruddy2003.vestigium.ui.TrofeosTema.TEMAS.forEach { t ->
+            temas.forEach { t ->
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, oscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, oscuro)) {
                     Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(vertical = 4.dp)) {
                         Text(t.nombre, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
@@ -927,7 +945,7 @@ class Capturas {
     @Test fun hallGotico() = hall(TemaId.GOTICO, false)
     @Test fun hallRenacimiento() = hall(TemaId.RENACIMIENTO, false)
     @Test fun hallHeleno() = hall(TemaId.HELENO, true)
-    private fun hallImagen(tema: TemaId, oscuro: Boolean, textos: Boolean) = v67(tema, oscuro, 2700, { it.copy(hall_logros = listOf("diario_30", "ciudades_2", "paises_5", "unesco_1", "continentes_2", "pasos_dia_10000", "racha_diario_7", "diario_7")) }) {
+    private fun hallImagen(tema: TemaId, oscuro: Boolean, textos: Boolean, nombre: String? = null) = v67(tema, oscuro, 2700, { it.copy(hall_logros = listOf("diario_30", "ciudades_2", "paises_5", "unesco_1", "continentes_2", "pasos_dia_10000", "racha_diario_7", "diario_7")) }, nombre) {
         mundoEjemplo(); io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono = true
         val ctx = androidx.compose.ui.platform.LocalContext.current
         val cs = MaterialTheme.colorScheme
@@ -951,7 +969,7 @@ class Capturas {
     @Test fun campanasMedieval() = campanas(TemaId.MEDIEVAL, false)
     @Test fun campanasHeleno() = campanas(TemaId.HELENO, true)
 
-    private fun libreta(tema: TemaId, oscuro: Boolean) = v73(tema, oscuro, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "momentos") }
+    private fun libreta(tema: TemaId, oscuro: Boolean, nombre: String? = null) = v73(tema, oscuro, 2600, nombre = nombre) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "momentos") }
     @Test fun libretaRomano() = libreta(TemaId.ROMANO, false)
     @Test fun libretaHeleno() = libreta(TemaId.HELENO, false)
     @Test fun libretaGotico() = libreta(TemaId.GOTICO, true)
@@ -966,9 +984,9 @@ class Capturas {
     @Test fun presenciasBotanico() = v73(TemaId.BOTANICO, false, 3000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaPresencias(navVacia) }
     @Test fun otrasVidasRevolucion() = v73(TemaId.REVOLUCION, false, 4000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(navVacia) }
     @Test fun libroDiarioRevolucion() = v73(TemaId.REVOLUCION, false, 2600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDiario(navVacia) }
-    @Test fun temasAjustes() = captura(TemaId.REVOLUCION, false, alto = 3200) {
+    @Test fun temasAjustes() = hojaTemas(porParte = 30, alto = { 100 + (it + 2) / 3 * 443 }, base = TemaId.REVOLUCION) { temas ->
         Column(Modifier.padding(8.dp)) {
-            TemaId.entries.chunked(3).forEach { fila ->
+            temas.chunked(3).forEach { fila ->
                 Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     fila.forEach { t -> VistaPreviaTema(t, false, t == TemaId.REVOLUCION, Modifier.weight(1f)) {} }
                     repeat(3 - fila.size) { Box(Modifier.weight(1f)) }
@@ -1004,7 +1022,7 @@ class Capturas {
     @Test fun widgetsAntiguas() = widgets(TemaId.ANTIGUAS)
     @Test fun trofeosAntiguas() = v73(TemaId.ANTIGUAS, false, 6000) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) }
     @Test fun reporteSemanaAntiguas() = reporte(TemaId.ANTIGUAS, true, 5200, false)
-    private fun reporteMes(tema: TemaId, oscuro: Boolean) = v73(tema, oscuro, 7600) {
+    private fun reporteMes(tema: TemaId, oscuro: Boolean, nombre: String? = null) = v73(tema, oscuro, 7600, nombre = nombre) {
         val ctx = androidx.compose.ui.platform.LocalContext.current
         val r = androidx.compose.runtime.remember { runCatching { io.github.ruddy2003.vestigium.reportes.Reportes.imagenMes(ctx, io.github.ruddy2003.vestigium.data.Fechas.diaLogico().take(7)) } }
         val b = r.getOrNull()
@@ -1091,6 +1109,140 @@ class Capturas {
     }
     @Test fun l3GuiaNapoleon() = v73(TemaId.NAPOLEON, false, 3400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(navVacia, "diario") }
     @Test fun l3GuiaCompletaRomano() = v73(TemaId.ROMANO, true, 3400) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(navVacia) }
+
+    // ---------------------------------------------------------------- capturas por tema (plan de diseño, lote 0)
+
+    /**
+     * Una superficie en todos los temas, en claro y en oscuro (el que solo existe en oscuro, una vez). Cada imagen se llama
+     * `<superficie>_<tema>_<claro|oscuro>`. Son muchas, así que solo corren las superficies que pide la variable CAPTURAS:
+     * una lista separada por comas («huella,campana») o «todas». En Actions se pasa con la entrada `superficies` de
+     * capturas.yml; sin ella, estas pruebas se saltan y las capturas de siempre no cambian.
+     */
+    // Un alto menor que el ancho (1080) hace que Paparazzi gire la captura: aquí ninguna baja de 1200.
+    private fun porTema(superficie: String, captura: (tema: TemaId, oscuro: Boolean, nombre: String) -> Unit) {
+        val pedidas = (System.getenv("CAPTURAS") ?: "").split(',').map { it.trim() }
+        org.junit.Assume.assumeTrue("«$superficie» no está en CAPTURAS", "todas" in pedidas || superficie in pedidas)
+        TemaId.entries.forEach { t ->
+            (if (t.soloOscuro) listOf(true) else listOf(false, true)).forEach { o -> captura(t, o, "${t.id}_${if (o) "oscuro" else "claro"}") }
+        }
+    }
+    private val logroEjemplo = io.github.ruddy2003.vestigium.ciencia.Logros.Logro("paises_5", "Pasaporte con sellos", "Visita 5 países", "⚐", "Mundo", 2, 5.0, 5.0, "2026-10-19")
+
+    // Campaña, salón, hall y trofeos.
+    @Test fun temaTrofeos() = porTema("trofeos") { t, o, n -> v73(t, o, 7000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(navVacia) } }
+    @Test fun temaSalon() = porTema("salon") { t, o, n -> hall(t, o, n) }
+    @Test fun temaPiezas() = porTema("piezas") { t, o, n -> piezas(t, o, n) }
+    @Test fun temaHallImagen() = porTema("hallImagen") { t, o, n -> hallImagen(t, o, true, n) }
+    @Test fun temaCampana() = porTema("campana") { t, o, n -> campanas(t, o, n) }
+    @Test fun temaLibreta() = porTema("libreta") { t, o, n -> libreta(t, o, n) }
+
+    // Animación y celebración: un instante quieto de cada una.
+    @Test fun temaFondoVivo() = porTema("fondoVivo") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.FondoVivo(t, fijo = 0.4f) } }
+    @Test fun temaFiesta() = porTema("fiesta") { t, o, n ->
+        captura(t, o, 2400, n + "_lluvia") { Box(Modifier.fillMaxSize()) { io.github.ruddy2003.vestigium.ui.CapaFiesta(fijo = 0.45f) } }
+        v67(t, o, 2400, nombre = n + "_logro") {
+            io.github.ruddy2003.vestigium.ui.Celebracion.mostrar(listOf(logroEjemplo))
+            Box(Modifier.fillMaxSize()) { io.github.ruddy2003.vestigium.ui.CapaLogro() }
+        }
+    }
+    @Test fun temaRelacion() = porTema("relacion") { t, o, n -> relaciones(t, o, n) }
+
+    // Huella, ícono del lanzador y formas del mapa.
+    @Test fun temaHuella() = porTema("huella") { t, o, n ->
+        pantalla(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.VistaHuella(1f, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }
+    }
+    /** El ícono del lanzador (fondo + huella; cuadrado completo y recortado en círculo), el de las notificaciones y los de las pestañas. */
+    @Test fun temaIcono() = porTema("icono") { t, o, n -> captura(t, o, 1200, n) {
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        fun id(nombre: String) = ctx.resources.getIdentifier(nombre, "drawable", ctx.packageName)
+        val capas: @Composable (Modifier) -> Unit = { m ->
+            Box(m) {
+                listOf("logo_fondo_${t.id}", "logo_${t.id}").map { id(it) }.filter { it != 0 }.forEach {
+                    androidx.compose.foundation.Image(androidx.compose.ui.res.painterResource(it), null, Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+                }
+            }
+        }
+        Column(Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                capas(Modifier.size(130.dp))
+                Box(Modifier.size(120.dp).clip(androidx.compose.foundation.shape.CircleShape)) { capas(Modifier.fillMaxSize().graphicsLayer(scaleX = 1.5f, scaleY = 1.5f)) }
+                id("ic_stat").takeIf { it != 0 }?.let {
+                    androidx.compose.material3.Icon(androidx.compose.ui.res.painterResource(it), null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onBackground)
+                }
+            }
+            Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(10.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+                androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.primary) {
+                    listOf("dia", "diario", "registrar", "vida", "entender", "mas").forEach { io.github.ruddy2003.vestigium.ui.IconoPestana(it, t) }
+                }
+            }
+        }
+    } }
+    /** Las figuras con que el mapa marca los lugares (`Formas`) y el marco con su rosa de los vientos (`MarcoMapa`), sin el mapa de osmdroid. */
+    @Test fun temaMapaFormas() = porTema("mapaFormas") { t, o, n -> captura(t, o, 1400, n) {
+        val e = MaterialTheme.colorScheme
+        Box(Modifier.fillMaxWidth().height(460.dp)) {
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+                val relleno = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = e.primary.toArgb() }
+                val borde = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 4f; color = e.onBackground.toArgb() }
+                drawIntoCanvas { c ->
+                    listOf(0.2f to 0.3f, 0.45f to 0.55f, 0.7f to 0.35f, 0.3f to 0.75f, 0.62f to 0.8f).forEachIndexed { i, (x, y) ->
+                        io.github.ruddy2003.vestigium.ui.pantallas.Formas.dibujar(c.nativeCanvas, t, size.width * x, size.height * y, (14 + 8 * i).dp.toPx(), relleno, if (i % 2 == 0) borde else null)
+                    }
+                }
+            }
+            io.github.ruddy2003.vestigium.ui.pantallas.MarcoMapa(t, Modifier.fillMaxSize())
+        }
+    } }
+
+    // Galerías, reportes y Tu año.
+    @Test fun temaCalificacion() = porTema("calificacion") { t, o, n -> captura(t, o, 1200, n) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            listOf(2, 7, 10).forEach { v -> io.github.ruddy2003.vestigium.ui.pantallas.Calificacion(v, tam = 26.dp, tema = t) }
+        }
+    } }
+    @Test fun temaReporte() = porTema("reporte") { t, o, n -> reporte(t, o, 5200, false, n) }
+    @Test fun temaReporteMes() = porTema("reporteMes") { t, o, n -> reporteMes(t, o, n) }
+    @Test fun temaVozAnio() = porTema("vozAnio") { t, o, n -> tarjetaAnio(t, o, "portada", n) }
+
+    // Pantallas genéricas y gráficas.
+    @Test fun temaCalendario() = porTema("calendario") { t, o, n -> v73(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaCalendario(navVacia) } }
+    @Test fun temaConstelacion() = porTema("constelacion") { t, o, n -> v67(t, o, 3000, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaConstelacion(navVacia) } }
+    /** Las medallas de logro (los cuatro niveles y una a medias) y las de las otras vidas. */
+    @Test fun temaMedalla() = porTema("medalla") { t, o, n -> captura(t, o, 1200, n) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                (1..5).forEach { k ->
+                    val l = io.github.ruddy2003.vestigium.ciencia.Logros.Logro("m$k", "Logro", "", "★", "Diario", k.coerceAtMost(4), 1.0, if (k == 5) 0.4 else 1.0, if (k == 5) null else "2026-10-19")
+                    io.github.ruddy2003.vestigium.ui.pantallas.MedallaLogro(l, 64.dp)
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                io.github.ruddy2003.vestigium.data.OtrasVidas.DE_TEMAS.take(5).forEach { io.github.ruddy2003.vestigium.ui.pantallas.MedallaVida(it, 58.dp) }
+            }
+        }
+    } }
+    @Test fun temaGraficas() = porTema("graficas") { t, o, n -> pantalla(t, o, 3000, n) { saludEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaSalud(navVacia) } }
+
+    // Controles, barra, enfoque, bloqueo y cartas.
+    /**
+     * Los diálogos de Material se abren en otra ventana y Paparazzi no los dibuja; hasta que el lote 4 cree `Dialogo` con su
+     * contenido a la vista, aquí sale la barra de Deshacer, que es el otro control que flota sobre la pantalla.
+     */
+    @Test fun temaDialogo() = porTema("dialogo") { t, o, n ->
+        io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Se borró un momento") {}
+        captura(t, o, 1200, n) { Box(Modifier.fillMaxSize()) { CapaDeshacer() } }
+        io.github.ruddy2003.vestigium.ui.Deshacer.deshacer()
+    }
+    @Test fun temaBarra() = porTema("barra") { t, o, n -> captura(t, o, 1200, n) {
+        Column(Modifier.padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            listOf("dia", "diario", "vida").forEach { io.github.ruddy2003.vestigium.ui.BarraPestanas(it, t, {}, {}) }
+        }
+    } }
+    @Test fun temaEnfoque() = porTema("enfoque") { t, o, n ->
+        v73(t, o, 2400, { it.copy(enfoque_plan = planEnfoque(0, 12)) }, n) { io.github.ruddy2003.vestigium.ui.RelojEnfoque(false) {} }
+    }
+    @Test fun temaBloqueo() = porTema("bloqueo") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.Bloqueo {} } }
+    @Test fun temaCartas() = porTema("cartas") { t, o, n -> cartas(t, o, n) }
 }
 
 @Composable

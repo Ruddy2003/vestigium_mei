@@ -118,20 +118,30 @@ def mono(salida):
     img = np.dstack([np.full((TAM, TAM, 3), 255, np.uint8), (m * 255).astype(np.uint8)])
     Image.fromarray(img, 'RGBA').save(os.path.join(salida, 'logo_mono.png'), optimize=True)
 
+COLUMNAS = 7
+
+def hoja_de_contacto(imagenes, archivo, cel=160, columnas=COLUMNAS, mascaras=None):
+    """Junta las imágenes en una cuadrícula de `columnas` fijas; las filas salen del número de temas."""
+    filas = max(1, -(-len(imagenes) // columnas))
+    hoja = Image.new('RGB', (cel * columnas, cel * filas), 'white')
+    for i, img in enumerate(imagenes):
+        m = mascaras[i] if mascaras else None
+        hoja.paste(img.convert('RGB').resize((cel - 10, cel - 10)), ((i % columnas) * cel + 5, (i // columnas) * cel + 5),
+                   m.resize((cel - 10, cel - 10)) if m else None)
+    hoja.save(archivo)
+
 def muestra(salida, archivo):
-    cel = 160; temas = list(TEMAS)
-    hoja = Image.new('RGB', (cel * 7, cel * 3), 'white')
-    for i, t in enumerate(temas):
+    from PIL import ImageDraw
+    # Recorte circular como en la pantalla de inicio.
+    c = Image.new('L', (TAM, TAM), 0)
+    ImageDraw.Draw(c).ellipse((TAM * 0.17, TAM * 0.17, TAM * 0.83, TAM * 0.83), fill=255)
+    caja = (int(TAM * 0.17), int(TAM * 0.17), int(TAM * 0.83), int(TAM * 0.83))
+    imagenes = []
+    for t in TEMAS:
         f = Image.open(os.path.join(salida, f'logo_fondo_{t}.jpg')).convert('RGBA')
         f.alpha_composite(Image.open(os.path.join(salida, f'logo_{t}.png')))
-        # Recorte circular como en la pantalla de inicio.
-        c = Image.new('L', (TAM, TAM), 0)
-        from PIL import ImageDraw
-        ImageDraw.Draw(c).ellipse((TAM * 0.17, TAM * 0.17, TAM * 0.83, TAM * 0.83), fill=255)
-        f = f.crop((int(TAM * 0.17), int(TAM * 0.17), int(TAM * 0.83), int(TAM * 0.83))).resize((cel - 10, cel - 10))
-        c = c.crop((int(TAM * 0.17), int(TAM * 0.17), int(TAM * 0.83), int(TAM * 0.83))).resize((cel - 10, cel - 10))
-        hoja.paste(f.convert('RGB'), ((i % 7) * cel + 5, (i // 7) * cel + 5), c)
-    hoja.save(archivo)
+        imagenes.append(f.crop(caja))
+    hoja_de_contacto(imagenes, archivo, mascaras=[c.crop(caja)] * len(imagenes))
 
 if __name__ == '__main__':
     salida = sys.argv[1]

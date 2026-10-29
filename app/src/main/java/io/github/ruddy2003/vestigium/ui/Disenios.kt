@@ -6,6 +6,8 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -50,14 +52,30 @@ internal fun esquema(
         surfaceVariant = c(variante), onSurfaceVariant = c(tenue), outline = c(borde), outlineVariant = c(borde), error = c(error),
         surfaceContainer = c(superficie), surfaceContainerHigh = c(variante), surfaceContainerHighest = c(variante),
         surfaceContainerLow = c(superficie), surfaceContainerLowest = c(fondo),
-    ) else lightColorScheme(
+    ).conInversos() else lightColorScheme(
         primary = c(primario), onPrimary = c(sobrePrimario), primaryContainer = c(contenedor), onPrimaryContainer = c(sobreContenedor),
         secondary = c(secundario), onSecondary = Color.White, secondaryContainer = c(contSecundario), onSecondaryContainer = c(tinta),
         tertiary = c(terciario), background = c(fondo), onBackground = c(tinta), surface = c(superficie), onSurface = c(tinta),
         surfaceVariant = c(variante), onSurfaceVariant = c(tenue), outline = c(borde), outlineVariant = c(borde), error = c(error),
         surfaceContainer = c(superficie), surfaceContainerHigh = c(variante), surfaceContainerHighest = c(variante),
         surfaceContainerLow = c(superficie), surfaceContainerLowest = c(superficie),
-    )
+    ).conInversos()
+}
+
+/**
+ * Los colores «inversos» (la barra de Deshacer): la superficie es la tinta del tema, el texto es su superficie y el botón
+ * es el primario del tema, aclarado u oscurecido hasta que se lea sobre esa barra (contraste de al menos 4.5).
+ * Sin esto, Material pone su gris y su lila por defecto en todos los temas.
+ */
+internal fun ColorScheme.conInversos(): ColorScheme {
+    val barra = onSurface; val texto = surface
+    fun contraste(a: Color, b: Color): Float {
+        val (x, y) = a.luminance() to b.luminance()
+        return (maxOf(x, y) + 0.05f) / (minOf(x, y) + 0.05f)
+    }
+    var boton = primary; var t = 0f
+    while (contraste(boton, barra) < 4.5f && t < 1f) { t += 0.1f; boton = lerp(primary, texto, t) }
+    return copy(inverseSurface = barra, inverseOnSurface = texto, inversePrimary = boton)
 }
 
 /**
