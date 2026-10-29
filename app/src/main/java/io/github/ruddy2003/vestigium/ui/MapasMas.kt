@@ -46,7 +46,7 @@ object MapasMas {
         // La traza de la red: saltos de servidor en servidor, de la máquina propia a la raíz.
         TemaId.CIBER -> listOf(Offset(0.07f, 0.52f), Offset(0.2f, 0.28f), Offset(0.34f, 0.6f), Offset(0.48f, 0.36f), Offset(0.62f, 0.7f), Offset(0.77f, 0.4f), Offset(0.93f, 0.6f))
         // Del dormitorio del nivel más hondo a la salida: pasillos y escaleras de nivel en nivel (las escaleras quedan a la mitad de cada tramo).
-        TemaId.REFUGIO -> listOf(Offset(0.07f, 0.86f), Offset(0.24f, 0.68f), Offset(0.4f, 0.68f), Offset(0.54f, 0.5f), Offset(0.68f, 0.5f), Offset(0.8f, 0.32f), Offset(0.93f, 0.12f))
+        TemaId.REFUGIO -> listOf(Offset(0.07f, 0.86f), Offset(0.22f, 0.68f), Offset(0.42f, 0.68f), Offset(0.54f, 0.5f), Offset(0.68f, 0.5f), Offset(0.8f, 0.32f), Offset(0.93f, 0.12f))
         // El avance en el mapa táctico: del campamento a la fortaleza, cuadro por cuadro.
         TemaId.ORDEN -> listOf(Offset(0.07f, 0.8f), Offset(0.2f, 0.6f), Offset(0.34f, 0.72f), Offset(0.48f, 0.46f), Offset(0.62f, 0.58f), Offset(0.76f, 0.36f), Offset(0.91f, 0.24f))
         // El protocolo: la pipeta pasa de pozo en pozo por la microplaca hasta la placa de Petri.
@@ -180,7 +180,7 @@ object MapasMas {
                     var xx = x0 + w * 0.1f; while (xx < x1) { drawLine(muro.copy(alpha = muro.alpha * 0.6f), Offset(xx, y - h * 0.11f), Offset(xx, y - h * 0.04f), 1f * d); xx += w * 0.12f }
                 }
                 // Las escaleras entre niveles, a la mitad de cada tramo de la ruta.
-                listOf(Triple(0.155f, 0.68f, 0.86f), Triple(0.47f, 0.5f, 0.68f), Triple(0.74f, 0.32f, 0.5f), Triple(0.865f, 0.12f, 0.32f)).forEach { (fx, ya, yb) ->
+                listOf(Triple(0.145f, 0.68f, 0.86f), Triple(0.48f, 0.5f, 0.68f), Triple(0.74f, 0.32f, 0.5f), Triple(0.865f, 0.12f, 0.32f)).forEach { (fx, ya, yb) ->
                     val xx = w * fx
                     listOf(-4f, 4f).forEach { dx -> drawLine(muro, Offset(xx + dx * d, h * ya), Offset(xx + dx * d, h * yb), 1f * d) }
                     var yy = h * ya + 3 * d; while (yy < h * yb) { drawLine(muro, Offset(xx - 4 * d, yy), Offset(xx + 4 * d, yy), 1f * d); yy += 4 * d }
