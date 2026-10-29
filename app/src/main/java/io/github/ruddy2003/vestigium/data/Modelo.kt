@@ -700,6 +700,8 @@ data class Config(
     val modo: String = "sistema",
     /** Emblemas que se mueven, transiciones y barras que crecen. */
     val animaciones: Boolean = true,
+    /** El gato del tema en una banda arriba de Día. */
+    val gato: Boolean = true,
     /** Una capa tenue que se mueve detrás de todo: estrellas, nieve, polvo de vitral, luciérnagas… */
     val fondo_vivo: Boolean = true,
     /** Vibraciones al tocar y al guardar. */

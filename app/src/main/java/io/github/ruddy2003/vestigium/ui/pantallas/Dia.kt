@@ -245,6 +245,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
         if (esHoy && c.semana_corta) { SemanaCorta(d) { abrirNoche() }; return@Hoja }
         // La frase, siempre arriba, justo debajo del estado.
         FraseDelDia(fecha)
+        // El gato del tema camina por su banda (solo hoy).
+        if (esHoy) io.github.ruddy2003.vestigium.ui.GatoDelDia(hoy)
         // En lugar del personaje: tus últimos días, de un vistazo (N-28). Tocar un día lo abre; hoy abre «Llenar el día».
         if (esHoy) FranjaDias(hoy, abrir = { f -> if (f == hoy) abrirNoche() else { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.abrir(nav, f) } }) { ponerte() }
         if (esHoy) SugerirSemanaCorta(hoy)

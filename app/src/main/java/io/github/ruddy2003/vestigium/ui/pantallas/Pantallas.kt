@@ -122,7 +122,7 @@ object Pantallas {
         P("experimentos", "Experimentos personales", "Prueba algo y mide si sirve", "experimento"),
         P("totales", "Totales", "Todo lo acumulado", "sumas"),
         P("recaidas", "Privado", "Solo se ve aquí", "impulso recaída libido medicamentos privado"),
-        P("apariencia", "Apariencia", "Tema, claro u oscuro, animaciones, tus últimos días, semana corta", "tema colores sonido personaje franja semana corta"),
+        P("apariencia", "Apariencia", "Tema, claro u oscuro, animaciones, gato, tus últimos días, semana corta", "tema colores sonido personaje gato franja semana corta"),
         P("avisos", "Avisos y recordatorios", "Ánimo, diario, sueño, cuestionarios", "notificaciones"),
         P("privacidad", "Privacidad", "Huella, modo discreto, seguimiento privado", "bloqueo huella discreto"),
         P("datos", "Datos", "Exportar a R, Drive, respaldos, importar", "exportar respaldo drive importar csv r"),
