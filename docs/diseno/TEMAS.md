@@ -27,7 +27,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 
 - **Las pruebas** (`app/src/test/.../CoberturaTemas.kt` y `UnicidadTemas.kt`) miden lo que se puede medir: entradas en los mapas, recursos, sonidos, ícono, gato, frases, nombres, letras, esquinas, vibración. Su lista de pendientes es la fuente de verdad de esas filas; aquí se copian para tenerlas a la vista. Si una fila de esta matriz y la lista de la prueba no coinciden, manda la prueba.
 - **La cuenta de despachos** (`CoberturaTemas.despachosPorTema`) dice, por archivo, cuántas ramas juntan temas, cuántas comparaciones `== TemaId.X` o `in setOf(TemaId.…)` y cuántos `else ->` en un `when (tema)` quedan. Ninguna cuenta puede subir; al final del lote 7 quedan en cero.
-- **Los dibujos** se revisan en las capturas por tema (`Capturas.kt`, sección «capturas por tema»). Se piden con la entrada `superficies` de `capturas.yml`, por ejemplo `campana,libreta`, o `todas`. Cada imagen se llama `io.github.ruddy2003.vestigium_Capturas_tema<Superficie>_<tema>_<claro|oscuro>.png` en la rama `capturas`. Las superficies son: `trofeos`, `salon`, `piezas`, `hallImagen`, `campana`, `libreta`, `fondoVivo`, `fiesta`, `relacion`, `huella`, `icono`, `mapaFormas`, `calificacion`, `reporte`, `reporteMes`, `vozAnio`, `calendario`, `constelacion`, `medalla`, `graficas`, `dialogo`, `barra`, `enfoque`, `bloqueo` y `cartas`; desde el lote 3, además, `campanaVictoria`, `decoracion`, `componentes`, `previa`, `fondoTelefono`, `personaje`, `lamina`, `librosAnio`, `cosasAnio`, `galerias`, `bibliotecas`, `widgets`, `dia`, `hoy`, `cartaAbierta`, `hojaLibreta` y `libros`; desde el lote 4, `presentacion`, `quick`, `cinta`, `otrasVidas`, `estiloGrafica`, `controles`, `selectorFecha` y `graficasAnno`; desde el lote 5, `textos` (letras, nombres, fechas, números, claves, textos cortos y esquinas en una hoja). Paparazzi no dibuja otra ventana, así que `dialogo`, `controles` y `selectorFecha` muestran el cuerpo de los diálogos y del menú (`CuerpoDialogo`, `MenuVista`, `CuerpoSelectorFecha`) sin la ventana.
+- **Los dibujos** se revisan en las capturas por tema (`Capturas.kt`, sección «capturas por tema»). Se piden con la entrada `superficies` de `capturas.yml`, por ejemplo `campana,libreta`, o `todas`. Cada imagen se llama `io.github.ruddy2003.vestigium_Capturas_tema<Superficie>_<tema>_<claro|oscuro>.png` en la rama `capturas`. Las superficies son: `trofeos`, `salon`, `piezas`, `hallImagen`, `campana`, `libreta`, `fondoVivo`, `fiesta`, `relacion`, `huella`, `icono`, `mapaFormas`, `calificacion`, `reporte`, `reporteMes`, `vozAnio`, `calendario`, `constelacion`, `medalla`, `graficas`, `dialogo`, `barra`, `enfoque`, `bloqueo` y `cartas`; desde el lote 3, además, `campanaVictoria`, `decoracion`, `componentes`, `previa`, `fondoTelefono`, `personaje`, `lamina`, `librosAnio`, `cosasAnio`, `galerias`, `bibliotecas`, `widgets`, `dia`, `hoy`, `cartaAbierta`, `hojaLibreta` y `libros`; desde el lote 4, `presentacion`, `quick`, `cinta`, `otrasVidas`, `estiloGrafica`, `controles`, `selectorFecha` y `graficasAnno`; desde el lote 5, `textos` (letras, nombres, fechas, números, claves, textos cortos y esquinas en una hoja) y `reporteDia` (las fichas de «Lo que registró el teléfono» con un día completo). Paparazzi no dibuja otra ventana, así que `dialogo`, `controles` y `selectorFecha` muestran el cuerpo de los diálogos y del menú (`CuerpoDialogo`, `MenuVista`, `CuerpoSelectorFecha`) sin la ventana.
 - **El estado de las pruebas** de cada corrida de capturas queda en la rama `capturas`: `cobertura.txt`, `unicidad.txt` y `despachos.txt`, listos para pegar en la prueba.
 
 ## Cómo se usa en cada lote
@@ -58,27 +58,27 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 116 | 1 | 2 | 2 | 3 |
-| CIB | 114 | 1 | 2 | 2 | 3 |
-| HEL | 116 | 1 | 2 | 2 | 3 |
-| MED | 116 | 1 | 1 | 2 | 4 |
-| DIS | 113 | 2 | 1 | 2 | 4 |
-| REF | 113 | 2 | 1 | 2 | 4 |
-| ORD | 114 | 3 | 1 | 2 | 4 |
-| LAB | 116 | 2 | 1 | 2 | 3 |
-| COL | 115 | 2 | 2 | 2 | 3 |
-| NAP | 113 | 2 | 1 | 2 | 4 |
-| BOT | 117 | 1 | 1 | 2 | 3 |
-| NAV | 113 | 2 | 1 | 2 | 4 |
-| SED | 116 | 1 | 2 | 2 | 3 |
-| GOT | 116 | 1 | 2 | 2 | 3 |
-| ESP | 113 | 2 | 2 | 2 | 3 |
-| AND | 117 | 1 | 1 | 2 | 3 |
-| MON | 116 | 1 | 1 | 2 | 4 |
-| REN | 116 | 1 | 1 | 2 | 4 |
-| URS | 114 | 3 | 1 | 2 | 4 |
-| REV | 117 | 1 | 1 | 2 | 3 |
-| ANT | 115 | 1 | 2 | 2 | 4 |
+| ROM | 117 | 1 | 2 | 2 | 3 |
+| CIB | 115 | 1 | 2 | 2 | 3 |
+| HEL | 117 | 1 | 2 | 2 | 3 |
+| MED | 117 | 1 | 1 | 2 | 4 |
+| DIS | 114 | 2 | 1 | 2 | 4 |
+| REF | 114 | 2 | 1 | 2 | 4 |
+| ORD | 115 | 3 | 1 | 2 | 4 |
+| LAB | 117 | 2 | 1 | 2 | 3 |
+| COL | 116 | 2 | 2 | 2 | 3 |
+| NAP | 114 | 2 | 1 | 2 | 4 |
+| BOT | 118 | 1 | 1 | 2 | 3 |
+| NAV | 114 | 2 | 1 | 2 | 4 |
+| SED | 117 | 1 | 2 | 2 | 3 |
+| GOT | 117 | 1 | 2 | 2 | 3 |
+| ESP | 114 | 2 | 2 | 2 | 3 |
+| AND | 118 | 1 | 1 | 2 | 3 |
+| MON | 117 | 1 | 1 | 2 | 4 |
+| REN | 117 | 1 | 1 | 2 | 4 |
+| URS | 115 | 3 | 1 | 2 | 4 |
+| REV | 118 | 1 | 1 | 2 | 3 |
+| ANT | 116 | 1 | 2 | 2 | 4 |
 
 Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
 
@@ -228,6 +228,7 @@ Las filas con valor comparable las vigila `UnicidadTemas` (y las que faltan, `Co
 | Letra de texto | `tipoDe`, `pagina()`, `LibroDiario.fuentes` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: 15 familias nuevas (Cardo, Barlow, Courier Prime, Saira, Old Standard, Crimson Pro, Lora, Alegreya, PT Sans, Fira Sans, Goudy, Baskerville, Vollkorn…) recortadas con `herramientas/fuentes.py`; la etiqueta usa la letra de texto o de título salvo en ROM, CIB y REF. |
 | Esquinas | `radioDe` (`ui/Tema.kt`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: `Esquinas(radio, forma)` con cuatro formas (redonda, cortada, hoja, arco); ninguna pareja se repite. |
 | Frases del día (al menos 20) | `ui/Frases.kt` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 5: los 13 temas que tenían menos llegan a 22, con 89 citas reales comprobadas en fuentes en línea (autor y fuente en cada una; las dudosas lo dicen). |
+| Legibilidad (principio 7) | `LegibilidadTemas`, `Estilo.pantallaLegible` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Después del lote 5: claves, pestañas, semana, meses, números, fecha, racha, «atrás», widgets y textos cortos se entienden sin saber otra lengua; los nombres en griego, árabe y mongol llevan su español al lado donde van solos. |
 
 ## Lote 6 · Sonido y vibración
 
