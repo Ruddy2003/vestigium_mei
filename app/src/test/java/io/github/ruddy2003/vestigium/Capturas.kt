@@ -1349,6 +1349,26 @@ class Capturas {
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(navVacia)
     } }
     @Test fun temaHojaLibreta() = porTema("hojaLibreta") { t, o, n -> v73(t, o, 2400, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaHojaMomentos(navVacia) } }
+    /** El diario: objeto cerrado de día y de noche, el estante, el estante de sueños bajo su cielo, la página abierta y el escritor del sueño. */
+    @Test fun temaLibros() = porTema("libros") { t, o, n ->
+        val dias = listOf("2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16").mapIndexed { i, f ->
+            io.github.ruddy2003.vestigium.data.Dia(fecha = f, valencia = i * 2 - 4, nota = TEXTO.take(60 + i * 90), sueno_texto = "Volaba sobre un río.", sueno_valencia = 2 - i)
+        }
+        captura(t, o, 3200, n + "_estante") {
+            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                io.github.ruddy2003.vestigium.ui.ObjetoDiario("2026-10-16", TEXTO, tema = t) {}
+                io.github.ruddy2003.vestigium.ui.ObjetoDiario("2026-10-16", "", tema = t, noche = true) {}
+                io.github.ruddy2003.vestigium.ui.EstanteDiario(dias, t) {}
+                io.github.ruddy2003.vestigium.ui.CieloNoche(tema = t) { io.github.ruddy2003.vestigium.ui.EstanteDiario(dias, t, noche = true) {} }
+            }
+        }
+        captura(t, o, 2400, n + "_pagina") {
+            io.github.ruddy2003.vestigium.ui.LecturaTema("2026-10-16", dias.last().copy(mejor_momento = "La caminata.", peor_momento = "El tráfico."), {}, null, null, emptyList(), tema = t)
+        }
+        captura(t, o, 2400, n + "_sueno") {
+            io.github.ruddy2003.vestigium.ui.EscritorTema("2026-10-16", "", {}, {}, t, modo = io.github.ruddy2003.vestigium.ui.Escrito.SUENO)
+        }
+    }
     @Test fun temaLibrosAnio() = porTema("librosAnio") { t, o, n -> tarjetaAnio(t, o, "libros", n) }
     @Test fun temaCosasAnio() = porTema("cosasAnio") { t, o, n -> tarjetaAnio(t, o, "cosas", n) }
     /** «Más» (recuadros con el marco del tema), «Mapas» y la galería de obras. */
