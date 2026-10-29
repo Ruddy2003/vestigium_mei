@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
@@ -21,7 +22,7 @@ class PrivacidadActivity : ComponentActivity() {
         setContent {
             TemaVestigium {
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    Box(Modifier.safeDrawingPadding()) {
+                    Box(Modifier.fillMaxSize().fondoTema(Estilo.tema, MaterialTheme.colorScheme).safeDrawingPadding()) {
                         Hoja("Privacidad", { finish() }) {
                             Text(
                                 "Vestigium Mei es una app personal. Los datos de salud que lee de Health Connect (sueño, frecuencia cardiaca, " +

@@ -138,7 +138,7 @@ class QuickActivity : FragmentActivity() {
                     ) {
                         var pantalla by remember { mutableStateOf(pantallaInicial) }
                         var privado by remember { mutableStateOf(inicial?.takeIf { pantallaInicial == "privado" }) }
-                        Column(Modifier.padding(18.dp).verticalScroll(rememberScrollState())) {
+                        Column(Modifier.fondoTema(Estilo.tema, MaterialTheme.colorScheme).padding(18.dp).verticalScroll(rememberScrollState())) {
                             Meandro(Modifier.padding(bottom = 12.dp))
                             val ir: (String) -> Unit = { destino ->
                                 when (destino) {
