@@ -242,7 +242,7 @@ private fun FichaVista(f: FichaDia, modifier: Modifier) {
         Column(Modifier.padding(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconoPista(f.icono, cs.primary, tam = 22.dp, tema = tema)
-                Text(rotulo(f), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 1,
+                Text(rotulo(f), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, maxLines = 2,
                     overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 6.dp).weight(1f))
             }
             Text(f.cifra, style = estiloCifra(), maxLines = 1, modifier = Modifier.padding(top = 4.dp))
@@ -254,7 +254,7 @@ private fun FichaVista(f: FichaDia, modifier: Modifier) {
 
 /** El rótulo del tema y, si dice otra cosa, lo que mide en español: «somnus · sueño», «MARCHA · pasos». */
 private fun rotulo(f: FichaDia): String {
-    val k = Estilo.clave(f.clave)
+    val k = Estilo.clave(f.clave).replace('_', ' ')
     fun llano(x: String) = java.text.Normalizer.normalize(x.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "").replace('_', ' ')
     return if (llano(k) == llano(f.nombre)) k else "$k · ${f.nombre}"
 }
