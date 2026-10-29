@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -322,7 +324,8 @@ internal fun CosasDelAnio(d: TuAnio.Datos, tema: TemaId = Estilo.tema) {
     if (fichas.isEmpty()) return
     Column(Modifier.fillMaxWidth().padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         fichas.chunked(2).forEach { par ->
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Las dos fichas de una fila miden lo mismo aunque una tenga el texto en dos renglones.
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 par.forEach { it(Modifier.weight(1f)) }
                 if (par.size == 1) Spacer(Modifier.weight(1f))
             }
@@ -334,7 +337,7 @@ internal fun CosasDelAnio(d: TuAnio.Datos, tema: TemaId = Estilo.tema) {
 @Composable
 private fun FichaCosa(tema: TemaId, forma: String, cifra: String, que: String, compara: String?, modifier: Modifier, grafica: @Composable () -> Unit) {
     val cs = MaterialTheme.colorScheme
-    Column(modifier.clip(MaterialTheme.shapes.small).background(cs.surface.copy(alpha = 0.55f)).border(0.8.dp, cs.outline.copy(alpha = 0.35f), MaterialTheme.shapes.small)
+    Column(modifier.fillMaxHeight().clip(MaterialTheme.shapes.small).background(cs.surface.copy(alpha = 0.55f)).border(0.8.dp, cs.outline.copy(alpha = 0.35f), MaterialTheme.shapes.small)
         .padding(horizontal = 9.dp, vertical = 8.dp)) {
         Box(Modifier.fillMaxWidth().height(54.dp), contentAlignment = Alignment.Center) { grafica() }
         Row(Modifier.padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -385,9 +388,10 @@ private fun FichaCamino(d: TuAnio.Datos, tema: TemaId, modifier: Modifier) {
     FichaCosa(tema, "huella", f0(km) + " km", "${miles(d.p.pasosTotal)} pasos", texto, modifier) {
         Canvas(Modifier.fillMaxWidth().height(54.dp)) {
             val dd = density; val y = size.height * 0.68f; val x0 = 6 * dd; val x1 = size.width - 6 * dd
+            // El camino mide tantos tramos como metas empezadas (hasta 8): lo que falta para la siguiente queda punteado.
             val tramos = minOf(8, maxOf(1, ceil(veces).toInt()))
-            val escala = if (veces <= 8) (x1 - x0) / maxOf(veces, 1.0).toFloat() else (x1 - x0) / 8f
-            val fin = x0 + (if (veces <= 8) veces.toFloat() else 8f) * escala
+            val escala = (x1 - x0) / tramos
+            val fin = x0 + minOf(veces, tramos.toDouble()).toFloat() * escala
             // El camino entero (punteado) y lo recorrido (lleno), con una ondulación suave.
             fun camino(hasta: Float) = Path().apply {
                 moveTo(x0, y); var x = x0
@@ -398,7 +402,7 @@ private fun FichaCamino(d: TuAnio.Datos, tema: TemaId, modifier: Modifier) {
             // Un banderín en cada meta cumplida.
             for (k in 1..tramos) {
                 val bx = x0 + k * escala
-                if (bx > fin + 0.5f || bx > x1) break
+                if (bx > fin - 14 * dd) break // la huella ocupa la última meta
                 val by = y + sin(bx / (18 * dd)) * 3 * dd
                 drawLine(cs.onSurfaceVariant, Offset(bx, by), Offset(bx, by - 18 * dd), 1.2f * dd)
                 drawPath(Path().apply { moveTo(bx, by - 18 * dd); lineTo(bx + 9 * dd, by - 14.5f * dd); lineTo(bx, by - 11 * dd); close() }, if (k % 2 == 0) cs.secondary else cs.tertiary)
