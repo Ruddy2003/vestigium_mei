@@ -162,6 +162,7 @@ class MainActivity : FragmentActivity() {
         enFondoDesde = System.currentTimeMillis()
         runCatching { Widgets.actualizar(this) }
         if (!isChangingConfigurations) IconoApp.aplicar(this)
+        runCatching { AccesosDirectos.publicar(this) }
     }
 
     override fun onStart() {

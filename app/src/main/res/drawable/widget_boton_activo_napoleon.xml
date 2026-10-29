@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FFD9B25B" />
-    <corners android:radius="4dp" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFD9B25B"/>
+            <corners android:radius="4dp"/>
+        </shape>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="2.5dp" android:left="5dp" android:right="5dp" android:bottom="1.5dp">
+        <vector android:width="40dp" android:height="2.5dp" android:viewportWidth="39" android:viewportHeight="2.5">
+            <path android:pathData="M0,0 L1,0 L1,2.5 L0,2.5 Z M2,0 L3,0 L3,2.5 L2,2.5 Z M4,0 L5,0 L5,2.5 L4,2.5 Z M6,0 L7,0 L7,2.5 L6,2.5 Z M8,0 L9,0 L9,2.5 L8,2.5 Z M10,0 L11,0 L11,2.5 L10,2.5 Z M12,0 L13,0 L13,2.5 L12,2.5 Z M14,0 L15,0 L15,2.5 L14,2.5 Z M16,0 L17,0 L17,2.5 L16,2.5 Z M18,0 L19,0 L19,2.5 L18,2.5 Z M20,0 L21,0 L21,2.5 L20,2.5 Z M22,0 L23,0 L23,2.5 L22,2.5 Z M24,0 L25,0 L25,2.5 L24,2.5 Z M26,0 L27,0 L27,2.5 L26,2.5 Z M28,0 L29,0 L29,2.5 L28,2.5 Z M30,0 L31,0 L31,2.5 L30,2.5 Z M32,0 L33,0 L33,2.5 L32,2.5 Z M34,0 L35,0 L35,2.5 L34,2.5 Z M36,0 L37,0 L37,2.5 L36,2.5 Z M38,0 L39,0 L39,2.5 L38,2.5 Z" android:fillColor="#55000000"/>
+        </vector>
+    </item>
+</layer-list>

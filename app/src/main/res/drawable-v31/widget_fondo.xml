@@ -1,7 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F7252D32" />
-    <stroke android:width="1.5dp" android:color="#495968" />
-    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
-</shape>
+<!-- Android 12 y después: igual que la de drawable/. Ya no fuerza el radio del sistema (system_app_widget_background_radius) para no perder la forma del tema. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7252D32"/>
+            <stroke android:width="1.5dp" android:color="#495968"/>
+            <corners android:radius="4dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#66D2AE5A"/>
+            <corners android:radius="2dp"/>
+        </shape>
+    </item>
+    <item android:gravity="left|center_vertical" android:width="6dp" android:height="14dp" android:left="1dp">
+        <vector android:width="6dp" android:height="14dp" android:viewportWidth="6" android:viewportHeight="14">
+            <path android:pathData="M0,0 L6,7 L0,14 Z" android:fillColor="#99D2AE5A"/>
+        </vector>
+    </item>
+    <item android:gravity="right|center_vertical" android:width="6dp" android:height="14dp" android:right="1dp">
+        <vector android:width="6dp" android:height="14dp" android:viewportWidth="6" android:viewportHeight="14">
+            <path android:pathData="M6,0 L0,7 L6,14 Z" android:fillColor="#99D2AE5A"/>
+        </vector>
+    </item>
+</layer-list>

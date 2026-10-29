@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F72F3336" />
-    <stroke android:width="1.5dp" android:color="#66707A" />
-    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
-</shape>
+<!-- Android 12 y después: igual que la de drawable/. Ya no fuerza el radio del sistema (system_app_widget_background_radius) para no perder la forma del tema. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F72F3336"/>
+            <stroke android:width="1.5dp" android:color="#66707A"/>
+            <corners android:radius="0dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|right" android:width="20dp" android:height="20dp">
+        <vector android:width="20dp" android:height="20dp" android:viewportWidth="20" android:viewportHeight="20">
+            <path android:pathData="M4,0 L20,0 L20,16 Z" android:fillColor="#D0E0262F"/>
+            <path android:pathData="M0,0 L3,0 L20,17 L20,20 Z" android:fillColor="#55E0262F"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="4dp" android:left="8dp" android:right="8dp" android:bottom="3dp">
+        <shape android:shape="line">
+            <stroke android:width="1dp" android:color="#CC66707A" android:dashWidth="3dp" android:dashGap="3dp"/>
+        </shape>
+    </item>
+</layer-list>
