@@ -89,7 +89,8 @@ internal fun LibrosDelAnio(anio: Int, tema: TemaId = Estilo.tema) {
 /** Etiqueta corta de cada mes en el tema: la inicial de su nombre; si se repiten, su numeral (si es corto) o el número. */
 internal fun etiquetasMesesAnio(): List<String> {
     val iniciales = (1..12).map { Estilo.mes(it).trim().take(1).uppercase() }
-    if (iniciales.toSet().size >= 9) return iniciales
+    // Si el mes del tema empieza con su número (MON: «10-р сар»), la inicial sería «1» para octubre, noviembre y diciembre.
+    if (iniciales.none { it.firstOrNull()?.isDigit() == true } && iniciales.toSet().size >= 9) return iniciales
     val numerales = (1..12).map { Estilo.numeral(it) }
     return if (numerales.all { it.length <= 4 }) numerales else (1..12).map { "$it" }
 }
