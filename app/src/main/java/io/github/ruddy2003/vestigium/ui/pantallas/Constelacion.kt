@@ -35,11 +35,13 @@ import io.github.ruddy2003.vestigium.data.Perfiles
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.ui.Ayuda
+import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.figuraTema
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
@@ -88,6 +90,8 @@ fun PantallaConstelacion(nav: Nav) {
     val animar = io.github.ruddy2003.vestigium.data.Repo.config.animaciones
     val medidor = rememberTextMeasurer()
     val estiloNombre = MaterialTheme.typography.labelSmall.copy(color = cs.onSurface)
+    // Cada tema dibuja a su gente con su figura (ver figuraTema): áureos, píxeles, soles de Vergina, lacres, ojos, átomos…
+    val tema = Estilo.tema
 
     Hoja("Constelación", nav.atras, "Tu gente como un cielo: más grande, más días mencionada; más cerca del centro, más reciente. Las líneas unen a quienes aparecen el mismo día.") {
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -122,13 +126,14 @@ fun PantallaConstelacion(nav: Nav) {
                 val a = pos[k.first] ?: return@forEach; val b = pos[k.second] ?: return@forEach
                 drawLine(cs.primary.copy(alpha = (0.12f + 0.06f * n).coerceAtMost(0.5f)), Offset(a.x, a.y), Offset(b.x, b.y), (0.6f + n * 0.15f).coerceAtMost(2f) * density)
             }
-            // Tú, en el centro.
-            drawCircle(cs.primary, 4.5f * density, c); drawCircle(cs.primary.copy(alpha = 0.3f), 9f * density, c, style = Stroke(1f * density))
+            // Tú, en el centro, con la figura del tema.
+            figuraTema(tema, cs.primary, c, 6f * density, cs.surface); drawCircle(cs.primary.copy(alpha = 0.3f), 10f * density, c, style = Stroke(1f * density))
             estrellas.forEachIndexed { i, e ->
                 val col = tonos[e.relacion] ?: cs.onSurface
                 val brillo = if (animar) 0.65f + 0.35f * sin((fase.value + i * 0.137f) * 2 * Math.PI).toFloat().let { (it + 1) / 2 } else 1f
                 drawCircle(col.copy(alpha = 0.18f * brillo), e.r * 2.2f, Offset(e.x, e.y))
-                drawCircle(col.copy(alpha = brillo), e.r, Offset(e.x, e.y))
+                // La figura es un poco más grande que el círculo de antes para que pese lo mismo a la vista (las puntas dejan huecos).
+                figuraTema(tema, col.copy(alpha = brillo), Offset(e.x, e.y), e.r * 1.25f, cs.surface)
                 if (e === elegida) drawCircle(cs.primary, e.r + 6f, Offset(e.x, e.y), style = Stroke(2f))
                 if (i < 14 || e === elegida) {
                     val t = medidor.measure("@" + e.nombre, estiloNombre)
