@@ -50,7 +50,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 6 | Sonido y vibración | hecho 30 oct 2026 |
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | hecho 30 oct 2026 (queda el gato, del lote 9) |
 | 8 | Terminal y 13 temas nuevos (de 21 a 34) | hecho 30 oct 2026 con 11 de los 13: Vapor y Art déco quedan para la próxima semana |
-| 9 | El gato de cada tema | pendiente (la rama del gato aún no está en `main`) |
+| 9 | El gato de cada tema | en curso: el gato de los 21 originales ya está (30 oct 2026); faltan los gatos de los temas nuevos y 9a |
 
 ## Resumen por tema
 
@@ -58,37 +58,37 @@ Cuántas superficies de la matriz están en cada estado (sin contar los «no apl
 
 | Tema | P | S | C | G | ✗ |
 |---|---|---|---|---|---|
-| ROM | 124 | 0 | 0 | 0 | 1 |
+| ROM | 125 | 0 | 0 | 0 | 0 |
 | URB | 124 | 0 | 0 | 0 | 1 |
-| CIB | 122 | 0 | 0 | 0 | 1 |
+| CIB | 123 | 0 | 0 | 0 | 0 |
 | NEO | 122 | 0 | 0 | 0 | 1 |
-| HEL | 124 | 0 | 0 | 0 | 1 |
+| HEL | 125 | 0 | 0 | 0 | 0 |
 | EGI | 124 | 0 | 0 | 0 | 1 |
-| MED | 124 | 0 | 0 | 0 | 1 |
+| MED | 125 | 0 | 0 | 0 | 0 |
 | TEM | 124 | 0 | 0 | 0 | 1 |
-| DIS | 122 | 0 | 0 | 0 | 1 |
-| REF | 122 | 0 | 0 | 0 | 1 |
-| ORD | 124 | 0 | 0 | 0 | 1 |
-| LAB | 124 | 0 | 0 | 0 | 1 |
-| COL | 124 | 0 | 0 | 0 | 1 |
-| NAP | 122 | 0 | 0 | 0 | 1 |
-| BOT | 124 | 0 | 0 | 0 | 1 |
+| DIS | 123 | 0 | 0 | 0 | 0 |
+| REF | 123 | 0 | 0 | 0 | 0 |
+| ORD | 125 | 0 | 0 | 0 | 0 |
+| LAB | 125 | 0 | 0 | 0 | 0 |
+| COL | 125 | 0 | 0 | 0 | 0 |
+| NAP | 123 | 0 | 0 | 0 | 0 |
+| BOT | 125 | 0 | 0 | 0 | 0 |
 | RUI | 124 | 0 | 0 | 0 | 1 |
-| NAV | 122 | 0 | 0 | 0 | 1 |
-| SED | 124 | 0 | 0 | 0 | 1 |
+| NAV | 123 | 0 | 0 | 0 | 0 |
+| SED | 125 | 0 | 0 | 0 | 0 |
 | EDO | 124 | 0 | 0 | 0 | 1 |
-| GOT | 124 | 0 | 0 | 0 | 1 |
+| GOT | 125 | 0 | 0 | 0 | 0 |
 | ARC | 124 | 0 | 0 | 0 | 1 |
-| ESP | 122 | 0 | 0 | 0 | 1 |
+| ESP | 123 | 0 | 0 | 0 | 0 |
 | ABI | 124 | 0 | 0 | 0 | 1 |
-| AND | 124 | 0 | 0 | 0 | 1 |
+| AND | 125 | 0 | 0 | 0 | 0 |
 | MES | 124 | 0 | 0 | 0 | 1 |
-| MON | 124 | 0 | 0 | 0 | 1 |
-| REN | 124 | 0 | 0 | 0 | 1 |
+| MON | 125 | 0 | 0 | 0 | 0 |
+| REN | 125 | 0 | 0 | 0 | 0 |
 | PIR | 124 | 0 | 0 | 0 | 1 |
-| URS | 124 | 0 | 0 | 0 | 1 |
-| REV | 124 | 0 | 0 | 0 | 1 |
-| ANT | 124 | 0 | 0 | 0 | 1 |
+| URS | 125 | 0 | 0 | 0 | 0 |
+| REV | 125 | 0 | 0 | 0 | 0 |
+| ANT | 125 | 0 | 0 | 0 | 0 |
 | CUE | 124 | 0 | 0 | 0 | 1 |
 
 Desde el lote 2 ningún tema cae en los respaldos de trofeos, salón, campaña ni libreta.
@@ -262,7 +262,7 @@ Lo que la prueba `CoberturaTemas` exige por tema. Los recursos que ya existen sa
 | Papel `papel_<id>` | `res/drawable-nodpi`, `herramientas/arte.py` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 7: un papel por tema, con su nombre de tema. Los de ROM, MED, SED y REV vienen de rasters viejos guardados en `herramientas/fuentes/`. |
 | Drawables de widget | `res/drawable/widget_*`, `drawable-v31` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | ROM usa los nombres sin sufijo. |
 | Los 13 sonidos del tema | `res/raw` | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P |  |
-| Gato de la banda de Día | `assets/gato/gato.json` | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | Está en la rama `claude/quirky-thompson-3km48y`, todavía sin mezclar. |
+| Gato de la banda de Día | `assets/gato/gato.json` | P | ✗ | P | ✗ | P | ✗ | P | ✗ | P | P | P | P | P | P | P | ✗ | P | P | ✗ | P | ✗ | P | ✗ | P | ✗ | P | P | ✗ | P | P | P | ✗ | Se juntó la rama del gato (lote 9, primera parte): los 21 temas originales tienen su gato. Los del lote 8 todavía no; en ellos la banda no aparece (`Gato.tieneGato`). |
 | Otra vida del tema | `data/OtrasVidas.kt` (`DE_TEMAS`) | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | Lote 7: ANT tiene a Brenna, guía de caminos (inventada). Lote 8: Kei pasa de CIB a NEO; CIB tiene a Carmen, operadora, y cada tema nuevo trae su vida. |
 
 ## Fuera de la matriz

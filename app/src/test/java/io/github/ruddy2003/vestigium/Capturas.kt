@@ -819,6 +819,26 @@ class Capturas {
     @Test fun piezasSeda() = piezas(TemaId.SEDA, false)
     @Test fun piezasGotico() = piezas(TemaId.GOTICO, true)
 
+    /** La banda del gato en cada tema que lo tiene (los 21 originales), quieta en una de sus dos animaciones propias (de día la primera, de noche la segunda). */
+    private fun gatos(oscuro: Boolean) = captura(TemaId.ROMANO, oscuro, alto = 6200) {
+        Column(Modifier.padding(8.dp)) {
+            TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.Gato.tieneGato(it) }.forEachIndexed { k, t ->
+                val o = oscuro || t.soloOscuro
+                androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, o), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, o)) {
+                    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                        Text(t.nombre, style = MaterialTheme.typography.labelMedium)
+                        io.github.ruddy2003.vestigium.ui.BandaGato(
+                            io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false), tema = t,
+                            fijo = io.github.ruddy2003.vestigium.ui.Gato.Paso("esp_${t.id}_${if (oscuro) 1 else 0}", 1, 40f + (k % 6) * 55f, if (k % 2 == 0) 1 else -1),
+                        )
+                    }
+                }
+            }
+        }
+    }
+    @Test fun gatosClaro() = gatos(false)
+    @Test fun gatosOscuro() = gatos(true)
+
     /** Las @personas y los #temas marcados en cada tema. */
     @Test fun marcas() = hojaTemas(porParte = 28, alto = { 100 + it * 167 }) { temas ->
         Column(Modifier.padding(12.dp)) {

@@ -694,7 +694,9 @@ Notas:
 
 ### Qué existe
 
-El gato está en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `main`, **todavía sin mezclar**).
+**Estado (30 oct 2026):** la rama `claude/quirky-thompson-3km48y` ya está juntada. El gato sale en los 21 temas originales, los que tienen arte en `assets/gato/`. En los temas del lote 8 la banda no aparece: `Gato.tieneGato` dice, tema por tema, cuáles lo tienen, y `CoberturaTemas` deja de pendientes solo a los temas nuevos. Quedan para después 9a, los gatos de los temas nuevos y el resto de este lote.
+
+El gato estaba en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `main`).
 
 - **Código:** `ui/Gato.kt`. Lo llama `pantallas/Dia.kt:249` (`GatoDelDia`); el interruptor está en `Modelo.kt:704`.
 - **Ánimo:** `Gato.humor()` lo calcula con el sueño y el ánimo del día. `Animo` puede ser NORMAL, ALEGRE, TRISTE o ENOJADO, y además el gato puede estar cansado o ser de noche.
@@ -702,7 +704,7 @@ El gato está en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `m
 - **Arte:** lo dibujan `herramientas/gato/gato8.py` a `gato18.py`, y `exportar.py` lo pasa a `assets/gato/` (unos 7.4 MB para 41 claves).
 - **Capturas:** `gatosClaro` y `gatosOscuro`.
 
-**Requisito:** mezclar esa rama antes del lote 9, o construir encima de ella.
+**Requisito:** mezclar esa rama antes del lote 9 (hecho el 30 oct 2026).
 
 ### 9a. Completar los gatos que ya existen
 
