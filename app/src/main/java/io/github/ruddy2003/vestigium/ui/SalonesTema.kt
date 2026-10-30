@@ -22,8 +22,6 @@ import kotlin.math.sin
  * Las de los otros catorce temas están en [SalonesMas]. Todo se dibuja tenue para que las piezas se lean encima.
  */
 object SalonesTema {
-    val TEMAS = TrofeosTema.TEMAS
-
     /**
      * La escena detrás de las piezas. [columnas] = cuántas piezas hay por fila: la arquitectura (columnas, arcos,
      * hornacinas) se acomoda para enmarcar cada columna de piezas y nunca pasar por detrás de una.
@@ -39,20 +37,20 @@ object SalonesTema {
             TemaId.RENACIMIENTO -> galeria(cs, oscuro, n)
             TemaId.NAPOLEON -> imperial(cs, oscuro, n)
             TemaId.REVOLUCION -> panteon(cs, oscuro, n)
-            TemaId.ANDALUS -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.SEDA -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.MONGOL -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.COLONOS -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.BOTANICO -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.NAVIDAD -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.ANTIGUAS -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.DISTOPIA -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.CIBER -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.REFUGIO -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.ORDEN -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.LABORATORIO -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.ESPACIO -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
-            TemaId.URSS -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.ANDALUS -> with(SalonesMas) { patio(cs, oscuro, n) }
+            TemaId.SEDA -> with(SalonesMas) { caravasar(cs, oscuro, n) }
+            TemaId.MONGOL -> with(SalonesMas) { yurta(cs, oscuro, n) }
+            TemaId.COLONOS -> with(SalonesMas) { almacen(cs, oscuro, n) }
+            TemaId.BOTANICO -> with(SalonesMas) { invernadero(cs, oscuro, n) }
+            TemaId.NAVIDAD -> with(SalonesMas) { chimenea(cs, oscuro, n) }
+            TemaId.ANTIGUAS -> with(SalonesMas) { salonPiedra(cs, oscuro, n) }
+            TemaId.DISTOPIA -> with(SalonesMas) { archivo(cs, oscuro, n) }
+            TemaId.CIBER -> with(SalonesMas) { salaCentral(cs, oscuro, n) }
+            TemaId.REFUGIO -> with(SalonesMas) { salaComun(cs, oscuro, n) }
+            TemaId.ORDEN -> with(SalonesMas) { salaCapitular(cs, oscuro, n) }
+            TemaId.LABORATORIO -> with(SalonesMas) { laboratorioLimpio(cs, oscuro, n) }
+            TemaId.ESPACIO -> with(SalonesMas) { observatorio(cs, oscuro, n) }
+            TemaId.URSS -> with(SalonesMas) { estacionMetro(cs, oscuro, n) }
         }
     }
 

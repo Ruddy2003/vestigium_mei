@@ -23,8 +23,6 @@ import kotlin.math.sin
  * Antioquía, el arco de herradura, el ovoo, la almenara, el sello de «APROBADO» y las escenas de los temas del lote 2.
  */
 object MapasCampana {
-    val TEMAS = TrofeosTema.TEMAS
-
     /** El fondo del mapa. [avance] va de 0 a 1 (días cumplidos de los siete). */
     fun DrawScope.fondo(tema: TemaId, cs: ColorScheme, avance: Float) {
         with(MapasMas) { fondoMas(tema, cs, avance) }

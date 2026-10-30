@@ -107,33 +107,6 @@ private fun matizHall(t: TemaId): Color = when (t) {
 /** El metal de un nivel (1 a 4) en el hall del tema: conserva bronce, plata, oro o cristal, teñido con el matiz del tema. */
 internal fun metalHall(tema: TemaId, nivel: Int): Color = lerp(METALES_HALL[(nivel - 1).coerceIn(0, 3)], matizHall(tema), 0.28f)
 
-/** Familias de temas para el salón: cada una con su arquitectura. */
-enum class Salon { TEMPLO, CASTILLO, LABORATORIO, TALLER }
-
-fun salonDe(t: TemaId): Salon = when (t) {
-    TemaId.ROMANO -> Salon.TEMPLO
-    TemaId.HELENO -> Salon.TEMPLO
-    TemaId.ANDALUS -> Salon.TEMPLO
-    TemaId.GOTICO -> Salon.TEMPLO
-    TemaId.RENACIMIENTO -> Salon.TEMPLO
-    TemaId.REVOLUCION -> Salon.TEMPLO
-    TemaId.MEDIEVAL -> Salon.CASTILLO
-    TemaId.ORDEN -> Salon.CASTILLO
-    TemaId.MONGOL -> Salon.CASTILLO
-    TemaId.NAPOLEON -> Salon.CASTILLO
-    TemaId.ANTIGUAS -> Salon.CASTILLO
-    TemaId.CIBER -> Salon.LABORATORIO
-    TemaId.DISTOPIA -> Salon.LABORATORIO
-    TemaId.REFUGIO -> Salon.LABORATORIO
-    TemaId.LABORATORIO -> Salon.LABORATORIO
-    TemaId.ESPACIO -> Salon.LABORATORIO
-    TemaId.COLONOS -> Salon.TALLER
-    TemaId.BOTANICO -> Salon.TALLER
-    TemaId.SEDA -> Salon.TALLER
-    TemaId.NAVIDAD -> Salon.TALLER
-    TemaId.URSS -> Salon.TALLER
-}
-
 /**
  * Cada logro, dibujado según lo que celebra: un horizonte de ciudad, un sello de pasaporte con bandera, un globo,
  * un monumento del patrimonio, una brújula, huellas, una pesa, una montaña, un libro, una luna, una carta…
@@ -1502,34 +1475,12 @@ fun PiezaLogro(l: Logros.Logro, tam: Dp, modifier: Modifier = Modifier, tema: Te
     Canvas(modifier.size(tam)) { with(PiezasLogro) { pieza(l, tema, cs) } }
 }
 
-/** El fondo del salón: arcos y columnas, muros con estandartes, vitrinas de laboratorio o repisas de madera. */
+/** El fondo del salón: la escena del tema ([SalonesTema]). */
 @Composable
 private fun BoxScope.FondoSalon(tema: TemaId) {
     val cs = MaterialTheme.colorScheme
     Canvas(Modifier.matchParentSize()) {
-        if (tema in SalonesTema.TEMAS) { with(SalonesTema) { escena(tema, cs) }; return@Canvas }
-        val w = size.width; val h = size.height
-        val linea = cs.outline.copy(alpha = 0.35f)
-        when (salonDe(tema)) {
-            Salon.TEMPLO -> {
-                val n = 4; val paso = w / n
-                for (i in 0..n) drawRect(cs.surfaceVariant.copy(alpha = 0.5f), Offset(i * paso - 6f, 0f), Size(12f, h))
-                for (i in 0 until n) drawArc(linea, 180f, 180f, false, Offset(i * paso + 6f, 8f), Size(paso - 12f, paso * 0.7f), style = Stroke(2f))
-            }
-            Salon.CASTILLO -> {
-                val fila = 22f
-                var y = 0f; var k = 0
-                while (y < h) { val off = if (k % 2 == 0) 0f else 30f; var x = -off; while (x < w) { drawRect(linea, Offset(x, y), Size(60f, fila), style = Stroke(1f)); x += 60f }; y += fila; k++ }
-                listOf(0.12f, 0.88f).forEach { fx -> drawPath(Path().apply { moveTo(w * fx - 18f, 10f); lineTo(w * fx + 18f, 10f); lineTo(w * fx + 18f, 110f); lineTo(w * fx, 92f); lineTo(w * fx - 18f, 110f); close() }, cs.primary.copy(alpha = 0.35f)) }
-            }
-            Salon.LABORATORIO -> {
-                var x = 0f; while (x < w) { drawLine(cs.primary.copy(alpha = 0.10f), Offset(x, 0f), Offset(x, h), 1f); x += 24f }
-                var y = 0f; while (y < h) { drawLine(cs.primary.copy(alpha = 0.10f), Offset(0f, y), Offset(w, y), 1f); y += 24f }
-            }
-            Salon.TALLER -> {
-                var y = 0f; while (y < h) { drawLine(Color(0xFF8A6A44).copy(alpha = 0.18f), Offset(0f, y), Offset(w, y), 1.5f); y += 14f }
-            }
-        }
+        with(SalonesTema) { escena(tema, cs) }
     }
 }
 
@@ -1635,15 +1586,9 @@ private fun Pedestal(g: Logros.Logro, tema: TemaId, modifier: Modifier) {
     Column(modifier.padding(horizontal = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         // El trofeo del tema (el mismo de la sala de trofeos), sobre la repisa del salón.
         TrofeoLogro(g, 118.dp, tema = tema)
-        // El pedestal: columna en el templo, plinto de piedra en el castillo, base iluminada en el laboratorio, repisa en el taller.
+        // El pedestal del tema (ver [SalonesTema.pedestal]).
         Canvas(Modifier.fillMaxWidth().height(22.dp).padding(horizontal = 18.dp)) {
-            if (tema in SalonesTema.TEMAS) { with(SalonesTema) { pedestal(tema, cs, metal) }; return@Canvas }
-            when (salonDe(tema)) {
-                Salon.TEMPLO -> { drawRect(cs.surfaceVariant, Offset(size.width * 0.15f, 0f), Size(size.width * 0.7f, size.height)); for (k in 1..4) drawLine(cs.outline.copy(alpha = 0.5f), Offset(size.width * (0.15f + 0.14f * k), 0f), Offset(size.width * (0.15f + 0.14f * k), size.height), 1f); drawRect(cs.outline, Offset(0f, size.height - 3f), Size(size.width, 3f)) }
-                Salon.CASTILLO -> { drawRect(cs.outline.copy(alpha = 0.6f), Offset(size.width * 0.08f, 0f), Size(size.width * 0.84f, size.height)); drawRect(cs.surface, Offset(size.width * 0.08f, size.height * 0.45f), Size(size.width * 0.84f, 1.5f)) }
-                Salon.LABORATORIO -> { drawRoundRect(cs.primary.copy(alpha = 0.18f), Offset(0f, 0f), Size(size.width, size.height), CornerRadius(6f, 6f)); drawLine(cs.primary, Offset(8f, 2f), Offset(size.width - 8f, 2f), 2f) }
-                Salon.TALLER -> { drawRect(Color(0xFF8A6A44).copy(alpha = 0.7f), Offset(0f, size.height * 0.3f), Size(size.width, size.height * 0.4f)); drawLine(Color(0xFF5A4630), Offset(0f, size.height * 0.7f), Offset(size.width, size.height * 0.7f), 1.5f) }
-            }
+            with(SalonesTema) { pedestal(tema, cs, metal) }
         }
         Box(Modifier.padding(top = 4.dp).background(metal.copy(alpha = 0.22f), MaterialTheme.shapes.small).padding(horizontal = 8.dp, vertical = 4.dp)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {

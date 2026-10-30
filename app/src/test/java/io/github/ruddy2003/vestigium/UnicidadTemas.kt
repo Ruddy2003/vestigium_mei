@@ -59,11 +59,11 @@ class UnicidadTemas {
         r["vibracion_rascar"] = iguales { Sentidos.patronRascar(it).toString() }
         r["sonido_archivos"] = (CoberturaTemas.SONIDOS_TEMA + CoberturaTemas.SONIDOS_LOTE6).flatMap { s -> iguales { t -> huellaDe("raw", s.replace("<id>", t.id)) } }.toSet()
 
-        // Nombres de trofeos, de etapas y de campañas; la libreta (la de respaldo se cuenta en la cobertura).
+        // Nombres de trofeos, de etapas y de campañas; la libreta.
         r["trofeos_nombres"] = comparten { t -> CATEGORIAS.mapNotNull { TrofeosTema.nombre(t, it) } }
         r["campana_etapas"] = comparten { Campanas.ETAPAS[it.id].orEmpty() }
         r["campana_titulos"] = comparten { Campanas.TITULOS[it.id].orEmpty() }
-        r["libreta"] = iguales { contenedorDe(it).takeIf { c -> c != Contenedor.ESPIRAL } }
+        r["libreta"] = iguales { contenedorDe(it) }
         return r
     }
 

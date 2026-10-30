@@ -53,11 +53,7 @@ class CoberturaTemas {
         superficie("frases_20") { Frases.de(it).size < 20 }
         superficie("textos") { t -> Textos.CLAVES.any { Textos.de(t, it) == null } }
 
-        // Lotes de diseño: trofeos, salón, campaña y libreta propios.
-        superficie("trofeos") { it !in TrofeosTema.TEMAS }
-        superficie("salon") { it !in SalonesTema.TEMAS }
-        superficie("campana_mapa") { it !in MapasCampana.TEMAS }
-        superficie("libreta") { contenedorDe(it) == Contenedor.ESPIRAL }
+        // Trofeos, salón, campaña y libreta ya no tienen respaldo: sus `when (tema)` exhaustivos los vigila el compilador.
         superficie("escala_toque") { Sentidos.acordeToque(it).isEmpty() }
 
         // Recursos.
@@ -108,12 +104,7 @@ class CoberturaTemas {
         )
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */
-        val DESPACHOS: Map<String, Int> = mapOf(
-            "ui/Bases.kt · agrupadas" to 6,
-            "ui/IconoApp.kt · comparaciones" to 2,
-            "ui/SalonesMas.kt · else" to 2,
-            "ui/TrofeosMas.kt · else" to 2,
-        )
+        val DESPACHOS: Map<String, Int> = emptyMap()
     }
 }
 

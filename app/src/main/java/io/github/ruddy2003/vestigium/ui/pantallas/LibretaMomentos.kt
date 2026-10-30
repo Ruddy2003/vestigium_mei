@@ -95,70 +95,24 @@ private fun renglones(fecha: String, discreto: Boolean): List<Renglon> {
 }
 
 /**
- * La libreta cerrada: una sola, de espiral, que engorda con cada hoja escrita. Al tocarla se abre en la última hoja.
+ * La libreta cerrada: el contenedor del tema ([contenedorDe]), que engorda con cada hoja escrita. Al tocarla se abre en la última hoja.
  */
 @Composable
 private fun LibretaCerrada(hojas: Int, desde: String?, modifier: Modifier = Modifier, abrir: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
     val tapa = cs.primary
-    val papel = if (oscuro) lerp(cs.surface, Color.White, 0.12f) else lerp(cs.surface, Color.White, 0.6f)
     val contenedor = io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema)
-    if (contenedor != io.github.ruddy2003.vestigium.ui.Contenedor.ESPIRAL) {
-        // El contenedor del tema (rollo, tablillas, códice…): la misma lógica, otra forma.
-        Box(modifier.aspectRatio(0.74f).clickable(onClick = abrir), contentAlignment = Alignment.Center) {
-            Canvas(Modifier.fillMaxSize()) { with(io.github.ruddy2003.vestigium.ui.Contenedores) { cerrado(contenedor, hojas, tapa, cs.secondary, oscuro) } }
-            Column(Modifier.fillMaxSize().padding(bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
-                Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f), shape = MaterialTheme.shapes.small) {
-                    Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(contenedor.nombre, style = MaterialTheme.typography.titleSmall, color = cs.primary, textAlign = TextAlign.Center)
-                        Text("$hojas ${contenedor.hoja}${if (hojas == 1) "" else "s"}" + (desde?.let { " · desde el ${Fechas.corto(it)}" } ?: ""), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
-                    }
+    // El contenedor del tema (rollo, tablillas, códice…): la misma lógica, otra forma.
+    Box(modifier.aspectRatio(0.74f).clickable(onClick = abrir), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) { with(io.github.ruddy2003.vestigium.ui.Contenedores) { cerrado(contenedor, hojas, tapa, cs.secondary, oscuro) } }
+        Column(Modifier.fillMaxSize().padding(bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+            Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f), shape = MaterialTheme.shapes.small) {
+                Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(contenedor.nombre, style = MaterialTheme.typography.titleSmall, color = cs.primary, textAlign = TextAlign.Center)
+                    Text("$hojas ${contenedor.hoja}${if (hojas == 1) "" else "s"}" + (desde?.let { " · desde el ${Fechas.corto(it)}" } ?: ""), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                 }
             }
-        }
-        return
-    }
-    Box(modifier.aspectRatio(0.74f).clickable(onClick = abrir), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) {
-            val d = density
-            // El grosor de las hojas crece con lo escrito (de 3 a 14 dp).
-            val grosor = (3f + kotlin.math.min(11f, hojas / 12f)) * d
-            val w = size.width - grosor; val h = size.height - grosor
-            val r = CornerRadius(10f * d)
-            // Sombra suave.
-            drawRoundRect(Color.Black.copy(alpha = 0.18f), Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), r)
-            // Las hojas, como líneas en el canto derecho y abajo.
-            drawRoundRect(papel, Offset(grosor, grosor), Size(w, h), r)
-            val n = (grosor / (1.6f * d)).toInt().coerceAtLeast(2)
-            for (k in 1..n) {
-                val o = k * grosor / (n + 1)
-                drawLine(cs.outline.copy(alpha = 0.35f), Offset(w + o, grosor + 12 * d), Offset(w + o, h + o - 4 * d), 0.8f * d)
-                drawLine(cs.outline.copy(alpha = 0.35f), Offset(grosor + 12 * d, h + o), Offset(w + o - 4 * d, h + o), 0.8f * d)
-            }
-            // La tapa, con un poco de brillo.
-            drawRoundRect(Brush.linearGradient(listOf(lerp(tapa, Color.White, 0.10f), tapa, lerp(tapa, Color.Black, 0.18f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), r)
-            // El resorte: argollas por todo el lomo izquierdo.
-            val anillos = 13
-            val paso = (h - 24 * d) / anillos
-            for (k in 0 until anillos) {
-                val y = 12 * d + paso * (k + 0.5f)
-                drawCircle(Color.Black.copy(alpha = 0.35f), 3.2f * d, Offset(14 * d, y))
-                drawArc(lerp(cs.outline, Color.White, 0.55f), 150f, 240f, false, Offset(-2 * d, y - 6 * d), Size(20 * d, 12 * d), style = Stroke(2.4f * d))
-            }
-            // La liga que la mantiene cerrada.
-            drawRect(lerp(cs.secondary, Color.Black, 0.15f), Offset(w * 0.82f, 0f), Size(7 * d, h))
-            // La etiqueta.
-            drawRoundRect(papel, Offset(w * 0.2f, h * 0.2f), Size(w * 0.56f, h * 0.24f), CornerRadius(6f * d))
-            drawRoundRect(tapa.copy(alpha = 0.5f), Offset(w * 0.2f + 4 * d, h * 0.2f + 4 * d), Size(w * 0.56f - 8 * d, h * 0.24f - 8 * d), CornerRadius(4f * d), style = Stroke(1f * d))
-        }
-        Column(Modifier.fillMaxSize().padding(end = 14.dp, bottom = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(Modifier.fillMaxWidth().aspectRatio(3.0f))
-            Text(Estilo.seccion("Momentos", null).first, style = MaterialTheme.typography.titleLarge, color = cs.primary, textAlign = TextAlign.Center,
-                modifier = Modifier.padding(start = 8.dp))
-            Text("$hojas hojas", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
-            Spacer(Modifier.weight(1f))
-            desde?.let { Text("desde el ${Fechas.corto(it)}", style = MaterialTheme.typography.labelMedium, color = cs.onPrimary.copy(alpha = 0.85f), modifier = Modifier.padding(bottom = 18.dp)) }
         }
     }
 }
@@ -290,7 +244,7 @@ fun PantallaHojaMomentos(nav: Nav) {
     Column(Modifier.fillMaxSize().background(lerp(cs.background, Color.Black, if (esOscuro()) 0.25f else 0.06f))) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp, start = 4.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = nav.atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = cs.primary) }
-            Text(io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema).let { c -> if (c == io.github.ruddy2003.vestigium.ui.Contenedor.ESPIRAL) Estilo.seccion("Libreta de momentos", null).first else c.nombre },
+            Text(io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema).nombre,
                 style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
             TextButton(onClick = {
                 val t = hojaMomentos(fecha, discreto)?.nota ?: return@TextButton

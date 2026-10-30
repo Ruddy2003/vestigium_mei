@@ -861,18 +861,6 @@ internal fun Zarcillo(modifier: Modifier) {
     }
 }
 
-/** Filete de periódico oficial: barra gruesa con un tramo rojo y una línea fina debajo. */
-@Composable
-internal fun Filete(modifier: Modifier) {
-    val tinta = MaterialTheme.colorScheme.onBackground; val rojo = MaterialTheme.colorScheme.primary
-    Canvas(modifier.fillMaxWidth().height(10.dp)) {
-        val g = 4.5.dp.toPx()
-        drawRect(tinta, Offset.Zero, Size(size.width, g))
-        drawRect(rojo, Offset.Zero, Size(size.width * 0.22f, g))
-        drawRect(tinta, Offset(0f, g + 2.5.dp.toPx()), Size(size.width, 1.dp.toPx()))
-    }
-}
-
 /** Línea con destellos de cuatro puntas, como en los anuncios de la era atómica. */
 @Composable
 internal fun Destellos(modifier: Modifier) {
@@ -910,41 +898,6 @@ internal fun Galones(modifier: Modifier) {
         while (x < size.width) { drawCircle(laton, h * 0.2f, Offset(x, y)); x += 26.dp.toPx() }
     }
 }
-
-/** Regla graduada de laboratorio con una marca de lectura. */
-@Composable
-internal fun Regla(modifier: Modifier) {
-    val tinta = MaterialTheme.colorScheme.onSurfaceVariant; val cian = MaterialTheme.colorScheme.primary
-    Canvas(modifier.fillMaxWidth().height(10.dp)) {
-        val b = size.height - 1f
-        drawLine(tinta.copy(alpha = 0.6f), Offset(0f, b), Offset(size.width, b), 1f)
-        val paso = 6.dp.toPx(); var i = 0; var x = 0f
-        while (x <= size.width) {
-            val alto = if (i % 10 == 0) size.height else if (i % 5 == 0) size.height * 0.6f else size.height * 0.3f
-            drawLine(tinta.copy(alpha = 0.5f), Offset(x, b), Offset(x, b - alto), 1f)
-            x += paso; i++
-        }
-        drawRect(cian, Offset(size.width * 0.3f - 1.5f, 0f), Size(3f, size.height))
-    }
-}
-
-/** Viñeta de imprenta: doble filete con un rombo al centro. */
-@Composable
-internal fun Vineta(modifier: Modifier) {
-    val tinta = MaterialTheme.colorScheme.primary; val rojo = MaterialTheme.colorScheme.secondary
-    Canvas(modifier.fillMaxWidth().height(12.dp)) {
-        val y = size.height / 2; val cx = size.width / 2; val s = size.height * 0.45f
-        val hueco = s * 3.2f
-        listOf(-1.6f, 1.6f).forEach { dy ->
-            drawLine(tinta, Offset(0f, y + dy), Offset(cx - hueco, y + dy), 1f)
-            drawLine(tinta, Offset(cx + hueco, y + dy), Offset(size.width, y + dy), 1f)
-        }
-        val rombo = Path().apply { moveTo(cx, y - s); lineTo(cx + s, y); lineTo(cx, y + s); lineTo(cx - s, y); close() }
-        drawPath(rombo, rojo)
-        drawCircle(tinta, 1.8.dp.toPx(), Offset(cx - s * 2.1f, y)); drawCircle(tinta, 1.8.dp.toPx(), Offset(cx + s * 2.1f, y))
-    }
-}
-
 
 /** Rama de laurel dorada con una estrella de la Legión de Honor cada tanto. */
 @Composable
@@ -1071,26 +1024,6 @@ internal fun Lazo(modifier: Modifier) {
     }
 }
 
-/** Grecas mongolas (alkhan khee): un meandro de martillos en azul con remates de oro. */
-@Composable
-internal fun Alhan(modifier: Modifier) {
-    val e = MaterialTheme.colorScheme
-    Canvas(modifier.fillMaxWidth().height(12.dp)) {
-        val h = size.height; val u = h / 3f; val paso = u * 4
-        val p = Path(); var x = 0f
-        p.moveTo(0f, h * 0.5f)
-        while (x + paso <= size.width) {
-            // Un martillo: sube, gira dos veces y baja.
-            p.lineTo(x + u, h * 0.5f); p.lineTo(x + u, 1f); p.lineTo(x + u * 3, 1f); p.lineTo(x + u * 3, h * 0.5f)
-            p.lineTo(x + u * 2, h * 0.5f); p.lineTo(x + u * 2, h - 1f); p.lineTo(x + u * 4, h - 1f); p.lineTo(x + u * 4, h * 0.5f)
-            x += paso
-        }
-        drawPath(p, e.primary, style = Stroke(1.6f))
-        var k = 0; x = paso * 2
-        while (x < size.width) { if (k % 4 == 0) drawCircle(e.tertiary, u * 0.55f, Offset(x, h * 0.5f)); x += paso; k++ }
-    }
-}
-
 /** Trazo de cuaderno: una línea a pluma con marcas de medida, un arco de compás y sombreado a rayas. */
 @Composable
 internal fun Trazo(modifier: Modifier) {
@@ -1129,27 +1062,6 @@ internal fun Guirnalda(modifier: Modifier) {
             }
             drawCircle(e.tertiary, 2.dp.toPx(), Offset(x, 3f))
             x += tramo
-        }
-    }
-}
-
-/** Sarta de monedas de agujero cuadrado en un cordón de seda. */
-@Composable
-internal fun Monedas(modifier: Modifier) {
-    val e = MaterialTheme.colorScheme
-    val oro = if (e.background.luminance() < 0.5f) e.primary else e.tertiary
-    Canvas(modifier.fillMaxWidth().height(14.dp)) {
-        val y = size.height / 2
-        drawLine(e.secondary, Offset(0f, y), Offset(size.width, y), 1.6f)
-        val r = size.height * 0.42f; var x = 30.dp.toPx(); var k = 0
-        while (x < size.width) {
-            val n = if (k % 3 == 0) 3 else 1
-            for (i in 0 until n) {
-                val cx = x + i * r * 1.4f
-                drawCircle(oro, r, Offset(cx, y))
-                drawRect(e.background, Offset(cx - r * 0.3f, y - r * 0.3f), Size(r * 0.6f, r * 0.6f))
-            }
-            x += 54.dp.toPx(); k++
         }
     }
 }

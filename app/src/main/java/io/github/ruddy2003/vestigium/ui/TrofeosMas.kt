@@ -29,8 +29,6 @@ import kotlin.math.sin
  * mapas, llaves y cristales). Sin figuras humanas ni animales, sin letras reales: los signos son inventados.
  */
 object TrofeosMas {
-    val TEMAS = setOf(TemaId.ANDALUS, TemaId.SEDA, TemaId.MONGOL, TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ANTIGUAS, TemaId.DISTOPIA, TemaId.CIBER, TemaId.REFUGIO, TemaId.ORDEN, TemaId.LABORATORIO, TemaId.ESPACIO, TemaId.URSS)
-
     val NOMBRES: Map<TemaId, Map<String, String>> = mapOf(
         TemaId.ANDALUS to mapOf("Diario" to "Libro de lacería", "Mundo" to "Astrolabio", "Cuerpo" to "Fuente del patio", "Mente" to "Estrella de ocho puntas",
             "Cultura" to "Arco de herradura", "Gente" to "Azulejo", "Constancia" to "Lámpara de bronce", "Curiosos" to "Celosía", "Tuyos" to "Granada"),
@@ -193,7 +191,14 @@ object TrofeosMas {
                 drawRect(piedra(c), Offset(w * 0.18f, h * 0.79f), Size(w * 0.64f, h * 0.16f))
                 if (p.hecho) runas(Offset(w * 0.26f, h * 0.85f), w * 0.48f, h * 0.05f, Color(0xFF2B2A28).copy(alpha = 0.55f), w * 0.006f, 5)
             }
-            else -> {}
+            // Los pedestales de los siete primeros están en [TrofeosTema.pedestal]: no llegan aquí.
+            TemaId.ROMANO -> Unit
+            TemaId.HELENO -> Unit
+            TemaId.MEDIEVAL -> Unit
+            TemaId.GOTICO -> Unit
+            TemaId.RENACIMIENTO -> Unit
+            TemaId.NAPOLEON -> Unit
+            TemaId.REVOLUCION -> Unit
         }
     }
 
@@ -258,30 +263,11 @@ object TrofeosMas {
 
     // ================================================================== figuras
 
-    fun DrawScope.figuraMas(tema: TemaId, cat: String, p: TrofeosTema.Pincel): Boolean {
-        when (tema) {
-            TemaId.ANDALUS -> andalus(cat, p)
-            TemaId.SEDA -> seda(cat, p)
-            TemaId.MONGOL -> mongol(cat, p)
-            TemaId.COLONOS -> colonos(cat, p)
-            TemaId.BOTANICO -> botanico(cat, p)
-            TemaId.NAVIDAD -> navidad(cat, p)
-            TemaId.ANTIGUAS -> antiguas(cat, p)
-            TemaId.DISTOPIA -> distopia(cat, p)
-            TemaId.CIBER -> terminal(cat, p)
-            TemaId.REFUGIO -> refugio(cat, p)
-            TemaId.ORDEN -> orden(cat, p)
-            TemaId.LABORATORIO -> laboratorio(cat, p)
-            TemaId.ESPACIO -> espacio(cat, p)
-            TemaId.URSS -> urss(cat, p)
-            else -> return false
-        }
-        return true
-    }
+    // Cada tema se llama directo desde [TrofeosTema.figura].
 
     // ---------------------------------------------------------------- Al-Ándalus
 
-    private fun DrawScope.andalus(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.andalus(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val azul = p.c(Color(0xFF1E4F8A)); val verde = p.c(Color(0xFF1E6B5A)); val rojo = p.c(Color(0xFF9E2B25)); val yeso = p.c(Color(0xFFF1E8D4))
         when (cat) {
@@ -394,7 +380,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Ruta de la Seda
 
-    private fun DrawScope.seda(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.seda(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val cinabrio = p.c(Color(0xFFC0392B)); val jade = p.c(Color(0xFF4E9A72)); val lapis = p.c(Color(0xFF1F3A8A)); val seda = p.c(Color(0xFFF2E6C9))
         when (cat) {
@@ -516,7 +502,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Mongol
 
-    private fun DrawScope.mongol(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.mongol(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val cielo = p.c(Color(0xFF2E6DB4)); val rojo = p.c(Color(0xFFB0281E)); val fieltro = p.c(Color(0xFFEDE6D6)); val madera = p.c(Color(0xFF8A5A2B))
         when (cat) {
@@ -614,7 +600,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Colonos
 
-    private fun DrawScope.colonos(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.colonos(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val madera = p.c(Color(0xFF8A5A2B)); val maderaOsc = p.c(Color(0xFF5A3A22)); val hierro = p.c(Color(0xFF4A4E54)); val cuero = p.c(Color(0xFF7A4A28))
         when (cat) {
@@ -700,7 +686,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Botánico
 
-    private fun DrawScope.botanico(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.botanico(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val hoja = p.c(Color(0xFF3F7A3A)); val hojaClara = p.c(Color(0xFF7FA35A)); val tinta = p.c(Color(0xFF4A3A22)); val papel = p.c(Color(0xFFF1E9D2))
         when (cat) {
@@ -806,7 +792,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Navidad
 
-    private fun DrawScope.navidad(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.navidad(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val rojo = p.c(Color(0xFFB3122E)); val verde = p.c(Color(0xFF1F6B3A)); val oro = p.c(Color(0xFFD4AF37)); val nieve = p.c(Color(0xFFF4F7FB))
         fun cordel(x: Float, hasta: Float) = drawLine(p.c(Color(0xFF8A6A44)), p.o(x, 0f), p.o(x, hasta), lw * 0.5f)
@@ -915,7 +901,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Tierras Antiguas
 
-    private fun DrawScope.antiguas(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.antiguas(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val hierro = p.c(Color(0xFF4A4E54)); val cuero = p.c(Color(0xFF5A3A22)); val pergamino = p.c(Color(0xFFE9DCC0))
         val rubi = p.c(Color(0xFFA3172E)); val esmeralda = p.c(Color(0xFF1E7A5A)); val cristal = p.c(Color(0xFF8FB8E0))
@@ -1020,7 +1006,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Distopía: la oficina del Ministerio
 
-    private fun DrawScope.distopia(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.distopia(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val carton = p.c(Color(0xFFD8C08A)); val papel = p.c(Color(0xFFF2EFE6)); val tinta = p.c(Color(0xFF141414))
         val rojo = p.c(Color(0xFFC8102E)); val gris = p.c(Color(0xFF55585C)); val acero = p.c(Color(0xFF8A8D91))
@@ -1126,7 +1112,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Terminal: arte ASCII en ventanas de consola
 
-    private fun DrawScope.terminal(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.terminal(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val cian = Color(0xFF00E5FF); val negro = p.c(Color(0xFF05070B))
         val (titulo, dibujo) = when (cat) {
@@ -1158,7 +1144,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Refugio: placas y medallas de chapa esmaltada
 
-    private fun DrawScope.refugio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.refugio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val verde = p.c(Color(0xFF1C6E6A)); val naranja = p.c(Color(0xFFD9572B)); val amarillo = p.c(Color(0xFFE8B83A))
         val crema = p.c(Color(0xFFF1E8D0)); val tinta = p.c(Color(0xFF1F2A2A))
@@ -1277,7 +1263,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Orden: estandartes, escudos y piezas forjadas
 
-    private fun DrawScope.orden(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.orden(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val carmesi = p.c(Color(0xFF9E1B22)); val laton = p.c(Color(0xFFD6B25A)); val acero = p.c(Color(0xFF4B525A)); val negro = p.c(Color(0xFF15181B))
         fun remaches(vararg pts: Pair<Float, Float>) { if (p.hecho) pts.forEach { (x, y) -> drawCircle(p.linea, p.w * 0.015f, p.o(x, y)); drawCircle(p.claro, p.w * 0.006f, p.o(x - 0.004f, y - 0.004f)) } }
@@ -1388,7 +1374,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Laboratorio: vidrio, instrumentos y placas de mérito
 
-    private fun DrawScope.laboratorio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.laboratorio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val cian = p.c(Color(0xFF0B8FA1)); val violeta = p.c(Color(0xFF5E4FD1)); val verde = p.c(Color(0xFF1E8E5A))
         val blanco = p.c(Color(0xFFF4F7F9)); val tinta = p.c(Color(0xFF12202B))
@@ -1501,7 +1487,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Espacio: parches de misión, cohetes y sondas
 
-    private fun DrawScope.espacio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.espacio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val marino = p.c(Color(0xFF1B3A8C)); val naranja = p.c(Color(0xFFE8601C)); val violeta = p.c(Color(0xFF6B4FD6))
         val blanco = p.c(Color(0xFFEEF1F6)); val noche = p.c(Color(0xFF0A0F1E)); val gris = p.c(Color(0xFF8E9AB8))
@@ -1617,7 +1603,7 @@ object TrofeosMas {
 
     // ---------------------------------------------------------------- Soviético: medallas del trabajo y estrellas
 
-    private fun DrawScope.urss(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+    internal fun DrawScope.urss(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
         val rojo = p.c(Color(0xFFC1121F)); val negro = p.c(Color(0xFF161414)); val papel = p.c(Color(0xFFEFE6D2)); val oro = p.c(Color(0xFFD4A017))
         /** La cinta pentagonal de las medallas, con sus franjas. */

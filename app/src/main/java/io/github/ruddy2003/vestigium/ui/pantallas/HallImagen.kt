@@ -50,7 +50,7 @@ object HallImagen {
         // Fondo y escena.
         zona(0f, 0f, ANCHO.toFloat(), ALTO.toFloat()) { drawRect(cs.background) }
         zona(0f, arriba, ANCHO.toFloat(), ALTO - arriba - abajo) {
-            if (tema in SalonesTema.TEMAS) with(SalonesTema) { escena(tema, cs, porFila) } else fondoFamilia(tema, cs)
+            with(SalonesTema) { escena(tema, cs, porFila) }
         }
 
         // Encabezado.
@@ -78,8 +78,7 @@ object HallImagen {
             zona(cx - diam * 0.41f, y0, diam * 0.82f, diam) { dibujarTrofeoDe(g, tema, cs.background.luminance() < 0.5f, cs.onSurface) }
             val metal = metalHall(tema, g.nivel)
             zona(cx - diam * 0.55f, y0 + diam + 4f, diam * 1.1f, 30f) {
-                if (tema in SalonesTema.TEMAS) with(SalonesTema) { pedestal(tema, cs, metal) }
-                else drawRect(metal.copy(alpha = 0.6f), Offset(size.width * 0.1f, 0f), Size(size.width * 0.8f, size.height))
+                with(SalonesTema) { pedestal(tema, cs, metal) }
             }
             if (conTextos) {
                 val nombre = recortar(g.nombre, pNombre, celdaW - 24f)
@@ -136,17 +135,5 @@ object HallImagen {
         var t = s
         while (t.length > 1 && p.measureText("$t…") > ancho) t = t.dropLast(1)
         return "$t…"
-    }
-
-    /** Para los temas sin escena propia: la familia del salón, en grande. */
-    private fun DrawScope.fondoFamilia(tema: TemaId, cs: ColorScheme) {
-        val w = size.width; val h = size.height
-        val linea = cs.outline.copy(alpha = 0.3f)
-        when (salonDe(tema)) {
-            Salon.TEMPLO -> { val n = 4; val paso = w / n; for (i in 0..n) drawRect(cs.surfaceVariant.copy(alpha = 0.5f), Offset(i * paso - 8f, 0f), Size(16f, h)) }
-            Salon.CASTILLO -> { var y = 0f; var k = 0; while (y < h) { val off = if (k % 2 == 0) 0f else 40f; var x = -off; while (x < w) { drawRect(linea, Offset(x, y), Size(80f, 30f), style = androidx.compose.ui.graphics.drawscope.Stroke(1f)); x += 80f }; y += 30f; k++ } }
-            Salon.LABORATORIO -> { var x = 0f; while (x < w) { drawLine(cs.primary.copy(alpha = 0.1f), Offset(x, 0f), Offset(x, h), 1f); x += 30f }; var y = 0f; while (y < h) { drawLine(cs.primary.copy(alpha = 0.1f), Offset(0f, y), Offset(w, y), 1f); y += 30f } }
-            Salon.TALLER -> { var y = 0f; while (y < h) { drawLine(androidx.compose.ui.graphics.Color(0xFF8A6A44).copy(alpha = 0.18f), Offset(0f, y), Offset(w, y), 2f); y += 18f } }
-        }
     }
 }

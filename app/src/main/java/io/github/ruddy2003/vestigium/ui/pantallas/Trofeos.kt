@@ -71,12 +71,6 @@ private val METAL = listOf(
 )
 val NIVELES = listOf("Bronce", "Plata", "Oro", "Legendario")
 
-/** La figura de cada categoría. */
-private fun figura(categoria: String) = when (categoria) {
-    "Diario" -> "pluma"; "Mundo" -> "globo"; "Cuerpo" -> "antorcha"; "Mente" -> "lampara"; "Cultura" -> "libro"
-    "Gente" -> "corazon"; "Curiosos" -> "estrella"; else -> "copa"
-}
-
 private val SINGULAR = mapOf("días" to "día", "sueños" to "sueño", "cartas" to "carta", "momentos" to "momento", "avisos" to "aviso", "veces" to "vez",
     "libros" to "libro", "ciudades" to "ciudad", "países" to "país", "palabras" to "palabra", "semanas" to "semana", "sesiones" to "sesión",
     "kilómetros" to "kilómetro", "horas" to "hora", "bloques" to "bloque", "obras" to "obra", "películas" to "película", "series" to "serie",
@@ -105,9 +99,8 @@ fun pasado(desc0: String): String {
 }
 
 /**
- * Un trofeo: pedestal de dos escalones con su placa y, encima, la figura de su categoría (pluma para el diario, globo para
- * el mundo, antorcha para el cuerpo, lámpara para la mente, libro para la cultura, corazón para la gente, estrella para
- * los curiosos y copa para la constancia y los tuyos), en el metal de su nivel. Si falta, es una silueta.
+ * Un trofeo: el pedestal del tema y, encima, la obra o el objeto de su categoría ([TrofeosTema]), en el metal de su
+ * nivel. Si falta, es una silueta.
  */
 @Composable
 fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: TemaId = Estilo.tema) {
@@ -117,22 +110,20 @@ fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: 
     val pedestal = if (oscuro) Color(0xFF2B2622) else Color(0xFF4A3A2C)
     Box(modifier.size(width = alto * 0.82f, height = alto), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            if (tema in TrofeosTema.TEMAS) dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, cs.onSurface)
-            else dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, cs.onSurface, tema)
+            dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, cs.onSurface)
         }
         if (secreto) Text("?", fontSize = (alto.value * 0.26f).sp, color = cs.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = alto * 0.3f))
     }
 }
 
-/** El trofeo de un logro en un lienzo cualquiera (la imagen del hall): el del tema si lo tiene, o el de siempre. */
+/** El trofeo de un logro en un lienzo cualquiera (la imagen del hall). */
 internal fun DrawScope.dibujarTrofeoDe(l: Logros.Logro, tema: TemaId, oscuro: Boolean, tinta: Color) {
     val pedestal = if (oscuro) Color(0xFF2B2622) else Color(0xFF4A3A2C)
-    if (tema in TrofeosTema.TEMAS) dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, tinta)
-    else dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, tinta, tema)
+    dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, tinta)
 }
 
-/** El trofeo de los temas históricos: la obra o el objeto de su categoría (ver [TrofeosTema]) sobre el pedestal del tema. */
+/** El trofeo del tema: la obra o el objeto de su categoría (ver [TrofeosTema]) sobre el pedestal del tema. */
 internal fun DrawScope.dibujarTrofeoTema(tema: TemaId, categoria: String, nivel: Int, hecho: Boolean, colorPedestal: Color, tinta: Color) {
     val (oscuro, base, brillo) = METAL[nivel - 1]
     val p = TrofeosTema.Pincel(size.width, size.height, hecho, nivel, oscuro, base, brillo, tinta.copy(alpha = 0.13f))
@@ -147,135 +138,6 @@ private fun DrawScope.destellos(tema: TemaId, nivel: Int, hecho: Boolean) {
     listOf(Offset(w * 0.14f, h * 0.12f), Offset(w * 0.88f, h * 0.22f), Offset(w * 0.2f, h * 0.5f), Offset(w * 0.84f, h * 0.6f)).forEachIndexed { i, o ->
         chispa(tema, o, w * (if (i % 2 == 0) 0.05f else 0.035f), i)
     }
-}
-
-private fun DrawScope.dibujarTrofeo(fig: String, nivel: Int, hecho: Boolean, pedestal: Color, tinta: Color, tema: TemaId) {
-    val w = size.width; val h = size.height
-    val (oscuro, base, brillo) = METAL[nivel]
-    val sombra = tinta.copy(alpha = 0.13f)
-    fun metal(x0: Float, x1: Float): Brush = if (hecho) Brush.horizontalGradient(listOf(oscuro, base, brillo, base, oscuro), x0, x1) else SolidColor(sombra)
-    val brochaFig = metal(w * 0.18f, w * 0.82f)
-    // Pedestal: dos escalones de madera o piedra oscura, con una placa de metal.
-    val ped = if (hecho) pedestal else tinta.copy(alpha = 0.08f)
-    drawRoundRect(Color.Black.copy(alpha = if (hecho) 0.18f else 0.05f), Offset(w * 0.14f, h * 0.955f), Size(w * 0.72f, h * 0.04f), CornerRadius(h * 0.02f))
-    drawRect(ped, Offset(w * 0.17f, h * 0.84f), Size(w * 0.66f, h * 0.12f))
-    drawRect(Brush.verticalGradient(listOf(lerp(ped, Color.White, 0.12f), ped), h * 0.77f, h * 0.84f), Offset(w * 0.25f, h * 0.77f), Size(w * 0.5f, h * 0.075f))
-    drawRect(metal(w * 0.33f, w * 0.67f), Offset(w * 0.33f, h * 0.865f), Size(w * 0.34f, h * 0.06f))
-    when (fig) {
-        "globo" -> {
-            val c = Offset(w * 0.5f, h * 0.36f); val r = w * 0.27f
-            drawCircle(if (hecho) Brush.radialGradient(listOf(brillo, base, oscuro), Offset(c.x - r * 0.35f, c.y - r * 0.35f), r * 1.5f) else SolidColor(sombra), r, c)
-            if (hecho) {
-                val linea = oscuro.copy(alpha = 0.55f)
-                drawOval(linea, Offset(c.x - r * 0.45f, c.y - r), Size(r * 0.9f, r * 2), style = Stroke(w * 0.012f))
-                drawLine(linea, Offset(c.x - r, c.y), Offset(c.x + r, c.y), w * 0.012f)
-                drawLine(linea, Offset(c.x - r * 0.87f, c.y - r * 0.5f), Offset(c.x + r * 0.87f, c.y - r * 0.5f), w * 0.01f)
-                drawLine(linea, Offset(c.x - r * 0.87f, c.y + r * 0.5f), Offset(c.x + r * 0.87f, c.y + r * 0.5f), w * 0.01f)
-            }
-            // El arco que lo sostiene, el eje y el pie.
-            drawArc(brochaFig, 40f, 220f, false, Offset(c.x - r * 1.18f, c.y - r * 1.18f), Size(r * 2.36f, r * 2.36f), style = Stroke(w * 0.035f, cap = StrokeCap.Round))
-            drawRect(brochaFig, Offset(w * 0.47f, c.y + r * 1.1f), Size(w * 0.06f, h * 0.77f - (c.y + r * 1.1f)))
-            drawOval(brochaFig, Offset(w * 0.34f, h * 0.73f), Size(w * 0.32f, h * 0.05f))
-        }
-        "pluma" -> {
-            // El tintero.
-            drawRoundRect(brochaFig, Offset(w * 0.32f, h * 0.58f), Size(w * 0.36f, h * 0.19f), CornerRadius(w * 0.05f))
-            drawRoundRect(brochaFig, Offset(w * 0.42f, h * 0.53f), Size(w * 0.16f, h * 0.06f), CornerRadius(w * 0.02f))
-            // La pluma, curva, saliendo del tintero.
-            val p = Path().apply {
-                moveTo(w * 0.5f, h * 0.56f)
-                cubicTo(w * 0.52f, h * 0.40f, w * 0.62f, h * 0.18f, w * 0.82f, h * 0.05f)
-                cubicTo(w * 0.76f, h * 0.22f, w * 0.66f, h * 0.42f, w * 0.52f, h * 0.56f)
-                close()
-            }
-            drawPath(p, metal(w * 0.45f, w * 0.85f))
-            drawPath(Path().apply { moveTo(w * 0.5f, h * 0.56f); cubicTo(w * 0.56f, h * 0.38f, w * 0.66f, h * 0.2f, w * 0.8f, h * 0.07f) },
-                if (hecho) oscuro.copy(alpha = 0.6f) else sombra, style = Stroke(w * 0.012f))
-            drawPath(Path().apply {
-                moveTo(w * 0.52f, h * 0.48f); cubicTo(w * 0.40f, h * 0.36f, w * 0.44f, h * 0.20f, w * 0.62f, h * 0.10f)
-                cubicTo(w * 0.56f, h * 0.24f, w * 0.56f, h * 0.36f, w * 0.55f, h * 0.46f); close()
-            }, metal(w * 0.4f, w * 0.65f))
-        }
-        "antorcha" -> {
-            // Mango, copa y llama.
-            drawPath(Path().apply { moveTo(w * 0.43f, h * 0.36f); lineTo(w * 0.57f, h * 0.36f); lineTo(w * 0.53f, h * 0.77f); lineTo(w * 0.47f, h * 0.77f); close() }, brochaFig)
-            drawPath(Path().apply { moveTo(w * 0.32f, h * 0.27f); lineTo(w * 0.68f, h * 0.27f); lineTo(w * 0.58f, h * 0.38f); lineTo(w * 0.42f, h * 0.38f); close() }, brochaFig)
-            val llama = Path().apply {
-                moveTo(w * 0.5f, h * 0.02f)
-                cubicTo(w * 0.62f, h * 0.10f, w * 0.70f, h * 0.20f, w * 0.62f, h * 0.27f)
-                lineTo(w * 0.38f, h * 0.27f)
-                cubicTo(w * 0.30f, h * 0.20f, w * 0.40f, h * 0.12f, w * 0.46f, h * 0.06f)
-                cubicTo(w * 0.46f, h * 0.12f, w * 0.50f, h * 0.15f, w * 0.52f, h * 0.15f)
-                cubicTo(w * 0.54f, h * 0.10f, w * 0.52f, h * 0.06f, w * 0.5f, h * 0.02f); close()
-            }
-            drawPath(llama, if (hecho) Brush.verticalGradient(listOf(Color(0xFFFFE27A), Color(0xFFFF9A2E), Color(0xFFE2522B)), 0f, h * 0.27f) else SolidColor(sombra))
-        }
-        "lampara" -> {
-            // Una lámpara de aceite con su flama.
-            drawOval(brochaFig, Offset(w * 0.2f, h * 0.44f), Size(w * 0.6f, h * 0.2f))
-            drawPath(Path().apply { moveTo(w * 0.72f, h * 0.50f); lineTo(w * 0.92f, h * 0.44f); lineTo(w * 0.90f, h * 0.50f); lineTo(w * 0.74f, h * 0.58f); close() }, brochaFig)
-            drawArc(brochaFig, 90f, 180f, false, Offset(w * 0.08f, h * 0.45f), Size(w * 0.18f, h * 0.16f), style = Stroke(w * 0.04f))
-            drawOval(brochaFig, Offset(w * 0.38f, h * 0.39f), Size(w * 0.24f, h * 0.07f))
-            drawRect(brochaFig, Offset(w * 0.45f, h * 0.62f), Size(w * 0.1f, h * 0.1f))
-            drawOval(brochaFig, Offset(w * 0.33f, h * 0.71f), Size(w * 0.34f, h * 0.06f))
-            val f = Path().apply { moveTo(w * 0.9f, h * 0.26f); cubicTo(w * 0.98f, h * 0.36f, w * 0.96f, h * 0.43f, w * 0.91f, h * 0.44f); cubicTo(w * 0.85f, h * 0.43f, w * 0.83f, h * 0.36f, w * 0.9f, h * 0.26f); close() }
-            drawPath(f, if (hecho) Brush.verticalGradient(listOf(Color(0xFFFFE27A), Color(0xFFFF8A2E)), h * 0.26f, h * 0.44f) else SolidColor(sombra))
-        }
-        "libro" -> {
-            // Un libro abierto sobre un atril.
-            val izq = Path().apply { moveTo(w * 0.5f, h * 0.30f); cubicTo(w * 0.38f, h * 0.24f, w * 0.22f, h * 0.24f, w * 0.12f, h * 0.28f); lineTo(w * 0.12f, h * 0.56f); cubicTo(w * 0.24f, h * 0.52f, w * 0.38f, h * 0.53f, w * 0.5f, h * 0.60f); close() }
-            val der = Path().apply { moveTo(w * 0.5f, h * 0.30f); cubicTo(w * 0.62f, h * 0.24f, w * 0.78f, h * 0.24f, w * 0.88f, h * 0.28f); lineTo(w * 0.88f, h * 0.56f); cubicTo(w * 0.76f, h * 0.52f, w * 0.62f, h * 0.53f, w * 0.5f, h * 0.60f); close() }
-            drawPath(izq, metal(w * 0.1f, w * 0.5f)); drawPath(der, metal(w * 0.5f, w * 0.9f))
-            if (hecho) for (k in 1..4) {
-                val y = h * (0.32f + k * 0.045f)
-                drawLine(oscuro.copy(alpha = 0.45f), Offset(w * 0.18f, y), Offset(w * 0.44f, y + h * 0.02f), w * 0.01f)
-                drawLine(oscuro.copy(alpha = 0.45f), Offset(w * 0.56f, y + h * 0.02f), Offset(w * 0.82f, y), w * 0.01f)
-            }
-            drawRect(brochaFig, Offset(w * 0.47f, h * 0.6f), Size(w * 0.06f, h * 0.13f))
-            drawOval(brochaFig, Offset(w * 0.34f, h * 0.71f), Size(w * 0.32f, h * 0.06f))
-        }
-        "corazon" -> {
-            val p = Path().apply {
-                moveTo(w * 0.5f, h * 0.60f)
-                cubicTo(w * 0.18f, h * 0.42f, w * 0.12f, h * 0.22f, w * 0.30f, h * 0.14f)
-                cubicTo(w * 0.40f, h * 0.10f, w * 0.48f, h * 0.16f, w * 0.5f, h * 0.24f)
-                cubicTo(w * 0.52f, h * 0.16f, w * 0.60f, h * 0.10f, w * 0.70f, h * 0.14f)
-                cubicTo(w * 0.88f, h * 0.22f, w * 0.82f, h * 0.42f, w * 0.5f, h * 0.60f); close()
-            }
-            drawPath(p, brochaFig)
-            drawRect(brochaFig, Offset(w * 0.47f, h * 0.6f), Size(w * 0.06f, h * 0.13f))
-            drawOval(brochaFig, Offset(w * 0.34f, h * 0.71f), Size(w * 0.32f, h * 0.06f))
-        }
-        "estrella" -> {
-            val c = Offset(w * 0.5f, h * 0.32f); val R = w * 0.32f; val r = R * 0.45f
-            val p = Path()
-            for (k in 0 until 10) {
-                val a = -PI / 2 + k * PI / 5
-                val rr = if (k % 2 == 0) R else r
-                val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat()
-                if (k == 0) p.moveTo(x, y) else p.lineTo(x, y)
-            }
-            p.close()
-            drawPath(p, brochaFig)
-            drawRect(brochaFig, Offset(w * 0.47f, h * 0.56f), Size(w * 0.06f, h * 0.17f))
-            drawOval(brochaFig, Offset(w * 0.34f, h * 0.71f), Size(w * 0.32f, h * 0.06f))
-        }
-        else -> {
-            // La copa con dos asas.
-            val copa = Path().apply {
-                moveTo(w * 0.24f, h * 0.10f); lineTo(w * 0.76f, h * 0.10f)
-                cubicTo(w * 0.76f, h * 0.40f, w * 0.64f, h * 0.54f, w * 0.5f, h * 0.56f)
-                cubicTo(w * 0.36f, h * 0.54f, w * 0.24f, h * 0.40f, w * 0.24f, h * 0.10f); close()
-            }
-            drawArc(brochaFig, 90f, 180f, false, Offset(w * 0.10f, h * 0.14f), Size(w * 0.22f, h * 0.22f), style = Stroke(w * 0.045f))
-            drawArc(brochaFig, -90f, 180f, false, Offset(w * 0.68f, h * 0.14f), Size(w * 0.22f, h * 0.22f), style = Stroke(w * 0.045f))
-            drawPath(copa, brochaFig)
-            if (hecho) drawOval(lerp(brillo, Color.White, 0.3f), Offset(w * 0.25f, h * 0.085f), Size(w * 0.5f, h * 0.045f))
-            drawRect(brochaFig, Offset(w * 0.46f, h * 0.56f), Size(w * 0.08f, h * 0.12f))
-            drawPath(Path().apply { moveTo(w * 0.36f, h * 0.77f); lineTo(w * 0.64f, h * 0.77f); lineTo(w * 0.58f, h * 0.68f); lineTo(w * 0.42f, h * 0.68f); close() }, brochaFig)
-        }
-    }
-    destellos(tema, nivel, hecho)
 }
 
 /**

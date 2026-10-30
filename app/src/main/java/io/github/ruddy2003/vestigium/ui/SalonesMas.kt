@@ -27,25 +27,7 @@ import kotlin.math.sin
  * que cuelgan, y el gran salón de piedra de Tierras Antiguas con pilares y estandartes.
  */
 object SalonesMas {
-    fun DrawScope.escenaMas(tema: TemaId, cs: ColorScheme, oscuro: Boolean, n: Int) {
-        when (tema) {
-            TemaId.ANDALUS -> patio(cs, oscuro, n)
-            TemaId.SEDA -> caravasar(cs, oscuro, n)
-            TemaId.MONGOL -> yurta(cs, oscuro, n)
-            TemaId.COLONOS -> almacen(cs, oscuro, n)
-            TemaId.BOTANICO -> invernadero(cs, oscuro, n)
-            TemaId.NAVIDAD -> chimenea(cs, oscuro, n)
-            TemaId.ANTIGUAS -> salonPiedra(cs, oscuro, n)
-            TemaId.DISTOPIA -> archivo(cs, oscuro, n)
-            TemaId.CIBER -> salaCentral(cs, oscuro, n)
-            TemaId.REFUGIO -> salaComun(cs, oscuro, n)
-            TemaId.ORDEN -> salaCapitular(cs, oscuro, n)
-            TemaId.LABORATORIO -> laboratorioLimpio(cs, oscuro, n)
-            TemaId.ESPACIO -> observatorio(cs, oscuro, n)
-            TemaId.URSS -> estacionMetro(cs, oscuro, n)
-            else -> {}
-        }
-    }
+    // Cada escena se llama directo desde [SalonesTema.escena].
 
     fun DrawScope.pedestalMas(tema: TemaId, cs: ColorScheme, metal: Color) {
         val w = size.width; val h = size.height
@@ -111,14 +93,21 @@ object SalonesMas {
                 with(TrofeosTema) { estrella(Offset(w * 0.5f, h * 0.55f), h * 0.32f, h * 0.13f, 5, Brush.linearGradient(listOf(Color(0xFFD4A017), Color(0xFFD4A017)))) }
             }
             TemaId.ANTIGUAS -> { drawRect(piedra(Color(0xFF7D7A72)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); with(TrofeosMas) { runas(Offset(w * 0.22f, h * 0.5f), w * 0.56f, h * 0.5f, Color(0xFF2B2A28).copy(alpha = 0.5f), h * 0.06f, 6) } }
-            else -> drawRect(metal, Offset(0f, 0f), Size(w, h))
+            // Los pedestales de los siete primeros están en [SalonesTema.pedestal]: no llegan aquí.
+            TemaId.ROMANO -> Unit
+            TemaId.HELENO -> Unit
+            TemaId.MEDIEVAL -> Unit
+            TemaId.GOTICO -> Unit
+            TemaId.RENACIMIENTO -> Unit
+            TemaId.NAPOLEON -> Unit
+            TemaId.REVOLUCION -> Unit
         }
     }
 
     // ------------------------------------------------------------------ Al-Ándalus
 
     /** El patio: un arco de herradura sobre cada columna de piezas, celosía en las enjutas, zócalo de azulejo y la acequia. */
-    private fun DrawScope.patio(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.patio(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val yeso = (if (oscuro) Color(0xFF3B3A44) else Color(0xFFEDE3CF)).copy(alpha = 0.7f)
         val oro = Color(0xFFC9A04A).copy(alpha = 0.55f)
@@ -158,7 +147,7 @@ object SalonesMas {
     // ------------------------------------------------------------------ Ruta de la Seda
 
     /** El caravasar: una ventana lunar que enmarca cada columna, muros de adobe, celosía arriba y farolillos rojos entre columnas. */
-    private fun DrawScope.caravasar(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.caravasar(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val adobe = (if (oscuro) Color(0xFF3A3028) else Color(0xFFE6D3B0)).copy(alpha = 0.6f)
         val paso = w / n
@@ -191,7 +180,7 @@ object SalonesMas {
     // ------------------------------------------------------------------ Mongol
 
     /** La gran yurta: postes del techo que salen de la rueda central, el enrejado de la pared abajo y estandartes en los lados. */
-    private fun DrawScope.yurta(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.yurta(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val madera = Color(0xFFD9772A).copy(alpha = if (oscuro) 0.35f else 0.3f)
         val fieltro = (if (oscuro) Color(0xFF3A3630) else Color(0xFFEDE6D6)).copy(alpha = 0.5f)
@@ -221,7 +210,7 @@ object SalonesMas {
     // ------------------------------------------------------------------ Colonos
 
     /** El almacén de los pioneros: pared de tablones, postes entre las columnas, repisas cortas en los lados y la linterna. */
-    private fun DrawScope.almacen(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.almacen(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val tablon = Color(0xFF8A5A2B).copy(alpha = if (oscuro) 0.18f else 0.12f)
         var x = 0f; var k = 0
@@ -254,7 +243,7 @@ object SalonesMas {
     // ------------------------------------------------------------------ Botánico
 
     /** El invernadero: una bóveda de cristal y hierro sobre cada columna, plantas en macetas abajo y luz que entra. */
-    private fun DrawScope.invernadero(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.invernadero(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val hierro = (if (oscuro) Color(0xFF8FA89A) else Color(0xFF2F3A33)).copy(alpha = 0.4f)
         val vidrio = Color(0xFFCFE6F0).copy(alpha = if (oscuro) 0.06f else 0.18f)
@@ -284,7 +273,7 @@ object SalonesMas {
     // ------------------------------------------------------------------ Navidad
 
     /** La sala de Navidad: guirnaldas arriba, cordeles de los que cuelgan las piezas como adornos, el árbol tenue y la chimenea. */
-    private fun DrawScope.chimenea(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.chimenea(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val verde = Color(0xFF1F6B3A).copy(alpha = if (oscuro) 0.5f else 0.4f)
         val rojo = Color(0xFFB3122E).copy(alpha = 0.6f)
@@ -321,7 +310,7 @@ object SalonesMas {
     // ------------------------------------------------------------------ Tierras Antiguas
 
     /** El gran salón de piedra: pilares entre las columnas con capitel tallado, estandartes que cuelgan y antorchas. */
-    private fun DrawScope.salonPiedra(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.salonPiedra(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val piedra = (if (oscuro) Color(0xFF3A3A40) else Color(0xFFB8B2A6)).copy(alpha = 0.55f)
         val junta = (if (oscuro) Color.Black else Color(0xFF6E6A62)).copy(alpha = 0.18f)
@@ -360,7 +349,7 @@ object SalonesMas {
     }
 
     /** Distopía: un pasillo del archivo, con archiveros de cajones numerados, lámparas de tubo y la franja roja del Ministerio. */
-    private fun DrawScope.archivo(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.archivo(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val muro = (if (oscuro) Color(0xFF2A2B2E) else Color(0xFFD9D6CC)).copy(alpha = 0.6f)
         val metal = (if (oscuro) Color(0xFF45474C) else Color(0xFF9A9CA0)).copy(alpha = 0.5f)
@@ -400,7 +389,7 @@ object SalonesMas {
      * Terminal: la sala de las computadoras centrales. Gabinetes entre las columnas de piezas con dos carretes de cinta
      * y la rejilla de luces de estado, la charola de cables arriba y el piso técnico de losetas abajo. Todo en cian sobre negro.
      */
-    private fun DrawScope.salaCentral(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.salaCentral(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val cian = Color(0xFF00E5FF)
         val chapa = Color(0xFF111925).copy(alpha = 0.85f)
@@ -450,7 +439,7 @@ object SalonesMas {
      * columnas bajan tuberías con su manómetro y su llave; arriba corre el tubo de ventilación y abajo la rejilla del piso.
      * De día es el optimismo atómico (verde azulado, naranja, crema); de noche, la pantalla de fósforo verde.
      */
-    private fun DrawScope.salaComun(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.salaComun(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val chapa = if (oscuro) Color(0xFF3DFF7F).copy(alpha = 0.22f) else Color(0xFF1C6E6A).copy(alpha = 0.35f)
         val tubo = if (oscuro) Color(0xFF3DFF7F).copy(alpha = 0.4f) else Color(0xFF8A8D7A).copy(alpha = 0.7f)
@@ -505,7 +494,7 @@ object SalonesMas {
      * escalones sobre cada columna, estandartes carmesí con el engrane colgando de los pilares, lámparas de latón y el piso
      * de placa antiderrapante.
      */
-    private fun DrawScope.salaCapitular(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.salaCapitular(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val acero = (if (oscuro) Color(0xFF5A626B) else Color(0xFF8A929B)).copy(alpha = 0.55f)
         val sombraA = (if (oscuro) Color.Black else Color(0xFF3A4048)).copy(alpha = 0.3f)
@@ -548,7 +537,7 @@ object SalonesMas {
      * Laboratorio: el laboratorio limpio. Una campana de extracción enmarca cada columna de piezas; entre las columnas hay
      * vitrinas de vidrio con matraces en sus repisas; arriba, los paneles de luz y el ducto; abajo, la mesa con su canto cian.
      */
-    private fun DrawScope.laboratorioLimpio(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.laboratorioLimpio(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val linea = (if (oscuro) Color(0xFF97A8B9) else Color(0xFF4D5D6B)).copy(alpha = 0.35f)
         val cian = (if (oscuro) Color(0xFF3CD2E5) else Color(0xFF0B8FA1)).copy(alpha = 0.55f)
@@ -599,7 +588,7 @@ object SalonesMas {
      * Espacio: la cúpula del observatorio. Sobre cada columna de piezas, una cúpula con sus costillas y la ranura abierta
      * al cielo estrellado; entre las columnas, telescopios en su montura; abajo, el riel circular de la cúpula.
      */
-    private fun DrawScope.observatorio(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.observatorio(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val linea = (if (oscuro) Color(0xFF8E9AB8) else Color(0xFF4E5A70)).copy(alpha = 0.4f)
         val naranja = (if (oscuro) Color(0xFFFFB86B) else Color(0xFFE8601C)).copy(alpha = 0.6f)
@@ -644,7 +633,7 @@ object SalonesMas {
      * banda roja en diagonal y el medallón de la estrella; entre las columnas, pilones de mármol con franjas y lámparas
      * de brazo; abajo, el andén con la línea de seguridad y las vías.
      */
-    private fun DrawScope.estacionMetro(cs: ColorScheme, oscuro: Boolean, n: Int) {
+    internal fun DrawScope.estacionMetro(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val marmol = (if (oscuro) Color(0xFF3D3333) else Color(0xFFE3D6B8)).copy(alpha = 0.6f)
         val veta = (if (oscuro) Color.Black else Color(0xFF8A7A60)).copy(alpha = 0.18f)

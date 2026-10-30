@@ -27,9 +27,6 @@ import kotlin.math.sin
  * Imperio, laureles y condecoraciones; en la Revolución, sus símbolos. Sin figuras humanas ni animales.
  */
 object TrofeosTema {
-    /** Los siete del lote 1 (Europa histórica) y los siete del lote 2 (rutas, oriente, colonos, botánico, Navidad y Tierras Antiguas). */
-    val TEMAS = setOf(TemaId.ROMANO, TemaId.HELENO, TemaId.MEDIEVAL, TemaId.GOTICO, TemaId.RENACIMIENTO, TemaId.NAPOLEON, TemaId.REVOLUCION) + TrofeosMas.TEMAS
-
     /** Cómo se llama el trofeo de cada categoría en cada tema (para la placa y el detalle). */
     fun nombre(tema: TemaId, categoria: String): String? = (NOMBRES[tema] ?: TrofeosMas.NOMBRES[tema])?.let { it[categoria] ?: it["Tuyos"] }
 
@@ -149,8 +146,8 @@ object TrofeosTema {
 
     // ================================================================== figuras
 
-    /** Dibuja la figura del tema; false si el tema no tiene trofeos propios (se usa la figura de siempre). */
-    fun DrawScope.figura(tema: TemaId, categoria: String, p: Pincel): Boolean {
+    /** Dibuja la figura del tema: las de los siete primeros están aquí y las de los demás, en [TrofeosMas]. */
+    fun DrawScope.figura(tema: TemaId, categoria: String, p: Pincel) {
         when (tema) {
             TemaId.ROMANO -> romano(categoria, p)
             TemaId.HELENO -> heleno(categoria, p)
@@ -159,22 +156,21 @@ object TrofeosTema {
             TemaId.RENACIMIENTO -> renacimiento(categoria, p)
             TemaId.NAPOLEON -> napoleon(categoria, p)
             TemaId.REVOLUCION -> revolucion(categoria, p)
-            TemaId.ANDALUS -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.SEDA -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.MONGOL -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.COLONOS -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.BOTANICO -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.NAVIDAD -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.ANTIGUAS -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.DISTOPIA -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.CIBER -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.REFUGIO -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.ORDEN -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.LABORATORIO -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.ESPACIO -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
-            TemaId.URSS -> return with(TrofeosMas) { figuraMas(tema, categoria, p) }
+            TemaId.ANDALUS -> with(TrofeosMas) { andalus(categoria, p) }
+            TemaId.SEDA -> with(TrofeosMas) { seda(categoria, p) }
+            TemaId.MONGOL -> with(TrofeosMas) { mongol(categoria, p) }
+            TemaId.COLONOS -> with(TrofeosMas) { colonos(categoria, p) }
+            TemaId.BOTANICO -> with(TrofeosMas) { botanico(categoria, p) }
+            TemaId.NAVIDAD -> with(TrofeosMas) { navidad(categoria, p) }
+            TemaId.ANTIGUAS -> with(TrofeosMas) { antiguas(categoria, p) }
+            TemaId.DISTOPIA -> with(TrofeosMas) { distopia(categoria, p) }
+            TemaId.CIBER -> with(TrofeosMas) { terminal(categoria, p) }
+            TemaId.REFUGIO -> with(TrofeosMas) { refugio(categoria, p) }
+            TemaId.ORDEN -> with(TrofeosMas) { orden(categoria, p) }
+            TemaId.LABORATORIO -> with(TrofeosMas) { laboratorio(categoria, p) }
+            TemaId.ESPACIO -> with(TrofeosMas) { espacio(categoria, p) }
+            TemaId.URSS -> with(TrofeosMas) { urss(categoria, p) }
         }
-        return true
     }
 
     // ---------------------------------------------------------------- utilidades

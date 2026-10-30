@@ -21,10 +21,9 @@ import kotlin.math.sin
  * La unidad que guarda tus momentos, según el tema: la misma lógica (una hoja por día, que engorda con lo escrito),
  * con otra forma. Un rollo de papiro en Roma, tablillas de cera en Grecia, un códice en el scriptorium, un libro de
  * horas en la catedral, el cuaderno de taller del Renacimiento, el legajo de despachos del Imperio y el cahier de la
- * Revolución; los demás, en [ContenedoresMas]. La libreta de espiral queda como respaldo (ningún tema la usa ya).
+ * Revolución; los demás, en [ContenedoresMas].
  */
 enum class Contenedor(val nombre: String, val hoja: String) {
-    ESPIRAL("Libreta de momentos", "hoja"),
     ROLLO("Rollo de momentos", "columna"),
     TABLILLA("Tablillas de momentos", "tablilla"),
     CODICE("Códice de momentos", "folio"),
@@ -87,7 +86,6 @@ object Contenedores {
 
     /** El color del papel de una hoja abierta (de día y de noche). */
     fun papel(c: Contenedor, cs: ColorScheme, oscuro: Boolean): Color = when (c) {
-        Contenedor.ESPIRAL -> if (oscuro) lerp(cs.surface, Color.White, 0.06f) else lerp(cs.surface, Color.White, 0.65f)
         Contenedor.ROLLO -> if (oscuro) lerp(PAPIRO, Color.Black, 0.72f) else PAPIRO
         Contenedor.TABLILLA -> if (oscuro) lerp(CERA, Color.Black, 0.75f) else CERA
         Contenedor.CODICE -> if (oscuro) lerp(PERGAMINO, Color.Black, 0.76f) else PERGAMINO
@@ -114,7 +112,6 @@ object Contenedores {
             Contenedor.TALLER -> tallerCerrado(grosor, d, oscuro)
             Contenedor.LEGAJO -> legajoCerrado(grosor, d, tapa)
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
-            Contenedor.ESPIRAL -> {}
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
         }
@@ -311,10 +308,6 @@ object Contenedores {
         val d = density
         val tinta = if (oscuro) Color.White else Color.Black
         when (c) {
-            Contenedor.ESPIRAL -> {
-                var y = 96 * d; while (y < size.height) { drawLine(cs.primary.copy(alpha = 0.10f), Offset(0f, y), Offset(size.width, y), 1f); y += renglon }
-                drawLine(cs.error.copy(alpha = 0.35f), Offset(margen, 0f), Offset(margen, size.height), 1.2f * d)
-            }
             Contenedor.ROLLO -> {
                 // Fibras de papiro: horizontales y verticales, como las dos capas de tiras.
                 var y = 0f; var k = 0
@@ -384,18 +377,10 @@ object Contenedores {
 
     // ================================================================== abierto: la encuadernación a la izquierda
 
-    /** Lo que se ve encima del borde izquierdo de la hoja abierta: espiral, varilla, cordones, costura o cinta. */
+    /** Lo que se ve encima del borde izquierdo de la hoja abierta: varilla, cordones, costura o cinta. */
     fun DrawScope.encuadernacion(c: Contenedor, cs: ColorScheme, oscuro: Boolean) {
         val d = density
         when (c) {
-            Contenedor.ESPIRAL -> {
-                val paso = 34 * d; var y = 24 * d
-                while (y < size.height - 16 * d) {
-                    drawCircle(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.25f), 3.4f * d, Offset(24 * d, y))
-                    drawArc(lerp(cs.outline, if (oscuro) Color.White else Color.Gray, 0.4f), 160f, 220f, false, Offset(2 * d, y - 7 * d), Size(26 * d, 14 * d), style = Stroke(2.6f * d))
-                    y += paso
-                }
-            }
             Contenedor.ROLLO -> {
                 // La parte enrollada a la izquierda, como si la columna se desenrollara hacia la izquierda.
                 drawRect(Brush.horizontalGradient(listOf(lerp(PAPIRO, Color.Black, 0.35f), PAPIRO, lerp(PAPIRO, Color.Black, 0.3f)), 4 * d, 30 * d), Offset(4 * d, 6 * d), Size(26 * d, size.height - 12 * d))
