@@ -244,6 +244,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.RUINAS -> CutCornerShape(topStart = 0.dp, topEnd = 6.dp, bottomEnd = 0.dp, bottomStart = 2.dp)   // baldosa desportillada
     TemaId.NAVIDAD -> RoundedCornerShape(4.dp)
     TemaId.SEDA -> RectangleShape
+    TemaId.EDO -> CutCornerShape(bottomEnd = 3.dp)
     TemaId.GOTICO -> RectangleShape
     TemaId.ARCANO -> CutCornerShape(topEnd = 4.dp)
     TemaId.ESPACIO -> RoundedCornerShape(3.dp)
@@ -441,6 +442,19 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 drawRect(cinabrio, Offset(pc.x - 4.6f * s, pc.y - 4.6f * s), Size(9.2f * s, 9.2f * s))
                 drawRect(papel.copy(alpha = 0.8f), Offset(pc.x - 3.4f * s, pc.y - 3.4f * s), Size(6.8f * s, 6.8f * s), style = Stroke(0.6f * s))
                 figuraTema(tema, papel, pc, 2.6f * s, cinabrio)
+            }
+        }
+        // Una estera de tatami: la orilla oscura (heri) arriba y abajo; hoy, un trazo de pincel bermellón; el día sellado,
+        // el sello redondo (maru-in) con el mon de cerezo.
+        TemaId.EDO -> {
+            contorno(linea, 0.5f)
+            drawRect(linea.copy(alpha = linea.alpha * 0.8f), Offset(0f, 0f), Size(w, 1.6f * s)); drawRect(linea.copy(alpha = linea.alpha * 0.8f), Offset(0f, h - 1.6f * s), Size(w, 1.6f * s))
+            if (hoy) drawPath(Path().apply { moveTo(3 * s, h - 4 * s); quadraticTo(w * 0.5f, h - 6.5f * s, w - 3 * s, h - 4.4f * s); quadraticTo(w * 0.5f, h - 3.2f * s, 3 * s, h - 4 * s); close() }, acento)
+            if (sellado) {
+                val bermellon = Color(0xFFC9442E); val papel = Color(0xFFF3EDDD)
+                drawCircle(bermellon, 5f * s, pc)
+                drawCircle(papel.copy(alpha = 0.75f), 4.1f * s, pc, style = Stroke(0.6f * s))
+                figuraTema(tema, papel, pc, 3f * s, bermellon)
             }
         }
         // Vidriera: el plomo del borde y la lanceta por dentro; hoy, plomo dorado y una estrella.

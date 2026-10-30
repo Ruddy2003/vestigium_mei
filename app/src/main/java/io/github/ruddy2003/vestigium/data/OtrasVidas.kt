@@ -481,6 +481,26 @@ object OtrasVidas {
                 "lejos" to e(4500), "estatura" to r(168), "vida" to e(32), "vida_adulto" to e(55), "hijos" to e(4), "alfabetizacion" to e(10), "lectura" to r(0)),
             fuentes = listOf("Los sogdianos" to "${W}Sogdia", "La Ruta de la Seda" to "${W}Silk_Road")),
 
+        // Su tema es «edo» (TemaId.EDO). Ojo: «edo» también es el id de la vida de Kichizō en BASE; son espacios de nombres distintos (tema frente a id de vida).
+        Vida("posadera", "Ochiyo", "Sirvienta de una casa de té en una posta", "Una posta del camino real entre Edo y Kioto", "1830", 1830, "tema", "edo", edad = 22,
+            historia = listOf(
+                "Ochiyo sirve té, dulces y arroz a los viajeros que pasan por la posta: mensajeros, peregrinos, mercaderes, samuráis con su séquito. El camino real, el Tōkaidō, tiene 53 postas entre Edo y Kioto, y por la suya pasa gente todo el día.",
+                "Entró a servir de niña. Duerme en un cuarto con las otras sirvientas, se levanta antes del alba para encender el fuego y barrer la entrada, y solo tiene dos días libres al año, en el primer y el séptimo mes, para visitar a su familia.",
+                "Ve cientos de caras al día y casi ninguna vuelve: es lo contrario de un pueblo, donde todos se conocen. Nunca ha ido más allá de la posta siguiente, aunque sabe de memoria lo que cuentan los viajeros de Edo, de Kioto y del monte Fuji.",
+            ),
+            dia = listOf(t(22.0, 5.0, Hacer.DORMIR, "en el cuarto de las sirvientas"), t(5.0, 7.0, Hacer.CUIDAR, "fuego y barrer"), t(7.0, 8.0, Hacer.COMER), t(8.0, 13.0, Hacer.TRABAJO, "servir té a los viajeros"),
+                t(13.0, 14.0, Hacer.COMER), t(14.0, 21.0, Hacer.TRABAJO, "recibir viajeros, baños y cenas"), t(21.0, 22.0, Hacer.LIBRE)),
+            datos = mapOf(
+                "pasos" to e(14000, "Todo el día de pie: servir, barrer, ir por agua."), "km_anio" to e(3000, "Casi todo dentro de la posta."), "kcal" to e(2200), "proteina" to e(55),
+                "azucar" to e(10, "Algún dulce de la casa de té."), "fibra" to e(15, "Arroz blanco: poca fibra."), "alcohol" to e(5), "sueno" to e(7.0), "dormir" to e(22.0),
+                "trabajo" to e(84, "Doce horas al día, casi sin días libres."), "aire_libre" to e(4), "pantalla" to r(0),
+                "notificaciones" to e(40, "Viajeros que llegan, las voces que llaman a los clientes desde la puerta, las campanas del templo."), "musica" to e(0.5, "El shamisen de algún huésped por la noche."),
+                "personas_dia" to e(200, "Cientos de caras de paso."), "conocidas" to e(2000), "poblacion" to e(2000, "En el censo de 1843, las postas del Tōkaidō iban de unos 500 a más de 2,000 habitantes."),
+                "lejos" to e(30, "La posta siguiente."), "estatura" to r(145), "vida" to e(35), "vida_adulto" to e(60), "hijos" to e(4),
+                "alfabetizacion" to r(30, "Leer los silabarios era común en las ciudades; mucho menos entre las mujeres del campo."), "lectura" to r(1),
+            ),
+            fuentes = listOf("El Tōkaidō" to "${W}T%C5%8Dkaid%C5%8D_(road)", "Las postas (shukuba)" to "${W}Shukuba", "Hiratsuka-juku y el censo de 1843" to "${W}Hiratsuka-juku")),
+
         Vida("granadero", "Jean-Baptiste", "Soldado de infantería", "La campaña de Rusia", "1812", 1812, "tema", "napoleon", edad = 22,
             historia = listOf(
                 "Jean-Baptiste fue llamado por la conscripción y cruzó el río Niemen con más de medio millón de hombres. Marcha veinticinco o treinta kilómetros al día, a veces más, con unos veinte kilos encima.",

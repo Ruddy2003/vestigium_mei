@@ -608,6 +608,14 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 clipRect(right = fw) { var x = h / 2; while (x < fw + h) { drawPath(figPoligono(Offset(x, h / 2), h * 0.34f, 4, -90f), claro, style = Stroke(0.8f * d)); x += h } }
             }
         }
+        // Olas de seigaiha que se van llenando.
+        TemaId.EDO -> {
+            drawRect(pista, Offset.Zero, size)
+            if (fw > 0f) {
+                drawRect(color, Offset.Zero, Size(fw, h))
+                clipRect(right = fw) { var x = h / 2; while (x < fw + h) { for (k in 0..1) { val q = h * (0.42f - k * 0.18f); drawArc(claro, 180f, 180f, false, Offset(x - q, h - q), Size(2 * q, 2 * q), style = Stroke(0.8f * d)) }; x += h } }
+            }
+        }
         // Vidriera: vidrios entre plomos.
         TemaId.GOTICO -> {
             val plomo = Color(0xFF1C1A24).copy(alpha = 0.75f)
@@ -929,6 +937,11 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
         TemaId.SEDA -> {
             for (k in 0 until 12) { val a = (2 * k + 1) * 15f - 90f; drawLine(cs.tertiary.copy(alpha = 0.7f), polarFig(c, ro + d, a), polarFig(c, ro + 5f * d, a), 2.2f * d) }
             figuraTema(tema, cs.tertiary.copy(alpha = 0.3f), c, rc * 0.45f, cs.surface)
+        }
+        // Las doce horas del templo, con un sellito en cada una, y el mon de cerezo en medio.
+        TemaId.EDO -> {
+            for (k in 0 until 12) { val q = polarFig(c, ro + 3f * d, k * 30f - 90f); drawRect(cs.secondary.copy(alpha = 0.7f), Offset(q.x - 1.8f * d, q.y - 1.8f * d), Size(3.6f * d, 3.6f * d)) }
+            figuraTema(tema, cs.secondary.copy(alpha = 0.3f), c, rc * 0.45f, cs.surface)
         }
         // Rosetón: doce lóbulos, radios y estrellas de oro.
         TemaId.GOTICO -> {

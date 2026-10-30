@@ -666,6 +666,23 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             drawLine(e.secondary, nudo, Offset(nudo.x, c.y + R), 2 * u)
             drawCircle(e.secondary, 2.5f * u, nudo)
         }
+        // El reloj de incienso (kōdokei) de los templos: doce tramos, como las doce horas del día japonés, que se vuelven
+        // ceniza del color de la marcha; donde arde ahora, la brasa y su humo.
+        TemaId.EDO -> {
+            arco(pista, 0f, 1f, r, 9 * u)
+            val n = 12
+            for (k in 0 until n) {
+                val a = k.toFloat() / n; val b = (k + 1f) / n
+                arco(color, a + 0.006f, minOf(b, maxOf(a, p)) - 0.006f, r, 9 * u)
+                drawLine(tenue.copy(alpha = 0.5f), en(a, r - 7 * u), en(a, r + 7 * u), u)
+            }
+            val brasa = en(p, r)
+            drawCircle(e.secondary.copy(alpha = 0.3f), 7 * u, brasa); drawCircle(e.secondary, 3.5f * u, brasa)
+            for (j in 0 until 3) {
+                val y0 = brasa.y - (8 + j * 7) * u
+                drawArc(tenue.copy(alpha = 0.45f - j * 0.12f), if (j % 2 == 0) 180f else 0f, 180f, false, Offset(brasa.x - 3 * u, y0 - 3 * u), Size(6 * u, 6 * u), style = Stroke(u))
+            }
+        }
         // Rosetón: doce lancetas que se encienden como vidrieras, entre dos aros de tracería.
         TemaId.GOTICO -> {
             val rIn = r - g * 0.6f; val rOut = R - 3 * u; val rMid = rOut - 10 * u; val bw = 9 * u
@@ -966,6 +983,11 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             val n = (w / h).toInt().coerceAtLeast(1); val paso = w / n; val rm = minOf(h, paso) * 0.46f
             for (i in 0 until n) { val cc = Offset(x + (i + 0.5f) * paso, y + h / 2); addOval(Rect(cc, rm)); addRect(Rect(cc, rm * 0.32f)) }
             fillType = PathFillType.EvenOdd
+        }
+        // Tanzaku: tiras de papel colgadas, una más corta y otra más larga.
+        TemaId.EDO -> {
+            val n = (w / (h * 0.45f)).toInt().coerceAtLeast(1); val paso = w / n
+            for (i in 0 until n) addRect(Rect(x + i * paso, y + (if (i % 2 == 0) 0f else h * 0.14f), x + i * paso + paso * 0.68f, y + h - (if (i % 3 == 0) h * 0.08f else 0f)))
         }
         TemaId.GOTICO -> {
             val d = minOf(h * 0.6f, w / 2)

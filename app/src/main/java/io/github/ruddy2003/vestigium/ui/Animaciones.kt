@@ -70,7 +70,7 @@ private enum class BarridoTema {
     ARCO, CUPOLA, PIXELES, SOL, PIRAMIDE, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
     TINTA,
     GRIETA,
-    COPO, ABANICO, OJIVA, CIRCULO, MAREA, OCHO, HORIZONTE, VITRUVIO, ROSA, ESTRELLA, BANDAS, HEXAGONO,
+    COPO, ABANICO, SELLO, OJIVA, CIRCULO, MAREA, OCHO, HORIZONTE, VITRUVIO, ROSA, ESTRELLA, BANDAS, HEXAGONO,
     PERSIANA,
     /** Templario: la cruz patada que crece sobre su disco. */
     CRUZ,
@@ -128,6 +128,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.NAVIDAD -> MatizMovimiento(BarridoTema.COPO, 880, FastOutSlowInEasing, 0f, -14f, 1f, 500, 60, FastOutSlowInEasing, 1f, 0.35f, 700f)
     // Abanico que se despliega; la caravana llega desde la izquierda.
     TemaId.SEDA -> MatizMovimiento(BarridoTema.ABANICO, 800, CubicBezierEasing(0.4f, 0f, 0.2f, 1f), -18f, 0f, 1f, 460, 60, FastOutSlowInEasing, 0.95f, 0.6f, 800f)
+    // Un sello que se estampa; las secciones bajan como un rollo que se desenrolla, despacio y sin rebote.
+    TemaId.EDO -> MatizMovimiento(BarridoTema.SELLO, 820, CubicBezierEasing(0.25f, 0f, 0.15f, 1f), 0f, -10f, 1f, 520, 80, LinearOutSlowInEasing, 0.85f, 0.9f, 650f)
     // Arco apuntado; solemne, sin prisa.
     TemaId.GOTICO -> MatizMovimiento(BarridoTema.OJIVA, 960, CubicBezierEasing(0.6f, 0f, 0.4f, 1f), 0f, 24f, 1f, 600, 75, LinearOutSlowInEasing, 0.9f, 0.85f, 450f)
     // Una mancha de tinta que se extiende sobre el papel; las secciones suben de la niebla, lentas y sin rebote.
@@ -212,7 +214,7 @@ internal enum class VivoTema(val periodo: Int) {
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
     NIEBLA(60000),
     VILANOS(30000), GOTERAS(12000),
-    ARENA(14000), VITRAL(80000), ESTRELLAS(9000), MAR(15000), AGUA(14000), NUBES(180000), SAMARAS(24000), OLEAJE(30000), ESTRELLAS_ROJAS(36000),
+    ARENA(14000), PETALOS(20000), VITRAL(80000), ESTRELLAS(9000), MAR(15000), AGUA(14000), NUBES(180000), SAMARAS(24000), OLEAJE(30000), ESTRELLAS_ROJAS(36000),
     CONFETI(22000), RUNAS(14000), LLOVIZNA(6000),
     /** Templario: antorchas en la muralla. */
     ANTORCHAS(8000),
@@ -239,6 +241,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.RUINAS -> if (oscuro) VivoTema.GOTERAS else VivoTema.VILANOS   // de día, vilanos y hiedra colgante; de noche, goteras del techo roto
     TemaId.NAVIDAD -> VivoTema.NIEVE             // nieve con algún copo
     TemaId.SEDA -> VivoTema.ARENA                // arena que el viento arrastra de lado
+    TemaId.EDO -> VivoTema.PETALOS              // pétalos de cerezo que caen meciéndose
     TemaId.GOTICO -> VivoTema.VITRAL             // manchas de luz de vitral
     TemaId.ARCANO -> VivoTema.NIEBLA             // bancos de niebla y el haz del faro
     TemaId.ESPACIO -> VivoTema.ESTRELLAS         // estrellas que titilan
@@ -675,6 +678,22 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val estela = 6f * u * (0.5f + m.v)
             drawLine(al(e.tertiary, 0.10f), Offset(x - estela, y + estela * 0.1f), Offset(x, y), 1f * u * m.tam)
             drawCircle(al(e.tertiary, 0.22f), 1.1f * u * m.tam, Offset(x, y))
+        }
+        VivoTema.PETALOS -> motas.take(22).forEach { m ->
+            // Pétalos de cerezo (con su muesca en la punta) que caen meciéndose y girando, como en las estampas de primavera.
+            val k = vueltas(m)
+            val y = fraccionVivo(m.y + t * k) * (h + 30f * u) - 15f * u
+            val x = (m.x + 0.06f * senoVuelta(t * 2 * k + m.fase)) * w
+            val l = 5.5f * u * m.tam
+            val col = al(if (oscuro) Color(0xFFF2C6CF) else Color(0xFFE08CA4), if (oscuro) 0.2f else 0.28f)
+            rotate(200f * (t * 3 * k + m.fase), Offset(x, y)) {
+                val petalo = Path().apply {
+                    moveTo(x, y + l); cubicTo(x - l * 0.9f, y + l * 0.3f, x - l * 0.6f, y - l * 0.9f, x - l * 0.16f, y - l)
+                    lineTo(x, y - l * 0.72f); lineTo(x + l * 0.16f, y - l)
+                    cubicTo(x + l * 0.6f, y - l * 0.9f, x + l * 0.9f, y + l * 0.3f, x, y + l); close()
+                }
+                drawPath(petalo, col)
+            }
         }
         VivoTema.VITRAL -> motas.take(14).forEach { m ->
             // Manchas de luz de colores que cruzan despacio, como el sol a través de las vidrieras.
@@ -1137,6 +1156,11 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
         BarridoTema.ABANICO -> {
             if (p >= 0.995f) ruta.addRect(Rect(0f, 0f, w, h))
             else if (p > 0f) { ruta.moveTo(c.x, c.y); ruta.arcTo(Rect(c, r0 * 1.05f), -90f, 360f * p, false); ruta.close() }
+        }
+        BarridoTema.SELLO -> {
+            // El sello hanko que se estampa: un cuadrado de esquinas redondeadas que crece desde el toque.
+            val s = r * 1.15f
+            ruta.addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(c.x - s, c.y - s, c.x + s, c.y + s), androidx.compose.ui.geometry.CornerRadius(s * 0.3f)))
         }
     }
     return ruta

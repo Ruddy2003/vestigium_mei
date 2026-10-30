@@ -125,6 +125,7 @@ object HallImagen {
         TemaId.RUINAS -> "Lo rescatado · Vestigium Mei" to "Juntado entre las ruinas, día tras día"
         TemaId.NAVIDAD -> "Vestigium Mei · Felices fiestas" to "Escrito junto al fuego"
         TemaId.SEDA -> "我的足迹 · Vestigium Mei" to "丝路行记"
+        TemaId.EDO -> "我が足跡 · Vestigium Mei" to "東海道中日記"
         TemaId.GOTICO -> "Vestigium Mei · Horae" to "Per vitrum lux"
         TemaId.ARCANO -> "Vestigium Mei · archivo del caso" to "Lo que vi, anotado"
         TemaId.ESPACIO -> "CONTROL DE MISIÓN · VESTIGIUM MEI" to "Fin de la transmisión"

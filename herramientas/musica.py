@@ -327,6 +327,26 @@ def hacer_urbe():
         P['urbe'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: campana(f, d, 3.01, 1.3, 4.0), [12, 16, 19], 0.13, 0.8))
         ARGS['urbe'] = (T, pz, ac, mel, kw)
 
+def hacer_edo():
+    # --- Japón Edo: Mi hirajōshi (Mi, Fa#, Sol, Si, Do). El koto arpegia en quintas y cuartas, como su afinación; el
+    # shakuhachi canta con su aliento; un koto grave hace el bajo; las tablillas (hyōshigi) abren y cierran, un tambor
+    # suave marca cada compás y la campanita de viento suena al final de cada frase. Con su propio azar.
+    with A.azar_propio('musica_edo'):
+        T = -5; pz = 0.34
+        ac = compases([0, 7, 12], [-4, 3, 8], [2, 7, 14], [0, 7, 12], [3, 8, 15], [-5, 2, 7], [-4, 3, 8], [0, 7, 12])
+        mel = frase(0, "12:2 8:1 7:1 | 3:2 2:1 3:1 | 7:3 8:1 | 7:4 | 8:1 12:1 14:2 | 15:1 14:1 12:2 | 8:1 7:1 3:1 2:1 | 0:4")
+        koto = lambda f, d: pluck(f, max(d, 0.7), 0.8, 0.994)
+        shaku = lambda f, d: flauta(f, d) + 0.1 * filtro(ruido(d), 'banda', (f, f * 4)) * np.minimum(1, t_(d) / 0.05)
+        hyoshigi = lambda: mezclar((0, filtro(ruido(0.09), 'banda', (1200, 5000)) * env(int(0.09 * SR), 0.0005, 0.015, 6), 0.7),
+                                   (0, seno(hz(T + 31), 0.09) * env(int(0.09 * SR), 0.0005, 0.03, 5), 0.5))
+        furin = lambda: campana(hz(T + 36), 1.2, 3.9, 0.8, 3)
+        perc = ([(0, hyoshigi(), 0.5), (0.5, hyoshigi(), 0.55), (30, hyoshigi(), 0.45), (30.5, hyoshigi(), 0.5)]
+                + cada(32, lambda: tambor(hz(T - 36), 0.4, 0.15), 0.3, paso=4) + [(15, furin(), 0.2), (31, furin(), 0.2)])
+        kw = dict(inst_mel=shaku, inst_ac=koto, arpegio=True, bajo=lambda f, d: pluck(f, min(d, 1.5), 0.4, 0.996), perc=perc,
+                  g_mel=0.42, g_ac=0.26, g_bajo=0.22, oct_ac=-12, oct_mel=0, legato=0.95, rev=0.3)
+        P['edo'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, koto, [7, 12, 15], 0.11, 0.9))
+        ARGS['edo'] = (T, pz, ac, mel, kw)
+
 def hacer_revolucion():
     # --- Revolución: Sol mayor, marcha de pífano y tambor (melodía propia) sobre cuerdas
     T = -2; pz = 0.36
@@ -546,6 +566,7 @@ if __name__ == '__main__':
     hacer_templario()
     hacer_pirata()
     hacer_urbe()
+    hacer_edo()
     hacer_revolucion()
     hacer_antiguas()
     hacer_neon()

@@ -37,6 +37,8 @@
     <color name="arranque_navidad_oscuro">#0E1A14</color>
     <color name="arranque_seda">#F5EEDC</color>
     <color name="arranque_seda_oscuro">#0F1426</color>
+    <color name="arranque_edo">#F2ECDF</color>
+    <color name="arranque_edo_oscuro">#111215</color>
     <color name="arranque_urss">#EFE6D2</color>
     <color name="arranque_urss_oscuro">#121010</color>
     <color name="arranque_gotico">#EDE7DA</color>

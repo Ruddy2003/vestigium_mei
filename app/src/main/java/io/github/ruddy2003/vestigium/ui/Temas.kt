@@ -136,6 +136,71 @@ object Temas {
 
     fun fechaChina(a: Int, m: Int, d: Int) = anioChino(a) + " " + chino(m) + "月" + chino(d) + "日"
 
+    /**
+     * Japón Edo: los nombres tradicionales de los meses (wafū getsumei: «mes de la armonía», «mes sin dioses»…). En la época
+     * Edo nombraban los meses del calendario lunisolar; hoy se usan, por costumbre, para los meses del calendario gregoriano,
+     * y así se usan aquí (aproximación).
+     */
+    val MESES_JAPONESES = listOf("睦月", "如月", "弥生", "卯月", "皐月", "水無月", "文月", "葉月", "長月", "神無月", "霜月", "師走")
+
+    /** Los días de la semana en japonés, de lunes a domingo: luna, fuego, agua, madera, metal, tierra y sol. */
+    val SEMANA_JAPONESA = listOf("月", "火", "水", "木", "金", "土", "日")
+
+    /**
+     * Las 72 microestaciones (kō) del almanaque japonés (la versión de 1685 de Shibukawa Shunkai, con los nombres que se
+     * usan hoy): cada uno de los 24 términos solares se parte en tres, de unos cinco días. Las fechas de inicio son las
+     * habituales y se mueven un día de un año a otro (aproximación). (mes, día de inicio, nombre en español).
+     */
+    private val KO = listOf(
+        Triple(2, 4, "el viento del este deshiela"), Triple(2, 9, "canta el ruiseñor del monte"), Triple(2, 14, "los peces asoman bajo el hielo"),
+        Triple(2, 19, "la lluvia humedece la tierra"), Triple(2, 24, "se tiende la neblina"), Triple(3, 1, "despiertan hierbas y árboles"),
+        Triple(3, 6, "salen los insectos dormidos"), Triple(3, 11, "sonríen los primeros melocotoneros"), Triple(3, 16, "las orugas se vuelven mariposas"),
+        Triple(3, 21, "los gorriones hacen nido"), Triple(3, 26, "se abren los primeros cerezos"), Triple(3, 31, "el trueno alza la voz a lo lejos"),
+        Triple(4, 5, "llegan las golondrinas"), Triple(4, 10, "los gansos vuelan al norte"), Triple(4, 15, "se ven los primeros arcoíris"),
+        Triple(4, 20, "brotan los primeros juncos"), Triple(4, 25, "cesa la escarcha, crece el arroz"), Triple(4, 30, "florecen las peonías"),
+        Triple(5, 5, "empiezan a cantar las ranas"), Triple(5, 10, "salen las lombrices"), Triple(5, 15, "brotan los tallos de bambú"),
+        Triple(5, 21, "los gusanos de seda comen morera"), Triple(5, 26, "florece el cártamo"), Triple(5, 31, "madura la cebada"),
+        Triple(6, 6, "nacen las mantis"), Triple(6, 11, "de la hierba húmeda salen luciérnagas"), Triple(6, 16, "amarillean las ciruelas"),
+        Triple(6, 21, "se seca la prunela"), Triple(6, 27, "florecen los lirios"), Triple(7, 2, "brota el hange"),
+        Triple(7, 7, "llegan los vientos cálidos"), Triple(7, 12, "se abren los primeros lotos"), Triple(7, 17, "los halcones aprenden a volar"),
+        Triple(7, 23, "las paulonias dan semilla"), Triple(7, 29, "tierra húmeda, aire de bochorno"), Triple(8, 3, "caen a ratos grandes lluvias"),
+        Triple(8, 8, "llega el viento fresco"), Triple(8, 13, "cantan las cigarras del ocaso"), Triple(8, 18, "sube y baja una niebla espesa"),
+        Triple(8, 23, "se abren las cápsulas del algodón"), Triple(8, 28, "por fin amaina el calor"), Triple(9, 2, "madura el arroz"),
+        Triple(9, 8, "blanquea el rocío en la hierba"), Triple(9, 13, "cantan las lavanderas"), Triple(9, 18, "se van las golondrinas"),
+        Triple(9, 23, "el trueno calla"), Triple(9, 28, "los insectos tapan sus madrigueras"), Triple(10, 3, "se secan los arrozales"),
+        Triple(10, 8, "vuelven los gansos salvajes"), Triple(10, 13, "florecen los crisantemos"), Triple(10, 18, "los grillos cantan junto a la puerta"),
+        Triple(10, 23, "cae la primera escarcha"), Triple(10, 28, "lloviznas ligeras"), Triple(11, 2, "arces y hiedras amarillean"),
+        Triple(11, 7, "se abren las camelias"), Triple(11, 12, "la tierra empieza a helarse"), Triple(11, 17, "huelen los narcisos"),
+        Triple(11, 22, "se esconden los arcoíris"), Triple(11, 27, "el viento del norte barre las hojas"), Triple(12, 2, "amarillean los tachibana"),
+        Triple(12, 7, "se cierra el cielo, llega el invierno"), Triple(12, 12, "los osos se meten en su cueva"), Triple(12, 16, "los salmones remontan juntos"),
+        Triple(12, 21, "brota la prunela"), Triple(12, 26, "los ciervos mudan las astas"), Triple(12, 31, "bajo la nieve brota el trigo"),
+        Triple(1, 5, "crece el perejil japonés"), Triple(1, 10, "se mueven los manantiales"), Triple(1, 15, "llaman los faisanes"),
+        Triple(1, 20, "florece la petasita"), Triple(1, 25, "se hielan los arroyos"), Triple(1, 30, "las gallinas empiezan a poner"),
+    )
+    private val ORDEN_KO = KO.indices.sortedBy { KO[it].first * 100 + KO[it].second }
+
+    /** El kō de un día: su número (1 a 72, contados desde el comienzo de la primavera, hacia el 4 de febrero) y su nombre. */
+    fun ko(d: java.time.LocalDate): Pair<Int, String> {
+        val md = d.monthValue * 100 + d.dayOfMonth
+        val i = ORDEN_KO.lastOrNull { KO[it].first * 100 + KO[it].second <= md } ?: ORDEN_KO.last()
+        return (i + 1) to KO[i].third
+    }
+
+    /**
+     * El año en la era japonesa (nengō), con la fecha exacta del cambio de era: 令和八年 (Reiwa 8) es 2026. El primer año
+     * de una era se escribe 元年. Antes de Meiji, el año gregoriano en cifras chinas.
+     */
+    fun nengo(d: java.time.LocalDate): String {
+        val eras = listOf(java.time.LocalDate.of(2019, 5, 1) to "令和", java.time.LocalDate.of(1989, 1, 8) to "平成",
+            java.time.LocalDate.of(1926, 12, 25) to "昭和", java.time.LocalDate.of(1912, 7, 30) to "大正", java.time.LocalDate.of(1868, 10, 23) to "明治")
+        val (ini, era) = eras.firstOrNull { !d.isBefore(it.first) } ?: return anioChino(d.year)
+        val n = d.year - ini.year + 1
+        return era + (if (n == 1) "元" else chino(n)) + "年"
+    }
+
+    /** «神無月十七日 · los grillos cantan junto a la puerta»: el mes tradicional, el día en kanji y el kō en que cae. */
+    fun fechaEdo(d: java.time.LocalDate): String = MESES_JAPONESES[d.monthValue - 1] + chino(d.dayOfMonth) + "日 · " + ko(d).second
+
     /** «faltan N días para …», o el nombre del día cuando llega. */
     fun cuentaAtras(d: java.time.LocalDate, mes: Int, dia: Int, nombre: String, corto: String): String {
         var meta = java.time.LocalDate.of(d.year, mes, dia)
@@ -202,6 +267,9 @@ object Temas {
     // Nowruz, el equinoccio de otoño y tres de los veinticuatro términos solares chinos; y el día en que la ruta entró al Patrimonio Mundial.
     private val MARCAS_SEDA = mapOf("03-21" to "Nowruz", "09-21" to "Luna", "04-05" to "Qingming", "06-21" to "Xiazhi", "06-22" to "Ruta",
         "12-22" to "Dongzhi")
+    // Los cinco sekku (hoy en sus fechas gregorianas), el año nuevo, Setsubun, Obon, Shichi-go-san y el último día del año.
+    private val MARCAS_EDO = mapOf("01-01" to "Shōgatsu", "01-07" to "Nanakusa", "02-03" to "Setsubun", "03-03" to "Hinamatsuri", "04-08" to "Hanamatsuri",
+        "05-05" to "Tango", "07-07" to "Tanabata", "08-15" to "Obon", "09-09" to "Chōyō", "11-15" to "Shichigosan", "12-31" to "Ōmisoka")
     private val MARCAS_URSS = mapOf("05-01" to "1º mayo", "04-12" to "Cosmos", "05-09" to "Victoria", "11-07" to "Octubre", "03-08" to "Mujer")
 
     /** Marca de [fecha] en el calendario del tema, o null. */
@@ -226,6 +294,7 @@ object Temas {
             TemaId.RUINAS -> MARCAS_RUINAS[md]
             TemaId.NAVIDAD -> MARCAS_NAVIDAD[md]
             TemaId.SEDA -> MARCAS_SEDA[md]
+            TemaId.EDO -> MARCAS_EDO[md]
             TemaId.URSS -> MARCAS_URSS[md]
             TemaId.GOTICO -> MARCAS_GOTICO[md]
             TemaId.ARCANO -> MARCAS_ARCANO[md]
@@ -410,6 +479,7 @@ object Temas {
         TemaId.PIRATA -> PIRATA[titulo]
         TemaId.NAVIDAD -> NAVIDAD[titulo]
         TemaId.SEDA -> SEDA[titulo]
+        TemaId.EDO -> EDO[titulo]
         TemaId.URSS -> URSS[titulo]
         TemaId.REVOLUCION -> REVOLUCION[titulo]
         TemaId.ANTIGUAS -> ANTIGUAS[titulo]
@@ -443,6 +513,7 @@ object Temas {
             TemaId.PIRATA -> mapOf("animo" to "Cariz", "momento" to "Asiento", "gasto" to "Bolsa", "sueno" to "Coy", "habitos" to "Guardias", "hoy" to "Singladura", "cifra" to "Sonda", "foto" to "Boceto", "enfoque" to "Ampolleta")
             TemaId.NAVIDAD -> mapOf("animo" to "Ánimo", "momento" to "Momento", "gasto" to "Regalos", "sueno" to "Noche de paz", "habitos" to "Propósitos", "hoy" to "El día", "cifra" to "Número", "foto" to "Postal", "enfoque" to "Taller")
             TemaId.SEDA -> mapOf("animo" to "Espíritu", "momento" to "Relato", "gasto" to "Mercancías", "sueno" to "Reposo", "habitos" to "Ritos", "hoy" to "Jornada", "cifra" to "Cuenta", "foto" to "Estampa", "enfoque" to "Estudio")
+            TemaId.EDO -> mapOf("animo" to "Corazón", "momento" to "Estampa", "gasto" to "Monedero", "sueno" to "Futón", "habitos" to "Costumbres", "hoy" to "Posta", "cifra" to "Ábaco", "foto" to "Ukiyo-e", "enfoque" to "Pincel")
             TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO", "enfoque" to "TRABAJO")
             TemaId.REVOLUCION -> mapOf("animo" to "ESPÍRITU", "momento" to "SUCESO", "gasto" to "ASIGNADOS", "sueno" to "REPOSO", "habitos" to "VIRTUDES", "hoy" to "CAHIER", "cifra" to "CIFRA", "foto" to "ESTAMPA", "enfoque" to "ESTUDIO")
             TemaId.ANTIGUAS -> mapOf("animo" to "TEMPLE", "momento" to "SUCESO", "gasto" to "MONEDAS", "sueno" to "VIGILIA", "habitos" to "JURAMENTOS", "hoy" to "CRÓNICA", "cifra" to "CUENTA", "foto" to "GRABADO", "enfoque" to "ESTUDIO")
@@ -773,6 +844,19 @@ object Temas {
         "Te falta hoy" to "Pendientes del camino", "Hábitos" to "Ritos", "Sueño" to "Reposo", "Ánimo y cuerpo" to "Espíritu y cuerpo", "Hitos" to "Maravillas",
         "Apariencia" to "Telas", "Obras" to "Manuscritos", "Mapa" to "La ruta", "Lugares" to "Oasis", "Totales" to "Inventario del mercader",
         "Momentos de este día" to "Relatos del día", "Avisos y recordatorios" to "Gongs",
+    )
+    private val EDO = mapOf(
+        "Mundo" to "Los caminos del mundo", "Patrimonio Mundial" to "Lugares famosos del mundo", "Mapa para rascar" to "Mapa de las provincias", "Ciudades visitadas" to "Postas visitadas",
+        "Biblioteca de sueños" to "Sueños de la posada", "Cartas" to "Correo a pie", "Escribir una carta" to "Escribir con el pincel", "Carta" to "Carta de correo", "Conocerte" to "El caminante",
+        "Brújula política" to "Consejo de la aldea", "Mapas" to "Mapas del camino", "Salud" to "Libro del herbolario", "Tus apps" to "Útiles de viaje", "Otras vidas" to "Otros caminantes",
+        "Logros" to "Sellos del templo", "Tu año en historias" to "Estampas del año", "Anoche" to "La noche en la posada", "Selladas" to "Con el sello puesto",
+        "Listas para abrir" to "Cartas por abrir", "A otras personas" to "A otros caminantes", "Del pasado" to "De estaciones pasadas",
+        "Hoy" to "La posta de hoy", "Línea de tiempo" to "El camino recorrido de posta en posta", "Ahora mismo estoy…" to "En esta posta…",
+        "Día" to "Jornada del camino", "Diario" to "Cuaderno del caminante", "Gastos" to "Cuentas del monedero", "Entender" to "El ábaco", "Más" to "La posada",
+        "Llenar el día" to "Junto al farolillo", "Biblioteca del diario" to "Cuadernos cosidos", "Entrada" to "Hoja de washi", "Tablero" to "Tablón de la posta",
+        "Te falta hoy" to "Lo que falta para la siguiente posta", "Hábitos" to "Costumbres", "Sueño" to "Noche en el futón", "Ánimo y cuerpo" to "Corazón y cuerpo", "Hitos" to "Lugares famosos",
+        "Apariencia" to "Telas y tintes", "Obras" to "Libros y estampas", "Mapa" to "El camino real", "Lugares" to "Postas", "Totales" to "Cuenta del ábaco",
+        "Momentos de este día" to "Estampas del día", "Avisos y recordatorios" to "Campanas del templo",
     )
     private val URSS = mapOf(
         "Mundo" to "INTERNACIONAL", "Patrimonio Mundial" to "PATRIMONIO DE LOS PUEBLOS", "Mapa para rascar" to "MAPA DE LA AMISTAD", "Ciudades visitadas" to "CIUDADES",

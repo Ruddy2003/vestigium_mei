@@ -115,6 +115,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.RUINAS -> R.font.letrero_titulo        // el letrero pintado a mano
     TemaId.NAVIDAD -> R.font.cinzel_deco_bold
     TemaId.SEDA -> R.font.almendra_bold
+    TemaId.EDO -> R.font.shippori_titulo            // cifras de mincho, como en los libros impresos en madera
     TemaId.GOTICO -> R.font.gotica_textura          // la textura del vitral; sus números se leen bien
     TemaId.ARCANO -> R.font.spectral_medium         // la serifa del archivo, de cifras claras
     TemaId.ESPACIO -> R.font.orbitron_bold
@@ -148,6 +149,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.RUINAS -> "Cuaderno del superviviente · Vestigium Mei"
     TemaId.NAVIDAD -> "Cartas al fuego · Vestigium Mei"
     TemaId.SEDA -> "Vestigium Mei · diario de caravana"
+    TemaId.EDO -> "Vestigium Mei · 道中日記 · diario del camino"
     TemaId.GOTICO -> "Liber horarum · Vestigium mei"
     TemaId.ARCANO -> "Vestigium Mei · archivo del caso, caja reservada"
     TemaId.ESPACIO -> "VESTIGIUM MEI / MISIÓN"
@@ -491,6 +493,25 @@ object Reportes {
                         c.drawLine(mx - 5f, yc, mx + 5f, yc, cordon)
                     }
                     y += 52f
+                }
+                TemaId.EDO -> {
+                    // Una franja de seigaiha (las olas en escamas de las telas y los grabados) y, al centro, el sello de bermellón.
+                    val r = 13f; val base = yy + 36f
+                    val ola = L.trazo(L.primario, 1.3f); val fondo = L.relleno(L.fondo)
+                    for (fila in 1 downTo 0) {
+                        val yb = base - fila * r * 0.5f; val dx = if (fila == 1) r else 0f
+                        var x = M + dx
+                        while (x <= W - M) {
+                            val caja = RectF(x - r, yb - r, x + r, yb + r)
+                            c.drawArc(caja, 180f, 180f, true, fondo)
+                            for (k in 0..2) { val q = r * (1f - k * 0.3f); c.drawArc(RectF(x - q, yb - q, x + q, yb + q), 180f, 180f, false, ola) }
+                            x += 2 * r
+                        }
+                    }
+                    c.drawRect(cx - 14f, base - 34f, cx + 14f, base - 6f, L.relleno(L.secundario))
+                    c.drawRect(cx - 10.5f, base - 30.5f, cx + 10.5f, base - 9.5f, L.trazo(L.fondo, 1.6f))
+                    c.drawLine(cx, base - 28f, cx, base - 12f, L.trazo(L.fondo, 2f)); c.drawLine(cx - 7f, base - 22f, cx + 7f, base - 22f, L.trazo(L.fondo, 2f))
+                    y += 50f
                 }
                 TemaId.GOTICO -> {
                     // Una arquería de ojivas, como el triforio de una capilla, con un punto de oro entre arco y arco.

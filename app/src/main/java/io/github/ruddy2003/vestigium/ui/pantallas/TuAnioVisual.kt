@@ -268,6 +268,14 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             for (k in 0 until 4) { val y = y0 + h * (0.15f + k * 0.23f); drawLine(claro, Offset(x0 + 3 * d, y), Offset(x0 + 7 * d, y), 0.8f * d) }
             drawRect(lerp(Color.White, c, 0.15f), Offset(x0 + w * 0.5f, y0 + h * 0.15f), Size(w * 0.18f, h * 0.7f))
         }
+        // El cuaderno cosido: la etiqueta del título arriba a la izquierda y las cuatro puntadas en el lomo de la derecha.
+        TemaId.EDO -> {
+            drawRect(c, o, s)
+            drawRect(lerp(Color.White, c, 0.12f), Offset(x0 + w * 0.12f, y0 + h * 0.1f), Size(w * 0.16f, h * 0.55f))
+            val xs = x0 + w - 4 * d
+            drawLine(claro, Offset(xs, y0), Offset(xs, y0 + h), 0.8f * d)
+            for (k in 0 until 4) { val y = y0 + h * (0.12f + k * 0.25f); drawLine(claro, Offset(xs, y), Offset(x0 + w, y), 0.8f * d); drawCircle(oscuro, 0.8f * d, Offset(xs, y)) }
+        }
         // Libro de horas: tapa con una ventana ojival dorada y el broche.
         TemaId.GOTICO -> {
             drawRoundRect(c, o, s, CornerRadius(1.5f * d))
@@ -722,6 +730,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
         TemaId.SEDA -> {
             drawCircle(relleno, r, c); drawCircle(borde, r, c, style = fino)
             drawRect(borde, Offset(x - r * 0.68f, y - r * 0.68f), Size(1.36f * r, 1.36f * r), style = fino)
+        }
+        // Una flor de cerezo.
+        TemaId.EDO -> {
+            for (k in 0 until 5) { val a = -kotlin.math.PI / 2 + k * 2 * kotlin.math.PI / 5; val q = Offset(x + (r * 0.5f * kotlin.math.cos(a)).toFloat(), y + (r * 0.5f * kotlin.math.sin(a)).toFloat()); drawCircle(relleno, r * 0.5f, q); drawCircle(borde, r * 0.5f, q, style = fino) }
+            drawCircle(fondo, r * 0.18f, c)
         }
         // Ventana ojival.
         TemaId.GOTICO -> lleno(Path().apply {
@@ -1193,6 +1206,32 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawRect(fondo, Offset(x - r * 0.4f, y - r * 0.55f), Size(r * 0.8f, r * 1.1f))
                 listOf(-0.8f, 0.8f).forEach { f -> drawLine(col, Offset(x - r * 0.75f, y + f * r), Offset(x + r * 0.75f, y + f * r), 1.4f * d) }
                 drawLine(col, Offset(x, y + r * 0.35f), Offset(x, y - r * 0.35f), 0.8f * d)
+            }
+            else -> return false
+        }
+        TemaId.EDO -> when (forma) {
+            // El cuenco del té verde (chawan), con el batidor de bambú (chasen) al lado.
+            "taza" -> {
+                drawPath(Path().apply { moveTo(x - r * 0.9f, y - r * 0.3f); lineTo(x + r * 0.5f, y - r * 0.3f); quadraticTo(x + r * 0.45f, y + r * 0.55f, x - r * 0.2f, y + r * 0.55f); quadraticTo(x - r * 0.85f, y + r * 0.55f, x - r * 0.9f, y - r * 0.3f); close() }, col)
+                drawRect(col, Offset(x - r * 0.4f, y + r * 0.55f), Size(r * 0.4f, r * 0.15f))
+                drawLine(fondo, Offset(x - r * 0.8f, y - r * 0.15f), Offset(x + r * 0.4f, y - r * 0.15f), 0.8f * d)
+                drawRect(col, Offset(x + r * 0.68f, y - r * 0.9f), Size(r * 0.14f, r * 0.7f))
+                for (k in -2..2) drawLine(col, Offset(x + r * 0.75f, y - r * 0.2f), Offset(x + r * (0.75f + k * 0.08f), y + r * 0.6f), 0.7f * d)
+            }
+            // La linterna de piedra (tōrō) de un templo.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r * 0.8f, y - r * 0.45f); quadraticTo(x - r * 0.3f, y - r * 0.55f, x, y - r * 0.9f); quadraticTo(x + r * 0.3f, y - r * 0.55f, x + r * 0.8f, y - r * 0.45f); close() }, col)
+                drawRect(col, Offset(x - r * 0.45f, y - r * 0.45f), Size(r * 0.9f, r * 0.5f)); drawRect(fondo, Offset(x - r * 0.2f, y - r * 0.35f), Size(r * 0.4f, r * 0.28f))
+                drawRect(col, Offset(x - r * 0.6f, y + r * 0.05f), Size(r * 1.2f, r * 0.14f))
+                drawRect(col, Offset(x - r * 0.14f, y + r * 0.19f), Size(r * 0.28f, r * 0.5f)); drawRect(col, Offset(x - r * 0.5f, y + r * 0.69f), Size(r * 1f, r * 0.2f))
+            }
+            // La carta doblada en vertical (tatebumi) con el 〆 que la cierra.
+            "sobre" -> {
+                drawRect(col, Offset(x - r * 0.42f, y - r * 0.9f), Size(r * 0.84f, r * 1.8f))
+                drawPath(Path().apply { moveTo(x - r * 0.42f, y - r * 0.9f); lineTo(x, y - r * 0.55f); lineTo(x + r * 0.42f, y - r * 0.9f) }, fondo, style = Stroke(0.8f * d))
+                drawLine(fondo, Offset(x - r * 0.22f, y - r * 0.25f), Offset(x + r * 0.22f, y + r * 0.15f), 1.2f * d)
+                drawLine(fondo, Offset(x + r * 0.2f, y - r * 0.28f), Offset(x - r * 0.18f, y + r * 0.08f), 1.2f * d)
+                drawLine(fondo, Offset(x - r * 0.18f, y + r * 0.08f), Offset(x - r * 0.1f, y + r * 0.22f), 1.2f * d)
             }
             else -> return false
         }

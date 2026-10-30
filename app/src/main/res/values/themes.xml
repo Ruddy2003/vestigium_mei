@@ -120,8 +120,14 @@
     <style name="Theme.Vestigium.Arranque.Seda" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_seda</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Edo" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_edo</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Seda.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_seda_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Edo.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_edo_oscuro</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Urss" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_urss</item>

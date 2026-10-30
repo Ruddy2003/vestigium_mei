@@ -254,6 +254,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(SPIN, 0.35f), g(TICK, 0.6f, 60)); Evento.ERROR -> listOf(g(THUD, 0.6f), g(BAJA, 0.5f, 100))
             Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 1f), g(SPIN, 0.5f, 40), g(SUBE_LENTO, 0.4f, 200))
         }
+        // Las tablillas de madera del sereno (hyōshigi), el sello que se aprieta, el shōji que se desliza y el taiko.
+        TemaId.EDO -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.62f)); Evento.PASAR -> listOf(g(TICK, 0.42f), g(TICK, 0.42f, 140))
+            Evento.GUARDAR -> listOf(g(THUD, 0.72f), g(TICK_GRAVE, 0.48f, 70))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.46f), g(TICK, 0.31f, 55)); Evento.ABRIR -> listOf(g(SPIN, 0.33f), g(THUD, 0.44f, 90))
+            Evento.CAMBIO -> listOf(g(TICK_GRAVE, 0.52f), g(SPIN, 0.27f, 45)); Evento.ERROR -> listOf(g(TICK_GRAVE, 0.7f), g(TICK_GRAVE, 0.7f, 130), g(BAJA, 0.36f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.9f), g(TICK, 0.5f, 140), g(TICK, 0.5f, 140), g(SUBE_LENTO, 0.38f, 80))
+        }
         // Prensa de fábrica y sirena.
         TemaId.URSS -> when (e) {
             Evento.TOQUE -> listOf(g(CLICK, 0.9f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.9f))
@@ -363,6 +371,7 @@ object Sentidos {
         TemaId.PIRATA -> intArrayOf(R.raw.s_pirata_toque, R.raw.s_pirata_guardar, R.raw.s_pirata_logro, R.raw.s_pirata_pasar, R.raw.s_pirata_elegir, R.raw.s_pirata_abrir, R.raw.s_pirata_tema, R.raw.s_pirata_error, R.raw.s_pirata_cambio, R.raw.s_tecla_pirata, R.raw.s_rascar_pirata)
         TemaId.NAVIDAD -> intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro, R.raw.s_navidad_pasar, R.raw.s_navidad_elegir, R.raw.s_navidad_abrir, R.raw.s_navidad_tema, R.raw.s_navidad_error, R.raw.s_navidad_cambio, R.raw.s_tecla_navidad, R.raw.s_rascar_navidad)
         TemaId.SEDA -> intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro, R.raw.s_seda_pasar, R.raw.s_seda_elegir, R.raw.s_seda_abrir, R.raw.s_seda_tema, R.raw.s_seda_error, R.raw.s_seda_cambio, R.raw.s_tecla_seda, R.raw.s_rascar_seda)
+        TemaId.EDO -> intArrayOf(R.raw.s_edo_toque, R.raw.s_edo_guardar, R.raw.s_edo_logro, R.raw.s_edo_pasar, R.raw.s_edo_elegir, R.raw.s_edo_abrir, R.raw.s_edo_tema, R.raw.s_edo_error, R.raw.s_edo_cambio, R.raw.s_tecla_edo, R.raw.s_rascar_edo)
         TemaId.URSS -> intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir, R.raw.s_urss_tema, R.raw.s_urss_error, R.raw.s_urss_cambio, R.raw.s_tecla_urss, R.raw.s_rascar_urss)
         TemaId.ANTIGUAS -> intArrayOf(R.raw.s_antiguas_toque, R.raw.s_antiguas_guardar, R.raw.s_antiguas_logro, R.raw.s_antiguas_pasar, R.raw.s_antiguas_elegir, R.raw.s_antiguas_abrir, R.raw.s_antiguas_tema, R.raw.s_antiguas_error, R.raw.s_antiguas_cambio, R.raw.s_tecla_antiguas, R.raw.s_rascar_antiguas)
         TemaId.REVOLUCION -> intArrayOf(R.raw.s_revolucion_toque, R.raw.s_revolucion_guardar, R.raw.s_revolucion_logro, R.raw.s_revolucion_pasar, R.raw.s_revolucion_elegir, R.raw.s_revolucion_abrir, R.raw.s_revolucion_tema, R.raw.s_revolucion_error, R.raw.s_revolucion_cambio, R.raw.s_tecla_revolucion, R.raw.s_rascar_revolucion)
@@ -461,6 +470,8 @@ object Sentidos {
         TemaId.NAVIDAD -> Afinacion(st(-3, 0, 4, 7), st(0, 5, 7, 12), pasarRuido = true, elegirRuido = false)
         // La menor pentatónico; la seda da pasos del modo.
         TemaId.SEDA -> Afinacion(st(-2, 0, 3, 5), st(-7, -5, 0, 3), pasarRuido = true, elegirRuido = false)
+        // La afinación hirajōshi del koto: Do, Re, Mi bemol, Sol, La bemol.
+        TemaId.EDO -> Afinacion(st(0, 2, 3, 7, 8), st(-5, -4, 0, 2), pasarRuido = true, elegirRuido = true)
         // Do menor; la prensa baja a la quinta.
         TemaId.URSS -> Afinacion(st(-5, -3, 0), st(-9, -5, 0, 3), pasarRuido = true, elegirRuido = false)
         // Re dórico; la piedra, en pasos graves del modo.
@@ -570,6 +581,7 @@ object Sentidos {
         TemaId.PIRATA -> pasadas(TICK, 0.65f, 40, 4)   // un doblón de oro
         TemaId.NAVIDAD -> pasadas(TICK, 0.7f, 25, 5)   // plata escarchada
         TemaId.SEDA -> pasadas(TICK, 0.6f, 50, 3)   // bronce de moneda
+        TemaId.EDO -> pasadas(CLICK, 0.42f, 70, 4)   // pan de oro sobre laca
         TemaId.URSS -> pasadas(CLICK, 0.9f, 40, 3)   // acero ennegrecido
         TemaId.ANTIGUAS -> pasadas(TICK_GRAVE, 0.8f, 60, 3)   // hierro viejo
         TemaId.REVOLUCION -> pasadas(CLICK, 0.45f, 50, 4)   // estaño

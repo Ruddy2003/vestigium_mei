@@ -90,6 +90,7 @@ object Musica {
         TemaId.RUINAS -> R.raw.s_ruinas_presentacion
         TemaId.NAVIDAD -> R.raw.s_navidad_presentacion
         TemaId.SEDA -> R.raw.s_seda_presentacion
+        TemaId.EDO -> R.raw.s_edo_presentacion
         TemaId.URSS -> R.raw.s_urss_presentacion
         TemaId.GOTICO -> R.raw.s_gotico_presentacion
         TemaId.ARCANO -> R.raw.s_arcano_presentacion
@@ -122,6 +123,7 @@ object Musica {
         TemaId.RUINAS -> R.raw.s_ruinas_anual
         TemaId.NAVIDAD -> R.raw.s_navidad_anual
         TemaId.SEDA -> R.raw.s_seda_anual
+        TemaId.EDO -> R.raw.s_edo_anual
         TemaId.URSS -> R.raw.s_urss_anual
         TemaId.GOTICO -> R.raw.s_gotico_anual
         TemaId.ARCANO -> R.raw.s_arcano_anual
@@ -153,6 +155,7 @@ object Musica {
         TemaId.RUINAS -> R.raw.t_ruinas_llamada
         TemaId.NAVIDAD -> R.raw.t_navidad_llamada
         TemaId.SEDA -> R.raw.t_seda_llamada
+        TemaId.EDO -> R.raw.t_edo_llamada
         TemaId.URSS -> R.raw.t_urss_llamada
         TemaId.GOTICO -> R.raw.t_gotico_llamada
         TemaId.ARCANO -> R.raw.t_arcano_llamada
@@ -184,6 +187,7 @@ object Musica {
         TemaId.RUINAS -> R.raw.t_ruinas_notificacion
         TemaId.NAVIDAD -> R.raw.t_navidad_notificacion
         TemaId.SEDA -> R.raw.t_seda_notificacion
+        TemaId.EDO -> R.raw.t_edo_notificacion
         TemaId.URSS -> R.raw.t_urss_notificacion
         TemaId.GOTICO -> R.raw.t_gotico_notificacion
         TemaId.ARCANO -> R.raw.t_arcano_notificacion
@@ -619,6 +623,19 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawCircle(madera, u * 8, Offset(u * 4, y + u * 6)); drawCircle(madera, u * 8, Offset(w - u * 4, y + u * 6))
         }
         drawPath(Path().apply { moveTo(w / 2 - u * 30, 0f); lineTo(w / 2, -u * 18); lineTo(w / 2 + u * 30, 0f) }, madera, style = Stroke(u))
+    }
+    // Un biombo de seis hojas con nubes de oro (kasumi) y el monte Fuji al fondo; el sello al pie, como en las estampas.
+    TemaId.EDO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, true, t.nombre, "※ 道中  ·  toca para seguir por el camino real",
+        comillas = "『" to "』", emblema = 92.dp, arriba = 40.dp, abajo = 48.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height; val n = 6; val pw = w / n
+        for (k in 0 until n) drawRect((if (k % 2 == 0) e.surface else e.surfaceVariant).copy(alpha = 0.5f), Offset(k * pw, 0f), Size(pw, h))
+        drawPath(Path().apply { moveTo(w * 0.2f, h * 0.62f); lineTo(w * 0.44f, h * 0.36f); quadraticTo(w * 0.5f, h * 0.33f, w * 0.56f, h * 0.36f); lineTo(w * 0.8f, h * 0.62f); close() }, e.primary.copy(alpha = 0.06f))
+        val oro = e.tertiary.copy(alpha = 0.22f)
+        listOf(0.06f to 0.5f, 0.12f to 0.35f, 0.86f to 0.55f, 0.92f to 0.3f).forEachIndexed { i, (fy, fw) ->
+            drawRoundRect(oro, Offset(w * (if (i % 2 == 0) 0.05f else 0.4f), h * fy), Size(w * fw, h * 0.045f), CornerRadius(h * 0.0225f))
+        }
+        for (k in 1 until n) drawLine(e.outline.copy(alpha = 0.5f), Offset(k * pw, 0f), Offset(k * pw, h), u)
+        drawRect(e.onSurface.copy(alpha = 0.35f), Offset.Zero, size, style = Stroke(2 * u))
     }
     // Vitral: un arco ojival con su rosetón en la clave.
     TemaId.GOTICO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "✠ toca, y que se abra la puerta del claustro",

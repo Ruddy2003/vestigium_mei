@@ -38,6 +38,21 @@ internal object Claves {
         "apps" to "应用",
     )
 
+    /** Japonés, como en el libro de registro de una posta del camino real (con su español al lado en los reportes). */
+    val JAPONES: Map<String, String> = mapOf(
+        "horologium" to "腕時計", "somnus" to "眠り", "stadia" to "段階", "cor" to "脈", "passus" to "歩み", "motus" to "動き", "iter" to "道筋",
+        "exercitatio" to "稽古", "loca" to "宿場", "telephonum" to "画面", "telephon" to "画面", "usus" to "使い道", "monita" to "知らせ",
+        "musica" to "音曲", "imagines" to "絵", "fasti" to "予定", "caelum" to "空模様", "lux" to "日の光", "aer" to "風", "corpus" to "体",
+        "nutritio" to "滋養", "cibus" to "食事", "robur" to "鍛錬", "musculi" to "筋", "voces" to "便り", "soni" to "音", "retia" to "網",
+        "lumen" to "明かり", "vis" to "電池", "lectio" to "読書", "strepitus" to "騒音", "luna" to "月齢", "dias" to "日数", "animus" to "心持ち",
+        "optimus" to "最良", "momenta" to "一コマ", "svmptvs" to "出費", "memorabilia" to "名所", "ascensvs" to "岩登り", "dies" to "日",
+        "quaestiones" to "問い", "celeritas" to "反応", "bibliotheca" to "文庫", "synchronia" to "同期", "opera" to "作品", "iudicium" to "評",
+        "citatio" to "引用", "sententia" to "言葉", "orbis" to "世間", "nova" to "新", "mirabilia" to "名勝", "somnium" to "夢", "epistulae" to "手紙",
+        "aperta" to "開封", "initium" to "始まり", "finis" to "終わり", "pessimus" to "最悪", "personae" to "人々", "themata" to "題目",
+        "praeclarum" to "一番", "dies felix" to "吉日", "consuetudo" to "習わし", "series" to "連続", "palmae" to "御朱印", "reditus" to "稼ぎ",
+        "apps" to "道具",
+    )
+
     /** Árabe, para al-Ándalus. */
     val ARABE: Map<String, String> = mapOf(
         "horologium" to "الساعة", "somnus" to "النوم", "stadia" to "المراحل", "cor" to "القلب", "passus" to "الخطوات", "motus" to "الحركة",

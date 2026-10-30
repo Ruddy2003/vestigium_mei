@@ -724,6 +724,44 @@ def seda():
                tecla=filtro(ruido(0.07), 'banda', (1500, 6000)) * env(int(0.07 * SR), 0.015, 0.04, 3),
                rascar=rascado((1400, 6000), cimbalo(T + 36, 0.5), aspereza=80))
 
+def edo():
+    # Mi hirajōshi (Mi, Fa#, Sol, Si, Do): koto, shamisen, las tablillas de madera (hyōshigi), la campana del templo
+    # (bonshō), el shakuhachi y la campanita de viento (fūrin). La escala tiene semitonos (Fa#–Sol, Si–Do): suena japonesa
+    # y no a la pentatónica sin semitonos del tema de la seda.
+    T = -5   # Mi4
+    hira = [0, 2, 3, 7, 8, 12]
+    koto = lambda n, d=1.0: mezclar((0, pluck(hz(n), d, 0.8, 0.994), 1.0), (0, clic(0.006, (3000, 8000)), 0.25))
+    shami = lambda n, d=0.45: mezclar((0, pluck(hz(n), d, 0.95, 0.985), 0.9),
+                                      (0, filtro(ruido(d), 'banda', (hz(n) * 4, hz(n) * 9)) * env(int(d * SR), 0.002, d * 0.3, 4), 0.25))
+    hyoshigi = lambda d=0.09: mezclar((0, filtro(ruido(d), 'banda', (1200, 5000)) * env(int(d * SR), 0.0005, 0.015, 6), 0.7),
+                                      (0, seno(hz(T + 31), d) * env(int(d * SR), 0.0005, 0.03, 5), 0.5))
+    bonsho = lambda d=3.0: reverb(mezclar((0, campana(hz(T - 24), d, 2.76, 1.2, 1.2), 0.6), (0, campana(hz(T - 24) * 1.007, d, 2.76, 1.0, 1.2), 0.5)), 1.4, 0.3)
+    shaku = lambda f, d: flauta(f, d) + 0.12 * filtro(ruido(d), 'banda', (f, f * 4)) * np.minimum(1, t_(d) / 0.05)
+    furin = lambda n=T + 36, d=0.7: campana(hz(n), d, 3.9, 0.8, 5)
+    # Con su propio azar también los sonidos de siempre: un tema nuevo no mueve el ruido de los que van después.
+    with azar_propio('edo_base'):
+        S['edo'] = dict(
+            toque=mezclar((0, clic(0.008, (2500, 7000)), 0.6), (0, pluck(hz(T + 24), 0.12, 0.8, 0.99), 0.5)),
+            elegir=koto(T + 19, 0.4), pasar=papel(0.22, (600, 3000)),
+            abrir=mezclar((0, hyoshigi(), 0.8), (0.16, hyoshigi(), 0.9)),
+            guardar=mezclar((0, koto(T + 7, 0.8), 0.55), (0.1, koto(T + 12, 0.9), 0.5)),
+            logro=reverb(mezclar(melodia(lambda f, d: pluck(f, d, 0.8, 0.994), [T + p for p in hira], 0.07, 0.9), (0.45, furin(), 0.3)), 1.2, 0.25),
+            tema=reverb(mezclar((0, shami(T + 12, 0.35), 0.6), (0.14, shami(T + 19, 0.35), 0.55), (0.28, koto(T + 24, 0.9), 0.5)), 1.0, 0.22),
+            aviso=reverb(mezclar(melodia(shaku, [T + 12, T + 8, T + 7, None, T + 3, T + 2, T], 0.22, 0.4, g=0.5), (0, hyoshigi(), 0.5), (0.12, hyoshigi(), 0.6)), 1.4, 0.3),
+            solemne=reverb(mezclar((0, bonsho(4.0), 0.6),
+                                   (1.0, melodia(lambda f, d: pluck(f, d, 0.8, 0.994), [T + n for n in [0, 2, 3, 7, 8, 7, 3, 2, 0]], 0.45, 1.2, g=0.4), 0.9),
+                                   (1.0, shaku(hz(T - 5), 4.2), 0.12)), 1.6, 0.22))
+
+    # Error: el shamisen que cae medio tono y la cuerda que se afloja. Cambio: las tablillas y la campanita de viento.
+    # Tecla: el pincel sobre el washi, más blando que el de la seda. Rascar: la moneda de cobre con su agujero cuadrado.
+    with azar_propio('edo'):
+        nuevos('edo',
+               error=mezclar((0, shami(T + 8, 0.14), 0.5), (0.14, shami(T + 7, 0.4), 0.5),
+                             (0.14, filtro(barrido(hz(T + 7), hz(T + 3), 0.35), 'bajo', 2000) * env(int(0.35 * SR), 0.003, 0.2, 3), 0.25)),
+               cambio=mezclar((0, hyoshigi(0.06), 0.6), (0.09, furin(T + 31, 0.4), 0.35)),
+               tecla=trazo((700, 3600), 0.06, 8, 0.035),
+               rascar=rascado((1100, 5200), furin(T + 36, 0.5), aspereza=70))
+
 def urss():
     # Do menor: prensa, yunque, silbato de fábrica (acorde menor) y metales.
     T = 3
@@ -1104,6 +1142,7 @@ if __name__ == '__main__':
         ruinas,
         navidad,
         seda,
+        edo,
         urss,
         gotico,
         arcano,

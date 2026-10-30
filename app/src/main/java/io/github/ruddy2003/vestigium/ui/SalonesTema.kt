@@ -44,6 +44,7 @@ object SalonesTema {
             TemaId.REVOLUCION -> panteon(cs, oscuro, n)
             TemaId.ANDALUS -> with(SalonesMas) { patio(cs, oscuro, n) }
             TemaId.SEDA -> with(SalonesMas) { caravasar(cs, oscuro, n) }
+            TemaId.EDO -> with(SalonesMas) { posada(cs, oscuro, n) }
             TemaId.MONGOL -> with(SalonesMas) { yurta(cs, oscuro, n) }
             TemaId.COLONOS -> with(SalonesMas) { almacen(cs, oscuro, n) }
             TemaId.BOTANICO -> with(SalonesMas) { invernadero(cs, oscuro, n) }
@@ -116,6 +117,7 @@ object SalonesTema {
             }
             TemaId.ANDALUS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.SEDA -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.EDO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.MONGOL -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.COLONOS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.BOTANICO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }

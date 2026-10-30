@@ -40,6 +40,17 @@ object SalonesMas {
             }
             TemaId.SEDA -> { drawRoundRect(piedra(Color(0xFF8E1B1B)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.55f), CornerRadius(h * 0.2f)); drawRect(Color(0xFFD4AF37), Offset(w * 0.12f, 0f), Size(w * 0.76f, h * 0.1f))
                 listOf(0.2f, 0.8f).forEach { x -> drawRect(Color(0xFF8E1B1B), Offset(w * x - w * 0.03f, h * 0.5f), Size(w * 0.06f, h * 0.5f)) } }
+            // Sanbō: la bandeja de ofrendas de madera lacada en negro, sobre su caja con el vano recortado (kurikata).
+            TemaId.EDO -> {
+                val laca = Color(0xFF1C1A1D)
+                drawRect(piedra(laca), Offset(w * 0.1f, 0f), Size(w * 0.8f, h * 0.2f)); drawRect(Color(0xFFB8322A), Offset(w * 0.13f, h * 0.03f), Size(w * 0.74f, h * 0.05f))
+                drawPath(Path().apply {
+                    fillType = PathFillType.EvenOdd
+                    addRect(Rect(w * 0.18f, h * 0.2f, w * 0.82f, h))
+                    addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(w * 0.36f, h * 0.38f, w * 0.64f, h * 0.78f), CornerRadius(w * 0.14f)))
+                }, piedra(laca))
+                drawRect(Color(0xFFD4AF37).copy(alpha = 0.6f), Offset(w * 0.18f, h * 0.2f), Size(w * 0.64f, h * 0.025f))
+            }
             TemaId.MONGOL -> for (k in 0 until 3) drawRoundRect(lerp(Color(0xFFEDE6D6), Color.Black, k * 0.08f), Offset(w * (0.18f - k * 0.04f), h * k / 3f), Size(w * (0.64f + k * 0.08f), h / 3f), CornerRadius(h * 0.15f))
             TemaId.COLONOS -> { drawRect(Brush.horizontalGradient(listOf(Color(0xFF5A3A22), Color(0xFF8A5A2B), Color(0xFF5A3A22)), w * 0.2f, w * 0.8f), Offset(w * 0.2f, h * 0.2f), Size(w * 0.6f, h * 0.8f)); drawOval(Color(0xFFC9A57A), Offset(w * 0.2f, 0f), Size(w * 0.6f, h * 0.4f)) }
             TemaId.BOTANICO -> { drawRect(Color(0xFF8A6A44), Offset(w * 0.1f, 0f), Size(w * 0.8f, h * 0.3f)); listOf(0.2f, 0.8f).forEach { x -> drawLine(Color(0xFF2F3A33), Offset(w * x, h * 0.3f), Offset(w * x, h), w * 0.03f) } }
@@ -196,6 +207,42 @@ object SalonesMas {
                 drawRect(Color(0xFFD4AF37).copy(alpha = 0.7f), Offset(cx - 4 * d, y - 9 * d), Size(8 * d, 2 * d)); drawRect(Color(0xFFD4AF37).copy(alpha = 0.7f), Offset(cx - 4 * d, y + 7 * d), Size(8 * d, 2 * d))
                 y += 200 * d
             }
+        }
+    }
+
+    // ------------------------------------------------------------------ Japón Edo
+
+    /**
+     * La sala de una posada del camino real: el dintel de madera arriba, un shōji de papel con su celosía (kumiko) detrás
+     * de cada columna, el suelo de tatami con sus orillas oscuras y, entre columna y columna, un andon (farol de papel) encendido.
+     */
+    internal fun DrawScope.posada(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val madera = (if (oscuro) Color(0xFF5A4632) else Color(0xFF7A5C3E)).copy(alpha = 0.55f)
+        val washi = (if (oscuro) Color(0xFF3A3530) else Color(0xFFF6F0E2)).copy(alpha = if (oscuro) 0.35f else 0.6f)
+        val paso = w / n; val suelo = h - 56 * d
+        drawRect(madera, Offset(0f, 0f), Size(w, 10 * d)); drawRect(madera, Offset(0f, 14 * d), Size(w, 3 * d))
+        for (i in 0 until n) {
+            val x0 = i * paso + 5 * d; val x1 = (i + 1) * paso - 5 * d; val top = 22 * d
+            drawRect(washi, Offset(x0, top), Size(x1 - x0, suelo - top))
+            val k = madera.copy(alpha = madera.alpha * 0.5f)
+            for (j in 1..2) { val x = x0 + (x1 - x0) * j / 3f; drawLine(k, Offset(x, top), Offset(x, suelo), 0.8f * d) }
+            var y = top + 30 * d; while (y < suelo) { drawLine(k, Offset(x0, y), Offset(x1, y), 0.8f * d); y += 30 * d }
+            drawRect(madera, Offset(x0, top), Size(x1 - x0, suelo - top), style = Stroke(2 * d))
+        }
+        // El tatami: esteras con su orilla de tela oscura (heri).
+        val tatami = (if (oscuro) Color(0xFF4A4A30) else Color(0xFFCFC79A)).copy(alpha = 0.55f)
+        drawRect(tatami, Offset(0f, suelo), Size(w, h - suelo))
+        var x = 0f; var k = 0
+        while (x < w) { drawLine(Color(0xFF2A2A1C).copy(alpha = 0.45f), Offset(x, suelo), Offset(x, h), 2.4f * d); x += if (k % 2 == 0) w * 0.36f else w * 0.18f; k++ }
+        drawLine(Color(0xFF2A2A1C).copy(alpha = 0.45f), Offset(0f, suelo + 2 * d), Offset(w, suelo + 2 * d), 3 * d)
+        // Los andon encendidos entre las columnas.
+        for (i in 0..n) {
+            val cx = i * paso; val y0 = suelo - 34 * d
+            drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC46B).copy(alpha = if (oscuro) 0.28f else 0.16f), Color.Transparent), Offset(cx, y0 + 12 * d), 36 * d), 36 * d, Offset(cx, y0 + 12 * d))
+            drawRect(Color(0xFFFFF1D6).copy(alpha = 0.75f), Offset(cx - 7 * d, y0), Size(14 * d, 22 * d))
+            drawRect(madera, Offset(cx - 7 * d, y0), Size(14 * d, 22 * d), style = Stroke(1.2f * d))
+            drawLine(madera, Offset(cx - 6 * d, y0 + 22 * d), Offset(cx - 7 * d, suelo + 2 * d), 1.4f * d); drawLine(madera, Offset(cx + 6 * d, y0 + 22 * d), Offset(cx + 7 * d, suelo + 2 * d), 1.4f * d)
         }
     }
 

@@ -155,7 +155,7 @@ data class EstiloGrafica(
 
 /** Formas del punto de datos. */
 enum class FormaPunto {
-    CIRCULO, TRIANGULO, CUPOLA, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO, HOJA, COPO, MONEDA,
+    CIRCULO, TRIANGULO, CUPOLA, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO, HOJA, COPO, MONEDA, SAKURA,
     HIEDRA,
     ROMBO, ANILLO, OCTOGRAMA, LUNA, MIRA,
     /** La «X» de las cartas del tesoro. */
@@ -185,13 +185,13 @@ enum class AdornoTrazo {
 /** Las líneas guía del fondo de la gráfica. */
 enum class Rejilla {
     NINGUNA, LINEAS, PUNTEADA, DISCONTINUA, MILIMETRADO, CRUCES, MATRIZ, DOBLE, PICADO, BANDAS, FILETES, RETICULA,
-    GUIRNALDA, ONDAS, CELOSIA, ESTRELLAS, ISOBATAS, ROMBOS, MUESCAS, PUNTO_Y_RAYA, ALTERNA, PAUTA, TALLADA,
+    GUIRNALDA, ONDAS, KASUMI, CELOSIA, ESTRELLAS, ISOBATAS, ROMBOS, MUESCAS, PUNTO_Y_RAYA, ALTERNA, PAUTA, TALLADA,
 }
 
 /** El eje. */
 enum class Eje {
     NINGUNO, LINEA, MARCAS, REMATES, CORCHETES, DOBLE, FLORON, GRUESA, REMACHES, REGLA, GALONES, BROTES, CUENTAS,
-    ATRAVESADAS, PINACULOS, SOLO_MARCAS, SONDA, ALMENAS, FLECHA, COMPAS,
+    ATRAVESADAS, SELLOS, PINACULOS, SOLO_MARCAS, SONDA, ALMENAS, FLECHA, COMPAS,
     /** Un cabo trenzado con un nudo en cada marca. */
     CABO,
     AGUZADA, PICA, RUNAS,
@@ -199,7 +199,7 @@ enum class Eje {
 
 /** La forma de las barras. */
 enum class FormaBarra {
-    RECTA, REDONDA, ARCO, PILDORA, BISEL, OJIVA, HERRADURA, TAPA, TORRE, BLOQUES, ROLLO, BANDERIN, SESGADA, TERCIOS,
+    RECTA, REDONDA, ARCO, PILDORA, BISEL, OJIVA, HERRADURA, TAPA, TORRE, BLOQUES, ROLLO, TANZAKU, BANDERIN, SESGADA, TERCIOS,
     ESTRIADA, OBELISCO, TABLAS, MARCO, PUNTEADO, LAZO, RAYADA, HUECA, BURBUJAS,
 }
 
@@ -269,6 +269,9 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Ruta de la Seda: moneda con agujero, dunas, eje como varilla de ábaco y barras como rollos de seda.
     TemaId.SEDA -> EstiloGrafica(FormaPunto.MONEDA, 1.8f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(7f, 2f, 2f, 2f),
         Rejilla.ONDAS, 0.45f, Eje.ATRAVESADAS, FormaBarra.ROLLO, R.font.almendra_regular, FontWeight.Normal, null, 0.02f, 1.1f)
+    // Japón Edo: flor de cerezo, trazo de pincel que se afila en las puntas, bandas de niebla, eje con sellitos y barras de tanzaku.
+    TemaId.EDO -> EstiloGrafica(FormaPunto.SAKURA, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(10f, 3f),
+        Rejilla.KASUMI, 0.5f, Eje.SELLOS, FormaBarra.TANZAKU, R.font.zenmincho_regular, FontWeight.Normal, null, 0.01f, 1.05f)
     // Gótico: losange de vitral, plomo grueso, celosía de vidrieras, pináculos y barras en ojiva.
     TemaId.GOTICO -> EstiloGrafica(FormaPunto.ROMBO, 2.6f, null, StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(5f, 1.5f),
         Rejilla.CELOSIA, 0.45f, Eje.PINACULOS, FormaBarra.OJIVA, R.font.gotica_semibold, FontWeight.SemiBold, null, 0.02f, 1.15f)
@@ -431,6 +434,17 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
                 drawRect(color, Offset(c.x - h, c.y - h), Size(2 * h, 2 * h), style = Stroke(g * 0.6f))
             } else drawPath(Path().apply { fillType = PathFillType.EvenOdd; addOval(Rect(c, r)); addRect(Rect(c.x - h, c.y - h, c.x + h, c.y + h)) }, color)
         }
+        FormaPunto.SAKURA -> {
+            // Flor de cerezo: cinco pétalos redondos alrededor del centro.
+            var f = Path()
+            for (k in 0 until 5) {
+                val ang = (k * 72f - 90f) * (PI.toFloat() / 180f)
+                val petalo = Path().apply { addOval(Rect(Offset(c.x + r * 0.52f * cos(ang), c.y + r * 0.52f * sin(ang)), r * 0.5f)) }
+                f = if (k == 0) petalo else Path.combine(PathOperation.Union, f, petalo)
+            }
+            figura(f)
+            if (!hueco && r >= 3f) drawCircle(egTinte(color), r * 0.22f, c)
+        }
         FormaPunto.LUNA -> figura(Path.combine(PathOperation.Difference, Path().apply { addOval(Rect(c, r)) },
             Path().apply { addOval(Rect(Offset(c.x + r * 0.42f, c.y - r * 0.22f), r * 0.82f)) }))
         FormaPunto.FLOR -> {
@@ -562,6 +576,14 @@ fun DrawScope.barraGrafica(e: EstiloGrafica, arriba: Offset, tam: Size, color: C
             drawPath(silueta, color)
             val ec = min(grosor * 0.2f, largo / 2)
             if (ec >= 1.5f) drawPath(t.nueva().also { t.ovalo(largo - 2 * ec, 0f, largo, grosor) }, tinte, style = Stroke(max(1f, 0.8f * d)))
+        }
+        FormaBarra.TANZAKU -> {
+            // La tira de papel de los poemas: el doblez cerca de la punta y el agujerito del cordón.
+            drawPath(silueta, color)
+            if (grosor >= 5f * d && largo >= grosor) {
+                raya(largo - grosor * 0.75f, 0f, largo - grosor * 0.75f, grosor, tinte, max(1f, 0.6f * d))
+                drawCircle(tinte, max(1f, grosor * 0.11f), t.p(largo - grosor * 0.35f, grosor / 2))
+            }
         }
         FormaBarra.ESTRIADA -> {
             drawPath(silueta, color)
@@ -749,6 +771,7 @@ private fun egSilueta(forma: FormaBarra, t: EgBarra, d: Float): Path {
             while (u < l) { t.rect(u, 0f, min(u + seg, l), g); u += seg + hueco }
         }
         FormaBarra.ROLLO -> { val ec = min(g * 0.2f, l / 2); t.rect(0f, 0f, l - ec, g); t.ovalo(l - 2 * ec, 0f, l, g) }
+        FormaBarra.TANZAKU -> t.rect(0f, 0f, l, g)
         FormaBarra.BANDERIN -> { val n = min(g * 0.42f, l * 0.5f); t.ir(0f, 0f); t.a(l, 0f); t.a(l - n, g / 2); t.a(l, g); t.a(0f, g); t.cerrar() }
         FormaBarra.SESGADA -> { val s = min(g * 0.55f, l); t.ir(0f, 0f); t.a(l, 0f); t.a(l - s, g); t.a(0f, g); t.cerrar() }
         FormaBarra.TERCIOS -> {
@@ -852,6 +875,11 @@ fun DrawScope.rejillaGrafica(e: EstiloGrafica, ys: List<Float>, color: Color, xs
                 }
                 drawPath(p, c, style = Stroke(g))
             }
+            xs.forEach { punteadaV(it) }
+        }
+        Rejilla.KASUMI -> {
+            // Bandas de niebla (kasumi), como las que cortan el paisaje en los grabados: tramos largos de puntas redondas.
+            ys.forEach { y -> drawLine(c, Offset(a.left, y), Offset(a.right, y), g * 1.6f, StrokeCap.Round, PathEffect.dashPathEffect(floatArrayOf(26f * d, 7f * d), (y * 7f) % (33f * d))) }
             xs.forEach { punteadaV(it) }
         }
         Rejilla.CELOSIA -> {
@@ -1003,6 +1031,12 @@ fun DrawScope.ejeGrafica(e: EstiloGrafica, desde: Offset, hasta: Offset, color: 
             }
         }
         Eje.ATRAVESADAS -> { linea(); (ms + extremos).forEach { cruzada(it, 3f * d) } }
+        Eje.SELLOS -> {
+            // Un sellito en cada marca y, al final, el sello grande con su marco en reserva.
+            linea()
+            ms.forEach { m -> val q = m + fuera * (2.6f * d); drawRect(color, Offset(q.x - 1.4f * d, q.y - 1.4f * d), Size(2.8f * d, 2.8f * d)) }
+            drawRect(color, Offset(hasta.x - 2.6f * d, hasta.y - 2.6f * d), Size(5.2f * d, 5.2f * d), style = Stroke(g))
+        }
         Eje.PINACULOS -> {
             linea()
             extremos.forEach { o ->

@@ -129,6 +129,14 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
         }
         // Ventana octogonal.
         TemaId.SEDA -> drawPath(figPoligono(o, w * 0.49f, 8, -67.5f), c, style = Stroke(g))
+        // Marumado: la ventana redonda de las casas de té, con su celosía en la parte baja.
+        TemaId.EDO -> {
+            val r = w * 0.47f
+            drawCircle(c, r, o, style = Stroke(g))
+            val y = o.y + r * 0.25f; val media = r * kotlin.math.sqrt(1f - 0.25f * 0.25f)
+            drawLine(c, Offset(o.x - media, y), Offset(o.x + media, y), g * 0.6f)
+            listOf(-0.4f, 0f, 0.4f).forEach { f -> val x = o.x + f * r; val fondo = o.y + r * kotlin.math.sqrt(1f - f * f); drawLine(c, Offset(x, y), Offset(x, fondo), g * 0.6f) }
+        }
         // Lanceta: el arco apuntado de la ventana.
         TemaId.GOTICO -> drawPath(Path().apply {
             moveTo(w * 0.1f, h * 0.96f); lineTo(w * 0.1f, h * 0.45f); quadraticTo(w * 0.1f, h * 0.12f, w * 0.5f, h * 0.02f)
@@ -376,6 +384,16 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
         TemaId.SEDA -> {
             drawCircle(color, r, c); drawCircle(hueco.copy(alpha = 0.35f), r * 0.82f, c, style = Stroke(r * 0.07f))
             drawRect(hueco, Offset(c.x - r * 0.26f, c.y - r * 0.26f), Size(r * 0.52f, r * 0.52f))
+        }
+        // Un mon (blasón de familia) de flor de cerezo: cinco pétalos con su muesca y el centro en reserva.
+        TemaId.EDO -> {
+            for (i in 0 until 5) {
+                val a = -90f + 72f * i
+                drawCircle(color, r * 0.46f, polarFig(c, r * 0.5f, a))
+                drawCircle(hueco, r * 0.11f, polarFig(c, r * 0.97f, a))
+            }
+            drawCircle(hueco, r * 0.18f, c)
+            for (i in 0 until 5) drawCircle(color, r * 0.05f, polarFig(c, r * 0.28f, -90f + 72f * i + 36f))
         }
         // Un rosetón de ocho lóbulos.
         TemaId.GOTICO -> {

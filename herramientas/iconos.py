@@ -128,6 +128,16 @@ def seda(sem):           # Seda: tejido fino de hilos horizontales y verticales 
     brillo = np.sin((X + Y) * 0.02 + ruido(sem, 2, 20)) * 0.5
     return trama + brillo + ruido(sem + 1, 0.2)
 
+def washi(sem):          # Japón Edo: papel washi con sus fibras largas de kōzo, enredadas, sobre un grano suave
+    rng = np.random.default_rng(sem)
+    capa = Image.new('L', (TAM, TAM), 128); d = ImageDraw.Draw(capa)
+    for _ in range(260):
+        x, y = rng.uniform(0, TAM, 2); a = rng.uniform(0, math.pi); l = rng.uniform(14, 60)
+        pts = [(x + t * l * math.cos(a) + 3 * math.sin(t * 6 + x), y + t * l * math.sin(a) + 3 * math.cos(t * 5 + y)) for t in np.linspace(0, 1, 8)]
+        d.line(pts, fill=int(rng.choice([150, 165, 105])), width=1)
+    fibras = (np.asarray(capa.filter(ImageFilter.GaussianBlur(0.6)), np.float32) - 128) / 22
+    return fibras * 0.8 + ruido(sem + 1, 0.35, 3) + ruido(sem + 2, 0.25, 18)
+
 def piedra(sem):         # Gótico: piedra con manchas y poros
     return ruido(sem, 1.0, 14) * 0.9 + ruido(sem + 1, 0.4, 1) + (ruido(sem + 2, 1, 0) > 2.3) * -1.2
 
@@ -307,6 +317,15 @@ def _monedas(d, c, fondo, n=10):      # monedas con agujero cuadrado
         x, y = _pos(2 * math.pi * i / n); r = 5 * K; q = 1.6 * K
         d.ellipse([x - r, y - r, x + r, y + r], fill=c); d.rectangle([x - q, y - q, x + q, y + q], fill=fondo)
 
+def _sellos(d, c, n=12):              # sellos hanko cuadrados, con su marco en reserva y un trazo
+    for i in range(n):
+        ang = 2 * math.pi * i / n; x, y = _pos(ang); s = 5.4 * K; q = 3.3 * K
+        cs, sn = math.cos(math.radians(-4)), math.sin(math.radians(-4))   # derechos, apenas torcidos, como estampados a mano
+        def rot(px, py): return (x + px * cs - py * sn, y + px * sn + py * cs)
+        d.polygon([rot(-s, -s), rot(s, -s), rot(s, s), rot(-s, s)], fill=c)
+        d.polygon([rot(-q, -q), rot(q, -q), rot(q, q), rot(-q, q)], outline=(0, 0, 0, 0), width=int(K * 0.9))
+        d.line([rot(0, -q * 0.7), rot(0, q * 0.7)], fill=(0, 0, 0, 0), width=int(K * 0.9))
+
 def _trebol(d, c, n=12):
     for i in range(n):
         a = 2 * math.pi * i / n; x, y = _pos(a, RADIO + 1)
@@ -401,6 +420,7 @@ TEMAS = {
     'ruinas':       (hormigon_agrietado, '#E2E2DA', '#3E5A2A', 9, 5, 'tinta',    _hiedra),
     'navidad':      (fieltro_nieve, '#1C1E1D', '#E4C987',   8, 5, 'dorado',      _copos),
     'seda':         (seda,          '#F2EFE8', '#862A1D',   6, 5, 'tinta',       _monedas),
+    'edo':          (washi,         '#F1EBDD', '#1E3A5F',   7, 5, 'tinta',       _sellos),
     'gotico':       (piedra,        '#1E1E21', '#D8CCAE',   9, 6, 'dorado',      _trebol),
     'arcano':       (archivo_manchado, '#E3D9C1', '#1E3329', 10, 6, 'ferrogalica', _ganchos),
     'espacio':      (polvo_estelar, '#0F1012', '#B0C8F2',   4, 4, 'fosforo',     _orbita),

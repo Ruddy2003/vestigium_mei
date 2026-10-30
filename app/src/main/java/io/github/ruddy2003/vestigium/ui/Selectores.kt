@@ -293,6 +293,9 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     TemaId.NAVIDAD -> RoundedCornerShape(12)
     // Moneda (el agujero se dibuja aparte).
     TemaId.SEDA -> GenericShape { s, _ -> val r = minOf(s.width, s.height) / 2; addOval(Rect(Offset(s.width / 2, s.height / 2), r)) }
+    // El sello hanko: cuadrado de esquinas apenas redondeadas.
+    TemaId.EDO -> GenericShape { s, _ -> val l = minOf(s.width, s.height) * 0.92f; val o = Offset((s.width - l) / 2, (s.height - l) / 2)
+        addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(o, Size(l, l)), androidx.compose.ui.geometry.CornerRadius(l * 0.12f))) }
     // Lanceta.
     TemaId.GOTICO -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -353,6 +356,11 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.SEDA -> {
             val l = minOf(s.width, s.height) * 0.22f
             drawRect(fondo, Offset(s.width / 2 - l / 2, s.height / 2 - l / 2), Size(l, l))
+        }
+        // El marco en reserva del sello.
+        TemaId.EDO -> {
+            val l = minOf(s.width, s.height) * 0.92f; val m = l * 0.12f
+            drawRect(fondo.copy(alpha = 0.7f), Offset((s.width - l) / 2 + m, (s.height - l) / 2 + m), Size(l - 2 * m, l - 2 * m), style = Stroke(l * 0.05f))
         }
         TemaId.ROMANO -> {}
         // El brillo de la piedra pisada, en una arista.

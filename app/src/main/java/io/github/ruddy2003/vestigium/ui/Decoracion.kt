@@ -89,6 +89,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.RUINAS -> 9000
     TemaId.NAVIDAD -> 24000
     TemaId.SEDA -> 4800
+    TemaId.EDO -> 6400
     TemaId.GOTICO -> 7600
     TemaId.ARCANO -> 8800
     TemaId.ESPACIO -> 10000
@@ -149,6 +150,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.PIRATA -> calaveraRosa(c, r, if (oscuro) e.onBackground else e.surface, e.onBackground, e.tertiary, if (oscuro) e.primary else e.secondary, t)
         TemaId.NAVIDAD -> copo(c, r, if (oscuro) e.onBackground else e.secondary, e.tertiary, t)
         TemaId.SEDA -> moneda(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.background, t)
+        TemaId.EDO -> hanko(c, r, if (oscuro) e.primary else e.secondary, e.background, t)
         TemaId.URSS -> estrellaEngrane(c, r, e.primary, if (oscuro) e.tertiary else e.onBackground, t)
         TemaId.REVOLUCION -> escarapelaEmblema(c, r, e.primary, if (oscuro) Color(0xFFF0EADB) else Color.White, e.secondary, e.onBackground, t)
         TemaId.ANTIGUAS -> gemaRunas(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
@@ -720,6 +722,29 @@ private fun DrawScope.moneda(c: Offset, r: Float, oro: Color, cordon: Color, fon
     }
     // El cordón rojo que la ata.
     drawLine(cordon, Offset(c.x, c.y + r * 0.86f), Offset(c.x, c.y + r * 1.0f), r * 0.08f)
+}
+
+/**
+ * El sello hanko de bermellón, un poco torcido como al estamparlo a mano: el bloque con sus huecos de tinta, el marco en
+ * reserva y el carácter 足 («pie», la huella) en escritura de sello, simplificado. Cada tanto se hunde, como al sellar.
+ */
+private fun DrawScope.hanko(c: Offset, r: Float, rojo: Color, fondo: Color, t: Float) {
+    val golpe = 1f - 0.05f * maxOf(0f, sin(2 * PI * t).toFloat())
+    withTransform({ scale(golpe, golpe, c); rotate(-4f, c) }) {
+        val s = r * 0.8f
+        drawRoundRect(rojo, Offset(c.x - s, c.y - s), Size(2 * s, 2 * s), CornerRadius(s * 0.12f))
+        // Huecos donde la tinta no agarró.
+        listOf(Offset(-0.86f, -0.4f) to 0.05f, Offset(0.7f, 0.88f) to 0.06f, Offset(0.9f, -0.75f) to 0.035f, Offset(-0.5f, 0.92f) to 0.04f, Offset(0.15f, -0.9f) to 0.03f)
+            .forEach { (o, k) -> drawCircle(fondo.copy(alpha = 0.5f), s * k, c + o * s) }
+        drawRoundRect(fondo, Offset(c.x - s * 0.8f, c.y - s * 0.8f), Size(s * 1.6f, s * 1.6f), CornerRadius(s * 0.06f), style = Stroke(s * 0.08f))
+        val g = Stroke(s * 0.1f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // 口 arriba; abajo el tallo, el trazo corto a la derecha y las dos patas.
+        drawRect(fondo, Offset(c.x - s * 0.3f, c.y - s * 0.6f), Size(s * 0.6f, s * 0.36f), style = g)
+        drawLine(fondo, Offset(c.x, c.y - s * 0.12f), Offset(c.x, c.y + s * 0.5f), g.width, StrokeCap.Round)
+        drawLine(fondo, Offset(c.x, c.y + s * 0.12f), Offset(c.x + s * 0.34f, c.y + s * 0.12f), g.width, StrokeCap.Round)
+        drawPath(Path().apply { moveTo(c.x - s * 0.08f, c.y + s * 0.22f); quadraticTo(c.x - s * 0.22f, c.y + s * 0.5f, c.x - s * 0.52f, c.y + s * 0.58f) }, fondo, style = g)
+        drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); quadraticTo(c.x + s * 0.3f, c.y + s * 0.6f, c.x + s * 0.56f, c.y + s * 0.56f) }, fondo, style = g)
+    }
 }
 
 /** Estrella de cinco puntas dentro de un engrane que gira despacio. */
@@ -2037,6 +2062,19 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             while (x < w) { trazo.moveTo(x, h); trazo.lineTo(x + h, 0f); x += p }
             x = 0f; while (x < w + h) { trazo.moveTo(x, h); trazo.lineTo(x - h * 0.5f, 0f); x += p * 3 }
         }
+        TemaId.EDO -> {
+            // Seigaiha: hileras alternas de olas de tres arcos, muy tenues, como el estampado de un kimono de verano.
+            color = esquema.primary.copy(alpha = if (oscuro) 0.05f else 0.045f)
+            val r = 16.dp.toPx(); var fila = 0; var y = r
+            while (y < h + r) {
+                var x = if (fila % 2 == 0) 0f else r
+                while (x < w + r) {
+                    for (k in 0..2) { val q = r * (1f - k * 0.3f); trazo.moveTo(x - q, y); trazo.arcTo(Rect(x - q, y - q, x + q, y + q), 180f, 180f, false) }
+                    x += 2 * r
+                }
+                y += r; fila++
+            }
+        }
         TemaId.REVOLUCION -> {
             // Papel verjurado de la época: los corondeles verticales, y una escarapela diminuta de vez en cuando.
             color = esquema.onBackground.copy(alpha = if (oscuro) 0.04f else 0.035f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.08f else 0.07f)
@@ -2168,6 +2206,11 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         arcTo(Rect(0.07f * s.width, 0.14f * s.height, 0.93f * s.width, 1f * s.height), -76.55f, 333.1f, false); close()
     }
     TemaId.SEDA -> CutCornerShape(30)
+    // Kikkō: el hexágono del caparazón de tortuga, un motivo de buena suerte.
+    TemaId.EDO -> GenericShape { s, _ ->
+        moveTo(0.16f * s.width, 0f); lineTo(0.84f * s.width, 0f); lineTo(s.width, 0.5f * s.height); lineTo(0.84f * s.width, s.height)
+        lineTo(0.16f * s.width, s.height); lineTo(0f, 0.5f * s.height); close()
+    }
     TemaId.GOTICO -> GenericShape { s, _ ->
         moveTo(0.14f * s.width, s.height); lineTo(0.14f * s.width, 0.45f * s.height)
         quadraticTo(0.14f * s.width, 0.1f * s.height, 0.5f * s.width, 0f)
@@ -2225,6 +2268,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.RUINAS -> "Mochila"
     TemaId.NAVIDAD -> "Baúl"
     TemaId.SEDA -> "更多"
+    TemaId.EDO -> "Posada"
     TemaId.GOTICO -> "Atrio"
     TemaId.ARCANO -> "Cajones"
     TemaId.ESPACIO -> "Panel"
@@ -2330,6 +2374,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.NAVIDAD -> { listOf(-90.0 to 0.8f, 0.0 to 0.8f, 180.0 to 0.8f, 90.0 to 1f).forEach { (g, l) -> espina(rad(g), 0.16f, l, 0.6f) }; rayos(4, 0.2f, 0.5f, 0.08f, 45.0) }
             // Moneda solar con su agujero cuadrado.
             TemaId.SEDA -> { drawCircle(color, r * 0.48f, c); val h = r * 0.15f; drawRect(fondo, Offset(c.x - h, c.y - h), Size(h * 2, h * 2)); rayos(8, 0.66f, 0.94f, 0.12f, 22.5) }
+            // Sol rojo cruzado por dos bandas de nube (kasumi), como en los grabados.
+            TemaId.EDO -> { drawCircle(color, r * 0.66f, c)
+                drawRoundRect(fondo, Offset(c.x - r, c.y + r * 0.12f), Size(r * 1.35f, r * 0.17f), CornerRadius(r * 0.085f))
+                drawRoundRect(fondo, Offset(c.x - r * 0.25f, c.y - r * 0.34f), Size(r * 1.25f, r * 0.15f), CornerRadius(r * 0.075f)) }
             // Rosetón de lancetas.
             TemaId.GOTICO -> { for (i in 0 until 8) espina(rad(45.0 * i - 90), 0.5f, 0.98f, 0.22f)
                 drawCircle(color, r * 0.44f, c, style = Stroke(r * 0.1f)); rayos(8, 0.1f, 0.4f, 0.06f); drawCircle(color, r * 0.12f, c) }
@@ -2434,6 +2482,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                 drawLine(color, Offset(c.x + r * 0.62f, c.y - r), Offset(c.x + r * 0.62f, c.y - r * 0.2f), r * 0.05f)
                 drawRoundRect(color, Offset(c.x + r * 0.44f, c.y - r * 0.2f), Size(r * 0.36f, r * 0.46f), CornerRadius(r * 0.12f))
                 drawLine(color, Offset(c.x + r * 0.62f, c.y + r * 0.26f), Offset(c.x + r * 0.62f, c.y + r * 0.45f), r * 0.05f) }
+            // La luna de la fiesta de otoño (tsukimi) con tres espigas de susuki delante.
+            TemaId.EDO -> { luna(0.62f, 0.3f, -0.24f, c + Offset(-r * 0.2f, -r * 0.12f))
+                listOf(0.3f, 0.55f, 0.8f).forEachIndexed { i, f ->
+                    drawPath(Path().apply { moveTo(c.x + r * (f - 0.1f), c.y + r); quadraticTo(c.x + r * f, c.y + r * 0.3f, c.x + r * (f + 0.25f), c.y - r * (0.05f + i * 0.12f)) }, color, style = Stroke(r * 0.06f, cap = StrokeCap.Round)) } }
             // Luna con dos destellos de bóveda.
             TemaId.GOTICO -> { luna(); destello(c + Offset(r * 0.62f, -r * 0.5f), r * 0.26f); destello(c + Offset(r * 0.7f, r * 0.4f), r * 0.18f) }
             // La luna en medio de sus ocho fases: el almanaque del investigador.
@@ -2532,6 +2584,10 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Cristal octogonal y borla.
         TemaId.SEDA -> { drawPath(poli(8, lr * 1.04f, 22.5), color, style = Stroke(g)); mango(0.86f)
             drawLine(color, Offset(r * 0.86f, r * 0.86f), Offset(r * 0.8f, r * 0.99f), r * 0.05f); drawLine(color, Offset(r * 0.86f, r * 0.86f), Offset(r * 0.99f, r * 0.8f), r * 0.05f) }
+        // El cristal con un sellito cuadrado dentro, como el que se estampa al revisar.
+        TemaId.EDO -> { lente(); mango(0.86f)
+            drawRect(color, Offset(c.x - lr * 0.3f, c.y - lr * 0.3f), Size(lr * 0.6f, lr * 0.6f), style = Stroke(r * 0.05f))
+            drawLine(color, Offset(c.x, c.y - lr * 0.18f), Offset(c.x, c.y + lr * 0.18f), r * 0.05f) }
         // Cristal en arco apuntado.
         TemaId.GOTICO -> { drawPath(Path().apply {
                 moveTo(c.x - lr, c.y + lr); lineTo(c.x - lr, c.y); quadraticTo(c.x - lr, c.y - lr * 0.8f, c.x, c.y - lr * 1.2f)
@@ -2648,6 +2704,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.RUINAS -> true            // los vilanos suben con el aire tibio
     TemaId.NAVIDAD -> false
     TemaId.SEDA -> false
+    TemaId.EDO -> false
     TemaId.GOTICO -> false
     TemaId.ARCANO -> false
     TemaId.ESPACIO -> true
@@ -2802,6 +2859,9 @@ fun CapaFiesta(fijo: Float? = null) {
                         est.close(); drawPath(est, col)
                     }
                     TemaId.SEDA -> { drawCircle(col, s * 0.7f, pos); drawRect(e.background.copy(alpha = a), Offset(pos.x - s * 0.22f, pos.y - s * 0.22f), Size(s * 0.44f, s * 0.44f)) }
+                    // Flores de cerezo de cinco pétalos.
+                    TemaId.EDO -> { for (i in 0 until 5) drawCircle(col, s * 0.42f, pos.mas(s * 0.48f, rad(72.0 * i - 90.0)))
+                        drawCircle(Color(0xFFF2C94C).copy(alpha = a), s * 0.2f, pos) }
                     TemaId.REVOLUCION -> { drawCircle(e.primary.copy(alpha = a), s * 0.8f, pos); drawCircle(Color.White.copy(alpha = a), s * 0.55f, pos); drawCircle(e.secondary.copy(alpha = a), s * 0.3f, pos) }
                     // Gemas talladas que caen girando.
                     TemaId.ANTIGUAS -> { drawPath(Path().apply { moveTo(pos.x, pos.y - s); lineTo(pos.x + s * 0.7f, pos.y - s * 0.2f); lineTo(pos.x, pos.y + s); lineTo(pos.x - s * 0.7f, pos.y - s * 0.2f); close() },

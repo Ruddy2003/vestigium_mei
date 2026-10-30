@@ -154,6 +154,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.NAPOLEON -> "BOLETÍN DE LA GRANDE ARMÉE · $anio"
     TemaId.NAVIDAD -> "Lo que trajo $anio"
     TemaId.SEDA -> "Bitácora de la caravana · ${Temas.anioChino(anio)}"
+    TemaId.EDO -> "Estampas del camino · ${Temas.nengo(java.time.LocalDate.of(anio, 7, 1))}"
     TemaId.URSS -> "BALANCE DEL PLAN · $anio"
     TemaId.GOTICO -> "Annales · anno ${Romano.de(anio).lowercase()}"
     TemaId.ARCANO -> "Crónica del caso · año ${Temas.tachado(anio)}"

@@ -848,6 +848,66 @@ def templario(tam):
     guardar(fondo, base, 'templario')
 
 
+# ------------------------------------------------------------------ Japón Edo
+def edo(tam):
+    """Japón Edo: washi con sus fibras de kōzo y, detrás, una estampa ukiyo-e en índigo: el monte Fuji nevado, el sol
+    rojo, dos bandas de niebla dorada (kasumi) y las olas de seigaiha abajo. La huella, en tinta sumi que se asienta en
+    el papel y se aclara donde el pincel iba seco, y el sello de bermellón al pie, un poco torcido."""
+    m = mascara_sello(tam)
+    papel_c = col('#F2EBDB')
+    papel = mezcla(papel_c, col('#E2D5BA'), ruido(tam, tam / 18, 71) * 0.6)
+    papel = papel * (0.975 + 0.025 * ruido(tam, 0.8, 72)[..., None])
+    fondo = a_img(papel).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    r = np.random.default_rng(73)
+    for _ in range(520):
+        x, y = r.random() * tam, r.random() * tam; ang = r.random() * math.pi; l = 8 + r.random() * 30
+        d.line([(x + t * l * math.cos(ang) + 2 * math.sin(t * 7), y + t * l * math.sin(ang) + 2 * math.cos(t * 5)) for t in np.linspace(0, 1, 6)],
+               fill=(165, 145, 110, 38), width=1)
+    c = tam / 2; ind = (30, 58, 95)
+    # El sol rojo, arriba a la derecha.
+    d.ellipse([c + tam * 0.1, c - tam * 0.38, c + tam * 0.3, c - tam * 0.18], fill=(201, 68, 46, 140))
+    # El Fuji, con su cumbre nevada.
+    d.polygon([(c - tam * 0.44, c + tam * 0.2), (c - tam * 0.07, c - tam * 0.22), (c + tam * 0.07, c - tam * 0.22), (c + tam * 0.44, c + tam * 0.2)], fill=ind + (60,))
+    d.polygon([(c - tam * 0.135, c - tam * 0.145), (c - tam * 0.07, c - tam * 0.22), (c + tam * 0.07, c - tam * 0.22), (c + tam * 0.135, c - tam * 0.145),
+               (c + tam * 0.08, c - tam * 0.11), (c + tam * 0.03, c - tam * 0.15), (c - tam * 0.02, c - tam * 0.1), (c - tam * 0.07, c - tam * 0.14)], fill=(252, 250, 244, 200))
+    # Bandas de niebla dorada.
+    for x0, y0, w, h in ((c - tam * 0.42, c - tam * 0.04, tam * 0.44, tam * 0.036), (c + tam * 0.02, c + tam * 0.06, tam * 0.38, tam * 0.03)):
+        d.rounded_rectangle([x0, y0, x0 + w, y0 + h], radius=int(h / 2), fill=(222, 190, 120, 120))
+    # Seigaiha: cada hilera tapa la de atrás, como en las telas.
+    R = tam * 0.05; pc = tuple(int(v) for v in papel_c) + (255,)
+    for fila in range(7):
+        yb = c + tam * 0.22 + fila * R * 0.5; x = -R + (R if fila % 2 else 0)
+        while x < tam + R:
+            d.pieslice([x - R, yb - R, x + R, yb + R], 180, 360, fill=pc)
+            for k in range(3):
+                q = R * (1 - k * 0.3)
+                d.arc([x - q, yb - q, x + q, yb + q], 180, 360, fill=ind + (120,), width=max(2, tam // 300))
+            x += 2 * R
+    fondo = fondo.convert('RGB')
+    # La huella en tinta sumi: grano del papel y zonas donde el pincel iba seco.
+    grano = ruido(tam, 0.8, 74)
+    seco = ruido(tam, tam / 25, 75)
+    tinta = col('#1B1A1E') * (0.85 + 0.3 * grano[..., None])
+    alfa = m * np.clip(0.95 - 0.08 * grano - np.clip(seco - 0.62, 0, 1) * 1.1, 0, 1)
+    capa = a_rgba(tinta, alfa)
+    # El sello de bermellón al pie, con su marco en reserva y 足 en escritura de sello, simplificado.
+    k = 3; s = tam * 0.1 * k
+    sello = Image.new('RGBA', (int(s * 1.4), int(s * 1.4)), (0, 0, 0, 0)); ds = ImageDraw.Draw(sello, 'RGBA')
+    o = s * 0.2; bl = (243, 236, 220, 235); g = max(3, int(s * 0.07))
+    ds.rounded_rectangle([o, o, o + s, o + s], radius=int(s * 0.08), fill=(201, 68, 46, 240))
+    ds.rectangle([o + s * 0.12, o + s * 0.12, o + s * 0.88, o + s * 0.88], outline=bl, width=g)
+    cx = o + s / 2
+    ds.rectangle([cx - s * 0.17, o + s * 0.24, cx + s * 0.17, o + s * 0.42], outline=bl, width=g)
+    ds.line([(cx, o + s * 0.46), (cx, o + s * 0.76)], fill=bl, width=g)
+    ds.line([(cx, o + s * 0.56), (cx + s * 0.2, o + s * 0.56)], fill=bl, width=g)
+    ds.line([(cx - s * 0.04, o + s * 0.62), (cx - s * 0.26, o + s * 0.78)], fill=bl, width=g)
+    ds.line([(cx, o + s * 0.76), (cx + s * 0.28, o + s * 0.78)], fill=bl, width=g)
+    sello = sello.rotate(-5, resample=Image.BICUBIC).resize((int(s * 1.4 / k), int(s * 1.4 / k)), Image.LANCZOS)
+    capa.alpha_composite(sello, (int(c + tam * 0.17), int(c + tam * 0.2)))
+    guardar(fondo, capa, 'edo')
+
+
 # ------------------------------------------------------------------ los otros catorce: extraer (una vez) y componer
 
 CATORCE = ['romano', 'ciber', 'heleno', 'medieval', 'distopia', 'refugio', 'orden', 'laboratorio', 'colonos', 'napoleon',
@@ -1033,6 +1093,7 @@ SIETE = [
     'andalus',
     'egipto',
     'mongol',
+    'edo',
     'renacimiento',
     'pirata',
     'antiguas',
@@ -1057,6 +1118,7 @@ ORDEN = [
     'ruinas',
     'navidad',
     'seda',
+    'edo',
     'gotico',
     'arcano',
     'espacio',

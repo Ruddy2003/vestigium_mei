@@ -121,6 +121,8 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     RUINAS("ruinas", "Ciudad verde", "Una ciudad que el bosque recuperó: hormigón agrietado, hiedra, musgo y óxido. Los días se cuentan desde el silencio, con la letra de una máquina de escribir rescatada.", Epoca.FUTURO),
     NAVIDAD("navidad", "Navidad", "Rojo, verde pino y oro, con nieve. Cartas junto al fuego y la cuenta hacia el 25 de diciembre.", Epoca.CONTEMPORANEA),
     SEDA("seda", "Ruta de la Seda", "Seda, lapislázuli, cinabrio y oro. Monedas con agujero, caravanas y números chinos.", Epoca.EDAD_MEDIA),
+    /** Japón Edo. Ojo: el id «edo» coincide con el de una vida de `OtrasVidas.BASE` (Kichizō); son espacios de nombres distintos (`TemaId.id` frente a `porId`), no chocan. */
+    EDO("edo", "Japón Edo", "Washi, tinta sumi, índigo y el bermellón del sello. Las 72 microestaciones, meses de la luna y un camino real de posta en posta.", Epoca.EDAD_MODERNA),
     GOTICO("gotico", "Gótico", "Una capilla de vitrales: azul de bóveda con estrellas de oro, cristal rubí y zafiro, letra textura. Horas canónicas.", Epoca.EDAD_MEDIA),
     ARCANO("arcano", "Horror cósmico", "Un archivo de pueblo costero: papel manchado, tinta verde-negra, sellos y un faro en la niebla. Fecha por la fase de la luna; los números, tachados y corregidos.", Epoca.FANTASIA),
     ESPACIO("espacio", "Espacio", "Estrellas, nebulosas y la sala de control. Fecha en día juliano, como en los observatorios.", Epoca.FUTURO),
@@ -366,6 +368,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.RUINAS -> if (oscuro) ruinasOscuro else ruinasClaro
     TemaId.NAVIDAD -> if (oscuro) navidadOscuro else navidadClaro
     TemaId.SEDA -> if (oscuro) sedaOscuro else sedaClaro
+    TemaId.EDO -> if (oscuro) edoOscuro else edoClaro
     TemaId.URSS -> if (oscuro) urssOscuro else urssClaro
     TemaId.GOTICO -> if (oscuro) goticoOscuro else goticoClaro
     TemaId.ARCANO -> if (oscuro) arcanoOscuro else arcanoClaro
@@ -398,6 +401,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.RUINAS -> tipoRuinas
     TemaId.NAVIDAD -> tipoNavidad
     TemaId.SEDA -> tipoSeda
+    TemaId.EDO -> tipoEdo
     TemaId.URSS -> tipoUrss
     TemaId.GOTICO -> tipoGotico
     TemaId.ARCANO -> tipoArcano
@@ -436,6 +440,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.RUINAS -> 64f to 1f        // Letrero (Londrina), condensada
     TemaId.NAVIDAD -> 54f to 1f         // Cinzel Decorative, muy ancha
     TemaId.SEDA -> 64f to 0.5f          // Almendra
+    TemaId.EDO -> 60f to 0.3f          // Shippori Mincho, de pincel grabado
     TemaId.GOTICO -> 66f to 0.5f        // textura
     TemaId.ARCANO -> 62f to 0.2f        // Spectral, de libro antiguo
     TemaId.ESPACIO -> 48f to 2f         // Orbitron, ancha y gruesa
@@ -473,6 +478,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.RUINAS -> Esquinas(5, Esquina.CORTADA)        // el bloque de hormigón desportillado
     TemaId.NAVIDAD -> Esquinas(8, Esquina.REDONDA)
     TemaId.SEDA -> Esquinas(7, Esquina.REDONDA)
+    TemaId.EDO -> Esquinas(1, Esquina.CORTADA)             // el bastidor de un shōji, casi en escuadra
     TemaId.URSS -> Esquinas(0, Esquina.REDONDA)
     TemaId.GOTICO -> Esquinas(8, Esquina.ARCO)             // el ventanal
     TemaId.ARCANO -> Esquinas(5, Esquina.CORTADA)          // la esquina recortada del recorte de periódico
@@ -705,6 +711,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.RUINAS -> "Día 214"
         TemaId.NAVIDAD -> "El día"
         TemaId.SEDA -> "Etapa"
+        TemaId.EDO -> "日記"
         TemaId.URSS -> "PLAN"
         TemaId.GOTICO -> "Laudes"
         TemaId.ARCANO -> "Legajo"
@@ -736,6 +743,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.RUINAS -> "tras el silencio · otoño"
         TemaId.NAVIDAD -> "faltan 69 días"
         TemaId.SEDA -> "十月十七日"
+        TemaId.EDO -> "神無月十七日"
         TemaId.URSS -> "ОКТЯБРЬ"
         TemaId.GOTICO -> "hora de vísperas"
         TemaId.ARCANO -> "luna menguante"
@@ -769,6 +777,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.RUINAS -> 18 to 14
         TemaId.NAVIDAD -> 20 to 12
         TemaId.SEDA -> 12 to 20
+        TemaId.EDO -> 14 to 18
         TemaId.GOTICO -> 24 to 8
         TemaId.ARCANO -> 14 to 18
         TemaId.ESPACIO -> 18 to 14
@@ -801,6 +810,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.RUINAS -> 13
         TemaId.NAVIDAD -> 10
         TemaId.SEDA -> 10
+        TemaId.EDO -> 11
         TemaId.GOTICO -> 12
         TemaId.ARCANO -> 14
         TemaId.ESPACIO -> 10
@@ -923,6 +933,14 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     TemaId.SEDA -> GenericShape { s, _ ->
         val p = s.height * 0.1f
         moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width, s.height); lineTo(s.width / 2, s.height - p); lineTo(0f, s.height); close()
+    }
+    // Noren: la cortina de la entrada de una posada, partida abajo en tres paños.
+    TemaId.EDO -> GenericShape { s, _ ->
+        val p = s.height * 0.07f; val g = s.width * 0.012f; val t1 = s.width / 3; val t2 = s.width * 2 / 3
+        moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width, s.height)
+        lineTo(t2 + g, s.height); lineTo(t2, s.height - p); lineTo(t2 - g, s.height)
+        lineTo(t1 + g, s.height); lineTo(t1, s.height - p); lineTo(t1 - g, s.height)
+        lineTo(0f, s.height); close()
     }
     // Ventana ojival.
     TemaId.GOTICO -> GenericShape { s, _ ->
@@ -1054,6 +1072,13 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.NAVIDAD -> { drawCircle(c, r * 0.8f, Offset(cx, cy + r * 0.2f)); drawRect(borde, Offset(cx - r * 0.25f, 0f), Size(r * 0.5f, r * 0.3f)) }
         // Moneda con agujero cuadrado.
         TemaId.SEDA -> { drawCircle(c, r); drawRect(fondo, Offset(cx - r * 0.3f, cy - r * 0.3f), Size(r * 0.6f, r * 0.6f)) }
+        // Sello hanko: bloque de bermellón con su marco en reserva y un trazo.
+        TemaId.EDO -> {
+            drawRoundRect(c, cornerRadius = CornerRadius(w * 0.12f))
+            drawRect(fondo.copy(alpha = 0.8f), Offset(w * 0.16f, h * 0.16f), Size(w * 0.68f, h * 0.68f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.07f))
+            drawLine(fondo.copy(alpha = 0.8f), Offset(cx, h * 0.3f), Offset(cx, h * 0.7f), w * 0.08f)
+            drawLine(fondo.copy(alpha = 0.8f), Offset(w * 0.32f, h * 0.45f), Offset(w * 0.68f, h * 0.45f), w * 0.08f)
+        }
         // Lanceta de vitral.
         TemaId.GOTICO -> drawPath(Path().apply { moveTo(w * 0.15f, h); lineTo(w * 0.15f, h * 0.4f); quadraticTo(w * 0.15f, h * 0.08f, cx, 0f); quadraticTo(w * 0.85f, h * 0.08f, w * 0.85f, h * 0.4f); lineTo(w * 0.85f, h); close() }, c)
         // Gota de tinta que cae y se corre.

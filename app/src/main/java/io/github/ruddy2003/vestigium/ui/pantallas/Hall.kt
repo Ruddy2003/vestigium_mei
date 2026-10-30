@@ -101,6 +101,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.RUINAS -> Color(0xFF5B7A3A)   // musgo
     TemaId.NAVIDAD -> Color(0xFF1B5E20)
     TemaId.SEDA -> Color(0xFFC0392B)
+    TemaId.EDO -> Color(0xFF1E3A5F)
     TemaId.GOTICO -> Color(0xFF1A3A8F)
     TemaId.ARCANO -> Color(0xFF2E4A3E)
     TemaId.ESPACIO -> Color(0xFF7B1FA2)
@@ -211,6 +212,8 @@ object PiezasLogro {
         TemaId.RUINAS -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Bevel, floatArrayOf(5f, 0.8f, 1.5f, 0.8f), 0f, false, Color(0xFFD6D6CC))
         TemaId.NAVIDAD -> Trazo(u, 1.35f, StrokeCap.Round, StrokeJoin.Round, null, 0f, true, Color(0xFFF7FAFF))
         TemaId.SEDA -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(9f, 1.2f, 1.5f, 1.2f), 0f, false, Color(0xFFF6E2C8))
+        // Pincel: trazo redondo y continuo, un poco más grueso, sobre washi.
+        TemaId.EDO -> Trazo(u, 1.22f, StrokeCap.Round, StrokeJoin.Round, null, 1.2f, false, Color(0xFFF3EDDD))
         TemaId.GOTICO -> Trazo(u, 1.4f, StrokeCap.Square, StrokeJoin.Miter, null, 0f, true, Color(0xFFD8E2F2))
         // Tinta de pluma de acero que falla a ratos sobre papel de libreta.
         TemaId.ARCANO -> Trazo(u, 1.1f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(14f, 1.4f, 2f, 1.4f), 0f, false, Color(0xFFE8DDC0))
@@ -339,6 +342,9 @@ object PiezasLogro {
                 for (k in 0 until 3) { val a = k * PI / 3; val dx = (2.4f * u * cos(a)).toFloat(); val dy = (2.4f * u * sin(a)).toFloat(); drawLine(Color.White.copy(alpha = if (hecho) 0.9f else 0.4f), Offset(p.x - dx, p.y - dy), Offset(p.x + dx, p.y + dy), 0.8f * u) }
             }
             TemaId.SEDA -> for (i in 0 until 12) { val p = en(i * PI / 6, 0.89f); drawCircle(m, 3.2f * u, p); drawRect(tinta.copy(alpha = 0.6f), Offset(p.x - 1 * u, p.y - 1 * u), Size(2 * u, 2 * u)) }
+            // Sellitos cuadrados de bermellón alternados con perlas de oro.
+            TemaId.EDO -> for (i in 0 until 16) { val a = i * PI / 8; val p = en(a, 0.89f)
+                if (i % 2 == 0) rotate(grados(a), p) { drawRect(pri, Offset(p.x - 1.4f * u, p.y - 1.4f * u), Size(2.8f * u, 2.8f * u)) } else drawCircle(m, 1.3f * u, p) }
             TemaId.GOTICO -> {
                 val p = Path()
                 for (i in 0 until 12) { val a0 = i * PI / 6; val a1 = (i + 1) * PI / 6; val p0 = en(a0, 0.92f); val pm = en((a0 + a1) / 2, 0.8f); val p1 = en(a1, 0.92f); if (i == 0) p.moveTo(p0.x, p0.y); p.quadraticTo(pm.x, pm.y, p1.x, p1.y) }
@@ -451,6 +457,14 @@ object PiezasLogro {
                 moveTo(x - 3 * u, y - 4 * u); quadraticTo(x, y, x + 2 * u, y); lineTo(x + an - 2 * u, y); quadraticTo(x + an, y, x + an + 3 * u, y - 4 * u)
                 lineTo(x + an - 2 * u, y - 4.5f * u); lineTo(cx, y - 6 * u); lineTo(x + 2 * u, y - 4.5f * u); close()
             }, tinta)
+            // Tejado irimoya: el alero sube en curva en las puntas, con su cumbrera.
+            TemaId.EDO -> {
+                drawPath(Path().apply {
+                    moveTo(x - 3.5f * u, y - 2.5f * u); quadraticTo(x + an * 0.2f, y - 1.5f * u, cx - an * 0.18f, y - 6 * u); lineTo(cx + an * 0.18f, y - 6 * u)
+                    quadraticTo(x + an * 0.8f, y - 1.5f * u, x + an + 3.5f * u, y - 2.5f * u); lineTo(x + an, y); lineTo(x, y); close()
+                }, tinta)
+                drawLine(tinta, Offset(cx - an * 0.22f, y - 6.6f * u), Offset(cx + an * 0.22f, y - 6.6f * u), 1.2f * u)
+            }
             TemaId.GOTICO -> { tri(11 * u, x + 1 * u, x + an - 1 * u); drawCircle(tinta, 0.9f * u, Offset(cx, y - 11.5f * u)) }
             // Tejado de dos aguas con la veleta torcida por el viento del mar.
             TemaId.ARCANO -> { tri(4.5f * u, x - 0.6f * u, x + an + 0.6f * u); drawLine(tinta, Offset(cx, y - 4.5f * u), Offset(cx + 1.5f * u, y - 9 * u), 0.8f * u); drawLine(tinta, Offset(cx + 0.6f * u, y - 7.8f * u), Offset(cx + 3.4f * u, y - 8.4f * u), 0.8f * u) }
@@ -548,6 +562,8 @@ object PiezasLogro {
                 close()
             })
             TemaId.SEDA -> { traza(poligono(8, 30 * u, PI / 8)); drawRect(tinto, Offset(c.x - 21 * u, c.y - 21 * u), Size(42 * u, 42 * u), style = Stroke(0.8f * u)) }
+            // El sello de templo (shuin): un rectángulo alto de esquinas redondas con su marco por dentro.
+            TemaId.EDO -> { traza(caja(c.x - 19 * u, c.y - 27 * u, c.x + 19 * u, c.y + 27 * u, 6 * u)); drawRoundRect(tinto, Offset(c.x - 15 * u, c.y - 23 * u), Size(30 * u, 46 * u), CornerRadius(3 * u), style = Stroke(0.8f * u)) }
             TemaId.GOTICO -> traza(Path().apply {
                 moveTo(c.x - 22 * u, c.y + 22 * u); lineTo(c.x - 22 * u, c.y - 6 * u); quadraticTo(c.x - 22 * u, c.y - 22 * u, c.x, c.y - 32 * u)
                 quadraticTo(c.x + 22 * u, c.y - 22 * u, c.x + 22 * u, c.y - 6 * u); lineTo(c.x + 22 * u, c.y + 22 * u); close()
@@ -874,6 +890,14 @@ object PiezasLogro {
                 }
                 raya(tz, tinta, Offset(c.x, base - 35 * u), Offset(c.x, base - 41 * u), 1 * u)
             }
+            TemaId.EDO -> {
+                // El torii de un santuario: dos pilares, el travesaño (nuki), la tablilla del nombre y el dintel curvo (kasagi).
+                listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(c.x + s * 15 * u, base); lineTo(c.x + s * 13 * u, base - 30 * u); lineTo(c.x + s * 10.5f * u, base - 30 * u); lineTo(c.x + s * 12.5f * u, base); close() }, tinta) }
+                drawRect(tinta, Offset(c.x - 20 * u, base - 24 * u), Size(40 * u, 3 * u))
+                drawRect(tinta, Offset(c.x - 2.5f * u, base - 31 * u), Size(5 * u, 7 * u)); drawRect(hueco, Offset(c.x - 1.5f * u, base - 30 * u), Size(3 * u, 5 * u))
+                drawPath(Path().apply { moveTo(c.x - 27 * u, base - 36 * u); quadraticTo(c.x, base - 31 * u, c.x + 27 * u, base - 36 * u); lineTo(c.x + 25 * u, base - 31 * u); quadraticTo(c.x, base - 28.5f * u, c.x - 25 * u, base - 31 * u); close() }, tinta)
+                suelo()
+            }
             TemaId.GOTICO -> {
                 drawRect(tinta, Offset(c.x - 16 * u, base - 24 * u), Size(32 * u, 24 * u))
                 listOf(-12f, 12f).forEach { dx -> drawPath(Path().apply { moveTo(c.x + (dx - 5) * u, base - 24 * u); lineTo(c.x + dx * u, base - 40 * u); lineTo(c.x + (dx + 5) * u, base - 24 * u); close() }, tinta) }
@@ -1141,6 +1165,15 @@ object PiezasLogro {
                 }
                 drawCircle(Color(0xFFF2C94C), 2.6f * u, Offset(px, c.y - 28 * u))
             }
+            TemaId.EDO -> {
+                // Un nobori: el estandarte alto y estrecho atado al asta con lazos, con un mon de cerezo arriba.
+                asta(); raya(tz, tinta, Offset(px, arriba), Offset(px + 14 * u, arriba), 1.4f * u)
+                pano(caja(px + 1 * u, arriba + 1 * u, px + 14 * u, c.y + 24 * u))
+                for (k in 0 until 5) drawCircle(tinta, 1.1f * u, Offset(px, arriba + (4 + k * 10) * u), style = Stroke(0.8f * u))
+                val mo = Offset(px + 7.5f * u, arriba + 9 * u)
+                for (i in 0 until 5) { val a = -PI / 2 + i * 2 * PI / 5; drawCircle(claro, 2.1f * u, Offset(mo.x + (2.6f * u * cos(a)).toFloat(), mo.y + (2.6f * u * sin(a)).toFloat())) }
+                for (k in 0 until 3) drawLine(claro, Offset(px + 7.5f * u, arriba + (20 + k * 8) * u), Offset(px + 7.5f * u, arriba + (25 + k * 8) * u), 1.6f * u)
+            }
             TemaId.GOTICO -> {
                 asta()
                 pano(Path().apply {
@@ -1368,6 +1401,13 @@ object PiezasLogro {
                 disco()
                 drawRect(claro, Offset(c.x - 5 * u, c.y - 5 * u), Size(10 * u, 10 * u)); drawRect(tinta, Offset(c.x - 5 * u, c.y - 5 * u), Size(10 * u, 10 * u), style = Stroke(1.2f * u))
                 for (i in 0 until 4) { val p = en(-PI / 2 + i * PI / 2, 0.62f); drawLine(tinta, Offset(p.x - 2 * u, p.y), Offset(p.x + 2 * u, p.y), 1 * u); drawLine(tinta, Offset(p.x, p.y - 2 * u), Offset(p.x, p.y + 2 * u), 1 * u) }
+            }
+            TemaId.EDO -> {
+                // El koban: la moneda ovalada de oro con las rayas del martillo y los sellos de la ceca.
+                forma(Path().apply { addOval(Rect(c.x - R * 0.62f, c.y - R, c.x + R * 0.62f, c.y + R)) })
+                for (k in -4..4) drawLine(tinta.copy(alpha = 0.35f), Offset(c.x - R * 0.36f, c.y + k * R * 0.17f), Offset(c.x + R * 0.36f, c.y + k * R * 0.17f), 0.6f * u)
+                listOf(-0.62f, 0.62f).forEach { f -> drawCircle(claro, R * 0.14f, Offset(c.x, c.y + f * R)); drawCircle(tinta, R * 0.14f, Offset(c.x, c.y + f * R), style = Stroke(0.9f * u)) }
+                drawRect(claro, Offset(c.x - R * 0.16f, c.y - R * 0.2f), Size(R * 0.32f, R * 0.4f)); drawRect(tinta, Offset(c.x - R * 0.16f, c.y - R * 0.2f), Size(R * 0.32f, R * 0.4f), style = Stroke(0.9f * u))
             }
             TemaId.GOTICO -> {
                 disco()
@@ -1605,6 +1645,15 @@ object PiezasLogro {
                 val panel = Path().apply { moveTo(x, c.y - 16 * u + alto); lineTo(x + 10 * u, c.y - 13 * u - alto); lineTo(x + 10 * u, c.y + 21 * u - alto); lineTo(x, c.y + 18 * u + alto); close() }
                 drawPath(panel, if (k % 2 == 0) papel else lerp(papel, tinta, 0.12f)); contorno(tz, panel, tinta, 0.7f * u)
                 for (j in 0 until 4) drawLine(tinta.copy(alpha = 0.7f), Offset(x + 5 * u, c.y - 10 * u + j * 7 * u), Offset(x + 5 * u, c.y - 6 * u + j * 7 * u), 1.4f * u)
+            }
+            TemaId.EDO -> {
+                // El cuaderno cosido: la tapa, la etiqueta del título y la costura de cuatro agujeros a la derecha.
+                tapa(c.x - 17 * u, c.y - 23 * u, c.x + 17 * u, c.y + 23 * u, tono, 0.5f * u)
+                val et = caja(c.x - 13 * u, c.y - 19 * u, c.x - 7 * u, c.y + 3 * u); drawPath(et, tz.material); contorno(tz, et, tinta, 0.8f * u)
+                for (j in 0 until 3) drawLine(tinta, Offset(c.x - 10 * u, c.y - 16 * u + j * 6 * u), Offset(c.x - 10 * u, c.y - 12.5f * u + j * 6 * u), 1 * u)
+                val xs = c.x + 13 * u
+                drawLine(tz.material, Offset(xs, c.y - 23 * u), Offset(xs, c.y + 23 * u), 0.9f * u)
+                listOf(-17f, -6f, 6f, 17f).forEach { dy -> drawLine(tz.material, Offset(xs, c.y + dy * u), Offset(c.x + 17 * u, c.y + dy * u), 0.9f * u); drawCircle(tinta, 0.8f * u, Offset(xs, c.y + dy * u)) }
             }
             TemaId.GOTICO -> {
                 paginas()
@@ -1849,6 +1898,15 @@ object PiezasLogro {
                 contorno(tz, Path().apply { moveTo(c.x - 14 * u, c.y - 12 * u); quadraticTo(c.x, c.y - 2 * u, c.x + 14 * u, c.y - 12 * u) }, tinta, 0.9f * u)
                 drawCircle(Color(0xFFF2C94C), 5.5f * u, Offset(c.x, c.y - 5 * u)); drawRect(Color(0xFFC0392B), Offset(c.x - 1.6f * u, c.y - 6.6f * u), Size(3.2f * u, 3.2f * u))
                 for (k in 0 until 3) drawLine(Color(0xFFF2C94C), Offset(c.x - 3 * u, c.y + 5 * u + k * 4 * u), Offset(c.x + 3 * u, c.y + 5 * u + k * 4 * u), 1.2f * u)
+            }
+            TemaId.EDO -> {
+                // La carta doblada en vertical (tatebumi): los pliegues de arriba, la banda de mizuhiki y el 〆 que la cierra.
+                hoja(c.x - 9 * u, c.y - 22 * u, c.x + 9 * u, c.y + 22 * u, papel)
+                contorno(tz, Path().apply { moveTo(c.x - 9 * u, c.y - 22 * u); lineTo(c.x, c.y - 14 * u); lineTo(c.x + 9 * u, c.y - 22 * u) }, tinta, 0.9f * u)
+                drawRect(Color(0xFFC9442E), Offset(c.x - 9 * u, c.y + 3 * u), Size(18 * u, 2.4f * u))
+                drawLine(tinta, Offset(c.x - 5 * u, c.y - 8 * u), Offset(c.x + 5 * u, c.y + 0 * u), 1.6f * u, StrokeCap.Round)
+                drawLine(tinta, Offset(c.x + 4.5f * u, c.y - 9 * u), Offset(c.x - 4 * u, c.y - 1 * u), 1.6f * u, StrokeCap.Round)
+                drawLine(tinta, Offset(c.x - 4 * u, c.y - 1 * u), Offset(c.x - 2.5f * u, c.y + 1.5f * u), 1.6f * u, StrokeCap.Round)
             }
             TemaId.GOTICO -> {
                 hoja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u)

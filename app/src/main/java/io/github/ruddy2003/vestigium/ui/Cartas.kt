@@ -143,6 +143,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.NAVIDAD -> Papeleria(Color(0xFFB71C1C), Color(0xFF7A1010), Color(0xFFD84343), Color(0xFF1B5E20), Color(0xFFD4AF37), Color(0xFFD4AF37), Color(0xFFFBF6EC))
     // Papel de arroz, forro de lapislázuli, el sello de cinabrio y la faja azul.
     TemaId.SEDA -> Papeleria(Color(0xFFF2EAD3), Color(0xFFB9B29F), Color(0xFFFBF7EA), Color(0xFF233E8C), Color(0xFFC0392B), Color(0xFF2B4A9E), Color(0xFF1F1A14))
+    // Washi forrado de índigo, el cordón de mizuhiki y el bermellón del sello; tinta sumi.
+    TemaId.EDO -> Papeleria(Color(0xFFF1EADB), Color(0xFFC2B79F), Color(0xFFFBF8F0), Color(0xFF1E3A5F), Color(0xFFC9442E), Color(0xFFB8322A), Color(0xFF1B1A1E))
     // Azul de bóveda forrado de rubí, la mandorla de cera roja y la cinta de oro.
     TemaId.GOTICO -> Papeleria(Color(0xFF1F2F7A), Color(0xFF0E1640), Color(0xFF3B4FA8), Color(0xFFB3122E), Color(0xFFB3122E), Color(0xFFE2B34A), Color(0xFFF3EBD6))
     // Sobre de archivo de papel manila forrado de verde, lacre verdinegro y bramante.
@@ -199,6 +201,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.RUINAS -> FormaSobre(SolapaSobre.RASGADA, 0.005f, CierreSobre.HILO)
     TemaId.NAVIDAD -> FormaSobre(SolapaSobre.DIENTES, 0.04f, CierreSobre.CRUZ)
     TemaId.SEDA -> FormaSobre(SolapaSobre.RECTA, 0.02f, CierreSobre.BANDA)
+    TemaId.EDO -> FormaSobre(SolapaSobre.BISEL, 0.005f, CierreSobre.BANDA)
     TemaId.GOTICO -> FormaSobre(SolapaSobre.OJIVA, 0.015f, CierreSobre.VERTICAL)
     TemaId.ARCANO -> FormaSobre(SolapaSobre.PICO, 0.01f, CierreSobre.HILO)
     TemaId.ESPACIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.PRECINTO)
@@ -569,6 +572,16 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawLine(blanco, Offset(c.x + r * 0.1f, c.y + r * 0.05f), Offset(c.x + r * 0.58f, c.y + r * 0.2f), g)
             drawLine(blanco, Offset(c.x + r * 0.12f, c.y + r * 0.42f), Offset(c.x + r * 0.56f, c.y + r * 0.42f), g)
         }
+        TemaId.EDO -> {
+            // En Japón no se sellaba con cera: se cerraba la carta escribiendo 〆 a pincel sobre la solapa, con un sellito rojo al lado.
+            val tinta = k(Color(0xFF1B1A1E)); val g = Stroke(r * 0.17f, cap = StrokeCap.Round)
+            drawPath(Path().apply { moveTo(c.x - r * 0.62f, c.y - r * 0.55f); quadraticTo(c.x - r * 0.05f, c.y - r * 0.1f, c.x + r * 0.55f, c.y + r * 0.6f) }, tinta, style = g)
+            drawPath(Path().apply { moveTo(c.x + r * 0.5f, c.y - r * 0.62f); quadraticTo(c.x - r * 0.05f, c.y - r * 0.05f, c.x - r * 0.5f, c.y + r * 0.3f); lineTo(c.x - r * 0.28f, c.y + r * 0.62f) }, tinta, style = g)
+            val o = Offset(c.x + r * 0.7f, c.y + r * 0.62f)
+            translate(r * 0.03f, r * 0.04f) { drawCircle(sombra, r * 0.3f, o) }
+            drawCircle(col, r * 0.3f, o); drawCircle(claro, r * 0.22f, o, style = Stroke(r * 0.04f))
+            drawLine(claro, Offset(o.x, o.y - r * 0.13f), Offset(o.x, o.y + r * 0.13f), r * 0.05f)
+        }
         TemaId.GOTICO -> {
             // El sello de capítulo en forma de mandorla (óvalo con punta), con una crucecita arriba y el rosetón.
             val v = Path().apply { moveTo(c.x, c.y - r * 1.25f); quadraticTo(c.x + r * 1.5f, c.y, c.x, c.y + r * 1.25f); quadraticTo(c.x - r * 1.5f, c.y, c.x, c.y - r * 1.25f); close() }
@@ -878,6 +891,15 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             drawCircle(Color(0xFFD9B25B), rr, c); drawCircle(Color(0xFF8E6A1F), rr, c, style = Stroke(1f))
             drawRect(pa.sobre, Offset(c.x - rr * 0.32f, c.y - rr * 0.32f), Size(rr * 0.64f, rr * 0.64f))
         }
+        // El noshi: el adorno de papel plegado de los regalos, con su tira amarilla, arriba a la derecha.
+        TemaId.EDO -> {
+            val c = Offset(r - W * 0.1f, top + H * 0.2f); val a = H * 0.05f; val b = H * 0.13f
+            rotate(-18f, c) {
+                drawPath(Path().apply { moveTo(c.x, c.y - b); lineTo(c.x + a, c.y - b * 0.6f); lineTo(c.x + a, c.y + b * 0.6f); lineTo(c.x, c.y + b); lineTo(c.x - a, c.y + b * 0.6f); lineTo(c.x - a, c.y - b * 0.6f); close() }, pa.lacre)
+                drawPath(Path().apply { moveTo(c.x, c.y - b * 0.8f); lineTo(c.x + a * 0.55f, c.y - b * 0.45f); lineTo(c.x + a * 0.55f, c.y + b * 0.45f); lineTo(c.x, c.y + b * 0.8f); lineTo(c.x - a * 0.55f, c.y + b * 0.45f); lineTo(c.x - a * 0.55f, c.y - b * 0.45f); close() }, Color.White)
+                drawRect(Color(0xFFE8C04A), Offset(c.x - a * 0.18f, c.y - b * 0.6f), Size(a * 0.36f, b * 1.2f))
+            }
+        }
         TemaId.GOTICO -> {
             // Las estrellas de oro de la bóveda.
             val az = java.util.Random(9); val oro = Color(0xFFE2B34A)
@@ -1182,6 +1204,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Querido yo de otra Navidad…", "Escribe tu carta junto al fuego…", "Carta para %s envuelta", "Como un regalo: no se abre antes.", "Toca para escribir junto al fuego…")
     TemaId.SEDA -> VozCarta("La caravana llegó: ábrela", "Sellada con cinabrio", "Para el viajero del %s", "Viajero de %s", "Para el viajero que seré",
         "Al viajero que seré…", "Escribe tu carta para la caravana…", "Carta para %s en la caravana", "La caravana no llega antes.", "Toca para mojar el pincel…")
+    TemaId.EDO -> VozCarta("El correo a pie llegó: ábrela", "Cerrada con 〆 y el sello rojo", "Para el caminante del %s", "Caminante de %s", "Para el caminante que seré",
+        "Al caminante que seré…", "Escribe tu carta para el correo a pie…", "Carta para %s, por el correo del camino real", "El correo no llega antes de su estación.", "Toca para mojar el pincel en la piedra de tinta…")
     TemaId.GOTICO -> VozCarta("Ya suenan las campanas: ábrela", "Sellada en la capilla", "Para mi alma del %s", "Para mi alma de %s", "Para mi alma de mañana",
         "Al que velará en la capilla…", "Escribe a la luz del vitral…", "Epístola para %s sellada", "No se abrirá antes de su hora.", "Toca para escribir en el folio…")
     TemaId.ARCANO -> VozCarta("Llegó su noche: rompe el lacre", "Lacrada y archivada", "Para quien yo sea en %s", "Para mí, %s", "Para quien siga investigando",
@@ -1226,6 +1250,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.RUINAS -> LetraExtra.letrero
     TemaId.NAVIDAD -> LetraExtra.cinzelDeco
     TemaId.SEDA -> LetraExtra.almendra
+    TemaId.EDO -> LetraExtra.shippori
     TemaId.GOTICO -> LetraExtra.textura
     TemaId.ARCANO -> Letra.spectralCursiva
     TemaId.ESPACIO -> LetraExtra.orbita

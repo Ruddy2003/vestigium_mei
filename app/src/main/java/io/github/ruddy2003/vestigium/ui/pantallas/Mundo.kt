@@ -240,6 +240,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.NAVIDAD -> LaminaRascar(0xFF5D6B7C.toInt(), 0xFFB9C7D6.toInt(), 0xFFF7FBFF.toInt())
     // Bronce de moneda con sombra de cinabrio.
     TemaId.SEDA -> LaminaRascar(0xFF8A2414.toInt(), 0xFFC28E2C.toInt(), 0xFFF3D68A.toInt())
+    // Maki-e: polvo de oro sobre laca negra.
+    TemaId.EDO -> LaminaRascar(0xFF1C1A1D.toInt(), 0xFFB8932E.toInt(), 0xFFF1D98A.toInt())
     // Peltre de cáliz, con un tinte violeta.
     TemaId.GOTICO -> LaminaRascar(0xFF3B3644.toInt(), 0xFF7D7488.toInt(), 0xFFCFC6D8.toInt())
     // Bronce verdoso de una placa de archivo, comido por el salitre.
@@ -468,6 +470,12 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             val r = l * 0.19f; val h = r * 0.32f
             c.drawCircle(x, y, r, linea); c.drawRect(x - h, y - h, x + h, y + h, linea)
             for (i in 0 until 4) girado(x, y, i * 90f) { c.drawRect(-r * 0.08f, -r * 0.8f, r * 0.08f, -r * 0.55f, relleno) }
+        }
+        TemaId.EDO -> tresbolillo { x, y ->
+            // Asanoha: la estrella de seis puntas de hojas de cáñamo de las telas de Edo.
+            val r = l * 0.26f
+            for (k in 0 until 6) { val a = Math.toRadians(k * 60.0); c.drawLine(x, y, x + (r * kotlin.math.cos(a)).toFloat(), y + (r * kotlin.math.sin(a)).toFloat(), linea) }
+            c.drawCircle(x, y, l * 0.025f, relleno)
         }
         TemaId.GOTICO -> {
             // Cuadrifolio de tracería en el centro y estrellas de bóveda en las esquinas.

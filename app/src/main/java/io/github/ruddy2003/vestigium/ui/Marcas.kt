@@ -47,7 +47,9 @@ import androidx.compose.ui.unit.dp
  */
 object Marcas {
     enum class Forma {
-        NINGUNA, MARCADOR, SUBRAYADO, ONDULADO, RECUADRO, SELLO, CORCHETES,
+        NINGUNA, MARCADOR, SUBRAYADO, ONDULADO, RECUADRO, SELLO,
+        /** Sello hanko: un bloque de bermellón casi cuadrado, un poco torcido, con su marco en reserva. */
+        HANKO, CORCHETES,
         /** Un cabo de dos cordones trenzados bajo la palabra, que remata en un nudo. */
         CABO,
         /** Tabula ansata: recuadro con sus dos asas en cola de milano. */
@@ -134,6 +136,8 @@ object Marcas {
             TemaId.RUINAS -> if (persona) Aspecto(p, s, Forma.TIZA, negrita = true) else Aspecto(t, t, Forma.GUIONES, cursiva = true)
             TemaId.NAVIDAD -> if (persona) Aspecto(p, p, Forma.CINTA, negrita = true) else Aspecto(s, s, Forma.ZIGZAG)
             TemaId.SEDA -> if (persona) Aspecto(cs.onPrimary, p, Forma.SELLO, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
+            // La persona, estampada con el sello de bermellón (el secundario de día, el primario de noche); lo demás, punteado en verde pino.
+            TemaId.EDO -> if (persona) Aspecto(Color(0xFFFFF8F0), if (p.red > p.blue) p else s, Forma.HANKO, negrita = true) else Aspecto(t, t, Forma.PUNTEADO, cursiva = true)
             TemaId.GOTICO -> if (persona) Aspecto(p, t, Forma.OJIVA, negrita = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
             // Los testigos, entre los corchetes de una nota del archivo; los asuntos, subrayados a lápiz con puntos.
             TemaId.ARCANO -> if (persona) Aspecto(t, s, Forma.CORCHETES, negrita = true) else Aspecto(p, s, Forma.PUNTEADO, cursiva = true)
@@ -151,7 +155,7 @@ object Marcas {
 
     /** En un campo de texto no se puede dibujar: el fondo de la letra que sustituye a cada forma (o nada). */
     private fun fondoCampo(f: Forma, c: Color): Color = when (f) {
-        Forma.SELLO, Forma.TERMINAL, Forma.BARRA, Forma.PARALELO -> c
+        Forma.SELLO, Forma.HANKO, Forma.TERMINAL, Forma.BARRA, Forma.PARALELO -> c
         Forma.MARCADOR, Forma.CINTA, Forma.PLACA, Forma.ETIQUETA -> c.copy(alpha = 0.22f)
         Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
         Forma.TIZA -> c.copy(alpha = 0.12f)
@@ -166,7 +170,7 @@ object Marcas {
         Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS -> true
         Forma.CABO, Forma.BURBUJAS -> true
-        Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
+        Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.HANKO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
         Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
         Forma.TIZA -> false
         Forma.ESCUDETE -> true
@@ -252,6 +256,10 @@ object Marcas {
             Forma.RECUADRO -> drawRoundRect(c.copy(alpha = 0.7f), Offset(rr.left - 2 * u, rr.top + h * 0.08f), Size(rr.width + 4 * u, h * 0.86f),
                 CornerRadius(2 * u, 2 * u), style = Stroke(1f * u))
             Forma.SELLO -> drawRoundRect(c, Offset(rr.left - 3 * u, rr.top + h * 0.06f), Size(rr.width + 6 * u, h * 0.88f), CornerRadius(h / 2, h / 2))
+            Forma.HANKO -> rotate(-2f, rr.center) {
+                drawRoundRect(c, Offset(rr.left - 3 * u, rr.top + h * 0.04f), Size(rr.width + 6 * u, h * 0.92f), CornerRadius(1.5f * u, 1.5f * u))
+                drawRect(Color.White.copy(alpha = 0.55f), Offset(rr.left - 1.5f * u, rr.top + h * 0.04f + 1.5f * u), Size(rr.width + 3 * u, h * 0.92f - 3 * u), style = Stroke(0.7f * u))
+            }
             Forma.CORCHETES -> {
                 val t = rr.top + h * 0.12f; val b = rr.bottom - h * 0.08f; val w = 3f * u
                 drawRect(c.copy(alpha = 0.10f), Offset(rr.left - 2 * u, t), Size(rr.width + 4 * u, b - t))

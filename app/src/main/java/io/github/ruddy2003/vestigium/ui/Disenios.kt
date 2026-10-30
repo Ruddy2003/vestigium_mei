@@ -71,6 +71,10 @@ object LetraExtra {
     val calida = FontFamily(Font(R.font.calida_regular, FontWeight.Normal), Font(R.font.calida_semibold, FontWeight.SemiBold))
     /** Alegreya: humanista caligráfica, para las crónicas de la caravana. */
     val alegreya = FontFamily(Font(R.font.alegreya_regular, FontWeight.Normal), Font(R.font.alegreya_semibold, FontWeight.SemiBold))
+    /** Shippori Mincho (recortada: latino y los kanji y kana que usa el tema): los títulos de Japón Edo, de trazo de pincel grabado en madera. */
+    val shippori = FontFamily(Font(R.font.shippori_titulo, FontWeight.Normal), Font(R.font.shippori_titulo, FontWeight.Medium), Font(R.font.shippori_titulo, FontWeight.SemiBold), Font(R.font.shippori_titulo, FontWeight.Bold))
+    /** Zen Old Mincho (recortada igual): el texto de Japón Edo, un mincho antiguo que se lee bien en párrafos. */
+    val zenMincho = FontFamily(Font(R.font.zenmincho_regular, FontWeight.Normal), Font(R.font.zenmincho_semibold, FontWeight.SemiBold), Font(R.font.zenmincho_semibold, FontWeight.Bold))
     /** «Obrera Vestigium» (PT Sans renombrada): hecha para el ruso. */
     val obrera = FontFamily(Font(R.font.obrera_regular, FontWeight.Normal), Font(R.font.obrera_bold, FontWeight.Bold), Font(R.font.obrera_bold, FontWeight.SemiBold))
     /** Fira Sans: sans con cirílico para la estepa. */
@@ -263,6 +267,15 @@ internal val sedaOscuro = esquema(true, 0xFF0F1426, 0xFF161D35, 0xFF1F2846, 0xFF
 internal val tipoSeda = tipografia(LetraExtra.almendra, FontWeight.Normal, 1.12f, 0.4f, LetraExtra.alegreya, 1.06f, LetraExtra.alegreya, 1.08f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
+//  Japón Edo: washi, tinta sumi, índigo de aizome y el bermellón del sello; de noche, la posta a la luz de los farolillos.
+// ---------------------------------------------------------------------
+internal val edoClaro = esquema(false, 0xFFF2ECDF, 0xFFFAF7EF, 0xFFE7DFCC, 0xFFC8BCA2, 0xFF1B1A1E, 0xFF5B5750,
+    0xFF1E3A5F, 0xFFFFFFFF, 0xFFD6DEEA, 0xFF0E1B2E, 0xFFC9442E, 0xFFF5D8CE, 0xFF4F7146, 0xFF8A1A1A)
+internal val edoOscuro = esquema(true, 0xFF111215, 0xFF191A1F, 0xFF23252C, 0xFF3A3D47, 0xFFEEE7D7, 0xFFB0A999,
+    0xFFEF7A55, 0xFF2A0D05, 0xFF4A2016, 0xFFEEE7D7, 0xFF92ABD8, 0xFF1E2A42, 0xFFE3C77A, 0xFFFF8A80)
+internal val tipoEdo = tipografia(LetraExtra.shippori, FontWeight.SemiBold, 1.0f, 0.6f, LetraExtra.zenMincho, 1.02f, LetraExtra.zenMincho, 1.04f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
 //  Soviético: papel de cartel, rojo y negro en diagonales constructivistas.
 // ---------------------------------------------------------------------
 internal val urssClaro = esquema(false, 0xFFEFE6D2, 0xFFF7F0DE, 0xFFE3D6B8, 0xFFC9B994, 0xFF161414, 0xFF4A4440,
@@ -387,6 +400,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.RUINAS -> if (oscuro) listOf(0xFFE08A55, 0xFF212923, 0xFF8FCB6A, 0xFFE9C25A) else listOf(0xFFA34A1E, 0xFFD6D6CC, 0xFF3E6B2A, 0xFFB57A0E)
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFFE5484D, 0xFF1C3125, 0xFF66BB6A, 0xFFF2C94C) else listOf(0xFFB71C1C, 0xFFECE4D6, 0xFF1B5E20, 0xFFC9A227)
     TemaId.SEDA -> if (oscuro) listOf(0xFFE26A50, 0xFF1F2846, 0xFF4FC3C3, 0xFFE0B04F) else listOf(0xFFC0392B, 0xFFEADFC3, 0xFF23408E, 0xFF1A8C8C)
+    TemaId.EDO -> if (oscuro) listOf(0xFFEF7A55, 0xFF23252C, 0xFF92ABD8, 0xFFE3C77A) else listOf(0xFF1E3A5F, 0xFFE7DFCC, 0xFFC9442E, 0xFF4F7146)
     TemaId.URSS -> if (oscuro) listOf(0xFFE5252F, 0xFF262020, 0xFFE8D9B5, 0xFFE5252F) else listOf(0xFFC1121F, 0xFFE3D6B8, 0xFF1D1D1B, 0xFFC1121F)
     TemaId.GOTICO -> if (oscuro) listOf(0xFFE0405E, 0xFF1A2356, 0xFF5C8DFF, 0xFFE2B34A) else listOf(0xFFB3122E, 0xFFE2D9C6, 0xFF1F3A9E, 0xFFB8892B)
     TemaId.ARCANO -> if (oscuro) listOf(0xFFC98472, 0xFF182622, 0xFF7DBBA4, 0xFFE6D58C) else listOf(0xFF7A2C24, 0xFFD8CCAF, 0xFF2D5446, 0xFF6A4B26)
@@ -420,6 +434,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.RUINAS -> if (oscuro) listOf(0xFF8FCB6A, 0xFFE9C25A, 0xFFE0604A) else listOf(0xFF3E6B2A, 0xFFB57A0E, 0xFFB3261E)   // el semáforo: verde, ámbar, rojo
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFF66BB6A, 0xFFF2C94C, 0xFFE5484D) else listOf(0xFF1B5E20, 0xFFC9A227, 0xFFB71C1C)
     TemaId.SEDA -> if (oscuro) listOf(0xFF4FC3C3, 0xFFE0B04F, 0xFFE26A50) else listOf(0xFF23408E, 0xFF1A8C8C, 0xFFC0392B)
+    TemaId.EDO -> if (oscuro) listOf(0xFF92ABD8, 0xFFE3C77A, 0xFFEF7A55) else listOf(0xFF1E3A5F, 0xFF4F7146, 0xFFC9442E)
     TemaId.URSS -> if (oscuro) listOf(0xFFE8D9B5, 0xFFE8B923, 0xFFE5252F) else listOf(0xFF1D1D1B, 0xFFD4A017, 0xFFC1121F)
     TemaId.GOTICO -> if (oscuro) listOf(0xFF5C8DFF, 0xFFE2B34A, 0xFFE0405E) else listOf(0xFF1F3A9E, 0xFFB8892B, 0xFFB3122E)
     TemaId.ARCANO -> if (oscuro) listOf(0xFF7DBBA4, 0xFFE6D58C, 0xFFC98472) else listOf(0xFF2D5446, 0xFF6A4B26, 0xFF7A2C24)

@@ -198,6 +198,7 @@ object TrofeosTema {
             }
             TemaId.ANDALUS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.SEDA -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.EDO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.MONGOL -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.COLONOS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.BOTANICO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
@@ -235,6 +236,7 @@ object TrofeosTema {
             TemaId.REVOLUCION -> revolucion(categoria, p)
             TemaId.ANDALUS -> with(TrofeosMas) { andalus(categoria, p) }
             TemaId.SEDA -> with(TrofeosMas) { seda(categoria, p) }
+            TemaId.EDO -> with(TrofeosMas) { edo(categoria, p) }
             TemaId.MONGOL -> with(TrofeosMas) { mongol(categoria, p) }
             TemaId.COLONOS -> with(TrofeosMas) { colonos(categoria, p) }
             TemaId.BOTANICO -> with(TrofeosMas) { botanico(categoria, p) }

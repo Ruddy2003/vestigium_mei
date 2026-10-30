@@ -314,6 +314,18 @@ object MapasCampana {
                 farol(m.x + 7 * d, 2 * d, 6 * d)
                 farol(m.x + 16 * d, 6 * d, 4.6f * d)
             }
+            TemaId.EDO -> {
+                // La llegada a Kioto: el puente de Sanjō con su barandal y sus pilotes y, al lado, un torii de bermellón.
+                val b = m.y - 2 * d
+                drawPath(Path().apply { moveTo(m.x - 20 * d, b); quadraticTo(m.x, b - 7 * d, m.x + 20 * d, b) }, Color(0xFF7A5C3E), style = Stroke(2.4f * d))
+                drawPath(Path().apply { moveTo(m.x - 20 * d, b - 5 * d); quadraticTo(m.x, b - 12 * d, m.x + 20 * d, b - 5 * d) }, Color(0xFF7A5C3E), style = Stroke(0.9f * d))
+                for (k in -3..3) { val x = m.x + k * 6 * d; val y = b - 7 * d * (1f - (k / 3.3f) * (k / 3.3f)); drawLine(Color(0xFF7A5C3E), Offset(x, y), Offset(x, y + 6 * d), 0.8f * d) }
+                val bermellon = Color(0xFFC9442E); val tx = m.x + 30 * d; val ty = b
+                drawLine(bermellon, Offset(tx - 7 * d, ty), Offset(tx - 6 * d, ty - 22 * d), 2.2f * d); drawLine(bermellon, Offset(tx + 7 * d, ty), Offset(tx + 6 * d, ty - 22 * d), 2.2f * d)
+                drawRect(bermellon, Offset(tx - 9 * d, ty - 18 * d), Size(18 * d, 2 * d))
+                drawPath(Path().apply { moveTo(tx - 13 * d, ty - 25 * d); quadraticTo(tx, ty - 22 * d, tx + 13 * d, ty - 25 * d); lineTo(tx + 12 * d, ty - 22 * d); quadraticTo(tx, ty - 20 * d, tx - 12 * d, ty - 22 * d); close() }, Color(0xFF1B1A1E))
+                drawRect(oro, Offset(tx - 1.5f * d, ty - 21.5f * d), Size(3 * d, 3.5f * d))
+            }
             TemaId.ANDALUS -> {
                 // El arco de herradura: las dovelas rojas y blancas, el alfiz de oro que lo enmarca y sus dos columnas.
                 val c = Offset(m.x, m.y - 26 * d); val R = 9 * d

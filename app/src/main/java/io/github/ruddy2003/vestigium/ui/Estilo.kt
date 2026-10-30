@@ -38,6 +38,7 @@ object Estilo {
         TemaId.RUINAS -> "❦ "
         TemaId.NAVIDAD -> "✦ "
         TemaId.SEDA -> "◇ "
+        TemaId.EDO -> "※ "
         TemaId.URSS -> "★ "
         TemaId.GOTICO -> "✠ "
         TemaId.ARCANO -> "† "
@@ -74,6 +75,7 @@ object Estilo {
         TemaId.RUINAS -> false         // letrero pintado a mano
         TemaId.NAVIDAD -> false        // tarjeta escrita a mano
         TemaId.SEDA -> false           // manuscrito de caravana
+        TemaId.EDO -> false           // pincel sobre washi
         TemaId.URSS -> true            // cartel constructivista
         TemaId.GOTICO -> false         // textura
         TemaId.ARCANO -> false         // libro antiguo
@@ -115,6 +117,7 @@ object Estilo {
             TemaId.RUINAS -> if (igual) null else "❦ $t"
             TemaId.NAVIDAD -> if (igual) null else "✦ $t ✦"
             TemaId.SEDA -> if (igual) null else "◇ $t ◇"
+            TemaId.EDO -> if (igual) null else "「$t」"
             TemaId.URSS -> if (igual) null else "★ $t"
             TemaId.GOTICO -> if (igual) null else "✠ $t"
             // La signatura del archivo: caja y legajo, como en los inventarios.
@@ -153,6 +156,7 @@ object Estilo {
             TemaId.RUINAS -> propio(titulo, true)
             TemaId.NAVIDAD -> propio(titulo, true)
             TemaId.SEDA -> propio(titulo, true)
+            TemaId.EDO -> propio(titulo, true)
             TemaId.URSS -> propio(titulo, true)
             TemaId.GOTICO -> propio(titulo, true)
             TemaId.ARCANO -> propio(titulo, true)
@@ -193,6 +197,7 @@ object Estilo {
         TemaId.RUINAS -> false
         TemaId.NAVIDAD -> false
         TemaId.SEDA -> false
+        TemaId.EDO -> false
         TemaId.URSS -> false
         TemaId.GOTICO -> false
         TemaId.ARCANO -> true
@@ -240,6 +245,7 @@ object Estilo {
             TemaId.RUINAS -> propio(titulo, false)
             TemaId.NAVIDAD -> propio(titulo, false)
             TemaId.SEDA -> propio(titulo, false)
+            TemaId.EDO -> propio(titulo, false)
             TemaId.URSS -> propio(titulo, false)
             TemaId.GOTICO -> propio(titulo, false)
             TemaId.ARCANO -> propio(titulo, false)
@@ -288,6 +294,8 @@ object Estilo {
         // El folio de la bitácora: «f.º 17». Los años, tal cual.
         TemaId.PIRATA -> if (n in 1..999) "f.º $n" else "$n"
         TemaId.SEDA -> Temas.chino(n)
+        // El ordinal japonés en kanji: «第十七» (el decimoséptimo), con las cifras de Temas.chino.
+        TemaId.EDO -> if (n in 1..9999) "第" + Temas.chino(n) else "$n"
         TemaId.URSS -> "№ $n"
         TemaId.GOTICO -> if (n in 1..3999) Romano.de(n).lowercase() else "$n"
         // El investigador duda: escribe mal la cifra, la tacha y la corrige al lado.
@@ -369,6 +377,8 @@ object Estilo {
         }.getOrDefault(iso)
         TemaId.NAVIDAD -> runCatching { val d = Fechas.parse(iso); "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} · " + Temas.cuentaAtras(d, 12, 25, "Navidad", "Navidad") }.getOrDefault(iso)
         TemaId.SEDA -> runCatching { val d = Fechas.parse(iso); Temas.fechaChina(d.year, d.monthValue, d.dayOfMonth) }.getOrDefault(iso)
+        // El mes tradicional, el día en kanji y la microestación (kō) en que cae.
+        TemaId.EDO -> runCatching { Temas.fechaEdo(Fechas.parse(iso)) }.getOrDefault(iso)
         TemaId.URSS -> runCatching {
             val d = Fechas.parse(iso)
             "%d.%s.%d".format(d.dayOfMonth, Romano.de(d.monthValue), d.year) + (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { " · PLAN QUINQUENAL, AÑO ${((it - 1) / 365) % 5 + 1}" } ?: "")
@@ -401,6 +411,8 @@ object Estilo {
             TemaId.RUINAS -> listOf("Escarcha", "Savia", "Brotes", "Lluvias", "Flores", "Enjambres", "Moras", "Cigarras", "Semillas", "Hojarasca", "Setas", "Raíces")[i] + (anio?.let { " · $it" } ?: "")
             TemaId.NAVIDAD -> (if (n == 12) "Mes de la Navidad" else "Mes de " + MESES_LARGOS[i]) + (anio?.let { " de $it" } ?: "")
             TemaId.SEDA -> (anio?.let { Temas.anioChino(it) + " " } ?: "") + Temas.chino(n) + "月"
+            // El nombre tradicional del mes y el año de la era: «神無月 · 令和八年».
+            TemaId.EDO -> Temas.MESES_JAPONESES[i] + (anio?.let { " · " + Temas.nengo(java.time.LocalDate.of(it, i + 1, 1)) } ?: "")
             TemaId.URSS -> Temas.MESES_RUSOS[i] + (anio?.let { " $it" } ?: "")
             // En genitivo, como en las rúbricas del calendario litúrgico: «Octobris».
             TemaId.GOTICO -> Temas.MESES_LATINOS_GEN[i].replaceFirstChar { it.uppercase() } + (anio?.let { " " + Romano.de(it).lowercase() } ?: "")
@@ -449,6 +461,7 @@ object Estilo {
         TemaId.RUINAS -> listOf("lun.", "mar.", "miér.", "jue.", "vier.", "sáb.", "dom.")
         TemaId.NAVIDAD -> listOf("Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom")
         TemaId.SEDA -> listOf("一", "二", "三", "四", "五", "六", "日")
+        TemaId.EDO -> Temas.SEMANA_JAPONESA
         TemaId.URSS -> listOf("ПН", "ВТ", "СР", "ЧТ", "ПТ", "СБ", "ВС")
         // Las ferias de la liturgia, en romanos: feria II es el lunes.
         TemaId.GOTICO -> listOf("F.II", "F.III", "F.IV", "F.V", "F.VI", "Sab.", "Dom.")
@@ -487,6 +500,7 @@ object Estilo {
         TemaId.RUINAS -> listOf("l", "m", "x", "j", "v", "s", "d")
         TemaId.NAVIDAD -> listOf("L", "M", "M", "J", "V", "S", "D")
         TemaId.SEDA -> semana
+        TemaId.EDO -> Temas.SEMANA_JAPONESA.map { it + "曜" }
         TemaId.URSS -> semana
         TemaId.GOTICO -> listOf("II", "III", "IV", "V", "VI", "SB", "DM")
         TemaId.ARCANO -> listOf("Ln", "Mt", "Mc", "Jp", "Vn", "St", "Sl")
@@ -523,6 +537,7 @@ object Estilo {
         TemaId.RUINAS -> "$n amaneceres seguidos entre la hiedra"
         TemaId.NAVIDAD -> "$n noches junto al fuego"
         TemaId.SEDA -> "$n jornadas de caravana"
+        TemaId.EDO -> "$n postas seguidas por el camino real"
         TemaId.GOTICO -> "$n días de oficio sin falta"
         TemaId.ARCANO -> "$n noches sin perder el hilo"
         TemaId.ESPACIO -> "T+$n DÍAS EN ÓRBITA"
@@ -556,6 +571,7 @@ object Estilo {
         TemaId.RUINAS -> "← por donde vine"
         TemaId.NAVIDAD -> "← volver a casa"
         TemaId.SEDA -> "← desandar"
+        TemaId.EDO -> "← a la posta anterior"
         TemaId.URSS -> "◄ НАЗАД"
         TemaId.GOTICO -> "← redire"
         TemaId.ARCANO -> "← cerrar el legajo"
@@ -587,6 +603,7 @@ object Estilo {
         TemaId.RUINAS -> "↳ "
         TemaId.NAVIDAD -> "✦ "
         TemaId.SEDA -> "◇ "
+        TemaId.EDO -> "・ "
         TemaId.URSS -> "▶ "
         TemaId.GOTICO -> "✠ "
         TemaId.ARCANO -> "⁜ "
@@ -623,6 +640,7 @@ object Estilo {
         TemaId.RUINAS -> ""
         TemaId.NAVIDAD -> ""
         TemaId.SEDA -> ""
+        TemaId.EDO -> ""
         TemaId.GOTICO -> ""
         TemaId.ARCANO -> ""
         TemaId.ESPACIO -> ""
@@ -659,6 +677,7 @@ object Estilo {
         TemaId.RUINAS -> EstiloFecha(1.08f, 0.9f, abre = "⌄")
         TemaId.NAVIDAD -> EstiloFecha(1.1f, 1.4f)
         TemaId.SEDA -> EstiloFecha(1.08f, 0.6f, abre = "▿")
+        TemaId.EDO -> EstiloFecha(0.98f, 0.2f, peso = 600, abre = "◎")   // el nijūmaru, el doble círculo de «muy bien»
         TemaId.GOTICO -> EstiloFecha(1.16f, 0.6f)
         TemaId.ARCANO -> EstiloFecha(1.08f, 0.4f, cursiva = true, abre = "†")
         TemaId.ESPACIO -> EstiloFecha(0.92f, 2.8f, peso = 500, abre = "▼")
@@ -706,6 +725,7 @@ object Estilo {
             TemaId.RUINAS -> es(Claves.RUINAS)
             TemaId.NAVIDAD -> es(Claves.NAVIDAD)
             TemaId.SEDA -> Claves.CHINO[k]
+            TemaId.EDO -> Claves.JAPONES[k]
             TemaId.URSS -> Claves.RUSO[k]
             TemaId.GOTICO -> Claves.GOTICO[k] ?: k
             TemaId.ARCANO -> es(Claves.ARCANO)

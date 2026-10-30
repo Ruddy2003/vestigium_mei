@@ -136,6 +136,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.PIRATA -> Cabo(modifier)
         TemaId.NAVIDAD -> Guirnalda(modifier)
         TemaId.SEDA -> BandaCaravana(modifier)
+        TemaId.EDO -> BandaSeigaiha(modifier)
         TemaId.URSS -> Barra(modifier)
         TemaId.REVOLUCION -> Tricolor(modifier)
         TemaId.ANTIGUAS -> Runica(modifier)
@@ -303,6 +304,30 @@ private fun BandaCaravana(modifier: Modifier) {
             }
             x += 48.dp.toPx(); k++
         }
+    }
+}
+
+/** Una franja de seigaiha (olas en escamas, dos hileras) cortada al centro por el sello de bermellón. */
+@Composable
+private fun BandaSeigaiha(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    Canvas(modifier.fillMaxWidth().height(17.dp)) {
+        val f = 1.dp.toPx(); val r = 5.5f * f; val base = size.height - 1.5f * f; val cx = size.width / 2
+        val ola = e.primary.copy(alpha = 0.55f)
+        for (fila in 1 downTo 0) {
+            val yb = base - fila * r * 0.55f; var x = if (fila == 1) r else 0f
+            while (x <= size.width + r) {
+                if (kotlin.math.abs(x - cx) > r * 2.6f) {
+                    drawArc(e.background, 180f, 180f, true, Offset(x - r, yb - r), Size(2 * r, 2 * r))
+                    for (k in 0..2) { val q = r * (1f - k * 0.32f); drawArc(ola, 180f, 180f, false, Offset(x - q, yb - q), Size(2 * q, 2 * q), style = Stroke(0.9f * f)) }
+                }
+                x += 2 * r
+            }
+        }
+        val s = 11 * f; val o = Offset(cx - s / 2, base - s - 1 * f)
+        drawRect(e.secondary, o, Size(s, s))
+        drawRect(e.background.copy(alpha = 0.85f), o + Offset(1.6f * f, 1.6f * f), Size(s - 3.2f * f, s - 3.2f * f), style = Stroke(0.8f * f))
+        drawLine(e.background.copy(alpha = 0.85f), Offset(cx, o.y + 3 * f), Offset(cx, o.y + s - 3 * f), 1.1f * f)
     }
 }
 
@@ -1050,6 +1075,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "◈", igual = "〉", nulo = "空", elegido = "⊡", riel = RolColor.PRIMARIO, quitar = "(×)", listaVacia = "( alforja vacía )", flecha = "⟿",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.6f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.ROJO,
         guiones = floatArrayOf(2f, 0.8f, 0.4f, 0.8f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
+    TemaId.EDO -> PielComponentes(sep = "  ・  ", cerrada = "＋", abierta = "－", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
+        aviso = "※", igual = "：", nulo = "無", elegido = "■", riel = RolColor.SECUNDARIO, quitar = "〔×〕", listaVacia = "( hatillo vacío )", flecha = "⇢",
+        sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.3f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.PUNTOS,
+        guiones = floatArrayOf(5f, 2.5f), tamBoton = 15, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.2f)
     TemaId.GOTICO -> PielComponentes(sep = "  †  ", cerrada = "†", abierta = "‡", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
         aviso = "✝", igual = "⁝ ", nulo = "vacat", elegido = "✠", riel = RolColor.TERCIARIO, quitar = "☓", listaVacia = "( nave vacía )", flecha = "⇀",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.3f, colorPrefijo = RolColor.TERCIARIO, renglones = true, margen = MargenEditor.DOBLE,
@@ -1187,6 +1216,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             drawRect(e.primary, o, Size(l, l))
             drawRect(e.surface, Offset(o.x + l * 0.2f, o.y + l * 0.2f), Size(l * 0.6f, l * 0.6f), style = Stroke(1.dp.toPx()))
         }.padding(start = 18.dp))
+        // Un tanzaku (la tira de papel de los poemas) colgado de su cordón antes del nombre.
+        TemaId.EDO -> Text(nombre, style = estilo, modifier = peso.drawBehind {
+            val a = 6.dp.toPx(); val alto = size.height * 0.78f; val o = Offset(2.dp.toPx(), (size.height - alto) / 2 + 2.dp.toPx())
+            drawLine(e.onBackground.copy(alpha = 0.5f), Offset(o.x + a / 2, 0f), Offset(o.x + a / 2, o.y), 0.8.dp.toPx())
+            drawRect(e.secondary, o, Size(a, alto))
+            drawLine(e.surface.copy(alpha = 0.7f), Offset(o.x + a / 2, o.y + alto * 0.25f), Offset(o.x + a / 2, o.y + alto * 0.75f), 0.8.dp.toPx())
+        }.padding(start = 16.dp))
         // Inicial sobre pan de oro, como en un vitral.
         TemaId.GOTICO -> Text(buildAnnotatedString {
             withStyle(SpanStyle(color = e.surface, background = e.tertiary)) { append(" ${nombre.take(1)} ") }
@@ -1294,6 +1330,11 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         val w = s.width; val h = s.height; val a = h * 0.12f
         moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - a, h * 0.22f); lineTo(w - a, h); lineTo(a, h); lineTo(a, h * 0.22f); close()
     }
+    // Ema: la tablilla votiva de madera, con el tejadillo en chaflán.
+    TemaId.EDO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val a = h * 0.24f
+        moveTo(0f, a); lineTo(w * 0.1f, 0f); lineTo(w * 0.9f, 0f); lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
+    }
     // Arco apuntado.
     TemaId.GOTICO -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -1367,6 +1408,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.RUINAS -> "a lápiz, en el cuaderno del superviviente · $es"
         TemaId.NAVIDAD -> "carta junto al fuego · $es"
         TemaId.SEDA -> "pincel y tinta · $es"
+        TemaId.EDO -> "cuaderno cosido · $es"
         TemaId.GOTICO -> "breviario · $es"
         TemaId.ARCANO -> "diario del investigador · $es"
         TemaId.ESPACIO -> "BITÁCORA DE MISIÓN · ${es.uppercase()}"
@@ -1543,6 +1585,13 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawRect(e.primary.copy(alpha = 0.85f), o, Size(s, s))
             drawRect(e.surface.copy(alpha = 0.8f), Offset(o.x + s * 0.18f, o.y + s * 0.18f), Size(s * 0.64f, s * 0.64f), style = Stroke(fino))
             drawLine(e.surface.copy(alpha = 0.8f), Offset(o.x + s * 0.5f, o.y + s * 0.25f), Offset(o.x + s * 0.5f, o.y + s * 0.75f), fino)
+        }
+        TemaId.EDO -> {
+            // La costura de cuatro agujeros (yotsume-toji) de los cuadernos japoneses, en el borde izquierdo.
+            val x = i + u * 0.7f; val hilo = e.secondary.copy(alpha = 0.7f)
+            val ys = listOf(0.2f, 0.4f, 0.6f, 0.8f).map { h * it }
+            drawLine(hilo, Offset(x, ys.first()), Offset(x, ys.last()), fino * 1.2f)
+            ys.forEach { y -> drawLine(hilo, Offset(i * 0.4f, y), Offset(x, y), fino * 1.2f); drawCircle(e.onSurface.copy(alpha = 0.45f), fino * 1.3f, Offset(x, y)) }
         }
         TemaId.GOTICO -> enLasCuatro {
             // Cuadrifolio de tracería.
@@ -1754,6 +1803,18 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawLine(a, Offset(f(0.56f), f(0.06f)), Offset(f(0.9f), f(0.44f)), tr.width)
             drawLine(a, Offset(f(0.66f), f(0.04f)), Offset(f(0.96f), f(0.38f)), tr.width)
         }
+        TemaId.EDO -> {
+            // Un farolillo de papel apagado: el cuerpo con sus costillas, las tapas y el gancho.
+            drawOval(l, Offset(f(0.24f), f(0.18f)), Size(f(0.52f), f(0.66f)), style = tr)
+            for (k in 1..4) {
+                val y = f(0.18f + 0.66f * k / 5f); val dy = (y - f(0.51f)) / f(0.33f)
+                val media = f(0.26f) * kotlin.math.sqrt(maxOf(0f, 1f - dy * dy))
+                drawLine(l, Offset(f(0.5f) - media, y), Offset(f(0.5f) + media, y), tr.width * 0.6f)
+            }
+            drawRect(a, Offset(f(0.36f), f(0.12f)), Size(f(0.28f), f(0.07f)))
+            drawRect(a, Offset(f(0.36f), f(0.83f)), Size(f(0.28f), f(0.07f)))
+            drawLine(a, Offset(f(0.5f), f(0.02f)), Offset(f(0.5f), f(0.12f)), tr.width)
+        }
         TemaId.GOTICO -> {
             // Vela apagada en su palmatoria, con un hilo de humo.
             drawRect(l, Offset(f(0.4f), f(0.3f)), Size(f(0.2f), f(0.48f)), style = tr)
@@ -1891,6 +1952,11 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
             drawCircle(c, d * 0.95f, Offset(w / 2, h - d * 1.4f))
             drawRect(fondo, Offset(w / 2 - d * 0.3f, h - d * 1.7f), Size(d * 0.6f, d * 0.6f))
         }
+        // Un sellito cuadrado en la esquina, como el que se estampa al margen.
+        TemaId.EDO -> {
+            drawRect(c, Offset(w - d * 1.9f, d * 0.5f), Size(d * 1.4f, d * 1.4f))
+            drawRect(fondo, Offset(w - d * 1.65f, d * 0.75f), Size(d * 0.9f, d * 0.9f), style = Stroke(d * 0.18f))
+        }
         TemaId.GOTICO -> drawPath(Path().apply {
             moveTo(w / 2 - d, h); lineTo(w / 2 - d, h - d * 1.2f); quadraticTo(w / 2 - d, h - d * 2.2f, w / 2, h - d * 2.6f)
             quadraticTo(w / 2 + d, h - d * 2.2f, w / 2 + d, h - d * 1.2f); lineTo(w / 2 + d, h); close()
@@ -2004,6 +2070,12 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.SEDA -> listOf(m * 3.4f, w - m * 3.4f).forEach { x ->
             drawCircle(c, m * 1.1f, Offset(x, h / 2 + m * 0.4f))
             drawRect(e.primary, Offset(x - m * 0.35f, h / 2 + m * 0.05f), Size(m * 0.7f, m * 0.7f))
+        }
+        // Dos nudos de cordón con sus borlas, como los que cierran una caja de madera.
+        TemaId.EDO -> listOf(m * 3.4f, w - m * 3.4f).forEach { x ->
+            drawCircle(c, m * 0.85f, Offset(x, h / 2 - m * 0.4f), style = Stroke(fino))
+            drawLine(c, Offset(x, h / 2 + m * 0.45f), Offset(x - m * 0.45f, h / 2 + m * 1.7f), fino)
+            drawLine(c, Offset(x, h / 2 + m * 0.45f), Offset(x + m * 0.45f, h / 2 + m * 1.7f), fino)
         }
         // Trébol de tracería bajo la clave del arco.
         TemaId.GOTICO -> {
@@ -2186,6 +2258,13 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawRect(l, Offset(f(0.08f), f(0.72f)), Size(f(0.84f), f(0.22f)))
             drawLine(a, Offset(f(0.3f), f(0.06f)), Offset(f(0.62f), f(0.58f)), tr.width * 1.2f)
             drawPath(Path().apply { moveTo(f(0.56f), f(0.5f)); lineTo(f(0.7f), f(0.72f)); lineTo(f(0.66f), f(0.48f)); close() }, a)
+        }
+        TemaId.EDO -> {
+            // El pincel (fude) en vertical, con su punta mojada, y la piedra de tinta (suzuri) con su pocito.
+            drawRoundRect(l, Offset(f(0.06f), f(0.62f)), Size(f(0.5f), f(0.32f)), CornerRadius(f(0.06f)), style = tr)
+            drawOval(l, Offset(f(0.12f), f(0.67f)), Size(f(0.18f), f(0.1f)))
+            drawLine(a, Offset(f(0.76f), f(0.04f)), Offset(f(0.76f), f(0.6f)), tr.width * 1.6f)
+            drawPath(Path().apply { moveTo(f(0.7f), f(0.6f)); quadraticTo(f(0.68f), f(0.8f), f(0.76f), f(0.96f)); quadraticTo(f(0.84f), f(0.8f), f(0.82f), f(0.6f)); close() }, a)
         }
         TemaId.GOTICO -> {
             // Breviario abierto.
@@ -2373,6 +2452,13 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             drawRect(c, Offset(2.6f * d, 0f), Size(0.8f * d, h))
             var y = 6 * d
             while (y < h) { drawCircle(e.tertiary, 2.6f * d, Offset(3 * d, y)); drawRect(e.secondaryContainer, Offset(2.2f * d, y - 0.8f * d), Size(1.6f * d, 1.6f * d)); y += 10 * d }
+        }
+        // Un tanzaku de bermellón con su tapa de tinta y las tiras de papel que se le pegan.
+        TemaId.EDO -> {
+            drawRect(c, Offset.Zero, Size(3.5f * d, h))
+            drawRect(e.onSurface, Offset.Zero, Size(3.5f * d, 3 * d))
+            var y = 9 * d
+            while (y < h) { drawLine(e.surface.copy(alpha = 0.7f), Offset(0.7f * d, y), Offset(2.8f * d, y), 0.8f * d); y += 12 * d }
         }
         TemaId.GOTICO -> {
             drawRect(c, Offset(2 * d, 0f), Size(2 * d, h))
