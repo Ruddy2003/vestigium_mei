@@ -5,12 +5,143 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowBackground">@color/fondo</item>
+        <!-- Neutro oscuro: antes de que la app sepa el tema (y en Android 11 y 12, que no dejan elegir el arranque) no asoma un destello claro. -->
+        <item name="android:windowBackground">@color/arranque_neutro</item>
     </style>
     <style name="Theme.Vestigium.Quick" parent="android:Theme.Translucent.NoTitleBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">true</item>
         <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <!--
+      Pantalla de arranque de cada tema (una por tema y, si el tema tiene claro y oscuro, «.Oscuro» para el oscuro).
+      MainActivity la elige con SplashScreen.setSplashScreenTheme (Android 13 o más), cada vez que sabe el tema y el modo,
+      y Android la usa en el SIGUIENTE arranque: un alias del ícono no puede llevar tema propio.
+    -->
+    <style name="Theme.Vestigium.Arranque" parent="Theme.Vestigium" />
+    <style name="Theme.Vestigium.Arranque.Romano" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_romano</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Romano.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_romano_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Ciber" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_ciber_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Heleno" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_heleno</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Heleno.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_heleno_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Medieval" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_medieval</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Medieval.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_medieval_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Distopia" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_distopia</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Distopia.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_distopia_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Refugio" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_refugio</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Refugio.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_refugio_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Orden" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_orden</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Orden.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_orden_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Laboratorio" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_laboratorio</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Laboratorio.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_laboratorio_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Colonos" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_colonos</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Colonos.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_colonos_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Napoleon" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_napoleon</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Napoleon.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_napoleon_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Botanico" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_botanico</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Botanico.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_botanico_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Navidad" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_navidad</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Navidad.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_navidad_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Seda" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_seda</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Seda.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_seda_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Urss" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_urss</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Urss.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_urss_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Gotico" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_gotico</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Gotico.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_gotico_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Espacio" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_espacio</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Espacio.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_espacio_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Andalus" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_andalus</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Andalus.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_andalus_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Mongol" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_mongol</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Mongol.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_mongol_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Renacimiento" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_renacimiento</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Renacimiento.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_renacimiento_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Revolucion" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_revolucion</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Revolucion.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_revolucion_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Antiguas" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_antiguas</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Antiguas.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_antiguas_oscuro</item>
     </style>
 </resources>

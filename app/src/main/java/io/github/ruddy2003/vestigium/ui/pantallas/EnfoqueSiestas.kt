@@ -26,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +37,9 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.Cifra
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
 import io.github.ruddy2003.vestigium.ui.Deshacer
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
@@ -46,6 +48,7 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TextoMarcado
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 fun horasMin(min: Int): String = if (min >= 60) "${min / 60} h ${"%02d".format(min % 60)}" else "$min min"
 
@@ -85,15 +88,16 @@ fun PantallaEnfoque(nav: Nav) {
                 val porTipo = tr.filter { it.fecha in mes }.groupBy { it.tipo }.mapValues { (_, l) -> l.sumOf { it.min } }.entries.sortedByDescending { it.value }
                 val max = (porTipo.maxOfOrNull { it.value } ?: 1).coerceAtLeast(1)
                 val cs = MaterialTheme.colorScheme
+                val eg = estiloGrafica()
                 if (porTipo.isEmpty()) Ayuda("Nada en los últimos 30 días.")
                 porTipo.forEach { (t, m) ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(Catalogo.nombreTramo(t), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(0.3f))
                         Canvas(Modifier.weight(0.5f).aspectRatio(12f)) {
-                            drawRoundRect(cs.surfaceVariant, Offset.Zero, size, CornerRadius(4f, 4f))
-                            drawRoundRect(if (t == "siesta") cs.secondary else cs.primary, Offset.Zero, Size(size.width * m / max, size.height), CornerRadius(4f, 4f))
+                            barraGrafica(eg, Offset.Zero, size, cs.surfaceVariant, horizontal = true, pista = true)
+                            barraGrafica(eg, Offset.Zero, Size(size.width * m / max, size.height), if (t == "siesta") cs.secondary else cs.primary, horizontal = true)
                         }
-                        Text(horasMin(m), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(0.2f).padding(start = 8.dp))
+                        Text(horasMin(m), style = estiloCifras(MaterialTheme.typography.labelMedium), modifier = Modifier.weight(0.2f).padding(start = 8.dp))
                     }
                 }
             }
@@ -131,7 +135,7 @@ fun DialogoTramo(t: io.github.ruddy2003.vestigium.data.Tramo, cerrar: () -> Unit
     var min by remember(t.id) { mutableStateOf<Int?>(t.min) }
     var nota by remember(t.id) { mutableStateOf(t.nota) }
     var confirmar by remember(t.id) { mutableStateOf(false) }
-    androidx.compose.material3.AlertDialog(
+    Dialogo(
         onDismissRequest = cerrar,
         title = { Text("${Catalogo.nombreTramo(t.tipo)} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.inicio)}") },
         text = {

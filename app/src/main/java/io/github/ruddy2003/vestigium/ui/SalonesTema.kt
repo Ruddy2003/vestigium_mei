@@ -17,9 +17,9 @@ import kotlin.math.min
 import kotlin.math.sin
 
 /**
- * El hall de los temas históricos, cada uno con su escena: el atrio romano, la stoa griega, la sala de gestas con tapices,
+ * El hall de los temas, cada uno con su escena: aquí, el atrio romano con su impluvio, la stoa pintada griega, la sala de gestas con tapices,
  * la nave gótica con su rosetón, la galería renacentista con su artesonado, la galería imperial y el panteón de la Revolución.
- * Todo se dibuja tenue para que las piezas se lean encima.
+ * Las de los otros catorce temas están en [SalonesMas]. Todo se dibuja tenue para que las piezas se lean encima.
  */
 object SalonesTema {
     val TEMAS = TrofeosTema.TEMAS
@@ -39,7 +39,20 @@ object SalonesTema {
             TemaId.RENACIMIENTO -> galeria(cs, oscuro, n)
             TemaId.NAPOLEON -> imperial(cs, oscuro, n)
             TemaId.REVOLUCION -> panteon(cs, oscuro, n)
-            else -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.ANDALUS -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.SEDA -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.MONGOL -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.COLONOS -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.BOTANICO -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.NAVIDAD -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.ANTIGUAS -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.DISTOPIA -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.CIBER -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.REFUGIO -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.ORDEN -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.LABORATORIO -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.ESPACIO -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
+            TemaId.URSS -> with(SalonesMas) { escenaMas(tema, cs, oscuro, n) }
         }
     }
 
@@ -58,7 +71,20 @@ object SalonesTema {
                 drawRect(piedra(Color(0xFFD8D1C2)), Offset(w * 0.18f, 0f), Size(w * 0.64f, h))
                 listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, c -> drawRect(c, Offset(w * (0.18f + i * 0.2133f), 0f), Size(w * 0.2133f, h * 0.22f)) }
             }
-            else -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.ANDALUS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.SEDA -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.MONGOL -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.COLONOS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.BOTANICO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.NAVIDAD -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.ANTIGUAS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.DISTOPIA -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.CIBER -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.REFUGIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.ORDEN -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.LABORATORIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.ESPACIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.URSS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
         }
     }
 
@@ -95,28 +121,89 @@ object SalonesTema {
 
     // ------------------------------------------------------------------ las escenas
 
-    /** El atrio: pilastras de mármol con capitel corintio entre las piezas, el friso con la greca y un zócalo de pórfido abajo. */
+    /**
+     * El atrio: arriba, el compluvio abierto al cielo con sus antefijas de barro y el entablamento con la greca; pilastras de
+     * mármol con capitel corintio entre las piezas y, entre ellas, paneles de pintura pompeyana (rojo con marco de ocre, una
+     * guirnalda y el zócalo negro); abajo, el piso de mosaico en blanco y negro, el zócalo de pórfido y el impluvio con su agua.
+     */
     private fun DrawScope.atrio(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         val marmol = (if (oscuro) Color(0xFF2A2F34) else Color(0xFFDCDAD2)).copy(alpha = 0.6f)
         val porfido = Color(0xFF7C2433).copy(alpha = if (oscuro) 0.3f else 0.18f)
-        drawRect(porfido, Offset(0f, h - 26 * d), Size(w, 26 * d))
-        drawRect(cs.tertiary.copy(alpha = 0.35f), Offset(0f, h - 26 * d), Size(w, 1.5f * d))
+        val pompeya = Color(0xFF9E2A22).copy(alpha = if (oscuro) 0.16f else 0.09f)
+        val ocre = Color(0xFFC9A04A).copy(alpha = if (oscuro) 0.3f else 0.35f)
+        val barro = Color(0xFFB0643A).copy(alpha = if (oscuro) 0.4f else 0.35f)
         val paso = w / n
-        for (i in 0..n) columnaClasica(i * paso, 22 * d, h - 26 * d, 7 * d, marmol, 2)
-        drawRect(marmol, Offset(0f, 0f), Size(w, 14 * d))
-        greca(2.5f * d, 8 * d, cs.tertiary.copy(alpha = 0.45f))
+        val techo = 34 * d; val abajo = h - 26 * d
+        // El cielo del compluvio y las antefijas en forma de palmeta sobre el borde del tejado.
+        drawRect(Brush.verticalGradient(listOf(Color(0xFF6FA8DC).copy(alpha = if (oscuro) 0.14f else 0.2f), Color.Transparent), 0f, 12 * d), Offset.Zero, Size(w, 12 * d))
+        var x = 9 * d
+        while (x < w) {
+            drawPath(Path().apply { moveTo(x - 3 * d, 11 * d); lineTo(x - 3 * d, 8 * d); quadraticTo(x - 4.5f * d, 3 * d, x, 2 * d); quadraticTo(x + 4.5f * d, 3 * d, x + 3 * d, 8 * d); lineTo(x + 3 * d, 11 * d); close() }, barro)
+            x += 18 * d
+        }
+        // Los paneles de pintura pompeyana entre las pilastras.
+        for (i in 0 until n) {
+            val x0 = i * paso + 11 * d; val x1 = (i + 1) * paso - 11 * d
+            val y0 = techo + 10 * d; val y1 = abajo - 10 * d
+            if (x1 - x0 < 24 * d || y1 - y0 < 60 * d) continue
+            drawRect(pompeya, Offset(x0, y0), Size(x1 - x0, y1 - y0))
+            drawRect(ocre, Offset(x0 + 3 * d, y0 + 3 * d), Size(x1 - x0 - 6 * d, y1 - y0 - 24 * d), style = Stroke(1 * d))
+            drawPath(Path().apply { moveTo(x0 + 6 * d, y0 + 8 * d); quadraticTo((x0 + x1) / 2, y0 + 28 * d, x1 - 6 * d, y0 + 8 * d) }, Color(0xFF3F6A3A).copy(alpha = if (oscuro) 0.3f else 0.22f), style = Stroke(2.4f * d))
+            listOf(x0 + 6 * d, x1 - 6 * d).forEach { xx -> drawLine(Color(0xFF3F6A3A).copy(alpha = if (oscuro) 0.3f else 0.22f), Offset(xx, y0 + 8 * d), Offset(xx, y0 + 16 * d), 1.2f * d) }
+            drawRect(Color.Black.copy(alpha = if (oscuro) 0.22f else 0.07f), Offset(x0, y1 - 18 * d), Size(x1 - x0, 18 * d))
+        }
+        // El piso de mosaico, el zócalo de pórfido y el impluvio al centro.
+        var k = 0; x = 0f
+        while (x < w) { if (k % 2 == 0) drawRect(Color.Black.copy(alpha = if (oscuro) 0.3f else 0.12f), Offset(x, abajo - 6 * d), Size(3 * d, 3 * d)) else drawRect(Color.Black.copy(alpha = if (oscuro) 0.3f else 0.12f), Offset(x, abajo - 3 * d), Size(3 * d, 3 * d)); x += 3 * d; k++ }
+        drawRect(porfido, Offset(0f, abajo), Size(w, 26 * d))
+        drawRect(cs.tertiary.copy(alpha = 0.35f), Offset(0f, abajo), Size(w, 1.5f * d))
+        val pila = Rect(w * 0.3f, abajo + 7 * d, w * 0.7f, h - 5 * d)
+        drawRect(marmol, Offset(pila.left - 2 * d, pila.top - 2 * d), Size(pila.width + 4 * d, pila.height + 4 * d))
+        drawRect(Color(0xFF4F86B8).copy(alpha = if (oscuro) 0.35f else 0.3f), pila.topLeft, pila.size)
+        for (j in 1..3) drawLine(Color.White.copy(alpha = 0.3f), Offset(pila.left + pila.width * j / 4 - 6 * d, pila.top + pila.height * 0.5f), Offset(pila.left + pila.width * j / 4 + 6 * d, pila.top + pila.height * 0.5f), 1 * d)
+        // Las pilastras y el entablamento con la greca.
+        for (i in 0..n) columnaClasica(i * paso, techo, abajo - 6 * d, 7 * d, marmol, 2)
+        drawRect(marmol, Offset(0f, 12 * d), Size(w, 14 * d))
+        greca(15 * d, 8 * d, cs.tertiary.copy(alpha = 0.45f))
     }
 
-    /** La stoa: columnas jónicas entre las piezas, el cielo del Egeo arriba y el estilóbato abajo. */
+    /**
+     * La stoa pintada: el cielo y el mar del Egeo al fondo, entre columnas jónicas; los escudos de bronce colgados en el muro,
+     * con la estrella de Macedonia; el entablamento con su cornisa, los dentículos, el friso con la greca y las tres fajas del
+     * arquitrabe; abajo, el estilóbato de tres escalones.
+     */
     private fun DrawScope.stoa(cs: ColorScheme, oscuro: Boolean, n: Int) {
         val w = size.width; val h = size.height; val d = density
         drawRect(Brush.verticalGradient(listOf(cs.secondary.copy(alpha = if (oscuro) 0.18f else 0.14f), Color.Transparent), 0f, h * 0.4f), Offset.Zero, Size(w, h * 0.4f))
         val marmol = (if (oscuro) Color(0xFF3A3550) else Color(0xFFEDE7DA)).copy(alpha = 0.75f)
+        val bronce = Color(0xFFB07A3A).copy(alpha = if (oscuro) 0.4f else 0.32f)
         val paso = w / n
-        for (i in 0..n) columnaClasica(i * paso, 20 * d, h - 10 * d, 7 * d, marmol, 1)
-        drawRect(marmol, Offset(0f, 0f), Size(w, 15 * d))
-        greca(3 * d, 8 * d, cs.primary.copy(alpha = 0.45f))
+        val techo = 34 * d; val piso = h - 10 * d
+        // El mar al fondo, con sus islas y sus olas.
+        val mar = Color(0xFF4F86B8).copy(alpha = if (oscuro) 0.16f else 0.12f)
+        drawRect(mar, Offset(0f, piso - 30 * d), Size(w, 30 * d))
+        val arena = Color(0xFFE6D3A6).copy(alpha = if (oscuro) 0.25f else 0.5f)
+        listOf(0.18f to 34f, 0.62f to 48f, 0.86f to 26f).forEach { (fx, ancho) -> drawArc(arena, 180f, 180f, true, Offset(w * fx - ancho / 2 * d, piso - 36 * d), Size(ancho * d, 12 * d)) }
+        val az = java.util.Random(11)
+        repeat(10) { val c = Offset(az.nextFloat() * w, piso - (6 + az.nextFloat() * 20) * d); drawArc(Color.White.copy(alpha = 0.35f), 200f, 140f, false, Offset(c.x - 5 * d, c.y - 3 * d), Size(10 * d, 6 * d), style = Stroke(1f * d)) }
+        // Los escudos de bronce, uno entre cada par de columnas.
+        for (i in 0 until n) {
+            val c = Offset((i + 0.5f) * paso, techo + 22 * d); val r = min(11 * d, paso * 0.14f)
+            drawCircle(bronce, r, c)
+            drawCircle(bronce, r * 0.78f, c, style = Stroke(1 * d))
+            estrella(c, r * 0.62f, r * 0.2f, Color(0xFFD4AF37).copy(alpha = if (oscuro) 0.6f else 0.5f), 8)
+            drawLine(bronce, Offset(c.x, c.y - r), Offset(c.x, c.y - r - 6 * d), 1 * d)
+        }
+        // Las columnas jónicas.
+        for (i in 0..n) columnaClasica(i * paso, techo, piso, 7 * d, marmol, 1)
+        // El entablamento: cornisa, dentículos, friso con greca y las tres fajas del arquitrabe.
+        drawRect(marmol, Offset(0f, 0f), Size(w, 5 * d))
+        var x = 1 * d; while (x < w) { drawRect(marmol, Offset(x, 6 * d), Size(2.4f * d, 3 * d)); x += 4 * d }
+        drawRect(marmol.copy(alpha = marmol.alpha * 0.5f), Offset(0f, 10 * d), Size(w, 11 * d))
+        greca(11.5f * d, 8 * d, cs.primary.copy(alpha = 0.45f))
+        listOf(22f, 26f, 30f).forEachIndexed { k, y -> drawRect(marmol, Offset(0f, y * d), Size(w, (3.2f - k * 0.4f) * d)) }
+        // El estilóbato.
         for (k in 0 until 3) drawRect(marmol, Offset(0f, h - 10 * d + k * 3.4f * d), Size(w, 3 * d))
     }
 

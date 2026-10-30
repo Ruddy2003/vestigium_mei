@@ -1,7 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F715204F" />
-    <stroke android:width="1.5dp" android:color="#3654D5" />
-    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
-</shape>
+<!-- Android 12 y después: igual que la de drawable/. Ya no fuerza el radio del sistema (system_app_widget_background_radius) para no perder la forma del tema. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F715204F"/>
+            <stroke android:width="1.5dp" android:color="#3654D5"/>
+            <corners android:radius="4dp"/>
+        </shape>
+    </item>
+    <item android:top="3dp" android:left="3dp" android:right="3dp" android:bottom="3dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="1dp" android:color="#AAD9B25B"/>
+            <corners android:radius="2dp"/>
+        </shape>
+    </item>
+    <item android:top="5.5dp" android:left="5.5dp" android:right="5.5dp" android:bottom="5.5dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.5dp" android:color="#55D9B25B"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="18dp" android:height="12dp" android:top="0dp">
+        <shape android:shape="oval">
+            <solid android:color="#F715204F"/>
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="12dp" android:height="12dp" android:top="0dp">
+        <vector android:width="12dp" android:height="12dp" android:viewportWidth="12" android:viewportHeight="12">
+            <path android:pathData="M6,3.1 m-1.1,0 a1.1,1.1 0 1,0 2.2,0 a1.1,1.1 0 1,0 -2.2,0 Z M4.6,6.6 a1.4,2.8 0 1,0 2.8,0 a1.4,2.8 0 1,0 -2.8,0 Z M5.4,5.2 C2.2,1.6 0.4,4.6 4.7,6.6 Z M6.6,5.2 C9.8,1.6 11.6,4.6 7.3,6.6 Z" android:fillColor="#D9B25B"/>
+        </vector>
+    </item>
+</layer-list>

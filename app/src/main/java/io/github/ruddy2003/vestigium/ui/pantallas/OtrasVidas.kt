@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,13 +47,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.text.drawText
@@ -77,6 +82,11 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.dibujarEmblema
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.figEngrane
+import io.github.ruddy2003.vestigium.ui.figEstrella
+import io.github.ruddy2003.vestigium.ui.figPoligono
+import io.github.ruddy2003.vestigium.ui.figuraTema
+import io.github.ruddy2003.vestigium.ui.polarFig
 import io.github.ruddy2003.vestigium.ui.rememberSentir
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -421,21 +431,227 @@ private fun FilaComparacion(v: OtrasVidas.Vida, m: OtrasVidas.Medida, d: OtrasVi
 
 @Composable
 private fun BarraValor(color: Color, f: Float, texto: String) {
+    val tema = Estilo.tema
     Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.weight(1f).height(10.dp)) {
-            Canvas(Modifier.fillMaxSize()) {
-                drawRoundRect(color.copy(alpha = 0.15f), Offset.Zero, size, CornerRadius(5f))
-                if (f > 0f) drawRoundRect(color, Offset.Zero, Size(size.width * f.coerceIn(0.015f, 1f), size.height), CornerRadius(5f))
-            }
+            Canvas(Modifier.fillMaxSize()) { barraTema(tema, color, f) }
         }
         Text(texto, style = MaterialTheme.typography.labelMedium, color = color, maxLines = 1, modifier = Modifier.width(118.dp).padding(start = 8.dp), textAlign = TextAlign.End)
     }
 }
 
-/** La hora de dormir: una línea de las 18 a las 6 con su marca y la tuya. */
+/**
+ * Una barra de comparación con la forma del tema. El largo lleno es siempre [f] del ancho (desde cero, como antes);
+ * el tema solo cambia la pista, la forma y lo que lleva dentro: columna acanalada, celdas de consola, tinta con su rúbrica,
+ * sello rayado, medidor, barra remachada, regla graduada, cinta pespunteada, galón, tallo con hojas, bastón de caramelo,
+ * seda, vidriera, haz de luz, alicatado, fieltro, sombreado a pluma, cuña, banderola y piedra con muescas.
+ */
+private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
+    val w = size.width; val h = size.height; val d = density
+    val fw = if (f > 0f) w * f.coerceIn(0.015f, 1f) else 0f
+    val pista = color.copy(alpha = 0.15f)
+    val claro = Color.White.copy(alpha = 0.35f); val oscuro = Color.Black.copy(alpha = 0.25f)
+    fun guion(a: Float, b: Float) = PathEffect.dashPathEffect(floatArrayOf(a * d, b * d))
+    when (tema) {
+        // Fuste acanalado, tumbado, con su ábaco arriba y abajo.
+        TemaId.ROMANO -> {
+            drawRect(pista, Offset.Zero, size)
+            if (fw > 0f) {
+                drawRect(color, Offset.Zero, Size(fw, h))
+                clipRect(right = fw) { var x = 3f * d; while (x < fw) { drawLine(claro, Offset(x, 1.6f * d), Offset(x, h - 1.6f * d), 0.8f * d); x += 3.5f * d } }
+                drawRect(oscuro, Offset.Zero, Size(fw, 1.2f * d)); drawRect(oscuro, Offset(0f, h - 1.2f * d), Size(fw, 1.2f * d))
+            }
+        }
+        // Celdas de consola: ▮▮▮▯▯.
+        TemaId.CIBER -> {
+            val paso = 5f * d; val celda = 3.6f * d
+            var x = 0f
+            while (x < w) { drawRect(pista, Offset(x, 0f), Size(celda, h)); x += paso }
+            clipRect(right = fw) { x = 0f; while (x < fw) { drawRect(color, Offset(x, 0f), Size(celda, h)); x += paso } }
+        }
+        // Friso: la barra entre dos filetes.
+        TemaId.HELENO -> {
+            drawLine(color.copy(alpha = 0.3f), Offset(0f, h / 2), Offset(w, h / 2), d)
+            if (fw > 0f) {
+                drawRect(color, Offset(0f, h * 0.27f), Size(fw, h * 0.46f))
+                drawLine(color, Offset(0f, 0.5f * d), Offset(fw, 0.5f * d), d); drawLine(color, Offset(0f, h - 0.5f * d), Offset(fw, h - 0.5f * d), d)
+            }
+        }
+        // Trazo de tinta sobre el renglón, rematado con un rombo de rúbrica.
+        TemaId.MEDIEVAL -> {
+            drawLine(color.copy(alpha = 0.3f), Offset(0f, h / 2), Offset(w, h / 2), d, pathEffect = guion(1f, 2.5f))
+            if (fw > 0f) {
+                drawRoundRect(color, Offset(0f, h * 0.18f), Size(fw, h * 0.64f), CornerRadius(h * 0.32f))
+                drawPath(Path().apply { moveTo(fw, 0f); lineTo(fw + h * 0.4f, h / 2); lineTo(fw, h); lineTo(fw - h * 0.4f, h / 2); close() }, Color(0xFFA3312F))
+            }
+        }
+        // Sello rayado del expediente.
+        TemaId.DISTOPIA -> {
+            drawRect(color.copy(alpha = 0.4f), Offset(0.5f * d, 0.5f * d), Size(w - d, h - d), style = Stroke(d))
+            if (fw > 0f) {
+                drawRect(color.copy(alpha = 0.35f), Offset.Zero, Size(fw, h))
+                clipRect(right = fw) { var x = -h; while (x < fw) { drawLine(color, Offset(x, h), Offset(x + h, 0f), 1.6f * d); x += 3.2f * d } }
+                drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
+            }
+        }
+        // Medidor de esfera alargada, con sus décimos y el brillo del vidrio.
+        TemaId.REFUGIO -> {
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(h / 2))
+            for (k in 1..9) drawLine(color.copy(alpha = 0.3f), Offset(w * k / 10f, h * 0.2f), Offset(w * k / 10f, h * 0.8f), d)
+            if (fw > 0f) {
+                drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(h / 2))
+                drawRoundRect(claro, Offset(h * 0.3f, h * 0.18f), Size((fw - h * 0.6f).coerceAtLeast(0f), h * 0.22f), CornerRadius(h * 0.11f))
+            }
+        }
+        // Barra de acero con bisel y dos remaches.
+        TemaId.ORDEN -> {
+            drawRect(pista, Offset.Zero, size)
+            if (fw > 0f) {
+                drawRect(color, Offset.Zero, Size(fw, h)); drawRect(claro, Offset.Zero, Size(fw, 1.5f * d))
+                if (fw > h * 3) { drawCircle(oscuro, h * 0.17f, Offset(h * 0.5f, h / 2)); drawCircle(oscuro, h * 0.17f, Offset(fw - h * 0.5f, h / 2)) }
+            }
+        }
+        // Regla graduada: la lectura arriba y la marca donde termina.
+        TemaId.LABORATORIO -> {
+            var x = 0f; var i = 0
+            while (x <= w) { drawLine(color.copy(alpha = 0.35f), Offset(x, h), Offset(x, if (i % 5 == 0) h * 0.35f else h * 0.65f), 0.8f * d); x += 3f * d; i++ }
+            if (fw > 0f) { drawRect(color, Offset(0f, h * 0.08f), Size(fw, h * 0.45f)); drawLine(color, Offset(fw, 0f), Offset(fw, h), 1.5f * d) }
+        }
+        // Cinta de tela pespunteada.
+        TemaId.COLONOS -> {
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(2f * d))
+            if (fw > 0f) {
+                drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(2f * d))
+                if (fw > 4f * d) drawLine(Color.White.copy(alpha = 0.6f), Offset(2f * d, h / 2), Offset(fw - 2f * d, h / 2), d, pathEffect = guion(2.5f, 2f))
+            }
+        }
+        // Galón con los bordes de oro.
+        TemaId.NAPOLEON -> {
+            drawRect(pista, Offset.Zero, size)
+            if (fw > 0f) {
+                val oro = Color(0xFFD4AF37)
+                drawRect(color, Offset.Zero, Size(fw, h)); drawRect(oro, Offset.Zero, Size(fw, 1.6f * d)); drawRect(oro, Offset(0f, h - 1.6f * d), Size(fw, 1.6f * d))
+            }
+        }
+        // Un tallo con hojas alternas y un botón en la punta.
+        TemaId.BOTANICO -> {
+            drawLine(color.copy(alpha = 0.25f), Offset(0f, h / 2), Offset(w, h / 2), d)
+            if (fw > 0f) {
+                drawLine(color, Offset(0f, h / 2), Offset(fw, h / 2), 2f * d, StrokeCap.Round)
+                clipRect(right = fw) {
+                    var x = 4f * d; var k = 0
+                    while (x < fw) {
+                        val arriba = k % 2 == 0
+                        rotate(if (arriba) -35f else 35f, Offset(x, h / 2)) { drawOval(color, Offset(x, h / 2 - h * 0.18f), Size(h * 0.55f, h * 0.36f)) }
+                        x += 6f * d; k++
+                    }
+                }
+                drawCircle(color, h * 0.3f, Offset(fw, h / 2))
+            }
+        }
+        // Bastón de caramelo.
+        TemaId.NAVIDAD -> {
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(h / 2))
+            if (fw > 0f) {
+                val p = Path().apply { addRoundRect(RoundRect(0f, 0f, fw, h, CornerRadius(h / 2))) }
+                drawPath(p, color)
+                clipPath(p) { var x = -h; while (x < fw) { drawLine(Color.White.copy(alpha = 0.55f), Offset(x, h), Offset(x + h, 0f), 2f * d); x += 5f * d } }
+            }
+        }
+        // Seda con rombos tejidos.
+        TemaId.SEDA -> {
+            drawRect(pista, Offset.Zero, size)
+            if (fw > 0f) {
+                drawRect(color, Offset.Zero, Size(fw, h))
+                clipRect(right = fw) { var x = h / 2; while (x < fw + h) { drawPath(figPoligono(Offset(x, h / 2), h * 0.34f, 4, -90f), claro, style = Stroke(0.8f * d)); x += h } }
+            }
+        }
+        // Vidriera: vidrios entre plomos.
+        TemaId.GOTICO -> {
+            val plomo = Color(0xFF1C1A24).copy(alpha = 0.75f)
+            drawRect(plomo.copy(alpha = 0.25f), Offset.Zero, size, style = Stroke(d))
+            if (fw > 0f) {
+                drawRect(color, Offset.Zero, Size(fw, h))
+                clipRect(right = fw) { var x = 7f * d; while (x < fw) { drawLine(plomo, Offset(x, 0f), Offset(x, h), 1.5f * d); x += 7f * d } }
+                drawRect(plomo, Offset.Zero, Size(fw, h), style = Stroke(1.5f * d))
+            }
+        }
+        // Haz de luz de la consola con su punta encendida.
+        TemaId.ESPACIO -> {
+            drawLine(color.copy(alpha = 0.25f), Offset(0f, h / 2), Offset(w, h / 2), d)
+            if (fw > 0f) {
+                drawRoundRect(color.copy(alpha = 0.25f), Offset.Zero, Size(fw, h), CornerRadius(h / 2))
+                drawRoundRect(color, Offset(0f, h * 0.32f), Size(fw, h * 0.36f), CornerRadius(h * 0.18f))
+                drawCircle(Color.White.copy(alpha = 0.85f), h * 0.2f, Offset((fw - h * 0.2f).coerceAtLeast(h * 0.2f), h / 2))
+            }
+        }
+        // Alicatado: estrellas de ocho puntas en fila.
+        TemaId.ANDALUS -> {
+            drawRect(color.copy(alpha = 0.35f), Offset.Zero, size, style = Stroke(0.8f * d))
+            if (fw > 0f) {
+                drawRect(color, Offset.Zero, Size(fw, h))
+                clipRect(right = fw) {
+                    var x = h / 2
+                    while (x < fw + h) { val o = Offset(x, h / 2); drawPath(figPoligono(o, h * 0.32f, 4, -90f), claro); drawPath(figPoligono(o, h * 0.32f, 4, -45f), claro); x += h * 1.1f }
+                }
+            }
+        }
+        // Fieltro con su zigzag cosido.
+        TemaId.MONGOL -> {
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(3f * d))
+            if (fw > 0f) {
+                drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(3f * d))
+                clipRect(right = fw) {
+                    val z = Path(); var x = 0f; var arriba = true
+                    z.moveTo(0f, h * 0.7f)
+                    while (x < fw) { x += h * 0.4f; z.lineTo(x, if (arriba) h * 0.3f else h * 0.7f); arriba = !arriba }
+                    drawPath(z, Color.White.copy(alpha = 0.5f), style = Stroke(d))
+                }
+            }
+        }
+        // Sombreado a pluma, cruzado, sobre la línea de construcción.
+        TemaId.RENACIMIENTO -> {
+            drawLine(color.copy(alpha = 0.3f), Offset(0f, h / 2), Offset(w, h / 2), 0.6f * d)
+            drawLine(color.copy(alpha = 0.3f), Offset(0f, 0f), Offset(0f, h), 0.6f * d); drawLine(color.copy(alpha = 0.3f), Offset(w, 0f), Offset(w, h), 0.6f * d)
+            if (fw > 0f) {
+                drawRect(color.copy(alpha = 0.3f), Offset.Zero, Size(fw, h))
+                clipRect(right = fw) {
+                    var x = -h
+                    while (x < fw) { drawLine(color, Offset(x, h), Offset(x + h, 0f), 0.9f * d); drawLine(color.copy(alpha = 0.5f), Offset(x, 0f), Offset(x + h, h), 0.6f * d); x += 2.5f * d }
+                }
+                drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(0.8f * d))
+            }
+        }
+        // Cuña constructivista que crece hacia la punta.
+        TemaId.URSS -> {
+            drawLine(color.copy(alpha = 0.35f), Offset(0f, h / 2), Offset(w, h / 2), 1.2f * d)
+            if (fw > 0f) drawPath(Path().apply { moveTo(0f, h * 0.38f); lineTo(fw, 0f); lineTo(fw, h); lineTo(0f, h * 0.62f); close() }, color)
+        }
+        // Banderola de cola de golondrina.
+        TemaId.REVOLUCION -> {
+            drawRect(pista, Offset.Zero, size)
+            if (fw > 0f) {
+                val n = minOf(h * 0.4f, fw * 0.5f)
+                drawPath(Path().apply { moveTo(0f, 0f); lineTo(fw, 0f); lineTo(fw - n, h / 2); lineTo(fw, h); lineTo(0f, h); close() }, color)
+            }
+        }
+        // Piedra en chaflán con muescas de runa.
+        TemaId.ANTIGUAS -> {
+            fun losa(x1: Float): Path { val k = minOf(2f * d, x1 / 2); return Path().apply { moveTo(k, 0f); lineTo(x1 - k, 0f); lineTo(x1, k); lineTo(x1, h - k); lineTo(x1 - k, h); lineTo(k, h); lineTo(0f, h - k); lineTo(0f, k); close() } }
+            drawPath(losa(w), pista)
+            if (fw > 0f) {
+                drawPath(losa(fw), color)
+                clipRect(right = fw) { var x = 4f * d; var k = 0; while (x < fw) { drawLine(oscuro, Offset(x, if (k % 3 != 1) 0f else h), Offset(x + 1.5f * d, h / 2), d); x += 5f * d; k++ } }
+            }
+        }
+    }
+}
+
+/** La hora de dormir: una línea de las 18 a las 6 con su marca y la tuya, con la figura del tema. */
 @Composable
 private fun RelojitoHora(suya: Double, tuya: Double?) {
     val cs = MaterialTheme.colorScheme
+    val tema = Estilo.tema
     val medidor = androidx.compose.ui.text.rememberTextMeasurer()
     val estilo = androidx.compose.ui.text.TextStyle(fontSize = 9.sp, color = cs.onSurfaceVariant)
     fun norm(h: Double) = (if (h < 12) h + 24 else h).coerceIn(18.0, 32.0)
@@ -444,8 +660,8 @@ private fun RelojitoHora(suya: Double, tuya: Double?) {
         fun x(h: Double) = ((norm(h) - 18) / 14 * size.width).toFloat()
         drawLine(cs.outline.copy(alpha = 0.5f), Offset(0f, y), Offset(size.width, y), 2f)
         for (h in listOf(18, 21, 24, 27, 30)) { drawLine(cs.outline, Offset(x(h.toDouble()), y - 4f), Offset(x(h.toDouble()), y + 4f), 1.5f); drawText(medidor, "${h % 24}:00", Offset(x(h.toDouble()) - 10f, y + 6f), estilo) }
-        drawCircle(cs.secondary, 6.dp.toPx(), Offset(x(suya), y))
-        tuya?.let { drawCircle(cs.primary, 6.dp.toPx(), Offset(x(it), y)); drawCircle(cs.surface, 2.5.dp.toPx(), Offset(x(it), y)) }
+        figuraTema(tema, cs.secondary, Offset(x(suya), y), 6.dp.toPx(), cs.surface)
+        tuya?.let { figuraTema(tema, cs.primary, Offset(x(it), y), 6.dp.toPx(), cs.surface); drawCircle(cs.surface, 2.5.dp.toPx(), Offset(x(it), y)) }
     }
 }
 
@@ -460,10 +676,13 @@ private fun RelojDia(v: OtrasVidas.Vida, tuDormir: Double?, tuDespertar: Double?
     )
     val medidor = androidx.compose.ui.text.rememberTextMeasurer()
     val estilo = androidx.compose.ui.text.TextStyle(fontSize = 10.sp, color = cs.onSurfaceVariant)
+    val tema = Estilo.tema
     Row(verticalAlignment = Alignment.CenterVertically) {
         Canvas(Modifier.size(170.dp)) {
             val c = center; val r = size.minDimension / 2 - 14.dp.toPx(); val ancho = 18.dp.toPx()
             fun ang(h: Double) = (h / 24 * 360 - 90).toFloat()
+            // La esfera del tema, debajo de los tramos: solo adorno; las horas siguen donde estaban.
+            esferaDia(tema, c, r, ancho, cs)
             v.dia.forEach { tr ->
                 val dur = ((tr.hasta - tr.desde) + 24) % 24
                 drawArc(colores[tr.que] ?: cs.outline, ang(tr.desde), (dur / 24 * 360).toFloat() - 0.8f, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(ancho, cap = StrokeCap.Butt))
@@ -498,6 +717,179 @@ private fun RelojDia(v: OtrasVidas.Vida, tuDormir: Double?, tuDespertar: Double?
     }
     val notas = v.dia.filter { it.texto.isNotBlank() }
     if (notas.isNotEmpty()) Ayuda(notas.joinToString(" · ") { "${horaCorta(it.desde)} ${it.texto}" }, Modifier.padding(top = 8.dp))
+}
+
+/**
+ * La esfera del reloj de 24 horas en cada tema: reloj de sol, pantalla de consola, sol de Vergina, horologio iluminado,
+ * ojo vigilante, medidor, engrane, papel polar, reloj de pared, laurel, reloj de flores, corona de pino, las doce horas
+ * dobles, rosetón, radar, astrolabio, tono de yurta, trazo de construcción, estrella roja, escarapela y fases de la luna.
+ * Va en el centro (dentro del anillo de tu sueño) y en el borde de afuera, sin tapar las horas 0, 6, 12 y 18.
+ */
+private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float, cs: ColorScheme) {
+    val d = density
+    val ro = r + ancho / 2
+    val rc = r - ancho - 12f * d
+    val tinta = cs.onSurface; val linea = cs.outline
+    fun marcas(n: Int, largo: Float, grosor: Float, color: Color) {
+        for (k in 0 until n) { val a = k * 360f / n - 90f; drawLine(color, polarFig(c, ro + 1.5f * d, a), polarFig(c, ro + 1.5f * d + largo, a), grosor) }
+    }
+    when (tema) {
+        // Reloj de sol: las líneas horarias y el gnomon.
+        TemaId.ROMANO -> {
+            for (k in 0 until 24) drawLine(linea.copy(alpha = 0.35f), polarFig(c, rc * 0.3f, k * 15f - 90f), polarFig(c, rc, k * 15f - 90f), 0.7f * d)
+            drawPath(Path().apply { moveTo(c.x - rc * 0.12f, c.y + rc * 0.12f); lineTo(c.x + rc * 0.12f, c.y + rc * 0.12f); lineTo(c.x, c.y - rc * 0.55f); close() }, tinta.copy(alpha = 0.45f))
+            drawCircle(tinta.copy(alpha = 0.4f), rc * 0.15f, c)
+            marcas(24, 2.5f * d, d, linea)
+        }
+        // Pantalla de consola: píxeles por hora y el cursor.
+        TemaId.CIBER -> {
+            for (k in 0 until 24) drawRect(cs.primary.copy(alpha = if (k % 6 == 0) 0.9f else 0.35f), polarFig(c, ro + 3f * d, k * 15f - 90f) - Offset(1.2f * d, 1.2f * d), Size(2.4f * d, 2.4f * d))
+            drawCircle(cs.primary.copy(alpha = 0.3f), rc, c, style = Stroke(d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * d, 2f * d))))
+            drawRect(cs.primary.copy(alpha = 0.6f), Offset(c.x - 3f * d, c.y - 5f * d), Size(6f * d, 10f * d))
+        }
+        // El sol de Vergina en el centro.
+        TemaId.HELENO -> {
+            drawPath(figEstrella(c, rc * 0.75f, rc * 0.32f, 16), cs.tertiary.copy(alpha = 0.35f))
+            drawCircle(cs.tertiary.copy(alpha = 0.5f), rc * 0.24f, c)
+            marcas(24, 2f * d, d, linea)
+        }
+        // Horologio iluminado: cuadrifolio rojo y puntos de rúbrica.
+        TemaId.MEDIEVAL -> {
+            val rubrica = Color(0xFFA3312F)
+            for (k in 0 until 4) drawCircle(rubrica.copy(alpha = 0.6f), rc * 0.22f, polarFig(c, rc * 0.22f, k * 90f), style = Stroke(1.2f * d))
+            for (k in 0 until 24) drawCircle(if (k % 3 == 0) rubrica else tinta.copy(alpha = 0.4f), 1.3f * d, polarFig(c, ro + 3f * d, k * 15f - 90f))
+        }
+        // El ojo que vigila y las marcas gruesas.
+        TemaId.DISTOPIA -> {
+            val l = rc * 0.7f
+            drawPath(Path().apply { moveTo(c.x - l, c.y); quadraticTo(c.x, c.y - l * 0.9f, c.x + l, c.y); quadraticTo(c.x, c.y + l * 0.9f, c.x - l, c.y); close() }, tinta.copy(alpha = 0.5f), style = Stroke(1.5f * d))
+            drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
+            marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
+        }
+        // Medidor: marcas largas cada tres horas y el átomo al centro.
+        TemaId.REFUGIO -> {
+            for (k in 0 until 24) { val a = k * 15f - 90f; drawLine(linea, polarFig(c, ro + 1.5f * d, a), polarFig(c, ro + (if (k % 3 == 0) 6f else 3f) * d, a), d) }
+            figuraTema(tema, cs.primary.copy(alpha = 0.35f), c, rc * 0.5f, cs.surface)
+        }
+        // Engrane alrededor y cubo con sus pernos.
+        TemaId.ORDEN -> {
+            drawPath(figEngrane(c, ro + 3.5f * d, 24, ro / (ro + 3.5f * d) - 0.01f), linea.copy(alpha = 0.6f), style = Stroke(1.2f * d))
+            drawCircle(linea.copy(alpha = 0.5f), rc * 0.32f, c, style = Stroke(2f * d))
+            for (k in 0 until 6) drawCircle(linea.copy(alpha = 0.5f), 1.5f * d, polarFig(c, rc * 0.2f, k * 60f))
+        }
+        // Papel polar: círculos y radios.
+        TemaId.LABORATORIO -> {
+            listOf(1f, 0.66f, 0.33f).forEach { k -> drawCircle(linea.copy(alpha = 0.25f), rc * k, c, style = Stroke(0.6f * d)) }
+            for (k in 0 until 24) drawLine(linea.copy(alpha = 0.2f), c, polarFig(c, rc, k * 15f), 0.5f * d)
+            marcas(96, 1.5f * d, 0.5f * d, linea.copy(alpha = 0.5f))
+        }
+        // Reloj de pared: aro de madera, doce puntos y el eje.
+        TemaId.COLONOS -> {
+            drawCircle(cs.secondary.copy(alpha = 0.45f), ro + 3f * d, c, style = Stroke(3f * d))
+            for (k in 0 until 12) drawCircle(tinta.copy(alpha = 0.35f), 1.4f * d, polarFig(c, rc * 0.85f, k * 30f))
+            drawCircle(tinta.copy(alpha = 0.6f), 2.5f * d, c)
+        }
+        // Laurel por fuera y la estrella de la Legión al centro.
+        TemaId.NAPOLEON -> {
+            listOf(-60f, -45f, -30f, 30f, 45f, 60f, 120f, 135f, 150f, 210f, 225f, 240f).forEach { a ->
+                val p = polarFig(c, ro + 4f * d, a)
+                rotate(a, p) { drawOval(cs.tertiary.copy(alpha = 0.7f), Offset(p.x - 1.3f * d, p.y - 3f * d), Size(2.6f * d, 6f * d)) }
+            }
+            figuraTema(tema, cs.tertiary.copy(alpha = 0.35f), c, rc * 0.45f, cs.surface)
+        }
+        // El reloj de flores: doce pétalos.
+        TemaId.BOTANICO -> {
+            for (k in 0 until 12) rotate(k * 30f, c) { drawOval(cs.tertiary.copy(alpha = 0.3f), Offset(c.x - rc * 0.1f, c.y - rc * 0.7f), Size(rc * 0.2f, rc * 0.5f)) }
+            drawCircle(cs.secondary.copy(alpha = 0.45f), rc * 0.18f, c)
+            marcas(24, 2f * d, d, linea)
+        }
+        // Corona de pino con bayas y un copo al centro.
+        TemaId.NAVIDAD -> {
+            val pino = Color(0xFF2E6B3A).copy(alpha = 0.7f)
+            for (k in 0 until 90) { val a = k * 4f; drawLine(pino, polarFig(c, ro + 0.5f * d, a), polarFig(c, ro + 3f * d, a + 6f), d) }
+            listOf(45f, 135f, 225f, 315f).forEach { a -> drawCircle(Color(0xFFC0392B), 2f * d, polarFig(c, ro + 3f * d, a)) }
+            figuraTema(tema, cs.primary.copy(alpha = 0.3f), c, rc * 0.5f, cs.surface)
+        }
+        // Las doce horas dobles y la moneda al centro.
+        TemaId.SEDA -> {
+            for (k in 0 until 12) { val a = (2 * k + 1) * 15f - 90f; drawLine(cs.tertiary.copy(alpha = 0.7f), polarFig(c, ro + d, a), polarFig(c, ro + 5f * d, a), 2.2f * d) }
+            figuraTema(tema, cs.tertiary.copy(alpha = 0.3f), c, rc * 0.45f, cs.surface)
+        }
+        // Rosetón: doce lóbulos, radios y estrellas de oro.
+        TemaId.GOTICO -> {
+            drawCircle(cs.tertiary.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.2f * d))
+            for (k in 0 until 12) {
+                drawCircle(cs.tertiary.copy(alpha = 0.4f), rc * 0.14f, polarFig(c, rc * 0.45f, k * 30f), style = Stroke(d))
+                drawLine(cs.tertiary.copy(alpha = 0.3f), polarFig(c, rc * 0.6f, k * 30f + 15f), polarFig(c, rc, k * 30f + 15f), 0.8f * d)
+            }
+            for (k in 0 until 24) if (k % 6 != 0) drawCircle(cs.tertiary.copy(alpha = 0.7f), 1.2f * d, polarFig(c, ro + 3f * d, k * 15f - 90f))
+        }
+        // Radar: anillos, cruz y el barrido.
+        TemaId.ESPACIO -> {
+            listOf(1f, 0.66f, 0.33f).forEach { k -> drawCircle(cs.secondary.copy(alpha = 0.3f), rc * k, c, style = Stroke(0.8f * d)) }
+            drawLine(cs.secondary.copy(alpha = 0.25f), Offset(c.x - rc, c.y), Offset(c.x + rc, c.y), 0.6f * d)
+            drawLine(cs.secondary.copy(alpha = 0.25f), Offset(c.x, c.y - rc), Offset(c.x, c.y + rc), 0.6f * d)
+            drawArc(cs.secondary.copy(alpha = 0.12f), -90f, 50f, true, Offset(c.x - rc, c.y - rc), Size(rc * 2, rc * 2))
+            marcas(24, 2f * d, 0.8f * d, cs.secondary.copy(alpha = 0.5f))
+        }
+        // Astrolabio: la red con la estrella de ocho y el limbo graduado.
+        TemaId.ANDALUS -> {
+            drawPath(figPoligono(c, rc * 0.5f, 4, -90f), cs.tertiary.copy(alpha = 0.6f), style = Stroke(d))
+            drawPath(figPoligono(c, rc * 0.5f, 4, -45f), cs.tertiary.copy(alpha = 0.6f), style = Stroke(d))
+            drawCircle(cs.tertiary.copy(alpha = 0.4f), rc, c, style = Stroke(0.6f * d))
+            marcas(72, 2f * d, 0.6f * d, cs.tertiary.copy(alpha = 0.55f)); marcas(24, 4f * d, d, cs.tertiary.copy(alpha = 0.7f))
+        }
+        // El tono de la yurta: la rueda, sus dos barras cruzadas y las varas del techo.
+        TemaId.MONGOL -> {
+            for (k in 0 until 32) { val a = k * 360f / 32; drawLine(linea.copy(alpha = 0.3f), polarFig(c, rc * 0.34f, a), polarFig(c, rc, a), 0.8f * d) }
+            drawCircle(cs.primary.copy(alpha = 0.45f), rc * 0.32f, c, style = Stroke(2.5f * d))
+            for (s in listOf(-1f, 1f)) {
+                drawLine(cs.primary.copy(alpha = 0.4f), Offset(c.x + s * rc * 0.08f, c.y - rc * 0.3f), Offset(c.x + s * rc * 0.08f, c.y + rc * 0.3f), 1.2f * d)
+                drawLine(cs.primary.copy(alpha = 0.4f), Offset(c.x - rc * 0.3f, c.y + s * rc * 0.08f), Offset(c.x + rc * 0.3f, c.y + s * rc * 0.08f), 1.2f * d)
+            }
+        }
+        // Trazo de construcción: círculo, cuadrado inscrito, ejes y la punta del compás.
+        TemaId.RENACIMIENTO -> {
+            val sepia = tinta.copy(alpha = 0.3f); val l = rc * 0.707f
+            drawCircle(sepia, rc, c, style = Stroke(0.6f * d))
+            drawRect(sepia, Offset(c.x - l, c.y - l), Size(l * 2, l * 2), style = Stroke(0.6f * d))
+            drawLine(sepia, Offset(c.x - l, c.y - l), Offset(c.x + l, c.y + l), 0.5f * d); drawLine(sepia, Offset(c.x + l, c.y - l), Offset(c.x - l, c.y + l), 0.5f * d)
+            drawLine(sepia, Offset(c.x - rc, c.y), Offset(c.x + rc, c.y), 0.5f * d); drawLine(sepia, Offset(c.x, c.y - rc), Offset(c.x, c.y + rc), 0.5f * d)
+            drawCircle(sepia, 2f * d, c, style = Stroke(0.8f * d))
+            for (k in 0 until 4) drawArc(sepia, k * 90f + 30f, 30f, false, Offset(c.x - rc * 1.06f, c.y - rc * 1.06f), Size(rc * 2.12f, rc * 2.12f), style = Stroke(0.6f * d))
+        }
+        // Estrella roja sobre la barra diagonal.
+        TemaId.URSS -> {
+            rotate(-30f, c) { drawRect(tinta.copy(alpha = 0.5f), Offset(c.x - rc, c.y - rc * 0.09f), Size(rc * 2, rc * 0.18f)) }
+            drawPath(figEstrella(c, rc * 0.5f, rc * 0.2f, 5), Color(0xFFC62828).copy(alpha = 0.8f))
+            marcas(24, 3f * d, 1.6f * d, tinta.copy(alpha = 0.55f))
+        }
+        // La escarapela al centro.
+        TemaId.REVOLUCION -> {
+            drawCircle(Color(0xFFC8102E).copy(alpha = 0.5f), rc * 0.55f, c)
+            drawCircle(Color.White.copy(alpha = 0.8f), rc * 0.4f, c)
+            drawCircle(Color(0xFF1F3A93).copy(alpha = 0.55f), rc * 0.25f, c)
+            marcas(24, 2f * d, d, linea)
+        }
+        // Las lunas por fuera (llena, creciente, nueva, menguante) y una runa inventada al centro.
+        TemaId.ANTIGUAS -> {
+            val luna = tinta.copy(alpha = 0.45f); val rl = 3f * d
+            listOf(-45f, 45f, 135f, 225f).forEachIndexed { i, a ->
+                val p = polarFig(c, ro + 5f * d, a); val caja = Offset(p.x - rl, p.y - rl); val lado = Size(rl * 2, rl * 2)
+                when (i) {
+                    0 -> drawCircle(luna, rl, p)
+                    1 -> { drawArc(luna, -90f, 180f, true, caja, lado); drawCircle(luna, rl, p, style = Stroke(0.6f * d)) }
+                    2 -> drawCircle(luna, rl, p, style = Stroke(0.8f * d))
+                    else -> { drawArc(luna, 90f, 180f, true, caja, lado); drawCircle(luna, rl, p, style = Stroke(0.6f * d)) }
+                }
+            }
+            val q = rc * 0.4f
+            drawPath(figPoligono(c + Offset(0f, -q * 0.3f), q * 0.5f, 4, -90f), luna, style = Stroke(1.5f * d))
+            drawLine(luna, Offset(c.x, c.y + q * 0.2f), Offset(c.x - q * 0.5f, c.y + q), 1.5f * d)
+            drawLine(luna, Offset(c.x, c.y + q * 0.2f), Offset(c.x + q * 0.5f, c.y + q), 1.5f * d)
+            drawLine(luna, Offset(c.x, c.y - q * 1.1f), Offset(c.x, c.y + q * 0.2f), 1.5f * d)
+        }
+    }
 }
 
 private fun horaCorta(h: Double): String { val x = ((h % 24) + 24) % 24; return "%d:%02d".format(x.toInt(), ((x - x.toInt()) * 60).roundToInt().coerceAtMost(59)) }

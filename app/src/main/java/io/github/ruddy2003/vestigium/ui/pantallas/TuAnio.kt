@@ -71,9 +71,11 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -96,6 +98,7 @@ import io.github.ruddy2003.vestigium.ui.Emblema
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Fiesta
+import io.github.ruddy2003.vestigium.ui.Griego
 import io.github.ruddy2003.vestigium.ui.FondoVivo
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Interruptor
@@ -115,6 +118,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import io.github.ruddy2003.vestigium.ui.Menu
+import io.github.ruddy2003.vestigium.ui.OpcionMenu
 
 // =====================================================================
 //  «Tu año»: historias a pantalla completa con la música, la voz y los colores del tema
@@ -122,29 +127,41 @@ import kotlin.math.roundToInt
 
 private const val DURACION = 8500
 
-/** Cómo se presenta el año en cada tema. */
+/**
+ * Cómo se presenta el año en cada tema: cada uno con su palabra (ninguna se repite entre temas) y su manera de contar.
+ */
 private fun voz(t: TemaId, anio: Int): String = when (t) {
-    TemaId.ROMANO -> "ANNO ${Romano.de(anio)}"
+    // «Res gestae»: las cosas hechas, como el balance que Augusto mandó grabar en bronce.
+    TemaId.ROMANO -> "RES GESTAE · ANNO ${Romano.de(anio)}"
     TemaId.DISTOPIA -> "INFORME ANUAL DEL CIUDADANO · $anio"
     TemaId.CIBER -> "> cat year_$anio.log"
     TemaId.BOTANICO -> "Catálogo de especímenes · $anio"
-    TemaId.HELENO -> "ΕΤΟΣ ${Estilo.numeral(anio)}"
-    TemaId.MEDIEVAL -> "Crónica del año de ${Temas.copista(anio)}"
-    TemaId.REFUGIO -> "REGISTRO ANUAL DEL REFUGIO · $anio"
-    TemaId.ORDEN -> "PARTE ANUAL · $anio"
-    TemaId.LABORATORIO -> "Informe anual de protocolo · $anio"
+    // «Apologismós»: la rendición de cuentas.
+    TemaId.HELENO -> "ΑΠΟΛΟΓΙΣΜΟΣ · ΕΤΟΣ ${Griego.numeral(anio)}"
+    // «Fechos»: los hechos, en la grafía de los cronistas castellanos.
+    TemaId.MEDIEVAL -> "Libro de los fechos del año de ${Temas.copista(anio)}"
+    TemaId.REFUGIO -> "REGISTRO DEL REFUGIO · AÑO $anio BAJO TIERRA"
+    TemaId.ORDEN -> "PARTE DE CUSTODIA DE LA ORDEN · $anio"
+    TemaId.LABORATORIO -> "Protocolo $anio · resultados del año"
     TemaId.COLONOS -> "Almanaque del año $anio"
-    TemaId.NAPOLEON -> "BOLETÍN DEL AÑO $anio"
+    TemaId.NAPOLEON -> "BOLETÍN DE LA GRANDE ARMÉE · $anio"
     TemaId.NAVIDAD -> "Lo que trajo $anio"
     TemaId.SEDA -> "Bitácora de la caravana · ${Temas.anioChino(anio)}"
     TemaId.URSS -> "BALANCE DEL PLAN · $anio"
     TemaId.GOTICO -> "Annales · anno ${Romano.de(anio).lowercase()}"
-    TemaId.ESPACIO -> "BITÁCORA DE MISIÓN · CICLO $anio"
-    TemaId.ANDALUS -> "Crónica del año $anio"
-    TemaId.MONGOL -> Temas.anioMongol(java.time.LocalDate.of(anio, 6, 1))
-    TemaId.RENACIMIENTO -> "Annali dell'anno $anio"
-    TemaId.REVOLUCION -> "ANALES DEL AÑO $anio · ${Temas.anRepublicano(anio, 6).uppercase()}"
-    TemaId.ANTIGUAS -> "CRÓNICA DE LAS DOCE LUNAS · $anio"
+    // Como en los observatorios: el año empieza en un día juliano.
+    TemaId.ESPACIO -> "CICLO $anio · DESDE JD " + String.format(java.util.Locale.US, "%,d", Temas.diaJuliano(java.time.LocalDate.of(anio, 1, 1))).replace(',', ' ')
+    // El año del sol cae sobre dos años de la hégira: el del 1 de enero y el del 31 de diciembre.
+    TemaId.ANDALUS -> {
+        val h1 = Temas.hegira(java.time.LocalDate.of(anio, 1, 1))?.third
+        val h2 = Temas.hegira(java.time.LocalDate.of(anio, 12, 31))?.third
+        "Diwán del año $anio" + (if (h1 != null && h2 != null) " · " + (if (h1 == h2) "$h1 H" else "$h1–$h2 H") else "")
+    }
+    TemaId.MONGOL -> Temas.anioMongol(java.time.LocalDate.of(anio, 6, 1)) + " · $anio"
+    // «Taccuino»: la libreta de bolsillo en que Leonardo apuntaba todo.
+    TemaId.RENACIMIENTO -> "Taccuino dell'anno $anio"
+    TemaId.REVOLUCION -> "CAHIER DE L'ANNÉE $anio · ${Temas.anRepublicano(anio, 6).uppercase()}"
+    TemaId.ANTIGUAS -> "LAS DOCE LUNAS DEL CAMINO · $anio"
 }
 
 /** Lo que una tarjeta necesita saber para dibujarse. */
@@ -163,7 +180,8 @@ val TARJETAS_ANIO = listOf(
 
 private fun n0(x: Double) = "%,.0f".format(x)
 private fun n1(x: Double) = "%.1f".format(x)
-private fun mesLargo(m: Int) = java.time.Month.of(m).getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)
+/** El nombre del mes en la voz del tema (Ianuarius, março, ЯНВАРЬ…), el mismo que usa el resto de la app. */
+private fun mesLargo(m: Int) = Estilo.mes(m)
 private val DIAS = listOf("lunes", "martes", "miércoles", "jueves", "viernes", "sábados", "domingos")
 
 private fun iniciales(s: String) = s.removePrefix("@").split('_', ' ', '-').filter { it.isNotBlank() }.joinToString("") { it.take(1).uppercase() + "." }
@@ -220,12 +238,20 @@ private fun Adivina(v: Vista, pregunta: String, opciones: List<String>, correcta
     }
 }
 
-/** Rascar para descubrir: se borra la capa con el dedo; al rascar lo suficiente se descubre todo. */
+/**
+ * Rascar para descubrir: se borra la capa con el dedo; al rascar lo suficiente se descubre todo. La capa es la misma
+ * lámina del mapa para rascar (Mundo): el metal del tema y su motivo grabado.
+ */
 @Composable
 private fun Rascar(v: Vista, contenido: @Composable () -> Unit) {
-    val cs = MaterialTheme.colorScheme
     val sentir = rememberSentir()
     val trazos = remember { mutableStateListOf<Offset>() }
+    val tema = Estilo.tema
+    val lam = laminaRascar(tema)
+    val dens = LocalDensity.current.density
+    val tesela = remember(tema, dens) { teselaLamina(tema, lam, (26 * dens).toInt()) }
+    // El «rasca aquí» va grabado en el tono que contrasta con el cuerpo del metal.
+    val letra = if (Color(lam.media).luminance() > 0.4f) Color(lam.oscura) else Color(lam.clara)
     Box(Modifier.fillMaxWidth().height(170.dp), contentAlignment = Alignment.Center) {
         contenido()
         if (!v.revelado && !v.exportar) Canvas(Modifier.fillMaxSize().graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).pointerInput(Unit) {
@@ -236,11 +262,10 @@ private fun Rascar(v: Vista, contenido: @Composable () -> Unit) {
                 if (trazos.size > 70) v.revelar()
             }
         }) {
-            drawRoundRect(Brush.linearGradient(listOf(cs.primary, cs.tertiary, cs.primary)), cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx()))
-            for (i in 0 until 40) drawCircle(cs.onPrimary.copy(alpha = 0.10f), 3.dp.toPx(), Offset((i * 37 % 100) / 100f * size.width, (i * 53 % 100) / 100f * size.height))
+            pintarLaminaRascar(lam, tesela, 18.dp.toPx())
             trazos.forEach { drawCircle(Color.Transparent, 30.dp.toPx(), it, blendMode = BlendMode.Clear) }
         }
-        if (!v.revelado && !v.exportar && trazos.isEmpty()) Text("rasca aquí", style = MaterialTheme.typography.titleMedium, color = cs.onPrimary)
+        if (!v.revelado && !v.exportar && trazos.isEmpty()) Text("rasca aquí", style = MaterialTheme.typography.titleMedium, color = letra)
     }
 }
 
@@ -248,6 +273,7 @@ private fun Rascar(v: Vista, contenido: @Composable () -> Unit) {
 @Composable
 private fun MesesAnimo(d: TuAnio.Datos) {
     val cs = MaterialTheme.colorScheme
+    val etiquetas = etiquetasMesesAnio()
     Row(Modifier.fillMaxWidth().height(110.dp).padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.Bottom) {
         for (m in 1..12) {
             val val0 = d.p.valPorMes[m]
@@ -255,7 +281,7 @@ private fun MesesAnimo(d: TuAnio.Datos) {
                 val h = ((val0 ?: 1.0) - 1) / 6
                 Box(Modifier.fillMaxWidth().fillMaxHeight((h.toFloat() * 0.85f).coerceAtLeast(0.03f))
                     .background(if (val0 == null) cs.surfaceVariant else if (m == d.mesMejor) cs.primary else cs.primary.copy(alpha = 0.35f + 0.5f * h.toFloat()), MaterialTheme.shapes.extraSmall))
-                Text(mesLargo(m).take(1).uppercase(), style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
+                Text(etiquetas[m - 1], style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 1, softWrap = false)
             }
         }
     }
@@ -629,13 +655,13 @@ private fun HistoriasAnio(d: TuAnio.Datos, nav: Nav, cerrar: () -> Unit) {
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(voz(tema, d.anio), style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.weight(1f), maxLines = 1)
+                    Text(voz(tema, d.anio), style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (actual.id in Repo.config.anio_ocultas) Text("oculta al exportar  ", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                     Box {
                         Text("⤓", fontSize = 22.sp, color = cs.primary, modifier = Modifier.clickable(enabled = !exportando) { menu = true }.padding(horizontal = 10.dp, vertical = 4.dp))
-                        androidx.compose.material3.DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            androidx.compose.material3.DropdownMenuItem(text = { Text("Guardar y compartir esta") }, onClick = { menu = false; exportar(false) })
-                            androidx.compose.material3.DropdownMenuItem(text = { Text("Guardar todas (PNG)") }, onClick = { menu = false; exportar(true) })
+                        Menu(expanded = menu, onDismissRequest = { menu = false }) {
+                            OpcionMenu(text = { Text("Guardar y compartir esta") }, onClick = { menu = false; exportar(false) })
+                            OpcionMenu(text = { Text("Guardar todas (PNG)") }, onClick = { menu = false; exportar(true) })
                         }
                     }
                     Text("✕", fontSize = 20.sp, color = cs.onBackground, modifier = Modifier.clickable { cerrar() }.padding(horizontal = 10.dp, vertical = 4.dp)

@@ -3,7 +3,6 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
 import io.github.ruddy2003.vestigium.data.privado
-import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.BorderStroke
@@ -22,7 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -84,6 +82,7 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.SelladoCarta
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.SobreCarta
+import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Vacio
 import io.github.ruddy2003.vestigium.ui.estadoSobre
 import io.github.ruddy2003.vestigium.ui.mediaLuna
@@ -92,6 +91,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.ui.Dialogo
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 /** Minúsculas y sin acentos, para buscar sin importar cómo se escribió. */
 private fun sinAcentos(s: String) = java.text.Normalizer.normalize(s.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
@@ -148,6 +149,7 @@ private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
     val cs = MaterialTheme.colorScheme
     val n = mapOf("diario" to Repo.dias.values.count { it.nota.isNotBlank() }, "suenos" to Repo.dias.values.count { it.sueno_texto.isNotBlank() },
         "momentos" to diasConMomentos().size, "cartas" to Repo.cartas.size)
+    val tema = Estilo.tema
     Row(Modifier.fillMaxWidth().padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         BIBLIOTECAS.forEach { (id, nombre, _) ->
             val sel = id == actual
@@ -155,7 +157,7 @@ private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
                 border = BorderStroke(1.dp, if (sel) cs.primary else cs.outline), modifier = Modifier.weight(1f)) {
                 Column(Modifier.padding(vertical = 9.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     val tinta = if (sel) cs.onPrimary else cs.primary
-                    Canvas(Modifier.size(width = 30.dp, height = 20.dp)) { icono(id, tinta) }
+                    Canvas(Modifier.size(width = 30.dp, height = 20.dp)) { icono(id, tinta, tema, if (sel) cs.primary else cs.surface) }
                     // En mayúsculas y con letra ancha (griego, Revolución) «MOMENTOS» no cabe: se achica un poco en lugar de partirse.
                     val estilo = MaterialTheme.typography.labelLarge.let { if (Estilo.mayusculas && nombre.length > 7) it.copy(fontSize = it.fontSize * 0.82f, letterSpacing = 0.sp) else it }
                     Text(if (Estilo.mayusculas) nombre.uppercase() else nombre, style = estilo, color = if (sel) cs.onPrimary else cs.onSurface,
@@ -167,32 +169,39 @@ private fun SelectorBibliotecas(actual: String, elegir: (String) -> Unit) {
     }
 }
 
-/** Un libro abierto, una luna con estrellas o un sobre. */
-private fun DrawScope.icono(id: String, c: Color) {
+/**
+ * Un libro abierto, una luna con estrellas, una libreta o un sobre, y en cada uno el símbolo del tema (el mismo con que se
+ * califica: hoja de laurel, cruz de malta, abeja, engrane, rosetón…): en la página derecha del libro, como la estrella mayor
+ * junto a la luna, en la tapa de la libreta y como el sello del sobre.
+ */
+private fun DrawScope.icono(id: String, c: Color, t: TemaId, fondo: Color) {
     val w = size.width; val h = size.height
     val trazo = Stroke(1.6.dp.toPx())
+    fun sello(o: Offset, r: Float, aro: Boolean = false) {
+        if (aro) drawCircle(fondo, r * 1.25f, o)
+        drawPath(simboloCalificacion(t, o, r), c)
+    }
     when (id) {
         "suenos" -> {
             mediaLuna(Offset(w * 0.42f, h * 0.52f), h * 0.42f, c)
-            listOf(Offset(w * 0.8f, h * 0.22f) to 1.6f, Offset(w * 0.72f, h * 0.72f) to 1.1f, Offset(w * 0.92f, h * 0.5f) to 0.9f).forEach { (o, r) -> drawCircle(c, r.dp.toPx(), o) }
+            sello(Offset(w * 0.82f, h * 0.24f), h * 0.18f)
+            listOf(Offset(w * 0.72f, h * 0.76f) to 1.1f, Offset(w * 0.94f, h * 0.58f) to 0.9f).forEach { (o, r) -> drawCircle(c, r.dp.toPx(), o) }
         }
         "momentos" -> {
-            // Una libreta de espiral con una estrella de cuatro puntas.
+            // Una libreta de espiral con el símbolo del tema en la tapa.
             drawRect(c, Offset(w * 0.22f, h * 0.08f), Size(w * 0.6f, h * 0.84f), style = trazo)
             for (k in 0 until 4) drawCircle(c, 1.4.dp.toPx(), Offset(w * 0.22f, h * (0.22f + k * 0.19f)))
-            val o = Offset(w * 0.54f, h * 0.5f); val r = h * 0.26f
-            drawPath(Path().apply {
-                moveTo(o.x, o.y - r); quadraticTo(o.x, o.y, o.x + r, o.y); quadraticTo(o.x, o.y, o.x, o.y + r)
-                quadraticTo(o.x, o.y, o.x - r, o.y); quadraticTo(o.x, o.y, o.x, o.y - r); close()
-            }, c)
+            sello(Offset(w * 0.54f, h * 0.5f), h * 0.27f)
         }
         "cartas" -> {
             drawRect(c, Offset(w * 0.12f, h * 0.15f), Size(w * 0.76f, h * 0.7f), style = trazo)
             drawPath(Path().apply { moveTo(w * 0.12f, h * 0.15f); lineTo(w * 0.5f, h * 0.55f); lineTo(w * 0.88f, h * 0.15f) }, c, style = trazo)
+            sello(Offset(w * 0.5f, h * 0.56f), h * 0.2f, aro = true)
         }
         else -> {
             drawPath(Path().apply { moveTo(w * 0.5f, h * 0.25f); quadraticTo(w * 0.3f, h * 0.1f, w * 0.08f, h * 0.18f); lineTo(w * 0.08f, h * 0.88f); quadraticTo(w * 0.3f, h * 0.8f, w * 0.5f, h * 0.92f); close() }, c, style = trazo)
             drawPath(Path().apply { moveTo(w * 0.5f, h * 0.25f); quadraticTo(w * 0.7f, h * 0.1f, w * 0.92f, h * 0.18f); lineTo(w * 0.92f, h * 0.88f); quadraticTo(w * 0.7f, h * 0.8f, w * 0.5f, h * 0.92f); close() }, c, style = trazo)
+            sello(Offset(w * 0.71f, h * 0.53f), h * 0.18f)
         }
     }
 }
@@ -450,9 +459,7 @@ fun PantallaCartaNueva(nav: Nav) {
                         Ficha(n, b.fecha == null && b.plazo == d) { b.plazo = d; b.fecha = null }
                     }
                     Ficha(b.fecha?.let { "el ${Fechas.corto(it)} ${it.take(4)}" } ?: "otra fecha…", b.fecha != null) {
-                        val d = Fechas.parse(b.abrirEn(hoy))
-                        DatePickerDialog(ctx, { _, y, m, dd -> b.fecha = Fechas.iso(LocalDate.of(y, m + 1, dd)).let { f -> if (f <= hoy) Fechas.sumar(hoy, 1) else f } },
-                            d.year, d.monthValue - 1, d.dayOfMonth).apply { datePicker.minDate = Fechas.finDia(hoy) }.show()
+                        elegirFecha(ctx, b.abrirEn(hoy), minimo = Fechas.parse(Fechas.sumar(hoy, 1))) { f -> b.fecha = if (f <= hoy) Fechas.sumar(hoy, 1) else f }
                     }
                 }
                 Ayuda("Se abrirá el ${Fechas.titulo(b.abrirEn(hoy)).lowercase()} de ${b.abrirEn(hoy).take(4)}. Ese día te llegará un aviso.", Modifier.padding(top = 8.dp))
@@ -521,7 +528,7 @@ fun PantallaCarta(nav: Nav) {
                 modo = Escrito.CARTA, encabezado = { p -> io.github.ruddy2003.vestigium.ui.EncabezadoCarta(Estilo.tema, p, c.escrita, c.hora, c.lugar, c.para, null) }, textoBoton = "listo")
         }
     }
-    if (borrar) AlertDialog(onDismissRequest = { borrar = false },
+    if (borrar) Dialogo(onDismissRequest = { borrar = false },
         title = { Text("¿Borrar esta carta?") }, text = { Text("Tendrás unos segundos para deshacerlo.") },
         confirmButton = { TextButton(onClick = { Repo.borrarCarta(c.id); borrar = false; nav.atras(); io.github.ruddy2003.vestigium.ui.Deshacer.ofrecer("Carta borrada") { Repo.guardarCarta(c) } }) { Text("Borrar", color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { borrar = false }) { Text("Cancelar") } })

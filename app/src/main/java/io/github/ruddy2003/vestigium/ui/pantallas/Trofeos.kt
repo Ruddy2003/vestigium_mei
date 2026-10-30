@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,16 +28,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -57,6 +59,8 @@ import io.github.ruddy2003.vestigium.ui.esOscuro
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import io.github.ruddy2003.vestigium.ui.Dialogo
+import io.github.ruddy2003.vestigium.ui.Progreso
 
 /** Los metales de cada nivel: oscuro, base y brillo. Bronce, plata, oro y cristal (legendario). */
 private val METAL = listOf(
@@ -114,7 +118,7 @@ fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: 
     Box(modifier.size(width = alto * 0.82f, height = alto), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             if (tema in TrofeosTema.TEMAS) dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, cs.onSurface)
-            else dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, cs.onSurface)
+            else dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, cs.onSurface, tema)
         }
         if (secreto) Text("?", fontSize = (alto.value * 0.26f).sp, color = cs.onSurfaceVariant.copy(alpha = 0.7f), fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = alto * 0.3f))
@@ -125,7 +129,7 @@ fun TrofeoLogro(l: Logros.Logro, alto: Dp, modifier: Modifier = Modifier, tema: 
 internal fun DrawScope.dibujarTrofeoDe(l: Logros.Logro, tema: TemaId, oscuro: Boolean, tinta: Color) {
     val pedestal = if (oscuro) Color(0xFF2B2622) else Color(0xFF4A3A2C)
     if (tema in TrofeosTema.TEMAS) dibujarTrofeoTema(tema, l.categoria, l.nivel.coerceIn(1, 4), l.hecho, pedestal, tinta)
-    else dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, tinta)
+    else dibujarTrofeo(figura(l.categoria), (l.nivel - 1).coerceIn(0, 3), l.hecho, pedestal, tinta, tema)
 }
 
 /** El trofeo de los temas históricos: la obra o el objeto de su categoría (ver [TrofeosTema]) sobre el pedestal del tema. */
@@ -133,20 +137,19 @@ internal fun DrawScope.dibujarTrofeoTema(tema: TemaId, categoria: String, nivel:
     val (oscuro, base, brillo) = METAL[nivel - 1]
     val p = TrofeosTema.Pincel(size.width, size.height, hecho, nivel, oscuro, base, brillo, tinta.copy(alpha = 0.13f))
     with(TrofeosTema) { pedestal(tema, p, colorPedestal); figura(tema, categoria, p) }
-    destellos(nivel - 1, hecho)
+    destellos(tema, nivel - 1, hecho)
 }
 
-/** Los legendarios brillan. */
-private fun DrawScope.destellos(nivel: Int, hecho: Boolean) {
+/** Los legendarios brillan, cada tema con su propia chispa (ver [chispa]). */
+private fun DrawScope.destellos(tema: TemaId, nivel: Int, hecho: Boolean) {
+    if (!hecho || nivel != 3) return
     val w = size.width; val h = size.height
-    if (hecho && nivel == 3) listOf(Offset(w * 0.14f, h * 0.12f), Offset(w * 0.88f, h * 0.22f), Offset(w * 0.2f, h * 0.5f), Offset(w * 0.84f, h * 0.6f)).forEachIndexed { i, o ->
-        val s = w * (if (i % 2 == 0) 0.05f else 0.035f)
-        drawPath(Path().apply { moveTo(o.x, o.y - s); lineTo(o.x + s * 0.25f, o.y - s * 0.25f); lineTo(o.x + s, o.y); lineTo(o.x + s * 0.25f, o.y + s * 0.25f)
-            lineTo(o.x, o.y + s); lineTo(o.x - s * 0.25f, o.y + s * 0.25f); lineTo(o.x - s, o.y); lineTo(o.x - s * 0.25f, o.y - s * 0.25f); close() }, Color.White.copy(alpha = 0.9f))
+    listOf(Offset(w * 0.14f, h * 0.12f), Offset(w * 0.88f, h * 0.22f), Offset(w * 0.2f, h * 0.5f), Offset(w * 0.84f, h * 0.6f)).forEachIndexed { i, o ->
+        chispa(tema, o, w * (if (i % 2 == 0) 0.05f else 0.035f), i)
     }
 }
 
-private fun DrawScope.dibujarTrofeo(fig: String, nivel: Int, hecho: Boolean, pedestal: Color, tinta: Color) {
+private fun DrawScope.dibujarTrofeo(fig: String, nivel: Int, hecho: Boolean, pedestal: Color, tinta: Color, tema: TemaId) {
     val w = size.width; val h = size.height
     val (oscuro, base, brillo) = METAL[nivel]
     val sombra = tinta.copy(alpha = 0.13f)
@@ -272,15 +275,19 @@ private fun DrawScope.dibujarTrofeo(fig: String, nivel: Int, hecho: Boolean, ped
             drawPath(Path().apply { moveTo(w * 0.36f, h * 0.77f); lineTo(w * 0.64f, h * 0.77f); lineTo(w * 0.58f, h * 0.68f); lineTo(w * 0.42f, h * 0.68f); close() }, brochaFig)
         }
     }
-    destellos(nivel, hecho)
+    destellos(tema, nivel, hecho)
 }
 
-/** La placa debajo de la repisa: nombre, lo que lograste y cuándo (o cuánto falta). */
+/**
+ * La placa debajo de la repisa: nombre, lo que lograste y cuándo (o cuánto falta). Su forma es la del tema (ver [fondoPlaca]):
+ * tabula ansata, corchetes de consola, rollo, etiqueta de herbario, cartela oval…
+ */
 @Composable
-private fun Placa(l: Logros.Logro, modifier: Modifier = Modifier) {
+private fun Placa(l: Logros.Logro, tema: TemaId, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val secreto = l.secreto && !l.hecho
-    Column(modifier.padding(horizontal = 3.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier.padding(horizontal = 3.dp).drawBehind { fondoPlaca(tema, cs.onSurface, cs.primary, l.hecho) }.padding(horizontal = 8.dp, vertical = 5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally) {
         Text(if (secreto) "Secreto" else l.nombre, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
             maxLines = 2, overflow = TextOverflow.Ellipsis, color = if (l.hecho) cs.onSurface else cs.onSurfaceVariant)
         when {
@@ -291,7 +298,7 @@ private fun Placa(l: Logros.Logro, modifier: Modifier = Modifier) {
             secreto -> Text("aparece cuando lo logras", style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, color = cs.onSurfaceVariant)
             else -> {
                 Text(singular(l.descripcion), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, color = cs.onSurfaceVariant)
-                LinearProgressIndicator(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth(0.8f).padding(top = 3.dp).height(3.dp))
+                Progreso(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth(0.8f).padding(top = 3.dp).height(3.dp))
             }
         }
     }
@@ -306,10 +313,10 @@ fun SalaTrofeos(lista: List<Logros.Logro>, titulo: String? = null, porFila: Int 
     if (lista.isEmpty()) return
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
-    val pared = lerp(cs.surface, if (oscuro) Color.Black else cs.primary, if (oscuro) 0.25f else 0.05f)
-    val madera = if (oscuro) Color(0xFF3A2E25) else Color(0xFF7A5A3E)
+    val tema = Estilo.tema
+    val pared = lerp(lerp(cs.surface, if (oscuro) Color.Black else cs.primary, if (oscuro) 0.25f else 0.05f), tonoPared(tema), if (oscuro) 0.14f else 0.12f)
     Surface(shape = MaterialTheme.shapes.medium, color = pared, border = BorderStroke(1.dp, cs.outline), modifier = Modifier.fillMaxWidth().padding(top = 10.dp)) {
-        Column(Modifier.padding(horizontal = 6.dp, vertical = 10.dp)) {
+        Column(Modifier.drawBehind { paredTema(tema, cs.onSurface, cs.primary) }.padding(horizontal = 6.dp, vertical = 10.dp)) {
             if (titulo != null) Text(titulo.uppercase(), style = MaterialTheme.typography.labelLarge, color = cs.primary, letterSpacing = 2.sp,
                 textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp))
             lista.chunked(porFila).forEach { fila ->
@@ -317,11 +324,11 @@ fun SalaTrofeos(lista: List<Logros.Logro>, titulo: String? = null, porFila: Int 
                     fila.forEach { l -> Box(Modifier.weight(1f).clickable { abrir(l) }, contentAlignment = Alignment.BottomCenter) { TrofeoLogro(l, 96.dp) } }
                     repeat(porFila - fila.size) { Spacer(Modifier.weight(1f)) }
                 }
-                // La repisa, con su canto y su sombra.
-                Box(Modifier.fillMaxWidth().height(11.dp).background(Brush.verticalGradient(listOf(lerp(madera, Color.White, 0.18f), madera, lerp(madera, Color.Black, 0.35f)))))
+                // La repisa del tema, con su canto y su sombra.
+                Canvas(Modifier.fillMaxWidth().height(14.dp)) { repisaTema(tema, oscuro) }
                 Box(Modifier.fillMaxWidth().height(7.dp).background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent))))
                 Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), verticalAlignment = Alignment.Top) {
-                    fila.forEach { l -> Placa(l, Modifier.weight(1f).clickable { abrir(l) }) }
+                    fila.forEach { l -> Placa(l, tema, Modifier.weight(1f).clickable { abrir(l) }) }
                     repeat(porFila - fila.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
@@ -336,7 +343,7 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit
     val secreto = l.secreto && !l.hecho
     val serie = l.id.substringBeforeLast('_')
     val siguiente = todos.filter { it.id != l.id && it.id.substringBeforeLast('_') == serie && it.categoria == l.categoria && !it.hecho }.minByOrNull { it.meta }
-    AlertDialog(onDismissRequest = cerrar, confirmButton = { TextButton(onClick = cerrar) { Text("cerrar") } },
+    Dialogo(onDismissRequest = cerrar, confirmButton = { TextButton(onClick = cerrar) { Text("cerrar") } },
         dismissButton = {
             if (l.hecho) {
                 val enHall = l.id in Repo.config.hall_logros
@@ -369,7 +376,7 @@ fun DetalleTrofeo(l: Logros.Logro, todos: List<Logros.Logro>, cerrar: () -> Unit
                     secreto -> Text("Sigue viviendo y escribiendo: aparece cuando lo logras.", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
                     else -> {
                         Text("Reto: " + singular(l.descripcion).replaceFirstChar { it.lowercase() } + ".", style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
-                        LinearProgressIndicator(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(6.dp))
+                        Progreso(progress = { l.fraccion }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(6.dp))
                         Text("llevas ${cifraLogro(l.progreso)} de ${cifraLogro(l.meta)}" + if (l.unidad.isNotEmpty()) " ${l.unidad}" else "", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
                     }
                 }
@@ -396,5 +403,611 @@ fun TrofeoConNombre(l: Logros.Logro, alto: Dp = 72.dp) {
     Column(Modifier.width(alto * 1.1f), horizontalAlignment = Alignment.CenterHorizontally) {
         TrofeoLogro(l, alto)
         Text(if (l.secreto && !l.hecho) "?" else l.nombre, style = MaterialTheme.typography.labelSmall, maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+// ================================================================== la sala de cada tema: destellos, pared, repisa y placa
+
+/** Un polígono estrellado de [puntas] puntas entre los radios [R] y [r]. */
+private fun estrellada(c: Offset, R: Float, r: Float, puntas: Int, giro: Double = -PI / 2): Path = Path().apply {
+    for (k in 0 until puntas * 2) {
+        val a = giro + k * PI / puntas
+        val rr = if (k % 2 == 0) R else r
+        val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat()
+        if (k == 0) moveTo(x, y) else lineTo(x, y)
+    }
+    close()
+}
+
+/** Una greca de ganchos, de [x0] hasta [ancho], con módulo [a] y su borde de arriba en [y0]. */
+private fun Path.grecaRepisa(x0: Float, y0: Float, a: Float, ancho: Float) {
+    val y1 = y0 + 3 * a
+    var x = x0
+    moveTo(x, y1)
+    while (x < ancho) {
+        lineTo(x, y0); lineTo(x + 3 * a, y0); lineTo(x + 3 * a, y0 + 2 * a); lineTo(x + 2 * a, y0 + 2 * a)
+        lineTo(x + 2 * a, y0 + a); lineTo(x + a, y0 + a); lineTo(x + a, y1); lineTo(x + 4 * a, y1)
+        x += 4 * a
+    }
+}
+
+/**
+ * El destello de un trofeo legendario, propio de cada tema: estrella romana, cruz de píxeles de consola, sol de Vergina,
+ * hojuelas de pan de oro, el ojo del ministerio, un átomo, chispas de fragua, una burbuja, un asterisco de imprenta…
+ */
+private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
+    when (tema) {
+        TemaId.ROMANO -> drawPath(estrellada(o, s, s * 0.3f, 4), Color(0xFFFFF1C2).copy(alpha = 0.95f))
+        TemaId.CIBER -> {
+            val q = s * 0.42f
+            listOf(0 to 0, 1 to 0, -1 to 0, 0 to 1, 0 to -1).forEach { (dx, dy) ->
+                drawRect(Color(0xFF8CFFB0), Offset(o.x + dx * q - q * 0.45f, o.y + dy * q - q * 0.45f), Size(q * 0.9f, q * 0.9f))
+            }
+        }
+        TemaId.HELENO -> {
+            for (k in 0 until 16) {
+                val a = k * PI / 8; val l = if (k % 2 == 0) s else s * 0.6f
+                drawLine(Color(0xFFFFE08A), o, Offset(o.x + (l * cos(a)).toFloat(), o.y + (l * sin(a)).toFloat()), s * 0.09f)
+            }
+            drawCircle(Color(0xFFFFE08A), s * 0.28f, o)
+        }
+        TemaId.MEDIEVAL -> listOf(Offset(0f, -0.5f), Offset(-0.45f, 0.35f), Offset(0.5f, 0.3f)).forEachIndexed { k, d ->
+            val p = Offset(o.x + d.x * s, o.y + d.y * s); val t = s * (0.38f - k * 0.06f)
+            drawPath(Path().apply { moveTo(p.x, p.y - t); lineTo(p.x + t * 0.8f, p.y - t * 0.1f); lineTo(p.x + t * 0.1f, p.y + t); lineTo(p.x - t * 0.9f, p.y + t * 0.2f); close() }, Color(0xFFF2C94C))
+        }
+        TemaId.DISTOPIA -> {
+            val ojo = Path().apply { moveTo(o.x - s, o.y); quadraticTo(o.x, o.y - s * 0.9f, o.x + s, o.y); quadraticTo(o.x, o.y + s * 0.9f, o.x - s, o.y); close() }
+            drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
+            drawCircle(Color(0xFFD32F2F), s * 0.3f, o)
+        }
+        TemaId.REFUGIO -> {
+            val col = Color(0xFFFFF59D)
+            listOf(-60f, 0f, 60f).forEach { g -> rotate(g, o) { drawOval(col, Offset(o.x - s, o.y - s * 0.35f), Size(s * 2, s * 0.7f), style = Stroke(s * 0.1f)) } }
+            drawCircle(col, s * 0.22f, o)
+        }
+        TemaId.ORDEN -> {
+            val col = Color(0xFFFFB347)
+            listOf(Offset(0.9f, -0.9f), Offset(1f, -0.2f), Offset(0.3f, -1f), Offset(-0.5f, -0.6f)).forEach { d ->
+                drawLine(col, Offset(o.x + d.x * s * 0.25f, o.y + d.y * s * 0.25f), Offset(o.x + d.x * s, o.y + d.y * s), s * 0.12f, StrokeCap.Round)
+            }
+            drawCircle(Color(0xFFFFE0A0), s * 0.2f, o)
+        }
+        TemaId.LABORATORIO -> {
+            drawCircle(Color(0xFFB8F4FF).copy(alpha = 0.35f), s * 0.8f, o); drawCircle(Color(0xFFB8F4FF), s * 0.8f, o, style = Stroke(s * 0.1f))
+            drawArc(Color.White, 200f, 70f, false, Offset(o.x - s * 0.55f, o.y - s * 0.55f), Size(s * 1.1f, s * 1.1f), style = Stroke(s * 0.12f, cap = StrokeCap.Round))
+        }
+        TemaId.COLONOS -> for (k in 0 until 3) {
+            val a = k * PI / 3 + PI / 2; val dx = (s * cos(a)).toFloat(); val dy = (s * sin(a)).toFloat()
+            drawLine(Color(0xFFC0533A), Offset(o.x - dx, o.y - dy), Offset(o.x + dx, o.y + dy), s * 0.2f)
+        }
+        TemaId.NAPOLEON -> {
+            // La abeja imperial, en silueta: alas, cuerpo y dos franjas.
+            val ala = Color(0xFFFFF4D6).copy(alpha = 0.85f)
+            drawOval(ala, Offset(o.x - s, o.y - s * 0.7f), Size(s * 0.9f, s * 0.6f)); drawOval(ala, Offset(o.x + s * 0.1f, o.y - s * 0.7f), Size(s * 0.9f, s * 0.6f))
+            drawOval(Color(0xFFE8C252), Offset(o.x - s * 0.28f, o.y - s * 0.45f), Size(s * 0.56f, s * 1.3f))
+            listOf(0.1f, 0.4f).forEach { f -> drawLine(Color(0xFF6B4E10), Offset(o.x - s * 0.25f, o.y + s * f), Offset(o.x + s * 0.25f, o.y + s * f), s * 0.09f) }
+        }
+        TemaId.BOTANICO -> {
+            for (k in 0 until 5) { val a = -PI / 2 + k * 2 * PI / 5; drawCircle(Color(0xFFFFF0A8), s * 0.34f, Offset(o.x + (s * 0.5f * cos(a)).toFloat(), o.y + (s * 0.5f * sin(a)).toFloat())) }
+            drawCircle(Color(0xFFB0702A), s * 0.24f, o)
+        }
+        TemaId.NAVIDAD -> {
+            val col = Color(0xFFF4FBFF)
+            for (k in 0 until 6) {
+                val a = k * PI / 3
+                drawLine(col, o, Offset(o.x + s * cos(a).toFloat(), o.y + s * sin(a).toFloat()), s * 0.1f, StrokeCap.Round)
+                val m = Offset(o.x + s * 0.6f * cos(a).toFloat(), o.y + s * 0.6f * sin(a).toFloat())
+                listOf(a + 0.6, a - 0.6).forEach { b -> drawLine(col, m, Offset(m.x + s * 0.3f * cos(b).toFloat(), m.y + s * 0.3f * sin(b).toFloat()), s * 0.08f, StrokeCap.Round) }
+            }
+        }
+        TemaId.SEDA -> {
+            drawCircle(Color(0xFFF0C75E), s * 0.75f, o)
+            drawRect(Color(0xFF8A5A12), Offset(o.x - s * 0.22f, o.y - s * 0.22f), Size(s * 0.44f, s * 0.44f))
+            drawCircle(Color(0xFF8A5A12), s * 0.75f, o, style = Stroke(s * 0.08f))
+        }
+        TemaId.GOTICO -> {
+            val col = if (i % 2 == 0) Color(0xFFE0475B) else Color(0xFF4F7BE8)
+            listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(col, s * 0.38f, Offset(o.x + d.x * s * 0.36f, o.y + d.y * s * 0.36f)) }
+            drawCircle(Color(0xFFF5D76E), s * 0.2f, o)
+        }
+        TemaId.ESPACIO -> {
+            val col = Color(0xFFE6F0FF)
+            drawLine(col, Offset(o.x - s * 1.3f, o.y), Offset(o.x + s * 1.3f, o.y), s * 0.06f); drawLine(col, Offset(o.x, o.y - s * 1.3f), Offset(o.x, o.y + s * 1.3f), s * 0.06f)
+            drawCircle(col.copy(alpha = 0.5f), s * 0.6f, o, style = Stroke(s * 0.06f)); drawCircle(col, s * 0.22f, o)
+        }
+        TemaId.ANDALUS -> drawPath(estrellada(o, s, s * 0.74f, 8), Color(0xFFF5D27A))
+        TemaId.MONGOL -> {
+            val col = Color(0xFF8FD3FF)
+            drawPath(Path().apply { moveTo(o.x, o.y - s); lineTo(o.x + s, o.y); lineTo(o.x, o.y + s); lineTo(o.x - s, o.y); close() }, col, style = Stroke(s * 0.12f))
+            drawLine(col, Offset(o.x - s * 0.5f, o.y - s * 0.5f), Offset(o.x + s * 0.5f, o.y + s * 0.5f), s * 0.1f)
+            drawLine(col, Offset(o.x + s * 0.5f, o.y - s * 0.5f), Offset(o.x - s * 0.5f, o.y + s * 0.5f), s * 0.1f)
+        }
+        TemaId.RENACIMIENTO -> {
+            val col = Color(0xFFD8743E)
+            drawCircle(col, s * 0.6f, o, style = Stroke(s * 0.07f))
+            drawLine(col, Offset(o.x - s * 1.1f, o.y), Offset(o.x + s * 1.1f, o.y), s * 0.06f); drawLine(col, Offset(o.x, o.y - s * 1.1f), Offset(o.x, o.y + s * 1.1f), s * 0.06f)
+            drawCircle(col, s * 0.12f, o)
+        }
+        TemaId.URSS -> drawPath(estrellada(o, s, s * 0.4f, 5), Color(0xFFE53935))
+        TemaId.REVOLUCION -> { drawCircle(Color(0xFF1F3A8A), s * 0.8f, o); drawCircle(Color.White, s * 0.55f, o); drawCircle(Color(0xFFC62828), s * 0.3f, o) }
+        TemaId.ANTIGUAS -> {
+            val col = Color(0xFF9FE8FF)
+            drawCircle(col.copy(alpha = 0.22f), s, o)
+            drawLine(col, Offset(o.x - s * 0.2f, o.y - s * 0.8f), Offset(o.x - s * 0.2f, o.y + s * 0.8f), s * 0.12f, StrokeCap.Round)
+            drawLine(col, Offset(o.x - s * 0.2f, o.y - s * 0.3f), Offset(o.x + s * 0.45f, o.y - s * 0.75f), s * 0.12f, StrokeCap.Round)
+            drawLine(col, Offset(o.x - s * 0.2f, o.y + s * 0.15f), Offset(o.x + s * 0.45f, o.y - s * 0.3f), s * 0.12f, StrokeCap.Round)
+        }
+    }
+}
+
+/** El tono de la pared de la sala de trofeos en cada tema (se mezcla, tenue, con la superficie). */
+private fun tonoPared(tema: TemaId): Color = when (tema) {
+    TemaId.ROMANO -> Color(0xFFD9CBB0)
+    TemaId.CIBER -> Color(0xFF0B3D24)
+    TemaId.HELENO -> Color(0xFFC9D8E6)
+    TemaId.MEDIEVAL -> Color(0xFFD8C08E)
+    TemaId.DISTOPIA -> Color(0xFF8E9296)
+    TemaId.REFUGIO -> Color(0xFF9CC9C1)
+    TemaId.ORDEN -> Color(0xFF6F7882)
+    TemaId.LABORATORIO -> Color(0xFFDDF3F6)
+    TemaId.COLONOS -> Color(0xFFCDB89A)
+    TemaId.NAPOLEON -> Color(0xFF2E4A8C)
+    TemaId.BOTANICO -> Color(0xFFB9C49A)
+    TemaId.NAVIDAD -> Color(0xFF8E2A2A)
+    TemaId.SEDA -> Color(0xFFD9A35A)
+    TemaId.GOTICO -> Color(0xFF2C3A6B)
+    TemaId.ESPACIO -> Color(0xFF1B2140)
+    TemaId.ANDALUS -> Color(0xFFE2C98F)
+    TemaId.MONGOL -> Color(0xFF4F86C6)
+    TemaId.RENACIMIENTO -> Color(0xFFD9B98F)
+    TemaId.URSS -> Color(0xFFC8B79A)
+    TemaId.REVOLUCION -> Color(0xFFD6CCB8)
+    TemaId.ANTIGUAS -> Color(0xFF7D7668)
+}
+
+/**
+ * La pared de la sala, muy tenue, detrás de las repisas: vetas de mármol, líneas de barrido de la consola, estrías,
+ * pautado de pergamino, paneles atornillados, azulejo, chapa estriada, tablero perforado, tablas con tapajuntas,
+ * papel a rayas con rombos, pliegos de herbario, guirnalda con nieve, monedas entrelazadas, sillares con arcos ciegos,
+ * estrellas, lazo de ocho, celosía de la ger, trazos de construcción, cuña constructivista, carteles y piedra tosca.
+ */
+private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
+    val w = size.width; val h = size.height; val d = 1.dp.toPx()
+    val v = tinta.copy(alpha = 0.07f); val a = acento.copy(alpha = 0.09f)
+    when (tema) {
+        TemaId.ROMANO -> for (k in 0 until 7) {
+            val y0 = h * (0.06f + k * 0.15f)
+            drawPath(Path().apply { moveTo(0f, y0); cubicTo(w * 0.28f, y0 - h * 0.05f, w * 0.52f, y0 + h * 0.07f, w * 0.74f, y0 + h * 0.01f); cubicTo(w * 0.86f, y0 - h * 0.02f, w * 0.94f, y0 + h * 0.04f, w, y0 + h * 0.03f) },
+                v, style = Stroke(1.3f * d))
+        }
+        TemaId.CIBER -> {
+            var y = 0f
+            while (y < h) { drawLine(Color(0xFF39FF88).copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), d); y += 3 * d }
+            drawLine(Color(0xFF39FF88).copy(alpha = 0.12f), Offset(14 * d, 0f), Offset(14 * d, h), d)
+        }
+        TemaId.HELENO -> {
+            var x = 8 * d; var k = 0
+            while (x < w) { drawLine(if (k % 2 == 0) v else a, Offset(x, 22 * d), Offset(x, h), 2 * d); x += 12 * d; k++ }
+            drawPath(Path().apply { grecaRepisa(0f, 6 * d, 3 * d, w) }, a, style = Stroke(1.2f * d))
+        }
+        TemaId.MEDIEVAL -> {
+            var y = 18 * d
+            while (y < h) { drawLine(v, Offset(0f, y), Offset(w, y), d); drawLine(v, Offset(0f, y + 4 * d), Offset(w, y + 4 * d), d * 0.6f); y += 26 * d }
+            listOf(0.05f, 0.95f).forEach { fx -> drawLine(Color(0xFFB0302A).copy(alpha = 0.12f), Offset(w * fx, 0f), Offset(w * fx, h), d) }
+        }
+        TemaId.DISTOPIA -> {
+            val pw = w / 3; val ph = 70 * d; var y = 0f
+            while (y < h) {
+                for (k in 0 until 3) {
+                    drawRect(v, Offset(k * pw + 2 * d, y + 2 * d), Size(pw - 4 * d, ph - 4 * d), style = Stroke(d))
+                    listOf(Offset(k * pw + 7 * d, y + 7 * d), Offset((k + 1) * pw - 7 * d, y + 7 * d), Offset(k * pw + 7 * d, y + ph - 7 * d), Offset((k + 1) * pw - 7 * d, y + ph - 7 * d))
+                        .forEach { drawCircle(v, 1.6f * d, it) }
+                }
+                y += ph
+            }
+        }
+        TemaId.REFUGIO -> {
+            val t = 22 * d; var y = 0f
+            while (y < h) { var x = 0f; while (x < w) { drawRoundRect(v, Offset(x + d, y + d), Size(t - 2 * d, t - 2 * d), CornerRadius(3 * d), style = Stroke(d)); x += t }; y += t }
+            drawRect(a, Offset(0f, 0f), Size(w, 6 * d))
+        }
+        TemaId.ORDEN -> {
+            val t = 16 * d; var y = 0f; var f = 0
+            while (y < h) {
+                var x = if (f % 2 == 0) 0f else t / 2; var k = 0; val e = 3 * d
+                while (x < w) {
+                    if ((k + f) % 2 == 0) drawLine(v, Offset(x - e, y + e), Offset(x + e, y - e), 1.8f * d, StrokeCap.Round)
+                    else drawLine(v, Offset(x - e, y - e), Offset(x + e, y + e), 1.8f * d, StrokeCap.Round)
+                    x += t; k++
+                }
+                y += t; f++
+            }
+        }
+        TemaId.LABORATORIO -> { val t = 18 * d; var y = t / 2; while (y < h) { var x = t / 2; while (x < w) { drawCircle(v, 1.3f * d, Offset(x, y)); x += t }; y += t } }
+        TemaId.COLONOS -> { var x = 0f; while (x < w) { drawLine(v, Offset(x, 0f), Offset(x, h), d); drawRect(v, Offset(x - 2 * d, 0f), Size(4 * d, h), style = Stroke(d * 0.6f)); x += 28 * d } }
+        TemaId.NAPOLEON -> {
+            val t = 22 * d; var x = 0f; var k = 0
+            while (x < w) {
+                if (k % 2 == 0) {
+                    drawRect(a, Offset(x, 0f), Size(t, h))
+                    var y = 20 * d; val cx = x + t / 2
+                    while (y < h) { drawPath(Path().apply { moveTo(cx, y - 4 * d); lineTo(cx + 3 * d, y); lineTo(cx, y + 4 * d); lineTo(cx - 3 * d, y); close() }, v); y += 34 * d }
+                }
+                x += t; k++
+            }
+        }
+        TemaId.BOTANICO -> {
+            val hw = 70 * d; val hh = 90 * d; var y = 8 * d; var f = 0
+            while (y < h) {
+                var x = if (f % 2 == 0) 6 * d else 6 * d - hw / 2
+                while (x < w) {
+                    drawRect(v, Offset(x, y), Size(hw - 12 * d, hh - 12 * d), style = Stroke(d))
+                    drawRect(v, Offset(x + hw - 34 * d, y + hh - 24 * d), Size(18 * d, 8 * d))
+                    val cx = x + (hw - 12 * d) / 2
+                    drawLine(v, Offset(cx, y + hh - 26 * d), Offset(cx, y + 14 * d), d)
+                    for (j in 0 until 4) { val yy = y + 22 * d + j * 12 * d; drawLine(v, Offset(cx, yy + 4 * d), Offset(cx - (10 - j) * d, yy), d); drawLine(v, Offset(cx, yy + 4 * d), Offset(cx + (10 - j) * d, yy), d) }
+                    x += hw
+                }
+                y += hh; f++
+            }
+        }
+        TemaId.NAVIDAD -> {
+            for (k in 0 until 60) drawCircle(Color.White.copy(alpha = 0.12f), (1 + k % 3) * d, Offset(((k * 73) % 100) / 100f * w, ((k * 37 + 11) % 100) / 100f * h))
+            val paso = 48 * d; var x = 0f
+            while (x < w) {
+                drawArc(Color(0xFF2E6B3A).copy(alpha = 0.35f), 0f, 180f, false, Offset(x, -10 * d), Size(paso, 26 * d), style = Stroke(4 * d, cap = StrokeCap.Round))
+                drawCircle(Color(0xFFC62828).copy(alpha = 0.5f), 3 * d, Offset(x, 3 * d))
+                x += paso
+            }
+        }
+        TemaId.SEDA -> { val r = 14 * d; val t = 20 * d; var y = 0f; while (y < h + r) { var x = 0f; while (x < w + r) { drawCircle(v, r, Offset(x, y), style = Stroke(d)); x += t }; y += t } }
+        TemaId.GOTICO -> {
+            val bw = 40 * d; val bh = 20 * d; var y = 0f; var f = 0
+            while (y < h) { var x = if (f % 2 == 0) 0f else -bw / 2; while (x < w) { drawRect(v, Offset(x, y), Size(bw, bh), style = Stroke(d)); x += bw }; y += bh; f++ }
+            val aw = 30 * d; var x = 4 * d
+            while (x + aw < w) {
+                drawPath(Path().apply { moveTo(x, 44 * d); lineTo(x, 22 * d); quadraticTo(x, 8 * d, x + aw / 2, 4 * d); quadraticTo(x + aw, 8 * d, x + aw, 22 * d); lineTo(x + aw, 44 * d) }, a, style = Stroke(1.6f * d))
+                x += aw + 6 * d
+            }
+        }
+        TemaId.ESPACIO -> {
+            for (k in 0 until 90) drawCircle(Color.White.copy(alpha = if (k % 7 == 0) 0.3f else 0.12f), if (k % 7 == 0) 1.6f * d else 0.9f * d,
+                Offset(((k * 61 + 7) % 113) / 113f * w, ((k * 47 + 3) % 127) / 127f * h))
+            drawOval(a, Offset(-w * 0.2f, h * 0.1f), Size(w * 1.4f, h * 0.3f), style = Stroke(d))
+            drawOval(a, Offset(-w * 0.1f, h * 0.55f), Size(w * 1.2f, h * 0.25f), style = Stroke(d))
+        }
+        TemaId.ANDALUS -> { val t = 28 * d; var y = t / 2; while (y < h) { var x = t / 2; while (x < w) { drawPath(estrellada(Offset(x, y), t * 0.42f, t * 0.32f, 8), v, style = Stroke(d)); x += t }; y += t } }
+        TemaId.MONGOL -> {
+            val t = 18 * d; var x = -h
+            while (x < w) { drawLine(v, Offset(x, 0f), Offset(x + h, h), d); drawLine(v, Offset(x + h, 0f), Offset(x, h), d); x += t }
+            listOf(Color(0xFFC62828), Color(0xFF1565C0), Color(0xFFC62828)).forEachIndexed { k, col -> drawRect(col.copy(alpha = 0.12f), Offset(0f, k * 4 * d), Size(w, 4 * d)) }
+        }
+        TemaId.RENACIMIENTO -> {
+            val r = w * 0.32f; var y = r; var k = 0
+            while (y < h + r) {
+                val cx = if (k % 2 == 0) w * 0.3f else w * 0.7f
+                drawCircle(a, r, Offset(cx, y), style = Stroke(d))
+                drawRect(v, Offset(cx - r, y - r), Size(2 * r, 2 * r), style = Stroke(d))
+                drawLine(v, Offset(cx - r, y - r), Offset(cx + r, y + r), d); drawLine(v, Offset(cx + r, y - r), Offset(cx - r, y + r), d)
+                y += r * 1.6f; k++
+            }
+        }
+        TemaId.URSS -> {
+            var y = 0f
+            while (y < h) {
+                drawPath(Path().apply { moveTo(0f, y + 120 * d); lineTo(w, y); lineTo(w, y + 40 * d); lineTo(0f, y + 160 * d); close() }, Color(0xFFC62828).copy(alpha = 0.07f))
+                drawCircle(v, 46 * d, Offset(w * 0.78f, y + 150 * d), style = Stroke(3 * d))
+                drawRect(v, Offset(w * 0.06f, y + 200 * d), Size(10 * d, 90 * d))
+                y += 320 * d
+            }
+        }
+        TemaId.REVOLUCION -> {
+            listOf(Color(0xFF1F3A8A), Color.White, Color(0xFFC62828)).forEachIndexed { k, col -> drawRect(col.copy(alpha = 0.25f), Offset(k * w / 3, 0f), Size(w / 3, 4 * d)) }
+            var y = 20 * d; var k = 0
+            while (y < h) {
+                val x = if (k % 2 == 0) w * 0.08f else w * 0.55f
+                rotate(if (k % 2 == 0) -3f else 2.5f, Offset(x + w * 0.18f, y + 50 * d)) {
+                    drawRect(v, Offset(x, y), Size(w * 0.36f, 100 * d), style = Stroke(d))
+                    for (j in 0 until 4) drawLine(v, Offset(x + 8 * d, y + 20 * d + j * 16 * d), Offset(x + w * 0.3f, y + 20 * d + j * 16 * d), 2 * d)
+                }
+                y += 70 * d; k++
+            }
+        }
+        TemaId.ANTIGUAS -> {
+            val anchos = listOf(46f, 30f, 58f, 38f, 52f); var y = 0f; var f = 0
+            while (y < h) {
+                var x = -((f * 17) % 40) * d; var k = f
+                while (x < w) { val bw = anchos[k % anchos.size] * d; drawRoundRect(v, Offset(x + 1.5f * d, y + 1.5f * d), Size(bw - 3 * d, 23 * d), CornerRadius(5 * d), style = Stroke(1.2f * d)); x += bw; k++ }
+                y += 26 * d; f++
+            }
+        }
+    }
+}
+
+/**
+ * La repisa de cada tema: losa de mármol con dentículos, riel de servidores con luces, mármol con greca, tabla de roble
+ * con herrajes, pupitre de acero, estante esmaltado, hierro forjado con ménsulas, vidrio de laboratorio, tabla de pino,
+ * caoba con bronce dorado, anaquel de herbario con portaetiquetas, repisa de chimenea con acebo, cañas de bambú,
+ * cornisa de piedra con arquillos, consola con pilotos, cedro con mocárabes y alicatado, arcón pintado, taracea de nogal,
+ * viga de acero calada, tabla con la cinta tricolor y viga de piedra con runas.
+ */
+private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
+    val w = size.width; val h = size.height; val d = 1.dp.toPx()
+    fun m(c: Color) = if (oscuro) lerp(c, Color.Black, 0.4f) else c
+    fun tabla(c: Color, y0: Float = 0f, alto: Float = h) =
+        drawRect(Brush.verticalGradient(listOf(lerp(c, Color.White, 0.18f), c, lerp(c, Color.Black, 0.35f)), y0, y0 + alto), Offset(0f, y0), Size(w, alto))
+    when (tema) {
+        TemaId.ROMANO -> {
+            val c = m(Color(0xFFD9CDB2)); tabla(c, 0f, h * 0.5f)
+            drawLine(lerp(c, Color.Black, 0.3f), Offset(0f, h * 0.5f), Offset(w, h * 0.5f), d)
+            var x = 2 * d; while (x < w) { drawRect(lerp(c, Color.Black, 0.12f), Offset(x, h * 0.5f), Size(5 * d, h * 0.32f)); x += 8 * d }
+        }
+        TemaId.CIBER -> {
+            tabla(m(Color(0xFF1A1F24)))
+            var x = 6 * d; var k = 0
+            while (x < w) {
+                drawRect(Color.Black, Offset(x, h * 0.25f), Size(3 * d, 3 * d)); drawRect(Color.Black, Offset(x, h * 0.6f), Size(3 * d, 3 * d))
+                if (k % 4 == 1) drawCircle(if (k % 12 == 5) Color(0xFFFFB300) else Color(0xFF39FF88), 1.4f * d, Offset(x + 9 * d, h * 0.45f))
+                x += 14 * d; k++
+            }
+        }
+        TemaId.HELENO -> { tabla(m(Color(0xFFE9E4D8))); drawPath(Path().apply { grecaRepisa(0f, h * 0.2f, h * 0.2f, w) }, m(Color(0xFF1E5F8C)), style = Stroke(1.2f * d)) }
+        TemaId.MEDIEVAL -> {
+            tabla(m(Color(0xFF6B4528)))
+            var x = 30 * d
+            while (x < w) {
+                drawRect(m(Color(0xFF2E2A27)), Offset(x, 0f), Size(8 * d, h))
+                drawCircle(m(Color(0xFF9A9389)), 1.3f * d, Offset(x + 4 * d, h * 0.3f)); drawCircle(m(Color(0xFF9A9389)), 1.3f * d, Offset(x + 4 * d, h * 0.7f))
+                x += 90 * d
+            }
+        }
+        TemaId.DISTOPIA -> {
+            tabla(m(Color(0xFF7D8287)))
+            drawRect(m(Color(0xFFB71C1C)), Offset(0f, h * 0.78f), Size(w, h * 0.12f))
+            var x = 24 * d
+            while (x < w - 30 * d) {
+                drawRect(m(Color(0xFFEDEDE6)), Offset(x, h * 0.18f), Size(26 * d, h * 0.45f)); drawRect(m(Color(0xFF3A3D40)), Offset(x, h * 0.18f), Size(26 * d, h * 0.45f), style = Stroke(d))
+                x += 110 * d
+            }
+        }
+        TemaId.REFUGIO -> {
+            drawRoundRect(m(Color(0xFFE9DDBF)), Offset.Zero, Size(w, h * 0.8f), CornerRadius(h * 0.4f))
+            drawRect(Brush.verticalGradient(listOf(Color.White, m(Color(0xFFA8B0B5)), Color.White), h * 0.45f, h * 0.7f), Offset(h * 0.4f, h * 0.45f), Size(w - h * 0.8f, h * 0.25f))
+            drawRect(m(Color(0xFF3FA7A0)), Offset(0f, h * 0.8f), Size(w, h * 0.2f))
+            var x = 20 * d; while (x < w) { drawCircle(m(Color(0xFF8A8F93)), 1.3f * d, Offset(x, h * 0.22f)); x += 40 * d }
+        }
+        TemaId.ORDEN -> {
+            val c = m(Color(0xFF3B3F45)); tabla(c, 0f, h * 0.6f)
+            listOf(0.12f, 0.88f).forEach { fx -> drawPath(Path().apply { moveTo(w * fx - 10 * d, h * 0.6f); lineTo(w * fx + 10 * d, h * 0.6f); lineTo(w * fx, h); close() }, c) }
+            var x = 10 * d; while (x < w) { drawCircle(m(Color(0xFFC9A44C)), 1.6f * d, Offset(x, h * 0.3f)); x += 26 * d }
+        }
+        TemaId.LABORATORIO -> {
+            drawRect(Color(0xFF7FD8E8).copy(alpha = if (oscuro) 0.25f else 0.35f), Offset.Zero, Size(w, h * 0.55f))
+            drawLine(Color.White.copy(alpha = 0.9f), Offset(0f, d), Offset(w, d), 1.5f * d)
+            drawLine(m(Color(0xFF4FB3C4)), Offset(0f, h * 0.55f), Offset(w, h * 0.55f), d)
+            listOf(0.15f, 0.85f).forEach { fx -> drawRect(m(Color(0xFFB8C2C8)), Offset(w * fx - 3 * d, h * 0.55f), Size(6 * d, h * 0.45f)) }
+        }
+        TemaId.COLONOS -> {
+            val c = m(Color(0xFFB88A55)); tabla(c)
+            for (k in 0 until 3) drawLine(lerp(c, Color.Black, 0.2f), Offset(0f, h * (0.3f + k * 0.2f)), Offset(w, h * (0.32f + k * 0.18f)), 0.7f * d)
+            listOf(0.23f, 0.61f, 0.87f).forEach { fx -> drawOval(lerp(c, Color.Black, 0.3f), Offset(w * fx, h * 0.35f), Size(7 * d, h * 0.3f)) }
+            listOf(0.05f, 0.5f, 0.95f).forEach { fx -> drawCircle(m(Color(0xFF55504A)), 1.4f * d, Offset(w * fx, h * 0.5f)) }
+        }
+        TemaId.NAPOLEON -> {
+            val c = m(Color(0xFF5A1E14)); tabla(c); val oro = m(Color(0xFFD4AF37))
+            drawRect(oro, Offset.Zero, Size(w, h * 0.16f)); drawRect(oro, Offset(0f, h * 0.84f), Size(w, h * 0.16f))
+            var x = 40 * d; while (x < w) { drawCircle(oro, 2.5f * d, Offset(x, h * 0.5f)); drawCircle(c, 1.1f * d, Offset(x, h * 0.5f)); x += 80 * d }
+        }
+        TemaId.BOTANICO -> {
+            tabla(m(Color(0xFF8A6A3E)))
+            var x = 22 * d
+            while (x < w - 30 * d) { drawRect(m(Color(0xFFF3EBD5)), Offset(x, h * 0.22f), Size(30 * d, h * 0.5f)); drawRect(m(Color(0xFFC9A44C)), Offset(x, h * 0.22f), Size(30 * d, h * 0.5f), style = Stroke(1.4f * d)); x += 100 * d }
+        }
+        TemaId.NAVIDAD -> {
+            tabla(m(Color(0xFFEDE6DA)), 0f, h * 0.55f)
+            val hoja = m(Color(0xFF2E6B3A)); val baya = m(Color(0xFFC62828)); var x = 0f; var k = 0
+            while (x < w) {
+                val cx = x + 9 * d; val cy = h * 0.72f
+                drawPath(Path().apply {
+                    moveTo(cx - 8 * d, cy); lineTo(cx - 5 * d, cy - 3 * d); lineTo(cx - 2 * d, cy - 1 * d); lineTo(cx, cy - 4 * d); lineTo(cx + 2 * d, cy - 1 * d); lineTo(cx + 5 * d, cy - 3 * d)
+                    lineTo(cx + 8 * d, cy); lineTo(cx + 5 * d, cy + 3 * d); lineTo(cx + 2 * d, cy + 1 * d); lineTo(cx, cy + 4 * d); lineTo(cx - 2 * d, cy + 1 * d); lineTo(cx - 5 * d, cy + 3 * d); close()
+                }, hoja)
+                if (k % 2 == 0) { drawCircle(baya, 2 * d, Offset(x + 18 * d, h * 0.62f)); drawCircle(baya, 2 * d, Offset(x + 21 * d, h * 0.78f)) }
+                x += 22 * d; k++
+            }
+        }
+        TemaId.SEDA -> {
+            val c = m(Color(0xFFC9B26A))
+            listOf(0f, h * 0.5f).forEach { y0 -> drawRect(Brush.verticalGradient(listOf(lerp(c, Color.White, 0.3f), c, lerp(c, Color.Black, 0.3f)), y0, y0 + h * 0.5f), Offset(0f, y0), Size(w, h * 0.5f)) }
+            var x = 30 * d; while (x < w) { drawLine(lerp(c, Color.Black, 0.35f), Offset(x, 0f), Offset(x, h), 1.5f * d); x += 55 * d }
+            listOf(0.1f, 0.9f).forEach { fx -> for (j in 0 until 3) drawLine(m(Color(0xFF7A3B1E)), Offset(w * fx - 4 * d + j * 3 * d, 0f), Offset(w * fx - 4 * d + j * 3 * d, h), d) }
+        }
+        TemaId.GOTICO -> {
+            val c = m(Color(0xFF6B6F7A)); tabla(c, 0f, h * 0.5f)
+            val aw = 14 * d; var x = 0f
+            while (x < w) { drawArc(lerp(c, Color.Black, 0.2f), 180f, 180f, false, Offset(x + 1 * d, h * 0.5f), Size(aw - 2 * d, aw), style = Stroke(1.5f * d)); x += aw }
+        }
+        TemaId.ESPACIO -> {
+            tabla(m(Color(0xFF262B33)))
+            drawLine(Color(0xFF4FC3F7), Offset(0f, h * 0.2f), Offset(w, h * 0.2f), 1.2f * d)
+            val luces = listOf(Color(0xFF66BB6A), Color(0xFFFFCA28), Color(0xFF4FC3F7), Color(0xFFEF5350)); var x = 16 * d; var k = 0
+            while (x < w) { drawCircle(luces[k % 4], 1.6f * d, Offset(x, h * 0.6f)); x += 18 * d; k++ }
+        }
+        TemaId.ANDALUS -> {
+            val c = m(Color(0xFF7A4A2A)); tabla(c, 0f, h * 0.6f)
+            val t = 6 * d; var x = 0f; var k = 0
+            while (x < w) { drawRect(if (k % 2 == 0) m(Color(0xFF2E7D5B)) else m(Color(0xFFF1E3C8)), Offset(x, h * 0.22f), Size(t, t)); x += t; k++ }
+            x = 0f
+            while (x < w) { drawPath(Path().apply { moveTo(x, h * 0.6f); lineTo(x + 5 * d, h); lineTo(x + 10 * d, h * 0.6f); close() }, lerp(c, Color.Black, 0.15f)); x += 10 * d }
+        }
+        TemaId.MONGOL -> {
+            tabla(m(Color(0xFFC2551F))); val oro = m(Color(0xFFE0B040))
+            drawRect(oro, Offset.Zero, Size(w, 1.5f * d)); drawRect(oro, Offset(0f, h - 1.5f * d), Size(w, 1.5f * d))
+            drawPath(Path().apply { grecaRepisa(0f, h * 0.25f, h * 0.17f, w) }, m(Color(0xFF2E5C9A)), style = Stroke(1.6f * d))
+        }
+        TemaId.RENACIMIENTO -> {
+            val c = m(Color(0xFF5B3B26)); tabla(c)
+            val t = 7 * d; var x = 0f; var k = 0
+            while (x < w) { drawRect(if (k % 2 == 0) m(Color(0xFFD8B98A)) else lerp(c, Color.Black, 0.2f), Offset(x, h * 0.35f), Size(t, t * 0.6f)); x += t; k++ }
+        }
+        TemaId.URSS -> {
+            val c = m(Color(0xFFB3261E))
+            drawRect(c, Offset.Zero, Size(w, h * 0.22f)); drawRect(c, Offset(0f, h * 0.78f), Size(w, h * 0.22f))
+            val p = 14 * d; var x = 0f
+            while (x < w) { drawLine(c, Offset(x, h * 0.22f), Offset(x + p, h * 0.78f), 1.6f * d); drawLine(c, Offset(x + p, h * 0.78f), Offset(x + 2 * p, h * 0.22f), 1.6f * d); x += 2 * p }
+        }
+        TemaId.REVOLUCION -> {
+            tabla(m(Color(0xFF8B6B47)))
+            listOf(Color(0xFF1F3A8A), Color.White, Color(0xFFC62828)).forEachIndexed { k, col -> drawRect(m(col), Offset(0f, h * (0.08f + k * 0.1f)), Size(w, h * 0.1f)) }
+        }
+        TemaId.ANTIGUAS -> {
+            val c = m(Color(0xFF6E6A62))
+            drawPath(Path().apply {
+                moveTo(0f, h * 0.15f); var x = 0f; var k = 0
+                while (x < w) { x += (14 + (k * 7) % 11) * d; lineTo(x, h * (if (k % 2 == 0) 0.05f else 0.2f)); k++ }
+                lineTo(w, h); lineTo(0f, h); close()
+            }, Brush.verticalGradient(listOf(lerp(c, Color.White, 0.15f), c, lerp(c, Color.Black, 0.35f)), 0f, h))
+            val runa = lerp(c, Color.Black, 0.45f); var x = 40 * d
+            while (x < w) {
+                drawLine(runa, Offset(x, h * 0.35f), Offset(x, h * 0.8f), 1.3f * d)
+                drawLine(runa, Offset(x, h * 0.45f), Offset(x + 4 * d, h * 0.3f), 1.3f * d); drawLine(runa, Offset(x, h * 0.6f), Offset(x + 4 * d, h * 0.45f), 1.3f * d)
+                x += 70 * d
+            }
+        }
+    }
+}
+
+/**
+ * El fondo de la placa de cada trofeo: tabula ansata, corchetes de consola, frontón, rollo, pestaña de expediente, insignia
+ * redondeada, chapa remachada, etiqueta de muestra, recorte de gaceta, cartela oval, etiqueta de herbario pautada, etiqueta
+ * de regalo, sello rojo, arco apuntado, marcas de visor, arco lobulado, cinta azul de seda, cartellino, cuña roja, franja
+ * tricolor y tablilla de piedra desportillada.
+ */
+private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hecho: Boolean) {
+    val w = size.width; val h = size.height; val d = 1.dp.toPx()
+    val f = if (hecho) 1f else 0.55f
+    val fondo = tinta.copy(alpha = 0.05f * f); val borde = tinta.copy(alpha = 0.28f * f); val ac = acento.copy(alpha = 0.6f * f)
+    val fino = Stroke(d)
+    when (tema) {
+        TemaId.ROMANO -> {
+            val e = 6 * d
+            val p = Path().apply {
+                moveTo(e, 0f); lineTo(w - e, 0f); lineTo(w - e, h * 0.3f); lineTo(w, h * 0.15f); lineTo(w, h * 0.85f); lineTo(w - e, h * 0.7f); lineTo(w - e, h)
+                lineTo(e, h); lineTo(e, h * 0.7f); lineTo(0f, h * 0.85f); lineTo(0f, h * 0.15f); lineTo(e, h * 0.3f); close()
+            }
+            drawPath(p, fondo); drawPath(p, borde, style = fino)
+        }
+        TemaId.CIBER -> {
+            val l = 7 * d
+            listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
+                drawLine(ac, o, Offset(o.x + s.x * l, o.y), 1.5f * d); drawLine(ac, o, Offset(o.x, o.y + s.y * l), 1.5f * d)
+            }
+        }
+        TemaId.HELENO -> {
+            val t = 5 * d
+            drawRect(fondo, Offset(0f, t), Size(w, h - t)); drawRect(borde, Offset(0f, t), Size(w, h - t), style = fino)
+            drawPath(Path().apply { moveTo(0f, t); lineTo(w / 2, 0f); lineTo(w, t); close() }, borde, style = fino)
+        }
+        TemaId.MEDIEVAL -> {
+            val r = 4 * d
+            drawRect(fondo, Offset(r, 0f), Size(w - 2 * r, h))
+            drawLine(borde, Offset(r, 0f), Offset(w - r, 0f), d); drawLine(borde, Offset(r, h), Offset(w - r, h), d)
+            listOf(r, w - r).forEach { x -> drawOval(fondo, Offset(x - r, 0f), Size(2 * r, h)); drawOval(borde, Offset(x - r, 0f), Size(2 * r, h), style = fino) }
+        }
+        TemaId.DISTOPIA -> {
+            val t = 6 * d
+            drawRect(fondo, Offset(0f, t), Size(w, h - t)); drawRect(fondo, Offset.Zero, Size(w * 0.4f, t))
+            drawPath(Path().apply { moveTo(0f, h); lineTo(0f, 0f); lineTo(w * 0.4f, 0f); lineTo(w * 0.4f + t, t); lineTo(w, t); lineTo(w, h); close() }, borde, style = fino)
+            drawLine(Color(0xFFB71C1C).copy(alpha = 0.5f * f), Offset(0f, h - 2 * d), Offset(w, h - 2 * d), 2 * d)
+        }
+        TemaId.REFUGIO -> {
+            drawRoundRect(fondo, Offset.Zero, size, CornerRadius(12 * d)); drawRoundRect(ac, Offset.Zero, size, CornerRadius(12 * d), style = Stroke(1.5f * d))
+            drawRoundRect(borde, Offset(3 * d, 3 * d), Size(w - 6 * d, h - 6 * d), CornerRadius(9 * d), style = fino)
+        }
+        TemaId.ORDEN -> {
+            val e = 5 * d
+            val p = Path().apply { moveTo(e, 0f); lineTo(w - e, 0f); lineTo(w, e); lineTo(w, h - e); lineTo(w - e, h); lineTo(e, h); lineTo(0f, h - e); lineTo(0f, e); close() }
+            drawPath(p, fondo); drawPath(p, borde, style = Stroke(1.5f * d))
+            listOf(Offset(e + 2 * d, e + 2 * d), Offset(w - e - 2 * d, e + 2 * d), Offset(e + 2 * d, h - e - 2 * d), Offset(w - e - 2 * d, h - e - 2 * d)).forEach { drawCircle(ac, 1.6f * d, it) }
+        }
+        TemaId.LABORATORIO -> { drawRect(fondo, Offset.Zero, size); drawRect(borde, Offset.Zero, size, style = fino); drawRect(ac, Offset.Zero, Size(w, 3 * d)) }
+        TemaId.COLONOS -> {
+            val p = Path().apply {
+                moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h - 3 * d)
+                var x = w; var k = 0
+                while (x > 0f) { x -= 4 * d; lineTo(x.coerceAtLeast(0f), if (k % 2 == 0) h else h - 3 * d); k++ }
+                close()
+            }
+            drawPath(p, fondo); drawPath(p, borde, style = fino)
+        }
+        TemaId.NAPOLEON -> {
+            // Cartela de esquinas muy redondas (el óvalo entero dejaba el texto fuera) con un medallón oval arriba.
+            val r = CornerRadius(minOf(16 * d, h / 2.5f))
+            drawRoundRect(fondo, Offset.Zero, size, r); drawRoundRect(ac, Offset.Zero, size, r, style = Stroke(1.5f * d))
+            drawRoundRect(borde, Offset(3 * d, 3 * d), Size(w - 6 * d, h - 6 * d), CornerRadius(r.x - 3 * d), style = fino)
+            drawOval(ac, Offset(w / 2 - 5 * d, -2.5f * d), Size(10 * d, 6 * d))
+        }
+        TemaId.BOTANICO -> {
+            drawRect(fondo, Offset.Zero, size); drawRect(borde, Offset.Zero, size, style = fino)
+            var y = 14 * d; while (y < h) { drawLine(tinta.copy(alpha = 0.12f * f), Offset(4 * d, y), Offset(w - 4 * d, y), d); y += 12 * d }
+        }
+        TemaId.NAVIDAD -> {
+            val pt = 8 * d
+            val p = Path().apply { moveTo(pt, 0f); lineTo(w, 0f); lineTo(w, h); lineTo(pt, h); lineTo(0f, h / 2); close() }
+            drawPath(p, fondo); drawPath(p, borde, style = fino); drawCircle(ac, 2 * d, Offset(pt, h / 2), style = fino)
+        }
+        TemaId.SEDA -> {
+            drawRect(fondo, Offset.Zero, size); drawRect(borde, Offset.Zero, size, style = fino)
+            val s = 10 * d
+            drawRect(Color(0xFFC0392B).copy(alpha = 0.55f * f), Offset(w - s - 2 * d, 2 * d), Size(s, s))
+            drawRect(Color.White.copy(alpha = 0.6f * f), Offset(w - s + 1 * d, 5 * d), Size(s - 6 * d, s - 6 * d), style = fino)
+        }
+        TemaId.GOTICO -> {
+            val t = 10 * d
+            val p = Path().apply { moveTo(0f, h); lineTo(0f, t); quadraticTo(0f, t * 0.2f, w / 2, 0f); quadraticTo(w, t * 0.2f, w, t); lineTo(w, h); close() }
+            drawPath(p, fondo); drawPath(p, borde, style = fino)
+        }
+        TemaId.ESPACIO -> {
+            val l = 6 * d
+            listOf(Offset(0f, 0f), Offset(w - l, 0f), Offset(0f, h - 1.5f * d), Offset(w - l, h - 1.5f * d)).forEach { drawRect(ac, it, Size(l, 1.5f * d)) }
+            drawLine(borde, Offset(0f, h / 2), Offset(3 * d, h / 2), d); drawLine(borde, Offset(w - 3 * d, h / 2), Offset(w, h / 2), d)
+            drawLine(borde, Offset(l + 2 * d, h - d), Offset(w - l - 2 * d, h - d), d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3 * d)))
+        }
+        TemaId.ANDALUS -> {
+            val t = 6 * d
+            val p = Path().apply {
+                moveTo(0f, h); lineTo(0f, t)
+                for (k in 0 until 3) arcTo(Rect(k * w / 3, 0f, (k + 1) * w / 3, 2 * t), 180f, 180f, false)
+                lineTo(w, h); close()
+            }
+            drawPath(p, fondo); drawPath(p, borde, style = fino)
+        }
+        TemaId.MONGOL -> {
+            val e = 6 * d; val azul = Color(0xFF4FA3E0)
+            val p = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - e, h / 2); lineTo(w, h); lineTo(0f, h); lineTo(e, h / 2); close() }
+            drawPath(p, azul.copy(alpha = 0.16f * f)); drawPath(p, azul.copy(alpha = 0.5f * f), style = fino)
+        }
+        TemaId.RENACIMIENTO -> {
+            val pl = 9 * d
+            val p = Path().apply { moveTo(0f, 0f); lineTo(w - pl, 0f); lineTo(w, pl); lineTo(w, h); lineTo(0f, h); close() }
+            drawPath(p, Color(0xFFF3E3C6).copy(alpha = 0.5f * f)); drawPath(p, borde, style = fino)
+            drawPath(Path().apply { moveTo(w - pl, 0f); lineTo(w - pl, pl); lineTo(w, pl); close() }, tinta.copy(alpha = 0.18f * f))
+        }
+        TemaId.URSS -> {
+            val t = 12 * d
+            drawRect(fondo, Offset.Zero, size)
+            drawPath(Path().apply { moveTo(0f, 0f); lineTo(t, 0f); lineTo(0f, t); close() }, Color(0xFFC62828).copy(alpha = 0.75f * f))
+            drawRect(tinta.copy(alpha = 0.6f * f), Offset(0f, h - 3 * d), Size(w, 3 * d))
+        }
+        TemaId.REVOLUCION -> {
+            drawRect(fondo, Offset.Zero, size); drawRect(borde, Offset.Zero, size, style = fino)
+            listOf(Color(0xFF1F3A8A), Color.White, Color(0xFFC62828)).forEachIndexed { k, col -> drawRect(col.copy(alpha = 0.7f * f), Offset(k * 2 * d, 0f), Size(2 * d, h)) }
+        }
+        TemaId.ANTIGUAS -> {
+            val e = 4 * d
+            val p = Path().apply { moveTo(e, 0f); lineTo(w - 2 * e, 0f); lineTo(w, e * 1.5f); lineTo(w - e * 0.5f, h - e); lineTo(w - e * 1.5f, h); lineTo(e * 0.8f, h); lineTo(0f, h - e * 2); lineTo(e * 0.4f, e); close() }
+            drawPath(p, tinta.copy(alpha = 0.09f * f)); drawPath(p, borde, style = Stroke(1.3f * d))
+            drawLine(ac, Offset(w * 0.35f, h - 2.5f * d), Offset(w * 0.65f, h - 2.5f * d), d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 1.5f * d, 4 * d, 1.5f * d)))
+        }
     }
 }

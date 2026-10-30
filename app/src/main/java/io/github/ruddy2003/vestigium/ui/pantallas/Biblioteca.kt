@@ -2,7 +2,6 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import android.app.DatePickerDialog
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -48,6 +47,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -86,6 +90,7 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.Tarjeta
+import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Vacio
 import io.github.ruddy2003.vestigium.ui.materia
 import io.github.ruddy2003.vestigium.ui.rememberSentir
@@ -94,6 +99,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 object EdicionObra { var id by mutableStateOf<String?>(null) }
 
@@ -131,7 +137,7 @@ private fun ImagenRed(url: String?, modifier: Modifier) {
 }
 
 /**
- * La portada de una obra: la imagen guardada en el teléfono o, si no hay, una tapa dibujada con los colores del tema
+ * La portada de una obra: la imagen guardada en el teléfono o, si no hay, una tapa dibujada con los colores, la letra y el adorno del tema
  * (los artículos siempre llevan esta, como una ficha de biblioteca). Si la imagen se perdió pero se sabe de dónde vino, se vuelve a bajar.
  */
 @Composable
@@ -147,7 +153,10 @@ fun PortadaObra(o: Obra, modifier: Modifier = Modifier, lado: Int = 360) {
             if (nuevo != null) Repo.obras.firstOrNull { it.id == o.id }?.let { Repo.guardarObra(it.copy(portada = nuevo)) }
         }
     }
-    val m = materia(Estilo.tema)
+    val tema = Estilo.tema
+    val m = materia(tema)
+    // La letra de los títulos del tema (la gótica, la de estarcido, la de consola…).
+    val letraTema = MaterialTheme.typography.headlineSmall.fontFamily ?: Letra.garamond
     Box(modifier.clip(RoundedCornerShape(4.dp))) {
         val b = bmp
         if (b != null) Image(b.asImageBitmap(), o.titulo, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
@@ -156,20 +165,171 @@ fun PortadaObra(o: Obra, modifier: Modifier = Modifier, lado: Int = 360) {
             val ancho = maxWidth
             val fondo = m.cuerpo.luminance()
             val letra = if (abs(m.textoCuerpo.luminance() - fondo) > 0.3f) m.textoCuerpo else if (fondo < 0.4f) Color(0xFFF4ECD8) else Color(0xFF231A12)
+            androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) { adornoPortada(tema, m.acento, letra) }
             if (ancho < 64.dp) {
                 // Miniatura de lista: solo la inicial, grande, dentro del filete.
                 Box(Modifier.fillMaxSize().padding(3.dp).border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)), contentAlignment = Alignment.Center) {
-                    Text(o.titulo.trim().firstOrNull()?.uppercase() ?: "·", fontFamily = Letra.garamond, fontSize = (ancho.value * 0.45f).sp, color = letra)
+                    Text(o.titulo.trim().firstOrNull()?.uppercase() ?: "·", fontFamily = letraTema, fontSize = (ancho.value * 0.45f).sp, color = letra)
                 }
             } else Box(Modifier.fillMaxSize().padding(5.dp).border(1.dp, m.acento.copy(alpha = 0.8f), RoundedCornerShape(2.dp)).padding(5.dp)) {
                 val escala = (ancho.value / 78f).coerceIn(1f, 1.6f)
                 Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween, horizontalAlignment = Alignment.CenterHorizontally) {
                     Text((TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre ?: "").uppercase(), fontSize = (7 * escala).sp, color = m.acento, letterSpacing = 1.sp, maxLines = 1)
-                    Text(o.titulo.ifBlank { "—" }, fontFamily = Letra.garamond, fontSize = (11 * escala).sp, lineHeight = (12 * escala).sp, color = letra, textAlign = TextAlign.Center,
+                    Text(o.titulo.ifBlank { "—" }, fontFamily = letraTema, fontSize = (11 * escala).sp, lineHeight = (12 * escala).sp, color = letra, textAlign = TextAlign.Center,
                         maxLines = 5, overflow = TextOverflow.Ellipsis)
                     Text(listOfNotNull(o.revista.ifBlank { null } ?: o.autor.substringBefore(",").ifBlank { null }, o.anio?.toString()).joinToString(" · "),
                         fontSize = (7 * escala).sp, color = letra.copy(alpha = 0.8f), maxLines = 2, textAlign = TextAlign.Center, lineHeight = (8 * escala).sp)
                 }
+            }
+        }
+    }
+}
+
+/**
+ * El adorno de la tapa dibujada, uno por tema: laurel, renglones de consola, grecas, cuadrifolios, tachones de censura,
+ * remaches y franjas, galones, papel cuadriculado, columnas de gaceta, abejas, helecho, copos, moneda, arco ojival, órbita,
+ * estrellas de lazo, cuernos de carnero, círculo y cuadrado de Vitruvio, cuña roja, la franja tricolor o una hilera de runas.
+ * Va tenue, en los bordes y abajo, para que el título se siga leyendo. `a` es el color de acento y `l` el de la letra.
+ */
+private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
+    val w = size.width; val h = size.height; val u = w / 80f
+    val tenue = a.copy(alpha = 0.45f)
+    fun linea(x0: Float, y0: Float, x1: Float, y1: Float, color: Color = tenue, grosor: Float = 1f * u) = drawLine(color, Offset(x0, y0), Offset(x1, y1), grosor)
+    fun rombo(o: Offset, rx: Float, ry: Float, color: Color) =
+        drawPath(Path().apply { moveTo(o.x, o.y - ry); lineTo(o.x + rx, o.y); lineTo(o.x, o.y + ry); lineTo(o.x - rx, o.y); close() }, color)
+    when (t) {
+        // Dos ramas de laurel que suben desde abajo.
+        TemaId.ROMANO -> for (lado in listOf(-1f, 1f)) for (k in 0 until 6) {
+            val g = Math.toRadians(20.0 + 12.0 * k); val r = w * 0.3f
+            val o = Offset(w / 2 + lado * r * kotlin.math.cos(g).toFloat(), h * 0.74f + r * 0.6f * kotlin.math.sin(g).toFloat())
+            drawOval(tenue, Offset(o.x - 2.6f * u, o.y - 1.4f * u), Size(5.2f * u, 2.8f * u))
+        }
+        // Renglones de pantalla y el indicador con su cursor.
+        TemaId.CIBER -> {
+            var y = 0f
+            while (y < h) { linea(0f, y, w, y, a.copy(alpha = 0.08f), 0.6f * u); y += 3 * u }
+            linea(8 * u, h - 14 * u, 12 * u, h - 11 * u, a.copy(alpha = 0.7f)); linea(12 * u, h - 11 * u, 8 * u, h - 8 * u, a.copy(alpha = 0.7f))
+            drawRect(a.copy(alpha = 0.7f), Offset(15 * u, h - 14 * u), Size(4 * u, 6 * u))
+        }
+        // Una greca arriba y otra abajo.
+        TemaId.HELENO -> listOf(16 * u, h - 20 * u).forEach { y0 ->
+            val p = 3.5f * u
+            drawPath(Path().apply {
+                moveTo(6 * u, y0 + p); var x = 6 * u
+                while (x + 2 * p <= w - 6 * u) { lineTo(x, y0); lineTo(x + p, y0); lineTo(x + p, y0 + p); lineTo(x + 2 * p, y0 + p); x += 2 * p }
+            }, tenue, style = Stroke(1f * u))
+        }
+        // Cuadrifolios en las esquinas y la raya roja del margen.
+        TemaId.MEDIEVAL -> {
+            linea(10 * u, 8 * u, 10 * u, h - 8 * u, a.copy(alpha = 0.6f), 1.2f * u)
+            listOf(Offset(10 * u, 10 * u), Offset(w - 10 * u, 10 * u), Offset(10 * u, h - 10 * u), Offset(w - 10 * u, h - 10 * u)).forEach { o ->
+                listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(tenue, 2.2f * u, o + d * (2.2f * u)) }
+            }
+        }
+        // Tachones de censura y el sello de goma.
+        TemaId.DISTOPIA -> {
+            drawRect(l.copy(alpha = 0.35f), Offset(8 * u, h - 22 * u), Size(w * 0.55f, 4 * u))
+            drawRect(l.copy(alpha = 0.35f), Offset(8 * u, h - 15 * u), Size(w * 0.35f, 4 * u))
+            drawCircle(a.copy(alpha = 0.55f), 9 * u, Offset(w - 16 * u, 22 * u), style = Stroke(1.4f * u))
+            drawCircle(a.copy(alpha = 0.55f), 6.5f * u, Offset(w - 16 * u, 22 * u), style = Stroke(0.8f * u))
+        }
+        // Tres franjas de folleto abajo y un remache en cada esquina.
+        TemaId.REFUGIO -> {
+            for (k in 0 until 3) drawRect(a.copy(alpha = 0.22f + 0.1f * k), Offset(0f, h - (8 + 6 * k) * u), Size(w, 3.5f * u))
+            listOf(Offset(7 * u, 7 * u), Offset(w - 7 * u, 7 * u), Offset(7 * u, h - 26 * u), Offset(w - 7 * u, h - 26 * u)).forEach { drawCircle(tenue, 1.8f * u, it) }
+        }
+        // Galones de grado abajo, uno sobre otro.
+        TemaId.ORDEN -> for (k in 0 until 3) {
+            val y = h - (12 + 5 * k) * u
+            drawPath(Path().apply { moveTo(w / 2 - 12 * u, y - 5 * u); lineTo(w / 2, y); lineTo(w / 2 + 12 * u, y - 5 * u) }, tenue, style = Stroke(2f * u))
+        }
+        // Papel cuadriculado de cuaderno de laboratorio.
+        TemaId.LABORATORIO -> {
+            val malla = a.copy(alpha = 0.12f); var x = 0f
+            while (x < w) { linea(x, 0f, x, h, malla, 0.5f * u); x += 6 * u }
+            var y = 0f
+            while (y < h) { linea(0f, y, w, y, malla, 0.5f * u); y += 6 * u }
+        }
+        // Raya gruesa y fina arriba, y columnas de gaceta abajo.
+        TemaId.COLONOS -> {
+            linea(6 * u, 14 * u, w - 6 * u, 14 * u, tenue, 2f * u); linea(6 * u, 17 * u, w - 6 * u, 17 * u, tenue, 0.6f * u)
+            listOf(w / 3, 2 * w / 3).forEach { x -> linea(x, h * 0.72f, x, h - 8 * u, tenue, 0.6f * u) }
+        }
+        // Abejas sembradas, como en el manto imperial.
+        TemaId.NAPOLEON -> for (fila in 0 until 3) for (col in 0 until 3) {
+            if ((fila + col) % 2 == 0) drawPath(simboloCalificacion(t, Offset(w * (0.2f + 0.3f * col), h * (0.62f + 0.13f * fila)), 3.2f * u), a.copy(alpha = 0.35f))
+        }
+        // Un helecho que sube por el borde izquierdo.
+        TemaId.BOTANICO -> {
+            val x0 = 9 * u
+            linea(x0, h - 6 * u, x0 + 3 * u, h * 0.45f, tenue)
+            for (k in 0 until 7) {
+                val y = h - 10 * u - k * (h * 0.075f); val x = x0 + 3 * u * (k / 7f); val largo = (7 - k) * 0.9f * u + 2 * u
+                linea(x, y, x + largo, y - 2.5f * u); linea(x, y, x - largo * 0.5f, y - 2 * u)
+            }
+        }
+        // Copos de nieve.
+        TemaId.NAVIDAD -> listOf(Offset(w * 0.2f, h * 0.2f) to 5f, Offset(w * 0.82f, h * 0.36f) to 3.5f, Offset(w * 0.3f, h * 0.84f) to 4f, Offset(w * 0.75f, h * 0.8f) to 3f).forEach { (o, r) ->
+            for (k in 0 until 3) { val g = Math.toRadians(90.0 + 60.0 * k); val d = Offset(kotlin.math.cos(g).toFloat(), kotlin.math.sin(g).toFloat()) * (r * u); drawLine(tenue, o - d, o + d, 0.8f * u) }
+        }
+        // Una moneda con su agujero cuadrado, abajo al centro.
+        TemaId.SEDA -> {
+            val o = Offset(w / 2, h - 16 * u)
+            drawCircle(tenue, 8 * u, o, style = Stroke(1.4f * u)); drawCircle(tenue, 5.5f * u, o, style = Stroke(0.7f * u))
+            drawRect(tenue, Offset(o.x - 2.2f * u, o.y - 2.2f * u), Size(4.4f * u, 4.4f * u), style = Stroke(1f * u))
+        }
+        // Un arco ojival que enmarca el título.
+        TemaId.GOTICO -> {
+            val x0 = 8 * u; val x1 = w - 8 * u; val base = h - 8 * u; val arranque = h * 0.36f
+            drawPath(Path().apply {
+                moveTo(x0, base); lineTo(x0, arranque); quadraticTo(x0, arranque - h * 0.2f, w / 2, 10 * u)
+                quadraticTo(x1, arranque - h * 0.2f, x1, arranque); lineTo(x1, base)
+            }, tenue, style = Stroke(1.2f * u))
+        }
+        // Estrellas sueltas y un planeta con su órbita.
+        TemaId.ESPACIO -> {
+            listOf(0.15f to 0.12f, 0.8f to 0.2f, 0.12f to 0.55f, 0.88f to 0.6f, 0.5f to 0.08f).forEach { (x, y) -> drawCircle(a.copy(alpha = 0.6f), 0.9f * u, Offset(w * x, h * y)) }
+            drawOval(tenue, Offset(w * 0.2f, h - 20 * u), Size(w * 0.6f, 9 * u), style = Stroke(0.8f * u))
+            drawCircle(tenue, 3.5f * u, Offset(w / 2, h - 15.5f * u))
+        }
+        // Estrellas de lazo de ocho puntas en las esquinas.
+        TemaId.ANDALUS -> listOf(Offset(11 * u, 11 * u), Offset(w - 11 * u, 11 * u), Offset(11 * u, h - 11 * u), Offset(w - 11 * u, h - 11 * u)).forEach { o ->
+            listOf(-90.0, -45.0).forEach { g0 ->
+                drawPath(Path().apply {
+                    for (i in 0 until 4) { val g = Math.toRadians(g0 + 90.0 * i); val x = o.x + 5 * u * kotlin.math.cos(g).toFloat(); val y = o.y + 5 * u * kotlin.math.sin(g).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }
+                    close()
+                }, tenue)
+            }
+        }
+        // Cuernos de carnero enroscados en las esquinas de abajo.
+        TemaId.MONGOL -> listOf(Offset(13 * u, h - 13 * u), Offset(w - 13 * u, h - 13 * u)).forEach { o ->
+            drawArc(tenue, 0f, 270f, false, Offset(o.x - 6 * u, o.y - 6 * u), Size(12 * u, 12 * u), style = Stroke(1.4f * u))
+            drawArc(tenue, 90f, 270f, false, Offset(o.x - 3 * u, o.y - 3 * u), Size(6 * u, 6 * u), style = Stroke(1.4f * u))
+        }
+        // El círculo y el cuadrado de Vitruvio, a lápiz, detrás del título.
+        TemaId.RENACIMIENTO -> {
+            val c = Offset(w / 2, h * 0.52f); val r = w * 0.36f
+            drawCircle(a.copy(alpha = 0.25f), r, c, style = Stroke(0.7f * u))
+            drawRect(a.copy(alpha = 0.25f), Offset(c.x - r * 0.88f, c.y - r * 0.6f), Size(r * 1.76f, r * 1.76f), style = Stroke(0.7f * u))
+            linea(c.x, c.y - r, c.x, c.y + r, a.copy(alpha = 0.18f), 0.5f * u); linea(c.x - r, c.y, c.x + r, c.y, a.copy(alpha = 0.18f), 0.5f * u)
+        }
+        // Una cuña roja desde la esquina y una barra en diagonal.
+        TemaId.URSS -> {
+            drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.7f); lineTo(w * 0.45f, h); close() }, a.copy(alpha = 0.5f))
+            linea(w * 0.55f, h - 6 * u, w - 6 * u, h * 0.62f, l.copy(alpha = 0.35f), 3 * u)
+        }
+        // La franja tricolor a lo largo del borde izquierdo.
+        TemaId.REVOLUCION -> listOf(Color(0xFF1F3A93), Color(0xFFF4F1EA), Color(0xFFC8102E)).forEachIndexed { k, col ->
+            drawRect(col.copy(alpha = 0.75f), Offset((3 + 3 * k) * u, 0f), Size(3 * u, h))
+        }
+        // Una hilera de runas abajo y una gema arriba.
+        TemaId.ANTIGUAS -> {
+            rombo(Offset(w / 2, 9 * u), 3 * u, 4.5f * u, a.copy(alpha = 0.55f))
+            var x = 12 * u; var i = 0; val y0 = h - 14 * u
+            while (x < w - 10 * u) {
+                linea(x, y0, x, y0 + 7 * u)
+                if (i % 2 == 0) linea(x, y0, x + 3.5f * u, y0 + 2.5f * u) else linea(x - 3 * u, y0 + 2 * u, x + 3 * u, y0 + 5 * u)
+                x += 9 * u; i++
             }
         }
     }
@@ -426,8 +586,7 @@ fun PantallaObra(nav: Nav) {
         if (uri != null) Portadas.desdeFoto(ctx, uri, o.id)?.let { n -> Repo.obras.firstOrNull { it.id == o.id }?.let { g(it.copy(portada = n, portada_url = null)) } }
     }
     fun fecha(actual: String?, poner: (String?) -> Unit) {
-        val p = Fechas.parse(actual ?: hoy)
-        DatePickerDialog(ctx, { _, y, m, d -> poner(Fechas.iso(LocalDate.of(y, m + 1, d))) }, p.year, p.monthValue - 1, p.dayOfMonth).show()
+        elegirFecha(ctx, actual ?: hoy) { poner(it) }
     }
 
     Hoja(TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre ?: "Obra", nav.atras, latin = "OPVS", subtitulo = "Se guarda sola mientras escribes.") {

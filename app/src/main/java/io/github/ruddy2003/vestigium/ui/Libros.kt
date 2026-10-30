@@ -36,8 +36,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -75,6 +73,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -87,6 +86,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -101,20 +101,37 @@ import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 // =====================================================================
 //  El diario como objeto: rollos, libros, cartas, expedientes y terminales
 // =====================================================================
 
-/** En qué se escribe el diario en cada tema. */
+/** En qué se escribe el diario en cada tema (lo usan las cartas para su papelería; el dibujo de cada objeto va por tema). */
 enum class Soporte { ROLLO, LIBRO, SOBRE, CARPETA, PANTALLA }
 
 fun soporte(t: TemaId): Soporte = when (t) {
-    TemaId.ROMANO, TemaId.HELENO, TemaId.SEDA, TemaId.MONGOL -> Soporte.ROLLO
-    TemaId.MEDIEVAL, TemaId.COLONOS, TemaId.ORDEN, TemaId.BOTANICO, TemaId.URSS, TemaId.LABORATORIO, TemaId.GOTICO, TemaId.ANDALUS, TemaId.RENACIMIENTO, TemaId.REVOLUCION, TemaId.ANTIGUAS -> Soporte.LIBRO
-    TemaId.NAPOLEON, TemaId.NAVIDAD -> Soporte.SOBRE
+    TemaId.ROMANO -> Soporte.ROLLO
+    TemaId.HELENO -> Soporte.ROLLO
+    TemaId.SEDA -> Soporte.ROLLO
+    TemaId.MONGOL -> Soporte.ROLLO
+    TemaId.MEDIEVAL -> Soporte.LIBRO
+    TemaId.COLONOS -> Soporte.LIBRO
+    TemaId.ORDEN -> Soporte.LIBRO
+    TemaId.BOTANICO -> Soporte.LIBRO
+    TemaId.URSS -> Soporte.LIBRO
+    TemaId.LABORATORIO -> Soporte.LIBRO
+    TemaId.GOTICO -> Soporte.LIBRO
+    TemaId.ANDALUS -> Soporte.LIBRO
+    TemaId.RENACIMIENTO -> Soporte.LIBRO
+    TemaId.REVOLUCION -> Soporte.LIBRO
+    TemaId.ANTIGUAS -> Soporte.LIBRO
+    TemaId.NAPOLEON -> Soporte.SOBRE
+    TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
-    TemaId.CIBER, TemaId.REFUGIO, TemaId.ESPACIO -> Soporte.PANTALLA
+    TemaId.CIBER -> Soporte.PANTALLA
+    TemaId.REFUGIO -> Soporte.PANTALLA
+    TemaId.ESPACIO -> Soporte.PANTALLA
 }
 
 /** Colores del objeto físico (cuero, papiro, lacre…); no cambian con el modo claro u oscuro. */
@@ -150,7 +167,7 @@ fun materia(t: TemaId): Materia = when (t) {
 }
 
 // =====================================================================
-//  De noche: los sueños con el mismo objeto del tema, teñido de medianoche
+//  De noche: los sueños con el mismo objeto del tema, bajo el cielo y la luz de su noche
 // =====================================================================
 
 /** Qué se escribe en la página: el diario del día, un sueño o una carta. */
@@ -160,32 +177,121 @@ internal val NOCHE = Color(0xFF111833)
 internal val NOCHE_ALTA = Color(0xFF261C4C)
 internal val LUNA = Color(0xFFEDE6C8)
 
-/** La materia del tema de noche: el cuero, el papiro o la pantalla en azul de medianoche, y el oro vuelto plata de luna. */
+/** La noche de cada tema: el color de su cielo y la luz que alumbra el objeto (luna, lámpara, fuego, fósforo…). */
+private class NocheTema(val cielo: Color, val luz: Color) {
+    /** La luna (o la luz principal) de ese cielo: el blanco de luna teñido de la luz del tema. */
+    val luna: Color get() = lerp(LUNA, luz, 0.35f)
+}
+
+private fun nocheDe(t: TemaId): NocheTema = when (t) {
+    // La lucerna: luz de aceite sobre el pórfido de noche.
+    TemaId.ROMANO -> NocheTema(c(0xFF1A1426), c(0xFFE9B860))
+    TemaId.CIBER -> NocheTema(c(0xFF0A0614), c(0xFFFF2E88))
+    // Selene en plata sobre el Egeo.
+    TemaId.HELENO -> NocheTema(c(0xFF0E1A33), c(0xFFDCE4F2))
+    // La vela del scriptorium.
+    TemaId.MEDIEVAL -> NocheTema(c(0xFF1A130C), c(0xFFF2C46B))
+    // Apagón bajo el reflector.
+    TemaId.DISTOPIA -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4))
+    TemaId.REFUGIO -> NocheTema(c(0xFF1A1003), c(0xFFFFB23F))
+    // Brasas de la forja.
+    TemaId.ORDEN -> NocheTema(c(0xFF14181D), c(0xFFE8743A))
+    // La lámpara ultravioleta del laboratorio.
+    TemaId.LABORATORIO -> NocheTema(c(0xFF0F0B22), c(0xFFB59CFF))
+    // El farol del pueblo.
+    TemaId.COLONOS -> NocheTema(c(0xFF0F1626), c(0xFFF0A860))
+    // El fuego del vivac.
+    TemaId.NAPOLEON -> NocheTema(c(0xFF0C1433), c(0xFFE8C35A))
+    // Luciérnagas en el bosque.
+    TemaId.BOTANICO -> NocheTema(c(0xFF0B1A14), c(0xFFC6F06A))
+    // La chimenea.
+    TemaId.NAVIDAD -> NocheTema(c(0xFF1A0E0E), c(0xFFFF9E57))
+    // El farol de papel rojo de la caravana.
+    TemaId.SEDA -> NocheTema(c(0xFF0D1433), c(0xFFF26B4E))
+    // La luna a través del vitral de zafiro.
+    TemaId.GOTICO -> NocheTema(c(0xFF0B0F2E), c(0xFF9FB4FF))
+    TemaId.ESPACIO -> NocheTema(c(0xFF07041A), c(0xFFC59BFF))
+    // Las lámparas de la Alhambra en el patio.
+    TemaId.ANDALUS -> NocheTema(c(0xFF0A1A1E), c(0xFFF2D27A))
+    // La luz fría de las estrellas sobre la estepa.
+    TemaId.MONGOL -> NocheTema(c(0xFF061433), c(0xFFBFD9FF))
+    // La vela del taller, en tono sanguina.
+    TemaId.RENACIMIENTO -> NocheTema(c(0xFF1A140E), c(0xFFE3A06B))
+    // La estrella roja en la noche polar.
+    TemaId.URSS -> NocheTema(c(0xFF141018), c(0xFFFF5A4E))
+    // Las antorchas de la barricada.
+    TemaId.REVOLUCION -> NocheTema(c(0xFF101828), c(0xFFFF8A4A))
+    // La luz de estrellas de los bosques antiguos.
+    TemaId.ANTIGUAS -> NocheTema(c(0xFF0E1612), c(0xFFB8E0C8))
+}
+
+/** El objeto bajo su noche: el cuerpo se hunde en el cielo del tema y el oro toma la luz que lo alumbra. */
+private fun materiaTenida(m: Materia, n: NocheTema): Materia {
+    fun o(x: Color, k: Float) = lerp(x, n.cielo, k)
+    val tinta = lerp(Color(0xFFE8E6F2), n.luz, 0.12f)
+    return Materia(cuerpo = o(m.cuerpo, 0.68f), sombra = o(m.sombra, 0.76f), brillo = o(m.brillo, 0.6f),
+        acento = lerp(m.acento, n.luz, 0.3f), detalle = lerp(m.detalle, n.luz, 0.45f),
+        hoja = o(m.hoja, 0.74f), tinta = tinta, extra = lerp(m.extra, n.luz, 0.35f), textoCuerpo = tinta)
+}
+
+/** La materia del tema de noche: el cuero, el papiro o la pantalla bajo el cielo y la luz de su noche. */
 fun materiaNoche(t: TemaId): Materia {
-    val m = materia(t)
+    val m = materia(t); val n = nocheDe(t)
     return when (t) {
         // El fósforo verde se vuelve ámbar, como una pantalla en reposo.
         TemaId.REFUGIO -> Materia(c(0xFF6E6A58), c(0xFF3E3B30), c(0xFF8E886F), c(0xFFFFB23F), c(0xFFB3741E), c(0xFF1A1003), c(0xFFFFC870))
         TemaId.CIBER -> Materia(c(0xFF120B1F), c(0xFF07040D), c(0xFF22163A), c(0xFFFF2E88), c(0xFF9B5CFF), c(0xFF07040D), c(0xFFF0DAF7), extra = c(0xFF00E5FF))
         TemaId.ESPACIO -> Materia(c(0xFF120A2A), c(0xFF06040F), c(0xFF241645), c(0xFFC59BFF), c(0xFF8AB4FF), c(0xFF06040F), c(0xFFECE6FA), extra = c(0xFFFF8AD8))
-        else -> {
-            fun n(x: Color, k: Float) = lerp(x, NOCHE, k)
-            Materia(cuerpo = n(m.cuerpo, 0.68f), sombra = n(m.sombra, 0.76f), brillo = n(m.brillo, 0.6f),
-                acento = lerp(m.acento, LUNA, 0.3f), detalle = lerp(m.detalle, Color(0xFFAFC0EE), 0.45f),
-                hoja = n(m.hoja, 0.74f), tinta = Color(0xFFE8E6F2), extra = lerp(m.extra, Color(0xFF8FA6F0), 0.35f), textoCuerpo = Color(0xFFE8E6F2))
-        }
+        TemaId.ROMANO -> materiaTenida(m, n)
+        TemaId.HELENO -> materiaTenida(m, n)
+        TemaId.MEDIEVAL -> materiaTenida(m, n)
+        TemaId.DISTOPIA -> materiaTenida(m, n)
+        TemaId.ORDEN -> materiaTenida(m, n)
+        TemaId.LABORATORIO -> materiaTenida(m, n)
+        TemaId.COLONOS -> materiaTenida(m, n)
+        TemaId.NAPOLEON -> materiaTenida(m, n)
+        TemaId.BOTANICO -> materiaTenida(m, n)
+        TemaId.NAVIDAD -> materiaTenida(m, n)
+        TemaId.SEDA -> materiaTenida(m, n)
+        TemaId.GOTICO -> materiaTenida(m, n)
+        TemaId.ANDALUS -> materiaTenida(m, n)
+        TemaId.MONGOL -> materiaTenida(m, n)
+        TemaId.RENACIMIENTO -> materiaTenida(m, n)
+        TemaId.URSS -> materiaTenida(m, n)
+        TemaId.REVOLUCION -> materiaTenida(m, n)
+        TemaId.ANTIGUAS -> materiaTenida(m, n)
     }
 }
 
-/** La página de un sueño: el papel del tema bajo un cielo de noche. */
+/** El papel bajo la noche del tema: se oscurece hacia su cielo y la tinta toma su luz. */
+private fun paginaTenida(p: Pagina, n: NocheTema) = Pagina(p.fondo, lerp(p.color, n.cielo, 0.84f), lerp(Color(0xFFE6E4F0), n.luz, 0.12f), lerp(Color(0xFFA2AACB), n.luz, 0.22f),
+    lerp(p.acento, n.luz, 0.45f), lerp(p.detalle, n.luz, 0.5f), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
+
+/** La página de un sueño: el papel del tema bajo el cielo de su noche. */
 fun paginaNoche(t: TemaId): Pagina {
-    val p = pagina(t)
+    val p = pagina(t); val n = nocheDe(t)
     return when (t) {
         TemaId.REFUGIO -> Pagina(null, c(0xFF1A1003), c(0xFFFFC870), c(0xFFB3741E), c(0xFFFFB23F), c(0xFF7CF098), p.texto, p.tam, p.interlinea, true, p.rayas)
         TemaId.CIBER -> Pagina(null, c(0xFF0A0614), c(0xFFF0DAF7), c(0xFF7A5B8C), c(0xFFFF2E88), c(0xFF00E5FF), p.texto, p.tam, p.interlinea, true, p.rayas)
         TemaId.ESPACIO -> Pagina(null, c(0xFF07041A), c(0xFFECE6FA), c(0xFF8A7BB0), c(0xFFC59BFF), c(0xFFFF8AD8), p.texto, p.tam, p.interlinea, true, p.rayas)
-        else -> Pagina(p.fondo, lerp(p.color, NOCHE, 0.84f), c(0xFFE6E4F0), c(0xFFA2AACB), lerp(p.acento, LUNA, 0.45f), lerp(p.detalle, Color(0xFFAFC0EE), 0.5f),
-            p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
+        TemaId.ROMANO -> paginaTenida(p, n)
+        TemaId.HELENO -> paginaTenida(p, n)
+        TemaId.MEDIEVAL -> paginaTenida(p, n)
+        TemaId.DISTOPIA -> paginaTenida(p, n)
+        TemaId.ORDEN -> paginaTenida(p, n)
+        TemaId.LABORATORIO -> paginaTenida(p, n)
+        TemaId.COLONOS -> paginaTenida(p, n)
+        TemaId.NAPOLEON -> paginaTenida(p, n)
+        TemaId.BOTANICO -> paginaTenida(p, n)
+        TemaId.NAVIDAD -> paginaTenida(p, n)
+        TemaId.SEDA -> paginaTenida(p, n)
+        TemaId.GOTICO -> paginaTenida(p, n)
+        TemaId.ANDALUS -> paginaTenida(p, n)
+        TemaId.MONGOL -> paginaTenida(p, n)
+        TemaId.RENACIMIENTO -> paginaTenida(p, n)
+        TemaId.URSS -> paginaTenida(p, n)
+        TemaId.REVOLUCION -> paginaTenida(p, n)
+        TemaId.ANTIGUAS -> paginaTenida(p, n)
     }
 }
 
@@ -232,17 +338,218 @@ internal fun DrawScope.estrellas(semilla: Int, n: Int, color: Color, area: Rect 
     }
 }
 
-/** Un cielo de noche con el tono del tema, para los estantes de los sueños. */
+private fun polarLibro(r: Float, a: Double) = Offset(r * cos(a).toFloat(), r * sin(a).toFloat())
+
+/** Estrella de [puntas] puntas; [interior] es el radio de los valles respecto del de las puntas. */
+private fun DrawScope.estrellaPuntas(ce: Offset, r: Float, color: Color, puntas: Int = 5, interior: Float = 0.42f) {
+    val p = Path()
+    for (i in 0 until puntas * 2) {
+        val rr = if (i % 2 == 0) r else r * interior
+        val q = ce + polarLibro(rr, -PI / 2 + PI * i / puntas)
+        if (i == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
+    }
+    p.close(); drawPath(p, color)
+}
+
+/** Asterisco de trazos (como las estrellitas de los márgenes). */
+private fun DrawScope.asterisco(ce: Offset, l: Float, color: Color, brazos: Int, grosor: Float) {
+    for (i in 0 until brazos / 2) { val a = 2 * PI * i / brazos; drawLine(color, ce - polarLibro(l, a), ce + polarLibro(l, a), grosor) }
+}
+
+/** Copo de nieve: seis brazos con sus ramitas. */
+private fun DrawScope.copoNieve(ce: Offset, l: Float, color: Color) {
+    for (i in 0 until 6) {
+        val a = PI * i / 3
+        val punta = ce + polarLibro(l, a); val medio = ce + polarLibro(l * 0.6f, a)
+        drawLine(color, ce, punta, 0.8f)
+        drawLine(color, medio, medio + polarLibro(l * 0.3f, a + 0.7), 0.7f); drawLine(color, medio, medio + polarLibro(l * 0.3f, a - 0.7), 0.7f)
+    }
+}
+
+/** Las estrellas de cada tema: puntos, píxeles, cruces, asteriscos, copos, rombos… La misma semilla da siempre el mismo cielo. */
+private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: Color, area: Rect = size.toRect(), max: Float = 1.6f) {
+    val az = java.util.Random(semilla.toLong())
+    repeat(n) { i ->
+        val o = Offset(area.left + az.nextFloat() * area.width, area.top + az.nextFloat() * area.height)
+        val r = 0.45f + az.nextFloat() * max
+        val col = color.copy(alpha = 0.25f + az.nextFloat() * 0.6f)
+        when (t) {
+            TemaId.ROMANO -> drawCircle(col, r, o)
+            TemaId.CIBER -> drawRect(col, o, Size(r * 1.6f, r * 1.6f))
+            TemaId.HELENO -> {
+                drawCircle(col, r, o)
+                if (r > max * 0.92f) { drawLine(col, o - Offset(r * 2.8f, 0f), o + Offset(r * 2.8f, 0f), 0.8f); drawLine(col, o - Offset(0f, r * 2.8f), o + Offset(0f, r * 2.8f), 0.8f) }
+            }
+            TemaId.MEDIEVAL -> asterisco(o, r * 1.7f, col, 6, 0.9f)
+            TemaId.DISTOPIA -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
+            TemaId.REFUGIO -> { val p = r * 0.8f; drawRect(col, Offset(o.x - p / 2, o.y - p * 1.5f), Size(p, p * 3)); drawRect(col, Offset(o.x - p * 1.5f, o.y - p / 2), Size(p * 3, p)) }
+            TemaId.ORDEN -> { drawLine(col, o - Offset(r * 2.4f, 0f), o + Offset(r * 2.4f, 0f), 1f); drawLine(col, o - Offset(0f, r * 2.4f), o + Offset(0f, r * 2.4f), 1f); drawCircle(col, r * 0.7f, o) }
+            TemaId.LABORATORIO -> { drawLine(col, o - Offset(r * 1.5f, 0f), o + Offset(r * 1.5f, 0f), 0.7f); drawLine(col, o - Offset(0f, r * 1.5f), o + Offset(0f, r * 1.5f), 0.7f) }
+            TemaId.COLONOS -> { drawCircle(col, r * 0.8f, o); drawCircle(col.copy(alpha = col.alpha * 0.3f), r * 2f, o, style = Stroke(0.6f)) }
+            TemaId.NAPOLEON -> estrellaPuntas(o, r * 1.8f, col, 5, 0.42f)
+            TemaId.BOTANICO -> { drawCircle(col.copy(alpha = col.alpha * 0.25f), r * 3f, o); drawCircle(col, r * 0.8f, o) }
+            TemaId.NAVIDAD -> copoNieve(o, r * 2.2f, col)
+            TemaId.SEDA -> drawPath(Path().apply { moveTo(o.x, o.y - r * 1.6f); lineTo(o.x + r, o.y); lineTo(o.x, o.y + r * 1.6f); lineTo(o.x - r, o.y); close() }, col)
+            TemaId.GOTICO -> estrellaPuntas(o, r * 2f, col, 8, 0.5f)
+            TemaId.ESPACIO -> drawCircle(listOf(col, Color(0xFF8AB4FF), Color(0xFFFFB86B))[i % 3].copy(alpha = col.alpha), r, o)
+            TemaId.ANDALUS -> estrellaPuntas(o, r * 1.8f, col, 6, 0.55f)
+            TemaId.MONGOL -> drawCircle(col, r * 1.2f, o, style = Stroke(0.9f))
+            TemaId.RENACIMIENTO -> { val l = r * 1.3f; drawLine(col, o + Offset(-l, -l), o + Offset(l, l), 0.9f); drawLine(col, o + Offset(-l, l), o + Offset(l, -l), 0.9f) }
+            TemaId.URSS -> if (i % 9 == 0) estrellaPuntas(o, r * 2.2f, Color(0xFFE53935).copy(alpha = col.alpha), 5, 0.42f) else drawCircle(col, r * 0.8f, o)
+            TemaId.REVOLUCION -> drawCircle(listOf(Color(0xFF8FA6E8), col, Color(0xFFE57373))[i % 3].copy(alpha = col.alpha), r, o)
+            TemaId.ANTIGUAS -> estrellaPuntas(o, r * 2.2f, col, 4, 0.3f)
+        }
+    }
+}
+
+/**
+ * La luna (o lo que alumbra la noche) de cada tema. Con [sola], solo la figura principal, sin lo que la acompaña
+ * (para los lomos, que son angostos).
+ */
+private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema, sola: Boolean = false) {
+    val luna = n.luna
+    when (t) {
+        // Luna llena con su halo, como sobre el Foro.
+        TemaId.ROMANO -> { drawCircle(luna.copy(alpha = 0.18f), r * 1.45f, ce); drawCircle(luna, r * 0.9f, ce); drawCircle(n.cielo.copy(alpha = 0.18f), r * 0.25f, ce + Offset(-r * 0.25f, -r * 0.1f)) }
+        // Una media luna hecha de cuadritos, como en una consola.
+        TemaId.CIBER -> {
+            val paso = r / 3.5f; var y = -r
+            while (y <= r) {
+                var x = -r
+                while (x <= r) {
+                    val dentro = x * x + y * y <= r * r
+                    val fuera = (x - r * 0.48f) * (x - r * 0.48f) + (y + r * 0.22f) * (y + r * 0.22f) > r * 0.88f * r * 0.88f
+                    if (dentro && fuera) drawRect(luna, Offset(ce.x + x - paso * 0.45f, ce.y + y - paso * 0.45f), Size(paso * 0.9f, paso * 0.9f))
+                    x += paso
+                }
+                y += paso
+            }
+        }
+        // Selene: la media luna tumbada como una barca, y las Pléyades al lado.
+        TemaId.HELENO -> {
+            rotate(-90f, ce) { mediaLuna(ce, r, luna) }
+            if (!sola) listOf(0f to 0f, 0.8f to -0.3f, 1.4f to 0.2f, 0.6f to 0.6f, -0.5f to 0.5f, 1.9f to -0.4f, 0.2f to -0.9f).forEach { (x, y) ->
+                drawCircle(luna, r * 0.1f, ce + Offset(-r * 3f + x * r * 0.5f, r * 0.3f + y * r * 0.5f))
+            }
+        }
+        // Media luna con una estrellita de seis puntas, como en los márgenes iluminados.
+        TemaId.MEDIEVAL -> { mediaLuna(ce, r, luna); if (!sola) asterisco(ce + Offset(-r * 1.9f, r * 0.6f), r * 0.45f, luna, 6, 1.4f) }
+        // Una luna gris cortada por el haz de un reflector.
+        TemaId.DISTOPIA -> {
+            drawCircle(luna.copy(alpha = 0.75f), r, ce)
+            if (!sola) drawPath(Path().apply { moveTo(ce.x - r * 2.2f, ce.y + r * 2.6f); lineTo(ce.x - r * 0.2f, ce.y - r * 1.4f); lineTo(ce.x + r * 0.8f, ce.y - r * 1.2f); close() }, luna.copy(alpha = 0.16f))
+        }
+        // Luna de fósforo: un círculo hecho de líneas de barrido.
+        TemaId.REFUGIO -> {
+            drawCircle(n.luz, r, ce, style = Stroke(1f))
+            var y = -r + r / 5f
+            while (y < r) { val m = sqrt(r * r - y * y); drawLine(n.luz.copy(alpha = 0.8f), Offset(ce.x - m, ce.y + y), Offset(ce.x + m, ce.y + y), 1.2f); y += r / 5f }
+        }
+        // Media luna de acero: un semicírculo recto, con su anillo.
+        TemaId.ORDEN -> { drawArc(luna, 90f, 180f, true, Offset(ce.x - r, ce.y - r), Size(2 * r, 2 * r)); drawCircle(luna.copy(alpha = 0.4f), r * 1.25f, ce, style = Stroke(1.2f)) }
+        // Diagrama de fase: la mitad iluminada y las marcas de los grados.
+        TemaId.LABORATORIO -> {
+            drawCircle(luna, r, ce, style = Stroke(1.2f))
+            drawArc(luna, -90f, 180f, true, Offset(ce.x - r, ce.y - r), Size(2 * r, 2 * r))
+            if (!sola) for (i in 0 until 12) { val a = PI * i / 6; drawLine(luna.copy(alpha = 0.6f), ce + polarLibro(r * 1.15f, a), ce + polarLibro(r * 1.35f, a), 1f) }
+        }
+        // Media luna y el Carro (la Osa Mayor), con que se orientaban los colonos.
+        TemaId.COLONOS -> {
+            mediaLuna(ce, r, luna)
+            if (!sola) {
+                val s = r * 0.55f; val o = ce + Offset(-r * 2.8f, r * 0.4f)
+                val puntos = listOf(-1.6f to -0.5f, -1.0f to -0.3f, -0.45f to -0.15f, 0f to 0f, 0.1f to 0.6f, 0.9f to 0.65f, 0.95f to 0.05f).map { (x, y) -> o + Offset(x * s, y * s) }
+                puntos.zipWithNext().forEach { (a, b) -> drawLine(luna.copy(alpha = 0.35f), a, b, 0.8f) }
+                drawLine(luna.copy(alpha = 0.35f), puntos[6], puntos[3], 0.8f)
+                puntos.forEach { drawCircle(luna, s * 0.14f, it) }
+            }
+        }
+        // La estrella del Emperador junto a la luna.
+        TemaId.NAPOLEON -> { mediaLuna(ce, r * 0.85f, luna); if (!sola) estrellaPuntas(ce + Offset(-r * 2f, r * 0.4f), r * 0.7f, n.luz, 5, 0.42f) }
+        // Una polilla nocturna cruza la luna llena.
+        TemaId.BOTANICO -> {
+            drawCircle(luna, r, ce)
+            val o = ce + Offset(r * 0.15f, r * 0.15f); val s = r * 0.5f
+            drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x - s, o.y - s * 0.7f); lineTo(o.x - s * 0.8f, o.y + s * 0.5f); close() }, n.cielo)
+            drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + s, o.y - s * 0.7f); lineTo(o.x + s * 0.8f, o.y + s * 0.5f); close() }, n.cielo)
+            drawLine(n.cielo, o + Offset(0f, -s * 0.3f), o + Offset(0f, s * 0.5f), s * 0.18f)
+            drawLine(n.cielo, o + Offset(0f, -s * 0.3f), o + Offset(-s * 0.35f, -s * 0.8f), 1f); drawLine(n.cielo, o + Offset(0f, -s * 0.3f), o + Offset(s * 0.35f, -s * 0.8f), 1f)
+        }
+        // La estrella de Belén, con su cola larga, y una luna pequeña.
+        TemaId.NAVIDAD -> {
+            if (!sola) mediaLuna(ce + Offset(r * 0.6f, -r * 0.4f), r * 0.55f, luna)
+            val o = if (sola) ce else ce + Offset(-r * 1.4f, r * 0.1f)
+            drawCircle(n.luz.copy(alpha = 0.18f), r * 0.7f, o)
+            val k = r * 0.14f
+            drawPath(Path().apply {
+                moveTo(o.x, o.y - r * 0.8f); lineTo(o.x + k, o.y - k); lineTo(o.x + r * 0.6f, o.y); lineTo(o.x + k, o.y + k)
+                lineTo(o.x, o.y + r * 1.9f); lineTo(o.x - k, o.y + k); lineTo(o.x - r * 0.6f, o.y); lineTo(o.x - k, o.y - k); close()
+            }, n.luz)
+        }
+        // Luna llena de otoño tras dos nubes alargadas.
+        TemaId.SEDA -> {
+            drawCircle(luna, r, ce)
+            listOf(-0.35f, 0.3f).forEachIndexed { i, f -> drawRoundRect(n.cielo.copy(alpha = 0.85f), Offset(ce.x - r * (1.3f - i * 0.5f), ce.y + r * f), Size(r * 1.8f, r * 0.32f), CornerRadius(r * 0.16f)) }
+        }
+        // Estrella de oro de ocho puntas, como en la bóveda de la capilla.
+        TemaId.GOTICO -> { estrellaPuntas(ce, r, n.luz, 8, 0.5f); drawCircle(n.cielo, r * 0.18f, ce) }
+        // Un planeta con su anillo.
+        TemaId.ESPACIO -> { drawCircle(luna, r * 0.75f, ce); rotate(-20f, ce) { drawOval(n.luz, Offset(ce.x - r * 1.5f, ce.y - r * 0.38f), Size(r * 3f, r * 0.76f), style = Stroke(1.6f)) } }
+        // Media luna y la estrella de ocho puntas (dos cuadrados girados).
+        TemaId.ANDALUS -> {
+            mediaLuna(ce, r, luna)
+            if (!sola) {
+                val e = ce + Offset(-r * 1.8f, r * 0.5f); val l = r * 0.32f
+                drawRect(n.luz, Offset(e.x - l, e.y - l), Size(2 * l, 2 * l))
+                rotate(45f, e) { drawRect(n.luz, Offset(e.x - l, e.y - l), Size(2 * l, 2 * l)) }
+            }
+        }
+        // El sol y la luna del soyombo: la media luna boca arriba con el disco encima.
+        TemaId.MONGOL -> {
+            rotate(-90f, ce + Offset(0f, r * 0.3f)) { mediaLuna(ce + Offset(0f, r * 0.3f), r * 0.8f, luna) }
+            drawCircle(luna, r * 0.38f, ce + Offset(0f, -r * 0.8f))
+            if (!sola) listOf(-0.3f, 0f, 0.3f).forEach { dx -> drawCircle(n.luz, r * 0.1f, ce + Offset(dx * r, -r * (1.45f + if (dx == 0f) 0.15f else 0f))) }
+        }
+        // La luz cenicienta que dibujó Leonardo: el creciente iluminado y el resto rayado a pluma.
+        TemaId.RENACIMIENTO -> {
+            drawCircle(luna.copy(alpha = 0.5f), r, ce, style = Stroke(1f))
+            mediaLuna(ce, r, luna)
+            var x = r * 0.05f
+            while (x < r) { val m = sqrt(r * r - x * x) * 0.92f; drawLine(luna.copy(alpha = 0.35f), Offset(ce.x + x, ce.y - m), Offset(ce.x + x - r * 0.15f, ce.y + m), 0.8f); x += r / 5f }
+        }
+        // El Sputnik cruza junto a la luna.
+        TemaId.URSS -> {
+            mediaLuna(ce + Offset(r * 0.4f, 0f), r * 0.8f, luna)
+            if (!sola) {
+                val o = ce + Offset(-r * 1.8f, r * 0.6f); val s = r * 0.28f
+                drawCircle(n.luz, s, o)
+                listOf(20.0, 34.0, -20.0, -34.0).forEach { a -> drawLine(n.luz, o, o + polarLibro(s * 4f, Math.toRadians(a)), 0.9f) }
+            }
+        }
+        // Media luna y la escarapela.
+        TemaId.REVOLUCION -> {
+            mediaLuna(ce, r, luna)
+            if (!sola) { val e = ce + Offset(-r * 1.8f, r * 0.5f); drawCircle(Color(0xFFB22234), r * 0.42f, e); drawCircle(Color(0xFFF4F1E8), r * 0.28f, e); drawCircle(Color(0xFF1F3A6E), r * 0.14f, e) }
+        }
+        // La luna con su anillo de runas inventadas.
+        TemaId.ANTIGUAS -> {
+            drawCircle(luna, r * 0.8f, ce)
+            if (!sola) for (i in 0 until 16) { val a = 2 * PI * i / 16; val p0 = ce + polarLibro(r * 1.1f, a); drawLine(luna.copy(alpha = 0.7f), p0, p0 + polarLibro(r * 0.25f, a + if (i % 3 == 0) 0.6 else -0.4), 1.1f) }
+        }
+    }
+}
+
+/** Un cielo de noche propio de cada tema (su color, su luna y sus estrellas), para los estantes de los sueños. */
 @Composable
 fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, content: @Composable () -> Unit) {
-    val m = materiaNoche(tema)
-    val alto = lerp(NOCHE_ALTA, m.acento, 0.14f)
+    val m = materiaNoche(tema); val n = nocheDe(tema)
+    val alto = lerp(n.cielo, n.luz, 0.16f)
     val forma = RoundedCornerShape(10.dp)
     val e = MaterialTheme.colorScheme.copy(onSurfaceVariant = Color(0xFFB8BEDA), onSurface = Color(0xFFE8E6F2), onBackground = Color(0xFFE8E6F2), primary = m.acento)
-    Box(modifier.fillMaxWidth().clip(forma).background(Brush.verticalGradient(listOf(NOCHE, alto))).border(1.dp, m.acento.copy(alpha = 0.35f), forma)) {
+    Box(modifier.fillMaxWidth().clip(forma).background(Brush.verticalGradient(listOf(n.cielo, alto))).border(1.dp, n.luz.copy(alpha = 0.35f), forma)) {
         Canvas(Modifier.matchParentSize()) {
-            estrellas(tema.ordinal * 31 + 5, (size.width * size.height / 9000f).toInt().coerceIn(20, 140), LUNA)
-            mediaLuna(Offset(size.width - 24.dp.toPx(), 22.dp.toPx()), 10.dp.toPx(), LUNA.copy(alpha = 0.9f))
+            estrellasDelTema(tema, tema.ordinal * 31 + 5, (size.width * size.height / 9000f).toInt().coerceIn(20, 140), n.luna)
+            lunaDelTema(tema, Offset(size.width - 24.dp.toPx(), 22.dp.toPx()), 10.dp.toPx(), n)
         }
         MaterialTheme(colorScheme = e, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
             Box(Modifier.padding(horizontal = 10.dp, vertical = 10.dp)) { content() }
@@ -252,9 +559,9 @@ fun CieloNoche(modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, conten
 
 /** Lo que dice el botón de guardar en cada tema. */
 fun textoGuardar(t: TemaId): String = when (t) {
-    TemaId.ROMANO -> "SIGNARE"; TemaId.CIBER -> "git commit"; TemaId.HELENO -> "guardar"; TemaId.MEDIEVAL -> "asentar"
+    TemaId.ROMANO -> "SIGNARE"; TemaId.CIBER -> "git commit"; TemaId.HELENO -> "γράφε · anotar"; TemaId.MEDIEVAL -> "rubricar"
     TemaId.DISTOPIA -> "ARCHIVAR"; TemaId.REFUGIO -> "GUARDAR"; TemaId.ORDEN -> "REGISTRAR"; TemaId.LABORATORIO -> "guardar registro"
-    TemaId.COLONOS -> "asentar"; TemaId.NAPOLEON -> "SELLAR"; TemaId.BOTANICO -> "guardar"; TemaId.NAVIDAD -> "guardar carta"
+    TemaId.COLONOS -> "asentar"; TemaId.NAPOLEON -> "SELLAR"; TemaId.BOTANICO -> "prensar la hoja"; TemaId.NAVIDAD -> "guardar carta"
     TemaId.SEDA -> "sellar el rollo"; TemaId.URSS -> "ENTREGAR"
     TemaId.GOTICO -> "sellar el folio"; TemaId.ESPACIO -> "TRANSMITIR"; TemaId.ANDALUS -> "guardar · حفظ"; TemaId.MONGOL -> "ТАМГА · sellar"
     TemaId.RENACIMIENTO -> "annotare"; TemaId.REVOLUCION -> "FIRMAR"; TemaId.ANTIGUAS -> "ASENTAR EN LA CRÓNICA"
@@ -272,18 +579,179 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.ANTIGUAS -> "Así quedó escrito en la crónica."
 }
 
-private fun pistaSueno(s: Soporte) = when (s) {
-    Soporte.CARPETA -> "TOCA PARA DECLARAR LO SOÑADO"
-    Soporte.PANTALLA -> "> toca para registrar el sueño_"
-    else -> "toca para contar lo que soñaste"
+/** Lo que invita a abrir el objeto cerrado cuando aún no tiene nada escrito. */
+private fun pistaDia(t: TemaId): String = when (t) {
+    TemaId.ROMANO -> "toca para desenrollar el volumen"
+    TemaId.CIBER -> "> toca para abrir el editor_"
+    TemaId.HELENO -> "toca para desplegar el rollo"
+    TemaId.MEDIEVAL -> "toca para abrir el códice"
+    TemaId.DISTOPIA -> "TOCA PARA ABRIR EL EXPEDIENTE"
+    TemaId.REFUGIO -> "> TOCA PARA ABRIR LA BITÁCORA_"
+    TemaId.ORDEN -> "toca para abrir el libro de partes"
+    TemaId.LABORATORIO -> "toca para abrir el cuaderno de laboratorio"
+    TemaId.COLONOS -> "toca para abrir el libro de registro"
+    TemaId.NAPOLEON -> "toca para desplegar el boletín"
+    TemaId.BOTANICO -> "toca para abrir la libreta de campo"
+    TemaId.NAVIDAD -> "toca para abrir la carta"
+    TemaId.SEDA -> "toca para desenrollar la seda"
+    TemaId.GOTICO -> "toca para abrir el libro de horas"
+    TemaId.ESPACIO -> "toca para abrir la bitácora de vuelo"
+    TemaId.ANDALUS -> "toca para soltar la solapa y abrir el cuaderno"
+    TemaId.MONGOL -> "toca para desenrollar el rollo de la estepa"
+    TemaId.RENACIMIENTO -> "toca para desatar el cuaderno de notas"
+    TemaId.URSS -> "toca para abrir la libreta de informes"
+    TemaId.REVOLUCION -> "toca para abrir el cuaderno de quejas"
+    TemaId.ANTIGUAS -> "toca para abrir la crónica"
 }
 
-private fun pista(s: Soporte) = when (s) {
-    Soporte.ROLLO -> "toca para desenrollar y escribir"
-    Soporte.LIBRO -> "toca para abrir el libro"
-    Soporte.SOBRE -> "toca para abrir la carta"
-    Soporte.CARPETA -> "TOCA PARA ABRIR EL EXPEDIENTE"
-    Soporte.PANTALLA -> "> toca para abrir el editor_"
+/** Lo mismo, de noche: invita a contar el sueño. */
+private fun pistaNoche(t: TemaId): String = when (t) {
+    TemaId.ROMANO -> "toca para contar el somnium"
+    TemaId.CIBER -> "> toca para registrar el sueño_"
+    TemaId.HELENO -> "toca para contar lo que trajo Hipnos"
+    TemaId.MEDIEVAL -> "toca para asentar la visión de la noche"
+    TemaId.DISTOPIA -> "TOCA PARA DECLARAR LO SOÑADO"
+    TemaId.REFUGIO -> "> TOCA PARA REGISTRAR EL SUEÑO_"
+    TemaId.ORDEN -> "toca para dar el parte nocturno"
+    TemaId.LABORATORIO -> "toca para registrar la observación nocturna"
+    TemaId.COLONOS -> "toca para anotar lo soñado"
+    TemaId.NAPOLEON -> "toca para dictar el sueño"
+    TemaId.BOTANICO -> "toca para anotar la flora de la noche"
+    TemaId.NAVIDAD -> "toca para contar lo que soñaste junto al fuego"
+    TemaId.SEDA -> "toca para escribir el sueño de la caravana"
+    TemaId.GOTICO -> "toca para escribir la visión nocturna"
+    TemaId.ESPACIO -> "toca para transmitir el sueño"
+    TemaId.ANDALUS -> "toca para escribir el sueño del patio"
+    TemaId.MONGOL -> "toca para contar el sueño de la yurta"
+    TemaId.RENACIMIENTO -> "toca para dibujar el sogno con palabras"
+    TemaId.URSS -> "toca para entregar el informe del sueño"
+    TemaId.REVOLUCION -> "toca para levantar acta del sueño"
+    TemaId.ANTIGUAS -> "toca para contar las visiones de la noche"
+}
+
+/** Lo que dice la página de un día sin nada escrito. */
+private fun textoVacio(t: TemaId): String = when (t) {
+    TemaId.ROMANO -> "Nihil scriptum: este día quedó en blanco."
+    TemaId.CIBER -> "// archivo vacío: nada escrito este día"
+    TemaId.HELENO -> "Ἄγραφος: nada escrito este día."
+    TemaId.MEDIEVAL -> "Folio en blanco: nada se asentó este día."
+    TemaId.DISTOPIA -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
+    TemaId.REFUGIO -> "SIN ENTRADAS EN LA BITÁCORA PARA ESTE DÍA."
+    TemaId.ORDEN -> "Sin parte para esta jornada."
+    TemaId.LABORATORIO -> "Sin datos registrados en esta fecha."
+    TemaId.COLONOS -> "Nada asentado en el registro este día."
+    TemaId.NAPOLEON -> "Aucun bulletin: no hubo despacho este día."
+    TemaId.BOTANICO -> "Lámina vacía: no se anotó nada este día."
+    TemaId.NAVIDAD -> "Nadie escribió junto al fuego este día."
+    TemaId.SEDA -> "El rollo de este día quedó sin tinta."
+    TemaId.GOTICO -> "Folium vacuum: nada escrito este día."
+    TemaId.ESPACIO -> "SIN TRANSMISIONES EN ESTA FECHA."
+    TemaId.ANDALUS -> "Página en blanco: nada escrito este día."
+    TemaId.MONGOL -> "Хоосон · nada escrito este día."
+    TemaId.RENACIMIENTO -> "Carta bianca: nada escrito este día."
+    TemaId.URSS -> "ЗАПИСЕЙ НЕТ · sin informe este día."
+    TemaId.REVOLUCION -> "Rien à signaler: nada escrito este día."
+    TemaId.ANTIGUAS -> "Las crónicas callan sobre este día."
+}
+
+/** Lo que dice la página de una noche sin sueño anotado. */
+private fun textoSinSueno(t: TemaId): String = when (t) {
+    TemaId.ROMANO -> "Nullum somnium: no anotaste ningún sueño esa noche."
+    TemaId.CIBER -> "// sin sueños registrados esa noche"
+    TemaId.HELENO -> "Hipnos no dejó nada escrito esa noche."
+    TemaId.MEDIEVAL -> "Ninguna visión se asentó esa noche."
+    TemaId.DISTOPIA -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
+    TemaId.REFUGIO -> "SIN REGISTRO ONÍRICO ESA NOCHE."
+    TemaId.ORDEN -> "Sin parte nocturno."
+    TemaId.LABORATORIO -> "Sin registro de sueño esa noche."
+    TemaId.COLONOS -> "No quedó nada soñado esa noche."
+    TemaId.NAPOLEON -> "Pas de songe: no anotaste ningún sueño."
+    TemaId.BOTANICO -> "La flora de esa noche quedó sin describir."
+    TemaId.NAVIDAD -> "No anotaste ningún sueño junto al fuego."
+    TemaId.SEDA -> "La caravana durmió sin sueños anotados."
+    TemaId.GOTICO -> "Nulla visio esa noche."
+    TemaId.ESPACIO -> "SIN TRANSMISIÓN NOCTURNA."
+    TemaId.ANDALUS -> "Ningún sueño quedó escrito esa noche."
+    TemaId.MONGOL -> "Зүүдгүй · no anotaste ningún sueño esa noche."
+    TemaId.RENACIMIENTO -> "Nessun sogno: no anotaste nada esa noche."
+    TemaId.URSS -> "СНОВ НЕТ · sin informe de sueño."
+    TemaId.REVOLUCION -> "Nuit sans rêve: no anotaste ningún sueño."
+    TemaId.ANTIGUAS -> "La compañía no recordó visiones esa noche."
+}
+
+/** Cómo se anuncian «lo mejor» y «lo peor» del día al pie de la página. */
+private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
+    TemaId.ROMANO -> "Optimum — " to "Pessimum — "
+    TemaId.CIBER -> "// mejor: " to "// peor: "
+    TemaId.HELENO -> "Τὸ ἄριστον — " to "Τὸ χείριστον — "
+    TemaId.MEDIEVAL -> "Lo bueno del día — " to "Lo amargo del día — "
+    TemaId.DISTOPIA -> "MÉRITO — " to "FALTA — "
+    TemaId.REFUGIO -> "LO MEJOR > " to "LO PEOR > "
+    TemaId.ORDEN -> "Acierto — " to "Baja — "
+    TemaId.LABORATORIO -> "Resultado positivo — " to "Resultado negativo — "
+    TemaId.COLONOS -> "Lo que salió bien — " to "Lo que salió mal — "
+    TemaId.NAPOLEON -> "Victoire — " to "Revers — "
+    TemaId.BOTANICO -> "Hallazgo — " to "Plaga — "
+    TemaId.NAVIDAD -> "Lo más bonito — " to "Lo más frío — "
+    TemaId.SEDA -> "Lo más dulce — " to "Lo más amargo — "
+    TemaId.GOTICO -> "Gaudium — " to "Dolor — "
+    TemaId.ESPACIO -> "ÉXITO — " to "FALLO — "
+    TemaId.ANDALUS -> "Lo mejor · خير — " to "Lo peor · شرّ — "
+    TemaId.MONGOL -> "Сайн · lo bueno — " to "Муу · lo malo — "
+    TemaId.RENACIMIENTO -> "Il meglio — " to "Il peggio — "
+    TemaId.URSS -> "ДОСТИЖЕНИЕ · logro — " to "НЕДОСТАТОК · falla — "
+    TemaId.REVOLUCION -> "Bonheur — " to "Doléance — "
+    TemaId.ANTIGUAS -> "La hazaña — " to "El tropiezo — "
+}
+
+/** La invitación a escribir en la página en blanco del día. */
+private fun pistaEscribir(t: TemaId): String = when (t) {
+    TemaId.ROMANO -> "Quid hodie? ¿Cómo fue el día?"
+    TemaId.CIBER -> "// ¿cómo fue el día?"
+    TemaId.HELENO -> "Τί ἐγένετο; ¿Qué pasó hoy?"
+    TemaId.MEDIEVAL -> "Asiéntese aquí lo acontecido en este día…"
+    TemaId.DISTOPIA -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
+    TemaId.REFUGIO -> "> REGISTRE LA ENTRADA DEL DÍA_"
+    TemaId.ORDEN -> "Redacte el parte de la jornada."
+    TemaId.LABORATORIO -> "Observaciones del día:"
+    TemaId.COLONOS -> "¿Qué pasó hoy en el pueblo?"
+    TemaId.NAPOLEON -> "Dictez: ¿qué noticias trae el día?"
+    TemaId.BOTANICO -> "Observaciones de campo: ¿qué viste hoy?"
+    TemaId.NAVIDAD -> "Querido diario: hoy junto al fuego…"
+    TemaId.SEDA -> "¿Por dónde pasó hoy la caravana?"
+    TemaId.GOTICO -> "Scribe: ¿qué trajeron las horas de hoy?"
+    TemaId.ESPACIO -> "BITÁCORA: ¿cómo fue la jornada a bordo?"
+    TemaId.ANDALUS -> "Escribe lo que trajo el día…"
+    TemaId.MONGOL -> "Өнөөдөр юу болсон бэ? ¿Qué pasó hoy en la estepa?"
+    TemaId.RENACIMIENTO -> "Annota: ¿qué viste y pensaste hoy?"
+    TemaId.URSS -> "ОТЧЁТ: ¿qué se cumplió hoy?"
+    TemaId.REVOLUCION -> "Escribe tus quejas y tus esperanzas del día."
+    TemaId.ANTIGUAS -> "¿Qué caminos recorrió hoy la compañía?"
+}
+
+/** La invitación a escribir el sueño. */
+private fun pistaSonar(t: TemaId): String = when (t) {
+    TemaId.ROMANO -> "Quid somniavisti? ¿Qué soñaste?"
+    TemaId.CIBER -> "// ¿qué soñaste?"
+    TemaId.HELENO -> "¿Qué te mostró Hipnos esta noche?"
+    TemaId.MEDIEVAL -> "Asiéntese la visión de la noche…"
+    TemaId.DISTOPIA -> "DECLARE LA ACTIVIDAD ONÍRICA."
+    TemaId.REFUGIO -> "> REGISTRE EL SUEÑO_"
+    TemaId.ORDEN -> "Parte nocturno: ¿qué soñó?"
+    TemaId.LABORATORIO -> "Registro onírico: fragmentos, imágenes, emociones."
+    TemaId.COLONOS -> "¿Qué soñaste anoche?"
+    TemaId.NAPOLEON -> "Racontez le songe: ¿qué soñaste?"
+    TemaId.BOTANICO -> "¿Qué flora creció en el sueño?"
+    TemaId.NAVIDAD -> "¿Qué soñaste junto al fuego?"
+    TemaId.SEDA -> "¿Qué soñaste bajo la luna de la caravana?"
+    TemaId.GOTICO -> "Visio nocturna: ¿qué viste en sueños?"
+    TemaId.ESPACIO -> "TRANSMISIÓN NOCTURNA: ¿qué soñaste?"
+    TemaId.ANDALUS -> "¿Qué soñaste? Aunque sean fragmentos."
+    TemaId.MONGOL -> "Ямар зүүд зүүдлэв? ¿Qué soñaste?"
+    TemaId.RENACIMIENTO -> "Il sogno: ¿qué viste dormido?"
+    TemaId.URSS -> "СОН: ¿qué soñaste? Informe breve."
+    TemaId.REVOLUCION -> "Le rêve: ¿qué soñaste?"
+    TemaId.ANTIGUAS -> "¿Qué visiones tuvo la compañía esta noche?"
 }
 
 /** Un esquema de color con los colores del objeto, para que bandas, botones y fichas combinen con la página. */
@@ -302,80 +770,238 @@ internal fun esquemaPagina(p: Pagina): ColorScheme {
 //  El objeto cerrado: «Hoy» en el Diario y en la hoja de la noche
 // =====================================================================
 
-/** El diario de un día como objeto del tema (rollo, libro, carta, expediente o terminal). Al tocarlo se abre a pantalla completa. */
+/** Un letrero sobre el objeto (el sello de un expediente, la cabecera de un boletín…). [x] es fracción del ancho desde su lado; [y], del alto. */
+private class RotuloObjeto(val texto: String, val letra: FontFamily, val tam: Float, val color: Color, val x: Float, val y: Float,
+                           val alinear: Alignment = Alignment.TopStart, val giro: Float = 0f, val borde: Boolean = false)
+
+/** Cómo es el objeto cerrado de un tema: su dibujo, dónde va el texto, con qué letra y qué letreros lleva. */
+private class FormaObjeto(
+    val dibujo: DrawScope.() -> Unit,
+    /** Márgenes del texto: izquierda, arriba, derecha y abajo, como fracción del ancho o del alto. */
+    val caja: List<Float>,
+    val pista: String,
+    val letra: FontFamily,
+    val tinta: Color,
+    val fecha: Color,
+    val tam: Float = 13.5f,
+    val interlinea: Float = 17f,
+    val alto: Int = 168,
+    /** Si al abrirse gira como una tapa (libros y cartas) o solo se acerca (rollos y pantallas). */
+    val gira: Boolean = false,
+    val centrado: Boolean = false,
+    val lineas: Int = 3,
+    /** Las pantallas ya brillan: de noche su fecha no pasa a luz de luna. */
+    val brilla: Boolean = false,
+    val letraFecha: FontFamily? = null,
+    val letraPie: FontFamily = Letra.texto,
+    val palabras: (Int) -> String = { "$it palabras" },
+    val cabecera: String? = null,
+    val rotulos: List<RotuloObjeto> = emptyList(),
+)
+
+private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, fecha: String): FormaObjeto {
+    val pista = if (noche) pistaNoche(t) else pistaDia(t)
+    val cajaLibro = listOf(0.25f, 0.24f, 0.17f, 0.24f)
+    fun libro(dibujo: DrawScope.() -> Unit, letra: FontFamily, tam: Float, caja: List<Float> = cajaLibro, rotulos: List<RotuloObjeto> = emptyList(), fecha: Color = m.extra) =
+        FormaObjeto(dibujo = dibujo, caja = caja, pista = pista, letra = letra, tinta = m.tinta, fecha = fecha, tam = tam, alto = 176, gira = true, centrado = true, rotulos = rotulos)
+    return when (t) {
+        TemaId.ROMANO -> FormaObjeto(dibujo = { rolloRomano(m) }, caja = listOf(0.17f, 0.17f, 0.17f, 0.15f), pista = pista, letra = Letra.inscripcion, tinta = m.tinta,
+            fecha = m.extra, tam = 12.5f, letraFecha = Letra.inscripcion)
+        TemaId.HELENO -> FormaObjeto(dibujo = { rolloHeleno(m) }, caja = listOf(0.13f, 0.2f, 0.18f, 0.2f), pista = pista, letra = Letra.garamond, tinta = m.tinta, fecha = m.detalle)
+        TemaId.SEDA -> FormaObjeto(dibujo = {
+            rolloAbierto(m, { x0, x1, arr, aba, _ -> listOf(arr + size.height * 0.06f, aba - size.height * 0.06f).forEach { y -> drawLine(m.detalle, Offset(x0, y), Offset(x1, y), 3f) } }) { _, x1, _, _, r ->
+                // Cordón rojo con borla.
+                val w = size.width; val h = size.height
+                val a = Offset(x1 + r * 0.6f, h * 0.45f)
+                drawPath(Path().apply { moveTo(a.x, a.y); quadraticTo(w * 0.99f, h * 0.55f, w * 0.975f, h * 0.7f) }, m.extra, style = Stroke(3f))
+                drawRoundRect(m.extra, Offset(w * 0.965f, h * 0.7f), Size(w * 0.02f, h * 0.12f), CornerRadius(4f))
+            }
+        }, caja = listOf(0.15f, 0.14f, 0.15f, 0.12f), pista = pista, letra = LetraExtra.kufi, tinta = m.tinta, fecha = m.extra, tam = 13f)
+        TemaId.MONGOL -> FormaObjeto(dibujo = {
+            // Franjas azules como un jadag, con greca de martillos.
+            rolloAbierto(m, { x0, x1, arr, aba, r ->
+                listOf(arr + size.height * 0.07f, aba - size.height * 0.07f).forEach { y ->
+                    drawRect(m.cuerpo.copy(alpha = 0.85f), Offset(x0, y - size.height * 0.035f), Size(x1 - x0, size.height * 0.07f))
+                    grecaPequena(Offset(x0 + r, y), x1 - x0 - 2 * r, size.height * 0.045f, m.acento)
+                }
+            })
+        }, caja = listOf(0.15f, 0.14f, 0.15f, 0.12f), pista = pista, letra = LetraExtra.filosofo, tinta = m.tinta, fecha = m.extra)
+        TemaId.MEDIEVAL -> libro({ libroCerrado(m) { g -> tapaMedieval(m, g) } }, LetraExtra.gotica, 14f)
+        TemaId.ORDEN -> libro({ libroCerrado(m) { g -> tapaOrden(m, g) } }, LetraExtra.estarcido, 12.5f)
+        TemaId.BOTANICO -> libro({ libroCerrado(m) { g -> tapaBotanico(m, g) } }, LetraExtra.fraunces, 13f)
+        TemaId.LABORATORIO -> libro({
+            libroCerrado(m, cubierta = { g -> jaspe(m, g) }, placa = { o, s ->
+                for (i in 1..3) drawLine(m.acento.copy(alpha = 0.35f), Offset(o.x + 8f, o.y + s.height * (0.25f * i + 0.12f)), Offset(o.x + s.width - 8f, o.y + s.height * (0.25f * i + 0.12f)), 1f)
+            }) { }
+        }, LetraExtra.jost, 13f)
+        TemaId.GOTICO -> libro({ libroCerrado(m) { g -> tapaGotico(m, g) } }, LetraExtra.textura, 14f)
+        TemaId.ANDALUS -> libro({ libroCerrado(m) { g -> tapaAndalus(m, g) } }, LetraExtra.amiri, 14f)
+        TemaId.REVOLUCION -> libro({ libroCerrado(m) { g -> tapaRevolucion(m, g) } }, LetraExtra.fell, 13.5f)
+        TemaId.ANTIGUAS -> libro({ libroCerrado(m) { g -> tapaAntiguas(m, g) } }, LetraExtra.almendra, 13.5f)
+        TemaId.COLONOS -> libro({ libroRegistro(m) }, LetraExtra.oswald, 13f, caja = listOf(0.27f, 0.24f, 0.17f, 0.24f))
+        TemaId.URSS -> libro({ libretaInforme(m) }, LetraExtra.russo, 12f, caja = listOf(0.37f, 0.27f, 0.1f, 0.18f),
+            rotulos = listOf(RotuloObjeto("ОТЧЁТ · INFORME", LetraExtra.russo, 9f, m.hoja, 0.37f, 0.183f)), fecha = m.cuerpo)
+        TemaId.RENACIMIENTO -> FormaObjeto(dibujo = { cuadernoLeonardo(m) }, caja = listOf(0.08f, 0.22f, 0.26f, 0.16f), pista = pista, letra = LetraExtra.cormorant,
+            tinta = m.tinta, fecha = m.extra, tam = 14.5f, interlinea = 17.5f, alto = 176, gira = true)
+        TemaId.NAPOLEON -> FormaObjeto(dibujo = { boletin(t, m, e, noche) }, caja = listOf(0.07f, 0.36f, 0.24f, 0.07f), pista = pista, letra = LetraExtra.bodoni,
+            tinta = m.tinta, fecha = m.detalle, tam = 13f, alto = 176, gira = true, letraFecha = LetraExtra.bodoniTitulo,
+            rotulos = listOf(RotuloObjeto("BULLETIN DE LA GRANDE ARMÉE", LetraExtra.bodoniTitulo, 12f, m.tinta, 0f, 0.15f, Alignment.TopCenter)))
+        TemaId.NAVIDAD -> FormaObjeto(dibujo = { cartaNavidad(t, m, e, noche) }, caja = listOf(0.07f, 0.62f, 0.07f, 0.07f), pista = pista, letra = LetraExtra.italianno,
+            tinta = m.textoCuerpo, fecha = m.acento, tam = 18f, interlinea = 18f, alto = 176, gira = true, lineas = 2)
+        TemaId.DISTOPIA -> FormaObjeto(dibujo = { carpeta(m) }, caja = listOf(0.06f, 0.34f, 0.06f, 0.06f), pista = pista, letra = Letra.terminal, tinta = m.textoCuerpo,
+            fecha = m.acento, tam = 13f, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "$it PALABRAS" },
+            rotulos = listOf(
+                RotuloObjeto(if (noche) "SUEÑO" else "ARCHIVO", LetraExtra.oswald, 15f, m.acento.copy(alpha = 0.75f), 0.06f, 0.36f, Alignment.TopEnd, giro = -10f, borde = true),
+                RotuloObjeto("EXPEDIENTE", LetraExtra.oswald, 11f, if (noche) LUNA else m.detalle, 0.07f, 0.035f),
+            ))
+        TemaId.CIBER -> FormaObjeto(dibujo = { terminalCiber(m) }, caja = listOf(0.05f, 0.22f, 0.05f, 0.06f), pista = pista, letra = Letra.codigo, tinta = m.tinta,
+            fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "[$it palabras]" },
+            cabecera = if (noche) "$ nano ~/suenos/$fecha.dream" else "$ nano ~/diario/$fecha.log")
+        TemaId.REFUGIO -> FormaObjeto(dibujo = { monitorRefugio(m) }, caja = listOf(0.1f, 0.13f, 0.1f, 0.2f), pista = pista, letra = LetraExtra.vt323, tinta = m.tinta,
+            fecha = m.acento, tam = 17f, interlinea = 18f, brilla = true, letraFecha = LetraExtra.vt323, letraPie = LetraExtra.vt323, palabras = { "[$it PALABRAS]" })
+        TemaId.ESPACIO -> FormaObjeto(dibujo = { tabletaControl(m) }, caja = listOf(0.06f, 0.32f, 0.2f, 0.14f), pista = pista, letra = LetraExtra.grotesk, tinta = m.tinta,
+            fecha = m.acento, tam = 13f, brilla = true, letraFecha = Letra.codigo, letraPie = Letra.codigo, palabras = { "$it palabras transmitidas" },
+            rotulos = listOf(RotuloObjeto("BITÁCORA DE VUELO", LetraExtra.orbita, 9f, m.acento, 0.14f, 0.195f)))
+    }
+}
+
+/** El diario de un día como objeto del tema (rollo, libro, boletín, carta, expediente, tableta o terminal). Al tocarlo se abre a pantalla completa. */
 @Composable
 fun ObjetoDiario(fecha: String, texto: String, modifier: Modifier = Modifier, tema: TemaId = Estilo.tema, noche: Boolean = false, onClick: () -> Unit) {
-    val m = if (noche) materiaNoche(tema) else materia(tema); val s = soporte(tema)
+    val m = if (noche) materiaNoche(tema) else materia(tema)
+    val n = nocheDe(tema)
     val sentir = rememberSentir()
     val esquemaEmblema = MaterialTheme.colorScheme.copy(primary = m.brillo, secondary = m.detalle, tertiary = m.brillo, background = m.acento, onBackground = m.brillo)
+    val forma = formaObjeto(tema, m, esquemaEmblema, noche, fecha)
     val palabras = Texto.palabras(texto)
     val vista = texto.trim().replace(Regex("\\s+"), " ").take(140)
-    val alto = when (s) { Soporte.LIBRO -> 176.dp; Soporte.SOBRE -> 176.dp; else -> 168.dp }
     // Al tocarlo, el objeto se abre un instante (la tapa gira, el rollo se acerca) antes de pasar a pantalla completa.
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val abre = remember { androidx.compose.animation.core.Animatable(0f) }
     val animar = Repo.config.animaciones
-    BoxWithConstraints(modifier.fillMaxWidth().height(alto).graphicsLayer {
+    BoxWithConstraints(modifier.fillMaxWidth().height(forma.alto.dp).graphicsLayer {
         val k = abre.value
         scaleX = 1f + 0.05f * k; scaleY = 1f + 0.05f * k
-        if (s == Soporte.LIBRO || s == Soporte.SOBRE) { rotationY = -22f * k; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f); cameraDistance = 14f * density }
+        if (forma.gira) { rotationY = -22f * k; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f); cameraDistance = 14f * density }
         alpha = 1f - 0.25f * k
     }.clickable {
         sentir(Sentidos.Evento.ABRIR)
         if (animar) scope.launch { abre.animateTo(1f, androidx.compose.animation.core.tween(230)); onClick(); abre.snapTo(0f) } else onClick()
     }) {
         Canvas(Modifier.fillMaxSize()) {
-            when (s) {
-                Soporte.ROLLO -> rolloAbierto(tema, m)
-                Soporte.LIBRO -> libroCerrado(tema, m)
-                Soporte.SOBRE -> sobre(tema, m, esquemaEmblema, luna = noche)
-                Soporte.CARPETA -> carpeta(m)
-                Soporte.PANTALLA -> pantalla(tema, m)
-            }
+            forma.dibujo.invoke(this)
             if (noche) {
-                // Un poco de cielo sobre el objeto: estrellas y la luna en una esquina.
-                estrellas(fecha.hashCode(), 26, LUNA, Rect(0f, 0f, size.width, size.height * 0.5f), 1.3f)
-                mediaLuna(Offset(size.width * 0.93f, size.height * 0.16f), size.height * 0.07f, LUNA)
+                // Un poco del cielo del tema sobre el objeto: sus estrellas y su luna en una esquina.
+                estrellasDelTema(tema, fecha.hashCode(), 26, n.luna, Rect(0f, 0f, size.width, size.height * 0.5f), 1.3f)
+                lunaDelTema(tema, Offset(size.width * 0.93f, size.height * 0.16f), size.height * 0.07f, n)
             }
         }
         val w = maxWidth; val h = maxHeight
-        // Dónde va el texto según el objeto.
-        val (izq, arr, der, aba) = when (s) {
-            Soporte.ROLLO -> listOf(w * 0.15f, h * 0.14f, w * 0.15f, h * 0.12f)
-            Soporte.LIBRO -> listOf(w * 0.25f, h * 0.24f, w * 0.17f, h * 0.24f)
-            Soporte.SOBRE -> listOf(w * 0.07f, h * 0.62f, w * 0.07f, h * 0.07f)
-            Soporte.CARPETA -> listOf(w * 0.06f, h * 0.34f, w * 0.06f, h * 0.06f)
-            Soporte.PANTALLA -> if (tema == TemaId.REFUGIO) listOf(w * 0.1f, h * 0.13f, w * 0.1f, h * 0.2f) else listOf(w * 0.05f, h * 0.22f, w * 0.05f, h * 0.06f)
-        }
-        val tinta = when (s) { Soporte.SOBRE, Soporte.CARPETA -> m.textoCuerpo; Soporte.PANTALLA -> m.tinta; else -> m.tinta }
-        // De noche, la fecha va en luz de luna (salvo en las pantallas, que ya brillan).
-        val acento = if (noche && s != Soporte.PANTALLA) LUNA else when (s) { Soporte.PANTALLA -> m.acento; Soporte.SOBRE -> if (tema == TemaId.NAVIDAD) m.acento else m.detalle; Soporte.CARPETA -> m.acento; else -> m.extra }
+        val k = forma.caja
+        // De noche, la fecha va en la luz de la noche del tema (salvo en las pantallas, que ya brillan).
+        val acento = if (noche && !forma.brilla) n.luna else forma.fecha
         val ty = MaterialTheme.typography
-        val mono = s == Soporte.PANTALLA || s == Soporte.CARPETA
-        val fuente = when { tema == TemaId.REFUGIO -> LetraExtra.vt323; mono -> Letra.codigo; else -> null }
-        Column(Modifier.fillMaxSize().padding(start = izq, top = arr, end = der, bottom = aba), verticalArrangement = Arrangement.Center,
-            horizontalAlignment = if (s == Soporte.LIBRO) Alignment.CenterHorizontally else Alignment.Start) {
-            if (tema == TemaId.CIBER) Text(if (noche) "$ nano ~/suenos/$fecha.dream" else "$ nano ~/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 11.sp, color = m.acento, maxLines = 1)
+        val alinear = if (forma.centrado) TextAlign.Center else TextAlign.Start
+        Column(Modifier.fillMaxSize().padding(start = w * k[0], top = h * k[1], end = w * k[2], bottom = h * k[3]), verticalArrangement = Arrangement.Center,
+            horizontalAlignment = if (forma.centrado) Alignment.CenterHorizontally else Alignment.Start) {
+            forma.cabecera?.let { Text(it, fontFamily = Letra.codigo, fontSize = 11.sp, color = m.acento, maxLines = 1) }
             Text(Estilo.fecha(fecha), style = ty.titleSmall, color = acento, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                fontFamily = fuente ?: ty.titleSmall.fontFamily, textAlign = if (s == Soporte.LIBRO) TextAlign.Center else TextAlign.Start)
-            Text(if (vista.isBlank()) (if (noche) pistaSueno(s) else pista(s)) else vista, color = tinta.copy(alpha = if (vista.isBlank()) 0.65f else 0.9f),
-                fontFamily = fuente ?: if (s == Soporte.LIBRO || s == Soporte.ROLLO || s == Soporte.SOBRE) Letra.garamond else Letra.texto,
-                fontSize = if (tema == TemaId.REFUGIO) 17.sp else 13.5.sp, lineHeight = if (tema == TemaId.REFUGIO) 18.sp else 17.sp,
-                maxLines = if (s == Soporte.SOBRE) 2 else 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp),
-                textAlign = if (s == Soporte.LIBRO) TextAlign.Center else TextAlign.Start)
-            if (palabras > 0) Text(if (s == Soporte.PANTALLA) "[$palabras palabras]" else "$palabras palabras",
-                fontSize = 10.5.sp, color = tinta.copy(alpha = 0.6f), fontFamily = fuente ?: Letra.texto, modifier = Modifier.padding(top = 3.dp))
+                fontFamily = forma.letraFecha ?: ty.titleSmall.fontFamily, textAlign = alinear)
+            Text(if (vista.isBlank()) forma.pista else vista, color = forma.tinta.copy(alpha = if (vista.isBlank()) 0.65f else 0.9f),
+                fontFamily = forma.letra, fontSize = forma.tam.sp, lineHeight = forma.interlinea.sp,
+                maxLines = forma.lineas, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp), textAlign = alinear)
+            if (palabras > 0) Text(forma.palabras(palabras), fontSize = 10.5.sp, color = forma.tinta.copy(alpha = 0.6f), fontFamily = forma.letraPie, modifier = Modifier.padding(top = 3.dp))
         }
-        if (s == Soporte.CARPETA) Text(if (noche) "SUEÑO" else "ARCHIVO", color = m.acento.copy(alpha = 0.75f), fontFamily = LetraExtra.oswald, fontSize = 15.sp,
-            modifier = Modifier.align(Alignment.TopEnd).padding(top = h * 0.36f, end = w * 0.06f).rotate(-10f)
-                .border(2.dp, m.acento.copy(alpha = 0.7f)).padding(horizontal = 6.dp, vertical = 1.dp))
-        if (s == Soporte.CARPETA) Text("EXPEDIENTE", color = if (noche) LUNA else m.detalle, fontFamily = LetraExtra.oswald, fontSize = 11.sp,
-            modifier = Modifier.padding(start = w * 0.07f, top = h * 0.035f))
+        forma.rotulos.forEach { r ->
+            val marco = if (r.borde) Modifier.border(2.dp, r.color).padding(horizontal = 6.dp, vertical = 1.dp) else Modifier
+            Text(r.texto, color = r.color, fontFamily = r.letra, fontSize = r.tam.sp, maxLines = 1,
+                modifier = Modifier.align(r.alinear)
+                    .padding(start = if (r.alinear == Alignment.TopStart) w * r.x else 0.dp, end = if (r.alinear == Alignment.TopEnd) w * r.x else 0.dp, top = h * r.y)
+                    .rotate(r.giro).then(marco))
+        }
     }
 }
 
-/** Rollo abierto: la hoja entre dos varillas. */
-private fun DrawScope.rolloAbierto(t: TemaId, m: Materia) {
+/** Rollo romano: el volumen con sus dos cilindros enrollados, el umbilicus que asoma con sus cuernos (cornua) y el título colgando (sillybos). */
+private fun DrawScope.rolloRomano(m: Materia) {
+    val w = size.width; val h = size.height
+    val arr = h * 0.14f; val aba = h * 0.86f
+    val r = h * 0.085f
+    val x0 = w * 0.09f; val x1 = w * 0.91f
+    // La hoja: dos capas de fibras cruzadas (así se hacía el papiro) y las juntas de las hojas pegadas.
+    drawRect(m.hoja, Offset(x0, arr + h * 0.02f), Size(x1 - x0, aba - arr - h * 0.04f))
+    val az = java.util.Random(11)
+    repeat(20) { val y = arr + h * 0.04f + az.nextFloat() * (aba - arr - h * 0.08f); drawLine(m.sombra.copy(alpha = 0.1f), Offset(x0, y), Offset(x1, y), 1f) }
+    repeat(34) { val x = x0 + az.nextFloat() * (x1 - x0); drawLine(m.sombra.copy(alpha = 0.06f), Offset(x, arr + h * 0.02f), Offset(x, aba - h * 0.02f), 1f) }
+    listOf(0.34f, 0.67f).forEach { f -> drawRect(m.sombra.copy(alpha = 0.12f), Offset(x0 + (x1 - x0) * f, arr + h * 0.02f), Size(w * 0.012f, aba - arr - h * 0.04f)) }
+    // Los dos volúmenes enrollados, gruesos, con la espiral del papiro en el canto.
+    listOf(x0, x1).forEach { x ->
+        drawLine(m.acento, Offset(x, arr - h * 0.06f), Offset(x, aba + h * 0.06f), r * 0.3f)
+        drawRoundRect(Brush.horizontalGradient(listOf(m.sombra, m.brillo, m.hoja, m.sombra), startX = x - r, endX = x + r), Offset(x - r, arr), Size(2 * r, aba - arr), CornerRadius(r * 0.4f))
+        listOf(arr, aba).forEach { y ->
+            drawOval(m.hoja, Offset(x - r, y - r * 0.22f), Size(2 * r, r * 0.44f))
+            for (k in 1..3) { val f = k / 4f; drawOval(m.sombra.copy(alpha = 0.55f), Offset(x - r * f, y - r * 0.22f * f), Size(2 * r * f, r * 0.44f * f), style = Stroke(1f)) }
+        }
+        // Los cornua: perillas de marfil y oro en las puntas del umbilicus.
+        listOf(arr - h * 0.06f to -1f, aba + h * 0.06f to 1f).forEach { (y, s) ->
+            drawPath(Path().apply { moveTo(x - r * 0.42f, y); lineTo(x, y + s * r * 0.8f); lineTo(x + r * 0.42f, y); close() }, m.detalle)
+            drawOval(m.brillo, Offset(x - r * 0.5f, y - r * 0.22f), Size(r, r * 0.44f))
+            drawCircle(m.detalle, r * 0.14f, Offset(x, y + s * r * 0.8f))
+        }
+    }
+    // El sillybos: la etiqueta de pergamino teñido, con su título, colgando del volumen de la izquierda.
+    val ex = x0 - r * 0.9f; val ey = aba - h * 0.01f
+    drawLine(m.acento, Offset(x0 - r * 0.3f, aba - h * 0.08f), Offset(ex + r * 0.5f, ey), 1.4f)
+    drawRect(m.extra, Offset(ex - r * 0.55f, ey), Size(r * 1.5f, h * 0.075f))
+    listOf(0.35f, 0.65f).forEach { f -> drawLine(m.brillo.copy(alpha = 0.8f), Offset(ex - r * 0.4f, ey + h * 0.075f * f), Offset(ex + r * 0.8f, ey + h * 0.075f * f), 1f) }
+}
+
+/** La ola corrida de los vasos griegos: espirales que ruedan una tras otra sobre una línea de base. */
+private fun DrawScope.olaCorrida(o: Offset, largo: Float, alto: Float, color: Color) {
+    val r = alto / 2; val paso = alto * 1.4f
+    val p = Path(); var x = 0f
+    while (x + paso <= largo) {
+        val x0 = o.x + x
+        p.moveTo(x0, o.y + r)
+        p.cubicTo(x0 + paso * 0.45f, o.y + r, x0 + paso * 0.25f, o.y - r, x0 + paso * 0.65f, o.y - r)
+        p.cubicTo(x0 + paso * 0.98f, o.y - r, x0 + paso * 0.98f, o.y + r * 0.15f, x0 + paso * 0.7f, o.y + r * 0.15f)
+        p.cubicTo(x0 + paso * 0.5f, o.y + r * 0.15f, x0 + paso * 0.52f, o.y - r * 0.45f, x0 + paso * 0.7f, o.y - r * 0.4f)
+        x += paso
+    }
+    drawPath(p, color, style = Stroke(1.5f))
+    drawLine(color, Offset(o.x, o.y + r), Offset(o.x + x, o.y + r), 1.2f)
+}
+
+/** Rollo helénico: varillas de ébano con perillas de terracota, la ola corrida arriba y abajo, y un sello con el sol de Vergina. */
+private fun DrawScope.rolloHeleno(m: Materia) {
+    val w = size.width; val h = size.height
+    val r = h * 0.06f
+    val arr = h * 0.1f; val aba = h * 0.9f
+    val x0 = w * 0.07f; val x1 = w * 0.93f
+    val hoja = Size(x1 - x0, aba - arr - h * 0.04f)
+    drawRect(m.hoja, Offset(x0, arr + h * 0.02f), hoja)
+    // El papel se comba hacia las varillas.
+    drawRect(Brush.horizontalGradient(listOf(m.sombra.copy(alpha = 0.3f), Color.Transparent, Color.Transparent, m.sombra.copy(alpha = 0.3f)), startX = x0, endX = x1), Offset(x0, arr + h * 0.02f), hoja)
+    // La ola corrida (las espirales del mar), en barniz negro como en los vasos.
+    listOf(arr + h * 0.075f, aba - h * 0.085f).forEach { y -> olaCorrida(Offset(x0 + r * 1.4f, y), x1 - x0 - r * 2.8f, h * 0.055f, m.extra) }
+    // Varillas de ébano y perillas de terracota.
+    listOf(x0, x1).forEach { x ->
+        drawRoundRect(Brush.horizontalGradient(listOf(m.extra, m.acento, m.extra), startX = x - r * 0.5f, endX = x + r * 0.5f), Offset(x - r * 0.5f, arr - h * 0.03f), Size(r, aba - arr + h * 0.06f), CornerRadius(r * 0.3f))
+        listOf(arr - h * 0.05f, aba + h * 0.05f).forEach { y ->
+            drawCircle(m.detalle, r * 0.75f, Offset(x, y)); drawCircle(m.extra, r * 0.75f, Offset(x, y), style = Stroke(1.2f))
+            drawCircle(m.brillo.copy(alpha = 0.5f), r * 0.25f, Offset(x - r * 0.2f, y - r * 0.2f))
+        }
+    }
+    // Sello de terracota con el sol de dieciséis rayos (estrella de Vergina), en la esquina.
+    val ce = Offset(x1 - r * 2.4f, aba - h * 0.2f); val rs = h * 0.07f
+    drawCircle(m.detalle, rs, ce)
+    for (i in 0 until 16) { val rr = if (i % 2 == 0) rs * 0.8f else rs * 0.5f; drawLine(m.brillo, ce, ce + polarLibro(rr, 2 * PI * i / 16), 1.3f) }
+    drawCircle(m.brillo, rs * 0.18f, ce)
+}
+
+/** Rollo abierto: la hoja entre dos varillas delgadas. [bandas] adorna la hoja y [remate] lo que cuelga. */
+private fun DrawScope.rolloAbierto(m: Materia, bandas: DrawScope.(Float, Float, Float, Float, Float) -> Unit,
+                                   remate: DrawScope.(Float, Float, Float, Float, Float) -> Unit = { _, _, _, _, _ -> }) {
     val w = size.width; val h = size.height
     val r = h * 0.075f
     val arr = h * 0.09f; val aba = h * 0.91f
@@ -387,16 +1013,7 @@ private fun DrawScope.rolloAbierto(t: TemaId, m: Materia) {
         val y = arr + h * 0.05f + fibras.nextFloat() * (aba - arr - h * 0.1f)
         drawLine(m.sombra.copy(alpha = 0.12f), Offset(x0, y), Offset(x1, y + (fibras.nextFloat() - 0.5f) * 3f), 1.2f)
     }
-    when (t) {
-        TemaId.SEDA -> listOf(arr + h * 0.06f, aba - h * 0.06f).forEach { y -> drawLine(m.detalle, Offset(x0, y), Offset(x1, y), 3f) }
-        // Franjas azules como un jadag, con greca de martillos.
-        TemaId.MONGOL -> listOf(arr + h * 0.07f, aba - h * 0.07f).forEach { y ->
-            drawRect(m.cuerpo.copy(alpha = 0.85f), Offset(x0, y - h * 0.035f), Size(x1 - x0, h * 0.07f))
-            grecaPequena(Offset(x0 + r, y), x1 - x0 - 2 * r, h * 0.045f, m.acento)
-        }
-        TemaId.HELENO -> listOf(arr + h * 0.075f, aba - h * 0.075f).forEach { y -> grecaPequena(Offset(x0 + r, y), x1 - x0 - 2 * r, h * 0.05f, m.extra) }
-        else -> {}
-    }
+    bandas.invoke(this, x0, x1, arr, aba, r)
     // Varillas: cilindros con sombra y pomos.
     listOf(x0, x1).forEach { x ->
         val cil = Brush.horizontalGradient(listOf(m.sombra, m.brillo, m.cuerpo, m.sombra), startX = x - r, endX = x + r)
@@ -404,18 +1021,7 @@ private fun DrawScope.rolloAbierto(t: TemaId, m: Materia) {
         drawLine(m.acento, Offset(x, arr - h * 0.06f), Offset(x, aba + h * 0.06f), r * 0.45f, StrokeCap.Round)
         listOf(arr - h * 0.06f, aba + h * 0.06f).forEach { y -> drawCircle(m.detalle, r * 0.55f, Offset(x, y)); drawCircle(m.brillo.copy(alpha = 0.6f), r * 0.2f, Offset(x - r * 0.15f, y - r * 0.15f)) }
     }
-    if (t == TemaId.SEDA) {
-        // Cordón rojo con borla.
-        val a = Offset(x1 + r * 0.6f, h * 0.45f)
-        val p = Path().apply { moveTo(a.x, a.y); quadraticTo(w * 0.99f, h * 0.55f, w * 0.975f, h * 0.7f) }
-        drawPath(p, m.extra, style = Stroke(3f))
-        drawRoundRect(m.extra, Offset(w * 0.965f, h * 0.7f), Size(w * 0.02f, h * 0.12f), CornerRadius(4f))
-    }
-    if (t == TemaId.ROMANO) {
-        // Etiqueta (titulus) colgando de la varilla izquierda.
-        drawLine(m.acento, Offset(x0, aba - h * 0.02f), Offset(x0 - r * 0.2f, aba + h * 0.03f), 1.5f)
-        drawRect(m.extra, Offset(x0 - r * 1.4f, aba - h * 0.015f), Size(r * 1.6f, h * 0.06f))
-    }
+    remate.invoke(this, x0, x1, arr, aba, r)
 }
 
 private fun DrawScope.grecaPequena(o: Offset, largo: Float, alto: Float, color: Color) {
@@ -430,8 +1036,12 @@ private fun DrawScope.grecaPequena(o: Offset, largo: Float, alto: Float, color: 
     drawPath(p, color, style = Stroke(1.6f))
 }
 
-/** Libro cerrado visto desde arriba: cubierta, lomo, cantos y adornos de cada tema. */
-private fun DrawScope.libroCerrado(t: TemaId, m: Materia) {
+/** Dónde quedó cada parte del libro cerrado, para que cada tema ponga sus adornos encima. */
+private class Tapa(val ini: Offset, val tam: Size, val lomo: Float, val esquinas: List<Offset>)
+
+/** Libro cerrado visto desde arriba: cubierta, lomo, cantos, filete y placa. [cubierta] va sobre el cuero, [adorno] sobre el filete y [placa] sobre la placa. */
+private fun DrawScope.libroCerrado(m: Materia, cubierta: DrawScope.(Tapa) -> Unit = {}, placa: DrawScope.(Offset, Size) -> Unit = { _, _ -> },
+                                   adorno: DrawScope.(Tapa) -> Unit) {
     val w = size.width; val h = size.height
     val rad = CornerRadius(8f)
     // Cantos de las hojas.
@@ -439,115 +1049,246 @@ private fun DrawScope.libroCerrado(t: TemaId, m: Materia) {
     for (i in 1..4) drawLine(m.sombra.copy(alpha = 0.25f), Offset(w * 0.06f, h * (0.94f + i * 0.006f) - 2f), Offset(w * 0.97f, h * (0.94f + i * 0.006f) - 2f), 1f)
     // Cubierta.
     val ini = Offset(w * 0.02f, h * 0.04f); val tam = Size(w * 0.925f, h * 0.885f)
-    drawRoundRect(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra), startY = ini.y, endY = ini.y + tam.height), ini, tam, rad)
-    if (t == TemaId.LABORATORIO) {
-        // Cuaderno de composición: jaspeado blanco.
-        val az = java.util.Random(5)
-        repeat(70) {
-            val x = ini.x + az.nextFloat() * tam.width; val y = ini.y + az.nextFloat() * tam.height
-            drawOval(m.detalle.copy(alpha = 0.18f), Offset(x, y), Size(6f + az.nextFloat() * 22f, 3f + az.nextFloat() * 10f))
-        }
-    }
-    // Lomo.
     val lomo = w * 0.075f
+    val m0 = 11.dp.toPx()
+    val esquinas = listOf(Offset(ini.x + lomo + m0, ini.y + m0), Offset(ini.x + tam.width - m0, ini.y + m0), Offset(ini.x + lomo + m0, ini.y + tam.height - m0), Offset(ini.x + tam.width - m0, ini.y + tam.height - m0))
+    val g = Tapa(ini, tam, lomo, esquinas)
+    drawRoundRect(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra), startY = ini.y, endY = ini.y + tam.height), ini, tam, rad)
+    cubierta.invoke(this, g)
+    // Lomo.
     drawRect(Brush.horizontalGradient(listOf(m.sombra, m.cuerpo, m.sombra), startX = ini.x, endX = ini.x + lomo), ini, Size(lomo, tam.height))
     listOf(0.18f, 0.38f, 0.62f, 0.82f).forEach { f -> drawLine(m.acento.copy(alpha = 0.8f), Offset(ini.x + 3f, ini.y + tam.height * f), Offset(ini.x + lomo - 3f, ini.y + tam.height * f), 3f) }
     // Filete dorado.
-    val m0 = 11.dp.toPx()
     drawRect(m.acento.copy(alpha = 0.85f), Offset(ini.x + lomo + m0, ini.y + m0), Size(tam.width - lomo - 2 * m0, tam.height - 2 * m0), style = Stroke(2f))
     drawRect(m.acento.copy(alpha = 0.5f), Offset(ini.x + lomo + m0 + 5f, ini.y + m0 + 5f), Size(tam.width - lomo - 2 * m0 - 10f, tam.height - 2 * m0 - 10f), style = Stroke(1f))
-    val esquinas = listOf(Offset(ini.x + lomo + m0, ini.y + m0), Offset(ini.x + tam.width - m0, ini.y + m0), Offset(ini.x + lomo + m0, ini.y + tam.height - m0), Offset(ini.x + tam.width - m0, ini.y + tam.height - m0))
-    when (t) {
-        TemaId.MEDIEVAL -> {
-            esquinas.forEach { drawCircle(m.acento, 7f, it); drawCircle(m.sombra, 3f, it) }
-            // Broches de latón.
-            listOf(0.3f, 0.7f).forEach { f ->
-                drawRoundRect(m.detalle, Offset(ini.x + tam.width - w * 0.05f, ini.y + tam.height * f - h * 0.045f), Size(w * 0.075f, h * 0.09f), CornerRadius(3f))
-                drawCircle(m.sombra, 3f, Offset(ini.x + tam.width + w * 0.01f, ini.y + tam.height * f))
-            }
-        }
-        TemaId.COLONOS -> {
-            val x = ini.x + tam.width * 0.9f
-            drawRect(m.detalle, Offset(x - w * 0.025f, ini.y), Size(w * 0.05f, tam.height + h * 0.04f))
-            drawRect(m.acento, Offset(x - w * 0.033f, ini.y + tam.height * 0.44f), Size(w * 0.066f, tam.height * 0.12f), style = Stroke(3f))
-        }
-        TemaId.ORDEN -> {
-            val k = 26f
-            listOf(Triple(ini.x + lomo, ini.y, 1f to 1f), Triple(ini.x + tam.width, ini.y, -1f to 1f), Triple(ini.x + lomo, ini.y + tam.height, 1f to -1f), Triple(ini.x + tam.width, ini.y + tam.height, -1f to -1f))
-                .forEach { (x, y, s) -> drawPath(Path().apply { moveTo(x, y); lineTo(x + s.first * k, y); lineTo(x, y + s.second * k); close() }, m.acento) }
-            drawRect(m.detalle, Offset(ini.x + tam.width * 0.72f, ini.y + tam.height - 4f), Size(w * 0.03f, h * 0.1f))
-        }
-        TemaId.BOTANICO -> {
-            // Libreta de campo de cuero, con su broche de latón y una fila de hormigas estampada en el borde.
-            val x = ini.x + tam.width * 0.86f
-            drawRect(m.sombra, Offset(x - w * 0.02f, ini.y), Size(w * 0.04f, tam.height))
-            drawRoundRect(m.acento, Offset(x - w * 0.034f, ini.y + tam.height * 0.46f), Size(w * 0.068f, tam.height * 0.08f), CornerRadius(3f))
-            var xx = ini.x + lomo + 12f
-            while (xx < x - 18f) {
-                listOf(ini.y + 8f, ini.y + tam.height - 8f).forEach { y ->
-                    drawCircle(m.acento.copy(alpha = 0.8f), 2.6f, Offset(xx - 4f, y)); drawCircle(m.acento.copy(alpha = 0.8f), 1.6f, Offset(xx, y)); drawCircle(m.acento.copy(alpha = 0.8f), 2f, Offset(xx + 3.6f, y))
-                }
-                xx += 22f
-            }
-        }
-        TemaId.GOTICO -> {
-            // Terciopelo azul sembrado de flores de lis y broches de oro.
-            var y = ini.y + 10f; var fila = 0
-            while (y < ini.y + tam.height - 6f) {
-                var x = ini.x + lomo + (if (fila % 2 == 0) 10f else 22f)
-                while (x < ini.x + tam.width - 6f) { drawCircle(m.acento.copy(alpha = 0.55f), 2.4f, Offset(x, y)); drawCircle(m.acento.copy(alpha = 0.55f), 1.4f, Offset(x - 3f, y + 3f)); drawCircle(m.acento.copy(alpha = 0.55f), 1.4f, Offset(x + 3f, y + 3f)); x += 24f }
-                y += 14f; fila++
-            }
-            esquinas.forEach { drawCircle(m.acento, 7f, it); drawCircle(m.extra, 3f, it) }
-            listOf(0.3f, 0.7f).forEach { f -> drawRoundRect(m.acento, Offset(ini.x + tam.width - w * 0.05f, ini.y + tam.height * f - h * 0.045f), Size(w * 0.075f, h * 0.09f), CornerRadius(3f)) }
-        }
-        TemaId.ANDALUS -> {
-            // Encuadernación andalusí: la solapa (lisán) que cierra por delante y una estrella de lacería al centro.
-            val solapa = Path().apply { moveTo(ini.x + tam.width, ini.y + tam.height * 0.18f); lineTo(ini.x + tam.width + w * 0.035f, ini.y + tam.height * 0.5f); lineTo(ini.x + tam.width, ini.y + tam.height * 0.82f); close() }
-            drawPath(solapa, m.sombra)
-            esquinas.forEach { o -> for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento.copy(alpha = 0.8f), o, Offset(o.x + 9f * cos(a).toFloat(), o.y + 9f * sin(a).toFloat()), 1.5f) } }
-        }
-        TemaId.RENACIMIENTO -> {
-            // Cuaderno de vitela flexible atado con una correa; un círculo de sanguina en la tapa.
-            val x = ini.x + tam.width * 0.93f
-            drawRect(m.detalle.copy(alpha = 0.8f), Offset(ini.x + lomo, ini.y + tam.height * 0.47f), Size(tam.width - lomo + w * 0.03f, h * 0.035f))
-            drawCircle(m.detalle, 5f, Offset(x, ini.y + tam.height * 0.485f))
-            drawCircle(m.acento.copy(alpha = 0.4f), h * 0.16f, Offset(ini.x + tam.width * 0.8f, ini.y + tam.height * 0.24f), style = Stroke(1.5f))
-        }
-        TemaId.URSS -> {
-            val c = Offset(ini.x + lomo + w * 0.08f, ini.y + tam.height * 0.5f)
-            val est = Path(); for (i in 0 until 10) { val rr = if (i % 2 == 0) h * 0.13f else h * 0.05f; val a = Math.toRadians(-90.0 + 36.0 * i); val p = Offset(c.x + rr * cos(a).toFloat(), c.y + rr * sin(a).toFloat()); if (i == 0) est.moveTo(p.x, p.y) else est.lineTo(p.x, p.y) }
-            est.close(); drawPath(est, m.acento)
-            drawRect(m.detalle, Offset(ini.x + lomo, ini.y + tam.height * 0.86f), Size(tam.width - lomo, tam.height * 0.06f))
-        }
-        TemaId.REVOLUCION -> {
-            // Cinta tricolor que baja por la tapa y la escarapela clavada encima.
-            val x = ini.x + lomo + w * 0.06f; val an = w * 0.018f
-            listOf(c(0xFF1F3A6E), c(0xFFF4F1E8), c(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, Offset(x + i * an, ini.y), Size(an, tam.height)) }
-            val o = Offset(x + an * 1.5f, ini.y + tam.height * 0.5f)
-            drawCircle(c(0xFFB22234), h * 0.1f, o); drawCircle(c(0xFFF4F1E8), h * 0.066f, o); drawCircle(c(0xFF1F3A6E), h * 0.034f, o)
-        }
-        TemaId.ANTIGUAS -> {
-            // Esquinas de hierro y el broche con su gema.
-            val e = h * 0.12f
-            listOf(Offset(ini.x + lomo, ini.y), Offset(ini.x + tam.width, ini.y), Offset(ini.x + lomo, ini.y + tam.height), Offset(ini.x + tam.width, ini.y + tam.height)).forEachIndexed { i, o ->
-                val sx = if (i % 2 == 0) 1f else -1f; val sy = if (i < 2) 1f else -1f
-                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + sx * e, o.y); lineTo(o.x, o.y + sy * e); close() }, m.detalle)
-            }
-            drawRect(m.detalle, Offset(ini.x + tam.width - w * 0.02f, ini.y + tam.height * 0.44f), Size(w * 0.04f, tam.height * 0.12f))
-            drawCircle(m.extra, h * 0.035f, Offset(ini.x + tam.width, ini.y + tam.height * 0.5f))
-        }
-        else -> {}
-    }
+    adorno.invoke(this, g)
     // Placa para el título.
-    val placa = Offset(w * 0.22f, h * 0.2f); val tp = Size(w * 0.63f, h * 0.6f)
-    drawRoundRect(m.hoja, placa, tp, CornerRadius(4f))
-    drawRoundRect(m.acento.copy(alpha = 0.9f), placa, tp, CornerRadius(4f), style = Stroke(2f))
-    if (t == TemaId.LABORATORIO) for (i in 1..3) drawLine(m.acento.copy(alpha = 0.35f), Offset(placa.x + 8f, placa.y + tp.height * (0.25f * i + 0.12f)), Offset(placa.x + tp.width - 8f, placa.y + tp.height * (0.25f * i + 0.12f)), 1f)
+    val pl = Offset(w * 0.22f, h * 0.2f); val tp = Size(w * 0.63f, h * 0.6f)
+    drawRoundRect(m.hoja, pl, tp, CornerRadius(4f))
+    drawRoundRect(m.acento.copy(alpha = 0.9f), pl, tp, CornerRadius(4f), style = Stroke(2f))
+    placa.invoke(this, pl, tp)
 }
 
-/** Carta con solapa, lacre y un adorno (cinta, acebo). */
-internal fun DrawScope.sobre(t: TemaId, m: Materia, e: ColorScheme, luna: Boolean = false) {
+/** Cuaderno de composición: jaspeado blanco sobre la tapa. */
+private fun DrawScope.jaspe(m: Materia, g: Tapa) {
+    val az = java.util.Random(5)
+    repeat(70) {
+        val x = g.ini.x + az.nextFloat() * g.tam.width; val y = g.ini.y + az.nextFloat() * g.tam.height
+        drawOval(m.detalle.copy(alpha = 0.18f), Offset(x, y), Size(6f + az.nextFloat() * 22f, 3f + az.nextFloat() * 10f))
+    }
+}
+
+private fun DrawScope.tapaMedieval(m: Materia, g: Tapa) {
+    val w = size.width; val h = size.height
+    g.esquinas.forEach { drawCircle(m.acento, 7f, it); drawCircle(m.sombra, 3f, it) }
+    // Broches de latón.
+    listOf(0.3f, 0.7f).forEach { f ->
+        drawRoundRect(m.detalle, Offset(g.ini.x + g.tam.width - w * 0.05f, g.ini.y + g.tam.height * f - h * 0.045f), Size(w * 0.075f, h * 0.09f), CornerRadius(3f))
+        drawCircle(m.sombra, 3f, Offset(g.ini.x + g.tam.width + w * 0.01f, g.ini.y + g.tam.height * f))
+    }
+}
+
+private fun DrawScope.tapaOrden(m: Materia, g: Tapa) {
+    val w = size.width; val h = size.height
+    val k = 26f
+    listOf(Triple(g.ini.x + g.lomo, g.ini.y, 1f to 1f), Triple(g.ini.x + g.tam.width, g.ini.y, -1f to 1f), Triple(g.ini.x + g.lomo, g.ini.y + g.tam.height, 1f to -1f), Triple(g.ini.x + g.tam.width, g.ini.y + g.tam.height, -1f to -1f))
+        .forEach { (x, y, s) -> drawPath(Path().apply { moveTo(x, y); lineTo(x + s.first * k, y); lineTo(x, y + s.second * k); close() }, m.acento) }
+    drawRect(m.detalle, Offset(g.ini.x + g.tam.width * 0.72f, g.ini.y + g.tam.height - 4f), Size(w * 0.03f, h * 0.1f))
+}
+
+private fun DrawScope.tapaBotanico(m: Materia, g: Tapa) {
+    val w = size.width
+    // Libreta de campo de cuero, con su broche de latón y una fila de hormigas estampada en el borde.
+    val x = g.ini.x + g.tam.width * 0.86f
+    drawRect(m.sombra, Offset(x - w * 0.02f, g.ini.y), Size(w * 0.04f, g.tam.height))
+    drawRoundRect(m.acento, Offset(x - w * 0.034f, g.ini.y + g.tam.height * 0.46f), Size(w * 0.068f, g.tam.height * 0.08f), CornerRadius(3f))
+    var xx = g.ini.x + g.lomo + 12f
+    while (xx < x - 18f) {
+        listOf(g.ini.y + 8f, g.ini.y + g.tam.height - 8f).forEach { y ->
+            drawCircle(m.acento.copy(alpha = 0.8f), 2.6f, Offset(xx - 4f, y)); drawCircle(m.acento.copy(alpha = 0.8f), 1.6f, Offset(xx, y)); drawCircle(m.acento.copy(alpha = 0.8f), 2f, Offset(xx + 3.6f, y))
+        }
+        xx += 22f
+    }
+}
+
+private fun DrawScope.tapaGotico(m: Materia, g: Tapa) {
+    val w = size.width; val h = size.height
+    // Terciopelo azul sembrado de flores de lis y broches de oro.
+    var y = g.ini.y + 10f; var fila = 0
+    while (y < g.ini.y + g.tam.height - 6f) {
+        var x = g.ini.x + g.lomo + (if (fila % 2 == 0) 10f else 22f)
+        while (x < g.ini.x + g.tam.width - 6f) { drawCircle(m.acento.copy(alpha = 0.55f), 2.4f, Offset(x, y)); drawCircle(m.acento.copy(alpha = 0.55f), 1.4f, Offset(x - 3f, y + 3f)); drawCircle(m.acento.copy(alpha = 0.55f), 1.4f, Offset(x + 3f, y + 3f)); x += 24f }
+        y += 14f; fila++
+    }
+    g.esquinas.forEach { drawCircle(m.acento, 7f, it); drawCircle(m.extra, 3f, it) }
+    listOf(0.3f, 0.7f).forEach { f -> drawRoundRect(m.acento, Offset(g.ini.x + g.tam.width - w * 0.05f, g.ini.y + g.tam.height * f - h * 0.045f), Size(w * 0.075f, h * 0.09f), CornerRadius(3f)) }
+}
+
+private fun DrawScope.tapaAndalus(m: Materia, g: Tapa) {
+    val w = size.width
+    // Encuadernación andalusí: la solapa (lisán) que cierra por delante y estrellas de lacería en las esquinas.
+    val solapa = Path().apply { moveTo(g.ini.x + g.tam.width, g.ini.y + g.tam.height * 0.18f); lineTo(g.ini.x + g.tam.width + w * 0.035f, g.ini.y + g.tam.height * 0.5f); lineTo(g.ini.x + g.tam.width, g.ini.y + g.tam.height * 0.82f); close() }
+    drawPath(solapa, m.sombra)
+    g.esquinas.forEach { o -> for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento.copy(alpha = 0.8f), o, Offset(o.x + 9f * cos(a).toFloat(), o.y + 9f * sin(a).toFloat()), 1.5f) } }
+}
+
+private fun DrawScope.tapaRevolucion(m: Materia, g: Tapa) {
+    val w = size.width; val h = size.height
+    // Cinta tricolor que baja por la tapa y la escarapela clavada encima.
+    val x = g.ini.x + g.lomo + w * 0.06f; val an = w * 0.018f
+    listOf(c(0xFF1F3A6E), c(0xFFF4F1E8), c(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, Offset(x + i * an, g.ini.y), Size(an, g.tam.height)) }
+    val o = Offset(x + an * 1.5f, g.ini.y + g.tam.height * 0.5f)
+    drawCircle(c(0xFFB22234), h * 0.1f, o); drawCircle(c(0xFFF4F1E8), h * 0.066f, o); drawCircle(c(0xFF1F3A6E), h * 0.034f, o)
+}
+
+private fun DrawScope.tapaAntiguas(m: Materia, g: Tapa) {
+    val w = size.width; val h = size.height
+    // Esquinas de hierro y el broche con su gema.
+    val e = h * 0.12f
+    listOf(Offset(g.ini.x + g.lomo, g.ini.y), Offset(g.ini.x + g.tam.width, g.ini.y), Offset(g.ini.x + g.lomo, g.ini.y + g.tam.height), Offset(g.ini.x + g.tam.width, g.ini.y + g.tam.height)).forEachIndexed { i, o ->
+        val sx = if (i % 2 == 0) 1f else -1f; val sy = if (i < 2) 1f else -1f
+        drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + sx * e, o.y); lineTo(o.x, o.y + sy * e); close() }, m.detalle)
+    }
+    drawRect(m.detalle, Offset(g.ini.x + g.tam.width - w * 0.02f, g.ini.y + g.tam.height * 0.44f), Size(w * 0.04f, g.tam.height * 0.12f))
+    drawCircle(m.extra, h * 0.035f, Offset(g.ini.x + g.tam.width, g.ini.y + g.tam.height * 0.5f))
+}
+
+/** Libro de registro del pueblo: tapas de tela azul con su trama, lomo ancho y puntas de cuero ladrillo, y la etiqueta de papel recortada. */
+private fun DrawScope.libroRegistro(m: Materia) {
+    val w = size.width; val h = size.height
+    val ini = Offset(w * 0.02f, h * 0.05f); val tam = Size(w * 0.93f, h * 0.86f)
+    // Cantos de las hojas, gruesas como de libro de cuentas.
+    drawRect(m.hoja, Offset(w * 0.04f, h * 0.08f), Size(w * 0.93f, h * 0.88f))
+    for (i in 1..5) drawLine(m.sombra.copy(alpha = 0.3f), Offset(w * 0.05f, h * (0.92f + i * 0.008f)), Offset(w * 0.97f, h * (0.92f + i * 0.008f)), 1f)
+    // Tela azul marino con su trama.
+    drawRect(Brush.verticalGradient(listOf(c(0xFF3A4A6B), c(0xFF2A3650), c(0xFF1E2840)), startY = ini.y, endY = ini.y + tam.height), ini, tam)
+    var x = ini.x; while (x < ini.x + tam.width) { drawLine(Color.White.copy(alpha = 0.05f), Offset(x, ini.y), Offset(x, ini.y + tam.height), 1f); x += 3f }
+    var y = ini.y; while (y < ini.y + tam.height) { drawLine(Color.Black.copy(alpha = 0.08f), Offset(ini.x, y), Offset(ini.x + tam.width, y), 1f); y += 3f }
+    // Lomo ancho de cuero, con sus nervios dorados, y las puntas de cuero.
+    val lomo = w * 0.13f
+    val cuero = m.extra; val cueroOscuro = lerp(m.extra, Color.Black, 0.35f)
+    drawRect(Brush.horizontalGradient(listOf(cueroOscuro, cuero, cueroOscuro), startX = ini.x, endX = ini.x + lomo), ini, Size(lomo, tam.height))
+    listOf(0.2f, 0.4f, 0.6f, 0.8f).forEach { f ->
+        drawRect(lerp(cuero, Color.Black, 0.25f), Offset(ini.x, ini.y + tam.height * f - 3f), Size(lomo, 6f))
+        drawLine(m.acento, Offset(ini.x + 3f, ini.y + tam.height * f - 4f), Offset(ini.x + lomo - 3f, ini.y + tam.height * f - 4f), 1.2f)
+    }
+    val e = h * 0.2f
+    listOf(Offset(ini.x + tam.width, ini.y) to 1f, Offset(ini.x + tam.width, ini.y + tam.height) to -1f).forEach { (o, s) ->
+        drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x - e, o.y); lineTo(o.x, o.y + s * e); close() }, cuero)
+    }
+    // La etiqueta de papel con las esquinas cortadas y doble filete.
+    fun octogono(o: Offset, s: Size, k: Float) = Path().apply {
+        moveTo(o.x + k, o.y); lineTo(o.x + s.width - k, o.y); lineTo(o.x + s.width, o.y + k); lineTo(o.x + s.width, o.y + s.height - k)
+        lineTo(o.x + s.width - k, o.y + s.height); lineTo(o.x + k, o.y + s.height); lineTo(o.x, o.y + s.height - k); lineTo(o.x, o.y + k); close()
+    }
+    val pl = Offset(w * 0.24f, h * 0.2f); val tp = Size(w * 0.62f, h * 0.6f); val k = h * 0.06f
+    drawPath(octogono(pl, tp, k), m.hoja)
+    drawPath(octogono(pl, tp, k), m.tinta, style = Stroke(2f))
+    drawPath(octogono(pl + Offset(4f, 4f), Size(tp.width - 8f, tp.height - 8f), k * 0.8f), m.tinta.copy(alpha = 0.5f), style = Stroke(1f))
+}
+
+/** El cuaderno de Leonardo: vitela flexible sin lomo rígido, la solapa que envuelve el canto, el botón de hueso con su presilla y trazos de sanguina. */
+private fun DrawScope.cuadernoLeonardo(m: Materia) {
+    val w = size.width; val h = size.height
+    // Hojas sueltas que asoman, un poco torcidas.
+    rotate(-1.5f, Offset(w / 2, h / 2)) { drawRect(m.hoja, Offset(w * 0.05f, h * 0.08f), Size(w * 0.86f, h * 0.86f)) }
+    // La tapa de vitela: bordes blandos, ondulados.
+    val tapa = Path().apply {
+        moveTo(w * 0.03f, h * 0.06f)
+        quadraticTo(w * 0.4f, h * 0.03f, w * 0.8f, h * 0.05f)
+        lineTo(w * 0.8f, h * 0.93f)
+        quadraticTo(w * 0.4f, h * 0.96f, w * 0.03f, h * 0.93f)
+        quadraticTo(w * 0.015f, h * 0.5f, w * 0.03f, h * 0.06f)
+        close()
+    }
+    drawPath(tapa, Brush.verticalGradient(listOf(m.brillo, m.cuerpo)))
+    drawPath(tapa, m.sombra.copy(alpha = 0.6f), style = Stroke(1.5f))
+    // La solapa que envuelve el canto, más oscura.
+    val solapa = Path().apply { moveTo(w * 0.8f, h * 0.05f); lineTo(w * 0.95f, h * 0.12f); quadraticTo(w * 0.97f, h * 0.5f, w * 0.95f, h * 0.88f); lineTo(w * 0.8f, h * 0.93f); close() }
+    drawPath(solapa, Brush.horizontalGradient(listOf(m.sombra, m.cuerpo), startX = w * 0.8f, endX = w * 0.96f))
+    drawLine(m.sombra, Offset(w * 0.8f, h * 0.05f), Offset(w * 0.8f, h * 0.93f), 2f)
+    // El botón de hueso y la presilla de cuero.
+    val b = Offset(w * 0.875f, h * 0.5f)
+    drawLine(m.acento, b + Offset(-w * 0.07f, 0f), b + Offset(w * 0.02f, 0f), 2.5f)
+    drawRoundRect(m.hoja, Offset(b.x - w * 0.01f, b.y - h * 0.09f), Size(w * 0.02f, h * 0.18f), CornerRadius(w * 0.01f))
+    drawRoundRect(m.sombra, Offset(b.x - w * 0.01f, b.y - h * 0.09f), Size(w * 0.02f, h * 0.18f), CornerRadius(w * 0.01f), style = Stroke(1f))
+    // Trazos de sanguina: el hombre en el círculo y el cuadrado, y renglones de escritura en espejo.
+    val o = Offset(w * 0.68f, h * 0.7f); val r = h * 0.17f
+    val sanguina = m.acento.copy(alpha = 0.3f)
+    drawCircle(sanguina, r, o, style = Stroke(1.2f))
+    drawRect(sanguina, Offset(o.x - r * 0.88f, o.y - r * 0.7f), Size(r * 1.76f, r * 1.76f), style = Stroke(1.2f))
+    drawLine(sanguina, Offset(o.x - r, o.y), Offset(o.x + r, o.y), 1f); drawLine(sanguina, Offset(o.x, o.y - r), Offset(o.x, o.y + r), 1f)
+    for (i in 0 until 3) {
+        val y = h * (0.12f + i * 0.045f); var x = w * 0.5f
+        val p = Path(); p.moveTo(x, y)
+        while (x < w * 0.74f) { p.quadraticTo(x + 4f, y - 4f, x + 8f, y); x += 8f }
+        drawPath(p, m.detalle.copy(alpha = 0.3f), style = Stroke(1f))
+    }
+}
+
+/** Libreta de informes soviética: cartón rojo, la cuña negra en diagonal (constructivismo), la estrella en su círculo y la etiqueta para el título. */
+private fun DrawScope.libretaInforme(m: Materia) {
+    val w = size.width; val h = size.height
+    val ini = Offset(w * 0.02f, h * 0.04f); val tam = Size(w * 0.94f, h * 0.9f)
+    drawRect(m.hoja, Offset(w * 0.04f, h * 0.07f), Size(w * 0.94f, h * 0.9f))
+    drawRect(m.cuerpo, ini, tam)
+    // Cinta de tela negra en el lomo, con las grapas.
+    drawRect(m.detalle, ini, Size(w * 0.05f, tam.height))
+    listOf(0.3f, 0.7f).forEach { f -> drawRect(Color(0xFFB0B0B0), Offset(ini.x + w * 0.018f, ini.y + tam.height * f - h * 0.05f), Size(w * 0.012f, h * 0.1f)) }
+    // La cuña negra que cruza la tapa.
+    drawPath(Path().apply { moveTo(ini.x + w * 0.05f, ini.y + tam.height); lineTo(w * 0.5f, ini.y); lineTo(w * 0.6f, ini.y); lineTo(ini.x + w * 0.17f, ini.y + tam.height); close() }, m.detalle)
+    // La estrella roja en un círculo blanco.
+    val ce = Offset(w * 0.17f, h * 0.3f); val rc = h * 0.15f
+    drawCircle(m.hoja, rc, ce); drawCircle(m.detalle, rc, ce, style = Stroke(2f))
+    estrellaPuntas(ce, rc * 0.8f, m.cuerpo)
+    // La etiqueta para el título, con su banda negra.
+    val pl = Offset(w * 0.34f, h * 0.17f); val tp = Size(w * 0.58f, h * 0.68f)
+    drawRect(m.hoja, pl, tp); drawRect(m.detalle, pl, tp, style = Stroke(2.5f))
+    drawRect(m.detalle, pl, Size(tp.width, h * 0.085f))
+    // Tres renglones para el nombre, al pie de la etiqueta.
+    listOf(0.9f, 0.95f).forEach { f -> drawLine(m.detalle.copy(alpha = 0.25f), Offset(pl.x + 8f, pl.y + tp.height * f), Offset(pl.x + tp.width - 8f, pl.y + tp.height * f), 1f) }
+}
+
+/** El lacre ondulado con el emblema del tema (o la media luna de noche). */
+private fun DrawScope.lacre(t: TemaId, ce: Offset, r: Float, color: Color, brillo: Color, e: ColorScheme, luna: Boolean) {
+    val w = size.width; val h = size.height
+    val borde = Path()
+    for (i in 0..36) { val a = 2 * PI * i / 36; val rr = r * (1f + 0.07f * sin(a * 5 + 1).toFloat()); val p = ce + polarLibro(rr, a); if (i == 0) borde.moveTo(p.x, p.y) else borde.lineTo(p.x, p.y) }
+    borde.close()
+    drawPath(borde, color)
+    drawCircle(Color.Black.copy(alpha = 0.18f), r * 0.78f, ce, style = Stroke(r * 0.08f))
+    val k = r * 0.62f
+    if (luna) mediaLuna(ce, r * 0.5f, brillo.copy(alpha = 0.95f))
+    else inset(ce.x - k, ce.y - k, w - (ce.x + k), h - (ce.y + k)) { dibujarEmblema(t, 0.3f, e, true) }
+}
+
+/** Boletín de la Grande Armée: la hoja impresa y doblada, con su cabecera entre filetes y el lacre sobre la cinta tricolor. */
+private fun DrawScope.boletin(t: TemaId, m: Materia, e: ColorScheme, luna: Boolean) {
+    val w = size.width; val h = size.height
+    val ini = Offset(w * 0.02f, h * 0.04f); val tam = Size(w * 0.96f, h * 0.9f)
+    drawRect(Color.Black.copy(alpha = 0.12f), ini + Offset(4f, 5f), tam)
+    drawRect(m.cuerpo, ini, tam)
+    // El doblez: media hoja un poco más clara.
+    drawRect(m.brillo.copy(alpha = 0.5f), Offset(ini.x + tam.width / 2, ini.y), Size(tam.width / 2, tam.height))
+    drawLine(m.sombra.copy(alpha = 0.6f), Offset(ini.x + tam.width / 2, ini.y), Offset(ini.x + tam.width / 2, ini.y + tam.height), 1.2f)
+    // La cabecera: filete grueso y fino arriba y abajo del título, y la viñeta de las columnas.
+    val x0 = ini.x + w * 0.04f; val x1 = ini.x + tam.width - w * 0.04f
+    listOf(h * 0.1f to 3f, h * 0.125f to 1f, h * 0.29f to 1f, h * 0.315f to 3f).forEach { (y, g) -> drawLine(m.tinta, Offset(x0, y), Offset(x1, y), g) }
+    listOf(x0 + w * 0.02f, x1 - w * 0.02f).forEach { x -> estrellaPuntas(Offset(x, h * 0.207f), h * 0.03f, m.acento) }
+    // La cinta tricolor que asoma bajo el lacre.
+    val ce = Offset(ini.x + tam.width - w * 0.1f, ini.y + tam.height - h * 0.22f); val r = h * 0.12f
+    listOf(c(0xFF1E3A8A), c(0xFFF6F0E0), c(0xFFA3172E)).forEachIndexed { i, col ->
+        val dx = (i - 1) * r * 0.34f
+        drawPath(Path().apply {
+            moveTo(ce.x + dx - r * 0.17f, ce.y); lineTo(ce.x + dx + r * 0.17f, ce.y)
+            lineTo(ce.x + dx + r * 0.17f - r * 0.3f, ce.y + r * 1.45f); lineTo(ce.x + dx - r * 0.17f - r * 0.3f, ce.y + r * 1.45f); close()
+        }, col)
+    }
+    lacre(t, ce, r, m.acento, m.brillo, e, luna)
+}
+
+/** La carta de Navidad: sobre con solapa, timbre, ramita de acebo y el lacre con el emblema. */
+private fun DrawScope.cartaNavidad(t: TemaId, m: Materia, e: ColorScheme, luna: Boolean) {
     val w = size.width; val h = size.height
     val ini = Offset(w * 0.02f, h * 0.05f); val tam = Size(w * 0.96f, h * 0.9f)
     drawRoundRect(Color.Black.copy(alpha = 0.12f), ini + Offset(4f, 6f), tam, CornerRadius(6f))
@@ -560,25 +1301,12 @@ internal fun DrawScope.sobre(t: TemaId, m: Materia, e: ColorScheme, luna: Boolea
     drawPath(solapa, m.brillo); drawPath(solapa, m.sombra, style = Stroke(1.5f))
     // Timbre.
     val st = Offset(ini.x + tam.width - w * 0.13f, ini.y + h * 0.07f); val ts = Size(w * 0.09f, h * 0.2f)
-    drawRect(m.hoja, st, ts); drawRect(if (t == TemaId.NAVIDAD) m.acento else m.detalle, st + Offset(4f, 4f), Size(ts.width - 8f, ts.height - 8f), style = Stroke(2f))
-    if (t == TemaId.NAVIDAD) {
-        // Acebo.
-        val o = Offset(ini.x + w * 0.09f, ini.y + h * 0.12f)
-        listOf(-35f, 35f, 200f).forEach { g -> rotate(g, o) { drawOval(m.detalle, o + Offset(2f, -h * 0.035f), Size(w * 0.075f, h * 0.07f)) } }
-        listOf(Offset(0f, 0f), Offset(9f, 5f), Offset(-6f, 8f)).forEach { drawCircle(m.extra, 5.5f, o + it) }
-    } else {
-        // Cinta azul cruzando la esquina.
-        drawPath(Path().apply { moveTo(ini.x, ini.y + h * 0.38f); lineTo(ini.x + w * 0.16f, ini.y); lineTo(ini.x + w * 0.22f, ini.y); lineTo(ini.x, ini.y + h * 0.52f); close() }, m.detalle)
-    }
-    // Lacre con el emblema.
-    val c = Offset(w / 2, h * 0.47f); val r = h * 0.13f
-    val borde = Path(); for (i in 0..36) { val a = 2 * PI * i / 36; val rr = r * (1f + 0.07f * sin(a * 5 + 1).toFloat()); val p = Offset(c.x + rr * cos(a).toFloat(), c.y + rr * sin(a).toFloat()); if (i == 0) borde.moveTo(p.x, p.y) else borde.lineTo(p.x, p.y) }
-    borde.close()
-    drawPath(borde, m.acento)
-    drawCircle(Color.Black.copy(alpha = 0.18f), r * 0.78f, c, style = Stroke(r * 0.08f))
-    val k = r * 0.62f
-    if (luna) mediaLuna(c, r * 0.5f, m.brillo.copy(alpha = 0.95f))
-    else inset(c.x - k, c.y - k, w - (c.x + k), h - (c.y + k)) { dibujarEmblema(t, 0.3f, e, true) }
+    drawRect(m.hoja, st, ts); drawRect(m.acento, st + Offset(4f, 4f), Size(ts.width - 8f, ts.height - 8f), style = Stroke(2f))
+    // Acebo.
+    val o = Offset(ini.x + w * 0.09f, ini.y + h * 0.12f)
+    listOf(-35f, 35f, 200f).forEach { g -> rotate(g, o) { drawOval(m.detalle, o + Offset(2f, -h * 0.035f), Size(w * 0.075f, h * 0.07f)) } }
+    listOf(Offset(0f, 0f), Offset(9f, 5f), Offset(-6f, 8f)).forEach { drawCircle(m.extra, 5.5f, o + it) }
+    lacre(t, Offset(w / 2, h * 0.47f), h * 0.13f, m.acento, m.brillo, e, luna)
 }
 
 /** Carpeta de archivo color manila con su pestaña y una hoja asomando. */
@@ -594,30 +1322,61 @@ private fun DrawScope.carpeta(m: Materia) {
     drawCircle(m.sombra, 6f, Offset(w * 0.5f, h * 0.9f)); drawLine(m.detalle.copy(alpha = 0.6f), Offset(w * 0.5f, h * 0.9f), Offset(w * 0.58f, h * 0.99f), 1.5f)
 }
 
-/** Ventana de terminal (cyberpunk) o monitor de fósforo verde (refugio). */
-private fun DrawScope.pantalla(t: TemaId, m: Materia) {
+/** Monitor de fósforo verde del refugio, con su rejilla de barrido y sus perillas. */
+private fun DrawScope.monitorRefugio(m: Materia) {
     val w = size.width; val h = size.height
-    if (t == TemaId.REFUGIO) {
-        drawRoundRect(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra)), Offset.Zero, size, CornerRadius(28f))
-        val pi = Offset(w * 0.06f, h * 0.07f); val ps = Size(w * 0.88f, h * 0.76f)
-        drawRoundRect(m.hoja, pi, ps, CornerRadius(30f))
-        drawRoundRect(Brush.radialGradient(listOf(m.acento.copy(alpha = 0.16f), Color.Transparent), center = pi + Offset(ps.width / 2, ps.height / 2), radius = ps.width * 0.6f), pi, ps, CornerRadius(30f))
-        var y = pi.y; while (y < pi.y + ps.height) { drawLine(Color.Black.copy(alpha = 0.25f), Offset(pi.x + 8f, y), Offset(pi.x + ps.width - 8f, y), 1.5f); y += 5f }
-        listOf(0.8f, 0.87f).forEach { f -> drawCircle(m.sombra, h * 0.035f, Offset(w * f, h * 0.915f)) }
-        for (i in 0 until 6) drawLine(m.sombra, Offset(w * (0.1f + i * 0.03f), h * 0.89f), Offset(w * (0.1f + i * 0.03f), h * 0.94f), 2f)
-    } else {
-        drawRoundRect(m.cuerpo, Offset.Zero, size, CornerRadius(10f))
-        drawRoundRect(m.brillo, Offset.Zero, Size(w, h * 0.15f), CornerRadius(10f))
-        drawRect(m.brillo, Offset(0f, h * 0.08f), Size(w, h * 0.07f))
-        listOf(m.detalle, m.extra, m.acento).forEachIndexed { i, col -> drawCircle(col, h * 0.03f, Offset(w * 0.03f + i * h * 0.09f, h * 0.075f)) }
-        var y = h * 0.15f; while (y < h) { drawLine(m.acento.copy(alpha = 0.04f), Offset(0f, y), Offset(w, y), 1f); y += 4f }
-        drawRoundRect(m.acento.copy(alpha = 0.7f), Offset.Zero, size, CornerRadius(10f), style = Stroke(2f))
-        drawLine(m.detalle.copy(alpha = 0.5f), Offset(3f, h * 0.15f), Offset(w * 0.4f, h * 0.15f), 2f)
-    }
+    drawRoundRect(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra)), Offset.Zero, size, CornerRadius(28f))
+    val pi = Offset(w * 0.06f, h * 0.07f); val ps = Size(w * 0.88f, h * 0.76f)
+    drawRoundRect(m.hoja, pi, ps, CornerRadius(30f))
+    drawRoundRect(Brush.radialGradient(listOf(m.acento.copy(alpha = 0.16f), Color.Transparent), center = pi + Offset(ps.width / 2, ps.height / 2), radius = ps.width * 0.6f), pi, ps, CornerRadius(30f))
+    var y = pi.y; while (y < pi.y + ps.height) { drawLine(Color.Black.copy(alpha = 0.25f), Offset(pi.x + 8f, y), Offset(pi.x + ps.width - 8f, y), 1.5f); y += 5f }
+    listOf(0.8f, 0.87f).forEach { f -> drawCircle(m.sombra, h * 0.035f, Offset(w * f, h * 0.915f)) }
+    for (i in 0 until 6) drawLine(m.sombra, Offset(w * (0.1f + i * 0.03f), h * 0.89f), Offset(w * (0.1f + i * 0.03f), h * 0.94f), 2f)
+}
+
+/** Ventana de terminal con su barra de título y su barrido tenue. */
+private fun DrawScope.terminalCiber(m: Materia) {
+    val w = size.width; val h = size.height
+    drawRoundRect(m.cuerpo, Offset.Zero, size, CornerRadius(10f))
+    drawRoundRect(m.brillo, Offset.Zero, Size(w, h * 0.15f), CornerRadius(10f))
+    drawRect(m.brillo, Offset(0f, h * 0.08f), Size(w, h * 0.07f))
+    listOf(m.detalle, m.extra, m.acento).forEachIndexed { i, col -> drawCircle(col, h * 0.03f, Offset(w * 0.03f + i * h * 0.09f, h * 0.075f)) }
+    var y = h * 0.15f; while (y < h) { drawLine(m.acento.copy(alpha = 0.04f), Offset(0f, y), Offset(w, y), 1f); y += 4f }
+    drawRoundRect(m.acento.copy(alpha = 0.7f), Offset.Zero, size, CornerRadius(10f), style = Stroke(2f))
+    drawLine(m.detalle.copy(alpha = 0.5f), Offset(3f, h * 0.15f), Offset(w * 0.4f, h * 0.15f), 2f)
+}
+
+/** La tableta de la sala de control: carcasa con la pinza de la bitácora, barra de estado con luces, el parche de la misión y la telemetría al pie. */
+private fun DrawScope.tabletaControl(m: Materia) {
+    val w = size.width; val h = size.height
+    // Carcasa.
+    drawRoundRect(Brush.verticalGradient(listOf(m.brillo, m.cuerpo, m.sombra)), Offset(0f, h * 0.06f), Size(w, h * 0.94f), CornerRadius(22f))
+    // La pinza de la bitácora, arriba al centro.
+    drawRoundRect(Color(0xFF9AA3B5), Offset(w * 0.38f, 0f), Size(w * 0.24f, h * 0.12f), CornerRadius(8f))
+    drawRoundRect(Color(0xFF5C6475), Offset(w * 0.43f, h * 0.03f), Size(w * 0.14f, h * 0.05f), CornerRadius(4f))
+    // Pantalla.
+    val pi = Offset(w * 0.03f, h * 0.15f); val ps = Size(w * 0.94f, h * 0.79f)
+    drawRoundRect(m.hoja, pi, ps, CornerRadius(14f))
+    drawRoundRect(m.acento.copy(alpha = 0.35f), pi, ps, CornerRadius(14f), style = Stroke(1.2f))
+    // Barra de estado: tres luces y una línea.
+    listOf(Color(0xFF5BE08C), m.detalle, m.acento).forEachIndexed { i, col -> drawCircle(col, h * 0.018f, Offset(pi.x + w * 0.03f + i * w * 0.03f, pi.y + h * 0.07f)) }
+    drawLine(m.acento.copy(alpha = 0.3f), Offset(pi.x + 8f, pi.y + h * 0.13f), Offset(pi.x + ps.width - 8f, pi.y + h * 0.13f), 1f)
+    // El parche bordado de la misión: su órbita, el planeta y una estrella.
+    val pc = Offset(pi.x + ps.width - w * 0.08f, pi.y + h * 0.2f); val pr = h * 0.13f
+    drawCircle(m.cuerpo, pr, pc); drawCircle(m.detalle, pr, pc, style = Stroke(3f))
+    drawCircle(m.acento, pr * 0.3f, pc)
+    rotate(-25f, pc) { drawOval(m.detalle.copy(alpha = 0.9f), Offset(pc.x - pr * 0.78f, pc.y - pr * 0.28f), Size(pr * 1.56f, pr * 0.56f), style = Stroke(1.5f)) }
+    estrellaPuntas(pc + Offset(pr * 0.42f, -pr * 0.45f), pr * 0.18f, m.extra)
+    // La telemetría al pie.
+    val az = java.util.Random(3); val p = Path()
+    var x = pi.x + 10f; val base = pi.y + ps.height - h * 0.05f
+    p.moveTo(x, base)
+    while (x < pi.x + ps.width - 10f) { x += w * 0.02f; p.lineTo(x, base - az.nextFloat() * h * 0.06f) }
+    drawPath(p, m.acento.copy(alpha = 0.3f), style = Stroke(1.2f))
 }
 
 // =====================================================================
-//  La biblioteca: lomos en estantes, rollos, cartas, expedientes, logs
+//  La biblioteca: lomos en estantes, rollos, boletines, cartas, expedientes, logs
 // =====================================================================
 
 /** Las entradas del diario como objetos del tema. [abrir] recibe la fecha. */
@@ -629,39 +1388,249 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
     val conSonido: (String) -> Unit = { f -> sentir(Sentidos.Evento.ABRIR); abrir(f) }
     // De noche el objeto guarda el sueño; de día, la entrada.
     val texto: (Dia) -> String = if (noche) { d -> d.sueno_texto } else { d -> d.nota }
-    when (soporte(tema)) {
-        Soporte.LIBRO -> Lomos(entradas, tema, m, noche, texto, conSonido)
-        Soporte.ROLLO -> Rollos(entradas, tema, m, noche, texto, conSonido)
-        Soporte.SOBRE -> Cartas(entradas, tema, m, noche, texto, conSonido)
-        Soporte.CARPETA -> Expedientes(entradas, m, noche, texto, conSonido)
-        Soporte.PANTALLA -> Logs(entradas, tema, m, noche, texto, conSonido)
+    when (tema) {
+        // Rollos tumbados: el romano con sus frentes teñidos, sus cornua y el sillybos rojo.
+        TemaId.ROMANO -> Rollos(entradas, tema, m, noche, texto, conSonido, ESTANTE_MARMOL) { x0, largo ->
+            val h = size.height
+            drawRect(m.extra.copy(alpha = 0.55f), Offset(x0, h * 0.2f), Size(largo * 0.06f, h * 0.6f))
+            drawRect(m.extra.copy(alpha = 0.55f), Offset(x0 + largo * 0.94f, h * 0.2f), Size(largo * 0.06f, h * 0.6f))
+            drawPath(Path().apply { moveTo(x0 - h * 0.1f, h * 0.34f); lineTo(x0 - h * 0.3f, h * 0.5f); lineTo(x0 - h * 0.1f, h * 0.66f); close() }, m.detalle)
+            drawPath(Path().apply { moveTo(x0 + largo + h * 0.08f, h * 0.34f); lineTo(x0 + largo + h * 0.28f, h * 0.5f); lineTo(x0 + largo + h * 0.08f, h * 0.66f); close() }, m.detalle)
+            drawLine(m.acento, Offset(x0 + largo * 0.22f, h * 0.78f), Offset(x0 + largo * 0.18f, h * 0.9f), 1.2f)
+            drawRect(m.extra, Offset(x0 + largo * 0.1f, h * 0.88f), Size(largo * 0.16f, h * 0.12f))
+        }
+        TemaId.HELENO -> Rollos(entradas, tema, m, noche, texto, conSonido, ESTANTE_OLIVO) { x0, largo ->
+            val h = size.height
+            drawRect(m.extra, Offset(x0 + largo * 0.3f, h * 0.2f), Size(largo * 0.4f, h * 0.6f), style = Stroke(1.5f))
+            drawCircle(m.detalle, h * 0.08f, Offset(x0 + largo * 0.5f, h * 0.5f))
+        }
+        TemaId.SEDA -> Rollos(entradas, tema, m, noche, texto, conSonido, ESTANTE_LACA) { x0, largo ->
+            val h = size.height
+            drawRect(m.detalle, Offset(x0 + largo * 0.12f, h * 0.2f), Size(largo * 0.05f, h * 0.6f)); drawRect(m.extra, Offset(x0 + largo * 0.5f, h * 0.2f), Size(largo * 0.04f, h * 0.75f))
+        }
+        TemaId.MONGOL -> Rollos(entradas, tema, m, noche, texto, conSonido, ESTANTE_FIELTRO) { x0, largo ->
+            val h = size.height
+            drawRect(m.acento, Offset(x0 + largo * 0.2f, h * 0.2f), Size(largo * 0.04f, h * 0.6f)); drawRect(m.extra, Offset(x0 + largo * 0.55f, h * 0.2f), Size(largo * 0.05f, h * 0.75f))
+        }
+        // Libros de pie: cada tema con su lomo.
+        TemaId.MEDIEVAL -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_ROBLE) { o, cuerpo ->
+            // Los nervios del lomo (las cuerdas de la costura, en relieve) y un florón de oro.
+            val w = size.width; val hh = size.height
+            listOf(-0.09f, 0f, 0.09f).forEach { f ->
+                drawRoundRect(lerp(cuerpo, Color.Black, 0.3f), Offset(0f, o.y + hh * f - 3f), Size(w, 6f), CornerRadius(3f))
+                drawLine(lerp(cuerpo, Color.White, 0.25f), Offset(1f, o.y + hh * f - 2f), Offset(w - 1f, o.y + hh * f - 2f), 1f)
+            }
+            listOf(-0.045f, 0.045f).forEach { f -> drawCircle(m.acento, w * 0.07f, Offset(o.x, o.y + hh * f)) }
+        }
+        TemaId.ORDEN -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_ACERO) { o, _ ->
+            // El escudo carmesí de la orden, con su filete de latón, y dos remaches.
+            val w = size.width; val s = w * 0.3f
+            val escudo = Path().apply { moveTo(o.x - s, o.y - s); lineTo(o.x + s, o.y - s); lineTo(o.x + s, o.y + s * 0.2f); quadraticTo(o.x + s, o.y + s * 0.9f, o.x, o.y + s * 1.3f); quadraticTo(o.x - s, o.y + s * 0.9f, o.x - s, o.y + s * 0.2f); close() }
+            drawPath(escudo, m.detalle); drawPath(escudo, m.acento, style = Stroke(1.4f))
+            drawLine(m.acento, Offset(o.x, o.y - s * 0.7f), Offset(o.x, o.y + s * 0.8f), 1.2f)
+            listOf(-1f, 1f).forEach { k -> drawCircle(m.brillo, w * 0.06f, Offset(o.x, o.y + k * s * 2.4f)) }
+        }
+        TemaId.LABORATORIO -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_LABORATORIO) { o, _ ->
+            // Etiqueta de inventario con código de barras y el punto de color de la serie.
+            val w = size.width; val hh = size.height
+            drawRect(Color.White, Offset(w * 0.15f, o.y - hh * 0.08f), Size(w * 0.7f, hh * 0.12f))
+            val az = java.util.Random(o.y.toLong() + 7)
+            var x = w * 0.2f
+            while (x < w * 0.8f) { val g = 0.8f + az.nextFloat() * 1.8f; drawLine(Color(0xFF1B2733), Offset(x, o.y - hh * 0.07f), Offset(x, o.y + hh * 0.02f), g); x += g + 1.2f + az.nextFloat() * 1.5f }
+            drawCircle(m.acento, w * 0.14f, Offset(o.x, o.y + hh * 0.12f))
+        }
+        TemaId.COLONOS -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_PINO) { o, _ ->
+            // El tejuelo de cuero ladrillo del libro de cuentas, con sus filetes dorados.
+            val w = size.width; val hh = size.height
+            drawRect(m.extra, Offset(w * 0.08f, o.y - hh * 0.07f), Size(w * 0.84f, hh * 0.14f))
+            listOf(-0.055f, 0.055f).forEach { f -> drawLine(m.acento, Offset(w * 0.12f, o.y + hh * f), Offset(w * 0.88f, o.y + hh * f), 1.2f) }
+            drawCircle(m.acento, w * 0.06f, o)
+        }
+        TemaId.BOTANICO -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_NOGAL_CLARO) { o, cuerpo ->
+            // Un escarabajo estampado en oro sobre el cuero.
+            val l = size.width * 0.2f; val cx = o.x; val y0 = o.y
+            drawOval(m.acento, Offset(cx - l * 0.55f, y0 - l * 0.45f), Size(l * 1.1f, l * 1.5f)); drawCircle(m.acento, l * 0.3f, Offset(cx, y0 - l * 0.6f))
+            drawLine(lerp(cuerpo, Color.Black, 0.3f), Offset(cx, y0 - l * 0.4f), Offset(cx, y0 + l), 1.2f)
+            listOf(-1f, 1f).forEach { s -> for (k in 0 until 3) drawLine(m.acento, Offset(cx + s * l * 0.4f, y0 - l * 0.1f + k * l * 0.4f), Offset(cx + s * l * 0.85f, y0 - l * 0.3f + k * l * 0.55f), 1.4f) }
+        }
+        TemaId.GOTICO -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_PIEDRA_CLARA) { o, _ ->
+            val w = size.width
+            drawCircle(m.acento, w * 0.12f, o); drawCircle(m.extra, w * 0.06f, o)
+        }
+        TemaId.ANDALUS -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_CEDRO) { o, _ ->
+            val w = size.width
+            for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento, o, Offset(o.x + w * 0.22f * cos(a).toFloat(), o.y + w * 0.22f * sin(a).toFloat()), 1.5f) }
+        }
+        TemaId.RENACIMIENTO -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_TALLER) { o, _ ->
+            val w = size.width; val hh = size.height
+            drawRect(m.detalle.copy(alpha = 0.7f), Offset(0f, o.y - hh * 0.015f), Size(w, hh * 0.03f))
+        }
+        TemaId.URSS -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_METAL) { o, _ ->
+            // La estrella roja en su disco amarillo.
+            val w = size.width
+            drawCircle(m.acento, w * 0.2f, o); estrellaPuntas(o, w * 0.16f, m.cuerpo)
+        }
+        TemaId.REVOLUCION -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_NOGAL) { o, _ ->
+            val w = size.width
+            drawCircle(Color(0xFFB22234), w * 0.2f, o); drawCircle(Color(0xFFF4F1E8), w * 0.13f, o); drawCircle(Color(0xFF1F3A6E), w * 0.065f, o)
+        }
+        TemaId.ANTIGUAS -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_PIEDRA) { o, _ ->
+            // Una gema tallada en el lomo.
+            val g = size.width * 0.18f
+            drawPath(Path().apply { moveTo(o.x, o.y - g); lineTo(o.x + g * 0.75f, o.y - g * 0.2f); lineTo(o.x, o.y + g); lineTo(o.x - g * 0.75f, o.y - g * 0.2f); close() }, m.extra)
+            drawLine(m.acento, Offset(o.x - g * 0.75f, o.y - g * 0.2f), Offset(o.x + g * 0.75f, o.y - g * 0.2f), 1.2f)
+        }
+        // Boletines y cartas, de dos en dos.
+        TemaId.NAPOLEON -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> boletin(tema, m, e, noche) }
+        TemaId.NAVIDAD -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> cartaNavidad(tema, m, e, noche) }
+        TemaId.DISTOPIA -> Expedientes(entradas, m, noche, texto, conSonido)
+        TemaId.CIBER -> Logs(entradas, m, noche, texto, conSonido, refugio = false)
+        TemaId.REFUGIO -> Logs(entradas, m, noche, texto, conSonido, refugio = true)
+        TemaId.ESPACIO -> RegistroDeVuelo(entradas, m, noche, texto, conSonido)
     }
 }
 
-private fun madera(t: TemaId): Pair<Color, Color> = when (t) {
-    TemaId.ORDEN -> Color(0xFF6E7883) to Color(0xFF2A2F35)
-    TemaId.LABORATORIO -> Color(0xFFE3ECF3) to Color(0xFF97A8B9)
-    TemaId.SEDA -> Color(0xFF8E2B1F) to Color(0xFF4A120C)
-    TemaId.BOTANICO -> Color(0xFF8A6A3E) to Color(0xFF4A3820)
-    TemaId.GOTICO -> Color(0xFFBDB4A0) to Color(0xFF7E7563)
-    TemaId.RENACIMIENTO -> Color(0xFF5A3A22) to Color(0xFF2E1D10)
-    TemaId.MONGOL -> Color(0xFFC2412D) to Color(0xFF7A2418)
-    else -> Color(0xFF7A5230) to Color(0xFF3E2716)
+/** La tabla del estante: su madera (o piedra, o acero) y el detalle de su canto. */
+private class TablaEstante(val claro: Color, val oscuro: Color, val canto: DrawScope.() -> Unit = {})
+
+/** Mármol con vetas y una fila de dentículos. */
+private val ESTANTE_MARMOL = TablaEstante(Color(0xFFE6E2D8), Color(0xFFA8A296)) {
+    val w = size.width; val h = size.height
+    val az = java.util.Random(4)
+    repeat(6) { val x = az.nextFloat() * w; drawLine(Color(0xFF8E887C).copy(alpha = 0.35f), Offset(x, 0f), Offset(x + h * 3f, h), 0.8f) }
+    var x = 2f; while (x < w) { drawRect(Color(0xFF8E887C).copy(alpha = 0.5f), Offset(x, h * 0.62f), Size(h * 0.45f, h * 0.38f)); x += h * 0.9f }
+}
+
+/** Madera de olivo, con su veta ondulada. */
+private val ESTANTE_OLIVO = TablaEstante(Color(0xFF9C8A5A), Color(0xFF54472A)) {
+    val w = size.width; val h = size.height
+    listOf(0.3f, 0.55f, 0.8f).forEachIndexed { i, f ->
+        val p = Path(); p.moveTo(0f, h * f); var x = 0f
+        while (x < w) { p.quadraticTo(x + 14f, h * f + (if (i % 2 == 0) 1.5f else -1.5f), x + 28f, h * f); x += 28f }
+        drawPath(p, Color(0xFF3E3320).copy(alpha = 0.45f), style = Stroke(0.8f))
+    }
+}
+
+/** Seda roja lacada, con un filete de oro y monedas con agujero cuadrado. */
+private val ESTANTE_LACA = TablaEstante(Color(0xFF8E2B1F), Color(0xFF4A120C)) {
+    val w = size.width; val h = size.height
+    drawLine(Color(0xFFD9B25B), Offset(0f, 1f), Offset(w, 1f), 1.2f)
+    var x = 30f; while (x < w) { drawCircle(Color(0xFFD9B25B), h * 0.28f, Offset(x, h * 0.55f)); drawRect(Color(0xFF4A120C), Offset(x - h * 0.08f, h * 0.47f), Size(h * 0.16f, h * 0.16f)); x += 90f }
+}
+
+/** Fieltro rojo de la yurta, con rombos de oro. */
+private val ESTANTE_FIELTRO = TablaEstante(Color(0xFFC2412D), Color(0xFF7A2418)) {
+    val w = size.width; val h = size.height
+    var x = 12f
+    while (x < w) { drawPath(Path().apply { moveTo(x, h * 0.2f); lineTo(x + h * 0.35f, h * 0.55f); lineTo(x, h * 0.9f); lineTo(x - h * 0.35f, h * 0.55f); close() }, Color(0xFFF2C14E).copy(alpha = 0.8f)); x += 26f }
+}
+
+/** Roble oscuro con clavos de hierro. */
+private val ESTANTE_ROBLE = TablaEstante(Color(0xFF5E3F24), Color(0xFF2E1E10)) {
+    val w = size.width; val h = size.height
+    drawLine(Color(0xFF1E140A).copy(alpha = 0.5f), Offset(0f, h * 0.4f), Offset(w, h * 0.45f), 0.8f)
+    var x = 20f; while (x < w) { drawCircle(Color(0xFF2B2B2B), h * 0.2f, Offset(x, h * 0.5f)); drawCircle(Color(0xFF8A8A8A), h * 0.07f, Offset(x - 1f, h * 0.45f)); x += 140f }
+}
+
+/** Acero con remaches y una línea carmesí. */
+private val ESTANTE_ACERO = TablaEstante(Color(0xFF6E7883), Color(0xFF2A2F35)) {
+    val w = size.width; val h = size.height
+    drawLine(Color(0xFFA3172E), Offset(0f, h * 0.85f), Offset(w, h * 0.85f), 1.5f)
+    var x = 10f; while (x < w) { drawCircle(Color(0xFFB8C0C8), h * 0.14f, Offset(x, h * 0.4f)); x += 48f }
+}
+
+/** Repisa blanca de laboratorio con marcas de regla. */
+private val ESTANTE_LABORATORIO = TablaEstante(Color(0xFFE3ECF3), Color(0xFF97A8B9)) {
+    val w = size.width; val h = size.height
+    drawLine(Color(0xFF3CD2E5), Offset(0f, 1f), Offset(w, 1f), 1.5f)
+    var x = 0f; var i = 0
+    while (x < w) { drawLine(Color(0xFF5D6F80).copy(alpha = 0.6f), Offset(x, h), Offset(x, h * (if (i % 5 == 0) 0.45f else 0.7f)), 0.8f); x += 8f; i++ }
+}
+
+/** Tablones de pino: juntas, nudos y clavos. */
+private val ESTANTE_PINO = TablaEstante(Color(0xFFB8925E), Color(0xFF76583A)) {
+    val w = size.width; val h = size.height
+    var x = 70f
+    while (x < w) {
+        drawLine(Color(0xFF4A3420).copy(alpha = 0.7f), Offset(x, 0f), Offset(x, h), 1.2f)
+        listOf(x - 6f, x + 6f).forEach { cx -> drawCircle(Color(0xFF3A2A1A), h * 0.1f, Offset(cx, h * 0.5f)) }
+        drawOval(Color(0xFF6A4A2A).copy(alpha = 0.6f), Offset(x + 30f, h * 0.3f), Size(h * 0.7f, h * 0.4f))
+        x += 110f
+    }
+}
+
+/** Madera clara de campo con una fila de hormigas. */
+private val ESTANTE_NOGAL_CLARO = TablaEstante(Color(0xFF8A6A3E), Color(0xFF4A3820)) {
+    val w = size.width; val h = size.height
+    var x = 8f; while (x < w) { listOf(-3.5f to 1.6f, 0f to 1f, 3f to 1.3f).forEach { (dx, r) -> drawCircle(Color(0xFF2A1E10).copy(alpha = 0.7f), r, Offset(x + dx, h * 0.55f)) }; x += 18f }
+}
+
+/** Piedra clara de la capilla con una arquería menuda. */
+private val ESTANTE_PIEDRA_CLARA = TablaEstante(Color(0xFFBDB4A0), Color(0xFF7E7563)) {
+    val w = size.width; val h = size.height
+    var x = 0f; while (x < w) { drawArc(Color(0xFF5E5646).copy(alpha = 0.6f), 180f, 180f, false, Offset(x, h * 0.35f), Size(h * 1.1f, h * 1.1f), style = Stroke(0.9f)); x += h * 1.1f }
+}
+
+/** Cedro con una cenefa de taracea (triángulos claros y oscuros). */
+private val ESTANTE_CEDRO = TablaEstante(Color(0xFF9C5A33), Color(0xFF5A2E16)) {
+    val w = size.width; val h = size.height
+    var x = 0f; var i = 0; val l = h * 0.5f
+    while (x < w) {
+        drawPath(Path().apply { moveTo(x, h * 0.75f); lineTo(x + l / 2, h * 0.25f); lineTo(x + l, h * 0.75f); close() }, if (i % 2 == 0) Color(0xFFF3E7CC).copy(alpha = 0.75f) else Color(0xFF1E6B5C).copy(alpha = 0.8f))
+        x += l / 2; i++
+    }
+}
+
+/** La madera oscura del taller, con un filete claro y marcas de compás. */
+private val ESTANTE_TALLER = TablaEstante(Color(0xFF5A3A22), Color(0xFF2E1D10)) {
+    val w = size.width; val h = size.height
+    drawLine(Color(0xFFE6C9A0).copy(alpha = 0.5f), Offset(0f, h * 0.3f), Offset(w, h * 0.3f), 0.8f)
+    var x = 40f; while (x < w) { drawArc(Color(0xFFE6C9A0).copy(alpha = 0.4f), 200f, 140f, false, Offset(x - h, h * 0.3f), Size(h * 2f, h * 2f), style = Stroke(0.7f)); x += 120f }
+}
+
+/** Repisa metálica gris con su franja roja y remaches. */
+private val ESTANTE_METAL = TablaEstante(Color(0xFF8C9196), Color(0xFF4C5157)) {
+    val w = size.width; val h = size.height
+    drawRect(Color(0xFFC1121F), Offset(0f, h * 0.7f), Size(w, h * 0.3f))
+    var x = 16f; while (x < w) { drawCircle(Color(0xFF2E3236), h * 0.12f, Offset(x, h * 0.35f)); x += 64f }
+}
+
+/** Nogal con la cinta tricolor a lo largo del canto. */
+private val ESTANTE_NOGAL = TablaEstante(Color(0xFF6E4C33), Color(0xFF3A2616)) {
+    val w = size.width
+    listOf(Color(0xFF1F3A6E), Color(0xFFF4F1E8), Color(0xFFB22234)).forEachIndexed { i, col -> drawLine(col, Offset(0f, 1.5f + i * 2f), Offset(w, 1.5f + i * 2f), 2f) }
+}
+
+/** Una repisa de piedra: sillares y runas inventadas grabadas. */
+private val ESTANTE_PIEDRA = TablaEstante(Color(0xFF85807A), Color(0xFF4A4640)) {
+    val w = size.width; val h = size.height
+    var x = 50f; var i = 0
+    while (x < w) {
+        drawLine(Color(0xFF2E2B27).copy(alpha = 0.6f), Offset(x, 0f), Offset(x, h), 1f)
+        val o = Offset(x + 22f, h * 0.5f)
+        drawLine(Color(0xFF2E2B27).copy(alpha = 0.7f), o + Offset(0f, -h * 0.3f), o + Offset(0f, h * 0.3f), 0.9f)
+        drawLine(Color(0xFF2E2B27).copy(alpha = 0.7f), o + Offset(0f, if (i % 2 == 0) -h * 0.3f else 0f), o + Offset(h * 0.3f, if (i % 2 == 0) 0f else -h * 0.2f), 0.9f)
+        x += 90f; i++
+    }
 }
 
 @Composable
-private fun Tabla(tema: TemaId, noche: Boolean = false) {
-    val (a, b) = madera(tema).let { (x, y) -> if (noche) lerp(x, NOCHE, 0.5f) to lerp(y, NOCHE, 0.55f) else x to y }
-    Box(Modifier.fillMaxWidth().height(11.dp).background(Brush.verticalGradient(listOf(a, b))))
+private fun Tabla(e: TablaEstante, noche: Boolean = false) {
+    Canvas(Modifier.fillMaxWidth().height(11.dp)) {
+        drawRect(Brush.verticalGradient(listOf(e.claro, e.oscuro)))
+        e.canto.invoke(this)
+        // De noche, la tabla se hunde en la sombra.
+        if (noche) drawRect(NOCHE.copy(alpha = 0.5f))
+    }
     Box(Modifier.fillMaxWidth().height(6.dp).background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent))))
 }
 
-private val MESES3 = listOf("ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic")
-
-/** Libros de pie en estantes: el grosor depende de cuánto escribiste y el color del ánimo del día. */
+/** Libros de pie en estantes: el grosor depende de cuánto escribiste y el color del ánimo del día. [adorno] estampa el lomo de cada tema. */
 @Composable
-private fun Lomos(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
+private fun Lomos(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit, estante: TablaEstante,
+                  adorno: DrawScope.(Offset, Color) -> Unit) {
     val oscuro = esOscuro()
+    val medidor = rememberTextMeasurer(cacheSize = 32)
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val ancho = maxWidth
         val lomos = entradas.map { d -> d to (24 + (Texto.palabras(texto(d)) / 40).coerceAtMost(22)).dp }
@@ -671,62 +1640,57 @@ private fun Lomos(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean,
         Column {
             filas.forEach { fila ->
                 Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
-                    fila.forEach { (d, w) -> Lomo(d, w, tema, m, oscuro, noche) { abrir(d.fecha) } }
+                    fila.forEach { (d, w) -> Lomo(d, w, tema, m, oscuro, noche, medidor, adorno) { abrir(d.fecha) } }
                 }
-                Tabla(tema, noche)
+                Tabla(estante, noche)
             }
         }
     }
 }
 
 @Composable
-private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Materia, oscuro: Boolean, noche: Boolean = false, abrir: () -> Unit) {
+private fun Lomo(d: Dia, ancho: androidx.compose.ui.unit.Dp, tema: TemaId, m: Materia, oscuro: Boolean, noche: Boolean, medidor: TextMeasurer,
+                 adorno: DrawScope.(Offset, Color) -> Unit, abrir: () -> Unit) {
     val h = (118 + (d.fecha.hashCode() and 0x7fffffff) % 34).dp
     // De noche, el color del lomo es el del sueño (qué tan agradable fue); de día, el ánimo del día.
     val tono = Tonos.valencia((if (noche) d.sueno_valencia else d.valencia)?.toDouble(), oscuro)
     val cuerpo = if (tono != null) lerp(m.cuerpo, tono, 0.28f) else m.cuerpo
-    val dia = d.fecha.takeLast(2).trimStart('0'); val mes = MESES3[(d.fecha.substring(5, 7).toIntOrNull() ?: 1) - 1]
+    val n = nocheDe(tema)
+    val ty = MaterialTheme.typography
+    val dia = d.fecha.takeLast(2).trimStart('0')
+    // El mes como lo nombra el tema (latín, griego, ruso, lunas…), en su letra, a lo largo del lomo.
+    val mes = Estilo.mes(d.fecha.substring(5, 7).toIntOrNull() ?: 1)
+    val estiloMes = TextStyle(fontFamily = ty.labelSmall.fontFamily, fontSize = 8.5.sp, lineHeight = 9.5.sp, color = if (noche) n.luna else m.acento, textAlign = TextAlign.Center)
     Box(Modifier.width(ancho).height(h).clickable(onClick = abrir), contentAlignment = Alignment.TopCenter) {
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width; val hh = size.height
             drawRoundRect(Brush.horizontalGradient(listOf(lerp(cuerpo, Color.Black, 0.35f), lerp(cuerpo, Color.White, 0.18f), cuerpo, lerp(cuerpo, Color.Black, 0.4f))), Offset.Zero, size, CornerRadius(3f))
-            listOf(0.07f, 0.11f, 0.89f, 0.93f).forEach { f -> drawLine(m.acento.copy(alpha = 0.85f), Offset(2f, hh * f), Offset(w - 2f, hh * f), 2.2f) }
-            drawRoundRect(m.hoja.copy(alpha = 0.92f), Offset(w * 0.14f, hh * 0.2f), Size(w * 0.72f, hh * 0.27f), CornerRadius(2f))
+            listOf(0.05f, 0.08f, 0.91f, 0.94f).forEach { f -> drawLine(m.acento.copy(alpha = 0.85f), Offset(2f, hh * f), Offset(w - 2f, hh * f), 2.2f) }
+            drawRoundRect(m.hoja.copy(alpha = 0.92f), Offset(w * 0.14f, hh * 0.13f), Size(w * 0.72f, hh * 0.15f), CornerRadius(2f))
+            // Si el nombre no cabe, se parte en renglones; si aun así no cabe, se achica.
+            val largo = hh * 0.27f; val grueso = w * 0.78f
+            val lim = Constraints(maxWidth = largo.toInt().coerceAtLeast(1))
+            var capa = medidor.measure(mes, estiloMes, constraints = lim)
+            val k = minOf(1f, grueso / capa.size.height.coerceAtLeast(1), largo / capa.size.width.coerceAtLeast(1))
+            if (k < 1f) capa = medidor.measure(mes, estiloMes.copy(fontSize = estiloMes.fontSize * k, lineHeight = estiloMes.lineHeight * k), constraints = lim)
+            val ce = Offset(w / 2, hh * 0.45f)
+            rotate(-90f, ce) { drawText(capa, topLeft = Offset(ce.x - capa.size.width / 2f, ce.y - capa.size.height / 2f)) }
+            val o = Offset(w / 2, hh * 0.72f)
             if (noche) {
-                mediaLuna(Offset(w / 2, hh * 0.64f), w * 0.2f, LUNA.copy(alpha = 0.9f))
-                estrellas(d.fecha.hashCode(), 4, LUNA, Rect(w * 0.15f, hh * 0.72f, w * 0.85f, hh * 0.86f), 1.1f)
-            } else if (tema == TemaId.URSS) { drawCircle(m.acento, w * 0.16f, Offset(w / 2, hh * 0.66f)) }
-            else if (tema == TemaId.REVOLUCION) {
-                val o = Offset(w / 2, hh * 0.66f)
-                drawCircle(Color(0xFFB22234), w * 0.2f, o); drawCircle(Color(0xFFF4F1E8), w * 0.13f, o); drawCircle(Color(0xFF1F3A6E), w * 0.065f, o)
-            }
-            else if (tema == TemaId.ANTIGUAS) {
-                // Una gema tallada en el lomo.
-                val o = Offset(w / 2, hh * 0.66f); val g = w * 0.18f
-                drawPath(Path().apply { moveTo(o.x, o.y - g); lineTo(o.x + g * 0.75f, o.y - g * 0.2f); lineTo(o.x, o.y + g); lineTo(o.x - g * 0.75f, o.y - g * 0.2f); close() }, m.extra)
-                drawLine(m.acento, Offset(o.x - g * 0.75f, o.y - g * 0.2f), Offset(o.x + g * 0.75f, o.y - g * 0.2f), 1.2f)
-            }
-            if (!noche && tema == TemaId.BOTANICO) {
-                // Un escarabajo estampado en oro sobre el cuero.
-                val cx = w / 2; val y0 = hh * 0.64f; val l = w * 0.2f
-                drawOval(m.acento, Offset(cx - l * 0.55f, y0 - l * 0.45f), Size(l * 1.1f, l * 1.5f)); drawCircle(m.acento, l * 0.3f, Offset(cx, y0 - l * 0.6f))
-                drawLine(lerp(cuerpo, Color.Black, 0.3f), Offset(cx, y0 - l * 0.4f), Offset(cx, y0 + l), 1.2f)
-                listOf(-1f, 1f).forEach { s -> for (k in 0 until 3) drawLine(m.acento, Offset(cx + s * l * 0.4f, y0 - l * 0.1f + k * l * 0.4f), Offset(cx + s * l * 0.85f, y0 - l * 0.3f + k * l * 0.55f), 1.4f) }
-            }
-            if (!noche && tema == TemaId.GOTICO) { drawCircle(m.acento, w * 0.12f, Offset(w / 2, hh * 0.64f)); drawCircle(m.extra, w * 0.06f, Offset(w / 2, hh * 0.64f)) }
-            if (!noche && tema == TemaId.ANDALUS) for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento, Offset(w / 2, hh * 0.66f), Offset(w / 2 + w * 0.22f * cos(a).toFloat(), hh * 0.66f + w * 0.22f * sin(a).toFloat()), 1.5f) }
-            if (!noche && tema == TemaId.RENACIMIENTO) drawRect(m.detalle.copy(alpha = 0.7f), Offset(0f, hh * 0.62f), Size(w, hh * 0.03f))
+                lunaDelTema(tema, o, w * 0.2f, n, sola = true)
+                estrellasDelTema(tema, d.fecha.hashCode(), 4, n.luna, Rect(w * 0.15f, hh * 0.8f, w * 0.85f, hh * 0.88f), 1.1f)
+            } else adorno.invoke(this, o, cuerpo)
         }
-        Column(Modifier.padding(top = h * 0.205f), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(dia, color = m.tinta, fontSize = 13.sp, fontFamily = Letra.garamond, lineHeight = 13.sp, maxLines = 1)
-            Text(mes, color = m.tinta.copy(alpha = 0.75f), fontSize = 8.5.sp, fontFamily = Letra.texto, lineHeight = 9.sp, maxLines = 1)
-        }
+        Text(dia, color = m.tinta, fontSize = 13.sp, fontFamily = ty.headlineSmall.fontFamily, lineHeight = 13.sp, maxLines = 1, modifier = Modifier.padding(top = h * 0.14f))
     }
 }
 
-/** Rollos tumbados en un estante, con su etiqueta colgando. */
+/** Rollos tumbados en un estante, con su etiqueta colgando. [adorno] pinta el rollo de cada tema. */
 @Composable
-private fun Rollos(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
+private fun Rollos(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit, estante: TablaEstante,
+                   adorno: DrawScope.(Float, Float) -> Unit) {
+    val n = nocheDe(tema)
+    val letra = MaterialTheme.typography.labelLarge.fontFamily
     Column {
         entradas.chunked(3).forEach { fila ->
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
@@ -740,37 +1704,40 @@ private fun Rollos(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean
                             drawOval(m.sombra, Offset(x0 + largo - h * 0.18f, h * 0.2f), Size(h * 0.3f, h * 0.6f))
                             drawOval(m.hoja, Offset(x0 + largo - h * 0.14f, h * 0.27f), Size(h * 0.2f, h * 0.46f))
                             listOf(x0 - h * 0.1f, x0 + largo + h * 0.08f).forEach { x -> drawCircle(m.detalle, h * 0.13f, Offset(x, h * 0.5f)) }
-                            if (tema == TemaId.SEDA) { drawRect(m.detalle, Offset(x0 + largo * 0.12f, h * 0.2f), Size(largo * 0.05f, h * 0.6f)); drawRect(m.extra, Offset(x0 + largo * 0.5f, h * 0.2f), Size(largo * 0.04f, h * 0.75f)) }
-                            if (tema == TemaId.HELENO) drawRect(m.extra, Offset(x0 + largo * 0.3f, h * 0.2f), Size(largo * 0.4f, h * 0.6f), style = Stroke(1.5f))
-                            if (tema == TemaId.MONGOL) { drawRect(m.acento, Offset(x0 + largo * 0.2f, h * 0.2f), Size(largo * 0.04f, h * 0.6f)); drawRect(m.extra, Offset(x0 + largo * 0.55f, h * 0.2f), Size(largo * 0.05f, h * 0.75f)) }
+                            adorno.invoke(this, x0, largo)
                             drawLine(m.acento, Offset(w / 2, h * 0.8f), Offset(w / 2, h), 1.5f)
-                            if (noche) estrellas(d.fecha.hashCode(), 7, LUNA, Rect(x0 + largo * 0.1f, h * 0.28f, x0 + largo * 0.85f, h * 0.72f), 1.2f)
+                            if (noche) estrellasDelTema(tema, d.fecha.hashCode(), 7, n.luna, Rect(x0 + largo * 0.1f, h * 0.28f, x0 + largo * 0.85f, h * 0.72f), 1.2f)
                         }
-                        val dia = d.fecha.takeLast(2).trimStart('0'); val mes = MESES3[(d.fecha.substring(5, 7).toIntOrNull() ?: 1) - 1]
-                        Text((if (noche) "☾ " else "") + "$dia $mes", color = if (noche) LUNA else m.hoja, fontSize = 11.sp, fontFamily = Letra.garamond, maxLines = 1,
-                            modifier = Modifier.background(if (noche) lerp(m.extra, NOCHE, 0.45f) else m.extra, RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 1.dp))
+                        val dia = d.fecha.takeLast(2).trimStart('0'); val mes = Estilo.mes(d.fecha.substring(5, 7).toIntOrNull() ?: 1)
+                        Text((if (noche) "☾ " else "") + "$dia $mes", color = if (noche) n.luna else m.hoja, fontSize = 11.sp, fontFamily = letra, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.background(if (noche) lerp(m.extra, n.cielo, 0.45f) else m.extra, RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 1.dp))
                         Text("${Texto.palabras(texto(d))} pal.", fontSize = 9.5.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 1.dp))
                     }
                 }
                 repeat(3 - fila.size) { Spacer(Modifier.weight(1f)) }
             }
-            Tabla(tema, noche)
+            Tabla(estante, noche)
         }
     }
 }
 
-/** Cartas selladas, de dos en dos. */
+/** Boletines o cartas selladas, de dos en dos. [figura] dibuja cada uno. */
 @Composable
-private fun Cartas(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
+private fun Cartas(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit, figura: DrawScope.(ColorScheme) -> Unit) {
     val e = MaterialTheme.colorScheme.copy(primary = m.brillo, secondary = m.detalle, tertiary = m.brillo, background = m.acento, onBackground = m.brillo)
+    val n = nocheDe(tema)
+    val letra = MaterialTheme.typography.labelLarge.fontFamily
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 6.dp)) {
         entradas.chunked(2).forEach { fila ->
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 fila.forEach { d ->
                     Box(Modifier.weight(1f).height(104.dp).clickable { abrir(d.fecha) }) {
-                        Canvas(Modifier.fillMaxSize()) { sobre(tema, m, e, luna = noche); if (noche) estrellas(d.fecha.hashCode(), 12, LUNA, Rect(0f, 0f, size.width, size.height * 0.4f), 1.2f) }
+                        Canvas(Modifier.fillMaxSize()) {
+                            figura.invoke(this, e)
+                            if (noche) estrellasDelTema(tema, d.fecha.hashCode(), 12, n.luna, Rect(0f, 0f, size.width, size.height * 0.4f), 1.2f)
+                        }
                         Column(Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 8.dp, end = 10.dp)) {
-                            Text(Fechas.corto(d.fecha), fontSize = 12.sp, color = m.textoCuerpo, fontFamily = Letra.garamond, maxLines = 1)
+                            Text(Fechas.corto(d.fecha), fontSize = 12.sp, color = m.textoCuerpo, fontFamily = letra, maxLines = 1)
                             Text("${Texto.palabras(texto(d))} palabras", fontSize = 9.5.sp, color = m.textoCuerpo.copy(alpha = 0.7f), maxLines = 1)
                         }
                     }
@@ -806,11 +1773,9 @@ private fun Expedientes(entradas: List<Dia>, m: Materia, noche: Boolean, texto: 
     }
 }
 
-/** El directorio de logs (cyberpunk) o la lista de cintas de bitácora (refugio). */
+/** El directorio de logs de la terminal o la lista de cintas de la bitácora del refugio. */
 @Composable
-private fun Logs(entradas: List<Dia>, tema: TemaId, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit) {
-    val refugio = tema == TemaId.REFUGIO
-    if (tema == TemaId.ESPACIO) { RegistroDeVuelo(entradas, m, noche, texto, abrir); return }
+private fun Logs(entradas: List<Dia>, m: Materia, noche: Boolean, texto: (Dia) -> String, abrir: (String) -> Unit, refugio: Boolean) {
     val fuente = if (refugio) LetraExtra.vt323 else Letra.codigo
     val tam = if (refugio) 17.sp else 11.5.sp
     val fondo = if (refugio) m.hoja else m.cuerpo
@@ -865,44 +1830,76 @@ class Pagina(val fondo: Int?, val color: Color, val tinta: Color, val tenue: Col
              val texto: FontFamily, val tam: Float, val interlinea: Float, val oscura: Boolean, val rayas: Rayas = Rayas.NADA,
              val capitular: FontFamily? = null)
 
+/**
+ * El papel y la letra de cada tema. Cada tema escribe con una letra propia: inscripción romana, Garamond con griego,
+ * gótica de copista, textura de vitral, kúfica, Didot, letra de molde soviética, estarcido, máquina de escribir, cursiva de carta…
+ */
 fun pagina(t: TemaId): Pagina = when (t) {
-    TemaId.ROMANO -> Pagina(R.drawable.papel_papiro, c(0xFFE8D4A2), c(0xFF2A1E14), c(0xFF6B5536), c(0xFF8E2B1F), c(0xFF6B4423), Letra.garamond, 18.5f, 27f, false, capitular = Letra.inscripcion)
-    TemaId.HELENO -> Pagina(R.drawable.papel_papiro, c(0xFFE8D4A2), c(0xFF1F1712), c(0xFF6B5536), c(0xFFA8471F), c(0xFF1A1410), Letra.garamond, 18.5f, 27f, false)
-    TemaId.SEDA -> Pagina(R.drawable.papel_seda, c(0xFF1F3578), c(0xFFF2EAD3), c(0xFFB9B29F), c(0xFFE0B04F), c(0xFFE26A50), Letra.garamond, 18.5f, 27f, true, capitular = LetraExtra.almendra)
-    TemaId.MEDIEVAL -> Pagina(R.drawable.papel_pergamino, c(0xFFEDDDB8), c(0xFF2B1D12), c(0xFF6E5639), c(0xFFB3261E), c(0xFF1F3A93), Letra.garamond, 18.5f, 27f, false, capitular = LetraExtra.gotica)
-    TemaId.COLONOS -> Pagina(null, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), Letra.garamond, 18f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
-    TemaId.ORDEN -> Pagina(null, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), Letra.texto, 16.5f, 25f, true, Rayas.NADA)
-    TemaId.BOTANICO -> Pagina(R.drawable.papel_lamina, c(0xFFF1E9D2), c(0xFF2A2318), c(0xFF6B5E45), c(0xFF3F5A2C), c(0xFF8C4A22), Letra.garamond, 18.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
-    TemaId.GOTICO -> Pagina(R.drawable.papel_vitela, c(0xFFF1E8D2), c(0xFF1A1630), c(0xFF5E5870), c(0xFFB3122E), c(0xFF1F3A9E), Letra.garamond, 18.5f, 27f, false, capitular = LetraExtra.textura)
+    TemaId.ROMANO -> Pagina(R.drawable.papel_papiro, c(0xFFE8D4A2), c(0xFF2A1E14), c(0xFF6B5536), c(0xFF8E2B1F), c(0xFF6B4423), Letra.inscripcion, 16.5f, 27f, false, capitular = Letra.inscripcion)
+    // Pergamino de Pérgamo (dibujado en FondoPagina): más claro y liso que el papiro romano.
+    TemaId.HELENO -> Pagina(null, c(0xFFF3E9D2), c(0xFF1F1712), c(0xFF6B5536), c(0xFFA8471F), c(0xFF1A1410), Letra.garamond, 18.5f, 27f, false)
+    TemaId.SEDA -> Pagina(R.drawable.papel_seda, c(0xFF1F3578), c(0xFFF2EAD3), c(0xFFB9B29F), c(0xFFE0B04F), c(0xFFE26A50), LetraExtra.kufi, 17f, 27f, true, capitular = LetraExtra.almendra)
+    TemaId.MEDIEVAL -> Pagina(R.drawable.papel_pergamino, c(0xFFEDDDB8), c(0xFF2B1D12), c(0xFF6E5639), c(0xFFB3261E), c(0xFF1F3A93), LetraExtra.gotica, 19.5f, 28f, false, capitular = LetraExtra.gotica)
+    TemaId.COLONOS -> Pagina(null, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), LetraExtra.oswald, 17.5f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
+    TemaId.ORDEN -> Pagina(null, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), LetraExtra.estarcido, 16f, 25f, true, Rayas.NADA)
+    TemaId.BOTANICO -> Pagina(R.drawable.papel_lamina, c(0xFFF1E9D2), c(0xFF2A2318), c(0xFF6B5E45), c(0xFF3F5A2C), c(0xFF8C4A22), LetraExtra.fraunces, 17.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
+    TemaId.GOTICO -> Pagina(R.drawable.papel_vitela, c(0xFFF1E8D2), c(0xFF1A1630), c(0xFF5E5870), c(0xFFB3122E), c(0xFF1F3A9E), LetraExtra.textura, 19.5f, 28f, false, capitular = LetraExtra.textura)
     TemaId.ESPACIO -> Pagina(null, c(0xFF050A18), c(0xFFE8ECF8), c(0xFF6E7BA0), c(0xFF8AB4FF), c(0xFFFFB86B), LetraExtra.grotesk, 16f, 25f, true, Rayas.RENGLONES)
     TemaId.ANDALUS -> Pagina(R.drawable.papel_xativa, c(0xFFF2E6C8), c(0xFF2A1A12), c(0xFF6A5640), c(0xFF1E6B5C), c(0xFFB5432A), LetraExtra.amiri, 18.5f, 28f, false, capitular = LetraExtra.kufi)
     TemaId.MONGOL -> Pagina(R.drawable.papel_estepa, c(0xFFF1EBDC), c(0xFF18202E), c(0xFF5C6577), c(0xFF1F5FA8), c(0xFFC2412D), LetraExtra.filosofo, 17.5f, 27f, false)
     TemaId.RENACIMIENTO -> Pagina(R.drawable.papel_leonardo, c(0xFFEEDFBC), c(0xFF3A2614), c(0xFF7A6040), c(0xFF8C3B1E), c(0xFF2F4F6F), LetraExtra.cormorant, 19.5f, 28f, false, capitular = LetraExtra.italianno)
-    TemaId.URSS -> Pagina(null, c(0xFFEFE6D2), c(0xFF161414), c(0xFF6A625A), c(0xFFC1121F), c(0xFF161414), Letra.codigo, 15f, 26f, false, Rayas.RENGLONES)
+    TemaId.URSS -> Pagina(null, c(0xFFEFE6D2), c(0xFF161414), c(0xFF6A625A), c(0xFFC1121F), c(0xFF161414), LetraExtra.russo, 15.5f, 26f, false, Rayas.RENGLONES)
     TemaId.LABORATORIO -> Pagina(null, c(0xFFF7FBFC), c(0xFF1B2733), c(0xFF5D6F80), c(0xFF0B8FA3), c(0xFFE0557A), LetraExtra.jost, 16.5f, 26f, false, Rayas.CUADRICULA)
     TemaId.NAPOLEON -> Pagina(null, c(0xFFF6F0E0), c(0xFF14213D), c(0xFF5A6278), c(0xFF1E3A8A), c(0xFFA3172E), LetraExtra.bodoni, 18f, 27f, false, Rayas.NADA, LetraExtra.bodoniTitulo)
-    TemaId.NAVIDAD -> Pagina(null, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), Letra.garamond, 18.5f, 27f, false, Rayas.NADA, LetraExtra.cinzelDeco)
-    TemaId.DISTOPIA -> Pagina(null, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.codigo, 15f, 24f, false, Rayas.RENGLONES)
+    // La carta de Navidad va en cursiva de pluma, grande para que se lea bien.
+    TemaId.NAVIDAD -> Pagina(null, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
+    // La declaración, tecleada.
+    TemaId.DISTOPIA -> Pagina(null, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
     TemaId.CIBER -> Pagina(null, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
     TemaId.REFUGIO -> Pagina(null, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
-    TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.cormorant, 19f, 28f, false, Rayas.NADA, LetraExtra.fell)
-    TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), Letra.garamond, 18.5f, 27f, false, Rayas.NADA, Letra.inscripcion)
+    TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.fell, 18.5f, 28f, false, Rayas.NADA, LetraExtra.fell)
+    TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), LetraExtra.almendra, 18.5f, 27f, false, Rayas.NADA, Letra.inscripcion)
 }
 
-/** Fondo de la página: papel, papiro, seda, pantalla… En modo oscuro, el papel claro se atenúa un poco para no deslumbrar. */
+/** Fondo de la página: papel, papiro, seda, pantalla… y el adorno de cada tema. En modo oscuro, el papel claro se atenúa un poco para no deslumbrar. */
 @Composable
 internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, noche: Boolean = false) {
     val oscuroApp = esOscuro()
+    val n = nocheDe(t)
     Box(modifier.fillMaxSize().background(p.color)) {
         p.fondo?.let { Image(painterResource(it), null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
-        // De noche el papel queda debajo de un cielo: se adivina la textura, pero manda el azul de medianoche.
-        if (noche) Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(lerp(p.color, NOCHE, 0.4f).copy(alpha = if (p.fondo != null) 0.9f else 0.7f),
-            lerp(NOCHE_ALTA, p.acento, 0.12f).copy(alpha = if (p.fondo != null) 0.88f else 0.6f)))))
+        // De noche el papel queda debajo del cielo del tema: se adivina la textura, pero manda su noche.
+        if (noche) Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(lerp(p.color, n.cielo, 0.4f).copy(alpha = if (p.fondo != null) 0.9f else 0.7f),
+            lerp(lerp(n.cielo, n.luz, 0.1f), p.acento, 0.12f).copy(alpha = if (p.fondo != null) 0.88f else 0.6f)))))
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width; val h = size.height
             when (t) {
+                TemaId.ROMANO -> {
+                    // Las juntas de las hojas pegadas del volumen (kolleseis) y la doble regla del margen.
+                    var x = w * 0.29f; while (x < w) { drawRect(p.detalle.copy(alpha = 0.08f), Offset(x, 0f), Size(6.dp.toPx(), h)); x += w * 0.37f }
+                    listOf(18.dp.toPx(), 22.dp.toPx()).forEach { x0 -> drawLine(p.acento.copy(alpha = 0.3f), Offset(x0, 0f), Offset(x0, h), 1f) }
+                }
+                TemaId.HELENO -> {
+                    // Pergamino de Pérgamo: manchas suaves de la piel, los poros y la ola corrida arriba y abajo.
+                    val az = java.util.Random(23)
+                    repeat(40) { drawCircle(p.tenue.copy(alpha = 0.035f), (20 + az.nextFloat() * 70).dp.toPx(), Offset(az.nextFloat() * w, az.nextFloat() * h)) }
+                    repeat(220) { drawCircle(p.tenue.copy(alpha = 0.12f), 0.7f + az.nextFloat(), Offset(az.nextFloat() * w, az.nextFloat() * h)) }
+                    drawRect(Brush.radialGradient(listOf(Color.Transparent, p.tenue.copy(alpha = 0.14f)), center = Offset(w / 2, h / 2), radius = maxOf(w, h) * 0.75f))
+                    listOf(14.dp.toPx(), h - 22.dp.toPx()).forEach { y -> olaCorrida(Offset(16.dp.toPx(), y), w - 32.dp.toPx(), 9.dp.toPx(), p.detalle.copy(alpha = 0.55f)) }
+                }
                 TemaId.MEDIEVAL -> listOf(26.dp.toPx(), 31.dp.toPx(), w - 26.dp.toPx()).forEach { x -> drawLine(p.acento.copy(alpha = 0.22f), Offset(x, 0f), Offset(x, h), 1.2f) }
-                TemaId.COLONOS, TemaId.URSS -> drawLine(p.acento.copy(alpha = 0.45f), Offset(40.dp.toPx(), 0f), Offset(40.dp.toPx(), h), 1.5f)
+                TemaId.COLONOS -> {
+                    // Libro de registro: doble margen rojo, la cabecera azul y la columna de las cuentas.
+                    listOf(36.dp.toPx(), 40.dp.toPx()).forEach { x -> drawLine(p.acento.copy(alpha = 0.45f), Offset(x, 0f), Offset(x, h), 1.2f) }
+                    listOf(18.dp.toPx(), 21.dp.toPx()).forEach { y -> drawLine(p.detalle.copy(alpha = 0.45f), Offset(0f, y), Offset(w, y), 1.2f) }
+                    drawLine(p.detalle.copy(alpha = 0.3f), Offset(w - 64.dp.toPx(), 0f), Offset(w - 64.dp.toPx(), h), 1f)
+                }
+                TemaId.URSS -> {
+                    // La libreta escolar: margen rojo a la derecha y una cuña roja y negra abajo, como en los carteles.
+                    drawLine(p.acento.copy(alpha = 0.5f), Offset(w - 22.dp.toPx(), 0f), Offset(w - 22.dp.toPx(), h), 1.5f)
+                    drawPath(Path().apply { moveTo(0f, h); lineTo(46.dp.toPx(), h); lineTo(0f, h - 46.dp.toPx()); close() }, p.acento.copy(alpha = 0.6f))
+                    drawPath(Path().apply { moveTo(0f, h - 46.dp.toPx()); lineTo(46.dp.toPx(), h); lineTo(58.dp.toPx(), h); lineTo(0f, h - 58.dp.toPx()); close() }, p.tinta.copy(alpha = 0.7f))
+                }
                 TemaId.NAPOLEON -> { var x = 0f; while (x < w) { drawLine(p.tenue.copy(alpha = 0.07f), Offset(x, 0f), Offset(x, h), 1f); x += 22.dp.toPx() } }
                 TemaId.NAVIDAD -> {
                     drawRect(p.acento, Offset(8.dp.toPx(), 8.dp.toPx()), Size(w - 16.dp.toPx(), h - 16.dp.toPx()), style = Stroke(3f))
@@ -962,11 +1959,36 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     drawRect(p.tinta.copy(alpha = 0.08f), Offset(o.x - w * 0.2f, o.y - w * 0.2f), Size(w * 0.4f, w * 0.4f), style = Stroke(1f))
                     drawLine(p.tinta.copy(alpha = 0.08f), Offset(o.x - w * 0.24f, o.y), Offset(o.x + w * 0.24f, o.y), 1f)
                 }
-                else -> {}
+                TemaId.SEDA -> {
+                    // Las columnas de hilo rojo de los rollos chinos y el sello cuadrado de cinabrio.
+                    var x = 26.dp.toPx(); while (x < w) { drawLine(p.detalle.copy(alpha = 0.16f), Offset(x, 10.dp.toPx()), Offset(x, h - 10.dp.toPx()), 1f); x += 38.dp.toPx() }
+                    val l = 34.dp.toPx(); val o = Offset(w - l - 18.dp.toPx(), h - l - 24.dp.toPx())
+                    drawRect(p.detalle.copy(alpha = 0.7f), o, Size(l, l))
+                    drawRect(p.color, o + Offset(4f, 4f), Size(l - 8f, l - 8f), style = Stroke(2f))
+                    drawLine(p.color, o + Offset(l / 2, 6f), o + Offset(l / 2, l - 6f), 2f); drawLine(p.color, o + Offset(6f, l / 2), o + Offset(l - 6f, l / 2), 2f)
+                }
+                TemaId.LABORATORIO -> {
+                    // El cuaderno de laboratorio: margen doble, la casilla del número de página y las líneas de firma y de testigo al pie.
+                    listOf(24.dp.toPx(), 27.dp.toPx()).forEach { x -> drawLine(p.detalle.copy(alpha = 0.4f), Offset(x, 0f), Offset(x, h), 1f) }
+                    drawRect(p.acento.copy(alpha = 0.5f), Offset(w - 74.dp.toPx(), 12.dp.toPx()), Size(58.dp.toPx(), 24.dp.toPx()), style = Stroke(1.2f))
+                    val y = h - 30.dp.toPx()
+                    drawLine(p.tenue.copy(alpha = 0.5f), Offset(34.dp.toPx(), y), Offset(w * 0.46f, y), 1f)
+                    drawLine(p.tenue.copy(alpha = 0.5f), Offset(w * 0.54f, y), Offset(w - 26.dp.toPx(), y), 1f)
+                }
+                TemaId.DISTOPIA -> {
+                    // Los agujeros del archivador, el ojo de agua en el papel y la franja roja de clasificación.
+                    listOf(0.28f, 0.72f).forEach { f ->
+                        drawCircle(p.tenue.copy(alpha = 0.3f), 6.dp.toPx(), Offset(14.dp.toPx(), h * f))
+                        drawCircle(p.tenue.copy(alpha = 0.5f), 6.dp.toPx(), Offset(14.dp.toPx(), h * f), style = Stroke(1.2f))
+                    }
+                    val o = Offset(w / 2, h * 0.55f); val a = w * 0.32f
+                    val ojo = Path().apply { moveTo(o.x - a, o.y); quadraticTo(o.x, o.y - a * 0.75f, o.x + a, o.y); quadraticTo(o.x, o.y + a * 0.75f, o.x - a, o.y); close() }
+                    drawPath(ojo, p.tinta.copy(alpha = 0.035f)); drawPath(ojo, p.tinta.copy(alpha = 0.06f), style = Stroke(2f))
+                    drawCircle(p.tinta.copy(alpha = 0.06f), a * 0.28f, o)
+                    drawPath(Path().apply { moveTo(w - 70.dp.toPx(), h); lineTo(w - 40.dp.toPx(), h); lineTo(w, h - 40.dp.toPx()); lineTo(w, h - 70.dp.toPx()); close() }, p.acento.copy(alpha = 0.6f))
+                }
             }
-            if (noche) {
-                estrellas(t.ordinal * 17 + 3, (w * h / 5200f).toInt().coerceIn(60, 260), LUNA, max = 1.5f)
-            }
+            if (noche) estrellasDelTema(t, t.ordinal * 17 + 3, (w * h / 5200f).toInt().coerceIn(60, 260), n.luna, max = 1.5f)
         }
         if (oscuroApp && !p.oscura) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.22f)))
     }
@@ -1013,45 +2035,123 @@ internal fun Modifier.rayado(p: Pagina, layout: TextLayoutResult?): Modifier {
     }
 }
 
-/** Encabezado de la página: emblema, fecha del tema y una banda. */
+/** Un rótulo centrado del encabezado. */
+@Composable
+private fun Rubrica(texto: String, letra: FontFamily, tam: Float, color: Color, espacio: Float = 1f) =
+    Text(texto, fontFamily = letra, fontSize = tam.sp, letterSpacing = espacio.sp, color = color, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
+
+/** Encabezado de la página: lo que cada tema pone sobre la fecha (cabecera de gaceta, rúbrica, expediente, ruta…), la fecha del tema y una banda. */
 @Composable
 private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito = Escrito.DIARIO) {
     val ty = MaterialTheme.typography
     if (modo == Escrito.SUENO) { EncabezadoSueno(t, p, fecha); return }
+    val dia = runCatching { Fechas.parse(fecha) }.getOrNull()
+    val nDia = dia?.dayOfYear ?: 1
+    val emblema: @Composable () -> Unit = { Emblema(t, 40.dp, MaterialTheme.colorScheme, animado = false) }
     Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         when (t) {
+            TemaId.ROMANO -> { emblema(); Rubrica("ACTA · DIVRNA", Letra.inscripcion, 12f, p.acento, 3f) }
             TemaId.CIBER -> Text("~/vestigium/diario/$fecha.log", fontFamily = Letra.codigo, fontSize = 12.sp, color = p.tenue, modifier = Modifier.fillMaxWidth())
+            TemaId.HELENO -> { emblema(); Rubrica("ΕΦΗΜΕΡΙΔΕΣ · diario", Letra.garamond, 13f, p.acento, 2f) }
+            TemaId.MEDIEVAL -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Emblema(t, 34.dp, MaterialTheme.colorScheme, animado = false)
+                Text("Aquí comiença el folio ${Temas.copista(nDia)}", fontFamily = LetraExtra.gotica, fontSize = 15.sp, color = p.acento, modifier = Modifier.padding(start = 8.dp))
+            }
             TemaId.DISTOPIA -> Row(Modifier.fillMaxWidth().border(1.5.dp, p.tinta)) {
                 Text("EXPEDIENTE Nº %04d".format((fecha.hashCode() and 0x7fffffff) % 10000), fontFamily = LetraExtra.oswald, fontSize = 13.sp, color = p.tinta, modifier = Modifier.weight(1f).padding(6.dp))
                 Text("DECLARACIÓN DIARIA", fontFamily = LetraExtra.oswald, fontSize = 13.sp, color = p.acento, modifier = Modifier.padding(6.dp))
             }
-            TemaId.LABORATORIO -> Text("PROTOCOLO VM-%03d · CUADERNO DE LABORATORIO".format((fecha.hashCode() and 0x7fffffff) % 900 + 100), fontFamily = LetraExtra.jost, fontSize = 11.sp, color = p.acento)
-            TemaId.URSS -> Text("ОТЧЁТ · INFORME DE JORNADA", fontFamily = LetraExtra.russo, fontSize = 12.sp, color = p.acento, modifier = Modifier.border(2.dp, p.acento).padding(horizontal = 8.dp, vertical = 2.dp))
             TemaId.REFUGIO -> Text("BITÁCORA PERSONAL · TERMINAL 03", fontFamily = LetraExtra.vt323, fontSize = 18.sp, color = p.acento)
-            else -> Emblema(t, 44.dp, MaterialTheme.colorScheme, animado = false)
+            TemaId.ORDEN -> Row(Modifier.border(1.5.dp, p.acento).padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Emblema(t, 28.dp, MaterialTheme.colorScheme, animado = false)
+                Text("PARTE DE LA ORDEN · Nº %03d".format(nDia), fontFamily = LetraExtra.estarcido, fontSize = 13.sp, color = p.tinta, modifier = Modifier.padding(start = 8.dp))
+            }
+            TemaId.LABORATORIO -> Text("PROTOCOLO VM-%03d · CUADERNO DE LABORATORIO".format((fecha.hashCode() and 0x7fffffff) % 900 + 100), fontFamily = LetraExtra.jost, fontSize = 11.sp, color = p.acento)
+            // La cabecera de la gaceta del pueblo, entre filetes.
+            TemaId.COLONOS -> Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(Modifier.fillMaxWidth().height(2.dp).background(p.tinta))
+                Text("LA GACETA DEL PUEBLO", fontFamily = LetraExtra.fell, fontSize = 20.sp, color = p.tinta, letterSpacing = 1.5.sp, modifier = Modifier.padding(vertical = 2.dp))
+                Box(Modifier.fillMaxWidth().height(1.dp).background(p.tinta))
+                Text("Año ${dia?.year ?: ""} · Número $nDia", fontFamily = LetraExtra.fell, fontSize = 11.sp, color = p.tenue, modifier = Modifier.padding(top = 2.dp))
+            }
+            TemaId.NAPOLEON -> { emblema(); Rubrica("BULLETIN DE LA GRANDE ARMÉE · Nº $nDia", LetraExtra.bodoniTitulo, 12f, p.acento, 1.5f) }
+            TemaId.BOTANICO -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Emblema(t, 36.dp, MaterialTheme.colorScheme, animado = false)
+                Column(Modifier.padding(start = 10.dp)) {
+                    Text("Lámina $nDia", fontFamily = LetraExtra.fraunces, fontSize = 16.sp, color = p.acento)
+                    Text("observaciones de campo", fontFamily = Letra.garamond, fontSize = 12.sp, color = p.tenue, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                }
+            }
+            TemaId.NAVIDAD -> { emblema(); Rubrica("— Junto al fuego —", LetraExtra.cinzelDeco, 14f, p.acento) }
+            // El sello rojo con «diario» en chino y el nombre de la caravana.
+            TemaId.SEDA -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("日記", fontSize = 18.sp, color = p.detalle, modifier = Modifier.border(2.dp, p.detalle).padding(horizontal = 4.dp, vertical = 2.dp))
+                Text("diario de la caravana", fontFamily = LetraExtra.almendra, fontSize = 15.sp, color = p.acento, modifier = Modifier.padding(start = 10.dp))
+            }
+            TemaId.GOTICO -> { emblema(); Rubrica("Liber horarum · Horae diei", LetraExtra.textura, 16f, p.acento) }
+            TemaId.ESPACIO -> {
+                emblema()
+                Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(8.dp).background(p.detalle, androidx.compose.foundation.shape.CircleShape))
+                    Text("REGISTRO DE MISIÓN / CANAL 1", fontFamily = LetraExtra.orbita, fontSize = 11.sp, color = p.acento, letterSpacing = 1.sp, modifier = Modifier.padding(start = 6.dp))
+                }
+            }
+            TemaId.ANDALUS -> { emblema(); Rubrica("يوميات · Diario", LetraExtra.kufi, 15f, p.acento) }
+            TemaId.MONGOL -> { emblema(); Rubrica("Өдрийн тэмдэглэл · diario", LetraExtra.filosofo, 13f, p.acento, 1.5f) }
+            TemaId.RENACIMIENTO -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Emblema(t, 34.dp, MaterialTheme.colorScheme, animado = false)
+                Text("Quaderno di note · c. $nDia", fontFamily = LetraExtra.italianno, fontSize = 26.sp, color = p.acento, modifier = Modifier.padding(start = 8.dp))
+            }
+            TemaId.URSS -> Text("ОТЧЁТ · INFORME DE JORNADA", fontFamily = LetraExtra.russo, fontSize = 12.sp, color = p.acento, modifier = Modifier.border(2.dp, p.acento).padding(horizontal = 8.dp, vertical = 2.dp))
+            TemaId.REVOLUCION -> { emblema(); Rubrica("CAHIER DE DOLÉANCES", LetraExtra.fell, 15f, p.acento, 2f); Rubrica("de la commune · Nº $nDia", LetraExtra.cormorant, 12f, p.tenue) }
+            TemaId.ANTIGUAS -> { emblema(); Rubrica("CRÓNICA DE LA COMPAÑÍA", Letra.inscripcion, 12f, p.acento, 2.5f) }
         }
-        Text(Estilo.fecha(fecha), style = ty.headlineSmall, color = if (p.oscura) p.acento else p.tinta, textAlign = TextAlign.Center,
-            fontFamily = if (t == TemaId.REFUGIO) LetraExtra.vt323 else ty.headlineSmall.fontFamily, modifier = Modifier.padding(top = 8.dp))
+        Text(Estilo.fecha(fecha), style = ty.headlineSmall, color = if (p.oscura) p.acento else p.tinta, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
         Text(Fechas.titulo(fecha).lowercase() + " · " + Fechas.relativo(fecha), style = ty.labelMedium, color = p.tenue, textAlign = TextAlign.Center)
         Meandro(Modifier.padding(top = 10.dp, bottom = 12.dp))
     }
 }
 
-/** Encabezado de la página de un sueño: la luna, el rótulo del tema y la noche en que se soñó. */
+/** La letra y el tamaño del rótulo de la página de un sueño. */
+private fun letraSueno(t: TemaId): Pair<FontFamily, Float> = when (t) {
+    TemaId.ROMANO -> Letra.inscripcion to 12f
+    TemaId.CIBER -> Letra.codigo to 12f
+    TemaId.HELENO -> Letra.garamond to 13f
+    TemaId.MEDIEVAL -> LetraExtra.gotica to 15f
+    TemaId.DISTOPIA -> LetraExtra.oswald to 12f
+    TemaId.REFUGIO -> LetraExtra.vt323 to 18f
+    TemaId.ORDEN -> LetraExtra.estarcido to 12f
+    TemaId.LABORATORIO -> LetraExtra.jost to 12f
+    TemaId.COLONOS -> LetraExtra.fell to 14f
+    TemaId.NAPOLEON -> LetraExtra.bodoniTitulo to 12f
+    TemaId.BOTANICO -> LetraExtra.fraunces to 13f
+    TemaId.NAVIDAD -> LetraExtra.cinzelDeco to 13f
+    TemaId.SEDA -> LetraExtra.almendra to 14f
+    TemaId.GOTICO -> LetraExtra.textura to 16f
+    TemaId.ESPACIO -> LetraExtra.orbita to 11f
+    TemaId.ANDALUS -> LetraExtra.kufi to 14f
+    TemaId.MONGOL -> LetraExtra.filosofo to 13f
+    TemaId.RENACIMIENTO -> LetraExtra.italianno to 26f
+    TemaId.URSS -> LetraExtra.russo to 12f
+    TemaId.REVOLUCION -> LetraExtra.cormorant to 14f
+    TemaId.ANTIGUAS -> LetraExtra.almendra to 13f
+}
+
+/** Encabezado de la página de un sueño: la luna y las estrellas del tema, su rótulo y la noche en que se soñó. */
 @Composable
 private fun EncabezadoSueno(t: TemaId, p: Pagina, fecha: String) {
     val ty = MaterialTheme.typography
+    val n = nocheDe(t)
+    val (letra, tam) = letraSueno(t)
     val antes = runCatching { Fechas.parse(fecha).minusDays(1) }.getOrNull()
     Column(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Canvas(Modifier.size(width = 120.dp, height = 46.dp)) {
-            estrellas(fecha.hashCode(), 14, LUNA, max = 1.4f)
-            mediaLuna(Offset(size.width / 2, size.height / 2), size.height * 0.36f, p.acento)
+            estrellasDelTema(t, fecha.hashCode(), 14, n.luna, max = 1.4f)
+            lunaDelTema(t, Offset(size.width * 0.62f, size.height / 2), size.height * 0.33f, n)
         }
-        Text(rotuloSueno(t), fontFamily = if (t == TemaId.REFUGIO) LetraExtra.vt323 else if (t == TemaId.CIBER) Letra.codigo else ty.labelLarge.fontFamily,
-            fontSize = if (t == TemaId.REFUGIO) 18.sp else 12.sp, letterSpacing = 1.5.sp, color = p.acento, textAlign = TextAlign.Center,
+        Text(rotuloSueno(t), fontFamily = letra, fontSize = tam.sp, letterSpacing = 1.5.sp, color = p.acento, textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = 4.dp))
-        Text(Estilo.fecha(fecha), style = ty.headlineSmall, color = p.tinta, textAlign = TextAlign.Center,
-            fontFamily = if (t == TemaId.REFUGIO) LetraExtra.vt323 else ty.headlineSmall.fontFamily, modifier = Modifier.padding(top = 6.dp))
+        Text(Estilo.fecha(fecha), style = ty.headlineSmall, color = p.tinta, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp))
         val dia = runCatching { Fechas.parse(fecha) }.getOrNull()
         fun sem(d: java.time.LocalDate) = d.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)
         Text((if (antes != null && dia != null) "la noche del ${sem(antes)} ${antes.dayOfMonth} al ${sem(dia)} ${dia.dayOfMonth} de ${dia.month.getDisplayName(java.time.format.TextStyle.FULL, Fechas.ES)}"
@@ -1130,8 +2230,8 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                         modifier = Modifier.clickable(enabled = siguiente != null) { sentirPagina(Sentidos.Evento.PASAR); siguiente?.invoke() }.padding(horizontal = 10.dp))
                     Box {
                         Text("⋯", fontSize = 22.sp, color = p.acento, modifier = Modifier.clickable { menu = true }.padding(horizontal = 10.dp))
-                        DropdownMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = p.color) {
-                            acciones.forEach { (t, f) -> DropdownMenuItem(text = { Text(t, color = p.tinta) }, onClick = { menu = false; f() }) }
+                        Menu(expanded = menu, onDismissRequest = { menu = false }, containerColor = p.color) {
+                            acciones.forEach { (t, f) -> OpcionMenu(text = { Text(t, color = p.tinta) }, onClick = { menu = false; f() }) }
                         }
                     }
                 }
@@ -1139,7 +2239,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                     EncabezadoPagina(tema, p, fecha, modo)
                     if (!sueno) Epigrafe(fecha, p)
                     if (d == null || cuerpo.isBlank()) {
-                        Text(if (sueno) "No anotaste ningún sueño esa noche." else "No hay nada escrito este día.", color = p.tenue, fontFamily = p.texto, fontSize = p.tam.sp)
+                        Text(if (sueno) textoSinSueno(tema) else textoVacio(tema), color = p.tenue, fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp)
                     } else if (sueno) {
                         var layout by remember(cuerpo) { mutableStateOf<TextLayoutResult?>(null) }
                         val csPag = MaterialTheme.colorScheme
@@ -1157,9 +2257,10 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                             Text(texto, color = p.tinta, fontFamily = p.texto, fontSize = p.tam.sp, lineHeight = p.interlinea.sp, onTextLayout = { layout = it },
                                 modifier = Modifier.fillMaxWidth().rayado(p, layout).drawBehind { layout?.let { l -> with(Marcas) { dibujar(l, texto.text, tema, csPag) } } })
                         }
+                        val (mejor, peor) = mejorPeor(tema)
                         if (d.mejor_momento.isNotBlank() || d.peor_momento.isNotBlank()) Column(Modifier.padding(top = 22.dp)) {
-                            if (d.mejor_momento.isNotBlank()) Text("Lo mejor — " + d.mejor_momento, color = p.tinta, fontFamily = p.texto, fontSize = (p.tam - 2).sp, lineHeight = (p.interlinea - 3).sp)
-                            if (d.peor_momento.isNotBlank()) Text("Lo peor — " + d.peor_momento, color = p.tinta, fontFamily = p.texto, fontSize = (p.tam - 2).sp, lineHeight = (p.interlinea - 3).sp, modifier = Modifier.padding(top = 6.dp))
+                            if (d.mejor_momento.isNotBlank()) Text(mejor + d.mejor_momento, color = p.tinta, fontFamily = p.texto, fontSize = (p.tam - 2).sp, lineHeight = (p.interlinea - 3).sp)
+                            if (d.peor_momento.isNotBlank()) Text(peor + d.peor_momento, color = p.tinta, fontFamily = p.texto, fontSize = (p.tam - 2).sp, lineHeight = (p.interlinea - 3).sp, modifier = Modifier.padding(top = 6.dp))
                         }
                         if (d.sueno_texto.isNotBlank()) Text("☾ " + d.sueno_texto.trim(), color = p.tenue, fontFamily = p.texto, fontSize = (p.tam - 2).sp, lineHeight = (p.interlinea - 3).sp,
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, modifier = Modifier.padding(top = 18.dp))
@@ -1209,11 +2310,7 @@ fun EscritorTema(fecha: String, valor: String, onCambio: (String) -> Unit, guard
                         visualTransformation = rememberMarcas(p.capitular?.let { Capitular(it, p.acento) } ?: VisualTransformation.None),
                         decorationBox = { interior ->
                             Box {
-                                if (campo.text.isEmpty()) Text(pista ?: when {
-                                    modo == Escrito.SUENO -> if (tema == TemaId.CIBER) "// ¿qué soñaste?" else "¿Qué soñaste? Aunque sean fragmentos."
-                                    tema == TemaId.CIBER -> "// ¿cómo fue el día?"
-                                    else -> "¿Cómo fue el día?"
-                                }, style = estilo.copy(color = p.tenue.copy(alpha = 0.7f)))
+                                if (campo.text.isEmpty()) Text(pista ?: if (modo == Escrito.SUENO) pistaSonar(tema) else pistaEscribir(tema), style = estilo.copy(color = p.tenue.copy(alpha = 0.7f)))
                                 interior()
                             }
                         },

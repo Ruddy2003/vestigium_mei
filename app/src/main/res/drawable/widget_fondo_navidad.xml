@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F720392C" />
-    <stroke android:width="1.5dp" android:color="#488D63" />
-    <corners android:radius="8dp" />
-</shape>
+<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. Forma propia del tema (generado). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F720392C"/>
+            <stroke android:width="1.5dp" android:color="#488D63"/>
+            <corners android:radius="8dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="14dp" android:height="12dp" android:top="3dp" android:left="4dp">
+        <vector android:width="14dp" android:height="12dp" android:viewportWidth="14" android:viewportHeight="12">
+            <path android:pathData="M7,7 C4,3 1.5,4.5 0.8,1.5 C3.5,1.8 5.5,3 7,7 Z M7,7 C11,4.5 10.5,1.8 13.5,0.8 C13,3.6 11.2,5.6 7,7 Z" android:fillColor="#CC66BB6A"/>
+            <path android:pathData="M6,8.2 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 Z M8.6,8.4 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 Z M7.3,10.4 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 Z" android:fillColor="#FFE5484D"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="5dp" android:left="6dp" android:right="6dp" android:bottom="1.5dp">
+        <vector android:width="100dp" android:height="6dp" android:viewportWidth="100" android:viewportHeight="6">
+            <path android:pathData="M0,6 L0,3 Q5,0 10,3 Q15,0 20,3 Q25,0 30,3 Q35,0 40,3 Q45,0 50,3 Q55,0 60,3 Q65,0 70,3 Q75,0 80,3 Q85,0 90,3 Q95,0 100,3 L100,6 Z" android:fillColor="#30FFFFFF"/>
+        </vector>
+    </item>
+</layer-list>

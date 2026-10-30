@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F722252B" />
-    <stroke android:width="1.5dp" android:color="#4A505C" />
-    <corners android:radius="2dp" />
-</shape>
+<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. Forma propia del tema (generado). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F722252B"/>
+            <stroke android:width="1.5dp" android:color="#4A505C"/>
+            <corners android:radius="2dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|fill_horizontal" android:height="2.5dp" android:top="4dp" android:left="10dp" android:right="24dp">
+        <vector android:width="30dp" android:height="2.5dp" android:viewportWidth="3" android:viewportHeight="1">
+            <path android:pathData="M0,0 L1,0 L1,1 L0,1 Z" android:fillColor="#FF3B5BA9"/>
+            <path android:pathData="M1,0 L2,0 L2,1 L1,1 Z" android:fillColor="#FFF0EADB"/>
+            <path android:pathData="M2,0 L3,0 L3,1 L2,1 Z" android:fillColor="#FFE5525E"/>
+        </vector>
+    </item>
+    <item android:gravity="top|right" android:width="12dp" android:height="12dp" android:top="1.5dp" android:right="6dp">
+        <vector android:width="12dp" android:height="12dp" android:viewportWidth="12" android:viewportHeight="12">
+            <path android:pathData="M6,6 m-5.8,0 a5.8,5.8 0 1,0 11.6,0 a5.8,5.8 0 1,0 -11.6,0 Z" android:fillColor="#FFE5525E"/>
+            <path android:pathData="M6,6 m-3.9,0 a3.9,3.9 0 1,0 7.8,0 a3.9,3.9 0 1,0 -7.8,0 Z" android:fillColor="#FFF0EADB"/>
+            <path android:pathData="M6,6 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z" android:fillColor="#FF3B5BA9"/>
+        </vector>
+    </item>
+</layer-list>

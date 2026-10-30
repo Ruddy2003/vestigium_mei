@@ -10,6 +10,15 @@ import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
 import io.github.ruddy2003.vestigium.data.Repo
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
@@ -219,7 +228,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ANTIGUAS -> if (oscuro) antiguasOscuro else antiguasClaro
 }
 
-internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
+internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.ROMANO -> tipoRomano; TemaId.CIBER -> tipoCiber; TemaId.HELENO -> tipoHeleno
     TemaId.MEDIEVAL -> tipoMedieval; TemaId.DISTOPIA -> tipoDistopia
     TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
@@ -227,6 +236,41 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.NAPOLEON -> tipoNapoleon; TemaId.BOTANICO -> tipoBotanico; TemaId.NAVIDAD -> tipoNavidad; TemaId.SEDA -> tipoSeda; TemaId.URSS -> tipoUrss
     TemaId.GOTICO -> tipoGotico; TemaId.ESPACIO -> if (oscuro) tipoEspacioOscuro else tipoEspacio; TemaId.ANDALUS -> tipoAndalus
     TemaId.MONGOL -> tipoMongol; TemaId.RENACIMIENTO -> tipoRenacimiento; TemaId.REVOLUCION -> tipoRevolucion; TemaId.ANTIGUAS -> tipoAntiguas
+}.conReloj(tema)
+
+/**
+ * La letra grande (`displayLarge`): la del reloj de Enfoque y la del año en «Tu año». Es la letra de título del tema
+ * (familia, peso y, si lo tiene, el resplandor de su `displaySmall`) con cifras de ancho fijo, para que el reloj no
+ * baile al pasar los segundos. El tamaño, en sp, compensa lo ancha o angosta que es cada letra: «25:00» ocupa más o
+ * menos lo mismo en todos los temas. El segundo número es el espaciado entre letras, en sp.
+ */
+private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
+    TemaId.ROMANO -> 58f to 1f          // Cinzel: capitales anchas
+    TemaId.CIBER -> 62f to 0f           // Share Tech Mono
+    TemaId.HELENO -> 66f to 1f          // Garamond, cifras alineadas
+    TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
+    TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
+    TemaId.REFUGIO -> 74f to 0f         // VT323, de píxeles
+    TemaId.ORDEN -> 60f to 1.5f         // estarcido
+    TemaId.LABORATORIO -> 58f to 1f     // Jost, geométrica
+    TemaId.COLONOS -> 64f to 0.5f       // Fell
+    TemaId.NAPOLEON -> 64f to 1f        // Bodoni
+    TemaId.BOTANICO -> 62f to 0f        // Fraunces
+    TemaId.NAVIDAD -> 54f to 1f         // Cinzel Decorative, muy ancha
+    TemaId.SEDA -> 64f to 0.5f          // Almendra
+    TemaId.GOTICO -> 66f to 0.5f        // textura
+    TemaId.ESPACIO -> 48f to 2f         // Orbitron, ancha y gruesa
+    TemaId.ANDALUS -> 60f to 0.5f       // Kufi
+    TemaId.MONGOL -> 62f to 1f          // Filosofo
+    TemaId.RENACIMIENTO -> 88f to 0f    // Italianno, caligráfica y chica
+    TemaId.URSS -> 56f to 1f            // Russo One, ancha
+    TemaId.REVOLUCION -> 64f to 1f      // Fell
+    TemaId.ANTIGUAS -> 56f to 1.5f      // Cinzel seminegrita
+}
+
+private fun Typography.conReloj(tema: TemaId): Typography {
+    val (tam, esp) = letraReloj(tema)
+    return copy(displayLarge = displaySmall.copy(fontSize = tam.sp, lineHeight = (tam * 1.15f).sp, letterSpacing = esp.sp, fontFeatureSettings = "lnum, tnum"))
 }
 
 internal fun radioDe(tema: TemaId) = when (tema) {
@@ -376,7 +420,7 @@ object Romano {
     }
 }
 
-/** Muestra de un tema para elegirlo en Ajustes: fondo, emblema, título en su letra y sus colores. */
+/** Muestra de un tema para elegirlo en Ajustes: fondo, emblema, título en su letra y sus colores, en una tarjeta con la forma del tema. */
 @Composable
 fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier, onClick: () -> Unit) {
     val o = tema.soloOscuro || oscuro
@@ -385,7 +429,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val titulo = when (tema) {
         TemaId.ROMANO -> "DIES"; TemaId.CIBER -> "DÍA_"; TemaId.HELENO -> "ΗΜΕΡΑ"; TemaId.MEDIEVAL -> "Del día"
         TemaId.DISTOPIA -> "PARTE"; TemaId.REFUGIO -> "DIARIO"; TemaId.ORDEN -> "CAMPO"; TemaId.LABORATORIO -> "SESIÓN"; TemaId.COLONOS -> "Jornada"
-        TemaId.NAPOLEON -> "BOLETÍN"; TemaId.BOTANICO -> "Herbario"; TemaId.NAVIDAD -> "El día"; TemaId.SEDA -> "Jornada"; TemaId.URSS -> "PLAN"
+        TemaId.NAPOLEON -> "BOLETÍN"; TemaId.BOTANICO -> "Herbario"; TemaId.NAVIDAD -> "El día"; TemaId.SEDA -> "Etapa"; TemaId.URSS -> "PLAN"
         TemaId.GOTICO -> "Laudes"; TemaId.ESPACIO -> "ÓRBITA"; TemaId.ANDALUS -> "النهار"; TemaId.MONGOL -> "ӨДӨР"; TemaId.RENACIMIENTO -> "Giornata"; TemaId.REVOLUCION -> "CAHIER"; TemaId.ANTIGUAS -> "CRÓNICA"
     }
     val linea = when (tema) {
@@ -394,22 +438,197 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.NAPOLEON -> "samedi 17 octobre"; TemaId.BOTANICO -> "otoño · día 26"; TemaId.NAVIDAD -> "faltan 69 días"; TemaId.SEDA -> "十月十七日"; TemaId.URSS -> "ОКТЯБРЬ"
         TemaId.GOTICO -> "hora de vísperas"; TemaId.ESPACIO -> "JD 2461331"; TemaId.ANDALUS -> "1448 H"; TemaId.MONGOL -> "Морин жил"; TemaId.RENACIMIENTO -> "addì 17 d'ottobre"; TemaId.REVOLUCION -> "26 vendémiaire"; TemaId.ANTIGUAS -> "17 de la Luna de las Hojas"
     }
+    val forma = formaPrevia(tema)
+    // Las formas con arco, frontón o punta necesitan más aire arriba o abajo para que nada quede cortado; la suma es la misma en todas, para que las filas queden parejas.
+    val (arriba, abajo) = when (tema) {
+        TemaId.ROMANO -> 16 to 16; TemaId.CIBER -> 16 to 16; TemaId.HELENO -> 20 to 12; TemaId.MEDIEVAL -> 16 to 16; TemaId.DISTOPIA -> 20 to 12
+        TemaId.REFUGIO -> 16 to 16; TemaId.ORDEN -> 16 to 16; TemaId.LABORATORIO -> 12 to 20; TemaId.COLONOS -> 16 to 16; TemaId.NAPOLEON -> 12 to 20
+        TemaId.BOTANICO -> 16 to 16; TemaId.NAVIDAD -> 20 to 12; TemaId.SEDA -> 12 to 20; TemaId.GOTICO -> 24 to 8; TemaId.ESPACIO -> 18 to 14
+        TemaId.ANDALUS -> 22 to 10; TemaId.MONGOL -> 14 to 18; TemaId.RENACIMIENTO -> 16 to 16; TemaId.URSS -> 16 to 16; TemaId.REVOLUCION -> 12 to 20; TemaId.ANTIGUAS -> 18 to 14
+    }
+    // En el trapecio y el paralelogramo los lados se meten: un poco más de margen a los lados.
+    val lados = when (tema) {
+        TemaId.ROMANO -> 12; TemaId.CIBER -> 10; TemaId.HELENO -> 10; TemaId.MEDIEVAL -> 10; TemaId.DISTOPIA -> 10; TemaId.REFUGIO -> 12; TemaId.ORDEN -> 12
+        TemaId.LABORATORIO -> 10; TemaId.COLONOS -> 14; TemaId.NAPOLEON -> 10; TemaId.BOTANICO -> 12; TemaId.NAVIDAD -> 10; TemaId.SEDA -> 10; TemaId.GOTICO -> 12
+        TemaId.ESPACIO -> 10; TemaId.ANDALUS -> 12; TemaId.MONGOL -> 10; TemaId.RENACIMIENTO -> 16; TemaId.URSS -> 18; TemaId.REVOLUCION -> 10; TemaId.ANTIGUAS -> 12
+    }
     androidx.compose.material3.Surface(
-        onClick = onClick, modifier = modifier, color = e.background, shape = RoundedCornerShape(6.dp),
+        onClick = onClick, modifier = modifier, color = e.background, shape = forma,
         border = androidx.compose.foundation.BorderStroke(if (elegido) 2.dp else 1.dp, if (elegido) e.primary else e.outline),
     ) {
-        androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(10.dp)) {
+        androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(start = lados.dp, end = lados.dp, top = arriba.dp, bottom = abajo.dp)) {
             androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                androidx.compose.material3.Text(titulo, style = t.headlineSmall.copy(fontSize = t.headlineSmall.fontSize * 0.82f), color = e.onBackground, maxLines = 1, modifier = androidx.compose.ui.Modifier.weight(1f))
+                // Los títulos de más de cinco letras se achican para caber junto al emblema en las tarjetas de tres en fila.
+                val escala = if (titulo.length > 5) 0.82f * 5f / titulo.length else 0.82f
+                androidx.compose.material3.Text(titulo, style = t.headlineSmall.copy(fontSize = t.headlineSmall.fontSize * escala), color = e.onBackground, maxLines = 1,
+                    softWrap = false, overflow = androidx.compose.ui.text.style.TextOverflow.Clip, modifier = androidx.compose.ui.Modifier.weight(1f))
                 Emblema(tema, 22.dp, e, animado = false)
             }
             androidx.compose.material3.Text(linea, style = t.labelSmall, color = e.primary, maxLines = 1)
             androidx.compose.foundation.layout.Row(androidx.compose.ui.Modifier.padding(top = 8.dp)) {
                 listOf(e.primary, e.secondary, e.tertiary, e.surfaceVariant).forEach { c ->
-                    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.padding(end = 4.dp).size(12.dp).background(c, RoundedCornerShape(3.dp)))
+                    androidx.compose.foundation.Canvas(androidx.compose.ui.Modifier.padding(end = 4.dp).size(12.dp)) { cuadritoPrevia(tema, c, e.background, e.outline) }
                 }
             }
             androidx.compose.material3.Text(tema.nombre + if (elegido) "  ✓" else "", style = t.titleSmall, color = e.onSurfaceVariant, maxLines = 1, modifier = androidx.compose.ui.Modifier.padding(top = 6.dp))
+        }
+    }
+}
+
+/** Forma que delimita el contorno de la tarjeta de muestra, propia de cada tema (cartela, chaflán, frontón, carpeta, ojiva, trapecio…). */
+private fun formaPrevia(tema: TemaId): Shape = when (tema) {
+    // Cartela de esquinas cóncavas.
+    TemaId.ROMANO -> GenericShape { s, _ ->
+        val r = s.minDimension * 0.09f
+        moveTo(r, 0f); lineTo(s.width - r, 0f); quadraticTo(s.width - r, r, s.width, r); lineTo(s.width, s.height - r)
+        quadraticTo(s.width - r, s.height - r, s.width - r, s.height); lineTo(r, s.height); quadraticTo(r, s.height - r, 0f, s.height - r)
+        lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
+    }
+    // Panel de terminal con dos esquinas cortadas en diagonal.
+    TemaId.CIBER -> CutCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 0.dp, bottomStart = 12.dp)
+    // Fachada con frontón.
+    TemaId.HELENO -> GenericShape { s, _ ->
+        val f = s.height * 0.1f
+        moveTo(0f, f); lineTo(s.width / 2, 0f); lineTo(s.width, f); lineTo(s.width, s.height); lineTo(0f, s.height); close()
+    }
+    // Folio con la esquina doblada.
+    TemaId.MEDIEVAL -> CutCornerShape(topStart = 0.dp, topEnd = 14.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
+    // Carpeta de archivo con su pestaña.
+    TemaId.DISTOPIA -> GenericShape { s, _ ->
+        val p = s.height * 0.08f; val a = s.width * 0.42f
+        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(s.width, p); lineTo(s.width, s.height); lineTo(0f, s.height); close()
+    }
+    // Pantalla de tubo, muy redonda.
+    TemaId.REFUGIO -> RoundedCornerShape(18.dp)
+    // Compuerta de esquinas cortadas.
+    TemaId.ORDEN -> CutCornerShape(9.dp)
+    // Vaso de precipitado: arriba recto, abajo muy redondo.
+    TemaId.LABORATORIO -> RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 20.dp, bottomStart = 20.dp)
+    // Recorte de gaceta con muescas a los lados, como un boleto.
+    TemaId.COLONOS -> GenericShape { s, _ ->
+        val r = s.minDimension * 0.06f; val m = s.height / 2
+        moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width, m - r)
+        arcTo(Rect(Offset(s.width, m), r), 270f, -180f, false)
+        lineTo(s.width, s.height); lineTo(0f, s.height); lineTo(0f, m + r)
+        arcTo(Rect(Offset(0f, m), r), 90f, -180f, false)
+        close()
+    }
+    // Escudo: abajo termina en punta.
+    TemaId.NAPOLEON -> GenericShape { s, _ ->
+        val p = s.height * 0.1f
+        moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width, s.height - p); lineTo(s.width / 2, s.height); lineTo(0f, s.height - p); close()
+    }
+    // Hoja: dos esquinas opuestas muy redondas.
+    TemaId.BOTANICO -> RoundedCornerShape(topStart = 22.dp, topEnd = 3.dp, bottomEnd = 22.dp, bottomStart = 3.dp)
+    // Glaseado de nieve: borde de arriba en festón.
+    TemaId.NAVIDAD -> GenericShape { s, _ ->
+        val n = 6; val paso = s.width / n; val f = s.height * 0.06f
+        moveTo(0f, f)
+        for (i in 0 until n) quadraticTo(i * paso + paso / 2, -f, (i + 1) * paso, f)
+        lineTo(s.width, s.height); lineTo(0f, s.height); close()
+    }
+    // Banderola con cola de golondrina abajo.
+    TemaId.SEDA -> GenericShape { s, _ ->
+        val p = s.height * 0.1f
+        moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width, s.height); lineTo(s.width / 2, s.height - p); lineTo(0f, s.height); close()
+    }
+    // Ventana ojival.
+    TemaId.GOTICO -> GenericShape { s, _ ->
+        val a = s.height * 0.2f
+        moveTo(0f, s.height); lineTo(0f, a)
+        cubicTo(0f, a * 0.45f, s.width * 0.28f, a * 0.12f, s.width / 2, 0f)
+        cubicTo(s.width * 0.72f, a * 0.12f, s.width, a * 0.45f, s.width, a)
+        lineTo(s.width, s.height); close()
+    }
+    // Cápsula: nariz redonda arriba, base casi recta.
+    TemaId.ESPACIO -> RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp, bottomEnd = 6.dp, bottomStart = 6.dp)
+    // Arco de medio punto peraltado.
+    TemaId.ANDALUS -> GenericShape { s, _ ->
+        val a = s.height * 0.18f
+        moveTo(0f, s.height); lineTo(0f, a); quadraticTo(0f, 0f, s.width / 2, 0f); quadraticTo(s.width, 0f, s.width, a)
+        lineTo(s.width, s.height); close()
+    }
+    // Fieltro con las esquinas de abajo cortadas.
+    TemaId.MONGOL -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 12.dp, bottomStart = 12.dp)
+    // Hoja vista en perspectiva: un trapecio.
+    TemaId.RENACIMIENTO -> GenericShape { s, _ ->
+        val d = s.width * 0.05f
+        moveTo(d, 0f); lineTo(s.width - d, 0f); lineTo(s.width, s.height); lineTo(0f, s.height); close()
+    }
+    // Bloque de cartel inclinado.
+    TemaId.URSS -> GenericShape { s, _ ->
+        val d = s.width * 0.07f
+        moveTo(d, 0f); lineTo(s.width, 0f); lineTo(s.width - d, s.height); lineTo(0f, s.height); close()
+    }
+    // Cartel arrancado: el borde de abajo en dientes.
+    TemaId.REVOLUCION -> GenericShape { s, _ ->
+        val n = 9; val paso = s.width / n; val f = s.height * 0.05f
+        moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width, s.height - f)
+        for (i in n - 1 downTo 0) { lineTo(i * paso + paso / 2, if (i % 2 == 0) s.height else s.height - f * 0.4f); lineTo(i * paso, s.height - f) }
+        close()
+    }
+    // Lápida rúnica: esquinas de arriba muy cortadas, las de abajo apenas.
+    TemaId.ANTIGUAS -> CutCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
+}
+
+/** Cuadrito de color de la muestra, con la figura del tema (tesela, píxel, moneda, rombo, tuerca, probeta, hoja, estrella…). */
+private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde: Color) {
+    val w = size.width; val h = size.height; val cx = w / 2; val cy = h / 2; val r = w / 2
+    fun poligono(lados: Int, giro: Float, interior: Float? = null) = Path().apply {
+        val n = if (interior != null) lados * 2 else lados
+        for (i in 0 until n) {
+            val a = Math.toRadians(giro + i * 360.0 / n); val rr = if (interior != null && i % 2 == 1) interior else r
+            val x = cx + rr * kotlin.math.cos(a).toFloat(); val y = cy + rr * kotlin.math.sin(a).toFloat()
+            if (i == 0) moveTo(x, y) else lineTo(x, y)
+        }
+        close()
+    }
+    val fino = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.1f)
+    when (tema) {
+        // Tesela de mosaico.
+        TemaId.ROMANO -> { drawRect(c); drawRect(fondo.copy(alpha = 0.35f), Offset(w * 0.12f, h * 0.12f), Size(w * 0.76f, h * 0.76f), style = fino) }
+        // Píxel encendido dentro de su celda.
+        TemaId.CIBER -> { drawRect(c, style = fino); drawRect(c, Offset(w * 0.28f, h * 0.28f), Size(w * 0.44f, h * 0.44f)) }
+        // Dracma.
+        TemaId.HELENO -> { drawCircle(c, r); drawCircle(fondo.copy(alpha = 0.4f), r * 0.68f, style = fino) }
+        // Losange de blasón.
+        TemaId.MEDIEVAL -> drawPath(poligono(4, -90f), c)
+        // Ficha de archivo apaisada.
+        TemaId.DISTOPIA -> drawRect(c, Offset(0f, h * 0.2f), Size(w, h * 0.6f))
+        // Botón de consola.
+        TemaId.REFUGIO -> drawRoundRect(c, cornerRadius = CornerRadius(w * 0.3f))
+        // Tuerca.
+        TemaId.ORDEN -> { drawPath(poligono(6, 0f), c); drawCircle(fondo, r * 0.32f) }
+        // Probeta.
+        TemaId.LABORATORIO -> drawRoundRect(c, Offset(w * 0.28f, 0f), Size(w * 0.44f, h), CornerRadius(w * 0.22f))
+        // Casita del pueblo.
+        TemaId.COLONOS -> drawPath(Path().apply { moveTo(0f, h * 0.45f); lineTo(cx, 0f); lineTo(w, h * 0.45f); lineTo(w, h); lineTo(0f, h); close() }, c)
+        // Escudo.
+        TemaId.NAPOLEON -> drawPath(Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h * 0.55f); quadraticTo(w, h * 0.85f, cx, h); quadraticTo(0f, h * 0.85f, 0f, h * 0.55f); close() }, c)
+        // Hoja.
+        TemaId.BOTANICO -> drawPath(Path().apply { moveTo(0f, h); cubicTo(0f, h * 0.3f, w * 0.3f, 0f, w, 0f); cubicTo(w, h * 0.7f, w * 0.7f, h, 0f, h); close() }, c)
+        // Bola de árbol con su capuchón.
+        TemaId.NAVIDAD -> { drawCircle(c, r * 0.8f, Offset(cx, cy + r * 0.2f)); drawRect(borde, Offset(cx - r * 0.25f, 0f), Size(r * 0.5f, r * 0.3f)) }
+        // Moneda con agujero cuadrado.
+        TemaId.SEDA -> { drawCircle(c, r); drawRect(fondo, Offset(cx - r * 0.3f, cy - r * 0.3f), Size(r * 0.6f, r * 0.6f)) }
+        // Lanceta de vitral.
+        TemaId.GOTICO -> drawPath(Path().apply { moveTo(w * 0.15f, h); lineTo(w * 0.15f, h * 0.4f); quadraticTo(w * 0.15f, h * 0.08f, cx, 0f); quadraticTo(w * 0.85f, h * 0.08f, w * 0.85f, h * 0.4f); lineTo(w * 0.85f, h); close() }, c)
+        // Planeta con anillo.
+        TemaId.ESPACIO -> { drawCircle(c, r * 0.62f); drawOval(c, Offset(0f, cy - h * 0.14f), Size(w, h * 0.28f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.08f)) }
+        // Estrella de ocho puntas.
+        TemaId.ANDALUS -> drawPath(poligono(8, -90f, r * 0.765f), c)
+        // Yurta.
+        TemaId.MONGOL -> drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.5f); cubicTo(w * 0.1f, h * 0.05f, w * 0.9f, h * 0.05f, w, h * 0.5f); lineTo(w, h); close() }, c)
+        // Triángulo de construcción.
+        TemaId.RENACIMIENTO -> drawPath(Path().apply { moveTo(cx, 0f); lineTo(w, h); lineTo(0f, h); close() }, c)
+        // Estrella de cinco puntas.
+        TemaId.URSS -> drawPath(poligono(5, -90f, r * 0.42f), c)
+        // Escarapela.
+        TemaId.REVOLUCION -> { drawCircle(c, r); drawCircle(fondo, r * 0.62f); drawCircle(c, r * 0.36f) }
+        // Gema tallada.
+        TemaId.ANTIGUAS -> {
+            drawPath(Path().apply { moveTo(w * 0.2f, h * 0.3f); lineTo(w * 0.35f, 0f); lineTo(w * 0.65f, 0f); lineTo(w * 0.8f, h * 0.3f); lineTo(cx, h); close() }, c)
+            drawLine(fondo.copy(alpha = 0.5f), Offset(w * 0.2f, h * 0.3f), Offset(w * 0.8f, h * 0.3f), w * 0.06f)
         }
     }
 }

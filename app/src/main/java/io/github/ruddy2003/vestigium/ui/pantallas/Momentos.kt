@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -53,6 +52,7 @@ import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
 import io.github.ruddy2003.vestigium.ui.aMillis
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 @Composable
 fun PantallaMomentos(nav: Nav) {
@@ -126,7 +126,7 @@ fun DialogoMomento(m: Momento, cerrar: () -> Unit) {
     val esRecaida = m.tipo == "recaida"
     var cuando by remember(m.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(m.ts))) }
     var dur by remember(m.id) { mutableStateOf(m.duracion_min) }
-    AlertDialog(
+    Dialogo(
         onDismissRequest = { cerrar() },
         title = { Text("${Catalogo.titulo(m, discreto)} · ${Fechas.corto(m.fecha)} ${Fechas.horaDe(m.ts)}") },
         text = {

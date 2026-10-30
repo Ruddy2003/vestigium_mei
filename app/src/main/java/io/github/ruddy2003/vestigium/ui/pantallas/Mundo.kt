@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Paint
@@ -33,7 +32,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -56,6 +54,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -97,6 +96,9 @@ import java.util.UUID
 import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
+import io.github.ruddy2003.vestigium.ui.Conmutador
+import io.github.ruddy2003.vestigium.ui.Dialogo
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 // =====================================================================
 //  Geometría del mapa: proyección Natural Earth y contornos ya proyectados
@@ -182,7 +184,7 @@ private object GeoMapa {
  * (si la lámina es dorada, nada de amarillos ni ocres; si es de cobre, nada de naranjas), para que nunca
  * se confunda un país rascado con uno que falta.
  */
-private fun paletaRascados(lam: Lamina, oscuro: Boolean): List<Int> {
+private fun paletaRascados(lam: LaminaRascar, oscuro: Boolean): List<Int> {
     val hsv = FloatArray(3)
     android.graphics.Color.colorToHSV(lam.media, hsv)
     val tonoLamina = hsv[0]; val metalica = hsv[1] > 0.22f
@@ -195,17 +197,316 @@ private fun paletaRascados(lam: Lamina, oscuro: Boolean): List<Int> {
     }
 }
 
-/** La lámina que se rasca: oro, plata, cobre o acero según el tema. */
-private data class Lamina(val oscura: Int, val media: Int, val clara: Int)
+/**
+ * La lámina que se rasca, propia de cada tema: tres tonos de su metal (sombra, cuerpo y brillo). Encima lleva grabado
+ * el motivo del tema ([teselaLamina]). La usan el mapa para rascar y la palabra del año de «Tu año».
+ */
+internal data class LaminaRascar(val oscura: Int, val media: Int, val clara: Int)
 
-private fun lamina(t: TemaId): Lamina = when (t) {
-    TemaId.ROMANO, TemaId.HELENO, TemaId.MEDIEVAL, TemaId.GOTICO, TemaId.ANDALUS, TemaId.NAPOLEON, TemaId.SEDA, TemaId.URSS ->
-        Lamina(0xFF7A5A12.toInt(), 0xFFC8A040.toInt(), 0xFFF6E7A8.toInt())
-    TemaId.RENACIMIENTO, TemaId.COLONOS -> Lamina(0xFF6E3A1C.toInt(), 0xFFB87A4A.toInt(), 0xFFF0CDA6.toInt())
-    TemaId.BOTANICO -> Lamina(0xFF5C4A22.toInt(), 0xFFA8894E.toInt(), 0xFFE9DBAE.toInt())
-    TemaId.CIBER -> Lamina(0xFF0B2530.toInt(), 0xFF2C6F80.toInt(), 0xFF8FEFFF.toInt())
-    TemaId.DISTOPIA, TemaId.REFUGIO, TemaId.ORDEN -> Lamina(0xFF45494E.toInt(), 0xFF8B9197.toInt(), 0xFFD7DBDF.toInt())
-    else -> Lamina(0xFF6A7078.toInt(), 0xFFB7BCC3.toInt(), 0xFFF2F4F6.toInt())
+internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
+    // Oro imperial, algo rojizo.
+    TemaId.ROMANO -> LaminaRascar(0xFF7A5410.toInt(), 0xFFCFA03A.toInt(), 0xFFF8E3A0.toInt())
+    // Placa de consola: metal oscuro con reflejo de fósforo.
+    TemaId.CIBER -> LaminaRascar(0xFF0B2530.toInt(), 0xFF2C6F80.toInt(), 0xFF8FEFFF.toInt())
+    // Electro: la aleación pálida de oro y plata de las primeras monedas griegas.
+    TemaId.HELENO -> LaminaRascar(0xFF6B6038.toInt(), 0xFFBDB27A.toInt(), 0xFFF4EFD2.toInt())
+    // Pan de oro sobre bol rojo, como en las iniciales iluminadas.
+    TemaId.MEDIEVAL -> LaminaRascar(0xFF7A3E1A.toInt(), 0xFFD4A537.toInt(), 0xFFFFF0B3.toInt())
+    // Gris de ministerio: chapa sin brillo.
+    TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
+    // Chapa galvanizada, azulada.
+    TemaId.REFUGIO -> LaminaRascar(0xFF4A5560.toInt(), 0xFF98A7B3.toInt(), 0xFFE3EBF0.toInt())
+    // Acero pavonado.
+    TemaId.ORDEN -> LaminaRascar(0xFF2C3138.toInt(), 0xFF6A747F.toInt(), 0xFFBFC8D2.toInt())
+    // Aluminio de instrumento, casi blanco.
+    TemaId.LABORATORIO -> LaminaRascar(0xFF5F6670.toInt(), 0xFFB5BCC4.toInt(), 0xFFF4F6F8.toInt())
+    // Cobre.
+    TemaId.COLONOS -> LaminaRascar(0xFF6E3A1C.toInt(), 0xFFB87A4A.toInt(), 0xFFF0CDA6.toInt())
+    // Bronce dorado del Imperio, amarillo limón.
+    TemaId.NAPOLEON -> LaminaRascar(0xFF6E5A10.toInt(), 0xFFD9B82E.toInt(), 0xFFFFF4B0.toInt())
+    // Bronce con verdín.
+    TemaId.BOTANICO -> LaminaRascar(0xFF3E4A30.toInt(), 0xFF7E8F5E.toInt(), 0xFFD8E2B8.toInt())
+    // Plata escarchada.
+    TemaId.NAVIDAD -> LaminaRascar(0xFF5D6B7C.toInt(), 0xFFB9C7D6.toInt(), 0xFFF7FBFF.toInt())
+    // Bronce de moneda con sombra de cinabrio.
+    TemaId.SEDA -> LaminaRascar(0xFF8A2414.toInt(), 0xFFC28E2C.toInt(), 0xFFF3D68A.toInt())
+    // Peltre de cáliz, con un tinte violeta.
+    TemaId.GOTICO -> LaminaRascar(0xFF3B3644.toInt(), 0xFF7D7488.toInt(), 0xFFCFC6D8.toInt())
+    // Titanio anodizado azul.
+    TemaId.ESPACIO -> LaminaRascar(0xFF1E2A4A.toInt(), 0xFF4E6AA8.toInt(), 0xFFBFD0FF.toInt())
+    // Latón verdoso de las lámparas nazaríes.
+    TemaId.ANDALUS -> LaminaRascar(0xFF5C5418.toInt(), 0xFFB5A646.toInt(), 0xFFEDE6A8.toInt())
+    // Plata sobredorada de la estepa.
+    TemaId.MONGOL -> LaminaRascar(0xFF6A5030.toInt(), 0xFFC09A68.toInt(), 0xFFF4E2C4.toInt())
+    // Bronce de taller, pardo.
+    TemaId.RENACIMIENTO -> LaminaRascar(0xFF4E3C24.toInt(), 0xFF96784C.toInt(), 0xFFE2CFA6.toInt())
+    // Acero ennegrecido, para que resalten las estrellas rojas.
+    TemaId.URSS -> LaminaRascar(0xFF1C1C1E.toInt(), 0xFF4A4A4E.toInt(), 0xFFA8A8AE.toInt())
+    // Estaño de botón de uniforme.
+    TemaId.REVOLUCION -> LaminaRascar(0xFF55524C.toInt(), 0xFFA8A398.toInt(), 0xFFEDE9DF.toInt())
+    // Hierro viejo de las minas, cálido.
+    TemaId.ANTIGUAS -> LaminaRascar(0xFF3A342C.toInt(), 0xFF7B6E5C.toInt(), 0xFFD1C3A8.toInt())
+}
+
+private fun conAlfaLamina(c: Int, a: Int): Int = (c and 0x00FFFFFF) or (a shl 24)
+
+/**
+ * Una tesela cuadrada de [lado] píxeles con el motivo del tema grabado: una pasada clara corrida un poco (el filo que
+ * brilla) y encima la pasada oscura (el surco). Se repite en mosaico sobre la lámina.
+ */
+internal fun teselaLamina(t: TemaId, lam: LaminaRascar, lado: Int): android.graphics.Bitmap {
+    val n = lado.coerceAtLeast(8)
+    val l = n.toFloat()
+    val bmp = android.graphics.Bitmap.createBitmap(n, n, android.graphics.Bitmap.Config.ARGB_8888)
+    val c = android.graphics.Canvas(bmp)
+    fun pasada(tono: Int, sombra: Boolean) {
+        val linea = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE; strokeWidth = l * 0.045f; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND; color = tono
+        }
+        val relleno = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL; color = tono }
+        motivoLamina(t, c, l, linea, relleno, sombra)
+    }
+    val e = l * 0.03f
+    c.save(); c.translate(e, e); pasada(conAlfaLamina(lam.clara, 0x90), false); c.restore()
+    pasada(conAlfaLamina(lam.oscura, 0xA8), true)
+    return bmp
+}
+
+/** Estrella de [puntas] puntas centrada en ([x], [y]), para los motivos. */
+private fun estrellaLamina(x: Float, y: Float, r: Float, puntas: Int, interior: Float): Path = Path().apply {
+    for (k in 0 until puntas * 2) {
+        val a = -PI / 2 + k * PI / puntas
+        val rr = if (k % 2 == 0) r else r * interior
+        val px = x + (rr * kotlin.math.cos(a)).toFloat(); val py = y + (rr * kotlin.math.sin(a)).toFloat()
+        if (k == 0) moveTo(px, py) else lineTo(px, py)
+    }
+    close()
+}
+
+/**
+ * El motivo grabado de cada tema, en una tesela de lado [l]. Las figuras «al tresbolillo» se dibujan en el centro y en
+ * las cuatro esquinas: al juntar teselas, los cuartos de las esquinas forman figuras enteras.
+ */
+private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea: Paint, relleno: Paint, sombra: Boolean) {
+    fun tresbolillo(figura: (Float, Float) -> Unit) {
+        figura(l / 2, l / 2)
+        for (x in listOf(0f, l)) for (y in listOf(0f, l)) figura(x, y)
+    }
+    fun girado(x: Float, y: Float, grados: Float, dibujo: () -> Unit) { c.save(); c.translate(x, y); c.rotate(grados); dibujo(); c.restore() }
+    when (t) {
+        TemaId.ROMANO -> {
+            // Ramas de laurel en diagonal: el tallo, tres pares de hojas y las bayas en la punta.
+            c.drawLine(l * 0.18f, l * 0.82f, l * 0.82f, l * 0.18f, linea)
+            for (i in 0 until 3) {
+                val f = 0.25f + i * 0.22f
+                val x = l * (0.18f + 0.64f * f); val y = l * (0.82f - 0.64f * f)
+                for (lado in listOf(-1f, 1f)) girado(x, y, -45f + lado * 50f) { c.drawOval(RectF(0f, -l * 0.045f, l * 0.2f, l * 0.045f), relleno) }
+            }
+            c.drawCircle(l * 0.86f, l * 0.2f, l * 0.035f, relleno); c.drawCircle(l * 0.8f, l * 0.13f, l * 0.035f, relleno)
+        }
+        TemaId.CIBER -> {
+            // Pistas de circuito impreso: una línea que cruza con su desvío a 45°, un bus vertical, un pad y un chip con patas.
+            c.drawPath(Path().apply {
+                moveTo(0f, l * 0.3f); lineTo(l * 0.3f, l * 0.3f); lineTo(l * 0.42f, l * 0.18f); lineTo(l * 0.7f, l * 0.18f); lineTo(l * 0.82f, l * 0.3f); lineTo(l, l * 0.3f)
+                moveTo(l * 0.15f, 0f); lineTo(l * 0.15f, l * 0.55f); lineTo(l * 0.28f, l * 0.68f); lineTo(l * 0.28f, l * 0.85f); lineTo(l * 0.15f, l * 0.98f); lineTo(l * 0.15f, l)
+                moveTo(l * 0.5f, l * 0.18f); lineTo(l * 0.5f, l * 0.5f)
+            }, linea)
+            c.drawCircle(l * 0.5f, l * 0.56f, l * 0.055f, linea)
+            c.drawRect(l * 0.62f, l * 0.58f, l * 0.9f, l * 0.84f, linea)
+            for (x in listOf(0.67f, 0.76f, 0.85f)) { c.drawLine(l * x, l * 0.52f, l * x, l * 0.58f, linea); c.drawLine(l * x, l * 0.84f, l * x, l * 0.9f, linea) }
+        }
+        TemaId.HELENO -> {
+            // Greca: la línea de base corrida y, sobre ella, la espiral cuadrada del meandro.
+            c.drawPath(Path().apply {
+                moveTo(0f, l * 0.82f); lineTo(l, l * 0.82f)
+                moveTo(l * 0.85f, l * 0.82f); lineTo(l * 0.85f, l * 0.18f); lineTo(l * 0.15f, l * 0.18f); lineTo(l * 0.15f, l * 0.62f)
+                lineTo(l * 0.62f, l * 0.62f); lineTo(l * 0.62f, l * 0.4f); lineTo(l * 0.4f, l * 0.4f)
+            }, linea)
+        }
+        TemaId.MEDIEVAL -> tresbolillo { x, y ->
+            // Flor de lis: pétalo central, dos pétalos curvados hacia fuera, la banda y el pie.
+            val s = l * 0.15f
+            c.drawPath(Path().apply {
+                moveTo(x, y - s * 1.3f); quadTo(x + s * 0.5f, y - s * 0.4f, x, y + s * 0.2f); quadTo(x - s * 0.5f, y - s * 0.4f, x, y - s * 1.3f); close()
+                moveTo(x - s * 0.1f, y + s * 0.15f); quadTo(x - s * 1.25f, y - s * 0.25f, x - s * 0.9f, y - s * 0.95f); quadTo(x - s * 0.65f, y - s * 0.2f, x - s * 0.1f, y + s * 0.15f); close()
+                moveTo(x + s * 0.1f, y + s * 0.15f); quadTo(x + s * 1.25f, y - s * 0.25f, x + s * 0.9f, y - s * 0.95f); quadTo(x + s * 0.65f, y - s * 0.2f, x + s * 0.1f, y + s * 0.15f); close()
+                moveTo(x - s * 0.3f, y + s * 0.4f); lineTo(x + s * 0.3f, y + s * 0.4f); lineTo(x, y + s * 1.1f); close()
+            }, relleno)
+            c.drawRect(x - s * 0.6f, y + s * 0.18f, x + s * 0.6f, y + s * 0.4f, relleno)
+        }
+        TemaId.DISTOPIA -> tresbolillo { x, y ->
+            // El ojo que todo lo mira.
+            val s = l * 0.15f
+            c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
+            c.drawCircle(x, y, s * 0.42f, relleno)
+        }
+        TemaId.REFUGIO -> {
+            // Chapa estriada: lágrimas en relieve, alternando su inclinación.
+            val g = l * 0.045f
+            girado(l / 2, l / 2, 45f) { c.drawRoundRect(RectF(-l * 0.2f, -g, l * 0.2f, g), g, g, relleno) }
+            for (x in listOf(0f, l)) for (y in listOf(0f, l)) girado(x, y, -45f) { c.drawRoundRect(RectF(-l * 0.2f, -g, l * 0.2f, g), g, g, relleno) }
+        }
+        TemaId.ORDEN -> {
+            // Un engranaje en el centro y remaches en las esquinas.
+            val cx = l / 2; val cy = l / 2; val r = l * 0.17f
+            c.drawCircle(cx, cy, r, linea); c.drawCircle(cx, cy, r * 0.38f, linea)
+            for (i in 0 until 8) girado(cx, cy, i * 45f) { c.drawRect(-l * 0.035f, -r - l * 0.07f, l * 0.035f, -r, relleno) }
+            for (x in listOf(0f, l)) for (y in listOf(0f, l)) c.drawCircle(x, y, l * 0.045f, relleno)
+        }
+        TemaId.LABORATORIO -> tresbolillo { x, y ->
+            // Anillos de benceno: el hexágono y su círculo.
+            val r = l * 0.19f
+            c.drawPath(Path().apply {
+                for (i in 0 until 6) {
+                    val a = Math.toRadians(30.0 + 60.0 * i)
+                    val px = x + (r * kotlin.math.cos(a)).toFloat(); val py = y + (r * kotlin.math.sin(a)).toFloat()
+                    if (i == 0) moveTo(px, py) else lineTo(px, py)
+                }
+                close()
+            }, linea)
+            c.drawCircle(x, y, r * 0.52f, linea)
+        }
+        TemaId.COLONOS -> {
+            // Aparejo de ladrillo: hiladas corridas y juntas a matajunta.
+            c.drawLine(0f, l * 0.25f, l, l * 0.25f, linea); c.drawLine(0f, l * 0.75f, l, l * 0.75f, linea)
+            c.drawLine(l * 0.25f, l * 0.25f, l * 0.25f, l * 0.75f, linea)
+            c.drawLine(l * 0.75f, l * 0.75f, l * 0.75f, l, linea); c.drawLine(l * 0.75f, 0f, l * 0.75f, l * 0.25f, linea)
+        }
+        TemaId.NAPOLEON -> tresbolillo { x, y ->
+            // Las abejas del manto imperial.
+            val s = l * 0.1f
+            c.drawOval(RectF(x - s * 0.45f, y - s * 0.6f, x + s * 0.45f, y + s * 1.1f), relleno)
+            c.drawCircle(x, y - s * 0.85f, s * 0.32f, relleno)
+            c.drawOval(RectF(x - s * 1.25f, y - s * 0.75f, x - s * 0.15f, y + s * 0.05f), linea)
+            c.drawOval(RectF(x + s * 0.15f, y - s * 0.75f, x + s * 1.25f, y + s * 0.05f), linea)
+        }
+        TemaId.BOTANICO -> {
+            // Una fronda de helecho: el raquis y sus pinnas, más cortas hacia la punta.
+            c.drawLine(l * 0.5f, l * 0.94f, l * 0.5f, l * 0.08f, linea)
+            for (i in 0 until 6) {
+                val y = l * (0.84f - i * 0.13f); val largo = l * (0.2f - i * 0.025f)
+                for (izquierda in listOf(true, false)) girado(l * 0.5f, y, if (izquierda) 200f else -20f) { c.drawOval(RectF(0f, -l * 0.03f, largo, l * 0.03f), relleno) }
+            }
+        }
+        TemaId.NAVIDAD -> tresbolillo { x, y ->
+            // Copos de seis brazos, cada brazo con su par de ramitas.
+            val r = l * 0.17f
+            for (i in 0 until 6) girado(x, y, i * 60f) {
+                c.drawLine(0f, 0f, 0f, -r, linea)
+                c.drawLine(0f, -r * 0.55f, -r * 0.25f, -r * 0.8f, linea); c.drawLine(0f, -r * 0.55f, r * 0.25f, -r * 0.8f, linea)
+            }
+        }
+        TemaId.SEDA -> tresbolillo { x, y ->
+            // Monedas con agujero cuadrado y sus cuatro caracteres.
+            val r = l * 0.19f; val h = r * 0.32f
+            c.drawCircle(x, y, r, linea); c.drawRect(x - h, y - h, x + h, y + h, linea)
+            for (i in 0 until 4) girado(x, y, i * 90f) { c.drawRect(-r * 0.08f, -r * 0.8f, r * 0.08f, -r * 0.55f, relleno) }
+        }
+        TemaId.GOTICO -> {
+            // Cuadrifolio de tracería en el centro y estrellas de bóveda en las esquinas.
+            val cx = l / 2; val cy = l / 2; val r = l * 0.085f
+            for ((dx, dy) in listOf(0f to -1f, 1f to 0f, 0f to 1f, -1f to 0f)) c.drawCircle(cx + dx * r, cy + dy * r, r, linea)
+            c.drawCircle(cx, cy, r * 2.5f, linea)
+            for (x in listOf(0f, l)) for (y in listOf(0f, l)) c.drawPath(estrellaLamina(x, y, l * 0.09f, 8, 0.4f), relleno)
+        }
+        TemaId.ESPACIO -> {
+            // Una constelación unida por líneas y un destello de cuatro puntas.
+            val estrellas = listOf(0.18f to 0.25f, 0.4f to 0.14f, 0.56f to 0.38f, 0.82f to 0.3f, 0.72f to 0.72f)
+            c.drawPath(Path().apply {
+                moveTo(l * 0.18f, l * 0.25f); lineTo(l * 0.4f, l * 0.14f); lineTo(l * 0.56f, l * 0.38f); lineTo(l * 0.82f, l * 0.3f)
+                moveTo(l * 0.56f, l * 0.38f); lineTo(l * 0.72f, l * 0.72f)
+            }, linea)
+            estrellas.forEach { (x, y) -> c.drawCircle(l * x, l * y, l * 0.035f, relleno) }
+            c.drawPath(estrellaLamina(l * 0.26f, l * 0.72f, l * 0.13f, 4, 0.25f), relleno)
+        }
+        TemaId.ANDALUS -> {
+            // Lazo de ocho: estrellas de dos cuadrados girados y, entre ellas, rombos que las enlazan.
+            tresbolillo { x, y ->
+                val a = l * 0.14f
+                for (giro in listOf(0f, 45f)) girado(x, y, giro) { c.drawRect(-a, -a, a, a, linea) }
+                c.drawCircle(x, y, a * 0.4f, linea)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, 0f to l / 2, l to l / 2, l / 2 to l)) {
+                val m = l * 0.05f
+                c.drawPath(Path().apply { moveTo(x, y - m); lineTo(x + m, y); lineTo(x, y + m); lineTo(x - m, y); close() }, relleno)
+            }
+        }
+        TemaId.MONGOL -> tresbolillo { x, y ->
+            // Cuerno de carnero: dos espirales que se abren desde un tallo.
+            val s = l * 0.1f
+            c.drawLine(x, y, x, y + s * 1.6f, linea)
+            c.drawArc(RectF(x, y - s, x + 2 * s, y + s), 180f, 180f, false, linea)
+            c.drawArc(RectF(x + s, y - s * 0.5f, x + 2 * s, y + s * 0.5f), 0f, 180f, false, linea)
+            c.drawArc(RectF(x + s, y - s * 0.25f, x + s * 1.5f, y + s * 0.25f), 180f, 180f, false, linea)
+            c.drawArc(RectF(x - 2 * s, y - s, x, y + s), 0f, -180f, false, linea)
+            c.drawArc(RectF(x - 2 * s, y - s * 0.5f, x - s, y + s * 0.5f), 180f, -180f, false, linea)
+            c.drawArc(RectF(x - s * 1.5f, y - s * 0.25f, x - s, y + s * 0.25f), 0f, -180f, false, linea)
+        }
+        TemaId.RENACIMIENTO -> {
+            // Trazos de construcción: círculo y cuadrado con sus diagonales, y cruces de compás en las esquinas.
+            c.drawCircle(l / 2, l / 2, l * 0.3f, linea)
+            c.drawRect(l * 0.25f, l * 0.25f, l * 0.75f, l * 0.75f, linea)
+            c.drawLine(l * 0.25f, l * 0.25f, l * 0.75f, l * 0.75f, linea); c.drawLine(l * 0.75f, l * 0.25f, l * 0.25f, l * 0.75f, linea)
+            for (x in listOf(0f, l)) for (y in listOf(0f, l)) { c.drawLine(x - l * 0.06f, y, x + l * 0.06f, y, linea); c.drawLine(x, y - l * 0.06f, x, y + l * 0.06f, linea) }
+        }
+        TemaId.URSS -> tresbolillo { x, y ->
+            // Estrellas rojas sobre el acero.
+            val e = estrellaLamina(x, y, l * 0.17f, 5, 0.42f)
+            if (sombra) {
+                c.drawPath(e, Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL; color = 0xE0C8102E.toInt() })
+                c.drawPath(e, linea)
+            } else c.drawPath(e, relleno)
+        }
+        TemaId.REVOLUCION -> tresbolillo { x, y ->
+            // Escarapelas: azul, blanco y rojo, con el plisado del borde.
+            val r = l * 0.16f
+            if (sombra) {
+                listOf(1f to 0xC81F3A93.toInt(), 0.66f to 0xF0F4F1EA.toInt(), 0.33f to 0xD0C8102E.toInt()).forEach { (k, col) ->
+                    c.drawCircle(x, y, r * k, Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL; color = col })
+                }
+            }
+            c.drawCircle(x, y, r, linea)
+            for (i in 0 until 12) girado(x, y, i * 30f) { c.drawLine(0f, -r * 0.72f, 0f, -r * 0.95f, linea) }
+        }
+        TemaId.ANTIGUAS -> {
+            // Runas inventadas: una con dos ramas y otra con un rombo en el tallo.
+            val s = l * 0.17f
+            fun ramas(x: Float, y: Float) {
+                c.drawLine(x, y - s, x, y + s, linea)
+                c.drawLine(x, y - s * 0.5f, x + s * 0.6f, y - s, linea); c.drawLine(x, y, x + s * 0.6f, y - s * 0.4f, linea)
+            }
+            fun rombo(x: Float, y: Float) {
+                c.drawLine(x, y - s, x, y + s, linea)
+                c.drawPath(Path().apply { moveTo(x, y - s * 0.45f); lineTo(x + s * 0.4f, y); lineTo(x, y + s * 0.45f); lineTo(x - s * 0.4f, y); close() }, linea)
+            }
+            ramas(l * 0.3f, l * 0.5f); rombo(l * 0.72f, l * 0.5f)
+        }
+    }
+}
+
+/**
+ * La lámina entera dentro de una caja redondeada (la palabra del año en «Tu año»): el metal con su degradado, un
+ * brillo en diagonal, el motivo grabado en mosaico y el filo oscuro.
+ */
+internal fun DrawScope.pintarLaminaRascar(lam: LaminaRascar, tesela: android.graphics.Bitmap, esquina: Float) {
+    val c = drawContext.canvas.nativeCanvas
+    val caja = RectF(0f, 0f, size.width, size.height)
+    val metal = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        shader = android.graphics.LinearGradient(0f, 0f, size.width * 0.5f, size.height, intArrayOf(lam.oscura, lam.media, lam.clara, lam.media, lam.oscura, lam.media),
+            null, android.graphics.Shader.TileMode.MIRROR)
+    }
+    val brillo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        shader = android.graphics.LinearGradient(0f, size.height, size.width * 0.35f, 0f, intArrayOf(0x00FFFFFF, 0x30FFFFFF, 0x00FFFFFF), null, android.graphics.Shader.TileMode.MIRROR)
+    }
+    val grabado = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        shader = android.graphics.BitmapShader(tesela, android.graphics.Shader.TileMode.REPEAT, android.graphics.Shader.TileMode.REPEAT)
+    }
+    val m = 0.75f * density
+    val borde = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = lam.oscura; strokeWidth = 2 * m }
+    c.drawRoundRect(caja, esquina, esquina, metal)
+    c.drawRoundRect(caja, esquina, esquina, brillo)
+    c.drawRoundRect(caja, esquina, esquina, grabado)
+    c.drawRoundRect(RectF(m, m, size.width - m, size.height - m), esquina, esquina, borde)
 }
 
 /**
@@ -220,10 +521,12 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
     val cs = MaterialTheme.colorScheme
     val tema = Estilo.tema
     val oscuro = esOscuro()
-    val lam = lamina(tema)
+    val lam = laminaRascar(tema)
     val paleta = remember(lam, oscuro) { paletaRascados(lam, oscuro) }
     val dens = LocalDensity.current.density
-    val pinceles = remember(lam, cs) {
+    // El motivo grabado del tema, en teselas de 16 dp en pantalla (no crece con el zoom).
+    val tesela = remember(tema, dens) { teselaLamina(tema, lam, (16 * dens).toInt()) }
+    val pinceles = remember(lam, cs, tesela) {
         object {
             val lamina = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 shader = android.graphics.LinearGradient(-2.8f, -1.6f, -1.9f, -0.2f, intArrayOf(lam.oscura, lam.media, lam.clara, lam.media, lam.oscura, lam.media), null, android.graphics.Shader.TileMode.MIRROR)
@@ -236,6 +539,8 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
             val bordeLamina = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = lam.oscura }
             // Trama fina de líneas sobre la lámina: lo que falta por rascar no se confunde con un país de color.
             val trama = Paint(Paint.ANTI_ALIAS_FLAG)
+            val grabadoShader = android.graphics.BitmapShader(tesela, android.graphics.Shader.TileMode.REPEAT, android.graphics.Shader.TileMode.REPEAT)
+            val grabado = Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = grabadoShader }
             val reticula = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = cs.outline.copy(alpha = 0.35f).toArgb() }
             val mar = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = lerp(cs.surface, cs.primary, if (oscuro) 0.08f else 0.05f).toArgb() }
             val rasca = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
@@ -260,9 +565,11 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
         pinceles.bordeLamina.strokeWidth = 0.5f * dens * px
         run {
             val paso = 3.2f * dens * px
-            val linea = (lam.oscura and 0x00FFFFFF) or (0x55 shl 24)
+            val linea = (lam.oscura and 0x00FFFFFF) or (0x38 shl 24)
             pinceles.trama.shader = android.graphics.LinearGradient(0f, 0f, paso, paso, intArrayOf(linea, linea, 0x00000000, 0x00000000), floatArrayOf(0f, 0.28f, 0.28f, 1f),
                 android.graphics.Shader.TileMode.REPEAT)
+            // La tesela se hizo en píxeles de pantalla; el lienzo está escalado por k, así que se encoge por px.
+            pinceles.grabadoShader.setLocalMatrix(android.graphics.Matrix().apply { setScale(px, px) })
         }
         val r = 2.4f * dens * px
         for (f in formas) {
@@ -279,7 +586,8 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
             if (visto && codigo != rascando) {
                 c.drawPath(f.path, pinceles.color); c.drawPath(f.path, pinceles.borde)
             } else {
-                c.drawPath(f.path, pinceles.lamina); c.drawPath(f.path, pinceles.brillo); c.drawPath(f.path, pinceles.trama); c.drawPath(f.path, pinceles.bordeLamina)
+                c.drawPath(f.path, pinceles.lamina); c.drawPath(f.path, pinceles.brillo); c.drawPath(f.path, pinceles.trama); c.drawPath(f.path, pinceles.grabado)
+                c.drawPath(f.path, pinceles.bordeLamina)
                 if (codigo == rascando && avance > 0f) {
                     // Rascado en zigzag: la lámina se va quitando a trazos hasta dejar el país a color.
                     c.save(); c.clipPath(f.path)
@@ -434,7 +742,7 @@ fun PantallaMundo(nav: Nav) {
                 if (lista.size > 12) TextButton(onClick = { abiertas = !abiertas }) { Text(if (abiertas) "ver menos" else "ver las ${lista.size}") }
             }
             borrar?.let { b ->
-                AlertDialog(onDismissRequest = { borrar = null }, title = { Text("¿Quitar ${b.nombre}?") },
+                Dialogo(onDismissRequest = { borrar = null }, title = { Text("¿Quitar ${b.nombre}?") },
                     text = { Text("Se borra lo que anotaste a mano. Si tus ubicaciones pasan por ahí, la ciudad seguirá apareciendo.") },
                     confirmButton = { TextButton(onClick = {
                         Repo.cambiarConfig { c -> c.copy(ciudades_visitadas = c.ciudades_visitadas.filter { it.id != b.id }) }; borrar = null
@@ -600,7 +908,7 @@ private fun OrigenFotos(cuenta: Int, cambio: () -> Unit) {
                 }
                 if (a.imposibles > 0 || a.nombre in c.fotos_sin_fecha) Row(Modifier.padding(start = 48.dp), verticalAlignment = Alignment.CenterVertically) {
                     val malo = a.nombre in c.fotos_sin_fecha
-                    androidx.compose.material3.Switch(checked = malo, onCheckedChange = { v -> cambiar { it.copy(fotos_sin_fecha = if (v) it.fotos_sin_fecha + a.nombre else it.fotos_sin_fecha - a.nombre) } })
+                    Conmutador(checked = malo, onCheckedChange = { v -> cambiar { it.copy(fotos_sin_fecha = if (v) it.fotos_sin_fecha + a.nombre else it.fotos_sin_fecha - a.nombre) } })
                     Text("su reloj estaba mal: usar la fecha del archivo", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
                 }
             }
@@ -799,8 +1107,7 @@ fun PantallaCiudadNueva(nav: Nav) {
         resultados = withContext(Dispatchers.IO) { runCatching { Mundo.buscarCiudad(ctx, texto) }.getOrDefault(emptyList()) }
     }
     fun fecha(actual: String?, poner: (String) -> Unit) {
-        val p = actual?.let { Fechas.parse(it) } ?: LocalDate.now()
-        DatePickerDialog(ctx, { _, y, m, d -> poner(Fechas.iso(LocalDate.of(y, m + 1, d))) }, p.year, p.monthValue - 1, p.dayOfMonth).show()
+        elegirFecha(ctx, actual) { poner(it) }
     }
     Hoja("Añadir ciudad", nav.atras, "Busca la ciudad por su nombre. Si sabes cuándo fuiste, ponlo: así cuenta en el tiempo de cada ciudad y país.") {
         val c = remember { Mundo.ciudades(ctx) }
@@ -916,7 +1223,7 @@ fun PantallaUnesco(nav: Nav) {
     detalle?.let { s ->
         val visto = s.i in vistos
         val manual = Repo.config.unesco_marcados.any { it.id == s.i }
-        AlertDialog(onDismissRequest = { detalle = null },
+        Dialogo(onDismissRequest = { detalle = null },
             title = { Text(s.n) },
             text = {
                 Column {

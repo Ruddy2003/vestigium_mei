@@ -23,6 +23,29 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ColorScheme
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
+import kotlin.math.cos
+import kotlin.math.sin
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -204,6 +227,412 @@ object PresentacionTema {
     fun cerrar() { tema = null }
 }
 
+/**
+ * Cómo se acomoda la presentación: qué va primero. Cada tema combina un orden con su marco, su alineación, la forma de su
+ * título, sus comillas y su «toca para seguir» ([disenoPresentacion]).
+ */
+private enum class OrdenPresentacion {
+    /** Emblema, título, banda y frase. */
+    EMBLEMA_ARRIBA,
+    /** Título y banda; debajo el emblema y la frase. */
+    TITULO_ARRIBA,
+    /** Emblema pequeño a un lado del título, como una ficha; la frase debajo. */
+    EMBLEMA_AL_LADO,
+    /** Título, banda y frase; el emblema al pie, como un sello. */
+    EMBLEMA_ABAJO,
+    /** La frase primero, como epígrafe; luego el emblema y el título. */
+    FRASE_ARRIBA,
+}
+
+/**
+ * La presentación de un tema: [titulo] es cómo se escribe su nombre; [comillas], cómo abre y cierra la frase;
+ * [capitular] agranda la primera letra de la frase (y no lleva comillas); [arriba] y [abajo] dejan aire para el marco;
+ * [marco] se dibuja detrás de todo el bloque.
+ */
+private class DisenoPresentacion(
+    val orden: OrdenPresentacion,
+    val izquierda: Boolean,
+    val titulo: String,
+    val tocar: String,
+    val comillas: Pair<String, String> = "«" to "»",
+    val capitular: Boolean = false,
+    val emblema: Dp = 132.dp,
+    val arriba: Dp = 34.dp,
+    val abajo: Dp = 34.dp,
+    val marco: DrawScope.(ColorScheme) -> Unit,
+)
+
+/** Estrella de [puntas] puntas para los marcos de la presentación; [dentro] es el radio de los valles respecto al de las puntas. */
+private fun DrawScope.estrellaPresentacion(c: Offset, r: Float, color: Color, puntas: Int, dentro: Float) {
+    val p = Path()
+    for (i in 0 until puntas * 2) {
+        val rr = if (i % 2 == 0) r else r * dentro
+        val a = Math.toRadians(-90.0 + 180.0 / puntas * i)
+        val x = c.x + rr * cos(a).toFloat(); val y = c.y + rr * sin(a).toFloat()
+        if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
+    }
+    p.close()
+    drawPath(p, color)
+}
+
+/** La composición de la presentación de cada tema. */
+private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
+    // Lápida: el nombre grabado arriba y todo dentro de una tabula ansata, con sus dos asas en cola de milano.
+    TemaId.ROMANO -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, false, "· " + t.nombre.uppercase() + " ·", "TANGE · ET · PERGE  —  toca y sigue") { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.primary.copy(alpha = 0.6f)
+        val x0 = u * 24; val x1 = w - u * 24
+        drawRect(c, Offset(x0, 0f), Size(x1 - x0, h), style = Stroke(u * 1.4f))
+        drawRect(c.copy(alpha = 0.3f), Offset(x0 + u * 6, u * 6), Size(x1 - x0 - u * 12, h - u * 12), style = Stroke(u * 0.8f))
+        listOf(x0 to -1f, x1 to 1f).forEach { (x, s) ->
+            drawPath(Path().apply {
+                moveTo(x, h / 2 - u * 16); lineTo(x + s * u * 20, h / 2 - u * 28); lineTo(x + s * u * 20, h / 2 + u * 28); lineTo(x, h / 2 + u * 16)
+            }, c, style = Stroke(u * 1.4f))
+        }
+    }
+    // Consola: una ventana de terminal con su barra, el emblema como ícono del proceso y la frase como salida.
+    TemaId.CIBER -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "> " + t.nombre.lowercase() + "_", "[ pulsa para continuar ]_",
+        comillas = "> " to "", emblema = 84.dp, arriba = 44.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.primary
+        drawRect(c.copy(alpha = 0.7f), Offset.Zero, size, style = Stroke(u * 1.2f))
+        drawRect(c.copy(alpha = 0.16f), Offset.Zero, Size(w, u * 20))
+        drawLine(c.copy(alpha = 0.7f), Offset(0f, u * 20), Offset(w, u * 20), u)
+        for (i in 0 until 3) drawRect(if (i == 0) e.secondary else c.copy(alpha = 0.6f), Offset(w - u * (16 + i * 14f), u * 6), Size(u * 8, u * 8))
+        drawRect(c.copy(alpha = 0.6f), Offset(u * 8, u * 7), Size(u * 40, u * 6))
+        var y = u * 24
+        while (y < h) { drawLine(c.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), u * 0.8f); y += u * 4 }
+    }
+    // Templo: frontón con su arquitrabe sobre el emblema, dos columnas estriadas a los lados y las gradas al pie.
+    TemaId.HELENO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "πρόσω  ·  toca para seguir",
+        comillas = "“" to "”", arriba = 78.dp, abajo = 40.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.tertiary.copy(alpha = 0.75f); val l = u * 1.4f
+        val base = u * 56
+        drawPath(Path().apply { moveTo(u * 8, base); lineTo(w / 2, u * 8); lineTo(w - u * 8, base); close() }, c, style = Stroke(l))
+        drawPath(Path().apply { moveTo(u * 34, base - u * 5); lineTo(w / 2, u * 20); lineTo(w - u * 34, base - u * 5); close() }, c.copy(alpha = 0.35f), style = Stroke(u * 0.8f))
+        drawRect(c, Offset(u * 8, base), Size(w - u * 16, u * 8), style = Stroke(l))
+        listOf(u * 12, w - u * 26).forEach { x ->
+            drawRect(c, Offset(x, base + u * 8), Size(u * 14, h - base - u * 30), style = Stroke(l))
+            for (k in 1..2) drawLine(c.copy(alpha = 0.5f), Offset(x + k * u * 14 / 3, base + u * 12), Offset(x + k * u * 14 / 3, h - u * 26), u * 0.8f)
+        }
+        listOf(h - u * 22 to u * 6, h - u * 14 to u * 3, h - u * 6 to 0f).forEach { (y, m) -> drawLine(c, Offset(m, y), Offset(w - m, y), l) }
+    }
+    // Folio de códice: pauta roja de márgenes, anillos de pan de oro donde se cruzan y la frase con capitular.
+    TemaId.MEDIEVAL -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, true, t.nombre, "¶ toca la foja e prosigue", capitular = true, emblema = 112.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val rojo = e.primary.copy(alpha = 0.45f); val oro = e.tertiary
+        listOf(u * 18, u * 23).forEach { x ->
+            drawLine(rojo, Offset(x, 0f), Offset(x, h), u * 0.8f)
+            drawLine(rojo, Offset(w - x, 0f), Offset(w - x, h), u * 0.8f)
+        }
+        listOf(u * 12, h - u * 12).forEach { y -> drawLine(rojo, Offset(0f, y), Offset(w, y), u * 0.8f) }
+        listOf(Offset(u * 20.5f, u * 12), Offset(w - u * 20.5f, u * 12), Offset(u * 20.5f, h - u * 12), Offset(w - u * 20.5f, h - u * 12)).forEach {
+            drawCircle(oro, u * 6, it, style = Stroke(u * 1.6f)); drawCircle(oro, u * 2, it)
+        }
+    }
+    // Expediente: carpeta con su pestaña, código de archivo y un sello rojo torcido al pie.
+    TemaId.DISTOPIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
+        comillas = "“" to "”", emblema = 88.dp, arriba = 52.dp, abajo = 70.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onSurface.copy(alpha = 0.55f)
+        drawPath(Path().apply { moveTo(0f, u * 18); lineTo(u * 10, 0f); lineTo(u * 110, 0f); lineTo(u * 120, u * 18) }, c, style = Stroke(u * 1.3f))
+        drawRect(c, Offset(0f, u * 18), Size(w, h - u * 18), style = Stroke(u * 1.3f))
+        for (i in 0 until 14) drawRect(c, Offset(w - u * 84 + i * u * 5, u * 26), Size(u * (if (i % 3 == 0) 2.4f else 1.2f), u * 14))
+        val centro = Offset(w - u * 62, h - u * 36)
+        rotate(-12f, centro) {
+            drawRect(e.primary.copy(alpha = 0.7f), Offset(centro.x - u * 46, centro.y - u * 17), Size(u * 92, u * 34), style = Stroke(u * 2.2f))
+            drawRect(e.primary.copy(alpha = 0.5f), Offset(centro.x - u * 41, centro.y - u * 12), Size(u * 82, u * 24), style = Stroke(u))
+            drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
+        }
+    }
+    // Compuerta: mampara redondeada con remaches y una franja de peligro al pie.
+    TemaId.REFUGIO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, "— " + t.nombre.uppercase() + " —", "PULSE PARA ABRIR LA COMPUERTA",
+        arriba = 40.dp, abajo = 50.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.secondary.copy(alpha = 0.8f)
+        drawRoundRect(c, Offset(u * 6, u * 6), Size(w - u * 12, h - u * 12), CornerRadius(u * 22), style = Stroke(u * 3))
+        drawRoundRect(c.copy(alpha = 0.4f), Offset(u * 12, u * 12), Size(w - u * 24, h - u * 24), CornerRadius(u * 16), style = Stroke(u))
+        var x = u * 40
+        while (x < w - u * 36) {
+            listOf(u * 6, h - u * 6).forEach { y -> drawCircle(c, u * 3, Offset(x, y)); drawCircle(e.background, u * 1.1f, Offset(x - u * 0.8f, y - u * 0.8f)) }
+            x += u * 28
+        }
+        clipRect(u * 40, h - u * 32, w - u * 40, h - u * 22) {
+            var s = u * 20
+            while (s < w) {
+                drawPath(Path().apply { moveTo(s, h - u * 22); lineTo(s + u * 8, h - u * 32); lineTo(s + u * 16, h - u * 32); lineTo(s + u * 8, h - u * 22); close() }, e.tertiary.copy(alpha = 0.8f))
+                s += u * 16
+            }
+        }
+    }
+    // Placa de acero: chaflanes con pernos de latón y galones carmesí arriba.
+    TemaId.ORDEN -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, false, t.nombre.uppercase(), "« TOCA PARA PROSEGUIR LA MARCHA »",
+        arriba = 42.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onSurfaceVariant.copy(alpha = 0.7f); val k = u * 18
+        drawPath(Path().apply { moveTo(k, 0f); lineTo(w - k, 0f); lineTo(w, k); lineTo(w, h - k); lineTo(w - k, h); lineTo(k, h); lineTo(0f, h - k); lineTo(0f, k); close() }, c, style = Stroke(u * 2))
+        listOf(Offset(k, k), Offset(w - k, k), Offset(k, h - k), Offset(w - k, h - k)).forEach {
+            drawCircle(e.secondary, u * 4, it); drawLine(e.surface, it - Offset(u * 2.5f, 0f), it + Offset(u * 2.5f, 0f), u)
+        }
+        for (i in 0 until 3) {
+            val y = u * (6 + i * 6f)
+            drawPath(Path().apply { moveTo(w / 2 - u * 14, y); lineTo(w / 2, y + u * 6); lineTo(w / 2 + u * 14, y) }, e.primary, style = Stroke(u * 2))
+        }
+    }
+    // Hoja de laboratorio: papel milimetrado, etiqueta de muestra y una graduación por el borde.
+    TemaId.LABORATORIO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "○ " + t.nombre, "toca para cerrar la observación",
+        comillas = "“" to "”", emblema = 92.dp, arriba = 46.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val g = e.primary.copy(alpha = 0.08f)
+        var x = 0f
+        while (x <= w) { drawLine(g, Offset(x, 0f), Offset(x, h), u * 0.7f); x += u * 12 }
+        var y = 0f
+        while (y <= h) { drawLine(g, Offset(0f, y), Offset(w, y), u * 0.7f); y += u * 12 }
+        drawRoundRect(e.primary.copy(alpha = 0.5f), Offset.Zero, size, CornerRadius(u * 14), style = Stroke(u * 1.2f))
+        drawRoundRect(e.secondary.copy(alpha = 0.7f), Offset(w - u * 92, u * 10), Size(u * 80, u * 22), CornerRadius(u * 4), style = Stroke(u * 1.2f))
+        drawLine(e.secondary.copy(alpha = 0.5f), Offset(w - u * 84, u * 21), Offset(w - u * 32, u * 21), u)
+        drawCircle(e.secondary.copy(alpha = 0.7f), u * 4, Offset(w - u * 22, u * 21), style = Stroke(u))
+        for (n in 0 until 40) {
+            val yy = u * 40 + n * u * 10
+            if (yy < h - u * 20) drawLine(e.secondary.copy(alpha = 0.5f), Offset(0f, yy), Offset(if (n % 5 == 0) u * 14 else u * 8, yy), u)
+        }
+    }
+    // Primera plana: cabecera de gaceta entre filetes gruesos y finos, y columnas a los lados.
+    TemaId.COLONOS -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, false, "Gaceta · " + t.nombre, "☞ Pase usted a la página siguiente",
+        comillas = "“" to "”", emblema = 116.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.primary.copy(alpha = 0.7f)
+        drawLine(c, Offset(0f, u * 4), Offset(w, u * 4), u * 3); drawLine(c, Offset(0f, u * 10), Offset(w, u * 10), u * 0.8f)
+        drawLine(c, Offset(0f, h - u * 10), Offset(w, h - u * 10), u * 0.8f); drawLine(c, Offset(0f, h - u * 4), Offset(w, h - u * 4), u * 3)
+        listOf(u * 16, w - u * 16).forEach { x -> drawLine(c.copy(alpha = 0.4f), Offset(x, u * 18), Offset(x, h - u * 18), u * 0.8f) }
+        listOf(u * 16, w - u * 16).forEach { x ->
+            val m = Offset(x, h / 2)
+            drawPath(Path().apply { moveTo(m.x, m.y - u * 6); lineTo(m.x + u * 4, m.y); lineTo(m.x, m.y + u * 6); lineTo(m.x - u * 4, m.y); close() }, c)
+        }
+    }
+    // Boletín del Imperio: corona de laurel alrededor del emblema y una fila de estrellas al pie.
+    TemaId.NAPOLEON -> {
+        val arriba = 34f; val tam = 132f
+        DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "En avant !  ·  toca para seguir", emblema = tam.dp, arriba = arriba.dp, abajo = 46.dp) { e ->
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val oro = e.tertiary
+            val centro = Offset(w / 2, u * (arriba + tam / 2)); val r = u * (tam / 2 + 18)
+            listOf(1f, -1f).forEach { s ->
+                // Cada rama sube desde abajo por su lado y se queda abierta arriba: a la derecha de 30° a −65°, a la izquierda de 150° a 245°.
+                val desde = if (s > 0f) 30f else 150f
+                drawArc(oro.copy(alpha = 0.7f), desde, if (s > 0f) -95f else 95f, false, centro - Offset(r, r), Size(r * 2, r * 2), style = Stroke(u * 1.4f))
+                for (k in 0 until 6) {
+                    val a = Math.toRadians((if (s > 0f) 30.0 - k * 18 else 150.0 + k * 18))
+                    val p = Offset(centro.x + r * cos(a).toFloat(), centro.y + r * sin(a).toFloat())
+                    rotate(Math.toDegrees(a).toFloat() + 90f + s * 30f, p) { drawOval(oro.copy(alpha = 0.85f), Offset(p.x - u * 3, p.y - u * 8), Size(u * 6, u * 12)) }
+                }
+            }
+            drawRect(oro.copy(alpha = 0.4f), Offset(0f, 0f), size, style = Stroke(u))
+            for (i in 0 until 5) estrellaPresentacion(Offset(w / 2 + (i - 2) * u * 22, h - u * 18), u * 6, oro, 5, 0.45f)
+        }
+    }
+    // Lámina de herbario: esquineros, un helecho por el margen y la etiqueta del ejemplar al pie.
+    TemaId.BOTANICO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, true, "Lám. I — " + t.nombre, "toca para volver la hoja del herbario",
+        emblema = 104.dp, abajo = 62.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onSurfaceVariant.copy(alpha = 0.5f); val verde = e.secondary.copy(alpha = 0.7f)
+        drawRect(c, Offset.Zero, size, style = Stroke(u))
+        listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
+            drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + s.x * u * 22, o.y); lineTo(o.x, o.y + s.y * u * 22); close() }, c)
+        }
+        // Helecho: un raquis curvo con folíolos alternos.
+        val x0 = u * 20
+        drawPath(Path().apply { moveTo(x0, h - u * 70); quadraticTo(x0 - u * 8, h / 2, x0 + u * 4, u * 40) }, verde, style = Stroke(u * 1.2f, cap = StrokeCap.Round))
+        var y = u * 50; var lado = 1f
+        while (y < h - u * 80) {
+            drawLine(verde, Offset(x0 - u * 2, y), Offset(x0 - u * 2 + lado * u * 9, y - u * 5), u * 1.6f, cap = StrokeCap.Round)
+            y += u * 9; lado = -lado
+        }
+        val et = Offset(w - u * 120, h - u * 50)
+        drawRect(c, et, Size(u * 108, u * 38), style = Stroke(u))
+        for (i in 0 until 3) drawLine(c, Offset(et.x + u * 8, et.y + u * (10 + i * 9f)), Offset(et.x + u * (if (i == 0) 96f else 70f), et.y + u * (10 + i * 9f)), u * 0.8f)
+    }
+    // Ventana de Adviento: la frase colgada bajo una guirnalda con bolas, entre copos de nieve.
+    TemaId.NAVIDAD -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre, "✦ toca para abrir la siguiente ventanita", arriba = 50.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val verde = e.secondary; val rojo = e.primary; val oro = e.tertiary
+        drawRoundRect(oro.copy(alpha = 0.4f), Offset.Zero, size, CornerRadius(u * 12), style = Stroke(u))
+        val n = 4; val paso = w / n
+        for (i in 0 until n) drawArc(verde, 0f, 180f, false, Offset(i * paso, -u * 14), Size(paso, u * 36), style = Stroke(u * 4, cap = StrokeCap.Round))
+        for (i in 1 until n) {
+            drawLine(oro, Offset(i * paso, u * 4), Offset(i * paso, u * 16), u)
+            drawCircle(if (i % 2 == 0) oro else rojo, u * 5, Offset(i * paso, u * 21))
+        }
+        listOf(Offset(u * 18, h * 0.4f), Offset(w - u * 20, h * 0.6f), Offset(u * 22, h - u * 28), Offset(w - u * 26, h - u * 22)).forEach { c ->
+            for (k in 0 until 3) rotate(k * 60f, c) { drawLine(e.onSurfaceVariant.copy(alpha = 0.5f), c - Offset(0f, u * 6), c + Offset(0f, u * 6), u) }
+        }
+    }
+    // Rollo colgante: dos rodillos de madera, el borde de seda y el emblema al pie como sello de cinabrio.
+    TemaId.SEDA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, false, t.nombre, "◇ 前行  ·  toca para que siga la caravana",
+        comillas = "「" to "」", emblema = 100.dp, arriba = 44.dp, abajo = 44.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val madera = e.tertiary
+        drawRect(e.surface.copy(alpha = 0.55f), Offset(u * 10, u * 12), Size(w - u * 20, h - u * 24))
+        drawRect(e.primary.copy(alpha = 0.5f), Offset(u * 18, u * 20), Size(w - u * 36, h - u * 40), style = Stroke(u))
+        listOf(0f, h - u * 12).forEach { y ->
+            drawRoundRect(madera, Offset(u * 4, y), Size(w - u * 8, u * 12), CornerRadius(u * 6))
+            drawCircle(madera, u * 8, Offset(u * 4, y + u * 6)); drawCircle(madera, u * 8, Offset(w - u * 4, y + u * 6))
+        }
+        drawPath(Path().apply { moveTo(w / 2 - u * 30, 0f); lineTo(w / 2, -u * 18); lineTo(w / 2 + u * 30, 0f) }, madera, style = Stroke(u))
+    }
+    // Vitral: un arco ojival con su rosetón en la clave.
+    TemaId.GOTICO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "✠ toca, y que se abra la puerta del claustro",
+        arriba = 100.dp, abajo = 30.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.tertiary.copy(alpha = 0.75f)
+        listOf(0f, u * 7).forEach { m ->
+            val s = u * 120 + m; val top = u * 4 + m
+            drawPath(Path().apply {
+                moveTo(m, h); lineTo(m, s)
+                cubicTo(m, s - (s - top) * 0.55f, w / 2 - (w / 2 - m) * 0.35f, top + (s - top) * 0.1f, w / 2, top)
+                cubicTo(w / 2 + (w / 2 - m) * 0.35f, top + (s - top) * 0.1f, w - m, s - (s - top) * 0.55f, w - m, s)
+                lineTo(w - m, h)
+            }, if (m == 0f) c else c.copy(alpha = 0.35f), style = Stroke(if (m == 0f) u * 1.6f else u))
+        }
+        val r = Offset(w / 2, u * 52)
+        drawCircle(c, u * 16, r, style = Stroke(u * 1.2f))
+        for (k in 0 until 6) {
+            val a = Math.toRadians(k * 60.0)
+            drawCircle(c, u * 5.5f, Offset(r.x + u * 9 * cos(a).toFloat(), r.y + u * 9 * sin(a).toFloat()), style = Stroke(u))
+        }
+        drawLine(c, Offset(0f, h), Offset(w, h), u * 2)
+    }
+    // Visor de la sala de control: escuadras, marcas de mira y una órbita que rodea el emblema.
+    TemaId.ESPACIO -> {
+        val arriba = 40f; val tam = 132f
+        DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, "◦ " + t.nombre.uppercase() + " ◦", "◦ T–0 · toca para iniciar la secuencia",
+            emblema = tam.dp, arriba = arriba.dp) { e ->
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val c = e.primary; val l = u * 22
+            listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
+                drawLine(c, o, Offset(o.x + s.x * l, o.y), u * 1.6f); drawLine(c, o, Offset(o.x, o.y + s.y * l), u * 1.6f)
+            }
+            listOf(Offset(w / 2, 0f) to Offset(0f, 1f), Offset(w / 2, h) to Offset(0f, -1f), Offset(0f, h / 2) to Offset(1f, 0f), Offset(w, h / 2) to Offset(-1f, 0f)).forEach { (o, s) ->
+                drawLine(c.copy(alpha = 0.6f), o, Offset(o.x + s.x * u * 10, o.y + s.y * u * 10), u)
+            }
+            val centro = Offset(w / 2, u * (arriba + tam / 2))
+            drawOval(c.copy(alpha = 0.35f), Offset(centro.x - u * 116, centro.y - u * 30), Size(u * 232, u * 60), style = Stroke(u))
+            drawCircle(e.secondary, u * 3.5f, Offset(centro.x + u * 100, centro.y - u * 15))
+        }
+    }
+    // Arco de herradura con su alfiz y estrellas de ocho puntas en las enjutas.
+    TemaId.ANDALUS -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, false, t.nombre, "◈ تقدّم  ·  toca para cruzar el arco", arriba = 58.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.tertiary.copy(alpha = 0.75f)
+        val r = w / 2 - u * 4; val centro = Offset(w / 2, r + u * 4)
+        drawArc(c, 150f, 240f, false, centro - Offset(r, r), Size(r * 2, r * 2), style = Stroke(u * 1.6f))
+        val r2 = r - u * 7
+        drawArc(c.copy(alpha = 0.4f), 150f, 240f, false, centro - Offset(r2, r2), Size(r2 * 2, r2 * 2), style = Stroke(u))
+        // Dovelas: rayas que salen del centro por todo el arco.
+        for (k in 0..20) {
+            val a = Math.toRadians(150.0 + k * 12)
+            val dx = cos(a).toFloat(); val dy = sin(a).toFloat()
+            drawLine(c.copy(alpha = 0.4f), Offset(centro.x + dx * r2, centro.y + dy * r2), Offset(centro.x + dx * r, centro.y + dy * r), u * 0.8f)
+        }
+        val pie = centro.y + r * 0.5f
+        val jamba = r * 0.866f
+        drawLine(c, Offset(centro.x - jamba, pie), Offset(centro.x - jamba, h), u * 1.6f)
+        drawLine(c, Offset(centro.x + jamba, pie), Offset(centro.x + jamba, h), u * 1.6f)
+        estrellaPresentacion(Offset(u * 16, u * 16), u * 9, e.primary.copy(alpha = 0.8f), 8, 0.6f)
+        estrellaPresentacion(Offset(w - u * 16, u * 16), u * 9, e.primary.copy(alpha = 0.8f), 8, 0.6f)
+        // Alfiz: el recuadro que enmarca el arco, abierto abajo para no cruzar la frase.
+        drawLine(c.copy(alpha = 0.5f), Offset(0f, 0f), Offset(w, 0f), u)
+        drawLine(c.copy(alpha = 0.5f), Offset(0f, 0f), Offset(0f, pie), u)
+        drawLine(c.copy(alpha = 0.5f), Offset(w, 0f), Offset(w, pie), u)
+    }
+    // Ger: la cúpula con su corona (toono) arriba, la frase bajo ella y la celosía (khana) al pie.
+    TemaId.MONGOL -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre.uppercase(), "▹ УРАГШАА  ·  toca para levantar el campamento",
+        arriba = 72.dp, abajo = 56.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.primary.copy(alpha = 0.75f)
+        drawPath(Path().apply { moveTo(0f, u * 64); quadraticTo(w / 2, -u * 40, w, u * 64) }, c, style = Stroke(u * 1.6f))
+        val toono = Offset(w / 2, u * 13)
+        drawCircle(e.background, u * 10, toono); drawCircle(c, u * 10, toono, style = Stroke(u * 1.4f))
+        for (k in 0 until 8) {
+            val a = Math.toRadians(k * 45.0)
+            drawLine(c.copy(alpha = 0.6f), toono, Offset(toono.x + u * 10 * cos(a).toFloat(), toono.y + u * 10 * sin(a).toFloat()), u)
+        }
+        drawLine(c, Offset(0f, u * 64), Offset(0f, h), u * 1.6f); drawLine(c, Offset(w, u * 64), Offset(w, h), u * 1.6f)
+        drawLine(c, Offset(0f, h), Offset(w, h), u * 1.6f)
+        clipRect(u * 4, h - u * 40, w - u * 4, h - u * 8) {
+            var x = -u * 32
+            while (x < w + u * 32) {
+                drawLine(c.copy(alpha = 0.4f), Offset(x, h - u * 40), Offset(x + u * 32, h - u * 8), u)
+                drawLine(c.copy(alpha = 0.4f), Offset(x + u * 32, h - u * 40), Offset(x, h - u * 8), u)
+                x += u * 16
+            }
+        }
+    }
+    // Página de cuaderno: líneas de construcción que se pasan de las esquinas y el círculo de compás alrededor del emblema.
+    TemaId.RENACIMIENTO -> {
+        val arriba = 40f; val tam = 96f
+        DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, t.nombre, "✎ tocca e prosegui  ·  toca para seguir", emblema = tam.dp, arriba = arriba.dp) { e ->
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val c = e.primary.copy(alpha = 0.4f)
+            listOf(u * 10, h - u * 10).forEach { y -> drawLine(c, Offset(-u * 6, y), Offset(w + u * 6, y), u * 0.8f) }
+            listOf(u * 10, w - u * 10).forEach { x -> drawLine(c, Offset(x, -u * 6), Offset(x, h + u * 6), u * 0.8f) }
+            drawLine(c.copy(alpha = 0.25f), Offset(u * 10, u * 10), Offset(w - u * 10, h - u * 10), u * 0.6f)
+            drawLine(c.copy(alpha = 0.25f), Offset(w - u * 10, u * 10), Offset(u * 10, h - u * 10), u * 0.6f)
+            val centro = Offset(u * (40 + tam / 2), u * (arriba + tam / 2))
+            drawCircle(c, u * (tam / 2 + 14), centro, style = Stroke(u * 0.9f))
+            drawLine(c, Offset(centro.x - u * (tam / 2 + 22), centro.y), Offset(centro.x + u * (tam / 2 + 22), centro.y), u * 0.6f)
+            drawLine(c, Offset(centro.x, centro.y - u * (tam / 2 + 22)), Offset(centro.x, centro.y + u * (tam / 2 + 22)), u * 0.6f)
+            drawCircle(c, u * 2, centro)
+            // Un arco de la espiral áurea en la esquina de abajo.
+            drawArc(e.secondary.copy(alpha = 0.45f), 0f, 90f, false, Offset(w - u * 130, h - u * 140), Size(u * 120, u * 120), style = Stroke(u))
+        }
+    }
+    // Cartel constructivista: cuña roja arriba, barra negra a un lado y una diagonal con su círculo al pie.
+    TemaId.URSS -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, true, t.nombre.uppercase(), "ВПЕРЁД!  ·  toca para seguir", emblema = 120.dp, abajo = 50.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        drawPath(Path().apply { moveTo(w, 0f); lineTo(w, u * 120); lineTo(w - u * 90, 0f); close() }, e.primary.copy(alpha = 0.9f))
+        drawRect(e.onSurface, Offset(0f, u * 20), Size(u * 8, h * 0.6f))
+        drawLine(e.onSurface.copy(alpha = 0.8f), Offset(0f, h - u * 6), Offset(w, h - u * 30), u * 3)
+        drawCircle(e.primary, u * 12, Offset(w - u * 26, h - u * 16))
+    }
+    // Cartel de la plaza: banda tricolor arriba y abajo, filete de imprenta y la escarapela en el centro de la banda.
+    TemaId.REVOLUCION -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre.uppercase(), "Marchons, citoyen  ·  toca para seguir",
+        arriba = 46.dp, abajo = 40.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val colores = listOf(e.secondary, Color.White, e.primary)
+        colores.forEachIndexed { i, col -> drawRect(col, Offset(i * w / 3, 0f), Size(w / 3, u * 8)) }
+        colores.reversed().forEachIndexed { i, col -> drawRect(col, Offset(i * w / 3, h - u * 8), Size(w / 3, u * 8)) }
+        drawRect(e.onSurface.copy(alpha = 0.6f), Offset(0f, u * 8), Size(w, h - u * 16), style = Stroke(u * 1.4f))
+        drawRect(e.onSurface.copy(alpha = 0.3f), Offset(u * 6, u * 14), Size(w - u * 12, h - u * 28), style = Stroke(u * 0.7f))
+        val c = Offset(w / 2, u * 8)
+        drawCircle(e.secondary, u * 14, c); drawCircle(Color.White, u * 9, c); drawCircle(e.primary, u * 4.5f, c)
+    }
+    // Losa de las tierras antiguas: esquinas talladas, muescas rúnicas por el borde y una gema engastada arriba.
+    TemaId.ANTIGUAS -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, false, t.nombre, "◆ toca para seguir el camino", emblema = 112.dp, arriba = 46.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.secondary.copy(alpha = 0.7f); val k = u * 12
+        drawPath(Path().apply { moveTo(k, 0f); lineTo(w - k, 0f); lineTo(w, k); lineTo(w, h - k); lineTo(w - k, h); lineTo(k, h); lineTo(0f, h - k); lineTo(0f, k); close() }, c, style = Stroke(u * 1.6f))
+        // Muescas: cada una es una runa inventada de dos trazos.
+        var x = u * 30; var n = 0
+        while (x < w - u * 30) {
+            listOf(u * 8, h - u * 20).forEach { y ->
+                drawLine(c, Offset(x, y), Offset(x, y + u * 12), u * 1.2f)
+                when (n % 3) {
+                    0 -> drawLine(c, Offset(x, y + u * 2), Offset(x + u * 5, y + u * 6), u * 1.2f)
+                    1 -> drawLine(c, Offset(x, y + u * 6), Offset(x - u * 5, y + u * 10), u * 1.2f)
+                    else -> { drawLine(c, Offset(x, y + u * 3), Offset(x + u * 4, y), u * 1.2f); drawLine(c, Offset(x, y + u * 3), Offset(x - u * 4, y), u * 1.2f) }
+                }
+            }
+            x += u * 22; n++
+        }
+        val g = Offset(w / 2, 0f)
+        drawPath(Path().apply { moveTo(g.x, g.y - u * 11); lineTo(g.x + u * 8, g.y); lineTo(g.x, g.y + u * 11); lineTo(g.x - u * 8, g.y); close() }, e.tertiary)
+        drawPath(Path().apply { moveTo(g.x, g.y - u * 11); lineTo(g.x + u * 8, g.y); lineTo(g.x, g.y + u * 11); lineTo(g.x - u * 8, g.y); close() }, c, style = Stroke(u))
+        drawLine(Color.White.copy(alpha = 0.6f), Offset(g.x - u * 3, g.y - u * 4), Offset(g.x, g.y - u * 8), u)
+    }
+}
+
 @Composable
 fun CapaPresentacionTema() {
     val t = PresentacionTema.tema ?: return
@@ -219,20 +648,74 @@ fun CapaPresentacionTema() {
         p.animateTo(0f, tween(600))
         if (PresentacionTema.vuelta == vuelta) PresentacionTema.cerrar()
     }
+    val d = disenoPresentacion(t)
+    val alinear = if (d.izquierda) Alignment.Start else Alignment.CenterHorizontally
+    val alineaTexto = if (d.izquierda) TextAlign.Start else TextAlign.Center
+    val emblema: @Composable (Modifier) -> Unit = { m ->
+        Box(m.graphicsLayer { val s = 0.6f + 0.4f * p.value; scaleX = s; scaleY = s }) { Emblema(t, d.emblema, e, animado = Repo.config.animaciones) }
+    }
+    val titulo: @Composable (Modifier) -> Unit = { m ->
+        Text(d.titulo, style = MaterialTheme.typography.headlineMedium, color = e.primary, textAlign = alineaTexto, modifier = m)
+    }
+    val banda: @Composable () -> Unit = { Meandro(Modifier.width(200.dp).padding(top = 8.dp, bottom = 18.dp)) }
+    val frase: @Composable (Modifier) -> Unit = { m ->
+        f?.let { fr ->
+            Column(m, horizontalAlignment = alinear) {
+                fr.original?.let { Text(it, style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic), color = e.onSurfaceVariant, textAlign = alineaTexto, modifier = Modifier.padding(bottom = 8.dp)) }
+                val cuerpo = if (d.capitular && fr.texto.isNotEmpty()) buildAnnotatedString {
+                    // La capitular del copista: la primera letra grande y en rojo.
+                    withStyle(SpanStyle(color = e.primary, fontSize = 34.sp, fontWeight = FontWeight.SemiBold)) { append(fr.texto.take(1)) }
+                    append(fr.texto.drop(1))
+                } else AnnotatedString(d.comillas.first + fr.texto + d.comillas.second)
+                Text(cuerpo, style = MaterialTheme.typography.titleMedium, color = e.onBackground, textAlign = alineaTexto)
+                Text("— " + fr.autor, style = MaterialTheme.typography.labelMedium, color = e.onSurfaceVariant, textAlign = alineaTexto, modifier = Modifier.padding(top = 10.dp))
+            }
+        }
+    }
     Box(Modifier.fillMaxSize().graphicsLayer { alpha = p.value }.background(e.background.copy(alpha = 0.95f))
         .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { PresentacionTema.cerrar() }) {
         CapaFiesta()
-        Column(Modifier.align(Alignment.Center).padding(horizontal = 34.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(Modifier.graphicsLayer { val s = 0.6f + 0.4f * p.value; scaleX = s; scaleY = s }) { Emblema(t, 132.dp, e, animado = Repo.config.animaciones) }
-            Text(t.nombre, style = MaterialTheme.typography.headlineMedium, color = e.primary, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 22.dp))
-            Meandro(Modifier.width(200.dp).padding(top = 8.dp, bottom = 18.dp))
-            f?.let { fr ->
-                fr.original?.let { Text(it, style = MaterialTheme.typography.bodyMedium.copy(fontStyle = FontStyle.Italic), color = e.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(bottom = 8.dp)) }
-                Text("«" + fr.texto + "»", style = MaterialTheme.typography.titleMedium, color = e.onBackground, textAlign = TextAlign.Center)
-                Text("— " + fr.autor, style = MaterialTheme.typography.labelMedium, color = e.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 10.dp))
+        Column(
+            Modifier.align(Alignment.Center).fillMaxWidth().padding(horizontal = 22.dp).drawBehind { d.marco.invoke(this, e) }
+                .padding(start = 40.dp, end = 40.dp, top = d.arriba, bottom = d.abajo),
+            horizontalAlignment = alinear,
+        ) {
+            when (d.orden) {
+                OrdenPresentacion.EMBLEMA_ARRIBA -> {
+                    emblema(Modifier)
+                    titulo(Modifier.padding(top = 22.dp))
+                    banda()
+                    frase(Modifier)
+                }
+                OrdenPresentacion.TITULO_ARRIBA -> {
+                    titulo(Modifier)
+                    banda()
+                    emblema(Modifier.padding(bottom = 18.dp))
+                    frase(Modifier)
+                }
+                OrdenPresentacion.EMBLEMA_AL_LADO -> {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        emblema(Modifier)
+                        titulo(Modifier.weight(1f).padding(start = 16.dp))
+                    }
+                    banda()
+                    frase(Modifier)
+                }
+                OrdenPresentacion.EMBLEMA_ABAJO -> {
+                    titulo(Modifier)
+                    banda()
+                    frase(Modifier)
+                    emblema(Modifier.padding(top = 22.dp))
+                }
+                OrdenPresentacion.FRASE_ARRIBA -> {
+                    frase(Modifier)
+                    banda()
+                    emblema(Modifier)
+                    titulo(Modifier.padding(top = 18.dp))
+                }
             }
-            Text(t.descripcion, style = MaterialTheme.typography.bodySmall, color = e.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 26.dp))
-            Text("toca para seguir", style = MaterialTheme.typography.labelSmall, color = e.outline, modifier = Modifier.padding(top = 14.dp))
+            Text(t.descripcion, style = MaterialTheme.typography.bodySmall, color = e.onSurfaceVariant, textAlign = alineaTexto, modifier = Modifier.padding(top = 26.dp))
+            Text(d.tocar, style = MaterialTheme.typography.labelSmall, color = e.outline, textAlign = alineaTexto, modifier = Modifier.padding(top = 14.dp))
         }
     }
 }

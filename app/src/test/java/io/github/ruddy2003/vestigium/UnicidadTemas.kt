@@ -83,7 +83,6 @@ class UnicidadTemas {
         /** Lo repetido hoy, por superficie. Cada lote borra lo que vuelve propio. */
         val PENDIENTES: Map<String, Set<String>> = mapOf(
             "atras" to setOf("laboratorio", "colonos", "botanico", "navidad", "seda"),
-            "campana_etapas" to setOf("colonos", "napoleon", "botanico", "navidad"),
             "clave" to setOf("romano", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "urss", "revolucion", "antiguas"),
             "comentario" to setOf("romano", "ciber", "heleno", "orden", "napoleon"),
             "escala_toque" to setOf("romano", "ciber", "heleno", "colonos", "gotico", "espacio"),
@@ -95,7 +94,6 @@ class UnicidadTemas {
             "radio" to setOf("ciber", "heleno", "medieval", "distopia", "refugio", "orden", "napoleon", "navidad", "seda", "gotico", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
             "semana" to setOf("ciber", "distopia", "refugio", "orden", "colonos", "napoleon", "botanico", "navidad", "espacio", "revolucion", "antiguas"),
             "semana_corta" to setOf("ciber", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
-            "trofeos_nombres" to setOf("romano", "napoleon", "andalus", "renacimiento"),
         )
     }
 }

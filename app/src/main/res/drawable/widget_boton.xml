@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="@color/w_boton" />
-    <stroke android:width="1dp" android:color="@color/w_boton_borde" />
-    <corners android:radius="5dp" />
-</shape>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/w_boton"/>
+            <stroke android:width="1dp" android:color="@color/w_boton_borde"/>
+            <corners android:radius="2dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="8dp" android:height="3dp" android:top="0dp">
+        <vector android:width="8dp" android:height="3dp" android:viewportWidth="8" android:viewportHeight="3">
+            <path android:pathData="M0,0 L8,0 L6.4,3 L1.6,3 Z" android:fillColor="#AAD2AE5A"/>
+        </vector>
+    </item>
+</layer-list>

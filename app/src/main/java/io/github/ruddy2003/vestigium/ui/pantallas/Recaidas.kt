@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +53,9 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.QuickActivity
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
 
 /**
  * Privado: lo único que muestra el seguimiento privado. Cada día, los medicamentos y (con el seguimiento privado) la intensidad
@@ -259,13 +261,14 @@ private fun duracion(min: Double): String = if (min < 60) "${min.toInt()} min" e
 @Composable
 private fun Barras24(v: IntArray, color: androidx.compose.ui.graphics.Color) {
     val fondo = MaterialTheme.colorScheme.surfaceVariant
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().aspectRatio(9f).padding(top = 4.dp)) {
         val max = (v.maxOrNull() ?: 1).coerceAtLeast(1)
         val w = size.width / 24
         for (i in 0 until 24) {
-            drawRoundRect(fondo, Offset(i * w + 1, 0f), Size(w - 2, size.height), CornerRadius(3f, 3f))
+            barraGrafica(eg, Offset(i * w + 1, 0f), Size(w - 2, size.height), fondo, pista = true)
             val h = size.height * v[i] / max
-            if (v[i] > 0) drawRoundRect(color, Offset(i * w + 1, size.height - h), Size(w - 2, h), CornerRadius(3f, 3f))
+            if (v[i] > 0) barraGrafica(eg, Offset(i * w + 1, size.height - h), Size(w - 2, h), color)
         }
     }
 }
@@ -273,13 +276,14 @@ private fun Barras24(v: IntArray, color: androidx.compose.ui.graphics.Color) {
 @Composable
 private fun Fila(nombre: String, n: Int, max: Int) {
     val cs = MaterialTheme.colorScheme
+    val eg = estiloGrafica()
     Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
         Text(nombre, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(0.18f))
         Canvas(Modifier.weight(0.72f).padding(vertical = 4.dp).aspectRatio(18f)) {
-            drawRoundRect(cs.surfaceVariant, Offset.Zero, size, CornerRadius(4f, 4f))
-            if (n > 0) drawRoundRect(cs.error.copy(alpha = 0.8f), Offset.Zero, Size(size.width * n / max, size.height), CornerRadius(4f, 4f))
+            barraGrafica(eg, Offset.Zero, size, cs.surfaceVariant, horizontal = true, pista = true)
+            if (n > 0) barraGrafica(eg, Offset.Zero, Size(size.width * n / max, size.height), cs.error.copy(alpha = 0.8f), horizontal = true)
         }
-        Text("$n", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(0.1f).padding(start = 6.dp))
+        Text("$n", style = estiloCifras(MaterialTheme.typography.labelMedium), modifier = Modifier.weight(0.1f).padding(start = 6.dp))
     }
 }
 

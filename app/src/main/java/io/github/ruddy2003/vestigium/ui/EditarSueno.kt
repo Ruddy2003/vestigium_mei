@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,7 +39,7 @@ fun EditarSueno(fecha: String, cerrar: () -> Unit) {
     val a = (dormi ?: LocalDateTime.now()).aMillis(); val b = (desperte ?: LocalDateTime.now()).aMillis()
     val total = ((b - a) / 60_000L).toInt() - (despierto ?: 0)
     val valido = b > a && total in 30..(20 * 60)
-    AlertDialog(
+    Dialogo(
         onDismissRequest = cerrar,
         title = { Text("Sueño de la noche al ${Fechas.corto(fecha)}") },
         text = {

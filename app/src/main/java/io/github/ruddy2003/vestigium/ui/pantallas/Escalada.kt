@@ -2,9 +2,7 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import android.app.DatePickerDialog
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -59,8 +56,15 @@ import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.Vacio
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
+import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import java.time.LocalDate
+import io.github.ruddy2003.vestigium.ui.elegirFecha
 
 /** Sesión que se está editando (la elige la lista y la lee el editor). */
 object EdicionEscalada { var id by mutableStateOf<String?>(null) }
@@ -145,17 +149,18 @@ private fun GraficaGrados(sesiones: List<Ascenso>) {
     val puntos = sesiones.mapNotNull { a -> maxGrado(a)?.first }
     if (puntos.size < 2) { Ayuda("Con dos sesiones o más aparece la gráfica."); return }
     val linea = MaterialTheme.colorScheme.primary; val rejilla = MaterialTheme.colorScheme.outline; val tenue = MaterialTheme.colorScheme.onSurfaceVariant
+    val eg = estiloGrafica()
     val lo = kotlin.math.floor(puntos.min()); val hi = kotlin.math.ceil(puntos.max()).coerceAtLeast(lo + 1)
     Row {
         Column(Modifier.height(140.dp).padding(end = 6.dp), verticalArrangement = Arrangement.SpaceBetween) {
-            Text(Grados.nombre(hi, sesiones.lastOrNull()?.bloques?.firstOrNull()?.grado), style = MaterialTheme.typography.labelSmall, color = tenue)
-            Text(Grados.nombre(lo, sesiones.lastOrNull()?.bloques?.firstOrNull()?.grado), style = MaterialTheme.typography.labelSmall, color = tenue)
+            Text(Grados.nombre(hi, sesiones.lastOrNull()?.bloques?.firstOrNull()?.grado), style = estiloCifras(), color = tenue)
+            Text(Grados.nombre(lo, sesiones.lastOrNull()?.bloques?.firstOrNull()?.grado), style = estiloCifras(), color = tenue)
         }
         Canvas(Modifier.weight(1f).height(140.dp)) {
-            for (k in 0..4) { val y = size.height * k / 4; drawLine(rejilla, Offset(0f, y), Offset(size.width, y), 1f) }
+            rejillaGrafica(eg, (0..4).map { k -> size.height * k / 4 }, rejilla)
             val pts = puntos.mapIndexed { i, v -> Offset(size.width * i / (puntos.size - 1), (size.height * (1 - (v - lo) / (hi - lo))).toFloat()) }
-            for (i in 1 until pts.size) drawLine(linea, pts[i - 1], pts[i], 4f)
-            pts.forEach { drawRect(linea, Offset(it.x - 5f, it.y - 5f), Size(10f, 10f)) }
+            lineaGrafica(eg, pts, linea, 4f)
+            pts.forEach { puntoGrafica(eg, it, 5f, linea) }
         }
     }
 }
@@ -166,6 +171,7 @@ private fun Piramide(bloques: List<Bloque>) {
     if (porGrado.isEmpty()) { Ayuda("Todavía no hay bloques encadenados."); return }
     val maxN = porGrado.values.maxOf { it.size }
     val oscuro = esOscuro()
+    val eg = estiloGrafica()
     val lo = porGrado.keys.min(); val hi = porGrado.keys.max()
     Column {
         var g = hi
@@ -175,9 +181,12 @@ private fun Piramide(bloques: List<Bloque>) {
                 Text((l.firstOrNull()?.second ?: Grados.nombre(g, bloques.firstOrNull()?.grado)).padEnd(5), style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(52.dp))
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     val f = l.size.toFloat() / maxN
-                    if (l.isNotEmpty()) Box(Modifier.fillMaxWidth(f.coerceAtLeast(0.04f)).height(16.dp).background(Tonos.secuencial(0.3f + 0.7f * ((g - lo) / maxOf(1.0, hi - lo)).toFloat(), oscuro)))
+                    if (l.isNotEmpty()) {
+                        val tono = Tonos.secuencial(0.3f + 0.7f * ((g - lo) / maxOf(1.0, hi - lo)).toFloat(), oscuro)
+                        Canvas(Modifier.fillMaxWidth(f.coerceAtLeast(0.04f)).height(16.dp)) { barraGrafica(eg, Offset.Zero, size, tono, horizontal = true) }
+                    }
                 }
-                Text("${l.size}", style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(30.dp).padding(start = 6.dp))
+                Text("${l.size}", style = estiloCifras(MaterialTheme.typography.labelMedium), modifier = Modifier.width(30.dp).padding(start = 6.dp))
             }
             g -= 1.0
         }
@@ -205,8 +214,7 @@ fun PantallaAscenso(nav: Nav) {
                     Clave("dies", Fechas.titulo(a.fecha).lowercase(), ancho = 6)
                 }
                 BotonSecundario("cambiar fecha", Modifier.padding(top = 4.dp)) {
-                    val p = Fechas.parse(a.fecha)
-                    DatePickerDialog(ctx, { _, y, m, d -> g(a.copy(fecha = Fechas.iso(LocalDate.of(y, m + 1, d)))) }, p.year, p.monthValue - 1, p.dayOfMonth).show()
+                    elegirFecha(ctx, a.fecha) { g(a.copy(fecha = it)) }
                 }
                 Etiqueta("Lugar")
                 OutlinedTextField(a.lugar, { g(a.copy(lugar = it)) }, Modifier.fillMaxWidth(), singleLine = true, placeholder = { Text("gimnasio o zona", style = MaterialTheme.typography.labelLarge) })

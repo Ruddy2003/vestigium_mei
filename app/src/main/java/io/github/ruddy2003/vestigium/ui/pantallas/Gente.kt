@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -48,6 +47,8 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 /** Lo que dice cada nivel de la escala de cercanía (círculos de Aron: qué tanto se enciman tú y esa persona). */
 private val CERCANIA = mapOf(1 to "Casi nada en común", 2 to "Poco", 3 to "Algo", 4 to "Bastante", 5 to "Mucho", 6 to "Muy cercana", 7 to "Casi parte de mí")
@@ -72,7 +73,7 @@ fun CirculosCercania(valor: Int?, onCambio: (Int?) -> Unit) {
                         drawCircle(if (sel) cs.primary else cs.onSurfaceVariant, r, Offset(cx - d / 2, cy), style = t)
                         drawCircle(if (sel) cs.primary else cs.onSurfaceVariant, r, Offset(cx + d / 2, cy), style = t)
                     }
-                    Text("$i", style = MaterialTheme.typography.labelSmall, color = if (sel) cs.primary else cs.onSurfaceVariant)
+                    Text("$i", style = estiloCifras(), color = if (sel) cs.primary else cs.onSurfaceVariant)
                 }
             }
         }
@@ -173,7 +174,7 @@ fun PantallaPersonas(nav: Nav) {
         var nueva by remember { mutableStateOf<String?>(null) }
         TextButton(onClick = { nueva = "" }, modifier = Modifier.padding(top = 8.dp)) { Text("+ persona", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         nueva?.let { t ->
-            androidx.compose.material3.AlertDialog(onDismissRequest = { nueva = null }, title = { Text("Nueva persona") },
+            Dialogo(onDismissRequest = { nueva = null }, title = { Text("Nueva persona") },
                 text = {
                     Column {
                         androidx.compose.material3.OutlinedTextField(value = t, onValueChange = { nueva = it }, singleLine = true, modifier = Modifier.fillMaxWidth(), placeholder = { Text("Nombre, como la escribirías con @") })
@@ -232,7 +233,7 @@ fun PantallaPersonas(nav: Nav) {
         }
     }
     editando?.let { n ->
-        AlertDialog(onDismissRequest = { editando = null }, confirmButton = {}, dismissButton = { TextButton(onClick = { editando = null }) { Text("cerrar") } },
+        Dialogo(onDismissRequest = { editando = null }, confirmButton = {}, dismissButton = { TextButton(onClick = { editando = null }) { Text("cerrar") } },
             title = { Text("@$n") },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
@@ -285,7 +286,7 @@ private fun DiasEspeciales() {
         var tipo by remember(fp0.id) { mutableStateOf(fp0.tipo) }
         val ok = Especiales.leer(fecha)?.takeIf { it.isNotBlank() }
         val existe = c.fechas_propias.any { it.id == fp0.id }
-        AlertDialog(onDismissRequest = { editando = null },
+        Dialogo(onDismissRequest = { editando = null },
             confirmButton = {
                 TextButton(enabled = ok != null && nombre.isNotBlank(), onClick = {
                     val n = fp0.copy(nombre = nombre.trim(), fecha = ok!!, tipo = tipo)

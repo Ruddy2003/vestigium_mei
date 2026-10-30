@@ -2,7 +2,6 @@
 
 package io.github.ruddy2003.vestigium.ui.pantallas
 
-import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,9 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.ciencia.Analisis
@@ -57,9 +55,19 @@ import io.github.ruddy2003.vestigium.ui.Romano
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.lineaMeta
+import io.github.ruddy2003.vestigium.ui.pincelDeCifras
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
+import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 /** Herramienta que se abre (la elige Explorar). */
 object Herramienta {
@@ -132,7 +140,7 @@ internal fun ElegirVariable(vars: List<Variable>, cerrar: () -> Unit, elegir: (S
     fun normal(x: String) = java.text.Normalizer.normalize(x.lowercase(), java.text.Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
     val grupos = remember(vars) { vars.map { it.grupo }.distinct() }
     val lista = vars.filter { (grupo == null || it.grupo == grupo) && (q.isBlank() || normal(it.nombre + " " + it.grupo + " " + it.id).contains(normal(q.trim()))) }
-    AlertDialog(
+    Dialogo(
         onDismissRequest = cerrar,
         title = { Text("Variable · ${vars.size}", style = MaterialTheme.typography.titleLarge) },
         text = {
@@ -173,7 +181,8 @@ private fun Tendencia(panel: Map<String, Map<String, Double?>>, vars: List<Varia
     if (s.size < 5) { Vacio("Hay ${s.size} días con este dato. Con 5 o más aparece la gráfica."); return }
     val m7 = Analisis.movil(s, 7); val m30 = Analisis.movil(s, 30)
     val c1 = MaterialTheme.colorScheme.outline; val c2 = MaterialTheme.colorScheme.secondary; val c3 = MaterialTheme.colorScheme.primary
-    val txt = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val eg = estiloGrafica()
+    val pin = pincelDeCifras(MaterialTheme.colorScheme.onSurfaceVariant, 24f)
     val ultimos = s.takeLast(365)
     Canvas(Modifier.fillMaxWidth().height(200.dp).padding(top = 10.dp)) {
         val ini = Fechas.parse(ultimos.first().first).toEpochDay(); val fin = Fechas.parse(ultimos.last().first).toEpochDay().coerceAtLeast(ini + 1)
@@ -181,13 +190,20 @@ private fun Tendencia(panel: Map<String, Map<String, Double?>>, vars: List<Varia
         val izq = 60f
         fun px(f: String) = izq + (Fechas.parse(f).toEpochDay() - ini).toFloat() / (fin - ini) * (size.width - izq)
         fun py(y: Double) = (size.height - 20f - (y - lo) / (hi - lo) * (size.height - 30f)).toFloat()
-        val pin = Paint().apply { color = txt; textSize = 24f; isAntiAlias = true }
-        listOf(lo, (lo + hi) / 2, hi).forEach { y -> drawLine(c1, Offset(izq, py(y)), Offset(size.width, py(y)), 1f); drawContext.canvas.nativeCanvas.drawText(fmt(y), 0f, py(y) + 8f, pin) }
-        ultimos.forEach { (f, y) -> drawCircle(c1, 4f, Offset(px(f), py(y))) }
+        val guias = listOf(lo, (lo + hi) / 2, hi)
+        rejillaGrafica(eg, guias.map { py(it) }, c1, area = Rect(izq, py(hi), size.width, py(lo)))
+        ejeGrafica(eg, Offset(izq, py(lo)), Offset(size.width, py(lo)), c1)
+        guias.forEach { y -> drawContext.canvas.nativeCanvas.drawText(fmt(y), 0f, py(y) + 8f, pin) }
+        ultimos.forEach { (f, y) -> puntoGrafica(eg, Offset(px(f), py(y)), 4f, c1) }
+        // Solo se unen días seguidos: un día sin dato corta la línea (null).
         fun linea(l: List<Pair<String, Double>>, color: androidx.compose.ui.graphics.Color, w: Float) {
             val r = l.filter { Fechas.parse(it.first).toEpochDay() >= ini }
-            for (i in 1 until r.size) if (Fechas.parse(r[i].first).toEpochDay() - Fechas.parse(r[i - 1].first).toEpochDay() == 1L)
-                drawLine(color, Offset(px(r[i - 1].first), py(r[i - 1].second)), Offset(px(r[i].first), py(r[i].second)), w)
+            val puntos = ArrayList<Offset?>()
+            for (i in r.indices) {
+                if (i > 0 && Fechas.parse(r[i].first).toEpochDay() - Fechas.parse(r[i - 1].first).toEpochDay() != 1L) puntos.add(null)
+                puntos.add(Offset(px(r[i].first), py(r[i].second)))
+            }
+            lineaGrafica(eg, puntos, color, w)
         }
         linea(m7, c2, 3f); linea(m30, c3, 6f)
     }
@@ -216,14 +232,15 @@ private fun Semana(panel: Map<String, Map<String, Double?>>, vars: List<Variable
     val col = MaterialTheme.colorScheme.primary; val err = MaterialTheme.colorScheme.onSurface; val fondo = MaterialTheme.colorScheme.surfaceVariant
     val lo = g.filterNotNull().minOf { it.lo }; val hi = g.filterNotNull().maxOf { it.hi }.let { if (it == lo) lo + 1 else it }
     val base = if (lo > 0 && lo / hi > 0.5) lo - (hi - lo) * 0.3 else minOf(0.0, lo)
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().height(170.dp).padding(top = 10.dp)) {
         val w = size.width / 7
         fun py(y: Double) = (size.height - (y - base) / (hi - base) * size.height).toFloat()
         g.forEachIndexed { i, x ->
-            drawRect(fondo, Offset(i * w + 6, 0f), Size(w - 12, size.height))
+            barraGrafica(eg, Offset(i * w + 6, 0f), Size(w - 12, size.height), fondo, pista = true)
             if (x != null) {
-                drawRect(col, Offset(i * w + 6, py(x.media)), Size(w - 12, size.height - py(x.media)))
-                drawLine(err, Offset(i * w + w / 2, py(x.lo)), Offset(i * w + w / 2, py(x.hi)), 3f)
+                barraGrafica(eg, Offset(i * w + 6, py(x.media)), Size(w - 12, size.height - py(x.media)), col)
+                lineaGrafica(eg, listOf(Offset(i * w + w / 2, py(x.lo)), Offset(i * w + w / 2, py(x.hi))), err, 3f)
             }
         }
     }
@@ -250,6 +267,7 @@ private fun Factores(panel: Map<String, Map<String, Double?>>, vars: List<Variab
     val firmes = l.count { it.q < 0.1 }
     Aviso("Revisé ${l.size} variables. $firmes resisten la corrección por comparaciones múltiples (Benjamini-Hochberg, q < 0.1): esas son las pistas más confiables.")
     val c = MaterialTheme.colorScheme.primary; val c2 = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
     Tarjeta(Modifier.padding(top = 8.dp)) {
         l.take(20).forEachIndexed { i, f ->
             if (i > 0) HorizontalDivider()
@@ -266,9 +284,9 @@ private fun Factores(panel: Map<String, Map<String, Double?>>, vars: List<Variab
                 Canvas(Modifier.fillMaxWidth().height(12.dp).padding(top = 4.dp)) {
                     val mid = size.width / 2
                     fun px(x: Double) = (mid + x / escala * mid).toFloat().coerceIn(0f, size.width)
-                    drawLine(c2, Offset(mid, 0f), Offset(mid, size.height), 1f)
-                    drawLine(if (f.q < 0.1) c else c2, Offset(px(f.lo), size.height / 2), Offset(px(f.hi), size.height / 2), 4f)
-                    drawCircle(if (f.q < 0.1) c else c2, 5f, Offset(px(f.efecto), size.height / 2))
+                    lineaMeta(eg, Offset(mid, 0f), Offset(mid, size.height), c2, 1f)
+                    lineaGrafica(eg, listOf(Offset(px(f.lo), size.height / 2), Offset(px(f.hi), size.height / 2)), if (f.q < 0.1) c else c2, 4f)
+                    puntoGrafica(eg, Offset(px(f.efecto), size.height / 2), 5f, if (f.q < 0.1) c else c2)
                 }
             }
         }
@@ -295,18 +313,20 @@ private fun ModeloUI(panel: Map<String, Map<String, Double?>>, vars: List<Variab
         Cifra("${m.n}", "días completos", Modifier.weight(1f)); Cifra("%.0f%%".format(m.r2Ajustado.coerceAtLeast(0.0) * 100), "varianza explicada (ajustada)", Modifier.weight(1f))
     }
     val c = MaterialTheme.colorScheme.primary; val c2 = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
+    val cifras = estiloCifras(MaterialTheme.typography.labelMedium)
     Tarjeta(Modifier.padding(top = 8.dp)) {
         m.nombres.forEachIndexed { i, n ->
             val nombre = if (n == "ayer") "Valor del día anterior" else vars.firstOrNull { it.id == n }?.nombre ?: n
             val firme = m.lo[i] > 0 || m.hi[i] < 0
             Text(nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = if (i == 0) 0.dp else 8.dp))
-            Text("β = %+.2f  [%.2f, %.2f]".format(m.beta[i], m.lo[i], m.hi[i]) + if (firme) "  ✓" else "", style = MaterialTheme.typography.labelMedium, color = if (firme) c else MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("β = %+.2f  [%.2f, %.2f]".format(m.beta[i], m.lo[i], m.hi[i]) + if (firme) "  ✓" else "", style = cifras, color = if (firme) c else MaterialTheme.colorScheme.onSurfaceVariant)
             Canvas(Modifier.fillMaxWidth().height(12.dp).padding(top = 4.dp)) {
                 val mid = size.width / 2
                 fun px(x: Double) = (mid + x * mid).toFloat().coerceIn(0f, size.width)
-                drawLine(c2, Offset(mid, 0f), Offset(mid, size.height), 1f)
-                drawLine(if (firme) c else c2, Offset(px(m.lo[i]), size.height / 2), Offset(px(m.hi[i]), size.height / 2), 4f)
-                drawCircle(if (firme) c else c2, 5f, Offset(px(m.beta[i]), size.height / 2))
+                lineaMeta(eg, Offset(mid, 0f), Offset(mid, size.height), c2, 1f)
+                lineaGrafica(eg, listOf(Offset(px(m.lo[i]), size.height / 2), Offset(px(m.hi[i]), size.height / 2)), if (firme) c else c2, 4f)
+                puntoGrafica(eg, Offset(px(m.beta[i]), size.height / 2), 5f, if (firme) c else c2)
             }
         }
     }
@@ -367,18 +387,21 @@ private fun Ritmo() {
         r.sdDormir?.let { Clave("regularidad", "la hora de dormir varía ±%.0f min".format(it * 60)) }
     }
     // Cada noche es una barra de las 18:00 a las 14:00.
-    val c = MaterialTheme.colorScheme.primary; val c2 = MaterialTheme.colorScheme.secondary; val fondo = MaterialTheme.colorScheme.surfaceVariant
-    val txt = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
+    val c = MaterialTheme.colorScheme.primary; val c2 = MaterialTheme.colorScheme.secondary; val guia = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
+    val pin = pincelDeCifras(MaterialTheme.colorScheme.onSurfaceVariant, 22f)
     Canvas(Modifier.fillMaxWidth().height((r.noches.size * 9 + 24).dp).padding(top = 10.dp)) {
         val izq = 0f; val w = size.width
         fun px(h: Double) = (izq + (h - 18) / 20.0 * (w - izq)).toFloat()
         val alto = (size.height - 24f) / r.noches.size
-        val pin = Paint().apply { color = txt; textSize = 22f; isAntiAlias = true }
-        listOf(18.0, 22.0, 26.0, 30.0, 34.0, 38.0).forEach { h -> drawLine(fondo, Offset(px(h), 0f), Offset(px(h), size.height - 24f), 1f); drawContext.canvas.nativeCanvas.drawText(hora(h), px(h) + 2, size.height - 4f, pin) }
+        val horas = listOf(18.0, 22.0, 26.0, 30.0, 34.0, 38.0)
+        rejillaGrafica(eg, emptyList(), guia, xs = horas.map { px(it) }, area = Rect(0f, 0f, size.width, size.height - 24f))
+        horas.forEach { h -> drawContext.canvas.nativeCanvas.drawText(hora(h), px(h) + 2, size.height - 4f, pin) }
         r.noches.forEachIndexed { i, n ->
             val libre = Fechas.esDiaLibre(n.fecha, mexico)
-            drawRect(if (libre) c2 else c, Offset(px(n.inicio), i * alto + 1), Size((px(n.fin) - px(n.inicio)).coerceAtLeast(2f), alto - 2))
+            barraGrafica(eg, Offset(px(n.inicio), i * alto + 1), Size((px(n.fin) - px(n.inicio)).coerceAtLeast(2f), alto - 2), if (libre) c2 else c, horizontal = true)
         }
+        ejeGrafica(eg, Offset(0f, size.height - 24f), Offset(size.width, size.height - 24f), guia)
     }
     Ayuda("Barras de color fuerte: noches antes de un día laboral; de otro color: antes de un día libre (sábado, domingo${if (mexico) " o festivo" else ""}). El jet lag social es la diferencia del punto medio del sueño entre ambos (Wittmann et al., 2006); más de 1 hora se ha asociado con peor ánimo y salud.", Modifier.padding(top = 6.dp))
 }

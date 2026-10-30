@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -43,6 +42,11 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaMeta
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -137,10 +141,11 @@ private fun TarjetaGuia(it: Guias.Item) {
     val ctx = LocalContext.current
     var abierta by remember { mutableStateOf(false) }
     val punto = colorEstado(it.estado)
+    val eg = estiloGrafica()
     Tarjeta(Modifier.padding(bottom = 10.dp)) {
         Column(Modifier.fillMaxWidth().clickable { abierta = !abierta }) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Canvas(Modifier.padding(end = 8.dp).width(10.dp).height(10.dp)) { drawCircle(punto) }
+                Canvas(Modifier.padding(end = 8.dp).width(10.dp).height(10.dp)) { puntoGrafica(eg, center, size.minDimension / 2, punto) }
                 Text(it.titulo, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 Text(it.grupo.lowercase(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -165,20 +170,21 @@ private fun Regla(it: Guias.Item, modifier: Modifier) {
     val colores = it.zonas.map { z -> colorEstado(z.estado) }
     val tinta = MaterialTheme.colorScheme.onBackground
     val fondo = MaterialTheme.colorScheme.background
+    val eg = estiloGrafica()
     Canvas(modifier) {
         val alto = size.height * 0.36f; val y0 = size.height * 0.5f - alto / 2
         val span = (it.max - it.min).coerceAtLeast(1e-9)
         fun x(v: Double) = (((v - it.min) / span).coerceIn(0.0, 1.0) * size.width).toFloat()
         it.zonas.forEachIndexed { i, z ->
             val a = x(maxOf(z.desde, it.min)); val b = x(minOf(z.hasta, it.max))
-            if (b > a) drawRoundRect(colores[i].copy(alpha = 0.55f), Offset(a, y0), Size(b - a, alto), CornerRadius(alto / 2))
+            if (b > a) barraGrafica(eg, Offset(a, y0), Size(b - a, alto), colores[i].copy(alpha = 0.55f), horizontal = true)
         }
         val v = it.valor ?: return@Canvas
         val px = x(v)
         val p = Path().apply { moveTo(px, y0 - 2f); lineTo(px - 7.dp.toPx(), y0 - 11.dp.toPx()); lineTo(px + 7.dp.toPx(), y0 - 11.dp.toPx()); close() }
         drawPath(p, tinta)
         drawLine(tinta, Offset(px, y0 - 2f), Offset(px, y0 + alto + 3.dp.toPx()), 2.5.dp.toPx())
-        drawCircle(fondo, 3.dp.toPx(), Offset(px, y0 + alto / 2))
+        puntoGrafica(eg, Offset(px, y0 + alto / 2), 3.dp.toPx(), fondo)
     }
 }
 
@@ -188,17 +194,18 @@ private fun FilaMicro(m: Guias.Micro) {
     val estado = when { pct < 66 -> Guias.Estado.LEJOS; pct < 100 -> Guias.Estado.CERCA; m.limite != null && (m.tuyo ?: 0.0) > m.limite -> Guias.Estado.LEJOS; else -> Guias.Estado.BIEN }
     val col = colorEstado(estado)
     val pista = MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+    val eg = estiloGrafica()
     Column(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(m.nombre, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            Text("${fmt(m.tuyo ?: 0.0)} de ${fmt(m.meta)} ${m.unidad} · ${pct.roundToInt()}%", style = MaterialTheme.typography.labelMedium, color = col)
+            Text("${fmt(m.tuyo ?: 0.0)} de ${fmt(m.meta)} ${m.unidad} · ${pct.roundToInt()}%", style = estiloCifras(MaterialTheme.typography.labelMedium), color = col)
         }
         Canvas(Modifier.fillMaxWidth().padding(top = 3.dp).height(7.dp)) {
-            drawRoundRect(pista, Offset.Zero, size, CornerRadius(size.height / 2))
+            barraGrafica(eg, Offset.Zero, size, pista, horizontal = true, pista = true)
             val f = (pct / 150).coerceIn(0.0, 1.0).toFloat()
-            drawRoundRect(col, Offset.Zero, Size(size.width * f, size.height), CornerRadius(size.height / 2))
+            barraGrafica(eg, Offset.Zero, Size(size.width * f, size.height), col, horizontal = true)
             val meta = size.width * (100f / 150f)
-            drawLine(Color.Black.copy(alpha = 0.35f), Offset(meta, -2f), Offset(meta, size.height + 2f), 1.5f)
+            lineaMeta(eg, Offset(meta, -2f), Offset(meta, size.height + 2f), Color.Black.copy(alpha = 0.35f))
         }
     }
 }

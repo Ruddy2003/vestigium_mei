@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -68,11 +67,17 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.random.Random
+import io.github.ruddy2003.vestigium.ui.Deslizador
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 // ---------------- Cuestionarios ----------------
 @Composable
@@ -143,16 +148,14 @@ private fun Cuestionario(i: Instrumento, cerrar: () -> Unit) {
 private fun Linea(v: List<Double>) {
     val c = MaterialTheme.colorScheme.primary
     val l = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().height(90.dp)) {
         if (v.size < 2) return@Canvas
         val min = v.min(); val max = v.max().let { if (it == min) min + 1 else it }
-        drawLine(l, Offset(0f, size.height - 1), Offset(size.width, size.height - 1), 1.5f)
-        var prev: Offset? = null
-        v.forEachIndexed { k, x ->
-            val p = Offset(k * size.width / (v.size - 1), (size.height - 8 - (x - min) / (max - min) * (size.height - 16)).toFloat())
-            prev?.let { drawLine(c, it, p, 5f) }
-            drawCircle(c, 7f, p); prev = p
-        }
+        ejeGrafica(eg, Offset(0f, size.height - 1), Offset(size.width, size.height - 1), l)
+        val pts = v.mapIndexed { k, x -> Offset(k * size.width / (v.size - 1), (size.height - 8 - (x - min) / (max - min) * (size.height - 16)).toFloat()) }
+        lineaGrafica(eg, pts, c, 5f)
+        pts.forEach { puntoGrafica(eg, it, 7f, c) }
     }
 }
 
@@ -261,7 +264,7 @@ fun PantallaLugares(nav: Nav) {
                 OutlinedTextField(value = nombre, onValueChange = { nombre = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Nombre (ej. SEDECO, casa de mis abuelos)") }, singleLine = true)
                 Etiqueta("Tipo"); FilaFichas(Catalogo.TIPOS_LUGAR, tipo) { tipo = it }
                 Etiqueta("Radio: ${radio.toInt()} m")
-                Slider(value = radio, onValueChange = { radio = it }, valueRange = 80f..400f)
+                Deslizador(value = radio, onValueChange = { radio = it }, valueRange = 80f..400f)
                 msg?.let { Ayuda(it) }
                 BotonPrincipal("Guardar este lugar", Modifier.fillMaxWidth().padding(top = 8.dp), habilitado = nombre.isNotBlank()) {
                     scope.launch {
@@ -318,7 +321,7 @@ fun PantallaLugares(nav: Nav) {
                         Ayuda("Agrandar el radio busca las visitas de los últimos 30 días que antes quedaban fuera; achicarlo no quita las que ya hay.")
                     }
                     renombrar?.let { t ->
-                        androidx.compose.material3.AlertDialog(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
+                        Dialogo(onDismissRequest = { renombrar = null }, title = { Text("Renombrar lugar") },
                             text = { OutlinedTextField(value = t, onValueChange = { renombrar = it }, singleLine = true, modifier = Modifier.fillMaxWidth()) },
                             confirmButton = { TextButton(enabled = t.isNotBlank(), onClick = { Repo.guardarLugar(l.copy(nombre = t.trim())); renombrar = null }) { Text("Guardar") } },
                             dismissButton = { TextButton(onClick = { renombrar = null }) { Text("Cancelar") } })
@@ -334,7 +337,7 @@ fun PantallaLugares(nav: Nav) {
                                 if (ignorar) Repo.cambiarConfig { cc -> cc.copy(lugares_ignorados = cc.lugares_ignorados.dropLast(1)) }
                             }
                         }
-                        androidx.compose.material3.AlertDialog(onDismissRequest = { borrar = false }, title = { Text("Quitar «${l.nombre}»") },
+                        Dialogo(onDismissRequest = { borrar = false }, title = { Text("Quitar «${l.nombre}»") },
                             text = {
                                 Column {
                                     if (suyas.isEmpty()) Ayuda("No tiene visitas guardadas.")
@@ -366,6 +369,7 @@ fun PantallaLugares(nav: Nav) {
 private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<io.github.ruddy2003.vestigium.data.Momento>) {
     val tenue = MaterialTheme.colorScheme.onSurfaceVariant
     val neutro = MaterialTheme.colorScheme.outline
+    val eg = estiloGrafica()
     val general = muestreos.mapNotNull { it.valencia?.toDouble() }.takeIf { it.isNotEmpty() }?.average()
     if (puntos.isEmpty() && lugares.isEmpty()) { Ayuda("Aparecerá cuando haya ubicaciones guardadas."); return }
     val lats = puntos.map { it.lat } + lugares.map { it.lat }
@@ -379,6 +383,7 @@ private fun Mapa(puntos: List<Db.Punto>, lugares: List<Lugar>, muestreos: List<i
         val cx = size.width / 2; val cy = size.height / 2
         val mLa = (la0 + la1) / 2; val mLo = (lo0 + lo1) / 2
         fun p(la: Double, lo: Double) = Offset((cx + (lo - mLo) * Math.cos(Math.toRadians(mLa)) * esc).toFloat(), (cy - (la - mLa) * esc).toFloat())
+        // Pueden ser miles de muestras: van como círculos simples, sin la forma del tema (que arma un Path por punto).
         puntos.forEach { drawCircle(tenue.copy(alpha = 0.18f), 4f, p(it.lat, it.lon)) }
         lugares.forEach { l ->
             val aqui = muestreos.filter { enLugar(it, l) }.mapNotNull { it.valencia?.toDouble() }
@@ -404,7 +409,7 @@ private fun enLugar(m: io.github.ruddy2003.vestigium.data.Momento, l: io.github.
 @Composable
 fun DialogoVisita(v: io.github.ruddy2003.vestigium.data.Visita, cerrar: () -> Unit) {
     val actual = Repo.lugares.firstOrNull { it.id == v.lugar }
-    androidx.compose.material3.AlertDialog(onDismissRequest = cerrar,
+    Dialogo(onDismissRequest = cerrar,
         title = { Text("${actual?.nombre ?: "Lugar quitado"} · ${Fechas.horaDe(v.entrada)}" + (v.salida?.let { "–${Fechas.horaDe(it)}" } ?: "")) },
         text = {
             Column {

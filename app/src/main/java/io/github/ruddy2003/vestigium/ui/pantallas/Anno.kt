@@ -48,7 +48,11 @@ import io.github.ruddy2003.vestigium.ui.Romano
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Tonos
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,6 +68,8 @@ fun PantallaAnno(nav: Nav) {
     val oscuro = esOscuro()
     val vacio = MaterialTheme.colorScheme.surfaceVariant
     val marco = MaterialTheme.colorScheme.onSurface
+    val eg = estiloGrafica()
+    val numerales = estiloCifras(MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp))
     val mu = remember(anio, Repo.momentos.size) { Repo.momentos.filter { it.fecha.startsWith(pre) && it.esAnimo && it.valencia != null }.groupBy { it.fecha } }
     fun valencia(f: String): Double? = Repo.dias[f]?.valencia?.toDouble() ?: mu[f]?.mapNotNull { it.valencia }?.average()
 
@@ -85,7 +91,7 @@ fun PantallaAnno(nav: Nav) {
                 Row {
                     Column(Modifier.width(30.dp)) {
                         for (m in 1..12) androidx.compose.foundation.layout.Box(Modifier.height(celda), contentAlignment = Alignment.CenterStart) {
-                            Text(io.github.ruddy2003.vestigium.ui.Estilo.numeral(m), style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(io.github.ruddy2003.vestigium.ui.Estilo.numeral(m), style = numerales, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     Canvas(Modifier.weight(1f).height(celda * 12).pointerInput(anio) {
@@ -103,7 +109,8 @@ fun PantallaAnno(nav: Nav) {
                             val dm = YearMonth.of(anio, m).lengthOfMonth()
                             for (d in 1..dm) {
                                 val v = valencia("%04d-%02d-%02d".format(anio, m, d))
-                                drawRect(Tonos.valencia(v, oscuro) ?: vacio, Offset((d - 1) * cw, (m - 1) * ch), Size(cw - 2f, ch - 2f))
+                                // Cada día, con la silueta de barra del tema (sin adornos internos: los cuadros son muy chicos).
+                                barraGrafica(eg, Offset((d - 1) * cw, (m - 1) * ch), Size(cw - 2f, ch - 2f), Tonos.valencia(v, oscuro) ?: vacio, pista = true)
                             }
                         }
                         tocado?.let { f ->
@@ -127,15 +134,17 @@ fun PantallaAnno(nav: Nav) {
         Seccion("Mes por mes", numero = 2) {
             val medias = (1..12).map { m -> dias.filter { it.fecha.substring(5, 7).toInt() == m }.mapNotNull { it.valencia } }
             val color = MaterialTheme.colorScheme.primary
+            val linea = MaterialTheme.colorScheme.outline
             Canvas(Modifier.fillMaxWidth().height(120.dp)) {
                 val w = size.width / 12f
                 medias.forEachIndexed { i, l ->
                     if (l.isEmpty()) return@forEachIndexed
                     val v = l.average(); val h = ((v - 1) / 6 * size.height).toFloat()
-                    drawRect(Tonos.valencia(v, oscuro) ?: color, Offset(i * w + 4f, size.height - h), Size(w - 8f, h))
+                    barraGrafica(eg, Offset(i * w + 4f, size.height - h), Size(w - 8f, h), Tonos.valencia(v, oscuro) ?: color)
                 }
+                ejeGrafica(eg, Offset(0f, size.height), Offset(size.width, size.height), linea)
             }
-            Row(Modifier.fillMaxWidth()) { for (m in 1..12) Text(io.github.ruddy2003.vestigium.ui.Estilo.numeral(m), Modifier.weight(1f), style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), textAlign = TextAlign.Center) }
+            Row(Modifier.fillMaxWidth()) { for (m in 1..12) Text(io.github.ruddy2003.vestigium.ui.Estilo.numeral(m), Modifier.weight(1f), style = numerales, textAlign = TextAlign.Center) }
             val conDatos = medias.mapIndexedNotNull { i, l -> if (l.isEmpty()) null else (i + 1) to l.average() }
             if (conDatos.size >= 2) {
                 val mejor = conDatos.maxBy { it.second }; val peor = conDatos.minBy { it.second }

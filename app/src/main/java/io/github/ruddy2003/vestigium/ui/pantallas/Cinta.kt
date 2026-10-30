@@ -27,9 +27,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -46,7 +53,9 @@ import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Hoja
 import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Tarjeta
+import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TextoMarcado
+import io.github.ruddy2003.vestigium.ui.figuraTema
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import kotlinx.coroutines.Dispatchers
@@ -58,6 +67,93 @@ private class Cosa(val pista: Int, val a: Long, val b: Long?, val color: Color, 
 
 /** Una pista de la cinta: su nombre y su ícono (dibujado, ver [io.github.ruddy2003.vestigium.ui.IconoPista]). */
 private class PistaCinta(val nombre: String, val icono: String)
+
+/** Lo que se pinta dentro de un bloque de la cinta. */
+private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA }
+
+/**
+ * Cómo se ve la cinta en cada tema: la esquina de los bloques ([radio] en dp; [cortado], en chaflán), lo que llevan dentro,
+ * el guion de las horas menores (en dp; null, línea seguida) y el remate de las marcas sueltas. Los nodos, las horas
+ * mayores y el «ahora» llevan además la figura del tema ([figuraTema]).
+ */
+private class PielCinta(val radio: Float, val cortado: Boolean, val relleno: RellenoCinta, val guion: FloatArray?, val cap: StrokeCap)
+
+private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
+    // Sillares con el filo claro arriba.
+    TemaId.ROMANO -> PielCinta(0f, false, RellenoCinta.FILETE, null, StrokeCap.Square)
+    // Bloques de fósforo con líneas de barrido y horas punteadas.
+    TemaId.CIBER -> PielCinta(0f, false, RellenoCinta.RAYAS, floatArrayOf(1.5f, 3f), StrokeCap.Butt)
+    // Bloques con su contorno, como relieves.
+    TemaId.HELENO -> PielCinta(2f, false, RellenoCinta.CONTORNO, floatArrayOf(6f, 3f), StrokeCap.Round)
+    // Tinta que se carga arriba y se aclara.
+    TemaId.MEDIEVAL -> PielCinta(1f, false, RellenoCinta.DEGRADADO, null, StrokeCap.Round)
+    // Sello rayado del expediente.
+    TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    // Indicador en segmentos.
+    TemaId.REFUGIO -> PielCinta(6f, false, RellenoCinta.SEGMENTOS, floatArrayOf(3f, 3f), StrokeCap.Round)
+    // Placa de acero en chaflán.
+    TemaId.ORDEN -> PielCinta(3f, true, RellenoCinta.CONTORNO, floatArrayOf(10f, 3f), StrokeCap.Butt)
+    // Muestra punteada sobre papel milimétrico.
+    TemaId.LABORATORIO -> PielCinta(3f, false, RellenoCinta.PUNTOS, floatArrayOf(1f, 3f), StrokeCap.Round)
+    // Retazo de tela pespunteado.
+    TemaId.COLONOS -> PielCinta(2f, false, RellenoCinta.PUNTADA, floatArrayOf(5f, 5f), StrokeCap.Round)
+    // Galón con brillo.
+    TemaId.NAPOLEON -> PielCinta(1.5f, false, RellenoCinta.FILETE, floatArrayOf(4f, 2f, 1f, 2f), StrokeCap.Square)
+    // Tallos redondeados.
+    TemaId.BOTANICO -> PielCinta(10f, false, RellenoCinta.LISO, floatArrayOf(1f, 4f), StrokeCap.Round)
+    // Bastón de caramelo.
+    TemaId.NAVIDAD -> PielCinta(6f, false, RellenoCinta.DIAGONAL, floatArrayOf(4f, 4f), StrokeCap.Round)
+    // Seda tejida.
+    TemaId.SEDA -> PielCinta(5f, false, RellenoCinta.RAYAS, floatArrayOf(6f, 2f), StrokeCap.Round)
+    // Vidriera emplomada.
+    TemaId.GOTICO -> PielCinta(0f, false, RellenoCinta.SEGMENTOS, null, StrokeCap.Butt)
+    // Barra luminosa de la consola.
+    TemaId.ESPACIO -> PielCinta(3f, false, RellenoCinta.DEGRADADO, floatArrayOf(1f, 5f), StrokeCap.Round)
+    // Azulejo en chaflán con su punteado.
+    TemaId.ANDALUS -> PielCinta(2.5f, true, RellenoCinta.PUNTOS, floatArrayOf(3f, 2f), StrokeCap.Square)
+    // Fieltro cosido.
+    TemaId.MONGOL -> PielCinta(4f, false, RellenoCinta.PUNTADA, floatArrayOf(7f, 3f), StrokeCap.Round)
+    // Sombreado a pluma.
+    TemaId.RENACIMIENTO -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(10f, 4f), StrokeCap.Round)
+    // Bloques planos de cartel.
+    TemaId.URSS -> PielCinta(0f, false, RellenoCinta.LISO, null, StrokeCap.Square)
+    // Bandas de cartel con el filo claro.
+    TemaId.REVOLUCION -> PielCinta(0.5f, true, RellenoCinta.FILETE, floatArrayOf(5f, 2f), StrokeCap.Butt)
+    // Losas de piedra labrada.
+    TemaId.ANTIGUAS -> PielCinta(2f, true, RellenoCinta.CONTORNO, floatArrayOf(2f, 6f), StrokeCap.Square)
+}
+
+/** Un tramo de la cinta con la piel del tema: su forma (esquina o chaflán) y lo que lleva dentro. */
+private fun DrawScope.bloqueCinta(p: PielCinta, color: Color, a: Offset, t: Size) {
+    val d = density
+    val k = minOf(p.radio * d, t.width / 2, t.height / 2)
+    val forma = Path().apply {
+        if (p.cortado) {
+            moveTo(a.x + k, a.y); lineTo(a.x + t.width - k, a.y); lineTo(a.x + t.width, a.y + k); lineTo(a.x + t.width, a.y + t.height - k)
+            lineTo(a.x + t.width - k, a.y + t.height); lineTo(a.x + k, a.y + t.height); lineTo(a.x, a.y + t.height - k); lineTo(a.x, a.y + k); close()
+        } else addRoundRect(RoundRect(a.x, a.y, a.x + t.width, a.y + t.height, CornerRadius(k, k)))
+    }
+    drawPath(forma, color)
+    val claro = Color.White.copy(alpha = 0.3f); val oscuro = Color.Black.copy(alpha = 0.22f)
+    val der = a.x + t.width; val abajo = a.y + t.height
+    clipPath(forma) {
+        when (p.relleno) {
+            RellenoCinta.LISO -> {}
+            RellenoCinta.FILETE -> drawRect(claro, a, Size(t.width, 2f * d))
+            RellenoCinta.RAYAS -> { var y = a.y + 1.5f * d; while (y < abajo) { drawLine(oscuro, Offset(a.x, y), Offset(der, y), 0.8f * d); y += 3f * d } }
+            RellenoCinta.DIAGONAL -> { var x = a.x - t.height; while (x < der) { drawLine(claro, Offset(x, abajo), Offset(x + t.height, a.y), 1.6f * d); x += 6f * d } }
+            RellenoCinta.PUNTOS -> {
+                var y = a.y + 2.5f * d
+                while (y < abajo) { var x = a.x + 2.5f * d; while (x < der) { drawCircle(claro, 0.9f * d, Offset(x, y)); x += 5f * d }; y += 5f * d }
+            }
+            RellenoCinta.CONTORNO -> drawPath(forma, oscuro, style = Stroke(2f * d))
+            RellenoCinta.DEGRADADO -> drawRect(Brush.verticalGradient(listOf(claro, Color.Transparent, oscuro), a.y, abajo), a, t)
+            RellenoCinta.SEGMENTOS -> { var x = a.x + 7f * d; while (x < der) { drawLine(oscuro.copy(alpha = 0.45f), Offset(x, a.y), Offset(x, abajo), 1.4f * d); x += 7f * d } }
+            RellenoCinta.PUNTADA -> if (t.width > 5f * d) drawLine(claro.copy(alpha = 0.7f), Offset(a.x + 2f * d, a.y + t.height / 2), Offset(der - 2f * d, a.y + t.height / 2), 1f * d,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f * d, 2.5f * d)))
+        }
+    }
+}
 
 /**
  * La cinta del día: 29 horas (de las 0:00 a las 5:00 del día siguiente) en una tira que se desliza, con una pista por
@@ -72,6 +168,8 @@ fun PantallaCinta(nav: Nav) {
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
+    val tema = Estilo.tema
+    val piel = pielCinta(tema)
     val ini = Fechas.inicioDia(fecha)
     val fin = ini + 29 * 3_600_000L
     val musica by produceState(emptyList<Pair<Long, String>>(), fecha) {
@@ -265,7 +363,7 @@ fun PantallaCinta(nav: Nav) {
         val amanecer = hora(e?.amanecer); val atardecer = hora(e?.atardecer)
         Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
             Column(Modifier.width(30.dp)) {
-                pistas.forEach { p -> Box(Modifier.height(alto), contentAlignment = Alignment.Center) { io.github.ruddy2003.vestigium.ui.IconoPista(p.icono, cs.primary) } }
+                pistas.forEach { p -> Box(Modifier.height(alto), contentAlignment = Alignment.Center) { io.github.ruddy2003.vestigium.ui.IconoPista(p.icono, cs.primary, tam = 24.dp, tema = tema) } }
             }
             Box(Modifier.weight(1f).horizontalScroll(scroll)) {
                 Canvas(Modifier.width(anchoHora * 29).height(alto * pistas.size + 22.dp).pointerInput(fecha, cosas.size) {
@@ -289,9 +387,13 @@ fun PantallaCinta(nav: Nav) {
                         drawRect(noche, Offset(0f, 0f), Size(a, total))
                         drawRect(Brush.horizontalGradient(listOf(noche.copy(alpha = 0f), noche), t, t + 40f), Offset(t, 0f), Size(size.width - t, total))
                     }
+                    // Las horas: las menores con el guion del tema; las mayores (cada 6) con su figura arriba.
+                    val guion = piel.guion?.let { g -> PathEffect.dashPathEffect(FloatArray(g.size) { g[it] * density }) }
                     for (hh in 0..29) {
                         val xa = x(ini + hh * 3_600_000L)
-                        drawLine(linea.copy(alpha = if (hh % 6 == 0) 0.6f else 0.2f), Offset(xa, 0f), Offset(xa, total), 1f)
+                        val mayor = hh % 6 == 0
+                        drawLine(linea.copy(alpha = if (mayor) 0.6f else 0.2f), Offset(xa, 0f), Offset(xa, total), 1f, pathEffect = if (mayor) null else guion)
+                        if (mayor) figuraTema(tema, linea.copy(alpha = 0.75f), Offset(xa, 3.5.dp.toPx()), 2.6.dp.toPx(), noche)
                         val r = medidor.measure("${hh % 24}", estiloEje)
                         drawText(r, topLeft = Offset((xa - r.size.width / 2).coerceIn(0f, size.width - r.size.width), total + 3f))
                     }
@@ -303,7 +405,7 @@ fun PantallaCinta(nav: Nav) {
                             val xa = x(c.a).coerceIn(0f, size.width); val xb = x(b).coerceIn(0f, size.width)
                             if (xb > xa) {
                                 val alt = h * 0.64f * c.alto
-                                drawRoundRect(c.color.copy(alpha = if (c === elegida) 1f else 0.78f), Offset(xa, y + h * 0.18f + (h * 0.64f - alt)), Size(xb - xa - 1f, alt), CornerRadius(4f, 4f))
+                                bloqueCinta(piel, c.color.copy(alpha = if (c === elegida) 1f else 0.78f), Offset(xa, y + h * 0.18f + (h * 0.64f - alt)), Size(xb - xa - 1f, alt))
                                 if (c.rotulo.isNotBlank() && xb - xa > 34f) {
                                     val r = medidor.measure(c.rotulo.take(((xb - xa) / 14f).toInt().coerceAtLeast(2)), estiloRotulo)
                                     drawText(r, topLeft = Offset(xa + 4f, y + (h - r.size.height) / 2))
@@ -313,16 +415,20 @@ fun PantallaCinta(nav: Nav) {
                             val xa = x(c.a)
                             if (xa in 0f..size.width) {
                                 if (c.rotulo.isNotBlank()) {
-                                    drawCircle(c.color, h * 0.26f, Offset(xa, y + h / 2))
+                                    figuraTema(tema, c.color, Offset(xa, y + h / 2), h * 0.3f, lerp(c.color, Color.Black, 0.3f))
                                     val r = medidor.measure(c.rotulo, estiloRotulo)
                                     drawText(r, topLeft = Offset(xa - r.size.width / 2, y + (h - r.size.height) / 2))
-                                } else drawLine(c.color, Offset(xa, y + h * 0.2f), Offset(xa, y + h * 0.8f), 3f)
+                                } else drawLine(c.color, Offset(xa, y + h * 0.2f), Offset(xa, y + h * 0.8f), 3f, cap = piel.cap)
                                 if (c === elegida) drawCircle(c.color, h * 0.4f, Offset(xa, y + h / 2), style = Stroke(2f))
                             }
                         }
                     }
                     val ahora = System.currentTimeMillis()
-                    if (ahora in ini..fin) { val xa = x(ahora); drawLine(cs.error, Offset(xa, 0f), Offset(xa, total), 2f) }
+                    if (ahora in ini..fin) {
+                        val xa = x(ahora)
+                        drawLine(cs.error, Offset(xa, 0f), Offset(xa, total), 2f)
+                        figuraTema(tema, cs.error, Offset(xa, 4.5.dp.toPx()), 4.5.dp.toPx(), cs.surface)
+                    }
                 }
             }
         }
@@ -331,7 +437,7 @@ fun PantallaCinta(nav: Nav) {
             verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)) {
             pistas.forEach { p ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    io.github.ruddy2003.vestigium.ui.IconoPista(p.icono, cs.onSurfaceVariant, tam = 13.dp)
+                    io.github.ruddy2003.vestigium.ui.IconoPista(p.icono, cs.onSurfaceVariant, tam = 16.dp, tema = tema)
                     Text(" " + p.nombre, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant)
                 }
             }

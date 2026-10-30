@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -36,6 +35,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextAlign
@@ -68,6 +71,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Overlay
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 /**
  * Mosaicos estándar de OpenStreetMap (no piden clave). Para que combinen con la app se tiñen en el teléfono:
@@ -78,81 +82,92 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
     val invertir = ColorMatrix(floatArrayOf(-1f, 0f, 0f, 0f, 255f, 0f, -1f, 0f, 0f, 255f, 0f, 0f, -1f, 0f, 255f, 0f, 0f, 0f, 1f, 0f))
     fun tinte(r: Float, g: Float, b: Float, or: Float, og: Float, ob: Float) = ColorMatrix(floatArrayOf(r, 0f, 0f, 0f, or, 0f, g, 0f, 0f, og, 0f, 0f, b, 0f, ob, 0f, 0f, 0f, 1f, 0f))
     val m = ColorMatrix()
-    when {
-        // Cyberpunk: plano nocturno en azul eléctrico.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.CIBER -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.30f, 0.62f, 0.80f, 0f, 4f, 10f)) }
-        // Helénico: pergamino de día, noche púrpura de noche.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO && oscuro -> { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.78f, 0.70f, 0.92f, 6f, 4f, 14f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.HELENO -> { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.95f, 0.84f, 4f, 2f, 0f)) }
-        // Scriptorium: mapa en sepia sobre pergamino; de noche, tinta parda.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.MEDIEVAL && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.72f, 0.55f, 6f, 3f, 0f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.MEDIEVAL -> { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.92f, 0.76f, 0f, 0f, 0f)) }
-        // Distopía: gris de expediente, sin color.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.DISTOPIA && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.DISTOPIA -> { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
-        // Refugio: fósforo verde de noche; papel de folleto de día.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.REFUGIO && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.18f, 0.9f, 0.38f, 0f, 6f, 0f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.REFUGIO -> { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 0.96f, 0.88f, 4f, 4f, 0f)) }
-        // Orden: acero.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.ORDEN && oscuro -> { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.76f, 0.8f, 0.86f, 6f, 8f, 10f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.ORDEN -> { m.setSaturation(0.1f); m.postConcat(tinte(0.9f, 0.92f, 0.95f, 0f, 0f, 2f)) }
-        // Laboratorio: blanco clínico con un toque cian; de noche, azul de monitor.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.LABORATORIO && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.58f, 0.8f, 0.95f, 2f, 6f, 12f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.LABORATORIO -> { m.setSaturation(0.2f); m.postConcat(tinte(0.94f, 0.98f, 1.0f, 2f, 4f, 6f)) }
-        // Colonos: mapa viejo de gaceta; de noche, azul marino.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.COLONOS && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.7f, 0.86f, 4f, 6f, 14f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.COLONOS -> { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.95f, 0.86f, 2f, 0f, 0f)) }
-        // Napoleónico: carta de estado mayor sepia; de noche, azul imperial.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.NAPOLEON && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.68f, 0.92f, 2f, 4f, 16f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.NAPOLEON -> { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 2f, 0f, 0f)) }
-        // Botánico: lámina de atlas en crema y verde; de noche, el bosque.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.BOTANICO && oscuro -> { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.86f, 0.66f, 2f, 8f, 2f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.BOTANICO -> { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.86f, 2f, 4f, 0f)) }
-        // Gótico: piedra caliza; de noche, el azul de la bóveda.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.GOTICO && oscuro -> { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.56f, 0.6f, 0.95f, 2f, 4f, 22f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.GOTICO -> { m.setSaturation(0.2f); m.postConcat(tinte(0.98f, 0.95f, 0.88f, 2f, 2f, 0f)) }
-        // Espacio: carta de navegación; de noche, como vista desde la órbita.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.ESPACIO && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.42f, 0.55f, 0.85f, 0f, 2f, 8f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.ESPACIO -> { m.setSaturation(0.15f); m.postConcat(tinte(0.93f, 0.96f, 1.0f, 0f, 2f, 6f)) }
-        // Al-Ándalus: arena y yeso; de noche, el jardín en verde azulado.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.ANDALUS && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.82f, 0.78f, 2f, 8f, 6f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.ANDALUS -> { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 4f, 2f, 0f)) }
-        // Mongol: la estepa bajo el cielo azul; de noche, el azul profundo.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.MONGOL && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.55f, 0.68f, 0.95f, 2f, 6f, 18f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.MONGOL -> { m.setSaturation(0.4f); m.postConcat(tinte(0.97f, 0.97f, 0.92f, 2f, 2f, 4f)) }
-        // Renacimiento: mapa dibujado a sanguina; de noche, nogal.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.RENACIMIENTO && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.85f, 0.68f, 0.5f, 6f, 2f, 0f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.RENACIMIENTO -> { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.88f, 0.7f, 0f, 0f, 0f)) }
-        // Navidad: nieve; de noche, bosque.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.NAVIDAD && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.86f, 0.7f, 2f, 8f, 4f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.NAVIDAD -> { m.setSaturation(0.35f); m.postConcat(tinte(0.98f, 0.97f, 0.94f, 4f, 4f, 2f)) }
-        // Ruta de la Seda: arena; de noche, desierto bajo las estrellas.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.SEDA && oscuro -> { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.7f, 0.92f, 4f, 6f, 16f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.SEDA -> { m.setSaturation(0.3f); m.postConcat(tinte(1.0f, 0.93f, 0.78f, 4f, 2f, 0f)) }
-        // Soviético: papel de cartel en blanco y negro con un toque rojo.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.URSS && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.95f, 0.78f, 0.74f, 6f, 0f, 0f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.URSS -> { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.93f, 0.84f, 4f, 0f, 0f)) }
-        // Tierras Antiguas: pergamino verdoso de día; de noche, bosque con luz de luna.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.ANTIGUAS && oscuro -> { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.70f, 0.80f, 0.74f, 4f, 10f, 6f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.ANTIGUAS -> { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 1.0f, 0.90f, 4f, 6f, 0f)) }
-        // Revolución: papel de cartel con tinta de imprenta; de noche, la plaza con antorchas.
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.REVOLUCION && oscuro -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.72f, 0.74f, 0.82f, 6f, 4f, 8f)) }
-        tema == io.github.ruddy2003.vestigium.ui.TemaId.REVOLUCION -> { m.setSaturation(0.12f); m.postConcat(tinte(1.0f, 0.96f, 0.88f, 4f, 2f, 0f)) }
+    when (tema) {
         // Romano: mármol desaturado de día, basalto de noche.
-        oscuro -> { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.80f, 0.82f, 0.85f, 8f, 10f, 12f)) }
-        else -> { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }
+        TemaId.ROMANO -> if (oscuro) { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.80f, 0.82f, 0.85f, 8f, 10f, 12f)) }
+            else { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.95f, 6f, 6f, 4f)) }
+        // Terminal: plano nocturno en azul eléctrico (solo existe en oscuro, así que es igual con o sin «oscuro»).
+        TemaId.CIBER -> { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.30f, 0.62f, 0.80f, 0f, 4f, 10f)) }
+        // Helénico: pergamino de día, noche púrpura de noche.
+        TemaId.HELENO -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.78f, 0.70f, 0.92f, 6f, 4f, 14f)) }
+            else { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.95f, 0.84f, 4f, 2f, 0f)) }
+        // Scriptorium: mapa en sepia sobre pergamino; de noche, tinta parda.
+        TemaId.MEDIEVAL -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.72f, 0.55f, 6f, 3f, 0f)) }
+            else { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.92f, 0.76f, 0f, 0f, 0f)) }
+        // Distopía: gris de expediente, sin color.
+        TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
+            else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        // Refugio: fósforo verde de noche; papel de folleto de día.
+        TemaId.REFUGIO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.18f, 0.9f, 0.38f, 0f, 6f, 0f)) }
+            else { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 0.96f, 0.88f, 4f, 4f, 0f)) }
+        // Orden: acero.
+        TemaId.ORDEN -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.76f, 0.8f, 0.86f, 6f, 8f, 10f)) }
+            else { m.setSaturation(0.1f); m.postConcat(tinte(0.9f, 0.92f, 0.95f, 0f, 0f, 2f)) }
+        // Laboratorio: blanco clínico con un toque cian; de noche, azul de monitor.
+        TemaId.LABORATORIO -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.58f, 0.8f, 0.95f, 2f, 6f, 12f)) }
+            else { m.setSaturation(0.2f); m.postConcat(tinte(0.94f, 0.98f, 1.0f, 2f, 4f, 6f)) }
+        // Colonos: mapa viejo de gaceta; de noche, azul marino.
+        TemaId.COLONOS -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.7f, 0.86f, 4f, 6f, 14f)) }
+            else { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.95f, 0.86f, 2f, 0f, 0f)) }
+        // Napoleónico: carta de estado mayor sepia; de noche, azul imperial.
+        TemaId.NAPOLEON -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.68f, 0.92f, 2f, 4f, 16f)) }
+            else { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 2f, 0f, 0f)) }
+        // Botánico: lámina de atlas en crema y verde; de noche, el bosque.
+        TemaId.BOTANICO -> if (oscuro) { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.86f, 0.66f, 2f, 8f, 2f)) }
+            else { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.86f, 2f, 4f, 0f)) }
+        // Navidad: nieve; de noche, bosque.
+        TemaId.NAVIDAD -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.86f, 0.7f, 2f, 8f, 4f)) }
+            else { m.setSaturation(0.35f); m.postConcat(tinte(0.98f, 0.97f, 0.94f, 4f, 4f, 2f)) }
+        // Ruta de la Seda: arena; de noche, desierto bajo las estrellas.
+        TemaId.SEDA -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.7f, 0.92f, 4f, 6f, 16f)) }
+            else { m.setSaturation(0.3f); m.postConcat(tinte(1.0f, 0.93f, 0.78f, 4f, 2f, 0f)) }
+        // Gótico: piedra caliza; de noche, el azul de la bóveda.
+        TemaId.GOTICO -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.56f, 0.6f, 0.95f, 2f, 4f, 22f)) }
+            else { m.setSaturation(0.2f); m.postConcat(tinte(0.98f, 0.95f, 0.88f, 2f, 2f, 0f)) }
+        // Espacio: carta de navegación; de noche, como vista desde la órbita.
+        TemaId.ESPACIO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.42f, 0.55f, 0.85f, 0f, 2f, 8f)) }
+            else { m.setSaturation(0.15f); m.postConcat(tinte(0.93f, 0.96f, 1.0f, 0f, 2f, 6f)) }
+        // Al-Ándalus: arena y yeso; de noche, el jardín en verde azulado.
+        TemaId.ANDALUS -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.82f, 0.78f, 2f, 8f, 6f)) }
+            else { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 4f, 2f, 0f)) }
+        // Mongol: la estepa bajo el cielo azul; de noche, el azul profundo.
+        TemaId.MONGOL -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.55f, 0.68f, 0.95f, 2f, 6f, 18f)) }
+            else { m.setSaturation(0.4f); m.postConcat(tinte(0.97f, 0.97f, 0.92f, 2f, 2f, 4f)) }
+        // Renacimiento: mapa dibujado a sanguina; de noche, nogal.
+        TemaId.RENACIMIENTO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.85f, 0.68f, 0.5f, 6f, 2f, 0f)) }
+            else { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.88f, 0.7f, 0f, 0f, 0f)) }
+        // Soviético: papel de cartel en blanco y negro con un toque rojo.
+        TemaId.URSS -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.95f, 0.78f, 0.74f, 6f, 0f, 0f)) }
+            else { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.93f, 0.84f, 4f, 0f, 0f)) }
+        // Revolución: papel de cartel con tinta de imprenta; de noche, la plaza con antorchas.
+        TemaId.REVOLUCION -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.72f, 0.74f, 0.82f, 6f, 4f, 8f)) }
+            else { m.setSaturation(0.12f); m.postConcat(tinte(1.0f, 0.96f, 0.88f, 4f, 2f, 0f)) }
+        // Tierras Antiguas: pergamino verdoso de día; de noche, bosque con luz de luna.
+        TemaId.ANTIGUAS -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.70f, 0.80f, 0.74f, 4f, 10f, 6f)) }
+            else { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 1.0f, 0.90f, 4f, 6f, 0f)) }
     }
     return ColorMatrixColorFilter(m)
 }
 
 /**
- * La forma de los marcadores en cada tema: sello de cera, hexágono de neón, hoja, vitral, estrella de ocho puntas,
- * destello, corona de yurta, compás… Se dibujan directo en el lienzo del mapa (rápido aunque sean miles).
+ * La forma con que cada tema marca un lugar en el mapa, una distinta por tema: tabla con asas (Romano), cursor de bloque
+ * (Terminal), sol de dieciséis rayos (Helénico), sello de cera (Scriptorium), ojo (Distopía), señal de refugio (Refugio),
+ * escudo (Orden), anillo de benceno (Laboratorio), casita (Colonos), bicornio (Napoleónico), hoja (Botánico), abeto (Navidad),
+ * moneda con agujero (Seda), arco ojival (Gótico), destello (Espacio), estrella de dos cuadrados (Al-Ándalus), corona de yurta
+ * (Mongol), cuadrado con el círculo de Vitruvio (Renacimiento), estrella (Soviético), escarapela (Revolución) y gema tallada
+ * (Tierras Antiguas). Con borde, cada una lleva además su detalle. Se dibujan directo en el lienzo del mapa (rápido aunque sean miles).
  */
 internal object Formas {
     private val p = android.graphics.Path()
+    private val horario = android.graphics.Path.Direction.CW
+    private val antihorario = android.graphics.Path.Direction.CCW
     private fun poligono(x: Float, y: Float, r: Float, n: Int, giro: Double = -90.0, interior: Float? = null) {
         p.reset()
+        sumarPoligono(x, y, r, n, giro, interior)
+    }
+
+    /** Agrega un polígono (o estrella, con `interior`) al trazo sin borrar lo anterior: para figuras de varias piezas. */
+    private fun sumarPoligono(x: Float, y: Float, r: Float, n: Int, giro: Double, interior: Float? = null) {
         val pasos = if (interior != null) n * 2 else n
         for (i in 0 until pasos) {
             val rr = if (interior != null && i % 2 == 1) r * interior else r
@@ -163,46 +178,111 @@ internal object Formas {
         p.close()
     }
 
+    /** Una figura cerrada a partir de pares (kx, ky): cada vértice está en (x + kx·r, y + ky·r). */
+    private fun figura(x: Float, y: Float, r: Float, vararg k: Float) {
+        p.reset()
+        var i = 0
+        while (i + 1 < k.size) {
+            val px = x + k[i] * r; val py = y + k[i + 1] * r
+            if (i == 0) p.moveTo(px, py) else p.lineTo(px, py)
+            i += 2
+        }
+        p.close()
+    }
+
+    /** Una línea de (x + a·r, y + b·r) a (x + e·r, y + f·r). */
+    private fun raya(c: Canvas, x: Float, y: Float, r: Float, a: Float, b: Float, e: Float, f: Float, pincel: Paint) =
+        c.drawLine(x + a * r, y + b * r, x + e * r, y + f * r, pincel)
+
     fun dibujar(c: Canvas, tema: TemaId, x: Float, y: Float, r: Float, relleno: Paint, borde: Paint?) {
         when (tema) {
-            TemaId.ROMANO -> { p.reset(); p.addRoundRect(x - r, y - r * 0.8f, x + r, y + r * 0.8f, r * 0.2f, r * 0.2f, android.graphics.Path.Direction.CW) }
-            TemaId.CIBER, TemaId.LABORATORIO -> poligono(x, y, r, 6, -90.0)
-            TemaId.HELENO -> poligono(x, y, r * 1.15f, 8, -90.0, 0.55f)
-            TemaId.MEDIEVAL, TemaId.NAPOLEON -> {   // sello de cera de borde ondulado
+            // Tabula ansata: la placa de las inscripciones, con sus dos asas en cola de milano.
+            TemaId.ROMANO -> figura(x, y, r, -0.8f, -0.7f, 0.8f, -0.7f, 0.8f, -0.12f, 1.3f, -0.5f, 1.3f, 0.5f, 0.8f, 0.12f,
+                0.8f, 0.7f, -0.8f, 0.7f, -0.8f, 0.12f, -1.3f, 0.5f, -1.3f, -0.5f, -0.8f, -0.12f)
+            // El cursor de bloque de la consola.
+            TemaId.CIBER -> { p.reset(); p.addRect(x - r * 0.55f, y - r * 0.9f, x + r * 0.55f, y + r * 0.9f, horario) }
+            // El sol de Vergina: dieciséis rayos.
+            TemaId.HELENO -> poligono(x, y, r * 1.15f, 16, -90.0, 0.5f)
+            TemaId.MEDIEVAL -> {   // sello de cera de borde ondulado
                 p.reset()
                 for (i in 0..36) { val a = 2 * Math.PI * i / 36; val rr = r * (1f + 0.09f * kotlin.math.sin(a * 7).toFloat())
                     val px = x + rr * kotlin.math.cos(a).toFloat(); val py = y + rr * kotlin.math.sin(a).toFloat(); if (i == 0) p.moveTo(px, py) else p.lineTo(px, py) }
                 p.close()
             }
+            // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
-            TemaId.REFUGIO -> poligono(x, y, r * 1.1f, 4, -90.0)
+            // La señal de refugio: un triángulo con la punta hacia abajo.
+            TemaId.REFUGIO -> poligono(x, y, r * 1.2f, 3, 90.0)
+            // El escudo de la orden.
             TemaId.ORDEN -> { p.reset(); p.moveTo(x - r, y - r); p.lineTo(x + r, y - r); p.lineTo(x + r, y - r * 0.1f); p.quadTo(x + r, y + r * 0.7f, x, y + r * 1.2f)
                 p.quadTo(x - r, y + r * 0.7f, x - r, y - r * 0.1f); p.close() }
+            // El anillo de benceno: un hexágono (con borde lleva su círculo dentro).
+            TemaId.LABORATORIO -> poligono(x, y, r, 6, -90.0)
+            // Una casita del pueblo.
             TemaId.COLONOS -> { p.reset(); p.moveTo(x, y - r * 1.1f); p.lineTo(x + r, y - r * 0.2f); p.lineTo(x + r, y + r); p.lineTo(x - r, y + r); p.lineTo(x - r, y - r * 0.2f); p.close() }
+            // El bicornio, visto de frente.
+            TemaId.NAPOLEON -> { p.reset(); p.moveTo(x - r * 1.4f, y + r * 0.3f); p.quadTo(x - r * 0.9f, y - r * 1.1f, x, y - r * 0.9f)
+                p.quadTo(x + r * 0.9f, y - r * 1.1f, x + r * 1.4f, y + r * 0.3f); p.quadTo(x, y - r * 0.2f, x - r * 1.4f, y + r * 0.3f); p.close() }
+            // Una hoja.
             TemaId.BOTANICO -> { p.reset(); p.moveTo(x, y + r * 1.2f); p.quadTo(x + r * 1.3f, y, x, y - r * 1.2f); p.quadTo(x - r * 1.3f, y, x, y + r * 1.2f); p.close() }
-            TemaId.NAVIDAD, TemaId.URSS -> poligono(x, y, r * 1.25f, 5, -90.0, 0.42f)
-            TemaId.SEDA -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW); p.addRect(x - r * 0.32f, y - r * 0.32f, x + r * 0.32f, y + r * 0.32f, android.graphics.Path.Direction.CCW) }
+            // Un abeto de tres pisos con su tronco.
+            TemaId.NAVIDAD -> figura(x, y, r, 0f, -1.35f, 0.55f, -0.55f, 0.3f, -0.55f, 0.85f, 0.2f, 0.5f, 0.2f, 1.05f, 0.85f, 0.2f, 0.85f, 0.2f, 1.25f,
+                -0.2f, 1.25f, -0.2f, 0.85f, -1.05f, 0.85f, -0.5f, 0.2f, -0.85f, 0.2f, -0.3f, -0.55f, -0.55f, -0.55f)
+            // La moneda de la ruta, con su agujero cuadrado.
+            TemaId.SEDA -> { p.reset(); p.addCircle(x, y, r, horario); p.addRect(x - r * 0.32f, y - r * 0.32f, x + r * 0.32f, y + r * 0.32f, antihorario) }
+            // Un arco ojival.
             TemaId.GOTICO -> { p.reset(); p.moveTo(x - r * 0.8f, y + r); p.lineTo(x - r * 0.8f, y - r * 0.1f); p.quadTo(x - r * 0.8f, y - r * 0.9f, x, y - r * 1.3f)
                 p.quadTo(x + r * 0.8f, y - r * 0.9f, x + r * 0.8f, y - r * 0.1f); p.lineTo(x + r * 0.8f, y + r); p.close() }
+            // Un destello de cuatro puntas.
             TemaId.ESPACIO -> { p.reset(); val k = r * 1.3f; p.moveTo(x, y - k); p.quadTo(x, y, x + k, y); p.quadTo(x, y, x, y + k); p.quadTo(x, y, x - k, y); p.quadTo(x, y, x, y - k); p.close() }
-            TemaId.ANDALUS -> poligono(x, y, r * 1.2f, 8, -90.0, 0.62f)
-            TemaId.MONGOL -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW) }
-            TemaId.RENACIMIENTO -> { p.reset(); p.addCircle(x, y, r, android.graphics.Path.Direction.CW) }
+            // La estrella de ocho puntas hecha de dos cuadrados (los dos giran igual, así que se suman).
+            TemaId.ANDALUS -> { p.reset(); sumarPoligono(x, y, r * 1.15f, 4, -90.0); sumarPoligono(x, y, r * 1.15f, 4, -45.0) }
+            // La corona de la yurta (toono): un anillo con sus dos varas cruzadas.
+            TemaId.MONGOL -> {
+                p.reset(); p.addCircle(x, y, r, horario); p.addCircle(x, y, r * 0.5f, antihorario)
+                p.addRect(x - r * 0.5f, y - r * 0.09f, x + r * 0.5f, y + r * 0.09f, horario); p.addRect(x - r * 0.09f, y - r * 0.5f, x + r * 0.09f, y + r * 0.5f, horario)
+            }
+            // El cuadrado de Vitruvio con el círculo calado.
+            TemaId.RENACIMIENTO -> { p.reset(); p.addRect(x - r, y - r, x + r, y + r, horario); p.addCircle(x, y, r * 0.62f, antihorario) }
+            // La estrella de cinco puntas.
+            TemaId.URSS -> poligono(x, y, r * 1.25f, 5, -90.0, 0.42f)
             TemaId.REVOLUCION -> poligono(x, y, r * 1.12f, 14, -90.0, 0.84f)   // escarapela plisada
             TemaId.ANTIGUAS -> poligono(x, y, r * 1.2f, 6, -90.0, 0.5f)   // gema tallada de seis puntas
         }
         c.drawPath(p, relleno)
         borde?.let { b -> c.drawPath(p, b) }
-        // Detalles que van encima de la forma.
+        // Detalles que van encima de la forma: uno propio por tema.
         val d = borde ?: return
         when (tema) {
-            TemaId.MONGOL -> { c.drawLine(x - r * 0.7f, y, x + r * 0.7f, y, d); c.drawLine(x, y - r * 0.7f, x, y + r * 0.7f, d) }   // las varas del toono
-            TemaId.RENACIMIENTO -> { c.drawLine(x - r * 1.4f, y, x + r * 1.4f, y, d); c.drawLine(x, y - r * 1.4f, x, y + r * 1.4f, d) }  // retícula de dibujo
-            TemaId.GOTICO -> c.drawLine(x, y - r * 0.5f, x, y + r, d)
-            TemaId.BOTANICO -> c.drawLine(x, y + r * 1.2f, x, y - r * 0.8f, d)
+            TemaId.ROMANO -> c.drawRect(x - r * 0.6f, y - r * 0.48f, x + r * 0.6f, y + r * 0.48f, d)   // el campo de la inscripción
+            TemaId.CIBER -> { raya(c, x, y, r, -1.55f, -0.45f, -0.95f, 0f, d); raya(c, x, y, r, -0.95f, 0f, -1.55f, 0.45f, d) }   // el «>» del indicador
+            TemaId.HELENO -> c.drawCircle(x, y, r * 0.32f, d)
+            TemaId.MEDIEVAL -> { c.drawCircle(x, y, r * 0.62f, d); raya(c, x, y, r, -0.3f, 0f, 0.3f, 0f, d); raya(c, x, y, r, 0f, -0.3f, 0f, 0.3f, d) }   // la cruz del sello
+            TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.REFUGIO -> { poligono(x, y, r * 0.55f, 3, 90.0); c.drawPath(p, d) }
+            TemaId.ORDEN -> { raya(c, x, y, r, 0f, -0.8f, 0f, 0.95f, d); raya(c, x, y, r, -0.72f, -0.25f, 0.72f, -0.25f, d) }   // la cruz del escudo
+            TemaId.LABORATORIO -> c.drawCircle(x, y, r * 0.55f, d)
+            TemaId.COLONOS -> c.drawRect(x - r * 0.25f, y + r * 0.25f, x + r * 0.25f, y + r, d)   // la puerta
+            TemaId.NAPOLEON -> c.drawCircle(x + r * 0.5f, y - r * 0.38f, r * 0.22f, d)   // la escarapela del sombrero
+            TemaId.BOTANICO -> { raya(c, x, y, r, 0f, 1.2f, 0f, -0.8f, d); raya(c, x, y, r, 0f, 0.2f, 0.45f, -0.25f, d); raya(c, x, y, r, 0f, 0.2f, -0.45f, -0.25f, d) }
+            TemaId.NAVIDAD -> { c.drawCircle(x, y - r * 1.35f, r * 0.18f, d); raya(c, x, y, r, -0.6f, 0.55f, 0.45f, 0.1f, d) }   // la estrella y la guirnalda
+            TemaId.SEDA -> c.drawCircle(x, y, r * 0.72f, d)
+            TemaId.GOTICO -> { raya(c, x, y, r, 0f, -0.3f, 0f, 1f, d); c.drawCircle(x, y - r * 0.6f, r * 0.2f, d) }   // el parteluz y el rosetón
+            TemaId.ESPACIO -> c.drawOval(x - r * 1.45f, y - r * 0.4f, x + r * 1.45f, y + r * 0.4f, d)   // una órbita
+            TemaId.ANDALUS -> c.drawCircle(x, y, r * 0.42f, d)
+            TemaId.MONGOL -> for (i in 0 until 8) {   // las varas del techo, que salen de la corona
+                val a = Math.PI / 4 * i; val cx = kotlin.math.cos(a).toFloat(); val sy = kotlin.math.sin(a).toFloat()
+                c.drawLine(x + cx * r * 1.08f, y + sy * r * 1.08f, x + cx * r * 1.42f, y + sy * r * 1.42f, d)
+            }
+            TemaId.RENACIMIENTO -> {   // el círculo que pasa por las esquinas y la retícula de dibujo
+                c.drawCircle(x, y, r * 1.41f, d); raya(c, x, y, r, -1.6f, 0f, 1.6f, 0f, d); raya(c, x, y, r, 0f, -1.6f, 0f, 1.6f, d)
+            }
+            TemaId.URSS -> for (i in 0 until 5) {   // las aristas de la estrella facetada
+                val a = Math.toRadians(-90.0 + 72.0 * i)
+                c.drawLine(x, y, x + r * 1.25f * kotlin.math.cos(a).toFloat(), y + r * 1.25f * kotlin.math.sin(a).toFloat(), d)
+            }
             TemaId.REVOLUCION -> c.drawCircle(x, y, r * 0.42f, d)
-            TemaId.ANTIGUAS -> { c.drawLine(x, y - r * 0.5f, x, y + r * 0.5f, d); c.drawLine(x - r * 0.3f, y - r * 0.15f, x + r * 0.3f, y + r * 0.15f, d) }
-            else -> {}
+            TemaId.ANTIGUAS -> { raya(c, x, y, r, 0f, -0.5f, 0f, 0.5f, d); raya(c, x, y, r, -0.3f, -0.15f, 0.3f, 0.15f, d) }   // una runa
         }
     }
 }
@@ -448,7 +528,7 @@ fun PantallaMapa(nav: Nav) {
             TextButton(onClick = nav.atras) { Text(io.github.ruddy2003.vestigium.ui.Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
                 Text(io.github.ruddy2003.vestigium.ui.Estilo.pantalla("Mapa", "MAPPA").first, style = MaterialTheme.typography.headlineSmall)
-                Text("// mapa · «＋ lugar aquí» marca el centro (o mantén presionado un punto)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${io.github.ruddy2003.vestigium.ui.Estilo.comentario}mapa · «＋ lugar aquí» marca el centro (o mantén presionado un punto)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             // La alternativa visible al toque largo (N-24): marca el centro del mapa.
             TextButton(onClick = { mapa.value?.mapCenter?.let { c -> nuevoLugar = GeoPoint(c.latitude, c.longitude) } }) {
@@ -528,7 +608,7 @@ fun PantallaMapa(nav: Nav) {
     nuevoLugar?.let { p ->
         var nombre by remember(p) { mutableStateOf("") }
         var tipoNuevo by remember(p) { mutableStateOf("otro") }
-        AlertDialog(
+        Dialogo(
             onDismissRequest = { nuevoLugar = null },
             title = { Text("Marcar este lugar", style = MaterialTheme.typography.titleLarge) },
             text = {
@@ -560,39 +640,424 @@ internal fun MarcoMapa(tema: TemaId, modifier: Modifier) {
     val e = MaterialTheme.colorScheme
     val oscuro = esOscuro()
     androidx.compose.foundation.Canvas(modifier) {
-        val w = size.width; val h = size.height; val u = 1.dp.toPx()
+        val u = 1.dp.toPx()
         val tinta = if (oscuro) e.primary else e.onBackground
-        // Marco: doble filete en los temas de papel, esquinas de mira en los de pantalla.
-        when (tema) {
-            TemaId.CIBER, TemaId.ESPACIO, TemaId.REFUGIO, TemaId.LABORATORIO, TemaId.ORDEN -> {
-                val k = 22 * u; val m = 8 * u
-                listOf(Offset(m, m) to Offset(1f, 1f), Offset(w - m, m) to Offset(-1f, 1f), Offset(m, h - m) to Offset(1f, -1f), Offset(w - m, h - m) to Offset(-1f, -1f)).forEach { (o, d) ->
-                    drawLine(e.primary, o, o + Offset(d.x * k, 0f), 2 * u); drawLine(e.primary, o, o + Offset(0f, d.y * k), 2 * u)
-                }
-            }
-            else -> {
-                drawRect(tinta.copy(alpha = 0.55f), Offset(4 * u, 4 * u), androidx.compose.ui.geometry.Size(w - 8 * u, h - 8 * u), style = androidx.compose.ui.graphics.drawscope.Stroke(2 * u))
-                drawRect(tinta.copy(alpha = 0.35f), Offset(8 * u, 8 * u), androidx.compose.ui.geometry.Size(w - 16 * u, h - 16 * u), style = androidx.compose.ui.graphics.drawscope.Stroke(1 * u))
-            }
-        }
+        marcoDelMapa(tema, u, tinta, e.primary, e.surface)
         // Rosa de los vientos arriba a la derecha.
-        val c = Offset(w - 40 * u, 44 * u); val r = 24 * u
-        drawCircle(e.surface.copy(alpha = 0.82f), r * 1.05f, c)
-        drawCircle(tinta.copy(alpha = 0.6f), r * 1.05f, c, style = androidx.compose.ui.graphics.drawscope.Stroke(1.2f * u))
-        val puntas = if (tema == TemaId.ANDALUS) 8 else 4
-        for (i in 0 until puntas * 2) {
-            val a = Math.toRadians(-90.0 + 360.0 * i / (puntas * 2)).toFloat()
-            val larga = i % 2 == 0
-            val rr = if (larga) r * 0.95f else r * 0.55f
-            val lado = Math.toRadians(90.0).toFloat()
-            val punta = c + Offset(kotlin.math.cos(a) * rr, kotlin.math.sin(a) * rr)
-            val b1 = c + Offset(kotlin.math.cos(a + lado) * r * 0.13f, kotlin.math.sin(a + lado) * r * 0.13f)
-            val b2 = c + Offset(kotlin.math.cos(a - lado) * r * 0.13f, kotlin.math.sin(a - lado) * r * 0.13f)
-            val norte = i == 0
-            drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(punta.x, punta.y); lineTo(b1.x, b1.y); lineTo(c.x, c.y); close() }, if (norte) e.primary else tinta.copy(alpha = 0.8f))
-            drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(punta.x, punta.y); lineTo(b2.x, b2.y); lineTo(c.x, c.y); close() }, if (norte) e.primary.copy(alpha = 0.6f) else tinta.copy(alpha = 0.4f))
+        rosaDelMapa(tema, Offset(size.width - 40 * u, 44 * u), 24 * u, tinta, e.primary, e.secondary, e.surface)
+    }
+}
+
+/** La estrella de ocho puntas hecha con dos cuadrados, como en las yeserías (los dos giran igual, así que se suman). */
+private fun estrellaDeCuadros(c: Offset, r: Float): Path = Path().apply {
+    listOf(-90.0, -45.0).forEach { g0 ->
+        for (i in 0 until 4) {
+            val a = Math.toRadians(g0 + 90.0 * i)
+            val x = c.x + r * kotlin.math.cos(a).toFloat(); val y = c.y + r * kotlin.math.sin(a).toFloat()
+            if (i == 0) moveTo(x, y) else lineTo(x, y)
         }
-        drawCircle(e.secondary, r * 0.1f, c)
+        close()
+    }
+}
+
+/**
+ * El marco de un mapa con el adorno del tema. Va solo en los bordes, para no tapar lo que hay en medio.
+ * `u` es lo que mide un dp en el dibujo: en el mapa, un dp; en las tarjetas pequeñas, menos.
+ */
+internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento: Color, fondo: Color) {
+    val w = size.width; val h = size.height
+    fun filete(m: Float, color: Color, grosor: Float) = drawRect(color, Offset(m, m), Size(w - 2 * m, h - 2 * m), style = Stroke(grosor))
+    // Repite un dibujo en las cuatro esquinas: le pasa la esquina (a `m` del borde) y hacia dónde queda el centro (±1, ±1).
+    fun esquinas(m: Float, dibujo: (Offset, Float, Float) -> Unit) {
+        dibujo(Offset(m, m), 1f, 1f); dibujo(Offset(w - m, m), -1f, 1f); dibujo(Offset(m, h - m), 1f, -1f); dibujo(Offset(w - m, h - m), -1f, -1f)
+    }
+    when (tema) {
+        // Doble filete con dentículos de cornisa arriba y abajo, y un cuadro de pórfido en cada esquina.
+        TemaId.ROMANO -> {
+            filete(4 * u, tinta.copy(alpha = 0.55f), 2 * u); filete(8 * u, tinta.copy(alpha = 0.35f), 1 * u)
+            var x = 14 * u
+            while (x < w - 18 * u) {
+                drawRect(tinta.copy(alpha = 0.35f), Offset(x, 11 * u), Size(4 * u, 3.5f * u))
+                drawRect(tinta.copy(alpha = 0.35f), Offset(x, h - 14.5f * u), Size(4 * u, 3.5f * u))
+                x += 8 * u
+            }
+            esquinas(4 * u) { o, _, _ -> drawRect(acento, Offset(o.x - 3 * u, o.y - 3 * u), Size(6 * u, 6 * u)) }
+        }
+        // Líneas de barrido de la pantalla de fósforo, esquinas de mira y el cursor.
+        TemaId.CIBER -> {
+            var y = 0f
+            while (y < h) { drawLine(acento.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 0.6f * u); y += 3 * u }
+            val k = 22 * u
+            esquinas(8 * u) { o, dx, dy -> drawLine(acento, o, o + Offset(dx * k, 0f), 2 * u); drawLine(acento, o, o + Offset(0f, dy * k), 2 * u) }
+            drawRect(acento, Offset(14 * u, h - 24 * u), Size(7 * u, 11 * u))
+        }
+        // Una greca arriba y otra abajo.
+        TemaId.HELENO -> {
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u)
+            val a = 5 * u
+            listOf(8 * u, h - 8 * u - a).forEach { y0 ->
+                val greca = Path().apply {
+                    moveTo(8 * u, y0 + a)
+                    var x = 8 * u
+                    while (x + 2 * a <= w - 8 * u) { lineTo(x, y0); lineTo(x + a, y0); lineTo(x + a, y0 + a); lineTo(x + 2 * a, y0 + a); x += 2 * a }
+                }
+                drawPath(greca, tinta.copy(alpha = 0.45f), style = Stroke(1.2f * u))
+            }
+        }
+        // El pautado del copista: doble raya roja en el margen izquierdo y un cuadrifolio en cada esquina.
+        TemaId.MEDIEVAL -> {
+            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
+            drawLine(acento.copy(alpha = 0.7f), Offset(11 * u, 5 * u), Offset(11 * u, h - 5 * u), 1.4f * u)
+            drawLine(acento.copy(alpha = 0.7f), Offset(14 * u, 5 * u), Offset(14 * u, h - 5 * u), 0.8f * u)
+            esquinas(5 * u) { o, _, _ ->
+                listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(acento, 2.6f * u, o + d * (2.6f * u)) }
+                drawCircle(fondo, 1.4f * u, o)
+            }
+        }
+        // La cámara que graba: el punto rojo, la tira del expediente y la regla de tiempo abajo.
+        TemaId.DISTOPIA -> {
+            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
+            drawCircle(acento, 3.5f * u, Offset(16 * u, 16 * u))
+            drawRect(tinta.copy(alpha = 0.6f), Offset(23 * u, 14 * u), Size(18 * u, 4 * u))
+            var x = 10 * u; var i = 0
+            while (x < w - 10 * u) {
+                val l = if (i % 5 == 0) 6 * u else 3 * u
+                drawLine(tinta.copy(alpha = 0.5f), Offset(x, h - 5 * u), Offset(x, h - 5 * u - l), 1 * u)
+                x += 6 * u; i++
+            }
+        }
+        // Una placa de acero con remaches.
+        TemaId.REFUGIO -> {
+            filete(3 * u, tinta.copy(alpha = 0.6f), 3 * u)
+            val paso = 36 * u; val m = 9 * u; val remache = tinta.copy(alpha = 0.5f)
+            var x = m
+            while (x <= w - m) { drawCircle(remache, 2.2f * u, Offset(x, m)); drawCircle(remache, 2.2f * u, Offset(x, h - m)); x += paso }
+            var y = m + paso
+            while (y <= h - m - paso / 2) { drawCircle(remache, 2.2f * u, Offset(m, y)); drawCircle(remache, 2.2f * u, Offset(w - m, y)); y += paso }
+        }
+        // Filete de latón y tres galones en cada esquina.
+        TemaId.ORDEN -> {
+            filete(4 * u, acento.copy(alpha = 0.8f), 2.5f * u); filete(9 * u, tinta.copy(alpha = 0.3f), 1 * u)
+            esquinas(4 * u) { o, dx, dy ->
+                for (k in 0..2) { val a = (10 + 6 * k) * u; drawLine(acento, o + Offset(dx * a, dy * 3 * u), o + Offset(dx * 3 * u, dy * a), 2 * u) }
+            }
+        }
+        // Reglas graduadas arriba y a la izquierda, como en una hoja milimétrica.
+        TemaId.LABORATORIO -> {
+            filete(3 * u, tinta.copy(alpha = 0.4f), 1 * u)
+            val marca = acento.copy(alpha = 0.7f)
+            var i = 0; var x = 3 * u
+            while (x < w - 3 * u) { val l = if (i % 5 == 0) 8 * u else 4 * u; drawLine(marca, Offset(x, 3 * u), Offset(x, 3 * u + l), 0.8f * u); x += 6 * u; i++ }
+            i = 0; var y = 3 * u
+            while (y < h - 3 * u) { val l = if (i % 5 == 0) 8 * u else 4 * u; drawLine(marca, Offset(3 * u, y), Offset(3 * u + l, y), 0.8f * u); y += 6 * u; i++ }
+        }
+        // La raya gruesa y fina de la gaceta, con un rombo de imprenta arriba.
+        TemaId.COLONOS -> {
+            filete(4 * u, tinta.copy(alpha = 0.7f), 3 * u); filete(9 * u, tinta.copy(alpha = 0.5f), 0.8f * u)
+            drawPath(Path().apply { moveTo(w / 2, 5.5f * u); lineTo(w / 2 + 5 * u, 9 * u); lineTo(w / 2, 12.5f * u); lineTo(w / 2 - 5 * u, 9 * u); close() }, tinta.copy(alpha = 0.7f))
+        }
+        // El borde de las cartas de estado mayor: tramos claros y oscuros alternados.
+        TemaId.NAPOLEON -> {
+            filete(4 * u, tinta.copy(alpha = 0.65f), 1 * u); filete(9 * u, tinta.copy(alpha = 0.65f), 1 * u)
+            val tramo = 18 * u; val banda = tinta.copy(alpha = 0.55f)
+            var x = 4 * u; var i = 0
+            while (x < w - 4 * u) {
+                if (i % 2 == 0) { val l = minOf(tramo, w - 4 * u - x); drawRect(banda, Offset(x, 4 * u), Size(l, 5 * u)); drawRect(banda, Offset(x, h - 9 * u), Size(l, 5 * u)) }
+                x += tramo; i++
+            }
+            var y = 4 * u; i = 0
+            while (y < h - 4 * u) {
+                if (i % 2 == 1) { val l = minOf(tramo, h - 4 * u - y); drawRect(banda, Offset(4 * u, y), Size(5 * u, l)); drawRect(banda, Offset(w - 9 * u, y), Size(5 * u, l)) }
+                y += tramo; i++
+            }
+        }
+        // Tiras de papel engomado en las esquinas, como en un pliego de herbario.
+        TemaId.BOTANICO -> {
+            filete(6 * u, tinta.copy(alpha = 0.4f), 1 * u)
+            esquinas(10 * u) { o, dx, dy ->
+                val l = Offset(dx, -dy) * (9 * u); val a = Offset(dx, dy) * (3 * u)
+                val p1 = o + l + a; val p2 = o + l - a; val p3 = o - l - a; val p4 = o - l + a
+                drawPath(Path().apply { moveTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); lineTo(p4.x, p4.y); close() }, acento.copy(alpha = 0.25f))
+            }
+        }
+        // Nieve que cuelga del borde de arriba y acebo en las esquinas de abajo.
+        TemaId.NAVIDAD -> {
+            filete(5 * u, acento.copy(alpha = 0.6f), 1.5f * u)
+            var x = 0f; var i = 0
+            while (x < w + 8 * u) {
+                val rr = (7 + (i % 3) * 2) * u
+                drawCircle(tinta.copy(alpha = 0.15f), rr, Offset(x, 1.2f * u)); drawCircle(Color.White.copy(alpha = 0.92f), rr, Offset(x, 0f))
+                x += 12 * u; i++
+            }
+            val hoja = Color(0xFF2E6B3A)
+            listOf(Offset(16 * u, h - 14 * u), Offset(w - 16 * u, h - 14 * u)).forEach { o ->
+                drawOval(hoja, Offset(o.x - 9 * u, o.y - 2.5f * u), Size(9 * u, 5 * u)); drawOval(hoja, Offset(o.x, o.y - 2.5f * u), Size(9 * u, 5 * u))
+                listOf(Offset(-2f, -3f), Offset(2f, -3f), Offset(0f, -6f)).forEach { k -> drawCircle(acento, 1.8f * u, o + k * u) }
+            }
+        }
+        // Una greca de llave china en cada esquina.
+        TemaId.SEDA -> {
+            filete(5 * u, tinta.copy(alpha = 0.5f), 1 * u)
+            val llave = listOf(0f to 0f, 16f to 0f, 16f to 16f, 4f to 16f, 4f to 6f, 11f to 6f, 11f to 11f)
+            esquinas(8 * u) { o, dx, dy ->
+                drawPath(Path().apply { llave.forEachIndexed { i, (a, b) -> val px = o.x + dx * a * u; val py = o.y + dy * b * u; if (i == 0) moveTo(px, py) else lineTo(px, py) } },
+                    acento, style = Stroke(1.6f * u))
+            }
+        }
+        // Una arquería de arcos apuntados arriba y un trébol en las esquinas de abajo.
+        TemaId.GOTICO -> {
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u)
+            val ancho = 24 * u; var x = 4 * u
+            val arcos = Path()
+            while (x + ancho <= w - 4 * u + 0.5f) {
+                arcos.moveTo(x, 20 * u); arcos.quadraticTo(x, 8 * u, x + ancho / 2, 5 * u); arcos.quadraticTo(x + ancho, 8 * u, x + ancho, 20 * u)
+                x += ancho
+            }
+            drawPath(arcos, tinta.copy(alpha = 0.45f), style = Stroke(1.2f * u))
+            listOf(Offset(14 * u, h - 14 * u), Offset(w - 14 * u, h - 14 * u)).forEach { o ->
+                listOf(-90.0, 30.0, 150.0).forEach { g -> val a = Math.toRadians(g); drawCircle(acento, 2.6f * u, o + Offset(kotlin.math.cos(a).toFloat(), kotlin.math.sin(a).toFloat()) * (2.8f * u)) }
+            }
+        }
+        // El visor de la sala de control: arcos en las esquinas y marcas de nivel a los lados.
+        TemaId.ESPACIO -> {
+            val rr = 18 * u; val m = 6 * u; val visor = Stroke(1.8f * u); val lado = Size(2 * rr, 2 * rr)
+            drawArc(acento, 180f, 90f, false, Offset(m, m), lado, style = visor)
+            drawArc(acento, 270f, 90f, false, Offset(w - m - 2 * rr, m), lado, style = visor)
+            drawArc(acento, 0f, 90f, false, Offset(w - m - 2 * rr, h - m - 2 * rr), lado, style = visor)
+            drawArc(acento, 90f, 90f, false, Offset(m, h - m - 2 * rr), lado, style = visor)
+            for (k in -2..2) {
+                val y = h / 2 + k * 6 * u; val l = if (k == 0) 10 * u else 5 * u
+                drawLine(acento.copy(alpha = 0.7f), Offset(m, y), Offset(m + l, y), 1 * u); drawLine(acento.copy(alpha = 0.7f), Offset(w - m, y), Offset(w - m - l, y), 1 * u)
+            }
+        }
+        // Doble filete y una estrella de ocho puntas en cada esquina.
+        TemaId.ANDALUS -> {
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u); filete(8 * u, acento.copy(alpha = 0.45f), 0.8f * u)
+            esquinas(15 * u) { o, _, _ -> drawPath(estrellaDeCuadros(o, 7 * u), acento); drawCircle(fondo, 2.2f * u, o) }
+        }
+        // Cuernos de carnero enroscados en las esquinas.
+        TemaId.MONGOL -> {
+            filete(4 * u, tinta.copy(alpha = 0.55f), 2 * u)
+            esquinas(14 * u) { o, dx, dy ->
+                val c1 = o + Offset(dx * 1.5f * u, dy * 1.5f * u)
+                drawArc(acento, 0f, 270f, false, Offset(c1.x - 6 * u, c1.y - 6 * u), Size(12 * u, 12 * u), style = Stroke(1.6f * u))
+                drawArc(acento, 90f, 270f, false, Offset(c1.x - 3 * u, c1.y - 3 * u), Size(6 * u, 6 * u), style = Stroke(1.6f * u))
+            }
+        }
+        // Trazos de construcción: arcos de compás desde cada esquina y su diagonal.
+        TemaId.RENACIMIENTO -> {
+            filete(6 * u, tinta.copy(alpha = 0.45f), 0.8f * u)
+            val m = 6 * u; val rr = 34 * u; val trazo = Stroke(0.8f * u); val sanguina = acento.copy(alpha = 0.6f); val lado = Size(2 * rr, 2 * rr)
+            drawArc(sanguina, 0f, 90f, false, Offset(m - rr, m - rr), lado, style = trazo)
+            drawArc(sanguina, 90f, 90f, false, Offset(w - m - rr, m - rr), lado, style = trazo)
+            drawArc(sanguina, 180f, 90f, false, Offset(w - m - rr, h - m - rr), lado, style = trazo)
+            drawArc(sanguina, 270f, 90f, false, Offset(m - rr, h - m - rr), lado, style = trazo)
+            esquinas(m) { o, dx, dy -> drawLine(acento.copy(alpha = 0.5f), o, o + Offset(dx, dy) * (rr * 1.15f), 0.8f * u) }
+        }
+        // Constructivismo: una barra roja a la izquierda, una negra abajo y una cuña roja en la esquina.
+        TemaId.URSS -> {
+            drawRect(acento, Offset(0f, 0f), Size(7 * u, h))
+            drawRect(tinta.copy(alpha = 0.85f), Offset(0f, h - 5 * u), Size(w, 5 * u))
+            drawPath(Path().apply { moveTo(w, h); lineTo(w - 54 * u, h); lineTo(w, h - 54 * u); close() }, acento)
+            drawLine(tinta.copy(alpha = 0.8f), Offset(7 * u, 12 * u), Offset(w * 0.4f, 12 * u), 2 * u)
+        }
+        // Franjas tricolores arriba y abajo, y dos escarapelas.
+        TemaId.REVOLUCION -> {
+            val azul = Color(0xFF1F3A93); val rojo = Color(0xFFC8102E); val tercio = w / 3
+            listOf(0f to azul, tercio to Color.White, 2 * tercio to rojo).forEach { (x, col) ->
+                drawRect(col, Offset(x, 0f), Size(tercio, 5 * u)); drawRect(col, Offset(x, h - 5 * u), Size(tercio, 5 * u))
+            }
+            filete(5 * u, tinta.copy(alpha = 0.4f), 1 * u)
+            listOf(Offset(16 * u, h - 17 * u), Offset(w - 16 * u, h - 17 * u)).forEach { o -> drawCircle(azul, 6 * u, o); drawCircle(Color.White, 4 * u, o); drawCircle(rojo, 2 * u, o) }
+        }
+        // Una hilera de runas inventadas abajo y una gema en cada esquina.
+        TemaId.ANTIGUAS -> {
+            filete(5 * u, tinta.copy(alpha = 0.5f), 1.2f * u)
+            val y0 = h - 16 * u; val alto = 8 * u; val runa = tinta.copy(alpha = 0.5f)
+            var x = 16 * u; var i = 0
+            while (x < w - 16 * u) {
+                drawLine(runa, Offset(x, y0), Offset(x, y0 + alto), 1 * u)
+                when (i % 4) {
+                    0 -> drawLine(runa, Offset(x, y0), Offset(x + 4 * u, y0 + 3 * u), 1 * u)
+                    1 -> { drawLine(runa, Offset(x, y0 + 2 * u), Offset(x + 4 * u, y0), 1 * u); drawLine(runa, Offset(x, y0 + 5 * u), Offset(x + 4 * u, y0 + 3 * u), 1 * u) }
+                    2 -> drawLine(runa, Offset(x - 3 * u, y0 + 2 * u), Offset(x + 3 * u, y0 + 6 * u), 1 * u)
+                    else -> { drawLine(runa, Offset(x, y0 + 4 * u), Offset(x + 4 * u, y0), 1 * u); drawLine(runa, Offset(x + 4 * u, y0), Offset(x + 4 * u, y0 + alto), 1 * u) }
+                }
+                x += 12 * u; i++
+            }
+            esquinas(5 * u) { o, _, _ -> drawPath(Path().apply { moveTo(o.x, o.y - 4 * u); lineTo(o.x + 3 * u, o.y); lineTo(o.x, o.y + 4 * u); lineTo(o.x - 3 * u, o.y); close() }, acento) }
+        }
+    }
+}
+
+/**
+ * La rosa de los vientos del tema, sobre su disco. `c` es el centro y `r` el radio. El norte va en el color de acento
+ * (en la Ruta de la Seda, el sur: la brújula china señala al sur).
+ */
+internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Color, acento: Color, secundario: Color, fondo: Color) {
+    val u = r / 24f
+    drawCircle(fondo.copy(alpha = 0.82f), r * 1.05f, c)
+    drawCircle(tinta.copy(alpha = 0.6f), r * 1.05f, c, style = Stroke(1.2f * u))
+    fun rumbo(g: Double) = Offset(kotlin.math.cos(Math.toRadians(g)).toFloat(), kotlin.math.sin(Math.toRadians(g)).toFloat())
+    // Una punta: dos medios triángulos, uno lleno y otro más tenue, como en las rosas de los portulanos.
+    fun punta(g: Double, largo: Float, ancho: Float, color: Color) {
+        val q = c + rumbo(g) * largo; val b1 = c + rumbo(g + 90.0) * ancho; val b2 = c + rumbo(g - 90.0) * ancho
+        drawPath(Path().apply { moveTo(q.x, q.y); lineTo(b1.x, b1.y); lineTo(c.x, c.y); close() }, color)
+        drawPath(Path().apply { moveTo(q.x, q.y); lineTo(b2.x, b2.y); lineTo(c.x, c.y); close() }, color.copy(alpha = color.alpha * 0.55f))
+    }
+    fun anillo(rr: Float, color: Color, grosor: Float = 1f * u) = drawCircle(color, rr, c, style = Stroke(grosor))
+    val n = -90.0   // el norte
+    val tenue = tinta.copy(alpha = 0.8f)
+    when (tema) {
+        // Los doce vientos de los romanos.
+        TemaId.ROMANO -> {
+            for (i in 0 until 12) punta(n + 30.0 * i, if (i % 3 == 0) r * 0.95f else r * 0.6f, r * 0.11f, if (i == 0) acento else tenue)
+            drawCircle(secundario, r * 0.1f, c)
+        }
+        // Una mira de consola con su flecha.
+        TemaId.CIBER -> {
+            drawRect(acento, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f), style = Stroke(1.2f * u))
+            drawLine(acento.copy(alpha = 0.6f), c + Offset(-r * 0.9f, 0f), c + Offset(r * 0.9f, 0f), 1f * u)
+            drawLine(acento, c + Offset(0f, r * 0.9f), c + Offset(0f, -r * 0.92f), 1.6f * u)
+            drawPath(Path().apply { moveTo(c.x - r * 0.3f, c.y - r * 0.6f); lineTo(c.x, c.y - r * 0.92f); lineTo(c.x + r * 0.3f, c.y - r * 0.6f) }, acento, style = Stroke(2f * u))
+            drawRect(acento, Offset(c.x - r * 0.1f, c.y - r * 0.1f), Size(r * 0.2f, r * 0.2f))
+        }
+        // El sol de Vergina: dieciséis rayos.
+        TemaId.HELENO -> {
+            for (i in 0 until 16) punta(n + 22.5 * i, if (i % 2 == 0) r * 0.95f else r * 0.62f, r * 0.07f, if (i == 0) acento else tinta.copy(alpha = 0.75f))
+            drawCircle(acento, r * 0.22f, c); drawCircle(fondo, r * 0.1f, c)
+        }
+        // Ocho puntas y una cruz al oriente, como en las rosas de los manuscritos.
+        TemaId.MEDIEVAL -> {
+            for (i in 0 until 8) punta(n + 45.0 * i, when { i == 2 -> r * 0.5f; i % 2 == 0 -> r * 0.95f; else -> r * 0.55f }, r * 0.13f, if (i == 0) acento else tenue)
+            drawLine(acento, c + Offset(r * 0.58f, 0f), c + Offset(r * 0.98f, 0f), 2 * u)
+            drawLine(acento, c + Offset(r * 0.8f, -r * 0.2f), c + Offset(r * 0.8f, r * 0.2f), 2 * u)
+            drawCircle(secundario, r * 0.1f, c)
+        }
+        // El ojo, con la aguja del norte detrás.
+        TemaId.DISTOPIA -> {
+            punta(n, r * 0.98f, r * 0.1f, acento)
+            val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
+            drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
+            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+        }
+        // Un manómetro: medio círculo graduado y la aguja al norte.
+        TemaId.REFUGIO -> {
+            drawArc(tenue, 180f, 180f, false, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(1.6f * u))
+            for (k in 0..6) { val g = 180.0 + 30.0 * k; drawLine(tinta.copy(alpha = 0.7f), c + rumbo(g) * (r * 0.62f), c + rumbo(g) * (r * 0.8f), 1.2f * u) }
+            drawRect(tinta.copy(alpha = 0.6f), Offset(c.x - r * 0.45f, c.y + r * 0.3f), Size(r * 0.9f, r * 0.22f))
+            drawLine(acento, c, c + rumbo(n) * (r * 0.92f), 2.2f * u)
+            drawCircle(acento, r * 0.14f, c)
+        }
+        // Una rueda dentada con la aguja.
+        TemaId.ORDEN -> {
+            for (i in 0 until 10) { val g = n + 36.0 * i; drawLine(tenue, c + rumbo(g) * (r * 0.62f), c + rumbo(g) * (r * 0.88f), r * 0.17f) }
+            anillo(r * 0.62f, tenue, r * 0.16f)
+            punta(n, r * 0.5f, r * 0.13f, acento); punta(90.0, r * 0.4f, r * 0.13f, tinta.copy(alpha = 0.6f))
+        }
+        // Una brújula de laboratorio: 36 marcas y la aguja imantada.
+        TemaId.LABORATORIO -> {
+            for (i in 0 until 36) { val g = n + 10.0 * i; val l = if (i % 9 == 0) r * 0.22f else r * 0.1f; drawLine(tinta.copy(alpha = 0.7f), c + rumbo(g) * (r * 0.95f - l), c + rumbo(g) * (r * 0.95f), 0.8f * u) }
+            punta(n, r * 0.7f, r * 0.14f, acento); punta(90.0, r * 0.7f, r * 0.14f, tinta.copy(alpha = 0.6f))
+            drawCircle(fondo, r * 0.07f, c)
+        }
+        // Una flecha con plumas que apunta al norte.
+        TemaId.COLONOS -> {
+            anillo(r * 0.72f, tinta.copy(alpha = 0.4f))
+            drawLine(tinta.copy(alpha = 0.6f), c + Offset(-r * 0.85f, 0f), c + Offset(r * 0.85f, 0f), 1f * u)
+            drawLine(tinta.copy(alpha = 0.85f), c + Offset(0f, r * 0.85f), c + Offset(0f, -r * 0.6f), 1.6f * u)
+            drawPath(Path().apply { moveTo(c.x, c.y - r * 0.98f); lineTo(c.x - r * 0.22f, c.y - r * 0.55f); lineTo(c.x + r * 0.22f, c.y - r * 0.55f); close() }, acento)
+            listOf(0.55f, 0.72f).forEach { k ->
+                drawLine(tinta.copy(alpha = 0.7f), c + Offset(0f, r * k), c + Offset(-r * 0.2f, r * (k + 0.18f)), 1.2f * u)
+                drawLine(tinta.copy(alpha = 0.7f), c + Offset(0f, r * k), c + Offset(r * 0.2f, r * (k + 0.18f)), 1.2f * u)
+            }
+        }
+        // Ocho puntas con una corona de laurel abajo.
+        TemaId.NAPOLEON -> {
+            for (i in 0 until 8) punta(n + 45.0 * i, if (i % 2 == 0) r * 0.78f else r * 0.45f, r * 0.12f, if (i == 0) acento else tenue)
+            for (k in 0..10) { val g = 30.0 + 12.0 * k; if (k != 5) drawCircle(secundario.copy(alpha = 0.85f), r * 0.07f, c + rumbo(g) * (r * 0.88f)) }
+        }
+        // Una flor de ocho pétalos.
+        TemaId.BOTANICO -> {
+            for (i in 0 until 8) {
+                val g = n + 45.0 * i; val largo = if (i % 2 == 0) r * 0.95f else r * 0.6f
+                val q = c + rumbo(g) * largo; val a = c + rumbo(g - 22.0) * (largo * 0.6f); val b = c + rumbo(g + 22.0) * (largo * 0.6f)
+                drawPath(Path().apply { moveTo(c.x, c.y); quadraticTo(a.x, a.y, q.x, q.y); quadraticTo(b.x, b.y, c.x, c.y); close() }, if (i == 0) acento else tinta.copy(alpha = 0.55f))
+            }
+            drawCircle(secundario, r * 0.14f, c)
+        }
+        // Un copo de nieve de seis brazos.
+        TemaId.NAVIDAD -> {
+            for (i in 0 until 6) {
+                val g = n + 60.0 * i; val col = if (i == 0) acento else tenue; val grosor = if (i == 0) 2f * u else 1.4f * u
+                drawLine(col, c, c + rumbo(g) * (r * 0.92f), grosor)
+                val m = c + rumbo(g) * (r * 0.55f)
+                drawLine(col, m, m + rumbo(g - 40.0) * (r * 0.25f), grosor); drawLine(col, m, m + rumbo(g + 40.0) * (r * 0.25f), grosor)
+            }
+            drawCircle(secundario, r * 0.1f, c)
+        }
+        // La brújula de geomante: anillos, 24 rumbos y la aguja que señala al sur.
+        TemaId.SEDA -> {
+            anillo(r * 0.85f, tinta.copy(alpha = 0.6f)); anillo(r * 0.6f, tinta.copy(alpha = 0.6f)); anillo(r * 0.35f, tinta.copy(alpha = 0.5f))
+            for (i in 0 until 24) { val g = n + 15.0 * i; drawLine(tinta.copy(alpha = 0.6f), c + rumbo(g) * (r * 0.62f), c + rumbo(g) * (r * 0.83f), 0.8f * u) }
+            punta(90.0, r * 0.58f, r * 0.12f, acento); punta(n, r * 0.4f, r * 0.12f, tinta.copy(alpha = 0.55f))
+        }
+        // Un rosetón de ocho lóbulos con la marca del norte arriba.
+        TemaId.GOTICO -> {
+            for (i in 0 until 8) drawCircle(tinta.copy(alpha = 0.7f), r * 0.28f, c + rumbo(n + 45.0 * i) * (r * 0.58f), style = Stroke(1.2f * u))
+            drawCircle(acento.copy(alpha = 0.75f), r * 0.26f, c); drawCircle(fondo, r * 0.1f, c)
+            drawPath(Path().apply { moveTo(c.x, c.y - r * 1.0f); lineTo(c.x - r * 0.12f, c.y - r * 0.8f); lineTo(c.x + r * 0.12f, c.y - r * 0.8f); close() }, acento)
+        }
+        // El indicador de rumbo de una cabina.
+        TemaId.ESPACIO -> {
+            anillo(r * 0.8f, acento.copy(alpha = 0.7f))
+            for (i in 0 until 12) { val g = n + 30.0 * i; val l = if (i % 3 == 0) r * 0.18f else r * 0.08f; drawLine(acento.copy(alpha = 0.8f), c + rumbo(g) * (r * 0.8f), c + rumbo(g) * (r * 0.8f - l), 1f * u) }
+            listOf(0.0, 90.0, 180.0, 270.0).forEach { g -> drawLine(tinta.copy(alpha = 0.7f), c + rumbo(g) * (r * 0.15f), c + rumbo(g) * (r * 0.45f), 1f * u) }
+            drawPath(Path().apply { moveTo(c.x, c.y - r * 0.82f); lineTo(c.x - r * 0.16f, c.y - r * 1.02f); lineTo(c.x + r * 0.16f, c.y - r * 1.02f); close() }, acento)
+            drawCircle(acento, r * 0.05f, c)
+        }
+        // Ocho puntas sobre la estrella de dos cuadrados.
+        TemaId.ANDALUS -> {
+            drawPath(estrellaDeCuadros(c, r * 0.8f), tinta.copy(alpha = 0.75f))
+            drawCircle(fondo, r * 0.42f, c)
+            for (i in 0 until 8) punta(n + 45.0 * i, if (i % 2 == 0) r * 0.95f else r * 0.6f, r * 0.08f, if (i == 0) acento else tinta.copy(alpha = 0.55f))
+            drawCircle(secundario, r * 0.1f, c)
+        }
+        // Cuatro puntas con la corona de la yurta en medio.
+        TemaId.MONGOL -> {
+            for (i in 0 until 8) punta(n + 45.0 * i, if (i % 2 == 0) r * 0.95f else r * 0.5f, r * 0.13f, if (i == 0) acento else tenue)
+            drawCircle(fondo, r * 0.4f, c); anillo(r * 0.4f, tenue, 1.6f * u)
+            for (i in 0 until 8) { val g = n + 22.5 + 45.0 * i; drawLine(tenue, c + rumbo(g) * (r * 0.12f), c + rumbo(g) * (r * 0.4f), 1f * u) }
+            drawCircle(secundario, r * 0.12f, c)
+        }
+        // La rosa de un portulano: treinta y dos rumbos y ocho puntas.
+        TemaId.RENACIMIENTO -> {
+            for (i in 0 until 32) drawLine(tinta.copy(alpha = 0.3f), c, c + rumbo(n + 11.25 * i) * r, 0.6f * u)
+            for (i in 0 until 8) punta(n + 45.0 * i, if (i % 2 == 0) r * 0.9f else r * 0.55f, r * 0.1f, if (i == 0) acento else tinta.copy(alpha = 0.75f))
+            anillo(r * 0.3f, tinta.copy(alpha = 0.6f), 0.8f * u)
+        }
+        // Una cuña al norte y la estrella roja en medio.
+        TemaId.URSS -> {
+            punta(n, r * 0.98f, r * 0.16f, acento); punta(90.0, r * 0.6f, r * 0.12f, tinta.copy(alpha = 0.5f))
+            drawPath(Path().apply {
+                for (i in 0 until 10) { val q = c + rumbo(n + 36.0 * i) * (if (i % 2 == 0) r * 0.45f else r * 0.18f); if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }
+                close()
+            }, acento)
+        }
+        // Cuatro puntas sobre la escarapela.
+        TemaId.REVOLUCION -> {
+            for (i in 0 until 4) punta(n + 90.0 * i, r * 0.95f, r * 0.1f, if (i == 0) acento else tinta.copy(alpha = 0.75f))
+            drawCircle(Color(0xFF1F3A93), r * 0.5f, c); drawCircle(Color.White, r * 0.34f, c); drawCircle(Color(0xFFC8102E), r * 0.18f, c)
+        }
+        // Cuatro puntas, una gema en medio y otras cuatro entre los rumbos.
+        TemaId.ANTIGUAS -> {
+            for (i in 0 until 4) punta(n + 90.0 * i, r * 0.95f, r * 0.13f, if (i == 0) acento else tenue)
+            for (i in 0 until 4) {
+                val q = c + rumbo(-45.0 + 90.0 * i) * (r * 0.68f)
+                drawPath(Path().apply { moveTo(q.x, q.y - r * 0.12f); lineTo(q.x + r * 0.08f, q.y); lineTo(q.x, q.y + r * 0.12f); lineTo(q.x - r * 0.08f, q.y); close() }, secundario)
+            }
+            drawPath(Path().apply { moveTo(c.x, c.y - r * 0.2f); lineTo(c.x + r * 0.14f, c.y); lineTo(c.x, c.y + r * 0.2f); lineTo(c.x - r * 0.14f, c.y); close() }, secundario)
+        }
     }
 }
 

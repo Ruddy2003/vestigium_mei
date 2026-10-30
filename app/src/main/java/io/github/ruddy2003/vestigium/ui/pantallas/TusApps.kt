@@ -23,7 +23,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
@@ -47,6 +46,12 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.ejeGrafica
+import io.github.ruddy2003.vestigium.ui.estiloCifras
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
@@ -345,17 +350,19 @@ private fun DibujarBloque(b: Bloque) {
         is Bloque.Lista -> Seccion(b.titulo) {
             Tarjeta {
                 val max = b.l.maxOfOrNull { it.second } ?: 1.0
+                val eg = estiloGrafica()
+                val cifras = estiloCifras(MaterialTheme.typography.labelMedium)
                 b.l.forEachIndexed { i, (nombre, v, txt) ->
                     Column(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(Estilo.numeral(i + 1), style = MaterialTheme.typography.labelLarge, color = cs.primary, modifier = Modifier.width(30.dp))
                             Text(nombre, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                            Text(txt, style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+                            Text(txt, style = cifras, color = cs.onSurfaceVariant)
                         }
                         Box(Modifier.padding(start = 30.dp, top = 3.dp).fillMaxWidth().height(4.dp)) {
                             Canvas(Modifier.fillMaxWidth().height(4.dp)) {
-                                drawRoundRect(cs.outline.copy(alpha = 0.2f), Offset.Zero, size, CornerRadius(2f))
-                                drawRoundRect(lerp(cs.primary, cs.tertiary, i / 15f), Offset.Zero, Size(size.width * (v / max).toFloat().coerceIn(0.02f, 1f), size.height), CornerRadius(2f))
+                                barraGrafica(eg, Offset.Zero, size, cs.outline.copy(alpha = 0.2f), horizontal = true, pista = true)
+                                barraGrafica(eg, Offset.Zero, Size(size.width * (v / max).toFloat().coerceIn(0.02f, 1f), size.height), lerp(cs.primary, cs.tertiary, i / 15f), horizontal = true)
                             }
                         }
                     }
@@ -377,15 +384,17 @@ private fun BarrasMes(l: List<Pair<String, Double>>, unidad: String) {
     val estilo = TextStyle(fontSize = 9.sp, color = cs.onSurfaceVariant)
     val max = l.maxOf { it.second }.coerceAtLeast(1e-9)
     val mejor = l.maxByOrNull { it.second }
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().height(150.dp)) {
         val abajo = size.height - 16.dp.toPx(); val ancho = size.width / l.size
         l.forEachIndexed { i, (m, v) ->
             val h = (v / max).toFloat() * (abajo - 4.dp.toPx())
             val col = if (m == mejor?.first) cs.secondary else cs.primary
-            drawRoundRect(col.copy(alpha = 0.85f), Offset(i * ancho + ancho * 0.15f, abajo - h), Size(ancho * 0.7f, h), CornerRadius(2f))
+            barraGrafica(eg, Offset(i * ancho + ancho * 0.15f, abajo - h), Size(ancho * 0.7f, h), col.copy(alpha = 0.85f))
             val cada = maxOf(1, l.size / 6)
             if (i % cada == 0) drawText(medidor, etiquetaMes(m), Offset(i * ancho, abajo + 3.dp.toPx()), estilo)
         }
+        ejeGrafica(eg, Offset(0f, abajo), Offset(size.width, abajo), cs.outline)
     }
     mejor?.let { Ayuda("Tu mes con más: ${etiquetaMes(it.first)}, con ${if (it.second >= 10) n(it.second) else d1(it.second)} $unidad.") }
 }
@@ -396,13 +405,16 @@ private fun BarrasHoras(h: DoubleArray) {
     val medidor = rememberTextMeasurer()
     val estilo = TextStyle(fontSize = 9.sp, color = cs.onSurfaceVariant)
     val max = (h.maxOrNull() ?: 1.0).coerceAtLeast(1e-9)
+    val eg = estiloGrafica()
+    val cifras = estiloCifras(estilo)
     Canvas(Modifier.fillMaxWidth().height(110.dp)) {
         val abajo = size.height - 14.dp.toPx(); val ancho = size.width / 24
         for (i in 0 until 24) {
             val alto = (h[i] / max).toFloat() * (abajo - 2.dp.toPx())
-            drawRoundRect(lerp(cs.tertiary, cs.primary, if (i in 7..19) 1f else 0f), Offset(i * ancho + 1f, abajo - alto), Size(ancho - 2f, alto), CornerRadius(2f))
-            if (i % 6 == 0) drawText(medidor, "$i h", Offset(i * ancho, abajo + 2.dp.toPx()), estilo)
+            barraGrafica(eg, Offset(i * ancho + 1f, abajo - alto), Size(ancho - 2f, alto), lerp(cs.tertiary, cs.primary, if (i in 7..19) 1f else 0f))
+            if (i % 6 == 0) drawText(medidor, "$i h", Offset(i * ancho, abajo + 2.dp.toPx()), cifras)
         }
+        ejeGrafica(eg, Offset(0f, abajo), Offset(size.width, abajo), cs.outline)
     }
 }
 
@@ -414,6 +426,8 @@ private fun MapaSemana(m: Array<DoubleArray>) {
     val estilo = TextStyle(fontSize = 9.sp, color = cs.onSurfaceVariant)
     val max = m.maxOf { it.maxOrNull() ?: 0.0 }.coerceAtLeast(1e-9)
     val dias = listOf("L", "M", "M", "J", "V", "S", "D")
+    val eg = estiloGrafica()
+    val cifras = estiloCifras(estilo)
     Canvas(Modifier.fillMaxWidth().height(150.dp)) {
         val izq = 14.dp.toPx(); val abajo = 14.dp.toPx()
         val cw = (size.width - izq) / 24; val ch = (size.height - abajo) / 7
@@ -421,10 +435,11 @@ private fun MapaSemana(m: Array<DoubleArray>) {
             drawText(medidor, dias[d], Offset(0f, d * ch + ch / 2 - 6.dp.toPx()), estilo)
             for (h in 0 until 24) {
                 val f = (m[d][h] / max).toFloat()
-                drawRoundRect(if (f == 0f) cs.outline.copy(alpha = 0.12f) else cs.primary.copy(alpha = 0.15f + 0.85f * f), Offset(izq + h * cw + 1f, d * ch + 1f), Size(cw - 2f, ch - 2f), CornerRadius(3f))
+                // Cada hora, con la silueta de barra del tema (sin adornos internos: las celdas son muy chicas).
+                barraGrafica(eg, Offset(izq + h * cw + 1f, d * ch + 1f), Size(cw - 2f, ch - 2f), if (f == 0f) cs.outline.copy(alpha = 0.12f) else cs.primary.copy(alpha = 0.15f + 0.85f * f), pista = true)
             }
         }
-        for (h in listOf(0, 6, 12, 18)) drawText(medidor, "$h", Offset(izq + h * cw, size.height - abajo + 2.dp.toPx()), estilo)
+        for (h in listOf(0, 6, 12, 18)) drawText(medidor, "$h", Offset(izq + h * cw, size.height - abajo + 2.dp.toPx()), cifras)
     }
 }
 
@@ -460,14 +475,17 @@ private fun LineaTiempo(l: List<Pair<String, Double>>, unidad: String) {
     val medidor = rememberTextMeasurer()
     val estilo = TextStyle(fontSize = 9.sp, color = cs.onSurfaceVariant)
     val min = l.minOf { it.second }; val max = l.maxOf { it.second }; val rango = (max - min).coerceAtLeast(1e-9)
+    val eg = estiloGrafica()
+    val cifras = estiloCifras(estilo)
     Canvas(Modifier.fillMaxWidth().height(140.dp)) {
         val abajo = size.height - 14.dp.toPx(); val arriba = 6.dp.toPx()
         fun p(i: Int) = Offset(i * size.width / (l.size - 1), abajo - ((l[i].second - min) / rango).toFloat() * (abajo - arriba))
         val camino = Path().apply { moveTo(p(0).x, p(0).y); for (i in 1 until l.size) lineTo(p(i).x, p(i).y) }
-        drawPath(camino, cs.primary, style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
-        drawCircle(cs.secondary, 4.dp.toPx(), p(l.size - 1))
-        drawText(medidor, l.first().first.take(7), Offset(0f, abajo + 2.dp.toPx()), estilo)
-        val fin = medidor.measure(l.last().first.take(7), estilo)
+        ejeGrafica(eg, Offset(0f, abajo), Offset(size.width, abajo), cs.outline)
+        lineaGrafica(eg, camino, cs.primary)
+        puntoGrafica(eg, p(l.size - 1), 4.dp.toPx(), cs.secondary)
+        drawText(medidor, l.first().first.take(7), Offset(0f, abajo + 2.dp.toPx()), cifras)
+        val fin = medidor.measure(l.last().first.take(7), cifras)
         drawText(fin, topLeft = Offset(size.width - fin.size.width, abajo + 2.dp.toPx()))
     }
     fun f(x: Double) = if (max >= 100) n(x) else d1(x)

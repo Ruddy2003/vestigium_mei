@@ -49,6 +49,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -101,7 +104,10 @@ private fun ovalo(c: Offset, rx: Float, ry: Float) = Path().apply { addOval(Rect
 private fun menos(a: Path, b: Path) = Path.combine(PathOperation.Difference, a, b)
 private fun mas(a: Path, b: Path) = Path.combine(PathOperation.Union, a, b)
 
-/** El símbolo del tema para calificar: laurel, sol de Vergina, abeja imperial, estrella roja, moneda de la ruta… */
+/**
+ * El símbolo del tema para calificar, uno distinto por tema: hoja de laurel, sol de Vergina, cuadrifolio, ojo, cruz de malta,
+ * matraz, abeja imperial, escarabajo, copo, moneda de la ruta, rosetón, engrane con estrella, escarapela, gema…
+ */
 fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.ROMANO -> Path().apply { moveTo(c.x - r, c.y + r * 0.35f); quadraticTo(c.x - r * 0.1f, c.y - r * 1.15f, c.x + r, c.y - r * 0.35f); quadraticTo(c.x + r * 0.1f, c.y + r * 1.15f, c.x - r, c.y + r * 0.35f); close() }
     TemaId.HELENO -> mas(estrella(c, r, 16, 0.55f), circulo(c, r * 0.3f))
@@ -113,7 +119,12 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
     TemaId.REFUGIO -> menos(estrella(c, r, 20, 0.84f), circulo(c, r * 0.5f)).let { mas(it, circulo(c, r * 0.32f)) }
-    TemaId.ORDEN -> estrella(c, r, 5, 0.42f)
+    // La cruz de malta de los caballeros: cuatro brazos que se abren y terminan en dos puntas.
+    TemaId.ORDEN -> (0 until 4).map { k ->
+        val a = -PI / 2 + PI / 2 * k
+        val izq = c + dir(a - 0.42) * r; val muesca = c + dir(a) * (r * 0.62f); val der = c + dir(a + 0.42) * r
+        Path().apply { moveTo(c.x, c.y); lineTo(izq.x, izq.y); lineTo(muesca.x, muesca.y); lineTo(der.x, der.y); close() }
+    }.reduce { a, b -> mas(a, b) }
     TemaId.LABORATORIO -> Path().apply {
         moveTo(c.x - r * 0.24f, c.y - r); lineTo(c.x + r * 0.24f, c.y - r); lineTo(c.x + r * 0.24f, c.y - r * 0.3f); lineTo(c.x + r * 0.92f, c.y + r * 0.85f)
         lineTo(c.x - r * 0.92f, c.y + r * 0.85f); lineTo(c.x - r * 0.24f, c.y - r * 0.3f); close()
@@ -122,14 +133,36 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         moveTo(c.x, c.y - r); lineTo(c.x + r * 0.95f, c.y - r * 0.05f); lineTo(c.x + r * 0.7f, c.y - r * 0.05f); lineTo(c.x + r * 0.7f, c.y + r * 0.9f)
         lineTo(c.x - r * 0.7f, c.y + r * 0.9f); lineTo(c.x - r * 0.7f, c.y - r * 0.05f); lineTo(c.x - r * 0.95f, c.y - r * 0.05f); close()
     }
-    // La estrella de la Legión de Honor con su medallón.
-    TemaId.NAPOLEON -> mas(estrella(c, r, 5, 0.46f), circulo(c, r * 0.36f))
+    // La abeja imperial: alas, tórax, cabeza y el abdomen con sus franjas.
+    TemaId.NAPOLEON -> {
+        val alaIzq = Path().apply { moveTo(c.x - r * 0.12f, c.y - r * 0.25f); quadraticTo(c.x - r * 1.0f, c.y - r * 0.95f, c.x - r * 0.9f, c.y - r * 0.12f)
+            quadraticTo(c.x - r * 0.55f, c.y + r * 0.12f, c.x - r * 0.12f, c.y - r * 0.05f); close() }
+        val alaDer = Path().apply { moveTo(c.x + r * 0.12f, c.y - r * 0.25f); quadraticTo(c.x + r * 1.0f, c.y - r * 0.95f, c.x + r * 0.9f, c.y - r * 0.12f)
+            quadraticTo(c.x + r * 0.55f, c.y + r * 0.12f, c.x + r * 0.12f, c.y - r * 0.05f); close() }
+        val franjas = Path().apply {
+            addRect(Rect(c.x - r, c.y + r * 0.28f, c.x + r, c.y + r * 0.36f)); addRect(Rect(c.x - r, c.y + r * 0.52f, c.x + r, c.y + r * 0.6f))
+        }
+        val abdomen = menos(ovalo(c + Offset(0f, r * 0.42f), r * 0.32f, r * 0.55f), franjas)
+        listOf(alaIzq, alaDer, circulo(c + Offset(0f, -r * 0.18f), r * 0.24f), circulo(c + Offset(0f, -r * 0.52f), r * 0.16f), abdomen).reduce { a, b -> mas(a, b) }
+    }
     // Un escarabajo: élitros, pronoto y cabeza.
     TemaId.BOTANICO -> listOf(ovalo(c + Offset(0f, r * 0.2f), r * 0.62f, r * 0.78f), ovalo(c + Offset(0f, -r * 0.58f), r * 0.44f, r * 0.24f),
         circulo(c + Offset(0f, -r * 0.86f), r * 0.17f)).reduce { a, b -> mas(a, b) }
     TemaId.NAVIDAD -> estrella(c, r, 6, 0.32f)
     TemaId.SEDA -> menos(circulo(c, r), poligono(c, r * 0.36f, 4, PI / 4))
-    TemaId.URSS -> estrella(c, r, 5, 0.38f)
+    // Un engrane de ocho dientes con la estrella calada en medio.
+    TemaId.URSS -> {
+        val paso = 2 * PI / 8
+        val rueda = Path().apply {
+            for (i in 0 until 8) {
+                val a = -PI / 2 + i * paso
+                listOf(a - paso * 0.5 to r * 0.74f, a - paso * 0.22 to r * 0.74f, a - paso * 0.16 to r, a + paso * 0.16 to r, a + paso * 0.22 to r * 0.74f)
+                    .forEachIndexed { j, (g, rr) -> val q = c + dir(g) * rr; if (i == 0 && j == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }
+            }
+            close()
+        }
+        mas(menos(rueda, circulo(c, r * 0.46f)), estrella(c, r * 0.38f, 5, 0.4f))
+    }
     TemaId.ESPACIO -> mas(circulo(c, r * 0.5f), menos(ovalo(c, r, r * 0.36f), ovalo(c, r * 0.78f, r * 0.2f)))
     TemaId.ANDALUS -> mas(poligono(c, r, 4, 0.0), poligono(c, r, 4, PI / 4))
     TemaId.MONGOL -> mas(estrella(c, r, 8, 0.5f), circulo(c, r * 0.45f))
@@ -165,15 +198,22 @@ fun Calificacion(valor: Int?, modifier: Modifier = Modifier, tam: Dp = 14.dp, co
 //  Los recuadros grandes de «Más»
 // =====================================================================
 
-/** Un recuadro grande con su dibujo arriba y el título abajo. */
+/**
+ * Un recuadro grande con su dibujo arriba y el título abajo. El dibujo lleva encima el marco del tema (el mismo que el mapa:
+ * dentículos, greca, remaches, galones, nieve, runas…), más fino, y solo en los bordes.
+ */
 @Composable
 internal fun Recuadro(titulo: String, detalle: String, modifier: Modifier = Modifier, alto: Dp = 150.dp, onClick: () -> Unit, dibujo: @Composable BoxScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     val sentir = rememberSentir()
+    val tema = Estilo.tema
     Surface(onClick = { sentir(Sentidos.Evento.ABRIR); onClick() }, shape = MaterialTheme.shapes.medium, color = cs.surface,
         border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.55f)), modifier = modifier.fillMaxWidth()) {
         Column {
-            Box(Modifier.fillMaxWidth().height(alto).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp)), content = dibujo)
+            Box(Modifier.fillMaxWidth().height(alto).clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))) {
+                dibujo()
+                Canvas(Modifier.matchParentSize()) { marcoDelMapa(tema, 0.75.dp.toPx(), cs.onSurface.copy(alpha = 0.8f), cs.primary, cs.surface) }
+            }
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleLarge)
@@ -230,21 +270,32 @@ fun RecuadroObras(nav: Nav) {
 //  Mapas: Mundo, el mapa para rascar, el Patrimonio Mundial, las calles y tus lugares
 // =====================================================================
 
-/** Un dibujo pequeño para cada mapa. */
-private fun DrawScope.dibujoMapa(id: String, c1: Color, c2: Color) {
+/**
+ * Un dibujo pequeño para cada mapa, con las piezas del tema: los lugares se marcan con la forma del tema (la misma que en el
+ * mapa: tabla con asas, cursor, abeto, bicornio…), la ruta termina en ella y los demás llevan la rosa de los vientos del tema.
+ */
+private fun DrawScope.dibujoMapa(id: String, c1: Color, c2: Color, t: TemaId, fondo: Color) {
     val w = size.width; val h = size.height; val c = Offset(w / 2, h / 2); val r = minOf(w, h) * 0.36f
     val trazo = Stroke(1.8.dp.toPx(), cap = StrokeCap.Round)
+    val relleno = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = c1.toArgb() }
+    val borde = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+        style = android.graphics.Paint.Style.STROKE; strokeWidth = 1.2.dp.toPx(); color = fondo.toArgb(); strokeJoin = android.graphics.Paint.Join.ROUND
+    }
+    fun marca(o: Offset, rr: Float) = drawIntoCanvas { lienzo -> Formas.dibujar(lienzo.nativeCanvas, t, o.x, o.y, rr, relleno, borde) }
+    fun rosa() = rosaDelMapa(t, Offset(w - h * 0.2f, h * 0.22f), h * 0.17f, c2, c1, c2, fondo)
     when (id) {
         "mundo" -> {
             drawCircle(c2.copy(alpha = 0.18f), r, c); drawCircle(c1, r, c, style = trazo)
             listOf(0.35f, 0.75f).forEach { k -> drawOval(c1, Offset(c.x - r * k, c.y - r), Size(2 * r * k, 2 * r), style = Stroke(1.2.dp.toPx())) }
             listOf(-0.5f, 0f, 0.5f).forEach { k -> val y = c.y + r * k; val dx = r * kotlin.math.sqrt(1 - k * k); drawLine(c1, Offset(c.x - dx, y), Offset(c.x + dx, y), 1.2.dp.toPx()) }
+            rosa()
         }
         "unesco" -> {
             val base = c.y + r * 0.8f
             drawPath(Path().apply { moveTo(c.x - r * 1.1f, c.y - r * 0.45f); lineTo(c.x, c.y - r * 1.05f); lineTo(c.x + r * 1.1f, c.y - r * 0.45f); close() }, c1)
             for (i in 0 until 5) { val x = c.x - r * 0.9f + i * r * 0.45f; drawRect(c1, Offset(x - r * 0.08f, c.y - r * 0.38f), Size(r * 0.16f, base - (c.y - r * 0.38f))) }
             drawRect(c1, Offset(c.x - r * 1.2f, base), Size(r * 2.4f, r * 0.18f))
+            rosa()
         }
         "calles" -> {
             val az = java.util.Random(3)
@@ -252,19 +303,17 @@ private fun DrawScope.dibujoMapa(id: String, c1: Color, c2: Color) {
             for (i in 0..3) { val y = h * (0.15f + i * 0.23f); drawLine(c2.copy(alpha = 0.6f), Offset(0f, y), Offset(w, y + (az.nextFloat() - 0.5f) * 20f), 1.5.dp.toPx()) }
             val ruta = Path().apply { moveTo(w * 0.12f, h * 0.8f); cubicTo(w * 0.35f, h * 0.7f, w * 0.4f, h * 0.3f, w * 0.62f, h * 0.38f); cubicTo(w * 0.8f, h * 0.45f, w * 0.78f, h * 0.15f, w * 0.9f, h * 0.2f) }
             drawPath(ruta, c1, style = Stroke(3.dp.toPx(), cap = StrokeCap.Round))
+            marca(Offset(w * 0.9f, h * 0.2f), h * 0.11f)
         }
         "rascar" -> {
             drawRect(c2.copy(alpha = 0.35f), Offset(w * 0.12f, h * 0.2f), Size(w * 0.76f, h * 0.6f))
             val p = Path().apply { moveTo(w * 0.2f, h * 0.3f); var x = w * 0.2f; var arriba = true; while (x < w * 0.75f) { x += w * 0.07f; lineTo(x, if (arriba) h * 0.62f else h * 0.32f); arriba = !arriba } }
             drawPath(p, c1, style = Stroke(5.dp.toPx(), cap = StrokeCap.Round))
+            rosa()
         }
         else -> {
-            // Lugares: chinchetas sobre un mapa.
-            listOf(Offset(w * 0.3f, h * 0.45f) to 1f, Offset(w * 0.62f, h * 0.35f) to 0.8f, Offset(w * 0.5f, h * 0.7f) to 0.7f).forEach { (o, k) ->
-                val rr = r * 0.4f * k
-                drawPath(Path().apply { moveTo(o.x, o.y + rr * 2.2f); lineTo(o.x - rr * 0.85f, o.y + rr * 0.4f); lineTo(o.x + rr * 0.85f, o.y + rr * 0.4f); close() }, c1)
-                drawCircle(c1, rr, o); drawCircle(c2, rr * 0.4f, o)
-            }
+            // Lugares: tres marcas del tema sobre un mapa.
+            listOf(Offset(w * 0.3f, h * 0.45f) to 1f, Offset(w * 0.62f, h * 0.35f) to 0.8f, Offset(w * 0.5f, h * 0.72f) to 0.7f).forEach { (o, k) -> marca(o, r * 0.42f * k) }
         }
     }
 }
@@ -273,9 +322,14 @@ private fun DrawScope.dibujoMapa(id: String, c1: Color, c2: Color) {
 private fun TarjetaMapa(id: String, titulo: String, detalle: String, modifier: Modifier, onClick: () -> Unit) {
     val cs = MaterialTheme.colorScheme
     val sentir = rememberSentir()
+    val tema = Estilo.tema
     Surface(onClick = { sentir(Sentidos.Evento.ABRIR); onClick() }, shape = MaterialTheme.shapes.medium, color = cs.surface, border = BorderStroke(1.dp, cs.outline), modifier = modifier) {
         Column(Modifier.padding(12.dp)) {
-            Canvas(Modifier.fillMaxWidth().height(70.dp)) { dibujoMapa(id, cs.primary, cs.secondary) }
+            // El dibujo del mapa dentro del marco del tema, en pequeño.
+            Canvas(Modifier.fillMaxWidth().height(70.dp)) {
+                dibujoMapa(id, cs.primary, cs.secondary, tema, cs.surface)
+                marcoDelMapa(tema, 0.55.dp.toPx(), cs.onSurface.copy(alpha = 0.7f), cs.primary, cs.surface)
+            }
             Text(Estilo.seccion(titulo, Romano.latin(titulo)).first, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp), maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(detalle, style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }

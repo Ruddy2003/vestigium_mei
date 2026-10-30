@@ -1,7 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F72F353D" />
-    <stroke android:width="1.5dp" android:color="#637389" />
-    <corners android:radius="4dp" />
-</shape>
+<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. Forma propia del tema (generado). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F72F353D"/>
+            <stroke android:width="1.5dp" android:color="#637389" android:dashWidth="18dp" android:dashGap="3dp"/>
+            <corners android:radius="2dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#99D0333B"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="18dp" android:height="8dp" android:top="0dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#F72F353D"/>
+            <corners android:radius="0dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="12dp" android:height="12dp" android:top="0dp">
+        <vector android:width="12dp" android:height="12dp" android:viewportWidth="12" android:viewportHeight="12">
+            <path android:pathData="M6,6 L3.4,0.4 L8.6,0.4 Z M6,6 L11.6,3.4 L11.6,8.6 Z M6,6 L8.6,11.6 L3.4,11.6 Z M6,6 L0.4,8.6 L0.4,3.4 Z" android:fillColor="#FFD0333B"/>
+        </vector>
+    </item>
+</layer-list>

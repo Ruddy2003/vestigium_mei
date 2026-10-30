@@ -32,9 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -56,9 +54,8 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.Vacio
 
 /**
- * El mapa de una campaña: siete etapas unidas por un camino. Cada día cumplido enciende su etapa; la meta lleva el
- * emblema del tema. El camino es una vía en los templos, un sendero punteado en los castillos, un circuito en los
- * laboratorios y un riel en los talleres.
+ * El mapa de una campaña: siete etapas unidas por un camino, sobre el mapa propio del tema. Cada día cumplido enciende su
+ * etapa; el marcador del tema avanza por la ruta y, al ganar, la meta muestra la escena de la victoria del tema.
  */
 @Composable
 fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: Boolean = true, tema: TemaId = Estilo.tema) {
@@ -68,24 +65,16 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
     val etapas = Campanas.etapas(e.c.tema.ifBlank { tema.id })
     // El mapa es el de la campaña (el tema con que se aceptó), para que las etapas y el dibujo coincidan.
     val temaMapa = TemaId.entries.firstOrNull { it.id == e.c.tema } ?: tema
-    val propio = temaMapa in MapasCampana.TEMAS
     val hoy = Fechas.diaLogico()
     val trans = rememberInfiniteTransition(label = "campana")
     val pulso by trans.animateFloat(0f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Reverse), label = "pulso")
     val animar = Repo.config.animaciones
     Canvas(modifier.fillMaxWidth().aspectRatio(2.4f)) {
         val w = size.width; val h = size.height
-        // Las siete paradas del tema (donde quedan en su mapa) o, si no tiene, en zigzag de izquierda a derecha.
-        val pts = io.github.ruddy2003.vestigium.ui.MapasMas.puntos(temaMapa)?.map { Offset(w * it.x, h * it.y) }
-            ?: (0 until 7).map { i -> Offset(w * (0.07f + 0.86f * i / 6f), h * (if (i % 2 == 0) 0.32f else 0.62f)) }
+        // Las siete paradas del tema, donde quedan en su mapa.
+        val pts = io.github.ruddy2003.vestigium.ui.MapasMas.puntos(temaMapa).map { Offset(w * it.x, h * it.y) }
         val camino = Path().apply { moveTo(pts[0].x, pts[0].y); for (i in 1 until 7) { val a = pts[i - 1]; val b = pts[i]; cubicTo((a.x + b.x) / 2, a.y, (a.x + b.x) / 2, b.y, b.x, b.y) } }
-        val salon = salonDe(temaMapa)
-        if (propio) with(MapasCampana) { fondo(temaMapa, cs, e.hechos / 7f); ruta(temaMapa, cs, camino) } else when (salon) {
-            Salon.TEMPLO -> { drawPath(camino, cs.outline.copy(alpha = 0.5f), style = Stroke(3.6f * density)); drawPath(camino, cs.surface, style = Stroke(2f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f * density, 2.5f * density)))) }
-            Salon.CASTILLO -> drawPath(camino, cs.onSurfaceVariant.copy(alpha = 0.6f), style = Stroke(1.4f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1f * density, 3.5f * density))))
-            Salon.LABORATORIO -> { drawPath(camino, cs.primary.copy(alpha = 0.25f), style = Stroke(3f * density)); drawPath(camino, cs.primary, style = Stroke(0.8f * density)) }
-            Salon.TALLER -> { drawPath(camino, Color(0xFF8A6A44).copy(alpha = 0.6f), style = Stroke(3f * density, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1f * density, 2.5f * density)))); drawPath(camino, cs.onSurfaceVariant.copy(alpha = 0.5f), style = Stroke(0.8f * density)) }
-        }
+        with(MapasCampana) { fondo(temaMapa, cs, e.hechos / 7f); ruta(temaMapa, cs, camino) }
         // Dónde va cada nombre: se prueban abajo, arriba, a la derecha y a la izquierda, y se queda el primero que no choca
         // con otro nombre, con otra parada ni con el marcador.
         val lugaresNombre: List<Pair<androidx.compose.ui.text.TextLayoutResult, Offset>> = if (!conNombres) emptyList() else {
@@ -117,12 +106,7 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
             val r = (if (i == 6) 9f else 6.5f) * density
             val col = when { ok == true -> cs.primary; f == hoy -> cs.tertiary; f < hoy -> cs.error.copy(alpha = 0.55f); else -> cs.surfaceVariant }
             if (f == hoy && ok != true && animar) drawCircle(cs.tertiary.copy(alpha = 0.25f * (1 - pulso)), r + 5f * density * pulso, p)
-            if (propio) with(MapasCampana) { etapa(temaMapa, cs, p, r, col, i == 6) } else when (salon) {
-                Salon.CASTILLO -> drawRect(col, Offset(p.x - r, p.y - r), androidx.compose.ui.geometry.Size(r * 2, r * 2))
-                Salon.LABORATORIO -> drawPath(Path().apply { for (k in 0 until 6) { val a = k * Math.PI / 3; val x = p.x + (r * kotlin.math.cos(a)).toFloat(); val y = p.y + (r * kotlin.math.sin(a)).toFloat(); if (k == 0) moveTo(x, y) else lineTo(x, y) }; close() }, col)
-                else -> drawCircle(col, r, p)
-            }
-            if (!propio) drawCircle(cs.outline, r, p, style = Stroke(0.6f * density))
+            with(MapasCampana) { etapa(temaMapa, cs, p, r, col, i == 6) }
             if (ok == true) drawPath(Path().apply { moveTo(p.x - r * 0.45f, p.y); lineTo(p.x - r * 0.1f, p.y + r * 0.4f); lineTo(p.x + r * 0.5f, p.y - r * 0.4f) }, cs.onPrimary, style = Stroke(1f * density))
         }
         // Los nombres al final, encima de la ruta y las paradas.
@@ -130,13 +114,8 @@ fun MapaCampana(e: Campanas.Estado, modifier: Modifier = Modifier, conNombres: B
         // El marcador del tema avanza por la ruta con los días cumplidos (brinca si hoy falta cumplir).
         val hoyFalta = e.dias.any { it.first == hoy && it.second != true } && !e.ganada
         with(io.github.ruddy2003.vestigium.ui.MapasMas) { marcador(temaMapa, cs, pts[e.hechos.coerceIn(0, 6)], if (animar && hoyFalta) pulso else 0f) }
-        // La bandera de la meta si se ganó.
-        if (e.ganada && propio) with(MapasCampana) { victoria(temaMapa, cs, pts[6]) }
-        else if (e.ganada) {
-            val m = pts[6]
-            drawLine(cs.onSurface, m, m + Offset(0f, -14f * density), 0.8f * density)
-            drawPath(Path().apply { moveTo(m.x, m.y - 14f * density); lineTo(m.x + 9f * density, m.y - 11.5f * density); lineTo(m.x, m.y - 9f * density); close() }, cs.primary)
-        }
+        // La escena de la meta si se ganó.
+        if (e.ganada) with(MapasCampana) { victoria(temaMapa, cs, pts[6]) }
     }
 }
 

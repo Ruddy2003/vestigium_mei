@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondos de la pantalla de arranque: el «background» de cada tema (esquemaDe en ui/Tema.kt), claro y oscuro.
+     El neutro es el de Theme.Vestigium: lo que se ve en Android 11 y 12, donde la app no puede elegir el arranque. -->
+<resources>
+    <color name="arranque_neutro">#0F1012</color>
+    <color name="arranque_romano">#ECEDEA</color>
+    <color name="arranque_romano_oscuro">#0E1113</color>
+    <color name="arranque_ciber_oscuro">#05070B</color>
+    <color name="arranque_heleno">#F3EFE6</color>
+    <color name="arranque_heleno_oscuro">#0E0B17</color>
+    <color name="arranque_medieval">#EFE3C8</color>
+    <color name="arranque_medieval_oscuro">#15100A</color>
+    <color name="arranque_distopia">#DEDBD2</color>
+    <color name="arranque_distopia_oscuro">#0F1011</color>
+    <color name="arranque_refugio">#F1E8D0</color>
+    <color name="arranque_refugio_oscuro">#070D08</color>
+    <color name="arranque_orden">#E2E5E8</color>
+    <color name="arranque_orden_oscuro">#101215</color>
+    <color name="arranque_laboratorio">#F4F7F9</color>
+    <color name="arranque_laboratorio_oscuro">#0A1018</color>
+    <color name="arranque_colonos">#F2EBDC</color>
+    <color name="arranque_colonos_oscuro">#0E1420</color>
+    <color name="arranque_napoleon">#F4EEDF</color>
+    <color name="arranque_napoleon_oscuro">#0B1230</color>
+    <color name="arranque_botanico">#EFE8D6</color>
+    <color name="arranque_botanico_oscuro">#14120D</color>
+    <color name="arranque_navidad">#F6F1E7</color>
+    <color name="arranque_navidad_oscuro">#0E1A14</color>
+    <color name="arranque_seda">#F5EEDC</color>
+    <color name="arranque_seda_oscuro">#0F1426</color>
+    <color name="arranque_urss">#EFE6D2</color>
+    <color name="arranque_urss_oscuro">#121010</color>
+    <color name="arranque_gotico">#EDE7DA</color>
+    <color name="arranque_gotico_oscuro">#0A0F2A</color>
+    <color name="arranque_espacio">#EEF1F6</color>
+    <color name="arranque_espacio_oscuro">#03050C</color>
+    <color name="arranque_andalus">#F3EBDA</color>
+    <color name="arranque_andalus_oscuro">#0B1716</color>
+    <color name="arranque_mongol">#F1EDE3</color>
+    <color name="arranque_mongol_oscuro">#0A1220</color>
+    <color name="arranque_renacimiento">#F0E4C6</color>
+    <color name="arranque_renacimiento_oscuro">#1A130C</color>
+    <color name="arranque_revolucion">#F2ECDD</color>
+    <color name="arranque_revolucion_oscuro">#131417</color>
+    <color name="arranque_antiguas">#E9E3D4</color>
+    <color name="arranque_antiguas_oscuro">#151618</color>
+</resources>

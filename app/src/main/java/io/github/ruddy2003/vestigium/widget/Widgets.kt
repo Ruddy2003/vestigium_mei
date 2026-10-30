@@ -125,6 +125,66 @@ object Widgets {
     }
     private val com get() = Estilo.comentario
 
+    /**
+     * Títulos del modo discreto (ánimo y momento): palabras neutras en la voz del tema, que no dicen qué se registra.
+     * El romano conserva los de siempre.
+     */
+    private fun tituloDiscreto(t: TemaId): Pair<String, String> = when (t) {
+        TemaId.ROMANO -> "NVNC" to "SCRIBERE"
+        TemaId.CIBER -> "> ping" to "> log"
+        TemaId.HELENO -> "ΝΥΝ" to "ΓΡΑΦΕΙΝ"
+        TemaId.MEDIEVAL -> "Agora" to "Scriptura"
+        TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
+        TemaId.REFUGIO -> "CHEQUEO" to "ENTRADA"
+        TemaId.ORDEN -> "RELEVO" to "ACTA"
+        TemaId.LABORATORIO -> "t = 0" to "CUADERNO"
+        TemaId.COLONOS -> "Al paso" to "Apunte"
+        TemaId.NAPOLEON -> "À PRÉSENT" to "DÉPÊCHE"
+        TemaId.BOTANICO -> "En el campo" to "Libreta"
+        TemaId.NAVIDAD -> "Junto al fuego" to "Postal"
+        TemaId.SEDA -> "Alto" to "Rollo"
+        TemaId.GOTICO -> "Ad horam" to "Scribe"
+        TemaId.ESPACIO -> "T−0" to "LOG"
+        TemaId.ANDALUS -> "الآن" to "اكتب"
+        TemaId.MONGOL -> "ОДОО" to "БИЧИХ"
+        TemaId.RENACIMIENTO -> "Ora" to "Scrivere"
+        TemaId.URSS -> "СЕЙЧАС" to "ЗАПИСЬ"
+        TemaId.REVOLUCION -> "L'INSTANT" to "NOTER"
+        TemaId.ANTIGUAS -> "VIGÍA" to "PERGAMINO"
+    }
+
+    /**
+     * La letra del tema para lo que se dibuja en mapa de bits (calendario y anillos): la de sus títulos, o una de su familia
+     * cuando la de títulos no se lee en números pequeños. El segundo valor corrige el tamaño (letras de ojo chico o grande).
+     */
+    private fun letraDe(ctx: Context, t: TemaId): Pair<android.graphics.Typeface, Float> {
+        val (fuente, escala) = when (t) {
+            TemaId.ROMANO -> R.font.cinzel_regular to 0.95f
+            TemaId.CIBER -> R.font.sharetech_mono to 1.05f
+            TemaId.HELENO -> R.font.garamond_medium to 1.08f
+            TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
+            TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
+            TemaId.REFUGIO -> R.font.vt323 to 1.35f
+            TemaId.ORDEN -> R.font.saira_stencil to 1.0f
+            TemaId.LABORATORIO -> R.font.jost_medium to 1.0f
+            TemaId.COLONOS -> R.font.fell to 1.08f
+            TemaId.NAPOLEON -> R.font.bodoni_titulo to 1.05f
+            TemaId.BOTANICO -> R.font.fraunces_titulo to 1.0f
+            TemaId.NAVIDAD -> R.font.cinzel_deco_regular to 0.95f
+            TemaId.SEDA -> R.font.almendra_regular to 1.08f
+            TemaId.GOTICO -> R.font.gotica_textura to 1.12f
+            TemaId.ESPACIO -> R.font.orbitron_medium to 0.88f
+            TemaId.ANDALUS -> R.font.kufi_medium to 0.95f
+            TemaId.MONGOL -> R.font.philosopher_regular to 1.05f
+            TemaId.RENACIMIENTO -> R.font.cormorant_medium to 1.12f
+            TemaId.URSS -> R.font.russo to 0.95f
+            TemaId.REVOLUCION -> R.font.bodoni_texto to 1.05f
+            TemaId.ANTIGUAS -> R.font.cinzel_semibold to 0.95f
+        }
+        val tf = runCatching { androidx.core.content.res.ResourcesCompat.getFont(ctx, fuente) }.getOrNull() ?: android.graphics.Typeface.SERIF
+        return tf to escala
+    }
+
     private val BOTONES_ANIMO = intArrayOf(R.id.a1, R.id.a2, R.id.a3, R.id.a4, R.id.a5, R.id.a6, R.id.a7)
     private val BOTONES_MOMENTO = intArrayOf(R.id.m1, R.id.m2, R.id.m3, R.id.m4, R.id.m5, R.id.m6, R.id.m7, R.id.m8)
 
@@ -143,7 +203,7 @@ object Widgets {
         pintar(v, Piel.ANIMO)
         val hoy = Repo.momentos.count { it.tipo == "muestreo" && it.fecha == Fechas.diaLogico() }
         val discreto = Repo.config.discreto
-        v.setTextViewText(R.id.titulo_animo, if (discreto) "NVNC" else Estilo.widget("animo"))
+        v.setTextViewText(R.id.titulo_animo, if (discreto) tituloDiscreto(Estilo.tema).first else Estilo.widget("animo"))
         v.setTextViewText(R.id.pregunta_animo, com + if (discreto) "ahora" else "¿qué tan agradable se siente ahora?")
         v.setTextViewText(R.id.sub_animo, if (hoy == 0) Estilo.fecha(Fechas.diaLogico()) else "$hoy hoy")
         BOTONES_ANIMO.forEachIndexed { i, id ->
@@ -158,7 +218,7 @@ object Widgets {
         pintar(v, Piel.MOMENTO)
         val discreto = Repo.config.discreto
         val hoy = Repo.momentos.count { Catalogo.esRegistro(it) && it.fecha == Fechas.diaLogico() }
-        v.setTextViewText(R.id.titulo_momento, if (discreto) "SCRIBERE" else Estilo.widget("momento"))
+        v.setTextViewText(R.id.titulo_momento, if (discreto) tituloDiscreto(Estilo.tema).second else Estilo.widget("momento"))
         v.setTextViewText(R.id.pregunta_momento, com + if (discreto) "registrar" else "ahora siento…")
         v.setTextViewText(R.id.sub_momento, if (hoy == 0) "" else "$hoy hoy")
         // Ocho sentimientos: un toque y queda registrado (luego se puede agregar en qué pensabas y cómo te sientes).
@@ -278,7 +338,8 @@ object Widgets {
         val bmp = android.graphics.Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
         val c = android.graphics.Canvas(bmp)
         val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
-        val t = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { textSize = 22f; typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER }
+        val letra = letraDe(ctx, Estilo.tema)
+        val t = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { textSize = 22f * letra.second; typeface = letra.first; textAlign = android.graphics.Paint.Align.CENTER }
         Estilo.semanaCorta.forEachIndexed { i, s -> t.color = col.tenue; c.drawText(s, (i * (celda + sep) + celda / 2).toFloat(), 24f, t) }
         dias.forEachIndexed { k, d ->
             val pos = ini.dayOfWeek.value - 1 + k
@@ -357,8 +418,9 @@ object Widgets {
         val c = android.graphics.Canvas(bmp)
         val pista = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { style = android.graphics.Paint.Style.STROKE; strokeWidth = 26f; color = col.vacio }
         val arco = android.graphics.Paint(pista).apply { color = col.oro; strokeCap = android.graphics.Paint.Cap.ROUND }
-        val num = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = col.texto; textSize = 52f; typeface = android.graphics.Typeface.MONOSPACE; textAlign = android.graphics.Paint.Align.CENTER }
-        val etq = android.graphics.Paint(num).apply { color = col.tenue; textSize = 30f }
+        val letra = letraDe(ctx, Estilo.tema)
+        val num = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = col.texto; textSize = 52f * letra.second; typeface = letra.first; textAlign = android.graphics.Paint.Align.CENTER }
+        val etq = android.graphics.Paint(num).apply { color = col.tenue; textSize = 30f * letra.second }
         anillos.forEachIndexed { i, (nombre, p) ->
             val cx = (i % 2) * lado + lado / 2f; val cy = (i / 2) * lado + lado / 2f - 14f
             val r = android.graphics.RectF(cx - 92f, cy - 92f, cx + 92f, cy + 92f)
@@ -476,6 +538,8 @@ object Widgets {
         m.getAppWidgetIds(ComponentName(ctx, WidgetAnillos::class.java)).forEach { m.updateAppWidget(it, vistaAnillos(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, WidgetFoto::class.java)).forEach { m.updateAppWidget(it, vistaFoto(ctx)) }
         m.getAppWidgetIds(ComponentName(ctx, WidgetCifra::class.java)).forEach { m.updateAppWidget(it, vistaCifra(ctx)) }
+        // Los accesos directos del ícono también llevan el color del tema; solo se vuelven a publicar si algo cambió.
+        io.github.ruddy2003.vestigium.ui.AccesosDirectos.publicar(ctx)
     }
 }
 

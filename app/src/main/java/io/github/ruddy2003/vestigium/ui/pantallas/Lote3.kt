@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -38,6 +37,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.drawText
@@ -68,10 +68,16 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Seccion
 import io.github.ruddy2003.vestigium.ui.Tarjeta
 import io.github.ruddy2003.vestigium.ui.Vacio
+import io.github.ruddy2003.vestigium.ui.barraGrafica
+import io.github.ruddy2003.vestigium.ui.estiloGrafica
+import io.github.ruddy2003.vestigium.ui.lineaGrafica
+import io.github.ruddy2003.vestigium.ui.puntoGrafica
+import io.github.ruddy2003.vestigium.ui.rejillaGrafica
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.roundToInt
+import io.github.ruddy2003.vestigium.ui.Dialogo
 
 private fun cifra(x: Double) = if (x == Math.floor(x)) "%.0f".format(x) else "%.1f".format(x)
 
@@ -191,11 +197,13 @@ private fun NivelSuplemento(s: Suplemento, hoy: String) {
         else -> "Porciones por día en los últimos 60 días."
     }, Modifier.padding(top = 8.dp))
     val max = if (s.modelo == "carga") 100.0 else (valores.filterNotNull().maxOrNull() ?: 1.0).coerceAtLeast(1e-6)
+    val eg = estiloGrafica()
     Canvas(Modifier.fillMaxWidth().height(70.dp).padding(top = 6.dp)) {
         val w = size.width; val h = size.height; val n = valores.size
-        if (s.modelo == "carga") listOf(0.5f, 1f).forEach { k -> drawLine(cs.outlineVariant, Offset(0f, h * (1 - k)), Offset(w, h * (1 - k)), 1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))) }
+        // Las guías del 50 % y el 100 % de la reserva.
+        if (s.modelo == "carga") rejillaGrafica(eg, listOf(0.5f, 1f).map { k -> h * (1 - k) }, cs.outlineVariant)
         if (s.modelo == "exposicion") valores.forEachIndexed { i, v ->
-            if (v != null) { val bh = (v / max * h).toFloat(); drawRect(cs.primary, Offset(i * w / n + 1f, h - bh), androidx.compose.ui.geometry.Size(w / n - 2f, bh)) }
+            if (v != null) { val bh = (v / max * h).toFloat(); barraGrafica(eg, Offset(i * w / n + 1f, h - bh), androidx.compose.ui.geometry.Size(w / n - 2f, bh), cs.primary) }
         } else {
             val p = Path(); var abierto = false
             valores.forEachIndexed { i, v ->
@@ -203,7 +211,7 @@ private fun NivelSuplemento(s: Suplemento, hoy: String) {
                 val x = i * w / (n - 1); val y = h - (v / max * h).toFloat()
                 if (!abierto) { p.moveTo(x, y); abierto = true } else p.lineTo(x, y)
             }
-            drawPath(p, cs.primary, style = Stroke(2.5f * density))
+            lineaGrafica(eg, p, cs.primary, 2.5f * density)
         }
     }
 }
@@ -217,7 +225,7 @@ private fun EditorSuplemento(s0: Suplemento, cerrar: () -> Unit) {
     var vida by remember { mutableStateOf(cifra(s0.vida_media_h)) }
     var carga by remember { mutableStateOf(s0.carga_dias.toString()) }
     var lavado by remember { mutableStateOf(s0.lavado_dias.toString()) }
-    AlertDialog(onDismissRequest = cerrar, title = { Text(s0.nombre) },
+    Dialogo(onDismissRequest = cerrar, title = { Text(s0.nombre) },
         confirmButton = {
             TextButton(onClick = {
                 val n = s0.copy(nombre = nombre.trim().ifBlank { s0.nombre }, unidad = unidad.trim().ifBlank { s0.unidad }, dosis = dosis.replace(',', '.').toDoubleOrNull() ?: s0.dosis,
@@ -280,12 +288,21 @@ fun PantallaLaptop(nav: Nav) {
                 val cats = ColdTurkey.CATEGORIAS.map { it.id }
                 val colores = listOf(cs.primary, cs.tertiary, cs.secondary, cs.outline)
                 val max = dias.maxOf { f -> cats.sumOf { k -> res[f]?.get("laptop_${k}_min") ?: 0.0 } }.coerceAtLeast(30.0)
+                val eg = estiloGrafica()
                 Canvas(Modifier.fillMaxWidth().height(120.dp)) {
                     val bw = size.width / dias.size
                     dias.forEachIndexed { i, f ->
+                        // Una sola barra con la forma del tema, del alto del total, partida en franjas por categoría (cada
+                        // franja se recorta de la barra entera, así la punta del tema queda solo arriba).
+                        val alturas = cats.map { cat -> ((res[f]?.get("laptop_${cat}_min") ?: 0.0) / max * size.height).toFloat() }
+                        val total = alturas.sum()
                         var y = size.height
-                        cats.forEachIndexed { k, cat -> val m = res[f]?.get("laptop_${cat}_min") ?: 0.0; val h = (m / max * size.height).toFloat()
-                            drawRect(colores[k], Offset(i * bw + bw * 0.15f, y - h), androidx.compose.ui.geometry.Size(bw * 0.7f, h)); y -= h }
+                        alturas.forEachIndexed { k, h ->
+                            if (h > 0f) clipRect(0f, y - h, size.width, y) {
+                                barraGrafica(eg, Offset(i * bw + bw * 0.15f, size.height - total), androidx.compose.ui.geometry.Size(bw * 0.7f, total), colores[k])
+                            }
+                            y -= h
+                        }
                     }
                 }
                 Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -365,6 +382,7 @@ fun PantallaRed(nav: Nav) {
     var elegido by remember { mutableStateOf<String?>(null) }
     val medidor = rememberTextMeasurer()
     val estilo = MaterialTheme.typography.labelSmall.copy(color = cs.onSurface)
+    val eg = estiloGrafica()
     val tonos = mapOf("familia" to cs.tertiary, "pareja" to cs.error, "amistad" to cs.secondary, "casa" to cs.primary, "trabajo" to cs.outline, "expareja" to cs.error.copy(alpha = 0.45f))
     Hoja("Red", nav.atras, "Quién conoce a quién. Las líneas firmes son lo que dijiste en Tu gente; las finas, personas que aparecen juntas en tu diario al menos dos días.") {
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -387,14 +405,19 @@ fun PantallaRed(nav: Nav) {
                 val p = nodos.firstOrNull { it.nombre == a.a } ?: return@forEach; val q = nodos.firstOrNull { it.nombre == a.b } ?: return@forEach
                 val resaltado = elegido != null && (a.a == elegido || a.b == elegido)
                 val col = if (a.tipo != null) cs.primary else cs.onSurfaceVariant
-                drawLine(col.copy(alpha = if (resaltado) 0.9f else if (a.tipo != null) 0.55f else 0.22f), Offset(p.x * w, p.y * h), Offset(q.x * w, q.y * h),
-                    (if (a.tipo != null) 2f else 1f) * density, pathEffect = if (a.tipo == "colegas") PathEffect.dashPathEffect(floatArrayOf(6f * density, 4f * density)) else null)
+                val colLazo = col.copy(alpha = if (resaltado) 0.9f else if (a.tipo != null) 0.55f else 0.22f)
+                val anchoLazo = (if (a.tipo != null) 2f else 1f) * density
+                // Los colegas conservan su guion propio (distingue el tipo de lazo); los demás llevan el trazo del tema.
+                if (a.tipo == "colegas") drawLine(colLazo, Offset(p.x * w, p.y * h), Offset(q.x * w, q.y * h), anchoLazo,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f * density, 4f * density)))
+                else lineaGrafica(eg, listOf(Offset(p.x * w, p.y * h), Offset(q.x * w, q.y * h)), colLazo, anchoLazo)
             }
             nodos.forEach { nd ->
                 val r = (4f + 8f * kotlin.math.sqrt(nd.dias.toFloat() / maxDias)) * density
                 // Color por grupo de relación, como la Constelación: una amistad cercana es «amistad», un colega es «trabajo» (P-25).
                 val col = tonos[nd.grupo] ?: cs.onSurfaceVariant
-                drawCircle(col, r, Offset(nd.x * w, nd.y * h))
+                puntoGrafica(eg, Offset(nd.x * w, nd.y * h), r, col)
+                // El anillo de selección es de la interfaz, no un dato: sigue siendo un círculo fino.
                 if (nd.nombre == elegido) drawCircle(cs.onSurface, r + 3f * density, Offset(nd.x * w, nd.y * h), style = Stroke(1.5f * density))
                 if (nd.dias >= maxDias / 4 || nd.nombre == elegido || n <= 15) {
                     val t = medidor.measure("@" + nd.nombre, estilo)
@@ -607,7 +630,7 @@ fun DialogoToma(t: io.github.ruddy2003.vestigium.data.TomaSuplemento, cerrar: ()
     var cuando by remember(t.id) { mutableStateOf<java.time.LocalDateTime?>(io.github.ruddy2003.vestigium.ui.horaLocal(Fechas.millis(t.ts))) }
     var confirmar by remember(t.id) { mutableStateOf(false) }
     val v = cantidad.replace(',', '.').toDoubleOrNull()
-    androidx.compose.material3.AlertDialog(
+    Dialogo(
         onDismissRequest = cerrar,
         title = { Text("${s?.nombre ?: t.suplemento} · ${Fechas.corto(t.fecha)} ${Fechas.horaDe(t.ts)}") },
         text = {

@@ -1,7 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. -->
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F7131B49" />
-    <stroke android:width="1.5dp" android:color="#3652E8" />
-    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
-</shape>
+<!-- Android 12 y después: igual que la de drawable/. Ya no fuerza el radio del sistema (system_app_widget_background_radius) para no perder la forma del tema. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7131B49"/>
+            <stroke android:width="1.5dp" android:color="#3652E8"/>
+            <corners android:topLeftRadius="22dp" android:topRightRadius="22dp" android:bottomRightRadius="2dp" android:bottomLeftRadius="2dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="1.2dp" android:color="#55E2B34A"/>
+            <corners android:topLeftRadius="18dp" android:topRightRadius="18dp" android:bottomRightRadius="1dp" android:bottomLeftRadius="1dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="6dp" android:height="6dp" android:top="6dp">
+        <vector android:width="6dp" android:height="6dp" android:viewportWidth="6" android:viewportHeight="6">
+            <path android:pathData="M3,0 L3.7,2.3 L6,3 L3.7,3.7 L3,6 L2.3,3.7 L0,3 L2.3,2.3 Z" android:fillColor="#E2B34A"/>
+        </vector>
+    </item>
+    <item android:gravity="top|left" android:width="5dp" android:height="5dp" android:top="11dp" android:left="13dp">
+        <vector android:width="5dp" android:height="5dp" android:viewportWidth="6" android:viewportHeight="6">
+            <path android:pathData="M3,0 L3.7,2.3 L6,3 L3.7,3.7 L3,6 L2.3,3.7 L0,3 L2.3,2.3 Z" android:fillColor="#BBE2B34A"/>
+        </vector>
+    </item>
+    <item android:gravity="top|right" android:width="5dp" android:height="5dp" android:top="11dp" android:right="13dp">
+        <vector android:width="5dp" android:height="5dp" android:viewportWidth="6" android:viewportHeight="6">
+            <path android:pathData="M3,0 L3.7,2.3 L6,3 L3.7,3.7 L3,6 L2.3,3.7 L0,3 L2.3,2.3 Z" android:fillColor="#BBE2B34A"/>
+        </vector>
+    </item>
+</layer-list>

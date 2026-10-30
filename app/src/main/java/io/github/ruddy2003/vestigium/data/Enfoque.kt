@@ -143,16 +143,16 @@ object Enfoque {
         if (cambio == null) { programar(ctx, q); return }
         guardar(ctx, q)
         when (cambio) {
-            "descanso" -> avisar(ctx, "Descanso de ${segs[q.segmento].ms!! / MIN} min", "Bloque ${numeroBloque(q)} de ${bloques(q)} listo. Levántate, toma agua.")
-            "esperando" -> avisar(ctx, "Se acabó el descanso", "¿Empezamos el bloque ${numeroBloque(q)} de ${bloques(q)}? Toca «Empezar» cuando estés listo.")
+            "descanso" -> avisar(ctx, "${voz().descanso} · ${segs[q.segmento].ms!! / MIN} min", "Bloque ${numeroBloque(q)} de ${bloques(q)} listo. ${voz().consejo}")
+            "esperando" -> avisar(ctx, voz().finDescanso, "¿Empezamos el bloque ${numeroBloque(q)} de ${bloques(q)}? Toca «Empezar» cuando estés listo.")
         }
     }
 
     private fun completar(ctx: Context, q: PlanEnfoque) {
         val min = Math.round(q.hecho_ms / 60_000.0).toInt()
         limpiar(ctx)
-        if (q.tipo == "siesta") avisar(ctx, "Hora de despertar", "Siesta de $min min.")
-        else avisar(ctx, "¡Terminaste!", "${horasMin(min)} de ${Catalogo.nombreTramo(q.tipo).lowercase()}" + if (bloques(q) > 1) " en ${bloques(q)} bloques." else ".")
+        if (q.tipo == "siesta") avisar(ctx, voz().despertar, "Siesta de $min min.")
+        else avisar(ctx, voz().terminaste, "${horasMin(min)} de ${Catalogo.nombreTramo(q.tipo).lowercase()}" + if (bloques(q) > 1) " en ${bloques(q)} bloques." else ".")
     }
 
     private fun horasMin(m: Int) = if (m < 60) "$m min" else "${m / 60} h" + if (m % 60 > 0) " ${m % 60} min" else ""
@@ -218,9 +218,13 @@ object Enfoque {
         val nm = ctx.getSystemService(NotificationManager::class.java)
         if (nm.getNotificationChannel(CANAL) == null) nm.createNotificationChannel(
             NotificationChannel(CANAL, "Cronómetro de enfoque", NotificationManager.IMPORTANCE_LOW).apply { description = "El bloque de enfoque o la siesta que está corriendo"; setShowBadge(false) })
-        if (nm.getNotificationChannel(CANAL_AVISO) == null) nm.createNotificationChannel(
-            NotificationChannel(CANAL_AVISO, "Fin de bloque o descanso", NotificationManager.IMPORTANCE_HIGH).apply { description = "Avisa cuando empieza un descanso, cuando termina y cuando acabas"; enableVibration(true) })
     }
+
+    /** Textos del cronómetro en la voz del tema. */
+    private fun voz() = io.github.ruddy2003.vestigium.avisos.Avisos.vozEnfoque()
+
+    /** El primario del tema, para el color de las notificaciones. */
+    private fun color(ctx: Context) = runCatching { io.github.ruddy2003.vestigium.avisos.Avisos.colorTema(ctx) }.getOrNull()
 
     private fun abrirReloj(ctx: Context, req: Int = 4101) = PendingIntent.getActivity(ctx, req,
         Intent(ctx, io.github.ruddy2003.vestigium.ui.EnfoqueActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
@@ -239,13 +243,14 @@ object Enfoque {
         val bloque = if (n > 1) " · bloque ${numeroBloque(p)} de $n" else ""
         val b = NotificationCompat.Builder(ctx, CANAL).setSmallIcon(R.drawable.ic_stat).setOngoing(true).setOnlyAlertOnce(true).setSilent(true)
             .setContentIntent(abrirReloj(ctx)).setCategory(NotificationCompat.CATEGORY_STOPWATCH)
+        color(ctx)?.let { b.setColor(it) }
         val rest = restante(p, ahora)
         when {
             p.esperando -> b.setContentTitle("¿Empezamos el bloque ${numeroBloque(p)} de $n?").setContentText("$nombre · toca «Empezar» cuando estés listo")
                 .addAction(0, "Empezar", accion(ctx, EnfoqueReceiver.REANUDAR, 4105))
             enPausa(p) -> b.setContentTitle("En pausa · $nombre$bloque").setContentText(rest?.let { "Quedan ${(it + MIN - 1) / MIN} min de este " + if (enDescanso(p)) "descanso" else "bloque" } ?: "Llevas ${transcurrido(p, ahora) / MIN} min")
                 .addAction(0, "Reanudar", accion(ctx, EnfoqueReceiver.REANUDAR, 4105))
-            enDescanso(p) -> b.setContentTitle("Descanso$bloque").setContentText("Luego sigue $nombre".lowercase().replaceFirstChar { it.uppercase() })
+            enDescanso(p) -> b.setContentTitle("${voz().descanso}$bloque").setContentText("Luego sigue $nombre".lowercase().replaceFirstChar { it.uppercase() })
                 .setWhen(ahora + (rest ?: 0)).setShowWhen(true).setUsesChronometer(true).setChronometerCountDown(true)
                 .addAction(0, "Saltar descanso", accion(ctx, EnfoqueReceiver.SALTAR, 4106))
             rest != null -> b.setContentTitle("$nombre$bloque").setContentText("Termina a las " + Fechas.horaDe(Fechas.isoDeMillis(ahora + rest)))
@@ -263,9 +268,12 @@ object Enfoque {
     private fun avisar(ctx: Context, titulo: String, texto: String) {
         if (!io.github.ruddy2003.vestigium.avisos.Avisos.permitido(ctx)) return
         canales(ctx)
-        val b = NotificationCompat.Builder(ctx, CANAL_AVISO).setSmallIcon(R.drawable.ic_stat).setContentTitle(titulo).setContentText(texto)
+        // El canal del fin de bloque lleva el sonido del tema: uno por tema («enfoque_aviso_<tema>»), como los de Avisos.
+        val canal = runCatching { io.github.ruddy2003.vestigium.avisos.Avisos.canal(ctx, CANAL_AVISO) }.getOrDefault(CANAL_AVISO)
+        val b = NotificationCompat.Builder(ctx, canal).setSmallIcon(R.drawable.ic_stat).setContentTitle(titulo).setContentText(texto)
             .setStyle(NotificationCompat.BigTextStyle().bigText(texto)).setAutoCancel(true).setTimeoutAfter(45 * MIN)
             .setPriority(NotificationCompat.PRIORITY_HIGH).setCategory(NotificationCompat.CATEGORY_ALARM).setContentIntent(abrirReloj(ctx, 4108))
+        color(ctx)?.let { b.setColor(it) }
         if (plan()?.esperando == true) b.addAction(0, "Empezar", accion(ctx, EnfoqueReceiver.REANUDAR, 4109))
         try { NotificationManagerCompat.from(ctx).notify(NOTIF_AVISO, b.build()) } catch (e: SecurityException) { }
     }
