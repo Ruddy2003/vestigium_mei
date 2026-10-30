@@ -59,7 +59,7 @@ object HallImagen {
         val marca = L.p(L.tenue, 30f, L.titulo, 0.2f)
         while (marca.measureText(textoMarca) > ANCHO - 128f && marca.textSize > 18f) marca.textSize = marca.textSize - 1f
         c.drawText(textoMarca, 64f, 92f, marca)
-        val titulo = Estilo.pantallaLegible("Hall de logros", "ATRIVM PALMARVM")
+        val (titulo, _) = Estilo.pantalla("Hall de logros", "ATRIVM PALMARVM")
         val pt = L.p(L.primario, if (titulo.length > 20) 58f else 72f, L.titulo, 0.03f)
         c.drawText(titulo, 64f, 170f, pt)
 

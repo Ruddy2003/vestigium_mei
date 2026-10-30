@@ -154,7 +154,7 @@ private fun LibretaCerrada(hojas: Int, desde: String?, modifier: Modifier = Modi
         }
         Column(Modifier.fillMaxSize().padding(end = 14.dp, bottom = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Spacer(Modifier.fillMaxWidth().aspectRatio(3.0f))
-            Text(Estilo.seccionLegible("Momentos", null), style = MaterialTheme.typography.titleLarge, color = cs.primary, textAlign = TextAlign.Center,
+            Text(Estilo.seccion("Momentos", null).first, style = MaterialTheme.typography.titleLarge, color = cs.primary, textAlign = TextAlign.Center,
                 modifier = Modifier.padding(start = 8.dp))
             Text("$hojas hojas", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
             Spacer(Modifier.weight(1f))
@@ -290,7 +290,7 @@ fun PantallaHojaMomentos(nav: Nav) {
     Column(Modifier.fillMaxSize().background(lerp(cs.background, Color.Black, if (esOscuro()) 0.25f else 0.06f))) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp, start = 4.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = nav.atras) { Text(Estilo.atras, style = MaterialTheme.typography.labelLarge, color = cs.primary) }
-            Text(io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema).let { c -> if (c == io.github.ruddy2003.vestigium.ui.Contenedor.ESPIRAL) Estilo.seccionLegible("Libreta de momentos", null) else c.nombre },
+            Text(io.github.ruddy2003.vestigium.ui.contenedorDe(Estilo.tema).let { c -> if (c == io.github.ruddy2003.vestigium.ui.Contenedor.ESPIRAL) Estilo.seccion("Libreta de momentos", null).first else c.nombre },
                 style = MaterialTheme.typography.labelLarge, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f), textAlign = TextAlign.Center)
             TextButton(onClick = {
                 val t = hojaMomentos(fecha, discreto)?.nota ?: return@TextButton

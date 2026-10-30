@@ -137,7 +137,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.CIBER -> "> cat year_$anio.log"
     TemaId.BOTANICO -> "Catálogo de especímenes · $anio"
     // «Apologismós»: la rendición de cuentas.
-    TemaId.HELENO -> "ΑΠΟΛΟΓΙΣΜΟΣ · el balance de $anio"
+    TemaId.HELENO -> "ΑΠΟΛΟΓΙΣΜΟΣ · ΕΤΟΣ ${Griego.numeral(anio)}"
     // «Fechos»: los hechos, en la grafía de los cronistas castellanos.
     TemaId.MEDIEVAL -> "Libro de los fechos del año de ${Temas.copista(anio)}"
     TemaId.REFUGIO -> "REGISTRO DEL REFUGIO · AÑO $anio BAJO TIERRA"
@@ -146,7 +146,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.COLONOS -> "Almanaque del año $anio"
     TemaId.NAPOLEON -> "BOLETÍN DE LA GRANDE ARMÉE · $anio"
     TemaId.NAVIDAD -> "Lo que trajo $anio"
-    TemaId.SEDA -> "Bitácora de la caravana · año $anio"
+    TemaId.SEDA -> "Bitácora de la caravana · ${Temas.anioChino(anio)}"
     TemaId.URSS -> "BALANCE DEL PLAN · $anio"
     TemaId.GOTICO -> "Annales · anno ${Romano.de(anio).lowercase()}"
     // Como en los observatorios: el año empieza en un día juliano.
@@ -157,7 +157,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
         val h2 = Temas.hegira(java.time.LocalDate.of(anio, 12, 31))?.third
         "Diwán del año $anio" + (if (h1 != null && h2 != null) " · " + (if (h1 == h2) "$h1 H" else "$h1–$h2 H") else "")
     }
-    TemaId.MONGOL -> Temas.anioMongolEs(java.time.LocalDate.of(anio, 6, 1)) + " · $anio"
+    TemaId.MONGOL -> Temas.anioMongol(java.time.LocalDate.of(anio, 6, 1)) + " · $anio"
     // «Taccuino»: la libreta de bolsillo en que Leonardo apuntaba todo.
     TemaId.RENACIMIENTO -> "Taccuino dell'anno $anio"
     TemaId.REVOLUCION -> "CAHIER DE L'ANNÉE $anio · ${Temas.anRepublicano(anio, 6).uppercase()}"

@@ -218,10 +218,10 @@ private class TextosBloqueo(val titulo: String, val lema: String, val boton: Str
 internal fun Bloqueo(reintentar: () -> Unit) {
     when (Estilo.tema) {
         // Inscripción: el título va arriba, como en el friso, y el sello debajo.
-        TemaId.ROMANO -> BloqueoCentrado(TextosBloqueo("VESTIGIVM MEI", "// tabulae obsignatae · tu diario está sellado", "Aperire · abrir"), tituloArriba = true, sello = 170, reintentar = reintentar)
+        TemaId.ROMANO -> BloqueoCentrado(TextosBloqueo("VESTIGIVM MEI", "// tabulae obsignatae · tu diario está sellado", "Resignare"), tituloArriba = true, sello = 170, reintentar = reintentar)
         TemaId.CIBER -> BloqueoConsola(TextosBloqueo("vestigium_mei", "> esperando huella_", "[ desbloquear ]",
             listOf("> montar /diario", "! acceso denegado: volumen cifrado", "> llave: huella del titular")), reintentar)
-        TemaId.HELENO -> BloqueoMarco(TextosBloqueo("ΤΑ ΙΧΝΗ ΜΟΥ", "— ἐσφραγισμένον · tu diario está sellado", "ΑΝΟΙΞΟΝ · abrir"), arriba = 54, reintentar = reintentar) { cs -> bloqueoFronton(cs) }
+        TemaId.HELENO -> BloqueoMarco(TextosBloqueo("ΤΑ ΙΧΝΗ ΜΟΥ", "— ἐσφραγισμένον · tu diario está sellado", "ΑΝΟΙΞΟΝ"), arriba = 54, reintentar = reintentar) { cs -> bloqueoFronton(cs) }
         TemaId.MEDIEVAL -> BloqueoMarco(TextosBloqueo("Vestigium mei", "¶ Este libro está cerrado con sello: sólo su dueño lo abre.", "Romper el sello"), arriba = 0, reintentar = reintentar) { cs -> bloqueoIluminado(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
@@ -243,11 +243,11 @@ internal fun Bloqueo(reintentar: () -> Unit) {
             listOf("ESCOTILLA", "SELLADA", "SOPORTE VITAL", "NOMINAL", "TRIPULANTE", "SIN VERIFICAR")), reintentar) { cs -> bloqueoEscotilla(cs) }
         TemaId.ANDALUS -> BloqueoMarco(TextosBloqueo("آثاري", "❋ El cofre de los días está cerrado con llave.", "Abrir el cofre"), arriba = 30, reintentar = reintentar) { cs -> bloqueoHerradura(cs) }
         // Bajo el cielo: el sello grande, como el sol sobre la estepa, y el título debajo.
-        TemaId.MONGOL -> BloqueoCentrado(TextosBloqueo("МИНИЙ МӨР", "◆ дэвтэр битүүмжлэгдсэн · tu diario está sellado", "НЭЭХ · abrir"), tituloArriba = false, sello = 190, reintentar = reintentar)
+        TemaId.MONGOL -> BloqueoCentrado(TextosBloqueo("МИНИЙ МӨР", "◆ дэвтэр битүүмжлэгдсэн · tu diario está sellado", "НЭЭХ"), tituloArriba = false, sello = 190, reintentar = reintentar)
         TemaId.RENACIMIENTO -> BloqueoCuaderno(TextosBloqueo("Vestigium mei", "❧ Sólo la mano de su autor lo abre.", "Aprire",
             listOf("Questo taccuino è chiuso")), reintentar)
-        TemaId.URSS -> BloqueoCartel(TextosBloqueo("DIARIO CERRADO", "★ Acceso sólo con el pase del titular.", "ABRIR", listOf("VESTIGIUM MEI")), inclinado = true, tricolor = false, reintentar = reintentar)
-        TemaId.REVOLUCION -> BloqueoCartel(TextosBloqueo("AVIS AU PUBLIC", "✶ Le cahier est scellé: por decreto, sólo su autor lo abre.", "ABRIR EL CAHIER", listOf("VESTIGIUM MEI")), inclinado = false, tricolor = true, reintentar = reintentar)
+        TemaId.URSS -> BloqueoCartel(TextosBloqueo("ДНЕВНИК ЗАКРЫТ", "★ Acceso sólo con el pase del titular.", "ОТКРЫТЬ", listOf("VESTIGIUM MEI")), inclinado = true, tricolor = false, reintentar = reintentar)
+        TemaId.REVOLUCION -> BloqueoCartel(TextosBloqueo("AVIS AU PUBLIC", "✶ Le cahier est scellé: por decreto, sólo su autor lo abre.", "OUVRIR", listOf("VESTIGIUM MEI")), inclinado = false, tricolor = true, reintentar = reintentar)
         TemaId.ANTIGUAS -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "⟡ La cámara del tesoro está cerrada con runas.", "TRAZAR LA RUNA"), arriba = 10, reintentar = reintentar) { cs -> bloqueoRunico(cs) }
     }
 }

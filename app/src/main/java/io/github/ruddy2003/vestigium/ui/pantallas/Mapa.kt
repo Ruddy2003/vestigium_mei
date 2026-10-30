@@ -527,7 +527,7 @@ fun PantallaMapa(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 16.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = nav.atras) { Text(io.github.ruddy2003.vestigium.ui.Estilo.atras, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
-                Text(io.github.ruddy2003.vestigium.ui.Estilo.pantallaLegible("Mapa", "MAPPA"), style = MaterialTheme.typography.headlineSmall)
+                Text(io.github.ruddy2003.vestigium.ui.Estilo.pantalla("Mapa", "MAPPA").first, style = MaterialTheme.typography.headlineSmall)
                 Text("${io.github.ruddy2003.vestigium.ui.Estilo.comentario}mapa · «＋ lugar aquí» marca el centro (o mantén presionado un punto)", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             // La alternativa visible al toque largo (N-24): marca el centro del mapa.

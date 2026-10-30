@@ -1,12 +1,94 @@
 package io.github.ruddy2003.vestigium.ui
 
 /**
- * Las claves de las líneas «clave = valor» (Día, widget «hoy», reportes) en la jerga de cada tema, siempre
- * legibles: latín en el romano y el gótico, castellano antiguo en el scriptorium y español en los demás. Las claves
+ * Las claves de las líneas «clave = valor» (Día, widget «hoy», reportes) en la lengua o la jerga de cada tema. Las claves
  * originales están en latín (`somnus`, `passus`…); [Estilo.clave] decide qué diccionario usa cada tema. Son cortas: van en
  * una columna de ancho fijo.
  */
 internal object Claves {
+    /** Francés del Imperio (napoleónico; la revolución lo toma en mayúsculas con sus propias palabras). */
+    val FRANCES: Map<String, String> = mapOf(
+        "horologium" to "montre", "somnus" to "sommeil", "stadia" to "phases", "cor" to "cœur", "passus" to "pas", "motus" to "mouvement",
+        "iter" to "route", "exercitatio" to "exercice", "loca" to "lieux", "telephonum" to "écran", "telephon" to "écran",
+        "usus" to "usage", "monita" to "avis", "musica" to "musique", "imagines" to "images", "fasti" to "agenda", "caelum" to "ciel",
+        "lux" to "jour", "aer" to "air", "corpus" to "corps", "nutritio" to "nutrition", "cibus" to "repas", "robur" to "gymnase",
+        "musculi" to "muscles", "voces" to "appels", "soni" to "son", "retia" to "wifi", "lumen" to "lumière", "vis" to "batterie",
+        "lectio" to "lecture", "strepitus" to "bruit", "luna" to "lune", "dias" to "jours", "animus" to "humeur", "optimus" to "meilleur",
+        "momenta" to "moments", "svmptvs" to "dépense", "memorabilia" to "jalons", "ascensvs" to "escalade", "dies" to "jours",
+        "quaestiones" to "questions", "celeritas" to "réaction", "bibliotheca" to "bibliothèque", "synchronia" to "synchro",
+        "opera" to "œuvres", "iudicium" to "avis_critique", "citatio" to "citation", "sententia" to "phrase", "orbis" to "monde",
+        "nova" to "nouveau", "mirabilia" to "merveilles", "somnium" to "rêve", "epistulae" to "lettres", "aperta" to "ouverte",
+        "initium" to "début", "finis" to "fin", "pessimus" to "pire", "personae" to "personnes", "themata" to "sujets",
+        "praeclarum" to "la_meilleure", "dies felix" to "jour_heureux", "consuetudo" to "habitudes", "series" to "série",
+        "palmae" to "succès", "reditus" to "revenus", "apps" to "applis",
+    )
+
+    /** Chino, como en las tablillas de las postas de la Ruta de la Seda. */
+    val CHINO: Map<String, String> = mapOf(
+        "horologium" to "手表", "somnus" to "睡眠", "stadia" to "阶段", "cor" to "心率", "passus" to "步数", "motus" to "运动", "iter" to "路线",
+        "exercitatio" to "锻炼", "loca" to "地点", "telephonum" to "屏幕", "telephon" to "屏幕", "usus" to "使用", "monita" to "通知",
+        "musica" to "音乐", "imagines" to "照片", "fasti" to "日程", "caelum" to "天气", "lux" to "日照", "aer" to "空气", "corpus" to "身体",
+        "nutritio" to "营养", "cibus" to "饮食", "robur" to "健身", "musculi" to "肌肉", "voces" to "通话", "soni" to "声音", "retia" to "网络",
+        "lumen" to "光线", "vis" to "电量", "lectio" to "阅读", "strepitus" to "噪音", "luna" to "月相", "dias" to "天数", "animus" to "心情",
+        "optimus" to "最佳", "momenta" to "时刻", "svmptvs" to "花费", "memorabilia" to "里程碑", "ascensvs" to "攀岩", "dies" to "天",
+        "quaestiones" to "问卷", "celeritas" to "反应", "bibliotheca" to "书库", "synchronia" to "同步", "opera" to "作品", "iudicium" to "评价",
+        "citatio" to "引文", "sententia" to "句子", "orbis" to "世界", "nova" to "新", "mirabilia" to "奇观", "somnium" to "梦", "epistulae" to "书信",
+        "aperta" to "已开", "initium" to "开始", "finis" to "结束", "pessimus" to "最差", "personae" to "人物", "themata" to "主题",
+        "praeclarum" to "最好", "dies felix" to "好日子", "consuetudo" to "习惯", "series" to "连续", "palmae" to "成就", "reditus" to "收入",
+        "apps" to "应用",
+    )
+
+    /** Árabe, para al-Ándalus. */
+    val ARABE: Map<String, String> = mapOf(
+        "horologium" to "الساعة", "somnus" to "النوم", "stadia" to "المراحل", "cor" to "القلب", "passus" to "الخطوات", "motus" to "الحركة",
+        "iter" to "الطريق", "exercitatio" to "الرياضة", "loca" to "الأماكن", "telephonum" to "الشاشة", "telephon" to "الشاشة",
+        "usus" to "الاستعمال", "monita" to "التنبيهات", "musica" to "الموسيقى", "imagines" to "الصور", "fasti" to "المواعيد",
+        "caelum" to "الطقس", "lux" to "ضوء_النهار", "aer" to "الهواء", "corpus" to "الجسم", "nutritio" to "التغذية", "cibus" to "الوجبات",
+        "robur" to "القوة", "musculi" to "العضلات", "voces" to "المكالمات", "soni" to "الصوت", "retia" to "الشبكة", "lumen" to "الضوء",
+        "vis" to "الشحن", "lectio" to "القراءة", "strepitus" to "الضجيج", "luna" to "القمر", "dias" to "الأيام", "animus" to "المزاج",
+        "optimus" to "الأفضل", "momenta" to "اللحظات", "svmptvs" to "الإنفاق", "memorabilia" to "المعالم", "ascensvs" to "التسلق",
+        "dies" to "الأيام", "quaestiones" to "الاستبيانات", "celeritas" to "رد_الفعل", "bibliotheca" to "المكتبة",
+        "synchronia" to "المزامنة", "opera" to "الأعمال", "iudicium" to "الرأي", "citatio" to "اقتباس", "sententia" to "جملة",
+        "orbis" to "العالم", "nova" to "جديد", "mirabilia" to "العجائب", "somnium" to "الحلم", "epistulae" to "الرسائل",
+        "aperta" to "مفتوحة", "initium" to "البداية", "finis" to "النهاية", "pessimus" to "الأسوأ", "personae" to "الأشخاص",
+        "themata" to "المواضيع", "praeclarum" to "الأحسن", "dies felix" to "يوم_سعيد", "consuetudo" to "العادات", "series" to "التتابع",
+        "palmae" to "الإنجازات", "reditus" to "الدخل", "apps" to "التطبيقات",
+    )
+
+    /** Ruso, en las mayúsculas de los carteles. */
+    val RUSO: Map<String, String> = mapOf(
+        "horologium" to "ЧАСЫ", "somnus" to "СОН", "stadia" to "ФАЗЫ", "cor" to "СЕРДЦЕ", "passus" to "ШАГИ", "motus" to "ДВИЖЕНИЕ",
+        "iter" to "МАРШРУТ", "exercitatio" to "ТРЕНИРОВКА", "loca" to "МЕСТА", "telephonum" to "ЭКРАН", "telephon" to "ЭКРАН",
+        "usus" to "ИСПОЛЬЗОВАНИЕ", "monita" to "УВЕДОМЛЕНИЯ", "musica" to "МУЗЫКА", "imagines" to "ФОТО", "fasti" to "ПЛАНЫ",
+        "caelum" to "ПОГОДА", "lux" to "СВЕТЛЫЙ_ДЕНЬ", "aer" to "ВОЗДУХ", "corpus" to "ТЕЛО", "nutritio" to "ПИТАНИЕ", "cibus" to "ЕДА",
+        "robur" to "ЗАЛ", "musculi" to "МЫШЦЫ", "voces" to "ЗВОНКИ", "soni" to "ЗВУК", "retia" to "СЕТЬ", "lumen" to "СВЕТ",
+        "vis" to "ЗАРЯД", "lectio" to "ЧТЕНИЕ", "strepitus" to "ШУМ", "luna" to "ЛУНА", "dias" to "ДНИ", "animus" to "НАСТРОЕНИЕ",
+        "optimus" to "ЛУЧШИЙ", "momenta" to "МОМЕНТЫ", "svmptvs" to "РАСХОДЫ", "memorabilia" to "ВЕХИ", "ascensvs" to "ЛАЗАНИЕ",
+        "dies" to "ДНИ", "quaestiones" to "ОПРОСЫ", "celeritas" to "РЕАКЦИЯ", "bibliotheca" to "БИБЛИОТЕКА",
+        "synchronia" to "СИНХРОНИЗАЦИЯ", "opera" to "РАБОТЫ", "iudicium" to "ОЦЕНКА", "citatio" to "ЦИТАТА", "sententia" to "ФРАЗА",
+        "orbis" to "МИР", "nova" to "НОВОЕ", "mirabilia" to "ЧУДЕСА", "somnium" to "СНОВИДЕНИЕ", "epistulae" to "ПИСЬМА",
+        "aperta" to "ОТКРЫТО", "initium" to "НАЧАЛО", "finis" to "КОНЕЦ", "pessimus" to "ХУДШИЙ", "personae" to "ЛЮДИ",
+        "themata" to "ТЕМЫ", "praeclarum" to "ЛУЧШЕЕ", "dies felix" to "ХОРОШИЙ_ДЕНЬ", "consuetudo" to "ПРИВЫЧКИ", "series" to "СЕРИЯ",
+        "palmae" to "УСПЕХИ", "reditus" to "ДОХОДЫ", "apps" to "ПРИЛОЖЕНИЯ",
+    )
+
+    /** Mongol en cirílico, en mayúsculas. */
+    val MONGOL: Map<String, String> = mapOf(
+        "horologium" to "ЦАГ", "somnus" to "НОЙР", "stadia" to "ҮЕ_ШАТ", "cor" to "ЗҮРХ", "passus" to "АЛХАМ", "motus" to "ХӨДӨЛГӨӨН",
+        "iter" to "ЗАМ", "exercitatio" to "ДАСГАЛ", "loca" to "ГАЗРУУД", "telephonum" to "ДЭЛГЭЦ", "telephon" to "ДЭЛГЭЦ",
+        "usus" to "ХЭРЭГЛЭЭ", "monita" to "МЭДЭГДЭЛ", "musica" to "ХӨГЖИМ", "imagines" to "ЗУРАГ", "fasti" to "ХУВААРЬ",
+        "caelum" to "ЦАГ_АГААР", "lux" to "ӨДРИЙН_ГЭРЭЛ", "aer" to "АГААР", "corpus" to "БИЕ", "nutritio" to "ТЭЖЭЭЛ", "cibus" to "ХООЛ",
+        "robur" to "ХҮЧ", "musculi" to "БУЛЧИН", "voces" to "ДУУДЛАГА", "soni" to "ДУУ", "retia" to "СҮЛЖЭЭ", "lumen" to "ГЭРЭЛ",
+        "vis" to "ЦЭНЭГ", "lectio" to "УНШЛАГА", "strepitus" to "ЧИМЭЭ", "luna" to "САР", "dias" to "ӨДРҮҮД", "animus" to "СЭТГЭЛ",
+        "optimus" to "ШИЛДЭГ", "momenta" to "АГШИН", "svmptvs" to "ЗАРДАЛ", "memorabilia" to "ГАВЬЯА", "ascensvs" to "АВИРАЛТ",
+        "dies" to "ӨДӨР", "quaestiones" to "АСУУЛГА", "celeritas" to "ХАРИУ", "bibliotheca" to "НОМЫН_САН", "synchronia" to "СИНХРОН",
+        "opera" to "БҮТЭЭЛ", "iudicium" to "ҮНЭЛГЭЭ", "citatio" to "ИШЛЭЛ", "sententia" to "ӨГҮҮЛБЭР", "orbis" to "ДЭЛХИЙ",
+        "nova" to "ШИНЭ", "mirabilia" to "ГАЙХАМШИГ", "somnium" to "ЗҮҮД", "epistulae" to "ЗАХИДАЛ", "aperta" to "НЭЭСЭН",
+        "initium" to "ЭХЛЭЛ", "finis" to "ТӨГСГӨЛ", "pessimus" to "МУУ", "personae" to "ХҮМҮҮС", "themata" to "СЭДЭВ",
+        "praeclarum" to "САЙН", "dies felix" to "САЙХАН_ӨДӨР", "consuetudo" to "ЗУРШИЛ", "series" to "ЦУВРАЛ", "palmae" to "АМЖИЛТ",
+        "reditus" to "ОРЛОГО", "apps" to "АПП",
+    )
+
     /** Castellano de los siglos XIII a XV, como escribía el copista. */
     val CASTELLANO_ANTIGUO: Map<String, String> = mapOf(
         "horologium" to "relox", "somnus" to "suenno", "stadia" to "tiempos", "cor" to "coraçon", "passus" to "passos",
@@ -24,11 +106,27 @@ internal object Claves {
         "consuetudo" to "costumbres", "series" to "continuo", "palmae" to "fechos", "reditus" to "rentas", "apps" to "ingenios",
     )
 
+    /** Palabras del cuartel general que reemplazan al francés común. */
+    val NAPOLEON: Map<String, String> = mapOf(
+        "somnus" to "bivouac", "palmae" to "victoires", "svmptvs" to "trésor", "personae" to "état-major", "momenta" to "bulletins",
+        "iter" to "marche", "epistulae" to "dépêches", "robur" to "manège", "consuetudo" to "code", "reditus" to "solde",
+        "orbis" to "empire",
+    )
+
+    /** Palabras de la Convención que reemplazan al francés común. */
+    val REVOLUCION: Map<String, String> = mapOf(
+        "somnus" to "repos", "animus" to "esprit", "personae" to "citoyens", "palmae" to "honneurs", "consuetudo" to "vertus",
+        "svmptvs" to "assignats", "momenta" to "journées", "epistulae" to "adresses", "reditus" to "contributions", "themata" to "motions",
+        "iudicium" to "opinion", "orbis" to "nations",
+    )
+
     /** Latín litúrgico del gótico (el resto queda en el latín del romano). */
     val GOTICO: Map<String, String> = mapOf(
-        "somnus" to "dormitio", "animus" to "anima", "personae" to "fratres", "palmae" to "merita", "epistulae" to "litterae",
-        "momenta" to "horae", "svmptvs" to "expensae", "loca" to "loca_sancta", "musica" to "cantus", "consuetudo" to "regula",
-        "iter" to "peregrinatio", "opera" to "codices", "mirabilia" to "miracula", "themata" to "materiae",
+        "somnus" to "requies", "animus" to "anima", "personae" to "fratres", "palmae" to "reliquiae", "epistulae" to "litterae",
+        "cor" to "cor_cordis", "momenta" to "horae", "svmptvs" to "eleemosyna", "loca" to "loca_sancta", "imagines" to "vitrea",
+        "musica" to "cantus", "lectio" to "lectio_divina", "consuetudo" to "regula", "iter" to "peregrinatio", "dies" to "feriae",
+        "dias" to "feriae", "caelum" to "firmamentum", "lux" to "lux_diei", "orbis" to "orbis_christianus", "opera" to "codices",
+        "mirabilia" to "miracula", "initium" to "incipit", "finis" to "explicit", "reditus" to "decimae", "themata" to "materiae",
     )
 
     /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
@@ -100,54 +198,5 @@ internal object Claves {
         "personae" to "compañía", "palmae" to "hazañas", "consuetudo" to "juramentos", "epistulae" to "pergaminos", "caelum" to "cielo",
         "telephonum" to "espejo", "telephon" to "espejo", "imagines" to "grabados", "musica" to "cantares", "reditus" to "tributos",
         "momenta" to "sucesos", "orbis" to "el_ancho_mundo",
-    )
-
-    /** Voz clásica (Morfeo, dracmas, laureles). Lo que no está aquí queda en el español común. */
-    val HELENO: Map<String, String> = mapOf(
-        "somnus" to "morfeo", "animus" to "ánimo", "svmptvs" to "dracmas", "personae" to "amigos", "palmae" to "laureles",
-        "loca" to "lugares", "momenta" to "instantes", "caelum" to "cielo", "orbis" to "ecúmene", "consuetudo" to "costumbres",
-        "epistulae" to "epístolas", "reditus" to "óbolos",
-    )
-
-    /** Habla de la caravana. Lo que no está aquí queda en el español común. */
-    val SEDA: Map<String, String> = mapOf(
-        "somnus" to "acampada", "svmptvs" to "mercancías", "loca" to "postas", "personae" to "caravana", "palmae" to "tesoros",
-        "iter" to "ruta", "momenta" to "relatos", "orbis" to "rutas", "consuetudo" to "ritos", "caelum" to "cielo",
-        "reditus" to "ganancias",
-    )
-
-    /** Jerga del plan. Lo que no está aquí queda en el español común. */
-    val URSS: Map<String, String> = mapOf(
-        "somnus" to "noche", "animus" to "moral", "svmptvs" to "gasto", "personae" to "camaradas", "palmae" to "honores",
-        "loca" to "lugares", "momenta" to "informes", "consuetudo" to "normas", "reditus" to "salario", "epistulae" to "correo",
-        "orbis" to "mundo", "robur" to "cultura_física",
-    )
-
-    /** Palabras que el español tomó del árabe (almohada, maravedís, aldea, alhaja…). Lo que no está aquí queda en el español común. */
-    val ANDALUS: Map<String, String> = mapOf(
-        "somnus" to "almohada", "svmptvs" to "maravedís", "loca" to "aldeas", "personae" to "allegados", "palmae" to "alhajas",
-        "momenta" to "instantes", "consuetudo" to "costumbres", "caelum" to "cielo", "iter" to "camino", "reditus" to "rentas",
-        "musica" to "laúd",
-    )
-
-    /** Habla de la estepa. Lo que no está aquí queda en el español común. */
-    val MONGOL: Map<String, String> = mapOf(
-        "somnus" to "yurta", "passus" to "marcha", "svmptvs" to "gastos", "loca" to "campamentos", "personae" to "clan",
-        "palmae" to "hazañas", "momenta" to "sucesos", "iter" to "galope", "orbis" to "estepa", "consuetudo" to "costumbres",
-        "caelum" to "cielo_azul",
-    )
-
-    /** Jerga del cuartel general. Lo que no está aquí queda en el español común. */
-    val NAPOLEON: Map<String, String> = mapOf(
-        "somnus" to "vivac", "palmae" to "victorias", "svmptvs" to "tesorería", "personae" to "estado_mayor", "momenta" to "boletines",
-        "iter" to "marcha", "epistulae" to "despachos", "robur" to "manejo_armas", "consuetudo" to "código", "reditus" to "paga",
-        "orbis" to "imperio", "animus" to "moral",
-    )
-
-    /** Jerga de la Convención. Lo que no está aquí queda en el español común. */
-    val REVOLUCION: Map<String, String> = mapOf(
-        "somnus" to "noche_cívica", "animus" to "espíritu", "personae" to "ciudadanos", "palmae" to "honores", "consuetudo" to "virtudes",
-        "svmptvs" to "asignados", "momenta" to "jornadas", "epistulae" to "proclamas", "reditus" to "contribución",
-        "themata" to "mociones", "iudicium" to "opinión", "orbis" to "naciones",
     )
 }

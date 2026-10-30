@@ -127,7 +127,7 @@ fun CapaLogro() {
                 motivoLogro(tema, c, if (animar) angulo else 0f, cs)
             }
             Column(Modifier.statusBarsPadding().navigationBarsPadding().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(Estilo.seccionLegible("Logro conseguido", null), style = MaterialTheme.typography.titleLarge, color = cs.primary, textAlign = TextAlign.Center)
+                Text(Estilo.seccion("Logro conseguido", null).first, style = MaterialTheme.typography.titleLarge, color = cs.primary, textAlign = TextAlign.Center)
                 Box(Modifier.size(230.dp).graphicsLayer { scaleX = escala.value; scaleY = escala.value }, contentAlignment = Alignment.Center) {
                     io.github.ruddy2003.vestigium.ui.pantallas.TrofeoLogro(g, 220.dp)
                 }
@@ -151,7 +151,7 @@ fun CapaLogro() {
 private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.ROMANO -> listOf("ex aere", "ex argento", "ex auro", "triumphalis")
     TemaId.CIBER -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
-    TemaId.HELENO -> listOf("bronce de Corinto", "plata del Laurión", "oro de Micenas", "laurel olímpico")
+    TemaId.HELENO -> listOf("χάλκεος", "ἀργύρεος", "χρύσεος", "ἀθάνατος")
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
     TemaId.REFUGIO -> listOf("residente", "jefe de turno", "jefe de sector", "director del refugio")

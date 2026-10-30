@@ -37,7 +37,7 @@ fun RejillaTarjetas(l: List<Tarjetita>, ir: (String) -> Unit) {
                 Surface(onClick = { ir(t.ruta) }, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.medium,
                     color = MaterialTheme.colorScheme.surface, border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
                     Column(Modifier.padding(12.dp)) {
-                        Text(Estilo.seccionLegible(t.titulo, Romano.latin(t.titulo)), style = MaterialTheme.typography.labelLarge,
+                        Text(Estilo.seccion(t.titulo, Romano.latin(t.titulo)).first, style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(t.cifra, style = estiloCifra(), maxLines = 1)
                         Text(t.detalle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)

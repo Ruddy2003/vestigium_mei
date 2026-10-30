@@ -79,7 +79,7 @@ fun PantallaAnno(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
             OutlinedButton(onClick = { anio-- }, shape = RoundedCornerShape(4.dp)) { Text("‹", fontSize = 18.sp) }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("${io.github.ruddy2003.vestigium.ui.Estilo.pantallaLegible("Tu año", "ANNVS")} ${io.github.ruddy2003.vestigium.ui.Estilo.numeral(anio)}", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+                Text("${io.github.ruddy2003.vestigium.ui.Estilo.pantalla("Tu año", "ANNVS").first} ${io.github.ruddy2003.vestigium.ui.Estilo.numeral(anio)}", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
                 Text("// $anio", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             OutlinedButton(onClick = { anio++ }, shape = RoundedCornerShape(4.dp)) { Text("›", fontSize = 18.sp) }

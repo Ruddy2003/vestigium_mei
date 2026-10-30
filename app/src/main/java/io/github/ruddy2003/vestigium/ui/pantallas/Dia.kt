@@ -279,7 +279,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false) {
                         }
                     }
                     val sr = Repo.salud[fecha]
-                    sr?.sueno_min?.let { m -> Clave("horologium", "${m / 60} h ${m % 60} min dormido " + if (sr.sueno_manual) "(corregido a mano)" else "según tu reloj") }
+                    sr?.sueno_min?.let { m -> ClaveDia("horologium", "${m / 60} h ${m % 60} min dormido " + if (sr.sueno_manual) "(corregido a mano)" else "según tu reloj") }
                     TextButton(onClick = { editarSueno = true }) {
                         Text(if (sr?.sueno_min != null) "corregir las horas de sueño" else "anotar a qué hora dormí y desperté", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                     }
@@ -381,7 +381,7 @@ private fun TarjetaNoche(d: Dia, fecha: String, c: io.github.ruddy2003.vestigium
         modifier = Modifier.fillMaxWidth().padding(top = 18.dp)) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text(io.github.ruddy2003.vestigium.ui.Estilo.seccionLegible("Llenar el día", Romano.latin("Llenar el día")), style = MaterialTheme.typography.titleLarge)
+                Text(io.github.ruddy2003.vestigium.ui.Estilo.seccion("Llenar el día", Romano.latin("Llenar el día")).first.let { io.github.ruddy2003.vestigium.ui.Estilo.conEspanol(it, "Llenar el día") }, style = MaterialTheme.typography.titleLarge)
                 Text(partes.joinToString("  ") { (t, ok) -> (if (ok) "✓ " else "○ ") + t }, style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
                 if (listo) Text("día sellado", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
@@ -499,7 +499,7 @@ fun PantallaNoche(nav: Nav) {
                 Escala(d.dolor, 0, 5, Catalogo.ANCLAS["dolor"]) { cambiar(d.copy(dolor = it)) }
                 val mu = Repo.momentos.filter { it.fecha == fecha && it.esAnimo && it.valencia != null }
                 // Los avisos del día se ven solo después de elegir la valencia, para que no sirvan de ancla (H-2-11).
-                if (mu.isNotEmpty() && d.valencia != null) Clave("avisos", mu.joinToString("  ") { "${Fechas.horaDe(it.ts)}→${it.valencia}" })
+                if (mu.isNotEmpty() && d.valencia != null) ClaveDia("avisos", mu.joinToString("  ") { "${Fechas.horaDe(it.ts)}→${it.valencia}" })
             }
         }
         // 3. La predicción, junto al juicio del día y antes de escribir.
@@ -628,6 +628,10 @@ private fun BarraNoche(pasos: List<Pair<String, Boolean>>, completo: Boolean, mo
     }
 }
 
+/** Las líneas del reporte del día: si la clave del tema va en otro alfabeto, lleva su español debajo. */
+@Composable
+private fun ClaveDia(clave: String, valor: String) = Clave(clave, valor, espanol = true)
+
 private fun hm(min: Int): String = if (min >= 60) "${min / 60} h ${"%02d".format(min % 60)} min" else "$min min"
 
 /** Todo lo automático del día: las fichas del reporte (ver ReporteDia.kt) y debajo lo demás, en formato clave = valor. */
@@ -654,84 +658,84 @@ private fun Vestigios(fecha: String, nav: Nav) {
         // La luna siempre sale; «algo» cuenta lo que vino de los sensores.
         var algo = fichas.size > 1
         if (s != null) {
-            if (s.spo2_min != null) { algo = true; Clave("oxygenium", "mínima de noche %.0f%%".format(s.spo2_min)) }
+            if (s.spo2_min != null) { algo = true; ClaveDia("oxygenium", "mínima de noche %.0f%%".format(s.spo2_min)) }
         }
-        if (s?.pasos == null) km?.takeIf { it >= 0.2 }?.let { algo = true; Clave("iter", "%.1f km recorridos".format(it)) }
+        if (s?.pasos == null) km?.takeIf { it >= 0.2 }?.let { algo = true; ClaveDia("iter", "%.1f km recorridos".format(it)) }
         p?.let {
-            if (it.primer_uso != null) { algo = true; Clave("usus", "primer uso ${Fechas.horaDe(it.primer_uso)} · último ${it.ultimo_uso?.let { u -> Fechas.horaDe(u) } ?: "?"}") }
+            if (it.primer_uso != null) { algo = true; ClaveDia("usus", "primer uso ${Fechas.horaDe(it.primer_uso)} · último ${it.ultimo_uso?.let { u -> Fechas.horaDe(u) } ?: "?"}") }
         }
-        ag?.let { if (it.eventos + it.todo_el_dia > 0) { algo = true; Clave("fasti", "${it.eventos} eventos · ${hm(it.min_ocupado)} ocupado" + if (it.titulos.isNotEmpty()) " · " + it.titulos.take(3).joinToString(", ") else "") } }
+        ag?.let { if (it.eventos + it.todo_el_dia > 0) { algo = true; ClaveDia("fasti", "${it.eventos} eventos · ${hm(it.min_ocupado)} ocupado" + if (it.titulos.isNotEmpty()) " · " + it.titulos.take(3).joinToString(", ") else "") } }
         e?.let {
-            if (it.amanecer != null) Clave("lux", "${it.amanecer} → ${it.atardecer ?: "?"}" + (it.sol_min?.let { x -> " · ${hm(x)} de sol" } ?: ""))
-            if (it.aqi_us != null) Clave("aer", "calidad del aire ${it.aqi_us} (${aqiTexto(it.aqi_us)})" + (it.pm25?.let { x -> " · pm2.5 %.0f".format(x) } ?: ""))
+            if (it.amanecer != null) ClaveDia("lux", "${it.amanecer} → ${it.atardecer ?: "?"}" + (it.sol_min?.let { x -> " · ${hm(x)} de sol" } ?: ""))
+            if (it.aqi_us != null) ClaveDia("aer", "calidad del aire ${it.aqi_us} (${aqiTexto(it.aqi_us)})" + (it.pm25?.let { x -> " · pm2.5 %.0f".format(x) } ?: ""))
         }
         if (s != null) {
             val cuerpo = listOfNotNull(s.peso_kg?.let { "%.1f kg".format(it) }, s.temp_piel_delta?.let { "piel %+.2f °C".format(it) }, s.resp_rpm?.let { "resp %.0f rpm".format(it) },
                 s.pa_sistolica?.let { "pa %.0f/%.0f".format(it, s.pa_diastolica ?: 0.0) }, s.cal_activas?.let { "%.0f kcal activas".format(it) }, s.pisos?.let { "%.0f pisos".format(it) },
                 s.agua_ml?.let { "%.0f ml de agua".format(it) }, s.vo2max?.let { "vo₂max %.0f".format(it) })
-            if (cuerpo.isNotEmpty()) { algo = true; Clave("corpus", cuerpo.joinToString(" · ")) }
+            if (cuerpo.isNotEmpty()) { algo = true; ClaveDia("corpus", cuerpo.joinToString(" · ")) }
         }
         Repo.nutricion[fecha]?.let { nu ->
             val v = nu.valores
             val extra = listOfNotNull(v["gasto_kcal"]?.let { g -> v["kcal"]?.let { k -> "balance %+.0f".format(k - g) } }, v["fibra_g"]?.let { "fibra %.0f g".format(it) },
                 v["cafeina_mg"]?.takeIf { it > 0 }?.let { "cafeína %.0f mg".format(it) + (nu.cafeina_ultima?.let { h -> " (última $h)" } ?: "") },
                 v["alcohol_g"]?.takeIf { it > 0 }?.let { "alcohol %.0f g".format(it) }, if (nu.primera != null) "comiste de ${nu.primera} a ${nu.ultima}" else null)
-            if (extra.isNotEmpty()) { algo = true; Clave("cibus", extra.joinToString(" · ")) }
+            if (extra.isNotEmpty()) { algo = true; ClaveDia("cibus", extra.joinToString(" · ")) }
         }
         Repo.comunicacion[fecha]?.let { co ->
-            if (co.sms_enviados + co.sms_recibidos > 0 || co.contactos > 0) { algo = true; Clave("voces", (if (co.sms_enviados + co.sms_recibidos > 0) "${co.sms_enviados + co.sms_recibidos} sms · " else "") + "${co.contactos} personas") }
+            if (co.sms_enviados + co.sms_recibidos > 0 || co.contactos > 0) { algo = true; ClaveDia("voces", (if (co.sms_enviados + co.sms_recibidos > 0) "${co.sms_enviados + co.sms_recibidos} sms · " else "") + "${co.contactos} personas") }
         }
         val wa = Repo.chats.filter { it.fecha == fecha }
         if (wa.isNotEmpty()) {
             algo = true
-            Clave("whatsapp", "${wa.sumOf { it.mios }} enviados · ${wa.sumOf { it.otros }} recibidos · ${wa.size} chats")
+            ClaveDia("whatsapp", "${wa.sumOf { it.mios }} enviados · ${wa.sumOf { it.otros }} recibidos · ${wa.size} chats")
         }
         Repo.conexiones[fecha]?.let { cx ->
             algo = true
             val aud = listOfNotNull(cx.audio_min["audifonos"]?.let { "audífonos ${hm(it)}" }, cx.audio_min["coche"]?.let { "coche ${hm(it)}" },
                 cx.audio_min["bocina"]?.let { "bocina ${hm(it)}" }, cx.musica_min.takeIf { it > 0 }?.let { "sonando ${hm(it)}" })
-            if (aud.isNotEmpty()) Clave("soni", aud.joinToString(" · "))
-            cx.wifi_min.entries.sortedByDescending { it.value }.take(2).takeIf { it.isNotEmpty() }?.let { w -> Clave("retia", w.joinToString(" · ") { "${it.key} ${hm(it.value)}" } + " · sin wifi ${hm(cx.sin_wifi_min)}") }
+            if (aud.isNotEmpty()) ClaveDia("soni", aud.joinToString(" · "))
+            cx.wifi_min.entries.sortedByDescending { it.value }.take(2).takeIf { it.isNotEmpty() }?.let { w -> ClaveDia("retia", w.joinToString(" · ") { "${it.key} ${hm(it.value)}" } + " · sin wifi ${hm(cx.sin_wifi_min)}") }
             val n = cx.luz_n.sum()
-            if (n > 0) Clave("lumen", "máx %.0f lux · %s con luz de exterior".format(cx.luz_max ?: 0.0, hm(cx.luz_alta_min)))
-            if (cx.carga_noche_inicio != null) Clave("vis", "conectado ${Fechas.horaDe(cx.carga_noche_inicio)} → ${cx.carga_noche_fin?.let { Fechas.horaDe(it) } ?: "?"}")
+            if (n > 0) ClaveDia("lumen", "máx %.0f lux · %s con luz de exterior".format(cx.luz_max ?: 0.0, hm(cx.luz_alta_min)))
+            if (cx.carga_noche_inicio != null) ClaveDia("vis", "conectado ${Fechas.horaDe(cx.carga_noche_inicio)} → ${cx.carga_noche_fin?.let { Fechas.horaDe(it) } ?: "?"}")
         }
-        Repo.huellas[fecha]?.let { h -> algo = true; Clave("google", "${h.yt_vistos} videos · ${h.busquedas + h.yt_busquedas} búsquedas" + (h.canales.keys.firstOrNull()?.let { " · más: $it" } ?: "")) }
+        Repo.huellas[fecha]?.let { h -> algo = true; ClaveDia("google", "${h.yt_vistos} videos · ${h.busquedas + h.yt_busquedas} búsquedas" + (h.canales.keys.firstOrNull()?.let { " · más: $it" } ?: "")) }
         val sub = Repo.subrayados.filter { it.fecha == fecha }
-        if (sub.isNotEmpty()) { algo = true; Clave("lectio", "${sub.size} subrayados · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
+        if (sub.isNotEmpty()) { algo = true; ClaveDia("lectio", "${sub.size} subrayados · " + sub.map { it.libro }.distinct().take(2).joinToString(", ")) }
         val ruidos = Repo.momentos.filter { it.fecha == fecha && !it.privado }.mapNotNull { it.ruido_db }
-        if (ruidos.isNotEmpty()) Clave("strepitus", "%.0f dB de media al registrar".format(ruidos.average()))
+        if (ruidos.isNotEmpty()) ClaveDia("strepitus", "%.0f dB de media al registrar".format(ruidos.average()))
         // Lo que leíste, viste o jugaste; si lo terminaste ese día, tu calificación y lo que opinaste.
         val obras = Repo.obras.filter { it.titulo.isNotBlank() && (fecha in it.dias || (it.estado == "terminado" && it.fin == fecha)) }
         if (obras.isNotEmpty()) {
             algo = true
-            Clave("opera", obras.joinToString(" · ") { o ->
+            ClaveDia("opera", obras.joinToString(" · ") { o ->
                 o.titulo + " (" + (TIPOS_OBRA.firstOrNull { it.id == o.tipo }?.nombre?.lowercase() ?: o.tipo) + ")" +
                     (if (o.estado == "terminado" && o.fin == fecha) " terminado" + (o.calificacion?.let { " · $it/10" } ?: "") else "")
             })
             obras.filter { it.estado == "terminado" && it.fin == fecha && it.nota.isNotBlank() }.forEach { o ->
-                Clave("  iudicium", "«" + o.nota.trim().replace(Regex("\\s+"), " ").let { if (it.length > 160) it.take(160) + "…" else it } + "»")
+                ClaveDia("  iudicium", "«" + o.nota.trim().replace(Regex("\\s+"), " ").let { if (it.length > 160) it.take(160) + "…" else it } + "»")
             }
         }
         val citasDia = Repo.obras.flatMap { o -> o.citas.filter { it.fecha == fecha }.map { o to it } }
-        if (citasDia.isNotEmpty()) { algo = true; Clave("citatio", "«${citasDia.first().second.texto.take(110)}» — ${citasDia.first().first.titulo}" + if (citasDia.size > 1) " (+${citasDia.size - 1})" else "") }
-        Repo.config.frases_guardadas.filter { it.fecha == fecha && it.tema != "kindle" }.forEach { f -> algo = true; Clave("sententia", "♥ «${f.texto.take(110)}» — ${f.autor}") }
+        if (citasDia.isNotEmpty()) { algo = true; ClaveDia("citatio", "«${citasDia.first().second.texto.take(110)}» — ${citasDia.first().first.titulo}" + if (citasDia.size > 1) " (+${citasDia.size - 1})" else "") }
+        Repo.config.frases_guardadas.filter { it.fecha == fecha && it.tema != "kindle" }.forEach { f -> algo = true; ClaveDia("sententia", "♥ «${f.texto.take(110)}» — ${f.autor}") }
         // Dónde estuviste: ciudades, lo que fue primera vez y el Patrimonio Mundial.
         mundo?.let { m ->
             val c = m.ciudades.filter { it.second >= 0.25 || it.second == 0.0 }
-            if (c.isNotEmpty()) { algo = true; Clave("orbis", c.take(4).joinToString(" · ") { (e, h) -> "${io.github.ruddy2003.vestigium.data.Mundo.bandera(e.pais)} ${e.nombre}" + if (h > 0) " ${hm((h * 60).toInt())}" else "" }) }
+            if (c.isNotEmpty()) { algo = true; ClaveDia("orbis", c.take(4).joinToString(" · ") { (e, h) -> "${io.github.ruddy2003.vestigium.data.Mundo.bandera(e.pais)} ${e.nombre}" + if (h > 0) " ${hm((h * 60).toInt())}" else "" }) }
             val nuevas = (m.paisesNuevos.map { it.nombre } + m.ciudadesNuevas.map { it.nombre }).distinct()
-            if (nuevas.isNotEmpty()) Clave("  nova", "primera vez en " + nuevas.joinToString(", "))
-            if (m.sitios.isNotEmpty()) { algo = true; Clave("mirabilia", m.sitios.joinToString(" · ") { s -> s.n + " (Patrimonio Mundial, " + s.categoria.lowercase() + (if (s.i in m.sitiosNuevos) ", primera vez" else "") + ")" }) }
+            if (nuevas.isNotEmpty()) ClaveDia("  nova", "primera vez en " + nuevas.joinToString(", "))
+            if (m.sitios.isNotEmpty()) { algo = true; ClaveDia("mirabilia", m.sitios.joinToString(" · ") { s -> s.n + " (Patrimonio Mundial, " + s.categoria.lowercase() + (if (s.i in m.sitiosNuevos) ", primera vez" else "") + ")" }) }
         }
         // El sueño de esa noche y las cartas.
         Repo.dias[fecha]?.takeIf { it.sueno_texto.isNotBlank() }?.let { d ->
             algo = true
-            Clave("somnium", (io.github.ruddy2003.vestigium.ui.LibroDiario.metaSueno(d).ifBlank { "soñaste" }) + " · «" + d.sueno_texto.trim().replace(Regex("\\s+"), " ").take(90) + "…»")
+            ClaveDia("somnium", (io.github.ruddy2003.vestigium.ui.LibroDiario.metaSueno(d).ifBlank { "soñaste" }) + " · «" + d.sueno_texto.trim().replace(Regex("\\s+"), " ").take(90) + "…»")
         }
         val cartas = Repo.cartas.filter { it.escrita == fecha }
-        if (cartas.isNotEmpty()) { algo = true; Clave("epistulae", cartas.joinToString(" · ") { if (it.para.isBlank()) "sellaste una carta hasta el ${Fechas.corto(it.abrir_en)} ${it.abrir_en.take(4)}" else "carta a @${it.para}" }) }
-        Repo.cartas.filter { it.para.isBlank() && it.abierta_el == fecha }.forEach { Clave("  aperta", "abriste la carta que te escribiste el ${Fechas.larga(it.escrita)}") }
+        if (cartas.isNotEmpty()) { algo = true; ClaveDia("epistulae", cartas.joinToString(" · ") { if (it.para.isBlank()) "sellaste una carta hasta el ${Fechas.corto(it.abrir_en)} ${it.abrir_en.take(4)}" else "carta a @${it.para}" }) }
+        Repo.cartas.filter { it.para.isBlank() && it.abierta_el == fecha }.forEach { ClaveDia("  aperta", "abriste la carta que te escribiste el ${Fechas.larga(it.escrita)}") }
         if (!algo) Ayuda("Aún no hay datos automáticos de este día. Activa fuentes en Más → Permisos y sensores.", Modifier.padding(top = 8.dp))
         Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             BotonSecundario(if (ocupado) "sincronizando…" else "↻ sincronizar", habilitado = !ocupado) {

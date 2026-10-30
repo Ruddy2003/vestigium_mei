@@ -1018,7 +1018,7 @@ fun PantallaRascar(nav: Nav) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
             Column(Modifier.weight(1f)) {
-                Text(Estilo.pantallaLegible("Mapa para rascar", io.github.ruddy2003.vestigium.ui.Romano.latin("Mapa para rascar")), style = MaterialTheme.typography.titleLarge)
+                Text(Estilo.pantalla("Mapa para rascar", io.github.ruddy2003.vestigium.ui.Romano.latin("Mapa para rascar")).first, style = MaterialTheme.typography.titleLarge)
                 Ayuda("${visitados.size} países · toca un país para verlo; pellizca o usa − y +")
             }
             // Alternativa visible a pellizcar y al doble toque (N-24).

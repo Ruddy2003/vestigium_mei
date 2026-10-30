@@ -452,15 +452,23 @@ fun Ayuda(texto: String, modifier: Modifier = Modifier) {
     Text(texto, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = modifier)
 }
 
-/** Línea `clave = valor` en monoespaciada, para datos automáticos. */
+/**
+ * Línea `clave = valor` en monoespaciada, para datos automáticos. Con [espanol] (el reporte del día), si la clave del tema
+ * va en otro alfabeto lleva debajo su español ([Estilo.claveEspanol]).
+ */
 @Composable
-fun Clave(clave: String, valor: String, ancho: Int = 14) {
+fun Clave(clave: String, valor: String, ancho: Int = 14, espanol: Boolean = false) {
     Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
         // Ancho fijo medido con la letra del tema: así las columnas se alinean aunque no sea monoespaciada.
         val medidor = rememberTextMeasurer()
         val estilo = MaterialTheme.typography.labelLarge
         val anchoDp = with(LocalDensity.current) { medidor.measure("0".repeat(ancho), estilo).size.width.toDp() }
-        Text(Estilo.clave(clave), style = estilo, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(anchoDp), maxLines = 1)
+        val es = if (espanol) Estilo.claveEspanol(clave) else null
+        if (es == null) Text(Estilo.clave(clave), style = estilo, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(anchoDp), maxLines = 1)
+        else Column(Modifier.width(anchoDp)) {
+            Text(Estilo.clave(clave), style = estilo, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text(clave.takeWhile { it == ' ' } + es, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline, maxLines = 1)
+        }
         Text(pielDe(Estilo.tema).igual, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         Text(valor, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
     }
@@ -896,7 +904,7 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.PUNTOS,
         guiones = floatArrayOf(1.5f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
     TemaId.HELENO -> PielComponentes(sep = "  —  ", cerrada = "◇", abierta = "◆", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
-        aviso = "☉", igual = "· ", nulo = "nada", elegido = "✓", riel = RolColor.SECUNDARIO, quitar = "✕", listaVacia = "( ánfora vacía )", flecha = "⟶",
+        aviso = "☉", igual = "· ", nulo = "οὐδέν", elegido = "✓", riel = RolColor.SECUNDARIO, quitar = "✕", listaVacia = "( κενόν )", flecha = "⟶",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.5f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.DOBLE,
         guiones = floatArrayOf(5f, 2f), tamBoton = 14, letraBoton = null, borde = RolColor.TERCIARIO, grosor = 1f)
     TemaId.MEDIEVAL -> PielComponentes(sep = "  ⁖  ", cerrada = "❦", abierta = "☙", numeral = RolColor.PRIMARIO, centrar = true, rellena = true,
@@ -924,7 +932,7 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         sufijo = ":", caja = CajaEtiqueta.CAPITAL, espaciado = 0.3f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.ROJO,
         guiones = floatArrayOf(6f, 2f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 1f)
     TemaId.NAPOLEON -> PielComponentes(sep = "  ✧  ", cerrada = "⊞", abierta = "⊟", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
-        aviso = "✪", igual = "→ ", nulo = "sin parte", elegido = "✦", riel = RolColor.TERCIARIO, quitar = "✘", listaVacia = "( sin órdenes )", flecha = "➔",
+        aviso = "✪", igual = "→ ", nulo = "néant", elegido = "✦", riel = RolColor.TERCIARIO, quitar = "✘", listaVacia = "( sans ordre )", flecha = "➔",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.2f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.BARRA,
         guiones = floatArrayOf(5.5f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.TERCIARIO, grosor = 1.5f)
     TemaId.BOTANICO -> PielComponentes(sep = "  ⁂  ", cerrada = "⚘", abierta = "❀", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
@@ -936,7 +944,7 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.4f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(2f, 2f), tamBoton = 14, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.5f)
     TemaId.SEDA -> PielComponentes(sep = "  ◦  ", cerrada = "◎", abierta = "◉", numeral = RolColor.PRIMARIO, centrar = true, rellena = true,
-        aviso = "◈", igual = "〉", nulo = "vacío", elegido = "⊡", riel = RolColor.PRIMARIO, quitar = "(×)", listaVacia = "( alforja vacía )", flecha = "⟿",
+        aviso = "◈", igual = "〉", nulo = "空", elegido = "⊡", riel = RolColor.PRIMARIO, quitar = "(×)", listaVacia = "( alforja vacía )", flecha = "⟿",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.6f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.ROJO,
         guiones = floatArrayOf(2f, 0.8f, 0.4f, 0.8f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
     TemaId.GOTICO -> PielComponentes(sep = "  †  ", cerrada = "†", abierta = "‡", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
@@ -948,11 +956,11 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 2.5f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.PUNTOS,
         guiones = floatArrayOf(0.8f, 2.5f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
     TemaId.ANDALUS -> PielComponentes(sep = "  ❖  ", cerrada = "۞", abierta = "✺", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
-        aviso = "❁", igual = "∷ ", nulo = "nada", elegido = "✹", riel = RolColor.TERCIARIO, quitar = "‹×›", listaVacia = "( sin azulejos )", flecha = "➛",
+        aviso = "❁", igual = "∷ ", nulo = "لا شيء", elegido = "✹", riel = RolColor.TERCIARIO, quitar = "‹×›", listaVacia = "( sin azulejos )", flecha = "➛",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.5f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.DOBLE,
         guiones = floatArrayOf(1.2f, 1.2f, 3f, 1.2f), tamBoton = 14, letraBoton = null, borde = RolColor.TERCIARIO, grosor = 1f)
     TemaId.MONGOL -> PielComponentes(sep = "  ◆  ", cerrada = "◑", abierta = "◐", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
-        aviso = "☾", igual = "⇢ ", nulo = "sin nada", elegido = "◐", riel = RolColor.PRIMARIO, quitar = "x", listaVacia = "( ger vacía )", flecha = "➜",
+        aviso = "☾", igual = "⇢ ", nulo = "хоосон", elegido = "◐", riel = RolColor.PRIMARIO, quitar = "x", listaVacia = "( ger vacía )", flecha = "➜",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.4f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.BARRA,
         guiones = floatArrayOf(3.5f, 2.5f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1.5f)
     TemaId.RENACIMIENTO -> PielComponentes(sep = "  ⁘  ", cerrada = "∴", abierta = "∵", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
@@ -960,7 +968,7 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.2f, colorPrefijo = RolColor.PRIMARIO, renglones = true, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(7f, 1f, 1f, 1f), tamBoton = 17, letraBoton = LetraExtra.cormorant, borde = RolColor.CONTORNO, grosor = 1f)
     TemaId.URSS -> PielComponentes(sep = "  ▸  ", cerrada = "◣", abierta = "◥", numeral = RolColor.TINTA, centrar = true, rellena = false,
-        aviso = "★", igual = "▸ ", nulo = "SIN DATO", elegido = "▶", riel = RolColor.PRIMARIO, quitar = "—", listaVacia = "[ SIN NORMA ]", flecha = "➤",
+        aviso = "★", igual = "▸ ", nulo = "НЕТ", elegido = "▶", riel = RolColor.PRIMARIO, quitar = "—", listaVacia = "[ ПУСТО ]", flecha = "➤",
         sufijo = "!", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.8f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.BARRA,
         guiones = floatArrayOf(6f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
     TemaId.REVOLUCION -> PielComponentes(sep = "  •  ", cerrada = "☐", abierta = "☒", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,

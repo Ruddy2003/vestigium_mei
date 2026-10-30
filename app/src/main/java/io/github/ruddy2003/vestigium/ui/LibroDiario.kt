@@ -191,7 +191,7 @@ object LibroDiario {
         }
         val f = File(carpeta(ctx), nombre(lista, "html"))
         f.writeText("<!doctype html><html lang=\"es\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">" +
-            "<title>Diario · Vestigium Mei</title><style>$css</style><body><h1>${esc(Estilo.pantallaLegible("Biblioteca del diario", Romano.latin("Biblioteca del diario")))}</h1>$cuerpo</body></html>")
+            "<title>Diario · Vestigium Mei</title><style>$css</style><body><h1>${esc(Estilo.pantalla("Biblioteca del diario", Romano.latin("Biblioteca del diario")).first)}</h1>$cuerpo</body></html>")
         return f
     }
 
@@ -286,7 +286,7 @@ object LibroDiario {
         val med = medidas(tema, carta = false)
         val pTexto = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = tfTexto; textSize = med.tam; color = tinta }
         val pExtra = TextPaint(pTexto).apply { textSize = pTexto.textSize * 0.88f; color = tenue; textSkewX = -0.15f }
-        val etiqueta = Estilo.seccionLegible("Diario", Romano.latin("Diario")).let { if (Estilo.mayusculas) it.uppercase() else it }
+        val etiqueta = Estilo.seccion("Diario", Romano.latin("Diario")).first.let { if (Estilo.mayusculas) it.uppercase() else it }
 
         nueva()
         lista.sortedBy { it.fecha }.forEachIndexed { i, d ->
