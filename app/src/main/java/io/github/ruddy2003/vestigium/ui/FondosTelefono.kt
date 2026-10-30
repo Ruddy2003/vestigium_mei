@@ -682,11 +682,25 @@ class FondoVivoServicio : WallpaperService() {
 }
 
 private fun logo(t: TemaId): Int = when (t) {
-    TemaId.ROMANO -> R.drawable.logo_romano; TemaId.CIBER -> R.drawable.logo_ciber; TemaId.HELENO -> R.drawable.logo_heleno; TemaId.MEDIEVAL -> R.drawable.logo_medieval
-    TemaId.DISTOPIA -> R.drawable.logo_distopia; TemaId.REFUGIO -> R.drawable.logo_refugio; TemaId.ORDEN -> R.drawable.logo_orden; TemaId.LABORATORIO -> R.drawable.logo_laboratorio
-    TemaId.COLONOS -> R.drawable.logo_colonos; TemaId.NAPOLEON -> R.drawable.logo_napoleon; TemaId.BOTANICO -> R.drawable.logo_botanico; TemaId.NAVIDAD -> R.drawable.logo_navidad
-    TemaId.SEDA -> R.drawable.logo_seda; TemaId.URSS -> R.drawable.logo_urss; TemaId.GOTICO -> R.drawable.logo_gotico; TemaId.ESPACIO -> R.drawable.logo_espacio
-    TemaId.ANDALUS -> R.drawable.logo_andalus; TemaId.MONGOL -> R.drawable.logo_mongol; TemaId.RENACIMIENTO -> R.drawable.logo_renacimiento
+    TemaId.ROMANO -> R.drawable.logo_romano
+    TemaId.CIBER -> R.drawable.logo_ciber
+    TemaId.HELENO -> R.drawable.logo_heleno
+    TemaId.MEDIEVAL -> R.drawable.logo_medieval
+    TemaId.DISTOPIA -> R.drawable.logo_distopia
+    TemaId.REFUGIO -> R.drawable.logo_refugio
+    TemaId.ORDEN -> R.drawable.logo_orden
+    TemaId.LABORATORIO -> R.drawable.logo_laboratorio
+    TemaId.COLONOS -> R.drawable.logo_colonos
+    TemaId.NAPOLEON -> R.drawable.logo_napoleon
+    TemaId.BOTANICO -> R.drawable.logo_botanico
+    TemaId.NAVIDAD -> R.drawable.logo_navidad
+    TemaId.SEDA -> R.drawable.logo_seda
+    TemaId.URSS -> R.drawable.logo_urss
+    TemaId.GOTICO -> R.drawable.logo_gotico
+    TemaId.ESPACIO -> R.drawable.logo_espacio
+    TemaId.ANDALUS -> R.drawable.logo_andalus
+    TemaId.MONGOL -> R.drawable.logo_mongol
+    TemaId.RENACIMIENTO -> R.drawable.logo_renacimiento
     TemaId.REVOLUCION -> R.drawable.logo_revolucion
     TemaId.ANTIGUAS -> R.drawable.logo_antiguas
 }

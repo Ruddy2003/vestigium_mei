@@ -398,7 +398,10 @@ def anual(T, pz, ac, mel, kw, ciclos=10):
     return x
 
 if __name__ == '__main__':
-    hacer(); hacer_revolucion(); hacer_antiguas(); hacer_enriquecidos()
+    hacer()
+    hacer_revolucion()
+    hacer_antiguas()
+    hacer_enriquecidos()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None

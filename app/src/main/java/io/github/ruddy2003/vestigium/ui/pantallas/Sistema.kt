@@ -260,24 +260,27 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
     val titulo = when (parte) { "avisos" -> "Avisos y recordatorios"; "privacidad" -> "Privacidad"; else -> "Apariencia" }
     Hoja(titulo, nav.atras) {
         if (parte == "apariencia") Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
-            // Los temas en una cuadrícula de tres por fila.
+            // Los temas por época, en una cuadrícula de tres por fila.
             val vista = androidx.compose.ui.platform.LocalView.current
             val centros = remember { HashMap<String, androidx.compose.ui.geometry.Offset>() }
-            io.github.ruddy2003.vestigium.ui.TemaId.entries.chunked(3).forEach { fila ->
-                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    fila.forEach { t ->
-                        // Cada muestra en el modo que tendría ese tema (el que solo existe en oscuro, siempre oscuro).
-                        io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, io.github.ruddy2003.vestigium.ui.modoOscuro(t), c.tema == t.id,
-                            Modifier.weight(1f).onGloballyPositioned { centros[t.id] = it.boundsInWindow().center }) {
-                            if (c.tema != t.id) {
-                                // Foto del tema de ahora, cambio de tema, y el nuevo se abre en círculo desde la tarjeta con su propio sonido.
-                                io.github.ruddy2003.vestigium.ui.TransicionTema.preparar(vista, centros[t.id] ?: androidx.compose.ui.geometry.Offset.Zero)
-                                cambiar { it.copy(tema = t.id) }
-                                io.github.ruddy2003.vestigium.ui.PresentacionTema.mostrar(ctx, t)
+            io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
+                Etiqueta(epoca.nombre)
+                temas.chunked(3).forEach { fila ->
+                    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        fila.forEach { t ->
+                            // Cada muestra en el modo que tendría ese tema (el que solo existe en oscuro, siempre oscuro).
+                            io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, io.github.ruddy2003.vestigium.ui.modoOscuro(t), c.tema == t.id,
+                                Modifier.weight(1f).onGloballyPositioned { centros[t.id] = it.boundsInWindow().center }) {
+                                if (c.tema != t.id) {
+                                    // Foto del tema de ahora, cambio de tema, y el nuevo se abre en círculo desde la tarjeta con su propio sonido.
+                                    io.github.ruddy2003.vestigium.ui.TransicionTema.preparar(vista, centros[t.id] ?: androidx.compose.ui.geometry.Offset.Zero)
+                                    cambiar { it.copy(tema = t.id) }
+                                    io.github.ruddy2003.vestigium.ui.PresentacionTema.mostrar(ctx, t)
+                                }
                             }
                         }
+                        repeat(3 - fila.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
                     }
-                    repeat(3 - fila.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
                 }
             }
             Ayuda(io.github.ruddy2003.vestigium.ui.Estilo.tema.descripcion, Modifier.padding(top = 2.dp))
@@ -289,10 +292,13 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
             if (c.tema_rotar) {
                 Etiqueta("Entre cuáles (ninguno marcado = todos)")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    io.github.ruddy2003.vestigium.ui.TemaId.entries.forEach { t ->
-                        val dentro = t.id in c.temas_rotacion
-                        Ficha(t.nombre, dentro) { cambiar { it.copy(temas_rotacion = if (dentro) it.temas_rotacion - t.id else it.temas_rotacion + t.id) } }
+                io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
+                    Text(epoca.nombre, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 4.dp))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        temas.forEach { t ->
+                            val dentro = t.id in c.temas_rotacion
+                            Ficha(t.nombre, dentro) { cambiar { it.copy(temas_rotacion = if (dentro) it.temas_rotacion - t.id else it.temas_rotacion + t.id) } }
+                        }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {

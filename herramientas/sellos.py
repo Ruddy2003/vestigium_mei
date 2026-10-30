@@ -639,9 +639,39 @@ def marcas(capa, m, tipo, semilla):
 
 # ------------------------------------------------------------------ uso
 
-SIETE = ['botanico', 'gotico', 'espacio', 'andalus', 'mongol', 'renacimiento', 'antiguas']
-ORDEN = ['romano', 'ciber', 'heleno', 'medieval', 'distopia', 'refugio', 'orden', 'laboratorio', 'colonos', 'napoleon', 'botanico',
-         'navidad', 'seda', 'gotico', 'espacio', 'andalus', 'mongol', 'renacimiento', 'urss', 'revolucion', 'antiguas']
+# Los sellos que se dibujan con código (los demás se componen desde `fuentes/`). Los temas nuevos van aquí.
+SIETE = [
+    'botanico',
+    'gotico',
+    'espacio',
+    'andalus',
+    'mongol',
+    'renacimiento',
+    'antiguas',
+]
+ORDEN = [
+    'romano',
+    'ciber',
+    'heleno',
+    'medieval',
+    'distopia',
+    'refugio',
+    'orden',
+    'laboratorio',
+    'colonos',
+    'napoleon',
+    'botanico',
+    'navidad',
+    'seda',
+    'gotico',
+    'espacio',
+    'andalus',
+    'mongol',
+    'renacimiento',
+    'urss',
+    'revolucion',
+    'antiguas',
+]
 
 
 def hoja_contacto(archivo, temas=ORDEN):

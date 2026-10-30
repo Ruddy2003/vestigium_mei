@@ -642,11 +642,27 @@ object Frases {
     )
 
     fun de(tema: TemaId): List<Frase> = when (tema) {
-        TemaId.ROMANO -> ROMANO; TemaId.CIBER -> CIBER; TemaId.HELENO -> HELENO; TemaId.MEDIEVAL -> MEDIEVAL
-        TemaId.DISTOPIA -> DISTOPIA; TemaId.REFUGIO -> REFUGIO; TemaId.ORDEN -> ORDEN; TemaId.LABORATORIO -> LABORATORIO; TemaId.COLONOS -> COLONOS
-        TemaId.NAPOLEON -> NAPOLEON; TemaId.BOTANICO -> BOTANICO; TemaId.NAVIDAD -> NAVIDAD; TemaId.SEDA -> SEDA; TemaId.URSS -> URSS
-        TemaId.GOTICO -> GOTICO; TemaId.ESPACIO -> ESPACIO; TemaId.ANDALUS -> ANDALUS; TemaId.MONGOL -> MONGOL; TemaId.RENACIMIENTO -> RENACIMIENTO
-        TemaId.REVOLUCION -> REVOLUCION; TemaId.ANTIGUAS -> ANTIGUAS
+        TemaId.ROMANO -> ROMANO
+        TemaId.CIBER -> CIBER
+        TemaId.HELENO -> HELENO
+        TemaId.MEDIEVAL -> MEDIEVAL
+        TemaId.DISTOPIA -> DISTOPIA
+        TemaId.REFUGIO -> REFUGIO
+        TemaId.ORDEN -> ORDEN
+        TemaId.LABORATORIO -> LABORATORIO
+        TemaId.COLONOS -> COLONOS
+        TemaId.NAPOLEON -> NAPOLEON
+        TemaId.BOTANICO -> BOTANICO
+        TemaId.NAVIDAD -> NAVIDAD
+        TemaId.SEDA -> SEDA
+        TemaId.URSS -> URSS
+        TemaId.GOTICO -> GOTICO
+        TemaId.ESPACIO -> ESPACIO
+        TemaId.ANDALUS -> ANDALUS
+        TemaId.MONGOL -> MONGOL
+        TemaId.RENACIMIENTO -> RENACIMIENTO
+        TemaId.REVOLUCION -> REVOLUCION
+        TemaId.ANTIGUAS -> ANTIGUAS
     }
 
     /** La del día para el tema elegido: cambia cada día y recorre todas antes de repetir. */
@@ -657,14 +673,27 @@ object Frases {
 
     /** Encabezado del recuadro de la frase, según el tema. */
     fun rotulo(tema: TemaId = Estilo.tema): String = when (tema) {
-        TemaId.ROMANO -> "SENTENTIA DIEI"; TemaId.CIBER -> "> motd"; TemaId.HELENO -> "ΓΝΩΜΗ ΤΗΣ ΗΜΕΡΑΣ"; TemaId.MEDIEVAL -> "Sentencia del día"
-        TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"; TemaId.REFUGIO -> "MENSAJE DEL DÍA"; TemaId.ORDEN -> "ORDEN DEL DÍA"; TemaId.LABORATORIO -> "NOTA DEL DÍA"
+        TemaId.ROMANO -> "SENTENTIA DIEI"
+        TemaId.CIBER -> "> motd"
+        TemaId.HELENO -> "ΓΝΩΜΗ ΤΗΣ ΗΜΕΡΑΣ"
+        TemaId.MEDIEVAL -> "Sentencia del día"
+        TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
+        TemaId.REFUGIO -> "MENSAJE DEL DÍA"
+        TemaId.ORDEN -> "ORDEN DEL DÍA"
+        TemaId.LABORATORIO -> "NOTA DEL DÍA"
         TemaId.COLONOS -> "Del almanaque"
-        TemaId.NAPOLEON -> "BOLETÍN DEL EJÉRCITO"; TemaId.BOTANICO -> "Nota del naturalista"; TemaId.NAVIDAD -> "Junto a la chimenea"
-        TemaId.SEDA -> "Dicho de la caravana"; TemaId.URSS -> "LEMA DEL DÍA"
-        TemaId.GOTICO -> "Lectio del día"; TemaId.ESPACIO -> "TRANSMISIÓN DEL DÍA"; TemaId.ANDALUS -> "حكمة اليوم · sentencia del día"
-        TemaId.MONGOL -> "ӨНӨӨДРИЙН БИЛИГ · máxima del día"; TemaId.RENACIMIENTO -> "Dal taccuino"
-        TemaId.REVOLUCION -> "CARTEL DEL DÍA"; TemaId.ANTIGUAS -> "Dicho del camino"
+        TemaId.NAPOLEON -> "BOLETÍN DEL EJÉRCITO"
+        TemaId.BOTANICO -> "Nota del naturalista"
+        TemaId.NAVIDAD -> "Junto a la chimenea"
+        TemaId.SEDA -> "Dicho de la caravana"
+        TemaId.URSS -> "LEMA DEL DÍA"
+        TemaId.GOTICO -> "Lectio del día"
+        TemaId.ESPACIO -> "TRANSMISIÓN DEL DÍA"
+        TemaId.ANDALUS -> "حكمة اليوم · sentencia del día"
+        TemaId.MONGOL -> "ӨНӨӨДРИЙН БИЛИГ · máxima del día"
+        TemaId.RENACIMIENTO -> "Dal taccuino"
+        TemaId.REVOLUCION -> "CARTEL DEL DÍA"
+        TemaId.ANTIGUAS -> "Dicho del camino"
     }
 
     // ------------------------------------------------------------ frases guardadas («me gusta»)

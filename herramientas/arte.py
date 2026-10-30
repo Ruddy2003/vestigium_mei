@@ -199,5 +199,8 @@ def papeles_fuente():
 
 if __name__ == '__main__':
     OUT = sys.argv[1]
-    papeles(); papel_antiguas(); papeles_lote7(); papeles_fuente()
+    papeles()
+    papel_antiguas()
+    papeles_lote7()
+    papeles_fuente()
     print('papeles listos')

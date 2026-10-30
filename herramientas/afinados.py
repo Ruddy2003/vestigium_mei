@@ -789,7 +789,29 @@ def lugar():
 if __name__ == '__main__':
     # python3 afinados.py <res/raw> [temas] [claves]: [temas] separados por comas (o «todos»); con [claves] (por ejemplo
     # «error,cambio,tecla,rascar,lugar») solo se escriben esos sonidos y los demás archivos se quedan como están.
-    todos = (romano, ciber, heleno, medieval, distopia, refugio, orden, laboratorio, colonos, napoleon, botanico, navidad, seda, urss, gotico, espacio, andalus, mongol, renacimiento, revolucion, antiguas)
+    todos = (
+        romano,
+        ciber,
+        heleno,
+        medieval,
+        distopia,
+        refugio,
+        orden,
+        laboratorio,
+        colonos,
+        napoleon,
+        botanico,
+        navidad,
+        seda,
+        urss,
+        gotico,
+        espacio,
+        andalus,
+        mongol,
+        renacimiento,
+        revolucion,
+        antiguas,
+    )
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
     claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None
     for f in todos:

@@ -51,13 +51,26 @@ object Sello {
 
 /** Lo que dice la pantalla de la huella en cada tema. */
 fun textoSello(tema: TemaId): String = when (tema) {
-    TemaId.ROMANO -> "DIES SIGNATVS"; TemaId.CIBER -> "> día.commit() ✓"; TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
-    TemaId.MEDIEVAL -> "Sellado y asentado"; TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"; TemaId.REFUGIO -> "BITÁCORA GUARDADA"
-    TemaId.ORDEN -> "PARTE ENTREGADO"; TemaId.LABORATORIO -> "SESIÓN REGISTRADA"; TemaId.COLONOS -> "Jornada asentada"
-    TemaId.NAPOLEON -> "BOLETÍN ENVIADO"; TemaId.BOTANICO -> "Ejemplar prensado"; TemaId.NAVIDAD -> "Guardado bajo el árbol"
-    TemaId.SEDA -> "Rollo sellado"; TemaId.URSS -> "PLAN CUMPLIDO"
-    TemaId.GOTICO -> "Signatum et lucet"; TemaId.ESPACIO -> "TRANSMISIÓN COMPLETA"; TemaId.ANDALUS -> "Sellado · خُتِم"
-    TemaId.MONGOL -> "ТАМГА ДАРАВ · sellado"; TemaId.RENACIMIENTO -> "Fatto."; TemaId.REVOLUCION -> "CAHIER FIRMADO"
+    TemaId.ROMANO -> "DIES SIGNATVS"
+    TemaId.CIBER -> "> día.commit() ✓"
+    TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
+    TemaId.MEDIEVAL -> "Sellado y asentado"
+    TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"
+    TemaId.REFUGIO -> "BITÁCORA GUARDADA"
+    TemaId.ORDEN -> "PARTE ENTREGADO"
+    TemaId.LABORATORIO -> "SESIÓN REGISTRADA"
+    TemaId.COLONOS -> "Jornada asentada"
+    TemaId.NAPOLEON -> "BOLETÍN ENVIADO"
+    TemaId.BOTANICO -> "Ejemplar prensado"
+    TemaId.NAVIDAD -> "Guardado bajo el árbol"
+    TemaId.SEDA -> "Rollo sellado"
+    TemaId.URSS -> "PLAN CUMPLIDO"
+    TemaId.GOTICO -> "Signatum et lucet"
+    TemaId.ESPACIO -> "TRANSMISIÓN COMPLETA"
+    TemaId.ANDALUS -> "Sellado · خُتِم"
+    TemaId.MONGOL -> "ТАМГА ДАРАВ · sellado"
+    TemaId.RENACIMIENTO -> "Fatto."
+    TemaId.REVOLUCION -> "CAHIER FIRMADO"
     TemaId.ANTIGUAS -> "SELLADO EN LA CRÓNICA"
 }
 

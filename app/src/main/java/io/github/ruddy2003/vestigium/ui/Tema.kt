@@ -68,29 +68,42 @@ object Paleta {
     val bronceClaro = Color(0xFF67BBAE); val bronceNoche = Color(0xFF1E3633)
 }
 
-/** Los temas. El cyberpunk solo existe en oscuro. */
-enum class TemaId(val id: String, val nombre: String, val descripcion: String, val soloOscuro: Boolean = false) {
-    ROMANO("romano", "Romano", "Mármol, pórfido y oro. Títulos en latín, fechas romanas, corona de laurel."),
-    CIBER("ciber", "Cyberpunk", "Terminal de neón sobre negro. Todo en código. Solo oscuro.", soloOscuro = true),
-    HELENO("heleno", "Helénico", "Púrpura macedonio, oro y azul del Egeo. Títulos en griego, el sol de Vergina."),
-    MEDIEVAL("medieval", "Scriptorium", "Pergamino, tinta y pan de oro. Letra gótica, capitulares en rojo, numerales de copista."),
-    DISTOPIA("distopia", "Distopía", "Gris de ministerio y rojo de cartel. Cada día es un expediente y un ojo lo mira todo."),
-    REFUGIO("refugio", "Refugio", "Optimismo atómico de día, fósforo verde de noche. La vida bajo tierra, en orden."),
-    ORDEN("orden", "Orden", "Acero, carmesí y latón. Caballeros que custodian el saber técnico. Letra de estarcido."),
-    LABORATORIO("laboratorio", "Laboratorio", "Blanco clínico, cian y violeta. Un laboratorio silencioso donde todo se mide."),
-    COLONOS("colonos", "Colonos", "Papel de gaceta, azul marino y ladrillo. Vecinos que reconstruyen su pueblo."),
-    NAPOLEON("napoleon", "Napoleónico", "El Imperio (1804–1815): azul imperial, oro y carmesí, letra Didot. Boletines de la Grande Armée y fechas en francés."),
-    BOTANICO("botanico", "Botánico", "El cuaderno de un naturalista viajero: escarabajos clavados con alfiler, hileras de hormigas y helechos a tinta sepia, verde musgo y óxido. Fecha según la estación."),
-    NAVIDAD("navidad", "Navidad", "Rojo, verde pino y oro, con nieve. Cartas junto al fuego y la cuenta hacia el 25 de diciembre."),
-    SEDA("seda", "Ruta de la Seda", "Seda, lapislázuli, cinabrio y oro. Monedas con agujero, caravanas y números chinos."),
-    GOTICO("gotico", "Gótico", "Una capilla de vitrales: azul de bóveda con estrellas de oro, cristal rubí y zafiro, letra textura. Horas canónicas."),
-    ESPACIO("espacio", "Espacio", "Estrellas, nebulosas y la sala de control. Fecha en día juliano, como en los observatorios."),
-    ANDALUS("andalus", "Al-Ándalus", "Yeserías, azulejos de lazo y oro de la Alhambra. Títulos en árabe y fecha del calendario hégira."),
-    MONGOL("mongol", "Mongol", "El Cielo Azul Eterno, fieltro y oro de la estepa. Títulos en mongol y el año del animal."),
-    RENACIMIENTO("renacimiento", "Renacimiento", "Los cuadernos de Leonardo: tinta sepia, sanguina y trazos de construcción. Títulos en italiano."),
-    URSS("urss", "Soviético", "Rojo, negro y papel de cartel, en estilo constructivista. Planes quinquenales y meses en ruso."),
-    REVOLUCION("revolucion", "Revolución francesa", "Papel de cartel, tinta y la escarapela azul, blanca y roja. Cuadernos de quejas, el árbol de la libertad y el calendario republicano."),
-    ANTIGUAS("antiguas", "Tierras Antiguas", "Salones de piedra, runas inventadas, mapas y gemas. Una compañía que cruza aldeas, bosques, montañas y minas, contando el tiempo por lunas."),
+/**
+ * Las épocas en que se agrupan los temas en el selector y en las fichas de la rotación (plan de diseño, lote 8e).
+ * Solo ordenan la lista: no se guardan.
+ */
+enum class Epoca(val nombre: String) {
+    ANTIGUEDAD("Prehistoria y Antigüedad"),
+    EDAD_MEDIA("Edad Media"),
+    EDAD_MODERNA("Edad Moderna"),
+    CONTEMPORANEA("Siglos XIX a XXI"),
+    FUTURO("Futuro"),
+    FANTASIA("Fantasía"),
+}
+
+/** Los temas. Terminal (id «ciber») solo existe en oscuro. El orden de la lista es el del selector dentro de cada [Epoca]. */
+enum class TemaId(val id: String, val nombre: String, val descripcion: String, val epoca: Epoca, val soloOscuro: Boolean = false) {
+    ROMANO("romano", "Romano", "Mármol, pórfido y oro. Títulos en latín, fechas romanas, corona de laurel.", Epoca.ANTIGUEDAD),
+    CIBER("ciber", "Terminal", "Pura consola: cian sobre negro, cursor parpadeante, ASCII y volcados de memoria. Todo en código. Solo oscuro.", Epoca.CONTEMPORANEA, soloOscuro = true),
+    HELENO("heleno", "Helénico", "Púrpura macedonio, oro y azul del Egeo. Títulos en griego, el sol de Vergina.", Epoca.ANTIGUEDAD),
+    MEDIEVAL("medieval", "Scriptorium", "Pergamino, tinta y pan de oro. Letra gótica, capitulares en rojo, numerales de copista.", Epoca.EDAD_MEDIA),
+    DISTOPIA("distopia", "Distopía", "Gris de ministerio y rojo de cartel. Cada día es un expediente y un ojo lo mira todo.", Epoca.FUTURO),
+    REFUGIO("refugio", "Refugio", "Optimismo atómico de día, fósforo verde de noche. La vida bajo tierra, en orden.", Epoca.FUTURO),
+    ORDEN("orden", "Orden", "Acero, carmesí y latón. Caballeros que custodian el saber técnico. Letra de estarcido.", Epoca.FUTURO),
+    LABORATORIO("laboratorio", "Laboratorio", "Blanco clínico, cian y violeta. Un laboratorio silencioso donde todo se mide.", Epoca.FUTURO),
+    COLONOS("colonos", "Colonos", "Papel de gaceta, azul marino y ladrillo. Vecinos que reconstruyen su pueblo.", Epoca.FUTURO),
+    NAPOLEON("napoleon", "Napoleónico", "El Imperio (1804–1815): azul imperial, oro y carmesí, letra Didot. Boletines de la Grande Armée y fechas en francés.", Epoca.CONTEMPORANEA),
+    BOTANICO("botanico", "Botánico", "El cuaderno de un naturalista viajero: escarabajos clavados con alfiler, hileras de hormigas y helechos a tinta sepia, verde musgo y óxido. Fecha según la estación.", Epoca.CONTEMPORANEA),
+    NAVIDAD("navidad", "Navidad", "Rojo, verde pino y oro, con nieve. Cartas junto al fuego y la cuenta hacia el 25 de diciembre.", Epoca.CONTEMPORANEA),
+    SEDA("seda", "Ruta de la Seda", "Seda, lapislázuli, cinabrio y oro. Monedas con agujero, caravanas y números chinos.", Epoca.EDAD_MEDIA),
+    GOTICO("gotico", "Gótico", "Una capilla de vitrales: azul de bóveda con estrellas de oro, cristal rubí y zafiro, letra textura. Horas canónicas.", Epoca.EDAD_MEDIA),
+    ESPACIO("espacio", "Espacio", "Estrellas, nebulosas y la sala de control. Fecha en día juliano, como en los observatorios.", Epoca.FUTURO),
+    ANDALUS("andalus", "Al-Ándalus", "Yeserías, azulejos de lazo y oro de la Alhambra. Títulos en árabe y fecha del calendario hégira.", Epoca.EDAD_MEDIA),
+    MONGOL("mongol", "Mongol", "El Cielo Azul Eterno, fieltro y oro de la estepa. Títulos en mongol y el año del animal.", Epoca.EDAD_MEDIA),
+    RENACIMIENTO("renacimiento", "Renacimiento", "Los cuadernos de Leonardo: tinta sepia, sanguina y trazos de construcción. Títulos en italiano.", Epoca.EDAD_MODERNA),
+    URSS("urss", "Soviético", "Rojo, negro y papel de cartel, en estilo constructivista. Planes quinquenales y meses en ruso.", Epoca.CONTEMPORANEA),
+    REVOLUCION("revolucion", "Revolución francesa", "Papel de cartel, tinta y la escarapela azul, blanca y roja. Cuadernos de quejas, el árbol de la libertad y el calendario republicano.", Epoca.EDAD_MODERNA),
+    ANTIGUAS("antiguas", "Tierras Antiguas", "Salones de piedra, runas inventadas, mapas y gemas. Una compañía que cruza aldeas, bosques, montañas y minas, contando el tiempo por lunas.", Epoca.FANTASIA),
 }
 
 internal val romanoClaro = lightColorScheme(
@@ -249,13 +262,27 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
 }
 
 internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
-    TemaId.ROMANO -> tipoRomano; TemaId.CIBER -> tipoCiber; TemaId.HELENO -> tipoHeleno
-    TemaId.MEDIEVAL -> tipoMedieval; TemaId.DISTOPIA -> tipoDistopia
+    TemaId.ROMANO -> tipoRomano
+    TemaId.CIBER -> tipoCiber
+    TemaId.HELENO -> tipoHeleno
+    TemaId.MEDIEVAL -> tipoMedieval
+    TemaId.DISTOPIA -> tipoDistopia
     TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
-    TemaId.ORDEN -> tipoOrden; TemaId.LABORATORIO -> tipoLaboratorio; TemaId.COLONOS -> tipoColonos
-    TemaId.NAPOLEON -> tipoNapoleon; TemaId.BOTANICO -> tipoBotanico; TemaId.NAVIDAD -> tipoNavidad; TemaId.SEDA -> tipoSeda; TemaId.URSS -> tipoUrss
-    TemaId.GOTICO -> tipoGotico; TemaId.ESPACIO -> if (oscuro) tipoEspacioOscuro else tipoEspacio; TemaId.ANDALUS -> tipoAndalus
-    TemaId.MONGOL -> tipoMongol; TemaId.RENACIMIENTO -> tipoRenacimiento; TemaId.REVOLUCION -> tipoRevolucion; TemaId.ANTIGUAS -> tipoAntiguas
+    TemaId.ORDEN -> tipoOrden
+    TemaId.LABORATORIO -> tipoLaboratorio
+    TemaId.COLONOS -> tipoColonos
+    TemaId.NAPOLEON -> tipoNapoleon
+    TemaId.BOTANICO -> tipoBotanico
+    TemaId.NAVIDAD -> tipoNavidad
+    TemaId.SEDA -> tipoSeda
+    TemaId.URSS -> tipoUrss
+    TemaId.GOTICO -> tipoGotico
+    TemaId.ESPACIO -> if (oscuro) tipoEspacioOscuro else tipoEspacio
+    TemaId.ANDALUS -> tipoAndalus
+    TemaId.MONGOL -> tipoMongol
+    TemaId.RENACIMIENTO -> tipoRenacimiento
+    TemaId.REVOLUCION -> tipoRevolucion
+    TemaId.ANTIGUAS -> tipoAntiguas
 }.conReloj(tema)
 
 /**
@@ -464,30 +491,99 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val e = esquemaDe(tema, o)
     val t = tipoDe(tema, o)
     val titulo = when (tema) {
-        TemaId.ROMANO -> "DIES"; TemaId.CIBER -> "DÍA_"; TemaId.HELENO -> "ΗΜΕΡΑ"; TemaId.MEDIEVAL -> "Del día"
-        TemaId.DISTOPIA -> "PARTE"; TemaId.REFUGIO -> "DIARIO"; TemaId.ORDEN -> "CAMPO"; TemaId.LABORATORIO -> "SESIÓN"; TemaId.COLONOS -> "Jornada"
-        TemaId.NAPOLEON -> "BOLETÍN"; TemaId.BOTANICO -> "Herbario"; TemaId.NAVIDAD -> "El día"; TemaId.SEDA -> "Etapa"; TemaId.URSS -> "PLAN"
-        TemaId.GOTICO -> "Laudes"; TemaId.ESPACIO -> "ÓRBITA"; TemaId.ANDALUS -> "النهار"; TemaId.MONGOL -> "ӨДӨР"; TemaId.RENACIMIENTO -> "Giornata"; TemaId.REVOLUCION -> "CAHIER"; TemaId.ANTIGUAS -> "CRÓNICA"
+        TemaId.ROMANO -> "DIES"
+        TemaId.CIBER -> "DÍA_"
+        TemaId.HELENO -> "ΗΜΕΡΑ"
+        TemaId.MEDIEVAL -> "Del día"
+        TemaId.DISTOPIA -> "PARTE"
+        TemaId.REFUGIO -> "DIARIO"
+        TemaId.ORDEN -> "CAMPO"
+        TemaId.LABORATORIO -> "SESIÓN"
+        TemaId.COLONOS -> "Jornada"
+        TemaId.NAPOLEON -> "BOLETÍN"
+        TemaId.BOTANICO -> "Herbario"
+        TemaId.NAVIDAD -> "El día"
+        TemaId.SEDA -> "Etapa"
+        TemaId.URSS -> "PLAN"
+        TemaId.GOTICO -> "Laudes"
+        TemaId.ESPACIO -> "ÓRBITA"
+        TemaId.ANDALUS -> "النهار"
+        TemaId.MONGOL -> "ӨДӨР"
+        TemaId.RENACIMIENTO -> "Giornata"
+        TemaId.REVOLUCION -> "CAHIER"
+        TemaId.ANTIGUAS -> "CRÓNICA"
     }
     val linea = when (tema) {
-        TemaId.ROMANO -> "XVII · X"; TemaId.CIBER -> "2026.10.17"; TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."; TemaId.MEDIEVAL -> "xvij de otubre"
-        TemaId.DISTOPIA -> "EXP. 0290"; TemaId.REFUGIO -> "DÍA 290"; TemaId.ORDEN -> "17 OCT 26"; TemaId.LABORATORIO -> "T+290"; TemaId.COLONOS -> "17 de octubre"
-        TemaId.NAPOLEON -> "samedi 17 octobre"; TemaId.BOTANICO -> "otoño · día 26"; TemaId.NAVIDAD -> "faltan 69 días"; TemaId.SEDA -> "十月十七日"; TemaId.URSS -> "ОКТЯБРЬ"
-        TemaId.GOTICO -> "hora de vísperas"; TemaId.ESPACIO -> "JD 2461331"; TemaId.ANDALUS -> "1448 H"; TemaId.MONGOL -> "Морин жил"; TemaId.RENACIMIENTO -> "addì 17 d'ottobre"; TemaId.REVOLUCION -> "26 vendémiaire"; TemaId.ANTIGUAS -> "17 de la Luna de las Hojas"
+        TemaId.ROMANO -> "XVII · X"
+        TemaId.CIBER -> "2026.10.17"
+        TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."
+        TemaId.MEDIEVAL -> "xvij de otubre"
+        TemaId.DISTOPIA -> "EXP. 0290"
+        TemaId.REFUGIO -> "DÍA 290"
+        TemaId.ORDEN -> "17 OCT 26"
+        TemaId.LABORATORIO -> "T+290"
+        TemaId.COLONOS -> "17 de octubre"
+        TemaId.NAPOLEON -> "samedi 17 octobre"
+        TemaId.BOTANICO -> "otoño · día 26"
+        TemaId.NAVIDAD -> "faltan 69 días"
+        TemaId.SEDA -> "十月十七日"
+        TemaId.URSS -> "ОКТЯБРЬ"
+        TemaId.GOTICO -> "hora de vísperas"
+        TemaId.ESPACIO -> "JD 2461331"
+        TemaId.ANDALUS -> "1448 H"
+        TemaId.MONGOL -> "Морин жил"
+        TemaId.RENACIMIENTO -> "addì 17 d'ottobre"
+        TemaId.REVOLUCION -> "26 vendémiaire"
+        TemaId.ANTIGUAS -> "17 de la Luna de las Hojas"
     }
     val forma = formaPrevia(tema)
     // Las formas con arco, frontón o punta necesitan más aire arriba o abajo para que nada quede cortado; la suma es la misma en todas, para que las filas queden parejas.
     val (arriba, abajo) = when (tema) {
-        TemaId.ROMANO -> 16 to 16; TemaId.CIBER -> 16 to 16; TemaId.HELENO -> 20 to 12; TemaId.MEDIEVAL -> 16 to 16; TemaId.DISTOPIA -> 20 to 12
-        TemaId.REFUGIO -> 16 to 16; TemaId.ORDEN -> 16 to 16; TemaId.LABORATORIO -> 12 to 20; TemaId.COLONOS -> 16 to 16; TemaId.NAPOLEON -> 12 to 20
-        TemaId.BOTANICO -> 16 to 16; TemaId.NAVIDAD -> 20 to 12; TemaId.SEDA -> 12 to 20; TemaId.GOTICO -> 24 to 8; TemaId.ESPACIO -> 18 to 14
-        TemaId.ANDALUS -> 22 to 10; TemaId.MONGOL -> 14 to 18; TemaId.RENACIMIENTO -> 16 to 16; TemaId.URSS -> 16 to 16; TemaId.REVOLUCION -> 12 to 20; TemaId.ANTIGUAS -> 18 to 14
+        TemaId.ROMANO -> 16 to 16
+        TemaId.CIBER -> 16 to 16
+        TemaId.HELENO -> 20 to 12
+        TemaId.MEDIEVAL -> 16 to 16
+        TemaId.DISTOPIA -> 20 to 12
+        TemaId.REFUGIO -> 16 to 16
+        TemaId.ORDEN -> 16 to 16
+        TemaId.LABORATORIO -> 12 to 20
+        TemaId.COLONOS -> 16 to 16
+        TemaId.NAPOLEON -> 12 to 20
+        TemaId.BOTANICO -> 16 to 16
+        TemaId.NAVIDAD -> 20 to 12
+        TemaId.SEDA -> 12 to 20
+        TemaId.GOTICO -> 24 to 8
+        TemaId.ESPACIO -> 18 to 14
+        TemaId.ANDALUS -> 22 to 10
+        TemaId.MONGOL -> 14 to 18
+        TemaId.RENACIMIENTO -> 16 to 16
+        TemaId.URSS -> 16 to 16
+        TemaId.REVOLUCION -> 12 to 20
+        TemaId.ANTIGUAS -> 18 to 14
     }
     // En el trapecio y el paralelogramo los lados se meten: un poco más de margen a los lados.
     val lados = when (tema) {
-        TemaId.ROMANO -> 12; TemaId.CIBER -> 10; TemaId.HELENO -> 10; TemaId.MEDIEVAL -> 10; TemaId.DISTOPIA -> 10; TemaId.REFUGIO -> 12; TemaId.ORDEN -> 12
-        TemaId.LABORATORIO -> 10; TemaId.COLONOS -> 14; TemaId.NAPOLEON -> 10; TemaId.BOTANICO -> 12; TemaId.NAVIDAD -> 10; TemaId.SEDA -> 10; TemaId.GOTICO -> 12
-        TemaId.ESPACIO -> 10; TemaId.ANDALUS -> 12; TemaId.MONGOL -> 10; TemaId.RENACIMIENTO -> 16; TemaId.URSS -> 18; TemaId.REVOLUCION -> 10; TemaId.ANTIGUAS -> 12
+        TemaId.ROMANO -> 12
+        TemaId.CIBER -> 10
+        TemaId.HELENO -> 10
+        TemaId.MEDIEVAL -> 10
+        TemaId.DISTOPIA -> 10
+        TemaId.REFUGIO -> 12
+        TemaId.ORDEN -> 12
+        TemaId.LABORATORIO -> 10
+        TemaId.COLONOS -> 14
+        TemaId.NAPOLEON -> 10
+        TemaId.BOTANICO -> 12
+        TemaId.NAVIDAD -> 10
+        TemaId.SEDA -> 10
+        TemaId.GOTICO -> 12
+        TemaId.ESPACIO -> 10
+        TemaId.ANDALUS -> 12
+        TemaId.MONGOL -> 10
+        TemaId.RENACIMIENTO -> 16
+        TemaId.URSS -> 18
+        TemaId.REVOLUCION -> 10
+        TemaId.ANTIGUAS -> 12
     }
     androidx.compose.material3.Surface(
         onClick = onClick, modifier = modifier, color = e.background, shape = forma,
