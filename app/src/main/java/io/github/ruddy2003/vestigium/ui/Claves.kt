@@ -129,6 +129,16 @@ internal object Claves {
         "mirabilia" to "miracula", "initium" to "incipit", "finis" to "explicit", "reditus" to "decimae", "themata" to "materiae",
     )
 
+    /** Jerga del investigador del archivo (horror cósmico). Lo que no está aquí queda en el español común. */
+    val ARCANO: Map<String, String> = mapOf(
+        "somnus" to "desvelo", "animus" to "nervios", "passus" to "rondas", "cor" to "latido", "loca" to "parajes",
+        "personae" to "testigos", "palmae" to "pruebas", "svmptvs" to "expensas", "imagines" to "placas", "lectio" to "legajos",
+        "caelum" to "bruma", "lux" to "claridad", "luna" to "fase", "strepitus" to "rumores", "momenta" to "apuntes",
+        "iter" to "pesquisa", "orbis" to "cartografía", "dies" to "noches", "dias" to "noches", "consuetudo" to "precauciones",
+        "epistulae" to "lacradas", "somnium" to "soñé_con", "memorabilia" to "sucesos", "opera" to "tomos", "telephonum" to "aparato",
+        "telephon" to "aparato", "musica" to "melodías", "initium" to "primera_nota", "finis" to "última_nota", "series" to "noches_seguidas",
+    )
+
     /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
     val DISTOPIA: Map<String, String> = mapOf(
         "somnus" to "descanso", "animus" to "estado", "svmptvs" to "ración", "cor" to "pulso", "loca" to "zonas",

@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -955,6 +956,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.NAVIDAD -> 7.dp
     TemaId.SEDA -> 14.dp
     TemaId.GOTICO -> 18.dp
+    TemaId.ARCANO -> 10.dp
     TemaId.ESPACIO -> 12.dp
     TemaId.ANDALUS -> 18.dp
     TemaId.MONGOL -> 14.dp
@@ -1053,6 +1055,13 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         moveTo(0f, a); lineTo(w / 2 - b, a)
         quadraticTo(w / 2 - b, a * 0.3f, w / 2, 0f); quadraticTo(w / 2 + b, a * 0.3f, w / 2 + b, a)
         lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // La hoja del legajo: la orilla de arriba rasgada a mano.
+    TemaId.ARCANO -> formaDp { w, h, u ->
+        val d = 5 * u; var x = 0f; var k = 0
+        moveTo(0f, d)
+        while (x < w) { x = minOf(x + 11 * u, w); lineTo(x, if (k % 2 == 0) 0f else if (k % 3 == 0) d * 1.6f else d); k++ }
+        lineTo(w, h); lineTo(0f, h); close()
     }
     // Consola de mando: la parte central más alta.
     TemaId.ESPACIO -> formaDp { w, h, u ->
@@ -1206,6 +1215,17 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             listOf(Offset(0f, -r), Offset(-r * 0.9f, r * 0.6f), Offset(r * 0.9f, r * 0.6f)).forEach { o -> drawCircle(e.tertiary, r, c + o, style = Stroke(u)) }
             drawLine(e.tertiary.copy(alpha = 0.5f), Offset(10 * u, 23 * u), Offset(w - 10 * u, 23 * u), 0.8f * u)
         }
+        // Dos tiras de cinta que sujetan la hoja y, al centro, el ojo del signo entre dos rayas a pulso.
+        TemaId.ARCANO -> {
+            listOf(Offset(24 * u, 6 * u) to -24f, Offset(w - 24 * u, 6 * u) to 24f).forEach { (o, g) ->
+                rotate(g, o) { drawRect(e.secondary.copy(alpha = 0.25f), Offset(o.x - 14 * u, o.y - 4 * u), Size(28 * u, 8 * u)) }
+            }
+            val c = Offset(w / 2, 14 * u)
+            drawPath(Path().apply { moveTo(c.x - 7 * u, c.y); quadraticTo(c.x, c.y - 6 * u, c.x + 7 * u, c.y); quadraticTo(c.x, c.y + 6 * u, c.x - 7 * u, c.y); close() }, e.onSurface.copy(alpha = 0.55f), style = Stroke(u))
+            drawOval(e.tertiary, Offset(c.x - 1 * u, c.y - 2.6f * u), Size(2 * u, 5.2f * u))
+            drawLine(e.onSurface.copy(alpha = 0.3f), Offset(10 * u, c.y), Offset(c.x - 10 * u, c.y + 1 * u), 0.8f * u)
+            drawLine(e.onSurface.copy(alpha = 0.3f), Offset(c.x + 10 * u, c.y + 1 * u), Offset(w - 10 * u, c.y - 0.5f * u), 0.8f * u)
+        }
         // Tres luces de consola y una línea de telemetría.
         TemaId.ESPACIO -> {
             listOf(e.primary, e.tertiary, e.secondary).forEachIndexed { k, col -> drawCircle(col, 2.4f * u, Offset(w / 2 + (k - 1) * 14 * u, 6 * u)) }
@@ -1330,6 +1350,8 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
         val a = 14 * u
         moveTo(0f, h); lineTo(0f, a); quadraticTo(0f, a * 0.25f, w / 2, 0f); quadraticTo(w, a * 0.25f, w, a); lineTo(w, h); close()
     }
+    // La ficha del fichero: la esquina de arriba a la derecha recortada.
+    TemaId.ARCANO -> formaDp { w, h, u -> val d = 8 * u; moveTo(0f, 0f); lineTo(w - d, 0f); lineTo(w, d); lineTo(w, h); lineTo(0f, h); close() }
     // Tecla de consola, más angosta arriba.
     TemaId.ESPACIO -> formaDp { w, h, u -> val d = 6 * u; moveTo(d, 0f); lineTo(w - d, 0f); lineTo(w, h); lineTo(0f, h); close() }
     // Arco de medio punto, de radio fijo.

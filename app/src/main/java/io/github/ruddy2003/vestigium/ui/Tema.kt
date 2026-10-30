@@ -52,6 +52,12 @@ object Letra {
     val garamond = FontFamily(Font(R.font.garamond_regular, FontWeight.Normal), Font(R.font.garamond_medium, FontWeight.Medium), Font(R.font.garamond_semibold, FontWeight.SemiBold))
     /** Share Tech Mono: rótulos de terminal para el tema cyberpunk. */
     val terminal = FontFamily(Font(R.font.sharetech_mono, FontWeight.Normal))
+    /** Spectral: los títulos del horror cósmico, una serifa de libro antiguo hecha para la pantalla. */
+    val spectral = FontFamily(Font(R.font.spectral_medium, FontWeight.Normal), Font(R.font.spectral_medium, FontWeight.Medium), Font(R.font.spectral_medium, FontWeight.SemiBold))
+    /** La cursiva de Spectral: la mano del archivista en las notas al margen, los sellos y las cartas. */
+    val spectralCursiva = FontFamily(Font(R.font.spectral_cursiva, FontWeight.Normal), Font(R.font.spectral_cursiva, FontWeight.Medium))
+    /** Castoro: la letra de leer los legajos del archivo. */
+    val castoro = FontFamily(Font(R.font.castoro_regular, FontWeight.Normal), Font(R.font.castoro_semibold, FontWeight.SemiBold), Font(R.font.castoro_semibold, FontWeight.Bold))
 }
 
 object Paleta {
@@ -98,6 +104,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     NAVIDAD("navidad", "Navidad", "Rojo, verde pino y oro, con nieve. Cartas junto al fuego y la cuenta hacia el 25 de diciembre.", Epoca.CONTEMPORANEA),
     SEDA("seda", "Ruta de la Seda", "Seda, lapislázuli, cinabrio y oro. Monedas con agujero, caravanas y números chinos.", Epoca.EDAD_MEDIA),
     GOTICO("gotico", "Gótico", "Una capilla de vitrales: azul de bóveda con estrellas de oro, cristal rubí y zafiro, letra textura. Horas canónicas.", Epoca.EDAD_MEDIA),
+    ARCANO("arcano", "Horror cósmico", "Un archivo de pueblo costero: papel manchado, tinta verde-negra, sellos y un faro en la niebla. Fecha por la fase de la luna; los números, tachados y corregidos.", Epoca.FANTASIA),
     ESPACIO("espacio", "Espacio", "Estrellas, nebulosas y la sala de control. Fecha en día juliano, como en los observatorios.", Epoca.FUTURO),
     ANDALUS("andalus", "Al-Ándalus", "Yeserías, azulejos de lazo y oro de la Alhambra. Títulos en árabe y fecha del calendario hégira.", Epoca.EDAD_MEDIA),
     MONGOL("mongol", "Mongol", "El Cielo Azul Eterno, fieltro y oro de la estepa. Títulos en mongol y el año del animal.", Epoca.EDAD_MEDIA),
@@ -283,6 +290,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.SEDA -> if (oscuro) sedaOscuro else sedaClaro
     TemaId.URSS -> if (oscuro) urssOscuro else urssClaro
     TemaId.GOTICO -> if (oscuro) goticoOscuro else goticoClaro
+    TemaId.ARCANO -> if (oscuro) arcanoOscuro else arcanoClaro
     TemaId.ESPACIO -> if (oscuro) espacioOscuro else espacioClaro
     TemaId.ANDALUS -> if (oscuro) andalusOscuro else andalusClaro
     TemaId.MONGOL -> if (oscuro) mongolOscuro else mongolClaro
@@ -308,6 +316,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.SEDA -> tipoSeda
     TemaId.URSS -> tipoUrss
     TemaId.GOTICO -> tipoGotico
+    TemaId.ARCANO -> tipoArcano
     TemaId.ESPACIO -> if (oscuro) tipoEspacioOscuro else tipoEspacio
     TemaId.ANDALUS -> tipoAndalus
     TemaId.MONGOL -> tipoMongol
@@ -338,6 +347,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.NAVIDAD -> 54f to 1f         // Cinzel Decorative, muy ancha
     TemaId.SEDA -> 64f to 0.5f          // Almendra
     TemaId.GOTICO -> 66f to 0.5f        // textura
+    TemaId.ARCANO -> 62f to 0.2f        // Spectral, de libro antiguo
     TemaId.ESPACIO -> 48f to 2f         // Orbitron, ancha y gruesa
     TemaId.ANDALUS -> 60f to 0.5f       // Kufi
     TemaId.MONGOL -> 62f to 1f          // Filosofo
@@ -369,6 +379,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.SEDA -> Esquinas(7, Esquina.REDONDA)
     TemaId.URSS -> Esquinas(0, Esquina.REDONDA)
     TemaId.GOTICO -> Esquinas(8, Esquina.ARCO)             // el ventanal
+    TemaId.ARCANO -> Esquinas(5, Esquina.CORTADA)          // la esquina recortada del recorte de periódico
     TemaId.ESPACIO -> Esquinas(16, Esquina.REDONDA)
     TemaId.ANDALUS -> Esquinas(12, Esquina.ARCO)           // el arco de herradura
     TemaId.MONGOL -> Esquinas(9, Esquina.REDONDA)          // la yurta
@@ -540,6 +551,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.SEDA -> "Etapa"
         TemaId.URSS -> "PLAN"
         TemaId.GOTICO -> "Laudes"
+        TemaId.ARCANO -> "Legajo"
         TemaId.ESPACIO -> "ÓRBITA"
         TemaId.ANDALUS -> "النهار"
         TemaId.MONGOL -> "ӨДӨР"
@@ -564,6 +576,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.SEDA -> "十月十七日"
         TemaId.URSS -> "ОКТЯБРЬ"
         TemaId.GOTICO -> "hora de vísperas"
+        TemaId.ARCANO -> "luna menguante"
         TemaId.ESPACIO -> "JD 2461331"
         TemaId.ANDALUS -> "1448 H"
         TemaId.MONGOL -> "Морин жил"
@@ -589,6 +602,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.NAVIDAD -> 20 to 12
         TemaId.SEDA -> 12 to 20
         TemaId.GOTICO -> 24 to 8
+        TemaId.ARCANO -> 14 to 18
         TemaId.ESPACIO -> 18 to 14
         TemaId.ANDALUS -> 22 to 10
         TemaId.MONGOL -> 14 to 18
@@ -614,6 +628,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.NAVIDAD -> 10
         TemaId.SEDA -> 10
         TemaId.GOTICO -> 12
+        TemaId.ARCANO -> 14
         TemaId.ESPACIO -> 10
         TemaId.ANDALUS -> 12
         TemaId.MONGOL -> 10
@@ -711,6 +726,14 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         cubicTo(s.width * 0.72f, a * 0.12f, s.width, a * 0.45f, s.width, a)
         lineTo(s.width, s.height); close()
     }
+    // Recorte de periódico: la orilla de arriba rasgada a mano y una esquina doblada abajo.
+    TemaId.ARCANO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val d = h * 0.05f; val doblez = h * 0.16f
+        moveTo(0f, d)
+        val n = 9
+        for (k in 1..n) lineTo(w * k / n, if (k % 2 == 0) d else d * (if (k % 3 == 0) 0.2f else 1.7f))
+        lineTo(w, h - doblez); lineTo(w - doblez, h); lineTo(0f, h); close()
+    }
     // Cápsula: nariz redonda arriba, base casi recta.
     TemaId.ESPACIO -> RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp, bottomEnd = 6.dp, bottomStart = 6.dp)
     // Arco de medio punto peraltado.
@@ -785,6 +808,9 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.SEDA -> { drawCircle(c, r); drawRect(fondo, Offset(cx - r * 0.3f, cy - r * 0.3f), Size(r * 0.6f, r * 0.6f)) }
         // Lanceta de vitral.
         TemaId.GOTICO -> drawPath(Path().apply { moveTo(w * 0.15f, h); lineTo(w * 0.15f, h * 0.4f); quadraticTo(w * 0.15f, h * 0.08f, cx, 0f); quadraticTo(w * 0.85f, h * 0.08f, w * 0.85f, h * 0.4f); lineTo(w * 0.85f, h); close() }, c)
+        // Gota de tinta que cae y se corre.
+        TemaId.ARCANO -> { drawPath(Path().apply { moveTo(cx, 0f); cubicTo(w * 0.62f, h * 0.36f, w * 0.92f, h * 0.55f, w * 0.85f, h * 0.76f); cubicTo(w * 0.76f, h * 1.02f, w * 0.24f, h * 1.02f, w * 0.15f, h * 0.76f); cubicTo(w * 0.08f, h * 0.55f, w * 0.38f, h * 0.36f, cx, 0f); close() }, c)
+            drawCircle(fondo.copy(alpha = 0.35f), r * 0.16f, Offset(w * 0.38f, h * 0.68f)) }
         // Planeta con anillo.
         TemaId.ESPACIO -> { drawCircle(c, r * 0.62f); drawOval(c, Offset(0f, cy - h * 0.14f), Size(w, h * 0.28f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.08f)) }
         // Estrella de ocho puntas.

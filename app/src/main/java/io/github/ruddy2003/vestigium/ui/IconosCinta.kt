@@ -108,6 +108,14 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             moveTo(w * 0.1f, h * 0.96f); lineTo(w * 0.1f, h * 0.45f); quadraticTo(w * 0.1f, h * 0.12f, w * 0.5f, h * 0.02f)
             quadraticTo(w * 0.9f, h * 0.12f, w * 0.9f, h * 0.45f); lineTo(w * 0.9f, h * 0.96f); close()
         }, c, style = Stroke(g))
+        // Un heptágono que no cierra, como el del signo.
+        TemaId.ARCANO -> drawPath(Path().apply {
+            for (k in 0..6) {
+                val a = Math.toRadians(-90.0 + k * 360.0 / 7)
+                val x = w * (0.5f + 0.46f * kotlin.math.cos(a).toFloat()); val y = h * (0.52f + 0.46f * kotlin.math.sin(a).toFloat())
+                if (k == 0) moveTo(x, y) else lineTo(x, y)
+            }
+        }, c, style = Stroke(g))
         // Esquinas de mira de la pantalla de control.
         TemaId.ESPACIO -> {
             val l = w * 0.24f
@@ -298,6 +306,12 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
         TemaId.GOTICO -> {
             for (k in 0 until 8) drawCircle(color, r * 0.3f, polarFig(c, r * 0.68f, k * 45f))
             drawCircle(color, r * 0.56f, c); drawCircle(hueco.copy(alpha = 0.5f), r * 0.28f, c, style = Stroke(r * 0.08f))
+        }
+        // El ojo del signo, con su pupila vertical.
+        TemaId.ARCANO -> {
+            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.2f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.2f, c.x - r, c.y); close() }, color)
+            drawCircle(hueco.copy(alpha = 0.55f), r * 0.42f, c, style = Stroke(r * 0.1f))
+            drawOval(hueco, Offset(c.x - r * 0.1f, c.y - r * 0.36f), Size(r * 0.2f, r * 0.72f))
         }
         // Una estrella vista por el telescopio: núcleo y rayos de difracción.
         TemaId.ESPACIO -> {

@@ -64,6 +64,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -472,6 +473,15 @@ fun FraseDelDia(fecha: String) {
         TemaId.GOTICO -> Surface(shape = OJIVA_FRASE, color = cs.surface, border = BorderStroke(1.5.dp, cs.primary.copy(alpha = 0.7f)), modifier = arriba) {
             Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 30.dp, bottom = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»", centrado = true) }
         }
+        // Un recorte de periódico pegado con dos tiras de cinta: la orilla de arriba rasgada.
+        TemaId.ARCANO -> Surface(shape = RECORTE_FRASE, color = cs.surface, border = BorderStroke(1.dp, cs.onSurface.copy(alpha = 0.35f)), modifier = arriba) {
+            Box(Modifier.drawBehind {
+                val u = 1.dp.toPx()
+                listOf(Offset(14 * u, 8 * u) to -30f, Offset(size.width - 14 * u, 8 * u) to 30f).forEach { (o, g) ->
+                    rotate(g, o) { drawRect(cs.secondary.copy(alpha = 0.22f), Offset(o.x - 16 * u, o.y - 5 * u), Size(32 * u, 10 * u)) }
+                }
+            }.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "—", "") }
+        }
         // Pantalla de la sala de control: miras en las esquinas.
         TemaId.ESPACIO -> Box(arriba.drawBehind {
             val u = 1.dp.toPx(); val w = size.width; val h = size.height; val k = cs.primary.copy(alpha = 0.8f); val l = 10 * u
@@ -574,6 +584,14 @@ private val OJIVA_FRASE = GenericShape { s, _ ->
     quadraticTo(s.width * 0.18f, r * 0.1f, s.width / 2, 0f)
     quadraticTo(s.width * 0.82f, r * 0.1f, s.width, r)
     lineTo(s.width, s.height); close()
+}
+
+/** El recorte de periódico de la frase del horror cósmico: la orilla de arriba rasgada en dientes desiguales. */
+private val RECORTE_FRASE = GenericShape { s, _ ->
+    val d = minOf(s.height * 0.05f, 6f); val n = 16
+    moveTo(0f, d)
+    for (k in 1..n) lineTo(s.width * k / n, if (k % 2 == 0) d else if (k % 3 == 0) d * 2f else 0f)
+    lineTo(s.width, s.height); lineTo(0f, s.height); close()
 }
 
 /** Una tira de meandros (ganchos sobre una línea) del alto del lienzo. */
@@ -796,6 +814,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.NAVIDAD -> c(LetraExtra.amiri, FontWeight.Normal, 25f, 0f)
         TemaId.SEDA -> c(LetraExtra.almendra, FontWeight.Normal, 24f, 0.3f)
         TemaId.GOTICO -> c(LetraExtra.gotica, FontWeight.SemiBold, 25f, 0.2f)
+        TemaId.ARCANO -> c(Letra.spectral, FontWeight.Medium, 24f, 0.3f)
         TemaId.ESPACIO -> c(LetraExtra.orbita, FontWeight.Medium, 20f, 1.4f)
         TemaId.ANDALUS -> c(LetraExtra.kufi, FontWeight.Medium, 22f, 0.4f)
         TemaId.MONGOL -> c(LetraExtra.filosofo, FontWeight.Bold, 23f, 0.6f)
@@ -1114,6 +1133,17 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             pinta(p)
                             if (color != null) { drawPath(p, oro, style = Stroke(1.2f * u)); drawLine(oro, Offset(w / 2, top + r * 0.6f), Offset(w / 2, h), 0.8f * u) }
                             sello = oro
+                        }
+                        // Legajos de pie: la carpeta con su pestaña arriba, el cordel que la cruza y la ficha.
+                        TemaId.ARCANO -> {
+                            val pest = minOf(5 * u, barH * 0.3f)
+                            val p = Path().apply { moveTo(0f, h); lineTo(0f, top + pest); lineTo(w * 0.15f, top + pest); lineTo(w * 0.25f, top); lineTo(w * 0.7f, top); lineTo(w * 0.8f, top + pest); lineTo(w, top + pest); lineTo(w, h); close() }
+                            pinta(p)
+                            if (color != null) {
+                                drawLine(cs.onSurface.copy(alpha = 0.35f), Offset(0f, top + (h - top) * 0.55f), Offset(w, top + (h - top) * 0.55f), 0.9f * u)
+                                if (barH > 18 * u) drawRect(cs.surface.copy(alpha = 0.7f), Offset(w * 0.2f, top + pest + 3 * u), Size(w * 0.6f, minOf(6 * u, barH * 0.2f)))
+                            }
+                            sello = cs.tertiary
                         }
                         // Cohetes: cuerpo, ojiva, aletas y una ventanilla.
                         TemaId.ESPACIO -> {

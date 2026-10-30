@@ -237,6 +237,12 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             addPath(poligono(7.5f, 14.5f, 16.5f, 14.5f, 16.5f, 16.5f, 7.5f, 16.5f))
             addPath(poligono(12f, 16.5f, 14.5f, 22f, 9.5f, 22f))
         }, 1.3f)
+        // El ojo del signo, con la pupila vertical calada: lo que se guarda, se vigila.
+        TemaId.ARCANO -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(1.5f * u, 12f * u); quadraticTo(12f * u, 0.5f * u, 22.5f * u, 12f * u); quadraticTo(12f * u, 23.5f * u, 1.5f * u, 12f * u); close()
+            addOval(androidx.compose.ui.geometry.Rect(10.4f * u, 7.4f * u, 13.6f * u, 16.6f * u))
+        }, 1.3f)
         // Destello de estrella de cuatro puntas.
         TemaId.ESPACIO -> pinta(Path().apply {
             moveTo(12f * u, 1f * u); quadraticTo(13f * u, 11f * u, 23f * u, 12f * u); quadraticTo(13f * u, 13f * u, 12f * u, 23f * u)

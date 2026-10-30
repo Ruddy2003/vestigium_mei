@@ -88,6 +88,7 @@ object Musica {
         TemaId.SEDA -> R.raw.s_seda_presentacion
         TemaId.URSS -> R.raw.s_urss_presentacion
         TemaId.GOTICO -> R.raw.s_gotico_presentacion
+        TemaId.ARCANO -> R.raw.s_arcano_presentacion
         TemaId.ESPACIO -> R.raw.s_espacio_presentacion
         TemaId.ANDALUS -> R.raw.s_andalus_presentacion
         TemaId.MONGOL -> R.raw.s_mongol_presentacion
@@ -113,6 +114,7 @@ object Musica {
         TemaId.SEDA -> R.raw.s_seda_anual
         TemaId.URSS -> R.raw.s_urss_anual
         TemaId.GOTICO -> R.raw.s_gotico_anual
+        TemaId.ARCANO -> R.raw.s_arcano_anual
         TemaId.ESPACIO -> R.raw.s_espacio_anual
         TemaId.ANDALUS -> R.raw.s_andalus_anual
         TemaId.MONGOL -> R.raw.s_mongol_anual
@@ -137,6 +139,7 @@ object Musica {
         TemaId.SEDA -> R.raw.t_seda_llamada
         TemaId.URSS -> R.raw.t_urss_llamada
         TemaId.GOTICO -> R.raw.t_gotico_llamada
+        TemaId.ARCANO -> R.raw.t_arcano_llamada
         TemaId.ESPACIO -> R.raw.t_espacio_llamada
         TemaId.ANDALUS -> R.raw.t_andalus_llamada
         TemaId.MONGOL -> R.raw.t_mongol_llamada
@@ -161,6 +164,7 @@ object Musica {
         TemaId.SEDA -> R.raw.t_seda_notificacion
         TemaId.URSS -> R.raw.t_urss_notificacion
         TemaId.GOTICO -> R.raw.t_gotico_notificacion
+        TemaId.ARCANO -> R.raw.t_arcano_notificacion
         TemaId.ESPACIO -> R.raw.t_espacio_notificacion
         TemaId.ANDALUS -> R.raw.t_andalus_notificacion
         TemaId.MONGOL -> R.raw.t_mongol_notificacion
@@ -518,6 +522,30 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawCircle(c, u * 5.5f, Offset(r.x + u * 9 * cos(a).toFloat(), r.y + u * 9 * sin(a).toFloat()), style = Stroke(u))
         }
         drawLine(c, Offset(0f, h), Offset(w, h), u * 2)
+    }
+    // El recorte pegado en la libreta: la frase primero, como hallada en un periódico viejo; el borde rasgado, dos tiras de
+    // cinta y, al pie, el faro con su haz.
+    TemaId.ARCANO -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, true, "Horror cósmico", "† toca, si te atreves a abrir el archivo",
+        comillas = "—" to "", emblema = 118.dp, arriba = 26.dp, abajo = 70.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onBackground.copy(alpha = 0.45f)
+        val borde = Path().apply {
+            moveTo(0f, 6 * u); var x = 0f; var k = 0
+            while (x < w) { x = minOf(x + 9 * u, w); lineTo(x, if (k % 2 == 0) 2 * u else 7 * u); k++ }
+            lineTo(w, h - 52 * u); lineTo(0f, h - 52 * u); close()
+        }
+        drawPath(borde, e.secondary.copy(alpha = 0.06f))
+        drawPath(borde, c, style = Stroke(u))
+        listOf(Offset(14 * u, 6 * u) to -32f, Offset(w - 14 * u, 6 * u) to 32f).forEach { (o, g) ->
+            rotate(g, o) { drawRect(Color(0xFFE6D9A6).copy(alpha = 0.5f), Offset(o.x - 22 * u, o.y - 7 * u), Size(44 * u, 14 * u)) }
+        }
+        val f = Offset(w / 2, h - 10 * u)
+        drawPath(Path().apply { moveTo(f.x - 6 * u, f.y); lineTo(f.x - 4 * u, f.y - 30 * u); lineTo(f.x + 4 * u, f.y - 30 * u); lineTo(f.x + 6 * u, f.y); close() }, c)
+        drawCircle(e.primary.copy(alpha = 0.8f), 3 * u, Offset(f.x, f.y - 34 * u))
+        listOf(-1f, 1f).forEach { s ->
+            drawPath(Path().apply { moveTo(f.x, f.y - 34 * u); lineTo(f.x + s * w * 0.45f, f.y - 44 * u); lineTo(f.x + s * w * 0.45f, f.y - 26 * u); close() }, e.primary.copy(alpha = 0.08f))
+        }
+        drawLine(c, Offset(0f, h), Offset(w, h), u)
     }
     // Visor de la sala de control: escuadras, marcas de mira y una órbita que rodea el emblema.
     TemaId.ESPACIO -> {

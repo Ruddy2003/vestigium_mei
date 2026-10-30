@@ -66,6 +66,7 @@ import kotlin.math.sqrt
 /** La forma con que el tema nuevo se abre sobre el anterior. */
 private enum class BarridoTema {
     ARCO, PIXELES, SOL, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
+    TINTA,
     COPO, ABANICO, OJIVA, CIRCULO, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO
 }
 
@@ -114,6 +115,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.SEDA -> MatizMovimiento(BarridoTema.ABANICO, 800, CubicBezierEasing(0.4f, 0f, 0.2f, 1f), -18f, 0f, 1f, 460, 60, FastOutSlowInEasing, 0.95f, 0.6f, 800f)
     // Arco apuntado; solemne, sin prisa.
     TemaId.GOTICO -> MatizMovimiento(BarridoTema.OJIVA, 960, CubicBezierEasing(0.6f, 0f, 0.4f, 1f), 0f, 24f, 1f, 600, 75, LinearOutSlowInEasing, 0.9f, 0.85f, 450f)
+    // Una mancha de tinta que se extiende sobre el papel; las secciones suben de la niebla, lentas y sin rebote.
+    TemaId.ARCANO -> MatizMovimiento(BarridoTema.TINTA, 1100, CubicBezierEasing(0.2f, 0f, 0.6f, 1f), 0f, 10f, 0.985f, 700, 90, CubicBezierEasing(0.1f, 0.6f, 0.3f, 1f), 0.8f, 0.95f, 300f)
     // El círculo de un telescopio; las secciones se acercan como al enfocar.
     TemaId.ESPACIO -> MatizMovimiento(BarridoTema.CIRCULO, 720, FastOutSlowInEasing, 0f, 0f, 0.94f, 440, 55, FastOutSlowInEasing, 1f, 0.5f, 900f)
     // Estrella de ocho puntas de lazo.
@@ -188,6 +191,7 @@ fun contando(valor: String): String {
 internal enum class VivoTema(val periodo: Int) {
     LUCERNA(16000), FOSFORO(5000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
+    NIEBLA(60000),
     ARENA(14000), VITRAL(80000), ESTRELLAS(9000), AGUA(14000), NUBES(180000), SAMARAS(24000), ESTRELLAS_ROJAS(36000),
     CONFETI(22000), RUNAS(14000)
 }
@@ -209,6 +213,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.NAVIDAD -> VivoTema.NIEVE             // nieve con algún copo
     TemaId.SEDA -> VivoTema.ARENA                // arena que el viento arrastra de lado
     TemaId.GOTICO -> VivoTema.VITRAL             // manchas de luz de vitral
+    TemaId.ARCANO -> VivoTema.NIEBLA             // bancos de niebla y el haz del faro
     TemaId.ESPACIO -> VivoTema.ESTRELLAS         // estrellas que titilan
     TemaId.ANDALUS -> VivoTema.AGUA              // reflejos de alberca
     TemaId.MONGOL -> VivoTema.NUBES              // nubes del Cielo Azul
@@ -467,6 +472,26 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val r = 46f * u * m.tam
             drawCircle(Brush.radialGradient(listOf(al(col, if (oscuro) 0.12f else 0.09f), Color.Transparent), center = Offset(x, y), radius = r), r, Offset(x, y))
         }
+        VivoTema.NIEBLA -> {
+            // Bancos de niebla que cruzan despacio, unos más rápido que otros, y el haz del faro que va y viene dos veces por vuelta.
+            val bruma = if (oscuro) Color(0xFF9AB0A6) else Color.White
+            motas.take(7).forEach { m ->
+                val x = (fraccionVivo(m.x + t * (1 + m.tono)) * 1.6f - 0.3f) * w; val y = (0.2f + m.y * 0.75f) * h; val s = u * m.tam
+                listOf(Offset(0f, 0f) to 70f, Offset(60f, 10f) to 50f, Offset(-60f, 8f) to 46f).forEach { (o, r) ->
+                    drawOval(Brush.radialGradient(listOf(al(bruma, if (oscuro) 0.06f else 0.24f), Color.Transparent), center = Offset(x + o.x * s, y + o.y * s), radius = r * s * 1.6f),
+                        Offset(x + o.x * s - r * s * 1.6f, y + o.y * s - r * s * 0.45f), Size(r * s * 3.2f, r * s * 0.9f))
+                }
+            }
+            val fuente = Offset(w * 0.88f, h * 0.16f)
+            val ang = PI * 0.92 + 0.42 * senoVuelta(t * 2)
+            val largo = maxOf(w, h) * 1.2f
+            val p1 = Offset(fuente.x + (largo * cos(ang - 0.07)).toFloat(), fuente.y + (largo * sin(ang - 0.07)).toFloat())
+            val p2 = Offset(fuente.x + (largo * cos(ang + 0.07)).toFloat(), fuente.y + (largo * sin(ang + 0.07)).toFloat())
+            val luz = if (oscuro) e.primary else e.secondary
+            drawPath(Path().apply { moveTo(fuente.x, fuente.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); close() },
+                Brush.radialGradient(listOf(al(luz, if (oscuro) 0.09f else 0.05f), Color.Transparent), center = fuente, radius = largo))
+            drawCircle(al(luz, if (oscuro) 0.3f else 0.12f), 3f * u, fuente)
+        }
         VivoTema.ESTRELLAS -> motas.forEach { m ->
             val a = 0.15f + 0.55f * (0.5f + 0.5f * senoVuelta(t * 3 * vueltas(m) + m.fase))
             val p = Offset(m.x * w, m.y * h); val s = 2.2f * u * m.tam
@@ -634,6 +659,22 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
             ruta.cubicTo(c.x - s, c.y - s * 0.9f, c.x - s * 0.3f, c.y - s * 1.5f, c.x, c.y - s * 1.8f)
             ruta.cubicTo(c.x + s * 0.3f, c.y - s * 1.5f, c.x + s, c.y - s * 0.9f, c.x + s, c.y - s * 0.2f)
             ruta.lineTo(c.x + s, c.y + s); ruta.close()
+        }
+        BarridoTema.TINTA -> {
+            // Una mancha de tinta: doce lóbulos desiguales que se ondulan mientras crece.
+            val n = 12
+            fun borde(k: Int): Offset {
+                val a = 2 * PI * k / n
+                val rr = r * 1.45f * (1f + 0.22f * sin(k * 2.7 + p * 3.0).toFloat())
+                return Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat())
+            }
+            val primero = borde(0)
+            ruta.moveTo(primero.x, primero.y)
+            for (k in 1..n) {
+                val q = borde(k % n); val am = 2 * PI * (k - 0.5) / n; val rm = r * 1.25f
+                ruta.quadraticTo(c.x + (rm * cos(am)).toFloat(), c.y + (rm * sin(am)).toFloat(), q.x, q.y)
+            }
+            ruta.close()
         }
         BarridoTema.ROMBO -> {
             val d = r * 1.42f

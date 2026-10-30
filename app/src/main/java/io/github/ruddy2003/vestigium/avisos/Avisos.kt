@@ -51,6 +51,7 @@ object Avisos {
         TemaId.SEDA -> R.raw.n_seda_aviso to R.raw.n_seda_solemne
         TemaId.URSS -> R.raw.n_urss_aviso to R.raw.n_urss_solemne
         TemaId.GOTICO -> R.raw.n_gotico_aviso to R.raw.n_gotico_solemne
+        TemaId.ARCANO -> R.raw.n_arcano_aviso to R.raw.n_arcano_solemne
         TemaId.ESPACIO -> R.raw.n_espacio_aviso to R.raw.n_espacio_solemne
         TemaId.ANDALUS -> R.raw.n_andalus_aviso to R.raw.n_andalus_solemne
         TemaId.MONGOL -> R.raw.n_mongol_aviso to R.raw.n_mongol_solemne
@@ -275,6 +276,13 @@ object Avisos {
             "✠ Carta lacrada de tu yo del pasado", "Llegó la fiesta señalada para abrirla.",
             "Vidriera completa", "vidrieras nuevas",
             "El libro de horas de %d", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.ARCANO -> Voz("† Una nota al margen · ¿cómo están tus nervios?", "Dos toques antes de que se te olvide: agrado y energía.",
+            "† Lo que soñaste anoche", "Anótalo antes de levantarte: lo que se sueña cerca del mar se borra con la primera luz.",
+            "† Cierra el legajo del día", "Asienta la jornada. Si fue de las turbias, basta con una cifra.",
+            "Jornada turbia: una cifra", "Lo que hoy toca vigilar:",
+            "† Llegó una carta lacrada de tu yo del pasado", "La trajo la marea en la fecha convenida. Rompe el lacre.",
+            "Prueba hallada", "pruebas nuevas en el archivo",
+            "Crónica del caso, %d", "Un año entero en recortes: lo más repetido, lo inexplicable, lo curioso.")
         TemaId.ESPACIO -> Voz("CONTROL · estado de la tripulación", "Dos toques: agrado y energía. Cambio.",
             "BITÁCORA DE SUEÑO", "Regístralo antes de dejar la litera; la señal se pierde en minutos.",
             "FIN DE ÓRBITA", "Llena el día. Si hubo turbulencia, basta con un número.",
@@ -339,6 +347,7 @@ object Avisos {
         TemaId.SEDA -> VozEnfoque("Alto en el caravasar", "Levántate, bebe agua del pozo.", "La caravana sigue", "Hora de levantar el campamento", "Jornada cumplida")
         TemaId.URSS -> VozEnfoque("DESCANSO REGLAMENTARIO", "Levántate, toma agua, camarada.", "DE VUELTA AL TRABAJO", "¡ARRIBA, CAMARADA!", "¡NORMA CUMPLIDA!")
         TemaId.GOTICO -> VozEnfoque("Recreatio", "Levántate, bebe agua.", "Termina la recreatio", "Laudes: hora de despertar", "Deo gratias: terminaste")
+        TemaId.ARCANO -> VozEnfoque("Aparta la vista de los legajos", "Levántate, bebe agua, mira por la ventana hacia el faro.", "Vuelve a la mesa del archivo", "Amaneció: la niebla se levanta", "Pesquisa cumplida: guarda los papeles")
         TemaId.ESPACIO -> VozEnfoque("PAUSA ORBITAL", "Despega del asiento. Hidrátate.", "FIN DE LA PAUSA ORBITAL", "DESPERTAR DE LA TRIPULACIÓN", "MISIÓN COMPLETADA")
         TemaId.ANDALUS -> VozEnfoque("Pausa en el patio", "Levántate, bebe agua de la fuente.", "Terminó la pausa en el patio", "Al alba: hora de despertar", "¡Obra acabada!")
         TemaId.MONGOL -> VozEnfoque("Alto en la estepa", "Levántate, bebe agua.", "A caballo otra vez", "El sol sale sobre la estepa: despierta", "¡Jornada ganada!")

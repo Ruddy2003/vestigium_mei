@@ -620,6 +620,25 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             drawCircle(tenue.copy(alpha = 0.5f), rIn - 3 * u, c, style = Stroke(1.2f * u))
             drawCircle(tenue.copy(alpha = 0.5f), R - u, c, style = Stroke(u))
         }
+        // El almanaque lunar: dieciséis lunas en sus fases alrededor, que se encienden conforme avanza; por dentro, el haz
+        // del faro barre hasta donde va.
+        TemaId.ARCANO -> {
+            drawCircle(pista, r, c, style = Stroke(1.2f * u))
+            val rl = 5.5f * u
+            for (k in 0 until 16) {
+                val q = en((k + 0.5f) / 16f, r + 2 * u)
+                val luna = if (pasado(k, 16)) color.copy(alpha = 0.9f) else pista
+                drawCircle(luna, rl, q)
+                // La sombra que avanza sobre la luna: de nueva (k = 0) a llena (k = 8) y de vuelta.
+                val f = k / 16f; val desplazo = rl * 2f * (if (f < 0.5f) (1f - f * 2f) else (f * 2f - 1f)) * (if (f < 0.5f) 1f else -1f)
+                if (k != 8) drawCircle(e.surface.copy(alpha = 0.75f), rl, Offset(q.x + desplazo, q.y))
+                drawCircle(tenue.copy(alpha = 0.45f), rl, q, style = Stroke(0.8f * u))
+            }
+            if (p > 0f) drawArc(androidx.compose.ui.graphics.Brush.radialGradient(listOf(color.copy(alpha = 0.28f), Color.Transparent), c, r * 0.9f), -90f, p * 360f, true,
+                Offset(c.x - r * 0.86f, c.y - r * 0.86f), Size(r * 1.72f, r * 1.72f))
+            drawCircle(color.copy(alpha = 0.8f), 3 * u, c)
+            drawCircle(tenue.copy(alpha = 0.5f), R - u, c, style = Stroke(u))
+        }
         // Esfera de radar: aros de distancia, la cruz en la orilla, el barrido hasta donde va y el eco que lo marca.
         TemaId.ESPACIO -> {
             drawArc(color.copy(alpha = 0.1f), -90f, 360f * p, true, Offset(c.x - r, c.y - r), Size(r * 2, r * 2))
@@ -827,6 +846,15 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             val d = minOf(h * 0.6f, w / 2)
             moveTo(x, y + h / 2); quadraticTo(x + d * 0.15f, y, x + d, y); lineTo(x + w - d, y); quadraticTo(x + w - d * 0.15f, y, x + w, y + h / 2)
             quadraticTo(x + w - d * 0.15f, y + h, x + w - d, y + h); lineTo(x + d, y + h); quadraticTo(x + d * 0.15f, y + h, x, y + h / 2); close()
+        }
+        // Una tira de papel arrancada: las dos puntas rasgadas en dientes desiguales.
+        TemaId.ARCANO -> {
+            val dz = minOf(3 * u, w * 0.1f); val n = 5
+            moveTo(x + dz, y); lineTo(x + w - dz, y)
+            for (k in 1..n) lineTo(x + w - (if (k % 2 == 0) dz else 0f), y + h * k / n)
+            lineTo(x + dz, y + h)
+            for (k in n - 1 downTo 0) lineTo(x + (if (k % 2 == 0) dz else 0f) + (if (k == 2) dz * 0.5f else 0f), y + h * k / n)
+            close()
         }
         TemaId.ESPACIO -> {
             val rn = minOf(h * 0.42f, w / 4)

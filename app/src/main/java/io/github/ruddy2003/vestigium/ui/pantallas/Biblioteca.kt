@@ -292,6 +292,13 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 quadraticTo(x1, arranque - h * 0.2f, x1, arranque); lineTo(x1, base)
             }, tenue, style = Stroke(1.2f * u))
         }
+        // La etiqueta del tomo del archivo, el signo debajo y una mancha de humedad en la esquina.
+        TemaId.ARCANO -> {
+            drawRect(tenue, Offset(w * 0.2f, h * 0.14f), Size(w * 0.6f, h * 0.16f), style = Stroke(1f * u))
+            linea(w * 0.28f, h * 0.2f, w * 0.72f, h * 0.2f); linea(w * 0.28f, h * 0.25f, w * 0.6f, h * 0.25f)
+            with(io.github.ruddy2003.vestigium.ui.Contenedores) { signoOjo(Offset(w / 2, h * 0.55f), w * 0.16f, tenue, 1f * u) }
+            drawCircle(a.copy(alpha = 0.12f), w * 0.16f, Offset(w * 0.85f, h * 0.88f))
+        }
         // Estrellas sueltas y un planeta con su órbita.
         TemaId.ESPACIO -> {
             listOf(0.15f to 0.12f, 0.8f to 0.2f, 0.12f to 0.55f, 0.88f to 0.6f, 0.5f to 0.08f).forEach { (x, y) -> drawCircle(a.copy(alpha = 0.6f), 0.9f * u, Offset(w * x, h * y)) }

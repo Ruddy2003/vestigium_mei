@@ -208,6 +208,7 @@ object TrofeosMas {
             TemaId.HELENO -> Unit
             TemaId.MEDIEVAL -> Unit
             TemaId.GOTICO -> Unit
+            TemaId.ARCANO -> Unit
             TemaId.RENACIMIENTO -> Unit
             TemaId.NAPOLEON -> Unit
             TemaId.REVOLUCION -> Unit

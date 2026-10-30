@@ -147,6 +147,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(THUD, 0.5f), g(TICK_GRAVE, 0.5f, 120)); Evento.ERROR -> listOf(g(THUD, 0.7f), g(THUD, 0.7f, 40))
             Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.9f), g(THUD, 0.6f, 260), g(THUD, 0.4f, 260))
         }
+        // Un latido que se acelera, la ola que llega y se va, la puerta del archivo que cruje.
+        TemaId.ARCANO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.42f), g(TICK, 0.18f, 70)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.27f), g(BAJA, 0.22f, 90))
+            Evento.GUARDAR -> listOf(g(THUD, 0.66f), g(THUD, 0.38f, 140))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.47f), g(TICK_GRAVE, 0.21f, 170)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.62f), g(SPIN, 0.24f, 80))
+            Evento.CAMBIO -> listOf(g(BAJA, 0.44f), g(TICK_GRAVE, 0.36f, 130)); Evento.ERROR -> listOf(g(THUD, 0.58f), g(BAJA, 0.41f, 110), g(TICK_GRAVE, 0.2f, 160))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE_LENTO, 0.4f), g(THUD, 0.72f, 210), g(THUD, 0.44f, 140), g(SPIN, 0.3f, 300))
+        }
         // Pitidos de la sala de control.
         TemaId.ESPACIO -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 0.8f)); Evento.PASAR -> listOf(g(SUBE, 0.5f))
@@ -291,6 +299,7 @@ object Sentidos {
         TemaId.NAPOLEON -> intArrayOf(R.raw.s_napoleon_toque, R.raw.s_napoleon_guardar, R.raw.s_napoleon_logro, R.raw.s_napoleon_pasar, R.raw.s_napoleon_elegir, R.raw.s_napoleon_abrir, R.raw.s_napoleon_tema, R.raw.s_napoleon_error, R.raw.s_napoleon_cambio, R.raw.s_tecla_napoleon, R.raw.s_rascar_napoleon)
         TemaId.BOTANICO -> intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir, R.raw.s_botanico_tema, R.raw.s_botanico_error, R.raw.s_botanico_cambio, R.raw.s_tecla_botanico, R.raw.s_rascar_botanico)
         TemaId.GOTICO -> intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir, R.raw.s_gotico_tema, R.raw.s_gotico_error, R.raw.s_gotico_cambio, R.raw.s_tecla_gotico, R.raw.s_rascar_gotico)
+        TemaId.ARCANO -> intArrayOf(R.raw.s_arcano_toque, R.raw.s_arcano_guardar, R.raw.s_arcano_logro, R.raw.s_arcano_pasar, R.raw.s_arcano_elegir, R.raw.s_arcano_abrir, R.raw.s_arcano_tema, R.raw.s_arcano_error, R.raw.s_arcano_cambio, R.raw.s_tecla_arcano, R.raw.s_rascar_arcano)
         TemaId.ESPACIO -> intArrayOf(R.raw.s_espacio_toque, R.raw.s_espacio_guardar, R.raw.s_espacio_logro, R.raw.s_espacio_pasar, R.raw.s_espacio_elegir, R.raw.s_espacio_abrir, R.raw.s_espacio_tema, R.raw.s_espacio_error, R.raw.s_espacio_cambio, R.raw.s_tecla_espacio, R.raw.s_rascar_espacio)
         TemaId.ANDALUS -> intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir, R.raw.s_andalus_tema, R.raw.s_andalus_error, R.raw.s_andalus_cambio, R.raw.s_tecla_andalus, R.raw.s_rascar_andalus)
         TemaId.MONGOL -> intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir, R.raw.s_mongol_tema, R.raw.s_mongol_error, R.raw.s_mongol_cambio, R.raw.s_tecla_mongol, R.raw.s_rascar_mongol)
@@ -368,6 +377,8 @@ object Sentidos {
         TemaId.BOTANICO -> Afinacion(st(-5, 0, 3, 7, 9), st(-5, 0, 2, 5), pasarRuido = true, elegirRuido = false)
         // La menor con la sexta menor del órgano.
         TemaId.GOTICO -> Afinacion(st(-5, 0, 3, 7, 8), st(-5, 0, 3, 8), pasarRuido = false, elegirRuido = false)
+        // Si locrio: la quinta disminuida que nunca termina de resolver; el papel del legajo pasa sin nota.
+        TemaId.ARCANO -> Afinacion(st(-6, 0, 1, 5, 6), st(-6, -1, 0, 6), pasarRuido = true, elegirRuido = false)
         // Mi lidio: la cuarta aumentada de la sala de control.
         TemaId.ESPACIO -> Afinacion(st(0, 4, 6, 7, 11), st(-5, 0, 6, 7), pasarRuido = true, elegirRuido = false)
         // Re hiyaz.
@@ -476,6 +487,7 @@ object Sentidos {
         TemaId.NAPOLEON -> pasadas(CLICK, 0.6f, 50, 3)   // bronce dorado
         TemaId.BOTANICO -> pasadas(TICK_GRAVE, 0.45f, 65, 3)   // bronce con verdín
         TemaId.GOTICO -> pasadas(TICK_GRAVE, 0.6f, 80, 3)   // peltre
+        TemaId.ARCANO -> pasadas(TICK_GRAVE, 0.52f, 95, 3)   // bronce comido por el salitre
         TemaId.ESPACIO -> pasadas(TICK, 0.85f, 28, 5)   // titanio
         TemaId.ANDALUS -> pasadas(TICK, 0.6f, 45, 4)   // latón
         TemaId.MONGOL -> pasadas(CLICK, 0.55f, 55, 3)   // plata sobredorada

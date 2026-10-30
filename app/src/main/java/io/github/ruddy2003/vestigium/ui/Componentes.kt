@@ -124,6 +124,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.NAPOLEON -> Laureles(modifier)
         TemaId.BOTANICO -> Enredadera(modifier)
         TemaId.GOTICO -> Arqueria(modifier)
+        TemaId.ARCANO -> BandaMarea(modifier)
         TemaId.ESPACIO -> Orbita(modifier)
         TemaId.ANDALUS -> Lazo(modifier)
         TemaId.MONGOL -> BandaEstepa(modifier)
@@ -956,6 +957,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "✝", igual = "⁝ ", nulo = "vacat", elegido = "✠", riel = RolColor.TERCIARIO, quitar = "☓", listaVacia = "( nave vacía )", flecha = "⇀",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.3f, colorPrefijo = RolColor.TERCIARIO, renglones = true, margen = MargenEditor.DOBLE,
         guiones = floatArrayOf(3f, 0.8f, 0.8f, 0.8f), tamBoton = 17, letraBoton = null, borde = RolColor.TERCIARIO, grosor = 1.5f)
+    TemaId.ARCANO -> PielComponentes(sep = " — ", cerrada = "▹", abierta = "▿", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
+        aviso = "⚠", igual = " … ", nulo = "sin anotar", elegido = "◉", riel = RolColor.PRIMARIO, quitar = "✗", listaVacia = "( folio en blanco )", flecha = "↝",
+        sufijo = ":", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.15f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.ROJO,
+        guiones = floatArrayOf(5f, 2f, 1f, 2f), tamBoton = 16, letraBoton = Letra.spectralCursiva, borde = RolColor.SECUNDARIO, grosor = 1.1f)
     TemaId.ESPACIO -> PielComponentes(sep = "  ⋆  ", cerrada = "☆", abierta = "★", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
         aviso = "⊛", igual = "⇒ ", nulo = "sin señal", elegido = "★", riel = RolColor.PRIMARIO, quitar = "⊟", listaVacia = "[ SIN TELEMETRÍA ]", flecha = "⇥",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 2.5f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.PUNTOS,
@@ -1051,6 +1056,12 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             withStyle(SpanStyle(color = e.surface, background = e.tertiary)) { append(" ${nombre.take(1)} ") }
             append(nombre.drop(1))
         }, style = estilo, modifier = peso)
+        // Escrito a mano en cursiva y subrayado dos veces, la segunda raya más corta y torcida.
+        TemaId.ARCANO -> Text(nombre, style = estilo.copy(fontFamily = Letra.spectralCursiva), color = e.onBackground, modifier = peso.drawBehind {
+            val y = size.height - 3.dp.toPx(); val u = 1.dp.toPx()
+            drawLine(e.secondary.copy(alpha = 0.8f), Offset(0f, y), Offset(size.width, y - 1.5f * u), 1.2f * u)
+            drawLine(e.secondary.copy(alpha = 0.6f), Offset(4 * u, y + 3 * u), Offset(size.width * 0.6f, y + 2 * u), 0.9f * u)
+        }.padding(bottom = 7.dp))
         // Letras abiertas sobre una órbita de puntos.
         TemaId.ESPACIO -> Text(nombre, style = estilo.copy(letterSpacing = 2.5.sp), modifier = peso.drawBehind {
             var x = 1.dp.toPx()
@@ -1120,6 +1131,11 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         val w = s.width; val h = s.height
         moveTo(0f, h); lineTo(0f, h * 0.5f); quadraticTo(0f, h * 0.1f, w / 2, 0f); quadraticTo(w, h * 0.1f, w, h * 0.5f); lineTo(w, h); close()
     }
+    // Ficha de catálogo con la esquina de arriba a la derecha doblada.
+    TemaId.ARCANO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val d = minOf(h * 0.32f, w * 0.12f)
+        moveTo(0f, 0f); lineTo(w - d, 0f); lineTo(w, d); lineTo(w, h); lineTo(0f, h); close()
+    }
     // Tecla de consola, más angosta arriba.
     TemaId.ESPACIO -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -1169,6 +1185,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.NAVIDAD -> "carta junto al fuego · $es"
         TemaId.SEDA -> "pincel y tinta · $es"
         TemaId.GOTICO -> "breviario · $es"
+        TemaId.ARCANO -> "diario del investigador · $es"
         TemaId.ESPACIO -> "BITÁCORA DE MISIÓN · ${es.uppercase()}"
         TemaId.ANDALUS -> "cálamo · $es"
         TemaId.MONGOL -> "тэмдэглэл · $es"
@@ -1307,6 +1324,14 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             // Cuadrifolio de tracería.
             val c = Offset(i + u * 0.8f, i + u * 0.8f); val r = u * 0.3f
             listOf(Offset(0f, -r), Offset(r, 0f), Offset(0f, r), Offset(-r, 0f)).forEach { o -> drawCircle(e.tertiary.copy(alpha = 0.8f), r, c + o, style = Stroke(fino)) }
+        }
+        TemaId.ARCANO -> {
+            // Dos tiras de cinta amarillenta que pegan la tarjeta, como un recorte, y una mancha de tinta abajo.
+            listOf(Offset(i + u * 0.2f, i + u * 0.4f) to -38f, Offset(w - i - u * 0.2f, i + u * 0.4f) to 38f).forEach { (c, g) ->
+                rotate(g, c) { drawRect(Color(0xFFE6D9A6).copy(alpha = 0.55f), Offset(c.x - u * 1.1f, c.y - u * 0.35f), Size(u * 2.2f, u * 0.7f)) }
+            }
+            val m = Offset(w - i - u * 1.6f, h - i - u * 0.9f)
+            drawCircle(e.primary.copy(alpha = 0.18f), u * 0.5f, m); drawCircle(e.primary.copy(alpha = 0.14f), u * 0.22f, m + Offset(u * 0.7f, u * 0.2f))
         }
         TemaId.ESPACIO -> enLasCuatro {
             // Escuadras de visor.
@@ -1461,6 +1486,15 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawOval(a, Offset(f(0.2f), f(0.76f)), Size(f(0.6f), f(0.14f)), style = tr)
             drawPath(Path().apply { moveTo(f(0.52f), f(0.18f)); quadraticTo(f(0.62f), f(0.1f), f(0.54f), f(0.03f)) }, l.copy(alpha = 0.5f), style = tr)
         }
+        TemaId.ARCANO -> {
+            // Caja de archivo abierta y vacía, con su ficha caída y una telaraña en la esquina.
+            drawPath(Path().apply { moveTo(f(0.1f), f(0.4f)); lineTo(f(0.9f), f(0.4f)); lineTo(f(0.84f), f(0.92f)); lineTo(f(0.16f), f(0.92f)); close() }, l, style = tr)
+            drawPath(Path().apply { moveTo(f(0.1f), f(0.4f)); lineTo(f(0.22f), f(0.22f)); lineTo(f(0.98f), f(0.22f)); lineTo(f(0.9f), f(0.4f)) }, l, style = tr)
+            rotate(-14f, Offset(f(0.5f), f(0.66f))) { drawRect(a, Offset(f(0.36f), f(0.6f)), Size(f(0.28f), f(0.14f)), style = Stroke(tr.width * 0.7f)) }
+            val t = Offset(f(0.84f), f(0.44f))
+            listOf(180f, 225f, 270f).forEach { g -> val r = Math.toRadians(g.toDouble()); drawLine(l.copy(alpha = 0.5f), t, Offset(t.x + f(0.2f) * kotlin.math.cos(r).toFloat(), t.y - f(0.2f) * kotlin.math.sin(r).toFloat()), tr.width * 0.4f) }
+            drawArc(l.copy(alpha = 0.5f), 90f, 90f, false, Offset(t.x - f(0.12f), t.y), Size(f(0.24f), f(0.24f)), style = Stroke(tr.width * 0.4f))
+        }
         TemaId.ESPACIO -> {
             // Órbita sin planeta.
             drawOval(l, Offset(f(0.06f), f(0.3f)), Size(f(0.88f), f(0.4f)), style = Stroke(tr.width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(f(0.06f), f(0.05f)))))
@@ -1548,6 +1582,8 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
             moveTo(w / 2 - d, h); lineTo(w / 2 - d, h - d * 1.2f); quadraticTo(w / 2 - d, h - d * 2.2f, w / 2, h - d * 2.6f)
             quadraticTo(w / 2 + d, h - d * 2.2f, w / 2 + d, h - d * 1.2f); lineTo(w / 2 + d, h); close()
         }, c)
+        // Una raya de tachón sobre la marca, como una cifra corregida.
+        TemaId.ARCANO -> { drawCircle(c, d * 0.8f, Offset(w / 2, h - d * 1.4f)); drawLine(c, Offset(w / 2 - d * 1.6f, h - d * 0.6f), Offset(w / 2 + d * 1.6f, h - d * 2.2f), d * 0.35f) }
         TemaId.ESPACIO -> estrellaComp(Offset(w / 2, d * 1.5f), d * 0.95f, c, puntas = 4, dentro = 0.35f)
         TemaId.ANDALUS -> estrellaComp(Offset(w / 2, h - d * 1.4f), d, c, puntas = 8, dentro = 0.6f)
         TemaId.MONGOL -> drawArc(c, 180f, 180f, true, Offset(w / 2 - d * 1.3f, h - d * 1.3f), Size(d * 2.6f, d * 2.6f))
@@ -1628,6 +1664,13 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.GOTICO -> {
             val cc = Offset(w / 2, h * 0.2f); val r = m * 0.45f
             listOf(Offset(0f, -r), Offset(-r * 0.9f, r * 0.6f), Offset(r * 0.9f, r * 0.6f)).forEach { o -> drawCircle(c, r, cc + o, style = Stroke(fino * 0.8f)) }
+        }
+        // El doblez de la ficha y un ojal con su cordel.
+        TemaId.ARCANO -> {
+            val dd = minOf(h * 0.32f, w * 0.12f)
+            drawPath(Path().apply { moveTo(w - dd, 0f); lineTo(w - dd, dd); lineTo(w, dd) }, c, style = Stroke(fino))
+            drawCircle(c, m * 0.6f, Offset(m * 2.6f, h / 2), style = Stroke(fino))
+            drawLine(c.copy(alpha = c.alpha * 0.6f), Offset(m * 2.6f, h / 2 + m * 0.6f), Offset(m * 1.4f, h - fino), fino * 0.8f)
         }
         // Dos luces de consola y una línea de estado.
         TemaId.ESPACIO -> {
@@ -1763,6 +1806,14 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             }, l, style = tr)
             drawLine(a, Offset(f(0.5f), f(0.26f)), Offset(f(0.5f), f(0.9f)), tr.width)
         }
+        TemaId.ARCANO -> {
+            // La libreta con un recorte pegado y la pluma de acero encima.
+            drawRect(l, Offset(f(0.1f), f(0.08f)), Size(f(0.62f), f(0.84f)), style = tr)
+            rotate(-6f, Offset(f(0.4f), f(0.36f))) { drawRect(a, Offset(f(0.2f), f(0.22f)), Size(f(0.4f), f(0.28f)), style = Stroke(tr.width * 0.7f)) }
+            listOf(0.62f, 0.72f).forEach { y -> drawLine(l.copy(alpha = 0.6f), Offset(f(0.18f), f(y)), Offset(f(0.6f), f(y)), tr.width * 0.5f) }
+            drawLine(a, Offset(f(0.96f), f(0.06f)), Offset(f(0.52f), f(0.78f)), tr.width * 1.2f)
+            drawPath(Path().apply { moveTo(f(0.56f), f(0.72f)); lineTo(f(0.5f), f(0.84f)); lineTo(f(0.6f), f(0.76f)); close() }, a)
+        }
         TemaId.ESPACIO -> {
             // Bitácora grabando.
             drawCircle(l, f(0.42f), Offset(f(0.5f), f(0.5f)), style = tr)
@@ -1895,6 +1946,13 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             drawRect(c, Offset(2 * d, 0f), Size(2 * d, h))
             var y = 7 * d
             while (y < h) { drawRect(e.tertiary, Offset(0f, y - 0.6f * d), Size(w, 1.2f * d)); y += 14 * d }
+        }
+        // Una línea temblorosa a tinta, con una gota que se corrió.
+        TemaId.ARCANO -> {
+            val p = Path(); var y = 0f; p.moveTo(2.5f * d, 0f)
+            while (y <= h) { p.lineTo(2.5f * d + 0.8f * d * sin(y / (2.2f * d)) + 0.5f * d * sin(y / (7f * d)), y); y += 2f }
+            drawPath(p, c, style = Stroke(1.6f * d))
+            drawCircle(c, 2.2f * d, Offset(2.5f * d, h * 0.3f)); drawLine(c, Offset(2.5f * d, h * 0.3f), Offset(2.5f * d, h * 0.3f + 6 * d), 1.4f * d)
         }
         TemaId.ESPACIO -> {
             var y = 2 * d

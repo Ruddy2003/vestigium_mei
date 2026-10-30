@@ -108,6 +108,12 @@
     <style name="Theme.Vestigium.Arranque.Gotico" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_gotico</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Arcano" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcano</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Arcano.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcano_oscuro</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Gotico.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_gotico_oscuro</item>
     </style>

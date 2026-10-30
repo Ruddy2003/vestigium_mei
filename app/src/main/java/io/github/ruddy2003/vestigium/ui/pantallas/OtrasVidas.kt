@@ -582,6 +582,16 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(plomo, Offset.Zero, Size(fw, h), style = Stroke(1.5f * d))
             }
         }
+        // Una raya de tinta sobre el renglón; donde acaba, la tinta se corrió en una gota.
+        TemaId.ARCANO -> {
+            drawLine(pista, Offset(0f, h * 0.7f), Offset(w, h * 0.7f), 0.8f * d, pathEffect = guion(1f, 2f))
+            if (fw > 0f) {
+                val p = Path(); var x = 0f; p.moveTo(0f, h * 0.5f)
+                while (x <= fw) { p.lineTo(x, h * 0.5f + h * 0.12f * kotlin.math.sin(x / (5f * d))); x += 2f }
+                drawPath(p, color, style = Stroke(h * 0.45f, cap = StrokeCap.Round))
+                drawCircle(color, h * 0.32f, Offset(fw, h * 0.6f)); drawCircle(color.copy(alpha = 0.5f), h * 0.14f, Offset(fw + h * 0.5f, h * 0.85f))
+            }
+        }
         // Haz de luz de la consola con su punta encendida.
         TemaId.ESPACIO -> {
             drawLine(color.copy(alpha = 0.25f), Offset(0f, h / 2), Offset(w, h / 2), d)
@@ -834,6 +844,22 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
                 drawLine(cs.tertiary.copy(alpha = 0.3f), polarFig(c, rc * 0.6f, k * 30f + 15f), polarFig(c, rc, k * 30f + 15f), 0.8f * d)
             }
             for (k in 0 until 24) if (k % 6 != 0) drawCircle(cs.tertiary.copy(alpha = 0.7f), 1.2f * d, polarFig(c, ro + 3f * d, k * 15f - 90f))
+        }
+        // El almanaque: las ocho fases de la luna alrededor y, dentro, el heptágono del signo con el ojo.
+        TemaId.ARCANO -> {
+            for (k in 0 until 8) {
+                val q = polarFig(c, rc * 0.72f, k * 45f - 90f); val rl = rc * 0.1f
+                drawCircle(tinta.copy(alpha = 0.35f), rl, q, style = Stroke(0.8f * d))
+                if (k != 0) clipPath(Path().apply { addOval(androidx.compose.ui.geometry.Rect(q, rl)) }) {
+                    val f = k / 8f; val dx = if (f <= 0.5f) -2f * rl * (f * 2f) else 2f * rl * (2f - f * 2f)
+                    drawCircle(tinta.copy(alpha = 0.35f), rl, q); drawCircle(cs.surface, rl * 1.02f, Offset(q.x + dx, q.y))
+                }
+            }
+            val hp = Path()
+            for (k in 0..6) { val q = polarFig(c, rc * 0.36f, -90f + k * 360f / 7); if (k == 0) hp.moveTo(q.x, q.y) else hp.lineTo(q.x, q.y) }
+            drawPath(hp, cs.tertiary.copy(alpha = 0.55f), style = Stroke(1.2f * d))
+            drawPath(Path().apply { moveTo(c.x - rc * 0.2f, c.y); quadraticTo(c.x, c.y - rc * 0.2f, c.x + rc * 0.2f, c.y); quadraticTo(c.x, c.y + rc * 0.2f, c.x - rc * 0.2f, c.y); close() }, cs.tertiary.copy(alpha = 0.55f), style = Stroke(d))
+            marcas(24, 3f * d, 0.8f * d, linea.copy(alpha = 0.6f))
         }
         // Radar: anillos, cruz y el barrido.
         TemaId.ESPACIO -> {

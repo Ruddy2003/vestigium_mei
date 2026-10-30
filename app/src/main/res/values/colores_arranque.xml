@@ -33,6 +33,8 @@
     <color name="arranque_urss_oscuro">#121010</color>
     <color name="arranque_gotico">#EDE7DA</color>
     <color name="arranque_gotico_oscuro">#0A0F2A</color>
+    <color name="arranque_arcano">#E3D9C1</color>
+    <color name="arranque_arcano_oscuro">#0A1210</color>
     <color name="arranque_espacio">#EEF1F6</color>
     <color name="arranque_espacio_oscuro">#03050C</color>
     <color name="arranque_andalus">#F3EBDA</color>

@@ -57,6 +57,11 @@ FUENTES = [
     ("firasans/FiraSans-SemiBold.ttf", None, "fira_semibold", None, CIRILICO),
     # GOT: Goudy de libro antiguo
     ("sortsmillgoudy/SortsMillGoudy-Regular.ttf", None, "goudy_regular", None, LATINO),
+    # ARC (horror cósmico): Spectral para los títulos, en su cursiva de mano de archivista, y Castoro para leer los legajos
+    ("spectral/Spectral-Medium.ttf", None, "spectral_medium", None, LATINO),
+    ("spectral/Spectral-MediumItalic.ttf", None, "spectral_cursiva", None, LATINO),
+    ("castoro/Castoro[wght].ttf", {"wght": 400}, "castoro_regular", None, LATINO),
+    ("castoro/Castoro[wght].ttf", {"wght": 600}, "castoro_semibold", None, LATINO),
     # REV: Baskerville (1757), la letra del siglo de la Revolución
     ("librebaskerville/LibreBaskerville[wght].ttf", {"wght": 400}, "ciudadana_regular", "Ciudadana Vestigium", LATINO),
     ("librebaskerville/LibreBaskerville[wght].ttf", {"wght": 600}, "ciudadana_semibold", "Ciudadana Vestigium", LATINO),

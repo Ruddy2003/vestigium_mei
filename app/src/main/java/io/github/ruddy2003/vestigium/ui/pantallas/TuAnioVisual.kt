@@ -246,6 +246,15 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             }, oro, style = Stroke(0.8f * d))
             drawRect(oro, Offset(x0 + w - 3 * d, y0 + h * 0.3f), Size(3 * d, h * 0.4f))
         }
+        // El legajo del archivo: la carpeta de cartón con su ficha, el cordel que la ata y los recortes que asoman.
+        TemaId.ARCANO -> {
+            drawRect(lerp(c, Color(0xFFC9B88A), 0.5f), o, s)
+            drawRect(Color(0xFFE8DDC0), Offset(x0 + w * 0.08f, y0 - 2 * d), Size(w * 0.18f, 3 * d))
+            drawRect(Color(0xFFE8DDC0), Offset(x0 + w * 0.3f, y0 + h * 0.2f), Size(w * 0.4f, h * 0.3f))
+            drawLine(oscuro, Offset(x0 + w * 0.34f, y0 + h * 0.35f), Offset(x0 + w * 0.66f, y0 + h * 0.35f), 0.6f * d)
+            drawLine(Color(0xFF8A7A58), Offset(x0 + w * 0.82f, y0), Offset(x0 + w * 0.82f, y0 + h), 1f * d)
+            drawRect(oscuro, o, s, style = Stroke(0.6f * d))
+        }
         // Cartucho de datos de la misión: la ventana con sus dos bobinas y la cinta.
         TemaId.ESPACIO -> {
             drawRoundRect(lerp(c, Color(0xFF2A2F3A), 0.5f), o, s, CornerRadius(2f * d))
@@ -646,6 +655,12 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             moveTo(x - r * 0.75f, y + r); lineTo(x - r * 0.75f, y - r * 0.1f); quadraticTo(x - r * 0.75f, y - r * 0.85f, x, y - r * 1.1f)
             quadraticTo(x + r * 0.75f, y - r * 0.85f, x + r * 0.75f, y - r * 0.1f); lineTo(x + r * 0.75f, y + r); close()
         })
+        // El heptágono del signo, con el ojo calado.
+        TemaId.ARCANO -> {
+            lleno(Path().apply { for (k in 0..6) { val q = polarCosa(c, r, -PI / 2 + k * 2 * PI / 7); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() })
+            drawPath(Path().apply { moveTo(x - r * 0.5f, y); quadraticTo(x, y - r * 0.5f, x + r * 0.5f, y); quadraticTo(x, y + r * 0.5f, x - r * 0.5f, y); close() }, borde, style = fino)
+            drawOval(borde, Offset(x - r * 0.07f, y - r * 0.2f), Size(r * 0.14f, r * 0.4f))
+        }
         // Un planeta con su órbita inclinada y una luna.
         TemaId.ESPACIO -> {
             drawCircle(relleno, r * 0.78f, c)
@@ -1023,6 +1038,25 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             }
             // Estrella de ocho puntas de la bóveda.
             "estrella" -> drawPath(estrellaCosa(c, r, 8, 0.45f), col)
+            else -> return false
+        }
+        TemaId.ARCANO -> when (forma) {
+            // El faro: la torre con su banda, la linterna y un haz corto.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r * 0.4f, y + r); lineTo(x - r * 0.25f, y - r * 0.5f); lineTo(x + r * 0.25f, y - r * 0.5f); lineTo(x + r * 0.4f, y + r); close() }, col)
+                drawRect(fondo, Offset(x - r * 0.34f, y + r * 0.2f), Size(r * 0.68f, r * 0.15f))
+                drawRect(col, Offset(x - r * 0.2f, y - r * 0.85f), Size(r * 0.4f, r * 0.3f))
+                drawPath(Path().apply { moveTo(x + r * 0.2f, y - r * 0.7f); lineTo(x + r * 1f, y - r * 0.95f); lineTo(x + r * 1f, y - r * 0.45f); close() }, col.copy(alpha = col.alpha * 0.4f))
+            }
+            // La carta lacrada con el sello del signo.
+            "sobre" -> {
+                drawRect(col, Offset(x - r * 0.85f, y - r * 0.55f), Size(r * 1.7f, r * 1.1f))
+                drawLine(fondo, Offset(x - r * 0.85f, y - r * 0.55f), Offset(x, y + r * 0.05f), 0.8f * d)
+                drawLine(fondo, Offset(x + r * 0.85f, y - r * 0.55f), Offset(x, y + r * 0.05f), 0.8f * d)
+                drawCircle(fondo, r * 0.22f, Offset(x, y + r * 0.08f)); drawOval(col, Offset(x - r * 0.04f, y - r * 0.04f), Size(r * 0.08f, r * 0.24f))
+            }
+            // Una estrella velada por la niebla.
+            "estrella" -> { drawCircle(col.copy(alpha = col.alpha * 0.25f), r, c); drawPath(estrellaCosa(c, r * 0.7f, 4, 0.3f), col) }
             else -> return false
         }
         TemaId.ESPACIO -> when (forma) {

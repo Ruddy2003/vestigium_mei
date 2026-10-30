@@ -112,6 +112,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.NAVIDAD -> R.font.cinzel_deco_bold
     TemaId.SEDA -> R.font.almendra_bold
     TemaId.GOTICO -> R.font.gotica_textura          // la textura del vitral; sus números se leen bien
+    TemaId.ARCANO -> R.font.spectral_medium         // la serifa del archivo, de cifras claras
     TemaId.ESPACIO -> R.font.orbitron_bold
     TemaId.ANDALUS -> R.font.kufi_medium
     TemaId.MONGOL -> R.font.philosopher_bold
@@ -138,6 +139,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.NAVIDAD -> "Cartas al fuego · Vestigium Mei"
     TemaId.SEDA -> "Vestigium Mei · diario de caravana"
     TemaId.GOTICO -> "Liber horarum · Vestigium mei"
+    TemaId.ARCANO -> "Vestigium Mei · archivo del caso, caja reservada"
     TemaId.ESPACIO -> "VESTIGIUM MEI / MISIÓN"
     TemaId.ANDALUS -> "Vestigium Mei · أثري"
     TemaId.MONGOL -> "МИНИЙ МӨР · Vestigium Mei"
@@ -392,6 +394,20 @@ object Reportes {
                     }
                     c.drawPath(path, pa)
                     c.drawLine(x0, base, x0 + n * vano, base, L.trazo(L.primario, 2.6f))
+                    y += 56f
+                }
+                TemaId.ARCANO -> {
+                    // La costa vista desde el mar: la línea de las olas a tinta, el acantilado y el faro al centro con sus dos haces.
+                    val base = yy + 32f
+                    val ola = Path(); var x = M; ola.moveTo(M, base)
+                    while (x < W - M) { ola.quadTo(x + 6f, base - 4f, x + 12f, base); ola.quadTo(x + 18f, base + 4f, x + 24f, base); x += 24f }
+                    c.drawPath(ola, L.trazo(L.tinta, 1.6f))
+                    val haz = L.relleno(L.mezcla(L.primario, L.fondo, 0.6))
+                    listOf(-1f, 1f).forEach { s -> c.drawPath(Path().apply { moveTo(cx, yy + 4f); lineTo(cx + s * (W / 2 - M), yy - 6f); lineTo(cx + s * (W / 2 - M), yy + 14f); close() }, haz) }
+                    c.drawPath(Path().apply { moveTo(cx - 40f, base); quadTo(cx - 30f, base - 16f, cx - 10f, base - 18f); lineTo(cx + 14f, base - 18f); quadTo(cx + 34f, base - 10f, cx + 44f, base); close() }, L.relleno(L.tinta))
+                    c.drawPath(Path().apply { moveTo(cx - 6f, base - 18f); lineTo(cx - 4f, yy + 8f); lineTo(cx + 4f, yy + 8f); lineTo(cx + 6f, base - 18f); close() }, L.relleno(L.tinta))
+                    c.drawRect(cx - 5f, yy + 2f, cx + 5f, yy + 8f, L.relleno(L.primario))
+                    c.drawLine(cx - 6f, yy + 2f, cx + 6f, yy + 2f, L.trazo(L.tinta, 1.6f))
                     y += 56f
                 }
                 TemaId.ESPACIO -> {

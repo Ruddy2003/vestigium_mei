@@ -93,6 +93,21 @@ object MapasCampana {
                     drawArc(oro, 145f, 70f, false, Offset(c.x - R, c.y - R), Size(2 * R, 2 * R), style = Stroke(1.2f * d))
                 }
             }
+            TemaId.ARCANO -> {
+                // El faro encendido al fin: la torre de bandas sobre la roca, la linterna con sus dos haces largos que
+                // atraviesan la niebla y, en la luz, el ojo del signo que se abre.
+                val luz = Color(0xFFF2E3A0); val piedra = Color(0xFF3A4038); val c = Offset(m.x, m.y - 6 * d)
+                listOf(-1f, 1f).forEach { s ->
+                    drawPath(Path().apply { moveTo(c.x, c.y - 26 * d); lineTo(c.x + s * 46 * d, c.y - 36 * d); lineTo(c.x + s * 46 * d, c.y - 16 * d); close() },
+                        Brush.radialGradient(listOf(luz.copy(alpha = 0.55f), Color.Transparent), Offset(c.x, c.y - 26 * d), 46 * d))
+                }
+                drawPath(Path().apply { moveTo(c.x - 12 * d, c.y + 4 * d); quadraticTo(c.x, c.y - 4 * d, c.x + 12 * d, c.y + 4 * d); close() }, piedra)
+                drawPath(Path().apply { moveTo(c.x - 5 * d, c.y); lineTo(c.x - 3.4f * d, c.y - 21 * d); lineTo(c.x + 3.4f * d, c.y - 21 * d); lineTo(c.x + 5 * d, c.y); close() }, Color(0xFFE8DDC0))
+                listOf(-5f, -12f).forEach { y -> drawRect(Color(0xFF7A2C24), Offset(c.x - 4.6f * d, c.y + y * d), Size(9.2f * d, 3 * d)) }
+                drawRect(luz, Offset(c.x - 3 * d, c.y - 27 * d), Size(6 * d, 6 * d))
+                drawPath(Path().apply { moveTo(c.x - 4.4f * d, c.y - 27 * d); lineTo(c.x, c.y - 32 * d); lineTo(c.x + 4.4f * d, c.y - 27 * d); close() }, piedra)
+                with(Contenedores) { signoOjo(Offset(c.x, c.y - 24 * d), 8 * d, oro.copy(alpha = 0.8f), 0.8f * d) }
+            }
             TemaId.RENACIMIENTO -> {
                 // El cuadro terminado: el marco dorado alrededor del lienzo, con sus rosetas, y la firma con su rúbrica.
                 val w = size.width; val h = size.height

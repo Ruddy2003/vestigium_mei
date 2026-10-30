@@ -113,6 +113,8 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.HELENO -> mas(estrella(c, r, 16, 0.55f), circulo(c, r * 0.3f))
     TemaId.MEDIEVAL -> listOf(0.0, PI / 2, PI, 3 * PI / 2).map { circulo(c + dir(it) * (r * 0.45f), r * 0.48f) }.reduce { a, b -> mas(a, b) }
     TemaId.GOTICO -> (0 until 6).map { circulo(c + dir(PI / 3 * it - PI / 2) * (r * 0.55f), r * 0.4f) }.fold(circulo(c, r * 0.42f)) { a, b -> mas(a, b) }
+    // El heptágono del signo con el ojo calado.
+    TemaId.ARCANO -> menos(poligono(c, r, 7, -PI / 2), menos(circulo(c, r * 0.42f), circulo(c, r * 0.16f)))
     TemaId.CIBER -> menos(poligono(c, r, 6, 0.0), poligono(c, r * 0.45f, 6, 0.0))
     TemaId.NEON -> menos(poligono(c, r, 6, 0.0), poligono(c, r * 0.45f, 6, 0.0))
     TemaId.DISTOPIA -> {

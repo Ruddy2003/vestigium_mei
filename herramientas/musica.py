@@ -295,6 +295,31 @@ def hacer_antiguas():
     P['antiguas'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, 1.0, 0.62, 0.997), [7, 10, 14], 0.12, 1.0))
     ARGS['antiguas'] = (T, pz, ac, mel, kw)
 
+def hacer_arcano():
+    # --- Horror cósmico: Re frigio con el tritono que no resuelve (melodía propia). La armónica de cristal canta sobre un
+    # colchón de niebla; abajo, la sirena del faro; de vez en cuando una ola y la campana desafinada de la boya.
+    with A.azar_propio('musica_arcano'):
+        T = -7; pz = 0.5
+        def cristal(f, d=0.6):
+            t = t_(d)
+            x = np.sin(2 * np.pi * f * t) + 0.3 * np.sin(2 * np.pi * f * 2 * t) + 0.08 * np.sin(2 * np.pi * f * 3.02 * t)
+            return x * np.minimum(1, t / 0.06) * np.exp(-t * 1.4) * (1 + 0.15 * np.sin(2 * np.pi * 6.3 * t)) * np.minimum(1, np.maximum(0, d - t) / 0.08)
+        def sirena(f, d):
+            t = t_(d)
+            x = barrido(f, f * 0.985, d, 'sierra') * 0.6 + barrido(f * 1.004, f * 0.988, d, 'sierra') * 0.5
+            return filtro(x, 'bajo', 480) * np.minimum(1, t / 0.3) * np.minimum(1, np.maximum(0, d - t) / 0.5)
+        def ola(d):
+            t = t_(d); s = np.sin(np.pi * t / d)
+            return filtro(ruido(d), 'bajo', 900) * s ** 2 + 0.25 * filtro(ruido(d), 'banda', (2000, 6000)) * s ** 6
+        boya = lambda f, d=1.6: campana(f, d, 3.17, 1.4, 2.2)
+        ac = compases([0, 3, 7], [1, 5, 8], [-2, 2, 5], [-6, -2, 1], [0, 3, 7, 12])
+        mel = frase(0, "7:2 8:1 7:1 | 5:2 3:2 | 2:1 3:1 5:2 | 6:3 1:1 | 0:4")
+        extra = [(b * pz, ola(3.2), 0.3) for b in (0, 8, 16)] + [(0, boya(hz(T + 12), 2.4), 0.25), (16 * pz, boya(hz(T + 6), 2.6), 0.22)]
+        kw = dict(inst_mel=cristal, inst_ac=lambda f, d: sinte(f, d, 700, 0.4, 0.6), bajo=sirena, extra=extra,
+                  g_mel=0.42, g_ac=0.3, g_bajo=0.22, oct_mel=0, oct_ac=-12, oct_bajo=-24, cola=2.6, rev=0.4)
+        P['arcano'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: boya(f, 1.6), [13, 7, 0], 0.2, 1.4, 2.0))
+        ARGS['arcano'] = (T, pz, ac, mel, kw)
+
 def hacer_enriquecidos():
     """Lote 6: la presentación y la música anual de Refugio, Orden, Soviético y Espacio, más ricas. Ocho compases en lugar
     de cuatro o cinco, con más voces (bajo que camina, coro, cuerdas, arpegios) y su percusión. Corre después de [hacer]
@@ -401,6 +426,7 @@ if __name__ == '__main__':
     hacer()
     hacer_revolucion()
     hacer_antiguas()
+    hacer_arcano()
     hacer_enriquecidos()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
