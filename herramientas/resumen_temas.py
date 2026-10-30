@@ -4,11 +4,12 @@ Uso: python3 resumen_temas.py ../docs/diseno/TEMAS.md
 """
 import sys
 
-TEMAS = "ROM CIB HEL MED DIS REF ORD LAB COL NAP BOT NAV SED GOT ESP AND MON REN URS REV ANT".split()
 ESTADOS = ['P', 'S', 'C', 'G', '✗']
 
 ruta = sys.argv[1]
 lineas = open(ruta, encoding='utf-8').read().split('\n')
+# Las columnas, en el orden de `TemaId`: las de la tabla de abreviaturas del documento.
+TEMAS = next(l for l in lineas if l.startswith('| ROM |')).strip('|').replace(' ', '').split('|')
 cuenta = {t: dict.fromkeys(ESTADOS, 0) for t in TEMAS}
 for l in lineas:
     c = [x.strip() for x in l.strip().strip('|').split('|')]

@@ -516,6 +516,8 @@ Solo cambia la presentación, sin tocar datos:
 
 Va después del lote 7. Para entonces el compilador y las pruebas de cobertura y unicidad obligan a que cada tema nuevo esté completo. Se hace un PR por tema.
 
+**Cómo se hizo (30 oct 2026):** en una sola rama, con un commit «se junta el tema X» por tema en lugar de un PR por tema. Ciudad neón se hizo primero, a mano, y sirvió de modelo; los otros 12 partieron de la copia de un tema cercano (`herramientas/lote8/`) y se rehicieron rama por rama. Al juntarlos, la prueba de unicidad obligó a cambiar las esquinas de Pirata, Ciudad verde y Horror cósmico, dos títulos de pantalla (Egipto y Horror cósmico) y el comentario de Prehistoria. Lo único pendiente de los 34 es el gato (lote 9). Lo que quedó del peso de la APK está en 8e.
+
 ### 8a. El Cyberpunk pasa a «Terminal»
 
 - **Se conserva el id `"ciber"`.** Está guardado en la configuración, en `Campana.tema`, en `Carta.tema` y en `FraseGuardada.tema` (`Modelo.kt:257,518,918`).
@@ -681,6 +683,9 @@ Notas:
 - **Selector de temas** (`Sistema.kt:265-280`) y **fichas de rotación** (291-303): agrupados por época (Antigüedad, Edad Media, Edad Moderna, siglos XIX–XX, Futuro, Fantasía).
 - **Rotación** (`Rotacion.kt`): automática.
 - **Peso de la APK.** Cada tema suma entre 1 y 1.5 MB (sonidos, imágenes, papel, fuente y gato), así que se suman entre 13 y 20 MB. Para compensar: bajar la tasa de bits de los OGG largos, recortar las fuentes, y valorar `shrinkResources`. No hay minificación hoy.
+  - **Lo que se midió al cerrar el lote:** la v98 (21 temas) pesa 55 MB. Con 34 temas, `res/raw` pesa 16.4 MB, de los que 8 MB son las músicas anuales (`s_<id>_anual`, unos 80 s cada una); `res/font`, 11 MB; `res/drawable-nodpi`, 7.5 MB.
+  - **Lo que ya estaba hecho:** los OGG van en mono a 22 kHz (la música anual, con calidad 1 de Vorbis, unos 30 kbit/s), y las fuentes ya van recortadas a latino y sin *hinting* (`fuentes.py`).
+  - **Lo que queda por decidir:** bajar la música anual a calidad 0 o −1 ahorraría entre 1.5 y 3.5 MB, pero hay que regenerarla con `musica.py`, y hoy no sale idéntica a la guardada (el azar de los temas viejos ya no se reproduce), así que cambiaría la música de todos los temas. `shrinkResources` exige activar la minificación (R8), que con osmdroid, Health Connect y la serialización de los datos puede pedir reglas propias; habría que probarla aparte, en un teléfono, antes de publicarla.
 - **Datos:** no cambia el esquema. Se actualiza la lista de ejemplos del KDoc de `Modelo.kt:683-684`.
 
 ## Lote 9: el gato del tema (banda de Día)
