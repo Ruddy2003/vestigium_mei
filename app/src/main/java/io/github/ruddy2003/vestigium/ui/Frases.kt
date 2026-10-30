@@ -422,6 +422,36 @@ object Frases {
         f("Je désire que mes cendres reposent sur les bords de la Seine, au milieu de ce peuple français que j'ai tant aimé.", "Deseo que mis cenizas reposen a orillas del Sena, en medio de ese pueblo francés al que tanto he amado.", "Napoleón, testamento, art. 2, Santa Elena, 15 de abril de 1821"),
     )
 
+    /** Art déco: los años veinte y su orilla, de París a Nueva York (novela, poesía, cabaret, jazz y arquitectura). */
+    val DECO = listOf(
+        f("So we beat on, boats against the current, borne back ceaselessly into the past.", "Y así seguimos, botes contra la corriente, arrastrados sin cesar hacia el pasado.", "F. Scott Fitzgerald, El gran Gatsby, 1925 (la última línea)"),
+        f("Life starts all over again when it gets crisp in the fall.", "La vida vuelve a empezar cuando refresca en otoño.", "F. Scott Fitzgerald, El gran Gatsby, cap. VII, 1925"),
+        f("In his blue gardens men and girls came and went like moths among the whisperings and the champagne and the stars.",
+            "En sus jardines azules, hombres y muchachas iban y venían como polillas entre los susurros, el champán y las estrellas.", "F. Scott Fitzgerald, El gran Gatsby, cap. III, 1925"),
+        f("It was an age of miracles, it was an age of art, it was an age of excess, and it was an age of satire.",
+            "Fue una época de milagros, una época de arte, una época de excesos y una época de sátira.", "F. Scott Fitzgerald, «Ecos de la era del jazz», 1931"),
+        f("Mrs. Dalloway said she would buy the flowers herself.", "La señora Dalloway dijo que ella misma compraría las flores.", "Virginia Woolf, La señora Dalloway, 1925 (la primera línea)"),
+        f("She had a perpetual sense, as she watched the taxi cabs, of being out, out, far out to sea and alone.",
+            "Tenía siempre la sensación, mientras miraba pasar los taxis, de estar lejos, lejos, mar adentro y sola.", "Virginia Woolf, La señora Dalloway, 1925"),
+        f("One cannot think well, love well, sleep well, if one has not dined well.", "No se puede pensar bien, amar bien ni dormir bien si no se ha cenado bien.", "Virginia Woolf, Una habitación propia, 1929"),
+        f("You can't get away from yourself by moving from one place to another.", "Uno no se escapa de sí mismo yéndose de un lugar a otro.", "Ernest Hemingway, Fiesta, cap. II, 1926"),
+        f("If you are lucky enough to have lived in Paris as a young man, then wherever you go for the rest of your life, it stays with you, for Paris is a moveable feast.",
+            "Si tienes la suerte de haber vivido en París de joven, vayas adonde vayas el resto de tu vida, París te acompaña, porque París es una fiesta que se lleva dentro.", "Ernest Hemingway, epígrafe de París era una fiesta (de una carta de 1950)"),
+        f("Une maison est une machine à habiter.", "Una casa es una máquina para habitar.", "Le Corbusier, Hacia una arquitectura, 1923"),
+        f(null, "La aurora de Nueva York tiene cuatro columnas de cieno y un huracán de negras palomas que chapotean las aguas podridas.", "Federico García Lorca, «La aurora», Poeta en Nueva York (escrito en 1929-1930)"),
+        f("It don't mean a thing if it ain't got that swing.", "No vale nada si no tiene swing.", "Duke Ellington e Irving Mills, canción de 1931"),
+        f("J'ai deux amours, mon pays et Paris.", "Tengo dos amores: mi país y París.", "«J'ai deux amours», la canción que estrenó Josephine Baker en el Casino de París, 1930"),
+        f("La mode se démode, le style jamais.", "La moda pasa de moda; el estilo, jamás.", "Atribuida a Coco Chanel"),
+        f("Life is a tragedy when seen in close-up, but a comedy in long-shot.", "La vida es una tragedia vista en primer plano, pero una comedia en plano general.", "Atribuida a Charles Chaplin"),
+        f("Rose is a rose is a rose is a rose.", "Una rosa es una rosa es una rosa es una rosa.", "Gertrude Stein, «Sacred Emily», 1913 (publicado en Geografía y obras, 1922)"),
+        f("Le vent se lève !… Il faut tenter de vivre !", "¡Se levanta el viento!… ¡Hay que intentar vivir!", "Paul Valéry, El cementerio marino, 1920"),
+        f("Les vrais paradis sont les paradis qu'on a perdus.", "Los verdaderos paraísos son los paraísos que se han perdido.", "Marcel Proust, El tiempo recobrado, 1927"),
+        f(null, "Yo soy yo y mi circunstancia, y si no la salvo a ella no me salvo yo.", "José Ortega y Gasset, Meditaciones del Quijote, 1914"),
+        f("Well, less is more, Lucrezia.", "Pues bien, menos es más, Lucrezia.", "Robert Browning, «Andrea del Sarto», 1855; el lema lo hizo suyo el arquitecto Ludwig Mies van der Rohe"),
+        f("If you have to ask what jazz is, you'll never know.", "Si tienes que preguntar qué es el jazz, nunca lo sabrás.", "Atribuida a Louis Armstrong"),
+        f("The most effective way to do it, is to do it.", "La manera más eficaz de hacerlo es hacerlo.", "Atribuida a Amelia Earhart"),
+    )
+
     /** Tierras Antiguas: dichos propios del tema, escritos para la app (no citan ninguna obra). */
     val ANTIGUAS = listOf(
         f(null, "El camino no se acorta mirándolo; se acorta andándolo.", "Dicho de los caminantes"),
@@ -997,6 +1027,7 @@ object Frases {
         TemaId.LABORATORIO -> LABORATORIO
         TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON
+        TemaId.DECO -> DECO
         TemaId.BOTANICO -> BOTANICO
         TemaId.RUINAS -> RUINAS
         TemaId.NAVIDAD -> NAVIDAD
@@ -1039,6 +1070,7 @@ object Frases {
         TemaId.LABORATORIO -> "NOTA DEL DÍA"
         TemaId.COLONOS -> "Del almanaque"
         TemaId.NAPOLEON -> "BOLETÍN DEL EJÉRCITO"
+        TemaId.DECO -> "Del programa de esta noche"
         TemaId.BOTANICO -> "Nota del naturalista"
         TemaId.RUINAS -> "Escrito en la pared"
         TemaId.NAVIDAD -> "Junto a la chimenea"

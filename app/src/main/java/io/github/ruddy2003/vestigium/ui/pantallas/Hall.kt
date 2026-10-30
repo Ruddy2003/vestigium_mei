@@ -102,6 +102,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.LABORATORIO -> Color(0xFF00ACC1)
     TemaId.COLONOS -> Color(0xFF2F4A6E)
     TemaId.NAPOLEON -> Color(0xFF1F3A8A)
+    TemaId.DECO -> Color(0xFF1F6B57)   // jade de ascensor
     TemaId.BOTANICO -> Color(0xFFA0522D)
     TemaId.RUINAS -> Color(0xFF5B7A3A)   // musgo
     TemaId.NAVIDAD -> Color(0xFF1B5E20)
@@ -214,6 +215,8 @@ object PiezasLogro {
         TemaId.LABORATORIO -> Trazo(u, 0.75f, StrokeCap.Round, StrokeJoin.Round, null, 0f, false, Color(0xFFF4FBFC))
         TemaId.COLONOS -> Trazo(u, 1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(1.2f, 0.8f), 0f, false, Color(0xFFE6DFCC))
         TemaId.NAPOLEON -> Trazo(u, 1.05f, StrokeCap.Butt, StrokeJoin.Miter, null, 0f, true, Color(0xFFF3E6C4))
+        // Filete doble de oro, recto y sin pausas, sobre la cartulina marfil de un programa de gala.
+        TemaId.DECO -> Trazo(u, 0.95f, StrokeCap.Square, StrokeJoin.Miter, null, 0f, true, Color(0xFFF3EAD4))
         TemaId.BOTANICO -> Trazo(u, 0.85f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(0.01f, 1.8f), 0f, false, Color(0xFFE3D3AE))
         // Trazos quebrados como grietas, sobre el gris del hormigón.
         TemaId.RUINAS -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Bevel, floatArrayOf(5f, 0.8f, 1.5f, 0.8f), 0f, false, Color(0xFFD6D6CC))
@@ -336,6 +339,8 @@ object PiezasLogro {
             }
             TemaId.COLONOS -> for (i in 0 until 36) { val a = i * PI / 18; drawLine(t, en(a - 0.05, 0.85f), en(a + 0.05, 0.95f), 1.4f * u) }
             TemaId.NAPOLEON -> for (i in 0 until 20) { val a = i * PI / 10; val p = en(a, 0.89f); rotate(grados(a) + 45f, p) { drawOval(m, Offset(p.x - 3 * u, p.y - 1.3f * u), Size(6 * u, 2.6f * u)) } }
+            // Un sol de rayos alrededor de la pieza: largos y cortos, como en la puerta de un ascensor.
+            TemaId.DECO -> { drawCircle(m, r * 0.97f, c, style = Stroke(0.8f * u)); for (i in 0 until 32) { val a = i * PI / 16; drawLine(m, en(a, 0.82f), en(a, if (i % 2 == 0) 0.95f else 0.88f), (if (i % 2 == 0) 1.4f else 0.8f) * u) } }
             TemaId.BOTANICO -> {
                 drawCircle(t, r * 0.89f, c, style = Stroke(0.9f * u))
                 for (i in 0 until 14) { val a = i * PI / 7; val p = en(a, if (i % 2 == 0) 0.84f else 0.94f); rotate(grados(a), p) { drawOval(Color(0xFF5C7A3A).copy(alpha = if (hecho) 0.8f else 0.3f), Offset(p.x - 1.4f * u, p.y - 3 * u), Size(2.8f * u, 6 * u)) } }
@@ -456,6 +461,8 @@ object PiezasLogro {
             TemaId.LABORATORIO -> { val m = an / 2; for (k in 0 until 2) drawPath(Path().apply { moveTo(x + k * m, y); lineTo(x + k * m, y - 3.5f * u); lineTo(x + (k + 1) * m, y); close() }, tinta) }
             TemaId.COLONOS -> { drawPath(Path().apply { moveTo(x, y); lineTo(x + an * 0.35f, y - 5 * u); lineTo(x + an, y); close() }, tinta); drawRect(tinta, Offset(x + an * 0.65f, y - 5 * u), Size(1.6f * u, 4 * u)) }
             TemaId.NAPOLEON -> drawPath(Path().apply { moveTo(x, y); lineTo(x + 1.5f * u, y - 4 * u); lineTo(x + an - 1.5f * u, y - 4 * u); lineTo(x + an, y); close() }, tinta)
+            // La corona escalonada de un rascacielos con su aguja.
+            TemaId.DECO -> { drawRect(tinta, Offset(x + an * 0.15f, y - 2.5f * u), Size(an * 0.7f, 2.5f * u)); drawRect(tinta, Offset(x + an * 0.3f, y - 5 * u), Size(an * 0.4f, 2.5f * u)); drawLine(tinta, Offset(cx, y - 5 * u), Offset(cx, y - 9 * u), 0.8f * u) }
             TemaId.BOTANICO -> {
                 val d = an - 1 * u
                 drawArc(tz.material.copy(alpha = 0.5f), 180f, 180f, true, Offset(x + 0.5f * u, y - d / 2), Size(d, d))
@@ -577,6 +584,13 @@ object PiezasLogro {
             TemaId.NAPOLEON -> {
                 traza(Path().apply { addOval(Rect(c.x - 20 * u, c.y - 24 * u, c.x + 20 * u, c.y + 26 * u)) })
                 listOf(-6f, 0f, 6f).forEach { dx -> drawCircle(tinto, (if (dx == 0f) 2.4f else 1.8f) * u, Offset(c.x + dx * u, c.y - 27 * u)) }
+            }
+            // El sello de la naviera: un octógono escalonado con el abanico dentro.
+            TemaId.DECO -> {
+                traza(poligono(8, 24 * u, PI / 8))
+                traza(poligono(8, 19 * u, PI / 8))
+                for (i in 0 until 9) if (i % 2 == 0) drawArc(tinto, 180f + i * 20f, 20f, true, Offset(c.x - 12 * u, c.y - 8 * u), Size(24 * u, 24 * u))
+                drawLine(tinto, Offset(c.x - 13 * u, c.y + 4.5f * u), Offset(c.x + 13 * u, c.y + 4.5f * u), 1.2f * u)
             }
             TemaId.BOTANICO -> traza(Path().apply { moveTo(c.x - 30 * u, c.y); quadraticTo(c.x, c.y - 34 * u, c.x + 30 * u, c.y); quadraticTo(c.x, c.y + 34 * u, c.x - 30 * u, c.y); close() })
             // Una señal octogonal, de las de alto.
@@ -897,6 +911,17 @@ object PiezasLogro {
                 listOf(-18f, 14f).forEach { dx -> drawRect(hueco, Offset(c.x + dx * u, base - 22 * u), Size(4 * u, 10 * u), style = Stroke(0.7f * u)) }
                 suelo()
             }
+            // El cine de los años veinte: la fachada escalonada, la marquesina con sus bombillas y la puerta de doble hoja.
+            TemaId.DECO -> {
+                drawRect(tinta, Offset(c.x - 22 * u, base - 30 * u), Size(44 * u, 30 * u))
+                drawRect(tinta, Offset(c.x - 14 * u, base - 38 * u), Size(28 * u, 8 * u)); drawRect(tinta, Offset(c.x - 7 * u, base - 44 * u), Size(14 * u, 6 * u))
+                drawRect(hueco, Offset(c.x - 26 * u, base - 20 * u), Size(52 * u, 4 * u))
+                var bx = c.x - 24 * u; while (bx <= c.x + 24 * u) { drawCircle(tinta, 0.8f * u, Offset(bx, base - 18 * u)); bx += 4 * u }
+                drawRect(hueco, Offset(c.x - 7 * u, base - 13 * u), Size(14 * u, 13 * u))
+                drawLine(tinta, Offset(c.x, base - 13 * u), Offset(c.x, base), 0.8f * u)
+                listOf(-4f, 0f, 4f).forEach { dx -> drawLine(hueco, Offset(c.x + dx * u, base - 42 * u), Offset(c.x + dx * u, base - 32 * u), 0.8f * u) }
+                suelo()
+            }
             TemaId.BOTANICO -> {
                 val cristal = tz.material.copy(alpha = 0.45f)
                 listOf(Rect(c.x - 30 * u, base - 18 * u, c.x - 12 * u, base), Rect(c.x + 12 * u, base - 18 * u, c.x + 30 * u, base), Rect(c.x - 14 * u, base - 32 * u, c.x + 14 * u, base)).forEach { r ->
@@ -1187,6 +1212,14 @@ object PiezasLogro {
                 letra("N", n, 8 * u, claro)
                 drawPath(Path().apply { moveTo(px, c.y - 27 * u); lineTo(px - 6 * u, c.y - 32 * u); lineTo(px - 2 * u, c.y - 29 * u); lineTo(px, c.y - 33 * u); lineTo(px + 2 * u, c.y - 29 * u); lineTo(px + 6 * u, c.y - 32 * u); close() }, tinta)
             }
+            // El gallardete de la naviera, con tres franjas de velocidad y el abanico; en el asta, una bola de latón.
+            TemaId.DECO -> {
+                asta()
+                pano(Path().apply { moveTo(px, arriba); lineTo(c.x + 20 * u, c.y - 9 * u); lineTo(px, c.y + 6 * u); close() })
+                listOf(-14f, -9f, -4f).forEach { dy -> drawLine(claro, Offset(px + 2 * u, c.y + dy * u), Offset(px + 2 * u + (14 + dy) * u, c.y + dy * u), 1 * u) }
+                for (i in 0 until 5) if (i % 2 == 0) drawArc(claro, 180f + i * 36f, 36f, true, Offset(px + 2 * u, c.y - 2 * u), Size(10 * u, 10 * u))
+                drawCircle(tinta, 2.4f * u, Offset(px, c.y - 28 * u))
+            }
             TemaId.BOTANICO -> {
                 asta()
                 pano(Path().apply { moveTo(px, arriba); cubicTo(px + 12 * u, arriba + 4 * u, c.x + 8 * u, arriba - 4 * u, c.x + 20 * u, arriba + 4 * u); lineTo(c.x + 20 * u, arriba + 12 * u); cubicTo(c.x + 8 * u, arriba + 4 * u, px + 12 * u, arriba + 12 * u, px, arriba + 8 * u); close() })
@@ -1452,6 +1485,14 @@ object PiezasLogro {
                 listOf(-1f, 1f).forEach { s -> for (k in 0 until 7) { val a = PI / 2 + s * (0.3 + k * 0.33); val p = en(a, 0.78f); rotate((a * 180 / PI).toFloat() + 90f, p) { drawOval(tinta, Offset(p.x - 1.2f * u, p.y - 2.6f * u), Size(2.4f * u, 5.2f * u)) } } }
                 letra("20", Offset(c.x, c.y - 1 * u), 10 * u, tinta); letra("FR", Offset(c.x, c.y + 8 * u), 4.5f * u, tinta)
             }
+            // La ficha del casino del barco: canto con muescas, un abanico al centro y el valor.
+            TemaId.DECO -> {
+                disco()
+                for (k in 0 until 8) { val a = k * PI / 4; drawLine(tinta, en(a, 0.82f), en(a, 1f), 3 * u) }
+                contorno(tz, circulo(c, R * 0.62f), tinta, 0.9f * u)
+                for (i in 0 until 7) if (i % 2 == 0) drawArc(tinta, 180f + i * 180f / 7, 180f / 7, true, Offset(c.x - 8 * u, c.y - 6 * u), Size(16 * u, 16 * u))
+                letra("25", Offset(c.x, c.y + 7 * u), 5 * u, tinta)
+            }
             TemaId.BOTANICO -> {
                 disco()
                 val hoja = Path().apply { moveTo(c.x - 10 * u, c.y + 8 * u); quadraticTo(c.x - 8 * u, c.y - 10 * u, c.x + 10 * u, c.y - 10 * u); quadraticTo(c.x + 8 * u, c.y + 8 * u, c.x - 10 * u, c.y + 8 * u); close() }
@@ -1708,6 +1749,15 @@ object PiezasLogro {
                 drawRect(Color(0xFFD4AF37), Offset(c.x - 8 * u, c.y - 6 * u), Size(16 * u, 12 * u))
                 letra("N", c, 9 * u, tinta)
                 letra("CODE", Offset(c.x, c.y - 12 * u), 4 * u, Color(0xFFD4AF37))
+            }
+            // El carnet de baile de laca, con el abanico de oro en la tapa y el lápiz colgando de su cordón.
+            TemaId.DECO -> {
+                tapa(c.x - 13 * u, c.y - 22 * u, c.x + 13 * u, c.y + 20 * u, Color(0xFF16130E), 1.5f * u)
+                drawRect(Color(0xFFD4AF37), Offset(c.x - 10 * u, c.y - 19 * u), Size(20 * u, 36 * u), style = Stroke(0.8f * u))
+                for (i in 0 until 9) if (i % 2 == 0) drawArc(Color(0xFFD4AF37), 180f + i * 20f, 20f, true, Offset(c.x - 8 * u, c.y - 6 * u), Size(16 * u, 16 * u))
+                drawRect(Color(0xFFD4AF37), Offset(c.x - 9 * u, c.y + 2 * u), Size(18 * u, 1.6f * u))
+                drawLine(Color(0xFFB5523B), Offset(c.x + 13 * u, c.y + 14 * u), Offset(c.x + 18 * u, c.y + 26 * u), 0.8f * u)
+                drawRect(tinta, Offset(c.x + 17 * u, c.y + 24 * u), Size(2 * u, 8 * u))
             }
             TemaId.BOTANICO -> {
                 paginas(false)
@@ -1970,6 +2020,13 @@ object PiezasLogro {
                 hoja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u)
                 val s = caja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y - 2 * u); drawPath(s, lerp(papel, tinta, 0.08f)); contorno(tz, s, tinta, 1 * u)
                 drawCircle(Color(0xFFB0283F), 6 * u, Offset(c.x, c.y - 2 * u)); letra("N", Offset(c.x, c.y - 2 * u), 7 * u, Color(0xFFF2D58A))
+            }
+            // El telegrama: la hoja con las tiras de cinta pegadas y el membrete del abanico.
+            TemaId.DECO -> {
+                hoja(c.x - 24 * u, c.y - 16 * u, c.x + 24 * u, c.y + 16 * u)
+                for (i in 0 until 7) if (i % 2 == 0) drawArc(tinta, 180f + i * 180f / 7, 180f / 7, true, Offset(c.x - 20 * u, c.y - 14 * u), Size(10 * u, 10 * u))
+                drawLine(tinta, Offset(c.x - 7 * u, c.y - 9 * u), Offset(c.x + 20 * u, c.y - 9 * u), 1 * u)
+                listOf(-2f, 6f).forEach { dy -> drawRect(lerp(papel, Color(0xFFD4AF37), 0.45f), Offset(c.x - 19 * u, c.y + dy * u), Size(38 * u, 5 * u)) }
             }
             TemaId.BOTANICO -> {
                 val p = Path().apply {

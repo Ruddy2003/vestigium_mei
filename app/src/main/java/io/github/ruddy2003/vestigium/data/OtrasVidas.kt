@@ -539,6 +539,28 @@ object OtrasVidas {
             fuentes = listOf("Lo que comía el ejército de Napoleón (NPR)" to "https://www.npr.org/sections/thesalt/2015/06/18/414614705/appetite-for-war-what-napoleon-and-his-men-ate-on-the-march",
                 "La infantería en la campaña de 1812" to "https://www.napoleonguide.com/campaign_russ_1812inf.htm")),
 
+        // La vida del tema Art déco. Lou es inventada; las cifras de la ciudad y del país sí salen de los registros de la época.
+        Vida("pianista", "Lou", "Pianista de un club de jazz", "Nueva York", "1926", 1926, "tema", "deco", edad = 29,
+            historia = listOf(
+                "Lou se levanta pasado el mediodía en un cuarto de alquiler de Harlem. En la tarde ensaya en el piano de una casa de vecinos o en el del club vacío: la mano izquierda salta entre el bajo y el acorde, como en el piano «stride», y la derecha inventa encima.",
+                "A las nueve de la noche toma el metro hacia el club. Es plena Ley Seca: el alcohol está prohibido desde 1920, pero en el sótano se sirve igual, en tazas de café si hace falta. Lou toca siete horas casi seguidas, entre el humo, el charlestón y el ruido de la gente.",
+                "Cuando el club cierra, a las cuatro, empieza lo que más le gusta: la sesión de después, en otro sótano o en una fiesta de alquiler, donde los músicos tocan para ellos mismos hasta que sale el sol. Duerme de día, como casi todos los músicos de la ciudad.",
+            ),
+            dia = listOf(t(6.0, 13.0, Hacer.DORMIR), t(13.0, 14.0, Hacer.COMER), t(14.0, 17.0, Hacer.LIBRE, "ensayar"), t(17.0, 19.0, Hacer.CUIDAR), t(19.0, 20.0, Hacer.COMER),
+                t(20.0, 21.0, Hacer.CAMINO, "en metro"), t(21.0, 4.0, Hacer.TRABAJO, "tocar en el club"), t(4.0, 6.0, Hacer.GENTE, "la sesión de después")),
+            datos = mapOf("pasos" to r(6000, "Calles y escaleras del metro; casi todo el resto, sentado al piano."), "km_anio" to r(5000), "kcal" to r(2500), "proteina" to r(80),
+                "azucar" to r(70, "Refrescos, café endulzado y los dulces de las cafeterías que abren de noche."), "fibra" to r(15), "alcohol" to r(40, "Prohibido por la Ley Seca, pero servido en los clubes."),
+                "sueno" to r(7.0), "dormir" to r(6.0), "trabajo" to r(49, "Siete noches por semana, siete horas cada una."), "aire_libre" to r(1, "Casi no ve el sol: duerme de día."),
+                "pantalla" to r(0.3, "Alguna función de cine mudo en la tarde."), "notificaciones" to r(10, "El timbre del teléfono del club, los recados, la puerta."), "musica" to r(9, "Siete horas en el club y la sesión de después."),
+                "personas_dia" to r(200, "El público del club."), "conocidas" to r(3000), "poblacion" to e(6300000, "Entre los censos de 1920 (5.6 millones) y 1930 (6.9 millones)."), "lejos" to r(1500),
+                "estatura" to r(170), "vida" to m(56.7, "Estados Unidos, 1926, en los estados que registraban las defunciones (NCHS)."), "vida_adulto" to r(65),
+                "hijos" to r(2.9, "Aproximado para el país a mediados de los años veinte; no está comprobado."), "alfabetizacion" to e(94, "En el censo de 1920, cerca del 6% no sabía escribir."),
+                "lectura" to r(6, "Periódicos y revistas a diario; algún libro.")),
+            fuentes = listOf("La Ley Seca en Estados Unidos" to "${W}Prohibition_in_the_United_States", "El piano stride" to "${W}Stride_(music)",
+                "El Renacimiento de Harlem" to "${W}Harlem_Renaissance", "Población de Nueva York por censo" to "${W}Demographic_history_of_New_York_City",
+                "NCHS: esperanza de vida al nacer desde 1900" to "https://data.cdc.gov/NCHS/NCHS-Death-rates-and-life-expectancy-at-birth/w9j2-ggv5"),
+            inspiracion = "Inspirado en los pianistas de stride de Harlem de los años veinte, que tocaban en clubes y fiestas de alquiler hasta el amanecer."),
+
         Vida("lavandera", "Marie-Jeanne", "Lavandera", "Un barco-lavadero en el Sena, París", "1789", 1789, "tema", "revolucion", edad = 28,
             historia = listOf(
                 "Marie-Jeanne lava ropa ajena en uno de los barcos-lavaderos amarrados en el Sena: de rodillas, con las manos en agua fría, golpeando la ropa con una paleta de madera, desde que amanece hasta que se va la luz.",

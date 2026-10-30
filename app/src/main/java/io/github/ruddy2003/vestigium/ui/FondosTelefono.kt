@@ -171,6 +171,7 @@ object FondosTelefono {
         TemaId.LABORATORIO -> "CUADERNO DE LABORATORIO VM-01"
         TemaId.COLONOS -> "LA GACETA DEL VESTIGIO"
         TemaId.NAPOLEON -> "Bulletin du Vestige"
+        TemaId.DECO -> "Línea Transatlántica del Vestigio"
         TemaId.BOTANICO -> "Herbarium vestigii"
         TemaId.RUINAS -> "Cuaderno del silencio"
         TemaId.NAVIDAD -> "Cartas de invierno"
@@ -415,6 +416,26 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }, c, style = Stroke(g))
                 concavo(0f, col, 1.4f * u); concavo(6 * u, e.tertiary.copy(alpha = 0.35f), 0.8f * u)
                 listOf(Offset(cx, arr), Offset(cx, aba)).forEach { c -> estrellaMarco(c, 6 * u, 5, e.tertiary.copy(alpha = 0.6f)) }
+            }
+            TemaId.DECO -> {
+                // Doble filete con las cuatro esquinas escalonadas, como el marco de un cartel de naviera, y un abanico
+                // solar arriba y abajo al centro.
+                val k = 7 * u
+                fun escalonado(d: Float, c: Color, g: Float) = drawPath(Path().apply {
+                    moveTo(izq + d + 3 * k, arr + d); lineTo(der - d - 3 * k, arr + d); lineTo(der - d - 3 * k, arr + d + k); lineTo(der - d - 2 * k, arr + d + k)
+                    lineTo(der - d - 2 * k, arr + d + 2 * k); lineTo(der - d - k, arr + d + 2 * k); lineTo(der - d - k, arr + d + 3 * k); lineTo(der - d, arr + d + 3 * k)
+                    lineTo(der - d, aba - d - 3 * k); lineTo(der - d - k, aba - d - 3 * k); lineTo(der - d - k, aba - d - 2 * k); lineTo(der - d - 2 * k, aba - d - 2 * k)
+                    lineTo(der - d - 2 * k, aba - d - k); lineTo(der - d - 3 * k, aba - d - k); lineTo(der - d - 3 * k, aba - d); lineTo(izq + d + 3 * k, aba - d)
+                    lineTo(izq + d + 3 * k, aba - d - k); lineTo(izq + d + 2 * k, aba - d - k); lineTo(izq + d + 2 * k, aba - d - 2 * k); lineTo(izq + d + k, aba - d - 2 * k)
+                    lineTo(izq + d + k, aba - d - 3 * k); lineTo(izq + d, aba - d - 3 * k); lineTo(izq + d, arr + d + 3 * k); lineTo(izq + d + k, arr + d + 3 * k)
+                    lineTo(izq + d + k, arr + d + 2 * k); lineTo(izq + d + 2 * k, arr + d + 2 * k); lineTo(izq + d + 2 * k, arr + d + k); lineTo(izq + d + 3 * k, arr + d + k); close()
+                }, c, style = Stroke(g))
+                escalonado(0f, col, 1.4f * u); escalonado(5 * u, e.primary.copy(alpha = 0.4f), 0.8f * u)
+                listOf(arr to 1f, aba to -1f).forEach { (y, s) ->
+                    val rr = 11 * u; val b = Offset(cx, y + s * 2 * u)
+                    for (i in 0 until 7) if (i % 2 == 0) drawArc(e.primary.copy(alpha = 0.7f), (if (s > 0) 0f else 180f) + i * 180f / 7, 180f / 7, true, Offset(b.x - rr, b.y - rr), Size(2 * rr, 2 * rr))
+                    drawCircle(e.secondary.copy(alpha = 0.7f), 3 * u, b)
+                }
             }
             TemaId.BOTANICO -> {
                 // Pliego de herbario: filete fino, alfileres arriba y la etiqueta del ejemplar abajo a la derecha.
@@ -889,6 +910,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.LABORATORIO -> R.drawable.logo_laboratorio
     TemaId.COLONOS -> R.drawable.logo_colonos
     TemaId.NAPOLEON -> R.drawable.logo_napoleon
+    TemaId.DECO -> R.drawable.logo_deco
     TemaId.BOTANICO -> R.drawable.logo_botanico
     TemaId.RUINAS -> R.drawable.logo_ruinas
     TemaId.NAVIDAD -> R.drawable.logo_navidad

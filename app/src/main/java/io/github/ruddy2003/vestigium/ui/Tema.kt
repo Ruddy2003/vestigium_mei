@@ -117,6 +117,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     LABORATORIO("laboratorio", "Laboratorio", "Blanco clínico, cian y violeta. Un laboratorio silencioso donde todo se mide.", Epoca.FUTURO),
     COLONOS("colonos", "Colonos", "Papel de gaceta, azul marino y ladrillo. Vecinos que reconstruyen su pueblo.", Epoca.FUTURO),
     NAPOLEON("napoleon", "Napoleónico", "El Imperio (1804–1815): azul imperial, oro y carmesí, letra Didot. Boletines de la Grande Armée y fechas en francés.", Epoca.CONTEMPORANEA),
+    DECO("deco", "Art déco", "Los años veinte: laca negra, oro y marfil, abanicos de rayos, rascacielos y trasatlánticos. Cada día es un pasaje de barco y los números suben en escalones.", Epoca.CONTEMPORANEA),
     BOTANICO("botanico", "Botánico", "El cuaderno de un naturalista viajero: escarabajos clavados con alfiler, hileras de hormigas y helechos a tinta sepia, verde musgo y óxido. Fecha según la estación.", Epoca.CONTEMPORANEA),
     RUINAS("ruinas", "Ciudad verde", "Una ciudad que el bosque recuperó: hormigón agrietado, hiedra, musgo y óxido. Los días se cuentan desde el silencio, con la letra de una máquina de escribir rescatada.", Epoca.FUTURO),
     NAVIDAD("navidad", "Navidad", "Rojo, verde pino y oro, con nieve. Cartas junto al fuego y la cuenta hacia el 25 de diciembre.", Epoca.CONTEMPORANEA),
@@ -366,6 +367,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.LABORATORIO -> if (oscuro) laboratorioOscuro else laboratorioClaro
     TemaId.COLONOS -> if (oscuro) colonosOscuro else colonosClaro
     TemaId.NAPOLEON -> if (oscuro) napoleonOscuro else napoleonClaro
+    TemaId.DECO -> if (oscuro) decoOscuro else decoClaro
     TemaId.BOTANICO -> if (oscuro) botanicoOscuro else botanicoClaro
     TemaId.RUINAS -> if (oscuro) ruinasOscuro else ruinasClaro
     TemaId.NAVIDAD -> if (oscuro) navidadOscuro else navidadClaro
@@ -401,6 +403,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.LABORATORIO -> tipoLaboratorio
     TemaId.COLONOS -> tipoColonos
     TemaId.NAPOLEON -> tipoNapoleon
+    TemaId.DECO -> tipoDeco
     TemaId.BOTANICO -> tipoBotanico
     TemaId.RUINAS -> tipoRuinas
     TemaId.NAVIDAD -> tipoNavidad
@@ -442,6 +445,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.LABORATORIO -> 58f to 1f     // Jost, geométrica
     TemaId.COLONOS -> 64f to 0.5f       // Fell
     TemaId.NAPOLEON -> 64f to 1f        // Bodoni
+    TemaId.DECO -> 62f to 3.2f      // Poiret One, fina y muy espaciada, como una marquesina
     TemaId.BOTANICO -> 62f to 0f        // Fraunces
     TemaId.RUINAS -> 64f to 1f        // Letrero (Londrina), condensada
     TemaId.NAVIDAD -> 54f to 1f         // Cinzel Decorative, muy ancha
@@ -482,6 +486,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.LABORATORIO -> Esquinas(14, Esquina.REDONDA)
     TemaId.COLONOS -> Esquinas(5, Esquina.REDONDA)
     TemaId.NAPOLEON -> Esquinas(2, Esquina.REDONDA)
+    TemaId.DECO -> Esquinas(11, Esquina.CORTADA)           // el chaflán de la esquina de un rascacielos
     TemaId.BOTANICO -> Esquinas(12, Esquina.HOJA)          // la hoja
     TemaId.RUINAS -> Esquinas(3, Esquina.CORTADA)        // el bloque de hormigón desportillado
     TemaId.NAVIDAD -> Esquinas(8, Esquina.REDONDA)
@@ -717,6 +722,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.LABORATORIO -> "SESIÓN"
         TemaId.COLONOS -> "Jornada"
         TemaId.NAPOLEON -> "BOLETÍN"
+        TemaId.DECO -> "PASAJE Nº 290"
         TemaId.BOTANICO -> "Herbario"
         TemaId.RUINAS -> "Día 214"
         TemaId.NAVIDAD -> "El día"
@@ -751,6 +757,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.LABORATORIO -> "T+290"
         TemaId.COLONOS -> "17 de octubre"
         TemaId.NAPOLEON -> "samedi 17 octobre"
+        TemaId.DECO -> "función de medianoche"
         TemaId.BOTANICO -> "otoño · día 26"
         TemaId.RUINAS -> "tras el silencio · otoño"
         TemaId.NAVIDAD -> "faltan 69 días"
@@ -787,6 +794,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.LABORATORIO -> 12 to 20
         TemaId.COLONOS -> 16 to 16
         TemaId.NAPOLEON -> 12 to 20
+        TemaId.DECO -> 21 to 11
         TemaId.BOTANICO -> 16 to 16
         TemaId.RUINAS -> 18 to 14
         TemaId.NAVIDAD -> 20 to 12
@@ -822,6 +830,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.LABORATORIO -> 10
         TemaId.COLONOS -> 14
         TemaId.NAPOLEON -> 10
+        TemaId.DECO -> 13
         TemaId.BOTANICO -> 12
         TemaId.RUINAS -> 13
         TemaId.NAVIDAD -> 10
@@ -930,6 +939,13 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     TemaId.NAPOLEON -> GenericShape { s, _ ->
         val p = s.height * 0.1f
         moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width, s.height - p); lineTo(s.width / 2, s.height); lineTo(0f, s.height - p); close()
+    }
+    // La corona escalonada de un rascacielos: tres retranqueos a cada lado, como en las torres de los años veinte.
+    TemaId.DECO -> GenericShape { s, _ ->
+        val a = s.height * 0.045f; val p = s.width * 0.07f
+        moveTo(0f, s.height); lineTo(0f, 3 * a); lineTo(p, 3 * a); lineTo(p, 2 * a); lineTo(2 * p, 2 * a); lineTo(2 * p, a)
+        lineTo(3 * p, a); lineTo(3 * p, 0f); lineTo(s.width - 3 * p, 0f); lineTo(s.width - 3 * p, a); lineTo(s.width - 2 * p, a)
+        lineTo(s.width - 2 * p, 2 * a); lineTo(s.width - p, 2 * a); lineTo(s.width - p, 3 * a); lineTo(s.width, 3 * a); lineTo(s.width, s.height); close()
     }
     // Hoja: dos esquinas opuestas muy redondas.
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 22.dp, topEnd = 3.dp, bottomEnd = 22.dp, bottomStart = 3.dp)
@@ -1098,6 +1114,17 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.COLONOS -> drawPath(Path().apply { moveTo(0f, h * 0.45f); lineTo(cx, 0f); lineTo(w, h * 0.45f); lineTo(w, h); lineTo(0f, h); close() }, c)
         // Escudo.
         TemaId.NAPOLEON -> drawPath(Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h * 0.55f); quadraticTo(w, h * 0.85f, cx, h); quadraticTo(0f, h * 0.85f, 0f, h * 0.55f); close() }, c)
+        // Abanico solar: medio disco que sale de la base, con sus rayos vaciados y un arco de oro por dentro.
+        TemaId.DECO -> {
+            val base = Offset(cx, h * 0.86f)
+            drawArc(c, 180f, 180f, true, Offset(cx - r, base.y - r), Size(2 * r, 2 * r))
+            for (i in 1..6) {
+                val a = Math.toRadians(180.0 + i * 180.0 / 7)
+                drawLine(fondo.copy(alpha = 0.7f), base, Offset(cx + r * kotlin.math.cos(a).toFloat(), base.y + r * kotlin.math.sin(a).toFloat()), w * 0.045f)
+            }
+            drawArc(fondo.copy(alpha = 0.55f), 180f, 180f, false, Offset(cx - r * 0.42f, base.y - r * 0.42f), Size(r * 0.84f, r * 0.84f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.06f))
+            drawRect(c, Offset(w * 0.06f, base.y), Size(w * 0.88f, h * 0.1f))
+        }
         // Hoja.
         TemaId.BOTANICO -> drawPath(Path().apply { moveTo(0f, h); cubicTo(0f, h * 0.3f, w * 0.3f, 0f, w, 0f); cubicTo(w, h * 0.7f, w * 0.7f, h, 0f, h); close() }, c)
         // Semáforo apagado: la caja y sus tres luces; solo la verde sigue viva.

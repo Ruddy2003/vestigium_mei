@@ -240,6 +240,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
             listOf("Edición privada", "Sólo para el vecino titular")), reintentar)
         // Boletín sellado: el título va bajo el sello, entre laureles.
         TemaId.NAPOLEON -> BloqueoCentrado(TextosBloqueo("BULLETIN SCELLÉ", "— el despacho sólo se abre ante su destinatario", "ROMPER EL LACRE"), tituloArriba = false, sello = 150, reintentar = reintentar)
+        // La puerta de un ascensor de rascacielos: sube solo quien tiene la llave del piso.
+        TemaId.DECO -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI · PISO PRIVADO", "≡ El ascensor sólo sube con la llave del pasajero.", "LLAMAR AL ASCENSOR"), arriba = 34, reintentar = reintentar) { cs -> bloqueoAscensor(cs) }
         TemaId.BOTANICO -> BloqueoLamina(TextosBloqueo("Herbarium Vestigii", "⁂ La prensa está cerrada: el ejemplar no se toca sin su colector.", "Abrir la prensa",
             listOf("Ejemplar: tu diario", "Estado: prensado y sellado", "Leg.: el titular")), reintentar)
         TemaId.RUINAS -> BloqueoTapiado(TextosBloqueo("Puerta tapiada", "❦ Aquí vive alguien. La puerta solo se abre para quien la tapió.", "Quitar las tablas",
@@ -587,6 +589,34 @@ private fun DrawScope.bloqueoPortone(cs: ColorScheme) {
     listOf(12 * u, w / 2 + 6 * u).forEach { x -> drawRect(tenue, Offset(x, h * 0.86f), Size(w / 2 - 18 * u, h * 0.14f - 10 * u), style = Stroke(0.8f * u)) }
     drawCircle(cs.tertiary.copy(alpha = 0.7f), 4 * u, Offset(w / 2 - 12 * u, h * 0.8f), style = Stroke(1.2f * u))
     drawCircle(cs.tertiary.copy(alpha = 0.7f), 4 * u, Offset(w / 2 + 12 * u, h * 0.8f), style = Stroke(1.2f * u))
+    drawLine(c, Offset(-8 * u, h), Offset(w + 8 * u, h), 3f * u)
+}
+
+/**
+ * La puerta del ascensor del Art déco: el marco escalonado, el abanico de la montante con su aguja de pisos y, abajo,
+ * las dos hojas con su juntura y los chevrones de latón.
+ */
+private fun DrawScope.bloqueoAscensor(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height; val c = cs.primary.copy(alpha = 0.75f); val tenue = cs.onSurface.copy(alpha = 0.16f)
+    val a = 10 * u; val p = w * 0.1f
+    fun marco(d: Float) = Path().apply {
+        moveTo(d, h); lineTo(d, 3 * a + d); lineTo(p + d, 3 * a + d); lineTo(p + d, 2 * a + d); lineTo(2 * p + d, 2 * a + d); lineTo(2 * p + d, a + d)
+        lineTo(3 * p + d, a + d); lineTo(3 * p + d, d); lineTo(w - 3 * p - d, d); lineTo(w - 3 * p - d, a + d); lineTo(w - 2 * p - d, a + d)
+        lineTo(w - 2 * p - d, 2 * a + d); lineTo(w - p - d, 2 * a + d); lineTo(w - p - d, 3 * a + d); lineTo(w - d, 3 * a + d); lineTo(w - d, h)
+    }
+    drawPath(marco(0f), c, style = Stroke(1.8f * u, join = StrokeJoin.Miter))
+    drawPath(marco(6 * u), c.copy(alpha = 0.35f), style = Stroke(0.8f * u, join = StrokeJoin.Miter))
+    // La montante: el abanico con la aguja que marca el piso.
+    val b = Offset(w / 2, a * 3.4f); val r = a * 2.4f
+    for (i in 0 until 11) if (i % 2 == 0) drawArc(c.copy(alpha = 0.45f), 180f + i * 180f / 11, 180f / 11, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+    drawLine(cs.secondary, b, Offset(b.x + r * 0.7f, b.y - r * 0.7f), 1.6f * u)
+    drawCircle(cs.secondary, 2.5f * u, b)
+    // Las dos hojas: la juntura al medio y, abajo, los chevrones.
+    drawLine(tenue, Offset(w / 2, h * 0.8f), Offset(w / 2, h - 6 * u), u)
+    for (k in 0..2) {
+        val y = h - (12 + k * 7) * u
+        listOf(-1f, 1f).forEach { sg -> drawPath(Path().apply { moveTo(w / 2 + sg * 10 * u, y); lineTo(w / 2 + sg * 26 * u, y - 5 * u); lineTo(w / 2 + sg * 42 * u, y) }, tenue, style = Stroke(1.2f * u)) }
+    }
     drawLine(c, Offset(-8 * u, h), Offset(w + 8 * u, h), 3f * u)
 }
 
@@ -941,6 +971,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.LABORATORIO -> false
     TemaId.COLONOS -> true
     TemaId.NAPOLEON -> true
+    TemaId.DECO -> true
     TemaId.BOTANICO -> true
     TemaId.RUINAS -> true
     TemaId.NAVIDAD -> false
@@ -977,6 +1008,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.LABORATORIO -> true
     TemaId.COLONOS -> true
     TemaId.NAPOLEON -> true
+    TemaId.DECO -> true
     TemaId.BOTANICO -> true
     TemaId.RUINAS -> true
     TemaId.NAVIDAD -> true
@@ -1108,6 +1140,15 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         TemaId.NAPOLEON -> {
             drawOval(c, Offset(cx - 22 * u, 1 * u), Size(44 * u, 28 * u))
             drawOval(cs.tertiary.copy(alpha = p), Offset(cx - 24.5f * u, -1.5f * u), Size(49 * u, 33 * u), style = Stroke(1.2f * u))
+        }
+        // Una placa con las esquinas escalonadas y, encima, el abanico chico de la marquesina.
+        TemaId.DECO -> {
+            val a = 4 * u; val x0 = cx - 22 * u; val x1 = cx + 22 * u; val y0 = 4 * u; val y1 = 28 * u
+            drawPath(Path().apply {
+                moveTo(x0 + a, y0); lineTo(x1 - a, y0); lineTo(x1 - a, y0 + a); lineTo(x1, y0 + a); lineTo(x1, y1 - a); lineTo(x1 - a, y1 - a); lineTo(x1 - a, y1)
+                lineTo(x0 + a, y1); lineTo(x0 + a, y1 - a); lineTo(x0, y1 - a); lineTo(x0, y0 + a); lineTo(x0 + a, y0 + a); close()
+            }, c)
+            drawArc(cs.secondary.copy(alpha = p), 180f, 180f, true, Offset(cx - 5 * u, -1 * u), Size(10 * u, 10 * u))
         }
         // Una hoja con su pecíolo.
         TemaId.BOTANICO -> girar(-8f, Offset(cx, cy)) {
@@ -1339,6 +1380,16 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             }
             drawPath(escudo, c); drawPath(escudo, cs.tertiary, style = Stroke(1.6f * u))
         }
+        // La corona de un rascacielos: tres retranqueos a cada lado, con un abanico de rayos dentro.
+        TemaId.DECO -> {
+            val torre = Path().apply {
+                moveTo(6 * u, h - 4 * u); lineTo(6 * u, 22 * u); lineTo(12 * u, 22 * u); lineTo(12 * u, 14 * u); lineTo(18 * u, 14 * u); lineTo(18 * u, 6 * u)
+                lineTo(w - 18 * u, 6 * u); lineTo(w - 18 * u, 14 * u); lineTo(w - 12 * u, 14 * u); lineTo(w - 12 * u, 22 * u); lineTo(w - 6 * u, 22 * u); lineTo(w - 6 * u, h - 4 * u); close()
+            }
+            drawPath(torre, c); drawPath(torre, cs.secondary, style = Stroke(1.4f * u, join = StrokeJoin.Miter))
+            val b = Offset(cx, h - 8 * u)
+            for (i in 1..6) { val ang = Math.PI + i * Math.PI / 7; drawLine(sobre.copy(alpha = 0.35f), b, Offset(b.x + 16 * u * kotlin.math.cos(ang).toFloat(), b.y + 16 * u * kotlin.math.sin(ang).toFloat()), 1f * u) }
+        }
         // Hoja ancha en diagonal, con su nervio.
         TemaId.BOTANICO -> {
             drawPath(Path().apply {
@@ -1514,6 +1565,8 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.COLONOS -> { drawLine(cs.primary.copy(alpha = 0.55f), Offset(0f, 0.8f * u), Offset(w, 0.8f * u), 1.6f * u); drawLine(base, Offset(0f, 3.4f * u), Offset(w, 3.4f * u), 0.6f * u) }
         // Filete con estrellas de oro.
         TemaId.NAPOLEON -> { filete(); var x = 27 * u; while (x < w) { drawPath(barraPoligono(x, 2.8f * u, 2f * u, 5, -90f, 0.8f * u), cs.tertiary); x += 54 * u } }
+        // Filete doble y, de trecho en trecho, un abanico chico de oro que cuelga de él.
+        TemaId.DECO -> { filete(); drawLine(acento, Offset(0f, 2.6f * u), Offset(w, 2.6f * u), 0.6f * u); var x = 27 * u; while (x < w) { drawArc(cs.primary, 0f, 180f, true, Offset(x - 3.5f * u, -0.5f * u), Size(7 * u, 7 * u)); x += 54 * u } }
         // Zarcillo ondulado con hojitas.
         TemaId.BOTANICO -> {
             val p = Path().apply { moveTo(0f, 2.5f * u); var x = 0f; var i = 0; while (x < w) { quadraticTo(x + 6 * u, (if (i % 2 == 0) 0.5f else 4.5f) * u, x + 12 * u, 2.5f * u); x += 12 * u; i++ } }
@@ -1885,6 +1938,8 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         // Estandarte que se despliega desde su asta, a un lado.
         TemaId.NAPOLEON -> (scaleIn(t(280), initialScale = 0.85f, transformOrigin = TransformOrigin(if (atras) 1f else 0f, 0.5f)) + fadeIn(t(220))) togetherWith
             (fadeOut(t(160)) + scaleOut(t(160), targetScale = 0.97f))
+        // Las puertas del ascensor que se abren desde el centro.
+        TemaId.DECO -> (androidx.compose.animation.expandHorizontally(t(320), expandFrom = Alignment.CenterHorizontally) + fadeIn(t(240))) togetherWith fadeOut(t(160))
         // Una hoja que crece desde abajo, como un brote.
         TemaId.BOTANICO -> (scaleIn(t(380), initialScale = 0.96f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(t(320))) togetherWith fadeOut(t(180))
         // El polvo que se asienta: la pantalla baja apenas y se aclara; la anterior se desmorona hacia abajo.

@@ -109,6 +109,15 @@ def marmol(sem):         # Napoleónico: mármol con vetas suaves
     finas = np.abs(np.sin((x * 0.6 - y * 1.1) * 9 + t * 4.5)) ** 40 * -0.5
     return vetas + finas + ruido(sem + 1, 0.3, 3) + ruido(sem + 2, 0.5, 20)
 
+def laca(sem):           # Art déco: laca negra con escamas de abanico apenas grabadas y el brillo en diagonal
+    r = 27
+    fila = (Y // (r * 0.78)).astype(int)
+    cx = (X + (fila % 2) * r) % (2 * r) - r; cy = Y % (r * 0.78) - r * 0.78
+    d = np.sqrt(cx ** 2 + cy ** 2)
+    escamas = ((np.abs(d - r) < 0.9) | (np.abs(d - r * 0.6) < 0.7)) & (cy < 0)
+    brillo = np.exp(-(((X - Y * 0.7) - TAM * 0.3) / (TAM * 0.2)) ** 2) * 0.6
+    return escamas * 0.8 + brillo + ruido(sem, 0.2, 2)
+
 def herbario(sem):       # Botánico: papel de herbario con fibras y nervaduras muy tenues
     nerv = (np.abs(np.sin((X - Y * 0.6) * 0.035 + ruido(sem, 1.5, 16))) < 0.04) * -0.8
     return ruido(sem + 1, 0.9, 5) * 0.7 + ruido(sem + 2, 0.35) + nerv
@@ -231,6 +240,16 @@ def _cupolas(d, c, n=8, r=8.5):       # cúpulas: medio disco hacia afuera con s
         d.pieslice([x - r * K, y - r * K, x + r * K, y + r * K], g - 90, g + 90, fill=c)
         lx, ly = _pos(a, RADIO + r + 1.6)
         d.ellipse([lx - 1.4 * K, ly - 1.4 * K, lx + 1.4 * K, ly + 1.4 * K], fill=c)
+
+def _abanicos(d, c, n=10, r=10.5):     # Art déco: abanicos solares hacia afuera, de tres rayos llenos, y un punto entre uno y otro
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        x, y = _pos(a); g = math.degrees(a)
+        caja = [x - r * K, y - r * K, x + r * K, y + r * K]
+        for k in range(5):
+            if k % 2 == 0: d.pieslice(caja, g - 90 + k * 36, g - 90 + (k + 1) * 36, fill=c)
+        px, py = _pos(a + math.pi / n)
+        d.ellipse([px - 1.5 * K, py - 1.5 * K, px + 1.5 * K, py + 1.5 * K], fill=c)
 
 def _rayas(d, c, n=32, largo=0.6):    # segmentos sobre el anillo (como una barra de carga)
     for i in range(n):
@@ -462,6 +481,7 @@ TEMAS = {
     'laboratorio':  (cuadricula,    '#F1F2F1', '#1E5A66',   7, 4, 'tinta',       _marcas),
     'colonos':      (gaceta,        '#E7E3DA', '#22324D',   9, 6, 'tinta',       _cuerda),
     'napoleon':     (marmol,        '#EDEBE6', '#1F2B5C',  12, 5, 'esmalte',     _estrellas),
+    'deco':         (laca,          '#15120E', '#D9B44A',   9, 5, 'dorado',      _abanicos),
     'botanico':     (herbario,      '#EAE9E1', '#3B2E1D',   9, 6, 'ferrogalica', _hojas_alternas),
     'ruinas':       (hormigon_agrietado, '#E2E2DA', '#3E5A2A', 9, 5, 'tinta',    _hiedra),
     'navidad':      (fieltro_nieve, '#1C1E1D', '#E4C987',   8, 5, 'dorado',      _copos),

@@ -287,6 +287,7 @@ object TrofeosMas {
             TemaId.RENACIMIENTO -> Unit
             TemaId.PIRATA -> Unit
             TemaId.NAPOLEON -> Unit
+            TemaId.DECO -> Unit
             TemaId.REVOLUCION -> Unit
         }
     }

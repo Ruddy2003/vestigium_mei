@@ -282,6 +282,13 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
         moveTo(n, 0f); lineTo(w - n, 0f); lineTo(w - n, n); lineTo(w, n); lineTo(w, h - n); lineTo(w - n, h - n); lineTo(w - n, h)
         lineTo(n, h); lineTo(n, h - n); lineTo(0f, h - n); lineTo(0f, n); lineTo(n, n); close()
     }, 0.dp, 0.dp, false, 1.5.dp)
+    // La puerta de un ascensor de rascacielos: arriba, el dintel sube en tres escalones hasta el centro.
+    TemaId.DECO -> PielDialogo(FormaDp { w, h, d ->
+        val a = 6 * d; val p = w * 0.12f
+        moveTo(0f, h); lineTo(0f, 3 * a); lineTo(p, 3 * a); lineTo(p, 2 * a); lineTo(2 * p, 2 * a); lineTo(2 * p, a); lineTo(3 * p, a); lineTo(3 * p, 0f)
+        lineTo(w - 3 * p, 0f); lineTo(w - 3 * p, a); lineTo(w - 2 * p, a); lineTo(w - 2 * p, 2 * a); lineTo(w - p, 2 * a); lineTo(w - p, 3 * a); lineTo(w, 3 * a)
+        lineTo(w, h); close()
+    }, 18.dp, 0.dp, true, 1.dp)
     // Hoja: dos esquinas muy redondas y dos en punta.
     TemaId.BOTANICO -> PielDialogo(RoundedCornerShape(topStart = 30.dp, topEnd = 4.dp, bottomEnd = 30.dp, bottomStart = 4.dp), 0.dp, 0.dp, false, 1.dp)
     // Una losa de hormigón con la esquina de arriba a la derecha desprendida en escalones.
@@ -513,6 +520,22 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             // Filete de oro y una estrella junto a cada esquina escalonada.
             drawRect(e.tertiary.copy(alpha = 0.6f), Offset(11 * d, 11 * d), Size(w - 22 * d, h - 22 * d), style = Stroke(d))
             esquinasCtl { estrellaCtl(Offset(17 * d, 17 * d), 4 * d, e.tertiary) }
+        }
+        TemaId.DECO -> {
+            // Doble filete de oro que sigue los escalones del dintel y, arriba al centro, el abanico solar.
+            val oro = e.primary
+            val a = 6 * d; val p = w * 0.12f; val m = 6 * d
+            val marco = Path().apply {
+                moveTo(m, h - m); lineTo(m, 3 * a + m); lineTo(p + m * 0.4f, 3 * a + m); lineTo(p + m * 0.4f, 2 * a + m); lineTo(2 * p + m * 0.4f, 2 * a + m)
+                lineTo(2 * p + m * 0.4f, a + m); lineTo(3 * p + m * 0.4f, a + m); lineTo(3 * p + m * 0.4f, m); lineTo(w - 3 * p - m * 0.4f, m)
+                lineTo(w - 3 * p - m * 0.4f, a + m); lineTo(w - 2 * p - m * 0.4f, a + m); lineTo(w - 2 * p - m * 0.4f, 2 * a + m)
+                lineTo(w - p - m * 0.4f, 2 * a + m); lineTo(w - p - m * 0.4f, 3 * a + m); lineTo(w - m, 3 * a + m); lineTo(w - m, h - m); close()
+            }
+            drawPath(marco, oro.copy(alpha = 0.6f), style = Stroke(d))
+            val r = 13 * d; val b = Offset(w / 2, m + 18 * d)
+            for (i in 0 until 9) if (i % 2 == 0) drawArc(oro.copy(alpha = 0.7f), 180f + i * 20f, 20f, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+            drawArc(e.secondary.copy(alpha = 0.8f), 180f, 180f, true, Offset(b.x - r * 0.35f, b.y - r * 0.35f), Size(r * 0.7f, r * 0.7f))
+            drawLine(oro.copy(alpha = 0.7f), Offset(b.x - r * 1.2f, b.y + d), Offset(b.x + r * 1.2f, b.y + d), d)
         }
         TemaId.BOTANICO -> {
             // El alfiler del entomólogo arriba y una fronda de helecho abajo a la izquierda.
@@ -821,6 +844,17 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawLine(e.tertiary, Offset(w / 2 + 13 * d, cy), Offset(w, cy), d)
             estrellaCtl(Offset(w / 2, cy), 4.5f * d, e.tertiary)
             romboCtl(Offset(w / 2 - 9 * d, cy), 2 * d, 2.5f * d, e.primary); romboCtl(Offset(w / 2 + 9 * d, cy), 2 * d, 2.5f * d, e.primary)
+        }
+        // Tres filetes escalonados a cada lado de una corona de torre.
+        TemaId.DECO -> {
+            val oro = e.primary
+            for (k in 0..2) {
+                val y = cy + (k - 1) * 2.5f * d; val corte = w / 2 - (12 + k * 6) * d
+                drawLine(oro.copy(alpha = 0.7f - k * 0.15f), Offset(k * 14 * d, y), Offset(corte, y), 0.8f * d)
+                drawLine(oro.copy(alpha = 0.7f - k * 0.15f), Offset(w - corte, y), Offset(w - k * 14 * d, y), 0.8f * d)
+            }
+            drawRect(oro, Offset(w / 2 - 7 * d, cy), Size(14 * d, 3 * d)); drawRect(oro, Offset(w / 2 - 4.5f * d, cy - 3 * d), Size(9 * d, 3 * d))
+            drawRect(oro, Offset(w / 2 - 2 * d, cy - 6 * d), Size(4 * d, 3 * d)); drawLine(oro, Offset(w / 2, cy - 6 * d), Offset(w / 2, cy - 9 * d), 0.8f * d)
         }
         // Línea punteada a lápiz con una hoja al empezar.
         TemaId.BOTANICO -> {
@@ -1193,6 +1227,14 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
                 linea(e.tertiary, 0f, x, maxOf(g * 0.15f, 0.6f * d), cy - g * 0.45f); linea(e.tertiary, 0f, x, maxOf(g * 0.15f, 0.6f * d), cy + g * 0.45f)
             }
         }
+        // Tres hilos paralelos, como las líneas de velocidad; lo recorrido se llena de oro y cada paso es un escalón.
+        TemaId.DECO -> {
+            listOf(-0.4f, 0f, 0.4f).forEach { k -> linea(inactivo, x, w, g * 0.12f, cy + g * k) }
+            if (x > 0f) {
+                drawRect(activo, Offset(0f, cy - g * 0.5f), Size(x, g))
+                if (pasos in 2..40) for (i in 1 until pasos) { val xi = w * i / pasos; if (xi < x) drawLine(e.background.copy(alpha = 0.6f), Offset(xi, cy - g * 0.5f), Offset(xi, cy + g * 0.5f), 0.8f * d) }
+            }
+        }
         // Un tallo con hojas alternas.
         TemaId.BOTANICO -> {
             linea(inactivo, x, w, g * 0.25f)
@@ -1453,6 +1495,14 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
         TemaId.NAPOLEON -> {
             estrellaCtl(c, r, e.tertiary)
             estrellaCtl(c, r, color, estilo = Stroke(r * 0.1f))
+        }
+        // Un abanico solar de oro sobre su base, como la perilla de un ascensor de lujo.
+        TemaId.DECO -> {
+            val b = Offset(c.x, c.y + r * 0.35f)
+            for (i in 0 until 7) drawArc(if (i % 2 == 0) color else hueco, 180f + i * 180f / 7, 180f / 7, true, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r))
+            drawArc(e.secondary, 180f, 180f, true, Offset(b.x - r * 0.35f, b.y - r * 0.35f), Size(r * 0.7f, r * 0.7f))
+            drawRect(color, Offset(b.x - r, b.y), Size(2 * r, r * 0.22f))
+            drawArc(color, 180f, 180f, false, Offset(b.x - r, b.y - r), Size(2 * r, 2 * r), style = Stroke(r * 0.1f))
         }
         // Hoja con su nervio.
         TemaId.BOTANICO -> rotate(-35f, c) {

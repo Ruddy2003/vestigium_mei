@@ -124,6 +124,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.LABORATORIO -> BandaProbeta(modifier)
         TemaId.COLONOS -> BandaGaceta(modifier)
         TemaId.NAPOLEON -> Laureles(modifier)
+        TemaId.DECO -> Abanicos(modifier)
         TemaId.BOTANICO -> Enredadera(modifier)
         TemaId.RUINAS -> BandaCalle(modifier)
         TemaId.GOTICO -> Arqueria(modifier)
@@ -1061,6 +1062,11 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "✪", igual = "→ ", nulo = "néant", elegido = "✦", riel = RolColor.TERCIARIO, quitar = "✘", listaVacia = "( sans ordre )", flecha = "➔",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.2f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.BARRA,
         guiones = floatArrayOf(5.5f, 1.5f), tamBoton = 14, letraBoton = null, borde = RolColor.TERCIARIO, grosor = 1.5f)
+    // Rótulos de marquesina muy espaciados, el abanico de oro como aviso, doble filete en el editor y jade en el borde.
+    TemaId.DECO -> PielComponentes(sep = "  ‖  ", cerrada = "▷", abierta = "▽", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
+        aviso = "☼", igual = " ≡ ", nulo = "telón cerrado", elegido = "◆", riel = RolColor.PRIMARIO, quitar = "✕", listaVacia = "( butacas vacías )", flecha = "⇢",
+        sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 2.2f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.DOBLE,
+        guiones = floatArrayOf(8f, 2f, 2f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.2f)
     TemaId.BOTANICO -> PielComponentes(sep = "  ⁂  ", cerrada = "⚘", abierta = "❀", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
         aviso = "✾", igual = "~ ", nulo = "sin espécimen", elegido = "✿", riel = RolColor.SECUNDARIO, quitar = "⊘", listaVacia = "( frasco vacío )", flecha = "⤳",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.1f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.PUNTOS,
@@ -1201,6 +1207,11 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
         }.padding(bottom = 6.dp))
         // Azul imperial con una estrella de oro.
         TemaId.NAPOLEON -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.tertiary)) { append("  ✦") } }, style = estilo.copy(letterSpacing = 1.2.sp), color = e.primary, modifier = peso)
+        // Rótulo de marquesina: letras muy abiertas sobre tres filetes de oro que se acortan en escalones.
+        TemaId.DECO -> Text(nombre, style = estilo.copy(letterSpacing = 2.6.sp), modifier = peso.drawBehind {
+            val g = 1.dp.toPx(); val w = size.width; val h = size.height
+            listOf(1f, 0.62f, 0.3f).forEachIndexed { k, f -> drawRect(e.primary.copy(alpha = 0.75f - k * 0.18f), Offset(0f, h - (1.2f + k * 2.6f) * g), Size(w * f, 1.1f * g)) }
+        }.padding(bottom = 9.dp))
         // Nombre de especie: cursiva sobre una línea punteada a lápiz.
         TemaId.BOTANICO -> Text(nombre, style = estilo.copy(fontStyle = FontStyle.Italic), modifier = peso.drawBehind {
             drawLine(e.onBackground.copy(alpha = 0.5f), Offset(0f, size.height - 1.dp.toPx()), Offset(size.width, size.height - 1.dp.toPx()), 1.dp.toPx(),
@@ -1344,6 +1355,14 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     }
     // Placa de puntas, como una chapa de chacó.
     TemaId.NAPOLEON -> CutCornerShape(50)
+    // Placa de ascensor de los años veinte: cada esquina se mete en dos escalones.
+    TemaId.DECO -> GenericShape { s, _ ->
+        val a = s.height * 0.16f; val w = s.width; val h = s.height
+        moveTo(2 * a, 0f); lineTo(w - 2 * a, 0f); lineTo(w - 2 * a, a); lineTo(w - a, a); lineTo(w - a, 2 * a); lineTo(w, 2 * a)
+        lineTo(w, h - 2 * a); lineTo(w - a, h - 2 * a); lineTo(w - a, h - a); lineTo(w - 2 * a, h - a); lineTo(w - 2 * a, h)
+        lineTo(2 * a, h); lineTo(2 * a, h - a); lineTo(a, h - a); lineTo(a, h - 2 * a); lineTo(0f, h - 2 * a)
+        lineTo(0f, 2 * a); lineTo(a, 2 * a); lineTo(a, a); lineTo(2 * a, a); close()
+    }
     // Hoja: dos esquinas redondas y dos en punta.
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 16.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 2.dp)
     // Una losa con las esquinas desportilladas, cada una distinta.
@@ -1437,6 +1456,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.LABORATORIO -> "cuaderno de laboratorio · $es"
         TemaId.COLONOS -> "a máquina · $es"
         TemaId.NAPOLEON -> "dépêche · $es"
+        TemaId.DECO -> "telegrama de a bordo · $es"
         TemaId.BOTANICO -> "cuaderno de campo · $es"
         TemaId.RUINAS -> "a lápiz, en el cuaderno del superviviente · $es"
         TemaId.NAVIDAD -> "carta junto al fuego · $es"
@@ -1586,6 +1606,18 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawRect(e.primary.copy(alpha = 0.35f), Offset(j, j), Size(w - 2 * j, h - 2 * j), style = Stroke(fino * 0.6f))
         }
         TemaId.NAPOLEON -> enLasCuatro { estrellaComp(Offset(i + u * 0.6f, i + u * 0.6f), u * 0.6f, e.tertiary) }
+        TemaId.DECO -> {
+            // Doble filete de oro y, en cada esquina, tres escalones que se meten hacia dentro.
+            drawRect(e.primary.copy(alpha = 0.35f), Offset(i, i), Size(w - 2 * i, h - 2 * i), style = Stroke(fino * 0.8f))
+            enLasCuatro {
+                val esc = Path().apply {
+                    moveTo(i, i + u * 1.8f); lineTo(i + u * 0.6f, i + u * 1.8f); lineTo(i + u * 0.6f, i + u * 1.2f); lineTo(i + u * 1.2f, i + u * 1.2f)
+                    lineTo(i + u * 1.2f, i + u * 0.6f); lineTo(i + u * 1.8f, i + u * 0.6f); lineTo(i + u * 1.8f, i)
+                }
+                drawPath(esc, e.primary.copy(alpha = 0.75f), style = Stroke(fino * 1.2f))
+                drawRect(e.secondary.copy(alpha = 0.6f), Offset(i + u * 0.15f, i + u * 0.15f), Size(u * 0.32f, u * 0.32f))
+            }
+        }
         TemaId.BOTANICO -> {
             // El alfiler del entomólogo, clavado arriba al centro, con su sombra.
             val c = Offset(w / 2, i + u * 0.2f)
@@ -1820,6 +1852,13 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawCircle(a, f(0.08f), Offset(f(0.66f), f(0.4f)))
             drawLine(l, Offset(f(0.2f), f(0.78f)), Offset(f(0.8f), f(0.78f)), tr.width)
         }
+        TemaId.DECO -> {
+            // La copa de champán vacía (la «coupe»), con su tallo y su pie, y una sola burbuja que quedó.
+            drawPath(Path().apply { moveTo(f(0.16f), f(0.26f)); quadraticTo(f(0.18f), f(0.52f), f(0.5f), f(0.54f)); quadraticTo(f(0.82f), f(0.52f), f(0.84f), f(0.26f)); close() }, l, style = tr)
+            drawLine(l, Offset(f(0.5f), f(0.54f)), Offset(f(0.5f), f(0.86f)), tr.width)
+            drawOval(l, Offset(f(0.32f), f(0.84f)), Size(f(0.36f), f(0.08f)), style = tr)
+            drawCircle(a, f(0.035f), Offset(f(0.56f), f(0.16f)), style = Stroke(tr.width * 0.8f))
+        }
         TemaId.BOTANICO -> {
             // Frasco de especímenes vacío, con su corcho y la etiqueta.
             drawRoundRect(l, Offset(f(0.22f), f(0.26f)), Size(f(0.56f), f(0.66f)), CornerRadius(f(0.1f)), style = tr)
@@ -1999,6 +2038,12 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
             drawRect(c, Offset(d, h - d * 0.5f), Size(w - 2 * d, d * 0.35f))
         }
         TemaId.NAPOLEON -> romboComp(Offset(w / 2, d * 1.3f), d * 0.8f, d, c)
+        // Un abanico chico arriba al centro, con su raya de oro debajo.
+        TemaId.DECO -> {
+            drawArc(c, 180f, 180f, true, Offset(w / 2 - d * 1.3f, d * 0.2f), Size(d * 2.6f, d * 2.6f))
+            drawLine(fondo, Offset(w / 2, d * 1.5f), Offset(w / 2, d * 0.3f), d * 0.22f)
+            drawRect(c, Offset(d, h - d * 0.45f), Size(w - 2 * d, d * 0.45f))
+        }
         TemaId.BOTANICO -> rotate(-35f, Offset(w - d * 2.2f, h - d * 1.5f)) { drawOval(c, Offset(w - d * 3.4f, h - d * 2f), Size(d * 2.4f, d)) }
         TemaId.RUINAS -> {
             // Un semáforo diminuto arriba al centro: la caja y sus tres luces, la de abajo encendida.
@@ -2115,6 +2160,14 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         }
         // Estrellas de oro en las puntas.
         TemaId.NAPOLEON -> listOf(m * 3.2f, w - m * 3.2f).forEach { x -> estrellaComp(Offset(x, h / 2), m * 0.9f, e.tertiary) }
+        // Tres barras de velocidad en cada punta, cada una más corta, como en los rótulos de los trenes de lujo.
+        TemaId.DECO -> listOf(1f, -1f).forEach { sg ->
+            for (k in 0..2) {
+                val x = if (sg > 0) m * (1.6f + k * 0.9f) else w - m * (1.6f + k * 0.9f)
+                val alto = h * (0.5f - k * 0.12f)
+                drawLine(c, Offset(x, h / 2 - alto / 2), Offset(x, h / 2 + alto / 2), fino * 1.3f)
+            }
+        }
         // Nervaduras en las dos puntas de la hoja.
         TemaId.BOTANICO -> {
             drawLine(c, Offset(m * 1.5f, h - m * 1.5f), Offset(m * 4.5f, h - m * 3.2f), fino)
@@ -2307,6 +2360,13 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawRect(l, Offset(f(0.04f), f(0.2f)), Size(f(0.92f), f(0.6f)), style = tr)
             drawPath(Path().apply { moveTo(f(0.04f), f(0.2f)); lineTo(f(0.5f), f(0.56f)); lineTo(f(0.96f), f(0.2f)) }, l, style = tr)
             drawCircle(a, f(0.13f), Offset(f(0.5f), f(0.58f)))
+        }
+        TemaId.DECO -> {
+            // El formulario del telegrama, con las dos tiras de cinta pegadas y el abanico de la compañía arriba.
+            drawRect(l, Offset(f(0.06f), f(0.12f)), Size(f(0.88f), f(0.76f)), style = tr)
+            drawArc(a, 180f, 180f, true, Offset(f(0.12f), f(0.18f)), Size(f(0.2f), f(0.2f)))
+            drawLine(l, Offset(f(0.4f), f(0.26f)), Offset(f(0.86f), f(0.26f)), tr.width)
+            listOf(0.46f, 0.64f).forEach { y -> drawRect(a.copy(alpha = 0.55f), Offset(f(0.14f), f(y)), Size(f(0.72f), f(0.1f))) }
         }
         TemaId.BOTANICO -> {
             // Cuaderno de campo con una hoja prensada.
@@ -2513,6 +2573,16 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             drawRect(e.tertiary, Offset(2.5f * d, 0f), Size(d, h))
             var y = 6 * d
             while (y < h) { romboComp(Offset(3 * d, y), 2.4f * d, 3.2f * d, e.tertiary); y += 14 * d }
+        }
+        // Doble filete de oro y, de trecho en trecho, la corona escalonada de una torre.
+        TemaId.DECO -> {
+            drawRect(e.primary, Offset(0.5f * d, 0f), Size(d, h)); drawRect(e.primary.copy(alpha = 0.5f), Offset(3f * d, 0f), Size(0.7f * d, h))
+            var y = 8 * d
+            while (y < h) {
+                drawRect(c, Offset(0f, y), Size(5 * d, 1.6f * d)); drawRect(c, Offset(0.8f * d, y - 1.6f * d), Size(3.4f * d, 1.6f * d))
+                drawRect(c, Offset(1.6f * d, y - 3.2f * d), Size(1.8f * d, 1.6f * d))
+                y += 18 * d
+            }
         }
         TemaId.BOTANICO -> {
             // Un tallo que ondula.
