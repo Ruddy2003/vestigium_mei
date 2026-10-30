@@ -205,6 +205,21 @@ object Textos {
         "widget_discreto_momento" to "relatar",
     )
 
+    private val EDO: Map<String, String> = mapOf(
+        "pestana_dia" to "Esta posta",
+        "pestana_diario" to "Cuadernos",
+        "pestana_registrar" to "Pincel",
+        "pestana_vida" to "Camino",
+        "pestana_entender" to "Ábaco",
+        "escala_vacia" to "sin tinta · toca o desliza",
+        "lista_anadir" to "+ al hatillo",
+        "palabras" to "%d palabras a pincel",
+        "widget_animo" to "¿cómo late el corazón del caminante?",
+        "widget_momento" to "en esta posta, el caminante…",
+        "widget_discreto_animo" to "corazón",
+        "widget_discreto_momento" to "estampa",
+    )
+
     private val URSS: Map<String, String> = mapOf(
         "pestana_dia" to "PLAN",
         "pestana_diario" to "INFORMES",
@@ -340,6 +355,7 @@ object Textos {
         TemaId.BOTANICO -> BOTANICO
         TemaId.NAVIDAD -> NAVIDAD
         TemaId.SEDA -> SEDA
+        TemaId.EDO -> EDO
         TemaId.URSS -> URSS
         TemaId.GOTICO -> GOTICO
         TemaId.ESPACIO -> ESPACIO

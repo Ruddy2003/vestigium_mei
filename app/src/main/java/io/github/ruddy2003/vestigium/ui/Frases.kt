@@ -423,6 +423,32 @@ object Frases {
         f("Ah, fill the Cup: — what boots it to repeat / How Time is slipping underneath our Feet: / Unborn To-morrow and dead Yesterday, / Why fret about them if To-day be sweet!", "Ah, llena la copa: ¿de qué sirve repetir cómo se nos escurre el tiempo bajo los pies? Mañana aún no ha nacido y ayer está muerto: ¿por qué inquietarse por ellos si hoy es dulce?", "Rubaiyat de Omar Jayam, versión de Edward FitzGerald, 1859, XXXVII"),
     )
 
+    val EDO = listOf(
+        f("月日は百代の過客にして、行かふ年も又旅人也。", "Los meses y los días son viajeros de cien generaciones, y los años que van y vienen también son viajeros.", "Matsuo Bashō, Sendas de Oku (Oku no hosomichi), 1702"),
+        f("夏草や兵どもが夢の跡", "Hierbas de verano: es todo lo que queda de los sueños de los guerreros.", "Matsuo Bashō, Sendas de Oku, en Hiraizumi"),
+        f("閑さや岩にしみ入る蝉の声", "Quietud: se mete en las rocas la voz de las cigarras.", "Matsuo Bashō, Sendas de Oku, en el templo Risshaku-ji"),
+        f("古池や蛙飛びこむ水の音", "Un viejo estanque: salta una rana, el ruido del agua.", "Matsuo Bashō, 1686"),
+        f("この道や行く人なしに秋の暮", "Este camino: nadie lo recorre esta tarde de otoño.", "Matsuo Bashō, 1694"),
+        f("旅に病んで夢は枯野をかけ廻る", "Enfermo en el viaje, mis sueños corren por campos secos.", "Matsuo Bashō, su último haiku, 1694"),
+        f("古人の跡を求めず、古人の求めたる所を求めよ", "No busques las huellas de los antiguos: busca lo que ellos buscaban.", "Matsuo Bashō, «Palabras de despedida a Kyoriku», 1693, retomando a Kūkai"),
+        f("ゆく河の流れは絶えずして、しかももとの水にあらず。", "La corriente del río no se detiene, y sin embargo nunca es la misma agua.", "Kamo no Chōmei, Hōjōki, 1212"),
+        f("つれづれなるままに、日暮らし、硯にむかひて", "Sin nada que hacer, el día entero frente al tintero…", "Yoshida Kenkō, Tsurezuregusa, prólogo, hacia 1330"),
+        f("世はさだめなきこそいみじけれ。", "Precisamente porque el mundo es incierto, es hermoso.", "Yoshida Kenkō, Tsurezuregusa 7"),
+        f("やせ蛙まけるな一茶是に有", "¡Rana flaca, no te rindas! Aquí está Issa.", "Kobayashi Issa, 1816"),
+        f("露の世は露の世ながらさりながら", "Este mundo de rocío es un mundo de rocío, y sin embargo… y sin embargo…", "Kobayashi Issa, Ora ga haru, 1819"),
+        f("これがまあつひの栖か雪五尺", "¿Así que esta es mi última morada? Cinco palmos de nieve.", "Kobayashi Issa, 1812"),
+        f("菜の花や月は東に日は西に", "Flores de colza: la luna al este, el sol al oeste.", "Yosa Buson, 1774"),
+        f("朝顔に釣瓶とられてもらひ水", "La campanilla se enredó en la cuerda del pozo: pido agua prestada.", "Kaga no Chiyo-ni, siglo XVIII"),
+        f("盗人に取り残されし窓の月", "El ladrón la dejó atrás: la luna en la ventana.", "Ryōkan, siglo XIX"),
+        f("一期一会", "Un encuentro, una sola vez: cada reunión es única y no se repite.", "Ii Naosuke, Chanoyu ichie shū, 1858, desde la tradición del té de Sen no Rikyū"),
+        f("千日の稽古を鍛とし、万日の稽古を錬とす", "Mil días de práctica para forjar; diez mil días de práctica para pulir.", "Miyamoto Musashi, El libro de los cinco anillos, «Libro del agua», 1645"),
+        f("我事において後悔をせず", "No me arrepiento de lo que he hecho.", "Miyamoto Musashi, Dokkōdō, 1645"),
+        f("腹八分目に医者いらず", "Llena la barriga a ocho décimos y no hará falta el médico.", "Proverbio japonés, en la línea del Yōjōkun de Kaibara Ekiken, 1713"),
+        f("七転び八起き", "Siete caídas, ocho levantadas.", "Proverbio japonés"),
+        f(null, "Desde los seis años tenía la manía de copiar la forma de las cosas… A los setenta y tres entendí un poco la estructura de los animales y de las plantas. A los cien quizá llegue a lo divino; a los ciento diez, cada punto y cada línea estarán vivos.",
+            "Katsushika Hokusai, epílogo de Cien vistas del monte Fuji, 1834"),
+    )
+
     val BOTANICO = listOf(
         f("But no pursuit at Cambridge was followed with nearly so much eagerness or gave me so much pleasure as collecting beetles.",
             "Ninguna afición en Cambridge la seguí con tanto entusiasmo, ni me dio tanto placer, como coleccionar escarabajos.", "Charles Darwin, Autobiografía, 1876"),
@@ -656,6 +682,7 @@ object Frases {
         TemaId.BOTANICO -> BOTANICO
         TemaId.NAVIDAD -> NAVIDAD
         TemaId.SEDA -> SEDA
+        TemaId.EDO -> EDO
         TemaId.URSS -> URSS
         TemaId.GOTICO -> GOTICO
         TemaId.ESPACIO -> ESPACIO
@@ -688,6 +715,7 @@ object Frases {
         TemaId.BOTANICO -> "Nota del naturalista"
         TemaId.NAVIDAD -> "Junto a la chimenea"
         TemaId.SEDA -> "Dicho de la caravana"
+        TemaId.EDO -> "Palabras de la posta"
         TemaId.URSS -> "LEMA DEL DÍA"
         TemaId.GOTICO -> "Lectio del día"
         TemaId.ESPACIO -> "TRANSMISIÓN DEL DÍA"

@@ -151,6 +151,8 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         circulo(c + Offset(0f, -r * 0.86f), r * 0.17f)).reduce { a, b -> mas(a, b) }
     TemaId.NAVIDAD -> estrella(c, r, 6, 0.32f)
     TemaId.SEDA -> menos(circulo(c, r), poligono(c, r * 0.36f, 4, PI / 4))
+    // La flor de cerezo de cinco pétalos, con el centro calado.
+    TemaId.EDO -> menos((0 until 5).map { circulo(c + dir(-PI / 2 + it * 2 * PI / 5) * (r * 0.5f), r * 0.46f) }.reduce { a, b -> mas(a, b) }, circulo(c, r * 0.16f))
     // Un engrane de ocho dientes con la estrella calada en medio.
     TemaId.URSS -> {
         val paso = 2 * PI / 8

@@ -163,6 +163,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.BOTANICO -> listOf("ejemplar común", "ejemplar raro", "especie nueva", "género nuevo")
     TemaId.NAVIDAD -> listOf("cascabel", "campana de plata", "estrella de oro", "milagro de Navidad")
     TemaId.SEDA -> listOf("moneda de cobre", "lingote de plata", "oro de Samarcanda", "seda del emperador")
+    TemaId.EDO -> listOf("mon de cobre", "sello del templo", "koban de oro", "estampa del shōgun")
     TemaId.GOTICO -> listOf("cirio", "cáliz de plata", "custodia de oro", "reliquia")
     TemaId.ESPACIO -> listOf("magnitud 3", "magnitud 2", "magnitud 1", "supernova")
     TemaId.ANDALUS -> listOf("feluz de cobre", "dírham de plata", "dinar de oro", "dinar de la Alhambra")
@@ -410,6 +411,22 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 for (i in 0 until 16) {
                     val a = 2 * PI * i / 16
                     drawPath(estrellaLogro(pt(m * 0.30f, a), 2, m * 0.018f, m * 0.009f, a), cs.primary.copy(alpha = 0.16f))
+                }
+            }
+        }
+        TemaId.EDO -> {
+            // Una rueda de flores de cerezo que gira despacio y, por dentro, sellitos cuadrados que giran al revés.
+            rotate(giro * 0.3f, c) {
+                for (i in 0 until 8) {
+                    val p = pt(m * 0.4f, 2 * PI * i / 8); val r = m * 0.032f
+                    for (k in 0 until 5) { val a = 2 * PI * k / 5 - PI / 2; drawCircle(cs.secondary.copy(alpha = 0.18f), r, Offset(p.x + (r * cos(a)).toFloat(), p.y + (r * sin(a)).toFloat())) }
+                    drawCircle(cs.tertiary.copy(alpha = 0.3f), r * 0.4f, p)
+                }
+            }
+            rotate(-giro * 0.2f, c) {
+                for (i in 0 until 12) {
+                    val p = pt(m * 0.28f, 2 * PI * i / 12); val s = m * 0.02f
+                    drawRect(cs.primary.copy(alpha = 0.16f), Offset(p.x - s, p.y - s), Size(2 * s, 2 * s))
                 }
             }
         }

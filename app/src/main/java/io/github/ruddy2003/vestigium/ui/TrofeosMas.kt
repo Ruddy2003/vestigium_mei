@@ -34,6 +34,8 @@ object TrofeosMas {
             "Cultura" to "Arco de herradura", "Gente" to "Azulejo", "Constancia" to "Lámpara de bronce", "Curiosos" to "Celosía", "Tuyos" to "Granada"),
         TemaId.SEDA to mapOf("Diario" to "Sello de cinabrio", "Mundo" to "Brújula de cuchara", "Cuerpo" to "Disco de jade", "Mente" to "Porcelana azul",
             "Cultura" to "Carrete de seda", "Gente" to "Farolillo", "Constancia" to "Moneda de cobre", "Curiosos" to "Ábaco", "Tuyos" to "Ventana lunar"),
+        TemaId.EDO to mapOf("Diario" to "Cuaderno cosido", "Mundo" to "Sombrero de caminante", "Cuerpo" to "Sandalias de paja", "Mente" to "Tablero de go",
+            "Cultura" to "Abanico con el Fuji", "Gente" to "Chōchin de la posada", "Constancia" to "Koban de oro", "Curiosos" to "Linterna de piedra", "Tuyos" to "Sello de la posta"),
         TemaId.MONGOL to mapOf("Diario" to "Rollo de órdenes", "Mundo" to "Mapa de la estepa", "Cuerpo" to "Estribo", "Mente" to "Tamga",
             "Cultura" to "Yurta", "Gente" to "Placa de mensajero", "Constancia" to "Estandarte de nueve colas", "Curiosos" to "Ovoo", "Tuyos" to "Rueda del techo"),
         TemaId.COLONOS to mapOf("Diario" to "Diario de a bordo", "Mundo" to "Brújula de bolsillo", "Cuerpo" to "Hacha", "Mente" to "Telar",
@@ -88,6 +90,17 @@ object TrofeosMas {
                 drawRoundRect(piedra(c), Offset(w * 0.16f, h * 0.79f), Size(w * 0.68f, h * 0.06f), CornerRadius(w * 0.02f))
                 listOf(0.22f, 0.78f).forEach { x -> drawPath(Path().apply { moveTo(w * (x - 0.04f), h * 0.85f); quadraticTo(w * x, h * 0.9f, w * (x + if (x < 0.5f) -0.05f else 0.05f), h * 0.955f); lineTo(w * (x + 0.02f), h * 0.955f); quadraticTo(w * (x + 0.02f), h * 0.9f, w * (x + 0.04f), h * 0.85f); close() }, c) }
                 if (p.hecho) drawRect(Color(0xFFD4AF37), Offset(w * 0.16f, h * 0.79f), Size(w * 0.68f, h * 0.008f))
+            }
+            TemaId.EDO -> {
+                // Un tatami pequeño con su orilla de tela oscura (heri) y, encima, el paño de bermellón (fukusa) doblado.
+                val c = if (p.hecho) Color(0xFFCFC79A) else ped
+                drawRect(piedra(c), Offset(w * 0.12f, h * 0.8f), Size(w * 0.76f, h * 0.14f))
+                if (p.hecho) {
+                    val heri = Color(0xFF2A2A1C)
+                    drawRect(heri, Offset(w * 0.12f, h * 0.8f), Size(w * 0.76f, h * 0.018f)); drawRect(heri, Offset(w * 0.12f, h * 0.922f), Size(w * 0.76f, h * 0.018f))
+                    for (k in 1..12) drawLine(Color(0xFF8A8458).copy(alpha = 0.5f), Offset(w * (0.12f + k * 0.0585f), h * 0.82f), Offset(w * (0.12f + k * 0.0585f), h * 0.92f), 0.8f)
+                    drawPath(Path().apply { moveTo(w * 0.28f, h * 0.8f); lineTo(w * 0.5f, h * 0.772f); lineTo(w * 0.72f, h * 0.8f); close() }, Color(0xFFB8322A))
+                }
             }
             TemaId.MONGOL -> {
                 // Fieltros apilados, el de arriba con su greca roja.
@@ -508,6 +521,134 @@ object TrofeosMas {
                     }
                 }
                 drawCircle(p.metal(0.25f, 0.75f), R, c, style = Stroke(lw * 1.2f))
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Japón Edo
+
+    /**
+     * Las piezas de Japón Edo: el cuaderno cosido, el sombrero de caminante, las sandalias de paja, el tablero de go, el
+     * abanico con el Fuji, el farol de la posada, el koban de oro, la linterna de piedra de un templo y el sello. Los
+     * signos de los sellos y del farol son trazos inventados.
+     */
+    internal fun DrawScope.edo(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val bermellon = p.c(Color(0xFFC9442E)); val indigo = p.c(Color(0xFF1E3A5F)); val washi = p.c(Color(0xFFF3EDDD)); val paja = p.c(Color(0xFFC9B26A))
+        val sumi = p.c(Color(0xFF1B1A1E))
+        when (cat) {
+            "Diario" -> {
+                // Cuaderno cosido a la japonesa: tapa de índigo, la etiqueta del título y la costura de cuatro agujeros.
+                val r = Rect(p.x(0.2f), p.y(0.1f), p.x(0.8f), p.y(0.72f))
+                drawRect(washi, Offset(r.left + lw * 1.5f, r.top + lw * 1.5f), r.size)
+                drawRect(Brush.verticalGradient(listOf(lerp(indigo, Color.White, 0.12f), indigo, lerp(indigo, Color.Black, 0.25f)), r.top, r.bottom), r.topLeft, r.size)
+                drawRect(washi, Offset(r.left + r.width * 0.1f, r.top + r.height * 0.06f), Size(r.width * 0.16f, r.height * 0.6f))
+                if (p.hecho) {
+                    drawRect(Color(0xFFC9442E), Offset(r.left + r.width * 0.1f + lw * 0.5f, r.top + r.height * 0.06f + lw * 0.5f), Size(r.width * 0.16f - lw, r.height * 0.6f - lw), style = Stroke(lw * 0.5f))
+                    for (j in 0 until 4) drawLine(Color(0xFF1B1A1E), Offset(r.left + r.width * 0.18f, r.top + r.height * (0.14f + j * 0.13f)), Offset(r.left + r.width * 0.18f, r.top + r.height * (0.22f + j * 0.13f)), lw * 0.8f)
+                }
+                val xs = r.right - r.width * 0.08f
+                drawLine(washi, Offset(xs, r.top), Offset(xs, r.bottom), lw * 0.6f)
+                listOf(0.12f, 0.37f, 0.63f, 0.88f).forEach { f -> val y = r.top + r.height * f; drawLine(washi, Offset(xs, y), Offset(r.right, y), lw * 0.6f); drawCircle(sumi, lw * 0.7f, Offset(xs, y)) }
+            }
+            "Mundo" -> {
+                // El sugegasa: el sombrero cónico de paja del caminante, con su cinta para la barbilla.
+                val cima = p.o(0.5f, 0.16f)
+                val cono = Path().apply { moveTo(cima.x, cima.y); lineTo(p.x(0.92f), p.y(0.56f)); quadraticTo(p.x(0.5f), p.y(0.66f), p.x(0.08f), p.y(0.56f)); close() }
+                drawPath(cono, Brush.horizontalGradient(listOf(lerp(paja, Color.Black, 0.25f), paja, lerp(paja, Color.White, 0.25f), paja), p.x(0.08f), p.x(0.92f)))
+                if (p.hecho) for (k in 1..7) { val f = k / 8f; drawLine(Color(0xFF7A6436).copy(alpha = 0.5f), cima, Offset(p.x(0.08f + 0.84f * f), p.y(0.56f + 0.08f * (1 - (2 * f - 1) * (2 * f - 1)))), lw * 0.4f) }
+                for (k in 1..3) drawArc(p.linea, 20f, 140f, false, Offset(cima.x - p.w * 0.14f * k, cima.y - p.w * 0.02f * k), Size(p.w * 0.28f * k, p.w * 0.2f * k), style = Stroke(lw * 0.4f))
+                drawPath(Path().apply { moveTo(p.x(0.3f), p.y(0.6f)); quadraticTo(p.x(0.5f), p.y(0.78f), p.x(0.7f), p.y(0.6f)) }, bermellon, style = Stroke(lw * 0.8f))
+            }
+            "Cuerpo" -> {
+                // Un par de waraji: sandalias de paja trenzada con sus cordones.
+                listOf(0.32f, 0.68f).forEachIndexed { i, cx ->
+                    val s = Rect(p.x(cx - 0.13f), p.y(0.14f + i * 0.06f), p.x(cx + 0.13f), p.y(0.68f + i * 0.04f))
+                    drawRoundRect(Brush.verticalGradient(listOf(lerp(paja, Color.White, 0.2f), paja), s.top, s.bottom), s.topLeft, s.size, CornerRadius(s.width * 0.45f))
+                    if (p.hecho) { var y = s.top + s.height * 0.1f; while (y < s.bottom - s.height * 0.05f) { drawLine(Color(0xFF7A6436).copy(alpha = 0.55f), Offset(s.left + s.width * 0.1f, y), Offset(s.right - s.width * 0.1f, y), lw * 0.4f); y += s.height * 0.07f } }
+                    drawLine(bermellon, Offset(s.center.x, s.top + s.height * 0.08f), Offset(s.left, s.top + s.height * 0.5f), lw * 0.7f)
+                    drawLine(bermellon, Offset(s.center.x, s.top + s.height * 0.08f), Offset(s.right, s.top + s.height * 0.5f), lw * 0.7f)
+                }
+            }
+            "Mente" -> {
+                // Tablero de go sobre sus patas, con su rejilla y unas piedras blancas y negras.
+                val t = Rect(p.x(0.12f), p.y(0.2f), p.x(0.88f), p.y(0.6f))
+                val madera = p.c(Color(0xFFD9B26A))
+                drawRect(madera, t.topLeft, t.size)
+                drawRect(p.c(Color(0xFF9C7A3E)), Offset(t.left, t.bottom), Size(t.width, p.y(0.06f)))
+                listOf(0.2f, 0.8f).forEach { f -> caja(p, f - 0.05f, 0.66f, f + 0.05f, 0.76f, p.b(Color(0xFF6E5228))) }
+                for (k in 0..8) {
+                    val fx = t.left + t.width * (0.06f + k * 0.11f); drawLine(p.linea, Offset(fx, t.top + t.height * 0.08f), Offset(fx, t.bottom - t.height * 0.08f), lw * 0.3f)
+                    val fy = t.top + t.height * (0.08f + k * 0.105f); drawLine(p.linea, Offset(t.left + t.width * 0.06f, fy), Offset(t.right - t.width * 0.06f, fy), lw * 0.3f)
+                }
+                if (p.hecho) listOf(Triple(3, 2, true), Triple(4, 3, false), Triple(5, 2, true), Triple(4, 5, false), Triple(2, 4, true), Triple(6, 4, false)).forEach { (i, j, negra) ->
+                    drawCircle(if (negra) Color(0xFF1B1A1E) else Color(0xFFF6F2EA), t.width * 0.045f, Offset(t.left + t.width * (0.06f + i * 0.11f), t.top + t.height * (0.08f + j * 0.105f)))
+                }
+            }
+            "Cultura" -> {
+                // Abanico plegable (sensu) abierto, con el monte Fuji pintado y sus varillas.
+                val c = p.o(0.5f, 0.66f); val R = p.w * 0.4f; val r0 = p.w * 0.14f
+                val hoja = Path().apply { arcTo(Rect(c, R), 200f, 140f, false); arcTo(Rect(c, r0), 340f, -140f, false); close() }
+                drawPath(hoja, washi)
+                if (p.hecho) clipPath(hoja) {
+                    drawPath(Path().apply { moveTo(c.x - R * 0.55f, c.y - R * 0.35f); lineTo(c.x - R * 0.12f, c.y - R * 0.82f); lineTo(c.x + R * 0.12f, c.y - R * 0.82f); lineTo(c.x + R * 0.55f, c.y - R * 0.35f); close() }, Color(0xFF1E3A5F))
+                    drawPath(Path().apply { moveTo(c.x - R * 0.2f, c.y - R * 0.73f); lineTo(c.x - R * 0.12f, c.y - R * 0.82f); lineTo(c.x + R * 0.12f, c.y - R * 0.82f); lineTo(c.x + R * 0.2f, c.y - R * 0.73f); close() }, Color.White)
+                    drawCircle(Color(0xFFC9442E), R * 0.1f, Offset(c.x + R * 0.45f, c.y - R * 0.8f))
+                }
+                for (k in 0..10) { val a = Math.toRadians(200.0 + k * 14.0); drawLine(p.linea, Offset(c.x + (r0 * cos(a)).toFloat(), c.y + (r0 * sin(a)).toFloat()), Offset(c.x + (R * cos(a)).toFloat(), c.y + (R * sin(a)).toFloat()), lw * 0.3f) }
+                drawPath(hoja, p.linea, style = Stroke(lw * 0.5f))
+                drawCircle(p.metal(0.46f, 0.54f), p.w * 0.03f, c)
+            }
+            "Gente" -> {
+                // El chōchin de la posada: farol cilíndrico de papel y bambú, con sus tapas negras y un mon rojo.
+                drawLine(p.c(Color(0xFF3A2414)), p.o(0.5f, 0.02f), p.o(0.5f, 0.1f), lw)
+                caja(p, 0.34f, 0.1f, 0.66f, 0.16f, p.b(Color(0xFF1B1A1E)))
+                if (p.hecho) drawOval(Brush.radialGradient(listOf(Color(0xFFFFC46B).copy(alpha = 0.4f), Color.Transparent), p.o(0.5f, 0.4f), p.w * 0.45f), Offset(p.x(0.05f), p.y(0.1f)), Size(p.x(0.9f), p.y(0.6f)))
+                drawRoundRect(Brush.horizontalGradient(listOf(lerp(washi, Color.Black, 0.2f), washi, lerp(washi, Color.Black, 0.12f)), p.x(0.24f), p.x(0.76f)), Offset(p.x(0.24f), p.y(0.16f)), Size(p.x(0.52f), p.y(0.46f)), CornerRadius(p.w * 0.12f))
+                for (k in 1..8) drawLine(p.c(Color(0xFFB8A882)), p.o(0.25f, 0.16f + k * 0.051f), p.o(0.75f, 0.16f + k * 0.051f), lw * 0.3f)
+                if (p.hecho) { for (i in 0 until 5) drawCircle(Color(0xFFC9442E), p.w * 0.04f, Offset(p.x(0.5f) + (p.w * 0.06f * cos(-PI / 2 + i * 2 * PI / 5)).toFloat(), p.y(0.38f) + (p.w * 0.06f * sin(-PI / 2 + i * 2 * PI / 5)).toFloat())) }
+                caja(p, 0.34f, 0.62f, 0.66f, 0.68f, p.b(Color(0xFF1B1A1E)))
+                drawLine(p.c(Color(0xFF3A2414)), p.o(0.5f, 0.68f), p.o(0.5f, 0.77f), lw)
+            }
+            "Constancia" -> {
+                // El koban: la moneda ovalada de oro, con las rayas del martillo y dos sellos de la ceca.
+                val o = Rect(p.x(0.26f), p.y(0.08f), p.x(0.74f), p.y(0.74f))
+                drawOval(p.metal(0.26f, 0.74f), o.topLeft, o.size)
+                drawOval(p.linea, Offset(o.left + lw, o.top + lw), Size(o.width - 2 * lw, o.height - 2 * lw), style = Stroke(lw * 0.5f))
+                if (p.hecho) {
+                    for (k in 1..9) { val y = o.top + o.height * (0.1f + k * 0.08f); drawLine(p.linea.copy(alpha = 0.35f), Offset(o.left + o.width * 0.18f, y), Offset(o.right - o.width * 0.18f, y), lw * 0.35f) }
+                    listOf(0.2f, 0.8f).forEach { f -> val c = Offset(o.center.x, o.top + o.height * f); drawCircle(p.linea, o.width * 0.1f, c, style = Stroke(lw * 0.5f)); drawLine(p.linea, Offset(c.x - o.width * 0.05f, c.y), Offset(c.x + o.width * 0.05f, c.y), lw * 0.5f) }
+                    drawRect(p.linea, Offset(o.center.x - o.width * 0.12f, o.center.y - o.height * 0.12f), Size(o.width * 0.24f, o.height * 0.24f), style = Stroke(lw * 0.5f))
+                }
+            }
+            "Curiosos" -> {
+                // Tōrō: la linterna de piedra de los jardines de los templos, con su tejadillo y la luz dentro.
+                val piedraC = p.c(Color(0xFF9A9890))
+                caja(p, 0.3f, 0.66f, 0.7f, 0.76f, p.b(Color(0xFF8A8880)))
+                caja(p, 0.44f, 0.46f, 0.56f, 0.66f, p.b(Color(0xFF9A9890)))
+                caja(p, 0.32f, 0.42f, 0.68f, 0.47f, p.b(Color(0xFF8A8880)))
+                caja(p, 0.36f, 0.24f, 0.64f, 0.42f, p.b(Color(0xFFA8A69E)))
+                if (p.hecho) drawRect(Color(0xFFFFC46B), Offset(p.x(0.43f), p.y(0.28f)), Size(p.x(0.14f), p.y(0.1f)))
+                else drawRect(p.sombra, Offset(p.x(0.43f), p.y(0.28f)), Size(p.x(0.14f), p.y(0.1f)))
+                drawPath(Path().apply { moveTo(p.x(0.18f), p.y(0.25f)); quadraticTo(p.x(0.36f), p.y(0.2f), p.x(0.5f), p.y(0.1f)); quadraticTo(p.x(0.64f), p.y(0.2f), p.x(0.82f), p.y(0.25f)); close() }, piedraC)
+                drawCircle(piedraC, p.w * 0.045f, p.o(0.5f, 0.08f))
+            }
+            else -> {
+                // El sello de la posta: el bloque de piedra con su asa y, al lado, la impresión en bermellón con 足 en escritura de sello.
+                drawRoundRect(p.metal(0.12f, 0.36f), Offset(p.x(0.12f), p.y(0.34f)), Size(p.x(0.24f), p.y(0.4f)), CornerRadius(p.w * 0.02f))
+                drawCircle(p.metal(0.16f, 0.32f), p.w * 0.07f, p.o(0.24f, 0.32f))
+                val q = Rect(p.x(0.44f), p.y(0.22f), p.x(0.88f), p.y(0.22f) + p.x(0.44f))
+                drawRoundRect(bermellon, q.topLeft, q.size, CornerRadius(p.w * 0.02f))
+                val blanco = washi; val g = lw * 1.1f
+                drawRect(blanco, Offset(q.left + lw * 1.2f, q.top + lw * 1.2f), Size(q.width - 2.4f * lw, q.height - 2.4f * lw), style = Stroke(lw * 0.6f))
+                if (p.hecho) {
+                    val cx = q.center.x; val s = q.width * 0.36f; val cy = q.center.y
+                    drawRect(blanco, Offset(cx - s * 0.32f, cy - s * 0.72f), Size(s * 0.64f, s * 0.4f), style = Stroke(g))
+                    drawLine(blanco, Offset(cx, cy - s * 0.2f), Offset(cx, cy + s * 0.55f), g)
+                    drawLine(blanco, Offset(cx, cy + s * 0.08f), Offset(cx + s * 0.36f, cy + s * 0.08f), g)
+                    drawLine(blanco, Offset(cx - s * 0.06f, cy + s * 0.22f), Offset(cx - s * 0.55f, cy + s * 0.6f), g)
+                    drawLine(blanco, Offset(cx, cy + s * 0.55f), Offset(cx + s * 0.6f, cy + s * 0.6f), g)
+                }
             }
         }
     }

@@ -240,6 +240,7 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.NAVIDAD -> BloqueoCarta(TextosBloqueo("Querido diario:", "Te guardé bajo llave junto al fuego; sólo yo puedo abrirte.", "Desatar el lazo",
             listOf("— Vestigium Mei")), reintentar)
         TemaId.SEDA -> BloqueoMarco(TextosBloqueo("Vestigium Mei", "◇ Salvoconducto sellado: sólo su portador cruza la posta.", "Mostrar el salvoconducto"), arriba = 14, reintentar = reintentar) { cs -> bloqueoRollo(cs) }
+        TemaId.EDO -> BloqueoMarco(TextosBloqueo("Vestigium Mei", "※ La barrera está cerrada: muestra tu tegata para pasar.", "Mostrar el tegata"), arriba = 22, reintentar = reintentar) { cs -> bloqueoBarrera(cs) }
         TemaId.GOTICO -> BloqueoMarco(TextosBloqueo("Vestigium mei", "✠ Clausura: el breviario está sellado.", "Abrir la clausura"), arriba = 60, reintentar = reintentar) { cs -> bloqueoOjiva(cs) }
         TemaId.ESPACIO -> BloqueoFicha(TextosBloqueo("VESTIGIUM MEI", "⋆ secuencia de acceso", "INICIAR ACOPLAMIENTO",
             listOf("ESCOTILLA", "SELLADA", "SOPORTE VITAL", "NOMINAL", "TRIPULANTE", "SIN VERIFICAR")), reintentar) { cs -> bloqueoEscotilla(cs) }
@@ -534,6 +535,28 @@ private fun DrawScope.bloqueoRollo(cs: ColorScheme) {
     }
 }
 
+/** La barrera (sekisho) del camino real: tejado de alas levantadas, dos postes, el travesaño y la reja baja a los lados. */
+private fun DrawScope.bloqueoBarrera(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height
+    val madera = cs.onSurface.copy(alpha = 0.75f); val teja = cs.onSurface.copy(alpha = 0.85f)
+    // El tejado: las puntas suben, el centro cuelga un poco.
+    drawPath(Path().apply {
+        moveTo(-14 * u, 0f); quadraticTo(w * 0.22f, 12 * u, w / 2, 12 * u); quadraticTo(w * 0.78f, 12 * u, w + 14 * u, 0f)
+        lineTo(w + 6 * u, 18 * u); lineTo(-6 * u, 18 * u); close()
+    }, teja)
+    var x = -2 * u; while (x < w + 2 * u) { drawLine(cs.surface.copy(alpha = 0.35f), Offset(x, 10 * u), Offset(x, 17 * u), 0.8f * u); x += 7 * u }
+    // La viga, los dos postes y el travesaño (nuki) que los cruza.
+    drawRect(madera, Offset(-4 * u, 18 * u), Size(w + 8 * u, 6 * u))
+    drawRect(madera, Offset(0f, 24 * u), Size(8 * u, h - 24 * u)); drawRect(madera, Offset(w - 8 * u, 24 * u), Size(8 * u, h - 24 * u))
+    drawRect(madera, Offset(-6 * u, 40 * u), Size(w + 12 * u, 4 * u))
+    // La reja baja de listones a cada lado y el suelo de tierra apisonada.
+    listOf(8 * u, w - 30 * u).forEach { x0 -> var k = x0 + 3 * u; while (k < x0 + 22 * u) { drawLine(madera.copy(alpha = 0.5f), Offset(k, h - 46 * u), Offset(k, h), 1.2f * u); k += 5 * u } }
+    drawLine(madera, Offset(-10 * u, h), Offset(w + 10 * u, h), 2f * u)
+    // Una tablilla con el sello rojo de la barrera, colgada del travesaño.
+    val s = 12 * u; val o = Offset(w - 30 * u, 48 * u)
+    drawRect(cs.secondary, o, Size(s, s)); drawRect(cs.surface.copy(alpha = 0.8f), o + Offset(2 * u, 2 * u), Size(s - 4 * u, s - 4 * u), style = Stroke(0.8f * u))
+}
+
 /** Ventana gótica: arco apuntado con su moldura interior. */
 private fun DrawScope.bloqueoOjiva(cs: ColorScheme) {
     val u = 1.dp.toPx()
@@ -694,6 +717,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.BOTANICO -> true
     TemaId.NAVIDAD -> false
     TemaId.SEDA -> false
+    TemaId.EDO -> false
     TemaId.GOTICO -> false
     TemaId.ESPACIO -> false
     TemaId.ANDALUS -> true
@@ -720,6 +744,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.BOTANICO -> true
     TemaId.NAVIDAD -> true
     TemaId.SEDA -> false
+    TemaId.EDO -> true
     TemaId.GOTICO -> true
     TemaId.ESPACIO -> true
     TemaId.ANDALUS -> true
@@ -850,6 +875,15 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawPath(onda, c, style = Stroke(1.8f * u, cap = StrokeCap.Round))
             barraMoneda(cs.tertiary.copy(alpha = p), cs.surface, Offset(cx - 24 * u, y), 3.4f * u)
             barraMoneda(cs.tertiary.copy(alpha = p), cs.surface, Offset(cx + 24 * u, y), 3.4f * u)
+        }
+        // Un trazo de pincel que engorda al centro y se afila en las puntas, y el sellito rojo al final.
+        TemaId.EDO -> {
+            val y = h + 1.5f * u; val a = 20 * u * (0.6f + 0.4f * p)
+            drawPath(Path().apply {
+                moveTo(cx - a, y + 0.6f * u); quadraticTo(cx - a * 0.2f, y - 3.2f * u, cx + a, y - 0.4f * u)
+                quadraticTo(cx + a * 0.1f, y + 2.6f * u, cx - a, y + 0.6f * u); close()
+            }, c)
+            drawRect(cs.secondary.copy(alpha = p), Offset(cx + a + 3 * u, y - 3 * u), Size(5 * u, 5 * u))
         }
         // Ventana ojival con un poco de luz de vitral dentro.
         TemaId.GOTICO -> {
@@ -1001,6 +1035,18 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             barraMoneda(c, cs.surface, Offset(cx, cy), 26 * u)
             drawCircle(sobre.copy(alpha = 0.4f), 23 * u, Offset(cx, cy), style = Stroke(0.8f * u))
         }
+        // Farolillo de papel (chōchin): el cuerpo con sus costillas de bambú y las tapas negras arriba y abajo.
+        TemaId.EDO -> {
+            val rx = 22 * u; val ry = 25 * u
+            drawOval(c, Offset(cx - rx, cy - ry), Size(2 * rx, 2 * ry))
+            for (k in -3..3) {
+                val f = k / 4f; val y = cy + f * ry; val ancho = rx * kotlin.math.sqrt(1f - f * f)
+                drawLine(sobre.copy(alpha = 0.3f), Offset(cx - ancho, y), Offset(cx + ancho, y), 0.8f * u)
+            }
+            val negro = Color(0xFF1B1A1E)
+            drawRoundRect(negro, Offset(cx - 9 * u, cy - ry - 2 * u), Size(18 * u, 5 * u), CornerRadius(1.5f * u))
+            drawRoundRect(negro, Offset(cx - 9 * u, cy + ry - 3 * u), Size(18 * u, 5 * u), CornerRadius(1.5f * u))
+        }
         // Ventana ojival rellena, con el parteluz insinuado.
         TemaId.GOTICO -> {
             drawPath(Path().apply {
@@ -1097,6 +1143,15 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.SEDA -> {
             filete(); drawLine(acento, Offset(0f, 2.8f * u), Offset(w, 2.8f * u), 0.6f * u)
             var x = 5 * u; while (x < w) { barraMoneda(cs.tertiary, cs.surface, Offset(x, 2.8f * u), 1.9f * u); x += 20 * u }
+        }
+        // La costura de un cuaderno cosido a la japonesa: el hilo entra y sale por agujeros parejos.
+        TemaId.EDO -> {
+            filete()
+            var x = 8 * u
+            while (x < w) {
+                drawLine(cs.secondary.copy(alpha = 0.7f), Offset(x, 3 * u), Offset(x + 14 * u, 3 * u), 1.2f * u)
+                drawCircle(base, 1.1f * u, Offset(x - 2 * u, 3 * u)); x += 20 * u
+            }
         }
         // Arquería de arcos apuntados.
         TemaId.GOTICO -> {
@@ -1401,6 +1456,8 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.NAVIDAD -> (scaleIn(t(360, androidx.compose.animation.core.CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)), initialScale = 0.82f) + fadeIn(t(220))) togetherWith fadeOut(t(140))
         // Rollo de seda que se desenrolla de lado, como un rollo de mano.
         TemaId.SEDA -> (androidx.compose.animation.expandHorizontally(t(380), expandFrom = if (atras) Alignment.End else Alignment.Start) + fadeIn(t(300))) togetherWith fadeOut(t(160))
+        // Un rollo colgante (kakejiku) que se desenrolla de arriba abajo.
+        TemaId.EDO -> (expandVertically(t(440, frena), expandFrom = if (atras) Alignment.Bottom else Alignment.Top) + fadeIn(t(260))) togetherWith fadeOut(t(180))
         // Cartel que entra en diagonal.
         TemaId.URSS -> (slideIn(t(220)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 6, it.height / 12) } + fadeIn(t(160))) togetherWith fadeOut(t(100))
         // Un cartel que se pega en la pared: cae apenas desde arriba, algo más grande, y se asienta.

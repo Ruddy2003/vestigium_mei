@@ -258,6 +258,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.62f, c, style = Stroke(g * 0.7f))
             drawRect(luz, Offset(c.x - r * 0.44f, c.y - r * 0.44f), Size(r * 0.88f, r * 0.88f), style = Stroke(r * 0.04f))
         }
+        // Un mon de cerezo: cinco pétalos redondos, con la muesca de cada uno y el centro en reserva.
+        TemaId.EDO -> {
+            val flor = (0 until 5).map { disco(Offset(c.x + r * 0.5f * kotlin.math.cos(-kotlin.math.PI / 2 + it * 2 * kotlin.math.PI / 5).toFloat(), c.y + r * 0.5f * kotlin.math.sin(-kotlin.math.PI / 2 + it * 2 * kotlin.math.PI / 5).toFloat()), r * 0.47f) }
+                .reduce { a, b -> Path.combine(androidx.compose.ui.graphics.PathOperation.Union, a, b) }
+            forma(flor)
+            drawCircle(sombra, r * 0.2f, c); drawCircle(luz, r * 0.2f, c, style = Stroke(r * 0.04f))
+        }
         // Rosetón: la rueda con su tracería de doce pétalos.
         TemaId.GOTICO -> {
             forma(disco(c, r * 0.97f))

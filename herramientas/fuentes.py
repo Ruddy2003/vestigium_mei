@@ -22,6 +22,15 @@ GF = "https://raw.githubusercontent.com/google/fonts/main/ofl/"
 
 LATINO = "U+0000-024F,U+0259,U+02B0-02FF,U+0300-036F,U+1D00-1DBF,U+1E00-1EFF,U+2000-206F,U+2070-209F,U+20A0-20CF,U+2100-214F,U+2150-218F,U+2190-21FF,U+2200-22FF,U+2460-24FF,U+25A0-25FF,U+2600-27BF,U+FB00-FB06"
 CIRILICO = LATINO + ",U+0400-052F,U+1C80-1C8F,U+2DE0-2DFF,U+A640-A69F"
+# Japón Edo: solo los kanji, kana y signos que usa el tema (las fuentes japonesas completas pesan varios megas).
+KANJI_EDO = ("※、。々〆「」『』〔〕あいえおかがきぎくけこさしじすずせそただちつづてでとどなにのはひびふまみむめもやゆよらりるれわをんコマ・一七万世中也予事五人代令会体作使便元光入八兵具出分"
+             "動勝医十千卯印又反取口古吉同名和品問土場声夏夢大如始定客宿封尺岩師平年庫廻引弥後御心応悔悪成我所手持数文新旅日明昭是時暮曜曲書最月有朝期木朱東枯栖様模正歩残段水求池"
+             "河治流海滋火無瓶生用画番病登百皐盗目眠睦知硯神秋稼稽空窓第筋紙終絵絶続網習者脈腕腹良花茶草菜葉蛙蝉行西言計記評読費走起足跡転連過道野金釣錬鍛長開閑間階雪電霜露面音"
+             "題顔風飛食養騒齢＋－：〇二三四六九")
+# La negrita del texto solo lleva las cifras, los meses, los días de la semana y las eras.
+KANA_EDO_NEGRITA = "一二三四五六七八九十〇百千万第年月日曜火水木金土、。・「」『』※令和平成昭大正明治元睦如弥生卯皐無文葉長神霜師走"
+JAPONES_EDO = LATINO + "," + ",".join(f"U+{ord(c):04X}" for c in KANJI_EDO)
+JAPONES_EDO_NEGRITA = LATINO + "," + ",".join(f"U+{ord(c):04X}" for c in KANA_EDO_NEGRITA)
 
 # archivo de origen, ejes (None si es estática), nombre en res/font, nombre nuevo (si la licencia reserva el suyo), letras
 FUENTES = [
@@ -49,6 +58,10 @@ FUENTES = [
     # SED: humanista caligráfica
     ("alegreya/Alegreya[wght].ttf", {"wght": 400}, "alegreya_regular", None, LATINO),
     ("alegreya/Alegreya[wght].ttf", {"wght": 600}, "alegreya_semibold", None, LATINO),
+    # EDO: Shippori Mincho para los títulos (de pincel grabado en madera) y Zen Old Mincho para el texto; recortadas al tema
+    ("shipporimincho/ShipporiMincho-SemiBold.ttf", None, "shippori_titulo", None, JAPONES_EDO),
+    ("zenoldmincho/ZenOldMincho-Regular.ttf", None, "zenmincho_regular", None, JAPONES_EDO),
+    ("zenoldmincho/ZenOldMincho-SemiBold.ttf", None, "zenmincho_semibold", None, JAPONES_EDO_NEGRITA),
     # URS: hecha para el ruso
     ("ptsans/PT_Sans-Web-Regular.ttf", None, "obrera_regular", "Obrera Vestigium", CIRILICO),
     ("ptsans/PT_Sans-Web-Bold.ttf", None, "obrera_bold", "Obrera Vestigium", CIRILICO),

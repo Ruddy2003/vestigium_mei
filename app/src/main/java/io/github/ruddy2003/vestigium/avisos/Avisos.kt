@@ -49,6 +49,7 @@ object Avisos {
         TemaId.BOTANICO -> R.raw.n_botanico_aviso to R.raw.n_botanico_solemne
         TemaId.NAVIDAD -> R.raw.n_navidad_aviso to R.raw.n_navidad_solemne
         TemaId.SEDA -> R.raw.n_seda_aviso to R.raw.n_seda_solemne
+        TemaId.EDO -> R.raw.n_edo_aviso to R.raw.n_edo_solemne
         TemaId.URSS -> R.raw.n_urss_aviso to R.raw.n_urss_solemne
         TemaId.GOTICO -> R.raw.n_gotico_aviso to R.raw.n_gotico_solemne
         TemaId.ESPACIO -> R.raw.n_espacio_aviso to R.raw.n_espacio_solemne
@@ -261,6 +262,13 @@ object Avisos {
             "◇ Un mensajero trae carta de tu yo del pasado", "Llegó en la fecha convenida.",
             "Mercancía rara", "tesoros nuevos",
             "El rollo de %d está listo", "Un año entero de camino en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.EDO -> Voz("※ Un alto en la casa de té: ¿cómo late tu corazón?", "Dos toques, como dos sellos: agrado y fuerza para el camino.",
+            "※ ¿Qué soñaste en la posada?", "Anótalo antes de doblar el futón; los sueños se van con el rocío.",
+            "※ La hoja de la jornada", "Llena el día a pincel. Si la cuesta fue dura, basta un número.",
+            "Cuesta dura: basta un número", "En el tablón de la posta:",
+            "※ El correo a pie trae carta de tu yo del pasado", "Llegó en la estación convenida.",
+            "Un sello nuevo en tu cuaderno", "sellos nuevos",
+            "Las estampas de %d ya están impresas", "Un año entero del camino en ukiyo-e: lo más hecho, lo único, lo curioso.")
         TemaId.URSS -> Voz("★ ¡Camarada! ¿Cómo está tu moral?", "Dos toques: agrado y energía para el plan.",
             "★ Informe de descanso", "Anota lo soñado antes del turno; el recuerdo se va en minutos.",
             "★ Balance de la jornada", "Llena el día. Si fue duro, basta con una cifra.",
@@ -337,6 +345,7 @@ object Avisos {
         TemaId.BOTANICO -> VozEnfoque("Pausa de campo", "Levántate y riégate: toma agua.", "Termina la pausa de campo", "Hora de despertar, como las flores", "Muestra completa")
         TemaId.NAVIDAD -> VozEnfoque("Descanso junto al fuego", "Levántate, toma algo caliente o agua.", "Se acabó el descanso junto al fuego", "Hora de despertar", "¡Terminaste!")
         TemaId.SEDA -> VozEnfoque("Alto en el caravasar", "Levántate, bebe agua del pozo.", "La caravana sigue", "Hora de levantar el campamento", "Jornada cumplida")
+        TemaId.EDO -> VozEnfoque("Un té en la casa de té", "Levántate, estira las piernas, bebe agua del pozo.", "Se reanuda el camino", "Suena la campana del alba: a levantarse", "Llegaste a la posta")
         TemaId.URSS -> VozEnfoque("DESCANSO REGLAMENTARIO", "Levántate, toma agua, camarada.", "DE VUELTA AL TRABAJO", "¡ARRIBA, CAMARADA!", "¡NORMA CUMPLIDA!")
         TemaId.GOTICO -> VozEnfoque("Recreatio", "Levántate, bebe agua.", "Termina la recreatio", "Laudes: hora de despertar", "Deo gratias: terminaste")
         TemaId.ESPACIO -> VozEnfoque("PAUSA ORBITAL", "Despega del asiento. Hidrátate.", "FIN DE LA PAUSA ORBITAL", "DESPERTAR DE LA TRIPULACIÓN", "MISIÓN COMPLETADA")

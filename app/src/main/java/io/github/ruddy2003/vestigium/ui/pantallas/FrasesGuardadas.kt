@@ -229,6 +229,15 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             circulo(this, 12f, 12f, 10.5f)
             addPath(poligono(9f, 9f, 15f, 9f, 15f, 15f, 9f, 15f))
         }, 1.4f)
+        // Un abanico plegable (sensu) abierto, con su remache.
+        TemaId.EDO -> {
+            pinta(Path().apply {
+                fillType = PathFillType.EvenOdd
+                moveTo(12f * u, 20.5f * u); lineTo(2.5f * u, 10.5f * u); quadraticTo(12f * u, 0.5f * u, 21.5f * u, 10.5f * u); close()
+                moveTo(12f * u, 20.5f * u); lineTo(8.2f * u, 16.4f * u); quadraticTo(12f * u, 13f * u, 15.8f * u, 16.4f * u); close()
+            }, 1.4f)
+            for (k in 0..4) { val f = k / 4f; drawLine(if (lleno) Color.White.copy(alpha = 0.45f) else color.copy(alpha = 0.6f), p(12f, 20.5f), p(4.5f + 15f * f, 7.5f - 3.5f * (1 - (2 * f - 1) * (2 * f - 1))), 0.6f * u) }
+        }
         // Flor de lis.
         TemaId.GOTICO -> pinta(Path().apply {
             moveTo(12f * u, 2f * u); quadraticTo(16.5f * u, 8f * u, 12f * u, 14.5f * u); quadraticTo(7.5f * u, 8f * u, 12f * u, 2f * u); close()

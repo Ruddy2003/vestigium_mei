@@ -122,6 +122,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Ruta de la Seda: arena; de noche, desierto bajo las estrellas.
         TemaId.SEDA -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.7f, 0.92f, 4f, 6f, 16f)) }
             else { m.setSaturation(0.3f); m.postConcat(tinte(1.0f, 0.93f, 0.78f, 4f, 2f, 0f)) }
+        // Japón Edo: washi con un velo de índigo; de noche, la posta a la luz de los farolillos.
+        TemaId.EDO -> if (oscuro) { m.setSaturation(0.08f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.66f, 0.86f, 6f, 4f, 12f)) }
+            else { m.setSaturation(0.22f); m.postConcat(tinte(0.97f, 0.95f, 0.89f, 0f, 2f, 4f)) }
         // Gótico: piedra caliza; de noche, el azul de la bóveda.
         TemaId.GOTICO -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.56f, 0.6f, 0.95f, 2f, 4f, 22f)) }
             else { m.setSaturation(0.2f); m.postConcat(tinte(0.98f, 0.95f, 0.88f, 2f, 2f, 0f)) }
@@ -232,6 +235,8 @@ internal object Formas {
                 -0.2f, 1.25f, -0.2f, 0.85f, -1.05f, 0.85f, -0.5f, 0.2f, -0.85f, 0.2f, -0.3f, -0.55f, -0.55f, -0.55f)
             // La moneda de la ruta, con su agujero cuadrado.
             TemaId.SEDA -> { p.reset(); p.addCircle(x, y, r, horario); p.addRect(x - r * 0.32f, y - r * 0.32f, x + r * 0.32f, y + r * 0.32f, antihorario) }
+            // El chōchin: el farol de papel de la posada.
+            TemaId.EDO -> { p.reset(); p.addRoundRect(x - r * 0.75f, y - r, x + r * 0.75f, y + r, r * 0.55f, r * 0.55f, horario) }
             // Un arco ojival.
             TemaId.GOTICO -> { p.reset(); p.moveTo(x - r * 0.8f, y + r); p.lineTo(x - r * 0.8f, y - r * 0.1f); p.quadTo(x - r * 0.8f, y - r * 0.9f, x, y - r * 1.3f)
                 p.quadTo(x + r * 0.8f, y - r * 0.9f, x + r * 0.8f, y - r * 0.1f); p.lineTo(x + r * 0.8f, y + r); p.close() }
@@ -270,6 +275,7 @@ internal object Formas {
             TemaId.BOTANICO -> { raya(c, x, y, r, 0f, 1.2f, 0f, -0.8f, d); raya(c, x, y, r, 0f, 0.2f, 0.45f, -0.25f, d); raya(c, x, y, r, 0f, 0.2f, -0.45f, -0.25f, d) }
             TemaId.NAVIDAD -> { c.drawCircle(x, y - r * 1.35f, r * 0.18f, d); raya(c, x, y, r, -0.6f, 0.55f, 0.45f, 0.1f, d) }   // la estrella y la guirnalda
             TemaId.SEDA -> c.drawCircle(x, y, r * 0.72f, d)
+            TemaId.EDO -> { raya(c, x, y, r, -0.7f, -0.45f, 0.7f, -0.45f, d); raya(c, x, y, r, -0.75f, 0f, 0.75f, 0f, d); raya(c, x, y, r, -0.7f, 0.45f, 0.7f, 0.45f, d) }   // las costillas de bambú
             TemaId.GOTICO -> { raya(c, x, y, r, 0f, -0.3f, 0f, 1f, d); c.drawCircle(x, y - r * 0.6f, r * 0.2f, d) }   // el parteluz y el rosetón
             TemaId.ESPACIO -> c.drawOval(x - r * 1.45f, y - r * 0.4f, x + r * 1.45f, y + r * 0.4f, d)   // una órbita
             TemaId.ANDALUS -> c.drawCircle(x, y, r * 0.42f, d)
@@ -814,6 +820,12 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                     acento, style = Stroke(1.6f * u))
             }
         }
+        // El marco de un rollo colgante: las bandas de brocado arriba y abajo (ichimonji) y un sellito en cada esquina.
+        TemaId.EDO -> {
+            filete(5 * u, tinta.copy(alpha = 0.5f), 1 * u); filete(8 * u, tinta.copy(alpha = 0.25f), 0.6f * u)
+            drawRect(acento.copy(alpha = 0.25f), Offset(5 * u, 12 * u), Size(w - 10 * u, 4 * u)); drawRect(acento.copy(alpha = 0.25f), Offset(5 * u, h - 16 * u), Size(w - 10 * u, 4 * u))
+            esquinas(8 * u) { o, dx, dy -> val s = 6 * u; drawRect(acento, Offset(if (dx > 0) o.x else o.x - s, if (dy > 0) o.y else o.y - s), Size(s, s)) }
+        }
         // Una arquería de arcos apuntados arriba y un trébol en las esquinas de abajo.
         TemaId.GOTICO -> {
             filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u)
@@ -1018,6 +1030,13 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             anillo(r * 0.85f, tinta.copy(alpha = 0.6f)); anillo(r * 0.6f, tinta.copy(alpha = 0.6f)); anillo(r * 0.35f, tinta.copy(alpha = 0.5f))
             for (i in 0 until 24) { val g = n + 15.0 * i; drawLine(tinta.copy(alpha = 0.6f), c + rumbo(g) * (r * 0.62f), c + rumbo(g) * (r * 0.83f), 0.8f * u) }
             punta(90.0, r * 0.58f, r * 0.12f, acento); punta(n, r * 0.4f, r * 0.12f, tinta.copy(alpha = 0.55f))
+        }
+        // La brújula japonesa de las doce direcciones (las del zodiaco: la rata al norte), con el norte sellado en bermellón.
+        TemaId.EDO -> {
+            anillo(r * 0.82f, tinta.copy(alpha = 0.6f)); anillo(r * 0.5f, tinta.copy(alpha = 0.4f))
+            for (i in 0 until 12) { val g = n + 30.0 * i; drawCircle(tinta.copy(alpha = 0.6f), 1.3f * u, c + rumbo(g) * (r * 0.82f)); drawLine(tinta.copy(alpha = 0.4f), c + rumbo(g) * (r * 0.5f), c + rumbo(g) * (r * 0.68f), 0.7f * u) }
+            punta(n, r * 0.72f, r * 0.13f, acento); punta(n + 180.0, r * 0.45f, r * 0.1f, tinta.copy(alpha = 0.5f))
+            val q = c + rumbo(n) * (r * 0.96f); drawRect(acento, Offset(q.x - 2.6f * u, q.y - 2.6f * u), Size(5.2f * u, 5.2f * u))
         }
         // Un rosetón de ocho lóbulos con la marca del norte arriba.
         TemaId.GOTICO -> {

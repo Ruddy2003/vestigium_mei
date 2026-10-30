@@ -197,10 +197,31 @@ def papeles_fuente():
     for t in ('romano', 'medieval', 'seda', 'revolucion'):
         shutil.copyfile(os.path.join(aqui, f'papel_{t}.jpg'), os.path.join(OUT, f'papel_{t}.jpg'))
 
+def papel_edo():
+    """Japón Edo: washi de kōzo, blanco cálido, con las marcas finas de la estera de bambú (su), unas nubes de pulpa
+    más espesa y fibras largas y curvas, más claras y más oscuras que el papel, enredadas como en el papel hecho a mano."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#F4EEE1'), col('#E9E0CC'), ruido_rect(W, H, 45, 131) * 0.6)
+    a = mezcla(a, col('#DED2B8'), np.clip((ruido_rect(W, H, 16, 132) - 0.62) * 2.5, 0, 1) * 0.3)
+    for y in range(0, H, 3): a[y:y + 1, :] *= 0.992
+    for x in range(20, W, 54): a[:, x:x + 1] *= 0.985
+    d2 = np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) / math.sqrt(2)
+    a = mezcla(a, col('#D8CBB0'), np.clip((d2 - 0.6) / 0.4, 0, 1) * 0.35)
+    a = a * (0.98 + 0.03 * ruido_rect(W, H, 0.8, 133)[..., None])
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA'); r = np.random.default_rng(134)
+    for _ in range(380):
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 14 + r.random() * 46
+        f = r.random() * 6; c = (255, 252, 244, 70) if r.random() < 0.45 else (150, 128, 92, 34)
+        d.line([(x + t * l * math.cos(ang) + 2.5 * math.sin(t * 5 + f), y + t * l * math.sin(ang) + 2.5 * math.cos(t * 4 + f))
+                for t in np.linspace(0, 1, 9)], fill=c, width=1)
+    img.save(os.path.join(OUT, 'papel_edo.jpg'), quality=86)
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
     papeles()
     papel_antiguas()
     papeles_lote7()
     papeles_fuente()
+    papel_edo()
     print('papeles listos')

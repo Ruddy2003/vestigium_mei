@@ -468,6 +468,17 @@ fun FraseDelDia(fecha: String) {
                 drawRect(cs.surface, Offset(8 * u, s * 0.55f), Size(s - 16 * u, s * 0.2f), style = Stroke(1.2f * u))
             }
         }
+        // Un tanzaku de bermellón colgado a la izquierda, con su cordón y unos trazos de pincel; la frase entre 『』.
+        TemaId.EDO -> Row(arriba, verticalAlignment = Alignment.Top) {
+            Canvas(Modifier.padding(end = 12.dp, top = 2.dp).size(width = 12.dp, height = 56.dp)) {
+                val u = 1.dp.toPx(); val w = size.width; val h = size.height
+                drawLine(cs.onSurfaceVariant, Offset(w / 2, 0f), Offset(w / 2, 6 * u), 0.8f * u)
+                drawRect(cs.secondary, Offset(0f, 6 * u), Size(w, h - 6 * u))
+                drawCircle(cs.surface, 1.4f * u, Offset(w / 2, 9 * u))
+                for (k in 0 until 3) drawLine(cs.surface.copy(alpha = 0.75f), Offset(w / 2, 16 * u + k * 12 * u), Offset(w / 2, 23 * u + k * 12 * u), 1.4f * u)
+            }
+            Box(Modifier.weight(1f)) { CuerpoFrase(f, fecha, rotulo, "『", "』") }
+        }
         // Ventana ojival: el marco termina en punta y el texto va centrado.
         TemaId.GOTICO -> Surface(shape = OJIVA_FRASE, color = cs.surface, border = BorderStroke(1.5.dp, cs.primary.copy(alpha = 0.7f)), modifier = arriba) {
             Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 30.dp, bottom = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»", centrado = true) }
@@ -795,6 +806,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.BOTANICO -> c(LetraExtra.fraunces, FontWeight.Medium, 22f, 0f)
         TemaId.NAVIDAD -> c(LetraExtra.amiri, FontWeight.Normal, 25f, 0f)
         TemaId.SEDA -> c(LetraExtra.almendra, FontWeight.Normal, 24f, 0.3f)
+        TemaId.EDO -> c(LetraExtra.shippori, FontWeight.SemiBold, 23f, 0.2f)
         TemaId.GOTICO -> c(LetraExtra.gotica, FontWeight.SemiBold, 25f, 0.2f)
         TemaId.ESPACIO -> c(LetraExtra.orbita, FontWeight.Medium, 20f, 1.4f)
         TemaId.ANDALUS -> c(LetraExtra.kufi, FontWeight.Medium, 22f, 0.4f)
@@ -1106,6 +1118,15 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = h - 12 * u
                             while (y > top + 4 * u) { drawLine(nudo, Offset(bx - 1.5f * u, y), Offset(bx + bw + 1.5f * u, y), 1.6f * u); y -= 12 * u }
                             pinta(hojaFrase(Offset(bx + bw, top + 8 * u), Offset(w, top + 2 * u), 1.2f * u))
+                        }
+                        // Tanzaku: la tira de papel de los deseos, colgada de su cordón, con trazos de pincel.
+                        TemaId.EDO -> {
+                            val bx = w * 0.2f; val bw = w * 0.6f
+                            pinta(caja(bx, top, bw, barH))
+                            drawLine(linea, Offset(w / 2, top), Offset(w / 2, top - 4 * u), 0.8f * u)
+                            val trazo = if (color != null) Color.White.copy(alpha = 0.55f) else linea
+                            var y = top + 7 * u
+                            while (y < h - 6 * u) { drawLine(trazo, Offset(w / 2, y), Offset(w / 2, y + 3.5f * u), 1.2f * u); y += 7 * u }
                         }
                         // Lancetas: ventana apuntada con su filete de oro y el parteluz.
                         TemaId.GOTICO -> {

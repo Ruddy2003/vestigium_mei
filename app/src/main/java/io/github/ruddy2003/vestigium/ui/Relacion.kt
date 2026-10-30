@@ -98,6 +98,7 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.BOTANICO -> MarcoRecuadro(RoundedCornerShape(8.dp), 12.dp)
     TemaId.NAVIDAD -> MarcoRecuadro(RoundedCornerShape(10.dp), 12.dp)
     TemaId.SEDA -> MarcoRecuadro(CutCornerShape(3.dp), 11.dp)
+    TemaId.EDO -> MarcoRecuadro(CutCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomEnd = 0.dp, bottomStart = 0.dp), 12.dp)
     TemaId.GOTICO -> MarcoRecuadro(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp, bottomStart = 3.dp, bottomEnd = 3.dp), 14.dp)
     TemaId.ESPACIO -> MarcoRecuadro(RoundedCornerShape(18.dp), 10.dp)
     TemaId.ANDALUS -> MarcoRecuadro(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp, bottomStart = 4.dp, bottomEnd = 4.dp), 14.dp)
@@ -223,6 +224,14 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
                 drawRect(k, o, Size(l, l), style = Stroke(0.8f * u))
                 drawRect(k, o + Offset(1.6f * u, 1.6f * u), Size(l - 3.2f * u, l - 3.2f * u))
             }
+        }
+        // El mizuhiki: el cordón rojo de los regalos, atado arriba con su lazada de dos orejas.
+        TemaId.EDO -> {
+            val k = e.secondary.copy(alpha = 0.8f); val y = 4 * u; val cx = w / 2
+            drawLine(k, Offset(cx - w * 0.18f, y), Offset(cx + w * 0.18f, y), 0.9f * u)
+            drawLine(k, Offset(cx - w * 0.18f, y + 1.6f * u), Offset(cx + w * 0.18f, y + 1.6f * u), 0.9f * u)
+            listOf(-1f, 1f).forEach { s -> drawOval(k, Offset(cx + s * 4.5f * u - 3.5f * u, y - 2.5f * u), Size(7 * u, 6.5f * u), style = Stroke(0.9f * u)) }
+            drawCircle(k, 1.3f * u, Offset(cx, y + 0.8f * u))
         }
         // Un rosetón pequeño bajo la clave del arco.
         TemaId.GOTICO -> {
@@ -460,6 +469,13 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
         TemaId.SEDA -> {
             var x = 12 * u; while (x < w - 10 * u) { drawCircle(col, grosor * 0.45f + u, Offset(x, y)); x += 7 * u }
             listOf(5 * u, w - 5 * u).forEach { cx -> drawCircle(col, 5 * u, Offset(cx, y)); drawRect(fondo, Offset(cx - 1.6f * u, y - 1.6f * u), Size(3.2f * u, 3.2f * u)) }
+        }
+        // Un cordón de mizuhiki de dos hilos con el nudo awaji (de los que no se desatan) al centro.
+        TemaId.EDO -> {
+            val g = grosor * 0.5f + 0.6f * u; val cx = w / 2
+            listOf(-1.4f, 1.4f).forEach { d -> drawLine(col, Offset(4 * u, y + d * u), Offset(cx - 7 * u, y + d * u), g, pathEffect = punteado); drawLine(col, Offset(cx + 7 * u, y + d * u), Offset(w - 4 * u, y + d * u), g, pathEffect = punteado) }
+            listOf(-1f, 1f).forEach { s -> drawOval(col, Offset(cx + s * 4.5f * u - 4 * u, y - 3.5f * u), Size(8 * u, 7 * u), style = Stroke(g)) }
+            drawOval(col, Offset(cx - 3 * u, y - 1 * u), Size(6 * u, 6 * u), style = Stroke(g))
         }
         // Arquería de ojivas sobre una línea, como un friso de capilla.
         TemaId.GOTICO -> {

@@ -55,6 +55,8 @@ object MapasMas {
         TemaId.ANDALUS -> geo(listOf(-4.02 to 39.86, -3.83 to 38.9, -4.78 to 37.88, -5.98 to 37.39, -4.42 to 36.72, -2.46 to 36.84, -3.6 to 37.18), -6.4, -2.1, 36.4, 40.2)
         // Chang'an → Dunhuang → Turfán → Kashgar → Samarcanda → Bujará → Antioquía (de oriente a occidente).
         TemaId.SEDA -> geo(listOf(108.9 to 34.3, 94.7 to 40.1, 89.2 to 42.9, 76.0 to 39.5, 66.9 to 39.6, 64.4 to 39.8, 36.2 to 36.2), 112.0, 33.0, 31.0, 45.0)
+        // El Tōkaidō, de Edo a Kioto (el este queda a la izquierda): Nihonbashi → Hakone → Fuchū → Hamamatsu → Kuwana → Seki → el puente de Sanjō.
+        TemaId.EDO -> geo(listOf(139.774 to 35.684, 139.025 to 35.19, 138.383 to 34.976, 137.73 to 34.71, 136.69 to 35.06, 136.39 to 34.85, 135.773 to 35.009), 140.0, 135.6, 34.5, 35.9)
         // Las postas del yam, de Janbalic a Karakórum.
         TemaId.MONGOL -> listOf(Offset(0.93f, 0.7f), Offset(0.8f, 0.42f), Offset(0.66f, 0.62f), Offset(0.52f, 0.36f), Offset(0.38f, 0.56f), Offset(0.22f, 0.3f), Offset(0.07f, 0.44f))
         // La caravana de carretas: del puerto al pueblo nuevo, cruzando el río.
@@ -117,6 +119,28 @@ object MapasMas {
                 drawCircle(Color(0xFF4E9A72).copy(alpha = 0.25f), 10 * d, Offset(w * 0.8f, h * 0.32f))
                 // La costa del Mediterráneo al oeste.
                 drawPath(Path().apply { moveTo(0f, 0f); lineTo(w * 0.04f, 0f); cubicTo(w * 0.07f, h * 0.4f, w * 0.03f, h * 0.7f, w * 0.06f, h); lineTo(0f, h); close() }, agua)
+            }
+            TemaId.EDO -> {
+                // La costa del Pacífico al sur (la bahía de Edo, la península de Izu, la bahía de Suruga y la de Ise), el monte
+                // Fuji nevado sobre Hakone, el lago Biwa junto a Kioto y unos pinos del camino.
+                val costa = listOf(0f to 0.36f, 0.1f to 0.34f, 0.14f to 0.5f, 0.2f to 0.46f, 0.26f to 0.55f, 0.28f to 0.8f, 0.32f to 0.62f, 0.37f to 0.68f,
+                    0.45f to 0.83f, 0.55f to 0.86f, 0.62f to 0.72f, 0.66f to 0.64f, 0.7f to 0.8f, 0.72f to 0.95f, 1f to 1f).map { (x, y) -> Offset(w * x, h * y) }
+                drawPath(Path().apply {
+                    moveTo(0f, h); lineTo(costa[0].x, costa[0].y)
+                    for (i in 1 until costa.size - 1) { val m = (costa[i] + costa[i + 1]) / 2f; quadraticTo(costa[i].x, costa[i].y, m.x, m.y) }
+                    lineTo(costa.last().x, costa.last().y); close()
+                }, agua)
+                val fuji = Offset(w * 0.318f, h * 0.404f); val s = 26 * d
+                drawPath(Path().apply { moveTo(fuji.x - s * 1.4f, fuji.y + s * 0.5f); lineTo(fuji.x - s * 0.22f, fuji.y - s * 0.55f); quadraticTo(fuji.x, fuji.y - s * 0.62f, fuji.x + s * 0.22f, fuji.y - s * 0.55f); lineTo(fuji.x + s * 1.4f, fuji.y + s * 0.5f); close() },
+                    Color(0xFF1E3A5F).copy(alpha = if (oscuro) 0.3f else 0.18f))
+                drawPath(Path().apply { moveTo(fuji.x - s * 0.5f, fuji.y - s * 0.3f); lineTo(fuji.x - s * 0.22f, fuji.y - s * 0.55f); quadraticTo(fuji.x, fuji.y - s * 0.62f, fuji.x + s * 0.22f, fuji.y - s * 0.55f); lineTo(fuji.x + s * 0.5f, fuji.y - s * 0.3f)
+                    lineTo(fuji.x + s * 0.25f, fuji.y - s * 0.22f); lineTo(fuji.x, fuji.y - s * 0.32f); lineTo(fuji.x - s * 0.25f, fuji.y - s * 0.2f); close() }, Color.White.copy(alpha = if (oscuro) 0.3f else 0.7f))
+                drawOval(agua, Offset(w * 0.815f, h * 0.33f), Size(w * 0.035f, h * 0.27f))
+                listOf(0.19f to 0.36f, 0.42f to 0.72f, 0.58f to 0.68f, 0.79f to 0.68f).forEach { (x, y) ->
+                    val o = Offset(w * x, h * y)
+                    drawLine(tinta, o, Offset(o.x, o.y - 9 * d), 1.2f * d)
+                    drawOval(tinta, Offset(o.x - 6 * d, o.y - 12 * d), Size(12 * d, 4 * d)); drawOval(tinta, Offset(o.x - 4 * d, o.y - 15 * d), Size(8 * d, 3 * d))
+                }
             }
             TemaId.MONGOL -> {
                 // La estepa: pasto, el Gobi al sur, los montes al norte y el gran cielo.
@@ -422,6 +446,8 @@ object MapasMas {
             TemaId.ANDALUS -> { drawPath(p, Color(0xFFC9A04A).copy(alpha = 0.7f), style = Stroke(4 * d)); drawPath(p, cs.surface, style = Stroke(2 * d)); drawPath(p, Color(0xFF1E6B5A), style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.4f * d, 5 * d)))) }
             // La huella de la caravana en la arena: puntos dobles.
             TemaId.SEDA -> { drawPath(p, Color(0xFFD9B57A).copy(alpha = 0.6f), style = Stroke(5 * d)); drawPath(p, Color(0xFF8E1B1B).copy(alpha = 0.8f), style = Stroke(1.6f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 5 * d)))) }
+            // El camino real de tierra apisonada, con la hilera de pinos que lo bordeaba.
+            TemaId.EDO -> { drawPath(p, Color(0xFFB8A27A).copy(alpha = 0.65f), style = Stroke(5 * d)); drawPath(p, Color(0xFF3B5A3A).copy(alpha = 0.85f), style = Stroke(2.4f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.1f * d, 7 * d)))) }
             // El camino de las postas, en azul de cielo.
             TemaId.MONGOL -> drawPath(p, Color(0xFF2E6DB4).copy(alpha = 0.8f), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(8 * d, 4 * d))))
             // Las rodadas de las carretas: dos líneas paralelas.
@@ -505,6 +531,9 @@ object MapasMas {
             TemaId.ANDALUS -> with(TrofeosMas) { estrellaLazo(c, r * 1.2f, Brush.linearGradient(listOf(col, col)), Color(0xFFC9A04A), 0.8f * d) }
             // Una moneda de cobre con agujero cuadrado.
             TemaId.SEDA -> { drawCircle(col, r, c); drawRect(cs.surface, Offset(c.x - r * 0.3f, c.y - r * 0.3f), Size(r * 0.6f, r * 0.6f)); drawCircle(Color(0xFF8E6A1F), r, c, style = Stroke(0.8f * d)) }
+            // Cada posta, su sello (como los que coleccionaban los viajeros); la última, con doble marco.
+            TemaId.EDO -> { drawRect(col, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f)); drawRect(cs.surface, Offset(c.x - r * 0.6f, c.y - r * 0.6f), Size(r * 1.2f, r * 1.2f), style = Stroke(0.8f * d))
+                if (meta) drawRect(col, Offset(c.x - r * 1.25f, c.y - r * 1.25f), Size(r * 2.5f, r * 2.5f), style = Stroke(0.9f * d)) }
             // Una yurta.
             TemaId.MONGOL -> { drawArc(col, 180f, 180f, true, Offset(c.x - r, c.y - r * 0.9f), Size(2 * r, r * 1.4f)); drawRect(col, Offset(c.x - r, c.y - r * 0.2f), Size(2 * r, r * 0.9f)); drawRect(Color(0xFFD9772A), Offset(c.x - r * 0.25f, c.y + r * 0.1f), Size(r * 0.5f, r * 0.6f)) }
             // Una cabaña con su techo.
@@ -630,6 +659,7 @@ object MapasMas {
             TemaId.NAPOLEON -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r, g.y + r * 0.3f); quadraticTo(g.x, g.y - r * 1.2f, g.x + r, g.y + r * 0.3f); close() }, Color(0xFF1A1A22)) }
             TemaId.HELENO -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.6f, g.y - r * 0.6f); lineTo(g.x + r * 0.6f, g.y - r * 0.6f); lineTo(g.x + r * 0.7f, g.y + r * 0.4f); lineTo(g.x - r * 0.7f, g.y + r * 0.4f); close() }, Color.White) }
             TemaId.SEDA -> { alfiler(); drawOval(Color(0xFFC0392B), Offset(g.x - r * 0.6f, g.y - r * 0.8f), Size(r * 1.2f, r * 1.6f)) }
+            TemaId.EDO -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.95f, g.y + r * 0.35f); lineTo(g.x, g.y - r * 0.65f); lineTo(g.x + r * 0.95f, g.y + r * 0.35f); close() }, Color(0xFFC9B26A)) }
             TemaId.MONGOL -> { alfiler(); drawRoundRect(Color(0xFFD4AF37), Offset(g.x - r * 0.45f, g.y - r * 0.9f), Size(r * 0.9f, r * 1.8f), androidx.compose.ui.geometry.CornerRadius(r * 0.45f)) }
             TemaId.NAVIDAD -> { alfiler(); with(TrofeosTema) { estrella(g, r * 0.9f, r * 0.38f, 5, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37)))) } }
             TemaId.ANDALUS -> { alfiler(); with(TrofeosMas) { estrellaLazo(g, r * 0.85f, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37))), null, 0f) } }

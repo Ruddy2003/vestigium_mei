@@ -148,6 +148,7 @@ object LibroDiario {
         TemaId.BOTANICO -> Fuentes(R.font.fraunces_titulo, R.font.crimson_regular)
         TemaId.NAVIDAD -> Fuentes(R.font.cinzel_deco_regular, R.font.calida_regular)
         TemaId.SEDA -> Fuentes(R.font.almendra_regular, R.font.alegreya_regular)
+        TemaId.EDO -> Fuentes(R.font.shippori_titulo, R.font.zenmincho_regular)
         TemaId.URSS -> Fuentes(R.font.russo, R.font.obrera_regular)
         TemaId.GOTICO -> Fuentes(R.font.gotica_textura, R.font.goudy_regular)
         TemaId.ESPACIO -> Fuentes(R.font.orbitron_bold, R.font.grotesk_regular)
@@ -217,6 +218,9 @@ object LibroDiario {
             TemaId.BOTANICO -> "article{border-top:0}article::before{content:'';display:block;height:8px;margin-bottom:12px;background:radial-gradient(ellipse 5px 3px at 6px 4px,$p 98%,transparent) 0 0/18px 8px repeat-x}" + capitular("2.8em", p)
             TemaId.NAVIDAD -> "article{border-top:5px solid $p;border-image:repeating-linear-gradient(45deg,$p 0 8px,$b 8px 16px,$s 16px 24px) 5}" + capitular("2.8em", p)
             TemaId.SEDA -> "article{border-top:2px solid $p;border-right:6px solid $s;padding-right:14px}" + capitular("2.6em", p)
+            // Una franja de seigaiha arriba de cada entrada, el filete de bermellón a la izquierda y el «※» tras la fecha; sin capitular, como en los libros japoneses.
+            TemaId.EDO -> "article{border-top:0;border-left:4px solid $s;padding-left:14px}article::before{content:'';display:block;height:10px;margin-bottom:12px;" +
+                "background:radial-gradient(circle at 10px 10px,transparent 5px,$p 5px 6px,transparent 6px 8px,$p 8px 9px,transparent 9px) 0 0/20px 10px repeat-x}.fecha::after{content:' ※';color:$s}"
             TemaId.GOTICO -> "article{border-top:0;padding-top:24px;background:radial-gradient(circle at 9px 16px,transparent 7px,$p 7px 8px,transparent 8px) 0 0/18px 12px repeat-x}" + capitular("3.4em", p)
             TemaId.ESPACIO -> "article{border:1px solid $p;border-radius:16px;padding:18px;margin-bottom:18px}.fecha{text-transform:uppercase;letter-spacing:.12em}"
             TemaId.ANDALUS -> "article{border-top:0}article::before{content:'';display:block;height:10px;margin-bottom:12px;" +
@@ -354,6 +358,7 @@ object LibroDiario {
             TemaId.BOTANICO -> Medidas(12.5f, aire)
             TemaId.NAVIDAD -> Medidas(12.5f, aire)
             TemaId.SEDA -> Medidas(12.5f, aire)
+            TemaId.EDO -> Medidas(12f, aire + 0.1f)
             TemaId.GOTICO -> Medidas(12.5f, aire)
             TemaId.ESPACIO -> Medidas(11f, aire)
             TemaId.ANDALUS -> Medidas(12.5f, aire)
@@ -397,6 +402,8 @@ object LibroDiario {
         TemaId.BOTANICO -> Inicial(R.font.fraunces_negrita, 2.3f)
         TemaId.NAVIDAD -> Inicial(R.font.cinzel_deco_bold, 2.3f)
         TemaId.SEDA -> Inicial(R.font.almendra_bold, 2.2f)
+        // «一、» antes de la primera palabra, como cada artículo de los documentos de la época (ichitsugaki).
+        TemaId.EDO -> Inicial(R.font.zenmincho_semibold, 1f, palabra = true, prefijo = "一、")
         // La capitular de los libros de horas, en letra textura.
         TemaId.GOTICO -> Inicial(R.font.gotica_textura, 2.7f)
         // La primera palabra en mayúsculas de la sala de control.
@@ -538,6 +545,13 @@ object LibroDiario {
                 lados(9f)
                 cv.drawCircle(cx, y, 5f, relleno)
                 cv.drawRect(cx - 1.8f, y - 1.8f, cx + 1.8f, y + 1.8f, Paint(relleno).apply { color = fondo })
+            }
+            TemaId.EDO -> {
+                // El sellito de bermellón con su marco en reserva, entre dos trazos de pincel que se afilan.
+                lados(10f)
+                cv.drawRect(cx - 4.6f, y - 4.6f, cx + 4.6f, y + 4.6f, relleno)
+                cv.drawRect(cx - 3f, y - 3f, cx + 3f, y + 3f, Paint(trazo).apply { color = fondo; strokeWidth = 0.8f })
+                cv.drawLine(cx, y - 2f, cx, y + 2f, Paint(linea).apply { color = fondo; strokeWidth = 0.9f })
             }
             TemaId.GOTICO -> {
                 // Un arco ojival.
@@ -689,6 +703,15 @@ object LibroDiario {
                     lineTo(A - m - n, B - m); lineTo(m + n, B - m); lineTo(m + n, B - m - n); lineTo(m, B - m - n); lineTo(m, m + n); lineTo(m + n, m + n); close()
                 }
                 cv.drawPath(ruta, Paint(trazo).apply { strokeWidth = 1.4f }); rect(31f, fino)
+            }
+            TemaId.EDO -> {
+                // El marco de las páginas impresas en madera (kyōkaku): grueso por fuera, fino por dentro, y arriba al centro
+                // la «cola de pez» (gyobi) que marcaba dónde se dobla la hoja.
+                rect(22f, Paint(trazo).apply { strokeWidth = 2.4f })
+                rect(27f, fino)
+                val pez = android.graphics.Path().apply { moveTo(A / 2 - 9f, 27f); lineTo(A / 2 + 9f, 27f); lineTo(A / 2 + 9f, 35f); lineTo(A / 2, 31f); lineTo(A / 2 - 9f, 35f); close() }
+                cv.drawPath(pez, relleno)
+                cv.drawLine(A / 2, 37f, A / 2, 46f, Paint(fino).apply { strokeWidth = 0.8f })
             }
             TemaId.GOTICO -> {
                 // Un filete y una arquería de arcos ojivales arriba.

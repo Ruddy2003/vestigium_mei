@@ -277,6 +277,11 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
         val a = 10 * d
         moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, a * 0.4f); lineTo(w - a, a); lineTo(w - a, h); lineTo(a, h); lineTo(a, a); lineTo(0f, a * 0.4f); close()
     }, 4.dp, 0.dp, false, 1.dp)
+    // Ema: la tablilla votiva de madera, con el tejadillo en chaflán.
+    TemaId.EDO -> PielDialogo(FormaDp { w, h, d ->
+        val a = 14 * d
+        moveTo(0f, a); lineTo(a * 1.4f, 0f); lineTo(w - a * 1.4f, 0f); lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
+    }, 10.dp, 0.dp, true, 1.dp)
     // Arco apuntado.
     TemaId.GOTICO -> PielDialogo(FormaDp { w, h, d ->
         val a = 44 * d
@@ -452,6 +457,15 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             drawRect(e.primary.copy(alpha = 0.85f), o, Size(s, s))
             drawRect(e.surface.copy(alpha = 0.8f), Offset(o.x + 2.5f * d, o.y + 2.5f * d), Size(s - 5 * d, s - 5 * d), style = Stroke(0.8f * d))
             drawLine(e.surface.copy(alpha = 0.8f), Offset(o.x + s / 2, o.y + 4 * d), Offset(o.x + s / 2, o.y + s - 4 * d), 0.8f * d)
+        }
+        TemaId.EDO -> {
+            // El agujero del cordón arriba al centro, con su mizuhiki rojo, y la veta de la madera por dentro del borde.
+            val a = 14 * d
+            drawCircle(e.onSurface.copy(alpha = 0.35f), 2.6f * d, Offset(w / 2, a * 0.75f))
+            drawPath(Path().apply { moveTo(w / 2 - 12 * d, 2 * d); quadraticTo(w / 2, a * 0.75f + 5 * d, w / 2 + 12 * d, 2 * d) }, e.secondary, style = Stroke(1.2f * d))
+            drawPath(Path().apply { moveTo(5 * d, a + 3 * d); lineTo(a * 1.4f + 2 * d, 5 * d); lineTo(w - a * 1.4f - 2 * d, 5 * d); lineTo(w - 5 * d, a + 3 * d); lineTo(w - 5 * d, h - 5 * d); lineTo(5 * d, h - 5 * d); close() },
+                e.primary.copy(alpha = 0.3f), style = Stroke(0.8f * d))
+            listOf(0.3f, 0.55f, 0.8f).forEach { f -> drawLine(e.onSurface.copy(alpha = 0.05f), Offset(8 * d, h * f), Offset(w - 8 * d, h * f + 2 * d), d) }
         }
         TemaId.GOTICO -> {
             // El arco por dentro, en oro, y un rosetón bajo la clave.
@@ -636,6 +650,11 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             while (x < w) { drawCircle(e.primary, 1.8f * d, Offset(x, cy)); x += 24 * d }
             drawCircle(e.tertiary, 5 * d, Offset(w / 2, cy))
             drawRect(e.surface, Offset(w / 2 - 1.8f * d, cy - 1.8f * d), Size(3.6f * d, 3.6f * d))
+        }
+        // Un filete con una ola de seigaiha al centro.
+        TemaId.EDO -> {
+            drawLine(e.primary.copy(alpha = 0.5f), Offset(0f, cy), Offset(w / 2 - 12 * d, cy), d); drawLine(e.primary.copy(alpha = 0.5f), Offset(w / 2 + 12 * d, cy), Offset(w, cy), d)
+            for (k in 0..2) { val q = (9 - k * 3) * d; drawArc(e.secondary, 180f, 180f, false, Offset(w / 2 - q, cy + 3 * d - q), Size(2 * q, 2 * q), style = Stroke(d)) }
         }
         // Una arquería de arcos apuntados.
         TemaId.GOTICO -> {
@@ -933,6 +952,12 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             linea(activo, 0f, x, g * 0.4f)
             var px = g * 1.5f; while (px < x) { drawCircle(activo, g * 0.4f, Offset(px, cy)); px += g * 3 }
         }
+        // Un trazo de pincel que engorda, con un sellito en cada paso.
+        TemaId.EDO -> {
+            linea(inactivo, x, w, g * 0.2f)
+            if (x > 0f) drawPath(Path().apply { moveTo(0f, cy); quadraticTo(x * 0.5f, cy - g * 0.45f, x, cy); quadraticTo(x * 0.5f, cy + g * 0.45f, 0f, cy); close() }, activo)
+            if (pasos > 1) for (k in 0..pasos) { val px = w * k / pasos; val s = g * 0.3f; drawRect(if (px <= x) e.secondary else inactivo, Offset(px - s, cy - s), Size(2 * s, 2 * s)) }
+        }
         // Barra con rombos de oro, como una vidriera emplomada.
         TemaId.GOTICO -> {
             linea(inactivo, x, w, g * 0.3f)
@@ -1095,6 +1120,12 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawCircle(color, r * 0.85f, c)
             drawCircle(e.tertiary, r * 0.85f, c, style = Stroke(r * 0.1f))
             drawRect(hueco, Offset(c.x - r * 0.22f, c.y - r * 0.22f), Size(r * 0.44f, r * 0.44f))
+        }
+        // El sello hanko con su marco en reserva.
+        TemaId.EDO -> {
+            drawRoundRect(color, Offset(c.x - r * 0.78f, c.y - r * 0.78f), Size(r * 1.56f, r * 1.56f), CornerRadius(r * 0.18f))
+            drawRect(hueco, Offset(c.x - r * 0.52f, c.y - r * 0.52f), Size(r * 1.04f, r * 1.04f), style = Stroke(r * 0.1f))
+            drawLine(hueco, Offset(c.x, c.y - r * 0.32f), Offset(c.x, c.y + r * 0.32f), r * 0.1f)
         }
         // Ventana lanceta con su parteluz.
         TemaId.GOTICO -> {

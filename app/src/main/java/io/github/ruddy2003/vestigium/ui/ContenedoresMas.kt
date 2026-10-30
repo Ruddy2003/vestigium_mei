@@ -35,6 +35,7 @@ object ContenedoresMas {
         val claro = when (c) {
             Contenedor.MANUSCRITO -> Color(0xFFF3EAD6)
             Contenedor.ACORDEON -> Color(0xFFF4EEDF)
+            Contenedor.FUKURO -> Color(0xFFF3EDDD)
             Contenedor.ORDENES -> Color(0xFFEFE6D0)
             Contenedor.BITACORA -> Color(0xFFF0E7D2)
             Contenedor.HERBARIO -> Color(0xFFEFEADB)
@@ -99,6 +100,35 @@ object ContenedoresMas {
                 drawRect(Color(0xFFF4EEDF), Offset(w * 0.62f, h * 0.1f), Size(w * 0.18f, h * 0.55f))
                 drawRect(Color(0xFFC0392B), Offset(w * 0.62f + 2 * d, h * 0.1f + 2 * d), Size(w * 0.18f - 4 * d, h * 0.55f - 4 * d), style = Stroke(1 * d))
                 drawRect(Color(0xFFC0392B), Offset(w * 0.66f, h * 0.52f), Size(w * 0.1f, w * 0.1f))
+            }
+            Contenedor.FUKURO -> {
+                // Cuaderno cosido a la japonesa (fukuro-toji): tapa de índigo con su dibujo de hojas de cáñamo, la etiqueta
+                // del título arriba a la izquierda y la costura de cuatro agujeros en el lomo de la derecha. Engorda con lo escrito.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 2 * d); canto(w, h, grosor, d, Color(0xFFF3EDDD))
+                val indigo = if (oscuro) Color(0xFF16263F) else Color(0xFF1E3A5F)
+                drawRect(Brush.linearGradient(listOf(lerp(indigo, Color.White, 0.12f), indigo, lerp(indigo, Color.Black, 0.25f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h))
+                // Asanoha (hojas de cáñamo): estrellas de seis puntas trazadas en líneas muy tenues.
+                val claro = Color.White.copy(alpha = 0.08f); val paso = w * 0.2f
+                var fy = 0f; var fila = 0
+                while (fy < h) {
+                    var fx = if (fila % 2 == 0) 0f else paso / 2
+                    while (fx < w * 0.86f) {
+                        for (k in 0 until 6) { val a = k * PI / 3; drawLine(claro, Offset(fx, fy), Offset(fx + (paso * 0.5f * cos(a)).toFloat(), fy + (paso * 0.5f * sin(a)).toFloat()), 0.8f * d) }
+                        fx += paso
+                    }
+                    fy += paso * 0.866f; fila++
+                }
+                // La etiqueta del título (daisen), con su marco y unas columnas de trazos.
+                val et = Offset(w * 0.1f, h * 0.06f); val es = Size(w * 0.17f, h * 0.48f)
+                drawRect(Color(0xFFF3EDDD), et, es)
+                drawRect(Color(0xFFC9442E), et + Offset(2 * d, 2 * d), Size(es.width - 4 * d, es.height - 4 * d), style = Stroke(0.8f * d))
+                for (j in 0 until 5) drawLine(Color(0xFF1B1A1E).copy(alpha = 0.7f), Offset(et.x + es.width / 2, et.y + es.height * (0.12f + j * 0.15f)), Offset(et.x + es.width / 2, et.y + es.height * (0.2f + j * 0.15f)), 1.4f * d)
+                // La costura (yotsume-toji): cuatro agujeros y el hilo que da la vuelta al lomo.
+                val hilo = Color(0xFFEDE6D6); val xl = w - w * 0.07f
+                val ys = listOf(0.12f, 0.37f, 0.63f, 0.88f).map { h * it }
+                drawLine(hilo, Offset(xl, ys.first()), Offset(xl, ys.last()), 1.4f * d)
+                ys.forEach { y -> drawLine(hilo, Offset(xl, y), Offset(w, y), 1.4f * d); drawCircle(lerp(indigo, Color.Black, 0.5f), 1.6f * d, Offset(xl, y)) }
+                drawLine(hilo, Offset(xl, 0f), Offset(xl, ys.first()), 1.4f * d); drawLine(hilo, Offset(xl, ys.last()), Offset(xl, h), 1.4f * d)
             }
             Contenedor.ORDENES -> {
                 // Un rollo horizontal atado con la bufanda azul; engorda con lo escrito.
@@ -387,6 +417,18 @@ object ContenedoresMas {
                 var x = margen + 70 * d; while (x < size.width) { drawLine(tinta.copy(alpha = 0.08f), Offset(x, 0f), Offset(x, size.height), 1.2f * d); drawRect(Brush.horizontalGradient(listOf(tinta.copy(alpha = 0.05f), Color.Transparent), x, x + 12 * d), Offset(x, 0f), Size(12 * d, size.height)); x += 90 * d }
                 drawRect(Color(0xFFC0392B).copy(alpha = 0.35f), Offset(size.width - 34 * d, size.height - 40 * d), Size(20 * d, 20 * d))
             }
+            Contenedor.FUKURO -> {
+                // El washi con sus fibras y el marco de las páginas impresas en madera (kyōkaku), con sus columnas.
+                val r = java.util.Random(72)
+                repeat(70) {
+                    val x = r.nextFloat() * size.width; val y = r.nextFloat() * size.height; val l = (6 + r.nextFloat() * 14) * d; val a = r.nextFloat() * PI
+                    drawLine(tinta.copy(alpha = 0.035f), Offset(x, y), Offset(x + (l * cos(a)).toFloat(), y + (l * sin(a)).toFloat()), 0.6f * d)
+                }
+                val marco = Rect(margen - 10 * d, 72 * d, size.width - 12 * d, size.height - 14 * d)
+                drawRect(tinta.copy(alpha = 0.16f), marco.topLeft, marco.size, style = Stroke(1.4f * d))
+                drawRect(tinta.copy(alpha = 0.1f), marco.topLeft + Offset(3 * d, 3 * d), Size(marco.width - 6 * d, marco.height - 6 * d), style = Stroke(0.5f * d))
+                var x = marco.left + renglon * 1.5f; while (x < marco.right - 4 * d) { drawLine(tinta.copy(alpha = 0.05f), Offset(x, marco.top + 3 * d), Offset(x, marco.bottom - 3 * d), 0.5f * d); x += renglon * 1.5f }
+            }
             Contenedor.ORDENES -> {
                 // Columnas verticales tenues (como la escritura vertical) y el margen de fieltro azul.
                 var x = margen; while (x < size.width) { drawLine(Color(0xFF2E6DB4).copy(alpha = 0.08f), Offset(x, 96 * d), Offset(x, size.height), 0.8f * d); x += renglon }
@@ -549,6 +591,14 @@ object ContenedoresMas {
                 p.moveTo(10 * d, 0f)
                 while (y < size.height) { y += 18 * d; p.lineTo(if (k % 2 == 0) 26 * d else 10 * d, y); k++ }
                 drawPath(p, Color(0xFF8A6A44).copy(alpha = 0.6f), style = Stroke(1.4f * d))
+            }
+            Contenedor.FUKURO -> {
+                // La costura de cuatro agujeros con hilo de índigo, que pasa por el borde de la hoja.
+                val hilo = if (oscuro) Color(0xFF92ABD8) else Color(0xFF1E3A5F); val x = 20 * d
+                val ys = listOf(0.12f, 0.37f, 0.63f, 0.88f).map { size.height * it }
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.16f), Color.Transparent), 0f, 30 * d), Offset.Zero, Size(30 * d, size.height))
+                drawLine(hilo, Offset(x, 0f), Offset(x, size.height), 1.6f * d)
+                ys.forEach { y -> drawLine(hilo, Offset(0f, y), Offset(x, y), 1.6f * d); drawCircle(Color.Black.copy(alpha = 0.35f), 2 * d, Offset(x, y)) }
             }
             Contenedor.ORDENES -> {
                 drawRoundRect(Color(0xFF8A5A2B), Offset(10 * d, 0f), Size(10 * d, size.height), CornerRadius(5 * d))

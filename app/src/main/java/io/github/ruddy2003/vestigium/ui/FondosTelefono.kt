@@ -170,6 +170,7 @@ object FondosTelefono {
         TemaId.BOTANICO -> "Herbarium vestigii"
         TemaId.NAVIDAD -> "Cartas de invierno"
         TemaId.SEDA -> "絲路 · VESTIGIUM"
+        TemaId.EDO -> "東海道 · Vestigium"
         TemaId.GOTICO -> "Horae vestigii"
         TemaId.ESPACIO -> "BITÁCORA DE A BORDO · VM-1"
         TemaId.ANDALUS -> "أثري"
@@ -390,6 +391,20 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     }, col, style = Stroke(1.6f * u))
                 }
                 listOf(Offset(cx, arr), Offset(cx, aba)).forEach { c -> drawCircle(e.tertiary.copy(alpha = 0.6f), 7 * u, c); drawRect(e.background, Offset(c.x - 2.4f * u, c.y - 2.4f * u), Size(4.8f * u, 4.8f * u)) }
+            }
+            TemaId.EDO -> {
+                // Un rollo colgante (kakejiku): el cordón, la varilla de arriba, las dos tiras que cuelgan (fūtai), las bandas de
+                // brocado (ichimonji), el rodillo de abajo con sus pomos y un sello rojo en la esquina.
+                caja(0f, col, 1.2f * u)
+                drawPath(Path().apply { moveTo(cx - 34 * u, arr - 8 * u); lineTo(cx, arr - 24 * u); lineTo(cx + 34 * u, arr - 8 * u) }, tenue, style = Stroke(1.2f * u))
+                drawRoundRect(col, Offset(izq - 6 * u, arr - 9 * u), Size(der - izq + 12 * u, 6 * u), CornerRadius(3 * u))
+                listOf(0.36f, 0.64f).forEach { f -> val x = izq + (der - izq) * f; drawRect(tenue, Offset(x - 2 * u, arr), Size(4 * u, 56 * u)) }
+                drawRect(e.secondary.copy(alpha = 0.22f), Offset(izq, arr + 70 * u), Size(der - izq, 5 * u))
+                drawRect(e.secondary.copy(alpha = 0.22f), Offset(izq, aba - 22 * u), Size(der - izq, 5 * u))
+                drawRoundRect(col, Offset(izq - 4 * u, aba + 1 * u), Size(der - izq + 8 * u, 7 * u), CornerRadius(3.5f * u))
+                listOf(izq - 8 * u, der + 8 * u).forEach { x -> drawCircle(col, 5 * u, Offset(x, aba + 4.5f * u)) }
+                val s = 12 * u; val o = Offset(der - 28 * u, aba - 52 * u)
+                drawRect(e.secondary.copy(alpha = 0.55f), o, Size(s, s)); drawRect(e.background.copy(alpha = 0.7f), o + Offset(2 * u, 2 * u), Size(s - 4 * u, s - 4 * u), style = Stroke(0.8f * u))
             }
             TemaId.GOTICO -> {
                 // Un arco apuntado, doble, como el marco de una vidriera.
@@ -705,6 +720,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.BOTANICO -> R.drawable.logo_botanico
     TemaId.NAVIDAD -> R.drawable.logo_navidad
     TemaId.SEDA -> R.drawable.logo_seda
+    TemaId.EDO -> R.drawable.logo_edo
     TemaId.URSS -> R.drawable.logo_urss
     TemaId.GOTICO -> R.drawable.logo_gotico
     TemaId.ESPACIO -> R.drawable.logo_espacio

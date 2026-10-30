@@ -373,6 +373,11 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawRect(Color(0xFF8A5A12), Offset(o.x - s * 0.22f, o.y - s * 0.22f), Size(s * 0.44f, s * 0.44f))
             drawCircle(Color(0xFF8A5A12), s * 0.75f, o, style = Stroke(s * 0.08f))
         }
+        // Una flor de cerezo que cae.
+        TemaId.EDO -> {
+            for (k in 0 until 5) { val a = -kotlin.math.PI / 2 + k * 2 * kotlin.math.PI / 5; drawCircle(Color(0xFFF2B8C6), s * 0.34f, Offset(o.x + (s * 0.4f * kotlin.math.cos(a)).toFloat(), o.y + (s * 0.4f * kotlin.math.sin(a)).toFloat())) }
+            drawCircle(Color(0xFFF2C94C), s * 0.16f, o)
+        }
         TemaId.GOTICO -> {
             val col = if (i % 2 == 0) Color(0xFFE0475B) else Color(0xFF4F7BE8)
             listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(col, s * 0.38f, Offset(o.x + d.x * s * 0.36f, o.y + d.y * s * 0.36f)) }
@@ -424,6 +429,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.BOTANICO -> Color(0xFFB9C49A)
     TemaId.NAVIDAD -> Color(0xFF8E2A2A)
     TemaId.SEDA -> Color(0xFFD9A35A)
+    TemaId.EDO -> Color(0xFFC9B48A)
     TemaId.GOTICO -> Color(0xFF2C3A6B)
     TemaId.ESPACIO -> Color(0xFF1B2140)
     TemaId.ANDALUS -> Color(0xFFE2C98F)
@@ -535,6 +541,11 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             }
         }
         TemaId.SEDA -> { val r = 14 * d; val t = 20 * d; var y = 0f; while (y < h + r) { var x = 0f; while (x < w + r) { drawCircle(v, r, Offset(x, y), style = Stroke(d)); x += t }; y += t } }
+        // Un shōji: la celosía de listones y, cada tanto, el marco más grueso.
+        TemaId.EDO -> {
+            var x = 0f; var k = 0; while (x < w) { drawLine(v, Offset(x, 0f), Offset(x, h), if (k % 4 == 0) 2.4f * d else d); x += 40 * d; k++ }
+            var y = 0f; while (y < h) { drawLine(v, Offset(0f, y), Offset(w, y), d); y += 28 * d }
+        }
         TemaId.GOTICO -> {
             val bw = 40 * d; val bh = 20 * d; var y = 0f; var f = 0
             while (y < h) { var x = if (f % 2 == 0) 0f else -bw / 2; while (x < w) { drawRect(v, Offset(x, y), Size(bw, bh), style = Stroke(d)); x += bw }; y += bh; f++ }
@@ -705,6 +716,13 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             var x = 30 * d; while (x < w) { drawLine(lerp(c, Color.Black, 0.35f), Offset(x, 0f), Offset(x, h), 1.5f * d); x += 55 * d }
             listOf(0.1f, 0.9f).forEach { fx -> for (j in 0 until 3) drawLine(m(Color(0xFF7A3B1E)), Offset(w * fx - 4 * d + j * 3 * d, 0f), Offset(w * fx - 4 * d + j * 3 * d, h), d) }
         }
+        // La repisa del tokonoma: madera oscura pulida con su veta y el filo claro.
+        TemaId.EDO -> {
+            val c = m(Color(0xFF5A3A22))
+            tabla(c)
+            listOf(0.3f, 0.55f, 0.78f).forEach { f -> drawLine(lerp(c, Color.Black, 0.3f).copy(alpha = 0.6f), Offset(0f, h * f), Offset(w, h * f + 1.5f * d), 0.8f * d) }
+            drawRect(m(Color(0xFFB08A5A)), Offset(0f, 0f), Size(w, 1.5f * d))
+        }
         TemaId.GOTICO -> {
             val c = m(Color(0xFF6B6F7A)); tabla(c, 0f, h * 0.5f)
             val aw = 14 * d; var x = 0f
@@ -850,6 +868,15 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             val s = 10 * d
             drawRect(Color(0xFFC0392B).copy(alpha = 0.55f * f), Offset(w - s - 2 * d, 2 * d), Size(s, s))
             drawRect(Color.White.copy(alpha = 0.6f * f), Offset(w - s + 1 * d, 5 * d), Size(s - 6 * d, s - 6 * d), style = fino)
+        }
+        // Una ema: la tablilla de madera con las esquinas de arriba en chaflán y el cordón rojo para colgarla.
+        TemaId.EDO -> {
+            val k = 8 * d
+            val tabla = Path().apply { moveTo(0f, k); lineTo(k, 0f); lineTo(w - k, 0f); lineTo(w, k); lineTo(w, h); lineTo(0f, h); close() }
+            drawPath(tabla, fondo); drawPath(tabla, borde, style = fino)
+            drawLine(Color(0xFFC9442E).copy(alpha = 0.7f * f), Offset(w / 2 - 7 * d, 0f), Offset(w / 2, 5 * d), 1.2f * d)
+            drawLine(Color(0xFFC9442E).copy(alpha = 0.7f * f), Offset(w / 2 + 7 * d, 0f), Offset(w / 2, 5 * d), 1.2f * d)
+            drawCircle(ac, 1.4f * d, Offset(w / 2, 5.5f * d))
         }
         TemaId.GOTICO -> {
             val t = 10 * d

@@ -284,6 +284,13 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             drawCircle(tenue, 8 * u, o, style = Stroke(1.4f * u)); drawCircle(tenue, 5.5f * u, o, style = Stroke(0.7f * u))
             drawRect(tenue, Offset(o.x - 2.2f * u, o.y - 2.2f * u), Size(4.4f * u, 4.4f * u), style = Stroke(1f * u))
         }
+        // La etiqueta del título (daisen) arriba a la izquierda y la costura de cuatro agujeros en el lomo de la derecha.
+        TemaId.EDO -> {
+            drawRect(tenue, Offset(w * 0.12f, h * 0.08f), Size(w * 0.16f, h * 0.5f), style = Stroke(1f * u))
+            val xs = w - 7 * u
+            linea(xs, 4 * u, xs, h - 4 * u)
+            listOf(0.15f, 0.38f, 0.62f, 0.85f).forEach { f -> linea(xs, h * f, w, h * f); drawCircle(tenue, 1.2f * u, Offset(xs, h * f)) }
+        }
         // Un arco ojival que enmarca el título.
         TemaId.GOTICO -> {
             val x0 = 8 * u; val x1 = w - 8 * u; val base = h - 8 * u; val arranque = h * 0.36f

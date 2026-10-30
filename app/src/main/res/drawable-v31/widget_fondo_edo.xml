@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 y después: igual que la de drawable/. Ya no fuerza el radio del sistema (system_app_widget_background_radius) para no perder la forma del tema. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7191A1F"/>
+            <stroke android:width="1.5dp" android:color="#3A3D47"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+    <item android:top="5dp" android:left="5dp" android:right="5dp" android:bottom="5dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#88EF7A55"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="9dp" android:height="9dp" android:top="1dp" android:left="1dp">
+        <vector android:width="9dp" android:height="9dp" android:viewportWidth="9" android:viewportHeight="9">
+            <path android:pathData="M0.6,0.6 L8.4,0.6 L8.4,8.4 L0.6,8.4 Z M2,2 L7,2 L7,7 L2,7 Z M4.1,2.6 L4.9,2.6 L4.9,6.4 L4.1,6.4 Z" android:fillColor="#EF7A55" android:fillType="evenOdd"/>
+        </vector>
+    </item>
+    <item android:gravity="top|right" android:width="9dp" android:height="9dp" android:top="1dp" android:right="1dp">
+        <vector android:width="9dp" android:height="9dp" android:viewportWidth="9" android:viewportHeight="9">
+            <path android:pathData="M0.6,0.6 L8.4,0.6 L8.4,8.4 L0.6,8.4 Z M2,2 L7,2 L7,7 L2,7 Z M4.1,2.6 L4.9,2.6 L4.9,6.4 L4.1,6.4 Z" android:fillColor="#EF7A55" android:fillType="evenOdd"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|left" android:width="9dp" android:height="9dp" android:left="1dp" android:bottom="1dp">
+        <vector android:width="9dp" android:height="9dp" android:viewportWidth="9" android:viewportHeight="9">
+            <path android:pathData="M0.6,0.6 L8.4,0.6 L8.4,8.4 L0.6,8.4 Z M2,2 L7,2 L7,7 L2,7 Z M4.1,2.6 L4.9,2.6 L4.9,6.4 L4.1,6.4 Z" android:fillColor="#EF7A55" android:fillType="evenOdd"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|right" android:width="9dp" android:height="9dp" android:right="1dp" android:bottom="1dp">
+        <vector android:width="9dp" android:height="9dp" android:viewportWidth="9" android:viewportHeight="9">
+            <path android:pathData="M0.6,0.6 L8.4,0.6 L8.4,8.4 L0.6,8.4 Z M2,2 L7,2 L7,7 L2,7 Z M4.1,2.6 L4.9,2.6 L4.9,6.4 L4.1,6.4 Z" android:fillColor="#EF7A55" android:fillType="evenOdd"/>
+        </vector>
+    </item>
+</layer-list>

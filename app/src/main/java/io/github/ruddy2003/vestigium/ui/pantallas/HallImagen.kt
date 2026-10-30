@@ -121,6 +121,7 @@ object HallImagen {
         TemaId.BOTANICO -> "Herbarium Vestigii Mei" to "Leg. et det. ipse"
         TemaId.NAVIDAD -> "Vestigium Mei · Felices fiestas" to "Escrito junto al fuego"
         TemaId.SEDA -> "我的足迹 · Vestigium Mei" to "丝路行记"
+        TemaId.EDO -> "我が足跡 · Vestigium Mei" to "東海道中日記"
         TemaId.GOTICO -> "Vestigium Mei · Horae" to "Per vitrum lux"
         TemaId.ESPACIO -> "CONTROL DE MISIÓN · VESTIGIUM MEI" to "Fin de la transmisión"
         TemaId.ANDALUS -> "آثاري · Vestigium Mei" to "تمّ الكتاب"

@@ -954,6 +954,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.BOTANICO -> 8.dp
     TemaId.NAVIDAD -> 7.dp
     TemaId.SEDA -> 14.dp
+    TemaId.EDO -> 16.dp
     TemaId.GOTICO -> 18.dp
     TemaId.ESPACIO -> 12.dp
     TemaId.ANDALUS -> 18.dp
@@ -1046,6 +1047,12 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val p = 12 * u
         moveTo(0f, 0f); quadraticTo(w * 0.1f, p, w * 0.28f, p); lineTo(w * 0.72f, p); quadraticTo(w * 0.9f, p, w, 0f)
         lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Karahafu: el alero ondulado de las puertas de templos y castillos, que sube en curva hasta el centro.
+    TemaId.EDO -> formaDp { w, h, u ->
+        val p = 16 * u
+        moveTo(0f, p); cubicTo(w * 0.25f, p, w * 0.38f, p * 0.9f, w * 0.44f, p * 0.35f); quadraticTo(w * 0.5f, -p * 0.05f, w * 0.56f, p * 0.35f)
+        cubicTo(w * 0.62f, p * 0.9f, w * 0.75f, p, w, p); lineTo(w, h); lineTo(0f, h); close()
     }
     // Gablete apuntado al centro, como sobre una portada.
     TemaId.GOTICO -> formaDp { w, h, u ->
@@ -1200,6 +1207,13 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawRect(e.secondary, Offset(w - 40 * u, 17 * u), Size(8 * u, 8 * u))
             drawRect(e.background, Offset(w - 38.5f * u, 18.5f * u), Size(5 * u, 5 * u), style = Stroke(0.8f * u))
         }
+        TemaId.EDO -> {
+            // El alero repetido por dentro y, debajo, las cabezas de las vigas (taruki) en fila.
+            val p = 19 * u
+            drawPath(Path().apply { moveTo(0f, p); cubicTo(w * 0.25f, p, w * 0.38f, p * 0.92f, w * 0.44f, p * 0.5f); quadraticTo(w * 0.5f, p * 0.2f, w * 0.56f, p * 0.5f); cubicTo(w * 0.62f, p * 0.92f, w * 0.75f, p, w, p) },
+                e.primary.copy(alpha = 0.5f), style = Stroke(u))
+            var x = 10 * u; while (x < w - 6 * u) { if (kotlin.math.abs(x - w / 2) > w * 0.08f) drawCircle(e.primary.copy(alpha = 0.35f), 1.3f * u, Offset(x, p + 4 * u)); x += 14 * u }
+        }
         // Trébol de tracería bajo la punta del gablete y un filete.
         TemaId.GOTICO -> {
             val c = Offset(w / 2, 12 * u); val r = 3 * u
@@ -1324,6 +1338,11 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     TemaId.SEDA -> formaDp { w, h, u ->
         val a = 5 * u
         moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - a, 8 * u); lineTo(w - a, h); lineTo(a, h); lineTo(a, 8 * u); close()
+    }
+    // Ema: la tablilla votiva, con sus dos esquinas de arriba en chaflán.
+    TemaId.EDO -> formaDp { w, h, u ->
+        val a = 7 * u
+        moveTo(0f, a); lineTo(a, 0f); lineTo(w - a, 0f); lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
     }
     // Arco apuntado.
     TemaId.GOTICO -> formaDp { w, h, u ->

@@ -33,6 +33,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     CAHIER("Cahier de momentos", "página"),
     MANUSCRITO("Manuscrito de momentos", "folio"),
     ACORDEON("Libro plegado de momentos", "pliegue"),
+    FUKURO("Cuaderno cosido de momentos", "hoja doblada"),
     ORDENES("Rollo de órdenes", "mandato"),
     BITACORA("Diario de a bordo", "página"),
     HERBARIO("Herbario de momentos", "pliego"),
@@ -57,6 +58,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.REVOLUCION -> Contenedor.CAHIER
     TemaId.ANDALUS -> Contenedor.MANUSCRITO
     TemaId.SEDA -> Contenedor.ACORDEON
+    TemaId.EDO -> Contenedor.FUKURO
     TemaId.MONGOL -> Contenedor.ORDENES
     TemaId.COLONOS -> Contenedor.BITACORA
     TemaId.BOTANICO -> Contenedor.HERBARIO
@@ -95,7 +97,7 @@ object Contenedores {
         Contenedor.LEGAJO -> if (oscuro) lerp(Color(0xFFF3EEDF), Color.Black, 0.78f) else Color(0xFFF7F2E4)
         Contenedor.CAHIER -> if (oscuro) lerp(Color(0xFFF8F6EE), Color.Black, 0.8f) else Color(0xFFF8F6EE)
         // Las libretas del lote 2 tienen su papel en [ContenedoresMas].
-        Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
+        Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.FUKURO, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> ContenedoresMas.papel(c, cs, oscuro)
     }
 
@@ -113,7 +115,7 @@ object Contenedores {
             Contenedor.TALLER -> tallerCerrado(grosor, d, oscuro)
             Contenedor.LEGAJO -> legajoCerrado(grosor, d, tapa)
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
-            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
+            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.FUKURO, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
         }
     }
@@ -371,7 +373,7 @@ object Contenedores {
                 var x = margen; while (x < size.width) { drawLine(malva.copy(alpha = 0.14f), Offset(x, 96 * d), Offset(x, size.height), 0.5f * d); x += renglon }
                 drawLine(Color(0xFFB22234).copy(alpha = 0.5f), Offset(margen - 6 * d, 0f), Offset(margen - 6 * d, size.height), 1.2f * d)
             }
-            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
+            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.FUKURO, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
         }
     }
@@ -418,7 +420,7 @@ object Contenedores {
                 // El hilo de la costura del cuaderno.
                 var y = 20 * d; while (y < size.height - 20 * d) { drawLine(Color(0xFF1F3A6E).copy(alpha = 0.7f), Offset(16 * d, y), Offset(16 * d, y + 8 * d), 1.4f * d); y += 22 * d }
             }
-            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
+            Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.FUKURO, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
             Contenedor.EXPEDIENTE, Contenedor.CONSOLA, Contenedor.CARPETA, Contenedor.TECNICO, Contenedor.CUADERNO, Contenedor.VUELO, Contenedor.TETRAD -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
         }
     }

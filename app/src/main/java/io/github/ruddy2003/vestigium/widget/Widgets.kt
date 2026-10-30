@@ -82,6 +82,11 @@ object Widgets {
             0xFFE0B04F.toInt(), 0xFFF2EAD3.toInt(), 0xFFB9B29F.toInt(), 0xFF33406A.toInt(),
             intArrayOf(0xFFE26A50.toInt(), 0xFFE5907B.toInt(), 0xFFE8BFAA.toInt(), 0xFFF2EAD3.toInt(), 0xFFA8DEDE.toInt(), 0xFF7CD0D0.toInt(), 0xFF4FC3C3.toInt()),
             0xFF161D35.toInt(), 0xFF1A1405.toInt())
+        // Tinta sumi y el bermellón de los farolillos; el ánimo va del índigo frío al bermellón.
+        TemaId.EDO -> Colores(R.drawable.widget_fondo_edo, R.drawable.widget_boton_edo, R.drawable.widget_boton_activo_edo, R.drawable.widget_boton_ambar_edo,
+            0xFFEF7A55.toInt(), 0xFFEEE7D7.toInt(), 0xFFB0A999.toInt(), 0xFF3A3D47.toInt(),
+            intArrayOf(0xFF6F86B8.toInt(), 0xFF92ABD8.toInt(), 0xFFC3CEE2.toInt(), 0xFFEEE7D7.toInt(), 0xFFF3C3A8.toInt(), 0xFFF29E7E.toInt(), 0xFFEF7A55.toInt()),
+            0xFF23252C.toInt(), 0xFF2A0D05.toInt())
         TemaId.URSS -> Colores(R.drawable.widget_fondo_urss, R.drawable.widget_boton_urss, R.drawable.widget_boton_activo_urss, R.drawable.widget_boton_ambar_urss,
             0xFFE8B923.toInt(), 0xFFF1E7D2.toInt(), 0xFFB7AA95.toInt(), 0xFF3D3333.toInt(),
             intArrayOf(0xFF6E7C8C.toInt(), 0xFF98A1AA.toInt(), 0xFFC4C3BC.toInt(), 0xFFF1E7D2.toInt(), 0xFFEBC9A6.toInt(), 0xFFE8806A.toInt(), 0xFFE5252F.toInt()),
@@ -148,6 +153,7 @@ object Widgets {
         TemaId.BOTANICO -> "En el campo" to "Libreta"
         TemaId.NAVIDAD -> "Junto al fuego" to "Postal"
         TemaId.SEDA -> "Alto" to "Rollo"
+        TemaId.EDO -> "En la posta" to "Pincel"
         TemaId.GOTICO -> "Ad horam" to "Scribe"
         TemaId.ESPACIO -> "T−0" to "LOG"
         TemaId.ANDALUS -> "الآن" to "اكتب"
@@ -178,6 +184,7 @@ object Widgets {
             TemaId.BOTANICO -> R.font.fraunces_titulo to 1.0f
             TemaId.NAVIDAD -> R.font.cinzel_deco_regular to 0.95f
             TemaId.SEDA -> R.font.almendra_regular to 1.08f
+            TemaId.EDO -> R.font.shippori_titulo to 1.0f
             TemaId.GOTICO -> R.font.gotica_textura to 1.12f
             TemaId.ESPACIO -> R.font.orbitron_medium to 0.88f
             TemaId.ANDALUS -> R.font.kufi_medium to 0.95f
