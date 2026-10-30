@@ -21,6 +21,18 @@ class TerapiaPrueba {
         assertEquals("2026-10-07", Terapia.Opciones(dias = 14, fin = "2026-10-20").ini)
     }
 
+    @Test fun secciones() {
+        // Por omisión: todo lo que ya salía, encendido; lo de cada día y lo privado, apagados.
+        val o = Terapia.Opciones(fin = "2026-10-20")
+        assertTrue(o.animo && o.cuestionarios && o.sueno && o.rutina && o.cuerpo && o.sustancias && o.momentosPeriodo)
+        assertTrue(!o.momentosDia && !o.privado && !o.todo && o.alguna)
+        val todo = o.conTodo(true)
+        assertTrue(todo.todo && todo.privado && todo.momentosDia)
+        val nada = o.conTodo(false)
+        assertTrue(!nada.alguna && !nada.privado)
+        assertEquals(o.ini, nada.ini)
+    }
+
     @Test fun caloriasContraElObjetivo() {
         val o = Terapia.contraObjetivo(listOf(
             Triple("a", 2300.0, 2000.0), Triple("b", 1700.0, 2000.0), Triple("c", 2050.0, 2000.0),

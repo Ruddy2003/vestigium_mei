@@ -89,113 +89,140 @@ object ReporteTerapia {
             else "Respondí ${d.avisosRespondidos} de ${d.avisosMostrados} mostrados (${pct(d.avisosRespondidos.toDouble() / d.avisosMostrados)}); se planearon ${d.avisosPlaneados}.")
         if (d.diasSoloAvisos > 0) p.nota("${dias(d.diasSoloAvisos)} sin ánimo del diario, solo con avisos: no cuentan en el ánimo medio.")
 
-        p.seccion("Día por día")
-        val conPrivado = op.privado
-        val cab = listOf("Día", "Ánimo", "Energía", "Sueño (h)", "Calidad", "kcal vs. objetivo", "Gimnasio") + if (conPrivado) listOf("Impulso", "Recaída") else emptyList<String>()
-        val anchos = if (conPrivado) listOf(1.5f, 0.8f, 0.8f, 0.9f, 0.8f, 1.3f, 1f, 0.8f, 0.8f) else listOf(1.6f, 0.9f, 0.9f, 1f, 0.9f, 1.5f, 1.1f)
-        p.tabla(cab, d.filas.map { f ->
-            listOf(
-                fechaCorta(f.fecha) + if (f.dificil) " *" else "", f.valencia?.toString() ?: "—", f.activacion?.let(::n1) ?: "—",
-                f.suenoH?.let(::n1) ?: "—", f.calidad?.let { "$it de 5" } ?: "—",
-                if (f.kcal == null) "—" else f.objetivoKcal?.let { signo(f.kcal - it) } ?: n0(f.kcal),
-                if (!f.gimnasio) "—" else f.gimnasioMin?.let { "${it.roundToInt()} min" } ?: "sí",
-            ) + if (conPrivado) listOf(f.impulso?.let { "$it de 5" } ?: "—", when (f.recaida) { true -> "sí"; false -> "no"; null -> "—" }) else emptyList<String>()
-        }, anchos)
-        p.nota("* Día que marqué como difícil. «kcal vs. objetivo»: lo que comí menos mi objetivo de ese día (sin objetivo, lo que comí).")
-
-        p.seccion("Ánimo")
-        p.graficaLinea(d.fechas, listOf(d.filas.map { it.valencia?.toDouble() } to ACENTO, d.filas.map { it.activacion } to SEGUNDO), 1.0, 7.0, (1..7).map { it.toDouble() })
-        p.leyenda(listOf("Ánimo del diario" to ACENTO, "Energía" to SEGUNDO))
-        p.clave("Ánimo medio del diario", d.valMedia?.let { n1(it) + " de 7" + (cambio(it, d.valAnterior, anteriores, true, d.errorValencia)?.let { c -> " · $c" } ?: "") } ?: "—")
-        p.clave("Energía media", d.actMedia?.let { n1(it) + " de 7" } ?: "—")
-        val dificiles = d.filas.filter { it.dificil }
-        p.clave("Días difíciles", if (dificiles.isEmpty()) "Ninguno marcado." else "${dificiles.size}: " + dificiles.joinToString(", ") { fechaCorta(it.fecha) })
-        p.clave("Registros de ánimo en el día", "${d.registrosAnimo}")
-        if (d.emociones.isNotEmpty()) p.clave("Emociones más nombradas", lista(d.emociones))
-        d.negativasPct?.let { p.clave("Emociones desagradables", "${pct(it)} de las que nombré") }
-        if (d.pensamientos.isNotEmpty()) p.clave("En qué pensaba", lista(d.pensamientos))
-        d.acompanadoPct?.let { p.clave("Con alguien", "${pct(it)} de los avisos que respondí") }
-        if (d.valSolo != null || d.valAcompanado != null)
-            p.clave("Ánimo solo y acompañado", "solo ${d.valSolo?.let(::n1) ?: "—"} · acompañado ${d.valAcompanado?.let(::n1) ?: "—"} (avisos, de 1 a 7)")
-        if (d.apreciacion.isNotEmpty()) p.clave("Cómo viví la exigencia del día", lista(d.apreciacion))
-        d.errorPrediccion?.let {
-            p.clave("Mi predicción del día siguiente", (if (abs(it) < 0.05) "En promedio, los días salieron como los predije"
-                else "En promedio, los días salieron ${signo(it, true)} puntos ${if (it > 0) "mejor" else "peor"} de lo que predije la noche anterior") + " (${dias(d.nPrediccion)}).")
-        }
-
-        p.seccion("Cuestionarios")
-        d.cuestionarios.forEach { c ->
-            val ahora = if (c.enPeriodo.isEmpty()) "Sin respuesta en el periodo." else c.enPeriodo.joinToString(" · ") { "${fechaCorta(it.first)}: ${it.second}" } + (c.lectura?.let { "\n$it" } ?: "")
-            val antes = if (c.anteriores.isEmpty()) "" else "\nAntes: " + c.anteriores.joinToString(" · ") { "${fechaCorta(it.first)}: ${it.second}" }
-            p.clave(c.nombre, ahora + antes)
-        }
-        p.nota("WHO-5: de 0 a 100, más alto es más bienestar. PSS-4: de 0 a 16, más alto es más estrés. UCLA-3: de 3 a 9, más alto es más soledad. " +
-            "El WHO-5 y el PSS-4 preguntan por los últimos 7 días (el original, por 2 semanas y por un mes).")
-
-        p.seccion("Sueño")
-        p.barras(d.fechas, d.filas.map { it.suenoH }, ::n1)
-        p.clave("Horas de sueño por noche", d.suenoH?.let { n1(it) + " h" + (cambio(it, d.suenoAnterior, anteriores, true, d.errorSueno)?.let { c -> " · $c" } ?: "") } ?: "—")
-        p.clave("Me dormí", horaYVariacion(d.dormir) ?: "—")
-        p.clave("Desperté", horaYVariacion(d.despertar) ?: "—")
-        p.clave("Calidad que anoté", d.calidad?.let { n1(it) + " de 5" } ?: "—")
-        p.clave("Noches con sueño ansioso o pesadilla", "${d.pesadillas}")
-        p.clave("Pantalla en la hora antes de dormir", d.camaMin?.let { "${n0(it)} min por noche" } ?: "—")
-        p.nota("Horas y horarios del reloj. «±» es la desviación estándar: cuánto se movió el horario de una noche a otra.")
-
-        p.seccion("Actividad y rutina")
-        p.clave("Pasos al día", d.pasos?.let { n0(it) + (cambio(it, d.pasosAnterior, anteriores, false, d.errorPasos)?.let { c -> " · $c" } ?: "") } ?: "—")
-        p.clave("Ejercicio (reloj)", "${d.ejercicioMin} min en total")
-        p.clave("Al aire libre", d.aireLibreMin?.let { "${n0(it)} min al día (estimado)" } ?: "—")
-        p.clave("En casa", d.enCasaMin?.let { "${n1(it / 60)} h al día" } ?: "—")
-        p.clave("Hábitos cumplidos", d.habitosPct?.let(::pct) ?: "—")
-        p.clave("Dolor (0 a 5)", d.dolorMedio?.let { "medio ${n1(it)} · máximo ${d.dolorMax}" } ?: "—")
-        p.clave("Días con", d.contextos.joinToString(" · ") { "${it.first.lowercase()}: ${it.second}" })
-        p.clave("Pantalla del teléfono", d.pantallaMin?.let { n1(it / 60) + " h al día" + (cambio(it / 60, d.pantallaAnterior?.div(60), anteriores, true, d.errorPantalla?.div(60))?.let { c -> " · $c" } ?: "") } ?: "—")
-        p.clave("Desbloqueos", d.desbloqueos?.let { "${n0(it)} al día" } ?: "—")
-
-        p.seccion("Contacto con otros")
-        if (d.diasSociales == 0) p.nota("No hay días con personas anotadas en el periodo.")
-        else {
-            p.clave("Estuve en persona con", d.vio.joinToString(" · ") { "${it.first.lowercase()}: ${dias(it.second)}" })
-            p.clave("Pensé en (sin verlas)", d.penso.joinToString(" · ") { "${it.first.lowercase()}: ${dias(it.second)}" })
-            p.nota("De ${dias(d.diasSociales)} con personas anotadas en el diario o en los registros. Sin nombres.")
-        }
-        p.clave("Llamadas", "${d.llamadas}")
-
-        p.seccion("Gimnasio y ejercicio")
-        if (d.gimnasio.isEmpty()) p.clave("Días de gimnasio", "Ninguno en el periodo.")
-        else {
-            val mins = d.gimnasio.mapNotNull { it.second }
-            p.clave("Días de gimnasio", "${d.gimnasio.size} de ${d.n}")
-            p.clave("Duración", d.gimnasio.joinToString(" · ") { "${fechaCorta(it.first)}: ${it.second?.let { m -> "${m.roundToInt()} min" } ?: "sin duración"}" })
-            if (mins.isNotEmpty()) p.clave("En total", "${n0(mins.sum())} min · ${n0(mins.average())} min por entreno")
-        }
-        if (d.otrasSesiones.isNotEmpty()) p.clave("Otras sesiones (reloj)", d.otrasSesiones.joinToString(" · ") { "${it.first}: ${it.second} (${it.third} min)" })
-
-        p.seccion("Alimentación")
-        val nu = d.nutricion
-        if (nu == null) p.nota("Sin registro de comida en el periodo.")
-        else {
-            p.clave("Días con registro", "${nu.diasConRegistro} de ${d.n}")
-            nu.kcal?.let { k ->
-                p.clave("Calorías", "${n0(k.valorMedio)} kcal al día contra un objetivo de ${n0(k.objetivoMedio)}: ${signo(k.diferenciaMedia)} kcal (${signo(k.porcentajeMedio * 100, true)} %)")
-                p.clave("Contra el objetivo", "dentro de ±10 %: ${dias(k.dentro)} · por encima: ${dias(k.encima)} · por debajo: ${dias(k.debajo)}")
-                val porDia = k.diferencias.toMap()
-                p.barras(d.fechas, d.fechas.map { porDia[it] }, { signo(it) }, conCero = true)
+        // La tabla lleva solo las columnas de las secciones elegidas; sin ninguna, no sale.
+        class Col(val titulo: String, val peso: Float, val valor: (Terapia.Fila) -> String)
+        val cols = buildList {
+            if (op.animo) {
+                add(Col("Ánimo", 0.8f) { it.valencia?.toString() ?: "—" })
+                add(Col("Energía", 0.8f) { f -> f.activacion?.let(::n1) ?: "—" })
             }
-            nu.proteina?.let { k ->
-                p.clave("Proteína", "${n0(k.valorMedio)} g al día contra ${n0(k.objetivoMedio)} g: ${signo(k.diferenciaMedia)} g (${signo(k.porcentajeMedio * 100, true)} %) · " +
-                    "dentro de ±10 %: ${dias(k.dentro)}, por encima: ${k.encima}, por debajo: ${k.debajo}")
+            if (op.sueno) {
+                add(Col("Sueño (h)", 0.9f) { f -> f.suenoH?.let(::n1) ?: "—" })
+                add(Col("Calidad", 0.8f) { f -> f.calidad?.let { "$it de 5" } ?: "—" })
             }
-            nu.carbohidratos?.let { (v, o) -> p.clave("Carbohidratos", "${n0(v)} g al día" + (o?.let { " (objetivo ${n0(it)} g)" } ?: "")) }
-            nu.grasa?.let { (v, o) -> p.clave("Grasa", "${n0(v)} g al día" + (o?.let { " (objetivo ${n0(it)} g)" } ?: "")) }
-            nu.nutrientes.forEach { (nombre, v, u) -> p.clave(nombre, "${if (v < 10) n1(v) else n0(v)} $u al día") }
-            horaYVariacion(nu.cafeinaUltima)?.let { p.clave("Última cafeína", it) }
-            nu.comidasPorDia?.let { p.clave("Comidas al día", n1(it)) }
-            horaYVariacion(nu.primera)?.let { p.clave("Primera comida", it) }
-            horaYVariacion(nu.ultima)?.let { p.clave("Última comida", it) }
-            p.nota("Datos de MacroFactor. Los días con menos de ${Terapia.MINIMO_KCAL.toInt()} kcal cuentan como sin registro y no entran en los promedios" +
-                (if (nu.diasSinRegistro > 0) " (${dias(nu.diasSinRegistro)})." else "."))
+            if (op.cuerpo) {
+                add(Col("kcal vs. objetivo", 1.3f) { f -> f.kcal?.let { k -> f.objetivoKcal?.let { signo(k - it) } ?: n0(k) } ?: "—" })
+                add(Col("Gimnasio", 1f) { f -> if (!f.gimnasio) "—" else f.gimnasioMin?.let { "${it.roundToInt()} min" } ?: "sí" })
+            }
+            if (op.privado) {
+                add(Col("Impulso", 0.8f) { f -> f.impulso?.let { "$it de 5" } ?: "—" })
+                add(Col("Recaída", 0.8f) { f -> when (f.recaida) { true -> "sí"; false -> "no"; null -> "—" } })
+            }
+        }
+        if (cols.isNotEmpty()) {
+            p.seccion("Día por día")
+            val marcarDificil = op.animo
+            p.tabla(listOf("Día") + cols.map { it.titulo }, d.filas.map { f -> listOf(fechaCorta(f.fecha) + if (marcarDificil && f.dificil) " *" else "") + cols.map { it.valor(f) } },
+                listOf(1.5f) + cols.map { it.peso })
+            listOfNotNull(
+                "* Día que marqué como difícil.".takeIf { op.animo },
+                "«kcal vs. objetivo»: lo que comí menos mi objetivo de ese día (sin objetivo, lo que comí).".takeIf { op.cuerpo },
+            ).joinToString(" ").takeIf { it.isNotEmpty() }?.let { p.nota(it) }
+        }
+
+        if (op.animo) {
+            p.seccion("Ánimo")
+            p.graficaLinea(d.fechas, listOf(d.filas.map { it.valencia?.toDouble() } to ACENTO, d.filas.map { it.activacion } to SEGUNDO), 1.0, 7.0, (1..7).map { it.toDouble() })
+            p.leyenda(listOf("Ánimo del diario" to ACENTO, "Energía" to SEGUNDO))
+            p.clave("Ánimo medio del diario", d.valMedia?.let { n1(it) + " de 7" + (cambio(it, d.valAnterior, anteriores, true, d.errorValencia)?.let { c -> " · $c" } ?: "") } ?: "—")
+            p.clave("Energía media", d.actMedia?.let { n1(it) + " de 7" } ?: "—")
+            val dificiles = d.filas.filter { it.dificil }
+            p.clave("Días difíciles", if (dificiles.isEmpty()) "Ninguno marcado." else "${dificiles.size}: " + dificiles.joinToString(", ") { fechaCorta(it.fecha) })
+            p.clave("Registros de ánimo en el día", "${d.registrosAnimo}")
+            if (d.emociones.isNotEmpty()) p.clave("Emociones más nombradas", lista(d.emociones))
+            d.negativasPct?.let { p.clave("Emociones desagradables", "${pct(it)} de las que nombré") }
+            if (d.pensamientos.isNotEmpty()) p.clave("En qué pensaba", lista(d.pensamientos))
+            d.acompanadoPct?.let { p.clave("Con alguien", "${pct(it)} de los avisos que respondí") }
+            if (d.valSolo != null || d.valAcompanado != null)
+                p.clave("Ánimo solo y acompañado", "solo ${d.valSolo?.let(::n1) ?: "—"} · acompañado ${d.valAcompanado?.let(::n1) ?: "—"} (avisos, de 1 a 7)")
+            if (d.apreciacion.isNotEmpty()) p.clave("Cómo viví la exigencia del día", lista(d.apreciacion))
+            d.errorPrediccion?.let {
+                p.clave("Mi predicción del día siguiente", (if (abs(it) < 0.05) "En promedio, los días salieron como los predije"
+                    else "En promedio, los días salieron ${signo(it, true)} puntos ${if (it > 0) "mejor" else "peor"} de lo que predije la noche anterior") + " (${dias(d.nPrediccion)}).")
+            }
+        }
+
+        if (op.cuestionarios) {
+            p.seccion("Cuestionarios")
+            d.cuestionarios.forEach { c ->
+                val ahora = if (c.enPeriodo.isEmpty()) "Sin respuesta en el periodo." else c.enPeriodo.joinToString(" · ") { "${fechaCorta(it.first)}: ${it.second}" } + (c.lectura?.let { "\n$it" } ?: "")
+                val antes = if (c.anteriores.isEmpty()) "" else "\nAntes: " + c.anteriores.joinToString(" · ") { "${fechaCorta(it.first)}: ${it.second}" }
+                p.clave(c.nombre, ahora + antes)
+            }
+            p.nota("WHO-5: de 0 a 100, más alto es más bienestar. PSS-4: de 0 a 16, más alto es más estrés. UCLA-3: de 3 a 9, más alto es más soledad. " +
+                "El WHO-5 y el PSS-4 preguntan por los últimos 7 días (el original, por 2 semanas y por un mes).")
+        }
+
+        if (op.sueno) {
+            p.seccion("Sueño")
+            p.barras(d.fechas, d.filas.map { it.suenoH }, ::n1)
+            p.clave("Horas de sueño por noche", d.suenoH?.let { n1(it) + " h" + (cambio(it, d.suenoAnterior, anteriores, true, d.errorSueno)?.let { c -> " · $c" } ?: "") } ?: "—")
+            p.clave("Me dormí", horaYVariacion(d.dormir) ?: "—")
+            p.clave("Desperté", horaYVariacion(d.despertar) ?: "—")
+            p.clave("Calidad que anoté", d.calidad?.let { n1(it) + " de 5" } ?: "—")
+            p.clave("Noches con sueño ansioso o pesadilla", "${d.pesadillas}")
+            p.clave("Pantalla en la hora antes de dormir", d.camaMin?.let { "${n0(it)} min por noche" } ?: "—")
+            p.nota("Horas y horarios del reloj. «±» es la desviación estándar: cuánto se movió el horario de una noche a otra.")
+        }
+
+        if (op.rutina) {
+            p.seccion("Actividad y rutina")
+            p.clave("Pasos al día", d.pasos?.let { n0(it) + (cambio(it, d.pasosAnterior, anteriores, false, d.errorPasos)?.let { c -> " · $c" } ?: "") } ?: "—")
+            p.clave("Ejercicio (reloj)", "${d.ejercicioMin} min en total")
+            p.clave("Al aire libre", d.aireLibreMin?.let { "${n0(it)} min al día (estimado)" } ?: "—")
+            p.clave("En casa", d.enCasaMin?.let { "${n1(it / 60)} h al día" } ?: "—")
+            p.clave("Hábitos cumplidos", d.habitosPct?.let(::pct) ?: "—")
+            p.clave("Dolor (0 a 5)", d.dolorMedio?.let { "medio ${n1(it)} · máximo ${d.dolorMax}" } ?: "—")
+            p.clave("Días con", d.contextos.joinToString(" · ") { "${it.first.lowercase()}: ${it.second}" })
+            p.clave("Pantalla del teléfono", d.pantallaMin?.let { n1(it / 60) + " h al día" + (cambio(it / 60, d.pantallaAnterior?.div(60), anteriores, true, d.errorPantalla?.div(60))?.let { c -> " · $c" } ?: "") } ?: "—")
+            p.clave("Desbloqueos", d.desbloqueos?.let { "${n0(it)} al día" } ?: "—")
+
+            p.seccion("Contacto con otros")
+            if (d.diasSociales == 0) p.nota("No hay días con personas anotadas en el periodo.")
+            else {
+                p.clave("Estuve en persona con", d.vio.joinToString(" · ") { "${it.first.lowercase()}: ${dias(it.second)}" })
+                p.clave("Pensé en (sin verlas)", d.penso.joinToString(" · ") { "${it.first.lowercase()}: ${dias(it.second)}" })
+                p.nota("De ${dias(d.diasSociales)} con personas anotadas en el diario o en los registros. Sin nombres.")
+            }
+            p.clave("Llamadas", "${d.llamadas}")
+        }
+
+        if (op.cuerpo) {
+            p.seccion("Gimnasio y ejercicio")
+            if (d.gimnasio.isEmpty()) p.clave("Días de gimnasio", "Ninguno en el periodo.")
+            else {
+                val mins = d.gimnasio.mapNotNull { it.second }
+                p.clave("Días de gimnasio", "${d.gimnasio.size} de ${d.n}")
+                p.clave("Duración", d.gimnasio.joinToString(" · ") { "${fechaCorta(it.first)}: ${it.second?.let { m -> "${m.roundToInt()} min" } ?: "sin duración"}" })
+                if (mins.isNotEmpty()) p.clave("En total", "${n0(mins.sum())} min · ${n0(mins.average())} min por entreno")
+            }
+            if (d.otrasSesiones.isNotEmpty()) p.clave("Otras sesiones (reloj)", d.otrasSesiones.joinToString(" · ") { "${it.first}: ${it.second} (${it.third} min)" })
+
+            p.seccion("Alimentación")
+            val nu = d.nutricion
+            if (nu == null) p.nota("Sin registro de comida en el periodo.")
+            else {
+                p.clave("Días con registro", "${nu.diasConRegistro} de ${d.n}")
+                nu.kcal?.let { k ->
+                    p.clave("Calorías", "${n0(k.valorMedio)} kcal al día contra un objetivo de ${n0(k.objetivoMedio)}: ${signo(k.diferenciaMedia)} kcal (${signo(k.porcentajeMedio * 100, true)} %)")
+                    p.clave("Contra el objetivo", "dentro de ±10 %: ${dias(k.dentro)} · por encima: ${dias(k.encima)} · por debajo: ${dias(k.debajo)}")
+                    val porDia = k.diferencias.toMap()
+                    p.barras(d.fechas, d.fechas.map { porDia[it] }, { signo(it) }, conCero = true)
+                }
+                nu.proteina?.let { k ->
+                    p.clave("Proteína", "${n0(k.valorMedio)} g al día contra ${n0(k.objetivoMedio)} g: ${signo(k.diferenciaMedia)} g (${signo(k.porcentajeMedio * 100, true)} %) · " +
+                        "dentro de ±10 %: ${dias(k.dentro)}, por encima: ${k.encima}, por debajo: ${k.debajo}")
+                }
+                nu.carbohidratos?.let { (v, o) -> p.clave("Carbohidratos", "${n0(v)} g al día" + (o?.let { " (objetivo ${n0(it)} g)" } ?: "")) }
+                nu.grasa?.let { (v, o) -> p.clave("Grasa", "${n0(v)} g al día" + (o?.let { " (objetivo ${n0(it)} g)" } ?: "")) }
+                nu.nutrientes.forEach { (nombre, v, u) -> p.clave(nombre, "${if (v < 10) n1(v) else n0(v)} $u al día") }
+                horaYVariacion(nu.cafeinaUltima)?.let { p.clave("Última cafeína", it) }
+                nu.comidasPorDia?.let { p.clave("Comidas al día", n1(it)) }
+                horaYVariacion(nu.primera)?.let { p.clave("Primera comida", it) }
+                horaYVariacion(nu.ultima)?.let { p.clave("Última comida", it) }
+                p.nota("Datos de MacroFactor. Los días con menos de ${Terapia.MINIMO_KCAL.toInt()} kcal cuentan como sin registro y no entran en los promedios" +
+                    (if (nu.diasSinRegistro > 0) " (${dias(nu.diasSinRegistro)})." else "."))
+            }
         }
 
         d.sustancias?.let { l ->

@@ -18,16 +18,34 @@ import kotlin.math.sqrt
  * marca al generar cada reporte y no se guarda. Es el único reporte de la app que puede llevarlo.
  */
 object Terapia {
-    /** Lo que se elige al generar el reporte. Nada se guarda: cada vez empieza con estos valores. */
+    /**
+     * Lo que se elige al generar el reporte: el periodo y qué secciones salen. Nada se guarda: cada vez empieza con estos
+     * valores (todo encendido, salvo lo mejor y lo peor de cada día y lo privado). La cobertura de datos sale siempre.
+     */
     data class Opciones(
         val dias: Int = 7,
         val fin: String = Fechas.sumar(Fechas.diaLogico(), -1),
+        val animo: Boolean = true,
+        val cuestionarios: Boolean = true,
+        val sueno: Boolean = true,
+        /** Actividad, rutina y contacto con otros. */
+        val rutina: Boolean = true,
+        /** Gimnasio y alimentación. */
+        val cuerpo: Boolean = true,
         val sustancias: Boolean = true,
+        /** Lo mejor del mejor día y lo peor del peor día. */
         val momentosPeriodo: Boolean = true,
+        /** Lo mejor y lo peor de cada día (dentro de la sección de momentos). */
         val momentosDia: Boolean = false,
         val privado: Boolean = false,
     ) {
         val ini: String get() = Fechas.sumar(fin, -(dias - 1).toLong())
+        /** Todas las secciones encendidas. */
+        val todo: Boolean get() = animo && cuestionarios && sueno && rutina && cuerpo && sustancias && momentosPeriodo && momentosDia && privado
+        /** Al menos una sección, además de la cobertura. */
+        val alguna: Boolean get() = animo || cuestionarios || sueno || rutina || cuerpo || sustancias || momentosPeriodo || momentosDia || privado
+        /** Enciende o apaga todas las secciones a la vez (el periodo no cambia). */
+        fun conTodo(v: Boolean) = copy(animo = v, cuestionarios = v, sueno = v, rutina = v, cuerpo = v, sustancias = v, momentosPeriodo = v, momentosDia = v, privado = v)
     }
 
     /** Un día de la tabla. [impulso] y [recaida] solo se llenan con la casilla de lo privado. */

@@ -512,11 +512,23 @@ private fun ReporteTerapiaTarjeta() {
             TextButton(onClick = {
                 io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, op.fin, maximo = Fechas.parse(Fechas.diaLogico())) { op = op.copy(fin = it) }
             }) { Text("Cambiar el último día") }
+            Text("Qué sale", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+            Interruptor("Todo", op.todo, "Enciende o apaga todas las secciones a la vez. Cuántos días y avisos tienen datos sale siempre.") { op = op.conTodo(it) }
+            HorizontalDivider(Modifier.padding(vertical = 4.dp))
+            Interruptor("Ánimo y emociones", op.animo, "Ánimo y energía por día, días difíciles, emociones, en qué pensabas, solo o acompañado y tu predicción del día siguiente.") { op = op.copy(animo = it) }
+            Interruptor("Cuestionarios", op.cuestionarios, "Bienestar (WHO-5), estrés (PSS-4) y soledad (UCLA-3), con tus respuestas anteriores.") { op = op.copy(cuestionarios = it) }
+            Interruptor("Sueño", op.sueno, "Horas por noche, horarios y qué tan regulares fueron, calidad, pesadillas (solo cuántas) y pantalla antes de dormir.") { op = op.copy(sueno = it) }
+            Interruptor("Actividad, rutina y contacto", op.rutina, "Pasos, aire libre, tiempo en casa, hábitos, dolor, pantalla, y los días con familia, pareja o amistades (sin nombres).") { op = op.copy(rutina = it) }
+            Interruptor("Gimnasio y alimentación", op.cuerpo, "Días y duración del gimnasio; calorías y proteína contra tu objetivo, nutrientes y horarios de comida.") { op = op.copy(cuerpo = it) }
             Interruptor("Sustancias", op.sustancias, "Días y cantidad de alcohol, cannabis, tabaco u otras que anotaste.") { op = op.copy(sustancias = it) }
-            Interruptor("Lo mejor y lo peor del periodo", op.momentosPeriodo, "Lo mejor de tu mejor día y lo peor de tu peor día, tal como lo escribiste (los @nombres salen como iniciales).") { op = op.copy(momentosPeriodo = it) }
-            Interruptor("Lo mejor y lo peor de cada día", op.momentosDia, "Todos los días del periodo. El diario completo nunca sale.") { op = op.copy(momentosDia = it) }
-            Interruptor("Seguimiento privado", op.privado, "Incluye impulsos, recaídas, detonantes y medicamentos. Solo en este reporte, y solo si lo marcas ahora.") { op = op.copy(privado = it) }
-            OutlinedButton(enabled = !trabajando, onClick = {
+            Interruptor("Lo mejor y lo peor", op.momentosPeriodo || op.momentosDia, "Lo mejor de tu mejor día y lo peor de tu peor día, tal como lo escribiste (los @nombres salen como iniciales).") {
+                op = op.copy(momentosPeriodo = it, momentosDia = if (it) op.momentosDia else false)
+            }
+            if (op.momentosPeriodo || op.momentosDia) Column(Modifier.padding(start = 16.dp)) {
+                Interruptor("También el de cada día", op.momentosDia, "Lo mejor y lo peor de todos los días del periodo. El diario completo nunca sale.") { op = op.copy(momentosDia = it) }
+            }
+            Interruptor("Seguimiento privado", op.privado, "Impulsos, recaídas, detonantes y medicamentos. Solo en este reporte, y solo si lo marcas ahora.") { op = op.copy(privado = it) }
+            OutlinedButton(enabled = !trabajando && op.alguna, onClick = {
                 trabajando = true; msg = null
                 scope.launch {
                     val f = withContext(Dispatchers.IO) { runCatching { io.github.ruddy2003.vestigium.reportes.ReporteTerapia.pdf(ctx, op) } }
@@ -525,6 +537,7 @@ private fun ReporteTerapiaTarjeta() {
                         .onFailure { msg = "No pude generar el reporte: ${it.message ?: it.javaClass.simpleName}" }
                 }
             }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) { Text(if (trabajando) "Generando…" else "Generar y compartir PDF") }
+            if (!op.alguna) Ayuda("Elige al menos una sección.", Modifier.padding(top = 4.dp))
             Ayuda("Nunca lleva el diario completo, los sueños, las cartas, las notas, la agenda, los chats, los lugares ni los nombres.", Modifier.padding(top = 8.dp))
             msg?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
         }
