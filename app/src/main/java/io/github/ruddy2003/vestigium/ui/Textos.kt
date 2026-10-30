@@ -70,6 +70,21 @@ object Textos {
         "widget_discreto_momento" to "asentar",
     )
 
+    private val TEMPLARIO: Map<String, String> = mapOf(
+        "pestana_dia" to "Guardia",
+        "pestana_diario" to "Crónica",
+        "pestana_registrar" to "Inscribir",
+        "pestana_vida" to "La casa",
+        "pestana_entender" to "Capítulo",
+        "escala_vacia" to "sin señal · toca o desliza",
+        "lista_anadir" to "+ alistar",
+        "palabras" to "%d palabras de la jornada",
+        "widget_animo" to "¿cómo está tu ánimo, hermano?",
+        "widget_momento" to "en esta guardia siento…",
+        "widget_discreto_animo" to "guardia",
+        "widget_discreto_momento" to "al rol",
+    )
+
     private val DISTOPIA: Map<String, String> = mapOf(
         "pestana_dia" to "PARTE",
         "pestana_diario" to "DECLARAR",
@@ -331,6 +346,7 @@ object Textos {
         TemaId.NEON -> NEON
         TemaId.HELENO -> HELENO
         TemaId.MEDIEVAL -> MEDIEVAL
+        TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN

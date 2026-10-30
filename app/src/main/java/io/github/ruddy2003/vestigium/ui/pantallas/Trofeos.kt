@@ -323,6 +323,12 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             val p = Offset(o.x + d.x * s, o.y + d.y * s); val t = s * (0.38f - k * 0.06f)
             drawPath(Path().apply { moveTo(p.x, p.y - t); lineTo(p.x + t * 0.8f, p.y - t * 0.1f); lineTo(p.x + t * 0.1f, p.y + t); lineTo(p.x - t * 0.9f, p.y + t * 0.2f); close() }, Color(0xFFF2C94C))
         }
+        // Chispas de la fragua del armero: tres puntos encendidos y una estela que cae.
+        TemaId.TEMPLARIO -> listOf(Offset(0f, -0.45f), Offset(-0.5f, 0.3f), Offset(0.45f, 0.4f)).forEachIndexed { k, d ->
+            val p = Offset(o.x + d.x * s, o.y + d.y * s); val t = s * (0.18f - k * 0.03f)
+            drawLine(Color(0xFFF0A040).copy(alpha = 0.6f), p, Offset(p.x + d.x * s * 0.25f, p.y + s * 0.3f), t * 0.6f, StrokeCap.Round)
+            drawCircle(Color(0xFFFFE2A8), t, p)
+        }
         TemaId.DISTOPIA -> {
             val ojo = Path().apply { moveTo(o.x - s, o.y); quadraticTo(o.x, o.y - s * 0.9f, o.x + s, o.y); quadraticTo(o.x, o.y + s * 0.9f, o.x - s, o.y); close() }
             drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
@@ -415,6 +421,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.NEON -> Color(0xFF0B3D24)
     TemaId.HELENO -> Color(0xFFC9D8E6)
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
+    TemaId.TEMPLARIO -> Color(0xFFCDBB97)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
     TemaId.REFUGIO -> Color(0xFF9CC9C1)
     TemaId.ORDEN -> Color(0xFF6F7882)
@@ -468,6 +475,17 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             var y = 18 * d
             while (y < h) { drawLine(v, Offset(0f, y), Offset(w, y), d); drawLine(v, Offset(0f, y + 4 * d), Offset(w, y + 4 * d), d * 0.6f); y += 26 * d }
             listOf(0.05f, 0.95f).forEach { fx -> drawLine(Color(0xFFB0302A).copy(alpha = 0.12f), Offset(w * fx, 0f), Offset(w * fx, h), d) }
+        }
+        // Los sillares de la sala de armas, a soga, con la banda roja de la casa a media altura.
+        TemaId.TEMPLARIO -> {
+            val alto = 20 * d; val largo = 44 * d; var y = alto; var fila = 0
+            while (y < h) {
+                drawLine(v, Offset(0f, y), Offset(w, y), d)
+                var x = if (fila % 2 == 0) largo / 2 else 0f
+                while (x < w) { drawLine(v, Offset(x, y - alto), Offset(x, y), d); x += largo }
+                y += alto; fila++
+            }
+            drawRect(Color(0xFFB0191F).copy(alpha = 0.1f), Offset(0f, h * 0.36f), Size(w, 6 * d))
         }
         TemaId.DISTOPIA -> {
             val pw = w / 3; val ph = 70 * d; var y = 0f
@@ -644,6 +662,16 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
                 x += 90 * d
             }
         }
+        // El armero: tabla de roble negro, colgaderos de hierro y, entre ellos, escudetes con la cruz.
+        TemaId.TEMPLARIO -> {
+            tabla(m(Color(0xFF4A3524)))
+            var x = 24 * d; var k = 0
+            while (x < w) {
+                if (k % 2 == 0) { drawRect(m(Color(0xFF3A3D42)), Offset(x, h * 0.2f), Size(10 * d, h * 0.6f)); drawCircle(m(Color(0xFF9A9389)), 1.4f * d, Offset(x + 5 * d, h * 0.5f)) }
+                else drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(x + 5 * d, h * 0.5f), h * 0.3f), m(Color(0xFFB0191F)))
+                x += 60 * d; k++
+            }
+        }
         TemaId.DISTOPIA -> {
             tabla(m(Color(0xFF7D8287)))
             drawRect(m(Color(0xFFB71C1C)), Offset(0f, h * 0.78f), Size(w, h * 0.12f))
@@ -802,6 +830,13 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             drawRect(fondo, Offset(r, 0f), Size(w - 2 * r, h))
             drawLine(borde, Offset(r, 0f), Offset(w - r, 0f), d); drawLine(borde, Offset(r, h), Offset(w - r, h), d)
             listOf(r, w - r).forEach { x -> drawOval(fondo, Offset(x - r, 0f), Size(2 * r, h)); drawOval(borde, Offset(x - r, 0f), Size(2 * r, h), style = fino) }
+        }
+        // Una placa de hierro remachada con el borde de abajo en punta, como un gallardete.
+        TemaId.TEMPLARIO -> {
+            val p = 6 * d
+            val placa = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h - p); lineTo(w / 2, h); lineTo(0f, h - p); close() }
+            drawPath(placa, fondo); drawPath(placa, borde, style = fino)
+            listOf(Offset(4 * d, 4 * d), Offset(w - 4 * d, 4 * d)).forEach { drawCircle(borde, 1.4f * d, it) }
         }
         TemaId.DISTOPIA -> {
             val t = 6 * d

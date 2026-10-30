@@ -139,6 +139,7 @@ object LibroDiario {
         TemaId.NEON -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
         TemaId.HELENO -> Fuentes(R.font.garamond_medium, R.font.garamond_regular)
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
+        TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
         TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
         TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.saira_regular)
@@ -207,6 +208,8 @@ object LibroDiario {
             TemaId.HELENO -> "h1{text-align:center}article{border-top:0}article::before{content:'';display:block;height:5px;margin-bottom:14px;border-top:1px solid $p;" +
                 "border-bottom:1px solid $p;background:repeating-linear-gradient(90deg,$p 0 3px,transparent 3px 9px)}" + capitular("2.4em", tinta)
             TemaId.MEDIEVAL -> "article{border-top:2px solid $p;border-left:3px double $s;padding-left:14px}" + capitular("3.2em", p)
+            TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
+                ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
             TemaId.REFUGIO -> "article{border:1px solid $p;border-radius:14px;padding:18px;margin-bottom:18px}.nota::first-letter{background:$p;color:$b;font-size:1.6em;padding:0 3px;margin-right:2px}"
             TemaId.ORDEN -> "article{border-top:3px solid $p;outline:1px solid $v;outline-offset:6px;margin:18px 0;padding:18px}.fecha{text-transform:uppercase;letter-spacing:.1em}" + capitular("2.6em", p)
@@ -345,6 +348,7 @@ object LibroDiario {
             TemaId.NEON -> Medidas(11f, 1.35f)
             TemaId.HELENO -> Medidas(12.5f, aire)
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
+            TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
             TemaId.ORDEN -> Medidas(11f, aire)
@@ -383,6 +387,8 @@ object LibroDiario {
         TemaId.HELENO -> Inicial(R.font.garamond_semibold, 2.3f, tinta = true)
         // La capitular roja del copista.
         TemaId.MEDIEVAL -> Inicial(R.font.gotica_regular, 2.2f)
+        // La primera palabra en la letra de los estandartes, en rojo y en mayúsculas.
+        TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
         // Una letra grande de fósforo en video inverso.
@@ -481,6 +487,21 @@ object LibroDiario {
                 lados(10f)
                 listOf(-1f to -1f, 1f to -1f, -1f to 1f, 1f to 1f).forEach { (a, b) -> cv.drawCircle(cx + a * 2.4f, y + b * 2.4f, 2.2f, relleno) }
                 cv.drawCircle(cx, y, 1.2f, Paint(relleno).apply { color = tinta })
+            }
+            TemaId.TEMPLARIO -> {
+                // Una cruz patada roja entre dos filetes de acero, uno grueso y otro fino.
+                lados(10f)
+                cv.drawLine(x0, y + 3f, cx - 10f, y + 3f, Paint(linea).apply { strokeWidth = 0.6f }); cv.drawLine(cx + 10f, y + 3f, x1, y + 3f, Paint(linea).apply { strokeWidth = 0.6f })
+                cv.drawPath(ruta {
+                    for (k in 0 until 4) {
+                        val a = Math.toRadians(90.0 * k - 90); val dx = Math.cos(a).toFloat(); val dy = Math.sin(a).toFloat()
+                        fun px(fr: Float, s: Float) = cx + dx * 7f * fr - dy * 7f * s
+                        fun py(fr: Float, s: Float) = y + dy * 7f * fr + dx * 7f * s
+                        if (k == 0) moveTo(px(0.14f, -0.14f), py(0.14f, -0.14f)) else lineTo(px(0.14f, -0.14f), py(0.14f, -0.14f))
+                        lineTo(px(1f, -0.42f), py(1f, -0.42f)); lineTo(px(1f, 0.42f), py(1f, 0.42f))
+                    }
+                    close()
+                }, relleno)
             }
             TemaId.DISTOPIA -> {
                 // La barra negra del formulario y la línea roja de debajo.
@@ -633,6 +654,12 @@ object LibroDiario {
                 // Rojo grueso por fuera y azul fino por dentro.
                 rect(22f, Paint(trazo).apply { strokeWidth = 2.4f; alpha = 200 })
                 rect(27f, Paint(fino).apply { color = 0xFF1F3A93.toInt(); alpha = 160 })
+            }
+            TemaId.TEMPLARIO -> {
+                // Acero grueso por fuera, rojo fino por dentro y un clavo de hierro en cada esquina.
+                rect(22f, Paint(trazo).apply { color = 0xFF4A5560.toInt(); strokeWidth = 2.6f; alpha = 210 })
+                rect(28f, Paint(fino).apply { alpha = 170 })
+                listOf(22f to 22f, A - 22f to 22f, 22f to B - 22f, A - 22f to B - 22f).forEach { (x, yy) -> cv.drawCircle(x, yy, 3.2f, Paint(relleno).apply { color = 0xFF4A5560.toInt() }) }
             }
             TemaId.DISTOPIA -> {
                 // Marco negro, la franja roja de arriba y la casilla del folio.

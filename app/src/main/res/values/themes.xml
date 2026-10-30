@@ -42,6 +42,12 @@
     <style name="Theme.Vestigium.Arranque.Medieval" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_medieval</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Templario" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_templario</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Templario.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_templario_oscuro</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Medieval.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_medieval_oscuro</item>
     </style>

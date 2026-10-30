@@ -33,6 +33,7 @@ object SalonesTema {
             TemaId.ROMANO -> atrio(cs, oscuro, n)
             TemaId.HELENO -> stoa(cs, oscuro, n)
             TemaId.MEDIEVAL -> salaGestas(cs, oscuro, n)
+            TemaId.TEMPLARIO -> salaArmas(cs, oscuro, n)
             TemaId.GOTICO -> nave(cs, oscuro, n)
             TemaId.RENACIMIENTO -> galeria(cs, oscuro, n)
             TemaId.NAPOLEON -> imperial(cs, oscuro, n)
@@ -63,6 +64,9 @@ object SalonesTema {
             TemaId.ROMANO -> { drawRect(piedra(Color(0xFF7C2433).copy(alpha = 0.75f)), Offset(w * 0.2f, h * 0.15f), Size(w * 0.6f, h * 0.7f)); drawRect(piedra(Color(0xFFE7E3DA)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h * 0.18f)); drawRect(piedra(Color(0xFFE7E3DA)), Offset(w * 0.1f, h * 0.82f), Size(w * 0.8f, h * 0.18f)) }
             TemaId.HELENO -> for (k in 0 until 3) drawRect(piedra(Color(0xFFEDE7DA)), Offset(w * (0.24f - k * 0.07f), h * k / 3f), Size(w * (0.52f + k * 0.14f), h / 3f))
             TemaId.MEDIEVAL -> { drawRect(piedra(Color(0xFF5A3A22)), Offset(w * 0.12f, h * 0.1f), Size(w * 0.76f, h * 0.35f)); drawRect(Color(0xFF5A3A22), Offset(w * 0.45f, h * 0.45f), Size(w * 0.1f, h * 0.55f)) }
+            // Un sillar de arenisca con la cruz patada grabada en el frente.
+            TemaId.TEMPLARIO -> { drawRect(piedra(Color(0xFFC2AE84)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); drawRect(Color(0xFF7A6A4C).copy(alpha = 0.5f), Offset(w * 0.14f, 0f), Size(w * 0.72f, h), style = Stroke(1.2f))
+                drawPath(cruzPatada(Offset(w / 2, h * 0.5f), minOf(w, h) * 0.32f), Color(0xFFB0191F).copy(alpha = 0.75f)) }
             TemaId.GOTICO -> { drawRect(piedra(Color(0xFF6B6F7A)), Offset(w * 0.18f, 0f), Size(w * 0.64f, h)); for (k in 1..3) drawLine(Color(0xFF3A3E48).copy(alpha = 0.5f), Offset(w * (0.18f + 0.16f * k), 0f), Offset(w * (0.18f + 0.16f * k), h), 1.2f) }
             TemaId.RENACIMIENTO -> { drawRect(piedra(Color(0xFF8C9188)), Offset(w * 0.16f, h * 0.2f), Size(w * 0.68f, h * 0.8f)); drawRect(piedra(Color(0xFFB5B9AE)), Offset(w * 0.1f, 0f), Size(w * 0.8f, h * 0.22f)) }
             TemaId.NAPOLEON -> { drawRect(piedra(Color(0xFF2F5D4A)), Offset(w * 0.16f, 0f), Size(w * 0.68f, h)); drawRect(Color(0xFFD4AF37), Offset(w * 0.16f, 0f), Size(w * 0.68f, h * 0.12f)); drawRect(Color(0xFFD4AF37), Offset(w * 0.16f, h * 0.88f), Size(w * 0.68f, h * 0.12f)) }
@@ -234,6 +238,33 @@ object SalonesTema {
                 yy += 230 * d
             }
         }
+    }
+
+    /**
+     * La sala de armas del castillo: muros encalados, la viga del techo con sus canes, un arco de medio punto sobre cada
+     * columna de piezas y, en cada pilar, el escudo de la casa colgado sobre dos lanzas cruzadas. Abajo, las losas.
+     */
+    private fun DrawScope.salaArmas(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val piedra = (if (oscuro) Color(0xFF8A8270) else Color(0xFF9C8B66)).copy(alpha = 0.4f)
+        val madera = Color(0xFF4A3524).copy(alpha = if (oscuro) 0.7f else 0.5f)
+        drawRect(madera, Offset(0f, 0f), Size(w, 8 * d))
+        var x = 10 * d; while (x < w) { drawRect(madera, Offset(x, 8 * d), Size(6 * d, 6 * d)); x += 40 * d }
+        val paso = w / n
+        for (i in 0 until n) {
+            val x0 = i * paso + 8 * d; val x1 = (i + 1) * paso - 8 * d; val yArr = 44 * d
+            drawPath(Path().apply { moveTo(x0, h); lineTo(x0, yArr); arcTo(Rect(x0, yArr - (x1 - x0) / 2, x1, yArr + (x1 - x0) / 2), 180f, 180f, false); lineTo(x1, h) }, piedra, style = Stroke(2 * d))
+        }
+        for (i in 0..n) drawRect(piedra, Offset(i * paso - 4 * d, 14 * d), Size(8 * d, h - 14 * d))
+        for (i in 1 until n) {
+            val c = Offset(i * paso, 40 * d); val r = 11 * d
+            listOf(-1f, 1f).forEach { s -> drawLine(Color(0xFF5A3A22).copy(alpha = 0.6f), Offset(c.x - s * 16 * d, c.y + 18 * d), Offset(c.x + s * 16 * d, c.y - 20 * d), 1.6f * d) }
+            val escudo = Path().apply { moveTo(c.x - r * 0.8f, c.y - r * 0.85f); lineTo(c.x + r * 0.8f, c.y - r * 0.85f); quadraticTo(c.x + r * 0.86f, c.y + r * 0.3f, c.x, c.y + r); quadraticTo(c.x - r * 0.86f, c.y + r * 0.3f, c.x - r * 0.8f, c.y - r * 0.85f); close() }
+            drawPath(escudo, Color(0xFFF4EFE2).copy(alpha = if (oscuro) 0.5f else 0.8f)); drawPath(escudo, piedra, style = Stroke(1.2f * d))
+            drawPath(cruzPatada(c + Offset(0f, -r * 0.1f), r * 0.55f), Color(0xFFB0191F).copy(alpha = 0.7f))
+        }
+        var y = h * 0.92f; while (y < h) { drawLine(piedra, Offset(0f, y), Offset(w, y), 1f * d); y += 10 * d }
+        var xl = 0f; while (xl < w) { drawLine(piedra, Offset(xl, h * 0.92f), Offset(xl, h), 1f * d); xl += 34 * d }
     }
 
     /** La nave gótica: un arco apuntado sobre cada columna de piezas, manchas de luz de colores y el rosetón entre los arcos. */

@@ -154,6 +154,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.NEON -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
     TemaId.HELENO -> listOf("χάλκεος", "ἀργύρεος", "χρύσεος", "ἀθάνατος")
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
+    TemaId.TEMPLARIO -> listOf("hermano sargento", "freire caballero", "comendador", "maestre del Temple")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
     TemaId.REFUGIO -> listOf("residente", "jefe de turno", "jefe de sector", "director del refugio")
     TemaId.ORDEN -> listOf("escudero", "caballero", "paladín", "gran maestre")
@@ -298,6 +299,23 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                     val b = PI / 2 * j
                     drawCircle(oro.copy(alpha = 0.16f), 2f * u, Offset(p.x + (5f * u * cos(b)).toFloat(), p.y + (5f * u * sin(b)).toFloat()))
                 }
+            }
+        }
+        TemaId.TEMPLARIO -> {
+            // Dos espadas cruzadas detrás de una gran cruz patada que gira despacio, dentro de un anillo de cota de malla.
+            val hierro = cs.secondary; val rojo = cs.primary
+            listOf(-1f, 1f).forEach { s ->
+                val a = Math.toRadians(-90.0 + s * 38.0)
+                val punta = pt(m * 0.46f, a); val pomo = pt(m * 0.36f, a + PI)
+                drawLine(hierro.copy(alpha = 0.16f), pomo, punta, 3f * u, StrokeCap.Round)
+                val g = pt(m * 0.24f, a + PI); val n = Offset(-sin(a).toFloat(), cos(a).toFloat()) * (9f * u)
+                drawLine(hierro.copy(alpha = 0.2f), g - n, g + n, 2.4f * u, StrokeCap.Round)
+                drawCircle(hierro.copy(alpha = 0.2f), 3.2f * u, pomo)
+            }
+            rotate(giro * 0.15f, c) { drawPath(cruzPatada(c, m * 0.3f), rojo.copy(alpha = if (oscuro) 0.12f else 0.09f)) }
+            for (i in 0 until 40) {
+                val a = 2 * PI * i / 40 + Math.toRadians(giro * 0.1)
+                drawCircle(hierro.copy(alpha = 0.15f), 3.2f * u, pt(m * 0.4f, a), style = Stroke(1.1f * u))
             }
         }
         TemaId.DISTOPIA -> {

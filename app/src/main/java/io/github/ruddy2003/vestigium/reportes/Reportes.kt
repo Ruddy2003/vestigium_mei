@@ -102,6 +102,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.NEON -> R.font.sharetech_mono           // la consola: monoespaciada de terminal
     TemaId.HELENO -> R.font.garamond_medium
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
+    TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
     TemaId.ORDEN -> R.font.saira_stencil            // estarcido
@@ -128,6 +129,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.NEON -> "vestigium@mei:~\$"
     TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · Vestigium Mei"
     TemaId.MEDIEVAL -> "Liber vestigii mei"
+    TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
     TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
@@ -247,6 +249,29 @@ object Reportes {
                         x += 22f; i++
                     }
                     y += 50f
+                }
+                TemaId.TEMPLARIO -> {
+                    // El adarve de la muralla: una hilera de almenas en tinta de hierro y, en medio, el escudo con la cruz patada.
+                    val base = yy + 34f; val alto = 12f; val merlon = 14f; val cx = W / 2
+                    val hierro = L.relleno(L.tinta)
+                    c.drawRect(M, base - 4f, W - M, base, hierro)
+                    var x = M
+                    while (x + merlon <= W - M) {
+                        if (x + merlon < cx - 30f || x > cx + 30f) c.drawRect(x, base - 4f - alto, x + merlon, base - 4f, hierro)
+                        x += merlon * 2
+                    }
+                    val escudo = Path().apply {
+                        moveTo(cx - 20f, yy); lineTo(cx + 20f, yy); quadTo(cx + 21f, yy + 28f, cx, yy + 42f); quadTo(cx - 21f, yy + 28f, cx - 20f, yy); close()
+                    }
+                    c.drawPath(escudo, L.relleno(L.fondo)); c.drawPath(escudo, L.trazo(L.tinta, 1.6f))
+                    val rojo = L.relleno(L.primario); val my = yy + 17f
+                    val cruz = Path().apply {
+                        moveTo(cx - 3f, my - 3f); lineTo(cx - 7f, my - 15f); lineTo(cx + 7f, my - 15f); lineTo(cx + 3f, my - 3f)
+                        lineTo(cx + 15f, my - 7f); lineTo(cx + 15f, my + 7f); lineTo(cx + 3f, my + 3f); lineTo(cx + 7f, my + 15f)
+                        lineTo(cx - 7f, my + 15f); lineTo(cx - 3f, my + 3f); lineTo(cx - 15f, my + 7f); lineTo(cx - 15f, my - 7f); close()
+                    }
+                    c.drawPath(cruz, rojo)
+                    y += 58f
                 }
                 TemaId.DISTOPIA -> {
                     // La barra del expediente se abre en el centro para el ojo que lo mira todo.

@@ -65,6 +65,12 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             listOf(Offset(w * 0.06f, h * 0.06f), Offset(w * 0.94f, h * 0.06f), Offset(w * 0.06f, h * 0.94f), Offset(w * 0.94f, h * 0.94f))
                 .forEach { p -> drawRect(c, Offset(p.x - w * 0.07f, p.y - h * 0.07f), Size(w * 0.14f, h * 0.14f)) }
         }
+        // Escudo de lágrima con el ribete doble de hierro.
+        TemaId.TEMPLARIO -> {
+            val escudo = Path().apply { moveTo(w * 0.08f, h * 0.04f); lineTo(w * 0.92f, h * 0.04f); quadraticTo(w * 0.96f, h * 0.62f, w * 0.5f, h * 0.98f); quadraticTo(w * 0.04f, h * 0.62f, w * 0.08f, h * 0.04f); close() }
+            drawPath(escudo, c, style = Stroke(g))
+            drawLine(c, Offset(w * 0.14f, h * 0.12f), Offset(w * 0.86f, h * 0.12f), g * 0.5f)
+        }
         // Ficha de expediente: borde grueso y pestaña.
         TemaId.DISTOPIA -> {
             drawRect(c, Offset(w * 0.05f, h * 0.08f), Size(w * 0.9f, h * 0.87f), style = Stroke(g * 1.6f))
@@ -247,6 +253,12 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawCircle(hueco.copy(alpha = 0.4f), r * 0.6f, c, style = Stroke(r * 0.1f))
             drawLine(hueco.copy(alpha = 0.5f), Offset(c.x - r * 0.34f, c.y), Offset(c.x + r * 0.34f, c.y), r * 0.11f)
             drawLine(hueco.copy(alpha = 0.5f), Offset(c.x, c.y - r * 0.34f), Offset(c.x, c.y + r * 0.34f), r * 0.11f)
+        }
+        // El escudo blanco y rojo: el escudo lleno y la cruz patada calada.
+        TemaId.TEMPLARIO -> {
+            val escudo = Path().apply { moveTo(c.x - r * 0.82f, c.y - r * 0.9f); lineTo(c.x + r * 0.82f, c.y - r * 0.9f); quadraticTo(c.x + r * 0.88f, c.y + r * 0.3f, c.x, c.y + r); quadraticTo(c.x - r * 0.88f, c.y + r * 0.3f, c.x - r * 0.82f, c.y - r * 0.9f); close() }
+            drawPath(escudo, color)
+            drawPath(cruzPatada(Offset(c.x, c.y - r * 0.12f), r * 0.56f), hueco.copy(alpha = 0.6f))
         }
         // El ojo que todo lo mira.
         TemaId.DISTOPIA -> {

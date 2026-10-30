@@ -77,6 +77,7 @@ object Musica {
         TemaId.NEON -> R.raw.s_neon_presentacion
         TemaId.HELENO -> R.raw.s_heleno_presentacion
         TemaId.MEDIEVAL -> R.raw.s_medieval_presentacion
+        TemaId.TEMPLARIO -> R.raw.s_templario_presentacion
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
         TemaId.REFUGIO -> R.raw.s_refugio_presentacion
         TemaId.ORDEN -> R.raw.s_orden_presentacion
@@ -102,6 +103,7 @@ object Musica {
         TemaId.NEON -> R.raw.s_neon_anual
         TemaId.HELENO -> R.raw.s_heleno_anual
         TemaId.MEDIEVAL -> R.raw.s_medieval_anual
+        TemaId.TEMPLARIO -> R.raw.s_templario_anual
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
         TemaId.REFUGIO -> R.raw.s_refugio_anual
         TemaId.ORDEN -> R.raw.s_orden_anual
@@ -126,6 +128,7 @@ object Musica {
         TemaId.NEON -> R.raw.t_neon_llamada
         TemaId.HELENO -> R.raw.t_heleno_llamada
         TemaId.MEDIEVAL -> R.raw.t_medieval_llamada
+        TemaId.TEMPLARIO -> R.raw.t_templario_llamada
         TemaId.DISTOPIA -> R.raw.t_distopia_llamada
         TemaId.REFUGIO -> R.raw.t_refugio_llamada
         TemaId.ORDEN -> R.raw.t_orden_llamada
@@ -150,6 +153,7 @@ object Musica {
         TemaId.NEON -> R.raw.t_neon_notificacion
         TemaId.HELENO -> R.raw.t_heleno_notificacion
         TemaId.MEDIEVAL -> R.raw.t_medieval_notificacion
+        TemaId.TEMPLARIO -> R.raw.t_templario_notificacion
         TemaId.DISTOPIA -> R.raw.t_distopia_notificacion
         TemaId.REFUGIO -> R.raw.t_refugio_notificacion
         TemaId.ORDEN -> R.raw.t_orden_notificacion
@@ -346,6 +350,21 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         listOf(Offset(u * 20.5f, u * 12), Offset(w - u * 20.5f, u * 12), Offset(u * 20.5f, h - u * 12), Offset(w - u * 20.5f, h - u * 12)).forEach {
             drawCircle(oro, u * 6, it, style = Stroke(u * 1.6f)); drawCircle(oro, u * 2, it)
         }
+    }
+    // La puerta de la encomienda: el muro almenado arriba, dos estandartes «baucent» a los lados y el lema de la orden al pie.
+    TemaId.TEMPLARIO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "☩ toca para entrar en la casa", comillas = "“" to "”", emblema = 120.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val piedra = e.secondary.copy(alpha = 0.35f)
+        var x = 0f; var k = 0
+        while (x < w) { drawRect(piedra, Offset(x, 0f), Size(u * 18, if (k % 2 == 0) u * 26 else u * 16)); x += u * 18; k++ }
+        drawRect(piedra, Offset(0f, h - u * 10), Size(w, u * 10))
+        listOf(u * 26, w - u * 26).forEach { cx ->
+            drawLine(e.onBackground.copy(alpha = 0.4f), Offset(cx, u * 40), Offset(cx, u * 150), u * 1.4f)
+            drawRect(Color(0xFF1A1816).copy(alpha = 0.85f), Offset(cx, u * 44), Size(u * 18, u * 24))
+            drawRect(Color.White.copy(alpha = 0.9f), Offset(cx, u * 68), Size(u * 18, u * 24))
+            drawRect(e.onBackground.copy(alpha = 0.3f), Offset(cx, u * 44), Size(u * 18, u * 48), style = Stroke(u * 0.8f))
+        }
+        drawPath(cruzPatada(Offset(w / 2, h - u * 34), u * 12), e.primary.copy(alpha = 0.7f))
     }
     // Expediente: carpeta con su pestaña, código de archivo y un sello rojo torcido al pie.
     TemaId.DISTOPIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",

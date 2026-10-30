@@ -56,6 +56,7 @@ fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.NEON -> "> día.commit() ✓"
     TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
     TemaId.MEDIEVAL -> "Sellado y asentado"
+    TemaId.TEMPLARIO -> "Guardia rendida y sellada"
     TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"
     TemaId.REFUGIO -> "BITÁCORA GUARDADA"
     TemaId.ORDEN -> "PARTE ENTREGADO"
@@ -101,6 +102,7 @@ fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.NEON -> R.drawable.huella_fondo_neon to R.drawable.huella_neon
     TemaId.HELENO -> R.drawable.huella_fondo_heleno to R.drawable.huella_heleno
     TemaId.MEDIEVAL -> R.drawable.huella_fondo_medieval to R.drawable.huella_medieval
+    TemaId.TEMPLARIO -> R.drawable.huella_fondo_templario to R.drawable.huella_templario
     TemaId.DISTOPIA -> R.drawable.huella_fondo_distopia to R.drawable.huella_distopia
     TemaId.REFUGIO -> R.drawable.huella_fondo_refugio to R.drawable.huella_refugio
     TemaId.ORDEN -> R.drawable.huella_fondo_orden to R.drawable.huella_orden

@@ -232,6 +232,12 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(tenue, 2.2f * u, o + d * (2.2f * u)) }
             }
         }
+        // Almenas arriba, la banda roja de la sobreveste al margen y la cruz patada abajo.
+        TemaId.TEMPLARIO -> {
+            var x = 8 * u; while (x + 6 * u < w - 8 * u) { drawRect(tenue, Offset(x, 6 * u), Size(6 * u, 5 * u)); x += 12 * u }
+            drawRect(a.copy(alpha = 0.35f), Offset(8 * u, 14 * u), Size(3 * u, h - 22 * u))
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(w / 2, h - 16 * u), 6 * u), a.copy(alpha = 0.6f))
+        }
         // Tachones de censura y el sello de goma.
         TemaId.DISTOPIA -> {
             drawRect(l.copy(alpha = 0.35f), Offset(8 * u, h - 22 * u), Size(w * 0.55f, 4 * u))

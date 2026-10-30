@@ -76,6 +76,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.NEON -> 4200
     TemaId.HELENO -> 60000
     TemaId.MEDIEVAL -> 5000
+    TemaId.TEMPLARIO -> 4400
     TemaId.DISTOPIA -> 7000
     TemaId.REFUGIO -> 3200
     TemaId.ORDEN -> 2600
@@ -121,6 +122,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.NEON -> consola(c, r, e.primary, e.secondary, t)
         TemaId.HELENO -> solVergina(c, r, if (oscuro) e.primary else e.tertiary, if (oscuro) e.tertiary else e.primary, t)
         TemaId.MEDIEVAL -> roseton(c, r, e.primary, e.secondary, e.tertiary, t)
+        TemaId.TEMPLARIO -> escudoTemplario(c, r, e.primary, e.secondary, e.tertiary, if (oscuro) Color(0xFFEEE7D8) else Color.White, t)
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
         TemaId.REFUGIO -> atomo(c, r, e.primary, e.secondary, t)
         TemaId.ORDEN -> escudo(c, r, e.primary, e.secondary, t)
@@ -703,6 +705,45 @@ private fun DrawScope.roseton(c: Offset, r: Float, rojo: Color, azul: Color, oro
     drawCircle(azul, r * 0.06f, c)
 }
 
+/**
+ * La cruz patada de los templarios: cuatro brazos que se ensanchan hacia la punta, con el remate un poco cóncavo. Cabe en
+ * un círculo de radio [r]; [centro] y [punta] son la media anchura del brazo junto al centro y en la punta (en fracción de [r]).
+ */
+internal fun cruzPatada(c: Offset, r: Float, centro: Float = 0.13f, punta: Float = 0.4f): Path = Path().apply {
+    for (k in 0 until 4) {
+        val a = rad(90.0 * k - 90)
+        val d = Offset(cos(a), sin(a)); val n = Offset(-sin(a), cos(a))
+        fun p(f: Float, s: Float) = c + d * (r * f) + n * (r * s)
+        val p0 = p(centro, -centro); val p1 = p(1f, -punta); val q = p(0.86f, 0f); val p2 = p(1f, punta)
+        if (k == 0) moveTo(p0.x, p0.y) else lineTo(p0.x, p0.y)
+        lineTo(p1.x, p1.y); quadraticTo(q.x, q.y, p2.x, p2.y)
+    }
+    close()
+}
+
+/**
+ * Templario: el escudo de lágrima de los caballeros del siglo XII, de lino blanco con la cruz patada roja y ribeteado de
+ * hierro con sus clavos. La cruz late despacio, como a la luz de una antorcha, y un brillo recorre el borde de hierro.
+ */
+private fun DrawScope.escudoTemplario(c: Offset, r: Float, rojo: Color, hierro: Color, arena: Color, blanco: Color, t: Float) {
+    val escudo = Path().apply {
+        moveTo(c.x - r * 0.78f, c.y - r * 0.86f); lineTo(c.x + r * 0.78f, c.y - r * 0.86f)
+        quadraticTo(c.x + r * 0.84f, c.y + r * 0.3f, c.x, c.y + r * 0.98f)
+        quadraticTo(c.x - r * 0.84f, c.y + r * 0.3f, c.x - r * 0.78f, c.y - r * 0.86f); close()
+    }
+    drawPath(escudo, blanco)
+    drawPath(escudo, Brush.verticalGradient(listOf(Color.Transparent, arena.copy(alpha = 0.16f)), startY = c.y - r, endY = c.y + r))
+    val luz = 0.5f + 0.5f * sin(2 * PI * t).toFloat()
+    drawPath(cruzPatada(c + Offset(0f, -r * 0.1f), r * 0.6f), rojo.copy(alpha = 0.82f + 0.18f * luz))
+    drawPath(escudo, hierro, style = Stroke(r * 0.1f))
+    // Los clavos del ribete.
+    listOf(Offset(-0.6f, -0.86f), Offset(0f, -0.86f), Offset(0.6f, -0.86f), Offset(-0.74f, -0.3f), Offset(0.74f, -0.3f), Offset(-0.52f, 0.42f), Offset(0.52f, 0.42f), Offset(0f, 0.9f))
+        .forEach { o -> drawCircle(arena, r * 0.045f, c + o * r) }
+    // El brillo que corre por el borde de arriba, de un lado al otro.
+    val bx = c.x + r * (-0.78f + 1.56f * t); val by = c.y - r * 0.86f
+    drawCircle(Brush.radialGradient(listOf(blanco.copy(alpha = 0.7f), Color.Transparent), center = Offset(bx, by), radius = r * 0.16f), r * 0.16f, Offset(bx, by))
+}
+
 /** Un ojo dentro de un triángulo que mira de un lado a otro y parpadea. */
 private fun DrawScope.ojo(c: Offset, r: Float, tinta: Color, rojo: Color, fondo: Color, t: Float) {
     val tri = Path().apply {
@@ -859,6 +900,29 @@ internal fun Zarcillo(modifier: Modifier) {
                 drawOval(azul, Offset(x - 5.dp.toPx() / 2, y - (if (arriba) 4.dp.toPx() else -1f)), Size(5.dp.toPx(), 3.dp.toPx()))
             } else drawCircle(rojo, 1.6.dp.toPx(), Offset(x, mid + if (arriba) amp * 1.9f else -amp * 1.9f))
             x += lam / 2; k++
+        }
+    }
+}
+
+/** Templario: el adarve de la muralla, con sus merlones de piedra y, cada tanto, un escudo con la cruz patada colgado del muro. */
+@Composable
+internal fun Adarve(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    val piedra = e.onBackground.copy(alpha = 0.55f); val rojo = e.primary; val lino = e.surface
+    Canvas(modifier.fillMaxWidth().height(16.dp)) {
+        val h = size.height; val m = 8.dp.toPx(); val base = h * 0.62f
+        drawRect(piedra, Offset(0f, base), Size(size.width, h * 0.2f))
+        var x = 0f; var k = 0
+        while (x + m <= size.width) {
+            if (k % 6 == 3) {
+                val cx = x + m / 2
+                val escudo = Path().apply {
+                    moveTo(cx - m * 0.62f, 0.5f); lineTo(cx + m * 0.62f, 0.5f); quadraticTo(cx + m * 0.66f, h * 0.6f, cx, h - 0.5f); quadraticTo(cx - m * 0.66f, h * 0.6f, cx - m * 0.62f, 0.5f); close()
+                }
+                drawPath(escudo, lino); drawPath(escudo, piedra, style = Stroke(1.1f))
+                drawPath(cruzPatada(Offset(cx, h * 0.36f), h * 0.26f), rojo)
+            } else if (k % 2 == 0) drawRect(piedra, Offset(x, base - h * 0.42f), Size(m, h * 0.42f))
+            x += m; k++
         }
     }
 }
@@ -1153,6 +1217,21 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.06f); color2 = esquema.primary.copy(alpha = 0.12f)
             var y = 30.dp.toPx(); while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += 30.dp.toPx() }
             listOf(8.dp.toPx(), 11.dp.toPx()).forEach { x -> puntos.addRect(Rect(x, 0f, x + 1.2f, h)) }
+        }
+        TemaId.TEMPLARIO -> {
+            // Los sillares de la muralla, a soga (cada hilada corre media piedra), y de tanto en tanto una cruz grabada en la piedra.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.055f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.07f else 0.06f)
+            val alto = 22.dp.toPx(); val largo = 46.dp.toPx(); var y = alto; var fila = 0
+            while (y < h + alto) {
+                trazo.moveTo(0f, y); trazo.lineTo(w, y)
+                var x = if (fila % 2 == 0) largo * 0.5f else 0f
+                while (x < w) {
+                    trazo.moveTo(x, y - alto); trazo.lineTo(x, y)
+                    if ((fila * 7 + (x / largo).toInt() * 3) % 11 == 0) puntos.addPath(cruzPatada(Offset(x + largo / 2, y - alto / 2), alto * 0.28f))
+                    x += largo
+                }
+                y += alto; fila++
+            }
         }
         TemaId.DISTOPIA -> {
             color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.06f else 0.07f)
@@ -1461,6 +1540,9 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         }
         close()
     }
+    // Torre del homenaje con tres merlones.
+    TemaId.TEMPLARIO -> poligonoBoton(0.12f to 1f, 0.12f to 0.04f, 0.3f to 0.04f, 0.3f to 0.2f, 0.41f to 0.2f, 0.41f to 0.04f, 0.59f to 0.04f,
+        0.59f to 0.2f, 0.7f to 0.2f, 0.7f to 0.04f, 0.88f to 0.04f, 0.88f to 1f)
     TemaId.DISTOPIA -> poligonoBoton(0.04f to 0.12f, 0.4f to 0.12f, 0.48f to 0.24f, 0.96f to 0.24f, 0.96f to 0.92f, 0.04f to 0.92f)
     TemaId.REFUGIO -> RoundedCornerShape(30)
     TemaId.ORDEN -> GenericShape { s, _ ->
@@ -1511,6 +1593,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.NEON -> "más_"
     TemaId.HELENO -> "Πλέον"
     TemaId.MEDIEVAL -> "Ítem"
+    TemaId.TEMPLARIO -> "Armería"
     TemaId.DISTOPIA -> "Anexo"
     TemaId.REFUGIO -> "Menú"
     TemaId.ORDEN -> "Taller"
@@ -1569,6 +1652,13 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                     else { val z = Path(); val n = Offset(-sin(a), cos(a)) * (r * 0.07f); val p0 = c.mas(r * 0.5f, a); z.moveTo(p0.x, p0.y)
                         for (k in 1..3) { val q = c.mas(r * (0.5f + 0.12f * k), a) + n * (if (k % 2 == 0) -1f else 1f); z.lineTo(q.x, q.y) }
                         drawPath(z, color, style = Stroke(r * 0.08f, cap = StrokeCap.Round)) } } }
+            // El sol del desierto sobre la arena: disco, doce rayos en punta y la línea de las dunas debajo.
+            TemaId.TEMPLARIO -> { drawCircle(color, r * 0.34f, c.copy(y = c.y - r * 0.08f))
+                for (i in 0 until 12) { val a = rad(30.0 * i - 90); val o = c.copy(y = c.y - r * 0.08f); val n = Offset(-sin(a), cos(a)) * (r * 0.07f)
+                    val b = o.mas(r * 0.46f, a); val p = o.mas(r * (if (i % 2 == 0) 0.86f else 0.66f), a)
+                    drawPath(Path().apply { moveTo(b.x + n.x, b.y + n.y); lineTo(p.x, p.y); lineTo(b.x - n.x, b.y - n.y); close() }, color) }
+                drawPath(Path().apply { moveTo(c.x - r, c.y + r * 0.86f); quadraticTo(c.x - r * 0.5f, c.y + r * 0.62f, c.x, c.y + r * 0.84f); quadraticTo(c.x + r * 0.5f, c.y + r * 1.02f, c.x + r, c.y + r * 0.78f) },
+                    color, style = Stroke(r * 0.09f, cap = StrokeCap.Round)) }
             // Sol tachado por el censor.
             TemaId.DISTOPIA -> { drawCircle(color, r * 0.62f, c); listOf(-0.3f, 0f, 0.3f).forEach { dy -> drawRect(fondo, Offset(c.x - r, c.y + r * dy - r * 0.05f), Size(r * 2, r * 0.1f)) }
                 drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.08f)) }
@@ -1635,6 +1725,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.HELENO -> { luna(); listOf(Offset(0.6f, -0.55f), Offset(0.85f, -0.1f), Offset(0.55f, 0.4f)).forEach { drawCircle(color, r * 0.08f, c + it * r) } }
             // Luna en su medallón de miniatura.
             TemaId.MEDIEVAL -> { luna(0.6f, 0.3f, -0.24f); drawCircle(color, r * 0.92f, c, style = Stroke(r * 0.09f)) }
+            // Luna de vigilia sobre las almenas.
+            TemaId.TEMPLARIO -> { luna(0.56f, 0.32f, -0.26f, c.copy(y = c.y - r * 0.2f))
+                for (k in 0 until 3) drawRect(color, Offset(c.x - r * 0.9f + k * r * 0.68f, c.y + r * 0.56f), Size(r * 0.44f, r * 0.26f))
+                drawRect(color, Offset(c.x - r * 0.9f, c.y + r * 0.8f), Size(r * 1.8f, r * 0.16f)) }
             // Luna tras los barrotes.
             TemaId.DISTOPIA -> { luna(); listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawLine(color, Offset(c.x + r * dx, c.y - r * 0.95f), Offset(c.x + r * dx, c.y + r * 0.95f), r * 0.08f) } }
             // Luna con una órbita de átomo.
@@ -1706,6 +1800,9 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         TemaId.HELENO -> { lente(); mango(); for (i in 0 until 8) drawCircle(color, r * 0.035f, c.mas(lr * 0.55f, rad(45.0 * i))) }
         // Mango rematado en flor de tres pétalos.
         TemaId.MEDIEVAL -> { lente(); mango(0.82f); listOf(Offset(0.93f, 0.84f), Offset(0.84f, 0.93f), Offset(0.92f, 0.92f)).forEach { drawCircle(color, r * 0.055f, it * r) } }
+        // Mango de empuñadura de espada: la guarda en cruz y el pomo.
+        TemaId.TEMPLARIO -> { lente(); mango(0.88f, 0.1f, 0.66f)
+            drawLine(color, Offset(r * 0.6f, r * 0.84f), Offset(r * 0.84f, r * 0.6f), r * 0.08f, StrokeCap.Round); drawCircle(color, r * 0.065f, Offset(r * 0.92f, r * 0.92f)) }
         // Cruz de mira en el cristal.
         TemaId.DISTOPIA -> { lente(); mango()
             drawLine(color, Offset(c.x - lr * 0.6f, c.y), Offset(c.x + lr * 0.6f, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - lr * 0.6f), Offset(c.x, c.y + lr * 0.6f), r * 0.05f) }
@@ -1818,6 +1915,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.NEON -> false
     TemaId.HELENO -> false
     TemaId.MEDIEVAL -> false
+    TemaId.TEMPLARIO -> false
     TemaId.DISTOPIA -> false
     TemaId.REFUGIO -> false
     TemaId.ORDEN -> false
@@ -1909,6 +2007,12 @@ fun CapaFiesta(fijo: Float? = null) {
                         cubicTo(pos.x + s * 0.9f, pos.y + s * 0.1f, pos.x + s * 0.5f, pos.y + s * 0.8f, pos.x, pos.y + s * 0.8f)
                         cubicTo(pos.x - s * 0.5f, pos.y + s * 0.8f, pos.x - s * 0.9f, pos.y + s * 0.1f, pos.x, pos.y - s); close()
                     }, listOf(e.onBackground, e.primary, e.tertiary)[p.tono].copy(alpha = a))
+                    // Cruces patadas rojas, anillas de la cota de malla y granos de arena dorada.
+                    TemaId.TEMPLARIO -> when (p.tono) {
+                        0 -> drawPath(cruzPatada(pos, s * 0.9f), e.primary.copy(alpha = a))
+                        1 -> { drawCircle(e.secondary.copy(alpha = a), s * 0.45f, pos, style = Stroke(s * 0.16f)); drawCircle(e.secondary.copy(alpha = a), s * 0.45f, pos + Offset(s * 0.5f, 0f), style = Stroke(s * 0.16f)) }
+                        else -> drawCircle(e.tertiary.copy(alpha = a), s * 0.28f, pos)
+                    }
                     // Tiras de expediente con sus renglones.
                     TemaId.DISTOPIA -> { drawRect(col, Offset(pos.x - s * 0.7f, pos.y - s * 0.45f), Size(s * 1.4f, s * 0.9f))
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)

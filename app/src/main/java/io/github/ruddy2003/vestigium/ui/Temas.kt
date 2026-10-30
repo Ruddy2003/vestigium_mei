@@ -26,6 +26,49 @@ object Temas {
         "09-29" to "S. Miguel", "11-01" to "Santos", "11-11" to "S. Martín", "12-25" to "Navidad",
     )
 
+    // ------------------------------------------------------------ templario: calendario juliano, numerales entre puntos y vigilias
+
+    /** Numerales romanos entre puntos, como los escribían las cartas y las reglas del siglo XII: «·XVII·». */
+    fun puntos(n: Int): String = if (n in 1..3999) "·${Romano.de(n)}·" else "$n"
+
+    /**
+     * La fecha en el calendario juliano, el que seguían las órdenes militares (año, mes, día). Se pasa por el número de
+     * día juliano: desde 1900 hasta 2099 queda 13 días por detrás del gregoriano (el 17 de octubre es el 4 de octubre).
+     */
+    fun juliano(d: java.time.LocalDate): Triple<Int, Int, Int> {
+        val c = d.toEpochDay() + 2440588 + 32082
+        val dd = (4 * c + 3) / 1461
+        val e = c - 1461 * dd / 4
+        val m = (5 * e + 2) / 153
+        return Triple((dd - 4800 + m / 10).toInt(), (m + 3 - 12 * (m / 10)).toInt(), (e - (153 * m + 2) / 5 + 1).toInt())
+    }
+
+    /** «mm-dd» de [iso] en el calendario juliano, para buscar sus fiestas. */
+    fun mdJuliano(iso: String): String? = runCatching { val (_, m, d) = juliano(Fechas.parse(iso)); "%02d-%02d".format(m, d) }.getOrNull()
+
+    /**
+     * Las cuatro vigilias de la noche (de tres horas cada una, desde las seis de la tarde, como las contaban los Evangelios
+     * y las guardias de los castillos), o null de día.
+     */
+    fun vigilia(h: Int): String? = when (h) {
+        in 18..20 -> "primera vigilia"
+        in 21..23 -> "segunda vigilia"
+        in 0..2 -> "tercera vigilia"
+        in 3..5 -> "cuarta vigilia"
+        else -> null
+    }
+
+    /**
+     * Fechas de la orden, en el calendario juliano en que ocurrieron (así caen 13 días más tarde en el gregoriano): el concilio
+     * de Troyes que aprobó la regla (13 de enero de 1129), la bula «Omne datum optimum» (29 de marzo de 1139), la detención
+     * de los freires en Francia (13 de octubre de 1307), la bula «Vox in excelso» que suprimió la orden (22 de marzo de 1312)
+     * y la hoguera del último maestre (18 de marzo de 1314); además, san Jorge y san Miguel, patronos de caballeros.
+     */
+    private val MARCAS_TEMPLARIO = mapOf(
+        "01-13" to "Troyes", "03-29" to "Omne datum", "10-13" to "Detención", "03-22" to "Vox in exc.", "03-18" to "La hoguera",
+        "04-23" to "S. Jorge", "09-29" to "S. Miguel", "12-25" to "Natividad",
+    )
+
     // ------------------------------------------------------------ calendarios y números de los temas nuevos
 
     val MESES_FRANCESES = listOf("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre")
@@ -147,6 +190,7 @@ object Temas {
             TemaId.NEON -> MARCAS_NEON[md]
             TemaId.HELENO -> MARCAS_HELENO[md]
             TemaId.MEDIEVAL -> FIESTAS[md]
+            TemaId.TEMPLARIO -> Temas.mdJuliano(fecha)?.let { MARCAS_TEMPLARIO[it] }
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
             TemaId.REFUGIO -> MARCAS_REFUGIO[md]
             TemaId.ORDEN -> MARCAS_ORDEN[md]
@@ -253,6 +297,7 @@ object Temas {
         TemaId.NEON -> null
         TemaId.HELENO -> null
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
+        TemaId.TEMPLARIO -> TEMPLARIO[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
         TemaId.ORDEN -> ORDEN[titulo]
@@ -279,6 +324,7 @@ object Temas {
             TemaId.NEON -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
             TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ", "enfoque" to "ΣΧΟΛΗ")
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
+            TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")
             TemaId.ORDEN -> mapOf("animo" to "MORAL", "momento" to "BITÁCORA", "gasto" to "INTENDENCIA", "sueno" to "DESCANSO", "habitos" to "DISCIPLINA", "hoy" to "PARTE", "cifra" to "CIFRA", "foto" to "IMAGEN", "enfoque" to "VIGILIA")
@@ -321,6 +367,30 @@ object Temas {
         "Gimnasio" to "Ejercicio de armas", "Análisis" to "Quaestiones", "Cifras" to "Cuenta", "Momentos de la semana" to "Crónica de la semana",
         "Fotos del día" to "Miniaturas", "Exportar" to "Trasladar", "Importar" to "Traer", "Respaldo automático" to "Copia guardada", "Clima" to "Del tiempo",
         "Widgets" to "Tablillas", "Lugares" to "Lugares", "Diario" to "Diario", "Calendario" to "Calendario", "Buscar" to "Buscar",
+    )
+
+    /** Templario: la vida de una encomienda de frontera (la casa, el capítulo, la guardia, la tesorería, la hueste). */
+    private val TEMPLARIO = mapOf(
+        "Mundo" to "Las tierras", "Patrimonio Mundial" to "Maravillas de las tierras", "Mapa para rascar" to "Carta de las conquistas", "Ciudades visitadas" to "Plazas visitadas",
+        "Biblioteca de sueños" to "Libro de los ensueños", "Cartas" to "Misivas de la casa", "Escribir una carta" to "Escribir misiva", "Carta" to "Misiva", "Conocerte" to "Examen del freire", "Brújula política" to "El buen gobierno de la casa", "Mapas" to "Cartas de la frontera", "Salud" to "Enfermería de la encomienda", "Tus apps" to "Tus pertrechos", "Otras vidas" to "Otras vidas de la frontera", "Logros" to "Hechos de armas", "Tu año en historias" to "Crónica del año", "Anoche" to "La vigilia pasada", "Selladas" to "Selladas con el sello de la casa", "Listas para abrir" to "Prontas a abrirse", "A otras personas" to "A otros hermanos", "Del pasado" to "De otros años",
+        "Hoy" to "La guardia de hoy", "Línea de tiempo" to "Crónica de la casa", "Ahora mismo estoy…" to "En esta guardia estoy…",
+        "Entender" to "Capítulo", "Registros especiales" to "Libros aparte", "Apariencia" to "Blasón", "Avisos y recordatorios" to "Toques de campana",
+        "Llenar el día" to "Rendir la jornada", "Biblioteca del diario" to "Archivo de la crónica", "Entrada" to "Asiento",
+        "Día" to "La jornada", "Momentos" to "Sucesos de la guardia", "Gastos" to "Libro de la tesorería", "Explorar" to "Descubierta", "Más" to "Otras dependencias",
+        "Hábitos" to "La regla", "Cartas al futuro" to "Misivas al porvenir", "Experimentos personales" to "Pruebas de armas", "Cómo leer tus datos" to "Cómo leer el rol", "Guía científica" to "Tratado de la casa",
+        "Cuestionarios" to "Interrogatorios", "Prueba de reacción" to "Prueba del centinela", "Datos" to "Rol", "Permisos y sensores" to "Vigías y licencias",
+        "Ajustes" to "Estatutos", "Reportes" to "Partes de la encomienda", "Bienvenido" to "Bien llegado, hermano", "Escalada" to "Asalto al muro", "Obras" to "Armería de libros",
+        "Tu año" to "El año en la frontera", "Privacidad" to "Secreto del capítulo", "Sueño" to "Reposo", "Contexto" to "Circunstancias de la guardia", "Hitos" to "Proezas",
+        "Ánimo y cuerpo" to "Ánimo y cuerpo del freire", "Lectura del día" to "Lectura del refectorio", "Lo mejor y lo peor" to "La victoria y la derrota",
+        "Medicamentos" to "Remedios de la enfermería", "Seguimiento privado" to "Confesión", "Predicción" to "Lo que dirá el vigía", "Momentos de este día" to "Sucesos de la jornada",
+        "Este día hace un año" to "Esta jornada, un año atrás", "Lo que registró el teléfono" to "Lo que anotó el vigía", "Registrar" to "Inscribir",
+        "Últimos 30 días" to "Treinta jornadas", "Cobertura" to "Guardias cubiertas", "Cruzar dos variables" to "Cruzar dos rastros",
+        "Las relaciones más marcadas" to "Los lazos más fuertes", "Personas, temas e hitos" to "Hermanos, asuntos y hechos", "Mapa" to "Carta de la comarca",
+        "Mapa emocional" to "Carta del ánimo", "Tablero" to "Mesa del capítulo", "Tu día" to "Las guardias del día", "Tu día en 24 horas" to "Las veinticuatro horas de la guardia", "Te falta hoy" to "Lo que falta a la guardia",
+        "Datos que faltan" to "Huecos en el rol", "Tema" to "Blasón", "Recordatorios" to "Toques", "Resumen semanal" to "Parte de la semana", "Totales" to "Recuento general",
+        "Gimnasio" to "Ejercicio de armas", "Análisis" to "Deliberación del capítulo", "Cifras" to "Recuentos", "Momentos de la semana" to "Sucesos de la semana",
+        "Fotos del día" to "Estampas de la jornada", "Exportar" to "Enviar a la casa madre", "Importar" to "Recibir de otra casa", "Respaldo automático" to "Copia en el arca", "Clima" to "El cielo de la frontera",
+        "Widgets" to "Pendones", "Lugares" to "Plazas", "Diario" to "Crónica del freire", "Calendario" to "Calendario juliano", "Buscar" to "Rastrear",
     )
 
     private val DISTOPIA = mapOf(

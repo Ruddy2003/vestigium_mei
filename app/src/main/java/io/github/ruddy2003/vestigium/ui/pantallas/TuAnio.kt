@@ -141,6 +141,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.HELENO -> "ΑΠΟΛΟΓΙΣΜΟΣ · ΕΤΟΣ ${Griego.numeral(anio)}"
     // «Fechos»: los hechos, en la grafía de los cronistas castellanos.
     TemaId.MEDIEVAL -> "Libro de los fechos del año de ${Temas.copista(anio)}"
+    TemaId.TEMPLARIO -> "Crónica de la casa en el año del Señor ${Temas.puntos(anio)}"
     TemaId.REFUGIO -> "REGISTRO DEL REFUGIO · AÑO $anio BAJO TIERRA"
     TemaId.ORDEN -> "PARTE DE CUSTODIA DE LA ORDEN · $anio"
     TemaId.LABORATORIO -> "Protocolo $anio · resultados del año"

@@ -89,6 +89,8 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.NEON -> MarcoRecuadro(RectangleShape, 9.dp)
     TemaId.HELENO -> MarcoRecuadro(RoundedCornerShape(4.dp), 13.dp)
     TemaId.MEDIEVAL -> MarcoRecuadro(RoundedCornerShape(3.dp), 11.dp)
+    // El escudo: recto arriba y redondo abajo.
+    TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
     TemaId.REFUGIO -> MarcoRecuadro(RoundedCornerShape(12.dp), 10.dp)
     TemaId.ORDEN -> MarcoRecuadro(CutCornerShape(7.dp), 10.dp)
@@ -163,6 +165,12 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             listOf(Offset(3 * u, 3 * u), Offset(w - 3 * u, 3 * u), Offset(3 * u, h - 3 * u), Offset(w - 3 * u, h - 3 * u)).forEach { o ->
                 listOf(Offset(0f, -1.6f), Offset(1.6f, 0f), Offset(0f, 1.6f), Offset(-1.6f, 0f)).forEach { d -> drawCircle(e.tertiary, 1.1f * u, o + d * u) }
             }
+        }
+        // El jefe de acero arriba, con la cruz patada en medio, y un clavo en cada esquina de arriba.
+        TemaId.TEMPLARIO -> {
+            drawRect(e.secondary.copy(alpha = 0.5f), Offset(0f, 0f), Size(w, 3 * u))
+            drawPath(cruzPatada(Offset(w / 2, 9 * u), 4 * u), e.primary.copy(alpha = 0.8f))
+            listOf(Offset(5 * u, 7 * u), Offset(w - 5 * u, 7 * u)).forEach { o -> drawCircle(e.tertiary, 1.4f * u, o) }
         }
         // Expediente: franja de encabezado y dos perforaciones de archivador.
         TemaId.DISTOPIA -> {
@@ -385,6 +393,16 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             drawPath(onda(3 * u, 1f), fondo.copy(alpha = 0.5f), style = Stroke(0.6f * u))
             listOf(0f to 1f, w to -1f).forEach { (x, d) ->
                 drawPath(Path().apply { moveTo(x, y - ancho / 2 - u); lineTo(x + d * 3.5f * u, y); lineTo(x, y + ancho / 2 + u); close() }, fondo)
+            }
+        }
+        // Una cadena de eslabones de hierro: más gruesa cuanto más fuerte es la relación.
+        TemaId.TEMPLARIO -> {
+            val l = 7 * u + grosor; val a = 2.4f * u + grosor * 0.6f
+            var x = 2 * u; var i = 0
+            while (x + l <= w) {
+                if (i % 2 == 0) drawOval(col, Offset(x, y - a), Size(l, 2 * a), style = Stroke(1f * u + grosor * 0.35f, pathEffect = punteado))
+                else drawLine(col, Offset(x - 1f * u, y), Offset(x + l + 1f * u, y), 1f * u + grosor * 0.45f)
+                x += l * 0.78f; i++
             }
         }
         // Alambre de púas.

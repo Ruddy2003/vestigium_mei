@@ -491,6 +491,14 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawPath(Path().apply { moveTo(fw, 0f); lineTo(fw + h * 0.4f, h / 2); lineTo(fw, h); lineTo(fw - h * 0.4f, h / 2); close() }, Color(0xFFA3312F))
             }
         }
+        // La lanza: el asta de lo que falta, la de acero de lo recorrido y el gallardete rojo en la punta.
+        TemaId.TEMPLARIO -> {
+            drawLine(color.copy(alpha = 0.25f), Offset(0f, h / 2), Offset(w, h / 2), 1.2f * d)
+            if (fw > 0f) {
+                drawRect(color, Offset(0f, h * 0.36f), Size(fw, h * 0.28f))
+                drawPath(Path().apply { moveTo(fw, h * 0.5f); lineTo(fw - h * 0.9f, 0f); lineTo(fw - h * 0.55f, h * 0.5f); lineTo(fw - h * 0.9f, h); close() }, Color(0xFFB0191F))
+            }
+        }
         // Sello rayado del expediente.
         TemaId.DISTOPIA -> {
             drawRect(color.copy(alpha = 0.4f), Offset(0.5f * d, 0.5f * d), Size(w - d, h - d), style = Stroke(d))
@@ -769,6 +777,15 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             val rubrica = Color(0xFFA3312F)
             for (k in 0 until 4) drawCircle(rubrica.copy(alpha = 0.6f), rc * 0.22f, polarFig(c, rc * 0.22f, k * 90f), style = Stroke(1.2f * d))
             for (k in 0 until 24) drawCircle(if (k % 3 == 0) rubrica else tinta.copy(alpha = 0.4f), 1.3f * d, polarFig(c, ro + 3f * d, k * 15f - 90f))
+        }
+        // El reloj de la guardia: la cruz patada al centro y las horas en torno; cada tres horas, una vigilia en rojo.
+        TemaId.TEMPLARIO -> {
+            val rojo = Color(0xFFB0191F)
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(c, rc * 0.42f), rojo.copy(alpha = 0.45f))
+            for (k in 0 until 24) {
+                val p = polarFig(c, ro + 3f * d, k * 15f - 90f)
+                if (k % 3 == 0) drawRect(rojo, p - Offset(1.4f * d, 1.4f * d), Size(2.8f * d, 2.8f * d)) else drawCircle(tinta.copy(alpha = 0.4f), 1f * d, p)
+            }
         }
         // El ojo que vigila y las marcas gruesas.
         TemaId.DISTOPIA -> {

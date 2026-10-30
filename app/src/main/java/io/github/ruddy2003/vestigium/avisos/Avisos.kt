@@ -40,6 +40,7 @@ object Avisos {
         TemaId.NEON -> R.raw.n_neon_aviso to R.raw.n_neon_solemne
         TemaId.HELENO -> R.raw.n_heleno_aviso to R.raw.n_heleno_solemne
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
+        TemaId.TEMPLARIO -> R.raw.n_templario_aviso to R.raw.n_templario_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
         TemaId.REFUGIO -> R.raw.n_refugio_aviso to R.raw.n_refugio_solemne
         TemaId.ORDEN -> R.raw.n_orden_aviso to R.raw.n_orden_solemne
@@ -198,6 +199,13 @@ object Avisos {
             "¶ Epístola de tu yo de antaño", "Llegó el día señalado para romper el sello.",
             "Gesta cumplida", "gestas nuevas",
             "El anuario de %d está iluminado", "Un año entero en historias: lo más hecho, lo único, lo curioso. Toca para leer el códice.")
+        TemaId.TEMPLARIO -> Voz("☩ Relevo de guardia: ¿cómo está tu ánimo?", "Dos toques, hermano: cuánto agrado y cuánto brío.",
+            "☩ Lo que viste en la vigilia", "Inscríbelo antes de ensillar: el sueño se va como la arena entre los dedos.",
+            "☩ Se cierra la puerta del castillo: ¿cómo fue la jornada?", "Rinde la jornada. Si fue dura, basta con un número.",
+            "Jornada dura: un número", "Según la regla, hoy:",
+            "☩ Misiva de tu yo de otro tiempo", "Llegó la jornada señalada para romper el sello de la casa.",
+            "Hecho de armas", "hechos de armas nuevos",
+            "La crónica del año %d está asentada", "Un año entero en la frontera: lo más hecho, lo único, lo curioso. Toca para leer la crónica.")
         TemaId.DISTOPIA -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
             "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
             "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
@@ -328,6 +336,7 @@ object Avisos {
         TemaId.NEON -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
         TemaId.HELENO -> VozEnfoque("Σχολή · pausa", "Levántate, bebe agua de la fuente.", "Terminó la pausa", "Llega Eos: hora de despertar", "Τέλος · terminaste")
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste")
+        TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA")
         TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO")
         TemaId.ORDEN -> VozEnfoque("ALTO", "Rompan filas: agua y estiramiento.", "FIN DEL ALTO", "DIANA", "MISIÓN CUMPLIDA")

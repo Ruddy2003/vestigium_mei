@@ -461,6 +461,24 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             drawPath(vidrio, tenue.copy(alpha = 0.3f), style = Stroke(1.2f * u))
             listOf(y0, y1).forEach { y -> drawRect(tenue.copy(alpha = 0.35f), Offset(c.x - hw - 6 * u, y - 2.5f * u), Size(hw * 2 + 12 * u, 5 * u)) }
         }
+        // La vela de horas de los castillos: una vela marcada con doce rayas rojas que se consume conforme pasa el bloque;
+        // alrededor, el anillo de acero con doce clavos, que se tiñe de rojo con lo recorrido.
+        TemaId.TEMPLARIO -> {
+            drawCircle(pista, r, c, style = Stroke(1.2f * u))
+            arco(color, 0f, p, r, 4 * u)
+            for (k in 0 until 12) drawCircle(if (pasado(k, 12)) color else e.secondary.copy(alpha = 0.6f), 2.2f * u, en(k / 12f, r + 8 * u))
+            val hw = r * 0.16f; val base = c.y + r * 0.62f; val alto = r * 1.15f
+            val arriba = base - alto * (1f - p).coerceIn(0.04f, 1f)
+            drawRect(tenue.copy(alpha = 0.35f), Offset(c.x - r * 0.34f, base), Size(r * 0.68f, 4 * u))
+            drawRect(Color(0xFFF2EBDA).copy(alpha = 0.9f), Offset(c.x - hw, arriba), Size(hw * 2, base - arriba))
+            drawRect(tenue.copy(alpha = 0.4f), Offset(c.x - hw, arriba), Size(hw * 2, base - arriba), style = Stroke(1 * u))
+            for (k in 1 until 12) { val y = base - alto * k / 12f; if (y > arriba) drawLine(e.primary, Offset(c.x - hw, y), Offset(c.x + hw, y), 1.4f * u) }
+            if (p < 1f) {
+                drawLine(tenue, Offset(c.x, arriba), Offset(c.x, arriba - 4 * u), 1.2f * u)
+                drawPath(Path().apply { moveTo(c.x - 4 * u, arriba - 4 * u); quadraticTo(c.x - 4 * u, arriba - 12 * u, c.x, arriba - 18 * u); quadraticTo(c.x + 4 * u, arriba - 12 * u, c.x + 4 * u, arriba - 4 * u); close() }, Color(0xFFF0A040))
+                drawCircle(Color(0xFFFFE2A8), 1.8f * u, Offset(c.x, arriba - 8 * u))
+            }
+        }
         // El ojo que vigila: el iris es el anillo, con sus estrías; los párpados lo cierran por arriba y por abajo.
         TemaId.DISTOPIA -> {
             arco(pista, 0f, 1f, r, g)
@@ -782,6 +800,14 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             while (xx < x + w) { xx = minOf(xx + 2 * u, x + w); lineTo(xx, y + a + a * sin((xx - x) / l)) }
             while (xx > x) { lineTo(xx, y + h - a + a * sin((xx - x) / l)); xx = maxOf(xx - 2 * u, x) }
             lineTo(x, y + h - a); close()
+        }
+        // Un tramo de muralla: el borde de arriba almenado.
+        TemaId.TEMPLARIO -> {
+            val m = maxOf(h * 0.4f, 3 * u); val a = h * 0.22f
+            moveTo(x, y + h); lineTo(x, y)
+            var xx = x; var k = 0
+            while (xx + m < x + w) { val yy = if (k % 2 == 0) y else y + a; lineTo(xx, yy); lineTo(xx + m, yy); xx += m; k++ }
+            lineTo(xx, if (k % 2 == 0) y else y + a); lineTo(x + w, if (k % 2 == 0) y else y + a); lineTo(x + w, y + h); close()
         }
         TemaId.DISTOPIA -> {
             addRect(Rect(x, y, x + w, y + h))

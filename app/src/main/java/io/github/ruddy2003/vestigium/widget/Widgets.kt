@@ -46,6 +46,11 @@ object Widgets {
             0xFFD5A84A.toInt(), 0xFFEDDFC2.toInt(), 0xFFB7A587.toInt(), 0xFF5A4630.toInt(),
             intArrayOf(0xFFC9473B.toInt(), 0xFFD27A62.toInt(), 0xFFD9AE8E.toInt(), 0xFFEDDFC2.toInt(), 0xFFB9C4E6.toInt(), 0xFF9AB0E8.toInt(), 0xFF8DA5E0.toInt()),
             0xFF2A2016.toInt(), 0xFF1C1405.toInt())
+        // La noche en la muralla: arena a la luz de la luna, lino, y el ánimo del rojo de la cruz al acero de la malla.
+        TemaId.TEMPLARIO -> Colores(R.drawable.widget_fondo_templario, R.drawable.widget_boton_templario, R.drawable.widget_boton_activo_templario, R.drawable.widget_boton_ambar_templario,
+            0xFFDAAE68.toInt(), 0xFFEEE7D8.toInt(), 0xFFB1A891.toInt(), 0xFF3B352A.toInt(),
+            intArrayOf(0xFFE2453B.toInt(), 0xFFDD7A6A.toInt(), 0xFFD8B4A0.toInt(), 0xFFEEE7D8.toInt(), 0xFFC5CDD3.toInt(), 0xFFA8B3BC.toInt(), 0xFF8C99A4.toInt()),
+            0xFF262219.toInt(), 0xFF1F0604.toInt())
         TemaId.DISTOPIA -> Colores(R.drawable.widget_fondo_distopia, R.drawable.widget_boton_distopia, R.drawable.widget_boton_activo_distopia, R.drawable.widget_boton_ambar_distopia,
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
@@ -139,6 +144,7 @@ object Widgets {
         TemaId.NEON -> "> ping" to "> log"
         TemaId.HELENO -> "ΝΥΝ" to "ΓΡΑΦΕΙΝ"
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
+        TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
         TemaId.REFUGIO -> "CHEQUEO" to "ENTRADA"
         TemaId.ORDEN -> "RELEVO" to "ACTA"
@@ -169,6 +175,7 @@ object Widgets {
             TemaId.NEON -> R.font.sharetech_mono to 1.05f
             TemaId.HELENO -> R.font.garamond_medium to 1.08f
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
+            TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
             TemaId.REFUGIO -> R.font.vt323 to 1.35f
             TemaId.ORDEN -> R.font.saira_stencil to 1.0f

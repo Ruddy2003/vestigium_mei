@@ -213,6 +213,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.HELENO -> LaminaRascar(0xFF6B6038.toInt(), 0xFFBDB27A.toInt(), 0xFFF4EFD2.toInt())
     // Pan de oro sobre bol rojo, como en las iniciales iluminadas.
     TemaId.MEDIEVAL -> LaminaRascar(0xFF7A3E1A.toInt(), 0xFFD4A537.toInt(), 0xFFFFF0B3.toInt())
+    // El acero de la cota de malla, frío y gris.
+    TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
     // Chapa galvanizada, azulada.
@@ -345,6 +347,23 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 moveTo(x - s * 0.3f, y + s * 0.4f); lineTo(x + s * 0.3f, y + s * 0.4f); lineTo(x, y + s * 1.1f); close()
             }, relleno)
             c.drawRect(x - s * 0.6f, y + s * 0.18f, x + s * 0.6f, y + s * 0.4f, relleno)
+        }
+        TemaId.TEMPLARIO -> {
+            // La cota de malla: hileras de anillas que se cruzan (cada una corre media anilla) y, al centro, la cruz patada.
+            val ra = l / 8f
+            val fino = Paint(linea).apply { strokeWidth = l * 0.02f }
+            for (j in 0..8) for (i in 0..4) c.drawCircle(i * l / 4f + (if (j % 2 == 0) 0f else l / 8f), j * l / 8f, ra, fino)
+            c.drawPath(Path().apply {
+                val x = l / 2; val y = l / 2; val s = l * 0.22f
+                for (k in 0 until 4) {
+                    val a = Math.toRadians(90.0 * k - 90); val dx = Math.cos(a).toFloat(); val dy = Math.sin(a).toFloat()
+                    fun px(fr: Float, q: Float) = x + dx * s * fr - dy * s * q
+                    fun py(fr: Float, q: Float) = y + dy * s * fr + dx * s * q
+                    if (k == 0) moveTo(px(0.14f, -0.14f), py(0.14f, -0.14f)) else lineTo(px(0.14f, -0.14f), py(0.14f, -0.14f))
+                    lineTo(px(1f, -0.42f), py(1f, -0.42f)); lineTo(px(1f, 0.42f), py(1f, 0.42f))
+                }
+                close()
+            }, relleno)
         }
         TemaId.DISTOPIA -> tresbolillo { x, y ->
             // El ojo que todo lo mira.

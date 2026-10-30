@@ -106,6 +106,25 @@ internal object Claves {
         "consuetudo" to "costumbres", "series" to "continuo", "palmae" to "fechos", "reditus" to "rentas", "apps" to "ingenios",
     )
 
+    /**
+     * Templario: el francés antiguo de la Regla de la orden (sus estatutos se escribieron en esa lengua en el siglo XII y
+     * XIII). Las grafías son aproximadas: el francés antiguo no tenía una sola manera de escribir cada palabra.
+     */
+    val ANCIEN_FRANCES: Map<String, String> = mapOf(
+        "horologium" to "orloge", "somnus" to "som", "stadia" to "tens", "cor" to "cuer", "passus" to "pas", "motus" to "movement",
+        "iter" to "chemin", "exercitatio" to "travail", "loca" to "lieus", "telephonum" to "tablete", "telephon" to "tablete",
+        "usus" to "usage", "monita" to "banz", "musica" to "chançons", "imagines" to "ymages", "fasti" to "kalendier", "caelum" to "ciel",
+        "lux" to "jor", "aer" to "air", "corpus" to "cors", "nutritio" to "viande", "cibus" to "mangiers", "robur" to "force",
+        "musculi" to "nerz", "voces" to "voiz", "soni" to "sons", "retia" to "roiz", "lumen" to "lumiere", "vis" to "vigor",
+        "lectio" to "leçon", "strepitus" to "noise", "luna" to "lune", "dias" to "jorz", "animus" to "corage", "optimus" to "meillor",
+        "momenta" to "aventures", "svmptvs" to "despens", "memorabilia" to "remembrances", "ascensvs" to "montee", "dies" to "jornees",
+        "quaestiones" to "demandes", "celeritas" to "isnelece", "bibliotheca" to "armaire", "synchronia" to "acort", "opera" to "uevres",
+        "iudicium" to "jugement", "citatio" to "dit", "sententia" to "sentence", "orbis" to "monde", "nova" to "novel",
+        "mirabilia" to "merveilles", "somnium" to "songe", "epistulae" to "letres", "aperta" to "overte", "initium" to "commencement",
+        "finis" to "fin", "pessimus" to "pire", "personae" to "freres", "themata" to "matires", "praeclarum" to "la_meillor",
+        "dies felix" to "bon_jor", "consuetudo" to "costumes", "series" to "continue", "palmae" to "proesces", "reditus" to "rentes", "apps" to "engins",
+    )
+
     /** Palabras del cuartel general que reemplazan al francés común. */
     val NAPOLEON: Map<String, String> = mapOf(
         "somnus" to "bivouac", "palmae" to "victoires", "svmptvs" to "trésor", "personae" to "état-major", "momenta" to "bulletins",

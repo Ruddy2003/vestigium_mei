@@ -40,6 +40,9 @@ object MapasMas {
         // El Camino de Santiago, de los Pirineos a Galicia (el este queda a la izquierda): Roncesvalles, Pamplona, Logroño,
         // Burgos, León, Astorga y Santiago.
         TemaId.MEDIEVAL -> geo(listOf(-1.32 to 43.01, -1.64 to 42.81, -2.45 to 42.47, -3.7 to 42.34, -5.57 to 42.6, -6.06 to 42.46, -8.54 to 42.88), -1.0, -9.0, 41.8, 43.6)
+        // La marcha por una frontera inventada: de la encomienda de la costa (el mar a la izquierda), por las atalayas y el
+        // pozo del desierto, a través del vado del río, hasta el castillo de Montalbar en las montañas.
+        TemaId.TEMPLARIO -> listOf(Offset(0.08f, 0.62f), Offset(0.2f, 0.38f), Offset(0.34f, 0.68f), Offset(0.48f, 0.44f), Offset(0.6f, 0.72f), Offset(0.75f, 0.4f), Offset(0.9f, 0.22f))
         // La obra de la catedral, vista de lado: de los cimientos junto al ábside, por los muros, las columnas, los arbotantes
         // y la bóveda, al rosetón del crucero y a las campanas de la torre.
         TemaId.GOTICO -> listOf(Offset(0.07f, 0.9f), Offset(0.18f, 0.66f), Offset(0.29f, 0.84f), Offset(0.4f, 0.62f), Offset(0.5f, 0.42f), Offset(0.62f, 0.54f), Offset(0.77f, 0.24f))
@@ -341,6 +344,29 @@ object MapasMas {
                 val c = Offset(w * 0.86f, h * 0.8f); val r = 12 * d
                 for (k in 0 until 8) { val a = k * PI / 4; val rr = if (k % 2 == 0) r else r * 0.5f; drawLine(tinta.copy(alpha = 0.4f), c, Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat()), 1.2f * d) }
             }
+            TemaId.TEMPLARIO -> {
+                // La tierra de frontera en arena, el mar a la izquierda con sus olas, las dunas, el oasis del pozo con sus palmas,
+                // el río que se cruza por el vado de piedras rojas, las montañas de la derecha y, en cada etapa ganada, una
+                // atalaya que se enciende (el fuego de señales que pasaba la noticia de torre en torre).
+                drawRect(Color(0xFFE2C98F).copy(alpha = if (oscuro) 0.1f else 0.3f), Offset.Zero, size)
+                drawPath(Path().apply { moveTo(0f, 0f); lineTo(w * 0.06f, 0f); cubicTo(w * 0.03f, h * 0.3f, w * 0.07f, h * 0.55f, w * 0.03f, h * 0.8f); lineTo(w * 0.04f, h); lineTo(0f, h); close() }, agua)
+                for (k in 0 until 6) drawArc(Color.White.copy(alpha = 0.35f), 200f, 140f, false, Offset(w * 0.005f, h * (0.08f + k * 0.15f)), Size(8 * d, 5 * d), style = Stroke(1f * d))
+                val az = java.util.Random(31)
+                repeat(10) { val x = w * (0.12f + az.nextFloat() * 0.6f); val y = h * (0.12f + az.nextFloat() * 0.8f)
+                    drawArc(tinta, 200f, 140f, false, Offset(x, y), Size((18 + az.nextInt(12)) * d, 9 * d), style = Stroke(1f * d)) }
+                drawPath(Path().apply { moveTo(w * 0.66f, 0f); cubicTo(w * 0.6f, h * 0.3f, w * 0.66f, h * 0.55f, w * 0.58f, h * 0.8f); cubicTo(w * 0.56f, h * 0.9f, w * 0.6f, h * 0.96f, w * 0.57f, h) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(2.2f * d))
+                listOf(-4f, 0f, 4f).forEach { dx -> drawCircle(Color(0xFFA8432C).copy(alpha = 0.6f), 1.6f * d, Offset(w * 0.6f + dx * d, h * 0.72f)) }
+                val pozo = Offset(w * 0.48f, h * 0.44f)
+                drawOval(agua.copy(alpha = agua.alpha * 2), Offset(pozo.x - 8 * d, pozo.y + 4 * d), Size(16 * d, 5 * d))
+                listOf(-1f, 1f).forEach { s -> val t0 = Offset(pozo.x + s * 9 * d, pozo.y + 6 * d); val t1 = Offset(pozo.x + s * 11 * d, pozo.y - 6 * d)
+                    drawLine(tinta.copy(alpha = 0.6f), t0, t1, 1.2f * d)
+                    for (k in 0 until 4) { val a = (-PI / 2 + (k - 1.5) * 0.7).toFloat(); drawLine(Color(0xFF5E7A3A).copy(alpha = 0.6f), t1, t1 + Offset(6 * d * cos(a), 4 * d * sin(a) + 2 * d), 1.2f * d) } }
+                for (k in 0 until 6) monte(w * (0.72f + k * 0.045f), h * (0.2f + (k % 2) * 0.06f), 8 * d, tinta)
+                puntos(tema).forEachIndexed { i, q ->
+                    if (i in 1..5 && avance * 7f > i) { val p0 = Offset(w * q.x, h * q.y - 14 * d)
+                        drawCircle(Brush.radialGradient(listOf(Color(0xFFF0A040).copy(alpha = 0.5f), Color.Transparent), p0, 8 * d), 8 * d, p0) }
+                }
+            }
             TemaId.GOTICO -> {
                 // La catedral, vista de lado, se levanta con los días cumplidos: la silueta completa tenue y lo construido con más fuerza.
                 val silueta = catedral(w, h)
@@ -486,6 +512,15 @@ object MapasMas {
             TemaId.HELENO -> { drawPath(p, Color.White.copy(alpha = 0.6f), style = Stroke(3.4f * d)); drawPath(p, Color(0xFF5B2A6E), style = Stroke(1.6f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 4 * d)))) }
             // Los pasos del peregrino, en tinta parda.
             TemaId.MEDIEVAL -> drawPath(p, Color(0xFF6B2E1A).copy(alpha = 0.7f), style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 3 * d))))
+            // Las huellas de los cascos de la columna: herraduras en la arena.
+            TemaId.TEMPLARIO -> {
+                drawPath(p, Color(0xFF8A6A3E).copy(alpha = 0.18f), style = Stroke(5 * d))
+                aLoLargo(p, 9 * d) { o, t ->
+                    val n = Offset(-t.y, t.x) * (2 * d); val a = o - n - t * (1.5f * d); val b = o + n - t * (1.5f * d)
+                    val c1 = o - n * 1.1f + t * (2.5f * d); val c2 = o + n * 1.1f + t * (2.5f * d)
+                    drawPath(Path().apply { moveTo(a.x, a.y); cubicTo(c1.x, c1.y, c2.x, c2.y, b.x, b.y) }, Color(0xFF5A3A22).copy(alpha = 0.7f), style = Stroke(1f * d))
+                }
+            }
             // El cordel del maestro de obras.
             TemaId.GOTICO -> drawPath(p, cs.tertiary.copy(alpha = 0.7f), style = Stroke(1.6f * d))
             // Un trazo de sanguina, con el lápiz de la construcción debajo.
@@ -579,6 +614,16 @@ object MapasMas {
                 drawPath(p, col)
                 for (k in 1..5) { val a = PI + k * PI / 6; drawLine(Color.Black.copy(alpha = 0.25f), Offset(c.x, c.y + r * 0.9f), Offset(c.x + (r * 1.05f * cos(a)).toFloat(), c.y - r * 0.1f + (r * sin(a)).toFloat()), 0.8f * d) }
             }
+            // La atalaya de piedra con su almena; en la meta, el castillo de dos torres.
+            TemaId.TEMPLARIO -> if (meta) {
+                drawRect(col, Offset(c.x - r * 1.4f, c.y - r * 0.4f), Size(r * 2.8f, r * 1.4f))
+                listOf(-1.4f, 0.8f).forEach { fx -> drawRect(col, Offset(c.x + r * fx, c.y - r * 1.3f), Size(r * 0.6f, r * 0.9f)) }
+                drawPath(cruzPatada(Offset(c.x, c.y + r * 0.2f), r * 0.45f), Color(0xFFB0191F))
+            } else {
+                drawRect(col, Offset(c.x - r * 0.6f, c.y - r), Size(r * 1.2f, r * 2f))
+                listOf(-0.6f, 0.2f).forEach { fx -> drawRect(col, Offset(c.x + r * fx, c.y - r * 1.4f), Size(r * 0.4f, r * 0.4f)) }
+                drawRect(Color.Black.copy(alpha = 0.3f), Offset(c.x - r * 0.15f, c.y - r * 0.4f), Size(r * 0.3f, r * 0.5f))
+            }
             // Un arco apuntado.
             TemaId.GOTICO -> drawPath(Path().apply { moveTo(c.x - r * 0.8f, c.y + r); lineTo(c.x - r * 0.8f, c.y); quadraticTo(c.x - r * 0.8f, c.y - r * 0.8f, c.x, c.y - r * 1.3f); quadraticTo(c.x + r * 0.8f, c.y - r * 0.8f, c.x + r * 0.8f, c.y); lineTo(c.x + r * 0.8f, c.y + r); close() }, col)
             // Un punto de compás con su cruz de construcción.
@@ -616,6 +661,7 @@ object MapasMas {
         when (tema) {
             TemaId.ROMANO -> legionario(c, alto)
             TemaId.MEDIEVAL -> vela(c, alto)
+            TemaId.TEMPLARIO -> caballero(c, alto)
             TemaId.GOTICO -> peregrino(c, alto)
             TemaId.RENACIMIENTO -> puntaDePlata(c, alto)
             // Distopía: no un alfiler, sino el banderín rojo del punto de control.
@@ -697,6 +743,24 @@ object MapasMas {
         drawLine(Color(0xFF2A1E0E), Offset(c.x, pie - 18 * d), Offset(c.x, pie - 19.6f * d), 0.8f * d)
         drawPath(Path().apply { moveTo(c.x, pie - 26.5f * d); quadraticTo(c.x + 2.6f * d, pie - 21.5f * d, c.x, pie - 19 * d); quadraticTo(c.x - 2.6f * d, pie - 21.5f * d, c.x, pie - 26.5f * d); close() }, Color(0xFFFFB347))
         drawPath(Path().apply { moveTo(c.x, pie - 24 * d); quadraticTo(c.x + 1.2f * d, pie - 21 * d, c.x, pie - 19.6f * d); quadraticTo(c.x - 1.2f * d, pie - 21 * d, c.x, pie - 24 * d); close() }, Color(0xFFFFF1B8))
+    }
+
+    /** El caballero de la orden a caballo: el caballo pardo, la sobreveste blanca con la cruz roja, el yelmo y la lanza con su gallardete. */
+    private fun DrawScope.caballero(c: Offset, alto: Float) {
+        val d = density
+        val y = c.y - alto
+        val caballo = Color(0xFF6E4A2E); val hierro = Color(0xFF6E757D); val lino = Color(0xFFF4EFE2); val rojo = Color(0xFFB0191F)
+        drawOval(caballo, Offset(c.x - 8 * d, y - 12 * d), Size(14 * d, 6 * d))
+        drawPath(Path().apply { moveTo(c.x + 4 * d, y - 11 * d); lineTo(c.x + 8 * d, y - 17 * d); lineTo(c.x + 11 * d, y - 16 * d); lineTo(c.x + 7 * d, y - 9 * d); close() }, caballo)
+        listOf(-6.5f, -3.5f, 2.5f, 4.5f).forEach { fx -> drawLine(caballo, Offset(c.x + fx * d, y - 7 * d), Offset(c.x + fx * d, y), 1.4f * d) }
+        drawLine(caballo, Offset(c.x - 8 * d, y - 10 * d), Offset(c.x - 10 * d, y - 4 * d), 1.2f * d)
+        drawPath(Path().apply { moveTo(c.x - 4 * d, y - 11 * d); lineTo(c.x + 2 * d, y - 11 * d); lineTo(c.x + 1.4f * d, y - 19 * d); lineTo(c.x - 3.4f * d, y - 19 * d); close() }, lino)
+        drawLine(rojo, Offset(c.x - 1 * d, y - 18 * d), Offset(c.x - 1 * d, y - 12.5f * d), 1.2f * d); drawLine(rojo, Offset(c.x - 3 * d, y - 16 * d), Offset(c.x + 1 * d, y - 16 * d), 1.2f * d)
+        drawRect(hierro, Offset(c.x - 3 * d, y - 23.5f * d), Size(4 * d, 4.5f * d))
+        drawLine(Color.Black.copy(alpha = 0.6f), Offset(c.x - 2.6f * d, y - 21.6f * d), Offset(c.x + 0.6f * d, y - 21.6f * d), 0.6f * d)
+        drawLine(Color(0xFF4A3524), Offset(c.x + 2 * d, y - 8 * d), Offset(c.x + 5 * d, y - 34 * d), 1 * d)
+        drawPath(Path().apply { moveTo(c.x + 5 * d, y - 34 * d); lineTo(c.x + 12 * d, y - 32 * d); lineTo(c.x + 9 * d, y - 30.5f * d); lineTo(c.x + 11.5f * d, y - 29 * d); lineTo(c.x + 4.6f * d, y - 30.5f * d); close() }, lino)
+        drawLine(rojo, Offset(c.x + 6.4f * d, y - 32.6f * d), Offset(c.x + 6.2f * d, y - 30.4f * d), 0.8f * d)
     }
 
     /** El peregrino: la esclavina parda, el sombrero de ala ancha con la venera y el bordón con su calabaza. */

@@ -467,6 +467,49 @@ def antiguas(tam):
     guardar(fondo, base, 'antiguas')
 
 
+# ------------------------------------------------------------------ Templario
+def cruz_patada_pts(cx, cy, r, centro=0.15, punta=0.42):
+    """Los vértices de la cruz patada (la de ui/Decoracion.kt `cruzPatada`), sin el remate cóncavo."""
+    pts = []
+    for k in range(4):
+        a = math.radians(90 * k - 90); dx, dy = math.cos(a), math.sin(a); nx, ny = -dy, dx
+        for f_, q in ((centro, -centro), (1, -punta), (0.9, 0.0), (1, punta)):
+            pts.append((cx + (dx * f_ + nx * q) * r, cy + (dy * f_ + ny * q) * r))
+    return pts
+
+def templario(tam):
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    # La sobreveste: lino blanco en tafetán, con polvo de arena y la gran cruz patada roja detrás de la huella.
+    trama = (np.sin(xx * (2 * math.pi / 5.5)) * np.sin(yy * (2 * math.pi / 5.5))) * 0.5 + 0.5
+    lino = mezcla(col('#F4EFE3'), col('#DCD2BC'), ruido(tam, tam / 22, 101) * 0.7)
+    lino = lino * (0.96 + 0.05 * trama[..., None])
+    arena = np.clip((ruido(tam, 1.2, 102) - 0.8) * 3, 0, 1)
+    lino = mezcla(lino, col('#C8A86E'), arena * 0.35)
+    fondo = a_img(lino).convert('RGBA')
+    capa_cruz = Image.new('RGBA', (tam, tam), (0, 0, 0, 0))
+    ImageDraw.Draw(capa_cruz).polygon(cruz_patada_pts(tam / 2, tam / 2, tam * 0.47), fill=(176, 25, 31, 255))
+    roja = np.asarray(capa_cruz).astype(np.float32)
+    tela = 0.88 + 0.12 * trama + 0.06 * ruido(tam, 0.8, 103)
+    roja[..., :3] = roja[..., :3] * tela[..., None]
+    fondo.alpha_composite(Image.fromarray(np.clip(roja, 0, 255).astype(np.uint8), 'RGBA'))
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    arr = np.array(fondo.convert('RGB')).astype(np.float32)
+    arr = mezcla(arr, col('#6E5A3A'), np.clip(dist - 0.75, 0, 1) * 0.7)
+    fondo = a_img(arr)
+    # La huella en hierro de cota de malla: acero con relieve, anillas que brillan y algo de óxido en los surcos.
+    sh = relieve(m, fuerza=1.2)[..., None]
+    anillas = np.abs(np.sin(xx * (2 * math.pi / 7)) * np.sin((yy + (np.floor(xx / 7) % 2) * 3.5) * (2 * math.pi / 7)))
+    acero = mezcla(col('#3A4148'), col('#B8C2CA'), np.clip(ruido(tam, tam / 30, 104) * 0.6 + anillas * 0.5, 0, 1))
+    acero = mezcla(acero, col('#7A4A2A'), np.clip((ruido(tam, tam / 50, 105) - 0.7) * 3, 0, 1) * 0.35)
+    rgb = acero * (1 + sh * 0.55)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 140))).astype(np.float32) / 255
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#1A1714'), np.roll(np.roll(sombra, 3, 0), 3, 1) * 0.55)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'templario')
+
+
 # ------------------------------------------------------------------ los otros catorce: extraer (una vez) y componer
 
 CATORCE = ['romano', 'ciber', 'heleno', 'medieval', 'distopia', 'refugio', 'orden', 'laboratorio', 'colonos', 'napoleon',
@@ -648,12 +691,14 @@ SIETE = [
     'mongol',
     'renacimiento',
     'antiguas',
+    'templario',
 ]
 ORDEN = [
     'romano',
     'ciber',
     'heleno',
     'medieval',
+    'templario',
     'distopia',
     'refugio',
     'orden',

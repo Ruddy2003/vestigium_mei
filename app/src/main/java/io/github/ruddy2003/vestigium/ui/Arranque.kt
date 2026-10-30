@@ -24,6 +24,7 @@ object ArranqueTema {
         TemaId.NEON -> R.style.Theme_Vestigium_Arranque_Neon
         TemaId.HELENO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Heleno_Oscuro else R.style.Theme_Vestigium_Arranque_Heleno
         TemaId.MEDIEVAL -> if (oscuro) R.style.Theme_Vestigium_Arranque_Medieval_Oscuro else R.style.Theme_Vestigium_Arranque_Medieval
+        TemaId.TEMPLARIO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Templario_Oscuro else R.style.Theme_Vestigium_Arranque_Templario
         TemaId.DISTOPIA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Distopia_Oscuro else R.style.Theme_Vestigium_Arranque_Distopia
         TemaId.REFUGIO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Refugio_Oscuro else R.style.Theme_Vestigium_Arranque_Refugio
         TemaId.ORDEN -> if (oscuro) R.style.Theme_Vestigium_Arranque_Orden_Oscuro else R.style.Theme_Vestigium_Arranque_Orden

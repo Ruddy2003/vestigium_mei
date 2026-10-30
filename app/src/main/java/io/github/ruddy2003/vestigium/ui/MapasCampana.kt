@@ -78,6 +78,20 @@ object MapasCampana {
                 lis(Offset(x + 8.5f * d, y), 0f, 3.4f * d, rojo)
                 lis(Offset(x, y - 8.5f * d), (-PI / 2).toFloat(), 3.4f * d, rojo)
             }
+            TemaId.TEMPLARIO -> {
+                // El castillo de Montalbar tomado: la torre almenada de piedra, el estandarte «baucent» (negro arriba, blanco
+                // abajo) clavado en lo alto y, en la puerta, el escudo con la cruz patada roja.
+                val piedra = Color(0xFFB9A57E); val sombra = lerp(piedra, Color.Black, 0.35f); val x = m.x; val base = m.y - 4 * d
+                drawRect(piedra, Offset(x - 8 * d, base - 20 * d), Size(16 * d, 20 * d))
+                for (k in 0 until 3) drawRect(piedra, Offset(x - 8 * d + k * 6 * d, base - 24 * d), Size(4 * d, 4 * d))
+                drawRect(sombra, Offset(x - 8 * d, base - 20 * d), Size(16 * d, 20 * d), style = Stroke(0.8f * d))
+                drawPath(Path().apply { moveTo(x - 3 * d, base); lineTo(x - 3 * d, base - 6 * d); quadraticTo(x, base - 10 * d, x + 3 * d, base - 6 * d); lineTo(x + 3 * d, base); close() }, sombra)
+                drawLine(cs.onSurface, Offset(x, base - 24 * d), Offset(x, base - 42 * d), 1.2f * d)
+                drawRect(Color(0xFF1A1816), Offset(x, base - 42 * d), Size(12 * d, 4.5f * d))
+                drawRect(Color.White, Offset(x, base - 37.5f * d), Size(12 * d, 4.5f * d))
+                drawRect(cs.onSurface.copy(alpha = 0.6f), Offset(x, base - 42 * d), Size(12 * d, 9 * d), style = Stroke(0.6f * d))
+                drawPath(cruzPatada(Offset(x, base - 14 * d), 3.4f * d), Color(0xFFB0191F))
+            }
             TemaId.GOTICO -> {
                 // Las campanas echadas a vuelo en la torre: la campana de bronce en su yugo, el badajo y las ondas del repique.
                 val bronce = Color(0xFFC08A3A); val c = Offset(m.x, m.y - 22 * d)

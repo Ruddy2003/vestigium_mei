@@ -95,6 +95,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Scriptorium: mapa en sepia sobre pergamino; de noche, tinta parda.
         TemaId.MEDIEVAL -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.72f, 0.55f, 6f, 3f, 0f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.92f, 0.76f, 0f, 0f, 0f)) }
+        // Templario: la tierra de arena al sol; de noche, el azul acerado de la vigilia.
+        TemaId.TEMPLARIO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.72f, 0.75f, 0.82f, 0f, 2f, 8f)) }
+            else { m.setSaturation(0.2f); m.postConcat(tinte(1.02f, 0.94f, 0.80f, 8f, 4f, 0f)) }
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
@@ -211,6 +214,8 @@ internal object Formas {
                     val px = x + rr * kotlin.math.cos(a).toFloat(); val py = y + rr * kotlin.math.sin(a).toFloat(); if (i == 0) p.moveTo(px, py) else p.lineTo(px, py) }
                 p.close()
             }
+            // El escudo de lágrima.
+            TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
             // La señal de refugio: un triángulo con la punta hacia abajo.
@@ -261,6 +266,8 @@ internal object Formas {
             TemaId.NEON -> { raya(c, x, y, r, -1.55f, -0.45f, -0.95f, 0f, d); raya(c, x, y, r, -0.95f, 0f, -1.55f, 0.45f, d) }   // el «>» del indicador
             TemaId.HELENO -> c.drawCircle(x, y, r * 0.32f, d)
             TemaId.MEDIEVAL -> { c.drawCircle(x, y, r * 0.62f, d); raya(c, x, y, r, -0.3f, 0f, 0.3f, 0f, d); raya(c, x, y, r, 0f, -0.3f, 0f, 0.3f, d) }   // la cruz del sello
+            TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
+                raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
             TemaId.REFUGIO -> { poligono(x, y, r * 0.55f, 3, 90.0); c.drawPath(p, d) }
             TemaId.ORDEN -> { raya(c, x, y, r, 0f, -0.8f, 0f, 0.95f, d); raya(c, x, y, r, -0.72f, -0.25f, 0.72f, -0.25f, d) }   // la cruz del escudo
@@ -724,6 +731,13 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 drawCircle(fondo, 1.4f * u, o)
             }
         }
+        // El muro: filete de acero, almenas arriba y abajo y una cruz patada en cada esquina.
+        TemaId.TEMPLARIO -> {
+            filete(5 * u, tinta.copy(alpha = 0.45f), 1.2f * u)
+            val m = 9 * u
+            listOf(5 * u, h - 5 * u - 4 * u).forEach { y0 -> var x = 14 * u; while (x + m < w - 14 * u) { drawRect(tinta.copy(alpha = 0.35f), Offset(x, y0), Size(m, 4 * u)); x += 2 * m } }
+            esquinas(5 * u) { o, _, _ -> drawCircle(fondo, 5 * u, o); drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(o, 4.6f * u), acento) }
+        }
         // La cámara que graba: el punto rojo, la tira del expediente y la regla de tiempo abajo.
         TemaId.DISTOPIA -> {
             filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
@@ -950,6 +964,13 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             drawLine(acento, c + Offset(r * 0.58f, 0f), c + Offset(r * 0.98f, 0f), 2 * u)
             drawLine(acento, c + Offset(r * 0.8f, -r * 0.2f), c + Offset(r * 0.8f, r * 0.2f), 2 * u)
             drawCircle(secundario, r * 0.1f, c)
+        }
+        // Cuatro puntas anchas como los brazos de la cruz patada, cuatro finas entre ellas y la cruz roja al centro.
+        TemaId.TEMPLARIO -> {
+            for (i in 0 until 4) punta(n + 45.0 + 90.0 * i, r * 0.5f, r * 0.07f, tenue)
+            for (i in 0 until 4) punta(n + 90.0 * i, r * 0.95f, r * 0.22f, if (i == 0) acento else tinta.copy(alpha = 0.7f))
+            drawCircle(fondo, r * 0.26f, c)
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(c, r * 0.22f), acento)
         }
         // El ojo, con la aguja del norte detrás.
         TemaId.DISTOPIA -> {

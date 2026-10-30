@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Un tono más claro que el fondo de pantalla del tema, para que el widget no se pierda encima de él. El muro de la encomienda: piedra de noche, filete de acero, la banda roja y una cruz patada en cada esquina. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7262219"/>
+            <stroke android:width="1.5dp" android:color="#6E777F"/>
+            <corners android:radius="2dp"/>
+        </shape>
+    </item>
+    <item android:top="5dp" android:left="5dp" android:right="5dp" android:bottom="5dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="1dp" android:color="#CCB0191F"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="10dp" android:height="10dp" android:top="1dp" android:left="1dp">
+        <vector android:width="10dp" android:height="10dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M4.31,4.31 L3.07,0.40 L6.93,0.40 L5.69,4.31 L9.60,3.07 L9.60,6.93 L5.69,5.69 L6.93,9.60 L3.07,9.60 L4.31,5.69 L0.40,6.93 L0.40,3.07 Z" android:fillColor="#E2453B"/>
+        </vector>
+    </item>
+    <item android:gravity="top|right" android:width="10dp" android:height="10dp" android:top="1dp" android:right="1dp">
+        <vector android:width="10dp" android:height="10dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M4.31,4.31 L3.07,0.40 L6.93,0.40 L5.69,4.31 L9.60,3.07 L9.60,6.93 L5.69,5.69 L6.93,9.60 L3.07,9.60 L4.31,5.69 L0.40,6.93 L0.40,3.07 Z" android:fillColor="#E2453B"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|left" android:width="10dp" android:height="10dp" android:left="1dp" android:bottom="1dp">
+        <vector android:width="10dp" android:height="10dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M4.31,4.31 L3.07,0.40 L6.93,0.40 L5.69,4.31 L9.60,3.07 L9.60,6.93 L5.69,5.69 L6.93,9.60 L3.07,9.60 L4.31,5.69 L0.40,6.93 L0.40,3.07 Z" android:fillColor="#E2453B"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|right" android:width="10dp" android:height="10dp" android:right="1dp" android:bottom="1dp">
+        <vector android:width="10dp" android:height="10dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M4.31,4.31 L3.07,0.40 L6.93,0.40 L5.69,4.31 L9.60,3.07 L9.60,6.93 L5.69,5.69 L6.93,9.60 L3.07,9.60 L4.31,5.69 L0.40,6.93 L0.40,3.07 Z" android:fillColor="#E2453B"/>
+        </vector>
+    </item>
+</layer-list>

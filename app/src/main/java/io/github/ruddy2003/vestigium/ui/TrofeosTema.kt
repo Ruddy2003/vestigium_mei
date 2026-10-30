@@ -37,6 +37,8 @@ object TrofeosTema {
             "Gente" to "Crátera", "Constancia" to "Columna dórica", "Curiosos" to "Trípode", "Tuyos" to "Columna corintia"),
         TemaId.MEDIEVAL to mapOf("Diario" to "Capitular", "Mundo" to "Mapamundi", "Cuerpo" to "Sello de cera", "Mente" to "Nudo entrelazado", "Cultura" to "Códice",
             "Gente" to "Cenefa", "Constancia" to "Llave", "Curiosos" to "Tintero", "Tuyos" to "Rúbrica"),
+        TemaId.TEMPLARIO to mapOf("Diario" to "Regla de la casa", "Mundo" to "Castillo de frontera", "Cuerpo" to "Cota de malla", "Mente" to "Yelmo de cubo", "Cultura" to "Estandarte baucent",
+            "Gente" to "Olifante", "Constancia" to "Espada del freire", "Curiosos" to "Arqueta del tesoro", "Tuyos" to "Cruz patada"),
         TemaId.GOTICO to mapOf("Diario" to "Vitral del libro", "Mundo" to "Rosetón", "Cuerpo" to "Vitral de la cruz", "Mente" to "Vitral de la estrella", "Cultura" to "Vitral del lirio",
             "Gente" to "Vitral de la rosa", "Constancia" to "Vitral de la campana", "Curiosos" to "Vitral del cáliz", "Tuyos" to "Vitral de la llave"),
         TemaId.RENACIMIENTO to mapOf("Diario" to "Tipos móviles", "Mundo" to "Esfera armilar", "Cuerpo" to "Compás y escuadra", "Mente" to "Dodecaedro", "Cultura" to "Cúpula",
@@ -107,6 +109,14 @@ object TrofeosTema {
                 drawPath(Path().apply { moveTo(w * 0.18f, h * 0.78f); lineTo(w * 0.82f, h * 0.74f); lineTo(w * 0.82f, h * 0.79f); lineTo(w * 0.18f, h * 0.83f); close() }, c)
                 drawRect(c, Offset(w * 0.46f, h * 0.8f), Size(w * 0.08f, h * 0.14f)); drawRect(c, Offset(w * 0.3f, h * 0.935f), Size(w * 0.4f, h * 0.025f))
             }
+            TemaId.TEMPLARIO -> {
+                // Un sillar de arenisca de la muralla, con su junta y la cruz grabada.
+                val c = if (p.hecho) Color(0xFFC2AE84) else ped
+                drawRect(piedra(c), Offset(w * 0.16f, h * 0.79f), Size(w * 0.68f, h * 0.16f))
+                drawLine(lerp(c, Color.Black, 0.3f), Offset(w * 0.5f, h * 0.79f), Offset(w * 0.5f, h * 0.87f), h * 0.004f)
+                drawLine(lerp(c, Color.Black, 0.3f), Offset(w * 0.16f, h * 0.87f), Offset(w * 0.84f, h * 0.87f), h * 0.004f)
+                if (p.hecho) drawPath(cruzPatada(Offset(w * 0.33f, h * 0.83f), h * 0.03f), ROJO.copy(alpha = 0.8f))
+            }
             TemaId.GOTICO -> {
                 // El alféizar de piedra bajo el vitral.
                 val c = if (p.hecho) Color(0xFF6B6F7A) else ped
@@ -153,6 +163,7 @@ object TrofeosTema {
             TemaId.ROMANO -> romano(categoria, p)
             TemaId.HELENO -> heleno(categoria, p)
             TemaId.MEDIEVAL -> medieval(categoria, p)
+            TemaId.TEMPLARIO -> templario(categoria, p)
             TemaId.GOTICO -> gotico(categoria, p)
             TemaId.RENACIMIENTO -> renacimiento(categoria, p)
             TemaId.NAPOLEON -> napoleon(categoria, p)
@@ -472,6 +483,114 @@ object TrofeosTema {
                     if (p.hecho) SolidColor(lerp(Color.White, p.base, 0.3f)) else SolidColor(p.sombra))
             }
             else -> texto("¶", p, 0.5f, 0.38f, 0.62f, rojo)
+        }
+    }
+
+    // ================================================================== Templario: la casa, las armas y la frontera
+
+    private fun DrawScope.templario(cat: String, p: Pincel) {
+        val lw = p.w * 0.01f
+        val rojo = if (p.hecho) SolidColor(ROJO) else SolidColor(p.sombra)
+        val lino = if (p.hecho) SolidColor(Color(0xFFF4EFE2)) else SolidColor(p.sombra)
+        fun escudo(c: Offset, r: Float) = Path().apply {
+            moveTo(c.x - r * 0.8f, c.y - r * 0.85f); lineTo(c.x + r * 0.8f, c.y - r * 0.85f)
+            quadraticTo(c.x + r * 0.86f, c.y + r * 0.3f, c.x, c.y + r); quadraticTo(c.x - r * 0.86f, c.y + r * 0.3f, c.x - r * 0.8f, c.y - r * 0.85f); close()
+        }
+        when (cat) {
+            "Diario" -> {
+                // La regla de la casa: el libro de pie, tapas de metal con la cruz patada, las correas y el sello colgando.
+                caja(p, 0.27f, 0.1f, 0.73f, 0.7f)
+                drawRect(lino, Offset(p.x(0.31f), p.y(0.14f)), Size(p.x(0.38f), p.y(0.52f)))
+                drawPath(cruzPatada(Offset(p.x(0.5f), p.y(0.38f)), p.w * 0.15f), rojo)
+                listOf(0.22f, 0.56f).forEach { yy -> drawRect(p.linea, Offset(p.x(0.66f), p.y(yy)), Size(p.x(0.12f), p.y(0.035f))) }
+                drawLine(p.linea, Offset(p.x(0.46f), p.y(0.7f)), Offset(p.x(0.5f), p.y(0.75f)), lw); drawLine(p.linea, Offset(p.x(0.54f), p.y(0.7f)), Offset(p.x(0.5f), p.y(0.75f)), lw)
+                drawCircle(rojo, p.w * 0.035f, Offset(p.x(0.5f), p.y(0.76f)))
+            }
+            "Mundo" -> {
+                // El castillo de frontera: dos torres almenadas, el lienzo de muralla y la puerta con su rastrillo.
+                caja(p, 0.2f, 0.36f, 0.8f, 0.76f)
+                listOf(0.16f, 0.62f).forEach { x0 -> caja(p, x0, 0.18f, x0 + 0.22f, 0.76f); for (k in 0 until 3) caja(p, x0 + k * 0.08f, 0.12f, x0 + k * 0.08f + 0.06f, 0.19f) }
+                for (k in 0 until 3) caja(p, 0.39f + k * 0.08f, 0.31f, 0.39f + k * 0.08f + 0.05f, 0.37f)
+                val puerta = Path().apply { moveTo(p.x(0.43f), p.y(0.76f)); lineTo(p.x(0.43f), p.y(0.58f)); quadraticTo(p.x(0.5f), p.y(0.5f), p.x(0.57f), p.y(0.58f)); lineTo(p.x(0.57f), p.y(0.76f)); close() }
+                drawPath(puerta, if (p.hecho) SolidColor(Color(0xFF2A2420)) else SolidColor(p.sombra))
+                for (k in 1..3) drawLine(p.linea, Offset(p.x(0.43f + k * 0.035f), p.y(0.56f)), Offset(p.x(0.43f + k * 0.035f), p.y(0.76f)), lw * 0.8f)
+                drawLine(p.linea, Offset(p.x(0.27f), p.y(0.12f)), Offset(p.x(0.27f), p.y(0.02f)), lw)
+                drawPath(Path().apply { moveTo(p.x(0.27f), p.y(0.02f)); lineTo(p.x(0.4f), p.y(0.05f)); lineTo(p.x(0.27f), p.y(0.08f)); close() }, rojo)
+            }
+            "Cuerpo" -> {
+                // La cota de malla: el camisón con sus mangas, en anillas de metal, y la sobreveste con la cruz.
+                val malla = Path().apply {
+                    moveTo(p.x(0.36f), p.y(0.1f)); lineTo(p.x(0.64f), p.y(0.1f)); lineTo(p.x(0.86f), p.y(0.3f)); lineTo(p.x(0.8f), p.y(0.38f)); lineTo(p.x(0.68f), p.y(0.3f))
+                    lineTo(p.x(0.7f), p.y(0.74f)); lineTo(p.x(0.3f), p.y(0.74f)); lineTo(p.x(0.32f), p.y(0.3f)); lineTo(p.x(0.2f), p.y(0.38f)); lineTo(p.x(0.14f), p.y(0.3f)); close()
+                }
+                drawPath(malla, p.metal(0.14f, 0.86f))
+                clipPath(malla) {
+                    var yy = p.y(0.12f); var fila = 0
+                    while (yy < p.y(0.76f)) {
+                        var xx = p.x(0.14f) + (if (fila % 2 == 0) 0f else p.w * 0.02f)
+                        while (xx < p.x(0.86f)) { drawCircle(p.linea, p.w * 0.016f, Offset(xx, yy), style = Stroke(lw * 0.5f)); xx += p.w * 0.04f }
+                        yy += p.w * 0.03f; fila++
+                    }
+                }
+                drawRect(lino, Offset(p.x(0.38f), p.y(0.3f)), Size(p.x(0.24f), p.y(0.42f)))
+                drawPath(cruzPatada(Offset(p.x(0.5f), p.y(0.44f)), p.w * 0.09f), rojo)
+            }
+            "Mente" -> {
+                // El yelmo de cubo: la ranura de la vista, los respiraderos y el refuerzo del frente.
+                val yelmo = Path().apply {
+                    moveTo(p.x(0.26f), p.y(0.74f)); lineTo(p.x(0.26f), p.y(0.26f)); quadraticTo(p.x(0.26f), p.y(0.08f), p.x(0.5f), p.y(0.07f))
+                    quadraticTo(p.x(0.74f), p.y(0.08f), p.x(0.74f), p.y(0.26f)); lineTo(p.x(0.74f), p.y(0.74f)); close()
+                }
+                drawPath(yelmo, p.metal(0.26f, 0.74f)); drawPath(yelmo, p.linea, style = Stroke(lw))
+                drawRect(if (p.hecho) SolidColor(Color(0xFF14110C)) else SolidColor(p.sombra), Offset(p.x(0.3f), p.y(0.34f)), Size(p.x(0.4f), p.y(0.04f)))
+                drawLine(p.linea, Offset(p.x(0.5f), p.y(0.1f)), Offset(p.x(0.5f), p.y(0.72f)), lw * 1.2f)
+                for (k in 0 until 4) { drawCircle(p.linea, p.w * 0.012f, Offset(p.x(0.42f), p.y(0.48f + k * 0.05f))); drawCircle(p.linea, p.w * 0.012f, Offset(p.x(0.58f), p.y(0.48f + k * 0.05f))) }
+                if (p.hecho) drawPath(cruzPatada(Offset(p.x(0.5f), p.y(0.22f)), p.w * 0.05f), rojo)
+            }
+            "Cultura" -> {
+                // El estandarte «baucent», negro arriba y blanco abajo, en su asta con la punta de lanza.
+                caja(p, 0.29f, 0.04f, 0.32f, 0.76f)
+                drawPath(Path().apply { moveTo(p.x(0.305f), p.y(0.0f)); lineTo(p.x(0.33f), p.y(0.05f)); lineTo(p.x(0.28f), p.y(0.05f)); close() }, p.metal(0.28f, 0.33f))
+                drawRect(if (p.hecho) SolidColor(Color(0xFF1A1816)) else SolidColor(p.sombra), Offset(p.x(0.32f), p.y(0.08f)), Size(p.x(0.42f), p.y(0.2f)))
+                drawPath(Path().apply { moveTo(p.x(0.32f), p.y(0.28f)); lineTo(p.x(0.74f), p.y(0.28f)); lineTo(p.x(0.74f), p.y(0.5f)); lineTo(p.x(0.64f), p.y(0.44f)); lineTo(p.x(0.54f), p.y(0.5f)); lineTo(p.x(0.32f), p.y(0.48f)); close() }, lino)
+                drawRect(p.linea, Offset(p.x(0.32f), p.y(0.08f)), Size(p.x(0.42f), p.y(0.42f)), style = Stroke(lw * 0.6f))
+                if (p.hecho) drawPath(cruzPatada(Offset(p.x(0.53f), p.y(0.18f)), p.w * 0.06f), rojo)
+            }
+            "Gente" -> {
+                // El olifante, el cuerno que llamaba a la hueste: curvo, con sus abrazaderas y el tahalí.
+                val cuerno = Path().apply {
+                    moveTo(p.x(0.16f), p.y(0.3f)); quadraticTo(p.x(0.5f), p.y(0.34f), p.x(0.8f), p.y(0.12f)); lineTo(p.x(0.86f), p.y(0.32f))
+                    quadraticTo(p.x(0.52f), p.y(0.6f), p.x(0.18f), p.y(0.42f)); close()
+                }
+                drawPath(cuerno, p.metal(0.16f, 0.86f)); drawPath(cuerno, p.linea, style = Stroke(lw))
+                listOf(0.32f, 0.62f).forEach { fx -> drawLine(p.linea, Offset(p.x(fx), p.y(0.3f - (fx - 0.3f) * 0.2f)), Offset(p.x(fx + 0.02f), p.y(0.48f - (fx - 0.3f) * 0.2f)), lw * 1.6f) }
+                drawPath(Path().apply { moveTo(p.x(0.32f), p.y(0.46f)); quadraticTo(p.x(0.48f), p.y(0.74f), p.x(0.64f), p.y(0.4f)) }, rojo, style = Stroke(lw * 1.2f))
+                caja(p, 0.46f, 0.7f, 0.54f, 0.77f)
+            }
+            "Constancia" -> {
+                // La espada del freire, de punta al suelo: la hoja con su canal, la guarda en cruz, la empuñadura y el pomo.
+                caja(p, 0.47f, 0.24f, 0.53f, 0.72f)
+                drawPath(Path().apply { moveTo(p.x(0.47f), p.y(0.72f)); lineTo(p.x(0.5f), p.y(0.78f)); lineTo(p.x(0.53f), p.y(0.72f)); close() }, p.metal(0.47f, 0.53f))
+                drawLine(p.linea, Offset(p.x(0.5f), p.y(0.26f)), Offset(p.x(0.5f), p.y(0.68f)), lw * 0.6f)
+                caja(p, 0.3f, 0.2f, 0.7f, 0.24f)
+                caja(p, 0.475f, 0.08f, 0.525f, 0.2f, if (p.hecho) SolidColor(Color(0xFF5A3A22)) else SolidColor(p.sombra))
+                drawCircle(p.metal(0.44f, 0.56f), p.w * 0.045f, Offset(p.x(0.5f), p.y(0.06f)))
+            }
+            "Curiosos" -> {
+                // La arqueta de la tesorería, donde se guardaban los depósitos y las cartas de crédito: herrajes, cerradura y monedas.
+                caja(p, 0.22f, 0.4f, 0.78f, 0.74f)
+                drawPath(Path().apply { moveTo(p.x(0.22f), p.y(0.4f)); quadraticTo(p.x(0.5f), p.y(0.2f), p.x(0.78f), p.y(0.4f)); close() }, p.metal(0.22f, 0.78f))
+                listOf(0.32f, 0.68f).forEach { fx -> drawLine(p.linea, Offset(p.x(fx), p.y(0.3f)), Offset(p.x(fx), p.y(0.74f)), lw * 1.6f) }
+                drawPath(escudo(Offset(p.x(0.5f), p.y(0.5f)), p.w * 0.06f), rojo)
+                if (p.hecho) listOf(0.3f, 0.5f, 0.7f).forEach { fx -> drawCircle(SolidColor(Color(0xFFD9B44A)), p.w * 0.035f, Offset(p.x(fx), p.y(0.77f))) }
+            }
+            else -> {
+                // La cruz patada roja sobre el escudo de lino blanco.
+                val c = Offset(p.x(0.5f), p.y(0.4f))
+                drawPath(escudo(c, p.w * 0.32f), p.metal(0.18f, 0.82f))
+                drawPath(escudo(c, p.w * 0.27f), lino)
+                drawPath(cruzPatada(c + Offset(0f, -p.w * 0.03f), p.w * 0.17f), rojo)
+            }
         }
     }
 

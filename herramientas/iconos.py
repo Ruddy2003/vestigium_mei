@@ -55,6 +55,11 @@ def vitela(sem):         # Scriptorium: vitela con manchas cálidas y poros de f
     poros = (ruido(sem, 1, 0) > 2.6) * -0.9
     return ruido(sem + 1, 1.0, 22) * 0.8 + ruido(sem + 2, 0.3) + poros
 
+def lino(sem):           # Templario: el lino de la sobreveste, en tafetán (trama y urdimbre), con polvo de arena
+    trama = np.sin(X * 1.9 + ruido(sem, 0.8, 3)) * 0.22 + np.sin(Y * 1.9 + ruido(sem + 1, 0.8, 3)) * 0.22
+    arena = (ruido(sem + 2, 1, 0) > 2.4) * -0.6
+    return trama + arena + ruido(sem + 3, 0.6, 20)
+
 def papel(sem):          # Distopía: papel con fibras y grano
     f = ruido(sem, 0.5) + ruido(sem + 1, 1.2, 6)
     fibras = np.sin(X * 0.9 + ruido(sem + 2, 6, 10)) * 0.25
@@ -163,6 +168,15 @@ def _cuadrifolios(d, c, n=12):
             u = a + k * math.pi / 2; cx, cy = x + 2.1 * K * math.cos(u), y + 2.1 * K * math.sin(u)
             d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c)
 
+def _cruces_patadas(d, c, n=10, s=4.6):   # cruces patadas del Temple sobre el anillo
+    for i in range(n):
+        a = 2 * math.pi * i / n; x, y = _pos(a); pts = []
+        for k in range(4):
+            u = math.radians(90 * k - 90); dx, dy = math.cos(u), math.sin(u); nx, ny = -dy, dx
+            for f_, q in ((0.15, -0.15), (1, -0.42), (1, 0.42)):
+                pts.append((x + (dx * f_ + nx * q) * s * K, y + (dy * f_ + ny * q) * s * K))
+        d.polygon(pts, fill=c)
+
 def _marcas(d, c, n=48, largo=6, cada=4, largo2=10):   # muescas radiales (las de cada [cada], más largas)
     for i in range(n):
         a = 2 * math.pi * i / n; l = largo2 if i % cada == 0 else largo
@@ -266,6 +280,7 @@ TEMAS = {
     'ciber':        (pantalla,      '#0D1117', '#7FE3F0',   5, 4, 'fosforo',     _rayas),
     'heleno':       (pario,         '#EEEDE9', '#3D2459',   9, 5, 'tinta',       _perlas),
     'medieval':     (vitela,        '#E8E2D6', '#33261A',   9, 6, 'ferrogalica', _cuadrifolios),
+    'templario':    (lino,          '#EDE6D6', '#9A1A1F',   8, 5, 'esmalte',     _cruces_patadas),
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),

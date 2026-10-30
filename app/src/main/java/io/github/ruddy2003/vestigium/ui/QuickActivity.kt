@@ -945,6 +945,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.NEON -> 4.dp
     TemaId.HELENO -> 14.dp
     TemaId.MEDIEVAL -> 10.dp
+    TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
     TemaId.REFUGIO -> 6.dp
     TemaId.ORDEN -> 6.dp
@@ -992,6 +993,14 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         var x = 0f
         while (x < w) { lineTo(x, a + a * sin(2 * PI * 3 * x / w).toFloat()); x += 3 * u }
         lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // El adarve: merlones y troneras en el borde de arriba.
+    TemaId.TEMPLARIO -> formaDp { w, h, u ->
+        val m = 16 * u; val a = 9 * u
+        moveTo(0f, h); lineTo(0f, 0f)
+        var x = 0f; var k = 0
+        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += m; k++ }
+        lineTo(x, if (k % 2 == 0) 0f else a); lineTo(w, if (k % 2 == 0) 0f else a); lineTo(w, h); close()
     }
     // Carpeta de expediente con su pestaña a la izquierda.
     TemaId.DISTOPIA -> formaDp { w, h, u ->
@@ -1134,6 +1143,12 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawLine(e.primary.copy(alpha = 0.7f), Offset(14 * u, y), Offset(w - 14 * u, y), 1.4f * u)
             drawLine(e.primary.copy(alpha = 0.5f), Offset(14 * u, y + 3 * u), Offset(w - 14 * u, y + 3 * u), 0.6f * u)
             listOf(-8f, 0f, 8f).forEach { dx -> drawCircle(e.tertiary, 1.8f * u, Offset(w / 2 + dx * u, 9 * u)) }
+        }
+        // La línea de acero bajo las almenas y la cruz patada en medio.
+        TemaId.TEMPLARIO -> {
+            drawLine(e.secondary.copy(alpha = 0.6f), Offset(10 * u, 15 * u), Offset(w - 10 * u, 15 * u), 1.2f * u)
+            drawCircle(e.surface, 7 * u, Offset(w / 2, 15 * u))
+            drawPath(cruzPatada(Offset(w / 2, 15 * u), 6 * u), e.primary)
         }
         // Renglones del rótulo en la pestaña y el ojo que vigila a la derecha.
         TemaId.DISTOPIA -> {
@@ -1294,6 +1309,8 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
         moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h - r); quadraticTo(w - r, h - r, w - r, h)
         lineTo(r, h); quadraticTo(r, h - r, 0f, h - r); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
     }
+    // El escudete: recto arriba y redondeado abajo.
+    TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     TemaId.ORDEN -> CutCornerShape(8.dp)

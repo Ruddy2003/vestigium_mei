@@ -225,6 +225,7 @@ internal fun Bloqueo(reintentar: () -> Unit) {
             listOf("> montar /diario", "! acceso denegado: volumen cifrado", "> llave: huella del titular")), reintentar)
         TemaId.HELENO -> BloqueoMarco(TextosBloqueo("ΤΑ ΙΧΝΗ ΜΟΥ", "— ἐσφραγισμένον · tu diario está sellado", "ΑΝΟΙΞΟΝ"), arriba = 54, reintentar = reintentar) { cs -> bloqueoFronton(cs) }
         TemaId.MEDIEVAL -> BloqueoMarco(TextosBloqueo("Vestigium mei", "¶ Este libro está cerrado con sello: sólo su dueño lo abre.", "Romper el sello"), arriba = 0, reintentar = reintentar) { cs -> bloqueoIluminado(cs) }
+        TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
         TemaId.REFUGIO -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "[ esclusa sellada ] identifíquese, residente", "ABRIR ESCLUSA"), arriba = 6, reintentar = reintentar) { cs -> bloqueoMampara(cs) }
@@ -501,6 +502,25 @@ private fun DrawScope.bloqueoIluminado(cs: ColorScheme) {
     }
 }
 
+/** La puerta del castillo: muro almenado arriba, el rastrillo de hierro echado por dentro y el escudo con la cruz sobre el arco. */
+private fun DrawScope.bloqueoRastrillo(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height; val m = 16 * u; val a = 12 * u
+    val muro = Path().apply {
+        moveTo(0f, h); lineTo(0f, 0f)
+        var x = 0f; var k = 0
+        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += m; k++ }
+        lineTo(x, if (k % 2 == 0) 0f else a); lineTo(w, if (k % 2 == 0) 0f else a); lineTo(w, h); close()
+    }
+    drawPath(muro, cs.secondary, style = Stroke(2f * u))
+    val reja = cs.secondary.copy(alpha = 0.16f)
+    var x = 16 * u; while (x < w - 8 * u) { drawLine(reja, Offset(x, a + 8 * u), Offset(x, h - 4 * u), 2.2f * u); x += 18 * u }
+    var y = a + 22 * u; while (y < h - 8 * u) { drawLine(reja, Offset(8 * u, y), Offset(w - 8 * u, y), 1.6f * u); y += 26 * u }
+    val c = Offset(w / 2, a + 18 * u); val r = 11 * u
+    val escudo = Path().apply { moveTo(c.x - r * 0.8f, c.y - r * 0.85f); lineTo(c.x + r * 0.8f, c.y - r * 0.85f); quadraticTo(c.x + r * 0.86f, c.y + r * 0.3f, c.x, c.y + r); quadraticTo(c.x - r * 0.86f, c.y + r * 0.3f, c.x - r * 0.8f, c.y - r * 0.85f); close() }
+    drawPath(escudo, cs.surface); drawPath(escudo, cs.secondary, style = Stroke(1.2f * u))
+    drawPath(cruzPatada(c + Offset(0f, -r * 0.1f), r * 0.55f), cs.primary)
+}
+
 /** Mampara de refugio: pantalla de esquinas muy redondas dentro de un bastidor con remaches. */
 private fun DrawScope.bloqueoMampara(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height
@@ -685,6 +705,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.NEON -> false
     TemaId.HELENO -> false
     TemaId.MEDIEVAL -> true
+    TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
@@ -711,6 +732,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.NEON -> false
     TemaId.HELENO -> true
     TemaId.MEDIEVAL -> true
+    TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
@@ -782,6 +804,12 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         TemaId.MEDIEVAL -> {
             drawRect(c, Offset(cx - 20 * u, 1 * u), Size(40 * u, 28 * u))
             drawRect(cs.tertiary.copy(alpha = p), Offset(cx - 22.5f * u, -1.5f * u), Size(45 * u, 33 * u), style = Stroke(1f * u))
+        }
+        // El escudo de lágrima detrás del ícono, con el ribete de acero que aparece al elegirlo.
+        TemaId.TEMPLARIO -> {
+            val escudo = Path().apply { moveTo(cx - 17 * u, 0f); lineTo(cx + 17 * u, 0f); quadraticTo(cx + 18 * u, h * 0.62f, cx, h + 3 * u); quadraticTo(cx - 18 * u, h * 0.62f, cx - 17 * u, 0f); close() }
+            drawPath(escudo, c)
+            drawPath(escudo, cs.secondary.copy(alpha = p), style = Stroke(1.4f * u))
         }
         // Sello de goma, doble filete y un poco torcido.
         TemaId.DISTOPIA -> girar(-5f, Offset(cx, cy)) {
@@ -945,6 +973,13 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             listOf(Offset(cx - 10 * u, cy), Offset(cx + 10 * u, cy), Offset(cx, cy - 10 * u), Offset(cx, cy + 10 * u)).forEach { drawCircle(c, 12 * u, it) }
             drawCircle(cs.tertiary, 22.5f * u, Offset(cx, cy), style = Stroke(0.8f * u))
         }
+        // La rodela de hierro: un disco con el ribete y los clavos, y la cruz patada asomando por detrás.
+        TemaId.TEMPLARIO -> {
+            drawPath(cruzPatada(Offset(cx, cy), 27 * u, 0.2f, 0.42f), cs.secondary.copy(alpha = 0.5f))
+            drawCircle(c, 21 * u, Offset(cx, cy))
+            drawCircle(cs.secondary, 21 * u, Offset(cx, cy), style = Stroke(1.6f * u))
+            for (k in 0 until 8) { val an = Math.toRadians(k * 45.0); drawCircle(cs.tertiary, 1.4f * u, Offset(cx + 18 * u * kotlin.math.cos(an).toFloat(), cy + 18 * u * kotlin.math.sin(an).toFloat())) }
+        }
         // Sello de goma cuadrado, torcido, con su filete.
         TemaId.DISTOPIA -> girar(-4f, Offset(cx, cy)) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
@@ -1065,6 +1100,11 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.MEDIEVAL -> {
             filete(); var x = 18 * u
             while (x < w) { drawPath(Path().apply { moveTo(x, 0.5f * u); lineTo(x + 2 * u, 2.5f * u); lineTo(x, 4.5f * u); lineTo(x - 2 * u, 2.5f * u); close() }, cs.primary); x += 36 * u }
+        }
+        // El adarve: filete y merlones bajos.
+        TemaId.TEMPLARIO -> {
+            filete(); var x = 0f
+            while (x < w) { drawRect(cs.secondary.copy(alpha = 0.6f), Offset(x, 1 * u), Size(8 * u, 3 * u)); x += 16 * u }
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
@@ -1369,6 +1409,9 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         // Hoja de pergamino que se desliza entera sobre la anterior.
         TemaId.MEDIEVAL -> if (adelante || atras) (slideInHorizontally(t(320)) { dir * it } + fadeIn(t(200))) togetherWith (slideOutHorizontally(t(320)) { -dir * it / 4 } + fadeOut(t(320)))
             else fadeIn(t(260)) togetherWith fadeOut(t(160))
+        // El rastrillo que baja: la pantalla nueva cae pesada desde arriba y la anterior se hunde un poco.
+        TemaId.TEMPLARIO -> (slideInVertically(t(340, frena)) { -it / 3 } + fadeIn(t(240))) togetherWith
+            (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
         // Pantalla de tubo que se enciende desde una línea horizontal en el centro.

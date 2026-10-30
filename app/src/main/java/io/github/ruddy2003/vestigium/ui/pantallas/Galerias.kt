@@ -112,6 +112,7 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.ROMANO -> Path().apply { moveTo(c.x - r, c.y + r * 0.35f); quadraticTo(c.x - r * 0.1f, c.y - r * 1.15f, c.x + r, c.y - r * 0.35f); quadraticTo(c.x + r * 0.1f, c.y + r * 1.15f, c.x - r, c.y + r * 0.35f); close() }
     TemaId.HELENO -> mas(estrella(c, r, 16, 0.55f), circulo(c, r * 0.3f))
     TemaId.MEDIEVAL -> listOf(0.0, PI / 2, PI, 3 * PI / 2).map { circulo(c + dir(it) * (r * 0.45f), r * 0.48f) }.reduce { a, b -> mas(a, b) }
+    TemaId.TEMPLARIO -> io.github.ruddy2003.vestigium.ui.cruzPatada(c, r * 1.05f, 0.16f, 0.46f)
     TemaId.GOTICO -> (0 until 6).map { circulo(c + dir(PI / 3 * it - PI / 2) * (r * 0.55f), r * 0.4f) }.fold(circulo(c, r * 0.42f)) { a, b -> mas(a, b) }
     TemaId.CIBER -> menos(poligono(c, r, 6, 0.0), poligono(c, r * 0.45f, 6, 0.0))
     TemaId.NEON -> menos(poligono(c, r, 6, 0.0), poligono(c, r * 0.45f, 6, 0.0))
