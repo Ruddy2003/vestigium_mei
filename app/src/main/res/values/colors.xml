@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- App: mármol de día -->
-    <color name="fondo">#ECEDEA</color>
-    <color name="tinta">#17191C</color>
-    <color name="acento">#7C2433</color>
-    <color name="acento_suave">#EFDDDF</color>
-    <color name="superficie">#F7F7F4</color>
-    <color name="icono_fondo">#0E1113</color>
-    <color name="icono_trazo">#D2AE5A</color>
-
-    <!-- Widgets: siempre en basalto y oro -->
-    <color name="w_fondo">#F20E1113</color>
-    <color name="w_borde">#2B3137</color>
+    <!-- Widgets: los colores que usan sus drawables (cada tema pone los suyos en código). -->
     <color name="w_boton">#1A1F23</color>
     <color name="w_boton_borde">#2B3137</color>
     <color name="w_texto">#E7E3DA</color>

@@ -96,11 +96,9 @@ class CoberturaTemas {
         /** Los del lote 6: error, cambio, la tecla del diario y el rascado de la lámina. */
         val SONIDOS_LOTE6 = listOf("s_<id>_error", "s_<id>_cambio", "s_tecla_<id>", "s_rascar_<id>")
 
-        /** Lo que falta hoy, por superficie. Cada lote borra lo que completa. */
+        /** Lo que falta hoy, por superficie. Desde el lote 7 solo queda el gato, que llega con el lote 9. */
         val PENDIENTES: Map<String, Set<String>> = mapOf(
             "gato" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "papel" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento"),
-            "vidas" to setOf("antiguas"),
         )
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */

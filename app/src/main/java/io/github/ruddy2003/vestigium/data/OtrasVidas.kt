@@ -5,7 +5,7 @@ package io.github.ruddy2003.vestigium.data
  * Cada número dice qué tan seguro es: medido (estudios y censos), estimado (registros de la época), reconstruido (esqueletos,
  * restos y comparaciones) o inventado (los mundos de ficción de algunos temas: estimaciones razonables, no datos).
  *
- * Doce vidas reales para todos, y una más por tema que solo aparece dentro de ese tema.
+ * Doce vidas reales para todos, y una más por tema que solo aparece dentro de ese tema (en los 21 temas).
  */
 object OtrasVidas {
     enum class Certeza(val nombre: String, val explica: String) {
@@ -579,6 +579,20 @@ object OtrasVidas {
                 "sueno" to i(6.5), "dormir" to i(21.0), "trabajo" to i(70), "aire_libre" to i(11), "pantalla" to i(0.5), "notificaciones" to i(3, "Llamadas de auxilio por radio."), "musica" to i(2),
                 "personas_dia" to i(12), "conocidas" to i(200), "poblacion" to i(25), "lejos" to i(150), "estatura" to i(165), "vida" to i(45), "vida_adulto" to i(55), "hijos" to i(3),
                 "alfabetizacion" to i(30), "lectura" to i(2)),
+            fuentes = emptyList()),
+        Vida("guia_caminos", "Brenna", "Guía de caminos", "Una posada al pie de un paso de montaña", "año 312 de los Caminos", 312, "tema", "antiguas", edad = 29, ficticia = true,
+            inspiracion = "Inventada para Tierras Antiguas: un mundo de caminos, minas y compañías de viaje, sin nombres de ninguna obra.",
+            historia = listOf(
+                "Brenna lleva compañías de viajeros por el paso: mercaderes, mineros que suben a las vetas de hierro, peregrinos que van a las ruinas del otro lado. Conoce cada piedra marcada con las runas del camino y cada refugio donde se puede pasar la noche.",
+                "Camina casi todo el día con su bastón y su linterna de mina. Come pan de centeno, queso duro, cecina y lo que se recoge en el monte; en la posada, guiso y cerveza oscura. Dibuja mapas a mano en el libro de crónicas de la compañía.",
+                "Sabe leer las runas y un poco de letra; casi nadie en la aldea sabe. De noche, en la posada, alguien toca el arpa y los viajeros cuentan lo que vieron del otro lado de las montañas.",
+            ),
+            dia = listOf(t(22.0, 5.0, Hacer.DORMIR), t(5.0, 6.0, Hacer.COMER), t(6.0, 12.0, Hacer.CAMINO, "guiar a la compañía"), t(12.0, 13.0, Hacer.COMER, "pan, queso y cecina"),
+                t(13.0, 18.0, Hacer.CAMINO, "el paso y las marcas del camino"), t(18.0, 19.0, Hacer.CUIDAR, "mapas y monturas"), t(19.0, 22.0, Hacer.GENTE, "la posada, el arpa y las historias")),
+            datos = mapOf("pasos" to i(22000), "km_anio" to i(6000), "kcal" to i(3000), "proteina" to i(90), "azucar" to i(15, "Miel de monte."), "fibra" to i(40), "alcohol" to i(25, "Cerveza oscura de la posada."),
+                "sueno" to i(7.0), "dormir" to i(22.0), "trabajo" to i(60), "aire_libre" to i(11), "pantalla" to i(0), "notificaciones" to i(4, "Los cuernos del paso y la campana de la posada."), "musica" to i(1.5, "El arpa de la posada."),
+                "personas_dia" to i(20), "conocidas" to i(600), "poblacion" to i(150, "La aldea del paso."), "lejos" to i(900), "estatura" to i(168), "vida" to i(40), "vida_adulto" to i(60), "hijos" to i(2),
+                "alfabetizacion" to i(15, "Las runas del camino las leen más; la letra, pocos."), "lectura" to i(1, "Mapas y el libro de crónicas.")),
             fuentes = emptyList()),
     )
 

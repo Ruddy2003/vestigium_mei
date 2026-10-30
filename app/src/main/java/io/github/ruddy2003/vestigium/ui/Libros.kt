@@ -177,61 +177,64 @@ internal val NOCHE = Color(0xFF111833)
 internal val NOCHE_ALTA = Color(0xFF261C4C)
 internal val LUNA = Color(0xFFEDE6C8)
 
-/** La noche de cada tema: el color de su cielo y la luz que alumbra el objeto (luna, lámpara, fuego, fósforo…). */
-private class NocheTema(val cielo: Color, val luz: Color) {
+/**
+ * La noche de cada tema: el color de su cielo, la luz que alumbra el objeto (luna, lámpara, fuego, fósforo…), cuánto se
+ * hunde el objeto en ese cielo ([hunde]: la lámpara de aceite deja ver más el cuero que la luz fría de las estrellas),
+ * cuánto se oscurece el papel ([papel]) y la tinta con que se lee de noche ([tinta]), que es la de su luz.
+ */
+private class NocheTema(val cielo: Color, val luz: Color, val hunde: Float, val papel: Float, val tinta: Color) {
     /** La luna (o la luz principal) de ese cielo: el blanco de luna teñido de la luz del tema. */
     val luna: Color get() = lerp(LUNA, luz, 0.35f)
 }
 
 private fun nocheDe(t: TemaId): NocheTema = when (t) {
     // La lucerna: luz de aceite sobre el pórfido de noche.
-    TemaId.ROMANO -> NocheTema(c(0xFF1A1426), c(0xFFE9B860))
-    TemaId.CIBER -> NocheTema(c(0xFF0A0614), c(0xFFFF2E88))
+    TemaId.ROMANO -> NocheTema(c(0xFF1A1426), c(0xFFE9B860), 0.62f, 0.8f, c(0xFFF2DDB0))
+    TemaId.CIBER -> NocheTema(c(0xFF0A0614), c(0xFFFF2E88), 0.8f, 0.9f, c(0xFFF0DAF7))
     // Selene en plata sobre el Egeo.
-    TemaId.HELENO -> NocheTema(c(0xFF0E1A33), c(0xFFDCE4F2))
+    TemaId.HELENO -> NocheTema(c(0xFF0E1A33), c(0xFFDCE4F2), 0.7f, 0.86f, c(0xFFE4EAF6))
     // La vela del scriptorium.
-    TemaId.MEDIEVAL -> NocheTema(c(0xFF1A130C), c(0xFFF2C46B))
+    TemaId.MEDIEVAL -> NocheTema(c(0xFF1A130C), c(0xFFF2C46B), 0.6f, 0.78f, c(0xFFF0D9A8))
     // Apagón bajo el reflector.
-    TemaId.DISTOPIA -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4))
-    TemaId.REFUGIO -> NocheTema(c(0xFF1A1003), c(0xFFFFB23F))
+    TemaId.DISTOPIA -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4), 0.74f, 0.88f, c(0xFFDDE2E6))
+    TemaId.REFUGIO -> NocheTema(c(0xFF1A1003), c(0xFFFFB23F), 0.7f, 0.85f, c(0xFFFFC870))
     // Brasas de la forja.
-    TemaId.ORDEN -> NocheTema(c(0xFF14181D), c(0xFFE8743A))
+    TemaId.ORDEN -> NocheTema(c(0xFF14181D), c(0xFFE8743A), 0.66f, 0.82f, c(0xFFF3C9A8))
     // La lámpara ultravioleta del laboratorio.
-    TemaId.LABORATORIO -> NocheTema(c(0xFF0F0B22), c(0xFFB59CFF))
+    TemaId.LABORATORIO -> NocheTema(c(0xFF0F0B22), c(0xFFB59CFF), 0.72f, 0.87f, c(0xFFE3DAFF))
     // El farol del pueblo.
-    TemaId.COLONOS -> NocheTema(c(0xFF0F1626), c(0xFFF0A860))
+    TemaId.COLONOS -> NocheTema(c(0xFF0F1626), c(0xFFF0A860), 0.64f, 0.8f, c(0xFFF3DDBF))
     // El fuego del vivac.
-    TemaId.NAPOLEON -> NocheTema(c(0xFF0C1433), c(0xFFE8C35A))
+    TemaId.NAPOLEON -> NocheTema(c(0xFF0C1433), c(0xFFE8C35A), 0.66f, 0.83f, c(0xFFF1E3B8))
     // Luciérnagas en el bosque.
-    TemaId.BOTANICO -> NocheTema(c(0xFF0B1A14), c(0xFFC6F06A))
+    TemaId.BOTANICO -> NocheTema(c(0xFF0B1A14), c(0xFFC6F06A), 0.7f, 0.85f, c(0xFFE6F2C8))
     // La chimenea.
-    TemaId.NAVIDAD -> NocheTema(c(0xFF1A0E0E), c(0xFFFF9E57))
+    TemaId.NAVIDAD -> NocheTema(c(0xFF1A0E0E), c(0xFFFF9E57), 0.6f, 0.79f, c(0xFFFBE0C4))
     // El farol de papel rojo de la caravana.
-    TemaId.SEDA -> NocheTema(c(0xFF0D1433), c(0xFFF26B4E))
+    TemaId.SEDA -> NocheTema(c(0xFF0D1433), c(0xFFF26B4E), 0.67f, 0.84f, c(0xFFF8DCCF))
     // La luna a través del vitral de zafiro.
-    TemaId.GOTICO -> NocheTema(c(0xFF0B0F2E), c(0xFF9FB4FF))
-    TemaId.ESPACIO -> NocheTema(c(0xFF07041A), c(0xFFC59BFF))
+    TemaId.GOTICO -> NocheTema(c(0xFF0B0F2E), c(0xFF9FB4FF), 0.75f, 0.88f, c(0xFFDCE3FF))
+    TemaId.ESPACIO -> NocheTema(c(0xFF07041A), c(0xFFC59BFF), 0.78f, 0.9f, c(0xFFECE6FA))
     // Las lámparas de la Alhambra en el patio.
-    TemaId.ANDALUS -> NocheTema(c(0xFF0A1A1E), c(0xFFF2D27A))
+    TemaId.ANDALUS -> NocheTema(c(0xFF0A1A1E), c(0xFFF2D27A), 0.63f, 0.81f, c(0xFFF6E8C2))
     // La luz fría de las estrellas sobre la estepa.
-    TemaId.MONGOL -> NocheTema(c(0xFF061433), c(0xFFBFD9FF))
+    TemaId.MONGOL -> NocheTema(c(0xFF061433), c(0xFFBFD9FF), 0.76f, 0.89f, c(0xFFDCE8FA))
     // La vela del taller, en tono sanguina.
-    TemaId.RENACIMIENTO -> NocheTema(c(0xFF1A140E), c(0xFFE3A06B))
+    TemaId.RENACIMIENTO -> NocheTema(c(0xFF1A140E), c(0xFFE3A06B), 0.61f, 0.79f, c(0xFFF2D6C0))
     // La estrella roja en la noche polar.
-    TemaId.URSS -> NocheTema(c(0xFF141018), c(0xFFFF5A4E))
+    TemaId.URSS -> NocheTema(c(0xFF141018), c(0xFFFF5A4E), 0.72f, 0.86f, c(0xFFF2D8D6))
     // Las antorchas de la barricada.
-    TemaId.REVOLUCION -> NocheTema(c(0xFF101828), c(0xFFFF8A4A))
+    TemaId.REVOLUCION -> NocheTema(c(0xFF101828), c(0xFFFF8A4A), 0.65f, 0.82f, c(0xFFF8D9C2))
     // La luz de estrellas de los bosques antiguos.
-    TemaId.ANTIGUAS -> NocheTema(c(0xFF0E1612), c(0xFFB8E0C8))
+    TemaId.ANTIGUAS -> NocheTema(c(0xFF0E1612), c(0xFFB8E0C8), 0.73f, 0.87f, c(0xFFDCEFE2))
 }
 
 /** El objeto bajo su noche: el cuerpo se hunde en el cielo del tema y el oro toma la luz que lo alumbra. */
 private fun materiaTenida(m: Materia, n: NocheTema): Materia {
-    fun o(x: Color, k: Float) = lerp(x, n.cielo, k)
-    val tinta = lerp(Color(0xFFE8E6F2), n.luz, 0.12f)
-    return Materia(cuerpo = o(m.cuerpo, 0.68f), sombra = o(m.sombra, 0.76f), brillo = o(m.brillo, 0.6f),
+    fun o(x: Color, k: Float) = lerp(x, n.cielo, k.coerceIn(0f, 0.95f))
+    return Materia(cuerpo = o(m.cuerpo, n.hunde), sombra = o(m.sombra, n.hunde + 0.08f), brillo = o(m.brillo, n.hunde - 0.08f),
         acento = lerp(m.acento, n.luz, 0.3f), detalle = lerp(m.detalle, n.luz, 0.45f),
-        hoja = o(m.hoja, 0.74f), tinta = tinta, extra = lerp(m.extra, n.luz, 0.35f), textoCuerpo = tinta)
+        hoja = o(m.hoja, n.hunde + 0.06f), tinta = n.tinta, extra = lerp(m.extra, n.luz, 0.35f), textoCuerpo = n.tinta)
 }
 
 /** La materia del tema de noche: el cuero, el papiro o la pantalla bajo el cielo y la luz de su noche. */
@@ -264,7 +267,7 @@ fun materiaNoche(t: TemaId): Materia {
 }
 
 /** El papel bajo la noche del tema: se oscurece hacia su cielo y la tinta toma su luz. */
-private fun paginaTenida(p: Pagina, n: NocheTema) = Pagina(p.fondo, lerp(p.color, n.cielo, 0.84f), lerp(Color(0xFFE6E4F0), n.luz, 0.12f), lerp(Color(0xFFA2AACB), n.luz, 0.22f),
+private fun paginaTenida(p: Pagina, n: NocheTema) = Pagina(p.fondo, lerp(p.color, n.cielo, n.papel), n.tinta, lerp(n.tinta, n.cielo, 0.42f),
     lerp(p.acento, n.luz, 0.45f), lerp(p.detalle, n.luz, 0.5f), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
 
 /** La página de un sueño: el papel del tema bajo el cielo de su noche. */
@@ -1835,28 +1838,28 @@ class Pagina(val fondo: Int?, val color: Color, val tinta: Color, val tenue: Col
  * gótica de copista, textura de vitral, kúfica, Didot, letra de molde soviética, estarcido, máquina de escribir, cursiva de carta…
  */
 fun pagina(t: TemaId): Pagina = when (t) {
-    TemaId.ROMANO -> Pagina(R.drawable.papel_papiro, c(0xFFE8D4A2), c(0xFF2A1E14), c(0xFF6B5536), c(0xFF8E2B1F), c(0xFF6B4423), Letra.inscripcion, 16.5f, 27f, false, capitular = Letra.inscripcion)
-    // Pergamino de Pérgamo (dibujado en FondoPagina): más claro y liso que el papiro romano.
-    TemaId.HELENO -> Pagina(null, c(0xFFF3E9D2), c(0xFF1F1712), c(0xFF6B5536), c(0xFFA8471F), c(0xFF1A1410), Letra.garamond, 18.5f, 27f, false)
+    TemaId.ROMANO -> Pagina(R.drawable.papel_romano, c(0xFFE8D4A2), c(0xFF2A1E14), c(0xFF6B5536), c(0xFF8E2B1F), c(0xFF6B4423), Letra.inscripcion, 16.5f, 27f, false, capitular = Letra.inscripcion)
+    // Pergamino de Pérgamo: más claro y liso que el papiro romano.
+    TemaId.HELENO -> Pagina(R.drawable.papel_heleno, c(0xFFF3E9D2), c(0xFF1F1712), c(0xFF6B5536), c(0xFFA8471F), c(0xFF1A1410), Letra.garamond, 18.5f, 27f, false)
     TemaId.SEDA -> Pagina(R.drawable.papel_seda, c(0xFF1F3578), c(0xFFF2EAD3), c(0xFFB9B29F), c(0xFFE0B04F), c(0xFFE26A50), LetraExtra.alegreya, 17.5f, 27f, true, capitular = LetraExtra.almendra)
-    TemaId.MEDIEVAL -> Pagina(R.drawable.papel_pergamino, c(0xFFEDDDB8), c(0xFF2B1D12), c(0xFF6E5639), c(0xFFB3261E), c(0xFF1F3A93), LetraExtra.gotica, 19.5f, 28f, false, capitular = LetraExtra.gotica)
-    TemaId.COLONOS -> Pagina(null, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), LetraExtra.gaceta, 17.5f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
-    TemaId.ORDEN -> Pagina(null, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), LetraExtra.estarcido, 16f, 25f, true, Rayas.NADA)
-    TemaId.BOTANICO -> Pagina(R.drawable.papel_lamina, c(0xFFF1E9D2), c(0xFF2A2318), c(0xFF6B5E45), c(0xFF3F5A2C), c(0xFF8C4A22), LetraExtra.fraunces, 17.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
-    TemaId.GOTICO -> Pagina(R.drawable.papel_vitela, c(0xFFF1E8D2), c(0xFF1A1630), c(0xFF5E5870), c(0xFFB3122E), c(0xFF1F3A9E), LetraExtra.textura, 19.5f, 28f, false, capitular = LetraExtra.textura)
-    TemaId.ESPACIO -> Pagina(null, c(0xFF050A18), c(0xFFE8ECF8), c(0xFF6E7BA0), c(0xFF8AB4FF), c(0xFFFFB86B), LetraExtra.grotesk, 16f, 25f, true, Rayas.RENGLONES)
-    TemaId.ANDALUS -> Pagina(R.drawable.papel_xativa, c(0xFFF2E6C8), c(0xFF2A1A12), c(0xFF6A5640), c(0xFF1E6B5C), c(0xFFB5432A), LetraExtra.amiri, 18.5f, 28f, false, capitular = LetraExtra.kufi)
-    TemaId.MONGOL -> Pagina(R.drawable.papel_estepa, c(0xFFF1EBDC), c(0xFF18202E), c(0xFF5C6577), c(0xFF1F5FA8), c(0xFFC2412D), LetraExtra.filosofo, 17.5f, 27f, false)
-    TemaId.RENACIMIENTO -> Pagina(R.drawable.papel_leonardo, c(0xFFEEDFBC), c(0xFF3A2614), c(0xFF7A6040), c(0xFF8C3B1E), c(0xFF2F4F6F), LetraExtra.cormorant, 19.5f, 28f, false, capitular = LetraExtra.italianno)
-    TemaId.URSS -> Pagina(null, c(0xFFEFE6D2), c(0xFF161414), c(0xFF6A625A), c(0xFFC1121F), c(0xFF161414), LetraExtra.russo, 15.5f, 26f, false, Rayas.RENGLONES)
-    TemaId.LABORATORIO -> Pagina(null, c(0xFFF7FBFC), c(0xFF1B2733), c(0xFF5D6F80), c(0xFF0B8FA3), c(0xFFE0557A), LetraExtra.jost, 16.5f, 26f, false, Rayas.CUADRICULA)
-    TemaId.NAPOLEON -> Pagina(null, c(0xFFF6F0E0), c(0xFF14213D), c(0xFF5A6278), c(0xFF1E3A8A), c(0xFFA3172E), LetraExtra.bodoni, 18f, 27f, false, Rayas.NADA, LetraExtra.bodoniTitulo)
+    TemaId.MEDIEVAL -> Pagina(R.drawable.papel_medieval, c(0xFFEDDDB8), c(0xFF2B1D12), c(0xFF6E5639), c(0xFFB3261E), c(0xFF1F3A93), LetraExtra.gotica, 19.5f, 28f, false, capitular = LetraExtra.gotica)
+    TemaId.COLONOS -> Pagina(R.drawable.papel_colonos, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), LetraExtra.gaceta, 17.5f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
+    TemaId.ORDEN -> Pagina(R.drawable.papel_orden, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), LetraExtra.estarcido, 16f, 25f, true, Rayas.NADA)
+    TemaId.BOTANICO -> Pagina(R.drawable.papel_botanico, c(0xFFF1E9D2), c(0xFF2A2318), c(0xFF6B5E45), c(0xFF3F5A2C), c(0xFF8C4A22), LetraExtra.fraunces, 17.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
+    TemaId.GOTICO -> Pagina(R.drawable.papel_gotico, c(0xFFF1E8D2), c(0xFF1A1630), c(0xFF5E5870), c(0xFFB3122E), c(0xFF1F3A9E), LetraExtra.textura, 19.5f, 28f, false, capitular = LetraExtra.textura)
+    TemaId.ESPACIO -> Pagina(R.drawable.papel_espacio, c(0xFF050A18), c(0xFFE8ECF8), c(0xFF6E7BA0), c(0xFF8AB4FF), c(0xFFFFB86B), LetraExtra.grotesk, 16f, 25f, true, Rayas.RENGLONES)
+    TemaId.ANDALUS -> Pagina(R.drawable.papel_andalus, c(0xFFF2E6C8), c(0xFF2A1A12), c(0xFF6A5640), c(0xFF1E6B5C), c(0xFFB5432A), LetraExtra.amiri, 18.5f, 28f, false, capitular = LetraExtra.kufi)
+    TemaId.MONGOL -> Pagina(R.drawable.papel_mongol, c(0xFFF1EBDC), c(0xFF18202E), c(0xFF5C6577), c(0xFF1F5FA8), c(0xFFC2412D), LetraExtra.filosofo, 17.5f, 27f, false)
+    TemaId.RENACIMIENTO -> Pagina(R.drawable.papel_renacimiento, c(0xFFEEDFBC), c(0xFF3A2614), c(0xFF7A6040), c(0xFF8C3B1E), c(0xFF2F4F6F), LetraExtra.cormorant, 19.5f, 28f, false, capitular = LetraExtra.italianno)
+    TemaId.URSS -> Pagina(R.drawable.papel_urss, c(0xFFEFE6D2), c(0xFF161414), c(0xFF6A625A), c(0xFFC1121F), c(0xFF161414), LetraExtra.russo, 15.5f, 26f, false, Rayas.RENGLONES)
+    TemaId.LABORATORIO -> Pagina(R.drawable.papel_laboratorio, c(0xFFF7FBFC), c(0xFF1B2733), c(0xFF5D6F80), c(0xFF0B8FA3), c(0xFFE0557A), LetraExtra.jost, 16.5f, 26f, false, Rayas.CUADRICULA)
+    TemaId.NAPOLEON -> Pagina(R.drawable.papel_napoleon, c(0xFFF6F0E0), c(0xFF14213D), c(0xFF5A6278), c(0xFF1E3A8A), c(0xFFA3172E), LetraExtra.bodoni, 18f, 27f, false, Rayas.NADA, LetraExtra.bodoniTitulo)
     // La carta de Navidad va en cursiva de pluma, grande para que se lea bien.
-    TemaId.NAVIDAD -> Pagina(null, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
+    TemaId.NAVIDAD -> Pagina(R.drawable.papel_navidad, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
     // La declaración, tecleada.
-    TemaId.DISTOPIA -> Pagina(null, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
-    TemaId.CIBER -> Pagina(null, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
-    TemaId.REFUGIO -> Pagina(null, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
+    TemaId.DISTOPIA -> Pagina(R.drawable.papel_distopia, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
+    TemaId.CIBER -> Pagina(R.drawable.papel_ciber, c(0xFF05080E), c(0xFFD6F3F7), c(0xFF4F6B78), c(0xFF00E5FF), c(0xFFFF2E88), Letra.codigo, 15f, 23f, true, Rayas.NUMEROS)
+    TemaId.REFUGIO -> Pagina(R.drawable.papel_refugio, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
     TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.ciudadana, 17.5f, 28f, false, Rayas.NADA, LetraExtra.convencion)
     TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), LetraExtra.vollkorn, 18f, 27f, false, Rayas.NADA, LetraExtra.camino)
 }
@@ -1880,10 +1883,7 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     listOf(18.dp.toPx(), 22.dp.toPx()).forEach { x0 -> drawLine(p.acento.copy(alpha = 0.3f), Offset(x0, 0f), Offset(x0, h), 1f) }
                 }
                 TemaId.HELENO -> {
-                    // Pergamino de Pérgamo: manchas suaves de la piel, los poros y la ola corrida arriba y abajo.
-                    val az = java.util.Random(23)
-                    repeat(40) { drawCircle(p.tenue.copy(alpha = 0.035f), (20 + az.nextFloat() * 70).dp.toPx(), Offset(az.nextFloat() * w, az.nextFloat() * h)) }
-                    repeat(220) { drawCircle(p.tenue.copy(alpha = 0.12f), 0.7f + az.nextFloat(), Offset(az.nextFloat() * w, az.nextFloat() * h)) }
+                    // Pergamino de Pérgamo (las manchas y los poros vienen en papel_heleno): la ola corrida arriba y abajo.
                     drawRect(Brush.radialGradient(listOf(Color.Transparent, p.tenue.copy(alpha = 0.14f)), center = Offset(w / 2, h / 2), radius = maxOf(w, h) * 0.75f))
                     listOf(14.dp.toPx(), h - 22.dp.toPx()).forEach { y -> olaCorrida(Offset(16.dp.toPx(), y), w - 32.dp.toPx(), 9.dp.toPx(), p.detalle.copy(alpha = 0.55f)) }
                 }

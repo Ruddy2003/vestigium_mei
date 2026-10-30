@@ -929,7 +929,7 @@ class Capturas {
     @Test fun revolucionOscuro() = captura(TemaId.REVOLUCION, true)
     @Test fun diaRevolucion() = dia(TemaId.REVOLUCION, false)
 
-    /** Los trofeos de las nueve categorías en los siete temas históricos (el último de cada fila, sin conseguir). */
+    /** Los trofeos de las nueve categorías en los 21 temas (el último de cada fila, sin conseguir). */
     private fun trofeosTemas(oscuro: Boolean) = hojaTemas(TemaId.entries, porParte = 24, alto = { 100 + it * 200 }, oscuro = oscuro) { temas ->
         Column(Modifier.padding(6.dp)) {
             temas.forEach { t ->

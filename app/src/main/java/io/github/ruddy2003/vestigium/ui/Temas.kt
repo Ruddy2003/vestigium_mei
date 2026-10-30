@@ -4,7 +4,8 @@ import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.ui.nombres.NombresCompletos
 
 /**
- * Nombres de pantallas y secciones de los seis temas nuevos. Todo es invención propia:
+ * Lo propio de cada tema que no es dibujo: nombres de pantallas y secciones, calendarios, marcas, rótulos de widget y
+ * numerales. Todo es invención propia:
  * ningún nombre, lema ni símbolo viene de novelas o videojuegos con derechos de autor.
  */
 object Temas {
