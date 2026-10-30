@@ -473,7 +473,7 @@ fun PantallaReportes(nav: Nav) {
         runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)) }
             .onFailure { msg = "Guardado en tu galería (Pictures/VestigiumMei) o en Descargas." }
     }
-    Hoja("Reportes", nav.atras, "Cada lunes llega el de la semana anterior y cada día 1 el del mes anterior. Se guardan en la galería y en Descargas, sin mapas ni direcciones.") {
+    Hoja("Reportes", nav.atras, "Cada lunes llega el de la semana anterior y cada día 1 el del mes anterior. Se guardan en la galería y en Descargas, sin mapas ni direcciones. El de terapia se genera aquí y se comparte.") {
         Seccion("Generar ahora") {
             Tarjeta {
                 val hoy = Fechas.diaLogico()
@@ -485,6 +485,48 @@ fun PantallaReportes(nav: Nav) {
                 Ayuda("Con los colores, letras y nombres del tema que tengas puesto. Para las historias del año, abre «Tu año» en Más.", Modifier.padding(top = 8.dp))
                 msg?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
             }
+        }
+        ReporteTerapiaTarjeta()
+    }
+}
+
+/**
+ * El reporte para terapia: los últimos 7 o 14 días en un PDF para compartir. Las casillas no se guardan: cada vez empiezan
+ * igual, y lo privado siempre empieza apagado.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ReporteTerapiaTarjeta() {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val ayer = remember { Fechas.sumar(Fechas.diaLogico(), -1) }
+    var op by remember { mutableStateOf(io.github.ruddy2003.vestigium.ciencia.Terapia.Opciones(fin = ayer)) }
+    var trabajando by remember { mutableStateOf(false) }
+    var msg by remember { mutableStateOf<String?>(null) }
+    Seccion("Para terapia", "Un PDF con tu ánimo, sueño, cuestionarios, rutina, contacto, gimnasio y alimentación, para compartir con quien te atiende.") {
+        Tarjeta {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(7, 14).forEach { n -> Ficha("$n días", op.dias == n) { op = op.copy(dias = n) } }
+            }
+            Text("Del ${Fechas.larga(op.ini)} al ${Fechas.larga(op.fin)}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            TextButton(onClick = {
+                io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, op.fin, maximo = Fechas.parse(Fechas.diaLogico())) { op = op.copy(fin = it) }
+            }) { Text("Cambiar el último día") }
+            Interruptor("Sustancias", op.sustancias, "Días y cantidad de alcohol, cannabis, tabaco u otras que anotaste.") { op = op.copy(sustancias = it) }
+            Interruptor("Lo mejor y lo peor del periodo", op.momentosPeriodo, "Lo mejor de tu mejor día y lo peor de tu peor día, tal como lo escribiste (los @nombres salen como iniciales).") { op = op.copy(momentosPeriodo = it) }
+            Interruptor("Lo mejor y lo peor de cada día", op.momentosDia, "Todos los días del periodo. El diario completo nunca sale.") { op = op.copy(momentosDia = it) }
+            Interruptor("Seguimiento privado", op.privado, "Incluye impulsos, recaídas, detonantes y medicamentos. Solo en este reporte, y solo si lo marcas ahora.") { op = op.copy(privado = it) }
+            OutlinedButton(enabled = !trabajando, onClick = {
+                trabajando = true; msg = null
+                scope.launch {
+                    val f = withContext(Dispatchers.IO) { runCatching { io.github.ruddy2003.vestigium.reportes.ReporteTerapia.pdf(ctx, op) } }
+                    trabajando = false
+                    f.onSuccess { io.github.ruddy2003.vestigium.ui.LibroDiario.compartir(ctx, it, "application/pdf") }
+                        .onFailure { msg = "No pude generar el reporte: ${it.message ?: it.javaClass.simpleName}" }
+                }
+            }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) { Text(if (trabajando) "Generando…" else "Generar y compartir PDF") }
+            Ayuda("Nunca lleva el diario completo, los sueños, las cartas, las notas, la agenda, los chats, los lugares ni los nombres.", Modifier.padding(top = 8.dp))
+            msg?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
         }
     }
 }

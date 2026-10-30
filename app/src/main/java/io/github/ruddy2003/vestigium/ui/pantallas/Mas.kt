@@ -158,7 +158,7 @@ fun PantallaMas(nav: Nav) {
                 HorizontalDivider()
                 FilaMas("lugar_nuevo", "Lugares especiales", io.github.ruddy2003.vestigium.data.Lugares.pendientes().size.let { if (it > 0) "$it sitio(s) esperando respuesta" else "Cuándo pregunta «¿es un lugar especial?» y los sitios ignorados" }, ir)
                 HorizontalDivider()
-                FilaMas("reportes", "Reportes", "Semanal en imagen, mensual en PDF", ir)
+                FilaMas("reportes", "Reportes", "Semanal en imagen, mensual en PDF y uno para terapia", ir)
                 HorizontalDivider()
                 FilaMas("permisos", "Permisos y sensores", "Ubicación, reloj, pantalla, fotos, agenda, notificaciones, clima", ir)
                 HorizontalDivider()
