@@ -139,6 +139,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.URSS -> Barra(modifier)
         TemaId.REVOLUCION -> Tricolor(modifier)
         TemaId.ANTIGUAS -> Runica(modifier)
+        TemaId.CUEVA -> BandaCueva(modifier)
         TemaId.ROMANO -> BandaOvas(modifier, color)
         TemaId.URBE -> BandaSampietrini(modifier, color)
     }
@@ -1095,6 +1096,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "ᛟ", igual = "⁖ ", nulo = "sin runa", elegido = "◈", riel = RolColor.SECUNDARIO, quitar = "(✕)", listaVacia = "( cofre vacío )", flecha = "↠",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 1f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.DOBLE,
         guiones = floatArrayOf(2f, 1f, 0.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1f)
+    TemaId.CUEVA -> PielComponentes(sep = "  ⁘  ", cerrada = "⋮", abierta = "⋯", numeral = RolColor.PRIMARIO, centrar = false, rellena = false,
+        aviso = "!·", igual = "≈ ", nulo = "nada pintado", elegido = "●", riel = RolColor.PRIMARIO, quitar = "⨯", listaVacia = "( la bolsa está vacía )", flecha = "⟶",
+        sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.8f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.PUNTOS,
+        guiones = floatArrayOf(1f, 2.5f), tamBoton = 15, letraBoton = null, borde = RolColor.CONTORNO, grosor = 1.2f)
 }
 
 /** El título de una sección, con el trazo del tema (capitular, rótulo en bloque, subrayado doble, sello, tramo tricolor…). */
@@ -1243,6 +1248,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             drawLine(e.secondary.copy(alpha = 0.7f), Offset(0f, y), Offset(fin - r * 2.5f, y), 1.dp.toPx())
             romboComp(Offset(fin - r, y), r * 0.8f, r, e.primary)
         }.padding(bottom = 7.dp))
+        // Un trazo de carbón a mano alzada bajo el título, y tres puntos de ocre al final.
+        TemaId.CUEVA -> Text(nombre, style = estilo, modifier = peso.drawBehind {
+            val y = size.height - 3.dp.toPx(); val fin = minOf(size.width, 110.dp.toPx()); val u = 1.dp.toPx()
+            drawPath(Path().apply { moveTo(0f, y); quadraticTo(fin * 0.3f, y - 2.5f * u, fin * 0.55f, y); quadraticTo(fin * 0.75f, y + 2f * u, fin - 12 * u, y - u) },
+                e.onBackground.copy(alpha = 0.6f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+            for (k in 0 until 3) drawCircle(e.primary, 1.6f * u, Offset(fin - 8 * u + k * 4 * u, y - u))
+        }.padding(bottom = 7.dp))
     }
 }
 
@@ -1340,6 +1352,13 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         val w = s.width; val h = s.height
         moveTo(h * 0.15f, 0f); lineTo(w - h * 0.05f, h * 0.06f); lineTo(w, h * 0.78f); lineTo(w - h * 0.2f, h); lineTo(h * 0.05f, h * 0.94f); lineTo(0f, h * 0.2f); close()
     }
+    // Laja de caliza: los bordes ondulan un poco, como una piedra partida.
+    TemaId.CUEVA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val a = h * 0.08f
+        moveTo(0f, h * 0.22f); quadraticTo(w * 0.04f, 0f, w * 0.3f, a * 0.3f); quadraticTo(w * 0.6f, -a * 0.4f, w * 0.88f, a * 0.5f)
+        quadraticTo(w, h * 0.1f, w, h * 0.55f); quadraticTo(w * 0.99f, h, w * 0.7f, h - a * 0.2f); quadraticTo(w * 0.35f, h + a * 0.3f, w * 0.1f, h - a * 0.4f)
+        quadraticTo(-a * 0.2f, h * 0.8f, 0f, h * 0.22f); close()
+    }
 }
 
 /** El rótulo de la barra del editor: dónde se escribe en cada tema. Los nombres de archivo en latín se traducen fuera del romano. */
@@ -1378,6 +1397,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.URSS -> "ТЕЛЕТАЙП · ${es.uppercase()}"
         TemaId.REVOLUCION -> "cahier · $es"
         TemaId.ANTIGUAS -> "crónica de la compañía · $es"
+        TemaId.CUEVA -> "pared pintada · $es"
     }
 }
 
@@ -1608,6 +1628,13 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             romboComp(Offset(i + u * 0.6f, i + u * 0.6f), u * 0.45f, u * 0.6f, e.primary)
             drawLine(e.secondary.copy(alpha = 0.7f), Offset(i + u * 1.3f, i + u * 0.2f), Offset(i + u * 2f, i + u * 0.2f), fino)
             drawLine(e.secondary.copy(alpha = 0.7f), Offset(i + u * 0.2f, i + u * 1.3f), Offset(i + u * 0.2f, i + u * 2f), fino)
+        }
+        TemaId.CUEVA -> enLasCuatro {
+            // En cada esquina, tres puntos de ocre soplado y un trazo corto de carbón.
+            listOf(Offset(i + u * 0.3f, i + u * 0.3f), Offset(i + u * 1.1f, i + u * 0.15f), Offset(i + u * 0.15f, i + u * 1.1f)).forEachIndexed { k, o ->
+                drawCircle(e.primary.copy(alpha = 0.75f - k * 0.15f), u * (0.3f - k * 0.05f), o)
+            }
+            drawLine(e.onBackground.copy(alpha = 0.35f), Offset(i + u * 1.8f, i + u * 0.2f), Offset(i + u * 3f, i + u * 0.35f), fino, StrokeCap.Round)
         }
     }
 }
@@ -1843,6 +1870,13 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawLine(l, Offset(f(0.12f), f(0.26f)), Offset(f(0.88f), f(0.26f)), tr.width)
             romboComp(Offset(f(0.5f), f(0.62f)), f(0.06f), f(0.08f), a)
         }
+        TemaId.CUEVA -> {
+            // La bolsa de piel, abierta y vacía, con su cordón suelto y tres puntos de ocre.
+            drawPath(Path().apply { moveTo(f(0.24f), f(0.34f)); quadraticTo(f(0.06f), f(0.9f), f(0.5f), f(0.92f)); quadraticTo(f(0.94f), f(0.9f), f(0.76f), f(0.34f)) }, l, style = tr)
+            drawOval(l, Offset(f(0.22f), f(0.24f)), Size(f(0.56f), f(0.16f)), style = tr)
+            drawPath(Path().apply { moveTo(f(0.7f), f(0.36f)); quadraticTo(f(0.86f), f(0.5f), f(0.8f), f(0.62f)) }, a, style = tr)
+            for (k in 0 until 3) drawCircle(a, f(0.025f), Offset(f(0.36f + k * 0.14f), f(0.66f)))
+        }
     }
 }
 
@@ -1926,6 +1960,8 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
             drawLine(c, Offset(x, h - d * 1.3f), Offset(x - d * 0.8f, h - d * 2.1f), d * 0.4f)
             drawLine(c, Offset(x, h - d * 1.3f), Offset(x + d * 0.8f, h - d * 2.1f), d * 0.4f)
         }
+        // Una mano pequeña de ocre, en positivo.
+        TemaId.CUEVA -> drawPath(manoUnida(Offset(w / 2, h - d * 1.2f), d * 1.1f), c)
     }
 }
 
@@ -2062,6 +2098,8 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         }
         // Gemas engastadas a los lados.
         TemaId.ANTIGUAS -> listOf(m * 2.6f, w - m * 2.6f).forEach { x -> romboComp(Offset(x, h / 2), m * 0.7f, m * 1.1f, c) }
+        // Dos puntos de ocre a cada lado, como los que flanquean los animales pintados.
+        TemaId.CUEVA -> listOf(m * 2.4f, w - m * 2.4f).forEach { x -> drawCircle(c, m * 0.38f, Offset(x, h / 2 - m * 0.5f)); drawCircle(c, m * 0.38f, Offset(x, h / 2 + m * 0.5f)) }
     }
 }
 
@@ -2265,6 +2303,11 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawLine(a, Offset(f(0.5f), f(0.4f)), Offset(f(0.34f), f(0.26f)), tr.width)
             drawLine(a, Offset(f(0.5f), f(0.4f)), Offset(f(0.66f), f(0.26f)), tr.width)
         }
+        TemaId.CUEVA -> {
+            // Un tizón de carbón que traza una línea en la roca.
+            drawPath(Path().apply { moveTo(f(0.14f), f(0.86f)); quadraticTo(f(0.4f), f(0.7f), f(0.62f), f(0.8f)) }, l, style = tr)
+            rotate(-40f, Offset(f(0.66f), f(0.42f))) { drawRoundRect(a, Offset(f(0.6f), f(0.04f)), Size(f(0.13f), f(0.72f)), CornerRadius(f(0.05f))) }
+        }
     }
 }
 
@@ -2430,6 +2473,11 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
                 drawLine(c, Offset(3 * d, y), Offset(3 * d + lado * 2.5f * d, y - 2.5f * d), d)
                 y += 6 * d; n++
             }
+        }
+        TemaId.CUEVA -> {
+            // Una hilera de puntos de ocre, de grosor desparejo, como pintados con la yema del dedo.
+            var y = 3 * d; var k = 0
+            while (y < h) { drawCircle(e.primary, (1.4f + (k * 7 % 5) * 0.25f) * d, Offset(2.5f * d, y)); y += 6 * d; k++ }
         }
     }
 }

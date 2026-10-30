@@ -136,6 +136,7 @@ object HallImagen {
         TemaId.URSS -> "МОЙ СЛЕД · VESTIGIUM MEI" to "План выполнен!"
         TemaId.REVOLUCION -> "Cahier du citoyen · Vestigium Mei" to "Liberté · Égalité · Fraternité"
         TemaId.ANTIGUAS -> "Libro de la compañía · Vestigium Mei" to "Aquí termina el relato, por ahora"
+        TemaId.CUEVA -> "La pared del clan · Vestigium Mei" to "Aquí se acaba la roca pintada, por ahora"
     }
 
     private fun recortar(s: String, p: Paint, ancho: Float): String {

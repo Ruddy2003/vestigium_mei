@@ -383,6 +383,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawPath(figPoligono(c, r * 0.55f, 8, -67.5f), luz, style = Stroke(r * 0.04f))
             for (k in 0 until 8) { val a = -67.5f + k * 45f; drawLine(luz, polarFig(c, r * 0.55f, a), polarFig(c, r * 0.98f, a), r * 0.03f) }
         }
+        // Un colgante de hueso: el disco perforado arriba, muescas en el canto y una mano en negativo, más clara, en medio.
+        TemaId.CUEVA -> {
+            forma(disco(c, r * 0.96f))
+            for (k in 0 until 16) rotate(k * 22.5f, c) { drawLine(sombra, Offset(c.x, c.y - r * 0.96f), Offset(c.x, c.y - r * 0.82f), r * 0.04f) }
+            drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(c.x, c.y + r * 0.08f), r * 0.5f), luz)
+            drawCircle(sombra, r * 0.08f, Offset(c.x, c.y - r * 0.72f))
+        }
     }
 }
 

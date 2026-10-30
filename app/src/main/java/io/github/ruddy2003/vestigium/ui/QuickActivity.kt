@@ -971,6 +971,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.URSS -> 20.dp
     TemaId.REVOLUCION -> 9.dp
     TemaId.ANTIGUAS -> 16.dp
+    TemaId.CUEVA -> 18.dp
 }
 
 /** La silueta de la hoja: solo cambia el borde de arriba; abajo llega al borde de la pantalla. */
@@ -1148,6 +1149,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     // Losa de piedra tallada a golpes.
     TemaId.ANTIGUAS -> formaDp { w, h, u ->
         moveTo(0f, 16 * u); lineTo(16 * u, 0f); lineTo(w * 0.42f, 3 * u); lineTo(w * 0.58f, 0f); lineTo(w - 16 * u, 4 * u); lineTo(w, 16 * u)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
+    // El borde de arriba de una laja partida: ondula, más alto a un lado.
+    TemaId.CUEVA -> formaDp { w, h, u ->
+        moveTo(0f, 14 * u); quadraticTo(w * 0.2f, 2 * u, w * 0.45f, 8 * u); quadraticTo(w * 0.7f, 14 * u, w * 0.86f, 4 * u); quadraticTo(w * 0.95f, 0f, w, 10 * u)
         lineTo(w, h); lineTo(0f, h); close()
     }
 }
@@ -1377,6 +1383,13 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             }
             drawPath(Path().apply { moveTo(w / 2, y - 7 * u); lineTo(w / 2 + 5 * u, y); lineTo(w / 2, y + 7 * u); lineTo(w / 2 - 5 * u, y); close() }, e.primary)
         }
+        TemaId.CUEVA -> {
+            // Una hilera de puntos de ocre que se abre al centro para una mano pequeña.
+            val y = 20 * u
+            var x = 26 * u; var k = 0
+            while (x < w - 26 * u) { if (kotlin.math.abs(x - w / 2) > 14 * u) drawCircle(e.primary.copy(alpha = 0.55f), (1.4f + (k % 3) * 0.4f) * u, Offset(x, y)); x += 11 * u; k++ }
+            drawPath(manoUnida(Offset(w / 2, y), 7 * u), e.primary)
+        }
     }
 }
 
@@ -1487,5 +1500,10 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // Losa de piedra irregular.
     TemaId.ANTIGUAS -> formaDp { w, h, u ->
         moveTo(6 * u, 0f); lineTo(w - 2 * u, 3 * u); lineTo(w, h - 10 * u); lineTo(w - 8 * u, h); lineTo(2 * u, h - 3 * u); lineTo(0f, 8 * u); close()
+    }
+    // Un canto rodado aplastado: esquinas muy blandas y desparejas.
+    TemaId.CUEVA -> formaDp { w, h, u ->
+        moveTo(10 * u, 0f); lineTo(w - 14 * u, 2 * u); quadraticTo(w, 2 * u, w, h * 0.5f); quadraticTo(w - 2 * u, h, w - 16 * u, h); lineTo(12 * u, h - 1 * u)
+        quadraticTo(0f, h - 2 * u, 0f, h * 0.5f); quadraticTo(0f, 0f, 10 * u, 0f); close()
     }
 }

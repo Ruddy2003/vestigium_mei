@@ -100,6 +100,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.URSS -> 12000
     TemaId.REVOLUCION -> 9000
     TemaId.ANTIGUAS -> 16000
+    TemaId.CUEVA -> 9000                       // el soplo de ocre respira despacio
 }
 
 /**
@@ -152,6 +153,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.URSS -> estrellaEngrane(c, r, e.primary, if (oscuro) e.tertiary else e.onBackground, t)
         TemaId.REVOLUCION -> escarapelaEmblema(c, r, e.primary, if (oscuro) Color(0xFFF0EADB) else Color.White, e.secondary, e.onBackground, t)
         TemaId.ANTIGUAS -> gemaRunas(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
+        TemaId.CUEVA -> manoEmblema(c, r, e.primary, e.tertiary, e.background, e.onBackground, t)
     }
 }
 
@@ -188,6 +190,80 @@ private fun DrawScope.gemaRunas(c: Offset, r: Float, verde: Color, oro: Color, r
     val b = c.mas(g * 0.55f, rad(t * 720.0))
     drawCircle(Color.White.copy(alpha = 0.55f), r * 0.06f, b)
     drawCircle(rubi, r * 0.05f, c.mas(r * 0.96f, rad(t * 360.0 + 22.5)))
+}
+
+/**
+ * Prehistoria: una mano en negativo, como las de las cuevas. Se apoyaba la mano en la roca y se soplaba ocre alrededor
+ * (con la boca o con un hueso hueco): la mano queda del color de la pared, rodeada de la nube de pigmento. Aquí la nube
+ * respira despacio y unas gotas titilan, como a la luz de una lámpara de grasa; tres puntos de ocre amarillo al lado.
+ */
+private fun DrawScope.manoEmblema(c: Offset, r: Float, ocre: Color, amarillo: Color, pared: Color, tinta: Color, t: Float) {
+    val laja = Path().apply {
+        for (i in 0 until 11) { val q = c.mas(r * (0.9f + 0.07f * sin(i * 2.3f)), rad(-90.0 + i * 360.0 / 11)); if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }
+        close()
+    }
+    val roca = lerp(pared, tinta, 0.07f)
+    drawPath(laja, roca)
+    drawPath(laja, tinta.copy(alpha = 0.25f), style = Stroke(r * 0.03f))
+    val vuelta = t * 2 * PI.toFloat()
+    val respira = 0.82f + 0.18f * sin(vuelta)
+    val m = Offset(c.x, c.y + r * 0.04f)
+    drawCircle(Brush.radialGradient(listOf(ocre.copy(alpha = 0.9f * respira), ocre.copy(alpha = 0.55f * respira), ocre.copy(alpha = 0f)), m, r * 0.82f), r * 0.82f, m)
+    val az = java.util.Random(23)
+    repeat(46) { k ->
+        val a = az.nextFloat() * 2 * PI.toFloat(); val d = r * (0.5f + az.nextFloat() * 0.38f); val g = r * (0.012f + az.nextFloat() * 0.022f)
+        val vivo = 0.5f + 0.5f * sin(vuelta * 3 + k)
+        drawCircle(ocre.copy(alpha = (0.35f + 0.4f * vivo) * (1f - (d / r - 0.5f) / 0.45f).coerceIn(0f, 1f)), g, m.mas(d, a))
+    }
+    piezasMano(Offset(m.x - r * 0.04f, m.y - r * 0.02f), r * 0.6f).forEach { drawPath(it, roca) }
+    for (k in 0 until 3) drawCircle(amarillo, r * 0.045f, Offset(c.x + r * 0.64f, c.y - r * 0.4f + k * r * 0.14f))
+}
+
+/**
+ * La mano de la Prehistoria, de alto 2·[r] con centro en [c] (los dedos arriba, el pulgar a la derecha): palma, muñeca,
+ * cuatro dedos y el pulgar, cada pieza por separado (se pintan una por una, del mismo color, sin huecos entre ellas).
+ * Sirve para la mano en negativo (pintada del color de la pared sobre el ocre) y para la mano en positivo (en ocre).
+ */
+internal fun piezasMano(c: Offset, r: Float): List<Path> {
+    fun caja(l: Float, t: Float, d: Float, b: Float, radio: Float) = Path().apply {
+        addRoundRect(androidx.compose.ui.geometry.RoundRect(c.x + l * r, c.y + t * r, c.x + d * r, c.y + b * r, CornerRadius(radio * r)))
+    }
+    fun dedo(x: Float, arriba: Float, abajo: Float, ancho: Float) = caja(x - ancho / 2, arriba, x + ancho / 2, abajo, ancho / 2)
+    val pulgar = Path().apply {
+        moveTo(c.x + 0.3f * r, c.y + 0.5f * r); lineTo(c.x + 0.36f * r, c.y + 0.08f * r)
+        quadraticTo(c.x + 0.62f * r, c.y - 0.2f * r, c.x + 0.76f * r, c.y - 0.08f * r)
+        quadraticTo(c.x + 0.84f * r, c.y + 0.02f * r, c.x + 0.66f * r, c.y + 0.22f * r)
+        lineTo(c.x + 0.4f * r, c.y + 0.6f * r); close()
+    }
+    return listOf(
+        caja(-0.44f, -0.12f, 0.4f, 0.62f, 0.2f),     // palma
+        caja(-0.3f, 0.45f, 0.26f, 1f, 0.06f),        // muñeca
+        dedo(-0.34f, -0.62f, 0.05f, 0.17f),          // meñique
+        dedo(-0.13f, -0.86f, 0f, 0.19f),             // anular
+        dedo(0.1f, -0.98f, 0f, 0.19f),               // medio
+        dedo(0.3f, -0.8f, 0.05f, 0.18f),             // índice
+        pulgar,
+    )
+}
+
+/** La misma mano en un solo contorno (la unión de sus piezas), para pintarla con transparencia sin que se noten las juntas. */
+internal fun manoUnida(c: Offset, r: Float): Path =
+    piezasMano(c, r).reduce { a, b -> Path.combine(androidx.compose.ui.graphics.PathOperation.Union, a, b) }
+
+/**
+ * El bisonte de las cuevas, de perfil y mirando a la derecha, de ancho 2·[r] con centro en [c]: la giba alta sobre los
+ * hombros, la cabeza baja con su cuerno y su barba, el lomo que cae hacia la grupa y la cola.
+ */
+internal fun bisonte(c: Offset, r: Float): Path = Path().apply {
+    fun p(x: Float, y: Float) = Offset(c.x + x * r, c.y + y * r)
+    val o = p(-0.85f, -0.15f); moveTo(o.x, o.y)
+    val a1 = p(-0.5f, -0.3f); val a2 = p(-0.1f, -0.45f); val a3 = p(0.15f, -0.62f); cubicTo(a1.x, a1.y, a2.x, a2.y, a3.x, a3.y)
+    val b1 = p(0.4f, -0.6f); val b2 = p(0.55f, -0.35f); val b3 = p(0.62f, -0.18f); cubicTo(b1.x, b1.y, b2.x, b2.y, b3.x, b3.y)
+    listOf(0.7f to -0.34f, 0.72f to -0.16f, 0.9f to 0.05f, 0.92f to 0.22f, 0.8f to 0.28f, 0.68f to 0.44f, 0.58f to 0.3f,
+        0.52f to 0.66f, 0.44f to 0.66f, 0.4f to 0.3f).forEach { (x, y) -> val q = p(x, y); lineTo(q.x, q.y) }
+    val v = p(0f, 0.42f); val w = p(-0.38f, 0.3f); quadraticTo(v.x, v.y, w.x, w.y)
+    listOf(-0.44f to 0.66f, -0.52f to 0.66f, -0.6f to 0.24f, -0.78f to 0.14f, -0.95f to 0.3f, -0.88f to 0.04f).forEach { (x, y) -> val q = p(x, y); lineTo(q.x, q.y) }
+    close()
 }
 
 /** La escarapela tricolor (rojo afuera, blanco y azul al centro): tela plisada en tres anillos que gira despacio. */
@@ -1582,6 +1658,25 @@ internal fun Runica(modifier: Modifier) {
     }
 }
 
+/** La banda de la Prehistoria: hileras de puntos de ocre, como las de las paredes de las cuevas, y al centro un bisonte de carbón. */
+@Composable
+internal fun BandaCueva(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    Canvas(modifier.fillMaxWidth().height(14.dp)) {
+        val h = size.height; val y = h / 2; val cx = size.width / 2; val r = h * 0.95f
+        val az = java.util.Random(31)
+        var x = 4.dp.toPx(); var k = 0
+        while (x < size.width - 4.dp.toPx()) {
+            if (abs(x - cx) > r * 1.5f) {
+                val g = (1.3f + az.nextFloat() * 1.1f).dp.toPx()
+                drawCircle(e.primary.copy(alpha = 0.55f + az.nextFloat() * 0.35f), g, Offset(x, y + (if (k % 2 == 0) -1f else 1f) * h * 0.08f))
+            }
+            x += (7f + az.nextFloat() * 3f).dp.toPx(); k++
+        }
+        drawPath(bisonte(Offset(cx, y), r), e.onBackground.copy(alpha = 0.75f))
+    }
+}
+
 /** La banda de la Revolución: un filete azul, blanco y rojo cortado al centro por una escarapela pequeña. */
 @Composable
 internal fun Tricolor(modifier: Modifier) {
@@ -2061,6 +2156,20 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 puntos.moveTo(cx, cy - rr); puntos.lineTo(cx + rr, cy); puntos.lineTo(cx, cy + rr); puntos.lineTo(cx - rr, cy); puntos.close()
             }
         }
+        TemaId.CUEVA -> {
+            // La caliza de la pared: estratos que ondulan y, de tanto en tanto, una hilera de puntos de ocre como las de las cuevas.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.055f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.1f else 0.08f)
+            val az = java.util.Random(17000); val paso = 34.dp.toPx(); var y = paso * 0.6f
+            while (y < h) {
+                val a = (3 + az.nextInt(8)).dp.toPx(); trazo.moveTo(0f, y); var x = 0f
+                while (x < w) { val nx = x + w / 3; trazo.quadraticTo(x + w / 6, y + (if (az.nextBoolean()) a else -a), nx, y + (az.nextFloat() - 0.5f) * a); x = nx }
+                y += paso * (0.7f + az.nextFloat() * 0.6f)
+            }
+            repeat(((w * h) / 140000f).toInt().coerceIn(2, 9)) {
+                val x0 = az.nextFloat() * w; val y0 = az.nextFloat() * h; val n = 3 + az.nextInt(4); val rr = 2.4f.dp.toPx()
+                for (k in 0 until n) { val cx = x0 + k * rr * 3.2f; val cy = y0 + (if (k % 2 == 0) 0f else rr * 0.8f); puntos.addOval(Rect(cx - rr, cy - rr, cx + rr, cy + rr)) }
+            }
+        }
         TemaId.URSS -> {
             // Rayos que salen de una esquina, como en los carteles.
             color = esquema.primary.copy(alpha = if (oscuro) 0.06f else 0.05f)
@@ -2203,6 +2312,12 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.URSS -> poligonoBoton(0.22f to 0.06f, 1f to 0.06f, 0.78f to 0.94f, 0f to 0.94f)
     TemaId.REVOLUCION -> estrellaBoton(48, 0.5f, 0.45f, -90.0)
     TemaId.ANTIGUAS -> poligonoBoton(0.12f to 0.1f, 0.55f to 0.02f, 0.9f to 0.14f, 0.98f to 0.55f, 0.84f to 0.94f, 0.4f to 0.98f, 0.06f to 0.8f, 0.02f to 0.4f)
+    // Un canto rodado del río: casi redondo, un poco más ancho abajo.
+    TemaId.CUEVA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0.5f * w, 0.05f * h); quadraticTo(0.95f * w, 0.02f * h, 0.97f * w, 0.52f * h); quadraticTo(0.96f * w, 0.97f * h, 0.52f * w, 0.97f * h)
+        quadraticTo(0.03f * w, 0.96f * h, 0.04f * w, 0.5f * h); quadraticTo(0.07f * w, 0.07f * h, 0.5f * w, 0.05f * h); close()
+    }
 }
 
 /** La palabra bajo el engrane de «Más», en la voz de cada tema (la descripción para lectores de pantalla sigue en español). */
@@ -2236,6 +2351,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.URSS -> "Ещё"
     TemaId.REVOLUCION -> "Club"
     TemaId.ANTIGUAS -> "Morral"
+    TemaId.CUEVA -> "Lo hondo"
 }
 
 /** El sol (se ofrece en oscuro, para pasar a claro) o la luna (en claro, para pasar a oscuro), a la manera de cada tema. */
@@ -2370,6 +2486,9 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             TemaId.ANTIGUAS -> { drawCircle(color, r * 0.34f, c)
                 for (i in 0 until 6) { val a = rad(60.0 * i - 90); val m = c.mas(r * 0.7f, a)
                     drawLine(color, c.mas(r * 0.46f, a), m, r * 0.11f); drawLine(color, m, m.mas(r * 0.26f, a - 0.6f), r * 0.09f); drawLine(color, m, m.mas(r * 0.26f, a + 0.6f), r * 0.09f) } }
+            // El sol de los grabados en la roca: un anillo con su punto y diez rayos, uno largo y uno corto.
+            TemaId.CUEVA -> { drawCircle(color, r * 0.42f, c, style = Stroke(r * 0.12f)); drawCircle(color, r * 0.13f, c)
+                for (i in 0 until 10) { val a = rad(36.0 * i - 90); drawLine(color, c.mas(r * 0.62f, a), c.mas(r * (if (i % 2 == 0) 0.98f else 0.8f), a), r * 0.1f, StrokeCap.Round) } }
         }
     } else {
         when (tema) {
@@ -2466,6 +2585,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Luna con una gema.
             TemaId.ANTIGUAS -> { luna(); val q = c + Offset(r * 0.6f, -r * 0.45f); val k = r * 0.24f
                 drawPath(Path().apply { moveTo(q.x, q.y - k); lineTo(q.x + k * 0.7f, q.y); lineTo(q.x, q.y + k); lineTo(q.x - k * 0.7f, q.y); close() }, color) }
+            // La creciente sobre un hueso con muescas, como los que contaban las lunas.
+            TemaId.CUEVA -> { luna(0.6f, 0.3f, -0.24f, c + Offset(0f, -r * 0.18f))
+                drawLine(color, Offset(c.x - r * 0.8f, c.y + r * 0.72f), Offset(c.x + r * 0.8f, c.y + r * 0.72f), r * 0.16f, StrokeCap.Round)
+                for (k in 0 until 7) { val x = c.x - r * 0.6f + k * r * 0.2f; drawLine(fondo, Offset(x, c.y + r * 0.62f), Offset(x, c.y + r * 0.76f), r * 0.05f) } }
         }
     }
 }
@@ -2573,6 +2696,9 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Cristal tallado en rombo, como una gema.
         TemaId.ANTIGUAS -> { drawPath(Path().apply { moveTo(c.x, c.y - lr * 1.15f); lineTo(c.x + lr * 1.0f, c.y); lineTo(c.x, c.y + lr * 1.15f); lineTo(c.x - lr * 1.0f, c.y); close() }, color, style = Stroke(g * 0.9f))
             mango(0.92f, 0.14f, 0.68f) }
+        // Una lasca de sílex por cristal y un hueso por mango, con sus dos nudos al final.
+        TemaId.CUEVA -> { drawPath(poli(7, lr * 1.08f, -80.0), color, style = Stroke(g * 0.9f, join = StrokeJoin.Round)); mango(0.84f, 0.12f, 0.68f)
+            drawCircle(color, r * 0.065f, Offset(r * 0.91f, r * 0.84f)); drawCircle(color, r * 0.065f, Offset(r * 0.84f, r * 0.91f)) }
     }
 }
 
@@ -2659,6 +2785,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.URSS -> false
     TemaId.REVOLUCION -> false
     TemaId.ANTIGUAS -> false
+    TemaId.CUEVA -> false            // las manos de ocre y los puntos caen soplados sobre la pared
 }
 
 /**
@@ -2806,6 +2933,9 @@ fun CapaFiesta(fijo: Float? = null) {
                     // Gemas talladas que caen girando.
                     TemaId.ANTIGUAS -> { drawPath(Path().apply { moveTo(pos.x, pos.y - s); lineTo(pos.x + s * 0.7f, pos.y - s * 0.2f); lineTo(pos.x, pos.y + s); lineTo(pos.x - s * 0.7f, pos.y - s * 0.2f); close() },
                         listOf(e.primary, e.tertiary, e.secondary)[p.tono % 3].copy(alpha = a)); drawLine(Color.White.copy(alpha = a * 0.6f), Offset(pos.x - s * 0.7f, pos.y - s * 0.2f), Offset(pos.x + s * 0.7f, pos.y - s * 0.2f), s * 0.1f) }
+                    // Manos de ocre en positivo que giran al caer, e hileras de tres puntos.
+                    TemaId.CUEVA -> if (p.tono == 0) rotate(p.giro * 40f, pos) { drawPath(manoUnida(pos, s * 0.9f), col) }
+                        else for (k in 0 until 3) drawCircle(col, s * 0.26f, pos + Offset((k - 1) * s * 0.7f, (k % 2) * s * 0.3f))
                 }
             }
         }

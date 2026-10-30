@@ -445,6 +445,21 @@ object Textos {
         "widget_discreto_momento" to "CONTAR",
     )
 
+    private val CUEVA: Map<String, String> = mapOf(
+        "pestana_dia" to "Fuego",
+        "pestana_diario" to "Pared",
+        "pestana_registrar" to "Pintar",
+        "pestana_vida" to "Clan",
+        "pestana_entender" to "Rastro",
+        "escala_vacia" to "sin ocre · toca o desliza",
+        "lista_anadir" to "+ a la bolsa",
+        "palabras" to "%d palabras en la pared",
+        "widget_animo" to "¿Cómo arde tu fuego?",
+        "widget_momento" to "Junto al fuego siento…",
+        "widget_discreto_animo" to "Aliento",
+        "widget_discreto_momento" to "Señal",
+    )
+
     fun de(tema: TemaId, clave: String): String? = when (tema) {
         TemaId.ROMANO -> ROMANO
         TemaId.URBE -> URBE
@@ -475,5 +490,6 @@ object Textos {
         TemaId.PIRATA -> PIRATA
         TemaId.REVOLUCION -> REVOLUCION
         TemaId.ANTIGUAS -> ANTIGUAS
+        TemaId.CUEVA -> CUEVA
     }[clave]
 }

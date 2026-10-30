@@ -355,6 +355,12 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
         moveTo(6 * d, 0f); lineTo(w - 14 * d, 3 * d); lineTo(w, 10 * d); lineTo(w - 3 * d, h - 8 * d); lineTo(w - 12 * d, h)
         lineTo(10 * d, h - 3 * d); lineTo(0f, h - 12 * d); lineTo(2 * d, 9 * d); close()
     }, 0.dp, 0.dp, false, 1.dp)
+    // Una laja de caliza: los cuatro bordes ondulan, como una piedra que se partió sola.
+    TemaId.CUEVA -> PielDialogo(FormaDp { w, h, d ->
+        moveTo(0f, 10 * d); quadraticTo(w * 0.25f, -3 * d, w * 0.55f, 4 * d); quadraticTo(w * 0.85f, 9 * d, w, 2 * d)
+        quadraticTo(w - 6 * d, h * 0.5f, w - d, h - 4 * d); quadraticTo(w * 0.6f, h + 3 * d, w * 0.3f, h - 5 * d); quadraticTo(w * 0.1f, h - 9 * d, 0f, h)
+        quadraticTo(5 * d, h * 0.5f, 0f, 10 * d); close()
+    }, 4.dp, 2.dp, false, 1.dp)
 }
 
 /** Los adornos del marco del diálogo, dibujados encima del contenido y siempre en el margen. */
@@ -673,6 +679,16 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             }, e.secondary.copy(alpha = 0.6f), style = Stroke(d))
             listOf(Offset(14 * d, 14 * d), Offset(w - 16 * d, 16 * d), Offset(w - 16 * d, h - 14 * d), Offset(14 * d, h - 16 * d)).forEach { romboCtl(it, 2.6f * d, 3.8f * d, e.primary) }
         }
+        TemaId.CUEVA -> {
+            // Un trazo de carbón que sigue la piedra, una mano de ocre arriba a la izquierda y una hilera de puntos abajo.
+            drawPath(Path().apply {
+                moveTo(14 * d, 12 * d); quadraticTo(w / 2, 7 * d, w - 14 * d, 12 * d); quadraticTo(w - 9 * d, h / 2, w - 13 * d, h - 12 * d)
+                quadraticTo(w / 2, h - 8 * d, 13 * d, h - 12 * d); quadraticTo(9 * d, h / 2, 14 * d, 12 * d); close()
+            }, e.onSurface.copy(alpha = 0.25f), style = Stroke(1.2f * d))
+            val m = Offset(28 * d, 30 * d)
+            piezasMano(m, 9 * d).forEach { drawPath(it, androidx.compose.ui.graphics.lerp(e.surface, e.primary, 0.45f)) }
+            var x = w / 2 - 20 * d; while (x <= w / 2 + 20 * d) { drawCircle(e.primary.copy(alpha = 0.6f), 1.8f * d, Offset(x, h - 17 * d)); x += 10 * d }
+        }
     }
 }
 
@@ -890,6 +906,12 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             var x = 9 * d
             while (x < w - 16 * d) { drawLine(e.secondary.copy(alpha = 0.7f), Offset(x, cy - 2.5f * d), Offset(x, cy + 2.5f * d), d); x += 18 * d }
             romboCtl(Offset(w - 6 * d, cy), 3.5f * d, 4.5f * d, e.primary)
+        }
+        // Un trazo de carbón cortado por tres puntos de ocre.
+        TemaId.CUEVA -> {
+            drawLine(e.onSurface.copy(alpha = 0.4f), Offset(0f, cy), Offset(w / 2 - 14 * d, cy), d, StrokeCap.Round)
+            drawLine(e.onSurface.copy(alpha = 0.4f), Offset(w / 2 + 14 * d, cy), Offset(w, cy), d, StrokeCap.Round)
+            for (k in -1..1) drawCircle(e.primary, 2.2f * d, Offset(w / 2 + k * 8 * d, cy))
         }
     }
 }
@@ -1257,6 +1279,13 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             linea(activo, 0f, x, g * 0.7f)
             if (x > 0f) romboCtl(Offset(x, cy), g * 0.45f, g * 0.65f, e.tertiary)
         }
+        // Un hueso largo: lo recorrido, teñido de ocre y con sus muescas.
+        TemaId.CUEVA -> {
+            linea(inactivo, 0f, w, g * 0.55f, cap = StrokeCap.Round)
+            linea(activo, 0f, x, g * 0.55f, cap = StrokeCap.Round)
+            var m = 6 * d; while (m < x - 2 * d) { drawLine(e.surface.copy(alpha = 0.7f), Offset(m, cy - g * 0.27f), Offset(m, cy + g * 0.27f), 0.8f * d); m += 7 * d }
+            if (x > 0f) drawCircle(activo, g * 0.45f, Offset(x, cy))
+        }
     }
     if (pasos in 1..40) for (k in 1..pasos) {
         val fx = k / (pasos + 1f)
@@ -1480,6 +1509,11 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             romboCtl(c, r * 0.65f, r * 0.95f, color)
             drawLine(hueco.copy(alpha = 0.5f), Offset(c.x - r * 0.65f, c.y), Offset(c.x + r * 0.65f, c.y), r * 0.06f)
             drawLine(hueco.copy(alpha = 0.5f), Offset(c.x, c.y - r * 0.95f), Offset(c.x, c.y + r * 0.95f), r * 0.06f)
+        }
+        // Un canto rodado con un punto de ocre en medio.
+        TemaId.CUEVA -> {
+            drawOval(color, Offset(c.x - r * 0.95f, c.y - r * 0.78f), Size(r * 1.9f, r * 1.56f))
+            drawCircle(hueco.copy(alpha = 0.55f), r * 0.24f, c)
         }
     }
 }

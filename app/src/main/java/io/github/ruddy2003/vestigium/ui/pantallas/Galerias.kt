@@ -196,6 +196,8 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.REVOLUCION -> menos(estrella(c, r, 18, 0.88f), menos(circulo(c, r * 0.62f), circulo(c, r * 0.4f)))
     // Una gema tallada: seis puntas cortas.
     TemaId.ANTIGUAS -> estrella(c, r, 6, 0.72f)
+    // La mano de ocre: cada calificación, una mano más en la pared.
+    TemaId.CUEVA -> io.github.ruddy2003.vestigium.ui.manoUnida(c, r)
 }
 
 /**

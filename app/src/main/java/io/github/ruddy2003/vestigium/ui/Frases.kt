@@ -450,6 +450,40 @@ object Frases {
         f(null, "Lo que se nombra se puede cuidar.", "Dicho de los cronistas"),
     )
 
+    /** Prehistoria: el fuego, la caverna, los orígenes y el tiempo largo; en su lengua y en español. */
+    val CUEVA = listOf(
+        f("Arma antiqua manus ungues dentesque fuerunt / et lapides et item silvarum fragmina rami.",
+            "Las armas antiguas fueron las manos, las uñas y los dientes, y las piedras, y también las ramas rotas de los bosques.", "Lucrecio, De rerum natura V, 1283–1284"),
+        f("Nullam rem e nilo gigni divinitus umquam.", "Nada nace nunca de la nada, ni por obra de los dioses.", "Lucrecio, De rerum natura I, 150"),
+        f(null, "Mira: hombres como en una morada subterránea en forma de caverna, que tiene la entrada abierta a la luz.", "Platón, República VII, 514a"),
+        f(null,
+            "Este mundo no lo hizo ninguno de los dioses ni de los hombres: siempre fue, es y será fuego siempre vivo, que se enciende según medida y se apaga según medida.", "Heráclito, fragmento B30 (Diels-Kranz)"),
+        f(null, "No es posible bañarse dos veces en el mismo río.", "Heráclito, fragmento B91 (Diels-Kranz)"),
+        f(null, "Busqué la fuente del fuego, robada en una caña hueca, que se ha mostrado a los mortales maestra de todo arte y gran recurso.", "Esquilo, Prometeo encadenado, vv. 109–111"),
+        f("οἵη περ φύλλων γενεὴ τοίη δὲ καὶ ἀνδρῶν.", "Como la generación de las hojas, así también la de los hombres.", "Homero, Ilíada VI, 146"),
+        f("Aurea prima sata est aetas, quae vindice nullo, / sponte sua, sine lege fidem rectumque colebat.",
+            "La primera edad que nació fue la de oro: sin juez, por sí misma y sin ley, guardaba la lealtad y lo recto.", "Ovidio, Metamorfosis I, 89–90"),
+        f("Labor omnia vicit / improbus et duris urgens in rebus egestas.", "Todo lo venció el trabajo tenaz y la necesidad que aprieta en los tiempos duros.", "Virgilio, Geórgicas I, 145–146"),
+        f(null, "Pues polvo eres, y al polvo serás tornado.", "Génesis 3:19, versión Reina-Valera de 1909"),
+        f(null, "Nada hay nuevo debajo del sol.", "Eclesiastés 1:9, versión Reina-Valera de 1909"),
+        f("Le premier qui, ayant enclos un terrain, s'avisa de dire: Ceci est à moi, et trouva des gens assez simples pour le croire, fut le vrai fondateur de la société civile.",
+            "El primero que, tras cercar un terreno, se le ocurrió decir «esto es mío» y encontró gente lo bastante simple para creerle fue el verdadero fundador de la sociedad civil.", "Jean-Jacques Rousseau, Discurso sobre el origen de la desigualdad, 1755"),
+        f("And the life of man, solitary, poor, nasty, brutish, and short.", "Y la vida del hombre, solitaria, pobre, desagradable, brutal y corta.", "Thomas Hobbes, Leviatán, cap. XIII, 1651"),
+        f("L'homme n'est qu'un roseau, le plus faible de la nature; mais c'est un roseau pensant.",
+            "El hombre no es más que una caña, la más débil de la naturaleza; pero es una caña que piensa.", "Blaise Pascal, Pensamientos, 1670"),
+        f("Man still bears in his bodily frame the indelible stamp of his lowly origin.",
+            "El hombre todavía lleva en su cuerpo el sello imborrable de su origen humilde.", "Charles Darwin, El origen del hombre, 1871"),
+        f("From so simple a beginning endless forms most beautiful and most wonderful have been, and are being, evolved.",
+            "De un comienzo tan sencillo han evolucionado, y siguen evolucionando, infinitas formas, las más bellas y maravillosas.", "Charles Darwin, El origen de las especies, 1859"),
+        f("We are a way for the Cosmos to know itself.", "Somos una manera que tiene el cosmos de conocerse a sí mismo.", "Carl Sagan, Cosmos, 1980"),
+        f("We shall not cease from exploration / And the end of all our exploring / Will be to arrive where we started / And know the place for the first time.",
+            "No dejaremos de explorar, y el fin de toda nuestra exploración será llegar adonde empezamos y conocer el lugar por primera vez.", "T. S. Eliot, «Little Gidding», Cuatro cuartetos, 1942"),
+        f("We are such stuff / As dreams are made on, and our little life / Is rounded with a sleep.",
+            "Estamos hechos de la misma materia que los sueños, y nuestra breve vida se cierra con un sueño.", "William Shakespeare, La tempestad, acto IV, escena 1"),
+        f(null, "Sube a nacer conmigo, hermano.", "Pablo Neruda, «Alturas de Macchu Picchu», Canto general, 1950"),
+        f(null, "Después de Altamira, todo es decadencia.", "Atribuida a Pablo Picasso; no se conoce una fuente escrita de su mano"),
+    )
+
     val REVOLUCION = listOf(
         f("Les hommes naissent et demeurent libres et égaux en droits.", "Los hombres nacen y permanecen libres e iguales en derechos.", "Declaración de los Derechos del Hombre y del Ciudadano, art. 1, 1789"),
         f("La liberté consiste à pouvoir faire tout ce qui ne nuit pas à autrui.", "La libertad consiste en poder hacer todo lo que no daña a otro.", "Declaración de los Derechos del Hombre y del Ciudadano, art. 4, 1789"),
@@ -922,6 +956,7 @@ object Frases {
         TemaId.PIRATA -> PIRATA
         TemaId.REVOLUCION -> REVOLUCION
         TemaId.ANTIGUAS -> ANTIGUAS
+        TemaId.CUEVA -> CUEVA
     }
 
     /** La del día para el tema elegido: cambia cada día y recorre todas antes de repetir. */
@@ -961,6 +996,7 @@ object Frases {
         TemaId.PIRATA -> "Escrito en la bitácora"
         TemaId.REVOLUCION -> "CARTEL DEL DÍA"
         TemaId.ANTIGUAS -> "Dicho del camino"
+        TemaId.CUEVA -> "Palabras junto al fuego"
     }
 
     // ------------------------------------------------------------ frases guardadas («me gusta»)

@@ -173,6 +173,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.PIRATA -> "La travesía de $anio, singladura por singladura"
     TemaId.REVOLUCION -> "CAHIER DE L'ANNÉE $anio · ${Temas.anRepublicano(anio, 6).uppercase()}"
     TemaId.ANTIGUAS -> "LAS DOCE LUNAS DEL CAMINO · $anio"
+    TemaId.CUEVA -> "Las lunas de $anio, pintadas en la pared"
 }
 
 /** Lo que una tarjeta necesita saber para dibujarse. */

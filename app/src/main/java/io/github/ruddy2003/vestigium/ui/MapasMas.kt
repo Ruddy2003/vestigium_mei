@@ -81,6 +81,9 @@ object MapasMas {
         TemaId.NAVIDAD -> geo(listOf(7.75 to 48.58, 7.36 to 48.08, 11.08 to 49.45, 13.74 to 51.05, 14.42 to 50.08, 16.37 to 48.21, 13.04 to 47.8), 6.4, 17.2, 47.2, 51.6)
         // La travesía de la compañía: aldea, bosque, vado, montañas, mina, puente y fortaleza.
         TemaId.ANTIGUAS -> listOf(Offset(0.07f, 0.74f), Offset(0.22f, 0.56f), Offset(0.36f, 0.7f), Offset(0.5f, 0.3f), Offset(0.62f, 0.52f), Offset(0.78f, 0.62f), Offset(0.93f, 0.3f))
+        // La migración tras las manadas: del abrigo del risco (abajo a la izquierda) se cruza el río helado y la estepa, el vado
+        // de los renos, la cueva de los caballos y las fuentes tibias, hasta los pastos del verano arriba a la derecha.
+        TemaId.CUEVA -> listOf(Offset(0.08f, 0.78f), Offset(0.24f, 0.62f), Offset(0.4f, 0.72f), Offset(0.54f, 0.48f), Offset(0.66f, 0.28f), Offset(0.8f, 0.42f), Offset(0.92f, 0.22f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
         // La traza de la red: saltos de servidor en servidor, de la máquina propia a la raíz.
@@ -203,6 +206,25 @@ object MapasMas {
                 for (k in 0 until 7) monte(w * (0.42f + k * 0.035f), h * (0.36f + (k % 2) * 0.06f), 10 * d, tinta.copy(alpha = 0.4f))
                 drawArc(Color(0xFF2A2420).copy(alpha = 0.35f), 180f, 180f, true, Offset(w * 0.6f, h * 0.5f), Size(16 * d, 16 * d))
                 drawPath(Path().apply { moveTo(w * 0.3f, 0f); cubicTo(w * 0.34f, h * 0.4f, w * 0.38f, h * 0.7f, w * 0.34f, h) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(3 * d))
+            }
+            TemaId.CUEVA -> {
+                // La estepa helada de la migración: el risco con el abrigo a la izquierda, el río helado, los montes nevados, la
+                // hierba de la estepa, la manada de bisontes que va hacia los pastos del verano y el vapor de las fuentes tibias.
+                drawRect(Color(0xFFE6D8BC).copy(alpha = if (oscuro) 0.05f else 0.25f), Offset.Zero, size)
+                drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.55f); quadraticTo(w * 0.08f, h * 0.5f, w * 0.14f, h * 0.68f); lineTo(w * 0.14f, h); close() }, tinta.copy(alpha = 0.35f))
+                drawArc(Color.Black.copy(alpha = 0.3f), 180f, 180f, true, Offset(w * 0.03f, h * 0.74f), Size(12 * d, 12 * d))
+                val rio = Path().apply { moveTo(w * 0.22f, 0f); cubicTo(w * 0.32f, h * 0.35f, w * 0.18f, h * 0.6f, w * 0.3f, h) }
+                drawPath(rio, Color(0xFFDDEBF2).copy(alpha = if (oscuro) 0.25f else 0.9f), style = Stroke(6 * d))
+                drawPath(rio, agua, style = Stroke(2 * d))
+                for (k in 0 until 5) monte(w * (0.48f + k * 0.06f), h * 0.18f + (k % 2) * 4 * d, 12 * d, tinta.copy(alpha = 0.45f))
+                val az = java.util.Random(17)
+                repeat(26) {
+                    val x = w * (0.34f + az.nextFloat() * 0.6f); val y = h * (0.55f + az.nextFloat() * 0.4f)
+                    drawLine(Color(0xFF7A8A4A).copy(alpha = 0.35f), Offset(x, y), Offset(x + 2 * d, y - 4 * d), 1 * d); drawLine(Color(0xFF7A8A4A).copy(alpha = 0.35f), Offset(x, y), Offset(x - 2 * d, y - 4 * d), 1 * d)
+                }
+                listOf(0.5f to 0.62f, 0.56f to 0.66f, 0.6f to 0.6f, 0.66f to 0.64f).forEachIndexed { i, (fx, fy) -> drawPath(bisonte(Offset(w * fx, h * fy), (6 - i % 2) * d), Color(0xFF3A2A1E).copy(alpha = 0.55f)) }
+                listOf(0f, 1f).forEach { k -> val x = w * 0.8f + k * 6 * d
+                    drawPath(Path().apply { moveTo(x, h * 0.42f); cubicTo(x - 4 * d, h * 0.38f, x + 4 * d, h * 0.34f, x, h * 0.3f) }, Color.White.copy(alpha = if (oscuro) 0.25f else 0.6f), style = Stroke(1.4f * d)) }
             }
             TemaId.DISTOPIA -> {
                 // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
@@ -638,6 +660,8 @@ object MapasMas {
             TemaId.NAVIDAD -> { drawPath(p, Color.White, style = Stroke(5 * d)); drawPath(p, Color(0xFFB3122E), style = Stroke(5 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5 * d, 5 * d)))) }
             // La línea roja del mapa de la travesía.
             TemaId.ANTIGUAS -> drawPath(p, Color(0xFF7A1A12).copy(alpha = 0.8f), style = Stroke(1.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 3 * d))))
+            // Una hilera de puntos de ocre, como las que se pintaban en la pared.
+            TemaId.CUEVA -> drawPath(p, Color(0xFFA2401F).copy(alpha = 0.85f), style = Stroke(2.6f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.1f * d, 5 * d))))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
             // El enlace de la traza: la línea cian y los paquetes que viajan de nodo en nodo.
@@ -764,6 +788,12 @@ object MapasMas {
             TemaId.ANTIGUAS -> {
                 drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y + r); lineTo(c.x - r * 0.8f, c.y - r * 0.4f); quadraticTo(c.x, c.y - r * 1.4f, c.x + r * 0.8f, c.y - r * 0.4f); lineTo(c.x + r * 0.7f, c.y + r); close() }, col)
                 with(TrofeosMas) { runas(Offset(c.x - r * 0.3f, c.y), r * 0.6f, r * 0.8f, Color.Black.copy(alpha = 0.35f), 0.8f * d, 1, (c.x + c.y).toInt()) }
+            }
+            // Una mano en negativo en su disco; la meta, con un aro de ocre.
+            TemaId.CUEVA -> {
+                drawCircle(col, r, c)
+                drawPath(manoUnida(c, r * 0.7f), cs.surface)
+                if (meta) drawCircle(Color(0xFFA2401F), r * 1.3f, c, style = Stroke(1.2f * d))
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
@@ -950,6 +980,7 @@ object MapasMas {
             TemaId.RUINAS -> { alfiler(); drawRect(Color(0xFF2E332E), Offset(g.x - r * 0.4f, g.y - r * 0.8f), Size(r * 0.8f, r * 1.6f)); drawCircle(Color(0xFF8A4A22).copy(alpha = 0.6f), r * 0.2f, Offset(g.x, g.y - r * 0.4f)); drawCircle(Color(0xFF8FCB6A), r * 0.24f, Offset(g.x, g.y + r * 0.35f)) }
             TemaId.COLONOS -> { alfiler(); drawArc(Color(0xFFF1E6C8), 180f, 180f, true, Offset(g.x - r * 0.8f, g.y - r * 0.8f), Size(r * 1.6f, r * 1.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x - r * 0.4f, g.y + r * 0.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x + r * 0.4f, g.y + r * 0.4f)) }
             TemaId.ANTIGUAS -> { alfiler(); with(TrofeosMas) { runas(Offset(g.x - r * 0.3f, g.y), r * 0.6f, r * 1.2f, tinta, 1f * d, 1, 4) } }
+            TemaId.CUEVA -> { alfiler(); drawPath(manoUnida(g, r * 0.75f), tinta) }
             // La ficha amarilla del vecino.
             TemaId.REFUGIO -> { alfiler(); drawCircle(Color(0xFFE8B83A), r * 0.85f, g); drawCircle(Color(0xFF1F2A2A), r * 0.85f, g, style = Stroke(0.8f * d)); with(TrofeosMas) { atomo(g, r * 0.55f, Color(0xFF1F2A2A), 0.6f * d) } }
             // El banderín de avance.

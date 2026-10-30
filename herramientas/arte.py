@@ -58,6 +58,23 @@ def papel_antiguas():
     a = a * (0.96 + 0.06 * ruido_rect(W, H, 0.8, 93)[..., None])
     a_img(a).save(os.path.join(OUT, 'papel_antiguas.jpg'), quality=86)
 
+def papel_cueva():
+    """Prehistoria: una piel curtida, clara y cálida como el ante, con su poro, las venas de la piel, una mancha de ocre
+    donde se apoyó una mano pintada y los bordes más oscuros, como de piel raspada con un raspador de sílex."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#ECDFC8'), col('#DCC8A6'), ruido_rect(W, H, 34, 151) * 0.8)
+    venas = np.abs(ruido_rect(W, H, 46, 152) - 0.5)
+    a = mezcla(a, col('#C9B089'), np.clip(1 - venas / 0.012, 0, 1) * 0.3)
+    poro = np.clip((ruido_rect(W, H, 1.2, 154) - 0.86) * 6, 0, 1)
+    a = mezcla(a, col('#A8906A'), poro * 0.3)
+    ocre = np.clip(1 - np.sqrt((xx - W * 0.84) ** 2 + (yy - H * 0.9) ** 2) / 170, 0, 1) ** 1.5 * np.clip(0.6 + ruido_rect(W, H, 1.5, 155) * 0.5, 0, 1)
+    a = mezcla(a, col('#B65A34'), ocre * 0.22)
+    borde = np.sqrt(((xx - W / 2) / (W / 2)) ** 4 + ((yy - H / 2) / (H / 2)) ** 4) ** 0.5 + ruido_rect(W, H, 18, 157) * 0.12
+    a = mezcla(a, col('#9E8058'), np.clip((borde - 0.78) * 2.2, 0, 1) * 0.5)
+    a = a * (0.96 + 0.06 * ruido_rect(W, H, 0.8, 156)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_cueva.jpg'), quality=86)
+
 def papel_abismo():
     """El papel sintético impermeable de la bitácora del batiscafo: gris verdoso y liso, con un grano plástico muy fino,
     la red de luz del agua apenas marcada como marca de agua, manchas de humedad que se secaron y los bordes un poco
@@ -374,6 +391,7 @@ if __name__ == '__main__':
     papeles()
     papel_ruinas()
     papel_antiguas()
+    papel_cueva()
     papel_pirata()
     papel_arcano()
     papeles_lote7()

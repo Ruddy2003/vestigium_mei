@@ -101,6 +101,7 @@ object Musica {
         TemaId.PIRATA -> R.raw.s_pirata_presentacion
         TemaId.REVOLUCION -> R.raw.s_revolucion_presentacion
         TemaId.ANTIGUAS -> R.raw.s_antiguas_presentacion
+        TemaId.CUEVA -> R.raw.s_cueva_presentacion
     }
     /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). */
     fun anual(t: TemaId): Int = when (t) {
@@ -133,6 +134,7 @@ object Musica {
         TemaId.PIRATA -> R.raw.s_pirata_anual
         TemaId.REVOLUCION -> R.raw.s_revolucion_anual
         TemaId.ANTIGUAS -> R.raw.s_antiguas_anual
+        TemaId.CUEVA -> R.raw.s_cueva_anual
     }
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
@@ -164,6 +166,7 @@ object Musica {
         TemaId.PIRATA -> R.raw.t_pirata_llamada
         TemaId.REVOLUCION -> R.raw.t_revolucion_llamada
         TemaId.ANTIGUAS -> R.raw.t_antiguas_llamada
+        TemaId.CUEVA -> R.raw.t_cueva_llamada
     }
     fun notificacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_notificacion
@@ -195,6 +198,7 @@ object Musica {
         TemaId.PIRATA -> R.raw.t_pirata_notificacion
         TemaId.REVOLUCION -> R.raw.t_revolucion_notificacion
         TemaId.ANTIGUAS -> R.raw.t_antiguas_notificacion
+        TemaId.CUEVA -> R.raw.t_cueva_notificacion
     }
 
     private var reproductor: MediaPlayer? = null
@@ -837,6 +841,25 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         drawPath(Path().apply { moveTo(g.x, g.y - u * 11); lineTo(g.x + u * 8, g.y); lineTo(g.x, g.y + u * 11); lineTo(g.x - u * 8, g.y); close() }, e.tertiary)
         drawPath(Path().apply { moveTo(g.x, g.y - u * 11); lineTo(g.x + u * 8, g.y); lineTo(g.x, g.y + u * 11); lineTo(g.x - u * 8, g.y); close() }, c, style = Stroke(u))
         drawLine(Color.White.copy(alpha = 0.6f), Offset(g.x - u * 3, g.y - u * 4), Offset(g.x, g.y - u * 8), u)
+    }
+    // La boca de la cueva: el arco de roca con sus estalactitas, una mano en negativo a cada lado y una hilera de puntos al pie.
+    TemaId.CUEVA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "⁘ toca para entrar en la cueva", emblema = 120.dp, arriba = 40.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onBackground.copy(alpha = 0.55f)
+        val boca = Path().apply {
+            moveTo(0f, h); lineTo(2 * u, h * 0.3f); quadraticTo(6 * u, 4 * u, w * 0.3f, 6 * u); quadraticTo(w * 0.52f, -4 * u, w * 0.74f, 8 * u)
+            quadraticTo(w - 2 * u, 12 * u, w - 2 * u, h * 0.36f); lineTo(w, h)
+        }
+        drawPath(boca, c.copy(alpha = 0.2f), style = Stroke(10 * u)); drawPath(boca, c, style = Stroke(1.8f * u, cap = StrokeCap.Round))
+        listOf(0.2f to 18f, 0.34f to 28f, 0.48f to 14f, 0.62f to 24f, 0.78f to 12f).forEach { (f, l) ->
+            val x = w * f; drawPath(Path().apply { moveTo(x - 4 * u, 6 * u); lineTo(x, (6 + l) * u); lineTo(x + 4 * u, 6 * u); close() }, c.copy(alpha = 0.4f))
+        }
+        listOf(28 * u, w - 28 * u).forEach { x ->
+            val m = Offset(x, h * 0.45f)
+            drawCircle(e.primary.copy(alpha = 0.4f), 20 * u, m); drawCircle(e.primary.copy(alpha = 0.55f), 15 * u, m)
+            drawPath(manoUnida(m, 13 * u), e.background)
+        }
+        var x = w * 0.3f; while (x < w * 0.7f) { drawCircle(e.primary, 2.4f * u, Offset(x, h - 18 * u)); x += 14 * u }
     }
 }
 

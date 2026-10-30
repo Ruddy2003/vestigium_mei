@@ -94,6 +94,12 @@ FUENTES = [
     # ANT: libro de crónicas
     ("vollkorn/Vollkorn[wght].ttf", {"wght": 400}, "vollkorn_regular", None, LATINO),
     ("vollkorn/Vollkorn[wght].ttf", {"wght": 600}, "vollkorn_semibold", None, LATINO),
+    # CUE: Prehistoria. Títulos a mano alzada, como trazos de carbón en la pared (Amatic SC), y texto de Andika, hecha para
+    # quien aprende a leer (reserva «Andika» y «SIL»: se renombra)
+    ("amaticsc/AmaticSC-Regular.ttf", None, "amatic_regular", None, LATINO),
+    ("amaticsc/AmaticSC-Bold.ttf", None, "amatic_bold", None, LATINO),
+    ("andika/Andika-Regular.ttf", None, "abrigo_regular", "Abrigo Vestigium", LATINO),
+    ("andika/Andika-Bold.ttf", None, "abrigo_bold", "Abrigo Vestigium", LATINO),
     # EGI: Gentium (SIL), con las letras de la transliteración egiptológica (ꜣ, ꜥ, ḥ, ḫ, š…); títulos en El Messiri, de un diseñador egipcio
     ("gentiumbookplus/GentiumBookPlus-Regular.ttf", None, "escriba_regular", "Escriba Vestigium", LATINO + ",U+A722-A725"),
     ("gentiumbookplus/GentiumBookPlus-Bold.ttf", None, "escriba_bold", "Escriba Vestigium", LATINO + ",U+A722-A725"),

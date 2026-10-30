@@ -42,6 +42,8 @@ object ContenedoresMas {
             Contenedor.SUPERVIVIENTE -> Color(0xFFE6E3D6)
             Contenedor.ADVIENTO -> Color(0xFFFBF7EE)
             Contenedor.MAPAS -> Color(0xFFE9DCC0)
+            // La piel de ciervo curtida, color de ante.
+            Contenedor.BOLSA -> Color(0xFFE3D2B4)
             Contenedor.EXPEDIENTE -> Color(0xFFF2EFE6)
             // La pantalla: al oscurecerse queda casi negra (Terminal solo existe en oscuro).
             Contenedor.CONSOLA -> Color(0xFF22303A)
@@ -230,6 +232,32 @@ object ContenedoresMas {
                 with(TrofeosMas) { runas(Offset(w * 0.24f, h * 0.78f), w * 0.52f, h * 0.05f, Color(0xFFC9A04A).copy(alpha = 0.6f), 1.2f * d, 5, 2) }
                 drawRect(HIERRO, Offset(w - 6 * d, h * 0.44f), Size(14 * d + grosor, 20 * d))
                 drawCircle(Color(0xFF1E7A5A), 5 * d, Offset(w + 2 * d, h * 0.44f + 10 * d))
+            }
+            Contenedor.BOLSA -> {
+                // La bolsa de piel: se hincha con lo escrito; la boca fruncida con el cordón de tendón y dos cuentas de concha,
+                // una mano de ocre pintada en la piel, la costura del costado y los flecos de abajo.
+                val piel = Color(0xFF8A6440); val ocre = Color(0xFFA2401F)
+                val hincha = ((grosor / d - 3f) / 11f).coerceIn(0f, 1f)
+                val W = size.width; val H = size.height
+                drawOval(Color.Black.copy(alpha = 0.18f), Offset(W * 0.12f, H * 0.86f), Size(W * 0.8f, H * 0.12f))
+                val cuerpo = Path().apply {
+                    moveTo(W * 0.34f, H * 0.24f)
+                    cubicTo(W * (0.1f - 0.08f * hincha), H * 0.36f, W * (0.04f - 0.04f * hincha), H * 0.86f, W * 0.5f, H * 0.92f)
+                    cubicTo(W * (0.96f + 0.04f * hincha), H * 0.86f, W * (0.9f + 0.08f * hincha), H * 0.36f, W * 0.66f, H * 0.24f); close()
+                }
+                drawPath(cuerpo, Brush.radialGradient(listOf(lerp(piel, Color.White, 0.18f), piel, lerp(piel, Color.Black, 0.35f)), Offset(W * 0.42f, H * 0.5f), W * 0.6f))
+                drawPath(Path().apply { moveTo(W * 0.36f, H * 0.3f); quadraticTo(W * 0.2f, H * 0.6f, W * 0.42f, H * 0.88f) }, Color(0xFF3A2414).copy(alpha = 0.5f),
+                    style = Stroke(1 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 2.5f * d))))
+                drawPath(Path().apply { moveTo(W * 0.3f, H * 0.12f); lineTo(W * 0.38f, H * 0.26f); lineTo(W * 0.62f, H * 0.26f); lineTo(W * 0.7f, H * 0.12f); quadraticTo(W * 0.5f, H * 0.06f, W * 0.3f, H * 0.12f); close() },
+                    lerp(piel, Color.Black, 0.15f))
+                for (k in 0 until 5) drawLine(Color.Black.copy(alpha = 0.25f), Offset(W * (0.34f + k * 0.08f), H * 0.12f), Offset(W * (0.4f + k * 0.05f), H * 0.25f), 0.8f * d)
+                val tendon = Color(0xFFD9C29A); val nudo = Offset(W * 0.64f, H * 0.25f)
+                drawLine(tendon, Offset(W * 0.36f, H * 0.25f), nudo, 2.2f * d)
+                drawCircle(tendon, 3 * d, nudo)
+                listOf(Offset(W * 0.72f, H * 0.45f), Offset(W * 0.78f, H * 0.4f)).forEach { p -> drawLine(tendon, nudo, p, 1.6f * d, StrokeCap.Round); drawCircle(Color(0xFFF2E8D6), 2.4f * d, p) }
+                piezasMano(Offset(W * 0.5f, H * 0.58f), W * 0.14f).forEach { drawPath(it, lerp(piel, ocre, 0.8f)) }
+                for (k in 0 until 7) { val x = W * (0.3f + k * 0.067f); drawLine(lerp(piel, Color.Black, 0.2f), Offset(x, H * 0.88f), Offset(x + (k - 3) * 0.6f * d, H * 0.98f), 1.4f * d, StrokeCap.Round) }
+                if (oscuro) drawPath(cuerpo, Color.Black.copy(alpha = 0.25f))
             }
             Contenedor.EXPEDIENTE -> {
                 // La carpeta de cartón con pestaña, la etiqueta mecanografiada, el sello rojo y la grapa.
@@ -615,6 +643,14 @@ object ContenedoresMas {
                 for (k in 0 until 8) { val a = k * PI / 4; val rr = if (k % 2 == 0) r else r * 0.5f; drawLine(Color(0xFF6B5A44).copy(alpha = 0.18f), c, Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat()), 1 * d) }
                 drawCircle(Color(0xFF6B5A44).copy(alpha = 0.15f), r * 0.7f, c, style = Stroke(0.8f * d))
             }
+            Contenedor.BOLSA -> {
+                // La piel curtida: el poro, un punto de ocre en el margen por cada renglón (como las hileras de puntos de la
+                // pared) y un bisonte de carbón, apenas, abajo a la derecha.
+                val az = java.util.Random(13)
+                repeat(160) { drawCircle(tinta.copy(alpha = 0.035f), (0.6f + az.nextFloat()) * d, Offset(az.nextFloat() * size.width, az.nextFloat() * size.height)) }
+                var y = 96 * d; while (y < size.height) { drawCircle(Color(0xFFA2401F).copy(alpha = if (oscuro) 0.3f else 0.22f), 2 * d, Offset(margen - 12 * d, y - renglon * 0.35f)); y += renglon }
+                drawPath(bisonte(Offset(size.width - 70 * d, size.height - 60 * d), 50 * d), tinta.copy(alpha = if (oscuro) 0.08f else 0.07f))
+            }
             Contenedor.EXPEDIENTE -> {
                 // Formulario oficial: renglones grises, casillas en el margen, el folio arriba y la franja roja.
                 drawRect(Color(0xFFC8102E).copy(alpha = 0.45f), Offset(0f, 0f), Size(size.width, 4 * d))
@@ -778,6 +814,16 @@ object ContenedoresMas {
                     drawCircle(HIERRO, 5 * d, Offset(24 * d, y), style = Stroke(2 * d))
                     listOf(-12f, 12f).forEach { dy -> drawCircle(Color(0xFF8A8D91), 1.5f * d, Offset(12 * d, y + dy * d)) }
                     y += 70 * d
+                }
+            }
+            Contenedor.BOLSA -> {
+                // La tira de tendón que cose la piel por el borde, en zigzag por los agujeros.
+                val tendon = if (oscuro) Color(0xFF8A7458) else Color(0xFFCDB48A)
+                var y = 16 * d; var k = 0
+                while (y < size.height - 10 * d) {
+                    drawCircle(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.3f), 2.2f * d, Offset(12 * d, y))
+                    drawLine(tendon, Offset(12 * d, y), Offset(if (k % 2 == 0) 24 * d else 6 * d, y + 14 * d), 1.8f * d, StrokeCap.Round)
+                    y += 28 * d; k++
                 }
             }
             Contenedor.EXPEDIENTE -> {

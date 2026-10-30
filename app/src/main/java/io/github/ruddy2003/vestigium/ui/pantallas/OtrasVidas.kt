@@ -717,6 +717,15 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 clipRect(right = fw) { var x = 4f * d; var k = 0; while (x < fw) { drawLine(oscuro, Offset(x, if (k % 3 != 1) 0f else h), Offset(x + 1.5f * d, h / 2), d); x += 5f * d; k++ } }
             }
         }
+        TemaId.CUEVA -> {
+            // Un hueso largo: lo recorrido, teñido de ocre, con muescas de cinco en cinco.
+            drawRoundRect(pista, Offset.Zero, Size(w, h), CornerRadius(h / 2))
+            if (fw > 0f) {
+                drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(h / 2))
+                var x = 3f * d; var k = 0
+                while (x < fw - 1f * d) { drawLine(oscuro, Offset(x, h * 0.2f), Offset(x, h * 0.8f), 0.7f * d); x += if (k % 5 == 4) 5f * d else 2.5f * d; k++ }
+            }
+        }
     }
 }
 
@@ -1044,6 +1053,14 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawLine(luna, Offset(c.x, c.y + q * 0.2f), Offset(c.x - q * 0.5f, c.y + q), 1.5f * d)
             drawLine(luna, Offset(c.x, c.y + q * 0.2f), Offset(c.x + q * 0.5f, c.y + q), 1.5f * d)
             drawLine(luna, Offset(c.x, c.y - q * 1.1f), Offset(c.x, c.y + q * 0.2f), 1.5f * d)
+        }
+        TemaId.CUEVA -> {
+            // Un sol grabado en el centro (anillo, punto y rayos) y una hilera de puntos por fuera, uno por hora.
+            val t2 = tinta.copy(alpha = 0.45f)
+            for (k in 0 until 24) drawCircle(t2, (if (k % 6 == 0) 1.6f else 0.9f) * d, polarFig(c, ro + 5f * d, k * 15f - 90f))
+            val q = rc * 0.32f
+            drawCircle(t2, q, c, style = Stroke(1.4f * d)); drawCircle(t2, q * 0.3f, c)
+            for (k in 0 until 8) drawLine(t2, polarFig(c, q * 1.3f, k * 45f), polarFig(c, q * 1.8f, k * 45f), 1.2f * d)
         }
     }
 }

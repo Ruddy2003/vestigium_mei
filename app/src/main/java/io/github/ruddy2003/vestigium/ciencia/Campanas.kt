@@ -171,6 +171,7 @@ object Campanas {
         TemaId.URSS -> listOf("PLAN QUINQUENAL", "LA COSECHA DEL KOLJÓS", "EL TRANSIBERIANO", "LA PRESA")
         TemaId.REVOLUCION -> listOf("Las jornadas de 1789", "La toma de la Bastilla", "La fiesta de la Federación", "El cuaderno de quejas")
         TemaId.ANTIGUAS -> listOf("La travesía de la compañía", "El paso de las montañas", "La mina olvidada", "Rumbo a la fortaleza")
+        TemaId.CUEVA -> listOf("Tras la manada de bisontes", "La gran bajada de los renos", "Hacia los pastos del verano", "El invierno en el abrigo del risco")
     }
 
     /** Las siete etapas del mapa, en el orden de la ruta (cuadran con `MapasMas.puntos`). */
@@ -205,5 +206,6 @@ object Campanas {
         TemaId.URSS -> listOf("MOSCÚ", "EKATERIMBURGO", "NOVOSIBIRSK", "KRASNOYARSK", "IRKUTSK", "CHITÁ", "VLADIVOSTOK")
         TemaId.REVOLUCION -> listOf("Estados Generales", "Juego de pelota", "Bastilla", "4 de agosto", "Declaración", "Versalles", "Federación")
         TemaId.ANTIGUAS -> listOf("La aldea", "El bosque viejo", "El vado", "Las montañas", "La mina", "El puente de piedra", "La fortaleza")
+        TemaId.CUEVA -> listOf("El abrigo del risco", "El río helado", "La estepa abierta", "El vado de los renos", "La cueva de los caballos", "Las fuentes tibias", "Los pastos del verano")
     }
 }

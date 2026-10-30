@@ -165,6 +165,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.REVOLUCION -> Papeleria(Color(0xFFF2ECDD), Color(0xFFB8AE98), Color(0xFFFBF7EE), Color(0xFF1F3A6E), Color(0xFFB22234), Color(0xFF2F4A7A), Color(0xFF1C1A17))
     // Papel de mapa viejo, forro de cuero, la gema verde y la correa de cuero.
     TemaId.ANTIGUAS -> Papeleria(Color(0xFFE3D5B4), Color(0xFFA8946A), Color(0xFFF1E6C8), Color(0xFF5A3A22), Color(0xFF2E7A5A), Color(0xFF5A3A22), Color(0xFF1E1D1A))
+    // Piel de ante curtida, el revés más claro, un disco de ocre por sello y tendón por cordón.
+    TemaId.CUEVA -> Papeleria(Color(0xFFCDB089), Color(0xFF8C6B48), Color(0xFFE6D2AE), Color(0xFFE8DCC4), Color(0xFFA2401F), Color(0xFFD9C29A), Color(0xFF2A211B))
 }
 
 // =====================================================================
@@ -210,6 +212,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.URSS -> FormaSobre(SolapaSobre.PICO, 0f, CierreSobre.PRECINTO)
     TemaId.REVOLUCION -> FormaSobre(SolapaSobre.LENGUA, 0.01f, CierreSobre.CRUZ)
     TemaId.ANTIGUAS -> FormaSobre(SolapaSobre.RASGADA, 0.02f, CierreSobre.CRUZ)
+    TemaId.CUEVA -> FormaSobre(SolapaSobre.PARABOLA, 0.06f, CierreSobre.DOBLE)      // la piel doblada y atada con dos vueltas de tendón
 }
 
 /** Qué tan abajo llega el borde de la solapa en [u] (0 a 1, de una esquina a la otra): 0 en las esquinas y 1 al centro. */
@@ -723,6 +726,14 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawPath(gema, hondo, style = Stroke(r * 0.05f))
             drawCircle(k(Color.White.copy(alpha = 0.6f)), r * 0.09f, c - Offset(r * 0.16f, r * 0.16f))
         }
+        TemaId.CUEVA -> {
+            // Un disco de arcilla teñida de ocre, con la mano en negativo de quien lo cerró y una corona de puntos.
+            drawCircle(sombra, r * 0.98f, c + Offset(r * 0.05f, r * 0.08f))
+            drawCircle(col, r * 0.92f, c)
+            drawCircle(hondo, r * 0.92f, c, style = Stroke(r * 0.06f))
+            for (j in 0 until 10) { val ang = j * PI / 5; drawCircle(hondo, r * 0.045f, Offset(c.x + (r * 0.78f * cos(ang)).toFloat(), c.y + (r * 0.78f * sin(ang)).toFloat())) }
+            drawPath(manoUnida(Offset(c.x, c.y + r * 0.04f), r * 0.55f), claro)
+        }
     }
 }
 
@@ -973,6 +984,11 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
                 drawPath(Path().apply { moveTo(b.x - H * 0.05f, b.y); lineTo(b.x, b.y - H * 0.07f); lineTo(b.x + H * 0.05f, b.y) }, tinta, style = Stroke(1.2f))
             }
         }
+        TemaId.CUEVA -> {
+            // Una hilera de puntos de ocre y un bisonte de carbón pintados en la piel del sobre.
+            for (k in 0 until 5) drawCircle(Color(0xFFA2401F).copy(alpha = 0.6f), H * 0.022f, Offset(l + W * (0.08f + k * 0.04f), top + H * 0.8f))
+            drawPath(bisonte(Offset(r - W * 0.16f, top + H * 0.72f), W * 0.1f), Color(0xFF2A211B).copy(alpha = 0.45f))
+        }
     }
 }
 
@@ -1204,6 +1220,9 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Citoyen de l’avenir…", "Redacta tu queja o tu carta…", "Carta para %s firmada", "La ley no permite abrirla antes.", "Toca para tomar la pluma…")
     TemaId.ANTIGUAS -> VozCarta("La compañía llegó: ábrela", "Sellada con la gema", "Para el que seré tras muchas lunas · %s", "Tras muchas lunas · %s", "Para el que seré tras muchas lunas",
         "Al que seré cuando vuelva la compañía…", "Escribe tu mensaje para el camino…", "Mensaje para %s sellado", "Ni la magia la abre antes.", "Toca para escribir en la crónica…")
+    TemaId.CUEVA -> VozCarta("Llegó su luna: desentiérrala", "Enterrada bajo la laja", "Para el que pintará dentro de muchas lunas · %s", "Dentro de muchas lunas · %s",
+        "Para el que pintará dentro de muchas lunas", "Al que seré cuando vuelvan las manadas…", "Pinta tu mensaje para otro clan…", "Piedra para %s, enterrada",
+        "Nadie la desentierra antes de su luna.", "Toca para pintar en la piedra…")
 }
 
 /** La letra con que se rotula el sobre en cada tema. */
@@ -1237,6 +1256,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.URSS -> LetraExtra.russo
     TemaId.REVOLUCION -> LetraExtra.convencion
     TemaId.ANTIGUAS -> LetraExtra.camino
+    TemaId.CUEVA -> LetraExtra.trazo
 }
 
 /** A quién va, en pocas palabras, en la voz del tema. */

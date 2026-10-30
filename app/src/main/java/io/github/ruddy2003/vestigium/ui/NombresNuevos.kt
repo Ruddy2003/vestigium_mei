@@ -53,6 +53,12 @@ object NombresNuevos {
             "Impulsos y recaídas" to "EL LIBRO CERRADO", "Estado de los datos" to "LOS VIGÍAS", "Enfoque y siestas" to "ESTUDIO Y VIGILIA", "Ver tu vida" to "GRABADOS",
             "Tus atajos" to "SENDEROS", "Logro conseguido" to "HAZAÑA", "Este día hace un año" to "HACE UNA VUELTA DEL SOL", "Elegir campaña" to "NUEVA TRAVESÍA", "Campañas anteriores" to "TRAVESÍAS PASADAS",
             "Lugares especiales" to "LUGARES DEL CAMINO", "Cobertura de variables" to "LO QUE YA SE SABE"),
+        TemaId.CUEVA to mapOf(
+            "La cinta" to "El rastro del día", "Constelación" to "El clan alrededor del fuego", "Hall de logros" to "La sala de los bisontes",
+            "Campañas" to "Migraciones", "Impulsos y recaídas" to "Lo que se pinta en lo hondo", "Estado de los datos" to "Los que vigilan el fuego",
+            "Enfoque y siestas" to "Acecho y reposo", "Ver tu vida" to "Pinturas", "Tus atajos" to "Veredas de la manada", "Logro conseguido" to "¡Presa!",
+            "Este día hace un año" to "Hace un ciclo de estaciones", "Elegir campaña" to "Seguir a otra manada", "Campañas anteriores" to "Migraciones pasadas",
+            "Lugares especiales" to "Parajes de la manada", "Cobertura de variables" to "Lo que ya se ve en la pared"),
         TemaId.BOTANICO to mapOf("La cinta" to "Diario de campo", "Constelación" to "Ecosistema", "Hall de logros" to "Gabinete de curiosidades", "Campañas" to "Expediciones",
             "Impulsos y recaídas" to "Notas privadas", "Estado de los datos" to "Estado de los instrumentos", "Enfoque y siestas" to "Estudio y latencia", "Ver tu vida" to "Láminas",
             "Tus atajos" to "Atajos", "Logro conseguido" to "Hallazgo", "Este día hace un año" to "Hace un año", "Elegir campaña" to "Nueva expedición", "Campañas anteriores" to "Expediciones pasadas"),

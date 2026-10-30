@@ -110,6 +110,14 @@ object SalonesMas {
                 with(TrofeosTema) { estrella(Offset(w * 0.5f, h * 0.55f), h * 0.32f, h * 0.13f, 5, Brush.linearGradient(listOf(Color(0xFFD4A017), Color(0xFFD4A017)))) }
             }
             TemaId.ANTIGUAS -> { drawRect(piedra(Color(0xFF7D7A72)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); with(TrofeosMas) { runas(Offset(w * 0.22f, h * 0.5f), w * 0.56f, h * 0.5f, Color(0xFF2B2A28).copy(alpha = 0.5f), h * 0.06f, 6) } }
+            TemaId.CUEVA -> {
+                // Un canto de caliza redondeado por el agua, con una hilera de puntos de ocre y una mano pequeña soplada.
+                drawRoundRect(piedra(Color(0xFFB59A78)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h), CornerRadius(h * 0.35f))
+                for (k in 0 until 4) drawCircle(Color(0xFFA2401F), h * 0.08f, Offset(w * (0.24f + k * 0.07f), h * 0.5f))
+                val m = Offset(w * 0.7f, h * 0.48f)
+                drawCircle(Color(0xFFA2401F).copy(alpha = 0.55f), h * 0.32f, m)
+                piezasMano(m, h * 0.22f).forEach { drawPath(it, Color(0xFFB59A78)) }
+            }
             // Los pedestales de los siete primeros están en [SalonesTema.pedestal]: no llegan aquí.
             TemaId.ROMANO -> Unit
             TemaId.URBE -> Unit          // la Roma de hoy tiene su pilón de fuente en [SalonesTema.pedestal]
@@ -412,6 +420,58 @@ object SalonesMas {
         }
         // El piso de losas.
         drawRect(piedra.copy(alpha = piedra.alpha * 0.5f), Offset(0f, h - 8 * d), Size(w, 8 * d))
+    }
+
+    /**
+     * Prehistoria: la sala de los bisontes, en lo hondo de la cueva. El techo de roca con estalactitas; entre las columnas de
+     * piezas, bisontes de ocre y de carbón con su hilera de puntos; manos en negativo en los pilares de roca y lámparas de
+     * grasa en el suelo, con su resplandor.
+     */
+    internal fun DrawScope.salonCueva(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val base = if (oscuro) Color(0xFF2A2019) else Color(0xFFD8C6A6)
+        val roca = base.copy(alpha = 0.6f)
+        val vista = lerp(cs.background, base, 0.6f)          // la roca tal como se ve sobre el fondo, para las manos en negativo
+        val sombra = (if (oscuro) Color.Black else Color(0xFF6E5638)).copy(alpha = 0.16f)
+        val ocre = Color(0xFFA2401F).copy(alpha = if (oscuro) 0.55f else 0.45f)
+        val carbon = (if (oscuro) Color(0xFF0C0806) else Color(0xFF2E2620)).copy(alpha = if (oscuro) 0.7f else 0.45f)
+        drawRect(roca, Offset.Zero, Size(w, h))
+        // Las vetas de la roca.
+        val az = java.util.Random(170)
+        var y = 30 * d
+        while (y < h) {
+            val veta = Path().apply { moveTo(0f, y); var x = 0f; while (x < w) { val nx = x + w / 4; quadraticTo(x + w / 8, y + (az.nextFloat() - 0.5f) * 16 * d, nx, y + (az.nextFloat() - 0.5f) * 6 * d); x = nx } }
+            drawPath(veta, sombra, style = Stroke(1f * d)); y += 46 * d
+        }
+        // El techo, con estalactitas.
+        drawPath(Path().apply {
+            moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, 16 * d); var x = w; var k = 0
+            while (x > 0f) { val nx = x - 22 * d; lineTo(x - 11 * d, (16 + (if (k % 3 == 0) 26 else 10)) * d); lineTo(nx, 16 * d); x = nx; k++ }
+            close()
+        }, sombra.copy(alpha = sombra.alpha * 1.6f))
+        val paso = w / n
+        // Entre las columnas de piezas: un bisonte (de ocre o de carbón) y debajo, una hilera de puntos.
+        for (i in 0 until n) {
+            val cx = (i + 0.5f) * paso
+            drawPath(bisonte(Offset(cx, 72 * d), paso * (if (i % 2 == 0) 0.32f else 0.28f)), if (i % 2 == 0) ocre else carbon)
+            for (k in 0 until 5) drawCircle(ocre, 2.2f * d, Offset(cx - 16 * d + k * 8 * d, 110 * d))
+        }
+        // Manos en negativo en los pilares de roca.
+        for (i in 0..n) {
+            val m = Offset(i * paso, 150 * d + (i % 2) * 40 * d)
+            if (m.y < h - 40 * d) {
+                drawCircle(Brush.radialGradient(listOf(ocre, Color.Transparent), m, 24 * d), 24 * d, m)
+                piezasMano(m, 14 * d).forEach { drawPath(it, vista) }
+            }
+        }
+        // Lámparas de grasa en el suelo, con su resplandor.
+        for (i in 0 until n) {
+            val cx = (i + 0.5f) * paso; val yl = h - 14 * d
+            drawCircle(Brush.radialGradient(listOf(Color(0xFFFFB347).copy(alpha = if (oscuro) 0.3f else 0.18f), Color.Transparent), Offset(cx, yl - 8 * d), 46 * d), 46 * d, Offset(cx, yl - 8 * d))
+            drawArc(carbon, 0f, 180f, true, Offset(cx - 9 * d, yl - 5 * d), Size(18 * d, 10 * d))
+            drawPath(Path().apply { moveTo(cx, yl - 14 * d); quadraticTo(cx + 4 * d, yl - 6 * d, cx, yl - 2 * d); quadraticTo(cx - 4 * d, yl - 6 * d, cx, yl - 14 * d); close() }, Color(0xFFFFB347).copy(alpha = 0.8f))
+        }
+        drawRect(sombra, Offset(0f, h - 6 * d), Size(w, 6 * d))
     }
 
     /** Distopía: un pasillo del archivo, con archiveros de cajones numerados, lámparas de tubo y la franja roja del Ministerio. */

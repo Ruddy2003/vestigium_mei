@@ -605,6 +605,16 @@ fun FraseDelDia(fecha: String) {
                 }
             }.padding(horizontal = 20.dp, vertical = 12.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»", centrado = true) }
         }
+        TemaId.CUEVA -> Surface(shape = RoundedCornerShape(topStart = 18.dp, topEnd = 8.dp, bottomEnd = 20.dp, bottomStart = 10.dp), color = cs.surfaceVariant,
+            border = BorderStroke(1.dp, cs.outline), modifier = arriba) {
+            Box(Modifier.drawBehind {
+                // Una mano en negativo arriba a la izquierda y tres puntos de ocre abajo a la derecha.
+                val u = 1.dp.toPx(); val m = Offset(16 * u, 18 * u)
+                drawCircle(cs.primary.copy(alpha = 0.35f), 12 * u, m)
+                drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(m, 8 * u), cs.surfaceVariant)
+                for (k in 0 until 3) drawCircle(cs.primary.copy(alpha = 0.7f), 2 * u, Offset(size.width - (12 + k * 7) * u, size.height - 10 * u))
+            }.padding(horizontal = 22.dp, vertical = 14.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»", centrado = true) }
+        }
     }
 }
 
@@ -902,6 +912,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         // Didot en cursiva, como los impresos de 1793; el napoleónico usa la misma casa, derecha y espaciada.
         TemaId.REVOLUCION -> c(LetraExtra.bodoni, FontWeight.Normal, 24f, 0.2f, "lnum", cursiva = true)
         TemaId.ANTIGUAS -> c(LetraExtra.cinzelDeco, FontWeight.Normal, 21f, 1f)
+        TemaId.CUEVA -> c(LetraExtra.trazo, FontWeight.Bold, 30f, 1f)          // cifras a mano alzada
     }
 }
 
@@ -1339,6 +1350,16 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             drawLine(faceta, Offset(w * 0.06f, top + pc), Offset(w / 2, top + pc * 1.6f), 0.7f * u)
                             drawLine(faceta, Offset(w * 0.94f, top + pc), Offset(w / 2, top + pc * 1.6f), 0.7f * u)
                             sello = cs.tertiary
+                        }
+                        // Estalagmitas: crecen desde el suelo de la cueva, con un punto de ocre en la punta.
+                        TemaId.CUEVA -> {
+                            pinta(Path().apply {
+                                moveTo(w * 0.08f, h); quadraticTo(w * 0.16f, top + barH * 0.45f, w * 0.42f, top + 2 * u); quadraticTo(w * 0.5f, top - u, w * 0.58f, top + 2 * u)
+                                quadraticTo(w * 0.84f, top + barH * 0.45f, w * 0.92f, h); close()
+                            })
+                            val veta = if (color != null) Color.Black.copy(alpha = 0.15f) else linea.copy(alpha = 0.4f)
+                            for (k in 1..2) { val y = top + barH * k / 3f; drawLine(veta, Offset(w * 0.3f, y), Offset(w * 0.7f, y + 1.5f * u), 0.7f * u) }
+                            sello = cs.primary
                         }
                     }
                     // Hoy: se llena desde abajo con lo que ya anotaste, sin el color del ánimo.

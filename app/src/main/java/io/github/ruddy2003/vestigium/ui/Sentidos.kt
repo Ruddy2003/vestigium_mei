@@ -270,6 +270,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(TICK, 0.6f), g(TICK, 0.8f, 70)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(BAJA, 0.4f, 80))
             Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.9f), g(SUBE_LENTO, 0.5f, 80), g(TICK, 0.7f, 90), g(TICK, 0.8f, 90), g(TICK, 1f, 90))
         }
+        // Piedra contra piedra, golpes sordos de percutor; lo que se abre, una piel que se tensa.
+        TemaId.CUEVA -> when (e) {
+            Evento.TOQUE -> listOf(g(THUD, 0.42f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.37f))
+            Evento.GUARDAR -> listOf(g(THUD, 0.66f), g(THUD, 0.5f, 140), g(TICK_GRAVE, 0.55f, 90))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.47f), g(THUD, 0.33f, 55)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.37f), g(THUD, 0.57f, 110))
+            Evento.CAMBIO -> listOf(g(THUD, 0.53f), g(THUD, 0.53f, 135)); Evento.ERROR -> listOf(g(THUD, 0.87f), g(TICK_GRAVE, 0.43f, 75), g(BAJA, 0.36f, 65))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.8f), g(THUD, 0.6f, 150), g(THUD, 0.8f, 150), g(SUBE_LENTO, 0.45f, 120), g(TICK, 0.6f, 85))
+        }
         // Tambor de las milicias: redoble y golpe.
         TemaId.REVOLUCION -> when (e) {
             Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.5f, 40))
@@ -365,6 +373,7 @@ object Sentidos {
         TemaId.SEDA -> intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro, R.raw.s_seda_pasar, R.raw.s_seda_elegir, R.raw.s_seda_abrir, R.raw.s_seda_tema, R.raw.s_seda_error, R.raw.s_seda_cambio, R.raw.s_tecla_seda, R.raw.s_rascar_seda)
         TemaId.URSS -> intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir, R.raw.s_urss_tema, R.raw.s_urss_error, R.raw.s_urss_cambio, R.raw.s_tecla_urss, R.raw.s_rascar_urss)
         TemaId.ANTIGUAS -> intArrayOf(R.raw.s_antiguas_toque, R.raw.s_antiguas_guardar, R.raw.s_antiguas_logro, R.raw.s_antiguas_pasar, R.raw.s_antiguas_elegir, R.raw.s_antiguas_abrir, R.raw.s_antiguas_tema, R.raw.s_antiguas_error, R.raw.s_antiguas_cambio, R.raw.s_tecla_antiguas, R.raw.s_rascar_antiguas)
+        TemaId.CUEVA -> intArrayOf(R.raw.s_cueva_toque, R.raw.s_cueva_guardar, R.raw.s_cueva_logro, R.raw.s_cueva_pasar, R.raw.s_cueva_elegir, R.raw.s_cueva_abrir, R.raw.s_cueva_tema, R.raw.s_cueva_error, R.raw.s_cueva_cambio, R.raw.s_tecla_cueva, R.raw.s_rascar_cueva)
         TemaId.REVOLUCION -> intArrayOf(R.raw.s_revolucion_toque, R.raw.s_revolucion_guardar, R.raw.s_revolucion_logro, R.raw.s_revolucion_pasar, R.raw.s_revolucion_elegir, R.raw.s_revolucion_abrir, R.raw.s_revolucion_tema, R.raw.s_revolucion_error, R.raw.s_revolucion_cambio, R.raw.s_tecla_revolucion, R.raw.s_rascar_revolucion)
     }
     internal val SONIDOS: Map<String, IntArray> = TemaId.entries.associate { it.id to sonidos(it) }
@@ -465,6 +474,8 @@ object Sentidos {
         TemaId.URSS -> Afinacion(st(-5, -3, 0), st(-9, -5, 0, 3), pasarRuido = true, elegirRuido = false)
         // Re dórico; la piedra, en pasos graves del modo.
         TemaId.ANTIGUAS -> Afinacion(st(-5, -2, 0, 3), st(-5, -2, 0, 5), pasarRuido = true, elegirRuido = false)
+        // Mi, en cuartas y quintas, como una flauta de hueso de pocos agujeros (no se sabe cómo se afinaban); las pisadas son ruido.
+        TemaId.CUEVA -> Afinacion(st(-7, -5, 0, 5, 7), st(-12, -5, 0, 7), pasarRuido = true, elegirRuido = false)
         // Sol mayor; el tambor, en la quinta y el tono.
         TemaId.REVOLUCION -> Afinacion(st(-5, 0, 2), st(-7, 0, 4, 7), pasarRuido = true, elegirRuido = false)
     }
@@ -572,6 +583,7 @@ object Sentidos {
         TemaId.SEDA -> pasadas(TICK, 0.6f, 50, 3)   // bronce de moneda
         TemaId.URSS -> pasadas(CLICK, 0.9f, 40, 3)   // acero ennegrecido
         TemaId.ANTIGUAS -> pasadas(TICK_GRAVE, 0.8f, 60, 3)   // hierro viejo
+        TemaId.CUEVA -> pasadas(THUD, 0.66f, 85, 4)   // carbón que raspa la caliza
         TemaId.REVOLUCION -> pasadas(CLICK, 0.45f, 50, 4)   // estaño
     }
 

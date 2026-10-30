@@ -126,6 +126,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.URSS -> R.font.russo
     TemaId.REVOLUCION -> R.font.fell                // tipos de imprenta de cartel
     TemaId.ANTIGUAS -> R.font.cinzel_semibold       // números tallados en piedra
+    TemaId.CUEVA -> R.font.amatic_bold          // cifras a mano alzada, como trazos de carbón
 }
 
 /** El nombre de la app como lo firma cada tema arriba del reporte. */
@@ -159,6 +160,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.URSS -> "ДНЕВНИК · VESTIGIUM MEI"
     TemaId.REVOLUCION -> "Cahier de Vestigium Mei"
     TemaId.ANTIGUAS -> "Crónica de Vestigium Mei"
+    TemaId.CUEVA -> "Vestigium Mei · la pared del clan"
 }
 
 /**
@@ -675,6 +677,25 @@ object Reportes {
                         }
                     }
                     y += 50f
+                }
+                TemaId.CUEVA -> {
+                    // Una hilera de puntos de ocre de orilla a orilla y, al centro, una mano en negativo: la nube soplada y la
+                    // mano del color del papel.
+                    val yc = yy + 22f; val r = 16f
+                    var x = M + 4f; var k = 0
+                    while (x < W - M) { if (abs(x - cx) > r * 2.2f) c.drawCircle(x, yc + (if (k % 2 == 0) -1.5f else 1.5f), 2.2f + (k % 3) * 0.5f, L.relleno(L.mezcla(L.primario, L.fondo, 0.25))); x += 14f; k++ }
+                    c.drawCircle(cx, yc, r * 1.5f, L.relleno(L.mezcla(L.primario, L.fondo, 0.7)))
+                    c.drawCircle(cx, yc, r * 1.15f, L.relleno(L.mezcla(L.primario, L.fondo, 0.4)))
+                    val papel = L.relleno(L.fondo)
+                    fun pieza(l: Float, t: Float, d: Float, b: Float, radio: Float) = c.drawRoundRect(android.graphics.RectF(cx + l * r, yc + t * r, cx + d * r, yc + b * r), radio * r, radio * r, papel)
+                    pieza(-0.44f, -0.12f, 0.4f, 0.62f, 0.2f); pieza(-0.3f, 0.45f, 0.26f, 1f, 0.06f)
+                    listOf(Triple(-0.34f, -0.62f, 0.17f), Triple(-0.13f, -0.86f, 0.19f), Triple(0.1f, -0.98f, 0.19f), Triple(0.3f, -0.8f, 0.18f)).forEach { (fx, arriba, an) -> pieza(fx - an / 2, arriba, fx + an / 2, 0.02f, an / 2) }
+                    val pulgar = android.graphics.Path().apply {
+                        moveTo(cx + 0.3f * r, yc + 0.5f * r); lineTo(cx + 0.36f * r, yc + 0.08f * r); quadTo(cx + 0.62f * r, yc - 0.2f * r, cx + 0.76f * r, yc - 0.08f * r)
+                        quadTo(cx + 0.84f * r, yc + 0.02f * r, cx + 0.66f * r, yc + 0.22f * r); lineTo(cx + 0.4f * r, yc + 0.6f * r); close()
+                    }
+                    c.drawPath(pulgar, papel)
+                    y += 56f
                 }
             }
         }

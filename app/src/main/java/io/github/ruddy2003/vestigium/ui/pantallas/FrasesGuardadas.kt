@@ -314,6 +314,8 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             drawPath(Path().apply { moveTo(6.5f * u, 4f * u); lineTo(9f * u, 9.5f * u); lineTo(12f * u, 21.5f * u); lineTo(15f * u, 9.5f * u); lineTo(17.5f * u, 4f * u)
                 moveTo(9f * u, 9.5f * u); lineTo(12f * u, 4f * u); lineTo(15f * u, 9.5f * u) }, k, style = Stroke(0.7f * u))
         }
+        // Guardar una frase es dejar la mano en la pared.
+        TemaId.CUEVA -> pinta(io.github.ruddy2003.vestigium.ui.manoUnida(p(12f, 12.2f), 9.4f * u), 1.3f)
     }
 }
 

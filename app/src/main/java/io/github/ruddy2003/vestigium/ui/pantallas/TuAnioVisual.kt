@@ -360,6 +360,13 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             val gx = x0 + w / 2; val gr = h * 0.26f
             drawPath(Path().apply { moveTo(gx, cy - gr); lineTo(gx + gr * 0.8f, cy); lineTo(gx, cy + gr); lineTo(gx - gr * 0.8f, cy); close() }, Color(0xFF3FA7A0))
         }
+        TemaId.CUEVA -> {
+            // Una piel enrollada y atada con dos tiras de tendón, con una mano de ocre pintada.
+            drawRoundRect(lerp(c, Color(0xFF8A6440), 0.45f), o, s, CornerRadius(h * 0.45f))
+            drawOval(oscuro, Offset(x0 + w - h * 0.5f, y0), Size(h * 0.5f, h))
+            listOf(0.25f, 0.68f).forEach { f -> drawRect(Color(0xFFD9C29A), Offset(x0 + w * f, y0 - 0.5f * d), Size(w * 0.04f, h + 1f * d)) }
+            drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(x0 + w * 0.47f, cy), h * 0.3f), Color(0xFFA2401F))
+        }
     }
     drawRect(fondo.copy(alpha = 0.12f), o, Size(w, 1f * d))
 }
@@ -785,6 +792,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             }
             close()
         })
+        // Un canto rodado con tres puntos de ocre.
+        TemaId.CUEVA -> {
+            lleno(Path().apply { addOval(androidx.compose.ui.geometry.Rect(c.x - r, c.y - r * 0.8f, c.x + r, c.y + r * 0.85f)) })
+            for (k in -1..1) drawCircle(borde, r * 0.1f, Offset(c.x + k * r * 0.35f, c.y))
+        }
     }
 }
 
@@ -1441,6 +1453,22 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawRect(col, Offset(x - r * 0.62f, y - r * 0.75f), Size(r * 1.1f, r * 0.2f))
                 drawArc(col, -80f, 160f, false, Offset(x + r * 0.15f, y - r * 0.35f), Size(r * 0.6f, r * 0.8f), style = Stroke(r * 0.14f))
                 listOf(-0.2f, 0.5f).forEach { f -> drawLine(fondo, Offset(x - r * 0.55f, y + f * r), Offset(x + r * 0.4f, y + f * r), 0.7f * d) }
+            }
+            else -> return false
+        }
+        TemaId.CUEVA -> when (forma) {
+            // La mano de ocre.
+            "estrella" -> drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(x, y), r * 0.9f), col)
+            // La boca de una cueva en el risco.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r, y + r * 0.8f); quadraticTo(x - r * 0.9f, y - r * 0.8f, x, y - r * 0.85f); quadraticTo(x + r * 0.9f, y - r * 0.8f, x + r, y + r * 0.8f); close() }, col)
+                drawArc(fondo, 180f, 180f, true, Offset(x - r * 0.4f, y + r * 0.1f), Size(r * 0.8f, r * 0.9f)); drawRect(fondo, Offset(x - r * 0.4f, y + r * 0.55f), Size(r * 0.8f, r * 0.25f))
+            }
+            // La lámpara de grasa con su llama.
+            "taza" -> {
+                drawArc(col, 0f, 180f, true, Offset(x - r * 0.75f, y - r * 0.2f), Size(r * 1.5f, r * 0.9f))
+                drawRect(col, Offset(x + r * 0.6f, y + r * 0.02f), Size(r * 0.4f, r * 0.16f))
+                drawPath(Path().apply { moveTo(x - r * 0.1f, y - r * 0.9f); quadraticTo(x + r * 0.2f, y - r * 0.45f, x - r * 0.1f, y + r * 0.2f); quadraticTo(x - r * 0.4f, y - r * 0.45f, x - r * 0.1f, y - r * 0.9f); close() }, col)
             }
             else -> return false
         }

@@ -805,6 +805,72 @@ def antiguas(tam):
     guardar(fondo, base, 'antiguas')
 
 
+# ------------------------------------------------------------------ Prehistoria
+def mano_pil(d, x, y, s, ang, color):
+    """Una mano (palma, cuatro dedos y pulgar) de alto 2·s, con los dedos hacia [ang], como en Decoracion.piezasMano."""
+    ca, sa = math.cos(ang + math.pi / 2), math.sin(ang + math.pi / 2)
+    def p(px, py): return (x + (px * ca - py * sa) * s, y + (px * sa + py * ca) * s)
+    d.polygon([p(-0.44, -0.04), p(-0.36, -0.12), p(0.32, -0.12), p(0.4, -0.04), p(0.4, 0.56), p(0.26, 1.0), p(-0.3, 1.0), p(-0.44, 0.56)], fill=color)
+    for fx, arriba, an in ((-0.34, -0.62, 0.17), (-0.13, -0.86, 0.19), (0.1, -0.98, 0.19), (0.3, -0.8, 0.18)):
+        pts = [p(fx - an / 2, 0.02)] + [p(fx + an / 2 * math.cos(t), arriba + an / 2 - an / 2 * math.sin(t)) for t in [math.pi - k * math.pi / 8 for k in range(9)]] + [p(fx + an / 2, 0.02)]
+        d.polygon(pts, fill=color)
+    d.polygon([p(0.3, 0.5), p(0.36, 0.08), p(0.55, -0.12), p(0.72, -0.12), p(0.8, -0.02), p(0.66, 0.22), p(0.42, 0.6)], fill=color)
+
+def bisonte_pil(d, x, y, r, color):
+    """El bisonte de las cuevas, de perfil y mirando a la derecha (como Decoracion.bisonte), de ancho 2·r."""
+    def cub(p0, p1, p2, p3, n=10):
+        return [((1 - t) ** 3 * p0[0] + 3 * (1 - t) ** 2 * t * p1[0] + 3 * (1 - t) * t * t * p2[0] + t ** 3 * p3[0],
+                 (1 - t) ** 3 * p0[1] + 3 * (1 - t) ** 2 * t * p1[1] + 3 * (1 - t) * t * t * p2[1] + t ** 3 * p3[1]) for t in [k / n for k in range(1, n + 1)]]
+    pts = [(-0.85, -0.15)] + cub((-0.85, -0.15), (-0.5, -0.3), (-0.1, -0.45), (0.15, -0.62)) + cub((0.15, -0.62), (0.4, -0.6), (0.55, -0.35), (0.62, -0.18))
+    pts += [(0.7, -0.34), (0.72, -0.16), (0.9, 0.05), (0.92, 0.22), (0.8, 0.28), (0.68, 0.44), (0.58, 0.3), (0.52, 0.66), (0.44, 0.66), (0.4, 0.3)]
+    pts += [((1 - t) ** 2 * 0.4 + 2 * (1 - t) * t * 0.0 + t * t * -0.38, (1 - t) ** 2 * 0.3 + 2 * (1 - t) * t * 0.42 + t * t * 0.3) for t in [k / 8 for k in range(1, 9)]]
+    pts += [(-0.44, 0.66), (-0.52, 0.66), (-0.6, 0.24), (-0.78, 0.14), (-0.95, 0.3), (-0.88, 0.04)]
+    d.polygon([(x + px * r, y + py * r) for px, py in pts], fill=color)
+
+def cueva(tam):
+    """Prehistoria: la pared de caliza de una cueva, con sus estratos, el hollín de las lámparas arriba, dos manos en
+    negativo sopladas en ocre, un bisonte de carbón e hileras de puntos; la huella es de ocre rojo, como una mano que se
+    apoyó mojada en pigmento: más cargada en el centro, con grumos y el borde moteado."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    caliza = mezcla(col('#D9C8A8'), col('#B69C76'), ruido(tam, tam / 26, 121))
+    caliza = caliza * (0.92 + 0.1 * ruido(tam, 0.9, 122)[..., None])
+    estratos = (np.sin(yy / tam * 26 + ruido(tam, tam / 40, 123) * 2.5) + 1) / 2
+    caliza = mezcla(caliza, col('#A68B66'), (estratos > 0.93) * 0.35)
+    hollin = np.clip(1 - yy / (tam * 0.32), 0, 1) ** 2 * np.clip(ruido(tam, tam / 18, 124) + 0.3, 0, 1)
+    caliza = mezcla(caliza, col('#3A2E26'), hollin * 0.45)
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    caliza = mezcla(caliza, col('#7A6248'), np.clip(dist - 0.75, 0, 1) * 1.2)
+    # Las dos manos en negativo: la nube de ocre soplado alrededor de la mano.
+    manos = [(0.17, 0.3, 0.09, -0.35), (0.84, 0.66, 0.08, 0.4)]
+    for k, (fx, fy, fs, g) in enumerate(manos):
+        nube = np.clip(1 - np.sqrt((xx - tam * fx) ** 2 + (yy - tam * fy) ** 2) / (tam * fs * 2.1), 0, 1) ** 0.6
+        nube = nube * np.clip(0.75 + 0.5 * ruido(tam, 1.2, 125 + k), 0, 1)
+        caliza = mezcla(caliza, col('#9A3A1C'), np.clip(nube * 1.1, 0, 0.92))
+    fondo = a_img(caliza).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    base_roca = tuple(int(v) for v in col('#C4AC86'))
+    for fx, fy, fs, g in manos:
+        mano_pil(d, tam * fx, tam * fy, tam * fs, g, base_roca + (235,))
+    # El bisonte de carbón, abajo a la izquierda, y las hileras de puntos.
+    bisonte_pil(d, tam * 0.24, tam * 0.8, tam * 0.13, (42, 34, 28, 200))
+    rng = np.random.default_rng(126)
+    for fila, (x0, y0) in enumerate([(0.62, 0.17), (0.66, 0.24), (0.58, 0.88)]):
+        for k in range(5):
+            r = tam * (0.009 + rng.random() * 0.006); x = tam * (x0 + k * 0.035); y = tam * y0 + (k % 2) * tam * 0.006
+            d.ellipse([x - r, y - r, x + r, y + r], fill=(162, 64, 31, 210 if fila < 2 else 170))
+    fondo = fondo.convert('RGB')
+    # La huella de ocre: grumos de pigmento, más cargada al centro, y el borde moteado.
+    grano = ruido(tam, 0.9, 127)
+    carga = ruido(tam, tam / 16, 128)
+    centro = np.clip(1.15 - dist, 0.4, 1)
+    tinta = mezcla(col('#7A2A14'), col('#C0582E'), np.clip(carga * 0.6 + 0.3, 0, 1))
+    alfa = m * np.clip(0.62 + 0.38 * grano, 0, 1) * np.clip(0.55 + carga * 0.35, 0, 1) * centro
+    sh = relieve(m, fuerza=0.45)[..., None]
+    capa = a_rgba(tinta * (1 + sh * 0.2), np.clip(alfa * 1.45, 0, 1))
+    guardar(fondo, capa, 'cueva')
+
+
 # ------------------------------------------------------------------ Templario
 def cruz_patada_pts(cx, cy, r, centro=0.15, punta=0.42):
     """Los vértices de la cruz patada (la de ui/Decoracion.kt `cruzPatada`), sin el remate cóncavo."""
@@ -1036,6 +1102,7 @@ SIETE = [
     'renacimiento',
     'pirata',
     'antiguas',
+    'cueva',
     'templario',
 ]
 ORDEN = [
@@ -1068,6 +1135,7 @@ ORDEN = [
     'urss',
     'revolucion',
     'antiguas',
+    'cueva',
 ]
 
 
