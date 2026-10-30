@@ -188,6 +188,7 @@ object FondosTelefono {
         TemaId.URSS -> "МОЙ СЛЕД"
         TemaId.REVOLUCION -> "VESTIGIUM · MEI · AN I"
         TemaId.ANTIGUAS -> "VESTIGIUM · MEI · CRÓNICA"
+        TemaId.CUEVA -> "VESTIGIUM MEI · LA PARED"
     }
 }
 
@@ -647,6 +648,21 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     runaVivo(RUNAS_VIVO[j + 5], Offset(cx + j * 16 * u, aba - 20 * u), 12 * u, col, 1.3f * u)
                 }
             }
+            TemaId.CUEVA -> {
+                // El borde de una laja de caliza, doble, con una mano en negativo arriba a cada lado y una hilera de puntos abajo.
+                fun laja(d: Float, c: Color, g: Float) = drawPath(Path().apply {
+                    moveTo(izq + d, arr + d + 8 * u); quadraticTo(cx, arr + d - 6 * u, der - d, arr + d + 4 * u)
+                    quadraticTo(der - d + 6 * u, cy, der - d, aba - d - 6 * u); quadraticTo(cx, aba - d + 6 * u, izq + d, aba - d)
+                    quadraticTo(izq + d - 5 * u, cy, izq + d, arr + d + 8 * u); close()
+                }, c, style = Stroke(g))
+                laja(0f, col, 2f * u); laja(7 * u, tenue, 0.9f * u)
+                listOf(izq + 34 * u, der - 34 * u).forEach { x ->
+                    val m = Offset(x, arr + 40 * u)
+                    drawCircle(col, 16 * u, m)
+                    drawPath(manoUnida(m, 11 * u), e.background)
+                }
+                for (k in -3..3) drawCircle(col, 2 * u, Offset(cx + k * 10 * u, aba - 20 * u))
+            }
         }
     }
 }
@@ -890,4 +906,5 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.PIRATA -> R.drawable.logo_pirata
     TemaId.REVOLUCION -> R.drawable.logo_revolucion
     TemaId.ANTIGUAS -> R.drawable.logo_antiguas
+    TemaId.CUEVA -> R.drawable.logo_cueva
 }

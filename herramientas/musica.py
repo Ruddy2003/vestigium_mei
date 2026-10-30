@@ -370,6 +370,22 @@ def hacer_antiguas():
     P['antiguas'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, 1.0, 0.62, 0.997), [7, 10, 14], 0.12, 1.0))
     ARGS['antiguas'] = (T, pz, ac, mel, kw)
 
+def hacer_cueva():
+    # --- Prehistoria: Mi pentatónico menor. La flauta de hueso sobre un tambor de piel que late, lajas de piedra que suenan
+    # en cuartas y quintas y la bramadera de fondo, con el eco largo de la cueva (melodía propia). Con su propio azar.
+    with A.azar_propio('musica_cueva'):
+        T = -5; pz = 0.5
+        ac = compases([0, 7, 12], [-2, 5, 10], [3, 10, 15], [0, 7, 12])
+        mel = frase(0, "12:1 15:1 17:2 | 15:1 12:1 10:2 | 12:0.5 10:0.5 7:1 10:2 | 7:4")
+        def hueso_f(f, d): return flauta(f, d) * 0.85 + 0.25 * filtro(ruido(d), 'banda', (f * 1.5, f * 4)) * env(int(d * SR), 0.03, d * 0.7, 2)
+        laja = lambda f, d: campana(f, min(d, 1.4), 2.41, 0.8, 4.0)
+        piel = lambda: tambor(hz(T - 24), 0.35, 0.35)
+        bram = lambda: filtro(ruido(3.6), 'banda', (140, 360)) * (0.55 + 0.45 * np.sin(2 * np.pi * 2.6 * t_(3.6))) * env(int(3.6 * SR), 1.2, 2.0, 2)
+        perc = cada(16, piel, 0.4, paso=1) + cada(16, bram, 0.12, paso=8)
+        kw = dict(inst_mel=hueso_f, inst_ac=laja, arpegio=True, perc=perc, g_mel=0.5, g_ac=0.3, oct_mel=0, oct_ac=-12, legato=0.95, cola=2.4, rev=0.38)
+        P['cueva'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: laja(f, 1.0), [7, 12, 19], 0.14, 1.2))
+        ARGS['cueva'] = (T, pz, ac, mel, kw)
+
 def hacer_neon():
     # --- Ciudad neón: Fa sostenido menor con séptima, synth-pop de bar a medio tempo. Colchón tibio de sierras, bajo
     # pulsado, melodía de sierra filtrada y, de fondo, la llovizna y un bombo suave. Con su propio azar.
@@ -585,6 +601,7 @@ if __name__ == '__main__':
     hacer_edo()
     hacer_revolucion()
     hacer_antiguas()
+    hacer_cueva()
     hacer_neon()
     hacer_egipto()
     hacer_meso()

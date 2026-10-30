@@ -206,6 +206,11 @@ def pizarra(sem):        # Tierras Antiguas: pizarra en lajas
     lajas = (np.abs(np.sin(Y * 0.045 + X * 0.01 + ruido(sem + 1, 2, 20))) < 0.03) * -1.0
     return capas + lajas + ruido(sem + 2, 0.4, 1.2)
 
+def caliza(sem):         # Prehistoria: caliza de la pared de la cueva, con estratos que ondulan y motas de ocre
+    estratos = np.sin(Y * 0.06 + np.sin(X * 0.02) * 2 + ruido(sem, 3, 24)) * 0.4
+    motas = (ruido(sem + 1, 1.0, 2) > 2.1) * -1.2
+    return estratos + motas + ruido(sem + 2, 0.45, 1.0)
+
 
 # ---- motivos del anillo: se dibujan sobre el anillo, en coordenadas del lienzo grande (×K).
 def _pos(ang, r=RADIO): return (TAM / 2 + r * math.cos(ang)) * K, (TAM / 2 + r * math.sin(ang)) * K
@@ -420,6 +425,24 @@ def _runas(d, c, n=14, s=5):
         elif t == 1: d.line([(x - ex, y - ey), (x + ex, y + ey)], fill=c, width=int(K * 1.3))
         else: d.line([(x - s * K * dx, y - s * K * dy), (x - ex, y - ey)], fill=c, width=int(K * 1.3))
 
+def _mano(d, c, x, y, s, ang):
+    """Una mano pequeña (palma, cuatro dedos y pulgar) de alto 2·s, con los dedos hacia [ang]."""
+    ca, sa = math.cos(ang + math.pi / 2), math.sin(ang + math.pi / 2)
+    def p(px, py): return (x + (px * ca - py * sa) * s, y + (px * sa + py * ca) * s)
+    d.polygon([p(-0.44, -0.1), p(0.4, -0.1), p(0.4, 0.6), p(0.26, 1.0), p(-0.3, 1.0), p(-0.44, 0.6)], fill=c)
+    for fx, arriba, an in ((-0.34, -0.62, 0.17), (-0.13, -0.86, 0.19), (0.1, -0.98, 0.19), (0.3, -0.8, 0.18)):
+        d.polygon([p(fx - an / 2, 0), p(fx - an / 2, arriba + an / 2), p(fx, arriba), p(fx + an / 2, arriba + an / 2), p(fx + an / 2, 0)], fill=c)
+    d.polygon([p(0.3, 0.5), p(0.36, 0.08), p(0.7, -0.14), p(0.8, -0.02), p(0.42, 0.6)], fill=c)
+
+def _manos(d, c, n=24):                 # Prehistoria: puntos de ocre de tamaño desparejo y, cada cuarto, una mano hacia fuera
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        if i % 6 == 0:
+            x, y = _pos(a, RADIO + 2); _mano(d, c, x, y, 12 * K, a)
+        else:
+            x, y = _pos(a); r = (2.4 + (i * 7 % 4) * 0.5) * K
+            d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+
 
 # tema: (textura, fondo, tinta, fuerza de la textura en el fondo y en la huella, acabado, motivo)
 # Acabados: 'tinta' (se asienta en el soporte), 'dorado' (brillo metálico leve), 'ferrogalica' (sepia que se aclara
@@ -456,6 +479,7 @@ TEMAS = {
     'urss':         (cartel,        '#ECE7DE', '#8E1D1D',  10, 6, 'tinta',       _estrellas),
     'revolucion':   (verjurado,     '#F1EFEA', '#1F2A5A',  11, 5, 'tinta',       _tricolor),
     'antiguas':     (pizarra,       '#1D1F1E', '#C6A65A',   9, 6, 'dorado',      _runas),
+    'cueva':        (caliza,        '#E6D6BC', '#A2401F',  10, 5, 'tinta',       _manos),
 }
 # Los temas que comparten un motivo lo dibujan distinto (cuántos, de qué tamaño, cuántas puntas).
 VARIANTES = {

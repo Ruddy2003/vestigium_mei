@@ -71,6 +71,8 @@ private enum class BarridoTema {
     TINTA,
     GRIETA,
     COPO, ABANICO, SELLO, OJIVA, CIRCULO, MAREA, OCHO, HORIZONTE, VITRUVIO, ROSA, ESTRELLA, BANDAS, HEXAGONO,
+    /** Prehistoria: la nube de ocre soplado, de borde moteado. */
+    SOPLO,
     PERSIANA,
     /** Templario: la cruz patada que crece sobre su disco. */
     CRUZ,
@@ -157,6 +159,9 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.REVOLUCION -> MatizMovimiento(BarridoTema.BANDAS, 780, LinearOutSlowInEasing, 0f, 18f, 1f, 400, 55, FastOutSlowInEasing, 1.05f, 0.55f, 850f)
     // Puerta hexagonal de piedra; pesada.
     TemaId.ANTIGUAS -> MatizMovimiento(BarridoTema.HEXAGONO, 900, CubicBezierEasing(0.5f, 0f, 0.3f, 1f), 0f, 20f, 1f, 560, 70, LinearOutSlowInEasing, 1f, 0.8f, 500f)
+    // La nube de ocre que se sopla desde el toque; las secciones se asientan despacio, como polvo de pigmento, y el botón
+    // pesa como una piedra que se apoya.
+    TemaId.CUEVA -> MatizMovimiento(BarridoTema.SOPLO, 960, CubicBezierEasing(0.3f, 0f, 0.5f, 1f), 0f, 10f, 0.98f, 540, 70, LinearOutSlowInEasing, 1.08f, 0.6f, 560f)
 }
 
 /** Aparece desde un lado y aclarándose, con el matiz del tema. [orden] retrasa unos milisegundos, para que las secciones entren una tras otra. */
@@ -221,6 +226,8 @@ internal enum class VivoTema(val periodo: Int) {
     VILANOS(30000), GOTERAS(12000),
     ARENA(14000), PETALOS(20000), VITRAL(80000), ESTRELLAS(9000), MAR(15000), AGUA(14000), NUBES(180000), SAMARAS(24000), OLEAJE(30000), ESTRELLAS_ROJAS(36000),
     CONFETI(22000), RUNAS(14000), LLOVIZNA(6000),
+    /** Prehistoria: de día, manos en negativo que aparecen sopladas en la pared; de noche, la hoguera en lo hondo de la cueva. */
+    MANOS(26000), HOGUERA(9000),
     /** Templario: antorchas en la muralla. */
     ANTORCHAS(8000),
     JEROGLIFOS(20000),
@@ -261,6 +268,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.URSS -> VivoTema.ESTRELLAS_ROJAS      // estrellas rojas que suben
     TemaId.REVOLUCION -> VivoTema.CONFETI        // confeti azul, blanco y rojo, tenue
     TemaId.ANTIGUAS -> VivoTema.RUNAS            // runas que brillan y se apagan
+    TemaId.CUEVA -> if (oscuro) VivoTema.HOGUERA else VivoTema.MANOS   // de día, manos que se soplan en la pared; de noche, la hoguera
 }
 
 internal class MotaVivo(val x: Float, val y: Float, val v: Float, val fase: Float, val tam: Float, val tono: Int)
@@ -948,6 +956,43 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 drawCircle(Brush.radialGradient(listOf(al(e.onBackground, (1f - vida) * (if (oscuro) 0.08f else 0.06f)), Color.Transparent), center = Offset(x, y), radius = rr), rr, Offset(x, y))
             }
         }
+        VivoTema.MANOS -> {
+            // Manos en negativo que aparecen en la pared como sopladas, se quedan un rato y se borran; e hileras de puntos
+            // de ocre que titilan.
+            motas.take(7).forEachIndexed { i, m ->
+                val f = fraccionVivo(t * (1 + i % 2) + m.fase)
+                val a = (if (f < 0.25f) f / 0.25f else if (f < 0.7f) 1f else (1f - f) / 0.3f).coerceIn(0f, 1f)
+                if (a > 0.01f) {
+                    val o = Offset((0.08f + 0.84f * m.x) * w, (0.1f + 0.8f * m.y) * h); val r = 18f * u * (0.8f + 0.5f * m.tam)
+                    drawCircle(Brush.radialGradient(listOf(al(e.primary, 0.16f * a), al(e.primary, 0.08f * a), Color.Transparent), center = o, radius = r * 1.6f), r * 1.6f, o)
+                    rotate((m.v - 0.5f) * 50f, o) { drawPath(manoUnida(o, r), al(e.background, 0.9f * a)) }
+                }
+            }
+            motas.drop(7).take(10).forEach { m ->
+                val brillo = 0.5f + 0.5f * senoVuelta(t * vueltas(m) + m.fase)
+                val o = Offset(m.x * w, m.y * h)
+                for (j in 0 until 4) drawCircle(al(e.primary, 0.08f + 0.1f * brillo), 2.2f * u, Offset(o.x + j * 7f * u, o.y + (j % 2) * 2f * u))
+            }
+        }
+        VivoTema.HOGUERA -> {
+            // La luz de una hoguera en lo hondo de la cueva: el resplandor de abajo respira y tiembla, las brasas suben
+            // meciéndose y se apagan, y la sombra del techo baja y sube con la llama.
+            val temblor = 0.75f + 0.15f * senoVuelta(t * 7) + 0.1f * senoVuelta(t * 13 + 0.3f)
+            val fuego = Offset(w * 0.5f, h * 1.02f)
+            drawCircle(Brush.radialGradient(listOf(al(Color(0xFFFF9A3C), 0.16f * temblor), al(Color(0xFFE8804F), 0.07f * temblor), Color.Transparent), center = fuego, radius = h * 0.6f), h * 0.6f, fuego)
+            motas.take(16).forEach { m ->
+                val k = vueltas(m)
+                val sube = fraccionVivo(m.y + t * k)
+                val y = h * (1.02f - sube * 0.75f)
+                val x = (0.3f + 0.4f * m.x + 0.04f * senoVuelta(t * 3 * k + m.fase) * sube) * w
+                val a = (1f - sube) * (0.6f + 0.4f * senoVuelta(t * 9 * k + m.fase))
+                if (a > 0.02f) {
+                    drawCircle(al(Color(0xFFFFB347), 0.18f * a), 3.5f * u * m.tam, Offset(x, y))
+                    drawCircle(al(Color(0xFFFFE08A), 0.6f * a), 1.1f * u, Offset(x, y))
+                }
+            }
+            drawRect(Brush.verticalGradient(listOf(al(Color.Black, (0.25f * (1.2f - temblor)).coerceAtLeast(0f)), Color.Transparent), 0f, h * 0.3f), Offset.Zero, Size(w, h * 0.3f))
+        }
         VivoTema.JEROGLIFOS -> {
             // Un muro de signos en columnas, como se escribe en los templos: la luz de una lámpara pasa despacio de un lado
             // a otro y los signos que alcanza se encienden en oro y vuelven a la sombra.
@@ -1119,6 +1164,18 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
         }
         BarridoTema.ESCOTILLA -> ruta.poligonoBarrido(c, 4, r * 1.1f, r * 1.1f, 22.5f + 45f * p)
         BarridoTema.HEXAGONO -> ruta.poligonoBarrido(c, 3, r * 1.2f, r * 1.2f, 30f)
+        BarridoTema.SOPLO -> {
+            // La nube de ocre soplado: un borde de motas desparejas (radios fijos, siempre más allá de 1.2·r) que gira apenas.
+            val n = 28
+            for (i in 0 until n) {
+                val a = 2 * PI * i / n + 0.15f * p
+                val ruido = (((i * 2246822519L) ushr 9) and 255L) / 255f
+                val rr = r * (1.22f + 0.28f * ruido)
+                val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat()
+                if (i == 0) ruta.moveTo(x, y) else ruta.lineTo(x, y)
+            }
+            ruta.close()
+        }
         BarridoTema.SOL -> ruta.poligonoBarrido(c, 16, r * 2f, r * 1.2f, 20f * p)
         // Triángulo equilátero con el vértice arriba: su círculo inscrito tiene radio r, así que sus vértices van a 2r.
         BarridoTema.PIRAMIDE -> {

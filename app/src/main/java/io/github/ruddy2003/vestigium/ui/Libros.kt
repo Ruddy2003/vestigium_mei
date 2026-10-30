@@ -135,6 +135,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.PIRATA -> Soporte.LIBRO
     TemaId.REVOLUCION -> Soporte.LIBRO
     TemaId.ANTIGUAS -> Soporte.LIBRO
+    TemaId.CUEVA -> Soporte.LIBRO      // una laja que se da vuelta, como una tapa
     TemaId.NAPOLEON -> Soporte.SOBRE
     TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
@@ -194,6 +195,8 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.REVOLUCION -> Materia(c(0xFF2F4A7A), c(0xFF1A2A4A), c(0xFF4A6699), c(0xFFB22234), c(0xFFF0EADB), c(0xFFF2ECDD), c(0xFF1C1A17), extra = c(0xFFB22234))
     // Libro de crónicas: cuero gastado, esquinas de hierro, oro viejo y una gema verde.
     TemaId.ANTIGUAS -> Materia(c(0xFF5A3A22), c(0xFF33210F), c(0xFF7A5232), c(0xFFC9A04A), c(0xFF4A4E54), c(0xFFEDE2C6), c(0xFF1E1D1A), extra = c(0xFF2E7A5A))
+    // La laja de caliza: la piedra, su sombra y su brillo, el ocre rojo, el carbón, la cara lisa donde se pinta y el ocre amarillo de la fecha.
+    TemaId.CUEVA -> Materia(c(0xFFD9C7A6), c(0xFF9C8664), c(0xFFEFE3CC), c(0xFFA2401F), c(0xFF2E2620), c(0xFFEFE4D0), c(0xFF2A211B), extra = c(0xFFB07418))
 }
 
 // =====================================================================
@@ -277,6 +280,8 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     TemaId.REVOLUCION -> NocheTema(c(0xFF101828), c(0xFFFF8A4A), 0.65f, 0.82f, c(0xFFF8D9C2))
     // La luz de estrellas de los bosques antiguos.
     TemaId.ANTIGUAS -> NocheTema(c(0xFF0E1612), c(0xFFB8E0C8), 0.73f, 0.87f, c(0xFFDCEFE2))
+    // Lo hondo de la cueva: la roca casi negra y la luz amarilla de la lámpara de grasa.
+    TemaId.CUEVA -> NocheTema(c(0xFF120C08), c(0xFFF2B36B), 0.7f, 0.85f, c(0xFFF6D9AE))
 }
 
 /** El objeto bajo su noche: el cuerpo se hunde en el cielo del tema y el oro toma la luz que lo alumbra. */
@@ -325,6 +330,8 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.URSS -> materiaTenida(m, n)
         TemaId.REVOLUCION -> materiaTenida(m, n)
         TemaId.ANTIGUAS -> materiaTenida(m, n)
+        // La laja a la luz del fuego: la piedra se oscurece, el ocre se enciende y la cara lisa queda en sombra.
+        TemaId.CUEVA -> Materia(c(0xFF5A4634), c(0xFF2E2219), c(0xFF8A6A4A), c(0xFFE8804F), c(0xFF1A130E), c(0xFF3A2C20), c(0xFFF2DDB8), extra = c(0xFFF4C76E))
     }
 }
 
@@ -367,6 +374,7 @@ fun paginaNoche(t: TemaId): Pagina {
         TemaId.URSS -> paginaTenida(p, n)
         TemaId.REVOLUCION -> paginaTenida(p, n)
         TemaId.ANTIGUAS -> paginaTenida(p, n)
+        TemaId.CUEVA -> Pagina(null, c(0xFF1C140E), c(0xFFEEDFC8), c(0xFF9A8670), c(0xFFE8804F), c(0xFFF4C76E), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
     }
 }
 
@@ -403,6 +411,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.PIRATA -> "Lo soñado en el coy"
     TemaId.REVOLUCION -> "RÊVE · SUEÑO"
     TemaId.ANTIGUAS -> "VISIONES DE LA NOCHE"
+    TemaId.CUEVA -> "Visiones junto al fuego"
 }
 
 /** Lo que cierra la página de un sueño: el despertar, en cada tema. */
@@ -438,6 +447,7 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.PIRATA -> "Y sonó la campana del alba."
     TemaId.REVOLUCION -> "DEBOUT · EN PIE"
     TemaId.ANTIGUAS -> "Y la compañía despertó."
+    TemaId.CUEVA -> "— y el fuego aún tenía brasas —"
 }
 
 /** Media luna: un círculo menos otro corrido hacia un lado. */
@@ -550,6 +560,8 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             TemaId.URSS -> if (i % 9 == 0) estrellaPuntas(o, r * 2.2f, Color(0xFFE53935).copy(alpha = col.alpha), 5, 0.42f) else drawCircle(col, r * 0.8f, o)
             TemaId.REVOLUCION -> drawCircle(listOf(Color(0xFF8FA6E8), col, Color(0xFFE57373))[i % 3].copy(alpha = col.alpha), r, o)
             TemaId.ANTIGUAS -> estrellaPuntas(o, r * 2.2f, col, 4, 0.3f)
+            // Puntos de dos en dos, como las parejas de puntos pintados en la roca.
+            TemaId.CUEVA -> { drawCircle(col, r * 0.8f, o); drawCircle(col.copy(alpha = col.alpha * 0.5f), r * 0.5f, o + Offset(r * 2.2f, r * 0.6f)) }
         }
     }
 }
@@ -770,6 +782,11 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             drawCircle(luna, r * 0.8f, ce)
             if (!sola) for (i in 0 until 16) { val a = 2 * PI * i / 16; val p0 = ce + polarLibro(r * 1.1f, a); drawLine(luna.copy(alpha = 0.7f), p0, p0 + polarLibro(r * 0.25f, a + if (i % 3 == 0) 0.6 else -0.4), 1.1f) }
         }
+        // La luna llena y, alrededor, una hilera de muescas en zigzag: las noches de una luna contadas en un hueso.
+        TemaId.CUEVA -> {
+            drawCircle(luna.copy(alpha = 0.16f), r * 1.3f, ce); drawCircle(luna, r * 0.8f, ce)
+            if (!sola) for (i in 0 until 15) { val a = -PI / 2 + PI * 1.6 * i / 14 - PI * 0.3; val p0 = ce + polarLibro(r * (if (i % 2 == 0) 1.2f else 1.38f), a); drawCircle(luna.copy(alpha = 0.75f), 1.2f, p0) }
+        }
     }
 }
 
@@ -824,6 +841,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.PIRATA -> "ASENTAR LA SINGLADURA"
     TemaId.REVOLUCION -> "FIRMAR"
     TemaId.ANTIGUAS -> "ASENTAR EN LA CRÓNICA"
+    TemaId.CUEVA -> "Pintar en la pared"
 }
 
 /** Lo que cierra cada página al leerla. */
@@ -859,6 +877,7 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.PIRATA -> "Fin de la singladura."
     TemaId.REVOLUCION -> "Lu et approuvé."
     TemaId.ANTIGUAS -> "Así quedó escrito en la crónica."
+    TemaId.CUEVA -> "Aquí termina la pintura; sigue la roca."
 }
 
 /** Lo que invita a abrir el objeto cerrado cuando aún no tiene nada escrito. */
@@ -894,6 +913,7 @@ private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.URSS -> "toca para abrir la libreta de informes"
     TemaId.REVOLUCION -> "toca para abrir el cuaderno de quejas"
     TemaId.ANTIGUAS -> "toca para abrir la crónica"
+    TemaId.CUEVA -> "toca para dar vuelta la laja"
 }
 
 /** Lo mismo, de noche: invita a contar el sueño. */
@@ -929,6 +949,7 @@ private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.URSS -> "toca para entregar el informe del sueño"
     TemaId.REVOLUCION -> "toca para levantar acta del sueño"
     TemaId.ANTIGUAS -> "toca para contar las visiones de la noche"
+    TemaId.CUEVA -> "toca para contar lo que viste con los ojos cerrados"
 }
 
 /** Lo que dice la página de un día sin nada escrito. */
@@ -964,6 +985,7 @@ private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.URSS -> "ЗАПИСЕЙ НЕТ · sin informe este día."
     TemaId.REVOLUCION -> "Rien à signaler: nada escrito este día."
     TemaId.ANTIGUAS -> "Las crónicas callan sobre este día."
+    TemaId.CUEVA -> "Pared lisa: este sol no dejó pintura."
 }
 
 /** Lo que dice la página de una noche sin sueño anotado. */
@@ -999,6 +1021,7 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.URSS -> "СНОВ НЕТ · sin informe de sueño."
     TemaId.REVOLUCION -> "Nuit sans rêve: no anotaste ningún sueño."
     TemaId.ANTIGUAS -> "La compañía no recordó visiones esa noche."
+    TemaId.CUEVA -> "Esa noche el fuego no trajo visiones."
 }
 
 /** Cómo se anuncian «lo mejor» y «lo peor» del día al pie de la página. */
@@ -1034,6 +1057,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.URSS -> "ДОСТИЖЕНИЕ · logro — " to "НЕДОСТАТОК · falla — "
     TemaId.REVOLUCION -> "Bonheur — " to "Doléance — "
     TemaId.ANTIGUAS -> "La hazaña — " to "El tropiezo — "
+    TemaId.CUEVA -> "La mejor presa — " to "La que se escapó — "
 }
 
 /** La invitación a escribir en la página en blanco del día. */
@@ -1069,6 +1093,7 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.URSS -> "ОТЧЁТ: ¿qué se cumplió hoy?"
     TemaId.REVOLUCION -> "Escribe tus quejas y tus esperanzas del día."
     TemaId.ANTIGUAS -> "¿Qué caminos recorrió hoy la compañía?"
+    TemaId.CUEVA -> "¿Qué pasó este sol? Píntalo con palabras."
 }
 
 /** La invitación a escribir el sueño. */
@@ -1104,6 +1129,7 @@ private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.URSS -> "СОН: ¿qué soñaste? Informe breve."
     TemaId.REVOLUCION -> "Le rêve: ¿qué soñaste?"
     TemaId.ANTIGUAS -> "¿Qué visiones tuvo la compañía esta noche?"
+    TemaId.CUEVA -> "¿Qué viste con los ojos cerrados, junto al fuego?"
 }
 
 /** Un esquema de color con los colores del objeto, para que bandas, botones y fichas combinen con la página. */
@@ -1199,6 +1225,8 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
         TemaId.MESO -> libro({ libroCerrado(m) { g -> tapaMeso(m, g) } }, LetraExtra.codice, 14f)
         TemaId.REVOLUCION -> libro({ libroCerrado(m) { g -> tapaRevolucion(m, g) } }, LetraExtra.convencion, 13.5f)
         TemaId.ANTIGUAS -> libro({ libroCerrado(m) { g -> tapaAntiguas(m, g) } }, LetraExtra.almendra, 13.5f)
+        TemaId.CUEVA -> FormaObjeto(dibujo = { lajaPintada(m) }, caja = listOf(0.1f, 0.3f, 0.1f, 0.2f), pista = pista, letra = LetraExtra.abrigo, tinta = m.tinta,
+            fecha = m.acento, tam = 13.5f, interlinea = 18f, alto = 176, gira = true, letraFecha = LetraExtra.trazo, palabras = { "$it palabras en la laja" })
         TemaId.COLONOS -> libro({ libroRegistro(m) }, LetraExtra.oswald, 13f, caja = listOf(0.27f, 0.24f, 0.17f, 0.24f))
         TemaId.URSS -> libro({ libretaInforme(m) }, LetraExtra.russo, 12f, caja = listOf(0.37f, 0.27f, 0.1f, 0.18f),
             rotulos = listOf(RotuloObjeto("ОТЧЁТ · INFORME", LetraExtra.russo, 9f, m.hoja, 0.37f, 0.183f)), fecha = m.cuerpo)
@@ -1755,6 +1783,32 @@ private fun DrawScope.bitacoraAtada(m: Materia) {
     drawLine(m.detalle, nudo, nudo + Offset(5f, 9f), 2.2f, StrokeCap.Round); drawLine(m.detalle, nudo, nudo + Offset(-2f, 11f), 2.2f, StrokeCap.Round)
 }
 
+/**
+ * La pared de la Prehistoria hecha objeto: una laja de caliza de borde partido, con una mano en negativo arriba a la
+ * izquierda, una hilera de puntos de ocre, una grieta y un bisonte de carbón abajo; en medio, la cara lisa donde se escribe.
+ */
+private fun DrawScope.lajaPintada(m: Materia) {
+    val w = size.width; val h = size.height
+    val laja = Path().apply {
+        moveTo(w * 0.04f, h * 0.1f); quadraticTo(w * 0.3f, h * 0.02f, w * 0.6f, h * 0.06f); quadraticTo(w * 0.85f, h * 0.02f, w * 0.96f, h * 0.12f)
+        quadraticTo(w * 0.99f, h * 0.5f, w * 0.95f, h * 0.9f); quadraticTo(w * 0.6f, h * 0.99f, w * 0.3f, h * 0.95f); quadraticTo(w * 0.06f, h * 0.97f, w * 0.03f, h * 0.86f)
+        quadraticTo(0f, h * 0.5f, w * 0.04f, h * 0.1f); close()
+    }
+    drawPath(laja, Brush.linearGradient(listOf(m.brillo, m.cuerpo, m.sombra), Offset.Zero, Offset(w, h)))
+    drawPath(laja, m.sombra, style = Stroke(1.4f))
+    // El grano de la piedra.
+    val az = java.util.Random(4)
+    repeat(70) { drawCircle(m.sombra.copy(alpha = 0.2f), 0.6f + az.nextFloat() * 1.4f, Offset(w * (0.07f + az.nextFloat() * 0.86f), h * (0.09f + az.nextFloat() * 0.82f))) }
+    drawPath(Path().apply { moveTo(w * 0.72f, h * 0.05f); lineTo(w * 0.75f, h * 0.15f); lineTo(w * 0.72f, h * 0.22f) }, m.sombra.copy(alpha = 0.7f), style = Stroke(1f))
+    // La mano en negativo y la hilera de puntos.
+    val mano = Offset(w * 0.15f, h * 0.17f)
+    drawCircle(Brush.radialGradient(listOf(m.acento.copy(alpha = 0.85f), m.acento.copy(alpha = 0f)), mano, h * 0.14f), h * 0.14f, mano)
+    piezasMano(mano, h * 0.085f).forEach { drawPath(it, m.cuerpo) }
+    for (k in 0 until 5) drawCircle(m.acento, 2.2f, Offset(w * (0.32f + k * 0.05f), h * 0.13f + (k % 2) * 2f))
+    // El bisonte de carbón.
+    drawPath(bisonte(Offset(w * 0.8f, h * 0.86f), w * 0.1f), m.detalle.copy(alpha = 0.8f))
+}
+
 /** El cuaderno de Leonardo: vitela flexible sin lomo rígido, la solapa que envuelve el canto, el botón de hueso con su presilla y trazos de sanguina. */
 private fun DrawScope.cuadernoLeonardo(m: Materia) {
     val w = size.width; val h = size.height
@@ -2175,6 +2229,10 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
             drawPath(Path().apply { moveTo(o.x, o.y - g); lineTo(o.x + g * 0.75f, o.y - g * 0.2f); lineTo(o.x, o.y + g); lineTo(o.x - g * 0.75f, o.y - g * 0.2f); close() }, m.extra)
             drawLine(m.acento, Offset(o.x - g * 0.75f, o.y - g * 0.2f), Offset(o.x + g * 0.75f, o.y - g * 0.2f), 1.2f)
         }
+        TemaId.CUEVA -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_ROCA) { o, _ ->
+            // Una mano pequeña de ocre, en positivo, en cada laja.
+            piezasMano(o, size.width * 0.16f).forEach { drawPath(it, m.acento) }
+        }
         // Boletines y cartas, de dos en dos.
         TemaId.NAPOLEON -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> boletin(tema, m, e, noche) }
         TemaId.NAVIDAD -> Cartas(entradas, tema, m, noche, texto, conSonido) { e -> cartaNavidad(tema, m, e, noche) }
@@ -2392,6 +2450,15 @@ private val ESTANTE_PIEDRA = TablaEstante(Color(0xFF85807A), Color(0xFF4A4640)) 
         drawLine(Color(0xFF2E2B27).copy(alpha = 0.7f), o + Offset(0f, if (i % 2 == 0) -h * 0.3f else 0f), o + Offset(h * 0.3f, if (i % 2 == 0) 0f else -h * 0.2f), 0.9f)
         x += 90f; i++
     }
+}
+
+/** Una repisa de roca de la cueva: el borde desparejo, una veta de hollín y, de tanto en tanto, tres puntos de ocre. */
+private val ESTANTE_ROCA = TablaEstante(Color(0xFFB59A78), Color(0xFF6E5638)) {
+    val w = size.width; val h = size.height
+    drawPath(Path().apply { moveTo(0f, h * 0.35f); var x = 0f; var k = 0; while (x < w) { x += 34f; quadraticTo(x - 17f, h * (if (k % 2 == 0) 0.2f else 0.5f), x, h * 0.35f); k++ } },
+        Color(0xFF2E2620).copy(alpha = 0.45f), style = Stroke(1.2f))
+    var x = 40f
+    while (x < w) { for (k in 0 until 3) drawCircle(Color(0xFFA2401F).copy(alpha = 0.8f), 1.6f, Offset(x + k * 5f, h * 0.68f)); x += 110f }
 }
 
 @Composable
@@ -2678,6 +2745,7 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.REFUGIO -> Pagina(R.drawable.papel_refugio, c(0xFF031A0B), c(0xFF7CF098), c(0xFF2F8F4E), c(0xFF3DFF7F), c(0xFFFFB23F), LetraExtra.vt323, 22f, 26f, true, Rayas.NADA)
     TemaId.REVOLUCION -> Pagina(R.drawable.papel_revolucion, c(0xFFF2ECDD), c(0xFF1C1A17), c(0xFF5E584E), c(0xFFB22234), c(0xFF1F3A6E), LetraExtra.ciudadana, 17.5f, 28f, false, Rayas.NADA, LetraExtra.convencion)
     TemaId.ANTIGUAS -> Pagina(R.drawable.papel_antiguas, c(0xFFEDE2C6), c(0xFF1E1D1A), c(0xFF5E5646), c(0xFF8E1B24), c(0xFF2E5A3E), LetraExtra.vollkorn, 18f, 27f, false, Rayas.NADA, LetraExtra.camino)
+    TemaId.CUEVA -> Pagina(R.drawable.papel_cueva, c(0xFFEADCC2), c(0xFF2A211B), c(0xFF6A5A48), c(0xFFA2401F), c(0xFFB07418), LetraExtra.abrigo, 17f, 27f, false, Rayas.NADA, LetraExtra.trazo)
 }
 
 /** Fondo de la página: papel, papiro, seda, pantalla… y el adorno de cada tema. En modo oscuro, el papel claro se atenúa un poco para no deslumbrar. */
@@ -2788,6 +2856,14 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     val o = Offset(w - 46.dp.toPx(), h - 56.dp.toPx()); val r0 = 22.dp.toPx()
                     for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); val rr = if (i % 2 == 0) r0 else r0 * 0.5f; drawLine(p.tinta.copy(alpha = 0.16f), o, Offset(o.x + rr * cos(a).toFloat(), o.y + rr * sin(a).toFloat()), 1.2f) }
                     drawCircle(p.tinta.copy(alpha = 0.12f), r0 * 0.7f, o, style = Stroke(1f))
+                }
+                TemaId.CUEVA -> {
+                    // El hollín de la lámpara arriba, una hilera de puntos de ocre y una mano en negativo, apenas, abajo a la derecha.
+                    drawRect(Brush.verticalGradient(listOf(p.tinta.copy(alpha = 0.08f), Color.Transparent), 0f, h * 0.18f), Offset.Zero, Size(w, h * 0.18f))
+                    for (k in 0 until 6) drawCircle(p.acento.copy(alpha = 0.3f), 2.4f.dp.toPx(), Offset(w * 0.5f + (k - 2.5f) * 9.dp.toPx(), 18.dp.toPx()))
+                    val mano = Offset(w - 46.dp.toPx(), h - 60.dp.toPx())
+                    drawCircle(Brush.radialGradient(listOf(p.acento.copy(alpha = 0.16f), Color.Transparent), mano, 40.dp.toPx()), 40.dp.toPx(), mano)
+                    piezasMano(mano, 24.dp.toPx()).forEach { drawPath(it, p.color) }
                 }
                 TemaId.REVOLUCION -> {
                     // El margen del cuaderno: un filete azul y otro rojo.
@@ -3047,6 +3123,7 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
             TemaId.URSS -> Text("ОТЧЁТ · INFORME DE JORNADA", fontFamily = LetraExtra.russo, fontSize = 12.sp, color = p.acento, modifier = Modifier.border(2.dp, p.acento).padding(horizontal = 8.dp, vertical = 2.dp))
             TemaId.REVOLUCION -> { emblema(); Rubrica("CAHIER DE DOLÉANCES", LetraExtra.convencion, 15f, p.acento, 2f); Rubrica("de la commune · Nº $nDia", LetraExtra.ciudadana, 12f, p.tenue) }
             TemaId.ANTIGUAS -> { emblema(); Rubrica("CRÓNICA DE LA COMPAÑÍA", LetraExtra.camino, 13f, p.acento, 1.5f) }
+            TemaId.CUEVA -> { emblema(); Rubrica("La pared de este sol", LetraExtra.trazo, 19f, p.acento, 1f) }
         }
         Text(Estilo.fecha(fecha), style = ty.headlineSmall, color = if (p.oscura) p.acento else p.tinta, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
         Text(Fechas.titulo(fecha).lowercase() + " · " + Fechas.relativo(fecha), style = ty.labelMedium, color = p.tenue, textAlign = TextAlign.Center)
@@ -3087,6 +3164,7 @@ private fun letraSueno(t: TemaId): Pair<FontFamily, Float> = when (t) {
     TemaId.URSS -> LetraExtra.russo to 12f
     TemaId.REVOLUCION -> LetraExtra.cormorant to 14f
     TemaId.ANTIGUAS -> LetraExtra.almendra to 13f
+    TemaId.CUEVA -> LetraExtra.abrigo to 13.5f
 }
 
 /** Encabezado de la página de un sueño: la luna y las estrellas del tema, su rótulo y la noche en que se soñó. */

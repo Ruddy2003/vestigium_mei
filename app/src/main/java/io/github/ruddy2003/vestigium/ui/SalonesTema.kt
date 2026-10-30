@@ -52,6 +52,7 @@ object SalonesTema {
             TemaId.RUINAS -> with(SalonesMas) { bibliotecaInvadida(cs, oscuro, n) }
             TemaId.NAVIDAD -> with(SalonesMas) { chimenea(cs, oscuro, n) }
             TemaId.ANTIGUAS -> with(SalonesMas) { salonPiedra(cs, oscuro, n) }
+            TemaId.CUEVA -> with(SalonesMas) { salonCueva(cs, oscuro, n) }
             TemaId.DISTOPIA -> with(SalonesMas) { archivo(cs, oscuro, n) }
             TemaId.CIBER -> with(SalonesMas) { salaCentral(cs, oscuro, n) }
             TemaId.NEON -> with(SalonesMas) { callejon(cs, oscuro, n) }
@@ -126,6 +127,7 @@ object SalonesTema {
             TemaId.RUINAS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.NAVIDAD -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.ANTIGUAS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.CUEVA -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.DISTOPIA -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.CIBER -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.NEON -> with(SalonesMas) { pedestalMas(tema, cs, metal) }

@@ -180,6 +180,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.URSS -> listOf("trabajador de choque", "plan cumplido", "plan en cuatro años", "héroe del trabajo")
     TemaId.REVOLUCION -> listOf("ciudadano activo", "guardia nacional", "héroe de la patria", "al Panteón")
     TemaId.ANTIGUAS -> listOf("hierro de la mina", "plata lunar", "oro de las profundidades", "gema de las edades")
+    TemaId.CUEVA -> listOf("carbón de hoguera", "ocre amarillo", "ocre rojo", "hematita que brilla")
 }
 
 /** Un polígono estrellado: [puntas] vértices a [fuera] y otros tantos a [dentro]; con los dos iguales, un polígono regular. */
@@ -697,6 +698,16 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                     runaVivo(runa, p, m * 0.07f, luz.copy(alpha = 0.10f), 4f * u)
                     runaVivo(runa, p, m * 0.07f, luz.copy(alpha = 0.30f), 1.3f * u)
                 }
+            }
+        }
+        TemaId.CUEVA -> rotate(giro, c) {
+            // Un corro de manos de ocre alrededor, como en las paredes cubiertas de manos, y un anillo de puntos por dentro.
+            val ocre = if (oscuro) Color(0xFFE8804F) else cs.primary
+            for (i in 0 until 24) drawCircle(ocre.copy(alpha = 0.22f), m * 0.012f, pt(m * 0.34f, 2 * PI * i / 24))
+            for (i in 0 until 8) {
+                val a = 2 * PI * i / 8
+                val p = pt(m * 0.43f, a)
+                rotate(Math.toDegrees(a).toFloat() + 90f, p) { drawPath(manoUnida(p, m * 0.05f), ocre.copy(alpha = 0.3f)) }
             }
         }
     }

@@ -151,6 +151,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.REVOLUCION -> { p { m(5f, 20f); q(4f, 10f, 10f, 5f); q(15f, 2f, 19f, 6f); q(20f, 9f, 17.5f, 10f); q(19f, 14f, 19f, 20f); close() }; l(4.5f, 20.5f, 19.5f, 20.5f); ci(9f, 15.5f, 1.8f, st = fino) } // gorro frigio
         TemaId.ANTIGUAS -> { p { m(5f, 21f); t(5f, 10f); q(5f, 3f, 12f, 3f); q(19f, 3f, 19f, 10f); t(19f, 21f) }; l(3f, 21f, 21f, 21f); l(9f, 9f, 9f, 21f, 1.1f); l(15f, 9f, 15f, 21f, 1.1f)
             ci(13.6f, 15f, 0.9f, relleno = true) }                                                                                           // puerta del salón
+        TemaId.CUEVA -> { ci(12f, 7.5f, 3f); rayos(12f, 7.5f, 8, 4.6f, 6.4f, w = 1.3f); p { m(2f, 21f); q(4f, 14f, 8.5f, 15f); q(12f, 13f, 15.5f, 15f); q(20f, 14f, 22f, 21f) }
+            arco(9f, 17f, 6f, 8f, 180f, 180f, fino) }                                                                                         // el sol sobre el risco y la boca de la cueva
     } }
 
     // ------------------------------------------------------------ Diario
@@ -195,6 +197,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.URSS -> momentos(tm)
         TemaId.REVOLUCION -> momentos(tm)
         TemaId.ANTIGUAS -> momentos(tm)
+        TemaId.CUEVA -> { p { m(3f, 20f); q(8f, 15f, 13f, 17f) }; l(13.5f, 15.5f, 20f, 4f, 2.6f); ci(5f, 8f, 1.2f, relleno = true); ci(8.5f, 6.5f, 1.2f, relleno = true)
+            ci(12f, 8f, 1.2f, relleno = true) }                                                                                              // un tizón que pinta en la roca, y tres puntos
     } }
 
     // ------------------------------------------------------------ Momentos
@@ -249,6 +253,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.URSS -> { r(5f, 3f, 14f, 18f, 0.5f); estrella(12f, 8.5f, 3.4f, 1.4f, relleno = true); l(8f, 14f, 16f, 14f, 1.1f); l(8f, 17f, 14f, 17f, 1.1f) } // informe
         TemaId.REVOLUCION -> { r(5f, 3f, 14f, 18f, 0.6f); l(12f, 3f, 12f, 1.2f, 1.1f); l(8f, 8f, 16f, 8f, 1.1f); l(8f, 11.5f, 16f, 11.5f, 1.1f); l(8f, 15f, 13f, 15f, 1.1f) } // cuaderno de quejas
         TemaId.ANTIGUAS -> { r(5f, 3f, 14f, 18f, 0.6f); l(8.5f, 3f, 8.5f, 21f, 1.1f); r(17.5f, 10f, 3.5f, 4f, 0.3f, relleno = true); p(st = fino) { m(13.5f, 7.5f); t(15.5f, 10.5f); t(13.5f, 14.5f); t(11.5f, 10.5f); close() } } // libro con broche
+        TemaId.CUEVA -> { p { m(8.5f, 7.5f); q(3.5f, 12f, 4.5f, 17.5f); q(6f, 21.5f, 12f, 21.5f); q(18f, 21.5f, 19.5f, 17.5f); q(20.5f, 12f, 15.5f, 7.5f) }
+            p(st = fino) { m(8f, 3f); t(10f, 7.5f); t(14f, 7.5f); t(16f, 3f) }; l(8.5f, 7.5f, 15.5f, 7.5f, 1.3f); ci(16.5f, 9.8f, 1f, relleno = true); ci(12f, 15f, 1.4f, relleno = true) } // la bolsa de piel
     } }
 
     // ------------------------------------------------------------ Explorar
@@ -301,6 +307,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.URSS -> { l(3f, 21f, 21f, 21f); r(5f, 14f, 3.4f, 7f, 0.2f, true); r(10.3f, 10f, 3.4f, 11f, 0.2f, true); r(15.6f, 5f, 3.4f, 16f, 0.2f, true) } // estadística
         TemaId.REVOLUCION -> { l(12f, 4f, 12f, 20f); l(4f, 7f, 20f, 7f); l(8f, 20.5f, 16f, 20.5f); p(st = fino) { m(4f, 7f); t(2f, 13f); q(4f, 15.5f, 6f, 13f); t(4f, 7f) }; p(st = fino) { m(20f, 7f); t(18f, 13f); q(20f, 15.5f, 22f, 13f); t(20f, 7f) } } // balanza
         TemaId.ANTIGUAS -> { r(3f, 5f, 18f, 14f, 0.4f); p(st = fino) { m(5.5f, 16f); q(9f, 9f, 12.5f, 13f); q(16f, 16.5f, 18f, 8.5f) }; l(7f, 9f, 9f, 7f, 1.1f); l(9f, 9f, 11f, 7f, 1.1f); ci(18f, 8.5f, 1.3f, relleno = true) } // mapa con el camino
+        TemaId.CUEVA -> { ov(4.5f, 11f, 4.6f, 7.8f, relleno = true); ov(14.5f, 5f, 4.6f, 7.8f, relleno = true)
+            listOf(0f to 0.9f, 1.9f to 0.8f, 3.5f to 0.7f).forEach { (dx, rr) -> ci(5.2f + dx, 9.7f, rr, relleno = true); ci(15.2f + dx, 3.7f, rr, relleno = true) } } // dos huellas de pies: el rastro
     } }
 
     // ------------------------------------------------------------ Más
@@ -353,6 +361,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.REVOLUCION -> { ci(12f, 12f, 9f); ci(12f, 12f, 5.6f, st = fino); ci(12f, 12f, 2.4f, relleno = true) } // escarapela
         TemaId.ANTIGUAS -> { p { m(5.5f, 9f); t(9f, 4f); t(15f, 4f); t(18.5f, 9f); t(12f, 21f); close() }; l(5.5f, 9f, 18.5f, 9f, 1.1f); l(9f, 4f, 10.5f, 9f, 1.1f); l(15f, 4f, 13.5f, 9f, 1.1f)
             l(10.5f, 9f, 12f, 21f, 0.9f); l(13.5f, 9f, 12f, 21f, 0.9f) }                                                                   // gema tallada
+        TemaId.CUEVA -> { l(2f, 4f, 22f, 4f); p(relleno = true) { m(5f, 4f); t(7f, 11f); t(9f, 4f); close() }; p(relleno = true) { m(11f, 4f); t(12.5f, 15f); t(14f, 4f); close() }
+            p(relleno = true) { m(16.5f, 4f); t(18f, 9f); t(19.5f, 4f); close() }; l(4f, 20.5f, 20f, 20.5f); p(relleno = true) { m(10.5f, 20.5f); t(12.5f, 17f); t(14.5f, 20.5f); close() } } // lo hondo: estalactitas y estalagmita
     } }
 
     // ------------------------------------------------------------ Vida (tu vida vista de lejos)
@@ -433,6 +443,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(relleno = true) { m(6f, 7.6f); q(1.4f, 12f, 6f, 16.4f); q(3.6f, 12f, 6f, 7.6f); close() }
             p(relleno = true) { m(18f, 7.6f); q(22.6f, 12f, 18f, 16.4f); q(20.4f, 12f, 18f, 7.6f); close() }
             l(5f, 20f, 19f, 20f, 1.1f); ci(12f, 20f, 0.9f, relleno = true) }                                                               // las lunas: creciente, llena y menguante
+        TemaId.CUEVA -> { r(7.5f, 11f, 8.5f, 8f, 2.5f, relleno = true); l(8.6f, 12f, 8.6f, 6.5f, 1.8f); l(10.8f, 11f, 10.8f, 4.2f, 1.9f); l(13f, 11f, 13f, 3.5f, 1.9f)
+            l(15f, 12f, 15f, 5.2f, 1.8f); l(15.2f, 15.5f, 18.5f, 11.5f, 1.9f); r(8.8f, 18f, 6f, 4f, 0.5f, relleno = true) }               // la mano del clan
     } }
 
     // ------------------------------------------------------------ Registrar (el botón del centro)
@@ -495,6 +507,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(16.5f, 18.5f, 21.5f, 18.5f, 1.8f); l(19f, 16f, 19f, 21f, 1.8f) }                                                               // la cuña que entra en el círculo
         TemaId.REVOLUCION -> { l(12f, 3f, 4.5f, 20.5f); l(12f, 3f, 19.5f, 20.5f); l(7.2f, 14.5f, 16.8f, 14.5f); l(12f, 3f, 12f, 16f, 1.1f); ci(12f, 17.2f, 1.3f, relleno = true) } // nivel de la igualdad
         TemaId.ANTIGUAS -> { l(12f, 3f, 12f, 21f, 2f); l(12f, 7.5f, 17.5f, 3.5f, 1.8f); l(12f, 12f, 6.5f, 16f, 1.8f); l(12f, 16.5f, 16.5f, 20.5f, 1.8f); ci(7f, 6f, 1.3f, relleno = true) } // runa inventada
+        TemaId.CUEVA -> { l(12f, 5f, 12f, 19f, 2.6f); l(5f, 12f, 19f, 12f, 2.6f); ci(6.5f, 6.5f, 1.3f, relleno = true); ci(17.5f, 6.5f, 1.3f, relleno = true)
+            ci(6.5f, 17.5f, 1.3f, relleno = true); ci(17.5f, 17.5f, 1.3f, relleno = true) }                                             // «+» entre cuatro puntos de ocre
     } }
 
     // ------------------------------------------------------------ Ajustes (el botón «Más» de arriba)
@@ -554,5 +568,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(12f, 12f, 12f, 6.5f, 1.5f); l(12f, 12f, 15.5f, 14f, 1.5f); ci(12f, 12f, 1f, relleno = true) }                                // reloj decimal
         TemaId.ANTIGUAS -> { p { m(3f, 7f); t(19f, 7f); t(19f, 10f); q(15f, 11f, 14.5f, 14f); t(17f, 18f); t(7f, 18f); t(9.5f, 14f); q(9f, 11f, 6f, 10f); q(3.5f, 9.5f, 3f, 7f); close() }
             l(5f, 20.5f, 19f, 20.5f, 1.8f) }                                                                                                  // yunque
+        TemaId.CUEVA -> { p { m(12f, 2.5f); q(19f, 9f, 16f, 18f); q(12f, 22f, 8f, 18f); q(5f, 9f, 12f, 2.5f); close() }
+            l(12f, 6f, 10.5f, 10f, 1.1f); l(12f, 6f, 13.5f, 10f, 1.1f); l(10f, 12.5f, 12f, 15.5f, 1.1f); l(14f, 12.5f, 12f, 15.5f, 1.1f) } // el bifaz del taller de sílex
     } }
 }

@@ -451,6 +451,13 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawLine(col, Offset(o.x - s * 0.2f, o.y - s * 0.3f), Offset(o.x + s * 0.45f, o.y - s * 0.75f), s * 0.12f, StrokeCap.Round)
             drawLine(col, Offset(o.x - s * 0.2f, o.y + s * 0.15f), Offset(o.x + s * 0.45f, o.y - s * 0.3f), s * 0.12f, StrokeCap.Round)
         }
+        TemaId.CUEVA -> {
+            // Una chispa del fuego que sube, con su halo y su estela.
+            val col = Color(0xFFFFB347)
+            drawCircle(col.copy(alpha = 0.25f), s, o)
+            drawCircle(col, s * 0.32f, o)
+            drawLine(col.copy(alpha = 0.6f), o, Offset(o.x + s * 0.2f, o.y + s * 1.1f), s * 0.14f, StrokeCap.Round)
+        }
     }
 }
 
@@ -487,6 +494,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.URSS -> Color(0xFFC8B79A)
     TemaId.REVOLUCION -> Color(0xFFD6CCB8)
     TemaId.ANTIGUAS -> Color(0xFF7D7668)
+    TemaId.CUEVA -> Color(0xFFB59A78)          // la caliza de la cueva
 }
 
 /**
@@ -742,6 +750,21 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 y += 26 * d; f++
             }
         }
+        TemaId.CUEVA -> {
+            // La roca de la cueva: vetas que ondulan y, apenas, manos de ocre con su hilera de puntos.
+            var y = 18 * d; var k = 0
+            while (y < h) {
+                val veta = Path().apply { moveTo(0f, y); var x = 0f; var j = k; while (x < w) { val nx = x + 60 * d; quadraticTo(x + 30 * d, y + (if (j % 2 == 0) 6f else -6f) * d, nx, y); x = nx; j++ } }
+                drawPath(veta, v, style = Stroke(1.2f * d)); y += 34 * d; k++
+            }
+            var x = 34 * d; var i = 0
+            while (x < w) {
+                val m = Offset(x, h * (if (i % 2 == 0) 0.3f else 0.62f))
+                drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(m, 11 * d), a)
+                for (j in 0 until 4) drawCircle(a, 2 * d, Offset(m.x - 9 * d + j * 6 * d, m.y + 18 * d))
+                x += 110 * d; i++
+            }
+        }
     }
 }
 
@@ -970,6 +993,17 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
                 x += 70 * d
             }
         }
+        TemaId.CUEVA -> {
+            // Una cornisa de roca natural, de borde desparejo, con una hilera de puntos de ocre y el hollín de las lámparas.
+            val c = m(Color(0xFFB59A78))
+            drawPath(Path().apply {
+                moveTo(0f, h * 0.2f); var x = 0f; var k = 0
+                while (x < w) { x += (18 + (k * 11) % 13) * d; quadraticTo(x - 9 * d, h * (if (k % 2 == 0) 0.02f else 0.16f), x, h * (0.1f + (k % 3) * 0.05f)); k++ }
+                lineTo(w, h); lineTo(0f, h); close()
+            }, Brush.verticalGradient(listOf(lerp(c, Color.White, 0.15f), c, lerp(c, Color.Black, 0.4f)), 0f, h))
+            var x = 26 * d; while (x < w) { for (j in 0 until 3) drawCircle(m(Color(0xFFA2401F)), 1.8f * d, Offset(x + j * 6 * d, h * 0.55f)); x += 84 * d }
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.18f)), h * 0.75f, h), Offset(0f, h * 0.75f), Size(w, h * 0.25f))
+        }
     }
 }
 
@@ -1179,6 +1213,15 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             val p = Path().apply { moveTo(e, 0f); lineTo(w - 2 * e, 0f); lineTo(w, e * 1.5f); lineTo(w - e * 0.5f, h - e); lineTo(w - e * 1.5f, h); lineTo(e * 0.8f, h); lineTo(0f, h - e * 2); lineTo(e * 0.4f, e); close() }
             drawPath(p, tinta.copy(alpha = 0.09f * f)); drawPath(p, borde, style = Stroke(1.3f * d))
             drawLine(ac, Offset(w * 0.35f, h - 2.5f * d), Offset(w * 0.65f, h - 2.5f * d), d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 1.5f * d, 4 * d, 1.5f * d)))
+        }
+        TemaId.CUEVA -> {
+            // Un retazo de piel: el borde ondulado, la costura de tendón y una tira de puntos de ocre abajo.
+            val p = Path().apply {
+                moveTo(3 * d, 2 * d); quadraticTo(w * 0.5f, -2 * d, w - 3 * d, 3 * d); quadraticTo(w + 1 * d, h * 0.5f, w - 2 * d, h - 3 * d)
+                quadraticTo(w * 0.5f, h + 2 * d, 2 * d, h - 2 * d); quadraticTo(-1 * d, h * 0.5f, 3 * d, 2 * d); close()
+            }
+            drawPath(p, tinta.copy(alpha = 0.08f * f)); drawPath(p, borde, style = Stroke(1.2f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 2 * d))))
+            for (k in 0 until 5) drawCircle(ac, 1.4f * d, Offset(w * 0.4f + k * 5 * d, h - 4 * d))
         }
     }
 }

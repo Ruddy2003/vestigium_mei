@@ -175,6 +175,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Tierras Antiguas: pergamino verdoso de día; de noche, bosque con luz de luna.
         TemaId.ANTIGUAS -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.70f, 0.80f, 0.74f, 4f, 10f, 6f)) }
             else { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 1.0f, 0.90f, 4f, 6f, 0f)) }
+        // Prehistoria: el plano en tonos de ocre y caliza de día; de noche, la roca a la luz del fuego.
+        TemaId.CUEVA -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.85f, 0.72f, 0.6f, 8f, 4f, 0f)) }
+            else { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.92f, 0.8f, 8f, 2f, -6f)) }
     }
     return ColorMatrixColorFilter(m)
 }
@@ -309,6 +312,7 @@ internal object Formas {
             TemaId.URSS -> poligono(x, y, r * 1.25f, 5, -90.0, 0.42f)
             TemaId.REVOLUCION -> poligono(x, y, r * 1.12f, 14, -90.0, 0.84f)   // escarapela plisada
             TemaId.ANTIGUAS -> poligono(x, y, r * 1.2f, 6, -90.0, 0.5f)   // gema tallada de seis puntas
+            TemaId.CUEVA -> { p.reset(); p.addOval(android.graphics.RectF(x - r * 0.62f, y - r * 0.85f, x + r * 0.62f, y + r * 0.95f), horario) }   // la huella de un pie
         }
         c.drawPath(p, relleno)
         borde?.let { b -> c.drawPath(p, b) }
@@ -355,6 +359,7 @@ internal object Formas {
             }
             TemaId.REVOLUCION -> c.drawCircle(x, y, r * 0.42f, d)
             TemaId.ANTIGUAS -> { raya(c, x, y, r, 0f, -0.5f, 0f, 0.5f, d); raya(c, x, y, r, -0.3f, -0.15f, 0.3f, 0.15f, d) }   // una runa
+            TemaId.CUEVA -> listOf(-0.42f to 1.12f, 0f to 1.24f, 0.4f to 1.14f).forEach { (dx, dy) -> c.drawCircle(x + dx * r, y - dy * r, r * 0.17f, d) }   // los dedos de la huella
         }
     }
 }
@@ -1060,6 +1065,13 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             }
             esquinas(5 * u) { o, _, _ -> drawPath(Path().apply { moveTo(o.x, o.y - 4 * u); lineTo(o.x + 3 * u, o.y); lineTo(o.x, o.y + 4 * u); lineTo(o.x - 3 * u, o.y); close() }, acento) }
         }
+        TemaId.CUEVA -> {
+            // El borde de la roca, una hilera de puntos de ocre abajo y una mano pequeña en cada esquina.
+            filete(5 * u, tinta.copy(alpha = 0.4f), 1.4f * u)
+            var x = 18 * u; var k = 0
+            while (x < w - 18 * u) { drawCircle(acento.copy(alpha = 0.6f), (1.4f + (k % 3) * 0.4f) * u, Offset(x, h - 12 * u)); x += 10 * u; k++ }
+            esquinas(14 * u) { o, _, _ -> drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(o, 5 * u), acento.copy(alpha = 0.7f)) }
+        }
     }
 }
 
@@ -1313,6 +1325,15 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
                 drawPath(Path().apply { moveTo(q.x, q.y - r * 0.12f); lineTo(q.x + r * 0.08f, q.y); lineTo(q.x, q.y + r * 0.12f); lineTo(q.x - r * 0.08f, q.y); close() }, secundario)
             }
             drawPath(Path().apply { moveTo(c.x, c.y - r * 0.2f); lineTo(c.x + r * 0.14f, c.y); lineTo(c.x, c.y + r * 0.2f); lineTo(c.x - r * 0.14f, c.y); close() }, secundario)
+        }
+        TemaId.CUEVA -> {
+            // Una rosa grabada en la roca: el anillo con su punto, rayos cortos y largos, y el norte con una punta de azagaya.
+            anillo(r * 0.42f, tenue, 1.4f * u); drawCircle(acento, r * 0.12f, c)
+            for (i in 0 until 12) {
+                val q0 = c + rumbo(n + 30.0 * i) * (r * 0.55f); val q1 = c + rumbo(n + 30.0 * i) * (r * (if (i % 3 == 0) 0.95f else 0.72f))
+                drawLine(if (i == 0) acento else tenue, q0, q1, (if (i % 3 == 0) 2f else 1.2f) * u, androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+            punta(n, r * 1.0f, r * 0.12f, acento)
         }
     }
 }

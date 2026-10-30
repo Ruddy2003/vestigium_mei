@@ -317,9 +317,19 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_antiguas</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_antiguas</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Cueva" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_cueva</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_cueva</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_cueva</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Antiguas.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_antiguas_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_antiguas_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_antiguas</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Cueva.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_cueva_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_cueva_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_cueva</item>
     </style>
 </resources>

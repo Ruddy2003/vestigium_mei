@@ -119,6 +119,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.URSS -> Color(0xFFD32F2F)
     TemaId.REVOLUCION -> Color(0xFFF2EFE6)
     TemaId.ANTIGUAS -> Color(0xFF8E7CC3)
+    TemaId.CUEVA -> Color(0xFFA2401F)          // el ocre rojo de la hematita
 }
 
 /** El metal de un nivel (1 a 4) en el hall del tema: conserva bronce, plata, oro o cristal, teñido con el matiz del tema. */
@@ -236,6 +237,8 @@ object PiezasLogro {
         TemaId.URSS -> Trazo(u, 1.5f, StrokeCap.Butt, StrokeJoin.Miter, null, 0f, false, Color(0xFFEDE3CF))
         TemaId.REVOLUCION -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Round, floatArrayOf(8f, 2f), 0f, false, Color(0xFFF0E8D8))
         TemaId.ANTIGUAS -> Trazo(u, 1.2f, StrokeCap.Round, StrokeJoin.Bevel, null, 3f, false, Color(0xFFD9D2C2))
+        // Un tizón de carbón: trazo grueso, redondo y que se corta, sobre piel de ante.
+        TemaId.CUEVA -> Trazo(u, 1.35f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(5f, 1.2f, 1f, 1.2f), 0.8f, false, Color(0xFFE3D2B4))
     }
 
     /** Un contorno con el trazo del tema (doble si el tema lo pide). */
@@ -400,6 +403,8 @@ object PiezasLogro {
                 drawArc(col.copy(alpha = if (hecho) 0.85f else 0.3f), -90f + i * 120f, 120f, false, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f), style = Stroke(3 * u))
             }
             TemaId.ANTIGUAS -> drawCircle(t, r * 0.9f, c, style = Stroke(2 * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(9 * u, 2 * u, 2 * u, 2 * u))))
+            // Un aro de puntos de ocre de tamaños desparejos, como pintados con la yema del dedo.
+            TemaId.CUEVA -> for (i in 0 until 26) drawCircle(pri, (1.1f + (i * 7 % 4) * 0.35f) * u, en(i * PI / 13, 0.91f))
         }
     }
 
@@ -504,6 +509,11 @@ object PiezasLogro {
             TemaId.ANTIGUAS -> {
                 drawPath(Path().apply { moveTo(x - 2 * u, y + 1 * u); lineTo(cx, y - 7 * u); lineTo(x + an + 2 * u, y + 1 * u); close() }, tinta)
                 drawLine(Color.White.copy(alpha = 0.35f), Offset(cx - 2 * u, y - 4 * u), Offset(cx + 2 * u, y - 4 * u), 0.6f * u)
+            }
+            // La choza de pieles: los palos se cruzan arriba.
+            TemaId.CUEVA -> {
+                tri(6 * u, x - 1 * u, x + an + 1 * u)
+                drawLine(tinta, Offset(cx - 1.5f * u, y - 6 * u), Offset(cx - 3 * u, y - 8.5f * u), 0.8f * u); drawLine(tinta, Offset(cx + 1.5f * u, y - 6 * u), Offset(cx + 3 * u, y - 8.5f * u), 0.8f * u)
             }
         }
     }
@@ -622,6 +632,9 @@ object PiezasLogro {
                 lineTo(c.x - 32 * u, c.y + 18 * u); lineTo(c.x - 26 * u, c.y); close()
             })
             TemaId.ANTIGUAS -> traza(poligono(8, 29 * u, PI / 8 + 0.1, irregular = true))
+            // Un canto rodado con un aro de puntos de ocre por dentro.
+            TemaId.CUEVA -> { traza(Path().apply { addOval(Rect(c.x - 29 * u, c.y - 24 * u, c.x + 29 * u, c.y + 24 * u)) })
+                for (i in 0 until 12) drawCircle(tinto, 1.2f * u, Offset(c.x + (24 * u * cos(i * PI / 6)).toFloat(), c.y + (19 * u * sin(i * PI / 6)).toFloat())) }
         }
         val col = listOf(cs.primary, cs.secondary, cs.tertiary)
         drawLine(tinta, Offset(c.x - 14 * u, c.y + 16 * u), Offset(c.x - 14 * u, c.y - 16 * u), 1.6f * u)
@@ -1032,6 +1045,18 @@ object PiezasLogro {
                 drawLine(hueco, Offset(c.x - 17 * u, base - 18 * u), Offset(c.x - 17 * u, base - 10 * u), 0.7f * u); drawLine(hueco, Offset(c.x - 17 * u, base - 16 * u), Offset(c.x - 15 * u, base - 18 * u), 0.7f * u)
                 suelo()
             }
+            TemaId.CUEVA -> {
+                // La boca de la cueva en el risco, con el fuego encendido dentro y una mano en negativo al lado.
+                val risco = Path().apply {
+                    moveTo(c.x - 28 * u, base); lineTo(c.x - 24 * u, base - 22 * u); quadraticTo(c.x - 10 * u, base - 36 * u, c.x + 6 * u, base - 32 * u)
+                    quadraticTo(c.x + 22 * u, base - 30 * u, c.x + 28 * u, base - 14 * u); lineTo(c.x + 28 * u, base); close()
+                }
+                drawPath(risco, tinta)
+                arco(c.x - 10 * u, base, 16 * u, 18 * u)
+                drawPath(Path().apply { moveTo(c.x - 2 * u, base - 2 * u); quadraticTo(c.x + 2 * u, base - 7 * u, c.x - 2 * u, base - 11 * u); quadraticTo(c.x - 6 * u, base - 6 * u, c.x - 2 * u, base - 2 * u); close() }, Color(0xFFFFB347))
+                io.github.ruddy2003.vestigium.ui.piezasMano(Offset(c.x + 17 * u, base - 18 * u), 4.5f * u).forEach { drawPath(it, hueco) }
+                suelo()
+            }
         }
     }
 
@@ -1318,6 +1343,17 @@ object PiezasLogro {
                 drawLine(claro, r0, Offset(r0.x, r0.y + 14 * u), 1.6f * u); drawLine(claro, Offset(r0.x, r0.y + 3 * u), Offset(r0.x + 5 * u, r0.y), 1.6f * u); drawLine(claro, Offset(r0.x, r0.y + 7 * u), Offset(r0.x - 5 * u, r0.y + 3 * u), 1.6f * u)
                 drawPath(Path().apply { moveTo(px, c.y - 35 * u); lineTo(px + 3 * u, c.y - 29 * u); lineTo(px, c.y - 26 * u); lineTo(px - 3 * u, c.y - 29 * u); close() }, tinta)
             }
+            TemaId.CUEVA -> {
+                // Una piel tensada en un palo, con la mano del clan pintada en ocre y dos tiras con cuentas colgando.
+                asta()
+                val piel = Path().apply {
+                    moveTo(px, arriba); quadraticTo(c.x + 4 * u, arriba - 3 * u, c.x + 18 * u, arriba + 1 * u); quadraticTo(c.x + 21 * u, arriba + 12 * u, c.x + 17 * u, arriba + 24 * u)
+                    quadraticTo(c.x + 4 * u, arriba + 28 * u, px, arriba + 24 * u); close()
+                }
+                pano(piel)
+                io.github.ruddy2003.vestigium.ui.piezasMano(Offset(c.x + 4 * u, arriba + 12 * u), 7 * u).forEach { drawPath(it, Color(0xFFA2401F)) }
+                listOf(c.x + 10 * u, c.x + 16 * u).forEach { x -> drawLine(tinta, Offset(x, arriba + 25 * u), Offset(x, arriba + 33 * u), 0.8f * u); drawCircle(claro, 1.4f * u, Offset(x, arriba + 33 * u)) }
+            }
         }
     }
 
@@ -1534,6 +1570,13 @@ object PiezasLogro {
                 for (i in 0 until 9) { val a = i * 2 * PI / 9 + 0.35; drawLine(tinta, en(a, 0.58f), en(a + (if (i % 2 == 0) 0.12 else -0.12), 0.8f), 1 * u) }
                 val gema = Path().apply { moveTo(c.x, c.y - 7 * u); lineTo(c.x + 6 * u, c.y); lineTo(c.x, c.y + 7 * u); lineTo(c.x - 6 * u, c.y); close() }
                 drawPath(gema, Color(0xFF7FD8E8)); contorno(tz, gema, tinta, 0.8f * u)
+            }
+            TemaId.CUEVA -> {
+                // Un disco de hueso perforado, con muescas en el borde y un bisonte grabado.
+                disco()
+                drawCircle(tinta, 2.4f * u, en(-PI / 2, 0.78f), style = Stroke(1 * u))
+                for (i in 0 until 20) { val a = i * PI / 10; drawLine(tinta, en(a, 0.88f), en(a, 1f), 1 * u) }
+                drawPath(io.github.ruddy2003.vestigium.ui.bisonte(Offset(c.x, c.y + 3 * u), R * 0.55f), tinta)
             }
         }
     }
@@ -1806,6 +1849,14 @@ object PiezasLogro {
                 val gema = Path().apply { moveTo(c.x - 2 * u, c.y - 8 * u); lineTo(c.x + 4 * u, c.y); lineTo(c.x - 2 * u, c.y + 8 * u); lineTo(c.x - 8 * u, c.y); close() }
                 drawPath(gema, Color(0xFF7FD8E8)); contorno(tz, gema, tinta, 0.8f * u)
             }
+            TemaId.CUEVA -> {
+                // La piel enrollada, atada con dos vueltas de tendón, con puntos de ocre pintados.
+                val p = caja(c.x - 24 * u, c.y - 10 * u, c.x + 24 * u, c.y + 10 * u, 10 * u); drawPath(p, tono); contorno(tz, p, tinta, 1.2f * u)
+                drawOval(lerp(tono, tinta, 0.25f), Offset(c.x + 17 * u, c.y - 10 * u), Size(7 * u, 20 * u))
+                drawOval(tinta.copy(alpha = 0.5f), Offset(c.x + 19 * u, c.y - 5 * u), Size(3 * u, 10 * u), style = Stroke(0.8f * u))
+                listOf(-10f, 6f).forEach { dx -> drawLine(tinta, Offset(c.x + dx * u, c.y - 10.5f * u), Offset(c.x + dx * u, c.y + 10.5f * u), 1.6f * u) }
+                for (k in 0 until 4) drawCircle(Color(0xFFA2401F), 1.6f * u, Offset(c.x - 4 * u + k * 2.5f * u, c.y + (if (k % 2 == 0) -3f else 3f) * u))
+            }
         }
     }
 
@@ -2062,6 +2113,15 @@ object PiezasLogro {
                 drawLine(tinta, Offset(c.x - 23 * u, c.y - 14 * u), Offset(c.x + 22 * u, c.y + 15 * u), 1 * u); drawLine(tinta, Offset(c.x + 24 * u, c.y - 13 * u), Offset(c.x - 24 * u, c.y + 13 * u), 1 * u)
                 drawCircle(tono, 6 * u, c)
                 drawLine(papel, Offset(c.x - 1 * u, c.y - 4 * u), Offset(c.x - 1 * u, c.y + 4 * u), 1 * u); drawLine(papel, Offset(c.x - 1 * u, c.y - 1 * u), Offset(c.x + 3 * u, c.y - 4 * u), 1 * u); drawLine(papel, Offset(c.x - 1 * u, c.y + 2 * u), Offset(c.x + 3 * u, c.y - 1 * u), 1 * u)
+            }
+            TemaId.CUEVA -> {
+                // La piedra marcada: un canto plano con signos de ocre (puntos, una raya y un chevrón), atado con una tira de piel.
+                val p = Path().apply { addOval(Rect(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u)) }
+                drawPath(p, papel); contorno(tz, p, tinta, 1.2f * u)
+                for (k in 0 until 4) drawCircle(tono, 1.8f * u, Offset(c.x - 14 * u + k * 5 * u, c.y - 5 * u))
+                drawLine(tono, Offset(c.x - 14 * u, c.y + 3 * u), Offset(c.x + 2 * u, c.y + 3 * u), 1.6f * u, StrokeCap.Round)
+                drawPath(Path().apply { moveTo(c.x + 7 * u, c.y + 7 * u); lineTo(c.x + 11 * u, c.y + 1 * u); lineTo(c.x + 15 * u, c.y + 7 * u) }, tono, style = Stroke(1.6f * u, cap = StrokeCap.Round))
+                drawLine(lerp(papel, tinta, 0.5f), Offset(c.x + 18 * u, c.y - 16 * u), Offset(c.x + 18 * u, c.y + 16 * u), 1.8f * u)
             }
         }
     }

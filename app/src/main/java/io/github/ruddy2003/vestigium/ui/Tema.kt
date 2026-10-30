@@ -135,6 +135,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     URSS("urss", "Soviético", "Rojo, negro y papel de cartel, en estilo constructivista. Planes quinquenales y meses en ruso.", Epoca.CONTEMPORANEA),
     REVOLUCION("revolucion", "Revolución francesa", "Papel de cartel, tinta y la escarapela azul, blanca y roja. Cuadernos de quejas, el árbol de la libertad y el calendario republicano.", Epoca.EDAD_MODERNA),
     ANTIGUAS("antiguas", "Tierras Antiguas", "Salones de piedra, runas inventadas, mapas y gemas. Una compañía que cruza aldeas, bosques, montañas y minas, contando el tiempo por lunas.", Epoca.FANTASIA),
+    CUEVA("cueva", "Prehistoria", "Ocre, carbón y caliza: manos en negativo y bisontes en la pared de una cueva. Las lunas se cuentan desde el primer registro y los números son muescas en un hueso.", Epoca.ANTIGUEDAD),
 }
 
 internal val romanoClaro = lightColorScheme(
@@ -382,6 +383,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.PIRATA -> if (oscuro) pirataOscuro else pirataClaro
     TemaId.REVOLUCION -> if (oscuro) revolucionOscuro else revolucionClaro
     TemaId.ANTIGUAS -> if (oscuro) antiguasOscuro else antiguasClaro
+    TemaId.CUEVA -> if (oscuro) cuevaOscuro else cuevaClaro
 }
 
 internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
@@ -416,6 +418,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.PIRATA -> tipoPirata
     TemaId.REVOLUCION -> tipoRevolucion
     TemaId.ANTIGUAS -> tipoAntiguas
+    TemaId.CUEVA -> tipoCueva
 }.conReloj(tema)
 
 /**
@@ -456,6 +459,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.URSS -> 56f to 1f            // Russo One, ancha
     TemaId.REVOLUCION -> 60f to 1f      // Convención (Playfair)
     TemaId.ANTIGUAS -> 56f to 1f        // uncial del camino
+    TemaId.CUEVA -> 78f to 1f           // Amatic SC, angosta y de trazo fino
 }
 
 private fun Typography.conReloj(tema: TemaId): Typography {
@@ -495,6 +499,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.PIRATA -> Esquinas(7, Esquina.CORTADA)          // el cofre con cantoneras
     TemaId.REVOLUCION -> Esquinas(2, Esquina.CORTADA)      // el cartel recortado
     TemaId.ANTIGUAS -> Esquinas(4, Esquina.ARCO)           // la puerta de piedra
+    TemaId.CUEVA -> Esquinas(7, Esquina.HOJA)          // la lasca de sílex
 }
 
 /** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); Terminal y Ciudad neón siempre son oscuros. */
@@ -729,6 +734,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.PIRATA -> "Bitácora"
         TemaId.REVOLUCION -> "CAHIER"
         TemaId.ANTIGUAS -> "CRÓNICA"
+        TemaId.CUEVA -> "Pared"
     }
     val linea = when (tema) {
         TemaId.ROMANO -> "XVII · X"
@@ -762,6 +768,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.PIRATA -> "singladura 290 · 8bre"
         TemaId.REVOLUCION -> "26 vendémiaire"
         TemaId.ANTIGUAS -> "17 de la Luna de las Hojas"
+        TemaId.CUEVA -> "sol 12 · luna 9"
     }
     val forma = formaPrevia(tema)
     // Las formas con arco, frontón o punta necesitan más aire arriba o abajo para que nada quede cortado; la suma es la misma en todas, para que las filas queden parejas.
@@ -797,6 +804,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.URSS -> 16 to 16
         TemaId.REVOLUCION -> 12 to 20
         TemaId.ANTIGUAS -> 18 to 14
+        TemaId.CUEVA -> 17 to 15
     }
     // En el trapecio y el paralelogramo los lados se meten: un poco más de margen a los lados.
     val lados = when (tema) {
@@ -831,6 +839,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.URSS -> 18
         TemaId.REVOLUCION -> 10
         TemaId.ANTIGUAS -> 12
+        TemaId.CUEVA -> 13
     }
     androidx.compose.material3.Surface(
         onClick = onClick, modifier = modifier, color = e.background, shape = forma,
@@ -1023,6 +1032,13 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     }
     // Lápida rúnica: esquinas de arriba muy cortadas, las de abajo apenas.
     TemaId.ANTIGUAS -> CutCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
+    // Laja de caliza: los cuatro bordes ondulan un poco, como una piedra partida.
+    TemaId.CUEVA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val a = s.minDimension * 0.05f
+        moveTo(0f, a); quadraticTo(w * 0.3f, -a * 0.6f, w * 0.55f, a * 0.5f); quadraticTo(w * 0.8f, a * 1.2f, w, 0f)
+        quadraticTo(w - a * 1.2f, h * 0.45f, w - a * 0.2f, h - a); quadraticTo(w * 0.6f, h + a * 0.4f, w * 0.35f, h - a * 0.4f)
+        quadraticTo(w * 0.12f, h - a * 1.1f, 0f, h); quadraticTo(a * 1.1f, h * 0.5f, 0f, a); close()
+    }
 }
 
 /** Cuadrito de color de la muestra, con la figura del tema (tesela, píxel, moneda, rombo, tuerca, probeta, hoja, estrella…). */
@@ -1138,6 +1154,12 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.ANTIGUAS -> {
             drawPath(Path().apply { moveTo(w * 0.2f, h * 0.3f); lineTo(w * 0.35f, 0f); lineTo(w * 0.65f, 0f); lineTo(w * 0.8f, h * 0.3f); lineTo(cx, h); close() }, c)
             drawLine(fondo.copy(alpha = 0.5f), Offset(w * 0.2f, h * 0.3f), Offset(w * 0.8f, h * 0.3f), w * 0.06f)
+        }
+        // Mano en negativo: el ocre soplado alrededor y la mano, del color de la pared.
+        TemaId.CUEVA -> {
+            drawCircle(c.copy(alpha = 0.35f), r * 1.05f, Offset(cx, cy))
+            drawCircle(c.copy(alpha = 0.6f), r * 0.78f, Offset(cx, cy))
+            piezasMano(Offset(cx, cy), r * 0.82f).forEach { drawPath(it, fondo) }
         }
     }
 }

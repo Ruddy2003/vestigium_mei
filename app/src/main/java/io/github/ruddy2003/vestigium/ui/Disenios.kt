@@ -91,6 +91,10 @@ object LetraExtra {
     val vollkorn = FontFamily(Font(R.font.vollkorn_regular, FontWeight.Normal), Font(R.font.vollkorn_semibold, FontWeight.SemiBold))
     /** «Camino Vestigium» (Uncial Antiqua renombrada): títulos de las Tierras Antiguas. */
     val camino = FontFamily(Font(R.font.camino_titulo, FontWeight.Normal))
+    /** Amatic SC: los títulos de la Prehistoria, angostos y a mano alzada, como trazos de carbón en la pared. */
+    val trazo = FontFamily(Font(R.font.amatic_regular, FontWeight.Normal), Font(R.font.amatic_regular, FontWeight.Medium), Font(R.font.amatic_bold, FontWeight.SemiBold), Font(R.font.amatic_bold, FontWeight.Bold))
+    /** «Abrigo Vestigium» (Andika renombrada, hecha para quien aprende a leer): el texto de la Prehistoria. */
+    val abrigo = FontFamily(Font(R.font.abrigo_regular, FontWeight.Normal), Font(R.font.abrigo_regular, FontWeight.Medium), Font(R.font.abrigo_bold, FontWeight.SemiBold), Font(R.font.abrigo_bold, FontWeight.Bold))
     /** «Convencion Vestigium» (Playfair Display renombrada): los carteles de la Convención. */
     val convencion = FontFamily(Font(R.font.convencion_titulo, FontWeight.Normal), Font(R.font.convencion_negrita, FontWeight.Bold), Font(R.font.convencion_negrita, FontWeight.SemiBold))
 }
@@ -392,6 +396,17 @@ internal val antiguasOscuro = esquema(true, 0xFF151618, 0xFF1F2023, 0xFF2A2B2F, 
     0xFF8CC79A, 0xFF0D1F14, 0xFF1F3A28, 0xFFEDE7D8, 0xFFD9BC6A, 0xFF3A3018, 0xFFE06A72, 0xFFFF8A80)
 internal val tipoAntiguas = tipografia(LetraExtra.camino, FontWeight.Normal, 1.0f, 1.2f, LetraExtra.vollkorn, 1.02f, LetraExtra.vollkorn, 1.04f, cifrasAlineadas = true)
 
+/**
+ * Prehistoria: de día, la caliza de la boca de la cueva con ocre rojo (hematita), ocre amarillo y carbón; de noche, lo hondo
+ * de la cueva a la luz de una lámpara de grasa: la roca casi negra, el ocre encendido y la llama amarilla. Títulos en Amatic SC
+ * (trazo de carbón) y texto en Abrigo (Andika).
+ */
+internal val cuevaClaro = esquema(false, 0xFFEADCC6, 0xFFF5EEE1, 0xFFE0D0B6, 0xFFC1AB8C, 0xFF2A211B, 0xFF66574A,
+    0xFFA2401F, 0xFFFFFFFF, 0xFFF2D2C0, 0xFF3A160A, 0xFF4D4037, 0xFFE2D7C6, 0xFFB07418, 0xFF9B1C1C)
+internal val cuevaOscuro = esquema(true, 0xFF16100C, 0xFF211913, 0xFF2D2219, 0xFF4B3A2B, 0xFFEEDFC8, 0xFFB5A08A,
+    0xFFE8804F, 0xFF2A0E04, 0xFF4D2616, 0xFFF6DCCB, 0xFFD9AE62, 0xFF3D2D14, 0xFFF4C76E, 0xFFFF8A7A)
+internal val tipoCueva = tipografia(LetraExtra.trazo, FontWeight.Bold, 1.32f, 0.6f, LetraExtra.abrigo, 1.0f, LetraExtra.abrigo, 1.0f, cifrasAlineadas = true)
+
 /** Juegos de color para gráficas: bajo, medio, alto y el color fuerte (secuencial). */
 internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema) {
     TemaId.ROMANO -> if (oscuro) listOf(0xFFA63A4D, 0xFF2A2F34, 0xFF3FA393, 0xFFD2AE5A) else listOf(0xFF9E3445, 0xFFE4E2DA, 0xFF2D7A6F, 0xFFB8892B)
@@ -427,6 +442,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.PIRATA -> if (oscuro) listOf(0xFFD6AA4C, 0xFF25201A, 0xFF7DBFB6, 0xFFE47B4E) else listOf(0xFF1E5157, 0xFFD9CBA6, 0xFF85621A, 0xFF9A2A1C)
     TemaId.REVOLUCION -> if (oscuro) listOf(0xFFE5525E, 0xFF25282F, 0xFF8FAEE8, 0xFF8CC08A) else listOf(0xFFB22234, 0xFFE6DDC8, 0xFF1F3A6E, 0xFF3F6B3A)
     TemaId.ANTIGUAS -> if (oscuro) listOf(0xFFE06A72, 0xFF2A2B2F, 0xFF8CC79A, 0xFFD9BC6A) else listOf(0xFF8E1B24, 0xFFDCD5C3, 0xFF2E5A3E, 0xFF9A7B2E)
+    TemaId.CUEVA -> if (oscuro) listOf(0xFFE8804F, 0xFF2D2219, 0xFFDCC9A8, 0xFFF4C76E) else listOf(0xFFA2401F, 0xFFE0D0B6, 0xFF3B302A, 0xFFB07418)   // ocre rojo, caliza, carbón y ocre amarillo
 }.map { Color(it) }
 
 /** Escala de calor del mapa: poco, medio, mucho. */
@@ -462,4 +478,5 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.PIRATA -> if (oscuro) listOf(0xFF7DBFB6, 0xFFD6AA4C, 0xFFE47B4E) else listOf(0xFF1E5157, 0xFF85621A, 0xFF9A2A1C)
     TemaId.REVOLUCION -> if (oscuro) listOf(0xFF8FAEE8, 0xFF8CC08A, 0xFFE5525E) else listOf(0xFF1F3A6E, 0xFF3F6B3A, 0xFFB22234)
     TemaId.ANTIGUAS -> if (oscuro) listOf(0xFF8CC79A, 0xFFD9BC6A, 0xFFE06A72) else listOf(0xFF2E5A3E, 0xFF9A7B2E, 0xFF8E1B24)
+    TemaId.CUEVA -> if (oscuro) listOf(0xFF8C7A66, 0xFFD9AE62, 0xFFE8804F) else listOf(0xFF7A6A58, 0xFFB07418, 0xFFA2401F)   // del carbón al ocre rojo
 }.map { Color(it) }

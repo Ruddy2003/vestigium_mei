@@ -209,6 +209,11 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             }, c, style = Stroke(g))
             drawLine(c, Offset(w * 0.3f, h * 0.9f), Offset(w * 0.7f, h * 0.9f), g * 0.5f)
         }
+        // Un canto rodado con tres puntos de ocre abajo.
+        TemaId.CUEVA -> {
+            drawOval(c, Offset(w * 0.08f, h * 0.06f), Size(w * 0.84f, h * 0.86f), style = Stroke(g))
+            for (k in -1..1) drawCircle(c, g * 0.7f, Offset(o.x + k * w * 0.14f, h * 0.8f))
+        }
     }
 }
 
@@ -482,6 +487,11 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawLine(f, Offset(c.x + r * 0.22f, c.y - r * 0.72f), Offset(c.x + r * 0.4f, c.y - r * 0.2f), g)
             drawLine(f, Offset(c.x - r * 0.4f, c.y - r * 0.2f), Offset(c.x, c.y + r), g)
             drawLine(f, Offset(c.x + r * 0.4f, c.y - r * 0.2f), Offset(c.x, c.y + r), g)
+        }
+        // La mano en negativo: la nube de ocre y la mano, del color del hueco.
+        TemaId.CUEVA -> {
+            drawCircle(color, r, c)
+            drawPath(manoUnida(Offset(c.x, c.y + r * 0.04f), r * 0.66f), hueco.copy(alpha = 0.85f))
         }
     }
 }

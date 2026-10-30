@@ -348,6 +348,12 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
         val w = s.width; val h = s.height
         moveTo(w * 0.12f, 0f); lineTo(w * 0.94f, h * 0.08f); lineTo(w, h * 0.74f); lineTo(w * 0.82f, h); lineTo(w * 0.06f, h * 0.92f); lineTo(0f, h * 0.22f); close()
     }
+    // Un canto rodado: los cuatro lados curvos y desparejos.
+    TemaId.CUEVA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(w * 0.5f, 0f); quadraticTo(w, h * 0.02f, w * 0.98f, h * 0.5f); quadraticTo(w * 0.96f, h, w * 0.48f, h * 0.98f)
+        quadraticTo(0f, h * 0.95f, w * 0.02f, h * 0.48f); quadraticTo(w * 0.05f, 0f, w * 0.5f, 0f); close()
+    }
 }
 
 /** Lo que va encima de la celda en algunos temas: el lazo del regalo, el agujero de la moneda. [fondo] es el color de detrás. */
@@ -416,5 +422,6 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.URSS -> {}
         TemaId.REVOLUCION -> {}
         TemaId.ANTIGUAS -> {}
+        TemaId.CUEVA -> for (k in -1..1) drawCircle(fondo.copy(alpha = 0.45f), minOf(s.width, s.height) * 0.05f, Offset(s.width / 2 + k * s.width * 0.14f, s.height * 0.8f))   // tres puntos de ocre
     }
 }

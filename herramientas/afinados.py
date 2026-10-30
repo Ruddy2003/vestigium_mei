@@ -1147,6 +1147,44 @@ def antiguas():
                tecla=mezclar((0, clic(0.012, (400, 2000)), 1), (0, filtro(ruido(0.02), 'bajo', 500) * env(int(0.02 * SR), 0.001, 0.01), 0.5)),
                rascar=rascado((900, 4500), cuerno(T + 12, 0.4), aspereza=45))
 
+def cueva():
+    # Mi pentatónico menor, en cuartas y quintas: la Prehistoria. Una flauta de hueso con mucho soplo, un litófono (lajas de
+    # piedra que suenan al golpearlas), un tambor de piel, piedras que chocan, la bramadera que zumba al girar y el eco largo
+    # de la cueva. No se sabe cómo se afinaban las flautas del Paleolítico: la escala es una elección, no una reconstrucción.
+    T = -5   # Mi4
+    def hueso_f(f, d):
+        return flauta(f, d) * 0.85 + 0.25 * filtro(ruido(d), 'banda', (f * 1.5, f * 4)) * env(int(d * SR), 0.03, d * 0.7, 2)
+    hueso = lambda n, d: hueso_f(hz(n), d)
+    laja = lambda n, d=0.5: campana(hz(n), d, 2.41, 0.8, 9.0)
+    piel = lambda d=0.35: tambor(hz(T - 24), d, 0.35)
+    def piedras():
+        return mezclar((0, filtro(ruido(0.035), 'banda', (900, 3800)) * env(int(0.035 * SR), 0.0005, 0.02, 6), 1.0), (0.002, tambor(hz(T - 12), 0.06, 0.4), 0.35))
+    def bramadera(d, f0=180, f1=420):
+        t = t_(d)
+        return filtro(ruido(d), 'banda', (f0, f1)) * (0.55 + 0.45 * np.sin(2 * np.pi * 2.6 * t)) * env(int(d * SR), d * 0.3, d * 0.6, 2)
+    eco = lambda x, cola=2.2, mezcla_=0.38: reverb(x, cola, mezcla_, 3000)
+    with azar_propio('cueva_base'):
+        S['cueva'] = dict(
+            toque=mezclar((0, laja(T + 12, 0.25), 0.7), (0, piedras(), 0.25)),
+            elegir=hueso(T + 7, 0.22),
+            pasar=mezclar((0, filtro(ruido(0.2), 'banda', (250, 1600)) * env(int(0.2 * SR), 0.02, 0.12, 3), 0.9), (0.09, filtro(ruido(0.08), 'banda', (300, 1400)) * env(int(0.08 * SR), 0.01, 0.05, 3), 0.5)),
+            abrir=eco(mezclar(*[(0.07 * i, laja(T + n, 0.7), 0.5) for i, n in enumerate([0, 5, 7, 12])]), 1.2, 0.25),
+            guardar=mezclar((0, piedras(), 0.6), (0.06, laja(T + 7, 0.5), 0.5), (0.18, laja(T + 12, 0.7), 0.5)),
+            logro=eco(mezclar(*[(0.18 * i, piel(0.35), 0.5) for i in range(3)], melodia(hueso_f, [T + 12 + n for n in [0, 3, 5, 7, 10, 12]], 0.13, 0.35, g=0.45))),
+            tema=eco(mezclar((0, bramadera(1.1), 0.5), (0.35, hueso(T + 12, 0.9), 0.4), (0.1, piel(0.4), 0.45), (0.55, piel(0.4), 0.35))),
+            aviso=eco(mezclar(melodia(hueso_f, [T + 12 + n for n in [7, 5, 3, 0]], 0.2, 0.4, g=0.5), (0, piel(0.3), 0.35), (0.6, laja(T + 24, 0.8), 0.3)), 1.6, 0.3),
+            solemne=eco(mezclar(melodia(hueso_f, [T + n for n in [0, 3, 5, 7, 5, 3, 0, -2, 0]], 0.55, 0.7, g=0.35), (0, bramadera(5.5, 120, 300), 0.35),
+                                *[(1.1 * i, piel(0.5), 0.45) for i in range(5)], *[(0.8 + 1.4 * i, laja(T + [12, 19, 15, 24][i], 1.0), 0.18) for i in range(4)]), 2.6, 0.4))
+
+    # Error: las piedras que chocan mal y la flauta que cae medio tono. Cambio: dos lajas a la quinta.
+    # Tecla: el carbón que raspa la caliza. Rascar: ocre que se raspa de la pared, y una laja que queda sonando.
+    with azar_propio('cueva'):
+        nuevos('cueva',
+               error=mezclar((0, piedras(), 0.6), (0.06, hueso(T + 3, 0.18), 0.45), (0.2, hueso(T + 2, 0.4) * np.linspace(1, 0.4, int(0.4 * SR)), 0.45)),
+               cambio=mezclar((0, laja(T + 12, 0.35), 0.5), (0.08, laja(T + 19, 0.45), 0.5)),
+               tecla=mezclar((0, trazo((450, 2000), 0.06, 9, 0.04), 1), (0, filtro(ruido(0.015), 'bajo', 600) * env(int(0.015 * SR), 0.001, 0.008), 0.4)),
+               rascar=rascado((700, 3800), laja(T + 12, 0.5), aspereza=40))
+
 # ------------------------------------------------------------------ el aviso de los lugares especiales
 
 def lugar():
@@ -1190,6 +1228,7 @@ if __name__ == '__main__':
         pirata,
         revolucion,
         antiguas,
+        cueva,
     )
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
     claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None

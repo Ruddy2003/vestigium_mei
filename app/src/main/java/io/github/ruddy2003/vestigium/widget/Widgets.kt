@@ -159,6 +159,11 @@ object Widgets {
             0xFFD9BC6A.toInt(), 0xFFEDE7D8.toInt(), 0xFFB0AA9C.toInt(), 0xFF45464C.toInt(),
             intArrayOf(0xFFE06A72.toInt(), 0xFFE39A96.toInt(), 0xFFE3C2B6.toInt(), 0xFFEDE7D8.toInt(), 0xFFBCDDC3.toInt(), 0xFFA4D2AE.toInt(), 0xFF8CC79A.toInt()),
             0xFF1F2023.toInt(), 0xFF0D1F14.toInt())
+        // La roca de la cueva a la luz del fuego: el ocre encendido, la caliza del texto y, en el ánimo, del ocre rojo al ocre amarillo.
+        TemaId.CUEVA -> Colores(R.drawable.widget_fondo_cueva, R.drawable.widget_boton_cueva, R.drawable.widget_boton_activo_cueva, R.drawable.widget_boton_ambar_cueva,
+            0xFFE8804F.toInt(), 0xFFEEDFC8.toInt(), 0xFFB5A08A.toInt(), 0xFF4B3A2B.toInt(),
+            intArrayOf(0xFFB8432A.toInt(), 0xFFCC6A42.toInt(), 0xFFDB9560.toInt(), 0xFFE6C9A0.toInt(), 0xFFE2BC6E.toInt(), 0xFFD9AE52.toInt(), 0xFFF4C76E.toInt()),
+            0xFF211913.toInt(), 0xFF16100C.toInt())
     }
 
     /** Pinta fondo, botones, líneas y textos según el tema. Va primero: lo que se pinta después (estado activo, colores de ánimo) lo sobrescribe. */
@@ -210,6 +215,7 @@ object Widgets {
         TemaId.URSS -> "СЕЙЧАС" to "ЗАПИСЬ"
         TemaId.REVOLUCION -> "L'INSTANT" to "NOTER"
         TemaId.ANTIGUAS -> "VIGÍA" to "PERGAMINO"
+        TemaId.CUEVA -> "Este sol" to "A la pared"
     }
 
     /**
@@ -249,6 +255,7 @@ object Widgets {
             TemaId.URSS -> R.font.russo to 0.95f
             TemaId.REVOLUCION -> R.font.bodoni_texto to 1.05f
             TemaId.ANTIGUAS -> R.font.cinzel_semibold to 0.95f
+            TemaId.CUEVA -> R.font.amatic_bold to 1.3f
         }
         val tf = runCatching { androidx.core.content.res.ResourcesCompat.getFont(ctx, fuente) }.getOrNull() ?: android.graphics.Typeface.SERIF
         return tf to escala

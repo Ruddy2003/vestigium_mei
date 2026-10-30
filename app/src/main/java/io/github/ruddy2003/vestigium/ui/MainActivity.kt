@@ -267,6 +267,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.URSS -> BloqueoCartel(TextosBloqueo("ДНЕВНИК ЗАКРЫТ", "★ Acceso sólo con el pase del titular.", "ОТКРЫТЬ", listOf("VESTIGIUM MEI")), inclinado = true, tricolor = false, reintentar = reintentar)
         TemaId.REVOLUCION -> BloqueoCartel(TextosBloqueo("AVIS AU PUBLIC", "✶ Le cahier est scellé: por decreto, sólo su autor lo abre.", "OUVRIR", listOf("VESTIGIUM MEI")), inclinado = false, tricolor = true, reintentar = reintentar)
         TemaId.ANTIGUAS -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "⟡ La cámara del tesoro está cerrada con runas.", "TRAZAR LA RUNA"), arriba = 10, reintentar = reintentar) { cs -> bloqueoRunico(cs) }
+        // La boca de la cueva, tapada con una laja: se abre apoyando la mano, como las manos de la pared.
+        TemaId.CUEVA -> BloqueoMarco(TextosBloqueo("La boca de la cueva", "⁘ Una laja tapa la entrada: solo tu mano la reconoce.", "Apoyar la mano"), arriba = 26, reintentar = reintentar) { cs -> bloqueoCueva(cs) }
     }
 }
 
@@ -791,6 +793,27 @@ private fun DrawScope.bloqueoRunico(cs: ColorScheme) {
     }
 }
 
+/** La boca de la cueva: el arco irregular de la roca, estalactitas arriba, una mano en negativo a cada lado y el resplandor del fuego abajo. */
+private fun DrawScope.bloqueoCueva(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height
+    val boca = Path().apply {
+        moveTo(0f, h); lineTo(2 * u, h * 0.35f); quadraticTo(4 * u, 6 * u, w * 0.3f, 4 * u); quadraticTo(w * 0.5f, -2 * u, w * 0.72f, 6 * u)
+        quadraticTo(w - 3 * u, 10 * u, w - 2 * u, h * 0.4f); lineTo(w, h)
+    }
+    drawPath(boca, cs.onBackground.copy(alpha = 0.18f), style = Stroke(9f * u, join = StrokeJoin.Round))
+    drawPath(boca, cs.onBackground.copy(alpha = 0.55f), style = Stroke(2.2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    listOf(0.22f to 14f, 0.36f to 22f, 0.5f to 12f, 0.63f to 18f, 0.78f to 10f).forEach { (f, l) ->
+        val x = w * f; val y = 6 * u
+        drawPath(Path().apply { moveTo(x - 3 * u, y); lineTo(x, y + l * u); lineTo(x + 3 * u, y); close() }, cs.onBackground.copy(alpha = 0.3f))
+    }
+    listOf(24 * u, w - 24 * u).forEach { x ->
+        val m = Offset(x, h * 0.42f)
+        drawCircle(cs.primary.copy(alpha = 0.35f), 15 * u, m); drawCircle(cs.primary.copy(alpha = 0.5f), 11 * u, m)
+        piezasMano(m, 10 * u).forEach { drawPath(it, cs.background) }
+    }
+    drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(listOf(cs.tertiary.copy(alpha = 0.28f), Color.Transparent), Offset(w / 2, h), w * 0.45f), w * 0.45f, Offset(w / 2, h))
+}
+
 /** Retícula de laboratorio alrededor del sello: cuadro con marcas de enfoque. */
 private fun DrawScope.bloqueoReticula(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height; val l = 18 * u; val c = cs.primary
@@ -935,6 +958,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.URSS -> true
     TemaId.REVOLUCION -> false
     TemaId.ANTIGUAS -> false
+    TemaId.CUEVA -> true             // la mano de ocre, llena
 }
 
 /** ¿El botón central es una figura rellena? Si no (consola, moneda con agujero, círculo de construcción), el ícono va en el color del tema. */
@@ -970,6 +994,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.URSS -> true
     TemaId.REVOLUCION -> true
     TemaId.ANTIGUAS -> true
+    TemaId.CUEVA -> false            // la mano en negativo: la deja la nube de ocre
 }
 
 /** Polígono regular (o estrella, si se da el radio interior) centrado en (cx, cy); `giro` es el ángulo del primer vértice. */
@@ -1210,6 +1235,13 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawPath(gema, cs.tertiary.copy(alpha = p))
             drawLine(cs.surface.copy(alpha = 0.6f * p), Offset(cx - 5 * u, y - 1.5f * u), Offset(cx + 5 * u, y - 1.5f * u), 0.6f * u)
         }
+        TemaId.CUEVA -> {
+            // Tres puntos de ocre bajo el ícono, soplados uno tras otro, entre dos trazos de carbón.
+            val y = h + 1.5f * u
+            for (k in -1..1) { val f = (p * 3f - (k + 1)).coerceIn(0f, 1f); drawCircle(cs.primary.copy(alpha = f), (2.6f - kotlin.math.abs(k) * 0.5f) * u * f, Offset(cx + k * 8 * u, y)) }
+            drawLine(cs.onSurface.copy(alpha = 0.3f * p), Offset(cx - 18 * u, y), Offset(cx - 13 * u, y + 0.5f * u), 1.2f * u, StrokeCap.Round)
+            drawLine(cs.onSurface.copy(alpha = 0.3f * p), Offset(cx + 13 * u, y + 0.5f * u), Offset(cx + 18 * u, y), 1.2f * u, StrokeCap.Round)
+        }
     }
 }
 
@@ -1426,6 +1458,11 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawLine(cara, Offset(cx, 1 * u), Offset(cx - 11 * u, 15 * u), 0.8f * u); drawLine(cara, Offset(cx, 1 * u), Offset(cx + 11 * u, 15 * u), 0.8f * u)
             drawLine(cara, Offset(cx, h - 1 * u), Offset(cx - 11 * u, h - 15 * u), 0.8f * u); drawLine(cara, Offset(cx, h - 1 * u), Offset(cx + 11 * u, h - 15 * u), 0.8f * u)
         }
+        TemaId.CUEVA -> {
+            // Una mano en negativo: la nube de ocre y la mano, del color de la roca.
+            drawCircle(c.copy(alpha = 0.35f), 26 * u, Offset(cx, cy)); drawCircle(c, 22 * u, Offset(cx, cy))
+            piezasMano(Offset(cx, cy + 1 * u), 15 * u).forEach { drawPath(it, sobre) }
+        }
     }
 }
 
@@ -1588,6 +1625,11 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
                 drawLine(acento, Offset(x, (if (i % 2 == 0) 1f else 2.5f) * u), Offset(x + 2.2f * u, (if (i % 2 == 0) 2.5f else 1f) * u), 0.8f * u)
                 x += 30 * u; i++
             }
+        }
+        TemaId.CUEVA -> {
+            // Un trazo de carbón que ondula y, debajo, puntos de ocre de dos en dos.
+            drawPath(Path().apply { moveTo(0f, 1 * u); var x = 0f; var k = 0; while (x < w) { x += 24 * u; quadraticTo(x - 12 * u, if (k % 2 == 0) 0f else 2 * u, x, 1 * u); k++ } }, base, style = Stroke(1f * u))
+            var x = 20 * u; while (x < w) { drawCircle(acento, 1.1f * u, Offset(x, 3.5f * u)); drawCircle(acento, 1.1f * u, Offset(x + 4 * u, 3.5f * u)); x += 46 * u }
         }
     }
 }
@@ -1878,5 +1920,10 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.REVOLUCION -> (slideInVertically(t(260)) { -it / 14 } + scaleIn(t(260), initialScale = 1.03f, transformOrigin = TransformOrigin(0.5f, 0f)) + fadeIn(t(200))) togetherWith fadeOut(t(140))
         // Puerta de piedra: la anterior se apaga del todo y solo después aparece la nueva, despacio.
         TemaId.ANTIGUAS -> (fadeIn(t(320, espera = 160)) + scaleIn(t(380, espera = 160), initialScale = 0.94f)) togetherWith fadeOut(t(160, lineal))
+        // La pared que aparece a la luz de la lámpara: se aclara titilando, como una llama, y se acerca apenas.
+        TemaId.CUEVA -> {
+            val llama = androidx.compose.animation.core.Easing { f -> (f + 0.08f * kotlin.math.sin(f * 19f) * (1f - f)).coerceIn(0f, 1f) }
+            (fadeIn(tween(440, 0, llama)) + scaleIn(t(460), initialScale = 1.03f)) togetherWith fadeOut(t(240, lineal))
+        }
     }
 }

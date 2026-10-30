@@ -266,6 +266,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.REVOLUCION -> LaminaRascar(0xFF55524C.toInt(), 0xFFA8A398.toInt(), 0xFFEDE9DF.toInt())
     // Hierro viejo de las minas, cálido.
     TemaId.ANTIGUAS -> LaminaRascar(0xFF3A342C.toInt(), 0xFF7B6E5C.toInt(), 0xFFD1C3A8.toInt())
+    // Una capa de ocre soplado sobre la roca: el rojo de la hematita y su brillo.
+    TemaId.CUEVA -> LaminaRascar(0xFF5A2A14.toInt(), 0xFFA2401F.toInt(), 0xFFE0A070.toInt())
 }
 
 private fun conAlfaLamina(c: Int, a: Int): Int = (c and 0x00FFFFFF) or (a shl 24)
@@ -605,6 +607,13 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 c.drawPath(Path().apply { moveTo(x, y - s * 0.45f); lineTo(x + s * 0.4f, y); lineTo(x, y + s * 0.45f); lineTo(x - s * 0.4f, y); close() }, linea)
             }
             ramas(l * 0.3f, l * 0.5f); rombo(l * 0.72f, l * 0.5f)
+        }
+        TemaId.CUEVA -> {
+            // Signos de las paredes: una hilera de puntos y, debajo, un trazo con dos puntos, como los que acompañan a los animales.
+            val s = l * 0.06f
+            for (k in 0 until 4) c.drawCircle(l * (0.3f + k * 0.13f), l * 0.4f + (k % 2) * s, s, relleno)
+            c.drawLine(l * 0.3f, l * 0.62f, l * 0.62f, l * 0.6f, linea)
+            c.drawCircle(l * 0.7f, l * 0.61f, s * 0.8f, relleno); c.drawCircle(l * 0.78f, l * 0.6f, s * 0.8f, relleno)
         }
     }
 }

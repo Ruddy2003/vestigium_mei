@@ -106,6 +106,8 @@ object Marcas {
         BURBUJAS,
         /** Escudete con la cruz patada delante de la palabra y un filete de acero debajo. */
         ESCUDETE,
+        /** Prehistoria: la nube de ocre soplado detrás de la palabra, con motas en el borde, como alrededor de una mano en la pared. */
+        SOPLO,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -155,6 +157,8 @@ object Marcas {
             TemaId.URSS -> if (persona) Aspecto(cs.onPrimary, p, Forma.PARALELO, negrita = true) else Aspecto(cs.onBackground, p, Forma.FLECHA, negrita = true)
             TemaId.REVOLUCION -> if (persona) Aspecto(p, s, Forma.TRIPLE, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
             TemaId.ANTIGUAS -> if (persona) Aspecto(p, s, Forma.PIEDRA, negrita = true) else Aspecto(t, t, Forma.MUESCAS, cursiva = true)
+            // Las personas, en la nube de ocre soplado, como una mano en la pared; los asuntos, sobre una hilera de puntos.
+            TemaId.CUEVA -> if (persona) Aspecto(cs.onBackground, p, Forma.SOPLO, negrita = true) else Aspecto(p, p, Forma.PUNTEADO)
         }
     }
 
@@ -170,6 +174,7 @@ object Marcas {
         Forma.ESCUDETE -> c.copy(alpha = 0.12f)
         Forma.GLIFO -> c.copy(alpha = 0.12f)
         Forma.NUMERAL -> Color.Unspecified
+        Forma.SOPLO -> c.copy(alpha = 0.18f)
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -183,6 +188,7 @@ object Marcas {
         Forma.ESCUDETE -> true
         Forma.GLIFO -> false
         Forma.NUMERAL -> true
+        Forma.SOPLO -> false
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -459,6 +465,16 @@ object Marcas {
                 drawPath(escudo, c.copy(alpha = 0.85f), style = Stroke(0.8f * u))
                 drawPath(cruzPatada(Offset(o.x, o.y - r * 0.1f), r * 0.6f), Color(0xFFB0191F))
                 drawLine(c.copy(alpha = 0.7f), Offset(rr.left, baja), Offset(rr.right, baja), 1.4f * u)
+            }
+            Forma.SOPLO -> {
+                // Una nube de ocre soplado detrás de la palabra: el centro más denso y motas sueltas en el borde (fijas por la posición).
+                val ce = rr.center; val rx = rr.width / 2 + 6 * u; val ry = h * 0.62f
+                drawOval(androidx.compose.ui.graphics.Brush.radialGradient(listOf(c.copy(alpha = 0.3f), c.copy(alpha = 0.16f), Color.Transparent), ce, maxOf(rx, ry)), Offset(ce.x - rx, ce.y - ry), Size(rx * 2, ry * 2))
+                val az = java.util.Random((rr.left * 31 + rr.top).toLong())
+                repeat(10) {
+                    val a = az.nextFloat() * 2 * kotlin.math.PI.toFloat(); val k = 0.85f + az.nextFloat() * 0.3f
+                    drawCircle(c.copy(alpha = 0.35f), (0.6f + az.nextFloat() * 0.8f) * u, Offset(ce.x + rx * k * kotlin.math.cos(a), ce.y + ry * k * kotlin.math.sin(a)))
+                }
             }
         }
     }

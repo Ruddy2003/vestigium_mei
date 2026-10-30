@@ -886,6 +886,13 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             }
             for (j in 1..4) rombo(en(j / 4f, r), 4 * u, 6.5f * u, if (j / 4f <= p) e.tertiary else pista)
         }
+        TemaId.CUEVA -> {
+            // Un corro de veinticuatro puntos de ocre que se van pintando y, en cada cuarto, una mano que se pinta al llegar.
+            drawCircle(tenue.copy(alpha = 0.25f), R - 2 * u, c, style = Stroke(1.6f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u))))
+            val n = 24
+            for (k in 0 until n) { val f = (k + 0.5f) / n; drawCircle(if (pasado(k, n)) color else pista, (2.2f + (k % 3) * 0.5f) * u, en(f, r)) }
+            for (j in 1..4) drawPath(manoUnida(en(j / 4f, r - 16 * u), 6 * u), if (j / 4f <= p) e.primary else pista)
+        }
     }
 }
 
@@ -1070,6 +1077,12 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
         TemaId.ANTIGUAS -> {
             val k = minOf(h * 0.25f, w * 0.2f)
             moveTo(x, y + h * 0.25f); lineTo(x + minOf(w * 0.3f, h), y); lineTo(x + w, y + h * 0.12f); lineTo(x + w - k, y + h); lineTo(x + minOf(h * 0.1f, w * 0.1f), y + h); close()
+        }
+        // Un canto rodado: los bordes blandos, un poco más ancho abajo.
+        TemaId.CUEVA -> {
+            val k = minOf(h * 0.45f, w * 0.3f)
+            moveTo(x + k, y); quadraticTo(x + w * 0.5f, y - h * 0.04f, x + w - k, y + h * 0.04f); quadraticTo(x + w, y + h * 0.1f, x + w, y + h * 0.5f)
+            quadraticTo(x + w, y + h, x + w - k, y + h); lineTo(x + k, y + h); quadraticTo(x, y + h * 0.96f, x, y + h * 0.5f); quadraticTo(x, y + h * 0.04f, x + k, y); close()
         }
     }
 }

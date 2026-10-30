@@ -423,6 +423,12 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 x += 9 * u; i++
             }
         }
+        TemaId.CUEVA -> {
+            // Una mano de ocre arriba y, abajo, una hilera de puntos de grosor desparejo.
+            drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(w / 2, 11 * u), 5 * u), a.copy(alpha = 0.55f))
+            var x = 12 * u; var i = 0; val y0 = h - 10 * u
+            while (x < w - 10 * u) { drawCircle(tenue, (1.2f + (i % 3) * 0.4f) * u, Offset(x, y0 + (if (i % 2 == 0) -u else u))); x += 7 * u; i++ }
+        }
     }
 }
 

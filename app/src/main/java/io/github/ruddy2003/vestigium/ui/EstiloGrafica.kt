@@ -163,6 +163,8 @@ enum class FormaPunto {
     ESTRELLA, ESCARAPELA, GEMA, GOTA,
     /** Templario: la cruz patada. */
     PATADA,
+    /** Prehistoria: la mano de ocre. */
+    MANO,
 }
 
 /** Lo que acompaña al trazo de una serie. */
@@ -311,6 +313,10 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Tierras Antiguas: gema tallada, surcos de cincel, eje rúnico y barras como torres almenadas.
     TemaId.ANTIGUAS -> EstiloGrafica(FormaPunto.GEMA, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(2.5f, 1.5f, 0.5f, 1.5f),
         Rejilla.TALLADA, 0.55f, Eje.RUNAS, FormaBarra.TORRE, R.font.cinzel_semibold, FontWeight.SemiBold, null, 0.05f, 1f)
+    // Prehistoria: manos de ocre por puntos, un trazo de carbón que se corta con su boceto debajo, referencias en hilera de
+    // puntos, muescas en la rejilla y cifras a mano alzada.
+    TemaId.CUEVA -> EstiloGrafica(FormaPunto.MANO, 2.4f, listOf(7f, 1.5f), StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.BOCETO, listOf(0.1f, 5f),
+        Rejilla.MUESCAS, 0.5f, Eje.CUENTAS, FormaBarra.REDONDA, R.font.amatic_bold, FontWeight.Bold, null, 0.02f, 1.3f)
 }
 
 // =====================================================================
@@ -487,6 +493,7 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
             cubicTo(c.x - 0.85f * r, c.y - 0.1f * r, c.x - 0.35f * r, c.y - 0.55f * r, c.x, c.y - 1.1f * r); close()
         })
         FormaPunto.PATADA -> figura(cruzPatada(c, r * 1.15f, 0.16f, 0.45f))
+        FormaPunto.MANO -> figura(manoUnida(c, r * 1.15f))
     }
 }
 

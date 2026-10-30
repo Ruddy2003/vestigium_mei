@@ -110,6 +110,19 @@ object Temas {
     val LUNAS = listOf("LUNA DEL HIELO", "LUNA DE LA NIEVE", "LUNA DEL DESHIELO", "LUNA DE LA SIEMBRA", "LUNA DE LAS FLORES", "LUNA LARGA",
         "LUNA DEL HENO", "LUNA DE LA COSECHA", "LUNA DE LAS HOJAS", "LUNA DE LA NIEBLA", "LUNA DE LA ESCARCHA", "LUNA DEL HOGAR")
 
+    /** Prehistoria: los meses por lo que hacen las manadas y el valle en una glaciación («Pasan los renos» es octubre). */
+    val MESES_CUEVA = listOf("Frío de los lobos", "Nieve honda", "Crujen los ríos", "Vuelven las grullas", "Paren las yeguas", "Brota la estepa",
+        "Bisontes en celo", "Moscas y bayas", "Braman los ciervos", "Pasan los renos", "Primera nieve", "La noche larga")
+
+    /** Lunas desde el primer registro: el día [n] (1 = el primer registro) cae en la luna N, en su sol (día) S. Cada luna dura 29.53 días
+     *  (el mes sinódico): la luna L empieza el día ⌊(L − 1) · 29.53⌋ + 1. Devuelve (luna, sol). */
+    fun lunaYSol(n: Long): Pair<Long, Long> {
+        fun inicio(l: Long) = ((l - 1) * 29.53).toLong() + 1
+        var l = ((n - 1) / 29.53).toLong() + 1
+        if (inicio(l + 1) <= n) l++
+        return l to n - inicio(l) + 1
+    }
+
     /** «17 de la Luna de las Hojas» (el 17 de octubre, contado a la antigua). */
     fun fechaAntigua(iso: String): String = runCatching {
         val d = Fechas.parse(iso)
@@ -239,6 +252,9 @@ object Temas {
     private val MARCAS_NAPOLEON = mapOf("12-02" to "Austerlitz", "08-15" to "Natalicio", "06-18" to "Waterloo", "03-21" to "Código", "05-18" to "Imperio",
         "10-14" to "Jena", "06-14" to "Friedland", "03-20" to "Cien Días", "07-06" to "Wagram")
     private val MARCAS_ANTIGUAS = mapOf("12-21" to "Noche larga", "06-21" to "Día largo", "03-20" to "Deshielo", "09-22" to "Cosecha", "10-31" to "Víspera", "01-01" to "Año nuevo")
+    /** El año del valle (solsticios y equinoccios, por lo que hacen las manadas) y los días en que se hallaron dos grandes cuevas pintadas:
+     *  Lascaux (12 de septiembre de 1940) y Chauvet (18 de diciembre de 1994). */
+    private val MARCAS_CUEVA = mapOf("12-21" to "Noche más larga", "06-21" to "Sol más alto", "03-20" to "Vuelven las grullas", "09-22" to "Bajan los renos", "09-12" to "Lascaux", "12-18" to "Chauvet", "10-31" to "Primera helada")
     private val MARCAS_REVOLUCION = mapOf("07-14" to "Bastilla", "06-20" to "Juego de pelota", "08-04" to "Privilegios", "08-26" to "Derechos", "10-05" to "Versalles",
         "09-22" to "República", "07-27" to "Termidor", "09-20" to "Valmy")
     private val MARCAS_BOTANICO = mapOf("05-23" to "Linneo", "02-12" to "Darwin", "09-14" to "Humboldt", "04-22" to "Tierra", "03-20" to "Equinoccio",
@@ -310,6 +326,7 @@ object Temas {
             TemaId.PIRATA -> MARCAS_PIRATA[md]
             TemaId.REVOLUCION -> MARCAS_REVOLUCION[md]
             TemaId.ANTIGUAS -> MARCAS_ANTIGUAS[md]
+            TemaId.CUEVA -> MARCAS_CUEVA[md]
         }
     }
 
@@ -488,6 +505,7 @@ object Temas {
         TemaId.URSS -> URSS[titulo]
         TemaId.REVOLUCION -> REVOLUCION[titulo]
         TemaId.ANTIGUAS -> ANTIGUAS[titulo]
+        TemaId.CUEVA -> CUEVA[titulo]
     }
 
     fun widget(tema: TemaId, clave: String): String {
@@ -523,6 +541,7 @@ object Temas {
             TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO", "enfoque" to "TRABAJO")
             TemaId.REVOLUCION -> mapOf("animo" to "ESPÍRITU", "momento" to "SUCESO", "gasto" to "ASIGNADOS", "sueno" to "REPOSO", "habitos" to "VIRTUDES", "hoy" to "CAHIER", "cifra" to "CIFRA", "foto" to "ESTAMPA", "enfoque" to "ESTUDIO")
             TemaId.ANTIGUAS -> mapOf("animo" to "TEMPLE", "momento" to "SUCESO", "gasto" to "MONEDAS", "sueno" to "VIGILIA", "habitos" to "JURAMENTOS", "hoy" to "CRÓNICA", "cifra" to "CUENTA", "foto" to "GRABADO", "enfoque" to "ESTUDIO")
+            TemaId.CUEVA -> mapOf("animo" to "Aliento", "momento" to "Señal", "gasto" to "Conchas", "sueno" to "Reposo", "habitos" to "Costumbres", "hoy" to "Este sol", "cifra" to "Muescas", "foto" to "Pintura", "enfoque" to "Acecho")
         }
         return m[clave] ?: clave.uppercase()
     }
@@ -717,6 +736,30 @@ object Temas {
         "Registros especiales" to "REGISTROS", "Avisos y recordatorios" to "CUERNOS Y CAMPANAS", "Contexto" to "CIRCUNSTANCIAS", "Medicamentos" to "POCIONES",
         "Ajustes" to "EL TALLER", "Datos" to "ARCHIVOS", "Privacidad" to "LO SECRETO", "Reportes" to "PERGAMINOS", "Experimentos personales" to "PRUEBAS",
         "Cómo leer tus datos" to "EL SABER ANTIGUO", "Guía científica" to "EL SABER ANTIGUO", "Cartas al futuro" to "MISIVAS AL PORVENIR", "Notas" to "APUNTES DE VIAJE", "Metas" to "LAS GESTAS POR VENIR",
+    )
+
+    /** Prehistoria: la voz del clan que pinta en la cueva y sigue a las manadas. */
+    private val CUEVA = mapOf(
+        "Mundo" to "Más allá del valle", "Patrimonio Mundial" to "Cuevas pintadas del mundo", "Mapa para rascar" to "La pared por raspar",
+        "Ciudades visitadas" to "Abrigos visitados", "Biblioteca de sueños" to "Lo que se ve con los ojos cerrados", "Cartas" to "Piedras marcadas",
+        "Escribir una carta" to "Marcar una piedra", "Carta" to "Piedra marcada", "Conocerte" to "Quién deja esta mano",
+        "Brújula política" to "Cómo se reparte el clan", "Mapas" to "Rastros pintados", "Salud" to "El cuerpo del cazador",
+        "Tus apps" to "Piedras que brillan", "Otras vidas" to "Otros clanes", "Logros" to "Presas", "Tu año en historias" to "Tu año de lunas en la pared",
+        "Anoche" to "La noche junto al fuego", "Selladas" to "Enterradas", "Listas para abrir" to "Listas para desenterrar",
+        "A otras personas" to "Para otro clan", "Del pasado" to "De lunas viejas", "Hoy" to "Este sol", "Línea de tiempo" to "Muescas del día",
+        "Ahora mismo estoy…" to "Junto al fuego estoy…", "Día" to "El sol en la pared", "Diario" to "La pared pintada", "Gastos" to "Trueques de conchas",
+        "Entender" to "Leer el rastro", "Más" to "Lo hondo de la cueva", "Llenar el día" to "Pintar el día",
+        "Biblioteca del diario" to "Las paredes pintadas", "Entrada" to "Pintura", "Tablero" to "La pared grande",
+        "Te falta hoy" to "Te falta antes de que caiga el sol", "Hábitos" to "Costumbres del clan", "Sueño" to "Reposo",
+        "Ánimo y cuerpo" to "Aliento y cuerpo", "Predicción" to "Lo que dicen las huellas", "Calendario" to "Las lunas en el hueso",
+        "Apariencia" to "Pigmentos", "Tu año" to "Las lunas de tu año", "Totales" to "Todo lo que cabe en la bolsa",
+        "Obras" to "Lo que se cuenta junto al fuego", "Lugares" to "Parajes", "Mapa" to "El valle pintado", "Datos que faltan" to "Huellas borradas",
+        "Hitos" to "Piedras grandes del camino", "Momentos de este día" to "Señales de este sol", "Resumen semanal" to "Siete soles",
+        "Tu día" to "Tu sol de punta a punta", "Tu día en 24 horas" to "Tu sol de punta a punta", "Registros especiales" to "Marcas aparte",
+        "Avisos y recordatorios" to "Cuernos y silbos", "Contexto" to "Cómo amaneció el valle", "Medicamentos" to "Hierbas y raíces",
+        "Ajustes" to "El taller de sílex", "Datos" to "Las marcas guardadas", "Privacidad" to "Lo que no se pinta", "Reportes" to "Paredes para llevar",
+        "Experimentos personales" to "Pruebas del cazador", "Cómo leer tus datos" to "Cómo se lee el rastro", "Guía científica" to "Cómo se lee el rastro",
+        "Cartas al futuro" to "Piedras para lunas que vendrán", "Notas" to "Rayas en la corteza", "Metas" to "Presas por cazar",
     )
 
     private val BOTANICO = mapOf(

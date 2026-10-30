@@ -51,6 +51,8 @@ Ciudadana Vestigium — versión reducida y renombrada de Libre Baskerville: Cop
 Titillium Web (recortada) — Copyright (c) 2009-2011 by Accademia di Belle Arti di Urbino and students of MA course of Visual design.
 Newsreader (instancias estáticas, recortadas) — Copyright 2020 The Newsreader Project Authors (http://github.com/productiontype/Newsreader)
 Vollkorn (instancias estáticas, recortadas) — Copyright 2017 The Vollkorn Project Authors (https://github.com/FAlthausen/Vollkorn-Typeface)
+Amatic SC (sin modificar el diseño, recortada) — Copyright 2015 The Amatic SC Project Authors (https://github.com/googlefonts/AmaticSC)
+Abrigo Vestigium — versión reducida y renombrada de Andika: Copyright (c) 2004-2022 SIL International (http://www.sil.org/), with Reserved Font Names "Andika" and "SIL".
 Escriba Vestigium — versión reducida y renombrada de Gentium Book Plus: Copyright (c) 2003-2022 SIL International (http://www.sil.org/), with Reserved Font Names "Gentium" and "SIL".
 El Messiri (instancias estáticas, recortadas) — Copyright 2015 The El Messiri Project Authors (https://github.com/Gue3bara/El-Messiri)
 Camino Vestigium — versión reducida y renombrada de Uncial Antiqua: Copyright (c) 2011 by Brian J. Bonislawsky DBA Astigmatic (AOETI) (astigma@astigmatic.com), with Reserved Font Names "Uncial Antiqua"

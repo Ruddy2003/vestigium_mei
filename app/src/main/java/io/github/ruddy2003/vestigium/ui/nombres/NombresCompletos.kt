@@ -40,5 +40,6 @@ object NombresCompletos {
         TemaId.PIRATA -> NombresPirata.M[titulo]
         TemaId.REVOLUCION -> NombresRevolucion.M[titulo]
         TemaId.ANTIGUAS -> NombresAntiguas.M[titulo]
+        TemaId.CUEVA -> NombresCueva.M[titulo]
     }
 }

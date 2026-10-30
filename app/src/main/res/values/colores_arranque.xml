@@ -62,5 +62,7 @@
     <color name="arranque_revolucion">#F2ECDD</color>
     <color name="arranque_revolucion_oscuro">#131417</color>
     <color name="arranque_antiguas">#E9E3D4</color>
+    <color name="arranque_cueva">#EADCC6</color>
     <color name="arranque_antiguas_oscuro">#151618</color>
+    <color name="arranque_cueva_oscuro">#16100C</color>
 </resources>

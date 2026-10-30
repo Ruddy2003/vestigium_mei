@@ -51,6 +51,8 @@ object TrofeosMas {
             "Cultura" to "Esfera", "Gente" to "Corona", "Constancia" to "Campana", "Curiosos" to "Regalo", "Tuyos" to "Piña"),
         TemaId.ANTIGUAS to mapOf("Diario" to "Libro de runas", "Mundo" to "Mapa de la travesía", "Cuerpo" to "Yelmo", "Mente" to "Cristal",
             "Cultura" to "Arpa", "Gente" to "Estandarte", "Constancia" to "Llave de hierro", "Curiosos" to "Gema", "Tuyos" to "Linterna de mina"),
+        TemaId.CUEVA to mapOf("Diario" to "Laja pintada", "Mundo" to "Huellas en el barro", "Cuerpo" to "Propulsor de asta", "Mente" to "Lámpara de grasa",
+            "Cultura" to "Flauta de hueso", "Gente" to "Collar de conchas", "Constancia" to "Hueso con muescas", "Curiosos" to "Bifaz de sílex", "Tuyos" to "Mano en negativo"),
         TemaId.DISTOPIA to mapOf("Diario" to "Expediente sellado", "Mundo" to "Pase de control", "Cuerpo" to "Insignia numerada", "Mente" to "Tarjeta perforada",
             "Cultura" to "Documento censurado", "Gente" to "Credencial", "Constancia" to "Sello de goma", "Curiosos" to "Cámara de vigilancia", "Tuyos" to "Altavoz"),
         TemaId.CIBER to mapOf("Diario" to "Registro del sistema", "Mundo" to "Mapa de la red", "Cuerpo" to "Monitor de pulso", "Mente" to "Árbol de directorios",
@@ -257,6 +259,21 @@ object TrofeosMas {
                 val c = if (p.hecho) Color(0xFF7D7A72) else ped
                 drawRect(piedra(c), Offset(w * 0.18f, h * 0.79f), Size(w * 0.64f, h * 0.16f))
                 if (p.hecho) runas(Offset(w * 0.26f, h * 0.85f), w * 0.48f, h * 0.05f, Color(0xFF2B2A28).copy(alpha = 0.55f), w * 0.006f, 5)
+            }
+            TemaId.CUEVA -> {
+                // Un canto de caliza sin labrar, con una hilera de puntos de ocre y una mano pequeña soplada al frente.
+                val c = if (p.hecho) Color(0xFFBFA987) else ped
+                val roca = Path().apply {
+                    moveTo(w * 0.14f, h * 0.95f); lineTo(w * 0.17f, h * 0.83f); quadraticTo(w * 0.3f, h * 0.77f, w * 0.52f, h * 0.785f)
+                    quadraticTo(w * 0.74f, h * 0.775f, w * 0.83f, h * 0.83f); lineTo(w * 0.86f, h * 0.95f); close()
+                }
+                drawPath(roca, piedra(c))
+                if (p.hecho) {
+                    for (k in 0 until 5) drawCircle(Color(0xFFA2401F), w * 0.011f, Offset(w * (0.28f + k * 0.045f), h * 0.86f))
+                    val m = Offset(w * 0.68f, h * 0.87f)
+                    drawCircle(Color(0xFFA2401F).copy(alpha = 0.55f), w * 0.045f, m)
+                    piezasMano(m, w * 0.03f).forEach { drawPath(it, c) }
+                }
             }
             // Los pedestales de los siete primeros están en [TrofeosTema.pedestal]: no llegan aquí.
             TemaId.ROMANO -> Unit
@@ -1441,6 +1458,121 @@ object TrofeosMas {
                 listOf(0.36f, 0.5f, 0.64f).forEach { x -> drawLine(hierro, p.o(x, 0.22f), p.o(x, 0.6f), lw * 0.9f) }
                 caja(p, 0.3f, 0.6f, 0.7f, 0.68f)
                 caja(p, 0.36f, 0.68f, 0.64f, 0.74f, SolidColor(hierro))
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Prehistoria: lo que guarda el clan de la cueva
+
+    internal fun DrawScope.cueva(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val caliza = p.c(Color(0xFFD9C7A6)); val ocre = p.c(Color(0xFFA2401F)); val carbon = p.c(Color(0xFF2E2620))
+        val hueso = p.c(Color(0xFFE8DCC4)); val silex = p.c(Color(0xFF6E6A62)); val madera = p.c(Color(0xFF7A5232))
+        when (cat) {
+            "Diario" -> {
+                // La laja pintada: caliza de borde partido, una mano en negativo y un bisonte de carbón.
+                val laja = Path().apply { moveTo(p.x(0.16f), p.y(0.12f)); lineTo(p.x(0.6f), p.y(0.06f)); lineTo(p.x(0.86f), p.y(0.16f)); lineTo(p.x(0.84f), p.y(0.7f)); lineTo(p.x(0.5f), p.y(0.76f)); lineTo(p.x(0.14f), p.y(0.7f)); close() }
+                drawPath(laja, SolidColor(caliza)); drawPath(laja, p.metal(0.14f, 0.86f), style = Stroke(lw * 1.2f))
+                val m = p.o(0.4f, 0.32f)
+                if (p.hecho) drawCircle(Brush.radialGradient(listOf(ocre, ocre.copy(alpha = 0f)), m, p.w * 0.2f), p.w * 0.2f, m)
+                piezasMano(m, p.w * 0.13f).forEach { drawPath(it, if (p.hecho) caliza else p.linea) }
+                drawPath(bisonte(p.o(0.6f, 0.58f), p.w * 0.18f), carbon)
+            }
+            "Mundo" -> {
+                // Huellas en el barro: un charco seco y los pies descalzos que lo cruzaron, como las que quedaron en las cuevas.
+                val barro = p.c(Color(0xFF8C6B4A)); val huella = p.c(Color(0xFF4A3424))
+                drawOval(SolidColor(barro), Offset(p.x(0.08f), p.y(0.22f)), Size(p.x(0.84f), p.y(0.5f)))
+                drawOval(p.metal(0.08f, 0.92f), Offset(p.x(0.08f), p.y(0.22f)), Size(p.x(0.84f), p.y(0.5f)), style = Stroke(lw))
+                listOf(Triple(0.26f, 0.58f, -20f), Triple(0.42f, 0.44f, 10f), Triple(0.58f, 0.56f, -15f), Triple(0.74f, 0.4f, 15f)).forEach { (x, y, g) ->
+                    val c = p.o(x, y)
+                    rotate(g, c) {
+                        drawOval(huella, Offset(c.x - p.w * 0.035f, c.y - p.w * 0.04f), Size(p.w * 0.07f, p.w * 0.11f))
+                        for (k in 0 until 5) drawCircle(huella, p.w * (0.014f - k * 0.0015f), Offset(c.x - p.w * 0.03f + k * p.w * 0.016f, c.y - p.w * (0.06f - k * 0.004f)))
+                    }
+                }
+            }
+            "Cuerpo" -> {
+                // El propulsor de asta con su gancho y, encima, la azagaya con su punta de sílex atada con tendón.
+                drawLine(madera, p.o(0.1f, 0.7f), p.o(0.86f, 0.14f), lw * 1.6f, StrokeCap.Round)
+                drawPath(Path().apply { moveTo(p.x(0.95f), p.y(0.06f)); lineTo(p.x(0.83f), p.y(0.12f)); lineTo(p.x(0.88f), p.y(0.17f)); close() }, SolidColor(silex))
+                listOf(0.0f, 0.03f).forEach { f -> drawLine(hueso, p.o(0.8f - f, 0.15f + f * 0.7f), p.o(0.84f - f, 0.21f + f * 0.7f), lw * 0.6f) }
+                drawLine(hueso, p.o(0.14f, 0.76f), p.o(0.56f, 0.44f), lw * 3.2f, StrokeCap.Round)
+                drawCircle(hueso, p.w * 0.04f, p.o(0.58f, 0.42f))
+                drawLine(p.linea, p.o(0.14f, 0.76f), p.o(0.56f, 0.44f), lw * 0.4f)
+                if (p.hecho) for (k in 0 until 4) drawCircle(ocre, p.w * 0.01f, p.o(0.22f + k * 0.08f, 0.7f - k * 0.061f))
+            }
+            "Mente" -> {
+                // La lámpara de grasa: un cuenco de arenisca con mango grabado, la mecha y la llama que deja ver la pared.
+                val arenisca = p.c(Color(0xFFB4865A))
+                if (p.hecho) drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC46B).copy(alpha = 0.55f), Color.Transparent), p.o(0.44f, 0.36f), p.w * 0.42f), p.w * 0.42f, p.o(0.44f, 0.36f))
+                drawArc(SolidColor(arenisca), 0f, 180f, true, Offset(p.x(0.16f), p.y(0.42f)), Size(p.x(0.56f), p.y(0.3f)))
+                caja(p, 0.7f, 0.53f, 0.92f, 0.6f, SolidColor(arenisca))
+                if (p.hecho) for (k in 0 until 3) { val x = 0.75f + k * 0.055f; drawLine(carbon, p.o(x, 0.545f), p.o(x + 0.025f, 0.57f), lw * 0.5f); drawLine(carbon, p.o(x + 0.025f, 0.57f), p.o(x + 0.05f, 0.545f), lw * 0.5f) }
+                drawLine(p.linea, p.o(0.16f, 0.57f), p.o(0.72f, 0.57f), lw)
+                val llama = Path().apply { moveTo(p.x(0.42f), p.y(0.24f)); quadraticTo(p.x(0.5f), p.y(0.44f), p.x(0.42f), p.y(0.56f)); quadraticTo(p.x(0.34f), p.y(0.44f), p.x(0.42f), p.y(0.24f)); close() }
+                drawPath(llama, SolidColor(p.c(Color(0xFFFF9A3C))))
+                if (p.hecho) drawPath(Path().apply { moveTo(p.x(0.42f), p.y(0.36f)); quadraticTo(p.x(0.46f), p.y(0.48f), p.x(0.42f), p.y(0.55f)); quadraticTo(p.x(0.38f), p.y(0.48f), p.x(0.42f), p.y(0.36f)); close() }, Color(0xFFFFE08A))
+            }
+            "Cultura" -> {
+                // La flauta de hueso de ave, con sus agujeros, como las halladas en las cuevas del Jura de Suabia; y el sonido que sale.
+                rotate(-18f, p.o(0.46f, 0.44f)) {
+                    caja(p, 0.1f, 0.4f, 0.82f, 0.48f, SolidColor(hueso))
+                    drawCircle(hueso, p.w * 0.05f, p.o(0.1f, 0.44f)); drawCircle(hueso, p.w * 0.045f, p.o(0.82f, 0.44f))
+                    drawRect(p.metal(0.1f, 0.82f), Offset(p.x(0.1f), p.y(0.4f)), Size(p.x(0.72f), p.y(0.08f)), style = Stroke(lw * 0.6f))
+                    for (k in 0 until 5) drawCircle(carbon, p.w * 0.014f, p.o(0.3f + k * 0.1f, 0.44f))
+                }
+                if (p.hecho) listOf(0.08f, 0.14f, 0.2f).forEach { r ->
+                    drawArc(ocre, -70f, 70f, false, Offset(p.x(0.84f) - p.w * r, p.y(0.22f) - p.w * r), Size(p.w * r * 2, p.w * r * 2), style = Stroke(lw * 0.8f, cap = StrokeCap.Round))
+                }
+            }
+            "Gente" -> {
+                // El collar de conchas perforadas y dientes de ciervo: cada cuenta, un regalo de otro clan.
+                val concha = p.c(Color(0xFFF2E8D6)); val diente = p.c(Color(0xFFE6D3A8))
+                drawPath(Path().apply { moveTo(p.x(0.14f), p.y(0.14f)); quadraticTo(p.x(0.5f), p.y(1f), p.x(0.86f), p.y(0.14f)) }, p.linea, style = Stroke(lw * 0.6f))
+                for (k in 0 until 11) {
+                    val t = 0.08f + k * 0.084f
+                    val x = (1 - t) * (1 - t) * 0.14f + 2 * (1 - t) * t * 0.5f + t * t * 0.86f
+                    val y = (1 - t) * (1 - t) * 0.14f + 2 * (1 - t) * t * 1f + t * t * 0.14f
+                    val c = p.o(x, y)
+                    if (k % 4 == 2) drawPath(Path().apply { moveTo(c.x - p.w * 0.018f, c.y - p.w * 0.01f); quadraticTo(c.x, c.y + p.w * 0.07f, c.x + p.w * 0.018f, c.y - p.w * 0.01f); close() }, SolidColor(diente))
+                    else { drawOval(SolidColor(concha), Offset(c.x - p.w * 0.03f, c.y - p.w * 0.022f), Size(p.w * 0.06f, p.w * 0.05f)); drawCircle(p.linea, p.w * 0.008f, c) }
+                }
+                if (p.hecho) drawCircle(ocre, p.w * 0.02f, p.o(0.5f, 0.6f))
+            }
+            "Constancia" -> {
+                // El hueso con muescas: una cuenta grabada de cinco en cinco, como en los huesos marcados del Paleolítico.
+                rotate(-8f, p.o(0.5f, 0.42f)) {
+                    caja(p, 0.16f, 0.36f, 0.84f, 0.5f, SolidColor(hueso))
+                    listOf(0.16f, 0.84f).forEach { x -> drawCircle(hueso, p.w * 0.06f, p.o(x, 0.39f)); drawCircle(hueso, p.w * 0.06f, p.o(x, 0.47f)) }
+                    drawRect(p.metal(0.16f, 0.84f), Offset(p.x(0.16f), p.y(0.36f)), Size(p.x(0.68f), p.y(0.14f)), style = Stroke(lw * 0.5f))
+                    val n = if (p.hecho) 15 else 6
+                    for (k in 0 until n) { val x = 0.24f + k * 0.036f + (k / 5) * 0.03f; drawLine(carbon, p.o(x, 0.38f), p.o(x, 0.48f), lw * 0.7f) }
+                }
+            }
+            "Curiosos" -> {
+                // El bifaz: un sílex tallado por las dos caras, en forma de almendra, con las huellas de cada golpe.
+                val bifaz = Path().apply {
+                    moveTo(p.x(0.5f), p.y(0.06f)); cubicTo(p.x(0.72f), p.y(0.2f), p.x(0.8f), p.y(0.56f), p.x(0.62f), p.y(0.74f)); quadraticTo(p.x(0.5f), p.y(0.78f), p.x(0.38f), p.y(0.74f))
+                    cubicTo(p.x(0.2f), p.y(0.56f), p.x(0.28f), p.y(0.2f), p.x(0.5f), p.y(0.06f)); close()
+                }
+                drawPath(bifaz, if (p.hecho) Brush.linearGradient(listOf(lerp(silex, Color.White, 0.35f), silex, lerp(silex, Color.Black, 0.35f)), p.o(0.3f, 0.1f), p.o(0.7f, 0.74f)) else SolidColor(silex))
+                clipPath(bifaz) {
+                    for (k in 0 until 6) { val y = 0.16f + k * 0.1f
+                        listOf(-1f, 1f).forEach { s -> drawArc(p.linea.copy(alpha = 0.5f), if (s < 0f) -60f else 120f, 120f, false, Offset(p.x(0.5f + s * 0.14f) - p.w * 0.08f, p.y(y) - p.w * 0.05f), Size(p.w * 0.16f, p.w * 0.1f), style = Stroke(lw * 0.5f)) } }
+                }
+                drawPath(bifaz, p.metal(0.25f, 0.75f), style = Stroke(lw * 0.8f))
+            }
+            else -> {
+                // Tu mano en negativo: la roca, la nube de ocre soplado y la mano que queda del color de la piedra.
+                val roca = Path().apply { moveTo(p.x(0.12f), p.y(0.14f)); quadraticTo(p.x(0.5f), p.y(0.02f), p.x(0.88f), p.y(0.16f)); lineTo(p.x(0.9f), p.y(0.74f)); quadraticTo(p.x(0.5f), p.y(0.8f), p.x(0.1f), p.y(0.72f)); close() }
+                drawPath(roca, SolidColor(caliza)); drawPath(roca, p.metal(0.1f, 0.9f), style = Stroke(lw))
+                val m = p.o(0.5f, 0.44f)
+                if (p.hecho) {
+                    drawCircle(Brush.radialGradient(listOf(ocre, ocre.copy(alpha = 0.7f), ocre.copy(alpha = 0f)), m, p.w * 0.3f), p.w * 0.3f, m)
+                    val az = java.util.Random(9)
+                    repeat(40) { val a = az.nextFloat() * 2 * PI.toFloat(); val r = p.w * (0.2f + az.nextFloat() * 0.14f); drawCircle(ocre.copy(alpha = 0.5f), p.w * 0.008f, Offset(m.x + r * cos(a), m.y + r * sin(a))) }
+                }
+                piezasMano(m, p.w * 0.22f).forEach { drawPath(it, if (p.hecho) caliza else p.linea) }
             }
         }
     }

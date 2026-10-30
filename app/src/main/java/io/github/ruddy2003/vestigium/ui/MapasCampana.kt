@@ -383,6 +383,18 @@ object MapasCampana {
                 }
                 listOf(Offset(-6f, -36f), Offset(5f, -38f), Offset(1f, -42f)).forEach { o -> drawCircle(Color(0xFFFFB347), 0.8f * d, Offset(m.x + o.x * d, b + o.y * d)) }
             }
+            TemaId.CUEVA -> {
+                // Los pastos del verano: la choza de pieles del campamento con su humo, el fuego encendido delante y un bisonte que pace.
+                val piel = Color(0xFF8A6440); val b = m.y - 8 * d
+                drawPath(Path().apply { moveTo(m.x - 12 * d, b); lineTo(m.x - 2 * d, b - 20 * d); lineTo(m.x + 8 * d, b); close() }, piel)
+                drawLine(Color(0xFF3A2414), Offset(m.x - 4 * d, b - 23 * d), Offset(m.x, b - 17 * d), 1 * d); drawLine(Color(0xFF3A2414), Offset(m.x, b - 23 * d), Offset(m.x - 4 * d, b - 17 * d), 1 * d)
+                drawPath(Path().apply { moveTo(m.x - 4 * d, b); lineTo(m.x - 2 * d, b - 8 * d); lineTo(m.x, b); close() }, Color(0xFF2A1A10))
+                drawPath(Path().apply { moveTo(m.x - 2 * d, b - 24 * d); cubicTo(m.x - 6 * d, b - 30 * d, m.x + 2 * d, b - 34 * d, m.x - 2 * d, b - 40 * d) }, Color.Gray.copy(alpha = 0.5f), style = Stroke(1.4f * d))
+                val fuego = Offset(m.x + 12 * d, b - 2 * d)
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFB347).copy(alpha = 0.5f), Color.Transparent), fuego, 10 * d), 10 * d, fuego)
+                drawPath(Path().apply { moveTo(fuego.x, fuego.y - 7 * d); quadraticTo(fuego.x + 3 * d, fuego.y - 2 * d, fuego.x, fuego.y + 1 * d); quadraticTo(fuego.x - 3 * d, fuego.y - 2 * d, fuego.x, fuego.y - 7 * d); close() }, Color(0xFFE8601C))
+                drawPath(bisonte(Offset(m.x - 22 * d, b - 4 * d), 7 * d), Color(0xFF3A2A1E))
+            }
             TemaId.DISTOPIA -> with(TrofeosMas) {
                 // El sello de «APROBADO» estampado sobre el Ministerio, un poco torcido, con su doble filete.
                 val rojo = Color(0xFFC8102E)

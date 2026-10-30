@@ -169,6 +169,7 @@ object LibroDiario {
         TemaId.REVOLUCION -> Fuentes(R.font.convencion_titulo, R.font.ciudadana_regular)
         // La uncial de los caminos y el libro de crónicas.
         TemaId.ANTIGUAS -> Fuentes(R.font.camino_titulo, R.font.vollkorn_regular)
+        TemaId.CUEVA -> Fuentes(R.font.amatic_bold, R.font.abrigo_regular)
     }
 
     private fun hex(c: Color) = "#%06X".format(c.toArgb() and 0xFFFFFF)
@@ -266,6 +267,9 @@ object LibroDiario {
             TemaId.REVOLUCION -> "article{border-top:6px solid;border-image:linear-gradient(90deg,#1F3A6E 0 33%,$b 33% 66%,#B22234 66%) 6}" + capitular("3em", p)
             TemaId.ANTIGUAS -> "article{border:2px solid $p;padding:18px;margin-bottom:18px;background:linear-gradient(135deg,$s 10px,transparent 10px),linear-gradient(225deg,$s 10px,transparent 10px)," +
                 "linear-gradient(315deg,$s 10px,transparent 10px),linear-gradient(45deg,$s 10px,transparent 10px)}" + capitular("2.8em", p)
+            // Una hilera de puntos de ocre a la izquierda de cada día, los títulos a mano alzada y la primera letra grande, de ocre.
+            TemaId.CUEVA -> "article{border-left:4px dotted $p;padding:6px 14px;margin-bottom:20px}h1,.fecha{font-family:T,cursive;letter-spacing:.06em}" +
+                ".fecha{font-size:1.4em;color:$p}.meta{color:$v}" + capitular("3em", p)
         }
     }
 
@@ -410,6 +414,7 @@ object LibroDiario {
             TemaId.URSS -> Medidas(11f, aire)
             TemaId.REVOLUCION -> Medidas(11f, aire)
             TemaId.ANTIGUAS -> Medidas(11f, aire)
+            TemaId.CUEVA -> Medidas(11.5f, if (carta) 1.5f else 1.46f)
         }
     }
 
@@ -474,6 +479,8 @@ object LibroDiario {
         TemaId.URSS -> Inicial(R.font.russo, 1.15f, palabra = true, mayusculas = true)
         TemaId.REVOLUCION -> Inicial(R.font.cormorant_medium, 2.6f)
         TemaId.ANTIGUAS -> Inicial(R.font.cinzel_semibold, 2.5f)
+        // Una capitular grande a mano alzada, en ocre.
+        TemaId.CUEVA -> Inicial(R.font.amatic_bold, 2.9f, tinta = true)
     }
 
     /** El [texto] con la inicial del tema ([acento], [fondo] y [tinta] son los colores de la hoja). */
@@ -731,6 +738,12 @@ object LibroDiario {
                     if (i == 2) cv.drawLine(x - 3f, y + 1.5f, x + 3f, y - 1.5f, runa)
                 }
             }
+            TemaId.CUEVA -> {
+                // Una hilera de puntos de ocre de grosor desparejo y, en el centro, tres más grandes en triángulo.
+                var x = x0 + 2f; var k = 0
+                while (x < x1) { if (kotlin.math.abs(x - cx) > 12f) cv.drawCircle(x, y + (if (k % 2 == 0) -0.6f else 0.6f), 1.1f + (k % 3) * 0.35f, relleno); x += 7f; k++ }
+                cv.drawCircle(cx - 5f, y + 2f, 2.2f, relleno); cv.drawCircle(cx + 5f, y + 2f, 2.2f, relleno); cv.drawCircle(cx, y - 3f, 2.2f, relleno)
+            }
         }
     }
 
@@ -951,6 +964,16 @@ object LibroDiario {
                     val (sx, sy) = haciaDentro(x, y)
                     cv.drawPath(android.graphics.Path().apply { moveTo(x, y); lineTo(x + sx * 20f, y); lineTo(x, y + sy * 20f); close() }, hierro)
                     cv.drawCircle(x + sx * 5f, y + sy * 5f, 2.4f, gema)
+                }
+            }
+            TemaId.CUEVA -> {
+                // El borde ondulado de una piel curtida, la costura de tendón por dentro y tres puntos de ocre en cada esquina.
+                cv.drawPath(android.graphics.Path().apply { moveTo(24f, 30f); quadTo(A / 2, 16f, A - 24f, 28f); quadTo(A - 12f, B / 2, A - 26f, B - 24f); quadTo(A / 2, B - 12f, 26f, B - 28f); quadTo(14f, B / 2, 24f, 30f); close() }, trazo)
+                cv.drawPath(android.graphics.Path().apply { moveTo(34f, 40f); quadTo(A / 2, 28f, A - 34f, 38f); quadTo(A - 24f, B / 2, A - 36f, B - 34f); quadTo(A / 2, B - 24f, 36f, B - 38f); quadTo(26f, B / 2, 34f, 40f); close() },
+                    Paint(fino).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 4f), 0f) })
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y)
+                    listOf(18f to 18f, 28f to 16f, 16f to 28f).forEach { (dx, dy) -> cv.drawCircle(x + sx * dx, y + sy * dy, 2.4f, relleno) }
                 }
             }
         }

@@ -270,4 +270,13 @@ internal object Claves {
         "telephonum" to "espejo", "telephon" to "espejo", "imagines" to "grabados", "musica" to "cantares", "reditus" to "tributos",
         "momenta" to "sucesos", "orbis" to "el_ancho_mundo",
     )
+
+    /** Habla del clan de la cueva. Lo que no está aquí queda en el español común. */
+    val CUEVA: Map<String, String> = mapOf(
+        "somnus" to "reposo", "passus" to "pisadas", "cor" to "latido", "animus" to "aliento", "svmptvs" to "conchas", "loca" to "parajes",
+        "personae" to "clan", "palmae" to "presas", "iter" to "rastro", "caelum" to "cielo", "lux" to "sol", "strepitus" to "eco", "musica" to "flauta",
+        "telephonum" to "piedra_que_brilla", "telephon" to "piedra_que_brilla", "imagines" to "pinturas", "momenta" to "señales",
+        "consuetudo" to "costumbres", "cibus" to "comida", "orbis" to "más_allá", "dies" to "soles", "epistulae" to "piedras_marcadas", "luna" to "luna",
+        "series" to "huellas_seguidas", "aer" to "viento", "vis" to "brasas",
+    )
 }

@@ -66,6 +66,7 @@ object Avisos {
         TemaId.PIRATA -> R.raw.n_pirata_aviso to R.raw.n_pirata_solemne
         TemaId.REVOLUCION -> R.raw.n_revolucion_aviso to R.raw.n_revolucion_solemne
         TemaId.ANTIGUAS -> R.raw.n_antiguas_aviso to R.raw.n_antiguas_solemne
+        TemaId.CUEVA -> R.raw.n_cueva_aviso to R.raw.n_cueva_solemne
     }
 
     /** Los mismos sonidos por id de tema (lo revisa la prueba de cobertura). Sale del `when` de arriba: no puede faltar ninguno. */
@@ -389,6 +390,13 @@ object Avisos {
             "⟡ Un pergamino de tu yo del pasado", "Llegó la luna que elegiste para abrirlo.",
             "Gema hallada", "gemas nuevas",
             "La crónica de %d está escrita", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.CUEVA -> Voz("⁘ Junto al fuego · ¿cómo arde tu aliento?", "Dos toques en la piedra: cuánto agrado y cuánta fuerza.",
+            "⁘ Lo que se ve con los ojos cerrados", "Cuéntalo antes de salir del abrigo; el sueño se va como el humo.",
+            "⁘ Cae el sol sobre el valle", "Pinta el día. Si fue de mala caza, basta con un número.",
+            "Sol de mala caza: un número", "Lo que hay que hacer este sol:",
+            "⁘ Desenterraste una piedra marcada por tu yo de otras lunas", "Llegó la luna que elegiste para sacarla.",
+            "Presa nueva en la pared", "presas nuevas",
+            "Las lunas de %d ya están en la pared", "Un año entero en pinturas: lo más hecho, lo único, lo curioso.")
     }
 
     /** El cronómetro de enfoque en la voz del tema: nombre del descanso, consejo, fin del descanso, despertar y fin. */
@@ -426,6 +434,7 @@ object Avisos {
         TemaId.PIRATA -> VozEnfoque("Se volteó la ampolleta", "Estira las piernas en cubierta y bebe agua dulce.", "Otra vuelta de ampolleta", "Toque de diana: a cubierta", "¡Guardia cumplida!")
         TemaId.REVOLUCION -> VozEnfoque("Repos", "Levántate, toma agua, ciudadano.", "Fin du repos", "Réveil: hora de despertar", "Ça ira: terminaste")
         TemaId.ANTIGUAS -> VozEnfoque("Alto en el camino", "Levántate, bebe del odre.", "La compañía sigue", "El alba: hora de despertar", "¡Hazaña cumplida!")
+        TemaId.CUEVA -> VozEnfoque("Descanso junto al fuego", "Levántate, estira las piernas, bebe del arroyo.", "De vuelta al acecho", "Sale el sol sobre el valle: hora de despertar", "¡Presa cobrada!")
     }
 
     fun permitido(ctx: Context): Boolean =

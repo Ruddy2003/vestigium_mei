@@ -141,6 +141,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.REVOLUCION -> PielCinta(0.5f, true, RellenoCinta.FILETE, floatArrayOf(5f, 2f), StrokeCap.Butt)
     // Losas de piedra labrada.
     TemaId.ANTIGUAS -> PielCinta(2f, true, RellenoCinta.CONTORNO, floatArrayOf(2f, 6f), StrokeCap.Square)
+    // Cantos rodados, con puntos de ocre dentro; las horas, en hilera de puntos.
+    TemaId.CUEVA -> PielCinta(7f, false, RellenoCinta.PUNTOS, floatArrayOf(0.1f, 5f), StrokeCap.Round)
 }
 
 /** Un tramo de la cinta con la piel del tema: su forma (esquina o chaflán) y lo que lleva dentro. */
