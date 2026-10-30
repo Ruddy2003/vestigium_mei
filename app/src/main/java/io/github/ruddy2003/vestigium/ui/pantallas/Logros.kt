@@ -321,6 +321,17 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawLine(sombra.copy(alpha = sombra.alpha * 0.6f), Offset(c.x + l, c.y - l), Offset(c.x - l, c.y + l), r * 0.02f)
             for (k in 0 until 4) drawCircle(sombra, r * 0.045f, polarFig(c, l * 1.414f, k * 90f + 45f))
         }
+        // El doblón: canto irregular de moneda acuñada a martillo, la cruz de cuarteles y su gráfila de puntos.
+        TemaId.PIRATA -> {
+            forma(Path().apply {
+                for (k in 0 until 16) { val rr = r * (0.94f + 0.04f * kotlin.math.sin(k * 2.1f)); val q = polarFig(c, rr, k * 22.5f); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }
+                close()
+            })
+            for (k in 0 until 28) drawCircle(sombra, r * 0.025f, polarFig(c, r * 0.8f, k * 360f / 28))
+            drawLine(sombra, Offset(c.x, c.y - r * 0.6f), Offset(c.x, c.y + r * 0.6f), r * 0.07f)
+            drawLine(sombra, Offset(c.x - r * 0.6f, c.y), Offset(c.x + r * 0.6f, c.y), r * 0.07f)
+            for (k in 0 until 4) drawCircle(luz, r * 0.07f, polarFig(c, r * 0.36f, k * 90f + 45f))
+        }
         // Orden de la estrella roja: estrella esmaltada con el centro de metal.
         TemaId.URSS -> {
             val st = figEstrella(c, r * 0.99f, r * 0.45f, 5)

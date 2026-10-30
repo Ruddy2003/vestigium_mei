@@ -131,6 +131,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.ANDALUS -> Lazo(modifier)
         TemaId.MONGOL -> BandaEstepa(modifier)
         TemaId.RENACIMIENTO -> Trazo(modifier)
+        TemaId.PIRATA -> Cabo(modifier)
         TemaId.NAVIDAD -> Guirnalda(modifier)
         TemaId.SEDA -> BandaCaravana(modifier)
         TemaId.URSS -> Barra(modifier)
@@ -1036,6 +1037,11 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "✎", igual = "≡ ", nulo = "nulla", elegido = "✐", riel = RolColor.PRIMARIO, quitar = "✂", listaVacia = "( foglio bianco )", flecha = "↝",
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.2f, colorPrefijo = RolColor.PRIMARIO, renglones = true, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(7f, 1f, 1f, 1f), tamBoton = 17, letraBoton = LetraExtra.cormorant, borde = RolColor.CONTORNO, grosor = 1f)
+    // Banderas arriada e izada para plegar y abrir, la «X» del tesoro para lo elegido, la derrota punteada en lo vacío.
+    TemaId.PIRATA -> PielComponentes(sep = "  ∿  ", cerrada = "⚐", abierta = "⚑", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
+        aviso = "⚑", igual = "⇢ ", nulo = "sin sondar", elegido = "✕", riel = RolColor.SECUNDARIO, quitar = "†", listaVacia = "( mar en calma )", flecha = "➳",
+        sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.6f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.DOBLE,
+        guiones = floatArrayOf(5f, 3f), tamBoton = 18, letraBoton = LetraExtra.corsario, borde = RolColor.SECUNDARIO, grosor = 1.5f)
     TemaId.URSS -> PielComponentes(sep = "  ▸  ", cerrada = "◣", abierta = "◥", numeral = RolColor.TINTA, centrar = true, rellena = false,
         aviso = "★", igual = "▸ ", nulo = "НЕТ", elegido = "▶", riel = RolColor.PRIMARIO, quitar = "—", listaVacia = "[ ПУСТО ]", flecha = "➤",
         sufijo = "!", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.8f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.BARRA,
@@ -1153,6 +1159,16 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             drawLine(e.primary.copy(alpha = 0.7f), Offset(0f, y), Offset(size.width * 0.9f, y - 1.dp.toPx()), 0.8.dp.toPx())
             drawLine(e.primary.copy(alpha = 0.45f), Offset(size.width * 0.04f, y + 1.5.dp.toPx()), Offset(size.width * 0.7f, y + 1.dp.toPx()), 0.7.dp.toPx())
         }.padding(bottom = 5.dp))
+        // Una ola de tinta bajo el nombre que termina en la «X» roja del tesoro.
+        TemaId.PIRATA -> Text(nombre, style = estilo, modifier = peso.drawBehind {
+            val y = size.height - 3.dp.toPx(); val a = 1.6.dp.toPx(); val l = 9.dp.toPx(); val fin = size.width * 0.82f
+            val ola = Path(); var x = 0f; ola.moveTo(0f, y)
+            while (x < fin) { ola.quadraticTo(x + l / 4, y - a, x + l / 2, y); ola.quadraticTo(x + l * 3 / 4, y + a, x + l, y); x += l }
+            drawPath(ola, e.primary.copy(alpha = 0.6f), style = Stroke(0.9.dp.toPx()))
+            val s = 2.6.dp.toPx(); val c = Offset(fin + 7.dp.toPx(), y)
+            drawLine(e.tertiary, c - Offset(s, s), c + Offset(s, s), 1.4.dp.toPx(), StrokeCap.Round)
+            drawLine(e.tertiary, c + Offset(-s, s), c + Offset(s, -s), 1.4.dp.toPx(), StrokeCap.Round)
+        }.padding(bottom = 7.dp))
         // Cartel: blanco sobre rojo, con su estrella.
         TemaId.URSS -> Text("★ $nombre", style = estilo, color = e.onPrimary, modifier = peso.background(e.primary).padding(horizontal = 6.dp, vertical = 1.dp))
         // Tramo azul, blanco y rojo.
@@ -1234,6 +1250,11 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.MONGOL -> RoundedCornerShape(8.dp)
     // Hoja con la esquina doblada.
     TemaId.RENACIMIENTO -> CutCornerShape(bottomEnd = 12.dp)
+    // La duela de un barril de ron: arriba y abajo, un poco combada.
+    TemaId.PIRATA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0f, h * 0.1f); quadraticTo(w / 2, -h * 0.1f, w, h * 0.1f); lineTo(w, h * 0.9f); quadraticTo(w / 2, h * 1.1f, 0f, h * 0.9f); close()
+    }
     // Paralelogramo de cartel.
     TemaId.URSS -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -1280,6 +1301,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.ANDALUS -> "cálamo · $es"
         TemaId.MONGOL -> "тэмдэглэл · $es"
         TemaId.RENACIMIENTO -> "taccuino · $es"
+        TemaId.PIRATA -> "bitácora · $es"
         TemaId.URSS -> "ТЕЛЕТАЙП · ${es.uppercase()}"
         TemaId.REVOLUCION -> "cahier · $es"
         TemaId.ANTIGUAS -> "crónica de la compañía · $es"
@@ -1456,6 +1478,16 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
                 drawLine(e.primary.copy(alpha = 0.45f), Offset(i + u, 0f), Offset(i + u, i + u * 2.2f), fino * 0.8f)
             }
             drawCircle(e.primary.copy(alpha = 0.4f), u * 0.9f, Offset(w - i - u, i + u), style = Stroke(fino * 0.8f))
+        }
+        TemaId.PIRATA -> {
+            // Cantoneras de latón clavadas en las esquinas, como en un cofre, y un cabo que corre por el borde de arriba.
+            val laton = e.secondary.copy(alpha = 0.55f)
+            enLasCuatro {
+                drawPath(Path().apply { moveTo(0f, 0f); lineTo(u * 2.2f, 0f); lineTo(u * 2.2f, i * 0.5f); lineTo(i * 0.5f, i * 0.5f); lineTo(i * 0.5f, u * 2.2f); lineTo(0f, u * 2.2f); close() }, laton)
+                drawCircle(e.onSurface.copy(alpha = 0.35f), fino * 1.1f, Offset(u * 0.8f, u * 0.8f) * 0.6f + Offset(i * 0.25f, i * 0.25f))
+            }
+            var x = u * 3f
+            while (x < w - u * 3f) { drawLine(e.primary.copy(alpha = 0.22f), Offset(x, i * 0.3f), Offset(x + u * 0.5f, i * 0.3f + u * 0.5f), fino * 0.9f); x += u * 0.6f }
         }
         TemaId.URSS -> {
             // Cuña roja de cartel arriba y una barra negra abajo.
@@ -1648,6 +1680,20 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawLine(a, Offset(f(0.72f), f(0.14f)), Offset(f(0.92f), f(0.88f)), tr.width)
             drawCircle(a, f(0.05f), Offset(f(0.72f), f(0.14f)))
         }
+        TemaId.PIRATA -> {
+            // Mar en calma: una isla pequeña con su palmera, dos olas y, en la arena, la «X» que aún no se ha marcado.
+            drawPath(Path().apply { moveTo(f(0.18f), f(0.72f)); quadraticTo(f(0.5f), f(0.52f), f(0.82f), f(0.72f)) }, l, style = tr)
+            drawPath(Path().apply { moveTo(f(0.52f), f(0.64f)); quadraticTo(f(0.5f), f(0.4f), f(0.58f), f(0.24f)) }, l, style = tr)
+            listOf(-0.2f, 0.06f, 0.24f).forEach { dx ->
+                drawPath(Path().apply { moveTo(f(0.58f), f(0.24f)); quadraticTo(f(0.58f + dx * 0.6f), f(0.14f), f(0.58f + dx), f(0.3f)) }, l, style = tr)
+            }
+            listOf(0.84f, 0.94f).forEach { y ->
+                drawPath(Path().apply { moveTo(f(0.1f), f(y)); quadraticTo(f(0.2f), f(y - 0.05f), f(0.3f), f(y)); quadraticTo(f(0.4f), f(y + 0.05f), f(0.5f), f(y)); quadraticTo(f(0.6f), f(y - 0.05f), f(0.7f), f(y)); quadraticTo(f(0.8f), f(y + 0.05f), f(0.9f), f(y)) }, l.copy(alpha = 0.5f), style = tr)
+            }
+            val x = Offset(f(0.38f), f(0.64f)); val d = f(0.04f)
+            drawLine(a.copy(alpha = 0.5f), x - Offset(d, d), x + Offset(d, d), tr.width, StrokeCap.Round)
+            drawLine(a.copy(alpha = 0.5f), x + Offset(-d, d), x + Offset(d, -d), tr.width, StrokeCap.Round)
+        }
         TemaId.URSS -> {
             // Estrella de cartel sin pintar, sobre su barra.
             estrellaComp(Offset(f(0.5f), f(0.48f)), f(0.42f), a, estilo = tr)
@@ -1725,6 +1771,12 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
                 val o = d * 0.6f + n * d * 0.8f
                 drawLine(c, Offset(o, h), Offset(o + d * 1.6f, h - d * 1.6f), d * 0.3f)
             }
+        }
+        // La «X» del tesoro, en la esquina de abajo.
+        TemaId.PIRATA -> {
+            val x = Offset(w - d * 1.6f, h - d * 1.6f)
+            drawLine(c, x - Offset(d, d), x + Offset(d, d), d * 0.45f, StrokeCap.Round)
+            drawLine(c, x + Offset(-d, d), x + Offset(d, -d), d * 0.45f, StrokeCap.Round)
         }
         TemaId.URSS -> drawPath(Path().apply { moveTo(w, h - d * 3f); lineTo(w, h); lineTo(w - d * 3f, h); close() }, c)
         TemaId.REVOLUCION -> drawRect(c, Offset(w - d, 0f), Size(d, h))
@@ -1838,6 +1890,11 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.RENACIMIENTO -> {
             val s = 12.dp.toPx()
             drawPath(Path().apply { moveTo(w - s, h); lineTo(w - s, h - s); lineTo(w, h - s); close() }, c)
+        }
+        // Los dos aros de latón del barril, con sus clavos.
+        TemaId.PIRATA -> listOf(m * 2.2f, w - m * 2.2f).forEach { x ->
+            drawLine(c, Offset(x, h * 0.14f), Offset(x, h * 0.86f), fino * 1.6f)
+            drawCircle(c, fino * 1.3f, Offset(x, h * 0.3f)); drawCircle(c, fino * 1.3f, Offset(x, h * 0.7f))
         }
         // Rayas de cartel paralelas al corte.
         TemaId.URSS -> listOf(4.dp.toPx(), 7.5.dp.toPx()).forEach { dd -> drawLine(c, Offset(w - 0.3f * m - dd, m), Offset(w - 0.3f * (h - m) - dd, h - m), fino * 1.6f) }
@@ -1998,6 +2055,18 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawCircle(l, f(0.11f), Offset(f(0.5f), f(0.12f)))
             drawArc(l, 20f, 140f, false, Offset(f(0.1f), f(0.3f)), Size(f(0.8f), f(0.6f)), style = Stroke(tr.width * 0.6f))
         }
+        TemaId.PIRATA -> {
+            // Pluma de gaviota sobre el tintero de la bitácora.
+            val pluma = Path().apply {
+                moveTo(f(0.86f), f(0.06f)); cubicTo(f(0.56f), f(0.12f), f(0.34f), f(0.4f), f(0.3f), f(0.7f))
+                cubicTo(f(0.5f), f(0.58f), f(0.76f), f(0.36f), f(0.86f), f(0.06f))
+            }
+            drawPath(pluma, a.copy(alpha = 0.25f)); drawPath(pluma, a, style = tr)
+            drawLine(a, Offset(f(0.3f), f(0.7f)), Offset(f(0.22f), f(0.84f)), tr.width)
+            for (k in 1..4) drawLine(a.copy(alpha = 0.6f), Offset(f(0.32f + k * 0.1f), f(0.62f - k * 0.12f)), Offset(f(0.42f + k * 0.1f), f(0.66f - k * 0.12f)), tr.width * 0.6f)
+            drawRoundRect(l, Offset(f(0.08f), f(0.78f)), Size(f(0.3f), f(0.18f)), CornerRadius(f(0.04f)), style = tr)
+            drawLine(l, Offset(f(0.13f), f(0.78f)), Offset(f(0.33f), f(0.78f)), tr.width * 1.6f)
+        }
         TemaId.URSS -> {
             // Cinta perforada de teletipo.
             drawRect(l, Offset(0f, f(0.3f)), Size(s, f(0.4f)), style = tr)
@@ -2145,6 +2214,14 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
         TemaId.RENACIMIENTO -> {
             drawLine(c, Offset(1.5f * d, 0f), Offset(2 * d, h), 0.9f * d)
             drawLine(c.copy(alpha = 0.6f), Offset(3.5f * d, 2 * d), Offset(3 * d, h - 3 * d), 0.7f * d)
+        }
+        // Un cabo trenzado: dos cordones que se cruzan en diagonal.
+        TemaId.PIRATA -> {
+            var y = 0f; var k = 0
+            while (y < h) {
+                drawLine(if (k % 2 == 0) c else c.copy(alpha = 0.55f), Offset(0.4f * d, y), Offset(3.6f * d, y + 3 * d), 1.4f * d, StrokeCap.Round)
+                y += 2.5f * d; k++
+            }
         }
         TemaId.URSS -> drawPath(Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(0f, h); close() }, e.primary)
         TemaId.REVOLUCION -> listOf(e.secondary, e.outline, e.primary).forEachIndexed { k, cc -> drawRect(cc, Offset(k * 2 * d, 0f), Size(1.6f * d, h)) }

@@ -151,6 +151,12 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             drawCircle(c, w * 0.48f, o, style = Stroke(g * 0.5f))
             drawRect(c, Offset(w * 0.1f, h * 0.1f), Size(w * 0.8f, h * 0.8f), style = Stroke(g * 0.5f))
         }
+        // Un salvavidas de cabo: el aro grueso con sus cuatro amarres.
+        TemaId.PIRATA -> {
+            drawCircle(c, w * 0.44f, o, style = Stroke(g * 1.2f))
+            for (k in 0 until 4) { val a = Math.PI / 4 + k * Math.PI / 2; val p = Offset(o.x + (w * 0.44f * kotlin.math.cos(a)).toFloat(), o.y + (h * 0.44f * kotlin.math.sin(a)).toFloat())
+                drawCircle(c, g * 0.9f, p) }
+        }
         // Cuadro constructivista: cuña en la esquina y barra abajo.
         TemaId.URSS -> {
             drawRect(c, Offset(w * 0.05f, h * 0.05f), Size(w * 0.9f, h * 0.9f), style = Stroke(g * 0.6f))
@@ -377,6 +383,11 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawRect(color, Offset(c.x - r * 0.65f, c.y - r * 0.65f), Size(r * 1.3f, r * 1.3f), style = Stroke(r * 0.08f))
             drawLine(color, Offset(c.x - r, c.y), Offset(c.x + r, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - r), Offset(c.x, c.y + r), r * 0.05f)
             drawCircle(color, r * 0.34f, c)
+        }
+        // Un doblón con su cruz de cuarteles.
+        TemaId.PIRATA -> {
+            drawCircle(color, r * 0.95f, c); drawCircle(hueco.copy(alpha = 0.45f), r * 0.75f, c, style = Stroke(r * 0.08f))
+            drawLine(hueco, Offset(c.x, c.y - r * 0.6f), Offset(c.x, c.y + r * 0.6f), r * 0.16f); drawLine(hueco, Offset(c.x - r * 0.6f, c.y), Offset(c.x + r * 0.6f, c.y), r * 0.16f)
         }
         // La estrella roja de cinco puntas.
         TemaId.URSS -> drawPath(figEstrella(c, r, r * 0.4f, 5), color)

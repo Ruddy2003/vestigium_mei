@@ -171,6 +171,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.ANDALUS -> listOf("feluz de cobre", "dírham de plata", "dinar de oro", "dinar de la Alhambra")
     TemaId.MONGOL -> listOf("paiza de madera", "paiza de plata", "paiza de oro", "paiza del Gran Kan")
     TemaId.RENACIMIENTO -> listOf("bronzo", "argento", "oro", "capolavoro")
+    TemaId.PIRATA -> listOf("real de a ocho", "escudo de oro", "doblón de a ocho", "el cofre del capitán")
     TemaId.URSS -> listOf("trabajador de choque", "plan cumplido", "plan en cuatro años", "héroe del trabajo")
     TemaId.REVOLUCION -> listOf("ciudadano activo", "guardia nacional", "héroe de la patria", "al Panteón")
     TemaId.ANTIGUAS -> listOf("hierro de la mina", "plata lunar", "oro de las profundidades", "gema de las edades")
@@ -533,6 +534,33 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                     }
                 }
             }
+        }
+        TemaId.PIRATA -> {
+            // El cofre abierto: destellos de oro que salen del centro y un corro de doblones que gira alrededor; abajo, la
+            // derrota punteada que llega a la «X».
+            val oro = if (oscuro) cs.primary else cs.secondary; val tinta = cs.onBackground; val rojo = cs.tertiary
+            rotate(giro * 0.2f, c) {
+                for (i in 0 until 12) {
+                    val a = Math.toRadians(30.0 * i)
+                    val largo = m * (if (i % 2 == 0) 0.44f else 0.3f)
+                    val izq = pt(m * 0.05f, a - 0.12); val der = pt(m * 0.05f, a + 0.12); val punta = pt(largo, a)
+                    drawPath(Path().apply { moveTo(izq.x, izq.y); lineTo(punta.x, punta.y); lineTo(der.x, der.y); close() }, oro.copy(alpha = 0.10f))
+                }
+            }
+            rotate(-giro * 0.35f, c) {
+                for (i in 0 until 10) {
+                    val p = pt(m * 0.38f, Math.toRadians(36.0 * i)); val rr = m * 0.035f
+                    drawCircle(oro.copy(alpha = 0.22f), rr, p)
+                    drawCircle(tinta.copy(alpha = 0.14f), rr * 0.72f, p, style = Stroke(0.8f * u))
+                    drawLine(tinta.copy(alpha = 0.14f), p - Offset(rr * 0.4f, 0f), p + Offset(rr * 0.4f, 0f), 0.8f * u)
+                    drawLine(tinta.copy(alpha = 0.14f), p - Offset(0f, rr * 0.4f), p + Offset(0f, rr * 0.4f), 0.8f * u)
+                }
+            }
+            val x = Offset(c.x + m * 0.3f, c.y + m * 0.52f); val s = m * 0.03f
+            val derrota = Path().apply { moveTo(c.x - m * 0.5f, c.y + m * 0.62f); cubicTo(c.x - m * 0.2f, c.y + m * 0.4f, c.x, c.y + m * 0.75f, x.x - s * 1.6f, x.y) }
+            drawPath(derrota, tinta.copy(alpha = 0.14f), style = Stroke(1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f * u, 5f * u))))
+            drawLine(rojo.copy(alpha = 0.4f), x - Offset(s, s), x + Offset(s, s), 2.2f * u, StrokeCap.Round)
+            drawLine(rojo.copy(alpha = 0.4f), x + Offset(-s, s), x + Offset(s, -s), 2.2f * u, StrokeCap.Round)
         }
         TemaId.URSS -> {
             // Cinco haces anchos que salen de una gran estrella roja, como en un cartel constructivista.

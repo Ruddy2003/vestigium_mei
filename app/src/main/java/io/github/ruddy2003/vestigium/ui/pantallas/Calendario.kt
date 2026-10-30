@@ -248,6 +248,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.ANDALUS -> RectangleShape
     TemaId.MONGOL -> RoundedCornerShape(8.dp)
     TemaId.RENACIMIENTO -> RectangleShape
+    TemaId.PIRATA -> CutCornerShape(topStart = 5.dp, bottomEnd = 5.dp)
     TemaId.URSS -> RectangleShape
     TemaId.REVOLUCION -> RoundedCornerShape(1.dp)
     TemaId.ANTIGUAS -> CutCornerShape(4.dp)
@@ -470,6 +471,14 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             drawLine(guia, Offset.Zero, Offset(w, h), 0.5f * s); drawLine(guia, Offset(w, 0f), Offset(0f, h), 0.5f * s)
             drawCircle(if (hoy) acento.copy(alpha = 0.6f) else guia, minOf(w, h) / 2 - s, center, style = Stroke((if (hoy) 0.8f else 0.5f) * s))
             contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.5f)
+            if (sellado) sello(acento)
+        }
+        // La casilla de la bitácora: renglón de asiento abajo y, el día de hoy, el doble filete del capitán.
+        TemaId.PIRATA -> {
+            val guia = linea.copy(alpha = 0.25f)
+            drawLine(guia, Offset(w * 0.15f, h - 3 * s), Offset(w * 0.85f, h - 3 * s), 0.6f * s, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2 * s, 1.2f * s)))
+            contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.5f)
+            if (hoy) drawRect(acento.copy(alpha = 0.5f), Offset(2.5f * s, 2.5f * s), Size(w - 5 * s, h - 5 * s), style = Stroke(0.5f * s))
             if (sellado) sello(acento)
         }
         // Cartel constructivista: barra gruesa abajo y cuña roja en la esquina.

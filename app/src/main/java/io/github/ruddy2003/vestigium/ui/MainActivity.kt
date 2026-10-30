@@ -254,6 +254,7 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.MONGOL -> BloqueoCentrado(TextosBloqueo("МИНИЙ МӨР", "◆ дэвтэр битүүмжлэгдсэн · tu diario está sellado", "НЭЭХ"), tituloArriba = false, sello = 190, reintentar = reintentar)
         TemaId.RENACIMIENTO -> BloqueoCuaderno(TextosBloqueo("Vestigium mei", "❧ Sólo la mano de su autor lo abre.", "Aprire",
             listOf("Questo taccuino è chiuso")), reintentar)
+        TemaId.PIRATA -> BloqueoMarco(TextosBloqueo("Bitácora de Vestigium mei", "✷ Bajo siete llaves: sólo su capitán abre este cofre.", "Abrir el cofre"), arriba = 24, reintentar = reintentar) { cs -> bloqueoCofre(cs) }
         TemaId.URSS -> BloqueoCartel(TextosBloqueo("ДНЕВНИК ЗАКРЫТ", "★ Acceso sólo con el pase del titular.", "ОТКРЫТЬ", listOf("VESTIGIUM MEI")), inclinado = true, tricolor = false, reintentar = reintentar)
         TemaId.REVOLUCION -> BloqueoCartel(TextosBloqueo("AVIS AU PUBLIC", "✶ Le cahier est scellé: por decreto, sólo su autor lo abre.", "OUVRIR", listOf("VESTIGIUM MEI")), inclinado = false, tricolor = true, reintentar = reintentar)
         TemaId.ANTIGUAS -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "⟡ La cámara del tesoro está cerrada con runas.", "TRAZAR LA RUNA"), arriba = 10, reintentar = reintentar) { cs -> bloqueoRunico(cs) }
@@ -573,6 +574,22 @@ private fun DrawScope.bloqueoPersiana(cs: ColorScheme) {
     drawArc(cs.secondary, 180f, 180f, false, Offset(w / 2 - 4 * u, h - 20 * u), Size(8 * u, 10 * u), style = Stroke(1.6f * u))
 }
 
+/** El cofre: la tapa abombada arriba, los flejes de latón con sus clavos y la cerradura en medio del borde de abajo. */
+private fun DrawScope.bloqueoCofre(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height; val a = 30 * u
+    val laton = cs.secondary.copy(alpha = 0.75f)
+    val cofre = Path().apply { moveTo(0f, a); quadraticTo(w / 2, -a * 0.6f, w, a); lineTo(w, h); lineTo(0f, h); close() }
+    drawPath(cofre, cs.primary.copy(alpha = 0.06f)); drawPath(cofre, cs.onBackground.copy(alpha = 0.5f), style = Stroke(2.2f * u))
+    drawPath(Path().apply { moveTo(0f, a + 8 * u); quadraticTo(w / 2, -a * 0.6f + 8 * u, w, a + 8 * u) }, laton, style = Stroke(1.4f * u))
+    listOf(w * 0.14f, w * 0.86f).forEach { x ->
+        drawLine(laton, Offset(x, a * 0.5f), Offset(x, h), 5 * u)
+        var y = a + 20 * u; while (y < h - 10 * u) { drawCircle(cs.onBackground.copy(alpha = 0.5f), 1.6f * u, Offset(x, y)); y += 40 * u }
+    }
+    val cerr = Offset(w / 2, h)
+    drawRoundRect(laton, Offset(cerr.x - 14 * u, cerr.y - 22 * u), Size(28 * u, 30 * u), CornerRadius(3 * u))
+    drawCircle(cs.background, 3.5f * u, Offset(cerr.x, cerr.y - 10 * u)); drawLine(cs.background, Offset(cerr.x, cerr.y - 10 * u), Offset(cerr.x, cerr.y - 2 * u), 2.4f * u)
+}
+
 /** Compuerta blindada: esquinas cortadas y una franja de aviso arriba. */
 private fun DrawScope.bloqueoCompuerta(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height; val k = 22 * u
@@ -784,6 +801,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.ANDALUS -> true
     TemaId.MONGOL -> true
     TemaId.RENACIMIENTO -> false
+    TemaId.PIRATA -> false           // el gallardete va debajo del ícono
     TemaId.URSS -> true
     TemaId.REVOLUCION -> false
     TemaId.ANTIGUAS -> false
@@ -813,6 +831,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.ANDALUS -> true
     TemaId.MONGOL -> true
     TemaId.RENACIMIENTO -> false
+    TemaId.PIRATA -> false
     TemaId.URSS -> true
     TemaId.REVOLUCION -> true
     TemaId.ANTIGUAS -> true
@@ -991,6 +1010,12 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawLine(c.copy(alpha = 0.55f * p), Offset(cx - 26 * u, cy), Offset(cx + 26 * u, cy), 0.7f * u)
             drawLine(c.copy(alpha = 0.55f * p), Offset(cx, cy - 17 * u), Offset(cx, cy + 17 * u), 0.7f * u)
         }
+        // Un gallardete: la banderola de dos puntas que se iza sobre la pestaña elegida.
+        TemaId.PIRATA -> {
+            val y = h - 2 * u; val a = 20 * u * p
+            drawPath(Path().apply { moveTo(cx - a, y - 4 * u); lineTo(cx + a, y - 4 * u); lineTo(cx + a - 4 * u, y - 1.5f * u); lineTo(cx + a, y + 1 * u); lineTo(cx - a, y + 1 * u); close() }, c)
+            drawCircle(cs.tertiary.copy(alpha = p), 1.6f * u, Offset(cx - a + 3 * u, y - 1.5f * u))
+        }
         // Bloque inclinado de cartel constructivista.
         TemaId.URSS -> drawPath(Path().apply {
             moveTo(cx - 20 * u, 1 * u); lineTo(cx + 27 * u, 1 * u); lineTo(cx + 20 * u, 29 * u); lineTo(cx - 27 * u, 29 * u); close()
@@ -1161,6 +1186,12 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(cx - 17.7f * u, cy - 17.7f * u), Size(35.4f * u, 35.4f * u), style = Stroke(1f * u))
             drawLine(c.copy(alpha = 0.4f), Offset(0f, cy), Offset(w, cy), 0.6f * u)
         }
+        // El timón: el aro, el cubo y las ocho cabillas.
+        TemaId.PIRATA -> {
+            drawCircle(c.copy(alpha = 0.14f), 20 * u, Offset(cx, cy))
+            for (k in 0 until 8) { val an = k * Math.PI / 4; drawLine(c, Offset(cx, cy), Offset(cx + (27 * u * kotlin.math.cos(an)).toFloat(), cy + (27 * u * kotlin.math.sin(an)).toFloat()), 2.4f * u, StrokeCap.Round) }
+            drawCircle(c, 20 * u, Offset(cx, cy), style = Stroke(3 * u)); drawCircle(c, 6 * u, Offset(cx, cy))
+        }
         // Bloque inclinado de cartel.
         TemaId.URSS -> drawPath(Path().apply { moveTo(13 * u, 5 * u); lineTo(w, 5 * u); lineTo(w - 13 * u, h - 5 * u); lineTo(0f, h - 5 * u); close() }, c)
         // Escarapela: rojo, blanco y azul.
@@ -1272,6 +1303,11 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.RENACIMIENTO -> {
             filete(); drawLine(cs.primary.copy(alpha = 0.3f), Offset(0f, 3.5f * u), Offset(w, 3.5f * u), 0.5f * u)
             var x = 20 * u; while (x < w) { drawLine(acento, Offset(x - 1.6f * u, 2 * u), Offset(x + 1.6f * u, 2 * u), 0.7f * u); drawLine(acento, Offset(x, 0.4f * u), Offset(x, 3.6f * u), 0.7f * u); x += 40 * u }
+        }
+        // Un cabo que corre a lo largo, con sus vueltas.
+        TemaId.PIRATA -> {
+            filete(2 * u, 1.6f * u)
+            var x = 0f; while (x < w) { drawLine(acento, Offset(x, 3.4f * u), Offset(x + 2 * u, 0.6f * u), 0.8f * u); x += 3 * u }
         }
         // Barra gruesa con punta oblicua y un filete fino después.
         TemaId.URSS -> {
@@ -1559,6 +1595,9 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.MONGOL -> (slideInHorizontally(t(260, frena)) { dir * it }) togetherWith (slideOutHorizontally(t(260, frena)) { -dir * it })
         // Hoja de cuaderno que se levanta por su esquina de abajo.
         TemaId.RENACIMIENTO -> (scaleIn(t(360), initialScale = 0.9f, transformOrigin = TransformOrigin(if (atras) 0f else 1f, 1f)) + fadeIn(t(300))) togetherWith fadeOut(t(200))
+        // La marea: la pantalla entra de costado con un vaivén lento y la anterior se hunde un poco al irse.
+        TemaId.PIRATA -> (slideIn(t(420, frena)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 3, it.height / 30) } + fadeIn(t(320))) togetherWith
+            (slideOutVertically(t(260)) { it / 20 } + fadeOut(t(220)))
         // Regalo que se abre: salta un poco más allá y vuelve.
         TemaId.NAVIDAD -> (scaleIn(t(360, androidx.compose.animation.core.CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)), initialScale = 0.82f) + fadeIn(t(220))) togetherWith fadeOut(t(140))
         // Rollo de seda que se desenrolla de lado, como un rollo de mano.

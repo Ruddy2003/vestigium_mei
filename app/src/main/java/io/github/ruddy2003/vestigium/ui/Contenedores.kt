@@ -20,7 +20,7 @@ import kotlin.math.sin
 /**
  * La unidad que guarda tus momentos, según el tema: la misma lógica (una hoja por día, que engorda con lo escrito),
  * con otra forma. Un rollo de papiro en Roma, tablillas de cera en Grecia, un códice en el scriptorium, un libro de
- * horas en la catedral, el cuaderno de taller del Renacimiento, el legajo de despachos del Imperio y el cahier de la
+ * horas en la catedral, el cuaderno de taller del Renacimiento, la bitácora atada con un cabo del pirata, el legajo de despachos del Imperio y el cahier de la
  * Revolución; los demás, en [ContenedoresMas].
  */
 enum class Contenedor(val nombre: String, val hoja: String) {
@@ -31,12 +31,13 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     REGLA("Regla de la casa", "artículo"),
     HORAS("Libro de horas", "folio"),
     TALLER("Cuaderno de taller", "hoja"),
+    SINGLADURAS("Bitácora de a bordo", "singladura"),
     LEGAJO("Legajo de despachos", "despacho"),
     CAHIER("Cahier de momentos", "página"),
     MANUSCRITO("Manuscrito de momentos", "folio"),
     ACORDEON("Libro plegado de momentos", "pliegue"),
     ORDENES("Rollo de órdenes", "mandato"),
-    BITACORA("Diario de a bordo", "página"),
+    BITACORA("Cuaderno del pueblo", "página"),
     HERBARIO("Herbario de momentos", "pliego"),
     ADVIENTO("Calendario de adviento", "casilla"),
     MAPAS("Libro de mapas", "mapa"),
@@ -59,6 +60,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.TEMPLARIO -> Contenedor.REGLA
     TemaId.GOTICO -> Contenedor.HORAS
     TemaId.RENACIMIENTO -> Contenedor.TALLER
+    TemaId.PIRATA -> Contenedor.SINGLADURAS
     TemaId.NAPOLEON -> Contenedor.LEGAJO
     TemaId.REVOLUCION -> Contenedor.CAHIER
     TemaId.ANDALUS -> Contenedor.MANUSCRITO
@@ -97,6 +99,10 @@ object Contenedores {
     private val ORO = Color(0xFFD4AF37)
     private val ORO_OSCURO = Color(0xFF8E6A1F)
     private val LACRE = Color(0xFFA3172E)
+    /** El pergamino de la bitácora, verdoso de humedad, y el cuero ennegrecido de brea de sus tapas. */
+    private val PERGAMINO_HUMEDO = Color(0xFFE6DCBA)
+    private val CUERO_BREA = Color(0xFF4A3424)
+    private val CANAMO = Color(0xFFB59A62)
 
     /** El color del papel de una hoja abierta (de día y de noche). */
     fun papel(c: Contenedor, cs: ColorScheme, oscuro: Boolean): Color = when (c) {
@@ -107,6 +113,7 @@ object Contenedores {
         Contenedor.REGLA -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.HORAS -> if (oscuro) lerp(VITELA, Color.Black, 0.8f) else VITELA
         Contenedor.TALLER -> if (oscuro) lerp(Color(0xFFEAD9B0), Color.Black, 0.74f) else Color(0xFFEAD9B0)
+        Contenedor.SINGLADURAS -> if (oscuro) lerp(PERGAMINO_HUMEDO, Color.Black, 0.76f) else PERGAMINO_HUMEDO
         Contenedor.LEGAJO -> if (oscuro) lerp(Color(0xFFF3EEDF), Color.Black, 0.78f) else Color(0xFFF7F2E4)
         Contenedor.CAHIER -> if (oscuro) lerp(Color(0xFFF8F6EE), Color.Black, 0.8f) else Color(0xFFF8F6EE)
         // Las libretas del lote 2 tienen su papel en [ContenedoresMas].
@@ -129,6 +136,7 @@ object Contenedores {
             Contenedor.REGLA -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
             Contenedor.HORAS -> horasCerrado(grosor, d)
             Contenedor.TALLER -> tallerCerrado(grosor, d, oscuro)
+            Contenedor.SINGLADURAS -> bitacoraCerrada(grosor, d, oscuro)
             Contenedor.LEGAJO -> legajoCerrado(grosor, d, tapa)
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
@@ -296,6 +304,52 @@ object Contenedores {
         if (oscuro) drawRect(Color.Black.copy(alpha = 0.12f), Offset.Zero, Size(w, h))
     }
 
+    /**
+     * La bitácora cerrada: tapas de cuero ennegrecido de brea con cantoneras de latón, la rosa de los vientos gofrada, una
+     * mancha de agua de mar y el cabo de cáñamo que la ata en cruz y remata en un nudo con sus dos chicotes.
+     */
+    private fun DrawScope.bitacoraCerrada(grosor: Float, d: Float, oscuro: Boolean) {
+        val w = size.width - grosor; val h = size.height - grosor
+        sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 4 * d)
+        // El canto de las hojas, onduladas por la humedad.
+        drawRoundRect(PERGAMINO_HUMEDO, Offset(grosor, grosor), Size(w, h), CornerRadius(3 * d))
+        val n = (grosor / (1.6f * d)).toInt().coerceAtLeast(2)
+        for (k in 1..n) { val o = k * grosor / (n + 1); drawLine(Color(0x557A6A40), Offset(w + o, grosor + 6 * d), Offset(w + o, h + o - 3 * d), 0.8f * d) }
+        drawRoundRect(Brush.linearGradient(listOf(lerp(CUERO_BREA, Color.White, 0.1f), CUERO_BREA, lerp(CUERO_BREA, Color.Black, 0.35f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(3 * d))
+        // La mancha de agua de mar, que aclaró el cuero.
+        val m = Offset(w * 0.28f, h * 0.78f)
+        drawCircle(Brush.radialGradient(listOf(Color(0xFFE6DCBA).copy(alpha = 0.12f), Color.Transparent), m, w * 0.24f), w * 0.24f, m)
+        // La rosa de los vientos gofrada.
+        val c = Offset(w * 0.5f, h * 0.36f); val R = w * 0.22f
+        val gofrado = Color(0xFFC9A04A).copy(alpha = 0.55f)
+        drawCircle(gofrado, R * 0.78f, c, style = Stroke(1f * d))
+        for (k in 0 until 8) {
+            val a = -PI / 2 + k * PI / 4; val largo = if (k % 2 == 0) R else R * 0.6f
+            val punta = Offset(c.x + (largo * cos(a)).toFloat(), c.y + (largo * sin(a)).toFloat())
+            val izq = Offset(c.x + (R * 0.14f * cos(a - PI / 2)).toFloat(), c.y + (R * 0.14f * sin(a - PI / 2)).toFloat())
+            val der = Offset(c.x + (R * 0.14f * cos(a + PI / 2)).toFloat(), c.y + (R * 0.14f * sin(a + PI / 2)).toFloat())
+            drawPath(Path().apply { moveTo(izq.x, izq.y); lineTo(punta.x, punta.y); lineTo(der.x, der.y); close() }, gofrado, style = Stroke(1f * d))
+        }
+        // Las cantoneras de latón.
+        val e = w * 0.13f
+        listOf(Offset(0f, 0f) to 0f, Offset(w, 0f) to 90f, Offset(w, h) to 180f, Offset(0f, h) to 270f).forEach { (o, a) ->
+            val r = Math.toRadians(a.toDouble())
+            fun pt(x: Float, y: Float) = Offset(o.x + (x * cos(r) - y * sin(r)).toFloat(), o.y + (x * sin(r) + y * cos(r)).toFloat())
+            drawPath(Path().apply { moveTo(pt(0f, 0f).x, pt(0f, 0f).y); lineTo(pt(e, 0f).x, pt(e, 0f).y); lineTo(pt(0f, e).x, pt(0f, e).y); close() }, Color(0xFFC9A04A))
+            drawCircle(Color(0xFF5A4520), 1.3f * d, pt(e * 0.3f, e * 0.3f))
+        }
+        // El cabo en cruz y el nudo con sus chicotes.
+        val nudo = Offset(w * 0.5f, h * 0.68f)
+        drawLine(lerp(CANAMO, Color.Black, 0.35f), Offset(w * 0.5f + 1.2f * d, -2 * d), Offset(w * 0.5f + 1.2f * d, h + grosor), 3.4f * d)
+        drawLine(CANAMO, Offset(w * 0.5f, -2 * d), Offset(w * 0.5f, h + grosor), 3 * d)
+        drawLine(lerp(CANAMO, Color.Black, 0.35f), Offset(-2 * d, h * 0.68f + 1.2f * d), Offset(w + grosor, h * 0.68f + 1.2f * d), 3.4f * d)
+        drawLine(CANAMO, Offset(-2 * d, h * 0.68f), Offset(w + grosor, h * 0.68f), 3 * d)
+        var t = 0f; while (t < w + grosor) { drawLine(lerp(CANAMO, Color.Black, 0.3f), Offset(t, h * 0.68f - 1.4f * d), Offset(t + 2 * d, h * 0.68f + 1.4f * d), 0.6f * d); t += 3 * d }
+        drawCircle(CANAMO, 5 * d, nudo); drawCircle(lerp(CANAMO, Color.Black, 0.3f), 5 * d, nudo, style = Stroke(1 * d))
+        listOf(-1f, 1f).forEach { s -> drawLine(CANAMO, nudo, nudo + Offset(s * 9 * d, 16 * d), 2.4f * d, StrokeCap.Round) }
+        if (oscuro) drawRect(Color.Black.copy(alpha = 0.1f), Offset.Zero, Size(w, h))
+    }
+
     /** El legajo: carpeta atada con cordón carmesí y un sello de lacre con su corona de laurel. */
     private fun DrawScope.legajoCerrado(grosor: Float, d: Float, tapa: Color) {
         val w = size.width - grosor; val h = size.height - grosor
@@ -422,6 +476,18 @@ object Contenedores {
                 drawLine(t, Offset(size.width * 0.4f, 0f), Offset(size.width, size.height * 0.4f), 0.6f * d)
                 var y = 96 * d; while (y < size.height) { drawLine(t, Offset(margen, y), Offset(size.width, y), 0.5f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 6 * d))); y += renglon }
             }
+            Contenedor.SINGLADURAS -> {
+                // La hoja de la bitácora: el encabezado con sus columnas (hora, nudos, rumbo, viento), el renglón de cada
+                // asiento, el margen doble en rojo y una mancha de agua de mar en una esquina.
+                val tintaB = Color(0xFF2A1C0F).copy(alpha = if (oscuro) 0.22f else 0.13f)
+                val rojo = Color(0xFF9A2A1C).copy(alpha = if (oscuro) 0.4f else 0.35f)
+                drawLine(tintaB, Offset(0f, 84 * d), Offset(size.width, 84 * d), 1.2f * d)
+                listOf(0.58f, 0.68f, 0.8f, 0.9f).forEach { f -> drawLine(tintaB, Offset(size.width * f, 70 * d), Offset(size.width * f, 84 * d), 0.8f * d) }
+                var y = 96 * d; while (y < size.height) { drawLine(tintaB, Offset(margen - 6 * d, y), Offset(size.width - 8 * d, y), 0.6f * d); y += renglon }
+                listOf(margen - 10 * d, margen - 13 * d).forEach { x -> drawLine(rojo, Offset(x, 0f), Offset(x, size.height), 0.8f * d) }
+                val m = Offset(size.width * 0.82f, size.height * 0.88f); val rm = size.width * 0.2f
+                drawCircle(Brush.radialGradient(listOf(Color.Transparent, Color(0xFF7A6A40).copy(alpha = if (oscuro) 0.12f else 0.09f), Color.Transparent), m, rm), rm, m)
+            }
             Contenedor.LEGAJO -> {
                 // Membrete con doble filete y margen ancho a la izquierda.
                 drawLine(cs.primary.copy(alpha = 0.6f), Offset(margen, 84 * d), Offset(size.width - 12 * d, 84 * d), 1.4f * d)
@@ -487,6 +553,16 @@ object Contenedores {
             Contenedor.TALLER -> {
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent), 10 * d, 30 * d), Offset(10 * d, 4 * d), Size(20 * d, size.height - 8 * d))
                 var y = 26 * d; while (y < size.height - 20 * d) { drawLine(Color(0xFF4A2A14), Offset(12 * d, y), Offset(22 * d, y + 6 * d), 1.4f * d); y += 40 * d }
+            }
+            Contenedor.SINGLADURAS -> {
+                // El lomo cosido con cabo: ojales de latón y el cabo de cáñamo que entra y sale de ellos en diagonal.
+                drawRect(Brush.horizontalGradient(listOf(lerp(CUERO_BREA, Color.Black, if (oscuro) 0.4f else 0f), CUERO_BREA, Color.Transparent), 4 * d, 30 * d), Offset(4 * d, 0f), Size(26 * d, size.height))
+                var y = 18 * d; var k = 0
+                while (y < size.height - 18 * d) {
+                    drawCircle(Color(0xFFC9A04A), 3 * d, Offset(17 * d, y), style = Stroke(1.4f * d))
+                    drawLine(CANAMO, Offset(17 * d, y), Offset(if (k % 2 == 0) 4 * d else 30 * d, y + 15 * d), 2.4f * d, StrokeCap.Round)
+                    y += 30 * d; k++
+                }
             }
             Contenedor.LEGAJO -> {
                 // La cinta carmesí que pasa por los ojales.

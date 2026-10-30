@@ -115,6 +115,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     ANDALUS("andalus", "Al-Ándalus", "Yeserías, azulejos de lazo y oro de la Alhambra. Títulos en árabe y fecha del calendario hégira.", Epoca.EDAD_MEDIA),
     MONGOL("mongol", "Mongol", "El Cielo Azul Eterno, fieltro y oro de la estepa. Títulos en mongol y el año del animal.", Epoca.EDAD_MEDIA),
     RENACIMIENTO("renacimiento", "Renacimiento", "Los cuadernos de Leonardo: tinta sepia, sanguina y trazos de construcción. Títulos en italiano.", Epoca.EDAD_MODERNA),
+    PIRATA("pirata", "Pirata", "Carta náutica, brea, lona y latón, en sepia sobre pergamino húmedo. Cada día es una singladura de la bitácora y las horas se cuentan por campanadas.", Epoca.EDAD_MODERNA),
     URSS("urss", "Soviético", "Rojo, negro y papel de cartel, en estilo constructivista. Planes quinquenales y meses en ruso.", Epoca.CONTEMPORANEA),
     REVOLUCION("revolucion", "Revolución francesa", "Papel de cartel, tinta y la escarapela azul, blanca y roja. Cuadernos de quejas, el árbol de la libertad y el calendario republicano.", Epoca.EDAD_MODERNA),
     ANTIGUAS("antiguas", "Tierras Antiguas", "Salones de piedra, runas inventadas, mapas y gemas. Una compañía que cruza aldeas, bosques, montañas y minas, contando el tiempo por lunas.", Epoca.FANTASIA),
@@ -345,6 +346,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ANDALUS -> if (oscuro) andalusOscuro else andalusClaro
     TemaId.MONGOL -> if (oscuro) mongolOscuro else mongolClaro
     TemaId.RENACIMIENTO -> if (oscuro) renacimientoOscuro else renacimientoClaro
+    TemaId.PIRATA -> if (oscuro) pirataOscuro else pirataClaro
     TemaId.REVOLUCION -> if (oscuro) revolucionOscuro else revolucionClaro
     TemaId.ANTIGUAS -> if (oscuro) antiguasOscuro else antiguasClaro
 }
@@ -373,6 +375,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.ANDALUS -> tipoAndalus
     TemaId.MONGOL -> tipoMongol
     TemaId.RENACIMIENTO -> tipoRenacimiento
+    TemaId.PIRATA -> tipoPirata
     TemaId.REVOLUCION -> tipoRevolucion
     TemaId.ANTIGUAS -> tipoAntiguas
 }.conReloj(tema)
@@ -406,6 +409,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.ANDALUS -> 60f to 0.5f       // Kufi
     TemaId.MONGOL -> 62f to 1f          // Filosofo
     TemaId.RENACIMIENTO -> 88f to 0f    // Italianno, caligráfica y chica
+    TemaId.PIRATA -> 72f to 1f          // Corsario (Pirata One), letra negra angosta
     TemaId.URSS -> 56f to 1f            // Russo One, ancha
     TemaId.REVOLUCION -> 60f to 1f      // Convención (Playfair)
     TemaId.ANTIGUAS -> 56f to 1f        // uncial del camino
@@ -440,6 +444,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.ANDALUS -> Esquinas(12, Esquina.ARCO)           // el arco de herradura
     TemaId.MONGOL -> Esquinas(9, Esquina.REDONDA)          // la yurta
     TemaId.RENACIMIENTO -> Esquinas(3, Esquina.HOJA)       // la página del cuaderno
+    TemaId.PIRATA -> Esquinas(5, Esquina.CORTADA)          // el cofre con cantoneras
     TemaId.REVOLUCION -> Esquinas(2, Esquina.CORTADA)      // el cartel recortado
     TemaId.ANTIGUAS -> Esquinas(4, Esquina.ARCO)           // la puerta de piedra
 }
@@ -614,6 +619,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ANDALUS -> "النهار"
         TemaId.MONGOL -> "ӨДӨР"
         TemaId.RENACIMIENTO -> "Giornata"
+        TemaId.PIRATA -> "Bitácora"
         TemaId.REVOLUCION -> "CAHIER"
         TemaId.ANTIGUAS -> "CRÓNICA"
     }
@@ -641,6 +647,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ANDALUS -> "1448 H"
         TemaId.MONGOL -> "Морин жил"
         TemaId.RENACIMIENTO -> "addì 17 d'ottobre"
+        TemaId.PIRATA -> "singladura 290 · 8bre"
         TemaId.REVOLUCION -> "26 vendémiaire"
         TemaId.ANTIGUAS -> "17 de la Luna de las Hojas"
     }
@@ -669,6 +676,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ANDALUS -> 22 to 10
         TemaId.MONGOL -> 14 to 18
         TemaId.RENACIMIENTO -> 16 to 16
+        TemaId.PIRATA -> 12 to 20
         TemaId.URSS -> 16 to 16
         TemaId.REVOLUCION -> 12 to 20
         TemaId.ANTIGUAS -> 18 to 14
@@ -697,6 +705,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ANDALUS -> 12
         TemaId.MONGOL -> 10
         TemaId.RENACIMIENTO -> 16
+        TemaId.PIRATA -> 12
         TemaId.URSS -> 18
         TemaId.REVOLUCION -> 10
         TemaId.ANTIGUAS -> 12
@@ -834,6 +843,13 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         val d = s.width * 0.05f
         moveTo(d, 0f); lineTo(s.width - d, 0f); lineTo(s.width, s.height); lineTo(0f, s.height); close()
     }
+    // Bandera al viento: el borde de abajo ondea en tres olas.
+    TemaId.PIRATA -> GenericShape { s, _ ->
+        val n = 3; val paso = s.width / n; val f = s.height * 0.045f
+        moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width, s.height - f)
+        for (i in n - 1 downTo 0) cubicTo(i * paso + paso * 0.7f, s.height + f, i * paso + paso * 0.3f, s.height - f * 3f, i * paso, s.height - f)
+        close()
+    }
     // Bloque de cartel inclinado.
     TemaId.URSS -> GenericShape { s, _ ->
         val d = s.width * 0.07f
@@ -926,6 +942,11 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.MONGOL -> drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.5f); cubicTo(w * 0.1f, h * 0.05f, w * 0.9f, h * 0.05f, w, h * 0.5f); lineTo(w, h); close() }, c)
         // Triángulo de construcción.
         TemaId.RENACIMIENTO -> drawPath(Path().apply { moveTo(cx, 0f); lineTo(w, h); lineTo(0f, h); close() }, c)
+        // La «X» del tesoro.
+        TemaId.PIRATA -> {
+            drawLine(c, Offset(w * 0.16f, h * 0.16f), Offset(w * 0.84f, h * 0.84f), w * 0.24f, androidx.compose.ui.graphics.StrokeCap.Round)
+            drawLine(c, Offset(w * 0.84f, h * 0.16f), Offset(w * 0.16f, h * 0.84f), w * 0.24f, androidx.compose.ui.graphics.StrokeCap.Round)
+        }
         // Estrella de cinco puntas.
         TemaId.URSS -> drawPath(poligono(5, -90f, r * 0.42f), c)
         // Escarapela.

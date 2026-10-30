@@ -190,6 +190,8 @@ object Temas {
     private val MARCAS_ANDALUS = mapOf("01-02" to "Granada", "04-30" to "Tariq", "03-30" to "Alhambra")
     private val MARCAS_MONGOL = mapOf("07-11" to "Naadam", "07-12" to "Naadam", "07-13" to "Naadam", "12-29" to "Independ.", "11-26" to "Repúbl.")
     private val MARCAS_RENACIMIENTO = mapOf("04-15" to "Leonardo", "05-02" to "Leonardo †", "03-06" to "Michelangelo", "03-25" to "Capodanno", "06-24" to "S. Giovanni", "04-06" to "Rafael")
+    private val MARCAS_PIRATA = mapOf("06-07" to "Port Royal", "09-05" to "Indulto", "11-22" to "Barbanegra †", "05-23" to "Kidd †", "02-10" to "Roberts †",
+        "11-18" to "Rackham †", "09-19" to "Habla pirata")
     private val MARCAS_NAVIDAD = mapOf("12-12" to "Guadalupe", "12-16" to "Posadas", "12-24" to "Nochebuena", "12-25" to "Navidad", "12-28" to "Inocentes", "12-31" to "Año nuevo", "01-06" to "Reyes")
     // Nowruz, el equinoccio de otoño y tres de los veinticuatro términos solares chinos; y el día en que la ruta entró al Patrimonio Mundial.
     private val MARCAS_SEDA = mapOf("03-21" to "Nowruz", "09-21" to "Luna", "04-05" to "Qingming", "06-21" to "Xiazhi", "06-22" to "Ruta",
@@ -223,6 +225,7 @@ object Temas {
             TemaId.ANDALUS -> MARCAS_ANDALUS[md] ?: fiestaHegira(fecha)
             TemaId.MONGOL -> MARCAS_MONGOL[md]
             TemaId.RENACIMIENTO -> MARCAS_RENACIMIENTO[md]
+            TemaId.PIRATA -> MARCAS_PIRATA[md]
             TemaId.REVOLUCION -> MARCAS_REVOLUCION[md]
             TemaId.ANTIGUAS -> MARCAS_ANTIGUAS[md]
         }
@@ -296,6 +299,33 @@ object Temas {
         return "a dì ${d.dayOfMonth} " + (if (m.first() in "aeiou") "d'$m" else "di $m") + " ${d.year}"
     }
 
+    /** Los meses de las bitácoras del siglo XVIII: de septiembre a diciembre se escribían por su número latino, «7bre» (septiembre)… «Xbre». */
+    val MESES_PIRATAS = listOf("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "7bre", "8bre", "9bre", "Xbre")
+
+    /** «Singladura 290 · 17 de 8bre de 2026»: la singladura es la jornada de navegación de la bitácora. */
+    fun fechaPirata(d: java.time.LocalDate, singladura: Long): String = "Singladura $singladura · ${d.dayOfMonth} de ${MESES_PIRATAS[d.monthValue - 1]} de ${d.year}"
+
+    /**
+     * Las guardias de a bordo, con los nombres de la Armada española (los del diccionario de la RAE para prima, media y
+     * alba, y los del buque escuela para las demás): media (0–4), alba (4–8), mañana (8–12), los dos cuartillos (12–14 y
+     * 14–16), superprima (16–20) y prima (20–24). [Aproximación]: cada barco y cada siglo repartía las guardias a su modo.
+     */
+    fun guardia(h: Int): String = when (h) {
+        in 0..3 -> "guardia de media"
+        in 4..7 -> "guardia de alba"
+        in 8..11 -> "guardia de mañana"
+        in 12..13 -> "primer cuartillo"
+        in 14..15 -> "segundo cuartillo"
+        in 16..19 -> "guardia de superprima"
+        else -> "guardia de prima"
+    }
+
+    /** La campana de a bordo: un toque por cada media hora (una vuelta de la ampolleta), hasta los ocho que cierran cuatro horas. */
+    fun campanadas(h: Int, m: Int): Int = ((h * 60 + m) / 30 % 8).let { if (it == 0) 8 else it }
+
+    /** «3 campanadas de la guardia de alba». */
+    fun horaPirata(h: Int, m: Int): String = campanadas(h, m).let { c -> "$c campanada" + (if (c == 1) "" else "s") + " de la " + guardia(h) }.replace("de la primer", "del primer").replace("de la segundo", "del segundo")
+
     /** Estación astronómica del hemisferio norte y cuántos días lleva: «otoño, día 26». */
     fun estacion(d: java.time.LocalDate): String {
         val y = d.year
@@ -330,6 +360,7 @@ object Temas {
         TemaId.ANDALUS -> ANDALUS[titulo]
         TemaId.MONGOL -> MONGOL[titulo]
         TemaId.RENACIMIENTO -> RENACIMIENTO[titulo]
+        TemaId.PIRATA -> PIRATA[titulo]
         TemaId.NAVIDAD -> NAVIDAD[titulo]
         TemaId.SEDA -> SEDA[titulo]
         TemaId.URSS -> URSS[titulo]
@@ -359,6 +390,7 @@ object Temas {
             TemaId.ANDALUS -> mapOf("animo" to "الروح", "momento" to "لحظة", "gasto" to "النفقات", "sueno" to "النوم", "habitos" to "العادات", "hoy" to "النهار", "cifra" to "الحساب", "foto" to "صورة", "enfoque" to "دراسة")
             TemaId.MONGOL -> mapOf("animo" to "СЭТГЭЛ", "momento" to "АГШИН", "gasto" to "ЗАРДАЛ", "sueno" to "НОЙР", "habitos" to "ЗАНШИЛ", "hoy" to "ӨДӨР", "cifra" to "ТОО", "foto" to "ЗУРАГ", "enfoque" to "СУРАЛЦАХ")
             TemaId.RENACIMIENTO -> mapOf("animo" to "Animo", "momento" to "Nota", "gasto" to "Conti", "sueno" to "Sonno", "habitos" to "Esercizi", "hoy" to "Giornata", "cifra" to "Misura", "foto" to "Ritratto", "enfoque" to "Studio")
+            TemaId.PIRATA -> mapOf("animo" to "Cariz", "momento" to "Asiento", "gasto" to "Bolsa", "sueno" to "Coy", "habitos" to "Guardias", "hoy" to "Singladura", "cifra" to "Sonda", "foto" to "Boceto", "enfoque" to "Ampolleta")
             TemaId.NAVIDAD -> mapOf("animo" to "Ánimo", "momento" to "Momento", "gasto" to "Regalos", "sueno" to "Noche de paz", "habitos" to "Propósitos", "hoy" to "El día", "cifra" to "Número", "foto" to "Postal", "enfoque" to "Taller")
             TemaId.SEDA -> mapOf("animo" to "Espíritu", "momento" to "Relato", "gasto" to "Mercancías", "sueno" to "Reposo", "habitos" to "Ritos", "hoy" to "Jornada", "cifra" to "Cuenta", "foto" to "Estampa", "enfoque" to "Estudio")
             TemaId.URSS -> mapOf("animo" to "MORAL", "momento" to "INFORME", "gasto" to "ECONOMÍA", "sueno" to "DESCANSO", "habitos" to "NORMAS", "hoy" to "PLAN", "cifra" to "PRODUCCIÓN", "foto" to "FOTO", "enfoque" to "TRABAJO")
@@ -634,6 +666,21 @@ object Temas {
         "Apariencia" to "Disegno", "Obras" to "Libreria", "Mapa" to "Mappa", "Lugares" to "Luoghi", "Totales" to "Inventario",
         "Momentos de este día" to "Note del giorno", "Datos que faltan" to "Lacune", "Resumen semanal" to "La settimana",
         "Avisos y recordatorios" to "Campane", "Contexto" to "Circostanze", "Calendario" to "Calendario", "Tu año" to "L'anno",
+    )
+    private val PIRATA = mapOf(
+        "Mundo" to "Los siete mares", "Patrimonio Mundial" to "Maravillas de ultramar", "Mapa para rascar" to "Carta de las islas", "Ciudades visitadas" to "Puertos tocados",
+        "Biblioteca de sueños" to "Sueños del coy", "Cartas" to "Botellas", "Escribir una carta" to "Meter un mensaje en la botella", "Carta" to "Mensaje en la botella",
+        "Conocerte" to "Sondear tu fondo", "Brújula política" to "Aguja política", "Mapas" to "Cartas náuticas", "Salud" to "Parte del cirujano",
+        "Tus apps" to "Tus instrumentos", "Otras vidas" to "Otras travesías", "Logros" to "Botín", "Tu año en historias" to "Tu año en relatos de taberna",
+        "Anoche" to "La guardia de anoche", "Selladas" to "Lacradas", "Listas para abrir" to "Listas para descorchar", "A otras personas" to "A otras costas",
+        "Del pasado" to "De mares pasados", "Hoy" to "La singladura de hoy", "Línea de tiempo" to "La estela", "Ahora mismo estoy…" to "En este momento navego…",
+        "Día" to "Singladura", "Diario" to "Bitácora", "Gastos" to "Libro del sobrecargo", "Entender" to "Sondear",
+        "Más" to "La bodega", "Llenar el día" to "Al caer la guardia", "Biblioteca del diario" to "Las bitácoras", "Entrada" to "Asiento",
+        "Tablero" to "Cuadro de mando", "Te falta hoy" to "Falta por asentar", "Hábitos" to "Guardias", "Sueño" to "El coy",
+        "Ánimo y cuerpo" to "Ánimo y casco", "Hitos" to "Avistamientos", "Apariencia" to "Arboladura", "Obras" to "La biblioteca de cámara",
+        "Mapa" to "Carta", "Lugares" to "Fondeaderos", "Totales" to "Arqueo", "Momentos de este día" to "Asientos de esta singladura",
+        "Datos que faltan" to "Sondas que faltan", "Resumen semanal" to "Parte de la semana", "Avisos y recordatorios" to "Campanas de guardia", "Contexto" to "Mar de fondo",
+        "Tu año" to "Tu año de travesía",
     )
     private val NAVIDAD = mapOf(
         "Mundo" to "Viajes", "Patrimonio Mundial" to "Maravillas", "Mapa para rascar" to "Mapa de los viajes", "Ciudades visitadas" to "Ciudades",

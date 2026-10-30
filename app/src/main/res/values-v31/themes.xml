@@ -242,6 +242,16 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_renacimiento_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_renacimiento</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Pirata" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_pirata</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_pirata</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_pirata</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Pirata.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_pirata_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_pirata_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_pirata</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Revolucion" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_revolucion</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_revolucion</item>

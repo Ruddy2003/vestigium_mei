@@ -129,6 +129,7 @@ object HallImagen {
         TemaId.ANDALUS -> "آثاري · Vestigium Mei" to "تمّ الكتاب"
         TemaId.MONGOL -> "Миний мөр · Vestigium Mei" to "Мөнх тэнгэрийн хүчин дор"
         TemaId.RENACIMIENTO -> "Taccuino · Vestigium Mei" to "Fatto di mia mano"
+        TemaId.PIRATA -> "Bitácora de Vestigium Mei" to "Escrito a bordo, de mi puño y letra"
         TemaId.URSS -> "МОЙ СЛЕД · VESTIGIUM MEI" to "План выполнен!"
         TemaId.REVOLUCION -> "Cahier du citoyen · Vestigium Mei" to "Liberté · Égalité · Fraternité"
         TemaId.ANTIGUAS -> "Libro de la compañía · Vestigium Mei" to "Aquí termina el relato, por ahora"

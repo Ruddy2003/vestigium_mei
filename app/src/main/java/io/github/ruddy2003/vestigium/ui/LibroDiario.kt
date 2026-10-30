@@ -157,6 +157,8 @@ object LibroDiario {
         TemaId.ANDALUS -> Fuentes(R.font.kufi_medium, R.font.amiri_regular)
         TemaId.MONGOL -> Fuentes(R.font.philosopher_bold, R.font.fira_regular)
         TemaId.RENACIMIENTO -> Fuentes(R.font.italianno, R.font.cormorant_regular)
+        // La letra negra de las cartas de marear y el Caslon de los libros de a bordo.
+        TemaId.PIRATA -> Fuentes(R.font.corsario_titulo, R.font.caslon_regular)
         // Los carteles de la Convención y la Baskerville de su siglo.
         TemaId.REVOLUCION -> Fuentes(R.font.convencion_titulo, R.font.ciudadana_regular)
         // La uncial de los caminos y el libro de crónicas.
@@ -235,6 +237,9 @@ object LibroDiario {
                 "background:conic-gradient(from 45deg,$p 25%,transparent 0 50%,$p 0 75%,transparent 0) 0 0/10px 10px repeat-x}" + capitular("2.6em", p)
             TemaId.MONGOL -> "article{border:2px dashed $s;border-radius:10px;padding:18px;margin-bottom:18px}" + capitular("2.4em", p)
             TemaId.RENACIMIENTO -> "article{border-top:1px solid $v}article::before{content:'';float:right;width:60px;height:60px;border:1px dashed $v;border-radius:50%;margin:0 0 6px 10px}" + capitular("3.6em", p)
+            // Cada asiento entre dos filetes, con la «X» roja del tesoro al margen y la fecha en versalitas de bitácora.
+            TemaId.PIRATA -> "article{border-top:3px double $v;border-bottom:1px dotted $v;padding-bottom:10px}article::before{content:'✕';float:right;color:$p;font-size:1.4em;margin:0 0 4px 10px}" +
+                ".fecha{font-variant:small-caps;letter-spacing:.06em}" + capitular("3em", p)
             TemaId.URSS -> "article{border-top:0;border-left:10px solid $p;padding-left:16px}.fecha{text-transform:uppercase;letter-spacing:.04em}.nota::first-line{font-weight:bold}"
             TemaId.REVOLUCION -> "article{border-top:6px solid;border-image:linear-gradient(90deg,#1F3A6E 0 33%,$b 33% 66%,#B22234 66%) 6}" + capitular("3em", p)
             TemaId.ANTIGUAS -> "article{border:2px solid $p;padding:18px;margin-bottom:18px;background:linear-gradient(135deg,$s 10px,transparent 10px),linear-gradient(225deg,$s 10px,transparent 10px)," +
@@ -374,6 +379,7 @@ object LibroDiario {
             TemaId.ANDALUS -> Medidas(12.5f, aire)
             TemaId.MONGOL -> Medidas(11f, aire)
             TemaId.RENACIMIENTO -> Medidas(12.5f, aire)
+            TemaId.PIRATA -> Medidas(11.5f, aire)
             TemaId.URSS -> Medidas(11f, aire)
             TemaId.REVOLUCION -> Medidas(11f, aire)
             TemaId.ANTIGUAS -> Medidas(11f, aire)
@@ -426,6 +432,8 @@ object LibroDiario {
         TemaId.MONGOL -> Inicial(R.font.philosopher_bold, 2.1f)
         // La inicial a mano, en sanguina.
         TemaId.RENACIMIENTO -> Inicial(R.font.italianno, 3.2f)
+        // La capitular en letra negra, como en los títulos de las cartas.
+        TemaId.PIRATA -> Inicial(R.font.corsario_titulo, 2.7f)
         // La primera palabra en mayúsculas del cartel.
         TemaId.URSS -> Inicial(R.font.russo, 1.15f, palabra = true, mayusculas = true)
         TemaId.REVOLUCION -> Inicial(R.font.cormorant_medium, 2.6f)
@@ -622,6 +630,13 @@ object LibroDiario {
                 val fino = Paint(trazo).apply { strokeWidth = 0.6f }
                 cv.drawCircle(cx, y, 6f, fino); cv.drawRect(cx - 4.24f, y - 4.24f, cx + 4.24f, y + 4.24f, fino); cv.drawCircle(cx, y, 0.9f, relleno)
             }
+            TemaId.PIRATA -> {
+                // Un cabo de orilla a orilla con un nudo al centro: el filete hecho de vueltas cortas de cordón.
+                var x = x0
+                while (x < x1) { if (kotlin.math.abs(x - cx) > 8f) cv.drawLine(x, y + 1.6f, x + 2.4f, y - 1.6f, linea); x += 2.6f }
+                cv.drawCircle(cx, y, 4f, trazo); cv.drawCircle(cx, y, 1.4f, relleno)
+                cv.drawLine(cx + 2f, y + 3f, cx + 5f, y + 7f, linea); cv.drawLine(cx - 2f, y + 3f, cx - 5f, y + 7f, linea)
+            }
             TemaId.URSS -> {
                 // La barra roja gruesa, la negra fina y la estrella donde se juntan.
                 cv.drawLine(x0, y, cx - 7f, y, Paint(linea).apply { strokeWidth = 3.2f })
@@ -790,6 +805,18 @@ object LibroDiario {
                 rect(24f, Paint(fino).apply { alpha = 140 })
                 val raya = Paint(fino).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(3f, 3f), 0f) }
                 esquinas.forEach { (x, y) -> cv.drawCircle(x, y, 30f, raya) }
+            }
+            TemaId.PIRATA -> {
+                // El borde de una carta de marear: la escala de grados en franjas, un filete de cabo y una rosa pequeña arriba.
+                rect(20f, trazo); rect(26f, fino)
+                var x = 20f; var k = 0
+                while (x < A - 20f) { if (k % 2 == 0) { cv.drawRect(x, 20f, minOf(x + 14f, A - 20f), 26f, relleno); cv.drawRect(x, B - 26f, minOf(x + 14f, A - 20f), B - 20f, relleno) }; x += 14f; k++ }
+                val cabo = Paint(fino).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(4f, 2f), 0f); strokeWidth = 1f }
+                rect(32f, cabo)
+                val c = A - 60f to 62f
+                for (i in 0 until 8) { val a = Math.toRadians(-90.0 + 45.0 * i); val l = if (i % 2 == 0) 18f else 10f
+                    cv.drawLine(c.first, c.second, c.first + (l * kotlin.math.cos(a)).toFloat(), c.second + (l * kotlin.math.sin(a)).toFloat(), if (i == 0) trazo else fino) }
+                cv.drawCircle(c.first, c.second, 11f, fino)
             }
             TemaId.URSS -> {
                 // La barra roja a la izquierda, el filete negro y el cuadrado negro arriba a la derecha.

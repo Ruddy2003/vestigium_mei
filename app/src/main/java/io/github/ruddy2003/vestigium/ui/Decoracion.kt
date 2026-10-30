@@ -93,6 +93,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.ANDALUS -> 36000
     TemaId.MONGOL -> 30000
     TemaId.RENACIMIENTO -> 6600
+    TemaId.PIRATA -> 18000
     TemaId.URSS -> 12000
     TemaId.REVOLUCION -> 9000
     TemaId.ANTIGUAS -> 16000
@@ -139,6 +140,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.ANDALUS -> rotate(t * 360f, c) { estrellaLazo(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.primary, e.background) }
         TemaId.MONGOL -> toono(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.RENACIMIENTO -> compas(c, r, e.primary, e.onBackground, e.secondary, t)
+        TemaId.PIRATA -> calaveraRosa(c, r, if (oscuro) e.onBackground else e.surface, e.onBackground, e.tertiary, if (oscuro) e.primary else e.secondary, t)
         TemaId.NAVIDAD -> copo(c, r, if (oscuro) e.onBackground else e.secondary, e.tertiary, t)
         TemaId.SEDA -> moneda(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.background, t)
         TemaId.URSS -> estrellaEngrane(c, r, e.primary, if (oscuro) e.tertiary else e.onBackground, t)
@@ -537,6 +539,38 @@ private fun DrawScope.compas(c: Offset, r: Float, sanguina: Color, tinta: Color,
     drawLine(tinta, bisagra, punta, r * 0.08f, StrokeCap.Round)
     drawCircle(azul, r * 0.1f, bisagra)
     drawCircle(sanguina, r * 0.04f, punta)
+}
+
+/**
+ * La calavera sobre la rosa de los vientos: ocho puntas de tinta y latón (las cardinales largas, con la flor de lis al
+ * norte) detrás de un cráneo de hueso. La aguja de la rosa busca el norte: cabecea un poco a cada lado.
+ */
+private fun DrawScope.calaveraRosa(c: Offset, r: Float, hueso: Color, tinta: Color, rojo: Color, laton: Color, t: Float) {
+    val giro = 9f * sin(2 * PI * t).toFloat()
+    rotate(giro, c) {
+        for (i in 0 until 8) {
+            val a = rad(-90.0 + 45.0 * i)
+            val largo = r * (if (i % 2 == 0) 0.98f else 0.66f); val ancho = r * (if (i % 2 == 0) 0.16f else 0.12f)
+            val punta = c.mas(largo, a); val izq = c.mas(ancho, a - PI / 2); val der = c.mas(ancho, a + PI / 2)
+            drawPath(Path().apply { moveTo(c.x, c.y); lineTo(izq.x, izq.y); lineTo(punta.x, punta.y); close() }, laton)
+            drawPath(Path().apply { moveTo(c.x, c.y); lineTo(der.x, der.y); lineTo(punta.x, punta.y); close() }, tinta.copy(alpha = 0.85f))
+        }
+        // La flor de lis del norte, en rojo.
+        val n = c.mas(r * 0.98f, rad(-90.0))
+        drawCircle(rojo, r * 0.06f, n)
+        drawCircle(tinta.copy(alpha = 0.6f), r * 0.62f, c, style = Stroke(r * 0.03f))
+    }
+    // El cráneo, con las cuencas, la nariz y los dientes.
+    val k = Offset(c.x, c.y - r * 0.06f)
+    drawCircle(tinta, r * 0.37f, k)
+    drawCircle(hueso, r * 0.33f, k)
+    val quijada = Offset(c.x - r * 0.18f, c.y + r * 0.12f)
+    drawRoundRect(tinta, quijada - Offset(r * 0.03f, 0f), Size(r * 0.42f, r * 0.26f), CornerRadius(r * 0.08f))
+    drawRoundRect(hueso, quijada + Offset(0f, r * 0.0f), Size(r * 0.36f, r * 0.22f), CornerRadius(r * 0.06f))
+    drawCircle(tinta, r * 0.095f, Offset(c.x - r * 0.13f, c.y - r * 0.08f))
+    drawCircle(tinta, r * 0.095f, Offset(c.x + r * 0.13f, c.y - r * 0.08f))
+    drawPath(Path().apply { moveTo(c.x, c.y + r * 0.02f); lineTo(c.x - r * 0.045f, c.y + r * 0.1f); lineTo(c.x + r * 0.045f, c.y + r * 0.1f); close() }, tinta)
+    for (j in -1..1) drawLine(tinta, Offset(c.x + j * r * 0.09f, c.y + r * 0.16f), Offset(c.x + j * r * 0.09f, c.y + r * 0.31f), r * 0.025f)
 }
 
 /**
@@ -1262,6 +1296,36 @@ internal fun Trazo(modifier: Modifier) {
     }
 }
 
+/** Un cabo de cáñamo trenzado que corre bajo el título, con un nudo llano al centro y su «X» de tesoro a un lado. */
+@Composable
+internal fun Cabo(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    Canvas(modifier.fillMaxWidth().height(14.dp).clipToBounds()) {
+        val h = size.height; val w = size.width; val y = h * 0.5f; val f = 1.dp.toPx()
+        val grueso = h * 0.34f; val paso = grueso * 0.9f
+        val claro = e.secondary.copy(alpha = 0.75f); val sombra = e.onBackground.copy(alpha = 0.45f)
+        val nudo = w * 0.5f; val hueco = h * 0.9f
+        var x = 0f
+        while (x < w) {
+            if (abs(x - nudo) > hueco) {
+                // Cada vuelta del cordón: una diagonal clara con su sombra debajo.
+                drawLine(sombra, Offset(x + f * 0.6f, y + grueso * 0.6f), Offset(x + paso + f * 0.6f, y - grueso * 0.4f), grueso * 0.42f, StrokeCap.Round)
+                drawLine(claro, Offset(x, y + grueso * 0.5f), Offset(x + paso, y - grueso * 0.5f), grueso * 0.36f, StrokeCap.Round)
+            }
+            x += paso
+        }
+        // El nudo llano: dos lazos que se abrazan.
+        drawOval(claro, Offset(nudo - hueco, y - grueso * 0.9f), Size(hueco, grueso * 1.8f), style = Stroke(grueso * 0.34f))
+        drawOval(claro, Offset(nudo, y - grueso * 0.9f), Size(hueco, grueso * 1.8f), style = Stroke(grueso * 0.34f))
+        drawOval(sombra, Offset(nudo - hueco * 0.5f, y - grueso * 0.5f), Size(hueco, grueso), style = Stroke(f))
+        // La «X» del tesoro, a un tercio.
+        val c = Offset(w * 0.2f, y); val s = h * 0.32f
+        drawCircle(e.background, s * 1.5f, c)
+        drawLine(e.tertiary, c - Offset(s, s), c + Offset(s, s), 1.8f * f, StrokeCap.Round)
+        drawLine(e.tertiary, c + Offset(-s, s), c + Offset(s, -s), 1.8f * f, StrokeCap.Round)
+    }
+}
+
 /** Guirnalda de pino que cuelga en arcos, con focos de colores. */
 @Composable
 internal fun Guirnalda(modifier: Modifier) {
@@ -1634,6 +1698,26 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             }
             repeat(18) { val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = 1f + azar.nextFloat() * 3.5f; puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr)) }
         }
+        TemaId.PIRATA -> {
+            // Carta náutica: las líneas de rumbo que salen de dos rosas (como en los portulanos), la cuadrícula de grados y
+            // unas islas pequeñas.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.065f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.05f else 0.07f)
+            val largo = maxOf(w, h) * 1.2f
+            listOf(Offset(w * 0.78f, h * 0.22f), Offset(w * 0.2f, h * 0.7f)).forEach { o ->
+                for (i in 0 until 16) {
+                    val a = 2 * PI * i / 16
+                    trazo.moveTo(o.x, o.y); trazo.lineTo(o.x + (largo * cos(a)).toFloat(), o.y + (largo * sin(a)).toFloat())
+                }
+                trazo.addOval(Rect(o.x - 14.dp.toPx(), o.y - 14.dp.toPx(), o.x + 14.dp.toPx(), o.y + 14.dp.toPx()))
+            }
+            val g = 96.dp.toPx(); var y = g; while (y < h) { trazo.moveTo(0f, y); trazo.lineTo(w, y); y += g }
+            val azar = java.util.Random(1718)
+            repeat(5) {
+                val x = azar.nextFloat() * w; val yy = azar.nextFloat() * h; val rr = (6f + azar.nextFloat() * 14f) * 1.dp.toPx()
+                puntos.addOval(Rect(x - rr, yy - rr * 0.55f, x + rr, yy + rr * 0.55f))
+                puntos.addOval(Rect(x + rr * 0.4f, yy - rr * 0.8f, x + rr * 1.2f, yy - rr * 0.1f))
+            }
+        }
         TemaId.NAVIDAD -> {
             // Nieve.
             color2 = (if (oscuro) Color.White else esquema.secondary).copy(alpha = if (oscuro) 0.09f else 0.05f)
@@ -1784,6 +1868,8 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.ANDALUS -> estrellaBoton(16, 0.5f, 0.383f, -90.0)
     TemaId.MONGOL -> poligonoBoton(0.04f to 0.96f, 0.04f to 0.46f, 0.36f to 0.06f, 0.64f to 0.06f, 0.96f to 0.46f, 0.96f to 0.96f)
     TemaId.RENACIMIENTO -> poligonoBoton(0.5f to 0f, 1f to 0.5f, 0.5f to 1f, 0f to 0.5f)
+    // El doblón: una moneda acuñada a martillo, de canto irregular.
+    TemaId.PIRATA -> poligonoBoton(0.5f to 0.02f, 0.8f to 0.1f, 0.97f to 0.36f, 0.95f to 0.68f, 0.76f to 0.93f, 0.46f to 0.98f, 0.18f to 0.86f, 0.03f to 0.6f, 0.06f to 0.28f, 0.24f to 0.08f)
     TemaId.URSS -> poligonoBoton(0.22f to 0.06f, 1f to 0.06f, 0.78f to 0.94f, 0f to 0.94f)
     TemaId.REVOLUCION -> estrellaBoton(48, 0.5f, 0.45f, -90.0)
     TemaId.ANTIGUAS -> poligonoBoton(0.12f to 0.1f, 0.55f to 0.02f, 0.9f to 0.14f, 0.98f to 0.55f, 0.84f to 0.94f, 0.4f to 0.98f, 0.06f to 0.8f, 0.02f to 0.4f)
@@ -1813,6 +1899,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.ANDALUS -> "مزيد"
     TemaId.MONGOL -> "Илүү"
     TemaId.RENACIMIENTO -> "Altro"
+    TemaId.PIRATA -> "Bodega"
     TemaId.URSS -> "Ещё"
     TemaId.REVOLUCION -> "Club"
     TemaId.ANTIGUAS -> "Morral"
@@ -1924,6 +2011,11 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Sol de cuaderno: círculo y cuadrado de proporciones.
             TemaId.RENACIMIENTO -> { drawCircle(color, r * 0.8f, c, style = Stroke(r * 0.08f)); val q = r * 0.56f
                 drawRect(color, Offset(c.x - q, c.y - q), Size(q * 2, q * 2), style = Stroke(r * 0.06f)); drawCircle(color, r * 0.28f, c); rayos(8, 0.84f, 0.98f, 0.08f) }
+            // El sol de las cartas antiguas: rayos rectos y rayos ondulados, uno y uno.
+            TemaId.PIRATA -> { drawCircle(color, r * 0.4f, c); rayos(8, 0.52f, 0.98f, 0.09f)
+                for (i in 0 until 8) { val a = rad(22.5 + 45.0 * i); val p = Path(); p.moveTo(c.mas(r * 0.5f, a).x, c.mas(r * 0.5f, a).y)
+                    val m1 = c.mas(r * 0.62f, a + 0.16); val m2 = c.mas(r * 0.74f, a - 0.16); val f = c.mas(r * 0.84f, a)
+                    p.cubicTo(m1.x, m1.y, m2.x, m2.y, f.x, f.y); drawPath(p, color, style = Stroke(r * 0.07f, cap = StrokeCap.Round)) } }
             // Sol que sale de una esquina, con rayos en abanico, como en los carteles.
             TemaId.URSS -> { val o = Offset(c.x - r * 0.6f, c.y + r * 0.6f); drawArc(color, -90f, 90f, true, Offset(o.x - r * 0.6f, o.y - r * 0.6f), Size(r * 1.2f, r * 1.2f))
                 for (i in 0 until 5) { val a = rad(-90.0 + 22.5 * i); drawLine(color, o.mas(r * 0.78f, a), o.mas(r * 1.5f, a), r * 0.12f) } }
@@ -2005,6 +2097,11 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                 drawRect(color, Offset(c.x - r * 0.9f, c.y + r * 0.6f), Size(r * 0.9f, r * 0.3f)) }
             // Luna con su círculo de construcción y una diagonal a pluma.
             TemaId.RENACIMIENTO -> { luna(); drawCircle(color, r * 0.78f, c, style = Stroke(r * 0.04f)); drawLine(color, Offset(c.x - r, c.y + r), Offset(c.x + r, c.y - r), r * 0.04f) }
+            // Luna sobre la mar: la creciente y dos olas abajo.
+            TemaId.PIRATA -> { luna(0.62f, 0.3f, -0.24f, c + Offset(0f, -r * 0.16f))
+                listOf(0.66f, 0.88f).forEach { y -> val p = Path(); p.moveTo(c.x - r * 0.9f, c.y + r * y)
+                    p.quadraticTo(c.x - r * 0.45f, c.y + r * (y - 0.14f), c.x, c.y + r * y); p.quadraticTo(c.x + r * 0.45f, c.y + r * (y + 0.14f), c.x + r * 0.9f, c.y + r * y)
+                    drawPath(p, color, style = Stroke(r * 0.08f, cap = StrokeCap.Round)) } }
             // Luna con la estrella roja.
             TemaId.URSS -> { luna(); estrella(c + Offset(r * 0.5f, -r * 0.4f), r * 0.28f, 5, 0.4f) }
             // Luna con una escarapela pequeña.
@@ -2089,6 +2186,15 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Línea de construcción que atraviesa el cristal.
         TemaId.RENACIMIENTO -> { lente(); mango(); drawLine(color, Offset(r * 0.02f, r * 0.02f), Offset(c.x + lr * 0.3f, c.y + lr * 0.3f), r * 0.035f)
             drawLine(color, Offset(c.x - lr * 0.25f, c.y + lr * 0.25f), Offset(c.x + lr * 0.25f, c.y - lr * 0.25f), r * 0.035f) }
+        // El catalejo: tres tramos de latón que se adelgazan, con la lente al frente.
+        TemaId.PIRATA -> {
+            val ini = Offset(r * 0.12f, r * 0.12f); val fin = Offset(r * 0.92f, r * 0.92f)
+            listOf(Triple(0f, 0.36f, 0.24f), Triple(0.34f, 0.68f, 0.18f), Triple(0.66f, 1f, 0.12f)).forEach { (a, b, g2) ->
+                drawLine(color, ini + (fin - ini) * a, ini + (fin - ini) * b, r * g2)
+            }
+            drawCircle(color, r * 0.15f, ini, style = Stroke(r * 0.05f))
+            listOf(0.35f, 0.67f).forEach { k -> val p = ini + (fin - ini) * k; drawLine(color, p + Offset(-r * 0.12f, r * 0.12f), p + Offset(r * 0.12f, -r * 0.12f), r * 0.04f) }
+        }
         // Estrella de cinco puntas en el cristal y mango grueso.
         TemaId.URSS -> { lente(); mango(0.92f, 0.17f)
             val est = Path(); for (i in 0 until 10) { val rr = if (i % 2 == 0) lr * 0.55f else lr * 0.22f; val q = c.mas(rr, rad(-90.0 + 36.0 * i)); if (i == 0) est.moveTo(q.x, q.y) else est.lineTo(q.x, q.y) }
@@ -2178,6 +2284,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.ANDALUS -> false
     TemaId.MONGOL -> false
     TemaId.RENACIMIENTO -> false
+    TemaId.PIRATA -> false          // los doblones caen
     TemaId.URSS -> false
     TemaId.REVOLUCION -> false
     TemaId.ANTIGUAS -> false
@@ -2292,6 +2399,13 @@ fun CapaFiesta(fijo: Float? = null) {
                         drawPath(Path().apply { moveTo(pos.x + s * 1.3f, pos.y); lineTo(pos.x + s * 0.7f, pos.y - s * 0.35f); lineTo(pos.x + s * 0.7f, pos.y + s * 0.35f); close() }, col) }
                     TemaId.RENACIMIENTO -> { drawLine(col, pos - Offset(s, 0f), pos + Offset(s, 0f), s * 0.14f); drawLine(col, pos - Offset(0f, s), pos + Offset(0f, s), s * 0.14f)
                         drawCircle(col, s * 0.55f, pos, style = Stroke(s * 0.1f)) }
+                    // Doblones de oro que caen girando (se ven de canto a ratos) y alguna «X» roja.
+                    TemaId.PIRATA -> if (p.tono == 2) { drawLine(e.tertiary.copy(alpha = a), pos - Offset(s * 0.6f, s * 0.6f), pos + Offset(s * 0.6f, s * 0.6f), s * 0.22f, StrokeCap.Round)
+                        drawLine(e.tertiary.copy(alpha = a), pos + Offset(-s * 0.6f, s * 0.6f), pos + Offset(s * 0.6f, -s * 0.6f), s * 0.22f, StrokeCap.Round) } else {
+                        val k = 0.25f + 0.75f * abs(cos(p.giro * t * 0.05f))
+                        drawOval(oro.copy(alpha = a), Offset(pos.x - s * 0.75f * k, pos.y - s * 0.75f), Size(s * 1.5f * k, s * 1.5f))
+                        drawOval(col, Offset(pos.x - s * 0.52f * k, pos.y - s * 0.52f), Size(s * 1.04f * k, s * 1.04f), style = Stroke(s * 0.1f))
+                        drawLine(col, pos - Offset(0f, s * 0.3f), pos + Offset(0f, s * 0.3f), s * 0.1f); drawLine(col, pos - Offset(s * 0.3f * k, 0f), pos + Offset(s * 0.3f * k, 0f), s * 0.1f) }
                     TemaId.URSS -> {
                         val est = Path(); for (i in 0 until 10) { val rr = if (i % 2 == 0) s else s * 0.4f; val q = pos.mas(rr, rad(-90.0 + 36.0 * i)); if (i == 0) est.moveTo(q.x, q.y) else est.lineTo(q.x, q.y) }
                         est.close(); drawPath(est, col)

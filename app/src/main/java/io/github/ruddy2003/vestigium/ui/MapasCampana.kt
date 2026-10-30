@@ -137,6 +137,20 @@ object MapasCampana {
                 }, tinta, style = Stroke(1 * d))
                 drawPath(Path().apply { moveTo(m.x - 19 * d, m.y - 6 * d); quadraticTo(m.x - 4 * d, m.y - 3 * d, m.x + 8 * d, m.y - 8 * d); quadraticTo(m.x + 2 * d, m.y - 9 * d, m.x - 2 * d, m.y - 5 * d) }, tinta, style = Stroke(0.8f * d))
             }
+            TemaId.PIRATA -> {
+                // El cofre desenterrado sobre la «X»: la tapa abierta, el brillo del oro que sale y los doblones regados.
+                val c = Offset(m.x, m.y - 16 * d)
+                val madera = Color(0xFF6B4A2B); val laton = Color(0xFFC9A04A)
+                drawCircle(Brush.radialGradient(listOf(oro.copy(alpha = 0.5f), Color.Transparent), c, 26 * d), 26 * d, c)
+                drawLine(Color(0xFF9A2A1C), Offset(m.x - 12 * d, m.y - 2 * d), Offset(m.x + 12 * d, m.y + 4 * d), 2.4f * d, androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(Color(0xFF9A2A1C), Offset(m.x + 12 * d, m.y - 2 * d), Offset(m.x - 12 * d, m.y + 4 * d), 2.4f * d, androidx.compose.ui.graphics.StrokeCap.Round)
+                drawPath(Path().apply { moveTo(c.x - 12 * d, c.y - 2 * d); lineTo(c.x - 10 * d, c.y - 16 * d); quadraticTo(c.x, c.y - 21 * d, c.x + 10 * d, c.y - 16 * d); lineTo(c.x + 12 * d, c.y - 2 * d); close() }, lerp(madera, Color.Black, 0.25f))
+                for (k in 0 until 5) drawCircle(oro, 3 * d, Offset(c.x - 8 * d + k * 4 * d, c.y - 1 * d - (k % 2) * 2 * d))
+                drawRect(madera, Offset(c.x - 12 * d, c.y), Size(24 * d, 12 * d))
+                listOf(-9f, 7f).forEach { x -> drawRect(laton, Offset(c.x + x * d, c.y), Size(2 * d, 12 * d)) }
+                drawRect(laton, Offset(c.x - 2 * d, c.y + 2 * d), Size(4 * d, 4 * d))
+                listOf(Offset(-17f, 10f), Offset(15f, 12f), Offset(19f, 6f)).forEach { o -> drawOval(oro, Offset(c.x + o.x * d - 2.5f * d, c.y + o.y * d - 1.2f * d), Size(5 * d, 2.4f * d)) }
+            }
             TemaId.NAPOLEON -> {
                 // El sol de Austerlitz detrás y el águila imperial en lo alto del asta, sobre la bandera de 1804: el rombo
                 // blanco al centro y los rincones azules y rojos, con su fleco de oro.

@@ -343,6 +343,19 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             drawRect(a.copy(alpha = 0.25f), Offset(c.x - r * 0.88f, c.y - r * 0.6f), Size(r * 1.76f, r * 1.76f), style = Stroke(0.7f * u))
             linea(c.x, c.y - r, c.x, c.y + r, a.copy(alpha = 0.18f), 0.5f * u); linea(c.x - r, c.y, c.x + r, c.y, a.copy(alpha = 0.18f), 0.5f * u)
         }
+        // La portada de la bitácora: cantoneras de latón en las cuatro esquinas, el cabo que la ciñe abajo y una rosa en lo alto.
+        TemaId.PIRATA -> {
+            val e = w * 0.14f
+            listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
+                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + s.x * e, o.y); lineTo(o.x, o.y + s.y * e); close() }, tenue)
+            }
+            val y = h * 0.86f
+            linea(0f, y, w, y, l.copy(alpha = 0.35f), 2.4f * u)
+            var x = 0f; while (x < w) { linea(x, y + 1.2f * u, x + 1.6f * u, y - 1.2f * u, a.copy(alpha = 0.5f), 0.5f * u); x += 2.2f * u }
+            val c = Offset(w / 2, h * 0.2f); val r = w * 0.09f
+            for (k in 0 until 8) { val an = Math.toRadians(-90.0 + 45.0 * k); val rr = if (k % 2 == 0) r else r * 0.55f
+                linea(c.x, c.y, c.x + (rr * kotlin.math.cos(an)).toFloat(), c.y + (rr * kotlin.math.sin(an)).toFloat(), tenue, 0.8f * u) }
+        }
         // Una cuña roja desde la esquina y una barra en diagonal.
         TemaId.URSS -> {
             drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.7f); lineTo(w * 0.45f, h); close() }, a.copy(alpha = 0.5f))

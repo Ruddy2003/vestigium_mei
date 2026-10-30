@@ -319,6 +319,8 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Hoja con la esquina doblada.
     TemaId.RENACIMIENTO -> CutCornerShape(bottomEndPercent = 30)
+    // El doblón acuñado a martillo: un octógono de canto irregular.
+    TemaId.PIRATA -> CutCornerShape(topStartPercent = 22, topEndPercent = 30, bottomEndPercent = 24, bottomStartPercent = 28)
     // Paralelogramo de cartel.
     TemaId.URSS -> GenericShape { s, _ -> moveTo(s.width * 0.18f, 0f); lineTo(s.width, 0f); lineTo(s.width * 0.82f, s.height); lineTo(0f, s.height); close() }
     // Banderola con cola de golondrina.
@@ -372,6 +374,11 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.ANDALUS -> {}
         TemaId.MONGOL -> {}
         TemaId.RENACIMIENTO -> {}
+        // La cruz de cuarteles del doblón, apenas grabada.
+        TemaId.PIRATA -> {
+            val c = Offset(s.width / 2, s.height / 2); val l = minOf(s.width, s.height) * 0.28f
+            drawLine(fondo.copy(alpha = 0.18f), Offset(c.x - l, c.y), Offset(c.x + l, c.y), 1.2f); drawLine(fondo.copy(alpha = 0.18f), Offset(c.x, c.y - l), Offset(c.x, c.y + l), 1.2f)
+        }
         TemaId.URSS -> {}
         TemaId.REVOLUCION -> {}
         TemaId.ANTIGUAS -> {}

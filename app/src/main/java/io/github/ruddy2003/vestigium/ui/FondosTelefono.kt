@@ -178,6 +178,7 @@ object FondosTelefono {
         TemaId.ANDALUS -> "أثري"
         TemaId.MONGOL -> "МИНИЙ МӨР"
         TemaId.RENACIMIENTO -> "Il mio vestigio"
+        TemaId.PIRATA -> "Mi derrota"
         TemaId.URSS -> "МОЙ СЛЕД"
         TemaId.REVOLUCION -> "VESTIGIUM · MEI · AN I"
         TemaId.ANTIGUAS -> "VESTIGIUM · MEI · CRÓNICA"
@@ -509,6 +510,16 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 drawLine(e.secondary.copy(alpha = 0.22f), Offset(izq, arr), Offset(der, aba), 0.6f * u, pathEffect = punteado)
                 drawLine(e.secondary.copy(alpha = 0.22f), Offset(der, arr), Offset(izq, aba), 0.6f * u, pathEffect = punteado)
             }
+            TemaId.PIRATA -> {
+                // El marco de una carta de marear: la escala de grados en franjas, un cabo por dentro y un nudo en cada esquina.
+                val paso = 12 * u; var x = izq; var k = 0
+                while (x < der) { if (k % 2 == 0) { drawLine(col, Offset(x, arr), Offset(minOf(x + paso, der), arr), 3 * u); drawLine(col, Offset(x, aba), Offset(minOf(x + paso, der), aba), 3 * u) }; x += paso; k++ }
+                var y = arr; k = 0
+                while (y < aba) { if (k % 2 == 0) { drawLine(col, Offset(izq, y), Offset(izq, minOf(y + paso, aba)), 3 * u); drawLine(col, Offset(der, y), Offset(der, minOf(y + paso, aba)), 3 * u) }; y += paso; k++ }
+                val cabo = PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 1.4f * u))
+                drawRect(tenue, Offset(izq + 8 * u, arr + 8 * u), Size(der - izq - 16 * u, aba - arr - 16 * u), style = Stroke(1.2f * u, pathEffect = cabo))
+                esquinas.forEach { c -> drawCircle(e.secondary.copy(alpha = 0.5f), 4 * u, c); drawCircle(tenue, 4 * u, c, style = Stroke(0.7f * u)) }
+            }
             TemaId.URSS -> {
                 // Constructivista: barras gruesas a la izquierda y abajo, filetes finos y una cuña roja en la esquina.
                 drawRect(e.primary.copy(alpha = 0.55f), Offset(izq, arr), Size(7 * u, aba - arr))
@@ -775,6 +786,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.ANDALUS -> R.drawable.logo_andalus
     TemaId.MONGOL -> R.drawable.logo_mongol
     TemaId.RENACIMIENTO -> R.drawable.logo_renacimiento
+    TemaId.PIRATA -> R.drawable.logo_pirata
     TemaId.REVOLUCION -> R.drawable.logo_revolucion
     TemaId.ANTIGUAS -> R.drawable.logo_antiguas
 }

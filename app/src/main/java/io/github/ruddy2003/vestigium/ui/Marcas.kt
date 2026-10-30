@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.dp
 object Marcas {
     enum class Forma {
         NINGUNA, MARCADOR, SUBRAYADO, ONDULADO, RECUADRO, SELLO, CORCHETES,
+        /** Un cabo de dos cordones trenzados bajo la palabra, que remata en un nudo. */
+        CABO,
         /** Tabula ansata: recuadro con sus dos asas en cola de milano. */
         CARTELA,
         /** Cartucho egipcio: el óvalo de cuerda que encierra un nombre, con la barra del nudo al final. */
@@ -131,6 +133,7 @@ object Marcas {
             TemaId.ANDALUS -> if (persona) Aspecto(p, t, Forma.HERRADURA, negrita = true) else Aspecto(s, s, Forma.TRENZA)
             TemaId.MONGOL -> if (persona) Aspecto(p, t, Forma.MEDALLON, negrita = true) else Aspecto(s, s, Forma.MARCADOR)
             TemaId.RENACIMIENTO -> if (persona) Aspecto(p, p, Forma.ONDULADO, cursiva = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
+            TemaId.PIRATA -> if (persona) Aspecto(p, s, Forma.CABO, negrita = true) else Aspecto(t, t, Forma.PUNTEADO, cursiva = true)
             TemaId.URSS -> if (persona) Aspecto(cs.onPrimary, p, Forma.PARALELO, negrita = true) else Aspecto(cs.onBackground, p, Forma.FLECHA, negrita = true)
             TemaId.REVOLUCION -> if (persona) Aspecto(p, s, Forma.TRIPLE, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
             TemaId.ANTIGUAS -> if (persona) Aspecto(p, s, Forma.PIEDRA, negrita = true) else Aspecto(t, t, Forma.MUESCAS, cursiva = true)
@@ -144,13 +147,15 @@ object Marcas {
         Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.CARTUCHO, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
         Forma.NINGUNA, Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> Color.Unspecified
+        Forma.CABO -> Color.Unspecified
         Forma.ESCUDETE -> c.copy(alpha = 0.12f)
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
     private fun subrayaCampo(f: Forma): Boolean = when (f) {
         Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
-        Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> true
+        Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS -> true
+        Forma.CABO, Forma.BURBUJAS -> true
         Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.CORCHETES, Forma.CARTELA, Forma.CARTUCHO, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
         Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
         Forma.ESCUDETE -> true
@@ -222,6 +227,16 @@ object Marcas {
                 var x = rr.left; var arriba = true
                 while (x < rr.right) { val nx = minOf(x + 3f * u, rr.right); p.quadraticTo((x + nx) / 2, if (arriba) y - 2f * u else y + 2f * u, nx, y); x = nx; arriba = !arriba }
                 drawPath(p, c.copy(alpha = 0.85f), style = Stroke(1.2f * u))
+            }
+            Forma.CABO -> {
+                // Dos cordones que se enroscan (dos ondas a media vuelta una de otra) y el nudo al final.
+                val y = rr.bottom - h * 0.06f; val fin = rr.right + 2 * u
+                listOf(0, 1).forEach { s ->
+                    val p = tramo(rr.left, fin, 2.4f * u) { x, nx, k -> if (k == 0) moveTo(x, y); quadraticTo((x + nx) / 2, y + (if ((k + s) % 2 == 0) -1.8f else 1.8f) * u, nx, y) }
+                    drawPath(p, c.copy(alpha = if (s == 0) 0.85f else 0.55f), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+                }
+                drawCircle(c.copy(alpha = 0.9f), 1.8f * u, Offset(fin + 1.4f * u, y))
+                drawLine(c.copy(alpha = 0.7f), Offset(fin + 1.4f * u, y), Offset(fin + 3.4f * u, y + 2.6f * u), 0.9f * u, StrokeCap.Round)
             }
             Forma.RECUADRO -> drawRoundRect(c.copy(alpha = 0.7f), Offset(rr.left - 2 * u, rr.top + h * 0.08f), Size(rr.width + 4 * u, h * 0.86f),
                 CornerRadius(2 * u, 2 * u), style = Stroke(1f * u))

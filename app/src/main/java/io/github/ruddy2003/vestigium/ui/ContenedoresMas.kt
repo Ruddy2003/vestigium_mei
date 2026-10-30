@@ -55,7 +55,7 @@ object ContenedoresMas {
             // El pergamino blanqueado de la regla de la orden.
             Contenedor.REGLA -> Color(0xFFF4EFE2)
             // Las libretas de [Contenedores] tienen su papel allá.
-            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
     }
@@ -463,7 +463,7 @@ object ContenedoresMas {
                 drawPath(cruzPatada(sello, 4.5f * d), lerp(Color(0xFF7A2A16), Color.Black, 0.35f))
             }
             // Estas las dibuja [Contenedores].
-            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 
@@ -649,7 +649,7 @@ object ContenedoresMas {
                 drawPath(cruzPatada(s, 14 * d), rojo.copy(alpha = 0.08f))
             }
             // Estas las dibuja [Contenedores].
-            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 
@@ -773,7 +773,7 @@ object ContenedoresMas {
                 }
             }
             // Estas las dibuja [Contenedores].
-            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
     }
 }

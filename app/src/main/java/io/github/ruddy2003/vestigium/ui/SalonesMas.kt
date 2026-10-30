@@ -113,6 +113,7 @@ object SalonesMas {
             TemaId.TEMPLARIO -> Unit
             TemaId.GOTICO -> Unit
             TemaId.RENACIMIENTO -> Unit
+            TemaId.PIRATA -> Unit
             TemaId.NAPOLEON -> Unit
             TemaId.REVOLUCION -> Unit
         }

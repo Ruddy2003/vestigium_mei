@@ -272,6 +272,13 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             drawLine(k, p(12f, 1f), p(12f, 23f), 0.6f * u)
             pinta(corazon(), 1.5f)
         }
+        // El corazón tatuado del marinero, con su cinta y el ancla detrás.
+        TemaId.PIRATA -> {
+            val k = color.copy(alpha = 0.4f)
+            drawLine(k, p(12f, 2f), p(12f, 22f), 0.9f * u); drawLine(k, p(7f, 5f), p(17f, 5f), 0.9f * u)
+            drawPath(Path().apply { moveTo(3f * u, 15f * u); quadraticTo(4f * u, 22f * u, 12f * u, 22f * u); quadraticTo(20f * u, 22f * u, 21f * u, 15f * u) }, k, style = Stroke(0.9f * u))
+            pinta(corazon(), 1.5f)
+        }
         // Estrella roja de cinco puntas.
         TemaId.URSS -> pinta(estrella(12f, 12.8f, 5, 11f, 4.4f), 1.4f)
         // Escarapela: anillos concéntricos.

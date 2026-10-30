@@ -121,6 +121,11 @@ object Widgets {
             0xFFD9B566.toInt(), 0xFFEFE0BE.toInt(), 0xFFBCA884.toInt(), 0xFF4A3826.toInt(),
             intArrayOf(0xFF6E8CA8.toInt(), 0xFF8DA2B5.toInt(), 0xFFB8B3A6.toInt(), 0xFFEFE0BE.toInt(), 0xFFE8C79A.toInt(), 0xFFE4A877.toInt(), 0xFFE08A5E.toInt()),
             0xFF241A11.toInt(), 0xFF2A1006.toInt())
+        // Brea y latón: del temporal (rojo de bandera) a la bonanza (verde del mar de las cartas).
+        TemaId.PIRATA -> Colores(R.drawable.widget_fondo_pirata, R.drawable.widget_boton_pirata, R.drawable.widget_boton_activo_pirata, R.drawable.widget_boton_ambar_pirata,
+            0xFFD6AA4C.toInt(), 0xFFE9DEC3.toInt(), 0xFFAFA386.toInt(), 0xFF41382A.toInt(),
+            intArrayOf(0xFFE47B4E.toInt(), 0xFFDB9A6E.toInt(), 0xFFD2BE94.toInt(), 0xFFE9DEC3.toInt(), 0xFFB7D3C5.toInt(), 0xFF98C9BE.toInt(), 0xFF7DBFB6.toInt()),
+            0xFF1A1712.toInt(), 0xFF201604.toInt())
         TemaId.REVOLUCION -> Colores(R.drawable.widget_fondo_revolucion, R.drawable.widget_boton_revolucion, R.drawable.widget_boton_activo_revolucion, R.drawable.widget_boton_ambar_revolucion,
             0xFF8FAEE8.toInt(), 0xFFF0EADB.toInt(), 0xFFB2AC9E.toInt(), 0xFF3A3F4A.toInt(),
             intArrayOf(0xFFE5525E.toInt(), 0xFFE28A90.toInt(), 0xFFE3BCB8.toInt(), 0xFFF0EADB.toInt(), 0xFFC2D0EC.toInt(), 0xFFA8BFEA.toInt(), 0xFF8FAEE8.toInt()),
@@ -171,6 +176,7 @@ object Widgets {
         TemaId.ANDALUS -> "الآن" to "اكتب"
         TemaId.MONGOL -> "ОДОО" to "БИЧИХ"
         TemaId.RENACIMIENTO -> "Ora" to "Scrivere"
+        TemaId.PIRATA -> "A esta campanada" to "Asiento"
         TemaId.URSS -> "СЕЙЧАС" to "ЗАПИСЬ"
         TemaId.REVOLUCION -> "L'INSTANT" to "NOTER"
         TemaId.ANTIGUAS -> "VIGÍA" to "PERGAMINO"
@@ -204,6 +210,7 @@ object Widgets {
             TemaId.ANDALUS -> R.font.kufi_medium to 0.95f
             TemaId.MONGOL -> R.font.philosopher_regular to 1.05f
             TemaId.RENACIMIENTO -> R.font.cormorant_medium to 1.12f
+            TemaId.PIRATA -> R.font.caslon_semibold to 1.0f
             TemaId.URSS -> R.font.russo to 0.95f
             TemaId.REVOLUCION -> R.font.bodoni_texto to 1.05f
             TemaId.ANTIGUAS -> R.font.cinzel_semibold to 0.95f

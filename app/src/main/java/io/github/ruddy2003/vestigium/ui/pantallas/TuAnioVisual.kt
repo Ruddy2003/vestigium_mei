@@ -308,6 +308,14 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             listOf(0.3f, 0.5f, 0.7f).forEach { f -> drawLine(sepia.copy(alpha = 0.6f), Offset(x0 + w * (0.58f - f * 0.1f), y0 + h * f), Offset(x0 + w * 0.9f, y0 + h * f), 0.5f * d) }
             drawLine(Color(0xFFA0442A), Offset(x0, y0), Offset(x0, y0 + h), 1.6f * d)
         }
+        // La bitácora en el estante: lomo de cuero de brea, dos vueltas de cabo y el rótulo de pergamino.
+        TemaId.PIRATA -> {
+            drawRect(lerp(Color(0xFF4A3424), c, 0.25f), o, s)
+            drawRect(Color.Black.copy(alpha = 0.25f), Offset(x0, y0), Size(w, h * 0.06f)); drawRect(Color.Black.copy(alpha = 0.25f), Offset(x0, y0 + h * 0.94f), Size(w, h * 0.06f))
+            drawRect(Color(0xFFE6DCBA), Offset(x0 + w * 0.36f, y0 + h * 0.22f), Size(w * 0.28f, h * 0.56f))
+            listOf(0.18f, 0.82f).forEach { f -> drawRect(Color(0xFFB59A62), Offset(x0 + w * (f - 0.04f), y0), Size(w * 0.08f, h)) }
+            drawCircle(Color(0xFFC9A04A), h * 0.06f, Offset(x0 + w * 0.5f, y0 + h * 0.86f))
+        }
         // Folleto del plan: cuña roja en diagonal y franja negra, a la manera constructivista.
         TemaId.URSS -> {
             drawRect(lerp(Color(0xFFEDE3CF), c, 0.1f), o, s)
@@ -712,6 +720,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
         TemaId.RENACIMIENTO -> {
             drawCircle(relleno, r, c); drawCircle(borde, r, c, style = fino)
             drawRect(borde, Offset(x - r * 0.82f, y - r * 0.72f), Size(1.64f * r, 1.64f * r), style = fino)
+        }
+        // Un doblón de canto irregular con su gráfila.
+        TemaId.PIRATA -> {
+            lleno(Path().apply { for (k in 0 until 12) { val rr = r * (0.95f + 0.05f * kotlin.math.sin(k * 2.3f)); val q = polarCosa(c, rr, k * PI / 6); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() })
+            for (k in 0 until 20) drawCircle(borde, 0.7f * d, polarCosa(c, r * 0.82f, k * PI / 10))
         }
         // Cuadro inclinado, a la manera constructivista.
         TemaId.URSS -> rotate(-15f, c) {
@@ -1219,6 +1232,40 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawRect(col, Offset(x - r * 0.8f, y - r * 0.65f), Size(r * 1.6f, r * 1.3f))
                 drawRect(fondo, Offset(x - r * 0.65f, y - r * 0.5f), Size(r * 1.3f, r))
                 listOf(-0.25f, 0.05f, 0.35f).forEachIndexed { i, f -> drawLine(col, Offset(x - r * (0.2f + i * 0.12f), y + f * r), Offset(x + r * 0.5f, y + f * r), 0.6f * d) }
+            }
+            else -> return false
+        }
+        TemaId.PIRATA -> when (forma) {
+            // El puñal clavado en la carta.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x, y + r); lineTo(x - r * 0.16f, y - r * 0.2f); lineTo(x + r * 0.16f, y - r * 0.2f); close() }, col)
+                drawLine(col, Offset(x - r * 0.45f, y - r * 0.24f), Offset(x + r * 0.45f, y - r * 0.24f), r * 0.14f, StrokeCap.Round)
+                drawLine(col, Offset(x, y - r * 0.3f), Offset(x, y - r * 0.85f), r * 0.2f)
+                drawCircle(col, r * 0.14f, Offset(x, y - r * 0.95f))
+            }
+            // La estrella de marear: cuatro puntas, la del norte más larga.
+            "estrella" -> {
+                drawPath(Path().apply {
+                    listOf(0 to 1f, 1 to 0.38f, 2 to 0.7f, 3 to 0.38f, 4 to 0.8f, 5 to 0.38f, 6 to 0.7f, 7 to 0.38f).forEach { (k, f) ->
+                        val q = polarCosa(c, r * f, -PI / 2 + k * PI / 4); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
+                    }
+                    close()
+                }, col)
+            }
+            // La botella con el mensaje dentro.
+            "sobre" -> {
+                rotate(-30f, c) {
+                    drawRoundRect(col, Offset(x - r * 0.4f, y - r * 0.5f), Size(r * 0.8f, r * 1.4f), CornerRadius(r * 0.25f), style = trazo)
+                    drawRect(col, Offset(x - r * 0.14f, y - r * 0.95f), Size(r * 0.28f, r * 0.46f))
+                    drawRect(col, Offset(x - r * 0.22f, y - r * 0.2f), Size(r * 0.44f, r * 0.7f))
+                    drawRect(fondo, Offset(x - r * 0.12f, y - r * 0.1f), Size(r * 0.24f, r * 0.5f))
+                }
+            }
+            // La jarra de grog.
+            "taza" -> {
+                drawRoundRect(col, Offset(x - r * 0.5f, y - r * 0.6f), Size(r, r * 1.3f), CornerRadius(r * 0.12f))
+                drawArc(col, -90f, 180f, false, Offset(x + r * 0.25f, y - r * 0.35f), Size(r * 0.6f, r * 0.7f), style = Stroke(r * 0.14f))
+                listOf(-0.25f, 0.35f).forEach { f -> drawLine(fondo, Offset(x - r * 0.5f, y + f * r), Offset(x + r * 0.5f, y + f * r), r * 0.08f) }
             }
             else -> return false
         }

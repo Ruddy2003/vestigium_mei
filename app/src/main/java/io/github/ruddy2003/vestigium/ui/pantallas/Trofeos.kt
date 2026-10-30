@@ -413,6 +413,13 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawLine(col, Offset(o.x - s * 1.1f, o.y), Offset(o.x + s * 1.1f, o.y), s * 0.06f); drawLine(col, Offset(o.x, o.y - s * 1.1f), Offset(o.x, o.y + s * 1.1f), s * 0.06f)
             drawCircle(col, s * 0.12f, o)
         }
+        // El destello de un doblón: una moneda con su cruz y cuatro rayos cortos.
+        TemaId.PIRATA -> {
+            val oro = Color(0xFFF2C14E)
+            drawCircle(oro, s * 0.5f, o); drawCircle(Color(0xFF8A6418), s * 0.36f, o, style = Stroke(s * 0.07f))
+            drawLine(Color(0xFF8A6418), Offset(o.x - s * 0.22f, o.y), Offset(o.x + s * 0.22f, o.y), s * 0.07f); drawLine(Color(0xFF8A6418), Offset(o.x, o.y - s * 0.22f), Offset(o.x, o.y + s * 0.22f), s * 0.07f)
+            for (k in 0 until 4) { val a = PI / 4 + k * PI / 2; drawLine(oro, Offset(o.x + (s * 0.65f * cos(a)).toFloat(), o.y + (s * 0.65f * sin(a)).toFloat()), Offset(o.x + (s * 1.05f * cos(a)).toFloat(), o.y + (s * 1.05f * sin(a)).toFloat()), s * 0.08f) }
+        }
         TemaId.URSS -> drawPath(estrellada(o, s, s * 0.4f, 5), Color(0xFFE53935))
         TemaId.REVOLUCION -> { drawCircle(Color(0xFF1F3A8A), s * 0.8f, o); drawCircle(Color.White, s * 0.55f, o); drawCircle(Color(0xFFC62828), s * 0.3f, o) }
         TemaId.ANTIGUAS -> {
@@ -449,6 +456,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.ANDALUS -> Color(0xFFE2C98F)
     TemaId.MONGOL -> Color(0xFF4F86C6)
     TemaId.RENACIMIENTO -> Color(0xFFD9B98F)
+    TemaId.PIRATA -> Color(0xFF7A5634)          // la tablazón de roble de la cámara
     TemaId.URSS -> Color(0xFFC8B79A)
     TemaId.REVOLUCION -> Color(0xFFD6CCB8)
     TemaId.ANTIGUAS -> Color(0xFF7D7668)
@@ -620,6 +628,13 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 drawLine(v, Offset(cx - r, y - r), Offset(cx + r, y + r), d); drawLine(v, Offset(cx + r, y - r), Offset(cx - r, y + r), d)
                 y += r * 1.6f; k++
             }
+        }
+        // La pared de tablones con sus clavos y, colgada, una carta náutica: líneas de rumbo que salen de una rosa.
+        TemaId.PIRATA -> {
+            var x = 0f; while (x < w) { drawLine(v, Offset(x, 0f), Offset(x, h), 1.2f * d); var y = 20 * d; while (y < h) { drawCircle(v, 1.2f * d, Offset(x + 6 * d, y)); y += 90 * d }; x += 26 * d }
+            val o = Offset(w * 0.62f, h * 0.3f); val largo = w * 0.6f
+            for (i in 0 until 16) { val an = i * PI / 8; drawLine(a, o, Offset(o.x + (largo * cos(an)).toFloat(), o.y + (largo * sin(an)).toFloat()), d) }
+            drawCircle(a, 18 * d, o, style = Stroke(d)); drawCircle(a, 10 * d, o, style = Stroke(d))
         }
         TemaId.URSS -> {
             var y = 0f
@@ -809,6 +824,14 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             val t = 7 * d; var x = 0f; var k = 0
             while (x < w) { drawRect(if (k % 2 == 0) m(Color(0xFFD8B98A)) else lerp(c, Color.Black, 0.2f), Offset(x, h * 0.35f), Size(t, t * 0.6f)); x += t; k++ }
         }
+        // La repisa es una regala de barco: tablón de roble, sus cabillas de latón y un cabo que cuelga en guirnalda.
+        TemaId.PIRATA -> {
+            val c = m(Color(0xFF6B4A2B)); tabla(c)
+            drawLine(Color.Black.copy(alpha = 0.3f), Offset(0f, h * 0.5f), Offset(w, h * 0.5f), d)
+            var x = 18 * d; while (x < w) { drawCircle(m(Color(0xFFC9A04A)), 2.2f * d, Offset(x, h * 0.3f)); x += 48 * d }
+            val cabo = m(Color(0xFFB59A62)); var x0 = 0f
+            while (x0 < w) { drawPath(Path().apply { moveTo(x0, h * 0.72f); quadraticTo(x0 + 24 * d, h * 0.72f + 7 * d, x0 + 48 * d, h * 0.72f) }, cabo, style = Stroke(1.8f * d)); x0 += 48 * d }
+        }
         TemaId.URSS -> {
             val c = m(Color(0xFFB3261E))
             drawRect(c, Offset.Zero, Size(w, h * 0.22f)); drawRect(c, Offset(0f, h * 0.78f), Size(w, h * 0.22f))
@@ -980,6 +1003,13 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             val p = Path().apply { moveTo(0f, 0f); lineTo(w - pl, 0f); lineTo(w, pl); lineTo(w, h); lineTo(0f, h); close() }
             drawPath(p, Color(0xFFF3E3C6).copy(alpha = 0.5f * f)); drawPath(p, borde, style = fino)
             drawPath(Path().apply { moveTo(w - pl, 0f); lineTo(w - pl, pl); lineTo(w, pl); close() }, tinta.copy(alpha = 0.18f * f))
+        }
+        // Una tablilla de pergamino clavada con cuatro clavos, con la esquina rota.
+        TemaId.PIRATA -> {
+            val pl = 7 * d
+            val p = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h - pl); lineTo(w - pl * 0.6f, h - pl * 0.4f); lineTo(w - pl, h); lineTo(0f, h); close() }
+            drawPath(p, Color(0xFFE6DCBA).copy(alpha = 0.55f * f)); drawPath(p, borde, style = fino)
+            listOf(Offset(4 * d, 4 * d), Offset(w - 4 * d, 4 * d), Offset(4 * d, h - 4 * d)).forEach { q -> drawCircle(ac, 1.6f * d, q) }
         }
         TemaId.URSS -> {
             val t = 12 * d

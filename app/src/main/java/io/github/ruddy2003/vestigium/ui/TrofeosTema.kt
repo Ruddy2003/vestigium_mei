@@ -45,6 +45,8 @@ object TrofeosTema {
             "Gente" to "Vitral de la rosa", "Constancia" to "Vitral de la campana", "Curiosos" to "Vitral del cáliz", "Tuyos" to "Vitral de la llave"),
         TemaId.RENACIMIENTO to mapOf("Diario" to "Tipos móviles", "Mundo" to "Esfera armilar", "Cuerpo" to "Compás y escuadra", "Mente" to "Dodecaedro", "Cultura" to "Cúpula",
             "Gente" to "Florín", "Constancia" to "Reloj de arena", "Curiosos" to "Nocturlabio", "Tuyos" to "Tornillo aéreo"),
+        TemaId.PIRATA to mapOf("Diario" to "Bitácora atada", "Mundo" to "Astrolabio de marear", "Cuerpo" to "Ancla", "Mente" to "Ballestilla", "Cultura" to "Catalejo",
+            "Gente" to "Doblón de a ocho", "Constancia" to "Timón", "Curiosos" to "Botella con mensaje", "Tuyos" to "Cofre del tesoro"),
         TemaId.NAPOLEON to mapOf("Diario" to "Código", "Mundo" to "Mapa de campaña", "Cuerpo" to "Tambor", "Mente" to "Columna triunfal", "Cultura" to "Arco de la Estrella",
             "Gente" to "Legión de Honor", "Constancia" to "Laurel", "Curiosos" to "Bicornio", "Tuyos" to "Monograma"),
         TemaId.REVOLUCION to mapOf("Diario" to "Declaración", "Mundo" to "Árbol de la libertad", "Cuerpo" to "Escarapela", "Mente" to "Balanza", "Cultura" to "Pluma",
@@ -99,6 +101,21 @@ object TrofeosTema {
                 drawRect(piedra(lerp(c, Color.White, 0.15f)), Offset(w * 0.14f, h * 0.77f), Size(w * 0.72f, h * 0.035f))
                 if (p.hecho) drawLine(lerp(c, Color.Black, 0.3f), Offset(w * 0.14f, h * 0.795f), Offset(w * 0.86f, h * 0.795f), h * 0.004f)
                 drawRect(piedra(c), Offset(w * 0.12f, h * 0.935f), Size(w * 0.76f, h * 0.025f))
+            }
+            TemaId.PIRATA -> {
+                // La cubierta: tres tablones de roble calafateados con brea, sus clavos de latón y un cabo adujado a un lado.
+                val c = if (p.hecho) Color(0xFF7A5634) else ped
+                fun madera(k: Color) = Brush.verticalGradient(listOf(lerp(k, Color.White, 0.12f), k, lerp(k, Color.Black, 0.25f)), h * 0.78f, h * 0.95f)
+                listOf(0.78f, 0.84f, 0.9f).forEachIndexed { n, y0 ->
+                    drawRect(madera(lerp(c, Color.Black, n * 0.06f)), Offset(w * 0.1f, h * y0), Size(w * 0.8f, h * 0.055f))
+                    if (p.hecho) {
+                        drawLine(Color(0xFF1E1610), Offset(w * 0.1f, h * (y0 + 0.055f)), Offset(w * 0.9f, h * (y0 + 0.055f)), h * 0.004f)
+                        listOf(0.16f, 0.84f).forEach { x -> drawCircle(Color(0xFFC9A04A), h * 0.006f, Offset(w * x, h * (y0 + 0.028f))) }
+                    }
+                }
+                if (p.hecho) listOf(0.035f, 0.025f, 0.015f).forEach { rr ->
+                    drawOval(Color(0xFFB59A62), Offset(w * (0.8f - rr * 2), h * (0.765f - rr)), Size(w * rr * 4, h * rr * 1.6f), style = Stroke(h * 0.006f))
+                }
             }
             TemaId.HELENO -> {
                 // Estilóbato de tres escalones de mármol.
@@ -181,6 +198,7 @@ object TrofeosTema {
             TemaId.TEMPLARIO -> templario(categoria, p)
             TemaId.GOTICO -> gotico(categoria, p)
             TemaId.RENACIMIENTO -> renacimiento(categoria, p)
+            TemaId.PIRATA -> pirata(categoria, p)
             TemaId.NAPOLEON -> napoleon(categoria, p)
             TemaId.REVOLUCION -> revolucion(categoria, p)
             TemaId.ANDALUS -> with(TrofeosMas) { andalus(categoria, p) }
@@ -897,6 +915,131 @@ object TrofeosTema {
                 }, if (p.hecho) SolidColor(Color(0xFFE8D9B0).copy(alpha = 0.9f)) else SolidColor(p.sombra))
                 drawPath(Path().apply { moveTo(p.x(0.2f), p.y(0.36f)); cubicTo(p.x(0.2f), p.y(0.18f), p.x(0.8f), p.y(0.14f), p.x(0.8f), p.y(0.3f)) }, p.linea, style = Stroke(lw))
                 caja(p, 0.3f, 0.68f, 0.7f, 0.74f)
+            }
+        }
+    }
+
+    // ================================================================== Pirata
+
+    private fun DrawScope.pirata(cat: String, p: Pincel) {
+        val lw = p.w * 0.012f
+        val madera = if (p.hecho) SolidColor(Color(0xFF6B4A2B)) else SolidColor(p.sombra)
+        val cuerda = if (p.hecho) Color(0xFFB59A62) else p.sombra
+        when (cat) {
+            "Diario" -> {
+                // La bitácora: un libro de tapas gruesas, cerrado y atado con un cabo en cruz que remata en un nudo.
+                drawRoundRect(madera, Offset(p.x(0.2f), p.y(0.22f)), Size(p.x(0.6f), p.y(0.5f)), CornerRadius(p.w * 0.02f))
+                caja(p, 0.22f, 0.26f, 0.76f, 0.68f)
+                if (p.hecho) for (k in 0 until 6) drawLine(Color(0xFFF2E6C8).copy(alpha = 0.7f), Offset(p.x(0.77f), p.y(0.28f + k * 0.07f)), Offset(p.x(0.79f), p.y(0.28f + k * 0.07f)), lw * 0.6f)
+                drawLine(cuerda, Offset(p.x(0.5f), p.y(0.2f)), Offset(p.x(0.5f), p.y(0.74f)), lw * 1.6f)
+                drawLine(cuerda, Offset(p.x(0.18f), p.y(0.47f)), Offset(p.x(0.82f), p.y(0.47f)), lw * 1.6f)
+                drawCircle(cuerda, p.w * 0.04f, Offset(p.x(0.5f), p.y(0.47f)))
+                listOf(-1f, 1f).forEach { s -> drawLine(cuerda, Offset(p.x(0.5f), p.y(0.47f)), Offset(p.x(0.5f + s * 0.08f), p.y(0.6f)), lw * 1.2f, StrokeCap.Round) }
+            }
+            "Mundo" -> {
+                // El astrolabio de marear: una rueda pesada con cuatro rayos, la escala de grados, la alidada y su argolla.
+                val c = Offset(p.x(0.5f), p.y(0.42f)); val R = p.w * 0.28f
+                drawCircle(p.metal(0.22f, 0.78f), R, c, style = Stroke(lw * 3f))
+                for (k in 0 until 4) { val a = k * PI / 2; drawLine(p.metal(0.3f, 0.7f), c, Offset(c.x + (R * cos(a)).toFloat(), c.y + (R * sin(a)).toFloat()), lw * 1.4f) }
+                if (p.hecho) for (k in 0 until 36) {
+                    val a = k * PI / 18
+                    drawLine(p.linea, Offset(c.x + (R * 0.86f * cos(a)).toFloat(), c.y + (R * 0.86f * sin(a)).toFloat()), Offset(c.x + (R * 0.94f * cos(a)).toFloat(), c.y + (R * 0.94f * sin(a)).toFloat()), lw * 0.4f)
+                }
+                val g = -PI / 5
+                drawLine(p.metal(0.2f, 0.8f), Offset(c.x - (R * 0.9f * cos(g)).toFloat(), c.y - (R * 0.9f * sin(g)).toFloat()), Offset(c.x + (R * 0.9f * cos(g)).toFloat(), c.y + (R * 0.9f * sin(g)).toFloat()), lw * 2f)
+                drawCircle(p.metal(0.45f, 0.55f), p.w * 0.035f, c)
+                drawCircle(p.metal(0.45f, 0.55f), p.w * 0.045f, Offset(c.x, c.y - R - p.w * 0.05f), style = Stroke(lw * 1.4f))
+                caja(p, 0.47f, 0.42f + 0.28f * p.w / p.h, 0.53f, 0.74f); caja(p, 0.36f, 0.74f, 0.64f, 0.77f)
+            }
+            "Cuerpo" -> {
+                // El ancla: la caña con su cepo de madera, la argolla arriba y los dos brazos con sus uñas.
+                caja(p, 0.47f, 0.18f, 0.53f, 0.7f)
+                drawRect(madera, Offset(p.x(0.3f), p.y(0.22f)), Size(p.x(0.4f), p.y(0.04f)))
+                drawCircle(p.metal(0.42f, 0.58f), p.w * 0.06f, Offset(p.x(0.5f), p.y(0.12f)), style = Stroke(lw * 1.6f))
+                drawArc(p.metal(0.16f, 0.84f), 20f, 140f, false, Offset(p.x(0.2f), p.y(0.42f)), Size(p.x(0.6f), p.y(0.32f)), style = Stroke(lw * 2.2f, cap = StrokeCap.Round))
+                listOf(-1f, 1f).forEach { s ->
+                    val u = Offset(p.x(0.5f + s * 0.29f), p.y(0.6f))
+                    drawPath(Path().apply { moveTo(u.x, u.y); lineTo(u.x - s * p.w * 0.06f, u.y - p.w * 0.1f); lineTo(u.x + s * p.w * 0.04f, u.y - p.w * 0.02f); close() }, p.metal(0.2f, 0.8f))
+                }
+                drawLine(cuerda, Offset(p.x(0.56f), p.y(0.14f)), Offset(p.x(0.72f), p.y(0.36f)), lw, StrokeCap.Round)
+            }
+            "Mente" -> {
+                // La ballestilla: la vara graduada y la sonaja que corre por ella para medir la altura del sol.
+                caja(p, 0.12f, 0.43f, 0.88f, 0.47f)
+                if (p.hecho) for (k in 0..12) drawLine(p.linea, Offset(p.x(0.16f + k * 0.055f), p.y(0.43f)), Offset(p.x(0.16f + k * 0.055f), p.y(if (k % 4 == 0) 0.47f else 0.455f)), lw * 0.5f)
+                caja(p, 0.56f, 0.16f, 0.6f, 0.74f)
+                listOf(0.16f, 0.74f).forEach { y -> drawCircle(p.metal(0.55f, 0.61f), p.w * 0.02f, Offset(p.x(0.58f), p.y(y))) }
+                drawCircle(p.metal(0.08f, 0.16f), p.w * 0.03f, Offset(p.x(0.12f), p.y(0.45f)))
+                if (p.hecho) drawLine(Color(0xFFE8C66A).copy(alpha = 0.5f), Offset(p.x(0.12f), p.y(0.45f)), Offset(p.x(0.86f), p.y(0.1f)), lw * 0.6f)
+                caja(p, 0.4f, 0.74f, 0.76f, 0.77f)
+            }
+            "Cultura" -> {
+                // El catalejo extendido sobre su trípode: tres tramos de latón que se adelgazan y la lente.
+                listOf(Triple(0.14f, 0.42f, 0.07f), Triple(0.4f, 0.64f, 0.055f), Triple(0.62f, 0.86f, 0.042f)).forEach { (x0, x1, g) ->
+                    val y0 = 0.36f - (x0 - 0.14f) * 0.3f; val y1 = 0.36f - (x1 - 0.14f) * 0.3f
+                    drawLine(p.metal(x0, x1), Offset(p.x(x0), p.y(y0)), Offset(p.x(x1), p.y(y1)), p.w * g * 2, StrokeCap.Butt)
+                    if (p.hecho) drawLine(p.linea, Offset(p.x(x1), p.y(y1) - p.w * g), Offset(p.x(x1), p.y(y1) + p.w * g), lw * 0.8f)
+                }
+                drawOval(if (p.hecho) SolidColor(Color(0xFF9EC0E0).copy(alpha = 0.8f)) else SolidColor(p.sombra), Offset(p.x(0.84f), p.y(0.12f)), Size(p.w * 0.05f, p.w * 0.1f))
+                listOf(0.24f, 0.38f, 0.5f).forEach { x -> drawLine(madera, Offset(p.x(0.36f), p.y(0.34f)), Offset(p.x(x), p.y(0.74f)), lw * 2f) }
+            }
+            "Gente" -> {
+                // El doblón de a ocho, acuñado a martillo: canto irregular, la cruz con sus cuatro cuarteles y la ley.
+                val c = Offset(p.x(0.5f), p.y(0.4f))
+                val canto = Path().apply {
+                    for (k in 0 until 14) {
+                        val a = k * 2 * PI / 14; val rr = p.w * (0.29f + 0.02f * sin(k * 2.3).toFloat())
+                        val q = Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat())
+                        if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
+                    }
+                    close()
+                }
+                drawPath(canto, p.metal(0.2f, 0.8f))
+                drawCircle(p.linea, p.w * 0.22f, c, style = Stroke(lw * 0.6f))
+                drawLine(p.linea, Offset(c.x, c.y - p.w * 0.2f), Offset(c.x, c.y + p.w * 0.2f), lw * 1.4f)
+                drawLine(p.linea, Offset(c.x - p.w * 0.2f, c.y), Offset(c.x + p.w * 0.2f, c.y), lw * 1.4f)
+                listOf(Offset(-1f, -1f), Offset(1f, -1f), Offset(-1f, 1f), Offset(1f, 1f)).forEach { d -> drawCircle(p.linea, p.w * 0.025f, c + d * (p.w * 0.1f)) }
+                texto("8", p, 0.5f, 0.71f, 0.12f, p.linea)
+            }
+            "Constancia" -> {
+                // El timón: la rueda con sus ocho cabillas, el cubo de latón y el aro de madera.
+                val c = Offset(p.x(0.5f), p.y(0.42f)); val R = p.w * 0.24f
+                for (k in 0 until 8) {
+                    val a = k * PI / 4
+                    val fin = Offset(c.x + (R * 1.42f * cos(a)).toFloat(), c.y + (R * 1.42f * sin(a)).toFloat())
+                    drawLine(madera, c, fin, lw * 1.6f, StrokeCap.Round)
+                    drawCircle(madera, lw * 1.4f, fin)
+                }
+                drawCircle(madera, R, c, style = Stroke(lw * 2.6f))
+                drawCircle(p.metal(0.3f, 0.7f), R * 0.98f, c, style = Stroke(lw * 0.7f))
+                drawCircle(p.metal(0.44f, 0.56f), R * 0.26f, c)
+                caja(p, 0.47f, 0.42f + 0.36f * p.w / p.h, 0.53f, 0.77f)
+            }
+            "Curiosos" -> {
+                // La botella con un mensaje enrollado dentro, el corcho y su lacre.
+                val vidrio = if (p.hecho) SolidColor(Color(0xFF5E8F6A).copy(alpha = 0.55f)) else SolidColor(p.sombra)
+                val botella = Path().apply {
+                    moveTo(p.x(0.44f), p.y(0.12f)); lineTo(p.x(0.56f), p.y(0.12f)); lineTo(p.x(0.56f), p.y(0.28f))
+                    cubicTo(p.x(0.7f), p.y(0.32f), p.x(0.7f), p.y(0.36f), p.x(0.7f), p.y(0.44f)); lineTo(p.x(0.7f), p.y(0.72f)); lineTo(p.x(0.3f), p.y(0.72f)); lineTo(p.x(0.3f), p.y(0.44f))
+                    cubicTo(p.x(0.3f), p.y(0.36f), p.x(0.3f), p.y(0.32f), p.x(0.44f), p.y(0.28f)); close()
+                }
+                drawPath(botella, vidrio); drawPath(botella, p.metal(0.3f, 0.7f), style = Stroke(lw))
+                drawRoundRect(if (p.hecho) SolidColor(Color(0xFFEFE2BE)) else SolidColor(p.sombra), Offset(p.x(0.4f), p.y(0.42f)), Size(p.x(0.2f), p.y(0.24f)), CornerRadius(p.w * 0.03f))
+                if (p.hecho) drawLine(Color(0xFFB22234), Offset(p.x(0.4f), p.y(0.54f)), Offset(p.x(0.6f), p.y(0.54f)), lw)
+                caja(p, 0.45f, 0.07f, 0.55f, 0.13f, madera)
+                drawCircle(p.metal(0.45f, 0.55f), p.w * 0.035f, Offset(p.x(0.5f), p.y(0.07f)))
+                if (p.hecho) drawLine(Color.White.copy(alpha = 0.4f), Offset(p.x(0.35f), p.y(0.46f)), Offset(p.x(0.35f), p.y(0.68f)), lw)
+            }
+            else -> {
+                // El cofre del tesoro: tapa de medio cañón con flejes de latón, la cerradura y los doblones que asoman.
+                val tapa = Path().apply { moveTo(p.x(0.16f), p.y(0.42f)); lineTo(p.x(0.16f), p.y(0.34f)); cubicTo(p.x(0.16f), p.y(0.16f), p.x(0.84f), p.y(0.16f), p.x(0.84f), p.y(0.34f)); lineTo(p.x(0.84f), p.y(0.42f)); close() }
+                if (p.hecho) listOf(0.3f, 0.42f, 0.56f, 0.68f).forEachIndexed { k, x -> drawCircle(Color(0xFFE8C66A), p.w * 0.05f, Offset(p.x(x), p.y(0.42f - (k % 2) * 0.02f))) }
+                drawPath(tapa, madera)
+                drawRect(madera, Offset(p.x(0.16f), p.y(0.44f)), Size(p.x(0.68f), p.y(0.3f)))
+                listOf(0.22f, 0.74f).forEach { x -> caja(p, x, 0.26f, x + 0.04f, 0.74f) }
+                caja(p, 0.16f, 0.42f, 0.84f, 0.45f)
+                caja(p, 0.44f, 0.46f, 0.56f, 0.58f)
+                drawCircle(if (p.hecho) Color(0xFF1E1610) else p.sombra, p.w * 0.018f, Offset(p.x(0.5f), p.y(0.51f)))
             }
         }
     }

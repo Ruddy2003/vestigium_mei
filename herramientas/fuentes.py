@@ -69,6 +69,10 @@ FUENTES = [
     ("barlowcondensed/BarlowCondensed-SemiBold.ttf", None, "batiscafo_semibold", None, LATINO),
     ("atkinsonhyperlegiblenext/AtkinsonHyperlegibleNext[wght].ttf", {"wght": 400}, "atkinson_regular", None, LATINO),
     ("atkinsonhyperlegiblenext/AtkinsonHyperlegibleNext[wght].ttf", {"wght": 600}, "atkinson_semibold", None, LATINO),
+    # PIR: Caslon (h. 1725), la letra de los libros de a bordo; títulos en Pirata One (reserva «Pirata»: se renombra)
+    ("librecaslontext/LibreCaslonText[wght].ttf", {"wght": 400}, "caslon_regular", None, LATINO),
+    ("librecaslontext/LibreCaslonText[wght].ttf", {"wght": 600}, "caslon_semibold", None, LATINO),
+    ("pirataone/PirataOne-Regular.ttf", None, "corsario_titulo", "Corsario Vestigium", LATINO),
     # REV: Baskerville (1757), la letra del siglo de la Revolución
     ("librebaskerville/LibreBaskerville[wght].ttf", {"wght": 400}, "ciudadana_regular", "Ciudadana Vestigium", LATINO),
     ("librebaskerville/LibreBaskerville[wght].ttf", {"wght": 600}, "ciudadana_semibold", "Ciudadana Vestigium", LATINO),

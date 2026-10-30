@@ -119,6 +119,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.ANDALUS -> R.font.kufi_medium
     TemaId.MONGOL -> R.font.philosopher_bold
     TemaId.RENACIMIENTO -> R.font.cormorant_medium  // números de cuaderno, con trazos de pluma
+    TemaId.PIRATA -> R.font.caslon_semibold      // números de libro de a bordo, en Caslon
     TemaId.URSS -> R.font.russo
     TemaId.REVOLUCION -> R.font.fell                // tipos de imprenta de cartel
     TemaId.ANTIGUAS -> R.font.cinzel_semibold       // números tallados en piedra
@@ -148,6 +149,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.ANDALUS -> "Vestigium Mei · أثري"
     TemaId.MONGOL -> "МИНИЙ МӨР · Vestigium Mei"
     TemaId.RENACIMIENTO -> "Il taccuino di Vestigium Mei"
+    TemaId.PIRATA -> "Bitácora de a bordo de Vestigium Mei"
     TemaId.URSS -> "ДНЕВНИК · VESTIGIUM MEI"
     TemaId.REVOLUCION -> "Cahier de Vestigium Mei"
     TemaId.ANTIGUAS -> "Crónica de Vestigium Mei"
@@ -537,6 +539,22 @@ object Reportes {
                         val xx = M + k * (W - 2 * M) / 8
                         if (abs(xx - cx) > r + 16f) { c.drawLine(xx - 6f, yc - 6f, xx + 6f, yc + 6f, fino); c.drawLine(xx - 6f, yc + 6f, xx + 6f, yc - 6f, fino) }
                     }
+                    y += 62f
+                }
+                TemaId.PIRATA -> {
+                    // Una ola de tinta de orilla a orilla y, al centro, una rosa de ocho rumbos con la flor de lis al norte.
+                    val yc = yy + 22f; val r = 18f
+                    val fino = L.trazo(L.mezcla(L.primario, L.fondo, 0.35), 1.1f)
+                    val ola = android.graphics.Path(); var x = M; ola.moveTo(M, yc)
+                    while (x < W - M) { ola.quadTo(x + 8f, yc - 4f, x + 16f, yc); ola.quadTo(x + 24f, yc + 4f, x + 32f, yc); x += 32f }
+                    c.drawPath(ola, fino)
+                    c.drawRect(cx - r - 10f, yc - r - 4f, cx + r + 10f, yc + r + 4f, L.relleno(L.fondo))
+                    for (k in 0 until 8) {
+                        val a = Math.toRadians(-90.0 + 45.0 * k); val l = if (k % 2 == 0) r else r * 0.6f
+                        c.drawLine(cx, yc, cx + (l * kotlin.math.cos(a)).toFloat(), yc + (l * kotlin.math.sin(a)).toFloat(), L.trazo(if (k == 0) L.primario else L.secundario, if (k % 2 == 0) 1.8f else 1.1f))
+                    }
+                    c.drawCircle(cx, yc, r * 0.62f, fino)
+                    c.drawCircle(cx, yc - r - 1f, 2.6f, L.relleno(L.primario))
                     y += 62f
                 }
                 TemaId.URSS -> {

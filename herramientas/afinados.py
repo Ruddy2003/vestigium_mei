@@ -162,6 +162,12 @@ def grillo(f, d=0.14, pulsos=3):
     t = t_(d); x = np.sin(2 * np.pi * f * t)
     am = np.clip(np.sin(2 * np.pi * 30 * t), 0, 1) ** 2 * (t < pulsos / 30.0)
     return x * am * np.minimum(1, t / 0.003)
+def fuelle(f, d, ataque=0.05):
+    """Concertina: dos lengüetas apenas desafinadas que baten entre sí, con el aire del fuelle."""
+    t = t_(d)
+    x = sum(np.tanh(2.2 * np.sin(2 * np.pi * f * k * t)) * a for k, a in ((1.0, 0.6), (1.006, 0.5)))
+    x = filtro(x, 'bajo', 3200) + 0.03 * filtro(ruido(d), 'banda', (800, 3000))
+    return x * np.minimum(1, t / ataque) * np.minimum(1, np.maximum(0, d - t) / 0.12)
 def guitarra(f, d=1.2, brillo=0.32): return pluck(f, d, brillo, 0.996)
 def acorde(inst, notas, d, g=1.0, arpegio=0.0, **kw):
     return mezclar(*[(i * arpegio, inst(hz(n), d, **kw), g / len(notas) ** 0.5) for i, n in enumerate(notas)])
@@ -857,6 +863,46 @@ def renacimiento():
                tecla=trazo((3000, 9000), 0.04, 22, 0.025),
                rascar=rascado((1300, 5800), laud(T + 24, 0.5), aspereza=75))
 
+def pirata():
+    # Mi dórico, el modo de las salomas: la campana de a bordo (que da las medias horas por pares), la concertina, el
+    # violín de cubierta, la madera del casco que cruje y el oleaje.
+    T = -5   # Mi4
+    bronce = lambda n, d=1.8: campana(hz(n), d, 2.76, 1.4, 2.2)
+    def campanadas(pares, d=1.6):
+        """Las campanadas de la guardia: de dos en dos, juntas, y una pausa entre pares."""
+        return mezclar(*[(0.75 * p + 0.28 * k, bronce(T + 12, d), 0.5) for p in range(pares) for k in range(2)])
+    madera = lambda f=(250, 1400), d=0.05: mezclar((0, filtro(ruido(d), 'banda', f) * env(int(d * SR), 0.001, d * 0.5, 4), 0.8), (0, tambor(hz(T - 17), d * 1.6, 0.1), 0.35))
+    def crujido(d=0.4, f0=70):
+        """El casco que trabaja: una sierra grave con tirones irregulares, como una tabla que roza otra."""
+        t = t_(d); f = f0 * (1 + 0.25 * np.sin(2 * np.pi * 1.3 * t / d) + 0.1 * filtro(ruido(d), 'bajo', 12))
+        ph = 2 * np.pi * np.cumsum(f) / SR
+        return filtro(((ph / (2 * np.pi)) % 1) * 2 - 1, 'banda', (180, 1600)) * np.sin(np.pi * t / d) ** 1.5
+    ola = lambda d: filtro(ruido(d), 'banda', (250, 2600)) * np.sin(np.pi * t_(d) / d) ** 2 * (0.6 + 0.4 * np.abs(filtro(ruido(d), 'bajo', 8)))
+    violin = lambda n, d: arco(hz(n), d, 6.2)
+    with azar_propio('pirata_base'):
+        S['pirata'] = dict(
+            toque=madera(), elegir=mezclar((0, bronce(T + 19, 0.5), 0.6), (0, madera((600, 2400), 0.02), 0.3)),
+            pasar=mezclar((0, ola(0.24), 0.9), (0.04, filtro(ruido(0.08), 'banda', (1200, 4000)) * env(int(0.08 * SR), 0.004, 0.05, 3), 0.25)),
+            abrir=mezclar((0, crujido(0.35), 0.45), (0.12, acorde(fuelle, [T - 12 + a for a in (0, 7, 15)], 0.45), 0.6)),
+            guardar=mezclar((0, madera(), 0.6), (0.04, bronce(T + 12, 1.2), 0.45), (0.32, bronce(T + 12, 1.2), 0.45)),
+            logro=reverb(mezclar(*[(0.11 * i, violin(T + n, 0.12 if i < 6 else 0.6), 0.45) for i, n in enumerate([0, 2, 3, 7, 9, 10, 12])],
+                                 (0.66, acorde(fuelle, [T - 12 + a for a in (0, 7, 12, 15)], 0.8), 0.5), (0.66, bronce(T + 24, 1.4), 0.25)), 1.1, 0.22),
+            tema=reverb(mezclar((0, ola(0.7), 0.5), (0.15, acorde(fuelle, [T - 12 + a for a in (0, 3, 7, 14)], 0.7, ataque=0.12), 0.55), (0.55, bronce(T + 12, 1.4), 0.35)), 1.2, 0.25),
+            aviso=reverb(mezclar((0, campanadas(2), 1.0), (0, ola(1.8), 0.35)), 1.3, 0.22),
+            solemne=reverb(mezclar(*[(0.95 * i, acorde(fuelle, [T - 12 + a for a in ch], 1.0, ataque=0.15), 0.5)
+                                     for i, ch in enumerate([[0, 3, 7], [-2, 2, 5], [5, 9, 12], [-5, 2, 7], [0, 3, 7, 12]])],
+                                   *[(0.95 * i + 0.45, violin(T + n, 0.45), 0.22) for i, n in enumerate([7, 5, 9, 10])],
+                                   (0, ola(4.8), 0.4), (3.9, campanadas(2), 0.6)), 1.8, 0.32))
+
+    # Error: el cañonazo lejano y la concertina que se queda sin aire medio tono abajo. Cambio: dos golpes en la
+    # borda y una campanada. Tecla: la pluma de la bitácora, que raspa el papel de trapo. Rascar: un doblón de oro.
+    with azar_propio('pirata'):
+        nuevos('pirata',
+               error=mezclar((0, tambor(hz(T - 31), 0.5, 0.6), 0.6), (0.12, fuelle(hz(T + 3), 0.14), 0.35), (0.26, fuelle(hz(T + 2), 0.3), 0.35)),
+               cambio=mezclar((0, madera(), 0.6), (0.07, madera((400, 2000)), 0.6), (0.12, bronce(T + 19, 0.6), 0.35)),
+               tecla=trazo((1800, 6500), 0.05, 14, 0.03),
+               rascar=rascado((1100, 5000), bronce(T + 24, 0.6), aspereza=70))
+
 def revolucion():
     # Sol mayor: pífano y tambor de las milicias, el papel de los carteles; en lo solemne, cuerdas de himno y bombo.
     T = -2   # Sol4
@@ -948,6 +994,7 @@ if __name__ == '__main__':
         andalus,
         mongol,
         renacimiento,
+        pirata,
         revolucion,
         antiguas,
     )

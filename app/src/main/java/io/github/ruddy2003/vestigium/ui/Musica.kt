@@ -95,6 +95,7 @@ object Musica {
         TemaId.ANDALUS -> R.raw.s_andalus_presentacion
         TemaId.MONGOL -> R.raw.s_mongol_presentacion
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_presentacion
+        TemaId.PIRATA -> R.raw.s_pirata_presentacion
         TemaId.REVOLUCION -> R.raw.s_revolucion_presentacion
         TemaId.ANTIGUAS -> R.raw.s_antiguas_presentacion
     }
@@ -123,6 +124,7 @@ object Musica {
         TemaId.ANDALUS -> R.raw.s_andalus_anual
         TemaId.MONGOL -> R.raw.s_mongol_anual
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_anual
+        TemaId.PIRATA -> R.raw.s_pirata_anual
         TemaId.REVOLUCION -> R.raw.s_revolucion_anual
         TemaId.ANTIGUAS -> R.raw.s_antiguas_anual
     }
@@ -150,6 +152,7 @@ object Musica {
         TemaId.ANDALUS -> R.raw.t_andalus_llamada
         TemaId.MONGOL -> R.raw.t_mongol_llamada
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_llamada
+        TemaId.PIRATA -> R.raw.t_pirata_llamada
         TemaId.REVOLUCION -> R.raw.t_revolucion_llamada
         TemaId.ANTIGUAS -> R.raw.t_antiguas_llamada
     }
@@ -177,6 +180,7 @@ object Musica {
         TemaId.ANDALUS -> R.raw.t_andalus_notificacion
         TemaId.MONGOL -> R.raw.t_mongol_notificacion
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_notificacion
+        TemaId.PIRATA -> R.raw.t_pirata_notificacion
         TemaId.REVOLUCION -> R.raw.t_revolucion_notificacion
         TemaId.ANTIGUAS -> R.raw.t_antiguas_notificacion
     }
@@ -681,6 +685,28 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawCircle(c, u * 2, centro)
             // Un arco de la espiral áurea en la esquina de abajo.
             drawArc(e.secondary.copy(alpha = 0.45f), 0f, 90f, false, Offset(w - u * 130, h - u * 140), Size(u * 120, u * 120), style = Stroke(u))
+        }
+    }
+    // La carta del tesoro: las líneas de rumbo que salen del emblema como de una rosa, el mar abajo con sus olas, y la
+    // derrota punteada que cruza la hoja hasta la «X».
+    TemaId.PIRATA -> {
+        val arriba = 44f; val tam = 100f
+        DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, false, t.nombre, "✷ leven anclas  ·  toca para zarpar", emblema = tam.dp, arriba = arriba.dp) { e ->
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val c = e.onBackground.copy(alpha = 0.18f)
+            val centro = Offset(u * (40 + tam / 2), u * (arriba + tam / 2))
+            for (k in 0 until 16) { val a = k * Math.PI / 8; drawLine(c, centro, Offset(centro.x + (w * 1.5f * kotlin.math.cos(a)).toFloat(), centro.y + (w * 1.5f * kotlin.math.sin(a)).toFloat()), u * 0.6f) }
+            drawCircle(e.primary.copy(alpha = 0.35f), u * (tam / 2 + 12), centro, style = Stroke(u))
+            for (k in 0 until 3) {
+                val y0 = h - u * (18 + k * 16); val p = Path(); var x = -u * 10; p.moveTo(x, y0)
+                while (x < w + u * 10) { p.quadraticTo(x + u * 12, y0 - u * 5, x + u * 24, y0); p.quadraticTo(x + u * 36, y0 + u * 5, x + u * 48, y0); x += u * 48 }
+                drawPath(p, e.secondary.copy(alpha = 0.3f - k * 0.07f), style = Stroke(u))
+            }
+            val x = Offset(w - u * 46, h - u * 92); val s = u * 8
+            drawPath(Path().apply { moveTo(u * 30, h - u * 70); cubicTo(w * 0.3f, h - u * 150, w * 0.6f, h - u * 40, x.x - s * 1.5f, x.y + s) }, e.tertiary.copy(alpha = 0.55f),
+                style = Stroke(u * 1.6f, cap = StrokeCap.Round, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(u * 0.1f, u * 6))))
+            drawLine(e.tertiary.copy(alpha = 0.8f), x - Offset(s, s), x + Offset(s, s), u * 2.6f, StrokeCap.Round)
+            drawLine(e.tertiary.copy(alpha = 0.8f), x + Offset(-s, s), x + Offset(s, -s), u * 2.6f, StrokeCap.Round)
         }
     }
     // Cartel constructivista: cuña roja arriba, barra negra a un lado y una diagonal con su círculo al pie.

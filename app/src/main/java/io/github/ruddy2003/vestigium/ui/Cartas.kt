@@ -151,6 +151,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.MONGOL -> Papeleria(Color(0xFFEDE6D3), Color(0xFFB5AC92), Color(0xFFF8F3E6), Color(0xFF1F5FA8), Color(0xFFC48A1E), Color(0xFF2E6DB4), Color(0xFF18202E))
     // Papel del cuaderno de taller, forro de cartón, la cera de sanguina y el cordel sepia.
     TemaId.RENACIMIENTO -> Papeleria(Color(0xFFEEDFBC), Color(0xFFB89466), Color(0xFFF8EDD2), Color(0xFF9A7A50), Color(0xFF8C3B1E), Color(0xFF5A3A1C), Color(0xFF3A2614))
+    // Pergamino húmedo de carta náutica, forro del verde del mar de las cartas, lacre de brea y cabo de cáñamo.
+    TemaId.PIRATA -> Papeleria(Color(0xFFE2D6B4), Color(0xFFA8956A), Color(0xFFF1E8CF), Color(0xFF2F5D62), Color(0xFF2B2622), Color(0xFFA88A55), Color(0xFF2A1C0F))
     // Papel de estraza, forro rojo, el matasellos rojo y la cinta negra.
     TemaId.URSS -> Papeleria(Color(0xFFE3D9C3), Color(0xFFA89C82), Color(0xFFF0E8D6), Color(0xFFB71C1C), Color(0xFFC1121F), Color(0xFF161414), Color(0xFF161414))
     // Papel de cartel, forro azul, la escarapela y el cordón azul.
@@ -195,6 +197,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.ANDALUS -> FormaSobre(SolapaSobre.ESCALON, 0.03f, CierreSobre.DOBLE)
     TemaId.MONGOL -> FormaSobre(SolapaSobre.PARABOLA, 0.06f, CierreSobre.CRUZ)
     TemaId.RENACIMIENTO -> FormaSobre(SolapaSobre.BISEL, 0.02f, CierreSobre.DOBLE)
+    TemaId.PIRATA -> FormaSobre(SolapaSobre.ONDAS, 0.012f, CierreSobre.DOBLE)
     TemaId.URSS -> FormaSobre(SolapaSobre.PICO, 0f, CierreSobre.PRECINTO)
     TemaId.REVOLUCION -> FormaSobre(SolapaSobre.LENGUA, 0.01f, CierreSobre.CRUZ)
     TemaId.ANTIGUAS -> FormaSobre(SolapaSobre.RASGADA, 0.02f, CierreSobre.CRUZ)
@@ -594,6 +597,24 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawCircle(claro, r * 0.08f, bisagra)
             drawArc(claro, 20f, 140f, false, Offset(c.x - r * 0.5f, c.y - r * 0.2f), Size(r, r), style = Stroke(r * 0.04f))
         }
+        TemaId.PIRATA -> {
+            // Lacre de brea con la calavera y las tibias grabadas, y un cordón de cuentas como de cabo alrededor.
+            gotaCera(c, r, col, 11)
+            for (i in 0 until 18) {
+                val a = 2 * PI * i / 18
+                drawCircle(hondo, r * 0.05f, Offset(c.x + (r * 0.8f * cos(a)).toFloat(), c.y + (r * 0.8f * sin(a)).toFloat()))
+            }
+            listOf(-1f, 1f).forEach { s ->
+                val a = Offset(c.x - s * r * 0.5f, c.y + r * 0.42f); val b = Offset(c.x + s * r * 0.5f, c.y - r * 0.08f)
+                drawLine(claro, a, b, r * 0.09f, StrokeCap.Round)
+                drawCircle(claro, r * 0.07f, a + Offset(-s * r * 0.02f, r * 0.04f)); drawCircle(claro, r * 0.07f, b + Offset(s * r * 0.02f, -r * 0.04f))
+            }
+            drawCircle(claro, r * 0.3f, Offset(c.x, c.y - r * 0.12f))
+            drawRoundRect(claro, Offset(c.x - r * 0.17f, c.y + r * 0.06f), Size(r * 0.34f, r * 0.2f), CornerRadius(r * 0.05f))
+            drawCircle(hondo, r * 0.08f, Offset(c.x - r * 0.11f, c.y - r * 0.12f)); drawCircle(hondo, r * 0.08f, Offset(c.x + r * 0.11f, c.y - r * 0.12f))
+            drawPath(Path().apply { moveTo(c.x, c.y - r * 0.02f); lineTo(c.x - r * 0.04f, c.y + r * 0.05f); lineTo(c.x + r * 0.04f, c.y + r * 0.05f); close() }, hondo)
+            for (j in -1..1) drawLine(hondo, Offset(c.x + j * r * 0.08f, c.y + r * 0.1f), Offset(c.x + j * r * 0.08f, c.y + r * 0.24f), r * 0.025f)
+        }
         TemaId.URSS -> rotate(-8f, c) {
             // El matasellos: dos círculos de tinta con la estrella al centro y las ondas que cancelan.
             drawCircle(col, r * 0.92f, c, style = Stroke(r * 0.07f))
@@ -805,6 +826,21 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             drawCircle(sepia, rr, c, style = Stroke(0.9f))
             drawRect(sepia, Offset(c.x - rr * 0.707f, c.y - rr * 0.707f), Size(rr * 1.414f, rr * 1.414f), style = Stroke(0.9f))
             drawLine(sepia, Offset(c.x - rr * 1.4f, c.y + rr * 1.2f), Offset(c.x + rr * 1.3f, c.y - rr * 1.3f), 0.8f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 3f)))
+        }
+        TemaId.PIRATA -> {
+            // Las líneas de rumbo de los portulanos, que salen de una rosa pequeña, y la «X» roja del tesoro donde cruzan dos.
+            val sepia = Color(0xFF2A1C0F); val c = Offset(r - W * 0.2f, top + H * 0.62f); val largo = W * 0.34f
+            for (i in 0 until 16) {
+                val a = 2 * PI * i / 16
+                val fin = Offset(c.x + (largo * cos(a)).toFloat(), c.y + (largo * sin(a)).toFloat())
+                drawLine(sepia.copy(alpha = if (i % 4 == 0) 0.22f else 0.11f), c, fin, if (i % 4 == 0) 0.9f else 0.6f)
+            }
+            drawCircle(sepia.copy(alpha = 0.3f), W * 0.025f, c, style = Stroke(0.9f))
+            val x = Offset(c.x - largo * 0.55f, c.y - largo * 0.32f); val s = W * 0.018f
+            drawLine(Color(0xFF9A2A1C).copy(alpha = 0.6f), x - Offset(s, s), x + Offset(s, s), 1.6f, StrokeCap.Round)
+            drawLine(Color(0xFF9A2A1C).copy(alpha = 0.6f), x + Offset(-s, s), x + Offset(s, -s), 1.6f, StrokeCap.Round)
+            val ruta = Path().apply { moveTo(l + W * 0.06f, bot - H * 0.12f); quadraticTo(l + W * 0.3f, bot - H * 0.45f, x.x - s * 1.8f, x.y + s * 1.8f) }
+            drawPath(ruta, sepia.copy(alpha = 0.25f), style = Stroke(0.9f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f))))
         }
         TemaId.URSS -> {
             // La cuña roja y la barra negra del cartel constructivista.
@@ -1042,6 +1078,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Bajo el Cielo Azul, querido yo…", "Dicta tu mensaje al jinete…", "Mensaje para %s con el jinete", "Ningún jinete la entrega antes.", "Toca para dictar al escriba…")
     TemaId.RENACIMIENTO -> VozCarta("Ya puedes abrirla, maestro", "Sellada con sanguina", "Al maestro que seré el %s", "Al maestro de %s", "Al maestro que seré",
         "Caro me stesso del futuro…", "Escribe tu lettera…", "Lettera para %s sellada", "Paciencia: no se abre antes.", "Toca para afilar la pluma…")
+    TemaId.PIRATA -> VozCarta("La marea trajo la botella: ya puedes descorcharla", "Lacrada con brea", "Al capitán que seré el %s", "Al capitán de %s", "Al capitán que seré",
+        "Capitán del porvenir:…", "Escribe el mensaje de la botella…", "Botella para %s, echada al mar", "Aún no la trae la marea.", "Toca para mojar la pluma…")
     TemaId.URSS -> VozCarta("ПИСЬМО · YA PUEDE ABRIRSE", "Matasellada", "AL CAMARADA DEL %s", "CAMARADA DE %s", "AL CAMARADA DEL FUTURO",
         "Camarada del futuro:…", "Escribe tu carta, camarada…", "Carta para %s matasellada", "No antes de cumplir el plan.", "TOCA PARA ESCRIBIR")
     TemaId.REVOLUCION -> VozCarta("Ya puede abrirse, ciudadano", "Sellada con la escarapela", "Al ciudadano que seré el %s", "Ciudadano de %s", "Al ciudadano del porvenir",
@@ -1074,6 +1112,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.ANDALUS -> LetraExtra.amiri
     TemaId.MONGOL -> LetraExtra.filosofo
     TemaId.RENACIMIENTO -> LetraExtra.cormorant
+    TemaId.PIRATA -> LetraExtra.corsario
     TemaId.URSS -> LetraExtra.russo
     TemaId.REVOLUCION -> LetraExtra.convencion
     TemaId.ANTIGUAS -> LetraExtra.camino

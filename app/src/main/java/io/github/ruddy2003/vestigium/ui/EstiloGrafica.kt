@@ -156,7 +156,10 @@ data class EstiloGrafica(
 /** Formas del punto de datos. */
 enum class FormaPunto {
     CIRCULO, TRIANGULO, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO, HOJA, COPO, MONEDA,
-    ROMBO, ANILLO, OCTOGRAMA, LUNA, MIRA, ESTRELLA, ESCARAPELA, GEMA, GOTA,
+    ROMBO, ANILLO, OCTOGRAMA, LUNA, MIRA,
+    /** La «X» de las cartas del tesoro. */
+    EQUIS,
+    ESTRELLA, ESCARAPELA, GEMA, GOTA,
     /** Templario: la cruz patada. */
     PATADA,
 }
@@ -187,7 +190,10 @@ enum class Rejilla {
 /** El eje. */
 enum class Eje {
     NINGUNO, LINEA, MARCAS, REMATES, CORCHETES, DOBLE, FLORON, GRUESA, REMACHES, REGLA, GALONES, BROTES, CUENTAS,
-    ATRAVESADAS, PINACULOS, SOLO_MARCAS, SONDA, ALMENAS, FLECHA, COMPAS, AGUZADA, PICA, RUNAS,
+    ATRAVESADAS, PINACULOS, SOLO_MARCAS, SONDA, ALMENAS, FLECHA, COMPAS,
+    /** Un cabo trenzado con un nudo en cada marca. */
+    CABO,
+    AGUZADA, PICA, RUNAS,
 }
 
 /** La forma de las barras. */
@@ -272,6 +278,9 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Leonardo: mira de compás, trazo con línea de construcción, punto y raya, eje con sobretrazo y sombreado de plumilla.
     TemaId.RENACIMIENTO -> EstiloGrafica(FormaPunto.MIRA, 1.4f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.BOCETO, listOf(9f, 2f, 1f, 2f),
         Rejilla.PUNTO_Y_RAYA, 0.5f, Eje.COMPAS, FormaBarra.RAYADA, R.font.cormorant_medium, FontWeight.Medium, "onum", 0f, 1.2f)
+    // La carta del tesoro: la «X» en cada dato, la derrota punteada, las ondas del mar al fondo, el eje de cabo y las barras como tablones.
+    TemaId.PIRATA -> EstiloGrafica(FormaPunto.EQUIS, 1.5f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(0.1f, 3f),
+        Rejilla.ONDAS, 0.5f, Eje.CABO, FormaBarra.TABLAS, R.font.caslon_semibold, FontWeight.SemiBold, "lnum", 0.02f, 1.05f)
     // Constructivismo: estrella, trazo grueso con impresión corrida, líneas alternas, la cuña y barras cortadas en diagonal.
     TemaId.URSS -> EstiloGrafica(FormaPunto.ESTRELLA, 3f, null, StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.SOMBRA, listOf(9f, 3f),
         Rejilla.ALTERNA, 0.5f, Eje.AGUZADA, FormaBarra.SESGADA, R.font.russo, FontWeight.Normal, null, 0.03f, 1f)
@@ -347,6 +356,11 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
             drawLine(color, Offset(c.x - r * 1.15f, c.y), Offset(c.x + r * 1.15f, c.y), g * 0.55f)
             drawLine(color, Offset(c.x, c.y - r * 1.15f), Offset(c.x, c.y + r * 1.15f), g * 0.55f)
             if (!hueco) drawCircle(color, r * 0.3f, c)
+        }
+        FormaPunto.EQUIS -> {
+            val a = r * 0.95f; val ancho = if (hueco) g * 0.8f else g * 1.4f
+            drawLine(color, Offset(c.x - a, c.y - a), Offset(c.x + a, c.y + a), ancho, StrokeCap.Round)
+            drawLine(color, Offset(c.x + a, c.y - a), Offset(c.x - a, c.y + a), ancho, StrokeCap.Round)
         }
         FormaPunto.TRIANGULO -> figura(egPoligono(c, r * 1.15f, 3, -90f))
         FormaPunto.CUADRADO -> figura(egPoligono(c, r * 1.2f, 4, 45f))
@@ -1004,6 +1018,13 @@ fun DrawScope.ejeGrafica(e: EstiloGrafica, desde: Offset, hasta: Offset, color: 
             drawLine(color, desde - dir * sobra, hasta + dir * sobra, g * 0.75f)
             extremos.forEach { drawCircle(color, 1.9f * d, it, style = Stroke(g * 0.75f)) }
             ms.forEach { cruzada(it, 2.2f * d, g * 0.75f) }
+        }
+        Eje.CABO -> {
+            linea(g * 1.8f)
+            val largo = (hasta - desde).getDistance(); val paso = 2.6f * d
+            var t = 0f
+            while (t < largo) { val p = desde + dir * t; drawLine(color.copy(alpha = color.alpha * 0.45f), p - normal * (g * 0.9f), p + dir * (g * 1.2f) + normal * (g * 0.9f), g * 0.5f); t += paso }
+            ms.forEach { drawCircle(color, 1.8f * d, it) }
         }
         Eje.AGUZADA -> {
             val a0 = 1.7f * d; val a1 = 0.35f * d

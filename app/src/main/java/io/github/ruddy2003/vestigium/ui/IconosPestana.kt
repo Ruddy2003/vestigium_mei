@@ -130,6 +130,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.MONGOL -> { p { m(3f, 20.5f); t(3f, 13f); q(12f, 5f, 21f, 13f); t(21f, 20.5f); close() }; r(10f, 15f, 4f, 5.5f, 0.3f); ci(12f, 8.6f, 1.3f, st = fino)
             l(3f, 13f, 21f, 13f, 1.1f) }                                                                                                      // yurta
         TemaId.RENACIMIENTO -> { l(12f, 4f, 6.5f, 21f); l(12f, 4f, 17.5f, 21f); ci(12f, 3.2f, 1.4f); p(st = fino) { m(5f, 16f); q(12f, 21f, 19f, 16f) } } // compás
+        TemaId.PIRATA -> { p { m(12f, 2f); t(13.6f, 10.4f); t(22f, 12f); t(13.6f, 13.6f); t(12f, 22f); t(10.4f, 13.6f); t(2f, 12f); t(10.4f, 10.4f); close() }
+            l(6.5f, 6.5f, 9.5f, 9.5f, 1.1f); l(17.5f, 6.5f, 14.5f, 9.5f, 1.1f); l(6.5f, 17.5f, 9.5f, 14.5f, 1.1f); l(17.5f, 17.5f, 14.5f, 14.5f, 1.1f); ci(12f, 12f, 1.2f, relleno = true) } // rosa de los vientos
         TemaId.NAVIDAD -> { estrella(12f, 12.5f, 9.5f, 4f); ci(12f, 12.5f, 1.2f, relleno = true) }                                        // estrella
         TemaId.SEDA -> { p { m(2f, 18f); q(7f, 12.5f, 12f, 17f); q(17f, 12f, 22f, 16f) }; ci(15.5f, 7.5f, 3f); l(2f, 21f, 22f, 21f, 1.1f) } // sol sobre las dunas
         TemaId.URSS -> { l(2.5f, 21f, 21.5f, 21f); p { m(4f, 21f); t(4f, 13f); t(8.5f, 16f); t(8.5f, 13f); t(13f, 16f); t(13f, 21f) }; r(15.5f, 6f, 3.4f, 15f, 0.3f)
@@ -168,6 +170,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.ANDALUS -> momentos(tm)
         TemaId.MONGOL -> momentos(tm)
         TemaId.RENACIMIENTO -> momentos(tm)
+        TemaId.PIRATA -> momentos(tm)
         TemaId.URSS -> momentos(tm)
         TemaId.REVOLUCION -> momentos(tm)
         TemaId.ANTIGUAS -> momentos(tm)
@@ -207,6 +210,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(3f, 12f, 4.5f, 10.5f, 1f); l(3f, 12f, 4.5f, 13.5f, 1f) }                                                                       // arco y flecha
         TemaId.RENACIMIENTO -> { r(4f, 4f, 12f, 16f, 0.6f); l(6.5f, 9f, 13f, 9f, 1.1f); l(6.5f, 12f, 13f, 12f, 1.1f); l(6.5f, 15f, 11f, 15f, 1.1f)
             p(relleno = true) { m(21f, 2.5f); q(15f, 6f, 13.5f, 15f); t(15f, 15.5f); q(19f, 9f, 21f, 2.5f); close() } }                     // cuaderno y pluma
+        TemaId.PIRATA -> { r(4.5f, 3.5f, 14f, 17f, 1.2f); l(16f, 5f, 16f, 19.5f, 1.1f); l(3f, 13f, 20f, 13f, 1.4f); l(11f, 2.5f, 11f, 21.5f, 1.4f)
+            ci(11f, 13f, 1.6f, relleno = true); l(11f, 13f, 14f, 17f, 1.1f) } // la bitácora atada con su cabo
         TemaId.NAVIDAD -> { r(3f, 6f, 18f, 13f, 1f); p(st = fino) { m(3f, 6.5f); t(12f, 13f); t(21f, 6.5f) }; r(15.5f, 8.5f, 3.5f, 4f, 0.3f, relleno = true) } // carta con sello
         TemaId.SEDA -> { l(4.5f, 3.5f, 19.5f, 3.5f, 2.4f); r(6f, 3.5f, 12f, 16f, 0.3f); l(4.5f, 20f, 19.5f, 20f, 2.4f); l(10f, 7f, 10f, 16.5f, 1.1f); l(14f, 7f, 14f, 13f, 1.1f) } // rollo colgante
         TemaId.URSS -> { r(5f, 3f, 14f, 18f, 0.5f); estrella(12f, 8.5f, 3.4f, 1.4f, relleno = true); l(8f, 14f, 16f, 14f, 1.1f); l(8f, 17f, 14f, 17f, 1.1f) } // informe
@@ -246,6 +251,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(6f, 20.5f, 18f, 20.5f) }                                                                                                        // sol, luna y fuego
         TemaId.RENACIMIENTO -> { p { m(2.5f, 13f); q(7f, 4f, 12f, 10f); q(17f, 4f, 21.5f, 13f); q(18f, 11f, 16.5f, 13.5f); q(14f, 11f, 12f, 13.5f); q(10f, 11f, 7.5f, 13.5f); q(6f, 11f, 2.5f, 13f); close() }
             l(12f, 10f, 12f, 19f, 1.1f); l(7f, 7.5f, 7.5f, 13.3f, 0.9f); l(17f, 7.5f, 16.5f, 13.3f, 0.9f) }                                 // ala de la máquina voladora
+        TemaId.PIRATA -> { l(3f, 15f, 9f, 12.5f, 3.4f); l(9f, 12.5f, 15f, 10f, 2.6f); l(15f, 10f, 20.5f, 7.8f, 1.9f); l(8f, 15f, 6f, 21f, 1.1f); l(8f, 15f, 11f, 21f, 1.1f)
+            ci(21f, 7.6f, 1.3f, st = fino) } // el catalejo sobre su trípode
         TemaId.NAVIDAD -> { p { m(12f, 2.5f); t(18f, 9.5f); t(15f, 9.5f); t(19.5f, 16f); t(4.5f, 16f); t(9f, 9.5f); t(6f, 9.5f); close() }; r(10.5f, 16f, 3f, 4.5f, 0.3f) } // árbol
         TemaId.SEDA -> { ci(12f, 13f, 7.8f); ci(12f, 3.8f, 1.3f, st = fino); l(12f, 5.1f, 12f, 5.2f); ci(12f, 13f, 4.2f, st = fino); l(5.5f, 17.5f, 18.5f, 8.5f); ci(12f, 13f, 1f, relleno = true) } // astrolabio
         TemaId.URSS -> { l(3f, 21f, 21f, 21f); r(5f, 14f, 3.4f, 7f, 0.2f, true); r(10.3f, 10f, 3.4f, 11f, 0.2f, true); r(15.6f, 5f, 3.4f, 16f, 0.2f, true) } // estadística
@@ -285,6 +292,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.MONGOL -> { p { m(8f, 21f); t(16f, 21f); t(15f, 14f); t(9f, 14f); close() }; l(12f, 14f, 12f, 4.5f); p { m(12f, 4.5f); q(12f, 2f, 14.5f, 2.5f); q(16.5f, 3.5f, 15f, 6f); t(12f, 6f) }
             l(11f, 15f, 11f, 20f, 0.8f); l(13f, 15f, 13f, 20f, 0.8f) }                                                                       // morin juur
         TemaId.RENACIMIENTO -> { l(7.5f, 21.5f, 12f, 2.5f); l(16.5f, 21.5f, 12f, 2.5f); l(12f, 15f, 12f, 21.5f, 1.1f); r(6.5f, 6.5f, 11f, 8f, 0.3f); l(5.5f, 14.5f, 18.5f, 14.5f) } // caballete
+        TemaId.PIRATA -> { p { m(7f, 3f); t(17f, 3f); q(20.5f, 12f, 17f, 21f); t(7f, 21f); q(3.5f, 12f, 7f, 3f); close() }
+            l(5.3f, 8f, 18.7f, 8f, 1.1f); l(5.3f, 16f, 18.7f, 16f, 1.1f); ci(12f, 12f, 1f, relleno = true) } // el barril de la bodega
         TemaId.NAVIDAD -> { p { m(6f, 16f); q(6f, 5f, 12f, 5f); q(18f, 5f, 18f, 16f); t(19.5f, 18f); t(4.5f, 18f); close() }; ci(12f, 19.8f, 1.3f, relleno = true); l(12f, 3f, 12f, 5f, 1.1f) } // campana
         TemaId.SEDA -> { p { m(4f, 21f); t(4f, 11f); q(4f, 5f, 12f, 3.5f); q(20f, 5f, 20f, 11f); t(20f, 21f) }; p { m(9f, 21f); t(9f, 15f); q(12f, 11f, 15f, 15f); t(15f, 21f) }; l(2.5f, 21f, 21.5f, 21f) } // caravasar
         TemaId.URSS -> { p { m(4f, 10f); t(9f, 10f); t(18.5f, 5f); t(18.5f, 19f); t(9f, 14f); t(4f, 14f); close() }; l(7f, 14f, 8.2f, 19.5f); p(st = fino) { m(20.5f, 9f); q(22.5f, 12f, 20.5f, 15f) } } // megáfono
@@ -348,6 +357,9 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(relleno = true) { m(9f, 8.6f); q(7.8f, 14f, 10f, 17.5f); q(12f, 15.2f, 14f, 17.5f); q(16.2f, 14f, 15f, 8.6f); close() } }   // estandarte de crin
         TemaId.RENACIMIENTO -> { ci(12f, 11.5f, 9f, st = fino); p(st = fino) { m(4.5f, 5.5f); t(19.5f, 5.5f); t(19.5f, 20.5f); t(4.5f, 20.5f); close() }
             ci(12f, 6.9f, 1.5f, relleno = true); l(12f, 8.6f, 12f, 14.5f, 1.4f); l(4.8f, 10f, 19.2f, 10f, 1.2f); l(12f, 14.5f, 9f, 20.5f, 1.2f); l(12f, 14.5f, 15f, 20.5f, 1.2f) } // figura en el círculo y el cuadrado
+        TemaId.PIRATA -> { p { m(3f, 16f); t(21f, 16f); t(18f, 20.5f); t(6f, 20.5f); close() }; l(12f, 2.5f, 12f, 16f, 1.1f)
+            p(st = fino) { m(12.8f, 3.5f); q(19f, 9f, 12.8f, 14.5f); close() }; p(st = fino) { m(11.2f, 5f); t(5.5f, 14.5f); t(11.2f, 14.5f); close() }
+            r(12f, 1.5f, 3f, 1.8f, 0.2f, relleno = true) } // el balandro con su bandera
         TemaId.URSS -> { p(st = fino) { m(12f, 22f); q(11.4f, 15f, 12f, 3.5f) }; hoja(12f, 3.6f, 3.6f, 2f, -90f)
             for (y in listOf(6.2f, 9.2f, 12.2f)) { hoja(10.2f, y, 3.8f, 2f, -125f); hoja(13.8f, y, 3.8f, 2f, -55f) }
             hoja(15f, 18f, 6f, 2f, -40f, relleno = false) }                                                                                // espiga de trigo
@@ -402,6 +414,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(relleno = true) { m(2f, 12f); t(5.6f, 9.8f); t(5.6f, 14.2f); close() }; p(relleno = true) { m(22f, 12f); t(18.4f, 9.8f); t(18.4f, 14.2f); close() } } // las cuatro direcciones de la estepa
         TemaId.RENACIMIENTO -> { ci(8f, 16f, 4.5f, st = fino); l(8f, 10f, 8f, 22f, 1.1f); l(2f, 16f, 14f, 16f, 1.1f)
             l(10.6f, 13.4f, 18.6f, 5.4f, 2.2f); l(15.2f, 7.4f, 17.2f, 9.4f, 1.1f); p(relleno = true) { m(18f, 4f); t(21.8f, 2.2f); t(20f, 6f); close() } } // portalápiz de sanguina y su cruz de construcción
+        TemaId.PIRATA -> { p { m(20.5f, 2.5f); q(13f, 4f, 8f, 14f); q(13f, 13f, 20.5f, 2.5f); close() }; l(8f, 14f, 5.5f, 19f, 1.4f)
+            l(12f, 9.5f, 14.5f, 10.5f, 1.1f); l(10.5f, 12f, 12.5f, 12.8f, 1.1f); r(3f, 18f, 6f, 4f, 0.8f) } // la pluma y el tintero
         TemaId.URSS -> { ci(15f, 9.5f, 6.5f); p(relleno = true) { m(2.5f, 20f); t(13.5f, 10.5f); t(7.5f, 21.5f); close() }
             l(16.5f, 18.5f, 21.5f, 18.5f, 1.8f); l(19f, 16f, 19f, 21f, 1.8f) }                                                               // la cuña que entra en el círculo
         TemaId.REVOLUCION -> { l(12f, 3f, 4.5f, 20.5f); l(12f, 3f, 19.5f, 20.5f); l(7.2f, 14.5f, 16.8f, 14.5f); l(12f, 3f, 12f, 16f, 1.1f); ci(12f, 17.2f, 1.3f, relleno = true) } // nivel de la igualdad
@@ -446,6 +460,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
             l(10.8f, 8f, 10.8f, 16f, 1.1f); l(13.2f, 8f, 13.2f, 16f, 1.1f); l(8f, 10.8f, 16f, 10.8f, 1.1f); l(8f, 13.2f, 16f, 13.2f, 1.1f) } // corona de la yurta
         TemaId.RENACIMIENTO -> { l(4f, 2.5f, 20f, 2.5f, 1.8f); l(12f, 2.5f, 12f, 5.8f); ci(12f, 9f, 3.2f); ci(12f, 9f, 0.9f, relleno = true)
             l(8.8f, 9f, 8.8f, 20f, 1.1f); l(15.2f, 9f, 15.2f, 14f, 1.1f); r(13.2f, 14f, 4f, 5f, 0.4f, true); ci(8.8f, 20.8f, 1f) }      // polea
+        TemaId.PIRATA -> { ci(12f, 12f, 6.2f); ci(12f, 12f, 1.6f, relleno = true); rayos(12f, 12f, 8, 2f, 10.5f, 0.0, 360.0, 1.4f)
+            for (k in 0 until 8) { val a = Math.toRadians(45.0 * k).toFloat(); ci(12f + 10.5f * cos(a), 12f + 10.5f * sin(a), 0.9f, relleno = true) } } // el timón
         TemaId.URSS -> { p { m(6f, 21f); q(10f, 12f, 7.5f, 3f) }; p { m(18f, 21f); q(14f, 12f, 16.5f, 3f) }; l(7.5f, 3f, 16.5f, 3f); l(4.5f, 21f, 19.5f, 21f)
             l(7f, 19f, 15.8f, 6f, 1f); l(17f, 19f, 8.2f, 6f, 1f); l(8.4f, 12f, 15.6f, 12f, 1.1f); l(12f, 3f, 12f, 0.8f, 1.1f) }            // torre de radio de celosía
         TemaId.REVOLUCION -> { ci(12f, 12f, 8.8f); for (k in 0 until 10) { val g = -90.0 + 36.0 * k; l(px(12f, 5.6f, g), py(12f, 5.6f, g), px(12f, 7.2f, g), py(12f, 7.2f, g), 1.1f) }

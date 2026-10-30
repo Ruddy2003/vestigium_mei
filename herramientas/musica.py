@@ -288,6 +288,26 @@ def hacer_templario():
         P['templario'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, cuerno, [0, 7, 12], 0.15, 0.5, 1.2))
         ARGS['templario'] = (T, pz, ac, mel, kw)
 
+def hacer_pirata():
+    # --- Pirata: Mi dórico, una saloma propia a buen paso. Violín de cubierta, concertina, un bajo pulsado, el pisotón
+    # en las tablas y, al cerrar, dos campanadas sobre el oleaje. Con su propio azar.
+    with A.azar_propio('musica_pirata'):
+        T = -5; pz = 0.3
+        ac = compases([0, 3, 7], [-2, 2, 5], [0, 3, 7], [5, 9, 12], [0, 3, 7], [-2, 2, 5], [5, 9, 12], [0, 3, 7])
+        mel = frase(0, "0:0.5 3:0.5 7:1 7:0.5 5:0.5 3:1 | 2:1 5:1 2:1 -2:1 | 0:0.5 3:0.5 7:1 10:1 9:1 | 7:1.5 5:0.5 9:2 | "
+                       "12:1 10:0.5 9:0.5 7:1 3:1 | 5:1 2:1 5:0.5 7:0.5 5:1 | 9:1 12:1 9:0.5 7:0.5 5:1 | 3:1 2:1 0:2")
+        pisoton = lambda: mezclar((0, filtro(ruido(0.06), 'banda', (200, 1200)) * env(int(0.06 * SR), 0.001, 0.035, 4), 0.8), (0, tambor(hz(T - 29), 0.12, 0.1), 0.5))
+        palmada = lambda: filtro(ruido(0.03), 'banda', (900, 3500)) * env(int(0.03 * SR), 0.001, 0.015, 5)
+        perc = cada(32, pisoton, 0.4, paso=2) + cada(32, palmada, 0.12, desde=1, paso=2)
+        bronce = lambda d: campana(hz(T + 12), d, 2.76, 1.4, 2.2)
+        ola = lambda d: filtro(ruido(d), 'banda', (250, 2600)) * np.sin(np.pi * t_(d) / d) ** 2
+        extra = ((0, ola(3.0), 0.12), (28 * pz, bronce(2.0), 0.3), (28 * pz + 0.28, bronce(2.0), 0.3), (26 * pz, ola(4.0), 0.14))
+        kw = dict(inst_mel=lambda f, d: arco(f, d, 6.2), inst_ac=lambda f, d: fuelle(f, d, 0.08), bajo=lambda f, d: pluck(f, min(d, 1.0), 0.3, 0.994),
+                  perc=perc, extra=extra, g_mel=0.4, g_ac=0.3, g_bajo=0.3, oct_mel=12, oct_ac=-12, legato=0.9, rev=0.24)
+        P['pirata'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw),
+                       notificacion(T, lambda f, d: campana(f, 1.6, 2.76, 1.4, 2.2), [12, 12, 19], 0.28, 1.6, 1.4))
+        ARGS['pirata'] = (T, pz, ac, mel, kw)
+
 def hacer_revolucion():
     # --- Revolución: Sol mayor, marcha de pífano y tambor (melodía propia) sobre cuerdas
     T = -2; pz = 0.36
@@ -465,6 +485,7 @@ def anual(T, pz, ac, mel, kw, ciclos=10):
 if __name__ == '__main__':
     hacer()
     hacer_templario()
+    hacer_pirata()
     hacer_revolucion()
     hacer_antiguas()
     hacer_neon()
