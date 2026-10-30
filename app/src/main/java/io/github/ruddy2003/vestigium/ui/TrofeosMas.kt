@@ -13,7 +13,10 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -26,7 +29,7 @@ import kotlin.math.sin
  * mapas, llaves y cristales). Sin figuras humanas ni animales, sin letras reales: los signos son inventados.
  */
 object TrofeosMas {
-    val TEMAS = setOf(TemaId.ANDALUS, TemaId.SEDA, TemaId.MONGOL, TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ANTIGUAS, TemaId.DISTOPIA)
+    val TEMAS = setOf(TemaId.ANDALUS, TemaId.SEDA, TemaId.MONGOL, TemaId.COLONOS, TemaId.BOTANICO, TemaId.NAVIDAD, TemaId.ANTIGUAS, TemaId.DISTOPIA, TemaId.CIBER, TemaId.REFUGIO, TemaId.ORDEN, TemaId.LABORATORIO, TemaId.ESPACIO, TemaId.URSS)
 
     val NOMBRES: Map<TemaId, Map<String, String>> = mapOf(
         TemaId.ANDALUS to mapOf("Diario" to "Libro de lacería", "Mundo" to "Astrolabio", "Cuerpo" to "Fuente del patio", "Mente" to "Estrella de ocho puntas",
@@ -45,6 +48,18 @@ object TrofeosMas {
             "Cultura" to "Arpa", "Gente" to "Estandarte", "Constancia" to "Llave de hierro", "Curiosos" to "Gema", "Tuyos" to "Linterna de mina"),
         TemaId.DISTOPIA to mapOf("Diario" to "Expediente sellado", "Mundo" to "Pase de control", "Cuerpo" to "Insignia numerada", "Mente" to "Tarjeta perforada",
             "Cultura" to "Documento censurado", "Gente" to "Credencial", "Constancia" to "Sello de goma", "Curiosos" to "Cámara de vigilancia", "Tuyos" to "Altavoz"),
+        TemaId.CIBER to mapOf("Diario" to "Registro del sistema", "Mundo" to "Mapa de la red", "Cuerpo" to "Monitor de pulso", "Mente" to "Árbol de directorios",
+            "Cultura" to "Disquete", "Gente" to "Canal de charla", "Constancia" to "Tiempo en línea", "Curiosos" to "Laberinto ASCII", "Tuyos" to "Llave de raíz"),
+        TemaId.REFUGIO to mapOf("Diario" to "Placa del cronista", "Mundo" to "Medalla de la superficie", "Cuerpo" to "Insignia de salud", "Mente" to "Medalla del átomo",
+            "Cultura" to "Disco de vinilo", "Gente" to "Placa de la puerta", "Constancia" to "Engrane de la compuerta", "Curiosos" to "Contador Geiger", "Tuyos" to "Lata de conservas"),
+        TemaId.ORDEN to mapOf("Diario" to "Placa del juramento", "Mundo" to "Estandarte de campaña", "Cuerpo" to "Guantelete", "Mente" to "Calibre de acero",
+            "Cultura" to "Escudo de la Orden", "Gente" to "Yelmo de visera", "Constancia" to "Martillo de forja", "Curiosos" to "Válvula de vacío", "Tuyos" to "Espada forjada"),
+        TemaId.LABORATORIO to mapOf("Diario" to "Placa de mérito", "Mundo" to "Matraz de fondo redondo", "Cuerpo" to "Probeta graduada", "Mente" to "Microscopio",
+            "Cultura" to "Modelo molecular", "Gente" to "Gradilla de tubos", "Constancia" to "Balanza analítica", "Curiosos" to "Matraz Erlenmeyer", "Tuyos" to "Placa de Petri"),
+        TemaId.ESPACIO to mapOf("Diario" to "Parche de la misión", "Mundo" to "Sonda planetaria", "Cuerpo" to "Casco presurizado", "Mente" to "Telescopio espacial",
+            "Cultura" to "Radiotelescopio", "Gente" to "Estación orbital", "Constancia" to "Cohete de tres etapas", "Curiosos" to "Meteorito", "Tuyos" to "Módulo de aterrizaje"),
+        TemaId.URSS to mapOf("Diario" to "Periódico mural", "Mundo" to "Insignia del Transiberiano", "Cuerpo" to "Insignia del deportista", "Mente" to "Satélite de antenas",
+            "Cultura" to "Cartel constructivista", "Gente" to "Estrella de la brigada", "Constancia" to "Medalla del trabajo", "Curiosos" to "Samovar", "Tuyos" to "Estrella roja"),
     )
 
     private fun TrofeosTema.Pincel.c(c: Color): Color = if (hecho) c else sombra
@@ -113,6 +128,65 @@ object TrofeosMas {
                     for (k in 0 until 6) drawRect(Color(0xFF141414).copy(alpha = 0.55f), Offset(w * (0.3f + k * 0.07f), h * 0.85f), Size(w * 0.035f, h * 0.05f))
                 }
             }
+            TemaId.CIBER -> {
+                // Una unidad de rack: chapa negra con rejilla de ventilación y sus luces de estado.
+                val c = if (p.hecho) Color(0xFF111925) else ped
+                drawRect(piedra(c), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f))
+                if (p.hecho) {
+                    drawRect(Color(0xFF15404A), Offset(w * 0.14f, h * 0.79f), Size(w * 0.72f, h * 0.16f), style = Stroke(w * 0.008f))
+                    for (k in 0 until 8) drawLine(Color(0xFF05070B), Offset(w * (0.2f + k * 0.035f), h * 0.82f), Offset(w * (0.2f + k * 0.035f), h * 0.92f), w * 0.014f)
+                    for (k in 0 until 4) drawCircle(if (k == 2) Color(0xFF86A0B3) else Color(0xFF00E5FF), w * 0.016f, Offset(w * (0.6f + k * 0.06f), h * 0.87f))
+                }
+            }
+            TemaId.REFUGIO -> {
+                // Una caja de suministros de chapa verde azulado, con remaches y su placa amarilla.
+                val c = if (p.hecho) Color(0xFF1C6E6A) else ped
+                drawRoundRect(piedra(c), Offset(w * 0.15f, h * 0.79f), Size(w * 0.7f, h * 0.16f), CornerRadius(w * 0.02f))
+                if (p.hecho) {
+                    drawRect(Color(0xFF124A47), Offset(w * 0.15f, h * 0.835f), Size(w * 0.7f, h * 0.008f))
+                    drawRoundRect(Color(0xFFE8B83A), Offset(w * 0.38f, h * 0.855f), Size(w * 0.24f, h * 0.06f), CornerRadius(w * 0.01f))
+                    for (k in 0 until 5) drawCircle(Color(0xFF0C3431), w * 0.012f, Offset(w * (0.2f + k * 0.15f), h * 0.81f))
+                }
+            }
+            TemaId.ORDEN -> {
+                // Un bloque de acero remachado con el paño carmesí de la Orden y su filete de latón.
+                val c = if (p.hecho) Color(0xFF6E757D) else ped
+                drawRect(piedra(c), Offset(w * 0.16f, h * 0.8f), Size(w * 0.68f, h * 0.15f))
+                drawRect(piedra(lerp(c, Color.Black, 0.1f)), Offset(w * 0.12f, h * 0.775f), Size(w * 0.76f, h * 0.03f))
+                if (p.hecho) {
+                    drawPath(Path().apply { moveTo(w * 0.36f, h * 0.805f); lineTo(w * 0.64f, h * 0.805f); lineTo(w * 0.62f, h * 0.93f); lineTo(w * 0.5f, h * 0.9f); lineTo(w * 0.38f, h * 0.93f); close() }, Color(0xFF9E1B22))
+                    drawLine(Color(0xFFD6B25A), Offset(w * 0.36f, h * 0.81f), Offset(w * 0.64f, h * 0.81f), w * 0.01f)
+                    listOf(0.21f, 0.28f, 0.72f, 0.79f).forEach { x -> drawCircle(Color(0xFF2A2E33), w * 0.014f, Offset(w * x, h * 0.87f)) }
+                }
+            }
+            TemaId.LABORATORIO -> {
+                // La mesa del laboratorio: cubierta blanca con su canto cian y la etiqueta de inventario.
+                val c = if (p.hecho) Color(0xFFE6EDF2) else ped
+                drawRoundRect(piedra(c), Offset(w * 0.12f, h * 0.78f), Size(w * 0.76f, h * 0.05f), CornerRadius(w * 0.015f))
+                drawRect(piedra(lerp(c, Color.Black, 0.08f)), Offset(w * 0.18f, h * 0.83f), Size(w * 0.64f, h * 0.12f))
+                if (p.hecho) {
+                    drawRect(Color(0xFF0B8FA1), Offset(w * 0.12f, h * 0.825f), Size(w * 0.76f, h * 0.008f))
+                    drawRect(Color.White, Offset(w * 0.38f, h * 0.86f), Size(w * 0.24f, h * 0.05f))
+                    for (k in 0 until 6) drawLine(Color(0xFF12202B), Offset(w * (0.4f + k * 0.035f), h * 0.865f), Offset(w * (0.4f + k * 0.035f), h * 0.9f), w * (if (k % 2 == 0) 0.008f else 0.004f))
+                }
+            }
+            TemaId.ESPACIO -> {
+                // La plataforma de lanzamiento: losa de concreto con el foso de las llamas y las luces naranjas.
+                val c = if (p.hecho) Color(0xFF9AA3B2) else ped
+                drawRect(piedra(c), Offset(w * 0.12f, h * 0.8f), Size(w * 0.76f, h * 0.15f))
+                drawRect(if (p.hecho) Color(0xFF26324F) else ped, Offset(w * 0.4f, h * 0.8f), Size(w * 0.2f, h * 0.08f))
+                if (p.hecho) {
+                    listOf(0.18f, 0.3f, 0.7f, 0.82f).forEach { x -> drawCircle(Color(0xFFE8601C), w * 0.014f, Offset(w * x, h * 0.9f)) }
+                    drawRect(Color(0xFF1B3A8C), Offset(w * 0.12f, h * 0.935f), Size(w * 0.76f, h * 0.015f))
+                }
+            }
+            TemaId.URSS -> {
+                // Un plinto de granito rojo en escalón, con la estrella dorada al frente.
+                val c = if (p.hecho) Color(0xFF7A2A26) else ped
+                drawRect(piedra(c), Offset(w * 0.18f, h * 0.79f), Size(w * 0.64f, h * 0.16f))
+                drawRect(piedra(lerp(c, Color.Black, 0.15f)), Offset(w * 0.12f, h * 0.92f), Size(w * 0.76f, h * 0.035f))
+                if (p.hecho) with(TrofeosTema) { estrella(Offset(w * 0.5f, h * 0.865f), w * 0.06f, w * 0.024f, 5, SolidColor(Color(0xFFD4A017))) }
+            }
             TemaId.ANTIGUAS -> {
                 // Un sillar con runas inventadas.
                 val c = if (p.hecho) Color(0xFF7D7A72) else ped
@@ -137,6 +211,35 @@ object TrofeosMas {
                 else -> { drawLine(color, Offset(x + ww / 2, o.y - alto / 6), Offset(x + ww, o.y + alto / 6), grosor, StrokeCap.Round); drawLine(color, Offset(x + ww / 2, o.y - alto / 6), Offset(x, o.y + alto / 6), grosor, StrokeCap.Round) }
             }
         }
+    }
+
+    /** El átomo de los años del optimismo atómico: tres órbitas elípticas giradas y el núcleo. */
+    fun DrawScope.atomo(c: Offset, r: Float, color: Color, grosor: Float, nucleo: Color = color) {
+        for (k in 0 until 3) rotate(k * 60f, c) { drawOval(color, Offset(c.x - r, c.y - r * 0.36f), Size(2 * r, r * 0.72f), style = Stroke(grosor)) }
+        drawCircle(nucleo, r * 0.18f, c)
+    }
+
+    /** Texto en letra monoespaciada con la base en [y] (consolas, letreros de máquina). */
+    fun DrawScope.mono(t: String, x: Float, y: Float, tam: Float, color: Color, alinear: android.graphics.Paint.Align = android.graphics.Paint.Align.LEFT, negrita: Boolean = false) {
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = color.toArgb(); textSize = tam; textAlign = alinear
+            typeface = android.graphics.Typeface.create(android.graphics.Typeface.MONOSPACE, if (negrita) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
+        }
+        drawContext.canvas.nativeCanvas.drawText(t, x, y, paint)
+    }
+
+    /** Arte ASCII: las [lineas] en letra monoespaciada, del tamaño que quepa en el rectángulo (en fracciones del pincel) y centradas. */
+    private fun DrawScope.ascii(p: TrofeosTema.Pincel, lineas: List<String>, x0: Float, y0: Float, x1: Float, y1: Float, color: Color) {
+        val cols = lineas.maxOf { it.length }.coerceAtLeast(1)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { this.color = color.toArgb(); typeface = android.graphics.Typeface.MONOSPACE; textSize = 100f }
+        val anchoLetra = paint.measureText("M") / 100f
+        val interlinea = 1.16f
+        val tam = minOf(p.x(x1 - x0) / (cols * anchoLetra), p.y(y1 - y0) / (lineas.size * interlinea))
+        paint.textSize = tam
+        val izq = p.x((x0 + x1) / 2) - cols * anchoLetra * tam / 2
+        var y = p.y((y0 + y1) / 2) - lineas.size * interlinea * tam / 2 + tam * 0.9f
+        val lienzo = drawContext.canvas.nativeCanvas
+        lineas.forEach { l -> lienzo.drawText(l, izq, y, paint); y += tam * interlinea }
     }
 
     /** Una estrella de [puntas] hecha con [capas] cuadrados girados (la lacería). */
@@ -165,6 +268,12 @@ object TrofeosMas {
             TemaId.NAVIDAD -> navidad(cat, p)
             TemaId.ANTIGUAS -> antiguas(cat, p)
             TemaId.DISTOPIA -> distopia(cat, p)
+            TemaId.CIBER -> terminal(cat, p)
+            TemaId.REFUGIO -> refugio(cat, p)
+            TemaId.ORDEN -> orden(cat, p)
+            TemaId.LABORATORIO -> laboratorio(cat, p)
+            TemaId.ESPACIO -> espacio(cat, p)
+            TemaId.URSS -> urss(cat, p)
             else -> return false
         }
         return true
@@ -1011,6 +1120,608 @@ object TrofeosMas {
                 if (p.hecho) listOf(0.1f, 0.16f, 0.22f).forEachIndexed { k, r ->
                     drawArc(rojo.copy(alpha = 0.8f - k * 0.2f), -40f, 80f, false, Offset(p.x(0.74f) - p.w * r, p.y(0.36f) - p.w * r), Size(p.w * r * 2, p.w * r * 2), style = Stroke(lw * 0.8f))
                 }
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Terminal: arte ASCII en ventanas de consola
+
+    private fun DrawScope.terminal(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val cian = Color(0xFF00E5FF); val negro = p.c(Color(0xFF05070B))
+        val (titulo, dibujo) = when (cat) {
+            "Diario" -> "syslog" to listOf("$ tail diario", "[ok] 07:10", "[ok] 13:42", "[ok] 22:05", "> _")
+            "Mundo" -> "red" to listOf("  .-'''-.", " /|  |  |\\", "|-+--+--+-|", " \\|  |  |/", "  '-...-'")
+            "Cuerpo" -> "pulso" to listOf("BPM 064", "    /\\", "___/  \\  ___", "       \\/")
+            "Mente" -> "árbol" to listOf("~/mente", "+-- ideas/", "|   +-- a.txt", "|   `-- b.txt", "`-- dudas/")
+            "Cultura" -> "disco" to listOf(" _________", "| |_____| |", "|  _____  |", "| |     | |", "|_|_____|_|")
+            "Gente" -> "charla" to listOf("<tú> hola", "<yo> hola :)", "<tú> ¿café?", "<yo> va <3")
+            "Constancia" -> "uptime" to listOf("UPTIME", "[#########-]", "  99.9 %", " 7d 00:00")
+            "Curiosos" -> "laberinto" to listOf("+--+--+--+", "|  |     |", "+  +  +--+", "|     |  |", "+--+--+--+")
+            else -> "raíz" to listOf(" .--.", "(    )----+-+", " '--'     ' '", "root@vm # _")
+        }
+        // La ventana: marco de metal, barra de título con su nombre y sus botones, y la pantalla negra.
+        caja(p, 0.08f, 0.06f, 0.92f, 0.7f)
+        caja(p, 0.11f, 0.14f, 0.89f, 0.67f, SolidColor(negro))
+        if (p.hecho) {
+            drawCircle(Brush.radialGradient(listOf(cian.copy(alpha = 0.16f), Color.Transparent), p.o(0.5f, 0.4f), p.w * 0.42f), p.w * 0.42f, p.o(0.5f, 0.4f))
+            mono(titulo, p.x(0.13f), p.y(0.122f), p.w * 0.06f, Color(0xFF05070B), negrita = true)
+            for (k in 0 until 3) drawRect(Color(0xFF05070B), Offset(p.x(0.7f + k * 0.06f), p.y(0.083f)), Size(p.x(0.04f), p.y(0.035f)), style = Stroke(lw * 0.6f))
+            // Las líneas de barrido de la pantalla.
+            var y = p.y(0.15f); while (y < p.y(0.66f)) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(p.x(0.11f), y), Offset(p.x(0.89f), y), lw * 0.25f); y += lw * 0.9f }
+        }
+        ascii(p, dibujo, 0.15f, 0.17f, 0.85f, 0.64f, if (p.hecho) cian else p.sombra)
+        // El cuello y la base del monitor.
+        caja(p, 0.42f, 0.7f, 0.58f, 0.74f)
+        caja(p, 0.3f, 0.74f, 0.7f, 0.77f)
+    }
+
+    // ---------------------------------------------------------------- Refugio: placas y medallas de chapa esmaltada
+
+    private fun DrawScope.refugio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val verde = p.c(Color(0xFF1C6E6A)); val naranja = p.c(Color(0xFFD9572B)); val amarillo = p.c(Color(0xFFE8B83A))
+        val crema = p.c(Color(0xFFF1E8D0)); val tinta = p.c(Color(0xFF1F2A2A))
+        fun remaches(vararg pts: Pair<Float, Float>) { if (p.hecho) pts.forEach { (x, y) -> drawCircle(p.linea, p.w * 0.016f, p.o(x, y)); drawCircle(p.claro, p.w * 0.006f, p.o(x - 0.004f, y - 0.004f)) } }
+        /** Una cinta de medalla con dos colores que cuelga desde arriba. */
+        fun cinta(y1: Float) {
+            drawPath(Path().apply { moveTo(p.x(0.36f), p.y(0.02f)); lineTo(p.x(0.64f), p.y(0.02f)); lineTo(p.x(0.58f), p.y(y1)); lineTo(p.x(0.42f), p.y(y1)); close() }, verde)
+            drawPath(Path().apply { moveTo(p.x(0.46f), p.y(0.02f)); lineTo(p.x(0.54f), p.y(0.02f)); lineTo(p.x(0.52f), p.y(y1)); lineTo(p.x(0.48f), p.y(y1)); close() }, amarillo)
+            caja(p, 0.4f, y1 - 0.01f, 0.6f, y1 + 0.025f)
+        }
+        when (cat) {
+            "Diario" -> {
+                // Placa rectangular atornillada: el marco de metal, el esmalte crema, la pluma y el átomo.
+                drawRoundRect(p.metal(0.14f, 0.86f), Offset(p.x(0.14f), p.y(0.14f)), Size(p.x(0.72f), p.y(0.5f)), CornerRadius(p.w * 0.04f))
+                drawRoundRect(SolidColor(crema), Offset(p.x(0.19f), p.y(0.18f)), Size(p.x(0.62f), p.y(0.42f)), CornerRadius(p.w * 0.025f))
+                drawRect(verde, Offset(p.x(0.19f), p.y(0.18f)), Size(p.x(0.62f), p.y(0.08f)))
+                atomo(p.o(0.38f, 0.43f), p.w * 0.13f, naranja, lw * 0.8f)
+                drawPath(Path().apply { moveTo(p.x(0.74f), p.y(0.3f)); lineTo(p.x(0.6f), p.y(0.52f)); lineTo(p.x(0.58f), p.y(0.56f)); lineTo(p.x(0.62f), p.y(0.54f)); lineTo(p.x(0.76f), p.y(0.32f)); close() }, tinta)
+                remaches(0.18f to 0.16f, 0.82f to 0.16f, 0.18f to 0.62f, 0.82f to 0.62f)
+                caja(p, 0.46f, 0.64f, 0.54f, 0.77f)
+            }
+            "Mundo" -> {
+                // Medalla redonda: el sol que sale sobre las colinas, con su cinta.
+                cinta(0.24f)
+                val c = p.o(0.5f, 0.5f); val R = p.w * 0.27f
+                drawCircle(p.metal(0.23f, 0.77f), R, c)
+                drawCircle(SolidColor(crema), R * 0.8f, c)
+                clipPath(Path().apply { addOval(Rect(c, R * 0.8f)) }) {
+                    drawCircle(amarillo, R * 0.3f, Offset(c.x, c.y + R * 0.1f))
+                    if (p.hecho) for (k in 0 until 9) { val a = PI + k * PI / 8; drawLine(amarillo, Offset(c.x + (R * 0.38f * cos(a)).toFloat(), c.y + R * 0.1f + (R * 0.38f * sin(a)).toFloat()), Offset(c.x + (R * 0.6f * cos(a)).toFloat(), c.y + R * 0.1f + (R * 0.6f * sin(a)).toFloat()), lw * 0.7f) }
+                    drawArc(verde, 180f, 180f, true, Offset(c.x - R * 1.1f, c.y + R * 0.1f), Size(R * 1.4f, R))
+                    drawArc(lerp(verde, Color.Black, 0.25f), 180f, 180f, true, Offset(c.x - R * 0.2f, c.y + R * 0.2f), Size(R * 1.5f, R))
+                }
+                drawCircle(p.linea, R * 0.8f, c, style = Stroke(lw * 0.6f))
+            }
+            "Cuerpo" -> {
+                // Insignia de escudo con la cruz de salud y una franja naranja.
+                val escudo = Path().apply { moveTo(p.x(0.2f), p.y(0.12f)); lineTo(p.x(0.8f), p.y(0.12f)); lineTo(p.x(0.8f), p.y(0.42f)); quadraticTo(p.x(0.8f), p.y(0.64f), p.x(0.5f), p.y(0.74f)); quadraticTo(p.x(0.2f), p.y(0.64f), p.x(0.2f), p.y(0.42f)); close() }
+                drawPath(escudo, p.metal(0.2f, 0.8f))
+                val dentro = Path().apply { moveTo(p.x(0.25f), p.y(0.16f)); lineTo(p.x(0.75f), p.y(0.16f)); lineTo(p.x(0.75f), p.y(0.42f)); quadraticTo(p.x(0.75f), p.y(0.6f), p.x(0.5f), p.y(0.69f)); quadraticTo(p.x(0.25f), p.y(0.6f), p.x(0.25f), p.y(0.42f)); close() }
+                drawPath(dentro, SolidColor(crema))
+                clipPath(dentro) { drawRect(naranja, Offset(p.x(0.2f), p.y(0.16f)), Size(p.x(0.6f), p.y(0.06f))) }
+                caja(p, 0.44f, 0.28f, 0.56f, 0.56f, SolidColor(verde)); caja(p, 0.36f, 0.36f, 0.64f, 0.48f, SolidColor(verde))
+            }
+            "Mente" -> {
+                // Medalla de estrella de ocho puntas con el átomo grande al centro.
+                val c = p.o(0.5f, 0.4f)
+                estrella(c, p.w * 0.36f, p.w * 0.26f, 8, p.metal(0.14f, 0.86f))
+                drawCircle(SolidColor(verde), p.w * 0.24f, c)
+                atomo(c, p.w * 0.19f, crema, lw * 0.9f, naranja)
+                caja(p, 0.46f, 0.68f, 0.54f, 0.77f)
+            }
+            "Cultura" -> {
+                // El disco de vinilo de la sala común, con su etiqueta y el brillo de los surcos.
+                val c = p.o(0.5f, 0.4f); val R = p.w * 0.33f
+                drawCircle(p.c(Color(0xFF161616)), R, c)
+                if (p.hecho) for (k in 1..6) drawCircle(Color.White.copy(alpha = 0.06f), R * (0.4f + k * 0.09f), c, style = Stroke(lw * 0.4f))
+                if (p.hecho) drawArc(Color.White.copy(alpha = 0.14f), 200f, 50f, false, Offset(c.x - R * 0.85f, c.y - R * 0.85f), Size(R * 1.7f, R * 1.7f), style = Stroke(lw * 2))
+                drawCircle(p.metal(0.38f, 0.62f), R * 0.36f, c)
+                drawCircle(SolidColor(naranja), R * 0.28f, c)
+                atomo(c, R * 0.2f, crema, lw * 0.5f)
+                drawCircle(p.c(Color(0xFF161616)), R * 0.05f, c)
+                caja(p, 0.3f, 0.74f, 0.7f, 0.77f)
+            }
+            "Gente" -> {
+                // La placa de la puerta del vecino: número grande en una placa redondeada con dos tornillos.
+                drawRoundRect(p.metal(0.18f, 0.82f), Offset(p.x(0.18f), p.y(0.2f)), Size(p.x(0.64f), p.y(0.36f)), CornerRadius(p.w * 0.12f))
+                drawRoundRect(SolidColor(verde), Offset(p.x(0.22f), p.y(0.235f)), Size(p.x(0.56f), p.y(0.29f)), CornerRadius(p.w * 0.1f))
+                if (p.hecho) texto("017", p, 0.5f, 0.375f, 0.17f, Color(0xFFF1E8D0))
+                remaches(0.27f to 0.38f, 0.73f to 0.38f)
+                caja(p, 0.47f, 0.56f, 0.53f, 0.77f)
+            }
+            "Constancia" -> {
+                // El engrane de la compuerta: rueda dentada con la cruz de la manivela.
+                val c = p.o(0.5f, 0.4f); val R = p.w * 0.34f
+                val rueda = Path().apply {
+                    val dientes = 12
+                    for (k in 0 until dientes * 2) { val a = k * PI / dientes; val rr = if (k % 2 == 0) R else R * 0.82f
+                        val a0 = a - PI / dientes / 2; val a1 = a + PI / dientes / 2
+                        val x0 = c.x + (rr * cos(a0)).toFloat(); val y0 = c.y + (rr * sin(a0)).toFloat()
+                        if (k == 0) moveTo(x0, y0) else lineTo(x0, y0); lineTo(c.x + (rr * cos(a1)).toFloat(), c.y + (rr * sin(a1)).toFloat()) }
+                    close(); addOval(Rect(c, R * 0.5f)); fillType = PathFillType.EvenOdd
+                }
+                drawPath(rueda, p.metal(0.16f, 0.84f))
+                drawCircle(SolidColor(amarillo), R * 0.5f, c)
+                listOf(0f, 90f).forEach { a -> rotate(a + 45f, c) { drawRect(tinta, Offset(c.x - R * 0.45f, c.y - lw), Size(R * 0.9f, lw * 2)) } }
+                drawCircle(tinta, R * 0.1f, c)
+                caja(p, 0.46f, 0.68f, 0.54f, 0.77f)
+            }
+            "Curiosos" -> {
+                // El contador Geiger: caja con la aguja, la sonda en su cable y los clics que salen.
+                caja(p, 0.16f, 0.3f, 0.64f, 0.66f, SolidColor(amarillo))
+                drawRect(p.metal(0.16f, 0.64f), Offset(p.x(0.16f), p.y(0.3f)), Size(p.x(0.48f), p.y(0.36f)), style = Stroke(lw))
+                drawArc(SolidColor(crema), 200f, 140f, true, Offset(p.x(0.22f), p.y(0.36f)), Size(p.x(0.36f), p.y(0.3f)))
+                drawLine(tinta, p.o(0.4f, 0.51f), p.o(0.5f, 0.4f), lw * 0.8f)
+                caja(p, 0.3f, 0.22f, 0.5f, 0.3f)
+                drawPath(Path().apply { moveTo(p.x(0.64f), p.y(0.56f)); cubicTo(p.x(0.8f), p.y(0.62f), p.x(0.82f), p.y(0.36f), p.x(0.76f), p.y(0.26f)) }, tinta, style = Stroke(lw * 0.8f))
+                rotate(-25f, p.o(0.76f, 0.2f)) { drawRoundRect(p.metal(0.72f, 0.8f), Offset(p.x(0.73f), p.y(0.08f)), Size(p.x(0.06f), p.y(0.18f)), CornerRadius(p.w * 0.02f)) }
+                if (p.hecho) listOf(0.06f, 0.1f).forEach { r -> drawArc(naranja, -70f, 50f, false, Offset(p.x(0.72f) - p.w * r, p.y(0.1f) - p.w * r), Size(p.w * r * 2, p.w * r * 2), style = Stroke(lw * 0.7f)) }
+                caja(p, 0.2f, 0.66f, 0.6f, 0.77f, SolidColor(lerp(amarillo, Color.Black, 0.25f)))
+            }
+            else -> {
+                // La lata de conservas con su etiqueta del átomo, la tapa y la llave de abrir.
+                caja(p, 0.28f, 0.2f, 0.72f, 0.72f)
+                caja(p, 0.28f, 0.32f, 0.72f, 0.6f, SolidColor(naranja))
+                drawRect(SolidColor(crema), Offset(p.x(0.28f), p.y(0.4f)), Size(p.x(0.44f), p.y(0.12f)))
+                atomo(p.o(0.5f, 0.46f), p.w * 0.07f, verde, lw * 0.5f)
+                drawOval(p.metal(0.28f, 0.72f), Offset(p.x(0.28f), p.y(0.16f)), Size(p.x(0.44f), p.y(0.08f)))
+                drawOval(p.linea, Offset(p.x(0.3f), p.y(0.17f)), Size(p.x(0.4f), p.y(0.06f)), style = Stroke(lw * 0.5f))
+                for (k in 1..4) drawLine(p.linea.copy(alpha = 0.35f), p.o(0.28f, 0.2f + k * 0.025f), p.o(0.72f, 0.2f + k * 0.025f), lw * 0.4f)
+                drawOval(p.metal(0.28f, 0.72f), Offset(p.x(0.28f), p.y(0.68f)), Size(p.x(0.44f), p.y(0.08f)))
+                drawLine(tinta, p.o(0.72f, 0.18f), p.o(0.84f, 0.1f), lw); drawCircle(tinta, p.w * 0.03f, p.o(0.86f, 0.09f), style = Stroke(lw * 0.7f))
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Orden: estandartes, escudos y piezas forjadas
+
+    private fun DrawScope.orden(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val carmesi = p.c(Color(0xFF9E1B22)); val laton = p.c(Color(0xFFD6B25A)); val acero = p.c(Color(0xFF4B525A)); val negro = p.c(Color(0xFF15181B))
+        fun remaches(vararg pts: Pair<Float, Float>) { if (p.hecho) pts.forEach { (x, y) -> drawCircle(p.linea, p.w * 0.015f, p.o(x, y)); drawCircle(p.claro, p.w * 0.006f, p.o(x - 0.004f, y - 0.004f)) } }
+        /** El engrane de la Orden, el saber técnico que custodia. */
+        fun engrane(c: Offset, r: Float, b: Brush, hueco: Color) {
+            val path = Path().apply {
+                val n = 8
+                for (k in 0 until n * 2) { val a = k * PI / n; val rr = if (k % 2 == 0) r else r * 0.78f
+                    val a0 = a - PI / n / 2; val a1 = a + PI / n / 2
+                    val x0 = c.x + (rr * cos(a0)).toFloat(); val y0 = c.y + (rr * sin(a0)).toFloat()
+                    if (k == 0) moveTo(x0, y0) else lineTo(x0, y0); lineTo(c.x + (rr * cos(a1)).toFloat(), c.y + (rr * sin(a1)).toFloat()) }
+                close()
+            }
+            drawPath(path, b); drawCircle(hueco, r * 0.36f, c)
+        }
+        when (cat) {
+            "Diario" -> {
+                // La placa del juramento: lámina de acero con esquinas cortadas, remaches, el engrane y los renglones grabados.
+                val placa = Path().apply { val a = 0.05f; moveTo(p.x(0.16f + a), p.y(0.1f)); lineTo(p.x(0.84f - a), p.y(0.1f)); lineTo(p.x(0.84f), p.y(0.1f + a)); lineTo(p.x(0.84f), p.y(0.66f - a))
+                    lineTo(p.x(0.84f - a), p.y(0.66f)); lineTo(p.x(0.16f + a), p.y(0.66f)); lineTo(p.x(0.16f), p.y(0.66f - a)); lineTo(p.x(0.16f), p.y(0.1f + a)); close() }
+                drawPath(placa, p.metal(0.16f, 0.84f)); drawPath(placa, p.linea, style = Stroke(lw * 0.7f))
+                engrane(p.o(0.5f, 0.27f), p.w * 0.11f, SolidColor(carmesi), p.c(Color(0xFFD6B25A)))
+                if (p.hecho) for (k in 0 until 4) drawLine(p.linea, p.o(0.26f, 0.43f + k * 0.05f), p.o(if (k == 3) 0.56f else 0.74f, 0.43f + k * 0.05f), lw * 0.7f)
+                remaches(0.21f to 0.15f, 0.79f to 0.15f, 0.21f to 0.61f, 0.79f to 0.61f)
+                caja(p, 0.44f, 0.66f, 0.56f, 0.77f, SolidColor(acero))
+            }
+            "Mundo" -> {
+                // El estandarte de campaña: asta de acero con remate, travesaño de latón y el paño carmesí con el engrane y sus colas.
+                caja(p, 0.2f, 0.04f, 0.24f, 0.77f, SolidColor(acero))
+                drawPath(Path().apply { moveTo(p.x(0.22f), p.y(0.0f)); lineTo(p.x(0.26f), p.y(0.05f)); lineTo(p.x(0.18f), p.y(0.05f)); close() }, p.metal(0.18f, 0.26f))
+                caja(p, 0.2f, 0.08f, 0.84f, 0.11f)
+                val pano = Path().apply { moveTo(p.x(0.28f), p.y(0.11f)); lineTo(p.x(0.8f), p.y(0.11f)); lineTo(p.x(0.8f), p.y(0.58f)); lineTo(p.x(0.67f), p.y(0.5f)); lineTo(p.x(0.54f), p.y(0.6f)); lineTo(p.x(0.41f), p.y(0.5f)); lineTo(p.x(0.28f), p.y(0.58f)); close() }
+                drawPath(pano, SolidColor(carmesi))
+                drawPath(pano, p.metal(0.28f, 0.8f), style = Stroke(lw * 0.8f))
+                engrane(p.o(0.54f, 0.3f), p.w * 0.12f, p.metal(0.42f, 0.66f), carmesi)
+            }
+            "Cuerpo" -> {
+                // El guantelete: puño de láminas articuladas, nudillos y la manga con el filete carmesí.
+                caja(p, 0.32f, 0.5f, 0.68f, 0.74f)
+                caja(p, 0.32f, 0.52f, 0.68f, 0.56f, SolidColor(carmesi))
+                drawRoundRect(p.metal(0.26f, 0.74f), Offset(p.x(0.26f), p.y(0.2f)), Size(p.x(0.48f), p.y(0.32f)), CornerRadius(p.w * 0.06f))
+                for (k in 0 until 4) { val x = 0.29f + k * 0.11f; drawRoundRect(p.metal(x, x + 0.1f), Offset(p.x(x), p.y(0.1f)), Size(p.x(0.1f), p.y(0.16f)), CornerRadius(p.w * 0.04f)); if (p.hecho) drawLine(p.linea, p.o(x, 0.18f), p.o(x + 0.1f, 0.18f), lw * 0.5f) }
+                drawRoundRect(p.metal(0.16f, 0.3f), Offset(p.x(0.16f), p.y(0.26f)), Size(p.x(0.14f), p.y(0.18f)), CornerRadius(p.w * 0.05f))
+                if (p.hecho) for (k in 0 until 3) drawLine(p.linea, p.o(0.28f, 0.3f + k * 0.07f), p.o(0.72f, 0.3f + k * 0.07f), lw * 0.6f)
+                remaches(0.36f to 0.64f, 0.64f to 0.64f)
+            }
+            "Mente" -> {
+                // El calibre de acero: la regla graduada, las dos mandíbulas y el tornillo de latón.
+                caja(p, 0.14f, 0.2f, 0.86f, 0.3f)
+                if (p.hecho) for (k in 0..24) drawLine(p.linea, p.o(0.18f + k * 0.026f, 0.2f), p.o(0.18f + k * 0.026f, if (k % 5 == 0) 0.27f else 0.24f), lw * 0.4f)
+                drawPath(Path().apply { moveTo(p.x(0.14f), p.y(0.2f)); lineTo(p.x(0.26f), p.y(0.2f)); lineTo(p.x(0.26f), p.y(0.62f)); lineTo(p.x(0.2f), p.y(0.7f)); lineTo(p.x(0.14f), p.y(0.62f)); close() }, p.metal(0.14f, 0.26f))
+                drawPath(Path().apply { moveTo(p.x(0.5f), p.y(0.16f)); lineTo(p.x(0.64f), p.y(0.16f)); lineTo(p.x(0.64f), p.y(0.36f)); lineTo(p.x(0.58f), p.y(0.36f)); lineTo(p.x(0.58f), p.y(0.62f)); lineTo(p.x(0.54f), p.y(0.7f)); lineTo(p.x(0.5f), p.y(0.62f)); close() }, p.metal(0.5f, 0.64f))
+                drawCircle(SolidColor(laton), p.w * 0.04f, p.o(0.57f, 0.12f))
+                caja(p, 0.3f, 0.32f, 0.48f, 0.38f, SolidColor(carmesi))
+                caja(p, 0.44f, 0.7f, 0.56f, 0.77f, SolidColor(acero))
+            }
+            "Cultura" -> {
+                // El escudo de la Orden: escudo de punta con banda carmesí, el engrane de latón y el borde remachado.
+                val escudo = Path().apply { moveTo(p.x(0.18f), p.y(0.08f)); lineTo(p.x(0.82f), p.y(0.08f)); lineTo(p.x(0.82f), p.y(0.36f)); quadraticTo(p.x(0.8f), p.y(0.62f), p.x(0.5f), p.y(0.76f)); quadraticTo(p.x(0.2f), p.y(0.62f), p.x(0.18f), p.y(0.36f)); close() }
+                drawPath(escudo, p.metal(0.18f, 0.82f))
+                clipPath(escudo) { drawPath(Path().apply { moveTo(p.x(0.18f), p.y(0.3f)); lineTo(p.x(0.5f), p.y(0.18f)); lineTo(p.x(0.82f), p.y(0.3f)); lineTo(p.x(0.82f), p.y(0.42f)); lineTo(p.x(0.5f), p.y(0.3f)); lineTo(p.x(0.18f), p.y(0.42f)); close() }, carmesi) }
+                engrane(p.o(0.5f, 0.5f), p.w * 0.12f, SolidColor(laton), p.c(Color(0xFF4B525A)))
+                drawPath(escudo, p.linea, style = Stroke(lw * 0.9f))
+                remaches(0.24f to 0.13f, 0.5f to 0.13f, 0.76f to 0.13f)
+            }
+            "Gente" -> {
+                // El yelmo de visera: la cúpula, la visera con sus rendijas y la cresta carmesí.
+                drawPath(Path().apply { moveTo(p.x(0.4f), p.y(0.12f)); quadraticTo(p.x(0.5f), p.y(0.02f), p.x(0.62f), p.y(0.12f)); lineTo(p.x(0.6f), p.y(0.2f)); lineTo(p.x(0.42f), p.y(0.2f)); close() }, carmesi)
+                val casco = Path().apply { moveTo(p.x(0.22f), p.y(0.68f)); lineTo(p.x(0.22f), p.y(0.38f)); cubicTo(p.x(0.22f), p.y(0.12f), p.x(0.78f), p.y(0.12f), p.x(0.78f), p.y(0.38f)); lineTo(p.x(0.78f), p.y(0.68f)); lineTo(p.x(0.62f), p.y(0.74f)); lineTo(p.x(0.38f), p.y(0.74f)); close() }
+                drawPath(casco, p.metal(0.22f, 0.78f))
+                drawRoundRect(SolidColor(lerp(acero, Color.Black, 0.2f)), Offset(p.x(0.26f), p.y(0.36f)), Size(p.x(0.48f), p.y(0.14f)), CornerRadius(p.w * 0.03f))
+                if (p.hecho) for (k in 0 until 2) drawLine(negro, p.o(0.3f, 0.4f + k * 0.06f), p.o(0.7f, 0.4f + k * 0.06f), lw * 0.8f)
+                drawLine(p.linea, p.o(0.5f, 0.2f), p.o(0.5f, 0.36f), lw * 0.7f)
+                remaches(0.3f to 0.6f, 0.7f to 0.6f)
+            }
+            "Constancia" -> {
+                // El martillo de forja sobre el bloque, con chispas.
+                rotate(-30f, p.o(0.5f, 0.5f)) {
+                    caja(p, 0.46f, 0.24f, 0.54f, 0.78f, SolidColor(p.c(Color(0xFF5A3A22))))
+                    caja(p, 0.46f, 0.3f, 0.54f, 0.34f, SolidColor(carmesi))
+                    drawRoundRect(p.metal(0.3f, 0.7f), Offset(p.x(0.3f), p.y(0.12f)), Size(p.x(0.4f), p.y(0.13f)), CornerRadius(p.w * 0.015f))
+                }
+                caja(p, 0.2f, 0.66f, 0.8f, 0.72f, SolidColor(acero)); caja(p, 0.3f, 0.72f, 0.7f, 0.77f, SolidColor(acero))
+                if (p.hecho) listOf(Offset(0.24f, 0.56f), Offset(0.32f, 0.5f), Offset(0.2f, 0.48f), Offset(0.36f, 0.6f)).forEach { o -> drawCircle(Color(0xFFFFB347), p.w * 0.012f, p.o(o.x, o.y)) }
+            }
+            "Curiosos" -> {
+                // La válvula de vacío: ampolla de vidrio, el filamento encendido, las placas y la base de latón con sus patas.
+                val amp = Path().apply { moveTo(p.x(0.32f), p.y(0.6f)); lineTo(p.x(0.32f), p.y(0.26f)); cubicTo(p.x(0.32f), p.y(0.06f), p.x(0.68f), p.y(0.06f), p.x(0.68f), p.y(0.26f)); lineTo(p.x(0.68f), p.y(0.6f)); close() }
+                drawPath(amp, SolidColor(p.c(Color(0xFFCFE6F0)).copy(alpha = if (p.hecho) 0.35f else 1f)))
+                if (p.hecho) drawCircle(Brush.radialGradient(listOf(Color(0xFFFF8A3A).copy(alpha = 0.6f), Color.Transparent), p.o(0.5f, 0.42f), p.w * 0.2f), p.w * 0.2f, p.o(0.5f, 0.42f))
+                caja(p, 0.38f, 0.26f, 0.42f, 0.56f, SolidColor(acero)); caja(p, 0.58f, 0.26f, 0.62f, 0.56f, SolidColor(acero))
+                drawPath(Path().apply { moveTo(p.x(0.46f), p.y(0.56f)); lineTo(p.x(0.48f), p.y(0.36f)); lineTo(p.x(0.5f), p.y(0.44f)); lineTo(p.x(0.52f), p.y(0.36f)); lineTo(p.x(0.54f), p.y(0.56f)) }, if (p.hecho) Color(0xFFFF8A3A) else p.sombra, style = Stroke(lw * 0.6f))
+                drawPath(amp, p.metal(0.32f, 0.68f), style = Stroke(lw * 0.6f))
+                caja(p, 0.3f, 0.6f, 0.7f, 0.7f, SolidColor(laton))
+                listOf(0.38f, 0.46f, 0.54f, 0.62f).forEach { x -> caja(p, x - 0.01f, 0.7f, x + 0.01f, 0.77f) }
+            }
+            else -> {
+                // La espada forjada: hoja con su canal, guarda de latón, empuñadura forrada en carmesí y el pomo con el engrane.
+                drawPath(Path().apply { moveTo(p.x(0.5f), p.y(0.02f)); lineTo(p.x(0.56f), p.y(0.1f)); lineTo(p.x(0.56f), p.y(0.52f)); lineTo(p.x(0.44f), p.y(0.52f)); lineTo(p.x(0.44f), p.y(0.1f)); close() }, p.metal(0.44f, 0.56f))
+                if (p.hecho) drawLine(p.linea, p.o(0.5f, 0.08f), p.o(0.5f, 0.5f), lw * 0.6f)
+                drawRoundRect(SolidColor(laton), Offset(p.x(0.26f), p.y(0.52f)), Size(p.x(0.48f), p.y(0.05f)), CornerRadius(p.w * 0.02f))
+                caja(p, 0.46f, 0.57f, 0.54f, 0.69f, SolidColor(carmesi))
+                if (p.hecho) for (k in 0 until 4) drawLine(negro.copy(alpha = 0.5f), p.o(0.46f, 0.59f + k * 0.028f), p.o(0.54f, 0.6f + k * 0.028f), lw * 0.4f)
+                engrane(p.o(0.5f, 0.72f), p.w * 0.06f, p.metal(0.44f, 0.56f), carmesi)
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Laboratorio: vidrio, instrumentos y placas de mérito
+
+    private fun DrawScope.laboratorio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val cian = p.c(Color(0xFF0B8FA1)); val violeta = p.c(Color(0xFF5E4FD1)); val verde = p.c(Color(0xFF1E8E5A))
+        val blanco = p.c(Color(0xFFF4F7F9)); val tinta = p.c(Color(0xFF12202B))
+        val vidrio = if (p.hecho) Color(0xFFCFE6F0).copy(alpha = 0.45f) else p.sombra
+        /** El vidrio: la forma llena de aire, el líquido de [nivel] para abajo, el contorno de metal y un brillo. */
+        fun vaso(forma: Path, nivel: Float, liquido: Color, x0: Float, x1: Float) {
+            drawPath(forma, vidrio)
+            clipPath(forma) { drawRect(liquido, Offset(p.x(x0) - p.w, p.y(nivel)), Size(p.w * 3, p.h)) }
+            drawPath(forma, p.metal(x0, x1), style = Stroke(lw * 1.1f))
+            if (p.hecho) drawLine(Color.White.copy(alpha = 0.6f), p.o(x0 + 0.06f, nivel - 0.2f), p.o(x0 + 0.06f, nivel - 0.06f), lw * 0.8f, StrokeCap.Round)
+        }
+        when (cat) {
+            "Diario" -> {
+                // La placa de mérito: marco de metal, el fondo blanco, la molécula y las líneas grabadas.
+                drawRoundRect(p.metal(0.16f, 0.84f), Offset(p.x(0.16f), p.y(0.1f)), Size(p.x(0.68f), p.y(0.56f)), CornerRadius(p.w * 0.03f))
+                drawRoundRect(SolidColor(blanco), Offset(p.x(0.2f), p.y(0.135f)), Size(p.x(0.6f), p.y(0.49f)), CornerRadius(p.w * 0.02f))
+                val a = p.o(0.38f, 0.28f); val b = p.o(0.6f, 0.24f); val c = p.o(0.5f, 0.42f)
+                listOf(a to b, b to c, c to a).forEach { (u, v) -> drawLine(tinta, u, v, lw * 0.8f) }
+                drawCircle(cian, p.w * 0.05f, a); drawCircle(violeta, p.w * 0.06f, b); drawCircle(verde, p.w * 0.045f, c)
+                if (p.hecho) for (k in 0 until 3) drawLine(tinta.copy(alpha = 0.5f), p.o(0.28f, 0.5f + k * 0.035f), p.o(if (k == 2) 0.55f else 0.72f, 0.5f + k * 0.035f), lw * 0.5f)
+                caja(p, 0.46f, 0.66f, 0.54f, 0.77f)
+            }
+            "Mundo" -> {
+                // El matraz de fondo redondo en su soporte de anillo.
+                val c = p.o(0.5f, 0.46f); val R = p.w * 0.25f
+                val forma = Path().apply { addRect(Rect(p.x(0.44f), p.y(0.08f), p.x(0.56f), c.y - R * 0.8f)); addOval(Rect(c, R)) }
+                vaso(forma, 0.48f, cian, 0.25f, 0.75f)
+                caja(p, 0.42f, 0.07f, 0.58f, 0.1f)
+                drawOval(p.metal(0.22f, 0.78f), Offset(p.x(0.22f), c.y + R * 0.6f), Size(p.x(0.56f), p.y(0.04f)), style = Stroke(lw * 1.2f))
+                listOf(0.26f, 0.74f).forEach { x -> drawLine(p.c(Color(0xFF4D5D6B)), Offset(p.x(x), c.y + R * 0.7f), p.o(x + if (x < 0.5f) -0.04f else 0.04f, 0.77f), lw) }
+            }
+            "Cuerpo" -> {
+                // La probeta graduada con su pico, la base hexagonal y la escala.
+                val forma = Path().apply { moveTo(p.x(0.4f), p.y(0.08f)); lineTo(p.x(0.62f), p.y(0.08f)); lineTo(p.x(0.6f), p.y(0.12f)); lineTo(p.x(0.6f), p.y(0.68f)); lineTo(p.x(0.4f), p.y(0.68f)); close() }
+                vaso(forma, 0.3f, violeta, 0.4f, 0.62f)
+                if (p.hecho) for (k in 0 until 10) drawLine(tinta.copy(alpha = 0.6f), p.o(0.4f, 0.18f + k * 0.05f), p.o(if (k % 5 == 0) 0.5f else 0.46f, 0.18f + k * 0.05f), lw * 0.4f)
+                drawPath(Path().apply { moveTo(p.x(0.28f), p.y(0.77f)); lineTo(p.x(0.72f), p.y(0.77f)); lineTo(p.x(0.66f), p.y(0.68f)); lineTo(p.x(0.34f), p.y(0.68f)); close() }, p.metal(0.28f, 0.72f))
+            }
+            "Mente" -> {
+                // El microscopio: brazo curvo, tubo con el ocular, el revólver con objetivos, la platina y la base.
+                drawPath(Path().apply { moveTo(p.x(0.62f), p.y(0.7f)); cubicTo(p.x(0.8f), p.y(0.6f), p.x(0.8f), p.y(0.3f), p.x(0.6f), p.y(0.22f)); lineTo(p.x(0.56f), p.y(0.3f)); cubicTo(p.x(0.7f), p.y(0.36f), p.x(0.7f), p.y(0.56f), p.x(0.56f), p.y(0.64f)); close() }, p.metal(0.56f, 0.8f))
+                rotate(-18f, p.o(0.5f, 0.3f)) {
+                    caja(p, 0.42f, 0.12f, 0.54f, 0.42f)
+                    caja(p, 0.4f, 0.06f, 0.56f, 0.12f, SolidColor(tinta))
+                    caja(p, 0.44f, 0.42f, 0.52f, 0.48f, SolidColor(cian))
+                }
+                caja(p, 0.24f, 0.52f, 0.62f, 0.55f)
+                drawRect(SolidColor(blanco), Offset(p.x(0.34f), p.y(0.5f)), Size(p.x(0.16f), p.y(0.02f)))
+                drawCircle(p.metal(0.66f, 0.74f), p.w * 0.04f, p.o(0.7f, 0.48f))
+                drawRoundRect(p.metal(0.22f, 0.82f), Offset(p.x(0.22f), p.y(0.7f)), Size(p.x(0.6f), p.y(0.07f)), CornerRadius(p.w * 0.03f))
+            }
+            "Cultura" -> {
+                // El modelo molecular de esferas y varillas.
+                val pts = listOf(Offset(0.5f, 0.36f), Offset(0.28f, 0.22f), Offset(0.72f, 0.2f), Offset(0.3f, 0.56f), Offset(0.72f, 0.54f), Offset(0.52f, 0.12f))
+                listOf(0 to 1, 0 to 2, 0 to 3, 0 to 4, 2 to 5).forEach { (i, j) -> drawLine(p.c(Color(0xFF97A8B9)), p.o(pts[i].x, pts[i].y), p.o(pts[j].x, pts[j].y), lw * 1.6f) }
+                val colores = listOf(tinta, cian, violeta, verde, cian, blanco)
+                pts.forEachIndexed { i, o -> val r = p.w * (if (i == 0) 0.1f else 0.065f)
+                    drawCircle(if (p.hecho) Brush.radialGradient(listOf(lerp(colores[i], Color.White, 0.5f), colores[i]), Offset(p.x(o.x) - r * 0.3f, p.y(o.y) - r * 0.3f), r) else SolidColor(p.sombra), r, p.o(o.x, o.y)) }
+                drawCircle(p.metal(0.4f, 0.6f), p.w * 0.1f, p.o(0.5f, 0.36f), style = Stroke(lw * 0.6f))
+                caja(p, 0.48f, 0.6f, 0.52f, 0.72f); caja(p, 0.34f, 0.72f, 0.66f, 0.77f)
+            }
+            "Gente" -> {
+                // La gradilla con cinco tubos de ensayo de colores.
+                val colores = listOf(cian, violeta, verde, p.c(Color(0xFFD9572B)), cian)
+                for (k in 0 until 5) {
+                    val x0 = 0.2f + k * 0.125f; val x1 = x0 + 0.08f
+                    val tubo = Path().apply { moveTo(p.x(x0), p.y(0.14f)); lineTo(p.x(x0), p.y(0.56f)); arcTo(Rect(p.x(x0), p.y(0.56f) - p.x(0.04f), p.x(x1), p.y(0.56f) + p.x(0.04f)), 180f, -180f, false); lineTo(p.x(x1), p.y(0.14f)); close() }
+                    vaso(tubo, 0.36f + 0.04f * (k % 3), colores[k], x0, x1)
+                }
+                caja(p, 0.14f, 0.3f, 0.86f, 0.34f); caja(p, 0.14f, 0.6f, 0.86f, 0.64f)
+                caja(p, 0.16f, 0.3f, 0.19f, 0.77f); caja(p, 0.81f, 0.3f, 0.84f, 0.77f)
+            }
+            "Constancia" -> {
+                // La balanza analítica: la caja de vidrio, el platillo, la pantalla con su cifra y la base.
+                caja(p, 0.16f, 0.6f, 0.84f, 0.76f)
+                drawRect(SolidColor(tinta), Offset(p.x(0.46f), p.y(0.63f)), Size(p.x(0.32f), p.y(0.09f)))
+                if (p.hecho) texto("0.0001", p, 0.62f, 0.675f, 0.06f, Color(0xFF3CD2E5), negrita = false)
+                drawRect(vidrio, Offset(p.x(0.2f), p.y(0.14f)), Size(p.x(0.6f), p.y(0.46f)))
+                drawRect(p.metal(0.2f, 0.8f), Offset(p.x(0.2f), p.y(0.14f)), Size(p.x(0.6f), p.y(0.46f)), style = Stroke(lw))
+                caja(p, 0.2f, 0.12f, 0.8f, 0.15f)
+                drawOval(p.metal(0.34f, 0.66f), Offset(p.x(0.34f), p.y(0.5f)), Size(p.x(0.32f), p.y(0.04f)))
+                caja(p, 0.48f, 0.53f, 0.52f, 0.6f)
+                drawCircle(violeta, p.w * 0.05f, p.o(0.5f, 0.46f))
+            }
+            "Curiosos" -> {
+                // El matraz Erlenmeyer con su tapón y la reacción que burbujea.
+                val forma = Path().apply { moveTo(p.x(0.43f), p.y(0.12f)); lineTo(p.x(0.57f), p.y(0.12f)); lineTo(p.x(0.57f), p.y(0.32f)); lineTo(p.x(0.8f), p.y(0.72f)); lineTo(p.x(0.2f), p.y(0.72f)); lineTo(p.x(0.43f), p.y(0.32f)); close() }
+                vaso(forma, 0.5f, verde, 0.2f, 0.8f)
+                caja(p, 0.42f, 0.06f, 0.58f, 0.12f, SolidColor(p.c(Color(0xFF8A6A44))))
+                if (p.hecho) listOf(Offset(0.42f, 0.6f) to 0.02f, Offset(0.56f, 0.56f) to 0.015f, Offset(0.5f, 0.44f) to 0.012f, Offset(0.62f, 0.64f) to 0.018f).forEach { (o, r) -> drawCircle(Color.White.copy(alpha = 0.7f), p.w * r, p.o(o.x, o.y), style = Stroke(lw * 0.4f)) }
+                caja(p, 0.18f, 0.72f, 0.82f, 0.77f)
+            }
+            else -> {
+                // La placa de Petri vista desde arriba, con las colonias del cultivo y su etiqueta.
+                val c = p.o(0.5f, 0.4f); val R = p.w * 0.34f
+                drawCircle(p.metal(0.16f, 0.84f), R, c)
+                drawCircle(SolidColor(p.c(Color(0xFFF1E6B8))), R * 0.9f, c)
+                if (p.hecho) {
+                    val az = java.util.Random(77)
+                    repeat(18) { val a = az.nextDouble() * 2 * PI; val rr = R * 0.75f * kotlin.math.sqrt(az.nextFloat())
+                        drawCircle(listOf(cian, violeta, verde)[it % 3].copy(alpha = 0.75f), p.w * (0.015f + az.nextFloat() * 0.03f), Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat())) }
+                    drawArc(Color.White.copy(alpha = 0.5f), 200f, 60f, false, Offset(c.x - R * 0.8f, c.y - R * 0.8f), Size(R * 1.6f, R * 1.6f), style = Stroke(lw))
+                }
+                drawRect(SolidColor(blanco), Offset(p.x(0.36f), p.y(0.66f)), Size(p.x(0.28f), p.y(0.06f)))
+                drawRect(p.linea, Offset(p.x(0.36f), p.y(0.66f)), Size(p.x(0.28f), p.y(0.06f)), style = Stroke(lw * 0.4f))
+                caja(p, 0.3f, 0.73f, 0.7f, 0.77f)
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Espacio: parches de misión, cohetes y sondas
+
+    private fun DrawScope.espacio(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val marino = p.c(Color(0xFF1B3A8C)); val naranja = p.c(Color(0xFFE8601C)); val violeta = p.c(Color(0xFF6B4FD6))
+        val blanco = p.c(Color(0xFFEEF1F6)); val noche = p.c(Color(0xFF0A0F1E)); val gris = p.c(Color(0xFF8E9AB8))
+        /** Estrellitas fijas dentro de un recorte (solo si ya se logró). */
+        fun estrellas(n: Int, semilla: Long, x0: Float, y0: Float, x1: Float, y1: Float) { if (p.hecho) { val az = java.util.Random(semilla); repeat(n) { drawCircle(Color.White.copy(alpha = 0.8f), p.w * (0.004f + az.nextFloat() * 0.008f), p.o(x0 + az.nextFloat() * (x1 - x0), y0 + az.nextFloat() * (y1 - y0))) } } }
+        when (cat) {
+            "Diario" -> {
+                // El parche bordado de la misión: el borde de metal, el cielo, el planeta con su órbita y el cohete que sube.
+                val c = p.o(0.5f, 0.4f); val R = p.w * 0.34f
+                drawCircle(p.metal(0.16f, 0.84f), R, c)
+                drawCircle(SolidColor(noche), R * 0.86f, c)
+                clipPath(Path().apply { addOval(Rect(c, R * 0.86f)) }) {
+                    estrellas(14, 3, 0.2f, 0.12f, 0.8f, 0.7f)
+                    drawCircle(SolidColor(marino), R * 0.6f, Offset(c.x, c.y + R * 0.75f))
+                    drawCircle(p.c(Color(0xFF4F86B8)), R * 0.6f, Offset(c.x, c.y + R * 0.75f), style = Stroke(lw * 0.8f))
+                }
+                rotate(-20f, c) { drawOval(naranja, Offset(c.x - R * 0.8f, c.y - R * 0.2f), Size(R * 1.6f, R * 0.45f), style = Stroke(lw * 0.9f)) }
+                drawPath(Path().apply { moveTo(c.x, c.y - R * 0.6f); lineTo(c.x + R * 0.12f, c.y - R * 0.3f); lineTo(c.x + R * 0.12f, c.y + R * 0.1f); lineTo(c.x - R * 0.12f, c.y + R * 0.1f); lineTo(c.x - R * 0.12f, c.y - R * 0.3f); close() }, blanco)
+                drawCircle(p.metal(0.16f, 0.84f), R, c, style = Stroke(lw * 0.6f))
+            }
+            "Mundo" -> {
+                // La sonda planetaria: la antena de plato, el cuerpo con sus paneles, el brazo de instrumentos y la antena larga.
+                val c = p.o(0.46f, 0.34f)
+                drawArc(p.metal(0.2f, 0.72f), 0f, 180f, true, Offset(c.x - p.w * 0.26f, c.y - p.w * 0.12f), Size(p.w * 0.52f, p.w * 0.24f))
+                drawLine(p.linea, Offset(c.x, c.y), Offset(c.x, c.y - p.w * 0.16f), lw * 0.8f)
+                caja(p, 0.38f, 0.42f, 0.54f, 0.54f, SolidColor(gris))
+                caja(p, 0.4f, 0.44f, 0.52f, 0.5f, SolidColor(p.c(Color(0xFFD4AF37))))
+                drawLine(p.linea, p.o(0.54f, 0.48f), p.o(0.84f, 0.62f), lw * 0.7f); drawCircle(SolidColor(naranja), p.w * 0.03f, p.o(0.84f, 0.62f))
+                drawLine(p.linea, p.o(0.38f, 0.5f), p.o(0.16f, 0.72f), lw * 0.5f)
+                caja(p, 0.44f, 0.54f, 0.48f, 0.66f, SolidColor(gris))
+                estrellas(6, 9, 0.1f, 0.05f, 0.9f, 0.2f)
+            }
+            "Cuerpo" -> {
+                // El casco presurizado: la cúpula, el visor dorado que refleja un planeta, el anillo de cierre y la luz.
+                val c = p.o(0.5f, 0.38f); val R = p.w * 0.3f
+                drawCircle(p.metal(0.2f, 0.8f), R, c)
+                drawRoundRect(SolidColor(p.c(Color(0xFFC9A04A))), Offset(c.x - R * 0.72f, c.y - R * 0.5f), Size(R * 1.44f, R * 0.95f), CornerRadius(R * 0.45f))
+                if (p.hecho) { drawArc(Color.White.copy(alpha = 0.55f), 200f, 60f, false, Offset(c.x - R * 0.6f, c.y - R * 0.42f), Size(R * 1.2f, R * 0.8f), style = Stroke(lw)); drawCircle(Color(0xFF1B3A8C).copy(alpha = 0.6f), R * 0.15f, Offset(c.x + R * 0.3f, c.y + R * 0.1f)) }
+                caja(p, 0.28f, 0.64f, 0.72f, 0.72f, SolidColor(blanco))
+                drawRect(SolidColor(naranja), Offset(p.x(0.28f), p.y(0.66f)), Size(p.x(0.44f), p.y(0.02f)))
+                drawCircle(SolidColor(naranja), p.w * 0.025f, Offset(c.x + R * 0.8f, c.y - R * 0.5f))
+                caja(p, 0.34f, 0.72f, 0.66f, 0.77f)
+            }
+            "Mente" -> {
+                // El telescopio espacial: el tubo con su tapa abierta, los dos paneles solares y la luz que entra.
+                rotate(-30f, p.o(0.5f, 0.4f)) {
+                    caja(p, 0.36f, 0.16f, 0.64f, 0.62f)
+                    drawLine(p.linea, p.o(0.36f, 0.3f), p.o(0.64f, 0.3f), lw * 0.5f); drawLine(p.linea, p.o(0.36f, 0.48f), p.o(0.64f, 0.48f), lw * 0.5f)
+                    drawPath(Path().apply { moveTo(p.x(0.36f), p.y(0.16f)); lineTo(p.x(0.2f), p.y(0.08f)); lineTo(p.x(0.2f), p.y(0.12f)); lineTo(p.x(0.36f), p.y(0.2f)); close() }, SolidColor(gris))
+                    listOf(0.06f to 0.32f, 0.68f to 0.94f).forEach { (x0, x1) ->
+                        drawRect(SolidColor(marino), Offset(p.x(x0), p.y(0.34f)), Size(p.x(x1 - x0), p.y(0.1f)))
+                        if (p.hecho) for (k in 1..3) drawLine(Color(0xFF8AB4FF).copy(alpha = 0.6f), p.o(x0 + (x1 - x0) * k / 4, 0.34f), p.o(x0 + (x1 - x0) * k / 4, 0.44f), lw * 0.4f)
+                    }
+                    caja(p, 0.32f, 0.38f, 0.68f, 0.4f, SolidColor(gris))
+                }
+                estrellas(8, 21, 0.06f, 0.04f, 0.94f, 0.7f)
+                caja(p, 0.47f, 0.68f, 0.53f, 0.77f)
+            }
+            "Cultura" -> {
+                // El radiotelescopio: el plato parabólico, el receptor sobre su trípode y la base que gira.
+                rotate(-25f, p.o(0.5f, 0.42f)) {
+                    drawArc(p.metal(0.16f, 0.84f), 0f, 180f, true, Offset(p.x(0.16f), p.y(0.18f)), Size(p.x(0.68f), p.y(0.36f)))
+                    if (p.hecho) for (k in 1..3) drawArc(p.linea, 0f, 180f, false, Offset(p.x(0.5f - 0.34f * k / 4), p.y(0.36f - 0.18f * k / 4)), Size(p.x(0.68f * k / 4), p.y(0.36f * k / 4)), style = Stroke(lw * 0.4f))
+                    listOf(0.24f, 0.76f).forEach { x -> drawLine(p.linea, p.o(x, 0.36f), p.o(0.5f, 0.12f), lw * 0.6f) }
+                    drawCircle(SolidColor(naranja), p.w * 0.03f, p.o(0.5f, 0.12f))
+                }
+                caja(p, 0.44f, 0.5f, 0.56f, 0.7f, SolidColor(gris))
+                caja(p, 0.3f, 0.7f, 0.7f, 0.77f)
+            }
+            "Gente" -> {
+                // La estación orbital: los módulos en cruz, las alas de paneles y el anillo.
+                caja(p, 0.2f, 0.36f, 0.8f, 0.44f)
+                caja(p, 0.44f, 0.16f, 0.56f, 0.64f)
+                listOf(0.04f to 0.18f, 0.82f to 0.96f).forEach { (x0, x1) -> listOf(0.24f, 0.48f).forEach { y -> drawRect(SolidColor(marino), Offset(p.x(x0), p.y(y)), Size(p.x(x1 - x0), p.y(0.08f))) } ; caja(p, x0, 0.39f, x1, 0.41f, SolidColor(gris)) }
+                drawOval(p.metal(0.28f, 0.72f), Offset(p.x(0.28f), p.y(0.33f)), Size(p.x(0.44f), p.y(0.14f)), style = Stroke(lw * 1.2f))
+                listOf(0.2f, 0.6f).forEach { y -> drawCircle(SolidColor(naranja), p.w * 0.015f, p.o(0.5f, y)) }
+                estrellas(10, 31, 0.05f, 0.05f, 0.95f, 0.72f)
+            }
+            "Constancia" -> {
+                // El cohete de tres etapas en su torre, con las franjas de cada etapa y el fuego del despegue.
+                val cohete = Path().apply { moveTo(p.x(0.5f), p.y(0.02f)); quadraticTo(p.x(0.6f), p.y(0.1f), p.x(0.6f), p.y(0.2f)); lineTo(p.x(0.6f), p.y(0.62f)); lineTo(p.x(0.4f), p.y(0.62f)); lineTo(p.x(0.4f), p.y(0.2f)); quadraticTo(p.x(0.4f), p.y(0.1f), p.x(0.5f), p.y(0.02f)); close() }
+                drawPath(cohete, p.metal(0.4f, 0.6f))
+                listOf(0.22f, 0.38f, 0.52f).forEach { y -> drawRect(SolidColor(noche), Offset(p.x(0.4f), p.y(y)), Size(p.x(0.2f), p.y(0.015f))) }
+                drawRect(SolidColor(naranja), Offset(p.x(0.4f), p.y(0.42f)), Size(p.x(0.2f), p.y(0.04f)))
+                listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(p.x(0.5f + s * 0.1f), p.y(0.5f)); lineTo(p.x(0.5f + s * 0.2f), p.y(0.66f)); lineTo(p.x(0.5f + s * 0.1f), p.y(0.62f)); close() }, SolidColor(marino)) }
+                if (p.hecho) drawPath(Path().apply { moveTo(p.x(0.42f), p.y(0.62f)); quadraticTo(p.x(0.5f), p.y(0.8f), p.x(0.58f), p.y(0.62f)); close() }, Brush.verticalGradient(listOf(Color(0xFFFFD27A), Color(0xFFE8601C), Color.Transparent), p.y(0.62f), p.y(0.78f)))
+                // La torre de servicio a un lado.
+                caja(p, 0.74f, 0.1f, 0.78f, 0.77f, SolidColor(gris))
+                if (p.hecho) for (k in 0 until 9) drawLine(p.linea, p.o(0.74f, 0.12f + k * 0.07f), p.o(0.78f, 0.18f + k * 0.07f), lw * 0.4f)
+                drawLine(gris, p.o(0.74f, 0.3f), p.o(0.6f, 0.3f), lw)
+            }
+            "Curiosos" -> {
+                // El meteorito: la roca con cráteres, la estela que trae y el brillo de su metal.
+                if (p.hecho) drawPath(Path().apply { moveTo(p.x(0.36f), p.y(0.3f)); lineTo(p.x(0.86f), p.y(0.04f)); lineTo(p.x(0.6f), p.y(0.46f)); close() }, Brush.linearGradient(listOf(Color(0xFFFFB86B).copy(alpha = 0.6f), Color.Transparent), p.o(0.5f, 0.38f), p.o(0.86f, 0.04f)))
+                val roca = Path().apply { moveTo(p.x(0.2f), p.y(0.46f)); cubicTo(p.x(0.18f), p.y(0.26f), p.x(0.42f), p.y(0.2f), p.x(0.56f), p.y(0.28f)); cubicTo(p.x(0.74f), p.y(0.34f), p.x(0.74f), p.y(0.6f), p.x(0.52f), p.y(0.66f)); cubicTo(p.x(0.34f), p.y(0.7f), p.x(0.22f), p.y(0.62f), p.x(0.2f), p.y(0.46f)); close() }
+                drawPath(roca, p.metal(0.2f, 0.74f))
+                listOf(Offset(0.36f, 0.42f) to 0.06f, Offset(0.56f, 0.5f) to 0.045f, Offset(0.46f, 0.6f) to 0.03f).forEach { (o, r) -> drawCircle(p.linea, p.w * r, p.o(o.x, o.y), style = Stroke(lw * 0.7f)) }
+                caja(p, 0.36f, 0.7f, 0.64f, 0.77f, SolidColor(noche))
+            }
+            else -> {
+                // El módulo de aterrizaje: el cuerpo dorado, la cabina, las patas con sus platos y la bandera clavada al lado.
+                drawPath(Path().apply { moveTo(p.x(0.3f), p.y(0.5f)); lineTo(p.x(0.7f), p.y(0.5f)); lineTo(p.x(0.66f), p.y(0.62f)); lineTo(p.x(0.34f), p.y(0.62f)); close() }, SolidColor(p.c(Color(0xFFC9A04A))))
+                drawPath(Path().apply { moveTo(p.x(0.36f), p.y(0.5f)); lineTo(p.x(0.4f), p.y(0.3f)); lineTo(p.x(0.6f), p.y(0.3f)); lineTo(p.x(0.64f), p.y(0.5f)); close() }, p.metal(0.36f, 0.64f))
+                caja(p, 0.46f, 0.35f, 0.54f, 0.42f, SolidColor(noche))
+                listOf(-1f, 1f).forEach { s -> drawLine(gris, p.o(0.5f + s * 0.16f, 0.6f), p.o(0.5f + s * 0.28f, 0.74f), lw * 1.2f); caja(p, 0.5f + s * 0.28f - 0.05f, 0.74f, 0.5f + s * 0.28f + 0.05f, 0.77f) }
+                drawLine(gris, p.o(0.5f, 0.3f), p.o(0.5f, 0.2f), lw * 0.6f)
+                drawLine(p.linea, p.o(0.86f, 0.77f), p.o(0.86f, 0.4f), lw * 0.7f)
+                drawRect(SolidColor(naranja), Offset(p.x(0.86f), p.y(0.4f)), Size(p.x(0.1f), p.y(0.07f)))
+                drawRect(SolidColor(gris.copy(alpha = 0.4f)), Offset(p.x(0.1f), p.y(0.76f)), Size(p.x(0.8f), p.y(0.01f)))
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Soviético: medallas del trabajo y estrellas
+
+    private fun DrawScope.urss(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val rojo = p.c(Color(0xFFC1121F)); val negro = p.c(Color(0xFF161414)); val papel = p.c(Color(0xFFEFE6D2)); val oro = p.c(Color(0xFFD4A017))
+        /** La cinta pentagonal de las medallas, con sus franjas. */
+        fun cinta(franjas: List<Color>) {
+            val c = Path().apply { moveTo(p.x(0.34f), p.y(0.04f)); lineTo(p.x(0.66f), p.y(0.04f)); lineTo(p.x(0.66f), p.y(0.2f)); lineTo(p.x(0.5f), p.y(0.28f)); lineTo(p.x(0.34f), p.y(0.2f)); close() }
+            clipPath(c) { franjas.forEachIndexed { i, col -> drawRect(col, Offset(p.x(0.34f + i * 0.32f / franjas.size), p.y(0.02f)), Size(p.x(0.32f / franjas.size) + 1f, p.y(0.3f))) } }
+            drawPath(c, p.metal(0.34f, 0.66f), style = Stroke(lw * 0.7f))
+        }
+        when (cat) {
+            "Diario" -> {
+                // El periódico mural: el tablero con su encabezado rojo en diagonal, las columnas de texto y la estrella.
+                caja(p, 0.14f, 0.1f, 0.86f, 0.66f)
+                caja(p, 0.17f, 0.13f, 0.83f, 0.63f, SolidColor(papel))
+                drawPath(Path().apply { moveTo(p.x(0.17f), p.y(0.13f)); lineTo(p.x(0.83f), p.y(0.13f)); lineTo(p.x(0.83f), p.y(0.2f)); lineTo(p.x(0.17f), p.y(0.28f)); close() }, rojo)
+                estrella(p.o(0.72f, 0.36f), p.w * 0.07f, p.w * 0.028f, 5, SolidColor(rojo))
+                if (p.hecho) {
+                    for (col in 0 until 2) for (k in 0 until 6) drawLine(negro.copy(alpha = 0.6f), p.o(0.21f + col * 0.24f, 0.34f + k * 0.045f), p.o(0.4f + col * 0.24f - (if (k == 5) 0.08f else 0f), 0.34f + k * 0.045f), lw * 0.5f)
+                    drawRect(negro, Offset(p.x(0.64f), p.y(0.46f)), Size(p.x(0.15f), p.y(0.12f)))
+                }
+                listOf(0.3f, 0.7f).forEach { x -> caja(p, x - 0.03f, 0.66f, x + 0.03f, 0.77f) }
+            }
+            "Mundo" -> {
+                // La insignia del Transiberiano: medallón con la locomotora de frente, los rieles que se pierden y la estrella.
+                cinta(listOf(rojo, oro, rojo))
+                val c = p.o(0.5f, 0.5f); val R = p.w * 0.26f
+                drawCircle(p.metal(0.24f, 0.76f), R, c)
+                drawCircle(SolidColor(papel), R * 0.8f, c)
+                clipPath(Path().apply { addOval(Rect(c, R * 0.8f)) }) {
+                    listOf(-1f, 1f).forEach { s -> drawLine(negro, Offset(c.x + s * R * 0.08f, c.y + R * 0.1f), Offset(c.x + s * R * 0.7f, c.y + R), lw * 0.8f) }
+                    for (k in 0 until 4) { val y = c.y + R * (0.2f + k * 0.18f); val a = R * (0.12f + k * 0.14f); drawLine(negro, Offset(c.x - a, y), Offset(c.x + a, y), lw * 0.6f) }
+                    drawRoundRect(SolidColor(negro), Offset(c.x - R * 0.25f, c.y - R * 0.5f), Size(R * 0.5f, R * 0.6f), CornerRadius(R * 0.1f))
+                    drawCircle(oro, R * 0.1f, Offset(c.x, c.y - R * 0.2f))
+                    estrella(Offset(c.x, c.y - R * 0.42f), R * 0.1f, R * 0.04f, 5, SolidColor(rojo))
+                }
+            }
+            "Cuerpo" -> {
+                // La insignia del deportista: escudo esmaltado con la franja azul, la estrella roja y la corona de espigas.
+                cinta(listOf(p.c(Color(0xFF2E5C8A)), papel, p.c(Color(0xFF2E5C8A))))
+                val escudo = Path().apply { moveTo(p.x(0.26f), p.y(0.3f)); lineTo(p.x(0.74f), p.y(0.3f)); lineTo(p.x(0.74f), p.y(0.5f)); quadraticTo(p.x(0.74f), p.y(0.66f), p.x(0.5f), p.y(0.74f)); quadraticTo(p.x(0.26f), p.y(0.66f), p.x(0.26f), p.y(0.5f)); close() }
+                drawPath(escudo, p.metal(0.26f, 0.74f))
+                clipPath(escudo) { drawRect(SolidColor(p.c(Color(0xFF2E5C8A))), Offset(p.x(0.26f), p.y(0.3f)), Size(p.x(0.48f), p.y(0.08f))) }
+                estrella(p.o(0.5f, 0.52f), p.w * 0.12f, p.w * 0.05f, 5, SolidColor(rojo))
+                if (p.hecho) listOf(-1f, 1f).forEach { s -> for (k in 0 until 4) drawOval(oro, Offset(p.x(0.5f + s * (0.17f - k * 0.02f)) - p.w * 0.02f, p.y(0.62f - k * 0.06f)), Size(p.w * 0.04f, p.w * 0.06f)) }
+            }
+            "Mente" -> {
+                // El satélite de antenas: la esfera pulida, las cuatro antenas hacia atrás y su órbita.
+                val c = p.o(0.4f, 0.34f); val R = p.w * 0.14f
+                listOf(0.1f, 0.2f, 0.34f, 0.46f).forEachIndexed { i, dy -> drawLine(p.linea, Offset(c.x + R * 0.6f, c.y + R * (0.2f + i * 0.15f) - R * 0.3f), p.o(0.9f, 0.3f + dy), lw * 0.7f) }
+                drawCircle(Brush.radialGradient(if (p.hecho) listOf(p.claro, p.base, p.oscuro) else listOf(p.sombra, p.sombra), Offset(c.x - R * 0.4f, c.y - R * 0.4f), R * 1.6f), R, c)
+                drawOval(rojo, Offset(p.x(0.12f), p.y(0.26f)), Size(p.x(0.76f), p.y(0.18f)), style = Stroke(lw * 0.6f))
+                estrella(p.o(0.5f, 0.62f), p.w * 0.06f, p.w * 0.024f, 5, SolidColor(rojo))
+                caja(p, 0.46f, 0.68f, 0.54f, 0.77f)
+            }
+            "Cultura" -> {
+                // El cartel constructivista: diagonales negras y rojas, el círculo y la cuña que lo atraviesa.
+                caja(p, 0.18f, 0.06f, 0.82f, 0.72f)
+                caja(p, 0.2f, 0.08f, 0.8f, 0.7f, SolidColor(papel))
+                clipPath(Path().apply { addRect(Rect(p.x(0.2f), p.y(0.08f), p.x(0.8f), p.y(0.7f))) }) {
+                    drawCircle(SolidColor(papel), p.w * 0.2f, p.o(0.4f, 0.36f))
+                    drawCircle(negro, p.w * 0.2f, p.o(0.42f, 0.38f), style = Stroke(lw * 0.8f))
+                    drawPath(Path().apply { moveTo(p.x(0.1f), p.y(0.62f)); lineTo(p.x(0.86f), p.y(0.2f)); lineTo(p.x(0.86f), p.y(0.3f)); close() }, rojo)
+                    rotate(-30f, p.o(0.5f, 0.4f)) { drawRect(negro, Offset(p.x(0.1f), p.y(0.5f)), Size(p.x(0.9f), p.y(0.05f))) }
+                    drawRect(rojo, Offset(p.x(0.2f), p.y(0.6f)), Size(p.x(0.6f), p.y(0.04f)))
+                }
+                caja(p, 0.46f, 0.72f, 0.54f, 0.77f)
+            }
+            "Gente" -> {
+                // La estrella de la brigada: la estrella roja con borde de metal sobre un engrane, con la cinta.
+                cinta(listOf(rojo, rojo))
+                val c = p.o(0.5f, 0.5f)
+                for (k in 0 until 12) { val a = k * PI / 6; drawLine(p.metal(0.2f, 0.8f), c, Offset(c.x + (p.w * 0.27f * cos(a)).toFloat(), c.y + (p.w * 0.27f * sin(a)).toFloat()), lw * 3) }
+                drawCircle(p.metal(0.24f, 0.76f), p.w * 0.23f, c)
+                estrella(c, p.w * 0.22f, p.w * 0.09f, 5, p.metal(0.28f, 0.72f))
+                estrella(c, p.w * 0.18f, p.w * 0.072f, 5, SolidColor(rojo))
+            }
+            "Constancia" -> {
+                // La medalla del trabajo: el disco con el engrane y las espigas, la estrella arriba y su cinta.
+                cinta(listOf(rojo, oro, rojo))
+                val c = p.o(0.5f, 0.52f); val R = p.w * 0.24f
+                drawCircle(p.metal(0.26f, 0.74f), R, c)
+                drawCircle(p.linea, R * 0.86f, c, style = Stroke(lw * 0.5f))
+                for (k in 0 until 10) { val a = k * PI / 5; drawLine(p.linea, c, Offset(c.x + (R * 0.5f * cos(a)).toFloat(), c.y + (R * 0.5f * sin(a)).toFloat()), lw * 1.6f) }
+                drawCircle(p.metal(0.4f, 0.6f), R * 0.36f, c)
+                if (p.hecho) listOf(-1f, 1f).forEach { s -> for (k in 0 until 5) { val a = PI / 2 + s * (0.5 + k * 0.35); drawOval(oro, Offset(c.x + (R * 0.68f * cos(a)).toFloat() - p.w * 0.018f, c.y + (R * 0.68f * sin(a)).toFloat() - p.w * 0.03f), Size(p.w * 0.036f, p.w * 0.06f)) } }
+                estrella(Offset(c.x, c.y - R * 0.05f), R * 0.2f, R * 0.08f, 5, SolidColor(rojo))
+            }
+            "Curiosos" -> {
+                // El samovar: el cuerpo de latón con su grifo, las asas, la tetera encima y la base.
+                caja(p, 0.44f, 0.04f, 0.56f, 0.12f, SolidColor(p.c(Color(0xFF2E5C8A))))
+                drawPath(Path().apply { moveTo(p.x(0.38f), p.y(0.2f)); quadraticTo(p.x(0.5f), p.y(0.08f), p.x(0.62f), p.y(0.2f)); close() }, SolidColor(p.c(Color(0xFF2E5C8A))))
+                drawRoundRect(p.metal(0.26f, 0.74f), Offset(p.x(0.26f), p.y(0.2f)), Size(p.x(0.48f), p.y(0.4f)), CornerRadius(p.w * 0.12f))
+                if (p.hecho) for (k in 0 until 3) drawLine(p.linea.copy(alpha = 0.4f), p.o(0.27f, 0.3f + k * 0.1f), p.o(0.73f, 0.3f + k * 0.1f), lw * 0.4f)
+                listOf(-1f, 1f).forEach { s -> drawArc(p.metal(0.2f, 0.8f), if (s < 0) 90f else -90f, 180f, false, Offset(p.x(0.5f + s * 0.24f) - p.w * 0.06f, p.y(0.26f)), Size(p.w * 0.12f, p.y(0.12f)), style = Stroke(lw)) }
+                caja(p, 0.44f, 0.48f, 0.58f, 0.51f); caja(p, 0.56f, 0.48f, 0.6f, 0.56f)
+                drawPath(Path().apply { moveTo(p.x(0.34f), p.y(0.6f)); lineTo(p.x(0.66f), p.y(0.6f)); lineTo(p.x(0.58f), p.y(0.7f)); lineTo(p.x(0.42f), p.y(0.7f)); close() }, p.metal(0.34f, 0.66f))
+                caja(p, 0.3f, 0.7f, 0.7f, 0.77f)
+            }
+            else -> {
+                // La estrella roja grande, con su borde dorado y el relieve en facetas.
+                val c = p.o(0.5f, 0.4f)
+                estrella(c, p.w * 0.38f, p.w * 0.15f, 5, p.metal(0.12f, 0.88f))
+                estrella(c, p.w * 0.32f, p.w * 0.125f, 5, SolidColor(rojo))
+                if (p.hecho) for (k in 0 until 5) { val a = -PI / 2 + k * 2 * PI / 5; drawLine(Color.Black.copy(alpha = 0.25f), c, Offset(c.x + (p.w * 0.32f * cos(a)).toFloat(), c.y + (p.w * 0.32f * sin(a)).toFloat()), lw * 0.6f) }
+                caja(p, 0.46f, 0.66f, 0.54f, 0.77f)
             }
         }
     }
