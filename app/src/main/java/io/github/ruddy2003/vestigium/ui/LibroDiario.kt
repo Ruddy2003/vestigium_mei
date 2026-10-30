@@ -135,28 +135,41 @@ object LibroDiario {
     internal class Fuentes(val titulo: Int, val texto: Int)
     internal fun fuentes(t: TemaId) = when (t) {
         TemaId.ROMANO -> Fuentes(R.font.cinzel_regular, R.font.plex_sans_regular)
+        TemaId.URBE -> Fuentes(R.font.titillium_semibold, R.font.newsreader_regular)
         TemaId.CIBER -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
+        TemaId.NEON -> Fuentes(R.font.chakra_semibold, R.font.chakra_regular)
         TemaId.HELENO -> Fuentes(R.font.garamond_medium, R.font.garamond_regular)
-        TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.garamond_regular)
-        TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.plex_sans_regular)
-        TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.plex_mono_regular)
-        TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.plex_sans_regular)
+        TemaId.EGIPTO -> Fuentes(R.font.messiri_bold, R.font.escriba_regular)
+        TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
+        TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
+        TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
+        TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
+        TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.saira_regular)
         TemaId.LABORATORIO -> Fuentes(R.font.jost_medium, R.font.jost_regular)
-        TemaId.COLONOS -> Fuentes(R.font.fell, R.font.garamond_regular)
+        TemaId.COLONOS -> Fuentes(R.font.fell, R.font.oldstandard_regular)
         TemaId.NAPOLEON -> Fuentes(R.font.bodoni_titulo, R.font.bodoni_texto)
-        TemaId.BOTANICO -> Fuentes(R.font.fraunces_titulo, R.font.garamond_regular)
-        TemaId.NAVIDAD -> Fuentes(R.font.cinzel_deco_regular, R.font.garamond_regular)
-        TemaId.SEDA -> Fuentes(R.font.almendra_regular, R.font.garamond_regular)
-        TemaId.URSS -> Fuentes(R.font.russo, R.font.plex_sans_regular)
-        TemaId.GOTICO -> Fuentes(R.font.gotica_textura, R.font.garamond_regular)
+        TemaId.BOTANICO -> Fuentes(R.font.fraunces_titulo, R.font.crimson_regular)
+        TemaId.RUINAS -> Fuentes(R.font.letrero_titulo, R.font.overpass_regular)
+        TemaId.NAVIDAD -> Fuentes(R.font.cinzel_deco_regular, R.font.calida_regular)
+        TemaId.SEDA -> Fuentes(R.font.almendra_regular, R.font.alegreya_regular)
+        TemaId.EDO -> Fuentes(R.font.shippori_titulo, R.font.zenmincho_regular)
+        TemaId.URSS -> Fuentes(R.font.russo, R.font.obrera_regular)
+        TemaId.GOTICO -> Fuentes(R.font.gotica_textura, R.font.goudy_regular)
+        TemaId.ARCANO -> Fuentes(R.font.spectral_medium, R.font.castoro_regular)
         TemaId.ESPACIO -> Fuentes(R.font.orbitron_bold, R.font.grotesk_regular)
+        TemaId.ABISMO -> Fuentes(R.font.batiscafo_semibold, R.font.atkinson_regular)
         TemaId.ANDALUS -> Fuentes(R.font.kufi_medium, R.font.amiri_regular)
-        TemaId.MONGOL -> Fuentes(R.font.philosopher_bold, R.font.plex_sans_regular)
+        // Las versalitas de Alegreya Sans SC y la Alegreya Sans de leer, las dos con los numerales mayas.
+        TemaId.MESO -> Fuentes(R.font.alegreya_sc_bold, R.font.alegreya_sans_regular)
+        TemaId.MONGOL -> Fuentes(R.font.philosopher_bold, R.font.fira_regular)
         TemaId.RENACIMIENTO -> Fuentes(R.font.italianno, R.font.cormorant_regular)
-        // El cartel de la Revolución en Cormorant (no en la Fell de la gaceta de los colonos).
-        TemaId.REVOLUCION -> Fuentes(R.font.cormorant_medium, R.font.cormorant_regular)
-        // Los rótulos a mano de los mapas (no la letra de inscripción de Roma).
-        TemaId.ANTIGUAS -> Fuentes(R.font.almendra_bold, R.font.garamond_medium)
+        // La letra negra de las cartas de marear y el Caslon de los libros de a bordo.
+        TemaId.PIRATA -> Fuentes(R.font.corsario_titulo, R.font.caslon_regular)
+        // Los carteles de la Convención y la Baskerville de su siglo.
+        TemaId.REVOLUCION -> Fuentes(R.font.convencion_titulo, R.font.ciudadana_regular)
+        // La uncial de los caminos y el libro de crónicas.
+        TemaId.ANTIGUAS -> Fuentes(R.font.camino_titulo, R.font.vollkorn_regular)
+        TemaId.CUEVA -> Fuentes(R.font.amatic_bold, R.font.abrigo_regular)
     }
 
     private fun hex(c: Color) = "#%06X".format(c.toArgb() and 0xFFFFFF)
@@ -201,10 +214,19 @@ object LibroDiario {
         fun capitular(tam: String, color: String) = ".nota::first-letter{font-family:T,serif;font-size:$tam;float:left;line-height:.8;color:$color;margin:4px 6px 0 0}"
         return when (t) {
             TemaId.ROMANO -> "h1{text-align:center;letter-spacing:.25em}article{border-top:3px double $p}.fecha{letter-spacing:.12em}.nota::first-line{font-variant:small-caps;letter-spacing:.04em}"
+            // La página de la crónica de la ciudad en el periódico: cabecera en mayúsculas con raya gruesa, la fecha como antetítulo.
+            TemaId.URBE -> "h1{text-transform:uppercase;letter-spacing:.14em;border-bottom:3px solid $tinta;padding-bottom:6px}article{border-top:1px solid $v}" +
+                ".fecha{font-family:T,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:$p}.nota::first-line{font-weight:600}"
             TemaId.CIBER -> "article{border-top:1px dashed $p}.fecha::before{content:'> ';color:$p}.meta::before{content:'// '}.nota::first-letter{background:$p;color:$b}"
+            TemaId.NEON -> "h2,.fecha{text-shadow:0 0 6px $p,0 0 14px $p;letter-spacing:.08em;text-transform:uppercase}.fecha::before{content:'◆ ';color:$s}article{border-bottom:2px solid $s}.nota::first-letter{color:$p;text-shadow:0 0 8px $p}"
             TemaId.HELENO -> "h1{text-align:center}article{border-top:0}article::before{content:'';display:block;height:5px;margin-bottom:14px;border-top:1px solid $p;" +
                 "border-bottom:1px solid $p;background:repeating-linear-gradient(90deg,$p 0 3px,transparent 3px 9px)}" + capitular("2.4em", tinta)
+            // La cenefa de rectángulos de colores sobre cada entrada y la primera línea en rojo, como las rúbricas de los escribas.
+            TemaId.EGIPTO -> "h1{text-align:center;letter-spacing:.04em}article{border-top:0}article::before{content:'';display:block;height:6px;margin-bottom:14px;" +
+                "background:repeating-linear-gradient(90deg,$p 0 6px,transparent 6px 8px,$s 8px 14px,transparent 14px 16px)}.fecha{color:$s}.nota::first-line{color:$s}"
             TemaId.MEDIEVAL -> "article{border-top:2px solid $p;border-left:3px double $s;padding-left:14px}" + capitular("3.2em", p)
+            TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
+                ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
             TemaId.REFUGIO -> "article{border:1px solid $p;border-radius:14px;padding:18px;margin-bottom:18px}.nota::first-letter{background:$p;color:$b;font-size:1.6em;padding:0 3px;margin-right:2px}"
             TemaId.ORDEN -> "article{border-top:3px solid $p;outline:1px solid $v;outline-offset:6px;margin:18px 0;padding:18px}.fecha{text-transform:uppercase;letter-spacing:.1em}" + capitular("2.6em", p)
@@ -213,18 +235,41 @@ object LibroDiario {
             TemaId.COLONOS -> "article{border-top:3px solid $p}article::before{content:'';display:block;border-top:1px solid $p;margin:2px 0 14px}" + capitular("3em", tinta)
             TemaId.NAPOLEON -> "h1{text-align:center;letter-spacing:.15em}article{border-top:1px solid $p;border-bottom:1px solid $p;outline:1px solid $s;outline-offset:4px;padding:18px;margin-bottom:18px}" + capitular("3em", p)
             TemaId.BOTANICO -> "article{border-top:0}article::before{content:'';display:block;height:8px;margin-bottom:12px;background:radial-gradient(ellipse 5px 3px at 6px 4px,$p 98%,transparent) 0 0/18px 8px repeat-x}" + capitular("2.8em", p)
+            // La línea discontinua de una calle sobre cada entrada y la fecha como una placa de calle.
+            TemaId.RUINAS -> "article{border-top:0}article::before{content:'';display:block;height:4px;margin-bottom:14px;background:repeating-linear-gradient(90deg,$s 0 22px,transparent 22px 34px)}" +
+                ".fecha{display:inline-block;border:1px solid $p;border-radius:4px;padding:0 8px}" + capitular("2.6em", p)
             TemaId.NAVIDAD -> "article{border-top:5px solid $p;border-image:repeating-linear-gradient(45deg,$p 0 8px,$b 8px 16px,$s 16px 24px) 5}" + capitular("2.8em", p)
             TemaId.SEDA -> "article{border-top:2px solid $p;border-right:6px solid $s;padding-right:14px}" + capitular("2.6em", p)
+            // Una franja de seigaiha arriba de cada entrada, el filete de bermellón a la izquierda y el «※» tras la fecha; sin capitular, como en los libros japoneses.
+            TemaId.EDO -> "article{border-top:0;border-left:4px solid $s;padding-left:14px}article::before{content:'';display:block;height:10px;margin-bottom:12px;" +
+                "background:radial-gradient(circle at 10px 10px,transparent 5px,$p 5px 6px,transparent 6px 8px,$p 8px 9px,transparent 9px) 0 0/20px 10px repeat-x}.fecha::after{content:' ※';color:$s}"
             TemaId.GOTICO -> "article{border-top:0;padding-top:24px;background:radial-gradient(circle at 9px 16px,transparent 7px,$p 7px 8px,transparent 8px) 0 0/18px 12px repeat-x}" + capitular("3.4em", p)
+            // La hoja del legajo: una raya a pulso arriba, el margen rojo desvaído y la fecha en cursiva, como una nota al margen.
+            TemaId.ARCANO -> "article{border-top:1px solid $v;border-left:1px solid $s;padding-left:14px}.fecha{font-style:italic}.fecha::before{content:'† ';color:$s}" +
+                ".nota::first-letter{font-family:T,serif;font-size:2.2em;float:left;line-height:.8;color:$p;margin:4px 6px 0 0;text-decoration:line-through ${s}66}"
             TemaId.ESPACIO -> "article{border:1px solid $p;border-radius:16px;padding:18px;margin-bottom:18px}.fecha{text-transform:uppercase;letter-spacing:.12em}"
+            // La regla del profundímetro a la izquierda (una raya cada renglón) y la superficie ondulada encima de cada día.
+            TemaId.ABISMO -> "article{border-top:0;border-left:3px solid $p;padding-left:16px;background:repeating-linear-gradient(180deg,transparent 0 22px,$v 22px 23px) 0 0/8px 100% no-repeat}" +
+                "article::before{content:'';display:block;height:8px;margin-bottom:10px;background:radial-gradient(circle at 8px -4px,transparent 9px,$p 9px 10px,transparent 10px) 0 0/16px 8px repeat-x}" +
+                ".fecha{text-transform:uppercase;letter-spacing:.06em}" + capitular("3em", p)
             TemaId.ANDALUS -> "article{border-top:0}article::before{content:'';display:block;height:10px;margin-bottom:12px;" +
                 "background:conic-gradient(from 45deg,$p 25%,transparent 0 50%,$p 0 75%,transparent 0) 0 0/10px 10px repeat-x}" + capitular("2.6em", p)
+            // Cada día entre dos renglones rojos de códice, con una fila de puntos de jade encima y la fecha en versalitas rojas.
+            TemaId.MESO -> "article{border-top:2px solid $p;border-bottom:1px solid $p;padding:10px 0 12px}" +
+                "article::before{content:'';display:block;height:8px;margin-bottom:10px;background:radial-gradient(circle,$s 2px,transparent 2.6px) 0 0/12px 8px repeat-x}" +
+                ".fecha{font-variant:small-caps;letter-spacing:.05em;color:$p}" + capitular("2.8em", p)
             TemaId.MONGOL -> "article{border:2px dashed $s;border-radius:10px;padding:18px;margin-bottom:18px}" + capitular("2.4em", p)
             TemaId.RENACIMIENTO -> "article{border-top:1px solid $v}article::before{content:'';float:right;width:60px;height:60px;border:1px dashed $v;border-radius:50%;margin:0 0 6px 10px}" + capitular("3.6em", p)
+            // Cada asiento entre dos filetes, con la «X» roja del tesoro al margen y la fecha en versalitas de bitácora.
+            TemaId.PIRATA -> "article{border-top:3px double $v;border-bottom:1px dotted $v;padding-bottom:10px}article::before{content:'✕';float:right;color:$p;font-size:1.4em;margin:0 0 4px 10px}" +
+                ".fecha{font-variant:small-caps;letter-spacing:.06em}" + capitular("3em", p)
             TemaId.URSS -> "article{border-top:0;border-left:10px solid $p;padding-left:16px}.fecha{text-transform:uppercase;letter-spacing:.04em}.nota::first-line{font-weight:bold}"
             TemaId.REVOLUCION -> "article{border-top:6px solid;border-image:linear-gradient(90deg,#1F3A6E 0 33%,$b 33% 66%,#B22234 66%) 6}" + capitular("3em", p)
             TemaId.ANTIGUAS -> "article{border:2px solid $p;padding:18px;margin-bottom:18px;background:linear-gradient(135deg,$s 10px,transparent 10px),linear-gradient(225deg,$s 10px,transparent 10px)," +
                 "linear-gradient(315deg,$s 10px,transparent 10px),linear-gradient(45deg,$s 10px,transparent 10px)}" + capitular("2.8em", p)
+            // Una hilera de puntos de ocre a la izquierda de cada día, los títulos a mano alzada y la primera letra grande, de ocre.
+            TemaId.CUEVA -> "article{border-left:4px dotted $p;padding:6px 14px;margin-bottom:20px}h1,.fecha{font-family:T,cursive;letter-spacing:.06em}" +
+                ".fecha{font-size:1.4em;color:$p}.meta{color:$v}" + capitular("3em", p)
         }
     }
 
@@ -339,9 +384,13 @@ object LibroDiario {
         val aire = if (carta) 1.45f else 1.42f
         return when (t) {
             TemaId.ROMANO -> Medidas(if (carta) 12.5f else 11f, aire)
+            TemaId.URBE -> Medidas(if (carta) 12f else 10.8f, if (carta) 1.5f else 1.38f)
             TemaId.CIBER -> Medidas(11f, 1.35f)
+            TemaId.NEON -> Medidas(11.5f, 1.4f)
             TemaId.HELENO -> Medidas(12.5f, aire)
+            TemaId.EGIPTO -> Medidas(if (carta) 12.5f else 11.5f, aire + 0.04f)
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
+            TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
             TemaId.ORDEN -> Medidas(11f, aire)
@@ -349,16 +398,23 @@ object LibroDiario {
             TemaId.COLONOS -> Medidas(12.5f, aire)
             TemaId.NAPOLEON -> Medidas(12.5f, aire)
             TemaId.BOTANICO -> Medidas(12.5f, aire)
+            TemaId.RUINAS -> Medidas(12f, aire)
             TemaId.NAVIDAD -> Medidas(12.5f, aire)
             TemaId.SEDA -> Medidas(12.5f, aire)
+            TemaId.EDO -> Medidas(12f, aire + 0.1f)
             TemaId.GOTICO -> Medidas(12.5f, aire)
+            TemaId.ARCANO -> Medidas(12f, aire)
             TemaId.ESPACIO -> Medidas(11f, aire)
+            TemaId.ABISMO -> Medidas(11.5f, aire)
             TemaId.ANDALUS -> Medidas(12.5f, aire)
+            TemaId.MESO -> Medidas(12f, aire)
             TemaId.MONGOL -> Medidas(11f, aire)
             TemaId.RENACIMIENTO -> Medidas(12.5f, aire)
+            TemaId.PIRATA -> Medidas(11.5f, aire)
             TemaId.URSS -> Medidas(11f, aire)
             TemaId.REVOLUCION -> Medidas(11f, aire)
             TemaId.ANTIGUAS -> Medidas(11f, aire)
+            TemaId.CUEVA -> Medidas(11.5f, if (carta) 1.5f else 1.46f)
         }
     }
 
@@ -373,12 +429,19 @@ object LibroDiario {
     private fun inicial(t: TemaId): Inicial = when (t) {
         // La primera palabra en capitales lapidarias, como en una inscripción.
         TemaId.ROMANO -> Inicial(R.font.cinzel_semibold, 1.25f, palabra = true, mayusculas = true)
+        // La primera palabra en mayúsculas sobre una cartela de color, como el nombre de la calle en su placa.
+        TemaId.URBE -> Inicial(R.font.titillium_bold, 1.1f, palabra = true, mayusculas = true, invertida = true)
         // El indicador de la consola y la primera letra en video inverso, como el cursor.
         TemaId.CIBER -> Inicial(R.font.sharetech_mono, 1f, invertida = true, prefijo = "> ")
+        TemaId.NEON -> Inicial(R.font.chakra_semibold, 1.6f, tinta = true, mayusculas = true)
         // La letra que sale al margen, en negro, como en los papiros griegos.
         TemaId.HELENO -> Inicial(R.font.garamond_semibold, 2.3f, tinta = true)
+        // La primera palabra en rojo, como una rúbrica, con el ankh delante.
+        TemaId.EGIPTO -> Inicial(R.font.messiri_bold, 1.15f, palabra = true, prefijo = "☥ ")
         // La capitular roja del copista.
         TemaId.MEDIEVAL -> Inicial(R.font.gotica_regular, 2.2f)
+        // La primera palabra en la letra de los estandartes, en rojo y en mayúsculas.
+        TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
         // Una letra grande de fósforo en video inverso.
@@ -391,20 +454,33 @@ object LibroDiario {
         TemaId.COLONOS -> Inicial(R.font.fell, 2.6f, tinta = true)
         TemaId.NAPOLEON -> Inicial(R.font.bodoni_titulo, 2.5f)
         TemaId.BOTANICO -> Inicial(R.font.fraunces_negrita, 2.3f)
+        TemaId.RUINAS -> Inicial(R.font.letrero_titulo, 2.4f)
         TemaId.NAVIDAD -> Inicial(R.font.cinzel_deco_bold, 2.3f)
         TemaId.SEDA -> Inicial(R.font.almendra_bold, 2.2f)
+        // «一、» antes de la primera palabra, como cada artículo de los documentos de la época (ichitsugaki).
+        TemaId.EDO -> Inicial(R.font.zenmincho_semibold, 1f, palabra = true, prefijo = "一、")
         // La capitular de los libros de horas, en letra textura.
         TemaId.GOTICO -> Inicial(R.font.gotica_textura, 2.7f)
+        // La primera letra en la cursiva del archivista, grande y en tinta.
+        TemaId.ARCANO -> Inicial(R.font.spectral_cursiva, 2.1f, tinta = true)
         // La primera palabra en mayúsculas de la sala de control.
         TemaId.ESPACIO -> Inicial(R.font.orbitron_bold, 1.1f, palabra = true, mayusculas = true)
+        // La capitular estrecha de rótulo de instrumento, en el color de la luz del fondo.
+        TemaId.ABISMO -> Inicial(R.font.batiscafo_semibold, 2.6f, tinta = true)
         TemaId.ANDALUS -> Inicial(R.font.kufi_bold, 2.2f)
+        // La capitular en versalitas, roja de cinabrio como las cifras del códice.
+        TemaId.MESO -> Inicial(R.font.alegreya_sc_bold, 2.5f)
         TemaId.MONGOL -> Inicial(R.font.philosopher_bold, 2.1f)
         // La inicial a mano, en sanguina.
         TemaId.RENACIMIENTO -> Inicial(R.font.italianno, 3.2f)
+        // La capitular en letra negra, como en los títulos de las cartas.
+        TemaId.PIRATA -> Inicial(R.font.corsario_titulo, 2.7f)
         // La primera palabra en mayúsculas del cartel.
         TemaId.URSS -> Inicial(R.font.russo, 1.15f, palabra = true, mayusculas = true)
         TemaId.REVOLUCION -> Inicial(R.font.cormorant_medium, 2.6f)
         TemaId.ANTIGUAS -> Inicial(R.font.cinzel_semibold, 2.5f)
+        // Una capitular grande a mano alzada, en ocre.
+        TemaId.CUEVA -> Inicial(R.font.amatic_bold, 2.9f, tinta = true)
     }
 
     /** El [texto] con la inicial del tema ([acento], [fondo] y [tinta] son los colores de la hoja). */
@@ -456,10 +532,22 @@ object LibroDiario {
                 cv.drawPath(ruta { moveTo(cx - 4f, y - 3f); lineTo(cx + 4f, y - 3f); lineTo(cx, y + 3.5f); close() }, relleno)
                 cv.drawCircle(cx - 8f, y, 1.3f, relleno); cv.drawCircle(cx + 8f, y, 1.3f, relleno)
             }
+            TemaId.URBE -> {
+                // Las vías del tranvía: dos rieles finos con sus durmientes.
+                cv.drawLine(x0, y - 1.6f, x1, y - 1.6f, linea); cv.drawLine(x0, y + 1.6f, x1, y + 1.6f, linea)
+                var x = x0 + 3f; while (x < x1) { cv.drawLine(x, y - 3.2f, x, y + 3.2f, Paint(linea).apply { strokeWidth = 1.6f }); x += 9f }
+            }
             TemaId.CIBER -> {
                 // Una línea discontinua y el cursor al principio.
                 cv.drawPath(ruta { moveTo(x0 + 9f, y); lineTo(x1, y) }, Paint(trazo).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(4f, 3f), 0f) })
                 cv.drawRect(x0, y - 3f, x0 + 5f, y + 3f, relleno)
+            }
+            TemaId.NEON -> {
+                // Un tubo de neón partido en tres tramos, con su halo, y un rombo en el centro.
+                val halo = Paint(linea).apply { strokeWidth = 4f; alpha = 60; strokeCap = Paint.Cap.ROUND }
+                val nucleo = Paint(linea).apply { strokeWidth = 1.3f; strokeCap = Paint.Cap.ROUND }
+                listOf(x0 to cx - 10f, cx + 10f to x1).forEach { (a, b) -> cv.drawLine(a, y, b, y, halo); cv.drawLine(a, y, b, y, nucleo) }
+                cv.drawPath(ruta { moveTo(cx, y - 4f); lineTo(cx + 4f, y); lineTo(cx, y + 4f); lineTo(cx - 4f, y); close() }, relleno)
             }
             TemaId.HELENO -> {
                 // El meandro entre dos filetes.
@@ -467,11 +555,33 @@ object LibroDiario {
                 meandro(cv, x0, x1, y, u, Paint(trazo).apply { strokeWidth = 0.8f })
                 cv.drawLine(x0, y - 2 * u, x1, y - 2 * u, fino); cv.drawLine(x0, y + 2 * u, x1, y + 2 * u, fino)
             }
+            TemaId.EGIPTO -> {
+                // La cenefa de rectángulos de colores entre dos filetes, como bajo las pinturas de las tumbas.
+                val fino = Paint(linea).apply { strokeWidth = 0.6f }
+                var x = x0; var k = 0
+                while (x + 4f <= x1) { cv.drawRect(x, y - 2f, x + 4f, y + 2f, Paint(relleno).apply { alpha = if (k % 2 == 0) 255 else 110 }); x += 6f; k++ }
+                cv.drawLine(x0, y - 4f, x1, y - 4f, fino); cv.drawLine(x0, y + 4f, x1, y + 4f, fino)
+            }
             TemaId.MEDIEVAL -> {
                 // Un cuadrifolio rojo con el botón de tinta.
                 lados(10f)
                 listOf(-1f to -1f, 1f to -1f, -1f to 1f, 1f to 1f).forEach { (a, b) -> cv.drawCircle(cx + a * 2.4f, y + b * 2.4f, 2.2f, relleno) }
                 cv.drawCircle(cx, y, 1.2f, Paint(relleno).apply { color = tinta })
+            }
+            TemaId.TEMPLARIO -> {
+                // Una cruz patada roja entre dos filetes de acero, uno grueso y otro fino.
+                lados(10f)
+                cv.drawLine(x0, y + 3f, cx - 10f, y + 3f, Paint(linea).apply { strokeWidth = 0.6f }); cv.drawLine(cx + 10f, y + 3f, x1, y + 3f, Paint(linea).apply { strokeWidth = 0.6f })
+                cv.drawPath(ruta {
+                    for (k in 0 until 4) {
+                        val a = Math.toRadians(90.0 * k - 90); val dx = Math.cos(a).toFloat(); val dy = Math.sin(a).toFloat()
+                        fun px(fr: Float, s: Float) = cx + dx * 7f * fr - dy * 7f * s
+                        fun py(fr: Float, s: Float) = y + dy * 7f * fr + dx * 7f * s
+                        if (k == 0) moveTo(px(0.14f, -0.14f), py(0.14f, -0.14f)) else lineTo(px(0.14f, -0.14f), py(0.14f, -0.14f))
+                        lineTo(px(1f, -0.42f), py(1f, -0.42f)); lineTo(px(1f, 0.42f), py(1f, 0.42f))
+                    }
+                    close()
+                }, relleno)
             }
             TemaId.DISTOPIA -> {
                 // La barra negra del formulario y la línea roja de debajo.
@@ -516,6 +626,15 @@ object LibroDiario {
                 var x = x0 + 6f; var s = 1f
                 while (x < x1) { cv.save(); cv.rotate(-35f * s, x, y - s * 2f); cv.drawOval(x - 3f, y - s * 2f - 1.2f, x + 3f, y - s * 2f + 1.2f, relleno); cv.restore(); x += 12f; s = -s }
             }
+            TemaId.RUINAS -> {
+                // La línea discontinua de una calle, con una grieta a la mitad y una mata de hierba en la grieta.
+                val m = (x0 + x1) / 2
+                val pintura = Paint(trazo).apply { strokeWidth = 1.6f }; val finito = Paint(trazo).apply { strokeWidth = 0.7f }
+                var x = x0
+                while (x < x1) { val f = minOf(x + 10f, x1); if (f < m - 3f || x > m + 3f) cv.drawLine(x, y, f, y, pintura); x += 16f }
+                cv.drawPath(ruta { moveTo(m, y - 4f); lineTo(m - 1f, y); lineTo(m + 1f, y + 2f); lineTo(m, y + 5f) }, finito)
+                for (k in -1..1) cv.drawLine(m + k * 1.2f, y - 1f, m + k * 2.4f, y - 6f + (if (k == 0) 0f else 1f), finito)
+            }
             TemaId.NAVIDAD -> {
                 // Una ramita de acebo: dos hojas verdes y tres bayas.
                 lados(13f)
@@ -530,11 +649,24 @@ object LibroDiario {
                 cv.drawCircle(cx, y, 5f, relleno)
                 cv.drawRect(cx - 1.8f, y - 1.8f, cx + 1.8f, y + 1.8f, Paint(relleno).apply { color = fondo })
             }
+            TemaId.EDO -> {
+                // El sellito de bermellón con su marco en reserva, entre dos trazos de pincel que se afilan.
+                lados(10f)
+                cv.drawRect(cx - 4.6f, y - 4.6f, cx + 4.6f, y + 4.6f, relleno)
+                cv.drawRect(cx - 3f, y - 3f, cx + 3f, y + 3f, Paint(trazo).apply { color = fondo; strokeWidth = 0.8f })
+                cv.drawLine(cx, y - 2f, cx, y + 2f, Paint(linea).apply { color = fondo; strokeWidth = 0.9f })
+            }
             TemaId.GOTICO -> {
                 // Un arco ojival.
                 lados(9f)
                 cv.drawPath(ruta { moveTo(cx - 5f, y + 4f); lineTo(cx - 5f, y - 1f); quadTo(cx - 5f, y - 6f, cx, y - 8.5f); quadTo(cx + 5f, y - 6f, cx + 5f, y - 1f); lineTo(cx + 5f, y + 4f) }, Paint(trazo).apply { strokeWidth = 1f })
                 cv.drawCircle(cx, y - 1.5f, 1.4f, relleno)
+            }
+            TemaId.ARCANO -> {
+                // El ojo del signo entre dos rayas a pulso.
+                lados(10f)
+                cv.drawPath(ruta { moveTo(cx - 6f, y); quadTo(cx, y - 5f, cx + 6f, y); quadTo(cx, y + 5f, cx - 6f, y); close() }, Paint(trazo).apply { strokeWidth = 1f })
+                cv.drawOval(cx - 0.9f, y - 2.4f, cx + 0.9f, y + 2.4f, relleno)
             }
             TemaId.ESPACIO -> {
                 // Un planeta con su anillo.
@@ -542,12 +674,24 @@ object LibroDiario {
                 cv.drawCircle(cx, y, 3.4f, relleno)
                 cv.save(); cv.rotate(-20f, cx, y); cv.drawOval(cx - 8.5f, y - 2.4f, cx + 8.5f, y + 2.4f, Paint(trazo).apply { strokeWidth = 0.8f }); cv.restore()
             }
+            TemaId.ABISMO -> {
+                // Una medusa entre dos líneas: la campana y tres tentáculos.
+                lados(12f)
+                cv.drawArc(cx - 6f, y - 6f, cx + 6f, y + 2f, 180f, 180f, true, relleno)
+                listOf(-3.5f, 0f, 3.5f).forEach { dx -> cv.drawPath(ruta { moveTo(cx + dx, y - 1f); quadTo(cx + dx - 2f, y + 3f, cx + dx, y + 7f) }, trazo) }
+            }
             TemaId.ANDALUS -> {
                 // La estrella de ocho puntas de dos cuadrados.
                 lados(10f)
                 cv.drawRect(cx - 4f, y - 4f, cx + 4f, y + 4f, relleno)
                 cv.save(); cv.rotate(45f, cx, y); cv.drawRect(cx - 4f, y - 4f, cx + 4f, y + 4f, relleno); cv.restore()
                 cv.drawCircle(cx, y, 1.6f, Paint(relleno).apply { color = fondo })
+            }
+            TemaId.MESO -> {
+                // El seis maya: un punto sobre una barra.
+                lados(10f)
+                cv.drawRoundRect(cx - 6.5f, y + 0.6f, cx + 6.5f, y + 3.2f, 1.2f, 1.2f, relleno)
+                cv.drawCircle(cx, y - 2.6f, 1.9f, relleno)
             }
             TemaId.MONGOL -> {
                 // El sol, la luna y la llama, uno sobre otro.
@@ -561,6 +705,13 @@ object LibroDiario {
                 lados(10f)
                 val fino = Paint(trazo).apply { strokeWidth = 0.6f }
                 cv.drawCircle(cx, y, 6f, fino); cv.drawRect(cx - 4.24f, y - 4.24f, cx + 4.24f, y + 4.24f, fino); cv.drawCircle(cx, y, 0.9f, relleno)
+            }
+            TemaId.PIRATA -> {
+                // Un cabo de orilla a orilla con un nudo al centro: el filete hecho de vueltas cortas de cordón.
+                var x = x0
+                while (x < x1) { if (kotlin.math.abs(x - cx) > 8f) cv.drawLine(x, y + 1.6f, x + 2.4f, y - 1.6f, linea); x += 2.6f }
+                cv.drawCircle(cx, y, 4f, trazo); cv.drawCircle(cx, y, 1.4f, relleno)
+                cv.drawLine(cx + 2f, y + 3f, cx + 5f, y + 7f, linea); cv.drawLine(cx - 2f, y + 3f, cx - 5f, y + 7f, linea)
             }
             TemaId.URSS -> {
                 // La barra roja gruesa, la negra fina y la estrella donde se juntan.
@@ -587,6 +738,12 @@ object LibroDiario {
                     if (i == 2) cv.drawLine(x - 3f, y + 1.5f, x + 3f, y - 1.5f, runa)
                 }
             }
+            TemaId.CUEVA -> {
+                // Una hilera de puntos de ocre de grosor desparejo y, en el centro, tres más grandes en triángulo.
+                var x = x0 + 2f; var k = 0
+                while (x < x1) { if (kotlin.math.abs(x - cx) > 12f) cv.drawCircle(x, y + (if (k % 2 == 0) -0.6f else 0.6f), 1.1f + (k % 3) * 0.35f, relleno); x += 7f; k++ }
+                cv.drawCircle(cx - 5f, y + 2f, 2.2f, relleno); cv.drawCircle(cx + 5f, y + 2f, 2.2f, relleno); cv.drawCircle(cx, y - 3f, 2.2f, relleno)
+            }
         }
     }
 
@@ -606,20 +763,45 @@ object LibroDiario {
                 rect(22f, trazo); rect(27f, fino)
                 esquinas.forEach { (x, y) -> cv.drawRect(x - 3f, y - 3f, x + 3f, y + 3f, relleno) }
             }
+            TemaId.URBE -> {
+                // La placa de la calle: marco grueso, filete fino, un tornillo en cada esquina y, arriba, el recuadro del rione.
+                rect(22f, Paint(trazo).apply { strokeWidth = 2.4f }); rect(28f, fino)
+                esquinas.forEach { (x, y) -> val (sx, sy) = haciaDentro(x, y); cv.drawCircle(x + sx * 11f, y + sy * 11f, 2.6f, relleno) }
+                cv.drawRect(A / 2 - 40f, 16f, A / 2 + 40f, 28f, Paint(relleno).apply { alpha = 60 })
+            }
             // Solo las escuadras de las esquinas, como en una pantalla.
             TemaId.CIBER -> esquinas.forEach { (x, y) ->
                 val (sx, sy) = haciaDentro(x, y); val p = Paint(trazo).apply { strokeWidth = 1.4f }
                 cv.drawLine(x, y, x + sx * 40f, y, p); cv.drawLine(x, y, x, y + sy * 40f, p)
+            }
+            // Un marco de tubo con las esquinas redondas y su halo, como un letrero.
+            TemaId.NEON -> {
+                val r = android.graphics.RectF(22f, 22f, A - 22f, B - 22f)
+                cv.drawRoundRect(r, 14f, 14f, Paint(trazo).apply { strokeWidth = 5f; alpha = 50 })
+                cv.drawRoundRect(r, 14f, 14f, Paint(trazo).apply { strokeWidth = 1.4f; alpha = 220 })
             }
             TemaId.HELENO -> {
                 // Un filete y el meandro arriba y abajo.
                 rect(22f, trazo)
                 listOf(30f, B - 29f).forEach { y -> meandro(cv, 34f, A - 34f, y, 3f, Paint(trazo).apply { strokeWidth = 0.8f }) }
             }
+            TemaId.EGIPTO -> {
+                // Un filete y, arriba, la gola del templo: hojas de palma pintadas en franjas; abajo, la línea del suelo.
+                rect(22f, trazo)
+                var x = 26f; while (x < A - 26f) { cv.drawRect(x, 26f, minOf(x + 4f, A - 26f), 38f, relleno); x += 7f }
+                cv.drawLine(26f, 40f, A - 26f, 40f, trazo)
+                cv.drawLine(26f, B - 30f, A - 26f, B - 30f, trazo)
+            }
             TemaId.MEDIEVAL -> {
                 // Rojo grueso por fuera y azul fino por dentro.
                 rect(22f, Paint(trazo).apply { strokeWidth = 2.4f; alpha = 200 })
                 rect(27f, Paint(fino).apply { color = 0xFF1F3A93.toInt(); alpha = 160 })
+            }
+            TemaId.TEMPLARIO -> {
+                // Acero grueso por fuera, rojo fino por dentro y un clavo de hierro en cada esquina.
+                rect(22f, Paint(trazo).apply { color = 0xFF4A5560.toInt(); strokeWidth = 2.6f; alpha = 210 })
+                rect(28f, Paint(fino).apply { alpha = 170 })
+                listOf(22f to 22f, A - 22f to 22f, 22f to B - 22f, A - 22f to B - 22f).forEach { (x, yy) -> cv.drawCircle(x, yy, 3.2f, Paint(relleno).apply { color = 0xFF4A5560.toInt() }) }
             }
             TemaId.DISTOPIA -> {
                 // Marco negro, la franja roja de arriba y la casilla del folio.
@@ -662,6 +844,17 @@ object LibroDiario {
                     listOf(-20f, 20f).forEach { g -> cv.save(); cv.rotate(base + g, x, y); cv.drawOval(x + 2f, y - 2.5f, x + 16f, y + 2.5f, relleno); cv.restore() }
                 }
             }
+            TemaId.RUINAS -> {
+                // Un filete con dos esquinas desportilladas y una hoja de hiedra de cinco puntas en cada esquina, hacia dentro.
+                cv.drawPath(android.graphics.Path().apply { moveTo(36f, 24f); lineTo(A - 30f, 24f); lineTo(A - 24f, 32f); lineTo(A - 24f, B - 24f); lineTo(34f, B - 24f); lineTo(24f, B - 36f); lineTo(24f, 30f); close() }, fino)
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y)
+                    val base = Math.toDegrees(Math.atan2(sy.toDouble(), sx.toDouble())).toFloat() + 90f
+                    cv.save(); cv.rotate(base, x, y)
+                    cv.drawPath(android.graphics.Path().apply { moveTo(x, y); lineTo(x - 5f, y - 1.5f); lineTo(x - 7f, y - 5f); lineTo(x - 2.5f, y - 5f); lineTo(x, y - 9f); lineTo(x + 2.5f, y - 5f); lineTo(x + 7f, y - 5f); lineTo(x + 5f, y - 1.5f); close() }, relleno)
+                    cv.restore()
+                }
+            }
             TemaId.NAVIDAD -> {
                 // Bastón de caramelo: el mismo marco a trazos rojos y verdes alternados.
                 val d = 8f
@@ -677,6 +870,15 @@ object LibroDiario {
                 }
                 cv.drawPath(ruta, Paint(trazo).apply { strokeWidth = 1.4f }); rect(31f, fino)
             }
+            TemaId.EDO -> {
+                // El marco de las páginas impresas en madera (kyōkaku): grueso por fuera, fino por dentro, y arriba al centro
+                // la «cola de pez» (gyobi) que marcaba dónde se dobla la hoja.
+                rect(22f, Paint(trazo).apply { strokeWidth = 2.4f })
+                rect(27f, fino)
+                val pez = android.graphics.Path().apply { moveTo(A / 2 - 9f, 27f); lineTo(A / 2 + 9f, 27f); lineTo(A / 2 + 9f, 35f); lineTo(A / 2, 31f); lineTo(A / 2 - 9f, 35f); close() }
+                cv.drawPath(pez, relleno)
+                cv.drawLine(A / 2, 37f, A / 2, 46f, Paint(fino).apply { strokeWidth = 0.8f })
+            }
             TemaId.GOTICO -> {
                 // Un filete y una arquería de arcos ojivales arriba.
                 rect(22f, trazo)
@@ -684,15 +886,40 @@ object LibroDiario {
                 while (x + w <= A - 40f) { ruta.moveTo(x, 44f); ruta.lineTo(x, 36f); ruta.quadTo(x, 28f, x + w / 2, 26f); ruta.quadTo(x + w, 28f, x + w, 36f); ruta.lineTo(x + w, 44f); x += w + 4f }
                 cv.drawPath(ruta, fino)
             }
+            TemaId.ARCANO -> {
+                // La hoja del legajo: el filete con la esquina de arriba doblada, el margen rojo y dos tiras de cinta.
+                val d = 40f
+                cv.drawPath(android.graphics.Path().apply { moveTo(22f, 22f); lineTo(A - 22f - d, 22f); lineTo(A - 22f, 22f + d); lineTo(A - 22f, B - 22f); lineTo(22f, B - 22f); close() }, trazo)
+                cv.drawPath(android.graphics.Path().apply { moveTo(A - 22f - d, 22f); lineTo(A - 22f - d, 22f + d); lineTo(A - 22f, 22f + d) }, fino)
+                cv.drawLine(52f, 22f, 52f, B - 22f, fino)
+                listOf(22f to 22f, 22f to B - 22f).forEach { (x, y) -> cv.save(); cv.rotate(if (y < B / 2) -35f else 35f, x, y); cv.drawRect(x - 20f, y - 6f, x + 20f, y + 6f, Paint(relleno).apply { alpha = 60 }); cv.restore() }
+            }
             TemaId.ESPACIO -> {
                 // Esquinas redondas y una mira en el centro de cada lado.
                 cv.drawRoundRect(22f, 22f, A - 22f, B - 22f, 16f, 16f, trazo)
                 listOf(A / 2 to 22f, A / 2 to B - 22f, 22f to B / 2, A - 22f to B / 2).forEach { (x, y) -> cv.drawCircle(x, y, 4f, fino); cv.drawLine(x - 8f, y, x + 8f, y, fino); cv.drawLine(x, y - 8f, x, y + 8f, fino) }
             }
+            TemaId.ABISMO -> {
+                // La plancha del casco: el borde con su fila de remaches y un ojo de buey en cada esquina.
+                cv.drawRoundRect(22f, 22f, A - 22f, B - 22f, 12f, 12f, trazo)
+                var x = 60f; while (x < A - 60f) { cv.drawCircle(x, 30f, 1.6f, relleno); cv.drawCircle(x, B - 30f, 1.6f, relleno); x += 24f }
+                var yy = 60f; while (yy < B - 60f) { cv.drawCircle(30f, yy, 1.6f, relleno); cv.drawCircle(A - 30f, yy, 1.6f, relleno); yy += 24f }
+                esquinas.forEach { (ex, ey) -> val (sx, sy) = haciaDentro(ex, ey); cv.drawCircle(ex + sx * 12f, ey + sy * 12f, 9f, trazo); cv.drawCircle(ex + sx * 12f, ey + sy * 12f, 5f, fino) }
+            }
             TemaId.ANDALUS -> {
                 // Doble filete y una estrella de ocho puntas en cada esquina.
                 rect(24f, trazo); rect(29f, fino)
                 esquinas.forEach { (x, y) -> val (sx, sy) = haciaDentro(x, y); cv.drawPath(estrellaPdf(x + sx * 2f, y + sy * 2f, 8f, 5f, 8), relleno) }
+            }
+            TemaId.MESO -> {
+                // El marco rojo de la página del códice y, en cada esquina, un bloque de glifo con un punto y una barra.
+                rect(24f, trazo)
+                val tintaP = Paint(relleno).apply { color = tinta; alpha = 150 }
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y); val cx = x + sx * 8f; val cy = y + sy * 8f
+                    cv.drawRoundRect(cx - 6.5f, cy - 6.5f, cx + 6.5f, cy + 6.5f, 2.6f, 2.6f, relleno)
+                    cv.drawCircle(cx, cy - 2f, 1.4f, tintaP); cv.drawRect(cx - 3.8f, cy + 1.2f, cx + 3.8f, cy + 2.8f, tintaP)
+                }
             }
             TemaId.MONGOL -> {
                 // Doble filete con rombos en las esquinas y al centro de arriba y de abajo.
@@ -704,6 +931,18 @@ object LibroDiario {
                 rect(24f, Paint(fino).apply { alpha = 140 })
                 val raya = Paint(fino).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(3f, 3f), 0f) }
                 esquinas.forEach { (x, y) -> cv.drawCircle(x, y, 30f, raya) }
+            }
+            TemaId.PIRATA -> {
+                // El borde de una carta de marear: la escala de grados en franjas, un filete de cabo y una rosa pequeña arriba.
+                rect(20f, trazo); rect(26f, fino)
+                var x = 20f; var k = 0
+                while (x < A - 20f) { if (k % 2 == 0) { cv.drawRect(x, 20f, minOf(x + 14f, A - 20f), 26f, relleno); cv.drawRect(x, B - 26f, minOf(x + 14f, A - 20f), B - 20f, relleno) }; x += 14f; k++ }
+                val cabo = Paint(fino).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(4f, 2f), 0f); strokeWidth = 1f }
+                rect(32f, cabo)
+                val c = A - 60f to 62f
+                for (i in 0 until 8) { val a = Math.toRadians(-90.0 + 45.0 * i); val l = if (i % 2 == 0) 18f else 10f
+                    cv.drawLine(c.first, c.second, c.first + (l * kotlin.math.cos(a)).toFloat(), c.second + (l * kotlin.math.sin(a)).toFloat(), if (i == 0) trazo else fino) }
+                cv.drawCircle(c.first, c.second, 11f, fino)
             }
             TemaId.URSS -> {
                 // La barra roja a la izquierda, el filete negro y el cuadrado negro arriba a la derecha.
@@ -725,6 +964,16 @@ object LibroDiario {
                     val (sx, sy) = haciaDentro(x, y)
                     cv.drawPath(android.graphics.Path().apply { moveTo(x, y); lineTo(x + sx * 20f, y); lineTo(x, y + sy * 20f); close() }, hierro)
                     cv.drawCircle(x + sx * 5f, y + sy * 5f, 2.4f, gema)
+                }
+            }
+            TemaId.CUEVA -> {
+                // El borde ondulado de una piel curtida, la costura de tendón por dentro y tres puntos de ocre en cada esquina.
+                cv.drawPath(android.graphics.Path().apply { moveTo(24f, 30f); quadTo(A / 2, 16f, A - 24f, 28f); quadTo(A - 12f, B / 2, A - 26f, B - 24f); quadTo(A / 2, B - 12f, 26f, B - 28f); quadTo(14f, B / 2, 24f, 30f); close() }, trazo)
+                cv.drawPath(android.graphics.Path().apply { moveTo(34f, 40f); quadTo(A / 2, 28f, A - 34f, 38f); quadTo(A - 24f, B / 2, A - 36f, B - 34f); quadTo(A / 2, B - 24f, 36f, B - 38f); quadTo(26f, B / 2, 34f, 40f); close() },
+                    Paint(fino).apply { pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 4f), 0f) })
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y)
+                    listOf(18f to 18f, 28f to 16f, 16f to 28f).forEach { (dx, dy) -> cv.drawCircle(x + sx * dx, y + sy * dy, 2.4f, relleno) }
                 }
             }
         }

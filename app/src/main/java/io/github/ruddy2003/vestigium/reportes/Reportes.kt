@@ -98,9 +98,13 @@ class Lienzo(private val ctx: Context, val tema: TemaId = Estilo.tema, val oscur
  */
 private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.ROMANO -> R.font.cinzel_regular          // capitales romanas, como sus títulos
+    TemaId.URBE -> R.font.titillium_bold          // las cifras de los letreros y de los números de autobús
     TemaId.CIBER -> R.font.sharetech_mono           // la consola: monoespaciada de terminal
+    TemaId.NEON -> R.font.chakra_semibold          // la de los letreros
     TemaId.HELENO -> R.font.garamond_medium
+    TemaId.EGIPTO -> R.font.messiri_bold            // la de los títulos, redonda y firme
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
+    TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
     TemaId.ORDEN -> R.font.saira_stencil            // estarcido
@@ -108,24 +112,35 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.COLONOS -> R.font.garamond_semibold      // el tipo de la gaceta
     TemaId.NAPOLEON -> R.font.bodoni_titulo         // Didot
     TemaId.BOTANICO -> R.font.fraunces_titulo
+    TemaId.RUINAS -> R.font.letrero_titulo        // el letrero pintado a mano
     TemaId.NAVIDAD -> R.font.cinzel_deco_bold
     TemaId.SEDA -> R.font.almendra_bold
+    TemaId.EDO -> R.font.shippori_titulo            // cifras de mincho, como en los libros impresos en madera
     TemaId.GOTICO -> R.font.gotica_textura          // la textura del vitral; sus números se leen bien
+    TemaId.ARCANO -> R.font.spectral_medium         // la serifa del archivo, de cifras claras
     TemaId.ESPACIO -> R.font.orbitron_bold
+    TemaId.ABISMO -> R.font.batiscafo_semibold      // cifras estrechas de manómetro y profundímetro
     TemaId.ANDALUS -> R.font.kufi_medium
+    TemaId.MESO -> R.font.alegreya_sc_bold         // las versalitas del códice (y sus numerales de puntos y barras)
     TemaId.MONGOL -> R.font.philosopher_bold
     TemaId.RENACIMIENTO -> R.font.cormorant_medium  // números de cuaderno, con trazos de pluma
+    TemaId.PIRATA -> R.font.caslon_semibold      // números de libro de a bordo, en Caslon
     TemaId.URSS -> R.font.russo
     TemaId.REVOLUCION -> R.font.fell                // tipos de imprenta de cartel
     TemaId.ANTIGUAS -> R.font.cinzel_semibold       // números tallados en piedra
+    TemaId.CUEVA -> R.font.amatic_bold          // cifras a mano alzada, como trazos de carbón
 }
 
 /** El nombre de la app como lo firma cada tema arriba del reporte. */
 private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.ROMANO -> "VESTIGIVM MEI"
+    TemaId.URBE -> "ROMA · VESTIGIUM MEI"
     TemaId.CIBER -> "vestigium@mei:~\$"
+    TemaId.NEON -> "屋台 · VESTIGIUM MEI · NIVEL −3"
     TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · Vestigium Mei"
+    TemaId.EGIPTO -> "☥ Vestigium Mei · papiro del escriba"
     TemaId.MEDIEVAL -> "Liber vestigii mei"
+    TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
     TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
@@ -133,16 +148,23 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.COLONOS -> "La Gaceta de Vestigium Mei"
     TemaId.NAPOLEON -> "BULLETIN DE VESTIGIUM MEI"
     TemaId.BOTANICO -> "Herbarium · Vestigium Mei"
+    TemaId.RUINAS -> "Cuaderno del superviviente · Vestigium Mei"
     TemaId.NAVIDAD -> "Cartas al fuego · Vestigium Mei"
     TemaId.SEDA -> "Vestigium Mei · diario de caravana"
+    TemaId.EDO -> "Vestigium Mei · 道中日記 · diario del camino"
     TemaId.GOTICO -> "Liber horarum · Vestigium mei"
+    TemaId.ARCANO -> "Vestigium Mei · archivo del caso, caja reservada"
     TemaId.ESPACIO -> "VESTIGIUM MEI / MISIÓN"
+    TemaId.ABISMO -> "BITÁCORA DE INMERSIÓN · VESTIGIUM MEI"
     TemaId.ANDALUS -> "Vestigium Mei · أثري"
+    TemaId.MESO -> "Códice de Vestigium Mei"
     TemaId.MONGOL -> "МИНИЙ МӨР · Vestigium Mei"
     TemaId.RENACIMIENTO -> "Il taccuino di Vestigium Mei"
+    TemaId.PIRATA -> "Bitácora de a bordo de Vestigium Mei"
     TemaId.URSS -> "ДНЕВНИК · VESTIGIUM MEI"
     TemaId.REVOLUCION -> "Cahier de Vestigium Mei"
     TemaId.ANTIGUAS -> "Crónica de Vestigium Mei"
+    TemaId.CUEVA -> "Vestigium Mei · la pared del clan"
 }
 
 /**
@@ -193,6 +215,34 @@ object Reportes {
                     }
                     c.drawPath(path, pa); y += 3 * u + 34f
                 }
+                TemaId.URBE -> {
+                    // El perfil de los tejados: una cúpula grande con su linterna entre dos campanarios y dos cúpulas chicas,
+                    // sobre la línea de las cornisas.
+                    val base = yy + 44f
+                    val pa = L.relleno(L.primario)
+                    val sombra = L.relleno(L.mezcla(L.primario, L.fondo, 0.45))
+                    flancos(base, 150f, L.trazo(L.tenue, 1.6f))
+                    c.drawRect(cx - 150f, base - 6f, cx + 150f, base, sombra)
+                    // Cúpula mayor: tambor, casquete y linterna.
+                    c.drawRect(cx - 46f, base - 30f, cx + 46f, base - 6f, pa)
+                    c.drawArc(RectF(cx - 44f, base - 74f, cx + 44f, base + 14f), 180f, 180f, true, pa)
+                    c.drawRect(cx - 7f, base - 88f, cx + 7f, base - 70f, pa)
+                    c.drawCircle(cx, base - 92f, 4f, pa)
+                    val gajo = L.trazo(L.fondo, 1.4f)
+                    listOf(-26f, 0f, 26f).forEach { dx -> c.drawLine(cx + dx * 0.4f, base - 72f, cx + dx, base - 32f, gajo) }
+                    // Campanarios y cúpulas chicas a los lados.
+                    listOf(-1f, 1f).forEach { s ->
+                        val xt = cx + s * 82f
+                        c.drawRect(xt - 9f, base - 62f, xt + 9f, base - 6f, sombra)
+                        c.drawRect(xt - 4f, base - 54f, xt + 4f, base - 44f, L.relleno(L.fondo))
+                        val path = Path().apply { moveTo(xt - 11f, base - 62f); lineTo(xt, base - 74f); lineTo(xt + 11f, base - 62f); close() }
+                        c.drawPath(path, sombra)
+                        val xc = cx + s * 124f
+                        c.drawArc(RectF(xc - 18f, base - 36f, xc + 18f, base), 180f, 180f, true, sombra)
+                        c.drawRect(xc - 2.5f, base - 44f, xc + 2.5f, base - 34f, sombra)
+                    }
+                    y += 44f + 34f
+                }
                 TemaId.CIBER -> {
                     // La línea de órdenes: el indicador, una fila de puntos de fósforo y el cursor en bloque.
                     c.drawText(">", M, yy + 24f, L.p(L.primario, 28f, L.mono))
@@ -200,6 +250,15 @@ object Reportes {
                     var x = M + 34f
                     while (x + 6f < W - M - 34f) { c.drawRect(x, yy + 14f, x + 6f, yy + 20f, punto); x += 16f }
                     c.drawRect(W - M - 16f, yy + 2f, W - M, yy + 26f, L.relleno(L.primario))
+                    y += 48f
+                }
+                TemaId.NEON -> {
+                    // Un tubo de neón de orilla a orilla, con su halo, partido al centro por un rombo ámbar.
+                    val halo = L.trazo(L.mezcla(L.primario, L.fondo, 0.7), 14f)
+                    val nucleo = L.trazo(L.primario, 4f)
+                    flancos(yy + 14f, 22f, halo); flancos(yy + 14f, 22f, nucleo)
+                    val r = Path().apply { moveTo(cx, yy); lineTo(cx + 14f, yy + 14f); lineTo(cx, yy + 28f); lineTo(cx - 14f, yy + 14f); close() }
+                    c.drawPath(r, L.relleno(L.secundario))
                     y += 48f
                 }
                 TemaId.HELENO -> {
@@ -221,6 +280,31 @@ object Reportes {
                     c.drawLine(M, base + 7f, x, base + 7f, L.trazo(L.primario, 1.2f))
                     y += 62f
                 }
+                TemaId.EGIPTO -> {
+                    // Friso de lotos abiertos y capullos, como en las tumbas tebanas, sobre una cenefa de rectángulos de colores.
+                    val base = yy + 30f; val paso = 44f
+                    val pa = L.trazo(L.primario, 2f); val flor = L.relleno(L.primario); val capullo = L.relleno(L.secundario)
+                    var x = M + paso / 2
+                    while (x + paso / 2 <= W - M) {
+                        c.drawLine(x, base, x, base - 10f, pa)
+                        val p = Path()
+                        p.moveTo(x, base - 10f); p.lineTo(x - 11f, base - 26f); p.lineTo(x - 4f, base - 22f); p.lineTo(x, base - 31f)
+                        p.lineTo(x + 4f, base - 22f); p.lineTo(x + 11f, base - 26f); p.close()
+                        c.drawPath(p, flor)
+                        val xb = x + paso / 2
+                        if (xb + 6f < W - M) {
+                            c.drawLine(xb, base, xb, base - 8f, pa)
+                            val q = Path()
+                            q.moveTo(xb, base - 8f); q.quadTo(xb - 6f, base - 14f, xb, base - 22f); q.quadTo(xb + 6f, base - 14f, xb, base - 8f); q.close()
+                            c.drawPath(q, capullo)
+                        }
+                        x += maxOf(paso, 1f)
+                    }
+                    val colores = intArrayOf(L.primario, L.terciario, L.secundario, L.terciario)
+                    var xr = M; var k = 0
+                    while (xr + 12f <= W - M) { c.drawRect(xr, base + 4f, xr + 12f, base + 12f, L.relleno(colores[k % 4])); xr += 14f; k++ }
+                    y += 62f
+                }
                 TemaId.MEDIEVAL -> {
                     // Cenefa de copista: dos filetes de tinta y, entre ellos, rombos de rúbrica que alternan con puntos de oro.
                     val a = yy + 2f; val b = yy + 26f; val mid = (a + b) / 2
@@ -236,6 +320,29 @@ object Reportes {
                         x += 22f; i++
                     }
                     y += 50f
+                }
+                TemaId.TEMPLARIO -> {
+                    // El adarve de la muralla: una hilera de almenas en tinta de hierro y, en medio, el escudo con la cruz patada.
+                    val base = yy + 34f; val alto = 12f; val merlon = 14f; val cx = W / 2
+                    val hierro = L.relleno(L.tinta)
+                    c.drawRect(M, base - 4f, W - M, base, hierro)
+                    var x = M
+                    while (x + merlon <= W - M) {
+                        if (x + merlon < cx - 30f || x > cx + 30f) c.drawRect(x, base - 4f - alto, x + merlon, base - 4f, hierro)
+                        x += maxOf(merlon * 2, 1f)
+                    }
+                    val escudo = Path().apply {
+                        moveTo(cx - 20f, yy); lineTo(cx + 20f, yy); quadTo(cx + 21f, yy + 28f, cx, yy + 42f); quadTo(cx - 21f, yy + 28f, cx - 20f, yy); close()
+                    }
+                    c.drawPath(escudo, L.relleno(L.fondo)); c.drawPath(escudo, L.trazo(L.tinta, 1.6f))
+                    val rojo = L.relleno(L.primario); val my = yy + 17f
+                    val cruz = Path().apply {
+                        moveTo(cx - 3f, my - 3f); lineTo(cx - 7f, my - 15f); lineTo(cx + 7f, my - 15f); lineTo(cx + 3f, my - 3f)
+                        lineTo(cx + 15f, my - 7f); lineTo(cx + 15f, my + 7f); lineTo(cx + 3f, my + 3f); lineTo(cx + 7f, my + 15f)
+                        lineTo(cx - 7f, my + 15f); lineTo(cx - 3f, my + 3f); lineTo(cx - 15f, my + 7f); lineTo(cx - 15f, my - 7f); close()
+                    }
+                    c.drawPath(cruz, rojo)
+                    y += 58f
                 }
                 TemaId.DISTOPIA -> {
                     // La barra del expediente se abre en el centro para el ojo que lo mira todo.
@@ -335,6 +442,32 @@ object Reportes {
                     }
                     y += 46f
                 }
+                TemaId.RUINAS -> {
+                    // Una losa de hormigón partida por una grieta en zigzag; encima trepa una enredadera de hiedra con hojas de tres puntas.
+                    val yc = yy + 18f
+                    val losa = L.relleno(L.mezcla(L.linea, L.tinta, 0.25))
+                    c.drawRect(M, yc - 4f, cx - 12f, yc + 4f, losa); c.drawRect(cx + 8f, yc - 4f, W - M, yc + 4f, losa)
+                    val grieta = Path().apply { moveTo(cx - 12f, yc - 4f); lineTo(cx - 4f, yc - 1f); lineTo(cx - 10f, yc + 1.5f); lineTo(cx + 8f, yc + 4f) }
+                    c.drawPath(grieta, L.trazo(L.tinta, 1.4f))
+                    val tallo = Path(); tallo.moveTo(M, yc - 6f)
+                    val hojas = mutableListOf<Pair<Float, Float>>()
+                    var x = M; var i = 0
+                    while (x < W - M - 8f) {
+                        val alto = if (i % 2 == 0) yc - 20f else yc - 2f
+                        tallo.quadTo(x + 18f, alto, x + 36f, yc - 6f)
+                        hojas += (x + 18f) to (if (i % 2 == 0) yc - 13f else yc - 4f)
+                        x += 36f; i++
+                    }
+                    c.drawPath(tallo, L.trazo(L.mezcla(L.primario, L.tinta, 0.4), 1.3f))
+                    val verde = L.relleno(L.primario)
+                    hojas.forEachIndexed { k, (hx, hy) ->
+                        val s = 0.7f + 0.3f * (1f - abs(hx - cx) / (cx - M))
+                        c.save(); c.translate(hx, hy); c.rotate(if (k % 2 == 0) -25f else 155f); c.scale(s, s)
+                        val hoja = Path().apply { moveTo(0f, 0f); lineTo(-7f, -4f); lineTo(-9f, -12f); lineTo(-3f, -10f); lineTo(0f, -17f); lineTo(3f, -10f); lineTo(9f, -12f); lineTo(7f, -4f); close() }
+                        c.drawPath(hoja, verde); c.restore()
+                    }
+                    y += 46f
+                }
                 TemaId.NAVIDAD -> {
                     // Guirnalda de pino colgada en festones, con una esfera en cada nudo.
                     val top = yy + 2f; val paso = 68f
@@ -365,6 +498,25 @@ object Reportes {
                     }
                     y += 52f
                 }
+                TemaId.EDO -> {
+                    // Una franja de seigaiha (las olas en escamas de las telas y los grabados) y, al centro, el sello de bermellón.
+                    val r = 13f; val base = yy + 36f
+                    val ola = L.trazo(L.primario, 1.3f); val fondo = L.relleno(L.fondo)
+                    for (fila in 1 downTo 0) {
+                        val yb = base - fila * r * 0.5f; val dx = if (fila == 1) r else 0f
+                        var x = M + dx
+                        while (x <= W - M) {
+                            val caja = RectF(x - r, yb - r, x + r, yb + r)
+                            c.drawArc(caja, 180f, 180f, true, fondo)
+                            for (k in 0..2) { val q = r * (1f - k * 0.3f); c.drawArc(RectF(x - q, yb - q, x + q, yb + q), 180f, 180f, false, ola) }
+                            x += maxOf(2 * r, 1f)
+                        }
+                    }
+                    c.drawRect(cx - 14f, base - 34f, cx + 14f, base - 6f, L.relleno(L.secundario))
+                    c.drawRect(cx - 10.5f, base - 30.5f, cx + 10.5f, base - 9.5f, L.trazo(L.fondo, 1.6f))
+                    c.drawLine(cx, base - 28f, cx, base - 12f, L.trazo(L.fondo, 2f)); c.drawLine(cx - 7f, base - 22f, cx + 7f, base - 22f, L.trazo(L.fondo, 2f))
+                    y += 50f
+                }
                 TemaId.GOTICO -> {
                     // Una arquería de ojivas, como el triforio de una capilla, con un punto de oro entre arco y arco.
                     val vano = 36f; val alto = 26f; val base = yy + 30f; val arranque = base - alto * 0.45f
@@ -383,6 +535,20 @@ object Reportes {
                     c.drawLine(x0, base, x0 + n * vano, base, L.trazo(L.primario, 2.6f))
                     y += 56f
                 }
+                TemaId.ARCANO -> {
+                    // La costa vista desde el mar: la línea de las olas a tinta, el acantilado y el faro al centro con sus dos haces.
+                    val base = yy + 32f
+                    val ola = Path(); var x = M; ola.moveTo(M, base)
+                    while (x < W - M) { ola.quadTo(x + 6f, base - 4f, x + 12f, base); ola.quadTo(x + 18f, base + 4f, x + 24f, base); x += 24f }
+                    c.drawPath(ola, L.trazo(L.tinta, 1.6f))
+                    val haz = L.relleno(L.mezcla(L.primario, L.fondo, 0.6))
+                    listOf(-1f, 1f).forEach { s -> c.drawPath(Path().apply { moveTo(cx, yy + 4f); lineTo(cx + s * (W / 2 - M), yy - 6f); lineTo(cx + s * (W / 2 - M), yy + 14f); close() }, haz) }
+                    c.drawPath(Path().apply { moveTo(cx - 40f, base); quadTo(cx - 30f, base - 16f, cx - 10f, base - 18f); lineTo(cx + 14f, base - 18f); quadTo(cx + 34f, base - 10f, cx + 44f, base); close() }, L.relleno(L.tinta))
+                    c.drawPath(Path().apply { moveTo(cx - 6f, base - 18f); lineTo(cx - 4f, yy + 8f); lineTo(cx + 4f, yy + 8f); lineTo(cx + 6f, base - 18f); close() }, L.relleno(L.tinta))
+                    c.drawRect(cx - 5f, yy + 2f, cx + 5f, yy + 8f, L.relleno(L.primario))
+                    c.drawLine(cx - 6f, yy + 2f, cx + 6f, yy + 2f, L.trazo(L.tinta, 1.6f))
+                    y += 56f
+                }
                 TemaId.ESPACIO -> {
                     // Un planeta con su anillo al centro y, a los lados, estrellas de varios brillos.
                     val yc = yy + 16f
@@ -396,6 +562,34 @@ object Reportes {
                     c.save(); c.rotate(-18f, cx, yc)
                     c.drawOval(RectF(cx - 30f, yc - 7f, cx + 30f, yc + 7f), L.trazo(L.terciario, 2.4f))
                     c.restore()
+                    y += 50f
+                }
+                TemaId.ABISMO -> {
+                    // La traza del sonar: el perfil del fondo con sus sondeos verticales y, al centro, una medusa.
+                    val yc = yy + 14f
+                    fun fondo(x: Float) = yc + 12f + 5f * kotlin.math.sin(x / 37f) + 3f * kotlin.math.sin(x / 13f)
+                    val perfil = L.trazo(L.mezcla(L.tinta, L.fondo, 0.35), 1.6f)
+                    val sondeo = L.trazo(L.mezcla(L.primario, L.fondo, 0.4), 1f)
+                    for (lado in listOf(-1f, 1f)) {
+                        val ruta = Path(); var x = cx + lado * 46f; var primero = true
+                        while (if (lado < 0) x >= M else x <= W - M) {
+                            if (primero) { ruta.moveTo(x, fondo(x)); primero = false } else ruta.lineTo(x, fondo(x))
+                            x += maxOf(lado * 6f, 1f)
+                        }
+                        c.drawPath(ruta, perfil)
+                        var s = cx + lado * 70f
+                        while (if (lado < 0) s >= M else s <= W - M) {
+                            c.drawLine(s, yc - 12f, s, fondo(s) - 3f, sondeo)
+                            c.drawCircle(s, yc - 12f, 2f, L.relleno(L.primario))
+                            s += lado * 48f
+                        }
+                    }
+                    c.drawArc(RectF(cx - 18f, yc - 20f, cx + 18f, yc + 8f), 180f, 180f, true, L.relleno(L.primario))
+                    val tentaculo = L.trazo(L.terciario, 1.6f)
+                    for (k in 0 until 4) {
+                        val tx = cx - 12f + k * 8f
+                        c.drawPath(Path().apply { moveTo(tx, yc - 6f); quadTo(tx + (if (k % 2 == 0) 6f else -6f), yc + 6f, tx, yc + 18f) }, tentaculo)
+                    }
                     y += 50f
                 }
                 TemaId.ANDALUS -> {
@@ -415,6 +609,25 @@ object Reportes {
                         c.drawCircle(sx, yc, 5f, L.relleno(L.fondo))
                     }
                     y += 52f
+                }
+                TemaId.MESO -> {
+                    // Greca escalonada (xicalcoliuhqui): un escalón que sube tres gradas y remata en un gancho en espiral,
+                    // repetido entre dos cenefas, como en los frisos de piedra de Mitla y Uxmal; puntos de jade en los huecos.
+                    val a = yy + 4f; val b = yy + 34f; val paso = 40f
+                    val greca = L.trazo(L.primario, 2.6f).apply { strokeCap = Paint.Cap.SQUARE; strokeJoin = Paint.Join.MITER }
+                    c.drawLine(M, a - 2f, W - M, a - 2f, L.trazo(L.secundario, 1.4f)); c.drawLine(M, b + 2f, W - M, b + 2f, L.trazo(L.secundario, 1.4f))
+                    val jade = L.relleno(L.terciario)
+                    var x = M
+                    while (x + paso <= W - M) {
+                        val g = (b - a) / 4f; val p = Path()
+                        p.moveTo(x, b); p.lineTo(x + 4f, b); p.lineTo(x + 4f, b - g); p.lineTo(x + 9f, b - g); p.lineTo(x + 9f, b - 2 * g)
+                        p.lineTo(x + 14f, b - 2 * g); p.lineTo(x + 14f, a); p.lineTo(x + 30f, a); p.lineTo(x + 30f, a + 2.4f * g)
+                        p.lineTo(x + 20f, a + 2.4f * g); p.lineTo(x + 20f, a + 1.2f * g); p.lineTo(x + 25f, a + 1.2f * g)
+                        c.drawPath(p, greca)
+                        c.drawCircle(x + 32f, b - 5f, 2.6f, jade)
+                        x += maxOf(paso, 1f)
+                    }
+                    y += 50f
                 }
                 TemaId.MONGOL -> {
                     // El enrejado de la pared de una ger: listones cruzados en diagonal entre dos cintas de fieltro.
@@ -444,6 +657,22 @@ object Reportes {
                         val xx = M + k * (W - 2 * M) / 8
                         if (abs(xx - cx) > r + 16f) { c.drawLine(xx - 6f, yc - 6f, xx + 6f, yc + 6f, fino); c.drawLine(xx - 6f, yc + 6f, xx + 6f, yc - 6f, fino) }
                     }
+                    y += 62f
+                }
+                TemaId.PIRATA -> {
+                    // Una ola de tinta de orilla a orilla y, al centro, una rosa de ocho rumbos con la flor de lis al norte.
+                    val yc = yy + 22f; val r = 18f
+                    val fino = L.trazo(L.mezcla(L.primario, L.fondo, 0.35), 1.1f)
+                    val ola = android.graphics.Path(); var x = M; ola.moveTo(M, yc)
+                    while (x < W - M) { ola.quadTo(x + 8f, yc - 4f, x + 16f, yc); ola.quadTo(x + 24f, yc + 4f, x + 32f, yc); x += 32f }
+                    c.drawPath(ola, fino)
+                    c.drawRect(cx - r - 10f, yc - r - 4f, cx + r + 10f, yc + r + 4f, L.relleno(L.fondo))
+                    for (k in 0 until 8) {
+                        val a = Math.toRadians(-90.0 + 45.0 * k); val l = if (k % 2 == 0) r else r * 0.6f
+                        c.drawLine(cx, yc, cx + (l * kotlin.math.cos(a)).toFloat(), yc + (l * kotlin.math.sin(a)).toFloat(), L.trazo(if (k == 0) L.primario else L.secundario, if (k % 2 == 0) 1.8f else 1.1f))
+                    }
+                    c.drawCircle(cx, yc, r * 0.62f, fino)
+                    c.drawCircle(cx, yc - r - 1f, 2.6f, L.relleno(L.primario))
                     y += 62f
                 }
                 TemaId.URSS -> {
@@ -490,6 +719,25 @@ object Reportes {
                         }
                     }
                     y += 50f
+                }
+                TemaId.CUEVA -> {
+                    // Una hilera de puntos de ocre de orilla a orilla y, al centro, una mano en negativo: la nube soplada y la
+                    // mano del color del papel.
+                    val yc = yy + 22f; val r = 16f
+                    var x = M + 4f; var k = 0
+                    while (x < W - M) { if (abs(x - cx) > r * 2.2f) c.drawCircle(x, yc + (if (k % 2 == 0) -1.5f else 1.5f), 2.2f + (k % 3) * 0.5f, L.relleno(L.mezcla(L.primario, L.fondo, 0.25))); x += 14f; k++ }
+                    c.drawCircle(cx, yc, r * 1.5f, L.relleno(L.mezcla(L.primario, L.fondo, 0.7)))
+                    c.drawCircle(cx, yc, r * 1.15f, L.relleno(L.mezcla(L.primario, L.fondo, 0.4)))
+                    val papel = L.relleno(L.fondo)
+                    fun pieza(l: Float, t: Float, d: Float, b: Float, radio: Float) = c.drawRoundRect(android.graphics.RectF(cx + l * r, yc + t * r, cx + d * r, yc + b * r), radio * r, radio * r, papel)
+                    pieza(-0.44f, -0.12f, 0.4f, 0.62f, 0.2f); pieza(-0.3f, 0.45f, 0.26f, 1f, 0.06f)
+                    listOf(Triple(-0.34f, -0.62f, 0.17f), Triple(-0.13f, -0.86f, 0.19f), Triple(0.1f, -0.98f, 0.19f), Triple(0.3f, -0.8f, 0.18f)).forEach { (fx, arriba, an) -> pieza(fx - an / 2, arriba, fx + an / 2, 0.02f, an / 2) }
+                    val pulgar = android.graphics.Path().apply {
+                        moveTo(cx + 0.3f * r, yc + 0.5f * r); lineTo(cx + 0.36f * r, yc + 0.08f * r); quadTo(cx + 0.62f * r, yc - 0.2f * r, cx + 0.76f * r, yc - 0.08f * r)
+                        quadTo(cx + 0.84f * r, yc + 0.02f * r, cx + 0.66f * r, yc + 0.22f * r); lineTo(cx + 0.4f * r, yc + 0.6f * r); close()
+                    }
+                    c.drawPath(pulgar, papel)
+                    y += 56f
                 }
             }
         }

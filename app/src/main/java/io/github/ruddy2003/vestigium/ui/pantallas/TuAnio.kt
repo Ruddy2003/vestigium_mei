@@ -133,13 +133,20 @@ private const val DURACION = 8500
 private fun voz(t: TemaId, anio: Int): String = when (t) {
     // «Res gestae»: las cosas hechas, como el balance que Augusto mandó grabar en bronce.
     TemaId.ROMANO -> "RES GESTAE · ANNO ${Romano.de(anio)}"
+    // El anuario de la ciudad: tu año, con el año de la fundación al lado, como en las placas.
+    TemaId.URBE -> "IL TUO ANNO A ROMA · $anio · AUC ${io.github.ruddy2003.vestigium.ui.Romano.de(io.github.ruddy2003.vestigium.ui.Urbe.auc(anio))}"
     TemaId.DISTOPIA -> "INFORME ANUAL DEL CIUDADANO · $anio"
     TemaId.CIBER -> "> cat year_$anio.log"
+    TemaId.NEON -> "LOS LETREROS DE $anio"
     TemaId.BOTANICO -> "Catálogo de especímenes · $anio"
+    TemaId.RUINAS -> "Lo que quedó escrito tras el silencio · $anio"
     // «Apologismós»: la rendición de cuentas.
     TemaId.HELENO -> "ΑΠΟΛΟΓΙΣΜΟΣ · ΕΤΟΣ ${Griego.numeral(anio)}"
+    // Los anales: lo que se grababa del año de cada rey, con el año en numerales jeroglíficos.
+    TemaId.EGIPTO -> "Los anales del año $anio · ${io.github.ruddy2003.vestigium.ui.Egipcio.numeral(anio)}"
     // «Fechos»: los hechos, en la grafía de los cronistas castellanos.
     TemaId.MEDIEVAL -> "Libro de los fechos del año de ${Temas.copista(anio)}"
+    TemaId.TEMPLARIO -> "Crónica de la casa en el año del Señor ${Temas.puntos(anio)}"
     TemaId.REFUGIO -> "REGISTRO DEL REFUGIO · AÑO $anio BAJO TIERRA"
     TemaId.ORDEN -> "PARTE DE CUSTODIA DE LA ORDEN · $anio"
     TemaId.LABORATORIO -> "Protocolo $anio · resultados del año"
@@ -147,21 +154,30 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.NAPOLEON -> "BOLETÍN DE LA GRANDE ARMÉE · $anio"
     TemaId.NAVIDAD -> "Lo que trajo $anio"
     TemaId.SEDA -> "Bitácora de la caravana · ${Temas.anioChino(anio)}"
+    TemaId.EDO -> "Estampas del camino · ${Temas.nengo(java.time.LocalDate.of(anio, 7, 1))}"
     TemaId.URSS -> "BALANCE DEL PLAN · $anio"
     TemaId.GOTICO -> "Annales · anno ${Romano.de(anio).lowercase()}"
+    TemaId.ARCANO -> "Crónica del caso · año ${Temas.tachado(anio)}"
     // Como en los observatorios: el año empieza en un día juliano.
     TemaId.ESPACIO -> "CICLO $anio · DESDE JD " + String.format(java.util.Locale.US, "%,d", Temas.diaJuliano(java.time.LocalDate.of(anio, 1, 1))).replace(',', ' ')
+    // El año como una bajada: una inmersión por día, diez metros cada una.
+    TemaId.ABISMO -> java.time.Year.of(anio).length().let { n -> String.format(java.util.Locale.US, "LA BAJADA DE %d · %d INMERSIONES · %,d m", anio, n, n * 10) }
     // El año del sol cae sobre dos años de la hégira: el del 1 de enero y el del 31 de diciembre.
     TemaId.ANDALUS -> {
         val h1 = Temas.hegira(java.time.LocalDate.of(anio, 1, 1))?.third
         val h2 = Temas.hegira(java.time.LocalDate.of(anio, 12, 31))?.third
         "Diwán del año $anio" + (if (h1 != null && h2 != null) " · " + (if (h1 == h2) "$h1 H" else "$h1–$h2 H") else "")
     }
+    // El año como un tramo de la cuenta larga: del primer día al último, en baktunes, katunes, tunes, uinales y kines.
+    TemaId.MESO -> "El códice del año $anio · de " + io.github.ruddy2003.vestigium.ui.Maya.cuentaLarga(java.time.LocalDate.of(anio, 1, 1)) +
+        " a " + io.github.ruddy2003.vestigium.ui.Maya.cuentaLarga(java.time.LocalDate.of(anio, 12, 31))
     TemaId.MONGOL -> Temas.anioMongol(java.time.LocalDate.of(anio, 6, 1)) + " · $anio"
     // «Taccuino»: la libreta de bolsillo en que Leonardo apuntaba todo.
     TemaId.RENACIMIENTO -> "Taccuino dell'anno $anio"
+    TemaId.PIRATA -> "La travesía de $anio, singladura por singladura"
     TemaId.REVOLUCION -> "CAHIER DE L'ANNÉE $anio · ${Temas.anRepublicano(anio, 6).uppercase()}"
     TemaId.ANTIGUAS -> "LAS DOCE LUNAS DEL CAMINO · $anio"
+    TemaId.CUEVA -> "Las lunas de $anio, pintadas en la pared"
 }
 
 /** Lo que una tarjeta necesita saber para dibujarse. */

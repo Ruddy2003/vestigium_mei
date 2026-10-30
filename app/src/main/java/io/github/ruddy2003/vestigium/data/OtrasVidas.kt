@@ -5,7 +5,7 @@ package io.github.ruddy2003.vestigium.data
  * Cada número dice qué tan seguro es: medido (estudios y censos), estimado (registros de la época), reconstruido (esqueletos,
  * restos y comparaciones) o inventado (los mundos de ficción de algunos temas: estimaciones razonables, no datos).
  *
- * Doce vidas reales para todos, y una más por tema que solo aparece dentro de ese tema.
+ * Doce vidas reales para todos, y una o dos más por tema que solo aparecen dentro de ese tema.
  */
 object OtrasVidas {
     enum class Certeza(val nombre: String, val explica: String) {
@@ -308,6 +308,26 @@ object OtrasVidas {
                 "vida" to e(25), "vida_adulto" to e(50), "hijos" to e(1), "alfabetizacion" to e(30), "lectura" to r(0)),
             fuentes = listOf("La legión romana" to "${W}Roman_legion", "El ejército romano: la vida diaria" to "${W}Roman_army")),
 
+        // La vida moderna más parecida a la tuya, pero en otra ciudad: misma época, mismas pantallas, otro ritmo de calle.
+        Vida("restauradora", "Giulia", "Restauradora de frescos", "Roma", "2025", 2025, "tema", "urbe", edad = 38,
+            historia = listOf(
+                "Giulia sale en motoneta antes de las ocho y cruza el tráfico del centro hasta una iglesia donde trabaja sobre un andamio, a diez metros del suelo, limpiando un fresco centímetro a centímetro con hisopos y una lámpara. Un metro cuadrado puede llevarle semanas.",
+                "A la una baja a comer algo rápido en un bar; en la tarde vuelve al andamio hasta las seis. Después camina por su barrio, toma un café de pie en la barra y pasa por el mercado. Cena tarde, como casi todos en Roma, y a veces se queda en la plaza con amigos.",
+                "Su ciudad tiene unos dos millones setecientos cincuenta mil habitantes y lleva casi tres mil años de capas encima. Ella vivirá, en promedio, más de ochenta y cinco años y tendrá uno o ningún hijo: en Italia nacen menos niños que nunca. Lleva el teléfono en el bolsillo del overol, como tú.",
+            ),
+            dia = listOf(t(23.5, 7.0, Hacer.DORMIR), t(7.0, 8.0, Hacer.CUIDAR), t(8.0, 8.5, Hacer.CAMINO, "en motoneta"), t(8.5, 13.0, Hacer.TRABAJO, "andamio en una iglesia"), t(13.0, 14.0, Hacer.COMER),
+                t(14.0, 18.0, Hacer.TRABAJO), t(18.0, 19.5, Hacer.LIBRE, "paseo de la tarde"), t(19.5, 20.5, Hacer.CUIDAR), t(20.5, 22.0, Hacer.COMER, "cena tardía"), t(22.0, 23.5, Hacer.GENTE)),
+            datos = mapOf("pasos" to e(7000, "De pie en el andamio y a pie en el barrio; la motoneta ahorra el resto."), "km_anio" to e(8000), "kcal" to e(2100), "proteina" to e(75),
+                "azucar" to e(35, "El cornetto y el café con azúcar de la mañana."), "fibra" to e(22), "alcohol" to e(10, "Una copa de vino en la cena."), "sueno" to e(7.5), "dormir" to e(23.5),
+                "trabajo" to e(40), "aire_libre" to e(2), "pantalla" to e(4.5, "Poca pantalla en el trabajo, mucha en la noche."), "notificaciones" to e(60), "musica" to e(1.5),
+                "personas_dia" to e(25), "conocidas" to e(3000), "poblacion" to m(2745062, "Roma Capitale al 1 de enero de 2026, según el Istat."), "lejos" to e(9000),
+                "estatura" to e(163, "Promedio aproximado de las italianas de su edad."), "vida" to m(85.5, "Mujeres en Italia, 2024 (Istat); 81.4 los hombres."), "vida_adulto" to e(87),
+                "hijos" to m(1.18, "Italia, 2024: el mínimo de su historia (Istat)."), "alfabetizacion" to e(99), "lectura" to e(10, "En Italia, el 57% de los mayores de seis años leyó al menos un libro en 2024 (Istat).")),
+            fuentes = listOf("Istat: indicadores demográficos 2024" to "https://www.istat.it/comunicato-stampa/indicatori-demografici-anno-2024/",
+                "Istat: libros y bibliotecas, 2024 y 2025" to "https://www.istat.it/comunicato-stampa/libri-e-biblioteche-abitudini-di-lettura-e-frequentazione-anni-2024-e-2025/",
+                "Población de Roma (datos del Istat)" to "https://www.quantitalia.it/demografia/comune/roma",
+                "El fresco y su restauración" to "${W}Fresco")),
+
         Vida("remero", "Demeas", "Remero de un trirreme", "Atenas", "431 a. C.", -431, "tema", "heleno", edad = 30,
             historia = listOf(
                 "Demeas es un ciudadano pobre de Atenas: no tiene armadura de hoplita, así que sirve en la flota. En el trirreme son ciento setenta remeros en tres filas, y un flautista marca el ritmo para que nadie choque.",
@@ -322,6 +342,25 @@ object OtrasVidas {
                 "hijos" to e(4), "alfabetizacion" to e(10), "lectura" to r(0)),
             fuentes = listOf("El trirreme" to "${W}Trireme", "La democracia ateniense" to "${W}Athenian_democracy")),
 
+        // La vida del tema Egipto (su id de tema, «egipto», es el mismo texto que el id de la vida de Ipy en BASE: son
+        // espacios de nombres distintos, el de los temas y el de las vidas, y no chocan).
+        Vida("escriba_tumba", "Pay", "Escriba de la tumba", "Deir el-Medina, Tebas oeste", "hacia el 1200 a. C.", -1200, "tema", "egipto", edad = 34,
+            historia = listOf(
+                "Pay es uno de los escribas de «la Tumba», la cuadrilla que excava y decora las tumbas de los reyes en el Valle. Vive en la aldea de los obreros: unas setenta casas de adobe apretadas entre los cerros del desierto, sin agua propia; el agua se la suben en burro desde el río.",
+                "Su oficio es llevar la cuenta de todo en óstraca y papiros: cuánto grano llega, cuántas mechas y cinceles de cobre se reparten, quién faltó y por qué («enfermo», «picado por un escorpión»). La semana dura diez días; se trabaja ocho, en dos turnos de unas cuatro horas, y a veces se duerme en las chozas del paso de la montaña.",
+                "Le pagan cada mes en grano, más que a un obrero: trigo para el pan y cebada para la cerveza, con pescado, verduras y leña. En la aldea leen bastantes; en todo Egipto, quizá uno de cada cien. Pay es un personaje inventado, con un nombre común en la aldea; la aldea y sus registros son reales.",
+            ),
+            dia = listOf(t(20.0, 5.0, Hacer.DORMIR), t(5.0, 6.0, Hacer.COMER), t(6.0, 6.5, Hacer.CAMINO, "subir al valle"), t(6.5, 11.0, Hacer.TRABAJO, "anotar raciones, herramientas, ausencias"),
+                t(11.0, 12.0, Hacer.COMER, "y la siesta"), t(12.0, 16.0, Hacer.TRABAJO), t(16.0, 17.0, Hacer.CAMINO), t(17.0, 18.0, Hacer.CUIDAR), t(18.0, 20.0, Hacer.GENTE)),
+            datos = mapOf("pasos" to r(10000, "La subida por el paso de la montaña, ida y vuelta, cada día de trabajo."), "km_anio" to r(2500), "kcal" to r(2800, "Pan, cerveza, cebolla, lentejas y pescado; su ración de grano alcanzaba para la familia."),
+                "proteina" to r(70), "azucar" to r(10, "Dátiles y algo de miel."), "fibra" to r(45), "alcohol" to r(35, "Cerveza espesa y poco alcohólica, a diario."), "sueno" to r(9.0, "Se acuesta con la noche; además, la siesta del mediodía."),
+                "dormir" to r(20.0), "trabajo" to e(48, "Ocho días de cada diez, en dos turnos de unas cuatro horas."), "aire_libre" to r(4, "El camino y la obra al sol; dentro de la tumba, a la luz de mechas de aceite."), "pantalla" to r(0),
+                "notificaciones" to r(3), "musica" to r(0.5, "Cantos de trabajo y fiestas de la aldea."), "personas_dia" to e(60, "La cuadrilla tenía entre unos cuarenta y ciento veinte hombres, según el reinado."), "conocidas" to r(800),
+                "poblacion" to e(350, "Entre 200 y 500 personas, según la época."), "lejos" to r(30, "Hasta los templos de la otra orilla."), "estatura" to r(165), "vida" to r(25), "vida_adulto" to r(50), "hijos" to r(5),
+                "alfabetizacion" to e(1, "En todo Egipto, quizá uno de cada cien; en la aldea, muchos más: allí se han hallado miles de óstraca escritos."), "lectura" to r(4, "Copias de enseñanzas y poemas, que también aparecen en la aldea.")),
+            fuentes = listOf("Deir el-Medina, la aldea de los obreros" to "${W}Deir_el-Medina", "Las huelgas de Deir el-Medina: raciones y turnos" to "${W}Deir_el-Medina_strikes",
+                "Óstracon con el registro de ausencias (British Museum EA5634)" to "https://www.britishmuseum.org/collection/object/Y_EA5634")),
+
         Vida("copista", "Hermano Odo", "Monje copista", "Una abadía benedictina", "hacia 1150", 1150, "tema", "medieval", edad = 35,
             historia = listOf(
                 "El hermano Odo se acuesta al anochecer, después de completas, y lo despiertan a la madrugada para maitines. Reza en el coro siete veces al día: unas cuatro horas de canto llano diario.",
@@ -335,6 +374,26 @@ object OtrasVidas {
                 "pantalla" to r(0), "notificaciones" to e(8, "Las campanas de las horas."), "musica" to e(3.5, "El oficio cantado."), "personas_dia" to e(40), "conocidas" to e(300), "poblacion" to e(80),
                 "lejos" to e(100), "estatura" to r(170), "vida_adulto" to e(55), "hijos" to e(0), "alfabetizacion" to e(100, "Dentro del monasterio."), "lectura" to e(1, "El libro de Cuaresma.")),
             fuentes = listOf("Barbara Harvey, Living and Dying in England 1100–1540" to "https://fivebooks.com/book/living-and-dying-in-england-1100-1540-the-monastic-experience-by-barbara-harvey/", "Scriptorium" to "${W}Scriptorium")),
+
+        Vida("sargento", "Hermano Bernat", "Sargento de una orden militar", "Castillo de frontera en el Levante", "hacia 1250", 1250, "tema", "templario", edad = 29,
+            historia = listOf(
+                "El hermano Bernat no es caballero: es sargento, un freire de la orden que no viene de linaje noble. Viste de pardo y no de blanco, pelea a caballo o a pie detrás de los caballeros y cuida sus monturas y sus armas. Ha hecho los votos de pobreza, castidad y obediencia.",
+                "La Regla le ordena todo: a qué hora se levanta para maitines en plena noche, cómo come (en silencio, mientras un hermano lee en voz alta), cuántos caballos puede tener y qué castigo le toca si pierde el equipo. No puede salir del castillo ni recibir una carta sin permiso del maestre.",
+                "Desde la muralla mira la arena y los caminos de los peregrinos. Escolta caravanas de un castillo a otro, monta guardia y repara la muralla. No tendrá hijos, y casi toda la gente que conocerá cabe en unos pocos castillos.",
+            ),
+            dia = listOf(t(20.0, 0.0, Hacer.DORMIR), t(0.0, 1.5, Hacer.REZAR, "maitines"), t(1.5, 5.5, Hacer.DORMIR), t(5.5, 6.0, Hacer.REZAR, "prima"), t(6.0, 11.0, Hacer.TRABAJO, "caballos, armas, guardia"),
+                t(11.0, 12.0, Hacer.COMER, "en silencio, con lectura"), t(12.0, 17.0, Hacer.TRABAJO, "instrucción y muralla"), t(17.0, 18.0, Hacer.REZAR, "vísperas"), t(18.0, 19.0, Hacer.COMER),
+                t(19.0, 20.0, Hacer.REZAR, "completas")),
+            datos = mapOf("pasos" to r(11000, "Mucho del día va a caballo o en la muralla."), "km_anio" to r(4000, "Escoltas y cabalgadas entre castillos."),
+                "kcal" to r(3500, "La Regla daba carne unos tres días a la semana."), "proteina" to r(100, "Los domingos, los sargentos tenían una comida de carne y los caballeros, dos."), "azucar" to r(10), "fibra" to r(40),
+                "alcohol" to r(30, "Vino en la mesa, repartido por parejas de hermanos."), "sueno" to r(6.0, "En dos partes, cortado por maitines."), "dormir" to r(20.0, "Después de completas."),
+                "trabajo" to r(60), "aire_libre" to r(9), "pantalla" to r(0), "notificaciones" to r(10, "La campana de la capilla y los toques de la guardia."),
+                "musica" to r(1, "Oír el oficio; quien no sabía leer rezaba padrenuestros."), "personas_dia" to r(70, "La guarnición de un castillo mediano."), "conocidas" to r(800),
+                "poblacion" to r(400, "Freires, soldados a sueldo, criados y peregrinos de paso."), "lejos" to r(3500, "Desde su tierra natal, al otro lado del mar."), "estatura" to r(170),
+                "vida" to r(30), "vida_adulto" to r(50, "Si no lo mataba la guerra."), "hijos" to e(0, "Por el voto de castidad."), "alfabetizacion" to r(10, "Entre los freires sargentos, pocos."), "lectura" to r(0)),
+            fuentes = listOf("Los templarios" to "${W}Knights_Templar", "La Regla latina del Temple" to "${W}Latin_Rule",
+                "Las órdenes militares" to "${W}Military_order_(religious_society)", "Un castillo templario: Atlit" to "${W}Castle_Pilgrim"),
+            inspiracion = "Persona inventada. Su día sigue la Regla del Temple (la latina de 1129 y los artículos franceses que se le añadieron); las cifras son reconstrucciones, no registros."),
 
         Vida("cantero", "Pierre", "Cantero", "La obra de la catedral de Amiens", "1240", 1240, "tema", "gotico", edad = 34,
             historia = listOf(
@@ -361,6 +420,25 @@ object OtrasVidas {
                 "trabajo" to e(60), "aire_libre" to e(4), "pantalla" to r(0), "notificaciones" to e(6, "Campanas."), "musica" to e(0.7), "personas_dia" to e(100), "conocidas" to e(3000), "poblacion" to e(60000),
                 "lejos" to e(80), "estatura" to r(167), "vida" to e(30), "vida_adulto" to e(55), "hijos" to e(5), "alfabetizacion" to e(30), "lectura" to e(1)),
             fuentes = listOf("Florencia en el Renacimiento" to "${W}Republic_of_Florence", "El taller de Verrocchio" to "${W}Andrea_del_Verrocchio")),
+        Vida("grumete", "Tomás", "Grumete", "Un balandro pirata en el Caribe", "1718", 1718, "tema", "pirata", edad = 14,
+            historia = listOf(
+                "Tomás subió a bordo de un mercante a los doce, como paje, y cuando los piratas tomaron el barco se quedó con ellos: en un balandro le dan su parte del botín, aunque sea media. Baldea la cubierta, sube a la jarcia a soltar o aferrar las velas, ceba los cañones y sirve el rancho.",
+                "El día se cuenta por guardias de cuatro horas y la campana suena cada media hora. Duerme a pedazos, en un coy o donde caiga, entre setenta y tantos hombres que ve todos los días: los mismos, durante meses. Casi todo el día está al aire libre, al sol y al viento.",
+                "Come galleta, carne salada, frijoles y lo que se saque de las presas; bebe ron rebajado con agua (el grog) todos los días. Ese año el rey ofrece el indulto a quien se rinda y en noviembre cae Barbanegra: la mayoría de las tripulaciones no duran más de un par de años.",
+            ),
+            dia = listOf(t(0.0, 4.0, Hacer.DORMIR), t(4.0, 8.0, Hacer.TRABAJO, "baldear la cubierta en la guardia del alba"), t(8.0, 9.0, Hacer.COMER),
+                t(9.0, 12.0, Hacer.TRABAJO, "remendar velas y cabos"), t(12.0, 13.0, Hacer.COMER, "galleta y grog"), t(13.0, 16.0, Hacer.DORMIR),
+                t(16.0, 20.0, Hacer.TRABAJO, "guardias cortas de la tarde"), t(20.0, 24.0, Hacer.GENTE, "canto y dados")),
+            datos = mapOf("pasos" to r(9000, "Cubierta, jarcia y escalas; casi nada en tierra."), "km_anio" to r(12000, "Lo que navega el balandro en un año de corso."),
+                "kcal" to r(4000, "Las raciones de la marina de entonces se calculan entre 3,300 y 5,000 kcal; los piratas comían a rachas."),
+                "proteina" to e(110, "Carne salada y frijoles."), "azucar" to e(5), "fibra" to e(20), "alcohol" to e(45, "Su ración de ron rebajado; los adultos bebían más."),
+                "sueno" to e(7.0, "Partido en dos: de noche y en la tarde."), "dormir" to e(0.0), "trabajo" to e(77), "aire_libre" to e(14), "pantalla" to r(0),
+                "notificaciones" to e(36, "La campana de a bordo, cada media hora de guardia."), "musica" to e(1.5, "Salomas para el trabajo y canto por la noche."),
+                "personas_dia" to e(75, "Toda la tripulación, todos los días."), "conocidas" to e(400), "poblacion" to e(75, "Hacia 1720 navegaban unos 2,400 piratas en unos 32 barcos."),
+                "lejos" to r(2500), "estatura" to r(158), "vida" to r(35), "vida_adulto" to r(45), "hijos" to r(5), "alfabetizacion" to r(30), "lectura" to r(0)),
+            fuentes = listOf("La edad de oro de la piratería" to "${W}Golden_Age_of_Piracy", "La campana de a bordo y las guardias" to "${W}Ship%27s_bell",
+                "Quiénes eran los piratas del Caribe (Smithsonian)" to "https://www.smithsonianmag.com/history/who-were-the-real-pirates-of-the-caribbean-180984343/",
+                "La galleta de a bordo (Royal Museums Greenwich)" to "https://www.rmg.co.uk/stories/topics/ships-biscuit")),
 
         Vida("cordobesa", "Zaynab", "Tejedora de seda", "Córdoba", "hacia el 970", 970, "tema", "andalus", edad = 27,
             historia = listOf(
@@ -375,6 +453,29 @@ object OtrasVidas {
                 "poblacion" to e(100000, "Las estimaciones van de 100,000 a más de 400,000."), "lejos" to e(150), "estatura" to r(156), "vida" to e(35), "vida_adulto" to e(55), "hijos" to e(5),
                 "alfabetizacion" to e(15), "lectura" to e(0.5)),
             fuentes = listOf("El califato de Córdoba" to "${W}Caliphate_of_C%C3%B3rdoba")),
+
+        // La vida del tema Mesoamérica: un escriba maya del Clásico tardío, de las tierras bajas (no repite a Citlali, la
+        // macehual de Tenochtitlan de las vidas de todos: otra región, otro pueblo y siete siglos antes).
+        Vida("escriba_maya", "K'an", "Escriba y pintor de códices", "Una ciudad maya de las tierras bajas", "hacia el 750", 750, "tema", "meso", edad = 30,
+            historia = listOf(
+                "K'an es un aj tz'ib, «el de la escritura»: uno de los pocos de su ciudad que saben leer y pintar los glifos. Trabaja en una casa de piedra junto a la plaza, con pinceles de pelo y tinta negra y roja guardada en conchas cortadas, sobre tiras de papel amate cubiertas de estuco blanco que luego se doblan como un biombo.",
+                "Su oficio es llevar la cuenta del tiempo: qué día del tzolk'in de 260 días cae con qué día del haab de 365, cuándo se cierra un katún, qué dice el almanaque para la siembra y para los ritos. También pinta escenas y textos en vasos de cerámica para beber cacao, que su señor regala a otros señores; algunos escribas firmaban esos vasos.",
+                "Come sobre todo maíz: atole por la mañana, tamales y tortillas, con frijol, calabaza y chile; el cacao espumoso es bebida de la corte y de las fiestas, y la carne de venado o de pavo llega pocas veces. Su ciudad vive su mejor siglo; en las generaciones siguientes, muchas de estas ciudades se irán vaciando. K'an es un personaje inventado; su oficio, sus herramientas y sus cuentas son reales.",
+            ),
+            dia = listOf(t(21.0, 5.0, Hacer.DORMIR), t(5.0, 6.0, Hacer.COMER, "atole"), t(6.0, 12.0, Hacer.TRABAJO, "pintar glifos en amate"), t(12.0, 13.0, Hacer.COMER),
+                t(13.0, 16.0, Hacer.TRABAJO, "cuentas del calendario"), t(16.0, 18.0, Hacer.REZAR, "ritual en el templo"), t(18.0, 19.0, Hacer.COMER, "tamales y cacao"), t(19.0, 21.0, Hacer.GENTE)),
+            datos = mapOf("pasos" to r(8000, "Casi todo el día sentado ante el papel; camina a la plaza, al templo y a su casa."), "km_anio" to r(1500),
+                "kcal" to r(2500, "El maíz daba quizá dos tercios o más de la energía."), "proteina" to r(60, "Frijol y maíz; carne de venado, pavo o pescado de vez en cuando."),
+                "azucar" to r(8, "Miel de abejas sin aguijón, que se criaban en troncos huecos."), "fibra" to r(55), "alcohol" to r(5, "Balché, una bebida de miel fermentada con corteza, sobre todo en los ritos."),
+                "sueno" to r(8.0), "dormir" to r(21.0), "trabajo" to r(48), "aire_libre" to r(4, "Pinta a la sombra, con la luz del día; el resto, en la plaza y en el templo."), "pantalla" to r(0),
+                "notificaciones" to r(3, "La caracola y los tambores que llaman a los ritos."), "musica" to r(0.5, "Flautas, caracolas, tambores y sonajas en las ceremonias."),
+                "personas_dia" to r(50), "conocidas" to r(1500), "poblacion" to r(40000, "Una ciudad mediana del Clásico tardío; las mayores, como Tikal, pasaban de 50,000."),
+                "lejos" to r(150, "Hasta una ciudad aliada, por los caminos blancos de piedra (sacbeob)."), "estatura" to r(158, "Promedio aproximado de los hombres mayas del Clásico, según sus esqueletos."),
+                "vida" to r(28), "vida_adulto" to r(50), "hijos" to r(5), "alfabetizacion" to r(1, "Leer y escribir era cosa de una minoría de la corte y los sacerdotes."),
+                "lectura" to r(3, "Los códices de almanaques y profecías de su ciudad, que copia y consulta.")),
+            fuentes = listOf("La escritura maya" to "${W}Maya_script", "Los códices mayas" to "${W}Maya_codices", "El calendario maya" to "${W}Maya_calendar",
+                "La cocina maya" to "${W}Maya_cuisine"),
+            inspiracion = "Persona inventada. Su oficio, sus herramientas y su calendario siguen lo que se sabe de los escribas mayas del Clásico; las cifras son reconstrucciones, no registros."),
 
         Vida("pastor_mongol", "Bat", "Pastor nómada", "La estepa mongola", "hacia 1220", 1220, "tema", "mongol", edad = 30,
             historia = listOf(
@@ -402,6 +503,26 @@ object OtrasVidas {
                 "trabajo" to e(70), "aire_libre" to e(11), "pantalla" to r(0), "notificaciones" to r(0), "musica" to e(0.5), "personas_dia" to e(50), "conocidas" to e(5000), "poblacion" to e(200, "La caravana."),
                 "lejos" to e(4500), "estatura" to r(168), "vida" to e(32), "vida_adulto" to e(55), "hijos" to e(4), "alfabetizacion" to e(10), "lectura" to r(0)),
             fuentes = listOf("Los sogdianos" to "${W}Sogdia", "La Ruta de la Seda" to "${W}Silk_Road")),
+
+        // Su tema es «edo» (TemaId.EDO). Ojo: «edo» también es el id de la vida de Kichizō en BASE; son espacios de nombres distintos (tema frente a id de vida).
+        Vida("posadera", "Ochiyo", "Sirvienta de una casa de té en una posta", "Una posta del camino real entre Edo y Kioto", "1830", 1830, "tema", "edo", edad = 22,
+            historia = listOf(
+                "Ochiyo sirve té, dulces y arroz a los viajeros que pasan por la posta: mensajeros, peregrinos, mercaderes, samuráis con su séquito. El camino real, el Tōkaidō, tiene 53 postas entre Edo y Kioto, y por la suya pasa gente todo el día.",
+                "Entró a servir de niña. Duerme en un cuarto con las otras sirvientas, se levanta antes del alba para encender el fuego y barrer la entrada, y solo tiene dos días libres al año, en el primer y el séptimo mes, para visitar a su familia.",
+                "Ve cientos de caras al día y casi ninguna vuelve: es lo contrario de un pueblo, donde todos se conocen. Nunca ha ido más allá de la posta siguiente, aunque sabe de memoria lo que cuentan los viajeros de Edo, de Kioto y del monte Fuji.",
+            ),
+            dia = listOf(t(22.0, 5.0, Hacer.DORMIR, "en el cuarto de las sirvientas"), t(5.0, 7.0, Hacer.CUIDAR, "fuego y barrer"), t(7.0, 8.0, Hacer.COMER), t(8.0, 13.0, Hacer.TRABAJO, "servir té a los viajeros"),
+                t(13.0, 14.0, Hacer.COMER), t(14.0, 21.0, Hacer.TRABAJO, "recibir viajeros, baños y cenas"), t(21.0, 22.0, Hacer.LIBRE)),
+            datos = mapOf(
+                "pasos" to e(14000, "Todo el día de pie: servir, barrer, ir por agua."), "km_anio" to e(3000, "Casi todo dentro de la posta."), "kcal" to e(2200), "proteina" to e(55),
+                "azucar" to e(10, "Algún dulce de la casa de té."), "fibra" to e(15, "Arroz blanco: poca fibra."), "alcohol" to e(5), "sueno" to e(7.0), "dormir" to e(22.0),
+                "trabajo" to e(84, "Doce horas al día, casi sin días libres."), "aire_libre" to e(4), "pantalla" to r(0),
+                "notificaciones" to e(40, "Viajeros que llegan, las voces que llaman a los clientes desde la puerta, las campanas del templo."), "musica" to e(0.5, "El shamisen de algún huésped por la noche."),
+                "personas_dia" to e(200, "Cientos de caras de paso."), "conocidas" to e(2000), "poblacion" to e(2000, "En el censo de 1843, las postas del Tōkaidō iban de unos 500 a más de 2,000 habitantes."),
+                "lejos" to e(30, "La posta siguiente."), "estatura" to r(145), "vida" to e(35), "vida_adulto" to e(60), "hijos" to e(4),
+                "alfabetizacion" to r(30, "Leer los silabarios era común en las ciudades; mucho menos entre las mujeres del campo."), "lectura" to r(1),
+            ),
+            fuentes = listOf("El Tōkaidō" to "${W}T%C5%8Dkaid%C5%8D_(road)", "Las postas (shukuba)" to "${W}Shukuba", "Hiratsuka-juku y el censo de 1843" to "${W}Hiratsuka-juku")),
 
         Vida("granadero", "Jean-Baptiste", "Soldado de infantería", "La campaña de Rusia", "1812", 1812, "tema", "napoleon", edad = 22,
             historia = listOf(
@@ -449,6 +570,23 @@ object OtrasVidas {
             fuentes = listOf("El viaje del Beagle" to "${W}Second_voyage_of_HMS_Beagle", "HMS Beagle" to "${W}HMS_Beagle"),
             inspiracion = "Inspirado en el viaje de Charles Darwin (1831–1836)."),
 
+        Vida("semillera", "Una recolectora", "Recolectora de semillas", "Una ciudad que el bosque recuperó", "año 40 tras el silencio", 40, "tema", "ruinas", edad = 33, ficticia = true,
+            inspiracion = "Inventada para la Ciudad verde. La idea de cómo la vegetación recupera una ciudad vacía viene del libro de Alan Weisman y de lo que creció en Prípiat después de 1986.",
+            historia = listOf(
+                "Nació siete años después del silencio, cuando la ciudad ya llevaba tiempo vacía. Vive con unas sesenta personas en un edificio de oficinas cuyas azoteas se volvieron huertos. Por las avenidas crecen abedules y la hiedra cubre los semáforos.",
+                "Su trabajo es guardar semillas: cada mañana cuida el huerto de la azotea, y a mediodía recorre las calles con una mochila para juntar las de los árboles, las hierbas y las hortalizas que se asilvestraron en los jardines. Por la tarde las seca y las guarda en latas con su etiqueta a lápiz.",
+                "Camina muchísimo y no ve una pantalla jamás: la última se apagó antes de que naciera. Duerme cuando se va la luz y despierta con el sol. Aprendió a leer con los libros que se salvaron de la biblioteca, y de noche, junto a la fogata, alguien canta.",
+            ),
+            dia = listOf(t(21.0, 5.5, Hacer.DORMIR), t(5.5, 6.0, Hacer.COMER), t(6.0, 11.0, Hacer.TRABAJO, "huerto en la azotea"), t(11.0, 13.0, Hacer.CAMINO, "calles con hiedra"),
+                t(13.0, 14.0, Hacer.COMER), t(14.0, 17.0, Hacer.TRABAJO, "secar y guardar semillas"), t(17.0, 19.0, Hacer.CUIDAR, "agua, leña y remiendos"), t(19.0, 21.0, Hacer.GENTE, "fogata")),
+            datos = mapOf("pasos" to i(24000, "Va a pie a todas partes: no hay coches ni gasolina."), "km_anio" to i(3500), "kcal" to i(2600), "proteina" to i(60), "azucar" to i(5, "Miel silvestre de vez en cuando."),
+                "fibra" to i(45, "Huerto, semillas y frutos del monte."), "alcohol" to i(3), "sueno" to i(8.0, "Duerme con el sol: no hay luz eléctrica."), "dormir" to i(21.0), "trabajo" to i(48),
+                "aire_libre" to i(10), "pantalla" to i(0, "La última pantalla se apagó antes de que naciera."), "notificaciones" to i(2, "Un silbido desde otra azotea."), "musica" to i(1, "Canciones junto a la fogata."),
+                "personas_dia" to i(15), "conocidas" to i(120), "poblacion" to i(60, "El campamento, en una ciudad donde antes vivían cientos de miles."), "lejos" to i(60), "estatura" to i(166),
+                "vida" to i(50), "vida_adulto" to i(62), "hijos" to i(2.5), "alfabetizacion" to i(70, "Los que crecieron con los libros que se salvaron."), "lectura" to i(6, "Libros rescatados de la biblioteca.")),
+            fuentes = listOf("El mundo sin nosotros (Alan Weisman, 2007)" to "${W}The_World_Without_Us", "La zona de exclusión de Chernóbil" to "${W}Chernobyl_Exclusion_Zone",
+                "Prípiat, la ciudad vacía desde 1986" to "${W}Pripyat", "Guardar semillas" to "${W}Seed_saving")),
+
         Vida("escribiente", "Tom", "Escribiente", "Una oficina de Londres", "Navidad de 1843", 1843, "tema", "navidad", edad = 35,
             historia = listOf(
                 "Tom copia cartas y lleva cuentas en una oficina helada, de las ocho de la mañana a las ocho de la noche, seis días a la semana. Camina una hora para llegar y otra para volver, entre la niebla y el humo de carbón.",
@@ -492,8 +630,42 @@ object OtrasVidas {
             fuentes = listOf("La vida en la estación (Agencia Espacial Canadiense)" to "https://www.asc-csa.gc.ca/eng/youth-educators/activities/fitness-and-nutrition/trading-spaces-living-and-earth-off-earth.asp",
                 "Estación Espacial Internacional" to "${W}International_Space_Station")),
 
+        Vida("operadora", "Carmen", "Operadora de computadora central, turno de noche", "El centro de cómputo de un banco, Ciudad de México", "1978", 1978, "tema", "ciber", edad = 27,
+            historia = listOf(
+                "Carmen entra a las diez de la noche a un cuarto frío, con piso falso y aire acondicionado todo el año, donde zumba la computadora central del banco. Su trabajo es que la máquina no se detenga: montar y desmontar cintas magnéticas, cargar los paquetes de tarjetas, cambiar el papel continuo de la impresora y vigilar la consola.",
+                "De noche corren los procesos largos: los saldos de todas las cuentas, la nómina, los estados de cuenta que saldrán por la mañana. Cuando algo falla, la consola escribe un mensaje en mayúsculas y hay que buscar en el manual qué significa y qué cinta pide.",
+                "Sale a las seis, cuando la ciudad empieza a moverse, y duerme de día con las cortinas cerradas. Sus amigas del turno de día casi no la ven; a cambio, entre cinta y cinta, lee novelas enteras.",
+            ),
+            dia = listOf(t(8.0, 15.0, Hacer.DORMIR), t(15.0, 17.0, Hacer.CUIDAR, "la casa y el mandado"), t(17.0, 18.0, Hacer.LIBRE), t(18.0, 21.5, Hacer.GENTE, "comida con la familia"),
+                t(21.5, 22.0, Hacer.CAMINO, "en camión"), t(22.0, 6.0, Hacer.TRABAJO, "cargar cintas, vigilar la consola, imprimir listados"), t(6.0, 6.5, Hacer.COMER, "un café y una torta"),
+                t(6.5, 8.0, Hacer.CAMINO, "el tráfico de la mañana")),
+            datos = mapOf("pasos" to e(6000), "km_anio" to e(9000, "Ida y vuelta en camión, todos los días."), "kcal" to e(2000), "proteina" to e(65), "azucar" to e(60, "Refrescos para aguantar la noche."),
+                "fibra" to e(25), "alcohol" to e(3), "sueno" to e(6.5, "De día, con ruido de la calle."), "dormir" to e(8.0), "trabajo" to e(48, "Seis turnos de ocho horas."), "aire_libre" to e(1.5),
+                "pantalla" to e(7, "La consola de la computadora, toda la noche."), "notificaciones" to e(40, "Mensajes de la consola y el timbre de la impresora."), "musica" to e(1.5, "La radio de la madrugada."),
+                "personas_dia" to e(15), "conocidas" to e(1500), "poblacion" to r(13000000, "La zona metropolitana, hacia 1980."), "lejos" to e(400), "estatura" to e(155),
+                "vida" to r(65), "vida_adulto" to r(72), "hijos" to r(5.0), "alfabetizacion" to r(83), "lectura" to e(20, "Entre cinta y cinta.")),
+            fuentes = listOf("Operador de computadoras (Wikipedia)" to "${W}Computer_operator", "IBM System/370 (Wikipedia)" to "${W}IBM_System/370",
+                "Cintas magnéticas de datos (Wikipedia)" to "${W}Magnetic-tape_data_storage", "La población de México (Wikipedia)" to "${W}Demographics_of_Mexico")),
+        Vida("buzo_esponjas", "Nikos", "Buzo esponjero de escafandra", "Un barco esponjero frente a la costa de Florida", "1910", 1910, "tema", "abismo", edad = 26,
+            historia = listOf(
+                "Nikos llegó de una isla del Dodecaneso con los buzos griegos que, desde 1905, sacan esponjas del golfo de México con escafandra: un casco de cobre atornillado a un traje de lona, botas de plomo y una manguera por la que dos hombres, a mano, le bombean aire desde cubierta. Baja una y otra vez durante la mañana; arriba, su ayudante sostiene la cuerda y entiende sus tirones.",
+                "Cada buzo sabe de alguien a quien el fondo dejó paralítico o mató al subir: es la enfermedad de los buzos, que entonces nadie sabía evitar bien. Por la tarde, las esponjas se limpian en cubierta, se pisan para quitarles la piel negra, se enjuagan y se ensartan en cuerdas para secarlas al sol.",
+                "Pasa meses en el mar con la misma decena de hombres. Come pan duro que se ablanda en agua, aceitunas, legumbres y el pescado que caiga; duerme en cubierta, bajo las estrellas, y antes de dormir se cantan las canciones de la isla.",
+            ),
+            dia = listOf(t(20.0, 4.5, Hacer.DORMIR, "en cubierta"), t(4.5, 5.0, Hacer.COMER), t(5.0, 11.0, Hacer.TRABAJO, "inmersiones con casco de cobre"), t(11.0, 12.5, Hacer.COMER),
+                t(12.5, 17.0, Hacer.TRABAJO, "limpiar y ensartar esponjas"), t(17.0, 18.0, Hacer.COMER), t(18.0, 20.0, Hacer.GENTE, "canciones de la isla")),
+            datos = mapOf("pasos" to r(3000, "Entre la cubierta y el fondo, con botas de plomo."), "km_anio" to r(4000, "Ir y volver de los bancos de esponjas del golfo."), "kcal" to r(3500, "Trabajo pesado en agua fría."),
+                "proteina" to r(100), "azucar" to r(15), "fibra" to r(30, "Pan duro, legumbres y aceitunas."), "alcohol" to r(20, "Algo de vino o de licor de anís por la noche."),
+                "sueno" to r(8.5), "dormir" to r(20.0), "trabajo" to r(70, "Seis días a la semana en la temporada."), "aire_libre" to r(13, "Casi todo el día en cubierta o bajo el agua."), "pantalla" to e(0),
+                "notificaciones" to r(20, "Los tirones de la cuerda de señales."), "musica" to r(2, "Canciones de la isla."), "personas_dia" to r(10, "La tripulación del barco."), "conocidas" to r(400),
+                "poblacion" to e(2212, "Tarpon Springs, el puerto de los esponjeros griegos, en el censo de 1910."), "lejos" to r(9600, "Desde su isla del Egeo hasta Florida."), "estatura" to r(167),
+                "vida" to r(40), "vida_adulto" to r(60, "Menos para los buzos: la enfermedad de la descompresión mataba o paralizaba a muchos."), "hijos" to r(5),
+                "alfabetizacion" to r(40), "lectura" to r(0)),
+            fuentes = listOf("La historia de los buzos de esponjas (Divers Alert Network)" to "https://dan.org/alert-diver/article/the-story-of-sponge-divers/",
+                "Tarpon Springs" to "${W}Tarpon_Springs,_Florida", "Escafandra" to "${W}Standard_diving_dress")),
+
         // ------------------------------------------------ mundos de ficción: estimaciones inventadas, con sentido
-        Vida("repartidora", "Kei", "Repartidora en bicicleta eléctrica", "Una megaciudad de neón", "2077", 2077, "tema", "ciber", edad = 26, ficticia = true,
+        Vida("repartidora", "Kei", "Repartidora en bicicleta eléctrica", "Una megaciudad de neón", "2077", 2077, "tema", "neon", edad = 26, ficticia = true,
             inspiracion = "Un mundo cyberpunk: megaciudades, implantes y corporaciones.",
             historia = listOf(
                 "Kei reparte de noche entre torres de cien pisos, guiada por flechas que solo ella ve: un implante en el ojo le pone el mapa, la música y los anuncios encima del mundo. La aplicación le cobra si llega tarde.",
@@ -506,6 +678,22 @@ object OtrasVidas {
                 "sueno" to i(5.0), "dormir" to i(30.0), "trabajo" to i(72), "aire_libre" to i(6), "pantalla" to i(16, "El implante nunca se apaga."), "notificaciones" to i(2500, "Anuncios en el ojo."),
                 "musica" to i(8), "personas_dia" to i(400), "conocidas" to i(20000), "poblacion" to i(30000000), "lejos" to i(50), "estatura" to i(166), "vida" to i(65), "vida_adulto" to i(70),
                 "hijos" to i(0.9), "alfabetizacion" to i(99), "lectura" to i(0)),
+            fuentes = emptyList()),
+
+        Vida("fideos", "Amaru", "Vendedor de fideos en un puesto de callejón", "Los niveles bajos de una megaciudad", "2077", 2077, "tema", "neon", edad = 47, ficticia = true,
+            inspiracion = "Los puestos de comida callejera que abren de noche bajo los letreros, llevados a una megaciudad del futuro.",
+            historia = listOf(
+                "Amaru abre su puesto cuando se encienden los letreros, en un callejón del nivel −3 donde nunca da el sol: seis bancos de plástico, una olla de caldo que lleva hirviendo desde la tarde y un letrero magenta con un tazón que parpadea.",
+                "Por la barra le pasan cientos de caras cada noche: repartidores, guardias que salen de turno, gente que no puede dormir. Conoce el pedido de muchos y el nombre de pocos. Su mejor amigo es el de la farmacia de guardia de enfrente.",
+                "Duerme de día, en el cuarto de arriba del puesto, con el zumbido del transformador del letrero metido en el sueño. Hace años que no sube a la superficie; dice que allá arriba la comida no sabe a nada.",
+            ),
+            dia = listOf(t(10.0, 17.0, Hacer.DORMIR), t(17.0, 18.0, Hacer.CUIDAR, "compra en el mercado flotante"), t(18.0, 4.0, Hacer.TRABAJO, "el puesto, entre vapor y letreros"),
+                t(4.0, 5.0, Hacer.COMER, "con los repartidores"), t(5.0, 10.0, Hacer.LIBRE)),
+            datos = mapOf("pasos" to i(4000, "Tres pasos entre la olla y la barra, miles de veces."), "km_anio" to i(300), "kcal" to i(2600), "proteina" to i(90), "azucar" to i(40), "fibra" to i(12),
+                "alcohol" to i(25, "Un trago con los últimos clientes."), "sueno" to i(6.0), "dormir" to i(10.0), "trabajo" to i(70), "aire_libre" to i(0.5, "Si el callejón cuenta como aire libre."),
+                "pantalla" to i(3), "notificaciones" to i(600, "Pedidos, pagos y los letreros del callejón."), "musica" to i(10, "La radio del puesto, toda la noche."), "personas_dia" to i(350),
+                "conocidas" to i(15000), "poblacion" to i(30000000), "lejos" to i(5), "estatura" to i(168), "vida" to i(70), "vida_adulto" to i(74), "hijos" to i(0.9),
+                "alfabetizacion" to i(99), "lectura" to i(1)),
             fuentes = emptyList()),
 
         Vida("funcionario", "Un funcionario", "Empleado de un ministerio", "La capital de un Estado que todo lo vigila", "1984", 1984, "tema", "distopia", edad = 39, ficticia = true,
@@ -579,6 +767,56 @@ object OtrasVidas {
                 "sueno" to i(6.5), "dormir" to i(21.0), "trabajo" to i(70), "aire_libre" to i(11), "pantalla" to i(0.5), "notificaciones" to i(3, "Llamadas de auxilio por radio."), "musica" to i(2),
                 "personas_dia" to i(12), "conocidas" to i(200), "poblacion" to i(25), "lejos" to i(150), "estatura" to i(165), "vida" to i(45), "vida_adulto" to i(55), "hijos" to i(3),
                 "alfabetizacion" to i(30), "lectura" to i(2)),
+            fuentes = emptyList()),
+        Vida("guia_caminos", "Brenna", "Guía de caminos", "Una posada al pie de un paso de montaña", "año 312 de los Caminos", 312, "tema", "antiguas", edad = 29, ficticia = true,
+            inspiracion = "Inventada para Tierras Antiguas: un mundo de caminos, minas y compañías de viaje, sin nombres de ninguna obra.",
+            historia = listOf(
+                "Brenna lleva compañías de viajeros por el paso: mercaderes, mineros que suben a las vetas de hierro, peregrinos que van a las ruinas del otro lado. Conoce cada piedra marcada con las runas del camino y cada refugio donde se puede pasar la noche.",
+                "Camina casi todo el día con su bastón y su linterna de mina. Come pan de centeno, queso duro, cecina y lo que se recoge en el monte; en la posada, guiso y cerveza oscura. Dibuja mapas a mano en el libro de crónicas de la compañía.",
+                "Sabe leer las runas y un poco de letra; casi nadie en la aldea sabe. De noche, en la posada, alguien toca el arpa y los viajeros cuentan lo que vieron del otro lado de las montañas.",
+            ),
+            dia = listOf(t(22.0, 5.0, Hacer.DORMIR), t(5.0, 6.0, Hacer.COMER), t(6.0, 12.0, Hacer.CAMINO, "guiar a la compañía"), t(12.0, 13.0, Hacer.COMER, "pan, queso y cecina"),
+                t(13.0, 18.0, Hacer.CAMINO, "el paso y las marcas del camino"), t(18.0, 19.0, Hacer.CUIDAR, "mapas y monturas"), t(19.0, 22.0, Hacer.GENTE, "la posada, el arpa y las historias")),
+            datos = mapOf("pasos" to i(22000), "km_anio" to i(6000), "kcal" to i(3000), "proteina" to i(90), "azucar" to i(15, "Miel de monte."), "fibra" to i(40), "alcohol" to i(25, "Cerveza oscura de la posada."),
+                "sueno" to i(7.0), "dormir" to i(22.0), "trabajo" to i(60), "aire_libre" to i(11), "pantalla" to i(0), "notificaciones" to i(4, "Los cuernos del paso y la campana de la posada."), "musica" to i(1.5, "El arpa de la posada."),
+                "personas_dia" to i(20), "conocidas" to i(600), "poblacion" to i(150, "La aldea del paso."), "lejos" to i(900), "estatura" to i(168), "vida" to i(40), "vida_adulto" to i(60), "hijos" to i(2),
+                "alfabetizacion" to i(15, "Las runas del camino las leen más; la letra, pocos."), "lectura" to i(1, "Mapas y el libro de crónicas.")),
+            fuentes = emptyList()),
+        Vida("pintora_cueva", "Ama", "Pintora de cuevas", "Un valle del suroeste de Europa", "hace unos 17,000 años", -15000, "tema", "cueva", edad = 26,
+            historia = listOf(
+                "Ama vive al final de la última glaciación, en un valle de caliza donde el invierno dura casi medio año. Su grupo, de unas veinticinco personas, pasa el frío bajo un abrigo de roca, junto al río, y se mueve con las estaciones detrás de los renos y los caballos; en otoño, cuando bajan las manadas, se caza más que nunca.",
+                "Come sobre todo carne y grasa: reno, caballo, salmón del río, médula de los huesos; en verano, bayas y raíces. Cose su ropa de piel con agujas de hueso. Por las tardes muele ocre y carbón en una piedra plana y lo mezcla con agua o grasa para hacer pintura.",
+                "Al caer el día entra con otros a lo hondo de la cueva, con lámparas de piedra que queman grasa, y pinta bisontes, caballos y puntos en la pared. Apoya la mano en la roca y sopla el ocre alrededor: queda su silueta. Medir esas manos sugiere que muchas las hicieron mujeres. Ama es inventada; su mundo, en lo que se sabe, no.",
+            ),
+            dia = listOf(t(20.0, 6.0, Hacer.DORMIR, "junto al fuego"), t(6.0, 7.0, Hacer.COMER), t(7.0, 12.0, Hacer.TRABAJO, "cazar y recolectar"), t(12.0, 14.0, Hacer.LIBRE),
+                t(14.0, 16.0, Hacer.TRABAJO, "moler ocre y carbón"), t(16.0, 18.0, Hacer.REZAR, "pintar en lo hondo de la cueva, con lámparas de grasa"), t(18.0, 20.0, Hacer.GENTE)),
+            datos = mapOf(
+                "pasos" to r(14000, "Seguir manadas por la estepa fría; nadie midió pasos en el Paleolítico."), "km_anio" to r(4000, "Varios campamentos al año, siguiendo las estaciones."),
+                "kcal" to r(2700, "El frío de la glaciación sube el gasto del cuerpo."), "proteina" to r(130, "Carne de reno y caballo, y pescado del río."), "azucar" to r(5, "Bayas en verano; casi nada el resto del año."),
+                "fibra" to r(25, "Pocas plantas comestibles en la estepa helada."), "alcohol" to r(0), "sueno" to r(8.0, "Noches largas de invierno junto al fuego."), "dormir" to r(20.0),
+                "trabajo" to r(40, "Cazar, recolectar, curtir pieles, coser y moler pigmentos."), "aire_libre" to r(8), "pantalla" to r(0), "notificaciones" to r(0),
+                "musica" to r(1, "Del Paleolítico superior quedan flautas de hueso; no se sabe cuánto se tocaba."), "personas_dia" to r(25), "conocidas" to r(400, "Su grupo y los que se juntan en las cacerías grandes."),
+                "poblacion" to r(25, "El grupo que comparte el abrigo de roca."), "lejos" to r(250, "Hay conchas de la costa en sitios del interior: viajaban o se intercambiaban."),
+                "estatura" to r(154, "Las mujeres del Paleolítico superior tardío medían en promedio unos 153.5 cm (Formicola y Holt, 2007)."),
+                "vida" to r(30, "Muchos niños morían pequeños."), "vida_adulto" to r(55), "hijos" to r(4.5), "alfabetizacion" to r(0), "lectura" to r(0),
+            ),
+            fuentes = listOf("Snow (2013), las manos de las cuevas, casi todas de mujeres" to "https://doi.org/10.7183/0002-7316.78.4.746",
+                "Formicola y Holt (2007), la estatura en el Paleolítico superior" to "https://works.bepress.com/brigitte_holt/1",
+                "Lascaux" to "${W}Lascaux", "Magdaleniense" to "${W}Magdalenian")),
+        Vida("archivista", "El archivista", "Archivista de un pueblo costero", "Un pueblo de pescadores en la niebla", "1926", 1926, "tema", "arcano", edad = 44, ficticia = true,
+            inspiracion = "Inventada para Horror cósmico: un archivo de pueblo, una costa con faro y algo que no se nombra, sin personajes, lugares ni criaturas de ninguna obra.",
+            historia = listOf(
+                "Llegó al pueblo para poner en orden el archivo municipal: cajas de actas, registros de bautizos y de naufragios, cartas que nadie reclamó. Pasa el día entre legajos húmedos, copiando a mano lo que el salitre está a punto de borrar, y anota en su diario los nombres que se repiten donde no deberían.",
+                "Come poco y a deshoras: pescado salado, pan duro, sopa de la posada y mucho café. Casi no habla con nadie; los pescadores lo saludan de lejos y cambian de acera. Al caer la tarde camina por el muelle hasta donde se ve la luz del faro.",
+                "De noche lee lo que encuentra en las cajas del fondo, a la luz de una lámpara de aceite, hasta que el cansancio lo vence de madrugada. Duerme mal y poco. En el margen de sus cuadernos hay un mismo signo, dibujado una y otra vez, que no recuerda haber trazado.",
+            ),
+            dia = listOf(t(3.0, 9.0, Hacer.DORMIR, "mal"), t(9.0, 10.0, Hacer.COMER), t(10.0, 17.0, Hacer.TRABAJO, "catalogar legajos"), t(17.0, 18.0, Hacer.CAMINO, "por el muelle"),
+                t(18.0, 19.0, Hacer.COMER), t(19.0, 3.0, Hacer.LIBRE, "lee lo que no debería")),
+            datos = mapOf("pasos" to i(5000), "km_anio" to i(1200, "El tren que lo trajo y el muelle cada tarde."), "kcal" to i(1800), "proteina" to i(70, "Pescado salado."), "azucar" to i(25, "En el café."), "fibra" to i(18),
+                "alcohol" to i(15, "Una copa de licor para dormir."), "sueno" to i(5.0, "Y mal."), "dormir" to i(3.0), "trabajo" to i(50), "aire_libre" to i(1.5, "La niebla casi no deja ver el sol."), "pantalla" to i(0),
+                "notificaciones" to i(3, "La sirena del faro y la campana de la iglesia."), "musica" to i(0.1), "personas_dia" to i(3), "conocidas" to i(150), "poblacion" to i(900),
+                "lejos" to i(600, "La ciudad donde estudió."), "estatura" to i(172), "vida" to i(55), "vida_adulto" to i(65), "hijos" to i(0), "alfabetizacion" to i(70, "En el pueblo; él lee latín y letra antigua."),
+                "lectura" to i(120, "Legajos, cartas y los libros del fondo del archivo.")),
             fuentes = emptyList()),
     )
 

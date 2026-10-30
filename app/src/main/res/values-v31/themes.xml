@@ -27,30 +27,65 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_romano</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_romano</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Urbe" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_urbe</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_urbe</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_urbe</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Romano.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_romano_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_romano_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_romano</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Urbe.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_urbe_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_urbe_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_urbe</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Ciber" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_ciber_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_ciber_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_ciber</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Neon" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_neon_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_neon_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_neon</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Heleno" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_heleno</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_heleno</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_heleno</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Egipto" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_egipto</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_egipto</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_egipto</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Heleno.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_heleno_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_heleno_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_heleno</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Egipto.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_egipto_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_egipto_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_egipto</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Medieval" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_medieval</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_medieval</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_medieval</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Templario" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_templario</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_templario</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_templario</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Templario.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_templario_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_templario_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_templario</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Medieval.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_medieval_oscuro</item>
@@ -122,10 +157,20 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_botanico</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_botanico</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Ruinas" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_ruinas</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_ruinas</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_ruinas</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Botanico.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_botanico_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_botanico_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_botanico</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Ruinas.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_ruinas_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_ruinas_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_ruinas</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Navidad" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_navidad</item>
@@ -142,10 +187,20 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_seda</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_seda</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Edo" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_edo</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_edo</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_edo</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Seda.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_seda_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_seda_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_seda</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Edo.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_edo_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_edo_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_edo</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Urss" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_urss</item>
@@ -162,6 +217,16 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_gotico</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_gotico</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Arcano" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcano</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_arcano</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_arcano</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Arcano.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcano_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_arcano_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_arcano</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Gotico.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_gotico_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_gotico_oscuro</item>
@@ -177,15 +242,35 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_espacio_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_espacio</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Abismo" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_abismo</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_abismo</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_abismo</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Abismo.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_abismo_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_abismo_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_abismo</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Andalus" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_andalus</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_andalus</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_andalus</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Meso" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_meso</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_meso</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_meso</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Andalus.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_andalus_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_andalus_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_andalus</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Meso.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_meso_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_meso_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_meso</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Mongol" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_mongol</item>
@@ -207,6 +292,16 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_renacimiento_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_renacimiento</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Pirata" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_pirata</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_pirata</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_pirata</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Pirata.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_pirata_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_pirata_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_pirata</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Revolucion" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_revolucion</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_revolucion</item>
@@ -222,9 +317,19 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_antiguas</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_antiguas</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Cueva" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_cueva</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_cueva</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_cueva</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Antiguas.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_antiguas_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_antiguas_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_antiguas</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Cueva.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_cueva_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_cueva_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_cueva</item>
     </style>
 </resources>

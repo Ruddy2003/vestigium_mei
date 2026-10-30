@@ -50,6 +50,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -57,6 +58,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -941,9 +943,13 @@ private fun formaDp(trazo: Path.(w: Float, h: Float, u: Float) -> Unit): Shape =
 /** Cuánto baja, desde lo más alto, el borde de arriba de la hoja: lo que la hoja deja libre arriba para su adorno. */
 private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.ROMANO -> 12.dp
+    TemaId.URBE -> 16.dp
     TemaId.CIBER -> 4.dp
+    TemaId.NEON -> 6.dp
     TemaId.HELENO -> 14.dp
+    TemaId.EGIPTO -> 16.dp
     TemaId.MEDIEVAL -> 10.dp
+    TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
     TemaId.REFUGIO -> 6.dp
     TemaId.ORDEN -> 6.dp
@@ -951,16 +957,23 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.COLONOS -> 4.dp
     TemaId.NAPOLEON -> 14.dp
     TemaId.BOTANICO -> 8.dp
+    TemaId.RUINAS -> 10.dp
     TemaId.NAVIDAD -> 7.dp
     TemaId.SEDA -> 14.dp
+    TemaId.EDO -> 16.dp
     TemaId.GOTICO -> 18.dp
+    TemaId.ARCANO -> 10.dp
     TemaId.ESPACIO -> 12.dp
+    TemaId.ABISMO -> 9.dp
     TemaId.ANDALUS -> 18.dp
+    TemaId.MESO -> 16.dp
     TemaId.MONGOL -> 14.dp
     TemaId.RENACIMIENTO -> 6.dp
+    TemaId.PIRATA -> 8.dp
     TemaId.URSS -> 20.dp
     TemaId.REVOLUCION -> 9.dp
     TemaId.ANTIGUAS -> 16.dp
+    TemaId.CUEVA -> 18.dp
 }
 
 /** La silueta de la hoja: solo cambia el borde de arriba; abajo llega al borde de la pantalla. */
@@ -970,15 +983,30 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val r = 12 * u
         moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h); lineTo(0f, h); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
     }
+    // El arco rebajado de un portón, de lado a lado.
+    TemaId.URBE -> formaDp { w, h, u ->
+        val f = 16 * u
+        moveTo(0f, f); quadraticTo(w / 2, -f, w, f); lineTo(w, h); lineTo(0f, h); close()
+    }
     // Ventana de consola con una esquina cortada.
     TemaId.CIBER -> formaDp { w, h, u ->
         val c = 18 * u
         moveTo(0f, 0f); lineTo(w - c, 0f); lineTo(w, c); lineTo(w, h); lineTo(0f, h); close()
     }
+    // La placa del letrero, con las esquinas de arriba redondas.
+    TemaId.NEON -> formaDp { w, h, u ->
+        val c = 22 * u
+        moveTo(0f, c); quadraticTo(0f, 0f, c, 0f); lineTo(w - c, 0f); quadraticTo(w, 0f, w, c); lineTo(w, h); lineTo(0f, h); close()
+    }
     // Frontón de templo de lado a lado.
     TemaId.HELENO -> formaDp { w, h, u ->
         val f = 14 * u
         moveTo(0f, f); lineTo(w / 2, 0f); lineTo(w, f); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Estela de remate redondo: un arco rebajado de lado a lado.
+    TemaId.EGIPTO -> formaDp { w, h, u ->
+        val f = 16 * u
+        moveTo(0f, h); lineTo(0f, f); quadraticTo(w / 2, -f * 0.9f, w, f); lineTo(w, h); close()
     }
     // Borde de pergamino que ondula, como un rollo a medio abrir.
     TemaId.MEDIEVAL -> formaDp { w, h, u ->
@@ -987,6 +1015,14 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         var x = 0f
         while (x < w) { lineTo(x, a + a * sin(2 * PI * 3 * x / w).toFloat()); x += 3 * u }
         lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // El adarve: merlones y troneras en el borde de arriba.
+    TemaId.TEMPLARIO -> formaDp { w, h, u ->
+        val m = 16 * u; val a = 9 * u
+        moveTo(0f, h); lineTo(0f, 0f)
+        var x = 0f; var k = 0
+        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += maxOf(m, 1f); k++ }
+        lineTo(x, if (k % 2 == 0) 0f else a); lineTo(w, if (k % 2 == 0) 0f else a); lineTo(w, h); close()
     }
     // Carpeta de expediente con su pestaña a la izquierda.
     TemaId.DISTOPIA -> formaDp { w, h, u ->
@@ -1029,6 +1065,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         addRoundRect(RoundRect(0f, 0f, w, h, topLeftCornerRadius = CornerRadius(30 * u), topRightCornerRadius = CornerRadius(2 * u),
             bottomRightCornerRadius = CornerRadius.Zero, bottomLeftCornerRadius = CornerRadius.Zero))
     }
+    // Una losa de hormigón con el borde de arriba quebrado y la esquina derecha desprendida en escalones.
+    TemaId.RUINAS -> formaDp { w, h, u ->
+        moveTo(0f, 6 * u); lineTo(w * 0.3f, 3 * u); lineTo(w * 0.34f, 7 * u); lineTo(w * 0.62f, 2 * u); lineTo(w - 26 * u, 4 * u)
+        lineTo(w - 18 * u, 10 * u); lineTo(w - 10 * u, 8 * u); lineTo(w, 16 * u); lineTo(w, h); lineTo(0f, h); close()
+    }
     // Glaseado de nieve: festones arriba.
     TemaId.NAVIDAD -> formaDp { w, h, u ->
         val f = 7 * u; val n = (w / (44 * u)).toInt().coerceAtLeast(3); val paso = w / n
@@ -1042,6 +1083,12 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         moveTo(0f, 0f); quadraticTo(w * 0.1f, p, w * 0.28f, p); lineTo(w * 0.72f, p); quadraticTo(w * 0.9f, p, w, 0f)
         lineTo(w, h); lineTo(0f, h); close()
     }
+    // Karahafu: el alero ondulado de las puertas de templos y castillos, que sube en curva hasta el centro.
+    TemaId.EDO -> formaDp { w, h, u ->
+        val p = 16 * u
+        moveTo(0f, p); cubicTo(w * 0.25f, p, w * 0.38f, p * 0.9f, w * 0.44f, p * 0.35f); quadraticTo(w * 0.5f, -p * 0.05f, w * 0.56f, p * 0.35f)
+        cubicTo(w * 0.62f, p * 0.9f, w * 0.75f, p, w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
     // Gablete apuntado al centro, como sobre una portada.
     TemaId.GOTICO -> formaDp { w, h, u ->
         val a = 18 * u; val b = 36 * u
@@ -1049,11 +1096,28 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         quadraticTo(w / 2 - b, a * 0.3f, w / 2, 0f); quadraticTo(w / 2 + b, a * 0.3f, w / 2 + b, a)
         lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
     }
+    // La hoja del legajo: la orilla de arriba rasgada a mano.
+    TemaId.ARCANO -> formaDp { w, h, u ->
+        val d = 5 * u; var x = 0f; var k = 0
+        moveTo(0f, d)
+        while (x < w) { x = minOf(x + 11 * u, w); lineTo(x, if (k % 2 == 0) 0f else if (k % 3 == 0) d * 1.6f else d); k++ }
+        lineTo(w, h); lineTo(0f, h); close()
+    }
     // Consola de mando: la parte central más alta.
     TemaId.ESPACIO -> formaDp { w, h, u ->
         val p = 12 * u; val a = w * 0.3f; val r = 14 * u
         moveTo(0f, p + r); quadraticTo(0f, p, r, p); lineTo(a, p); lineTo(a + p, 0f); lineTo(w - a - p, 0f); lineTo(w - a, p)
         lineTo(w - r, p); quadraticTo(w, p, w, p + r); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // La superficie del mar: el borde de arriba es una ola de cuatro crestas.
+    TemaId.ABISMO -> formaDp { w, h, u ->
+        val p = 8 * u; val n = 4
+        moveTo(0f, p)
+        for (i in 0 until n) {
+            val x0 = w * i / n; val x1 = w * (i + 1) / n
+            quadraticTo((x0 + x1) / 2, if (i % 2 == 0) -p * 0.4f else p * 2.2f, x1, p)
+        }
+        lineTo(w, h); lineTo(0f, h); close()
     }
     // Arco polilobulado al centro: cinco lóbulos que suben hacia la clave.
     TemaId.ANDALUS -> formaDp { w, h, u ->
@@ -1061,6 +1125,14 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         moveTo(0f, p); lineTo(x0, p)
         floatArrayOf(2f, 6f, 8f, 6f, 2f).forEachIndexed { i, k -> arcTo(Rect(Offset(x0 + r + 2 * r * i, p - k * u), r), 180f, 180f, false) }
         lineTo(x0 + 10 * r, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Un templo sobre la hoja: al centro, el borde sube en gradas como el perfil de una pirámide.
+    TemaId.MESO -> formaDp { w, h, u ->
+        val p = 16 * u; val g = 4 * u; val s = 10 * u; val x0 = w / 2 - 4 * s
+        moveTo(0f, p); lineTo(x0, p)
+        for (k in 0 until 3) { lineTo(x0 + k * s, p - (k + 1) * g); lineTo(x0 + (k + 1) * s, p - (k + 1) * g) }
+        for (k in 3 downTo 1) { lineTo(x0 + (9 - k) * s, p - k * g); lineTo(x0 + (9 - k) * s, p - (k - 1) * g) }
+        lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
     // Esquinas escalonadas, como la orilla de un fieltro bordado.
     TemaId.MONGOL -> formaDp { w, h, u ->
@@ -1073,6 +1145,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     TemaId.RENACIMIENTO -> formaDp { w, h, u ->
         val d = 14 * u
         moveTo(d, 0f); lineTo(w - d, 0f); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // La lona de una vela tensada: el borde de arriba se comba hacia adentro entre dos ollaos.
+    TemaId.PIRATA -> formaDp { w, h, u ->
+        val f = 8 * u
+        moveTo(0f, 0f); quadraticTo(w / 2, f * 2, w, 0f); lineTo(w, h); lineTo(0f, h); close()
     }
     // Diagonal de cartel: el borde baja de izquierda a derecha.
     TemaId.URSS -> formaDp { w, h, u -> moveTo(0f, 0f); lineTo(w, 20 * u); lineTo(w, h); lineTo(0f, h); close() }
@@ -1090,6 +1167,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         moveTo(0f, 16 * u); lineTo(16 * u, 0f); lineTo(w * 0.42f, 3 * u); lineTo(w * 0.58f, 0f); lineTo(w - 16 * u, 4 * u); lineTo(w, 16 * u)
         lineTo(w, h); lineTo(0f, h); close()
     }
+    // El borde de arriba de una laja partida: ondula, más alto a un lado.
+    TemaId.CUEVA -> formaDp { w, h, u ->
+        moveTo(0f, 14 * u); quadraticTo(w * 0.2f, 2 * u, w * 0.45f, 8 * u); quadraticTo(w * 0.7f, 14 * u, w * 0.86f, 4 * u); quadraticTo(w * 0.95f, 0f, w, 10 * u)
+        lineTo(w, h); lineTo(0f, h); close()
+    }
 }
 
 /** El adorno del borde de arriba de la hoja; cabe en el aire que deja [perfilHojaQuick] más 12 dp. */
@@ -1103,12 +1185,25 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawPath(Path().apply { moveTo(x0, y); lineTo(x0 + 6 * u, y - 3.5f * u); lineTo(x0 + 6 * u, y + 3.5f * u); close() }, col)
             drawPath(Path().apply { moveTo(x1, y); lineTo(x1 - 6 * u, y - 3.5f * u); lineTo(x1 - 6 * u, y + 3.5f * u); close() }, col)
         }
+        // La moldura que sigue el arco por dentro y la clave en lo más alto.
+        TemaId.URBE -> {
+            val f = 16 * u; val col = e.primary.copy(alpha = 0.45f)
+            drawPath(Path().apply { moveTo(10 * u, f + 4 * u); quadraticTo(w / 2, -f + 10 * u, w - 10 * u, f + 4 * u) }, col, style = Stroke(0.9f * u))
+            drawPath(Path().apply { moveTo(w / 2 - 7 * u, 2 * u); lineTo(w / 2 + 7 * u, 2 * u); lineTo(w / 2 + 5 * u, 11 * u); lineTo(w / 2 - 5 * u, 11 * u); close() }, col)
+        }
         // Barra de estado de la consola: la línea, tres rayas de señal y el cursor.
         TemaId.CIBER -> {
             val y = 7 * u; val x = w * 0.55f
             drawLine(e.primary.copy(alpha = 0.5f), Offset(10 * u, y), Offset(x, y), u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u)))
             (0 until 3).forEach { k -> drawRect(e.primary.copy(alpha = 0.75f - k * 0.2f), Offset(x + (6 + k * 6) * u, y - 2.5f * u), Size(4 * u, 5 * u)) }
             drawRect(e.secondary, Offset(x + 26 * u, y - 3 * u), Size(7 * u, 6 * u))
+        }
+        // El tubo magenta a lo largo del borde de arriba, con su halo, y el foquito verde de «abierto».
+        TemaId.NEON -> {
+            val y = 6 * u
+            drawLine(e.primary.copy(alpha = 0.25f), Offset(24 * u, y), Offset(w - 24 * u, y), 5 * u, StrokeCap.Round)
+            drawLine(e.primary, Offset(24 * u, y), Offset(w - 24 * u, y), 1.4f * u, StrokeCap.Round)
+            drawCircle(e.tertiary, 2.4f * u, Offset(w - 14 * u, y + 8 * u))
         }
         // El tímpano del frontón con su roseta y el arquitrabe debajo.
         TemaId.HELENO -> {
@@ -1117,12 +1212,29 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawLine(col, Offset(12 * u, f + 4 * u), Offset(w - 12 * u, f + 4 * u), u)
             drawCircle(e.tertiary, 2.2f * u, Offset(w / 2, 10.5f * u))
         }
+        // El disco solar alado bajo el arco de la estela.
+        TemaId.EGIPTO -> {
+            val c = Offset(w / 2, 10 * u); val col = e.primary.copy(alpha = 0.7f)
+            listOf(-1f, 1f).forEach { s ->
+                drawPath(Path().apply {
+                    moveTo(c.x + s * 4 * u, c.y - 1.5f * u); quadraticTo(c.x + s * 14 * u, c.y - 5 * u, c.x + s * 26 * u, c.y - 2 * u)
+                    lineTo(c.x + s * 23 * u, c.y + 1.5f * u); quadraticTo(c.x + s * 13 * u, c.y + 1 * u, c.x + s * 4 * u, c.y + 2.5f * u); close()
+                }, col)
+            }
+            drawCircle(e.secondary, 3.4f * u, c)
+        }
         // Doble filete de rúbrica y tres puntos de oro.
         TemaId.MEDIEVAL -> {
             val y = 14 * u
             drawLine(e.primary.copy(alpha = 0.7f), Offset(14 * u, y), Offset(w - 14 * u, y), 1.4f * u)
             drawLine(e.primary.copy(alpha = 0.5f), Offset(14 * u, y + 3 * u), Offset(w - 14 * u, y + 3 * u), 0.6f * u)
             listOf(-8f, 0f, 8f).forEach { dx -> drawCircle(e.tertiary, 1.8f * u, Offset(w / 2 + dx * u, 9 * u)) }
+        }
+        // La línea de acero bajo las almenas y la cruz patada en medio.
+        TemaId.TEMPLARIO -> {
+            drawLine(e.secondary.copy(alpha = 0.6f), Offset(10 * u, 15 * u), Offset(w - 10 * u, 15 * u), 1.2f * u)
+            drawCircle(e.surface, 7 * u, Offset(w / 2, 15 * u))
+            drawPath(cruzPatada(Offset(w / 2, 15 * u), 6 * u), e.primary)
         }
         // Renglones del rótulo en la pestaña y el ojo que vigila a la derecha.
         TemaId.DISTOPIA -> {
@@ -1174,6 +1286,19 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
                 drawOval(col, Offset(x - 3 * u, y + dy - 1.8f * u), Size(6 * u, 3.6f * u)); x += 9 * u; k++
             }
         }
+        TemaId.RUINAS -> {
+            // Una guía de hiedra que cuelga del borde quebrado, con hojas de cinco puntas, y una grieta que baja.
+            val col = e.primary.copy(alpha = 0.7f)
+            drawLine(col, Offset(24 * u, 6 * u), Offset(30 * u, 40 * u), 0.9f * u)
+            listOf(12f to 1f, 20f to -1f, 28f to 1f, 36f to -1f).forEach { (yy, lado) ->
+                val q = Offset(24 * u + yy * 0.18f * u + lado * 5 * u, yy * u); val r = 5 * u
+                drawPath(Path().apply {
+                    moveTo(q.x, q.y - r * 0.5f); lineTo(q.x - r * 0.55f, q.y - r * 0.35f); lineTo(q.x - r * 0.8f, q.y + r * 0.05f); lineTo(q.x - r * 0.32f, q.y + r * 0.05f)
+                    lineTo(q.x, q.y + r * 0.5f); lineTo(q.x + r * 0.32f, q.y + r * 0.05f); lineTo(q.x + r * 0.8f, q.y + r * 0.05f); lineTo(q.x + r * 0.55f, q.y - r * 0.35f); close()
+                }, col)
+            }
+            drawPath(Path().apply { moveTo(w * 0.62f, 2 * u); lineTo(w * 0.6f, 10 * u); lineTo(w * 0.63f, 16 * u); lineTo(w * 0.61f, 24 * u) }, e.onSurface.copy(alpha = 0.3f), style = Stroke(0.8f * u))
+        }
         // Nieve en cada festón y una baya roja entre dos.
         TemaId.NAVIDAD -> {
             val n = (w / (44 * u)).toInt().coerceAtLeast(3); val paso = w / n
@@ -1189,21 +1314,51 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawRect(e.secondary, Offset(w - 40 * u, 17 * u), Size(8 * u, 8 * u))
             drawRect(e.background, Offset(w - 38.5f * u, 18.5f * u), Size(5 * u, 5 * u), style = Stroke(0.8f * u))
         }
+        TemaId.EDO -> {
+            // El alero repetido por dentro y, debajo, las cabezas de las vigas (taruki) en fila.
+            val p = 19 * u
+            drawPath(Path().apply { moveTo(0f, p); cubicTo(w * 0.25f, p, w * 0.38f, p * 0.92f, w * 0.44f, p * 0.5f); quadraticTo(w * 0.5f, p * 0.2f, w * 0.56f, p * 0.5f); cubicTo(w * 0.62f, p * 0.92f, w * 0.75f, p, w, p) },
+                e.primary.copy(alpha = 0.5f), style = Stroke(u))
+            var x = 10 * u; while (x < w - 6 * u) { if (kotlin.math.abs(x - w / 2) > w * 0.08f) drawCircle(e.primary.copy(alpha = 0.35f), 1.3f * u, Offset(x, p + 4 * u)); x += 14 * u }
+        }
         // Trébol de tracería bajo la punta del gablete y un filete.
         TemaId.GOTICO -> {
             val c = Offset(w / 2, 12 * u); val r = 3 * u
             listOf(Offset(0f, -r), Offset(-r * 0.9f, r * 0.6f), Offset(r * 0.9f, r * 0.6f)).forEach { o -> drawCircle(e.tertiary, r, c + o, style = Stroke(u)) }
             drawLine(e.tertiary.copy(alpha = 0.5f), Offset(10 * u, 23 * u), Offset(w - 10 * u, 23 * u), 0.8f * u)
         }
+        // Dos tiras de cinta que sujetan la hoja y, al centro, el ojo del signo entre dos rayas a pulso.
+        TemaId.ARCANO -> {
+            listOf(Offset(24 * u, 6 * u) to -24f, Offset(w - 24 * u, 6 * u) to 24f).forEach { (o, g) ->
+                rotate(g, o) { drawRect(e.secondary.copy(alpha = 0.25f), Offset(o.x - 14 * u, o.y - 4 * u), Size(28 * u, 8 * u)) }
+            }
+            val c = Offset(w / 2, 14 * u)
+            drawPath(Path().apply { moveTo(c.x - 7 * u, c.y); quadraticTo(c.x, c.y - 6 * u, c.x + 7 * u, c.y); quadraticTo(c.x, c.y + 6 * u, c.x - 7 * u, c.y); close() }, e.onSurface.copy(alpha = 0.55f), style = Stroke(u))
+            drawOval(e.tertiary, Offset(c.x - 1 * u, c.y - 2.6f * u), Size(2 * u, 5.2f * u))
+            drawLine(e.onSurface.copy(alpha = 0.3f), Offset(10 * u, c.y), Offset(c.x - 10 * u, c.y + 1 * u), 0.8f * u)
+            drawLine(e.onSurface.copy(alpha = 0.3f), Offset(c.x + 10 * u, c.y + 1 * u), Offset(w - 10 * u, c.y - 0.5f * u), 0.8f * u)
+        }
         // Tres luces de consola y una línea de telemetría.
         TemaId.ESPACIO -> {
             listOf(e.primary, e.tertiary, e.secondary).forEachIndexed { k, col -> drawCircle(col, 2.4f * u, Offset(w / 2 + (k - 1) * 14 * u, 6 * u)) }
             drawLine(e.primary.copy(alpha = 0.45f), Offset(16 * u, 18 * u), Offset(w - 16 * u, 18 * u), 0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 4 * u)))
         }
+        // Tres burbujas que suben en el centro y, debajo, la línea de flotación.
+        TemaId.ABISMO -> {
+            listOf(Offset(-6f, 16f) to 2.2f, Offset(3f, 12f) to 3f, Offset(-1f, 6f) to 1.6f).forEach { (o, r) ->
+                drawCircle(e.tertiary, r * u, Offset(w / 2 + o.x * u, o.y * u), style = Stroke(0.9f * u))
+            }
+            drawLine(e.primary.copy(alpha = 0.45f), Offset(16 * u, 22 * u), Offset(w - 16 * u, 22 * u), 0.8f * u)
+        }
         // Estrella de ocho puntas en el lóbulo de la clave y un filete de oro.
         TemaId.ANDALUS -> {
             estrellaHoja(Offset(w / 2, 11 * u), 5 * u, e.tertiary, puntas = 8, dentro = 0.6f)
             drawLine(e.tertiary.copy(alpha = 0.6f), Offset(12 * u, 23 * u), Offset(w - 12 * u, 23 * u), 0.8f * u)
+        }
+        // El cartucho del glifo del día en lo alto del templo y el renglón rojo del códice debajo.
+        TemaId.MESO -> {
+            cartuchoMaya(Offset(w / 2, 7 * u), 4.5f * u, e.primary, e.surface, e.onSurface, 1)
+            drawLine(e.primary.copy(alpha = 0.6f), Offset(12 * u, 21 * u), Offset(w - 12 * u, 21 * u), 0.9f * u)
         }
         // La rueda del techo de la yurta al centro y la costura del fieltro.
         TemaId.MONGOL -> {
@@ -1222,6 +1377,12 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawCircle(col, 4 * u, c, style = Stroke(0.8f * u))
             drawLine(col, Offset(c.x - 7 * u, c.y), Offset(c.x + 7 * u, c.y), 0.6f * u)
             drawLine(col, Offset(c.x, c.y - 7 * u), Offset(c.x, c.y + 7 * u), 0.6f * u)
+        }
+        // Los ollaos de latón de la vela y la relinga (el cabo cosido al borde).
+        TemaId.PIRATA -> {
+            val col = e.secondary.copy(alpha = 0.7f)
+            listOf(10 * u, w - 10 * u).forEach { x -> drawCircle(col, 3.2f * u, Offset(x, 6 * u), style = Stroke(1.4f * u)) }
+            drawPath(Path().apply { moveTo(16 * u, 9 * u); quadraticTo(w / 2, 22 * u, w - 16 * u, 9 * u) }, e.primary.copy(alpha = 0.45f), style = Stroke(1.6f * u, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 1.4f * u))))
         }
         // Una franja roja y otra negra, paralelas a la diagonal.
         TemaId.URSS -> {
@@ -1250,6 +1411,13 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             }
             drawPath(Path().apply { moveTo(w / 2, y - 7 * u); lineTo(w / 2 + 5 * u, y); lineTo(w / 2, y + 7 * u); lineTo(w / 2 - 5 * u, y); close() }, e.primary)
         }
+        TemaId.CUEVA -> {
+            // Una hilera de puntos de ocre que se abre al centro para una mano pequeña.
+            val y = 20 * u
+            var x = 26 * u; var k = 0
+            while (x < w - 26 * u) { if (kotlin.math.abs(x - w / 2) > 14 * u) drawCircle(e.primary.copy(alpha = 0.55f), (1.4f + (k % 3) * 0.4f) * u, Offset(x, y)); x += 11 * u; k++ }
+            drawPath(manoUnida(Offset(w / 2, y), 7 * u), e.primary)
+        }
     }
 }
 
@@ -1273,15 +1441,24 @@ private fun DrawScope.estrellaHoja(c: Offset, r: Float, color: Color, puntas: In
  */
 private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> RoundedCornerShape(2.dp)
+    TemaId.URBE -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.CIBER -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
+    TemaId.NEON -> RoundedCornerShape(50)
     // Frontón muy bajo.
     TemaId.HELENO -> formaDp { w, h, u -> val f = 8 * u; moveTo(0f, f); lineTo(w / 2, 0f); lineTo(w, f); lineTo(w, h); lineTo(0f, h); close() }
+    // Cartucho: redondo a la izquierda y cerrado por la barra del nudo a la derecha.
+    TemaId.EGIPTO -> formaDp { w, h, _ ->
+        val r = minOf(h / 2, w / 2)
+        moveTo(r, 0f); lineTo(w, 0f); lineTo(w, h); lineTo(r, h); arcTo(Rect(0f, 0f, 2 * r, h), 90f, 180f, false); close()
+    }
     // Esquinas cóncavas, como un marco de miniatura.
     TemaId.MEDIEVAL -> formaDp { w, h, u ->
         val r = 7 * u
         moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h - r); quadraticTo(w - r, h - r, w - r, h)
         lineTo(r, h); quadraticTo(r, h - r, 0f, h - r); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
     }
+    // El escudete: recto arriba y redondeado abajo.
+    TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     TemaId.ORDEN -> CutCornerShape(8.dp)
@@ -1302,6 +1479,8 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     }
     // Hoja: dos esquinas redondas y dos en punta.
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 16.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 2.dp)
+    // Un bloque desportillado: dos esquinas cortadas, desiguales.
+    TemaId.RUINAS -> CutCornerShape(topStart = 3.dp, topEnd = 10.dp, bottomEnd = 3.dp, bottomStart = 6.dp)
     // Caja de regalo con su cinta: esquinas suaves y una muesca arriba al centro.
     TemaId.NAVIDAD -> formaDp { w, h, u ->
         val r = 8 * u; val n = 5 * u
@@ -1313,15 +1492,30 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
         val a = 5 * u
         moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - a, 8 * u); lineTo(w - a, h); lineTo(a, h); lineTo(a, 8 * u); close()
     }
+    // Ema: la tablilla votiva, con sus dos esquinas de arriba en chaflán.
+    TemaId.EDO -> formaDp { w, h, u ->
+        val a = 7 * u
+        moveTo(0f, a); lineTo(a, 0f); lineTo(w - a, 0f); lineTo(w, a); lineTo(w, h); lineTo(0f, h); close()
+    }
     // Arco apuntado.
     TemaId.GOTICO -> formaDp { w, h, u ->
         val a = 14 * u
         moveTo(0f, h); lineTo(0f, a); quadraticTo(0f, a * 0.25f, w / 2, 0f); quadraticTo(w, a * 0.25f, w, a); lineTo(w, h); close()
     }
+    // La ficha del fichero: la esquina de arriba a la derecha recortada.
+    TemaId.ARCANO -> formaDp { w, h, u -> val d = 8 * u; moveTo(0f, 0f); lineTo(w - d, 0f); lineTo(w, d); lineTo(w, h); lineTo(0f, h); close() }
     // Tecla de consola, más angosta arriba.
     TemaId.ESPACIO -> formaDp { w, h, u -> val d = 6 * u; moveTo(d, 0f); lineTo(w - d, 0f); lineTo(w, h); lineTo(0f, h); close() }
+    // El flotador del batiscafo: proa redonda a la izquierda, popa de esquinas suaves a la derecha.
+    TemaId.ABISMO -> formaDp { w, h, u ->
+        val r = h / 2; val r2 = 4 * u
+        moveTo(r, 0f); lineTo(w - r2, 0f); quadraticTo(w, 0f, w, r2); lineTo(w, h - r2); quadraticTo(w, h, w - r2, h); lineTo(r, h)
+        quadraticTo(0f, h, 0f, h / 2); quadraticTo(0f, 0f, r, 0f); close()
+    }
     // Arco de medio punto, de radio fijo.
     TemaId.ANDALUS -> RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
+    // El bloque de un glifo: un cuadro de esquinas muy redondeadas.
+    TemaId.MESO -> RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     // Esquinas escalonadas, como la orilla del fieltro.
     TemaId.MONGOL -> formaDp { w, h, u ->
         val s = 4 * u
@@ -1332,6 +1526,8 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     }
     // Hoja con la esquina doblada.
     TemaId.RENACIMIENTO -> CutCornerShape(bottomEnd = 12.dp)
+    // La duela del barril: arriba y abajo, un poco combada.
+    TemaId.PIRATA -> formaDp { w, h, u -> val f = 3 * u; moveTo(0f, f); quadraticTo(w / 2, -f, w, f); lineTo(w, h - f); quadraticTo(w / 2, h + f, 0f, h - f); close() }
     // Paralelogramo de cartel.
     TemaId.URSS -> formaDp { w, h, u -> val d = 10 * u; moveTo(d, 0f); lineTo(w, 0f); lineTo(w - d, h); lineTo(0f, h); close() }
     // Banderola con cola de golondrina.
@@ -1339,5 +1535,10 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // Losa de piedra irregular.
     TemaId.ANTIGUAS -> formaDp { w, h, u ->
         moveTo(6 * u, 0f); lineTo(w - 2 * u, 3 * u); lineTo(w, h - 10 * u); lineTo(w - 8 * u, h); lineTo(2 * u, h - 3 * u); lineTo(0f, 8 * u); close()
+    }
+    // Un canto rodado aplastado: esquinas muy blandas y desparejas.
+    TemaId.CUEVA -> formaDp { w, h, u ->
+        moveTo(10 * u, 0f); lineTo(w - 14 * u, 2 * u); quadraticTo(w, 2 * u, w, h * 0.5f); quadraticTo(w - 2 * u, h, w - 16 * u, h); lineTo(12 * u, h - 1 * u)
+        quadraticTo(0f, h - 2 * u, 0f, h * 0.5f); quadraticTo(0f, 0f, 10 * u, 0f); close()
     }
 }

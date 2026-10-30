@@ -85,9 +85,14 @@ private class MarcoRecuadro(val forma: Shape, val vertical: Dp)
 
 private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.ROMANO -> MarcoRecuadro(RoundedCornerShape(2.dp), 12.dp)
+    TemaId.URBE -> MarcoRecuadro(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 3.dp, bottomStart = 3.dp), 13.dp)
     TemaId.CIBER -> MarcoRecuadro(RectangleShape, 9.dp)
+    TemaId.NEON -> MarcoRecuadro(RoundedCornerShape(16.dp), 12.dp)
     TemaId.HELENO -> MarcoRecuadro(RoundedCornerShape(4.dp), 13.dp)
+    TemaId.EGIPTO -> MarcoRecuadro(RoundedCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomEnd = 2.dp, bottomStart = 2.dp), 14.dp)
     TemaId.MEDIEVAL -> MarcoRecuadro(RoundedCornerShape(3.dp), 11.dp)
+    // El escudo: recto arriba y redondo abajo.
+    TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
     TemaId.REFUGIO -> MarcoRecuadro(RoundedCornerShape(12.dp), 10.dp)
     TemaId.ORDEN -> MarcoRecuadro(CutCornerShape(7.dp), 10.dp)
@@ -95,16 +100,26 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.COLONOS -> MarcoRecuadro(RoundedCornerShape(1.dp), 12.dp)
     TemaId.NAPOLEON -> MarcoRecuadro(RoundedCornerShape(5.dp), 11.dp)
     TemaId.BOTANICO -> MarcoRecuadro(RoundedCornerShape(8.dp), 12.dp)
+    TemaId.RUINAS -> MarcoRecuadro(CutCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 5.dp), 12.dp)   // losa desportillada
     TemaId.NAVIDAD -> MarcoRecuadro(RoundedCornerShape(10.dp), 12.dp)
     TemaId.SEDA -> MarcoRecuadro(CutCornerShape(3.dp), 11.dp)
+    TemaId.EDO -> MarcoRecuadro(CutCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomEnd = 0.dp, bottomStart = 0.dp), 12.dp)
     TemaId.GOTICO -> MarcoRecuadro(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp, bottomStart = 3.dp, bottomEnd = 3.dp), 14.dp)
+    // La ficha del testigo, con la esquina de arriba recortada.
+    TemaId.ARCANO -> MarcoRecuadro(CutCornerShape(topEnd = 16.dp), 12.dp)
     TemaId.ESPACIO -> MarcoRecuadro(RoundedCornerShape(18.dp), 10.dp)
+    // El casco: arriba casi recto, abajo muy redondeado, como la esfera de la tripulación.
+    TemaId.ABISMO -> MarcoRecuadro(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomStart = 26.dp, bottomEnd = 26.dp), 12.dp)
     TemaId.ANDALUS -> MarcoRecuadro(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp, bottomStart = 4.dp, bottomEnd = 4.dp), 14.dp)
+    // La bóveda en saledizo: los lados de arriba suben en diagonal.
+    TemaId.MESO -> MarcoRecuadro(CutCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 0.dp, bottomEnd = 0.dp), 14.dp)
     TemaId.MONGOL -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 6.dp, bottomEnd = 6.dp), 12.dp)
     TemaId.RENACIMIENTO -> MarcoRecuadro(RectangleShape, 10.dp)
+    TemaId.PIRATA -> MarcoRecuadro(CutCornerShape(7.dp), 12.dp)
     TemaId.URSS -> MarcoRecuadro(CutCornerShape(topEnd = 12.dp), 10.dp)
     TemaId.REVOLUCION -> MarcoRecuadro(RoundedCornerShape(2.dp), 12.dp)
     TemaId.ANTIGUAS -> MarcoRecuadro(CutCornerShape(4.dp), 12.dp)
+    TemaId.CUEVA -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 6.dp, bottomEnd = 14.dp, bottomStart = 8.dp), 13.dp)   // un canto rodado
 }
 
 /** Un recuadro con el nombre de la variable y su grupo, con el marco y el adorno de cada tema. */
@@ -135,6 +150,13 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
                 drawPath(Path().apply { moveTo(x0 + d * 5 * u, h / 2); lineTo(x0 + d * 1.5f * u, h / 2 - 5 * u); lineTo(x0 + d * 1.5f * u, h / 2 + 5 * u); close() }, c.copy(alpha = 0.4f))
             }
         }
+        // La placa de la calle: el filete grueso y el fino, y un tornillo arriba en cada esquina.
+        TemaId.URBE -> {
+            val t = e.onSurface
+            drawLine(t.copy(alpha = 0.4f), Offset(4 * u, h - 3 * u), Offset(w - 4 * u, h - 3 * u), 1.6f * u)
+            drawRect(t.copy(alpha = 0.18f), Offset(6 * u, 8 * u), Size(w - 12 * u, h - 14 * u), style = Stroke(0.7f * u))
+            listOf(9 * u, w - 9 * u).forEach { x -> drawCircle(e.tertiary.copy(alpha = 0.6f), 1.5f * u, Offset(x, 11 * u)) }
+        }
         // Corchetes de consola a los lados y el cursor abajo.
         TemaId.CIBER -> {
             val k = c.copy(alpha = 0.8f)
@@ -145,14 +167,31 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             }
             drawRect(k, Offset(w - 14 * u, h - 7 * u), Size(5 * u, 1.6f * u))
         }
+        // Tubo de neón alrededor de la tarjeta, con su halo, y el foquito ámbar arriba a la derecha.
+        TemaId.NEON -> {
+            drawRoundRect(c.copy(alpha = 0.18f), Offset(3 * u, 3 * u), Size(w - 6 * u, h - 6 * u), androidx.compose.ui.geometry.CornerRadius(14 * u), style = Stroke(4 * u))
+            drawRoundRect(c.copy(alpha = 0.8f), Offset(3 * u, 3 * u), Size(w - 6 * u, h - 6 * u), androidx.compose.ui.geometry.CornerRadius(14 * u), style = Stroke(1.2f * u))
+            drawCircle(e.secondary, 2 * u, Offset(w - 12 * u, 12 * u))
+        }
         // Meandros arriba y abajo.
         TemaId.HELENO -> { grecaRel(3 * u, c.copy(alpha = 0.5f), u); grecaRel(h - 9 * u, c.copy(alpha = 0.5f), u) }
+        // La cenefa de rectángulos de colores arriba y abajo, como el marco de una pintura de tumba.
+        TemaId.EGIPTO -> listOf(3 * u, h - 6 * u).forEach { y ->
+            var x = 6 * u; var k = 0
+            while (x < w - 6 * u) { drawRect(c.copy(alpha = if (k % 2 == 0) 0.55f else 0.25f), Offset(x, y), Size(4 * u, 3 * u)); x += 6 * u; k++ }
+        }
         // Marco de rúbrica y cuatro puntos de oro en cada esquina.
         TemaId.MEDIEVAL -> {
             drawRect(c.copy(alpha = 0.5f), Offset(3 * u, 3 * u), Size(w - 6 * u, h - 6 * u), style = Stroke(0.8f * u))
             listOf(Offset(3 * u, 3 * u), Offset(w - 3 * u, 3 * u), Offset(3 * u, h - 3 * u), Offset(w - 3 * u, h - 3 * u)).forEach { o ->
                 listOf(Offset(0f, -1.6f), Offset(1.6f, 0f), Offset(0f, 1.6f), Offset(-1.6f, 0f)).forEach { d -> drawCircle(e.tertiary, 1.1f * u, o + d * u) }
             }
+        }
+        // El jefe de acero arriba, con la cruz patada en medio, y un clavo en cada esquina de arriba.
+        TemaId.TEMPLARIO -> {
+            drawRect(e.secondary.copy(alpha = 0.5f), Offset(0f, 0f), Size(w, 3 * u))
+            drawPath(cruzPatada(Offset(w / 2, 9 * u), 4 * u), e.primary.copy(alpha = 0.8f))
+            listOf(Offset(5 * u, 7 * u), Offset(w - 5 * u, 7 * u)).forEach { o -> drawCircle(e.tertiary, 1.4f * u, o) }
         }
         // Expediente: franja de encabezado y dos perforaciones de archivador.
         TemaId.DISTOPIA -> {
@@ -199,6 +238,13 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             drawCircle(e.secondary, 2 * u, Offset(w / 2, 3 * u))
             drawLine(c.copy(alpha = 0.35f), Offset(8 * u, h - 5 * u), Offset(w - 8 * u, h - 5 * u), 0.6f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 2 * u)))
         }
+        TemaId.RUINAS -> {
+            // Una hoja de hiedra que cuelga arriba al centro de su tallito y una grieta que sube desde la esquina de abajo.
+            drawLine(c.copy(alpha = 0.6f), Offset(w / 2, 0f), Offset(w / 2 + u, 5 * u), 0.8f * u)
+            val c = Offset(w / 2 + u, 9 * u); val s = 9 * u
+            drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, e.primary.copy(alpha = 0.8f))
+            drawPath(Path().apply { moveTo(w - 10 * u, h); lineTo(w - 13 * u, h - 6 * u); lineTo(w - 9 * u, h - 11 * u); lineTo(w - 12 * u, h - 18 * u) }, e.onSurfaceVariant.copy(alpha = 0.4f), style = Stroke(0.8f * u))
+        }
         // Ramita de acebo en la esquina.
         TemaId.NAVIDAD -> {
             val o = Offset(6 * u, 6 * u)
@@ -214,11 +260,26 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
                 drawRect(k, o + Offset(1.6f * u, 1.6f * u), Size(l - 3.2f * u, l - 3.2f * u))
             }
         }
+        // El mizuhiki: el cordón rojo de los regalos, atado arriba con su lazada de dos orejas.
+        TemaId.EDO -> {
+            val k = e.secondary.copy(alpha = 0.8f); val y = 4 * u; val cx = w / 2
+            drawLine(k, Offset(cx - w * 0.18f, y), Offset(cx + w * 0.18f, y), 0.9f * u)
+            drawLine(k, Offset(cx - w * 0.18f, y + 1.6f * u), Offset(cx + w * 0.18f, y + 1.6f * u), 0.9f * u)
+            listOf(-1f, 1f).forEach { s -> drawOval(k, Offset(cx + s * 4.5f * u - 3.5f * u, y - 2.5f * u), Size(7 * u, 6.5f * u), style = Stroke(0.9f * u)) }
+            drawCircle(k, 1.3f * u, Offset(cx, y + 0.8f * u))
+        }
         // Un rosetón pequeño bajo la clave del arco.
         TemaId.GOTICO -> {
             val o = Offset(w / 2, 8 * u); val k = c.copy(alpha = 0.5f)
             drawCircle(k, 4 * u, o, style = Stroke(0.8f * u))
             for (i in 0 until 6) { val a = i * PI.toFloat() / 3; drawCircle(k, 1.2f * u, o + Offset(cos(a), sin(a)) * (2.3f * u), style = Stroke(0.6f * u)) }
+        }
+        // La ficha clavada en el pizarrón: el alfiler arriba al centro y el doblez de la esquina recortada.
+        TemaId.ARCANO -> {
+            val o = Offset(w / 2, 5 * u)
+            drawCircle(Color.Black.copy(alpha = 0.15f), 2.6f * u, o + Offset(0.8f * u, 1f * u)); drawCircle(e.tertiary, 2.4f * u, o)
+            drawLine(c.copy(alpha = 0.4f), Offset(w - 16.dp.toPx(), 0f), Offset(w, 16.dp.toPx()), 0.8f * u)
+            drawLine(c.copy(alpha = 0.3f), Offset(8 * u, h - 6 * u), Offset(w * 0.5f, h - 6 * u), 0.6f * u)
         }
         // Miras de la sala de control en las esquinas y dos estrellas.
         TemaId.ESPACIO -> {
@@ -227,8 +288,17 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
                 .forEach { (o, d) -> drawLine(k, o, o + Offset(d.x * 6 * u, 0f), 1.4f * u); drawLine(k, o, o + Offset(0f, d.y * 6 * u), 1.4f * u) }
             drawCircle(k, 0.9f * u, Offset(w * 0.72f, 5 * u)); drawCircle(k, 0.7f * u, Offset(w * 0.24f, h - 5 * u))
         }
+        // La fila de remaches de la plancha arriba y un ojo de buey en la esquina.
+        TemaId.ABISMO -> {
+            val k = e.secondary.copy(alpha = 0.8f)
+            var x = 14 * u; while (x < w - 30 * u) { drawCircle(k, 1.1f * u, Offset(x, 5 * u)); x += 9 * u }
+            val o = Offset(w - 13 * u, 12 * u)
+            drawCircle(k, 6 * u, o, style = Stroke(1.6f * u)); drawCircle(c.copy(alpha = 0.35f), 3.6f * u, o)
+        }
         // Estrella de ocho puntas de los alicatados, bajo el arco.
         TemaId.ANDALUS -> drawPath(estrellaRel(Offset(w / 2, 9 * u), 8, 4.5f * u, 3.45f * u), c.copy(alpha = 0.55f), style = Stroke(0.9f * u))
+        // Una greca escalonada bajo el dintel.
+        TemaId.MESO -> grecaEscalonada(w * 0.3f, w * 0.7f, 4 * u, 12 * u, c.copy(alpha = 0.55f), 0.9f * u)
         // Cuernos de carnero en espiral en las esquinas de arriba, como en el fieltro bordado.
         TemaId.MONGOL -> listOf(7 * u to 1f, w - 7 * u to -1f).forEach { (x, d) ->
             drawPath(espiralRel(Offset(x, 7 * u), 4 * u, d), c.copy(alpha = 0.6f), style = Stroke(u, cap = StrokeCap.Round))
@@ -241,6 +311,13 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             drawArc(c.copy(alpha = 0.28f), -90f, 90f, false, topLeft = Offset(-r, h - r), size = Size(2 * r, 2 * r), style = Stroke(0.6f * u))
             drawLine(c.copy(alpha = 0.3f), Offset(w / 2 - 3 * u, h / 2), Offset(w / 2 + 3 * u, h / 2), 0.6f * u)
             drawLine(c.copy(alpha = 0.3f), Offset(w / 2, h / 2 - 3 * u), Offset(w / 2, h / 2 + 3 * u), 0.6f * u)
+        }
+        // Las líneas de rumbo que salen de la esquina y la «X» en la otra punta.
+        TemaId.PIRATA -> {
+            val k = c.copy(alpha = 0.16f); val o = Offset(w, 0f); val l = maxOf(w, h) * 1.2f
+            for (i in 0 until 7) { val a = Math.PI / 2 + i * Math.PI / 12; drawLine(k, o, Offset(o.x + (l * kotlin.math.cos(a)).toFloat(), o.y + (l * kotlin.math.sin(a)).toFloat()), 0.6f * u) }
+            val x = Offset(10 * u, h - 10 * u); val s = 3 * u
+            drawLine(e.tertiary.copy(alpha = 0.45f), x - Offset(s, s), x + Offset(s, s), 1.2f * u); drawLine(e.tertiary.copy(alpha = 0.45f), x + Offset(-s, s), x + Offset(s, -s), 1.2f * u)
         }
         // Cuña roja constructivista y una barra negra.
         TemaId.URSS -> {
@@ -261,6 +338,11 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
                 val y = h * f
                 drawLine(c.copy(alpha = 0.45f), Offset(3 * u, y), Offset(6 * u, y + (if (i % 2 == 0) -2f else 2f) * u), 0.8f * u)
             }
+        }
+        TemaId.CUEVA -> {
+            // Tres puntos de ocre arriba y abajo, y una mano pequeña de ocre en la esquina.
+            listOf(4.5f * u, h - 4.5f * u).forEach { y -> for (k in -1..1) drawCircle(c.copy(alpha = 0.7f), 1.6f * u, Offset(w / 2 + k * 5 * u, y)) }
+            drawPath(manoUnida(Offset(w - 10 * u, 12 * u), 5 * u), e.tertiary.copy(alpha = 0.7f))
         }
     }
 }
@@ -330,6 +412,13 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             while (x < w - 8 * u) { drawLine(col, Offset(x - 2.5f * u, y - grosor / 2 - 2 * u), Offset(x + 2.5f * u, y + grosor / 2 + 2 * u), 1.2f * u); x += 11 * u }
             listOf(3 * u, w - 3 * u).forEach { drawCircle(col, grosor / 2 + 2 * u, Offset(it, y), style = Stroke(1.2f * u)) }
         }
+        // Un puente sobre el Tíber: el tablero y, debajo, sus arcos; al medio, el ojo del puente.
+        TemaId.URBE -> {
+            drawLine(col, Offset(2 * u, y - 2 * u), Offset(w - 2 * u, y - 2 * u), grosor, pathEffect = punteado)
+            val n = 3; val ancho = (w - 4 * u) / n
+            for (k in 0 until n) drawArc(col, 180f, 180f, false, Offset(2 * u + k * ancho + 1.5f * u, y), Size(ancho - 3 * u, minOf(ancho * 0.5f, 14 * u)), style = Stroke(1.2f * u, pathEffect = punteado))
+            drawCircle(col, 2.4f * u, Offset(w / 2, y + 4 * u), style = Stroke(1f * u))
+        }
         // Barra de progreso de la terminal: ocho celdas entre corchetes, llenas según la fuerza.
         TemaId.CIBER -> {
             val n = 8; val llenas = (fuerza * n).roundToInt().coerceIn(0, n)
@@ -344,6 +433,15 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 if (i < llenas) drawRect(col, o, s) else drawRect(col.copy(alpha = col.alpha * 0.5f), o, s, style = Stroke(0.8f * u, pathEffect = punteado))
             }
         }
+        // Un tubo de neón: apagado de lado a lado y encendido, con su halo, hasta donde llega la fuerza del lazo.
+        TemaId.NEON -> {
+            val m = 6 * u; val hasta = m + (w - 2 * m) * fuerza
+            drawLine(col.copy(alpha = col.alpha * 0.25f), Offset(m, y), Offset(w - m, y), grosor * 0.6f, cap = StrokeCap.Round)
+            if (fuerza > 0f) {
+                drawLine(col.copy(alpha = col.alpha * 0.3f), Offset(m, y), Offset(hasta, y), grosor * 2.4f, cap = StrokeCap.Round)
+                drawLine(col, Offset(m, y), Offset(hasta, y), grosor * 0.8f, cap = StrokeCap.Round)
+            }
+        }
         // Rama de olivo: un tallo con hojas alternas.
         TemaId.HELENO -> {
             drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.55f + 0.6f * u, cap = StrokeCap.Round, pathEffect = punteado)
@@ -355,6 +453,17 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += 9 * u; i++
             }
         }
+        // Un tallo de papiro con flores de loto abiertas, una arriba y otra abajo: más gruesas cuanto más fuerte el lazo.
+        TemaId.EGIPTO -> {
+            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.55f + 0.6f * u, cap = StrokeCap.Round, pathEffect = punteado)
+            val l = 4 * u + grosor * 0.5f
+            var x = 8 * u; var i = 0
+            while (x < w - 8 * u) {
+                val d = if (i % 2 == 0) -1f else 1f
+                drawPath(Path().apply { moveTo(x, y); lineTo(x - l * 0.55f, y + d * l); lineTo(x, y + d * l * 0.7f); lineTo(x + l * 0.55f, y + d * l); close() }, col)
+                x += 10 * u; i++
+            }
+        }
         // Filacteria: una cinta ondulada con cola de golondrina en cada punta.
         TemaId.MEDIEVAL -> {
             val ancho = grosor + 3 * u
@@ -362,6 +471,16 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             drawPath(onda(3 * u, 1f), fondo.copy(alpha = 0.5f), style = Stroke(0.6f * u))
             listOf(0f to 1f, w to -1f).forEach { (x, d) ->
                 drawPath(Path().apply { moveTo(x, y - ancho / 2 - u); lineTo(x + d * 3.5f * u, y); lineTo(x, y + ancho / 2 + u); close() }, fondo)
+            }
+        }
+        // Una cadena de eslabones de hierro: más gruesa cuanto más fuerte es la relación.
+        TemaId.TEMPLARIO -> {
+            val l = 7 * u + grosor; val a = 2.4f * u + grosor * 0.6f
+            var x = 2 * u; var i = 0
+            while (x + l <= w) {
+                if (i % 2 == 0) drawOval(col, Offset(x, y - a), Size(l, 2 * a), style = Stroke(1f * u + grosor * 0.35f, pathEffect = punteado))
+                else drawLine(col, Offset(x - 1f * u, y), Offset(x + l + 1f * u, y), 1f * u + grosor * 0.45f)
+                x += maxOf(l * 0.78f, 1f); i++
             }
         }
         // Alambre de púas.
@@ -426,6 +545,15 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 hormiga(Offset(x, y0 - grosor), 8 * u + grosor, a, col)
             }
         }
+        TemaId.RUINAS -> {
+            // Una guía de hiedra que une a las dos personas, con hojas de cinco puntas a un lado y al otro.
+            drawPath(onda(3 * u, 2f), col, style = Stroke(grosor * 0.8f, cap = StrokeCap.Round, pathEffect = punteado))
+            listOf(0.2f, 0.4f, 0.6f, 0.8f).forEachIndexed { k, f ->
+                val x = w * f; val y0 = y + 3 * u * sin(2 * PI * f * 2).toFloat()
+                val c = Offset(x, y0 + (if (k % 2 == 0) -1f else 1f) * (4 * u + grosor)); val s = 7 * u + grosor
+                drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, col)
+            }
+        }
         // Guirnalda con dos esferas colgando.
         TemaId.NAVIDAD -> {
             val p = Path().apply { moveTo(0f, y - 3 * u); quadraticTo(w / 2, y + 9 * u, w, y - 3 * u) }
@@ -438,6 +566,13 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             var x = 12 * u; while (x < w - 10 * u) { drawCircle(col, grosor * 0.45f + u, Offset(x, y)); x += 7 * u }
             listOf(5 * u, w - 5 * u).forEach { cx -> drawCircle(col, 5 * u, Offset(cx, y)); drawRect(fondo, Offset(cx - 1.6f * u, y - 1.6f * u), Size(3.2f * u, 3.2f * u)) }
         }
+        // Un cordón de mizuhiki de dos hilos con el nudo awaji (de los que no se desatan) al centro.
+        TemaId.EDO -> {
+            val g = grosor * 0.5f + 0.6f * u; val cx = w / 2
+            listOf(-1.4f, 1.4f).forEach { d -> drawLine(col, Offset(4 * u, y + d * u), Offset(cx - 7 * u, y + d * u), g, pathEffect = punteado); drawLine(col, Offset(cx + 7 * u, y + d * u), Offset(w - 4 * u, y + d * u), g, pathEffect = punteado) }
+            listOf(-1f, 1f).forEach { s -> drawOval(col, Offset(cx + s * 4.5f * u - 4 * u, y - 3.5f * u), Size(8 * u, 7 * u), style = Stroke(g)) }
+            drawOval(col, Offset(cx - 3 * u, y - 1 * u), Size(6 * u, 6 * u), style = Stroke(g))
+        }
         // Arquería de ojivas sobre una línea, como un friso de capilla.
         TemaId.GOTICO -> {
             val base = y + 3 * u; val paso = 9 * u; val alto = 7 * u
@@ -449,6 +584,12 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             }
             drawPath(p, col, style = Stroke(grosor * 0.35f + 0.7f * u, pathEffect = punteado))
         }
+        // El hilo del pizarrón del investigador, que cuelga un poco entre dos alfileres.
+        TemaId.ARCANO -> {
+            val hilo = Path().apply { moveTo(4 * u, y - 2 * u); quadraticTo(w / 2, y + 4 * u + grosor, w - 4 * u, y - 2 * u) }
+            drawPath(hilo, col, style = Stroke(grosor * 0.7f, cap = StrokeCap.Round, pathEffect = punteado))
+            listOf(4 * u, w - 4 * u).forEach { x -> drawCircle(Color.Black.copy(alpha = 0.18f), 2.6f * u, Offset(x + 0.7f * u, y - 1f * u)); drawCircle(col, 2.4f * u, Offset(x, y - 2 * u)); drawCircle(fondo.copy(alpha = 0.6f), 0.8f * u, Offset(x - 0.6f * u, y - 2.6f * u)) }
+        }
         // Una órbita colgante entre dos estrellas, con un planeta anillado al fondo.
         TemaId.ESPACIO -> {
             drawPath(Path().apply { moveTo(5 * u, y - 2 * u); quadraticTo(w / 2, y + 14 * u, w - 5 * u, y - 2 * u) }, col,
@@ -458,10 +599,25 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
             drawCircle(col, 2.5f * u + grosor * 0.3f, o)
             drawOval(col, Offset(o.x - 6 * u, o.y - 1.6f * u), Size(12 * u, 3.2f * u), style = Stroke(0.9f * u))
         }
+        // Un cabo torcido de dos cordones y, en medio, la boya que los une.
+        TemaId.ABISMO -> {
+            drawPath(onda(2.2f * u, 6f), col, style = Stroke(grosor * 0.5f + 0.4f * u, cap = StrokeCap.Round, pathEffect = punteado))
+            drawPath(onda(2.2f * u, 6f, PI.toFloat()), col, style = Stroke(grosor * 0.5f + 0.4f * u, cap = StrokeCap.Round, pathEffect = punteado))
+            val o = Offset(w / 2, y)
+            drawCircle(fondo, 4.5f * u + grosor * 0.3f, o)
+            drawCircle(col, 4f * u + grosor * 0.3f, o, style = Stroke(1.2f * u))
+            drawLine(col, Offset(o.x - 3.6f * u, o.y), Offset(o.x + 3.6f * u, o.y), 1.6f * u)
+        }
         // Dos cintas que se cruzan, como en la lacería.
         TemaId.ANDALUS -> {
             drawPath(onda(6 * u, 1f), col, style = Stroke(grosor * 0.75f, pathEffect = punteado))
             drawPath(onda(6 * u, 1f, PI.toFloat()), col, style = Stroke(grosor * 0.75f, pathEffect = punteado))
+        }
+        // Un sartal de cuentas de jade en su cordel: más gruesas cuanto más fuerte es el lazo.
+        TemaId.MESO -> {
+            drawLine(col.copy(alpha = col.alpha * 0.6f), Offset(0f, y), Offset(w, y), 0.9f * u, pathEffect = punteado)
+            var x = 5 * u; val r = grosor * 0.62f + u
+            while (x < w - 3 * u) { drawCircle(col, r, Offset(x, y)); drawCircle(fondo.copy(alpha = 0.45f), r * 0.3f, Offset(x - r * 0.3f, y - r * 0.3f)); x += maxOf(r * 2.6f + 2 * u, 1f) }
         }
         // Cuerda trenzada de crin.
         TemaId.MONGOL -> {
@@ -479,6 +635,13 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 moveTo(b, y); lineTo(b - f, y - f * 0.45f); lineTo(b - f, y + f * 0.45f); close()
             }, col)
             drawCircle(col.copy(alpha = col.alpha * 0.45f), 5 * u, Offset(w / 2, y), style = Stroke(0.6f * u))
+        }
+        // Un cabo tendido entre los dos: dos cordones que se enroscan y un nudo al medio.
+        TemaId.PIRATA -> {
+            val a = 4 * u; val b = w - 4 * u
+            drawPath(onda(2.2f * u + grosor * 0.2f, (b - a) / (10 * u)), col, style = Stroke(grosor * 0.5f + 0.6f * u))
+            drawPath(onda(2.2f * u + grosor * 0.2f, (b - a) / (10 * u), PI.toFloat()), col.copy(alpha = col.alpha * 0.55f), style = Stroke(grosor * 0.5f + 0.6f * u))
+            drawCircle(col, 3 * u + grosor * 0.3f, Offset(w / 2, y))
         }
         // Viga de celosía constructivista: dos cordones y diagonales en zigzag.
         TemaId.URSS -> {
@@ -516,6 +679,12 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                     }
                 }
             }
+        }
+        TemaId.CUEVA -> {
+            // Una hilera de puntos de ocre, como una línea de huellas; más gruesos cuanto más fuerte es el lazo.
+            val paso = (7 * u + grosor).coerceAtLeast(6 * u)
+            var x = paso / 2; var k = 0
+            while (x < w) { drawCircle(if (azar && k % 2 == 1) col.copy(alpha = col.alpha * 0.4f) else col, grosor * 0.55f + 0.6f * u, Offset(x, y + (if (k % 2 == 0) -1f else 1f) * 1.2f * u)); x += maxOf(paso, 1f); k++ }
         }
     }
 }

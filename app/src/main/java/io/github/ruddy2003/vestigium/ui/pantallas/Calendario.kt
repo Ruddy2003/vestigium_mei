@@ -227,9 +227,13 @@ fun PantallaCalendario(nav: Nav) {
  */
 private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.ROMANO -> RoundedCornerShape(1.dp)
+    TemaId.URBE -> RoundedCornerShape(topStart = 1.dp, topEnd = 7.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.CIBER -> RectangleShape
+    TemaId.NEON -> RoundedCornerShape(8.dp)
     TemaId.HELENO -> RoundedCornerShape(2.dp)
+    TemaId.EGIPTO -> RoundedCornerShape(topStart = 2.dp, topEnd = 9.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
+    TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
     TemaId.ORDEN -> CutCornerShape(topEnd = 8.dp)
@@ -237,16 +241,23 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.COLONOS -> RoundedCornerShape(2.dp)
     TemaId.NAPOLEON -> CutCornerShape(2.dp)
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 9.dp, topEnd = 1.dp, bottomEnd = 9.dp, bottomStart = 1.dp)
+    TemaId.RUINAS -> CutCornerShape(topStart = 0.dp, topEnd = 6.dp, bottomEnd = 0.dp, bottomStart = 2.dp)   // baldosa desportillada
     TemaId.NAVIDAD -> RoundedCornerShape(4.dp)
     TemaId.SEDA -> RectangleShape
+    TemaId.EDO -> CutCornerShape(bottomEnd = 3.dp)
     TemaId.GOTICO -> RectangleShape
+    TemaId.ARCANO -> CutCornerShape(topEnd = 4.dp)
     TemaId.ESPACIO -> RoundedCornerShape(3.dp)
+    TemaId.ABISMO -> RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomStart = 9.dp, bottomEnd = 9.dp)
     TemaId.ANDALUS -> RectangleShape
+    TemaId.MESO -> RoundedCornerShape(6.dp)          // el bloque de un glifo
     TemaId.MONGOL -> RoundedCornerShape(8.dp)
     TemaId.RENACIMIENTO -> RectangleShape
+    TemaId.PIRATA -> CutCornerShape(topStart = 5.dp, bottomEnd = 5.dp)
     TemaId.URSS -> RectangleShape
     TemaId.REVOLUCION -> RoundedCornerShape(1.dp)
     TemaId.ANTIGUAS -> CutCornerShape(4.dp)
+    TemaId.CUEVA -> RoundedCornerShape(topStart = 7.dp, topEnd = 3.dp, bottomEnd = 8.dp, bottomStart = 4.dp)   // un canto de río
 }
 
 /**
@@ -278,11 +289,27 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             while (y < h - lado) { val col = if (!hoy) linea else if (i % 2 == 0) acento else oro; drawRect(col, Offset(0f, y), Size(lado, lado)); drawRect(col, Offset(w - lado, y), Size(lado, lado)); y += paso; i++ }
             if (sellado) sello(acento)
         }
+        // Una ventana de la ciudad: el alféizar abajo y la cornisa arriba; hoy, con las persianas abiertas a los lados.
+        TemaId.URBE -> {
+            contorno(linea, if (hoy) 0.9f else 0.6f)
+            drawRect(if (hoy) oro else linea, Offset(0f, h - 2.4f * s), Size(w, 2.4f * s))
+            drawRect(linea, Offset(0f, 0f), Size(w, 1.4f * s))
+            if (hoy) listOf(0f, w - 2.6f * s).forEach { x ->
+                drawRect(acento, Offset(x, 2 * s), Size(2.6f * s, h - 5 * s))
+                var y = 4 * s; while (y < h - 4 * s) { drawLine(sobre.copy(alpha = 0.4f), Offset(x, y), Offset(x + 2.6f * s, y), 0.5f * s); y += maxOf(2.4f * s, 1f) }
+            }
+            if (sellado) sello(acento)
+        }
         // Píxel de fósforo: líneas de barrido; hoy, el borde encendido con su halo y el cursor bajo el número.
         TemaId.CIBER -> {
             var y = 2f * s
             while (y < h) { drawLine(Color.Black.copy(alpha = 0.14f), Offset(0f, y), Offset(w, y), 0.6f * s); y += 2.6f * s }
             if (hoy) { contorno(acento.copy(alpha = 0.35f), 3f); contorno(acento, 1.2f); drawRect(acento, Offset(4f * s, 20f * s), Size(6f * s, 1.6f * s)) } else contorno(linea, 0.6f)
+            if (sellado) sello(acento)
+        }
+        // Un letrerito por día: el tubo apagado y, hoy, encendido con su halo y un punto verde de «abierto».
+        TemaId.NEON -> {
+            if (hoy) { contorno(acento.copy(alpha = 0.3f), 3.4f); contorno(acento, 1.1f); drawCircle(Color(0xFF8CFF5A), 1.4f * s, Offset(5f * s, 5f * s)) } else contorno(linea, 0.7f)
             if (sellado) sello(acento)
         }
         // Entablamento: doble filete arriba y abajo; hoy, un frontón de oro.
@@ -292,6 +319,19 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             drawLine(col, Offset(0f, h - g / 2), Offset(w, h - g / 2), g); drawLine(col, Offset(0f, h - 2.2f * s), Offset(w, h - 2.2f * s), g * 0.6f)
             drawLine(col.copy(alpha = 0.5f), Offset(0.4f * s, 0f), Offset(0.4f * s, h), 0.6f * s); drawLine(col.copy(alpha = 0.5f), Offset(w - 0.4f * s, 0f), Offset(w - 0.4f * s, h), 0.6f * s)
             if (hoy) drawPath(Path().apply { moveTo(w / 2 - 6f * s, 3.2f * s); lineTo(w / 2 + 6f * s, 3.2f * s); lineTo(w / 2, 0f); close() }, oro)
+            if (sellado) sello(oro)
+        }
+        // La cenefa de rectángulos al pie; hoy, la cenefa también arriba, en colores, y el disco del sol en la esquina.
+        TemaId.EGIPTO -> {
+            val lado = 2.2f * s; val paso = lado + 1f * s
+            var x = 0f; var i = 0
+            while (x < w) {
+                val col = if (!hoy) linea else if (i % 2 == 0) acento else oro
+                drawRect(col, Offset(x, h - lado * 0.8f), Size(lado, lado * 0.8f))
+                if (hoy) drawRect(col, Offset(x, 0f), Size(lado, lado * 0.8f))
+                x += maxOf(paso, 1f); i++
+            }
+            if (hoy) drawCircle(oro, 2.6f * s, Offset(w - 5f * s, 6f * s))
             if (sellado) sello(oro)
         }
         // Folio: la rúbrica roja al margen y la esquina gastada; el día sellado lleva lacre.
@@ -304,6 +344,12 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 drawPath(figOndulado(pc, 5.6f * s, 7, 0.14f), lacre)
                 figuraTema(tema, Color(0xFFE9C9A0), pc, 3.2f * s, lacre)
             }
+        }
+        // Sillar: el borde de acero arriba (hoy, rojo y más grueso); la jornada sellada lleva el escudo de la casa.
+        TemaId.TEMPLARIO -> {
+            drawRect((if (hoy) acento else linea).copy(alpha = 0.85f), Offset.Zero, Size(w, (if (hoy) 2.6f else 1.4f) * s))
+            contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.5f)
+            if (sellado) figuraTema(tema, Color(0xFFF4EFE2), pc, 5f * s, Color(0xFFB0191F))
         }
         // Expediente: borde de ficha y pestaña; el día sellado lleva un timbre de goma torcido.
         TemaId.DISTOPIA -> {
@@ -362,6 +408,17 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             if (hoy) { drawLine(Color(0xFF5A4A3A), Offset(w / 2, 0f), Offset(w / 2, 5f * s), 0.7f * s); drawCircle(acento, 1.8f * s, Offset(w / 2, 1.8f * s)) }
             if (sellado) sello(oro)
         }
+        TemaId.RUINAS -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.3f else 0.6f)
+            // Musgo en la esquina de abajo a la izquierda.
+            listOf(Offset(2.5f, -2.5f) to 1.4f, Offset(4.5f, -2f) to 1f, Offset(2f, -4.5f) to 0.9f).forEach { (o, r) -> drawCircle(Color(0xFF4F7A33).copy(alpha = 0.45f), r * s, Offset(o.x * s, h + o.y * s)) }
+            // Hoy: la marca de tiza del día, tres palotes y uno que los cruza.
+            if (hoy) {
+                for (k in 0 until 3) drawLine(acento, Offset((3f + k * 1.6f) * s, 2f * s), Offset((3f + k * 1.6f) * s, 6f * s), 0.6f * s)
+                drawLine(acento, Offset(2f * s, 5.5f * s), Offset(8f * s, 2.5f * s), 0.6f * s)
+            }
+            if (sellado) sello(oro)
+        }
         // Nieve sobre el borde de arriba; hoy, el borde de bastón de caramelo.
         TemaId.NAVIDAD -> {
             if (hoy) {
@@ -389,6 +446,19 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 figuraTema(tema, papel, pc, 2.6f * s, cinabrio)
             }
         }
+        // Una estera de tatami: la orilla oscura (heri) arriba y abajo; hoy, un trazo de pincel bermellón; el día sellado,
+        // el sello redondo (maru-in) con el mon de cerezo.
+        TemaId.EDO -> {
+            contorno(linea, 0.5f)
+            drawRect(linea.copy(alpha = linea.alpha * 0.8f), Offset(0f, 0f), Size(w, 1.6f * s)); drawRect(linea.copy(alpha = linea.alpha * 0.8f), Offset(0f, h - 1.6f * s), Size(w, 1.6f * s))
+            if (hoy) drawPath(Path().apply { moveTo(3 * s, h - 4 * s); quadraticTo(w * 0.5f, h - 6.5f * s, w - 3 * s, h - 4.4f * s); quadraticTo(w * 0.5f, h - 3.2f * s, 3 * s, h - 4 * s); close() }, acento)
+            if (sellado) {
+                val bermellon = Color(0xFFC9442E); val papel = Color(0xFFF3EDDD)
+                drawCircle(bermellon, 5f * s, pc)
+                drawCircle(papel.copy(alpha = 0.75f), 4.1f * s, pc, style = Stroke(0.6f * s))
+                figuraTema(tema, papel, pc, 3f * s, bermellon)
+            }
+        }
         // Vidriera: el plomo del borde y la lanceta por dentro; hoy, plomo dorado y una estrella.
         TemaId.GOTICO -> {
             val plomo = Color(0xFF1C1A24).copy(alpha = 0.75f)
@@ -398,6 +468,15 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 quadraticTo(w - 2.4f * s, h * 0.26f, w - 2.4f * s, h * 0.5f); lineTo(w - 2.4f * s, h)
             }, plomo.copy(alpha = 0.35f), style = Stroke(0.7f * s))
             if (hoy) drawPath(figEstrella(Offset(w / 2, 3.4f * s), 2.4f * s, 1f * s, 5), oro)
+            if (sellado) sello(acento)
+        }
+        // La ficha del día con la esquina recortada; hoy, rodeada a lápiz dos veces, como quien no quiere olvidarla.
+        TemaId.ARCANO -> {
+            contorno(linea, 0.9f)
+            if (hoy) {
+                drawOval(acento.copy(alpha = 0.8f), Offset(1.5f * s, 2f * s), Size(w - 3f * s, h - 3.5f * s), style = Stroke(1.1f * s))
+                drawOval(acento.copy(alpha = 0.45f), Offset(2.5f * s, 1f * s), Size(w - 4.5f * s, h - 2.5f * s), style = Stroke(0.7f * s))
+            }
             if (sellado) sello(acento)
         }
         // Mira de la pantalla de control: solo las esquinas.
@@ -410,11 +489,28 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             if (hoy) contorno(acento.copy(alpha = 0.35f), 0.5f)
             if (sellado) sello(acento)
         }
+        // Casillas de casco redondeado abajo; hoy lleva la superficie ondulada arriba y el contorno encendido.
+        TemaId.ABISMO -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.6f)
+            if (hoy) {
+                val ola = Path(); var x = 0f
+                ola.moveTo(0f, 3f * s)
+                while (x <= w) { ola.lineTo(x, 3f * s + 1.2f * s * kotlin.math.sin(x / (3f * s))); x += maxOf(1.5f * s, 1f) }
+                drawPath(ola, acento, style = Stroke(1f * s))
+            }
+            if (sellado) sello(acento)
+        }
         // Alicatado: doble filete y los rombos del lazo arriba y abajo.
         TemaId.ANDALUS -> {
             contorno(if (hoy) oro else linea, if (hoy) 1.3f else 0.6f)
             drawRect(oro.copy(alpha = 0.5f), Offset(1.8f * s, 1.8f * s), Size(w - 3.6f * s, h - 3.6f * s), style = Stroke(0.5f * s))
             listOf(Offset(w / 2, 0f), Offset(w / 2, h)).forEach { drawPath(figPoligono(it, 2.2f * s, 4, -90f), if (hoy) oro else linea) }
+            if (sellado) sello(oro)
+        }
+        // El bloque de glifo con su renglón rojo arriba y, el día de hoy, el borde en cinabrio.
+        TemaId.MESO -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.4f else 0.6f)
+            drawLine(acento.copy(alpha = if (hoy) 0.8f else 0.35f), Offset(3f * s, 2.6f * s), Offset(w - 3f * s, 2.6f * s), 0.9f * s)
             if (sellado) sello(oro)
         }
         // Fieltro: la franja de cielo arriba y la puntada por dentro.
@@ -431,6 +527,14 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             drawLine(guia, Offset.Zero, Offset(w, h), 0.5f * s); drawLine(guia, Offset(w, 0f), Offset(0f, h), 0.5f * s)
             drawCircle(if (hoy) acento.copy(alpha = 0.6f) else guia, minOf(w, h) / 2 - s, center, style = Stroke((if (hoy) 0.8f else 0.5f) * s))
             contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.5f)
+            if (sellado) sello(acento)
+        }
+        // La casilla de la bitácora: renglón de asiento abajo y, el día de hoy, el doble filete del capitán.
+        TemaId.PIRATA -> {
+            val guia = linea.copy(alpha = 0.25f)
+            drawLine(guia, Offset(w * 0.15f, h - 3 * s), Offset(w * 0.85f, h - 3 * s), 0.6f * s, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2 * s, 1.2f * s)))
+            contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.5f)
+            if (hoy) drawRect(acento.copy(alpha = 0.5f), Offset(2.5f * s, 2.5f * s), Size(w - 5 * s, h - 5 * s), style = Stroke(0.5f * s))
             if (sellado) sello(acento)
         }
         // Cartel constructivista: barra gruesa abajo y cuña roja en la esquina.
@@ -461,6 +565,13 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 drawLine(acento, Offset(w / 2 - 2f * s, 0.6f * s), Offset(w / 2 + 2f * s, 3f * s), 0.8f * s)
                 drawLine(acento, Offset(w / 2 + 2f * s, 0.6f * s), Offset(w / 2 - 2f * s, 3f * s), 0.8f * s)
             }
+            if (sellado) sello(oro)
+        }
+        TemaId.CUEVA -> {
+            // El canto con su borde; hoy, una mano de ocre arriba; sellado, el sello del día.
+            contorno(if (hoy) acento else linea, if (hoy) 1.3f else 0.7f)
+            for (k in 0 until 3) drawCircle(linea.copy(alpha = 0.5f), 0.7f * s, Offset(3f * s + k * 2.4f * s, h - 3f * s))
+            if (hoy) drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(w / 2, 4f * s), 2.6f * s), acento)
             if (sellado) sello(oro)
         }
     }

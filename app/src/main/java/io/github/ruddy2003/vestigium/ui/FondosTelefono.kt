@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -157,9 +158,13 @@ object FondosTelefono {
     /** Lo que lleva escrito el fondo bajo el emblema: el nombre de la app en la voz de cada tema. */
     fun marca(t: TemaId): String = when (t) {
         TemaId.ROMANO -> "VESTIGIVM · MEI"
+        TemaId.URBE -> "VESTIGIUM MEI · ROMA"
         TemaId.CIBER -> "vestigium.mei"
+        TemaId.NEON -> "VESTIGIUM MEI · 屋台"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ"
+        TemaId.EGIPTO -> "☥ Vestigium Mei"
         TemaId.MEDIEVAL -> "Liber vestigii mei"
+        TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
         TemaId.REFUGIO -> "VESTIGIUM-MEI OS"
         TemaId.ORDEN -> "ORDO · VESTIGII"
@@ -167,16 +172,23 @@ object FondosTelefono {
         TemaId.COLONOS -> "LA GACETA DEL VESTIGIO"
         TemaId.NAPOLEON -> "Bulletin du Vestige"
         TemaId.BOTANICO -> "Herbarium vestigii"
+        TemaId.RUINAS -> "Cuaderno del silencio"
         TemaId.NAVIDAD -> "Cartas de invierno"
         TemaId.SEDA -> "絲路 · VESTIGIUM"
+        TemaId.EDO -> "東海道 · Vestigium"
         TemaId.GOTICO -> "Horae vestigii"
+        TemaId.ARCANO -> "Archivo de lo que vi · Vestigium Mei"
         TemaId.ESPACIO -> "BITÁCORA DE A BORDO · VM-1"
+        TemaId.ABISMO -> "BITÁCORA DEL BATISCAFO · INMERSIÓN"
         TemaId.ANDALUS -> "أثري"
+        TemaId.MESO -> "Códice de mis días"
         TemaId.MONGOL -> "МИНИЙ МӨР"
         TemaId.RENACIMIENTO -> "Il mio vestigio"
+        TemaId.PIRATA -> "Mi derrota"
         TemaId.URSS -> "МОЙ СЛЕД"
         TemaId.REVOLUCION -> "VESTIGIUM · MEI · AN I"
         TemaId.ANTIGUAS -> "VESTIGIUM · MEI · CRÓNICA"
+        TemaId.CUEVA -> "VESTIGIUM MEI · LA PARED"
     }
 }
 
@@ -253,6 +265,19 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     drawPath(Path().apply { moveTo(c.x - k, c.y); lineTo(c.x, c.y - k); lineTo(c.x + k, c.y); lineTo(c.x, c.y + k); close() }, e.primary.copy(alpha = 0.6f))
                 }
             }
+            TemaId.URBE -> {
+                // Una ventana de la ciudad: el marco de travertino, las dos persianas verdes abiertas a los lados (con sus
+                // tablillas), el alféizar abajo y el arco rebajado arriba.
+                caja(0f, col, 2.2f * u); caja(5 * u, tenue, 0.7f * u)
+                val verde = e.secondary.copy(alpha = 0.3f)
+                listOf(izq - 14 * u, der + 2 * u).forEach { x0 ->
+                    drawRect(verde, Offset(x0, arr), Size(12 * u, aba - arr), style = Stroke(1.2f * u))
+                    var y = arr + 6 * u; while (y < aba - 4 * u) { drawLine(verde, Offset(x0 + 2 * u, y), Offset(x0 + 10 * u, y + 2 * u), 1f * u); y += 7 * u }
+                }
+                drawRect(col, Offset(izq - 18 * u, aba + 2 * u), Size(der - izq + 36 * u, 5 * u))
+                drawPath(Path().apply { moveTo(izq, arr); quadraticTo(cx, arr - 30 * u, der, arr) }, col, style = Stroke(1.6f * u))
+                drawPath(Path().apply { moveTo(cx - 6 * u, arr - 16 * u); lineTo(cx + 6 * u, arr - 16 * u); lineTo(cx + 4 * u, arr - 6 * u); lineTo(cx - 4 * u, arr - 6 * u); close() }, e.primary.copy(alpha = 0.5f))
+            }
             TemaId.CIBER -> {
                 // Consola: borde punteado, escuadras de luz y un indicador con su cursor abajo.
                 drawRect(e.primary.copy(alpha = 0.22f), Offset(izq, arr), Size(der - izq, aba - arr), style = Stroke(1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 6 * u))))
@@ -260,6 +285,18 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 val py = aba - 16 * u
                 drawLine(col, Offset(izq + 12 * u, py - 5 * u), Offset(izq + 18 * u, py), 1.6f * u); drawLine(col, Offset(izq + 18 * u, py), Offset(izq + 12 * u, py + 5 * u), 1.6f * u)
                 drawRect(col, Offset(izq + 24 * u, py - 6 * u), Size(7 * u, 12 * u))
+            }
+            TemaId.NEON -> {
+                // Un letrero enorme: el marco de tubo con su halo, la llovizna delante y un letrero vertical colgado a la derecha.
+                val r = androidx.compose.ui.geometry.CornerRadius(26 * u)
+                drawRoundRect(e.primary.copy(alpha = 0.16f), Offset(izq, arr), Size(der - izq, aba - arr), r, style = Stroke(10 * u))
+                drawRoundRect(e.primary.copy(alpha = 0.7f), Offset(izq, arr), Size(der - izq, aba - arr), r, style = Stroke(2 * u))
+                val az = java.util.Random(12)
+                repeat(70) { val x = izq + az.nextFloat() * (der - izq); val y = arr + az.nextFloat() * (aba - arr); drawLine(Color(0xFF9DB4D8).copy(alpha = 0.1f), Offset(x, y), Offset(x - 4 * u, y + 16 * u), u) }
+                val sx = der - 30 * u; val sy = arr + 50 * u
+                drawRect(e.secondary.copy(alpha = 0.2f), Offset(sx - 4 * u, sy - 4 * u), Size(22 * u, 128 * u), style = Stroke(6 * u))
+                drawRect(e.secondary.copy(alpha = 0.8f), Offset(sx, sy), Size(14 * u, 120 * u), style = Stroke(1.6f * u))
+                for (k in 0 until 4) drawRect(e.secondary.copy(alpha = 0.7f), Offset(sx + 3.5f * u, sy + (10 + k * 28) * u), Size(7 * u, 16 * u))
             }
             TemaId.HELENO -> {
                 // Un filete con una greca arriba y otra abajo.
@@ -275,6 +312,24 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }
                 greca(arr + 8 * u); greca(aba - 20 * u)
             }
+            TemaId.EGIPTO -> {
+                // La puerta de un templo: la gola con sus hojas de palma pintadas arriba, el baquetón de cuerda a los lados
+                // y el disco solar alado bajo la cornisa.
+                caja(0f, col, 1.2f * u)
+                val alto = 18 * u
+                var x = izq; var k = 0
+                while (x < der) { drawRect(if (k % 2 == 0) e.primary.copy(alpha = 0.35f) else e.secondary.copy(alpha = 0.3f), Offset(x, arr), Size(minOf(5 * u, der - x), alto)); x += 6 * u; k++ }
+                drawLine(col, Offset(izq, arr + alto), Offset(der, arr + alto), 1.6f * u)
+                listOf(izq + 4 * u, der - 4 * u).forEach { xx -> var y = arr + alto + 3 * u; while (y < aba - 3 * u) { drawLine(tenue, Offset(xx - 2 * u, y), Offset(xx + 2 * u, y + 3 * u), 1f * u); y += 5 * u } }
+                val c = Offset((izq + der) / 2, arr + alto + 16 * u)
+                drawCircle(e.secondary.copy(alpha = 0.6f), 6 * u, c)
+                listOf(-1f, 1f).forEach { s ->
+                    drawPath(Path().apply {
+                        moveTo(c.x + s * 7 * u, c.y - 2 * u); quadraticTo(c.x + s * 30 * u, c.y - 9 * u, c.x + s * 52 * u, c.y - 3 * u)
+                        lineTo(c.x + s * 46 * u, c.y + 2 * u); quadraticTo(c.x + s * 28 * u, c.y + 1 * u, c.x + s * 7 * u, c.y + 4 * u); close()
+                    }, col)
+                }
+            }
             TemaId.MEDIEVAL -> {
                 // Filete doble de minio y oro, con cuadros iluminados en las esquinas y una flor de cuatro granos.
                 caja(0f, col, 1.4f * u); caja(5 * u, e.secondary.copy(alpha = 0.35f), 0.8f * u)
@@ -286,6 +341,20 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                         val a = PI / 2 * i
                         drawCircle(e.tertiary.copy(alpha = 0.55f), 2.6f * u, c + Offset((3.2f * u * cos(a)).toFloat(), (3.2f * u * sin(a)).toFloat()))
                     }
+                }
+            }
+            TemaId.TEMPLARIO -> {
+                // El muro de la encomienda: filete de acero con almenas por arriba, clavos en las esquinas y, a media altura
+                // de cada lado, un escudo con la cruz patada.
+                caja(0f, e.secondary.copy(alpha = 0.45f), 1.4f * u); caja(5 * u, tenue, 0.7f * u)
+                val mer = 12 * u; var x = izq
+                while (x + mer <= der) { drawRect(e.secondary.copy(alpha = 0.3f), Offset(x, arr - 10 * u), Size(mer, 10 * u)); x += maxOf(mer * 2, 1f) }
+                esquinas.forEach { c -> drawCircle(e.tertiary.copy(alpha = 0.6f), 3 * u, haciaDentro(c, 9 * u)) }
+                listOf(izq, der).forEach { xx ->
+                    val c = Offset(xx, cy); val r = 12 * u
+                    val escudo = Path().apply { moveTo(c.x - r * 0.8f, c.y - r * 0.85f); lineTo(c.x + r * 0.8f, c.y - r * 0.85f); quadraticTo(c.x + r * 0.86f, c.y + r * 0.3f, c.x, c.y + r); quadraticTo(c.x - r * 0.86f, c.y + r * 0.3f, c.x - r * 0.8f, c.y - r * 0.85f); close() }
+                    drawPath(escudo, e.background); drawPath(escudo, e.secondary.copy(alpha = 0.5f), style = Stroke(1.2f * u))
+                    drawPath(cruzPatada(c + Offset(0f, -r * 0.1f), r * 0.55f), col)
                 }
             }
             TemaId.DISTOPIA -> {
@@ -355,6 +424,31 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 for (i in 1..3) drawLine(tenue, Offset(o.x + 8 * u, o.y + al * i / 4f), Offset(o.x + an - 8 * u, o.y + al * i / 4f), 0.7f * u)
                 esquinas.take(2).forEach { c -> val q = haciaDentro(c, 18 * u); drawCircle(col, 2.4f * u, q); drawLine(tenue, q, q + Offset(5 * u, 7 * u), 0.8f * u) }
             }
+            TemaId.RUINAS -> {
+                // Marco de hormigón: filete fino, una guía de hiedra que sube por el borde izquierdo desde abajo, una placa de
+                // calle atornillada abajo a la derecha y una grieta que baja desde la esquina de arriba a la derecha.
+                caja(0f, tenue, 0.9f * u)
+                val alto = (aba - arr) * 0.55f
+                val tallo = Path().apply { moveTo(izq, aba); cubicTo(izq + 14 * u, aba - alto * 0.3f, izq - 6 * u, aba - alto * 0.6f, izq + 8 * u, aba - alto) }
+                drawPath(tallo, col, style = Stroke(1.2f * u))
+                for (k in 1..9) {
+                    val f = k / 10f; val y = aba - alto * f
+                    val x = izq + 8 * u * kotlin.math.sin(f * 7f)
+                    val q = Offset(x, y); val s = (6f - 2.5f * f) * u
+                    rotate(if (k % 2 == 0) 55f else -55f, q) {
+                        drawPath(Path().apply {
+                            moveTo(q.x, q.y); lineTo(q.x - s * 0.55f, q.y - s * 0.15f); lineTo(q.x - s * 0.8f, q.y - s * 0.55f); lineTo(q.x - s * 0.32f, q.y - s * 0.55f)
+                            lineTo(q.x, q.y - s); lineTo(q.x + s * 0.32f, q.y - s * 0.55f); lineTo(q.x + s * 0.8f, q.y - s * 0.55f); lineTo(q.x + s * 0.55f, q.y - s * 0.15f); close()
+                        }, col)
+                    }
+                }
+                val an = 84 * u; val al = 24 * u; val o = Offset(der - an - 12 * u, aba - al - 12 * u)
+                drawRoundRect(tenue, o, Size(an, al), CornerRadius(4 * u), style = Stroke(1.2f * u))
+                listOf(o.x + 7 * u, o.x + an - 7 * u).forEach { x -> drawCircle(col, 1.8f * u, Offset(x, o.y + al / 2)) }
+                drawLine(tenue, Offset(o.x + 16 * u, o.y + al / 2), Offset(o.x + an - 16 * u, o.y + al / 2), 0.8f * u)
+                drawPath(Path().apply { moveTo(der, arr + 30 * u); lineTo(der - 9 * u, arr + 44 * u); lineTo(der - 4 * u, arr + 58 * u); lineTo(der - 14 * u, arr + 76 * u)
+                    moveTo(der - 4 * u, arr + 58 * u); lineTo(der + 0 * u, arr + 66 * u) }, tenue, style = Stroke(1f * u))
+            }
             TemaId.NAVIDAD -> {
                 // Una guirnalda de luces de colores a lo largo del borde.
                 caja(0f, tenue, 0.8f * u)
@@ -382,6 +476,20 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }
                 listOf(Offset(cx, arr), Offset(cx, aba)).forEach { c -> drawCircle(e.tertiary.copy(alpha = 0.6f), 7 * u, c); drawRect(e.background, Offset(c.x - 2.4f * u, c.y - 2.4f * u), Size(4.8f * u, 4.8f * u)) }
             }
+            TemaId.EDO -> {
+                // Un rollo colgante (kakejiku): el cordón, la varilla de arriba, las dos tiras que cuelgan (fūtai), las bandas de
+                // brocado (ichimonji), el rodillo de abajo con sus pomos y un sello rojo en la esquina.
+                caja(0f, col, 1.2f * u)
+                drawPath(Path().apply { moveTo(cx - 34 * u, arr - 8 * u); lineTo(cx, arr - 24 * u); lineTo(cx + 34 * u, arr - 8 * u) }, tenue, style = Stroke(1.2f * u))
+                drawRoundRect(col, Offset(izq - 6 * u, arr - 9 * u), Size(der - izq + 12 * u, 6 * u), CornerRadius(3 * u))
+                listOf(0.36f, 0.64f).forEach { f -> val x = izq + (der - izq) * f; drawRect(tenue, Offset(x - 2 * u, arr), Size(4 * u, 56 * u)) }
+                drawRect(e.secondary.copy(alpha = 0.22f), Offset(izq, arr + 70 * u), Size(der - izq, 5 * u))
+                drawRect(e.secondary.copy(alpha = 0.22f), Offset(izq, aba - 22 * u), Size(der - izq, 5 * u))
+                drawRoundRect(col, Offset(izq - 4 * u, aba + 1 * u), Size(der - izq + 8 * u, 7 * u), CornerRadius(3.5f * u))
+                listOf(izq - 8 * u, der + 8 * u).forEach { x -> drawCircle(col, 5 * u, Offset(x, aba + 4.5f * u)) }
+                val s = 12 * u; val o = Offset(der - 28 * u, aba - 52 * u)
+                drawRect(e.secondary.copy(alpha = 0.55f), o, Size(s, s)); drawRect(e.background.copy(alpha = 0.7f), o + Offset(2 * u, 2 * u), Size(s - 4 * u, s - 4 * u), style = Stroke(0.8f * u))
+            }
             TemaId.GOTICO -> {
                 // Un arco apuntado, doble, como el marco de una vidriera.
                 fun ojiva(d: Float, c: Color, g: Float) {
@@ -394,6 +502,24 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     }, c, style = Stroke(g))
                 }
                 ojiva(0f, col, 1.4f * u); ojiva(7 * u, tenue, 0.8f * u)
+            }
+            TemaId.ARCANO -> {
+                // La hoja del legajo: filete a pulso, la esquina de arriba doblada, dos tiras de cinta y, abajo al centro, el
+                // signo del ojo; por la orilla de abajo asoman, apenas, dos puntas que se enroscan.
+                val doblez = 34 * u
+                drawPath(Path().apply { moveTo(izq, arr); lineTo(der - doblez, arr); lineTo(der, arr + doblez); lineTo(der, aba); lineTo(izq, aba); close() }, col, style = Stroke(1.3f * u))
+                drawPath(Path().apply { moveTo(der - doblez, arr); lineTo(der - doblez, arr + doblez); lineTo(der, arr + doblez) }, tenue, style = Stroke(0.9f * u))
+                listOf(Offset(izq, arr) to -40f, Offset(izq, aba) to 40f).forEach { (o, g) ->
+                    rotate(g, o) { drawRect(e.secondary.copy(alpha = 0.18f), Offset(o.x - 18 * u, o.y - 6 * u), Size(36 * u, 12 * u)) }
+                }
+                drawLine(e.tertiary.copy(alpha = 0.25f), Offset(izq + 18 * u, arr), Offset(izq + 18 * u, aba), 1f * u)
+                with(Contenedores) { signoOjo(Offset(cx, aba - 34 * u), 14 * u, col, 1.1f * u) }
+                listOf(izq + 30 * u to 1f, der - 30 * u to -1f).forEach { (x0, s) ->
+                    drawPath(Path().apply {
+                        moveTo(x0 - 5 * u, aba); quadraticTo(x0 + s * 10 * u, aba - 30 * u, x0 + s * 4 * u, aba - 48 * u)
+                        quadraticTo(x0 + s * 16 * u, aba - 58 * u, x0 + s * 14 * u, aba - 44 * u); quadraticTo(x0 + s * 18 * u, aba - 26 * u, x0 + 5 * u, aba)
+                    }, tenue, style = Stroke(0.9f * u))
+                }
             }
             TemaId.ESPACIO -> {
                 // Pantalla de la sala de control: escuadras, reglas graduadas a los lados y retículas en las esquinas.
@@ -410,6 +536,28 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     drawLine(tenue, q - Offset(7 * u, 0f), q + Offset(7 * u, 0f), 0.8f * u); drawLine(tenue, q - Offset(0f, 7 * u), q + Offset(0f, 7 * u), 0.8f * u)
                 }
             }
+            TemaId.ABISMO -> {
+                // La superficie ondulada arriba, la regla del profundímetro bajando por la izquierda (más apretada cuanto más
+                // hondo) y, en las esquinas de abajo, dos ojos de buey con sus pernos.
+                val ola = Path(); var x = izq
+                ola.moveTo(izq, arr)
+                while (x <= der) { ola.lineTo(x, arr + 4 * u * kotlin.math.sin((x - izq) / (22 * u))); x += 3 * u }
+                drawPath(ola, col, style = Stroke(1.4f * u))
+                var y = arr + 30 * u; var i = 0; var paso = 22 * u
+                while (y < aba - 30 * u) {
+                    drawLine(tenue, Offset(izq, y), Offset(izq + (if (i % 5 == 0) 12 * u else 5 * u), y), 1f * u)
+                    y += maxOf(paso, 1f); paso = maxOf(paso * 0.97f, 8 * u); i++
+                }
+                drawLine(tenue, Offset(izq, arr + 30 * u), Offset(izq, aba - 30 * u), 0.8f * u)
+                listOf(Offset(izq, aba), Offset(der, aba)).forEach { c ->
+                    val q = haciaDentro(c, 20 * u)
+                    drawCircle(col, 10 * u, q, style = Stroke(2.2f * u)); drawCircle(tenue, 6.5f * u, q, style = Stroke(0.8f * u))
+                    for (k in 0 until 6) {
+                        val a = Math.toRadians(30.0 + 60.0 * k)
+                        drawCircle(col, 1.3f * u, q + Offset((10 * u * kotlin.math.cos(a)).toFloat(), (10 * u * kotlin.math.sin(a)).toFloat()))
+                    }
+                }
+            }
             TemaId.ANDALUS -> {
                 // Remate lobulado arriba, como un arco de yesería, doble.
                 fun lobulado(d: Float, c: Color, g: Float) {
@@ -421,6 +569,26 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     }, c, style = Stroke(g))
                 }
                 lobulado(0f, col, 1.3f * u); lobulado(7 * u, tenue, 0.8f * u)
+            }
+            TemaId.MESO -> {
+                // La página de un códice: marco rojo doble con las esquinas escalonadas, una greca arriba y otra abajo, y
+                // el número del día en puntos y barras en las esquinas de abajo.
+                fun escalonado(d: Float, c: Color, g: Float) {
+                    val e = 10 * u
+                    drawPath(Path().apply {
+                        moveTo(izq + d + 2 * e, arr + d); lineTo(der - d - 2 * e, arr + d); lineTo(der - d - 2 * e, arr + d + e); lineTo(der - d - e, arr + d + e)
+                        lineTo(der - d - e, arr + d + 2 * e); lineTo(der - d, arr + d + 2 * e); lineTo(der - d, aba - d - 2 * e); lineTo(der - d - e, aba - d - 2 * e)
+                        lineTo(der - d - e, aba - d - e); lineTo(der - d - 2 * e, aba - d - e); lineTo(der - d - 2 * e, aba - d); lineTo(izq + d + 2 * e, aba - d)
+                        lineTo(izq + d + 2 * e, aba - d - e); lineTo(izq + d + e, aba - d - e); lineTo(izq + d + e, aba - d - 2 * e); lineTo(izq + d, aba - d - 2 * e)
+                        lineTo(izq + d, arr + d + 2 * e); lineTo(izq + d + e, arr + d + 2 * e); lineTo(izq + d + e, arr + d + e); lineTo(izq + d + 2 * e, arr + d + e); close()
+                    }, c, style = Stroke(g))
+                }
+                escalonado(0f, col, 1.4f * u); escalonado(6 * u, tenue, 0.8f * u)
+                grecaEscalonada(izq + 34 * u, der - 34 * u, arr + 14 * u, arr + 26 * u, col, 1.2f * u)
+                grecaEscalonada(izq + 34 * u, der - 34 * u, aba - 26 * u, aba - 14 * u, col, 1.2f * u)
+                val (n, _) = Maya.tzolkinPartes(java.time.LocalDate.now())
+                numeralMaya(n, Offset(izq + 26 * u, aba - 46 * u), 14 * u, tenue)
+                numeralMaya(n, Offset(der - 26 * u, aba - 46 * u), 14 * u, tenue)
             }
             TemaId.MONGOL -> {
                 // Fieltro: esquinas redondeadas, una costura punteada por dentro y botones a la mitad de cada lado.
@@ -438,6 +606,16 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 val punteado = PathEffect.dashPathEffect(floatArrayOf(3 * u, 5 * u))
                 drawLine(e.secondary.copy(alpha = 0.22f), Offset(izq, arr), Offset(der, aba), 0.6f * u, pathEffect = punteado)
                 drawLine(e.secondary.copy(alpha = 0.22f), Offset(der, arr), Offset(izq, aba), 0.6f * u, pathEffect = punteado)
+            }
+            TemaId.PIRATA -> {
+                // El marco de una carta de marear: la escala de grados en franjas, un cabo por dentro y un nudo en cada esquina.
+                val paso = 12 * u; var x = izq; var k = 0
+                while (x < der) { if (k % 2 == 0) { drawLine(col, Offset(x, arr), Offset(minOf(x + paso, der), arr), 3 * u); drawLine(col, Offset(x, aba), Offset(minOf(x + paso, der), aba), 3 * u) }; x += maxOf(paso, 1f); k++ }
+                var y = arr; k = 0
+                while (y < aba) { if (k % 2 == 0) { drawLine(col, Offset(izq, y), Offset(izq, minOf(y + paso, aba)), 3 * u); drawLine(col, Offset(der, y), Offset(der, minOf(y + paso, aba)), 3 * u) }; y += maxOf(paso, 1f); k++ }
+                val cabo = PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 1.4f * u))
+                drawRect(tenue, Offset(izq + 8 * u, arr + 8 * u), Size(der - izq - 16 * u, aba - arr - 16 * u), style = Stroke(1.2f * u, pathEffect = cabo))
+                esquinas.forEach { c -> drawCircle(e.secondary.copy(alpha = 0.5f), 4 * u, c); drawCircle(tenue, 4 * u, c, style = Stroke(0.7f * u)) }
             }
             TemaId.URSS -> {
                 // Constructivista: barras gruesas a la izquierda y abajo, filetes finos y una cuña roja en la esquina.
@@ -469,6 +647,21 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     runaVivo(RUNAS_VIVO[j + 1], Offset(cx + j * 16 * u, arr + 20 * u), 12 * u, col, 1.3f * u)
                     runaVivo(RUNAS_VIVO[j + 5], Offset(cx + j * 16 * u, aba - 20 * u), 12 * u, col, 1.3f * u)
                 }
+            }
+            TemaId.CUEVA -> {
+                // El borde de una laja de caliza, doble, con una mano en negativo arriba a cada lado y una hilera de puntos abajo.
+                fun laja(d: Float, c: Color, g: Float) = drawPath(Path().apply {
+                    moveTo(izq + d, arr + d + 8 * u); quadraticTo(cx, arr + d - 6 * u, der - d, arr + d + 4 * u)
+                    quadraticTo(der - d + 6 * u, cy, der - d, aba - d - 6 * u); quadraticTo(cx, aba - d + 6 * u, izq + d, aba - d)
+                    quadraticTo(izq + d - 5 * u, cy, izq + d, arr + d + 8 * u); close()
+                }, c, style = Stroke(g))
+                laja(0f, col, 2f * u); laja(7 * u, tenue, 0.9f * u)
+                listOf(izq + 34 * u, der - 34 * u).forEach { x ->
+                    val m = Offset(x, arr + 40 * u)
+                    drawCircle(col, 16 * u, m)
+                    drawPath(manoUnida(m, 11 * u), e.background)
+                }
+                for (k in -3..3) drawCircle(col, 2 * u, Offset(cx + k * 10 * u, aba - 20 * u))
             }
         }
     }
@@ -682,11 +875,36 @@ class FondoVivoServicio : WallpaperService() {
 }
 
 private fun logo(t: TemaId): Int = when (t) {
-    TemaId.ROMANO -> R.drawable.logo_romano; TemaId.CIBER -> R.drawable.logo_ciber; TemaId.HELENO -> R.drawable.logo_heleno; TemaId.MEDIEVAL -> R.drawable.logo_medieval
-    TemaId.DISTOPIA -> R.drawable.logo_distopia; TemaId.REFUGIO -> R.drawable.logo_refugio; TemaId.ORDEN -> R.drawable.logo_orden; TemaId.LABORATORIO -> R.drawable.logo_laboratorio
-    TemaId.COLONOS -> R.drawable.logo_colonos; TemaId.NAPOLEON -> R.drawable.logo_napoleon; TemaId.BOTANICO -> R.drawable.logo_botanico; TemaId.NAVIDAD -> R.drawable.logo_navidad
-    TemaId.SEDA -> R.drawable.logo_seda; TemaId.URSS -> R.drawable.logo_urss; TemaId.GOTICO -> R.drawable.logo_gotico; TemaId.ESPACIO -> R.drawable.logo_espacio
-    TemaId.ANDALUS -> R.drawable.logo_andalus; TemaId.MONGOL -> R.drawable.logo_mongol; TemaId.RENACIMIENTO -> R.drawable.logo_renacimiento
+    TemaId.ROMANO -> R.drawable.logo_romano
+    TemaId.URBE -> R.drawable.logo_urbe
+    TemaId.CIBER -> R.drawable.logo_ciber
+    TemaId.NEON -> R.drawable.logo_neon
+    TemaId.HELENO -> R.drawable.logo_heleno
+    TemaId.EGIPTO -> R.drawable.logo_egipto
+    TemaId.MEDIEVAL -> R.drawable.logo_medieval
+    TemaId.TEMPLARIO -> R.drawable.logo_templario
+    TemaId.DISTOPIA -> R.drawable.logo_distopia
+    TemaId.REFUGIO -> R.drawable.logo_refugio
+    TemaId.ORDEN -> R.drawable.logo_orden
+    TemaId.LABORATORIO -> R.drawable.logo_laboratorio
+    TemaId.COLONOS -> R.drawable.logo_colonos
+    TemaId.NAPOLEON -> R.drawable.logo_napoleon
+    TemaId.BOTANICO -> R.drawable.logo_botanico
+    TemaId.RUINAS -> R.drawable.logo_ruinas
+    TemaId.NAVIDAD -> R.drawable.logo_navidad
+    TemaId.SEDA -> R.drawable.logo_seda
+    TemaId.EDO -> R.drawable.logo_edo
+    TemaId.URSS -> R.drawable.logo_urss
+    TemaId.GOTICO -> R.drawable.logo_gotico
+    TemaId.ARCANO -> R.drawable.logo_arcano
+    TemaId.ESPACIO -> R.drawable.logo_espacio
+    TemaId.ABISMO -> R.drawable.logo_abismo
+    TemaId.ANDALUS -> R.drawable.logo_andalus
+    TemaId.MESO -> R.drawable.logo_meso
+    TemaId.MONGOL -> R.drawable.logo_mongol
+    TemaId.RENACIMIENTO -> R.drawable.logo_renacimiento
+    TemaId.PIRATA -> R.drawable.logo_pirata
     TemaId.REVOLUCION -> R.drawable.logo_revolucion
     TemaId.ANTIGUAS -> R.drawable.logo_antiguas
+    TemaId.CUEVA -> R.drawable.logo_cueva
 }

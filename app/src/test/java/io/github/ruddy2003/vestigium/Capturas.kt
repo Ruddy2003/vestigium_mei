@@ -745,7 +745,7 @@ class Capturas {
         io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.entrada = null
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(navVacia)
     }
-    // ------------------------------------------------------------ versión 67: cinta, constelación, hall, campañas, personaje, marcas
+    // ------------------------------------------------------------ versión 67: cinta, constelación, hall, campañas, marcas
 
     private fun ejemploV67() {
         val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
@@ -819,29 +819,25 @@ class Capturas {
     @Test fun piezasSeda() = piezas(TemaId.SEDA, false)
     @Test fun piezasGotico() = piezas(TemaId.GOTICO, true)
 
-    /** El personaje de cada tema, con estados distintos (cansado, feliz, lluvia, frío, calor, noche, racha). */
-    @Test fun personajes() = hojaTemas(porParte = 36, alto = { 100 + (it + 3) / 4 * 517 }) { temas ->
-        val estados = listOf(
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.5, 8, false, false, false, false, ""),
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(true, 3.0, 2, false, false, false, false, ""),
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 5.0, 31, true, false, false, false, ""),
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 4.0, 0, false, true, false, true, ""),
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.0, 3, false, false, true, false, ""),
-        )
+    /** La banda del gato en cada tema que lo tiene (los 21 originales), quieta en una de sus dos animaciones propias (de día la primera, de noche la segunda). */
+    private fun gatos(oscuro: Boolean) = captura(TemaId.ROMANO, oscuro, alto = 6200) {
         Column(Modifier.padding(8.dp)) {
-            temas.chunked(4).forEachIndexed { f, fila ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    fila.forEachIndexed { k, t ->
-                        androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
-                            Box(Modifier.background(MaterialTheme.colorScheme.background).padding(4.dp)) {
-                                io.github.ruddy2003.vestigium.ui.FiguraPersonaje(estados[(f * 4 + k) % estados.size], tam = 120.dp, tema = t)
-                            }
-                        }
+            TemaId.entries.filter { io.github.ruddy2003.vestigium.ui.Gato.tieneGato(it) }.forEachIndexed { k, t ->
+                val o = oscuro || t.soloOscuro
+                androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, o), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, o)) {
+                    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                        Text(t.nombre, style = MaterialTheme.typography.labelMedium)
+                        io.github.ruddy2003.vestigium.ui.BandaGato(
+                            io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false), tema = t,
+                            fijo = io.github.ruddy2003.vestigium.ui.Gato.Paso("esp_${t.id}_${if (oscuro) 1 else 0}", 1, 40f + (k % 6) * 55f, if (k % 2 == 0) 1 else -1),
+                        )
                     }
                 }
             }
         }
     }
+    @Test fun gatosClaro() = gatos(false)
+    @Test fun gatosOscuro() = gatos(true)
 
     /** Las @personas y los #temas marcados en cada tema. */
     @Test fun marcas() = hojaTemas(porParte = 28, alto = { 100 + it * 167 }) { temas ->
@@ -929,8 +925,8 @@ class Capturas {
     @Test fun revolucionOscuro() = captura(TemaId.REVOLUCION, true)
     @Test fun diaRevolucion() = dia(TemaId.REVOLUCION, false)
 
-    /** Los trofeos de las nueve categorías en los siete temas históricos (el último de cada fila, sin conseguir). */
-    private fun trofeosTemas(oscuro: Boolean) = hojaTemas(io.github.ruddy2003.vestigium.ui.TrofeosTema.TEMAS.toList(), porParte = 24, alto = { 100 + it * 200 }, oscuro = oscuro) { temas ->
+    /** Los trofeos de las nueve categorías en todos los temas (el último de cada fila, sin conseguir). */
+    private fun trofeosTemas(oscuro: Boolean) = hojaTemas(TemaId.entries, porParte = 24, alto = { 100 + it * 200 }, oscuro = oscuro) { temas ->
         Column(Modifier.padding(6.dp)) {
             temas.forEach { t ->
                 androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, oscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, oscuro)) {
@@ -1408,16 +1404,9 @@ class Capturas {
     } }
     /** El fondo de pantalla del teléfono (marca y marco). */
     @Test fun temaFondoTelefono() = porTema("fondoTelefono") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.FondoTelefonoVista(t, o, Modifier.fillMaxSize()) } }
-    /** El personaje con su globo y las marcas de @persona y #tema. */
-    @Test fun temaPersonaje() = porTema("personaje") { t, o, n -> pantalla(t, o, 1400, n) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            io.github.ruddy2003.vestigium.ui.TarjetaPersonaje(io.github.ruddy2003.vestigium.data.Fechas.diaLogico())
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(
-                    io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.5, 8, false, false, false, false, ""),
-                    io.github.ruddy2003.vestigium.ui.Personaje.Estado(true, 3.0, 31, true, true, false, true, ""),
-                ).forEach { io.github.ruddy2003.vestigium.ui.FiguraPersonaje(it, tam = 120.dp, tema = t) }
-            }
+    /** Las marcas de @persona y #tema dentro de un texto. */
+    @Test fun temaMarcas() = porTema("marcas") { t, o, n -> pantalla(t, o, 400, n) {
+        Column(Modifier.padding(16.dp)) {
             io.github.ruddy2003.vestigium.ui.TextoMarcado("Café con @ana y @luis_m después del #protocolo de la #tesis", style = MaterialTheme.typography.bodyLarge, tema = t)
         }
     } }
@@ -1427,6 +1416,57 @@ class Capturas {
             io.github.ruddy2003.vestigium.ui.pantallas.MapaRascar(setOf("MX", "ES", "FR", "JP"), Modifier.fillMaxWidth().aspectRatio(2.1f))
         }
     } }
+    /** Lote 5: letras, nombres, fechas, números, claves, textos cortos y esquinas del tema, en una hoja. */
+    @Test fun temaTextos() = porTema("textos") { t, o, n -> captura(t, o, 2600, n) {
+        val E = io.github.ruddy2003.vestigium.ui.Estilo
+        val ty = androidx.compose.material3.MaterialTheme.typography
+        val cs = androidx.compose.material3.MaterialTheme.colorScheme
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val (nombre, com) = E.pantalla("Hoy", null)
+            Text(nombre + E.sufijoTitulo, style = ty.headlineMedium, color = cs.primary)
+            com?.let { Text(it, style = ty.labelSmall, color = cs.onSurfaceVariant) }
+            Text(E.fecha("2026-10-17"), style = ty.titleLarge)
+            Text(UnicidadTemas.PANTALLAS.joinToString("  ·  ") { E.pantalla(it, null).first }, style = ty.titleMedium)
+            Text("Un día cualquiera también deja rastro: lo que comiste, con quién hablaste, cómo dormiste. 0123456789 ¿Ñandú? ¡Sí!", style = ty.bodyLarge)
+            Text("Texto mediano para leer con calma, y una línea más pequeña debajo.", style = ty.bodyMedium)
+            Text(E.prefijo + "etiqueta · " + E.comentario + "comentario · " + E.atras, style = ty.labelLarge, color = cs.primary)
+            Text("numeral(17) = ${E.numeral(17)}   año ${E.numeral(2026)}   mes ${E.mes(10)} · ${E.mes(10, 2026)}", style = ty.labelLarge)
+            Text(E.semana.joinToString("  "), style = ty.labelMedium)
+            Text(E.semanaCorta.joinToString("  "), style = ty.labelSmall)
+            Text(UnicidadTemas.CLAVES_DIA.joinToString("\n") { E.clave(it).padEnd(12) + "= 7" }, style = ty.labelMedium)
+            Text(listOf("dia", "diario", "registrar", "vida", "entender").joinToString("  |  ") { E.texto("pestana_$it") }, style = ty.labelLarge, color = cs.secondary)
+            Text(io.github.ruddy2003.vestigium.ui.Textos.CLAVES.drop(5).joinToString("\n") { E.texto(it).replace("%d", "120") }, style = ty.bodySmall)
+            Text(E.racha(5) + "   " + (E.marca("2026-12-21") ?: E.marca("2026-07-16") ?: E.marca("2026-10-23") ?: "—"), style = ty.labelMedium)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                androidx.compose.material3.Surface(shape = androidx.compose.material3.MaterialTheme.shapes.small, color = cs.primaryContainer, modifier = Modifier.size(64.dp)) {}
+                androidx.compose.material3.Surface(shape = androidx.compose.material3.MaterialTheme.shapes.medium, color = cs.secondaryContainer, modifier = Modifier.size(64.dp)) {}
+                androidx.compose.material3.Surface(shape = androidx.compose.material3.MaterialTheme.shapes.large, color = cs.tertiaryContainer, modifier = Modifier.size(64.dp)) {}
+                androidx.compose.material3.Button(onClick = {}) { Text(io.github.ruddy2003.vestigium.ui.textoGuardar(t)) }
+            }
+        }
+    } }
+    /** El reporte del día (Día → «Lo que registró el teléfono») con un día completo: fases del sueño, corazón, apps, cielo y comida. */
+    @Test fun temaReporteDia() = porTema("reporteDia") { t, o, n ->
+        Ejemplo.cargar()
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        val salud = Repo.salud.toMutableMap()
+        salud[hoy] = salud.getValue(hoy).copy(sueno_profundo_min = 82, sueno_rem_min = 96, sueno_ligero_min = 220, sueno_despierto_min = 14,
+            fc_media = 71.0, fc_min = 52.0, fc_max = 148.0, fc_reposo = 58.0, spo2 = 96.4)
+        val pantalla = Repo.pantalla.toMutableMap()
+        pantalla[hoy] = pantalla.getValue(hoy).copy(por_app_min = mapOf("Mensajes" to 64, "Mapas" to 31, "Lector" to 48))
+        val entorno = Repo.entorno.toMutableMap()
+        entorno[hoy] = entorno.getValue(hoy).copy(codigo = 2, luz_min = 706)
+        val nutricion = Repo.nutricion.toMutableMap()
+        nutricion[hoy] = io.github.ruddy2003.vestigium.data.NutricionDia(hoy, mapOf("kcal" to 2140.0, "proteina_g" to 118.0, "carbohidratos_g" to 240.0, "grasa_g" to 72.0))
+        val notifs = Repo.notifs.toMutableMap()
+        notifs[hoy] = io.github.ruddy2003.vestigium.data.NotifDia(hoy, 143, mapOf("Mensajes" to 61, "Correo" to 22, "Noticias" to 14))
+        Repo.ejemploEnMemoria(Repo.dias, salud, pantalla, Repo.gastos, Repo.momentos, notifs, entorno, nutricion, Repo.lugares, Repo.visitas, Repo.sesiones, Repo.ingresos)
+        captura(t, o, 2400, n) {
+            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                io.github.ruddy2003.vestigium.ui.pantallas.RejillaFichas(io.github.ruddy2003.vestigium.ui.pantallas.fichasDelDia(hoy, 6.4, 37, "La banda de ejemplo"))
+            }
+        }
+    }
     @Test fun temaDia() = porTema("dia") { t, o, n -> v73(t, o, 4200, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
     /** Frase, franja y cifras de Hoy; en oscuro la frase va guardada, para ver el corazón relleno. */
     @Test fun temaHoy() = porTema("hoy") { t, o, n ->

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 y después: igual que la de drawable/. Ya no fuerza el radio del sistema (system_app_widget_background_radius) para no perder la forma del tema. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7101B18"/>
+            <stroke android:width="1.2dp" android:color="#5E7A6A"/>
+            <corners android:topLeftRadius="3dp" android:topRightRadius="14dp" android:bottomRightRadius="3dp" android:bottomLeftRadius="3dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#44E6D58C" android:dashWidth="6dp" android:dashGap="2dp"/>
+            <corners android:radius="2dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="9dp" android:height="9dp" android:top="5dp">
+        <vector android:width="9dp" android:height="9dp" android:viewportWidth="6" android:viewportHeight="6">
+            <path android:pathData="M0.3,3 Q3,0.4 5.7,3 Q3,5.6 0.3,3 Z M2.6,1.9 L3.4,1.9 L3.4,4.1 L2.6,4.1 Z" android:fillColor="#AAE6D58C" android:fillType="evenOdd"/>
+        </vector>
+    </item>
+</layer-list>

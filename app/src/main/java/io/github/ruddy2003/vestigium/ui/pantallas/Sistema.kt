@@ -260,24 +260,27 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
     val titulo = when (parte) { "avisos" -> "Avisos y recordatorios"; "privacidad" -> "Privacidad"; else -> "Apariencia" }
     Hoja(titulo, nav.atras) {
         if (parte == "apariencia") Seccion("Tema", "Cambia colores, letras, adornos y cómo se nombran las cosas. Tus datos no cambian; los widgets también toman los colores del tema.") {
-            // Los temas en una cuadrícula de tres por fila.
+            // Los temas por época, en una cuadrícula de tres por fila.
             val vista = androidx.compose.ui.platform.LocalView.current
             val centros = remember { HashMap<String, androidx.compose.ui.geometry.Offset>() }
-            io.github.ruddy2003.vestigium.ui.TemaId.entries.chunked(3).forEach { fila ->
-                Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    fila.forEach { t ->
-                        // Cada muestra en el modo que tendría ese tema (el que solo existe en oscuro, siempre oscuro).
-                        io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, io.github.ruddy2003.vestigium.ui.modoOscuro(t), c.tema == t.id,
-                            Modifier.weight(1f).onGloballyPositioned { centros[t.id] = it.boundsInWindow().center }) {
-                            if (c.tema != t.id) {
-                                // Foto del tema de ahora, cambio de tema, y el nuevo se abre en círculo desde la tarjeta con su propio sonido.
-                                io.github.ruddy2003.vestigium.ui.TransicionTema.preparar(vista, centros[t.id] ?: androidx.compose.ui.geometry.Offset.Zero)
-                                cambiar { it.copy(tema = t.id) }
-                                io.github.ruddy2003.vestigium.ui.PresentacionTema.mostrar(ctx, t)
+            io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
+                Etiqueta(epoca.nombre)
+                temas.chunked(3).forEach { fila ->
+                    Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        fila.forEach { t ->
+                            // Cada muestra en el modo que tendría ese tema (el que solo existe en oscuro, siempre oscuro).
+                            io.github.ruddy2003.vestigium.ui.VistaPreviaTema(t, io.github.ruddy2003.vestigium.ui.modoOscuro(t), c.tema == t.id,
+                                Modifier.weight(1f).onGloballyPositioned { centros[t.id] = it.boundsInWindow().center }) {
+                                if (c.tema != t.id) {
+                                    // Foto del tema de ahora, cambio de tema, y el nuevo se abre en círculo desde la tarjeta con su propio sonido.
+                                    io.github.ruddy2003.vestigium.ui.TransicionTema.preparar(vista, centros[t.id] ?: androidx.compose.ui.geometry.Offset.Zero)
+                                    cambiar { it.copy(tema = t.id) }
+                                    io.github.ruddy2003.vestigium.ui.PresentacionTema.mostrar(ctx, t)
+                                }
                             }
                         }
+                        repeat(3 - fila.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
                     }
-                    repeat(3 - fila.size) { androidx.compose.foundation.layout.Spacer(Modifier.weight(1f)) }
                 }
             }
             Ayuda(io.github.ruddy2003.vestigium.ui.Estilo.tema.descripcion, Modifier.padding(top = 2.dp))
@@ -289,10 +292,13 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
             if (c.tema_rotar) {
                 Etiqueta("Entre cuáles (ninguno marcado = todos)")
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    io.github.ruddy2003.vestigium.ui.TemaId.entries.forEach { t ->
-                        val dentro = t.id in c.temas_rotacion
-                        Ficha(t.nombre, dentro) { cambiar { it.copy(temas_rotacion = if (dentro) it.temas_rotacion - t.id else it.temas_rotacion + t.id) } }
+                io.github.ruddy2003.vestigium.ui.TemaId.entries.groupBy { it.epoca }.toSortedMap().forEach { (epoca, temas) ->
+                    Text(epoca.nombre, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp, bottom = 4.dp))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        temas.forEach { t ->
+                            val dentro = t.id in c.temas_rotacion
+                            Ficha(t.nombre, dentro) { cambiar { it.copy(temas_rotacion = if (dentro) it.temas_rotacion - t.id else it.temas_rotacion + t.id) } }
+                        }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
@@ -315,6 +321,7 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             Ayuda("También puedes cambiarlo con el sol o la luna junto al título de cada pantalla.", Modifier.padding(top = 6.dp))
             Tarjeta(Modifier.padding(top = 10.dp)) {
                 Interruptor("El ícono de la app cambia con el tema", c.icono_tema, "La huella toma la textura del tema. Se aplica al salir de la app; en algunos teléfonos el ícono de la pantalla de inicio desaparece y hay que volver a ponerlo desde la lista de apps.") { v -> cambiar { it.copy(icono_tema = v) } }
+                Interruptor("Gato del tema", c.gato, "Un gato en una banda arriba de Día, vestido y pintado según el tema. Si dormiste poco camina despacio y se echa más; con el día ya completo, salta y juega si te fue bien o se encorva si fue pesado.") { v -> cambiar { it.copy(gato = v) } }
                 Interruptor("Tus últimos días", c.personaje, "Una franja en Hoy con tus últimos 14 días: el color es el ánimo del día; el alto, cuánto dormiste frente a tu normal; el remate, si lo sellaste. Hoy no se colorea hasta que lo llenas.") { v -> cambiar { it.copy(personaje = v) } }
                 Interruptor("Semana corta", c.semana_corta, "Hoy con lo mínimo: cuatro cifras y tres botones, para las semanas pesadas.") { v -> cambiar { it.copy(semana_corta = v) } }
                 Interruptor("Animaciones", c.animaciones, "Emblemas que se mueven, transiciones entre pantallas, cifras que cuentan, barras que crecen y una pequeña celebración al completar el día.") { v -> cambiar { it.copy(animaciones = v) } }

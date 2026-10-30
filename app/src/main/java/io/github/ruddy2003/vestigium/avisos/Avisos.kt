@@ -36,9 +36,13 @@ object Avisos {
     /** Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). */
     private fun sonidosDe(t: TemaId): Pair<Int, Int> = when (t) {
         TemaId.ROMANO -> R.raw.n_romano_aviso to R.raw.n_romano_solemne
+        TemaId.URBE -> R.raw.n_urbe_aviso to R.raw.n_urbe_solemne
         TemaId.CIBER -> R.raw.n_ciber_aviso to R.raw.n_ciber_solemne
+        TemaId.NEON -> R.raw.n_neon_aviso to R.raw.n_neon_solemne
         TemaId.HELENO -> R.raw.n_heleno_aviso to R.raw.n_heleno_solemne
+        TemaId.EGIPTO -> R.raw.n_egipto_aviso to R.raw.n_egipto_solemne
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
+        TemaId.TEMPLARIO -> R.raw.n_templario_aviso to R.raw.n_templario_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
         TemaId.REFUGIO -> R.raw.n_refugio_aviso to R.raw.n_refugio_solemne
         TemaId.ORDEN -> R.raw.n_orden_aviso to R.raw.n_orden_solemne
@@ -46,16 +50,23 @@ object Avisos {
         TemaId.COLONOS -> R.raw.n_colonos_aviso to R.raw.n_colonos_solemne
         TemaId.NAPOLEON -> R.raw.n_napoleon_aviso to R.raw.n_napoleon_solemne
         TemaId.BOTANICO -> R.raw.n_botanico_aviso to R.raw.n_botanico_solemne
+        TemaId.RUINAS -> R.raw.n_ruinas_aviso to R.raw.n_ruinas_solemne
         TemaId.NAVIDAD -> R.raw.n_navidad_aviso to R.raw.n_navidad_solemne
         TemaId.SEDA -> R.raw.n_seda_aviso to R.raw.n_seda_solemne
+        TemaId.EDO -> R.raw.n_edo_aviso to R.raw.n_edo_solemne
         TemaId.URSS -> R.raw.n_urss_aviso to R.raw.n_urss_solemne
         TemaId.GOTICO -> R.raw.n_gotico_aviso to R.raw.n_gotico_solemne
+        TemaId.ARCANO -> R.raw.n_arcano_aviso to R.raw.n_arcano_solemne
         TemaId.ESPACIO -> R.raw.n_espacio_aviso to R.raw.n_espacio_solemne
+        TemaId.ABISMO -> R.raw.n_abismo_aviso to R.raw.n_abismo_solemne
         TemaId.ANDALUS -> R.raw.n_andalus_aviso to R.raw.n_andalus_solemne
+        TemaId.MESO -> R.raw.n_meso_aviso to R.raw.n_meso_solemne
         TemaId.MONGOL -> R.raw.n_mongol_aviso to R.raw.n_mongol_solemne
         TemaId.RENACIMIENTO -> R.raw.n_renacimiento_aviso to R.raw.n_renacimiento_solemne
+        TemaId.PIRATA -> R.raw.n_pirata_aviso to R.raw.n_pirata_solemne
         TemaId.REVOLUCION -> R.raw.n_revolucion_aviso to R.raw.n_revolucion_solemne
         TemaId.ANTIGUAS -> R.raw.n_antiguas_aviso to R.raw.n_antiguas_solemne
+        TemaId.CUEVA -> R.raw.n_cueva_aviso to R.raw.n_cueva_solemne
     }
 
     /** Los mismos sonidos por id de tema (lo revisa la prueba de cobertura). Sale del `when` de arriba: no puede faltar ninguno. */
@@ -169,6 +180,13 @@ object Avisos {
             "EPISTVLA · te escribe tu yo del pasado", "Llegó la fecha que fijaste para abrirla.",
             "Triunfo", "triunfos nuevos",
             "ANNALES %d · tu año está listo", "Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
+        TemaId.URBE -> Voz("COME STAI? · ¿cómo te sientes ahora?", "Dos toques, como quien mira el cielo antes de salir: qué tan agradable y cuánta energía.",
+            "STANOTTE · ¿qué soñaste?", "Anótalo antes del primer café: el sueño se va con el ruido de las motonetas.",
+            "LA GIORNATA · ¿cómo fue tu día?", "Cierra la jornada. Si fue pesada, basta con un número.",
+            "Giornataccia: solo un número", "Oggi:",
+            "POSTA · llegó una cartolina de tu yo del pasado", "Es la fecha que pusiste en el matasellos.",
+            "Medaglia", "medaglie nuove",
+            "IL TUO ANNO %d · ya está en el quiosco", "Un año entero en historias, como el anuario del periódico: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
         TemaId.CIBER -> Voz("> ping ánimo", "Dos toques: qué tan agradable y cuánta energía. _",
             "> dump de sueños", "Guárdalo antes de levantarte: la memoria se libera en minutos.",
             "> cierre del día", "Llena el día. Si fue un mal día, basta con un número.",
@@ -176,6 +194,13 @@ object Avisos {
             "> mensaje en cola de tu yo del pasado", "Se cumplió la fecha programada. Toca para descifrarlo.",
             "> logro desbloqueado", "logros desbloqueados",
             "> informe_%d listo", "Un año entero en historias: lo más frecuente, lo único, lo raro. Toca para ejecutar.")
+        TemaId.NEON -> Voz("¿Cómo va la noche?", "Dos toques: qué tan bien estás y cuánta pila te queda.",
+            "Lo que soñaste entre el ruido", "Apúntalo antes de salir a la calle: se borra rápido.",
+            "Se apagan los letreros", "Cierra el ticket del día. Si fue malo, basta con un número.",
+            "modo de guardia: 1 número", "Te falta:",
+            "Llegó un recado de tu yo de antes", "Ya es la fecha: el repartidor trae tu carta. Toca para abrirla.",
+            "¡Ficha nueva!", "fichas ganadas",
+            "Tu año %d, en letreros", "Un año entero en historias: lo de siempre, lo único, lo raro. Toca para entrar.")
         TemaId.HELENO -> Voz("Πῶς ἔχεις; · ¿cómo te sientes ahora?", "Dos toques: cuánto agrado y cuánta energía.",
             "ὌΝΕΙΡΟΣ · ¿qué te mostró el sueño?", "Anótalo antes de levantarte; Hipnos se lo lleva en minutos.",
             "ἩΜΕΡΑ · ¿cómo fue tu día?", "Llena el día. Si fue difícil, basta con un número.",
@@ -183,6 +208,13 @@ object Avisos {
             "ἘΠΙΣΤΟΛΗ · carta de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Corona de olivo", "coronas de olivo nuevas",
             "Tu %d ya es historia", "Un año entero en historias, como en Heródoto: lo que más hiciste, lo único, lo curioso.")
+        TemaId.EGIPTO -> Voz("☥ El heraldo pregunta: ¿cómo está tu corazón?", "Dos toques: cuánto agrado y cuánta fuerza tiene tu ka.",
+            "☥ Lo que mostró la noche", "Anótalo antes de dejar la estera: los sueños se van con la primera luz de Ra.",
+            "☥ El papiro de hoy", "Llena el día antes de que se ponga el sol. Si fue un día torcido, basta con un número.",
+            "Día torcido: un número", "La Casa de la Vida pregunta hoy:",
+            "☥ Un papiro sellado de tu yo del pasado", "Llegó el día del año civil que elegiste para romper el sello.",
+            "Amuleto de oro ganado", "amuletos de oro nuevos",
+            "Los anales de %d están escritos", "Un año entero en relieves, como en los muros de un templo: lo que más hiciste, lo único, lo curioso.")
         TemaId.MEDIEVAL -> Voz("¶ ¿Cómo está tu ánima agora?", "Dos toques: cuán placentero y cuánto brío.",
             "¶ De las visiones de la noche", "Asiéntalas antes de levantarte, que el recuerdo se borra como tinta fresca.",
             "¶ Completas: ¿cómo fue el día?", "Asienta el día. Si fue de pesar, basta con un número.",
@@ -190,6 +222,13 @@ object Avisos {
             "¶ Epístola de tu yo de antaño", "Llegó el día señalado para romper el sello.",
             "Gesta cumplida", "gestas nuevas",
             "El anuario de %d está iluminado", "Un año entero en historias: lo más hecho, lo único, lo curioso. Toca para leer el códice.")
+        TemaId.TEMPLARIO -> Voz("☩ Relevo de guardia: ¿cómo está tu ánimo?", "Dos toques, hermano: cuánto agrado y cuánto brío.",
+            "☩ Lo que viste en la vigilia", "Inscríbelo antes de ensillar: el sueño se va como la arena entre los dedos.",
+            "☩ Se cierra la puerta del castillo: ¿cómo fue la jornada?", "Rinde la jornada. Si fue dura, basta con un número.",
+            "Jornada dura: un número", "Según la regla, hoy:",
+            "☩ Misiva de tu yo de otro tiempo", "Llegó la jornada señalada para romper el sello de la casa.",
+            "Hecho de armas", "hechos de armas nuevos",
+            "La crónica del año %d está asentada", "Un año entero en la frontera: lo más hecho, lo único, lo curioso. Toca para leer la crónica.")
         TemaId.DISTOPIA -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
             "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
             "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
@@ -239,6 +278,13 @@ object Avisos {
             "Una carta prensada por tu yo del pasado", "Llegó la estación que elegiste para abrirla.",
             "Especie nueva en la colección", "especies nuevas",
             "El herbario de %d está listo", "Un año entero en láminas: lo más hecho, lo único, lo curioso.")
+        TemaId.RUINAS -> Voz("❦ ¿Cuánto aguante te queda?", "Dos toques, como dos marcas de tiza: agrado y energía.",
+            "❦ ¿Qué soñaste en la azotea?", "Apúntalo antes de bajar; se lo lleva el viento en minutos.",
+            "❦ Una hoja más del cuaderno", "Llena el día junto a la fogata. Si fue difícil, basta con un número.",
+            "Día difícil: una marca basta", "La ronda de hoy:",
+            "Un mensaje tapiado por tu yo del pasado", "Llegó la estación que elegiste para destapiarlo.",
+            "Rescate nuevo entre los escombros", "rescates nuevos",
+            "Las hojas prensadas de %d están listas", "Un año entero tras el silencio: lo que más hiciste, lo único, lo raro.")
         TemaId.NAVIDAD -> Voz("✦ ¿Cómo te sientes ahora?", "Dos toques junto al fuego: agrado y energía.",
             "✦ ¿Qué soñaste esta noche?", "Anótalo antes de salir de las cobijas; se derrite en minutos.",
             "✦ ¿Cómo estuvo tu día?", "Llena el día. Si fue difícil, con un número basta.",
@@ -253,6 +299,13 @@ object Avisos {
             "◇ Un mensajero trae carta de tu yo del pasado", "Llegó en la fecha convenida.",
             "Mercancía rara", "tesoros nuevos",
             "El rollo de %d está listo", "Un año entero de camino en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.EDO -> Voz("※ Un alto en la casa de té: ¿cómo late tu corazón?", "Dos toques, como dos sellos: agrado y fuerza para el camino.",
+            "※ ¿Qué soñaste en la posada?", "Anótalo antes de doblar el futón; los sueños se van con el rocío.",
+            "※ La hoja de la jornada", "Llena el día a pincel. Si la cuesta fue dura, basta un número.",
+            "Cuesta dura: basta un número", "En el tablón de la posta:",
+            "※ El correo a pie trae carta de tu yo del pasado", "Llegó en la estación convenida.",
+            "Un sello nuevo en tu cuaderno", "sellos nuevos",
+            "Las estampas de %d ya están impresas", "Un año entero del camino en ukiyo-e: lo más hecho, lo único, lo curioso.")
         TemaId.URSS -> Voz("★ ¡Camarada! ¿Cómo está tu moral?", "Dos toques: agrado y energía para el plan.",
             "★ Informe de descanso", "Anota lo soñado antes del turno; el recuerdo se va en minutos.",
             "★ Balance de la jornada", "Llena el día. Si fue duro, basta con una cifra.",
@@ -267,6 +320,13 @@ object Avisos {
             "✠ Carta lacrada de tu yo del pasado", "Llegó la fiesta señalada para abrirla.",
             "Vidriera completa", "vidrieras nuevas",
             "El libro de horas de %d", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.ARCANO -> Voz("† Una nota al margen · ¿cómo están tus nervios?", "Dos toques antes de que se te olvide: agrado y energía.",
+            "† Lo que soñaste anoche", "Anótalo antes de levantarte: lo que se sueña cerca del mar se borra con la primera luz.",
+            "† Cierra el legajo del día", "Asienta la jornada. Si fue de las turbias, basta con una cifra.",
+            "Jornada turbia: una cifra", "Lo que hoy toca vigilar:",
+            "† Llegó una carta lacrada de tu yo del pasado", "La trajo la marea en la fecha convenida. Rompe el lacre.",
+            "Prueba hallada", "pruebas nuevas en el archivo",
+            "Crónica del caso, %d", "Un año entero en recortes: lo más repetido, lo inexplicable, lo curioso.")
         TemaId.ESPACIO -> Voz("CONTROL · estado de la tripulación", "Dos toques: agrado y energía. Cambio.",
             "BITÁCORA DE SUEÑO", "Regístralo antes de dejar la litera; la señal se pierde en minutos.",
             "FIN DE ÓRBITA", "Llena el día. Si hubo turbulencia, basta con un número.",
@@ -274,6 +334,13 @@ object Avisos {
             "TRANSMISIÓN DIFERIDA de tu yo del pasado", "La señal llegó en la fecha calculada.",
             "Hito de misión", "hitos de misión",
             "Misión %d · informe listo", "Una vuelta completa al Sol en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.ABISMO -> Voz("SONDEO · ¿cómo está el buzo?", "Dos toques en el panel de la góndola: agrado y energía.",
+            "BITÁCORA DE SUPERFICIE · ¿qué soñaste?", "Anótalo antes de dejar la litera; los sueños suben y se pierden como burbujas.",
+            "FIN DE LA INMERSIÓN · el día", "Llena el día. Si hubo mar de fondo, basta con un número.",
+            "Mar de fondo: un número", "SONDEO PROGRAMADO:",
+            "Boya lastrada de tu yo del pasado", "Soltó su lastre y subió en la fecha fijada.",
+            "Nueva cota", "cotas nuevas",
+            "Bitácora de inmersiones de %d", "Un año entero bajo el agua en historias: lo más hecho, lo único, lo curioso.")
         TemaId.ANDALUS -> Voz("الآن · ¿cómo te sientes?", "Dos toques: cuánta dulzura y cuánta fuerza.",
             "المنام · ¿qué soñaste?", "Escríbelo antes de levantarte; el sueño se va como el agua de la acequia.",
             "النهار · ¿cómo fue el día?", "Llena el día. Si fue duro, basta con un número.",
@@ -281,6 +348,13 @@ object Avisos {
             "رسالة · carta de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Azulejo nuevo en tu patio", "azulejos nuevos",
             "El libro de %d está listo", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.MESO -> Voz("⁘ Suena la caracola: ¿cómo está tu corazón?", "Dos toques: cuánto agrado y cuánta fuerza trae este día del tzolk'in.",
+            "⁘ Lo que pintó la noche", "Anótalo antes de dejar el petate: los sueños se van con el humo del copal.",
+            "⁘ La página de hoy del códice", "Pinta el día antes de que el sol baje al inframundo. Si fue un día pesado, basta con un número de puntos y barras.",
+            "Día pesado: un número", "El guardián de los días pregunta hoy:",
+            "⁘ Un códice atado de tu yo del pasado", "Llegó el día de la cuenta que elegiste para desatarlo.",
+            "Pluma de quetzal ganada", "plumas de quetzal nuevas",
+            "El códice de %d está pintado", "Un año entero pintado como en las páginas de un biombo: lo que más hiciste, lo único, lo curioso.")
         TemaId.MONGOL -> Voz("СЭТГЭЛ · ¿cómo va tu espíritu?", "Dos toques: agrado y fuerza, como el viento de la estepa.",
             "ЗҮҮД · ¿qué soñaste en la yurta?", "Anótalo antes de salir; el sueño se lo lleva el viento.",
             "ӨДӨР · ¿cómo fue la jornada?", "Llena el día. Si fue dura, basta con un número.",
@@ -295,6 +369,13 @@ object Avisos {
             "❧ Lettera de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Invención lograda", "invenciones nuevas",
             "El cuaderno de %d está listo", "Un año entero en láminas: lo más hecho, lo único, lo curioso.")
+        TemaId.PIRATA -> Voz("✷ Toque de campana · ¿qué cariz trae tu ánimo?", "Dos toques en la carta: cuánta bonanza y cuánto viento en las velas.",
+            "✷ Desde el coy · ¿qué soñaste?", "Asiéntalo antes de saltar a cubierta; el sueño se va como la espuma.",
+            "✷ Fin de la singladura", "Llena la bitácora. Si hubo temporal, basta con un número.",
+            "Singladura con temporal: un número", "Órdenes de esta guardia:",
+            "✷ Una botella llegó a la playa: te escribe tu yo del pasado", "La marea la trajo en la fecha que elegiste.",
+            "Botín a bordo", "botines nuevos",
+            "La bitácora de %d, encuadernada", "Un año entero de travesía: lo más hecho, lo único, lo curioso.")
         TemaId.REVOLUCION -> Voz("✶ Citoyen, ¿cómo te sientes?", "Dos toques, libremente: agrado y energía.",
             "✶ ¿Qué soñaste, ciudadano?", "Anótalo antes de levantarte; el recuerdo se va en minutos.",
             "✶ Cuaderno de quejas del día", "Llena el día. Si fue duro, basta con un número.",
@@ -309,6 +390,13 @@ object Avisos {
             "⟡ Un pergamino de tu yo del pasado", "Llegó la luna que elegiste para abrirlo.",
             "Gema hallada", "gemas nuevas",
             "La crónica de %d está escrita", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+        TemaId.CUEVA -> Voz("⁘ Junto al fuego · ¿cómo arde tu aliento?", "Dos toques en la piedra: cuánto agrado y cuánta fuerza.",
+            "⁘ Lo que se ve con los ojos cerrados", "Cuéntalo antes de salir del abrigo; el sueño se va como el humo.",
+            "⁘ Cae el sol sobre el valle", "Pinta el día. Si fue de mala caza, basta con un número.",
+            "Sol de mala caza: un número", "Lo que hay que hacer este sol:",
+            "⁘ Desenterraste una piedra marcada por tu yo de otras lunas", "Llegó la luna que elegiste para sacarla.",
+            "Presa nueva en la pared", "presas nuevas",
+            "Las lunas de %d ya están en la pared", "Un año entero en pinturas: lo más hecho, lo único, lo curioso.")
     }
 
     /** El cronómetro de enfoque en la voz del tema: nombre del descanso, consejo, fin del descanso, despertar y fin. */
@@ -316,9 +404,13 @@ object Avisos {
 
     internal fun vozEnfoque(t: TemaId = temaActual()): VozEnfoque = when (t) {
         TemaId.ROMANO -> VozEnfoque("Otium", "Levántate y bebe agua, como en las termas.", "Se acabó el otium", "Surge: hora de despertar", "Opus perfectum: terminaste")
+        TemaId.URBE -> VozEnfoque("Pausa caffè", "Levántate y bebe agua del nasone, como en la calle.", "Fine della pausa", "Sveglia! Hora de despertar", "Fatto! Terminaste")
         TemaId.CIBER -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
+        TemaId.NEON -> VozEnfoque("Respira, sal a la banqueta", "Despega la vista del letrero. Un vaso de agua.", "De vuelta al puesto", "Sube la persiana: hora de despertar", "Pedido terminado")
         TemaId.HELENO -> VozEnfoque("Σχολή · pausa", "Levántate, bebe agua de la fuente.", "Terminó la pausa", "Llega Eos: hora de despertar", "Τέλος · terminaste")
+        TemaId.EGIPTO -> VozEnfoque("Reposo del escriba", "Deja el cálamo, bebe agua de la jarra.", "Vuelve a la paleta", "Ra sale del horizonte: hora de despertar", "Columna terminada")
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste")
+        TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA")
         TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO")
         TemaId.ORDEN -> VozEnfoque("ALTO", "Rompan filas: agua y estiramiento.", "FIN DEL ALTO", "DIANA", "MISIÓN CUMPLIDA")
@@ -326,16 +418,23 @@ object Avisos {
         TemaId.COLONOS -> VozEnfoque("Descanso", "Levántate, toma agua del pozo.", "Se acabó el descanso", "Hora de despertar", "¡Faena terminada!")
         TemaId.NAPOLEON -> VozEnfoque("Halte", "Levántate y bebe, soldado.", "Fin de la halte", "Diana: ¡arriba!", "Victoire!")
         TemaId.BOTANICO -> VozEnfoque("Pausa de campo", "Levántate y riégate: toma agua.", "Termina la pausa de campo", "Hora de despertar, como las flores", "Muestra completa")
+        TemaId.RUINAS -> VozEnfoque("Sombra bajo el puente", "Levántate y bebe del agua de lluvia que guardaste.", "Se acabó la sombra", "Ya salió el sol sobre las azoteas", "Faena cumplida, sigues en pie")
         TemaId.NAVIDAD -> VozEnfoque("Descanso junto al fuego", "Levántate, toma algo caliente o agua.", "Se acabó el descanso junto al fuego", "Hora de despertar", "¡Terminaste!")
         TemaId.SEDA -> VozEnfoque("Alto en el caravasar", "Levántate, bebe agua del pozo.", "La caravana sigue", "Hora de levantar el campamento", "Jornada cumplida")
+        TemaId.EDO -> VozEnfoque("Un té en la casa de té", "Levántate, estira las piernas, bebe agua del pozo.", "Se reanuda el camino", "Suena la campana del alba: a levantarse", "Llegaste a la posta")
         TemaId.URSS -> VozEnfoque("DESCANSO REGLAMENTARIO", "Levántate, toma agua, camarada.", "DE VUELTA AL TRABAJO", "¡ARRIBA, CAMARADA!", "¡NORMA CUMPLIDA!")
         TemaId.GOTICO -> VozEnfoque("Recreatio", "Levántate, bebe agua.", "Termina la recreatio", "Laudes: hora de despertar", "Deo gratias: terminaste")
+        TemaId.ARCANO -> VozEnfoque("Aparta la vista de los legajos", "Levántate, bebe agua, mira por la ventana hacia el faro.", "Vuelve a la mesa del archivo", "Amaneció: la niebla se levanta", "Pesquisa cumplida: guarda los papeles")
         TemaId.ESPACIO -> VozEnfoque("PAUSA ORBITAL", "Despega del asiento. Hidrátate.", "FIN DE LA PAUSA ORBITAL", "DESPERTAR DE LA TRIPULACIÓN", "MISIÓN COMPLETADA")
+        TemaId.ABISMO -> VozEnfoque("PARADA DE DESCOMPRESIÓN", "Sube despacio: levántate y toma agua.", "FIN DE LA PARADA", "EMERSIÓN: HORA DE DESPERTAR", "INMERSIÓN COMPLETADA")
         TemaId.ANDALUS -> VozEnfoque("Pausa en el patio", "Levántate, bebe agua de la fuente.", "Terminó la pausa en el patio", "Al alba: hora de despertar", "¡Obra acabada!")
+        TemaId.MESO -> VozEnfoque("Descanso del pintor", "Deja el pincel, bebe agua del cenote.", "Vuelve al códice", "K'in sale por el oriente: hora de despertar", "Página pintada")
         TemaId.MONGOL -> VozEnfoque("Alto en la estepa", "Levántate, bebe agua.", "A caballo otra vez", "El sol sale sobre la estepa: despierta", "¡Jornada ganada!")
         TemaId.RENACIMIENTO -> VozEnfoque("Pausa", "Lascia il pennello: levántate, toma agua.", "Fine della pausa", "Sveglia: hora de despertar", "Opera compiuta")
+        TemaId.PIRATA -> VozEnfoque("Se volteó la ampolleta", "Estira las piernas en cubierta y bebe agua dulce.", "Otra vuelta de ampolleta", "Toque de diana: a cubierta", "¡Guardia cumplida!")
         TemaId.REVOLUCION -> VozEnfoque("Repos", "Levántate, toma agua, ciudadano.", "Fin du repos", "Réveil: hora de despertar", "Ça ira: terminaste")
         TemaId.ANTIGUAS -> VozEnfoque("Alto en el camino", "Levántate, bebe del odre.", "La compañía sigue", "El alba: hora de despertar", "¡Hazaña cumplida!")
+        TemaId.CUEVA -> VozEnfoque("Descanso junto al fuego", "Levántate, estira las piernas, bebe del arroyo.", "De vuelta al acecho", "Sale el sol sobre el valle: hora de despertar", "¡Presa cobrada!")
     }
 
     fun permitido(ctx: Context): Boolean =

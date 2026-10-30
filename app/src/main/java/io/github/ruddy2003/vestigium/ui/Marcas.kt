@@ -47,9 +47,17 @@ import androidx.compose.ui.unit.dp
  */
 object Marcas {
     enum class Forma {
-        NINGUNA, MARCADOR, SUBRAYADO, ONDULADO, RECUADRO, SELLO, CORCHETES,
+        NINGUNA, MARCADOR, SUBRAYADO, ONDULADO, RECUADRO, SELLO,
+        /** Sello hanko: un bloque de bermellón casi cuadrado, un poco torcido, con su marco en reserva. */
+        HANKO, CORCHETES,
+        /** Un cabo de dos cordones trenzados bajo la palabra, que remata en un nudo. */
+        CABO,
         /** Tabula ansata: recuadro con sus dos asas en cola de milano. */
         CARTELA,
+        /** Cartucho egipcio: el óvalo de cuerda que encierra un nombre, con la barra del nudo al final. */
+        CARTUCHO,
+        /** La placa de mármol de una calle: fondo claro, doble filete y dos tornillos. */
+        TARGA,
         /** Vídeo inverso con el cursor de bloque detrás. */
         TERMINAL,
         /** Subrayado en greca (onda cuadrada). */
@@ -66,6 +74,8 @@ object Marcas {
         RECORTE,
         /** Etiqueta colgante con su ojal. */
         ETIQUETA,
+        /** Un óvalo de tiza trazado dos veces a mano alrededor de la palabra, como las marcas en los muros. */
+        TIZA,
         /** Cinta con las puntas en cola de golondrina. */
         CINTA, ZIGZAG,
         /** Arco apuntado sobre la palabra. */
@@ -76,6 +86,10 @@ object Marcas {
         HERRADURA,
         /** Dos ondas que se cruzan, como un lazo. */
         TRENZA,
+        /** El bloque de un glifo maya: recuadro redondeado alrededor de la palabra, con su pie de tres lóbulos. */
+        GLIFO,
+        /** Subrayado de puntos y barras, como un numeral maya tendido. */
+        NUMERAL,
         /** Medallón (anillo con su punto) delante de la palabra. */
         MEDALLON,
         /** Paralelogramo lleno, a la manera constructivista. */
@@ -86,6 +100,14 @@ object Marcas {
         PIEDRA,
         /** Línea con muescas inclinadas, como una inscripción de palotes. */
         MUESCAS,
+        /** Escotilla: cápsula alrededor de la palabra con un perno en cada punta. */
+        ESCOTILLA,
+        /** Subrayado de burbujas de varios tamaños. */
+        BURBUJAS,
+        /** Escudete con la cruz patada delante de la palabra y un filete de acero debajo. */
+        ESCUDETE,
+        /** Prehistoria: la nube de ocre soplado detrás de la palabra, con motas en el borde, como alrededor de una mano en la pared. */
+        SOPLO,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -101,9 +123,15 @@ object Marcas {
         val p = cs.primary; val s = cs.secondary; val t = cs.tertiary
         return when (tema) {
             TemaId.ROMANO -> if (persona) Aspecto(p, t, Forma.CARTELA, negrita = true) else Aspecto(t, t, Forma.SUBRAYADO)
+            // La @persona, como el nombre de una calle en su placa; el #tema, subrayado a mano con una onda.
+            TemaId.URBE -> if (persona) Aspecto(cs.onBackground, p, Forma.TARGA, negrita = true) else Aspecto(s, s, Forma.ONDULADO, cursiva = true)
             TemaId.CIBER -> if (persona) Aspecto(cs.background, p, Forma.TERMINAL, negrita = true) else Aspecto(s, s, Forma.CORCHETES)
+            TemaId.NEON -> if (persona) Aspecto(cs.background, p, Forma.MARCADOR, negrita = true) else Aspecto(s, s, Forma.ONDULADO)
             TemaId.HELENO -> if (persona) Aspecto(p, t, Forma.GRECA, negrita = true) else Aspecto(s, s, Forma.PUNTEADO)
+            // Los nombres van en cartucho, como los de los reyes; los temas, sobre el signo del agua.
+            TemaId.EGIPTO -> if (persona) Aspecto(p, t, Forma.CARTUCHO, negrita = true) else Aspecto(s, s, Forma.ZIGZAG)
             TemaId.MEDIEVAL -> if (persona) Aspecto(p, p, Forma.NINGUNA, negrita = true, cursiva = true) else Aspecto(t, t, Forma.SUBRAYADO, cursiva = true)
+            TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             TemaId.REFUGIO -> Aspecto(if (persona) p else s, if (persona) p else s, Forma.RECUADRO, negrita = persona)
             TemaId.ORDEN -> if (persona) Aspecto(p, p, Forma.PLACA, negrita = true) else Aspecto(t, t, Forma.DOBLE)
@@ -111,34 +139,56 @@ object Marcas {
             TemaId.COLONOS -> if (persona) Aspecto(p, p, Forma.RECORTE, negrita = true) else Aspecto(s, s, Forma.ONDULADO)
             TemaId.NAPOLEON -> if (persona) Aspecto(p, t, Forma.SUBRAYADO, negrita = true, cursiva = true) else Aspecto(s, s, Forma.NINGUNA, cursiva = true)
             TemaId.BOTANICO -> if (persona) Aspecto(p, s, Forma.ETIQUETA, negrita = true) else Aspecto(t, t, Forma.MARCADOR)
+            TemaId.RUINAS -> if (persona) Aspecto(p, s, Forma.TIZA, negrita = true) else Aspecto(t, t, Forma.GUIONES, cursiva = true)
             TemaId.NAVIDAD -> if (persona) Aspecto(p, p, Forma.CINTA, negrita = true) else Aspecto(s, s, Forma.ZIGZAG)
             TemaId.SEDA -> if (persona) Aspecto(cs.onPrimary, p, Forma.SELLO, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
+            // La persona, estampada con el sello de bermellón (el secundario de día, el primario de noche); lo demás, punteado en verde pino.
+            TemaId.EDO -> if (persona) Aspecto(Color(0xFFFFF8F0), if (p.red > p.blue) p else s, Forma.HANKO, negrita = true) else Aspecto(t, t, Forma.PUNTEADO, cursiva = true)
             TemaId.GOTICO -> if (persona) Aspecto(p, t, Forma.OJIVA, negrita = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
+            // Los testigos, entre los corchetes de una nota del archivo; los asuntos, subrayados a lápiz con puntos.
+            TemaId.ARCANO -> if (persona) Aspecto(t, s, Forma.CORCHETES, negrita = true) else Aspecto(p, s, Forma.PUNTEADO, cursiva = true)
             TemaId.ESPACIO -> if (persona) Aspecto(t, t, Forma.ESQUINAS, negrita = true) else Aspecto(p, p, Forma.GUIONES)
+            TemaId.ABISMO -> if (persona) Aspecto(p, s, Forma.ESCOTILLA, negrita = true) else Aspecto(t, t, Forma.BURBUJAS)
             TemaId.ANDALUS -> if (persona) Aspecto(p, t, Forma.HERRADURA, negrita = true) else Aspecto(s, s, Forma.TRENZA)
+            TemaId.MESO -> if (persona) Aspecto(p, s, Forma.GLIFO, negrita = true) else Aspecto(t, t, Forma.NUMERAL)
             TemaId.MONGOL -> if (persona) Aspecto(p, t, Forma.MEDALLON, negrita = true) else Aspecto(s, s, Forma.MARCADOR)
             TemaId.RENACIMIENTO -> if (persona) Aspecto(p, p, Forma.ONDULADO, cursiva = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
+            TemaId.PIRATA -> if (persona) Aspecto(p, s, Forma.CABO, negrita = true) else Aspecto(t, t, Forma.PUNTEADO, cursiva = true)
             TemaId.URSS -> if (persona) Aspecto(cs.onPrimary, p, Forma.PARALELO, negrita = true) else Aspecto(cs.onBackground, p, Forma.FLECHA, negrita = true)
             TemaId.REVOLUCION -> if (persona) Aspecto(p, s, Forma.TRIPLE, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
             TemaId.ANTIGUAS -> if (persona) Aspecto(p, s, Forma.PIEDRA, negrita = true) else Aspecto(t, t, Forma.MUESCAS, cursiva = true)
+            // Las personas, en la nube de ocre soplado, como una mano en la pared; los asuntos, sobre una hilera de puntos.
+            TemaId.CUEVA -> if (persona) Aspecto(cs.onBackground, p, Forma.SOPLO, negrita = true) else Aspecto(p, p, Forma.PUNTEADO)
         }
     }
 
     /** En un campo de texto no se puede dibujar: el fondo de la letra que sustituye a cada forma (o nada). */
     private fun fondoCampo(f: Forma, c: Color): Color = when (f) {
-        Forma.SELLO, Forma.TERMINAL, Forma.BARRA, Forma.PARALELO -> c
+        Forma.SELLO, Forma.HANKO, Forma.TERMINAL, Forma.BARRA, Forma.PARALELO -> c
         Forma.MARCADOR, Forma.CINTA, Forma.PLACA, Forma.ETIQUETA -> c.copy(alpha = 0.22f)
-        Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA -> c.copy(alpha = 0.12f)
+        Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
+        Forma.TIZA -> c.copy(alpha = 0.12f)
         Forma.NINGUNA, Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
-        Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS -> Color.Unspecified
+        Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> Color.Unspecified
+        Forma.CABO -> Color.Unspecified
+        Forma.ESCUDETE -> c.copy(alpha = 0.12f)
+        Forma.GLIFO -> c.copy(alpha = 0.12f)
+        Forma.NUMERAL -> Color.Unspecified
+        Forma.SOPLO -> c.copy(alpha = 0.18f)
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
     private fun subrayaCampo(f: Forma): Boolean = when (f) {
         Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS -> true
-        Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.CORCHETES, Forma.CARTELA, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
-        Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA -> false
+        Forma.CABO, Forma.BURBUJAS -> true
+        Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.HANKO, Forma.CORCHETES, Forma.CARTELA, Forma.TARGA, Forma.CARTUCHO, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
+        Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
+        Forma.TIZA -> false
+        Forma.ESCUDETE -> true
+        Forma.GLIFO -> false
+        Forma.NUMERAL -> true
+        Forma.SOPLO -> false
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -208,9 +258,23 @@ object Marcas {
                 while (x < rr.right) { val nx = minOf(x + 3f * u, rr.right); p.quadraticTo((x + nx) / 2, if (arriba) y - 2f * u else y + 2f * u, nx, y); x = nx; arriba = !arriba }
                 drawPath(p, c.copy(alpha = 0.85f), style = Stroke(1.2f * u))
             }
+            Forma.CABO -> {
+                // Dos cordones que se enroscan (dos ondas a media vuelta una de otra) y el nudo al final.
+                val y = rr.bottom - h * 0.06f; val fin = rr.right + 2 * u
+                listOf(0, 1).forEach { s ->
+                    val p = tramo(rr.left, fin, 2.4f * u) { x, nx, k -> if (k == 0) moveTo(x, y); quadraticTo((x + nx) / 2, y + (if ((k + s) % 2 == 0) -1.8f else 1.8f) * u, nx, y) }
+                    drawPath(p, c.copy(alpha = if (s == 0) 0.85f else 0.55f), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+                }
+                drawCircle(c.copy(alpha = 0.9f), 1.8f * u, Offset(fin + 1.4f * u, y))
+                drawLine(c.copy(alpha = 0.7f), Offset(fin + 1.4f * u, y), Offset(fin + 3.4f * u, y + 2.6f * u), 0.9f * u, StrokeCap.Round)
+            }
             Forma.RECUADRO -> drawRoundRect(c.copy(alpha = 0.7f), Offset(rr.left - 2 * u, rr.top + h * 0.08f), Size(rr.width + 4 * u, h * 0.86f),
                 CornerRadius(2 * u, 2 * u), style = Stroke(1f * u))
             Forma.SELLO -> drawRoundRect(c, Offset(rr.left - 3 * u, rr.top + h * 0.06f), Size(rr.width + 6 * u, h * 0.88f), CornerRadius(h / 2, h / 2))
+            Forma.HANKO -> rotate(-2f, rr.center) {
+                drawRoundRect(c, Offset(rr.left - 3 * u, rr.top + h * 0.04f), Size(rr.width + 6 * u, h * 0.92f), CornerRadius(1.5f * u, 1.5f * u))
+                drawRect(Color.White.copy(alpha = 0.55f), Offset(rr.left - 1.5f * u, rr.top + h * 0.04f + 1.5f * u), Size(rr.width + 3 * u, h * 0.92f - 3 * u), style = Stroke(0.7f * u))
+            }
             Forma.CORCHETES -> {
                 val t = rr.top + h * 0.12f; val b = rr.bottom - h * 0.08f; val w = 3f * u
                 drawRect(c.copy(alpha = 0.10f), Offset(rr.left - 2 * u, t), Size(rr.width + 4 * u, b - t))
@@ -228,6 +292,21 @@ object Marcas {
                 listOf(iz to -1f, de to 1f).forEach { (x, d) ->
                     drawPath(Path().apply { moveTo(x, medio - 1.6f * u); lineTo(x + d * 3.6f * u, medio - 3.6f * u); lineTo(x + d * 3.6f * u, medio + 3.6f * u); lineTo(x, medio + 1.6f * u); close() }, c.copy(alpha = 0.8f))
                 }
+            }
+            Forma.CARTUCHO -> {
+                // El óvalo de cuerda alrededor del nombre y, al final, la barra del nudo.
+                val t = rr.top + h * 0.06f; val b = rr.bottom - h * 0.04f; val iz = rr.left - 4 * u; val de = rr.right + 4 * u
+                drawRoundRect(c.copy(alpha = 0.08f), Offset(iz, t), Size(de - iz, b - t), CornerRadius((b - t) / 2, (b - t) / 2))
+                drawRoundRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), CornerRadius((b - t) / 2, (b - t) / 2), style = Stroke(1.1f * u))
+                drawLine(c.copy(alpha = 0.85f), Offset(de + 1.8f * u, t - 1f * u), Offset(de + 1.8f * u, b + 1f * u), 1.8f * u)
+            }
+            Forma.TARGA -> {
+                // La placa de la calle: el mármol claro, el marco de dos filetes y un tornillo a cada lado.
+                val t = rr.top + h * 0.06f; val b = rr.bottom - h * 0.04f; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                drawRect(Color(0xFFF4EEE2).copy(alpha = 0.55f), Offset(iz, t), Size(de - iz, b - t))
+                drawRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), style = Stroke(1.2f * u))
+                drawRect(c.copy(alpha = 0.45f), Offset(iz + 1.8f * u, t + 1.8f * u), Size(de - iz - 3.6f * u, b - t - 3.6f * u), style = Stroke(0.6f * u))
+                listOf(iz + 2.6f * u, de - 2.6f * u).forEach { x -> drawCircle(c.copy(alpha = 0.8f), 0.9f * u, Offset(x, medio)) }
             }
             Forma.TERMINAL -> {
                 // Vídeo inverso: la palabra sobre su bloque y el cursor esperando detrás.
@@ -311,6 +390,22 @@ object Marcas {
                     drawPath(p, c.copy(alpha = 0.8f), style = Stroke(0.9f * u))
                 }
             }
+            Forma.GLIFO -> {
+                // El recuadro redondeado del bloque de glifo y, debajo, el pie de tres lóbulos.
+                val t = rr.top + h * 0.02f; val b = rr.bottom - h * 0.12f; val iz = rr.left - 3 * u; val de = rr.right + 3 * u
+                drawRoundRect(c.copy(alpha = 0.08f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(4 * u, 4 * u))
+                drawRoundRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(4 * u, 4 * u), style = Stroke(1.1f * u))
+                for (k in -1..1) drawCircle(c.copy(alpha = 0.85f), 1.3f * u, Offset((iz + de) / 2 + k * 3.4f * u, b + 1.6f * u))
+            }
+            Forma.NUMERAL -> {
+                // Cuatro puntos y una barra, y otra vez, a lo largo de la palabra.
+                var x = rr.left; var k = 0
+                while (x < rr.right) {
+                    if (k % 5 == 4) { drawRect(c.copy(alpha = 0.8f), Offset(x, baja - 0.7f * u), Size(minOf(6 * u, rr.right - x), 1.4f * u)); x += 8 * u }
+                    else { drawCircle(c.copy(alpha = 0.8f), 0.9f * u, Offset(x + 0.9f * u, baja)); x += 3.4f * u }
+                    k++
+                }
+            }
             Forma.MEDALLON -> {
                 val o = Offset(rr.left - 3.6f * u, medio)
                 drawCircle(c.copy(alpha = 0.85f), 2.2f * u, o, style = Stroke(1f * u)); drawCircle(c, 0.9f * u, o)
@@ -335,11 +430,51 @@ object Marcas {
                 }
                 drawPath(p, c.copy(alpha = 0.09f)); drawPath(p, c.copy(alpha = 0.8f), style = Stroke(1.1f * u, join = StrokeJoin.Bevel))
             }
+            Forma.ESCOTILLA -> {
+                // La cápsula de la escotilla: llena muy tenue, con su borde y un perno de latón en cada punta.
+                val iz = rr.left - 5 * u; val de = rr.right + 5 * u; val t = rr.top + h * 0.06f; val b = rr.bottom - h * 0.04f; val r = (b - t) / 2
+                drawRoundRect(c.copy(alpha = 0.1f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(r, r))
+                drawRoundRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(r, r), style = Stroke(1.1f * u))
+                listOf(iz + r * 0.55f, de - r * 0.55f).forEach { x -> drawCircle(c.copy(alpha = 0.85f), 0.9f * u, Offset(x, medio)) }
+            }
+            Forma.BURBUJAS -> {
+                // Una fila de burbujas bajo la palabra, unas más grandes que otras y a distinta altura.
+                var x = rr.left + 1.5f * u; var k = 0
+                while (x <= rr.right) {
+                    val r = (if (k % 3 == 1) 1.5f else 1f) * u
+                    drawCircle(c.copy(alpha = 0.85f), r, Offset(x, baja - (k % 2) * 1.2f * u), style = Stroke(0.7f * u))
+                    x += 4.5f * u; k++
+                }
+            }
+            Forma.TIZA -> {
+                // Dos vueltas de tiza, un poco corridas una de otra, y la punta que se pasa al cerrar.
+                val iz = rr.left - 4 * u; val de = rr.right + 4 * u; val t = rr.top + h * 0.02f; val b = rr.bottom
+                drawOval(c.copy(alpha = 0.75f), Offset(iz, t), Size(de - iz, b - t), style = Stroke(1.1f * u))
+                rotate(-2.5f, Offset(rr.center.x, rr.center.y)) { drawOval(c.copy(alpha = 0.45f), Offset(iz + 1.5f * u, t - 1f * u), Size(de - iz - 2 * u, b - t + 1.5f * u), style = Stroke(0.8f * u)) }
+                drawLine(c.copy(alpha = 0.6f), Offset(de - 6 * u, t - 1.5f * u), Offset(de + 1 * u, t + 2.5f * u), 0.9f * u, StrokeCap.Round)
+            }
             Forma.MUESCAS -> {
                 val y = baja
                 drawLine(c.copy(alpha = 0.85f), Offset(rr.left, y), Offset(rr.right, y), 0.8f * u)
                 var x = rr.left + 1.5f * u
                 while (x <= rr.right) { drawLine(c.copy(alpha = 0.85f), Offset(x - 0.8f * u, y + 1.4f * u), Offset(x + 0.8f * u, y - 2.2f * u), 0.8f * u); x += 4f * u }
+            }
+            Forma.ESCUDETE -> {
+                val o = Offset(rr.left - 4.6f * u, medio); val r = minOf(3.4f * u, h * 0.4f)
+                val escudo = Path().apply { moveTo(o.x - r * 0.8f, o.y - r * 0.85f); lineTo(o.x + r * 0.8f, o.y - r * 0.85f); quadraticTo(o.x + r * 0.86f, o.y + r * 0.3f, o.x, o.y + r); quadraticTo(o.x - r * 0.86f, o.y + r * 0.3f, o.x - r * 0.8f, o.y - r * 0.85f); close() }
+                drawPath(escudo, c.copy(alpha = 0.85f), style = Stroke(0.8f * u))
+                drawPath(cruzPatada(Offset(o.x, o.y - r * 0.1f), r * 0.6f), Color(0xFFB0191F))
+                drawLine(c.copy(alpha = 0.7f), Offset(rr.left, baja), Offset(rr.right, baja), 1.4f * u)
+            }
+            Forma.SOPLO -> {
+                // Una nube de ocre soplado detrás de la palabra: el centro más denso y motas sueltas en el borde (fijas por la posición).
+                val ce = rr.center; val rx = rr.width / 2 + 6 * u; val ry = h * 0.62f
+                drawOval(androidx.compose.ui.graphics.Brush.radialGradient(listOf(c.copy(alpha = 0.3f), c.copy(alpha = 0.16f), Color.Transparent), ce, maxOf(rx, ry)), Offset(ce.x - rx, ce.y - ry), Size(rx * 2, ry * 2))
+                val az = java.util.Random((rr.left * 31 + rr.top).toLong())
+                repeat(10) {
+                    val a = az.nextFloat() * 2 * kotlin.math.PI.toFloat(); val k = 0.85f + az.nextFloat() * 0.3f
+                    drawCircle(c.copy(alpha = 0.35f), (0.6f + az.nextFloat() * 0.8f) * u, Offset(ce.x + rx * k * kotlin.math.cos(a), ce.y + ry * k * kotlin.math.sin(a)))
+                }
             }
         }
     }

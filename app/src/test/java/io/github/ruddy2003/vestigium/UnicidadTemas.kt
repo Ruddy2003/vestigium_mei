@@ -5,6 +5,7 @@ import io.github.ruddy2003.vestigium.ui.Contenedor
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.Textos
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
 import io.github.ruddy2003.vestigium.ui.contenedorDe
 import io.github.ruddy2003.vestigium.ui.radioDe
@@ -32,6 +33,9 @@ class UnicidadTemas {
         conEstilo("clave") { Estilo.clave("somnus") }
         conEstilo("racha") { Estilo.racha(5) }
         conEstilo("widget_rotulos") { CoberturaTemas.CLAVES_WIDGET.joinToString(" | ") { Estilo.widget(it) } }
+        conEstilo("textos") { Textos.CLAVES.joinToString(" | ") { Estilo.texto(it) } }
+        conEstilo("pestanas") { listOf("dia", "diario", "registrar", "vida", "entender").joinToString(" | ") { Estilo.texto("pestana_$it") } }
+        conEstilo("claves_dia") { CLAVES_DIA.joinToString(" ") { Estilo.clave(it) } }
         r["pantallas"] = PANTALLAS.flatMap { p -> iguales { t -> Pendientes.conTema(t) { Estilo.pantalla(p, null).first } } }.toSet()
 
         // Números y fechas.
@@ -46,15 +50,20 @@ class UnicidadTemas {
         r["radio"] = iguales { radioDe(it) }
 
         // Sonido y vibración. La escala que falta se cuenta en la cobertura, no aquí.
-        r["escala_toque"] = iguales { Sentidos.acordeToque(it)?.contentToString() }
+        r["escala_toque"] = iguales { Sentidos.acordeToque(it).contentToString() }
         r["vibracion"] = iguales { t -> Sentidos.Evento.entries.joinToString(" | ") { Sentidos.patron(t, it).toString() } }
-        r["sonido_archivos"] = CoberturaTemas.SONIDOS_TEMA.flatMap { s -> iguales { t -> huellaDe("raw", s.replace("<id>", t.id)) } }.toSet()
+        // Elegir, abrir, cambio y error eran comunes a varios temas: cada uno, por separado, también es propio.
+        listOf(Sentidos.Evento.ELEGIR, Sentidos.Evento.ABRIR, Sentidos.Evento.CAMBIO, Sentidos.Evento.ERROR).forEach { e ->
+            r["vibracion_${e.name.lowercase()}"] = iguales { Sentidos.patron(it, e).toString() }
+        }
+        r["vibracion_rascar"] = iguales { Sentidos.patronRascar(it).toString() }
+        r["sonido_archivos"] = (CoberturaTemas.SONIDOS_TEMA + CoberturaTemas.SONIDOS_LOTE6).flatMap { s -> iguales { t -> huellaDe("raw", s.replace("<id>", t.id)) } }.toSet()
 
-        // Nombres de trofeos, de etapas y de campañas; la libreta (la de respaldo se cuenta en la cobertura).
+        // Nombres de trofeos, de etapas y de campañas; la libreta.
         r["trofeos_nombres"] = comparten { t -> CATEGORIAS.mapNotNull { TrofeosTema.nombre(t, it) } }
         r["campana_etapas"] = comparten { Campanas.ETAPAS[it.id].orEmpty() }
         r["campana_titulos"] = comparten { Campanas.TITULOS[it.id].orEmpty() }
-        r["libreta"] = iguales { contenedorDe(it).takeIf { c -> c != Contenedor.ESPIRAL } }
+        r["libreta"] = iguales { contenedorDe(it) }
         return r
     }
 
@@ -77,23 +86,13 @@ class UnicidadTemas {
         /** Las nueve categorías de logros (las de `Logros.CATEGORIAS`). */
         val CATEGORIAS = listOf("Diario", "Mundo", "Cuerpo", "Mente", "Cultura", "Gente", "Constancia", "Curiosos", "Tuyos")
 
+        /** Claves de las líneas «clave = valor» de Día que se comparan juntas. */
+        val CLAVES_DIA = listOf("somnus", "passus", "cor", "animus", "svmptvs", "loca", "personae", "palmae")
+
         /** Títulos de pantalla que todos los temas muestran. */
         val PANTALLAS = listOf("Hoy", "Diario", "Momentos", "Gastos", "Logros", "Cartas", "Salud", "Mapas", "Campañas", "Línea de tiempo", "Tu gente", "Más")
 
         /** Lo repetido hoy, por superficie. Cada lote borra lo que vuelve propio. */
-        val PENDIENTES: Map<String, Set<String>> = mapOf(
-            "atras" to setOf("laboratorio", "colonos", "botanico", "navidad", "seda"),
-            "clave" to setOf("romano", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "urss", "revolucion", "antiguas"),
-            "comentario" to setOf("romano", "ciber", "heleno", "orden", "napoleon"),
-            "escala_toque" to setOf("romano", "ciber", "heleno", "colonos", "gotico", "espacio"),
-            "letra_texto" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "colonos", "botanico", "navidad", "seda", "gotico", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
-            "letra_titulo" to setOf("romano", "colonos", "revolucion", "antiguas"),
-            "mes_10" to setOf("ciber", "refugio", "orden", "colonos", "napoleon", "botanico", "navidad", "espacio", "revolucion"),
-            "numeral_17" to setOf("romano", "orden", "laboratorio", "napoleon", "botanico", "navidad", "mongol", "renacimiento", "antiguas"),
-            "pantallas" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
-            "radio" to setOf("ciber", "heleno", "medieval", "distopia", "refugio", "orden", "napoleon", "navidad", "seda", "gotico", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
-            "semana" to setOf("ciber", "distopia", "refugio", "orden", "colonos", "napoleon", "botanico", "navidad", "espacio", "revolucion", "antiguas"),
-            "semana_corta" to setOf("ciber", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "gotico", "espacio", "andalus", "mongol", "renacimiento", "urss", "revolucion", "antiguas"),
-        )
+        val PENDIENTES: Map<String, Set<String>> = emptyMap()
     }
 }

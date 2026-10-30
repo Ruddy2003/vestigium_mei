@@ -67,6 +67,7 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.numeralMaya
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Fiesta
@@ -141,6 +142,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(luz, r * 0.76f, c, style = Stroke(r * 0.05f))
             for (k in 0 until 18) rotate(k * 20f, c) { drawOval(sombra, Offset(c.x - r * 0.045f, c.y - r * 0.93f), Size(r * 0.09f, r * 0.15f)) }
         }
+        // La tapa de alcantarilla de la calle: el aro, la reja de barras y los dos agujeros para levantarla.
+        TemaId.URBE -> {
+            forma(disco(c, r * 0.96f))
+            drawCircle(sombra, r * 0.8f, c, style = Stroke(r * 0.06f))
+            listOf(-0.45f, -0.15f, 0.15f, 0.45f).forEach { f -> val m = r * 0.68f * kotlin.math.sqrt(1f - f * f); drawLine(sombra, Offset(c.x - m, c.y + f * r), Offset(c.x + m, c.y + f * r), r * 0.07f) }
+            listOf(-0.55f, 0.55f).forEach { f -> drawCircle(luz, r * 0.05f, Offset(c.x + f * r, c.y)) }
+        }
         // Chip de consola: cuadro de esquinas cortadas con sus patas.
         TemaId.CIBER -> {
             val k = r * 0.8f; val q = r * 0.26f
@@ -155,11 +163,25 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             })
             drawRect(luz, Offset(c.x - r * 0.6f, c.y - r * 0.6f), Size(r * 1.2f, r * 1.2f), style = Stroke(r * 0.04f))
         }
+        // La ficha de la máquina: disco con el canto dentado y el agujero cuadrado.
+        TemaId.NEON -> {
+            forma(disco(c, r * 0.95f))
+            for (k in 0 until 24) rotate(k * 15f, c) { drawRect(sombra, Offset(c.x - r * 0.03f, c.y - r * 0.95f), Size(r * 0.06f, r * 0.12f)) }
+            drawCircle(luz, r * 0.7f, c, style = Stroke(r * 0.05f))
+            drawRect(sombra, Offset(c.x - r * 0.18f, c.y - r * 0.18f), Size(r * 0.36f, r * 0.36f))
+        }
         // El sol de Vergina: disco con dieciséis rayos cortos.
         TemaId.HELENO -> {
             forma(figEstrella(c, r, r * 0.66f, 16))
             drawCircle(sombra, r * 0.62f, c, style = Stroke(g))
             drawCircle(luz, r * 0.52f, c, style = Stroke(r * 0.04f))
+        }
+        // Un pectoral en forma de cartucho, con su barra abajo y la cuerda por dentro.
+        TemaId.EGIPTO -> {
+            forma(Path().apply { addRoundRect(RoundRect(c.x - r * 0.62f, c.y - r, c.x + r * 0.62f, c.y + r * 0.78f, CornerRadius(r * 0.62f))) })
+            forma(Path().apply { addRect(Rect(c.x - r * 0.8f, c.y + r * 0.8f, c.x + r * 0.8f, c.y + r)) })
+            drawRoundRect(sombra, Offset(c.x - r * 0.44f, c.y - r * 0.8f), Size(r * 0.88f, r * 1.4f), CornerRadius(r * 0.44f), style = Stroke(g))
+            drawCircle(luz, r * 0.18f, Offset(c.x, c.y - r * 0.1f))
         }
         // Sello de lacre que cuelga de su cordón.
         TemaId.MEDIEVAL -> {
@@ -170,6 +192,15 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             forma(figOndulado(cs0, r * 0.84f, 7, 0.1f))
             drawCircle(luz, r * 0.6f, cs0, style = Stroke(r * 0.05f))
             drawCircle(sombra, r * 0.68f, cs0, style = Stroke(r * 0.03f))
+        }
+        // El escudete de la casa colgado de su cinta roja y blanca, con la cruz patada en relieve.
+        TemaId.TEMPLARIO -> {
+            val cinta = if (hecho) Color(0xFFB0191F) else borde.copy(alpha = 0.4f)
+            drawRect(cinta, Offset(c.x - r * 0.3f, c.y - r), Size(r * 0.3f, r * 0.3f)); drawRect(if (hecho) Color.White else borde.copy(alpha = 0.25f), Offset(c.x, c.y - r), Size(r * 0.3f, r * 0.3f))
+            val esc = Path().apply { moveTo(c.x - r * 0.72f, c.y - r * 0.68f); lineTo(c.x + r * 0.72f, c.y - r * 0.68f); quadraticTo(c.x + r * 0.78f, c.y + r * 0.35f, c.x, c.y + r * 0.98f); quadraticTo(c.x - r * 0.78f, c.y + r * 0.35f, c.x - r * 0.72f, c.y - r * 0.68f); close() }
+            forma(esc)
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(c + Offset(r * 0.03f, r * 0.03f), r * 0.42f), sombra)
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(c, r * 0.42f), luz)
         }
         // Insignia numerada: hexágono con banda roja y remaches.
         TemaId.DISTOPIA -> {
@@ -225,6 +256,17 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawLine(tallo, Offset(c.x - r * 0.32f, c.y + r * 0.78f), Offset(c.x + r * 0.32f, c.y + r * 0.62f), r * 0.04f)
             for (k in 0..2) { val x = c.x - r * 0.2f + k * r * 0.2f; drawOval(tallo, Offset(x - r * 0.06f, c.y + r * (0.5f - k * 0.05f)), Size(r * 0.12f, r * 0.22f)) }
         }
+        TemaId.RUINAS -> {
+            // Una chapa de botella hecha medalla: el borde dentado, el disco y una hoja de hiedra en relieve.
+            forma(Path().apply {
+                for (i in 0 until 42) { val a = i * kotlin.math.PI / 21; val rr = r * (if (i % 2 == 0) 0.98f else 0.86f); val x = c.x + (rr * kotlin.math.cos(a)).toFloat(); val y = c.y + (rr * kotlin.math.sin(a)).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }
+                close()
+            })
+            drawCircle(luz, r * 0.72f, c, style = Stroke(r * 0.04f))
+            val verde = if (hecho) lerp(metal, Color(0xFF3F5A2A), 0.6f) else borde.copy(alpha = 0.45f); val s = r * 0.9f
+            drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, verde)
+            drawLine(sombra, Offset(c.x, c.y + s * 0.45f), Offset(c.x, c.y - s * 0.3f), r * 0.03f)
+        }
         // Esfera de árbol con su tapa, su gancho y una ola de escarcha.
         TemaId.NAVIDAD -> {
             val cb = c + Offset(0f, r * 0.1f)
@@ -245,6 +287,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.62f, c, style = Stroke(g * 0.7f))
             drawRect(luz, Offset(c.x - r * 0.44f, c.y - r * 0.44f), Size(r * 0.88f, r * 0.88f), style = Stroke(r * 0.04f))
         }
+        // Un mon de cerezo: cinco pétalos redondos, con la muesca de cada uno y el centro en reserva.
+        TemaId.EDO -> {
+            val flor = (0 until 5).map { disco(Offset(c.x + r * 0.5f * kotlin.math.cos(-kotlin.math.PI / 2 + it * 2 * kotlin.math.PI / 5).toFloat(), c.y + r * 0.5f * kotlin.math.sin(-kotlin.math.PI / 2 + it * 2 * kotlin.math.PI / 5).toFloat()), r * 0.47f) }
+                .reduce { a, b -> Path.combine(androidx.compose.ui.graphics.PathOperation.Union, a, b) }
+            forma(flor)
+            drawCircle(sombra, r * 0.2f, c); drawCircle(luz, r * 0.2f, c, style = Stroke(r * 0.04f))
+        }
         // Rosetón: la rueda con su tracería de doce pétalos.
         TemaId.GOTICO -> {
             forma(disco(c, r * 0.97f))
@@ -255,6 +304,16 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             }
             drawCircle(sombra, r * 0.58f, c, style = Stroke(r * 0.06f))
         }
+        // Un sello de lacre derramado, con el heptágono y el ojo hundidos.
+        TemaId.ARCANO -> {
+            forma(figOndulado(c, r * 0.9f, 11, 0.07f))
+            val hp = Path()
+            for (k in 0..6) { val q = polarFig(c, r * 0.58f, -90f + k * 360f / 7); if (k == 0) hp.moveTo(q.x, q.y) else hp.lineTo(q.x, q.y) }
+            drawPath(hp, sombra, style = Stroke(r * 0.05f))
+            drawPath(Path().apply { moveTo(c.x - r * 0.34f, c.y); quadraticTo(c.x, c.y - r * 0.34f, c.x + r * 0.34f, c.y); quadraticTo(c.x, c.y + r * 0.34f, c.x - r * 0.34f, c.y); close() }, sombra, style = Stroke(r * 0.045f))
+            drawOval(sombra, Offset(c.x - r * 0.05f, c.y - r * 0.15f), Size(r * 0.1f, r * 0.3f))
+            drawArc(luz, 200f, 60f, false, Offset(c.x - r * 0.75f, c.y - r * 0.75f), Size(r * 1.5f, r * 1.5f), style = Stroke(r * 0.05f))
+        }
         // Parche de misión: óvalo bordado y la órbita.
         TemaId.ESPACIO -> {
             forma(Path().apply { addOval(Rect(c.x - r * 0.97f, c.y - r * 0.8f, c.x + r * 0.97f, c.y + r * 0.8f)) })
@@ -263,12 +322,31 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             rotate(-18f, c) { drawArc(sombra, 200f, 140f, false, Offset(c.x - r * 0.9f, c.y - r * 0.32f), Size(r * 1.8f, r * 0.64f), style = Stroke(r * 0.05f)) }
             drawCircle(sombra, r * 0.07f, polarFig(c, r * 0.62f, -40f))
         }
+        // Un ojo de buey: la brida con ocho pernos, el cristal hundido y el agua ondulada detrás.
+        TemaId.ABISMO -> {
+            forma(disco(c, r * 0.97f))
+            drawCircle(sombra, r * 0.6f, c)
+            drawCircle(canto, r * 0.6f, c, style = Stroke(g * 0.8f))
+            for (k in 0 until 8) drawCircle(sombra, r * 0.07f, polarFig(c, r * 0.8f, 22.5f + k * 45f))
+            val ola = Path(); var x = c.x - r * 0.5f
+            ola.moveTo(x, c.y + r * 0.08f)
+            while (x <= c.x + r * 0.5f) { ola.lineTo(x, c.y + r * 0.08f + r * 0.06f * kotlin.math.sin((x - c.x) / (r * 0.12f))); x += maxOf(r * 0.04f, 1f) }
+            drawPath(ola, luz, style = Stroke(r * 0.05f))
+            drawArc(luz, 200f, 60f, false, Offset(c.x - r * 0.45f, c.y - r * 0.45f), Size(r * 0.9f, r * 0.9f), style = Stroke(r * 0.06f))
+        }
         // Estrella de lazo de ocho puntas: dos cuadrados.
         TemaId.ANDALUS -> {
             val a1 = figPoligono(c, r * 0.97f, 4, -90f); val a2 = figPoligono(c, r * 0.97f, 4, -45f)
             drawPath(a1, relleno); drawPath(a2, relleno)
             drawPath(a1, canto, style = Stroke(g * 0.7f)); drawPath(a2, canto, style = Stroke(g * 0.7f))
             drawCircle(luz, r * 0.55f, c, style = Stroke(r * 0.05f))
+        }
+        // Un pectoral de jade con la forma de un bloque de glifo, el trece maya grabado y el pie de tres lóbulos.
+        TemaId.MESO -> {
+            forma(Path().apply { addRoundRect(RoundRect(c.x - r * 0.86f, c.y - r * 0.8f, c.x + r * 0.86f, c.y + r * 0.62f, CornerRadius(r * 0.36f))) })
+            for (k in -1..1) forma(disco(Offset(c.x + k * r * 0.36f, c.y + r * 0.8f), r * 0.17f))
+            numeralMaya(13, Offset(c.x, c.y - r * 0.08f), r * 0.86f, sombra)
+            drawArc(luz, 200f, 60f, false, Offset(c.x - r * 0.7f, c.y - r * 0.66f), Size(r * 1.4f, r * 1.2f), style = Stroke(r * 0.06f))
         }
         // Paiza: la tablilla de paso con su agujero para colgarla.
         TemaId.MONGOL -> {
@@ -285,6 +363,17 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawLine(sombra.copy(alpha = sombra.alpha * 0.6f), Offset(c.x - l, c.y - l), Offset(c.x + l, c.y + l), r * 0.02f)
             drawLine(sombra.copy(alpha = sombra.alpha * 0.6f), Offset(c.x + l, c.y - l), Offset(c.x - l, c.y + l), r * 0.02f)
             for (k in 0 until 4) drawCircle(sombra, r * 0.045f, polarFig(c, l * 1.414f, k * 90f + 45f))
+        }
+        // El doblón: canto irregular de moneda acuñada a martillo, la cruz de cuarteles y su gráfila de puntos.
+        TemaId.PIRATA -> {
+            forma(Path().apply {
+                for (k in 0 until 16) { val rr = r * (0.94f + 0.04f * kotlin.math.sin(k * 2.1f)); val q = polarFig(c, rr, k * 22.5f); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }
+                close()
+            })
+            for (k in 0 until 28) drawCircle(sombra, r * 0.025f, polarFig(c, r * 0.8f, k * 360f / 28))
+            drawLine(sombra, Offset(c.x, c.y - r * 0.6f), Offset(c.x, c.y + r * 0.6f), r * 0.07f)
+            drawLine(sombra, Offset(c.x - r * 0.6f, c.y), Offset(c.x + r * 0.6f, c.y), r * 0.07f)
+            for (k in 0 until 4) drawCircle(luz, r * 0.07f, polarFig(c, r * 0.36f, k * 90f + 45f))
         }
         // Orden de la estrella roja: estrella esmaltada con el centro de metal.
         TemaId.URSS -> {
@@ -308,6 +397,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             forma(figPoligono(c, r * 0.98f, 8, -67.5f))
             drawPath(figPoligono(c, r * 0.55f, 8, -67.5f), luz, style = Stroke(r * 0.04f))
             for (k in 0 until 8) { val a = -67.5f + k * 45f; drawLine(luz, polarFig(c, r * 0.55f, a), polarFig(c, r * 0.98f, a), r * 0.03f) }
+        }
+        // Un colgante de hueso: el disco perforado arriba, muescas en el canto y una mano en negativo, más clara, en medio.
+        TemaId.CUEVA -> {
+            forma(disco(c, r * 0.96f))
+            for (k in 0 until 16) rotate(k * 22.5f, c) { drawLine(sombra, Offset(c.x, c.y - r * 0.96f), Offset(c.x, c.y - r * 0.82f), r * 0.04f) }
+            drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(c.x, c.y + r * 0.08f), r * 0.5f), luz)
+            drawCircle(sombra, r * 0.08f, Offset(c.x, c.y - r * 0.72f))
         }
     }
 }

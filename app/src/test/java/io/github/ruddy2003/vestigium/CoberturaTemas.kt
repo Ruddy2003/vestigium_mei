@@ -11,6 +11,7 @@ import io.github.ruddy2003.vestigium.ui.NombresNuevos
 import io.github.ruddy2003.vestigium.ui.SalonesTema
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.Textos
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
 import io.github.ruddy2003.vestigium.ui.contenedorDe
 import kotlinx.serialization.json.Json
@@ -50,13 +51,10 @@ class CoberturaTemas {
         }
         superficie("vidas") { t -> OtrasVidas.DE_TEMAS.none { it.tema == t.id } }
         superficie("frases_20") { Frases.de(it).size < 20 }
+        superficie("textos") { t -> Textos.CLAVES.any { Textos.de(t, it) == null } }
 
-        // Lotes de diseño: trofeos, salón, campaña y libreta propios.
-        superficie("trofeos") { it !in TrofeosTema.TEMAS }
-        superficie("salon") { it !in SalonesTema.TEMAS }
-        superficie("campana_mapa") { it !in MapasCampana.TEMAS }
-        superficie("libreta") { contenedorDe(it) == Contenedor.ESPIRAL }
-        superficie("escala_toque") { Sentidos.acordeToque(it) == null }
+        // Trofeos, salón, campaña y libreta ya no tienen respaldo: sus `when (tema)` exhaustivos los vigila el compilador.
+        superficie("escala_toque") { Sentidos.acordeToque(it).isEmpty() }
 
         // Recursos.
         val manifiesto = Pendientes.main("AndroidManifest.xml").readText()
@@ -72,6 +70,7 @@ class CoberturaTemas {
         superficie("sonido_tecla") { !recurso("raw", "s_tecla_${it.id}") }
         superficie("sonido_error") { !recurso("raw", "s_${it.id}_error") }
         superficie("sonido_cambio") { !recurso("raw", "s_${it.id}_cambio") }
+        superficie("sonido_rascar") { !recurso("raw", "s_rascar_${it.id}") }
         val temas = Pendientes.main("res/values/themes.xml").readText()
         superficie("arranque") { "Theme.Vestigium.Arranque.${Id(it)}\"" !in temas }
 
@@ -94,36 +93,16 @@ class CoberturaTemas {
         val SONIDOS_TEMA = listOf("toque", "guardar", "logro", "pasar", "elegir", "abrir", "tema", "presentacion", "anual").map { "s_<id>_$it" } +
             listOf("n_<id>_aviso", "n_<id>_solemne", "t_<id>_llamada", "t_<id>_notificacion")
 
-        /** Lo que falta hoy, por superficie. Cada lote borra lo que completa. */
+        /** Los del lote 6: error, cambio, la tecla del diario y el rascado de la lámina. */
+        val SONIDOS_LOTE6 = listOf("s_<id>_error", "s_<id>_cambio", "s_tecla_<id>", "s_rascar_<id>")
+
+        /** Lo que falta hoy, por superficie. Solo queda el gato de los temas del lote 8, que llega con el lote 9; los 21 originales ya lo tienen. */
         val PENDIENTES: Map<String, Set<String>> = mapOf(
-            "escala_toque" to setOf("medieval", "distopia", "refugio", "orden", "napoleon", "navidad", "seda", "urss", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "frases_20" to setOf("refugio", "orden", "laboratorio", "napoleon", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion"),
-            "gato" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "marcas_calendario" to setOf("ciber", "heleno", "distopia", "refugio", "orden", "laboratorio", "colonos"),
-            "nombres" to setOf("ciber"),
-            "papel" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento"),
-            "sonido_cambio" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "sonido_error" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "sonido_tecla" to setOf("romano", "ciber", "heleno", "medieval", "distopia", "refugio", "orden", "laboratorio", "colonos", "napoleon", "botanico", "navidad", "seda", "urss", "gotico", "espacio", "andalus", "mongol", "renacimiento", "revolucion", "antiguas"),
-            "vidas" to setOf("antiguas"),
+            "gato" to setOf("urbe", "neon", "egipto", "templario", "ruinas", "edo", "arcano", "abismo", "meso", "pirata", "cueva"),
         )
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */
-        val DESPACHOS: Map<String, Int> = mapOf(
-            "ui/Bases.kt · agrupadas" to 6,
-            "ui/Estilo.kt · agrupadas" to 10,
-            "ui/Estilo.kt · comparaciones" to 3,
-            "ui/Estilo.kt · else" to 7,
-            "ui/Hoja.kt · comparaciones" to 1,
-            "ui/IconoApp.kt · comparaciones" to 2,
-            "ui/SalonesMas.kt · else" to 2,
-            "ui/Sentidos.kt · agrupadas" to 9,
-            "ui/Sentidos.kt · comparaciones" to 2,
-            "ui/Sentidos.kt · else" to 5,
-            "ui/Temas.kt · comparaciones" to 1,
-            "ui/Temas.kt · else" to 2,
-            "ui/TrofeosMas.kt · else" to 2,
-        )
+        val DESPACHOS: Map<String, Int> = emptyMap()
     }
 }
 

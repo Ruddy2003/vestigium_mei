@@ -58,7 +58,7 @@ Lo que pidió el autor:
      - `ic_launcher_<id>.xml`;
      - `logo_<id>`, `logo_fondo_<id>`, `huella_<id>`, `huella_fondo_<id>` y `papel_<id>`;
      - los 4 drawables de widget y su copia en v31;
-     - los 13 archivos de `raw` más `s_tecla_<id>`, `s_<id>_error` y `s_<id>_cambio`;
+     - los 13 archivos de `raw` más `s_tecla_<id>`, `s_rascar_<id>`, `s_<id>_error` y `s_<id>_cambio`;
      - las claves `<id>_c` y `<id>_o` en `assets/gato/gato.json`, con sus 2 acciones especiales.
    - **(c) Prueba de unicidad.** Para todo lo que se puede comparar como valor, exige que no haya dos temas iguales:
      - textos y nombres de pantalla;
@@ -83,6 +83,12 @@ Lo que pidió el autor:
    - Se recortan a un subconjunto con `pyftsubset`. `fontTools` no está instalado: se instala con `pip` en el lote 0.
    - Se renombran si su licencia reserva el nombre, como ya hace el repo («Gaceta Vestigium», «Orbita Vestigium»).
    - Su licencia se agrega a `app/src/main/assets/licencias/` (la OFL en `fuentes_OFL.txt` y la de Apache en un archivo aparte).
+7. **En el reporte del día, lo que se lee para entender un dato se entiende.** Lo pidió el autor después del lote 5.
+   - Vale para la pantalla Día y sus capturas: las claves de «Lo que registró el teléfono» (sueño, pasos…), los rótulos de sus fichas y el título de «Llenar el día».
+   - La palabra del tema no se quita, se complementa: si va en griego, árabe, cirílico, mongol o chino, lleva su español al lado o debajo (`Estilo.claveEspanol`, `Estilo.conEspanol`).
+   - El latín, el italiano, el francés y el castellano antiguo se parecen al español y van solos.
+   - En el resto de la app las palabras en otras lenguas se quedan como están.
+   - Lo vigila `LegibilidadDia`.
 
 ## Lote 0: base de trabajo
 
@@ -510,6 +516,10 @@ Solo cambia la presentación, sin tocar datos:
 
 Va después del lote 7. Para entonces el compilador y las pruebas de cobertura y unicidad obligan a que cada tema nuevo esté completo. Se hace un PR por tema.
 
+**Cómo se hizo (30 oct 2026):** en una sola rama, con un commit «se junta el tema X» por tema en lugar de un PR por tema. Ciudad neón se hizo primero, a mano, y sirvió de modelo; los otros 12 partieron de la copia de un tema cercano (`herramientas/lote8/`) y se rehicieron rama por rama. Al juntarlos, la prueba de unicidad obligó a cambiar las esquinas de Pirata, Ciudad verde y Horror cósmico, dos títulos de pantalla (Egipto y Horror cósmico) y el comentario de Prehistoria. Lo que quedó del peso de la APK está en 8e.
+
+**Vapor victoriano y Art déco quedan para la próxima semana.** Están hechos, cada uno en su rama (`worktree-agent-a45fbcb2bdebf5093` y `worktree-agent-a9d920256ab695569`), y compilan, pero con los dos juntos la máquina de CI se apagaba al minuto de empezar las pruebas, incluso después de poner un tope de 1 px al paso de los bucles de dibujo nuevos. Se juntaron y se revirtieron (`git revert -m 1` de 9cf45bf y ed0194c). Para retomarlos: revertir esas reversiones, o volver a juntar sus ramas, de uno en uno, para saber cuál apaga la máquina.
+
 ### 8a. El Cyberpunk pasa a «Terminal»
 
 - **Se conserva el id `"ciber"`.** Está guardado en la configuración, en `Campana.tema`, en `Carta.tema` y en `FraseGuardada.tema` (`Modelo.kt:257,518,918`).
@@ -580,7 +590,6 @@ Los ids `egipto` y `edo` coinciden con ids de vidas de `BASE` (`OtrasVidas.kt:11
 - **Nombres:** `Temas` (nombres, marcas, rótulos de widget, el calendario propio) y `NombresNuevos`.
 - **Decoración** (`Decoracion.kt`): emblema, `periodo`, `fondoTema`, la banda y `CapaFiesta`.
 - **Componentes:** todos los del lote 3, más la barra inferior, el bloqueo y la transición.
-- **Personaje:** atuendo y frases.
 - **Marcas** (`Marcas.kt`) y **fondo de pantalla del teléfono** (`marca`, marco, `tipo`, `logo`).
 - **Íconos de pestaña:** día, diario, registrar, vida, entender y ajustes.
 - **Fondo vivo** (`Animaciones`) y **Relación** (`Relacion`).
@@ -617,7 +626,7 @@ Los ids `egipto` y `edo` coinciden con ids de vidas de `BASE` (`OtrasVidas.kt:11
 - **Lanzador:** `mipmap-anydpi-v26/ic_launcher_<id>.xml`, con `logo_fondo_<id>`, `logo_<id>` y `logo_mono`.
 - **`AndroidManifest.xml`:** `<activity-alias android:name=".Icono<Id>" android:enabled="false" android:exported="true" android:icon/roundIcon="@mipmap/ic_launcher_<id>" android:targetActivity=".ui.MainActivity">`, con el intent-filter MAIN/LAUNCHER y `meta-data android.app.shortcuts=@xml/accesos`.
 - **Sonidos** (`raw/`):
-  - de `afinados.py` (función `<id>()`, `S['<id>']` y la tupla `todos`): `s_<id>_{toque,guardar,logro,pasar,elegir,abrir,tema,error,cambio}.ogg`, `n_<id>_{aviso,solemne}.ogg` y `s_tecla_<id>.ogg`;
+  - de `afinados.py` (función `<id>()`, `S['<id>']`, su llamada a `nuevos(...)` dentro de `azar_propio('<id>')` y la tupla `todos`): `s_<id>_{toque,guardar,logro,pasar,elegir,abrir,tema,error,cambio}.ogg`, `n_<id>_{aviso,solemne}.ogg`, `s_tecla_<id>.ogg` y `s_rascar_<id>.ogg`;
   - de `musica.py` (`P['<id>']` y `ARGS['<id>']`): `s_<id>_presentacion.ogg`, `s_<id>_anual.ogg`, `t_<id>_llamada.ogg` y `t_<id>_notificacion.ogg`.
 - **Fuente** (`font/`): `<familia>_<peso>.ttf`, recortada y, si hace falta, renombrada.
 - **Arranque** (`values/themes.xml`): `Theme.Vestigium.Arranque.<Id>`.
@@ -676,13 +685,18 @@ Notas:
 - **Selector de temas** (`Sistema.kt:265-280`) y **fichas de rotación** (291-303): agrupados por época (Antigüedad, Edad Media, Edad Moderna, siglos XIX–XX, Futuro, Fantasía).
 - **Rotación** (`Rotacion.kt`): automática.
 - **Peso de la APK.** Cada tema suma entre 1 y 1.5 MB (sonidos, imágenes, papel, fuente y gato), así que se suman entre 13 y 20 MB. Para compensar: bajar la tasa de bits de los OGG largos, recortar las fuentes, y valorar `shrinkResources`. No hay minificación hoy.
+  - **Lo que se midió al cerrar el lote:** la v98 (21 temas) pesa 55 MB. Con 34 temas, `res/raw` pesa 16.4 MB, de los que 8 MB son las músicas anuales (`s_<id>_anual`, unos 80 s cada una); `res/font`, 11 MB; `res/drawable-nodpi`, 7.5 MB.
+  - **Lo que ya estaba hecho:** los OGG van en mono a 22 kHz (la música anual, con calidad 1 de Vorbis, unos 30 kbit/s), y las fuentes ya van recortadas a latino y sin *hinting* (`fuentes.py`).
+  - **Lo que queda por decidir:** bajar la música anual a calidad 0 o −1 ahorraría entre 1.5 y 3.5 MB, pero hay que regenerarla con `musica.py`, y hoy no sale idéntica a la guardada (el azar de los temas viejos ya no se reproduce), así que cambiaría la música de todos los temas. `shrinkResources` exige activar la minificación (R8), que con osmdroid, Health Connect y la serialización de los datos puede pedir reglas propias; habría que probarla aparte, en un teléfono, antes de publicarla.
 - **Datos:** no cambia el esquema. Se actualiza la lista de ejemplos del KDoc de `Modelo.kt:683-684`.
 
 ## Lote 9: el gato del tema (banda de Día)
 
 ### Qué existe
 
-El gato está en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `main`, **todavía sin mezclar**).
+**Estado (30 oct 2026):** la rama `claude/quirky-thompson-3km48y` ya está juntada. El gato sale en los 21 temas originales, los que tienen arte en `assets/gato/`. En los temas del lote 8 la banda no aparece: `Gato.tieneGato` dice, tema por tema, cuáles lo tienen, y `CoberturaTemas` deja de pendientes solo a los temas nuevos. Quedan para después 9a, los gatos de los temas nuevos y el resto de este lote.
+
+El gato estaba en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `main`).
 
 - **Código:** `ui/Gato.kt`. Lo llama `pantallas/Dia.kt:249` (`GatoDelDia`); el interruptor está en `Modelo.kt:704`.
 - **Ánimo:** `Gato.humor()` lo calcula con el sueño y el ánimo del día. `Animo` puede ser NORMAL, ALEGRE, TRISTE o ENOJADO, y además el gato puede estar cansado o ser de noche.
@@ -690,7 +704,7 @@ El gato está en la rama `claude/quirky-thompson-3km48y` (3 commits encima de `m
 - **Arte:** lo dibujan `herramientas/gato/gato8.py` a `gato18.py`, y `exportar.py` lo pasa a `assets/gato/` (unos 7.4 MB para 41 claves).
 - **Capturas:** `gatosClaro` y `gatosOscuro`.
 
-**Requisito:** mezclar esa rama antes del lote 9, o construir encima de ella.
+**Requisito:** mezclar esa rama antes del lote 9 (hecho el 30 oct 2026).
 
 ### 9a. Completar los gatos que ya existen
 
@@ -762,7 +776,7 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
 
 - **Kotlin** (`app/src/main/java/io/github/ruddy2003/vestigium/`):
   - Base de los temas: `ui/` `Tema.kt`, `Disenios.kt`, `Estilo.kt`, `Temas.kt`, `NombresNuevos.kt`, `Frases.kt` y `Bases.kt` (se borra).
-  - Decoración, animación y personaje: `ui/` `Decoracion.kt`, `Componentes.kt`, `Animaciones.kt`, `Celebracion.kt`, `Personaje.kt` y `Marcas.kt`.
+  - Decoración, animación y personaje: `ui/` `Decoracion.kt`, `Componentes.kt`, `Animaciones.kt`, `Celebracion.kt` y `Marcas.kt`.
   - Cartas, libros y diario: `ui/` `Relacion.kt`, `Libros.kt`, `Cartas.kt` y `LibroDiario.kt`.
   - Sonido e íconos: `ui/` `Sentidos.kt`, `Musica.kt`, `IconosPestana.kt` e `IconosCinta.kt`.
   - Fondo de pantalla, huella y gato: `ui/` `FondosTelefono.kt`, `Huella.kt` y `Gato.kt`.

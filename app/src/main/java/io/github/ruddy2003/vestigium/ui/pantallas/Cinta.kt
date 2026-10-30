@@ -81,12 +81,20 @@ private class PielCinta(val radio: Float, val cortado: Boolean, val relleno: Rel
 private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     // Sillares con el filo claro arriba.
     TemaId.ROMANO -> PielCinta(0f, false, RellenoCinta.FILETE, null, StrokeCap.Square)
+    // Adoquines de esquinas gastadas, con la junta en puntos; las horas, a pasos cortos.
+    TemaId.URBE -> PielCinta(3f, false, RellenoCinta.PUNTOS, floatArrayOf(4f, 1.5f), StrokeCap.Round)
     // Bloques de fósforo con líneas de barrido y horas punteadas.
     TemaId.CIBER -> PielCinta(0f, false, RellenoCinta.RAYAS, floatArrayOf(1.5f, 3f), StrokeCap.Butt)
+    // Bloques como letreros: esquinas redondas y su tubo por dentro.
+    TemaId.NEON -> PielCinta(8f, false, RellenoCinta.CONTORNO, floatArrayOf(5f, 2f), StrokeCap.Round)
     // Bloques con su contorno, como relieves.
     TemaId.HELENO -> PielCinta(2f, false, RellenoCinta.CONTORNO, floatArrayOf(6f, 3f), StrokeCap.Round)
+    // Bloques en segmentos, como la cenefa de rectángulos de las pinturas, y las horas en trazos cortos de cálamo.
+    TemaId.EGIPTO -> PielCinta(3f, false, RellenoCinta.SEGMENTOS, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Tinta que se carga arriba y se aclara.
     TemaId.MEDIEVAL -> PielCinta(1f, false, RellenoCinta.DEGRADADO, null, StrokeCap.Round)
+    // Sillares tallados: chaflán en las esquinas, la junta de mortero y las horas como saeteras.
+    TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
     // Indicador en segmentos.
@@ -101,26 +109,40 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.NAPOLEON -> PielCinta(1.5f, false, RellenoCinta.FILETE, floatArrayOf(4f, 2f, 1f, 2f), StrokeCap.Square)
     // Tallos redondeados.
     TemaId.BOTANICO -> PielCinta(10f, false, RellenoCinta.LISO, floatArrayOf(1f, 4f), StrokeCap.Round)
+    // Tramos de la línea pintada de una calle.
+    TemaId.RUINAS -> PielCinta(2f, true, RellenoCinta.SEGMENTOS, floatArrayOf(8f, 5f), StrokeCap.Butt)
     // Bastón de caramelo.
     TemaId.NAVIDAD -> PielCinta(6f, false, RellenoCinta.DIAGONAL, floatArrayOf(4f, 4f), StrokeCap.Round)
     // Seda tejida.
     TemaId.SEDA -> PielCinta(5f, false, RellenoCinta.RAYAS, floatArrayOf(6f, 2f), StrokeCap.Round)
+    // Hojas de cuaderno cosido: casi en escuadra, con la puntada del hilo.
+    TemaId.EDO -> PielCinta(1f, true, RellenoCinta.PUNTADA, floatArrayOf(8f, 3f), StrokeCap.Square)
     // Vidriera emplomada.
     TemaId.GOTICO -> PielCinta(0f, false, RellenoCinta.SEGMENTOS, null, StrokeCap.Butt)
+    // Tiras de papel recortadas a mano, con su rayado de periódico.
+    TemaId.ARCANO -> PielCinta(1f, true, RellenoCinta.RAYAS, floatArrayOf(4f, 2f, 1f, 2f), StrokeCap.Butt)
     // Barra luminosa de la consola.
     TemaId.ESPACIO -> PielCinta(3f, false, RellenoCinta.DEGRADADO, floatArrayOf(1f, 5f), StrokeCap.Round)
+    // Ristras de burbujas: bloques muy redondos llenos de puntos.
+    TemaId.ABISMO -> PielCinta(7f, false, RellenoCinta.PUNTOS, floatArrayOf(0.1f, 3.5f), StrokeCap.Round)
     // Azulejo en chaflán con su punteado.
     TemaId.ANDALUS -> PielCinta(2.5f, true, RellenoCinta.PUNTOS, floatArrayOf(3f, 2f), StrokeCap.Square)
+    // Bloques de glifo redondeados, partidos en segmentos como las cifras de una cuenta, con su línea de puntos.
+    TemaId.MESO -> PielCinta(5f, false, RellenoCinta.SEGMENTOS, floatArrayOf(0.1f, 3f), StrokeCap.Round)
     // Fieltro cosido.
     TemaId.MONGOL -> PielCinta(4f, false, RellenoCinta.PUNTADA, floatArrayOf(7f, 3f), StrokeCap.Round)
     // Sombreado a pluma.
     TemaId.RENACIMIENTO -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(10f, 4f), StrokeCap.Round)
+    // Tablones con sus vetas, y las horas menores como un cabo de vueltas cortas.
+    TemaId.PIRATA -> PielCinta(1.5f, true, RellenoCinta.RAYAS, floatArrayOf(2.4f, 1.4f), StrokeCap.Round)
     // Bloques planos de cartel.
     TemaId.URSS -> PielCinta(0f, false, RellenoCinta.LISO, null, StrokeCap.Square)
     // Bandas de cartel con el filo claro.
     TemaId.REVOLUCION -> PielCinta(0.5f, true, RellenoCinta.FILETE, floatArrayOf(5f, 2f), StrokeCap.Butt)
     // Losas de piedra labrada.
     TemaId.ANTIGUAS -> PielCinta(2f, true, RellenoCinta.CONTORNO, floatArrayOf(2f, 6f), StrokeCap.Square)
+    // Cantos rodados, con puntos de ocre dentro; las horas, en hilera de puntos.
+    TemaId.CUEVA -> PielCinta(7f, false, RellenoCinta.PUNTOS, floatArrayOf(0.1f, 5f), StrokeCap.Round)
 }
 
 /** Un tramo de la cinta con la piel del tema: su forma (esquina o chaflán) y lo que lleva dentro. */

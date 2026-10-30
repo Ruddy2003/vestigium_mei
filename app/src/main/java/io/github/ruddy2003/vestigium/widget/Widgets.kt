@@ -30,18 +30,37 @@ object Widgets {
             0xFFD2AE5A.toInt(), 0xFFE7E3DA.toInt(), 0xFF9AA0A6.toInt(), 0xFF5A4A24.toInt(),
             intArrayOf(0xFFE07A86.toInt(), 0xFFD9998C.toInt(), 0xFFD6BC8E.toInt(), 0xFFE7E3DA.toInt(), 0xFFB5D2BE.toInt(), 0xFF8CC8B9.toInt(), 0xFF67BBAE.toInt()),
             0xFF1A1F23.toInt(), 0xFF0E1113.toInt())
+        // La placa sobre el adoquinado de noche: luz de farola, travertino y, en el ánimo, del rojo pompeyano al verde de las persianas.
+        TemaId.URBE -> Colores(R.drawable.widget_fondo_urbe, R.drawable.widget_boton_urbe, R.drawable.widget_boton_activo_urbe, R.drawable.widget_boton_ambar_urbe,
+            0xFFE8955A.toInt(), 0xFFF1E6D2.toInt(), 0xFFB5A794.toInt(), 0xFF433830.toInt(),
+            intArrayOf(0xFFD9573A.toInt(), 0xFFE07A52.toInt(), 0xFFE3A266.toInt(), 0xFFE3C07A.toInt(), 0xFFB9C08A.toInt(), 0xFF9DB892.toInt(), 0xFF8DB596.toInt()),
+            0xFF2B2420.toInt(), 0xFF2A1405.toInt())
         TemaId.CIBER -> Colores(R.drawable.widget_fondo_ciber, R.drawable.widget_boton_ciber, R.drawable.widget_boton_activo_ciber, R.drawable.widget_boton_ambar_ciber,
             0xFF00E5FF.toInt(), 0xFFD6F3F7.toInt(), 0xFF7E98AB.toInt(), 0xFF15404A.toInt(),
             intArrayOf(0xFFFF2E88.toInt(), 0xFFE0559A.toInt(), 0xFFB77CA8.toInt(), 0xFF8C96A8.toInt(), 0xFF5FB4C8.toInt(), 0xFF2FCCE0.toInt(), 0xFF00E5FF.toInt()),
             0xFF0B121C.toInt(), 0xFF00161A.toInt())
+        TemaId.NEON -> Colores(R.drawable.widget_fondo_neon, R.drawable.widget_boton_neon, R.drawable.widget_boton_activo_neon, R.drawable.widget_boton_ambar_neon,
+            0xFFFF3D9A.toInt(), 0xFFF4E7F0.toInt(), 0xFFB99DB2.toInt(), 0xFF4B2B47.toInt(),
+            intArrayOf(0xFF5A3A70.toInt(), 0xFF8A3A8C.toInt(), 0xFFC23C97.toInt(), 0xFFFF3D9A.toInt(), 0xFFFF7A6E.toInt(), 0xFFFFB238.toInt(), 0xFF8CFF5A.toInt()),
+            0xFF150E1B.toInt(), 0xFF1C0010.toInt())
         TemaId.HELENO -> Colores(R.drawable.widget_fondo_heleno, R.drawable.widget_boton_heleno, R.drawable.widget_boton_activo_heleno, R.drawable.widget_boton_ambar_heleno,
             0xFFD8B45C.toInt(), 0xFFEFE9DC.toInt(), 0xFFA69EBB.toInt(), 0xFF4A3D6E.toInt(),
             intArrayOf(0xFFC25A7A.toInt(), 0xFFCF8597.toInt(), 0xFFDDB3B7.toInt(), 0xFFEFE9DC.toInt(), 0xFFB5D2E8.toInt(), 0xFF8DBDE0.toInt(), 0xFF5FA8D8.toInt()),
             0xFF1D1830.toInt(), 0xFF1C1405.toInt())
+        // La tumba a la luz de la lámpara: oro, papiro y, en el ánimo, de la cornalina al verde de la fayenza.
+        TemaId.EGIPTO -> Colores(R.drawable.widget_fondo_egipto, R.drawable.widget_boton_egipto, R.drawable.widget_boton_activo_egipto, R.drawable.widget_boton_ambar_egipto,
+            0xFFE3B341.toInt(), 0xFFF1E4C0.toInt(), 0xFFB9A887.toInt(), 0xFF5A4318.toInt(),
+            intArrayOf(0xFFD9653E.toInt(), 0xFFE08A5E.toInt(), 0xFFE8B98A.toInt(), 0xFFF1E4C0.toInt(), 0xFF9FD2C2.toInt(), 0xFF6FC1AE.toInt(), 0xFF4FB8A6.toInt()),
+            0xFF241B13.toInt(), 0xFF1E1503.toInt())
         TemaId.MEDIEVAL -> Colores(R.drawable.widget_fondo_medieval, R.drawable.widget_boton_medieval, R.drawable.widget_boton_activo_medieval, R.drawable.widget_boton_ambar_medieval,
             0xFFD5A84A.toInt(), 0xFFEDDFC2.toInt(), 0xFFB7A587.toInt(), 0xFF5A4630.toInt(),
             intArrayOf(0xFFC9473B.toInt(), 0xFFD27A62.toInt(), 0xFFD9AE8E.toInt(), 0xFFEDDFC2.toInt(), 0xFFB9C4E6.toInt(), 0xFF9AB0E8.toInt(), 0xFF8DA5E0.toInt()),
             0xFF2A2016.toInt(), 0xFF1C1405.toInt())
+        // La noche en la muralla: arena a la luz de la luna, lino, y el ánimo del rojo de la cruz al acero de la malla.
+        TemaId.TEMPLARIO -> Colores(R.drawable.widget_fondo_templario, R.drawable.widget_boton_templario, R.drawable.widget_boton_activo_templario, R.drawable.widget_boton_ambar_templario,
+            0xFFDAAE68.toInt(), 0xFFEEE7D8.toInt(), 0xFFB1A891.toInt(), 0xFF3B352A.toInt(),
+            intArrayOf(0xFFE2453B.toInt(), 0xFFDD7A6A.toInt(), 0xFFD8B4A0.toInt(), 0xFFEEE7D8.toInt(), 0xFFC5CDD3.toInt(), 0xFFA8B3BC.toInt(), 0xFF8C99A4.toInt()),
+            0xFF262219.toInt(), 0xFF1F0604.toInt())
         TemaId.DISTOPIA -> Colores(R.drawable.widget_fondo_distopia, R.drawable.widget_boton_distopia, R.drawable.widget_boton_activo_distopia, R.drawable.widget_boton_ambar_distopia,
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
@@ -70,6 +89,11 @@ object Widgets {
             0xFFB8E06A.toInt(), 0xFFEAF0E2.toInt(), 0xFFA9B8A4.toInt(), 0xFF2D442F.toInt(),
             intArrayOf(0xFFF29BB8.toInt(), 0xFFE7A9BE.toInt(), 0xFFD9C3C0.toInt(), 0xFFEAF0E2.toInt(), 0xFFC8E3A8.toInt(), 0xFFA9DC80.toInt(), 0xFF8FD06A.toInt()),
             0xFF121D15.toInt(), 0xFF121A04.toInt())
+        // Ciudad verde: el ánimo va del óxido al musgo, pasando por el gris del hormigón.
+        TemaId.RUINAS -> Colores(R.drawable.widget_fondo_ruinas, R.drawable.widget_boton_ruinas, R.drawable.widget_boton_activo_ruinas, R.drawable.widget_boton_ambar_ruinas,
+            0xFF8FCB6A.toInt(), 0xFFE3E6DC.toInt(), 0xFFA2AB9E.toInt(), 0xFF26391C.toInt(),
+            intArrayOf(0xFFE08A55.toInt(), 0xFFD9A066.toInt(), 0xFFC9C2AE.toInt(), 0xFFE3E6DC.toInt(), 0xFFB8D79A.toInt(), 0xFF9FCB78.toInt(), 0xFF8FCB6A.toInt()),
+            0xFF141A16.toInt(), 0xFF0E1A08.toInt())
         TemaId.NAVIDAD -> Colores(R.drawable.widget_fondo_navidad, R.drawable.widget_boton_navidad, R.drawable.widget_boton_activo_navidad, R.drawable.widget_boton_ambar_navidad,
             0xFFF2C94C.toInt(), 0xFFF3EFE6.toInt(), 0xFFB5C2B8.toInt(), 0xFF2E4A39.toInt(),
             intArrayOf(0xFFE5484D.toInt(), 0xFFE77B7A.toInt(), 0xFFE9B2A8.toInt(), 0xFFF3EFE6.toInt(), 0xFFB5DDB7.toInt(), 0xFF8CCF8F.toInt(), 0xFF66BB6A.toInt()),
@@ -78,6 +102,11 @@ object Widgets {
             0xFFE0B04F.toInt(), 0xFFF2EAD3.toInt(), 0xFFB9B29F.toInt(), 0xFF33406A.toInt(),
             intArrayOf(0xFFE26A50.toInt(), 0xFFE5907B.toInt(), 0xFFE8BFAA.toInt(), 0xFFF2EAD3.toInt(), 0xFFA8DEDE.toInt(), 0xFF7CD0D0.toInt(), 0xFF4FC3C3.toInt()),
             0xFF161D35.toInt(), 0xFF1A1405.toInt())
+        // Tinta sumi y el bermellón de los farolillos; el ánimo va del índigo frío al bermellón.
+        TemaId.EDO -> Colores(R.drawable.widget_fondo_edo, R.drawable.widget_boton_edo, R.drawable.widget_boton_activo_edo, R.drawable.widget_boton_ambar_edo,
+            0xFFEF7A55.toInt(), 0xFFEEE7D7.toInt(), 0xFFB0A999.toInt(), 0xFF3A3D47.toInt(),
+            intArrayOf(0xFF6F86B8.toInt(), 0xFF92ABD8.toInt(), 0xFFC3CEE2.toInt(), 0xFFEEE7D7.toInt(), 0xFFF3C3A8.toInt(), 0xFFF29E7E.toInt(), 0xFFEF7A55.toInt()),
+            0xFF23252C.toInt(), 0xFF2A0D05.toInt())
         TemaId.URSS -> Colores(R.drawable.widget_fondo_urss, R.drawable.widget_boton_urss, R.drawable.widget_boton_activo_urss, R.drawable.widget_boton_ambar_urss,
             0xFFE8B923.toInt(), 0xFFF1E7D2.toInt(), 0xFFB7AA95.toInt(), 0xFF3D3333.toInt(),
             intArrayOf(0xFF6E7C8C.toInt(), 0xFF98A1AA.toInt(), 0xFFC4C3BC.toInt(), 0xFFF1E7D2.toInt(), 0xFFEBC9A6.toInt(), 0xFFE8806A.toInt(), 0xFFE5252F.toInt()),
@@ -86,14 +115,29 @@ object Widgets {
             0xFFE2B34A.toInt(), 0xFFF0E9D8.toInt(), 0xFFB0AFC8.toInt(), 0xFF2E3A7A.toInt(),
             intArrayOf(0xFFE0405E.toInt(), 0xFFD9708A.toInt(), 0xFFD2A6B4.toInt(), 0xFFF0E9D8.toInt(), 0xFFB8C8F2.toInt(), 0xFF8DA8FF.toInt(), 0xFF5C8DFF.toInt()),
             0xFF111842.toInt(), 0xFF1A1405.toInt())
+        // La niebla de la costa: la luz pálida del faro, tinta clara y del lacre al verde del agua.
+        TemaId.ARCANO -> Colores(R.drawable.widget_fondo_arcano, R.drawable.widget_boton_arcano, R.drawable.widget_boton_activo_arcano, R.drawable.widget_boton_ambar_arcano,
+            0xFFE6D58C.toInt(), 0xFFCDD6C7.toInt(), 0xFF8C9E93.toInt(), 0xFF2B3D37.toInt(),
+            intArrayOf(0xFFC98472.toInt(), 0xFFC99A86.toInt(), 0xFFC9B8A6.toInt(), 0xFFCDD6C7.toInt(), 0xFFA6CDBB.toInt(), 0xFF8EC4AF.toInt(), 0xFF7DBBA4.toInt()),
+            0xFF101B18.toInt(), 0xFF1A1806.toInt())
         TemaId.ESPACIO -> Colores(R.drawable.widget_fondo_espacio, R.drawable.widget_boton_espacio, R.drawable.widget_boton_activo_espacio, R.drawable.widget_boton_ambar_espacio,
             0xFFFFB86B.toInt(), 0xFFE8ECF8.toInt(), 0xFF8E9AB8.toInt(), 0xFF26324F.toInt(),
             intArrayOf(0xFFFF8A6B.toInt(), 0xFFF5A98A.toInt(), 0xFFE0C6B8.toInt(), 0xFFE8ECF8.toInt(), 0xFFB9CCF5.toInt(), 0xFFA0C0FF.toInt(), 0xFF8AB4FF.toInt()),
             0xFF0A0F1E.toInt(), 0xFF020818.toInt())
+        // La zona abisal: fondo casi negro y la luz viva de los animales; el ánimo va del violeta de las medusas al verde agua.
+        TemaId.ABISMO -> Colores(R.drawable.widget_fondo_abismo, R.drawable.widget_boton_abismo, R.drawable.widget_boton_activo_abismo, R.drawable.widget_boton_ambar_abismo,
+            0xFF5CF2C6.toInt(), 0xFFD6F0F2.toInt(), 0xFF7DA2AF.toInt(), 0xFF163347.toInt(),
+            intArrayOf(0xFFE29BFF.toInt(), 0xFFC8A6F0.toInt(), 0xFFA9B9E2.toInt(), 0xFFD6F0F2.toInt(), 0xFF9FE0E0.toInt(), 0xFF7CE9D3.toInt(), 0xFF5CF2C6.toInt()),
+            0xFF0A1A26.toInt(), 0xFF00201A.toInt())
         TemaId.ANDALUS -> Colores(R.drawable.widget_fondo_andalus, R.drawable.widget_boton_andalus, R.drawable.widget_boton_activo_andalus, R.drawable.widget_boton_ambar_andalus,
             0xFFE0B65A.toInt(), 0xFFF3EAD6.toInt(), 0xFFB4AE9B.toInt(), 0xFF2B4A45.toInt(),
             intArrayOf(0xFFE07A5F.toInt(), 0xFFE39A82.toInt(), 0xFFE5C2AE.toInt(), 0xFFF3EAD6.toInt(), 0xFFA9DCCD.toInt(), 0xFF7CCFB8.toInt(), 0xFF4FC1A6.toInt()),
             0xFF112220.toInt(), 0xFF1A1405.toInt())
+        // La obsidiana con el marco de cinabrio; el azul maya de acento y el ánimo del cinabrio al jade.
+        TemaId.MESO -> Colores(R.drawable.widget_fondo_meso, R.drawable.widget_boton_meso, R.drawable.widget_boton_activo_meso, R.drawable.widget_boton_ambar_meso,
+            0xFF63C5DD.toInt(), 0xFFEFE2C6.toInt(), 0xFFB0A58D.toInt(), 0xFF374446.toInt(),
+            intArrayOf(0xFFE8674D.toInt(), 0xFFE58B6E.toInt(), 0xFFE2B39A.toInt(), 0xFFEFE2C6.toInt(), 0xFFA9DDBE.toInt(), 0xFF8BD3A6.toInt(), 0xFF6FCB8F.toInt()),
+            0xFF161C1D.toInt(), 0xFF04222B.toInt())
         TemaId.MONGOL -> Colores(R.drawable.widget_fondo_mongol, R.drawable.widget_boton_mongol, R.drawable.widget_boton_activo_mongol, R.drawable.widget_boton_ambar_mongol,
             0xFFF2C14E.toInt(), 0xFFF0EBDD.toInt(), 0xFFAAB0BD.toInt(), 0xFF2B3E5E.toInt(),
             intArrayOf(0xFFFF7A59.toInt(), 0xFFF09A80.toInt(), 0xFFE2C3B4.toInt(), 0xFFF0EBDD.toInt(), 0xFFB8D6F5.toInt(), 0xFF93C3FA.toInt(), 0xFF6FB1FF.toInt()),
@@ -102,6 +146,11 @@ object Widgets {
             0xFFD9B566.toInt(), 0xFFEFE0BE.toInt(), 0xFFBCA884.toInt(), 0xFF4A3826.toInt(),
             intArrayOf(0xFF6E8CA8.toInt(), 0xFF8DA2B5.toInt(), 0xFFB8B3A6.toInt(), 0xFFEFE0BE.toInt(), 0xFFE8C79A.toInt(), 0xFFE4A877.toInt(), 0xFFE08A5E.toInt()),
             0xFF241A11.toInt(), 0xFF2A1006.toInt())
+        // Brea y latón: del temporal (rojo de bandera) a la bonanza (verde del mar de las cartas).
+        TemaId.PIRATA -> Colores(R.drawable.widget_fondo_pirata, R.drawable.widget_boton_pirata, R.drawable.widget_boton_activo_pirata, R.drawable.widget_boton_ambar_pirata,
+            0xFFD6AA4C.toInt(), 0xFFE9DEC3.toInt(), 0xFFAFA386.toInt(), 0xFF41382A.toInt(),
+            intArrayOf(0xFFE47B4E.toInt(), 0xFFDB9A6E.toInt(), 0xFFD2BE94.toInt(), 0xFFE9DEC3.toInt(), 0xFFB7D3C5.toInt(), 0xFF98C9BE.toInt(), 0xFF7DBFB6.toInt()),
+            0xFF1A1712.toInt(), 0xFF201604.toInt())
         TemaId.REVOLUCION -> Colores(R.drawable.widget_fondo_revolucion, R.drawable.widget_boton_revolucion, R.drawable.widget_boton_activo_revolucion, R.drawable.widget_boton_ambar_revolucion,
             0xFF8FAEE8.toInt(), 0xFFF0EADB.toInt(), 0xFFB2AC9E.toInt(), 0xFF3A3F4A.toInt(),
             intArrayOf(0xFFE5525E.toInt(), 0xFFE28A90.toInt(), 0xFFE3BCB8.toInt(), 0xFFF0EADB.toInt(), 0xFFC2D0EC.toInt(), 0xFFA8BFEA.toInt(), 0xFF8FAEE8.toInt()),
@@ -110,6 +159,11 @@ object Widgets {
             0xFFD9BC6A.toInt(), 0xFFEDE7D8.toInt(), 0xFFB0AA9C.toInt(), 0xFF45464C.toInt(),
             intArrayOf(0xFFE06A72.toInt(), 0xFFE39A96.toInt(), 0xFFE3C2B6.toInt(), 0xFFEDE7D8.toInt(), 0xFFBCDDC3.toInt(), 0xFFA4D2AE.toInt(), 0xFF8CC79A.toInt()),
             0xFF1F2023.toInt(), 0xFF0D1F14.toInt())
+        // La roca de la cueva a la luz del fuego: el ocre encendido, la caliza del texto y, en el ánimo, del ocre rojo al ocre amarillo.
+        TemaId.CUEVA -> Colores(R.drawable.widget_fondo_cueva, R.drawable.widget_boton_cueva, R.drawable.widget_boton_activo_cueva, R.drawable.widget_boton_ambar_cueva,
+            0xFFE8804F.toInt(), 0xFFEEDFC8.toInt(), 0xFFB5A08A.toInt(), 0xFF4B3A2B.toInt(),
+            intArrayOf(0xFFB8432A.toInt(), 0xFFCC6A42.toInt(), 0xFFDB9560.toInt(), 0xFFE6C9A0.toInt(), 0xFFE2BC6E.toInt(), 0xFFD9AE52.toInt(), 0xFFF4C76E.toInt()),
+            0xFF211913.toInt(), 0xFF16100C.toInt())
     }
 
     /** Pinta fondo, botones, líneas y textos según el tema. Va primero: lo que se pinta después (estado activo, colores de ánimo) lo sobrescribe. */
@@ -131,9 +185,13 @@ object Widgets {
      */
     private fun tituloDiscreto(t: TemaId): Pair<String, String> = when (t) {
         TemaId.ROMANO -> "NVNC" to "SCRIBERE"
+        TemaId.URBE -> "ADESSO" to "DUE RIGHE"
         TemaId.CIBER -> "> ping" to "> log"
+        TemaId.NEON -> "LA NOCHE" to "LA CALLE"
         TemaId.HELENO -> "ΝΥΝ" to "ΓΡΑΦΕΙΝ"
+        TemaId.EGIPTO -> "Esta hora" to "Al papiro"
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
+        TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
         TemaId.REFUGIO -> "CHEQUEO" to "ENTRADA"
         TemaId.ORDEN -> "RELEVO" to "ACTA"
@@ -141,16 +199,23 @@ object Widgets {
         TemaId.COLONOS -> "Al paso" to "Apunte"
         TemaId.NAPOLEON -> "À PRÉSENT" to "DÉPÊCHE"
         TemaId.BOTANICO -> "En el campo" to "Libreta"
+        TemaId.RUINAS -> "En la ronda" to "Cuaderno"
         TemaId.NAVIDAD -> "Junto al fuego" to "Postal"
         TemaId.SEDA -> "Alto" to "Rollo"
+        TemaId.EDO -> "En la posta" to "Pincel"
         TemaId.GOTICO -> "Ad horam" to "Scribe"
+        TemaId.ARCANO -> "Nota" to "Al margen"
         TemaId.ESPACIO -> "T−0" to "LOG"
+        TemaId.ABISMO -> "COTA" to "PIZARRA"
         TemaId.ANDALUS -> "الآن" to "اكتب"
+        TemaId.MESO -> "Este k'in" to "Pintar"
         TemaId.MONGOL -> "ОДОО" to "БИЧИХ"
         TemaId.RENACIMIENTO -> "Ora" to "Scrivere"
+        TemaId.PIRATA -> "A esta campanada" to "Asiento"
         TemaId.URSS -> "СЕЙЧАС" to "ЗАПИСЬ"
         TemaId.REVOLUCION -> "L'INSTANT" to "NOTER"
         TemaId.ANTIGUAS -> "VIGÍA" to "PERGAMINO"
+        TemaId.CUEVA -> "Este sol" to "A la pared"
     }
 
     /**
@@ -160,9 +225,13 @@ object Widgets {
     private fun letraDe(ctx: Context, t: TemaId): Pair<android.graphics.Typeface, Float> {
         val (fuente, escala) = when (t) {
             TemaId.ROMANO -> R.font.cinzel_regular to 0.95f
+            TemaId.URBE -> R.font.titillium_semibold to 1.02f
             TemaId.CIBER -> R.font.sharetech_mono to 1.05f
+            TemaId.NEON -> R.font.chakra_semibold to 1.0f
             TemaId.HELENO -> R.font.garamond_medium to 1.08f
+            TemaId.EGIPTO -> R.font.messiri_bold to 1.0f
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
+            TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
             TemaId.REFUGIO -> R.font.vt323 to 1.35f
             TemaId.ORDEN -> R.font.saira_stencil to 1.0f
@@ -170,16 +239,23 @@ object Widgets {
             TemaId.COLONOS -> R.font.fell to 1.08f
             TemaId.NAPOLEON -> R.font.bodoni_titulo to 1.05f
             TemaId.BOTANICO -> R.font.fraunces_titulo to 1.0f
+            TemaId.RUINAS -> R.font.letrero_titulo to 1.06f
             TemaId.NAVIDAD -> R.font.cinzel_deco_regular to 0.95f
             TemaId.SEDA -> R.font.almendra_regular to 1.08f
+            TemaId.EDO -> R.font.shippori_titulo to 1.0f
             TemaId.GOTICO -> R.font.gotica_textura to 1.12f
+            TemaId.ARCANO -> R.font.spectral_cursiva to 1.04f
             TemaId.ESPACIO -> R.font.orbitron_medium to 0.88f
+            TemaId.ABISMO -> R.font.batiscafo_semibold to 1.0f
             TemaId.ANDALUS -> R.font.kufi_medium to 0.95f
+            TemaId.MESO -> R.font.alegreya_sc_medium to 1.0f
             TemaId.MONGOL -> R.font.philosopher_regular to 1.05f
             TemaId.RENACIMIENTO -> R.font.cormorant_medium to 1.12f
+            TemaId.PIRATA -> R.font.caslon_semibold to 1.0f
             TemaId.URSS -> R.font.russo to 0.95f
             TemaId.REVOLUCION -> R.font.bodoni_texto to 1.05f
             TemaId.ANTIGUAS -> R.font.cinzel_semibold to 0.95f
+            TemaId.CUEVA -> R.font.amatic_bold to 1.3f
         }
         val tf = runCatching { androidx.core.content.res.ResourcesCompat.getFont(ctx, fuente) }.getOrNull() ?: android.graphics.Typeface.SERIF
         return tf to escala
@@ -204,7 +280,7 @@ object Widgets {
         val hoy = Repo.momentos.count { it.tipo == "muestreo" && it.fecha == Fechas.diaLogico() }
         val discreto = Repo.config.discreto
         v.setTextViewText(R.id.titulo_animo, if (discreto) tituloDiscreto(Estilo.tema).first else Estilo.widget("animo"))
-        v.setTextViewText(R.id.pregunta_animo, com + if (discreto) "ahora" else "¿qué tan agradable se siente ahora?")
+        v.setTextViewText(R.id.pregunta_animo, com + Estilo.texto(if (discreto) "widget_discreto_animo" else "widget_animo"))
         v.setTextViewText(R.id.sub_animo, if (hoy == 0) Estilo.fecha(Fechas.diaLogico()) else "$hoy hoy")
         BOTONES_ANIMO.forEachIndexed { i, id ->
             v.setTextColor(id, colores().animo[i])
@@ -219,7 +295,7 @@ object Widgets {
         val discreto = Repo.config.discreto
         val hoy = Repo.momentos.count { Catalogo.esRegistro(it) && it.fecha == Fechas.diaLogico() }
         v.setTextViewText(R.id.titulo_momento, if (discreto) tituloDiscreto(Estilo.tema).second else Estilo.widget("momento"))
-        v.setTextViewText(R.id.pregunta_momento, com + if (discreto) "registrar" else "ahora siento…")
+        v.setTextViewText(R.id.pregunta_momento, com + Estilo.texto(if (discreto) "widget_discreto_momento" else "widget_momento"))
         v.setTextViewText(R.id.sub_momento, if (hoy == 0) "" else "$hoy hoy")
         // Ocho sentimientos: un toque y queda registrado (luego se puede agregar en qué pensabas y cómo te sientes).
         Catalogo.SENTIMIENTOS_WIDGET.take(BOTONES_MOMENTO.size).forEachIndexed { i, id ->

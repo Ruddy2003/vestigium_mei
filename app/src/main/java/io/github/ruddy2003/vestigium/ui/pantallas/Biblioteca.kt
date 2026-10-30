@@ -80,6 +80,8 @@ import io.github.ruddy2003.vestigium.ui.Clave
 import io.github.ruddy2003.vestigium.ui.Editor
 import io.github.ruddy2003.vestigium.ui.Escala
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.grecaEscalonada
+import io.github.ruddy2003.vestigium.ui.numeralMaya
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.FilaFichas
@@ -204,12 +206,29 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             val o = Offset(w / 2 + lado * r * kotlin.math.cos(g).toFloat(), h * 0.74f + r * 0.6f * kotlin.math.sin(g).toFloat())
             drawOval(tenue, Offset(o.x - 2.6f * u, o.y - 1.4f * u), Size(5.2f * u, 2.8f * u))
         }
+        // El perfil de los tejados abajo (dos cúpulas y un campanario) y la raya doble de la cabecera arriba.
+        TemaId.URBE -> {
+            linea(6 * u, 5 * u, w - 6 * u, 5 * u, tenue, 1.6f * u); linea(6 * u, 7.5f * u, w - 6 * u, 7.5f * u, tenue, 0.6f * u)
+            val base = h - 6 * u
+            drawRect(tenue, Offset(4 * u, base), Size(w - 8 * u, 2 * u))
+            listOf(0.3f to 9f, 0.68f to 13f).forEach { (fx, r) ->
+                drawArc(tenue, 180f, 180f, true, Offset(w * fx - r * u, base - r * u), Size(2 * r * u, 2 * r * u))
+                drawRect(tenue, Offset(w * fx - 0.8f * u, base - r * u - 4 * u), Size(1.6f * u, 4 * u))
+            }
+            drawRect(tenue, Offset(w * 0.47f, base - 18 * u), Size(4 * u, 18 * u))
+        }
         // Renglones de pantalla y el indicador con su cursor.
         TemaId.CIBER -> {
             var y = 0f
             while (y < h) { linea(0f, y, w, y, a.copy(alpha = 0.08f), 0.6f * u); y += 3 * u }
             linea(8 * u, h - 14 * u, 12 * u, h - 11 * u, a.copy(alpha = 0.7f)); linea(12 * u, h - 11 * u, 8 * u, h - 8 * u, a.copy(alpha = 0.7f))
             drawRect(a.copy(alpha = 0.7f), Offset(15 * u, h - 14 * u), Size(4 * u, 6 * u))
+        }
+        // El reflejo de un letrero en el vidrio mojado del local: una franja magenta y gotas que resbalan.
+        TemaId.NEON -> {
+            drawRect(Brush.verticalGradient(listOf(a.copy(alpha = 0.1f), Color.Transparent), 0f, h * 0.4f), Offset.Zero, Size(w, h * 0.4f))
+            val az = java.util.Random(3)
+            repeat(10) { val x = az.nextFloat() * w; val y = az.nextFloat() * h; linea(x, y, x, y + 7 * u, a.copy(alpha = 0.18f), 0.8f * u) }
         }
         // Una greca arriba y otra abajo.
         TemaId.HELENO -> listOf(16 * u, h - 20 * u).forEach { y0 ->
@@ -219,12 +238,25 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 while (x + 2 * p <= w - 6 * u) { lineTo(x, y0); lineTo(x + p, y0); lineTo(x + p, y0 + p); lineTo(x + 2 * p, y0 + p); x += 2 * p }
             }, tenue, style = Stroke(1f * u))
         }
+        // El friso jeker arriba y la cenefa de rectángulos abajo.
+        TemaId.EGIPTO -> {
+            var x = 8 * u
+            while (x < w - 8 * u) { drawRect(tenue, Offset(x - 1 * u, 18 * u), Size(2 * u, 6 * u)); drawCircle(tenue, 1.5f * u, Offset(x, 17 * u)); x += 5 * u }
+            var x2 = 6 * u; var k = 0
+            while (x2 < w - 6 * u) { drawRect(if (k % 2 == 0) tenue else tenue.copy(alpha = tenue.alpha * 0.5f), Offset(x2, h - 20 * u), Size(4 * u, 3 * u)); x2 += 5 * u; k++ }
+        }
         // Cuadrifolios en las esquinas y la raya roja del margen.
         TemaId.MEDIEVAL -> {
             linea(10 * u, 8 * u, 10 * u, h - 8 * u, a.copy(alpha = 0.6f), 1.2f * u)
             listOf(Offset(10 * u, 10 * u), Offset(w - 10 * u, 10 * u), Offset(10 * u, h - 10 * u), Offset(w - 10 * u, h - 10 * u)).forEach { o ->
                 listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(tenue, 2.2f * u, o + d * (2.2f * u)) }
             }
+        }
+        // Almenas arriba, la banda roja de la sobreveste al margen y la cruz patada abajo.
+        TemaId.TEMPLARIO -> {
+            var x = 8 * u; while (x + 6 * u < w - 8 * u) { drawRect(tenue, Offset(x, 6 * u), Size(6 * u, 5 * u)); x += 12 * u }
+            drawRect(a.copy(alpha = 0.35f), Offset(8 * u, 14 * u), Size(3 * u, h - 22 * u))
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(w / 2, h - 16 * u), 6 * u), a.copy(alpha = 0.6f))
         }
         // Tachones de censura y el sello de goma.
         TemaId.DISTOPIA -> {
@@ -268,6 +300,19 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 linea(x, y, x + largo, y - 2.5f * u); linea(x, y, x - largo * 0.5f, y - 2 * u)
             }
         }
+        TemaId.RUINAS -> {
+            // Una guía de hiedra que trepa por la tapa desde abajo, y una grieta arriba a la derecha.
+            val x0 = 10 * u
+            linea(x0, h - 4 * u, x0 + 6 * u, h * 0.4f, tenue, 0.8f * u)
+            for (k in 0 until 6) {
+                val y = h - 10 * u - k * (h * 0.09f); val x = x0 + 6 * u * (k / 6f) + (if (k % 2 == 0) -3f else 3f) * u; val r = (6 - k) * 0.5f * u + 2.5f * u
+                drawPath(Path().apply {
+                    moveTo(x, y + r * 0.5f); lineTo(x - r * 0.55f, y + r * 0.35f); lineTo(x - r * 0.8f, y - r * 0.05f); lineTo(x - r * 0.32f, y - r * 0.05f)
+                    lineTo(x, y - r * 0.5f); lineTo(x + r * 0.32f, y - r * 0.05f); lineTo(x + r * 0.8f, y - r * 0.05f); lineTo(x + r * 0.55f, y + r * 0.35f); close()
+                }, tenue)
+            }
+            linea(w - 14 * u, 4 * u, w - 18 * u, 12 * u, l); linea(w - 18 * u, 12 * u, w - 13 * u, 18 * u, l); linea(w - 13 * u, 18 * u, w - 17 * u, 26 * u, l)
+        }
         // Copos de nieve.
         TemaId.NAVIDAD -> listOf(Offset(w * 0.2f, h * 0.2f) to 5f, Offset(w * 0.82f, h * 0.36f) to 3.5f, Offset(w * 0.3f, h * 0.84f) to 4f, Offset(w * 0.75f, h * 0.8f) to 3f).forEach { (o, r) ->
             for (k in 0 until 3) { val g = Math.toRadians(90.0 + 60.0 * k); val d = Offset(kotlin.math.cos(g).toFloat(), kotlin.math.sin(g).toFloat()) * (r * u); drawLine(tenue, o - d, o + d, 0.8f * u) }
@@ -278,6 +323,13 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             drawCircle(tenue, 8 * u, o, style = Stroke(1.4f * u)); drawCircle(tenue, 5.5f * u, o, style = Stroke(0.7f * u))
             drawRect(tenue, Offset(o.x - 2.2f * u, o.y - 2.2f * u), Size(4.4f * u, 4.4f * u), style = Stroke(1f * u))
         }
+        // La etiqueta del título (daisen) arriba a la izquierda y la costura de cuatro agujeros en el lomo de la derecha.
+        TemaId.EDO -> {
+            drawRect(tenue, Offset(w * 0.12f, h * 0.08f), Size(w * 0.16f, h * 0.5f), style = Stroke(1f * u))
+            val xs = w - 7 * u
+            linea(xs, 4 * u, xs, h - 4 * u)
+            listOf(0.15f, 0.38f, 0.62f, 0.85f).forEach { f -> linea(xs, h * f, w, h * f); drawCircle(tenue, 1.2f * u, Offset(xs, h * f)) }
+        }
         // Un arco ojival que enmarca el título.
         TemaId.GOTICO -> {
             val x0 = 8 * u; val x1 = w - 8 * u; val base = h - 8 * u; val arranque = h * 0.36f
@@ -286,11 +338,29 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 quadraticTo(x1, arranque - h * 0.2f, x1, arranque); lineTo(x1, base)
             }, tenue, style = Stroke(1.2f * u))
         }
+        // La etiqueta del tomo del archivo, el signo debajo y una mancha de humedad en la esquina.
+        TemaId.ARCANO -> {
+            drawRect(tenue, Offset(w * 0.2f, h * 0.14f), Size(w * 0.6f, h * 0.16f), style = Stroke(1f * u))
+            linea(w * 0.28f, h * 0.2f, w * 0.72f, h * 0.2f); linea(w * 0.28f, h * 0.25f, w * 0.6f, h * 0.25f)
+            with(io.github.ruddy2003.vestigium.ui.Contenedores) { signoOjo(Offset(w / 2, h * 0.55f), w * 0.16f, tenue, 1f * u) }
+            drawCircle(a.copy(alpha = 0.12f), w * 0.16f, Offset(w * 0.85f, h * 0.88f))
+        }
         // Estrellas sueltas y un planeta con su órbita.
         TemaId.ESPACIO -> {
             listOf(0.15f to 0.12f, 0.8f to 0.2f, 0.12f to 0.55f, 0.88f to 0.6f, 0.5f to 0.08f).forEach { (x, y) -> drawCircle(a.copy(alpha = 0.6f), 0.9f * u, Offset(w * x, h * y)) }
             drawOval(tenue, Offset(w * 0.2f, h - 20 * u), Size(w * 0.6f, 9 * u), style = Stroke(0.8f * u))
             drawCircle(tenue, 3.5f * u, Offset(w / 2, h - 15.5f * u))
+        }
+        // La superficie ondulada arriba, burbujas que suben por un lado y una medusa pequeña abajo.
+        TemaId.ABISMO -> {
+            val ola = Path(); var x = 0f
+            ola.moveTo(0f, 8 * u)
+            while (x <= w) { ola.lineTo(x, 8 * u + 1.6f * u * kotlin.math.sin(x / (5 * u))); x += 2 * u }
+            drawPath(ola, tenue, style = Stroke(1f * u))
+            listOf(0.3f to 1.4f, 0.42f to 2f, 0.55f to 1.2f, 0.66f to 1.7f).forEach { (y, r) -> drawCircle(a.copy(alpha = 0.6f), r * u, Offset(w * 0.86f, h * y), style = Stroke(0.6f * u)) }
+            val c = Offset(w / 2, h - 18 * u)
+            drawArc(tenue, 180f, 180f, true, Offset(c.x - 7 * u, c.y - 5 * u), Size(14 * u, 10 * u))
+            for (k in 0 until 3) linea(c.x - 4 * u + k * 4 * u, c.y, c.x - 4.5f * u + k * 4 * u, c.y + 9 * u, tenue, 0.7f * u)
         }
         // Estrellas de lazo de ocho puntas en las esquinas.
         TemaId.ANDALUS -> listOf(Offset(11 * u, 11 * u), Offset(w - 11 * u, 11 * u), Offset(11 * u, h - 11 * u), Offset(w - 11 * u, h - 11 * u)).forEach { o ->
@@ -300,6 +370,14 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                     close()
                 }, tenue)
             }
+        }
+        // Un bloque de glifo en cada esquina, con su numeral de punto y barra; arriba, la greca escalonada.
+        TemaId.MESO -> {
+            listOf(Offset(11 * u, 11 * u), Offset(w - 11 * u, 11 * u), Offset(11 * u, h - 11 * u), Offset(w - 11 * u, h - 11 * u)).forEach { o ->
+                drawRoundRect(tenue, Offset(o.x - 5 * u, o.y - 5 * u), Size(10 * u, 10 * u), androidx.compose.ui.geometry.CornerRadius(2.5f * u), style = Stroke(1f * u))
+                numeralMaya(6, o, 6 * u, tenue)
+            }
+            grecaEscalonada(20 * u, w - 20 * u, 6 * u, 12 * u, tenue, 0.8f * u)
         }
         // Cuernos de carnero enroscados en las esquinas de abajo.
         TemaId.MONGOL -> listOf(Offset(13 * u, h - 13 * u), Offset(w - 13 * u, h - 13 * u)).forEach { o ->
@@ -312,6 +390,19 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             drawCircle(a.copy(alpha = 0.25f), r, c, style = Stroke(0.7f * u))
             drawRect(a.copy(alpha = 0.25f), Offset(c.x - r * 0.88f, c.y - r * 0.6f), Size(r * 1.76f, r * 1.76f), style = Stroke(0.7f * u))
             linea(c.x, c.y - r, c.x, c.y + r, a.copy(alpha = 0.18f), 0.5f * u); linea(c.x - r, c.y, c.x + r, c.y, a.copy(alpha = 0.18f), 0.5f * u)
+        }
+        // La portada de la bitácora: cantoneras de latón en las cuatro esquinas, el cabo que la ciñe abajo y una rosa en lo alto.
+        TemaId.PIRATA -> {
+            val e = w * 0.14f
+            listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
+                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + s.x * e, o.y); lineTo(o.x, o.y + s.y * e); close() }, tenue)
+            }
+            val y = h * 0.86f
+            linea(0f, y, w, y, l.copy(alpha = 0.35f), 2.4f * u)
+            var x = 0f; while (x < w) { linea(x, y + 1.2f * u, x + 1.6f * u, y - 1.2f * u, a.copy(alpha = 0.5f), 0.5f * u); x += 2.2f * u }
+            val c = Offset(w / 2, h * 0.2f); val r = w * 0.09f
+            for (k in 0 until 8) { val an = Math.toRadians(-90.0 + 45.0 * k); val rr = if (k % 2 == 0) r else r * 0.55f
+                linea(c.x, c.y, c.x + (rr * kotlin.math.cos(an)).toFloat(), c.y + (rr * kotlin.math.sin(an)).toFloat(), tenue, 0.8f * u) }
         }
         // Una cuña roja desde la esquina y una barra en diagonal.
         TemaId.URSS -> {
@@ -331,6 +422,12 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 if (i % 2 == 0) linea(x, y0, x + 3.5f * u, y0 + 2.5f * u) else linea(x - 3 * u, y0 + 2 * u, x + 3 * u, y0 + 5 * u)
                 x += 9 * u; i++
             }
+        }
+        TemaId.CUEVA -> {
+            // Una mano de ocre arriba y, abajo, una hilera de puntos de grosor desparejo.
+            drawPath(io.github.ruddy2003.vestigium.ui.manoUnida(Offset(w / 2, 11 * u), 5 * u), a.copy(alpha = 0.55f))
+            var x = 12 * u; var i = 0; val y0 = h - 10 * u
+            while (x < w - 10 * u) { drawCircle(tenue, (1.2f + (i % 3) * 0.4f) * u, Offset(x, y0 + (if (i % 2 == 0) -u else u))); x += 7 * u; i++ }
         }
     }
 }

@@ -92,11 +92,37 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
         <activity-alias
+            android:name=".IconoUrbe"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_urbe"
+            android:roundIcon="@mipmap/ic_launcher_urbe"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
             android:name=".IconoCiber"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_ciber"
             android:roundIcon="@mipmap/ic_launcher_ciber"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoNeon"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_neon"
+            android:roundIcon="@mipmap/ic_launcher_neon"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -118,11 +144,37 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
         <activity-alias
+            android:name=".IconoEgipto"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_egipto"
+            android:roundIcon="@mipmap/ic_launcher_egipto"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
             android:name=".IconoMedieval"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_medieval"
             android:roundIcon="@mipmap/ic_launcher_medieval"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoTemplario"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_templario"
+            android:roundIcon="@mipmap/ic_launcher_templario"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -236,11 +288,37 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
         <activity-alias
+            android:name=".IconoRuinas"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_ruinas"
+            android:roundIcon="@mipmap/ic_launcher_ruinas"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
             android:name=".IconoGotico"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_gotico"
             android:roundIcon="@mipmap/ic_launcher_gotico"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoArcano"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_arcano"
+            android:roundIcon="@mipmap/ic_launcher_arcano"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -262,11 +340,37 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
         <activity-alias
+            android:name=".IconoAbismo"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_abismo"
+            android:roundIcon="@mipmap/ic_launcher_abismo"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
             android:name=".IconoAndalus"
             android:enabled="false"
             android:exported="true"
             android:icon="@mipmap/ic_launcher_andalus"
             android:roundIcon="@mipmap/ic_launcher_andalus"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoMeso"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_meso"
+            android:roundIcon="@mipmap/ic_launcher_meso"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -301,6 +405,19 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
         <activity-alias
+            android:name=".IconoPirata"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_pirata"
+            android:roundIcon="@mipmap/ic_launcher_pirata"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
             android:name=".IconoNavidad"
             android:enabled="false"
             android:exported="true"
@@ -319,6 +436,19 @@
             android:exported="true"
             android:icon="@mipmap/ic_launcher_seda"
             android:roundIcon="@mipmap/ic_launcher_seda"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoEdo"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_edo"
+            android:roundIcon="@mipmap/ic_launcher_edo"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -358,6 +488,19 @@
             android:exported="true"
             android:icon="@mipmap/ic_launcher_antiguas"
             android:roundIcon="@mipmap/ic_launcher_antiguas"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoCueva"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_cueva"
+            android:roundIcon="@mipmap/ic_launcher_cueva"
             android:targetActivity=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

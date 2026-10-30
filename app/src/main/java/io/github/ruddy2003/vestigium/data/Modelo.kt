@@ -680,7 +680,7 @@ data class Config(
     val whatsapp_yo: String = "",
     val escalas_hora: Int = 19,
     val escalas_insistir: Boolean = true,
-    /** Id del tema (ver TemaId): romano, ciber, heleno, medieval, gotico, espacio, andalus, botanico… */
+    /** Id del tema, uno de los de `TemaId` (romano, ciber, neon, heleno… antiguas; la lista completa está ahí). Se guarda como texto: un id desconocido vuelve a romano (el viejo «muertos», a botánico). */
     val tema: String = "romano",
     /** Escala del texto (1 = normal). */
     val letra: Float = 1f,
@@ -700,6 +700,8 @@ data class Config(
     val modo: String = "sistema",
     /** Emblemas que se mueven, transiciones y barras que crecen. */
     val animaciones: Boolean = true,
+    /** El gato del tema en una banda arriba de Día. */
+    val gato: Boolean = true,
     /** Una capa tenue que se mueve detrás de todo: estrellas, nieve, polvo de vitral, luciérnagas… */
     val fondo_vivo: Boolean = true,
     /** Vibraciones al tocar y al guardar. */

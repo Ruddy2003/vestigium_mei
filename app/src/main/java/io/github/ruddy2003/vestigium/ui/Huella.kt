@@ -51,14 +51,38 @@ object Sello {
 
 /** Lo que dice la pantalla de la huella en cada tema. */
 fun textoSello(tema: TemaId): String = when (tema) {
-    TemaId.ROMANO -> "DIES SIGNATVS"; TemaId.CIBER -> "> día.commit() ✓"; TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
-    TemaId.MEDIEVAL -> "Sellado y asentado"; TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"; TemaId.REFUGIO -> "BITÁCORA GUARDADA"
-    TemaId.ORDEN -> "PARTE ENTREGADO"; TemaId.LABORATORIO -> "SESIÓN REGISTRADA"; TemaId.COLONOS -> "Jornada asentada"
-    TemaId.NAPOLEON -> "BOLETÍN ENVIADO"; TemaId.BOTANICO -> "Ejemplar prensado"; TemaId.NAVIDAD -> "Guardado bajo el árbol"
-    TemaId.SEDA -> "Rollo sellado"; TemaId.URSS -> "PLAN CUMPLIDO"
-    TemaId.GOTICO -> "Signatum et lucet"; TemaId.ESPACIO -> "TRANSMISIÓN COMPLETA"; TemaId.ANDALUS -> "Sellado · خُتِم"
-    TemaId.MONGOL -> "ТАМГА ДАРАВ · sellado"; TemaId.RENACIMIENTO -> "Fatto."; TemaId.REVOLUCION -> "CAHIER FIRMADO"
+    TemaId.ROMANO -> "DIES SIGNATVS"
+    TemaId.URBE -> "GIORNATA TIMBRATA"
+    TemaId.CIBER -> "> día.commit() ✓"
+    TemaId.NEON -> "ticket cerrado ◆ 済"
+    TemaId.HELENO -> "ΕΣΦΡΑΓΙΣΘΗ"
+    TemaId.EGIPTO -> "SELLADO ANTE THOT"
+    TemaId.MEDIEVAL -> "Sellado y asentado"
+    TemaId.TEMPLARIO -> "Guardia rendida y sellada"
+    TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"
+    TemaId.REFUGIO -> "BITÁCORA GUARDADA"
+    TemaId.ORDEN -> "PARTE ENTREGADO"
+    TemaId.LABORATORIO -> "SESIÓN REGISTRADA"
+    TemaId.COLONOS -> "Jornada asentada"
+    TemaId.NAPOLEON -> "BOLETÍN ENVIADO"
+    TemaId.BOTANICO -> "Ejemplar prensado"
+    TemaId.RUINAS -> "Marcado en el muro"
+    TemaId.NAVIDAD -> "Guardado bajo el árbol"
+    TemaId.SEDA -> "Rollo sellado"
+    TemaId.EDO -> "Sello de la posta"
+    TemaId.URSS -> "PLAN CUMPLIDO"
+    TemaId.GOTICO -> "Signatum et lucet"
+    TemaId.ARCANO -> "Asentado en el archivo"
+    TemaId.ESPACIO -> "TRANSMISIÓN COMPLETA"
+    TemaId.ABISMO -> "COTA ALCANZADA"
+    TemaId.ANDALUS -> "Sellado · خُتِم"
+    TemaId.MESO -> "Pintado en el códice"
+    TemaId.MONGOL -> "ТАМГА ДАРАВ · sellado"
+    TemaId.RENACIMIENTO -> "Fatto."
+    TemaId.PIRATA -> "Asentado en la bitácora."
+    TemaId.REVOLUCION -> "CAHIER FIRMADO"
     TemaId.ANTIGUAS -> "SELLADO EN LA CRÓNICA"
+    TemaId.CUEVA -> "Tu mano quedó en la pared"
 }
 
 /** Pantalla completa: la huella del tema se va formando desde el centro, como en un lector, y luego se sella. Toca para cerrar. */
@@ -83,9 +107,13 @@ fun CapaHuella() {
 /** La huella de cada tema: el fondo con su textura (papiro, terminal, lacre, cartel…) y la huella entintada encima. */
 fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.ROMANO -> R.drawable.huella_fondo_romano to R.drawable.huella_romano
+    TemaId.URBE -> R.drawable.huella_fondo_urbe to R.drawable.huella_urbe
     TemaId.CIBER -> R.drawable.huella_fondo_ciber to R.drawable.huella_ciber
+    TemaId.NEON -> R.drawable.huella_fondo_neon to R.drawable.huella_neon
     TemaId.HELENO -> R.drawable.huella_fondo_heleno to R.drawable.huella_heleno
+    TemaId.EGIPTO -> R.drawable.huella_fondo_egipto to R.drawable.huella_egipto
     TemaId.MEDIEVAL -> R.drawable.huella_fondo_medieval to R.drawable.huella_medieval
+    TemaId.TEMPLARIO -> R.drawable.huella_fondo_templario to R.drawable.huella_templario
     TemaId.DISTOPIA -> R.drawable.huella_fondo_distopia to R.drawable.huella_distopia
     TemaId.REFUGIO -> R.drawable.huella_fondo_refugio to R.drawable.huella_refugio
     TemaId.ORDEN -> R.drawable.huella_fondo_orden to R.drawable.huella_orden
@@ -93,16 +121,23 @@ fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.COLONOS -> R.drawable.huella_fondo_colonos to R.drawable.huella_colonos
     TemaId.NAPOLEON -> R.drawable.huella_fondo_napoleon to R.drawable.huella_napoleon
     TemaId.BOTANICO -> R.drawable.huella_fondo_botanico to R.drawable.huella_botanico
+    TemaId.RUINAS -> R.drawable.huella_fondo_ruinas to R.drawable.huella_ruinas
     TemaId.NAVIDAD -> R.drawable.huella_fondo_navidad to R.drawable.huella_navidad
     TemaId.SEDA -> R.drawable.huella_fondo_seda to R.drawable.huella_seda
+    TemaId.EDO -> R.drawable.huella_fondo_edo to R.drawable.huella_edo
     TemaId.URSS -> R.drawable.huella_fondo_urss to R.drawable.huella_urss
     TemaId.GOTICO -> R.drawable.huella_fondo_gotico to R.drawable.huella_gotico
+    TemaId.ARCANO -> R.drawable.huella_fondo_arcano to R.drawable.huella_arcano
     TemaId.ESPACIO -> R.drawable.huella_fondo_espacio to R.drawable.huella_espacio
+    TemaId.ABISMO -> R.drawable.huella_fondo_abismo to R.drawable.huella_abismo
     TemaId.ANDALUS -> R.drawable.huella_fondo_andalus to R.drawable.huella_andalus
+    TemaId.MESO -> R.drawable.huella_fondo_meso to R.drawable.huella_meso
     TemaId.MONGOL -> R.drawable.huella_fondo_mongol to R.drawable.huella_mongol
     TemaId.RENACIMIENTO -> R.drawable.huella_fondo_renacimiento to R.drawable.huella_renacimiento
+    TemaId.PIRATA -> R.drawable.huella_fondo_pirata to R.drawable.huella_pirata
     TemaId.REVOLUCION -> R.drawable.huella_fondo_revolucion to R.drawable.huella_revolucion
     TemaId.ANTIGUAS -> R.drawable.huella_fondo_antiguas to R.drawable.huella_antiguas
+    TemaId.CUEVA -> R.drawable.huella_fondo_cueva to R.drawable.huella_cueva
 }
 
 /** El sello del tema en un círculo: fondo con textura y huella. [revela] (0–1) la descubre desde el núcleo, como un lector. */

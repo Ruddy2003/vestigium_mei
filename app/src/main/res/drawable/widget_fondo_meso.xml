@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mesoamérica: obsidiana con el marco de cinabrio, un filete de azul maya y un seis maya (punto y barra) de jade en cada esquina. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F5161C1D"/>
+            <stroke android:width="1.5dp" android:color="#A3301E"/>
+            <corners android:radius="7dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#7763C5DD"/>
+            <corners android:radius="4dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="10dp" android:height="10dp" android:top="2.5dp" android:left="2.5dp">
+        <vector android:width="10dp" android:height="10dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M1,6.2 L9,6.2 L9,8.2 L1,8.2 Z" android:fillColor="#6FCB8F"/>
+            <path android:pathData="M5,3.4 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 Z" android:fillColor="#6FCB8F"/>
+        </vector>
+    </item>
+    <item android:gravity="top|right" android:width="10dp" android:height="10dp" android:top="2.5dp" android:right="2.5dp">
+        <vector android:width="10dp" android:height="10dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M1,6.2 L9,6.2 L9,8.2 L1,8.2 Z" android:fillColor="#6FCB8F"/>
+            <path android:pathData="M5,3.4 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 Z" android:fillColor="#6FCB8F"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|left" android:width="10dp" android:height="10dp" android:left="2.5dp" android:bottom="2.5dp">
+        <vector android:width="10dp" android:height="10dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M1,6.2 L9,6.2 L9,8.2 L1,8.2 Z" android:fillColor="#6FCB8F"/>
+            <path android:pathData="M5,3.4 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 Z" android:fillColor="#6FCB8F"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|right" android:width="10dp" android:height="10dp" android:right="2.5dp" android:bottom="2.5dp">
+        <vector android:width="10dp" android:height="10dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M1,6.2 L9,6.2 L9,8.2 L1,8.2 Z" android:fillColor="#6FCB8F"/>
+            <path android:pathData="M5,3.4 m-1.5,0 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0 Z" android:fillColor="#6FCB8F"/>
+        </vector>
+    </item>
+</layer-list>

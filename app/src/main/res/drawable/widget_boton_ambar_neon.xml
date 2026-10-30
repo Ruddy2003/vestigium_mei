@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ciudad neón: la placa del letrero, con las esquinas redondas y el tubo alrededor. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF35240A"/>
+            <stroke android:width="1.2dp" android:color="#FFFFB238"/>
+            <corners android:radius="20dp"/>
+        </shape>
+    </item>
+</layer-list>

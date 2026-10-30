@@ -37,6 +37,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
@@ -248,15 +249,25 @@ fun CuadriculaAfecto(valencia: Int?, activacion: Int?, modifier: Modifier = Modi
 private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     // Tesela de mosaico, apenas irregular.
     TemaId.ROMANO -> GenericShape { s, _ -> moveTo(s.width * 0.03f, 0f); lineTo(s.width, s.height * 0.04f); lineTo(s.width * 0.97f, s.height); lineTo(0f, s.height * 0.96f); close() }
+    // Sampietrino: el adoquín cuadrado de aristas gastadas.
+    TemaId.URBE -> RoundedCornerShape(22)
     // Píxel con una esquina cortada.
     TemaId.CIBER -> CutCornerShape(topEndPercent = 28)
+    TemaId.NEON -> RoundedCornerShape(percent = 40)
     // Frontón.
     TemaId.HELENO -> GenericShape { s, _ -> moveTo(0f, s.height * 0.24f); lineTo(s.width / 2, 0f); lineTo(s.width, s.height * 0.24f); lineTo(s.width, s.height); lineTo(0f, s.height); close() }
+    // Mastaba: muros en talud con la cornisa que sobresale arriba.
+    TemaId.EGIPTO -> GenericShape { s, _ -> moveTo(0f, 0f); lineTo(s.width, 0f); lineTo(s.width * 0.94f, s.height * 0.12f); lineTo(s.width, s.height); lineTo(0f, s.height); lineTo(s.width * 0.06f, s.height * 0.12f); close() }
     // Esquinas cóncavas de miniatura.
     TemaId.MEDIEVAL -> GenericShape { s, _ ->
         val w = s.width; val h = s.height; val r = minOf(w, h) * 0.22f
         moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h - r); quadraticTo(w - r, h - r, w - r, h)
         lineTo(r, h); quadraticTo(r, h - r, 0f, h - r); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
+    }
+    // Escudo de lágrima.
+    TemaId.TEMPLARIO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(w * 0.06f, 0f); lineTo(w * 0.94f, 0f); quadraticTo(w * 0.98f, h * 0.6f, w * 0.5f, h); quadraticTo(w * 0.02f, h * 0.6f, w * 0.06f, 0f); close()
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
@@ -276,20 +287,33 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     TemaId.NAPOLEON -> GenericShape { s, _ -> moveTo(s.width / 2, 0f); lineTo(s.width, s.height / 2); lineTo(s.width / 2, s.height); lineTo(0f, s.height / 2); close() }
     // Hoja.
     TemaId.BOTANICO -> RoundedCornerShape(topStartPercent = 50, topEndPercent = 6, bottomEndPercent = 50, bottomStartPercent = 6)
+    // Un adoquín desportillado.
+    TemaId.RUINAS -> GenericShape { s, _ -> moveTo(s.width * 0.08f, 0f); lineTo(s.width * 0.8f, 0f); lineTo(s.width, s.height * 0.22f); lineTo(s.width * 0.94f, s.height); lineTo(s.width * 0.14f, s.height * 0.94f); lineTo(0f, s.height * 0.6f); close() }
     // Caja de regalo (el lazo se dibuja aparte).
     TemaId.NAVIDAD -> RoundedCornerShape(12)
     // Moneda (el agujero se dibuja aparte).
     TemaId.SEDA -> GenericShape { s, _ -> val r = minOf(s.width, s.height) / 2; addOval(Rect(Offset(s.width / 2, s.height / 2), r)) }
+    // El sello hanko: cuadrado de esquinas apenas redondeadas.
+    TemaId.EDO -> GenericShape { s, _ -> val l = minOf(s.width, s.height) * 0.92f; val o = Offset((s.width - l) / 2, (s.height - l) / 2)
+        addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(o, Size(l, l)), androidx.compose.ui.geometry.CornerRadius(l * 0.12f))) }
     // Lanceta.
     TemaId.GOTICO -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
         moveTo(0f, h); lineTo(0f, h * 0.45f); quadraticTo(0f, h * 0.05f, w / 2, 0f); quadraticTo(w, h * 0.05f, w, h * 0.45f); lineTo(w, h); close()
+    }
+    // Un recorte de papel: la orilla de arriba rasgada y la esquina de abajo doblada.
+    TemaId.ARCANO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val d = h * 0.06f
+        moveTo(0f, d); for (k in 1..6) lineTo(w * k / 6, if (k % 2 == 0) d else 0f)
+        lineTo(w, h - h * 0.18f); lineTo(w - h * 0.18f, h); lineTo(0f, h); close()
     }
     // Hexágono, como los espejos de un telescopio.
     TemaId.ESPACIO -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
         moveTo(w * 0.25f, 0f); lineTo(w * 0.75f, 0f); lineTo(w, h / 2); lineTo(w * 0.75f, h); lineTo(w * 0.25f, h); lineTo(0f, h / 2); close()
     }
+    // Una burbuja: el círculo entero.
+    TemaId.ABISMO -> GenericShape { s, _ -> addOval(androidx.compose.ui.geometry.Rect(0f, 0f, s.width, s.height)) }
     // Estrella de ocho puntas.
     TemaId.ANDALUS -> GenericShape { s, _ ->
         val c = Offset(s.width / 2, s.height / 2); val r = minOf(s.width, s.height) / 2
@@ -301,6 +325,11 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
         }
         close()
     }
+    // El bloque de un glifo: cuadro de esquinas muy redondeadas, un poco más ancho que alto.
+    TemaId.MESO -> GenericShape { s, _ ->
+        val r = minOf(s.width, s.height) * 0.3f
+        addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, s.height * 0.06f, s.width, s.height * 0.94f, androidx.compose.ui.geometry.CornerRadius(r, r)))
+    }
     // Cúpula de ger.
     TemaId.MONGOL -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -308,6 +337,8 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Hoja con la esquina doblada.
     TemaId.RENACIMIENTO -> CutCornerShape(bottomEndPercent = 30)
+    // El doblón acuñado a martillo: un octógono de canto irregular.
+    TemaId.PIRATA -> CutCornerShape(topStartPercent = 22, topEndPercent = 30, bottomEndPercent = 24, bottomStartPercent = 28)
     // Paralelogramo de cartel.
     TemaId.URSS -> GenericShape { s, _ -> moveTo(s.width * 0.18f, 0f); lineTo(s.width, 0f); lineTo(s.width * 0.82f, s.height); lineTo(0f, s.height); close() }
     // Banderola con cola de golondrina.
@@ -316,6 +347,12 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     TemaId.ANTIGUAS -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
         moveTo(w * 0.12f, 0f); lineTo(w * 0.94f, h * 0.08f); lineTo(w, h * 0.74f); lineTo(w * 0.82f, h); lineTo(w * 0.06f, h * 0.92f); lineTo(0f, h * 0.22f); close()
+    }
+    // Un canto rodado: los cuatro lados curvos y desparejos.
+    TemaId.CUEVA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(w * 0.5f, 0f); quadraticTo(w, h * 0.02f, w * 0.98f, h * 0.5f); quadraticTo(w * 0.96f, h, w * 0.48f, h * 0.98f)
+        quadraticTo(0f, h * 0.95f, w * 0.02f, h * 0.48f); quadraticTo(w * 0.05f, 0f, w * 0.5f, 0f); close()
     }
 }
 
@@ -331,10 +368,26 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
             val l = minOf(s.width, s.height) * 0.22f
             drawRect(fondo, Offset(s.width / 2 - l / 2, s.height / 2 - l / 2), Size(l, l))
         }
+        // El marco en reserva del sello.
+        TemaId.EDO -> {
+            val l = minOf(s.width, s.height) * 0.92f; val m = l * 0.12f
+            drawRect(fondo.copy(alpha = 0.7f), Offset((s.width - l) / 2 + m, (s.height - l) / 2 + m), Size(l - 2 * m, l - 2 * m), style = Stroke(l * 0.05f))
+        }
         TemaId.ROMANO -> {}
+        // El brillo de la piedra pisada, en una arista.
+        TemaId.URBE -> drawLine(fondo.copy(alpha = 0.35f), Offset(s.width * 0.2f, s.height * 0.3f), Offset(s.width * 0.5f, s.height * 0.16f), minOf(s.width, s.height) * 0.06f)
         TemaId.CIBER -> {}
+        // Una gota de lluvia que resbala por el letrero.
+        TemaId.NEON -> {
+            val g = minOf(s.width, s.height) * 0.07f
+            drawLine(fondo.copy(alpha = 0.5f), Offset(s.width * 0.72f, s.height * 0.2f), Offset(s.width * 0.7f, s.height * 0.45f), g, StrokeCap.Round)
+        }
         TemaId.HELENO -> {}
+        // El baquetón bajo la cornisa de la mastaba.
+        TemaId.EGIPTO -> drawLine(fondo.copy(alpha = 0.5f), Offset(s.width * 0.06f, s.height * 0.15f), Offset(s.width * 0.94f, s.height * 0.15f), minOf(s.width, s.height) * 0.04f)
         TemaId.MEDIEVAL -> {}
+        // La cruz patada calada en el escudo.
+        TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
         TemaId.REFUGIO -> {}
         TemaId.ORDEN -> {}
@@ -342,13 +395,33 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.COLONOS -> {}
         TemaId.NAPOLEON -> {}
         TemaId.BOTANICO -> {}
+        TemaId.RUINAS -> drawLine(fondo.copy(alpha = 0.35f), Offset(s.width * 0.7f, 0f), Offset(s.width * 0.62f, s.height * 0.3f), 1.5f)   // una grieta
         TemaId.GOTICO -> {}
+        // Una gota de tinta que se corrió en la esquina.
+        TemaId.ARCANO -> { val l = minOf(s.width, s.height); drawCircle(fondo.copy(alpha = 0.3f), l * 0.06f, Offset(s.width * 0.2f, s.height * 0.78f)) }
         TemaId.ESPACIO -> {}
+        // El brillo de la burbuja, arriba a la izquierda.
+        TemaId.ABISMO -> {
+            val r = minOf(s.width, s.height) / 2
+            drawArc(fondo.copy(alpha = 0.55f), 200f, 60f, false, Offset(s.width / 2 - r * 0.7f, s.height / 2 - r * 0.7f), Size(r * 1.4f, r * 1.4f), style = Stroke(r * 0.12f))
+        }
         TemaId.ANDALUS -> {}
+        // Un punto y una barra grabados abajo: el seis maya.
+        TemaId.MESO -> {
+            val r = minOf(s.width, s.height) / 2
+            drawRect(fondo.copy(alpha = 0.45f), Offset(s.width / 2 - r * 0.4f, s.height * 0.74f), Size(r * 0.8f, r * 0.12f))
+            drawCircle(fondo.copy(alpha = 0.45f), r * 0.08f, Offset(s.width / 2, s.height * 0.66f))
+        }
         TemaId.MONGOL -> {}
         TemaId.RENACIMIENTO -> {}
+        // La cruz de cuarteles del doblón, apenas grabada.
+        TemaId.PIRATA -> {
+            val c = Offset(s.width / 2, s.height / 2); val l = minOf(s.width, s.height) * 0.28f
+            drawLine(fondo.copy(alpha = 0.18f), Offset(c.x - l, c.y), Offset(c.x + l, c.y), 1.2f); drawLine(fondo.copy(alpha = 0.18f), Offset(c.x, c.y - l), Offset(c.x, c.y + l), 1.2f)
+        }
         TemaId.URSS -> {}
         TemaId.REVOLUCION -> {}
         TemaId.ANTIGUAS -> {}
+        TemaId.CUEVA -> for (k in -1..1) drawCircle(fondo.copy(alpha = 0.45f), minOf(s.width, s.height) * 0.05f, Offset(s.width / 2 + k * s.width * 0.14f, s.height * 0.8f))   // tres puntos de ocre
     }
 }

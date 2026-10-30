@@ -110,10 +110,25 @@ private fun mas(a: Path, b: Path) = Path.combine(PathOperation.Union, a, b)
  */
 fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.ROMANO -> Path().apply { moveTo(c.x - r, c.y + r * 0.35f); quadraticTo(c.x - r * 0.1f, c.y - r * 1.15f, c.x + r, c.y - r * 0.35f); quadraticTo(c.x + r * 0.1f, c.y + r * 1.15f, c.x - r, c.y + r * 0.35f); close() }
+    // Una cúpula con su linterna.
+    TemaId.URBE -> Path().apply {
+        moveTo(c.x - r, c.y + r * 0.6f); lineTo(c.x - r, c.y + r * 0.2f)
+        arcTo(Rect(c.x - r, c.y - r * 0.8f, c.x + r, c.y + r * 1.2f), 180f, 180f, false)
+        lineTo(c.x + r, c.y + r * 0.6f); close()
+        addRect(Rect(c.x - r * 0.18f, c.y - r * 1.15f, c.x + r * 0.18f, c.y - r * 0.78f))
+    }
     TemaId.HELENO -> mas(estrella(c, r, 16, 0.55f), circulo(c, r * 0.3f))
+    // El ankh, la vida.
+    TemaId.EGIPTO -> mas(mas(menos(ovalo(Offset(c.x, c.y - r * 0.5f), r * 0.42f, r * 0.5f), ovalo(Offset(c.x, c.y - r * 0.5f), r * 0.22f, r * 0.3f)),
+        Path().apply { addRect(Rect(c.x - r * 0.75f, c.y - r * 0.06f, c.x + r * 0.75f, c.y + r * 0.16f)) }), Path().apply { addRect(Rect(c.x - r * 0.13f, c.y, c.x + r * 0.13f, c.y + r)) })
     TemaId.MEDIEVAL -> listOf(0.0, PI / 2, PI, 3 * PI / 2).map { circulo(c + dir(it) * (r * 0.45f), r * 0.48f) }.reduce { a, b -> mas(a, b) }
+    TemaId.TEMPLARIO -> io.github.ruddy2003.vestigium.ui.cruzPatada(c, r * 1.05f, 0.16f, 0.46f)
     TemaId.GOTICO -> (0 until 6).map { circulo(c + dir(PI / 3 * it - PI / 2) * (r * 0.55f), r * 0.4f) }.fold(circulo(c, r * 0.42f)) { a, b -> mas(a, b) }
+    // El heptágono del signo con el ojo calado.
+    TemaId.ARCANO -> menos(poligono(c, r, 7, -PI / 2), menos(circulo(c, r * 0.42f), circulo(c, r * 0.16f)))
     TemaId.CIBER -> menos(poligono(c, r, 6, 0.0), poligono(c, r * 0.45f, 6, 0.0))
+    // El tazón del letrero visto de frente: el borde y la sopa, con un palillo cruzado.
+    TemaId.NEON -> mas(menos(circulo(c, r), circulo(c + Offset(0f, -r * 0.35f), r * 0.85f)), Path().apply { moveTo(c.x + r * 0.1f, c.y - r * 0.1f); lineTo(c.x + r * 0.95f, c.y - r * 0.95f); lineTo(c.x + r * 1.05f, c.y - r * 0.85f); lineTo(c.x + r * 0.2f, c.y); close() })
     TemaId.DISTOPIA -> {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
@@ -148,8 +163,15 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     // Un escarabajo: élitros, pronoto y cabeza.
     TemaId.BOTANICO -> listOf(ovalo(c + Offset(0f, r * 0.2f), r * 0.62f, r * 0.78f), ovalo(c + Offset(0f, -r * 0.58f), r * 0.44f, r * 0.24f),
         circulo(c + Offset(0f, -r * 0.86f), r * 0.17f)).reduce { a, b -> mas(a, b) }
+    // Una hoja de hiedra de cinco puntas.
+    TemaId.RUINAS -> Path().apply {
+        moveTo(c.x, c.y + r); lineTo(c.x - r * 0.62f, c.y + r * 0.62f); lineTo(c.x - r, c.y - r * 0.1f); lineTo(c.x - r * 0.4f, c.y - r * 0.12f)
+        lineTo(c.x, c.y - r); lineTo(c.x + r * 0.4f, c.y - r * 0.12f); lineTo(c.x + r, c.y - r * 0.1f); lineTo(c.x + r * 0.62f, c.y + r * 0.62f); close()
+    }
     TemaId.NAVIDAD -> estrella(c, r, 6, 0.32f)
     TemaId.SEDA -> menos(circulo(c, r), poligono(c, r * 0.36f, 4, PI / 4))
+    // La flor de cerezo de cinco pétalos, con el centro calado.
+    TemaId.EDO -> menos((0 until 5).map { circulo(c + dir(-PI / 2 + it * 2 * PI / 5) * (r * 0.5f), r * 0.46f) }.reduce { a, b -> mas(a, b) }, circulo(c, r * 0.16f))
     // Un engrane de ocho dientes con la estrella calada en medio.
     TemaId.URSS -> {
         val paso = 2 * PI / 8
@@ -164,13 +186,22 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         mas(menos(rueda, circulo(c, r * 0.46f)), estrella(c, r * 0.38f, 5, 0.4f))
     }
     TemaId.ESPACIO -> mas(circulo(c, r * 0.5f), menos(ovalo(c, r, r * 0.36f), ovalo(c, r * 0.78f, r * 0.2f)))
+    // Una burbuja: el aro y su brillo.
+    TemaId.ABISMO -> mas(menos(circulo(c, r), circulo(c, r * 0.76f)), circulo(c + Offset(-r * 0.3f, -r * 0.3f), r * 0.2f))
     TemaId.ANDALUS -> mas(poligono(c, r, 4, 0.0), poligono(c, r, 4, PI / 4))
+    // Una cuenta de jade, con su perforación.
+    TemaId.MESO -> menos(circulo(c, r), circulo(c, r * 0.28f))
     TemaId.MONGOL -> mas(estrella(c, r, 8, 0.5f), circulo(c, r * 0.45f))
     TemaId.RENACIMIENTO -> mas(menos(circulo(c, r), circulo(c, r * 0.8f)), poligono(c, r * 0.8f, 4, -PI / 2))
+    // El doblón: la moneda con la cruz calada de sus cuatro cuarteles.
+    TemaId.PIRATA -> menos(menos(poligono(c, r, 12, -PI / 2), Path().apply { addRect(Rect(c.x - r * 0.09f, c.y - r * 0.6f, c.x + r * 0.09f, c.y + r * 0.6f)) }),
+        Path().apply { addRect(Rect(c.x - r * 0.6f, c.y - r * 0.09f, c.x + r * 0.6f, c.y + r * 0.09f)) })
     // La escarapela: borde plisado y el anillo blanco hueco.
     TemaId.REVOLUCION -> menos(estrella(c, r, 18, 0.88f), menos(circulo(c, r * 0.62f), circulo(c, r * 0.4f)))
     // Una gema tallada: seis puntas cortas.
     TemaId.ANTIGUAS -> estrella(c, r, 6, 0.72f)
+    // La mano de ocre: cada calificación, una mano más en la pared.
+    TemaId.CUEVA -> io.github.ruddy2003.vestigium.ui.manoUnida(c, r)
 }
 
 /**

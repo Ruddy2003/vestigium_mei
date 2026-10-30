@@ -211,6 +211,70 @@ def botanico(tam):
         hormiga(d2, tam * (0.3 + 0.085 * i), tam * (0.37 - 0.04 * i), tam * 0.05, -0.5, (128, 46, 22, 250))
     guardar(fondo, capa, 'botanico')
 
+# ------------------------------------------------------------------ Ciudad verde
+def hoja_hiedra(d, cx, cy, s, ang, color, nervio=None):
+    """Una hoja de hiedra de cinco puntas, centrada en (cx, cy), de tamaño [s], con la punta hacia el ángulo [ang]."""
+    pts = [(0, 0.5), (-0.55, 0.35), (-0.8, -0.05), (-0.32, -0.05), (0, -0.5), (0.32, -0.05), (0.8, -0.05), (0.55, 0.35)]
+    ca, sa = math.cos(ang + math.pi / 2), math.sin(ang + math.pi / 2)
+    rot = lambda px, py: (cx + (px * ca - py * sa) * s, cy + (px * sa + py * ca) * s)
+    d.polygon([rot(px, py) for px, py in pts], fill=color)
+    if nervio: d.line([rot(0, 0.5), rot(0, -0.35)], fill=nervio, width=max(1, int(s / 22)))
+
+def grieta(d, x, y, ang, largo, color, w, rng, rama=True):
+    """Una grieta: un camino quebrado que a veces se bifurca."""
+    pts = [(x, y)]; paso = largo / 10
+    for k in range(10):
+        ang += (rng.random() - 0.5) * 0.9
+        x += paso * math.cos(ang); y += paso * math.sin(ang); pts.append((x, y))
+        if rama and k == 4: grieta(d, x, y, ang + 0.8 * (1 if rng.random() < 0.5 else -1), largo * 0.45, color, max(1, w - 1), rng, False)
+    d.line(pts, fill=color, width=w)
+
+def ruinas(tam):
+    """Ciudad verde: losa de hormigón agrietada con musgo, la línea gastada de una calle y hiedra que entra por una esquina;
+    la huella es musgo que creció en sus surcos, y una guía de hiedra la cruza."""
+    m = mascara_sello(tam)
+    base = mezcla(col('#D9D8D0'), col('#B7B6AC'), ruido(tam, tam / 50, 31) * 0.8)
+    base = base * (0.93 + 0.1 * ruido(tam, 0.8, 32)[..., None])
+    musgo = np.clip((ruido(tam, tam / 14, 34) - 0.6) * 3, 0, 1)
+    base = mezcla(base, col('#7F8F5A'), musgo * 0.55)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    base = mezcla(base, col('#8C8C82'), np.clip(dist - 0.78, 0, 1) * 1.3)
+    fondo = a_img(base)
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    rng = np.random.default_rng(41)
+    # La junta entre dos losas y la línea pintada de la calle, gastada a tramos.
+    d.line([(0, tam * 0.64), (tam, tam * 0.6)], fill=(80, 80, 74, 110), width=max(2, tam // 200))
+    for i in range(6):
+        x0 = tam * (0.0 + i * 0.18); x1 = x0 + tam * 0.11
+        y0 = tam * 0.84 - x0 * 0.05; y1 = tam * 0.84 - x1 * 0.05; g = tam * 0.022
+        d.polygon([(x0, y0 - g / 2), (x1, y1 - g / 2), (x1, y1 + g / 2), (x0, y0 + g / 2)], fill=(214, 170, 60, 120 if i % 3 else 70))
+    # Grietas.
+    for (x, y, a, l) in [(0.0, 0.22, 0.3, 0.55), (1.0, 0.38, 2.9, 0.5), (0.58, 0.0, 1.7, 0.4), (0.3, 1.0, -1.3, 0.35)]:
+        grieta(d, tam * x, tam * y, a, tam * l, (60, 62, 56, 150), max(1, tam // 260), rng)
+    # Hiedra que entra por la esquina de abajo a la izquierda.
+    tallo = [(tam * (0.02 + 0.3 * t + 0.04 * math.sin(t * 9)), tam * (0.99 - 0.48 * t)) for t in [i / 30 for i in range(31)]]
+    d.line(tallo, fill=(58, 80, 40, 210), width=max(2, tam // 240))
+    for i in range(2, 31, 3):
+        x, y = tallo[i]; lado = 1 if (i // 3) % 2 else -1
+        hoja_hiedra(d, x + lado * tam * 0.025, y, tam * (0.06 - 0.03 * i / 30), -math.pi / 2 + lado * 0.9, (79, 122, 51, 225), (40, 60, 28, 200))
+    fondo = fondo.convert('RGB')
+    # La huella: musgo en los surcos, más claro donde le da la luz y ralo en algunos tramos.
+    grano = ruido(tam, 0.7, 35)
+    carga = ruido(tam, tam / 14, 36)
+    tinta = mezcla(col('#2F4A22'), col('#6E8F3E'), carga)
+    alfa = m * np.clip(0.72 + 0.28 * grano, 0, 1) * np.clip(0.7 + carga * 0.45, 0, 1)
+    sh = relieve(m, fuerza=0.5)[..., None]
+    capa = a_rgba(tinta * (1 + sh * 0.25), alfa)
+    d2 = ImageDraw.Draw(capa, 'RGBA')
+    # Una guía de hiedra que cruza la huella en diagonal, con sus hojas.
+    guia = [(tam * (0.22 + 0.55 * t), tam * (0.78 - 0.5 * t + 0.05 * math.sin(t * 8))) for t in [i / 40 for i in range(41)]]
+    d2.line(guia, fill=(46, 66, 30, 255), width=max(2, tam // 200))
+    for i in range(3, 41, 6):
+        x, y = guia[i]; lado = 1 if (i // 6) % 2 else -1
+        hoja_hiedra(d2, x + lado * tam * 0.028, y + lado * tam * 0.018, tam * 0.058, -math.pi / 2 + lado * 1.0, (98, 142, 62, 255), (40, 60, 28, 255))
+    guardar(fondo, capa, 'ruinas')
+
 # ------------------------------------------------------------------ gótico (vitral)
 def gotico(tam):
     m = mascara_sello(tam)
@@ -256,6 +320,57 @@ def gotico(tam):
     halo.alpha_composite(capa)
     guardar(fondo, halo, 'gotico')
 
+# ------------------------------------------------------------------ horror cósmico
+def arcano(tam):
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    # Fondo: la hoja del archivo, amarillenta, con manchas de humedad, un recorte de periódico pegado detrás con sus
+    # columnas, el cerco de una taza y, al pie, la costa y el faro dibujados a pluma.
+    g = ruido(tam, tam / 9, 31)
+    base = mezcla(col('#D6CAA8'), col('#E8DFC6'), g)
+    manchas = ruido(tam, tam / 14, 32)
+    base = mezcla(base, col('#B8A67A'), np.clip((manchas - 0.62) * 2.2, 0, 0.45))
+    fondo = a_img(base).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    recorte = Image.new('RGBA', (int(tam * 0.5), int(tam * 0.34)), (222, 214, 190, 255))
+    dr = ImageDraw.Draw(recorte)
+    w0, h0 = recorte.size
+    dr.rectangle([w0 * 0.06, h0 * 0.08, w0 * 0.94, h0 * 0.2], fill=(70, 70, 64, 150))
+    for colx in (0.06, 0.52):
+        y = h0 * 0.28
+        while y < h0 * 0.92:
+            dr.line([(w0 * colx, y), (w0 * (colx + 0.42), y)], fill=(90, 90, 82, 120), width=max(1, int(tam / 360)))
+            y += h0 * 0.055
+    recorte = recorte.rotate(7, expand=True, resample=Image.BICUBIC)
+    fondo.alpha_composite(recorte, (int(tam * 0.46), int(tam * 0.04)))
+    for (x, y) in ((tam * 0.48, tam * 0.07), (tam * 0.9, tam * 0.13)):
+        d.rectangle([x - tam * 0.05, y - tam * 0.015, x + tam * 0.05, y + tam * 0.015], fill=(236, 226, 170, 110))
+    cx, cy, rr = tam * 0.24, tam * 0.78, tam * 0.13
+    d.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], outline=(120, 96, 52, 70), width=max(2, int(tam / 120)))
+    tinta = (30, 51, 41)
+    costa = [(0, tam * 0.95)]
+    for k in range(1, 21):
+        x = tam * k / 20; costa.append((x, tam * (0.95 - 0.06 * math.sin(k * 0.7) - (0.08 if k > 15 else 0))))
+    d.line(costa, fill=tinta + (110,), width=max(1, int(tam / 300)))
+    fx, fy = tam * 0.88, tam * 0.8
+    d.polygon([(fx - tam * 0.015, fy + tam * 0.07), (fx - tam * 0.009, fy), (fx + tam * 0.009, fy), (fx + tam * 0.015, fy + tam * 0.07)], fill=tinta + (130,))
+    d.polygon([(fx, fy - tam * 0.005), (fx - tam * 0.2, fy - tam * 0.045), (fx - tam * 0.2, fy + tam * 0.02)], fill=(236, 214, 140, 70))
+    fondo = fondo.convert('RGB')
+    # La huella: un sello de goma entintado de verde-negro que no apretó parejo: la tinta se corta en unas crestas y se
+    # carga en otras, con dos o tres gotas que saltaron.
+    presion = ruido(tam, tam / 30, 33)
+    alfa = m * np.clip(0.45 + presion * 0.75, 0, 1) * (ruido(tam, 1.2, 34) > 0.18)
+    rgb = np.zeros((tam, tam, 3), np.float32) + col('#1E3329')
+    rgb = mezcla(rgb, col('#2F5446'), np.clip(1 - presion, 0, 1) * 0.5)
+    capa = a_rgba(rgb, alfa)
+    dc = ImageDraw.Draw(capa, 'RGBA')
+    r = np.random.default_rng(35)
+    for _ in range(5):
+        a = r.random() * math.tau; dist = tam * (0.36 + r.random() * 0.06); s = tam * (0.006 + r.random() * 0.012)
+        x, y = tam / 2 + dist * math.cos(a), tam * 0.52 + dist * math.sin(a)
+        dc.ellipse([x - s, y - s, x + s, y + s], fill=(30, 51, 41, 200))
+    guardar(fondo, capa, 'arcano')
+
 # ------------------------------------------------------------------ espacio
 def espacio(tam):
     m = mascara_sello(tam)
@@ -291,6 +406,79 @@ def espacio(tam):
         i = r.integers(len(xs)); s = 0.8 + r.random() * 1.6
         d2.ellipse([xs[i] - s, ys[i] - s, xs[i] + s, ys[i] + s], fill=(255, 255, 255, 255))
     guardar(fondo, capa, 'espacio')
+
+# ------------------------------------------------------------------ Ciudad neón
+def neon(tam):
+    m = mascara_sello(tam)
+    # Fondo: asfalto mojado violeta, con los reflejos borrosos de tres letreros y la llovizna en diagonal.
+    base = np.zeros((tam, tam, 3)) + col('#0E0812')
+    base = mezcla(base, col('#2A1630'), np.clip((ruido(tam, tam / 10, 61) - 0.4) * 1.6, 0, 1) * 0.7)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    for (cx, cy, rr, c, k) in ((0.18, 0.2, 0.22, '#FF3D9A', 0.55), (0.85, 0.78, 0.2, '#FFB238', 0.45), (0.78, 0.15, 0.12, '#8CFF5A', 0.3)):
+        dist = np.sqrt((xx - cx * tam) ** 2 + ((yy - cy * tam) * 0.6) ** 2) / (rr * tam)
+        base = mezcla(base, col(c), np.clip(1 - dist, 0, 1) ** 2 * k)
+    fondo = a_img(base).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    r = np.random.default_rng(62)
+    for _ in range(int(tam * 0.45)):
+        x, y = r.random() * tam, r.random() * tam; l = tam * (0.02 + r.random() * 0.04)
+        d.line([(x, y), (x - l * 0.25, y + l)], fill=(190, 200, 230, int(10 + 22 * r.random())), width=1)
+    fondo = fondo.convert('RGB')
+    # Huella de tubo de neón: núcleo casi blanco, cuerpo magenta y el halo que se abre alrededor.
+    tono = mezcla(col('#FF3D9A'), col('#FFE3F1'), np.clip((m - 0.75) * 4, 0, 1) * 0.6)
+    glow = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 28))).astype(np.float32) / 255
+    alfa = np.clip(m * 0.95 + glow * 0.6, 0, 1)
+    guardar(fondo, a_rgba(tono, alfa), 'neon')
+# ------------------------------------------------------------------ abismo
+def abismo(tam):
+    """El agua que se oscurece hacia abajo, con los haces de la superficie arriba, nieve marina, burbujas y medusas
+    lejanas; la huella brilla con luz propia (verde agua, con un velo violeta), como un animal del fondo."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    prof = yy / tam
+    base = mezcla(np.zeros((tam, tam, 3)) + col('#0E5A78'), col('#02090F'), np.clip(prof * 1.25, 0, 1))
+    # Haces de luz que bajan en diagonal desde la superficie y se apagan con la profundidad.
+    haces = np.clip(np.sin((xx + yy * 0.35) / tam * 18) * np.sin((xx - yy * 0.2) / tam * 7 + 1.3), 0, 1) ** 3
+    base = mezcla(base, col('#9FE3F0'), haces * np.clip(0.55 - prof, 0, 1) * 0.55)
+    n1 = ruido(tam, tam / 12, 61)
+    base = mezcla(base, col('#123A55'), np.clip((n1 - 0.5) * 2, 0, 1) * 0.35)
+    fondo = a_img(base).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    r = np.random.default_rng(62)
+    # Nieve marina.
+    for _ in range(int(tam * 0.9)):
+        x, y = r.random() * tam, r.random() * tam; s = 0.5 + r.random() * 0.9
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(210, 235, 235, int(60 + 100 * r.random())))
+    # Burbujas que suben.
+    for _ in range(26):
+        x, y = r.random() * tam, r.random() * tam * 0.7; s = 2 + r.random() * 6
+        d.ellipse([x - s, y - s, x + s, y + s], outline=(220, 245, 250, 150), width=1)
+        d.ellipse([x - s * 0.45, y - s * 0.55, x - s * 0.15, y - s * 0.25], fill=(255, 255, 255, 140))
+    # Medusas lejanas en lo hondo, con su luz.
+    for (cx, cy, rr, colm) in ((tam * 0.12, tam * 0.78, tam * 0.05, (229, 155, 255)), (tam * 0.86, tam * 0.7, tam * 0.04, (92, 242, 198)),
+                               (tam * 0.8, tam * 0.9, tam * 0.03, (63, 169, 255))):
+        halo = Image.new('RGBA', (tam, tam), (0, 0, 0, 0)); dh = ImageDraw.Draw(halo, 'RGBA')
+        dh.ellipse([cx - rr * 2.4, cy - rr * 2.4, cx + rr * 2.4, cy + rr * 2.4], fill=colm + (70,))
+        fondo.alpha_composite(halo.filter(ImageFilter.GaussianBlur(rr)))
+        d = ImageDraw.Draw(fondo, 'RGBA')
+        d.pieslice([cx - rr, cy - rr * 0.8, cx + rr, cy + rr * 0.8], 180, 360, fill=colm + (190,))
+        for k in range(4):
+            tx = cx - rr * 0.7 + k * rr * 0.47
+            d.line([(tx, cy), (tx + rr * 0.2 * (1 if k % 2 else -1), cy + rr * 0.9), (tx, cy + rr * 1.8)], fill=colm + (150,), width=2)
+    fondo = fondo.convert('RGB')
+    # La huella de luz viva: verde agua en el centro, violeta en las orillas, con halo y chispas.
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    tono = mezcla(col('#DFFFF6'), col('#5CF2C6'), np.clip(dist * 1.5, 0, 1))
+    tono = mezcla(tono, col('#E29BFF'), np.clip((ruido(tam, tam / 18, 63) - 0.5) * 2.2, 0, 1) * 0.55)
+    glow = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 60))).astype(np.float32) / 255
+    alfa = np.clip(m * 0.95 + glow * 0.75, 0, 1)
+    capa = a_rgba(tono, alfa)
+    d2 = ImageDraw.Draw(capa, 'RGBA')
+    ys, xs = np.nonzero(m > 0.7)
+    for _ in range(int(tam / 7)):
+        i = r.integers(len(xs)); s = 0.8 + r.random() * 1.4
+        d2.ellipse([xs[i] - s, ys[i] - s, xs[i] + s, ys[i] + s], fill=(240, 255, 250, 255))
+    guardar(fondo, capa, 'abismo')
 
 # ------------------------------------------------------------------ Al-Ándalus
 def andalus(tam):
@@ -343,6 +531,120 @@ def andalus(tam):
     base = a_rgba(np.zeros((tam, tam, 3)) + col('#2A1A12'), sombra)
     base.alpha_composite(capa)
     guardar(fondo, base, 'andalus')
+
+# ------------------------------------------------------------------ Mesoamérica
+def meso(tam):
+    """Mesoamérica: papel amate de fibras cruzadas, la rueda de los veinte cartuchos de días alrededor, los renglones
+    rojos del códice y, en cada cartucho, un numeral de punto y barra; la huella, en jade pulido."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    a = mezcla(col('#E6D3AE'), col('#D4BC8E'), ruido(tam, tam / 16, 71) * 0.8)
+    r = np.random.default_rng(72)
+    fib = Image.new('L', (tam, tam), 0); df = ImageDraw.Draw(fib)
+    for _ in range(int(tam * 0.9)):
+        x, y = r.random() * tam, r.random() * tam
+        ang = (r.random() - 0.5) * 0.9 + (0 if r.random() < 0.5 else math.pi / 2); l = tam * (0.02 + r.random() * 0.07)
+        df.line([(x, y), (x + math.cos(ang) * l, y + math.sin(ang) * l)], fill=255, width=max(1, tam // 360))
+    fib = np.asarray(fib.filter(ImageFilter.GaussianBlur(0.8)), np.float32) / 255
+    a = a * (1 - 0.07 * fib[..., None])
+    fondo = a_img(a).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    c = tam / 2
+    cinabrio = (163, 48, 30, 255); tinta = (42, 24, 16, 150); azul = (62, 143, 168, 220)
+    # Los renglones rojos del códice, arriba y abajo, que dejan libre el centro.
+    w = max(3, tam // 160)
+    for y in (tam * 0.12, tam * 0.88):
+        d.line([(0, y), (tam, y)], fill=cinabrio[:3] + (170,), width=w)
+    # La rueda de los veinte días: un anillo con veinte cartuchos, uno de cada cuatro en azul maya.
+    r0, r1 = tam * 0.405, tam * 0.475
+    d.ellipse([c - r0, c - r0, c + r0, c + r0], outline=cinabrio, width=w)
+    d.ellipse([c - r1, c - r1, c + r1, c + r1], outline=cinabrio, width=w)
+    for i in range(20):
+        ang = 2 * math.pi * i / 20 - math.pi / 2; rm = (r0 + r1) / 2; q = tam * 0.024
+        x, y = c + rm * math.cos(ang), c + rm * math.sin(ang)
+        d.rounded_rectangle([x - q, y - q, x + q, y + q], radius=int(q * 0.4), outline=tinta, width=max(2, w - 1),
+                            fill=azul if i % 4 == 0 else None)
+        # Dentro de cada cartucho, un numeral pequeño: un punto sobre una barra (el seis).
+        f = (250, 244, 228, 230) if i % 4 == 0 else tinta
+        d.rectangle([x - q * 0.6, y + q * 0.12, x + q * 0.6, y + q * 0.42], fill=f)
+        d.ellipse([x - q * 0.2, y - q * 0.5, x + q * 0.2, y - q * 0.1], fill=f)
+    fondo = fondo.convert('RGB')
+    # La huella en jade pulido: verde con vetas claras y oscuras, y el brillo del pulido.
+    sh = relieve(m, fuerza=1.3)[..., None]
+    vetas = np.sin(xx * 0.03 + ruido(tam, 10, 73) * 3) * 0.5 + 0.5
+    piedra = mezcla(col('#1F6B48'), col('#5FB98A'), np.clip(ruido(tam, tam / 20, 74) * 0.6 + vetas * 0.5, 0, 1))
+    rgb = piedra * (1 + sh * 0.5)
+    brillo = np.clip(1 - np.abs((xx + yy) / tam - 0.75) * 2.4, 0, 1) ** 3
+    rgb = mezcla(rgb, col('#E6FFF0'), brillo * 0.3 * m)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 150))).astype(np.float32) / 255
+    sombra = np.roll(np.roll(sombra, 2, 0), 2, 1) * 0.45
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#2A1810'), sombra)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'meso')
+
+
+# ------------------------------------------------------------------ egipto
+
+def egipto(tam):
+    """Egipto: papiro con sus fibras, la cenefa de rectángulos de colores alrededor, columnas de signos pintados a los
+    lados y un gran cartucho rojo detrás; la huella, en fayenza azul vidriada (la cerámica de cuarzo de los amuletos)."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    a = mezcla(col('#ECDCA8'), col('#DCC68A'), ruido(tam, tam / 14, 61) * 0.7)
+    tiras = np.sin(yy * 0.55 + ruido(tam, 6, 62) * 6) * 0.5 + 0.5
+    a = a * (0.95 + 0.06 * tiras[..., None])
+    a = a * (0.97 + 0.04 * (np.sin(xx * 0.21 + ruido(tam, 8, 63) * 4) * 0.5 + 0.5))[..., None]
+    fondo = a_img(a).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    c = tam / 2
+    lapis = (29, 47, 122, 255); oro = (201, 151, 28, 255); corn = (184, 71, 30, 255)
+    # La cenefa de rectángulos de colores, cerca del borde del círculo.
+    n = 48; r0, r1 = tam * 0.43, tam * 0.48
+    colores = [lapis, oro, corn, oro]
+    for i in range(n):
+        a0 = 2 * math.pi * i / n; a1 = a0 + 2 * math.pi / n * 0.72
+        pts = [(c + r0 * math.cos(a0), c + r0 * math.sin(a0)), (c + r1 * math.cos(a0), c + r1 * math.sin(a0)),
+               (c + r1 * math.cos(a1), c + r1 * math.sin(a1)), (c + r0 * math.cos(a1), c + r0 * math.sin(a1))]
+        d.polygon(pts, fill=colores[i % 4])
+    w = max(2, tam // 240)
+    d.ellipse([c - r0 + w * 2, c - r0 + w * 2, c + r0 - w * 2, c + r0 - w * 2], outline=(30, 22, 12, 160), width=w)
+    # El cartucho grande detrás de la huella, en ocre rojo, con su barra abajo.
+    cw, ch = tam * 0.27, tam * 0.36
+    d.rounded_rectangle([c - cw, c - ch, c + cw, c + ch * 0.95], radius=int(cw), outline=corn[:3] + (150,), width=max(4, tam // 110))
+    d.rectangle([c - cw * 1.12, c + ch, c + cw * 1.12, c + ch + tam * 0.022], fill=corn[:3] + (160,))
+    # Columnas de signos a los lados: el ankh (en rojo de rúbrica), el ojo, la pluma y otra vez el ankh.
+    def ankh(x, y, s, f):
+        g = max(2, int(s * 0.09))
+        d.ellipse([x - s * 0.22, y - s * 0.5, x + s * 0.22, y - s * 0.08], outline=f, width=g)
+        d.line([(x - s * 0.32, y - s * 0.04), (x + s * 0.32, y - s * 0.04)], fill=f, width=g)
+        d.line([(x, y - s * 0.06), (x, y + s * 0.5)], fill=f, width=g)
+    def pluma(x, y, s, f):
+        d.polygon([(x - s * 0.06, y + s * 0.5), (x - s * 0.12, y - s * 0.2), (x + s * 0.06, y - s * 0.5), (x + s * 0.24, y - s * 0.45), (x + s * 0.1, y + s * 0.5)], fill=f)
+    def ojo(x, y, s, f):
+        g = max(2, int(s * 0.07))
+        d.ellipse([x - s * 0.42, y - s * 0.16, x + s * 0.42, y + s * 0.12], outline=f, width=g)
+        d.ellipse([x - s * 0.1, y - s * 0.12, x + s * 0.1, y + s * 0.08], fill=f)
+        d.arc([x - s * 0.46, y - s * 0.5, x + s * 0.5, y + s * 0.1], 200, 340, fill=f, width=g)
+        d.line([(x - s * 0.06, y + s * 0.1), (x - s * 0.12, y + s * 0.45)], fill=f, width=g)
+    s = tam * 0.075
+    tinta = (40, 30, 18, 120)
+    for x in (c - tam * 0.36, c + tam * 0.36):
+        for k, fn in enumerate((ankh, ojo, pluma, ankh)):
+            fn(x, c - tam * 0.22 + k * tam * 0.15, s, corn[:3] + (140,) if k == 0 else tinta)
+    fondo = fondo.convert('RGB')
+    # La huella en fayenza: azul turquesa vidriado, con el brillo del esmalte.
+    sh = relieve(m, fuerza=1.3)[..., None]
+    fay = mezcla(col('#1B6E8A'), col('#3FB0B8'), ruido(tam, tam / 25, 64))
+    rgb = fay * (1 + sh * 0.5)
+    brillo = np.clip(1 - np.abs((xx + yy) / tam - 0.8) * 2.2, 0, 1) ** 3
+    rgb = mezcla(rgb, col('#E8FFFF'), brillo * 0.35 * m)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 150))).astype(np.float32) / 255
+    sombra = np.roll(np.roll(sombra, 2, 0), 2, 1) * 0.45
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#3A2A12'), sombra)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'egipto')
 
 # ------------------------------------------------------------------ mongol
 def mongol(tam):
@@ -415,6 +717,94 @@ def renacimiento(tam):
     capa = a_rgba(rgb, alfa)
     guardar(fondo, capa, 'renacimiento')
 
+
+# ------------------------------------------------------------------ Pirata
+def pirata(tam):
+    """Carta náutica gastada: pergamino con manchas de agua, las 16 líneas de rumbo de una rosa, la costa de una isla,
+    la derrota punteada hasta la «X». La huella, en tinta de brea que se corre un poco con la humedad."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    papel = mezcla(col('#EADFC0'), col('#CDB88A'), ruido(tam, tam / 16, 61) * 0.8)
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    papel = mezcla(papel, col('#8E7448'), np.clip(dist - 0.72, 0, 1) * 1.1)
+    agua = np.clip((ruido(tam, tam / 30, 62) - 0.66) * 5, 0, 1)
+    papel = mezcla(papel, col('#B9A273'), agua * 0.45)
+    papel = papel * (0.95 + 0.08 * ruido(tam, 0.7, 63)[..., None])
+    fondo = a_img(papel).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    tinta = (46, 34, 20, 60)
+    # Las líneas de rumbo salen de una rosa fuera de centro, como en los portulanos.
+    cx, cy = tam * 0.8, tam * 0.18
+    for k in range(16):
+        a = k * math.pi / 8
+        d.line([(cx, cy), (cx + math.cos(a) * tam * 1.6, cy + math.sin(a) * tam * 1.6)], fill=tinta if k % 2 == 0 else (46, 34, 20, 34), width=1)
+    for k in range(8):
+        a = -math.pi / 2 + k * math.pi / 4; l = tam * (0.07 if k % 2 == 0 else 0.045)
+        b1 = a + math.pi / 2; w = tam * 0.012
+        d.polygon([(cx + math.cos(a) * l, cy + math.sin(a) * l), (cx + math.cos(b1) * w, cy + math.sin(b1) * w),
+                   (cx - math.cos(b1) * w, cy - math.sin(b1) * w)], fill=(46, 34, 20, 110 if k % 2 == 0 else 70))
+    # La costa de una isla abajo a la izquierda, con sus rayitas de agua.
+    r = np.random.default_rng(64)
+    ix, iy, ir = tam * 0.22, tam * 0.8, tam * 0.11
+    costa = [(ix + math.cos(t) * ir * (1 + 0.18 * math.sin(3 * t) + 0.08 * r.random()), iy + math.sin(t) * ir * 0.62 * (1 + 0.12 * math.cos(5 * t)))
+             for t in np.linspace(0, 2 * math.pi, 40)]
+    d.polygon(costa, fill=(150, 120, 70, 50), outline=(46, 34, 20, 110))
+    for e in (1.15, 1.32):
+        d.line([(ix + (x - ix) * e, iy + (y - iy) * e) for x, y in costa][::2], fill=(46, 34, 20, 40), width=1)
+    # La derrota punteada hasta la «X», en rojo de almagre.
+    rojo = (140, 40, 26, 120)
+    pts = [(tam * 0.34, tam * 0.83), (tam * 0.5, tam * 0.94), (tam * 0.8, tam * 0.9), (tam * 0.9, tam * 0.7)]
+    for i in range(60):
+        t = i / 60
+        x = (1 - t) ** 3 * pts[0][0] + 3 * (1 - t) ** 2 * t * pts[1][0] + 3 * (1 - t) * t ** 2 * pts[2][0] + t ** 3 * pts[3][0]
+        y = (1 - t) ** 3 * pts[0][1] + 3 * (1 - t) ** 2 * t * pts[1][1] + 3 * (1 - t) * t ** 2 * pts[2][1] + t ** 3 * pts[3][1]
+        if i % 2 == 0: d.ellipse([x - 2, y - 2, x + 2, y + 2], fill=rojo)
+    x, y, s = tam * 0.9, tam * 0.66, tam * 0.025
+    d.line([(x - s, y - s), (x + s, y + s)], fill=(140, 40, 26, 170), width=max(2, tam // 150))
+    d.line([(x - s, y + s), (x + s, y - s)], fill=(140, 40, 26, 170), width=max(2, tam // 150))
+    fondo = fondo.convert('RGB')
+    # Huella en tinta de brea: casi negra, con el borde corrido por la humedad y poros de papel.
+    corrida = np.clip(desenfocar(m.astype(np.float32), tam / 500) * 1.15, 0, 1)
+    grano = ruido(tam, 0.6, 65)
+    alfa = np.clip(corrida * (0.72 + 0.28 * grano), 0, 1) * np.clip(0.85 + 0.25 * ruido(tam, tam / 30, 66), 0, 1)
+    rgb = mezcla(col('#241A10'), col('#4A3420'), ruido(tam, tam / 25, 67))
+    capa = a_rgba(rgb, alfa)
+    guardar(fondo, capa, 'pirata')
+
+# ------------------------------------------------------------------ Roma (la de hoy)
+def urbe(tam):
+    """El muro ocre de una calle de Roma, con el revoque caído y el ladrillo a la vista, y encima la huella como un
+    timbre de oficina en tinta roja: entintada de más en los bordes y gastada en el centro."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+
+    def suave(s, semilla):   # ruido en coma flotante, sin los escalones del desenfoque en 8 bits
+        a = desenfocar(np.random.default_rng(semilla).random((tam, tam)).astype(np.float32), s)
+        return (a - a.min()) / max(1e-6, a.max() - a.min())
+    ocre = mezcla(col('#E2B172'), col('#C98E4E'), suave(tam / 14, 61) * 0.9)
+    ocre = ocre * (0.95 + 0.08 * ruido(tam, 0.8, 62)[..., None])
+    # Donde se cayó el revoque: ladrillo en hiladas, con su borde de cal.
+    caida = suave(tam / 26, 63)
+    hueco = np.clip((caida - 0.66) * 9, 0, 1)
+    borde = np.clip(1 - np.abs(caida - 0.64) * 30, 0, 1)
+    fila = (yy // (tam / 34)).astype(int)
+    junta = ((yy % (tam / 34)) < tam / 260) | (((xx + (fila % 2) * tam / 18) % (tam / 9)) < tam / 260)
+    ladrillo = mezcla(col('#A2553A'), col('#7F3B27'), ruido(tam, 2, 64))
+    ladrillo = np.where(junta[..., None], col('#D9CDB4'), ladrillo)
+    muro = mezcla(ocre, ladrillo, hueco)
+    muro = mezcla(muro, col('#F1E6CF'), borde * 0.45)
+    # Sombra suave arriba, como el alero de un tejado.
+    muro = muro * (0.86 + 0.14 * np.clip(yy / (tam * 0.25), 0, 1))[..., None]
+    fondo = a_img(muro)
+    # La huella: tinta de timbre, más cargada en los bordes de cada cresta y comida en el centro.
+    b = desenfocar(m, tam / 260)
+    filo = np.clip((m - b) * 3 + 0.0, 0, 1)
+    gasto = suave(tam / 30, 65)
+    alfa = m * np.clip(0.62 + 0.3 * filo + 0.25 * ruido(tam, 0.7, 66) - np.clip(gasto - 0.6, 0, 1) * 1.1, 0, 0.97)
+    rgb = mezcla(col('#9B1C1C'), col('#6E1414'), suave(tam / 40, 67))
+    capa = a_rgba(rgb, alfa)
+    guardar(fondo, capa, 'urbe')
+
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
     """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
@@ -465,6 +855,175 @@ def antiguas(tam):
     base = a_rgba(np.zeros((tam, tam, 3)) + col('#0E0F10'), np.roll(np.roll(sombra, 3, 0), 3, 1) * 0.6)
     base.alpha_composite(capa)
     guardar(fondo, base, 'antiguas')
+
+
+# ------------------------------------------------------------------ Prehistoria
+def mano_pil(d, x, y, s, ang, color):
+    """Una mano (palma, cuatro dedos y pulgar) de alto 2·s, con los dedos hacia [ang], como en Decoracion.piezasMano."""
+    ca, sa = math.cos(ang + math.pi / 2), math.sin(ang + math.pi / 2)
+    def p(px, py): return (x + (px * ca - py * sa) * s, y + (px * sa + py * ca) * s)
+    d.polygon([p(-0.44, -0.04), p(-0.36, -0.12), p(0.32, -0.12), p(0.4, -0.04), p(0.4, 0.56), p(0.26, 1.0), p(-0.3, 1.0), p(-0.44, 0.56)], fill=color)
+    for fx, arriba, an in ((-0.34, -0.62, 0.17), (-0.13, -0.86, 0.19), (0.1, -0.98, 0.19), (0.3, -0.8, 0.18)):
+        pts = [p(fx - an / 2, 0.02)] + [p(fx + an / 2 * math.cos(t), arriba + an / 2 - an / 2 * math.sin(t)) for t in [math.pi - k * math.pi / 8 for k in range(9)]] + [p(fx + an / 2, 0.02)]
+        d.polygon(pts, fill=color)
+    d.polygon([p(0.3, 0.5), p(0.36, 0.08), p(0.55, -0.12), p(0.72, -0.12), p(0.8, -0.02), p(0.66, 0.22), p(0.42, 0.6)], fill=color)
+
+def bisonte_pil(d, x, y, r, color):
+    """El bisonte de las cuevas, de perfil y mirando a la derecha (como Decoracion.bisonte), de ancho 2·r."""
+    def cub(p0, p1, p2, p3, n=10):
+        return [((1 - t) ** 3 * p0[0] + 3 * (1 - t) ** 2 * t * p1[0] + 3 * (1 - t) * t * t * p2[0] + t ** 3 * p3[0],
+                 (1 - t) ** 3 * p0[1] + 3 * (1 - t) ** 2 * t * p1[1] + 3 * (1 - t) * t * t * p2[1] + t ** 3 * p3[1]) for t in [k / n for k in range(1, n + 1)]]
+    pts = [(-0.85, -0.15)] + cub((-0.85, -0.15), (-0.5, -0.3), (-0.1, -0.45), (0.15, -0.62)) + cub((0.15, -0.62), (0.4, -0.6), (0.55, -0.35), (0.62, -0.18))
+    pts += [(0.7, -0.34), (0.72, -0.16), (0.9, 0.05), (0.92, 0.22), (0.8, 0.28), (0.68, 0.44), (0.58, 0.3), (0.52, 0.66), (0.44, 0.66), (0.4, 0.3)]
+    pts += [((1 - t) ** 2 * 0.4 + 2 * (1 - t) * t * 0.0 + t * t * -0.38, (1 - t) ** 2 * 0.3 + 2 * (1 - t) * t * 0.42 + t * t * 0.3) for t in [k / 8 for k in range(1, 9)]]
+    pts += [(-0.44, 0.66), (-0.52, 0.66), (-0.6, 0.24), (-0.78, 0.14), (-0.95, 0.3), (-0.88, 0.04)]
+    d.polygon([(x + px * r, y + py * r) for px, py in pts], fill=color)
+
+def cueva(tam):
+    """Prehistoria: la pared de caliza de una cueva, con sus estratos, el hollín de las lámparas arriba, dos manos en
+    negativo sopladas en ocre, un bisonte de carbón e hileras de puntos; la huella es de ocre rojo, como una mano que se
+    apoyó mojada en pigmento: más cargada en el centro, con grumos y el borde moteado."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    caliza = mezcla(col('#D9C8A8'), col('#B69C76'), ruido(tam, tam / 26, 121))
+    caliza = caliza * (0.92 + 0.1 * ruido(tam, 0.9, 122)[..., None])
+    estratos = (np.sin(yy / tam * 26 + ruido(tam, tam / 40, 123) * 2.5) + 1) / 2
+    caliza = mezcla(caliza, col('#A68B66'), (estratos > 0.93) * 0.35)
+    hollin = np.clip(1 - yy / (tam * 0.32), 0, 1) ** 2 * np.clip(ruido(tam, tam / 18, 124) + 0.3, 0, 1)
+    caliza = mezcla(caliza, col('#3A2E26'), hollin * 0.45)
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    caliza = mezcla(caliza, col('#7A6248'), np.clip(dist - 0.75, 0, 1) * 1.2)
+    # Las dos manos en negativo: la nube de ocre soplado alrededor de la mano.
+    manos = [(0.17, 0.3, 0.09, -0.35), (0.84, 0.66, 0.08, 0.4)]
+    for k, (fx, fy, fs, g) in enumerate(manos):
+        nube = np.clip(1 - np.sqrt((xx - tam * fx) ** 2 + (yy - tam * fy) ** 2) / (tam * fs * 2.1), 0, 1) ** 0.6
+        nube = nube * np.clip(0.75 + 0.5 * ruido(tam, 1.2, 125 + k), 0, 1)
+        caliza = mezcla(caliza, col('#9A3A1C'), np.clip(nube * 1.1, 0, 0.92))
+    fondo = a_img(caliza).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    base_roca = tuple(int(v) for v in col('#C4AC86'))
+    for fx, fy, fs, g in manos:
+        mano_pil(d, tam * fx, tam * fy, tam * fs, g, base_roca + (235,))
+    # El bisonte de carbón, abajo a la izquierda, y las hileras de puntos.
+    bisonte_pil(d, tam * 0.24, tam * 0.8, tam * 0.13, (42, 34, 28, 200))
+    rng = np.random.default_rng(126)
+    for fila, (x0, y0) in enumerate([(0.62, 0.17), (0.66, 0.24), (0.58, 0.88)]):
+        for k in range(5):
+            r = tam * (0.009 + rng.random() * 0.006); x = tam * (x0 + k * 0.035); y = tam * y0 + (k % 2) * tam * 0.006
+            d.ellipse([x - r, y - r, x + r, y + r], fill=(162, 64, 31, 210 if fila < 2 else 170))
+    fondo = fondo.convert('RGB')
+    # La huella de ocre: grumos de pigmento, más cargada al centro, y el borde moteado.
+    grano = ruido(tam, 0.9, 127)
+    carga = ruido(tam, tam / 16, 128)
+    centro = np.clip(1.15 - dist, 0.4, 1)
+    tinta = mezcla(col('#7A2A14'), col('#C0582E'), np.clip(carga * 0.6 + 0.3, 0, 1))
+    alfa = m * np.clip(0.62 + 0.38 * grano, 0, 1) * np.clip(0.55 + carga * 0.35, 0, 1) * centro
+    sh = relieve(m, fuerza=0.45)[..., None]
+    capa = a_rgba(tinta * (1 + sh * 0.2), np.clip(alfa * 1.45, 0, 1))
+    guardar(fondo, capa, 'cueva')
+
+
+# ------------------------------------------------------------------ Templario
+def cruz_patada_pts(cx, cy, r, centro=0.15, punta=0.42):
+    """Los vértices de la cruz patada (la de ui/Decoracion.kt `cruzPatada`), sin el remate cóncavo."""
+    pts = []
+    for k in range(4):
+        a = math.radians(90 * k - 90); dx, dy = math.cos(a), math.sin(a); nx, ny = -dy, dx
+        for f_, q in ((centro, -centro), (1, -punta), (0.9, 0.0), (1, punta)):
+            pts.append((cx + (dx * f_ + nx * q) * r, cy + (dy * f_ + ny * q) * r))
+    return pts
+
+def templario(tam):
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    # La sobreveste: lino blanco en tafetán, con polvo de arena y la gran cruz patada roja detrás de la huella.
+    trama = (np.sin(xx * (2 * math.pi / 5.5)) * np.sin(yy * (2 * math.pi / 5.5))) * 0.5 + 0.5
+    lino = mezcla(col('#F4EFE3'), col('#DCD2BC'), ruido(tam, tam / 22, 101) * 0.7)
+    lino = lino * (0.96 + 0.05 * trama[..., None])
+    arena = np.clip((ruido(tam, 1.2, 102) - 0.8) * 3, 0, 1)
+    lino = mezcla(lino, col('#C8A86E'), arena * 0.35)
+    fondo = a_img(lino).convert('RGBA')
+    capa_cruz = Image.new('RGBA', (tam, tam), (0, 0, 0, 0))
+    ImageDraw.Draw(capa_cruz).polygon(cruz_patada_pts(tam / 2, tam / 2, tam * 0.47), fill=(176, 25, 31, 255))
+    roja = np.asarray(capa_cruz).astype(np.float32)
+    tela = 0.88 + 0.12 * trama + 0.06 * ruido(tam, 0.8, 103)
+    roja[..., :3] = roja[..., :3] * tela[..., None]
+    fondo.alpha_composite(Image.fromarray(np.clip(roja, 0, 255).astype(np.uint8), 'RGBA'))
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    arr = np.array(fondo.convert('RGB')).astype(np.float32)
+    arr = mezcla(arr, col('#6E5A3A'), np.clip(dist - 0.75, 0, 1) * 0.7)
+    fondo = a_img(arr)
+    # La huella en hierro de cota de malla: acero con relieve, anillas que brillan y algo de óxido en los surcos.
+    sh = relieve(m, fuerza=1.2)[..., None]
+    anillas = np.abs(np.sin(xx * (2 * math.pi / 7)) * np.sin((yy + (np.floor(xx / 7) % 2) * 3.5) * (2 * math.pi / 7)))
+    acero = mezcla(col('#3A4148'), col('#B8C2CA'), np.clip(ruido(tam, tam / 30, 104) * 0.6 + anillas * 0.5, 0, 1))
+    acero = mezcla(acero, col('#7A4A2A'), np.clip((ruido(tam, tam / 50, 105) - 0.7) * 3, 0, 1) * 0.35)
+    rgb = acero * (1 + sh * 0.55)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 140))).astype(np.float32) / 255
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#1A1714'), np.roll(np.roll(sombra, 3, 0), 3, 1) * 0.55)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'templario')
+
+
+# ------------------------------------------------------------------ Japón Edo
+def edo(tam):
+    """Japón Edo: washi con sus fibras de kōzo y, detrás, una estampa ukiyo-e en índigo: el monte Fuji nevado, el sol
+    rojo, dos bandas de niebla dorada (kasumi) y las olas de seigaiha abajo. La huella, en tinta sumi que se asienta en
+    el papel y se aclara donde el pincel iba seco, y el sello de bermellón al pie, un poco torcido."""
+    m = mascara_sello(tam)
+    papel_c = col('#F2EBDB')
+    papel = mezcla(papel_c, col('#E2D5BA'), ruido(tam, tam / 18, 71) * 0.6)
+    papel = papel * (0.975 + 0.025 * ruido(tam, 0.8, 72)[..., None])
+    fondo = a_img(papel).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    r = np.random.default_rng(73)
+    for _ in range(520):
+        x, y = r.random() * tam, r.random() * tam; ang = r.random() * math.pi; l = 8 + r.random() * 30
+        d.line([(x + t * l * math.cos(ang) + 2 * math.sin(t * 7), y + t * l * math.sin(ang) + 2 * math.cos(t * 5)) for t in np.linspace(0, 1, 6)],
+               fill=(165, 145, 110, 38), width=1)
+    c = tam / 2; ind = (30, 58, 95)
+    # El sol rojo, arriba a la derecha.
+    d.ellipse([c + tam * 0.1, c - tam * 0.38, c + tam * 0.3, c - tam * 0.18], fill=(201, 68, 46, 140))
+    # El Fuji, con su cumbre nevada.
+    d.polygon([(c - tam * 0.44, c + tam * 0.2), (c - tam * 0.07, c - tam * 0.22), (c + tam * 0.07, c - tam * 0.22), (c + tam * 0.44, c + tam * 0.2)], fill=ind + (60,))
+    d.polygon([(c - tam * 0.135, c - tam * 0.145), (c - tam * 0.07, c - tam * 0.22), (c + tam * 0.07, c - tam * 0.22), (c + tam * 0.135, c - tam * 0.145),
+               (c + tam * 0.08, c - tam * 0.11), (c + tam * 0.03, c - tam * 0.15), (c - tam * 0.02, c - tam * 0.1), (c - tam * 0.07, c - tam * 0.14)], fill=(252, 250, 244, 200))
+    # Bandas de niebla dorada.
+    for x0, y0, w, h in ((c - tam * 0.42, c - tam * 0.04, tam * 0.44, tam * 0.036), (c + tam * 0.02, c + tam * 0.06, tam * 0.38, tam * 0.03)):
+        d.rounded_rectangle([x0, y0, x0 + w, y0 + h], radius=int(h / 2), fill=(222, 190, 120, 120))
+    # Seigaiha: cada hilera tapa la de atrás, como en las telas.
+    R = tam * 0.05; pc = tuple(int(v) for v in papel_c) + (255,)
+    for fila in range(7):
+        yb = c + tam * 0.22 + fila * R * 0.5; x = -R + (R if fila % 2 else 0)
+        while x < tam + R:
+            d.pieslice([x - R, yb - R, x + R, yb + R], 180, 360, fill=pc)
+            for k in range(3):
+                q = R * (1 - k * 0.3)
+                d.arc([x - q, yb - q, x + q, yb + q], 180, 360, fill=ind + (120,), width=max(2, tam // 300))
+            x += 2 * R
+    fondo = fondo.convert('RGB')
+    # La huella en tinta sumi: grano del papel y zonas donde el pincel iba seco.
+    grano = ruido(tam, 0.8, 74)
+    seco = ruido(tam, tam / 25, 75)
+    tinta = col('#1B1A1E') * (0.85 + 0.3 * grano[..., None])
+    alfa = m * np.clip(0.95 - 0.08 * grano - np.clip(seco - 0.62, 0, 1) * 1.1, 0, 1)
+    capa = a_rgba(tinta, alfa)
+    # El sello de bermellón al pie, con su marco en reserva y 足 en escritura de sello, simplificado.
+    k = 3; s = tam * 0.1 * k
+    sello = Image.new('RGBA', (int(s * 1.4), int(s * 1.4)), (0, 0, 0, 0)); ds = ImageDraw.Draw(sello, 'RGBA')
+    o = s * 0.2; bl = (243, 236, 220, 235); g = max(3, int(s * 0.07))
+    ds.rounded_rectangle([o, o, o + s, o + s], radius=int(s * 0.08), fill=(201, 68, 46, 240))
+    ds.rectangle([o + s * 0.12, o + s * 0.12, o + s * 0.88, o + s * 0.88], outline=bl, width=g)
+    cx = o + s / 2
+    ds.rectangle([cx - s * 0.17, o + s * 0.24, cx + s * 0.17, o + s * 0.42], outline=bl, width=g)
+    ds.line([(cx, o + s * 0.46), (cx, o + s * 0.76)], fill=bl, width=g)
+    ds.line([(cx, o + s * 0.56), (cx + s * 0.2, o + s * 0.56)], fill=bl, width=g)
+    ds.line([(cx - s * 0.04, o + s * 0.62), (cx - s * 0.26, o + s * 0.78)], fill=bl, width=g)
+    ds.line([(cx, o + s * 0.76), (cx + s * 0.28, o + s * 0.78)], fill=bl, width=g)
+    sello = sello.rotate(-5, resample=Image.BICUBIC).resize((int(s * 1.4 / k), int(s * 1.4 / k)), Image.LANCZOS)
+    capa.alpha_composite(sello, (int(c + tam * 0.17), int(c + tam * 0.2)))
+    guardar(fondo, capa, 'edo')
 
 
 # ------------------------------------------------------------------ los otros catorce: extraer (una vez) y componer
@@ -639,9 +1198,61 @@ def marcas(capa, m, tipo, semilla):
 
 # ------------------------------------------------------------------ uso
 
-SIETE = ['botanico', 'gotico', 'espacio', 'andalus', 'mongol', 'renacimiento', 'antiguas']
-ORDEN = ['romano', 'ciber', 'heleno', 'medieval', 'distopia', 'refugio', 'orden', 'laboratorio', 'colonos', 'napoleon', 'botanico',
-         'navidad', 'seda', 'gotico', 'espacio', 'andalus', 'mongol', 'renacimiento', 'urss', 'revolucion', 'antiguas']
+# Los sellos que se dibujan con código (los demás se componen desde `fuentes/`). Los temas nuevos van aquí.
+SIETE = [
+    'neon',
+    'botanico',
+    'ruinas',
+    'gotico',
+    'arcano',
+    'espacio',
+    'abismo',
+    'urbe',
+    'andalus',
+    'meso',
+    'egipto',
+    'mongol',
+    'edo',
+    'renacimiento',
+    'pirata',
+    'antiguas',
+    'cueva',
+    'templario',
+]
+ORDEN = [
+    'romano',
+    'urbe',
+    'ciber',
+    'neon',
+    'heleno',
+    'egipto',
+    'medieval',
+    'templario',
+    'distopia',
+    'refugio',
+    'orden',
+    'laboratorio',
+    'colonos',
+    'napoleon',
+    'botanico',
+    'ruinas',
+    'navidad',
+    'seda',
+    'edo',
+    'gotico',
+    'arcano',
+    'espacio',
+    'abismo',
+    'andalus',
+    'meso',
+    'mongol',
+    'renacimiento',
+    'pirata',
+    'urss',
+    'revolucion',
+    'antiguas',
+    'cueva',
+]
 
 
 def hoja_contacto(archivo, temas=ORDEN):

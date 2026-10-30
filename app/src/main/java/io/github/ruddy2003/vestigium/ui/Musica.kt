@@ -73,9 +73,13 @@ import kotlinx.coroutines.delay
 object Musica {
     fun presentacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_presentacion
+        TemaId.URBE -> R.raw.s_urbe_presentacion
         TemaId.CIBER -> R.raw.s_ciber_presentacion
+        TemaId.NEON -> R.raw.s_neon_presentacion
         TemaId.HELENO -> R.raw.s_heleno_presentacion
+        TemaId.EGIPTO -> R.raw.s_egipto_presentacion
         TemaId.MEDIEVAL -> R.raw.s_medieval_presentacion
+        TemaId.TEMPLARIO -> R.raw.s_templario_presentacion
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
         TemaId.REFUGIO -> R.raw.s_refugio_presentacion
         TemaId.ORDEN -> R.raw.s_orden_presentacion
@@ -83,23 +87,34 @@ object Musica {
         TemaId.COLONOS -> R.raw.s_colonos_presentacion
         TemaId.NAPOLEON -> R.raw.s_napoleon_presentacion
         TemaId.BOTANICO -> R.raw.s_botanico_presentacion
+        TemaId.RUINAS -> R.raw.s_ruinas_presentacion
         TemaId.NAVIDAD -> R.raw.s_navidad_presentacion
         TemaId.SEDA -> R.raw.s_seda_presentacion
+        TemaId.EDO -> R.raw.s_edo_presentacion
         TemaId.URSS -> R.raw.s_urss_presentacion
         TemaId.GOTICO -> R.raw.s_gotico_presentacion
+        TemaId.ARCANO -> R.raw.s_arcano_presentacion
         TemaId.ESPACIO -> R.raw.s_espacio_presentacion
+        TemaId.ABISMO -> R.raw.s_abismo_presentacion
         TemaId.ANDALUS -> R.raw.s_andalus_presentacion
+        TemaId.MESO -> R.raw.s_meso_presentacion
         TemaId.MONGOL -> R.raw.s_mongol_presentacion
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_presentacion
+        TemaId.PIRATA -> R.raw.s_pirata_presentacion
         TemaId.REVOLUCION -> R.raw.s_revolucion_presentacion
         TemaId.ANTIGUAS -> R.raw.s_antiguas_presentacion
+        TemaId.CUEVA -> R.raw.s_cueva_presentacion
     }
     /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). */
     fun anual(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_anual
+        TemaId.URBE -> R.raw.s_urbe_anual
         TemaId.CIBER -> R.raw.s_ciber_anual
+        TemaId.NEON -> R.raw.s_neon_anual
         TemaId.HELENO -> R.raw.s_heleno_anual
+        TemaId.EGIPTO -> R.raw.s_egipto_anual
         TemaId.MEDIEVAL -> R.raw.s_medieval_anual
+        TemaId.TEMPLARIO -> R.raw.s_templario_anual
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
         TemaId.REFUGIO -> R.raw.s_refugio_anual
         TemaId.ORDEN -> R.raw.s_orden_anual
@@ -107,22 +122,33 @@ object Musica {
         TemaId.COLONOS -> R.raw.s_colonos_anual
         TemaId.NAPOLEON -> R.raw.s_napoleon_anual
         TemaId.BOTANICO -> R.raw.s_botanico_anual
+        TemaId.RUINAS -> R.raw.s_ruinas_anual
         TemaId.NAVIDAD -> R.raw.s_navidad_anual
         TemaId.SEDA -> R.raw.s_seda_anual
+        TemaId.EDO -> R.raw.s_edo_anual
         TemaId.URSS -> R.raw.s_urss_anual
         TemaId.GOTICO -> R.raw.s_gotico_anual
+        TemaId.ARCANO -> R.raw.s_arcano_anual
         TemaId.ESPACIO -> R.raw.s_espacio_anual
+        TemaId.ABISMO -> R.raw.s_abismo_anual
         TemaId.ANDALUS -> R.raw.s_andalus_anual
+        TemaId.MESO -> R.raw.s_meso_anual
         TemaId.MONGOL -> R.raw.s_mongol_anual
         TemaId.RENACIMIENTO -> R.raw.s_renacimiento_anual
+        TemaId.PIRATA -> R.raw.s_pirata_anual
         TemaId.REVOLUCION -> R.raw.s_revolucion_anual
         TemaId.ANTIGUAS -> R.raw.s_antiguas_anual
+        TemaId.CUEVA -> R.raw.s_cueva_anual
     }
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
+        TemaId.URBE -> R.raw.t_urbe_llamada
         TemaId.CIBER -> R.raw.t_ciber_llamada
+        TemaId.NEON -> R.raw.t_neon_llamada
         TemaId.HELENO -> R.raw.t_heleno_llamada
+        TemaId.EGIPTO -> R.raw.t_egipto_llamada
         TemaId.MEDIEVAL -> R.raw.t_medieval_llamada
+        TemaId.TEMPLARIO -> R.raw.t_templario_llamada
         TemaId.DISTOPIA -> R.raw.t_distopia_llamada
         TemaId.REFUGIO -> R.raw.t_refugio_llamada
         TemaId.ORDEN -> R.raw.t_orden_llamada
@@ -130,22 +156,33 @@ object Musica {
         TemaId.COLONOS -> R.raw.t_colonos_llamada
         TemaId.NAPOLEON -> R.raw.t_napoleon_llamada
         TemaId.BOTANICO -> R.raw.t_botanico_llamada
+        TemaId.RUINAS -> R.raw.t_ruinas_llamada
         TemaId.NAVIDAD -> R.raw.t_navidad_llamada
         TemaId.SEDA -> R.raw.t_seda_llamada
+        TemaId.EDO -> R.raw.t_edo_llamada
         TemaId.URSS -> R.raw.t_urss_llamada
         TemaId.GOTICO -> R.raw.t_gotico_llamada
+        TemaId.ARCANO -> R.raw.t_arcano_llamada
         TemaId.ESPACIO -> R.raw.t_espacio_llamada
+        TemaId.ABISMO -> R.raw.t_abismo_llamada
         TemaId.ANDALUS -> R.raw.t_andalus_llamada
+        TemaId.MESO -> R.raw.t_meso_llamada
         TemaId.MONGOL -> R.raw.t_mongol_llamada
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_llamada
+        TemaId.PIRATA -> R.raw.t_pirata_llamada
         TemaId.REVOLUCION -> R.raw.t_revolucion_llamada
         TemaId.ANTIGUAS -> R.raw.t_antiguas_llamada
+        TemaId.CUEVA -> R.raw.t_cueva_llamada
     }
     fun notificacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_notificacion
+        TemaId.URBE -> R.raw.t_urbe_notificacion
         TemaId.CIBER -> R.raw.t_ciber_notificacion
+        TemaId.NEON -> R.raw.t_neon_notificacion
         TemaId.HELENO -> R.raw.t_heleno_notificacion
+        TemaId.EGIPTO -> R.raw.t_egipto_notificacion
         TemaId.MEDIEVAL -> R.raw.t_medieval_notificacion
+        TemaId.TEMPLARIO -> R.raw.t_templario_notificacion
         TemaId.DISTOPIA -> R.raw.t_distopia_notificacion
         TemaId.REFUGIO -> R.raw.t_refugio_notificacion
         TemaId.ORDEN -> R.raw.t_orden_notificacion
@@ -153,16 +190,23 @@ object Musica {
         TemaId.COLONOS -> R.raw.t_colonos_notificacion
         TemaId.NAPOLEON -> R.raw.t_napoleon_notificacion
         TemaId.BOTANICO -> R.raw.t_botanico_notificacion
+        TemaId.RUINAS -> R.raw.t_ruinas_notificacion
         TemaId.NAVIDAD -> R.raw.t_navidad_notificacion
         TemaId.SEDA -> R.raw.t_seda_notificacion
+        TemaId.EDO -> R.raw.t_edo_notificacion
         TemaId.URSS -> R.raw.t_urss_notificacion
         TemaId.GOTICO -> R.raw.t_gotico_notificacion
+        TemaId.ARCANO -> R.raw.t_arcano_notificacion
         TemaId.ESPACIO -> R.raw.t_espacio_notificacion
+        TemaId.ABISMO -> R.raw.t_abismo_notificacion
         TemaId.ANDALUS -> R.raw.t_andalus_notificacion
+        TemaId.MESO -> R.raw.t_meso_notificacion
         TemaId.MONGOL -> R.raw.t_mongol_notificacion
         TemaId.RENACIMIENTO -> R.raw.t_renacimiento_notificacion
+        TemaId.PIRATA -> R.raw.t_pirata_notificacion
         TemaId.REVOLUCION -> R.raw.t_revolucion_notificacion
         TemaId.ANTIGUAS -> R.raw.t_antiguas_notificacion
+        TemaId.CUEVA -> R.raw.t_cueva_notificacion
     }
 
     private var reproductor: MediaPlayer? = null
@@ -290,6 +334,28 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             }, c, style = Stroke(u * 1.4f))
         }
     }
+    // La primera plana de la ciudad: la cabecera entre raya gruesa y fina, y abajo el perfil de los tejados al atardecer
+    // (cúpulas, campanarios y los pinos piñoneros).
+    TemaId.URBE -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, true, t.nombre.uppercase() + " · OGGI", "tocca e vai  —  toca y sigue",
+        comillas = "“" to "”", emblema = 112.dp, arriba = 30.dp, abajo = 78.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val tinta = e.onBackground.copy(alpha = 0.7f); val perfil = e.primary.copy(alpha = 0.22f)
+        drawLine(tinta, Offset(u * 18, u * 4), Offset(w - u * 18, u * 4), u * 2.6f)
+        drawLine(tinta, Offset(u * 18, u * 9), Offset(w - u * 18, u * 9), u * 0.8f)
+        val base = h
+        drawRect(perfil, Offset(0f, base - u * 14), Size(w, u * 14))
+        listOf(0.22f to 26f, 0.62f to 40f).forEach { (fx, r) ->
+            val cx = w * fx; val rr = r * u
+            drawRect(perfil, Offset(cx - rr, base - u * 14 - rr * 0.5f), Size(2 * rr, rr * 0.5f))
+            drawArc(perfil, 180f, 180f, true, Offset(cx - rr, base - u * 14 - rr * 1.5f), Size(2 * rr, 2 * rr))
+            drawRect(perfil, Offset(cx - rr * 0.12f, base - u * 14 - rr * 1.85f), Size(rr * 0.24f, rr * 0.4f))
+        }
+        listOf(0.4f, 0.84f).forEach { fx -> drawRect(perfil, Offset(w * fx, base - u * 70), Size(u * 12, u * 56)); drawPath(Path().apply { moveTo(w * fx - u * 2, base - u * 70); lineTo(w * fx + u * 6, base - u * 82); lineTo(w * fx + u * 14, base - u * 70); close() }, perfil) }
+        listOf(0.06f, 0.94f).forEach { fx ->
+            drawLine(perfil, Offset(w * fx, base - u * 14), Offset(w * fx + u * 3, base - u * 44), u * 3)
+            drawOval(perfil, Offset(w * fx - u * 18, base - u * 58), Size(u * 42, u * 18))
+        }
+    }
     // Consola: una ventana de terminal con su barra, el emblema como ícono del proceso y la frase como salida.
     TemaId.CIBER -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "> " + t.nombre.lowercase() + "_", "[ pulsa para continuar ]_",
         comillas = "> " to "", emblema = 84.dp, arriba = 44.dp) { e ->
@@ -302,6 +368,18 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         drawRect(c.copy(alpha = 0.6f), Offset(u * 8, u * 7), Size(u * 40, u * 6))
         var y = u * 24
         while (y < h) { drawLine(c.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), u * 0.8f); y += u * 4 }
+    }
+    // Letrero: la frase va primero, como el cartel de la calle; luego el emblema colgado y el nombre en tubo de neón,
+    // todo dentro de un marco de tubo magenta con su halo y la llovizna cayendo delante.
+    TemaId.NEON -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre.uppercase(), "toca para entrar a la calle  ▸",
+        comillas = "「" to "」", emblema = 120.dp, arriba = 40.dp, abajo = 40.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.primary
+        drawRoundRect(c.copy(alpha = 0.2f), Offset(u * 4, u * 4), Size(w - u * 8, h - u * 8), androidx.compose.ui.geometry.CornerRadius(u * 18), style = Stroke(u * 7))
+        drawRoundRect(c, Offset(u * 4, u * 4), Size(w - u * 8, h - u * 8), androidx.compose.ui.geometry.CornerRadius(u * 18), style = Stroke(u * 1.6f))
+        drawLine(e.secondary.copy(alpha = 0.6f), Offset(w * 0.3f, h - u * 14), Offset(w * 0.7f, h - u * 14), u * 2)
+        val az = java.util.Random(8)
+        repeat(60) { val x = az.nextFloat() * w; val y = az.nextFloat() * h; drawLine(Color(0xFF9DB4D8).copy(alpha = 0.09f), Offset(x, y), Offset(x - u * 3, y + u * 12), u * 0.8f) }
     }
     // Templo: frontón con su arquitrabe sobre el emblema, dos columnas estriadas a los lados y las gradas al pie.
     TemaId.HELENO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "πρόσω  ·  toca para seguir",
@@ -318,6 +396,36 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         }
         listOf(h - u * 22 to u * 6, h - u * 14 to u * 3, h - u * 6 to 0f).forEach { (y, m) -> drawLine(c, Offset(m, y), Offset(w - m, y), l) }
     }
+    // El pilono del templo: dos torres en talud con su gola, los mástiles con banderolas y la puerta con el disco alado.
+    TemaId.EGIPTO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "☥  ·  toca para entrar al templo",
+        comillas = "«" to "»", arriba = 84.dp, abajo = 40.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.tertiary.copy(alpha = 0.75f); val l = u * 1.4f
+        val top = u * 30; val pie = h - u * 8
+        val torre = w * 0.36f
+        listOf(0f to 1f, w to -1f).forEach { (x0, s) ->
+            val xe = x0 + s * u * 6; val xi = x0 + s * torre
+            drawPath(Path().apply { moveTo(xe, pie); lineTo(xe + s * u * 14, top); lineTo(xi, top); lineTo(xi, pie); close() }, c, style = Stroke(l))
+            drawLine(c, Offset(xe + s * u * 13, top + u * 6), Offset(xi, top + u * 6), u * 0.8f)
+            var k = 0f
+            while (k < torre - u * 22) { drawLine(c.copy(alpha = 0.4f), Offset(xe + s * (u * 16 + k), top), Offset(xe + s * (u * 16 + k), top + u * 6), u * 0.7f); k += maxOf(u * 4, 1f) }
+            listOf(0.35f, 0.7f).forEach { f ->
+                val xm = xe + s * (u * 14 + (torre - u * 20) * f)
+                drawLine(c.copy(alpha = 0.6f), Offset(xm, pie - u * 10), Offset(xm, top - u * 22), u)
+                drawPath(Path().apply { moveTo(xm, top - u * 22); lineTo(xm - s * u * 9, top - u * 18); lineTo(xm, top - u * 14); close() }, e.secondary.copy(alpha = 0.6f))
+            }
+        }
+        val gx = w / 2; val gw = w * 0.26f
+        drawRect(c, Offset(gx - gw / 2, top + u * 30), Size(gw, pie - top - u * 30), style = Stroke(l))
+        drawCircle(e.secondary.copy(alpha = 0.7f), u * 5, Offset(gx, top + u * 20))
+        listOf(-1f, 1f).forEach { s ->
+            drawPath(Path().apply {
+                moveTo(gx + s * u * 6, top + u * 18); quadraticTo(gx + s * u * 20, top + u * 12, gx + s * gw * 0.5f, top + u * 17)
+                lineTo(gx + s * gw * 0.46f, top + u * 21); quadraticTo(gx + s * u * 18, top + u * 21, gx + s * u * 6, top + u * 23); close()
+            }, c)
+        }
+        drawLine(c, Offset(0f, pie), Offset(w, pie), l)
+    }
     // Folio de códice: pauta roja de márgenes, anillos de pan de oro donde se cruzan y la frase con capitular.
     TemaId.MEDIEVAL -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, true, t.nombre, "¶ toca la foja e prosigue", capitular = true, emblema = 112.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
@@ -330,6 +438,21 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         listOf(Offset(u * 20.5f, u * 12), Offset(w - u * 20.5f, u * 12), Offset(u * 20.5f, h - u * 12), Offset(w - u * 20.5f, h - u * 12)).forEach {
             drawCircle(oro, u * 6, it, style = Stroke(u * 1.6f)); drawCircle(oro, u * 2, it)
         }
+    }
+    // La puerta de la encomienda: el muro almenado arriba, dos estandartes «baucent» a los lados y el lema de la orden al pie.
+    TemaId.TEMPLARIO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "☩ toca para entrar en la casa", comillas = "“" to "”", emblema = 120.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val piedra = e.secondary.copy(alpha = 0.35f)
+        var x = 0f; var k = 0
+        while (x < w) { drawRect(piedra, Offset(x, 0f), Size(u * 18, if (k % 2 == 0) u * 26 else u * 16)); x += maxOf(u * 18, 1f); k++ }
+        drawRect(piedra, Offset(0f, h - u * 10), Size(w, u * 10))
+        listOf(u * 26, w - u * 26).forEach { cx ->
+            drawLine(e.onBackground.copy(alpha = 0.4f), Offset(cx, u * 40), Offset(cx, u * 150), u * 1.4f)
+            drawRect(Color(0xFF1A1816).copy(alpha = 0.85f), Offset(cx, u * 44), Size(u * 18, u * 24))
+            drawRect(Color.White.copy(alpha = 0.9f), Offset(cx, u * 68), Size(u * 18, u * 24))
+            drawRect(e.onBackground.copy(alpha = 0.3f), Offset(cx, u * 44), Size(u * 18, u * 48), style = Stroke(u * 0.8f))
+        }
+        drawPath(cruzPatada(Offset(w / 2, h - u * 34), u * 12), e.primary.copy(alpha = 0.7f))
     }
     // Expediente: carpeta con su pestaña, código de archivo y un sello rojo torcido al pie.
     TemaId.DISTOPIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
@@ -453,6 +576,34 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         drawRect(c, et, Size(u * 108, u * 38), style = Stroke(u))
         for (i in 0 until 3) drawLine(c, Offset(et.x + u * 8, et.y + u * (10 + i * 9f)), Offset(et.x + u * (if (i == 0) 96f else 70f), et.y + u * (10 + i * 9f)), u * 0.8f)
     }
+    // Ciudad verde: el borde de una losa rota, hiedra que cuelga desde arriba y la silueta de los edificios abajo.
+    TemaId.RUINAS -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, true, "Día 1 tras el silencio · " + t.nombre, "toca para seguir caminando",
+        comillas = "“" to "”", emblema = 112.dp, arriba = 46.dp, abajo = 70.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onSurfaceVariant.copy(alpha = 0.45f); val verde = e.primary.copy(alpha = 0.7f)
+        drawPath(Path().apply { moveTo(0f, 0f); lineTo(w * 0.7f, 0f); lineTo(w * 0.76f, u * 8); lineTo(w * 0.84f, u * 3); lineTo(w, u * 14); lineTo(w, h); lineTo(0f, h); close() }, c, style = Stroke(u))
+        // Hiedra que cuelga del borde de arriba.
+        listOf(0.08f to 0.32f, 0.2f to 0.2f, 0.9f to 0.26f).forEach { (fx, largo) ->
+            val x0 = w * fx; val y1 = h * largo
+            drawLine(verde, Offset(x0, 0f), Offset(x0 + u * 4, y1), u * 1.1f)
+            var y = u * 12; var lado = 1f
+            while (y < y1) {
+                val q = Offset(x0 + u * 4 * (y / y1), y); val r = u * 6
+                drawPath(Path().apply { moveTo(q.x, q.y); lineTo(q.x + lado * r, q.y - r * 0.2f); lineTo(q.x + lado * r * 0.7f, q.y + r * 0.6f); close() }, verde)
+                y += maxOf(u * 14, 1f); lado = -lado
+            }
+        }
+        // Edificios rotos al pie, con ventanas vacías.
+        val pie = Path().apply {
+            moveTo(0f, h); lineTo(0f, h - u * 40); lineTo(u * 30, h - u * 46); lineTo(u * 36, h - u * 30); lineTo(u * 60, h - u * 30); lineTo(u * 60, h - u * 58)
+            lineTo(u * 78, h - u * 64); lineTo(u * 86, h - u * 50); lineTo(u * 100, h - u * 54); lineTo(u * 100, h - u * 22)
+            lineTo(w - u * 90, h - u * 22); lineTo(w - u * 90, h - u * 48); lineTo(w - u * 60, h - u * 48); lineTo(w - u * 52, h - u * 36); lineTo(w - u * 40, h - u * 52); lineTo(w, h - u * 44); lineTo(w, h); close()
+        }
+        drawPath(pie, c.copy(alpha = 0.18f))
+        for (k in 0 until 3) drawRect(e.surface.copy(alpha = 0.7f), Offset(u * (66 + k * 10f), h - u * 46), Size(u * 5, u * 7))
+        drawLine(verde, Offset(u * 70, h - u * 22), Offset(u * 70, h - u * 70), u * 1.6f)
+        drawCircle(verde.copy(alpha = 0.5f), u * 14, Offset(u * 70, h - u * 76))
+    }
     // Ventana de Adviento: la frase colgada bajo una guirnalda con bolas, entre copos de nieve.
     TemaId.NAVIDAD -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre, "✦ toca para abrir la siguiente ventanita", arriba = 50.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
@@ -481,6 +632,19 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         }
         drawPath(Path().apply { moveTo(w / 2 - u * 30, 0f); lineTo(w / 2, -u * 18); lineTo(w / 2 + u * 30, 0f) }, madera, style = Stroke(u))
     }
+    // Un biombo de seis hojas con nubes de oro (kasumi) y el monte Fuji al fondo; el sello al pie, como en las estampas.
+    TemaId.EDO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, true, t.nombre, "※ 道中  ·  toca para seguir por el camino real",
+        comillas = "『" to "』", emblema = 92.dp, arriba = 40.dp, abajo = 48.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height; val n = 6; val pw = w / n
+        for (k in 0 until n) drawRect((if (k % 2 == 0) e.surface else e.surfaceVariant).copy(alpha = 0.5f), Offset(k * pw, 0f), Size(pw, h))
+        drawPath(Path().apply { moveTo(w * 0.2f, h * 0.62f); lineTo(w * 0.44f, h * 0.36f); quadraticTo(w * 0.5f, h * 0.33f, w * 0.56f, h * 0.36f); lineTo(w * 0.8f, h * 0.62f); close() }, e.primary.copy(alpha = 0.06f))
+        val oro = e.tertiary.copy(alpha = 0.22f)
+        listOf(0.06f to 0.5f, 0.12f to 0.35f, 0.86f to 0.55f, 0.92f to 0.3f).forEachIndexed { i, (fy, fw) ->
+            drawRoundRect(oro, Offset(w * (if (i % 2 == 0) 0.05f else 0.4f), h * fy), Size(w * fw, h * 0.045f), CornerRadius(h * 0.0225f))
+        }
+        for (k in 1 until n) drawLine(e.outline.copy(alpha = 0.5f), Offset(k * pw, 0f), Offset(k * pw, h), u)
+        drawRect(e.onSurface.copy(alpha = 0.35f), Offset.Zero, size, style = Stroke(2 * u))
+    }
     // Vitral: un arco ojival con su rosetón en la clave.
     TemaId.GOTICO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "✠ toca, y que se abra la puerta del claustro",
         arriba = 100.dp, abajo = 30.dp) { e ->
@@ -503,6 +667,30 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         }
         drawLine(c, Offset(0f, h), Offset(w, h), u * 2)
     }
+    // El recorte pegado en la libreta: la frase primero, como hallada en un periódico viejo; el borde rasgado, dos tiras de
+    // cinta y, al pie, el faro con su haz.
+    TemaId.ARCANO -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, true, "Horror cósmico", "† toca, si te atreves a abrir el archivo",
+        comillas = "—" to "", emblema = 118.dp, arriba = 26.dp, abajo = 70.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onBackground.copy(alpha = 0.45f)
+        val borde = Path().apply {
+            moveTo(0f, 6 * u); var x = 0f; var k = 0
+            while (x < w) { x = minOf(x + 9 * u, w); lineTo(x, if (k % 2 == 0) 2 * u else 7 * u); k++ }
+            lineTo(w, h - 52 * u); lineTo(0f, h - 52 * u); close()
+        }
+        drawPath(borde, e.secondary.copy(alpha = 0.06f))
+        drawPath(borde, c, style = Stroke(u))
+        listOf(Offset(14 * u, 6 * u) to -32f, Offset(w - 14 * u, 6 * u) to 32f).forEach { (o, g) ->
+            rotate(g, o) { drawRect(Color(0xFFE6D9A6).copy(alpha = 0.5f), Offset(o.x - 22 * u, o.y - 7 * u), Size(44 * u, 14 * u)) }
+        }
+        val f = Offset(w / 2, h - 10 * u)
+        drawPath(Path().apply { moveTo(f.x - 6 * u, f.y); lineTo(f.x - 4 * u, f.y - 30 * u); lineTo(f.x + 4 * u, f.y - 30 * u); lineTo(f.x + 6 * u, f.y); close() }, c)
+        drawCircle(e.primary.copy(alpha = 0.8f), 3 * u, Offset(f.x, f.y - 34 * u))
+        listOf(-1f, 1f).forEach { s ->
+            drawPath(Path().apply { moveTo(f.x, f.y - 34 * u); lineTo(f.x + s * w * 0.45f, f.y - 44 * u); lineTo(f.x + s * w * 0.45f, f.y - 26 * u); close() }, e.primary.copy(alpha = 0.08f))
+        }
+        drawLine(c, Offset(0f, h), Offset(w, h), u)
+    }
     // Visor de la sala de control: escuadras, marcas de mira y una órbita que rodea el emblema.
     TemaId.ESPACIO -> {
         val arriba = 40f; val tam = 132f
@@ -519,6 +707,28 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             val centro = Offset(w / 2, u * (arriba + tam / 2))
             drawOval(c.copy(alpha = 0.35f), Offset(centro.x - u * 116, centro.y - u * 30), Size(u * 232, u * 60), style = Stroke(u))
             drawCircle(e.secondary, u * 3.5f, Offset(centro.x + u * 100, centro.y - u * 15))
+        }
+    }
+    // La bajada: la medusa arriba, la superficie ondulada, las capas del mar en franjas cada vez más oscuras y la regla de cotas.
+    TemaId.ABISMO -> {
+        val arriba = 46f; val tam = 128f
+        DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, "▾ " + t.nombre.uppercase() + " ▾", "≈ toca para soltar el lastre y bajar",
+            emblema = tam.dp, arriba = arriba.dp) { e ->
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val sup = u * 24
+            val ola = Path(); var x = 0f
+            ola.moveTo(0f, sup)
+            while (x <= w) { ola.lineTo(x, sup + u * 4 * kotlin.math.sin(x / (u * 26))); x += maxOf(u * 3, 1f) }
+            drawPath(ola, e.primary.copy(alpha = 0.6f), style = Stroke(u * 1.4f))
+            for (k in 1..4) drawRect(e.primary.copy(alpha = 0.035f * k), Offset(0f, h * (0.2f + 0.2f * k)), Size(w, h * 0.2f))
+            var y = sup + u * 30; var i = 0
+            while (y < h - u * 20) {
+                drawLine(e.primary.copy(alpha = 0.45f), Offset(u * 12, y), Offset(u * (if (i % 5 == 0) 26 else 18), y), u)
+                y += maxOf(u * 14, 1f); i++
+            }
+            listOf(0.82f to 0.55f, 0.88f to 0.64f, 0.79f to 0.72f, 0.86f to 0.8f).forEachIndexed { j, (fx, fy) ->
+                drawCircle(e.secondary.copy(alpha = 0.6f), u * (2.5f + j % 2 * 1.5f), Offset(w * fx, h * fy), style = Stroke(u))
+            }
         }
     }
     // Arco de herradura con su alfiz y estrellas de ocho puntas en las enjutas.
@@ -545,6 +755,22 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         drawLine(c.copy(alpha = 0.5f), Offset(0f, 0f), Offset(w, 0f), u)
         drawLine(c.copy(alpha = 0.5f), Offset(0f, 0f), Offset(0f, pie), u)
         drawLine(c.copy(alpha = 0.5f), Offset(w, 0f), Offset(w, pie), u)
+    }
+    // Una página del códice: el marco rojo con las esquinas escalonadas, el número del día en puntos y barras arriba, la
+    // frase con capitular y, al pie, la greca escalonada y el glifo del día como sello.
+    TemaId.MESO -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, false, t.nombre, "⁘  ·  toca para desplegar el códice",
+        capitular = true, emblema = 110.dp, arriba = 52.dp, abajo = 44.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val rojo = e.primary.copy(alpha = 0.7f); val g = 9 * u
+        drawPath(Path().apply {
+            moveTo(2 * g, 0f); lineTo(w - 2 * g, 0f); lineTo(w - 2 * g, g); lineTo(w - g, g); lineTo(w - g, 2 * g); lineTo(w, 2 * g); lineTo(w, h)
+            lineTo(0f, h); lineTo(0f, 2 * g); lineTo(g, 2 * g); lineTo(g, g); lineTo(2 * g, g); close()
+        }, rojo, style = Stroke(1.6f * u))
+        drawLine(rojo.copy(alpha = 0.45f), Offset(3 * g, 6 * u), Offset(w - 3 * g, 6 * u), u)
+        val (n, _) = Maya.tzolkinPartes(java.time.LocalDate.now())
+        numeralMaya(n, Offset(2.4f * g, 3.4f * g), 14 * u, e.tertiary)
+        numeralMaya(n, Offset(w - 2.4f * g, 3.4f * g), 14 * u, e.tertiary)
+        grecaEscalonada(10 * u, w - 10 * u, h - 22 * u, h - 10 * u, rojo, 1.3f * u)
     }
     // Ger: la cúpula con su corona (toono) arriba, la frase bajo ella y la celosía (khana) al pie.
     TemaId.MONGOL -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre.uppercase(), "▹ УРАГШАА  ·  toca para levantar el campamento",
@@ -586,6 +812,28 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawCircle(c, u * 2, centro)
             // Un arco de la espiral áurea en la esquina de abajo.
             drawArc(e.secondary.copy(alpha = 0.45f), 0f, 90f, false, Offset(w - u * 130, h - u * 140), Size(u * 120, u * 120), style = Stroke(u))
+        }
+    }
+    // La carta del tesoro: las líneas de rumbo que salen del emblema como de una rosa, el mar abajo con sus olas, y la
+    // derrota punteada que cruza la hoja hasta la «X».
+    TemaId.PIRATA -> {
+        val arriba = 44f; val tam = 100f
+        DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, false, t.nombre, "✷ leven anclas  ·  toca para zarpar", emblema = tam.dp, arriba = arriba.dp) { e ->
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val c = e.onBackground.copy(alpha = 0.18f)
+            val centro = Offset(u * (40 + tam / 2), u * (arriba + tam / 2))
+            for (k in 0 until 16) { val a = k * Math.PI / 8; drawLine(c, centro, Offset(centro.x + (w * 1.5f * kotlin.math.cos(a)).toFloat(), centro.y + (w * 1.5f * kotlin.math.sin(a)).toFloat()), u * 0.6f) }
+            drawCircle(e.primary.copy(alpha = 0.35f), u * (tam / 2 + 12), centro, style = Stroke(u))
+            for (k in 0 until 3) {
+                val y0 = h - u * (18 + k * 16); val p = Path(); var x = -u * 10; p.moveTo(x, y0)
+                while (x < w + u * 10) { p.quadraticTo(x + u * 12, y0 - u * 5, x + u * 24, y0); p.quadraticTo(x + u * 36, y0 + u * 5, x + u * 48, y0); x += maxOf(u * 48, 1f) }
+                drawPath(p, e.secondary.copy(alpha = 0.3f - k * 0.07f), style = Stroke(u))
+            }
+            val x = Offset(w - u * 46, h - u * 92); val s = u * 8
+            drawPath(Path().apply { moveTo(u * 30, h - u * 70); cubicTo(w * 0.3f, h - u * 150, w * 0.6f, h - u * 40, x.x - s * 1.5f, x.y + s) }, e.tertiary.copy(alpha = 0.55f),
+                style = Stroke(u * 1.6f, cap = StrokeCap.Round, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(u * 0.1f, u * 6))))
+            drawLine(e.tertiary.copy(alpha = 0.8f), x - Offset(s, s), x + Offset(s, s), u * 2.6f, StrokeCap.Round)
+            drawLine(e.tertiary.copy(alpha = 0.8f), x + Offset(-s, s), x + Offset(s, -s), u * 2.6f, StrokeCap.Round)
         }
     }
     // Cartel constructivista: cuña roja arriba, barra negra a un lado y una diagonal con su círculo al pie.
@@ -630,6 +878,25 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         drawPath(Path().apply { moveTo(g.x, g.y - u * 11); lineTo(g.x + u * 8, g.y); lineTo(g.x, g.y + u * 11); lineTo(g.x - u * 8, g.y); close() }, e.tertiary)
         drawPath(Path().apply { moveTo(g.x, g.y - u * 11); lineTo(g.x + u * 8, g.y); lineTo(g.x, g.y + u * 11); lineTo(g.x - u * 8, g.y); close() }, c, style = Stroke(u))
         drawLine(Color.White.copy(alpha = 0.6f), Offset(g.x - u * 3, g.y - u * 4), Offset(g.x, g.y - u * 8), u)
+    }
+    // La boca de la cueva: el arco de roca con sus estalactitas, una mano en negativo a cada lado y una hilera de puntos al pie.
+    TemaId.CUEVA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "⁘ toca para entrar en la cueva", emblema = 120.dp, arriba = 40.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onBackground.copy(alpha = 0.55f)
+        val boca = Path().apply {
+            moveTo(0f, h); lineTo(2 * u, h * 0.3f); quadraticTo(6 * u, 4 * u, w * 0.3f, 6 * u); quadraticTo(w * 0.52f, -4 * u, w * 0.74f, 8 * u)
+            quadraticTo(w - 2 * u, 12 * u, w - 2 * u, h * 0.36f); lineTo(w, h)
+        }
+        drawPath(boca, c.copy(alpha = 0.2f), style = Stroke(10 * u)); drawPath(boca, c, style = Stroke(1.8f * u, cap = StrokeCap.Round))
+        listOf(0.2f to 18f, 0.34f to 28f, 0.48f to 14f, 0.62f to 24f, 0.78f to 12f).forEach { (f, l) ->
+            val x = w * f; drawPath(Path().apply { moveTo(x - 4 * u, 6 * u); lineTo(x, (6 + l) * u); lineTo(x + 4 * u, 6 * u); close() }, c.copy(alpha = 0.4f))
+        }
+        listOf(28 * u, w - 28 * u).forEach { x ->
+            val m = Offset(x, h * 0.45f)
+            drawCircle(e.primary.copy(alpha = 0.4f), 20 * u, m); drawCircle(e.primary.copy(alpha = 0.55f), 15 * u, m)
+            drawPath(manoUnida(m, 13 * u), e.background)
+        }
+        var x = w * 0.3f; while (x < w * 0.7f) { drawCircle(e.primary, 2.4f * u, Offset(x, h - 18 * u)); x += 14 * u }
     }
 }
 

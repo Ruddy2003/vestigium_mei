@@ -150,9 +150,13 @@ fun CapaLogro() {
 /** Los cuatro niveles de un logro (bronce, plata, oro y legendario) dichos en la voz de cada tema. */
 private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.ROMANO -> listOf("ex aere", "ex argento", "ex auro", "triumphalis")
+    TemaId.URBE -> listOf("di bronzo", "d'argento", "d'oro", "da Campidoglio")
     TemaId.CIBER -> listOf("rango: usuario", "rango: operador", "rango: admin", "rango: root")
+    TemaId.NEON -> listOf("cliente de paso", "cliente de la casa", "vecino del nivel", "leyenda del callejón")
     TemaId.HELENO -> listOf("χάλκεος", "ἀργύρεος", "χρύσεος", "ἀθάνατος")
+    TemaId.EGIPTO -> listOf("amuleto de fayenza", "amuleto de cobre", "amuleto de oro", "el oro de los dioses")
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
+    TemaId.TEMPLARIO -> listOf("hermano sargento", "freire caballero", "comendador", "maestre del Temple")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
     TemaId.REFUGIO -> listOf("residente", "jefe de turno", "jefe de sector", "director del refugio")
     TemaId.ORDEN -> listOf("escudero", "caballero", "paladín", "gran maestre")
@@ -160,16 +164,23 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.COLONOS -> listOf("nota breve", "crónica", "primera plana", "edición extra")
     TemaId.NAPOLEON -> listOf("citation", "croix d'argent", "Légion d'honneur", "maréchal d'Empire")
     TemaId.BOTANICO -> listOf("ejemplar común", "ejemplar raro", "especie nueva", "género nuevo")
+    TemaId.RUINAS -> listOf("hallazgo", "rescate", "tesoro entre escombros", "el árbol que rompió el asfalto")
     TemaId.NAVIDAD -> listOf("cascabel", "campana de plata", "estrella de oro", "milagro de Navidad")
     TemaId.SEDA -> listOf("moneda de cobre", "lingote de plata", "oro de Samarcanda", "seda del emperador")
+    TemaId.EDO -> listOf("mon de cobre", "sello del templo", "koban de oro", "estampa del shōgun")
     TemaId.GOTICO -> listOf("cirio", "cáliz de plata", "custodia de oro", "reliquia")
+    TemaId.ARCANO -> listOf("nota al margen", "recorte archivado", "prueba cotejada", "lo que no debía saberse")
     TemaId.ESPACIO -> listOf("magnitud 3", "magnitud 2", "magnitud 1", "supernova")
+    TemaId.ABISMO -> listOf("a 200 m", "a 1,000 m", "a 4,000 m", "al fondo de la fosa")
     TemaId.ANDALUS -> listOf("feluz de cobre", "dírham de plata", "dinar de oro", "dinar de la Alhambra")
+    TemaId.MESO -> listOf("grano de cacao", "cuenta de jade", "pluma de quetzal", "máscara de jade del señor")
     TemaId.MONGOL -> listOf("paiza de madera", "paiza de plata", "paiza de oro", "paiza del Gran Kan")
     TemaId.RENACIMIENTO -> listOf("bronzo", "argento", "oro", "capolavoro")
+    TemaId.PIRATA -> listOf("real de a ocho", "escudo de oro", "doblón de a ocho", "el cofre del capitán")
     TemaId.URSS -> listOf("trabajador de choque", "plan cumplido", "plan en cuatro años", "héroe del trabajo")
     TemaId.REVOLUCION -> listOf("ciudadano activo", "guardia nacional", "héroe de la patria", "al Panteón")
     TemaId.ANTIGUAS -> listOf("hierro de la mina", "plata lunar", "oro de las profundidades", "gema de las edades")
+    TemaId.CUEVA -> listOf("carbón de hoguera", "ocre amarillo", "ocre rojo", "hematita que brilla")
 }
 
 /** Un polígono estrellado: [puntas] vértices a [fuera] y otros tantos a [dentro]; con los dos iguales, un polígono regular. */
@@ -234,6 +245,24 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawLine(cs.primary.copy(alpha = 0.16f), nudo, Offset(nudo.x - 18f * u, nudo.y + 28f * u), 3f * u, cap = StrokeCap.Round)
             drawLine(cs.primary.copy(alpha = 0.16f), nudo, Offset(nudo.x + 18f * u, nudo.y + 28f * u), 3f * u, cap = StrokeCap.Round)
         }
+        TemaId.URBE -> {
+            // La cúpula del Panteón vista desde abajo: cinco anillos de 28 casetones que se achican hacia el óculo, y el
+            // disco de luz que entra por él. Los anillos giran en sentidos alternos, de casetón en casetón.
+            val luz = if (oscuro) cs.tertiary else cs.primary
+            for (anillo in 0 until 5) {
+                val ra = m * (0.46f - anillo * 0.065f); val lado = m * (0.05f - anillo * 0.006f)
+                val sentido = if (anillo % 2 == 0) 1f else -1f
+                rotate(sentido * giro * (anillo + 1) / 28f, c) {
+                    for (k in 0 until 28) rotate(k * 360f / 28f, c) {
+                        drawRect(luz.copy(alpha = 0.12f), Offset(c.x - lado / 2, c.y - ra - lado / 2), Size(lado, lado))
+                        drawRect(luz.copy(alpha = 0.2f), Offset(c.x - lado * 0.3f, c.y - ra - lado * 0.3f), Size(lado * 0.6f, lado * 0.6f), style = Stroke(0.8f * u))
+                    }
+                }
+            }
+            val oculo = m * 0.11f
+            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.16f else 0.3f), Color.Transparent), center = c, radius = oculo * 2.2f), oculo * 2.2f, c)
+            drawCircle(luz.copy(alpha = 0.3f), oculo, c, style = Stroke(1.6f * u))
+        }
         TemaId.CIBER -> {
             // Haces de fósforo: renglones de luz que se acortan hacia arriba y abajo, un barrido que baja y escuadras de selección.
             val fosforo = cs.primary
@@ -252,6 +281,21 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 drawLine(fosforo.copy(alpha = 0.35f), o, Offset(o.x, o.y - d.y * l), 2f * u)
             }
         }
+        TemaId.NEON -> {
+            // Los letreros de la calle se encienden alrededor: tubos verticales en los tres colores que parpadean al
+            // prenderse, y el halo magenta que baña el centro.
+            val tonos = listOf(cs.primary, cs.secondary, cs.tertiary)
+            drawCircle(Brush.radialGradient(listOf(cs.primary.copy(alpha = 0.14f), Color.Transparent), c, m * 0.5f), m * 0.5f, c)
+            for (k in 0 until 8) {
+                val x = c.x + (k - 3.5f) * m * 0.12f
+                val alto = m * (0.12f + 0.1f * ((k * 5) % 3))
+                val y = c.y + (if (k % 2 == 0) -1 else 1) * m * 0.22f
+                val prendido = ((giro / 20f).toInt() + k) % 7 != 0
+                val col = tonos[k % 3].copy(alpha = if (prendido) 0.6f else 0.12f)
+                drawLine(col.copy(alpha = col.alpha * 0.4f), Offset(x, y - alto / 2), Offset(x, y + alto / 2), 9f * u, StrokeCap.Round)
+                drawLine(col, Offset(x, y - alto / 2), Offset(x, y + alto / 2), 3f * u, StrokeCap.Round)
+            }
+        }
         TemaId.HELENO -> rotate(giro * 0.5f, c) {
             // El sol de Vergina: dieciséis rayos que alternan largo y corto alrededor de un disco.
             val oro = cs.tertiary
@@ -263,6 +307,27 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 val base = m * 0.09f
                 val p1 = pt(base, a - ancho); val p2 = pt(largo, a); val p3 = pt(base, a + ancho)
                 drawPath(Path().apply { moveTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); close() }, oro.copy(alpha = 0.09f))
+            }
+        }
+        TemaId.EGIPTO -> {
+            // El Atón de Amarna: un disco del que bajan rayos que terminan en manos abiertas; los rayos respiran despacio.
+            val oro = if (oscuro) cs.primary else cs.tertiary
+            val centro = Offset(c.x, c.y - m * 0.2f)
+            drawCircle(oro.copy(alpha = 0.12f), m * 0.12f, centro)
+            drawCircle(oro.copy(alpha = 0.2f), m * 0.12f, centro, style = Stroke(1.5f * u))
+            val pulso = 0.9f + 0.1f * sin(giro * PI / 90).toFloat()
+            for (i in 0 until 13) {
+                val a = PI * (0.12 + 0.76 * i / 12)
+                val ini = Offset(centro.x + (m * 0.14f * cos(a)).toFloat(), centro.y + (m * 0.14f * sin(a)).toFloat())
+                val largo = m * 0.52f * pulso
+                val fin = Offset(centro.x + (largo * cos(a)).toFloat(), centro.y + (largo * sin(a)).toFloat())
+                drawLine(oro.copy(alpha = 0.11f), ini, fin, 1.6f * u)
+                // La mano: la palma y cuatro dedos que se abren hacia afuera del rayo.
+                drawCircle(oro.copy(alpha = 0.16f), 3f * u, fin)
+                for (d in -1..2) {
+                    val ad = a + d * 0.32
+                    drawLine(oro.copy(alpha = 0.14f), fin, Offset(fin.x + (5f * u * cos(ad)).toFloat(), fin.y + (5f * u * sin(ad)).toFloat()), 1.1f * u)
+                }
             }
         }
         TemaId.MEDIEVAL -> rotate(giro * 0.25f, c) {
@@ -279,6 +344,23 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                     val b = PI / 2 * j
                     drawCircle(oro.copy(alpha = 0.16f), 2f * u, Offset(p.x + (5f * u * cos(b)).toFloat(), p.y + (5f * u * sin(b)).toFloat()))
                 }
+            }
+        }
+        TemaId.TEMPLARIO -> {
+            // Dos espadas cruzadas detrás de una gran cruz patada que gira despacio, dentro de un anillo de cota de malla.
+            val hierro = cs.secondary; val rojo = cs.primary
+            listOf(-1f, 1f).forEach { s ->
+                val a = Math.toRadians(-90.0 + s * 38.0)
+                val punta = pt(m * 0.46f, a); val pomo = pt(m * 0.36f, a + PI)
+                drawLine(hierro.copy(alpha = 0.16f), pomo, punta, 3f * u, StrokeCap.Round)
+                val g = pt(m * 0.24f, a + PI); val n = Offset(-sin(a).toFloat(), cos(a).toFloat()) * (9f * u)
+                drawLine(hierro.copy(alpha = 0.2f), g - n, g + n, 2.4f * u, StrokeCap.Round)
+                drawCircle(hierro.copy(alpha = 0.2f), 3.2f * u, pomo)
+            }
+            rotate(giro * 0.15f, c) { drawPath(cruzPatada(c, m * 0.3f), rojo.copy(alpha = if (oscuro) 0.12f else 0.09f)) }
+            for (i in 0 until 40) {
+                val a = 2 * PI * i / 40 + Math.toRadians(giro * 0.1)
+                drawCircle(hierro.copy(alpha = 0.15f), 3.2f * u, pt(m * 0.4f, a), style = Stroke(1.1f * u))
             }
         }
         TemaId.DISTOPIA -> {
@@ -362,6 +444,29 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 drawLine(cs.primary.copy(alpha = 0.10f), pt(m * 0.15f, a), pt(m * 0.45f, a), 0.8f * u)
             }
         }
+        TemaId.RUINAS -> rotate(giro / 6f, c) {
+            // Un anillo de hiedra (doce hojas de tres lóbulos sobre su tallo) y seis grietas que se abren hacia fuera, como en el hormigón.
+            val rt = m * 0.33f
+            drawCircle(cs.primary.copy(alpha = 0.10f), rt, c, style = Stroke(1.2f * u))
+            for (i in 0 until 12) {
+                val a = 2 * PI * i / 12
+                val hoja = cs.primary.copy(alpha = if (i % 2 == 0) 0.13f else 0.09f)
+                val p = pt(rt + (if (i % 2 == 0) 1f else -1f) * m * 0.035f, a)
+                val ang = a.toFloat() + (if (i % 2 == 0) 0f else PI.toFloat())
+                hojaLogro(p, ang, m * 0.045f, 0.38f, hoja)
+                hojaLogro(p, ang + 0.9f, m * 0.03f, 0.4f, hoja)
+                hojaLogro(p, ang - 0.9f, m * 0.03f, 0.4f, hoja)
+            }
+            for (i in 0 until 6) {
+                val a = 2 * PI * i / 6 + PI / 6
+                val grieta = Path().apply {
+                    var r = m * 0.42f; val p0 = pt(r, a); moveTo(p0.x, p0.y)
+                    var k = 0
+                    while (r < m * 0.62f) { r += maxOf(m * 0.035f, 1f); val q = pt(r, a + (if (k % 2 == 0) 0.05 else -0.05)); lineTo(q.x, q.y); k++ }
+                }
+                drawPath(grieta, (if (oscuro) cs.secondary else cs.onBackground).copy(alpha = 0.10f), style = Stroke(1f * u))
+            }
+        }
         TemaId.NAVIDAD -> rotate(giro / 6f, c) {
             // Un copo de nieve grande, de seis brazos con sus ramitas.
             val nieve = (if (oscuro) Color.White else cs.secondary).copy(alpha = 0.16f)
@@ -394,6 +499,22 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 }
             }
         }
+        TemaId.EDO -> {
+            // Una rueda de flores de cerezo que gira despacio y, por dentro, sellitos cuadrados que giran al revés.
+            rotate(giro * 0.3f, c) {
+                for (i in 0 until 8) {
+                    val p = pt(m * 0.4f, 2 * PI * i / 8); val r = m * 0.032f
+                    for (k in 0 until 5) { val a = 2 * PI * k / 5 - PI / 2; drawCircle(cs.secondary.copy(alpha = 0.18f), r, Offset(p.x + (r * cos(a)).toFloat(), p.y + (r * sin(a)).toFloat())) }
+                    drawCircle(cs.tertiary.copy(alpha = 0.3f), r * 0.4f, p)
+                }
+            }
+            rotate(-giro * 0.2f, c) {
+                for (i in 0 until 12) {
+                    val p = pt(m * 0.28f, 2 * PI * i / 12); val s = m * 0.02f
+                    drawRect(cs.primary.copy(alpha = 0.16f), Offset(p.x - s, p.y - s), Size(2 * s, 2 * s))
+                }
+            }
+        }
         TemaId.GOTICO -> rotate(giro * 0.25f, c) {
             // Un rosetón: doce pétalos de vidrio rubí y zafiro entre plomos, con su aro de lóbulos.
             val rr = m * 0.42f
@@ -407,6 +528,29 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawCircle(cs.primary.copy(alpha = 0.2f), rr * 0.16f, c, style = Stroke(1.5f * u))
             for (i in 0 until 24) drawCircle(Color(0xFFE2B34A).copy(alpha = 0.14f), rr * 0.06f, pt(rr * 1.07f, 2 * PI * i / 24), style = Stroke(1f * u))
         }
+        TemaId.ARCANO -> {
+            // El faro en la niebla: los dos haces que giran despacio, los aros de bruma y, por las orillas de abajo, unas
+            // puntas oscuras que suben del agua y se enroscan.
+            val luz = if (oscuro) cs.primary else Color(0xFFB89A3A)
+            val a0 = Math.toRadians(giro * 0.5)
+            listOf(0.0, PI).forEach { s ->
+                val p1 = pt(lejos, a0 + s - 0.16); val p2 = pt(lejos, a0 + s + 0.16)
+                drawPath(Path().apply { moveTo(c.x, c.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); close() }, Brush.radialGradient(listOf(luz.copy(alpha = 0.16f), Color.Transparent), c, lejos * 0.8f))
+            }
+            for (k in 1..4) drawCircle(cs.onBackground.copy(alpha = 0.05f), m * 0.12f * k + (giro % 40f) * 0.2f * u, c, style = Stroke(6f * u))
+            drawCircle(luz.copy(alpha = 0.3f), m * 0.05f, c)
+            val tinta = cs.onBackground.copy(alpha = 0.1f)
+            listOf(0.08f to 1f, 0.92f to -1f).forEach { (fx, s) ->
+                val x0 = size.width * fx; val y0 = size.height; val alto = m * 0.5f; val vaiven = sin(Math.toRadians(giro * 2.0)).toFloat() * 8f * u
+                drawPath(Path().apply {
+                    moveTo(x0 - 10 * u, y0)
+                    cubicTo(x0 + s * 30 * u, y0 - alto * 0.4f, x0 - s * 20 * u + vaiven, y0 - alto * 0.8f, x0 + s * 14 * u + vaiven, y0 - alto)
+                    quadraticTo(x0 + s * 34 * u + vaiven, y0 - alto - 14 * u, x0 + s * 28 * u + vaiven, y0 - alto + 6 * u)
+                    quadraticTo(x0 + s * 22 * u + vaiven, y0 - alto + 12 * u, x0 + s * 16 * u + vaiven, y0 - alto + 4 * u)
+                    cubicTo(x0 - s * 6 * u + vaiven, y0 - alto * 0.7f, x0 + s * 40 * u, y0 - alto * 0.4f, x0 + 10 * u, y0); close()
+                }, tinta)
+            }
+        }
         TemaId.ESPACIO -> rotate(giro, c) {
             // Una galaxia espiral de tres brazos, con su núcleo brillante.
             val luz = if (oscuro) Color.White else cs.primary
@@ -414,6 +558,22 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             for (brazo in 0 until 3) for (k in 0 until 40) {
                 val a = Math.toRadians(brazo * 120.0 + k * 9.0)
                 drawCircle(luz.copy(alpha = 0.22f * (1f - k / 44f)), (2.6f - k * 0.04f) * u, pt(m * (0.05f + k * 0.011f), a))
+            }
+        }
+        TemaId.ABISMO -> {
+            // La pantalla del sonar: anillos de distancia, el haz que barre girando y los ecos que deja encendidos.
+            val luz = if (oscuro) cs.primary else cs.primary.copy(alpha = 0.8f)
+            for (k in 1..4) drawCircle(luz.copy(alpha = 0.10f), m * 0.1f * k, c, style = Stroke(1f * u))
+            drawLine(luz.copy(alpha = 0.08f), Offset(c.x - m * 0.42f, c.y), Offset(c.x + m * 0.42f, c.y), 0.8f * u)
+            drawLine(luz.copy(alpha = 0.08f), Offset(c.x, c.y - m * 0.42f), Offset(c.x, c.y + m * 0.42f), 0.8f * u)
+            for (k in 0 until 18) {
+                val a = Math.toRadians(giro.toDouble() - k * 2.5)
+                drawLine(luz.copy(alpha = 0.2f * (1f - k / 18f)), c, pt(m * 0.4f, a), 2.4f * u)
+            }
+            listOf(0.17f to 30.0, 0.31f to 140.0, 0.24f to 250.0, 0.36f to 320.0).forEach { (r, ang) ->
+                val atras = ((giro - ang) % 360.0 + 360.0) % 360.0
+                val brillo = (1f - atras.toFloat() / 360f)
+                drawCircle(luz.copy(alpha = 0.45f * brillo), (2.4f + 2f * brillo) * u, pt(m * r, Math.toRadians(ang)))
             }
         }
         TemaId.ANDALUS -> rotate(giro * 0.25f, c) {
@@ -426,6 +586,24 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 }
             }
             drawPath(estrellaLogro(c, 16, m * 0.56f, m * 0.52f, 0.0), cs.primary.copy(alpha = 0.12f), style = Stroke(1.4f * u))
+        }
+        TemaId.MESO -> rotate(giro * 0.2f, c) {
+            // El sol K'in con un anillo de veinte cartuchos, uno por cada signo de día del tzolk'in, y otro de trece puntos,
+            // como en las piedras de la cuenta de los días; el anillo de afuera gira al revés que el de adentro.
+            val col = cs.primary; val jade = cs.tertiary
+            for (k in 0 until 4) rotate(45f + 90f * k, c) { drawOval(col.copy(alpha = 0.12f), Offset(c.x - m * 0.05f, c.y - m * 0.16f), Size(m * 0.1f, m * 0.12f)) }
+            drawCircle(col.copy(alpha = 0.14f), m * 0.05f, c)
+            drawCircle(col.copy(alpha = 0.12f), m * 0.2f, c, style = Stroke(1.4f * u))
+            for (i in 0 until 13) drawCircle(jade.copy(alpha = 0.16f), 2.2f * u, pt(m * 0.25f, 2 * PI * i / 13))
+            drawCircle(col.copy(alpha = 0.1f), m * 0.3f, c, style = Stroke(1f * u))
+            rotate(-giro * 0.5f, c) {
+                for (i in 0 until 20) {
+                    val q = pt(m * 0.38f, 2 * PI * i / 20); val s = m * 0.045f
+                    drawRoundRect(col.copy(alpha = 0.14f), Offset(q.x - s, q.y - s), Size(2 * s, 2 * s), androidx.compose.ui.geometry.CornerRadius(s * 0.4f), style = Stroke(1.2f * u))
+                    drawCircle(col.copy(alpha = 0.1f), s * 0.3f, q)
+                }
+            }
+            drawCircle(col.copy(alpha = 0.1f), m * 0.45f, c, style = Stroke(1.4f * u))
         }
         TemaId.MONGOL -> rotate(giro * 0.25f, c) {
             // La corona de una yurta vista desde abajo: el aro, sus varas en cruz y las veinticuatro varas del techo.
@@ -461,6 +639,33 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                 }
             }
         }
+        TemaId.PIRATA -> {
+            // El cofre abierto: destellos de oro que salen del centro y un corro de doblones que gira alrededor; abajo, la
+            // derrota punteada que llega a la «X».
+            val oro = if (oscuro) cs.primary else cs.secondary; val tinta = cs.onBackground; val rojo = cs.tertiary
+            rotate(giro * 0.2f, c) {
+                for (i in 0 until 12) {
+                    val a = Math.toRadians(30.0 * i)
+                    val largo = m * (if (i % 2 == 0) 0.44f else 0.3f)
+                    val izq = pt(m * 0.05f, a - 0.12); val der = pt(m * 0.05f, a + 0.12); val punta = pt(largo, a)
+                    drawPath(Path().apply { moveTo(izq.x, izq.y); lineTo(punta.x, punta.y); lineTo(der.x, der.y); close() }, oro.copy(alpha = 0.10f))
+                }
+            }
+            rotate(-giro * 0.35f, c) {
+                for (i in 0 until 10) {
+                    val p = pt(m * 0.38f, Math.toRadians(36.0 * i)); val rr = m * 0.035f
+                    drawCircle(oro.copy(alpha = 0.22f), rr, p)
+                    drawCircle(tinta.copy(alpha = 0.14f), rr * 0.72f, p, style = Stroke(0.8f * u))
+                    drawLine(tinta.copy(alpha = 0.14f), p - Offset(rr * 0.4f, 0f), p + Offset(rr * 0.4f, 0f), 0.8f * u)
+                    drawLine(tinta.copy(alpha = 0.14f), p - Offset(0f, rr * 0.4f), p + Offset(0f, rr * 0.4f), 0.8f * u)
+                }
+            }
+            val x = Offset(c.x + m * 0.3f, c.y + m * 0.52f); val s = m * 0.03f
+            val derrota = Path().apply { moveTo(c.x - m * 0.5f, c.y + m * 0.62f); cubicTo(c.x - m * 0.2f, c.y + m * 0.4f, c.x, c.y + m * 0.75f, x.x - s * 1.6f, x.y) }
+            drawPath(derrota, tinta.copy(alpha = 0.14f), style = Stroke(1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f * u, 5f * u))))
+            drawLine(rojo.copy(alpha = 0.4f), x - Offset(s, s), x + Offset(s, s), 2.2f * u, StrokeCap.Round)
+            drawLine(rojo.copy(alpha = 0.4f), x + Offset(-s, s), x + Offset(s, -s), 2.2f * u, StrokeCap.Round)
+        }
         TemaId.URSS -> {
             // Cinco haces anchos que salen de una gran estrella roja, como en un cartel constructivista.
             rotate(giro * 0.2f, c) {
@@ -493,6 +698,16 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
                     runaVivo(runa, p, m * 0.07f, luz.copy(alpha = 0.10f), 4f * u)
                     runaVivo(runa, p, m * 0.07f, luz.copy(alpha = 0.30f), 1.3f * u)
                 }
+            }
+        }
+        TemaId.CUEVA -> rotate(giro, c) {
+            // Un corro de manos de ocre alrededor, como en las paredes cubiertas de manos, y un anillo de puntos por dentro.
+            val ocre = if (oscuro) Color(0xFFE8804F) else cs.primary
+            for (i in 0 until 24) drawCircle(ocre.copy(alpha = 0.22f), m * 0.012f, pt(m * 0.34f, 2 * PI * i / 24))
+            for (i in 0 until 8) {
+                val a = 2 * PI * i / 8
+                val p = pt(m * 0.43f, a)
+                rotate(Math.toDegrees(a).toFloat() + 90f, p) { drawPath(manoUnida(p, m * 0.05f), ocre.copy(alpha = 0.3f)) }
             }
         }
     }

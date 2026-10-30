@@ -4,6 +4,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -16,15 +17,13 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Los mapas de campaña de los 21 temas. El fondo, el camino y las paradas de cada uno se dibujan en [MapasMas] (el motor
+ * Los mapas de campaña de todos los temas. El fondo, el camino y las paradas de cada uno se dibujan en [MapasMas] (el motor
  * de rutas, con sus siete puntos por tema); aquí está la escena de la victoria: la corona triunfal en Alesia, el sol de
  * Vergina en Babilonia, la cruz de Santiago, las campanas de la catedral, el cuadro enmarcado y firmado, el águila de 1804,
  * la bandera de la Federación, la casa del pueblo nuevo, la flor de la expedición, el árbol de la plaza, los farolillos de
  * Antioquía, el arco de herradura, el ovoo, la almenara, el sello de «APROBADO» y las escenas de los temas del lote 2.
  */
 object MapasCampana {
-    val TEMAS = TrofeosTema.TEMAS
-
     /** El fondo del mapa. [avance] va de 0 a 1 (días cumplidos de los siete). */
     fun DrawScope.fondo(tema: TemaId, cs: ColorScheme, avance: Float) {
         with(MapasMas) { fondoMas(tema, cs, avance) }
@@ -61,6 +60,24 @@ object MapasCampana {
                 }
                 drawRect(rojo, Offset(c.x - 2 * d, c.y + r - 1.5f * d), Size(4 * d, 3 * d))
             }
+            TemaId.URBE -> {
+                // La fuente al final del paseo: la fachada de travertino con su nicho, el agua que cae en la pila y la moneda
+                // de oro que vuela por encima del hombro hacia el agua, para volver a Roma.
+                val trav = Color(0xFFE6D8BC); val sombra = Color(0xFFA8956E); val agua = Color(0xFF6FB3D9)
+                val base = m.y - 4 * d
+                drawRect(trav, Offset(m.x - 16 * d, base - 30 * d), Size(32 * d, 24 * d))
+                drawRect(sombra, Offset(m.x - 17 * d, base - 32 * d), Size(34 * d, 3 * d))
+                listOf(-12f, -7f, 7f, 12f).forEach { x -> drawRect(sombra.copy(alpha = 0.7f), Offset(m.x + x * d - 0.8f * d, base - 29 * d), Size(1.6f * d, 22 * d)) }
+                drawPath(Path().apply { moveTo(m.x - 4.5f * d, base - 7 * d); lineTo(m.x - 4.5f * d, base - 20 * d); quadraticTo(m.x, base - 27 * d, m.x + 4.5f * d, base - 20 * d); lineTo(m.x + 4.5f * d, base - 7 * d); close() }, sombra)
+                // La cascada y la pila.
+                for (k in -2..2) drawLine(agua.copy(alpha = 0.8f), Offset(m.x + k * 1.6f * d, base - 9 * d), Offset(m.x + k * 2.6f * d, base - 1 * d), 1f * d)
+                drawArc(agua, 0f, 180f, true, Offset(m.x - 18 * d, base - 5 * d), Size(36 * d, 10 * d))
+                drawArc(sombra, 0f, 180f, false, Offset(m.x - 18 * d, base - 5 * d), Size(36 * d, 10 * d), style = Stroke(1.4f * d))
+                // La moneda en el aire, con su estela.
+                val mon = Offset(m.x + 12 * d, base - 40 * d)
+                drawPath(Path().apply { moveTo(m.x + 26 * d, base - 30 * d); quadraticTo(m.x + 20 * d, base - 46 * d, mon.x, mon.y) }, oro.copy(alpha = 0.5f), style = Stroke(0.8f * d, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2 * d, 2 * d))))
+                drawCircle(oro, 2.6f * d, mon); drawCircle(lerp(oro, Color.White, 0.5f), 1f * d, mon - Offset(0.8f * d, 0.8f * d))
+            }
             TemaId.HELENO -> with(TrofeosTema) {
                 // El sol de Vergina, de dieciséis rayos, en oro sobre el escudo púrpura de Macedonia.
                 val c = Offset(m.x, m.y - 24 * d)
@@ -69,6 +86,21 @@ object MapasCampana {
                 drawCircle(oro, 12 * d, c, style = Stroke(1.4f * d))
                 estrella(c, 10 * d, 3.4f * d, 16, Brush.linearGradient(listOf(oro, oro)))
                 drawCircle(purpura, 2.6f * d, c); drawCircle(oro, 1.5f * d, c)
+            }
+            TemaId.EGIPTO -> {
+                // Un obelisco recién alzado en Elefantina: el piramidión dorado brilla y el sol sale detrás, entre sus rayos.
+                val base = Offset(m.x, m.y - 4 * d); val alto = 36 * d
+                val sol = Offset(base.x, base.y - 22 * d)
+                for (k in 0 until 9) {
+                    val a = PI * (1.0 + k / 8.0)
+                    drawLine(oro.copy(alpha = 0.55f), Offset(sol.x + (14 * d * cos(a)).toFloat(), sol.y + (14 * d * sin(a)).toFloat()),
+                        Offset(sol.x + (22 * d * cos(a)).toFloat(), sol.y + (22 * d * sin(a)).toFloat()), 1.4f * d)
+                }
+                drawCircle(Color(0xFFB8471E), 9 * d, sol)
+                drawPath(Path().apply { moveTo(base.x - 5 * d, base.y); lineTo(base.x - 3.6f * d, base.y - alto); lineTo(base.x + 3.6f * d, base.y - alto); lineTo(base.x + 5 * d, base.y); close() }, Color(0xFF9C7E64))
+                drawPath(Path().apply { moveTo(base.x - 3.6f * d, base.y - alto); lineTo(base.x, base.y - alto - 6 * d); lineTo(base.x + 3.6f * d, base.y - alto); close() }, oro)
+                for (k in 1..4) drawLine(Color(0xFF5E4A38), Offset(base.x - 1.2f * d, base.y - alto * k / 5f), Offset(base.x + 1.2f * d, base.y - alto * k / 5f), 0.8f * d)
+                drawRect(Color(0xFF6E5A46), Offset(base.x - 8 * d, base.y), Size(16 * d, 3 * d))
             }
             TemaId.MEDIEVAL -> {
                 // La cruz de Santiago en rojo, con la hoja de espada hacia abajo y flores de lis en las otras tres puntas.
@@ -79,6 +111,20 @@ object MapasCampana {
                 lis(Offset(x - 8.5f * d, y), PI.toFloat(), 3.4f * d, rojo)
                 lis(Offset(x + 8.5f * d, y), 0f, 3.4f * d, rojo)
                 lis(Offset(x, y - 8.5f * d), (-PI / 2).toFloat(), 3.4f * d, rojo)
+            }
+            TemaId.TEMPLARIO -> {
+                // El castillo de Montalbar tomado: la torre almenada de piedra, el estandarte «baucent» (negro arriba, blanco
+                // abajo) clavado en lo alto y, en la puerta, el escudo con la cruz patada roja.
+                val piedra = Color(0xFFB9A57E); val sombra = lerp(piedra, Color.Black, 0.35f); val x = m.x; val base = m.y - 4 * d
+                drawRect(piedra, Offset(x - 8 * d, base - 20 * d), Size(16 * d, 20 * d))
+                for (k in 0 until 3) drawRect(piedra, Offset(x - 8 * d + k * 6 * d, base - 24 * d), Size(4 * d, 4 * d))
+                drawRect(sombra, Offset(x - 8 * d, base - 20 * d), Size(16 * d, 20 * d), style = Stroke(0.8f * d))
+                drawPath(Path().apply { moveTo(x - 3 * d, base); lineTo(x - 3 * d, base - 6 * d); quadraticTo(x, base - 10 * d, x + 3 * d, base - 6 * d); lineTo(x + 3 * d, base); close() }, sombra)
+                drawLine(cs.onSurface, Offset(x, base - 24 * d), Offset(x, base - 42 * d), 1.2f * d)
+                drawRect(Color(0xFF1A1816), Offset(x, base - 42 * d), Size(12 * d, 4.5f * d))
+                drawRect(Color.White, Offset(x, base - 37.5f * d), Size(12 * d, 4.5f * d))
+                drawRect(cs.onSurface.copy(alpha = 0.6f), Offset(x, base - 42 * d), Size(12 * d, 9 * d), style = Stroke(0.6f * d))
+                drawPath(cruzPatada(Offset(x, base - 14 * d), 3.4f * d), Color(0xFFB0191F))
             }
             TemaId.GOTICO -> {
                 // Las campanas echadas a vuelo en la torre: la campana de bronce en su yugo, el badajo y las ondas del repique.
@@ -95,6 +141,21 @@ object MapasCampana {
                     drawArc(oro, 145f, 70f, false, Offset(c.x - R, c.y - R), Size(2 * R, 2 * R), style = Stroke(1.2f * d))
                 }
             }
+            TemaId.ARCANO -> {
+                // El faro encendido al fin: la torre de bandas sobre la roca, la linterna con sus dos haces largos que
+                // atraviesan la niebla y, en la luz, el ojo del signo que se abre.
+                val luz = Color(0xFFF2E3A0); val piedra = Color(0xFF3A4038); val c = Offset(m.x, m.y - 6 * d)
+                listOf(-1f, 1f).forEach { s ->
+                    drawPath(Path().apply { moveTo(c.x, c.y - 26 * d); lineTo(c.x + s * 46 * d, c.y - 36 * d); lineTo(c.x + s * 46 * d, c.y - 16 * d); close() },
+                        Brush.radialGradient(listOf(luz.copy(alpha = 0.55f), Color.Transparent), Offset(c.x, c.y - 26 * d), 46 * d))
+                }
+                drawPath(Path().apply { moveTo(c.x - 12 * d, c.y + 4 * d); quadraticTo(c.x, c.y - 4 * d, c.x + 12 * d, c.y + 4 * d); close() }, piedra)
+                drawPath(Path().apply { moveTo(c.x - 5 * d, c.y); lineTo(c.x - 3.4f * d, c.y - 21 * d); lineTo(c.x + 3.4f * d, c.y - 21 * d); lineTo(c.x + 5 * d, c.y); close() }, Color(0xFFE8DDC0))
+                listOf(-5f, -12f).forEach { y -> drawRect(Color(0xFF7A2C24), Offset(c.x - 4.6f * d, c.y + y * d), Size(9.2f * d, 3 * d)) }
+                drawRect(luz, Offset(c.x - 3 * d, c.y - 27 * d), Size(6 * d, 6 * d))
+                drawPath(Path().apply { moveTo(c.x - 4.4f * d, c.y - 27 * d); lineTo(c.x, c.y - 32 * d); lineTo(c.x + 4.4f * d, c.y - 27 * d); close() }, piedra)
+                with(Contenedores) { signoOjo(Offset(c.x, c.y - 24 * d), 8 * d, oro.copy(alpha = 0.8f), 0.8f * d) }
+            }
             TemaId.RENACIMIENTO -> {
                 // El cuadro terminado: el marco dorado alrededor del lienzo, con sus rosetas, y la firma con su rúbrica.
                 val w = size.width; val h = size.height
@@ -108,6 +169,20 @@ object MapasCampana {
                     cubicTo(m.x - 6 * d, m.y - 18 * d, m.x - 3 * d, m.y - 6 * d, m.x, m.y - 12 * d); cubicTo(m.x + 2 * d, m.y - 16 * d, m.x + 4 * d, m.y - 9 * d, m.x + 6 * d, m.y - 13 * d)
                 }, tinta, style = Stroke(1 * d))
                 drawPath(Path().apply { moveTo(m.x - 19 * d, m.y - 6 * d); quadraticTo(m.x - 4 * d, m.y - 3 * d, m.x + 8 * d, m.y - 8 * d); quadraticTo(m.x + 2 * d, m.y - 9 * d, m.x - 2 * d, m.y - 5 * d) }, tinta, style = Stroke(0.8f * d))
+            }
+            TemaId.PIRATA -> {
+                // El cofre desenterrado sobre la «X»: la tapa abierta, el brillo del oro que sale y los doblones regados.
+                val c = Offset(m.x, m.y - 16 * d)
+                val madera = Color(0xFF6B4A2B); val laton = Color(0xFFC9A04A)
+                drawCircle(Brush.radialGradient(listOf(oro.copy(alpha = 0.5f), Color.Transparent), c, 26 * d), 26 * d, c)
+                drawLine(Color(0xFF9A2A1C), Offset(m.x - 12 * d, m.y - 2 * d), Offset(m.x + 12 * d, m.y + 4 * d), 2.4f * d, androidx.compose.ui.graphics.StrokeCap.Round)
+                drawLine(Color(0xFF9A2A1C), Offset(m.x + 12 * d, m.y - 2 * d), Offset(m.x - 12 * d, m.y + 4 * d), 2.4f * d, androidx.compose.ui.graphics.StrokeCap.Round)
+                drawPath(Path().apply { moveTo(c.x - 12 * d, c.y - 2 * d); lineTo(c.x - 10 * d, c.y - 16 * d); quadraticTo(c.x, c.y - 21 * d, c.x + 10 * d, c.y - 16 * d); lineTo(c.x + 12 * d, c.y - 2 * d); close() }, lerp(madera, Color.Black, 0.25f))
+                for (k in 0 until 5) drawCircle(oro, 3 * d, Offset(c.x - 8 * d + k * 4 * d, c.y - 1 * d - (k % 2) * 2 * d))
+                drawRect(madera, Offset(c.x - 12 * d, c.y), Size(24 * d, 12 * d))
+                listOf(-9f, 7f).forEach { x -> drawRect(laton, Offset(c.x + x * d, c.y), Size(2 * d, 12 * d)) }
+                drawRect(laton, Offset(c.x - 2 * d, c.y + 2 * d), Size(4 * d, 4 * d))
+                listOf(Offset(-17f, 10f), Offset(15f, 12f), Offset(19f, 6f)).forEach { o -> drawOval(oro, Offset(c.x + o.x * d - 2.5f * d, c.y + o.y * d - 1.2f * d), Size(5 * d, 2.4f * d)) }
             }
             TemaId.NAPOLEON -> {
                 // El sol de Austerlitz detrás y el águila imperial en lo alto del asta, sobre la bandera de 1804: el rombo
@@ -187,6 +262,21 @@ object MapasCampana {
                 }
                 drawLine(Color(0xFF2A1E0E), Offset(mp.x, mp.y - 3 * d), Offset(mp.x, mp.y + 2.4f * d), 0.9f * d)
             }
+            TemaId.RUINAS -> {
+                // En la azotea de la torre: un huerto con un árbol joven, una bandera de tela verde y el semáforo de la esquina, en verde.
+                val base = m.y - 4 * d
+                drawRect(Color(0xFF8A8D84), Offset(m.x - 22 * d, base), Size(44 * d, 5 * d))
+                drawRect(Color(0xFF6A4A2A), Offset(m.x - 18 * d, base - 4 * d), Size(20 * d, 4 * d))
+                drawLine(Color(0xFF5A3A22), Offset(m.x - 8 * d, base - 4 * d), Offset(m.x - 8 * d, base - 18 * d), 2 * d)
+                drawCircle(Color(0xFF3F7A3A), 8 * d, Offset(m.x - 8 * d, base - 24 * d)); drawCircle(Color(0xFF5A9A4A), 5 * d, Offset(m.x - 11 * d, base - 27 * d))
+                for (k in 0 until 4) drawLine(Color(0xFF6FB34A), Offset(m.x - 16 * d + k * 5 * d, base - 4 * d), Offset(m.x - 15 * d + k * 5 * d, base - 8 * d), 1.2f * d)
+                drawLine(Color(0xFF2A2A2A), Offset(m.x + 12 * d, base), Offset(m.x + 12 * d, base - 34 * d), 1.2f * d)
+                drawPath(Path().apply { moveTo(m.x + 12 * d, base - 34 * d); quadraticTo(m.x + 20 * d, base - 36 * d, m.x + 26 * d, base - 31 * d); lineTo(m.x + 26 * d, base - 24 * d); quadraticTo(m.x + 20 * d, base - 28 * d, m.x + 12 * d, base - 26 * d); close() }, Color(0xFF4F7A33))
+                drawRect(Color(0xFF2E332E), Offset(m.x + 17 * d, base - 18 * d), Size(6 * d, 14 * d))
+                drawCircle(Color(0xFF8FCB6A).copy(alpha = 0.3f), 4 * d, Offset(m.x + 20 * d, base - 7.5f * d))
+                drawCircle(Color(0xFF8FCB6A), 1.7f * d, Offset(m.x + 20 * d, base - 7.5f * d))
+                drawCircle(Color(0xFF8A4A22).copy(alpha = 0.5f), 1.5f * d, Offset(m.x + 20 * d, base - 14.5f * d))
+            }
             TemaId.NAVIDAD -> {
                 // El árbol de la plaza: tres pisos de ramas, las bolas de colores, la estrella de oro y los regalos al pie.
                 val verde = Color(0xFF1F6B3A); val b = m.y - 8 * d
@@ -224,6 +314,18 @@ object MapasCampana {
                 farol(m.x + 7 * d, 2 * d, 6 * d)
                 farol(m.x + 16 * d, 6 * d, 4.6f * d)
             }
+            TemaId.EDO -> {
+                // La llegada a Kioto: el puente de Sanjō con su barandal y sus pilotes y, al lado, un torii de bermellón.
+                val b = m.y - 2 * d
+                drawPath(Path().apply { moveTo(m.x - 20 * d, b); quadraticTo(m.x, b - 7 * d, m.x + 20 * d, b) }, Color(0xFF7A5C3E), style = Stroke(2.4f * d))
+                drawPath(Path().apply { moveTo(m.x - 20 * d, b - 5 * d); quadraticTo(m.x, b - 12 * d, m.x + 20 * d, b - 5 * d) }, Color(0xFF7A5C3E), style = Stroke(0.9f * d))
+                for (k in -3..3) { val x = m.x + k * 6 * d; val y = b - 7 * d * (1f - (k / 3.3f) * (k / 3.3f)); drawLine(Color(0xFF7A5C3E), Offset(x, y), Offset(x, y + 6 * d), 0.8f * d) }
+                val bermellon = Color(0xFFC9442E); val tx = m.x + 30 * d; val ty = b
+                drawLine(bermellon, Offset(tx - 7 * d, ty), Offset(tx - 6 * d, ty - 22 * d), 2.2f * d); drawLine(bermellon, Offset(tx + 7 * d, ty), Offset(tx + 6 * d, ty - 22 * d), 2.2f * d)
+                drawRect(bermellon, Offset(tx - 9 * d, ty - 18 * d), Size(18 * d, 2 * d))
+                drawPath(Path().apply { moveTo(tx - 13 * d, ty - 25 * d); quadraticTo(tx, ty - 22 * d, tx + 13 * d, ty - 25 * d); lineTo(tx + 12 * d, ty - 22 * d); quadraticTo(tx, ty - 20 * d, tx - 12 * d, ty - 22 * d); close() }, Color(0xFF1B1A1E))
+                drawRect(oro, Offset(tx - 1.5f * d, ty - 21.5f * d), Size(3 * d, 3.5f * d))
+            }
             TemaId.ANDALUS -> {
                 // El arco de herradura: las dovelas rojas y blancas, el alfiz de oro que lo enmarca y sus dos columnas.
                 val c = Offset(m.x, m.y - 26 * d); val R = 9 * d
@@ -238,6 +340,13 @@ object MapasCampana {
                     drawRect(Color(0xFFEDE3CF), Offset(x - 1 * d, c.y + pie.y + 1.6f * d), Size(2 * d, m.y - 9 * d - c.y - pie.y))
                 }
                 with(TrofeosMas) { estrellaLazo(Offset(c.x, c.y - R - 9 * d), 3 * d, Brush.linearGradient(listOf(dorado, dorado)), null, 0f) }
+            }
+            TemaId.MESO -> {
+                // La llegada: la pirámide de la ciudad al final del sacbé, con su templo y la crestería, y una pluma de
+                // quetzal que ondea en lo alto.
+                val base = Offset(m.x, m.y - 6 * d)
+                piramideMaya(base, 30 * d, 34 * d, Color(0xFFE8DCC0), Color(0xFF8E7A58), Color(0xFFA3301E), gradas = 4)
+                plumaQuetzal(Offset(m.x, base.y - 36 * d), 14 * d, -60f, Color(0xFF2F9A6A), Color(0xFF1C5A3E))
             }
             TemaId.MONGOL -> {
                 // El ovoo de la llegada: el montón de piedras, la vara en medio con su punta de tridente y las bufandas azules
@@ -274,6 +383,18 @@ object MapasCampana {
                 }
                 listOf(Offset(-6f, -36f), Offset(5f, -38f), Offset(1f, -42f)).forEach { o -> drawCircle(Color(0xFFFFB347), 0.8f * d, Offset(m.x + o.x * d, b + o.y * d)) }
             }
+            TemaId.CUEVA -> {
+                // Los pastos del verano: la choza de pieles del campamento con su humo, el fuego encendido delante y un bisonte que pace.
+                val piel = Color(0xFF8A6440); val b = m.y - 8 * d
+                drawPath(Path().apply { moveTo(m.x - 12 * d, b); lineTo(m.x - 2 * d, b - 20 * d); lineTo(m.x + 8 * d, b); close() }, piel)
+                drawLine(Color(0xFF3A2414), Offset(m.x - 4 * d, b - 23 * d), Offset(m.x, b - 17 * d), 1 * d); drawLine(Color(0xFF3A2414), Offset(m.x, b - 23 * d), Offset(m.x - 4 * d, b - 17 * d), 1 * d)
+                drawPath(Path().apply { moveTo(m.x - 4 * d, b); lineTo(m.x - 2 * d, b - 8 * d); lineTo(m.x, b); close() }, Color(0xFF2A1A10))
+                drawPath(Path().apply { moveTo(m.x - 2 * d, b - 24 * d); cubicTo(m.x - 6 * d, b - 30 * d, m.x + 2 * d, b - 34 * d, m.x - 2 * d, b - 40 * d) }, Color.Gray.copy(alpha = 0.5f), style = Stroke(1.4f * d))
+                val fuego = Offset(m.x + 12 * d, b - 2 * d)
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFB347).copy(alpha = 0.5f), Color.Transparent), fuego, 10 * d), 10 * d, fuego)
+                drawPath(Path().apply { moveTo(fuego.x, fuego.y - 7 * d); quadraticTo(fuego.x + 3 * d, fuego.y - 2 * d, fuego.x, fuego.y + 1 * d); quadraticTo(fuego.x - 3 * d, fuego.y - 2 * d, fuego.x, fuego.y - 7 * d); close() }, Color(0xFFE8601C))
+                drawPath(bisonte(Offset(m.x - 22 * d, b - 4 * d), 7 * d), Color(0xFF3A2A1E))
+            }
             TemaId.DISTOPIA -> with(TrofeosMas) {
                 // El sello de «APROBADO» estampado sobre el Ministerio, un poco torcido, con su doble filete.
                 val rojo = Color(0xFFC8102E)
@@ -291,6 +412,20 @@ object MapasCampana {
                 drawRect(Color(0xFF05070B), Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f))
                 drawRect(cian, Offset(x - 3 * d, y - tam), Size(tw + 6 * d, tam * 1.5f), style = Stroke(1f * d))
                 mono(t, x, y, tam, cian, negrita = true)
+            }
+            // Al fondo de la bajada, el puesto se enciende: el letrero «ABIERTO» con su halo, la cortina y dos farolitos.
+            TemaId.NEON -> with(TrofeosMas) {
+                val magenta = Color(0xFFFF3D9A); val ambar = Color(0xFFFFB238); val t = "ABIERTO · 営業中"; val tam = 8 * d
+                val tw = t.length * tam * 0.62f; val x = (m.x - tw / 2).coerceIn(3 * d, size.width - tw - 3 * d); val y = m.y - 32 * d
+                drawRoundRect(magenta.copy(alpha = 0.22f), Offset(x - 6 * d, y - tam - 3 * d), Size(tw + 12 * d, tam * 1.5f + 6 * d), CornerRadius(8 * d), style = Stroke(5 * d))
+                drawRoundRect(Color(0xFF0C0811), Offset(x - 4 * d, y - tam - 1 * d), Size(tw + 8 * d, tam * 1.5f + 2 * d), CornerRadius(6 * d))
+                drawRoundRect(magenta, Offset(x - 4 * d, y - tam - 1 * d), Size(tw + 8 * d, tam * 1.5f + 2 * d), CornerRadius(6 * d), style = Stroke(1.4f * d))
+                mono(t, x, y, tam, ambar, negrita = true)
+                for (k in 0 until 4) drawRect(Color(0xFFFF6B5E).copy(alpha = 0.8f), Offset(m.x - 14 * d + k * 7 * d, m.y - 12 * d), Size(5 * d, 9 * d))
+                listOf(-20f, 20f).forEach { dx ->
+                    drawCircle(Brush.radialGradient(listOf(Color(0xFFFF6B5E).copy(alpha = 0.4f), Color.Transparent), Offset(m.x + dx * d, m.y - 16 * d), 9 * d), 9 * d, Offset(m.x + dx * d, m.y - 16 * d))
+                    drawOval(Color(0xFFFF6B5E), Offset(m.x + dx * d - 3 * d, m.y - 20 * d), Size(6 * d, 8 * d))
+                }
             }
             // La salida a la superficie: el sol que asoma sobre la compuerta abierta.
             TemaId.REFUGIO -> {
@@ -321,6 +456,20 @@ object MapasCampana {
                 listOf(-1f, 1f).forEach { s -> drawLine(cs.onSurface, Offset(b.x + s * 5 * d, b.y), Offset(b.x + s * 10 * d, b.y + 8 * d), 1.2f * d) }
                 drawLine(cs.onSurface, Offset(b.x + 14 * d, b.y + 8 * d), Offset(b.x + 14 * d, b.y - 14 * d), 1f * d)
                 drawRect(Color(0xFFE8601C), Offset(b.x + 14 * d, b.y - 14 * d), Size(10 * d, 6 * d))
+            }
+            // El fondo de la fosa: el batiscafo posado, el haz de su foco sobre el fango y una medusa que lo ilumina desde arriba.
+            TemaId.ABISMO -> {
+                val b = Offset(m.x, m.y - 10 * d)
+                val laton = Color(0xFFB8913E)
+                drawPath(Path().apply { moveTo(b.x + 4 * d, b.y + 2 * d); lineTo(b.x + 26 * d, b.y + 12 * d); lineTo(b.x + 10 * d, b.y + 12 * d); close() }, Color(0xFFFFF2B0).copy(alpha = 0.35f))
+                drawRoundRect(laton, Offset(b.x - 13 * d, b.y - 12 * d), Size(26 * d, 8 * d), androidx.compose.ui.geometry.CornerRadius(4 * d))
+                drawRect(laton, Offset(b.x - 3 * d, b.y - 16 * d), Size(6 * d, 4 * d))
+                drawCircle(laton, 5 * d, Offset(b.x, b.y + 1 * d))
+                drawCircle(Color(0xFF5CF2C6), 1.8f * d, Offset(b.x - 1 * d, b.y + 0.5f * d))
+                val me = Offset(b.x - 16 * d, b.y - 26 * d)
+                drawCircle(Color(0xFFE29BFF).copy(alpha = 0.2f), 9 * d, me)
+                drawArc(Color(0xFFE29BFF), 180f, 180f, true, Offset(me.x - 5 * d, me.y - 4 * d), Size(10 * d, 8 * d))
+                listOf(-3f, 0f, 3f).forEach { dx -> drawLine(Color(0xFFE29BFF).copy(alpha = 0.8f), Offset(me.x + dx * d, me.y), Offset(me.x + dx * 0.6f * d, me.y + 7 * d), 0.8f * d) }
             }
             // La gran estrella roja de la llegada a Vladivostok.
             TemaId.URSS -> with(TrofeosTema) {

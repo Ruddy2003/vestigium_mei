@@ -1,7 +1,7 @@
 """Vestigium Mei — música de cada tema: la presentación al elegirlo (~8–10 s), un tono de llamada y un tono de notificación
 para el teléfono (distinto de los avisos de la app). Todo en la tonalidad del tema, con sus mismos instrumentos.
 
-Uso: python3 musica.py <carpeta res/raw>
+Uso: python3 musica.py <carpeta res/raw> [temas] [piezas]
 """
 import sys
 from afinados import *   # noqa: F401,F403  (bloques e instrumentos; OUT viene de sys.argv[1])
@@ -55,6 +55,14 @@ def llamada(T, pulso, acordes, mel, *a, **kw):
 def notificacion(T, inst, notas, paso=0.12, d=0.7, cola=1.0):
     return reverb(mezclar(*[(i * paso, inst(hz(T + n), d), 0.55) for i, n in enumerate(notas)]), cola, 0.25)
 
+def parejo(x, rms_db=-15.0, techo=0.86, maximo_db=5.0):
+    """Tonos del teléfono parejos: los de cuerda pulsada o campana tienen picos tan altos que, al normalizar, quedan más
+    bajos que los demás. Si les falta volumen, suben hasta [maximo_db] y sus picos se redondean con un limitador suave."""
+    x = x / np.abs(x).max() * techo
+    falta = min(maximo_db, rms_db - 20 * np.log10(np.sqrt(np.mean(x ** 2)) + 1e-12))
+    if falta <= 0.5: return x
+    return np.tanh(x * 10 ** (falta / 20) / techo) * techo
+
 P = {}   # tema → (presentación, llamada, notificación)
 ARGS = {}   # tema → lo necesario para la música larga de «Tu año»
 
@@ -69,7 +77,7 @@ def hacer():
     P['romano'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, cornu, [7, 12, 16], 0.14, 0.5))
     ARGS['romano'] = (T, pz, ac, mel, kw)
 
-    # --- Cyberpunk: Mi menor, arpegios cuadrados, bajo de sierra y hi-hat
+    # --- Terminal: Mi menor, arpegios cuadrados, bajo de sierra y hi-hat
     T = 7; pz = 0.3
     ac = compases([0, 3, 7], [-4, 0, 3], [3, 7, 10], [-2, 2, 5], [0, 3, 7], [-4, 0, 3], [-2, 2, 5], [0, 3, 7])
     mel = frase(0, "12:1 15:1 19:1 17:1 | 15:2 12:1 14:1 | 10:1 14:1 19:1 17:1 | 14:4 | 12:1 15:1 19:1 22:1 | 20:2 19:1 15:1 | 17:1 14:1 17:1 19:1 | 12:4")
@@ -264,6 +272,81 @@ def hacer():
     P['renacimiento'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, laud, [4, 7, 12], 0.09, 1.0))
     ARGS['renacimiento'] = (T, pz, ac, mel, kw)
 
+def hacer_templario():
+    # --- Templario: Sol mixolidio, canción de marcha de la hueste (melodía propia). El olifante lleva la melodía sobre el
+    # bordón del coro de los freires, la fídula marca el bajo y el tambor de guerra lleva el paso. Con su propio azar.
+    with A.azar_propio('musica_templario'):
+        T = -2; pz = 0.42
+        ac = compases([0, 7], [0, 7], [-2, 5], [0, 7], [5, 9, 12], [-2, 5, 10], [0, 4, 7], [0, 7, 12])
+        mel = frase(0, "7:1 9:1 10:1 9:1 | 7:2 5:1 4:1 | 5:1 7:1 10:1 9:1 | 7:4 | 12:1 10:1 9:1 7:1 | 10:2 9:1 5:1 | 4:1 5:1 7:1 4:1 | 0:4")
+        cuerno = lambda f, d: metal(f, d, 2000, 0.05)
+        paso = lambda: tambor(hz(T - 29), 0.35, 0.35)
+        redoble = lambda: mezclar(*[(0.06 * k, tambor(hz(T - 26), 0.12, 0.5), 0.5) for k in range(3)])
+        perc = cada(32, paso, 0.5, paso=2) + cada(32, redoble, 0.3, desde=1.5, paso=4)
+        kw = dict(inst_mel=cuerno, inst_ac=coro, bajo=lambda f, d: arco(f, d, 4.0), perc=perc, g_mel=0.45, g_ac=0.22, g_bajo=0.16,
+                  oct_mel=0, oct_ac=-12, legato=0.92, cola=1.8, rev=0.3)
+        P['templario'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, cuerno, [0, 7, 12], 0.15, 0.5, 1.2))
+        ARGS['templario'] = (T, pz, ac, mel, kw)
+
+def hacer_pirata():
+    # --- Pirata: Mi dórico, una saloma propia a buen paso. Violín de cubierta, concertina, un bajo pulsado, el pisotón
+    # en las tablas y, al cerrar, dos campanadas sobre el oleaje. Con su propio azar.
+    with A.azar_propio('musica_pirata'):
+        T = -5; pz = 0.3
+        ac = compases([0, 3, 7], [-2, 2, 5], [0, 3, 7], [5, 9, 12], [0, 3, 7], [-2, 2, 5], [5, 9, 12], [0, 3, 7])
+        mel = frase(0, "0:0.5 3:0.5 7:1 7:0.5 5:0.5 3:1 | 2:1 5:1 2:1 -2:1 | 0:0.5 3:0.5 7:1 10:1 9:1 | 7:1.5 5:0.5 9:2 | "
+                       "12:1 10:0.5 9:0.5 7:1 3:1 | 5:1 2:1 5:0.5 7:0.5 5:1 | 9:1 12:1 9:0.5 7:0.5 5:1 | 3:1 2:1 0:2")
+        pisoton = lambda: mezclar((0, filtro(ruido(0.06), 'banda', (200, 1200)) * env(int(0.06 * SR), 0.001, 0.035, 4), 0.8), (0, tambor(hz(T - 29), 0.12, 0.1), 0.5))
+        palmada = lambda: filtro(ruido(0.03), 'banda', (900, 3500)) * env(int(0.03 * SR), 0.001, 0.015, 5)
+        perc = cada(32, pisoton, 0.4, paso=2) + cada(32, palmada, 0.12, desde=1, paso=2)
+        bronce = lambda d: campana(hz(T + 12), d, 2.76, 1.4, 2.2)
+        ola = lambda d: filtro(ruido(d), 'banda', (250, 2600)) * np.sin(np.pi * t_(d) / d) ** 2
+        extra = ((0, ola(3.0), 0.12), (28 * pz, bronce(2.0), 0.3), (28 * pz + 0.28, bronce(2.0), 0.3), (26 * pz, ola(4.0), 0.14))
+        kw = dict(inst_mel=lambda f, d: arco(f, d, 6.2), inst_ac=lambda f, d: fuelle(f, d, 0.08), bajo=lambda f, d: pluck(f, min(d, 1.0), 0.3, 0.994),
+                  perc=perc, extra=extra, g_mel=0.4, g_ac=0.3, g_bajo=0.3, oct_mel=12, oct_ac=-12, legato=0.9, rev=0.24)
+        P['pirata'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw),
+                       notificacion(T, lambda f, d: campana(f, 1.6, 2.76, 1.4, 2.2), [12, 12, 19], 0.28, 1.6, 1.4))
+        ARGS['pirata'] = (T, pz, ac, mel, kw)
+
+def hacer_urbe():
+    # --- Roma (la de hoy): Si bemol mayor, una canzone de trattoria a medio tempo (melodía propia). La mandolina en trémolo
+    # canta, el acordeón sostiene, el bajo pulsado camina y la escobilla marca el dos y el cuatro; al final, la campanilla
+    # del tranvía. Con su propio azar.
+    with A.azar_propio('musica_urbe'):
+        T = 1; pz = 0.42
+        ac = compases([0, 4, 7], [-3, 0, 4], [2, 5, 9], [7, 11, 14, 17], [0, 4, 7, 12])
+        mel = frase(0, "7:1 9:0.5 7:0.5 4:1 7:1 | 9:1.5 7:0.5 4:2 | 5:1 9:1 12:1 9:1 | 11:1 9:0.5 7:0.5 5:2 | 4:1 2:1 0:2")
+        mandolina = lambda f, d: mezclar(*[(0.06 * i, pluck(f, 0.22, 0.58, 0.994), 0.6 * 0.93 ** i) for i in range(max(1, int(d / 0.06)))])
+        fisarmonica = lambda f, d: filtro(organo(f, d, 0.05) + organo(f * 1.0045, d, 0.05), 'bajo', 2400) * 0.5
+        bajo = lambda f, d: pluck(f, min(d, 0.7), 0.35, 0.995)
+        escobilla = lambda: filtro(ruido(0.09), 'banda', (2000, 7000)) * env(int(0.09 * SR), 0.004, 0.06, 3)
+        perc = cada(20, escobilla, 0.18, desde=1, paso=2)
+        tranvia = campana(hz(T + 24), 1.2, 3.01, 1.3, 4.0)
+        kw = dict(inst_mel=mandolina, inst_ac=fisarmonica, bajo=bajo, perc=perc, extra=[(18.5 * pz, tranvia, 0.18)],
+                  g_mel=0.5, g_ac=0.22, g_bajo=0.3, oct_mel=0, oct_ac=-12, legato=1.0, rev=0.26)
+        P['urbe'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: campana(f, d, 3.01, 1.3, 4.0), [12, 16, 19], 0.13, 0.8))
+        ARGS['urbe'] = (T, pz, ac, mel, kw)
+
+def hacer_edo():
+    # --- Japón Edo: Mi hirajōshi (Mi, Fa#, Sol, Si, Do). El koto arpegia en quintas y cuartas, como su afinación; el
+    # shakuhachi canta con su aliento; un koto grave hace el bajo; las tablillas (hyōshigi) abren y cierran, un tambor
+    # suave marca cada compás y la campanita de viento suena al final de cada frase. Con su propio azar.
+    with A.azar_propio('musica_edo'):
+        T = -5; pz = 0.34
+        ac = compases([0, 7, 12], [-4, 3, 8], [2, 7, 14], [0, 7, 12], [3, 8, 15], [-5, 2, 7], [-4, 3, 8], [0, 7, 12])
+        mel = frase(0, "12:2 8:1 7:1 | 3:2 2:1 3:1 | 7:3 8:1 | 7:4 | 8:1 12:1 14:2 | 15:1 14:1 12:2 | 8:1 7:1 3:1 2:1 | 0:4")
+        koto = lambda f, d: pluck(f, max(d, 0.7), 0.8, 0.994)
+        shaku = lambda f, d: flauta(f, d) + 0.1 * filtro(ruido(d), 'banda', (f, f * 4)) * np.minimum(1, t_(d) / 0.05)
+        hyoshigi = lambda: mezclar((0, filtro(ruido(0.09), 'banda', (1200, 5000)) * env(int(0.09 * SR), 0.0005, 0.015, 6), 0.7),
+                                   (0, seno(hz(T + 31), 0.09) * env(int(0.09 * SR), 0.0005, 0.03, 5), 0.5))
+        furin = lambda: campana(hz(T + 36), 1.2, 3.9, 0.8, 3)
+        perc = ([(0, hyoshigi(), 0.5), (0.5, hyoshigi(), 0.55), (30, hyoshigi(), 0.45), (30.5, hyoshigi(), 0.5)]
+                + cada(32, lambda: tambor(hz(T - 36), 0.4, 0.15), 0.3, paso=4) + [(15, furin(), 0.2), (31, furin(), 0.2)])
+        kw = dict(inst_mel=shaku, inst_ac=koto, arpegio=True, bajo=lambda f, d: pluck(f, min(d, 1.5), 0.4, 0.996), perc=perc,
+                  g_mel=0.42, g_ac=0.26, g_bajo=0.22, oct_ac=-12, oct_mel=0, legato=0.95, rev=0.3)
+        P['edo'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, koto, [7, 12, 15], 0.11, 0.9))
+        ARGS['edo'] = (T, pz, ac, mel, kw)
+
 def hacer_revolucion():
     # --- Revolución: Sol mayor, marcha de pífano y tambor (melodía propia) sobre cuerdas
     T = -2; pz = 0.36
@@ -286,6 +369,199 @@ def hacer_antiguas():
               bajo=lambda f, d: metal(f, d, brillo=900, ataque=0.12), g_bajo=0.18)
     P['antiguas'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, 1.0, 0.62, 0.997), [7, 10, 14], 0.12, 1.0))
     ARGS['antiguas'] = (T, pz, ac, mel, kw)
+
+def hacer_cueva():
+    # --- Prehistoria: Mi pentatónico menor. La flauta de hueso sobre un tambor de piel que late, lajas de piedra que suenan
+    # en cuartas y quintas y la bramadera de fondo, con el eco largo de la cueva (melodía propia). Con su propio azar.
+    with A.azar_propio('musica_cueva'):
+        T = -5; pz = 0.5
+        ac = compases([0, 7, 12], [-2, 5, 10], [3, 10, 15], [0, 7, 12])
+        mel = frase(0, "12:1 15:1 17:2 | 15:1 12:1 10:2 | 12:0.5 10:0.5 7:1 10:2 | 7:4")
+        def hueso_f(f, d): return flauta(f, d) * 0.85 + 0.25 * filtro(ruido(d), 'banda', (f * 1.5, f * 4)) * env(int(d * SR), 0.03, d * 0.7, 2)
+        laja = lambda f, d: campana(f, min(d, 1.4), 2.41, 0.8, 4.0)
+        piel = lambda: tambor(hz(T - 24), 0.35, 0.35)
+        bram = lambda: filtro(ruido(3.6), 'banda', (140, 360)) * (0.55 + 0.45 * np.sin(2 * np.pi * 2.6 * t_(3.6))) * env(int(3.6 * SR), 1.2, 2.0, 2)
+        perc = cada(16, piel, 0.4, paso=1) + cada(16, bram, 0.12, paso=8)
+        kw = dict(inst_mel=hueso_f, inst_ac=laja, arpegio=True, perc=perc, g_mel=0.5, g_ac=0.3, oct_mel=0, oct_ac=-12, legato=0.95, cola=2.4, rev=0.38)
+        P['cueva'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: laja(f, 1.0), [7, 12, 19], 0.14, 1.2))
+        ARGS['cueva'] = (T, pz, ac, mel, kw)
+
+def hacer_neon():
+    # --- Ciudad neón: Fa sostenido menor con séptima, synth-pop de bar a medio tempo. Colchón tibio de sierras, bajo
+    # pulsado, melodía de sierra filtrada y, de fondo, la llovizna y un bombo suave. Con su propio azar.
+    with A.azar_propio('musica_neon'):
+        T = -3; pz = 0.36
+        ac = compases([0, 3, 7, 10], [-4, 0, 3, 7], [-7, -3, 0, 5], [-2, 2, 5, 9], [0, 3, 7, 10], [5, 8, 12, 15], [-2, 2, 5, 9], [0, 3, 7, 10])
+        mel = frase(0, "15:1 12:0.5 10:0.5 12:2 | 7:1 10:1 12:1 15:1 | 17:1.5 15:0.5 12:2 | 14:4 | 15:1 19:1 17:1 15:1 | 20:2 19:1 15:1 | 14:1 12:1 10:1 14:1 | 12:4")
+        lead = lambda f, d: filtro(barrido(f, f, d, 'sierra'), 'bajo', 2200) * np.minimum(1, t_(d) / 0.01) * np.minimum(1, (d - t_(d)) / 0.12)
+        bajo = lambda f, d: filtro(barrido(f, f, min(d, 0.3), 'sierra'), 'bajo', 500) * env(int(min(d, 0.3) * SR), 0.004, 0.25, 3)
+        bombo = lambda: tambor(hz(T - 36), 0.3, 0.05)
+        lluvia = lambda: filtro(ruido(0.5), 'banda', (2000, 7000)) * env(int(0.5 * SR), 0.2, 0.25, 2)
+        perc = cada(32, bombo, 0.45, paso=2) + cada(32, lluvia, 0.08, paso=1)
+        kw = dict(inst_mel=lead, inst_ac=lambda f, d: sinte(f, d, 1500, 0.1, 0.4), bajo=bajo, perc=perc, g_mel=0.45, g_ac=0.3, g_bajo=0.3, oct_mel=-12, legato=0.9, rev=0.32)
+        P['neon'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: filtro(barrido(f, f, d, 'sierra'), 'bajo', 2600) * env(int(d * SR), 0.003, d * 0.7, 3), [10, 15, 19], 0.1, 0.4))
+        ARGS['neon'] = (T, pz, ac, mel, kw)
+def hacer_abismo():
+    # --- Abismo: Si, tonos enteros. Un órgano lejano que respira, un vibráfono apagado como oído a través del agua,
+    # el ping del sonar cada dos compases, burbujas sueltas y el oleaje que se va quedando arriba.
+    with A.azar_propio('musica_abismo'):
+        T = -10; pz = 0.46
+        def pad(f, d):
+            t = t_(d); return filtro(organo(f, d, 0.5), 'bajo', 1100) * np.sin(np.pi * t / d) ** 1.3
+        vib = lambda f, d: filtro(vibrafono(f, max(d, 0.9)), 'bajo', 2200)
+        ping = lambda n, d=1.0: seno(hz(T + n), d) * env(int(d * SR), 0.002, d * 0.55, 3)
+        burbuja = lambda n, d=0.05: barrido(hz(T + n), hz(T + n) * 1.9, d) * env(int(d * SR), 0.002, d * 0.6, 3)
+        ac = compases([0, 4, 8], [2, 6, 10], [-2, 2, 6], [0, 4, 8], [4, 8, 12], [2, 6, 10], [-2, 4, 8], [0, 4, 8, 12])
+        mel = frase(0, "12:2 10:1 8:1 | 6:2 8:2 | 4:1 6:1 8:2 | 10:4 | 12:1 14:1 12:2 | 10:2 6:2 | 8:1 6:1 4:1 2:1 | 0:4")
+        sonar = [(b, ping(18 + (2 if (b // 8) % 2 else 0)), 0.22) for b in range(0, 32, 8)]
+        burbujas = [(b + 0.3 * k, burbuja(22 + 2 * k), 0.07) for b in (5, 13, 21, 29) for k in range(4)]
+        oleaje = [(b, filtro(ruido(8 * pz), 'bajo', 500) * np.sin(np.pi * t_(8 * pz) / (8 * pz)) ** 2, 0.18) for b in (0, 16)]
+        kw = dict(inst_mel=vib, inst_ac=pad, perc=sonar + burbujas + oleaje, g_ac=0.3, g_mel=0.42, oct_ac=-12, oct_mel=0, cola=2.6, rev=0.4,
+                  bajo=lambda f, d: seno(f, d) * np.sin(np.pi * t_(d) / d), g_bajo=0.2)
+        P['abismo'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: seno(f, d) * env(int(d * SR), 0.002, d * 0.55, 3), [18, 14, 22], 0.22, 0.8, 1.6))
+        ARGS['abismo'] = (T, pz, ac, mel, kw)
+
+def hacer_egipto():
+    # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
+    # melodía propia de ocho compases. Con su propio azar, para no mover el de los temas que van después.
+    with A.azar_propio('musica_egipto'):
+        T = -5; pz = 0.4
+        ac = compases([0, 7, 12], [1, 8, 13], [-4, 5, 12], [0, 7, 12], [5, 8, 12], [1, 8, 13], [-4, 0, 7], [0, 7, 12])
+        mel = frase(0, "12:1 13:1 17:2 | 13:1 12:1 8:2 | 7:1 8:1 12:1 13:1 | 12:4 | 17:1 19:1 20:2 | 19:1 17:1 13:2 | 12:1 13:1 8:1 7:1 | 12:4")
+        sistro = lambda: mezclar(*[(i * 0.05, filtro(ruido(0.09), 'banda', (3500, 9000)) * env(int(0.09 * SR), 0.001, 0.04, 4), 0.6 - i * 0.1) for i in range(3)])
+        perc = cada(32, lambda: tambor(hz(T - 24), 0.25, 0.3), 0.45, paso=2) + cada(32, sistro, 0.16, desde=1, paso=2)
+        kw = dict(inst_mel=flauta, inst_ac=lambda f, d: pluck(f, 1.1, 0.42, 0.9965), arpegio=True, oct_ac=0, oct_mel=12, perc=perc, g_mel=0.38, g_ac=0.35,
+                  legato=0.9, bajo=lambda f, d: pluck(f, d, 0.2, 0.998), g_bajo=0.2)
+        P['egipto'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, d, 0.5, 0.9965), [12, 13, 17, 19], 0.1, 0.8))
+        ARGS['egipto'] = (T, pz, ac, mel, kw)
+
+def hacer_meso():
+    # --- Mesoamérica: Sol pentatónico (escala propia), la flauta de barro con la melodía, el tunkul (tambor de tronco con
+    # dos lengüetas) que lleva el bajo y los acordes en marimba de madera, y la sonaja y el caparazón de tortuga de
+    # percusión. Ocho compases de melodía propia. Con su propio azar, para no mover el de los temas que van después.
+    with A.azar_propio('musica_meso'):
+        T = -2; pz = 0.42
+        ac = compases([0, 7, 12], [-3, 2, 9], [-5, 2, 7], [0, 7, 12], [5, 9, 12], [2, 7, 9], [-5, 2, 7], [0, 7, 12])
+        mel = frase(0, "12:1 14:1 17:2 | 14:1 12:1 9:2 | 7:1 9:1 12:1 14:1 | 12:4 | 17:1 19:1 21:2 | 19:1 17:1 14:2 | 12:1 9:1 7:1 9:1 | 12:4")
+        sonaja = lambda: mezclar(*[(i * 0.04, filtro(ruido(0.05), 'banda', (2200, 6500)) * env(int(0.05 * SR), 0.001, 0.025, 5), 0.6 - i * 0.12) for i in range(4)])
+        tortuga = lambda: mezclar((0, clic(0.03, (900, 3200)), 0.8), (0, tambor(hz(T - 7), 0.12, 0.3), 0.5))
+        perc = cada(32, lambda: tambor(hz(T - 24), 0.3, 0.1), 0.45, paso=2) + cada(32, sonaja, 0.2, desde=1, paso=2) + cada(32, tortuga, 0.18, desde=1.5, paso=4)
+        kw = dict(inst_mel=flauta, inst_ac=lambda f, d: marimba(f, 0.9), arpegio=True, oct_ac=0, oct_mel=12, perc=perc, g_mel=0.4, g_ac=0.3,
+                  legato=0.92, bajo=lambda f, d: mezclar((0, marimba(f, min(d, 1.2)), 0.8), (0, tambor(f, 0.3, 0.05), 0.4)), g_bajo=0.22)
+        P['meso'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: marimba(f, d), [12, 14, 17, 19, 24], 0.1, 0.8))
+        ARGS['meso'] = (T, pz, ac, mel, kw)
+
+def hacer_ruinas():
+    # --- Ciudad verde: Re mixolidio. La flauta en una plaza vacía sobre una kalimba arpegiada; de fondo, gotas que caen del
+    # techo roto, el viento entre los edificios y el golpe hueco del hormigón cada dos compases. Con su propio azar.
+    with A.azar_propio('musica_ruinas'):
+        T = -7; pz = 0.44
+        ac = compases([0, 4, 7], [-2, 2, 5], [5, 9, 12], [0, 4, 7], [2, 5, 9], [-2, 2, 5], [5, 9, 12], [0, 4, 7, 12])
+        mel = frase(0, "12:1 14:1 16:2 | 14:1 12:1 10:2 | 12:1 9:1 7:2 | 7:4 | 16:1 17:1 19:2 | 17:1 16:1 14:2 | 12:1 10:1 9:1 10:1 | 12:4")
+        gota = lambda: barrido(hz(T + 31) * 1.25, hz(T + 31), 0.12) * env(int(0.12 * SR), 0.001, 0.05, 5)
+        viento = lambda: filtro(ruido(1.6), 'banda', (300, 1400)) * env(int(1.6 * SR), 0.6, 0.9, 2)
+        golpe = lambda: mezclar((0, filtro(ruido(0.06), 'bajo', 700) * env(int(0.06 * SR), 0.001, 0.04, 6), 1.0), (0, tambor(hz(T - 24), 0.1, 0.3), 0.5))
+        perc = [(1.5 + 2.75 * i, gota(), 0.12) for i in range(11)] + cada(32, viento, 0.18, paso=4) + cada(32, golpe, 0.3, paso=2)
+        kw = dict(inst_mel=flauta, inst_ac=lambda f, d: kalimba(f, 0.9), arpegio=True, perc=perc, g_mel=0.42, g_ac=0.3, oct_mel=0, oct_ac=-12, legato=0.9, rev=0.3)
+        P['ruinas'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: kalimba(f, 0.9), [12, 16, 19], 0.12, 1.0))
+        ARGS['ruinas'] = (T, pz, ac, mel, kw)
+
+def hacer_arcano():
+    # --- Horror cósmico: Re frigio con el tritono que no resuelve (melodía propia). La armónica de cristal canta sobre un
+    # colchón de niebla; abajo, la sirena del faro; de vez en cuando una ola y la campana desafinada de la boya.
+    with A.azar_propio('musica_arcano'):
+        T = -7; pz = 0.5
+        def cristal(f, d=0.6):
+            t = t_(d)
+            x = np.sin(2 * np.pi * f * t) + 0.3 * np.sin(2 * np.pi * f * 2 * t) + 0.08 * np.sin(2 * np.pi * f * 3.02 * t)
+            return x * np.minimum(1, t / 0.06) * np.exp(-t * 1.4) * (1 + 0.15 * np.sin(2 * np.pi * 6.3 * t)) * np.minimum(1, np.maximum(0, d - t) / 0.08)
+        def sirena(f, d):
+            t = t_(d)
+            x = barrido(f, f * 0.985, d, 'sierra') * 0.6 + barrido(f * 1.004, f * 0.988, d, 'sierra') * 0.5
+            return filtro(x, 'bajo', 480) * np.minimum(1, t / 0.3) * np.minimum(1, np.maximum(0, d - t) / 0.5)
+        def ola(d):
+            t = t_(d); s = np.sin(np.pi * t / d)
+            return filtro(ruido(d), 'bajo', 900) * s ** 2 + 0.25 * filtro(ruido(d), 'banda', (2000, 6000)) * s ** 6
+        boya = lambda f, d=1.6: campana(f, d, 3.17, 1.4, 2.2)
+        ac = compases([0, 3, 7], [1, 5, 8], [-2, 2, 5], [-6, -2, 1], [0, 3, 7, 12])
+        mel = frase(0, "7:2 8:1 7:1 | 5:2 3:2 | 2:1 3:1 5:2 | 6:3 1:1 | 0:4")
+        extra = [(b * pz, ola(3.2), 0.3) for b in (0, 8, 16)] + [(0, boya(hz(T + 12), 2.4), 0.25), (16 * pz, boya(hz(T + 6), 2.6), 0.22)]
+        kw = dict(inst_mel=cristal, inst_ac=lambda f, d: sinte(f, d, 700, 0.4, 0.6), bajo=sirena, extra=extra,
+                  g_mel=0.42, g_ac=0.3, g_bajo=0.22, oct_mel=0, oct_ac=-12, oct_bajo=-24, cola=2.6, rev=0.4)
+        P['arcano'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: boya(f, 1.6), [13, 7, 0], 0.2, 1.4, 2.0))
+        ARGS['arcano'] = (T, pz, ac, mel, kw)
+
+def hacer_enriquecidos():
+    """Lote 6: la presentación y la música anual de Refugio, Orden, Soviético y Espacio, más ricas. Ocho compases en lugar
+    de cuatro o cinco, con más voces (bajo que camina, coro, cuerdas, arpegios) y su percusión. Corre después de [hacer]
+    con su propio azar, para que las demás músicas no cambien; el tono de llamada y la notificación siguen iguales."""
+    with A.azar_propio('musica_enriquecida'):
+        # --- Refugio: Fa mayor. Combo de los cincuenta: vibráfono, órgano, contrabajo que camina, escobillas y celesta.
+        T = 8; pz = 0.34
+        ac = compases([0, 4, 7, 11], [-3, 0, 4, 7], [5, 9, 12, 16], [7, 11, 14, 17], [0, 4, 7, 11], [-3, 0, 4, 7], [2, 5, 9, 12], [0, 4, 7, 12])
+        mel = frase(0, "12:1 9:1 7:1 9:1 | 12:2 14:2 | 17:1 16:1 14:1 12:1 | 11:2 14:2 | 12:1 16:1 19:1 16:1 | 14:2 12:2 | 14:1 12:1 9:1 7:1 | 12:4")
+        bajo = lambda n, d: pluck(hz(T - 24 + n), d, 0.25, 0.995)
+        camina = [(b + k, bajo(n, 0.5 * pz * 2), 0.4) for (b, c, _) in ac for k, n in enumerate([c[0], c[1], c[2], c[1] + (1 if c[1] + 1 not in c else 0)])]
+        escobilla = lambda: filtro(ruido(0.14), 'banda', (2000, 7500)) * env(int(0.14 * SR), 0.03, 0.08, 3)
+        ride = lambda: campana(5200, 0.25, 2.3, 0.6, 14) * 0.5
+        perc = camina + [(b, escobilla(), 0.18) for b in range(1, 32, 2)] + [(b, ride(), 0.08) for b in range(0, 32)]
+        celesta = [(16 + b, cajita(hz(T + n), 0.8), 0.18) for b, n in [(0, 24), (1.5, 28), (3, 31), (4, 26), (6, 24), (8, 26), (9.5, 24), (11, 19), (12, 24)]]
+        kw = dict(inst_mel=vibrafono, inst_ac=lambda f, d: organo(f, d, 0.15), perc=perc + celesta, g_ac=0.18, oct_mel=-12, oct_ac=-12)
+        P['refugio'] = (obra(T, pz, ac, mel, **kw), P['refugio'][1], P['refugio'][2])
+        ARGS['refugio'] = (T, pz, ac, mel, kw)
+
+        # --- Orden: Sol menor. Trompas, coro grave, cuerdas en corcheas, timbales y un redoble al final.
+        T = -2; pz = 0.38
+        ac = compases([0, 3, 7], [-4, 0, 3], [-2, 2, 5], [0, 3, 7], [3, 7, 10], [-4, 0, 3], [-5, -1, 2], [0, 3, 7, 12])
+        mel = frase(0, "0:1 3:1 7:2 | 8:1 7:1 3:2 | 5:1 2:1 5:1 7:1 | 12:4 | 10:1 12:1 14:2 | 15:1 14:1 12:2 | 11:1 7:1 11:1 14:1 | 12:4")
+        trompa = lambda f, d: metal(f, d, 1800, 0.06)
+        timbal = lambda n: tambor(hz(T - 24 + n), 0.6, 0.15)
+        cuerdas = [(b + 0.5 * k, arco(hz(T - 12 + (c[0] if k % 2 == 0 else c[2])), 0.5 * pz * 0.95, 0), 0.12) for (b, c, _) in ac for k in range(8)]
+        coro_ac = [(b * pz, acorde(coro, [T - 12 + n for n in c], d * pz), 0.22) for (b, c, d) in ac]
+        def redoble(d):
+            x = np.zeros(int(d * SR))
+            for i in range(int(d / 0.03)):
+                g = filtro(ruido(0.04), 'banda', (1200, 5000)) * env(int(0.04 * SR), 0.001, 0.025)
+                k = int(i * 0.03 * SR); x[k:k + len(g)] += g[:len(x) - k] * (0.3 + 0.7 * i / (d / 0.03))
+            return x
+        perc = [(b, timbal(0 if b % 4 == 0 else 7), 0.5) for b in range(0, 32, 2)] + [(28, redoble(4 * pz - 0.05), 0.3), (31, timbal(0), 0.8)] + cuerdas
+        kw = dict(inst_mel=trompa, inst_ac=trompa, perc=perc, extra=coro_ac, g_ac=0.22, oct_mel=-12, oct_ac=-24)
+        P['orden'] = (obra(T, pz, ac, mel, **kw), P['orden'][1], P['orden'][2])
+        ARGS['orden'] = (T, pz, ac, mel, kw)
+
+        # --- Soviético: Do menor. Himno de metales sobre coro de hombres, bombo y caja de marcha, yunque y un bajo de tuba.
+        T = 3; pz = 0.4
+        ac = compases([0, 3, 7], [-4, 0, 3], [3, 7, 10], [-5, -1, 2], [0, 3, 7], [5, 8, 12], [-5, -1, 2], [0, 3, 7, 12])
+        mel = frase(0, "0:1 3:1 7:2 | 8:1 7:1 3:2 | 10:1 7:1 3:1 7:1 | 2:2 -1:2 | 0:1 3:1 7:1 12:1 | 8:2 12:2 | 11:1 7:1 2:1 -1:1 | 0:4")
+        bronce = lambda f, d: metal(f, d, 2600)
+        caja = lambda: mezclar((0, filtro(ruido(0.08), 'banda', (1500, 6000)) * env(int(0.08 * SR), 0.001, 0.05), 0.8), (0, tambor(hz(T - 12), 0.05, 0.2), 0.3))
+        yunque = lambda: campana(hz(T + 19), 0.6, 2.9, 2.5, 7)
+        coro_ac = [(b * pz, acorde(coro, [T - 24 + n for n in c], d * pz), 0.25) for (b, c, d) in ac]
+        perc = [(b, tambor(hz(T - 36), 0.5, 0.2), 0.55) for b in range(0, 32, 2)] + [(b + 0.5, caja(), 0.22) for b in range(1, 32, 2)] + \
+               [(b + 0.75, caja(), 0.12) for b in range(1, 32, 2)] + [(12, yunque(), 0.25), (28, yunque(), 0.3)]
+        kw = dict(inst_mel=bronce, inst_ac=lambda f, d: metal(f, d, 2000, 0.06), bajo=lambda f, d: metal(f, d, 700, 0.05), perc=perc, extra=coro_ac,
+                  g_ac=0.22, g_bajo=0.3, oct_mel=-12, oct_ac=-24, oct_bajo=-36)
+        P['urss'] = (obra(T, pz, ac, mel, **kw), P['urss'][1], P['urss'][2])
+        ARGS['urss'] = (T, pz, ac, mel, kw)
+
+        # --- Espacio: Mi lidio. El pad que respira, un arpegiador de senos, sub grave, campanas de vidrio y la transmisión.
+        T = 7; pz = 0.4
+        def pad(f, d):
+            t = t_(d); x = np.sin(2 * np.pi * f * t + 0.3 * np.sin(2 * np.pi * 0.3 * t)) + 0.5 * np.sin(2 * np.pi * f * 1.003 * t)
+            return x * np.sin(np.pi * t / d) ** 1.2
+        ac = compases([0, 4, 7], [-3, 0, 4], [5, 9, 12], [7, 11, 14], [0, 4, 7], [2, 6, 9], [-3, 0, 4], [0, 4, 7, 12])
+        mel = frase(0, "0:1 4:1 7:2 | 11:2 9:2 | 12:1 9:1 7:2 | 14:2 11:2 | 12:1 11:1 7:1 4:1 | 6:2 9:2 | 7:1 4:1 2:1 4:1 | 0:4")
+        nota_arp = lambda n: seno(hz(T + n), 0.18) * env(int(0.18 * SR), 0.004, 0.12, 3)
+        arp = [(b + 0.25 * k, nota_arp(c[k % len(c)] + 12 * ((k // len(c)) % 2)), 0.1) for (b, c, _) in ac for k in range(16)]
+        sub = [(b, seno(hz(T - 36 + c[0]), 4 * pz) * np.sin(np.pi * t_(4 * pz) / (4 * pz)), 0.3) for (b, c, _) in ac]
+        vidrio = [(b, vibrafono(hz(T + 24 + c[-1] - c[0]), 1.6), 0.12) for (b, c, _) in ac[::2]]
+        aliento = [(b, filtro(ruido(4 * pz), 'banda', (500, 3000)) * np.sin(np.pi * t_(4 * pz) / (4 * pz)) ** 2, 0.06) for b in (8, 24)]
+        bip = lambda: seno(hz(T + 24), 0.12) * np.minimum(1, t_(0.12) / 0.005) * np.minimum(1, (0.12 - t_(0.12)) / 0.01)
+        trans = [(31.0, bip(), 0.15), (31.4, bip(), 0.15)]
+        kw = dict(inst_mel=lambda f, d: seno(f, d) * env(int(d * SR), 0.03, d * 0.9, 2), inst_ac=pad, perc=arp + sub + vidrio + aliento + trans,
+                  g_ac=0.26, g_mel=0.35, oct_ac=-24, cola=2.4, rev=0.35)
+        P['espacio'] = (obra(T, pz, ac, mel, **kw), P['espacio'][1], P['espacio'][2])
+        ARGS['espacio'] = (T, pz, ac, mel, kw)
 
 def anual(T, pz, ac, mel, kw, ciclos=10):
     """La música de «Tu año» (~1 min y medio): la frase del tema, que va creciendo. Primero sola y suave; luego entran los acordes,
@@ -318,16 +594,32 @@ def anual(T, pz, ac, mel, kw, ciclos=10):
     return x
 
 if __name__ == '__main__':
-    hacer(); hacer_revolucion(); hacer_antiguas()
+    hacer()
+    hacer_templario()
+    hacer_pirata()
+    hacer_urbe()
+    hacer_edo()
+    hacer_revolucion()
+    hacer_antiguas()
+    hacer_cueva()
+    hacer_neon()
+    hacer_egipto()
+    hacer_meso()
+    hacer_ruinas()
+    hacer_arcano()
+    hacer_enriquecidos()
+    hacer_abismo()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
+    # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
+    piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None
     for tema, (pres, llam, notif) in P.items():
         if solo is not None and tema not in solo: continue
-        escribir(f's_{tema}_presentacion', pres, calidad=4, rms_db=-17.0)
-        escribir(f't_{tema}_llamada', llam, calidad=4, rms_db=-15.0)
-        escribir(f't_{tema}_notificacion', notif, calidad=4, rms_db=-15.0)
+        for clave, nombre, x, rms in (('presentacion', f's_{tema}_presentacion', pres, -17.0), ('llamada', f't_{tema}_llamada', parejo(llam), -15.0), ('notificacion', f't_{tema}_notificacion', parejo(notif), -15.0)):
+            if piezas is None or clave in piezas: escribir(nombre, x, calidad=4, rms_db=rms)
         print(tema, '%.1f s' % (len(pres) / SR), '%.1f s' % (len(llam) / SR), flush=True)
     for tema, (T, pz, ac, mel, kw) in ARGS.items():
         if solo is not None and tema not in solo: continue
+        if piezas is not None and 'anual' not in piezas: continue
         x = anual(T, pz, ac, mel, kw, ciclos=max(6, min(14, int(85 / (max([b + d for b, _, d in mel] + [16]) * pz)))))
         escribir(f's_{tema}_anual', x, calidad=1, rms_db=-19.0)
         print(tema, 'anual %.1f s' % (len(x) / SR), flush=True)

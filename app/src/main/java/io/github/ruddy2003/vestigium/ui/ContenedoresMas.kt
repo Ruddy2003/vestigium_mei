@@ -35,21 +35,36 @@ object ContenedoresMas {
         val claro = when (c) {
             Contenedor.MANUSCRITO -> Color(0xFFF3EAD6)
             Contenedor.ACORDEON -> Color(0xFFF4EEDF)
+            Contenedor.FUKURO -> Color(0xFFF3EDDD)
             Contenedor.ORDENES -> Color(0xFFEFE6D0)
             Contenedor.BITACORA -> Color(0xFFF0E7D2)
             Contenedor.HERBARIO -> Color(0xFFEFEADB)
+            // Papel reciclado, gris verdoso, de un cuaderno que se encontró entre los escombros.
+            Contenedor.SUPERVIVIENTE -> Color(0xFFE6E3D6)
             Contenedor.ADVIENTO -> Color(0xFFFBF7EE)
             Contenedor.MAPAS -> Color(0xFFE9DCC0)
+            // La piel de ciervo curtida, color de ante.
+            Contenedor.BOLSA -> Color(0xFFE3D2B4)
             Contenedor.EXPEDIENTE -> Color(0xFFF2EFE6)
             // La pantalla: al oscurecerse queda casi negra (Terminal solo existe en oscuro).
             Contenedor.CONSOLA -> Color(0xFF22303A)
+            // El papel térmico de los tickets, con el tinte magenta del letrero de enfrente.
+            Contenedor.TICKETS -> Color(0xFFEFE3EA)
             Contenedor.CARPETA -> Color(0xFFF6EFD9)
             Contenedor.TECNICO -> Color(0xFFEDEDE8)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
+            // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
+            Contenedor.INMERSION -> Color(0xFFEDF2EE)
             Contenedor.TETRAD -> Color(0xFFF7F3E6)
+            // El pergamino blanqueado de la regla de la orden.
+            Contenedor.REGLA -> Color(0xFFF4EFE2)
+            // El papel de un cuaderno escolar italiano, apenas amarillo.
+            Contenedor.BOLETOS -> Color(0xFFF5EEDC)
             // Las libretas de [Contenedores] tienen su papel allá.
-            Contenedor.ESPIRAL, Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
+            Contenedor.RECORTES -> return Contenedores.papel(c, cs, oscuro)
+            Contenedor.BIOMBO -> return Contenedores.papel(c, cs, oscuro)
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
     }
@@ -100,6 +115,35 @@ object ContenedoresMas {
                 drawRect(Color(0xFFC0392B), Offset(w * 0.62f + 2 * d, h * 0.1f + 2 * d), Size(w * 0.18f - 4 * d, h * 0.55f - 4 * d), style = Stroke(1 * d))
                 drawRect(Color(0xFFC0392B), Offset(w * 0.66f, h * 0.52f), Size(w * 0.1f, w * 0.1f))
             }
+            Contenedor.FUKURO -> {
+                // Cuaderno cosido a la japonesa (fukuro-toji): tapa de índigo con su dibujo de hojas de cáñamo, la etiqueta
+                // del título arriba a la izquierda y la costura de cuatro agujeros en el lomo de la derecha. Engorda con lo escrito.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 2 * d); canto(w, h, grosor, d, Color(0xFFF3EDDD))
+                val indigo = if (oscuro) Color(0xFF16263F) else Color(0xFF1E3A5F)
+                drawRect(Brush.linearGradient(listOf(lerp(indigo, Color.White, 0.12f), indigo, lerp(indigo, Color.Black, 0.25f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h))
+                // Asanoha (hojas de cáñamo): estrellas de seis puntas trazadas en líneas muy tenues.
+                val claro = Color.White.copy(alpha = 0.08f); val paso = w * 0.2f
+                var fy = 0f; var fila = 0
+                while (fy < h) {
+                    var fx = if (fila % 2 == 0) 0f else paso / 2
+                    while (fx < w * 0.86f) {
+                        for (k in 0 until 6) { val a = k * PI / 3; drawLine(claro, Offset(fx, fy), Offset(fx + (paso * 0.5f * cos(a)).toFloat(), fy + (paso * 0.5f * sin(a)).toFloat()), 0.8f * d) }
+                        fx += maxOf(paso, 1f)
+                    }
+                    fy += maxOf(paso * 0.866f, 1f); fila++
+                }
+                // La etiqueta del título (daisen), con su marco y unas columnas de trazos.
+                val et = Offset(w * 0.1f, h * 0.06f); val es = Size(w * 0.17f, h * 0.48f)
+                drawRect(Color(0xFFF3EDDD), et, es)
+                drawRect(Color(0xFFC9442E), et + Offset(2 * d, 2 * d), Size(es.width - 4 * d, es.height - 4 * d), style = Stroke(0.8f * d))
+                for (j in 0 until 5) drawLine(Color(0xFF1B1A1E).copy(alpha = 0.7f), Offset(et.x + es.width / 2, et.y + es.height * (0.12f + j * 0.15f)), Offset(et.x + es.width / 2, et.y + es.height * (0.2f + j * 0.15f)), 1.4f * d)
+                // La costura (yotsume-toji): cuatro agujeros y el hilo que da la vuelta al lomo.
+                val hilo = Color(0xFFEDE6D6); val xl = w - w * 0.07f
+                val ys = listOf(0.12f, 0.37f, 0.63f, 0.88f).map { h * it }
+                drawLine(hilo, Offset(xl, ys.first()), Offset(xl, ys.last()), 1.4f * d)
+                ys.forEach { y -> drawLine(hilo, Offset(xl, y), Offset(w, y), 1.4f * d); drawCircle(lerp(indigo, Color.Black, 0.5f), 1.6f * d, Offset(xl, y)) }
+                drawLine(hilo, Offset(xl, 0f), Offset(xl, ys.first()), 1.4f * d); drawLine(hilo, Offset(xl, ys.last()), Offset(xl, h), 1.4f * d)
+            }
             Contenedor.ORDENES -> {
                 // Un rollo horizontal atado con la bufanda azul; engorda con lo escrito.
                 val alto = h * (0.32f + min(0.24f, hojas / 400f))
@@ -143,6 +187,35 @@ object ContenedoresMas {
                 drawRect(Color(0xFF3A2A14).copy(alpha = 0.4f), Offset(w * 0.3f, h * 0.7f), Size(w * 0.4f, h * 0.1f), style = Stroke(0.8f * d))
                 drawLine(Color(0xFFEFE2C0), Offset(-2 * d, h * 0.56f), Offset(w + grosor, h * 0.56f), 2.4f * d)
                 drawCircle(Color(0xFFEFE2C0), 3 * d, Offset(w, h * 0.56f))
+            }
+            Contenedor.SUPERVIVIENTE -> {
+                // Un cuaderno maltratado: tapa de lona verde con el lomo de cinta plateada, una liga que lo cierra y hojas
+                // prensadas que asoman por el canto (más cuanto más escrito); la esquina de abajo se perdió.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d); canto(w, h, grosor, d, Color(0xFFE6E3D6))
+                val asoman = (1 + hojas / 15).coerceAtMost(6)
+                for (k in 0 until asoman) {
+                    val y = h * (0.15f + 0.13f * k); val x = w + grosor * 0.6f
+                    val hoja = if (k % 2 == 0) Color(0xFF4F7A33) else Color(0xFF8A6A2A)
+                    drawPath(Path().apply { moveTo(x - 6 * d, y); quadraticTo(x + 8 * d, y - 6 * d, x + 12 * d, y + 2 * d); quadraticTo(x + 6 * d, y + 6 * d, x - 6 * d, y + 3 * d); close() }, hoja.copy(alpha = 0.9f))
+                }
+                val lona = Color(0xFF5B6B45)
+                val tapa = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h * 0.86f); lineTo(w * 0.86f, h); lineTo(0f, h); close() }
+                drawPath(tapa, Brush.linearGradient(listOf(lerp(lona, Color.White, 0.1f), lona, lerp(lona, Color.Black, 0.25f)), Offset.Zero, Offset(w, h)))
+                // Manchas de agua y de óxido.
+                drawCircle(Color(0xFF8A4A22).copy(alpha = 0.25f), w * 0.12f, Offset(w * 0.7f, h * 0.25f))
+                drawCircle(Color.Black.copy(alpha = 0.08f), w * 0.2f, Offset(w * 0.3f, h * 0.7f))
+                // El lomo de cinta plateada, con sus arrugas.
+                drawRect(Color(0xFF9EA2A0), Offset.Zero, Size(w * 0.14f, h))
+                for (k in 1..6) drawLine(Color.Black.copy(alpha = 0.12f), Offset(0f, h * k / 7f), Offset(w * 0.14f, h * k / 7f + 3 * d), 0.8f * d)
+                // La etiqueta escrita a mano.
+                drawRect(Color(0xFFE6E3D6), Offset(w * 0.3f, h * 0.12f), Size(w * 0.5f, h * 0.14f))
+                drawLine(Color(0xFF1F2420).copy(alpha = 0.6f), Offset(w * 0.34f, h * 0.19f), Offset(w * 0.72f, h * 0.2f), 1.4f * d)
+                // Una hoja de hiedra pegada en la tapa.
+                val c = Offset(w * 0.55f, h * 0.52f); val s = w * 0.2f
+                drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, Color(0xFF7FA35A))
+                drawLine(Color(0xFF3E5A2A), Offset(c.x, c.y + s * 0.5f), Offset(c.x, c.y - s * 0.35f), 1 * d)
+                // La liga que lo cierra.
+                drawLine(Color(0xFF2A2A2A), Offset(w * 0.78f, -2 * d), Offset(w * 0.78f, h + grosor), 2.2f * d)
             }
             Contenedor.ADVIENTO -> {
                 // El calendario de adviento: una casita con 24 casillas; cada día escrito abre una (hasta las 24).
@@ -190,6 +263,32 @@ object ContenedoresMas {
                 with(TrofeosMas) { runas(Offset(w * 0.24f, h * 0.78f), w * 0.52f, h * 0.05f, Color(0xFFC9A04A).copy(alpha = 0.6f), 1.2f * d, 5, 2) }
                 drawRect(HIERRO, Offset(w - 6 * d, h * 0.44f), Size(14 * d + grosor, 20 * d))
                 drawCircle(Color(0xFF1E7A5A), 5 * d, Offset(w + 2 * d, h * 0.44f + 10 * d))
+            }
+            Contenedor.BOLSA -> {
+                // La bolsa de piel: se hincha con lo escrito; la boca fruncida con el cordón de tendón y dos cuentas de concha,
+                // una mano de ocre pintada en la piel, la costura del costado y los flecos de abajo.
+                val piel = Color(0xFF8A6440); val ocre = Color(0xFFA2401F)
+                val hincha = ((grosor / d - 3f) / 11f).coerceIn(0f, 1f)
+                val W = size.width; val H = size.height
+                drawOval(Color.Black.copy(alpha = 0.18f), Offset(W * 0.12f, H * 0.86f), Size(W * 0.8f, H * 0.12f))
+                val cuerpo = Path().apply {
+                    moveTo(W * 0.34f, H * 0.24f)
+                    cubicTo(W * (0.1f - 0.08f * hincha), H * 0.36f, W * (0.04f - 0.04f * hincha), H * 0.86f, W * 0.5f, H * 0.92f)
+                    cubicTo(W * (0.96f + 0.04f * hincha), H * 0.86f, W * (0.9f + 0.08f * hincha), H * 0.36f, W * 0.66f, H * 0.24f); close()
+                }
+                drawPath(cuerpo, Brush.radialGradient(listOf(lerp(piel, Color.White, 0.18f), piel, lerp(piel, Color.Black, 0.35f)), Offset(W * 0.42f, H * 0.5f), W * 0.6f))
+                drawPath(Path().apply { moveTo(W * 0.36f, H * 0.3f); quadraticTo(W * 0.2f, H * 0.6f, W * 0.42f, H * 0.88f) }, Color(0xFF3A2414).copy(alpha = 0.5f),
+                    style = Stroke(1 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 2.5f * d))))
+                drawPath(Path().apply { moveTo(W * 0.3f, H * 0.12f); lineTo(W * 0.38f, H * 0.26f); lineTo(W * 0.62f, H * 0.26f); lineTo(W * 0.7f, H * 0.12f); quadraticTo(W * 0.5f, H * 0.06f, W * 0.3f, H * 0.12f); close() },
+                    lerp(piel, Color.Black, 0.15f))
+                for (k in 0 until 5) drawLine(Color.Black.copy(alpha = 0.25f), Offset(W * (0.34f + k * 0.08f), H * 0.12f), Offset(W * (0.4f + k * 0.05f), H * 0.25f), 0.8f * d)
+                val tendon = Color(0xFFD9C29A); val nudo = Offset(W * 0.64f, H * 0.25f)
+                drawLine(tendon, Offset(W * 0.36f, H * 0.25f), nudo, 2.2f * d)
+                drawCircle(tendon, 3 * d, nudo)
+                listOf(Offset(W * 0.72f, H * 0.45f), Offset(W * 0.78f, H * 0.4f)).forEach { p -> drawLine(tendon, nudo, p, 1.6f * d, StrokeCap.Round); drawCircle(Color(0xFFF2E8D6), 2.4f * d, p) }
+                piezasMano(Offset(W * 0.5f, H * 0.58f), W * 0.14f).forEach { drawPath(it, lerp(piel, ocre, 0.8f)) }
+                for (k in 0 until 7) { val x = W * (0.3f + k * 0.067f); drawLine(lerp(piel, Color.Black, 0.2f), Offset(x, H * 0.88f), Offset(x + (k - 3) * 0.6f * d, H * 0.98f), 1.4f * d, StrokeCap.Round) }
+                if (oscuro) drawPath(cuerpo, Color.Black.copy(alpha = 0.25f))
             }
             Contenedor.EXPEDIENTE -> {
                 // La carpeta de cartón con pestaña, la etiqueta mecanografiada, el sello rojo y la grapa.
@@ -242,6 +341,44 @@ object ContenedoresMas {
                 drawRect(negro, Offset(W * 0.7f, H * 0.18f), Size(W * 0.08f, 3 * d))
                 drawCircle(cian, 2 * d, Offset(W * 0.64f, H * 0.56f))
                 drawPath(Path().apply { moveTo(W * 0.26f, H * 0.62f); lineTo(W * 0.48f, H * 0.62f); lineTo(W * 0.54f, H * 0.7f); lineTo(W * 0.2f, H * 0.7f); close() }, Color(0xFF111925))
+            }
+            Contenedor.TICKETS -> {
+                // El pincho de tickets del puesto: la base de metal, la púa y los tickets ensartados, cada uno un poco
+                // girado; la pila crece con lo escrito. Arriba, el reflejo magenta del letrero.
+                val W = size.width; val H = size.height
+                val papelT = Color(0xFFEFE3EA); val metal = Color(0xFF8E8A96)
+                val cx = W * 0.5f; val pisoY = H * 0.94f
+                sombra(Offset(cx - W * 0.22f + 3 * d, pisoY - 6 * d), Size(W * 0.44f, 10 * d), 5 * d)
+                drawRoundRect(Brush.verticalGradient(listOf(lerp(metal, Color.White, 0.3f), metal, lerp(metal, Color.Black, 0.4f)), pisoY - 8 * d, pisoY + 4 * d),
+                    Offset(cx - W * 0.22f, pisoY - 8 * d), Size(W * 0.44f, 12 * d), CornerRadius(6 * d))
+                val n = (3 + hojas / 6).coerceAtMost(24)
+                val az = java.util.Random(5)
+                for (k in 0 until n) {
+                    val y = pisoY - 10 * d - k * 3.2f * d
+                    val giro = (az.nextFloat() - 0.5f) * 16f
+                    rotate(giro, Offset(cx, y)) {
+                        val tw = W * 0.6f; val th = 3.2f * d
+                        drawRect(if (k % 2 == 0) papelT else lerp(papelT, Color.Black, 0.12f), Offset(cx - tw / 2, y - th), Size(tw, th))
+                    }
+                }
+                // El ticket de arriba, de frente, con su borde dentado y sus renglones.
+                val top = pisoY - 10 * d - n * 3.2f * d
+                val tx0 = cx - W * 0.3f; val tx1 = cx + W * 0.3f; val ty0 = (top - H * 0.42f).coerceAtLeast(H * 0.06f)
+                drawPath(Path().apply {
+                    moveTo(tx0, ty0); lineTo(tx1, ty0); lineTo(tx1, top)
+                    var x = tx1; var abajo = true; while (x > tx0) { x -= 6 * d; lineTo(maxOf(x, tx0), if (abajo) top - 4 * d else top); abajo = !abajo }
+                    close()
+                }, papelT)
+                with(TrofeosMas) {
+                    mono("屋台 · TICKET", cx, ty0 + 14 * d, 10 * d, Color(0xFF3A0D27), android.graphics.Paint.Align.CENTER, negrita = true)
+                    var yy = ty0 + 28 * d; var k = 0
+                    while (yy < top - 12 * d) { drawLine(Color(0xFF3A0D27).copy(alpha = 0.45f), Offset(tx0 + 10 * d, yy), Offset(tx1 - (if (k % 3 == 2) 40 else 14) * d, yy), 1 * d); yy += 9 * d; k++ }
+                }
+                // La púa que lo atraviesa.
+                drawLine(metal, Offset(cx, pisoY - 8 * d), Offset(cx, ty0 - 10 * d), 2.4f * d)
+                drawCircle(lerp(metal, Color.White, 0.4f), 2 * d, Offset(cx, ty0 - 10 * d))
+                // El reflejo: un halo redondo que se pierde hacia los lados, sin bordes rectos.
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFF3D9A).copy(alpha = 0.22f), Color.Transparent), Offset(cx, ty0 - 10 * d), W * 0.45f), W * 0.45f, Offset(cx, ty0 - 10 * d))
             }
             Contenedor.CARPETA -> {
                 // La carpeta del supervisor: cartón verde azulado con su pestaña naranja, las hojas que asoman, el broche
@@ -342,6 +479,40 @@ object ContenedoresMas {
                 // La lengüeta naranja para tirar.
                 drawRect(naranja, Offset(w - 4 * d, h * 0.74f), Size(8 * d + grosor, 14 * d))
             }
+            Contenedor.INMERSION -> {
+                // La bitácora del batiscafo: tapas de lona engomada azul petróleo con cantoneras de latón, el batiscafo
+                // estampado (el flotador largo y, debajo, la esfera de la tripulación con su ojo de buey), la regla de
+                // profundidad en el lomo y la correa de goma que la mantiene cerrada bajo el agua.
+                val lona = Color(0xFF1F4A59); val laton = Color(0xFFB8913E); val crema = Color(0xFFE6DFC6)
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 4 * d); canto(w, h, grosor, d, Color(0xFFEDF2EE))
+                drawRoundRect(Brush.linearGradient(listOf(lerp(lona, Color.White, 0.1f), lona, lerp(lona, Color.Black, 0.35f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(4 * d))
+                // El grano de la lona.
+                var y = 0f; while (y < h) { drawLine(Color.Black.copy(alpha = 0.06f), Offset(0f, y), Offset(w, y), 1f); y += 3 * d }
+                // La regla de profundidad en el lomo: una raya cada 100 m y una más larga cada 500.
+                drawRect(lerp(lona, Color.Black, 0.3f), Offset.Zero, Size(w * 0.12f, h))
+                var k = 0; y = h * 0.06f
+                while (y < h * 0.94f) { drawLine(crema.copy(alpha = 0.6f), Offset(0f, y), Offset(w * (if (k % 5 == 0) 0.09f else 0.05f), y), 0.9f * d); y += maxOf(h * 0.03f, 1f); k++ }
+                // Las cuatro cantoneras de latón.
+                listOf(Offset(0f, 0f) to 0, Offset(w, 0f) to 1, Offset(w, h) to 2, Offset(0f, h) to 3).forEach { (p, i) ->
+                    val sx = if (i == 1 || i == 2) -1f else 1f; val sy = if (i >= 2) -1f else 1f; val l = w * 0.13f
+                    drawPath(Path().apply { moveTo(p.x, p.y); lineTo(p.x + sx * l, p.y); lineTo(p.x, p.y + sy * l); close() }, Brush.linearGradient(listOf(lerp(laton, Color.White, 0.35f), laton, lerp(laton, Color.Black, 0.3f)), p, Offset(p.x + sx * l, p.y + sy * l)))
+                    drawCircle(lerp(laton, Color.Black, 0.4f), 1.4f * d, Offset(p.x + sx * l * 0.3f, p.y + sy * l * 0.3f))
+                }
+                // El batiscafo estampado en crema: el flotador, la torreta, la esfera colgada y su ojo de buey.
+                val cx = w * 0.56f; val cy = h * 0.42f; val L = w * 0.3f
+                val tinta = crema.copy(alpha = 0.8f)
+                drawRoundRect(tinta, Offset(cx - L, cy - L * 0.18f), Size(L * 2, L * 0.36f), CornerRadius(L * 0.18f), style = Stroke(1.4f * d))
+                drawRect(tinta, Offset(cx - L * 0.12f, cy - L * 0.36f), Size(L * 0.24f, L * 0.18f), style = Stroke(1.2f * d))
+                drawLine(tinta, Offset(cx, cy + L * 0.18f), Offset(cx, cy + L * 0.3f), 1.2f * d)
+                drawCircle(tinta, L * 0.26f, Offset(cx, cy + L * 0.56f), style = Stroke(1.4f * d))
+                drawCircle(tinta, L * 0.09f, Offset(cx - L * 0.06f, cy + L * 0.6f))
+                listOf(-0.7f, 0.7f).forEach { f -> drawLine(tinta, Offset(cx + f * L, cy + L * 0.18f), Offset(cx + f * L * 1.1f, cy + L * 0.34f), 1 * d) }
+                // La placa con el número de la inmersión, en latón.
+                drawRoundRect(laton, Offset(w * 0.32f, h * 0.72f), Size(w * 0.48f, h * 0.1f), CornerRadius(2 * d))
+                with(TrofeosMas) { mono("INMERSIÓN", w * 0.56f, h * 0.79f, h * 0.05f, lerp(lona, Color.Black, 0.4f), android.graphics.Paint.Align.CENTER, negrita = true) }
+                // La correa de goma negra que la cierra.
+                drawRect(Color(0xFF111A1E), Offset(w * 0.84f, -2 * d), Size(w * 0.05f, h + grosor + 4 * d))
+            }
             Contenedor.TETRAD -> {
                 // El cuaderno escolar (тетрадь): tapa delgada de papel verde con la etiqueta enmarcada y su palabra en
                 // ruso, la estrella roja, el lomo con las grapas y, como engorda poco, pocas hojas en el canto.
@@ -364,8 +535,65 @@ object ContenedoresMas {
                 drawRect(lerp(verde, Color.Black, 0.25f), Offset(0f, 0f), Size(W * 0.05f, H))
                 listOf(0.3f, 0.7f).forEach { f -> drawRect(Color(0xFFC3C6CA), Offset(W * 0.015f, H * f - 6 * d), Size(2 * d, 12 * d)) }
             }
+            Contenedor.REGLA -> {
+                // La regla de la casa: tapas de cuero blanco curtido al alumbre con la gran cruz patada roja, dos correas de
+                // cuero con hebilla de hierro que la cierran y, colgando del canto de abajo, el sello de cera de la orden.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d); canto(w, h, grosor, d, Color(0xFFF4EFE2))
+                val cuero = if (oscuro) Color(0xFFBDB4A0) else Color(0xFFE7DFCB); val rojo = Color(0xFFB0191F); val correa = Color(0xFF5A3A22)
+                drawRoundRect(Brush.linearGradient(listOf(lerp(cuero, Color.White, 0.3f), cuero, lerp(cuero, Color.Black, 0.18f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(3 * d))
+                drawRect(lerp(cuero, Color.Black, 0.22f), Offset.Zero, Size(w * 0.1f, h))
+                listOf(0.22f, 0.5f, 0.78f).forEach { f -> drawRect(lerp(cuero, Color.Black, 0.35f), Offset(0f, h * f - 2 * d), Size(w * 0.1f, 4 * d)) }
+                drawPath(cruzPatada(Offset(w * 0.56f, h * 0.42f), w * 0.26f), rojo)
+                drawPath(cruzPatada(Offset(w * 0.56f, h * 0.42f), w * 0.26f), lerp(rojo, Color.Black, 0.35f), style = Stroke(1 * d))
+                listOf(0.2f, 0.8f).forEach { f ->
+                    val y = h * f
+                    drawRect(correa, Offset(w * 0.62f, y - 4 * d), Size(w * 0.38f + grosor, 8 * d))
+                    drawRect(HIERRO, Offset(w - 10 * d, y - 6 * d), Size(8 * d, 12 * d), style = Stroke(1.6f * d))
+                    drawLine(HIERRO, Offset(w - 6 * d, y - 4 * d), Offset(w - 6 * d, y + 4 * d), 1.4f * d)
+                }
+                val sello = Offset(w * 0.56f, h - 4 * d)
+                drawLine(Color(0xFF8A7650), Offset(w * 0.5f, h * 0.74f), sello, 1.4f * d); drawLine(Color(0xFF8A7650), Offset(w * 0.62f, h * 0.74f), sello, 1.4f * d)
+                drawCircle(Color(0xFF7A2A16), 9 * d, sello); drawCircle(lerp(Color(0xFF7A2A16), Color.Black, 0.3f), 6.5f * d, sello, style = Stroke(1 * d))
+                drawPath(cruzPatada(sello, 4.5f * d), lerp(Color(0xFF7A2A16), Color.Black, 0.35f))
+            }
+            Contenedor.BOLETOS -> {
+                // El cuaderno de tapa ocre con el elástico rojo, la etiqueta para el nombre y, asomando por arriba, los
+                // boletos de tranvía y de autobús que se van guardando entre las hojas: más escrito, más boletos.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d); canto(w, h, grosor, d, Color(0xFFF5EEDC))
+                val n = (2 + hojas / 25).coerceAtMost(7)
+                for (k in 0 until n) {
+                    val x = w * (0.1f + 0.12f * k); val alto = h * (0.12f + 0.03f * (k % 3))
+                    rotate(-8f + 5f * (k % 4), Offset(x + w * 0.09f, 0f)) {
+                        val papel = if (k % 2 == 0) Color(0xFFE6EEDC) else Color(0xFFF3F0E6)
+                        drawRect(papel, Offset(x, -alto * 0.6f), Size(w * 0.18f, alto))
+                        drawRect(Color(0xFF3D5E45).copy(alpha = 0.55f), Offset(x, -alto * 0.6f + alto * 0.18f), Size(w * 0.18f, alto * 0.12f))
+                        drawLine(Color(0xFF2B2420).copy(alpha = 0.35f), Offset(x + w * 0.03f, -alto * 0.6f + alto * 0.5f), Offset(x + w * 0.14f, -alto * 0.6f + alto * 0.5f), 0.8f * d)
+                    }
+                }
+                val ocre = Color(0xFFC98A3A)
+                drawRoundRect(Brush.linearGradient(listOf(lerp(ocre, Color.White, 0.12f), ocre, lerp(ocre, Color.Black, 0.22f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(3 * d))
+                // La trama de la cartulina y la etiqueta blanca con sus renglones.
+                var y = 0f; while (y < h) { drawLine(Color.Black.copy(alpha = 0.04f), Offset(0f, y), Offset(w, y), 0.6f * d); y += 3 * d }
+                drawRoundRect(Color(0xFFFBF6EA), Offset(w * 0.18f, h * 0.18f), Size(w * 0.64f, h * 0.22f), CornerRadius(4 * d))
+                drawRoundRect(Color(0xFFA8432A).copy(alpha = 0.6f), Offset(w * 0.18f + 3 * d, h * 0.18f + 3 * d), Size(w * 0.64f - 6 * d, h * 0.22f - 6 * d), CornerRadius(3 * d), style = Stroke(0.8f * d))
+                for (j in 0 until 2) drawLine(Color(0xFF2B2420).copy(alpha = 0.35f), Offset(w * 0.26f, h * (0.26f + j * 0.07f)), Offset(w * 0.74f, h * (0.26f + j * 0.07f)), 0.8f * d)
+                // La loba de la placa, pequeña, abajo: el lomo, la cabeza y la cola, en silueta.
+                val lobo = Color(0xFF2B2420).copy(alpha = 0.35f); val c0 = Offset(w * 0.5f, h * 0.66f); val k = w * 0.12f
+                drawPath(Path().apply {
+                    moveTo(c0.x - k, c0.y); quadraticTo(c0.x - k * 0.2f, c0.y - k * 0.45f, c0.x + k * 0.7f, c0.y - k * 0.2f)
+                    lineTo(c0.x + k * 1.05f, c0.y - k * 0.5f); lineTo(c0.x + k * 1.1f, c0.y - k * 0.2f); lineTo(c0.x + k * 0.9f, c0.y + k * 0.05f)
+                    lineTo(c0.x + k * 0.75f, c0.y + k * 0.6f); lineTo(c0.x + k * 0.6f, c0.y + k * 0.6f); lineTo(c0.x + k * 0.55f, c0.y + k * 0.15f)
+                    lineTo(c0.x - k * 0.55f, c0.y + k * 0.15f); lineTo(c0.x - k * 0.7f, c0.y + k * 0.6f); lineTo(c0.x - k * 0.85f, c0.y + k * 0.6f)
+                    lineTo(c0.x - k * 0.9f, c0.y + k * 0.05f); quadraticTo(c0.x - k * 1.4f, c0.y - k * 0.1f, c0.x - k * 1.5f, c0.y - k * 0.5f); close()
+                }, lobo)
+                // El elástico rojo que lo cierra, de arriba abajo.
+                drawRect(Color(0xFFA8432A), Offset(w * 0.86f, 0f), Size(4 * d, h))
+                drawRect(Color.Black.copy(alpha = 0.18f), Offset(w * 0.86f + 4 * d, 0f), Size(1 * d, h))
+            }
             // Estas las dibuja [Contenedores].
-            Contenedor.ESPIRAL, Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.RECORTES -> {}
+            Contenedor.BIOMBO -> {}
         }
     }
 
@@ -386,6 +614,18 @@ object ContenedoresMas {
                 // Los pliegues verticales y un sello de cinabrio en la esquina.
                 var x = margen + 70 * d; while (x < size.width) { drawLine(tinta.copy(alpha = 0.08f), Offset(x, 0f), Offset(x, size.height), 1.2f * d); drawRect(Brush.horizontalGradient(listOf(tinta.copy(alpha = 0.05f), Color.Transparent), x, x + 12 * d), Offset(x, 0f), Size(12 * d, size.height)); x += 90 * d }
                 drawRect(Color(0xFFC0392B).copy(alpha = 0.35f), Offset(size.width - 34 * d, size.height - 40 * d), Size(20 * d, 20 * d))
+            }
+            Contenedor.FUKURO -> {
+                // El washi con sus fibras y el marco de las páginas impresas en madera (kyōkaku), con sus columnas.
+                val r = java.util.Random(72)
+                repeat(70) {
+                    val x = r.nextFloat() * size.width; val y = r.nextFloat() * size.height; val l = (6 + r.nextFloat() * 14) * d; val a = r.nextFloat() * PI
+                    drawLine(tinta.copy(alpha = 0.035f), Offset(x, y), Offset(x + (l * cos(a)).toFloat(), y + (l * sin(a)).toFloat()), 0.6f * d)
+                }
+                val marco = Rect(margen - 10 * d, 72 * d, size.width - 12 * d, size.height - 14 * d)
+                drawRect(tinta.copy(alpha = 0.16f), marco.topLeft, marco.size, style = Stroke(1.4f * d))
+                drawRect(tinta.copy(alpha = 0.1f), marco.topLeft + Offset(3 * d, 3 * d), Size(marco.width - 6 * d, marco.height - 6 * d), style = Stroke(0.5f * d))
+                var x = marco.left + renglon * 1.5f; while (x < marco.right - 4 * d) { drawLine(tinta.copy(alpha = 0.05f), Offset(x, marco.top + 3 * d), Offset(x, marco.bottom - 3 * d), 0.5f * d); x += maxOf(renglon * 1.5f, 1f) }
             }
             Contenedor.ORDENES -> {
                 // Columnas verticales tenues (como la escritura vertical) y el margen de fieltro azul.
@@ -410,6 +650,20 @@ object ContenedoresMas {
                 for (k in 1..3) drawLine(tinta.copy(alpha = 0.08f), Offset(e.left + 6 * d, e.top + k * e.height / 4), Offset(e.right - 6 * d, e.top + k * e.height / 4), 0.6f * d)
                 var y = 96 * d; while (y < size.height - 80 * d) { drawLine(tinta.copy(alpha = 0.04f), Offset(margen, y), Offset(size.width - 16 * d, y), 0.5f * d); y += renglon }
             }
+            Contenedor.SUPERVIVIENTE -> {
+                // Renglones a lápiz, el aro de agua que dejó una lata, una hoja de hiedra prensada y, en el margen, la cuenta
+                // de los días de cinco en cinco.
+                var y = 96 * d; while (y < size.height) { drawLine(tinta.copy(alpha = 0.07f), Offset(margen, y), Offset(size.width - 12 * d, y), 0.6f * d); y += maxOf(renglon, 1f) }
+                drawCircle(Color(0xFF8A6A44).copy(alpha = if (oscuro) 0.08f else 0.1f), 34 * d, Offset(size.width - 70 * d, 150 * d), style = Stroke(3 * d))
+                val c = Offset(size.width - 60 * d, size.height - 90 * d); val s = 60 * d
+                drawPath(Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }, Color(0xFF4F7A33).copy(alpha = if (oscuro) 0.12f else 0.14f))
+                drawLine(Color(0xFF4F7A33).copy(alpha = 0.2f), Offset(c.x, c.y + s * 0.5f), Offset(c.x - 10 * d, c.y + s * 1.1f), 1.4f * d)
+                for (g in 0 until 3) {
+                    val x0 = 8 * d; val y0 = 110 * d + g * 22 * d
+                    for (k in 0 until 4) drawLine(tinta.copy(alpha = 0.14f), Offset(x0 + k * 4 * d, y0), Offset(x0 + k * 4 * d, y0 + 14 * d), 1 * d)
+                    drawLine(tinta.copy(alpha = 0.14f), Offset(x0 - 2 * d, y0 + 12 * d), Offset(x0 + 15 * d, y0 + 2 * d), 1 * d)
+                }
+            }
             Contenedor.ADVIENTO -> {
                 // Una cenefa de copos y pinos arriba, y la cinta roja y verde abajo.
                 var x = 8 * d; var k = 0
@@ -433,6 +687,14 @@ object ContenedoresMas {
                 for (k in 0 until 8) { val a = k * PI / 4; val rr = if (k % 2 == 0) r else r * 0.5f; drawLine(Color(0xFF6B5A44).copy(alpha = 0.18f), c, Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat()), 1 * d) }
                 drawCircle(Color(0xFF6B5A44).copy(alpha = 0.15f), r * 0.7f, c, style = Stroke(0.8f * d))
             }
+            Contenedor.BOLSA -> {
+                // La piel curtida: el poro, un punto de ocre en el margen por cada renglón (como las hileras de puntos de la
+                // pared) y un bisonte de carbón, apenas, abajo a la derecha.
+                val az = java.util.Random(13)
+                repeat(160) { drawCircle(tinta.copy(alpha = 0.035f), (0.6f + az.nextFloat()) * d, Offset(az.nextFloat() * size.width, az.nextFloat() * size.height)) }
+                var y = 96 * d; while (y < size.height) { drawCircle(Color(0xFFA2401F).copy(alpha = if (oscuro) 0.3f else 0.22f), 2 * d, Offset(margen - 12 * d, y - renglon * 0.35f)); y += maxOf(renglon, 1f) }
+                drawPath(bisonte(Offset(size.width - 70 * d, size.height - 60 * d), 50 * d), tinta.copy(alpha = if (oscuro) 0.08f else 0.07f))
+            }
             Contenedor.EXPEDIENTE -> {
                 // Formulario oficial: renglones grises, casillas en el margen, el folio arriba y la franja roja.
                 drawRect(Color(0xFFC8102E).copy(alpha = 0.45f), Offset(0f, 0f), Size(size.width, 4 * d))
@@ -455,6 +717,20 @@ object ContenedoresMas {
                     var yy = 96 * d; var k = 1
                     while (yy < size.height - 8 * d) { mono("%03d".format(k), 21 * d, yy, 8 * d, cian.copy(alpha = 0.35f), android.graphics.Paint.Align.RIGHT); yy += renglon; k++ }
                 }
+            }
+            Contenedor.TICKETS -> {
+                // El ticket térmico: la cabecera del puesto, el número de orden, renglones de puntos y el borde dentado abajo.
+                val tinta2 = if (oscuro) Color(0xFFFF8AC2) else Color(0xFF3A0D27)
+                with(TrofeosMas) {
+                    mono("屋台 · PUESTO DE FIDEOS · NIVEL −3", size.width / 2, 22 * d, 9 * d, tinta2.copy(alpha = 0.7f), android.graphics.Paint.Align.CENTER, negrita = true)
+                    mono("ORDEN Nº ${(size.height / 7).toInt() % 900 + 100}", size.width / 2, 38 * d, 8 * d, tinta2.copy(alpha = 0.5f), android.graphics.Paint.Align.CENTER)
+                }
+                drawLine(tinta2.copy(alpha = 0.4f), Offset(12 * d, 50 * d), Offset(size.width - 12 * d, 50 * d), 1 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3 * d)))
+                var y = 96 * d
+                while (y < size.height - 16 * d) { drawLine(tinta.copy(alpha = 0.08f), Offset(margen, y), Offset(size.width - 12 * d, y), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1 * d, 3 * d))); y += maxOf(renglon, 1f) }
+                var x = 0f; var arriba = true
+                val diente = Path().apply { moveTo(0f, size.height); while (x < size.width) { x += 6 * d; lineTo(x, if (arriba) size.height - 5 * d else size.height); arriba = !arriba }; lineTo(size.width, size.height); close() }
+                drawPath(diente, Color.Black.copy(alpha = 0.35f))
             }
             Contenedor.CARPETA -> {
                 // El formato del refugio: cabecera con casillas de turno y nivel, renglones verde azulado y la franja naranja.
@@ -499,6 +775,23 @@ object ContenedoresMas {
                     y += renglon
                 }
             }
+            Contenedor.INMERSION -> {
+                // La hoja de inmersión: el encabezado con cota y presión por llenar, la regla de profundidad en el margen
+                // (cada renglón, diez metros más abajo) y, de fondo, el perfil del fondo marino que trazó el sonar.
+                val tinta = if (oscuro) Color(0xFF5CF2C6) else Color(0xFF0A5C8C)
+                with(TrofeosMas) { mono("COTA ____ m   PRESIÓN ____ bar", margen, 30 * d, 8 * d, tinta.copy(alpha = 0.5f)) }
+                drawLine(tinta.copy(alpha = 0.3f), Offset(margen, 38 * d), Offset(size.width - 12 * d, 38 * d), 0.8f * d)
+                val perfil = Path(); var x = margen; perfil.moveTo(margen, size.height * 0.7f)
+                while (x <= size.width) { perfil.lineTo(x, size.height * 0.7f + 18 * d * sin(x / (47 * d)) + 9 * d * sin(x / (17 * d))); x += 4 * d }
+                drawPath(perfil, tinta.copy(alpha = if (oscuro) 0.12f else 0.08f), style = Stroke(1.4f * d))
+                var y = 96 * d; var k = 1
+                while (y < size.height - 12 * d) {
+                    drawLine(tinta.copy(alpha = 0.1f), Offset(margen - 6 * d, y), Offset(size.width - 12 * d, y), 0.7f * d)
+                    drawLine(tinta.copy(alpha = 0.3f), Offset(margen - 18 * d, y), Offset(margen - 8 * d, y), 0.8f * d)
+                    if (k % 2 == 0) with(TrofeosMas) { mono("${k * 10}", margen - 20 * d, y - 2 * d, 6 * d, tinta.copy(alpha = 0.35f), android.graphics.Paint.Align.RIGHT) }
+                    y += maxOf(renglon, 1f); k++
+                }
+            }
             Contenedor.TETRAD -> {
                 // La hoja «en cuadritos» del cuaderno escolar ruso, con el margen rojo del lado de afuera (a la derecha).
                 val cuadro = if (oscuro) Color(0xFF7A9AC8) else Color(0xFF5A7AB0)
@@ -507,8 +800,38 @@ object ContenedoresMas {
                 var y = 0f; while (y < size.height) { drawLine(cuadro.copy(alpha = 0.12f), Offset(0f, y), Offset(size.width, y), 0.5f * d); y += paso }
                 drawLine(Color(0xFFC1121F).copy(alpha = 0.55f), Offset(size.width - 26 * d, 0f), Offset(size.width - 26 * d, size.height), 1.2f * d)
             }
+            Contenedor.REGLA -> {
+                // La hoja de la regla: reglado rojo, el margen ancho donde va el número de cada artículo en romanos entre
+                // puntos, la cruz patada en la cabecera y, abajo a la derecha, la huella del sello de la casa.
+                val rojo = Color(0xFFB0191F)
+                var y = 96 * d; while (y < size.height) { drawLine(rojo.copy(alpha = if (oscuro) 0.18f else 0.12f), Offset(margen - 10 * d, y), Offset(size.width - 14 * d, y), 0.7f * d); y += maxOf(renglon, 1f) }
+                listOf(margen - 12 * d, margen - 15 * d).forEach { x -> drawLine(rojo.copy(alpha = 0.3f), Offset(x, 60 * d), Offset(x, size.height), 0.8f * d) }
+                drawPath(cruzPatada(Offset(size.width / 2, 48 * d), 9 * d), rojo.copy(alpha = 0.55f))
+                drawLine(tinta.copy(alpha = 0.2f), Offset(size.width * 0.2f, 66 * d), Offset(size.width * 0.8f, 66 * d), 0.8f * d)
+                val s = Offset(size.width - 44 * d, size.height - 46 * d)
+                drawCircle(rojo.copy(alpha = 0.07f), 26 * d, s); drawCircle(rojo.copy(alpha = 0.12f), 22 * d, s, style = Stroke(1 * d))
+                drawPath(cruzPatada(s, 14 * d), rojo.copy(alpha = 0.08f))
+            }
+            Contenedor.BOLETOS -> {
+                // Los renglones del cuaderno escolar, con el margen a lápiz; arriba a la derecha, un boleto pegado con cinta.
+                val raya = if (oscuro) Color(0xFF9DB0C8) else Color(0xFF6A84A8)
+                var y = 96 * d; while (y < size.height) { drawLine(raya.copy(alpha = 0.18f), Offset(0f, y), Offset(size.width, y), 0.7f * d); y += maxOf(renglon, 1f) }
+                drawLine(tinta.copy(alpha = 0.18f), Offset(margen - 8 * d, 0f), Offset(margen - 8 * d, size.height), 0.8f * d)
+                val o = Offset(size.width - 92 * d, 18 * d)
+                rotate(6f, o + Offset(36 * d, 16 * d)) {
+                    drawRect(Color(0xFFE6EEDC).copy(alpha = if (oscuro) 0.35f else 0.9f), o, Size(72 * d, 32 * d))
+                    drawRect(Color(0xFF3D5E45).copy(alpha = 0.45f), o + Offset(0f, 5 * d), Size(72 * d, 5 * d))
+                    for (j in 0 until 2) drawLine(tinta.copy(alpha = 0.25f), o + Offset(8 * d, 17 * d + j * 6 * d), o + Offset((48 - j * 14) * d, 17 * d + j * 6 * d), 0.8f * d)
+                    // La marca de la máquina que lo valida, de lado.
+                    drawRect(Color(0xFF7A3A6A).copy(alpha = 0.35f), o + Offset(54 * d, 12 * d), Size(12 * d, 16 * d))
+                    drawRect(Color(0xFFF2EAC6).copy(alpha = 0.5f), o + Offset(-6 * d, -4 * d), Size(18 * d, 8 * d))
+                    drawRect(Color(0xFFF2EAC6).copy(alpha = 0.5f), o + Offset(60 * d, 28 * d), Size(18 * d, 8 * d))
+                }
+            }
             // Estas las dibuja [Contenedores].
-            Contenedor.ESPIRAL, Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.RECORTES -> {}
+            Contenedor.BIOMBO -> {}
         }
     }
 
@@ -538,6 +861,16 @@ object ContenedoresMas {
                     y += 70 * d
                 }
             }
+            Contenedor.BOLSA -> {
+                // La tira de tendón que cose la piel por el borde, en zigzag por los agujeros.
+                val tendon = if (oscuro) Color(0xFF8A7458) else Color(0xFFCDB48A)
+                var y = 16 * d; var k = 0
+                while (y < size.height - 10 * d) {
+                    drawCircle(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.3f), 2.2f * d, Offset(12 * d, y))
+                    drawLine(tendon, Offset(12 * d, y), Offset(if (k % 2 == 0) 24 * d else 6 * d, y + 14 * d), 1.8f * d, StrokeCap.Round)
+                    y += 28 * d; k++
+                }
+            }
             Contenedor.EXPEDIENTE -> {
                 // Las perforaciones del archivador y el broche metálico.
                 var y = 40 * d; while (y < size.height - 20 * d) { drawCircle(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.25f), 4 * d, Offset(18 * d, y)); y += 110 * d }
@@ -550,6 +883,14 @@ object ContenedoresMas {
                 while (y < size.height) { y += 18 * d; p.lineTo(if (k % 2 == 0) 26 * d else 10 * d, y); k++ }
                 drawPath(p, Color(0xFF8A6A44).copy(alpha = 0.6f), style = Stroke(1.4f * d))
             }
+            Contenedor.FUKURO -> {
+                // La costura de cuatro agujeros con hilo de índigo, que pasa por el borde de la hoja.
+                val hilo = if (oscuro) Color(0xFF92ABD8) else Color(0xFF1E3A5F); val x = 20 * d
+                val ys = listOf(0.12f, 0.37f, 0.63f, 0.88f).map { size.height * it }
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.16f), Color.Transparent), 0f, 30 * d), Offset.Zero, Size(30 * d, size.height))
+                drawLine(hilo, Offset(x, 0f), Offset(x, size.height), 1.6f * d)
+                ys.forEach { y -> drawLine(hilo, Offset(0f, y), Offset(x, y), 1.6f * d); drawCircle(Color.Black.copy(alpha = 0.35f), 2 * d, Offset(x, y)) }
+            }
             Contenedor.ORDENES -> {
                 drawRoundRect(Color(0xFF8A5A2B), Offset(10 * d, 0f), Size(10 * d, size.height), CornerRadius(5 * d))
                 if (oscuro) drawRect(Color.Black.copy(alpha = 0.4f), Offset(10 * d, 0f), Size(10 * d, size.height))
@@ -559,6 +900,14 @@ object ContenedoresMas {
                 var y = 20 * d; while (y < size.height - 10 * d) { drawLine(Color(0xFFE9DCC0).copy(alpha = 0.7f), Offset(12 * d, y), Offset(18 * d, y + 6 * d), 1.2f * d); y += 26 * d }
             }
             Contenedor.HERBARIO -> listOf(0.2f, 0.8f).forEach { f -> val y = size.height * f; drawLine(Color(0xFFEFE2C0), Offset(0f, y), Offset(24 * d, y), 3 * d, StrokeCap.Round); drawCircle(Color(0xFF6E7A4E), 3 * d, Offset(22 * d, y)) }
+            Contenedor.SUPERVIVIENTE -> {
+                // El lomo de cinta plateada y el lápiz de carpintero atado con un cordel.
+                drawRect(Color(0xFF9EA2A0).copy(alpha = if (oscuro) 0.35f else 0.85f), Offset(6 * d, 0f), Size(16 * d, size.height))
+                var y = 18 * d; while (y < size.height) { drawLine(Color.Black.copy(alpha = 0.12f), Offset(6 * d, y), Offset(22 * d, y + 4 * d), 0.8f * d); y += 30 * d }
+                drawLine(Color(0xFF8A7F68), Offset(14 * d, 40 * d), Offset(30 * d, 120 * d), 1.2f * d)
+                drawRoundRect(Color(0xFFC9A227), Offset(26 * d, 118 * d), Size(6 * d, 52 * d), CornerRadius(1.5f * d))
+                drawPath(Path().apply { moveTo(26 * d, 170 * d); lineTo(32 * d, 170 * d); lineTo(29 * d, 180 * d); close() }, Color(0xFF3A2A1A))
+            }
             Contenedor.ADVIENTO -> {
                 drawRect(Color(0xFFB3122E), Offset(12 * d, 0f), Size(8 * d, size.height))
                 val y = 60 * d
@@ -570,6 +919,13 @@ object ContenedoresMas {
                 drawRect(Color(0xFFD9DEE3).copy(alpha = if (oscuro) 0.16f else 0.6f), Offset(2 * d, 0f), Size(16 * d, size.height))
                 var y = 8 * d; while (y < size.height) { drawCircle(Color.Black.copy(alpha = 0.6f), 2.4f * d, Offset(10 * d, y)); y += 13 * d }
                 drawLine(Color(0xFF00E5FF).copy(alpha = 0.3f), Offset(18 * d, 0f), Offset(18 * d, size.height), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 2 * d)))
+            }
+            Contenedor.TICKETS -> {
+                // El agujero por donde la púa atravesó los tickets, con el desgarre alrededor, y la línea de corte.
+                val y = size.height * 0.12f
+                drawCircle(Color.Black.copy(alpha = if (oscuro) 0.6f else 0.35f), 3.2f * d, Offset(20 * d, y))
+                for (k in 0 until 6) { val a = k * PI / 3; drawLine(Color.Black.copy(alpha = 0.3f), Offset(20 * d, y), Offset(20 * d + (6 * d * cos(a)).toFloat(), y + (6 * d * sin(a)).toFloat()), 0.7f * d) }
+                drawLine(Color(0xFFFF3D9A).copy(alpha = 0.35f), Offset(30 * d, 0f), Offset(30 * d, size.height), 0.8f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * d, 3 * d)))
             }
             Contenedor.CARPETA -> {
                 // El broche de dos patas que pasa por los agujeros de las hojas, con su placa de metal.
@@ -596,13 +952,45 @@ object ContenedoresMas {
                 var y = 0f; while (y < size.height) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(6 * d, y), Offset(22 * d, y), 1f); y += 2 * d }
                 drawLine(Color(0xFFE8601C).copy(alpha = 0.7f), Offset(22 * d, 0f), Offset(22 * d, size.height), 1.2f * d)
             }
+            Contenedor.INMERSION -> {
+                // Los ollaos de latón del borde, con el cabo encerado que pasa de uno a otro en zigzag.
+                val laton = if (oscuro) Color(0xFF8C6E2E) else Color(0xFFB8913E)
+                val cabo = Color(0xFFCDB88C).copy(alpha = if (oscuro) 0.6f else 0.9f)
+                val paso = 34 * d; var y = 18 * d; var k = 0
+                val zig = Path().apply { moveTo(16 * d, 18 * d) }
+                while (y < size.height - 10 * d) {
+                    drawCircle(laton, 4.4f * d, Offset(16 * d, y)); drawCircle(Color.Black.copy(alpha = 0.5f), 2 * d, Offset(16 * d, y))
+                    if (k > 0) zig.lineTo(if (k % 2 == 0) 16 * d else 4 * d, y)
+                    y += maxOf(paso, 1f); k++
+                }
+                drawPath(zig, cabo, style = Stroke(1.6f * d, cap = StrokeCap.Round))
+            }
             Contenedor.TETRAD -> {
                 // El pliegue del cuadernillo con sus dos grapas.
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent), 10 * d, 30 * d), Offset(10 * d, 4 * d), Size(20 * d, size.height - 8 * d))
                 listOf(0.3f, 0.7f).forEach { f -> val y = size.height * f; drawRect(Color(0xFFC3C6CA), Offset(14 * d, y - 9 * d), Size(3 * d, 18 * d)); drawRect(Color.Black.copy(alpha = 0.25f), Offset(17 * d, y - 9 * d), Size(1 * d, 18 * d)) }
             }
+            Contenedor.REGLA -> {
+                // El lomo cosido sobre nervios de cuero: tres correas que cruzan el pliegue, sujetas con clavos de hierro.
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.26f), Color.Transparent), 10 * d, 32 * d), Offset(10 * d, 4 * d), Size(22 * d, size.height - 8 * d))
+                val correa = if (oscuro) Color(0xFF3E2817) else Color(0xFF5A3A22)
+                listOf(0.18f, 0.5f, 0.82f).forEach { f ->
+                    val y = size.height * f
+                    drawRect(correa, Offset(0f, y - 5 * d), Size(30 * d, 10 * d))
+                    drawCircle(HIERRO, 2 * d, Offset(24 * d, y))
+                }
+            }
+            Contenedor.BOLETOS -> {
+                // El lomo de tela ocre, cosido con hilo grueso, y el elástico rojo que cruza el borde.
+                val tela = Color(0xFFC98A3A).copy(alpha = if (oscuro) 0.55f else 0.9f)
+                drawRect(tela, Offset(6 * d, 0f), Size(16 * d, size.height))
+                var y = 12 * d; while (y < size.height - 8 * d) { drawLine(Color(0xFFFBF6EA).copy(alpha = 0.75f), Offset(14 * d, y), Offset(14 * d, y + 7 * d), 1.4f * d); y += 16 * d }
+                drawRect(Color(0xFFA8432A).copy(alpha = 0.85f), Offset(0f, size.height * 0.42f), Size(26 * d, 4 * d))
+            }
             // Estas las dibuja [Contenedores].
-            Contenedor.ESPIRAL, Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.RECORTES -> {}
+            Contenedor.BIOMBO -> {}
         }
     }
 }

@@ -15,17 +15,20 @@ object IconoApp {
     /** Alias de temas que ya no existen (Día de Muertos): se conservan para que la app no se quede sin ícono al actualizar, y se apagan. */
     private val VIEJOS = listOf("IconoMuertos")
 
-    fun deseado(): TemaId = if (Repo.config.icono_tema) Estilo.tema else TemaId.ROMANO
+    /** El alias que el manifiesto deja encendido de fábrica (el del tema con que arranca la app). No es diseño: es el ícono por omisión. */
+    private val DE_FABRICA = TemaId.ROMANO
+
+    fun deseado(): TemaId = if (Repo.config.icono_tema) Estilo.tema else DE_FABRICA
 
     fun aplicar(ctx: Context) = runCatching {
         val pm = ctx.packageManager
         val quiero = deseado()
         val activo = pm.getComponentEnabledSetting(alias(ctx, quiero))
         val yaEsta = activo == PackageManager.COMPONENT_ENABLED_STATE_ENABLED ||
-            (quiero == TemaId.ROMANO && activo == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
+            (quiero == DE_FABRICA && activo == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
         val otrosApagados = TemaId.entries.filter { it != quiero }.all { t ->
             val e = pm.getComponentEnabledSetting(alias(ctx, t))
-            e == PackageManager.COMPONENT_ENABLED_STATE_DISABLED || (t != TemaId.ROMANO && e == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
+            e == PackageManager.COMPONENT_ENABLED_STATE_DISABLED || (t != DE_FABRICA && e == PackageManager.COMPONENT_ENABLED_STATE_DEFAULT)
         }
         val viejos = VIEJOS.map { ComponentName(ctx.packageName, "io.github.ruddy2003.vestigium.$it") }
         val viejosApagados = viejos.all { pm.getComponentEnabledSetting(it) != PackageManager.COMPONENT_ENABLED_STATE_ENABLED }

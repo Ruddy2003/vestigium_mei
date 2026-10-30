@@ -206,12 +206,20 @@ internal data class LaminaRascar(val oscura: Int, val media: Int, val clara: Int
 internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     // Oro imperial, algo rojizo.
     TemaId.ROMANO -> LaminaRascar(0xFF7A5410.toInt(), 0xFFCFA03A.toInt(), 0xFFF8E3A0.toInt())
+    // El bronce de las monedas que se tiran a la fuente, con su pátina.
+    TemaId.URBE -> LaminaRascar(0xFF5A3A1E.toInt(), 0xFFB07A3A.toInt(), 0xFFE8C08A.toInt())
     // Placa de consola: metal oscuro con reflejo de fósforo.
     TemaId.CIBER -> LaminaRascar(0xFF0B2530.toInt(), 0xFF2C6F80.toInt(), 0xFF8FEFFF.toInt())
+    // Una tarjeta de rasca y gana de máquina de callejón: plata con reflejo magenta.
+    TemaId.NEON -> LaminaRascar(0xFF3A2440.toInt(), 0xFF9C7AA0.toInt(), 0xFFF2C6E4.toInt())
     // Electro: la aleación pálida de oro y plata de las primeras monedas griegas.
     TemaId.HELENO -> LaminaRascar(0xFF6B6038.toInt(), 0xFFBDB27A.toInt(), 0xFFF4EFD2.toInt())
+    // Oro rojizo de Nubia, la tierra del oro.
+    TemaId.EGIPTO -> LaminaRascar(0xFF6E3A10.toInt(), 0xFFC8862E.toInt(), 0xFFF6D49A.toInt())
     // Pan de oro sobre bol rojo, como en las iniciales iluminadas.
     TemaId.MEDIEVAL -> LaminaRascar(0xFF7A3E1A.toInt(), 0xFFD4A537.toInt(), 0xFFFFF0B3.toInt())
+    // El acero de la cota de malla, frío y gris.
+    TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
     // Chapa galvanizada, azulada.
@@ -226,26 +234,40 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.NAPOLEON -> LaminaRascar(0xFF6E5A10.toInt(), 0xFFD9B82E.toInt(), 0xFFFFF4B0.toInt())
     // Bronce con verdín.
     TemaId.BOTANICO -> LaminaRascar(0xFF3E4A30.toInt(), 0xFF7E8F5E.toInt(), 0xFFD8E2B8.toInt())
+    // Hormigón gris con su polvo.
+    TemaId.RUINAS -> LaminaRascar(0xFF5A5B52.toInt(), 0xFF9C9C92.toInt(), 0xFFDCDCD2.toInt())
     // Plata escarchada.
     TemaId.NAVIDAD -> LaminaRascar(0xFF5D6B7C.toInt(), 0xFFB9C7D6.toInt(), 0xFFF7FBFF.toInt())
     // Bronce de moneda con sombra de cinabrio.
     TemaId.SEDA -> LaminaRascar(0xFF8A2414.toInt(), 0xFFC28E2C.toInt(), 0xFFF3D68A.toInt())
+    // Maki-e: polvo de oro sobre laca negra.
+    TemaId.EDO -> LaminaRascar(0xFF1C1A1D.toInt(), 0xFFB8932E.toInt(), 0xFFF1D98A.toInt())
     // Peltre de cáliz, con un tinte violeta.
     TemaId.GOTICO -> LaminaRascar(0xFF3B3644.toInt(), 0xFF7D7488.toInt(), 0xFFCFC6D8.toInt())
+    // Bronce verdoso de una placa de archivo, comido por el salitre.
+    TemaId.ARCANO -> LaminaRascar(0xFF2C3B33.toInt(), 0xFF5E7A6A.toInt(), 0xFFBFD0C4.toInt())
     // Titanio anodizado azul.
     TemaId.ESPACIO -> LaminaRascar(0xFF1E2A4A.toInt(), 0xFF4E6AA8.toInt(), 0xFFBFD0FF.toInt())
+    // Cobre con verdín de un pecio.
+    TemaId.ABISMO -> LaminaRascar(0xFF1F4A46.toInt(), 0xFF3F8A78.toInt(), 0xFFB8E6D6.toInt())
     // Latón verdoso de las lámparas nazaríes.
     TemaId.ANDALUS -> LaminaRascar(0xFF5C5418.toInt(), 0xFFB5A646.toInt(), 0xFFEDE6A8.toInt())
+    // Estuco pintado de cinabrio, como los muros de los templos.
+    TemaId.MESO -> LaminaRascar(0xFF5A1A10.toInt(), 0xFFA3301E.toInt(), 0xFFE8B49A.toInt())
     // Plata sobredorada de la estepa.
     TemaId.MONGOL -> LaminaRascar(0xFF6A5030.toInt(), 0xFFC09A68.toInt(), 0xFFF4E2C4.toInt())
     // Bronce de taller, pardo.
     TemaId.RENACIMIENTO -> LaminaRascar(0xFF4E3C24.toInt(), 0xFF96784C.toInt(), 0xFFE2CFA6.toInt())
+    // Latón de instrumento náutico, verdoso por el salitre.
+    TemaId.PIRATA -> LaminaRascar(0xFF4A4224.toInt(), 0xFFA88A3E.toInt(), 0xFFE8D79A.toInt())
     // Acero ennegrecido, para que resalten las estrellas rojas.
     TemaId.URSS -> LaminaRascar(0xFF1C1C1E.toInt(), 0xFF4A4A4E.toInt(), 0xFFA8A8AE.toInt())
     // Estaño de botón de uniforme.
     TemaId.REVOLUCION -> LaminaRascar(0xFF55524C.toInt(), 0xFFA8A398.toInt(), 0xFFEDE9DF.toInt())
     // Hierro viejo de las minas, cálido.
     TemaId.ANTIGUAS -> LaminaRascar(0xFF3A342C.toInt(), 0xFF7B6E5C.toInt(), 0xFFD1C3A8.toInt())
+    // Una capa de ocre soplado sobre la roca: el rojo de la hematita y su brillo.
+    TemaId.CUEVA -> LaminaRascar(0xFF5A2A14.toInt(), 0xFFA2401F.toInt(), 0xFFE0A070.toInt())
 }
 
 private fun conAlfaLamina(c: Int, a: Int): Int = (c and 0x00FFFFFF) or (a shl 24)
@@ -304,6 +326,15 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             }
             c.drawCircle(l * 0.86f, l * 0.2f, l * 0.035f, relleno); c.drawCircle(l * 0.8f, l * 0.13f, l * 0.035f, relleno)
         }
+        TemaId.URBE -> {
+            // Los sampietrini puestos «en cola de pavo real»: abanicos de arcos con sus adoquines, uno junto al otro.
+            for (cx in listOf(0f, l)) for (k in 1..3) {
+                val rr = l * 0.17f * k
+                c.drawArc(RectF(cx - rr + l * 0.5f * (if (cx == 0f) 1f else -1f), l - rr, cx + rr + l * 0.5f * (if (cx == 0f) 1f else -1f), l + rr), 180f, 180f, false, linea)
+            }
+            for (k in 0 until 5) { val a = Math.toRadians(200.0 + k * 35.0); val x = l * 0.5f + (l * 0.42f * kotlin.math.cos(a)).toFloat(); val y = l + (l * 0.42f * kotlin.math.sin(a)).toFloat()
+                c.drawRect(x - l * 0.03f, y - l * 0.03f, x + l * 0.03f, y + l * 0.03f, relleno) }
+        }
         TemaId.CIBER -> {
             // Pistas de circuito impreso: una línea que cruza con su desvío a 45°, un bus vertical, un pad y un chip con patas.
             c.drawPath(Path().apply {
@@ -315,12 +346,30 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawRect(l * 0.62f, l * 0.58f, l * 0.9f, l * 0.84f, linea)
             for (x in listOf(0.67f, 0.76f, 0.85f)) { c.drawLine(l * x, l * 0.52f, l * x, l * 0.58f, linea); c.drawLine(l * x, l * 0.84f, l * x, l * 0.9f, linea) }
         }
+        TemaId.NEON -> {
+            // Letreros de la calle: una placa redonda con un tazón, un letrero vertical con sus tres «letras» y gotas.
+            c.drawRoundRect(RectF(l * 0.08f, l * 0.12f, l * 0.52f, l * 0.36f), l * 0.12f, l * 0.12f, linea)
+            c.drawArc(RectF(l * 0.18f, l * 0.1f, l * 0.42f, l * 0.3f), 0f, 180f, false, linea)
+            c.drawRect(l * 0.68f, l * 0.08f, l * 0.84f, l * 0.6f, linea)
+            for (k in 0 until 3) { val y = l * (0.16f + k * 0.15f); c.drawLine(l * 0.72f, y, l * 0.8f, y, linea); c.drawLine(l * 0.76f, y, l * 0.76f, y + l * 0.08f, linea) }
+            for ((x, y) in listOf(0.2f to 0.6f, 0.38f to 0.78f, 0.56f to 0.66f, 0.88f to 0.86f)) c.drawLine(l * x, l * y, l * (x - 0.03f), l * (y + 0.1f), linea)
+        }
         TemaId.HELENO -> {
             // Greca: la línea de base corrida y, sobre ella, la espiral cuadrada del meandro.
             c.drawPath(Path().apply {
                 moveTo(0f, l * 0.82f); lineTo(l, l * 0.82f)
                 moveTo(l * 0.85f, l * 0.82f); lineTo(l * 0.85f, l * 0.18f); lineTo(l * 0.15f, l * 0.18f); lineTo(l * 0.15f, l * 0.62f)
                 lineTo(l * 0.62f, l * 0.62f); lineTo(l * 0.62f, l * 0.4f); lineTo(l * 0.4f, l * 0.4f)
+            }, linea)
+        }
+        TemaId.EGIPTO -> {
+            // El ankh grabado sobre el signo del agua (una línea en zigzag), que corre de una tesela a la otra.
+            c.drawPath(Path().apply {
+                moveTo(0f, l * 0.85f); var x = 0f; var arriba = true
+                while (x < l - 0.01f) { x += maxOf(l * 0.1f, 1f); lineTo(x, if (arriba) l * 0.79f else l * 0.91f); arriba = !arriba }
+                addOval(l * 0.38f, l * 0.1f, l * 0.62f, l * 0.38f, Path.Direction.CW)
+                moveTo(l * 0.26f, l * 0.42f); lineTo(l * 0.74f, l * 0.42f)
+                moveTo(l * 0.5f, l * 0.38f); lineTo(l * 0.5f, l * 0.7f)
             }, linea)
         }
         TemaId.MEDIEVAL -> tresbolillo { x, y ->
@@ -333,6 +382,23 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 moveTo(x - s * 0.3f, y + s * 0.4f); lineTo(x + s * 0.3f, y + s * 0.4f); lineTo(x, y + s * 1.1f); close()
             }, relleno)
             c.drawRect(x - s * 0.6f, y + s * 0.18f, x + s * 0.6f, y + s * 0.4f, relleno)
+        }
+        TemaId.TEMPLARIO -> {
+            // La cota de malla: hileras de anillas que se cruzan (cada una corre media anilla) y, al centro, la cruz patada.
+            val ra = l / 8f
+            val fino = Paint(linea).apply { strokeWidth = l * 0.02f }
+            for (j in 0..8) for (i in 0..4) c.drawCircle(i * l / 4f + (if (j % 2 == 0) 0f else l / 8f), j * l / 8f, ra, fino)
+            c.drawPath(Path().apply {
+                val x = l / 2; val y = l / 2; val s = l * 0.22f
+                for (k in 0 until 4) {
+                    val a = Math.toRadians(90.0 * k - 90); val dx = Math.cos(a).toFloat(); val dy = Math.sin(a).toFloat()
+                    fun px(fr: Float, q: Float) = x + dx * s * fr - dy * s * q
+                    fun py(fr: Float, q: Float) = y + dy * s * fr + dx * s * q
+                    if (k == 0) moveTo(px(0.14f, -0.14f), py(0.14f, -0.14f)) else lineTo(px(0.14f, -0.14f), py(0.14f, -0.14f))
+                    lineTo(px(1f, -0.42f), py(1f, -0.42f)); lineTo(px(1f, 0.42f), py(1f, 0.42f))
+                }
+                close()
+            }, relleno)
         }
         TemaId.DISTOPIA -> tresbolillo { x, y ->
             // El ojo que todo lo mira.
@@ -388,6 +454,13 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 for (izquierda in listOf(true, false)) girado(l * 0.5f, y, if (izquierda) 200f else -20f) { c.drawOval(RectF(0f, -l * 0.03f, largo, l * 0.03f), relleno) }
             }
         }
+        TemaId.RUINAS -> {
+            // Una hoja de hiedra grande y la grieta del hormigón que sale de su tallo.
+            val p = android.graphics.Path().apply { moveTo(l * 0.5f, l * 0.86f); lineTo(l * 0.24f, l * 0.72f); lineTo(l * 0.1f, l * 0.48f); lineTo(l * 0.34f, l * 0.48f); lineTo(l * 0.5f, l * 0.12f); lineTo(l * 0.66f, l * 0.48f); lineTo(l * 0.9f, l * 0.48f); lineTo(l * 0.76f, l * 0.72f); close() }
+            c.drawPath(p, relleno)
+            c.drawLine(l * 0.5f, l * 0.86f, l * 0.5f, l * 0.3f, linea)
+            c.drawLine(l * 0.5f, l * 0.86f, l * 0.42f, l * 0.94f, linea); c.drawLine(l * 0.42f, l * 0.94f, l * 0.47f, l, linea)
+        }
         TemaId.NAVIDAD -> tresbolillo { x, y ->
             // Copos de seis brazos, cada brazo con su par de ramitas.
             val r = l * 0.17f
@@ -402,12 +475,35 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawCircle(x, y, r, linea); c.drawRect(x - h, y - h, x + h, y + h, linea)
             for (i in 0 until 4) girado(x, y, i * 90f) { c.drawRect(-r * 0.08f, -r * 0.8f, r * 0.08f, -r * 0.55f, relleno) }
         }
+        TemaId.EDO -> tresbolillo { x, y ->
+            // Asanoha: la estrella de seis puntas de hojas de cáñamo de las telas de Edo.
+            val r = l * 0.26f
+            for (k in 0 until 6) { val a = Math.toRadians(k * 60.0); c.drawLine(x, y, x + (r * kotlin.math.cos(a)).toFloat(), y + (r * kotlin.math.sin(a)).toFloat(), linea) }
+            c.drawCircle(x, y, l * 0.025f, relleno)
+        }
         TemaId.GOTICO -> {
             // Cuadrifolio de tracería en el centro y estrellas de bóveda en las esquinas.
             val cx = l / 2; val cy = l / 2; val r = l * 0.085f
             for ((dx, dy) in listOf(0f to -1f, 1f to 0f, 0f to 1f, -1f to 0f)) c.drawCircle(cx + dx * r, cy + dy * r, r, linea)
             c.drawCircle(cx, cy, r * 2.5f, linea)
             for (x in listOf(0f, l)) for (y in listOf(0f, l)) c.drawPath(estrellaLamina(x, y, l * 0.09f, 8, 0.4f), relleno)
+        }
+        TemaId.ARCANO -> {
+            // El signo en el centro (el heptágono abierto con el ojo) y, en las esquinas, puntas que se enroscan hacia dentro.
+            val cx = l / 2; val cy = l / 2; val r = l * 0.2f
+            val sig = android.graphics.Path()
+            for (k in 0..6) { val a = -Math.PI / 2 + k * 2 * Math.PI / 7; val x = cx + r * kotlin.math.cos(a).toFloat(); val y = cy + r * kotlin.math.sin(a).toFloat(); if (k == 0) sig.moveTo(x, y) else sig.lineTo(x, y) }
+            c.drawPath(sig, linea)
+            val ojo = android.graphics.Path().apply { moveTo(cx - r * 0.6f, cy); quadTo(cx, cy - r * 0.62f, cx + r * 0.6f, cy); quadTo(cx, cy + r * 0.62f, cx - r * 0.6f, cy); close() }
+            c.drawPath(ojo, linea)
+            c.drawOval(cx - r * 0.07f, cy - r * 0.22f, cx + r * 0.07f, cy + r * 0.22f, relleno)
+            for (x in listOf(0f, l)) for (y in listOf(0f, l)) {
+                val sx = if (x == 0f) 1f else -1f; val sy = if (y == 0f) 1f else -1f
+                c.drawPath(android.graphics.Path().apply {
+                    moveTo(x, y + sy * l * 0.02f); quadTo(x + sx * l * 0.1f, y + sy * l * 0.02f, x + sx * l * 0.12f, y + sy * l * 0.1f)
+                    quadTo(x + sx * l * 0.13f, y + sy * l * 0.16f, x + sx * l * 0.08f, y + sy * l * 0.14f)
+                }, linea)
+            }
         }
         TemaId.ESPACIO -> {
             // Una constelación unida por líneas y un destello de cuatro puntas.
@@ -418,6 +514,18 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             }, linea)
             estrellas.forEach { (x, y) -> c.drawCircle(l * x, l * y, l * 0.035f, relleno) }
             c.drawPath(estrellaLamina(l * 0.26f, l * 0.72f, l * 0.13f, 4, 0.25f), relleno)
+        }
+        TemaId.ABISMO -> {
+            // Conchas de abanico al tresbolillo, con sus costillas, y una rama de coral en el hueco.
+            tresbolillo { x, y ->
+                val r = l * 0.16f
+                c.drawPath(Path().apply { moveTo(x, y + r * 0.5f); lineTo(x - r, y - r * 0.2f); quadTo(x, y - r * 1.3f, x + r, y - r * 0.2f); close() }, relleno)
+                for (k in -2..2) c.drawLine(x, y + r * 0.5f, x + k * r * 0.4f, y - r * (0.5f + 0.15f * (2 - kotlin.math.abs(k))), linea)
+            }
+            c.drawPath(Path().apply {
+                moveTo(l * 0.5f, l * 0.98f); lineTo(l * 0.5f, l * 0.78f); lineTo(l * 0.42f, l * 0.66f)
+                moveTo(l * 0.5f, l * 0.78f); lineTo(l * 0.6f, l * 0.68f); lineTo(l * 0.58f, l * 0.6f)
+            }, linea)
         }
         TemaId.ANDALUS -> {
             // Lazo de ocho: estrellas de dos cuadrados girados y, entre ellas, rombos que las enlazan.
@@ -430,6 +538,17 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 val m = l * 0.05f
                 c.drawPath(Path().apply { moveTo(x, y - m); lineTo(x + m, y); lineTo(x, y + m); lineTo(x - m, y); close() }, relleno)
             }
+        }
+        TemaId.MESO -> {
+            // Grecas escalonadas (tres gradas y el gancho en espiral) y, entre ellas, puntos como los de los numerales.
+            tresbolillo { x, y ->
+                val s = l * 0.05f
+                c.drawPath(Path().apply {
+                    moveTo(x - 3 * s, y + 2 * s); lineTo(x - 2 * s, y + 2 * s); lineTo(x - 2 * s, y + s); lineTo(x - s, y + s); lineTo(x - s, y); lineTo(x, y)
+                    lineTo(x, y - 2 * s); lineTo(x + 3 * s, y - 2 * s); lineTo(x + 3 * s, y + s); lineTo(x + 1.2f * s, y + s); lineTo(x + 1.2f * s, y - 0.6f * s)
+                }, linea)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, 0f to l / 2, l to l / 2, l / 2 to l)) c.drawCircle(x, y, l * 0.025f, relleno)
         }
         TemaId.MONGOL -> tresbolillo { x, y ->
             // Cuerno de carnero: dos espirales que se abren desde un tallo.
@@ -448,6 +567,14 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawRect(l * 0.25f, l * 0.25f, l * 0.75f, l * 0.75f, linea)
             c.drawLine(l * 0.25f, l * 0.25f, l * 0.75f, l * 0.75f, linea); c.drawLine(l * 0.75f, l * 0.25f, l * 0.25f, l * 0.75f, linea)
             for (x in listOf(0f, l)) for (y in listOf(0f, l)) { c.drawLine(x - l * 0.06f, y, x + l * 0.06f, y, linea); c.drawLine(x, y - l * 0.06f, x, y + l * 0.06f, linea) }
+        }
+        TemaId.PIRATA -> tresbolillo { x, y ->
+            // Una rosa de ocho rumbos pequeña y, a su lado, la «X» del tesoro.
+            for (k in 0 until 8) { val a = Math.toRadians(45.0 * k); val rr = if (k % 2 == 0) l * 0.16f else l * 0.09f
+                c.drawLine(x, y, x + (rr * kotlin.math.cos(a)).toFloat(), y + (rr * kotlin.math.sin(a)).toFloat(), linea) }
+            c.drawCircle(x, y, l * 0.05f, linea)
+            val xx = x + l * 0.24f; val yy = y + l * 0.2f; val s = l * 0.045f
+            c.drawLine(xx - s, yy - s, xx + s, yy + s, linea); c.drawLine(xx + s, yy - s, xx - s, yy + s, linea)
         }
         TemaId.URSS -> tresbolillo { x, y ->
             // Estrellas rojas sobre el acero.
@@ -480,6 +607,13 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 c.drawPath(Path().apply { moveTo(x, y - s * 0.45f); lineTo(x + s * 0.4f, y); lineTo(x, y + s * 0.45f); lineTo(x - s * 0.4f, y); close() }, linea)
             }
             ramas(l * 0.3f, l * 0.5f); rombo(l * 0.72f, l * 0.5f)
+        }
+        TemaId.CUEVA -> {
+            // Signos de las paredes: una hilera de puntos y, debajo, un trazo con dos puntos, como los que acompañan a los animales.
+            val s = l * 0.06f
+            for (k in 0 until 4) c.drawCircle(l * (0.3f + k * 0.13f), l * 0.4f + (k % 2) * s, s, relleno)
+            c.drawLine(l * 0.3f, l * 0.62f, l * 0.62f, l * 0.6f, linea)
+            c.drawCircle(l * 0.7f, l * 0.61f, s * 0.8f, relleno); c.drawCircle(l * 0.78f, l * 0.6f, s * 0.8f, relleno)
         }
     }
 }

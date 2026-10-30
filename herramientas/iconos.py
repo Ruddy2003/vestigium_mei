@@ -41,19 +41,43 @@ def travertino(sem):     # Romano: travertino con poros alargados en capas
     capas = np.sin(Y * 0.18 + ruido(sem + 4, 3, 12)) * 0.2
     return base + capas - poros * 1.2
 
+def revoque(sem):        # Roma: revoque ocre de fachada, con manchas donde se descascara y alguna hilada de ladrillo
+    base = ruido(sem, 1.0, 5) * 0.5
+    manchas = (ruido(sem + 5, 1, 22) > 0.9).astype(np.float32)
+    manchas = np.asarray(Image.fromarray((manchas * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(3)), np.float32) / 255
+    hiladas = ((Y % 18) < 1.6).astype(np.float32) * manchas
+    return base - manchas * 0.5 - hiladas * 0.9
+
 def pantalla(sem):       # Ciber: líneas de barrido y una retícula muy tenue
     lineas = (np.sin(Y * math.pi / 2) > 0.7) * -0.5
     reticula = ((X % 27 < 1) | (Y % 27 < 1)) * 0.6
     return lineas + reticula + ruido(sem, 0.25)
+
+def callejon(sem):       # Ciudad neón: llovizna en diagonal sobre el asfalto mojado, con manchas de luz de letrero
+    lluvia = (np.sin((X * 0.35 + Y * 1.2) * 0.9 + ruido(sem, 8, 0)) > 0.985) * 0.9
+    charcos = ruido(sem + 1, 1.0, 26) * 0.7
+    return lluvia + charcos + ruido(sem + 2, 0.2)
 
 def pario(sem):          # Helénico: mármol de Paros, blanco y fino, con vetas cortas y suaves
     t = ruido(sem, 4.0, 18)
     vetas = np.abs(np.sin((X * 0.8 - Y * 1.2) / TAM * 14 + t * 2.2)) ** 30 * -0.7
     return vetas + ruido(sem + 1, 0.35, 2) + ruido(sem + 2, 0.4, 24)
 
+def papiro_nilo(sem):    # Egipto: papiro, las tiras en dos capas que se cruzan (las horizontales más marcadas) y una unión de hojas
+    t = ruido(sem, 3.0, 20)
+    horiz = np.sin(Y * 1.7 + t * 1.5) * 0.35
+    vert = np.sin(X * 0.9 + ruido(sem + 2, 2.0, 16)) * 0.18
+    union = (np.abs(X - TAM * 0.68) < 5) * -0.5
+    return horiz + vert + union + ruido(sem + 3, 0.3, 1)
+
 def vitela(sem):         # Scriptorium: vitela con manchas cálidas y poros de folículo
     poros = (ruido(sem, 1, 0) > 2.6) * -0.9
     return ruido(sem + 1, 1.0, 22) * 0.8 + ruido(sem + 2, 0.3) + poros
+
+def lino(sem):           # Templario: el lino de la sobreveste, en tafetán (trama y urdimbre), con polvo de arena
+    trama = np.sin(X * 1.9 + ruido(sem, 0.8, 3)) * 0.22 + np.sin(Y * 1.9 + ruido(sem + 1, 0.8, 3)) * 0.22
+    arena = (ruido(sem + 2, 1, 0) > 2.4) * -0.6
+    return trama + arena + ruido(sem + 3, 0.6, 20)
 
 def papel(sem):          # Distopía: papel con fibras y grano
     f = ruido(sem, 0.5) + ruido(sem + 1, 1.2, 6)
@@ -89,6 +113,12 @@ def herbario(sem):       # Botánico: papel de herbario con fibras y nervaduras 
     nerv = (np.abs(np.sin((X - Y * 0.6) * 0.035 + ruido(sem, 1.5, 16))) < 0.04) * -0.8
     return ruido(sem + 1, 0.9, 5) * 0.7 + ruido(sem + 2, 0.35) + nerv
 
+def hormigon_agrietado(sem):   # Ciudad verde: hormigón con grietas finas que se cruzan y manchas de musgo
+    t = ruido(sem, 6, 12)
+    grietas = (np.abs(np.sin(X * 0.03 + Y * 0.017 + t)) < 0.025) * -1.0 + (np.abs(np.sin(X * 0.011 - Y * 0.04 + t * 1.3)) < 0.02) * -0.8
+    musgo = np.clip(ruido(sem + 3, 1.0, 22) - 0.5, 0, 2) * -0.6
+    return ruido(sem + 1, 0.7, 2) * 0.6 + ruido(sem + 2, 0.4, 14) + grietas + musgo
+
 def fieltro_nieve(sem):  # Navidad: fieltro con copitos de nieve
     copos = (ruido(sem, 1, 0) > 2.7) * 1.4
     return ruido(sem + 1, 0.8, 1.5) + ruido(sem + 2, 0.4, 14) + copos
@@ -98,18 +128,53 @@ def seda(sem):           # Seda: tejido fino de hilos horizontales y verticales 
     brillo = np.sin((X + Y) * 0.02 + ruido(sem, 2, 20)) * 0.5
     return trama + brillo + ruido(sem + 1, 0.2)
 
+def washi(sem):          # Japón Edo: papel washi con sus fibras largas de kōzo, enredadas, sobre un grano suave
+    rng = np.random.default_rng(sem)
+    capa = Image.new('L', (TAM, TAM), 128); d = ImageDraw.Draw(capa)
+    for _ in range(260):
+        x, y = rng.uniform(0, TAM, 2); a = rng.uniform(0, math.pi); l = rng.uniform(14, 60)
+        pts = [(x + t * l * math.cos(a) + 3 * math.sin(t * 6 + x), y + t * l * math.sin(a) + 3 * math.cos(t * 5 + y)) for t in np.linspace(0, 1, 8)]
+        d.line(pts, fill=int(rng.choice([150, 165, 105])), width=1)
+    fibras = (np.asarray(capa.filter(ImageFilter.GaussianBlur(0.6)), np.float32) - 128) / 22
+    return fibras * 0.8 + ruido(sem + 1, 0.35, 3) + ruido(sem + 2, 0.25, 18)
+
 def piedra(sem):         # Gótico: piedra con manchas y poros
     return ruido(sem, 1.0, 14) * 0.9 + ruido(sem + 1, 0.4, 1) + (ruido(sem + 2, 1, 0) > 2.3) * -1.2
+
+def archivo_manchado(sem):  # Horror cósmico: papel de archivo con manchas de humedad, cercos de taza y fibras
+    manchas = ruido(sem, 1.0, 22) * 0.8
+    cx, cy, rr = TAM * 0.68, TAM * 0.3, TAM * 0.2
+    d = np.sqrt((X - cx) ** 2 + (Y - cy) ** 2)
+    cerco = -np.exp(-((d - rr) / 3.0) ** 2) * 0.9
+    fibras = np.sin(Y * 0.9 + ruido(sem + 1, 3, 6)) * 0.12
+    return manchas + cerco + fibras + ruido(sem + 2, 0.25)
 
 def polvo_estelar(sem):  # Espacio: polvo de estrellas y una nebulosa apenas visible
     estrellas = (ruido(sem, 1, 0) > 2.9) * 1.6
     return estrellas + ruido(sem + 1, 0.8, 40) + ruido(sem + 2, 0.15)
+
+def agua_abisal(sem):    # Abismo: la red de luz del oleaje (cáusticas), muy tenue, y nieve marina que cae
+    yy, xx = np.mgrid[0:TAM, 0:TAM].astype(np.float32)
+    causticas = np.abs(np.sin(xx / 23 + np.sin(yy / 31) * 2.1) * np.sin(yy / 19 + np.sin(xx / 27) * 1.7))
+    nieve = (ruido(sem, 1, 0) > 2.8) * 1.2
+    return (causticas < 0.08) * 1.1 + nieve + ruido(sem + 1, 0.6, 30)
 
 def lazo(sem):           # Al-Ándalus: lazo de ocho, apenas grabado
     u, v = (X % 54) - 27, (Y % 54) - 27
     a = np.maximum(np.abs(u), np.abs(v)); b = (np.abs(u) + np.abs(v)) / math.sqrt(2)
     estrella = np.maximum(a, b)
     return (np.abs(estrella - 15) < 1) * -0.7 + ruido(sem, 0.25, 2)
+
+def amate(sem):          # Mesoamérica: papel amate, la corteza golpeada en una red de fibras que se cruzan sin orden
+    r = np.random.default_rng(sem)
+    campo = np.zeros((TAM, TAM), np.float32)
+    img = Image.new('L', (TAM, TAM), 0); d = ImageDraw.Draw(img)
+    for _ in range(260):
+        x, y = r.random() * TAM, r.random() * TAM
+        a = (r.random() - 0.5) * 0.9 + (0 if r.random() < 0.5 else math.pi / 2); l = 12 + r.random() * 40
+        d.line([(x, y), (x + math.cos(a) * l, y + math.sin(a) * l)], fill=255, width=1)
+    campo = np.asarray(img.filter(ImageFilter.GaussianBlur(0.6)), np.float32) / 255
+    return ruido(sem + 1, 0.5, 6) - campo * 0.9 + ruido(sem + 2, 0.25, 1)
 
 def fieltro(sem):        # Mongol: fieltro de yurta, grueso y moteado
     return ruido(sem, 1.0, 3) * 0.8 + ruido(sem + 1, 0.7, 10) + ruido(sem + 2, 0.4, 0.8)
@@ -119,6 +184,13 @@ def construccion(sem):   # Renacimiento: papel con los trazos de construcción d
     d2 = np.abs(X - Y) < 0.8
     d3 = np.abs(X + Y - TAM) < 0.8
     return (d1 | d2 | d3) * -0.7 + ruido(sem, 0.8, 18) + ruido(sem + 1, 0.3)
+
+def carta_nautica(sem):  # Pirata: pergamino húmedo de carta náutica, con líneas de rumbo y manchas de agua
+    cx, cy = TAM * 0.78, TAM * 0.2
+    ang = np.arctan2(Y - cy, X - cx)
+    rumbos = (np.abs(((ang / (2 * math.pi / 16)) + 0.5) % 1 - 0.5) < 0.012) * -0.55
+    manchas = np.clip(ruido(sem + 2, 1.0, 30) - 0.6, 0, 2) * -0.9
+    return rumbos + manchas + ruido(sem, 0.7, 14) + ruido(sem + 1, 0.3)
 
 def cartel(sem):         # Soviético: papel de cartel con una trama de medios tonos muy leve
     trama = (np.sin(X * 0.9) * np.sin(Y * 0.9) > 0.55) * -0.6
@@ -134,6 +206,11 @@ def pizarra(sem):        # Tierras Antiguas: pizarra en lajas
     lajas = (np.abs(np.sin(Y * 0.045 + X * 0.01 + ruido(sem + 1, 2, 20))) < 0.03) * -1.0
     return capas + lajas + ruido(sem + 2, 0.4, 1.2)
 
+def caliza(sem):         # Prehistoria: caliza de la pared de la cueva, con estratos que ondulan y motas de ocre
+    estratos = np.sin(Y * 0.06 + np.sin(X * 0.02) * 2 + ruido(sem, 3, 24)) * 0.4
+    motas = (ruido(sem + 1, 1.0, 2) > 2.1) * -1.2
+    return estratos + motas + ruido(sem + 2, 0.45, 1.0)
+
 
 # ---- motivos del anillo: se dibujan sobre el anillo, en coordenadas del lienzo grande (×K).
 def _pos(ang, r=RADIO): return (TAM / 2 + r * math.cos(ang)) * K, (TAM / 2 + r * math.sin(ang)) * K
@@ -147,14 +224,38 @@ def _hojitas(d, c, n=16):             # laurel: dos hojas a cada lado de la rama
             p = [(x + s * math.cos(ang + t) * (1 if t == 0 else 0.35), y + s * math.sin(ang + t) * (1 if t == 0 else 0.35)) for t in (0, math.pi / 2, math.pi, 3 * math.pi / 2)]
             d.polygon(p, fill=c)
 
+def _cupolas(d, c, n=8, r=8.5):       # cúpulas: medio disco hacia afuera con su linterna, como el perfil de los tejados
+    for i in range(n):
+        a = 2 * math.pi * i / n + math.pi / n
+        x, y = _pos(a); g = math.degrees(a)
+        d.pieslice([x - r * K, y - r * K, x + r * K, y + r * K], g - 90, g + 90, fill=c)
+        lx, ly = _pos(a, RADIO + r + 1.6)
+        d.ellipse([lx - 1.4 * K, ly - 1.4 * K, lx + 1.4 * K, ly + 1.4 * K], fill=c)
+
 def _rayas(d, c, n=32, largo=0.6):    # segmentos sobre el anillo (como una barra de carga)
     for i in range(n):
         a0 = 2 * math.pi * i / n; a1 = a0 + 2 * math.pi / n * largo
         d.arc([(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K], math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K * 1.6))
 
+def _tubos(d, c, n=3, hueco=0.2):    # el anillo como un tubo de neón partido en tramos, con sus grapas
+    caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
+    for i in range(n):
+        a0 = 2 * math.pi * i / n + hueco; a1 = 2 * math.pi * (i + 1) / n - hueco
+        d.arc(caja, math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K * 1.5))
+        for a in (a0 + 0.25, a1 - 0.25):
+            x0, y0 = _pos(a, RADIO - 5); x1, y1 = _pos(a, RADIO + 5)
+            d.line([(x0, y0), (x1, y1)], fill=c, width=int(GROSOR * K * 0.7))
+
 def _perlas(d, c, n=28, r=2.4):
     for i in range(n):
         x, y = _pos(2 * math.pi * i / n); d.ellipse([x - r * K, y - r * K, x + r * K, y + r * K], fill=c)
+
+def _cenefa(d, c, n=36, s=3.6):       # Egipto: la cenefa de rectángulos de las pinturas, uno lleno y uno hueco
+    for i in range(n):
+        a = 2 * math.pi * i / n; da = math.pi / n * 0.62
+        p = [_pos(a - da, RADIO - s), _pos(a + da, RADIO - s), _pos(a + da, RADIO + s), _pos(a - da, RADIO + s)]
+        if i % 2 == 0: d.polygon(p, fill=c)
+        else: d.polygon(p, outline=c, width=int(K * 1.2))
 
 def _cuadrifolios(d, c, n=12):
     for i in range(n):
@@ -162,6 +263,15 @@ def _cuadrifolios(d, c, n=12):
         for k in range(4):
             u = a + k * math.pi / 2; cx, cy = x + 2.1 * K * math.cos(u), y + 2.1 * K * math.sin(u)
             d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c)
+
+def _cruces_patadas(d, c, n=10, s=4.6):   # cruces patadas del Temple sobre el anillo
+    for i in range(n):
+        a = 2 * math.pi * i / n; x, y = _pos(a); pts = []
+        for k in range(4):
+            u = math.radians(90 * k - 90); dx, dy = math.cos(u), math.sin(u); nx, ny = -dy, dx
+            for f_, q in ((0.15, -0.15), (1, -0.42), (1, 0.42)):
+                pts.append((x + (dx * f_ + nx * q) * s * K, y + (dy * f_ + ny * q) * s * K))
+        d.polygon(pts, fill=c)
 
 def _marcas(d, c, n=48, largo=6, cada=4, largo2=10):   # muescas radiales (las de cada [cada], más largas)
     for i in range(n):
@@ -195,12 +305,33 @@ def _estrellas(d, c, n=12, s=5.0, puntas=5):
             p.append((x + r * math.cos(u), y + r * math.sin(u)))
         d.polygon(p, fill=c)
 
+def _puntos_barras(d, c, n=14):        # Mesoamérica: numerales mayas en el anillo, el siete: la barra por fuera y dos puntos por dentro
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        ca, sa = math.cos(a + math.pi / 2), math.sin(a + math.pi / 2)
+        x, y = _pos(a, RADIO + 4.6); l = 4.4 * K; g = 1.3 * K
+        cx, cy = math.cos(a), math.sin(a)
+        d.polygon([(x - ca * l - cx * g, y - sa * l - cy * g), (x + ca * l - cx * g, y + sa * l - cy * g),
+                   (x + ca * l + cx * g, y + sa * l + cy * g), (x - ca * l + cx * g, y - sa * l + cy * g)], fill=c)
+        for lado in (-1, 1):
+            px, py = _pos(a + lado * 0.045, RADIO - 4.4); r = 1.6 * K
+            d.ellipse([px - r, py - r, px + r, py + r], fill=c)
+
 def _hojas_alternas(d, c, n=18):
     for i in range(n):
         a = 2 * math.pi * i / n; lado = 1 if i % 2 else -1
         x, y = _pos(a, RADIO + lado * 4); s = 5 * K; ang = a + math.pi / 2 + lado * 0.6
         d.ellipse([x - s * 0.5, y - s * 0.5, x + s * 0.5, y + s * 0.5], fill=c)
         d.line([_pos(a), (x + s * 0.5 * math.cos(ang), y + s * 0.5 * math.sin(ang))], fill=c, width=K)
+
+def _hiedra(d, c, n=14):               # hojas de hiedra de cinco puntas, alternas hacia fuera y hacia dentro del anillo
+    pts = [(0, 0.5), (-0.55, 0.35), (-0.8, -0.05), (-0.32, -0.05), (0, -0.5), (0.32, -0.05), (0.8, -0.05), (0.55, 0.35)]
+    for i in range(n):
+        a = 2 * math.pi * i / n; lado = 1 if i % 2 else -1
+        x, y = _pos(a, RADIO + lado * 6); s = 8.5 * K
+        ang = a + (0 if lado > 0 else math.pi)             # la punta mira hacia fuera o hacia dentro
+        ca, sa = math.cos(ang + math.pi / 2), math.sin(ang + math.pi / 2)
+        d.polygon([(x + (px * ca - py * sa) * s, y + (px * sa + py * ca) * s) for px, py in pts], fill=c)
 
 def _copos(d, c, n=12, s=5.2):
     for i in range(n):
@@ -214,6 +345,15 @@ def _monedas(d, c, fondo, n=10):      # monedas con agujero cuadrado
         x, y = _pos(2 * math.pi * i / n); r = 5 * K; q = 1.6 * K
         d.ellipse([x - r, y - r, x + r, y + r], fill=c); d.rectangle([x - q, y - q, x + q, y + q], fill=fondo)
 
+def _sellos(d, c, n=12):              # sellos hanko cuadrados, con su marco en reserva y un trazo
+    for i in range(n):
+        ang = 2 * math.pi * i / n; x, y = _pos(ang); s = 5.4 * K; q = 3.3 * K
+        cs, sn = math.cos(math.radians(-4)), math.sin(math.radians(-4))   # derechos, apenas torcidos, como estampados a mano
+        def rot(px, py): return (x + px * cs - py * sn, y + px * sn + py * cs)
+        d.polygon([rot(-s, -s), rot(s, -s), rot(s, s), rot(-s, s)], fill=c)
+        d.polygon([rot(-q, -q), rot(q, -q), rot(q, q), rot(-q, q)], outline=(0, 0, 0, 0), width=int(K * 0.9))
+        d.line([rot(0, -q * 0.7), rot(0, q * 0.7)], fill=(0, 0, 0, 0), width=int(K * 0.9))
+
 def _trebol(d, c, n=12):
     for i in range(n):
         a = 2 * math.pi * i / n; x, y = _pos(a, RADIO + 1)
@@ -221,12 +361,30 @@ def _trebol(d, c, n=12):
             u = a + k * 0.04; cx, cy = _pos(u, RADIO + 3 + (2.5 if k == 0 else 0))
             r = 2.1 * K; d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c)
 
+def _ganchos(d, c, n=7):                # horror cósmico: puntas que se enroscan sobre el anillo, con un punto entre una y otra
+    for i in range(n):
+        a = -math.pi / 2 + i * 2 * math.pi / n
+        x, y = _pos(a)
+        g = math.degrees(a)
+        for k, rr in enumerate((10.5, 6.0)):
+            s = rr * K
+            d.arc([x - s, y - s, x + s, y + s], g + 40 + k * 60, g + 300, fill=c, width=int(K * 1.4))
+        x2, y2 = _pos(a + math.pi / n)
+        d.ellipse([x2 - 2 * K, y2 - 2 * K, x2 + 2 * K, y2 + 2 * K], fill=c)
+
 def _orbita(d, c):                    # un planeta en su órbita y dos estrellas
     x, y = _pos(-0.6); r = 6 * K; d.ellipse([x - r, y - r, x + r, y + r], fill=c)
     for a in (1.4, 2.6):
         x, y = _pos(a, RADIO + 1)
         for u in (0, math.pi / 2):
             d.line([(x - 4 * K * math.cos(u), y - 4 * K * math.sin(u)), (x + 4 * K * math.cos(u), y + 4 * K * math.sin(u))], fill=c, width=int(K * 1.3))
+
+def _burbujas(d, c, n=22):            # burbujas de varios tamaños, unas por dentro y otras por fuera del anillo
+    for i in range(n):
+        a = 2 * math.pi * i / n + 0.07 * (i % 3)
+        r = (2.2 + 1.6 * ((i * 7) % 3)) * K
+        x, y = _pos(a, RADIO + (3.5 if i % 2 else -3.5))
+        d.ellipse([x - r, y - r, x + r, y + r], outline=c, width=int(K * 1.1))
 
 def _rombos(d, c, n=16, s=4.4):
     for i in range(n):
@@ -239,6 +397,16 @@ def _compas(d, c):                    # marcas de compás: cruces en los puntos 
         d.line([_pos(a, RADIO - 8), _pos(a, RADIO + 8)], fill=c, width=int(K * 1.6))
         d.line([_pos(a - 0.05), _pos(a + 0.05)], fill=c, width=int(K * 1.6))
     _marcas(d, c, 72, 3, 6, 6)
+
+def _rosa(d, c):                      # las 32 cuartas de la rosa (las cardinales, largas), la flor de lis al norte y la «X»
+    for i in range(32):
+        a = -math.pi / 2 + 2 * math.pi * i / 32
+        largo = 9 if i % 8 == 0 else (5 if i % 2 == 0 else 3)
+        d.line([_pos(a, RADIO - largo), _pos(a, RADIO + (largo if i % 8 == 0 else 0))], fill=c, width=int(K * (1.8 if i % 8 == 0 else 1.1)))
+    x, y = _pos(-math.pi / 2, RADIO + 9); s = 4.5 * K
+    d.polygon([(x, y - s), (x + s * 0.6, y + s * 0.3), (x, y), (x - s * 0.6, y + s * 0.3)], fill=c)
+    x, y = _pos(math.pi * 0.75, RADIO); s = 4.2 * K
+    d.line([(x - s, y - s), (x + s, y + s)], fill=c, width=int(K * 1.8)); d.line([(x - s, y + s), (x + s, y - s)], fill=c, width=int(K * 1.8))
 
 def _tricolor(d, colores, n=36):
     for i in range(n):
@@ -257,15 +425,37 @@ def _runas(d, c, n=14, s=5):
         elif t == 1: d.line([(x - ex, y - ey), (x + ex, y + ey)], fill=c, width=int(K * 1.3))
         else: d.line([(x - s * K * dx, y - s * K * dy), (x - ex, y - ey)], fill=c, width=int(K * 1.3))
 
+def _mano(d, c, x, y, s, ang):
+    """Una mano pequeña (palma, cuatro dedos y pulgar) de alto 2·s, con los dedos hacia [ang]."""
+    ca, sa = math.cos(ang + math.pi / 2), math.sin(ang + math.pi / 2)
+    def p(px, py): return (x + (px * ca - py * sa) * s, y + (px * sa + py * ca) * s)
+    d.polygon([p(-0.44, -0.1), p(0.4, -0.1), p(0.4, 0.6), p(0.26, 1.0), p(-0.3, 1.0), p(-0.44, 0.6)], fill=c)
+    for fx, arriba, an in ((-0.34, -0.62, 0.17), (-0.13, -0.86, 0.19), (0.1, -0.98, 0.19), (0.3, -0.8, 0.18)):
+        d.polygon([p(fx - an / 2, 0), p(fx - an / 2, arriba + an / 2), p(fx, arriba), p(fx + an / 2, arriba + an / 2), p(fx + an / 2, 0)], fill=c)
+    d.polygon([p(0.3, 0.5), p(0.36, 0.08), p(0.7, -0.14), p(0.8, -0.02), p(0.42, 0.6)], fill=c)
+
+def _manos(d, c, n=24):                 # Prehistoria: puntos de ocre de tamaño desparejo y, cada cuarto, una mano hacia fuera
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        if i % 6 == 0:
+            x, y = _pos(a, RADIO + 2); _mano(d, c, x, y, 12 * K, a)
+        else:
+            x, y = _pos(a); r = (2.4 + (i * 7 % 4) * 0.5) * K
+            d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+
 
 # tema: (textura, fondo, tinta, fuerza de la textura en el fondo y en la huella, acabado, motivo)
 # Acabados: 'tinta' (se asienta en el soporte), 'dorado' (brillo metálico leve), 'ferrogalica' (sepia que se aclara
 # donde la pluma tenía menos tinta), 'fosforo' (resplandor de pantalla), 'esmalte' (relieve suave).
 TEMAS = {
     'romano':       (travertino,    '#E5E1D9', '#6E5424',  10, 6, 'dorado',      _hojitas),
+    'urbe':         (revoque,       '#E7C793', '#7A2E1C',  13, 5, 'tinta',       _cupolas),
     'ciber':        (pantalla,      '#0D1117', '#7FE3F0',   5, 4, 'fosforo',     _rayas),
+    'neon':         (callejon,      '#150C19', '#FF5FAE',   6, 4, 'fosforo',     _tubos),
     'heleno':       (pario,         '#EEEDE9', '#3D2459',   9, 5, 'tinta',       _perlas),
+    'egipto':       (papiro_nilo,   '#E6D39E', '#1D2F7A',   8, 5, 'esmalte',     _cenefa),
     'medieval':     (vitela,        '#E8E2D6', '#33261A',   9, 6, 'ferrogalica', _cuadrifolios),
+    'templario':    (lino,          '#EDE6D6', '#9A1A1F',   8, 5, 'esmalte',     _cruces_patadas),
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
@@ -273,16 +463,23 @@ TEMAS = {
     'colonos':      (gaceta,        '#E7E3DA', '#22324D',   9, 6, 'tinta',       _cuerda),
     'napoleon':     (marmol,        '#EDEBE6', '#1F2B5C',  12, 5, 'esmalte',     _estrellas),
     'botanico':     (herbario,      '#EAE9E1', '#3B2E1D',   9, 6, 'ferrogalica', _hojas_alternas),
+    'ruinas':       (hormigon_agrietado, '#E2E2DA', '#3E5A2A', 9, 5, 'tinta',    _hiedra),
     'navidad':      (fieltro_nieve, '#1C1E1D', '#E4C987',   8, 5, 'dorado',      _copos),
     'seda':         (seda,          '#F2EFE8', '#862A1D',   6, 5, 'tinta',       _monedas),
+    'edo':          (washi,         '#F1EBDD', '#1E3A5F',   7, 5, 'tinta',       _sellos),
     'gotico':       (piedra,        '#1E1E21', '#D8CCAE',   9, 6, 'dorado',      _trebol),
+    'arcano':       (archivo_manchado, '#E3D9C1', '#1E3329', 10, 6, 'ferrogalica', _ganchos),
     'espacio':      (polvo_estelar, '#0F1012', '#B0C8F2',   4, 4, 'fosforo',     _orbita),
+    'abismo':       (agua_abisal,   '#06141D', '#7FE9D2',   6, 4, 'fosforo',     _burbujas),
     'andalus':      (lazo,          '#F0ECE4', '#1F3F5C',   6, 5, 'esmalte',     _estrellas),
+    'meso':         (amate,         '#E6D3AE', '#A3301E',  10, 5, 'tinta',       _puntos_barras),
     'mongol':       (fieltro,       '#EFEBE3', '#1F3D78',   6, 5, 'tinta',       _rombos),
     'renacimiento': (construccion,  '#EAE4D9', '#7C3B23',   8, 5, 'ferrogalica', _compas),
+    'pirata':       (carta_nautica, '#E3D8BB', '#2E2214',   9, 5, 'tinta',       _rosa),
     'urss':         (cartel,        '#ECE7DE', '#8E1D1D',  10, 6, 'tinta',       _estrellas),
     'revolucion':   (verjurado,     '#F1EFEA', '#1F2A5A',  11, 5, 'tinta',       _tricolor),
     'antiguas':     (pizarra,       '#1D1F1E', '#C6A65A',   9, 6, 'dorado',      _runas),
+    'cueva':        (caliza,        '#E6D6BC', '#A2401F',  10, 5, 'tinta',       _manos),
 }
 # Los temas que comparten un motivo lo dibujan distinto (cuántos, de qué tamaño, cuántas puntas).
 VARIANTES = {
