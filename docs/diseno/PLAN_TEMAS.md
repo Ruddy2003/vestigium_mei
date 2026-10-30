@@ -516,7 +516,9 @@ Solo cambia la presentación, sin tocar datos:
 
 Va después del lote 7. Para entonces el compilador y las pruebas de cobertura y unicidad obligan a que cada tema nuevo esté completo. Se hace un PR por tema.
 
-**Cómo se hizo (30 oct 2026):** en una sola rama, con un commit «se junta el tema X» por tema en lugar de un PR por tema. Ciudad neón se hizo primero, a mano, y sirvió de modelo; los otros 12 partieron de la copia de un tema cercano (`herramientas/lote8/`) y se rehicieron rama por rama. Al juntarlos, la prueba de unicidad obligó a cambiar las esquinas de Pirata, Ciudad verde y Horror cósmico, dos títulos de pantalla (Egipto y Horror cósmico) y el comentario de Prehistoria. Lo único pendiente de los 34 es el gato (lote 9). Lo que quedó del peso de la APK está en 8e.
+**Cómo se hizo (30 oct 2026):** en una sola rama, con un commit «se junta el tema X» por tema en lugar de un PR por tema. Ciudad neón se hizo primero, a mano, y sirvió de modelo; los otros 12 partieron de la copia de un tema cercano (`herramientas/lote8/`) y se rehicieron rama por rama. Al juntarlos, la prueba de unicidad obligó a cambiar las esquinas de Pirata, Ciudad verde y Horror cósmico, dos títulos de pantalla (Egipto y Horror cósmico) y el comentario de Prehistoria. Lo que quedó del peso de la APK está en 8e.
+
+**Vapor victoriano y Art déco quedan para la próxima semana.** Están hechos, cada uno en su rama (`worktree-agent-a45fbcb2bdebf5093` y `worktree-agent-a9d920256ab695569`), y compilan, pero con los dos juntos la máquina de CI se apagaba al minuto de empezar las pruebas, incluso después de poner un tope de 1 px al paso de los bucles de dibujo nuevos. Se juntaron y se revirtieron (`git revert -m 1` de 9cf45bf y ed0194c). Para retomarlos: revertir esas reversiones, o volver a juntar sus ramas, de uno en uno, para saber cuál apaga la máquina.
 
 ### 8a. El Cyberpunk pasa a «Terminal»
 
