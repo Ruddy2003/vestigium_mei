@@ -586,7 +586,6 @@ Los ids `egipto` y `edo` coinciden con ids de vidas de `BASE` (`OtrasVidas.kt:11
 - **Nombres:** `Temas` (nombres, marcas, rótulos de widget, el calendario propio) y `NombresNuevos`.
 - **Decoración** (`Decoracion.kt`): emblema, `periodo`, `fondoTema`, la banda y `CapaFiesta`.
 - **Componentes:** todos los del lote 3, más la barra inferior, el bloqueo y la transición.
-- **Personaje:** atuendo y frases.
 - **Marcas** (`Marcas.kt`) y **fondo de pantalla del teléfono** (`marca`, marco, `tipo`, `logo`).
 - **Íconos de pestaña:** día, diario, registrar, vida, entender y ajustes.
 - **Fondo vivo** (`Animaciones`) y **Relación** (`Relacion`).
@@ -768,7 +767,7 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
 
 - **Kotlin** (`app/src/main/java/io/github/ruddy2003/vestigium/`):
   - Base de los temas: `ui/` `Tema.kt`, `Disenios.kt`, `Estilo.kt`, `Temas.kt`, `NombresNuevos.kt`, `Frases.kt` y `Bases.kt` (se borra).
-  - Decoración, animación y personaje: `ui/` `Decoracion.kt`, `Componentes.kt`, `Animaciones.kt`, `Celebracion.kt`, `Personaje.kt` y `Marcas.kt`.
+  - Decoración, animación y personaje: `ui/` `Decoracion.kt`, `Componentes.kt`, `Animaciones.kt`, `Celebracion.kt` y `Marcas.kt`.
   - Cartas, libros y diario: `ui/` `Relacion.kt`, `Libros.kt`, `Cartas.kt` y `LibroDiario.kt`.
   - Sonido e íconos: `ui/` `Sentidos.kt`, `Musica.kt`, `IconosPestana.kt` e `IconosCinta.kt`.
   - Fondo de pantalla, huella y gato: `ui/` `FondosTelefono.kt`, `Huella.kt` y `Gato.kt`.

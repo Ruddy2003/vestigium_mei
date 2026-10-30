@@ -745,7 +745,7 @@ class Capturas {
         io.github.ruddy2003.vestigium.ui.pantallas.Seleccion.entrada = null
         io.github.ruddy2003.vestigium.ui.pantallas.PantallaEntrada(navVacia)
     }
-    // ------------------------------------------------------------ versión 67: cinta, constelación, hall, campañas, personaje, marcas
+    // ------------------------------------------------------------ versión 67: cinta, constelación, hall, campañas, marcas
 
     private fun ejemploV67() {
         val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
@@ -818,30 +818,6 @@ class Capturas {
     @Test fun piezasCiber() = piezas(TemaId.CIBER, true)
     @Test fun piezasSeda() = piezas(TemaId.SEDA, false)
     @Test fun piezasGotico() = piezas(TemaId.GOTICO, true)
-
-    /** El personaje de cada tema, con estados distintos (cansado, feliz, lluvia, frío, calor, noche, racha). */
-    @Test fun personajes() = hojaTemas(porParte = 36, alto = { 100 + (it + 3) / 4 * 517 }) { temas ->
-        val estados = listOf(
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.5, 8, false, false, false, false, ""),
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(true, 3.0, 2, false, false, false, false, ""),
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 5.0, 31, true, false, false, false, ""),
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 4.0, 0, false, true, false, true, ""),
-            io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.0, 3, false, false, true, false, ""),
-        )
-        Column(Modifier.padding(8.dp)) {
-            temas.chunked(4).forEachIndexed { f, fila ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    fila.forEachIndexed { k, t ->
-                        androidx.compose.material3.MaterialTheme(colorScheme = io.github.ruddy2003.vestigium.ui.esquemaDe(t, t.soloOscuro), typography = io.github.ruddy2003.vestigium.ui.tipoDe(t, t.soloOscuro)) {
-                            Box(Modifier.background(MaterialTheme.colorScheme.background).padding(4.dp)) {
-                                io.github.ruddy2003.vestigium.ui.FiguraPersonaje(estados[(f * 4 + k) % estados.size], tam = 120.dp, tema = t)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     /** Las @personas y los #temas marcados en cada tema. */
     @Test fun marcas() = hojaTemas(porParte = 28, alto = { 100 + it * 167 }) { temas ->
@@ -1408,16 +1384,9 @@ class Capturas {
     } }
     /** El fondo de pantalla del teléfono (marca y marco). */
     @Test fun temaFondoTelefono() = porTema("fondoTelefono") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.FondoTelefonoVista(t, o, Modifier.fillMaxSize()) } }
-    /** El personaje con su globo y las marcas de @persona y #tema. */
-    @Test fun temaPersonaje() = porTema("personaje") { t, o, n -> pantalla(t, o, 1400, n) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            io.github.ruddy2003.vestigium.ui.TarjetaPersonaje(io.github.ruddy2003.vestigium.data.Fechas.diaLogico())
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(
-                    io.github.ruddy2003.vestigium.ui.Personaje.Estado(false, 6.5, 8, false, false, false, false, ""),
-                    io.github.ruddy2003.vestigium.ui.Personaje.Estado(true, 3.0, 31, true, true, false, true, ""),
-                ).forEach { io.github.ruddy2003.vestigium.ui.FiguraPersonaje(it, tam = 120.dp, tema = t) }
-            }
+    /** Las marcas de @persona y #tema dentro de un texto. */
+    @Test fun temaMarcas() = porTema("marcas") { t, o, n -> pantalla(t, o, 400, n) {
+        Column(Modifier.padding(16.dp)) {
             io.github.ruddy2003.vestigium.ui.TextoMarcado("Café con @ana y @luis_m después del #protocolo de la #tesis", style = MaterialTheme.typography.bodyLarge, tema = t)
         }
     } }
