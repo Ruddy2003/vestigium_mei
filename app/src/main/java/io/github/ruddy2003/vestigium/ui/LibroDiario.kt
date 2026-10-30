@@ -154,6 +154,7 @@ object LibroDiario {
         TemaId.SEDA -> Fuentes(R.font.almendra_regular, R.font.alegreya_regular)
         TemaId.URSS -> Fuentes(R.font.russo, R.font.obrera_regular)
         TemaId.GOTICO -> Fuentes(R.font.gotica_textura, R.font.goudy_regular)
+        TemaId.ARCANO -> Fuentes(R.font.spectral_medium, R.font.castoro_regular)
         TemaId.ESPACIO -> Fuentes(R.font.orbitron_bold, R.font.grotesk_regular)
         TemaId.ABISMO -> Fuentes(R.font.batiscafo_semibold, R.font.atkinson_regular)
         TemaId.ANDALUS -> Fuentes(R.font.kufi_medium, R.font.amiri_regular)
@@ -236,6 +237,9 @@ object LibroDiario {
             TemaId.NAVIDAD -> "article{border-top:5px solid $p;border-image:repeating-linear-gradient(45deg,$p 0 8px,$b 8px 16px,$s 16px 24px) 5}" + capitular("2.8em", p)
             TemaId.SEDA -> "article{border-top:2px solid $p;border-right:6px solid $s;padding-right:14px}" + capitular("2.6em", p)
             TemaId.GOTICO -> "article{border-top:0;padding-top:24px;background:radial-gradient(circle at 9px 16px,transparent 7px,$p 7px 8px,transparent 8px) 0 0/18px 12px repeat-x}" + capitular("3.4em", p)
+            // La hoja del legajo: una raya a pulso arriba, el margen rojo desvaído y la fecha en cursiva, como una nota al margen.
+            TemaId.ARCANO -> "article{border-top:1px solid $v;border-left:1px solid $s;padding-left:14px}.fecha{font-style:italic}.fecha::before{content:'† ';color:$s}" +
+                ".nota::first-letter{font-family:T,serif;font-size:2.2em;float:left;line-height:.8;color:$p;margin:4px 6px 0 0;text-decoration:line-through ${s}66}"
             TemaId.ESPACIO -> "article{border:1px solid $p;border-radius:16px;padding:18px;margin-bottom:18px}.fecha{text-transform:uppercase;letter-spacing:.12em}"
             // La regla del profundímetro a la izquierda (una raya cada renglón) y la superficie ondulada encima de cada día.
             TemaId.ABISMO -> "article{border-top:0;border-left:3px solid $p;padding-left:16px;background:repeating-linear-gradient(180deg,transparent 0 22px,$v 22px 23px) 0 0/8px 100% no-repeat}" +
@@ -384,6 +388,7 @@ object LibroDiario {
             TemaId.NAVIDAD -> Medidas(12.5f, aire)
             TemaId.SEDA -> Medidas(12.5f, aire)
             TemaId.GOTICO -> Medidas(12.5f, aire)
+            TemaId.ARCANO -> Medidas(12f, aire)
             TemaId.ESPACIO -> Medidas(11f, aire)
             TemaId.ABISMO -> Medidas(11.5f, aire)
             TemaId.ANDALUS -> Medidas(12.5f, aire)
@@ -437,6 +442,8 @@ object LibroDiario {
         TemaId.SEDA -> Inicial(R.font.almendra_bold, 2.2f)
         // La capitular de los libros de horas, en letra textura.
         TemaId.GOTICO -> Inicial(R.font.gotica_textura, 2.7f)
+        // La primera letra en la cursiva del archivista, grande y en tinta.
+        TemaId.ARCANO -> Inicial(R.font.spectral_cursiva, 2.1f, tinta = true)
         // La primera palabra en mayúsculas de la sala de control.
         TemaId.ESPACIO -> Inicial(R.font.orbitron_bold, 1.1f, palabra = true, mayusculas = true)
         // La capitular estrecha de rótulo de instrumento, en el color de la luz del fondo.
@@ -624,6 +631,12 @@ object LibroDiario {
                 lados(9f)
                 cv.drawPath(ruta { moveTo(cx - 5f, y + 4f); lineTo(cx - 5f, y - 1f); quadTo(cx - 5f, y - 6f, cx, y - 8.5f); quadTo(cx + 5f, y - 6f, cx + 5f, y - 1f); lineTo(cx + 5f, y + 4f) }, Paint(trazo).apply { strokeWidth = 1f })
                 cv.drawCircle(cx, y - 1.5f, 1.4f, relleno)
+            }
+            TemaId.ARCANO -> {
+                // El ojo del signo entre dos rayas a pulso.
+                lados(10f)
+                cv.drawPath(ruta { moveTo(cx - 6f, y); quadTo(cx, y - 5f, cx + 6f, y); quadTo(cx, y + 5f, cx - 6f, y); close() }, Paint(trazo).apply { strokeWidth = 1f })
+                cv.drawOval(cx - 0.9f, y - 2.4f, cx + 0.9f, y + 2.4f, relleno)
             }
             TemaId.ESPACIO -> {
                 // Un planeta con su anillo.
@@ -821,6 +834,14 @@ object LibroDiario {
                 val ruta = android.graphics.Path(); var x = 40f; val w = 18f
                 while (x + w <= A - 40f) { ruta.moveTo(x, 44f); ruta.lineTo(x, 36f); ruta.quadTo(x, 28f, x + w / 2, 26f); ruta.quadTo(x + w, 28f, x + w, 36f); ruta.lineTo(x + w, 44f); x += w + 4f }
                 cv.drawPath(ruta, fino)
+            }
+            TemaId.ARCANO -> {
+                // La hoja del legajo: el filete con la esquina de arriba doblada, el margen rojo y dos tiras de cinta.
+                val d = 40f
+                cv.drawPath(android.graphics.Path().apply { moveTo(22f, 22f); lineTo(A - 22f - d, 22f); lineTo(A - 22f, 22f + d); lineTo(A - 22f, B - 22f); lineTo(22f, B - 22f); close() }, trazo)
+                cv.drawPath(android.graphics.Path().apply { moveTo(A - 22f - d, 22f); lineTo(A - 22f - d, 22f + d); lineTo(A - 22f, 22f + d) }, fino)
+                cv.drawLine(52f, 22f, 52f, B - 22f, fino)
+                listOf(22f to 22f, 22f to B - 22f).forEach { (x, y) -> cv.save(); cv.rotate(if (y < B / 2) -35f else 35f, x, y); cv.drawRect(x - 20f, y - 6f, x + 20f, y + 6f, Paint(relleno).apply { alpha = 60 }); cv.restore() }
             }
             TemaId.ESPACIO -> {
                 // Esquinas redondas y una mira en el centro de cada lado.

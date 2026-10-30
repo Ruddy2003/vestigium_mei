@@ -60,6 +60,7 @@ object ContenedoresMas {
             Contenedor.BOLETOS -> Color(0xFFF5EEDC)
             // Las libretas de [Contenedores] tienen su papel allá.
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
+            Contenedor.RECORTES -> return Contenedores.papel(c, cs, oscuro)
         }
         return if (oscuro) lerp(claro, Color.Black, 0.76f) else claro
     }
@@ -532,6 +533,7 @@ object ContenedoresMas {
             }
             // Estas las dibuja [Contenedores].
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.RECORTES -> {}
         }
     }
 
@@ -748,6 +750,7 @@ object ContenedoresMas {
             }
             // Estas las dibuja [Contenedores].
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.RECORTES -> {}
         }
     }
 
@@ -887,6 +890,7 @@ object ContenedoresMas {
             }
             // Estas las dibuja [Contenedores].
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.ESCRIBA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.SINGLADURAS, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
+            Contenedor.RECORTES -> {}
         }
     }
 }

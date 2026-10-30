@@ -308,6 +308,14 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
         val a = 44 * d
         moveTo(0f, h); lineTo(0f, a); quadraticTo(0f, a * 0.2f, w / 2, 0f); quadraticTo(w, a * 0.2f, w, a); lineTo(w, h); close()
     }, 22.dp, 0.dp, true, 1.5.dp)
+    // Una hoja del legajo: la esquina de arriba doblada y la orilla de abajo rasgada.
+    TemaId.ARCANO -> PielDialogo(FormaDp { w, h, d ->
+        val doblez = 18 * d
+        moveTo(0f, 0f); lineTo(w - doblez, 0f); lineTo(w, doblez); lineTo(w, h - 3 * d)
+        val n = (w / (9 * d)).toInt().coerceAtLeast(4)
+        for (k in n - 1 downTo 0) lineTo(w * k / n, h - (if (k % 2 == 0) 3 * d else if (k % 3 == 0) 0f else 5 * d))
+        close()
+    }, 6.dp, 6.dp, false, 1.dp)
     // Visor: las dos esquinas de arriba cortadas.
     TemaId.ESPACIO -> PielDialogo(CutCornerShape(topStart = 20.dp, topEnd = 20.dp), 0.dp, 0.dp, false, 1.dp)
     // La superficie del mar: el borde de arriba es una ola larga y mansa; abajo, el casco redondeado.
@@ -557,6 +565,17 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
                 drawCircle(e.tertiary.copy(alpha = 0.8f), 2 * d, Offset(c.x + 3.2f * d * cos(ang).toFloat(), c.y + 3.2f * d * sin(ang).toFloat()), style = Stroke(0.8f * d))
             }
         }
+        TemaId.ARCANO -> {
+            // El doblez de la esquina, el margen rojo desvaído y, abajo a la derecha, el sello del archivo con su signo.
+            val doblez = 18 * d
+            drawPath(Path().apply { moveTo(w - doblez, 0f); lineTo(w - doblez, doblez); lineTo(w, doblez); close() }, e.onSurface.copy(alpha = 0.08f))
+            drawPath(Path().apply { moveTo(w - doblez, 0f); lineTo(w - doblez, doblez); lineTo(w, doblez) }, e.onSurface.copy(alpha = 0.3f), style = Stroke(0.8f * d))
+            drawLine(e.tertiary.copy(alpha = 0.35f), Offset(16 * d, 0f), Offset(16 * d, h - 6 * d), d)
+            val c = Offset(w - 30 * d, h - 30 * d)
+            drawCircle(e.tertiary.copy(alpha = 0.22f), 16 * d, c, style = Stroke(1.2f * d))
+            drawCircle(e.tertiary.copy(alpha = 0.16f), 13 * d, c, style = Stroke(0.6f * d))
+            with(Contenedores) { signoOjo(c, 8 * d, e.tertiary.copy(alpha = 0.3f), 0.8f * d) }
+        }
         TemaId.ESPACIO -> {
             // Escuadras de visor abajo, chaflanes interiores arriba y una órbita de puntos con su planeta.
             listOf(1f, -1f).forEach { s ->
@@ -798,6 +817,14 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             }
             drawPath(p, e.tertiary, style = Stroke(0.9f * d))
             drawLine(e.tertiary, Offset(0f, cy + 4 * d), Offset(w, cy + 4 * d), 0.9f * d)
+        }
+        // Una raya a pulso que tiembla, con una palabra tachada en medio.
+        TemaId.ARCANO -> {
+            val p = Path(); var x = 0f; p.moveTo(0f, cy)
+            while (x <= w) { p.lineTo(x, cy + 0.9f * d * sin(x / (3.1f * d)) + 0.6f * d * sin(x / (11f * d))); x += 2f }
+            drawPath(p, e.onSurface.copy(alpha = 0.45f), style = Stroke(0.9f * d))
+            drawRect(e.surface, Offset(w / 2 - 14 * d, cy - 4 * d), Size(28 * d, 8 * d))
+            listOf(-1f, 1f).forEach { s -> drawLine(e.tertiary.copy(alpha = 0.7f), Offset(w / 2 - 11 * d, cy + s * 3 * d), Offset(w / 2 + 11 * d, cy - s * 3 * d), 1.1f * d) }
         }
         // Órbita de puntos con un planeta anillado.
         TemaId.ESPACIO -> {
@@ -1148,6 +1175,17 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
                 var px = g * 1.25f; while (px < x - g * 0.3f) { romboCtl(Offset(px, cy), g * 0.28f, g * 0.38f, e.tertiary); px += g * 2.5f }
             }
         }
+        // Una regla de cinta métrica a tinta; lo recorrido, tinta corrida que termina en una gota.
+        TemaId.ARCANO -> {
+            linea(inactivo, 0f, w, maxOf(g * 0.14f, 0.6f * d))
+            var px = 0f; var k = 0
+            while (px <= w) { drawLine(inactivo, Offset(px, cy), Offset(px, cy - g * (if (k % 5 == 0) 0.9f else 0.45f)), maxOf(g * 0.1f, 0.5f * d)); px += maxOf(g * 0.9f, 3 * d); k++ }
+            if (x > 0f) {
+                linea(activo, 0f, x, g * 0.5f, cap = StrokeCap.Round)
+                drawCircle(activo, g * 0.42f, Offset(x, cy + g * 0.12f))
+                drawCircle(activo.copy(alpha = activo.alpha * 0.5f), g * 0.18f, Offset(x + g * 0.6f, cy + g * 0.5f))
+            }
+        }
         // Órbita de puntos; lo recorrido, estela con brillo y una estrella en la punta.
         TemaId.ESPACIO -> {
             var px = x + g; while (px < w) { drawCircle(inactivo, maxOf(g * 0.15f, 0.5f * d), Offset(px, cy)); px += maxOf(g * 0.9f, 2 * d) }
@@ -1366,6 +1404,20 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawPath(p, color)
             drawPath(p, e.tertiary, style = Stroke(r * 0.09f))
             drawLine(e.tertiary, Offset(c.x, c.y - r * 0.6f), Offset(c.x, c.y + r * 0.9f), r * 0.07f)
+        }
+        // Un sello de lacre con la orilla derramada y el ojo de pupila vertical.
+        TemaId.ARCANO -> {
+            val p = Path()
+            for (k in 0..12) {
+                val a = -PI / 2 + k * 2 * PI / 12; val rr = r * (if (k % 2 == 0) 0.95f else 0.82f)
+                val q = Offset(c.x + (rr * cos(a)).toFloat(), c.y + (rr * sin(a)).toFloat())
+                if (k == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
+            }
+            p.close()
+            drawPath(p, color)
+            drawCircle(hueco.copy(alpha = 0.5f), r * 0.6f, c, style = Stroke(r * 0.06f))
+            drawPath(Path().apply { moveTo(c.x - r * 0.42f, c.y); quadraticTo(c.x, c.y - r * 0.42f, c.x + r * 0.42f, c.y); quadraticTo(c.x, c.y + r * 0.42f, c.x - r * 0.42f, c.y); close() }, hueco.copy(alpha = 0.75f), style = Stroke(r * 0.07f))
+            drawOval(hueco.copy(alpha = 0.8f), Offset(c.x - r * 0.06f, c.y - r * 0.18f), Size(r * 0.12f, r * 0.36f))
         }
         // Planeta con anillo.
         TemaId.ESPACIO -> {

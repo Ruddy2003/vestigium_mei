@@ -138,6 +138,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Gótico: piedra caliza; de noche, el azul de la bóveda.
         TemaId.GOTICO -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.56f, 0.6f, 0.95f, 2f, 4f, 22f)) }
             else { m.setSaturation(0.2f); m.postConcat(tinte(0.98f, 0.95f, 0.88f, 2f, 2f, 0f)) }
+        // Horror cósmico: carta de sondeos amarillenta; de noche, la costa en la niebla verdinegra.
+        TemaId.ARCANO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.5f, 0.64f, 0.58f, 0f, 6f, 3f)) }
+            else { m.setSaturation(0.12f); m.postConcat(tinte(0.93f, 0.92f, 0.82f, 0f, 3f, 0f)) }
         // Espacio: carta de navegación; de noche, como vista desde la órbita.
         TemaId.ESPACIO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.42f, 0.55f, 0.85f, 0f, 2f, 8f)) }
             else { m.setSaturation(0.15f); m.postConcat(tinte(0.93f, 0.96f, 1.0f, 0f, 2f, 6f)) }
@@ -267,6 +270,8 @@ internal object Formas {
             // Un arco ojival.
             TemaId.GOTICO -> { p.reset(); p.moveTo(x - r * 0.8f, y + r); p.lineTo(x - r * 0.8f, y - r * 0.1f); p.quadTo(x - r * 0.8f, y - r * 0.9f, x, y - r * 1.3f)
                 p.quadTo(x + r * 0.8f, y - r * 0.9f, x + r * 0.8f, y - r * 0.1f); p.lineTo(x + r * 0.8f, y + r); p.close() }
+            // El heptágono del signo.
+            TemaId.ARCANO -> poligono(x, y, r * 1.15f, 7, -90.0)
             // Un destello de cuatro puntas.
             TemaId.ESPACIO -> { p.reset(); val k = r * 1.3f; p.moveTo(x, y - k); p.quadTo(x, y, x + k, y); p.quadTo(x, y, x, y + k); p.quadTo(x, y, x - k, y); p.quadTo(x, y, x, y - k); p.close() }
             // Una gota de agua.
@@ -318,6 +323,7 @@ internal object Formas {
             TemaId.NAVIDAD -> { c.drawCircle(x, y - r * 1.35f, r * 0.18f, d); raya(c, x, y, r, -0.6f, 0.55f, 0.45f, 0.1f, d) }   // la estrella y la guirnalda
             TemaId.SEDA -> c.drawCircle(x, y, r * 0.72f, d)
             TemaId.GOTICO -> { raya(c, x, y, r, 0f, -0.3f, 0f, 1f, d); c.drawCircle(x, y - r * 0.6f, r * 0.2f, d) }   // el parteluz y el rosetón
+            TemaId.ARCANO -> { raya(c, x, y, r, 0f, -0.45f, 0f, 0.45f, d); c.drawCircle(x, y, r * 0.45f, d) }   // el ojo, con su pupila
             TemaId.ESPACIO -> c.drawOval(x - r * 1.45f, y - r * 0.4f, x + r * 1.45f, y + r * 0.4f, d)   // una órbita
             TemaId.ABISMO -> c.drawCircle(x - r * 0.3f, y + r * 0.15f, r * 0.24f, d)   // el brillo de la gota
             TemaId.ANDALUS -> c.drawCircle(x, y, r * 0.42f, d)
@@ -919,6 +925,18 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 listOf(-90.0, 30.0, 150.0).forEach { g -> val a = Math.toRadians(g); drawCircle(acento, 2.6f * u, o + Offset(kotlin.math.cos(a).toFloat(), kotlin.math.sin(a).toFloat()) * (2.8f * u)) }
             }
         }
+        // La carta de sondeos pegada con cinta: filete, tiras de cinta en las esquinas de arriba y la escala de millas abajo.
+        TemaId.ARCANO -> {
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u)
+            listOf(Offset(4 * u, 4 * u) to 1f, Offset(w - 4 * u, 4 * u) to -1f).forEach { (o, s) ->
+                drawPath(Path().apply { moveTo(o.x - s * 6 * u, o.y + 8 * u); lineTo(o.x + s * 8 * u, o.y - 6 * u); lineTo(o.x + s * 16 * u, o.y + 2 * u); lineTo(o.x + s * 2 * u, o.y + 16 * u); close() }, acento.copy(alpha = 0.22f))
+            }
+            val y0 = h - 14 * u; val seg = 12 * u
+            for (k in 0 until 5) {
+                val x0 = 14 * u + k * seg
+                if (k % 2 == 0) drawRect(tinta.copy(alpha = 0.55f), Offset(x0, y0), Size(seg, 3 * u)) else drawRect(tinta.copy(alpha = 0.55f), Offset(x0, y0), Size(seg, 3 * u), style = Stroke(0.8f * u))
+            }
+        }
         // El visor de la sala de control: arcos en las esquinas y marcas de nivel a los lados.
         TemaId.ESPACIO -> {
             val rr = 18 * u; val m = 6 * u; val visor = Stroke(1.8f * u); val lado = Size(2 * rr, 2 * rr)
@@ -1169,6 +1187,14 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             for (i in 0 until 8) drawCircle(tinta.copy(alpha = 0.7f), r * 0.28f, c + rumbo(n + 45.0 * i) * (r * 0.58f), style = Stroke(1.2f * u))
             drawCircle(acento.copy(alpha = 0.75f), r * 0.26f, c); drawCircle(fondo, r * 0.1f, c)
             drawPath(Path().apply { moveTo(c.x, c.y - r * 1.0f); lineTo(c.x - r * 0.12f, c.y - r * 0.8f); lineTo(c.x + r * 0.12f, c.y - r * 0.8f); close() }, acento)
+        }
+        // La rosa de una carta de sondeos: dieciséis rumbos a tinta, el norte largo y, en el centro, el ojo.
+        TemaId.ARCANO -> {
+            for (i in 0 until 16) drawLine(tinta.copy(alpha = if (i % 4 == 0) 0.7f else 0.4f), c, c + rumbo(n + 22.5 * i) * (if (i % 4 == 0) r * 0.9f else r * 0.55f), (if (i % 4 == 0) 1.2f else 0.7f) * u)
+            punta(n, r, r * 0.14f, acento)
+            drawCircle(tinta.copy(alpha = 0.6f), r * 0.3f, c, style = Stroke(1.2f * u))
+            drawPath(Path().apply { moveTo(c.x - r * 0.24f, c.y); quadraticTo(c.x, c.y - r * 0.2f, c.x + r * 0.24f, c.y); quadraticTo(c.x, c.y + r * 0.2f, c.x - r * 0.24f, c.y); close() }, fondo)
+            drawOval(acento, Offset(c.x - r * 0.04f, c.y - r * 0.1f), Size(r * 0.08f, r * 0.2f))
         }
         // El indicador de rumbo de una cabina.
         TemaId.ESPACIO -> {

@@ -778,6 +778,53 @@ def gotico():
                tecla=trazo((2000, 6000), 0.06, 16, 0.04),
                rascar=rascado((1500, 6000), campana(hz(T + 24), 0.8, 2.0, 2, 4), aspereza=70))
 
+def arcano():
+    # Re frigio (la segunda menor, Mi bemol) con el tritono (La bemol) que no resuelve: la sirena de niebla del faro, la
+    # boya con su campana desafinada, las olas contra el muelle, la armónica de cristal y la madera que cruje en el archivo.
+    T = -7   # Re4
+    def sirena(n, d):
+        """La sirena de niebla: dos sierras graves que bajan apenas al final, muy filtradas, que entran y salen despacio."""
+        t = t_(d)
+        x = barrido(hz(n), hz(n) * 0.985, d, 'sierra') * 0.6 + barrido(hz(n) * 1.004, hz(n) * 0.988, d, 'sierra') * 0.5
+        return filtro(x, 'bajo', 520) * np.minimum(1, t / 0.25) * np.minimum(1, np.maximum(0, d - t) / 0.4)
+    def cristal(f, d=0.6):
+        """Armónica de cristal: seno con su octava, ataque lento de dedo mojado y un temblor que no se va."""
+        t = t_(d)
+        x = np.sin(2 * np.pi * f * t) + 0.3 * np.sin(2 * np.pi * f * 2 * t) + 0.08 * np.sin(2 * np.pi * f * 3.02 * t)
+        return x * np.minimum(1, t / 0.06) * np.exp(-t * 2.2) * (1 + 0.15 * np.sin(2 * np.pi * 6.3 * t)) * np.minimum(1, np.maximum(0, d - t) / 0.05)
+    boya = lambda n, d=1.6: campana(hz(n), d, 3.17, 1.4, 2.2)
+    def ola(d):
+        """Una ola que sube y se retira por la grava."""
+        t = t_(d); s = np.sin(np.pi * t / d)
+        return filtro(ruido(d), 'bajo', 900) * s ** 2 + 0.25 * filtro(ruido(d), 'banda', (2000, 6000)) * s ** 6
+    def crujido(d=0.35, k=9):
+        """La madera del cajón o de la tarima: chasquidos graves, cada vez más juntos."""
+        return mezclar(*[(d * (1 - (1 - i / k) ** 1.6), clic(0.018, (300, 1600)), 0.5 + 0.05 * (i % 3)) for i in range(k)])
+    with azar_propio('arcano_base'):
+        S['arcano'] = dict(
+            toque=mezclar((0, clic(0.012, (900, 3200)), 0.5), (0, cristal(hz(T + 12), 0.12), 0.5)),
+            elegir=cristal(hz(T + 13), 0.35),
+            pasar=mezclar((0, papel(0.18, (600, 3800)), 0.9), (0.04, cristal(hz(T + 7), 0.15), 0.2)),
+            abrir=reverb(mezclar((0, crujido(0.35), 0.8), (0.3, boya(T - 5, 1.2), 0.35)), 1.4, 0.3),
+            guardar=mezclar((0, tambor(hz(T - 24), 0.25, 0.6), 0.7), (0.06, cristal(hz(T + 7), 0.5), 0.4), (0.2, cristal(hz(T + 12), 0.6), 0.4)),
+            logro=reverb(mezclar((0, sirena(T - 24, 1.4), 0.5), (0.2, melodia(cristal, [T, T + 1, T + 5, T + 7, T + 8, T + 12], 0.16, 0.7, g=0.45), 1),
+                                 (1.1, boya(T + 12, 1.8), 0.3)), 2.0, 0.35),
+            tema=reverb(mezclar((0, ola(0.9), 0.5), (0.2, melodia(cristal, [T + 12, T + 13, T + 7], 0.14, 0.6, g=0.5), 1)), 1.6, 0.3),
+            aviso=reverb(mezclar((0, sirena(T - 19, 1.1), 0.6), (1.4, sirena(T - 19, 1.6), 0.6), (0.3, boya(T + 5, 2.0), 0.3), (0, ola(3.2), 0.4)), 2.2, 0.35),
+            solemne=reverb(mezclar(*[(1.3 * i, acorde(cristal, [T - 12 + a for a in ch], 1.6), 0.6)
+                                     for i, ch in enumerate([[0, 3, 7], [1, 5, 8], [-2, 2, 5], [-5, -1, 2, 6], [0, 3, 7, 12]])],
+                                   (0, ola(3.0), 0.35), (3.0, ola(3.4), 0.35), (2.6, sirena(T - 24, 2.4), 0.35), (5.2, boya(T, 2.0), 0.3)), 2.6, 0.4))
+
+    # Error: el cristal que cae un tritono y la sirena que se ahoga. Cambio: el interruptor de la linterna y la boya que
+    # sube a la cuarta. Tecla: la plumilla de acero del investigador, rápida y seca. Rascar: un botón de latón de uniforme
+    # que el mar dejó verde.
+    with azar_propio('arcano'):
+        nuevos('arcano',
+               error=mezclar((0, cristal(hz(T + 6), 0.18), 0.5), (0.14, cristal(hz(T), 0.45), 0.5), (0.12, sirena(T - 24, 0.4), 0.3)),
+               cambio=mezclar((0, clic(0.014, (1200, 4200)), 0.6), (0.03, boya(T + 12, 0.5), 0.35), (0.12, boya(T + 17, 0.6), 0.35)),
+               tecla=mezclar((0, trazo((2600, 8000), 0.035, 24, 0.02), 1), (0, clic(0.006, (4000, 9000)), 0.3)),
+               rascar=rascado((800, 4200), boya(T + 19, 0.9), aspereza=55, pasadas=((0.0, 0.22), (0.3, 0.26), (0.62, 0.3))))
+
 def espacio():
     # Mi mayor: pitidos de la sala de control y una nave que respira.
     T = 7    # Mi5
@@ -1059,6 +1106,7 @@ if __name__ == '__main__':
         seda,
         urss,
         gotico,
+        arcano,
         espacio,
         abismo,
         andalus,

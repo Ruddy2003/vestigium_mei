@@ -37,6 +37,7 @@ object SalonesTema {
             TemaId.MEDIEVAL -> salaGestas(cs, oscuro, n)
             TemaId.TEMPLARIO -> salaArmas(cs, oscuro, n)
             TemaId.GOTICO -> nave(cs, oscuro, n)
+            TemaId.ARCANO -> sotano(cs, oscuro, n)
             TemaId.RENACIMIENTO -> galeria(cs, oscuro, n)
             TemaId.PIRATA -> camaraPopa(cs, oscuro, n)
             TemaId.NAPOLEON -> imperial(cs, oscuro, n)
@@ -89,6 +90,13 @@ object SalonesTema {
             TemaId.TEMPLARIO -> { drawRect(piedra(Color(0xFFC2AE84)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); drawRect(Color(0xFF7A6A4C).copy(alpha = 0.5f), Offset(w * 0.14f, 0f), Size(w * 0.72f, h), style = Stroke(1.2f))
                 drawPath(cruzPatada(Offset(w / 2, h * 0.5f), minOf(w, h) * 0.32f), Color(0xFFB0191F).copy(alpha = 0.75f)) }
             TemaId.GOTICO -> { drawRect(piedra(Color(0xFF6B6F7A)), Offset(w * 0.18f, 0f), Size(w * 0.64f, h)); for (k in 1..3) drawLine(Color(0xFF3A3E48).copy(alpha = 0.5f), Offset(w * (0.18f + 0.16f * k), 0f), Offset(w * (0.18f + 0.16f * k), h), 1.2f) }
+            // Dos cajas de archivo apiladas, con sus fichas y el cordel.
+            TemaId.ARCANO -> {
+                drawRect(piedra(Color(0xFF8C7A55)), Offset(w * 0.16f, h * 0.45f), Size(w * 0.68f, h * 0.55f))
+                drawRect(piedra(Color(0xFF7A6A48)), Offset(w * 0.22f, 0f), Size(w * 0.56f, h * 0.45f))
+                listOf(0.12f to 0.3f, 0.6f to 0.36f).forEach { (y, x) -> drawRect(Color(0xFFE8DDC0), Offset(w * x, h * y), Size(w * 0.28f, h * 0.18f)) }
+                drawLine(Color(0xFF8A7A58), Offset(w * 0.5f, 0f), Offset(w * 0.5f, h), 1.4f)
+            }
             TemaId.RENACIMIENTO -> { drawRect(piedra(Color(0xFF8C9188)), Offset(w * 0.16f, h * 0.2f), Size(w * 0.68f, h * 0.8f)); drawRect(piedra(Color(0xFFB5B9AE)), Offset(w * 0.1f, 0f), Size(w * 0.8f, h * 0.22f)) }
             // Un barril de ron puesto de pie: duelas de roble combadas y tres aros de hierro.
             TemaId.PIRATA -> {
@@ -422,6 +430,48 @@ object SalonesTema {
             drawCircle(Color(0xFFE2B34A).copy(alpha = 0.65f), R * 0.25f, c)
             drawCircle(piedra, R, c, style = Stroke(1.5f * d))
         }
+    }
+
+    /**
+     * El sótano del archivo: un estante de legajos y cajas detrás de cada columna de piezas, la bombilla que cuelga entre
+     * ellos con su cerco de luz, los hilos verdes del pizarrón de recortes arriba y la niebla que entra a ras del suelo.
+     */
+    private fun DrawScope.sotano(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val madera = (if (oscuro) Color(0xFF2B3D37) else Color(0xFFB3A683)).copy(alpha = 0.55f)
+        val lomo = (if (oscuro) Color(0xFF3E5A50) else Color(0xFF8C7A55)).copy(alpha = 0.35f)
+        val paso = w / n
+        val az = java.util.Random(26)
+        for (i in 0 until n) {
+            val x0 = i * paso + 8 * d; val x1 = (i + 1) * paso - 8 * d
+            drawRect(madera, Offset(x0, 40 * d), Size(3 * d, h - 40 * d)); drawRect(madera, Offset(x1 - 3 * d, 40 * d), Size(3 * d, h - 40 * d))
+            var y = 40 * d
+            while (y < h) {
+                drawRect(madera, Offset(x0, y), Size(x1 - x0, 2.5f * d))
+                // Los legajos de pie, de alturas y gruesos distintos; a veces una caja.
+                var x = x0 + 4 * d
+                while (x < x1 - 8 * d) {
+                    val g = (4 + az.nextInt(6)) * d; val a = (18 + az.nextInt(16)) * d
+                    if (az.nextInt(5) == 0) { drawRect(lomo, Offset(x, y - 20 * d), Size(18 * d, 20 * d)); x += 20 * d }
+                    else { drawRect(lomo.copy(alpha = lomo.alpha * (0.6f + az.nextFloat() * 0.6f)), Offset(x, y - a), Size(g, a)); x += g + 1 * d }
+                }
+                y += 64 * d
+            }
+        }
+        // El pizarrón de recortes: hilos verdes entre alfileres, de punta a punta.
+        val alfileres = (0..n * 2).map { Offset(it * w / (n * 2) + (az.nextFloat() - 0.5f) * 10 * d, 10 * d + az.nextFloat() * 18 * d) }
+        alfileres.zipWithNext().forEachIndexed { k, (a, b) -> drawLine(cs.secondary.copy(alpha = 0.35f), a, if (k % 3 == 0) alfileres[(k + 3).coerceAtMost(alfileres.size - 1)] else b, 1 * d) }
+        alfileres.forEach { drawCircle(cs.tertiary.copy(alpha = 0.55f), 2.2f * d, it) }
+        // Las bombillas entre los estantes, con su cerco amarillo.
+        for (i in 1 until n) {
+            val c = Offset(i * paso, 46 * d)
+            drawLine(lomo, Offset(c.x, 0f), Offset(c.x, c.y - 4 * d), 1 * d)
+            drawCircle(Brush.radialGradient(listOf(Color(0xFFF2E3A0).copy(alpha = if (oscuro) 0.22f else 0.16f), Color.Transparent), c, 60 * d), 60 * d, c)
+            drawCircle(Color(0xFFF2E3A0).copy(alpha = 0.7f), 4 * d, c)
+        }
+        // La niebla que entra por abajo, en bandas.
+        for (k in 0 until 3) drawRect(Brush.verticalGradient(listOf(Color.Transparent, (if (oscuro) Color(0xFF9AB0A6) else Color.White).copy(alpha = 0.12f), Color.Transparent), h - (70 - k * 16) * d, h - (20 - k * 6) * d),
+            Offset(0f, h - (70 - k * 16) * d), Size(w, (50 - k * 10) * d))
     }
 
     /** La galería: artesonado arriba, una hornacina que enmarca cada columna de piezas y el pavimento en damero que huye. */

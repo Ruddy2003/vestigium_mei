@@ -156,6 +156,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.SEDA -> "Bitácora de la caravana · ${Temas.anioChino(anio)}"
     TemaId.URSS -> "BALANCE DEL PLAN · $anio"
     TemaId.GOTICO -> "Annales · anno ${Romano.de(anio).lowercase()}"
+    TemaId.ARCANO -> "Crónica del caso · año ${Temas.tachado(anio)}"
     // Como en los observatorios: el año empieza en un día juliano.
     TemaId.ESPACIO -> "CICLO $anio · DESDE JD " + String.format(java.util.Locale.US, "%,d", Temas.diaJuliano(java.time.LocalDate.of(anio, 1, 1))).replace(',', ' ')
     // El año como una bajada: una inmersión por día, diez metros cada una.

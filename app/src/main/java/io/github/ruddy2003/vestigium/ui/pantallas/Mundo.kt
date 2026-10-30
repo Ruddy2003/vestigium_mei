@@ -242,6 +242,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.SEDA -> LaminaRascar(0xFF8A2414.toInt(), 0xFFC28E2C.toInt(), 0xFFF3D68A.toInt())
     // Peltre de cáliz, con un tinte violeta.
     TemaId.GOTICO -> LaminaRascar(0xFF3B3644.toInt(), 0xFF7D7488.toInt(), 0xFFCFC6D8.toInt())
+    // Bronce verdoso de una placa de archivo, comido por el salitre.
+    TemaId.ARCANO -> LaminaRascar(0xFF2C3B33.toInt(), 0xFF5E7A6A.toInt(), 0xFFBFD0C4.toInt())
     // Titanio anodizado azul.
     TemaId.ESPACIO -> LaminaRascar(0xFF1E2A4A.toInt(), 0xFF4E6AA8.toInt(), 0xFFBFD0FF.toInt())
     // Cobre con verdín de un pecio.
@@ -473,6 +475,23 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             for ((dx, dy) in listOf(0f to -1f, 1f to 0f, 0f to 1f, -1f to 0f)) c.drawCircle(cx + dx * r, cy + dy * r, r, linea)
             c.drawCircle(cx, cy, r * 2.5f, linea)
             for (x in listOf(0f, l)) for (y in listOf(0f, l)) c.drawPath(estrellaLamina(x, y, l * 0.09f, 8, 0.4f), relleno)
+        }
+        TemaId.ARCANO -> {
+            // El signo en el centro (el heptágono abierto con el ojo) y, en las esquinas, puntas que se enroscan hacia dentro.
+            val cx = l / 2; val cy = l / 2; val r = l * 0.2f
+            val sig = android.graphics.Path()
+            for (k in 0..6) { val a = -Math.PI / 2 + k * 2 * Math.PI / 7; val x = cx + r * kotlin.math.cos(a).toFloat(); val y = cy + r * kotlin.math.sin(a).toFloat(); if (k == 0) sig.moveTo(x, y) else sig.lineTo(x, y) }
+            c.drawPath(sig, linea)
+            val ojo = android.graphics.Path().apply { moveTo(cx - r * 0.6f, cy); quadTo(cx, cy - r * 0.62f, cx + r * 0.6f, cy); quadTo(cx, cy + r * 0.62f, cx - r * 0.6f, cy); close() }
+            c.drawPath(ojo, linea)
+            c.drawOval(cx - r * 0.07f, cy - r * 0.22f, cx + r * 0.07f, cy + r * 0.22f, relleno)
+            for (x in listOf(0f, l)) for (y in listOf(0f, l)) {
+                val sx = if (x == 0f) 1f else -1f; val sy = if (y == 0f) 1f else -1f
+                c.drawPath(android.graphics.Path().apply {
+                    moveTo(x, y + sy * l * 0.02f); quadTo(x + sx * l * 0.1f, y + sy * l * 0.02f, x + sx * l * 0.12f, y + sy * l * 0.1f)
+                    quadTo(x + sx * l * 0.13f, y + sy * l * 0.16f, x + sx * l * 0.08f, y + sy * l * 0.14f)
+                }, linea)
+            }
         }
         TemaId.ESPACIO -> {
             // Una constelación unida por líneas y un destello de cuatro puntas.

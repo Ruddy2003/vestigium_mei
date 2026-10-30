@@ -281,6 +281,16 @@ internal val goticoOscuro = esquema(true, 0xFF0A0F2A, 0xFF111842, 0xFF1A2356, 0x
 internal val tipoGotico = tipografia(LetraExtra.textura, FontWeight.Normal, 1.16f, 0.3f, LetraExtra.goudy, 1.08f, LetraExtra.goudy, 1.1f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
+//  Horror cósmico: el archivo de un pueblo costero. De día, papel de legajo amarillento con manchas, tinta verde-negra,
+//  sepia y lacre oscuro; de noche, la niebla de la costa, la luz pálida del faro y el verde del agua que brilla.
+// ---------------------------------------------------------------------
+internal val arcanoClaro = esquema(false, 0xFFE3D9C1, 0xFFEEE6D2, 0xFFD8CCAF, 0xFFB3A683, 0xFF18231D, 0xFF4C564C,
+    0xFF2D5446, 0xFFF1EADA, 0xFFCADBCF, 0xFF0F1D17, 0xFF6A4B26, 0xFFE6D2B2, 0xFF7A2C24, 0xFF8F2B1F)
+internal val arcanoOscuro = esquema(true, 0xFF0A1210, 0xFF101B18, 0xFF182622, 0xFF2B3D37, 0xFFCDD6C7, 0xFF8C9E93,
+    0xFFE6D58C, 0xFF1A1806, 0xFF2C3524, 0xFFCDD6C7, 0xFF7DBBA4, 0xFF173229, 0xFFC98472, 0xFFFF8A80)
+internal val tipoArcano = tipografia(Letra.spectral, FontWeight.Medium, 1.06f, 0.4f, Letra.castoro, 1.06f, Letra.castoro, 1.06f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
 //  Espacio: de día, la sala de control (blanco, azul marino y naranja); de noche, estrellas y nebulosas.
 // ---------------------------------------------------------------------
 internal val espacioClaro = esquema(false, 0xFFEEF1F6, 0xFFFFFFFF, 0xFFE1E6EF, 0xFFC3CCDA, 0xFF0D1526, 0xFF4E5A70,
@@ -379,6 +389,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.SEDA -> if (oscuro) listOf(0xFFE26A50, 0xFF1F2846, 0xFF4FC3C3, 0xFFE0B04F) else listOf(0xFFC0392B, 0xFFEADFC3, 0xFF23408E, 0xFF1A8C8C)
     TemaId.URSS -> if (oscuro) listOf(0xFFE5252F, 0xFF262020, 0xFFE8D9B5, 0xFFE5252F) else listOf(0xFFC1121F, 0xFFE3D6B8, 0xFF1D1D1B, 0xFFC1121F)
     TemaId.GOTICO -> if (oscuro) listOf(0xFFE0405E, 0xFF1A2356, 0xFF5C8DFF, 0xFFE2B34A) else listOf(0xFFB3122E, 0xFFE2D9C6, 0xFF1F3A9E, 0xFFB8892B)
+    TemaId.ARCANO -> if (oscuro) listOf(0xFFC98472, 0xFF182622, 0xFF7DBBA4, 0xFFE6D58C) else listOf(0xFF7A2C24, 0xFFD8CCAF, 0xFF2D5446, 0xFF6A4B26)
     TemaId.ESPACIO -> if (oscuro) listOf(0xFFFF8A65, 0xFF121A31, 0xFF8AB4FF, 0xFFC59BFF) else listOf(0xFFE8601C, 0xFFE1E6EF, 0xFF1B3A8C, 0xFF6B4FD6)
     TemaId.ABISMO -> if (oscuro) listOf(0xFFE29BFF, 0xFF0A1A26, 0xFF5CF2C6, 0xFF3FA9FF) else listOf(0xFFC0563F, 0xFFD3E7EF, 0xFF0A5C8C, 0xFF0F8A86)
     TemaId.ANDALUS -> if (oscuro) listOf(0xFFE07A5F, 0xFF18302D, 0xFF4FC1A6, 0xFFE0B65A) else listOf(0xFFB5432A, 0xFFE9DEC6, 0xFF1E6B5C, 0xFF2A4F9E)
@@ -411,6 +422,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.SEDA -> if (oscuro) listOf(0xFF4FC3C3, 0xFFE0B04F, 0xFFE26A50) else listOf(0xFF23408E, 0xFF1A8C8C, 0xFFC0392B)
     TemaId.URSS -> if (oscuro) listOf(0xFFE8D9B5, 0xFFE8B923, 0xFFE5252F) else listOf(0xFF1D1D1B, 0xFFD4A017, 0xFFC1121F)
     TemaId.GOTICO -> if (oscuro) listOf(0xFF5C8DFF, 0xFFE2B34A, 0xFFE0405E) else listOf(0xFF1F3A9E, 0xFFB8892B, 0xFFB3122E)
+    TemaId.ARCANO -> if (oscuro) listOf(0xFF7DBBA4, 0xFFE6D58C, 0xFFC98472) else listOf(0xFF2D5446, 0xFF6A4B26, 0xFF7A2C24)
     TemaId.ESPACIO -> if (oscuro) listOf(0xFF8AB4FF, 0xFFC59BFF, 0xFFFFB86B) else listOf(0xFF1B3A8C, 0xFF6B4FD6, 0xFFE8601C)
     TemaId.ABISMO -> if (oscuro) listOf(0xFF3FA9FF, 0xFF5CF2C6, 0xFFE29BFF) else listOf(0xFF0F8A86, 0xFF0A5C8C, 0xFFC0563F)
     TemaId.ANDALUS -> if (oscuro) listOf(0xFF4FC1A6, 0xFFE0B65A, 0xFFE07A5F) else listOf(0xFF1E6B5C, 0xFF2A4F9E, 0xFFB5432A)

@@ -104,6 +104,8 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.NAVIDAD -> MarcoRecuadro(RoundedCornerShape(10.dp), 12.dp)
     TemaId.SEDA -> MarcoRecuadro(CutCornerShape(3.dp), 11.dp)
     TemaId.GOTICO -> MarcoRecuadro(RoundedCornerShape(topStart = 40.dp, topEnd = 40.dp, bottomStart = 3.dp, bottomEnd = 3.dp), 14.dp)
+    // La ficha del testigo, con la esquina de arriba recortada.
+    TemaId.ARCANO -> MarcoRecuadro(CutCornerShape(topEnd = 16.dp), 12.dp)
     TemaId.ESPACIO -> MarcoRecuadro(RoundedCornerShape(18.dp), 10.dp)
     // El casco: arriba casi recto, abajo muy redondeado, como la esfera de la tripulación.
     TemaId.ABISMO -> MarcoRecuadro(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomStart = 26.dp, bottomEnd = 26.dp), 12.dp)
@@ -259,6 +261,13 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             val o = Offset(w / 2, 8 * u); val k = c.copy(alpha = 0.5f)
             drawCircle(k, 4 * u, o, style = Stroke(0.8f * u))
             for (i in 0 until 6) { val a = i * PI.toFloat() / 3; drawCircle(k, 1.2f * u, o + Offset(cos(a), sin(a)) * (2.3f * u), style = Stroke(0.6f * u)) }
+        }
+        // La ficha clavada en el pizarrón: el alfiler arriba al centro y el doblez de la esquina recortada.
+        TemaId.ARCANO -> {
+            val o = Offset(w / 2, 5 * u)
+            drawCircle(Color.Black.copy(alpha = 0.15f), 2.6f * u, o + Offset(0.8f * u, 1f * u)); drawCircle(e.tertiary, 2.4f * u, o)
+            drawLine(c.copy(alpha = 0.4f), Offset(w - 16.dp.toPx(), 0f), Offset(w, 16.dp.toPx()), 0.8f * u)
+            drawLine(c.copy(alpha = 0.3f), Offset(8 * u, h - 6 * u), Offset(w * 0.5f, h - 6 * u), 0.6f * u)
         }
         // Miras de la sala de control en las esquinas y dos estrellas.
         TemaId.ESPACIO -> {
@@ -548,6 +557,12 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += paso
             }
             drawPath(p, col, style = Stroke(grosor * 0.35f + 0.7f * u, pathEffect = punteado))
+        }
+        // El hilo del pizarrón del investigador, que cuelga un poco entre dos alfileres.
+        TemaId.ARCANO -> {
+            val hilo = Path().apply { moveTo(4 * u, y - 2 * u); quadraticTo(w / 2, y + 4 * u + grosor, w - 4 * u, y - 2 * u) }
+            drawPath(hilo, col, style = Stroke(grosor * 0.7f, cap = StrokeCap.Round, pathEffect = punteado))
+            listOf(4 * u, w - 4 * u).forEach { x -> drawCircle(Color.Black.copy(alpha = 0.18f), 2.6f * u, Offset(x + 0.7f * u, y - 1f * u)); drawCircle(col, 2.4f * u, Offset(x, y - 2 * u)); drawCircle(fondo.copy(alpha = 0.6f), 0.8f * u, Offset(x - 0.6f * u, y - 2.6f * u)) }
         }
         // Una órbita colgante entre dos estrellas, con un planeta anillado al fondo.
         TemaId.ESPACIO -> {

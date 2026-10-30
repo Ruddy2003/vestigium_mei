@@ -397,6 +397,12 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(col, s * 0.38f, Offset(o.x + d.x * s * 0.36f, o.y + d.y * s * 0.36f)) }
             drawCircle(Color(0xFFF5D76E), s * 0.2f, o)
         }
+        // Un destello pálido de faro, con su halo verde de niebla.
+        TemaId.ARCANO -> {
+            drawCircle(Color(0xFF7DBBA4).copy(alpha = 0.3f), s * 0.8f, o)
+            listOf(0f, 90f).forEach { g -> rotate(g + i * 15f, o) { drawLine(Color(0xFFF2E3A0), Offset(o.x - s, o.y), Offset(o.x + s, o.y), s * 0.12f, cap = StrokeCap.Round) } }
+            drawCircle(Color(0xFFF2E3A0), s * 0.22f, o)
+        }
         TemaId.ESPACIO -> {
             val col = Color(0xFFE6F0FF)
             drawLine(col, Offset(o.x - s * 1.3f, o.y), Offset(o.x + s * 1.3f, o.y), s * 0.06f); drawLine(col, Offset(o.x, o.y - s * 1.3f), Offset(o.x, o.y + s * 1.3f), s * 0.06f)
@@ -461,6 +467,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.NAVIDAD -> Color(0xFF8E2A2A)
     TemaId.SEDA -> Color(0xFFD9A35A)
     TemaId.GOTICO -> Color(0xFF2C3A6B)
+    TemaId.ARCANO -> Color(0xFF2E4A3E)
     TemaId.ESPACIO -> Color(0xFF1B2140)
     TemaId.ABISMO -> Color(0xFF0B2A3A)          // el agua honda tras el cristal
     TemaId.ANDALUS -> Color(0xFFE2C98F)
@@ -627,6 +634,21 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 drawPath(Path().apply { moveTo(x, 44 * d); lineTo(x, 22 * d); quadraticTo(x, 8 * d, x + aw / 2, 4 * d); quadraticTo(x + aw, 8 * d, x + aw, 22 * d); lineTo(x + aw, 44 * d) }, a, style = Stroke(1.6f * d))
                 x += aw + 6 * d
             }
+        }
+        // El pizarrón de corcho del investigador: recortes clavados, torcidos, unidos por hilos.
+        TemaId.ARCANO -> {
+            val az = java.util.Random(13)
+            val pines = mutableListOf<Offset>()
+            repeat(((w * h) / (110 * d * 110 * d)).toInt().coerceIn(6, 40)) {
+                val o = Offset(az.nextFloat() * w, az.nextFloat() * h); val g = az.nextFloat() * 16f - 8f
+                rotate(g, o) {
+                    drawRect(v, Offset(o.x - 22 * d, o.y - 15 * d), Size(44 * d, 30 * d), style = Stroke(d))
+                    for (k in 0 until 3) drawLine(v, Offset(o.x - 16 * d, o.y - 6 * d + k * 6 * d), Offset(o.x + 16 * d, o.y - 6 * d + k * 6 * d), 0.8f * d)
+                }
+                pines += Offset(o.x, o.y - 15 * d)
+            }
+            pines.zipWithNext().forEachIndexed { k, (p, q) -> if (k % 2 == 0) drawLine(a, p, q, 0.9f * d) }
+            pines.forEach { drawCircle(a, 2.2f * d, it) }
         }
         TemaId.ESPACIO -> {
             for (k in 0 until 90) drawCircle(Color.White.copy(alpha = if (k % 7 == 0) 0.3f else 0.12f), if (k % 7 == 0) 1.6f * d else 0.9f * d,
@@ -842,6 +864,17 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             val aw = 14 * d; var x = 0f
             while (x < w) { drawArc(lerp(c, Color.Black, 0.2f), 180f, 180f, false, Offset(x + 1 * d, h * 0.5f), Size(aw - 2 * d, aw), style = Stroke(1.5f * d)); x += aw }
         }
+        // El estante metálico del archivo, pintado de verde, con los portaetiquetas y el óxido de los tornillos.
+        TemaId.ARCANO -> {
+            val c = m(Color(0xFF4F6158)); tabla(c, 0f, h * 0.6f)
+            drawLine(lerp(c, Color.Black, 0.4f), Offset(0f, h * 0.6f), Offset(w, h * 0.6f), 1.2f * d)
+            var x = 16 * d
+            while (x < w - 24 * d) {
+                drawRect(m(Color(0xFFE8DDC0)), Offset(x, h * 0.16f), Size(22 * d, h * 0.3f)); drawRect(lerp(c, Color.Black, 0.4f), Offset(x, h * 0.16f), Size(22 * d, h * 0.3f), style = Stroke(0.8f * d))
+                drawCircle(m(Color(0xFF8C5A34)), 1.4f * d, Offset(x - 8 * d, h * 0.3f))
+                x += 72 * d
+            }
+        }
         TemaId.ESPACIO -> {
             tabla(m(Color(0xFF262B33)))
             drawLine(Color(0xFF4FC3F7), Offset(0f, h * 0.2f), Offset(w, h * 0.2f), 1.2f * d)
@@ -1026,6 +1059,14 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             val t = 10 * d
             val p = Path().apply { moveTo(0f, h); lineTo(0f, t); quadraticTo(0f, t * 0.2f, w / 2, 0f); quadraticTo(w, t * 0.2f, w, t); lineTo(w, h); close() }
             drawPath(p, fondo); drawPath(p, borde, style = fino)
+        }
+        // La ficha de catálogo: la esquina de arriba doblada y el agujero del fichero abajo.
+        TemaId.ARCANO -> {
+            val e = 9 * d
+            val p = Path().apply { moveTo(0f, 0f); lineTo(w - e, 0f); lineTo(w, e); lineTo(w, h); lineTo(0f, h); close() }
+            drawPath(p, fondo); drawPath(p, borde, style = fino)
+            drawPath(Path().apply { moveTo(w - e, 0f); lineTo(w - e, e); lineTo(w, e) }, borde, style = fino)
+            drawCircle(ac, 2.4f * d, Offset(w / 2, h - 5 * d), style = fino)
         }
         TemaId.ESPACIO -> {
             val l = 6 * d

@@ -114,6 +114,31 @@ def papel_ruinas():
         d.polygon([(cx + (px * ca - py * sa) * s, cy + (px * sa + py * ca) * s) for px, py in pts], fill=(90, 110, 60, 22))
     img.save(os.path.join(OUT, 'papel_ruinas.jpg'), quality=86)
 
+def papel_arcano():
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    borde = np.clip(np.maximum(np.abs(xx - W / 2) / (W / 2), np.abs(yy - H / 2) / (H / 2)) - 0.82, 0, 1) * 5
+    # Hoja de archivo de pueblo costero: amarillenta, con manchas de humedad que dejan cerco, papel de libro de
+    # registro (los renglones los pone la página), el margen rojo desvaído, un cerco de taza y el borde oscurecido por la sal.
+    a = mezcla(col('#E6DCC2'), col('#D9CCA8'), ruido_rect(W, H, 36, 141) * 0.8)
+    hum = ruido_rect(W, H, 70, 142)
+    a = mezcla(a, col('#C7B78E'), np.clip((hum - 0.62) * 3.0, 0, 1) * 0.4)
+    cerco_h = np.exp(-((hum - 0.62) / 0.008) ** 2)
+    a = mezcla(a, col('#A8946A'), np.clip(cerco_h, 0, 1) * 0.2)
+    a = mezcla(a, col('#8A7A55'), np.clip(borde, 0, 1) * 0.55)
+    a = a * (0.965 + 0.05 * ruido_rect(W, H, 0.8, 143)[..., None])
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA')
+    d.line([(92, 40), (92, H - 40)], fill=(150, 60, 50, 46), width=1)
+    d.line([(96, 40), (96, H - 40)], fill=(150, 60, 50, 30), width=1)
+    cx, cy, rr = W * 0.74, H * 0.83, 74
+    d.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], outline=(110, 84, 46, 40), width=5)
+    d.arc([cx - rr + 6, cy - rr + 4, cx + rr - 2, cy + rr + 6], 200, 330, fill=(110, 84, 46, 30), width=3)
+    r = np.random.default_rng(144)
+    for _ in range(9):
+        x, y, s = r.random() * W, r.random() * H, 2 + r.random() * 4
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(30, 51, 41, 40))
+    img.save(os.path.join(OUT, 'papel_arcano.jpg'), quality=86)
+
 # ------------------------------------------------------------------ papeles
 def papeles():
     W, H = 720, 1280
@@ -350,6 +375,7 @@ if __name__ == '__main__':
     papel_ruinas()
     papel_antiguas()
     papel_pirata()
+    papel_arcano()
     papeles_lote7()
     papel_neon()
     papel_abismo()

@@ -739,6 +739,21 @@ object OtrasVidas {
                 "personas_dia" to i(20), "conocidas" to i(600), "poblacion" to i(150, "La aldea del paso."), "lejos" to i(900), "estatura" to i(168), "vida" to i(40), "vida_adulto" to i(60), "hijos" to i(2),
                 "alfabetizacion" to i(15, "Las runas del camino las leen más; la letra, pocos."), "lectura" to i(1, "Mapas y el libro de crónicas.")),
             fuentes = emptyList()),
+        Vida("archivista", "El archivista", "Archivista de un pueblo costero", "Un pueblo de pescadores en la niebla", "1926", 1926, "tema", "arcano", edad = 44, ficticia = true,
+            inspiracion = "Inventada para Horror cósmico: un archivo de pueblo, una costa con faro y algo que no se nombra, sin personajes, lugares ni criaturas de ninguna obra.",
+            historia = listOf(
+                "Llegó al pueblo para poner en orden el archivo municipal: cajas de actas, registros de bautizos y de naufragios, cartas que nadie reclamó. Pasa el día entre legajos húmedos, copiando a mano lo que el salitre está a punto de borrar, y anota en su diario los nombres que se repiten donde no deberían.",
+                "Come poco y a deshoras: pescado salado, pan duro, sopa de la posada y mucho café. Casi no habla con nadie; los pescadores lo saludan de lejos y cambian de acera. Al caer la tarde camina por el muelle hasta donde se ve la luz del faro.",
+                "De noche lee lo que encuentra en las cajas del fondo, a la luz de una lámpara de aceite, hasta que el cansancio lo vence de madrugada. Duerme mal y poco. En el margen de sus cuadernos hay un mismo signo, dibujado una y otra vez, que no recuerda haber trazado.",
+            ),
+            dia = listOf(t(3.0, 9.0, Hacer.DORMIR, "mal"), t(9.0, 10.0, Hacer.COMER), t(10.0, 17.0, Hacer.TRABAJO, "catalogar legajos"), t(17.0, 18.0, Hacer.CAMINO, "por el muelle"),
+                t(18.0, 19.0, Hacer.COMER), t(19.0, 3.0, Hacer.LIBRE, "lee lo que no debería")),
+            datos = mapOf("pasos" to i(5000), "km_anio" to i(1200, "El tren que lo trajo y el muelle cada tarde."), "kcal" to i(1800), "proteina" to i(70, "Pescado salado."), "azucar" to i(25, "En el café."), "fibra" to i(18),
+                "alcohol" to i(15, "Una copa de licor para dormir."), "sueno" to i(5.0, "Y mal."), "dormir" to i(3.0), "trabajo" to i(50), "aire_libre" to i(1.5, "La niebla casi no deja ver el sol."), "pantalla" to i(0),
+                "notificaciones" to i(3, "La sirena del faro y la campana de la iglesia."), "musica" to i(0.1), "personas_dia" to i(3), "conocidas" to i(150), "poblacion" to i(900),
+                "lejos" to i(600, "La ciudad donde estudió."), "estatura" to i(172), "vida" to i(55), "vida_adulto" to i(65), "hijos" to i(0), "alfabetizacion" to i(70, "En el pueblo; él lee latín y letra antigua."),
+                "lectura" to i(120, "Legajos, cartas y los libros del fondo del archivo.")),
+            fuentes = emptyList()),
     )
 
     /** Las vidas que se ven con el tema [tema]: las doce de todos y la del tema (primero). */

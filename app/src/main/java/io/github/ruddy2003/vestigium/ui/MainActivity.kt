@@ -248,6 +248,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
             listOf("— Vestigium Mei")), reintentar)
         TemaId.SEDA -> BloqueoMarco(TextosBloqueo("Vestigium Mei", "◇ Salvoconducto sellado: sólo su portador cruza la posta.", "Mostrar el salvoconducto"), arriba = 14, reintentar = reintentar) { cs -> bloqueoRollo(cs) }
         TemaId.GOTICO -> BloqueoMarco(TextosBloqueo("Vestigium mei", "✠ Clausura: el breviario está sellado.", "Abrir la clausura"), arriba = 60, reintentar = reintentar) { cs -> bloqueoOjiva(cs) }
+        // La carpeta del archivo, atada con cordel y lacrada: solo su investigador la abre.
+        TemaId.ARCANO -> BloqueoMarco(TextosBloqueo("Legajo reservado", "† Este archivo no se abre sin su investigador.", "Romper el lacre"), arriba = 22, reintentar = reintentar) { cs -> bloqueoCarpeta(cs) }
         TemaId.ESPACIO -> BloqueoFicha(TextosBloqueo("VESTIGIUM MEI", "⋆ secuencia de acceso", "INICIAR ACOPLAMIENTO",
             listOf("ESCOTILLA", "SELLADA", "SOPORTE VITAL", "NOMINAL", "TRIPULANTE", "SIN VERIFICAR")), reintentar) { cs -> bloqueoEscotilla(cs) }
         // La escotilla del batiscafo cerrada a presión: el sello detrás del ojo de buey y la lista antes de abrir.
@@ -692,6 +694,25 @@ private fun DrawScope.bloqueoOjiva(cs: ColorScheme) {
     drawPath(arco(6 * u), cs.primary.copy(alpha = 0.5f), style = Stroke(0.8f * u))
 }
 
+/** La carpeta del archivo: la pestaña de arriba con su rótulo, el cordel que la cruza y el lacre con el signo abajo. */
+private fun DrawScope.bloqueoCarpeta(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height; val pest = 26 * u
+    val carpeta = Path().apply {
+        moveTo(0f, pest); lineTo(w * 0.08f, pest); lineTo(w * 0.12f, 0f); lineTo(w * 0.44f, 0f); lineTo(w * 0.48f, pest)
+        lineTo(w, pest); lineTo(w, h); lineTo(0f, h); close()
+    }
+    drawPath(carpeta, cs.secondary.copy(alpha = 0.08f))
+    drawPath(carpeta, cs.secondary.copy(alpha = 0.7f), style = Stroke(1.6f * u))
+    drawLine(cs.onSurface.copy(alpha = 0.35f), Offset(w * 0.16f, pest * 0.5f), Offset(w * 0.4f, pest * 0.5f), 1.2f * u)
+    // El cordel que da la vuelta, y su nudo.
+    drawLine(cs.onSurface.copy(alpha = 0.25f), Offset(w * 0.5f, pest), Offset(w * 0.5f, h), 1.4f * u)
+    drawCircle(cs.onSurface.copy(alpha = 0.3f), 4 * u, Offset(w * 0.5f, pest + 4 * u), style = Stroke(1.2f * u))
+    // El lacre abajo a la derecha.
+    val s = Offset(w - 34 * u, h - 34 * u)
+    drawCircle(cs.tertiary.copy(alpha = 0.75f), 18 * u, s)
+    with(Contenedores) { signoOjo(s, 10 * u, cs.surface.copy(alpha = 0.85f), 1.2f * u) }
+}
+
 /** Arco de herradura dentro de su alfiz. */
 private fun DrawScope.bloqueoHerradura(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height; val m = 10 * u
@@ -860,6 +881,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.NAVIDAD -> false
     TemaId.SEDA -> false
     TemaId.GOTICO -> false
+    TemaId.ARCANO -> false
     TemaId.ESPACIO -> false
     TemaId.ABISMO -> true            // el agua llena la pestaña activa
     TemaId.ANDALUS -> true
@@ -892,6 +914,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.NAVIDAD -> true
     TemaId.SEDA -> false
     TemaId.GOTICO -> true
+    TemaId.ARCANO -> true
     TemaId.ESPACIO -> true
     TemaId.ABISMO -> true
     TemaId.ANDALUS -> true
@@ -1059,6 +1082,14 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             }
             drawPath(arco, cs.primary.copy(alpha = 0.12f * p))
             drawPath(arco, c, style = linea)
+        }
+        // El haz del faro que se abre sobre la pestaña elegida, y el subrayado a pulso con su gota.
+        TemaId.ARCANO -> {
+            val haz = Path().apply { moveTo(cx, h); lineTo(cx - 22 * u * p, -2 * u); lineTo(cx + 22 * u * p, -2 * u); close() }
+            drawPath(haz, cs.primary.copy(alpha = 0.1f * p))
+            val y = h + 1 * u
+            drawLine(c, Offset(cx - 16 * u * p, y), Offset(cx + 16 * u * p, y - 1.5f * u), 1.4f * u)
+            drawCircle(c, 1.6f * u * p, Offset(cx + 16 * u * p, y - 1.5f * u))
         }
         // Órbita inclinada con su satélite.
         TemaId.ESPACIO -> girar(-16f, Offset(cx, cy)) {
@@ -1254,6 +1285,17 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             }, c)
             drawCircle(cs.tertiary, 2.2f * u, Offset(cx, 9 * u))
         }
+        // Un sello de lacre derramado, con el aro del signo.
+        TemaId.ARCANO -> {
+            val p = Path()
+            for (k in 0..14) {
+                val a = -Math.PI / 2 + k * 2 * Math.PI / 14; val rr = (if (k % 2 == 0) 26f else 23f) * u
+                val q = Offset(cx + (rr * kotlin.math.cos(a)).toFloat(), cy + (rr * kotlin.math.sin(a)).toFloat())
+                if (k == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
+            }
+            p.close(); drawPath(p, c)
+            drawCircle(sobre.copy(alpha = 0.5f), 19 * u, Offset(cx, cy), style = Stroke(1f * u))
+        }
         // Planeta con anillo.
         TemaId.ESPACIO -> {
             drawCircle(c, 19 * u, Offset(cx, cy))
@@ -1388,6 +1430,16 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.GOTICO -> {
             filete(h - 0.5f * u); var x = 0f
             while (x < w) { drawPath(Path().apply { moveTo(x, h); quadraticTo(x, 1 * u, x + 5 * u, 0f); quadraticTo(x + 10 * u, 1 * u, x + 10 * u, h) }, acento, style = Stroke(0.8f * u)); x += 10 * u }
+        }
+        // La marea a tinta: una ola menuda a lo largo, y de trecho en trecho una punta que se enrosca.
+        TemaId.ARCANO -> {
+            filete(); val ola = Path(); var x = 0f; var k = 0; ola.moveTo(0f, 3 * u)
+            while (x < w) {
+                if (k % 9 == 8) { ola.quadraticTo(x + 2 * u, -1 * u, x + 5 * u, 0f); ola.quadraticTo(x + 7 * u, 1.5f * u, x + 5 * u, 2 * u); ola.moveTo(x + 8 * u, 3 * u) }
+                else { ola.quadraticTo(x + 2 * u, 1.6f * u, x + 4 * u, 3 * u); ola.quadraticTo(x + 6 * u, 4.4f * u, x + 8 * u, 3 * u) }
+                x += 8 * u; k++
+            }
+            drawPath(ola, acento, style = Stroke(0.8f * u))
         }
         // Puntos de estrellas, uno brillante cada siete.
         TemaId.ESPACIO -> {
@@ -1701,6 +1753,8 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.RUINAS -> (slideInVertically(t(340)) { -it / 24 } + fadeIn(t(300))) togetherWith (slideOutVertically(t(220)) { it / 16 } + fadeOut(t(200)))
         // La luz atraviesa el vitral: aparece despacio, como cuando sale el sol detrás de la ventana.
         TemaId.GOTICO -> (fadeIn(t(460)) + expandVertically(t(420), expandFrom = Alignment.Bottom) { it / 4 * 3 }) togetherWith fadeOut(t(220))
+        // La niebla: la pantalla nueva aparece muy despacio y casi del mismo tamaño; la anterior se disuelve.
+        TemaId.ARCANO -> (fadeIn(t(620, frena)) + scaleIn(t(620, frena), initialScale = 0.985f)) togetherWith fadeOut(t(380, lineal))
         // Acoplamiento: entra desde lejos, pequeña, y se ajusta; la anterior se aleja hacia la cámara.
         TemaId.ESPACIO -> (scaleIn(t(320, frena), initialScale = 0.86f) + fadeIn(t(260))) togetherWith (scaleOut(t(200), targetScale = 1.08f) + fadeOut(t(200)))
         // Bajar: la nueva entra desde arriba despacio, como lastrada; la anterior se hunde y se apaga.

@@ -245,6 +245,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.NAVIDAD -> RoundedCornerShape(4.dp)
     TemaId.SEDA -> RectangleShape
     TemaId.GOTICO -> RectangleShape
+    TemaId.ARCANO -> CutCornerShape(topEnd = 4.dp)
     TemaId.ESPACIO -> RoundedCornerShape(3.dp)
     TemaId.ABISMO -> RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomStart = 9.dp, bottomEnd = 9.dp)
     TemaId.ANDALUS -> RectangleShape
@@ -451,6 +452,15 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 quadraticTo(w - 2.4f * s, h * 0.26f, w - 2.4f * s, h * 0.5f); lineTo(w - 2.4f * s, h)
             }, plomo.copy(alpha = 0.35f), style = Stroke(0.7f * s))
             if (hoy) drawPath(figEstrella(Offset(w / 2, 3.4f * s), 2.4f * s, 1f * s, 5), oro)
+            if (sellado) sello(acento)
+        }
+        // La ficha del día con la esquina recortada; hoy, rodeada a lápiz dos veces, como quien no quiere olvidarla.
+        TemaId.ARCANO -> {
+            contorno(linea, 0.9f)
+            if (hoy) {
+                drawOval(acento.copy(alpha = 0.8f), Offset(1.5f * s, 2f * s), Size(w - 3f * s, h - 3.5f * s), style = Stroke(1.1f * s))
+                drawOval(acento.copy(alpha = 0.45f), Offset(2.5f * s, 1f * s), Size(w - 4.5f * s, h - 2.5f * s), style = Stroke(0.7f * s))
+            }
             if (sellado) sello(acento)
         }
         // Mira de la pantalla de control: solo las esquinas.

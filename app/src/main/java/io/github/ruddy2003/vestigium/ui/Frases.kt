@@ -636,6 +636,45 @@ object Frases {
         f("Experto crede: aliquid amplius invenies in silvis quam in libris. Ligna et lapides docebunt te quod a magistris audire non possis.", "Créele a quien lo ha probado: encontrarás algo más en los bosques que en los libros. Los árboles y las piedras te enseñarán lo que no puedes oír de los maestros.", "Bernardo de Claraval, Carta 106, 2"),
     )
 
+    /** Horror cósmico: lo que se ve en la niebla, el miedo, el abismo y el diario de quien investiga. Todas de dominio público. */
+    val ARCANO = listOf(
+        f(null, "El sueño de la razón produce monstruos.", "Francisco de Goya, Los caprichos, lámina 43, 1799"),
+        f("There are more things in heaven and earth, Horatio, than are dreamt of in your philosophy.",
+            "Hay más cosas en el cielo y en la tierra, Horacio, de las que sueña tu filosofía.", "Shakespeare, Hamlet, acto I, escena 5"),
+        f("Le silence éternel de ces espaces infinis m'effraie.", "El silencio eterno de estos espacios infinitos me espanta.", "Blaise Pascal, Pensamientos, 1670"),
+        f("Und wenn du lange in einen Abgrund blickst, blickt der Abgrund auch in dich hinein.",
+            "Y si miras largo tiempo a un abismo, el abismo también mira dentro de ti.", "Friedrich Nietzsche, Más allá del bien y del mal, § 146, 1886"),
+        f("All that we see or seem is but a dream within a dream.", "Todo lo que vemos o parecemos no es sino un sueño dentro de un sueño.", "Edgar Allan Poe, «Un sueño dentro de un sueño», 1849"),
+        f("Deep into that darkness peering, long I stood there wondering, fearing, doubting, dreaming dreams no mortal ever dared to dream before.",
+            "Mirando a fondo esa oscuridad, me quedé largo rato asombrado, temiendo, dudando, soñando sueños que ningún mortal se atrevió a soñar antes.", "Edgar Allan Poe, «El cuervo», 1845"),
+        f("They who dream by day are cognizant of many things which escape those who dream only by night.",
+            "Los que sueñan de día saben de muchas cosas que se les escapan a los que solo sueñan de noche.", "Edgar Allan Poe, «Eleonora», 1842"),
+        f("The boundaries which divide Life from Death are at best shadowy and vague. Who shall say where the one ends, and where the other begins?",
+            "Los límites que separan la Vida de la Muerte son, en el mejor de los casos, sombríos y vagos. ¿Quién dirá dónde termina la una y dónde empieza la otra?", "Edgar Allan Poe, «El entierro prematuro», 1844"),
+        f("True!—nervous—very, very dreadfully nervous I had been and am; but why will you say that I am mad?",
+            "¡Es verdad! Nervioso, muy nervioso, terriblemente nervioso he estado y estoy; pero ¿por qué dirán ustedes que estoy loco?", "Edgar Allan Poe, «El corazón delator», 1843"),
+        f("Alone, alone, all, all alone, alone on a wide wide sea!", "¡Solo, solo, del todo solo, solo en un ancho, ancho mar!", "Samuel Taylor Coleridge, La balada del viejo marinero, parte IV (versión de 1817)"),
+        f("Like one, that on a lonesome road doth walk in fear and dread, and having once turned round walks on, and turns no more his head; because he knows, a frightful fiend doth close behind him tread.",
+            "Como quien por un camino solitario anda con miedo y espanto y, habiéndose vuelto una vez, sigue andando y ya no vuelve la cabeza, porque sabe que un demonio espantoso camina muy cerca detrás de él.",
+            "Samuel Taylor Coleridge, La balada del viejo marinero, parte VI (versión de 1817)"),
+        f("Yes, as every one knows, meditation and water are wedded for ever.", "Sí, como todo el mundo sabe, la meditación y el agua están casadas para siempre.", "Herman Melville, Moby Dick, capítulo 1, 1851"),
+        f("Learn from me, if not by my precepts, at least by my example, how dangerous is the acquirement of knowledge.",
+            "Aprende de mí, si no por mis consejos, al menos por mi ejemplo, cuán peligrosa es la adquisición del conocimiento.", "Mary Shelley, Frankenstein, 1818 (capítulo 4 en la edición de 1831)"),
+        f(null, "¡Dios mío, qué solos se quedan los muertos!", "Gustavo Adolfo Bécquer, Rimas, LXXIII, 1871"),
+        f("Diary, n. A daily record of that part of one's life, which he can relate to himself without blushing.",
+            "Diario, s. Registro cotidiano de aquella parte de la vida de uno que puede contarse a sí mismo sin sonrojarse.", "Ambrose Bierce, El diccionario del diablo, 1911"),
+        f("Ghost, n. The outward and visible sign of an inward fear.", "Fantasma, s. La señal externa y visible de un miedo interno.", "Ambrose Bierce, El diccionario del diablo, 1911"),
+        f("No passion so effectually robs the mind of all its powers of acting and reasoning as fear.",
+            "Ninguna pasión despoja tan eficazmente a la mente de todo su poder de obrar y de razonar como el miedo.", "Edmund Burke, Indagación filosófica sobre lo sublime y lo bello, parte II, sección 1, 1757"),
+        f("Whatever is in any sort terrible, or is conversant about terrible objects, or operates in a manner analogous to terror, is a source of the sublime.",
+            "Todo lo que de algún modo es terrible, o tiene que ver con objetos terribles, u obra de manera parecida al terror, es fuente de lo sublime.", "Edmund Burke, Indagación filosófica sobre lo sublime y lo bello, parte I, sección 7, 1757"),
+        f("Man is not truly one, but truly two.", "El hombre no es verdaderamente uno, sino verdaderamente dos.", "Robert Louis Stevenson, El extraño caso del doctor Jekyll y el señor Hyde, 1886"),
+        f("Welcome to my house! Enter freely and of your own will!", "¡Bienvenido a mi casa! ¡Entre libremente y por su propia voluntad!", "Bram Stoker, Drácula, capítulo 2, 1897"),
+        f("We are such stuff as dreams are made on, and our little life is rounded with a sleep.",
+            "Somos de la misma materia que los sueños, y nuestra breve vida está rodeada de un sueño.", "Shakespeare, La tempestad, acto IV, escena 1"),
+        f(null, "Que toda la vida es sueño, y los sueños, sueños son.", "Pedro Calderón de la Barca, La vida es sueño, jornada II, 1635"),
+    )
+
     val ESPACIO = listOf(
         f("Οἶδ᾽ ὅτι θνατὸς ἐγὼ καὶ ἐφάμερος· ἀλλ᾽ ὅταν ἄστρων μαστεύω πυκινὰς ἀμφιδρόμους ἕλικας, οὐκέτ᾽ ἐπιψαύω γαίης ποσίν",
             "Sé que soy mortal y de un día; pero cuando sigo las apretadas espirales de los astros, ya no toco la tierra con los pies.", "Claudio Ptolomeo, Antología Palatina IX, 577"),
@@ -874,6 +913,7 @@ object Frases {
         TemaId.SEDA -> SEDA
         TemaId.URSS -> URSS
         TemaId.GOTICO -> GOTICO
+        TemaId.ARCANO -> ARCANO
         TemaId.ESPACIO -> ESPACIO
         TemaId.ABISMO -> ABISMO
         TemaId.ANDALUS -> ANDALUS
@@ -912,6 +952,7 @@ object Frases {
         TemaId.SEDA -> "Dicho de la caravana"
         TemaId.URSS -> "LEMA DEL DÍA"
         TemaId.GOTICO -> "Lectio del día"
+        TemaId.ARCANO -> "Recorte del día"
         TemaId.ESPACIO -> "TRANSMISIÓN DEL DÍA"
         TemaId.ABISMO -> "LO QUE SUBIÓ LA SONDA HOY"
         TemaId.ANDALUS -> "حكمة اليوم · sentencia del día"

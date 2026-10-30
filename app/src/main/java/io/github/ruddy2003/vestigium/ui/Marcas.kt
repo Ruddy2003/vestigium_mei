@@ -135,6 +135,8 @@ object Marcas {
             TemaId.NAVIDAD -> if (persona) Aspecto(p, p, Forma.CINTA, negrita = true) else Aspecto(s, s, Forma.ZIGZAG)
             TemaId.SEDA -> if (persona) Aspecto(cs.onPrimary, p, Forma.SELLO, negrita = true) else Aspecto(s, s, Forma.RECUADRO)
             TemaId.GOTICO -> if (persona) Aspecto(p, t, Forma.OJIVA, negrita = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
+            // Los testigos, entre los corchetes de una nota del archivo; los asuntos, subrayados a lápiz con puntos.
+            TemaId.ARCANO -> if (persona) Aspecto(t, s, Forma.CORCHETES, negrita = true) else Aspecto(p, s, Forma.PUNTEADO, cursiva = true)
             TemaId.ESPACIO -> if (persona) Aspecto(t, t, Forma.ESQUINAS, negrita = true) else Aspecto(p, p, Forma.GUIONES)
             TemaId.ABISMO -> if (persona) Aspecto(p, s, Forma.ESCOTILLA, negrita = true) else Aspecto(t, t, Forma.BURBUJAS)
             TemaId.ANDALUS -> if (persona) Aspecto(p, t, Forma.HERRADURA, negrita = true) else Aspecto(s, s, Forma.TRENZA)

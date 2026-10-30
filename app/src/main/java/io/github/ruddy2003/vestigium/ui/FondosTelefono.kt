@@ -176,6 +176,7 @@ object FondosTelefono {
         TemaId.NAVIDAD -> "Cartas de invierno"
         TemaId.SEDA -> "絲路 · VESTIGIUM"
         TemaId.GOTICO -> "Horae vestigii"
+        TemaId.ARCANO -> "Archivo de lo que vi · Vestigium Mei"
         TemaId.ESPACIO -> "BITÁCORA DE A BORDO · VM-1"
         TemaId.ABISMO -> "BITÁCORA DEL BATISCAFO · INMERSIÓN"
         TemaId.ANDALUS -> "أثري"
@@ -484,6 +485,24 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     }, c, style = Stroke(g))
                 }
                 ojiva(0f, col, 1.4f * u); ojiva(7 * u, tenue, 0.8f * u)
+            }
+            TemaId.ARCANO -> {
+                // La hoja del legajo: filete a pulso, la esquina de arriba doblada, dos tiras de cinta y, abajo al centro, el
+                // signo del ojo; por la orilla de abajo asoman, apenas, dos puntas que se enroscan.
+                val doblez = 34 * u
+                drawPath(Path().apply { moveTo(izq, arr); lineTo(der - doblez, arr); lineTo(der, arr + doblez); lineTo(der, aba); lineTo(izq, aba); close() }, col, style = Stroke(1.3f * u))
+                drawPath(Path().apply { moveTo(der - doblez, arr); lineTo(der - doblez, arr + doblez); lineTo(der, arr + doblez) }, tenue, style = Stroke(0.9f * u))
+                listOf(Offset(izq, arr) to -40f, Offset(izq, aba) to 40f).forEach { (o, g) ->
+                    rotate(g, o) { drawRect(e.secondary.copy(alpha = 0.18f), Offset(o.x - 18 * u, o.y - 6 * u), Size(36 * u, 12 * u)) }
+                }
+                drawLine(e.tertiary.copy(alpha = 0.25f), Offset(izq + 18 * u, arr), Offset(izq + 18 * u, aba), 1f * u)
+                with(Contenedores) { signoOjo(Offset(cx, aba - 34 * u), 14 * u, col, 1.1f * u) }
+                listOf(izq + 30 * u to 1f, der - 30 * u to -1f).forEach { (x0, s) ->
+                    drawPath(Path().apply {
+                        moveTo(x0 - 5 * u, aba); quadraticTo(x0 + s * 10 * u, aba - 30 * u, x0 + s * 4 * u, aba - 48 * u)
+                        quadraticTo(x0 + s * 16 * u, aba - 58 * u, x0 + s * 14 * u, aba - 44 * u); quadraticTo(x0 + s * 18 * u, aba - 26 * u, x0 + 5 * u, aba)
+                    }, tenue, style = Stroke(0.9f * u))
+                }
             }
             TemaId.ESPACIO -> {
                 // Pantalla de la sala de control: escuadras, reglas graduadas a los lados y retículas en las esquinas.
@@ -824,6 +843,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.SEDA -> R.drawable.logo_seda
     TemaId.URSS -> R.drawable.logo_urss
     TemaId.GOTICO -> R.drawable.logo_gotico
+    TemaId.ARCANO -> R.drawable.logo_arcano
     TemaId.ESPACIO -> R.drawable.logo_espacio
     TemaId.ABISMO -> R.drawable.logo_abismo
     TemaId.ANDALUS -> R.drawable.logo_andalus

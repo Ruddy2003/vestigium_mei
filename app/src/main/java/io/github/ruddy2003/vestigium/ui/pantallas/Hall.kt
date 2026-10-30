@@ -102,6 +102,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.NAVIDAD -> Color(0xFF1B5E20)
     TemaId.SEDA -> Color(0xFFC0392B)
     TemaId.GOTICO -> Color(0xFF1A3A8F)
+    TemaId.ARCANO -> Color(0xFF2E4A3E)
     TemaId.ESPACIO -> Color(0xFF7B1FA2)
     TemaId.ABISMO -> Color(0xFF0F8A86)          // el verde azul del agua honda
     TemaId.ANDALUS -> Color(0xFF1F7A6B)
@@ -211,6 +212,8 @@ object PiezasLogro {
         TemaId.NAVIDAD -> Trazo(u, 1.35f, StrokeCap.Round, StrokeJoin.Round, null, 0f, true, Color(0xFFF7FAFF))
         TemaId.SEDA -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(9f, 1.2f, 1.5f, 1.2f), 0f, false, Color(0xFFF6E2C8))
         TemaId.GOTICO -> Trazo(u, 1.4f, StrokeCap.Square, StrokeJoin.Miter, null, 0f, true, Color(0xFFD8E2F2))
+        // Tinta de pluma de acero que falla a ratos sobre papel de libreta.
+        TemaId.ARCANO -> Trazo(u, 1.1f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(14f, 1.4f, 2f, 1.4f), 0f, false, Color(0xFFE8DDC0))
         TemaId.ESPACIO -> Trazo(u, 0.85f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(6f, 2f, 1f, 2f), 0f, false, Color(0xFFE2E4EA))
         // Trazo blando, de esquinas redondeadas por el agua; el material es el cristal verdoso de un ojo de buey.
         TemaId.ABISMO -> Trazo(u, 1f, StrokeCap.Round, StrokeJoin.Round, null, 3f, false, Color(0xFFDCEFF2))
@@ -341,6 +344,11 @@ object PiezasLogro {
                 for (i in 0 until 12) { val a0 = i * PI / 6; val a1 = (i + 1) * PI / 6; val p0 = en(a0, 0.92f); val pm = en((a0 + a1) / 2, 0.8f); val p1 = en(a1, 0.92f); if (i == 0) p.moveTo(p0.x, p0.y); p.quadraticTo(pm.x, pm.y, p1.x, p1.y) }
                 drawPath(p, m, style = Stroke(1.4f * u))
             }
+            // Veintiuna muescas y las siete puntas del heptágono del signo.
+            TemaId.ARCANO -> {
+                for (i in 0 until 21) drawLine(t, en(i * 2 * PI / 21, 0.86f), en(i * 2 * PI / 21, 0.95f), 0.9f * u)
+                for (k in 0 until 7) drawCircle(m, 1.7f * u, en(-PI / 2 + k * 2 * PI / 7, 0.9f))
+            }
             TemaId.ESPACIO -> {
                 for (i in 0 until 4) drawArc(pri, i * 90f + 8f, 74f, false, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f), style = Stroke(1.6f * u))
                 drawCircle(cs.primary, 2 * u, en(-PI / 4, 0.9f))
@@ -444,6 +452,8 @@ object PiezasLogro {
                 lineTo(x + an - 2 * u, y - 4.5f * u); lineTo(cx, y - 6 * u); lineTo(x + 2 * u, y - 4.5f * u); close()
             }, tinta)
             TemaId.GOTICO -> { tri(11 * u, x + 1 * u, x + an - 1 * u); drawCircle(tinta, 0.9f * u, Offset(cx, y - 11.5f * u)) }
+            // Tejado de dos aguas con la veleta torcida por el viento del mar.
+            TemaId.ARCANO -> { tri(4.5f * u, x - 0.6f * u, x + an + 0.6f * u); drawLine(tinta, Offset(cx, y - 4.5f * u), Offset(cx + 1.5f * u, y - 9 * u), 0.8f * u); drawLine(tinta, Offset(cx + 0.6f * u, y - 7.8f * u), Offset(cx + 3.4f * u, y - 8.4f * u), 0.8f * u) }
             TemaId.ESPACIO -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 3 * u), 0.8f * u); drawArc(tinta, 20f, 140f, false, Offset(cx - 3 * u, y - 9 * u), Size(6 * u, 6 * u), style = Stroke(1 * u)) }
             // La cúpula de una escotilla, con su respiradero.
             TemaId.ABISMO -> { drawArc(tinta, 180f, 180f, true, Offset(cx - an * 0.32f, y - an * 0.32f), Size(an * 0.64f, an * 0.64f)); drawLine(tinta, Offset(cx, y - an * 0.3f), Offset(cx, y - an * 0.3f - 3 * u), 0.9f * u); drawCircle(tinta, 1 * u, Offset(cx, y - an * 0.3f - 3.5f * u)) }
@@ -542,6 +552,8 @@ object PiezasLogro {
                 moveTo(c.x - 22 * u, c.y + 22 * u); lineTo(c.x - 22 * u, c.y - 6 * u); quadraticTo(c.x - 22 * u, c.y - 22 * u, c.x, c.y - 32 * u)
                 quadraticTo(c.x + 22 * u, c.y - 22 * u, c.x + 22 * u, c.y - 6 * u); lineTo(c.x + 22 * u, c.y + 22 * u); close()
             })
+            // El heptágono del signo, con la tinta desigual de un sello de goma gastado.
+            TemaId.ARCANO -> { traza(poligono(7, 30 * u, -PI / 2, irregular = true)); drawCircle(tinto, 24 * u, c, style = Stroke(0.7f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5 * u, 1.5f * u)))) }
             TemaId.ESPACIO -> {
                 traza(circulo(c, 25 * u))
                 listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawLine(tinto, Offset(c.x + d.x * 22 * u, c.y + d.y * 22 * u), Offset(c.x + d.x * 31 * u, c.y + d.y * 31 * u), 1.2f * u) }
@@ -869,6 +881,17 @@ object PiezasLogro {
                 for (k in 0 until 6) { val a = k * PI / 3; drawLine(tinta, Offset(c.x, base - 15 * u), Offset(c.x + (4 * u * cos(a)).toFloat(), base - 15 * u + (4 * u * sin(a)).toFloat()), 0.6f * u) }
                 drawPath(Path().apply { moveTo(c.x - 3 * u, base); lineTo(c.x - 3 * u, base - 5 * u); lineTo(c.x, base - 9 * u); lineTo(c.x + 3 * u, base - 5 * u); lineTo(c.x + 3 * u, base); close() }, hueco)
             }
+            // El faro sobre su roca, con la casa del farero y los dos haces.
+            TemaId.ARCANO -> {
+                drawPath(Path().apply { moveTo(c.x - 28 * u, base); quadraticTo(c.x - 20 * u, base - 8 * u, c.x - 6 * u, base - 9 * u); lineTo(c.x + 12 * u, base - 8 * u); quadraticTo(c.x + 24 * u, base - 5 * u, c.x + 28 * u, base); close() }, tinta)
+                drawPath(Path().apply { moveTo(c.x - 7 * u, base - 8 * u); lineTo(c.x - 4.5f * u, base - 38 * u); lineTo(c.x + 4.5f * u, base - 38 * u); lineTo(c.x + 7 * u, base - 8 * u); close() }, tinta)
+                listOf(16f, 26f).forEach { y -> drawRect(hueco, Offset(c.x - 6 * u, base - y * u), Size(12 * u, 3 * u)) }
+                drawRect(hueco, Offset(c.x - 3.5f * u, base - 44 * u), Size(7 * u, 6 * u))
+                drawPath(Path().apply { moveTo(c.x - 5 * u, base - 44 * u); lineTo(c.x, base - 49 * u); lineTo(c.x + 5 * u, base - 44 * u); close() }, tinta)
+                listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(c.x, base - 41 * u); lineTo(c.x + s * 28 * u, base - 47 * u); lineTo(c.x + s * 28 * u, base - 37 * u); close() }, hueco.copy(alpha = 0.35f)) }
+                drawRect(tinta, Offset(c.x + 10 * u, base - 16 * u), Size(12 * u, 8 * u)); drawPath(Path().apply { moveTo(c.x + 9 * u, base - 16 * u); lineTo(c.x + 16 * u, base - 21 * u); lineTo(c.x + 23 * u, base - 16 * u); close() }, tinta)
+                drawRect(hueco, Offset(c.x + 14 * u, base - 13 * u), Size(3 * u, 3 * u))
+            }
             TemaId.ESPACIO -> {
                 drawRect(tinta, Offset(c.x - 18 * u, base - 14 * u), Size(36 * u, 14 * u))
                 drawArc(tinta, 180f, 180f, true, Offset(c.x - 18 * u, base - 32 * u), Size(36 * u, 36 * u))
@@ -1126,6 +1149,19 @@ object PiezasLogro {
                 })
                 listOf(Offset(0f, -2.4f), Offset(-2f, 0.6f), Offset(2f, 0.6f)).forEach { o -> drawCircle(tinta, 1.6f * u, Offset(px + o.x * u, c.y - 31 * u + o.y * u)) }
             }
+            // Un paño raído de vela de barco con el ojo del signo, colgado de un remo.
+            TemaId.ARCANO -> {
+                asta()
+                pano(Path().apply {
+                    moveTo(px, arriba); lineTo(c.x + 24 * u, arriba)
+                    lineTo(c.x + 22 * u, arriba + 18 * u); lineTo(c.x + 16 * u, arriba + 22 * u); lineTo(c.x + 10 * u, arriba + 17 * u); lineTo(c.x + 3 * u, arriba + 24 * u)
+                    lineTo(c.x - 4 * u, arriba + 18 * u); lineTo(px + 4 * u, arriba + 23 * u); lineTo(px, arriba + 19 * u); close()
+                })
+                val o = Offset(c.x + 5 * u, arriba + 10 * u)
+                drawPath(Path().apply { moveTo(o.x - 8 * u, o.y); quadraticTo(o.x, o.y - 7 * u, o.x + 8 * u, o.y); quadraticTo(o.x, o.y + 7 * u, o.x - 8 * u, o.y); close() }, claro)
+                drawOval(tinta, Offset(o.x - 1.2f * u, o.y - 3.4f * u), Size(2.4f * u, 6.8f * u))
+                drawPath(Path().apply { moveTo(px - 2 * u, c.y - 26 * u); lineTo(px + 2 * u, c.y - 26 * u); lineTo(px + 1 * u, c.y - 32 * u); lineTo(px - 1 * u, c.y - 32 * u); close() }, tinta)
+            }
             TemaId.ESPACIO -> {
                 asta()
                 raya(tz, tinta, Offset(px, arriba), Offset(c.x + 22 * u, arriba), 1.4f * u)
@@ -1337,6 +1373,14 @@ object PiezasLogro {
                 disco()
                 listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawCircle(tinta, 5.5f * u, Offset(c.x + d.x * 5.5f * u, c.y + d.y * 5.5f * u), style = Stroke(1 * u)) }
                 drawCircle(tono, 3 * u, c)
+            }
+            // Una ficha de bronce verde: el heptágono del signo y el ojo acuñados.
+            TemaId.ARCANO -> {
+                disco()
+                val hp = Path().apply { for (k in 0..6) { val q = en(-PI / 2 + k * 2 * PI / 7, 0.7f); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) } }
+                contorno(tz, hp, tinta, 1 * u)
+                drawPath(Path().apply { moveTo(c.x - 7 * u, c.y); quadraticTo(c.x, c.y - 6 * u, c.x + 7 * u, c.y); quadraticTo(c.x, c.y + 6 * u, c.x - 7 * u, c.y); close() }, tinta, style = Stroke(1 * u))
+                drawOval(tinta, Offset(c.x - 1 * u, c.y - 3 * u), Size(2 * u, 6 * u))
             }
             TemaId.ESPACIO -> {
                 drawCircle(tono.copy(alpha = 0.35f), R, c); contorno(tz, circulo(c, R), tinta, 1.4f * u); contorno(tz, circulo(c, R * 0.8f), tinta, 0.8f * u)
@@ -1567,6 +1611,17 @@ object PiezasLogro {
                 drawRect(Color(0xFFB0283F), Offset(c.x - 23 * u, c.y - 13 * u), Size(8 * u, 8 * u)); drawRect(Color(0xFF2952A3), Offset(c.x - 21 * u, c.y - 11 * u), Size(4 * u, 4 * u))
                 drawLine(Color(0xFFD4AF37), Offset(c.x - 26 * u, c.y + 17 * u), Offset(c.x - 1 * u, c.y + 17 * u), 1.4f * u); drawLine(Color(0xFFD4AF37), Offset(c.x + 1 * u, c.y + 17 * u), Offset(c.x + 26 * u, c.y + 17 * u), 1.4f * u)
                 for (k in 0 until 3) drawCircle(Color(0xFFB0283F), 1 * u, Offset(c.x + 23 * u, c.y - 8 * u + k * 6 * u))
+            }
+            // El diario del investigador: tapas de tela con la correa, la etiqueta y los recortes que asoman.
+            TemaId.ARCANO -> {
+                listOf(Offset(-20f, -19f) to -8f, Offset(14f, -18f) to 6f, Offset(22f, 6f) to 10f).forEach { (o, g) ->
+                    rotate(g, Offset(c.x + o.x * u, c.y + o.y * u)) { drawRect(papel, Offset(c.x + o.x * u - 6 * u, c.y + o.y * u - 4 * u), Size(12 * u, 8 * u)); drawRect(tinta.copy(alpha = 0.4f), Offset(c.x + o.x * u - 6 * u, c.y + o.y * u - 4 * u), Size(12 * u, 8 * u), style = Stroke(0.6f * u)) }
+                }
+                tapa(c.x - 20 * u, c.y - 17 * u, c.x + 20 * u, c.y + 19 * u, tono, 1.5f * u)
+                drawRect(papel, Offset(c.x - 11 * u, c.y - 10 * u), Size(22 * u, 10 * u))
+                fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x - 8 * u, c.y - 5 * u), Offset(c.x + 8 * u, c.y - 5 * u), 0.8f * u)
+                drawRect(tinta.copy(alpha = 0.8f), Offset(c.x + 12 * u, c.y - 17 * u), Size(3.5f * u, 36 * u))
+                drawRect(papel, Offset(c.x + 11 * u, c.y + 2 * u), Size(5.5f * u, 4 * u), style = Stroke(0.8f * u))
             }
             TemaId.ESPACIO -> {
                 tapa(c.x - 17 * u, c.y - 22 * u, c.x + 17 * u, c.y + 24 * u, tono, 2 * u)
@@ -1800,6 +1855,15 @@ object PiezasLogro {
                 val s = Path().apply { moveTo(c.x - 24 * u, c.y - 15 * u); lineTo(c.x, c.y + 10 * u); lineTo(c.x + 24 * u, c.y - 15 * u); close() }
                 drawPath(s, lerp(papel, tinta, 0.1f)); contorno(tz, s, tinta, 1 * u)
                 drawPath(estrellaN(Offset(c.x, c.y + 8 * u), 6 * u, 6, 0.6f), tono); drawCircle(Color(0xFFF5D76E), 1.6f * u, Offset(c.x, c.y + 8 * u))
+            }
+            // El sobre de archivo de papel manila, cerrado con hilo y dos botones, y el matasellos borroso.
+            TemaId.ARCANO -> {
+                hoja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u, lerp(papel, Color(0xFFC9B88A), 0.6f))
+                solapaV(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y - 2 * u)
+                listOf(Offset(c.x, c.y - 2 * u), Offset(c.x, c.y + 8 * u)).forEach { drawCircle(tinta, 2.4f * u, it, style = Stroke(0.9f * u)) }
+                drawPath(Path().apply { moveTo(c.x, c.y - 2 * u); lineTo(c.x + 4 * u, c.y + 3 * u); lineTo(c.x, c.y + 8 * u); lineTo(c.x - 3 * u, c.y + 3 * u); lineTo(c.x, c.y - 2 * u) }, tinta, style = Stroke(0.7f * u))
+                drawCircle(tono.copy(alpha = 0.6f), 6 * u, Offset(c.x + 15 * u, c.y - 7 * u), style = Stroke(1 * u))
+                drawCircle(tono.copy(alpha = 0.4f), 4 * u, Offset(c.x + 15 * u, c.y - 7 * u), style = Stroke(0.6f * u))
             }
             TemaId.ESPACIO -> {
                 hoja(c.x - 22 * u, c.y - 10 * u, c.x + 18 * u, c.y + 16 * u)

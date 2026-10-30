@@ -296,6 +296,16 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             }
             drawCircle(sombra, r * 0.58f, c, style = Stroke(r * 0.06f))
         }
+        // Un sello de lacre derramado, con el heptágono y el ojo hundidos.
+        TemaId.ARCANO -> {
+            forma(figOndulado(c, r * 0.9f, 11, 0.07f))
+            val hp = Path()
+            for (k in 0..6) { val q = polarFig(c, r * 0.58f, -90f + k * 360f / 7); if (k == 0) hp.moveTo(q.x, q.y) else hp.lineTo(q.x, q.y) }
+            drawPath(hp, sombra, style = Stroke(r * 0.05f))
+            drawPath(Path().apply { moveTo(c.x - r * 0.34f, c.y); quadraticTo(c.x, c.y - r * 0.34f, c.x + r * 0.34f, c.y); quadraticTo(c.x, c.y + r * 0.34f, c.x - r * 0.34f, c.y); close() }, sombra, style = Stroke(r * 0.045f))
+            drawOval(sombra, Offset(c.x - r * 0.05f, c.y - r * 0.15f), Size(r * 0.1f, r * 0.3f))
+            drawArc(luz, 200f, 60f, false, Offset(c.x - r * 0.75f, c.y - r * 0.75f), Size(r * 1.5f, r * 1.5f), style = Stroke(r * 0.05f))
+        }
         // Parche de misión: óvalo bordado y la órbita.
         TemaId.ESPACIO -> {
             forma(Path().apply { addOval(Rect(c.x - r * 0.97f, c.y - r * 0.8f, c.x + r * 0.97f, c.y + r * 0.8f)) })

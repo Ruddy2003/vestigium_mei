@@ -320,6 +320,57 @@ def gotico(tam):
     halo.alpha_composite(capa)
     guardar(fondo, halo, 'gotico')
 
+# ------------------------------------------------------------------ horror cósmico
+def arcano(tam):
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    # Fondo: la hoja del archivo, amarillenta, con manchas de humedad, un recorte de periódico pegado detrás con sus
+    # columnas, el cerco de una taza y, al pie, la costa y el faro dibujados a pluma.
+    g = ruido(tam, tam / 9, 31)
+    base = mezcla(col('#D6CAA8'), col('#E8DFC6'), g)
+    manchas = ruido(tam, tam / 14, 32)
+    base = mezcla(base, col('#B8A67A'), np.clip((manchas - 0.62) * 2.2, 0, 0.45))
+    fondo = a_img(base).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    recorte = Image.new('RGBA', (int(tam * 0.5), int(tam * 0.34)), (222, 214, 190, 255))
+    dr = ImageDraw.Draw(recorte)
+    w0, h0 = recorte.size
+    dr.rectangle([w0 * 0.06, h0 * 0.08, w0 * 0.94, h0 * 0.2], fill=(70, 70, 64, 150))
+    for colx in (0.06, 0.52):
+        y = h0 * 0.28
+        while y < h0 * 0.92:
+            dr.line([(w0 * colx, y), (w0 * (colx + 0.42), y)], fill=(90, 90, 82, 120), width=max(1, int(tam / 360)))
+            y += h0 * 0.055
+    recorte = recorte.rotate(7, expand=True, resample=Image.BICUBIC)
+    fondo.alpha_composite(recorte, (int(tam * 0.46), int(tam * 0.04)))
+    for (x, y) in ((tam * 0.48, tam * 0.07), (tam * 0.9, tam * 0.13)):
+        d.rectangle([x - tam * 0.05, y - tam * 0.015, x + tam * 0.05, y + tam * 0.015], fill=(236, 226, 170, 110))
+    cx, cy, rr = tam * 0.24, tam * 0.78, tam * 0.13
+    d.ellipse([cx - rr, cy - rr, cx + rr, cy + rr], outline=(120, 96, 52, 70), width=max(2, int(tam / 120)))
+    tinta = (30, 51, 41)
+    costa = [(0, tam * 0.95)]
+    for k in range(1, 21):
+        x = tam * k / 20; costa.append((x, tam * (0.95 - 0.06 * math.sin(k * 0.7) - (0.08 if k > 15 else 0))))
+    d.line(costa, fill=tinta + (110,), width=max(1, int(tam / 300)))
+    fx, fy = tam * 0.88, tam * 0.8
+    d.polygon([(fx - tam * 0.015, fy + tam * 0.07), (fx - tam * 0.009, fy), (fx + tam * 0.009, fy), (fx + tam * 0.015, fy + tam * 0.07)], fill=tinta + (130,))
+    d.polygon([(fx, fy - tam * 0.005), (fx - tam * 0.2, fy - tam * 0.045), (fx - tam * 0.2, fy + tam * 0.02)], fill=(236, 214, 140, 70))
+    fondo = fondo.convert('RGB')
+    # La huella: un sello de goma entintado de verde-negro que no apretó parejo: la tinta se corta en unas crestas y se
+    # carga en otras, con dos o tres gotas que saltaron.
+    presion = ruido(tam, tam / 30, 33)
+    alfa = m * np.clip(0.45 + presion * 0.75, 0, 1) * (ruido(tam, 1.2, 34) > 0.18)
+    rgb = np.zeros((tam, tam, 3), np.float32) + col('#1E3329')
+    rgb = mezcla(rgb, col('#2F5446'), np.clip(1 - presion, 0, 1) * 0.5)
+    capa = a_rgba(rgb, alfa)
+    dc = ImageDraw.Draw(capa, 'RGBA')
+    r = np.random.default_rng(35)
+    for _ in range(5):
+        a = r.random() * math.tau; dist = tam * (0.36 + r.random() * 0.06); s = tam * (0.006 + r.random() * 0.012)
+        x, y = tam / 2 + dist * math.cos(a), tam * 0.52 + dist * math.sin(a)
+        dc.ellipse([x - s, y - s, x + s, y + s], fill=(30, 51, 41, 200))
+    guardar(fondo, capa, 'arcano')
+
 # ------------------------------------------------------------------ espacio
 def espacio(tam):
     m = mascara_sello(tam)
@@ -975,6 +1026,7 @@ SIETE = [
     'botanico',
     'ruinas',
     'gotico',
+    'arcano',
     'espacio',
     'abismo',
     'urbe',
@@ -1006,6 +1058,7 @@ ORDEN = [
     'navidad',
     'seda',
     'gotico',
+    'arcano',
     'espacio',
     'abismo',
     'andalus',

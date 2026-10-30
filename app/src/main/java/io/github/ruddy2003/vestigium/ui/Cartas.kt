@@ -145,6 +145,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.SEDA -> Papeleria(Color(0xFFF2EAD3), Color(0xFFB9B29F), Color(0xFFFBF7EA), Color(0xFF233E8C), Color(0xFFC0392B), Color(0xFF2B4A9E), Color(0xFF1F1A14))
     // Azul de bóveda forrado de rubí, la mandorla de cera roja y la cinta de oro.
     TemaId.GOTICO -> Papeleria(Color(0xFF1F2F7A), Color(0xFF0E1640), Color(0xFF3B4FA8), Color(0xFFB3122E), Color(0xFFB3122E), Color(0xFFE2B34A), Color(0xFFF3EBD6))
+    // Sobre de archivo de papel manila forrado de verde, lacre verdinegro y bramante.
+    TemaId.ARCANO -> Papeleria(Color(0xFFC9B88A), Color(0xFF8E7E57), Color(0xFFE3D6AC), Color(0xFF2E4A3E), Color(0xFF2C4034), Color(0xFF8A7A58), Color(0xFF1E3329))
     // Estuche de metal claro con interior negro, la cápsula con su luz naranja y la cinta azul.
     TemaId.ESPACIO -> Papeleria(Color(0xFFDDE3EC), Color(0xFF8E99AB), Color(0xFFF6F8FB), Color(0xFF0A1022), Color(0xFFFFB86B), Color(0xFF8AB4FF), Color(0xFF0A1022))
     // Bolsa de hule encerado azul petróleo, forrada de lona, sellada con latón de escafandra y atada con cabo de manila.
@@ -198,6 +200,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.NAVIDAD -> FormaSobre(SolapaSobre.DIENTES, 0.04f, CierreSobre.CRUZ)
     TemaId.SEDA -> FormaSobre(SolapaSobre.RECTA, 0.02f, CierreSobre.BANDA)
     TemaId.GOTICO -> FormaSobre(SolapaSobre.OJIVA, 0.015f, CierreSobre.VERTICAL)
+    TemaId.ARCANO -> FormaSobre(SolapaSobre.PICO, 0.01f, CierreSobre.HILO)
     TemaId.ESPACIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.PRECINTO)
     TemaId.ABISMO -> FormaSobre(SolapaSobre.ONDAS, 0.06f, CierreSobre.BANDA)
     TemaId.ANDALUS -> FormaSobre(SolapaSobre.ESCALON, 0.03f, CierreSobre.DOBLE)
@@ -577,6 +580,22 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawLine(claro, Offset(c.x - r * 0.12f, c.y - r * 0.78f), Offset(c.x + r * 0.12f, c.y - r * 0.78f), r * 0.06f)
             emblemaEn(t, Offset(c.x, c.y + r * 0.12f), r * 0.4f, e)
         }
+        TemaId.ARCANO -> {
+            // Una gota de lacre verdinegro derramada sin cuidado, con dos goterones que se corrieron, y el signo hundido.
+            val v = Path()
+            for (k in 0..15) {
+                val ang = -PI / 2 + k * 2 * PI / 15
+                val rr = r * (1f + 0.08f * sin(k * 2.3f) + if (k == 6) 0.32f else if (k == 10) 0.2f else 0f)
+                val q = Offset(c.x + (rr * cos(ang)).toFloat(), c.y + (rr * sin(ang)).toFloat())
+                if (k == 0) v.moveTo(q.x, q.y) else v.lineTo(q.x, q.y)
+            }
+            v.close()
+            translate(r * 0.05f, r * 0.08f) { drawPath(v, sombra) }
+            drawPath(v, col)
+            drawCircle(hondo, r * 0.72f, c, style = Stroke(r * 0.06f))
+            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.25f * a), Color.Transparent), center = c - Offset(r * 0.35f, r * 0.35f), radius = r * 0.7f), r * 0.9f, c)
+            with(Contenedores) { signoOjo(c, r * 0.5f, claro, r * 0.05f) }
+        }
         TemaId.ESPACIO -> {
             // La cápsula: un estuche de metal redondeado con sus juntas, la mirilla y la luz de estado.
             val o = Offset(c.x - r * 1.25f, c.y - r * 0.6f); val s = Size(r * 2.5f, r * 1.2f)
@@ -868,6 +887,16 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
                 drawCircle(oro.copy(alpha = 0.8f), s * 0.35f, p)
             }
         }
+        TemaId.ARCANO -> {
+            // El sobre del archivo: la etiqueta con sus renglones, el matasellos redondo que no se lee y el cerco de una taza.
+            val tinta = pa.tinta
+            drawRect(Color(0xFFEDE4C8), Offset(l + W * 0.08f, top + H * 0.12f), Size(W * 0.34f, H * 0.2f))
+            for (k in 0 until 3) drawLine(tinta.copy(alpha = 0.35f), Offset(l + W * 0.1f, top + H * (0.17f + k * 0.05f)), Offset(l + W * (0.38f - k * 0.06f), top + H * (0.17f + k * 0.05f)), 1.2f)
+            val m = Offset(r - W * 0.16f, top + H * 0.26f)
+            drawCircle(tinta.copy(alpha = 0.3f), H * 0.13f, m, style = Stroke(1.6f)); drawCircle(tinta.copy(alpha = 0.22f), H * 0.09f, m, style = Stroke(1f))
+            for (k in 0 until 4) drawLine(tinta.copy(alpha = 0.2f), Offset(m.x - H * 0.36f, m.y - H * 0.06f + k * H * 0.04f), Offset(m.x - H * 0.15f, m.y - H * 0.06f + k * H * 0.04f), 1.4f)
+            drawCircle(Color(0xFF6A4B26).copy(alpha = 0.16f), H * 0.16f, Offset(l + W * 0.7f, bot - H * 0.24f), style = Stroke(H * 0.02f))
+        }
         TemaId.ESPACIO -> {
             // Las juntas remachadas del estuche y las luces de estado.
             val junta = Color(0xFF5E6A80).copy(alpha = 0.5f)
@@ -1155,6 +1184,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Al viajero que seré…", "Escribe tu carta para la caravana…", "Carta para %s en la caravana", "La caravana no llega antes.", "Toca para mojar el pincel…")
     TemaId.GOTICO -> VozCarta("Ya suenan las campanas: ábrela", "Sellada en la capilla", "Para mi alma del %s", "Para mi alma de %s", "Para mi alma de mañana",
         "Al que velará en la capilla…", "Escribe a la luz del vitral…", "Epístola para %s sellada", "No se abrirá antes de su hora.", "Toca para escribir en el folio…")
+    TemaId.ARCANO -> VozCarta("Llegó su noche: rompe el lacre", "Lacrada y archivada", "Para quien yo sea en %s", "Para mí, %s", "Para quien siga investigando",
+        "A quien encuentre este sobre…", "Escribe lo que sabes, antes de que se te olvide…", "Carta para %s lacrada y archivada", "El lacre no se rompe antes de su noche.", "Toca para escribir con la pluma de acero…")
     TemaId.ESPACIO -> VozCarta("CÁPSULA RECUPERADA: ABRIR", "Puesta en órbita", "DESTINO: TRIPULANTE DEL %s", "TRIPULANTE · %s", "DESTINO: TRIPULANTE FUTURO",
         "Transmisión para mi yo futuro…", "Redacta la transmisión…", "Transmisión para %s en órbita", "La cápsula no reentra antes.", "TOCA PARA TRANSMITIR")
     TemaId.ABISMO -> VozCarta("La boya salió a flote: ábrela", "Lastrada", "Para el buzo del %s", "Buzo · %s", "Para el buzo que subirá",
@@ -1196,6 +1227,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.NAVIDAD -> LetraExtra.cinzelDeco
     TemaId.SEDA -> LetraExtra.almendra
     TemaId.GOTICO -> LetraExtra.textura
+    TemaId.ARCANO -> Letra.spectralCursiva
     TemaId.ESPACIO -> LetraExtra.orbita
     TemaId.ABISMO -> LetraExtra.batiscafo
     TemaId.ANDALUS -> LetraExtra.amiri

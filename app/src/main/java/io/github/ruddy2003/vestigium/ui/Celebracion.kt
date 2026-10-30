@@ -168,6 +168,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.NAVIDAD -> listOf("cascabel", "campana de plata", "estrella de oro", "milagro de Navidad")
     TemaId.SEDA -> listOf("moneda de cobre", "lingote de plata", "oro de Samarcanda", "seda del emperador")
     TemaId.GOTICO -> listOf("cirio", "cáliz de plata", "custodia de oro", "reliquia")
+    TemaId.ARCANO -> listOf("nota al margen", "recorte archivado", "prueba cotejada", "lo que no debía saberse")
     TemaId.ESPACIO -> listOf("magnitud 3", "magnitud 2", "magnitud 1", "supernova")
     TemaId.ABISMO -> listOf("a 200 m", "a 1,000 m", "a 4,000 m", "al fondo de la fosa")
     TemaId.ANDALUS -> listOf("feluz de cobre", "dírham de plata", "dinar de oro", "dinar de la Alhambra")
@@ -507,6 +508,29 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawCircle(cs.primary.copy(alpha = 0.2f), rr, c, style = Stroke(2f * u))
             drawCircle(cs.primary.copy(alpha = 0.2f), rr * 0.16f, c, style = Stroke(1.5f * u))
             for (i in 0 until 24) drawCircle(Color(0xFFE2B34A).copy(alpha = 0.14f), rr * 0.06f, pt(rr * 1.07f, 2 * PI * i / 24), style = Stroke(1f * u))
+        }
+        TemaId.ARCANO -> {
+            // El faro en la niebla: los dos haces que giran despacio, los aros de bruma y, por las orillas de abajo, unas
+            // puntas oscuras que suben del agua y se enroscan.
+            val luz = if (oscuro) cs.primary else Color(0xFFB89A3A)
+            val a0 = Math.toRadians(giro * 0.5)
+            listOf(0.0, PI).forEach { s ->
+                val p1 = pt(lejos, a0 + s - 0.16); val p2 = pt(lejos, a0 + s + 0.16)
+                drawPath(Path().apply { moveTo(c.x, c.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); close() }, Brush.radialGradient(listOf(luz.copy(alpha = 0.16f), Color.Transparent), c, lejos * 0.8f))
+            }
+            for (k in 1..4) drawCircle(cs.onBackground.copy(alpha = 0.05f), m * 0.12f * k + (giro % 40f) * 0.2f * u, c, style = Stroke(6f * u))
+            drawCircle(luz.copy(alpha = 0.3f), m * 0.05f, c)
+            val tinta = cs.onBackground.copy(alpha = 0.1f)
+            listOf(0.08f to 1f, 0.92f to -1f).forEach { (fx, s) ->
+                val x0 = size.width * fx; val y0 = size.height; val alto = m * 0.5f; val vaiven = sin(Math.toRadians(giro * 2.0)).toFloat() * 8f * u
+                drawPath(Path().apply {
+                    moveTo(x0 - 10 * u, y0)
+                    cubicTo(x0 + s * 30 * u, y0 - alto * 0.4f, x0 - s * 20 * u + vaiven, y0 - alto * 0.8f, x0 + s * 14 * u + vaiven, y0 - alto)
+                    quadraticTo(x0 + s * 34 * u + vaiven, y0 - alto - 14 * u, x0 + s * 28 * u + vaiven, y0 - alto + 6 * u)
+                    quadraticTo(x0 + s * 22 * u + vaiven, y0 - alto + 12 * u, x0 + s * 16 * u + vaiven, y0 - alto + 4 * u)
+                    cubicTo(x0 - s * 6 * u + vaiven, y0 - alto * 0.7f, x0 + s * 40 * u, y0 - alto * 0.4f, x0 + 10 * u, y0); close()
+                }, tinta)
+            }
         }
         TemaId.ESPACIO -> rotate(giro, c) {
             // Una galaxia espiral de tres brazos, con su núcleo brillante.

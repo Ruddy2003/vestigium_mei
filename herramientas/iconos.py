@@ -131,6 +131,14 @@ def seda(sem):           # Seda: tejido fino de hilos horizontales y verticales 
 def piedra(sem):         # Gótico: piedra con manchas y poros
     return ruido(sem, 1.0, 14) * 0.9 + ruido(sem + 1, 0.4, 1) + (ruido(sem + 2, 1, 0) > 2.3) * -1.2
 
+def archivo_manchado(sem):  # Horror cósmico: papel de archivo con manchas de humedad, cercos de taza y fibras
+    manchas = ruido(sem, 1.0, 22) * 0.8
+    cx, cy, rr = TAM * 0.68, TAM * 0.3, TAM * 0.2
+    d = np.sqrt((X - cx) ** 2 + (Y - cy) ** 2)
+    cerco = -np.exp(-((d - rr) / 3.0) ** 2) * 0.9
+    fibras = np.sin(Y * 0.9 + ruido(sem + 1, 3, 6)) * 0.12
+    return manchas + cerco + fibras + ruido(sem + 2, 0.25)
+
 def polvo_estelar(sem):  # Espacio: polvo de estrellas y una nebulosa apenas visible
     estrellas = (ruido(sem, 1, 0) > 2.9) * 1.6
     return estrellas + ruido(sem + 1, 0.8, 40) + ruido(sem + 2, 0.15)
@@ -306,6 +314,17 @@ def _trebol(d, c, n=12):
             u = a + k * 0.04; cx, cy = _pos(u, RADIO + 3 + (2.5 if k == 0 else 0))
             r = 2.1 * K; d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=c)
 
+def _ganchos(d, c, n=7):                # horror cósmico: puntas que se enroscan sobre el anillo, con un punto entre una y otra
+    for i in range(n):
+        a = -math.pi / 2 + i * 2 * math.pi / n
+        x, y = _pos(a)
+        g = math.degrees(a)
+        for k, rr in enumerate((10.5, 6.0)):
+            s = rr * K
+            d.arc([x - s, y - s, x + s, y + s], g + 40 + k * 60, g + 300, fill=c, width=int(K * 1.4))
+        x2, y2 = _pos(a + math.pi / n)
+        d.ellipse([x2 - 2 * K, y2 - 2 * K, x2 + 2 * K, y2 + 2 * K], fill=c)
+
 def _orbita(d, c):                    # un planeta en su órbita y dos estrellas
     x, y = _pos(-0.6); r = 6 * K; d.ellipse([x - r, y - r, x + r, y + r], fill=c)
     for a in (1.4, 2.6):
@@ -383,6 +402,7 @@ TEMAS = {
     'navidad':      (fieltro_nieve, '#1C1E1D', '#E4C987',   8, 5, 'dorado',      _copos),
     'seda':         (seda,          '#F2EFE8', '#862A1D',   6, 5, 'tinta',       _monedas),
     'gotico':       (piedra,        '#1E1E21', '#D8CCAE',   9, 6, 'dorado',      _trebol),
+    'arcano':       (archivo_manchado, '#E3D9C1', '#1E3329', 10, 6, 'ferrogalica', _ganchos),
     'espacio':      (polvo_estelar, '#0F1012', '#B0C8F2',   4, 4, 'fosforo',     _orbita),
     'abismo':       (agua_abisal,   '#06141D', '#7FE9D2',   6, 4, 'fosforo',     _burbujas),
     'andalus':      (lazo,          '#F0ECE4', '#1F3F5C',   6, 5, 'esmalte',     _estrellas),

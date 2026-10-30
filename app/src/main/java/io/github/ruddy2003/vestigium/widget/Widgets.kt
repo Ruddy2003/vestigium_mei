@@ -110,6 +110,11 @@ object Widgets {
             0xFFE2B34A.toInt(), 0xFFF0E9D8.toInt(), 0xFFB0AFC8.toInt(), 0xFF2E3A7A.toInt(),
             intArrayOf(0xFFE0405E.toInt(), 0xFFD9708A.toInt(), 0xFFD2A6B4.toInt(), 0xFFF0E9D8.toInt(), 0xFFB8C8F2.toInt(), 0xFF8DA8FF.toInt(), 0xFF5C8DFF.toInt()),
             0xFF111842.toInt(), 0xFF1A1405.toInt())
+        // La niebla de la costa: la luz pálida del faro, tinta clara y del lacre al verde del agua.
+        TemaId.ARCANO -> Colores(R.drawable.widget_fondo_arcano, R.drawable.widget_boton_arcano, R.drawable.widget_boton_activo_arcano, R.drawable.widget_boton_ambar_arcano,
+            0xFFE6D58C.toInt(), 0xFFCDD6C7.toInt(), 0xFF8C9E93.toInt(), 0xFF2B3D37.toInt(),
+            intArrayOf(0xFFC98472.toInt(), 0xFFC99A86.toInt(), 0xFFC9B8A6.toInt(), 0xFFCDD6C7.toInt(), 0xFFA6CDBB.toInt(), 0xFF8EC4AF.toInt(), 0xFF7DBBA4.toInt()),
+            0xFF101B18.toInt(), 0xFF1A1806.toInt())
         TemaId.ESPACIO -> Colores(R.drawable.widget_fondo_espacio, R.drawable.widget_boton_espacio, R.drawable.widget_boton_activo_espacio, R.drawable.widget_boton_ambar_espacio,
             0xFFFFB86B.toInt(), 0xFFE8ECF8.toInt(), 0xFF8E9AB8.toInt(), 0xFF26324F.toInt(),
             intArrayOf(0xFFFF8A6B.toInt(), 0xFFF5A98A.toInt(), 0xFFE0C6B8.toInt(), 0xFFE8ECF8.toInt(), 0xFFB9CCF5.toInt(), 0xFFA0C0FF.toInt(), 0xFF8AB4FF.toInt()),
@@ -183,6 +188,7 @@ object Widgets {
         TemaId.NAVIDAD -> "Junto al fuego" to "Postal"
         TemaId.SEDA -> "Alto" to "Rollo"
         TemaId.GOTICO -> "Ad horam" to "Scribe"
+        TemaId.ARCANO -> "Nota" to "Al margen"
         TemaId.ESPACIO -> "T−0" to "LOG"
         TemaId.ABISMO -> "COTA" to "PIZARRA"
         TemaId.ANDALUS -> "الآن" to "اكتب"
@@ -219,6 +225,7 @@ object Widgets {
             TemaId.NAVIDAD -> R.font.cinzel_deco_regular to 0.95f
             TemaId.SEDA -> R.font.almendra_regular to 1.08f
             TemaId.GOTICO -> R.font.gotica_textura to 1.12f
+            TemaId.ARCANO -> R.font.spectral_cursiva to 1.04f
             TemaId.ESPACIO -> R.font.orbitron_medium to 0.88f
             TemaId.ABISMO -> R.font.batiscafo_semibold to 1.0f
             TemaId.ANDALUS -> R.font.kufi_medium to 0.95f

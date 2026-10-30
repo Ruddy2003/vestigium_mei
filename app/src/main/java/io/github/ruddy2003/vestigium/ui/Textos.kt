@@ -310,6 +310,21 @@ object Textos {
         "widget_discreto_momento" to "inscribir",
     )
 
+    private val ARCANO: Map<String, String> = mapOf(
+        "pestana_dia" to "Legajo",
+        "pestana_diario" to "Diario",
+        "pestana_registrar" to "Anotar",
+        "pestana_vida" to "Testigos",
+        "pestana_entender" to "Cotejar",
+        "escala_vacia" to "sin anotar · toca o desliza",
+        "lista_anadir" to "+ añadir al legajo",
+        "palabras" to "%d palabras en el cuaderno",
+        "widget_animo" to "¿cómo están tus nervios?",
+        "widget_momento" to "ahora mismo noto…",
+        "widget_discreto_animo" to "nota",
+        "widget_discreto_momento" to "apuntar",
+    )
+
     private val ESPACIO: Map<String, String> = mapOf(
         "pestana_dia" to "ÓRBITA",
         "pestana_diario" to "BITÁCORA",
@@ -451,6 +466,7 @@ object Textos {
         TemaId.SEDA -> SEDA
         TemaId.URSS -> URSS
         TemaId.GOTICO -> GOTICO
+        TemaId.ARCANO -> ARCANO
         TemaId.ESPACIO -> ESPACIO
         TemaId.ABISMO -> ABISMO
         TemaId.ANDALUS -> ANDALUS

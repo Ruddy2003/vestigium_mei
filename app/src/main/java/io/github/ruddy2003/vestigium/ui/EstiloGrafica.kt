@@ -272,6 +272,9 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Gótico: losange de vitral, plomo grueso, celosía de vidrieras, pináculos y barras en ojiva.
     TemaId.GOTICO -> EstiloGrafica(FormaPunto.ROMBO, 2.6f, null, StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(5f, 1.5f),
         Rejilla.CELOSIA, 0.45f, Eje.PINACULOS, FormaBarra.OJIVA, R.font.gotica_semibold, FontWeight.SemiBold, null, 0.02f, 1.15f)
+    // Horror cósmico: fases de la luna, tinta que falla a ratos, renglones de libreta y barras tachadas, como cifras corregidas.
+    TemaId.ARCANO -> EstiloGrafica(FormaPunto.LUNA, 1.7f, listOf(12f, 1.6f, 3f, 1.6f), StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(0.1f, 3.5f),
+        Rejilla.PAUTA, 0.5f, Eje.MARCAS, FormaBarra.RAYADA, R.font.castoro_regular, FontWeight.Normal, "lnum", 0.01f, 1.06f)
     // Espacio: anillo de planeta, cielo de estrellas, solo las marcas del instrumento y barras en cápsula.
     TemaId.ESPACIO -> EstiloGrafica(FormaPunto.ANILLO, 1.6f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(0.1f, 4f),
         Rejilla.ESTRELLAS, 0.6f, Eje.SOLO_MARCAS, FormaBarra.PILDORA, R.font.orbitron_medium, FontWeight.Medium, null, 0.08f, 0.92f)

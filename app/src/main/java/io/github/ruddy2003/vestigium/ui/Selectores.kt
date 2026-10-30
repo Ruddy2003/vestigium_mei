@@ -298,6 +298,12 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
         val w = s.width; val h = s.height
         moveTo(0f, h); lineTo(0f, h * 0.45f); quadraticTo(0f, h * 0.05f, w / 2, 0f); quadraticTo(w, h * 0.05f, w, h * 0.45f); lineTo(w, h); close()
     }
+    // Un recorte de papel: la orilla de arriba rasgada y la esquina de abajo doblada.
+    TemaId.ARCANO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val d = h * 0.06f
+        moveTo(0f, d); for (k in 1..6) lineTo(w * k / 6, if (k % 2 == 0) d else 0f)
+        lineTo(w, h - h * 0.18f); lineTo(w - h * 0.18f, h); lineTo(0f, h); close()
+    }
     // Hexágono, como los espejos de un telescopio.
     TemaId.ESPACIO -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -372,6 +378,8 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.BOTANICO -> {}
         TemaId.RUINAS -> drawLine(fondo.copy(alpha = 0.35f), Offset(s.width * 0.7f, 0f), Offset(s.width * 0.62f, s.height * 0.3f), 1.5f)   // una grieta
         TemaId.GOTICO -> {}
+        // Una gota de tinta que se corrió en la esquina.
+        TemaId.ARCANO -> { val l = minOf(s.width, s.height); drawCircle(fondo.copy(alpha = 0.3f), l * 0.06f, Offset(s.width * 0.2f, s.height * 0.78f)) }
         TemaId.ESPACIO -> {}
         // El brillo de la burbuja, arriba a la izquierda.
         TemaId.ABISMO -> {

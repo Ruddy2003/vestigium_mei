@@ -182,6 +182,9 @@ object Temas {
     private val MARCAS_RUINAS = mapOf("04-26" to "Chernóbil", "03-21" to "Bosques", "03-22" to "Agua", "05-22" to "Biodiversidad", "06-05" to "Ambiente",
         "04-22" to "Tierra", "03-20" to "Primavera", "06-21" to "Verano", "09-22" to "Otoño", "12-21" to "Invierno")
     private val MARCAS_GOTICO = mapOf("04-26" to "Consagr.", "08-25" to "S. Luis", "08-15" to "Asunción", "12-25" to "Navidad", "01-06" to "Epifanía", "11-01" to "Todos Santos", "09-29" to "S. Miguel")
+    /** Las noches que el folclor de la costa tiene por peligrosas, y los equinoccios y solsticios de los almanaques. */
+    private val MARCAS_ARCANO = mapOf("03-20" to "Equinoccio", "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio",
+        "04-30" to "Walpurgis", "06-23" to "San Juan", "10-31" to "Víspera", "11-02" to "Difuntos", "02-02" to "Candelaria")
     private val MARCAS_ESPACIO = mapOf("04-12" to "Gagarin", "07-20" to "Apolo 11", "10-04" to "Sputnik", "02-18" to "Plutón", "12-24" to "Earthrise",
         "03-20" to "Equinoccio", "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "04-24" to "Hubble")
 
@@ -225,6 +228,7 @@ object Temas {
             TemaId.SEDA -> MARCAS_SEDA[md]
             TemaId.URSS -> MARCAS_URSS[md]
             TemaId.GOTICO -> MARCAS_GOTICO[md]
+            TemaId.ARCANO -> MARCAS_ARCANO[md]
             TemaId.ESPACIO -> MARCAS_ESPACIO[md]
             TemaId.ABISMO -> MARCAS_ABISMO[md]
             TemaId.ANDALUS -> MARCAS_ANDALUS[md] ?: fiestaHegira(fecha)
@@ -251,6 +255,40 @@ object Temas {
 
     /** Día juliano al mediodía, el número con que los astrónomos cuentan los días sin calendario. */
     fun diaJuliano(d: java.time.LocalDate): Long = d.toEpochDay() + 2440588L
+
+    /** El mes sinódico medio (de luna nueva a luna nueva), en días. */
+    private const val MES_SINODICO = 29.530588853
+
+    /**
+     * Edad de la luna (días desde la última luna nueva) al mediodía de [d], con el mes sinódico medio contado desde la luna
+     * nueva del 6 de enero de 2000 a las 18:14 UT (día juliano 2451550.26). Es la cuenta de los almanaques: la luna real se
+     * adelanta o se atrasa hasta unas 14 horas, así que la fase puede salir un día corrida.
+     */
+    fun edadLuna(d: java.time.LocalDate): Double {
+        val x = (diaJuliano(d) - 2451550.26) % MES_SINODICO
+        return if (x < 0) x + MES_SINODICO else x
+    }
+
+    /** Fracción iluminada de la luna, en porcentaje (0 en luna nueva, 100 en luna llena). */
+    fun luzLuna(d: java.time.LocalDate): Int = Math.round((1 - kotlin.math.cos(2 * Math.PI * edadLuna(d) / MES_SINODICO)) / 2 * 100).toInt()
+
+    /** El nombre de la fase en ocho partes iguales del mes: «luna nueva», «creciente», «cuarto creciente», «gibosa creciente»… */
+    fun faseLunar(d: java.time.LocalDate): String {
+        val i = Math.floorMod(Math.round(edadLuna(d) / MES_SINODICO * 8).toInt(), 8)
+        return listOf("luna nueva", "luna creciente", "cuarto creciente", "gibosa creciente", "luna llena", "gibosa menguante", "cuarto menguante", "luna menguante")[i]
+    }
+
+    /**
+     * Un número tachado y corregido, como en el diario de alguien que duda de lo que vio: primero la cifra equivocada (las
+     * mismas cifras al revés o, si al revés se leen igual, la siguiente), tachada con la raya combinante U+0336, y luego la
+     * buena: «7̶1̶ 17», «1̶2̶ 11».
+     */
+    fun tachado(n: Int): String {
+        if (n < 0) return "$n"
+        val s = n.toString(); val r = s.reversed()
+        val mal = if (r != s && !r.startsWith("0")) r else (n + 1).toString()
+        return mal.map { "$it\u0336" }.joinToString("") + " " + s
+    }
 
     private val MESES_HEGIRA = listOf("muharram", "safar", "rabi al-awwal", "rabi al-ajir", "yumada al-ula", "yumada al-ajira",
         "rayab", "shaabán", "ramadán", "shawwal", "du l-qada", "du l-hiyya")
@@ -363,6 +401,7 @@ object Temas {
         TemaId.BOTANICO -> BOTANICO[titulo]
         TemaId.RUINAS -> RUINAS[titulo]
         TemaId.GOTICO -> GOTICO[titulo]
+        TemaId.ARCANO -> ARCANO[titulo]
         TemaId.ESPACIO -> ESPACIO[titulo]
         TemaId.ABISMO -> ABISMO[titulo]
         TemaId.ANDALUS -> ANDALUS[titulo]
@@ -395,6 +434,7 @@ object Temas {
             TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina", "enfoque" to "Estudio")
             TemaId.RUINAS -> mapOf("animo" to "Aguante", "momento" to "Hallazgo", "gasto" to "Trueque", "sueno" to "Descanso", "habitos" to "Faenas", "hoy" to "Tras el silencio", "cifra" to "Marca", "foto" to "Recuerdo", "enfoque" to "Vigía")
             TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera", "enfoque" to "Lectio")
+            TemaId.ARCANO -> mapOf("animo" to "Nervios", "momento" to "Apunte", "gasto" to "Expensas", "sueno" to "Pesadilla", "habitos" to "Precauciones", "hoy" to "Legajo", "cifra" to "Cotejo", "foto" to "Placa", "enfoque" to "Pesquisa")
             TemaId.ESPACIO -> mapOf("animo" to "ESTADO", "momento" to "EVENTO", "gasto" to "COMBUSTIBLE", "sueno" to "SUEÑO", "habitos" to "RUTINAS", "hoy" to "ÓRBITA", "cifra" to "TELEMETRÍA", "foto" to "IMAGEN", "enfoque" to "CONCENTRACIÓN")
             TemaId.ABISMO -> mapOf("animo" to "SONDEO", "momento" to "AVISTAMIENTO", "gasto" to "LASTRE", "sueno" to "LITERA", "habitos" to "MANIOBRAS", "hoy" to "COTA", "cifra" to "PROFUNDÍMETRO", "foto" to "OJO DE BUEY", "enfoque" to "INMERSIÓN")
             TemaId.ANDALUS -> mapOf("animo" to "الروح", "momento" to "لحظة", "gasto" to "النفقات", "sueno" to "النوم", "habitos" to "العادات", "hoy" to "النهار", "cifra" to "الحساب", "foto" to "صورة", "enfoque" to "دراسة")
@@ -634,6 +674,17 @@ object Temas {
         "Apariencia" to "Vidrieras", "Obras" to "Librería", "Mapa" to "Peregrinaciones", "Lugares" to "Santuarios", "Totales" to "Tesoro de la capilla",
         "Momentos de este día" to "Horas del día", "Datos que faltan" to "Vidrios rotos", "Resumen semanal" to "La semana",
         "Avisos y recordatorios" to "Campanas", "Contexto" to "Circunstancias", "Calendario" to "Santoral", "Tu año" to "Año litúrgico",
+    )
+    private val ARCANO = mapOf(
+        "Mundo" to "La costa y más allá", "Patrimonio Mundial" to "Ruinas que nadie explica", "Mapa para rascar" to "Mapa velado", "Ciudades visitadas" to "Pueblos visitados",
+        "Biblioteca de sueños" to "Archivo de pesadillas", "Cartas" to "Cartas lacradas", "Escribir una carta" to "Lacrar una carta", "Carta" to "Carta lacrada", "Conocerte" to "Examen del investigador", "Brújula política" to "Lo que crees del orden", "Mapas" to "Cartografía", "Salud" to "Estado de la carne", "Tus apps" to "Los aparatos", "Otras vidas" to "Otros testigos", "Logros" to "Hallazgos", "Tu año en historias" to "Crónica del año", "Anoche" to "Lo que soñaste", "Selladas" to "Lacradas", "Listas para abrir" to "Listas para romper el lacre", "A otras personas" to "A otros testigos", "Del pasado" to "Llegadas del pasado",
+        "Hoy" to "El legajo de hoy", "Línea de tiempo" to "Cronología del caso", "Ahora mismo estoy…" to "En este instante…",
+        "Día" to "Legajo", "Diario" to "Diario del investigador", "Gastos" to "Expensas", "Entender" to "Cotejar", "Más" to "Trastienda",
+        "Llenar el día" to "Asentar la jornada", "Biblioteca del diario" to "El archivo", "Entrada" to "Anotación", "Tablero" to "Pizarrón de recortes",
+        "Te falta hoy" to "Por anotar", "Hábitos" to "Precauciones", "Sueño" to "Sueño y desvelo", "Ánimo y cuerpo" to "Nervios y carne", "Hitos" to "Sucesos",
+        "Apariencia" to "Grabados", "Obras" to "Tomos", "Mapa" to "Cartografía del caso", "Lugares" to "Parajes", "Totales" to "Inventario del archivo",
+        "Momentos de este día" to "Apuntes del día", "Datos que faltan" to "Folios arrancados", "Resumen semanal" to "La semana en el archivo",
+        "Avisos y recordatorios" to "Campanadas del faro", "Contexto" to "Circunstancias del caso", "Calendario" to "Almanaque", "Tu año" to "El año del caso",
     )
     private val ESPACIO = mapOf(
         "Mundo" to "ÓRBITA TERRESTRE", "Patrimonio Mundial" to "PUNTOS DE INTERÉS", "Mapa para rascar" to "PLANETA EXPLORADO", "Ciudades visitadas" to "BASES",
