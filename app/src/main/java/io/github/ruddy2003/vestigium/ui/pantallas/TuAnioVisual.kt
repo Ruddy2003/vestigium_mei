@@ -172,6 +172,13 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawCircle(oro, h * 0.16f, Offset(x0 + w / 2, cy))
             drawLine(oscuro, Offset(x0 + w * 0.12f, y0), Offset(x0 + w * 0.12f, y0 + h), 1f * d)
         }
+        // La regla de la casa: tapa de cuero blanco, dos correas pardas y la cruz patada roja al centro.
+        TemaId.TEMPLARIO -> {
+            drawRect(lerp(c, Color(0xFFEDE6D4), 0.6f), o, s)
+            listOf(0.2f, 0.8f).forEach { f -> drawRect(Color(0xFF5A3A22), Offset(x0, y0 + h * f - h * 0.05f), Size(w, h * 0.1f)) }
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(x0 + w / 2, cy), minOf(w, h) * 0.3f), Color(0xFFB0191F))
+            drawRect(oscuro, o, s, style = Stroke(0.8f * d))
+        }
         // Expediente: carpeta de cartón con pestaña, franja roja y la ficha pegada.
         TemaId.DISTOPIA -> {
             drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), o, s)
@@ -599,6 +606,8 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             moveTo(x - r * 0.9f, y - r * 0.9f); lineTo(x + r * 0.9f, y - r * 0.9f); lineTo(x + r * 0.9f, y + r * 0.1f)
             quadraticTo(x + r * 0.85f, y + r * 0.75f, x, y + r * 1.05f); quadraticTo(x - r * 0.85f, y + r * 0.75f, x - r * 0.9f, y + r * 0.1f); close()
         })
+        // La cruz patada.
+        TemaId.TEMPLARIO -> lleno(io.github.ruddy2003.vestigium.ui.cruzPatada(c, r * 1.05f, 0.16f, 0.46f))
         // Sello de goma de oficina: doble marco.
         TemaId.DISTOPIA -> {
             drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
@@ -826,6 +835,27 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawRect(col, Offset(x - r * 0.5f, y - r * 0.4f), Size(r, r * 1.4f))
                 for (k in 0 until 3) drawRect(col, Offset(x - r * 0.5f + k * r * 0.4f, y - r * 0.75f), Size(r * 0.2f, r * 0.35f))
                 drawRect(fondo, Offset(x - r * 0.15f, y + r * 0.5f), Size(r * 0.3f, r * 0.5f))
+            }
+            else -> return false
+        }
+        TemaId.TEMPLARIO -> when (forma) {
+            // El cuenco de madera del refectorio.
+            "taza" -> {
+                drawArc(col, 0f, 180f, true, Offset(x - r * 0.75f, y - r * 0.55f), Size(r * 1.5f, r * 1.2f))
+                drawRect(col, Offset(x - r * 0.25f, y + r * 0.1f), Size(r * 0.5f, r * 0.18f))
+                drawLine(fondo.copy(alpha = 0.5f), Offset(x - r * 0.6f, y - r * 0.2f), Offset(x + r * 0.6f, y - r * 0.2f), 0.8f * d)
+            }
+            // La misiva doblada con el sello de cera de la casa.
+            "sobre" -> {
+                drawRect(col, Offset(x - r, y - r * 0.6f), Size(2 * r, r * 1.2f))
+                drawPath(Path().apply { moveTo(x - r, y - r * 0.6f); lineTo(x, y + r * 0.1f); lineTo(x + r, y - r * 0.6f) }, fondo, style = Stroke(0.9f * d))
+                drawCircle(Color(0xFF7A2A16), r * 0.28f, Offset(x, y + r * 0.1f))
+            }
+            // La lanza con su gallardete.
+            "alfiler" -> {
+                drawLine(col, Offset(x - r * 0.1f, y + r), Offset(x - r * 0.1f, y - r), 1.6f * d)
+                drawPath(Path().apply { moveTo(x - r * 0.1f, y - r * 1.2f); lineTo(x + r * 0.05f, y - r * 0.9f); lineTo(x - r * 0.25f, y - r * 0.9f); close() }, col)
+                drawPath(Path().apply { moveTo(x - r * 0.1f, y - r * 0.8f); lineTo(x + r * 0.9f, y - r * 0.6f); lineTo(x + r * 0.55f, y - r * 0.45f); lineTo(x + r * 0.9f, y - r * 0.3f); lineTo(x - r * 0.1f, y - r * 0.2f); close() }, Color(0xFFB0191F))
             }
             else -> return false
         }

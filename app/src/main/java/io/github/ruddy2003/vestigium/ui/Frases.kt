@@ -178,6 +178,34 @@ object Frases {
             "Beda el Venerable, Historia eclesiástica II, 13"),
     )
 
+    /** Templario: la regla, el salterio de las vigilias, los cantares de la frontera y el elogio de san Bernardo a la orden. */
+    val TEMPLARIO = listOf(
+        f("Non nobis, Domine, non nobis, sed nomini tuo da gloriam.", "No a nosotros, Señor, no a nosotros, sino a tu nombre da la gloria.", "Salmo 113 (115), 1, Vulgata; lema de la orden del Temple"),
+        f("Militia est vita hominis super terram.", "Milicia es la vida del hombre sobre la tierra.", "Job 7, 1, Vulgata"),
+        f("Nisi Dominus custodierit civitatem, frustra vigilat qui custodit eam.", "Si el Señor no guarda la ciudad, en vano vela el centinela.", "Salmo 126 (127), 1, Vulgata"),
+        f("Custos, quid de nocte? Custos, quid de nocte?", "Centinela, ¿qué hay de la noche? Centinela, ¿qué hay de la noche?", "Isaías 21, 11, Vulgata"),
+        f("Dixit custos: Venit mane, et nox.", "Dijo el centinela: Viene la mañana, y también la noche.", "Isaías 21, 12, Vulgata"),
+        f("Scuto circumdabit te veritas eius: non timebis a timore nocturno, a sagitta volante in die.", "Su verdad te rodeará como un escudo: no temerás el espanto de la noche ni la flecha que vuela de día.", "Salmo 90 (91), 5, Vulgata"),
+        f("Media nocte surgebam ad confitendum tibi.", "A medianoche me levantaba a alabarte.", "Salmo 118 (119), 62, Vulgata; el verso en que se funda el rezo nocturno de maitines"),
+        f("A custodia matutina usque ad noctem speret Israel in Domino.", "Desde la vela de la mañana hasta la noche, espere Israel en el Señor.", "Salmo 129 (130), 6, Vulgata"),
+        f("Vigilate et orate, ut non intretis in tentationem.", "Velad y orad, para que no caigáis en la tentación.", "Mateo 26, 41, Vulgata"),
+        f("State ergo succincti lumbos vestros in veritate, et induti loricam iustitiae.", "Estad, pues, firmes, ceñida la cintura con la verdad y vestidos con la coraza de la justicia.", "Efesios 6, 14, Vulgata"),
+        f("Melior est patiens viro forti, et qui dominatur animo suo expugnatore urbium.", "Más vale el paciente que el fuerte, y el que domina su ánimo que el que conquista ciudades.", "Proverbios 16, 32, Vulgata"),
+        f("Tempus belli, et tempus pacis.", "Un tiempo de guerra y un tiempo de paz.", "Eclesiastés 3, 8, Vulgata"),
+        f("Benedictus Dominus Deus meus, qui docet manus meas ad proelium, et digitos meos ad bellum.", "Bendito el Señor, mi Dios, que adiestra mis manos para la lucha y mis dedos para la batalla.", "Salmo 143 (144), 1, Vulgata"),
+        f("Impavidus profecto miles, et omni ex parte securus, qui ut corpus ferri, sic animum fidei lorica induitur.",
+            "Intrépido y seguro por todas partes es el caballero que, así como viste su cuerpo con la cota de hierro, viste su alma con la coraza de la fe.", "Bernardo de Claraval, Elogio de la nueva milicia I, 1, c. 1130"),
+        f("At vero Christi milites securi proeliantur proelia Domini sui.", "Los soldados de Cristo, en cambio, pelean seguros las batallas de su Señor.", "Bernardo de Claraval, Elogio de la nueva milicia III, 4, c. 1130"),
+        f("Numquam compti, raro loti, magis autem neglecto crine hispidi, pulvere foedi, lorica et caumate fusci.",
+            "Nunca peinados, rara vez lavados, más bien desgreñados por el pelo descuidado, sucios de polvo, morenos por la cota y el calor.", "Bernardo de Claraval, Elogio de la nueva milicia IV, 7, c. 1130"),
+        f("Igitur qui desiderat pacem, praeparet bellum.", "Así pues, quien desea la paz, que prepare la guerra.", "Vegecio, Compendio del arte militar III, prólogo, c. 390; lo leían los caballeros de la Edad Media"),
+        f("Halt sunt li pui e li val tenebrus.", "Altos son los montes y tenebrosos los valles.", "Cantar de Roldán, v. 814, c. 1100"),
+        f("Rollant est proz e Oliver est sage.", "Roldán es valiente y Oliveros es sabio.", "Cantar de Roldán, v. 1093, c. 1100"),
+        f("¡Dios, qué buen vassallo, si oviesse buen señor!", "¡Dios, qué buen vasallo, si tuviera buen señor!", "Cantar de mio Cid, v. 20, c. 1200"),
+        f("De los sos ojos tan fuertemientre llorando, / tornava la cabeça e estávalos catando.", "Llorando de sus ojos con tanta fuerza, volvía la cabeza y se quedaba mirándolos.", "Cantar de mio Cid, vv. 1-2, c. 1200"),
+        f("Defensores son uno de los tres estados por que Dios quiso que se mantuviese el mundo.", "Los defensores son uno de los tres estados con que Dios quiso que se sostuviera el mundo.", "Alfonso X, Siete Partidas II, título XXI, c. 1265"),
+    )
+
     val DISTOPIA = listOf(
         f("Quis custodiet ipsos custodes?", "¿Quién vigilará a los vigilantes?", "Juvenal, Sátira VI"),
         f("Duas tantum res anxius optat, panem et circenses.", "El pueblo ya solo ansía dos cosas: pan y juegos de circo.", "Juvenal, Sátira X"),
@@ -706,6 +734,7 @@ object Frases {
         TemaId.NEON -> NEON
         TemaId.HELENO -> HELENO
         TemaId.MEDIEVAL -> MEDIEVAL
+        TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN
@@ -739,6 +768,7 @@ object Frases {
         TemaId.NEON -> "LO QUE DICE EL LETRERO"
         TemaId.HELENO -> "ΓΝΩΜΗ ΤΗΣ ΗΜΕΡΑΣ"
         TemaId.MEDIEVAL -> "Sentencia del día"
+        TemaId.TEMPLARIO -> "Lectura del refectorio"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
         TemaId.REFUGIO -> "MENSAJE DEL DÍA"
         TemaId.ORDEN -> "ORDEN DEL DÍA"

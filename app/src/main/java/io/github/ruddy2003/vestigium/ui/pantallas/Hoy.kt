@@ -389,6 +389,19 @@ fun FraseDelDia(fecha: String) {
             Box(Modifier.padding(start = 2.dp).width(1.dp).fillMaxHeight().background(cs.tertiary))
             Box(Modifier.weight(1f).padding(start = 10.dp)) { CuerpoFrase(f, fecha, "¶ $rotulo", "", "", capitular = io.github.ruddy2003.vestigium.ui.LetraExtra.gotica) }
         }
+        // La lectura del refectorio: el escudo de la casa a la izquierda y la barra de acero de la sobreveste encima.
+        TemaId.TEMPLARIO -> Column(arriba) {
+            Box(Modifier.fillMaxWidth().height(2.dp).background(cs.secondary.copy(alpha = 0.6f)))
+            Row(Modifier.padding(top = 8.dp)) {
+                Canvas(Modifier.padding(top = 2.dp, end = 10.dp).size(22.dp, 26.dp)) {
+                    val w = size.width; val h = size.height
+                    val escudo = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); quadraticTo(w * 1.04f, h * 0.62f, w / 2, h); quadraticTo(-w * 0.04f, h * 0.62f, 0f, 0f); close() }
+                    drawPath(escudo, cs.surface); drawPath(escudo, cs.secondary, style = Stroke(1.2.dp.toPx()))
+                    drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(w / 2, h * 0.4f), w * 0.36f), cs.primary)
+                }
+                Box(Modifier.weight(1f)) { CuerpoFrase(f, fecha, "☩ $rotulo", "“", "”", capitular = LetraExtra.cruzada) }
+            }
+        }
         // Cartel de propaganda: fondo negro, letras claras y una franja roja.
         TemaId.DISTOPIA -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
             Row(Modifier.height(IntrinsicSize.Min)) {
@@ -794,6 +807,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.NEON -> c(Letra.letrero, FontWeight.SemiBold, 23f, 1.6f)
         TemaId.HELENO -> c(Letra.inscripcion, FontWeight.SemiBold, 21f, 1.4f, "lnum")
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
+        TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
         TemaId.ORDEN -> c(LetraExtra.estarcido, FontWeight.Normal, 23f, 1.2f)
@@ -1031,6 +1045,15 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                                 drawRoundRect(oro, Offset(0f, top), Size(w, barH), r, style = Stroke(1.5f * u))
                             } else drawRoundRect(linea, Offset(0f, top), Size(w, barH), r, style = borde)
                             sello = oro
+                        }
+                        // Torres de la muralla: dos merlones arriba y, en las jornadas registradas, la cruz pintada.
+                        TemaId.TEMPLARIO -> {
+                            val m = minOf(w * 0.3f, barH * 0.14f)
+                            pinta(Path().apply {
+                                moveTo(0f, h); lineTo(0f, top); lineTo(w * 0.36f, top); lineTo(w * 0.36f, top + m); lineTo(w * 0.64f, top + m); lineTo(w * 0.64f, top); lineTo(w, top); lineTo(w, h); close()
+                            })
+                            if (color != null && barH > w * 1.6f) drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(w / 2, top + m + w * 0.55f), w * 0.3f), Color.White.copy(alpha = 0.75f))
+                            sello = cs.secondary
                         }
                         // Fichas perforadas: esquina cortada y una hilera de agujeros.
                         TemaId.DISTOPIA -> {

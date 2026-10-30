@@ -272,6 +272,22 @@ def hacer():
     P['renacimiento'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, laud, [4, 7, 12], 0.09, 1.0))
     ARGS['renacimiento'] = (T, pz, ac, mel, kw)
 
+def hacer_templario():
+    # --- Templario: Sol mixolidio, canción de marcha de la hueste (melodía propia). El olifante lleva la melodía sobre el
+    # bordón del coro de los freires, la fídula marca el bajo y el tambor de guerra lleva el paso. Con su propio azar.
+    with A.azar_propio('musica_templario'):
+        T = -2; pz = 0.42
+        ac = compases([0, 7], [0, 7], [-2, 5], [0, 7], [5, 9, 12], [-2, 5, 10], [0, 4, 7], [0, 7, 12])
+        mel = frase(0, "7:1 9:1 10:1 9:1 | 7:2 5:1 4:1 | 5:1 7:1 10:1 9:1 | 7:4 | 12:1 10:1 9:1 7:1 | 10:2 9:1 5:1 | 4:1 5:1 7:1 4:1 | 0:4")
+        cuerno = lambda f, d: metal(f, d, 2000, 0.05)
+        paso = lambda: tambor(hz(T - 29), 0.35, 0.35)
+        redoble = lambda: mezclar(*[(0.06 * k, tambor(hz(T - 26), 0.12, 0.5), 0.5) for k in range(3)])
+        perc = cada(32, paso, 0.5, paso=2) + cada(32, redoble, 0.3, desde=1.5, paso=4)
+        kw = dict(inst_mel=cuerno, inst_ac=coro, bajo=lambda f, d: arco(f, d, 4.0), perc=perc, g_mel=0.45, g_ac=0.22, g_bajo=0.16,
+                  oct_mel=0, oct_ac=-12, legato=0.92, cola=1.8, rev=0.3)
+        P['templario'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, cuerno, [0, 7, 12], 0.15, 0.5, 1.2))
+        ARGS['templario'] = (T, pz, ac, mel, kw)
+
 def hacer_revolucion():
     # --- Revolución: Sol mayor, marcha de pífano y tambor (melodía propia) sobre cuerdas
     T = -2; pz = 0.36
@@ -434,6 +450,7 @@ def anual(T, pz, ac, mel, kw, ciclos=10):
 
 if __name__ == '__main__':
     hacer()
+    hacer_templario()
     hacer_revolucion()
     hacer_antiguas()
     hacer_neon()

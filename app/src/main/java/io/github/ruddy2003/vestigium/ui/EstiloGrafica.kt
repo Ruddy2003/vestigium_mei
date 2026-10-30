@@ -157,6 +157,8 @@ data class EstiloGrafica(
 enum class FormaPunto {
     CIRCULO, TRIANGULO, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO, HOJA, COPO, MONEDA,
     ROMBO, ANILLO, OCTOGRAMA, LUNA, MIRA, ESTRELLA, ESCARAPELA, GEMA, GOTA,
+    /** Templario: la cruz patada. */
+    PATADA,
 }
 
 /** Lo que acompaña al trazo de una serie. */
@@ -218,6 +220,10 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Scriptorium: cuadrifolio, trazo de pluma, renglones con el picado del copista, floroncillos y arcos de medio punto.
     TemaId.MEDIEVAL -> EstiloGrafica(FormaPunto.FLOR, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.PLUMA, listOf(0.1f, 2.6f),
         Rejilla.PICADO, 0.5f, Eje.FLORON, FormaBarra.ARCO, R.font.garamond_regular, FontWeight.Normal, "onum", 0f, 1.15f)
+    // Templario: la cruz patada, trazo firme con sombra, rejilla de hiladas alternas (los sillares), el eje almenado de
+    // la muralla y barras como gallardetes de lanza.
+    TemaId.TEMPLARIO -> EstiloGrafica(FormaPunto.PATADA, 2.2f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.SOMBRA, listOf(5f, 2f),
+        Rejilla.ALTERNA, 0.4f, Eje.ALMENAS, FormaBarra.BANDERIN, R.font.regla_bold, FontWeight.Bold, "lnum, tnum", 0.04f, 1.05f)
     // Expediente: el ojo, trazo grueso, renglones de registro en bandas, eje duro con marcas y barras rectas.
     TemaId.DISTOPIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
         Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
@@ -418,6 +424,7 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
             cubicTo(c.x - 0.42f * r, c.y + 1.05f * r, c.x - 0.85f * r, c.y + 0.82f * r, c.x - 0.85f * r, c.y + 0.32f * r)
             cubicTo(c.x - 0.85f * r, c.y - 0.1f * r, c.x - 0.35f * r, c.y - 0.55f * r, c.x, c.y - 1.1f * r); close()
         })
+        FormaPunto.PATADA -> figura(cruzPatada(c, r * 1.15f, 0.16f, 0.45f))
     }
 }
 

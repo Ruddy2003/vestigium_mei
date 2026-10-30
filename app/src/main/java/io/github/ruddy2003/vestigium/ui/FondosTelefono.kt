@@ -161,6 +161,7 @@ object FondosTelefono {
         TemaId.NEON -> "VESTIGIUM MEI · 屋台"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ"
         TemaId.MEDIEVAL -> "Liber vestigii mei"
+        TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
         TemaId.REFUGIO -> "VESTIGIUM-MEI OS"
         TemaId.ORDEN -> "ORDO · VESTIGII"
@@ -300,6 +301,20 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                         val a = PI / 2 * i
                         drawCircle(e.tertiary.copy(alpha = 0.55f), 2.6f * u, c + Offset((3.2f * u * cos(a)).toFloat(), (3.2f * u * sin(a)).toFloat()))
                     }
+                }
+            }
+            TemaId.TEMPLARIO -> {
+                // El muro de la encomienda: filete de acero con almenas por arriba, clavos en las esquinas y, a media altura
+                // de cada lado, un escudo con la cruz patada.
+                caja(0f, e.secondary.copy(alpha = 0.45f), 1.4f * u); caja(5 * u, tenue, 0.7f * u)
+                val mer = 12 * u; var x = izq
+                while (x + mer <= der) { drawRect(e.secondary.copy(alpha = 0.3f), Offset(x, arr - 10 * u), Size(mer, 10 * u)); x += mer * 2 }
+                esquinas.forEach { c -> drawCircle(e.tertiary.copy(alpha = 0.6f), 3 * u, haciaDentro(c, 9 * u)) }
+                listOf(izq, der).forEach { xx ->
+                    val c = Offset(xx, cy); val r = 12 * u
+                    val escudo = Path().apply { moveTo(c.x - r * 0.8f, c.y - r * 0.85f); lineTo(c.x + r * 0.8f, c.y - r * 0.85f); quadraticTo(c.x + r * 0.86f, c.y + r * 0.3f, c.x, c.y + r); quadraticTo(c.x - r * 0.86f, c.y + r * 0.3f, c.x - r * 0.8f, c.y - r * 0.85f); close() }
+                    drawPath(escudo, e.background); drawPath(escudo, e.secondary.copy(alpha = 0.5f), style = Stroke(1.2f * u))
+                    drawPath(cruzPatada(c + Offset(0f, -r * 0.1f), r * 0.55f), col)
                 }
             }
             TemaId.DISTOPIA -> {
@@ -723,6 +738,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.NEON -> R.drawable.logo_neon
     TemaId.HELENO -> R.drawable.logo_heleno
     TemaId.MEDIEVAL -> R.drawable.logo_medieval
+    TemaId.TEMPLARIO -> R.drawable.logo_templario
     TemaId.DISTOPIA -> R.drawable.logo_distopia
     TemaId.REFUGIO -> R.drawable.logo_refugio
     TemaId.ORDEN -> R.drawable.logo_orden

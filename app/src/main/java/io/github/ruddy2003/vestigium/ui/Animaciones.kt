@@ -70,6 +70,8 @@ private enum class BarridoTema {
     ARCO, PIXELES, SOL, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
     COPO, ABANICO, OJIVA, CIRCULO, MAREA, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO,
     PERSIANA,
+    /** Templario: la cruz patada que crece sobre su disco. */
+    CRUZ,
 }
 
 /**
@@ -98,6 +100,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.HELENO -> MatizMovimiento(BarridoTema.SOL, 820, FastOutSlowInEasing, 0f, 14f, 0.98f, 480, 60, FastOutSlowInEasing, 1f, 0.5f, 800f)
     // Rombo de miniatura; todo lento, a paso de pluma.
     TemaId.MEDIEVAL -> MatizMovimiento(BarridoTema.ROMBO, 900, LinearOutSlowInEasing, 0f, 10f, 1f, 560, 70, LinearOutSlowInEasing, 0.9f, 0.75f, 500f)
+    // La cruz patada que se abre desde el toque; las piezas bajan un poco y asientan pesadas, como un yelmo que se calza, sin rebote.
+    TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
     // Escotilla octogonal que gira al abrirse; resortes de caricatura.
@@ -195,7 +199,9 @@ internal enum class VivoTema(val periodo: Int) {
     LUCERNA(16000), VOLCADO(6000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
     ARENA(14000), VITRAL(80000), ESTRELLAS(9000), MAR(15000), AGUA(14000), NUBES(180000), SAMARAS(24000), ESTRELLAS_ROJAS(36000),
-    CONFETI(22000), RUNAS(14000), LLOVIZNA(6000)
+    CONFETI(22000), RUNAS(14000), LLOVIZNA(6000),
+    /** Templario: antorchas en la muralla. */
+    ANTORCHAS(8000),
 }
 
 /** El tipo de fondo vivo de cada tema (solo el Botánico cambia entre el día y la noche; el Refugio suma el barrido de noche). */
@@ -205,6 +211,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.NEON -> VivoTema.LLOVIZNA             // la llovizna que cae entre letreros y salpica en los charcos
     TemaId.HELENO -> VivoTema.OLIVO              // hojas de olivo que bajan girando
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
+    TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
     TemaId.ORDEN -> VivoTema.FRAGUA              // chispas de fragua en parábola
@@ -487,6 +494,35 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 }
             } else drawCircle(col, 1.8f * u * m.tam, Offset(x, y))
         }
+        VivoTema.ANTORCHAS -> {
+            // La muralla de la frontera: el perfil almenado abajo y cuatro antorchas cuya llama tiembla y suelta pavesas.
+            // De día la luz casi no se ve; de noche, en la vigilia, alumbra el adarve.
+            val muro = al(e.onBackground, if (oscuro) 0.06f else 0.05f)
+            val base = h * 0.9f; val merlon = 18f * u
+            drawRect(muro, Offset(0f, base), Size(w, h - base))
+            var mx = 0f
+            while (mx < w) { drawRect(muro, Offset(mx, base - 14f * u), Size(merlon, 14f * u)); mx += merlon * 2 }
+            val fuego = if (oscuro) Color(0xFFF0A040) else e.tertiary
+            val sitios = listOf(0.12f, 0.38f, 0.64f, 0.9f)
+            sitios.forEachIndexed { i, fx ->
+                val tx = fx * w; val ty = base - 30f * u
+                val tiembla = 0.85f + 0.15f * senoVuelta(t * (7 + i) + i * 0.3f)
+                drawLine(muro, Offset(tx, ty), Offset(tx, base - 14f * u), 2.4f * u)
+                val rr = 34f * u * tiembla; val cl = Offset(tx, ty - 6f * u)
+                drawCircle(Brush.radialGradient(listOf(al(fuego, (if (oscuro) 0.16f else 0.07f) * tiembla), Color.Transparent), center = cl, radius = rr), rr, cl)
+                val alto = 12f * u * tiembla; val ancho = 4.2f * u; val ladeo = 2f * u * senoVuelta(t * (5 + i) + 0.2f * i)
+                drawPath(Path().apply {
+                    moveTo(tx - ancho, ty); quadraticTo(tx - ancho, ty - alto * 0.6f, tx + ladeo, ty - alto); quadraticTo(tx + ancho, ty - alto * 0.6f, tx + ancho, ty); close()
+                }, al(fuego, if (oscuro) 0.45f else 0.2f))
+            }
+            motas.take(16).forEach { m ->
+                val vida = fraccionVivo(m.y + t * vueltas(m))
+                val fx = sitios[(m.x * 4).toInt().coerceIn(0, 3)]
+                val px = fx * w + 10f * u * senoVuelta(vida + m.fase) + vida * 10f * u
+                val py = base - 42f * u - vida * h * 0.35f
+                drawCircle(al(fuego, (1f - vida) * (if (oscuro) 0.5f else 0.22f)), 1.1f * u * m.tam, Offset(px, py))
+            }
+        }
         VivoTema.ARENA -> motas.forEach { m ->
             // Granos que el viento arrastra de lado en rachas, con una estela corta.
             val k = vueltas(m) + 1
@@ -735,6 +771,19 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
             ruta.cubicTo(c.x - s, c.y - s * 0.9f, c.x - s * 0.3f, c.y - s * 1.5f, c.x, c.y - s * 1.8f)
             ruta.cubicTo(c.x + s * 0.3f, c.y - s * 1.5f, c.x + s, c.y - s * 0.9f, c.x + s, c.y - s * 0.2f)
             ruta.lineTo(c.x + s, c.y + s); ruta.close()
+        }
+        BarridoTema.CRUZ -> {
+            // La cruz patada sobre su disco: el disco cubre el círculo de radio r y los cuatro brazos se ensanchan hacia fuera.
+            val r1 = r * 1.02f; val l = r * 2.3f
+            fun pt(rad: Float, g: Float) = Offset(c.x + rad * cos(Math.toRadians(g.toDouble())).toFloat(), c.y + rad * sin(Math.toRadians(g.toDouble())).toFloat())
+            for (k in 0 until 4) {
+                val g = k * 90f - 90f
+                val p1 = pt(r1, g - 14f); val p2 = pt(l, g - 24f); val p3 = pt(l, g + 24f); val p4 = pt(r1, g + 14f); val q = pt(l * 0.93f, g)
+                if (k == 0) ruta.moveTo(p1.x, p1.y) else ruta.lineTo(p1.x, p1.y)
+                ruta.lineTo(p2.x, p2.y); ruta.quadraticTo(q.x, q.y, p3.x, p3.y); ruta.lineTo(p4.x, p4.y)
+                ruta.arcTo(Rect(c, r1), g + 14f, 62f, false)
+            }
+            ruta.close()
         }
         BarridoTema.ROMBO -> {
             val d = r * 1.42f

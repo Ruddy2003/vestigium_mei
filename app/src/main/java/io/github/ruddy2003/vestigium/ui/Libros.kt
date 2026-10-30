@@ -116,6 +116,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.SEDA -> Soporte.ROLLO
     TemaId.MONGOL -> Soporte.ROLLO
     TemaId.MEDIEVAL -> Soporte.LIBRO
+    TemaId.TEMPLARIO -> Soporte.LIBRO
     TemaId.COLONOS -> Soporte.LIBRO
     TemaId.ORDEN -> Soporte.LIBRO
     TemaId.BOTANICO -> Soporte.LIBRO
@@ -147,6 +148,8 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.HELENO -> Materia(c(0xFFE6D3A6), c(0xFFB5935E), c(0xFFF4E6C4), c(0xFF2B1D14), c(0xFFC2652F), c(0xFFEFDFB8), c(0xFF1F1712), extra = c(0xFF1A1410))
     TemaId.SEDA -> Materia(c(0xFF2B4A9E), c(0xFF15265F), c(0xFF5A78C8), c(0xFF3E9E83), c(0xFFD9B25B), c(0xFF233E8C), c(0xFFF2EAD3), extra = c(0xFFC0392B))
     TemaId.MEDIEVAL -> Materia(c(0xFF6B2E1A), c(0xFF3E190D), c(0xFF8A4429), c(0xFFD4A93C), c(0xFFB08D57), c(0xFFEFE3C2), c(0xFF2B1D12), extra = c(0xFFB3261E))
+    // La regla de la casa: cuero blanco curtido al alumbre, la cruz roja, herrajes de hierro y correas de cuero pardo.
+    TemaId.TEMPLARIO -> Materia(c(0xFFE6DDC6), c(0xFFA39880), c(0xFFFBF7EC), c(0xFFB0191F), c(0xFF4A4E54), c(0xFFF4EFE2), c(0xFF201E1B), extra = c(0xFF5A3A22))
     TemaId.COLONOS -> Materia(c(0xFF4A3423), c(0xFF2B1D12), c(0xFF6A4D35), c(0xFFB8893A), c(0xFF2E2016), c(0xFFF1E6CC), c(0xFF1E1A16), extra = c(0xFF9E2B25))
     TemaId.ORDEN -> Materia(c(0xFF4A525C), c(0xFF2A2F35), c(0xFF6E7883), c(0xFFC9A54A), c(0xFFA3172E), c(0xFFD6D9DC), c(0xFF1C2127))
     TemaId.BOTANICO -> Materia(c(0xFF6B4A2E), c(0xFF432C19), c(0xFF8C6844), c(0xFFC9A54A), c(0xFF2E5E5A), c(0xFFF2EAD3), c(0xFF2A2318), extra = c(0xFF8C4A22))
@@ -203,6 +206,7 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     TemaId.HELENO -> NocheTema(c(0xFF0E1A33), c(0xFFDCE4F2), 0.7f, 0.86f, c(0xFFE4EAF6))
     // La vela del scriptorium.
     TemaId.MEDIEVAL -> NocheTema(c(0xFF1A130C), c(0xFFF2C46B), 0.6f, 0.78f, c(0xFFF0D9A8))
+    TemaId.TEMPLARIO -> NocheTema(c(0xFF0F1117), c(0xFFF0A040), 0.62f, 0.8f, c(0xFFEEE7D8))
     // Apagón bajo el reflector.
     TemaId.DISTOPIA -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4), 0.74f, 0.88f, c(0xFFDDE2E6))
     TemaId.REFUGIO -> NocheTema(c(0xFF1A1003), c(0xFFFFB23F), 0.7f, 0.85f, c(0xFFFFC870))
@@ -262,6 +266,7 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.ROMANO -> materiaTenida(m, n)
         TemaId.HELENO -> materiaTenida(m, n)
         TemaId.MEDIEVAL -> materiaTenida(m, n)
+        TemaId.TEMPLARIO -> materiaTenida(m, n)
         TemaId.DISTOPIA -> materiaTenida(m, n)
         TemaId.ORDEN -> materiaTenida(m, n)
         TemaId.LABORATORIO -> materiaTenida(m, n)
@@ -296,6 +301,7 @@ fun paginaNoche(t: TemaId): Pagina {
         TemaId.ROMANO -> paginaTenida(p, n)
         TemaId.HELENO -> paginaTenida(p, n)
         TemaId.MEDIEVAL -> paginaTenida(p, n)
+        TemaId.TEMPLARIO -> paginaTenida(p, n)
         TemaId.DISTOPIA -> paginaTenida(p, n)
         TemaId.ORDEN -> paginaTenida(p, n)
         TemaId.LABORATORIO -> paginaTenida(p, n)
@@ -321,6 +327,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.NEON -> "夢 · LO QUE SOÑÉ"
     TemaId.HELENO -> "ΟΝΕΙΡΟΣ · sueño"
     TemaId.MEDIEVAL -> "Visión de la noche"
+    TemaId.TEMPLARIO -> "Lo soñado en la vigilia"
     TemaId.DISTOPIA -> "INFORME DE ACTIVIDAD ONÍRICA"
     TemaId.REFUGIO -> "REGISTRO ONÍRICO · TERMINAL 03"
     TemaId.ORDEN -> "PARTE NOCTURNO"
@@ -348,6 +355,7 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.NEON -> "— abre la persiana —"
     TemaId.HELENO -> "ἐξηγέρθην · desperté"
     TemaId.MEDIEVAL -> "Y en esto desperté."
+    TemaId.TEMPLARIO -> "Y tocaron a maitines."
     TemaId.DISTOPIA -> "FIN DEL INFORME NOCTURNO"
     TemaId.REFUGIO -> "FIN DEL REGISTRO"
     TemaId.ORDEN -> "TOQUE DE DIANA"
@@ -434,6 +442,7 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
                 if (r > max * 0.92f) { drawLine(col, o - Offset(r * 2.8f, 0f), o + Offset(r * 2.8f, 0f), 0.8f); drawLine(col, o - Offset(0f, r * 2.8f), o + Offset(0f, r * 2.8f), 0.8f) }
             }
             TemaId.MEDIEVAL -> asterisco(o, r * 1.7f, col, 6, 0.9f)
+            TemaId.TEMPLARIO -> drawPath(cruzPatada(o, r * 1.8f), col)
             TemaId.DISTOPIA -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
             TemaId.REFUGIO -> { val p = r * 0.8f; drawRect(col, Offset(o.x - p / 2, o.y - p * 1.5f), Size(p, p * 3)); drawRect(col, Offset(o.x - p * 1.5f, o.y - p / 2), Size(p * 3, p)) }
             TemaId.ORDEN -> { drawLine(col, o - Offset(r * 2.4f, 0f), o + Offset(r * 2.4f, 0f), 1f); drawLine(col, o - Offset(0f, r * 2.4f), o + Offset(0f, r * 2.4f), 1f); drawCircle(col, r * 0.7f, o) }
@@ -500,6 +509,11 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         }
         // Media luna con una estrellita de seis puntas, como en los márgenes iluminados.
         TemaId.MEDIEVAL -> { mediaLuna(ce, r, luna); if (!sola) asterisco(ce + Offset(-r * 1.9f, r * 0.6f), r * 0.45f, luna, 6, 1.4f) }
+        // Media luna sobre la torre de vigía, con su antorcha.
+        TemaId.TEMPLARIO -> { mediaLuna(ce, r, luna)
+            if (!sola) { val b = ce + Offset(-r * 2.2f, r * 0.4f); drawRect(luna.copy(alpha = 0.7f), Offset(b.x - r * 0.3f, b.y), Size(r * 0.6f, r * 1.4f))
+                for (k in 0 until 2) drawRect(luna.copy(alpha = 0.7f), Offset(b.x - r * 0.3f + k * r * 0.4f, b.y - r * 0.22f), Size(r * 0.2f, r * 0.22f))
+                drawCircle(Color(0xFFF0A040).copy(alpha = 0.8f), r * 0.12f, Offset(b.x + r * 0.42f, b.y + r * 0.2f)) } }
         // Una luna gris cortada por el haz de un reflector.
         TemaId.DISTOPIA -> {
             drawCircle(luna.copy(alpha = 0.75f), r, ce)
@@ -636,6 +650,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.NEON -> "cerrar el ticket"
     TemaId.HELENO -> "γράφε · anotar"
     TemaId.MEDIEVAL -> "rubricar"
+    TemaId.TEMPLARIO -> "inscribir en el rol"
     TemaId.DISTOPIA -> "ARCHIVAR"
     TemaId.REFUGIO -> "GUARDAR"
     TemaId.ORDEN -> "REGISTRAR"
@@ -663,6 +678,7 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.NEON -> "— se apaga el letrero —"
     TemaId.HELENO -> "ΤΕΛΟΣ"
     TemaId.MEDIEVAL -> "Aquí se acaba el folio."
+    TemaId.TEMPLARIO -> "Non nobis, Domine: aquí acaba la jornada."
     TemaId.DISTOPIA -> "FIN DE LA DECLARACIÓN"
     TemaId.REFUGIO -> "FIN DE LA ENTRADA"
     TemaId.ORDEN -> "FIN DEL PARTE"
@@ -690,6 +706,7 @@ private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.NEON -> "toca y cuenta cómo estuvo la calle"
     TemaId.HELENO -> "toca para desplegar el rollo"
     TemaId.MEDIEVAL -> "toca para abrir el códice"
+    TemaId.TEMPLARIO -> "toca para abrir la regla"
     TemaId.DISTOPIA -> "TOCA PARA ABRIR EL EXPEDIENTE"
     TemaId.REFUGIO -> "> TOCA PARA ABRIR LA BITÁCORA_"
     TemaId.ORDEN -> "toca para abrir el libro de partes"
@@ -717,6 +734,7 @@ private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.NEON -> "toca y cuenta lo que soñaste entre el ruido"
     TemaId.HELENO -> "toca para contar lo que trajo Hipnos"
     TemaId.MEDIEVAL -> "toca para asentar la visión de la noche"
+    TemaId.TEMPLARIO -> "toca para inscribir lo soñado en la vigilia"
     TemaId.DISTOPIA -> "TOCA PARA DECLARAR LO SOÑADO"
     TemaId.REFUGIO -> "> TOCA PARA REGISTRAR EL SUEÑO_"
     TemaId.ORDEN -> "toca para dar el parte nocturno"
@@ -744,6 +762,7 @@ private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.NEON -> "Letrero apagado: este día no se escribió nada."
     TemaId.HELENO -> "Ἄγραφος: nada escrito este día."
     TemaId.MEDIEVAL -> "Folio en blanco: nada se asentó este día."
+    TemaId.TEMPLARIO -> "Guardia sin parte: nada se inscribió esta jornada."
     TemaId.DISTOPIA -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
     TemaId.REFUGIO -> "SIN ENTRADAS EN LA BITÁCORA PARA ESTE DÍA."
     TemaId.ORDEN -> "Sin parte para esta jornada."
@@ -771,6 +790,7 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.NEON -> "Esa noche no quedó ningún sueño en el ticket."
     TemaId.HELENO -> "Hipnos no dejó nada escrito esa noche."
     TemaId.MEDIEVAL -> "Ninguna visión se asentó esa noche."
+    TemaId.TEMPLARIO -> "Ningún sueño se inscribió en esa vigilia."
     TemaId.DISTOPIA -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
     TemaId.REFUGIO -> "SIN REGISTRO ONÍRICO ESA NOCHE."
     TemaId.ORDEN -> "Sin parte nocturno."
@@ -798,6 +818,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.NEON -> "▲ lo mejor: " to "▼ lo peor: "
     TemaId.HELENO -> "Τὸ ἄριστον — " to "Τὸ χείριστον — "
     TemaId.MEDIEVAL -> "Lo bueno del día — " to "Lo amargo del día — "
+    TemaId.TEMPLARIO -> "Lo ganado en la jornada — " to "Lo perdido en la jornada — "
     TemaId.DISTOPIA -> "MÉRITO — " to "FALTA — "
     TemaId.REFUGIO -> "LO MEJOR > " to "LO PEOR > "
     TemaId.ORDEN -> "Acierto — " to "Baja — "
@@ -825,6 +846,7 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.NEON -> "¿Qué pasó hoy en la calle?"
     TemaId.HELENO -> "Τί ἐγένετο; ¿Qué pasó hoy?"
     TemaId.MEDIEVAL -> "Asiéntese aquí lo acontecido en este día…"
+    TemaId.TEMPLARIO -> "Inscribe, hermano, lo que pasó en esta guardia…"
     TemaId.DISTOPIA -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
     TemaId.REFUGIO -> "> REGISTRE LA ENTRADA DEL DÍA_"
     TemaId.ORDEN -> "Redacte el parte de la jornada."
@@ -852,6 +874,7 @@ private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.NEON -> "¿Qué soñaste con la ciudad zumbando afuera?"
     TemaId.HELENO -> "¿Qué te mostró Hipnos esta noche?"
     TemaId.MEDIEVAL -> "Asiéntese la visión de la noche…"
+    TemaId.TEMPLARIO -> "Inscribe lo que soñaste entre vigilia y vigilia…"
     TemaId.DISTOPIA -> "DECLARE LA ACTIVIDAD ONÍRICA."
     TemaId.REFUGIO -> "> REGISTRE EL SUEÑO_"
     TemaId.ORDEN -> "Parte nocturno: ¿qué soñó?"
@@ -945,6 +968,7 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
             })
         }, caja = listOf(0.15f, 0.14f, 0.15f, 0.12f), pista = pista, letra = LetraExtra.filosofo, tinta = m.tinta, fecha = m.extra)
         TemaId.MEDIEVAL -> libro({ libroCerrado(m) { g -> tapaMedieval(m, g) } }, LetraExtra.gotica, 14f)
+        TemaId.TEMPLARIO -> libro({ libroCerrado(m) { g -> tapaTemplario(m, g) } }, LetraExtra.cruzada, 13.5f)
         TemaId.ORDEN -> libro({ libroCerrado(m) { g -> tapaOrden(m, g) } }, LetraExtra.estarcido, 12.5f)
         TemaId.BOTANICO -> libro({ libroCerrado(m) { g -> tapaBotanico(m, g) } }, LetraExtra.fraunces, 13f)
         TemaId.LABORATORIO -> libro({
@@ -1209,6 +1233,20 @@ private fun DrawScope.tapaMedieval(m: Materia, g: Tapa) {
     listOf(0.3f, 0.7f).forEach { f ->
         drawRoundRect(m.detalle, Offset(g.ini.x + g.tam.width - w * 0.05f, g.ini.y + g.tam.height * f - h * 0.045f), Size(w * 0.075f, h * 0.09f), CornerRadius(3f))
         drawCircle(m.sombra, 3f, Offset(g.ini.x + g.tam.width + w * 0.01f, g.ini.y + g.tam.height * f))
+    }
+}
+
+/** La regla de la casa: la gran cruz patada roja en la tapa blanca, clavos de hierro en las esquinas y dos correas con hebilla. */
+private fun DrawScope.tapaTemplario(m: Materia, g: Tapa) {
+    val w = size.width; val h = size.height
+    val c = Offset(g.ini.x + g.lomo + (g.tam.width - g.lomo) * 0.48f, g.ini.y + g.tam.height * 0.44f)
+    drawPath(cruzPatada(c, minOf(g.tam.width, g.tam.height) * 0.26f), m.acento)
+    drawPath(cruzPatada(c, minOf(g.tam.width, g.tam.height) * 0.26f), m.sombra, style = Stroke(1.2f))
+    g.esquinas.forEach { drawCircle(m.detalle, 5f, it); drawCircle(m.brillo.copy(alpha = 0.6f), 1.6f, it - Offset(1.2f, 1.2f)) }
+    listOf(0.24f, 0.76f).forEach { f ->
+        val y = g.ini.y + g.tam.height * f
+        drawRect(m.extra, Offset(g.ini.x + g.tam.width * 0.7f, y - h * 0.022f), Size(g.tam.width * 0.3f + w * 0.02f, h * 0.044f))
+        drawRect(m.detalle, Offset(g.ini.x + g.tam.width * 0.74f, y - h * 0.032f), Size(w * 0.03f, h * 0.064f), style = Stroke(2f))
     }
 }
 
@@ -1616,6 +1654,12 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
             }
             listOf(-0.045f, 0.045f).forEach { f -> drawCircle(m.acento, w * 0.07f, Offset(o.x, o.y + hh * f)) }
         }
+        TemaId.TEMPLARIO -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_ARMERO) { o, cuerpo ->
+            // Lomos de cuero blanco: dos nervios de correa parda y, entre ellos, la cruz patada roja.
+            val w = size.width; val hh = size.height
+            listOf(-0.12f, 0.12f).forEach { f -> drawRect(lerp(m.extra, cuerpo, 0.2f), Offset(0f, o.y + hh * f - 3f), Size(w, 6f)) }
+            drawPath(cruzPatada(o, w * 0.32f), m.acento)
+        }
         TemaId.ORDEN -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_ACERO) { o, _ ->
             // El escudo carmesí de la orden, con su filete de latón, y dos remaches.
             val w = size.width; val s = w * 0.3f
@@ -1739,6 +1783,18 @@ private val ESTANTE_ROBLE = TablaEstante(Color(0xFF5E3F24), Color(0xFF2E1E10)) {
     val w = size.width; val h = size.height
     drawLine(Color(0xFF1E140A).copy(alpha = 0.5f), Offset(0f, h * 0.4f), Offset(w, h * 0.45f), 0.8f)
     var x = 20f; while (x < w) { drawCircle(Color(0xFF2B2B2B), h * 0.2f, Offset(x, h * 0.5f)); drawCircle(Color(0xFF8A8A8A), h * 0.07f, Offset(x - 1f, h * 0.45f)); x += 140f }
+}
+
+/** El armero de la sala de armas: roble negro con flejes de hierro remachados y, en cada tramo, una cruz roja pintada. */
+private val ESTANTE_ARMERO = TablaEstante(Color(0xFF4A3524), Color(0xFF22170D)) {
+    val w = size.width; val h = size.height
+    var x = 0f; var k = 0
+    while (x < w) {
+        drawRect(Color(0xFF3A3D42), Offset(x, 0f), Size(10f, h))
+        drawCircle(Color(0xFF9A9389), 1.6f, Offset(x + 5f, h * 0.28f)); drawCircle(Color(0xFF9A9389), 1.6f, Offset(x + 5f, h * 0.72f))
+        if (x + 60f < w) drawPath(cruzPatada(Offset(x + 60f, h * 0.5f), h * 0.32f), Color(0xFFB0191F).copy(alpha = 0.75f))
+        x += 120f; k++
+    }
 }
 
 /** Acero con remaches y una línea carmesí. */
@@ -2071,6 +2127,8 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.HELENO -> Pagina(R.drawable.papel_heleno, c(0xFFF3E9D2), c(0xFF1F1712), c(0xFF6B5536), c(0xFFA8471F), c(0xFF1A1410), Letra.garamond, 18.5f, 27f, false)
     TemaId.SEDA -> Pagina(R.drawable.papel_seda, c(0xFF1F3578), c(0xFFF2EAD3), c(0xFFB9B29F), c(0xFFE0B04F), c(0xFFE26A50), LetraExtra.alegreya, 17.5f, 27f, true, capitular = LetraExtra.almendra)
     TemaId.MEDIEVAL -> Pagina(R.drawable.papel_medieval, c(0xFFEDDDB8), c(0xFF2B1D12), c(0xFF6E5639), c(0xFFB3261E), c(0xFF1F3A93), LetraExtra.gotica, 19.5f, 28f, false, capitular = LetraExtra.gotica)
+    // El pergamino blanqueado de la regla, en la letra de la regla, con capitulares de estandarte.
+    TemaId.TEMPLARIO -> Pagina(R.drawable.papel_templario, c(0xFFF1EADA), c(0xFF201E1B), c(0xFF5B574E), c(0xFFB0191F), c(0xFF4A5560), LetraExtra.regla, 17.5f, 27f, false, capitular = LetraExtra.cruzada)
     TemaId.COLONOS -> Pagina(R.drawable.papel_colonos, c(0xFFF3EBD7), c(0xFF1E1A16), c(0xFF6B6255), c(0xFF9E2B25), c(0xFF3E4B60), LetraExtra.gaceta, 17.5f, 28f, false, Rayas.RENGLONES, LetraExtra.fell)
     TemaId.ORDEN -> Pagina(R.drawable.papel_orden, c(0xFF1C2127), c(0xFFDDE2E7), c(0xFF9DA6B0), c(0xFFD6B25A), c(0xFFD0333B), LetraExtra.estarcido, 16f, 25f, true, Rayas.NADA)
     TemaId.BOTANICO -> Pagina(R.drawable.papel_botanico, c(0xFFF1E9D2), c(0xFF2A2318), c(0xFF6B5E45), c(0xFF3F5A2C), c(0xFF8C4A22), LetraExtra.fraunces, 17.5f, 27f, false, Rayas.NADA, LetraExtra.fraunces)
@@ -2120,6 +2178,12 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                     listOf(14.dp.toPx(), h - 22.dp.toPx()).forEach { y -> olaCorrida(Offset(16.dp.toPx(), y), w - 32.dp.toPx(), 9.dp.toPx(), p.detalle.copy(alpha = 0.55f)) }
                 }
                 TemaId.MEDIEVAL -> listOf(26.dp.toPx(), 31.dp.toPx(), w - 26.dp.toPx()).forEach { x -> drawLine(p.acento.copy(alpha = 0.22f), Offset(x, 0f), Offset(x, h), 1.2f) }
+                TemaId.TEMPLARIO -> {
+                    // La banda roja de la sobreveste en el margen y, arriba, una fila de almenas tenue.
+                    drawRect(p.acento.copy(alpha = 0.18f), Offset(18.dp.toPx(), 0f), Size(4.dp.toPx(), h))
+                    drawLine(p.detalle.copy(alpha = 0.25f), Offset(25.dp.toPx(), 0f), Offset(25.dp.toPx(), h), 1f)
+                    val m = 12.dp.toPx(); var x = 0f; while (x < w) { drawRect(p.detalle.copy(alpha = 0.12f), Offset(x, 0f), Size(m, 8.dp.toPx())); x += m * 2 }
+                }
                 TemaId.COLONOS -> {
                     // Libro de registro: doble margen rojo, la cabecera azul y la columna de las cuentas.
                     listOf(36.dp.toPx(), 40.dp.toPx()).forEach { x -> drawLine(p.acento.copy(alpha = 0.45f), Offset(x, 0f), Offset(x, h), 1.2f) }
@@ -2310,6 +2374,10 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
                 Emblema(t, 34.dp, MaterialTheme.colorScheme, animado = false)
                 Text("Aquí comiença el folio ${Temas.copista(nDia)}", fontFamily = LetraExtra.gotica, fontSize = 15.sp, color = p.acento, modifier = Modifier.padding(start = 8.dp))
             }
+            TemaId.TEMPLARIO -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Emblema(t, 34.dp, MaterialTheme.colorScheme, animado = false)
+                Text("Parte de la jornada ${Temas.puntos(nDia)}", fontFamily = LetraExtra.cruzada, fontSize = 15.sp, color = p.acento, modifier = Modifier.padding(start = 8.dp))
+            }
             TemaId.DISTOPIA -> Row(Modifier.fillMaxWidth().border(1.5.dp, p.tinta)) {
                 Text("EXPEDIENTE Nº %04d".format((fecha.hashCode() and 0x7fffffff) % 10000), fontFamily = LetraExtra.oswald, fontSize = 13.sp, color = p.tinta, modifier = Modifier.weight(1f).padding(6.dp))
                 Text("DECLARACIÓN DIARIA", fontFamily = LetraExtra.oswald, fontSize = 13.sp, color = p.acento, modifier = Modifier.padding(6.dp))
@@ -2379,6 +2447,7 @@ private fun letraSueno(t: TemaId): Pair<FontFamily, Float> = when (t) {
     TemaId.NEON -> Letra.letrero to 13f
     TemaId.HELENO -> Letra.garamond to 13f
     TemaId.MEDIEVAL -> LetraExtra.gotica to 15f
+    TemaId.TEMPLARIO -> LetraExtra.cruzada to 14f
     TemaId.DISTOPIA -> LetraExtra.oswald to 12f
     TemaId.REFUGIO -> LetraExtra.vt323 to 18f
     TemaId.ORDEN -> LetraExtra.estarcido to 12f

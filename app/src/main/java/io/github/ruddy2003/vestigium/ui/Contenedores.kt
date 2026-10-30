@@ -27,6 +27,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     ROLLO("Rollo de momentos", "columna"),
     TABLILLA("Tablillas de momentos", "tablilla"),
     CODICE("Códice de momentos", "folio"),
+    REGLA("Regla de la casa", "artículo"),
     HORAS("Libro de horas", "folio"),
     TALLER("Cuaderno de taller", "hoja"),
     LEGAJO("Legajo de despachos", "despacho"),
@@ -53,6 +54,7 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.ROMANO -> Contenedor.ROLLO
     TemaId.HELENO -> Contenedor.TABLILLA
     TemaId.MEDIEVAL -> Contenedor.CODICE
+    TemaId.TEMPLARIO -> Contenedor.REGLA
     TemaId.GOTICO -> Contenedor.HORAS
     TemaId.RENACIMIENTO -> Contenedor.TALLER
     TemaId.NAPOLEON -> Contenedor.LEGAJO
@@ -93,6 +95,7 @@ object Contenedores {
         Contenedor.ROLLO -> if (oscuro) lerp(PAPIRO, Color.Black, 0.72f) else PAPIRO
         Contenedor.TABLILLA -> if (oscuro) lerp(CERA, Color.Black, 0.75f) else CERA
         Contenedor.CODICE -> if (oscuro) lerp(PERGAMINO, Color.Black, 0.76f) else PERGAMINO
+        Contenedor.REGLA -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.HORAS -> if (oscuro) lerp(VITELA, Color.Black, 0.8f) else VITELA
         Contenedor.TALLER -> if (oscuro) lerp(Color(0xFFEAD9B0), Color.Black, 0.74f) else Color(0xFFEAD9B0)
         Contenedor.LEGAJO -> if (oscuro) lerp(Color(0xFFF3EEDF), Color.Black, 0.78f) else Color(0xFFF7F2E4)
@@ -113,6 +116,7 @@ object Contenedores {
             Contenedor.ROLLO -> rolloCerrado(hojas, d)
             Contenedor.TABLILLA -> tablillasCerradas(grosor, d)
             Contenedor.CODICE -> libroCerrado(grosor, d, Color(0xFF6B3A1F), ORO_OSCURO, bandas = true, broches = true)
+            Contenedor.REGLA -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
             Contenedor.HORAS -> horasCerrado(grosor, d)
             Contenedor.TALLER -> tallerCerrado(grosor, d, oscuro)
             Contenedor.LEGAJO -> legajoCerrado(grosor, d, tapa)
@@ -335,6 +339,7 @@ object Contenedores {
                 var y = 96 * d; while (y < size.height) { drawLine(regla, Offset(margen - 10 * d, y), Offset(size.width - 18 * d, y), 0.7f * d); drawCircle(Color(0xFF6E5530).copy(alpha = 0.3f), 1 * d, Offset(size.width - 6 * d, y)); y += renglon }
                 listOf(margen - 10 * d, margen - 14 * d, size.width - 18 * d, size.width - 14 * d).forEach { x -> drawLine(regla, Offset(x, 0f), Offset(x, size.height), 0.7f * d) }
             }
+            Contenedor.REGLA -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.HORAS -> {
                 // Reglado en tinta roja, la barra de oro y azul del margen interior y la cenefa de hiedra del exterior.
                 val regla = Color(0xFFA3172E).copy(alpha = 0.22f)
@@ -404,6 +409,7 @@ object Contenedores {
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.28f), Color.Transparent), 10 * d, 34 * d), Offset(10 * d, 4 * d), Size(24 * d, size.height - 8 * d))
                 var y = 30 * d; while (y < size.height - 20 * d) { drawLine(Color(0xFF8A6A44), Offset(16 * d, y), Offset(16 * d, y + 10 * d), 1.6f * d); y += 48 * d }
             }
+            Contenedor.REGLA -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.HORAS -> {
                 // El lomo de terciopelo azul con su cadenilla de oro y el registro de seda roja que cruza la esquina.
                 val terciopelo = if (oscuro) Color(0xFF141E4A) else Color(0xFF1F2E6E)

@@ -52,6 +52,8 @@ object ContenedoresMas {
             // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
             Contenedor.INMERSION -> Color(0xFFEDF2EE)
             Contenedor.TETRAD -> Color(0xFFF7F3E6)
+            // El pergamino blanqueado de la regla de la orden.
+            Contenedor.REGLA -> Color(0xFFF4EFE2)
             // Las libretas de [Contenedores] tienen su papel allá.
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> return Contenedores.papel(c, cs, oscuro)
         }
@@ -439,6 +441,27 @@ object ContenedoresMas {
                 drawRect(lerp(verde, Color.Black, 0.25f), Offset(0f, 0f), Size(W * 0.05f, H))
                 listOf(0.3f, 0.7f).forEach { f -> drawRect(Color(0xFFC3C6CA), Offset(W * 0.015f, H * f - 6 * d), Size(2 * d, 12 * d)) }
             }
+            Contenedor.REGLA -> {
+                // La regla de la casa: tapas de cuero blanco curtido al alumbre con la gran cruz patada roja, dos correas de
+                // cuero con hebilla de hierro que la cierran y, colgando del canto de abajo, el sello de cera de la orden.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d); canto(w, h, grosor, d, Color(0xFFF4EFE2))
+                val cuero = if (oscuro) Color(0xFFBDB4A0) else Color(0xFFE7DFCB); val rojo = Color(0xFFB0191F); val correa = Color(0xFF5A3A22)
+                drawRoundRect(Brush.linearGradient(listOf(lerp(cuero, Color.White, 0.3f), cuero, lerp(cuero, Color.Black, 0.18f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(3 * d))
+                drawRect(lerp(cuero, Color.Black, 0.22f), Offset.Zero, Size(w * 0.1f, h))
+                listOf(0.22f, 0.5f, 0.78f).forEach { f -> drawRect(lerp(cuero, Color.Black, 0.35f), Offset(0f, h * f - 2 * d), Size(w * 0.1f, 4 * d)) }
+                drawPath(cruzPatada(Offset(w * 0.56f, h * 0.42f), w * 0.26f), rojo)
+                drawPath(cruzPatada(Offset(w * 0.56f, h * 0.42f), w * 0.26f), lerp(rojo, Color.Black, 0.35f), style = Stroke(1 * d))
+                listOf(0.2f, 0.8f).forEach { f ->
+                    val y = h * f
+                    drawRect(correa, Offset(w * 0.62f, y - 4 * d), Size(w * 0.38f + grosor, 8 * d))
+                    drawRect(HIERRO, Offset(w - 10 * d, y - 6 * d), Size(8 * d, 12 * d), style = Stroke(1.6f * d))
+                    drawLine(HIERRO, Offset(w - 6 * d, y - 4 * d), Offset(w - 6 * d, y + 4 * d), 1.4f * d)
+                }
+                val sello = Offset(w * 0.56f, h - 4 * d)
+                drawLine(Color(0xFF8A7650), Offset(w * 0.5f, h * 0.74f), sello, 1.4f * d); drawLine(Color(0xFF8A7650), Offset(w * 0.62f, h * 0.74f), sello, 1.4f * d)
+                drawCircle(Color(0xFF7A2A16), 9 * d, sello); drawCircle(lerp(Color(0xFF7A2A16), Color.Black, 0.3f), 6.5f * d, sello, style = Stroke(1 * d))
+                drawPath(cruzPatada(sello, 4.5f * d), lerp(Color(0xFF7A2A16), Color.Black, 0.35f))
+            }
             // Estas las dibuja [Contenedores].
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
@@ -613,6 +636,18 @@ object ContenedoresMas {
                 var y = 0f; while (y < size.height) { drawLine(cuadro.copy(alpha = 0.12f), Offset(0f, y), Offset(size.width, y), 0.5f * d); y += paso }
                 drawLine(Color(0xFFC1121F).copy(alpha = 0.55f), Offset(size.width - 26 * d, 0f), Offset(size.width - 26 * d, size.height), 1.2f * d)
             }
+            Contenedor.REGLA -> {
+                // La hoja de la regla: reglado rojo, el margen ancho donde va el número de cada artículo en romanos entre
+                // puntos, la cruz patada en la cabecera y, abajo a la derecha, la huella del sello de la casa.
+                val rojo = Color(0xFFB0191F)
+                var y = 96 * d; while (y < size.height) { drawLine(rojo.copy(alpha = if (oscuro) 0.18f else 0.12f), Offset(margen - 10 * d, y), Offset(size.width - 14 * d, y), 0.7f * d); y += renglon }
+                listOf(margen - 12 * d, margen - 15 * d).forEach { x -> drawLine(rojo.copy(alpha = 0.3f), Offset(x, 60 * d), Offset(x, size.height), 0.8f * d) }
+                drawPath(cruzPatada(Offset(size.width / 2, 48 * d), 9 * d), rojo.copy(alpha = 0.55f))
+                drawLine(tinta.copy(alpha = 0.2f), Offset(size.width * 0.2f, 66 * d), Offset(size.width * 0.8f, 66 * d), 0.8f * d)
+                val s = Offset(size.width - 44 * d, size.height - 46 * d)
+                drawCircle(rojo.copy(alpha = 0.07f), 26 * d, s); drawCircle(rojo.copy(alpha = 0.12f), 22 * d, s, style = Stroke(1 * d))
+                drawPath(cruzPatada(s, 14 * d), rojo.copy(alpha = 0.08f))
+            }
             // Estas las dibuja [Contenedores].
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}
         }
@@ -726,6 +761,16 @@ object ContenedoresMas {
                 // El pliegue del cuadernillo con sus dos grapas.
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.22f), Color.Transparent), 10 * d, 30 * d), Offset(10 * d, 4 * d), Size(20 * d, size.height - 8 * d))
                 listOf(0.3f, 0.7f).forEach { f -> val y = size.height * f; drawRect(Color(0xFFC3C6CA), Offset(14 * d, y - 9 * d), Size(3 * d, 18 * d)); drawRect(Color.Black.copy(alpha = 0.25f), Offset(17 * d, y - 9 * d), Size(1 * d, 18 * d)) }
+            }
+            Contenedor.REGLA -> {
+                // El lomo cosido sobre nervios de cuero: tres correas que cruzan el pliegue, sujetas con clavos de hierro.
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.26f), Color.Transparent), 10 * d, 32 * d), Offset(10 * d, 4 * d), Size(22 * d, size.height - 8 * d))
+                val correa = if (oscuro) Color(0xFF3E2817) else Color(0xFF5A3A22)
+                listOf(0.18f, 0.5f, 0.82f).forEach { f ->
+                    val y = size.height * f
+                    drawRect(correa, Offset(0f, y - 5 * d), Size(30 * d, 10 * d))
+                    drawCircle(HIERRO, 2 * d, Offset(24 * d, y))
+                }
             }
             // Estas las dibuja [Contenedores].
             Contenedor.ROLLO, Contenedor.TABLILLA, Contenedor.CODICE, Contenedor.HORAS, Contenedor.TALLER, Contenedor.LEGAJO, Contenedor.CAHIER -> {}

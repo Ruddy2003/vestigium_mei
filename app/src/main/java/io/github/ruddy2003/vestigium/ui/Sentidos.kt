@@ -84,6 +84,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(TICK_GRAVE, 0.6f), g(CLICK, 0.5f, 90)); Evento.ERROR -> listOf(g(THUD, 0.8f), g(THUD, 0.4f, 120))
             Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.8f), g(THUD, 0.45f, 300))
         }
+        // Cota de malla, espada, el sello de la casa, el rastrillo y los tambores con el olifante.
+        TemaId.TEMPLARIO -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.75f), g(TICK_GRAVE, 0.4f, 25)); Evento.PASAR -> listOf(g(BAJA, 0.55f), g(TICK_GRAVE, 0.5f, 35))
+            Evento.GUARDAR -> listOf(g(THUD, 0.9f), g(CLICK, 0.7f, 45), g(TICK_GRAVE, 0.4f, 40))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.65f), g(CLICK, 0.35f, 55)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.55f), g(THUD, 0.75f, 20), g(TICK, 0.3f, 60))
+            Evento.CAMBIO -> listOf(g(THUD, 0.5f), g(CLICK, 0.9f, 35)); Evento.ERROR -> listOf(g(THUD, 1f), g(BAJA, 0.6f, 40), g(THUD, 0.5f, 90))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.9f), g(CLICK, 0.8f, 120), g(CLICK, 0.8f, 120), g(SUBE, 0.6f, 60))
+        }
         // Máquina de escribir y sello de goma.
         TemaId.DISTOPIA -> when (e) {
             Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
@@ -292,6 +300,7 @@ object Sentidos {
         TemaId.NEON -> intArrayOf(R.raw.s_neon_toque, R.raw.s_neon_guardar, R.raw.s_neon_logro, R.raw.s_neon_pasar, R.raw.s_neon_elegir, R.raw.s_neon_abrir, R.raw.s_neon_tema, R.raw.s_neon_error, R.raw.s_neon_cambio, R.raw.s_tecla_neon, R.raw.s_rascar_neon)
         TemaId.HELENO -> intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir, R.raw.s_heleno_tema, R.raw.s_heleno_error, R.raw.s_heleno_cambio, R.raw.s_tecla_heleno, R.raw.s_rascar_heleno)
         TemaId.MEDIEVAL -> intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema, R.raw.s_medieval_error, R.raw.s_medieval_cambio, R.raw.s_tecla_medieval, R.raw.s_rascar_medieval)
+        TemaId.TEMPLARIO -> intArrayOf(R.raw.s_templario_toque, R.raw.s_templario_guardar, R.raw.s_templario_logro, R.raw.s_templario_pasar, R.raw.s_templario_elegir, R.raw.s_templario_abrir, R.raw.s_templario_tema, R.raw.s_templario_error, R.raw.s_templario_cambio, R.raw.s_tecla_templario, R.raw.s_rascar_templario)
         TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
         TemaId.REFUGIO -> intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir, R.raw.s_refugio_tema, R.raw.s_refugio_error, R.raw.s_refugio_cambio, R.raw.s_tecla_refugio, R.raw.s_rascar_refugio)
         TemaId.ORDEN -> intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir, R.raw.s_orden_tema, R.raw.s_orden_error, R.raw.s_orden_cambio, R.raw.s_tecla_orden, R.raw.s_rascar_orden)
@@ -363,6 +372,8 @@ object Sentidos {
         TemaId.HELENO -> Afinacion(st(0, 2, 4, 7, 9), st(-5, 0, 2, 7), pasarRuido = false, elegirRuido = false)
         // Re dórico; la pluma solo da pasos cortos del modo.
         TemaId.MEDIEVAL -> Afinacion(st(-2, 0, 2, 3), null, pasarRuido = true, elegirRuido = true)
+        // Sol mixolidio, el modo de los cantos de cruzada; el toque es el tintineo de la malla y elegir, el golpe de la espada en el escudo.
+        TemaId.TEMPLARIO -> Afinacion(st(-5, -2, 0, 5), st(-7, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
         TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
         // Fa pentatónico; el relé sube por tonos enteros.
@@ -481,6 +492,7 @@ object Sentidos {
         TemaId.NEON -> pasadas(TICK_GRAVE, 0.9f, 22, 6)   // la cortina metálica del puesto
         TemaId.HELENO -> pasadas(TICK, 0.55f, 55, 3)   // electro
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
+        TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
         TemaId.REFUGIO -> pasadas(TICK, 0.8f, 35, 4)   // chapa galvanizada
         TemaId.ORDEN -> pasadas(CLICK, 0.8f, 45, 3)   // acero pavonado

@@ -34,6 +34,10 @@ FUENTES = [
     # MED: la letra de los medievalistas
     ("cardo/Cardo-Regular.ttf", None, "cardo_regular", None, LATINO),
     ("cardo/Cardo-Bold.ttf", None, "cardo_bold", None, LATINO),
+    # Templario: el libro de la regla (Gentium, renombrada) y la letra de los estandartes (MedievalSharp, renombrada)
+    ("gentiumbookplus/GentiumBookPlus-Regular.ttf", None, "regla_regular", "Regla Vestigium", LATINO),
+    ("gentiumbookplus/GentiumBookPlus-Bold.ttf", None, "regla_bold", "Regla Vestigium", LATINO),
+    ("medievalsharp/MedievalSharp.ttf", None, "cruzada_titulo", "Cruzada Vestigium", LATINO),
     # DIS: la grotesca de los rótulos oficiales
     ("barlow/Barlow-Regular.ttf", None, "barlow_regular", None, LATINO),
     ("barlow/Barlow-SemiBold.ttf", None, "barlow_semibold", None, LATINO),

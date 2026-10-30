@@ -171,6 +171,8 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
         TemaId.HELENO -> pinta(estrella(12f, 12f, 16, 11f, 5.6f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 2.6f) }, 1.2f)
         // Cuadrifolio de las tracerías.
         TemaId.MEDIEVAL -> pinta(Path().also { c -> circulo(c, 12f, 7.4f, 5f); circulo(c, 16.6f, 12f, 5f); circulo(c, 12f, 16.6f, 5f); circulo(c, 7.4f, 12f, 5f) }, 1.3f)
+        // El escudo de lágrima de la casa.
+        TemaId.TEMPLARIO -> pinta(Path().apply { moveTo(4.5f * u, 3.5f * u); lineTo(19.5f * u, 3.5f * u); quadraticTo(20.2f * u, 14.5f * u, 12f * u, 21f * u); quadraticTo(3.8f * u, 14.5f * u, 4.5f * u, 3.5f * u); close() }, 1.4f)
         // El ojo que todo lo ve.
         TemaId.DISTOPIA -> pinta(Path().apply {
             fillType = PathFillType.EvenOdd

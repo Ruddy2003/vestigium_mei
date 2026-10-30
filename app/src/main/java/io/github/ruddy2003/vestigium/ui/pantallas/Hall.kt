@@ -87,6 +87,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.NEON -> Color(0xFFFF3D9A)
     TemaId.HELENO -> Color(0xFF1E5F8C)
     TemaId.MEDIEVAL -> Color(0xFF7A5C2E)
+    TemaId.TEMPLARIO -> Color(0xFF5E6870)
     TemaId.DISTOPIA -> Color(0xFF5D6670)
     TemaId.REFUGIO -> Color(0xFF3FA7A0)
     TemaId.ORDEN -> Color(0xFFA07D2E)
@@ -187,6 +188,8 @@ object PiezasLogro {
         TemaId.NEON -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, null, 1.5f, true, Color(0xFFFFD3E8))   // tubo doble: el halo y el núcleo
         TemaId.HELENO -> Trazo(u, 0.95f, StrokeCap.Butt, StrokeJoin.Bevel, null, 0f, true, Color(0xFFE9EEF4))
         TemaId.MEDIEVAL -> Trazo(u, 1.25f, StrokeCap.Round, StrokeJoin.Round, null, 0f, false, Color(0xFFEADBB8))
+        // Trazo de forja: firme, de esquinas vivas y doble, como el ribete de un escudo; el material, lino blanco.
+        TemaId.TEMPLARIO -> Trazo(u, 1.4f, StrokeCap.Square, StrokeJoin.Miter, null, 0f, true, Color(0xFFF1ECE0))
         TemaId.DISTOPIA -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(5f, 1.6f), 0f, false, Color(0xFFD9D9D4))
         TemaId.REFUGIO -> Trazo(u, 1.05f, StrokeCap.Round, StrokeJoin.Round, null, 2.5f, false, Color(0xFFFFF1CF))
         TemaId.ORDEN -> Trazo(u, 1.3f, StrokeCap.Square, StrokeJoin.Bevel, floatArrayOf(4f, 1.2f), 0f, false, Color(0xFFCFD3D8))
@@ -285,6 +288,8 @@ object PiezasLogro {
             }
             TemaId.HELENO -> for (i in 0 until 40) drawLine(m, en(i * PI / 20, 0.86f), en(i * PI / 20, 0.95f), 1.1f * u)
             TemaId.MEDIEVAL -> drawCircle(t, r * 0.9f, c, style = Stroke(2.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * u, 3 * u))))
+            // Un anillo de cota de malla: treinta anillas.
+            TemaId.TEMPLARIO -> for (i in 0 until 30) drawCircle(t, r * 0.06f, en(i * PI / 15, 0.9f), style = Stroke(0.9f * u))
             TemaId.DISTOPIA -> {
                 drawCircle(t, r * 0.9f, c, style = Stroke(1.2f * u)); drawCircle(t, r * 0.84f, c, style = Stroke(0.8f * u))
                 for (i in 0 until 4) { val a = PI / 4 + i * PI / 2; val p = en(a, 0.87f); rotate(grados(a), p) { drawRect(tinta.copy(alpha = 0.6f), Offset(p.x - 3 * u, p.y - 1.5f * u), Size(6 * u, 3 * u)) } }
@@ -370,6 +375,8 @@ object PiezasLogro {
             TemaId.NEON -> { drawLine(tinta, Offset(cx - an * 0.3f, y), Offset(cx - an * 0.3f, y - 3 * u), 0.8f * u); drawLine(tinta, Offset(cx + an * 0.3f, y), Offset(cx + an * 0.3f, y - 3 * u), 0.8f * u); drawRect(tinta, Offset(cx - an * 0.45f, y - 6.5f * u), Size(an * 0.9f, 3.5f * u)) }   // el letrero de la azotea
             TemaId.HELENO -> { tri(3.5f * u, x - 0.6f * u, x + an + 0.6f * u); drawCircle(tinta, 0.9f * u, Offset(cx, y - 4.2f * u)) }
             TemaId.MEDIEVAL -> { val m = an / 5; for (k in 0 until 3) drawRect(tinta, Offset(x + k * 2 * m, y - 3 * u), Size(m, 3 * u)) }
+            // El parapeto liso con la cruz patada alzada en medio.
+            TemaId.TEMPLARIO -> { drawRect(tinta, Offset(x, y - 1.6f * u), Size(an, 1.6f * u)); drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(cx, y - 4.4f * u), 3f * u), tinta) }
             TemaId.DISTOPIA -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 3 * u), 0.8f * u); drawRect(tinta, Offset(cx - an * 0.4f, y - 6 * u), Size(an * 0.8f, 3 * u)) }
             TemaId.REFUGIO -> drawPath(Path().apply { moveTo(x - 2 * u, y - 4 * u); lineTo(x + an + 2 * u, y - 1 * u); lineTo(x + an + 2 * u, y); lineTo(x - 2 * u, y - 3 * u); close() }, tinta)
             TemaId.ORDEN -> {
@@ -452,6 +459,8 @@ object PiezasLogro {
                 }
                 close()
             })
+            // El escudo de la casa con la cruz patada.
+            TemaId.TEMPLARIO -> { traza(Path().apply { moveTo(c.x - 13 * u, c.y - 15 * u); lineTo(c.x + 13 * u, c.y - 15 * u); quadraticTo(c.x + 14 * u, c.y + 5 * u, c.x, c.y + 17 * u); quadraticTo(c.x - 14 * u, c.y + 5 * u, c.x - 13 * u, c.y - 15 * u); close() }); traza(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(c.x, c.y - 2 * u), 9 * u)) }
             TemaId.DISTOPIA -> rotate(-6f, c) { traza(caja(c.x - 28 * u, c.y - 20 * u, c.x + 28 * u, c.y + 20 * u, 2 * u)); drawRect(tinto, Offset(c.x - 25 * u, c.y - 17 * u), Size(50 * u, 34 * u), style = Stroke(0.8f * u)) }
             TemaId.REFUGIO -> traza(Path().apply { addOval(Rect(c.x - 30 * u, c.y - 20 * u, c.x + 30 * u, c.y + 20 * u)) })
             TemaId.ORDEN -> traza(Path().apply { moveTo(c.x - 26 * u, c.y - 20 * u); lineTo(c.x + 26 * u, c.y - 20 * u); lineTo(c.x + 26 * u, c.y + 8 * u); lineTo(c.x, c.y + 26 * u); lineTo(c.x - 26 * u, c.y + 8 * u); close() })
@@ -682,6 +691,16 @@ object PiezasLogro {
                 arco(c.x - 11 * u, base, 6 * u, 10 * u); arco(c.x + 12.5f * u, base - 24 * u, 4 * u, 6 * u)
                 suelo()
             }
+            // La iglesia redonda del Temple (las de la orden imitaban el Santo Sepulcro): el tambor con sus arcos, la
+            // cúpula y la linterna con la cruz.
+            TemaId.TEMPLARIO -> {
+                drawRect(tinta, Offset(c.x - 20 * u, base - 22 * u), Size(40 * u, 22 * u))
+                drawArc(tinta, 180f, 180f, true, Offset(c.x - 20 * u, base - 36 * u), Size(40 * u, 28 * u))
+                drawRect(tinta, Offset(c.x - 3 * u, base - 42 * u), Size(6 * u, 7 * u))
+                drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(c.x, base - 46 * u), 3.4f * u), tinta)
+                for (k in 0 until 5) arco(c.x - 17 * u + k * 7.4f * u, base - 4 * u, 4.4f * u, 9 * u)
+                suelo()
+            }
             TemaId.DISTOPIA -> {
                 for (k in 0 until 4) { val an = (52 - k * 12) * u; drawRect(tinta, Offset(c.x - an / 2, base - (k + 1) * 9 * u), Size(an, 9 * u)) }
                 val o = Offset(c.x, base - 31.5f * u)
@@ -897,6 +916,15 @@ object PiezasLogro {
                 drawLine(tinta, Offset(c.x, c.y - 36 * u), Offset(c.x, c.y - 30 * u), 1.4f * u); drawLine(tinta, Offset(c.x - 3 * u, c.y - 33.5f * u), Offset(c.x + 3 * u, c.y - 33.5f * u), 1.4f * u)
                 drawCircle(claro, 4 * u, Offset(c.x, c.y - 10 * u), style = Stroke(1.2f * u))
             }
+            // El «baucent»: negro arriba y blanco abajo, colgado de su travesaño, con la cruz roja en la parte blanca.
+            TemaId.TEMPLARIO -> {
+                val x0 = c.x - 14 * u; val x1 = c.x + 14 * u
+                asta(c.x, c.y - 30 * u); travesano(x0, x1)
+                pano(caja(x0, arriba, x1, c.y + 16 * u), claro)
+                drawRect(tinta, Offset(x0, arriba), Size(x1 - x0, (c.y + 16 * u - arriba) / 2))
+                drawPath(Path().apply { moveTo(c.x, c.y - 36 * u); lineTo(c.x + 2.5f * u, c.y - 30 * u); lineTo(c.x - 2.5f * u, c.y - 30 * u); close() }, tinta)
+                drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(c.x, c.y + 6 * u), 6 * u), tono)
+            }
             TemaId.DISTOPIA -> {
                 raya(tz, tinta, Offset(c.x - 16 * u, c.y - 28 * u), Offset(c.x + 16 * u, c.y - 28 * u), 2 * u)
                 listOf(-14f, 14f).forEach { dx -> drawLine(tinta, Offset(c.x + dx * u, c.y - 28 * u), Offset(c.x + dx * u * 0.85f, c.y - 24 * u), 0.8f * u) }
@@ -1094,6 +1122,13 @@ object PiezasLogro {
                 listOf(-1.2f, 1.2f).forEach { d -> drawLine(tinta, Offset(c.x + d * u, c.y - R), Offset(c.x + d * u, c.y + R), 0.9f * u); drawLine(tinta, Offset(c.x - R, c.y + d * u), Offset(c.x + R, c.y + d * u), 0.9f * u) }
                 listOf(Offset(1f, 1f), Offset(-1f, 1f), Offset(1f, -1f), Offset(-1f, -1f)).forEach { s -> for (k in 0 until 3) drawCircle(tinta, 1.2f * u, Offset(c.x + s.x * (6 + (k % 2) * 3) * u, c.y + s.y * (6 + (k / 2) * 3) * u)) }
             }
+            // El dinero de la casa: la cruz patada al centro y la gráfila de perlas.
+            TemaId.TEMPLARIO -> {
+                disco()
+                drawCircle(tinta, R * 0.78f, c, style = Stroke(0.8f * u))
+                for (i in 0 until 24) drawCircle(tinta, 0.9f * u, en(i * PI / 12, 0.88f))
+                drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(c, R * 0.55f), tinta)
+            }
             TemaId.DISTOPIA -> {
                 forma(caja(c.x - 16 * u, c.y - 16 * u, c.x + 16 * u, c.y + 16 * u, 4 * u))
                 drawCircle(claro, 3 * u, Offset(c.x, c.y - 10 * u)); drawCircle(tinta, 3 * u, Offset(c.x, c.y - 10 * u), style = Stroke(0.8f * u))
@@ -1272,6 +1307,12 @@ object PiezasLogro {
                 drawCircle(tinta, 3.2f * u, Offset(c.x - 1 * u, c.y))
                 listOf(-9f, 9f).forEach { dy -> drawRect(tinta, Offset(c.x + 13 * u, c.y + (dy - 1.5f) * u), Size(6 * u, 3 * u)) }
                 drawRect(tinta, Offset(c.x - 9 * u, c.y - 13 * u), Size(16 * u, 26 * u), style = Stroke(0.8f * u))
+            }
+            // La regla de la casa: tapa blanca con la cruz roja y dos correas con hebilla.
+            TemaId.TEMPLARIO -> {
+                tapa(c.x - 16 * u, c.y - 21 * u, c.x + 16 * u, c.y + 21 * u, papel, 1.5f * u)
+                drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(c.x - 1 * u, c.y - 2 * u), 10 * u), tono)
+                listOf(-12f, 12f).forEach { dy -> drawRect(tinta, Offset(c.x + 8 * u, c.y + (dy - 1.8f) * u), Size(11 * u, 3.6f * u)); drawRect(tinta, Offset(c.x + 12 * u, c.y + (dy - 2.8f) * u), Size(3 * u, 5.6f * u), style = Stroke(0.8f * u)) }
             }
             TemaId.DISTOPIA -> {
                 drawRect(papel, Offset(c.x - 19 * u, c.y - 17 * u), Size(36 * u, 34 * u))
@@ -1458,6 +1499,13 @@ object PiezasLogro {
                 fina(tz, tinta.copy(alpha = 0.4f), Offset(c.x - 22 * u, c.y - 6 * u), Offset(c.x + 22 * u, c.y - 6 * u), 0.7f * u)
                 listOf(-3f, 3f).forEach { dx -> drawLine(Color(0xFFB0302A), Offset(c.x + dx * u * 0.4f, c.y + 6 * u), Offset(c.x + dx * u, c.y + 16 * u), 1 * u) }
                 drawCircle(tono, 6 * u, Offset(c.x, c.y + 20 * u)); drawCircle(tinta, 3.5f * u, Offset(c.x, c.y + 20 * u), style = Stroke(0.7f * u))
+            }
+            // La misiva plegada en tres, con el sello pendiente de la casa colgado de una tira.
+            TemaId.TEMPLARIO -> {
+                hoja(c.x - 20 * u, c.y - 16 * u, c.x + 20 * u, c.y + 6 * u)
+                listOf(-7f, 7f).forEach { dx -> fina(tz, tinta.copy(alpha = 0.4f), Offset(c.x + dx * u, c.y - 16 * u), Offset(c.x + dx * u, c.y + 6 * u), 0.7f * u) }
+                drawLine(tinta, Offset(c.x, c.y + 6 * u), Offset(c.x, c.y + 14 * u), 1.2f * u)
+                drawCircle(tono, 6.5f * u, Offset(c.x, c.y + 20 * u)); drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(c.x, c.y + 20 * u), 4 * u), tinta.copy(alpha = 0.7f))
             }
             TemaId.DISTOPIA -> {
                 hoja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u)

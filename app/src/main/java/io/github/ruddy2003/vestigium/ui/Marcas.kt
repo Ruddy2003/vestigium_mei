@@ -90,6 +90,8 @@ object Marcas {
         ESCOTILLA,
         /** Subrayado de burbujas de varios tamaños. */
         BURBUJAS,
+        /** Escudete con la cruz patada delante de la palabra y un filete de acero debajo. */
+        ESCUDETE,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -109,6 +111,7 @@ object Marcas {
             TemaId.NEON -> if (persona) Aspecto(cs.background, p, Forma.MARCADOR, negrita = true) else Aspecto(s, s, Forma.ONDULADO)
             TemaId.HELENO -> if (persona) Aspecto(p, t, Forma.GRECA, negrita = true) else Aspecto(s, s, Forma.PUNTEADO)
             TemaId.MEDIEVAL -> if (persona) Aspecto(p, p, Forma.NINGUNA, negrita = true, cursiva = true) else Aspecto(t, t, Forma.SUBRAYADO, cursiva = true)
+            TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             TemaId.REFUGIO -> Aspecto(if (persona) p else s, if (persona) p else s, Forma.RECUADRO, negrita = persona)
             TemaId.ORDEN -> if (persona) Aspecto(p, p, Forma.PLACA, negrita = true) else Aspecto(t, t, Forma.DOBLE)
@@ -137,6 +140,7 @@ object Marcas {
         Forma.RECUADRO, Forma.CORCHETES, Forma.CARTELA, Forma.GOMA, Forma.RECORTE, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PIEDRA, Forma.ESCOTILLA -> c.copy(alpha = 0.12f)
         Forma.NINGUNA, Forma.SUBRAYADO, Forma.ONDULADO, Forma.GRECA, Forma.PUNTEADO, Forma.DOBLE, Forma.ESCALA, Forma.ZIGZAG, Forma.GUIONES,
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> Color.Unspecified
+        Forma.ESCUDETE -> c.copy(alpha = 0.12f)
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -145,6 +149,7 @@ object Marcas {
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> true
         Forma.NINGUNA, Forma.MARCADOR, Forma.RECUADRO, Forma.SELLO, Forma.CORCHETES, Forma.CARTELA, Forma.TERMINAL, Forma.BARRA, Forma.GOMA,
         Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
+        Forma.ESCUDETE -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -362,6 +367,13 @@ object Marcas {
                 drawLine(c.copy(alpha = 0.85f), Offset(rr.left, y), Offset(rr.right, y), 0.8f * u)
                 var x = rr.left + 1.5f * u
                 while (x <= rr.right) { drawLine(c.copy(alpha = 0.85f), Offset(x - 0.8f * u, y + 1.4f * u), Offset(x + 0.8f * u, y - 2.2f * u), 0.8f * u); x += 4f * u }
+            }
+            Forma.ESCUDETE -> {
+                val o = Offset(rr.left - 4.6f * u, medio); val r = minOf(3.4f * u, h * 0.4f)
+                val escudo = Path().apply { moveTo(o.x - r * 0.8f, o.y - r * 0.85f); lineTo(o.x + r * 0.8f, o.y - r * 0.85f); quadraticTo(o.x + r * 0.86f, o.y + r * 0.3f, o.x, o.y + r); quadraticTo(o.x - r * 0.86f, o.y + r * 0.3f, o.x - r * 0.8f, o.y - r * 0.85f); close() }
+                drawPath(escudo, c.copy(alpha = 0.85f), style = Stroke(0.8f * u))
+                drawPath(cruzPatada(Offset(o.x, o.y - r * 0.1f), r * 0.6f), Color(0xFFB0191F))
+                drawLine(c.copy(alpha = 0.7f), Offset(rr.left, baja), Offset(rr.right, baja), 1.4f * u)
             }
         }
     }

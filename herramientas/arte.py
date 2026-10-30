@@ -231,6 +231,29 @@ def papeles_fuente():
     for t in ('romano', 'medieval', 'seda', 'revolucion'):
         shutil.copyfile(os.path.join(aqui, f'papel_{t}.jpg'), os.path.join(OUT, f'papel_{t}.jpg'))
 
+def papel_templario():
+    """La regla de la casa: pergamino blanqueado, polvo de arena del camino, la filigrana tenue de la cruz patada al centro
+    y los bordes tostados por el sol de la frontera."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#F3EDDF'), col('#E4D9C0'), ruido_rect(W, H, 40, 141) * 0.7)
+    a = mezcla(a, col('#D8C49A'), np.clip((ruido_rect(W, H, 20, 142) - 0.7) * 3, 0, 1) * 0.35)
+    arena = np.random.default_rng(143).random((H, W)) > 0.997
+    a[arena] = a[arena] * 0.6 + col('#B08A52') * 0.4
+    d = np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) / math.sqrt(2)
+    a = mezcla(a, col('#B99B6A'), np.clip((d - 0.6) / 0.4, 0, 1) * 0.55)
+    filigrana = Image.new('L', (W, H), 0); dl = ImageDraw.Draw(filigrana)
+    cx, cy, r = W / 2, H / 2, W * 0.28; pts = []
+    for k in range(4):
+        u = math.radians(90 * k - 90); dx, dy = math.cos(u), math.sin(u); nx, ny = -dy, dx
+        for f_, q in ((0.15, -0.15), (1, -0.42), (1, 0.42)):
+            pts.append((cx + (dx * f_ + nx * q) * r, cy + (dy * f_ + ny * q) * r))
+    dl.polygon(pts, fill=255)
+    fil = np.asarray(filigrana.filter(ImageFilter.GaussianBlur(3)), np.float32) / 255
+    a = a * (1 - 0.035 * fil[..., None])
+    a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 144)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_templario.jpg'), quality=86)
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
     papeles()
@@ -239,4 +262,5 @@ if __name__ == '__main__':
     papel_neon()
     papel_abismo()
     papeles_fuente()
+    papel_templario()
     print('papeles listos')

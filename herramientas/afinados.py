@@ -337,6 +337,40 @@ def medieval():
                tecla=trazo((2500, 8000), 0.045, 20),
                rascar=rascado((1200, 5000), camp(T + 24, 0.6), aspereza=60))
 
+def templario():
+    # Sol mixolidio, el modo de los cantos de cruzada: la cota de malla que tintinea, la espada contra el escudo, la tela
+    # de la sobreveste y del estandarte al viento, el rastrillo del castillo, el olifante y la campana de la capilla.
+    T = -2   # Sol4
+    malla = lambda n, d=0.14: campana(hz(n), d, 3.7, 0.9, 16)
+    golpe = lambda n, d=0.4: mezclar((0, metal(hz(n), d, 4200, 0.004) * env(int(d * SR), 0.002, d * 0.35, 5), 0.8), (0, clic(0.02, (2500, 7000)), 0.5))
+    cuerno = lambda f, d: metal(f, d, 2200, 0.05)
+    capilla = lambda n, d=1.8: campana(hz(n), d, 2.4, 1.3, 2.4)
+    with azar_propio('templario_base'):
+        tela = filtro(ruido(0.3), 'banda', (250, 1800)) * env(int(0.3 * SR), 0.06, 0.18, 3) * (0.55 + 0.45 * np.abs(np.sin(np.linspace(0, 9, int(0.3 * SR)))))
+        cadena = mezclar(*[(0.035 * i + 0.002 * i * i, clic(0.02, (1500, 6000)), 0.7 - 0.04 * i) for i in range(9)])
+        S['templario'] = dict(
+            toque=mezclar((0, malla(T + 24), 0.6), (0.012, malla(T + 31, 0.1), 0.35), (0, clic(0.012, (3000, 8000)), 0.3)),
+            elegir=golpe(T + 12),
+            pasar=tela,
+            abrir=mezclar((0, cadena, 0.8), (0.32, tambor(hz(T - 26), 0.4, 0.5), 0.9)),
+            guardar=mezclar((0, tambor(hz(T - 24), 0.3, 0.7), 0.9), (0.06, capilla(T + 12, 1.1), 0.3)),
+            logro=reverb(mezclar(melodia(cuerno, [T - 12, T - 5, T, T - 5, T], 0.2, 0.32, g=0.5), (0.85, cuerno(hz(T), 0.9), 0.55),
+                                 *[(0.21 * i, tambor(hz(T - 29), 0.3, 0.4), 0.5) for i in range(4)]), 1.6, 0.28),
+            tema=reverb(mezclar((0, tambor(hz(T - 29), 0.35, 0.5), 0.7), (0.05, cuerno(hz(T - 5), 0.4), 0.45), (0.4, cuerno(hz(T), 0.6), 0.5)), 1.4, 0.25),
+            aviso=reverb(mezclar(*[(0.3 * i, capilla(T + n, 1.4), 0.45) for i, n in enumerate([12, 10, 7, 5])], (1.2, cuerno(hz(T - 5), 0.7), 0.35)), 1.8, 0.3),
+            solemne=reverb(mezclar((0, coro(hz(T - 12), 6.0), 0.22), (0, coro(hz(T - 5), 6.0), 0.14),
+                                   melodia(coro, [T + n for n in [0, 2, 5, 4, 2, 0, -2, 0]], 0.7, 0.72, g=0.32),
+                                   (5.4, capilla(T + 12, 2.2), 0.35), (5.6, cuerno(hz(T - 12), 1.2), 0.2)), 2.8, 0.4))
+
+    # Error: el escudo que recibe un golpe sordo y la espada que se escurre, desafinada. Cambio: la hebilla que cierra y una
+    # anilla. Tecla: el cincel del cantero que marca la piedra. Rascar: el acero de la malla raspado, que chirría.
+    with azar_propio('templario'):
+        nuevos('templario',
+               error=mezclar((0, tambor(hz(T - 27), 0.3, 0.6), 0.8), (0.07, golpe(T + 1, 0.3), 0.35), (0.12, golpe(T, 0.35), 0.3)),
+               cambio=mezclar((0, clic(0.015, (1200, 4500)), 0.7), (0.02, malla(T + 19, 0.12), 0.45)),
+               tecla=mezclar((0, trazo((900, 3500), 0.03, 6, 0.012), 0.8), (0.002, malla(T + 36, 0.04), 0.12)),
+               rascar=rascado((2200, 8000), malla(T + 31, 0.5), aspereza=140))
+
 def distopia():
     # Do menor: máquina de escribir, sellos; el timbre del carro y el carillón del ministerio.
     T = 3    # Do5
@@ -866,6 +900,7 @@ if __name__ == '__main__':
         neon,
         heleno,
         medieval,
+        templario,
         distopia,
         refugio,
         orden,

@@ -112,6 +112,7 @@ object HallImagen {
         TemaId.NEON -> "EL CALLEJÓN DE LAS FICHAS · 屋台" to "— se apagan los letreros —"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ · VESTIGIUM MEI" to "ΜΝΗΜΗΣ ΧΑΡΙΝ"
         TemaId.MEDIEVAL -> "Liber vestigiorum meorum" to "Explicit liber · Deo gratias"
+        TemaId.TEMPLARIO -> "Domus Templi · Vestigium Mei" to "Non nobis, Domine, sed nomini tuo da gloriam"
         TemaId.DISTOPIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
         TemaId.REFUGIO -> "REFUGIO · REGISTRO DEL RESIDENTE" to "Todo en orden bajo tierra"
         TemaId.ORDEN -> "CODEX ORDINIS · VESTIGIUM MEI" to "AD SCIENTIAM CUSTODIENDAM"

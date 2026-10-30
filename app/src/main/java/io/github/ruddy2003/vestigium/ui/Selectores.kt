@@ -260,6 +260,11 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
         moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h - r); quadraticTo(w - r, h - r, w - r, h)
         lineTo(r, h); quadraticTo(r, h - r, 0f, h - r); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
     }
+    // Escudo de lágrima.
+    TemaId.TEMPLARIO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(w * 0.06f, 0f); lineTo(w * 0.94f, 0f); quadraticTo(w * 0.98f, h * 0.6f, w * 0.5f, h); quadraticTo(w * 0.02f, h * 0.6f, w * 0.06f, 0f); close()
+    }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
     // Píldora de luz de tablero.
@@ -344,6 +349,8 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         }
         TemaId.HELENO -> {}
         TemaId.MEDIEVAL -> {}
+        // La cruz patada calada en el escudo.
+        TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
         TemaId.REFUGIO -> {}
         TemaId.ORDEN -> {}

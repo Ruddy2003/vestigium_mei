@@ -25,6 +25,7 @@ object Estilo {
         TemaId.NEON -> "⌁ "
         TemaId.HELENO -> "∴ "
         TemaId.MEDIEVAL -> "¶ "
+        TemaId.TEMPLARIO -> "☩ "
         TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "
         TemaId.ORDEN -> "‡ "
@@ -55,6 +56,7 @@ object Estilo {
         TemaId.NEON -> true           // letreros
         TemaId.HELENO -> true          // capitales epigráficas
         TemaId.MEDIEVAL -> false       // gótica de libro
+        TemaId.TEMPLARIO -> false       // letra de estandarte, en minúsculas
         TemaId.DISTOPIA -> true        // cartel
         TemaId.REFUGIO -> true         // pantalla de fósforo
         TemaId.ORDEN -> true           // estarcido
@@ -93,6 +95,8 @@ object Estilo {
             TemaId.ORDEN -> if (igual) null else "— $t —"
             TemaId.COLONOS -> if (igual) null else "~ $t ~"
             TemaId.MEDIEVAL -> if (igual) null else "¶ $t"
+            // Cada pantalla es un artículo de la regla (la de la orden llegó a 686 artículos): «☩ art. ·CCXII· de la regla».
+            TemaId.TEMPLARIO -> if (pantalla) "☩ art. %s de la regla · %s".format(Temas.puntos(folio(titulo, 1, 686)), t) else if (igual) null else "☩ $t"
             TemaId.NAPOLEON -> if (igual) null else "« $t »"
             TemaId.BOTANICO -> if (igual) null else "⁂ $t"
             TemaId.NAVIDAD -> if (igual) null else "✦ $t ✦"
@@ -119,6 +123,7 @@ object Estilo {
             TemaId.NEON -> propio(titulo, true)
             TemaId.HELENO -> Griego.nombre(titulo)?.let { it to comentario + titulo.lowercase() } ?: (titulo.uppercase() to null)
             TemaId.MEDIEVAL -> propio(titulo, true)
+            TemaId.TEMPLARIO -> propio(titulo, true)
             TemaId.DISTOPIA -> propio(titulo, true)
             TemaId.REFUGIO -> propio(titulo, true)
             TemaId.ORDEN -> propio(titulo, true)
@@ -155,6 +160,7 @@ object Estilo {
         TemaId.NEON -> false
         TemaId.HELENO -> false
         TemaId.MEDIEVAL -> false
+        TemaId.TEMPLARIO -> true
         TemaId.REFUGIO -> false
         TemaId.ORDEN -> false
         TemaId.COLONOS -> false
@@ -194,6 +200,7 @@ object Estilo {
             TemaId.NEON -> propio(titulo, false)
             TemaId.HELENO -> Griego.nombre(titulo)?.let { it to comentario + titulo.lowercase() } ?: (titulo.uppercase() to null)
             TemaId.MEDIEVAL -> propio(titulo, false)
+            TemaId.TEMPLARIO -> propio(titulo, false)
             TemaId.DISTOPIA -> propio(titulo, false)
             TemaId.REFUGIO -> propio(titulo, false)
             TemaId.ORDEN -> propio(titulo, false)
@@ -221,6 +228,8 @@ object Estilo {
         TemaId.NEON -> n.toString().map { if (it.isDigit()) '０' + (it - '0') else it }.joinToString("")   // cifras de ancho completo, como en los letreros
         TemaId.HELENO -> Griego.numeral(n)
         TemaId.MEDIEVAL -> Temas.copista(n)
+        // Romanos en mayúscula entre puntos, como en las cartas del siglo XII: «·XVII·».
+        TemaId.TEMPLARIO -> Temas.puntos(n)
         TemaId.DISTOPIA -> if (n < 100) "Nº%02d".format(n) else "Nº$n"
         TemaId.REFUGIO -> if (n < 100) "#%02d".format(n) else "#$n"
         // Ordinal de regimiento y de batallón: «17º».
@@ -263,6 +272,12 @@ object Estilo {
         TemaId.NEON -> runCatching { val d = Fechas.parse(iso); "%s %02d·%02d·%d · 区 %d".format(SEMANA_ES[d.dayOfWeek.value - 1], d.dayOfMonth, d.monthValue, d.year, d.dayOfYear % 9 + 1) }.getOrDefault(iso)   // el día y el distrito (区) donde cae
         TemaId.HELENO -> Griego.fecha(iso)
         TemaId.MEDIEVAL -> runCatching { val d = Fechas.parse(iso); "${Temas.copista(d.dayOfMonth)} de ${Temas.MESES_MEDIEVALES[d.monthValue - 1]} de ${Temas.copista(d.year)}" }.getOrDefault(iso)
+        // En el calendario juliano (13 días por detrás) y, de noche, con su vigilia: «4 de octubre juliano · A. D. ·MMXXVI· · tercera vigilia».
+        TemaId.TEMPLARIO -> runCatching {
+            val (a, m, d) = Temas.juliano(Fechas.parse(iso))
+            "$d de ${MESES_LARGOS[m - 1]} juliano · A. D. ${Temas.puntos(a)}" +
+                (if (iso == Fechas.diaLogico()) Temas.vigilia(java.time.LocalTime.now().hour)?.let { " · $it" } ?: "" else "")
+        }.getOrDefault(iso)
         TemaId.DISTOPIA -> runCatching { val d = Fechas.parse(iso); "JORNADA %03d · AÑO %d".format(d.dayOfYear, d.year) }.getOrDefault(iso)
         TemaId.REFUGIO -> runCatching {
             val d = Fechas.parse(iso)
@@ -305,6 +320,7 @@ object Estilo {
             TemaId.NEON -> "${i + 1}月 " + MESES_ES[i].uppercase() + (anio?.let { " $it" } ?: "")
             TemaId.HELENO -> Griego.MESES[i]
             TemaId.MEDIEVAL -> Temas.MESES_MEDIEVALES[i]
+            TemaId.TEMPLARIO -> MESES_LARGOS[i] + " juliano" + (anio?.let { " · " + Temas.puntos(it) } ?: "")
             TemaId.DISTOPIA -> "MES %02d".format(n) + (anio?.let { " · $it" } ?: "")
             TemaId.REFUGIO -> MESES_LARGOS[i].uppercase() + (anio?.let { " $it" } ?: "")
             // Mes y número, como en los partes: «OCT-10».
@@ -342,6 +358,8 @@ object Estilo {
         TemaId.HELENO -> Griego.SEMANA
         // Los monjes contaban «ferias»: el lunes es la segunda, el martes la tercera…
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iiij", "v", "vj", "Sab", "Dom")
+        // Los días en el francés antiguo de la Regla: lunsdi, marsdi, mecresdi, juesdi, venresdi, samedi, diemenche.
+        TemaId.TEMPLARIO -> listOf("Luns", "Mars", "Mecr", "Jues", "Venr", "Same", "Diem")
         // Las letras de los formularios oficiales (con la X del miércoles).
         TemaId.DISTOPIA -> listOf("L", "M", "X", "J", "V", "S", "D")
         TemaId.REFUGIO -> listOf("LU", "MA", "MI", "JU", "VI", "SA", "DO")
@@ -376,6 +394,7 @@ object Estilo {
         TemaId.NEON -> listOf("월", "화", "수", "목", "금", "토", "일")   // los letreros coreanos del barrio
         TemaId.HELENO -> semana.map { it.take(2) }
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iv", "v", "vj", "Sb", "Dm")
+        TemaId.TEMPLARIO -> listOf("Lu", "Ma", "Me", "Ju", "Ve", "Sa", "Di")
         TemaId.DISTOPIA -> semana
         TemaId.REFUGIO -> semana
         TemaId.ORDEN -> semana.map { it.take(2) }
@@ -406,6 +425,7 @@ object Estilo {
         TemaId.NEON -> "$n NOCHES SEGUIDAS EN LA CALLE"
         TemaId.HELENO -> "ΣΥΝΕΧΕΙΣ ΗΜΕΡΑΙ · $n"
         TemaId.MEDIEVAL -> "$n días seguidos en el libro"
+        TemaId.TEMPLARIO -> "$n jornadas de guardia en la muralla"
         TemaId.DISTOPIA -> "CONTINUIDAD ACREDITADA: $n DÍAS"
         TemaId.REFUGIO -> "DÍAS SIN INCIDENTES: $n"
         TemaId.ORDEN -> "$n VIGILIAS SIN FALTA"
@@ -433,6 +453,7 @@ object Estilo {
         TemaId.NEON -> "◂ al callejón"
         TemaId.HELENO -> "← ὀπίσω"
         TemaId.MEDIEVAL -> "← tornar"
+        TemaId.TEMPLARIO -> "← volver grupas"
         TemaId.DISTOPIA -> "◄ RETROCEDER"
         TemaId.REFUGIO -> "< SALIR"
         TemaId.ORDEN -> "« REPLEGARSE"
@@ -458,6 +479,7 @@ object Estilo {
         TemaId.NEON -> "⏵ "
         TemaId.HELENO -> "· "
         TemaId.MEDIEVAL -> "¶ "
+        TemaId.TEMPLARIO -> "✚ "
         TemaId.DISTOPIA -> "▪ "
         TemaId.REFUGIO -> "> "
         TemaId.ORDEN -> "▸ "
@@ -488,6 +510,7 @@ object Estilo {
         TemaId.NEON -> ""
         TemaId.HELENO -> ""
         TemaId.MEDIEVAL -> ""
+        TemaId.TEMPLARIO -> ""
         TemaId.DISTOPIA -> ""
         TemaId.REFUGIO -> ""
         TemaId.ORDEN -> ""
@@ -518,6 +541,7 @@ object Estilo {
         TemaId.NEON -> EstiloFecha(1.12f, 2.2f, peso = 600, abre = "▼")
         TemaId.HELENO -> EstiloFecha(1.12f, 3.0f, peso = 500, abre = "▿")
         TemaId.MEDIEVAL -> EstiloFecha(1.1f, 0.3f)
+        TemaId.TEMPLARIO -> EstiloFecha(1.08f, 1.0f, abre = "☩")
         TemaId.DISTOPIA -> EstiloFecha(1.12f, 1.6f, peso = 700, abre = "▼")
         TemaId.REFUGIO -> EstiloFecha(1.15f, 0.8f, abre = "▼")
         TemaId.ORDEN -> EstiloFecha(1.08f, 2.4f)
@@ -559,6 +583,7 @@ object Estilo {
             TemaId.NEON -> es(CLAVES_NEON)
             TemaId.HELENO -> CLAVES_GRIEGO[k]
             TemaId.MEDIEVAL -> Claves.CASTELLANO_ANTIGUO[k]
+            TemaId.TEMPLARIO -> Claves.ANCIEN_FRANCES[k]
             TemaId.DISTOPIA -> es(Claves.DISTOPIA)?.uppercase()
             TemaId.REFUGIO -> es(Claves.REFUGIO)
             TemaId.ORDEN -> es(Claves.ORDEN)?.uppercase()

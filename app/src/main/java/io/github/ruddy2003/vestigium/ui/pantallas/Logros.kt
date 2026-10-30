@@ -178,6 +178,15 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(luz, r * 0.6f, cs0, style = Stroke(r * 0.05f))
             drawCircle(sombra, r * 0.68f, cs0, style = Stroke(r * 0.03f))
         }
+        // El escudete de la casa colgado de su cinta roja y blanca, con la cruz patada en relieve.
+        TemaId.TEMPLARIO -> {
+            val cinta = if (hecho) Color(0xFFB0191F) else borde.copy(alpha = 0.4f)
+            drawRect(cinta, Offset(c.x - r * 0.3f, c.y - r), Size(r * 0.3f, r * 0.3f)); drawRect(if (hecho) Color.White else borde.copy(alpha = 0.25f), Offset(c.x, c.y - r), Size(r * 0.3f, r * 0.3f))
+            val esc = Path().apply { moveTo(c.x - r * 0.72f, c.y - r * 0.68f); lineTo(c.x + r * 0.72f, c.y - r * 0.68f); quadraticTo(c.x + r * 0.78f, c.y + r * 0.35f, c.x, c.y + r * 0.98f); quadraticTo(c.x - r * 0.78f, c.y + r * 0.35f, c.x - r * 0.72f, c.y - r * 0.68f); close() }
+            forma(esc)
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(c + Offset(r * 0.03f, r * 0.03f), r * 0.42f), sombra)
+            drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(c, r * 0.42f), luz)
+        }
         // Insignia numerada: hexágono con banda roja y remaches.
         TemaId.DISTOPIA -> {
             val hex = figPoligono(c, r * 0.97f, 6)

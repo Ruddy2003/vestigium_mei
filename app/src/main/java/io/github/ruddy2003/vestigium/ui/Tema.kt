@@ -93,6 +93,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     NEON("neon", "Ciudad neón", "Los niveles bajos de una megaciudad: letreros de neón entre el vapor, puestos de comida y callejones. Magenta, ámbar y verde de sodio. Solo oscuro.", Epoca.FUTURO, soloOscuro = true),
     HELENO("heleno", "Helénico", "Púrpura macedonio, oro y azul del Egeo. Títulos en griego, el sol de Vergina.", Epoca.ANTIGUEDAD),
     MEDIEVAL("medieval", "Scriptorium", "Pergamino, tinta y pan de oro. Letra gótica, capitulares en rojo, numerales de copista.", Epoca.EDAD_MEDIA),
+    TEMPLARIO("templario", "Templario", "Cota de malla, sobreveste blanca con la cruz roja y un castillo de frontera entre la arena. Calendario juliano y vigilias de la noche.", Epoca.EDAD_MEDIA),
     DISTOPIA("distopia", "Distopía", "Gris de ministerio y rojo de cartel. Cada día es un expediente y un ojo lo mira todo.", Epoca.FUTURO),
     REFUGIO("refugio", "Refugio", "Optimismo atómico de día, fósforo verde de noche. La vida bajo tierra, en orden.", Epoca.FUTURO),
     ORDEN("orden", "Orden", "Acero, carmesí y latón. Caballeros que custodian el saber técnico. Letra de estarcido.", Epoca.FUTURO),
@@ -280,6 +281,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.NEON -> neon
     TemaId.HELENO -> if (oscuro) helenoOscuro else helenoClaro
     TemaId.MEDIEVAL -> if (oscuro) medievalOscuro else medievalClaro
+    TemaId.TEMPLARIO -> if (oscuro) templarioOscuro else templarioClaro
     TemaId.DISTOPIA -> if (oscuro) distopiaOscuro else distopiaClaro
     TemaId.REFUGIO -> if (oscuro) refugioOscuro else refugioClaro
     TemaId.ORDEN -> if (oscuro) ordenOscuro else ordenClaro
@@ -306,6 +308,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.NEON -> tipoNeon
     TemaId.HELENO -> tipoHeleno
     TemaId.MEDIEVAL -> tipoMedieval
+    TemaId.TEMPLARIO -> tipoTemplario
     TemaId.DISTOPIA -> tipoDistopia
     TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
     TemaId.ORDEN -> tipoOrden
@@ -338,6 +341,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.NEON -> 58f to 2f           // Chakra Petch: cuadrada y ancha
     TemaId.HELENO -> 66f to 1f          // Garamond, cifras alineadas
     TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
+    TemaId.TEMPLARIO -> 60f to 1.2f      // letra de estandarte (MedievalSharp)
     TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
     TemaId.REFUGIO -> 74f to 0f         // VT323, de píxeles
     TemaId.ORDEN -> 60f to 1.5f         // estarcido
@@ -369,6 +373,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.NEON -> Esquinas(10, Esquina.CORTADA)          // la placa del letrero
     TemaId.HELENO -> Esquinas(6, Esquina.REDONDA)
     TemaId.MEDIEVAL -> Esquinas(3, Esquina.REDONDA)
+    TemaId.TEMPLARIO -> Esquinas(5, Esquina.CORTADA)       // el sillar tallado de la muralla
     TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
     TemaId.REFUGIO -> Esquinas(10, Esquina.REDONDA)
     TemaId.ORDEN -> Esquinas(6, Esquina.CORTADA)           // placa de acero
@@ -541,6 +546,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.NEON -> "夜 · NOCHE"
         TemaId.HELENO -> "ΗΜΕΡΑ"
         TemaId.MEDIEVAL -> "Del día"
+        TemaId.TEMPLARIO -> "Guardia"
         TemaId.DISTOPIA -> "PARTE"
         TemaId.REFUGIO -> "DIARIO"
         TemaId.ORDEN -> "CAMPO"
@@ -566,6 +572,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.NEON -> "NIVEL −3 · 22:47"
         TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."
         TemaId.MEDIEVAL -> "xvij de otubre"
+        TemaId.TEMPLARIO -> "iv oct. · juliano"
         TemaId.DISTOPIA -> "EXP. 0290"
         TemaId.REFUGIO -> "DÍA 290"
         TemaId.ORDEN -> "17 OCT 26"
@@ -593,6 +600,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.NEON -> 16 to 16
         TemaId.HELENO -> 20 to 12
         TemaId.MEDIEVAL -> 16 to 16
+        TemaId.TEMPLARIO -> 22 to 10
         TemaId.DISTOPIA -> 20 to 12
         TemaId.REFUGIO -> 16 to 16
         TemaId.ORDEN -> 16 to 16
@@ -619,6 +627,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.NEON -> 10
         TemaId.HELENO -> 10
         TemaId.MEDIEVAL -> 10
+        TemaId.TEMPLARIO -> 12
         TemaId.DISTOPIA -> 10
         TemaId.REFUGIO -> 12
         TemaId.ORDEN -> 12
@@ -681,6 +690,17 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     }
     // Folio con la esquina doblada.
     TemaId.MEDIEVAL -> CutCornerShape(topStart = 0.dp, topEnd = 14.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
+    // Lienzo de muralla: almenas arriba, con sus merlones y troneras.
+    TemaId.TEMPLARIO -> GenericShape { s, _ ->
+        val n = 7; val paso = s.width / (2 * n - 1); val a = s.height * 0.07f
+        moveTo(0f, s.height); lineTo(0f, 0f)
+        for (i in 0 until n) {
+            val x0 = 2 * i * paso
+            lineTo(x0 + paso, 0f)
+            if (i < n - 1) { lineTo(x0 + paso, a); lineTo(x0 + 2 * paso, a); lineTo(x0 + 2 * paso, 0f) }
+        }
+        lineTo(s.width, 0f); lineTo(s.width, s.height); close()
+    }
     // Carpeta de archivo con su pestaña.
     TemaId.DISTOPIA -> GenericShape { s, _ ->
         val p = s.height * 0.08f; val a = s.width * 0.42f
@@ -798,6 +818,12 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.HELENO -> { drawCircle(c, r); drawCircle(fondo.copy(alpha = 0.4f), r * 0.68f, style = fino) }
         // Losange de blasón.
         TemaId.MEDIEVAL -> drawPath(poligono(4, -90f), c)
+        // Escudo de lágrima (el de los caballeros del siglo XII) con la cruz patada vaciada.
+        TemaId.TEMPLARIO -> {
+            drawPath(Path().apply { moveTo(w * 0.1f, 0f); lineTo(w * 0.9f, 0f); quadraticTo(w * 0.92f, h * 0.62f, cx, h); quadraticTo(w * 0.08f, h * 0.62f, w * 0.1f, 0f); close() }, c)
+            drawRect(fondo.copy(alpha = 0.7f), Offset(cx - w * 0.06f, h * 0.12f), Size(w * 0.12f, h * 0.6f))
+            drawRect(fondo.copy(alpha = 0.7f), Offset(w * 0.24f, h * 0.3f), Size(w * 0.52f, h * 0.12f))
+        }
         // Ficha de archivo apaisada.
         TemaId.DISTOPIA -> drawRect(c, Offset(0f, h * 0.2f), Size(w, h * 0.6f))
         // Botón de consola.

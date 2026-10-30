@@ -11,6 +11,8 @@
     <color name="arranque_heleno_oscuro">#0E0B17</color>
     <color name="arranque_medieval">#EFE3C8</color>
     <color name="arranque_medieval_oscuro">#15100A</color>
+    <color name="arranque_templario">#ECE2CC</color>
+    <color name="arranque_templario_oscuro">#12110E</color>
     <color name="arranque_distopia">#DEDBD2</color>
     <color name="arranque_distopia_oscuro">#0F1011</color>
     <color name="arranque_refugio">#F1E8D0</color>

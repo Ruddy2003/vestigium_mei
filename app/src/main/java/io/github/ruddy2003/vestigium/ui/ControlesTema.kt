@@ -241,6 +241,14 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
         moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h - r); quadraticTo(w - r, h - r, w - r, h)
         lineTo(r, h); quadraticTo(r, h - r, 0f, h - r); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
     }, 0.dp, 0.dp, false, 1.dp)
+    // Lienzo de muralla: el borde de arriba en almenas, merlones y troneras.
+    TemaId.TEMPLARIO -> PielDialogo(FormaDp { w, h, d ->
+        val m = 18 * d; val a = 7 * d
+        moveTo(0f, h); lineTo(0f, 0f)
+        var x = 0f; var k = 0
+        while (x + m < w) { val y = if (k % 2 == 0) 0f else a; lineTo(x, y); lineTo(x + m, y); x += m; k++ }
+        lineTo(x, if (k % 2 == 0) 0f else a); lineTo(w, if (k % 2 == 0) 0f else a); lineTo(w, h); close()
+    }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
     TemaId.DISTOPIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
     // Panel redondeado de refugio.
@@ -362,6 +370,15 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             }
             drawLine(e.primary.copy(alpha = 0.35f), Offset(12 * d, r + 10 * d), Offset(12 * d, h - r - 10 * d), 0.8f * d)
             drawLine(e.primary.copy(alpha = 0.35f), Offset(14.5f * d, r + 10 * d), Offset(14.5f * d, h - r - 10 * d), 0.8f * d)
+        }
+        TemaId.TEMPLARIO -> {
+            // El adarve por dentro: una línea de acero bajo las almenas, clavos de hierro en las esquinas, la cruz patada
+            // en medio de arriba y una costura de malla a lo largo del pie.
+            drawLine(e.secondary.copy(alpha = 0.5f), Offset(8 * d, 14 * d), Offset(w - 8 * d, 14 * d), 1.2f * d)
+            esquinasCtl { drawCircle(e.tertiary, 2.2f * d, Offset(10 * d, 22 * d)) }
+            drawPath(cruzPatada(Offset(w / 2, 26 * d), 7 * d), e.primary.copy(alpha = 0.8f))
+            var x = 14 * d
+            while (x < w - 14 * d) { drawCircle(e.secondary.copy(alpha = 0.35f), 2.2f * d, Offset(x, h - 9 * d), style = Stroke(0.8f * d)); x += 3.6f * d }
         }
         TemaId.DISTOPIA -> {
             // Dos perforaciones de archivador y un sello de goma ladeado abajo a la izquierda.
@@ -600,6 +617,13 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawCircle(e.tertiary, 2.2f * d, Offset(4 * d, cy)); drawCircle(e.tertiary, 2.2f * d, Offset(w - 4 * d, cy))
             drawCircle(e.surface, 6 * d, Offset(w / 2, cy))
             listOf(Offset(-2.5f, 1f), Offset(2.5f, 1f), Offset(0f, -2.5f)).forEach { o -> drawCircle(e.tertiary, 2 * d, Offset(w / 2 + o.x * d, cy + o.y * d)) }
+        }
+        // Una espada tendida: la hoja de acero, la guarda en cruz y el pomo; en medio, la cruz roja.
+        TemaId.TEMPLARIO -> {
+            drawLine(e.secondary, Offset(w * 0.14f, cy), Offset(w - 6 * d, cy), 1.6f * d)
+            drawLine(e.secondary, Offset(w * 0.14f, cy - 6 * d), Offset(w * 0.14f, cy + 6 * d), 2.2f * d)
+            drawLine(e.secondary, Offset(w * 0.06f, cy), Offset(w * 0.14f, cy), 2.6f * d); drawCircle(e.secondary, 3 * d, Offset(w * 0.05f, cy))
+            drawCircle(e.surface, 8 * d, Offset(w / 2, cy)); drawPath(cruzPatada(Offset(w / 2, cy), 6 * d), e.primary)
         }
         // Barra negra de formulario con un trazo rojo debajo.
         TemaId.DISTOPIA -> {
@@ -896,6 +920,12 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             linea(activo, 0f, x, g * 0.6f, cap = StrokeCap.Round)
             if (x > 0f) drawCircle(e.tertiary, g * 0.45f, Offset(x, cy))
         }
+        // Lo que falta, una fila de anillas de malla; lo recorrido, la banda roja de la sobreveste.
+        TemaId.TEMPLARIO -> {
+            var px = x + g * 0.4f
+            while (px < w) { drawCircle(inactivo, g * 0.32f, Offset(px, cy), style = Stroke(maxOf(g * 0.1f, 0.5f * d))); px += g * 0.5f }
+            if (x > 0f) drawRect(activo, Offset(0f, cy - g * 0.35f), Size(x, g * 0.7f))
+        }
         // Casilla de formulario: contorno duro, relleno y rayas cada décimo.
         TemaId.DISTOPIA -> {
             if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
@@ -1086,6 +1116,15 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             for (k in 0 until 10) { val ang = k * PI / 5; drawCircle(color, r * 0.22f, Offset(c.x + r * 0.78f * cos(ang).toFloat(), c.y + r * 0.78f * sin(ang).toFloat())) }
             drawCircle(color, r * 0.8f, c)
             drawCircle(hueco.copy(alpha = 0.5f), r * 0.5f, c, style = Stroke(r * 0.08f))
+        }
+        // Un escudo de lágrima con la cruz patada vaciada.
+        TemaId.TEMPLARIO -> {
+            val escudo = Path().apply {
+                moveTo(c.x - r * 0.8f, c.y - r * 0.85f); lineTo(c.x + r * 0.8f, c.y - r * 0.85f)
+                quadraticTo(c.x + r * 0.86f, c.y + r * 0.3f, c.x, c.y + r); quadraticTo(c.x - r * 0.86f, c.y + r * 0.3f, c.x - r * 0.8f, c.y - r * 0.85f); close()
+            }
+            drawPath(escudo, color)
+            drawPath(cruzPatada(c + Offset(0f, -r * 0.1f), r * 0.55f), hueco.copy(alpha = 0.75f))
         }
         // Aguja de medidor.
         TemaId.DISTOPIA -> {

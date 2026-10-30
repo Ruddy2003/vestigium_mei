@@ -47,6 +47,10 @@ object LetraExtra {
     val maquina = FontFamily(Font(R.font.courier_regular, FontWeight.Normal), Font(R.font.courier_bold, FontWeight.Bold), Font(R.font.courier_bold, FontWeight.SemiBold))
     /** Cardo: la letra de los medievalistas. */
     val cardo = FontFamily(Font(R.font.cardo_regular, FontWeight.Normal), Font(R.font.cardo_bold, FontWeight.Bold), Font(R.font.cardo_bold, FontWeight.SemiBold))
+    /** «Regla Vestigium» (Gentium Book Plus renombrada): el libro de la regla de la orden, para leer en párrafos. */
+    val regla = FontFamily(Font(R.font.regla_regular, FontWeight.Normal), Font(R.font.regla_bold, FontWeight.Bold), Font(R.font.regla_bold, FontWeight.SemiBold))
+    /** «Cruzada Vestigium» (MedievalSharp renombrada): la letra de los estandartes y las cartas de la frontera. */
+    val cruzada = FontFamily(Font(R.font.cruzada_titulo, FontWeight.Normal), Font(R.font.cruzada_titulo, FontWeight.SemiBold))
     /** Barlow: la grotesca de los rótulos oficiales. */
     val barlow = FontFamily(Font(R.font.barlow_regular, FontWeight.Normal), Font(R.font.barlow_semibold, FontWeight.SemiBold))
     /** Saira: la hermana de texto del estarcido de la orden. */
@@ -146,6 +150,16 @@ internal val medievalClaro = esquema(false, 0xFFEFE3C8, 0xFFF6ECD6, 0xFFE5D6B4, 
 internal val medievalOscuro = esquema(true, 0xFF15100A, 0xFF1E1710, 0xFF2A2016, 0xFF3F3122, 0xFFEDDFC2, 0xFFB7A587,
     0xFFD5A84A, 0xFF1C1405, 0xFF3A1717, 0xFFF3E4C8, 0xFF8DA5E0, 0xFF1B2645, 0xFFC9473B, 0xFFE58C86)
 internal val tipoMedieval = tipografia(LetraExtra.gotica, FontWeight.Normal, 1.18f, 0.6f, LetraExtra.cardo, 1.06f, LetraExtra.cardo, 1.08f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Templario: sobreveste de lino blanco, cruz roja, cota de malla de hierro y arena de la frontera; de noche, la vigilia
+//  en la muralla: piedra oscura, la cruz a la luz de la antorcha y la arena bajo la luna.
+// ---------------------------------------------------------------------
+internal val templarioClaro = esquema(false, 0xFFECE2CC, 0xFFFBF8F0, 0xFFDFD2B5, 0xFFBDA984, 0xFF201E1B, 0xFF5B574E,
+    0xFFB0191F, 0xFFFFF8F2, 0xFFF4D2CC, 0xFF2A0F0D, 0xFF4A5560, 0xFFD8DDE1, 0xFFA2763A, 0xFF7E1610)
+internal val templarioOscuro = esquema(true, 0xFF12110E, 0xFF1B1915, 0xFF262219, 0xFF3B352A, 0xFFEEE7D8, 0xFFB1A891,
+    0xFFE2453B, 0xFF1F0604, 0xFF461714, 0xFFF7E5DE, 0xFFA8B3BC, 0xFF26303A, 0xFFDAAE68, 0xFFF29C90)
+internal val tipoTemplario = tipografia(LetraExtra.cruzada, FontWeight.Normal, 1.12f, 0.9f, LetraExtra.regla, 1.0f, LetraExtra.regla, 1.02f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Distopía: papel de periódico gris, tinta negra y rojo de cartel.
@@ -320,6 +334,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.NEON -> listOf(0xFFFFB238, 0xFF221729, 0xFFFF3D9A, 0xFF8CFF5A)
     TemaId.HELENO -> if (oscuro) listOf(0xFFB04A6A, 0xFF2A2440, 0xFF5FA8D8, 0xFFD8B45C) else listOf(0xFF8E2C48, 0xFFE9E3D6, 0xFF1F6E9C, 0xFFA27B22)
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFFC9473B, 0xFF2A2016, 0xFF8DA5E0, 0xFFD5A84A) else listOf(0xFF9E1B1B, 0xFFE5D6B4, 0xFF1F3F8F, 0xFFA97C1E)
+    TemaId.TEMPLARIO -> if (oscuro) listOf(0xFFD0453A, 0xFF262219, 0xFF9AA8B4, 0xFFDAAE68) else listOf(0xFFA8181E, 0xFFE2D6BC, 0xFF46525D, 0xFFA2763A)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFFFFB23F, 0xFF112016, 0xFF3DFF7F, 0xFF3DFF7F) else listOf(0xFFD9572B, 0xFFE6DAB8, 0xFF1C6E6A, 0xFF1C6E6A)
     TemaId.ORDEN -> if (oscuro) listOf(0xFFD0333B, 0xFF262A30, 0xFF8FB3C8, 0xFFD6B25A) else listOf(0xFF9E1B22, 0xFFD3D7DC, 0xFF2F4858, 0xFF7E6219)
@@ -347,6 +362,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.NEON -> listOf(0xFF5A3A70, 0xFFFFB238, 0xFFFF3D9A)
     TemaId.HELENO -> if (oscuro) listOf(0xFF5FA8D8, 0xFFD8B45C, 0xFFB992EA) else listOf(0xFF1F6E9C, 0xFFA27B22, 0xFF5A2A82)
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFF8DA5E0, 0xFFD5A84A, 0xFFC9473B) else listOf(0xFF1F3F8F, 0xFFA97C1E, 0xFF9E1B1B)
+    TemaId.TEMPLARIO -> if (oscuro) listOf(0xFF9AA8B4, 0xFFDAAE68, 0xFFE2453B) else listOf(0xFF46525D, 0xFFB98A45, 0xFFB0191F)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFF1E8A45, 0xFF3DFF7F, 0xFFFFB23F) else listOf(0xFF1C6E6A, 0xFFB98A15, 0xFFD9572B)
     TemaId.ORDEN -> if (oscuro) listOf(0xFF8FB3C8, 0xFFD6B25A, 0xFFD0333B) else listOf(0xFF2F4858, 0xFF7E6219, 0xFF9E1B22)

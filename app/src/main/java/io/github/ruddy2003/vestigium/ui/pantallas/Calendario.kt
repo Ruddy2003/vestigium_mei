@@ -231,6 +231,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.NEON -> RoundedCornerShape(8.dp)
     TemaId.HELENO -> RoundedCornerShape(2.dp)
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
+    TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
     TemaId.ORDEN -> CutCornerShape(topEnd = 8.dp)
@@ -311,6 +312,12 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 drawPath(figOndulado(pc, 5.6f * s, 7, 0.14f), lacre)
                 figuraTema(tema, Color(0xFFE9C9A0), pc, 3.2f * s, lacre)
             }
+        }
+        // Sillar: el borde de acero arriba (hoy, rojo y más grueso); la jornada sellada lleva el escudo de la casa.
+        TemaId.TEMPLARIO -> {
+            drawRect((if (hoy) acento else linea).copy(alpha = 0.85f), Offset.Zero, Size(w, (if (hoy) 2.6f else 1.4f) * s))
+            contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.5f)
+            if (sellado) figuraTema(tema, Color(0xFFF4EFE2), pc, 5f * s, Color(0xFFB0191F))
         }
         // Expediente: borde de ficha y pestaña; el día sellado lleva un timbre de goma torcido.
         TemaId.DISTOPIA -> {

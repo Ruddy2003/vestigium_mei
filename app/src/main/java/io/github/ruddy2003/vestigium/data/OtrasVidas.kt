@@ -336,6 +336,26 @@ object OtrasVidas {
                 "lejos" to e(100), "estatura" to r(170), "vida_adulto" to e(55), "hijos" to e(0), "alfabetizacion" to e(100, "Dentro del monasterio."), "lectura" to e(1, "El libro de Cuaresma.")),
             fuentes = listOf("Barbara Harvey, Living and Dying in England 1100–1540" to "https://fivebooks.com/book/living-and-dying-in-england-1100-1540-the-monastic-experience-by-barbara-harvey/", "Scriptorium" to "${W}Scriptorium")),
 
+        Vida("sargento", "Hermano Bernat", "Sargento de una orden militar", "Castillo de frontera en el Levante", "hacia 1250", 1250, "tema", "templario", edad = 29,
+            historia = listOf(
+                "El hermano Bernat no es caballero: es sargento, un freire de la orden que no viene de linaje noble. Viste de pardo y no de blanco, pelea a caballo o a pie detrás de los caballeros y cuida sus monturas y sus armas. Ha hecho los votos de pobreza, castidad y obediencia.",
+                "La Regla le ordena todo: a qué hora se levanta para maitines en plena noche, cómo come (en silencio, mientras un hermano lee en voz alta), cuántos caballos puede tener y qué castigo le toca si pierde el equipo. No puede salir del castillo ni recibir una carta sin permiso del maestre.",
+                "Desde la muralla mira la arena y los caminos de los peregrinos. Escolta caravanas de un castillo a otro, monta guardia y repara la muralla. No tendrá hijos, y casi toda la gente que conocerá cabe en unos pocos castillos.",
+            ),
+            dia = listOf(t(20.0, 0.0, Hacer.DORMIR), t(0.0, 1.5, Hacer.REZAR, "maitines"), t(1.5, 5.5, Hacer.DORMIR), t(5.5, 6.0, Hacer.REZAR, "prima"), t(6.0, 11.0, Hacer.TRABAJO, "caballos, armas, guardia"),
+                t(11.0, 12.0, Hacer.COMER, "en silencio, con lectura"), t(12.0, 17.0, Hacer.TRABAJO, "instrucción y muralla"), t(17.0, 18.0, Hacer.REZAR, "vísperas"), t(18.0, 19.0, Hacer.COMER),
+                t(19.0, 20.0, Hacer.REZAR, "completas")),
+            datos = mapOf("pasos" to r(11000, "Mucho del día va a caballo o en la muralla."), "km_anio" to r(4000, "Escoltas y cabalgadas entre castillos."),
+                "kcal" to r(3500, "La Regla daba carne unos tres días a la semana."), "proteina" to r(100, "Los domingos, los sargentos tenían una comida de carne y los caballeros, dos."), "azucar" to r(10), "fibra" to r(40),
+                "alcohol" to r(30, "Vino en la mesa, repartido por parejas de hermanos."), "sueno" to r(6.0, "En dos partes, cortado por maitines."), "dormir" to r(20.0, "Después de completas."),
+                "trabajo" to r(60), "aire_libre" to r(9), "pantalla" to r(0), "notificaciones" to r(10, "La campana de la capilla y los toques de la guardia."),
+                "musica" to r(1, "Oír el oficio; quien no sabía leer rezaba padrenuestros."), "personas_dia" to r(70, "La guarnición de un castillo mediano."), "conocidas" to r(800),
+                "poblacion" to r(400, "Freires, soldados a sueldo, criados y peregrinos de paso."), "lejos" to r(3500, "Desde su tierra natal, al otro lado del mar."), "estatura" to r(170),
+                "vida" to r(30), "vida_adulto" to r(50, "Si no lo mataba la guerra."), "hijos" to e(0, "Por el voto de castidad."), "alfabetizacion" to r(10, "Entre los freires sargentos, pocos."), "lectura" to r(0)),
+            fuentes = listOf("Los templarios" to "${W}Knights_Templar", "La Regla latina del Temple" to "${W}Latin_Rule",
+                "Las órdenes militares" to "${W}Military_order_(religious_society)", "Un castillo templario: Atlit" to "${W}Castle_Pilgrim"),
+            inspiracion = "Persona inventada. Su día sigue la Regla del Temple (la latina de 1129 y los artículos franceses que se le añadieron); las cifras son reconstrucciones, no registros."),
+
         Vida("cantero", "Pierre", "Cantero", "La obra de la catedral de Amiens", "1240", 1240, "tema", "gotico", edad = 34,
             historia = listOf(
                 "Pierre talla piedra para una catedral que no verá terminada. En verano trabaja de sol a sol, doce horas; en invierno, ocho, y se paga menos. Los canteros viajan de obra en obra: ha trabajado en tres ciudades.",

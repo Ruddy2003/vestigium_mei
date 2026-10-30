@@ -117,6 +117,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.HELENO -> Papeleria(Color(0xFFE9D7A8), Color(0xFFB5935E), Color(0xFFF5E8C6), Color(0xFF5B2A6E), Color(0xFFB5652F), Color(0xFF2B1D14), Color(0xFF1F1712))
     // Pergamino doblado con la cinta azul y el sello rojo que cuelga.
     TemaId.MEDIEVAL -> Papeleria(Color(0xFFEADBB4), Color(0xFFB79C6A), Color(0xFFF6EBCB), Color(0xFFC9B07A), Color(0xFFB3261E), Color(0xFF1F3A93), Color(0xFF2B1D12))
+    // Lino blanco de la sobreveste forrado de rojo, cera parda del sello de la casa y cordón de cáñamo.
+    TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
     // Crema del optimismo atómico, forro verde azulado, la estampa amarilla y la banda naranja.
@@ -160,7 +162,7 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
 // =====================================================================
 
 /** El perfil del borde de la solapa, de una esquina a la otra: en pico, redondo, recto, en ondas, en ojiva… */
-internal enum class SolapaSobre { PICO, REDONDA, RECTA, ONDAS, LENGUA, BISEL, OJIVA, DIENTES, PARABOLA, ESCALON, RASGADA }
+internal enum class SolapaSobre { PICO, REDONDA, RECTA, ONDAS, LENGUA, BISEL, OJIVA, DIENTES, PARABOLA, ESCALON, RASGADA, ALMENA }
 
 /** Con qué se ata el sobre sellado: cordón en cruz, dos vueltas, cinta vertical, faja, hilo y botones o precinto. */
 internal enum class CierreSobre { CRUZ, DOBLE, VERTICAL, BANDA, HILO, PRECINTO }
@@ -174,6 +176,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.NEON -> FormaSobre(SolapaSobre.DIENTES, 0.05f, CierreSobre.BANDA)
     TemaId.HELENO -> FormaSobre(SolapaSobre.REDONDA, 0.03f, CierreSobre.DOBLE)
     TemaId.MEDIEVAL -> FormaSobre(SolapaSobre.LENGUA, 0.015f, CierreSobre.VERTICAL)
+    TemaId.TEMPLARIO -> FormaSobre(SolapaSobre.ALMENA, 0.01f, CierreSobre.CRUZ)
     TemaId.DISTOPIA -> FormaSobre(SolapaSobre.RECTA, 0.01f, CierreSobre.HILO)
     TemaId.REFUGIO -> FormaSobre(SolapaSobre.REDONDA, 0.08f, CierreSobre.BANDA)
     TemaId.ORDEN -> FormaSobre(SolapaSobre.BISEL, 0.01f, CierreSobre.CRUZ)
@@ -210,6 +213,8 @@ private fun perfilSolapa(s: SolapaSobre, u: Float): Float {
         SolapaSobre.PARABOLA -> 1f - (2f * u - 1f) * (2f * u - 1f)
         SolapaSobre.ESCALON -> ceil(p * 4f) / 4f
         SolapaSobre.RASGADA -> ((p * 1.6f).coerceAtMost(1f) + 0.05f * sin(u * 37f) * sin(u * PI.toFloat())).coerceIn(0f, 1f)
+        // El borde de la solapa en almenas: merlones y troneras alternados.
+        SolapaSobre.ALMENA -> borde * (if ((u * 9f).toInt() % 2 == 0) 1f else 0.8f)
     }
 }
 
@@ -338,6 +343,31 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawCircle(claro.copy(alpha = claro.alpha * 0.5f), r * 0.8f, c, style = Stroke(r * 0.05f))
             for (j in 0 until 24) { val ang = j * PI / 12; drawCircle(hondo, r * 0.04f, Offset(c.x + (r * 0.88f * cos(ang)).toFloat(), c.y + (r * 0.88f * sin(ang)).toFloat())) }
             emblemaEn(t, c, r * 0.52f, e)
+        }
+        TemaId.TEMPLARIO -> {
+            // El sello de la orden en cera parda: la gráfila de perlas y, al centro, dos caballeros sobre un mismo caballo, con su
+            // escudo y sus lanzas (la pobreza de los primeros freires, que compartían montura).
+            drawCircle(sombra, r * 0.98f, c + Offset(r * 0.05f, r * 0.08f))
+            gotaCera(c, r, col, 3)
+            drawCircle(hondo, r * 0.78f, c, style = Stroke(r * 0.04f))
+            for (j in 0 until 30) { val ang = j * PI / 15; drawCircle(hondo, r * 0.035f, Offset(c.x + (r * 0.88f * cos(ang)).toFloat(), c.y + (r * 0.88f * sin(ang)).toFloat())) }
+            val y0 = c.y + r * 0.12f
+            drawOval(hondo, Offset(c.x - r * 0.42f, y0 - r * 0.14f), Size(r * 0.78f, r * 0.28f))
+            drawPath(Path().apply { moveTo(c.x + r * 0.26f, y0 - r * 0.08f); lineTo(c.x + r * 0.48f, y0 - r * 0.36f); lineTo(c.x + r * 0.62f, y0 - r * 0.3f); lineTo(c.x + r * 0.42f, y0 + r * 0.04f); close() }, hondo)
+            listOf(-0.34f, -0.2f, 0.16f, 0.28f).forEachIndexed { i, fx ->
+                drawLine(hondo, Offset(c.x + r * fx, y0 + r * 0.08f), Offset(c.x + r * (fx + if (i % 2 == 0) -0.05f else 0.05f), y0 + r * 0.46f), r * 0.06f, StrokeCap.Round)
+            }
+            drawLine(hondo, Offset(c.x - r * 0.42f, y0 - r * 0.04f), Offset(c.x - r * 0.56f, y0 + r * 0.26f), r * 0.05f, StrokeCap.Round)
+            listOf(-0.16f, 0.08f).forEach { fx ->
+                val x = c.x + r * fx
+                drawLine(hondo, Offset(x, y0 - r * 0.1f), Offset(x, y0 - r * 0.4f), r * 0.1f, StrokeCap.Round)
+                drawCircle(hondo, r * 0.08f, Offset(x, y0 - r * 0.5f))
+                drawLine(hondo, Offset(x + r * 0.04f, y0 - r * 0.3f), Offset(x + r * 0.52f, y0 - r * 0.64f), r * 0.03f, StrokeCap.Round)
+            }
+            drawPath(Path().apply {
+                moveTo(c.x - r * 0.32f, y0 - r * 0.38f); lineTo(c.x - r * 0.12f, y0 - r * 0.38f)
+                quadraticTo(c.x - r * 0.12f, y0 - r * 0.14f, c.x - r * 0.22f, y0 - r * 0.04f); quadraticTo(c.x - r * 0.32f, y0 - r * 0.14f, c.x - r * 0.32f, y0 - r * 0.38f); close()
+            }, claro)
         }
         TemaId.DISTOPIA -> rotate(-14f, c) {
             // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
@@ -628,6 +658,15 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
                 drawRect(col.copy(alpha = 0.75f), Offset(x, top + H * f), Size(W * 0.02f, W * 0.02f))
                 drawLine(col.copy(alpha = 0.6f), Offset(x + W * 0.01f, top + H * f + W * 0.02f), Offset(x + W * 0.01f, top + H * (f + 0.08f)), 1.2f)
             }
+        }
+        TemaId.TEMPLARIO -> {
+            // El estandarte «baucent», la mitad de arriba negra y la de abajo blanca, en su asta a la izquierda; a la derecha, la cruz patada roja.
+            val x = l + W * 0.05f; val y = top + H * 0.24f; val bw = W * 0.06f; val bh = H * 0.34f
+            drawLine(pa.tinta.copy(alpha = 0.7f), Offset(x, y - H * 0.05f), Offset(x, y + bh + H * 0.1f), 1.4f)
+            drawRect(Color(0xFF1A1816).copy(alpha = 0.85f), Offset(x, y), Size(bw, bh / 2))
+            drawRect(Color.White.copy(alpha = 0.95f), Offset(x, y + bh / 2), Size(bw, bh / 2))
+            drawRect(pa.tinta.copy(alpha = 0.5f), Offset(x, y), Size(bw, bh), style = Stroke(1f))
+            drawPath(cruzPatada(Offset(r - W * 0.08f, top + H * 0.36f), W * 0.035f), pa.forro.copy(alpha = 0.85f))
         }
         TemaId.DISTOPIA -> {
             // Los agujeros del sobre de correo interno y la franja roja de «confidencial» en la esquina.
@@ -941,6 +980,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Χαῖρε, yo del futuro…", "Escribe tu carta…", "Carta para %s sellada en arcilla", "Ni el oráculo la abrirá antes.", "Toca para tomar el estilo…")
     TemaId.MEDIEVAL -> VozCarta("Ya puede abrirse", "Lacrada y atada", "Al que seré el %s", "Al que seré en %s", "Al que seré algún día",
         "A vos, que seréis yo…", "Escribid vuestra misiva…", "Misiva para %s lacrada", "Ningún copista la abrirá antes.", "Tocad para mojar la pluma…")
+    TemaId.TEMPLARIO -> VozCarta("Ya puede romperse el sello", "Sellada con el sello de la casa", "Al freire que seré el %s", "Al freire de %s", "Al freire que vendrá",
+        "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
     TemaId.REFUGIO -> VozCarta("¡Lista para abrir!", "Sellada en la bóveda", "Para el residente del %s", "Residente de %s", "Para el residente del mañana",
@@ -986,6 +1027,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.NEON -> Letra.letrero
     TemaId.HELENO -> Letra.garamond
     TemaId.MEDIEVAL -> LetraExtra.gotica
+    TemaId.TEMPLARIO -> LetraExtra.cruzada
     TemaId.DISTOPIA -> LetraExtra.oswald
     TemaId.REFUGIO -> LetraExtra.vt323
     TemaId.ORDEN -> LetraExtra.estarcido

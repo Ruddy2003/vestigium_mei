@@ -116,6 +116,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.NEON -> TuboNeon(modifier)
         TemaId.HELENO -> Greca(modifier, color)
         TemaId.MEDIEVAL -> Zarcillo(modifier)
+        TemaId.TEMPLARIO -> Adarve(modifier)
         TemaId.DISTOPIA -> BandaExpediente(modifier)
         TemaId.REFUGIO -> Destellos(modifier)
         TemaId.ORDEN -> Galones(modifier)
@@ -937,6 +938,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "✠", igual = "— ", nulo = "sine nota", elegido = "✚", riel = RolColor.TERCIARIO, quitar = "✗", listaVacia = "( folio en blanco )", flecha = "❧",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.2f, colorPrefijo = RolColor.PRIMARIO, renglones = true, margen = MargenEditor.ROJO,
         guiones = floatArrayOf(0.8f, 2f), tamBoton = 17, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
+    TemaId.TEMPLARIO -> PielComponentes(sep = "  ⚔  ", cerrada = "✚", abierta = "☩", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
+        aviso = "⚔", igual = " : ", nulo = "sin parte", elegido = "✚", riel = RolColor.PRIMARIO, quitar = "✕", listaVacia = "( rol vacío )", flecha = "⟶",
+        sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.2f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.BARRA,
+        guiones = floatArrayOf(3f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.6f)
     TemaId.DISTOPIA -> PielComponentes(sep = " ▪ ", cerrada = "▶", abierta = "▼", numeral = RolColor.TINTA, centrar = true, rellena = false,
         aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
         sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
@@ -1035,6 +1040,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             withStyle(SpanStyle(color = e.primary, fontSize = estilo.fontSize * 1.55f)) { append(nombre.take(1)) }
             append(nombre.drop(1))
         }, style = estilo, modifier = peso)
+        // La cruz roja delante y, debajo, la barra de acero de la sobreveste.
+        TemaId.TEMPLARIO -> Text(buildAnnotatedString { withStyle(SpanStyle(color = e.primary)) { append("✚ ") }; append(nombre) },
+            style = estilo.copy(letterSpacing = 1.sp), modifier = peso.drawBehind {
+                val y = size.height - 1.dp.toPx()
+                drawLine(e.secondary, Offset(0f, y), Offset(size.width * 0.6f, y), 2.dp.toPx())
+                drawLine(e.primary, Offset(size.width * 0.6f, y), Offset(size.width, y), 0.8.dp.toPx())
+            }.padding(bottom = 5.dp))
         // Rótulo de expediente: blanco sobre negro.
         TemaId.DISTOPIA -> Text(nombre, style = estilo, color = e.background, modifier = peso.background(e.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
         // Letrero de pasillo del refugio: una cápsula con borde.
@@ -1129,6 +1141,11 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h - r); quadraticTo(w - r, h - r, w - r, h)
         lineTo(r, h); quadraticTo(r, h - r, 0f, h - r); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
     }
+    // El gallardete: recto del lado del asta y con cola de golondrina al otro.
+    TemaId.TEMPLARIO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - h * 0.22f, h / 2); lineTo(w, h); lineTo(0f, h); close()
+    }
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(50)
     TemaId.ORDEN -> CutCornerShape(6.dp)
@@ -1199,6 +1216,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.NEON -> "ticket · $es"
         TemaId.HELENO -> "πάπυρος · $es"
         TemaId.MEDIEVAL -> "pluma y tintero · $es"
+        TemaId.TEMPLARIO -> "rol de la casa · $es"
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
         TemaId.REFUGIO -> "BITÁCORA DEL REFUGIO > $es"
         TemaId.ORDEN -> "CRÓNICA DE LA ORDEN · ${es.uppercase()}"
@@ -1289,6 +1307,13 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawArc(e.tertiary, 180f, 90f, false, Offset(i, i), Size(u * 2f, u * 2f), style = Stroke(fino * 1.4f))
             drawCircle(e.tertiary, u * 0.3f, Offset(i + u * 0.35f, i + u * 0.35f))
             drawCircle(e.primary, u * 0.17f, Offset(i + u * 1.5f, i + u * 0.2f))
+        }
+        TemaId.TEMPLARIO -> enLasCuatro {
+            // Esquinera de hierro remachada y una cruz patada roja pequeña.
+            drawLine(e.secondary, Offset(i, i), Offset(i + u * 2.2f, i), fino * 1.6f)
+            drawLine(e.secondary, Offset(i, i), Offset(i, i + u * 2.2f), fino * 1.6f)
+            drawCircle(e.tertiary, u * 0.16f, Offset(i + u * 1.8f, i + u * 0.3f)); drawCircle(e.tertiary, u * 0.16f, Offset(i + u * 0.3f, i + u * 1.8f))
+            drawPath(cruzPatada(Offset(i + u * 0.95f, i + u * 0.95f), u * 0.5f), e.primary.copy(alpha = 0.75f))
         }
         TemaId.DISTOPIA -> {
             // Un clip de expediente que asoma por arriba y un sello rojo abajo a la derecha.
@@ -1440,6 +1465,15 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawLine(l, Offset(f(0.44f), f(0.58f)), Offset(f(0.44f), f(0.5f)), tr.width)
             drawPath(Path().apply { moveTo(f(0.36f), f(0.62f)); quadraticTo(f(0.6f), f(0.2f), f(0.92f), f(0.06f)); quadraticTo(f(0.78f), f(0.36f), f(0.36f), f(0.62f)) }, a, style = tr)
         }
+        TemaId.TEMPLARIO -> {
+            // El yelmo de cubo sin nadie dentro: la ranura de la vista y la cruz de los respiraderos.
+            drawPath(Path().apply {
+                moveTo(f(0.22f), f(0.88f)); lineTo(f(0.22f), f(0.3f)); quadraticTo(f(0.22f), f(0.1f), f(0.5f), f(0.08f))
+                quadraticTo(f(0.78f), f(0.1f), f(0.78f), f(0.3f)); lineTo(f(0.78f), f(0.88f)); close()
+            }, l, style = tr)
+            drawLine(a, Offset(f(0.3f), f(0.42f)), Offset(f(0.7f), f(0.42f)), tr.width * 1.6f)
+            drawLine(l, Offset(f(0.5f), f(0.52f)), Offset(f(0.5f), f(0.8f)), tr.width); drawLine(l, Offset(f(0.38f), f(0.65f)), Offset(f(0.62f), f(0.65f)), tr.width)
+        }
         TemaId.DISTOPIA -> {
             // Carpeta de expediente vacía, cruzada por una franja roja.
             drawPath(Path().apply { moveTo(f(0.08f), f(0.86f)); lineTo(f(0.08f), f(0.2f)); lineTo(f(0.38f), f(0.2f)); lineTo(f(0.46f), f(0.3f)); lineTo(f(0.92f), f(0.3f)); lineTo(f(0.92f), f(0.86f)); close() }, l, style = tr)
@@ -1583,6 +1617,7 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         TemaId.NEON -> { drawRect(c.copy(alpha = c.alpha * 0.3f), Offset(0f, h - d * 2f), Size(w, d * 2f)); drawRect(c, Offset(0f, h - d * 0.9f), Size(w, d * 0.6f)) }   // el tubo encendido con su halo
         TemaId.HELENO -> drawPath(Path().apply { moveTo(w / 2 - d * 1.6f, h); lineTo(w / 2, h - d * 1.4f); lineTo(w / 2 + d * 1.6f, h); close() }, c)
         TemaId.MEDIEVAL -> drawCircle(c, d * 0.8f, Offset(w / 2, d * 1.4f))
+        TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(w / 2, d * 1.6f), d * 1.2f), c)
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
         TemaId.REFUGIO -> drawCircle(c, d * 0.9f, Offset(w / 2, h - d * 1.6f), style = Stroke(d * 0.5f))
         TemaId.ORDEN -> drawPath(Path().apply { moveTo(w / 2 - d * 1.5f, h - d * 0.6f); lineTo(w / 2, h - d * 1.8f); lineTo(w / 2 + d * 1.5f, h - d * 0.6f) }, c, style = Stroke(d * 0.55f))
@@ -1657,6 +1692,8 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.HELENO -> drawLine(c, Offset(w * 0.06f, h * 0.24f), Offset(w * 0.94f, h * 0.24f), fino)
         // Cuatro puntos de oro junto a las esquinas cóncavas.
         TemaId.MEDIEVAL -> listOf(Offset(m * 2f, m * 2f), Offset(w - m * 2f, m * 2f), Offset(m * 2f, h - m * 2f), Offset(w - m * 2f, h - m * 2f)).forEach { drawCircle(e.tertiary, fino * 1.6f, it) }
+        // La cruz junto al asta del gallardete y una costura de malla a lo largo.
+        TemaId.TEMPLARIO -> { drawPath(cruzPatada(Offset(m * 3f, h / 2), m * 1.2f), c); var x = m * 6f; while (x < w - h * 0.4f) { drawCircle(c, fino * 1.1f, Offset(x, h - m), style = Stroke(fino * 0.6f)); x += m * 1.4f } }
         // Doble recuadro de sello de goma.
         TemaId.DISTOPIA -> {
             drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
@@ -1777,6 +1814,13 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             // Pluma y tintero.
             drawRect(l, Offset(f(0.08f), f(0.6f)), Size(f(0.36f), f(0.32f)))
             drawPath(Path().apply { moveTo(f(0.3f), f(0.62f)); quadraticTo(f(0.56f), f(0.2f), f(0.96f), f(0.04f)); quadraticTo(f(0.8f), f(0.4f), f(0.3f), f(0.62f)) }, a)
+        }
+        TemaId.TEMPLARIO -> {
+            // La espada en alto: hoja, guarda en cruz y pomo.
+            drawLine(a, Offset(f(0.24f), f(0.76f)), Offset(f(0.92f), f(0.08f)), tr.width * 1.6f)
+            drawLine(l, Offset(f(0.12f), f(0.62f)), Offset(f(0.38f), f(0.88f)), tr.width * 1.6f)
+            drawLine(l, Offset(f(0.25f), f(0.75f)), Offset(f(0.14f), f(0.86f)), tr.width * 1.2f)
+            drawCircle(l, f(0.07f), Offset(f(0.1f), f(0.9f)))
         }
         TemaId.DISTOPIA -> {
             // Sello de goma.
@@ -1939,6 +1983,11 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             drawRect(e.tertiary, Offset(d, 0f), Size(1.2f * d, h))
             var y = 5 * d
             while (y < h) { drawCircle(e.primary, 1.5f * d, Offset(4.2f * d, y)); y += 9 * d }
+        }
+        TemaId.TEMPLARIO -> {
+            drawRect(e.secondary, Offset.Zero, Size(2 * d, h))
+            var y = 6 * d
+            while (y < h) { drawPath(cruzPatada(Offset(4.4f * d, y), 1.7f * d), e.primary); y += 10 * d }
         }
         TemaId.DISTOPIA -> drawRect(e.onSurface, Offset.Zero, Size(w, h))
         TemaId.REFUGIO -> drawRoundRect(c, Offset(d, d), Size(4 * d, h - 2 * d), CornerRadius(2 * d))
