@@ -498,6 +498,41 @@ def botanico():
                tecla=trazo((1100, 4200), 0.05, 26, 0.03),
                rascar=rascado((1300, 5500), cello(T + 12, 0.4), aspereza=60))
 
+def ruinas():
+    # Re mixolidio: la Ciudad verde. Una kalimba hecha con flejes, la flauta en una plaza vacía, tubos de metal que el viento
+    # hace sonar, gotas que caen del techo roto, el golpe hueco del hormigón y el viento entre los edificios.
+    T = -7   # Re4
+    kal = lambda n, d=0.7: kalimba(hz(n), d)
+    fl = lambda n, d: flauta(hz(n), d)
+    tubo = lambda n, d=1.6: campana(hz(n), d, 2.76, 1.2, 2.2)
+    gota = lambda n, d=0.12: barrido(hz(n + 12) * 1.25, hz(n), d) * env(int(d * SR), 0.001, d * 0.45, 5)
+    viento = lambda d: filtro(ruido(d), 'banda', (300, 1400)) * env(int(d * SR), d * 0.4, d * 0.6, 2) * 0.4
+    hormigon = lambda: mezclar((0, filtro(ruido(0.05), 'bajo', 700) * env(int(0.05 * SR), 0.001, 0.03, 6), 1.0), (0, tambor(hz(T - 24), 0.09, 0.3), 0.4))
+    # Con su propio azar también los sonidos de siempre: un tema nuevo no mueve el ruido de los que van después.
+    with azar_propio('ruinas_base'):
+        S['ruinas'] = dict(
+            toque=mezclar((0, gota(T + 19, 0.08), 0.7), (0, clic(0.004, (2000, 6000)), 0.2)),
+            elegir=kal(T + 19, 0.35),
+            pasar=mezclar((0, viento(0.22), 0.9), (0.03, papel(0.12, (900, 4000)), 0.3)),
+            abrir=mezclar(*[(0.06 * i, kal(T + n, 0.8), 0.5) for i, n in enumerate([0, 4, 7, 10])]),
+            guardar=mezclar((0, hormigon(), 0.6), (0.05, kal(T + 7, 0.6), 0.5), (0.17, kal(T + 12, 0.8), 0.5)),
+            logro=reverb(mezclar(melodia(lambda f, d: flauta(f, d), [T + 12 + n for n in [0, 2, 4, 7, 9, 12]], 0.12, 0.3, g=0.45),
+                                 *[(0.75 + 0.09 * i, tubo(T + 24 + n, 1.6), 0.25) for i, n in enumerate([0, 4, 7, 10])], (0.1, pajaro(0.25, 2400, 3600), 0.15)), 1.4, 0.3),
+            tema=reverb(mezclar((0, viento(0.8), 0.6), *[(0.25 + 0.07 * i, tubo(T + 12 + n, 1.8), 0.3) for i, n in enumerate([0, 7, 10, 14])], (0.6, fl(T + 19, 0.6), 0.3)), 1.4, 0.3),
+            aviso=reverb(mezclar(*[(0.18 * i, tubo(T + 24 + n, 1.2), 0.4) for i, n in enumerate([7, 4, 0, 2])], (0, viento(1.0), 0.4)), 1.3, 0.3),
+            solemne=reverb(mezclar(melodia(lambda f, d: flauta(f, d), [T + n for n in [0, 2, 4, 7, 4, 2, 0, -2, 0]], 0.6, 0.7, g=0.35),
+                                   *[(1.4 * i, acorde(lambda f, d: arco(f, d, 4.5), [T - 12 + a for a in ch], 1.5), 0.35) for i, ch in enumerate([[0, 7, 12], [-2, 5, 10], [5, 9, 12], [0, 7, 12, 16]])],
+                                   (0, viento(5.0), 0.35), *[(0.7 + 1.2 * i, gota(T + 24 + [0, 4, 7, 2][i % 4]), 0.15) for i in range(4)]), 2.0, 0.3))
+
+    # Error: un trozo de hormigón que se desprende y la kalimba que baja medio tono. Cambio: dos gotas a la quinta.
+    # Tecla: el carboncillo sobre el muro. Rascar: hormigón áspero, y un tubo que queda sonando.
+    with azar_propio('ruinas'):
+        nuevos('ruinas',
+               error=mezclar((0, hormigon(), 0.7), (0.05, kal(T + 7, 0.3), 0.45), (0.18, kal(T + 6, 0.5), 0.45), (0.12, filtro(ruido(0.25), 'bajo', 900) * env(int(0.25 * SR), 0.01, 0.15, 3), 0.3)),
+               cambio=mezclar((0, gota(T + 19, 0.08), 0.5), (0.07, gota(T + 26, 0.08), 0.5)),
+               tecla=mezclar((0, trazo((700, 2600), 0.05, 12, 0.03), 1), (0, filtro(ruido(0.03), 'alto', 5000) * env(int(0.03 * SR), 0.001, 0.02, 5), 0.3)),
+               rascar=rascado((500, 3200), tubo(T + 12, 0.5), aspereza=35))
+
 def navidad():
     # La mayor: cascabeles, caja de música y campanas.
     T = 0    # La4
@@ -801,6 +836,7 @@ if __name__ == '__main__':
         colonos,
         napoleon,
         botanico,
+        ruinas,
         navidad,
         seda,
         urss,

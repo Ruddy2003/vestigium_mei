@@ -132,6 +132,7 @@ object TrofeosTema {
             TemaId.MONGOL -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.COLONOS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.BOTANICO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.RUINAS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.NAVIDAD -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.ANTIGUAS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.DISTOPIA -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
@@ -162,6 +163,7 @@ object TrofeosTema {
             TemaId.MONGOL -> with(TrofeosMas) { mongol(categoria, p) }
             TemaId.COLONOS -> with(TrofeosMas) { colonos(categoria, p) }
             TemaId.BOTANICO -> with(TrofeosMas) { botanico(categoria, p) }
+            TemaId.RUINAS -> with(TrofeosMas) { ruinas(categoria, p) }
             TemaId.NAVIDAD -> with(TrofeosMas) { navidad(categoria, p) }
             TemaId.ANTIGUAS -> with(TrofeosMas) { antiguas(categoria, p) }
             TemaId.DISTOPIA -> with(TrofeosMas) { distopia(categoria, p) }

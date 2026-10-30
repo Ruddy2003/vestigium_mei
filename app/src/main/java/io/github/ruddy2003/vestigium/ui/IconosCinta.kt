@@ -96,6 +96,12 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             drawLine(c, Offset(w * 0.5f, 0f), Offset(w * 0.5f, h * 0.24f), g * 0.6f)
             drawCircle(c, w * 0.07f, Offset(w * 0.5f, h * 0.06f))
         }
+        // Una placa de calle atornillada, colgada de su poste.
+        TemaId.RUINAS -> {
+            drawRoundRect(c, Offset(w * 0.06f, h * 0.16f), Size(w * 0.88f, h * 0.7f), CornerRadius(w * 0.1f), style = Stroke(g * 0.7f))
+            drawCircle(c, w * 0.04f, Offset(w * 0.18f, h * 0.27f)); drawCircle(c, w * 0.04f, Offset(w * 0.82f, h * 0.27f))
+            drawLine(c, Offset(w * 0.5f, h * 0.86f), Offset(w * 0.5f, h), g * 0.8f)
+        }
         // Esfera de árbol con su tapa.
         TemaId.NAVIDAD -> {
             drawCircle(c, w * 0.42f, Offset(o.x, h * 0.56f), style = Stroke(g))
@@ -277,6 +283,17 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawCircle(color, r * 0.26f, Offset(c.x, c.y - r * 0.6f))
             drawLine(hueco.copy(alpha = 0.5f), Offset(c.x, c.y - r * 0.32f), Offset(c.x, c.y + r * 0.88f), r * 0.06f)
             drawCircle(hueco.copy(alpha = 0.85f), r * 0.11f, Offset(c.x, c.y - r * 0.12f))
+        }
+        // Un semáforo con sus tres luces (la verde encendida) y una hoja de hiedra que se le enreda.
+        TemaId.RUINAS -> {
+            drawRoundRect(color, Offset(c.x - r * 0.42f, c.y - r * 0.95f), Size(r * 0.84f, r * 1.7f), CornerRadius(r * 0.18f))
+            for (k in 0..2) drawCircle(hueco.copy(alpha = if (k == 2) 0.95f else 0.45f), r * 0.2f, Offset(c.x, c.y - r * 0.55f + k * r * 0.5f))
+            drawLine(color, Offset(c.x, c.y + r * 0.75f), Offset(c.x, c.y + r), r * 0.14f)
+            val q = Offset(c.x + r * 0.5f, c.y + r * 0.55f); val s = r * 0.5f
+            drawPath(Path().apply {
+                moveTo(q.x, q.y); lineTo(q.x - s * 0.55f, q.y - s * 0.15f); lineTo(q.x - s * 0.8f, q.y - s * 0.55f); lineTo(q.x - s * 0.32f, q.y - s * 0.55f)
+                lineTo(q.x, q.y - s); lineTo(q.x + s * 0.32f, q.y - s * 0.55f); lineTo(q.x + s * 0.8f, q.y - s * 0.55f); lineTo(q.x + s * 0.55f, q.y - s * 0.15f); close()
+            }, color)
         }
         // Un copo de nieve de seis brazos.
         TemaId.NAVIDAD -> {

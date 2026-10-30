@@ -210,6 +210,11 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             pinta(Path().also { c -> hoja(c, p(5f, 20f), p(19.5f, 3.5f), 3.6f) })
             drawLine(if (lleno) Color.White.copy(alpha = 0.55f) else color.copy(alpha = 0.7f), p(4f, 21f), p(17.5f, 5.8f), 1f * u)
         }
+        // Una hoja de hiedra de cinco puntas, con su nervio.
+        TemaId.RUINAS -> {
+            pinta(poligono(12f, 21f, 6f, 18f, 2.5f, 10.5f, 8f, 11f, 12f, 2.5f, 16f, 11f, 21.5f, 10.5f, 18f, 18f))
+            drawLine(if (lleno) Color.White.copy(alpha = 0.55f) else color.copy(alpha = 0.7f), p(12f, 20f), p(12f, 6f), 1f * u)
+        }
         // Copo de nieve: seis brazos con sus ramitas.
         TemaId.NAVIDAD -> {
             val k = if (lleno) color else color.copy(alpha = 0.7f); val t = (if (lleno) 2.2f else 1.4f) * u

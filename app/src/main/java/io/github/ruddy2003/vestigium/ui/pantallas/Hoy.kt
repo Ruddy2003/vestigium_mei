@@ -447,6 +447,15 @@ fun FraseDelDia(fecha: String) {
                 drawCircle(cs.secondary, 3 * u, o)
             }.padding(start = 14.dp, end = 30.dp, top = 12.dp, bottom = 10.dp)) { CuerpoFrase(f, fecha, rotulo, "“", "”") }
         }
+        // Una nota pegada al muro con un trozo de cinta, en una losa desportillada, con una grieta en la esquina.
+        TemaId.RUINAS -> Surface(shape = CutCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 0.dp, bottomStart = 4.dp), color = cs.surface, border = BorderStroke(1.dp, cs.outline), modifier = arriba) {
+            Box(Modifier.drawBehind {
+                val u = 1.dp.toPx(); val m = size.width / 2
+                drawPath(Path().apply { moveTo(m - 26 * u, -2 * u); lineTo(m + 26 * u, -6 * u); lineTo(m + 27 * u, 6 * u); lineTo(m - 25 * u, 10 * u); close() }, cs.onSurfaceVariant.copy(alpha = 0.18f))
+                drawPath(Path().apply { moveTo(size.width, size.height - 18 * u); lineTo(size.width - 6 * u, size.height - 12 * u); lineTo(size.width - 3 * u, size.height - 6 * u); lineTo(size.width - 9 * u, size.height) },
+                    cs.onSurfaceVariant.copy(alpha = 0.4f), style = Stroke(0.8f * u))
+            }.padding(start = 14.dp, end = 22.dp, top = 14.dp, bottom = 10.dp)) { CuerpoFrase(f, fecha, rotulo, "“", "”") }
+        }
         // Tarjeta de felicitación con una ramita de acebo en la esquina.
         TemaId.NAVIDAD -> Surface(shape = RoundedCornerShape(10.dp), color = cs.primaryContainer.copy(alpha = 0.45f), border = BorderStroke(1.dp, cs.secondary.copy(alpha = 0.6f)), modifier = arriba) {
             Box(Modifier.drawBehind {
@@ -793,6 +802,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.COLONOS -> c(LetraExtra.fell, FontWeight.Normal, 24f, 0.2f, "lnum")
         TemaId.NAPOLEON -> c(LetraExtra.bodoniTitulo, FontWeight.SemiBold, 23f, 0.8f, "lnum")
         TemaId.BOTANICO -> c(LetraExtra.fraunces, FontWeight.Medium, 22f, 0f)
+        TemaId.RUINAS -> c(LetraExtra.letrero, FontWeight.Normal, 24f, 0.5f, "tnum")
         TemaId.NAVIDAD -> c(LetraExtra.amiri, FontWeight.Normal, 25f, 0f)
         TemaId.SEDA -> c(LetraExtra.almendra, FontWeight.Normal, 24f, 0.3f)
         TemaId.GOTICO -> c(LetraExtra.gotica, FontWeight.SemiBold, 25f, 0.2f)
@@ -1088,6 +1098,15 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = h - 8 * u; var lado = 1f
                             while (y > top + w * 0.9f) { pinta(hojaFrase(Offset(w / 2, y), Offset(w / 2 + lado * w * 0.45f, y - 5 * u), 1.4f * u)); y -= 9 * u; lado = -lado }
                             pinta(Path().apply { addOval(Rect(w / 2 - w * 0.3f, top, w / 2 + w * 0.3f, top + w * 0.75f)) })
+                        }
+                        TemaId.RUINAS -> {
+                            // Un edificio roto: la azotea quebrada a la altura del día, ventanas vacías y una mata de hiedra al pie.
+                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top + 3 * u); lineTo(w * 0.35f, top); lineTo(w * 0.55f, top + 4 * u); lineTo(w, top + 1.5f * u); lineTo(w, h); close() })
+                            if (color != null) {
+                                var y = top + 8 * u
+                                while (y < h - 6 * u) { drawRect(cs.background.copy(alpha = 0.5f), Offset(w * 0.25f, y), Size(w * 0.18f, 3 * u)); drawRect(cs.background.copy(alpha = 0.5f), Offset(w * 0.58f, y), Size(w * 0.18f, 3 * u)); y += 7 * u }
+                            }
+                            drawCircle(Color(0xFF4F7A33).copy(alpha = 0.8f), w * 0.22f, Offset(w * 0.12f, h - w * 0.1f))
                         }
                         // Velas con su llama.
                         TemaId.NAVIDAD -> {

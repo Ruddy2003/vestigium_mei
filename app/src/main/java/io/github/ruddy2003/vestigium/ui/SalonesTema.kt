@@ -42,6 +42,7 @@ object SalonesTema {
             TemaId.MONGOL -> with(SalonesMas) { yurta(cs, oscuro, n) }
             TemaId.COLONOS -> with(SalonesMas) { almacen(cs, oscuro, n) }
             TemaId.BOTANICO -> with(SalonesMas) { invernadero(cs, oscuro, n) }
+            TemaId.RUINAS -> with(SalonesMas) { bibliotecaInvadida(cs, oscuro, n) }
             TemaId.NAVIDAD -> with(SalonesMas) { chimenea(cs, oscuro, n) }
             TemaId.ANTIGUAS -> with(SalonesMas) { salonPiedra(cs, oscuro, n) }
             TemaId.DISTOPIA -> with(SalonesMas) { archivo(cs, oscuro, n) }
@@ -75,6 +76,7 @@ object SalonesTema {
             TemaId.MONGOL -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.COLONOS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.BOTANICO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.RUINAS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.NAVIDAD -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.ANTIGUAS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.DISTOPIA -> with(SalonesMas) { pedestalMas(tema, cs, metal) }

@@ -83,6 +83,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.COLONOS -> 1900
     TemaId.NAPOLEON -> 5200
     TemaId.BOTANICO -> 14000
+    TemaId.RUINAS -> 9000
     TemaId.NAVIDAD -> 24000
     TemaId.SEDA -> 4800
     TemaId.GOTICO -> 7600
@@ -128,6 +129,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.COLONOS -> farol(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.NAPOLEON -> nImperial(c, r, if (oscuro) e.primaryContainer else e.primary, if (oscuro) e.primary else e.tertiary, e.secondary, t)
         TemaId.BOTANICO -> escarabajoLamina(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
+        TemaId.RUINAS -> semaforoHiedra(c, r, e.primary, e.secondary, e.tertiary, if (oscuro) Color(0xFF3A443B) else e.onBackground, t)
         TemaId.GOTICO -> vitral(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, if (oscuro) e.tertiary else e.primary, e.onBackground, t)
         TemaId.ESPACIO -> planeta(c, r, e.primary, e.secondary, e.tertiary, e.onBackground, t)
         TemaId.ANDALUS -> rotate(t * 360f, c) { estrellaLazo(c, r, if (oscuro) e.primary else e.tertiary, e.secondary, e.primary, e.background) }
@@ -328,6 +330,56 @@ private fun DrawScope.escarabajoLamina(c: Offset, r: Float, musgo: Color, oxido:
     val ang = (2 * PI * t).toFloat()
     val pos = Offset(c.x + r * 0.86f * cos(ang), c.y + r * 0.86f * sin(ang))
     hormiga(pos, r * 0.16f, ang + PI.toFloat() / 2, tinta.copy(alpha = 0.85f), t)
+}
+
+/**
+ * Ciudad verde: un semáforo viejo y ladeado, con la hiedra subiendo por el poste y abriéndose sobre la caja. El rojo y el
+ * ámbar están muertos; solo la luz verde sigue viva y late despacio, y las hojas se mecen apenas.
+ */
+private fun DrawScope.semaforoHiedra(c: Offset, r: Float, hiedra: Color, oxido: Color, ambar: Color, tinta: Color, t: Float) {
+    val late = 0.55f + 0.45f * (0.5f + 0.5f * sin(2 * PI * t).toFloat())
+    rotate(-7f, Offset(c.x, c.y + r * 0.9f)) {
+        // El poste, con su abrazadera oxidada.
+        drawRect(tinta.copy(alpha = 0.75f), Offset(c.x - r * 0.07f, c.y + r * 0.1f), Size(r * 0.14f, r * 0.85f))
+        drawRect(oxido, Offset(c.x - r * 0.1f, c.y + r * 0.22f), Size(r * 0.2f, r * 0.07f))
+        // La caja, con su borde de óxido, y las tres luces con su visera.
+        val caja = Rect(c.x - r * 0.26f, c.y - r * 0.86f, c.x + r * 0.26f, c.y + r * 0.18f)
+        drawRoundRect(tinta.copy(alpha = 0.85f), caja.topLeft, caja.size, CornerRadius(r * 0.08f))
+        drawRoundRect(oxido.copy(alpha = 0.5f), caja.topLeft, caja.size, CornerRadius(r * 0.08f), style = Stroke(r * 0.025f))
+        listOf(-0.6f, -0.28f, 0.04f).forEachIndexed { i, fy ->
+            val luz = Offset(c.x, c.y + r * fy)
+            if (i == 2) drawCircle(hiedra.copy(alpha = 0.25f * late), r * 0.24f, luz)
+            val col = when (i) { 0 -> oxido.copy(alpha = 0.35f); 1 -> ambar.copy(alpha = 0.3f); else -> hiedra.copy(alpha = late) }
+            drawCircle(col, r * 0.11f, luz)
+            drawArc(tinta, 200f, 140f, false, Offset(luz.x - r * 0.15f, luz.y - r * 0.15f), Size(r * 0.3f, r * 0.3f), style = Stroke(r * 0.04f))
+        }
+        // Una grieta en el costado de la caja.
+        drawPath(Path().apply { moveTo(caja.right, c.y - r * 0.5f); lineTo(caja.right - r * 0.08f, c.y - r * 0.44f); lineTo(caja.right - r * 0.05f, c.y - r * 0.36f) },
+            oxido, style = Stroke(r * 0.02f))
+        // La hiedra: sube enroscada por el poste y trepa por un lado de la caja.
+        val tallo = Path().apply {
+            moveTo(c.x - r * 0.12f, c.y + r * 0.95f)
+            cubicTo(c.x + r * 0.2f, c.y + r * 0.7f, c.x - r * 0.25f, c.y + r * 0.45f, c.x + r * 0.12f, c.y + r * 0.25f)
+            cubicTo(c.x + r * 0.42f, c.y + r * 0.05f, c.x + r * 0.38f, c.y - r * 0.45f, c.x + r * 0.2f, c.y - r * 0.8f)
+        }
+        drawPath(tallo, hiedra.copy(alpha = 0.8f), style = Stroke(r * 0.03f, cap = StrokeCap.Round))
+        val hojas = listOf(Offset(0.02f, 0.82f) to 30f, Offset(-0.16f, 0.55f) to -50f, Offset(0.1f, 0.33f) to 40f, Offset(0.36f, 0.05f) to 70f,
+            Offset(0.4f, -0.3f) to 100f, Offset(0.3f, -0.62f) to 60f, Offset(-0.32f, 0.2f) to -80f)
+        hojas.forEachIndexed { i, (o, g) ->
+            val q = Offset(c.x + r * o.x, c.y + r * o.y)
+            val mece = 6f * sin(2 * PI * (t * 2 + i * 0.17)).toFloat()
+            rotate(g + mece, q) { hojaHiedraEmblema(q, r * (0.13f + 0.02f * (i % 3)), hiedra) }
+        }
+    }
+}
+
+/** Una hoja de hiedra de cinco puntas (la del centro más larga), con el pecíolo en [p] y la hoja hacia arriba. */
+private fun DrawScope.hojaHiedraEmblema(p: Offset, s: Float, color: Color) {
+    drawPath(Path().apply {
+        moveTo(p.x, p.y); lineTo(p.x - s * 0.55f, p.y - s * 0.15f); lineTo(p.x - s * 0.8f, p.y - s * 0.55f); lineTo(p.x - s * 0.32f, p.y - s * 0.55f)
+        lineTo(p.x, p.y - s); lineTo(p.x + s * 0.32f, p.y - s * 0.55f); lineTo(p.x + s * 0.8f, p.y - s * 0.55f); lineTo(p.x + s * 0.55f, p.y - s * 0.15f); close()
+    }, color)
+    drawLine(Color.Black.copy(alpha = 0.18f * color.alpha), p, Offset(p.x, p.y - s * 0.8f), s * 0.06f)
 }
 
 /** Una hormiga vista desde arriba: cabeza, tórax y gáster, con seis patas que se alternan al caminar. */
@@ -959,6 +1011,38 @@ internal fun Enredadera(modifier: Modifier) {
     }
 }
 
+/** Divisor de la Ciudad verde: la línea discontinua de una calle vieja, partida por grietas, con hierba y hiedra que brotan entre los tramos. */
+@Composable
+internal fun BandaCalle(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    Canvas(modifier.fillMaxWidth().height(16.dp)) {
+        val mid = size.height * 0.62f; val tramo = 18.dp.toPx(); val hueco = 12.dp.toPx(); val g = 2.2.dp.toPx()
+        val pintura = e.tertiary.copy(alpha = 0.7f)
+        drawLine(e.onBackground.copy(alpha = 0.18f), Offset(0f, size.height - 1f), Offset(size.width, size.height - 1f), 1f)
+        var x = 4.dp.toPx(); var k = 0
+        while (x < size.width) {
+            val fin = (x + tramo).coerceAtMost(size.width)
+            // La pintura gastada: uno de cada cuatro tramos está partido por una grieta.
+            if (k % 4 == 1) {
+                val m = (x + fin) / 2
+                drawLine(pintura, Offset(x, mid), Offset(m - 1.5.dp.toPx(), mid), g)
+                drawLine(pintura, Offset(m + 1.5.dp.toPx(), mid), Offset(fin, mid), g)
+                val gr = Path().apply { moveTo(m, mid - 5.dp.toPx()); lineTo(m - 1.dp.toPx(), mid - 1.dp.toPx()); lineTo(m + 1.dp.toPx(), mid + 1.dp.toPx()); lineTo(m - 0.5.dp.toPx(), mid + 5.dp.toPx()) }
+                drawPath(gr, e.onBackground.copy(alpha = 0.5f), style = Stroke(0.8.dp.toPx()))
+            } else drawLine(pintura, Offset(x, mid), Offset(fin, mid), g)
+            // En el hueco, una mata de hierba o, cada tres, una hoja de hiedra.
+            val cx = fin + hueco / 2
+            if (cx < size.width) {
+                if (k % 3 == 2) hojaHiedraEmblema(Offset(cx, mid + 1.dp.toPx()), 6.dp.toPx(), e.primary.copy(alpha = 0.85f))
+                else for (j in -1..1) {
+                    drawLine(e.primary.copy(alpha = 0.8f), Offset(cx + j * 1.2.dp.toPx(), mid + 1.dp.toPx()), Offset(cx + j * 2.6.dp.toPx(), mid - (if (j == 0) 4.5f else 3.5f).dp.toPx()), 1.1f)
+                }
+            }
+            x = fin + hueco; k++
+        }
+    }
+}
+
 /** Arquería gótica: una fila de arcos apuntados con trébol, y en cada uno un vidrio que brilla. */
 @Composable
 internal fun Arqueria(modifier: Modifier) {
@@ -1308,6 +1392,41 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 }
             }
         }
+        TemaId.RUINAS -> {
+            // Losas de acera vistas desde arriba: juntas un poco torcidas, grietas que se ramifican y matas de musgo en las juntas.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.055f); color2 = esquema.primary.copy(alpha = if (oscuro) 0.07f else 0.08f)
+            val azar = java.util.Random(41)
+            val losa = 96.dp.toPx()
+            var gy = 0f; var fila = 0
+            while (gy < h) {
+                trazo.moveTo(0f, gy); trazo.lineTo(w, gy + (azar.nextFloat() - 0.5f) * 6.dp.toPx())
+                var gx = if (fila % 2 == 0) 0f else losa / 2
+                while (gx < w) { trazo.moveTo(gx, gy); trazo.lineTo(gx + (azar.nextFloat() - 0.5f) * 4.dp.toPx(), gy + losa); gx += losa }
+                gy += losa; fila++
+            }
+            // Grietas: caminos quebrados que a la mitad se bifurcan una vez.
+            fun grieta(x0: Float, y0: Float, a0: Float, pasos: Int, rama: Boolean) {
+                var x = x0; var y = y0; var a = a0
+                trazo.moveTo(x, y)
+                repeat(pasos) { k ->
+                    a += (azar.nextFloat() - 0.5f) * 1.1f
+                    val l = (5f + azar.nextFloat() * 7f).dp.toPx()
+                    x += cos(a) * l; y += sin(a) * l; trazo.lineTo(x, y)
+                    if (rama && k == pasos / 2) { grieta(x, y, a + 0.9f, pasos / 2, false); trazo.moveTo(x, y) }
+                }
+            }
+            repeat(((w * h) / 90000f).toInt().coerceIn(3, 14)) { grieta(azar.nextFloat() * w, azar.nextFloat() * h, azar.nextFloat() * 2 * PI.toFloat(), 6 + azar.nextInt(6), true) }
+            // Musgo: grupos de puntitos donde se cruzan las juntas.
+            repeat(((w * h) / 50000f).toInt().coerceIn(4, 40)) {
+                val mx = azar.nextInt((w / losa).toInt() + 1) * losa + (azar.nextFloat() - 0.5f) * 10.dp.toPx()
+                val my = azar.nextInt((h / losa).toInt() + 1) * losa + (azar.nextFloat() - 0.5f) * 10.dp.toPx()
+                repeat(6 + azar.nextInt(8)) {
+                    val rr = (0.8f + azar.nextFloat() * 1.8f).dp.toPx()
+                    val px = mx + (azar.nextFloat() - 0.5f) * 16.dp.toPx(); val py = my + (azar.nextFloat() - 0.5f) * 10.dp.toPx()
+                    puntos.addOval(Rect(px - rr, py - rr, px + rr, py + rr))
+                }
+            }
+        }
         TemaId.GOTICO -> {
             // Vidriera de rombos emplomados; de noche, además, la bóveda azul sembrada de estrellas de oro.
             color = esquema.onBackground.copy(alpha = if (oscuro) 0.04f else 0.035f)
@@ -1484,6 +1603,11 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         quadraticTo(-0.1f * s.width, -0.1f * s.height, 0.94f * s.width, 0.06f * s.height)
         quadraticTo(1.1f * s.width, 1.1f * s.height, 0.06f * s.width, 0.94f * s.height); close()
     }
+    // Un trozo de hormigón partido: siete lados desiguales.
+    TemaId.RUINAS -> GenericShape { s, _ ->
+        moveTo(0.18f * s.width, 0.06f * s.height); lineTo(0.7f * s.width, 0.02f * s.height); lineTo(0.96f * s.width, 0.3f * s.height)
+        lineTo(0.92f * s.width, 0.78f * s.height); lineTo(0.62f * s.width, 0.98f * s.height); lineTo(0.14f * s.width, 0.9f * s.height); lineTo(0.03f * s.width, 0.42f * s.height); close()
+    }
     TemaId.NAVIDAD -> GenericShape { s, _ ->
         // Bola con su capuchón: el círculo (centro 0,57; radio 0,43) sale del capuchón a −76,55° y vuelve a −103,45°.
         moveTo(0.4f * s.width, 0.02f * s.height); lineTo(0.6f * s.width, 0.02f * s.height); lineTo(0.6f * s.width, 0.152f * s.height)
@@ -1518,6 +1642,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.COLONOS -> "Tablón"
     TemaId.NAPOLEON -> "Plus"
     TemaId.BOTANICO -> "Notas"
+    TemaId.RUINAS -> "Mochila"
     TemaId.NAVIDAD -> "Baúl"
     TemaId.SEDA -> "更多"
     TemaId.GOTICO -> "Atrio"
@@ -1590,6 +1715,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Girasol.
             TemaId.BOTANICO -> { for (i in 0 until 8) rotate(45f * i, c) { drawOval(color, Offset(c.x - r * 0.15f, c.y - r * 0.98f), Size(r * 0.3f, r * 0.5f)) }
                 drawCircle(color, r * 0.36f, c); drawCircle(fondo, r * 0.18f, c) }
+            // El sol que sale entre dos edificios rotos (recortados con el color del fondo).
+            TemaId.RUINAS -> { drawCircle(color, r * 0.42f, c); rayos(8, 0.58f, 0.9f, 0.1f, 22.5)
+                drawPath(Path().apply { moveTo(c.x - r * 0.9f, c.y + r); lineTo(c.x - r * 0.9f, c.y + r * 0.2f); lineTo(c.x - r * 0.62f, c.y + r * 0.05f); lineTo(c.x - r * 0.5f, c.y + r * 0.25f); lineTo(c.x - r * 0.3f, c.y + r * 0.18f); lineTo(c.x - r * 0.3f, c.y + r); close() }, fondo)
+                drawPath(Path().apply { moveTo(c.x + r * 0.15f, c.y + r); lineTo(c.x + r * 0.15f, c.y + r * 0.35f); lineTo(c.x + r * 0.4f, c.y + r * 0.42f); lineTo(c.x + r * 0.55f, c.y + r * 0.3f); lineTo(c.x + r * 0.8f, c.y + r * 0.4f); lineTo(c.x + r * 0.8f, c.y + r); close() }, fondo) }
             // Estrella de Belén: la punta de abajo más larga.
             TemaId.NAVIDAD -> { listOf(-90.0 to 0.8f, 0.0 to 0.8f, 180.0 to 0.8f, 90.0 to 1f).forEach { (g, l) -> espina(rad(g), 0.16f, l, 0.6f) }; rayos(4, 0.2f, 0.5f, 0.08f, 45.0) }
             // Moneda solar con su agujero cuadrado.
@@ -1652,6 +1781,10 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Luna con una hoja.
             TemaId.BOTANICO -> { luna(0.7f, 0.34f, -0.26f, c + Offset(r * 0.1f, -r * 0.1f))
                 rotate(-40f, Offset(c.x - r * 0.55f, c.y + r * 0.6f)) { drawOval(color, Offset(c.x - r * 0.85f, c.y + r * 0.48f), Size(r * 0.6f, r * 0.24f)) } }
+            // La luna sobre una torre rota, con dos ventanas vacías.
+            TemaId.RUINAS -> { luna(0.62f, 0.32f, -0.24f, c + Offset(-r * 0.15f, -r * 0.2f))
+                drawPath(Path().apply { moveTo(c.x + r * 0.3f, c.y + r); lineTo(c.x + r * 0.3f, c.y + r * 0.15f); lineTo(c.x + r * 0.45f, c.y + r * 0.05f); lineTo(c.x + r * 0.55f, c.y + r * 0.22f); lineTo(c.x + r * 0.7f, c.y + r * 0.1f); lineTo(c.x + r * 0.7f, c.y + r); close() }, color)
+                for (k in 0..1) drawRect(fondo, Offset(c.x + r * 0.42f, c.y + r * (0.4f + 0.28f * k)), Size(r * 0.14f, r * 0.12f)) }
             // Luna con copos.
             TemaId.NAVIDAD -> { luna()
                 listOf(Offset(0.6f, -0.55f), Offset(0.62f, 0.45f)).forEach { o -> val q = c + o * r
@@ -1725,6 +1858,9 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
             drawLine(color, Offset(r * 0.62f, r * 0.8f), Offset(r * 0.8f, r * 0.62f), r * 0.07f) }
         // Una hoja vista con la lupa.
         TemaId.BOTANICO -> { lente(); mango(); rotate(-45f, c) { drawOval(color, Offset(c.x - lr * 0.5f, c.y - lr * 0.2f), Size(lr, lr * 0.4f)) } }
+        // Un cristal estrellado: la grieta cruza la lente.
+        TemaId.RUINAS -> { lente(); mango()
+            drawPath(Path().apply { moveTo(c.x - lr * 0.7f, c.y - lr * 0.5f); lineTo(c.x - lr * 0.1f, c.y - lr * 0.05f); lineTo(c.x + lr * 0.15f, c.y - lr * 0.35f); moveTo(c.x - lr * 0.1f, c.y - lr * 0.05f); lineTo(c.x + lr * 0.3f, c.y + lr * 0.6f) }, color, style = Stroke(r * 0.04f)) }
         // Un copo dentro del cristal.
         TemaId.NAVIDAD -> { lente(); mango(); for (k in 0 until 3) { val a = rad(60.0 * k + 90.0); drawLine(color, c.mas(lr * 0.5f, a), c.mas(-lr * 0.5f, a), r * 0.04f) } }
         // Cristal octogonal y borla.
@@ -1825,6 +1961,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.COLONOS -> true
     TemaId.NAPOLEON -> false
     TemaId.BOTANICO -> false
+    TemaId.RUINAS -> true            // los vilanos suben con el aire tibio
     TemaId.NAVIDAD -> false
     TemaId.SEDA -> false
     TemaId.GOTICO -> false
@@ -1932,6 +2069,13 @@ fun CapaFiesta(fijo: Float? = null) {
                     TemaId.NAVIDAD -> for (i in 0 until 3) { val a = rad(60.0 * i); drawLine(col, pos.mas(s, a), pos.mas(-s, a), s * 0.22f, StrokeCap.Round) }
                     TemaId.BOTANICO -> { drawOval(col, Offset(pos.x - s * 0.55f, pos.y - s * 0.6f), Size(s * 1.1f, s * 1.5f)); drawCircle(col, s * 0.32f, pos - Offset(0f, s * 0.85f))
                         drawLine(col.copy(alpha = col.alpha * 0.6f), pos - Offset(s * 0.9f, s * 0.1f), pos + Offset(s * 0.9f, -s * 0.1f), s * 0.12f) }
+                    // Vilanos de diente de león y hojas de hiedra que se elevan girando.
+                    TemaId.RUINAS -> if (p.tono == 0) {
+                        val cima = pos - Offset(0f, s)
+                        drawLine(col, pos, cima, s * 0.1f)
+                        for (j in 0 until 7) drawLine(col.copy(alpha = col.alpha * 0.7f), cima, cima.mas(s * 0.7f, rad(180.0 + 30.0 * j)), s * 0.07f)
+                        drawCircle(col, s * 0.16f, pos)
+                    } else rotate(p.giro * 57f + t * 120f, pos) { hojaHiedraEmblema(pos + Offset(0f, s * 0.5f), s * 1.1f, col) }
                     TemaId.GOTICO -> drawPath(Path().apply { moveTo(pos.x, pos.y - s); lineTo(pos.x + s * 0.7f, pos.y + s * 0.6f); lineTo(pos.x - s * 0.5f, pos.y + s * 0.8f); close() },
                         listOf(e.secondary, e.primary, Color(0xFF2E8B57), Color(0xFFE2B34A))[p.tono % 4].copy(alpha = a))
                     TemaId.ESPACIO -> drawPath(Path().apply { moveTo(pos.x, pos.y - s); quadraticTo(pos.x, pos.y, pos.x + s, pos.y); quadraticTo(pos.x, pos.y, pos.x, pos.y + s); quadraticTo(pos.x, pos.y, pos.x - s, pos.y); quadraticTo(pos.x, pos.y, pos.x, pos.y - s); close() }, col)

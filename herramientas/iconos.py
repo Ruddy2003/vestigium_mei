@@ -89,6 +89,12 @@ def herbario(sem):       # Botánico: papel de herbario con fibras y nervaduras 
     nerv = (np.abs(np.sin((X - Y * 0.6) * 0.035 + ruido(sem, 1.5, 16))) < 0.04) * -0.8
     return ruido(sem + 1, 0.9, 5) * 0.7 + ruido(sem + 2, 0.35) + nerv
 
+def hormigon_agrietado(sem):   # Ciudad verde: hormigón con grietas finas que se cruzan y manchas de musgo
+    t = ruido(sem, 6, 12)
+    grietas = (np.abs(np.sin(X * 0.03 + Y * 0.017 + t)) < 0.025) * -1.0 + (np.abs(np.sin(X * 0.011 - Y * 0.04 + t * 1.3)) < 0.02) * -0.8
+    musgo = np.clip(ruido(sem + 3, 1.0, 22) - 0.5, 0, 2) * -0.6
+    return ruido(sem + 1, 0.7, 2) * 0.6 + ruido(sem + 2, 0.4, 14) + grietas + musgo
+
 def fieltro_nieve(sem):  # Navidad: fieltro con copitos de nieve
     copos = (ruido(sem, 1, 0) > 2.7) * 1.4
     return ruido(sem + 1, 0.8, 1.5) + ruido(sem + 2, 0.4, 14) + copos
@@ -202,6 +208,15 @@ def _hojas_alternas(d, c, n=18):
         d.ellipse([x - s * 0.5, y - s * 0.5, x + s * 0.5, y + s * 0.5], fill=c)
         d.line([_pos(a), (x + s * 0.5 * math.cos(ang), y + s * 0.5 * math.sin(ang))], fill=c, width=K)
 
+def _hiedra(d, c, n=14):               # hojas de hiedra de cinco puntas, alternas hacia fuera y hacia dentro del anillo
+    pts = [(0, 0.5), (-0.55, 0.35), (-0.8, -0.05), (-0.32, -0.05), (0, -0.5), (0.32, -0.05), (0.8, -0.05), (0.55, 0.35)]
+    for i in range(n):
+        a = 2 * math.pi * i / n; lado = 1 if i % 2 else -1
+        x, y = _pos(a, RADIO + lado * 6); s = 8.5 * K
+        ang = a + (0 if lado > 0 else math.pi)             # la punta mira hacia fuera o hacia dentro
+        ca, sa = math.cos(ang + math.pi / 2), math.sin(ang + math.pi / 2)
+        d.polygon([(x + (px * ca - py * sa) * s, y + (px * sa + py * ca) * s) for px, py in pts], fill=c)
+
 def _copos(d, c, n=12, s=5.2):
     for i in range(n):
         x, y = _pos(2 * math.pi * i / n)
@@ -273,6 +288,7 @@ TEMAS = {
     'colonos':      (gaceta,        '#E7E3DA', '#22324D',   9, 6, 'tinta',       _cuerda),
     'napoleon':     (marmol,        '#EDEBE6', '#1F2B5C',  12, 5, 'esmalte',     _estrellas),
     'botanico':     (herbario,      '#EAE9E1', '#3B2E1D',   9, 6, 'ferrogalica', _hojas_alternas),
+    'ruinas':       (hormigon_agrietado, '#E2E2DA', '#3E5A2A', 9, 5, 'tinta',    _hiedra),
     'navidad':      (fieltro_nieve, '#1C1E1D', '#E4C987',   8, 5, 'dorado',      _copos),
     'seda':         (seda,          '#F2EFE8', '#862A1D',   6, 5, 'tinta',       _monedas),
     'gotico':       (piedra,        '#1E1E21', '#D8CCAE',   9, 6, 'dorado',      _trebol),

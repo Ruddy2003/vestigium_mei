@@ -43,6 +43,11 @@ object SalonesMas {
             TemaId.MONGOL -> for (k in 0 until 3) drawRoundRect(lerp(Color(0xFFEDE6D6), Color.Black, k * 0.08f), Offset(w * (0.18f - k * 0.04f), h * k / 3f), Size(w * (0.64f + k * 0.08f), h / 3f), CornerRadius(h * 0.15f))
             TemaId.COLONOS -> { drawRect(Brush.horizontalGradient(listOf(Color(0xFF5A3A22), Color(0xFF8A5A2B), Color(0xFF5A3A22)), w * 0.2f, w * 0.8f), Offset(w * 0.2f, h * 0.2f), Size(w * 0.6f, h * 0.8f)); drawOval(Color(0xFFC9A57A), Offset(w * 0.2f, 0f), Size(w * 0.6f, h * 0.4f)) }
             TemaId.BOTANICO -> { drawRect(Color(0xFF8A6A44), Offset(w * 0.1f, 0f), Size(w * 0.8f, h * 0.3f)); listOf(0.2f, 0.8f).forEach { x -> drawLine(Color(0xFF2F3A33), Offset(w * x, h * 0.3f), Offset(w * x, h), w * 0.03f) } }
+            // Un bloque de hormigón con dos varillas oxidadas que asoman, una grieta y musgo encima.
+            TemaId.RUINAS -> { drawRect(piedra(Color(0xFF9C9C92)), Offset(w * 0.12f, h * 0.1f), Size(w * 0.76f, h * 0.9f))
+                listOf(0.28f, 0.7f).forEach { x -> drawLine(Color(0xFF8A4A22), Offset(w * x, 0f), Offset(w * x + w * 0.03f, h * 0.14f), w * 0.025f) }
+                drawOval(Color(0xFF4F7A33).copy(alpha = 0.7f), Offset(w * 0.1f, h * 0.02f), Size(w * 0.4f, h * 0.18f))
+                drawLine(Color(0xFF3E3F38).copy(alpha = 0.5f), Offset(w * 0.6f, h * 0.1f), Offset(w * 0.52f, h * 0.6f), w * 0.01f) }
             TemaId.NAVIDAD -> {
                 // Una rama de acebo con sus bayas, de la que «cuelga» el adorno.
                 listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(w / 2, h * 0.5f); quadraticTo(w * (0.5f + s * 0.16f), 0f, w * (0.5f + s * 0.34f), h * 0.4f); quadraticTo(w * (0.5f + s * 0.16f), h * 0.8f, w / 2, h * 0.5f); close() }, Color(0xFF1F6B3A)) }
@@ -274,6 +279,50 @@ object SalonesMas {
         }
         // Rayos de luz.
         drawPath(Path().apply { moveTo(w * 0.15f, 0f); lineTo(w * 0.35f, 0f); lineTo(w * 0.6f, h); lineTo(w * 0.3f, h); close() }, Color(0xFFFFF4C2).copy(alpha = if (oscuro) 0.03f else 0.08f))
+    }
+
+    // ------------------------------------------------------------------ Ciudad verde
+
+    /**
+     * La biblioteca invadida: estantes altos de libros entre las columnas (con huecos de los que se cayeron), hiedra que
+     * cuelga de la viga partida, la luz que entra por el boquete del techo, el árbol que rompió el piso y los escombros.
+     */
+    internal fun DrawScope.bibliotecaInvadida(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val madera = (if (oscuro) Color(0xFF8A7458) else Color(0xFF5E4C36)).copy(alpha = 0.35f)
+        val lomos = listOf(Color(0xFF8A4A22), Color(0xFF3E5A6A), Color(0xFF6A5A2A), Color(0xFF5A3A4A), Color(0xFF4F6B3A))
+        val hiedra = Color(0xFF4F7A33).copy(alpha = if (oscuro) 0.5f else 0.55f)
+        val az = java.util.Random(27)
+        val paso = w / n
+        drawPath(Path().apply { moveTo(w * 0.55f, 0f); lineTo(w * 0.75f, 0f); lineTo(w * 0.62f, h); lineTo(w * 0.3f, h); close() }, Color(0xFFFFF4C2).copy(alpha = if (oscuro) 0.04f else 0.1f))
+        drawRect(madera, Offset(0f, 0f), Size(w * 0.56f, 8 * d)); drawRect(madera, Offset(w * 0.74f, 0f), Size(w * 0.26f, 8 * d))
+        for (i in 0..n) {
+            val x0 = i * paso - 14 * d
+            drawRect(madera, Offset(x0, 10 * d), Size(28 * d, h - 10 * d), style = Stroke(1.5f * d))
+            var y = 30 * d
+            while (y < h - 10 * d) {
+                drawLine(madera, Offset(x0, y), Offset(x0 + 28 * d, y), 2 * d)
+                var bx = x0 + 2 * d
+                while (bx < x0 + 25 * d) {
+                    val bw = (2.5f + az.nextFloat() * 2.5f) * d; val bh = (10 + az.nextFloat() * 8) * d
+                    if (az.nextFloat() > 0.2f) drawRect(lomos[az.nextInt(lomos.size)].copy(alpha = if (oscuro) 0.3f else 0.4f), Offset(bx, y - bh), Size(bw, bh))
+                    bx += bw + 0.6f * d
+                }
+                y += 30 * d
+            }
+        }
+        for (k in 0 until n * 2 + 1) {
+            val x = k * paso / 2 + 6 * d; val largo = (30 + az.nextFloat() * 70) * d
+            if (x > w * 0.56f && x < w * 0.74f) continue
+            drawLine(hiedra, Offset(x, 8 * d), Offset(x + 3 * d, 8 * d + largo), 1.2f * d)
+            var y = 14 * d; var lado = 1f
+            while (y < largo) { drawOval(hiedra, Offset(x + lado * 1.5f * d - 3 * d, 8 * d + y), Size(6 * d, 4 * d)); y += 9 * d; lado = -lado }
+        }
+        val ax = w * 0.5f
+        drawLine(Color(0xFF5A3A22).copy(alpha = 0.45f), Offset(ax, h), Offset(ax + 6 * d, h - 90 * d), 7 * d)
+        repeat(6) { drawCircle(hiedra.copy(alpha = hiedra.alpha * 0.6f), (16 + az.nextFloat() * 14) * d, Offset(ax + (az.nextFloat() - 0.4f) * 60 * d, h - 100 * d - az.nextFloat() * 40 * d)) }
+        val escombro = (if (oscuro) Color(0xFF9AA39A) else Color(0xFF6A6F66)).copy(alpha = 0.25f)
+        repeat(14) { val x = az.nextFloat() * w; val t = (3 + az.nextFloat() * 6) * d; drawRect(escombro, Offset(x, h - t), Size(t * 1.4f, t)) }
     }
 
     // ------------------------------------------------------------------ Navidad

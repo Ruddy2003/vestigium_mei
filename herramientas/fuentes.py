@@ -43,6 +43,10 @@ FUENTES = [
     # BOT: libro de naturalista
     ("crimsonpro/CrimsonPro[wght].ttf", {"wght": 400}, "crimson_regular", None, LATINO),
     ("crimsonpro/CrimsonPro[wght].ttf", {"wght": 600}, "crimson_semibold", None, LATINO),
+    # RUI: Ciudad verde. Títulos de letrero pintado a mano sobre una tabla y texto de señal de carretera
+    ("londrinasolid/LondrinaSolid-Regular.ttf", None, "letrero_titulo", "Letrero Vestigium", LATINO),
+    ("overpass/Overpass[wght].ttf", {"wght": 400}, "overpass_regular", None, LATINO),
+    ("overpass/Overpass[wght].ttf", {"wght": 600}, "overpass_semibold", None, LATINO),
     # NAV: cálida, de cuento
     ("lora/Lora[wght].ttf", {"wght": 400}, "calida_regular", "Calida Vestigium", LATINO),
     ("lora/Lora[wght].ttf", {"wght": 600}, "calida_semibold", "Calida Vestigium", LATINO),

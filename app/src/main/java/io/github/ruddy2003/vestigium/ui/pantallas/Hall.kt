@@ -93,6 +93,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.COLONOS -> Color(0xFF2F4A6E)
     TemaId.NAPOLEON -> Color(0xFF1F3A8A)
     TemaId.BOTANICO -> Color(0xFFA0522D)
+    TemaId.RUINAS -> Color(0xFF5B7A3A)   // musgo
     TemaId.NAVIDAD -> Color(0xFF1B5E20)
     TemaId.SEDA -> Color(0xFFC0392B)
     TemaId.GOTICO -> Color(0xFF1A3A8F)
@@ -192,6 +193,8 @@ object PiezasLogro {
         TemaId.COLONOS -> Trazo(u, 1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(1.2f, 0.8f), 0f, false, Color(0xFFE6DFCC))
         TemaId.NAPOLEON -> Trazo(u, 1.05f, StrokeCap.Butt, StrokeJoin.Miter, null, 0f, true, Color(0xFFF3E6C4))
         TemaId.BOTANICO -> Trazo(u, 0.85f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(0.01f, 1.8f), 0f, false, Color(0xFFE3D3AE))
+        // Trazos quebrados como grietas, sobre el gris del hormigón.
+        TemaId.RUINAS -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Bevel, floatArrayOf(5f, 0.8f, 1.5f, 0.8f), 0f, false, Color(0xFFD6D6CC))
         TemaId.NAVIDAD -> Trazo(u, 1.35f, StrokeCap.Round, StrokeJoin.Round, null, 0f, true, Color(0xFFF7FAFF))
         TemaId.SEDA -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(9f, 1.2f, 1.5f, 1.2f), 0f, false, Color(0xFFF6E2C8))
         TemaId.GOTICO -> Trazo(u, 1.4f, StrokeCap.Square, StrokeJoin.Miter, null, 0f, true, Color(0xFFD8E2F2))
@@ -293,6 +296,14 @@ object PiezasLogro {
                 drawCircle(t, r * 0.89f, c, style = Stroke(0.9f * u))
                 for (i in 0 until 14) { val a = i * PI / 7; val p = en(a, if (i % 2 == 0) 0.84f else 0.94f); rotate(grados(a), p) { drawOval(Color(0xFF5C7A3A).copy(alpha = if (hecho) 0.8f else 0.3f), Offset(p.x - 1.4f * u, p.y - 3 * u), Size(2.8f * u, 6 * u)) } }
             }
+            TemaId.RUINAS -> {
+                // Un aro de hormigón con hiedra: hojas de cinco puntas, alternas hacia dentro y hacia fuera.
+                drawCircle(t, r * 0.89f, c, style = Stroke(1.2f * u))
+                for (i in 0 until 12) {
+                    val a = i * PI / 6; val p = en(a, if (i % 2 == 0) 0.83f else 0.95f); val s = 3.4f * u
+                    rotate(grados(a) + (if (i % 2 == 0) -90f else 90f), p) { drawPath(Path().apply { moveTo(p.x, p.y + s * 0.5f); lineTo(p.x - s * 0.55f, p.y + s * 0.35f); lineTo(p.x - s * 0.8f, p.y - s * 0.05f); lineTo(p.x - s * 0.32f, p.y - s * 0.05f); lineTo(p.x, p.y - s * 0.5f); lineTo(p.x + s * 0.32f, p.y - s * 0.05f); lineTo(p.x + s * 0.8f, p.y - s * 0.05f); lineTo(p.x + s * 0.55f, p.y + s * 0.35f); close() }, Color(0xFF4F7A33).copy(alpha = if (hecho) 0.85f else 0.3f)) }
+                }
+            }
             TemaId.NAVIDAD -> for (i in 0 until 12) {
                 val p = en(i * PI / 6, 0.9f)
                 for (k in 0 until 3) { val a = k * PI / 3; val dx = (2.4f * u * cos(a)).toFloat(); val dy = (2.4f * u * sin(a)).toFloat(); drawLine(Color.White.copy(alpha = if (hecho) 0.9f else 0.4f), Offset(p.x - dx, p.y - dy), Offset(p.x + dx, p.y + dy), 0.8f * u) }
@@ -373,6 +384,12 @@ object PiezasLogro {
                 drawArc(tinta, 180f, 180f, false, Offset(x + 0.5f * u, y - d / 2), Size(d, d), style = Stroke(0.9f * u))
                 drawLine(tinta, Offset(cx, y), Offset(cx, y - d / 2), 0.6f * u)
             }
+            TemaId.RUINAS -> {
+                // Una losa partida en dos trozos, con una mata que sale por la rotura.
+                drawPath(Path().apply { moveTo(x - 1 * u, y); lineTo(x - 1 * u, y - 3 * u); lineTo(cx - 2 * u, y - 4 * u); lineTo(cx - 0.5f * u, y - 2 * u); lineTo(cx - 1.5f * u, y); close() }, tinta)
+                drawPath(Path().apply { moveTo(cx + 1 * u, y); lineTo(cx + 2 * u, y - 3.5f * u); lineTo(x + an + 1 * u, y - 3 * u); lineTo(x + an + 1 * u, y); close() }, tinta)
+                for (j in -1..1) drawLine(Color(0xFF5C7A3A), Offset(cx + j * 0.6f * u, y), Offset(cx + j * 1.6f * u, y - 4.5f * u), 0.6f * u)
+            }
             TemaId.NAVIDAD -> {
                 tri(6 * u, x - 1 * u, x + an + 1 * u)
                 drawPath(Path().apply { moveTo(cx - 2.2f * u, y - 3.8f * u); lineTo(cx, y - 6 * u); lineTo(cx + 2.2f * u, y - 3.8f * u); close() }, Color.White.copy(alpha = 0.85f))
@@ -447,6 +464,8 @@ object PiezasLogro {
                 listOf(-6f, 0f, 6f).forEach { dx -> drawCircle(tinto, (if (dx == 0f) 2.4f else 1.8f) * u, Offset(c.x + dx * u, c.y - 27 * u)) }
             }
             TemaId.BOTANICO -> traza(Path().apply { moveTo(c.x - 30 * u, c.y); quadraticTo(c.x, c.y - 34 * u, c.x + 30 * u, c.y); quadraticTo(c.x, c.y + 34 * u, c.x - 30 * u, c.y); close() })
+            // Una señal octogonal, de las de alto.
+            TemaId.RUINAS -> traza(poligono(8, 30 * u, PI / 8))
             TemaId.NAVIDAD -> traza(Path().apply {
                 for (i in 0 until 12) {
                     val a0 = i * PI / 6; val a1 = (i + 1) * PI / 6
@@ -712,6 +731,15 @@ object PiezasLogro {
                 }
                 suelo()
             }
+            TemaId.RUINAS -> {
+                // Un edificio de departamentos roto: la azotea quebrada, ventanas vacías y un árbol que le crece por dentro.
+                val p = Path().apply { moveTo(c.x - 24 * u, base); lineTo(c.x - 24 * u, base - 30 * u); lineTo(c.x - 10 * u, base - 34 * u); lineTo(c.x - 4 * u, base - 26 * u); lineTo(c.x + 6 * u, base - 38 * u); lineTo(c.x + 24 * u, base - 32 * u); lineTo(c.x + 24 * u, base); close() }
+                drawPath(p, tinta.copy(alpha = 0.35f)); contorno(tz, p, tinta, 1.2f * u)
+                for (f in 0 until 3) for (k in 0 until 4) { if ((f + k) % 5 == 3) continue; drawRect(hueco, Offset(c.x - 19 * u + k * 10 * u, base - 24 * u + f * 8 * u), Size(5 * u, 5 * u)) }
+                drawLine(Color(0xFF5A3A22), Offset(c.x + 12 * u, base), Offset(c.x + 13 * u, base - 30 * u), 1.6f * u)
+                drawCircle(Color(0xFF4F7A33).copy(alpha = 0.85f), 9 * u, Offset(c.x + 14 * u, base - 36 * u))
+                suelo()
+            }
             TemaId.NAVIDAD -> {
                 for (k in 0 until 3) { val an = (40 - k * 10) * u; val y = base - 6 * u - k * 10 * u; drawPath(Path().apply { moveTo(c.x - an / 2, y); lineTo(c.x, y - 16 * u); lineTo(c.x + an / 2, y); close() }, tinta) }
                 drawRect(tinta, Offset(c.x - 3 * u, base - 6 * u), Size(6 * u, 6 * u))
@@ -907,6 +935,13 @@ object PiezasLogro {
                 drawArc(tono, 90f, 270f, false, Offset(c.x + 16 * u, arriba + 10 * u), Size(8 * u, 8 * u), style = Stroke(2.4f * u))
                 drawPath(Path().apply { moveTo(px, c.y - 36 * u); quadraticTo(px + 5 * u, c.y - 31 * u, px, c.y - 26 * u); quadraticTo(px - 5 * u, c.y - 31 * u, px, c.y - 36 * u); close() }, Color(0xFF5C7A3A))
             }
+            TemaId.RUINAS -> {
+                // Una tela rasgada atada a un tubo, con una hoja de hiedra pintada.
+                asta()
+                pano(Path().apply { moveTo(px, arriba); lineTo(c.x + 18 * u, arriba + 2 * u); lineTo(c.x + 16 * u, c.y + 2 * u); lineTo(c.x + 10 * u, c.y - 2 * u); lineTo(c.x + 6 * u, c.y + 6 * u); lineTo(c.x, c.y + 1 * u); lineTo(c.x - 5 * u, c.y + 8 * u); lineTo(px, c.y + 4 * u); close() })
+                val q = Offset(c.x + 2 * u, c.y - 10 * u); val s = 12 * u
+                drawPath(Path().apply { moveTo(q.x, q.y + s * 0.5f); lineTo(q.x - s * 0.55f, q.y + s * 0.35f); lineTo(q.x - s * 0.8f, q.y - s * 0.05f); lineTo(q.x - s * 0.32f, q.y - s * 0.05f); lineTo(q.x, q.y - s * 0.5f); lineTo(q.x + s * 0.32f, q.y - s * 0.05f); lineTo(q.x + s * 0.8f, q.y - s * 0.05f); lineTo(q.x + s * 0.55f, q.y + s * 0.35f); close() }, claro)
+            }
             TemaId.NAVIDAD -> {
                 asta()
                 val p0 = Offset(px, arriba); val p1 = Offset(c.x + 4 * u, arriba + 14 * u); val p2 = Offset(c.x + 24 * u, arriba + 6 * u)
@@ -1083,6 +1118,14 @@ object PiezasLogro {
                 val hoja = Path().apply { moveTo(c.x - 10 * u, c.y + 8 * u); quadraticTo(c.x - 8 * u, c.y - 10 * u, c.x + 10 * u, c.y - 10 * u); quadraticTo(c.x + 8 * u, c.y + 8 * u, c.x - 10 * u, c.y + 8 * u); close() }
                 drawPath(hoja, claro); contorno(tz, hoja, tinta, 0.9f * u)
                 drawLine(tinta, Offset(c.x - 10 * u, c.y + 8 * u), Offset(c.x + 6 * u, c.y - 6 * u), 0.8f * u)
+            }
+            TemaId.RUINAS -> {
+                // Una chapa de botella: el borde dentado, el disco y una hoja estampada.
+                forma(Path().apply { for (i in 0 until 42) { val a = i * PI / 21; val rr = R * (if (i % 2 == 0) 1f else 0.88f); val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }; close() })
+                drawCircle(tinta, R * 0.7f, c, style = Stroke(0.8f * u))
+                val s = R * 0.9f
+                val h = Path().apply { moveTo(c.x, c.y + s * 0.5f); lineTo(c.x - s * 0.55f, c.y + s * 0.35f); lineTo(c.x - s * 0.8f, c.y - s * 0.05f); lineTo(c.x - s * 0.32f, c.y - s * 0.05f); lineTo(c.x, c.y - s * 0.5f); lineTo(c.x + s * 0.32f, c.y - s * 0.05f); lineTo(c.x + s * 0.8f, c.y - s * 0.05f); lineTo(c.x + s * 0.55f, c.y + s * 0.35f); close() }
+                drawPath(h, claro); contorno(tz, h, tinta, 0.9f * u)
             }
             TemaId.NAVIDAD -> {
                 val p = Path().apply {
@@ -1262,6 +1305,14 @@ object PiezasLogro {
                 val hoja = Path().apply { moveTo(c.x + 6 * u, c.y + 10 * u); quadraticTo(c.x + 6 * u, c.y - 8 * u, c.x + 22 * u, c.y - 12 * u); quadraticTo(c.x + 22 * u, c.y + 6 * u, c.x + 6 * u, c.y + 10 * u); close() }
                 drawPath(hoja, Color(0xFF5C7A3A)); drawLine(papel, Offset(c.x + 6 * u, c.y + 10 * u), Offset(c.x + 19 * u, c.y - 8 * u), 0.7f * u)
             }
+            TemaId.RUINAS -> {
+                // El cuaderno del superviviente: tapa de lona, lomo de cinta plateada, la liga y una hoja de hiedra pegada.
+                tapa(c.x - 18 * u, c.y - 20 * u, c.x + 18 * u, c.y + 20 * u, tono)
+                drawRect(Color(0xFFB8BCB8), Offset(c.x - 18 * u, c.y - 20 * u), Size(6 * u, 40 * u))
+                val q = Offset(c.x + 2 * u, c.y); val s = 18 * u
+                drawPath(Path().apply { moveTo(q.x, q.y + s * 0.5f); lineTo(q.x - s * 0.55f, q.y + s * 0.35f); lineTo(q.x - s * 0.8f, q.y - s * 0.05f); lineTo(q.x - s * 0.32f, q.y - s * 0.05f); lineTo(q.x, q.y - s * 0.5f); lineTo(q.x + s * 0.32f, q.y - s * 0.05f); lineTo(q.x + s * 0.8f, q.y - s * 0.05f); lineTo(q.x + s * 0.55f, q.y + s * 0.35f); close() }, Color(0xFF7FA35A))
+                drawLine(tinta, Offset(c.x + 11 * u, c.y - 22 * u), Offset(c.x + 11 * u, c.y + 22 * u), 1.4f * u)
+            }
             TemaId.NAVIDAD -> {
                 tapa(c.x - 18 * u, c.y - 18 * u, c.x + 18 * u, c.y + 22 * u, tono, 2 * u)
                 val oro = Color(0xFFF2C94C)
@@ -1438,6 +1489,15 @@ object PiezasLogro {
                 drawLine(Color(0xFF5C7A3A), Offset(c.x, c.y + 6 * u), Offset(c.x, c.y - 6 * u), 1.2f * u)
                 listOf(-7f, 0f).forEach { dx -> drawOval(Color(0xFF5C7A3A), Offset(c.x + dx * u, c.y - 6 * u), Size(7 * u, 4 * u)) }
                 fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x - 9 * u, c.y + 13 * u), Offset(c.x + 9 * u, c.y + 13 * u), 0.8f * u)
+            }
+            TemaId.RUINAS -> {
+                // Un mensaje doblado en cartón, atado con cordel en cruz y sellado con una chapa.
+                hoja(c.x - 22 * u, c.y - 14 * u, c.x + 22 * u, c.y + 14 * u, lerp(papel, Color(0xFF8E8775), 0.3f))
+                solapaV(c.x - 22 * u, c.y - 14 * u, c.x + 22 * u, c.y + 2 * u)
+                drawLine(Color(0xFF8A7F68), Offset(c.x - 22 * u, c.y + 4 * u), Offset(c.x + 22 * u, c.y + 4 * u), 1.2f * u)
+                drawLine(Color(0xFF8A7F68), Offset(c.x + 8 * u, c.y - 14 * u), Offset(c.x + 8 * u, c.y + 14 * u), 1.2f * u)
+                val ch = Path().apply { for (i in 0 until 24) { val a = i * PI / 12; val rr = (5 * u) * (if (i % 2 == 0) 1f else 0.88f); val x = (c.x + 8 * u) + (rr * cos(a)).toFloat(); val y = (c.y + 4 * u) + (rr * sin(a)).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }; close() }
+                drawPath(ch, tono); contorno(tz, ch, tinta, 0.8f * u)
             }
             TemaId.NAVIDAD -> {
                 hoja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u)

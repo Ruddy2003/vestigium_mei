@@ -466,6 +466,38 @@ object Frases {
             "Quienes contemplan la belleza de la tierra encuentran reservas de fuerza que duran tanto como la vida.", "Rachel Carson, El sentido del asombro, 1965"),
     )
 
+    /** Ciudad verde: ruinas que el bosque recupera, el silencio de después y lo que vuelve a brotar. */
+    val RUINAS = listOf(
+        f("國破山河在，城春草木深。", "El país está roto; quedan los montes y los ríos. En la ciudad es primavera: hierba y árboles espesos.", "Du Fu, «Vista de primavera», 757"),
+        f("夏草や兵どもが夢の跡", "Hierba de verano: lo que queda de los sueños de los guerreros.", "Matsuo Bashō, Sendas de Oku, 1689"),
+        f(null, "Estos, Fabio, ¡ay dolor!, que ves ahora campos de soledad, mustio collado, fueron un tiempo Itálica famosa.", "Rodrigo Caro, «Canción a las ruinas de Itálica»"),
+        f(null, "Buscas en Roma a Roma, ¡oh peregrino!, y en Roma misma a Roma no la hallas.", "Francisco de Quevedo, «A Roma sepultada en sus ruinas»"),
+        f(null, "Huyó lo que era firme, y solamente lo fugitivo permanece y dura.", "Francisco de Quevedo, «A Roma sepultada en sus ruinas»"),
+        f(null, "Al olmo viejo, hendido por el rayo y en su mitad podrido, con las lluvias de abril y el sol de mayo algunas hojas verdes le han salido.", "Antonio Machado, «A un olmo seco», 1912"),
+        f(null, "Caminante, no hay camino, se hace camino al andar.", "Antonio Machado, Proverbios y cantares XXIX, Campos de Castilla, 1912"),
+        f(null, "Volverán las oscuras golondrinas en tu balcón sus nidos a colgar.", "Gustavo Adolfo Bécquer, Rima LIII"),
+        f(null, "¿Qué se hizo el rey don Juan? Los infantes de Aragón, ¿qué se hicieron?", "Jorge Manrique, Coplas por la muerte de su padre"),
+        f(null, "Generación va, y generación viene: mas la tierra siempre permanece.", "Eclesiastés 1:4, versión Reina-Valera de 1909"),
+        f(null, "Tiempo de nacer, y tiempo de morir; tiempo de plantar, y tiempo de arrancar lo plantado.", "Eclesiastés 3:2, versión Reina-Valera de 1909"),
+        f(null, "Y en sus palacios crecerán espinas, y ortigas y cardos en sus fortalezas.", "Isaías 34:13, versión Reina-Valera de 1909"),
+        f("Round the decay / Of that colossal Wreck, boundless and bare / The lone and level sands stretch far away.",
+            "Alrededor de la ruina de aquel naufragio colosal, sin límites y desnudas, las arenas solitarias y llanas se extienden a lo lejos.", "Percy Bysshe Shelley, «Ozymandias», 1818"),
+        f("If Winter comes, can Spring be far behind?", "Si llega el invierno, ¿puede estar lejos la primavera?", "Percy Bysshe Shelley, «Oda al viento del oeste», 1820"),
+        f("There will come soft rains and the smell of the ground, / And swallows circling with their shimmering sound",
+            "Vendrán lluvias suaves y el olor de la tierra, y golondrinas que giran con su sonido brillante.", "Sara Teasdale, «Vendrán lluvias suaves», 1918"),
+        f("And Spring herself, when she woke at dawn / Would scarcely know that we were gone.",
+            "Y la primavera misma, al despertar con el alba, apenas sabría que ya no estamos.", "Sara Teasdale, «Vendrán lluvias suaves», 1918"),
+        f("There was a strange stillness. The birds, for example—where had they gone?", "Había una quietud extraña. Los pájaros, por ejemplo: ¿adónde se habían ido?", "Rachel Carson, Primavera silenciosa, 1962"),
+        f("In Wildness is the preservation of the World.", "En lo salvaje está la preservación del mundo.", "Henry David Thoreau, «Caminar», 1862"),
+        f("Wo aber Gefahr ist, wächst / Das Rettende auch.", "Pero donde está el peligro crece también lo que salva.", "Friedrich Hölderlin, «Patmos», 1803"),
+        f("Au milieu de l'hiver, j'apprenais enfin qu'il y avait en moi un été invincible.", "En medio del invierno aprendí por fin que había en mí un verano invencible.", "Albert Camus, «Regreso a Tipasa», 1952"),
+        f("Cercare e saper riconoscere chi e cosa, in mezzo all'inferno, non è inferno, e farlo durare, e dargli spazio.",
+            "Buscar y saber reconocer quién y qué, en medio del infierno, no es infierno, y hacer que dure, y darle espacio.", "Italo Calvino, Las ciudades invisibles, 1972"),
+        f("“Hope” is the thing with feathers - / That perches in the soul -", "La esperanza es esa cosa con plumas que se posa en el alma.", "Emily Dickinson, poema 314 (edición Franklin)"),
+        f("You have to carry the fire.", "Tienes que llevar el fuego.", "Cormac McCarthy, La carretera, 2006"),
+        f(null, "Si supiera que el mundo se acaba mañana, hoy mismo plantaría un manzano.", "Atribuida a Martín Lutero; la primera fuente escrita es de 1944"),
+    )
+
     val GOTICO = listOf(
         f("Mens hebes ad verum per materialia surgit.", "La mente torpe se eleva a la verdad a través de lo material.", "Inscripción del abad Suger en las puertas de Saint-Denis, c. 1140"),
         f("Nobile claret opus, sed opus quod nobile claret clarificet mentes, ut eant per lumina vera ad verum lumen.",
@@ -654,6 +686,7 @@ object Frases {
         TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON
         TemaId.BOTANICO -> BOTANICO
+        TemaId.RUINAS -> RUINAS
         TemaId.NAVIDAD -> NAVIDAD
         TemaId.SEDA -> SEDA
         TemaId.URSS -> URSS
@@ -686,6 +719,7 @@ object Frases {
         TemaId.COLONOS -> "Del almanaque"
         TemaId.NAPOLEON -> "BOLETÍN DEL EJÉRCITO"
         TemaId.BOTANICO -> "Nota del naturalista"
+        TemaId.RUINAS -> "Escrito en la pared"
         TemaId.NAVIDAD -> "Junto a la chimenea"
         TemaId.SEDA -> "Dicho de la caravana"
         TemaId.URSS -> "LEMA DEL DÍA"

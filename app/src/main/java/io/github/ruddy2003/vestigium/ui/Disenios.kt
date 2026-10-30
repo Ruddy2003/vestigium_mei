@@ -51,6 +51,10 @@ object LetraExtra {
     val gaceta = FontFamily(Font(R.font.oldstandard_regular, FontWeight.Normal), Font(R.font.oldstandard_bold, FontWeight.Bold), Font(R.font.oldstandard_bold, FontWeight.SemiBold))
     /** Crimson Pro: el libro del naturalista. */
     val crimson = FontFamily(Font(R.font.crimson_regular, FontWeight.Normal), Font(R.font.crimson_semibold, FontWeight.SemiBold))
+    /** «Letrero Vestigium» (Londrina Solid renombrada): los letreros pintados a mano sobre tablas en la Ciudad verde. */
+    val letrero = FontFamily(Font(R.font.letrero_titulo, FontWeight.Normal), Font(R.font.letrero_titulo, FontWeight.Medium), Font(R.font.letrero_titulo, FontWeight.SemiBold), Font(R.font.letrero_titulo, FontWeight.Bold))
+    /** Overpass: la letra de las señales de carretera, para el texto de la Ciudad verde. */
+    val overpass = FontFamily(Font(R.font.overpass_regular, FontWeight.Normal), Font(R.font.overpass_regular, FontWeight.Medium), Font(R.font.overpass_semibold, FontWeight.SemiBold), Font(R.font.overpass_semibold, FontWeight.Bold))
     /** «Calida Vestigium» (Lora renombrada): cálida, de cuento de Navidad. */
     val calida = FontFamily(Font(R.font.calida_regular, FontWeight.Normal), Font(R.font.calida_semibold, FontWeight.SemiBold))
     /** Alegreya: humanista caligráfica, para las crónicas de la caravana. */
@@ -209,6 +213,16 @@ internal val botanicoOscuro = esquema(true, 0xFF14120D, 0xFF1C1912, 0xFF2A251B, 
 internal val tipoBotanico = tipografia(LetraExtra.fraunces, FontWeight.Medium, 1.04f, 0.2f, LetraExtra.crimson, 1.12f, LetraExtra.crimson, 1.14f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
+//  Ciudad verde: una ciudad que el bosque recuperó. De día, hormigón gris claro, hiedra, óxido y el ámbar del semáforo
+//  muerto; de noche, asfalto mojado, musgo, óxido encendido y luciérnagas entre los edificios.
+// ---------------------------------------------------------------------
+internal val ruinasClaro = esquema(false, 0xFFE4E3DC, 0xFFF0EFE9, 0xFFD6D6CC, 0xFFA9AA9C, 0xFF1F2420, 0xFF545B52,
+    0xFF3E6B2A, 0xFFFFFFFF, 0xFFD3E4C2, 0xFF15240E, 0xFFA34A1E, 0xFFF2D5C2, 0xFFB57A0E, 0xFFB3261E)
+internal val ruinasOscuro = esquema(true, 0xFF0F1411, 0xFF161C18, 0xFF212923, 0xFF3A443B, 0xFFE3E6DC, 0xFFA2AB9E,
+    0xFF8FCB6A, 0xFF0E1A08, 0xFF26391C, 0xFFE3E6DC, 0xFFE08A55, 0xFF452414, 0xFFE9C25A, 0xFFFF8A7A)
+internal val tipoRuinas = tipografia(LetraExtra.letrero, FontWeight.Normal, 1.12f, 0.5f, LetraExtra.overpass, 1.0f, LetraExtra.overpass, 1.02f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
 //  Navidad: nieve y crema, rojo, verde pino y oro; de noche, el bosque nevado.
 // ---------------------------------------------------------------------
 internal val navidadClaro = esquema(false, 0xFFF6F1E7, 0xFFFFFFFF, 0xFFECE4D6, 0xFFD8CBB2, 0xFF1E2A22, 0xFF56635A,
@@ -312,6 +326,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.COLONOS -> if (oscuro) listOf(0xFFE07A62, 0xFF1E2838, 0xFF8FB3E0, 0xFFE3C27A) else listOf(0xFFA23B2A, 0xFFE7DDC8, 0xFF1F3A5F, 0xFF7A5A2E)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFFE05A6A, 0xFF1B2550, 0xFF9DB4FF, 0xFFD9B25B) else listOf(0xFFA3172E, 0xFFEAE1CB, 0xFF1E3A8A, 0xFFB8892B)
     TemaId.BOTANICO -> if (oscuro) listOf(0xFFE09A5E, 0xFF2A251B, 0xFFA9C27A, 0xFF6FC2B0) else listOf(0xFF8C4A22, 0xFFE3D9C0, 0xFF3F5A2C, 0xFF2E5E5A)
+    TemaId.RUINAS -> if (oscuro) listOf(0xFFE08A55, 0xFF212923, 0xFF8FCB6A, 0xFFE9C25A) else listOf(0xFFA34A1E, 0xFFD6D6CC, 0xFF3E6B2A, 0xFFB57A0E)
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFFE5484D, 0xFF1C3125, 0xFF66BB6A, 0xFFF2C94C) else listOf(0xFFB71C1C, 0xFFECE4D6, 0xFF1B5E20, 0xFFC9A227)
     TemaId.SEDA -> if (oscuro) listOf(0xFFE26A50, 0xFF1F2846, 0xFF4FC3C3, 0xFFE0B04F) else listOf(0xFFC0392B, 0xFFEADFC3, 0xFF23408E, 0xFF1A8C8C)
     TemaId.URSS -> if (oscuro) listOf(0xFFE5252F, 0xFF262020, 0xFFE8D9B5, 0xFFE5252F) else listOf(0xFFC1121F, 0xFFE3D6B8, 0xFF1D1D1B, 0xFFC1121F)
@@ -338,6 +353,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.COLONOS -> if (oscuro) listOf(0xFF8FB3E0, 0xFFE3C27A, 0xFFE07A62) else listOf(0xFF1F3A5F, 0xFF7A5A2E, 0xFFA23B2A)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFF9DB4FF, 0xFFD9B25B, 0xFFE05A6A) else listOf(0xFF1E3A8A, 0xFFB8892B, 0xFFA3172E)
     TemaId.BOTANICO -> if (oscuro) listOf(0xFF6FC2B0, 0xFFA9C27A, 0xFFE09A5E) else listOf(0xFF2E5E5A, 0xFF3F5A2C, 0xFF8C4A22)
+    TemaId.RUINAS -> if (oscuro) listOf(0xFF8FCB6A, 0xFFE9C25A, 0xFFE0604A) else listOf(0xFF3E6B2A, 0xFFB57A0E, 0xFFB3261E)   // el semáforo: verde, ámbar, rojo
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFF66BB6A, 0xFFF2C94C, 0xFFE5484D) else listOf(0xFF1B5E20, 0xFFC9A227, 0xFFB71C1C)
     TemaId.SEDA -> if (oscuro) listOf(0xFF4FC3C3, 0xFFE0B04F, 0xFFE26A50) else listOf(0xFF23408E, 0xFF1A8C8C, 0xFFC0392B)
     TemaId.URSS -> if (oscuro) listOf(0xFFE8D9B5, 0xFFE8B923, 0xFFE5252F) else listOf(0xFF1D1D1B, 0xFFD4A017, 0xFFC1121F)

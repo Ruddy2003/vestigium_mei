@@ -238,6 +238,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.COLONOS -> RoundedCornerShape(2.dp)
     TemaId.NAPOLEON -> CutCornerShape(2.dp)
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 9.dp, topEnd = 1.dp, bottomEnd = 9.dp, bottomStart = 1.dp)
+    TemaId.RUINAS -> CutCornerShape(topStart = 0.dp, topEnd = 6.dp, bottomEnd = 0.dp, bottomStart = 2.dp)   // baldosa desportillada
     TemaId.NAVIDAD -> RoundedCornerShape(4.dp)
     TemaId.SEDA -> RectangleShape
     TemaId.GOTICO -> RectangleShape
@@ -367,6 +368,17 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             contorno(if (hoy) acento else linea, if (hoy) 1.2f else 0.6f)
             drawLine(linea.copy(alpha = 0.22f), Offset(2f * s, h - 2f * s), Offset(w - 2f * s, 2f * s), 0.6f * s)
             if (hoy) { drawLine(Color(0xFF5A4A3A), Offset(w / 2, 0f), Offset(w / 2, 5f * s), 0.7f * s); drawCircle(acento, 1.8f * s, Offset(w / 2, 1.8f * s)) }
+            if (sellado) sello(oro)
+        }
+        TemaId.RUINAS -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.3f else 0.6f)
+            // Musgo en la esquina de abajo a la izquierda.
+            listOf(Offset(2.5f, -2.5f) to 1.4f, Offset(4.5f, -2f) to 1f, Offset(2f, -4.5f) to 0.9f).forEach { (o, r) -> drawCircle(Color(0xFF4F7A33).copy(alpha = 0.45f), r * s, Offset(o.x * s, h + o.y * s)) }
+            // Hoy: la marca de tiza del día, tres palotes y uno que los cruza.
+            if (hoy) {
+                for (k in 0 until 3) drawLine(acento, Offset((3f + k * 1.6f) * s, 2f * s), Offset((3f + k * 1.6f) * s, 6f * s), 0.6f * s)
+                drawLine(acento, Offset(2f * s, 5.5f * s), Offset(8f * s, 2.5f * s), 0.6f * s)
+            }
             if (sellado) sello(oro)
         }
         // Nieve sobre el borde de arriba; hoy, el borde de bastón de caramelo.

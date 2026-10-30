@@ -211,6 +211,70 @@ def botanico(tam):
         hormiga(d2, tam * (0.3 + 0.085 * i), tam * (0.37 - 0.04 * i), tam * 0.05, -0.5, (128, 46, 22, 250))
     guardar(fondo, capa, 'botanico')
 
+# ------------------------------------------------------------------ Ciudad verde
+def hoja_hiedra(d, cx, cy, s, ang, color, nervio=None):
+    """Una hoja de hiedra de cinco puntas, centrada en (cx, cy), de tamaño [s], con la punta hacia el ángulo [ang]."""
+    pts = [(0, 0.5), (-0.55, 0.35), (-0.8, -0.05), (-0.32, -0.05), (0, -0.5), (0.32, -0.05), (0.8, -0.05), (0.55, 0.35)]
+    ca, sa = math.cos(ang + math.pi / 2), math.sin(ang + math.pi / 2)
+    rot = lambda px, py: (cx + (px * ca - py * sa) * s, cy + (px * sa + py * ca) * s)
+    d.polygon([rot(px, py) for px, py in pts], fill=color)
+    if nervio: d.line([rot(0, 0.5), rot(0, -0.35)], fill=nervio, width=max(1, int(s / 22)))
+
+def grieta(d, x, y, ang, largo, color, w, rng, rama=True):
+    """Una grieta: un camino quebrado que a veces se bifurca."""
+    pts = [(x, y)]; paso = largo / 10
+    for k in range(10):
+        ang += (rng.random() - 0.5) * 0.9
+        x += paso * math.cos(ang); y += paso * math.sin(ang); pts.append((x, y))
+        if rama and k == 4: grieta(d, x, y, ang + 0.8 * (1 if rng.random() < 0.5 else -1), largo * 0.45, color, max(1, w - 1), rng, False)
+    d.line(pts, fill=color, width=w)
+
+def ruinas(tam):
+    """Ciudad verde: losa de hormigón agrietada con musgo, la línea gastada de una calle y hiedra que entra por una esquina;
+    la huella es musgo que creció en sus surcos, y una guía de hiedra la cruza."""
+    m = mascara_sello(tam)
+    base = mezcla(col('#D9D8D0'), col('#B7B6AC'), ruido(tam, tam / 50, 31) * 0.8)
+    base = base * (0.93 + 0.1 * ruido(tam, 0.8, 32)[..., None])
+    musgo = np.clip((ruido(tam, tam / 14, 34) - 0.6) * 3, 0, 1)
+    base = mezcla(base, col('#7F8F5A'), musgo * 0.55)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    base = mezcla(base, col('#8C8C82'), np.clip(dist - 0.78, 0, 1) * 1.3)
+    fondo = a_img(base)
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    rng = np.random.default_rng(41)
+    # La junta entre dos losas y la línea pintada de la calle, gastada a tramos.
+    d.line([(0, tam * 0.64), (tam, tam * 0.6)], fill=(80, 80, 74, 110), width=max(2, tam // 200))
+    for i in range(6):
+        x0 = tam * (0.0 + i * 0.18); x1 = x0 + tam * 0.11
+        y0 = tam * 0.84 - x0 * 0.05; y1 = tam * 0.84 - x1 * 0.05; g = tam * 0.022
+        d.polygon([(x0, y0 - g / 2), (x1, y1 - g / 2), (x1, y1 + g / 2), (x0, y0 + g / 2)], fill=(214, 170, 60, 120 if i % 3 else 70))
+    # Grietas.
+    for (x, y, a, l) in [(0.0, 0.22, 0.3, 0.55), (1.0, 0.38, 2.9, 0.5), (0.58, 0.0, 1.7, 0.4), (0.3, 1.0, -1.3, 0.35)]:
+        grieta(d, tam * x, tam * y, a, tam * l, (60, 62, 56, 150), max(1, tam // 260), rng)
+    # Hiedra que entra por la esquina de abajo a la izquierda.
+    tallo = [(tam * (0.02 + 0.3 * t + 0.04 * math.sin(t * 9)), tam * (0.99 - 0.48 * t)) for t in [i / 30 for i in range(31)]]
+    d.line(tallo, fill=(58, 80, 40, 210), width=max(2, tam // 240))
+    for i in range(2, 31, 3):
+        x, y = tallo[i]; lado = 1 if (i // 3) % 2 else -1
+        hoja_hiedra(d, x + lado * tam * 0.025, y, tam * (0.06 - 0.03 * i / 30), -math.pi / 2 + lado * 0.9, (79, 122, 51, 225), (40, 60, 28, 200))
+    fondo = fondo.convert('RGB')
+    # La huella: musgo en los surcos, más claro donde le da la luz y ralo en algunos tramos.
+    grano = ruido(tam, 0.7, 35)
+    carga = ruido(tam, tam / 14, 36)
+    tinta = mezcla(col('#2F4A22'), col('#6E8F3E'), carga)
+    alfa = m * np.clip(0.72 + 0.28 * grano, 0, 1) * np.clip(0.7 + carga * 0.45, 0, 1)
+    sh = relieve(m, fuerza=0.5)[..., None]
+    capa = a_rgba(tinta * (1 + sh * 0.25), alfa)
+    d2 = ImageDraw.Draw(capa, 'RGBA')
+    # Una guía de hiedra que cruza la huella en diagonal, con sus hojas.
+    guia = [(tam * (0.22 + 0.55 * t), tam * (0.78 - 0.5 * t + 0.05 * math.sin(t * 8))) for t in [i / 40 for i in range(41)]]
+    d2.line(guia, fill=(46, 66, 30, 255), width=max(2, tam // 200))
+    for i in range(3, 41, 6):
+        x, y = guia[i]; lado = 1 if (i // 6) % 2 else -1
+        hoja_hiedra(d2, x + lado * tam * 0.028, y + lado * tam * 0.018, tam * 0.058, -math.pi / 2 + lado * 1.0, (98, 142, 62, 255), (40, 60, 28, 255))
+    guardar(fondo, capa, 'ruinas')
+
 # ------------------------------------------------------------------ gótico (vitral)
 def gotico(tam):
     m = mascara_sello(tam)
@@ -642,6 +706,7 @@ def marcas(capa, m, tipo, semilla):
 # Los sellos que se dibujan con código (los demás se componen desde `fuentes/`). Los temas nuevos van aquí.
 SIETE = [
     'botanico',
+    'ruinas',
     'gotico',
     'espacio',
     'andalus',
@@ -661,6 +726,7 @@ ORDEN = [
     'colonos',
     'napoleon',
     'botanico',
+    'ruinas',
     'navidad',
     'seda',
     'gotico',

@@ -95,6 +95,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     COLONOS("colonos", "Colonos", "Papel de gaceta, azul marino y ladrillo. Vecinos que reconstruyen su pueblo.", Epoca.FUTURO),
     NAPOLEON("napoleon", "Napoleónico", "El Imperio (1804–1815): azul imperial, oro y carmesí, letra Didot. Boletines de la Grande Armée y fechas en francés.", Epoca.CONTEMPORANEA),
     BOTANICO("botanico", "Botánico", "El cuaderno de un naturalista viajero: escarabajos clavados con alfiler, hileras de hormigas y helechos a tinta sepia, verde musgo y óxido. Fecha según la estación.", Epoca.CONTEMPORANEA),
+    RUINAS("ruinas", "Ciudad verde", "Una ciudad que el bosque recuperó: hormigón agrietado, hiedra, musgo y óxido. Los días se cuentan desde el silencio, con la letra de una máquina de escribir rescatada.", Epoca.FUTURO),
     NAVIDAD("navidad", "Navidad", "Rojo, verde pino y oro, con nieve. Cartas junto al fuego y la cuenta hacia el 25 de diciembre.", Epoca.CONTEMPORANEA),
     SEDA("seda", "Ruta de la Seda", "Seda, lapislázuli, cinabrio y oro. Monedas con agujero, caravanas y números chinos.", Epoca.EDAD_MEDIA),
     GOTICO("gotico", "Gótico", "Una capilla de vitrales: azul de bóveda con estrellas de oro, cristal rubí y zafiro, letra textura. Horas canónicas.", Epoca.EDAD_MEDIA),
@@ -279,6 +280,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.COLONOS -> if (oscuro) colonosOscuro else colonosClaro
     TemaId.NAPOLEON -> if (oscuro) napoleonOscuro else napoleonClaro
     TemaId.BOTANICO -> if (oscuro) botanicoOscuro else botanicoClaro
+    TemaId.RUINAS -> if (oscuro) ruinasOscuro else ruinasClaro
     TemaId.NAVIDAD -> if (oscuro) navidadOscuro else navidadClaro
     TemaId.SEDA -> if (oscuro) sedaOscuro else sedaClaro
     TemaId.URSS -> if (oscuro) urssOscuro else urssClaro
@@ -304,6 +306,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.COLONOS -> tipoColonos
     TemaId.NAPOLEON -> tipoNapoleon
     TemaId.BOTANICO -> tipoBotanico
+    TemaId.RUINAS -> tipoRuinas
     TemaId.NAVIDAD -> tipoNavidad
     TemaId.SEDA -> tipoSeda
     TemaId.URSS -> tipoUrss
@@ -335,6 +338,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.COLONOS -> 64f to 0.5f       // Fell
     TemaId.NAPOLEON -> 64f to 1f        // Bodoni
     TemaId.BOTANICO -> 62f to 0f        // Fraunces
+    TemaId.RUINAS -> 64f to 1f        // Letrero (Londrina), condensada
     TemaId.NAVIDAD -> 54f to 1f         // Cinzel Decorative, muy ancha
     TemaId.SEDA -> 64f to 0.5f          // Almendra
     TemaId.GOTICO -> 66f to 0.5f        // textura
@@ -365,6 +369,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.COLONOS -> Esquinas(5, Esquina.REDONDA)
     TemaId.NAPOLEON -> Esquinas(2, Esquina.REDONDA)
     TemaId.BOTANICO -> Esquinas(12, Esquina.HOJA)          // la hoja
+    TemaId.RUINAS -> Esquinas(5, Esquina.CORTADA)        // el bloque de hormigón desportillado
     TemaId.NAVIDAD -> Esquinas(8, Esquina.REDONDA)
     TemaId.SEDA -> Esquinas(7, Esquina.REDONDA)
     TemaId.URSS -> Esquinas(0, Esquina.REDONDA)
@@ -536,6 +541,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.COLONOS -> "Jornada"
         TemaId.NAPOLEON -> "BOLETÍN"
         TemaId.BOTANICO -> "Herbario"
+        TemaId.RUINAS -> "Día 214"
         TemaId.NAVIDAD -> "El día"
         TemaId.SEDA -> "Etapa"
         TemaId.URSS -> "PLAN"
@@ -560,6 +566,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.COLONOS -> "17 de octubre"
         TemaId.NAPOLEON -> "samedi 17 octobre"
         TemaId.BOTANICO -> "otoño · día 26"
+        TemaId.RUINAS -> "tras el silencio · otoño"
         TemaId.NAVIDAD -> "faltan 69 días"
         TemaId.SEDA -> "十月十七日"
         TemaId.URSS -> "ОКТЯБРЬ"
@@ -586,6 +593,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.COLONOS -> 16 to 16
         TemaId.NAPOLEON -> 12 to 20
         TemaId.BOTANICO -> 16 to 16
+        TemaId.RUINAS -> 18 to 14
         TemaId.NAVIDAD -> 20 to 12
         TemaId.SEDA -> 12 to 20
         TemaId.GOTICO -> 24 to 8
@@ -611,6 +619,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.COLONOS -> 14
         TemaId.NAPOLEON -> 10
         TemaId.BOTANICO -> 12
+        TemaId.RUINAS -> 13
         TemaId.NAVIDAD -> 10
         TemaId.SEDA -> 10
         TemaId.GOTICO -> 12
@@ -691,6 +700,13 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     }
     // Hoja: dos esquinas opuestas muy redondas.
     TemaId.BOTANICO -> RoundedCornerShape(topStart = 22.dp, topEnd = 3.dp, bottomEnd = 22.dp, bottomStart = 3.dp)
+    // Losa de hormigón rota: la esquina de arriba a la derecha se desprendió en escalones.
+    TemaId.RUINAS -> GenericShape { s, _ ->
+        val a = s.minDimension * 0.12f
+        moveTo(0f, 0f); lineTo(s.width * 0.68f, 0f); lineTo(s.width * 0.74f, a * 0.55f); lineTo(s.width * 0.82f, a * 0.25f)
+        lineTo(s.width * 0.88f, a); lineTo(s.width, a * 1.35f); lineTo(s.width, s.height); lineTo(s.width * 0.1f, s.height)
+        lineTo(0f, s.height - a * 0.6f); close()
+    }
     // Glaseado de nieve: borde de arriba en festón.
     TemaId.NAVIDAD -> GenericShape { s, _ ->
         val n = 6; val paso = s.width / n; val f = s.height * 0.06f
@@ -779,6 +795,8 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.NAPOLEON -> drawPath(Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h * 0.55f); quadraticTo(w, h * 0.85f, cx, h); quadraticTo(0f, h * 0.85f, 0f, h * 0.55f); close() }, c)
         // Hoja.
         TemaId.BOTANICO -> drawPath(Path().apply { moveTo(0f, h); cubicTo(0f, h * 0.3f, w * 0.3f, 0f, w, 0f); cubicTo(w, h * 0.7f, w * 0.7f, h, 0f, h); close() }, c)
+        // Semáforo apagado: la caja y sus tres luces; solo la verde sigue viva.
+        TemaId.RUINAS -> { drawRoundRect(c, Offset(w * 0.3f, 0f), Size(w * 0.4f, h), CornerRadius(w * 0.12f)); for (k in 0..2) drawCircle(fondo.copy(alpha = if (k == 2) 0.9f else 0.3f), w * 0.13f, Offset(cx, h * (0.18f + 0.32f * k))) }
         // Bola de árbol con su capuchón.
         TemaId.NAVIDAD -> { drawCircle(c, r * 0.8f, Offset(cx, cy + r * 0.2f)); drawRect(borde, Offset(cx - r * 0.25f, 0f), Size(r * 0.5f, r * 0.3f)) }
         // Moneda con agujero cuadrado.

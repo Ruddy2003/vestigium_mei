@@ -84,6 +84,7 @@ object Musica {
         TemaId.COLONOS -> R.raw.s_colonos_presentacion
         TemaId.NAPOLEON -> R.raw.s_napoleon_presentacion
         TemaId.BOTANICO -> R.raw.s_botanico_presentacion
+        TemaId.RUINAS -> R.raw.s_ruinas_presentacion
         TemaId.NAVIDAD -> R.raw.s_navidad_presentacion
         TemaId.SEDA -> R.raw.s_seda_presentacion
         TemaId.URSS -> R.raw.s_urss_presentacion
@@ -109,6 +110,7 @@ object Musica {
         TemaId.COLONOS -> R.raw.s_colonos_anual
         TemaId.NAPOLEON -> R.raw.s_napoleon_anual
         TemaId.BOTANICO -> R.raw.s_botanico_anual
+        TemaId.RUINAS -> R.raw.s_ruinas_anual
         TemaId.NAVIDAD -> R.raw.s_navidad_anual
         TemaId.SEDA -> R.raw.s_seda_anual
         TemaId.URSS -> R.raw.s_urss_anual
@@ -133,6 +135,7 @@ object Musica {
         TemaId.COLONOS -> R.raw.t_colonos_llamada
         TemaId.NAPOLEON -> R.raw.t_napoleon_llamada
         TemaId.BOTANICO -> R.raw.t_botanico_llamada
+        TemaId.RUINAS -> R.raw.t_ruinas_llamada
         TemaId.NAVIDAD -> R.raw.t_navidad_llamada
         TemaId.SEDA -> R.raw.t_seda_llamada
         TemaId.URSS -> R.raw.t_urss_llamada
@@ -157,6 +160,7 @@ object Musica {
         TemaId.COLONOS -> R.raw.t_colonos_notificacion
         TemaId.NAPOLEON -> R.raw.t_napoleon_notificacion
         TemaId.BOTANICO -> R.raw.t_botanico_notificacion
+        TemaId.RUINAS -> R.raw.t_ruinas_notificacion
         TemaId.NAVIDAD -> R.raw.t_navidad_notificacion
         TemaId.SEDA -> R.raw.t_seda_notificacion
         TemaId.URSS -> R.raw.t_urss_notificacion
@@ -468,6 +472,34 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
         val et = Offset(w - u * 120, h - u * 50)
         drawRect(c, et, Size(u * 108, u * 38), style = Stroke(u))
         for (i in 0 until 3) drawLine(c, Offset(et.x + u * 8, et.y + u * (10 + i * 9f)), Offset(et.x + u * (if (i == 0) 96f else 70f), et.y + u * (10 + i * 9f)), u * 0.8f)
+    }
+    // Ciudad verde: el borde de una losa rota, hiedra que cuelga desde arriba y la silueta de los edificios abajo.
+    TemaId.RUINAS -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, true, "Día 1 tras el silencio · " + t.nombre, "toca para seguir caminando",
+        comillas = "“" to "”", emblema = 112.dp, arriba = 46.dp, abajo = 70.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.onSurfaceVariant.copy(alpha = 0.45f); val verde = e.primary.copy(alpha = 0.7f)
+        drawPath(Path().apply { moveTo(0f, 0f); lineTo(w * 0.7f, 0f); lineTo(w * 0.76f, u * 8); lineTo(w * 0.84f, u * 3); lineTo(w, u * 14); lineTo(w, h); lineTo(0f, h); close() }, c, style = Stroke(u))
+        // Hiedra que cuelga del borde de arriba.
+        listOf(0.08f to 0.32f, 0.2f to 0.2f, 0.9f to 0.26f).forEach { (fx, largo) ->
+            val x0 = w * fx; val y1 = h * largo
+            drawLine(verde, Offset(x0, 0f), Offset(x0 + u * 4, y1), u * 1.1f)
+            var y = u * 12; var lado = 1f
+            while (y < y1) {
+                val q = Offset(x0 + u * 4 * (y / y1), y); val r = u * 6
+                drawPath(Path().apply { moveTo(q.x, q.y); lineTo(q.x + lado * r, q.y - r * 0.2f); lineTo(q.x + lado * r * 0.7f, q.y + r * 0.6f); close() }, verde)
+                y += u * 14; lado = -lado
+            }
+        }
+        // Edificios rotos al pie, con ventanas vacías.
+        val pie = Path().apply {
+            moveTo(0f, h); lineTo(0f, h - u * 40); lineTo(u * 30, h - u * 46); lineTo(u * 36, h - u * 30); lineTo(u * 60, h - u * 30); lineTo(u * 60, h - u * 58)
+            lineTo(u * 78, h - u * 64); lineTo(u * 86, h - u * 50); lineTo(u * 100, h - u * 54); lineTo(u * 100, h - u * 22)
+            lineTo(w - u * 90, h - u * 22); lineTo(w - u * 90, h - u * 48); lineTo(w - u * 60, h - u * 48); lineTo(w - u * 52, h - u * 36); lineTo(w - u * 40, h - u * 52); lineTo(w, h - u * 44); lineTo(w, h); close()
+        }
+        drawPath(pie, c.copy(alpha = 0.18f))
+        for (k in 0 until 3) drawRect(e.surface.copy(alpha = 0.7f), Offset(u * (66 + k * 10f), h - u * 46), Size(u * 5, u * 7))
+        drawLine(verde, Offset(u * 70, h - u * 22), Offset(u * 70, h - u * 70), u * 1.6f)
+        drawCircle(verde.copy(alpha = 0.5f), u * 14, Offset(u * 70, h - u * 76))
     }
     // Ventana de Adviento: la frase colgada bajo una guirnalda con bolas, entre copos de nieve.
     TemaId.NAVIDAD -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre, "✦ toca para abrir la siguiente ventanita", arriba = 50.dp) { e ->

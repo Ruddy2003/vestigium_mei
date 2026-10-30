@@ -555,6 +555,16 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawCircle(color, h * 0.3f, Offset(fw, h / 2))
             }
         }
+        TemaId.RUINAS -> {
+            // Una calle: el asfalto, la línea discontinua de lo recorrido y un brote donde llega el avance.
+            drawLine(color.copy(alpha = 0.2f), Offset(0f, h / 2), Offset(w, h / 2), h * 0.5f)
+            if (fw > 0f) {
+                var x = 2f * d
+                while (x < fw) { drawLine(color, Offset(x, h / 2), Offset(minOf(x + 5f * d, fw), h / 2), 1.6f * d); x += 8f * d }
+                drawLine(color, Offset(fw, h / 2), Offset(fw, h * 0.1f), 1.2f * d)
+                rotate(-40f, Offset(fw, h * 0.25f)) { drawOval(color, Offset(fw, h * 0.1f), Size(h * 0.4f, h * 0.22f)) }
+            }
+        }
         // Bastón de caramelo.
         TemaId.NAVIDAD -> {
             drawRoundRect(pista, Offset.Zero, size, CornerRadius(h / 2))
@@ -812,6 +822,13 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
         TemaId.BOTANICO -> {
             for (k in 0 until 12) rotate(k * 30f, c) { drawOval(cs.tertiary.copy(alpha = 0.3f), Offset(c.x - rc * 0.1f, c.y - rc * 0.7f), Size(rc * 0.2f, rc * 0.5f)) }
             drawCircle(cs.secondary.copy(alpha = 0.45f), rc * 0.18f, c)
+            marcas(24, 2f * d, d, linea)
+        }
+        TemaId.RUINAS -> {
+            // Doce hojas de hiedra alrededor, como las horas, y el semáforo diminuto al centro.
+            for (k in 0 until 12) rotate(k * 30f, c) { val q = Offset(c.x, c.y - rc * 0.68f); val s = rc * 0.22f; drawPath(Path().apply { moveTo(q.x, q.y + s * 0.5f); lineTo(q.x - s * 0.55f, q.y + s * 0.35f); lineTo(q.x - s * 0.8f, q.y - s * 0.05f); lineTo(q.x - s * 0.32f, q.y - s * 0.05f); lineTo(q.x, q.y - s * 0.5f); lineTo(q.x + s * 0.32f, q.y - s * 0.05f); lineTo(q.x + s * 0.8f, q.y - s * 0.05f); lineTo(q.x + s * 0.55f, q.y + s * 0.35f); close() }, cs.primary.copy(alpha = 0.3f)) }
+            drawRoundRect(cs.onSurface.copy(alpha = 0.35f), Offset(c.x - rc * 0.08f, c.y - rc * 0.18f), Size(rc * 0.16f, rc * 0.36f), CornerRadius(rc * 0.04f))
+            drawCircle(cs.primary.copy(alpha = 0.8f), rc * 0.04f, Offset(c.x, c.y + rc * 0.1f))
             marcas(24, 2f * d, d, linea)
         }
         // Corona de pino con bayas y un copo al centro.

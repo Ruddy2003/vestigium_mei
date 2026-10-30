@@ -175,6 +175,21 @@ object Textos {
         "widget_discreto_momento" to "anotar",
     )
 
+    private val RUINAS: Map<String, String> = mapOf(
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Cuaderno",
+        "pestana_registrar" to "Apuntar",
+        "pestana_vida" to "Rastro",
+        "pestana_entender" to "Grietas",
+        "escala_vacia" to "nada apuntado · toca o desliza",
+        "lista_anadir" to "+ a la mochila",
+        "palabras" to "%d palabras a lápiz",
+        "widget_animo" to "¿cuánto aguante queda hoy?",
+        "widget_momento" to "entre la hiedra encontré…",
+        "widget_discreto_animo" to "aguante",
+        "widget_discreto_momento" to "apuntar",
+    )
+
     private val NAVIDAD: Map<String, String> = mapOf(
         "pestana_dia" to "El día",
         "pestana_diario" to "Cartas",
@@ -338,6 +353,7 @@ object Textos {
         TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON
         TemaId.BOTANICO -> BOTANICO
+        TemaId.RUINAS -> RUINAS
         TemaId.NAVIDAD -> NAVIDAD
         TemaId.SEDA -> SEDA
         TemaId.URSS -> URSS

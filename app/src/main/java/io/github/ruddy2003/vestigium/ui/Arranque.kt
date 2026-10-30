@@ -31,6 +31,7 @@ object ArranqueTema {
         TemaId.COLONOS -> if (oscuro) R.style.Theme_Vestigium_Arranque_Colonos_Oscuro else R.style.Theme_Vestigium_Arranque_Colonos
         TemaId.NAPOLEON -> if (oscuro) R.style.Theme_Vestigium_Arranque_Napoleon_Oscuro else R.style.Theme_Vestigium_Arranque_Napoleon
         TemaId.BOTANICO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Botanico_Oscuro else R.style.Theme_Vestigium_Arranque_Botanico
+        TemaId.RUINAS -> if (oscuro) R.style.Theme_Vestigium_Arranque_Ruinas_Oscuro else R.style.Theme_Vestigium_Arranque_Ruinas
         TemaId.NAVIDAD -> if (oscuro) R.style.Theme_Vestigium_Arranque_Navidad_Oscuro else R.style.Theme_Vestigium_Arranque_Navidad
         TemaId.SEDA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Seda_Oscuro else R.style.Theme_Vestigium_Arranque_Seda
         TemaId.URSS -> if (oscuro) R.style.Theme_Vestigium_Arranque_Urss_Oscuro else R.style.Theme_Vestigium_Arranque_Urss

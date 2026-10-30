@@ -449,6 +449,23 @@ object OtrasVidas {
             fuentes = listOf("El viaje del Beagle" to "${W}Second_voyage_of_HMS_Beagle", "HMS Beagle" to "${W}HMS_Beagle"),
             inspiracion = "Inspirado en el viaje de Charles Darwin (1831–1836)."),
 
+        Vida("semillera", "Una recolectora", "Recolectora de semillas", "Una ciudad que el bosque recuperó", "año 40 tras el silencio", 40, "tema", "ruinas", edad = 33, ficticia = true,
+            inspiracion = "Inventada para la Ciudad verde. La idea de cómo la vegetación recupera una ciudad vacía viene del libro de Alan Weisman y de lo que creció en Prípiat después de 1986.",
+            historia = listOf(
+                "Nació siete años después del silencio, cuando la ciudad ya llevaba tiempo vacía. Vive con unas sesenta personas en un edificio de oficinas cuyas azoteas se volvieron huertos. Por las avenidas crecen abedules y la hiedra cubre los semáforos.",
+                "Su trabajo es guardar semillas: cada mañana cuida el huerto de la azotea, y a mediodía recorre las calles con una mochila para juntar las de los árboles, las hierbas y las hortalizas que se asilvestraron en los jardines. Por la tarde las seca y las guarda en latas con su etiqueta a lápiz.",
+                "Camina muchísimo y no ve una pantalla jamás: la última se apagó antes de que naciera. Duerme cuando se va la luz y despierta con el sol. Aprendió a leer con los libros que se salvaron de la biblioteca, y de noche, junto a la fogata, alguien canta.",
+            ),
+            dia = listOf(t(21.0, 5.5, Hacer.DORMIR), t(5.5, 6.0, Hacer.COMER), t(6.0, 11.0, Hacer.TRABAJO, "huerto en la azotea"), t(11.0, 13.0, Hacer.CAMINO, "calles con hiedra"),
+                t(13.0, 14.0, Hacer.COMER), t(14.0, 17.0, Hacer.TRABAJO, "secar y guardar semillas"), t(17.0, 19.0, Hacer.CUIDAR, "agua, leña y remiendos"), t(19.0, 21.0, Hacer.GENTE, "fogata")),
+            datos = mapOf("pasos" to i(24000, "Va a pie a todas partes: no hay coches ni gasolina."), "km_anio" to i(3500), "kcal" to i(2600), "proteina" to i(60), "azucar" to i(5, "Miel silvestre de vez en cuando."),
+                "fibra" to i(45, "Huerto, semillas y frutos del monte."), "alcohol" to i(3), "sueno" to i(8.0, "Duerme con el sol: no hay luz eléctrica."), "dormir" to i(21.0), "trabajo" to i(48),
+                "aire_libre" to i(10), "pantalla" to i(0, "La última pantalla se apagó antes de que naciera."), "notificaciones" to i(2, "Un silbido desde otra azotea."), "musica" to i(1, "Canciones junto a la fogata."),
+                "personas_dia" to i(15), "conocidas" to i(120), "poblacion" to i(60, "El campamento, en una ciudad donde antes vivían cientos de miles."), "lejos" to i(60), "estatura" to i(166),
+                "vida" to i(50), "vida_adulto" to i(62), "hijos" to i(2.5), "alfabetizacion" to i(70, "Los que crecieron con los libros que se salvaron."), "lectura" to i(6, "Libros rescatados de la biblioteca.")),
+            fuentes = listOf("El mundo sin nosotros (Alan Weisman, 2007)" to "${W}The_World_Without_Us", "La zona de exclusión de Chernóbil" to "${W}Chernobyl_Exclusion_Zone",
+                "Prípiat, la ciudad vacía desde 1986" to "${W}Pripyat", "Guardar semillas" to "${W}Seed_saving")),
+
         Vida("escribiente", "Tom", "Escribiente", "Una oficina de Londres", "Navidad de 1843", 1843, "tema", "navidad", edad = 35,
             historia = listOf(
                 "Tom copia cartas y lleva cuentas en una oficina helada, de las ocho de la mañana a las ocho de la noche, seis días a la semana. Camina una hora para llegar y otra para volver, entre la niebla y el humo de carbón.",

@@ -61,6 +61,8 @@ object MapasMas {
         TemaId.COLONOS -> listOf(Offset(0.07f, 0.72f), Offset(0.2f, 0.5f), Offset(0.34f, 0.62f), Offset(0.5f, 0.38f), Offset(0.64f, 0.56f), Offset(0.79f, 0.32f), Offset(0.93f, 0.48f))
         // La expedición por los biomas, en línea casi recta, de franja en franja.
         TemaId.BOTANICO -> (0 until 7).map { i -> Offset(0.07f + 0.86f * i / 6f, 0.5f + 0.16f * sin(i * 1.3f)) }
+        // Calle por calle: la autopista rota, la gasolinera, la avenida, el mercado, la biblioteca, el paso a desnivel y la torre.
+        TemaId.RUINAS -> listOf(Offset(0.06f, 0.84f), Offset(0.2f, 0.68f), Offset(0.32f, 0.5f), Offset(0.48f, 0.6f), Offset(0.6f, 0.4f), Offset(0.76f, 0.5f), Offset(0.92f, 0.18f))
         // Los mercados de Navidad: Estrasburgo, Colmar, Núremberg, Dresde, Praga, Viena, Salzburgo.
         TemaId.NAVIDAD -> geo(listOf(7.75 to 48.58, 7.36 to 48.08, 11.08 to 49.45, 13.74 to 51.05, 14.42 to 50.08, 16.37 to 48.21, 13.04 to 47.8), 6.4, 17.2, 47.2, 51.6)
         // La travesía de la compañía: aldea, bosque, vado, montañas, mina, puente y fortaleza.
@@ -143,6 +145,29 @@ object MapasMas {
                 // Hojitas dibujadas a tinta sepia.
                 val az = java.util.Random(14)
                 repeat(14) { val o = Offset(az.nextFloat() * w, az.nextFloat() * h); drawPath(Path().apply { moveTo(o.x, o.y); quadraticTo(o.x + 6 * d, o.y - 6 * d, o.x + 12 * d, o.y); quadraticTo(o.x + 6 * d, o.y + 4 * d, o.x, o.y); close() }, Color(0xFF6E5530).copy(alpha = 0.18f)) }
+            }
+            TemaId.RUINAS -> {
+                // El plano de la ciudad desde arriba: manzanas de hormigón entre calles que el bosque se va comiendo (más copas
+                // cuanto más se avanza), un río que volvió a su cauce y una autopista rota que cruza en diagonal.
+                val az = java.util.Random(31)
+                drawPath(Path().apply { moveTo(0f, h * 0.3f); cubicTo(w * 0.3f, h * 0.2f, w * 0.5f, h * 0.45f, w, h * 0.35f) }, Color(0xFF5A8AA0).copy(alpha = 0.18f), style = Stroke(6 * d))
+                val manzana = 46 * d; val calle = 12 * d
+                val gris = (if (oscuro) Color(0xFF9AA39A) else Color(0xFF6A6F66)).copy(alpha = if (oscuro) 0.10f else 0.12f)
+                val copa = Color(0xFF4F7A33).copy(alpha = if (oscuro) 0.22f else 0.2f)
+                var y = calle; var fila = 0
+                while (y < h) {
+                    var x = calle + (if (fila % 2 == 0) 0f else manzana / 3)
+                    while (x < w) {
+                        drawRect(gris, Offset(x, y), Size(manzana, manzana * 0.8f))
+                        val copas = (1 + (avance * 6).toInt() + az.nextInt(2)).coerceAtMost(7)
+                        repeat(copas) { drawCircle(copa, (4 + az.nextFloat() * 7) * d, Offset(x + az.nextFloat() * manzana, y + az.nextFloat() * manzana * 0.8f)) }
+                        x += manzana + calle
+                    }
+                    y += manzana * 0.8f + calle; fila++
+                }
+                val via = (if (oscuro) Color(0xFFB8BCB0) else Color(0xFF55594F)).copy(alpha = 0.18f)
+                drawLine(via, Offset(0f, h * 0.95f), Offset(w * 0.42f, h * 0.55f), 9 * d)
+                drawLine(via, Offset(w * 0.5f, h * 0.48f), Offset(w, h * 0.05f), 9 * d)
             }
             TemaId.NAVIDAD -> {
                 // Lomas nevadas, pinos, y la nieve cayendo.
@@ -428,6 +453,8 @@ object MapasMas {
             TemaId.COLONOS -> { drawPath(p, Color(0xFF8A5A2B).copy(alpha = 0.5f), style = Stroke(6 * d)); drawPath(p, cs.surface.copy(alpha = 0.8f), style = Stroke(3 * d)) }
             // Un trazo de lápiz de naturalista.
             TemaId.BOTANICO -> drawPath(p, Color(0xFF6E5530).copy(alpha = 0.7f), style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4 * d, 2 * d, 1 * d, 2 * d))))
+            // Una calle: asfalto gris y la línea discontinua ámbar al centro.
+            TemaId.RUINAS -> { drawPath(p, Color(0xFF55594F).copy(alpha = 0.55f), style = Stroke(6 * d)); drawPath(p, Color(0xFFE0B040).copy(alpha = 0.85f), style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 5 * d)))) }
             // Rayado de bastón de caramelo.
             TemaId.NAVIDAD -> { drawPath(p, Color.White, style = Stroke(5 * d)); drawPath(p, Color(0xFFB3122E), style = Stroke(5 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5 * d, 5 * d)))) }
             // La línea roja del mapa de la travesía.
@@ -511,6 +538,9 @@ object MapasMas {
             TemaId.COLONOS -> { drawRect(col, Offset(c.x - r * 0.8f, c.y - r * 0.2f), Size(r * 1.6f, r * 1.1f)); drawPath(Path().apply { moveTo(c.x - r, c.y - r * 0.2f); lineTo(c.x, c.y - r * 1.1f); lineTo(c.x + r, c.y - r * 0.2f); close() }, lerp(col, Color.Black, 0.25f)) }
             // Una hoja.
             TemaId.BOTANICO -> drawPath(Path().apply { moveTo(c.x - r * 1.1f, c.y + r * 0.4f); quadraticTo(c.x - r * 0.6f, c.y - r * 1.2f, c.x + r * 1.1f, c.y - r * 0.6f); quadraticTo(c.x + r * 0.4f, c.y + r * 1.0f, c.x - r * 1.1f, c.y + r * 0.4f); close() }, col)
+            // Un edificio roto, con una ventana vacía y un arbusto al pie.
+            TemaId.RUINAS -> { drawPath(Path().apply { moveTo(c.x - r * 0.8f, c.y + r * 0.8f); lineTo(c.x - r * 0.8f, c.y - r * 0.6f); lineTo(c.x - r * 0.3f, c.y - r); lineTo(c.x, c.y - r * 0.5f); lineTo(c.x + r * 0.4f, c.y - r * 0.8f); lineTo(c.x + r * 0.8f, c.y - r * 0.3f); lineTo(c.x + r * 0.8f, c.y + r * 0.8f); close() }, col)
+                drawRect(lerp(col, Color.Black, 0.35f), Offset(c.x - r * 0.35f, c.y - r * 0.1f), Size(r * 0.25f, r * 0.3f)); drawCircle(Color(0xFF4F7A33), r * 0.35f, Offset(c.x + r * 0.6f, c.y + r * 0.55f)) }
             // El puesto del mercado, con su toldo rayado.
             TemaId.NAVIDAD -> { drawRect(col, Offset(c.x - r * 0.8f, c.y - r * 0.2f), Size(r * 1.6f, r * 1.0f)); for (k in 0 until 4) drawRect(if (k % 2 == 0) Color(0xFFB3122E) else Color.White, Offset(c.x - r + k * r * 0.5f, c.y - r * 0.8f), Size(r * 0.5f, r * 0.6f)) }
             // Una piedra rúnica.
@@ -634,6 +664,8 @@ object MapasMas {
             TemaId.NAVIDAD -> { alfiler(); with(TrofeosTema) { estrella(g, r * 0.9f, r * 0.38f, 5, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37)))) } }
             TemaId.ANDALUS -> { alfiler(); with(TrofeosMas) { estrellaLazo(g, r * 0.85f, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37))), null, 0f) } }
             TemaId.BOTANICO -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.8f, g.y + r * 0.4f); quadraticTo(g.x - r * 0.4f, g.y - r, g.x + r * 0.8f, g.y - r * 0.5f); quadraticTo(g.x + r * 0.3f, g.y + r * 0.8f, g.x - r * 0.8f, g.y + r * 0.4f); close() }, Color(0xFF3F7A3A)) }
+            // Un semáforo diminuto clavado en el plano: el rojo muerto y el verde encendido.
+            TemaId.RUINAS -> { alfiler(); drawRect(Color(0xFF2E332E), Offset(g.x - r * 0.4f, g.y - r * 0.8f), Size(r * 0.8f, r * 1.6f)); drawCircle(Color(0xFF8A4A22).copy(alpha = 0.6f), r * 0.2f, Offset(g.x, g.y - r * 0.4f)); drawCircle(Color(0xFF8FCB6A), r * 0.24f, Offset(g.x, g.y + r * 0.35f)) }
             TemaId.COLONOS -> { alfiler(); drawArc(Color(0xFFF1E6C8), 180f, 180f, true, Offset(g.x - r * 0.8f, g.y - r * 0.8f), Size(r * 1.6f, r * 1.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x - r * 0.4f, g.y + r * 0.4f)); drawCircle(Color(0xFF5A3A22), r * 0.3f, Offset(g.x + r * 0.4f, g.y + r * 0.4f)) }
             TemaId.ANTIGUAS -> { alfiler(); with(TrofeosMas) { runas(Offset(g.x - r * 0.3f, g.y), r * 0.6f, r * 1.2f, tinta, 1f * d, 1, 4) } }
             // La ficha amarilla del vecino.

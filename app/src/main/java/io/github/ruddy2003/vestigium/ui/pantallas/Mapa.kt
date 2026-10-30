@@ -116,6 +116,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Botánico: lámina de atlas en crema y verde; de noche, el bosque.
         TemaId.BOTANICO -> if (oscuro) { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.86f, 0.66f, 2f, 8f, 2f)) }
             else { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.86f, 2f, 4f, 0f)) }
+        // Ciudad verde: el plano gris de hormigón con un velo verde; de noche, asfalto oscuro y calles de musgo.
+        TemaId.RUINAS -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.8f, 0.66f, 0f, 10f, 4f)) }
+            else { m.setSaturation(0.3f); m.postConcat(tinte(0.92f, 0.95f, 0.88f, 0f, 6f, 0f)) }
         // Navidad: nieve; de noche, bosque.
         TemaId.NAVIDAD -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.86f, 0.7f, 2f, 8f, 4f)) }
             else { m.setSaturation(0.35f); m.postConcat(tinte(0.98f, 0.97f, 0.94f, 4f, 4f, 2f)) }
@@ -227,6 +230,8 @@ internal object Formas {
                 p.quadTo(x + r * 0.9f, y - r * 1.1f, x + r * 1.4f, y + r * 0.3f); p.quadTo(x, y - r * 0.2f, x - r * 1.4f, y + r * 0.3f); p.close() }
             // Una hoja.
             TemaId.BOTANICO -> { p.reset(); p.moveTo(x, y + r * 1.2f); p.quadTo(x + r * 1.3f, y, x, y - r * 1.2f); p.quadTo(x - r * 1.3f, y, x, y + r * 1.2f); p.close() }
+            // Una hoja de hiedra de cinco puntas.
+            TemaId.RUINAS -> figura(x, y, r, 0f, 0.9f, -0.55f, 0.62f, -0.95f, -0.05f, -0.38f, -0.08f, 0f, -0.95f, 0.38f, -0.08f, 0.95f, -0.05f, 0.55f, 0.62f)
             // Un abeto de tres pisos con su tronco.
             TemaId.NAVIDAD -> figura(x, y, r, 0f, -1.35f, 0.55f, -0.55f, 0.3f, -0.55f, 0.85f, 0.2f, 0.5f, 0.2f, 1.05f, 0.85f, 0.2f, 0.85f, 0.2f, 1.25f,
                 -0.2f, 1.25f, -0.2f, 0.85f, -1.05f, 0.85f, -0.5f, 0.2f, -0.85f, 0.2f, -0.3f, -0.55f, -0.55f, -0.55f)
@@ -268,6 +273,7 @@ internal object Formas {
             TemaId.COLONOS -> c.drawRect(x - r * 0.25f, y + r * 0.25f, x + r * 0.25f, y + r, d)   // la puerta
             TemaId.NAPOLEON -> c.drawCircle(x + r * 0.5f, y - r * 0.38f, r * 0.22f, d)   // la escarapela del sombrero
             TemaId.BOTANICO -> { raya(c, x, y, r, 0f, 1.2f, 0f, -0.8f, d); raya(c, x, y, r, 0f, 0.2f, 0.45f, -0.25f, d); raya(c, x, y, r, 0f, 0.2f, -0.45f, -0.25f, d) }
+            TemaId.RUINAS -> { raya(c, x, y, r, 0f, 0.8f, 0f, -0.6f, d); raya(c, x, y, r, 0f, 0.2f, -0.5f, -0.05f, d); raya(c, x, y, r, 0f, 0.2f, 0.5f, -0.05f, d) }   // los nervios
             TemaId.NAVIDAD -> { c.drawCircle(x, y - r * 1.35f, r * 0.18f, d); raya(c, x, y, r, -0.6f, 0.55f, 0.45f, 0.1f, d) }   // la estrella y la guirnalda
             TemaId.SEDA -> c.drawCircle(x, y, r * 0.72f, d)
             TemaId.GOTICO -> { raya(c, x, y, r, 0f, -0.3f, 0f, 1f, d); c.drawCircle(x, y - r * 0.6f, r * 0.2f, d) }   // el parteluz y el rosetón
@@ -790,6 +796,17 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 drawPath(Path().apply { moveTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); lineTo(p4.x, p4.y); close() }, acento.copy(alpha = 0.25f))
             }
         }
+        TemaId.RUINAS -> {
+            // El filete doble de un plano de calles, con hiedra que entra por las esquinas.
+            filete(6 * u, tinta.copy(alpha = 0.4f), 1 * u)
+            filete(10 * u, tinta.copy(alpha = 0.18f), 0.6f * u)
+            esquinas(10 * u) { o, dx, dy ->
+                listOf(Offset(0f, 0f) to 7f, Offset(dx * 9 * u, dy * 3 * u) to 5f, Offset(dx * 3 * u, dy * 10 * u) to 5f).forEach { (d, t) ->
+                    val q = o + d; val s = t * u
+                    drawPath(Path().apply { moveTo(q.x, q.y + s * 0.5f); lineTo(q.x - s * 0.55f, q.y + s * 0.35f); lineTo(q.x - s * 0.8f, q.y - s * 0.05f); lineTo(q.x - s * 0.32f, q.y - s * 0.05f); lineTo(q.x, q.y - s * 0.5f); lineTo(q.x + s * 0.32f, q.y - s * 0.05f); lineTo(q.x + s * 0.8f, q.y - s * 0.05f); lineTo(q.x + s * 0.55f, q.y + s * 0.35f); close() }, acento.copy(alpha = 0.4f))
+                }
+            }
+        }
         // Nieve que cuelga del borde de arriba y acebo en las esquinas de abajo.
         TemaId.NAVIDAD -> {
             filete(5 * u, acento.copy(alpha = 0.6f), 1.5f * u)
@@ -1002,6 +1019,17 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
                 drawPath(Path().apply { moveTo(c.x, c.y); quadraticTo(a.x, a.y, q.x, q.y); quadraticTo(b.x, b.y, c.x, c.y); close() }, if (i == 0) acento else tinta.copy(alpha = 0.55f))
             }
             drawCircle(secundario, r * 0.14f, c)
+        }
+        TemaId.RUINAS -> {
+            // Una brújula oxidada: el aro con sus marcas, cuatro puntas finas (la del norte en el color del tema) y una mancha de óxido.
+            drawCircle(tinta.copy(alpha = 0.45f), r * 0.8f, c, style = Stroke(r * 0.04f))
+            for (i in 0 until 16) { val g = n + 22.5 * i; drawLine(tinta.copy(alpha = 0.5f), c + rumbo(g) * (r * 0.72f), c + rumbo(g) * (r * (if (i % 4 == 0) 0.6f else 0.68f)), r * 0.03f) }
+            for (i in 0 until 4) {
+                val g = n + 90.0 * i; val q = c + rumbo(g) * (r * 0.98f); val a = c + rumbo(g - 90.0) * (r * 0.1f); val b = c + rumbo(g + 90.0) * (r * 0.1f)
+                drawPath(Path().apply { moveTo(a.x, a.y); lineTo(q.x, q.y); lineTo(b.x, b.y); close() }, if (i == 0) acento else tinta.copy(alpha = 0.6f))
+            }
+            drawCircle(secundario.copy(alpha = 0.6f), r * 0.16f, c + Offset(r * 0.35f, r * 0.42f))
+            drawCircle(tinta, r * 0.08f, c)
         }
         // Un copo de nieve de seis brazos.
         TemaId.NAVIDAD -> {

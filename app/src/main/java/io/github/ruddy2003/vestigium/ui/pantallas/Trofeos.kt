@@ -359,6 +359,11 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             for (k in 0 until 5) { val a = -PI / 2 + k * 2 * PI / 5; drawCircle(Color(0xFFFFF0A8), s * 0.34f, Offset(o.x + (s * 0.5f * cos(a)).toFloat(), o.y + (s * 0.5f * sin(a)).toFloat())) }
             drawCircle(Color(0xFFB0702A), s * 0.24f, o)
         }
+        TemaId.RUINAS -> {
+            // Un vilano de diente de león: seis pelos y su semilla verde.
+            for (k in 0 until 6) { val a = k * PI / 3; drawLine(Color(0xFFF2F5E6), o, Offset(o.x + (s * 0.6f * cos(a)).toFloat(), o.y + (s * 0.6f * sin(a)).toFloat()), s * 0.08f) }
+            drawCircle(Color(0xFF8FCB6A), s * 0.18f, o)
+        }
         TemaId.NAVIDAD -> {
             val col = Color(0xFFF4FBFF)
             for (k in 0 until 6) {
@@ -422,6 +427,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.COLONOS -> Color(0xFFCDB89A)
     TemaId.NAPOLEON -> Color(0xFF2E4A8C)
     TemaId.BOTANICO -> Color(0xFFB9C49A)
+    TemaId.RUINAS -> Color(0xFFA9AA9C)   // hormigón
     TemaId.NAVIDAD -> Color(0xFF8E2A2A)
     TemaId.SEDA -> Color(0xFFD9A35A)
     TemaId.GOTICO -> Color(0xFF2C3A6B)
@@ -523,6 +529,21 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                     x += hw
                 }
                 y += hh; f++
+            }
+        }
+        TemaId.RUINAS -> {
+            // Un muro de bloques de hormigón, con algunas grietas y hiedra que trepa desde abajo por los dos lados.
+            val bw = 44 * d; val bh = 22 * d; var y = 0f; var f = 0
+            while (y < h) { var x = if (f % 2 == 0) 0f else -bw / 2; while (x < w) { drawRect(v, Offset(x, y), Size(bw, bh), style = Stroke(d)); x += bw }; y += bh; f++ }
+            val az = java.util.Random(7)
+            repeat(6) {
+                var x = az.nextFloat() * w; var yy = az.nextFloat() * h
+                val p = Path().apply { moveTo(x, yy); repeat(4) { x += (az.nextFloat() - 0.5f) * 14 * d; yy += 8 * d; lineTo(x, yy) } }
+                drawPath(p, v, style = Stroke(d))
+            }
+            listOf(0.12f, 0.88f).forEach { fx ->
+                var yy = h; var x = w * fx; var k = 0
+                while (yy > h * 0.35f) { drawOval(a, Offset(x - 5 * d, yy - 4 * d), Size(10 * d, 7 * d)); yy -= 9 * d; x += (if (k % 2 == 0) 3f else -3f) * d; k++ }
             }
         }
         TemaId.NAVIDAD -> {
@@ -686,6 +707,13 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             var x = 22 * d
             while (x < w - 30 * d) { drawRect(m(Color(0xFFF3EBD5)), Offset(x, h * 0.22f), Size(30 * d, h * 0.5f)); drawRect(m(Color(0xFFC9A44C)), Offset(x, h * 0.22f), Size(30 * d, h * 0.5f), style = Stroke(1.4f * d)); x += 100 * d }
         }
+        TemaId.RUINAS -> {
+            // Una tabla rescatada sobre dos bloques de hormigón, con musgo en el canto.
+            listOf(0.1f, 0.84f).forEach { fx -> drawRect(m(Color(0xFF9C9C92)), Offset(w * fx, h * 0.45f), Size(w * 0.06f, h * 0.55f)) }
+            tabla(m(Color(0xFF8A7458)), 0f, h * 0.45f)
+            var x = 8 * d; var k = 0
+            while (x < w) { drawCircle(m(Color(0xFF4F7A33)).copy(alpha = 0.7f), (1.2f + (k % 3) * 0.6f) * d, Offset(x, h * 0.04f)); x += (7 + (k * 13) % 19) * d; k++ }
+        }
         TemaId.NAVIDAD -> {
             tabla(m(Color(0xFFEDE6DA)), 0f, h * 0.55f)
             val hoja = m(Color(0xFF2E6B3A)); val baya = m(Color(0xFFC62828)); var x = 0f; var k = 0
@@ -839,6 +867,11 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
         TemaId.BOTANICO -> {
             drawRect(fondo, Offset.Zero, size); drawRect(borde, Offset.Zero, size, style = fino)
             var y = 14 * d; while (y < h) { drawLine(tinta.copy(alpha = 0.12f * f), Offset(4 * d, y), Offset(w - 4 * d, y), d); y += 12 * d }
+        }
+        TemaId.RUINAS -> {
+            // Una placa de calle atornillada, con su filete y dos tornillos.
+            drawRoundRect(fondo, Offset.Zero, size, CornerRadius(5 * d)); drawRoundRect(borde, Offset(2 * d, 2 * d), Size(w - 4 * d, h - 4 * d), CornerRadius(4 * d), style = fino)
+            listOf(6 * d, w - 6 * d).forEach { x -> drawCircle(tinta.copy(alpha = 0.4f * f), 1.6f * d, Offset(x, h / 2)) }
         }
         TemaId.NAVIDAD -> {
             val pt = 8 * d

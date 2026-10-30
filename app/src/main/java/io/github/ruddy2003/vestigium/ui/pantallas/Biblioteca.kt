@@ -274,6 +274,19 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                 linea(x, y, x + largo, y - 2.5f * u); linea(x, y, x - largo * 0.5f, y - 2 * u)
             }
         }
+        TemaId.RUINAS -> {
+            // Una guía de hiedra que trepa por la tapa desde abajo, y una grieta arriba a la derecha.
+            val x0 = 10 * u
+            linea(x0, h - 4 * u, x0 + 6 * u, h * 0.4f, tenue, 0.8f * u)
+            for (k in 0 until 6) {
+                val y = h - 10 * u - k * (h * 0.09f); val x = x0 + 6 * u * (k / 6f) + (if (k % 2 == 0) -3f else 3f) * u; val r = (6 - k) * 0.5f * u + 2.5f * u
+                drawPath(Path().apply {
+                    moveTo(x, y + r * 0.5f); lineTo(x - r * 0.55f, y + r * 0.35f); lineTo(x - r * 0.8f, y - r * 0.05f); lineTo(x - r * 0.32f, y - r * 0.05f)
+                    lineTo(x, y - r * 0.5f); lineTo(x + r * 0.32f, y - r * 0.05f); lineTo(x + r * 0.8f, y - r * 0.05f); lineTo(x + r * 0.55f, y + r * 0.35f); close()
+                }, tenue)
+            }
+            linea(w - 14 * u, 4 * u, w - 18 * u, 12 * u, l); linea(w - 18 * u, 12 * u, w - 13 * u, 18 * u, l); linea(w - 13 * u, 18 * u, w - 17 * u, 26 * u, l)
+        }
         // Copos de nieve.
         TemaId.NAVIDAD -> listOf(Offset(w * 0.2f, h * 0.2f) to 5f, Offset(w * 0.82f, h * 0.36f) to 3.5f, Offset(w * 0.3f, h * 0.84f) to 4f, Offset(w * 0.75f, h * 0.8f) to 3f).forEach { (o, r) ->
             for (k in 0 until 3) { val g = Math.toRadians(90.0 + 60.0 * k); val d = Offset(kotlin.math.cos(g).toFloat(), kotlin.math.sin(g).toFloat()) * (r * u); drawLine(tenue, o - d, o + d, 0.8f * u) }

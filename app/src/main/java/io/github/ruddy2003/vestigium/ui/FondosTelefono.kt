@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
@@ -168,6 +169,7 @@ object FondosTelefono {
         TemaId.COLONOS -> "LA GACETA DEL VESTIGIO"
         TemaId.NAPOLEON -> "Bulletin du Vestige"
         TemaId.BOTANICO -> "Herbarium vestigii"
+        TemaId.RUINAS -> "Cuaderno del silencio"
         TemaId.NAVIDAD -> "Cartas de invierno"
         TemaId.SEDA -> "絲路 · VESTIGIUM"
         TemaId.GOTICO -> "Horae vestigii"
@@ -363,6 +365,31 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 drawRect(col, o, Size(an, al), style = Stroke(1f * u))
                 for (i in 1..3) drawLine(tenue, Offset(o.x + 8 * u, o.y + al * i / 4f), Offset(o.x + an - 8 * u, o.y + al * i / 4f), 0.7f * u)
                 esquinas.take(2).forEach { c -> val q = haciaDentro(c, 18 * u); drawCircle(col, 2.4f * u, q); drawLine(tenue, q, q + Offset(5 * u, 7 * u), 0.8f * u) }
+            }
+            TemaId.RUINAS -> {
+                // Marco de hormigón: filete fino, una guía de hiedra que sube por el borde izquierdo desde abajo, una placa de
+                // calle atornillada abajo a la derecha y una grieta que baja desde la esquina de arriba a la derecha.
+                caja(0f, tenue, 0.9f * u)
+                val alto = (aba - arr) * 0.55f
+                val tallo = Path().apply { moveTo(izq, aba); cubicTo(izq + 14 * u, aba - alto * 0.3f, izq - 6 * u, aba - alto * 0.6f, izq + 8 * u, aba - alto) }
+                drawPath(tallo, col, style = Stroke(1.2f * u))
+                for (k in 1..9) {
+                    val f = k / 10f; val y = aba - alto * f
+                    val x = izq + 8 * u * kotlin.math.sin(f * 7f)
+                    val q = Offset(x, y); val s = (6f - 2.5f * f) * u
+                    rotate(if (k % 2 == 0) 55f else -55f, q) {
+                        drawPath(Path().apply {
+                            moveTo(q.x, q.y); lineTo(q.x - s * 0.55f, q.y - s * 0.15f); lineTo(q.x - s * 0.8f, q.y - s * 0.55f); lineTo(q.x - s * 0.32f, q.y - s * 0.55f)
+                            lineTo(q.x, q.y - s); lineTo(q.x + s * 0.32f, q.y - s * 0.55f); lineTo(q.x + s * 0.8f, q.y - s * 0.55f); lineTo(q.x + s * 0.55f, q.y - s * 0.15f); close()
+                        }, col)
+                    }
+                }
+                val an = 84 * u; val al = 24 * u; val o = Offset(der - an - 12 * u, aba - al - 12 * u)
+                drawRoundRect(tenue, o, Size(an, al), CornerRadius(4 * u), style = Stroke(1.2f * u))
+                listOf(o.x + 7 * u, o.x + an - 7 * u).forEach { x -> drawCircle(col, 1.8f * u, Offset(x, o.y + al / 2)) }
+                drawLine(tenue, Offset(o.x + 16 * u, o.y + al / 2), Offset(o.x + an - 16 * u, o.y + al / 2), 0.8f * u)
+                drawPath(Path().apply { moveTo(der, arr + 30 * u); lineTo(der - 9 * u, arr + 44 * u); lineTo(der - 4 * u, arr + 58 * u); lineTo(der - 14 * u, arr + 76 * u)
+                    moveTo(der - 4 * u, arr + 58 * u); lineTo(der + 0 * u, arr + 66 * u) }, tenue, style = Stroke(1f * u))
             }
             TemaId.NAVIDAD -> {
                 // Una guirnalda de luces de colores a lo largo del borde.
@@ -703,6 +730,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.COLONOS -> R.drawable.logo_colonos
     TemaId.NAPOLEON -> R.drawable.logo_napoleon
     TemaId.BOTANICO -> R.drawable.logo_botanico
+    TemaId.RUINAS -> R.drawable.logo_ruinas
     TemaId.NAVIDAD -> R.drawable.logo_navidad
     TemaId.SEDA -> R.drawable.logo_seda
     TemaId.URSS -> R.drawable.logo_urss

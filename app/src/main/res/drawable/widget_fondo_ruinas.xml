@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ciudad verde: una losa de hormigón oscuro con una grieta y una hoja de hiedra (lote 8). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7161C18"/>
+            <stroke android:width="1.5dp" android:color="#3A443B"/>
+            <corners android:topLeftRadius="3dp" android:topRightRadius="10dp" android:bottomRightRadius="3dp" android:bottomLeftRadius="6dp"/>
+        </shape>
+    </item>
+    <!-- Una grieta que baja desde el borde de arriba, a la derecha. -->
+    <item android:gravity="top|right" android:width="24dp" android:height="24dp" android:top="0dp" android:right="14dp">
+        <vector android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+            <path android:pathData="M14,0 L11,6 L15,10 L12,17 M15,10 L20,13" android:strokeColor="#806E786C" android:strokeWidth="1"/>
+        </vector>
+    </item>
+    <!-- Una hoja de hiedra de cinco puntas en la esquina de abajo a la izquierda. -->
+    <item android:gravity="bottom|left" android:width="24dp" android:height="24dp" android:left="2dp" android:bottom="2dp">
+        <vector android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+            <path android:pathData="M12,21 L6,18 L2.5,10.5 L8,11 L12,2.5 L16,11 L21.5,10.5 L18,18 Z" android:fillColor="#B34F7A33"/>
+            <path android:pathData="M12,21 L12,7" android:strokeColor="#998FCB6A" android:strokeWidth="0.8"/>
+        </vector>
+    </item>
+</layer-list>

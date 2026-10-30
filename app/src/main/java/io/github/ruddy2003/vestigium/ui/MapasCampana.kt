@@ -185,6 +185,21 @@ object MapasCampana {
                 }
                 drawLine(Color(0xFF2A1E0E), Offset(mp.x, mp.y - 3 * d), Offset(mp.x, mp.y + 2.4f * d), 0.9f * d)
             }
+            TemaId.RUINAS -> {
+                // En la azotea de la torre: un huerto con un árbol joven, una bandera de tela verde y el semáforo de la esquina, en verde.
+                val base = m.y - 4 * d
+                drawRect(Color(0xFF8A8D84), Offset(m.x - 22 * d, base), Size(44 * d, 5 * d))
+                drawRect(Color(0xFF6A4A2A), Offset(m.x - 18 * d, base - 4 * d), Size(20 * d, 4 * d))
+                drawLine(Color(0xFF5A3A22), Offset(m.x - 8 * d, base - 4 * d), Offset(m.x - 8 * d, base - 18 * d), 2 * d)
+                drawCircle(Color(0xFF3F7A3A), 8 * d, Offset(m.x - 8 * d, base - 24 * d)); drawCircle(Color(0xFF5A9A4A), 5 * d, Offset(m.x - 11 * d, base - 27 * d))
+                for (k in 0 until 4) drawLine(Color(0xFF6FB34A), Offset(m.x - 16 * d + k * 5 * d, base - 4 * d), Offset(m.x - 15 * d + k * 5 * d, base - 8 * d), 1.2f * d)
+                drawLine(Color(0xFF2A2A2A), Offset(m.x + 12 * d, base), Offset(m.x + 12 * d, base - 34 * d), 1.2f * d)
+                drawPath(Path().apply { moveTo(m.x + 12 * d, base - 34 * d); quadraticTo(m.x + 20 * d, base - 36 * d, m.x + 26 * d, base - 31 * d); lineTo(m.x + 26 * d, base - 24 * d); quadraticTo(m.x + 20 * d, base - 28 * d, m.x + 12 * d, base - 26 * d); close() }, Color(0xFF4F7A33))
+                drawRect(Color(0xFF2E332E), Offset(m.x + 17 * d, base - 18 * d), Size(6 * d, 14 * d))
+                drawCircle(Color(0xFF8FCB6A).copy(alpha = 0.3f), 4 * d, Offset(m.x + 20 * d, base - 7.5f * d))
+                drawCircle(Color(0xFF8FCB6A), 1.7f * d, Offset(m.x + 20 * d, base - 7.5f * d))
+                drawCircle(Color(0xFF8A4A22).copy(alpha = 0.5f), 1.5f * d, Offset(m.x + 20 * d, base - 14.5f * d))
+            }
             TemaId.NAVIDAD -> {
                 // El árbol de la plaza: tres pisos de ramas, las bolas de colores, la estrella de oro y los regalos al pie.
                 val verde = Color(0xFF1F6B3A); val b = m.y - 8 * d

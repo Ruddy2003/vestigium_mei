@@ -222,6 +222,13 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             val cx = x0 + w * 0.5f; val r = h * 0.32f
             drawPath(Path().apply { moveTo(cx - r * 1.4f, cy); quadraticTo(cx, cy - r * 1.3f, cx + r * 1.4f, cy); quadraticTo(cx, cy + r * 1.3f, cx - r * 1.4f, cy); close() }, claro)
         }
+        TemaId.RUINAS -> {
+            // El cuaderno de lona con su lomo de cinta plateada y la liga.
+            drawRect(lerp(c, Color(0xFF5B6B45), 0.45f), o, s)
+            drawRect(Color(0xFFB8BCB8).copy(alpha = 0.85f), o, Size(s.width * 0.2f, s.height))
+            drawLine(Color(0xFF2A2A2A).copy(alpha = 0.7f), Offset(x0 + w * 0.78f, o.y), Offset(x0 + w * 0.78f, o.y + s.height), 1.2f * d)
+            drawCircle(claro, h * 0.12f, Offset(x0 + w * 0.5f, cy))
+        }
         // Libro envuelto para regalo: cinta dorada en cruz y su lazo.
         TemaId.NAVIDAD -> {
             drawRoundRect(c, o, s, CornerRadius(1.5f * d))
@@ -631,6 +638,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             lleno(Path().apply { moveTo(x - r * 0.55f, y - r * 0.85f); lineTo(x + r, y - r * 0.85f); lineTo(x + r, y + r * 0.85f); lineTo(x - r * 0.55f, y + r * 0.85f); lineTo(x - r, y); close() })
             drawCircle(borde, r * 0.1f, Offset(x - r * 0.74f, y), style = fino)
         }
+        TemaId.RUINAS -> {
+            // Una placa de calle: rectángulo de esquinas redondas con dos tornillos.
+            lleno(Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(x - r, y - r * 0.62f, x + r, y + r * 0.62f, CornerRadius(r * 0.18f))) })
+            drawCircle(borde, r * 0.1f, Offset(x - r * 0.74f, y), style = fino); drawCircle(borde, r * 0.1f, Offset(x + r * 0.74f, y), style = fino)
+        }
         // Bola del árbol con su casquillo.
         TemaId.NAVIDAD -> {
             drawCircle(relleno, r * 0.9f, Offset(x, y + r * 0.1f)); drawCircle(borde, r * 0.9f, Offset(x, y + r * 0.1f), style = fino)
@@ -957,6 +969,25 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawRoundRect(col, Offset(x - r * 0.5f, y - r * 0.5f), Size(r, r * 1.4f), CornerRadius(r * 0.2f))
                 drawRect(lerp(col, Color(0xFF8A6A3A), 0.6f), Offset(x - r * 0.3f, y - r * 0.85f), Size(r * 0.6f, r * 0.35f))
                 drawRect(fondo, Offset(x - r * 0.32f, y), Size(r * 0.64f, r * 0.35f))
+            }
+            else -> return false
+        }
+        TemaId.RUINAS -> when (forma) {
+            // Una tuerca oxidada, de las que se rescatan de los escombros.
+            "alfiler" -> {
+                drawPath(Path().apply { for (k in 0 until 6) { val a = k * PI / 3; val px = x + (r * 0.8f * cos(a)).toFloat(); val py = y + (r * 0.8f * sin(a)).toFloat(); if (k == 0) moveTo(px, py) else lineTo(px, py) }; close() }, col)
+                drawCircle(fondo, r * 0.32f, c)
+            }
+            // Una hoja de hiedra de cinco puntas.
+            "estrella" -> drawPath(Path().apply {
+                moveTo(x, y + r * 0.9f); lineTo(x - r * 0.55f, y + r * 0.6f); lineTo(x - r * 0.95f, y); lineTo(x - r * 0.38f, y - r * 0.05f)
+                lineTo(x, y - r * 0.95f); lineTo(x + r * 0.38f, y - r * 0.05f); lineTo(x + r * 0.95f, y); lineTo(x + r * 0.55f, y + r * 0.6f); close()
+            }, col)
+            // Una lata de conservas con su tapa abierta.
+            "taza" -> {
+                drawRect(col, Offset(x - r * 0.5f, y - r * 0.45f), Size(r, r * 1.3f))
+                for (k in 0 until 3) drawLine(fondo.copy(alpha = 0.5f), Offset(x - r * 0.5f, y - r * 0.15f + k * r * 0.35f), Offset(x + r * 0.5f, y - r * 0.15f + k * r * 0.35f), 0.7f * d)
+                drawOval(lerp(col, Color.White, 0.3f), Offset(x - r * 0.5f, y - r * 0.95f), Size(r, r * 0.3f))
             }
             else -> return false
         }

@@ -130,6 +130,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.NAPOLEON -> Papeleria(Color(0xFFF3EAD2), Color(0xFFC9B48A), Color(0xFFFBF5E6), Color(0xFF1E3A8A), Color(0xFFA3172E), Color(0xFFD9B25B), Color(0xFF14213D))
     // Papel de trapo, forro de musgo, la cera verde en flor y la rafia.
     TemaId.BOTANICO -> Papeleria(Color(0xFFE9E2C6), Color(0xFFAFA27C), Color(0xFFF5F0DC), Color(0xFF6E7A4E), Color(0xFF3F5A2C), Color(0xFFC9B27A), Color(0xFF2A2318))
+    // Cartón gris recortado de una caja, forro de hiedra, una chapa oxidada por sello y cordel de nailon viejo.
+    TemaId.RUINAS -> Papeleria(Color(0xFFC9C2AE), Color(0xFF8E8775), Color(0xFFDCD6C4), Color(0xFF3E6B2A), Color(0xFFA34A1E), Color(0xFF8A7F68), Color(0xFF1F2420))
     // Rojo de regalo, forro verde pino, el moño y la cinta de oro.
     TemaId.NAVIDAD -> Papeleria(Color(0xFFB71C1C), Color(0xFF7A1010), Color(0xFFD84343), Color(0xFF1B5E20), Color(0xFFD4AF37), Color(0xFFD4AF37), Color(0xFFFBF6EC))
     // Papel de arroz, forro de lapislázuli, el sello de cinabrio y la faja azul.
@@ -178,6 +180,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.COLONOS -> FormaSobre(SolapaSobre.PICO, 0.02f, CierreSobre.DOBLE)
     TemaId.NAPOLEON -> FormaSobre(SolapaSobre.PICO, 0.025f, CierreSobre.BANDA)
     TemaId.BOTANICO -> FormaSobre(SolapaSobre.ONDAS, 0.04f, CierreSobre.CRUZ)
+    TemaId.RUINAS -> FormaSobre(SolapaSobre.RASGADA, 0.005f, CierreSobre.HILO)
     TemaId.NAVIDAD -> FormaSobre(SolapaSobre.DIENTES, 0.04f, CierreSobre.CRUZ)
     TemaId.SEDA -> FormaSobre(SolapaSobre.RECTA, 0.02f, CierreSobre.BANDA)
     TemaId.GOTICO -> FormaSobre(SolapaSobre.OJIVA, 0.015f, CierreSobre.VERTICAL)
@@ -428,6 +431,27 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
                 drawLine(claro, Offset(c.x, y), Offset(c.x + r * 0.2f, y - r * 0.14f), r * 0.03f)
             }
         }
+        TemaId.RUINAS -> {
+            // Una chapa de botella oxidada, aplastada como sello: 21 dientes, el disco hundido y una hoja de hiedra estampada.
+            val chapa = Path().apply {
+                for (i in 0 until 42) {
+                    val ang = 2 * PI * i / 42; val rr = if (i % 2 == 0) r else r * 0.87f
+                    val x = c.x + (rr * cos(ang)).toFloat(); val y = c.y + (rr * sin(ang)).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }
+            translate(r * 0.05f, r * 0.08f) { drawPath(chapa, sombra) }
+            drawPath(chapa, col)
+            drawCircle(hondo, r * 0.74f, c, style = Stroke(r * 0.05f))
+            drawCircle(hondo.copy(alpha = hondo.alpha * 0.5f), r * 0.16f, Offset(c.x + r * 0.42f, c.y - r * 0.38f))
+            drawCircle(hondo.copy(alpha = hondo.alpha * 0.4f), r * 0.1f, Offset(c.x - r * 0.48f, c.y + r * 0.3f))
+            val hoja = Path().apply {
+                moveTo(c.x, c.y + r * 0.42f); lineTo(c.x - r * 0.24f, c.y + r * 0.1f); lineTo(c.x - r * 0.44f, c.y - r * 0.08f); lineTo(c.x - r * 0.16f, c.y - r * 0.1f)
+                lineTo(c.x, c.y - r * 0.46f); lineTo(c.x + r * 0.16f, c.y - r * 0.1f); lineTo(c.x + r * 0.44f, c.y - r * 0.08f); lineTo(c.x + r * 0.24f, c.y + r * 0.1f); close()
+            }
+            drawPath(hoja, claro)
+            drawLine(hondo, Offset(c.x, c.y + r * 0.42f), Offset(c.x, c.y - r * 0.3f), r * 0.035f)
+        }
         TemaId.NAVIDAD -> {
             // El moño de regalo: las dos lazadas, las puntas que caen, el nudo y una ramita de acebo encima.
             listOf(-1f, 1f).forEach { s ->
@@ -652,6 +676,22 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
                 val f = j / 8f; val p = Offset(a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f); val largo = W * 0.05f * (1f - f * 0.6f)
                 listOf(-1f, 1f).forEach { s -> drawLine(musgo, p, Offset(p.x + s * largo, p.y - largo * 0.5f), 2.2f, StrokeCap.Round) }
             }
+        }
+        TemaId.RUINAS -> {
+            // El sobre se cortó de un plano viejo de la ciudad: calles en cuadrícula y una avenida en diagonal. En una esquina,
+            // una hoja de hiedra prensada, sujeta con un trozo de cinta.
+            val calle = pa.tinta.copy(alpha = 0.10f)
+            for (i in 1..5) { val x = l + W * i / 6f; drawLine(calle, Offset(x, top), Offset(x, bot), 1f) }
+            for (j in 1..3) { val y = top + H * j / 4f; drawLine(calle, Offset(l, y), Offset(r, y), 1f) }
+            drawLine(pa.tinta.copy(alpha = 0.14f), Offset(l, bot - H * 0.1f), Offset(r, top + H * 0.2f), 3f)
+            val p = Offset(r - W * 0.14f, bot - H * 0.3f); val s = H * 0.16f
+            val hoja = Path().apply {
+                moveTo(p.x, p.y + s * 0.5f); lineTo(p.x - s * 0.3f, p.y + s * 0.1f); lineTo(p.x - s * 0.55f, p.y - s * 0.1f); lineTo(p.x - s * 0.2f, p.y - s * 0.12f)
+                lineTo(p.x, p.y - s * 0.55f); lineTo(p.x + s * 0.2f, p.y - s * 0.12f); lineTo(p.x + s * 0.55f, p.y - s * 0.1f); lineTo(p.x + s * 0.3f, p.y + s * 0.1f); close()
+            }
+            drawPath(hoja, pa.forro.copy(alpha = 0.75f))
+            drawLine(pa.forro, Offset(p.x, p.y + s * 0.45f), Offset(p.x, p.y + s * 0.95f), 1.4f)
+            rotate(-20f, p) { drawRect(Color(0xFFE8DFC4).copy(alpha = 0.6f), Offset(p.x - s * 0.5f, p.y + s * 0.3f), Size(s, s * 0.28f)) }
         }
         TemaId.NAVIDAD -> {
             // El borde de bastón de caramelo, blanco y verde, y unos copos.
@@ -919,6 +959,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Mon cher moi de l’avenir…", "Redacta tu despacho…", "Despacho para %s lacrado", "Ni el Emperador la abriría antes.", "Toca para dictar el despacho…")
     TemaId.BOTANICO -> VozCarta("Ya floreció: ábrela", "Prensada entre hojas", "Para el naturalista del %s", "Naturalista de %s", "Para el naturalista que seré",
         "Querido yo de otra estación…", "Escribe tu nota de campo…", "Carta para %s prensada", "Hay que esperar a que florezca.", "Toca para escribir a tinta sepia…")
+    TemaId.RUINAS -> VozCarta("Ya puedes destapiarla", "Tapiada con una chapa", "Para quien siga en pie el %s", "Superviviente de %s", "Para quien siga en pie",
+        "Si lees esto, seguimos aquí…", "Escribe tu mensaje en la pared…", "Mensaje para %s tapiado", "No se destapia antes de tiempo.", "Toca para escribir con el carboncillo…")
     TemaId.NAVIDAD -> VozCarta("¡Ya puedes desenvolverla!", "Envuelta con moño", "Para mi yo del %s, junto al fuego", "Para mi yo de %s", "Para mi yo de otra Navidad",
         "Querido yo de otra Navidad…", "Escribe tu carta junto al fuego…", "Carta para %s envuelta", "Como un regalo: no se abre antes.", "Toca para escribir junto al fuego…")
     TemaId.SEDA -> VozCarta("La caravana llegó: ábrela", "Sellada con cinabrio", "Para el viajero del %s", "Viajero de %s", "Para el viajero que seré",
@@ -955,6 +997,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.COLONOS -> LetraExtra.fell
     TemaId.NAPOLEON -> LetraExtra.bodoniTitulo
     TemaId.BOTANICO -> LetraExtra.fraunces
+    TemaId.RUINAS -> LetraExtra.letrero
     TemaId.NAVIDAD -> LetraExtra.cinzelDeco
     TemaId.SEDA -> LetraExtra.almendra
     TemaId.GOTICO -> LetraExtra.textura
