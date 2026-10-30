@@ -81,6 +81,8 @@ private class PielCinta(val radio: Float, val cortado: Boolean, val relleno: Rel
 private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     // Sillares con el filo claro arriba.
     TemaId.ROMANO -> PielCinta(0f, false, RellenoCinta.FILETE, null, StrokeCap.Square)
+    // Adoquines de esquinas gastadas, con la junta en puntos; las horas, a pasos cortos.
+    TemaId.URBE -> PielCinta(3f, false, RellenoCinta.PUNTOS, floatArrayOf(4f, 1.5f), StrokeCap.Round)
     // Bloques de fósforo con líneas de barrido y horas punteadas.
     TemaId.CIBER -> PielCinta(0f, false, RellenoCinta.RAYAS, floatArrayOf(1.5f, 3f), StrokeCap.Butt)
     TemaId.NEON -> PielCinta(0f, false, RellenoCinta.RAYAS, floatArrayOf(1.5f, 3f), StrokeCap.Butt)

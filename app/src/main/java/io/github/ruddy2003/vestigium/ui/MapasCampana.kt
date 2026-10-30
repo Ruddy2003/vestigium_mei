@@ -59,6 +59,24 @@ object MapasCampana {
                 }
                 drawRect(rojo, Offset(c.x - 2 * d, c.y + r - 1.5f * d), Size(4 * d, 3 * d))
             }
+            TemaId.URBE -> {
+                // La fuente al final del paseo: la fachada de travertino con su nicho, el agua que cae en la pila y la moneda
+                // de oro que vuela por encima del hombro hacia el agua, para volver a Roma.
+                val trav = Color(0xFFE6D8BC); val sombra = Color(0xFFA8956E); val agua = Color(0xFF6FB3D9)
+                val base = m.y - 4 * d
+                drawRect(trav, Offset(m.x - 16 * d, base - 30 * d), Size(32 * d, 24 * d))
+                drawRect(sombra, Offset(m.x - 17 * d, base - 32 * d), Size(34 * d, 3 * d))
+                listOf(-12f, -7f, 7f, 12f).forEach { x -> drawRect(sombra.copy(alpha = 0.7f), Offset(m.x + x * d - 0.8f * d, base - 29 * d), Size(1.6f * d, 22 * d)) }
+                drawPath(Path().apply { moveTo(m.x - 4.5f * d, base - 7 * d); lineTo(m.x - 4.5f * d, base - 20 * d); quadraticTo(m.x, base - 27 * d, m.x + 4.5f * d, base - 20 * d); lineTo(m.x + 4.5f * d, base - 7 * d); close() }, sombra)
+                // La cascada y la pila.
+                for (k in -2..2) drawLine(agua.copy(alpha = 0.8f), Offset(m.x + k * 1.6f * d, base - 9 * d), Offset(m.x + k * 2.6f * d, base - 1 * d), 1f * d)
+                drawArc(agua, 0f, 180f, true, Offset(m.x - 18 * d, base - 5 * d), Size(36 * d, 10 * d))
+                drawArc(sombra, 0f, 180f, false, Offset(m.x - 18 * d, base - 5 * d), Size(36 * d, 10 * d), style = Stroke(1.4f * d))
+                // La moneda en el aire, con su estela.
+                val mon = Offset(m.x + 12 * d, base - 40 * d)
+                drawPath(Path().apply { moveTo(m.x + 26 * d, base - 30 * d); quadraticTo(m.x + 20 * d, base - 46 * d, mon.x, mon.y) }, oro.copy(alpha = 0.5f), style = Stroke(0.8f * d, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2 * d, 2 * d))))
+                drawCircle(oro, 2.6f * d, mon); drawCircle(lerp(oro, Color.White, 0.5f), 1f * d, mon - Offset(0.8f * d, 0.8f * d))
+            }
             TemaId.HELENO -> with(TrofeosTema) {
                 // El sol de Vergina, de dieciséis rayos, en oro sobre el escudo púrpura de Macedonia.
                 val c = Offset(m.x, m.y - 24 * d)

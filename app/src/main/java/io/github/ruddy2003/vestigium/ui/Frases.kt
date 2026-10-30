@@ -49,6 +49,31 @@ object Frases {
         f("Respice post te, hominem te esse memento.", "Mira detrás de ti: recuerda que eres un hombre.", "Tertuliano, Apologético 33, sobre el triunfo romano"),
     )
 
+    /** La Roma de hoy y la de todas las capas: los viajeros que llegaron, los poetas en romanesco, la ciudad de los papas. */
+    val URBE = listOf(
+        f("Ich zähle einen zweiten Geburtstag, eine wahre Wiedergeburt, von dem Tage, da ich Rom betrat.", "Cuento un segundo cumpleaños, un verdadero renacimiento, desde el día en que pisé Roma.", "Goethe, Viaje a Italia, Roma, 3 de diciembre de 1786"),
+        f("Eine Welt zwar bist du, o Rom; doch ohne die Liebe / Wäre die Welt nicht die Welt, wäre denn Rom auch nicht Rom.", "Un mundo eres, Roma; pero sin el amor el mundo no sería el mundo, ni Roma sería Roma.", "Goethe, Elegías romanas I, 1795"),
+        f("O Rome! my country! city of the soul!", "¡Oh Roma, mi patria, ciudad del alma!", "Lord Byron, La peregrinación de Childe Harold IV, 78, 1818"),
+        f("While stands the Coliseum, Rome shall stand; / When falls the Coliseum, Rome shall fall; / And when Rome falls—the World.", "Mientras el Coliseo esté en pie, Roma estará en pie; cuando caiga el Coliseo, caerá Roma; y cuando caiga Roma, el mundo.", "Lord Byron, Childe Harold IV, 145, citando lo que decían los peregrinos sajones"),
+        f("Go thou to Rome,—at once the Paradise, / The grave, the city, and the wilderness.", "Ve tú a Roma: a la vez el paraíso, la tumba, la ciudad y la tierra salvaje.", "Percy B. Shelley, Adonais 49, 1821"),
+        f("I have an habitual feeling of my real life having past, and that I am leading a posthumous existence.", "Tengo la sensación constante de que mi vida verdadera ya pasó y de que llevo una existencia póstuma.", "John Keats, última carta conservada, a Charles Brown, Roma, 30 de noviembre de 1820"),
+        f("To see the ghost of old Rome, wicked, wonderful old city, haunting the very ground on which its people trod.", "Ver el fantasma de la vieja Roma, malvada y maravillosa ciudad vieja, rondando el mismo suelo que pisó su gente.", "Charles Dickens, Estampas de Italia, 1846, desde lo alto del Coliseo"),
+        f("J'ai eu connaissance des affaires de Rome longtemps avant que je l'aie eue de ceux de ma maison: je savais le Capitole et son plan avant que je susse le Louvre, et le Tibre avant la Seine.", "Conocí los asuntos de Roma mucho antes que los de mi casa: sabía el Capitolio y su plano antes de saber el Louvre, y el Tíber antes que el Sena.", "Michel de Montaigne, Ensayos III, 9, «De la vanidad»"),
+        f("Soleva Roma, che 'l buon mondo feo, / due soli aver, che l'una e l'altra strada / facean vedere, e del mondo e di Deo.", "Solía Roma, que hizo bueno al mundo, tener dos soles, que mostraban uno y otro camino: el del mundo y el de Dios.", "Dante, Purgatorio XVI, 106-108, sobre el papa y el emperador"),
+        f(null, "Cuando estoy en Roma, ayuno el sábado; cuando estoy aquí, no ayuno.", "Ambrosio de Milán, según Agustín, Carta 54 a Januario, 3; de ahí «donde fueres, haz lo que vieres»"),
+        f("C'è un'Ape che se posa / su un bottone de rosa: / lo succhia e se ne va... / Tutto sommato, la felicità / è una piccola cosa.", "Hay una abeja que se posa en un botón de rosa: lo chupa y se va… Al fin y al cabo, la felicidad es una cosa pequeña.", "Trilussa, «Felicità», en romanesco"),
+        f("Me spiego: da li conti che se fanno / secondo le statistiche d'adesso / risurta che te tocca un pollo all'anno: / e, se nun entra ne le spese tue, / t'entra ne la statistica lo stesso / perché c'è un antro che ne magna due.", "Me explico: según las cuentas que se hacen con las estadísticas de hoy, te toca un pollo al año; y si no entra en tus gastos, entra en la estadística igual, porque hay otro que se come dos.", "Trilussa, «La Statistica», en romanesco (Tutte le poesie, ed. de Pietro Pancrazi)"),
+        f("Roma de travertino, / rifatta de cartone, / saluta l'imbianchino, / suo prossimo padrone.", "Roma de travertino, rehecha de cartón, saluda al pintor de brocha gorda, su próximo amo.", "Atribuido a Trilussa, en la visita de Hitler a Roma, mayo de 1938"),
+        f("Io ho deliberato di lasciare un monumento di quello che oggi è la plebe di Roma.", "He decidido dejar un monumento de lo que hoy es el pueblo llano de Roma.", "Giuseppe Gioachino Belli, introducción a los Sonetos romanescos, 1831"),
+        f("L'ommini de sto monno sò ll'istesso / che vvaghi de caffè nner mascinino.", "Los hombres de este mundo son lo mismo que los granos de café en el molinillo.", "Giuseppe Gioachino Belli, «Er caffettiere fisolofo», soneto 211"),
+        f("La morte sta anniscosta in ne l'orloggi; / e ggnisuno pò ddí: ddomani ancora.", "La muerte está escondida en los relojes, y nadie puede decir: mañana también.", "Giuseppe Gioachino Belli, «La golaccia», soneto 364"),
+        f("Stupenda e misera città.", "Estupenda y mísera ciudad.", "Pier Paolo Pasolini, «El llanto de la excavadora», 1956, en Las cenizas de Gramsci"),
+        f("Urbem fecisti quod prius orbis erat.", "Hiciste una ciudad de lo que antes era el mundo.", "Rutilio Namaciano, Sobre su regreso I, 66, año 417"),
+        f("Urbem… excoluit adeo, ut iure sit gloriatus marmoream se relinquere, quam latericiam accepisset.", "Embelleció tanto la ciudad que pudo presumir con razón de dejarla de mármol, cuando la había recibido de ladrillo.", "Suetonio, Vida de Augusto 28"),
+        f("Rome ne fu pas faite toute en un jour.", "Roma no se hizo toda en un día.", "Proverbio; su primer registro es francés, en Li Proverbe au vilain, hacia 1190"),
+        f("Lasciami tutte le rughe, non me ne togliere nemmeno una: ci ho messo una vita a farmele.", "Déjame todas las arrugas, no me quites ni una: me llevó una vida entera hacérmelas.", "Atribuida a Anna Magnani, a quien la maquillaba"),
+    )
+
     val CIBER = listOf(
         f("Calculemus!", "¡Calculemos!", "Gottfried Leibniz"),
         f("The Analytical Engine weaves algebraical patterns just as the Jacquard-loom weaves flowers and leaves.",
@@ -643,6 +668,7 @@ object Frases {
 
     fun de(tema: TemaId): List<Frase> = when (tema) {
         TemaId.ROMANO -> ROMANO
+        TemaId.URBE -> URBE
         TemaId.CIBER -> CIBER
         TemaId.NEON -> NEON
         TemaId.HELENO -> HELENO
@@ -675,6 +701,7 @@ object Frases {
     /** Encabezado del recuadro de la frase, según el tema. */
     fun rotulo(tema: TemaId = Estilo.tema): String = when (tema) {
         TemaId.ROMANO -> "SENTENTIA DIEI"
+        TemaId.URBE -> "LA FRASE DEL GIORNO"
         TemaId.CIBER -> "> motd"
         TemaId.NEON -> "> motd"
         TemaId.HELENO -> "ΓΝΩΜΗ ΤΗΣ ΗΜΕΡΑΣ"

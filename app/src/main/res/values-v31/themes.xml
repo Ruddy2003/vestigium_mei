@@ -27,10 +27,20 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_romano</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_romano</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Urbe" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_urbe</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_urbe</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_urbe</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Romano.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_romano_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_romano_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_romano</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Urbe.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_urbe_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_urbe_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_urbe</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Ciber" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_ciber_oscuro</item>

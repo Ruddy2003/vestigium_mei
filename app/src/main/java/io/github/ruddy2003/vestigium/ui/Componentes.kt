@@ -134,6 +134,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.REVOLUCION -> Tricolor(modifier)
         TemaId.ANTIGUAS -> Runica(modifier)
         TemaId.ROMANO -> BandaOvas(modifier, color)
+        TemaId.URBE -> BandaSampietrini(modifier, color)
     }
 }
 
@@ -162,6 +163,31 @@ private fun BandaOvas(modifier: Modifier, color: Color) {
                 drawPath(Path().apply { moveTo(x - paso * 0.1f, h * 0.48f); lineTo(x, h * 0.84f); lineTo(x + paso * 0.1f, h * 0.48f); close() }, color)
             }
             x += paso
+        }
+    }
+}
+
+/**
+ * Sampietrini: dos hileras de adoquines de basalto puestos a tresbolillo, cada uno un poco distinto (la piedra se gasta
+ * desigual), con la junta de arena entre ellos y el bordillo de travertino arriba.
+ */
+@Composable
+private fun BandaSampietrini(modifier: Modifier, color: Color) {
+    Canvas(modifier.fillMaxWidth().height(13.dp)) {
+        val h = size.height; val f = 1.dp.toPx()
+        drawLine(color, Offset(0f, 0.6f * f), Offset(size.width, 0.6f * f), 1.4f * f)
+        val lado = (h - 3f * f) / 2f
+        val paso = lado + 1.2f * f
+        for (fila in 0 until 2) {
+            var x = if (fila == 0) 0f else -paso / 2
+            var i = 0
+            val y = 2.2f * f + fila * (lado + 0.8f * f)
+            while (x < size.width) {
+                val azar = ((i * 7919 + fila * 104729) % 97) / 97f
+                val enc = lado * (0.86f + 0.14f * azar)
+                drawRoundRect(color.copy(alpha = 0.45f + 0.4f * azar), Offset(x + (lado - enc) / 2, y + (lado - enc) / 2), Size(enc, enc), CornerRadius(enc * 0.28f))
+                x += paso; i++
+            }
         }
     }
 }
@@ -900,6 +926,11 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "N.B.", igual = "= ", nulo = "nihil", elegido = "◉", riel = RolColor.PRIMARIO, quitar = "×", listaVacia = "[ vacat ]", flecha = "→",
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0.6f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.BARRA,
         guiones = floatArrayOf(4f, 3f), tamBoton = 14, letraBoton = null, borde = RolColor.CONTORNO, grosor = 1f)
+    // Rótulos de calle en mayúsculas espaciadas, el verde de las persianas en el interruptor y un cuaderno escolar con renglones y margen.
+    TemaId.URBE -> PielComponentes(sep = " — ", cerrada = "▸", abierta = "▾", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
+        aviso = "Attenzione:", igual = ": ", nulo = "niente", elegido = "●", riel = RolColor.SECUNDARIO, quitar = "✕", listaVacia = "( ancora niente )", flecha = "›",
+        sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.2f, colorPrefijo = RolColor.TERCIARIO, renglones = true, margen = MargenEditor.ROJO,
+        guiones = floatArrayOf(6f, 2f, 1f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.4f)
     TemaId.CIBER -> PielComponentes(sep = " ", cerrada = "[+]", abierta = "[-]", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
         aviso = "!", igual = ":= ", nulo = "null", elegido = "▣", riel = RolColor.SECUNDARIO, quitar = "[x]", listaVacia = "[ ]", flecha = ">>",
         sufijo = "", caja = CajaEtiqueta.MINUSCULAS, espaciado = 0f, colorPrefijo = RolColor.SECUNDARIO, renglones = false, margen = MargenEditor.PUNTOS,
@@ -994,6 +1025,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
     when (t) {
         // Letras espaciadas, como en una inscripción.
         TemaId.ROMANO -> Text(nombre, style = estilo.copy(letterSpacing = 2.sp), modifier = peso)
+        // La placa de mármol de la esquina: doble filete y los dos tornillos que la sujetan al muro.
+        TemaId.URBE -> Text(nombre, style = estilo.copy(letterSpacing = 1.6.sp), modifier = peso.drawBehind {
+            val g = 1.dp.toPx(); val w = size.width; val h = size.height
+            drawRect(e.onBackground.copy(alpha = 0.55f), Offset(0f, 0f), Size(w, h), style = Stroke(1.4f * g))
+            drawRect(e.onBackground.copy(alpha = 0.3f), Offset(3 * g, 3 * g), Size(w - 6 * g, h - 6 * g), style = Stroke(0.7f * g))
+            listOf(5.5f * g, w - 5.5f * g).forEach { x -> drawCircle(e.tertiary, 1.4f * g, Offset(x, h / 2)) }
+        }.padding(horizontal = 14.dp, vertical = 3.dp))
         // Indicador de consola con el cursor detrás.
         TemaId.CIBER -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.secondary)) { append(" ▌") } }, style = estilo, color = e.primary, modifier = peso)
         TemaId.NEON -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.secondary)) { append(" ▌") } }, style = estilo, color = e.primary, modifier = peso)
@@ -1085,6 +1123,8 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
 /** La forma de los botones, las fichas de la lista y las pastillas. Las medidas van en proporción a la altura, para que sirvan en todos los tamaños. */
 private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> RoundedCornerShape(2.dp)
+    // El portón: arco rebajado arriba, pies rectos abajo.
+    TemaId.URBE -> RoundedCornerShape(topStartPercent = 40, topEndPercent = 40, bottomEndPercent = 6, bottomStartPercent = 6)
     TemaId.CIBER -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
     TemaId.NEON -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
     // Frontón de templo, muy bajo.
@@ -1155,6 +1195,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
     val es = (mapOf("somnium" to "sueño", "notae" to "notas", "ascensus" to "escalada")[raiz] ?: raiz) + (if (resto.isEmpty()) "" else " $resto")
     return when (t) {
         TemaId.ROMANO -> "tabula · " + base.uppercase().replace('U', 'V')
+        TemaId.URBE -> "quaderno a righe · $es"
         TemaId.CIBER -> "~/vm/$archivo"
         TemaId.NEON -> "~/vm/$archivo"
         TemaId.HELENO -> "πάπυρος · $es"
@@ -1222,6 +1263,15 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             listOf(1f, -1f).forEach { s ->
                 val x0 = if (s > 0f) i else w - i
                 drawPath(Path().apply { moveTo(x0, h / 2 - u); lineTo(x0 + s * u * 0.9f, h / 2); lineTo(x0, h / 2 + u); close() }, e.primary.copy(alpha = 0.55f))
+            }
+        }
+        TemaId.URBE -> {
+            // La placa de la calle: marco grueso y filete fino por dentro, con un tornillo en cada esquina.
+            drawRect(e.onSurface.copy(alpha = 0.22f), Offset(i, i), Size(w - 2 * i, h - 2 * i), style = Stroke(fino * 1.6f))
+            drawRect(e.onSurface.copy(alpha = 0.14f), Offset(i + u * 0.5f, i + u * 0.5f), Size(w - 2 * i - u, h - 2 * i - u), style = Stroke(fino * 0.6f))
+            listOf(Offset(i + u * 0.9f, i + u * 0.9f), Offset(w - i - u * 0.9f, i + u * 0.9f), Offset(i + u * 0.9f, h - i - u * 0.9f), Offset(w - i - u * 0.9f, h - i - u * 0.9f)).forEach { p ->
+                drawCircle(e.tertiary.copy(alpha = 0.7f), u * 0.22f, p)
+                drawLine(e.surface.copy(alpha = 0.8f), p - Offset(u * 0.14f, 0f), p + Offset(u * 0.14f, 0f), fino * 0.6f)
             }
         }
         TemaId.CIBER -> {
@@ -1360,6 +1410,13 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawLine(a, Offset(f(0.36f), f(0.1f)), Offset(f(0.64f), f(0.1f)), tr.width)
             drawArc(l, 90f, 180f, false, Offset(f(0.3f), f(0.14f)), Size(f(0.14f), f(0.2f)), style = tr)
             drawArc(l, -90f, 180f, false, Offset(f(0.56f), f(0.14f)), Size(f(0.14f), f(0.2f)), style = tr)
+        }
+        TemaId.URBE -> {
+            // La tazzina del café ya bebido, en su platito: sin vapor.
+            drawOval(l, Offset(f(0.1f), f(0.72f)), Size(f(0.8f), f(0.16f)), style = tr)
+            drawPath(Path().apply { moveTo(f(0.24f), f(0.4f)); lineTo(f(0.3f), f(0.7f)); quadraticTo(f(0.5f), f(0.8f), f(0.7f), f(0.7f)); lineTo(f(0.76f), f(0.4f)) }, l, style = tr)
+            drawOval(a, Offset(f(0.24f), f(0.35f)), Size(f(0.52f), f(0.1f)), style = tr)
+            drawArc(l, -80f, 190f, false, Offset(f(0.7f), f(0.44f)), Size(f(0.16f), f(0.16f)), style = tr)
         }
         TemaId.CIBER -> {
             // Consola sin salida: el indicador y el cursor.
@@ -1517,6 +1574,8 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
     val w = size.width; val h = size.height; val d = 4.dp.toPx()
     when (t) {
         TemaId.ROMANO -> drawRect(c, Offset(0f, h - d), Size(w, d))
+        // El agujero de la picadora del boleto, arriba a la derecha, y una raya de tinta abajo.
+        TemaId.URBE -> { drawCircle(c, d * 0.85f, Offset(w - d * 1.7f, d * 1.7f)); drawRect(c, Offset(0f, h - d * 0.5f), Size(w, d * 0.5f)) }
         TemaId.CIBER -> drawRect(c, Offset.Zero, Size(d * 0.75f, h))
         TemaId.NEON -> drawRect(c, Offset.Zero, Size(d * 0.75f, h))
         TemaId.HELENO -> drawPath(Path().apply { moveTo(w / 2 - d * 1.6f, h); lineTo(w / 2, h - d * 1.4f); lineTo(w / 2 + d * 1.6f, h); close() }, c)
@@ -1575,6 +1634,11 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
     when (t) {
         // Filete interior, como el marco de una inscripción.
         TemaId.ROMANO -> drawRect(c, Offset(m, m), Size(w - 2 * m, h - 2 * m), style = Stroke(fino * 0.8f))
+        // La clave del arco del portón, arriba al centro, y el umbral abajo.
+        TemaId.URBE -> {
+            drawPath(Path().apply { moveTo(w / 2 - m * 0.9f, 0f); lineTo(w / 2 + m * 0.9f, 0f); lineTo(w / 2 + m * 0.55f, m * 1.5f); lineTo(w / 2 - m * 0.55f, m * 1.5f); close() }, c)
+            drawLine(c, Offset(m * 2, h - m * 0.7f), Offset(w - m * 2, h - m * 0.7f), fino)
+        }
         // Un led a la derecha y la pista abajo.
         TemaId.CIBER -> {
             drawRect(c, Offset(w - m * 2.6f, h / 2 - m * 0.8f), Size(m * 0.9f, m * 1.6f))
@@ -1677,6 +1741,14 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawRect(l, Offset(f(0.06f), f(0.18f)), Size(f(0.78f), f(0.64f)), style = tr)
             drawRect(a.copy(alpha = 0.5f), Offset(f(0.18f), f(0.3f)), Size(f(0.54f), f(0.4f)))
             drawLine(a, Offset(f(0.6f), f(0.98f)), Offset(f(0.98f), f(0.2f)), tr.width)
+        }
+        TemaId.URBE -> {
+            // El blocchetto de espiral y el bolígrafo del quiosco.
+            drawRect(l, Offset(f(0.08f), f(0.2f)), Size(f(0.6f), f(0.74f)), style = tr)
+            for (k in 0 until 4) drawCircle(l, f(0.04f), Offset(f(0.18f + k * 0.13f), f(0.2f)), style = tr)
+            for (k in 0 until 3) drawLine(l.copy(alpha = 0.6f), Offset(f(0.16f), f(0.42f + k * 0.14f)), Offset(f(0.58f), f(0.42f + k * 0.14f)), tr.width * 0.7f)
+            drawLine(a, Offset(f(0.6f), f(0.96f)), Offset(f(0.94f), f(0.26f)), tr.width * 1.8f)
+            drawLine(l, Offset(f(0.94f), f(0.26f)), Offset(f(0.97f), f(0.2f)), tr.width)
         }
         TemaId.CIBER -> {
             // Indicador de consola.
@@ -1834,6 +1906,8 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
     val c = e.secondary; val w = size.width; val h = size.height; val d = 1.dp.toPx()
     when (t) {
         TemaId.ROMANO -> drawRect(c, Offset.Zero, Size(3 * d, h))
+        // El poste de la parada: tramos de color y tramos vacíos, como la pintura de los postes.
+        TemaId.URBE -> { var y = 0f; var i = 0; while (y < h) { drawRect(if (i % 2 == 0) c else e.primary, Offset(0f, y), Size(3 * d, minOf(5 * d, h - y))); y += 5 * d; i++ } }
         TemaId.CIBER -> {
             var y = 0f
             while (y < h) { drawRect(c, Offset(0f, y), Size(2 * d, 4 * d)); y += 7 * d }

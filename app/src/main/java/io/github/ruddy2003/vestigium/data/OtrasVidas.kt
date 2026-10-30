@@ -308,6 +308,26 @@ object OtrasVidas {
                 "vida" to e(25), "vida_adulto" to e(50), "hijos" to e(1), "alfabetizacion" to e(30), "lectura" to r(0)),
             fuentes = listOf("La legión romana" to "${W}Roman_legion", "El ejército romano: la vida diaria" to "${W}Roman_army")),
 
+        // La vida moderna más parecida a la tuya, pero en otra ciudad: misma época, mismas pantallas, otro ritmo de calle.
+        Vida("restauradora", "Giulia", "Restauradora de frescos", "Roma", "2025", 2025, "tema", "urbe", edad = 38,
+            historia = listOf(
+                "Giulia sale en motoneta antes de las ocho y cruza el tráfico del centro hasta una iglesia donde trabaja sobre un andamio, a diez metros del suelo, limpiando un fresco centímetro a centímetro con hisopos y una lámpara. Un metro cuadrado puede llevarle semanas.",
+                "A la una baja a comer algo rápido en un bar; en la tarde vuelve al andamio hasta las seis. Después camina por su barrio, toma un café de pie en la barra y pasa por el mercado. Cena tarde, como casi todos en Roma, y a veces se queda en la plaza con amigos.",
+                "Su ciudad tiene unos dos millones setecientos cincuenta mil habitantes y lleva casi tres mil años de capas encima. Ella vivirá, en promedio, más de ochenta y cinco años y tendrá uno o ningún hijo: en Italia nacen menos niños que nunca. Lleva el teléfono en el bolsillo del overol, como tú.",
+            ),
+            dia = listOf(t(23.5, 7.0, Hacer.DORMIR), t(7.0, 8.0, Hacer.CUIDAR), t(8.0, 8.5, Hacer.CAMINO, "en motoneta"), t(8.5, 13.0, Hacer.TRABAJO, "andamio en una iglesia"), t(13.0, 14.0, Hacer.COMER),
+                t(14.0, 18.0, Hacer.TRABAJO), t(18.0, 19.5, Hacer.LIBRE, "paseo de la tarde"), t(19.5, 20.5, Hacer.CUIDAR), t(20.5, 22.0, Hacer.COMER, "cena tardía"), t(22.0, 23.5, Hacer.GENTE)),
+            datos = mapOf("pasos" to e(7000, "De pie en el andamio y a pie en el barrio; la motoneta ahorra el resto."), "km_anio" to e(8000), "kcal" to e(2100), "proteina" to e(75),
+                "azucar" to e(35, "El cornetto y el café con azúcar de la mañana."), "fibra" to e(22), "alcohol" to e(10, "Una copa de vino en la cena."), "sueno" to e(7.5), "dormir" to e(23.5),
+                "trabajo" to e(40), "aire_libre" to e(2), "pantalla" to e(4.5, "Poca pantalla en el trabajo, mucha en la noche."), "notificaciones" to e(60), "musica" to e(1.5),
+                "personas_dia" to e(25), "conocidas" to e(3000), "poblacion" to m(2745062, "Roma Capitale al 1 de enero de 2026, según el Istat."), "lejos" to e(9000),
+                "estatura" to e(163, "Promedio aproximado de las italianas de su edad."), "vida" to m(85.5, "Mujeres en Italia, 2024 (Istat); 81.4 los hombres."), "vida_adulto" to e(87),
+                "hijos" to m(1.18, "Italia, 2024: el mínimo de su historia (Istat)."), "alfabetizacion" to e(99), "lectura" to e(10, "En Italia, el 57% de los mayores de seis años leyó al menos un libro en 2024 (Istat).")),
+            fuentes = listOf("Istat: indicadores demográficos 2024" to "https://www.istat.it/comunicato-stampa/indicatori-demografici-anno-2024/",
+                "Istat: libros y bibliotecas, 2024 y 2025" to "https://www.istat.it/comunicato-stampa/libri-e-biblioteche-abitudini-di-lettura-e-frequentazione-anni-2024-e-2025/",
+                "Población de Roma (datos del Istat)" to "https://www.quantitalia.it/demografia/comune/roma",
+                "El fresco y su restauración" to "${W}Fresco")),
+
         Vida("remero", "Demeas", "Remero de un trirreme", "Atenas", "431 a. C.", -431, "tema", "heleno", edad = 30,
             historia = listOf(
                 "Demeas es un ciudadano pobre de Atenas: no tiene armadura de hoplita, así que sirve en la flota. En el trirreme son ciento setenta remeros en tres filas, y un flautista marca el ritmo para que nadie choque.",

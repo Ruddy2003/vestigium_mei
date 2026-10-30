@@ -390,6 +390,23 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             drawLine(e.tertiary, nudo, Offset(c.x + 9 * u, c.y + r + 10 * u), 2.5f * u)
             drawCircle(e.tertiary, 4 * u, nudo)
         }
+        // Una plaza redonda vista desde arriba: dos anillos de sampietrini que se van llenando y, muy tenue detrás de la
+        // cuenta, la sombra del obelisco del centro que gira como la aguja de un reloj de sol.
+        TemaId.URBE -> {
+            for (anillo in 0 until 2) {
+                val ra = r + (if (anillo == 0) -4.5f else 4.5f) * u
+                val n = if (anillo == 0) 40 else 46
+                for (k in 0 until n) {
+                    val f = (k + if (anillo == 0) 0.5f else 0f) / n
+                    val q = en(f, ra)
+                    rotate(f * 360f, q) { drawRoundRect(if (f <= p) color else pista, Offset(q.x - 3.4f * u, q.y - 3.4f * u), Size(6.8f * u, 6.8f * u), CornerRadius(1.8f * u)) }
+                }
+            }
+            val punta = en(p, r * 0.82f)
+            drawLine(tenue.copy(alpha = 0.12f), c, punta, 5 * u, cap = StrokeCap.Round)
+            drawCircle(tenue.copy(alpha = 0.18f), 5 * u, c)
+            drawCircle(e.tertiary, 3.5f * u, en(0f, r + 14 * u))
+        }
         // Terminal: una vuelta de celdas; las hechas, encendidas; el cursor en la que sigue; corchetes en las esquinas.
         TemaId.CIBER -> {
             val n = 48; val lado = 6.5f * u; val sigue = (p * n).toInt()
@@ -762,6 +779,12 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             val r = minOf(h * 0.3f, w * 0.3f)
             moveTo(x + r, y); lineTo(x + w - r, y); quadraticTo(x + w - r, y + r, x + w, y + r); lineTo(x + w, y + h - r); quadraticTo(x + w - r, y + h - r, x + w - r, y + h)
             lineTo(x + r, y + h); quadraticTo(x + r, y + h - r, x, y + h - r); lineTo(x, y + r); quadraticTo(x + r, y + r, x + r, y); close()
+        }
+        // El boleto de autobús: rectángulo con las dos muescas del talón, arriba y abajo.
+        TemaId.URBE -> {
+            val n = minOf(h * 0.2f, w * 0.12f); val xm = x + w * 0.74f
+            moveTo(x, y); lineTo(xm - n, y); quadraticTo(xm, y + n * 1.4f, xm + n, y); lineTo(x + w, y); lineTo(x + w, y + h)
+            lineTo(xm + n, y + h); quadraticTo(xm, y + h - n * 1.4f, xm - n, y + h); lineTo(x, y + h); close()
         }
         TemaId.CIBER -> {
             val n = (w / (h * 0.9f)).toInt().coerceAtLeast(1); val ancho = w / n

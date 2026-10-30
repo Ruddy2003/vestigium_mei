@@ -33,6 +33,8 @@ Obrera Vestigium — versión reducida y renombrada de PT Sans: Copyright (c) 20
 Fira Sans (recortada) — Copyright (c) 2012-2015, The Mozilla Foundation and Telefonica S.A.
 Sorts Mill Goudy (recortada) — Copyright (c) 2010, Barry Schwartz (chemoelectric@chemoelectric.org)
 Ciudadana Vestigium — versión reducida y renombrada de Libre Baskerville: Copyright 2012 The Libre Baskerville Project Authors (https://github.com/impallari/Libre-Baskerville) with Reserved Font Name Libre Baskerville.
+Titillium Web (recortada) — Copyright (c) 2009-2011 by Accademia di Belle Arti di Urbino and students of MA course of Visual design.
+Newsreader (instancias estáticas, recortadas) — Copyright 2020 The Newsreader Project Authors (http://github.com/productiontype/Newsreader)
 Vollkorn (instancias estáticas, recortadas) — Copyright 2017 The Vollkorn Project Authors (https://github.com/FAlthausen/Vollkorn-Typeface)
 Camino Vestigium — versión reducida y renombrada de Uncial Antiqua: Copyright (c) 2011 by Brian J. Bonislawsky DBA Astigmatic (AOETI) (astigma@astigmatic.com), with Reserved Font Names "Uncial Antiqua"
 Convencion Vestigium — versión reducida y renombrada de Playfair Display: Copyright 2017 The Playfair Display Project Authors (https://github.com/clauseggers/Playfair-Display), with Reserved Font Name "Playfair Display"

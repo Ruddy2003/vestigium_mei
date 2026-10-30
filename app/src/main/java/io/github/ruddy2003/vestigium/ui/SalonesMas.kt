@@ -101,6 +101,7 @@ object SalonesMas {
             TemaId.ANTIGUAS -> { drawRect(piedra(Color(0xFF7D7A72)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); with(TrofeosMas) { runas(Offset(w * 0.22f, h * 0.5f), w * 0.56f, h * 0.5f, Color(0xFF2B2A28).copy(alpha = 0.5f), h * 0.06f, 6) } }
             // Los pedestales de los siete primeros están en [SalonesTema.pedestal]: no llegan aquí.
             TemaId.ROMANO -> Unit
+            TemaId.URBE -> Unit          // la Roma de hoy tiene su pilón de fuente en [SalonesTema.pedestal]
             TemaId.HELENO -> Unit
             TemaId.MEDIEVAL -> Unit
             TemaId.GOTICO -> Unit

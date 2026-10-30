@@ -157,6 +157,7 @@ object FondosTelefono {
     /** Lo que lleva escrito el fondo bajo el emblema: el nombre de la app en la voz de cada tema. */
     fun marca(t: TemaId): String = when (t) {
         TemaId.ROMANO -> "VESTIGIVM · MEI"
+        TemaId.URBE -> "VESTIGIUM MEI · ROMA"
         TemaId.CIBER -> "vestigium.mei"
         TemaId.NEON -> "vestigium.mei"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ"
@@ -253,6 +254,19 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     val k = 7 * u
                     drawPath(Path().apply { moveTo(c.x - k, c.y); lineTo(c.x, c.y - k); lineTo(c.x + k, c.y); lineTo(c.x, c.y + k); close() }, e.primary.copy(alpha = 0.6f))
                 }
+            }
+            TemaId.URBE -> {
+                // Una ventana de la ciudad: el marco de travertino, las dos persianas verdes abiertas a los lados (con sus
+                // tablillas), el alféizar abajo y el arco rebajado arriba.
+                caja(0f, col, 2.2f * u); caja(5 * u, tenue, 0.7f * u)
+                val verde = e.secondary.copy(alpha = 0.3f)
+                listOf(izq - 14 * u, der + 2 * u).forEach { x0 ->
+                    drawRect(verde, Offset(x0, arr), Size(12 * u, aba - arr), style = Stroke(1.2f * u))
+                    var y = arr + 6 * u; while (y < aba - 4 * u) { drawLine(verde, Offset(x0 + 2 * u, y), Offset(x0 + 10 * u, y + 2 * u), 1f * u); y += 7 * u }
+                }
+                drawRect(col, Offset(izq - 18 * u, aba + 2 * u), Size(der - izq + 36 * u, 5 * u))
+                drawPath(Path().apply { moveTo(izq, arr); quadraticTo(cx, arr - 30 * u, der, arr) }, col, style = Stroke(1.6f * u))
+                drawPath(Path().apply { moveTo(cx - 6 * u, arr - 16 * u); lineTo(cx + 6 * u, arr - 16 * u); lineTo(cx + 4 * u, arr - 6 * u); lineTo(cx - 4 * u, arr - 6 * u); close() }, e.primary.copy(alpha = 0.5f))
             }
             TemaId.CIBER -> {
                 // Consola: borde punteado, escuadras de luz y un indicador con su cursor abajo.
@@ -692,6 +706,7 @@ class FondoVivoServicio : WallpaperService() {
 
 private fun logo(t: TemaId): Int = when (t) {
     TemaId.ROMANO -> R.drawable.logo_romano
+    TemaId.URBE -> R.drawable.logo_urbe
     TemaId.CIBER -> R.drawable.logo_ciber
     TemaId.NEON -> R.drawable.logo_neon
     TemaId.HELENO -> R.drawable.logo_heleno

@@ -52,6 +52,10 @@ object Letra {
     val garamond = FontFamily(Font(R.font.garamond_regular, FontWeight.Normal), Font(R.font.garamond_medium, FontWeight.Medium), Font(R.font.garamond_semibold, FontWeight.SemiBold))
     /** Share Tech Mono: rótulos de terminal para el tema cyberpunk. */
     val terminal = FontFamily(Font(R.font.sharetech_mono, FontWeight.Normal))
+    /** Titillium Web (de la Academia de Bellas Artes de Urbino): la letra de las placas y los letreros de Roma de hoy. */
+    val placa = FontFamily(Font(R.font.titillium_regular, FontWeight.Normal), Font(R.font.titillium_semibold, FontWeight.Medium), Font(R.font.titillium_semibold, FontWeight.SemiBold), Font(R.font.titillium_bold, FontWeight.Bold))
+    /** Newsreader: letra de periódico para leer párrafos, como el diario que se compra en el quiosco de la esquina. */
+    val cronaca = FontFamily(Font(R.font.newsreader_regular, FontWeight.Normal), Font(R.font.newsreader_semibold, FontWeight.Medium), Font(R.font.newsreader_semibold, FontWeight.SemiBold))
 }
 
 object Paleta {
@@ -84,6 +88,7 @@ enum class Epoca(val nombre: String) {
 /** Los temas. Terminal (id «ciber») solo existe en oscuro. El orden de la lista es el del selector dentro de cada [Epoca]. */
 enum class TemaId(val id: String, val nombre: String, val descripcion: String, val epoca: Epoca, val soloOscuro: Boolean = false) {
     ROMANO("romano", "Romano", "Mármol, pórfido y oro. Títulos en latín, fechas romanas, corona de laurel.", Epoca.ANTIGUEDAD),
+    URBE("urbe", "Roma", "La Roma de hoy, en capas: placas de mármol en las esquinas, ocre y travertino, cúpulas, fuentes y motonetas entre las ruinas. Fecha en italiano con el año de la fundación, y los rioni.", Epoca.CONTEMPORANEA),
     CIBER("ciber", "Terminal", "Pura consola: cian sobre negro, cursor parpadeante, ASCII y volcados de memoria. Todo en código. Solo oscuro.", Epoca.CONTEMPORANEA, soloOscuro = true),
     NEON("neon", "Ciudad neón", "Los niveles bajos de una megaciudad: letreros de neón entre el vapor, puestos de comida y callejones. Magenta, ámbar y verde de sodio. Solo oscuro.", Epoca.FUTURO, soloOscuro = true),
     HELENO("heleno", "Helénico", "Púrpura macedonio, oro y azul del Egeo. Títulos en griego, el sol de Vergina.", Epoca.ANTIGUEDAD),
@@ -177,6 +182,18 @@ internal val helenoOscuro = darkColorScheme(
     surfaceContainerLow = Color(0xFF161222), surfaceContainerLowest = Color(0xFF0E0B17),
 ).conInversos()
 
+/**
+ * Roma de hoy. De día, travertino y revoque ocre con el rojo pompeyano de las fachadas, el verde de las persianas y el
+ * oro de la ocra; de noche, los sampietrini bajo las farolas de sodio, con el travertino que brilla tibio.
+ */
+internal val urbeClaro = esquema(false, 0xFFEFE6D3, 0xFFF8F1E2, 0xFFE6D9BF, 0xFFCDBB98, 0xFF2B2420, 0xFF6A5D51,
+    0xFFA8432A, 0xFFFFF7EE, 0xFFF3D9C9, 0xFF2B2420, 0xFF3D5E45, 0xFFD5E2D3, 0xFFB98322, 0xFF9B1C1C)
+internal val urbeOscuro = esquema(true, 0xFF171412, 0xFF201B18, 0xFF2B2420, 0xFF433830, 0xFFF1E6D2, 0xFFB5A794,
+    0xFFE8955A, 0xFF2A1405, 0xFF4A2A18, 0xFFF6E6D2, 0xFF8DB596, 0xFF1F3325, 0xFFE3C07A, 0xFFFF8A7A)
+
+/** Titillium en los títulos, espaciada como los nombres de las calles; Newsreader para leer; Titillium otra vez en los datos. */
+internal val tipoUrbe = tipografia(Letra.placa, FontWeight.SemiBold, 1.04f, 1.3f, Letra.cronaca, 1.06f, Letra.placa, 1.02f, cifrasAlineadas = true)
+
 internal val tipoRomano = Typography(
     displaySmall = TextStyle(fontFamily = Letra.inscripcion, fontWeight = FontWeight.Normal, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 2.sp),
     headlineMedium = TextStyle(fontFamily = Letra.inscripcion, fontWeight = FontWeight.Normal, fontSize = 27.sp, lineHeight = 33.sp, letterSpacing = 2.4.sp),
@@ -268,6 +285,7 @@ private fun formas(e: Esquinas) = Shapes(
 /** Colores, letra y redondez de cada tema. */
 internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ROMANO -> if (oscuro) romanoOscuro else romanoClaro
+    TemaId.URBE -> if (oscuro) urbeOscuro else urbeClaro
     TemaId.CIBER -> ciber
     TemaId.NEON -> neon
     TemaId.HELENO -> if (oscuro) helenoOscuro else helenoClaro
@@ -293,6 +311,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
 
 internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.ROMANO -> tipoRomano
+    TemaId.URBE -> tipoUrbe
     TemaId.CIBER -> tipoCiber
     TemaId.NEON -> tipoNeon
     TemaId.HELENO -> tipoHeleno
@@ -324,6 +343,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
  */
 private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.ROMANO -> 58f to 1f          // Cinzel: capitales anchas
+    TemaId.URBE -> 64f to 0.5f          // Titillium, semiangosta
     TemaId.CIBER -> 62f to 0f           // Share Tech Mono
     TemaId.NEON -> 62f to 0f           // Share Tech Mono
     TemaId.HELENO -> 66f to 1f          // Garamond, cifras alineadas
@@ -354,6 +374,7 @@ private fun Typography.conReloj(tema: TemaId): Typography {
 
 internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.ROMANO -> Esquinas(4, Esquina.REDONDA)
+    TemaId.URBE -> Esquinas(6, Esquina.ARCO)               // el arco de un portón romano
     TemaId.CIBER -> Esquinas(1, Esquina.REDONDA)
     TemaId.NEON -> Esquinas(1, Esquina.REDONDA)
     TemaId.HELENO -> Esquinas(6, Esquina.REDONDA)
@@ -517,6 +538,60 @@ object Romano {
     }
 }
 
+/**
+ * La Roma de hoy (tema «urbe»): la fecha en italiano con el año contado desde la fundación de la ciudad, los números de
+ * los portales, los meses y los días como en los letreros, los 22 rioni del centro y las fiestas de la ciudad.
+ * Los numerales romanos (del año de la fundación y de los rioni) salen de [Romano.de].
+ */
+object Urbe {
+    /** El número del portal, como en las placas de travertino de las casas: «n. 17». */
+    fun numero(n: Int): String = if (n in 1..9999) "n. $n" else "$n"
+
+    /**
+     * El año desde la fundación de Roma (ab Urbe condita), en la cuenta de Varrón: el 1 d. C. es el 754 AUC, así que se suma
+     * 753. Se cuenta por años civiles, como en las fechas de las placas modernas; la fiesta del 21 de abril no lo cambia.
+     */
+    fun auc(anio: Int): Int = anio + 753
+
+    val MESI = listOf("gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio", "agosto", "settembre", "ottobre", "novembre", "dicembre")
+    private val GIORNI = listOf("lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato", "domenica")
+
+    /** Los días, en dos letras, como en los horarios de las tiendas y de los autobuses. */
+    val SEMANA = listOf("LU", "MA", "ME", "GI", "VE", "SA", "DO")
+
+    /** «Roma, sabato 17 ottobre 2026 · AUC MMDCCLXXIX». */
+    fun fecha(iso: String): String = runCatching {
+        val d = io.github.ruddy2003.vestigium.data.Fechas.parse(iso)
+        "Roma, ${GIORNI[d.dayOfWeek.value - 1]} ${if (d.dayOfMonth == 1) "1º" else d.dayOfMonth} ${MESI[d.monthValue - 1]} ${d.year} · AUC ${Romano.de(auc(d.year))}"
+    }.getOrDefault(iso)
+
+    /** El mes en mayúsculas, como en las placas: «OTTOBRE 2026». */
+    fun mes(n: Int, anio: Int? = null): String = MESI[(n - 1).coerceIn(0, 11)].uppercase() + (anio?.let { " $it" } ?: "")
+
+    /** Los 22 rioni del centro de Roma, en su orden oficial (el número va en romanos en las placas: «R. XIII TRASTEVERE»). */
+    val RIONI = listOf("Monti", "Trevi", "Colonna", "Campo Marzio", "Ponte", "Parione", "Regola", "Sant'Eustachio", "Pigna", "Campitelli",
+        "Sant'Angelo", "Ripa", "Trastevere", "Borgo", "Esquilino", "Ludovisi", "Sallustiano", "Castro Pretorio", "Celio", "Testaccio",
+        "San Saba", "Prati")
+
+    /** «R. XIII · TRASTEVERE»: el rione [n] (de 1 a 22). */
+    fun rione(n: Int): String {
+        val i = Math.floorMod(n - 1, RIONI.size)
+        return "R. ${Romano.de(i + 1)} · ${RIONI[i].uppercase()}"
+    }
+
+    /**
+     * Las fiestas de la ciudad: el Natale di Roma (21 de abril), los santos patronos Pedro y Pablo (29 de junio), la
+     * nieve de Santa Maria Maggiore (5 de agosto), la brecha de Porta Pia (20 de septiembre de 1870) y las fiestas de toda Italia.
+     */
+    private val FIESTAS = mapOf(
+        "01-01" to "Capodanno", "01-06" to "Befana", "01-17" to "S. Antonio", "04-21" to "Natale Urbe", "04-25" to "Liberazione",
+        "05-01" to "1º maggio", "06-02" to "Repubblica", "06-29" to "Ss. Pietro", "08-05" to "Neve", "08-15" to "Ferragosto",
+        "09-20" to "Porta Pia", "11-01" to "Ognissanti", "12-08" to "Immacolata", "12-25" to "Natale",
+    )
+
+    fun marca(fecha: String): String? = FIESTAS[fecha.takeLast(5)]
+}
+
 /** Muestra de un tema para elegirlo en Ajustes: fondo, emblema, título en su letra y sus colores, en una tarjeta con la forma del tema. */
 @Composable
 fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier, onClick: () -> Unit) {
@@ -525,6 +600,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     val t = tipoDe(tema, o)
     val titulo = when (tema) {
         TemaId.ROMANO -> "DIES"
+        TemaId.URBE -> "OGGI"
         TemaId.CIBER -> "DÍA_"
         TemaId.NEON -> "DÍA_"
         TemaId.HELENO -> "ΗΜΕΡΑ"
@@ -549,6 +625,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     }
     val linea = when (tema) {
         TemaId.ROMANO -> "XVII · X"
+        TemaId.URBE -> "sabato 17 ottobre"
         TemaId.CIBER -> "2026.10.17"
         TemaId.NEON -> "2026.10.17"
         TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."
@@ -575,6 +652,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     // Las formas con arco, frontón o punta necesitan más aire arriba o abajo para que nada quede cortado; la suma es la misma en todas, para que las filas queden parejas.
     val (arriba, abajo) = when (tema) {
         TemaId.ROMANO -> 16 to 16
+        TemaId.URBE -> 20 to 12
         TemaId.CIBER -> 16 to 16
         TemaId.NEON -> 16 to 16
         TemaId.HELENO -> 20 to 12
@@ -600,6 +678,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
     // En el trapecio y el paralelogramo los lados se meten: un poco más de margen a los lados.
     val lados = when (tema) {
         TemaId.ROMANO -> 12
+        TemaId.URBE -> 11
         TemaId.CIBER -> 10
         TemaId.NEON -> 10
         TemaId.HELENO -> 10
@@ -653,6 +732,11 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         moveTo(r, 0f); lineTo(s.width - r, 0f); quadraticTo(s.width - r, r, s.width, r); lineTo(s.width, s.height - r)
         quadraticTo(s.width - r, s.height - r, s.width - r, s.height); lineTo(r, s.height); quadraticTo(r, s.height - r, 0f, s.height - r)
         lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
+    }
+    // Portón con arco rebajado, como los de los palacios: el arco apenas sube sobre los dos pies derechos.
+    TemaId.URBE -> GenericShape { s, _ ->
+        val f = s.height * 0.08f
+        moveTo(0f, s.height); lineTo(0f, f); quadraticTo(s.width / 2, -f, s.width, f); lineTo(s.width, s.height); close()
     }
     // Panel de terminal con dos esquinas cortadas en diagonal.
     TemaId.CIBER -> CutCornerShape(topStart = 0.dp, topEnd = 12.dp, bottomEnd = 0.dp, bottomStart = 12.dp)
@@ -758,6 +842,11 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
     when (tema) {
         // Tesela de mosaico.
         TemaId.ROMANO -> { drawRect(c); drawRect(fondo.copy(alpha = 0.35f), Offset(w * 0.12f, h * 0.12f), Size(w * 0.76f, h * 0.76f), style = fino) }
+        // Sampietrino: el adoquín de basalto, gastado en las aristas, con su junta y el brillo de la piedra pisada.
+        TemaId.URBE -> {
+            drawRoundRect(c, Offset(w * 0.06f, h * 0.06f), Size(w * 0.88f, h * 0.88f), CornerRadius(w * 0.16f))
+            drawLine(fondo.copy(alpha = 0.45f), Offset(w * 0.24f, h * 0.24f), Offset(w * 0.6f, h * 0.2f), w * 0.08f)
+        }
         // Píxel encendido dentro de su celda.
         TemaId.CIBER -> { drawRect(c, style = fino); drawRect(c, Offset(w * 0.28f, h * 0.28f), Size(w * 0.44f, h * 0.44f)) }
         TemaId.NEON -> { drawRect(c, style = fino); drawRect(c, Offset(w * 0.28f, h * 0.28f), Size(w * 0.44f, h * 0.44f)) }

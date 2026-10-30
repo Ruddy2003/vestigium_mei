@@ -197,10 +197,32 @@ def papeles_fuente():
     for t in ('romano', 'medieval', 'seda', 'revolucion'):
         shutil.copyfile(os.path.join(aqui, f'papel_{t}.jpg'), os.path.join(OUT, f'papel_{t}.jpg'))
 
+def papel_urbe():
+    """Roma: la hoja de un cuaderno comprado en la papelería del barrio, crema y algo reciclada, con el cerco claro
+    que dejó una tazzina de café y el pliegue suave de haberlo llevado en la bolsa."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#F7EFDD'), col('#ECE0C6'), ruido_rect(W, H, 50, 141) * 0.7)
+    motas = np.random.default_rng(142).random((H, W)) > 0.9988
+    a[motas] = a[motas] * 0.7 + col('#9C8460') * 0.3
+    # El cerco de la tazzina: un anillo marrón muy tenue, más oscuro en el borde, y no del todo cerrado.
+    cx, cy, rad = W * 0.74, H * 0.83, W * 0.13
+    d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
+    ang = np.arctan2(yy - cy, xx - cx)
+    anillo = np.clip(1 - np.abs(d - rad) / 4, 0, 1) * np.clip(0.3 + 0.7 * np.sin(ang + 0.8), 0, 1)
+    dentro = (d < rad) * ruido_rect(W, H, 18, 144) * 0.35
+    a = mezcla(a, col('#B98E5E'), np.clip(anillo * 0.32 + dentro * 0.18, 0, 1))
+    # El pliegue: una franja apenas más oscura con su lado iluminado.
+    py = H * 0.42 + (xx - W / 2) * 0.03
+    a = a * (1 - 0.03 * np.exp(-((yy - py) / 28) ** 2) + 0.015 * np.exp(-((yy - py - 40) / 30) ** 2))[..., None]
+    a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 143)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_urbe.jpg'), quality=86)
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
     papeles()
     papel_antiguas()
     papeles_lote7()
     papeles_fuente()
+    papel_urbe()
     print('papeles listos')

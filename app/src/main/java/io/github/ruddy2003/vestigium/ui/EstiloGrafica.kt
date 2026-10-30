@@ -155,7 +155,7 @@ data class EstiloGrafica(
 
 /** Formas del punto de datos. */
 enum class FormaPunto {
-    CIRCULO, TRIANGULO, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO, HOJA, COPO, MONEDA,
+    CIRCULO, TRIANGULO, CUPOLA, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO, HOJA, COPO, MONEDA,
     ROMBO, ANILLO, OCTOGRAMA, LUNA, MIRA, ESTRELLA, ESCARAPELA, GEMA, GOTA,
 }
 
@@ -206,6 +206,10 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Inscripción: interpunct triangular, líneas finas cinceladas, eje con remates de serif y barras como columnas con capitel.
     TemaId.ROMANO -> EstiloGrafica(FormaPunto.TRIANGULO, 1.8f, null, StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(6f, 3f),
         Rejilla.LINEAS, 0.55f, Eje.REMATES, FormaBarra.TAPA, R.font.plex_mono_regular, FontWeight.Normal, null, 0.02f, 1f)
+    // Roma de hoy: puntos en forma de cúpula, la línea de la ruta del autobús (guion largo y punto), la pauta del cuaderno
+    // de fondo, el eje como una regla y las barras como pilares de arcada; cifras de letrero, en Titillium.
+    TemaId.URBE -> EstiloGrafica(FormaPunto.CUPOLA, 2.2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(8f, 2f, 1f, 2f),
+        Rejilla.PAUTA, 0.45f, Eje.REGLA, FormaBarra.ARCO, R.font.titillium_semibold, FontWeight.SemiBold, "tnum", 0.03f, 1.02f)
     // Terminal: píxel de fósforo con halo, trazo en segmentos de barrido, matriz de puntos del monitor y barras de vúmetro.
     TemaId.CIBER -> EstiloGrafica(FormaPunto.PIXEL, 1.6f, listOf(4f, 1.2f), StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.HALO, listOf(0.1f, 2.2f),
         Rejilla.MATRIZ, 0.6f, Eje.CORCHETES, FormaBarra.BLOQUES, R.font.sharetech_mono, FontWeight.Normal, null, 0.04f, 1.05f)
@@ -336,6 +340,13 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
             if (!hueco) drawCircle(color, r * 0.3f, c)
         }
         FormaPunto.TRIANGULO -> figura(egPoligono(c, r * 1.15f, 3, -90f))
+        // La cúpula: casquete, tambor y linterna.
+        FormaPunto.CUPOLA -> figura(Path().apply {
+            moveTo(c.x - r, c.y + 0.75f * r); lineTo(c.x - r, c.y + 0.2f * r)
+            arcTo(Rect(c.x - r, c.y - 0.8f * r, c.x + r, c.y + 1.2f * r), 180f, 180f, false)
+            lineTo(c.x + r, c.y + 0.75f * r); close()
+            addRect(Rect(c.x - 0.2f * r, c.y - 1.15f * r, c.x + 0.2f * r, c.y - 0.75f * r))
+        })
         FormaPunto.CUADRADO -> figura(egPoligono(c, r * 1.2f, 4, 45f))
         FormaPunto.ROMBO -> figura(egPoligono(c, r * 1.3f, 4, -90f))
         FormaPunto.HEXAGONO -> figura(egPoligono(c, r * 1.12f, 6, -90f))

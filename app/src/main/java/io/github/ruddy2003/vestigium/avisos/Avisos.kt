@@ -36,6 +36,7 @@ object Avisos {
     /** Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). */
     private fun sonidosDe(t: TemaId): Pair<Int, Int> = when (t) {
         TemaId.ROMANO -> R.raw.n_romano_aviso to R.raw.n_romano_solemne
+        TemaId.URBE -> R.raw.n_urbe_aviso to R.raw.n_urbe_solemne
         TemaId.CIBER -> R.raw.n_ciber_aviso to R.raw.n_ciber_solemne
         TemaId.NEON -> R.raw.n_neon_aviso to R.raw.n_neon_solemne
         TemaId.HELENO -> R.raw.n_heleno_aviso to R.raw.n_heleno_solemne
@@ -170,6 +171,13 @@ object Avisos {
             "EPISTVLA · te escribe tu yo del pasado", "Llegó la fecha que fijaste para abrirla.",
             "Triunfo", "triunfos nuevos",
             "ANNALES %d · tu año está listo", "Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
+        TemaId.URBE -> Voz("COME STAI? · ¿cómo te sientes ahora?", "Dos toques, como quien mira el cielo antes de salir: qué tan agradable y cuánta energía.",
+            "STANOTTE · ¿qué soñaste?", "Anótalo antes del primer café: el sueño se va con el ruido de las motonetas.",
+            "LA GIORNATA · ¿cómo fue tu día?", "Cierra la jornada. Si fue pesada, basta con un número.",
+            "Giornataccia: solo un número", "Oggi:",
+            "POSTA · llegó una cartolina de tu yo del pasado", "Es la fecha que pusiste en el matasellos.",
+            "Medaglia", "medaglie nuove",
+            "IL TUO ANNO %d · ya está en el quiosco", "Un año entero en historias, como el anuario del periódico: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
         TemaId.CIBER -> Voz("> ping ánimo", "Dos toques: qué tan agradable y cuánta energía. _",
             "> dump de sueños", "Guárdalo antes de levantarte: la memoria se libera en minutos.",
             "> cierre del día", "Llena el día. Si fue un mal día, basta con un número.",
@@ -324,6 +332,7 @@ object Avisos {
 
     internal fun vozEnfoque(t: TemaId = temaActual()): VozEnfoque = when (t) {
         TemaId.ROMANO -> VozEnfoque("Otium", "Levántate y bebe agua, como en las termas.", "Se acabó el otium", "Surge: hora de despertar", "Opus perfectum: terminaste")
+        TemaId.URBE -> VozEnfoque("Pausa caffè", "Levántate y bebe agua del nasone, como en la calle.", "Fine della pausa", "Sveglia! Hora de despertar", "Fatto! Terminaste")
         TemaId.CIBER -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
         TemaId.NEON -> VozEnfoque("> pausa", "Despega la vista de la pantalla. Agua.", "> pausa terminada", "> wake: hora de despertar", "> proceso completado")
         TemaId.HELENO -> VozEnfoque("Σχολή · pausa", "Levántate, bebe agua de la fuente.", "Terminó la pausa", "Llega Eos: hora de despertar", "Τέλος · terminaste")

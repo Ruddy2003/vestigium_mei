@@ -41,6 +41,13 @@ def travertino(sem):     # Romano: travertino con poros alargados en capas
     capas = np.sin(Y * 0.18 + ruido(sem + 4, 3, 12)) * 0.2
     return base + capas - poros * 1.2
 
+def revoque(sem):        # Roma: revoque ocre de fachada, con manchas donde se descascara y alguna hilada de ladrillo
+    base = ruido(sem, 1.0, 5) * 0.5
+    manchas = (ruido(sem + 5, 1, 22) > 0.9).astype(np.float32)
+    manchas = np.asarray(Image.fromarray((manchas * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(3)), np.float32) / 255
+    hiladas = ((Y % 18) < 1.6).astype(np.float32) * manchas
+    return base - manchas * 0.5 - hiladas * 0.9
+
 def pantalla(sem):       # Ciber: líneas de barrido y una retícula muy tenue
     lineas = (np.sin(Y * math.pi / 2) > 0.7) * -0.5
     reticula = ((X % 27 < 1) | (Y % 27 < 1)) * 0.6
@@ -146,6 +153,14 @@ def _hojitas(d, c, n=16):             # laurel: dos hojas a cada lado de la rama
             ang = a + math.pi / 2 + lado * 0.5
             p = [(x + s * math.cos(ang + t) * (1 if t == 0 else 0.35), y + s * math.sin(ang + t) * (1 if t == 0 else 0.35)) for t in (0, math.pi / 2, math.pi, 3 * math.pi / 2)]
             d.polygon(p, fill=c)
+
+def _cupolas(d, c, n=8, r=8.5):       # cúpulas: medio disco hacia afuera con su linterna, como el perfil de los tejados
+    for i in range(n):
+        a = 2 * math.pi * i / n + math.pi / n
+        x, y = _pos(a); g = math.degrees(a)
+        d.pieslice([x - r * K, y - r * K, x + r * K, y + r * K], g - 90, g + 90, fill=c)
+        lx, ly = _pos(a, RADIO + r + 1.6)
+        d.ellipse([lx - 1.4 * K, ly - 1.4 * K, lx + 1.4 * K, ly + 1.4 * K], fill=c)
 
 def _rayas(d, c, n=32, largo=0.6):    # segmentos sobre el anillo (como una barra de carga)
     for i in range(n):
@@ -263,6 +278,7 @@ def _runas(d, c, n=14, s=5):
 # donde la pluma tenía menos tinta), 'fosforo' (resplandor de pantalla), 'esmalte' (relieve suave).
 TEMAS = {
     'romano':       (travertino,    '#E5E1D9', '#6E5424',  10, 6, 'dorado',      _hojitas),
+    'urbe':         (revoque,       '#E7C793', '#7A2E1C',  13, 5, 'tinta',       _cupolas),
     'ciber':        (pantalla,      '#0D1117', '#7FE3F0',   5, 4, 'fosforo',     _rayas),
     'heleno':       (pario,         '#EEEDE9', '#3D2459',   9, 5, 'tinta',       _perlas),
     'medieval':     (vitela,        '#E8E2D6', '#33261A',   9, 6, 'ferrogalica', _cuadrifolios),

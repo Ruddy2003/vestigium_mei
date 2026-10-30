@@ -60,6 +60,12 @@ FUENTES = [
     # REV: Baskerville (1757), la letra del siglo de la Revolución
     ("librebaskerville/LibreBaskerville[wght].ttf", {"wght": 400}, "ciudadana_regular", "Ciudadana Vestigium", LATINO),
     ("librebaskerville/LibreBaskerville[wght].ttf", {"wght": 600}, "ciudadana_semibold", "Ciudadana Vestigium", LATINO),
+    # URBE: Titillium Web (Accademia di Belle Arti di Urbino), sans de placa moderna; Newsreader, letra de periódico para el texto
+    ("titilliumweb/TitilliumWeb-Regular.ttf", None, "titillium_regular", None, LATINO),
+    ("titilliumweb/TitilliumWeb-SemiBold.ttf", None, "titillium_semibold", None, LATINO),
+    ("titilliumweb/TitilliumWeb-Bold.ttf", None, "titillium_bold", None, LATINO),
+    ("newsreader/Newsreader[opsz,wght].ttf", {"opsz": 16, "wght": 400}, "newsreader_regular", None, LATINO),
+    ("newsreader/Newsreader[opsz,wght].ttf", {"opsz": 16, "wght": 600}, "newsreader_semibold", None, LATINO),
     # ANT: libro de crónicas
     ("vollkorn/Vollkorn[wght].ttf", {"wght": 400}, "vollkorn_regular", None, LATINO),
     ("vollkorn/Vollkorn[wght].ttf", {"wght": 600}, "vollkorn_semibold", None, LATINO),

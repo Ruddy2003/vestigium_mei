@@ -82,6 +82,7 @@ internal val METALES_HALL = listOf(Color(0xFFB27A45), Color(0xFFBFC6CF), Color(0
 /** El matiz de cada tema con el que se tiñen los metales del hall. */
 private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.ROMANO -> Color(0xFF9C2F3F)
+    TemaId.URBE -> Color(0xFFC98A3A)
     TemaId.CIBER -> Color(0xFF00E676)
     TemaId.NEON -> Color(0xFF00E676)
     TemaId.HELENO -> Color(0xFF1E5F8C)
@@ -181,6 +182,8 @@ object PiezasLogro {
     /** El trazo y el material de las piezas en cada tema. */
     private fun trazoTema(t: TemaId, u: Float): Trazo = when (t) {
         TemaId.ROMANO -> Trazo(u, 1.2f, StrokeCap.Butt, StrokeJoin.Miter, null, 0f, false, Color(0xFFEDE6D6))
+        // Trazo de rotulador sobre cartulina de cuaderno: puntas redondas, alguna pausa y las esquinas suaves.
+        TemaId.URBE -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(7f, 1.2f), 1.2f, false, Color(0xFFF5EEDC))
         TemaId.CIBER -> Trazo(u, 0.9f, StrokeCap.Square, StrokeJoin.Miter, floatArrayOf(2.2f, 1.1f), 0f, false, Color(0xFFC8F7D2))
         TemaId.NEON -> Trazo(u, 0.9f, StrokeCap.Square, StrokeJoin.Miter, floatArrayOf(2.2f, 1.1f), 0f, false, Color(0xFFC8F7D2))
         TemaId.HELENO -> Trazo(u, 0.95f, StrokeCap.Butt, StrokeJoin.Bevel, null, 0f, true, Color(0xFFE9EEF4))
@@ -273,6 +276,8 @@ object PiezasLogro {
         fun grados(a: Double) = (a * 180 / PI).toFloat()
         when (tema) {
             TemaId.ROMANO -> for (i in 0 until 24) drawCircle(m, 1.4f * u, en(i * PI / 12, 0.92f))
+            // Un anillo de sampietrini alrededor de la plaza, con el bordillo.
+            TemaId.URBE -> { drawCircle(m, r * 0.97f, c, style = Stroke(0.8f * u)); for (i in 0 until 20) { val p = en(i * PI / 10, 0.88f); drawRoundRect(m, Offset(p.x - 1.4f * u, p.y - 1.4f * u), Size(2.8f * u, 2.8f * u), CornerRadius(0.7f * u)) } }
             TemaId.CIBER -> for (i in 0 until 28) { val p = en(i * PI / 14, 0.91f); drawRect(pri, Offset(p.x - 1.3f * u, p.y - 1.3f * u), Size(2.6f * u, 2.6f * u)) }
             TemaId.NEON -> for (i in 0 until 28) { val p = en(i * PI / 14, 0.91f); drawRect(pri, Offset(p.x - 1.3f * u, p.y - 1.3f * u), Size(2.6f * u, 2.6f * u)) }
             TemaId.HELENO -> for (i in 0 until 40) drawLine(m, en(i * PI / 20, 0.86f), en(i * PI / 20, 0.95f), 1.1f * u)
@@ -353,6 +358,8 @@ object PiezasLogro {
         fun tri(alto: Float, x0: Float = x, x1: Float = x + an) = drawPath(Path().apply { moveTo(x0, y); lineTo(cx, y - alto); lineTo(x1, y); close() }, tinta)
         when (tema) {
             TemaId.ROMANO -> tri(5 * u)
+            // La cúpula con su linterna.
+            TemaId.URBE -> { drawArc(tinta, 180f, 180f, true, Offset(x, y - an / 2), Size(an, an)); drawRect(tinta, Offset(cx - 0.8f * u, y - an / 2 - 3 * u), Size(1.6f * u, 3 * u)) }
             TemaId.CIBER -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 6 * u), 1 * u); drawRect(tinta, Offset(cx - 0.8f * u, y - 7.6f * u), Size(1.6f * u, 1.6f * u)) }
             TemaId.NEON -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 6 * u), 1 * u); drawRect(tinta, Offset(cx - 0.8f * u, y - 7.6f * u), Size(1.6f * u, 1.6f * u)) }
             TemaId.HELENO -> { tri(3.5f * u, x - 0.6f * u, x + an + 0.6f * u); drawCircle(tinta, 0.9f * u, Offset(cx, y - 4.2f * u)) }
@@ -417,6 +424,8 @@ object PiezasLogro {
         }
         when (tema) {
             TemaId.ROMANO -> drawCircle(tinto, 27 * u, c, style = Stroke(1.6f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * u, 2 * u))))
+            // La marca de la máquina que valida el boleto: rectángulo con la hora punteada.
+            TemaId.URBE -> { traza(caja(c.x - 28 * u, c.y - 17 * u, c.x + 28 * u, c.y + 17 * u, 2 * u)); drawLine(tinto, Offset(c.x - 22 * u, c.y + 12 * u), Offset(c.x + 22 * u, c.y + 12 * u), 1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 1.5f * u))) }
             TemaId.CIBER -> {
                 val x0 = c.x - 27 * u; val x1 = c.x + 27 * u; val y0 = c.y - 22 * u; val y1 = c.y + 22 * u; val l = 8 * u
                 traza(Path().apply { moveTo(x0 + l, y0); lineTo(x0, y0); lineTo(x0, y1); lineTo(x0 + l, y1); moveTo(x1 - l, y0); lineTo(x1, y0); lineTo(x1, y1); lineTo(x1 - l, y1) })
@@ -621,6 +630,16 @@ object PiezasLogro {
                 for (k in 0 until 8) drawRect(hueco, Offset(c.x - 22 * u + k * 6 * u, base - 29 * u), Size(2.5f * u, 3 * u))
                 suelo()
             }
+            // La cúpula grande sobre su tambor, con la linterna, y la columnata que abraza la plaza a los dos lados.
+            TemaId.URBE -> {
+                drawPath(caja(c.x - 12 * u, base - 22 * u, c.x + 12 * u, base, 0f), tinta)
+                drawArc(tinta, 180f, 180f, true, Offset(c.x - 12 * u, base - 34 * u), Size(24 * u, 24 * u))
+                drawRect(tinta, Offset(c.x - 2 * u, base - 40 * u), Size(4 * u, 6 * u))
+                for (k in 0 until 3) arco(c.x - 8 * u + k * 6 * u, base - 2 * u, 3.5f * u, 12 * u)
+                listOf(-1f, 1f).forEach { s -> for (k in 0 until 3) { val x = c.x + s * (16 + k * 4.5f) * u; drawRect(tinta, Offset(x - 1.2f * u, base - 9 * u), Size(2.4f * u, 9 * u)) }
+                    raya(tz, tinta, Offset(c.x + s * 14 * u, base - 9 * u), Offset(c.x + s * 28 * u, base - 9 * u), 1.4f * u) }
+                suelo()
+            }
             TemaId.CIBER -> {
                 drawRect(tinta, Offset(c.x - 12 * u, base - 40 * u), Size(24 * u, 40 * u))
                 for (k in 0 until 7) {
@@ -821,6 +840,14 @@ object PiezasLogro {
                 for (k in 0 until 9) { val x = x0 + 1.5f * u + k * 3.25f * u; drawLine(tinta, Offset(x, c.y + 6 * u), Offset(x, c.y + 10 * u), 0.8f * u) }
                 drawPath(Path().apply { moveTo(c.x, c.y - 36 * u); lineTo(c.x + 2.5f * u, c.y - 30 * u); lineTo(c.x - 2.5f * u, c.y - 30 * u); close() }, tinta)
                 letra("SPQR", Offset(c.x, c.y - 9 * u), 6.5f * u, claro)
+            }
+            // La bandera de la ciudad colgada del balcón: el asta inclinada y el paño de dos franjas, amaranto y oro.
+            TemaId.URBE -> {
+                raya(tz, tinta, Offset(c.x - 22 * u, c.y + 24 * u), Offset(c.x + 10 * u, c.y - 26 * u), 2 * u)
+                val pano1 = Path().apply { moveTo(c.x + 10 * u, c.y - 26 * u); lineTo(c.x - 5 * u, c.y - 2 * u); lineTo(c.x + 7 * u, c.y + 6 * u); lineTo(c.x + 22 * u, c.y - 18 * u); close() }
+                val pano2 = Path().apply { moveTo(c.x + 22 * u, c.y - 18 * u); lineTo(c.x + 7 * u, c.y + 6 * u); lineTo(c.x + 19 * u, c.y + 14 * u); lineTo(c.x + 30 * u, c.y - 10 * u); close() }
+                pano(pano1, Color(0xFF8C1C3A)); pano(pano2, Color(0xFFD9A63A))
+                raya(tz, tinta, Offset(c.x - 28 * u, c.y + 24 * u), Offset(c.x + 4 * u, c.y + 24 * u), 1.4f * u)
             }
             TemaId.CIBER -> {
                 raya(tz, tinta, Offset(px, c.y + 26 * u), Offset(px, c.y - 26 * u), 2 * u)
@@ -1024,6 +1051,9 @@ object PiezasLogro {
         }
         when (tema) {
             TemaId.ROMANO -> { disco(); for (i in 0 until 32) drawCircle(tinta, 0.8f * u, en(i * PI / 16, 0.85f)); letra("S·C", c, 9 * u, tinta) }
+            // La moneda bimetálica de la fuente: el aro de un metal, el disco del otro y la loba en medio.
+            TemaId.URBE -> { disco(); drawCircle(lerp(tono, Color.White, 0.35f).copy(alpha = 0.6f), R * 0.68f, c); contorno(tz, circulo(c, R * 0.68f), tinta, 0.9f * u)
+                drawPath(io.github.ruddy2003.vestigium.ui.lobaRuta(c, R * 0.5f), tinta.copy(alpha = 0.8f)) }
             TemaId.CIBER -> {
                 val k = 5 * u
                 forma(Path().apply { moveTo(c.x - R + k, c.y - R); lineTo(c.x + R - k, c.y - R); lineTo(c.x + R, c.y - R + k); lineTo(c.x + R, c.y + R - k); lineTo(c.x + R - k, c.y + R); lineTo(c.x - R + k, c.y + R); lineTo(c.x - R, c.y + R - k); lineTo(c.x - R, c.y - R + k); close() })
@@ -1181,6 +1211,15 @@ object PiezasLogro {
                 }
                 listOf(-8f, 8f).forEach { dy -> drawCircle(tinta, 1.6f * u, Offset(c.x, c.y + dy * u), style = Stroke(0.8f * u)) }
                 raya(tz, tinta, Offset(c.x + 10 * u, c.y + 22 * u), Offset(c.x + 26 * u, c.y + 4 * u), 1.4f * u)
+            }
+            // El periódico doblado: la cabecera, el titular grueso, una foto y las columnas de texto.
+            TemaId.URBE -> {
+                tapa(c.x - 24 * u, c.y - 18 * u, c.x + 24 * u, c.y + 18 * u, papel, 0.5f * u)
+                drawRect(tinta, Offset(c.x - 20 * u, c.y - 15 * u), Size(40 * u, 4 * u))
+                drawLine(tinta, Offset(c.x - 20 * u, c.y - 9 * u), Offset(c.x + 20 * u, c.y - 9 * u), 0.7f * u)
+                drawRect(tono, Offset(c.x - 20 * u, c.y - 6 * u), Size(16 * u, 12 * u))
+                for (col in 0 until 2) for (k in 0 until 6) fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x - 1 * u + col * 11 * u, c.y - 5 * u + k * 3.6f * u), Offset(c.x + 8 * u + col * 11 * u, c.y - 5 * u + k * 3.6f * u), 0.7f * u)
+                drawLine(tinta.copy(alpha = 0.35f), Offset(c.x, c.y - 18 * u), Offset(c.x, c.y + 18 * u), 0.8f * u)
             }
             TemaId.CIBER -> {
                 val p = caja(c.x - 24 * u, c.y - 18 * u, c.x + 24 * u, c.y + 12 * u, 3 * u); drawPath(p, tinta); contorno(tz, p, tono, 1 * u)
@@ -1360,6 +1399,14 @@ object PiezasLogro {
                 listOf(-22f, 22f).forEach { dx -> drawOval(lerp(papel, tinta, 0.2f), Offset(c.x + dx * u - 2.5f * u, c.y - 7 * u), Size(5 * u, 14 * u)) }
                 listOf(-2f, 2f).forEach { dx -> drawLine(tinta, Offset(c.x + dx * u, c.y - 7 * u), Offset(c.x + dx * u, c.y + 7 * u), 1 * u) }
                 drawLine(tinta, Offset(c.x, c.y + 7 * u), Offset(c.x, c.y + 13 * u), 1 * u); drawCircle(tono, 5 * u, Offset(c.x, c.y + 17 * u))
+            }
+            // La cartolina: la foto de un lado, la raya del medio y, del otro, la estampilla y los renglones de la dirección.
+            TemaId.URBE -> {
+                hoja(c.x - 26 * u, c.y - 16 * u, c.x + 26 * u, c.y + 16 * u, papel, 1 * u)
+                drawLine(tinta.copy(alpha = 0.6f), Offset(c.x, c.y - 12 * u), Offset(c.x, c.y + 12 * u), 0.8f * u)
+                drawRect(tono, Offset(c.x + 14 * u, c.y - 13 * u), Size(9 * u, 11 * u)); drawRect(tinta, Offset(c.x + 14 * u, c.y - 13 * u), Size(9 * u, 11 * u), style = Stroke(0.6f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1 * u, 1 * u))))
+                for (k in 0 until 3) fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x + 4 * u, c.y + 2 * u + k * 4.5f * u), Offset(c.x + 22 * u, c.y + 2 * u + k * 4.5f * u), 0.8f * u)
+                for (k in 0 until 4) fina(tz, tinta.copy(alpha = 0.5f), Offset(c.x - 22 * u, c.y - 8 * u + k * 5 * u), Offset(c.x - (6 + k % 2 * 4) * u, c.y - 8 * u + k * 5 * u), 0.8f * u)
             }
             TemaId.CIBER -> {
                 val q = 3 * u; val lado = q * 0.8f

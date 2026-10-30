@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12 y después: igual que la de drawable/, sin forzar el radio del sistema. Roma de hoy: la placa de una calle sobre el adoquinado de noche: fondo de basalto tibio, marco grueso de travertino, filete fino y un tornillo a cada lado. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7241E1A"/>
+            <stroke android:width="2dp" android:color="#8A7A62"/>
+            <corners android:radius="3dp"/>
+        </shape>
+    </item>
+    <item android:top="5dp" android:left="5dp" android:right="5dp" android:bottom="5dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#66E8955A"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+    <item android:gravity="left|center_vertical" android:width="5dp" android:height="5dp" android:left="1.5dp">
+        <shape android:shape="oval"><solid android:color="#B3E3C07A"/></shape>
+    </item>
+    <item android:gravity="right|center_vertical" android:width="5dp" android:height="5dp" android:right="1.5dp">
+        <shape android:shape="oval"><solid android:color="#B3E3C07A"/></shape>
+    </item>
+</layer-list>

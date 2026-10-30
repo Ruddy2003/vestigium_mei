@@ -941,6 +941,7 @@ private fun formaDp(trazo: Path.(w: Float, h: Float, u: Float) -> Unit): Shape =
 /** Cuánto baja, desde lo más alto, el borde de arriba de la hoja: lo que la hoja deja libre arriba para su adorno. */
 private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.ROMANO -> 12.dp
+    TemaId.URBE -> 16.dp
     TemaId.CIBER -> 4.dp
     TemaId.NEON -> 4.dp
     TemaId.HELENO -> 14.dp
@@ -970,6 +971,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> formaDp { w, h, u ->
         val r = 12 * u
         moveTo(r, 0f); lineTo(w - r, 0f); quadraticTo(w - r, r, w, r); lineTo(w, h); lineTo(0f, h); lineTo(0f, r); quadraticTo(r, r, r, 0f); close()
+    }
+    // El arco rebajado de un portón, de lado a lado.
+    TemaId.URBE -> formaDp { w, h, u ->
+        val f = 16 * u
+        moveTo(0f, f); quadraticTo(w / 2, -f, w, f); lineTo(w, h); lineTo(0f, h); close()
     }
     // Ventana de consola con una esquina cortada.
     TemaId.CIBER -> formaDp { w, h, u ->
@@ -1107,6 +1113,12 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawLine(col, Offset(x0 + 6 * u, y), Offset(x1 - 6 * u, y), 0.8f * u)
             drawPath(Path().apply { moveTo(x0, y); lineTo(x0 + 6 * u, y - 3.5f * u); lineTo(x0 + 6 * u, y + 3.5f * u); close() }, col)
             drawPath(Path().apply { moveTo(x1, y); lineTo(x1 - 6 * u, y - 3.5f * u); lineTo(x1 - 6 * u, y + 3.5f * u); close() }, col)
+        }
+        // La moldura que sigue el arco por dentro y la clave en lo más alto.
+        TemaId.URBE -> {
+            val f = 16 * u; val col = e.primary.copy(alpha = 0.45f)
+            drawPath(Path().apply { moveTo(10 * u, f + 4 * u); quadraticTo(w / 2, -f + 10 * u, w - 10 * u, f + 4 * u) }, col, style = Stroke(0.9f * u))
+            drawPath(Path().apply { moveTo(w / 2 - 7 * u, 2 * u); lineTo(w / 2 + 7 * u, 2 * u); lineTo(w / 2 + 5 * u, 11 * u); lineTo(w / 2 - 5 * u, 11 * u); close() }, col)
         }
         // Barra de estado de la consola: la línea, tres rayas de señal y el cursor.
         TemaId.CIBER -> {
@@ -1284,6 +1296,7 @@ private fun DrawScope.estrellaHoja(c: Offset, r: Float, color: Color, puntas: In
  */
 private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     TemaId.ROMANO -> RoundedCornerShape(2.dp)
+    TemaId.URBE -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.CIBER -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
     TemaId.NEON -> CutCornerShape(topEnd = 10.dp, bottomStart = 10.dp)
     // Frontón muy bajo.

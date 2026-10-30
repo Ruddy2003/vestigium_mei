@@ -143,6 +143,7 @@ object Temas {
         val md = fecha.takeLast(5)
         return when (tema) {
             TemaId.ROMANO -> Romano.marca(fecha)
+            TemaId.URBE -> Urbe.marca(fecha)
             TemaId.CIBER -> MARCAS_CIBER[md]
             TemaId.NEON -> MARCAS_NEON[md]
             TemaId.HELENO -> MARCAS_HELENO[md]
@@ -249,6 +250,8 @@ object Temas {
     private fun nombreBase(tema: TemaId, titulo: String): String? = when (tema) {
         // El romano y el heleno tienen su diccionario en `Romano` y `Griego`; la terminal solo usa el de [NombresNuevos].
         TemaId.ROMANO -> null
+        // La Roma de hoy tiene todo su diccionario en `NombresUrbe` (ver [NombresCompletos]).
+        TemaId.URBE -> null
         TemaId.CIBER -> null
         TemaId.NEON -> null
         TemaId.HELENO -> null
@@ -275,6 +278,7 @@ object Temas {
     fun widget(tema: TemaId, clave: String): String {
         val m = when (tema) {
             TemaId.ROMANO -> mapOf("animo" to "ANIMVS", "momento" to "MOMENTA", "gasto" to "SVMPTVS", "sueno" to "SOMNVS", "habitos" to "CONSVETVDINES", "hoy" to "DIES", "cifra" to "NVMERVS", "foto" to "IMAGO", "enfoque" to "STVDIVM")
+            TemaId.URBE -> mapOf("animo" to "UMORE", "momento" to "MOMENTI", "gasto" to "SPESE", "sueno" to "DORMITA", "habitos" to "ABITUDINI", "hoy" to "OGGI", "cifra" to "NUMERO", "foto" to "SCATTO", "enfoque" to "CONCENTRAZIONE")
             TemaId.CIBER -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
             TemaId.NEON -> mapOf("animo" to "> ánimo", "momento" to "> momento", "gasto" to "> gasto", "sueno" to "> sueño", "habitos" to "> hábitos", "hoy" to "> hoy", "cifra" to "> cifra", "foto" to "> foto", "enfoque" to "> enfoque")
             TemaId.HELENO -> mapOf("animo" to "ΘΥΜΟΣ", "momento" to "ΚΑΙΡΟΙ", "gasto" to "ΔΑΠΑΝΑΙ", "sueno" to "ΥΠΝΟΣ", "habitos" to "ΕΘΗ", "hoy" to "ΗΜΕΡΑ", "cifra" to "ΑΡΙΘΜΟΣ", "foto" to "ΕΙΚΩΝ", "enfoque" to "ΣΧΟΛΗ")

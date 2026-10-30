@@ -109,6 +109,8 @@ class Papeleria(val sobre: Color, val sombra: Color, val brillo: Color, val forr
 fun papeleria(t: TemaId): Papeleria = when (t) {
     // Papiro grueso forrado de pórfido, cordón de lino y cera roja para el anillo.
     TemaId.ROMANO -> Papeleria(Color(0xFFE4D0A0), Color(0xFFAE8A52), Color(0xFFF3E4BE), Color(0xFF7C2433), Color(0xFF8E2B1F), Color(0xFFBFA77A), Color(0xFF2A1E14))
+    // Cartolina de cartulina crema, forrada del ocre de las fachadas, con el franqueo rojo y el cordel de bramante.
+    TemaId.URBE -> Papeleria(Color(0xFFF1E4C8), Color(0xFFC4AC7E), Color(0xFFFBF3E0), Color(0xFFC98A3A), Color(0xFFA8432A), Color(0xFFB59A6A), Color(0xFF2B2420))
     // Un paquete de datos: grafito con la rejilla cian por dentro, el chip en cian y el precinto magenta.
     TemaId.CIBER -> Papeleria(Color(0xFF0B121C), Color(0xFF05080E), Color(0xFF15202E), Color(0xFF06282F), Color(0xFF00E5FF), Color(0xFFFF2E88), Color(0xFFD6F3F7))
     TemaId.NEON -> Papeleria(Color(0xFF0B121C), Color(0xFF05080E), Color(0xFF15202E), Color(0xFF06282F), Color(0xFF00E5FF), Color(0xFFFF2E88), Color(0xFFD6F3F7))
@@ -167,6 +169,7 @@ internal class FormaSobre(val solapa: SolapaSobre, val radio: Float, val cierre:
 
 internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.ROMANO -> FormaSobre(SolapaSobre.PICO, 0.03f, CierreSobre.CRUZ)
+    TemaId.URBE -> FormaSobre(SolapaSobre.RECTA, 0.03f, CierreSobre.VERTICAL)
     TemaId.CIBER -> FormaSobre(SolapaSobre.RECTA, 0f, CierreSobre.PRECINTO)
     TemaId.NEON -> FormaSobre(SolapaSobre.RECTA, 0f, CierreSobre.PRECINTO)
     TemaId.HELENO -> FormaSobre(SolapaSobre.REDONDA, 0.03f, CierreSobre.DOBLE)
@@ -280,6 +283,34 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawOval(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.3f * a), Color.Transparent), center = c - Offset(r * 0.3f, r * 0.4f), radius = r * 0.9f), o.topLeft, o.size)
             drawOval(hondo, Offset(o.left + r * 0.16f, o.top + r * 0.16f), Size(o.width - r * 0.32f, o.height - r * 0.32f), style = Stroke(r * 0.07f))
             emblemaEn(t, c, r * 0.5f, e)
+        }
+        TemaId.URBE -> {
+            // El francobollo: una estampilla dentada con la placa de la calle por figura, y encima las ondas del matasellos.
+            val ancho = r * 1.5f; val alto = r * 1.8f
+            val o = Offset(c.x - ancho / 2, c.y - alto / 2)
+            drawRect(sombra, o + Offset(r * 0.06f, r * 0.08f), Size(ancho, alto))
+            drawRect(k(Color(0xFFFBF3E0)), o, Size(ancho, alto))
+            // Los dientes: medios círculos mordidos en las cuatro orillas, del color del papel de abajo.
+            val diente = r * 0.07f; val hueco = k(e.surface)
+            var x = o.x + diente * 1.5f
+            while (x < o.x + ancho - diente) { drawCircle(hueco, diente, Offset(x, o.y)); drawCircle(hueco, diente, Offset(x, o.y + alto)); x += diente * 3f }
+            var y = o.y + diente * 1.5f
+            while (y < o.y + alto - diente) { drawCircle(hueco, diente, Offset(o.x, y)); drawCircle(hueco, diente, Offset(o.x + ancho, y)); y += diente * 3f }
+            val dentro = Rect(o.x + r * 0.16f, o.y + r * 0.16f, o.x + ancho - r * 0.16f, o.y + alto - r * 0.16f)
+            drawRect(col, dentro.topLeft, dentro.size)
+            drawRect(claro, Offset(dentro.left + r * 0.06f, dentro.top + r * 0.06f), Size(dentro.width - r * 0.12f, dentro.height - r * 0.12f), style = Stroke(r * 0.03f))
+            emblemaEn(t, Offset(c.x, c.y - r * 0.1f), r * 0.42f, e)
+            drawRect(claro, Offset(dentro.left + r * 0.12f, dentro.bottom - r * 0.32f), Size(dentro.width - r * 0.24f, r * 0.14f))
+            // El matasellos: cinco ondas que cruzan la estampilla de lado a lado.
+            for (j in 0 until 5) {
+                val yy = c.y - r * 0.5f + j * r * 0.24f
+                val onda = Path().apply {
+                    moveTo(o.x - r * 0.3f, yy)
+                    var xx = o.x - r * 0.3f
+                    while (xx < o.x + ancho + r * 0.3f) { quadraticTo(xx + r * 0.12f, yy - r * 0.08f, xx + r * 0.24f, yy); quadraticTo(xx + r * 0.36f, yy + r * 0.08f, xx + r * 0.48f, yy); xx += r * 0.48f }
+                }
+                drawPath(onda, k(Color(0xFF2B2420).copy(alpha = 0.45f)), style = Stroke(r * 0.035f))
+            }
         }
         TemaId.CIBER -> {
             // El paquete de datos: un chip con sus patas y el candado; se parte al descifrarlo.
@@ -571,6 +602,18 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
     when (t) {
         // Los clavi: dos franjas de púrpura, como en la toga.
         TemaId.ROMANO -> listOf(l + W * 0.035f, r - W * 0.053f).forEach { x -> drawRect(Color(0xFF7C2433).copy(alpha = 0.7f), Offset(x, top), Size(W * 0.018f, H)) }
+        // La orilla del correo urgente: rayas en diagonal, rojo pompeyano y verde de persiana, por arriba y por abajo.
+        TemaId.URBE -> {
+            val franja = H * 0.045f; val paso = W * 0.05f
+            listOf(top, bot - franja).forEach { y0 ->
+                var x = l; var i = 0
+                while (x < r) {
+                    val col = if (i % 2 == 0) Color(0xFFA8432A) else Color(0xFF3D5E45)
+                    drawPath(Path().apply { moveTo(x, y0 + franja); lineTo(x + paso * 0.5f, y0); lineTo(x + paso, y0); lineTo(x + paso * 0.5f, y0 + franja); close() }, col.copy(alpha = 0.6f))
+                    x += paso; i++
+                }
+            }
+        }
         TemaId.CIBER -> {
             // Líneas de barrido y la ventana del sobre, por donde asoma la dirección en cian.
             var y = top; while (y < bot) { drawLine(Color(0xFF00E5FF).copy(alpha = 0.035f), Offset(l, y), Offset(r, y), 1f); y += 3f }
@@ -897,6 +940,8 @@ internal class VozCarta(val lista: String, val sellada: String, val paraYo: Stri
 internal fun vozCarta(t: TemaId): VozCarta = when (t) {
     TemaId.ROMANO -> VozCarta("Ya puedes romper el sello", "Sellada con el anillo", "A mi yo del %s", "A mi yo de %s", "A mi yo del porvenir",
         "Salve, yo del futuro…", "Escribe tu epístola…", "Epístola para %s sellada", "Ni el César podrá abrirla antes.", "Toca para tomar el cálamo…")
+    TemaId.URBE -> VozCarta("È arrivata la posta: ábrela", "Con su francobollo", "Per me, il %s", "Per me · %s", "Per me, più avanti",
+        "Caro me del futuro…", "Escribe tu cartolina…", "Cartolina para %s echada al buzón", "Ni con correo urgente llega antes.", "Toca para escribir la cartolina…")
     TemaId.CIBER -> VozCarta("> clave liberada: abrir", "Cifrada", "> para mi yo del %s", "> yo@%s", "> para mi yo del futuro",
         "// hola, yo del futuro…", "// escribe tu mensaje…", "> mensaje para %s cifrado", "Sin la clave del tiempo no se descifra antes.", "> toca para escribir_")
     TemaId.NEON -> VozCarta("> clave liberada: abrir", "Cifrada", "> para mi yo del %s", "> yo@%s", "> para mi yo del futuro",
@@ -944,6 +989,7 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
 /** La letra con que se rotula el sobre en cada tema. */
 private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.ROMANO -> Letra.codigo
+    TemaId.URBE -> Letra.placa
     TemaId.CIBER -> Letra.terminal
     TemaId.NEON -> Letra.terminal
     TemaId.HELENO -> Letra.garamond

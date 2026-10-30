@@ -143,6 +143,7 @@ object Campanas {
 
     fun titulos(t: TemaId): List<String> = when (t) {
         TemaId.ROMANO -> listOf("Campaña de las Galias", "Marcha a Britania", "La vía Apia", "Expedición a Dacia")
+        TemaId.URBE -> listOf("Il giro dei rioni", "Dal Tevere al Gianicolo", "La passeggiata delle fontane", "Di cupola in cupola")
         TemaId.CIBER -> listOf("OP: NEON RUN", "RUTINA_7DIAS.EXE", "HACK DEL HÁBITO", "PROTOCOLO NOCTURNO")
         TemaId.NEON -> listOf("OP: NEON RUN", "RUTINA_7DIAS.EXE", "HACK DEL HÁBITO", "PROTOCOLO NOCTURNO")
         TemaId.HELENO -> listOf("La marcha de los diez mil", "Hacia el Indo", "La travesía del Egeo", "Los juegos de Olimpia")
@@ -169,6 +170,7 @@ object Campanas {
     /** Las siete etapas del mapa, en el orden de la ruta (cuadran con `MapasMas.puntos`). */
     fun etapas(t: TemaId): List<String> = when (t) {
         TemaId.ROMANO -> listOf("Roma", "Ostia", "Massilia", "Lugdunum", "Durocortorum", "Lutetia", "Alesia")
+        TemaId.URBE -> listOf("Testaccio", "Trastevere", "Gianicolo", "Borgo", "Piazza Navona", "Pantheon", "Fontana di Trevi")
         TemaId.CIBER -> listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz")
         TemaId.NEON -> listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz")
         TemaId.HELENO -> listOf("Pella", "Anfípolis", "Troya", "Sardes", "Gordio", "Tarso", "Babilonia")

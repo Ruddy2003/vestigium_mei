@@ -136,6 +136,14 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawLine(oscuro.copy(alpha = 0.5f), Offset(x0 + w * 0.3f, y0 + 1 * d), Offset(x0 + w * 0.3f, y0 + h - 1 * d), 0.6f * d)
             drawRect(Color(0xFFA3312F), Offset(x0 + w * 0.62f, y0 + h * 0.5f), Size(w * 0.12f, h * 0.5f))
         }
+        // El cuaderno con su elástico rojo y un boleto de tranvía que asoma por arriba.
+        TemaId.URBE -> {
+            drawRect(Color(0xFFDCE8D2), Offset(x0 + w * 0.2f, y0 - h * 0.15f), Size(w * 0.22f, h * 0.4f))
+            drawRoundRect(lerp(Color(0xFFF5EEDC), c, 0.1f), Offset(x0 + 1 * d, y0 + 1 * d), s, CornerRadius(1.5f * d))
+            drawRoundRect(c, o, s, CornerRadius(1.5f * d))
+            drawRect(Color(0xFFA8432A), Offset(x0 + w * 0.84f, y0), Size(w * 0.05f, h))
+            drawRoundRect(lerp(c, Color.White, 0.7f), Offset(x0 + w * 0.14f, y0 + h * 0.3f), Size(w * 0.5f, h * 0.36f), CornerRadius(1 * d))
+        }
         // Terminal: una pantallita con su indicador, una línea de texto y el cursor.
         TemaId.CIBER -> {
             drawRoundRect(lerp(c, Color.Black, 0.7f), o, s, CornerRadius(1.5f * d))
@@ -564,6 +572,12 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawCircle(relleno, r, c); drawCircle(borde, r, c, style = fino)
             for (k in 0 until 14) drawCircle(borde, r * 0.07f, polarCosa(c, r * 0.84f, k * 2 * PI / 14))
         }
+        // Un sampietrino visto de arriba, con el brillo de la piedra pisada.
+        TemaId.URBE -> {
+            drawRoundRect(relleno, Offset(x - r * 0.9f, y - r * 0.9f), Size(1.8f * r, 1.8f * r), CornerRadius(r * 0.3f))
+            drawRoundRect(borde, Offset(x - r * 0.9f, y - r * 0.9f), Size(1.8f * r, 1.8f * r), CornerRadius(r * 0.3f), style = fino)
+            drawLine(borde.copy(alpha = 0.35f), Offset(x - r * 0.55f, y - r * 0.5f), Offset(x - r * 0.05f, y - r * 0.7f), 1.2f * d)
+        }
         // Celda de consola entre corchetes.
         TemaId.CIBER -> {
             drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
@@ -718,6 +732,31 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                 drawRect(col, Offset(x - r * 0.35f, y - r * 0.6f), Size(r * 0.7f, r * 1.4f))
                 drawCircle(col, r * 0.35f, Offset(x, y - r * 0.6f))
                 drawRect(col, Offset(x - r * 0.6f, y + r * 0.75f), Size(r * 1.2f, r * 0.25f))
+            }
+            else -> return false
+        }
+        TemaId.URBE -> when (forma) {
+            // La tazzina del café en su platito, con el vapor.
+            "taza" -> {
+                drawOval(col, Offset(x - r, y + r * 0.45f), Size(2 * r, r * 0.35f))
+                drawPath(Path().apply { moveTo(x - r * 0.6f, y - r * 0.2f); lineTo(x + r * 0.6f, y - r * 0.2f); lineTo(x + r * 0.45f, y + r * 0.5f); lineTo(x - r * 0.45f, y + r * 0.5f); close() }, col)
+                drawArc(col, -80f, 170f, false, Offset(x + r * 0.45f, y - r * 0.1f), Size(r * 0.4f, r * 0.45f), style = trazo)
+                listOf(-0.2f, 0.2f).forEach { dx -> drawPath(Path().apply { moveTo(x + dx * r, y - r * 0.35f); quadraticTo(x + dx * r + r * 0.15f, y - r * 0.6f, x + dx * r, y - r * 0.85f) }, col, style = trazo) }
+            }
+            // La cartolina con su estampilla.
+            "sobre" -> {
+                drawRect(col, Offset(x - r, y - r * 0.65f), Size(2 * r, 1.3f * r))
+                drawRect(fondo, Offset(x - r * 0.85f, y - r * 0.5f), Size(1.7f * r, r))
+                drawRect(col, Offset(x + r * 0.35f, y - r * 0.4f), Size(r * 0.4f, r * 0.45f))
+                drawLine(col, Offset(x, y - r * 0.4f), Offset(x, y + r * 0.4f), 0.8f * d)
+                listOf(0.1f, 0.3f).forEach { f -> drawLine(col, Offset(x + r * 0.1f, y + f * r), Offset(x + r * 0.75f, y + f * r), 0.8f * d) }
+            }
+            // La parada: el poste con la placa arriba.
+            "alfiler" -> {
+                drawRect(col, Offset(x - r * 0.08f, y - r * 0.3f), Size(r * 0.16f, r * 1.3f))
+                drawRoundRect(col, Offset(x - r * 0.55f, y - r), Size(r * 1.1f, r * 0.75f), CornerRadius(r * 0.15f))
+                drawRect(fondo, Offset(x - r * 0.4f, y - r * 0.82f), Size(r * 0.8f, r * 0.12f))
+                drawRect(col, Offset(x - r * 0.45f, y + r * 0.92f), Size(r * 0.9f, r * 0.1f))
             }
             else -> return false
         }

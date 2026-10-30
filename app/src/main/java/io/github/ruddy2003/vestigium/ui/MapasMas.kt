@@ -34,6 +34,10 @@ object MapasMas {
         // La calzada: Roma → Ostia → Massilia → Lugdunum → Durocortorum → Lutetia → Alesia. Italia queda a la izquierda y la
         // Galia a la derecha; Ostia y Massilia sobre la costa, Lugdunum sobre el Ródano y Lutetia sobre el Sena.
         TemaId.ROMANO -> listOf(Offset(0.07f, 0.58f), Offset(0.17f, 0.74f), Offset(0.35f, 0.77f), Offset(0.48f, 0.48f), Offset(0.64f, 0.2f), Offset(0.8f, 0.36f), Offset(0.92f, 0.6f))
+        // El paseo por el centro de Roma (el norte arriba): de Testaccio se cruza el Tíber a Trastevere, se sube al
+        // Gianicolo, se baja a Borgo junto al Vaticano, se vuelve a cruzar el río hacia Piazza Navona y el Panteón, y se
+        // termina en la Fontana di Trevi.
+        TemaId.URBE -> listOf(Offset(0.5f, 0.9f), Offset(0.26f, 0.74f), Offset(0.1f, 0.54f), Offset(0.2f, 0.27f), Offset(0.56f, 0.44f), Offset(0.7f, 0.52f), Offset(0.88f, 0.34f))
         // La marcha de Alejandro: Pella y Anfípolis al norte del Egeo, Troya en la costa de Asia, Sardes, Gordio, Tarso junto
         // al mar del sur y Babilonia sobre el Éufrates.
         TemaId.HELENO -> listOf(Offset(0.07f, 0.17f), Offset(0.19f, 0.13f), Offset(0.31f, 0.36f), Offset(0.42f, 0.62f), Offset(0.55f, 0.3f), Offset(0.71f, 0.72f), Offset(0.91f, 0.48f))
@@ -312,6 +316,24 @@ object MapasMas {
                 drawPath(Path().apply { moveTo(w * 0.36f, h * 0.82f); cubicTo(w * 0.4f, h * 0.7f, w * 0.44f, h * 0.6f, w * 0.48f, h * 0.48f); cubicTo(w * 0.5f, h * 0.36f, w * 0.53f, h * 0.22f, w * 0.5f, 0f) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(1.6f * d))
                 drawPath(Path().apply { moveTo(w * 0.62f, h * 0.66f); cubicTo(w * 0.7f, h * 0.52f, w * 0.74f, h * 0.36f, w * 0.8f, h * 0.36f); cubicTo(w * 0.86f, h * 0.36f, w * 0.9f, h * 0.2f, w, h * 0.16f) }, agua.copy(alpha = agua.alpha * 2), style = Stroke(1.6f * d))
             }
+            TemaId.URBE -> {
+                // El plano del centro: las calles en una trama torcida, el Tíber que baja en curvas con la isla Tiberina,
+                // el verde del Gianicolo, la cúpula de San Pedro arriba a la izquierda y las murallas aurelianas, punteadas.
+                val az = java.util.Random(2779)
+                repeat(46) {
+                    val x = az.nextFloat() * w; val y = az.nextFloat() * h; val a = (az.nextFloat() - 0.5f) * 1.2f; val l = (14 + az.nextFloat() * 30) * d
+                    drawLine(tinta.copy(alpha = 0.5f), Offset(x, y), Offset(x + l * cos(a), y + l * sin(a)), 1f * d)
+                }
+                val rio = Path().apply { moveTo(w * 0.36f, 0f); cubicTo(w * 0.26f, h * 0.16f, w * 0.3f, h * 0.3f, w * 0.44f, h * 0.36f); cubicTo(w * 0.52f, h * 0.42f, w * 0.48f, h * 0.56f, w * 0.38f, h * 0.68f); cubicTo(w * 0.32f, h * 0.78f, w * 0.38f, h * 0.9f, w * 0.44f, h) }
+                drawPath(rio, agua.copy(alpha = agua.alpha * 2.2f), style = Stroke(9 * d))
+                drawOval(cs.surface.copy(alpha = 0.8f), Offset(w * 0.38f - 6 * d, h * 0.68f - 2.5f * d), Size(12 * d, 5 * d))
+                drawOval(Color(0xFF4E7A4A).copy(alpha = if (oscuro) 0.18f else 0.14f), Offset(w * 0.02f, h * 0.4f), Size(w * 0.18f, h * 0.32f))
+                val cp = Offset(w * 0.1f, h * 0.18f)
+                drawArc(tinta.copy(alpha = 0.6f), 180f, 180f, true, Offset(cp.x - 9 * d, cp.y - 6 * d), Size(18 * d, 14 * d))
+                drawRect(tinta.copy(alpha = 0.6f), Offset(cp.x - 9 * d, cp.y + 1 * d), Size(18 * d, 4 * d))
+                drawRect(tinta.copy(alpha = 0.6f), Offset(cp.x - 1.5f * d, cp.y - 10 * d), Size(3 * d, 4 * d))
+                drawPath(Path().apply { moveTo(w * 0.6f, 0f); cubicTo(w * 0.98f, h * 0.2f, w * 0.98f, h * 0.7f, w * 0.62f, h) }, tinta, style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5 * d, 3 * d))))
+            }
             TemaId.HELENO -> {
                 // Tierra de color arena: Macedonia arriba y Asia Menor a la derecha. El Egeo abajo a la izquierda, con sus islas y
                 // sus olas, y el mar del sur bajo Tarso; al final, el Éufrates y el Tigris.
@@ -482,6 +504,13 @@ object MapasMas {
             }
             // La calzada: borde de piedra y losas.
             TemaId.ROMANO -> { drawPath(p, Color(0xFF8C8478).copy(alpha = 0.7f), style = Stroke(5 * d)); drawPath(p, cs.surface, style = Stroke(3 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 1.2f * d)))) }
+            // El paseo a pie sobre los sampietrini: una franja de adoquines con la junta clara en medio.
+            TemaId.URBE -> {
+                drawPath(p, Color(0xFF3A3530).copy(alpha = 0.25f), style = Stroke(6 * d))
+                aLoLargo(p, 4.2f * d) { o, t -> val k = t * (1.8f * d); val n = Offset(-k.y, k.x)
+                    drawPath(Path().apply { moveTo(o.x + k.x, o.y + k.y); lineTo(o.x + n.x, o.y + n.y); lineTo(o.x - k.x, o.y - k.y); lineTo(o.x - n.x, o.y - n.y); close() }, Color(0xFF3A3530).copy(alpha = 0.7f)) }
+                drawPath(p, Color(0xFFA8432A).copy(alpha = 0.55f), style = Stroke(0.8f * d))
+            }
             // La ruta de la marcha, punteada en púrpura macedonio sobre un filete blanco.
             TemaId.HELENO -> { drawPath(p, Color.White.copy(alpha = 0.6f), style = Stroke(3.4f * d)); drawPath(p, Color(0xFF5B2A6E), style = Stroke(1.6f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 4 * d)))) }
             // Los pasos del peregrino, en tinta parda.
@@ -571,6 +600,13 @@ object MapasMas {
             }
             // Miliario: una columnita con su base.
             TemaId.ROMANO -> { drawRect(col, Offset(c.x - r * 0.55f, c.y - r), Size(r * 1.1f, r * 1.8f)); drawOval(col, Offset(c.x - r * 0.55f, c.y - r * 1.25f), Size(r * 1.1f, r * 0.5f)); drawRect(col, Offset(c.x - r * 0.8f, c.y + r * 0.7f), Size(r * 1.6f, r * 0.35f)) }
+            // La placa de la calle de cada barrio: el mármol con su marco; en la meta, además, la loba encima.
+            TemaId.URBE -> {
+                drawRect(Color(0xFFF4EEE2), Offset(c.x - r * 1.2f, c.y - r * 0.7f), Size(r * 2.4f, r * 1.4f))
+                drawRect(col, Offset(c.x - r * 1.2f, c.y - r * 0.7f), Size(r * 2.4f, r * 1.4f), style = Stroke(1.4f * d))
+                drawLine(Color(0xFF2B2420).copy(alpha = 0.7f), Offset(c.x - r * 0.7f, c.y), Offset(c.x + r * 0.7f, c.y), 1.2f * d)
+                if (meta) drawPath(lobaRuta(Offset(c.x, c.y - r * 1.25f), r * 0.9f), col)
+            }
             // Una isla en el mar o una ciudad en tierra: un círculo con la greca alrededor.
             TemaId.HELENO -> { drawCircle(col, r, c); drawCircle(Color(0xFFC9A04A), r * 1.25f, c, style = Stroke(1.2f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 1.5f * d)))) }
             // La venera del peregrino.
@@ -615,6 +651,7 @@ object MapasMas {
         }
         when (tema) {
             TemaId.ROMANO -> legionario(c, alto)
+            TemaId.URBE -> motoneta(c, alto)
             TemaId.MEDIEVAL -> vela(c, alto)
             TemaId.GOTICO -> peregrino(c, alto)
             TemaId.RENACIMIENTO -> puntaDePlata(c, alto)
@@ -653,6 +690,22 @@ object MapasMas {
     }
 
     /** El legionario con el estandarte: túnica roja y loriga, casco con cresta, el escudo con su umbo y el vexilo con el águila. */
+    /** Roma de hoy: la motoneta que avanza por el paseo, con su escudo delantero, el asiento y el faro encendido. */
+    private fun DrawScope.motoneta(c: Offset, alto: Float) {
+        val d = density
+        val pie = c.y - alto
+        val verde = Color(0xFF6E9C7E); val oscuro = Color(0xFF2B2420); val cromo = Color(0xFFC9CDD2)
+        listOf(c.x - 6.5f * d, c.x + 7 * d).forEach { x -> drawCircle(oscuro, 3 * d, Offset(x, pie - 3 * d)); drawCircle(cromo, 1.1f * d, Offset(x, pie - 3 * d)) }
+        // La carrocería redonda de atrás, el piso y el escudo de adelante.
+        drawPath(Path().apply { moveTo(c.x - 10 * d, pie - 4 * d); cubicTo(c.x - 11 * d, pie - 12 * d, c.x - 3 * d, pie - 12 * d, c.x - 1 * d, pie - 6 * d); lineTo(c.x + 4 * d, pie - 6 * d)
+            lineTo(c.x + 5.5f * d, pie - 16 * d); lineTo(c.x + 8 * d, pie - 16 * d); lineTo(c.x + 9.5f * d, pie - 5 * d); lineTo(c.x - 10 * d, pie - 4 * d); close() }, verde)
+        drawRoundRect(oscuro, Offset(c.x - 9 * d, pie - 13.5f * d), Size(8 * d, 2.4f * d), androidx.compose.ui.geometry.CornerRadius(1.2f * d))
+        // El manubrio con el faro.
+        drawLine(oscuro, Offset(c.x + 6.5f * d, pie - 16 * d), Offset(c.x + 6 * d, pie - 21 * d), 1.2f * d)
+        drawLine(cromo, Offset(c.x + 3 * d, pie - 21 * d), Offset(c.x + 9 * d, pie - 21 * d), 1.2f * d)
+        drawCircle(Color(0xFFFFE6A0), 1.6f * d, Offset(c.x + 8.6f * d, pie - 18.5f * d))
+    }
+
     private fun DrawScope.legionario(c: Offset, alto: Float) {
         val d = density
         val pie = c.y - alto

@@ -65,7 +65,7 @@ import kotlin.math.sqrt
 
 /** La forma con que el tema nuevo se abre sobre el anterior. */
 private enum class BarridoTema {
-    ARCO, PIXELES, SOL, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
+    ARCO, CUPOLA, PIXELES, SOL, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
     COPO, ABANICO, OJIVA, CIRCULO, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO
 }
 
@@ -87,6 +87,8 @@ private val SALTOS_RENGLON = Easing { f -> floor(f * 4f) / 4f }
 private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     // Arco de medio punto; las piezas asientan firmes, como mármol.
     TemaId.ROMANO -> MatizMovimiento(BarridoTema.ARCO, 760, FastOutSlowInEasing, 0f, 18f, 1f, 420, 55, FastOutSlowInEasing, 1f, 0.6f, 700f)
+    // Una cúpula que crece desde el toque, con su linterna; las piezas llegan de lado, como quien dobla la esquina en motoneta.
+    TemaId.URBE -> MatizMovimiento(BarridoTema.CUPOLA, 700, LinearOutSlowInEasing, 22f, 6f, 0.99f, 340, 45, LinearOutSlowInEasing, 0.9f, 0.55f, 900f)
     // Rejilla de píxeles que se enciende a saltos; nada rebota.
     TemaId.CIBER -> MatizMovimiento(BarridoTema.PIXELES, 640, SALTOS_CONSOLA, 0f, 6f, 1f, 260, 40, SALTOS_RENGLON, 0.8f, 1f, 2500f)
     TemaId.NEON -> MatizMovimiento(BarridoTema.PIXELES, 640, SALTOS_CONSOLA, 0f, 6f, 1f, 260, 40, SALTOS_RENGLON, 0.8f, 1f, 2500f)
@@ -186,7 +188,7 @@ fun contando(valor: String): String {
  * vivo del teléfono, para que los dos digan lo mismo. [periodo]: cuánto dura una vuelta completa, en ms.
  */
 internal enum class VivoTema(val periodo: Int) {
-    LUCERNA(16000), FOSFORO(5000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
+    LUCERNA(16000), STORNI(30000), FOSFORO(5000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
     ARENA(14000), VITRAL(80000), ESTRELLAS(9000), AGUA(14000), NUBES(180000), SAMARAS(24000), ESTRELLAS_ROJAS(36000),
     CONFETI(22000), RUNAS(14000)
@@ -195,6 +197,7 @@ internal enum class VivoTema(val periodo: Int) {
 /** El tipo de fondo vivo de cada tema (solo el Botánico cambia entre el día y la noche; el Refugio suma el barrido de noche). */
 internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.ROMANO -> VivoTema.LUCERNA            // chispas que suben de una lucerna de aceite
+    TemaId.URBE -> VivoTema.STORNI             // la bandada de estorninos que gira sobre los tejados al atardecer
     TemaId.CIBER -> VivoTema.FOSFORO             // columnas de fósforo con el cursor por cabeza
     TemaId.NEON -> VivoTema.FOSFORO             // columnas de fósforo con el cursor por cabeza
     TemaId.HELENO -> VivoTema.OLIVO              // hojas de olivo que bajan girando
@@ -273,6 +276,34 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             val r = 7f * u * m.tam
             drawCircle(Brush.radialGradient(listOf(al(brasa, 0.30f * a), Color.Transparent), center = Offset(x, y), radius = r), r, Offset(x, y))
             drawCircle(al(if (oscuro) Color(0xFFFFE2A8) else brasa, (if (oscuro) 0.6f else 0.35f) * a), 1.1f * u * m.tam, Offset(x, y))
+        }
+        VivoTema.STORNI -> {
+            // Los estorninos de las tardes de otoño: una bandada que da vueltas sobre los tejados, se estira, se encoge y
+            // se dobla como una sábana al viento. Cada pájaro es una «v» pequeña que aletea; abajo, el perfil de las cúpulas.
+            val cx = w * (0.5f + 0.26f * senoVuelta(t)); val cy = h * (0.3f + 0.08f * senoVuelta(t * 2 + 0.25f))
+            val ancho = w * (0.2f + 0.07f * senoVuelta(t * 3)); val alto = h * (0.06f + 0.035f * cosenoVuelta(t * 2))
+            val giro = 0.5f * senoVuelta(t * 2)
+            val ave = if (oscuro) Color(0xFFF1E6D2) else Color(0xFF2B2420)
+            motas.forEach { m ->
+                val k = vueltas(m)
+                val a = m.fase + t * k
+                val rr = 0.3f + 0.7f * m.tam
+                val px = ancho * rr * cosenoVuelta(a); val py = alto * rr * senoVuelta(2 * a) + alto * 0.6f * (m.y - 0.5f)
+                val x = cx + px * cos(giro) - py * sin(giro); val y = cy + px * sin(giro) + py * cos(giro)
+                val ala = 2.6f * u * (0.7f + 0.3f * m.tam); val bate = ala * (0.35f + 0.5f * abs(senoVuelta(t * 40 * k + m.fase)))
+                val col = al(ave, if (oscuro) 0.3f else 0.22f)
+                drawLine(col, Offset(x - ala, y - bate), Offset(x, y), 0.9f * u, cap = StrokeCap.Round)
+                drawLine(col, Offset(x + ala, y - bate), Offset(x, y), 0.9f * u, cap = StrokeCap.Round)
+            }
+            // El horizonte de cúpulas y campanarios, muy tenue, como recortado contra el cielo.
+            val linea = h * 0.97f; val sil = al(ave, if (oscuro) 0.05f else 0.04f)
+            drawRect(sil, Offset(0f, linea), Size(w, h - linea))
+            listOf(0.18f to 0.05f, 0.46f to 0.09f, 0.78f to 0.06f).forEach { (fx, fr) ->
+                val r = w * fr
+                drawArc(sil, 180f, 180f, true, Offset(w * fx - r, linea - r), Size(2 * r, 2 * r))
+                drawRect(sil, Offset(w * fx - r * 0.12f, linea - r * 1.35f), Size(r * 0.24f, r * 0.4f))
+            }
+            listOf(0.32f, 0.63f).forEach { fx -> drawRect(sil, Offset(w * fx, linea - w * 0.13f), Size(w * 0.025f, w * 0.13f)) }
         }
         VivoTema.FOSFORO -> {
             // Columnas de fósforo alineadas a la rejilla de la consola, con un bloque de cursor por cabeza.
@@ -627,6 +658,14 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
             ruta.moveTo(c.x - s, c.y + s); ruta.lineTo(c.x - s, c.y - s * 0.2f)
             ruta.arcTo(Rect(c.x - s, c.y - s * 1.2f, c.x + s, c.y + s * 0.8f), 180f, 180f, false)
             ruta.lineTo(c.x + s, c.y + s); ruta.close()
+        }
+        BarridoTema.CUPOLA -> {
+            // La cúpula: tambor recto, casquete de media elipse y la linterna arriba.
+            val s = r * 1.35f
+            ruta.moveTo(c.x - s, c.y + s); ruta.lineTo(c.x - s, c.y)
+            ruta.arcTo(Rect(c.x - s, c.y - s * 1.1f, c.x + s, c.y + s * 1.1f), 180f, 180f, false)
+            ruta.lineTo(c.x + s, c.y + s); ruta.close()
+            ruta.addRect(Rect(c.x - s * 0.14f, c.y - s * 1.45f, c.x + s * 0.14f, c.y - s * 1.0f))
         }
         BarridoTema.OJIVA -> {
             val s = r * 1.4f

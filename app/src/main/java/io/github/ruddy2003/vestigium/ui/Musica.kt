@@ -73,6 +73,7 @@ import kotlinx.coroutines.delay
 object Musica {
     fun presentacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_presentacion
+        TemaId.URBE -> R.raw.s_urbe_presentacion
         TemaId.CIBER -> R.raw.s_ciber_presentacion
         TemaId.NEON -> R.raw.s_neon_presentacion
         TemaId.HELENO -> R.raw.s_heleno_presentacion
@@ -98,6 +99,7 @@ object Musica {
     /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). */
     fun anual(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_anual
+        TemaId.URBE -> R.raw.s_urbe_anual
         TemaId.CIBER -> R.raw.s_ciber_anual
         TemaId.NEON -> R.raw.s_neon_anual
         TemaId.HELENO -> R.raw.s_heleno_anual
@@ -122,6 +124,7 @@ object Musica {
     }
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
+        TemaId.URBE -> R.raw.t_urbe_llamada
         TemaId.CIBER -> R.raw.t_ciber_llamada
         TemaId.NEON -> R.raw.t_neon_llamada
         TemaId.HELENO -> R.raw.t_heleno_llamada
@@ -146,6 +149,7 @@ object Musica {
     }
     fun notificacion(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_notificacion
+        TemaId.URBE -> R.raw.t_urbe_notificacion
         TemaId.CIBER -> R.raw.t_ciber_notificacion
         TemaId.NEON -> R.raw.t_neon_notificacion
         TemaId.HELENO -> R.raw.t_heleno_notificacion
@@ -292,6 +296,28 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawPath(Path().apply {
                 moveTo(x, h / 2 - u * 16); lineTo(x + s * u * 20, h / 2 - u * 28); lineTo(x + s * u * 20, h / 2 + u * 28); lineTo(x, h / 2 + u * 16)
             }, c, style = Stroke(u * 1.4f))
+        }
+    }
+    // La primera plana de la ciudad: la cabecera entre raya gruesa y fina, y abajo el perfil de los tejados al atardecer
+    // (cúpulas, campanarios y los pinos piñoneros).
+    TemaId.URBE -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, true, t.nombre.uppercase() + " · OGGI", "tocca e vai  —  toca y sigue",
+        comillas = "“" to "”", emblema = 112.dp, arriba = 30.dp, abajo = 78.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val tinta = e.onBackground.copy(alpha = 0.7f); val perfil = e.primary.copy(alpha = 0.22f)
+        drawLine(tinta, Offset(u * 18, u * 4), Offset(w - u * 18, u * 4), u * 2.6f)
+        drawLine(tinta, Offset(u * 18, u * 9), Offset(w - u * 18, u * 9), u * 0.8f)
+        val base = h
+        drawRect(perfil, Offset(0f, base - u * 14), Size(w, u * 14))
+        listOf(0.22f to 26f, 0.62f to 40f).forEach { (fx, r) ->
+            val cx = w * fx; val rr = r * u
+            drawRect(perfil, Offset(cx - rr, base - u * 14 - rr * 0.5f), Size(2 * rr, rr * 0.5f))
+            drawArc(perfil, 180f, 180f, true, Offset(cx - rr, base - u * 14 - rr * 1.5f), Size(2 * rr, 2 * rr))
+            drawRect(perfil, Offset(cx - rr * 0.12f, base - u * 14 - rr * 1.85f), Size(rr * 0.24f, rr * 0.4f))
+        }
+        listOf(0.4f, 0.84f).forEach { fx -> drawRect(perfil, Offset(w * fx, base - u * 70), Size(u * 12, u * 56)); drawPath(Path().apply { moveTo(w * fx - u * 2, base - u * 70); lineTo(w * fx + u * 6, base - u * 82); lineTo(w * fx + u * 14, base - u * 70); close() }, perfil) }
+        listOf(0.06f, 0.94f).forEach { fx ->
+            drawLine(perfil, Offset(w * fx, base - u * 14), Offset(w * fx + u * 3, base - u * 44), u * 3)
+            drawOval(perfil, Offset(w * fx - u * 18, base - u * 58), Size(u * 42, u * 18))
         }
     }
     // Consola: una ventana de terminal con su barra, el emblema como ícono del proceso y la frase como salida.

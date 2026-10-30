@@ -229,6 +229,39 @@ def romano():
                tecla=mezclar((0, trazo((1200, 4200), 0.04, 10), 1), (0, filtro(ruido(0.015), 'bajo', 700) * env(int(0.015 * SR), 0.001, 0.008), 0.3)),
                rascar=rascado((1400, 6000), campana(hz(T + 24), 0.7, 2.0, 1.0, 4)))
 
+def urbe():
+    # Si bemol mayor: la Roma de hoy. Mandolina en trémolo, la campanilla del tranvía, el claxon de dos tonos de la
+    # motoneta y, en lo solemne, las campanas de las iglesias del centro que no tocan nunca a la vez.
+    T = 1    # Si bemol 4
+    pua = lambda n, d=0.22: pluck(hz(n), d, 0.58, 0.994)
+    mandolina = lambda n, d=0.5, veces=5: mezclar(*[(0.055 * i, pua(n, 0.2 if i < veces - 1 else d), 0.55 * (0.85 ** i)) for i in range(veces)])
+    tranvia = lambda n, d=0.5: campana(hz(n), d, 3.01, 1.3, 5.0)
+    claxon = lambda n, d: filtro(barrido(hz(n), hz(n), d, 'cuadrada') + 0.5 * barrido(hz(n + 4), hz(n + 4), d, 'cuadrada'), 'bajo', 2200) * env(int(d * SR), 0.008, d * 0.9, 1.5)
+    campanas = lambda n, d=2.4: campana(hz(n), d, 2.4, 1.8, 1.7)
+    # Con su propio azar también los sonidos de siempre: un tema nuevo no mueve el ruido de los que van después.
+    with azar_propio('urbe_base'):
+        S['urbe'] = dict(
+            toque=mezclar((0, pua(T + 12, 0.1), 0.9), (0, clic(0.006, (2500, 7000)), 0.25)), elegir=tranvia(T + 19, 0.35),
+            pasar=mezclar((0, papel(0.14, (1100, 5200)), 0.9), (0.05, pua(T + 7, 0.08), 0.15)),
+            abrir=mezclar(*[(0.09 * i, mandolina(T + n, 0.35, 3), 0.5) for i, n in enumerate([0, 4, 7])]),
+            guardar=mezclar((0, tranvia(T + 12, 0.35), 0.55), (0.15, tranvia(T + 12, 0.6), 0.6)),
+            logro=reverb(mezclar(*[(0.22 * i, mandolina(T + n, 0.3 if i < 3 else 0.8, 4 if i < 3 else 8), 0.55) for i, n in enumerate([0, 4, 7, 12])],
+                                 (0.66, tranvia(T + 24, 0.9), 0.3), (0.66, pua(T - 12, 0.8), 0.4)), 1.1, 0.22),
+            tema=reverb(mezclar((0, claxon(T + 7, 0.11), 0.4), (0.14, claxon(T + 4, 0.16), 0.4), (0.38, mandolina(T + 12, 0.6, 7), 0.6)), 0.9, 0.2),
+            aviso=reverb(mezclar((0, tranvia(T + 19, 0.4), 0.5), (0.16, tranvia(T + 19, 0.7), 0.5),
+                                 *[(0.5 + 0.2 * i, mandolina(T + n, 0.25 if i < 3 else 0.7, 3 if i < 3 else 7), 0.45) for i, n in enumerate([12, 11, 9, 7])]), 1.2, 0.25),
+            solemne=reverb(mezclar(*[(0.75 * i, acorde(lambda f, d: organo(f, d, 0.1), [T - 12 + a for a in ch], 0.8), 0.4) for i, ch in enumerate([[0, 4, 7], [-3, 0, 4], [5, 9, 12], [0, 4, 7, 12]])],
+                                   *[(0.37 * k + 0.05 * (k % 3), campanas([T - 12, T - 5, T, T + 4, T - 8, T + 7][k % 6], 2.2), 0.28) for k in range(8)]), 2.4, 0.33))
+
+    # Error: el claxon que se ahoga medio tono abajo. Cambio: la campanilla del tranvía, de la tónica a la quinta.
+    # Tecla: el bolígrafo en el cuaderno a rayas. Rascar: la moneda de un euro, bimetálica, sobre la lámina.
+    with azar_propio('urbe'):
+        nuevos('urbe',
+               error=mezclar((0, claxon(T + 7, 0.1), 0.45), (0.13, claxon(T + 6, 0.32), 0.45)),
+               cambio=mezclar((0, tranvia(T + 12, 0.25), 0.5), (0.07, tranvia(T + 19, 0.3), 0.5)),
+               tecla=mezclar((0, trazo((2200, 6500), 0.035, 14, 0.02), 1), (0, filtro(ruido(0.01), 'bajo', 1200) * env(int(0.01 * SR), 0.001, 0.005), 0.25)),
+               rascar=rascado((1700, 7600), campana(hz(T + 28), 0.5, 2.41, 1.1, 6), aspereza=110))
+
 def ciber():
     # Mi menor: blips de onda cuadrada y arpegios de sintetizador.
     T = 7    # Mi5
@@ -791,6 +824,7 @@ if __name__ == '__main__':
     # «error,cambio,tecla,rascar,lugar») solo se escriben esos sonidos y los demás archivos se quedan como están.
     todos = (
         romano,
+        urbe,
         ciber,
         heleno,
         medieval,

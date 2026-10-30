@@ -204,6 +204,17 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
             val o = Offset(w / 2 + lado * r * kotlin.math.cos(g).toFloat(), h * 0.74f + r * 0.6f * kotlin.math.sin(g).toFloat())
             drawOval(tenue, Offset(o.x - 2.6f * u, o.y - 1.4f * u), Size(5.2f * u, 2.8f * u))
         }
+        // El perfil de los tejados abajo (dos cúpulas y un campanario) y la raya doble de la cabecera arriba.
+        TemaId.URBE -> {
+            linea(6 * u, 5 * u, w - 6 * u, 5 * u, tenue, 1.6f * u); linea(6 * u, 7.5f * u, w - 6 * u, 7.5f * u, tenue, 0.6f * u)
+            val base = h - 6 * u
+            drawRect(tenue, Offset(4 * u, base), Size(w - 8 * u, 2 * u))
+            listOf(0.3f to 9f, 0.68f to 13f).forEach { (fx, r) ->
+                drawArc(tenue, 180f, 180f, true, Offset(w * fx - r * u, base - r * u), Size(2 * r * u, 2 * r * u))
+                drawRect(tenue, Offset(w * fx - 0.8f * u, base - r * u - 4 * u), Size(1.6f * u, 4 * u))
+            }
+            drawRect(tenue, Offset(w * 0.47f, base - 18 * u), Size(4 * u, 18 * u))
+        }
         // Renglones de pantalla y el indicador con su cursor.
         TemaId.CIBER -> {
             var y = 0f

@@ -135,6 +135,7 @@ object LibroDiario {
     internal class Fuentes(val titulo: Int, val texto: Int)
     internal fun fuentes(t: TemaId) = when (t) {
         TemaId.ROMANO -> Fuentes(R.font.cinzel_regular, R.font.plex_sans_regular)
+        TemaId.URBE -> Fuentes(R.font.titillium_semibold, R.font.newsreader_regular)
         TemaId.CIBER -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
         TemaId.NEON -> Fuentes(R.font.sharetech_mono, R.font.plex_mono_regular)
         TemaId.HELENO -> Fuentes(R.font.garamond_medium, R.font.garamond_regular)
@@ -202,6 +203,9 @@ object LibroDiario {
         fun capitular(tam: String, color: String) = ".nota::first-letter{font-family:T,serif;font-size:$tam;float:left;line-height:.8;color:$color;margin:4px 6px 0 0}"
         return when (t) {
             TemaId.ROMANO -> "h1{text-align:center;letter-spacing:.25em}article{border-top:3px double $p}.fecha{letter-spacing:.12em}.nota::first-line{font-variant:small-caps;letter-spacing:.04em}"
+            // La página de la crónica de la ciudad en el periódico: cabecera en mayúsculas con raya gruesa, la fecha como antetítulo.
+            TemaId.URBE -> "h1{text-transform:uppercase;letter-spacing:.14em;border-bottom:3px solid $tinta;padding-bottom:6px}article{border-top:1px solid $v}" +
+                ".fecha{font-family:T,sans-serif;text-transform:uppercase;letter-spacing:.08em;color:$p}.nota::first-line{font-weight:600}"
             TemaId.CIBER -> "article{border-top:1px dashed $p}.fecha::before{content:'> ';color:$p}.meta::before{content:'// '}.nota::first-letter{background:$p;color:$b}"
             TemaId.NEON -> "article{border-top:1px dashed $p}.fecha::before{content:'> ';color:$p}.meta::before{content:'// '}.nota::first-letter{background:$p;color:$b}"
             TemaId.HELENO -> "h1{text-align:center}article{border-top:0}article::before{content:'';display:block;height:5px;margin-bottom:14px;border-top:1px solid $p;" +
@@ -341,6 +345,7 @@ object LibroDiario {
         val aire = if (carta) 1.45f else 1.42f
         return when (t) {
             TemaId.ROMANO -> Medidas(if (carta) 12.5f else 11f, aire)
+            TemaId.URBE -> Medidas(if (carta) 12f else 10.8f, if (carta) 1.5f else 1.38f)
             TemaId.CIBER -> Medidas(11f, 1.35f)
             TemaId.NEON -> Medidas(11f, 1.35f)
             TemaId.HELENO -> Medidas(12.5f, aire)
@@ -376,6 +381,8 @@ object LibroDiario {
     private fun inicial(t: TemaId): Inicial = when (t) {
         // La primera palabra en capitales lapidarias, como en una inscripción.
         TemaId.ROMANO -> Inicial(R.font.cinzel_semibold, 1.25f, palabra = true, mayusculas = true)
+        // La primera palabra en mayúsculas sobre una cartela de color, como el nombre de la calle en su placa.
+        TemaId.URBE -> Inicial(R.font.titillium_bold, 1.1f, palabra = true, mayusculas = true, invertida = true)
         // El indicador de la consola y la primera letra en video inverso, como el cursor.
         TemaId.CIBER -> Inicial(R.font.sharetech_mono, 1f, invertida = true, prefijo = "> ")
         TemaId.NEON -> Inicial(R.font.sharetech_mono, 1f, invertida = true, prefijo = "> ")
@@ -459,6 +466,11 @@ object LibroDiario {
                 lados(12f)
                 cv.drawPath(ruta { moveTo(cx - 4f, y - 3f); lineTo(cx + 4f, y - 3f); lineTo(cx, y + 3.5f); close() }, relleno)
                 cv.drawCircle(cx - 8f, y, 1.3f, relleno); cv.drawCircle(cx + 8f, y, 1.3f, relleno)
+            }
+            TemaId.URBE -> {
+                // Las vías del tranvía: dos rieles finos con sus durmientes.
+                cv.drawLine(x0, y - 1.6f, x1, y - 1.6f, linea); cv.drawLine(x0, y + 1.6f, x1, y + 1.6f, linea)
+                var x = x0 + 3f; while (x < x1) { cv.drawLine(x, y - 3.2f, x, y + 3.2f, Paint(linea).apply { strokeWidth = 1.6f }); x += 9f }
             }
             TemaId.CIBER -> {
                 // Una línea discontinua y el cursor al principio.
@@ -614,6 +626,12 @@ object LibroDiario {
                 // Doble filete con un cuadradito en cada esquina.
                 rect(22f, trazo); rect(27f, fino)
                 esquinas.forEach { (x, y) -> cv.drawRect(x - 3f, y - 3f, x + 3f, y + 3f, relleno) }
+            }
+            TemaId.URBE -> {
+                // La placa de la calle: marco grueso, filete fino, un tornillo en cada esquina y, arriba, el recuadro del rione.
+                rect(22f, Paint(trazo).apply { strokeWidth = 2.4f }); rect(28f, fino)
+                esquinas.forEach { (x, y) -> val (sx, sy) = haciaDentro(x, y); cv.drawCircle(x + sx * 11f, y + sy * 11f, 2.6f, relleno) }
+                cv.drawRect(A / 2 - 40f, 16f, A / 2 + 40f, 28f, Paint(relleno).apply { alpha = 60 })
             }
             // Solo las escuadras de las esquinas, como en una pantalla.
             TemaId.CIBER -> esquinas.forEach { (x, y) ->

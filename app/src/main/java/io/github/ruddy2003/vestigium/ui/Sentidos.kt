@@ -52,6 +52,15 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.5f), g(CLICK, 0.8f, 60)); Evento.ERROR -> listOf(g(THUD, 0.7f), g(BAJA, 0.5f, 50))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.4f), g(CLICK, 0.6f, 70), g(CLICK, 0.9f, 70))
         }
+        // La motoneta sobre los sampietrini: tumbos graves y cortos; guardar es la máquina que marca el boleto y el logro,
+        // las campanas de la tarde.
+        TemaId.URBE -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.62f), g(TICK, 0.3f, 18)); Evento.PASAR -> listOf(g(TICK, 0.45f), g(TICK, 0.45f, 55), g(TICK, 0.45f, 55))
+            Evento.GUARDAR -> listOf(g(THUD, 0.66f), g(TICK_GRAVE, 0.5f, 45), g(CLICK, 0.42f, 90))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.47f), g(TICK_GRAVE, 0.36f, 33)); Evento.ABRIR -> listOf(g(SUBE, 0.38f), g(THUD, 0.44f, 75))
+            Evento.CAMBIO -> listOf(g(TICK_GRAVE, 0.7f), g(CLICK, 0.52f, 48)); Evento.ERROR -> listOf(g(BAJA, 0.62f), g(TICK_GRAVE, 0.55f, 65), g(TICK_GRAVE, 0.55f, 65))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE_LENTO, 0.4f), g(CLICK, 0.55f, 85), g(CLICK, 0.75f, 65), g(THUD, 0.6f, 90))
+        }
         // Ráfagas digitales.
         TemaId.CIBER -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 1f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.8f), g(TICK_GRAVE, 0.8f, 25))
@@ -279,6 +288,7 @@ object Sentidos {
      */
     private fun sonidos(tema: TemaId): IntArray = when (tema) {
         TemaId.ROMANO -> intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir, R.raw.s_romano_tema, R.raw.s_romano_error, R.raw.s_romano_cambio, R.raw.s_tecla_romano, R.raw.s_rascar_romano)
+        TemaId.URBE -> intArrayOf(R.raw.s_urbe_toque, R.raw.s_urbe_guardar, R.raw.s_urbe_logro, R.raw.s_urbe_pasar, R.raw.s_urbe_elegir, R.raw.s_urbe_abrir, R.raw.s_urbe_tema, R.raw.s_urbe_error, R.raw.s_urbe_cambio, R.raw.s_tecla_urbe, R.raw.s_rascar_urbe)
         TemaId.CIBER -> intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir, R.raw.s_ciber_tema, R.raw.s_ciber_error, R.raw.s_ciber_cambio, R.raw.s_tecla_ciber, R.raw.s_rascar_ciber)
         TemaId.NEON -> intArrayOf(R.raw.s_neon_toque, R.raw.s_neon_guardar, R.raw.s_neon_logro, R.raw.s_neon_pasar, R.raw.s_neon_elegir, R.raw.s_neon_abrir, R.raw.s_neon_tema, R.raw.s_neon_error, R.raw.s_neon_cambio, R.raw.s_tecla_neon, R.raw.s_rascar_neon)
         TemaId.HELENO -> intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir, R.raw.s_heleno_tema, R.raw.s_heleno_error, R.raw.s_heleno_cambio, R.raw.s_tecla_heleno, R.raw.s_rascar_heleno)
@@ -345,6 +355,8 @@ object Sentidos {
     internal fun afinacion(tema: TemaId): Afinacion = when (tema) {
         // Re mayor: el acorde de la tónica; mármol y papel.
         TemaId.ROMANO -> Afinacion(st(0, 4, 7, 12), st(-5, 0, 5, 7), pasarRuido = true, elegirRuido = false)
+        // Re mayor de mandolina, con la sexta de los stornelli; los pasos sobre la piedra son ruido.
+        TemaId.URBE -> Afinacion(st(0, 4, 9, 7, 2), st(-3, 0, 4, 7), pasarRuido = true, elegirRuido = false)
         // Mi menor, en blips.
         TemaId.CIBER -> Afinacion(st(-5, 0, 3, 7), st(-5, 0, 3, 7), pasarRuido = false, elegirRuido = false)
         TemaId.NEON -> Afinacion(st(-5, 0, 3, 7), st(-5, 0, 3, 7), pasarRuido = false, elegirRuido = false)
@@ -464,6 +476,7 @@ object Sentidos {
     /** Cómo se siente rascar la lámina de cada tema: el metal blando apenas raspa y el acero golpetea. */
     internal fun patronRascar(tema: TemaId): List<Golpe> = when (tema) {
         TemaId.ROMANO -> pasadas(TICK, 0.5f, 60, 3)   // oro imperial, blando
+        TemaId.URBE -> pasadas(TICK_GRAVE, 0.58f, 47, 4)   // la moneda de bronce de la fuente
         TemaId.CIBER -> pasadas(TICK, 0.9f, 30, 5)   // la placa de consola
         TemaId.NEON -> pasadas(TICK, 0.9f, 30, 5)   // la placa de consola
         TemaId.HELENO -> pasadas(TICK, 0.55f, 55, 3)   // electro

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Botón del widget de Roma: un portón de arco rebajado (más redondo arriba) con la clave del arco. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#E8955A"/>
+            
+            <corners android:topLeftRadius="7dp" android:topRightRadius="7dp" android:bottomLeftRadius="1dp" android:bottomRightRadius="1dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="7dp" android:height="4dp" android:top="0dp">
+        <vector android:width="7dp" android:height="4dp" android:viewportWidth="7" android:viewportHeight="4">
+            <path android:pathData="M0,0 L7,0 L5.5,4 L1.5,4 Z" android:fillColor="#55000000"/>
+        </vector>
+    </item>
+</layer-list>

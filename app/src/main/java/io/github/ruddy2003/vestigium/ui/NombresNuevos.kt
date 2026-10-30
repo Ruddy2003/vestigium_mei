@@ -12,6 +12,8 @@ object NombresNuevos {
             "Impulsos y recaídas" to "ARCANA", "Estado de los datos" to "STATVS FONTIVM", "Enfoque y siestas" to "STVDIA ET SOMNI", "Ver tu vida" to "VITA PICTA",
             "Tus atajos" to "VIAE BREVES", "Logro conseguido" to "PALMA ADEPTA", "Este día hace un año" to "ANTE ANNVM", "Pantallas" to "PAGINAE",
             "Elegir campaña" to "ELIGE EXPEDITIONEM", "Campañas anteriores" to "EXPEDITIONES PRAETERITAE", "Ánimo según con quién estás" to "ANIMVS ET COMITES", "Últimos 30 días, por tipo" to "TRIGINTA DIES", "Registro" to "TABVLA"),
+        // La Roma de hoy nombra estas pantallas en `NombresUrbe`, junto con todas las demás («IL NASTRO DELLE ORE», «PASSEGGIATE»…).
+        TemaId.URBE to emptyMap(),
         TemaId.HELENO to mapOf("La cinta" to "ΩΡΑΙ", "Constelación" to "ΑΣΤΕΡΙΣΜΟΣ", "Hall de logros" to "ΣΤΟΑ ΤΩΝ ΝΙΚΩΝ", "Campañas" to "ΣΤΡΑΤΕΙΑΙ",
             "Impulsos y recaídas" to "ΑΠΟΡΡΗΤΑ", "Estado de los datos" to "ΠΗΓΑΙ", "Enfoque y siestas" to "ΣΧΟΛΗ ΚΑΙ ΥΠΝΟΣ", "Ver tu vida" to "Ο ΒΙΟΣ ΣΟΥ",
             "Tus atajos" to "ΣΥΝΤΟΜΙΑΙ", "Logro conseguido" to "ΝΙΚΗ", "Este día hace un año" to "ΠΕΡΥΣΙ", "Pantallas" to "ΣΕΛΙΔΕΣ",

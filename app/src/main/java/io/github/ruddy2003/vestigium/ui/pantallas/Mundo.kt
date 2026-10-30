@@ -206,6 +206,8 @@ internal data class LaminaRascar(val oscura: Int, val media: Int, val clara: Int
 internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     // Oro imperial, algo rojizo.
     TemaId.ROMANO -> LaminaRascar(0xFF7A5410.toInt(), 0xFFCFA03A.toInt(), 0xFFF8E3A0.toInt())
+    // El bronce de las monedas que se tiran a la fuente, con su pátina.
+    TemaId.URBE -> LaminaRascar(0xFF5A3A1E.toInt(), 0xFFB07A3A.toInt(), 0xFFE8C08A.toInt())
     // Placa de consola: metal oscuro con reflejo de fósforo.
     TemaId.CIBER -> LaminaRascar(0xFF0B2530.toInt(), 0xFF2C6F80.toInt(), 0xFF8FEFFF.toInt())
     TemaId.NEON -> LaminaRascar(0xFF0B2530.toInt(), 0xFF2C6F80.toInt(), 0xFF8FEFFF.toInt())
@@ -304,6 +306,15 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
                 for (lado in listOf(-1f, 1f)) girado(x, y, -45f + lado * 50f) { c.drawOval(RectF(0f, -l * 0.045f, l * 0.2f, l * 0.045f), relleno) }
             }
             c.drawCircle(l * 0.86f, l * 0.2f, l * 0.035f, relleno); c.drawCircle(l * 0.8f, l * 0.13f, l * 0.035f, relleno)
+        }
+        TemaId.URBE -> {
+            // Los sampietrini puestos «en cola de pavo real»: abanicos de arcos con sus adoquines, uno junto al otro.
+            for (cx in listOf(0f, l)) for (k in 1..3) {
+                val rr = l * 0.17f * k
+                c.drawArc(RectF(cx - rr + l * 0.5f * (if (cx == 0f) 1f else -1f), l - rr, cx + rr + l * 0.5f * (if (cx == 0f) 1f else -1f), l + rr), 180f, 180f, false, linea)
+            }
+            for (k in 0 until 5) { val a = Math.toRadians(200.0 + k * 35.0); val x = l * 0.5f + (l * 0.42f * kotlin.math.cos(a)).toFloat(); val y = l + (l * 0.42f * kotlin.math.sin(a)).toFloat()
+                c.drawRect(x - l * 0.03f, y - l * 0.03f, x + l * 0.03f, y + l * 0.03f, relleno) }
         }
         TemaId.CIBER -> {
             // Pistas de circuito impreso: una línea que cruza con su desvío a 45°, un bus vertical, un pad y un chip con patas.
