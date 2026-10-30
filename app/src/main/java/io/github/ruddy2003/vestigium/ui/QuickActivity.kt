@@ -945,6 +945,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.CIBER -> 4.dp
     TemaId.NEON -> 6.dp
     TemaId.HELENO -> 14.dp
+    TemaId.EGIPTO -> 16.dp
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
@@ -988,6 +989,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     TemaId.HELENO -> formaDp { w, h, u ->
         val f = 14 * u
         moveTo(0f, f); lineTo(w / 2, 0f); lineTo(w, f); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Estela de remate redondo: un arco rebajado de lado a lado.
+    TemaId.EGIPTO -> formaDp { w, h, u ->
+        val f = 16 * u
+        moveTo(0f, h); lineTo(0f, f); quadraticTo(w / 2, -f * 0.9f, w, f); lineTo(w, h); close()
     }
     // Borde de pergamino que ondula, como un rollo a medio abrir.
     TemaId.MEDIEVAL -> formaDp { w, h, u ->
@@ -1150,6 +1156,17 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawPath(Path().apply { moveTo(12 * u, f + u); lineTo(w / 2, 4 * u); lineTo(w - 12 * u, f + u) }, col, style = Stroke(u))
             drawLine(col, Offset(12 * u, f + 4 * u), Offset(w - 12 * u, f + 4 * u), u)
             drawCircle(e.tertiary, 2.2f * u, Offset(w / 2, 10.5f * u))
+        }
+        // El disco solar alado bajo el arco de la estela.
+        TemaId.EGIPTO -> {
+            val c = Offset(w / 2, 10 * u); val col = e.primary.copy(alpha = 0.7f)
+            listOf(-1f, 1f).forEach { s ->
+                drawPath(Path().apply {
+                    moveTo(c.x + s * 4 * u, c.y - 1.5f * u); quadraticTo(c.x + s * 14 * u, c.y - 5 * u, c.x + s * 26 * u, c.y - 2 * u)
+                    lineTo(c.x + s * 23 * u, c.y + 1.5f * u); quadraticTo(c.x + s * 13 * u, c.y + 1 * u, c.x + s * 4 * u, c.y + 2.5f * u); close()
+                }, col)
+            }
+            drawCircle(e.secondary, 3.4f * u, c)
         }
         // Doble filete de rúbrica y tres puntos de oro.
         TemaId.MEDIEVAL -> {
@@ -1324,6 +1341,11 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     TemaId.NEON -> RoundedCornerShape(50)
     // Frontón muy bajo.
     TemaId.HELENO -> formaDp { w, h, u -> val f = 8 * u; moveTo(0f, f); lineTo(w / 2, 0f); lineTo(w, f); lineTo(w, h); lineTo(0f, h); close() }
+    // Cartucho: redondo a la izquierda y cerrado por la barra del nudo a la derecha.
+    TemaId.EGIPTO -> formaDp { w, h, _ ->
+        val r = minOf(h / 2, w / 2)
+        moveTo(r, 0f); lineTo(w, 0f); lineTo(w, h); lineTo(r, h); arcTo(Rect(0f, 0f, 2 * r, h), 90f, 180f, false); close()
+    }
     // Esquinas cóncavas, como un marco de miniatura.
     TemaId.MEDIEVAL -> formaDp { w, h, u ->
         val r = 7 * u

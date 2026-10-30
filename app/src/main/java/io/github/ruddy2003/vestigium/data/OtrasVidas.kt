@@ -322,6 +322,25 @@ object OtrasVidas {
                 "hijos" to e(4), "alfabetizacion" to e(10), "lectura" to r(0)),
             fuentes = listOf("El trirreme" to "${W}Trireme", "La democracia ateniense" to "${W}Athenian_democracy")),
 
+        // La vida del tema Egipto (su id de tema, «egipto», es el mismo texto que el id de la vida de Ipy en BASE: son
+        // espacios de nombres distintos, el de los temas y el de las vidas, y no chocan).
+        Vida("escriba_tumba", "Pay", "Escriba de la tumba", "Deir el-Medina, Tebas oeste", "hacia el 1200 a. C.", -1200, "tema", "egipto", edad = 34,
+            historia = listOf(
+                "Pay es uno de los escribas de «la Tumba», la cuadrilla que excava y decora las tumbas de los reyes en el Valle. Vive en la aldea de los obreros: unas setenta casas de adobe apretadas entre los cerros del desierto, sin agua propia; el agua se la suben en burro desde el río.",
+                "Su oficio es llevar la cuenta de todo en óstraca y papiros: cuánto grano llega, cuántas mechas y cinceles de cobre se reparten, quién faltó y por qué («enfermo», «picado por un escorpión»). La semana dura diez días; se trabaja ocho, en dos turnos de unas cuatro horas, y a veces se duerme en las chozas del paso de la montaña.",
+                "Le pagan cada mes en grano, más que a un obrero: trigo para el pan y cebada para la cerveza, con pescado, verduras y leña. En la aldea leen bastantes; en todo Egipto, quizá uno de cada cien. Pay es un personaje inventado, con un nombre común en la aldea; la aldea y sus registros son reales.",
+            ),
+            dia = listOf(t(20.0, 5.0, Hacer.DORMIR), t(5.0, 6.0, Hacer.COMER), t(6.0, 6.5, Hacer.CAMINO, "subir al valle"), t(6.5, 11.0, Hacer.TRABAJO, "anotar raciones, herramientas, ausencias"),
+                t(11.0, 12.0, Hacer.COMER, "y la siesta"), t(12.0, 16.0, Hacer.TRABAJO), t(16.0, 17.0, Hacer.CAMINO), t(17.0, 18.0, Hacer.CUIDAR), t(18.0, 20.0, Hacer.GENTE)),
+            datos = mapOf("pasos" to r(10000, "La subida por el paso de la montaña, ida y vuelta, cada día de trabajo."), "km_anio" to r(2500), "kcal" to r(2800, "Pan, cerveza, cebolla, lentejas y pescado; su ración de grano alcanzaba para la familia."),
+                "proteina" to r(70), "azucar" to r(10, "Dátiles y algo de miel."), "fibra" to r(45), "alcohol" to r(35, "Cerveza espesa y poco alcohólica, a diario."), "sueno" to r(9.0, "Se acuesta con la noche; además, la siesta del mediodía."),
+                "dormir" to r(20.0), "trabajo" to e(48, "Ocho días de cada diez, en dos turnos de unas cuatro horas."), "aire_libre" to r(4, "El camino y la obra al sol; dentro de la tumba, a la luz de mechas de aceite."), "pantalla" to r(0),
+                "notificaciones" to r(3), "musica" to r(0.5, "Cantos de trabajo y fiestas de la aldea."), "personas_dia" to e(60, "La cuadrilla tenía entre unos cuarenta y ciento veinte hombres, según el reinado."), "conocidas" to r(800),
+                "poblacion" to e(350, "Entre 200 y 500 personas, según la época."), "lejos" to r(30, "Hasta los templos de la otra orilla."), "estatura" to r(165), "vida" to r(25), "vida_adulto" to r(50), "hijos" to r(5),
+                "alfabetizacion" to e(1, "En todo Egipto, quizá uno de cada cien; en la aldea, muchos más: allí se han hallado miles de óstraca escritos."), "lectura" to r(4, "Copias de enseñanzas y poemas, que también aparecen en la aldea.")),
+            fuentes = listOf("Deir el-Medina, la aldea de los obreros" to "${W}Deir_el-Medina", "Las huelgas de Deir el-Medina: raciones y turnos" to "${W}Deir_el-Medina_strikes",
+                "Óstracon con el registro de ausencias (British Museum EA5634)" to "https://www.britishmuseum.org/collection/object/Y_EA5634")),
+
         Vida("copista", "Hermano Odo", "Monje copista", "Una abadía benedictina", "hacia 1150", 1150, "tema", "medieval", edad = 35,
             historia = listOf(
                 "El hermano Odo se acuesta al anochecer, después de completas, y lo despiertan a la madrugada para maitines. Reza en el coro siete veces al día: unas cuatro horas de canto llano diario.",

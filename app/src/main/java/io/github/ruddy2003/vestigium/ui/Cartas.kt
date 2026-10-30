@@ -115,6 +115,8 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.NEON -> Papeleria(Color(0xFF2A1C33), Color(0xFF140D1A), Color(0xFF3D2A48), Color(0xFF3A0D27), Color(0xFFFF3D9A), Color(0xFFFFB238), Color(0xFFF4E7F0))
     // Papiro claro forrado de púrpura macedonio, hilo negro y sello de arcilla.
     TemaId.HELENO -> Papeleria(Color(0xFFE9D7A8), Color(0xFFB5935E), Color(0xFFF5E8C6), Color(0xFF5B2A6E), Color(0xFFB5652F), Color(0xFF2B1D14), Color(0xFF1F1712))
+    // Papiro doblado en tiras, forrado de lapislázuli, atado con hilo de lino y sellado con barro del Nilo.
+    TemaId.EGIPTO -> Papeleria(Color(0xFFE6D29A), Color(0xFFA88C4E), Color(0xFFF4E7BF), Color(0xFF1D2F7A), Color(0xFF6E4A2E), Color(0xFFCDBB8E), Color(0xFF1E160C))
     // Pergamino doblado con la cinta azul y el sello rojo que cuelga.
     TemaId.MEDIEVAL -> Papeleria(Color(0xFFEADBB4), Color(0xFFB79C6A), Color(0xFFF6EBCB), Color(0xFFC9B07A), Color(0xFFB3261E), Color(0xFF1F3A93), Color(0xFF2B1D12))
     // Lino blanco de la sobreveste forrado de rojo, cera parda del sello de la casa y cordón de cáñamo.
@@ -175,6 +177,7 @@ internal fun formaSobre(t: TemaId): FormaSobre = when (t) {
     TemaId.CIBER -> FormaSobre(SolapaSobre.RECTA, 0f, CierreSobre.PRECINTO)
     TemaId.NEON -> FormaSobre(SolapaSobre.DIENTES, 0.05f, CierreSobre.BANDA)
     TemaId.HELENO -> FormaSobre(SolapaSobre.REDONDA, 0.03f, CierreSobre.DOBLE)
+    TemaId.EGIPTO -> FormaSobre(SolapaSobre.RECTA, 0.035f, CierreSobre.VERTICAL)
     TemaId.MEDIEVAL -> FormaSobre(SolapaSobre.LENGUA, 0.015f, CierreSobre.VERTICAL)
     TemaId.TEMPLARIO -> FormaSobre(SolapaSobre.ALMENA, 0.01f, CierreSobre.CRUZ)
     TemaId.DISTOPIA -> FormaSobre(SolapaSobre.RECTA, 0.01f, CierreSobre.HILO)
@@ -329,6 +332,21 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
                     Offset(c.x + (r * largo * cos(ang)).toFloat(), c.y + (r * largo * sin(ang)).toFloat()), r * 0.07f, StrokeCap.Round)
             }
             drawCircle(hondo, r * 0.15f, c)
+        }
+        TemaId.EGIPTO -> {
+            // Un terrón de barro del Nilo sobre el hilo, con el escarabajo del sello hundido y su borde de cuerda.
+            drawPath(Path().apply {
+                moveTo(c.x - r * 0.95f, c.y - r * 0.2f); quadraticTo(c.x - r * 0.9f, c.y - r * 0.95f, c.x, c.y - r * 0.92f)
+                quadraticTo(c.x + r * 1.0f, c.y - r * 0.85f, c.x + r * 0.96f, c.y + r * 0.1f); quadraticTo(c.x + r * 0.85f, c.y + r * 0.95f, c.x - r * 0.05f, c.y + r * 0.9f)
+                quadraticTo(c.x - r * 1.02f, c.y + r * 0.8f, c.x - r * 0.95f, c.y - r * 0.2f); close()
+            }.also { drawPath(it, sombra, style = Stroke(r * 0.12f)) }, col)
+            drawOval(hondo.copy(alpha = hondo.alpha * 0.7f), Offset(c.x - r * 0.55f, c.y - r * 0.68f), Size(r * 1.1f, r * 1.36f), style = Stroke(r * 0.05f))
+            for (j in 0 until 14) {
+                val ang = j * PI / 7
+                drawCircle(hondo.copy(alpha = hondo.alpha * 0.6f), r * 0.04f, Offset(c.x + (r * 0.68f * cos(ang)).toFloat() * 0.82f, c.y + (r * 0.68f * sin(ang)).toFloat()))
+            }
+            signoEgipcio(3, c, r * 0.95f, hondo, r * 0.07f)
+            drawCircle(claro.copy(alpha = claro.alpha * 0.25f), r * 0.16f, c - Offset(r * 0.42f, r * 0.42f))
         }
         TemaId.MEDIEVAL -> {
             // El sello pendiente: la cera roja cuelga de dos cintas azules, con su gráfila de perlas y el rosetón.
@@ -650,6 +668,16 @@ private fun DrawScope.adornoSobre(t: TemaId, pa: Papeleria, cuerpo: Rect) {
             while (y + 3 * u <= top + H * 0.66f) { p.moveTo(x0, y); p.lineTo(x0 + 2 * u, y); p.lineTo(x0 + 2 * u, y + 2 * u); p.lineTo(x0 + u, y + 2 * u); p.lineTo(x0 + u, y + u); y += 3 * u }
             drawPath(p, purpura.copy(alpha = 0.65f), style = Stroke(1.3f))
             listOf(x0 - u * 0.6f, x0 + u * 2.6f).forEach { x -> drawLine(purpura.copy(alpha = 0.5f), Offset(x, top + H * 0.1f), Offset(x, top + H * 0.68f), 1f) }
+        }
+        TemaId.EGIPTO -> {
+            // Un cartucho vertical junto al borde derecho, con tres signos en lapislázuli, y las fibras del papiro en cruz.
+            val lapis = Color(0xFF1D2F7A)
+            var y = top + H * 0.05f; while (y < bot) { drawLine(Color(0xFF8A6E3A).copy(alpha = 0.08f), Offset(l, y), Offset(r, y), 1f); y += H * 0.035f }
+            var x = l + W * 0.02f; while (x < r) { drawLine(Color(0xFF8A6E3A).copy(alpha = 0.05f), Offset(x, top), Offset(x, bot), 1f); x += W * 0.03f }
+            val ancho = W * 0.075f; val x0 = r - W * 0.12f; val y0 = top + H * 0.1f; val alto = H * 0.56f
+            drawRoundRect(lapis.copy(alpha = 0.7f), Offset(x0, y0), Size(ancho, alto), CornerRadius(ancho / 2), style = Stroke(1.6f))
+            drawLine(lapis.copy(alpha = 0.7f), Offset(x0 - ancho * 0.15f, y0 + alto + 3f), Offset(x0 + ancho * 1.15f, y0 + alto + 3f), 2.2f)
+            for (j in 0 until 3) signoEgipcio(j, Offset(x0 + ancho / 2, y0 + alto * (0.2f + j * 0.3f)), ancho * 0.72f, lapis.copy(alpha = 0.7f), 1.3f)
         }
         // Calderones de copista en rojo y azul a los dos lados.
         TemaId.MEDIEVAL -> listOf(0.3f, 0.44f, 0.58f).forEachIndexed { i, f ->
@@ -978,6 +1006,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Oye, yo de más adelante:", "Cuéntale lo que pasa en la calle…", "Pedido para %s, en camino", "El repartidor no la entrega antes de la fecha.", "toca para escribir el recado")
     TemaId.HELENO -> VozCarta("Ya puedes desatarla", "Sellada en arcilla", "Para mí, el del %s", "Para mí, el de %s", "Para mí, el que vendrá",
         "Χαῖρε, yo del futuro…", "Escribe tu carta…", "Carta para %s sellada en arcilla", "Ni el oráculo la abrirá antes.", "Toca para tomar el estilo…")
+    TemaId.EGIPTO -> VozCarta("Ya puedes romper el barro del sello", "Sellada con el escarabajo", "Para mi ka del %s", "Mi ka de %s", "Para el que seré en otra crecida",
+        "Que vivas, prosperes y tengas salud, tú que me lees…", "Escribe tu papiro…", "Papiro para %s sellado con barro", "Ni el sacerdote lo abrirá antes.", "Toca para mojar el cálamo…")
     TemaId.MEDIEVAL -> VozCarta("Ya puede abrirse", "Lacrada y atada", "Al que seré el %s", "Al que seré en %s", "Al que seré algún día",
         "A vos, que seréis yo…", "Escribid vuestra misiva…", "Misiva para %s lacrada", "Ningún copista la abrirá antes.", "Tocad para mojar la pluma…")
     TemaId.TEMPLARIO -> VozCarta("Ya puede romperse el sello", "Sellada con el sello de la casa", "Al freire que seré el %s", "Al freire de %s", "Al freire que vendrá",
@@ -1026,6 +1056,7 @@ private fun letraSobre(t: TemaId): FontFamily = when (t) {
     TemaId.CIBER -> Letra.terminal
     TemaId.NEON -> Letra.letrero
     TemaId.HELENO -> Letra.garamond
+    TemaId.EGIPTO -> Letra.messiri
     TemaId.MEDIEVAL -> LetraExtra.gotica
     TemaId.TEMPLARIO -> LetraExtra.cruzada
     TemaId.DISTOPIA -> LetraExtra.oswald

@@ -53,6 +53,10 @@ object Letra {
     val texto = FontFamily(Font(R.font.plex_sans_regular, FontWeight.Normal), Font(R.font.plex_sans_medium, FontWeight.Medium), Font(R.font.plex_sans_semibold, FontWeight.SemiBold))
     /** EB Garamond: tiene griego politónico, para el tema helénico. */
     val garamond = FontFamily(Font(R.font.garamond_regular, FontWeight.Normal), Font(R.font.garamond_medium, FontWeight.Medium), Font(R.font.garamond_semibold, FontWeight.SemiBold))
+    /** El Messiri, de un tipógrafo egipcio: los títulos del tema Egipto (no trae jeroglíficos; esos los pone la letra del sistema). */
+    val messiri = FontFamily(Font(R.font.messiri_medium, FontWeight.Normal), Font(R.font.messiri_medium, FontWeight.Medium), Font(R.font.messiri_bold, FontWeight.SemiBold), Font(R.font.messiri_bold, FontWeight.Bold))
+    /** Escriba (Gentium Book Plus renombrada): el texto del tema Egipto, con las letras de la transliteración egiptológica (ꜣ, ꜥ, ḥ, š…). */
+    val escriba = FontFamily(Font(R.font.escriba_regular, FontWeight.Normal), Font(R.font.escriba_bold, FontWeight.SemiBold), Font(R.font.escriba_bold, FontWeight.Bold))
     /** Share Tech Mono: rótulos de consola para el tema Terminal. */
     val terminal = FontFamily(Font(R.font.sharetech_mono, FontWeight.Normal))
     /** Chakra Petch: la letra cuadrada de los letreros de Ciudad neón. */
@@ -92,6 +96,8 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     CIBER("ciber", "Terminal", "Pura consola: cian sobre negro, cursor parpadeante, ASCII y volcados de memoria. Todo en código. Solo oscuro.", Epoca.CONTEMPORANEA, soloOscuro = true),
     NEON("neon", "Ciudad neón", "Los niveles bajos de una megaciudad: letreros de neón entre el vapor, puestos de comida y callejones. Magenta, ámbar y verde de sodio. Solo oscuro.", Epoca.FUTURO, soloOscuro = true),
     HELENO("heleno", "Helénico", "Púrpura macedonio, oro y azul del Egeo. Títulos en griego, el sol de Vergina.", Epoca.ANTIGUEDAD),
+    /** Egipto faraónico. Su id «egipto» coincide con el de una vida de `OtrasVidas.BASE` (Ipy): son espacios de nombres distintos (`TemaId` frente a `porId`) y no chocan. */
+    EGIPTO("egipto", "Egipto", "Papiro, lapislázuli, oro y cornalina. El ojo protector, cartuchos, numerales jeroglíficos y el año civil de tres estaciones.", Epoca.ANTIGUEDAD),
     MEDIEVAL("medieval", "Scriptorium", "Pergamino, tinta y pan de oro. Letra gótica, capitulares en rojo, numerales de copista.", Epoca.EDAD_MEDIA),
     TEMPLARIO("templario", "Templario", "Cota de malla, sobreveste blanca con la cruz roja y un castillo de frontera entre la arena. Calendario juliano y vigilias de la noche.", Epoca.EDAD_MEDIA),
     DISTOPIA("distopia", "Distopía", "Gris de ministerio y rojo de cartel. Cada día es un expediente y un ojo lo mira todo.", Epoca.FUTURO),
@@ -184,6 +190,30 @@ internal val helenoOscuro = darkColorScheme(
     surfaceContainerLow = Color(0xFF161222), surfaceContainerLowest = Color(0xFF0E0B17),
 ).conInversos()
 
+/** Papiro de día: tinta de carbón, lapislázuli, cornalina y oro sobre la hoja amarilla. */
+internal val egiptoClaro = lightColorScheme(
+    primary = Color(0xFF1D2F7A), onPrimary = Color.White, primaryContainer = Color(0xFFD9DDF0), onPrimaryContainer = Color(0xFF231A0E),
+    secondary = Color(0xFFB8471E), onSecondary = Color.White, secondaryContainer = Color(0xFFF2D6C2), onSecondaryContainer = Color(0xFF231A0E),
+    tertiary = Color(0xFF9A7212),
+    background = Color(0xFFE8D6A0), onBackground = Color(0xFF231A0E), surface = Color(0xFFF2E5BE), onSurface = Color(0xFF231A0E),
+    surfaceVariant = Color(0xFFDDC88C), onSurfaceVariant = Color(0xFF5E4C2C), outline = Color(0xFFC2A867), outlineVariant = Color(0xFFC2A867),
+    error = Color(0xFF9E2B25),
+    surfaceContainer = Color(0xFFF2E5BE), surfaceContainerHigh = Color(0xFFDDC88C), surfaceContainerHighest = Color(0xFFDDC88C),
+    surfaceContainerLow = Color(0xFFF2E5BE), surfaceContainerLowest = Color(0xFFF2E5BE),
+).conInversos()
+
+/** La tumba a la luz de la lámpara: negro cálido de hollín, oro, lapislázuli claro y cornalina. */
+internal val egiptoOscuro = darkColorScheme(
+    primary = Color(0xFFE3B341), onPrimary = Color(0xFF1E1503), primaryContainer = Color(0xFF3B2C0E), onPrimaryContainer = Color(0xFFF1E4C0),
+    secondary = Color(0xFF7895F0), onSecondary = Color(0xFF0A1236), secondaryContainer = Color(0xFF1C2659), onSecondaryContainer = Color(0xFFF1E4C0),
+    tertiary = Color(0xFFE8774E),
+    background = Color(0xFF140E0A), onBackground = Color(0xFFF1E4C0), surface = Color(0xFF1D1610), onSurface = Color(0xFFF1E4C0),
+    surfaceVariant = Color(0xFF2A2017), onSurfaceVariant = Color(0xFFB9A887), outline = Color(0xFF3F3121), outlineVariant = Color(0xFF3F3121),
+    error = Color(0xFFE58C86),
+    surfaceContainer = Color(0xFF1D1610), surfaceContainerHigh = Color(0xFF2A2017), surfaceContainerHighest = Color(0xFF2A2017),
+    surfaceContainerLow = Color(0xFF1D1610), surfaceContainerLowest = Color(0xFF140E0A),
+).conInversos()
+
 internal val tipoRomano = Typography(
     displaySmall = TextStyle(fontFamily = Letra.inscripcion, fontWeight = FontWeight.Normal, fontSize = 30.sp, lineHeight = 36.sp, letterSpacing = 2.sp),
     headlineMedium = TextStyle(fontFamily = Letra.inscripcion, fontWeight = FontWeight.Normal, fontSize = 27.sp, lineHeight = 33.sp, letterSpacing = 2.4.sp),
@@ -249,6 +279,22 @@ internal val tipoHeleno = Typography(
     labelSmall = TextStyle(fontFamily = Letra.garamond, fontSize = 12.5.sp, letterSpacing = 0.4.sp, fontFeatureSettings = "lnum, tnum"),
 )
 
+/** El Messiri en los títulos, sin espaciar, como un friso; Escriba (Gentium) en el texto y en los datos, con cifras alineadas. */
+internal val tipoEgipto = Typography(
+    displaySmall = TextStyle(fontFamily = Letra.messiri, fontWeight = FontWeight.Medium, fontSize = 31.sp, lineHeight = 38.sp, letterSpacing = 0.6.sp),
+    headlineMedium = TextStyle(fontFamily = Letra.messiri, fontWeight = FontWeight.Medium, fontSize = 28.sp, lineHeight = 35.sp, letterSpacing = 0.5.sp),
+    headlineSmall = TextStyle(fontFamily = Letra.messiri, fontWeight = FontWeight.Medium, fontSize = 22.sp, lineHeight = 29.sp, letterSpacing = 0.4.sp),
+    titleLarge = TextStyle(fontFamily = Letra.messiri, fontWeight = FontWeight.Bold, fontSize = 17.sp, lineHeight = 23.sp, letterSpacing = 0.8.sp),
+    titleMedium = TextStyle(fontFamily = Letra.escriba, fontWeight = FontWeight.Bold, fontSize = 16.sp, lineHeight = 22.sp),
+    titleSmall = TextStyle(fontFamily = Letra.messiri, fontWeight = FontWeight.Medium, fontSize = 12.5.sp, lineHeight = 17.sp, letterSpacing = 0.5.sp),
+    bodyLarge = TextStyle(fontFamily = Letra.escriba, fontSize = 17.sp, lineHeight = 26.sp),
+    bodyMedium = TextStyle(fontFamily = Letra.escriba, fontSize = 15.sp, lineHeight = 22.sp),
+    bodySmall = TextStyle(fontFamily = Letra.escriba, fontSize = 13.sp, lineHeight = 19.sp),
+    labelLarge = TextStyle(fontFamily = Letra.messiri, fontWeight = FontWeight.Medium, fontSize = 14.sp, letterSpacing = 0.4.sp, fontFeatureSettings = "lnum, tnum"),
+    labelMedium = TextStyle(fontFamily = Letra.messiri, fontWeight = FontWeight.Medium, fontSize = 12.sp, letterSpacing = 0.4.sp, fontFeatureSettings = "lnum, tnum"),
+    labelSmall = TextStyle(fontFamily = Letra.escriba, fontSize = 12.sp, letterSpacing = 0.3.sp, fontFeatureSettings = "lnum, tnum"),
+)
+
 /**
  * Cómo dobla la esquina de las tarjetas, botones y diálogos de un tema: [REDONDA] (las cuatro iguales), [CORTADA] (en
  * chaflán, como una carpeta o una placa de acero), [HOJA] (dos esquinas opuestas redondas y dos casi rectas, como una hoja
@@ -280,6 +326,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.CIBER -> ciber
     TemaId.NEON -> neon
     TemaId.HELENO -> if (oscuro) helenoOscuro else helenoClaro
+    TemaId.EGIPTO -> if (oscuro) egiptoOscuro else egiptoClaro
     TemaId.MEDIEVAL -> if (oscuro) medievalOscuro else medievalClaro
     TemaId.TEMPLARIO -> if (oscuro) templarioOscuro else templarioClaro
     TemaId.DISTOPIA -> if (oscuro) distopiaOscuro else distopiaClaro
@@ -307,6 +354,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.CIBER -> tipoCiber
     TemaId.NEON -> tipoNeon
     TemaId.HELENO -> tipoHeleno
+    TemaId.EGIPTO -> tipoEgipto
     TemaId.MEDIEVAL -> tipoMedieval
     TemaId.TEMPLARIO -> tipoTemplario
     TemaId.DISTOPIA -> tipoDistopia
@@ -340,6 +388,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.CIBER -> 62f to 0f           // Share Tech Mono
     TemaId.NEON -> 58f to 2f           // Chakra Petch: cuadrada y ancha
     TemaId.HELENO -> 66f to 1f          // Garamond, cifras alineadas
+    TemaId.EGIPTO -> 60f to 1.5f        // El Messiri, redonda y abierta
     TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
     TemaId.TEMPLARIO -> 60f to 1.2f      // letra de estandarte (MedievalSharp)
     TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
@@ -372,6 +421,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.CIBER -> Esquinas(1, Esquina.REDONDA)
     TemaId.NEON -> Esquinas(10, Esquina.CORTADA)          // la placa del letrero
     TemaId.HELENO -> Esquinas(6, Esquina.REDONDA)
+    TemaId.EGIPTO -> Esquinas(11, Esquina.ARCO)            // la estela de remate redondo
     TemaId.MEDIEVAL -> Esquinas(3, Esquina.REDONDA)
     TemaId.TEMPLARIO -> Esquinas(5, Esquina.CORTADA)       // el sillar tallado de la muralla
     TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
@@ -545,6 +595,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.CIBER -> "DÍA_"
         TemaId.NEON -> "夜 · NOCHE"
         TemaId.HELENO -> "ΗΜΕΡΑ"
+        TemaId.EGIPTO -> "Hru"
         TemaId.MEDIEVAL -> "Del día"
         TemaId.TEMPLARIO -> "Guardia"
         TemaId.DISTOPIA -> "PARTE"
@@ -571,6 +622,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.CIBER -> "2026.10.17"
         TemaId.NEON -> "NIVEL −3 · 22:47"
         TemaId.HELENO -> "ΙΖʹ ΥΠΕΡΒ."
+        TemaId.EGIPTO -> "II Ajet 7 · Paofi"
         TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.TEMPLARIO -> "iv oct. · juliano"
         TemaId.DISTOPIA -> "EXP. 0290"
@@ -599,6 +651,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.CIBER -> 16 to 16
         TemaId.NEON -> 16 to 16
         TemaId.HELENO -> 20 to 12
+        TemaId.EGIPTO -> 21 to 11
         TemaId.MEDIEVAL -> 16 to 16
         TemaId.TEMPLARIO -> 22 to 10
         TemaId.DISTOPIA -> 20 to 12
@@ -626,6 +679,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.CIBER -> 10
         TemaId.NEON -> 10
         TemaId.HELENO -> 10
+        TemaId.EGIPTO -> 13
         TemaId.MEDIEVAL -> 10
         TemaId.TEMPLARIO -> 12
         TemaId.DISTOPIA -> 10
@@ -687,6 +741,12 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     TemaId.HELENO -> GenericShape { s, _ ->
         val f = s.height * 0.1f
         moveTo(0f, f); lineTo(s.width / 2, 0f); lineTo(s.width, f); lineTo(s.width, s.height); lineTo(0f, s.height); close()
+    }
+    // Pilono de templo: los muros en talud y, arriba, la gola que se abre hacia afuera.
+    TemaId.EGIPTO -> GenericShape { s, _ ->
+        val d = s.width * 0.06f; val f = s.height * 0.12f
+        moveTo(0f, s.height); lineTo(d, f); quadraticTo(d * 0.9f, f * 0.35f, d * 0.15f, 0f)
+        lineTo(s.width - d * 0.15f, 0f); quadraticTo(s.width - d * 0.9f, f * 0.35f, s.width - d, f); lineTo(s.width, s.height); close()
     }
     // Folio con la esquina doblada.
     TemaId.MEDIEVAL -> CutCornerShape(topStart = 0.dp, topEnd = 14.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
@@ -816,6 +876,12 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         }
         // Dracma.
         TemaId.HELENO -> { drawCircle(c, r); drawCircle(fondo.copy(alpha = 0.4f), r * 0.68f, style = fino) }
+        // Cartucho: el óvalo de cuerda que encierra el nombre del rey, con su nudo abajo.
+        TemaId.EGIPTO -> {
+            drawRoundRect(c, Offset(w * 0.2f, 0f), Size(w * 0.6f, h * 0.8f), CornerRadius(w * 0.3f))
+            drawRoundRect(fondo.copy(alpha = 0.45f), Offset(w * 0.32f, h * 0.12f), Size(w * 0.36f, h * 0.56f), CornerRadius(w * 0.18f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.07f))
+            drawRect(c, Offset(w * 0.1f, h * 0.86f), Size(w * 0.8f, h * 0.14f))
+        }
         // Losange de blasón.
         TemaId.MEDIEVAL -> drawPath(poligono(4, -90f), c)
         // Escudo de lágrima (el de los caballeros del siglo XII) con la cruz patada vaciada.

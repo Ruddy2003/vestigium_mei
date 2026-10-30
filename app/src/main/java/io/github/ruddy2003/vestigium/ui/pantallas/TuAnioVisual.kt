@@ -162,6 +162,16 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawLine(oscuro.copy(alpha = 0.25f), Offset(x0 + h * 0.6f, y0 + h * 0.35f), Offset(x0 + w, y0 + h * 0.35f), 0.5f * d)
             drawLine(c, Offset(x0 + w * 0.65f, y0), Offset(x0 + w * 0.65f, y0 + h), 1.2f * d)
         }
+        // Papiro egipcio enrollado: el cartucho pintado en el color del libro, el hilo de lino y el terrón de barro del sello.
+        TemaId.EGIPTO -> {
+            val papiro = lerp(Color(0xFFE6D29A), c, 0.1f)
+            drawRoundRect(papiro, Offset(x0, y0), Size(w, h), CornerRadius(h * 0.5f))
+            drawOval(lerp(papiro, Color.Black, 0.18f), Offset(x0 + w - h * 0.35f, y0), Size(h * 0.35f, h))
+            drawRoundRect(c, Offset(x0 + w * 0.18f, y0 + h * 0.2f), Size(w * 0.34f, h * 0.6f), CornerRadius(h * 0.3f), style = Stroke(1.1f * d))
+            drawLine(c, Offset(x0 + w * 0.54f, y0 + h * 0.2f), Offset(x0 + w * 0.54f, y0 + h * 0.8f), 1.6f * d)
+            drawLine(Color(0xFFCDBB8E), Offset(x0 + w * 0.7f, y0), Offset(x0 + w * 0.7f, y0 + h), 1.2f * d)
+            drawCircle(Color(0xFF6E4A2E), h * 0.16f, Offset(x0 + w * 0.7f, y0 + h * 0.84f))
+        }
         // Códice iluminado: cuero, cantoneras de oro, un bullón en el centro y el cajo del lomo.
         TemaId.MEDIEVAL -> {
             drawRect(lerp(c, Color(0xFF6B3A1E), 0.4f), o, s)
@@ -601,6 +611,13 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
         TemaId.HELENO -> {
             drawCircle(relleno, r, c); drawCircle(borde, r * 0.9f, c, style = Stroke(2.2f * d)); drawCircle(borde, r * 0.7f, c, style = fino)
         }
+        // Un cartucho de pie, con su barra abajo.
+        TemaId.EGIPTO -> {
+            drawRoundRect(relleno, Offset(x - r * 0.68f, y - r), Size(r * 1.36f, r * 1.75f), CornerRadius(r * 0.68f))
+            drawRoundRect(borde, Offset(x - r * 0.68f, y - r), Size(r * 1.36f, r * 1.75f), CornerRadius(r * 0.68f), style = Stroke(2f * d))
+            drawRoundRect(borde, Offset(x - r * 0.48f, y - r * 0.8f), Size(r * 0.96f, r * 1.35f), CornerRadius(r * 0.48f), style = fino)
+            drawRect(borde, Offset(x - r * 0.85f, y + r * 0.8f), Size(r * 1.7f, r * 0.2f))
+        }
         // Escudo heráldico.
         TemaId.MEDIEVAL -> lleno(Path().apply {
             moveTo(x - r * 0.9f, y - r * 0.9f); lineTo(x + r * 0.9f, y - r * 0.9f); lineTo(x + r * 0.9f, y + r * 0.1f)
@@ -813,6 +830,29 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
                         moveTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); close()
                     }, col)
                 }
+            }
+            else -> return false
+        }
+        TemaId.EGIPTO -> when (forma) {
+            // El cáliz de loto: la copa con forma de flor abierta, sus pétalos marcados y el pie.
+            "taza" -> {
+                drawPath(Path().apply { moveTo(x - r, y - r * 0.6f); quadraticTo(x - r * 0.7f, y + r * 0.35f, x - r * 0.18f, y + r * 0.4f); lineTo(x + r * 0.18f, y + r * 0.4f); quadraticTo(x + r * 0.7f, y + r * 0.35f, x + r, y - r * 0.6f); close() }, col)
+                listOf(-0.5f, 0f, 0.5f).forEach { k -> drawLine(fondo, Offset(x + k * r * 0.4f, y + r * 0.3f), Offset(x + k * r, y - r * 0.5f), 0.7f * d) }
+                drawLine(col, Offset(x, y + r * 0.4f), Offset(x, y + r * 0.78f), 1.4f * d)
+                drawLine(col, Offset(x - r * 0.45f, y + r * 0.82f), Offset(x + r * 0.45f, y + r * 0.82f), 1.6f * d)
+            }
+            // El obelisco con su piramidión.
+            "alfiler" -> {
+                drawPath(Path().apply { moveTo(x - r * 0.32f, y + r * 0.85f); lineTo(x - r * 0.22f, y - r * 0.55f); lineTo(x, y - r); lineTo(x + r * 0.22f, y - r * 0.55f); lineTo(x + r * 0.32f, y + r * 0.85f); close() }, col)
+                drawLine(fondo, Offset(x - r * 0.22f, y - r * 0.55f), Offset(x + r * 0.22f, y - r * 0.55f), 0.6f * d)
+                drawRect(col, Offset(x - r * 0.5f, y + r * 0.85f), Size(r, r * 0.15f))
+            }
+            // La estrella egipcia de cinco puntas, la de los techos de las tumbas.
+            "estrella" -> {
+                drawPath(Path().apply {
+                    for (k in 0 until 10) { val p = polarCosa(c, if (k % 2 == 0) r else r * 0.4f, -PI / 2 + PI * k / 5); if (k == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) }
+                    close()
+                }, col)
             }
             else -> return false
         }

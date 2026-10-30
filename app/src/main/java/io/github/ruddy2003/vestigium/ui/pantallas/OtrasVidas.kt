@@ -485,6 +485,12 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawLine(color, Offset(0f, 0.5f * d), Offset(fw, 0.5f * d), d); drawLine(color, Offset(0f, h - 0.5f * d), Offset(fw, h - 0.5f * d), d)
             }
         }
+        // La cenefa de rectángulos: la barra se llena bloque a bloque, uno fuerte y otro claro.
+        TemaId.EGIPTO -> {
+            drawLine(color.copy(alpha = 0.3f), Offset(0f, h / 2), Offset(w, h / 2), d)
+            var x = 0f; var k = 0
+            while (x < fw) { drawRect(color.copy(alpha = if (k % 2 == 0) 1f else 0.6f), Offset(x, h * 0.22f), Size(minOf(5f * d, fw - x), h * 0.56f)); x += 6f * d; k++ }
+        }
         // Trazo de tinta sobre el renglón, rematado con un rombo de rúbrica.
         TemaId.MEDIEVAL -> {
             drawLine(color.copy(alpha = 0.3f), Offset(0f, h / 2), Offset(w, h / 2), d, pathEffect = guion(1f, 2.5f))
@@ -785,6 +791,17 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
         TemaId.HELENO -> {
             drawPath(figEstrella(c, rc * 0.75f, rc * 0.32f, 16), cs.tertiary.copy(alpha = 0.35f))
             drawCircle(cs.tertiary.copy(alpha = 0.5f), rc * 0.24f, c)
+            marcas(24, 2f * d, d, linea)
+        }
+        // El disco solar alado en el centro del reloj de las veinticuatro horas.
+        TemaId.EGIPTO -> {
+            listOf(-1f, 1f).forEach { s ->
+                drawPath(Path().apply {
+                    moveTo(c.x + s * rc * 0.22f, c.y - rc * 0.06f); quadraticTo(c.x + s * rc * 0.5f, c.y - rc * 0.24f, c.x + s * rc * 0.8f, c.y - rc * 0.1f)
+                    lineTo(c.x + s * rc * 0.72f, c.y + rc * 0.06f); quadraticTo(c.x + s * rc * 0.45f, c.y + rc * 0.04f, c.x + s * rc * 0.22f, c.y + rc * 0.12f); close()
+                }, cs.tertiary.copy(alpha = 0.4f))
+            }
+            drawCircle(cs.secondary.copy(alpha = 0.55f), rc * 0.2f, c)
             marcas(24, 2f * d, d, linea)
         }
         // Horologio iluminado: cuadrifolio rojo y puntos de rúbrica.

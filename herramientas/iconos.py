@@ -56,6 +56,13 @@ def pario(sem):          # Helénico: mármol de Paros, blanco y fino, con vetas
     vetas = np.abs(np.sin((X * 0.8 - Y * 1.2) / TAM * 14 + t * 2.2)) ** 30 * -0.7
     return vetas + ruido(sem + 1, 0.35, 2) + ruido(sem + 2, 0.4, 24)
 
+def papiro_nilo(sem):    # Egipto: papiro, las tiras en dos capas que se cruzan (las horizontales más marcadas) y una unión de hojas
+    t = ruido(sem, 3.0, 20)
+    horiz = np.sin(Y * 1.7 + t * 1.5) * 0.35
+    vert = np.sin(X * 0.9 + ruido(sem + 2, 2.0, 16)) * 0.18
+    union = (np.abs(X - TAM * 0.68) < 5) * -0.5
+    return horiz + vert + union + ruido(sem + 3, 0.3, 1)
+
 def vitela(sem):         # Scriptorium: vitela con manchas cálidas y poros de folículo
     poros = (ruido(sem, 1, 0) > 2.6) * -0.9
     return ruido(sem + 1, 1.0, 22) * 0.8 + ruido(sem + 2, 0.3) + poros
@@ -180,6 +187,13 @@ def _tubos(d, c, n=3, hueco=0.2):    # el anillo como un tubo de neón partido e
 def _perlas(d, c, n=28, r=2.4):
     for i in range(n):
         x, y = _pos(2 * math.pi * i / n); d.ellipse([x - r * K, y - r * K, x + r * K, y + r * K], fill=c)
+
+def _cenefa(d, c, n=36, s=3.6):       # Egipto: la cenefa de rectángulos de las pinturas, uno lleno y uno hueco
+    for i in range(n):
+        a = 2 * math.pi * i / n; da = math.pi / n * 0.62
+        p = [_pos(a - da, RADIO - s), _pos(a + da, RADIO - s), _pos(a + da, RADIO + s), _pos(a - da, RADIO + s)]
+        if i % 2 == 0: d.polygon(p, fill=c)
+        else: d.polygon(p, outline=c, width=int(K * 1.2))
 
 def _cuadrifolios(d, c, n=12):
     for i in range(n):
@@ -307,6 +321,7 @@ TEMAS = {
     'ciber':        (pantalla,      '#0D1117', '#7FE3F0',   5, 4, 'fosforo',     _rayas),
     'neon':         (callejon,      '#150C19', '#FF5FAE',   6, 4, 'fosforo',     _tubos),
     'heleno':       (pario,         '#EEEDE9', '#3D2459',   9, 5, 'tinta',       _perlas),
+    'egipto':       (papiro_nilo,   '#E6D39E', '#1D2F7A',   8, 5, 'esmalte',     _cenefa),
     'medieval':     (vitela,        '#E8E2D6', '#33261A',   9, 6, 'ferrogalica', _cuadrifolios),
     'templario':    (lino,          '#EDE6D6', '#9A1A1F',   8, 5, 'esmalte',     _cruces_patadas),
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),

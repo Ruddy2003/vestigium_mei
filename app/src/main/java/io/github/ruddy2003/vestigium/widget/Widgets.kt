@@ -42,6 +42,11 @@ object Widgets {
             0xFFD8B45C.toInt(), 0xFFEFE9DC.toInt(), 0xFFA69EBB.toInt(), 0xFF4A3D6E.toInt(),
             intArrayOf(0xFFC25A7A.toInt(), 0xFFCF8597.toInt(), 0xFFDDB3B7.toInt(), 0xFFEFE9DC.toInt(), 0xFFB5D2E8.toInt(), 0xFF8DBDE0.toInt(), 0xFF5FA8D8.toInt()),
             0xFF1D1830.toInt(), 0xFF1C1405.toInt())
+        // La tumba a la luz de la lámpara: oro, papiro y, en el ánimo, de la cornalina al verde de la fayenza.
+        TemaId.EGIPTO -> Colores(R.drawable.widget_fondo_egipto, R.drawable.widget_boton_egipto, R.drawable.widget_boton_activo_egipto, R.drawable.widget_boton_ambar_egipto,
+            0xFFE3B341.toInt(), 0xFFF1E4C0.toInt(), 0xFFB9A887.toInt(), 0xFF5A4318.toInt(),
+            intArrayOf(0xFFD9653E.toInt(), 0xFFE08A5E.toInt(), 0xFFE8B98A.toInt(), 0xFFF1E4C0.toInt(), 0xFF9FD2C2.toInt(), 0xFF6FC1AE.toInt(), 0xFF4FB8A6.toInt()),
+            0xFF241B13.toInt(), 0xFF1E1503.toInt())
         TemaId.MEDIEVAL -> Colores(R.drawable.widget_fondo_medieval, R.drawable.widget_boton_medieval, R.drawable.widget_boton_activo_medieval, R.drawable.widget_boton_ambar_medieval,
             0xFFD5A84A.toInt(), 0xFFEDDFC2.toInt(), 0xFFB7A587.toInt(), 0xFF5A4630.toInt(),
             intArrayOf(0xFFC9473B.toInt(), 0xFFD27A62.toInt(), 0xFFD9AE8E.toInt(), 0xFFEDDFC2.toInt(), 0xFFB9C4E6.toInt(), 0xFF9AB0E8.toInt(), 0xFF8DA5E0.toInt()),
@@ -148,6 +153,7 @@ object Widgets {
         TemaId.CIBER -> "> ping" to "> log"
         TemaId.NEON -> "LA NOCHE" to "LA CALLE"
         TemaId.HELENO -> "ΝΥΝ" to "ΓΡΑΦΕΙΝ"
+        TemaId.EGIPTO -> "Esta hora" to "Al papiro"
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
         TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
@@ -180,6 +186,7 @@ object Widgets {
             TemaId.CIBER -> R.font.sharetech_mono to 1.05f
             TemaId.NEON -> R.font.chakra_semibold to 1.0f
             TemaId.HELENO -> R.font.garamond_medium to 1.08f
+            TemaId.EGIPTO -> R.font.messiri_bold to 1.0f
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
             TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f

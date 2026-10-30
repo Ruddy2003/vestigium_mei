@@ -26,6 +26,7 @@ import kotlin.math.sin
 enum class Contenedor(val nombre: String, val hoja: String) {
     ROLLO("Rollo de momentos", "columna"),
     TABLILLA("Tablillas de momentos", "tablilla"),
+    ESCRIBA("Papiro del escriba", "columna"),
     CODICE("Códice de momentos", "folio"),
     REGLA("Regla de la casa", "artículo"),
     HORAS("Libro de horas", "folio"),
@@ -53,6 +54,7 @@ enum class Contenedor(val nombre: String, val hoja: String) {
 fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.ROMANO -> Contenedor.ROLLO
     TemaId.HELENO -> Contenedor.TABLILLA
+    TemaId.EGIPTO -> Contenedor.ESCRIBA
     TemaId.MEDIEVAL -> Contenedor.CODICE
     TemaId.TEMPLARIO -> Contenedor.REGLA
     TemaId.GOTICO -> Contenedor.HORAS
@@ -82,6 +84,12 @@ object Contenedores {
     private val MADERA_OSCURA = Color(0xFF4A3020)
     private val PAPIRO = Color(0xFFE9D9A9)
     private val CERA = Color(0xFFE2C482)
+    /** El papiro egipcio, más amarillo y verdoso que el del rollo romano; el barro del Nilo del sello, el hilo de lino, el lapislázuli y la cornalina. */
+    private val PAPIRO_NILO = Color(0xFFE8D59C)
+    private val BARRO = Color(0xFF6E4A2E)
+    private val LINO = Color(0xFFCDBB8E)
+    private val LAPIS = Color(0xFF1D2F7A)
+    private val CORNALINA = Color(0xFFB8471E)
     private val PERGAMINO = Color(0xFFF1E6C8)
     /** La vitela fina y blanca del libro de horas (el códice va en pergamino más grueso y amarillo). */
     private val VITELA = Color(0xFFF7F1E3)
@@ -94,6 +102,7 @@ object Contenedores {
     fun papel(c: Contenedor, cs: ColorScheme, oscuro: Boolean): Color = when (c) {
         Contenedor.ROLLO -> if (oscuro) lerp(PAPIRO, Color.Black, 0.72f) else PAPIRO
         Contenedor.TABLILLA -> if (oscuro) lerp(CERA, Color.Black, 0.75f) else CERA
+        Contenedor.ESCRIBA -> if (oscuro) lerp(PAPIRO_NILO, Color.Black, 0.74f) else PAPIRO_NILO
         Contenedor.CODICE -> if (oscuro) lerp(PERGAMINO, Color.Black, 0.76f) else PERGAMINO
         Contenedor.REGLA -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.HORAS -> if (oscuro) lerp(VITELA, Color.Black, 0.8f) else VITELA
@@ -115,6 +124,7 @@ object Contenedores {
         when (c) {
             Contenedor.ROLLO -> rolloCerrado(hojas, d)
             Contenedor.TABLILLA -> tablillasCerradas(grosor, d)
+            Contenedor.ESCRIBA -> papiroCerrado(hojas, d)
             Contenedor.CODICE -> libroCerrado(grosor, d, Color(0xFF6B3A1F), ORO_OSCURO, bandas = true, broches = true)
             Contenedor.REGLA -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
             Contenedor.HORAS -> horasCerrado(grosor, d)
@@ -174,6 +184,40 @@ object Contenedores {
         drawPath(p, CERA.copy(alpha = 0.7f), style = Stroke(1.2f * d))
         // Los cordones del lomo.
         listOf(0.3f, 0.7f).forEach { f -> drawLine(Color(0xFFCDB58A), Offset(-2 * d, h * f), Offset(m * 0.8f, h * f), 2.4f * d, StrokeCap.Round); drawCircle(MADERA_OSCURA, 2.2f * d, Offset(m * 0.6f, h * f)) }
+    }
+
+    /**
+     * Un rollo de papiro egipcio tendido (el romano va de pie), más grueso cuanto más escrito: el cartucho pintado en
+     * lapislázuli con el escarabajo y el ankh, y el hilo de lino de dos vueltas con su terrón de barro sellado.
+     */
+    private fun DrawScope.papiroCerrado(hojas: Int, d: Float) {
+        val w = size.width; val h = size.height
+        val alto = h * (0.26f + min(0.2f, hojas / 450f))
+        val x0 = w * 0.1f; val x1 = w * 0.9f; val y0 = (h - alto) / 2
+        val elipse = alto * 0.32f
+        sombra(Offset(x0 + 6 * d, y0 + 8 * d), Size(x1 - x0, alto), alto / 2)
+        drawRect(Brush.verticalGradient(listOf(lerp(PAPIRO_NILO, Color.Black, 0.3f), lerp(PAPIRO_NILO, Color.White, 0.3f), PAPIRO_NILO, lerp(PAPIRO_NILO, Color.Black, 0.35f)), y0, y0 + alto),
+            Offset(x0, y0), Size(x1 - x0, alto))
+        // Los dos extremos: el de la derecha deja ver las vueltas.
+        drawOval(lerp(PAPIRO_NILO, Color.Black, 0.25f), Offset(x0 - elipse / 2, y0), Size(elipse, alto))
+        drawOval(lerp(PAPIRO_NILO, Color.Black, 0.1f), Offset(x1 - elipse / 2, y0), Size(elipse, alto))
+        for (k in 1..5) {
+            val f = k / 6f
+            drawOval(lerp(PAPIRO_NILO, Color.Black, 0.32f), Offset(x1 - elipse / 2 * (1 - f), y0 + alto / 2 * f), Size(elipse * (1 - f), alto * (1 - f)), style = Stroke(0.8f * d))
+        }
+        // Fibras: en un rollo tendido corren a lo ancho.
+        var x = x0 + 6 * d; while (x < x1) { drawLine(Color(0x1A5A4020), Offset(x, y0), Offset(x, y0 + alto), 0.7f * d); x += 5 * d }
+        // El cartucho pintado.
+        val cw = (x1 - x0) * 0.24f; val ch = alto * 0.62f; val cx = x0 + (x1 - x0) * 0.32f; val cy = y0 + alto / 2
+        drawRoundRect(LAPIS.copy(alpha = 0.85f), Offset(cx - cw / 2, cy - ch / 2), Size(cw, ch), CornerRadius(ch / 2), style = Stroke(1.6f * d))
+        drawLine(LAPIS.copy(alpha = 0.85f), Offset(cx + cw / 2 + 2 * d, cy - ch / 2), Offset(cx + cw / 2 + 2 * d, cy + ch / 2), 2.2f * d)
+        signoEgipcio(3, Offset(cx - cw * 0.2f, cy), ch * 0.7f, LAPIS.copy(alpha = 0.8f), 1.2f * d)
+        signoEgipcio(0, Offset(cx + cw * 0.2f, cy), ch * 0.7f, CORNALINA.copy(alpha = 0.8f), 1.2f * d)
+        // El hilo y el sello de barro.
+        val xh = x0 + (x1 - x0) * 0.66f
+        listOf(-3f, 3f).forEach { o -> drawLine(LINO, Offset(xh + o * d, y0 - 2 * d), Offset(xh + o * d, y0 + alto + 2 * d), 1.8f * d) }
+        drawOval(BARRO, Offset(xh - 9 * d, y0 + alto - 6 * d), Size(18 * d, 13 * d))
+        drawOval(lerp(BARRO, Color.Black, 0.35f), Offset(xh - 5 * d, y0 + alto - 3 * d), Size(10 * d, 7 * d), style = Stroke(1 * d))
     }
 
     /** Un libro encuadernado: tapa, canto de hojas, nervios en el lomo, esquineras y broches. */
@@ -333,6 +377,18 @@ object Contenedores {
                 drawRect(MADERA, Offset(size.width - m, 0f), Size(m, size.height))
                 var y = 96 * d; while (y < size.height - m) { drawLine(tinta.copy(alpha = 0.06f), Offset(margen, y), Offset(size.width - m, y), 0.8f * d); y += renglon }
             }
+            Contenedor.ESCRIBA -> {
+                // Fibras en dos capas, las uniones de las hojas pegadas que forman el rollo, la cenefa de colores arriba y,
+                // en el margen, el punto rojo con que los escribas marcaban cada verso.
+                val fibra = Color(0xFF6E5530)
+                var y = 0f; var k = 0
+                while (y < size.height) { drawLine(fibra.copy(alpha = if (k % 4 == 0) 0.09f else 0.04f), Offset(0f, y), Offset(size.width, y), 0.7f * d); y += 3.5f * d; k++ }
+                var x = 140 * d; while (x < size.width) { drawRect(fibra.copy(alpha = 0.07f), Offset(x, 0f), Size(5 * d, size.height)); x += 140 * d }
+                val colores = listOf(LAPIS, ORO, CORNALINA, ORO)
+                var xc = 0f; var j = 0
+                while (xc < size.width) { drawRect(colores[j % 4].copy(alpha = if (oscuro) 0.5f else 0.6f), Offset(xc, 70 * d), Size(minOf(7 * d, size.width - xc), 4 * d)); xc += 9 * d; j++ }
+                var yy = 96 * d; while (yy < size.height) { drawCircle(CORNALINA.copy(alpha = if (oscuro) 0.6f else 0.5f), 1.6f * d, Offset(margen - 12 * d, yy - 4 * d)); yy += renglon }
+            }
             Contenedor.CODICE -> {
                 // Los pinchazos del margen y el reglado a punta seca, con las dos líneas de justificación a cada lado.
                 val regla = Color(0xFF6E5530).copy(alpha = if (oscuro) 0.2f else 0.12f)
@@ -403,6 +459,17 @@ object Contenedores {
                 // El borde de madera izquierdo con los agujeros y cordones que unen las tablillas.
                 drawRect(MADERA, Offset(10 * d, 4 * d), Size(18 * d, size.height - 8 * d))
                 listOf(0.25f, 0.75f).forEach { f -> val y = size.height * f; drawCircle(MADERA_OSCURA, 3.4f * d, Offset(19 * d, y)); drawLine(Color(0xFFCDB58A), Offset(0f, y), Offset(19 * d, y), 2.4f * d) }
+            }
+            Contenedor.ESCRIBA -> {
+                // Lo que queda enrollado a la izquierda, con el hilo de lino suelto y el terrón de barro del sello, ya roto.
+                drawRect(Brush.horizontalGradient(listOf(lerp(PAPIRO_NILO, Color.Black, 0.4f), PAPIRO_NILO, lerp(PAPIRO_NILO, Color.Black, 0.25f)), 2 * d, 24 * d), Offset(2 * d, 2 * d), Size(22 * d, size.height - 4 * d))
+                var y = 8 * d; while (y < size.height - 8 * d) { drawLine(Color(0x225A4020), Offset(4 * d, y), Offset(22 * d, y + 2 * d), 0.7f * d); y += 7 * d }
+                val yh = size.height * 0.3f
+                drawLine(LINO, Offset(13 * d, yh), Offset(40 * d, yh + 22 * d), 1.8f * d, StrokeCap.Round)
+                drawLine(LINO, Offset(13 * d, yh + 4 * d), Offset(34 * d, yh + 34 * d), 1.8f * d, StrokeCap.Round)
+                drawOval(BARRO, Offset(30 * d, yh + 24 * d), Size(16 * d, 12 * d))
+                drawLine(lerp(BARRO, Color.Black, 0.4f), Offset(34 * d, yh + 26 * d), Offset(40 * d, yh + 34 * d), 1 * d)
+                if (oscuro) drawRect(Color.Black.copy(alpha = 0.5f), Offset(2 * d, 2 * d), Size(22 * d, size.height - 4 * d))
             }
             Contenedor.CODICE -> {
                 // El pliegue del cuadernillo: sombra del lomo y las puntadas.

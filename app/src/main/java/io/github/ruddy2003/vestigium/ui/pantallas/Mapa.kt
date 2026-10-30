@@ -93,6 +93,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Helénico: pergamino de día, noche púrpura de noche.
         TemaId.HELENO -> if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.78f, 0.70f, 0.92f, 6f, 4f, 14f)) }
             else { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.95f, 0.84f, 4f, 2f, 0f)) }
+        // Papiro de día (amarillo, poco color) y, de noche, el oro de la lámpara sobre el hollín.
+        TemaId.EGIPTO -> if (oscuro) { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.92f, 0.78f, 0.55f, 10f, 6f, 0f)) }
+            else { m.setSaturation(0.3f); m.postConcat(tinte(1.0f, 0.92f, 0.72f, 6f, 4f, -6f)) }
         // Scriptorium: mapa en sepia sobre pergamino; de noche, tinta parda.
         TemaId.MEDIEVAL -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.72f, 0.55f, 6f, 3f, 0f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.92f, 0.76f, 0f, 0f, 0f)) }
@@ -212,6 +215,8 @@ internal object Formas {
             TemaId.NEON -> { p.reset(); p.addRoundRect(x - r * 1.15f, y - r * 0.62f, x + r * 1.15f, y + r * 0.62f, r * 0.62f, r * 0.62f, horario) }   // la placa del letrero
             // El sol de Vergina: dieciséis rayos.
             TemaId.HELENO -> poligono(x, y, r * 1.15f, 16, -90.0, 0.5f)
+            // Una pirámide.
+            TemaId.EGIPTO -> figura(x, y, r, 0f, -1.1f, 1.15f, 0.8f, -1.15f, 0.8f)
             TemaId.MEDIEVAL -> {   // sello de cera de borde ondulado
                 p.reset()
                 for (i in 0..36) { val a = 2 * Math.PI * i / 36; val rr = r * (1f + 0.09f * kotlin.math.sin(a * 7).toFloat())
@@ -273,6 +278,7 @@ internal object Formas {
             TemaId.CIBER -> { raya(c, x, y, r, -1.55f, -0.45f, -0.95f, 0f, d); raya(c, x, y, r, -0.95f, 0f, -1.55f, 0.45f, d) }   // el «>» del indicador
             TemaId.NEON -> { raya(c, x, y, r, -0.6f, -0.15f, 0.6f, -0.15f, d); raya(c, x, y, r, -0.35f, 0.2f, 0.35f, 0.2f, d) }   // los renglones del letrero
             TemaId.HELENO -> c.drawCircle(x, y, r * 0.32f, d)
+            TemaId.EGIPTO -> { raya(c, x, y, r, -0.36f, -0.48f, 0.36f, -0.48f, d); raya(c, x, y, r, 0f, -1.1f, 0.3f, 0.8f, d) }   // el piramidión y la arista en sombra
             TemaId.MEDIEVAL -> { c.drawCircle(x, y, r * 0.62f, d); raya(c, x, y, r, -0.3f, 0f, 0.3f, 0f, d); raya(c, x, y, r, 0f, -0.3f, 0f, 0.3f, d) }   // la cruz del sello
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
@@ -733,6 +739,17 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 drawPath(greca, tinta.copy(alpha = 0.45f), style = Stroke(1.2f * u))
             }
         }
+        // La gola pintada arriba (hojas de palma en franjas) y la cenefa de rectángulos abajo.
+        TemaId.EGIPTO -> {
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u)
+            var x = 8 * u; var k = 0
+            while (x < w - 8 * u) {
+                drawRect(tinta.copy(alpha = if (k % 2 == 0) 0.45f else 0.2f), Offset(x, 8 * u), Size(3 * u, 8 * u))
+                drawRect(tinta.copy(alpha = if (k % 2 == 0) 0.4f else 0.18f), Offset(x, h - 13 * u), Size(3 * u, 4 * u))
+                x += 4.5f * u; k++
+            }
+            drawLine(tinta.copy(alpha = 0.5f), Offset(8 * u, 17 * u), Offset(w - 8 * u, 17 * u), 1f * u)
+        }
         // El pautado del copista: doble raya roja en el margen izquierdo y un cuadrifolio en cada esquina.
         TemaId.MEDIEVAL -> {
             filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
@@ -981,6 +998,11 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
         TemaId.HELENO -> {
             for (i in 0 until 16) punta(n + 22.5 * i, if (i % 2 == 0) r * 0.95f else r * 0.62f, r * 0.07f, if (i == 0) acento else tinta.copy(alpha = 0.75f))
             drawCircle(acento, r * 0.22f, c); drawCircle(fondo, r * 0.1f, c)
+        }
+        // Ocho puntas y la del sur en color: los egipcios se orientaban mirando al sur, de donde baja el Nilo. Al centro, el sol.
+        TemaId.EGIPTO -> {
+            for (i in 0 until 8) punta(n + 45.0 * i, if (i % 2 == 0) r * 0.95f else r * 0.5f, r * 0.1f, if (i == 4) acento else tinta.copy(alpha = 0.75f))
+            drawCircle(acento, r * 0.2f, c); drawCircle(fondo, r * 0.12f, c); drawCircle(acento, r * 0.05f, c)
         }
         // Ocho puntas y una cruz al oriente, como en las rosas de los manuscritos.
         TemaId.MEDIEVAL -> {

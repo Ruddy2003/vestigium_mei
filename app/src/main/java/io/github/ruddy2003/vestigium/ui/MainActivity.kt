@@ -224,6 +224,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         // La persiana del puesto bajada, con el letrero de «cerrado» encendido arriba.
         TemaId.NEON -> BloqueoMarco(TextosBloqueo("CERRADO · 閉店", "⌁ El puesto está cerrado: solo el dueño sube la persiana.", "SUBIR LA PERSIANA"), arriba = 40, reintentar = reintentar) { cs -> bloqueoPersiana(cs) }
         TemaId.HELENO -> BloqueoMarco(TextosBloqueo("ΤΑ ΙΧΝΗ ΜΟΥ", "— ἐσφραγισμένον · tu diario está sellado", "ΑΝΟΙΞΟΝ"), arriba = 54, reintentar = reintentar) { cs -> bloqueoFronton(cs) }
+        // Falsa puerta de una tumba: el papiro queda detrás, sellado con barro y escarabajo.
+        TemaId.EGIPTO -> BloqueoMarco(TextosBloqueo("La cámara sellada", "☥ tu papiro está sellado con barro y escarabajo", "Abrir la cámara"), arriba = 44, reintentar = reintentar) { cs -> bloqueoFalsaPuerta(cs) }
         TemaId.MEDIEVAL -> BloqueoMarco(TextosBloqueo("Vestigium mei", "¶ Este libro está cerrado con sello: sólo su dueño lo abre.", "Romper el sello"), arriba = 0, reintentar = reintentar) { cs -> bloqueoIluminado(cs) }
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
@@ -493,6 +495,31 @@ private fun DrawScope.bloqueoFronton(cs: ColorScheme) {
     drawLine(c, Offset(-6 * u, h), Offset(w + 6 * u, h), 1f * u)
 }
 
+/**
+ * Falsa puerta de una tumba egipcia: la gola con hojas de palma pintadas arriba, el baquetón de cuerda que la enmarca, el
+ * disco solar alado bajo la cornisa y las jambas escalonadas, una dentro de otra, que hacen de puerta.
+ */
+private fun DrawScope.bloqueoFalsaPuerta(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height; val c = cs.primary.copy(alpha = 0.7f)
+    val gola = 22 * u
+    var x = 0f; var k = 0
+    while (x < w) { drawRect((if (k % 2 == 0) cs.primary else cs.secondary).copy(alpha = 0.32f), Offset(x, 0f), Size(minOf(5 * u, w - x), gola)); x += 7 * u; k++ }
+    drawLine(c, Offset(0f, gola), Offset(w, gola), 1.6f * u)
+    val centro = Offset(w / 2, gola + 13 * u)
+    drawCircle(cs.secondary.copy(alpha = 0.75f), 5.5f * u, centro)
+    listOf(-1f, 1f).forEach { s ->
+        drawPath(Path().apply {
+            moveTo(centro.x + s * 6 * u, centro.y - 2 * u); quadraticTo(centro.x + s * 26 * u, centro.y - 9 * u, centro.x + s * 46 * u, centro.y - 3 * u)
+            lineTo(centro.x + s * 41 * u, centro.y + 2 * u); quadraticTo(centro.x + s * 24 * u, centro.y + 1 * u, centro.x + s * 6 * u, centro.y + 4 * u); close()
+        }, c)
+    }
+    // El baquetón: una cuerda enrollada a los lados.
+    listOf(3 * u, w - 3 * u).forEach { xx -> var y = gola + 3 * u; while (y < h - 3 * u) { drawLine(c.copy(alpha = 0.5f), Offset(xx - 2 * u, y), Offset(xx + 2 * u, y + 3 * u), 1f * u); y += 5 * u } }
+    // Las jambas escalonadas.
+    listOf(10f, 16f).forEach { d -> drawRect(c.copy(alpha = 0.35f), Offset(d * u, gola + 28 * u), Size(w - 2 * d * u, h - gola - 28 * u - 6 * u), style = Stroke(0.9f * u)) }
+    drawLine(c, Offset(-6 * u, h), Offset(w + 6 * u, h), 1.4f * u)
+}
+
 /** Página iluminada: doble filete y una pieza de oro en cada esquina. */
 private fun DrawScope.bloqueoIluminado(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height
@@ -739,6 +766,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.CIBER -> false
     TemaId.NEON -> false
     TemaId.HELENO -> false
+    TemaId.EGIPTO -> false            // el cartucho, en trazo
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
@@ -767,6 +795,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.CIBER -> false
     TemaId.NEON -> false
     TemaId.HELENO -> true
+    TemaId.EGIPTO -> true             // el cartucho de oro
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
@@ -837,6 +866,11 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         TemaId.HELENO -> {
             drawPath(Path().apply { moveTo(cx - 22 * u, 4 * u); lineTo(cx, -3 * u); lineTo(cx + 22 * u, 4 * u) }, c, style = linea)
             drawLine(c, Offset(cx - 22 * u, h + 1 * u), Offset(cx + 22 * u, h + 1 * u), 1.4f * u)
+        }
+        // Un cartucho que encierra el ícono, con su barra a la derecha.
+        TemaId.EGIPTO -> {
+            drawRoundRect(c, Offset(cx - 22 * u, 2 * u), Size(42 * u, 26 * u), CornerRadius(13 * u), style = linea)
+            drawLine(c, Offset(cx + 22.5f * u, 3 * u), Offset(cx + 22.5f * u, 27 * u), 2.2f * u)
         }
         // Inicial iluminada: campo de color con un filete de oro alrededor.
         TemaId.MEDIEVAL -> {
@@ -1013,6 +1047,12 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
                 drawLine(c, Offset(cx + r1 * co, cy + r1 * se), Offset(cx + r2 * co, cy + r2 * se), 2f * u, StrokeCap.Round)
             }
         }
+        // Un cartucho de pie, con la cuerda por dentro y la barra del nudo abajo.
+        TemaId.EGIPTO -> {
+            drawRoundRect(c, Offset(cx - 18 * u, cy - 25 * u), Size(36 * u, 46 * u), CornerRadius(18 * u))
+            drawRoundRect(sobre.copy(alpha = 0.5f), Offset(cx - 14.5f * u, cy - 21.5f * u), Size(29 * u, 39 * u), CornerRadius(14.5f * u), style = Stroke(1f * u))
+            drawRect(c, Offset(cx - 21 * u, cy + 22.5f * u), Size(42 * u, 3 * u))
+        }
         // Cuadrifolio de rosetón.
         TemaId.MEDIEVAL -> {
             listOf(Offset(cx - 10 * u, cy), Offset(cx + 10 * u, cy), Offset(cx, cy - 10 * u), Offset(cx, cy + 10 * u)).forEach { drawCircle(c, 12 * u, it) }
@@ -1152,6 +1192,13 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.NEON -> { drawLine(cs.primary.copy(alpha = 0.25f), Offset(0f, 2 * u), Offset(w, 2 * u), 4 * u); drawLine(cs.primary, Offset(0f, 2 * u), Offset(w, 2 * u), 1.2f * u) }
         // Astrágalo: filete y una fila de perlas.
         TemaId.HELENO -> { filete(); var x = 3 * u; while (x < w) { drawCircle(acento, 0.9f * u, Offset(x, 3 * u)); x += 6 * u } }
+        // La cenefa de rectángulos de colores.
+        TemaId.EGIPTO -> {
+            filete()
+            val colores = listOf(cs.primary, cs.tertiary, cs.secondary, cs.tertiary)
+            var x = 0f; var k = 0
+            while (x < w) { drawRect(colores[k % 4].copy(alpha = 0.6f), Offset(x, 2 * u), Size(minOf(4 * u, w - x), 2.5f * u)); x += 5 * u; k++ }
+        }
         // Filete con rombos de rúbrica.
         TemaId.MEDIEVAL -> {
             filete(); var x = 18 * u
@@ -1473,6 +1520,9 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         // Frontón: la pantalla baja desde el centro de arriba, como un friso que se asienta.
         TemaId.HELENO -> (scaleIn(t(320), initialScale = 0.9f, transformOrigin = TransformOrigin(0.5f, 0f)) + fadeIn(t(280))) togetherWith
             (scaleOut(t(200), targetScale = 0.96f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeOut(t(200)))
+        // Pilono: la pantalla nueva se levanta desde la base, lenta y pesada, y la anterior se hunde en la arena.
+        TemaId.EGIPTO -> (scaleIn(t(380, frena), initialScale = 0.93f, transformOrigin = TransformOrigin(0.5f, 1f)) + fadeIn(t(300))) togetherWith
+            (slideOutVertically(t(240)) { it / 30 } + fadeOut(t(220)))
         // Hoja de pergamino que se desliza entera sobre la anterior.
         TemaId.MEDIEVAL -> if (adelante || atras) (slideInHorizontally(t(320)) { dir * it } + fadeIn(t(200))) togetherWith (slideOutHorizontally(t(320)) { -dir * it / 4 } + fadeOut(t(320)))
             else fadeIn(t(260)) togetherWith fadeOut(t(160))

@@ -311,6 +311,36 @@ def heleno():
                tecla=trazo((1800, 5600), 0.05, 14),
                rascar=rascado((1600, 6500), campana(hz(T + 31), 0.6, 2.4, 1.0, 5)))
 
+def egipto():
+    # Mi con la segunda menor (escala propia: no se sabe cómo afinaban): el arpa del templo, el sistro de Hathor, el tambor
+    # de marco y la flauta de caña.
+    T = -5   # Mi4
+    arpa = lambda n, d=0.8, b=0.42: pluck(hz(n), d, b, 0.9965)
+    def sistro(d=0.2, k=4):
+        """El sistro: las plaquitas de metal que chocan en sus varillas, unas sacudidas cortas que se apagan."""
+        return mezclar(*[(i * d / k, filtro(ruido(d / k + 0.05), 'banda', (3500, 9000)) * env(int((d / k + 0.05) * SR), 0.001, 0.04, 4), 0.6 - i * 0.08) for i in range(k)])
+    escala = [0, 1, 5, 7, 8]
+    with azar_propio('egipto_base'):
+        S['egipto'] = dict(
+            toque=arpa(T + 12, 0.35, 0.45), elegir=arpa(T + 19, 0.4, 0.5), pasar=sistro(0.2, 4),
+            abrir=mezclar((0, sistro(0.12, 3), 0.5), (0.05, melodia(lambda f, d: pluck(f, d, 0.45, 0.9965), [T + 12, T + 13, T + 17, T + 19], 0.08, 0.8), 0.9)),
+            guardar=mezclar((0, tambor(hz(T - 24), 0.3, 0.5), 0.7), (0.05, arpa(T + 12, 0.9), 0.45), (0.05, arpa(T + 19, 0.9), 0.35)),
+            logro=reverb(mezclar(melodia(lambda f, d: pluck(f, d, 0.5, 0.9965), [T + 12, T + 13, T + 17, T + 19, T + 20, T + 24], 0.12, 0.9), (0.6, sistro(0.3, 5), 0.45), (0.62, tambor(hz(T - 24), 0.4, 0.4), 0.5)), 1.3, 0.25),
+            tema=reverb(mezclar((0, sistro(0.18, 3), 0.5), (0.12, melodia(flauta, [T + 19, T + 20, T + 24], 0.13, 0.3, g=0.45), 1)), 1.1, 0.25),
+            aviso=reverb(mezclar(melodia(flauta, [T + 24, T + 20, T + 19, T + 17, T + 19, None, T + 20, T + 24], 0.2, 0.25), (0, arpa(T - 12, 2.0, 0.2), 0.3), (1.4, sistro(0.3, 5), 0.4)), 1.4, 0.28),
+            solemne=reverb(mezclar(melodia(flauta, [T + 24, T + 25, T + 24, T + 20, T + 19, T + 17, T + 19, T + 20, T + 24], 0.45, 0.43, g=0.3),
+                                   *[(1.8 * i, acorde(lambda f, d: pluck(f, d, 0.4, 0.9965), [T + a for a in ch], 1.8, arpegio=0.05), 0.6) for i, ch in enumerate([[0, 7, 12], [1, 8, 13], [-4, 5, 12], [0, 7, 12, 19]])],
+                                   *[(1.8 * i, tambor(hz(T - 24), 0.5), 0.4) for i in range(4)]), 2.0, 0.3))
+
+    # Error: el arpa apagada que baja un semitono y el tambor sordo. Cambio: una sacudida del sistro y una cuerda.
+    # Tecla: el cálamo de junco sobre el papiro. Rascar: el oro de Nubia, blando, con su campanilla.
+    with azar_propio('egipto'):
+        nuevos('egipto',
+               error=mezclar((0, arpa(T + 13, 0.2, 0.2), 0.5), (0.12, arpa(T + 12, 0.45, 0.15), 0.5), (0.12, tambor(hz(T - 24), 0.25, 0.3), 0.3)),
+               cambio=mezclar((0, sistro(0.06, 2), 0.6), (0.07, arpa(T + 20, 0.3, 0.55), 0.5)),
+               tecla=trazo((1400, 4800), 0.045, 9),
+               rascar=rascado((1000, 5200), campana(hz(T + 32), 0.6, 2.2, 1.0, 5), aspereza=70))
+
 def medieval():
     # Re dórico: pluma y pergamino, campanitas y canto llano.
     T = -7
@@ -899,6 +929,7 @@ if __name__ == '__main__':
         ciber,
         neon,
         heleno,
+        egipto,
         medieval,
         templario,
         distopia,

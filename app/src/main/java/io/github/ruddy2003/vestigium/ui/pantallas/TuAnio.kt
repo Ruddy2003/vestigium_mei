@@ -139,6 +139,8 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.BOTANICO -> "Catálogo de especímenes · $anio"
     // «Apologismós»: la rendición de cuentas.
     TemaId.HELENO -> "ΑΠΟΛΟΓΙΣΜΟΣ · ΕΤΟΣ ${Griego.numeral(anio)}"
+    // Los anales: lo que se grababa del año de cada rey, con el año en numerales jeroglíficos.
+    TemaId.EGIPTO -> "Los anales del año $anio · ${io.github.ruddy2003.vestigium.ui.Egipcio.numeral(anio)}"
     // «Fechos»: los hechos, en la grafía de los cronistas castellanos.
     TemaId.MEDIEVAL -> "Libro de los fechos del año de ${Temas.copista(anio)}"
     TemaId.TEMPLARIO -> "Crónica de la casa en el año del Señor ${Temas.puntos(anio)}"

@@ -56,6 +56,7 @@ import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TrofeosTema
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.signoEgipcio
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -321,6 +322,8 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             }
             drawCircle(Color(0xFFFFE08A), s * 0.28f, o)
         }
+        // Chispas de oro con forma de signo: el ankh, el ojo, la pluma y el escarabajo, uno tras otro.
+        TemaId.EGIPTO -> signoEgipcio(i, o, s * 1.6f, Color(0xFFFFE08A).copy(alpha = 0.95f), s * 0.16f)
         TemaId.MEDIEVAL -> listOf(Offset(0f, -0.5f), Offset(-0.45f, 0.35f), Offset(0.5f, 0.3f)).forEachIndexed { k, d ->
             val p = Offset(o.x + d.x * s, o.y + d.y * s); val t = s * (0.38f - k * 0.06f)
             drawPath(Path().apply { moveTo(p.x, p.y - t); lineTo(p.x + t * 0.8f, p.y - t * 0.1f); lineTo(p.x + t * 0.1f, p.y + t); lineTo(p.x - t * 0.9f, p.y + t * 0.2f); close() }, Color(0xFFF2C94C))
@@ -428,6 +431,7 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.CIBER -> Color(0xFF06262C)
     TemaId.NEON -> Color(0xFF2A1430)
     TemaId.HELENO -> Color(0xFFC9D8E6)
+    TemaId.EGIPTO -> Color(0xFFE6CF9A)
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
     TemaId.TEMPLARIO -> Color(0xFFCDBB97)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
@@ -484,6 +488,12 @@ private fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
             var x = 8 * d; var k = 0
             while (x < w) { drawLine(if (k % 2 == 0) v else a, Offset(x, 22 * d), Offset(x, h), 2 * d); x += 12 * d; k++ }
             drawPath(Path().apply { grecaRepisa(0f, 6 * d, 3 * d, w) }, a, style = Stroke(1.2f * d))
+        }
+        // Un muro de tumba en registros: franjas separadas por líneas y, arriba, el friso jeker de juncos atados.
+        TemaId.EGIPTO -> {
+            for (k in 1 until 6) drawLine(a, Offset(0f, h * k / 6f), Offset(w, h * k / 6f), 1.4f * d)
+            var x = 4 * d; var k = 0
+            while (x < w) { drawRect(if (k % 2 == 0) v else a, Offset(x - 1.2f * d, 10 * d), Size(2.4f * d, 10 * d)); drawCircle(if (k % 2 == 0) v else a, 1.6f * d, Offset(x, 9 * d)); x += 7 * d; k++ }
         }
         TemaId.MEDIEVAL -> {
             var y = 18 * d
@@ -678,6 +688,13 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
             drawLine(Color(0xFFFF3D9A), Offset(0f, 1.5f * d), Offset(w, 1.5f * d), 1.2f * d)
         }
         TemaId.HELENO -> { tabla(m(Color(0xFFE9E4D8))); drawPath(Path().apply { grecaRepisa(0f, h * 0.2f, h * 0.2f, w) }, m(Color(0xFF1E5F8C)), style = Stroke(1.2f * d)) }
+        // Una repisa de acacia con la cenefa de rectángulos de lapislázuli, oro y cornalina.
+        TemaId.EGIPTO -> {
+            tabla(m(Color(0xFFB08A58)))
+            val colores = listOf(0xFF1D2F7A, 0xFFC9971C, 0xFFB8471E, 0xFFC9971C)
+            var x = 0f; var k = 0
+            while (x < w) { drawRect(m(Color(colores[k % 4])), Offset(x, h * 0.15f), Size(6 * d, h * 0.22f)); x += 8 * d; k++ }
+        }
         TemaId.MEDIEVAL -> {
             tabla(m(Color(0xFF6B4528)))
             var x = 30 * d
@@ -855,6 +872,12 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             val t = 5 * d
             drawRect(fondo, Offset(0f, t), Size(w, h - t)); drawRect(borde, Offset(0f, t), Size(w, h - t), style = fino)
             drawPath(Path().apply { moveTo(0f, t); lineTo(w / 2, 0f); lineTo(w, t); close() }, borde, style = fino)
+        }
+        // La placa es un cartucho: redonda a la izquierda, con la barra del nudo a la derecha.
+        TemaId.EGIPTO -> {
+            val b = 4 * d
+            drawRoundRect(fondo, Offset.Zero, Size(w - b, h), CornerRadius(h / 2)); drawRoundRect(borde, Offset.Zero, Size(w - b, h), CornerRadius(h / 2), style = fino)
+            drawRect(ac, Offset(w - 2.5f * d, 1 * d), Size(2.5f * d, h - 2 * d))
         }
         TemaId.MEDIEVAL -> {
             val r = 4 * d

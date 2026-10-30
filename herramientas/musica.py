@@ -346,6 +346,20 @@ def hacer_abismo():
         P['abismo'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: seno(f, d) * env(int(d * SR), 0.002, d * 0.55, 3), [18, 14, 22], 0.22, 0.8, 1.6))
         ARGS['abismo'] = (T, pz, ac, mel, kw)
 
+def hacer_egipto():
+    # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
+    # melodía propia de ocho compases. Con su propio azar, para no mover el de los temas que van después.
+    with A.azar_propio('musica_egipto'):
+        T = -5; pz = 0.4
+        ac = compases([0, 7, 12], [1, 8, 13], [-4, 5, 12], [0, 7, 12], [5, 8, 12], [1, 8, 13], [-4, 0, 7], [0, 7, 12])
+        mel = frase(0, "12:1 13:1 17:2 | 13:1 12:1 8:2 | 7:1 8:1 12:1 13:1 | 12:4 | 17:1 19:1 20:2 | 19:1 17:1 13:2 | 12:1 13:1 8:1 7:1 | 12:4")
+        sistro = lambda: mezclar(*[(i * 0.05, filtro(ruido(0.09), 'banda', (3500, 9000)) * env(int(0.09 * SR), 0.001, 0.04, 4), 0.6 - i * 0.1) for i in range(3)])
+        perc = cada(32, lambda: tambor(hz(T - 24), 0.25, 0.3), 0.45, paso=2) + cada(32, sistro, 0.16, desde=1, paso=2)
+        kw = dict(inst_mel=flauta, inst_ac=lambda f, d: pluck(f, 1.1, 0.42, 0.9965), arpegio=True, oct_ac=0, oct_mel=12, perc=perc, g_mel=0.38, g_ac=0.35,
+                  legato=0.9, bajo=lambda f, d: pluck(f, d, 0.2, 0.998), g_bajo=0.2)
+        P['egipto'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, d, 0.5, 0.9965), [12, 13, 17, 19], 0.1, 0.8))
+        ARGS['egipto'] = (T, pz, ac, mel, kw)
+
 def hacer_enriquecidos():
     """Lote 6: la presentación y la música anual de Refugio, Orden, Soviético y Espacio, más ricas. Ocho compases en lugar
     de cuatro o cinco, con más voces (bajo que camina, coro, cuerdas, arpegios) y su percusión. Corre después de [hacer]
@@ -454,6 +468,7 @@ if __name__ == '__main__':
     hacer_revolucion()
     hacer_antiguas()
     hacer_neon()
+    hacer_egipto()
     hacer_enriquecidos()
     hacer_abismo()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None

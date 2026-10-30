@@ -145,6 +145,34 @@ object Frases {
         f("χαλεπὸν ἐσθλὸν ἔμμεναι", "Es difícil ser bueno.", "Pítaco, citado por Simónides"),
     )
 
+    /**
+     * Egipto: las enseñanzas (sebayt) y los himnos van en la transliteración egiptológica, la manera de escribir el egipcio
+     * con letras latinas; luego, lo que griegos, latinos y modernos dijeron de Egipto, cada uno en su lengua.
+     */
+    val EGIPTO = listOf(
+        f("dgꜣ mdt nfrt r wꜣḏ, iw gm st m-ꜥ ḥmwt ḥr bnwt", "La palabra buena es más rara que la piedra verde, y sin embargo se encuentra entre las criadas que muelen el grano.", "Enseñanza de Ptahhotep, máxima 1 (papiro Prisse)"),
+        f("ir mꜣꜥt n nb mꜣꜥt", "Haz justicia para el señor de la justicia.", "Las quejas del campesino elocuente"),
+        f("ir hrw nfr, m wrd im.f", "Celebra el día feliz, y no te canses de él.", "Canción del arpista de la tumba del rey Intef"),
+        f("n ir.i isft r rmṯ", "No he hecho mal a la gente.", "Libro de los Muertos, capítulo 125, la declaración de inocencia"),
+        f("wbn.k nfr m ꜣḫt nt pt, pꜣ itn ꜥnḫ, šꜣꜥ ꜥnḫ", "Te alzas hermoso en el horizonte del cielo, Atón vivo, principio de la vida.", "Gran himno a Atón, tumba de Ay en Amarna"),
+        f("mk nn iꜣwt nn ḥry.s, wpw ḥr sš, ntf pw ḥry", "Mira: no hay oficio sin un jefe encima, salvo el de escriba: él es el jefe.", "Enseñanza de Jety (la «sátira de los oficios»)"),
+        f("ꜥnḫ wḏꜣ snb", "Vida, prosperidad, salud.", "Fórmula que sigue al nombre del rey en inscripciones y cartas"),
+        f("ἔστι Αἰγυπτίοισι ἐπίκτητός τε γῆ καὶ δῶρον τοῦ ποταμοῦ", "Para los egipcios es una tierra ganada y un regalo del río.", "Heródoto, Historias II, 5"),
+        f("θεοσεβέες δὲ περισσῶς ἐόντες μάλιστα πάντων ἀνθρώπων", "Son piadosos en exceso, más que todos los demás hombres.", "Heródoto, Historias II, 37"),
+        f("Αἰγύπτιοι ἅμα τῷ οὐρανῷ τῷ κατὰ σφέας ἐόντι ἑτεροίῳ καὶ τῷ ποταμῷ φύσιν ἀλλοίην παρεχομένῳ ἢ οἱ ἄλλοι ποταμοί, τὰ πολλὰ πάντα ἔμπαλιν τοῖσι ἄλλοισι ἀνθρώποισι ἐστήσαντο ἤθεά τε καὶ νόμους", "Los egipcios, con un cielo distinto y un río de otra naturaleza que los demás, se dieron costumbres y leyes casi en todo contrarias a las del resto de los hombres.", "Heródoto, Historias II, 35"),
+        f("ὦ Σόλων, Σόλων, Ἕλληνες ἀεὶ παῖδές ἐστε, γέρων δὲ Ἕλλην οὐκ ἔστιν", "Solón, Solón, los griegos son siempre niños: no hay griego viejo.", "Un sacerdote de Sais, en el Timeo de Platón (22b)"),
+        f("ψυχῆς ἰατρεῖον", "Clínica del alma.", "Inscripción de la biblioteca sagrada de Tebas, según Diodoro de Sicilia, Biblioteca histórica I, 49"),
+        f("ἐγώ εἰμι πᾶν τὸ γεγονὸς καὶ ὂν καὶ ἐσόμενον, καὶ τὸν ἐμὸν πέπλον οὐδείς πω θνητὸς ἀπεκάλυψεν", "Yo soy todo lo que ha sido, es y será, y ningún mortal ha levantado aún mi velo.", "Inscripción de Isis en Sais, según Plutarco, Sobre Isis y Osiris 9"),
+        f("cum chartae usu maxime humanitas vitae constet, certe memoria", "Del uso del papiro depende en gran parte la vida civilizada y, sin duda, la memoria.", "Plinio el Viejo, Historia natural XIII, 68"),
+        f("Quis nescit, Volusi Bithynice, qualia demens Aegyptos portenta colat?", "¿Quién no sabe, Volusio de Bitinia, qué monstruos adora el Egipto delirante?", "Juvenal, Sátiras XV, 1-2"),
+        f("Je tiens l'affaire !", "¡Lo tengo!", "Atribuida a Champollion, al descifrar los jeroglíficos, en 1822"),
+        f("Soldats, du haut de ces pyramides, quarante siècles vous contemplent.", "Soldados, desde lo alto de estas pirámides, cuarenta siglos os contemplan.", "Atribuida a Napoleón Bonaparte, antes de la batalla de las Pirámides, 1798"),
+        f("Look on my Works, ye Mighty, and despair!", "¡Mirad mis obras, poderosos, y desesperad!", "Percy Bysshe Shelley, «Ozymandias», 1818"),
+        f("Nothing beside remains.", "Nada más queda.", "Percy Bysshe Shelley, «Ozymandias», 1818"),
+        f("Yes, wonderful things.", "Sí, cosas maravillosas.", "Howard Carter, al asomarse a la tumba de Tutankamón; La tumba de Tut-ankh-Amen I, 1923"),
+        f("الإنسان يخشى الزمن، والزمن يخشى الأهرام", "El hombre teme al tiempo, y el tiempo teme a las pirámides.", "Proverbio árabe tradicional"),
+    )
+
     val MEDIEVAL = listOf(
         f("Tria digita scribunt, totum corpus laborat.", "Tres dedos escriben, pero trabaja todo el cuerpo.", "Nota de un copista en el margen de un códice"),
         f("Explicit, expliceat, ludere scriptor eat.", "Se acabó; que se acabe; que el copista se vaya a jugar.", "Colofón de copista"),
@@ -733,6 +761,7 @@ object Frases {
         TemaId.CIBER -> CIBER
         TemaId.NEON -> NEON
         TemaId.HELENO -> HELENO
+        TemaId.EGIPTO -> EGIPTO
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
@@ -767,6 +796,7 @@ object Frases {
         TemaId.CIBER -> "> motd"
         TemaId.NEON -> "LO QUE DICE EL LETRERO"
         TemaId.HELENO -> "ΓΝΩΜΗ ΤΗΣ ΗΜΕΡΑΣ"
+        TemaId.EGIPTO -> "Enseñanza del día (sebayt)"
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.TEMPLARIO -> "Lectura del refectorio"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"

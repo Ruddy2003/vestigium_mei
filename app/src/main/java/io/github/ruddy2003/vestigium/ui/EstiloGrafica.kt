@@ -193,7 +193,7 @@ enum class Eje {
 /** La forma de las barras. */
 enum class FormaBarra {
     RECTA, REDONDA, ARCO, PILDORA, BISEL, OJIVA, HERRADURA, TAPA, TORRE, BLOQUES, ROLLO, BANDERIN, SESGADA, TERCIOS,
-    ESTRIADA, TABLAS, MARCO, PUNTEADO, LAZO, RAYADA, HUECA, BURBUJAS,
+    ESTRIADA, OBELISCO, TABLAS, MARCO, PUNTEADO, LAZO, RAYADA, HUECA, BURBUJAS,
 }
 
 /** Píxeles por dp en los reportes (la hoja mide 1080 px de ancho, como un teléfono de unos 540 dp). */
@@ -217,6 +217,9 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // El sol de Vergina, doble filete de vaso, barras como columnas estriadas.
     TemaId.HELENO -> EstiloGrafica(FormaPunto.SOL, 1.8f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(4f, 2f, 1f, 2f),
         Rejilla.DOBLE, 0.5f, Eje.DOBLE, FormaBarra.ESTRIADA, R.font.garamond_medium, FontWeight.Medium, "lnum, tnum", 0.03f, 1.12f)
+    // El anillo shen, el trazo hundido de un relieve, los registros de un muro, el collar de cuentas y barras como obeliscos de punta dorada.
+    TemaId.EGIPTO -> EstiloGrafica(FormaPunto.ANILLO, 1.7f, null, StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.SOMBRA, listOf(5f, 2f),
+        Rejilla.BANDAS, 0.5f, Eje.CUENTAS, FormaBarra.OBELISCO, R.font.messiri_bold, FontWeight.Bold, "lnum, tnum", 0.02f, 1.05f)
     // Scriptorium: cuadrifolio, trazo de pluma, renglones con el picado del copista, floroncillos y arcos de medio punto.
     TemaId.MEDIEVAL -> EstiloGrafica(FormaPunto.FLOR, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.PLUMA, listOf(0.1f, 2.6f),
         Rejilla.PICADO, 0.5f, Eje.FLORON, FormaBarra.ARCO, R.font.garamond_regular, FontWeight.Normal, "onum", 0f, 1.15f)
@@ -529,6 +532,12 @@ fun DrawScope.barraGrafica(e: EstiloGrafica, arriba: Offset, tam: Size, color: C
                 for (i in 1..n) { val v = grosor * i / (n + 1); raya(margen, v, largo - margen, v, egOscuro(color), max(1f, grosor * 0.08f)) }
             }
         }
+        FormaBarra.OBELISCO -> {
+            // El fuste y, en la punta, el piramidión dorado.
+            drawPath(silueta, color)
+            val pp = min(grosor * 0.6f, largo * 0.4f)
+            if (pp >= 1.5f * d) drawPath(t.nueva().also { t.ir(largo - pp, grosor * 0.12f); t.a(largo, grosor / 2); t.a(largo - pp, grosor * 0.88f); t.cerrar() }, tinte)
+        }
         FormaBarra.TABLAS -> {
             drawPath(silueta, color)
             val tabla = max(grosor * 0.9f, 5f * d)
@@ -684,6 +693,11 @@ private fun egSilueta(forma: FormaBarra, t: EgBarra, d: Float): Path {
             t.rect(0f, 0f, l, g)
             t.rect(l - s, -o, l, g + o)
             if (l >= 3 * s) t.rect(0f, -o * 0.6f, s * 0.7f, g + o * 0.6f)
+        }
+        FormaBarra.OBELISCO -> {
+            // Se adelgaza un poco hacia la punta y termina en el piramidión.
+            val pp = min(g * 0.6f, l * 0.4f)
+            t.ir(0f, 0f); t.a(l - pp, g * 0.12f); t.a(l, g / 2); t.a(l - pp, g * 0.88f); t.a(0f, g); t.cerrar()
         }
         FormaBarra.TORRE -> {
             val m = min(g * 0.32f, l * 0.4f); val w5 = g / 5

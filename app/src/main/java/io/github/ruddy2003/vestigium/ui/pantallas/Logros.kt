@@ -168,6 +168,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.62f, c, style = Stroke(g))
             drawCircle(luz, r * 0.52f, c, style = Stroke(r * 0.04f))
         }
+        // Un pectoral en forma de cartucho, con su barra abajo y la cuerda por dentro.
+        TemaId.EGIPTO -> {
+            forma(Path().apply { addRoundRect(RoundRect(c.x - r * 0.62f, c.y - r, c.x + r * 0.62f, c.y + r * 0.78f, CornerRadius(r * 0.62f))) })
+            forma(Path().apply { addRect(Rect(c.x - r * 0.8f, c.y + r * 0.8f, c.x + r * 0.8f, c.y + r)) })
+            drawRoundRect(sombra, Offset(c.x - r * 0.44f, c.y - r * 0.8f), Size(r * 0.88f, r * 1.4f), CornerRadius(r * 0.44f), style = Stroke(g))
+            drawCircle(luz, r * 0.18f, Offset(c.x, c.y - r * 0.1f))
+        }
         // Sello de lacre que cuelga de su cordón.
         TemaId.MEDIEVAL -> {
             val cordon = if (hecho) Color(0xFF8E2A22) else borde.copy(alpha = 0.4f)

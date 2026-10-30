@@ -417,6 +417,68 @@ def andalus(tam):
     base.alpha_composite(capa)
     guardar(fondo, base, 'andalus')
 
+# ------------------------------------------------------------------ egipto
+
+def egipto(tam):
+    """Egipto: papiro con sus fibras, la cenefa de rectángulos de colores alrededor, columnas de signos pintados a los
+    lados y un gran cartucho rojo detrás; la huella, en fayenza azul vidriada (la cerámica de cuarzo de los amuletos)."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    a = mezcla(col('#ECDCA8'), col('#DCC68A'), ruido(tam, tam / 14, 61) * 0.7)
+    tiras = np.sin(yy * 0.55 + ruido(tam, 6, 62) * 6) * 0.5 + 0.5
+    a = a * (0.95 + 0.06 * tiras[..., None])
+    a = a * (0.97 + 0.04 * (np.sin(xx * 0.21 + ruido(tam, 8, 63) * 4) * 0.5 + 0.5))[..., None]
+    fondo = a_img(a).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    c = tam / 2
+    lapis = (29, 47, 122, 255); oro = (201, 151, 28, 255); corn = (184, 71, 30, 255)
+    # La cenefa de rectángulos de colores, cerca del borde del círculo.
+    n = 48; r0, r1 = tam * 0.43, tam * 0.48
+    colores = [lapis, oro, corn, oro]
+    for i in range(n):
+        a0 = 2 * math.pi * i / n; a1 = a0 + 2 * math.pi / n * 0.72
+        pts = [(c + r0 * math.cos(a0), c + r0 * math.sin(a0)), (c + r1 * math.cos(a0), c + r1 * math.sin(a0)),
+               (c + r1 * math.cos(a1), c + r1 * math.sin(a1)), (c + r0 * math.cos(a1), c + r0 * math.sin(a1))]
+        d.polygon(pts, fill=colores[i % 4])
+    w = max(2, tam // 240)
+    d.ellipse([c - r0 + w * 2, c - r0 + w * 2, c + r0 - w * 2, c + r0 - w * 2], outline=(30, 22, 12, 160), width=w)
+    # El cartucho grande detrás de la huella, en ocre rojo, con su barra abajo.
+    cw, ch = tam * 0.27, tam * 0.36
+    d.rounded_rectangle([c - cw, c - ch, c + cw, c + ch * 0.95], radius=int(cw), outline=corn[:3] + (150,), width=max(4, tam // 110))
+    d.rectangle([c - cw * 1.12, c + ch, c + cw * 1.12, c + ch + tam * 0.022], fill=corn[:3] + (160,))
+    # Columnas de signos a los lados: el ankh (en rojo de rúbrica), el ojo, la pluma y otra vez el ankh.
+    def ankh(x, y, s, f):
+        g = max(2, int(s * 0.09))
+        d.ellipse([x - s * 0.22, y - s * 0.5, x + s * 0.22, y - s * 0.08], outline=f, width=g)
+        d.line([(x - s * 0.32, y - s * 0.04), (x + s * 0.32, y - s * 0.04)], fill=f, width=g)
+        d.line([(x, y - s * 0.06), (x, y + s * 0.5)], fill=f, width=g)
+    def pluma(x, y, s, f):
+        d.polygon([(x - s * 0.06, y + s * 0.5), (x - s * 0.12, y - s * 0.2), (x + s * 0.06, y - s * 0.5), (x + s * 0.24, y - s * 0.45), (x + s * 0.1, y + s * 0.5)], fill=f)
+    def ojo(x, y, s, f):
+        g = max(2, int(s * 0.07))
+        d.ellipse([x - s * 0.42, y - s * 0.16, x + s * 0.42, y + s * 0.12], outline=f, width=g)
+        d.ellipse([x - s * 0.1, y - s * 0.12, x + s * 0.1, y + s * 0.08], fill=f)
+        d.arc([x - s * 0.46, y - s * 0.5, x + s * 0.5, y + s * 0.1], 200, 340, fill=f, width=g)
+        d.line([(x - s * 0.06, y + s * 0.1), (x - s * 0.12, y + s * 0.45)], fill=f, width=g)
+    s = tam * 0.075
+    tinta = (40, 30, 18, 120)
+    for x in (c - tam * 0.36, c + tam * 0.36):
+        for k, fn in enumerate((ankh, ojo, pluma, ankh)):
+            fn(x, c - tam * 0.22 + k * tam * 0.15, s, corn[:3] + (140,) if k == 0 else tinta)
+    fondo = fondo.convert('RGB')
+    # La huella en fayenza: azul turquesa vidriado, con el brillo del esmalte.
+    sh = relieve(m, fuerza=1.3)[..., None]
+    fay = mezcla(col('#1B6E8A'), col('#3FB0B8'), ruido(tam, tam / 25, 64))
+    rgb = fay * (1 + sh * 0.5)
+    brillo = np.clip(1 - np.abs((xx + yy) / tam - 0.8) * 2.2, 0, 1) ** 3
+    rgb = mezcla(rgb, col('#E8FFFF'), brillo * 0.35 * m)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 150))).astype(np.float32) / 255
+    sombra = np.roll(np.roll(sombra, 2, 0), 2, 1) * 0.45
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#3A2A12'), sombra)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'egipto')
+
 # ------------------------------------------------------------------ mongol
 def mongol(tam):
     m = mascara_sello(tam)
@@ -763,6 +825,7 @@ SIETE = [
     'espacio',
     'abismo',
     'andalus',
+    'egipto',
     'mongol',
     'renacimiento',
     'antiguas',
@@ -773,6 +836,7 @@ ORDEN = [
     'ciber',
     'neon',
     'heleno',
+    'egipto',
     'medieval',
     'templario',
     'distopia',

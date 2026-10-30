@@ -76,6 +76,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(SPIN, 0.6f)); Evento.ERROR -> listOf(g(BAJA, 0.6f), g(TICK_GRAVE, 0.5f, 80))
             Evento.LOGRO, Evento.TEMA -> listOf(g(SPIN, 0.7f), g(CLICK, 0.6f, 60))
         }
+        // El sistro que sacude sus varillas, el sello que se hunde en el barro y la puerta de piedra que se abre.
+        TemaId.EGIPTO -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.65f)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.35f))
+            Evento.GUARDAR -> listOf(g(THUD, 0.55f), g(TICK, 0.45f, 35))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.45f), g(TICK, 0.35f, 45), g(TICK, 0.25f, 35)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.5f), g(THUD, 0.4f, 55))
+            Evento.CAMBIO -> listOf(g(TICK, 0.55f), g(TICK_GRAVE, 0.55f, 45)); Evento.ERROR -> listOf(g(THUD, 0.65f), g(TICK_GRAVE, 0.4f, 90), g(TICK_GRAVE, 0.3f, 60))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE_LENTO, 0.6f), g(TICK, 0.5f, 30), g(TICK, 0.5f, 30), g(THUD, 0.7f, 60))
+        }
         // Pluma, página y sello de cera.
         TemaId.MEDIEVAL -> when (e) {
             Evento.TOQUE -> listOf(g(TICK_GRAVE, 0.8f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.6f), g(TICK, 0.3f, 40))
@@ -299,6 +307,7 @@ object Sentidos {
         TemaId.CIBER -> intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir, R.raw.s_ciber_tema, R.raw.s_ciber_error, R.raw.s_ciber_cambio, R.raw.s_tecla_ciber, R.raw.s_rascar_ciber)
         TemaId.NEON -> intArrayOf(R.raw.s_neon_toque, R.raw.s_neon_guardar, R.raw.s_neon_logro, R.raw.s_neon_pasar, R.raw.s_neon_elegir, R.raw.s_neon_abrir, R.raw.s_neon_tema, R.raw.s_neon_error, R.raw.s_neon_cambio, R.raw.s_tecla_neon, R.raw.s_rascar_neon)
         TemaId.HELENO -> intArrayOf(R.raw.s_heleno_toque, R.raw.s_heleno_guardar, R.raw.s_heleno_logro, R.raw.s_heleno_pasar, R.raw.s_heleno_elegir, R.raw.s_heleno_abrir, R.raw.s_heleno_tema, R.raw.s_heleno_error, R.raw.s_heleno_cambio, R.raw.s_tecla_heleno, R.raw.s_rascar_heleno)
+        TemaId.EGIPTO -> intArrayOf(R.raw.s_egipto_toque, R.raw.s_egipto_guardar, R.raw.s_egipto_logro, R.raw.s_egipto_pasar, R.raw.s_egipto_elegir, R.raw.s_egipto_abrir, R.raw.s_egipto_tema, R.raw.s_egipto_error, R.raw.s_egipto_cambio, R.raw.s_tecla_egipto, R.raw.s_rascar_egipto)
         TemaId.MEDIEVAL -> intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema, R.raw.s_medieval_error, R.raw.s_medieval_cambio, R.raw.s_tecla_medieval, R.raw.s_rascar_medieval)
         TemaId.TEMPLARIO -> intArrayOf(R.raw.s_templario_toque, R.raw.s_templario_guardar, R.raw.s_templario_logro, R.raw.s_templario_pasar, R.raw.s_templario_elegir, R.raw.s_templario_abrir, R.raw.s_templario_tema, R.raw.s_templario_error, R.raw.s_templario_cambio, R.raw.s_tecla_templario, R.raw.s_rascar_templario)
         TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
@@ -370,6 +379,8 @@ object Sentidos {
         TemaId.NEON -> Afinacion(st(-3, 0, 3, 7, 10), st(-7, 0, 3, 10), pasarRuido = false, elegirRuido = true)
         // La pentatónico de la lira.
         TemaId.HELENO -> Afinacion(st(0, 2, 4, 7, 9), st(-5, 0, 2, 7), pasarRuido = false, elegirRuido = false)
+        // Mi con la segunda menor, para el arpa del templo (escala propia: no se sabe cómo afinaban); el sistro de pasar es ruido.
+        TemaId.EGIPTO -> Afinacion(st(0, 1, 5, 7, 8), st(-5, 0, 1, 7), pasarRuido = true, elegirRuido = false)
         // Re dórico; la pluma solo da pasos cortos del modo.
         TemaId.MEDIEVAL -> Afinacion(st(-2, 0, 2, 3), null, pasarRuido = true, elegirRuido = true)
         // Sol mixolidio, el modo de los cantos de cruzada; el toque es el tintineo de la malla y elegir, el golpe de la espada en el escudo.
@@ -491,6 +502,7 @@ object Sentidos {
         TemaId.CIBER -> pasadas(TICK, 0.9f, 30, 5)   // la placa de consola
         TemaId.NEON -> pasadas(TICK_GRAVE, 0.9f, 22, 6)   // la cortina metálica del puesto
         TemaId.HELENO -> pasadas(TICK, 0.55f, 55, 3)   // electro
+        TemaId.EGIPTO -> pasadas(TICK_GRAVE, 0.4f, 70, 4)   // oro de Nubia, muy blando
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio

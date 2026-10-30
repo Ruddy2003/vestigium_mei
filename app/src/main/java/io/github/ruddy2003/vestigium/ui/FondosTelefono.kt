@@ -160,6 +160,7 @@ object FondosTelefono {
         TemaId.CIBER -> "vestigium.mei"
         TemaId.NEON -> "VESTIGIUM MEI · 屋台"
         TemaId.HELENO -> "ΙΧΝΟΣ ΕΜΟΝ"
+        TemaId.EGIPTO -> "☥ Vestigium Mei"
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
@@ -289,6 +290,24 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     drawPath(ruta, tenue, style = Stroke(1.1f * u))
                 }
                 greca(arr + 8 * u); greca(aba - 20 * u)
+            }
+            TemaId.EGIPTO -> {
+                // La puerta de un templo: la gola con sus hojas de palma pintadas arriba, el baquetón de cuerda a los lados
+                // y el disco solar alado bajo la cornisa.
+                caja(0f, col, 1.2f * u)
+                val alto = 18 * u
+                var x = izq; var k = 0
+                while (x < der) { drawRect(if (k % 2 == 0) e.primary.copy(alpha = 0.35f) else e.secondary.copy(alpha = 0.3f), Offset(x, arr), Size(minOf(5 * u, der - x), alto)); x += 6 * u; k++ }
+                drawLine(col, Offset(izq, arr + alto), Offset(der, arr + alto), 1.6f * u)
+                listOf(izq + 4 * u, der - 4 * u).forEach { xx -> var y = arr + alto + 3 * u; while (y < aba - 3 * u) { drawLine(tenue, Offset(xx - 2 * u, y), Offset(xx + 2 * u, y + 3 * u), 1f * u); y += 5 * u } }
+                val c = Offset((izq + der) / 2, arr + alto + 16 * u)
+                drawCircle(e.secondary.copy(alpha = 0.6f), 6 * u, c)
+                listOf(-1f, 1f).forEach { s ->
+                    drawPath(Path().apply {
+                        moveTo(c.x + s * 7 * u, c.y - 2 * u); quadraticTo(c.x + s * 30 * u, c.y - 9 * u, c.x + s * 52 * u, c.y - 3 * u)
+                        lineTo(c.x + s * 46 * u, c.y + 2 * u); quadraticTo(c.x + s * 28 * u, c.y + 1 * u, c.x + s * 7 * u, c.y + 4 * u); close()
+                    }, col)
+                }
             }
             TemaId.MEDIEVAL -> {
                 // Filete doble de minio y oro, con cuadros iluminados en las esquinas y una flor de cuatro granos.
@@ -737,6 +756,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.CIBER -> R.drawable.logo_ciber
     TemaId.NEON -> R.drawable.logo_neon
     TemaId.HELENO -> R.drawable.logo_heleno
+    TemaId.EGIPTO -> R.drawable.logo_egipto
     TemaId.MEDIEVAL -> R.drawable.logo_medieval
     TemaId.TEMPLARIO -> R.drawable.logo_templario
     TemaId.DISTOPIA -> R.drawable.logo_distopia

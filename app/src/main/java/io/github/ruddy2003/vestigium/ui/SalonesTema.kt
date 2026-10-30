@@ -32,6 +32,7 @@ object SalonesTema {
         when (tema) {
             TemaId.ROMANO -> atrio(cs, oscuro, n)
             TemaId.HELENO -> stoa(cs, oscuro, n)
+            TemaId.EGIPTO -> hipostila(cs, oscuro, n)
             TemaId.MEDIEVAL -> salaGestas(cs, oscuro, n)
             TemaId.TEMPLARIO -> salaArmas(cs, oscuro, n)
             TemaId.GOTICO -> nave(cs, oscuro, n)
@@ -64,6 +65,14 @@ object SalonesTema {
         when (tema) {
             TemaId.ROMANO -> { drawRect(piedra(Color(0xFF7C2433).copy(alpha = 0.75f)), Offset(w * 0.2f, h * 0.15f), Size(w * 0.6f, h * 0.7f)); drawRect(piedra(Color(0xFFE7E3DA)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h * 0.18f)); drawRect(piedra(Color(0xFFE7E3DA)), Offset(w * 0.1f, h * 0.82f), Size(w * 0.8f, h * 0.18f)) }
             TemaId.HELENO -> for (k in 0 until 3) drawRect(piedra(Color(0xFFEDE7DA)), Offset(w * (0.24f - k * 0.07f), h * k / 3f), Size(w * (0.52f + k * 0.14f), h / 3f))
+            // La mesa de ofrendas sobre su bloque: la losa con el filo de lapislázuli y el signo hotep (el pan sobre la estera) tallado.
+            TemaId.EGIPTO -> {
+                drawRect(piedra(Color(0xFFC9AE7A)), Offset(w * 0.18f, h * 0.3f), Size(w * 0.64f, h * 0.7f))
+                drawRect(piedra(Color(0xFF9A7650)), Offset(w * 0.1f, h * 0.12f), Size(w * 0.8f, h * 0.2f))
+                drawRect(Color(0xFF1D2F7A).copy(alpha = 0.6f), Offset(w * 0.1f, h * 0.12f), Size(w * 0.8f, h * 0.04f))
+                drawArc(Color(0xFF6E4A2E).copy(alpha = 0.6f), 180f, 180f, true, Offset(w * 0.4f, h * 0.38f), Size(w * 0.2f, h * 0.2f))
+                drawLine(Color(0xFF6E4A2E).copy(alpha = 0.6f), Offset(w * 0.32f, h * 0.49f), Offset(w * 0.68f, h * 0.49f), h * 0.03f)
+            }
             TemaId.MEDIEVAL -> { drawRect(piedra(Color(0xFF5A3A22)), Offset(w * 0.12f, h * 0.1f), Size(w * 0.76f, h * 0.35f)); drawRect(Color(0xFF5A3A22), Offset(w * 0.45f, h * 0.45f), Size(w * 0.1f, h * 0.55f)) }
             // Un sillar de arenisca con la cruz patada grabada en el frente.
             TemaId.TEMPLARIO -> { drawRect(piedra(Color(0xFFC2AE84)), Offset(w * 0.14f, 0f), Size(w * 0.72f, h)); drawRect(Color(0xFF7A6A4C).copy(alpha = 0.5f), Offset(w * 0.14f, 0f), Size(w * 0.72f, h), style = Stroke(1.2f))
@@ -211,6 +220,55 @@ object SalonesTema {
         listOf(22f, 26f, 30f).forEachIndexed { k, y -> drawRect(marmol, Offset(0f, y * d), Size(w, (3.2f - k * 0.4f) * d)) }
         // El estilóbato.
         for (k in 0 until 3) drawRect(marmol, Offset(0f, h - 10 * d + k * 3.4f * d), Size(w, 3 * d))
+    }
+
+    /**
+     * La sala hipóstila: el techo azul con estrellas de cinco puntas, el arquitrabe con el friso jeker, columnas
+     * papiriformes de capitel abierto entre cada columna de piezas y, al fondo, el muro con sus registros pintados.
+     */
+    private fun DrawScope.hipostila(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val techo = 30 * d; val piso = h - 10 * d
+        val piedra = (if (oscuro) Color(0xFF4A3C2C) else Color(0xFFE3CFA0)).copy(alpha = 0.75f)
+        val lapis = Color(0xFF1D2F7A).copy(alpha = if (oscuro) 0.5f else 0.35f)
+        val oro = Color(0xFFC9971C).copy(alpha = if (oscuro) 0.6f else 0.55f)
+        val cornalina = Color(0xFFB8471E).copy(alpha = if (oscuro) 0.45f else 0.35f)
+        drawRect(lapis, Offset.Zero, Size(w, techo - 8 * d))
+        val az = java.util.Random(17)
+        repeat((w / (14 * d)).toInt().coerceAtLeast(4)) {
+            val c = Offset(az.nextFloat() * w, 3 * d + az.nextFloat() * (techo - 14 * d)); val r = 2.2f * d
+            val p = Path()
+            for (k in 0 until 10) {
+                val a = -PI / 2 + PI * k / 5; val rr = if (k % 2 == 0) r else r * 0.4f
+                val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat()
+                if (k == 0) p.moveTo(x, y) else p.lineTo(x, y)
+            }
+            p.close(); drawPath(p, oro)
+        }
+        drawRect(piedra, Offset(0f, techo - 8 * d), Size(w, 8 * d))
+        var x = 2 * d; var k = 0
+        while (x < w) {
+            val col = if (k % 2 == 0) lapis else cornalina
+            drawRect(col, Offset(x - 1 * d, techo - 6.5f * d), Size(2 * d, 5 * d)); drawCircle(col, 1.4f * d, Offset(x, techo - 7 * d))
+            x += 5 * d; k++
+        }
+        listOf(0.42f, 0.62f).forEach { f -> drawLine(cornalina, Offset(0f, h * f), Offset(w, h * f), 1 * d) }
+        val paso = w / n
+        for (i in 0..n) {
+            val cx = i * paso; val r = 6 * d
+            drawPath(Path().apply {
+                moveTo(cx - r, piso); quadraticTo(cx - r * 1.3f, piso - 12 * d, cx - r * 0.8f, techo + 14 * d)
+                lineTo(cx + r * 0.8f, techo + 14 * d); quadraticTo(cx + r * 1.3f, piso - 12 * d, cx + r, piso); close()
+            }, piedra)
+            for (j in 0 until 3) drawLine(oro, Offset(cx - r * 0.85f, techo + (16 + j * 2.5f) * d), Offset(cx + r * 0.85f, techo + (16 + j * 2.5f) * d), 1 * d)
+            drawPath(Path().apply {
+                moveTo(cx - r * 0.8f, techo + 14 * d); quadraticTo(cx - r * 2.2f, techo + 6 * d, cx - r * 2f, techo)
+                lineTo(cx + r * 2f, techo); quadraticTo(cx + r * 2.2f, techo + 6 * d, cx + r * 0.8f, techo + 14 * d); close()
+            }, piedra)
+            drawLine(lapis, Offset(cx - r * 1.6f, techo + 4 * d), Offset(cx + r * 1.6f, techo + 4 * d), 1 * d)
+        }
+        drawRect(piedra, Offset(0f, piso), Size(w, h - piso))
+        drawLine(cornalina, Offset(0f, piso + 2 * d), Offset(w, piso + 2 * d), 1 * d)
     }
 
     /** La sala de gestas: sillares, un tapiz colgado entre cada par de piezas y antorchas en los muros de los lados. */

@@ -146,6 +146,7 @@ object Campanas {
         TemaId.CIBER -> listOf("RUTINA_7DIAS.EXE", "HACK DEL HÁBITO", "PROTOCOLO NOCTURNO", "BUCLE DE LA SEMANA")
         TemaId.NEON -> listOf("OP: NEON RUN", "BAJADA AL NIVEL −7", "LA RUTA DE LOS PUESTOS", "SIETE NOCHES EN LA CALLE")
         TemaId.HELENO -> listOf("La marcha de los diez mil", "Hacia el Indo", "La travesía del Egeo", "Los juegos de Olimpia")
+        TemaId.EGIPTO -> listOf("Río arriba hasta la primera catarata", "La barca de Amón", "Las canteras de granito", "La crecida del Nilo")
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.TEMPLARIO -> listOf("La marcha de las atalayas", "Relevo en Montalbar", "La escolta de los peregrinos", "Cabalgada al Pozo del Halcón")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
@@ -174,6 +175,7 @@ object Campanas {
         TemaId.CIBER -> listOf("localhost", "pasarela-01", "proxy-02", "muro-03", "dns-04", "espejo-05", "raíz")
         TemaId.NEON -> listOf("Azotea", "Nivel −1", "Nivel −2 · mercado", "Nivel −3 · callejón", "Nivel −4 · baños", "Nivel −5 · andén", "El fondo")
         TemaId.HELENO -> listOf("Pella", "Anfípolis", "Troya", "Sardes", "Gordio", "Tarso", "Babilonia")
+        TemaId.EGIPTO -> listOf("El Delta", "Menfis", "Hermópolis", "Abidos", "Tebas", "Edfu", "Elefantina")
         TemaId.MEDIEVAL -> listOf("Roncesvalles", "Pamplona", "Logroño", "Burgos", "León", "Astorga", "Santiago")
         // De fortaleza en fortaleza por una frontera inventada, de la costa al castillo de las montañas.
         TemaId.TEMPLARIO -> listOf("Encomienda de la costa", "Atalaya del Alba", "Torre de la Sed", "Pozo del Halcón", "Vado de las Piedras Rojas", "Peña del Cuervo", "Castillo de Montalbar")

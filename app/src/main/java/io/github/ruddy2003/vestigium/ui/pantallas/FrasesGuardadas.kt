@@ -169,6 +169,12 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
         }
         // Sol de Vergina: dieciséis rayos y el disco al centro.
         TemaId.HELENO -> pinta(estrella(12f, 12f, 16, 11f, 5.6f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 2.6f) }, 1.2f)
+        // El ankh: el lazo, el travesaño y el fuste.
+        TemaId.EGIPTO -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            addOval(Rect(p(8.5f, 2f), p(15.5f, 11f))); addOval(Rect(p(10.3f, 4f), p(13.7f, 9.2f)))
+            addRect(Rect(p(5f, 11f), p(19f, 13.2f))); addRect(Rect(p(10.9f, 13.2f), p(13.1f, 22f)))
+        }, 1.2f)
         // Cuadrifolio de las tracerías.
         TemaId.MEDIEVAL -> pinta(Path().also { c -> circulo(c, 12f, 7.4f, 5f); circulo(c, 16.6f, 12f, 5f); circulo(c, 12f, 16.6f, 5f); circulo(c, 7.4f, 12f, 5f) }, 1.3f)
         // El escudo de lágrima de la casa.
