@@ -96,6 +96,7 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
     TemaId.REFUGIO -> MarcoRecuadro(RoundedCornerShape(12.dp), 10.dp)
     TemaId.ORDEN -> MarcoRecuadro(CutCornerShape(7.dp), 10.dp)
+    TemaId.VAPOR -> MarcoRecuadro(RoundedCornerShape(topStart = 13.dp, topEnd = 13.dp, bottomEnd = 3.dp, bottomStart = 3.dp), 10.dp)
     TemaId.LABORATORIO -> MarcoRecuadro(RoundedCornerShape(14.dp), 9.dp)
     TemaId.COLONOS -> MarcoRecuadro(RoundedCornerShape(1.dp), 12.dp)
     TemaId.NAPOLEON -> MarcoRecuadro(RoundedCornerShape(5.dp), 11.dp)
@@ -204,6 +205,12 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
         // Placa blindada: remaches de latón en las esquinas.
         TemaId.ORDEN -> listOf(Offset(6 * u, 6 * u), Offset(w - 6 * u, 6 * u), Offset(6 * u, h - 6 * u), Offset(w - 6 * u, h - 6 * u)).forEach {
             drawCircle(e.secondary, 2 * u, it); drawCircle(c.copy(alpha = 0.5f), 2 * u, it, style = Stroke(0.6f * u))
+        }
+        // La placa de latón: el filete de arriba, un remache en cada esquina y una muesca de picado a la derecha.
+        TemaId.VAPOR -> {
+            drawLine(c.copy(alpha = 0.6f), Offset(14 * u, 3.5f * u), Offset(w - 14 * u, 3.5f * u), 1.6f * u)
+            listOf(Offset(7 * u, 8 * u), Offset(w - 7 * u, 8 * u), Offset(7 * u, h - 7 * u), Offset(w - 7 * u, h - 7 * u)).forEach { remacheVapor(it, 1.8f * u, c.copy(alpha = 0.8f)) }
+            drawCircle(e.onSurface.copy(alpha = 0.3f), 2.2f * u, Offset(w - 4 * u, h / 2), style = Stroke(0.8f * u))
         }
         // Probeta: marcas de graduación en el borde izquierdo.
         TemaId.LABORATORIO -> {
@@ -490,6 +497,12 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 else drawLine(col, Offset(x + u, y), Offset(x + l - u, y), trazo + u)
                 x += l * 0.72f; i++
             }
+        }
+        // La biela que une dos ruedas: una barra de acero con sus pasadores; cuanto más fuerte el lazo, más gruesa.
+        TemaId.VAPOR -> {
+            drawLine(col, Offset(4 * u, y), Offset(w - 4 * u, y), grosor, pathEffect = punteado)
+            var x = 4 * u
+            while (x <= w - 4 * u) { drawCircle(col, grosor * 0.5f + 2.2f * u, Offset(x, y)); drawCircle(fondo, 1.2f * u, Offset(x, y)); x += maxOf(26 * u, (w - 8 * u) / 6f) }
         }
         // Tubo de vidrio con el líquido adentro y tres burbujas.
         TemaId.LABORATORIO -> {

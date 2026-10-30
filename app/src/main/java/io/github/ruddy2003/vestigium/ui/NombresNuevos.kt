@@ -37,6 +37,8 @@ object NombresNuevos {
         TemaId.ORDEN to mapOf("La cinta" to "CRÓNICA HORARIA", "Constelación" to "LA HERMANDAD", "Hall de logros" to "SALA DE ARMAS", "Campañas" to "MISIONES",
             "Impulsos y recaídas" to "CÓDICE PRIVADO", "Estado de los datos" to "INFORME DE SENSORES", "Enfoque y siestas" to "VIGILIA Y REPOSO", "Ver tu vida" to "CRÓNICAS VISUALES",
             "Tus atajos" to "ATAJOS", "Logro conseguido" to "CONDECORACIÓN", "Este día hace un año" to "HACE UN AÑO", "Elegir campaña" to "ELEGIR MISIÓN", "Campañas anteriores" to "MISIONES PASADAS"),
+        // El Vapor victoriano nombra estas pantallas en `NombresVapor`, junto con todas las demás («La cinta del telégrafo», «Rutas ferroviarias»…).
+        TemaId.VAPOR to emptyMap(),
         TemaId.LABORATORIO to mapOf("La cinta" to "SERIE TEMPORAL", "Constelación" to "RED SOCIAL DEL SUJETO", "Hall de logros" to "VITRINA DE RESULTADOS", "Campañas" to "ENSAYOS SEMANALES",
             "Impulsos y recaídas" to "VARIABLES PRIVADAS", "Estado de los datos" to "CALIDAD DE LOS DATOS", "Enfoque y siestas" to "SESIONES Y REPOSO", "Ver tu vida" to "VISUALIZACIONES",
             "Tus atajos" to "ACCESOS", "Logro conseguido" to "HITO ALCANZADO", "Este día hace un año" to "CONTROL: HACE UN AÑO", "Elegir campaña" to "NUEVO ENSAYO", "Campañas anteriores" to "ENSAYOS PREVIOS"),

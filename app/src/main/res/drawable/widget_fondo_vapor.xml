@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Vapor victoriano: placa de hollín con el remate en arco de una placa de locomotora, filete de latón y de cardenillo, cuatro remaches y, arriba, el engrane con el manómetro. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F71D1914"/>
+            <stroke android:width="1.5dp" android:color="#B8862B"/>
+            <corners android:topLeftRadius="16dp" android:topRightRadius="16dp" android:bottomLeftRadius="3dp" android:bottomRightRadius="3dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#8874B8A4"/>
+            <corners android:topLeftRadius="12dp" android:topRightRadius="12dp" android:bottomLeftRadius="2dp" android:bottomRightRadius="2dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="5dp" android:height="5dp" android:top="10dp" android:left="10dp">
+        <shape android:shape="oval"><solid android:color="#FFDBA641"/></shape>
+    </item>
+    <item android:gravity="top|right" android:width="5dp" android:height="5dp" android:top="10dp" android:right="10dp">
+        <shape android:shape="oval"><solid android:color="#FFDBA641"/></shape>
+    </item>
+    <item android:gravity="bottom|left" android:width="5dp" android:height="5dp" android:bottom="8dp" android:left="8dp">
+        <shape android:shape="oval"><solid android:color="#FFDBA641"/></shape>
+    </item>
+    <item android:gravity="bottom|right" android:width="5dp" android:height="5dp" android:bottom="8dp" android:right="8dp">
+        <shape android:shape="oval"><solid android:color="#FFDBA641"/></shape>
+    </item>
+    <item android:gravity="top|center_horizontal" android:width="14dp" android:height="14dp" android:top="0dp">
+        <vector android:width="14dp" android:height="14dp" android:viewportWidth="14" android:viewportHeight="14">
+            <path android:pathData="M6,0 L8,0 L8.4,1.6 L10,2.2 L11.3,1.2 L12.8,2.7 L11.8,4 L12.4,5.6 L14,6 L14,8 L12.4,8.4 L11.8,10 L12.8,11.3 L11.3,12.8 L10,11.8 L8.4,12.4 L8,14 L6,14 L5.6,12.4 L4,11.8 L2.7,12.8 L1.2,11.3 L2.2,10 L1.6,8.4 L0,8 L0,6 L1.6,5.6 L2.2,4 L1.2,2.7 L2.7,1.2 L4,2.2 L5.6,1.6 Z" android:fillColor="#FFB8862B"/>
+            <path android:pathData="M7,3 A4,4 0 1,1 6.99,3 Z" android:fillColor="#FFEADCC0"/>
+            <path android:pathData="M7,7 L9.6,4.6" android:strokeColor="#FFC0392B" android:strokeWidth="0.9" android:strokeLineCap="round"/>
+            <path android:pathData="M7,6.2 A0.8,0.8 0 1,1 6.99,6.2 Z" android:fillColor="#FF1D1914"/>
+        </vector>
+    </item>
+</layer-list>

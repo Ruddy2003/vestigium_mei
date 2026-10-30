@@ -140,6 +140,11 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val izq = c + dir(a - 0.42) * r; val muesca = c + dir(a) * (r * 0.62f); val der = c + dir(a + 0.42) * r
         Path().apply { moveTo(c.x, c.y); lineTo(izq.x, izq.y); lineTo(muesca.x, muesca.y); lineTo(der.x, der.y); close() }
     }.reduce { a, b -> mas(a, b) }
+    // Un engrane de ocho dientes con su eje calado.
+    TemaId.VAPOR -> Path().apply {
+        fillType = PathFillType.EvenOdd
+        addPath(io.github.ruddy2003.vestigium.ui.Vapor.engrane(c, r * 1.05f, 8, 0.74f)); addOval(Rect(c, r * 0.3f))
+    }
     TemaId.LABORATORIO -> Path().apply {
         moveTo(c.x - r * 0.24f, c.y - r); lineTo(c.x + r * 0.24f, c.y - r); lineTo(c.x + r * 0.24f, c.y - r * 0.3f); lineTo(c.x + r * 0.92f, c.y + r * 0.85f)
         lineTo(c.x - r * 0.92f, c.y + r * 0.85f); lineTo(c.x - r * 0.24f, c.y - r * 0.3f); close()

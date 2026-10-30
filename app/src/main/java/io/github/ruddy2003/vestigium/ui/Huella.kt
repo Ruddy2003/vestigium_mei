@@ -62,6 +62,7 @@ fun textoSello(tema: TemaId): String = when (tema) {
     TemaId.DISTOPIA -> "DECLARACIÓN ARCHIVADA"
     TemaId.REFUGIO -> "BITÁCORA GUARDADA"
     TemaId.ORDEN -> "PARTE ENTREGADO"
+    TemaId.VAPOR -> "Patente concedida"
     TemaId.LABORATORIO -> "SESIÓN REGISTRADA"
     TemaId.COLONOS -> "Jornada asentada"
     TemaId.NAPOLEON -> "BOLETÍN ENVIADO"
@@ -114,6 +115,7 @@ fun recursosHuella(t: TemaId): Pair<Int, Int> = when (t) {
     TemaId.DISTOPIA -> R.drawable.huella_fondo_distopia to R.drawable.huella_distopia
     TemaId.REFUGIO -> R.drawable.huella_fondo_refugio to R.drawable.huella_refugio
     TemaId.ORDEN -> R.drawable.huella_fondo_orden to R.drawable.huella_orden
+    TemaId.VAPOR -> R.drawable.huella_fondo_vapor to R.drawable.huella_vapor
     TemaId.LABORATORIO -> R.drawable.huella_fondo_laboratorio to R.drawable.huella_laboratorio
     TemaId.COLONOS -> R.drawable.huella_fondo_colonos to R.drawable.huella_colonos
     TemaId.NAPOLEON -> R.drawable.huella_fondo_napoleon to R.drawable.huella_napoleon

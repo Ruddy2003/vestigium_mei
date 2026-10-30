@@ -97,6 +97,12 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
         }
         // Engrane.
         TemaId.ORDEN -> drawPath(figEngrane(o, w * 0.49f, 10, 0.86f), c, style = Stroke(g * 0.8f))
+        // La esfera de un manómetro: el bisel y la zona roja del final de la escala.
+        TemaId.VAPOR -> {
+            drawCircle(c, w * 0.46f, o, style = Stroke(g * 1.2f))
+            drawArc(c, 351f, 54f, false, Offset(o.x - w * 0.34f, o.y - h * 0.34f), Size(w * 0.68f, h * 0.68f), style = Stroke(g * 1.4f))
+            for (k in 0..4) { val a = 135f + k * 54f; drawLine(c, polarFig(o, w * 0.4f, a), polarFig(o, w * 0.33f, a), g * 0.6f) }
+        }
         // Anillo de benceno.
         TemaId.LABORATORIO -> drawPath(figPoligono(o, w * 0.48f, 6, 0f), c, style = Stroke(g))
         // Letrero de madera clavado.
@@ -332,6 +338,11 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
         }
         // Un engrane.
         TemaId.ORDEN -> { drawPath(figEngrane(c, r, 8, 0.72f), color); drawCircle(hueco, r * 0.3f, c) }
+        // El manómetro: esfera llena, la escala vaciada y la aguja.
+        TemaId.VAPOR -> {
+            drawCircle(color, r, c); drawCircle(hueco.copy(alpha = 0.7f), r * 0.72f, c, style = Stroke(r * 0.12f))
+            drawLine(hueco, c, Offset(c.x + r * 0.5f, c.y - r * 0.45f), r * 0.16f, StrokeCap.Round); drawCircle(hueco, r * 0.16f, c)
+        }
         // El anillo de benceno.
         TemaId.LABORATORIO -> { drawPath(figPoligono(c, r, 6, 0f), color); drawCircle(hueco.copy(alpha = 0.55f), r * 0.5f, c, style = Stroke(r * 0.12f)) }
         // Un botón de costura con sus cuatro agujeros.

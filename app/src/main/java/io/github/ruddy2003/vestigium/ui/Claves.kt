@@ -182,6 +182,16 @@ internal object Claves {
         "telephon" to "terminal", "themata" to "materias", "opera" to "archivo",
     )
 
+    /** Habla de la sala de máquinas y del andén (Vapor victoriano). Lo que no está aquí queda en el español común. */
+    val VAPOR: Map<String, String> = mapOf(
+        "somnus" to "fuegos_bajos", "passus" to "leguas", "cor" to "pistón", "animus" to "presión", "svmptvs" to "libro_mayor",
+        "loca" to "estaciones", "personae" to "pasajeros", "palmae" to "patentes", "iter" to "trayecto", "caelum" to "barómetro",
+        "lux" to "luz_de_gas", "aer" to "hollín", "telephonum" to "aparato", "telephon" to "aparato", "epistulae" to "telegramas",
+        "momenta" to "asientos", "consuetudo" to "mantenimiento", "cibus" to "carbonera", "dies" to "jornadas",
+        "orbis" to "la_red", "vis" to "carbón", "strepitus" to "estrépito", "musica" to "gramófono", "imagines" to "daguerrotipos",
+        "reditus" to "dividendos", "series" to "caldera", "robur" to "fundición", "horologium" to "leontina",
+    )
+
     /** Jerga del laboratorio. Lo que no está aquí queda en el español común. */
     val LABORATORIO: Map<String, String> = mapOf(
         "animus" to "afecto", "cor" to "fc", "svmptvs" to "recursos", "personae" to "sujetos", "loca" to "coordenadas",

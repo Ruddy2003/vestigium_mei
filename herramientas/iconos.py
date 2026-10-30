@@ -92,6 +92,12 @@ def acero(sem):          # Orden: acero cepillado en horizontal
     rayas = np.asarray(Image.fromarray(((ruido(sem, 1, 0) * 30) + 128).clip(0, 255).astype(np.uint8)).resize((TAM // 24, TAM)).resize((TAM, TAM), Image.BILINEAR), np.float32)
     return (rayas - 128) / 30 * 0.7 + ruido(sem + 1, 0.3, 30)
 
+def hollin_plano(sem):   # Vapor victoriano: papel de patente con nubes de hollín, motas de carbón y la doble regla del margen
+    nubes = np.clip(ruido(sem, 1.0, 22), -2, 0) * 0.9
+    motas = np.asarray(Image.fromarray(((ruido(sem + 5, 1, 0) > 2.6) * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(3)), np.float32) / 255 * -0.9
+    regla = ((np.abs(X - 40) < 1) | (np.abs(X - 46) < 0.8) | (np.abs(Y - 40) < 1) | (np.abs(Y - 46) < 0.8)) * -0.6
+    return nubes + motas + regla + ruido(sem + 2, 0.25, 2)
+
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
     grueso = ((X % 90 < 1.5) | (Y % 90 < 1.5)) * -0.6
@@ -265,6 +271,22 @@ def _remaches(d, c, n=8):
         d.ellipse([x - r, y - r, x + r, y + r], fill=c)
         d.ellipse([x - r * 0.45 - r * 0.3, y - r * 0.45 - r * 0.3, x + r * 0.45 - r * 0.3, y + r * 0.45 - r * 0.3], fill=(255, 255, 255, 110))
 
+def _engrane_manometro(d, c, n=16):   # Vapor victoriano: dientes de engrane por fuera y cuatro manómetros sobre el anillo
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        p = [_pos(a + s * 0.07, RADIO + h) for s, h in ((-1, 0), (-0.6, 9), (0.6, 9), (1, 0))]
+        d.polygon(p, fill=c)
+    for i in range(4):
+        a = math.pi / 4 + i * math.pi / 2
+        x, y = _pos(a); r = 11 * K
+        d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+        d.ellipse([x - r * 0.72, y - r * 0.72, x + r * 0.72, y + r * 0.72], fill=(239, 228, 203, 255))
+        for k in range(5):
+            b = math.radians(135 + 67.5 * k)
+            d.line([(x + r * 0.6 * math.cos(b), y + r * 0.6 * math.sin(b)), (x + r * 0.42 * math.cos(b), y + r * 0.42 * math.sin(b))], fill=c, width=int(K * 1.4))
+        g = math.radians(300)
+        d.line([(x, y), (x + r * 0.55 * math.cos(g), y + r * 0.55 * math.sin(g))], fill=(156, 61, 36, 255), width=int(K * 2))
+
 def _cuerda(d, c, n=56):              # cuerda trenzada
     for i in range(n):
         a = 2 * math.pi * i / n
@@ -394,6 +416,7 @@ TEMAS = {
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
+    'vapor':        (hollin_plano,  '#E6D9BD', '#7A4E12',  10, 5, 'dorado',      _engrane_manometro),
     'laboratorio':  (cuadricula,    '#F1F2F1', '#1E5A66',   7, 4, 'tinta',       _marcas),
     'colonos':      (gaceta,        '#E7E3DA', '#22324D',   9, 6, 'tinta',       _cuerda),
     'napoleon':     (marmol,        '#EDEBE6', '#1F2B5C',  12, 5, 'esmalte',     _estrellas),

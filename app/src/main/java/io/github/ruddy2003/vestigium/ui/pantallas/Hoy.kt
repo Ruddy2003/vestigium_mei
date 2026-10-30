@@ -451,6 +451,15 @@ fun FraseDelDia(fecha: String) {
                 listOf(Offset(16 * u, 5 * u), Offset(w - 16 * u, 5 * u), Offset(16 * u, h - 5 * u), Offset(w - 16 * u, h - 5 * u)).forEach { drawCircle(cs.secondary, 2.2f * u, it) }
             }.padding(horizontal = 18.dp, vertical = 14.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»") }
         }
+        // La placa de nombre de una locomotora: remate redondo arriba, el filete de latón por dentro y un remache a cada lado.
+        TemaId.VAPOR -> Surface(shape = RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomEnd = 4.dp, bottomStart = 4.dp), color = cs.surface,
+            border = BorderStroke(2.dp, cs.primary.copy(alpha = 0.8f)), modifier = arriba) {
+            Box(Modifier.drawBehind {
+                val u = 1.dp.toPx(); val w = size.width; val h = size.height
+                drawRoundRect(cs.primary.copy(alpha = 0.35f), Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u), androidx.compose.ui.geometry.CornerRadius(17 * u, 17 * u), style = Stroke(0.8f * u))
+                listOf(Offset(10 * u, h / 2), Offset(w - 10 * u, h / 2)).forEach { drawCircle(cs.tertiary, 2.4f * u, it); drawCircle(Color.White.copy(alpha = 0.4f), 0.9f * u, it - Offset(0.7f * u, 0.7f * u)) }
+            }.padding(horizontal = 22.dp, vertical = 16.dp)) { CuerpoFrase(f, fecha, rotulo, "“", "”") }
+        }
         // Etiqueta de laboratorio con una regla graduada arriba.
         TemaId.LABORATORIO -> Surface(shape = RoundedCornerShape(14.dp), color = cs.surface, border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.4f)), modifier = arriba) {
             Column {
@@ -883,6 +892,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
         TemaId.ORDEN -> c(LetraExtra.estarcido, FontWeight.Normal, 23f, 1.2f)
+        TemaId.VAPOR -> c(LetraExtra.caldera, FontWeight.Normal, 24f, 0.4f, "lnum")
         TemaId.LABORATORIO -> c(LetraExtra.jost, FontWeight.Normal, 23f, 1f, "tnum")
         TemaId.COLONOS -> c(LetraExtra.fell, FontWeight.Normal, 24f, 0.2f, "lnum")
         TemaId.NAPOLEON -> c(LetraExtra.bodoniTitulo, FontWeight.SemiBold, 23f, 0.8f, "lnum")
@@ -1172,6 +1182,16 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             drawRect(color ?: linea, Offset(0f, h - 6 * u), Size(w, 2 * u))
                             drawRect(color ?: linea, Offset(w * 0.4f, h - 4 * u), Size(w * 0.2f, 4 * u))
                             sello = cs.secondary
+                        }
+                        // Chimeneas de fábrica: el fuste de ladrillo que se angosta, el remate más ancho arriba y las hiladas.
+                        TemaId.VAPOR -> {
+                            val bx = w * 0.2f; val bw = w * 0.6f; val cap = minOf(4 * u, barH * 0.2f); val ala = w * 0.08f
+                            pinta(Path().apply {
+                                moveTo(bx, h); lineTo(bx + bw * 0.1f, top + cap); lineTo(bx - ala, top + cap); lineTo(bx - ala, top)
+                                lineTo(bx + bw + ala, top); lineTo(bx + bw + ala, top + cap); lineTo(bx + bw * 0.9f, top + cap); lineTo(bx + bw, h); close()
+                            })
+                            if (color != null) { var y = top + cap + 5 * u; while (y < h - 2 * u) { drawLine(Color.Black.copy(alpha = 0.18f), Offset(bx + bw * 0.1f, y), Offset(bx + bw * 0.9f, y), 0.6f * u); y += 5 * u } }
+                            sello = cs.tertiary
                         }
                         // Probetas de fondo redondo, con su borde y un brillo de vidrio.
                         TemaId.LABORATORIO -> {

@@ -175,6 +175,21 @@ object Textos {
         "widget_discreto_momento" to "REPORTAR",
     )
 
+    private val VAPOR: Map<String, String> = mapOf(
+        "pestana_dia" to "Salida",
+        "pestana_diario" to "Patentes",
+        "pestana_registrar" to "Patentar",
+        "pestana_vida" to "Itinerario",
+        "pestana_entender" to "Ingeniería",
+        "escala_vacia" to "aguja en cero · toca o desliza",
+        "lista_anadir" to "+ acoplar",
+        "palabras" to "%d palabras en la memoria",
+        "widget_animo" to "¿qué presión marca tu ánimo?",
+        "widget_momento" to "en este momento la caldera…",
+        "widget_discreto_animo" to "presión",
+        "widget_discreto_momento" to "patentar",
+    )
+
     private val LABORATORIO: Map<String, String> = mapOf(
         "pestana_dia" to "SESIÓN",
         "pestana_diario" to "CUADERNO",
@@ -457,6 +472,7 @@ object Textos {
         TemaId.DISTOPIA -> DISTOPIA
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN
+        TemaId.VAPOR -> VAPOR
         TemaId.LABORATORIO -> LABORATORIO
         TemaId.COLONOS -> COLONOS
         TemaId.NAPOLEON -> NAPOLEON

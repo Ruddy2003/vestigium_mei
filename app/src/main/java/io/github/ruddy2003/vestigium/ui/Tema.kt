@@ -114,6 +114,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     DISTOPIA("distopia", "Distopía", "Gris de ministerio y rojo de cartel. Cada día es un expediente y un ojo lo mira todo.", Epoca.FUTURO),
     REFUGIO("refugio", "Refugio", "Optimismo atómico de día, fósforo verde de noche. La vida bajo tierra, en orden.", Epoca.FUTURO),
     ORDEN("orden", "Orden", "Acero, carmesí y latón. Caballeros que custodian el saber técnico. Letra de estarcido.", Epoca.FUTURO),
+    VAPOR("vapor", "Vapor victoriano", "Latón, engranes y planos de patente; ladrillo, hollín y la luz del gas de alumbrado. Cada día es un tren del horario, con la hora del ferrocarril, y los números se leen en el manómetro.", Epoca.CONTEMPORANEA),
     LABORATORIO("laboratorio", "Laboratorio", "Blanco clínico, cian y violeta. Un laboratorio silencioso donde todo se mide.", Epoca.FUTURO),
     COLONOS("colonos", "Colonos", "Papel de gaceta, azul marino y ladrillo. Vecinos que reconstruyen su pueblo.", Epoca.FUTURO),
     NAPOLEON("napoleon", "Napoleónico", "El Imperio (1804–1815): azul imperial, oro y carmesí, letra Didot. Boletines de la Grande Armée y fechas en francés.", Epoca.CONTEMPORANEA),
@@ -359,6 +360,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.DISTOPIA -> if (oscuro) distopiaOscuro else distopiaClaro
     TemaId.REFUGIO -> if (oscuro) refugioOscuro else refugioClaro
     TemaId.ORDEN -> if (oscuro) ordenOscuro else ordenClaro
+    TemaId.VAPOR -> if (oscuro) vaporOscuro else vaporClaro
     TemaId.LABORATORIO -> if (oscuro) laboratorioOscuro else laboratorioClaro
     TemaId.COLONOS -> if (oscuro) colonosOscuro else colonosClaro
     TemaId.NAPOLEON -> if (oscuro) napoleonOscuro else napoleonClaro
@@ -391,6 +393,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.DISTOPIA -> tipoDistopia
     TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
     TemaId.ORDEN -> tipoOrden
+    TemaId.VAPOR -> tipoVapor
     TemaId.LABORATORIO -> tipoLaboratorio
     TemaId.COLONOS -> tipoColonos
     TemaId.NAPOLEON -> tipoNapoleon
@@ -429,6 +432,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
     TemaId.REFUGIO -> 74f to 0f         // VT323, de píxeles
     TemaId.ORDEN -> 60f to 1.5f         // estarcido
+    TemaId.VAPOR -> 58f to 0.4f         // Caldera (Abril Fatface), «fat face» de cartel, ancha y de contraste alto
     TemaId.LABORATORIO -> 58f to 1f     // Jost, geométrica
     TemaId.COLONOS -> 64f to 0.5f       // Fell
     TemaId.NAPOLEON -> 64f to 1f        // Bodoni
@@ -466,6 +470,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
     TemaId.REFUGIO -> Esquinas(10, Esquina.REDONDA)
     TemaId.ORDEN -> Esquinas(6, Esquina.CORTADA)           // placa de acero
+    TemaId.VAPOR -> Esquinas(9, Esquina.ARCO)              // la placa de nombre de una locomotora, de remate curvo
     TemaId.LABORATORIO -> Esquinas(14, Esquina.REDONDA)
     TemaId.COLONOS -> Esquinas(5, Esquina.REDONDA)
     TemaId.NAPOLEON -> Esquinas(2, Esquina.REDONDA)
@@ -698,6 +703,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.DISTOPIA -> "PARTE"
         TemaId.REFUGIO -> "DIARIO"
         TemaId.ORDEN -> "CAMPO"
+        TemaId.VAPOR -> "Salida"
         TemaId.LABORATORIO -> "SESIÓN"
         TemaId.COLONOS -> "Jornada"
         TemaId.NAPOLEON -> "BOLETÍN"
@@ -729,6 +735,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.DISTOPIA -> "EXP. 0290"
         TemaId.REFUGIO -> "DÍA 290"
         TemaId.ORDEN -> "17 OCT 26"
+        TemaId.VAPOR -> "tren n.º 290 · 2.32 t."
         TemaId.LABORATORIO -> "T+290"
         TemaId.COLONOS -> "17 de octubre"
         TemaId.NAPOLEON -> "samedi 17 octobre"
@@ -762,6 +769,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.DISTOPIA -> 20 to 12
         TemaId.REFUGIO -> 16 to 16
         TemaId.ORDEN -> 16 to 16
+        TemaId.VAPOR -> 22 to 10
         TemaId.LABORATORIO -> 12 to 20
         TemaId.COLONOS -> 16 to 16
         TemaId.NAPOLEON -> 12 to 20
@@ -794,6 +802,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.DISTOPIA -> 10
         TemaId.REFUGIO -> 12
         TemaId.ORDEN -> 12
+        TemaId.VAPOR -> 11
         TemaId.LABORATORIO -> 10
         TemaId.COLONOS -> 14
         TemaId.NAPOLEON -> 10
@@ -887,6 +896,13 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     // Compuerta de esquinas cortadas.
     TemaId.ORDEN -> CutCornerShape(9.dp)
+    // La placa de nombre de una locomotora: arco arriba, recta abajo, y dos orejas para los pernos a los lados.
+    TemaId.VAPOR -> GenericShape { s, _ ->
+        val a = s.height * 0.12f; val o = s.width * 0.035f
+        moveTo(0f, s.height); lineTo(0f, a * 1.2f); lineTo(o, a * 1.2f)
+        quadraticTo(s.width / 2, -a * 0.9f, s.width - o, a * 1.2f)
+        lineTo(s.width, a * 1.2f); lineTo(s.width, s.height); close()
+    }
     // Vaso de precipitado: arriba recto, abajo muy redondo.
     TemaId.LABORATORIO -> RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 20.dp, bottomStart = 20.dp)
     // Recorte de gaceta con muescas a los lados, como un boleto.
@@ -1040,6 +1056,8 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.REFUGIO -> drawRoundRect(c, cornerRadius = CornerRadius(w * 0.3f))
         // Tuerca.
         TemaId.ORDEN -> { drawPath(poligono(6, 0f), c); drawCircle(fondo, r * 0.32f) }
+        // Engrane de ocho dientes con su eje.
+        TemaId.VAPOR -> { drawPath(Vapor.engrane(Offset(cx, cy), r, 8, 0.74f), c); drawCircle(fondo, r * 0.3f, Offset(cx, cy)) }
         // Probeta.
         TemaId.LABORATORIO -> drawRoundRect(c, Offset(w * 0.28f, 0f), Size(w * 0.44f, h), CornerRadius(w * 0.22f))
         // Casita del pueblo.

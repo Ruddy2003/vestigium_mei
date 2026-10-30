@@ -49,6 +49,8 @@ object ContenedoresMas {
             Contenedor.TICKETS -> Color(0xFFEFE3EA)
             Contenedor.CARPETA -> Color(0xFFF6EFD9)
             Contenedor.TECNICO -> Color(0xFFEDEDE8)
+            // El papel de oficio, crema, de las memorias que se presentaban en la oficina de patentes.
+            Contenedor.PATENTES -> Color(0xFFF1E7CF)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
             // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
@@ -374,6 +376,42 @@ object ContenedoresMas {
                     drawCircle(Color(0xFF2A2E33), 2 * d, Offset(w - 3 * d, h * f))
                 }
             }
+            Contenedor.PATENTES -> {
+                // El cuaderno de patentes: tapa de tela verde de libro mayor, cantoneras curvas de latón, la placa de latón
+                // con sus renglones grabados, la correa con su hebilla y, asomando por arriba, los planos azules de
+                // cianotipia que se van guardando entre las hojas: cuanto más escrito, más planos.
+                sombra(Offset(grosor + 4 * d, grosor + 6 * d), Size(w, h), 3 * d); canto(w, h, grosor, d, Color(0xFFF1E7CF))
+                val azul = Color(0xFF2B5C8A); val laton = Color(0xFFC9A04A); val verde = Color(0xFF34473C)
+                val n = (1 + hojas / 30).coerceAtMost(6)
+                for (k in 0 until n) {
+                    val x = w * (0.16f + 0.13f * k); val alto = h * (0.1f + 0.025f * (k % 3))
+                    rotate(-6f + 4f * (k % 4), Offset(x + w * 0.1f, 0f)) {
+                        drawRect(azul, Offset(x, -alto * 0.55f), Size(w * 0.2f, alto))
+                        drawCircle(Color.White.copy(alpha = 0.6f), alto * 0.22f, Offset(x + w * 0.1f, -alto * 0.15f), style = Stroke(0.8f * d))
+                        drawLine(Color.White.copy(alpha = 0.5f), Offset(x + w * 0.02f, -alto * 0.15f), Offset(x + w * 0.18f, -alto * 0.15f), 0.6f * d)
+                    }
+                }
+                drawRoundRect(Brush.linearGradient(listOf(lerp(verde, Color.White, 0.12f), verde, lerp(verde, Color.Black, 0.3f)), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h), CornerRadius(3 * d))
+                // La trama de la tela.
+                var y = 0f; while (y < h) { drawLine(Color.Black.copy(alpha = 0.05f), Offset(0f, y), Offset(w, y), 0.5f * d); y += 2.5f * d }
+                drawRect(Brush.horizontalGradient(listOf(Color(0xFF6E2A1A), Color(0xFF9C3D24), Color(0xFF6E2A1A)), 0f, w * 0.1f), Offset.Zero, Size(w * 0.1f, h))
+                // Las cantoneras curvas, cada una con su remache.
+                val e = w * 0.16f
+                listOf(Triple(w, 0f, -1f to 1f), Triple(w, h, -1f to -1f), Triple(w * 0.1f, 0f, 1f to 1f), Triple(w * 0.1f, h, 1f to -1f)).forEach { (x, yy, s) ->
+                    drawPath(Path().apply { moveTo(x, yy); lineTo(x + s.first * e, yy); quadraticTo(x + s.first * e * 0.5f, yy + s.second * e * 0.5f, x, yy + s.second * e); close() }, laton)
+                    remacheVapor(Offset(x + s.first * e * 0.26f, yy + s.second * e * 0.26f), 1.4f * d, lerp(laton, Color.Black, 0.35f))
+                }
+                // La placa de latón con el remate en arco y los renglones grabados.
+                val pl = Rect(w * 0.26f, h * 0.2f, w * 0.84f, h * 0.42f)
+                drawPath(Path().apply { moveTo(pl.left, pl.bottom); lineTo(pl.left, pl.top + pl.height * 0.3f); quadraticTo(pl.center.x, pl.top - pl.height * 0.3f, pl.right, pl.top + pl.height * 0.3f); lineTo(pl.right, pl.bottom); close() }, laton)
+                for (j in 0 until 2) drawLine(Color(0xFF3A2A10).copy(alpha = 0.55f), Offset(pl.left + pl.width * 0.14f, pl.top + pl.height * (0.5f + j * 0.24f)), Offset(pl.right - pl.width * 0.14f, pl.top + pl.height * (0.5f + j * 0.24f)), 0.9f * d)
+                // El engrane estampado en seco, abajo.
+                drawPath(Vapor.engrane(Offset(w * 0.55f, h * 0.68f), w * 0.11f, 12, 0.8f), Color.Black.copy(alpha = 0.18f))
+                drawCircle(verde, w * 0.04f, Offset(w * 0.55f, h * 0.68f))
+                // La correa de cuero con la hebilla de latón, que lo cierra por el canto.
+                drawRect(Color(0xFF5A3A22), Offset(w * 0.78f, h * 0.47f), Size(w * 0.22f + grosor, h * 0.07f))
+                drawRect(laton, Offset(w * 0.84f, h * 0.455f), Size(w * 0.06f, h * 0.1f), style = Stroke(1.4f * d))
+            }
             Contenedor.CUADERNO -> {
                 // El cuaderno de laboratorio: tapa dura blanca con lomo de tela cian, la etiqueta con sus campos, la molécula
                 // impresa y las tiras de cinta de muestras de colores pegadas en el canto.
@@ -672,6 +710,27 @@ object ContenedoresMas {
                 drawLine(linea.copy(alpha = 0.3f), Offset(r.left, r.top + r.height / 2), Offset(r.right, r.top + r.height / 2), 0.8f * d)
                 drawLine(linea.copy(alpha = 0.3f), Offset(r.left + r.width * 0.6f, r.top), Offset(r.left + r.width * 0.6f, r.bottom), 0.8f * d)
             }
+            Contenedor.PATENTES -> {
+                // La memoria descriptiva de una patente: renglones de tinta sepia, el margen doble de ladrillo, el sello
+                // redondo de la oficina arriba a la izquierda y, a la derecha, un pequeño plano azul de cianotipia con su engrane.
+                val sepia = if (oscuro) Color(0xFFD9C7A8) else Color(0xFF6E5A3A)
+                var y = 96 * d; while (y < size.height) { drawLine(sepia.copy(alpha = 0.16f), Offset(0f, y), Offset(size.width, y), 0.7f * d); y += renglon }
+                listOf(margen - 10 * d, margen - 7 * d).forEach { x -> drawLine(Color(0xFF9C3D24).copy(alpha = 0.45f), Offset(x, 0f), Offset(x, size.height), 0.8f * d) }
+                val s = Offset(margen + 22 * d, 40 * d)
+                drawCircle(Color(0xFF9C3D24).copy(alpha = 0.35f), 18 * d, s, style = Stroke(1.4f * d))
+                drawCircle(Color(0xFF9C3D24).copy(alpha = 0.25f), 13 * d, s, style = Stroke(0.7f * d))
+                drawPath(Vapor.engrane(s, 8 * d, 8, 0.74f), Color(0xFF9C3D24).copy(alpha = 0.3f))
+                val o = Offset(size.width - 98 * d, 16 * d)
+                rotate(-3f, o + Offset(40 * d, 26 * d)) {
+                    drawRect(Color(0xFF2B5C8A).copy(alpha = if (oscuro) 0.5f else 0.85f), o, Size(80 * d, 52 * d))
+                    val blanco = Color.White.copy(alpha = 0.65f)
+                    drawPath(Vapor.engrane(o + Offset(28 * d, 26 * d), 14 * d, 10, 0.8f), blanco, style = Stroke(0.8f * d))
+                    drawCircle(blanco, 4 * d, o + Offset(28 * d, 26 * d), style = Stroke(0.8f * d))
+                    drawCircle(blanco, 8 * d, o + Offset(58 * d, 18 * d), style = Stroke(0.8f * d))
+                    drawLine(blanco, o + Offset(6 * d, 46 * d), o + Offset(74 * d, 46 * d), 0.6f * d)
+                    drawLine(blanco, o + Offset(6 * d, 43 * d), o + Offset(6 * d, 49 * d), 0.6f * d); drawLine(blanco, o + Offset(74 * d, 43 * d), o + Offset(74 * d, 49 * d), 0.6f * d)
+                }
+            }
             Contenedor.CUADERNO -> {
                 // La hoja cuadriculada del cuaderno de laboratorio, con el pie de «firma y testigo» y una tira de cinta de muestras.
                 val cuadro = if (oscuro) Color(0xFF3CD2E5) else Color(0xFF0B8FA1)
@@ -840,6 +899,14 @@ object ContenedoresMas {
                 var y = 0f; var k = 0
                 while (y < size.height) { drawRoundRect(if (k % 2 == 0) acero else lerp(acero, Color.Black, 0.2f), Offset(10 * d, y), Size(12 * d, 18 * d), CornerRadius(3 * d)); y += 18 * d; k++ }
                 drawLine(lerp(acero, Color.White, 0.3f), Offset(16 * d, 0f), Offset(16 * d, size.height), 1f * d)
+            }
+            Contenedor.PATENTES -> {
+                // El lomo de tela color ladrillo con tres bandas de latón y la costura que asoma entre ellas.
+                val ladrillo = if (oscuro) Color(0xFF4A2014) else Color(0xFF9C3D24)
+                drawRect(ladrillo, Offset(8 * d, 0f), Size(16 * d, size.height))
+                val laton = Color(0xFFC9A04A)
+                listOf(0.18f, 0.5f, 0.82f).forEach { f -> drawRect(laton, Offset(7 * d, size.height * f - 3 * d), Size(18 * d, 6 * d)) }
+                var y = 12 * d; while (y < size.height - 12 * d) { drawLine(Color(0xFFF1E7CF).copy(alpha = 0.5f), Offset(16 * d, y), Offset(16 * d, y + 5 * d), 1f * d); y += 14 * d }
             }
             Contenedor.CUADERNO -> {
                 // El lomo cosido con tela cian y el hilo de la costura.

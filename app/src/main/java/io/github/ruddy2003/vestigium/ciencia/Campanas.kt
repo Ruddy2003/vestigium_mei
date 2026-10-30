@@ -153,6 +153,7 @@ object Campanas {
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
         TemaId.REFUGIO -> listOf("Expedición a la superficie", "Reparar el purificador", "Turno de mantenimiento", "Ruta de suministros")
         TemaId.ORDEN -> listOf("Vigilia del archivo", "Patrulla del páramo", "Recuperar la reliquia", "La forja")
+        TemaId.VAPOR -> listOf("El expreso del Norte", "La línea de Valcarbón", "El correo nocturno", "Siete estaciones en el horario")
         TemaId.LABORATORIO -> listOf("Ensayo semanal", "Protocolo de siete días", "Serie experimental B", "Cultivo controlado")
         TemaId.COLONOS -> listOf("La caravana de carretas", "Fundar el pueblo", "Cruzar el río", "El camino del oeste")
         TemaId.NAPOLEON -> listOf("La campaña de 1805", "De Boulogne a Austerlitz", "La marcha sobre Ulm", "El sol de Austerlitz")
@@ -187,6 +188,8 @@ object Campanas {
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
         TemaId.REFUGIO -> listOf("Dormitorios", "Comedor", "Hidroponía", "Taller", "Purificador", "Esclusa", "Superficie")
         TemaId.ORDEN -> listOf("Campamento", "Puente de hierro", "Cota 214", "Desfiladero", "Trincheras", "Bastión", "Fortaleza")
+        // Una línea de ferrocarril inventada, del depósito de locomotoras a la estación terminal.
+        TemaId.VAPOR -> listOf("Depósito de locomotoras", "Apeadero del Molino", "Viaducto de los Siete Arcos", "Túnel de la Sierra Negra", "Aguada de Valcarbón", "Empalme de Ferrería", "Estación Terminal del Norte")
         TemaId.LABORATORIO -> listOf("Hipótesis", "Reactivos", "Siembra", "Incubación", "Medición", "Análisis", "Cultivo completo")
         TemaId.COLONOS -> listOf("Puerto", "Vado del río", "Pradera", "Cruce", "Colina", "Valle", "Pueblo nuevo")
         TemaId.NAPOLEON -> listOf("Boulogne", "Kehl", "Ulm", "Múnich", "Schönbrunn", "Brünn", "Austerlitz")

@@ -953,6 +953,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.DISTOPIA -> 12.dp
     TemaId.REFUGIO -> 6.dp
     TemaId.ORDEN -> 6.dp
+    TemaId.VAPOR -> 7.dp
     TemaId.LABORATORIO -> 8.dp
     TemaId.COLONOS -> 4.dp
     TemaId.NAPOLEON -> 14.dp
@@ -1035,6 +1036,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     TemaId.ORDEN -> formaDp { w, h, u ->
         val c = 14 * u
         moveTo(c, 0f); lineTo(w - c, 0f); lineTo(w, c); lineTo(w, h); lineTo(0f, h); lineTo(0f, c); close()
+    }
+    // El billete de tren: las dos esquinas de arriba recortadas hacia dentro.
+    TemaId.VAPOR -> formaDp { w, h, u ->
+        val c = 13 * u
+        moveTo(c, 0f); lineTo(w - c, 0f); quadraticTo(w - c, c, w, c); lineTo(w, h); lineTo(0f, h); lineTo(0f, c); quadraticTo(c, c, c, 0f); close()
     }
     // Vaso de precipitados: el pico para verter, a la izquierda.
     TemaId.LABORATORIO -> formaDp { w, h, u ->
@@ -1238,6 +1244,12 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
                 x += 34 * u
             }
         }
+        // La línea perforada del talonario de billetes y, debajo, el filete de latón.
+        TemaId.VAPOR -> {
+            var x = 20 * u
+            while (x < w - 18 * u) { drawCircle(e.onSurface.copy(alpha = 0.25f), 1.2f * u, Offset(x, 6 * u)); x += 6 * u }
+            drawLine(e.primary.copy(alpha = 0.7f), Offset(18 * u, 10 * u), Offset(w - 18 * u, 10 * u), 1.4f * u)
+        }
         // Graduación a lo largo del borde.
         TemaId.LABORATORIO -> {
             var x = 30 * u; var n = 0
@@ -1421,6 +1433,7 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     TemaId.DISTOPIA -> RectangleShape
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     TemaId.ORDEN -> CutCornerShape(8.dp)
+    TemaId.VAPOR -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.LABORATORIO -> RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomEnd = 4.dp, bottomStart = 4.dp)
     // Boleto: una muesca a cada lado, a media altura.
     TemaId.COLONOS -> formaDp { w, h, u ->
