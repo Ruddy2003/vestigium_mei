@@ -117,6 +117,12 @@
     <style name="Theme.Vestigium.Arranque.Espacio.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_espacio_oscuro</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Abismo" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_abismo</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Abismo.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_abismo_oscuro</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Andalus" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_andalus</item>
     </style>

@@ -116,6 +116,11 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
                 moveTo(w, h - l); lineTo(w, h); lineTo(w - l, h); moveTo(l, h); lineTo(0f, h); lineTo(0f, h - l)
             }, c, style = Stroke(g * 1.4f))
         }
+        // Ojo de buey: el aro grueso de la brida con sus ocho pernos.
+        TemaId.ABISMO -> {
+            drawCircle(c, w * 0.465f, o, style = Stroke(g * 0.6f)); drawCircle(c, w * 0.37f, o, style = Stroke(g * 0.6f))
+            for (k in 0 until 8) drawCircle(c, g * 0.7f, polarFig(o, w * 0.418f, k * 45f + 22.5f))
+        }
         // Estrella de ocho puntas: dos cuadrados.
         TemaId.ANDALUS -> {
             drawPath(figPoligono(o, w * 0.48f, 4, -90f), c, style = Stroke(g * 0.7f))
@@ -308,6 +313,19 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(rayo(-90f, r, r * 0.13f), color); drawPath(rayo(0f, r, r * 0.13f), color)
             drawPath(rayo(-45f, r * 0.55f, r * 0.08f), color); drawPath(rayo(45f, r * 0.55f, r * 0.08f), color)
             drawCircle(color, r * 0.36f, c)
+        }
+        // Una medusa: la campana llena, las gónadas caladas y tres tentáculos.
+        TemaId.ABISMO -> {
+            val y0 = c.y - r * 0.05f
+            drawPath(Path().apply {
+                moveTo(c.x - r * 0.95f, y0); cubicTo(c.x - r * 0.95f, y0 - r * 1.25f, c.x + r * 0.95f, y0 - r * 1.25f, c.x + r * 0.95f, y0)
+                quadraticTo(c.x, y0 - r * 0.25f, c.x - r * 0.95f, y0); close()
+            }, color)
+            listOf(-0.35f, 0f, 0.35f).forEach { f -> drawCircle(hueco.copy(alpha = 0.5f), r * 0.12f, Offset(c.x + f * r, y0 - r * 0.42f)) }
+            listOf(-0.55f, 0f, 0.55f).forEach { f ->
+                val x = c.x + f * r
+                drawPath(Path().apply { moveTo(x, y0 - r * 0.1f); quadraticTo(x - r * 0.25f, y0 + r * 0.5f, x, y0 + r) }, color, style = Stroke(r * 0.14f, cap = StrokeCap.Round))
+            }
         }
         // La estrella de ocho puntas de los alicatados: dos cuadrados.
         TemaId.ANDALUS -> {

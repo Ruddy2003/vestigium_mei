@@ -128,6 +128,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Espacio: carta de navegación; de noche, como vista desde la órbita.
         TemaId.ESPACIO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.42f, 0.55f, 0.85f, 0f, 2f, 8f)) }
             else { m.setSaturation(0.15f); m.postConcat(tinte(0.93f, 0.96f, 1.0f, 0f, 2f, 6f)) }
+        // Abismo: la carta bajo el agua azul de la zona iluminada; de noche, la zona abisal en verde azulado de luz viva.
+        TemaId.ABISMO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.28f, 0.72f, 0.68f, 0f, 6f, 10f)) }
+            else { m.setSaturation(0.2f); m.postConcat(tinte(0.82f, 0.95f, 1.0f, 0f, 6f, 12f)) }
         // Al-Ándalus: arena y yeso; de noche, el jardín en verde azulado.
         TemaId.ANDALUS -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.82f, 0.78f, 2f, 8f, 6f)) }
             else { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 4f, 2f, 0f)) }
@@ -237,6 +240,10 @@ internal object Formas {
                 p.quadTo(x + r * 0.8f, y - r * 0.9f, x + r * 0.8f, y - r * 0.1f); p.lineTo(x + r * 0.8f, y + r); p.close() }
             // Un destello de cuatro puntas.
             TemaId.ESPACIO -> { p.reset(); val k = r * 1.3f; p.moveTo(x, y - k); p.quadTo(x, y, x + k, y); p.quadTo(x, y, x, y + k); p.quadTo(x, y, x - k, y); p.quadTo(x, y, x, y - k); p.close() }
+            // Una gota de agua.
+            TemaId.ABISMO -> { p.reset(); p.moveTo(x, y - r * 1.35f); p.cubicTo(x + r * 0.4f, y - r * 0.7f, x + r * 0.95f, y - r * 0.2f, x + r * 0.95f, y + r * 0.3f)
+                p.cubicTo(x + r * 0.95f, y + r * 0.85f, x + r * 0.5f, y + r * 1.1f, x, y + r * 1.1f); p.cubicTo(x - r * 0.5f, y + r * 1.1f, x - r * 0.95f, y + r * 0.85f, x - r * 0.95f, y + r * 0.3f)
+                p.cubicTo(x - r * 0.95f, y - r * 0.2f, x - r * 0.4f, y - r * 0.7f, x, y - r * 1.35f); p.close() }
             // La estrella de ocho puntas hecha de dos cuadrados (los dos giran igual, así que se suman).
             TemaId.ANDALUS -> { p.reset(); sumarPoligono(x, y, r * 1.15f, 4, -90.0); sumarPoligono(x, y, r * 1.15f, 4, -45.0) }
             // La corona de la yurta (toono): un anillo con sus dos varas cruzadas.
@@ -272,6 +279,7 @@ internal object Formas {
             TemaId.SEDA -> c.drawCircle(x, y, r * 0.72f, d)
             TemaId.GOTICO -> { raya(c, x, y, r, 0f, -0.3f, 0f, 1f, d); c.drawCircle(x, y - r * 0.6f, r * 0.2f, d) }   // el parteluz y el rosetón
             TemaId.ESPACIO -> c.drawOval(x - r * 1.45f, y - r * 0.4f, x + r * 1.45f, y + r * 0.4f, d)   // una órbita
+            TemaId.ABISMO -> c.drawCircle(x - r * 0.3f, y + r * 0.15f, r * 0.24f, d)   // el brillo de la gota
             TemaId.ANDALUS -> c.drawCircle(x, y, r * 0.42f, d)
             TemaId.MONGOL -> for (i in 0 until 8) {   // las varas del techo, que salen de la corona
                 val a = Math.PI / 4 * i; val cx = kotlin.math.cos(a).toFloat(); val sy = kotlin.math.sin(a).toFloat()
@@ -840,6 +848,18 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 drawLine(acento.copy(alpha = 0.7f), Offset(m, y), Offset(m + l, y), 1 * u); drawLine(acento.copy(alpha = 0.7f), Offset(w - m, y), Offset(w - m - l, y), 1 * u)
             }
         }
+        // La superficie ondulada arriba, la regla de sondeo bajando por la izquierda y un remache en cada esquina.
+        TemaId.ABISMO -> {
+            val m = 6 * u
+            val ola = Path(); var x = m
+            ola.moveTo(m, m + 2 * u)
+            while (x <= w - m) { ola.lineTo(x, m + 2 * u + 2 * u * kotlin.math.sin((x - m) / (8 * u))); x += 2 * u }
+            drawPath(ola, acento, style = Stroke(1.4f * u))
+            drawLine(tinta.copy(alpha = 0.5f), Offset(m, h - m), Offset(w - m, h - m), 1 * u)
+            var y = m + 16 * u; var k = 0
+            while (y < h - m - 8 * u) { drawLine(acento.copy(alpha = 0.7f), Offset(m, y), Offset(m + (if (k % 5 == 0) 10 else 4) * u, y), 1 * u); y += 7 * u; k++ }
+            esquinas(m + 3 * u) { o, _, _ -> drawCircle(acento, 2 * u, o); drawCircle(fondo.copy(alpha = 0.6f), 0.8f * u, o) }
+        }
         // Doble filete y una estrella de ocho puntas en cada esquina.
         TemaId.ANDALUS -> {
             filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u); filete(8 * u, acento.copy(alpha = 0.45f), 0.8f * u)
@@ -1032,6 +1052,16 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             listOf(0.0, 90.0, 180.0, 270.0).forEach { g -> drawLine(tinta.copy(alpha = 0.7f), c + rumbo(g) * (r * 0.15f), c + rumbo(g) * (r * 0.45f), 1f * u) }
             drawPath(Path().apply { moveTo(c.x, c.y - r * 0.82f); lineTo(c.x - r * 0.16f, c.y - r * 1.02f); lineTo(c.x + r * 0.16f, c.y - r * 1.02f); close() }, acento)
             drawCircle(acento, r * 0.05f, c)
+        }
+        // La pantalla del sonar hecha rosa: tres anillos de distancia, el haz que barre hacia el noreste con su estela y
+        // la punta del norte.
+        TemaId.ABISMO -> {
+            listOf(0.85f, 0.6f, 0.35f).forEach { k -> anillo(r * k, acento.copy(alpha = 0.5f)) }
+            for (i in 0 until 10) drawLine(acento.copy(alpha = 0.5f * (1f - i / 10f)), c, c + rumbo(n + 45.0 - i * 4.0) * (r * 0.85f), 1.6f * u)
+            listOf(0.0, 90.0, 180.0, 270.0).forEach { g -> drawLine(tinta.copy(alpha = 0.6f), c + rumbo(n + g) * (r * 0.88f), c + rumbo(n + g) * (r * 1.0f), 1.4f * u) }
+            listOf(0.7f to 30.0, 0.45f to 140.0).forEach { (k, g) -> drawCircle(secundario, r * 0.06f, c + rumbo(n + g) * (r * k)) }
+            punta(n, r * 1.0f, r * 0.12f, acento)
+            drawCircle(acento, r * 0.06f, c)
         }
         // Ocho puntas sobre la estrella de dos cuadrados.
         TemaId.ANDALUS -> {

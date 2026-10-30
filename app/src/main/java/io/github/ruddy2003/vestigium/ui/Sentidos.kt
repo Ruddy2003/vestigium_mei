@@ -155,6 +155,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.6f), g(TICK, 0.8f, 30)); Evento.ERROR -> listOf(g(TICK, 1f), g(TICK, 1f, 60), g(TICK, 1f, 60))
             Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE_LENTO, 0.9f), g(CLICK, 1f, 10), g(SPIN, 0.5f, 60))
         }
+        // Bajo el agua todo llega amortiguado: golpes sordos que se hunden y, al subir, una burbuja lenta.
+        TemaId.ABISMO -> when (e) {
+            Evento.TOQUE -> listOf(g(BAJA, 0.42f)); Evento.PASAR -> listOf(g(THUD, 0.35f), g(BAJA, 0.3f, 40))
+            Evento.GUARDAR -> listOf(g(THUD, 0.7f), g(BAJA, 0.5f, 70), g(TICK_GRAVE, 0.4f, 90))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.55f), g(BAJA, 0.35f, 55)); Evento.ABRIR -> listOf(g(SUBE_LENTO, 0.45f), g(THUD, 0.5f, 85))
+            Evento.CAMBIO -> listOf(g(BAJA, 0.6f), g(TICK_GRAVE, 0.45f, 75)); Evento.ERROR -> listOf(g(THUD, 0.9f), g(THUD, 0.6f, 110))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE_LENTO, 0.7f), g(BAJA, 0.8f, 30), g(THUD, 0.6f, 120), g(TICK, 0.35f, 90))
+        }
         // Laúd y darbuka: dum, tek, tek.
         TemaId.ANDALUS -> when (e) {
             Evento.TOQUE -> listOf(g(CLICK, 0.5f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK_GRAVE, 0.5f, 60))
@@ -292,6 +300,7 @@ object Sentidos {
         TemaId.BOTANICO -> intArrayOf(R.raw.s_botanico_toque, R.raw.s_botanico_guardar, R.raw.s_botanico_logro, R.raw.s_botanico_pasar, R.raw.s_botanico_elegir, R.raw.s_botanico_abrir, R.raw.s_botanico_tema, R.raw.s_botanico_error, R.raw.s_botanico_cambio, R.raw.s_tecla_botanico, R.raw.s_rascar_botanico)
         TemaId.GOTICO -> intArrayOf(R.raw.s_gotico_toque, R.raw.s_gotico_guardar, R.raw.s_gotico_logro, R.raw.s_gotico_pasar, R.raw.s_gotico_elegir, R.raw.s_gotico_abrir, R.raw.s_gotico_tema, R.raw.s_gotico_error, R.raw.s_gotico_cambio, R.raw.s_tecla_gotico, R.raw.s_rascar_gotico)
         TemaId.ESPACIO -> intArrayOf(R.raw.s_espacio_toque, R.raw.s_espacio_guardar, R.raw.s_espacio_logro, R.raw.s_espacio_pasar, R.raw.s_espacio_elegir, R.raw.s_espacio_abrir, R.raw.s_espacio_tema, R.raw.s_espacio_error, R.raw.s_espacio_cambio, R.raw.s_tecla_espacio, R.raw.s_rascar_espacio)
+        TemaId.ABISMO -> intArrayOf(R.raw.s_abismo_toque, R.raw.s_abismo_guardar, R.raw.s_abismo_logro, R.raw.s_abismo_pasar, R.raw.s_abismo_elegir, R.raw.s_abismo_abrir, R.raw.s_abismo_tema, R.raw.s_abismo_error, R.raw.s_abismo_cambio, R.raw.s_tecla_abismo, R.raw.s_rascar_abismo)
         TemaId.ANDALUS -> intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir, R.raw.s_andalus_tema, R.raw.s_andalus_error, R.raw.s_andalus_cambio, R.raw.s_tecla_andalus, R.raw.s_rascar_andalus)
         TemaId.MONGOL -> intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir, R.raw.s_mongol_tema, R.raw.s_mongol_error, R.raw.s_mongol_cambio, R.raw.s_tecla_mongol, R.raw.s_rascar_mongol)
         TemaId.RENACIMIENTO -> intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir, R.raw.s_renacimiento_tema, R.raw.s_renacimiento_error, R.raw.s_renacimiento_cambio, R.raw.s_tecla_renacimiento, R.raw.s_rascar_renacimiento)
@@ -370,6 +379,8 @@ object Sentidos {
         TemaId.GOTICO -> Afinacion(st(-5, 0, 3, 7, 8), st(-5, 0, 3, 8), pasarRuido = false, elegirRuido = false)
         // Mi lidio: la cuarta aumentada de la sala de control.
         TemaId.ESPACIO -> Afinacion(st(0, 4, 6, 7, 11), st(-5, 0, 6, 7), pasarRuido = true, elegirRuido = false)
+        // La escala de tonos enteros, sin centro: suena a agua y a sonar; el giro baja.
+        TemaId.ABISMO -> Afinacion(st(0, 2, 4, 6, 8, 10), st(-10, -6, -2, 0), pasarRuido = true, elegirRuido = true)
         // Re hiyaz.
         TemaId.ANDALUS -> Afinacion(st(0, 1, 4, 5, 7), st(-5, 0, 1, 5), pasarRuido = false, elegirRuido = true)
         // Mi pentatónico; los cascos, en pasos del modo.
@@ -477,6 +488,7 @@ object Sentidos {
         TemaId.BOTANICO -> pasadas(TICK_GRAVE, 0.45f, 65, 3)   // bronce con verdín
         TemaId.GOTICO -> pasadas(TICK_GRAVE, 0.6f, 80, 3)   // peltre
         TemaId.ESPACIO -> pasadas(TICK, 0.85f, 28, 5)   // titanio
+        TemaId.ABISMO -> pasadas(THUD, 0.5f, 95, 2)   // cobre con verdín de pecio, blando
         TemaId.ANDALUS -> pasadas(TICK, 0.6f, 45, 4)   // latón
         TemaId.MONGOL -> pasadas(CLICK, 0.55f, 55, 3)   // plata sobredorada
         TemaId.RENACIMIENTO -> pasadas(TICK, 0.5f, 65, 3)   // bronce de taller

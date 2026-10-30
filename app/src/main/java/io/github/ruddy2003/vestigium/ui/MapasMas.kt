@@ -78,6 +78,9 @@ object MapasMas {
         TemaId.LABORATORIO -> listOf(Offset(0.07f, 0.72f), Offset(0.2f, 0.56f), Offset(0.33f, 0.42f), Offset(0.47f, 0.32f), Offset(0.6f, 0.42f), Offset(0.73f, 0.58f), Offset(0.88f, 0.48f))
         // De la Tierra a Marte: la plataforma, la órbita baja, la Luna, el punto de Lagrange, Fobos, la órbita marciana y Marte.
         TemaId.ESPACIO -> listOf(Offset(0.1f, 0.62f), Offset(0.2f, 0.4f), Offset(0.32f, 0.7f), Offset(0.47f, 0.34f), Offset(0.66f, 0.64f), Offset(0.78f, 0.38f), Offset(0.91f, 0.56f))
+        // La bajada por capas, en un corte del mar: del muelle a la zona iluminada, la crepuscular, la de medianoche,
+        // la llanura abisal, la zona hadal y el fondo de la fosa; cada etapa más honda que la anterior.
+        TemaId.ABISMO -> listOf(Offset(0.08f, 0.1f), Offset(0.24f, 0.24f), Offset(0.46f, 0.33f), Offset(0.3f, 0.47f), Offset(0.52f, 0.6f), Offset(0.74f, 0.7f), Offset(0.88f, 0.88f))
         // El Transiberiano: Moscú → Ekaterimburgo → Novosibirsk → Krasnoyarsk → Irkutsk → Chitá → Vladivostok.
         TemaId.URSS -> geo(listOf(37.6 to 55.75, 60.6 to 56.84, 82.9 to 55.03, 92.87 to 56.01, 104.3 to 52.29, 113.5 to 52.03, 131.9 to 43.12), 33.0, 136.0, 40.0, 60.0)
     }
@@ -288,6 +291,34 @@ object MapasMas {
                 drawCircle(Color(0xFFC1440E), 7 * d, Offset(w * 0.91f, h * 0.56f))
                 drawCircle(Color(0xFF8A2E0E), 2 * d, Offset(w * 0.66f, h * 0.64f))
             }
+            TemaId.ABISMO -> {
+                // Un corte del mar: el cielo y la superficie con su ola, las capas del agua cada vez más oscuras, la nieve
+                // marina que cae, el talud con su arrecife a la izquierda y el fondo que se hunde en una fosa a la derecha.
+                // De noche, puntos de luz viva en las capas hondas.
+                val az = java.util.Random(23)
+                val sup = h * 0.06f
+                val capas = listOf(Color(0xFF7FC4D8), Color(0xFF3F8FB0), Color(0xFF1E5A7A), Color(0xFF0D3350), Color(0xFF061E33), Color(0xFF020D18))
+                capas.forEachIndexed { i, c -> drawRect(c.copy(alpha = if (oscuro) 0.22f + i * 0.06f else 0.16f + i * 0.05f), Offset(0f, sup + (h - sup) * i / capas.size), Size(w, (h - sup) / capas.size + 1f)) }
+                val ola = Path(); var x = 0f
+                ola.moveTo(0f, sup)
+                while (x <= w) { ola.lineTo(x, sup + 2.2f * d * sin(x / (11 * d))); x += 3 * d }
+                drawPath(ola, (if (oscuro) Color(0xFF5CF2C6) else Color(0xFF0A5C8C)).copy(alpha = 0.6f), style = Stroke(1.4f * d))
+                repeat(70) { drawCircle((if (oscuro) Color(0xFFC4ECE6) else Color(0xFF0C2430)).copy(alpha = 0.12f + 0.2f * az.nextFloat()), (0.4f + 0.8f * az.nextFloat()) * d, Offset(az.nextFloat() * w, sup + az.nextFloat() * (h - sup))) }
+                if (oscuro) repeat(24) {
+                    val o = Offset(az.nextFloat() * w, h * (0.45f + 0.5f * az.nextFloat()))
+                    val col = listOf(Color(0xFF5CF2C6), Color(0xFFE29BFF), Color(0xFF3FA9FF))[it % 3]
+                    drawCircle(col.copy(alpha = 0.18f), 4 * d, o); drawCircle(col.copy(alpha = 0.7f), 1 * d, o)
+                }
+                val fondo = Path().apply {
+                    moveTo(0f, h * 0.32f); lineTo(w * 0.1f, h * 0.36f); quadraticTo(w * 0.16f, h * 0.6f, w * 0.26f, h * 0.7f)
+                    lineTo(w * 0.62f, h * 0.78f); quadraticTo(w * 0.74f, h * 0.8f, w * 0.8f, h * 0.98f); lineTo(w * 0.9f, h * 0.98f)
+                    quadraticTo(w * 0.94f, h * 0.84f, w, h * 0.82f); lineTo(w, h); lineTo(0f, h); close()
+                }
+                drawPath(fondo, (if (oscuro) Color(0xFF0B1A26) else Color(0xFF6E6250)).copy(alpha = if (oscuro) 0.9f else 0.45f))
+                drawPath(fondo, tinta, style = Stroke(1f * d))
+                listOf(0.03f, 0.06f, 0.09f).forEach { fx -> drawLine(Color(0xFFC0563F).copy(alpha = 0.6f), Offset(w * fx, h * 0.33f + fx * h * 0.3f), Offset(w * fx + 2 * d, h * 0.28f), 1.6f * d) }
+                drawPath(Path().apply { moveTo(w * 0.04f, sup); lineTo(w * 0.14f, sup); lineTo(w * 0.12f, sup + 4 * d); lineTo(w * 0.06f, sup + 4 * d); close() }, tinta.copy(alpha = 0.8f))
+            }
             TemaId.URSS -> {
                 // Rusia de oeste a este: la taiga, los Urales, el Obi y el Yeniséi, el lago Baikal y el Pacífico.
                 fun lon(x: Double) = w * (0.07f + 0.86f * ((x - 33.0) / 103.0).toFloat())
@@ -474,6 +505,14 @@ object MapasMas {
                 drawPath(p, naranja.copy(alpha = 0.18f), style = Stroke(4 * d))
                 aLoLargo(p, 7 * d) { o, _ -> drawCircle(naranja, 1.1f * d, o) }
             }
+            // El cable umbilical del batiscafo, con una burbuja cada tanto que sube desde él.
+            TemaId.ABISMO -> {
+                val cable = Color(0xFFB8913E)
+                drawPath(p, cable.copy(alpha = 0.3f), style = Stroke(3.4f * d))
+                drawPath(p, cable, style = Stroke(1.2f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5 * d, 2 * d))))
+                var k = 0
+                aLoLargo(p, 16 * d) { o, _ -> drawCircle(Color.White.copy(alpha = 0.55f), (1f + (k % 3) * 0.5f) * d, Offset(o.x + 3 * d, o.y - (4 + k % 3 * 2) * d), style = Stroke(0.7f * d)); k++ }
+            }
             // La vía del tren: los durmientes y los dos rieles.
             TemaId.URSS -> {
                 aLoLargo(p, 5 * d) { o, t -> val n = Offset(-t.y, t.x) * (3.5f * d); drawLine(Color(0xFF5A3A22).copy(alpha = 0.8f), o - n, o + n, 1.6f * d) }
@@ -562,6 +601,14 @@ object MapasMas {
                 drawOval(Color(0xFFE8601C).copy(alpha = 0.8f), Offset(c.x - r * 1.4f, c.y - r * 0.4f), Size(r * 2.8f, r * 0.8f), style = Stroke(0.9f * d))
                 drawArc(Color.Black.copy(alpha = 0.25f), -60f, 180f, true, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f))
             }
+            // Una boya de cota: el flotador redondo con su franja y el cabo que la ata al fondo.
+            TemaId.ABISMO -> {
+                drawLine(cs.onSurface.copy(alpha = 0.5f), Offset(c.x, c.y + r * 0.8f), Offset(c.x, c.y + r * 1.8f), 0.8f * d)
+                drawCircle(col, r * 0.85f, c)
+                drawRect(Color.White.copy(alpha = 0.7f), Offset(c.x - r * 0.85f, c.y - r * 0.12f), Size(r * 1.7f, r * 0.24f))
+                drawCircle(cs.onSurface.copy(alpha = 0.6f), r * 0.85f, c, style = Stroke(0.8f * d))
+                if (meta) drawCircle(col.copy(alpha = 0.3f), r * 1.5f, c, style = Stroke(1f * d))
+            }
             // La estación: el edificio con su techo y la estrellita roja.
             TemaId.URSS -> {
                 drawRect(col, Offset(c.x - r, c.y - r * 0.4f), Size(2 * r, r * 1.2f))
@@ -644,6 +691,8 @@ object MapasMas {
             TemaId.LABORATORIO -> { alfiler(); drawRect(Color.White, Offset(g.x - r * 0.18f, g.y - r * 0.9f), Size(r * 0.36f, r * 1.3f)); drawPath(Path().apply { moveTo(g.x - r * 0.18f, g.y + r * 0.4f); lineTo(g.x + r * 0.18f, g.y + r * 0.4f); lineTo(g.x, g.y + r * 0.95f); close() }, Color.White); drawRect(Color(0xFF5E4FD1), Offset(g.x - r * 0.3f, g.y - r * 0.95f), Size(r * 0.6f, r * 0.3f)) }
             // La nave.
             TemaId.ESPACIO -> { alfiler(); drawPath(Path().apply { moveTo(g.x, g.y - r); quadraticTo(g.x + r * 0.45f, g.y - r * 0.4f, g.x + r * 0.3f, g.y + r * 0.6f); lineTo(g.x - r * 0.3f, g.y + r * 0.6f); quadraticTo(g.x - r * 0.45f, g.y - r * 0.4f, g.x, g.y - r); close() }, Color.White); drawCircle(Color(0xFF1B3A8C), r * 0.18f, Offset(g.x, g.y - r * 0.2f)); drawLine(Color(0xFFE8601C), Offset(g.x, g.y + r * 0.6f), Offset(g.x, g.y + r * 0.95f), 1.4f * d) }
+            // El batiscafo: el flotador alargado, la torreta y la esfera colgada debajo con su ojo de buey encendido.
+            TemaId.ABISMO -> { alfiler(); drawRoundRect(Color.White, Offset(g.x - r * 0.9f, g.y - r * 0.55f), Size(r * 1.8f, r * 0.6f), androidx.compose.ui.geometry.CornerRadius(r * 0.3f)); drawRect(Color.White, Offset(g.x - r * 0.15f, g.y - r * 0.8f), Size(r * 0.3f, r * 0.25f)); drawCircle(Color.White, r * 0.36f, Offset(g.x, g.y + r * 0.4f)); drawCircle(Color(0xFF5CF2C6), r * 0.14f, Offset(g.x - r * 0.06f, g.y + r * 0.38f)) }
             // La locomotora vista de lado.
             TemaId.URSS -> { alfiler(); drawRect(Color(0xFF161414), Offset(g.x - r * 0.8f, g.y - r * 0.3f), Size(r * 1.4f, r * 0.7f)); drawRect(Color(0xFF161414), Offset(g.x + r * 0.1f, g.y - r * 0.8f), Size(r * 0.5f, r * 0.6f)); drawRect(Color(0xFF161414), Offset(g.x - r * 0.6f, g.y - r * 0.75f), Size(r * 0.2f, r * 0.45f)); drawRect(Color(0xFFC1121F), Offset(g.x - r * 0.8f, g.y + r * 0.05f), Size(r * 1.4f, r * 0.12f)); listOf(-0.45f, 0.05f).forEach { dx -> drawCircle(Color(0xFFC1121F), r * 0.22f, Offset(g.x + dx * r, g.y + r * 0.5f)) } }
             // El cursor de la consola.

@@ -235,6 +235,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.GOTICO -> LaminaRascar(0xFF3B3644.toInt(), 0xFF7D7488.toInt(), 0xFFCFC6D8.toInt())
     // Titanio anodizado azul.
     TemaId.ESPACIO -> LaminaRascar(0xFF1E2A4A.toInt(), 0xFF4E6AA8.toInt(), 0xFFBFD0FF.toInt())
+    // Cobre con verdín de un pecio.
+    TemaId.ABISMO -> LaminaRascar(0xFF1F4A46.toInt(), 0xFF3F8A78.toInt(), 0xFFB8E6D6.toInt())
     // Latón verdoso de las lámparas nazaríes.
     TemaId.ANDALUS -> LaminaRascar(0xFF5C5418.toInt(), 0xFFB5A646.toInt(), 0xFFEDE6A8.toInt())
     // Plata sobredorada de la estepa.
@@ -430,6 +432,18 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             }, linea)
             estrellas.forEach { (x, y) -> c.drawCircle(l * x, l * y, l * 0.035f, relleno) }
             c.drawPath(estrellaLamina(l * 0.26f, l * 0.72f, l * 0.13f, 4, 0.25f), relleno)
+        }
+        TemaId.ABISMO -> {
+            // Conchas de abanico al tresbolillo, con sus costillas, y una rama de coral en el hueco.
+            tresbolillo { x, y ->
+                val r = l * 0.16f
+                c.drawPath(Path().apply { moveTo(x, y + r * 0.5f); lineTo(x - r, y - r * 0.2f); quadTo(x, y - r * 1.3f, x + r, y - r * 0.2f); close() }, relleno)
+                for (k in -2..2) c.drawLine(x, y + r * 0.5f, x + k * r * 0.4f, y - r * (0.5f + 0.15f * (2 - kotlin.math.abs(k))), linea)
+            }
+            c.drawPath(Path().apply {
+                moveTo(l * 0.5f, l * 0.98f); lineTo(l * 0.5f, l * 0.78f); lineTo(l * 0.42f, l * 0.66f)
+                moveTo(l * 0.5f, l * 0.78f); lineTo(l * 0.6f, l * 0.68f); lineTo(l * 0.58f, l * 0.6f)
+            }, linea)
         }
         TemaId.ANDALUS -> {
             // Lazo de ocho: estrellas de dos cuadrados girados y, entre ellas, rombos que las enlazan.

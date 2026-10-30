@@ -105,6 +105,12 @@ def polvo_estelar(sem):  # Espacio: polvo de estrellas y una nebulosa apenas vis
     estrellas = (ruido(sem, 1, 0) > 2.9) * 1.6
     return estrellas + ruido(sem + 1, 0.8, 40) + ruido(sem + 2, 0.15)
 
+def agua_abisal(sem):    # Abismo: la red de luz del oleaje (cáusticas), muy tenue, y nieve marina que cae
+    yy, xx = np.mgrid[0:TAM, 0:TAM].astype(np.float32)
+    causticas = np.abs(np.sin(xx / 23 + np.sin(yy / 31) * 2.1) * np.sin(yy / 19 + np.sin(xx / 27) * 1.7))
+    nieve = (ruido(sem, 1, 0) > 2.8) * 1.2
+    return (causticas < 0.08) * 1.1 + nieve + ruido(sem + 1, 0.6, 30)
+
 def lazo(sem):           # Al-Ándalus: lazo de ocho, apenas grabado
     u, v = (X % 54) - 27, (Y % 54) - 27
     a = np.maximum(np.abs(u), np.abs(v)); b = (np.abs(u) + np.abs(v)) / math.sqrt(2)
@@ -228,6 +234,13 @@ def _orbita(d, c):                    # un planeta en su órbita y dos estrellas
         for u in (0, math.pi / 2):
             d.line([(x - 4 * K * math.cos(u), y - 4 * K * math.sin(u)), (x + 4 * K * math.cos(u), y + 4 * K * math.sin(u))], fill=c, width=int(K * 1.3))
 
+def _burbujas(d, c, n=22):            # burbujas de varios tamaños, unas por dentro y otras por fuera del anillo
+    for i in range(n):
+        a = 2 * math.pi * i / n + 0.07 * (i % 3)
+        r = (2.2 + 1.6 * ((i * 7) % 3)) * K
+        x, y = _pos(a, RADIO + (3.5 if i % 2 else -3.5))
+        d.ellipse([x - r, y - r, x + r, y + r], outline=c, width=int(K * 1.1))
+
 def _rombos(d, c, n=16, s=4.4):
     for i in range(n):
         a = 2 * math.pi * i / n
@@ -277,6 +290,7 @@ TEMAS = {
     'seda':         (seda,          '#F2EFE8', '#862A1D',   6, 5, 'tinta',       _monedas),
     'gotico':       (piedra,        '#1E1E21', '#D8CCAE',   9, 6, 'dorado',      _trebol),
     'espacio':      (polvo_estelar, '#0F1012', '#B0C8F2',   4, 4, 'fosforo',     _orbita),
+    'abismo':       (agua_abisal,   '#06141D', '#7FE9D2',   6, 4, 'fosforo',     _burbujas),
     'andalus':      (lazo,          '#F0ECE4', '#1F3F5C',   6, 5, 'esmalte',     _estrellas),
     'mongol':       (fieltro,       '#EFEBE3', '#1F3D78',   6, 5, 'tinta',       _rombos),
     'renacimiento': (construccion,  '#EAE4D9', '#7C3B23',   8, 5, 'ferrogalica', _compas),

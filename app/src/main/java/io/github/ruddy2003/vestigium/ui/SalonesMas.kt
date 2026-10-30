@@ -92,6 +92,12 @@ object SalonesMas {
                 drawRect(Color(0xFF1B3A8C), Offset(w * 0.12f, h * 0.7f), Size(w * 0.76f, h * 0.18f))
                 listOf(0.2f, 0.8f).forEach { x -> drawCircle(Color(0xFFE8601C), h * 0.13f, Offset(w * x, h * 0.35f)) }
             }
+            TemaId.ABISMO -> {
+                // Un bloque de lastre de hierro con su argolla y la placa de latón con la cota.
+                drawRoundRect(piedra(Color(0xFF3E4A52)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h), androidx.compose.ui.geometry.CornerRadius(h * 0.12f))
+                drawRect(Color(0xFFB8913E), Offset(w * 0.36f, h * 0.3f), Size(w * 0.28f, h * 0.4f))
+                listOf(0.18f, 0.82f).forEach { x -> drawCircle(Color(0xFFB8913E), h * 0.1f, Offset(w * x, h * 0.5f)); drawCircle(Color(0xFF1C252B), h * 0.04f, Offset(w * x, h * 0.5f)) }
+            }
             TemaId.URSS -> {
                 // El zócalo de granito rojo con su franja dorada y la estrella.
                 drawRect(piedra(Color(0xFF7A2A26)), Offset(w * 0.12f, 0f), Size(w * 0.76f, h))
@@ -632,6 +638,54 @@ object SalonesMas {
         // El riel circular de la cúpula y el piso.
         drawRect(linea.copy(alpha = linea.alpha * 0.4f), Offset(0f, h - 14 * d), Size(w, 14 * d))
         var xr = 0f; while (xr < w) { drawCircle(naranja.copy(alpha = 0.4f), 1.6f * d, Offset(xr, h - 7 * d)); xr += 30 * d }
+    }
+
+    /**
+     * Abismo: la sala del fondo del mar. Sobre cada columna de piezas, un gran ojo de buey de latón por el que se ve el agua
+     * (azul con haces de sol de día; negra con medusas que brillan de noche); entre las columnas, tubos remachados del
+     * casco con sus manómetros; abajo, el piso de rejilla y la arena con coral.
+     */
+    internal fun DrawScope.salaAbisal(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val laton = Color(0xFFB8913E).copy(alpha = if (oscuro) 0.7f else 0.8f)
+        val agua = if (oscuro) Color(0xFF020D18) else Color(0xFF3F8FB0)
+        val luz = if (oscuro) Color(0xFF5CF2C6) else Color.White
+        val az = java.util.Random(61)
+        val paso = w / n
+        for (i in 0 until n) {
+            val x0 = i * paso + 10 * d; val x1 = (i + 1) * paso - 10 * d; val cx = (x0 + x1) / 2; val r = (x1 - x0) / 2
+            val c = Offset(cx, 14 * d + r)
+            drawCircle(agua.copy(alpha = 0.55f), r, c)
+            clipPath(Path().apply { addOval(Rect(c, r)) }) {
+                if (oscuro) repeat(2) {
+                    val m = Offset(cx + (az.nextFloat() - 0.5f) * r, c.y + (az.nextFloat() - 0.5f) * r); val s = r * 0.18f
+                    drawCircle(luz.copy(alpha = 0.15f), s * 2.2f, m)
+                    drawArc(luz.copy(alpha = 0.7f), 180f, 180f, true, Offset(m.x - s, m.y - s * 0.8f), Size(s * 2, s * 1.6f))
+                    for (k in 0..2) drawLine(luz.copy(alpha = 0.5f), Offset(m.x - s * 0.6f + k * s * 0.6f, m.y), Offset(m.x - s * 0.6f + k * s * 0.6f, m.y + s * 1.6f), 0.8f * d)
+                } else for (k in 0 until 3) {
+                    val xh = c.x - r + r * 0.6f * k + r * 0.2f
+                    drawPath(Path().apply { moveTo(xh, c.y - r); lineTo(xh + r * 0.2f, c.y - r); lineTo(xh + r * 0.5f, c.y + r); lineTo(xh + r * 0.2f, c.y + r); close() }, luz.copy(alpha = 0.18f))
+                }
+                repeat(6) { drawCircle(luz.copy(alpha = 0.5f), (0.8f + az.nextFloat()) * d, Offset(cx + (az.nextFloat() - 0.5f) * r * 1.6f, c.y + (az.nextFloat() - 0.5f) * r * 1.6f), style = Stroke(0.7f * d)) }
+            }
+            drawCircle(laton, r, c, style = Stroke(6 * d))
+            for (k in 0 until 10) { val a = Math.toRadians(k * 36.0); drawCircle(laton, 1.8f * d, Offset(c.x + (r * cos(a)).toFloat(), c.y + (r * sin(a)).toFloat())) }
+            drawArc(Color.White.copy(alpha = 0.3f), 200f, 50f, false, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(2.4f * d))
+        }
+        // Los tubos remachados del casco entre las columnas, con su manómetro.
+        val tubo = (if (oscuro) Color(0xFF3E4A52) else Color(0xFF8A969E)).copy(alpha = 0.55f)
+        for (i in 0..n) {
+            val cx = i * paso
+            drawLine(tubo, Offset(cx, 0f), Offset(cx, h - 18 * d), 7 * d)
+            var y = 40 * d; while (y < h - 30 * d) { drawCircle(laton.copy(alpha = 0.6f), 1.4f * d, Offset(cx - 2.5f * d, y)); drawCircle(laton.copy(alpha = 0.6f), 1.4f * d, Offset(cx + 2.5f * d, y)); y += 34 * d }
+            val m = Offset(cx, h * 0.55f)
+            drawCircle(cs.surface.copy(alpha = 0.9f), 7 * d, m); drawCircle(laton, 7 * d, m, style = Stroke(1.6f * d))
+            drawLine(Color(0xFFC0563F), m, m + Offset(4 * d, -3 * d), 1.2f * d)
+        }
+        // El piso de rejilla y la arena con coral.
+        drawRect(Color(0xFFD9C79A).copy(alpha = if (oscuro) 0.15f else 0.35f), Offset(0f, h - 18 * d), Size(w, 18 * d))
+        var xr = 0f; while (xr < w) { drawLine(tubo, Offset(xr, h - 18 * d), Offset(xr + 6 * d, h), 1f * d); xr += 10 * d }
+        repeat(5) { val x = az.nextFloat() * w; drawLine(Color(0xFFC0563F).copy(alpha = 0.6f), Offset(x, h - 4 * d), Offset(x + 3 * d, h - 16 * d), 2 * d, StrokeCap.Round) }
     }
 
     /**

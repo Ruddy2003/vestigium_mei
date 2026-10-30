@@ -26,6 +26,7 @@ object NombresCompletos {
         TemaId.URSS -> NombresUrss.M[titulo]
         TemaId.GOTICO -> NombresGotico.M[titulo]
         TemaId.ESPACIO -> NombresEspacio.M[titulo]
+        TemaId.ABISMO -> NombresAbismo.M[titulo]
         TemaId.ANDALUS -> NombresAndalus.M[titulo]
         TemaId.MONGOL -> NombresMongol.M[titulo]
         TemaId.RENACIMIENTO -> NombresRenacimiento.M[titulo]

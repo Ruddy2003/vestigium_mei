@@ -129,6 +129,12 @@ object Temas {
     private val MARCAS_GOTICO = mapOf("04-26" to "Consagr.", "08-25" to "S. Luis", "08-15" to "Asunción", "12-25" to "Navidad", "01-06" to "Epifanía", "11-01" to "Todos Santos", "09-29" to "S. Miguel")
     private val MARCAS_ESPACIO = mapOf("04-12" to "Gagarin", "07-20" to "Apolo 11", "10-04" to "Sputnik", "02-18" to "Plutón", "12-24" to "Earthrise",
         "03-20" to "Equinoccio", "06-21" to "Solsticio", "09-22" to "Equinoccio", "12-21" to "Solsticio", "04-24" to "Hubble")
+
+    // Hitos del buceo profundo: el Trieste en la fosa de las Marianas (23 ene 1960), el Alvin hallando las fuentes hidrotermales
+    // de Galápagos (17 feb 1977), el pecio del Titanic (1 sep 1985), Cameron solo en el fondo (26 mar 2012), la batisfera de
+    // Beebe y Barton a 923 m (15 ago 1934), el día de los océanos (8 jun) y el natalicio de Cousteau (11 jun 1910).
+    private val MARCAS_ABISMO = mapOf("01-23" to "Trieste", "02-17" to "Fumarolas", "09-01" to "Titanic", "03-26" to "Deepsea", "08-15" to "Batisfera",
+        "06-08" to "Océanos", "06-11" to "Cousteau")
     private val MARCAS_ANDALUS = mapOf("01-02" to "Granada", "04-30" to "Tariq", "03-30" to "Alhambra")
     private val MARCAS_MONGOL = mapOf("07-11" to "Naadam", "07-12" to "Naadam", "07-13" to "Naadam", "12-29" to "Independ.", "11-26" to "Repúbl.")
     private val MARCAS_RENACIMIENTO = mapOf("04-15" to "Leonardo", "05-02" to "Leonardo †", "03-06" to "Michelangelo", "03-25" to "Capodanno", "06-24" to "S. Giovanni", "04-06" to "Rafael")
@@ -159,6 +165,7 @@ object Temas {
             TemaId.URSS -> MARCAS_URSS[md]
             TemaId.GOTICO -> MARCAS_GOTICO[md]
             TemaId.ESPACIO -> MARCAS_ESPACIO[md]
+            TemaId.ABISMO -> MARCAS_ABISMO[md]
             TemaId.ANDALUS -> MARCAS_ANDALUS[md] ?: fiestaHegira(fecha)
             TemaId.MONGOL -> MARCAS_MONGOL[md]
             TemaId.RENACIMIENTO -> MARCAS_RENACIMIENTO[md]
@@ -262,6 +269,7 @@ object Temas {
         TemaId.BOTANICO -> BOTANICO[titulo]
         TemaId.GOTICO -> GOTICO[titulo]
         TemaId.ESPACIO -> ESPACIO[titulo]
+        TemaId.ABISMO -> ABISMO[titulo]
         TemaId.ANDALUS -> ANDALUS[titulo]
         TemaId.MONGOL -> MONGOL[titulo]
         TemaId.RENACIMIENTO -> RENACIMIENTO[titulo]
@@ -288,6 +296,7 @@ object Temas {
             TemaId.BOTANICO -> mapOf("animo" to "Ánimo", "momento" to "Observación", "gasto" to "Semillas", "sueno" to "Latencia", "habitos" to "Cuidados", "hoy" to "Herbario", "cifra" to "Medida", "foto" to "Lámina", "enfoque" to "Estudio")
             TemaId.GOTICO -> mapOf("animo" to "Ánima", "momento" to "Horas", "gasto" to "Tesoro", "sueno" to "Maitines", "habitos" to "Regla", "hoy" to "Laudes", "cifra" to "Cuenta", "foto" to "Vidriera", "enfoque" to "Lectio")
             TemaId.ESPACIO -> mapOf("animo" to "ESTADO", "momento" to "EVENTO", "gasto" to "COMBUSTIBLE", "sueno" to "SUEÑO", "habitos" to "RUTINAS", "hoy" to "ÓRBITA", "cifra" to "TELEMETRÍA", "foto" to "IMAGEN", "enfoque" to "CONCENTRACIÓN")
+            TemaId.ABISMO -> mapOf("animo" to "SONDEO", "momento" to "AVISTAMIENTO", "gasto" to "LASTRE", "sueno" to "LITERA", "habitos" to "MANIOBRAS", "hoy" to "COTA", "cifra" to "PROFUNDÍMETRO", "foto" to "OJO DE BUEY", "enfoque" to "INMERSIÓN")
             TemaId.ANDALUS -> mapOf("animo" to "الروح", "momento" to "لحظة", "gasto" to "النفقات", "sueno" to "النوم", "habitos" to "العادات", "hoy" to "النهار", "cifra" to "الحساب", "foto" to "صورة", "enfoque" to "دراسة")
             TemaId.MONGOL -> mapOf("animo" to "СЭТГЭЛ", "momento" to "АГШИН", "gasto" to "ЗАРДАЛ", "sueno" to "НОЙР", "habitos" to "ЗАНШИЛ", "hoy" to "ӨДӨР", "cifra" to "ТОО", "foto" to "ЗУРАГ", "enfoque" to "СУРАЛЦАХ")
             TemaId.RENACIMIENTO -> mapOf("animo" to "Animo", "momento" to "Nota", "gasto" to "Conti", "sueno" to "Sonno", "habitos" to "Esercizi", "hoy" to "Giornata", "cifra" to "Misura", "foto" to "Ritratto", "enfoque" to "Studio")
@@ -500,6 +509,18 @@ object Temas {
         "Apariencia" to "CONSOLA", "Obras" to "BIBLIOTECA DE A BORDO", "Mapa" to "CARTA ESTELAR", "Lugares" to "ESTACIONES", "Totales" to "ODÓMETRO",
         "Momentos de este día" to "EVENTOS DEL DÍA", "Datos que faltan" to "SEÑAL PERDIDA", "Resumen semanal" to "INFORME SEMANAL",
         "Avisos y recordatorios" to "ALERTAS", "Contexto" to "CONDICIONES", "Calendario" to "EFEMÉRIDES", "Tu año" to "LA ÓRBITA",
+    )
+
+    private val ABISMO = mapOf(
+        "Mundo" to "EL OCÉANO ENTERO", "Patrimonio Mundial" to "PECIOS Y ARRECIFES DEL MUNDO", "Mapa para rascar" to "CARTA DE LOS MARES SONDEADOS", "Ciudades visitadas" to "PUERTOS DE ESCALA",
+        "Biblioteca de sueños" to "SUEÑOS DE LA LITERA", "Cartas" to "CORREO DE BOYA", "Escribir una carta" to "LASTRAR UNA BOYA", "Carta" to "BOYA", "Conocerte" to "SONDEO DEL BUZO", "Brújula política" to "GIROCOMPÁS POLÍTICO", "Mapas" to "CARTAS BATIMÉTRICAS", "Salud" to "SOPORTE DEL BUZO", "Tus apps" to "INSTRUMENTOS DEL PANEL", "Otras vidas" to "OTROS BUZOS", "Logros" to "PERLAS DEL FONDO", "Tu año en historias" to "LA BAJADA DEL AÑO", "Anoche" to "LA NOCHE EN LA LITERA", "Selladas" to "LASTRADAS", "Listas para abrir" to "BOYAS EN SUPERFICIE", "A otras personas" to "A OTROS BUZOS", "Del pasado" to "SUBIDAS DEL FONDO",
+        "Hoy" to "LA COTA DE HOY", "Línea de tiempo" to "EL CABO DE SONDEO", "Ahora mismo estoy…" to "A ESTA PROFUNDIDAD…",
+        "Día" to "INMERSIÓN DEL DÍA", "Diario" to "CUADERNO DE BUCEO", "Gastos" to "LASTRE GASTADO", "Entender" to "SONAR", "Más" to "ESCOTILLA",
+        "Llenar el día" to "PARTE DE INMERSIÓN", "Biblioteca del diario" to "ARCHIVO DE BITÁCORAS", "Entrada" to "ASIENTO", "Tablero" to "PANEL DE LA GÓNDOLA",
+        "Te falta hoy" to "SONDEOS PENDIENTES", "Hábitos" to "MANIOBRAS", "Sueño" to "LITERA", "Ánimo y cuerpo" to "ÁNIMO Y PRESIÓN", "Hitos" to "COTAS ALCANZADAS",
+        "Apariencia" to "COLOR DEL AGUA", "Obras" to "LA BODEGA DE LIBROS", "Mapa" to "CARTA BATIMÉTRICA", "Lugares" to "FONDEADEROS", "Totales" to "PROFUNDÍMETRO",
+        "Momentos de este día" to "AVISTAMIENTOS DE HOY", "Datos que faltan" to "ZONAS SIN ECO", "Resumen semanal" to "PARTE SEMANAL",
+        "Avisos y recordatorios" to "LLAMADAS DE LA BOYA", "Contexto" to "ESTADO DEL MAR", "Calendario" to "TABLA DE MAREAS", "Tu año" to "EL AÑO BAJO EL AGUA",
     )
     private val ANDALUS = mapOf(
         "Mundo" to "الرحلة", "Patrimonio Mundial" to "العجائب", "Mapa para rascar" to "خريطة الرحلة", "Ciudades visitadas" to "المدن",

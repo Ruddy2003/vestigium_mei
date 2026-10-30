@@ -113,6 +113,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.SEDA -> R.font.almendra_bold
     TemaId.GOTICO -> R.font.gotica_textura          // la textura del vitral; sus números se leen bien
     TemaId.ESPACIO -> R.font.orbitron_bold
+    TemaId.ABISMO -> R.font.batiscafo_semibold      // cifras estrechas de manómetro y profundímetro
     TemaId.ANDALUS -> R.font.kufi_medium
     TemaId.MONGOL -> R.font.philosopher_bold
     TemaId.RENACIMIENTO -> R.font.cormorant_medium  // números de cuaderno, con trazos de pluma
@@ -139,6 +140,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.SEDA -> "Vestigium Mei · diario de caravana"
     TemaId.GOTICO -> "Liber horarum · Vestigium mei"
     TemaId.ESPACIO -> "VESTIGIUM MEI / MISIÓN"
+    TemaId.ABISMO -> "BITÁCORA DE INMERSIÓN · VESTIGIUM MEI"
     TemaId.ANDALUS -> "Vestigium Mei · أثري"
     TemaId.MONGOL -> "МИНИЙ МӨР · Vestigium Mei"
     TemaId.RENACIMIENTO -> "Il taccuino di Vestigium Mei"
@@ -407,6 +409,34 @@ object Reportes {
                     c.save(); c.rotate(-18f, cx, yc)
                     c.drawOval(RectF(cx - 30f, yc - 7f, cx + 30f, yc + 7f), L.trazo(L.terciario, 2.4f))
                     c.restore()
+                    y += 50f
+                }
+                TemaId.ABISMO -> {
+                    // La traza del sonar: el perfil del fondo con sus sondeos verticales y, al centro, una medusa.
+                    val yc = yy + 14f
+                    fun fondo(x: Float) = yc + 12f + 5f * kotlin.math.sin(x / 37f) + 3f * kotlin.math.sin(x / 13f)
+                    val perfil = L.trazo(L.mezcla(L.tinta, L.fondo, 0.35), 1.6f)
+                    val sondeo = L.trazo(L.mezcla(L.primario, L.fondo, 0.4), 1f)
+                    for (lado in listOf(-1f, 1f)) {
+                        val ruta = Path(); var x = cx + lado * 46f; var primero = true
+                        while (if (lado < 0) x >= M else x <= W - M) {
+                            if (primero) { ruta.moveTo(x, fondo(x)); primero = false } else ruta.lineTo(x, fondo(x))
+                            x += lado * 6f
+                        }
+                        c.drawPath(ruta, perfil)
+                        var s = cx + lado * 70f
+                        while (if (lado < 0) s >= M else s <= W - M) {
+                            c.drawLine(s, yc - 12f, s, fondo(s) - 3f, sondeo)
+                            c.drawCircle(s, yc - 12f, 2f, L.relleno(L.primario))
+                            s += lado * 48f
+                        }
+                    }
+                    c.drawArc(RectF(cx - 18f, yc - 20f, cx + 18f, yc + 8f), 180f, 180f, true, L.relleno(L.primario))
+                    val tentaculo = L.trazo(L.terciario, 1.6f)
+                    for (k in 0 until 4) {
+                        val tx = cx - 12f + k * 8f
+                        c.drawPath(Path().apply { moveTo(tx, yc - 6f); quadTo(tx + (if (k % 2 == 0) 6f else -6f), yc + 6f, tx, yc + 18f) }, tentaculo)
+                    }
                     y += 50f
                 }
                 TemaId.ANDALUS -> {

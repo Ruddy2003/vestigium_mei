@@ -634,6 +634,29 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             drawCircle(color.copy(alpha = 0.3f), 8 * u, eco)
             drawCircle(color, 3.5f * u, eco)
         }
+        // El ojo de buey que se inunda: el agua sube por dentro del cristal a medida que pasa la sesión, con su ola y sus
+        // burbujas; alrededor, la brida con doce pernos y la escala del profundímetro.
+        TemaId.ABISMO -> {
+            val ventana = Path().apply { addOval(Rect(c, r)) }
+            clipPath(ventana) {
+                val nivel = c.y + r - 2 * r * p
+                val agua = Path(); var x = c.x - r
+                agua.moveTo(x, c.y + r); agua.lineTo(x, nivel)
+                while (x <= c.x + r) { agua.lineTo(x, nivel + 3 * u * sin((x - c.x) / (14 * u))); x += 3 * u }
+                agua.lineTo(c.x + r, c.y + r); agua.close()
+                drawPath(agua, color.copy(alpha = 0.22f))
+                listOf(0.3f to 0.2f, 0.55f to 0.55f, 0.42f to 0.8f, 0.68f to 0.35f, 0.2f to 0.65f).forEach { (fx, fy) ->
+                    val b = Offset(c.x - r + 2 * r * fx, c.y + r - 2 * r * p * fy)
+                    if (p > 0.05f) drawCircle(color.copy(alpha = 0.5f), (2f + 2f * fx) * u, b, style = Stroke(u))
+                }
+            }
+            drawCircle(tenue.copy(alpha = 0.55f), r, c, style = Stroke(2 * u))
+            drawCircle(pista, R - g * 0.5f, c, style = Stroke(g * 0.8f))
+            for (k in 0 until 12) drawCircle(tenue.copy(alpha = 0.6f), 2.6f * u, en(k / 12f + 1f / 24f, R - g * 0.5f))
+            for (k in 0 until 60) drawLine(tenue.copy(alpha = 0.35f), en(k / 60f, r - (if (k % 5 == 0) 9 else 4) * u), en(k / 60f, r), 0.8f * u)
+            arco(color, 0f, p, R - g * 0.5f, 3 * u, StrokeCap.Round)
+            drawCircle(color, 3.5f * u, en(p, R - g * 0.5f))
+        }
         // Astrolabio: el limbo graduado, la red en estrella de ocho puntas detrás de la cuenta, el anillo arriba y la alidada.
         TemaId.ANDALUS -> {
             val a1 = r - g * 0.5f; val a2 = r + g * 0.5f; val limbo = tenue.copy(alpha = 0.55f)
@@ -832,6 +855,14 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             val rn = minOf(h * 0.42f, w / 4)
             addRect(Rect(x + rn, y + h * 0.32f, x + w - rn, y + h * 0.68f))
             addOval(Rect(Offset(x + rn, y + h / 2), rn)); addOval(Rect(Offset(x + w - rn, y + h / 2), rn))
+        }
+        // Una ristra de burbujas: cada pieza de la sesión es una fila de burbujas de varios tamaños.
+        TemaId.ABISMO -> {
+            val n = (w / (h * 0.8f)).toInt().coerceAtLeast(1); val paso = w / n
+            for (i in 0 until n) {
+                val rr = h * (if (i % 3 == 1) 0.42f else 0.32f)
+                addOval(Rect(Offset(x + paso * (i + 0.5f), y + h / 2 + (if (i % 2 == 0) -h * 0.08f else h * 0.08f)), minOf(rr, paso * 0.48f)))
+            }
         }
         TemaId.ANDALUS -> {
             val n = (w / (h * 1.1f)).toInt().coerceAtLeast(1); val paso = w / n

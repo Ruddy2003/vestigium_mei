@@ -151,6 +151,7 @@ object LibroDiario {
         TemaId.URSS -> Fuentes(R.font.russo, R.font.obrera_regular)
         TemaId.GOTICO -> Fuentes(R.font.gotica_textura, R.font.goudy_regular)
         TemaId.ESPACIO -> Fuentes(R.font.orbitron_bold, R.font.grotesk_regular)
+        TemaId.ABISMO -> Fuentes(R.font.batiscafo_semibold, R.font.atkinson_regular)
         TemaId.ANDALUS -> Fuentes(R.font.kufi_medium, R.font.amiri_regular)
         TemaId.MONGOL -> Fuentes(R.font.philosopher_bold, R.font.fira_regular)
         TemaId.RENACIMIENTO -> Fuentes(R.font.italianno, R.font.cormorant_regular)
@@ -219,6 +220,10 @@ object LibroDiario {
             TemaId.SEDA -> "article{border-top:2px solid $p;border-right:6px solid $s;padding-right:14px}" + capitular("2.6em", p)
             TemaId.GOTICO -> "article{border-top:0;padding-top:24px;background:radial-gradient(circle at 9px 16px,transparent 7px,$p 7px 8px,transparent 8px) 0 0/18px 12px repeat-x}" + capitular("3.4em", p)
             TemaId.ESPACIO -> "article{border:1px solid $p;border-radius:16px;padding:18px;margin-bottom:18px}.fecha{text-transform:uppercase;letter-spacing:.12em}"
+            // La regla del profundímetro a la izquierda (una raya cada renglón) y la superficie ondulada encima de cada día.
+            TemaId.ABISMO -> "article{border-top:0;border-left:3px solid $p;padding-left:16px;background:repeating-linear-gradient(180deg,transparent 0 22px,$v 22px 23px) 0 0/8px 100% no-repeat}" +
+                "article::before{content:'';display:block;height:8px;margin-bottom:10px;background:radial-gradient(circle at 8px -4px,transparent 9px,$p 9px 10px,transparent 10px) 0 0/16px 8px repeat-x}" +
+                ".fecha{text-transform:uppercase;letter-spacing:.06em}" + capitular("3em", p)
             TemaId.ANDALUS -> "article{border-top:0}article::before{content:'';display:block;height:10px;margin-bottom:12px;" +
                 "background:conic-gradient(from 45deg,$p 25%,transparent 0 50%,$p 0 75%,transparent 0) 0 0/10px 10px repeat-x}" + capitular("2.6em", p)
             TemaId.MONGOL -> "article{border:2px dashed $s;border-radius:10px;padding:18px;margin-bottom:18px}" + capitular("2.4em", p)
@@ -356,6 +361,7 @@ object LibroDiario {
             TemaId.SEDA -> Medidas(12.5f, aire)
             TemaId.GOTICO -> Medidas(12.5f, aire)
             TemaId.ESPACIO -> Medidas(11f, aire)
+            TemaId.ABISMO -> Medidas(11.5f, aire)
             TemaId.ANDALUS -> Medidas(12.5f, aire)
             TemaId.MONGOL -> Medidas(11f, aire)
             TemaId.RENACIMIENTO -> Medidas(12.5f, aire)
@@ -401,6 +407,8 @@ object LibroDiario {
         TemaId.GOTICO -> Inicial(R.font.gotica_textura, 2.7f)
         // La primera palabra en mayúsculas de la sala de control.
         TemaId.ESPACIO -> Inicial(R.font.orbitron_bold, 1.1f, palabra = true, mayusculas = true)
+        // La capitular estrecha de rótulo de instrumento, en el color de la luz del fondo.
+        TemaId.ABISMO -> Inicial(R.font.batiscafo_semibold, 2.6f, tinta = true)
         TemaId.ANDALUS -> Inicial(R.font.kufi_bold, 2.2f)
         TemaId.MONGOL -> Inicial(R.font.philosopher_bold, 2.1f)
         // La inicial a mano, en sanguina.
@@ -550,6 +558,12 @@ object LibroDiario {
                 lados(12f)
                 cv.drawCircle(cx, y, 3.4f, relleno)
                 cv.save(); cv.rotate(-20f, cx, y); cv.drawOval(cx - 8.5f, y - 2.4f, cx + 8.5f, y + 2.4f, Paint(trazo).apply { strokeWidth = 0.8f }); cv.restore()
+            }
+            TemaId.ABISMO -> {
+                // Una medusa entre dos líneas: la campana y tres tentáculos.
+                lados(12f)
+                cv.drawArc(cx - 6f, y - 6f, cx + 6f, y + 2f, 180f, 180f, true, relleno)
+                listOf(-3.5f, 0f, 3.5f).forEach { dx -> cv.drawPath(ruta { moveTo(cx + dx, y - 1f); quadTo(cx + dx - 2f, y + 3f, cx + dx, y + 7f) }, trazo) }
             }
             TemaId.ANDALUS -> {
                 // La estrella de ocho puntas de dos cuadrados.
@@ -701,6 +715,13 @@ object LibroDiario {
                 // Esquinas redondas y una mira en el centro de cada lado.
                 cv.drawRoundRect(22f, 22f, A - 22f, B - 22f, 16f, 16f, trazo)
                 listOf(A / 2 to 22f, A / 2 to B - 22f, 22f to B / 2, A - 22f to B / 2).forEach { (x, y) -> cv.drawCircle(x, y, 4f, fino); cv.drawLine(x - 8f, y, x + 8f, y, fino); cv.drawLine(x, y - 8f, x, y + 8f, fino) }
+            }
+            TemaId.ABISMO -> {
+                // La plancha del casco: el borde con su fila de remaches y un ojo de buey en cada esquina.
+                cv.drawRoundRect(22f, 22f, A - 22f, B - 22f, 12f, 12f, trazo)
+                var x = 60f; while (x < A - 60f) { cv.drawCircle(x, 30f, 1.6f, relleno); cv.drawCircle(x, B - 30f, 1.6f, relleno); x += 24f }
+                var yy = 60f; while (yy < B - 60f) { cv.drawCircle(30f, yy, 1.6f, relleno); cv.drawCircle(A - 30f, yy, 1.6f, relleno); yy += 24f }
+                esquinas.forEach { (ex, ey) -> val (sx, sy) = haciaDentro(ex, ey); cv.drawCircle(ex + sx * 12f, ey + sy * 12f, 9f, trazo); cv.drawCircle(ex + sx * 12f, ey + sy * 12f, 5f, fino) }
             }
             TemaId.ANDALUS -> {
                 // Doble filete y una estrella de ocho puntas en cada esquina.

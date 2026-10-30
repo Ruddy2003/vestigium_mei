@@ -165,6 +165,7 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.SEDA -> listOf("moneda de cobre", "lingote de plata", "oro de Samarcanda", "seda del emperador")
     TemaId.GOTICO -> listOf("cirio", "cáliz de plata", "custodia de oro", "reliquia")
     TemaId.ESPACIO -> listOf("magnitud 3", "magnitud 2", "magnitud 1", "supernova")
+    TemaId.ABISMO -> listOf("a 200 m", "a 1,000 m", "a 4,000 m", "al fondo de la fosa")
     TemaId.ANDALUS -> listOf("feluz de cobre", "dírham de plata", "dinar de oro", "dinar de la Alhambra")
     TemaId.MONGOL -> listOf("paiza de madera", "paiza de plata", "paiza de oro", "paiza del Gran Kan")
     TemaId.RENACIMIENTO -> listOf("bronzo", "argento", "oro", "capolavoro")
@@ -433,6 +434,22 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             for (brazo in 0 until 3) for (k in 0 until 40) {
                 val a = Math.toRadians(brazo * 120.0 + k * 9.0)
                 drawCircle(luz.copy(alpha = 0.22f * (1f - k / 44f)), (2.6f - k * 0.04f) * u, pt(m * (0.05f + k * 0.011f), a))
+            }
+        }
+        TemaId.ABISMO -> {
+            // La pantalla del sonar: anillos de distancia, el haz que barre girando y los ecos que deja encendidos.
+            val luz = if (oscuro) cs.primary else cs.primary.copy(alpha = 0.8f)
+            for (k in 1..4) drawCircle(luz.copy(alpha = 0.10f), m * 0.1f * k, c, style = Stroke(1f * u))
+            drawLine(luz.copy(alpha = 0.08f), Offset(c.x - m * 0.42f, c.y), Offset(c.x + m * 0.42f, c.y), 0.8f * u)
+            drawLine(luz.copy(alpha = 0.08f), Offset(c.x, c.y - m * 0.42f), Offset(c.x, c.y + m * 0.42f), 0.8f * u)
+            for (k in 0 until 18) {
+                val a = Math.toRadians(giro.toDouble() - k * 2.5)
+                drawLine(luz.copy(alpha = 0.2f * (1f - k / 18f)), c, pt(m * 0.4f, a), 2.4f * u)
+            }
+            listOf(0.17f to 30.0, 0.31f to 140.0, 0.24f to 250.0, 0.36f to 320.0).forEach { (r, ang) ->
+                val atras = ((giro - ang) % 360.0 + 360.0) % 360.0
+                val brillo = (1f - atras.toFloat() / 360f)
+                drawCircle(luz.copy(alpha = 0.45f * brillo), (2.4f + 2f * brillo) * u, pt(m * r, Math.toRadians(ang)))
             }
         }
         TemaId.ANDALUS -> rotate(giro * 0.25f, c) {

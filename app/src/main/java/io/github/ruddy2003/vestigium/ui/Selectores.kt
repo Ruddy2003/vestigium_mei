@@ -291,6 +291,8 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
         val w = s.width; val h = s.height
         moveTo(w * 0.25f, 0f); lineTo(w * 0.75f, 0f); lineTo(w, h / 2); lineTo(w * 0.75f, h); lineTo(w * 0.25f, h); lineTo(0f, h / 2); close()
     }
+    // Una burbuja: el círculo entero.
+    TemaId.ABISMO -> GenericShape { s, _ -> addOval(androidx.compose.ui.geometry.Rect(0f, 0f, s.width, s.height)) }
     // Estrella de ocho puntas.
     TemaId.ANDALUS -> GenericShape { s, _ ->
         val c = Offset(s.width / 2, s.height / 2); val r = minOf(s.width, s.height) / 2
@@ -346,6 +348,11 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.BOTANICO -> {}
         TemaId.GOTICO -> {}
         TemaId.ESPACIO -> {}
+        // El brillo de la burbuja, arriba a la izquierda.
+        TemaId.ABISMO -> {
+            val r = minOf(s.width, s.height) / 2
+            drawArc(fondo.copy(alpha = 0.55f), 200f, 60f, false, Offset(s.width / 2 - r * 0.7f, s.height / 2 - r * 0.7f), Size(r * 1.4f, r * 1.4f), style = Stroke(r * 0.12f))
+        }
         TemaId.ANDALUS -> {}
         TemaId.MONGOL -> {}
         TemaId.RENACIMIENTO -> {}

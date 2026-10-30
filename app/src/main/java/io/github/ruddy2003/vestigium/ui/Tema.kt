@@ -99,6 +99,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     SEDA("seda", "Ruta de la Seda", "Seda, lapislázuli, cinabrio y oro. Monedas con agujero, caravanas y números chinos.", Epoca.EDAD_MEDIA),
     GOTICO("gotico", "Gótico", "Una capilla de vitrales: azul de bóveda con estrellas de oro, cristal rubí y zafiro, letra textura. Horas canónicas.", Epoca.EDAD_MEDIA),
     ESPACIO("espacio", "Espacio", "Estrellas, nebulosas y la sala de control. Fecha en día juliano, como en los observatorios.", Epoca.FUTURO),
+    ABISMO("abismo", "Abismo", "La bajada de un batiscafo: de día, el azul de la zona iluminada; de noche, la zona abisal y su luz viva. Sonar, medusas y la racha en metros de profundidad.", Epoca.CONTEMPORANEA),
     ANDALUS("andalus", "Al-Ándalus", "Yeserías, azulejos de lazo y oro de la Alhambra. Títulos en árabe y fecha del calendario hégira.", Epoca.EDAD_MEDIA),
     MONGOL("mongol", "Mongol", "El Cielo Azul Eterno, fieltro y oro de la estepa. Títulos en mongol y el año del animal.", Epoca.EDAD_MEDIA),
     RENACIMIENTO("renacimiento", "Renacimiento", "Los cuadernos de Leonardo: tinta sepia, sanguina y trazos de construcción. Títulos en italiano.", Epoca.EDAD_MODERNA),
@@ -284,6 +285,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.URSS -> if (oscuro) urssOscuro else urssClaro
     TemaId.GOTICO -> if (oscuro) goticoOscuro else goticoClaro
     TemaId.ESPACIO -> if (oscuro) espacioOscuro else espacioClaro
+    TemaId.ABISMO -> if (oscuro) abismoOscuro else abismoClaro
     TemaId.ANDALUS -> if (oscuro) andalusOscuro else andalusClaro
     TemaId.MONGOL -> if (oscuro) mongolOscuro else mongolClaro
     TemaId.RENACIMIENTO -> if (oscuro) renacimientoOscuro else renacimientoClaro
@@ -309,6 +311,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.URSS -> tipoUrss
     TemaId.GOTICO -> tipoGotico
     TemaId.ESPACIO -> if (oscuro) tipoEspacioOscuro else tipoEspacio
+    TemaId.ABISMO -> if (oscuro) tipoAbismoOscuro else tipoAbismo
     TemaId.ANDALUS -> tipoAndalus
     TemaId.MONGOL -> tipoMongol
     TemaId.RENACIMIENTO -> tipoRenacimiento
@@ -339,6 +342,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.SEDA -> 64f to 0.5f          // Almendra
     TemaId.GOTICO -> 66f to 0.5f        // textura
     TemaId.ESPACIO -> 48f to 2f         // Orbitron, ancha y gruesa
+    TemaId.ABISMO -> 70f to 0.5f        // Barlow Condensed, angosta como un rótulo de instrumento
     TemaId.ANDALUS -> 60f to 0.5f       // Kufi
     TemaId.MONGOL -> 62f to 1f          // Filosofo
     TemaId.RENACIMIENTO -> 88f to 0f    // Italianno, caligráfica y chica
@@ -370,6 +374,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.URSS -> Esquinas(0, Esquina.REDONDA)
     TemaId.GOTICO -> Esquinas(8, Esquina.ARCO)             // el ventanal
     TemaId.ESPACIO -> Esquinas(16, Esquina.REDONDA)
+    TemaId.ABISMO -> Esquinas(15, Esquina.REDONDA)         // la escotilla del batiscafo
     TemaId.ANDALUS -> Esquinas(12, Esquina.ARCO)           // el arco de herradura
     TemaId.MONGOL -> Esquinas(9, Esquina.REDONDA)          // la yurta
     TemaId.RENACIMIENTO -> Esquinas(3, Esquina.HOJA)       // la página del cuaderno
@@ -541,6 +546,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.URSS -> "PLAN"
         TemaId.GOTICO -> "Laudes"
         TemaId.ESPACIO -> "ÓRBITA"
+        TemaId.ABISMO -> "COTA"
         TemaId.ANDALUS -> "النهار"
         TemaId.MONGOL -> "ӨДӨР"
         TemaId.RENACIMIENTO -> "Giornata"
@@ -565,6 +571,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.URSS -> "ОКТЯБРЬ"
         TemaId.GOTICO -> "hora de vísperas"
         TemaId.ESPACIO -> "JD 2461331"
+        TemaId.ABISMO -> "−290 m · 30 bar"
         TemaId.ANDALUS -> "1448 H"
         TemaId.MONGOL -> "Морин жил"
         TemaId.RENACIMIENTO -> "addì 17 d'ottobre"
@@ -590,6 +597,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.SEDA -> 12 to 20
         TemaId.GOTICO -> 24 to 8
         TemaId.ESPACIO -> 18 to 14
+        TemaId.ABISMO -> 20 to 12
         TemaId.ANDALUS -> 22 to 10
         TemaId.MONGOL -> 14 to 18
         TemaId.RENACIMIENTO -> 16 to 16
@@ -615,6 +623,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.SEDA -> 10
         TemaId.GOTICO -> 12
         TemaId.ESPACIO -> 10
+        TemaId.ABISMO -> 11
         TemaId.ANDALUS -> 12
         TemaId.MONGOL -> 10
         TemaId.RENACIMIENTO -> 16
@@ -713,6 +722,17 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
     }
     // Cápsula: nariz redonda arriba, base casi recta.
     TemaId.ESPACIO -> RoundedCornerShape(topStart = 26.dp, topEnd = 26.dp, bottomEnd = 6.dp, bottomStart = 6.dp)
+    // La superficie del mar: el borde de arriba es una ola mansa; abajo, el casco redondeado.
+    TemaId.ABISMO -> GenericShape { s, _ ->
+        val o = s.height * 0.05f; val r = s.minDimension * 0.12f; val n = 3
+        moveTo(0f, o)
+        for (i in 0 until n) {
+            val x0 = s.width * i / n; val x1 = s.width * (i + 1) / n
+            quadraticTo((x0 + x1) / 2, if (i % 2 == 0) 0f else o * 2, x1, o)
+        }
+        lineTo(s.width, s.height - r); quadraticTo(s.width, s.height, s.width - r, s.height)
+        lineTo(r, s.height); quadraticTo(0f, s.height, 0f, s.height - r); close()
+    }
     // Arco de medio punto peraltado.
     TemaId.ANDALUS -> GenericShape { s, _ ->
         val a = s.height * 0.18f
@@ -787,6 +807,14 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         TemaId.GOTICO -> drawPath(Path().apply { moveTo(w * 0.15f, h); lineTo(w * 0.15f, h * 0.4f); quadraticTo(w * 0.15f, h * 0.08f, cx, 0f); quadraticTo(w * 0.85f, h * 0.08f, w * 0.85f, h * 0.4f); lineTo(w * 0.85f, h); close() }, c)
         // Planeta con anillo.
         TemaId.ESPACIO -> { drawCircle(c, r * 0.62f); drawOval(c, Offset(0f, cy - h * 0.14f), Size(w, h * 0.28f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.08f)) }
+        // Medusa: la campana y tres tentáculos.
+        TemaId.ABISMO -> {
+            drawArc(c, 180f, 180f, true, Offset(w * 0.1f, h * 0.05f), Size(w * 0.8f, h * 0.8f))
+            for (k in 0..2) {
+                val x = w * (0.28f + 0.22f * k)
+                drawPath(Path().apply { moveTo(x, h * 0.45f); quadraticTo(x - w * 0.1f, h * 0.7f, x, h) }, c, style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.08f))
+            }
+        }
         // Estrella de ocho puntas.
         TemaId.ANDALUS -> drawPath(poligono(8, -90f, r * 0.765f), c)
         // Yurta.

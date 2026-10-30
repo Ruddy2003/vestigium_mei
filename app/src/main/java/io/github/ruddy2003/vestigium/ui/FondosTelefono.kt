@@ -172,6 +172,7 @@ object FondosTelefono {
         TemaId.SEDA -> "絲路 · VESTIGIUM"
         TemaId.GOTICO -> "Horae vestigii"
         TemaId.ESPACIO -> "BITÁCORA DE A BORDO · VM-1"
+        TemaId.ABISMO -> "BITÁCORA DEL BATISCAFO · INMERSIÓN"
         TemaId.ANDALUS -> "أثري"
         TemaId.MONGOL -> "МИНИЙ МӨР"
         TemaId.RENACIMIENTO -> "Il mio vestigio"
@@ -417,6 +418,28 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     val q = haciaDentro(c, 16 * u)
                     drawCircle(tenue, 4 * u, q, style = Stroke(1f * u))
                     drawLine(tenue, q - Offset(7 * u, 0f), q + Offset(7 * u, 0f), 0.8f * u); drawLine(tenue, q - Offset(0f, 7 * u), q + Offset(0f, 7 * u), 0.8f * u)
+                }
+            }
+            TemaId.ABISMO -> {
+                // La superficie ondulada arriba, la regla del profundímetro bajando por la izquierda (más apretada cuanto más
+                // hondo) y, en las esquinas de abajo, dos ojos de buey con sus pernos.
+                val ola = Path(); var x = izq
+                ola.moveTo(izq, arr)
+                while (x <= der) { ola.lineTo(x, arr + 4 * u * kotlin.math.sin((x - izq) / (22 * u))); x += 3 * u }
+                drawPath(ola, col, style = Stroke(1.4f * u))
+                var y = arr + 30 * u; var i = 0; var paso = 22 * u
+                while (y < aba - 30 * u) {
+                    drawLine(tenue, Offset(izq, y), Offset(izq + (if (i % 5 == 0) 12 * u else 5 * u), y), 1f * u)
+                    y += paso; paso = maxOf(paso * 0.97f, 8 * u); i++
+                }
+                drawLine(tenue, Offset(izq, arr + 30 * u), Offset(izq, aba - 30 * u), 0.8f * u)
+                listOf(Offset(izq, aba), Offset(der, aba)).forEach { c ->
+                    val q = haciaDentro(c, 20 * u)
+                    drawCircle(col, 10 * u, q, style = Stroke(2.2f * u)); drawCircle(tenue, 6.5f * u, q, style = Stroke(0.8f * u))
+                    for (k in 0 until 6) {
+                        val a = Math.toRadians(30.0 + 60.0 * k)
+                        drawCircle(col, 1.3f * u, q + Offset((10 * u * kotlin.math.cos(a)).toFloat(), (10 * u * kotlin.math.sin(a)).toFloat()))
+                    }
                 }
             }
             TemaId.ANDALUS -> {
@@ -708,6 +731,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.URSS -> R.drawable.logo_urss
     TemaId.GOTICO -> R.drawable.logo_gotico
     TemaId.ESPACIO -> R.drawable.logo_espacio
+    TemaId.ABISMO -> R.drawable.logo_abismo
     TemaId.ANDALUS -> R.drawable.logo_andalus
     TemaId.MONGOL -> R.drawable.logo_mongol
     TemaId.RENACIMIENTO -> R.drawable.logo_renacimiento

@@ -243,6 +243,9 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.GOTICO -> BloqueoMarco(TextosBloqueo("Vestigium mei", "✠ Clausura: el breviario está sellado.", "Abrir la clausura"), arriba = 60, reintentar = reintentar) { cs -> bloqueoOjiva(cs) }
         TemaId.ESPACIO -> BloqueoFicha(TextosBloqueo("VESTIGIUM MEI", "⋆ secuencia de acceso", "INICIAR ACOPLAMIENTO",
             listOf("ESCOTILLA", "SELLADA", "SOPORTE VITAL", "NOMINAL", "TRIPULANTE", "SIN VERIFICAR")), reintentar) { cs -> bloqueoEscotilla(cs) }
+        // La escotilla del batiscafo cerrada a presión: el sello detrás del ojo de buey y la lista antes de abrir.
+        TemaId.ABISMO -> BloqueoFicha(TextosBloqueo("VESTIGIUM MEI", "≈ escotilla cerrada a presión", "IGUALAR PRESIÓN Y ABRIR",
+            listOf("ESCOTILLA", "ESTANCA", "PRESIÓN", "NIVELADA", "BUZO", "SIN IDENTIFICAR")), reintentar) { cs -> bloqueoOjoDeBuey(cs) }
         TemaId.ANDALUS -> BloqueoMarco(TextosBloqueo("آثاري", "❋ El cofre de los días está cerrado con llave.", "Abrir el cofre"), arriba = 30, reintentar = reintentar) { cs -> bloqueoHerradura(cs) }
         // Bajo el cielo: el sello grande, como el sol sobre la estepa, y el título debajo.
         TemaId.MONGOL -> BloqueoCentrado(TextosBloqueo("МИНИЙ МӨР", "◆ дэвтэр битүүмжлэгдсэн · tu diario está sellado", "НЭЭХ"), tituloArriba = false, sello = 190, reintentar = reintentar)
@@ -608,6 +611,26 @@ private fun DrawScope.bloqueoEscotilla(cs: ColorScheme) {
     }
 }
 
+/** El ojo de buey del Abismo: brida gruesa con ocho pernos, el cristal con su reflejo y la escala del profundímetro. */
+private fun DrawScope.bloqueoOjoDeBuey(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val r = size.minDimension / 2 - 4 * u
+    drawCircle(cs.secondary.copy(alpha = 0.85f), r, center, style = Stroke(9f * u))
+    drawCircle(cs.primary.copy(alpha = 0.5f), r - 9 * u, center, style = Stroke(1.2f * u))
+    for (i in 0 until 8) {
+        val a = Math.toRadians(22.5 + i * 45.0)
+        val p = Offset(center.x + (r * kotlin.math.cos(a)).toFloat(), center.y + (r * kotlin.math.sin(a)).toFloat())
+        drawCircle(cs.surface, 2.8f * u, p); drawCircle(cs.secondary, 1.8f * u, p)
+    }
+    for (k in 0 until 40) {
+        val a = Math.toRadians(-210.0 + k * 6.0)
+        val l = if (k % 5 == 0) 6 * u else 3 * u
+        val r0 = r - 12 * u
+        drawLine(cs.primary.copy(alpha = 0.45f), Offset(center.x + (r0 * kotlin.math.cos(a)).toFloat(), center.y + (r0 * kotlin.math.sin(a)).toFloat()),
+            Offset(center.x + ((r0 - l) * kotlin.math.cos(a)).toFloat(), center.y + ((r0 - l) * kotlin.math.sin(a)).toFloat()), 0.8f * u)
+    }
+    drawArc(Color.White.copy(alpha = 0.35f), 200f, 55f, false, Offset(center.x - r * 0.78f, center.y - r * 0.78f), Size(r * 1.56f, r * 1.56f), style = Stroke(2.4f * u))
+}
+
 // ------------------------------------------------------------------------------------------------ barra inferior
 
 private data class Pestana(val id: String, val nombre: String)
@@ -696,6 +719,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.SEDA -> false
     TemaId.GOTICO -> false
     TemaId.ESPACIO -> false
+    TemaId.ABISMO -> true            // el agua llena la pestaña activa
     TemaId.ANDALUS -> true
     TemaId.MONGOL -> true
     TemaId.RENACIMIENTO -> false
@@ -722,6 +746,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.SEDA -> false
     TemaId.GOTICO -> true
     TemaId.ESPACIO -> true
+    TemaId.ABISMO -> true
     TemaId.ANDALUS -> true
     TemaId.MONGOL -> true
     TemaId.RENACIMIENTO -> false
@@ -866,6 +891,15 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         TemaId.ESPACIO -> girar(-16f, Offset(cx, cy)) {
             drawOval(c, Offset(cx - 27 * u, cy - 9 * u), Size(54 * u, 18 * u), style = Stroke(1.3f * u))
             drawCircle(cs.tertiary.copy(alpha = p), 2.6f * u, Offset(cx + 27 * u, cy))
+        }
+        // El agua que sube detrás de la pestaña activa, con su ola y una burbuja.
+        TemaId.ABISMO -> {
+            val ola = Path(); var x = cx - 26 * u; val y0 = cy + 9 * u - 18 * u * p
+            ola.moveTo(x, cy + 10 * u); ola.lineTo(x, y0)
+            while (x <= cx + 26 * u) { ola.lineTo(x, y0 + 1.6f * u * kotlin.math.sin((x - cx) / (5 * u))); x += 2 * u }
+            ola.lineTo(cx + 26 * u, cy + 10 * u); ola.close()
+            drawPath(ola, c)
+            drawCircle(cs.tertiary.copy(alpha = p), 2.2f * u, Offset(cx + 18 * u, y0 - 5 * u), style = Stroke(0.9f * u))
         }
         // Estrella de ocho puntas (dos cuadrados cruzados).
         TemaId.ANDALUS -> drawPath(barraPoligono(cx, cy, 16 * u, 8, -90f, 16 * u * 0.765f), c)
@@ -1014,6 +1048,16 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawCircle(c, 19 * u, Offset(cx, cy))
             girar(-20f, Offset(cx, cy)) { drawOval(cs.tertiary, Offset(cx - 27 * u, cy - 7 * u), Size(54 * u, 14 * u), style = Stroke(1.8f * u)) }
         }
+        // El botón del centro es un ojo de buey: el cristal lleno y la brida con seis pernos.
+        TemaId.ABISMO -> {
+            drawCircle(cs.secondary, 22 * u, Offset(cx, cy))
+            drawCircle(c, 17 * u, Offset(cx, cy))
+            for (i in 0 until 6) {
+                val a = Math.toRadians(i * 60.0)
+                drawCircle(androidx.compose.ui.graphics.lerp(cs.secondary, Color.Black, 0.35f), 1.6f * u, Offset(cx + (19.5f * u * kotlin.math.cos(a)).toFloat(), cy + (19.5f * u * kotlin.math.sin(a)).toFloat()))
+            }
+            drawArc(Color.White.copy(alpha = 0.35f), 200f, 60f, false, Offset(cx - 12 * u, cy - 12 * u), Size(24 * u, 24 * u), style = Stroke(2 * u))
+        }
         // Estrella de ocho puntas con un octógono dentro.
         TemaId.ANDALUS -> {
             drawPath(barraPoligono(cx, cy, 27 * u, 8, -90f, 27 * u * 0.765f), c)
@@ -1107,6 +1151,13 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.ESPACIO -> {
             var i = 0; var x = 2 * u
             while (x < w) { if (i % 7 == 0) drawCircle(cs.tertiary, 1.1f * u, Offset(x, 1.5f * u)) else drawCircle(acento, 0.5f * u, Offset(x, 1.5f * u)); x += 4 * u; i++ }
+        }
+        // La superficie del agua: una ola continua.
+        TemaId.ABISMO -> {
+            val p = Path(); var x = 0f
+            p.moveTo(0f, 2f * u)
+            while (x <= w) { p.lineTo(x, 2f * u + 1.2f * u * kotlin.math.sin(x / (6 * u))); x += 2 * u }
+            drawPath(p, acento, style = Stroke(1f * u))
         }
         // Lazo: dos zigzags que se cruzan.
         TemaId.ANDALUS -> listOf(0f, 4 * u).forEach { fase ->
@@ -1391,6 +1442,8 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.GOTICO -> (fadeIn(t(460)) + expandVertically(t(420), expandFrom = Alignment.Bottom) { it / 4 * 3 }) togetherWith fadeOut(t(220))
         // Acoplamiento: entra desde lejos, pequeña, y se ajusta; la anterior se aleja hacia la cámara.
         TemaId.ESPACIO -> (scaleIn(t(320, frena), initialScale = 0.86f) + fadeIn(t(260))) togetherWith (scaleOut(t(200), targetScale = 1.08f) + fadeOut(t(200)))
+        // Bajar: la nueva entra desde arriba despacio, como lastrada; la anterior se hunde y se apaga.
+        TemaId.ABISMO -> (slideInVertically(t(420, frena)) { -it / 6 } + fadeIn(t(380))) togetherWith (slideOutVertically(t(300)) { it / 8 } + fadeOut(t(260)))
         // Puerta de arco que se abre desde el centro hacia los lados.
         TemaId.ANDALUS -> (androidx.compose.animation.expandHorizontally(t(360), expandFrom = Alignment.CenterHorizontally) { it / 3 } + fadeIn(t(300))) togetherWith fadeOut(t(180))
         // Jinete de la estepa: empuja a la anterior; las dos corren juntas de lado.

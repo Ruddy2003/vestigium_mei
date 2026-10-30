@@ -292,6 +292,57 @@ def espacio(tam):
         d2.ellipse([xs[i] - s, ys[i] - s, xs[i] + s, ys[i] + s], fill=(255, 255, 255, 255))
     guardar(fondo, capa, 'espacio')
 
+# ------------------------------------------------------------------ abismo
+def abismo(tam):
+    """El agua que se oscurece hacia abajo, con los haces de la superficie arriba, nieve marina, burbujas y medusas
+    lejanas; la huella brilla con luz propia (verde agua, con un velo violeta), como un animal del fondo."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    prof = yy / tam
+    base = mezcla(np.zeros((tam, tam, 3)) + col('#0E5A78'), col('#02090F'), np.clip(prof * 1.25, 0, 1))
+    # Haces de luz que bajan en diagonal desde la superficie y se apagan con la profundidad.
+    haces = np.clip(np.sin((xx + yy * 0.35) / tam * 18) * np.sin((xx - yy * 0.2) / tam * 7 + 1.3), 0, 1) ** 3
+    base = mezcla(base, col('#9FE3F0'), haces * np.clip(0.55 - prof, 0, 1) * 0.55)
+    n1 = ruido(tam, tam / 12, 61)
+    base = mezcla(base, col('#123A55'), np.clip((n1 - 0.5) * 2, 0, 1) * 0.35)
+    fondo = a_img(base).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    r = np.random.default_rng(62)
+    # Nieve marina.
+    for _ in range(int(tam * 0.9)):
+        x, y = r.random() * tam, r.random() * tam; s = 0.5 + r.random() * 0.9
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(210, 235, 235, int(60 + 100 * r.random())))
+    # Burbujas que suben.
+    for _ in range(26):
+        x, y = r.random() * tam, r.random() * tam * 0.7; s = 2 + r.random() * 6
+        d.ellipse([x - s, y - s, x + s, y + s], outline=(220, 245, 250, 150), width=1)
+        d.ellipse([x - s * 0.45, y - s * 0.55, x - s * 0.15, y - s * 0.25], fill=(255, 255, 255, 140))
+    # Medusas lejanas en lo hondo, con su luz.
+    for (cx, cy, rr, colm) in ((tam * 0.12, tam * 0.78, tam * 0.05, (229, 155, 255)), (tam * 0.86, tam * 0.7, tam * 0.04, (92, 242, 198)),
+                               (tam * 0.8, tam * 0.9, tam * 0.03, (63, 169, 255))):
+        halo = Image.new('RGBA', (tam, tam), (0, 0, 0, 0)); dh = ImageDraw.Draw(halo, 'RGBA')
+        dh.ellipse([cx - rr * 2.4, cy - rr * 2.4, cx + rr * 2.4, cy + rr * 2.4], fill=colm + (70,))
+        fondo.alpha_composite(halo.filter(ImageFilter.GaussianBlur(rr)))
+        d = ImageDraw.Draw(fondo, 'RGBA')
+        d.pieslice([cx - rr, cy - rr * 0.8, cx + rr, cy + rr * 0.8], 180, 360, fill=colm + (190,))
+        for k in range(4):
+            tx = cx - rr * 0.7 + k * rr * 0.47
+            d.line([(tx, cy), (tx + rr * 0.2 * (1 if k % 2 else -1), cy + rr * 0.9), (tx, cy + rr * 1.8)], fill=colm + (150,), width=2)
+    fondo = fondo.convert('RGB')
+    # La huella de luz viva: verde agua en el centro, violeta en las orillas, con halo y chispas.
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    tono = mezcla(col('#DFFFF6'), col('#5CF2C6'), np.clip(dist * 1.5, 0, 1))
+    tono = mezcla(tono, col('#E29BFF'), np.clip((ruido(tam, tam / 18, 63) - 0.5) * 2.2, 0, 1) * 0.55)
+    glow = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 60))).astype(np.float32) / 255
+    alfa = np.clip(m * 0.95 + glow * 0.75, 0, 1)
+    capa = a_rgba(tono, alfa)
+    d2 = ImageDraw.Draw(capa, 'RGBA')
+    ys, xs = np.nonzero(m > 0.7)
+    for _ in range(int(tam / 7)):
+        i = r.integers(len(xs)); s = 0.8 + r.random() * 1.4
+        d2.ellipse([xs[i] - s, ys[i] - s, xs[i] + s, ys[i] + s], fill=(240, 255, 250, 255))
+    guardar(fondo, capa, 'abismo')
+
 # ------------------------------------------------------------------ Al-Ándalus
 def andalus(tam):
     m = mascara_sello(tam)
@@ -644,6 +695,7 @@ SIETE = [
     'botanico',
     'gotico',
     'espacio',
+    'abismo',
     'andalus',
     'mongol',
     'renacimiento',
@@ -665,6 +717,7 @@ ORDEN = [
     'seda',
     'gotico',
     'espacio',
+    'abismo',
     'andalus',
     'mongol',
     'renacimiento',

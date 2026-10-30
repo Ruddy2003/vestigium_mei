@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -97,6 +98,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.SEDA -> Color(0xFFC0392B)
     TemaId.GOTICO -> Color(0xFF1A3A8F)
     TemaId.ESPACIO -> Color(0xFF7B1FA2)
+    TemaId.ABISMO -> Color(0xFF0F8A86)          // el verde azul del agua honda
     TemaId.ANDALUS -> Color(0xFF1F7A6B)
     TemaId.MONGOL -> Color(0xFF1E88E5)
     TemaId.RENACIMIENTO -> Color(0xFFB5562F)
@@ -196,6 +198,8 @@ object PiezasLogro {
         TemaId.SEDA -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(9f, 1.2f, 1.5f, 1.2f), 0f, false, Color(0xFFF6E2C8))
         TemaId.GOTICO -> Trazo(u, 1.4f, StrokeCap.Square, StrokeJoin.Miter, null, 0f, true, Color(0xFFD8E2F2))
         TemaId.ESPACIO -> Trazo(u, 0.85f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(6f, 2f, 1f, 2f), 0f, false, Color(0xFFE2E4EA))
+        // Trazo blando, de esquinas redondeadas por el agua; el material es el cristal verdoso de un ojo de buey.
+        TemaId.ABISMO -> Trazo(u, 1f, StrokeCap.Round, StrokeJoin.Round, null, 3f, false, Color(0xFFDCEFF2))
         TemaId.ANDALUS -> Trazo(u, 1f, StrokeCap.Butt, StrokeJoin.Miter, null, 1f, true, Color(0xFFF1E3C8))
         TemaId.MONGOL -> Trazo(u, 1.3f, StrokeCap.Round, StrokeJoin.Bevel, floatArrayOf(3f, 1.5f), 0f, false, Color(0xFFE8DCC8))
         TemaId.RENACIMIENTO -> Trazo(u, 0.7f, StrokeCap.Round, StrokeJoin.Round, null, 0f, true, Color(0xFFEFD9C0))
@@ -307,6 +311,11 @@ object PiezasLogro {
                 for (i in 0 until 4) drawArc(pri, i * 90f + 8f, 74f, false, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f), style = Stroke(1.6f * u))
                 drawCircle(cs.primary, 2 * u, en(-PI / 4, 0.9f))
             }
+            // Un anillo de burbujas de varios tamaños y cuatro pernos de latón.
+            TemaId.ABISMO -> {
+                for (i in 0 until 18) drawCircle(pri, (1f + (i % 3) * 0.5f) * u, en(i * PI / 9, 0.9f), style = Stroke(0.8f * u))
+                for (i in 0 until 4) drawCircle(m, 1.8f * u, en(PI / 4 + i * PI / 2, 0.9f))
+            }
             TemaId.ANDALUS -> {
                 val p = Path()
                 for (i in 0 until 16) { val a0 = i * PI / 8; val a1 = (i + 1) * PI / 8; val p0 = en(a0, 0.86f); val pm = en((a0 + a1) / 2, 0.99f); val p1 = en(a1, 0.86f); if (i == 0) p.moveTo(p0.x, p0.y); p.quadraticTo(pm.x, pm.y, p1.x, p1.y) }
@@ -383,6 +392,8 @@ object PiezasLogro {
             }, tinta)
             TemaId.GOTICO -> { tri(11 * u, x + 1 * u, x + an - 1 * u); drawCircle(tinta, 0.9f * u, Offset(cx, y - 11.5f * u)) }
             TemaId.ESPACIO -> { drawLine(tinta, Offset(cx, y), Offset(cx, y - 3 * u), 0.8f * u); drawArc(tinta, 20f, 140f, false, Offset(cx - 3 * u, y - 9 * u), Size(6 * u, 6 * u), style = Stroke(1 * u)) }
+            // La cúpula de una escotilla, con su respiradero.
+            TemaId.ABISMO -> { drawArc(tinta, 180f, 180f, true, Offset(cx - an * 0.32f, y - an * 0.32f), Size(an * 0.64f, an * 0.64f)); drawLine(tinta, Offset(cx, y - an * 0.3f), Offset(cx, y - an * 0.3f - 3 * u), 0.9f * u); drawCircle(tinta, 1 * u, Offset(cx, y - an * 0.3f - 3.5f * u)) }
             TemaId.ANDALUS -> {
                 val m = (an - 2 * u) / 5
                 for (k in 0 until 3) { val mx = x + 1 * u + k * 2 * m; drawRect(tinta, Offset(mx, y - 1.6f * u), Size(m, 1.6f * u)); drawRect(tinta, Offset(mx + m * 0.25f, y - 3.2f * u), Size(m * 0.5f, 1.6f * u)) }
@@ -465,6 +476,15 @@ object PiezasLogro {
             TemaId.ESPACIO -> {
                 traza(circulo(c, 25 * u))
                 listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d -> drawLine(tinto, Offset(c.x + d.x * 22 * u, c.y + d.y * 22 * u), Offset(c.x + d.x * 31 * u, c.y + d.y * 31 * u), 1.2f * u) }
+            }
+            // Un ojo de buey: dos aros, ocho pernos y el agua ondulada que se ve por el cristal.
+            TemaId.ABISMO -> {
+                traza(circulo(c, 27 * u)); traza(circulo(c, 18 * u))
+                for (i in 0 until 8) { val a = PI / 8 + i * PI / 4; drawCircle(tinto, 1.5f * u, Offset(c.x + (22.5f * u * cos(a)).toFloat(), c.y + (22.5f * u * sin(a)).toFloat())) }
+                val ola = Path(); var x = c.x - 14 * u
+                ola.moveTo(x, c.y)
+                while (x <= c.x + 14 * u) { ola.lineTo(x, c.y + 2.2f * u * sin((x - c.x) / (3 * u))); x += 1.5f * u }
+                drawPath(ola, tinto, style = tz.st(1.2f * u))
             }
             TemaId.ANDALUS -> traza(estrellaN(c, 31 * u, 8, 0.8f))
             TemaId.MONGOL -> traza(Path().apply { moveTo(c.x, c.y - 32 * u); lineTo(c.x + 32 * u, c.y); lineTo(c.x, c.y + 32 * u); lineTo(c.x - 32 * u, c.y); close() })
@@ -742,6 +762,16 @@ object PiezasLogro {
                 arco(c.x - 3 * u, base, 6 * u, 9 * u)
                 suelo()
             }
+            // El pecio: el casco de un barco hundido, escorado en el fondo, con sus ojos de buey y el mástil roto.
+            TemaId.ABISMO -> {
+                rotate(-8f, Offset(c.x, base)) {
+                    drawPath(Path().apply { moveTo(c.x - 27 * u, base - 18 * u); lineTo(c.x + 27 * u, base - 18 * u); lineTo(c.x + 20 * u, base - 2 * u); quadraticTo(c.x, base + 2 * u, c.x - 22 * u, base - 4 * u); close() }, tinta)
+                    for (k in 0 until 5) drawCircle(hueco, 1.8f * u, Offset(c.x - 18 * u + k * 8.5f * u, base - 11 * u))
+                    raya(tz, tinta, Offset(c.x - 4 * u, base - 18 * u), Offset(c.x - 2 * u, base - 36 * u), 2.4f * u)
+                    raya(tz, tinta, Offset(c.x - 2 * u, base - 36 * u), Offset(c.x + 8 * u, base - 30 * u), 1.6f * u)
+                }
+                suelo()
+            }
             TemaId.ANDALUS -> {
                 drawRect(tinta, Offset(c.x - 22 * u, base - 30 * u), Size(44 * u, 30 * u))
                 drawArc(hueco, 180f, 180f, true, Offset(c.x - 9 * u, base - 26 * u), Size(18 * u, 18 * u)); drawRect(hueco, Offset(c.x - 9 * u, base - 17 * u), Size(18 * u, 17 * u))
@@ -944,6 +974,14 @@ object PiezasLogro {
                 pano(caja(px, arriba, c.x + 22 * u, arriba + 20 * u))
                 drawOval(claro, Offset(c.x - 6 * u, arriba + 6 * u), Size(20 * u, 8 * u), style = Stroke(1 * u)); drawCircle(claro, 2.6f * u, Offset(c.x + 4 * u, arriba + 10 * u))
             }
+            // La bandera de buzo abajo: roja con la franja blanca en diagonal.
+            TemaId.ABISMO -> {
+                asta()
+                val p = caja(px, arriba, c.x + 22 * u, arriba + 22 * u)
+                pano(p, Color(0xFFC62828))
+                clipPath(p) { drawLine(Color.White, Offset(px, arriba), Offset(c.x + 22 * u, arriba + 22 * u), 5 * u) }
+                contorno(tz, p, tinta, 0.9f * u)
+            }
             TemaId.ANDALUS -> {
                 asta()
                 pano(caja(px, arriba, c.x + 20 * u, arriba + 22 * u))
@@ -1106,6 +1144,17 @@ object PiezasLogro {
                 drawCircle(tono.copy(alpha = 0.35f), R, c); contorno(tz, circulo(c, R), tinta, 1.4f * u); contorno(tz, circulo(c, R * 0.8f), tinta, 0.8f * u)
                 drawCircle(tinta, 5 * u, c); drawOval(tinta, Offset(c.x - 11 * u, c.y - 3.5f * u), Size(22 * u, 7 * u), style = Stroke(1 * u))
                 drawCircle(claro, 1.6f * u, Offset(c.x + 9 * u, c.y - 2 * u))
+            }
+            // Una perla en su concha abierta: las valvas acanaladas y la perla con su brillo.
+            TemaId.ABISMO -> {
+                val concha = Path().apply {
+                    moveTo(c.x - R, c.y + 2 * u); quadraticTo(c.x - R * 0.9f, c.y - R * 0.9f, c.x, c.y - R); quadraticTo(c.x + R * 0.9f, c.y - R * 0.9f, c.x + R, c.y + 2 * u)
+                    quadraticTo(c.x, c.y + R * 0.4f, c.x - R, c.y + 2 * u); close()
+                }
+                forma(concha, 1.4f * u)
+                for (k in -3..3) fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x + k * R * 0.12f, c.y - R * 0.1f), en(-PI / 2 + k * 0.32, 0.86f), 0.8f * u)
+                drawCircle(claro, 6 * u, Offset(c.x, c.y + 6 * u)); contorno(tz, circulo(Offset(c.x, c.y + 6 * u), 6 * u), tinta, 0.9f * u)
+                drawCircle(Color.White.copy(alpha = 0.8f), 1.6f * u, Offset(c.x - 2 * u, c.y + 4 * u))
             }
             TemaId.ANDALUS -> {
                 disco()
@@ -1291,6 +1340,17 @@ object PiezasLogro {
                     if (k < 2) drawLine(tono, Offset(c.x - 10.5f * u, y), Offset(c.x - 8 * u, y + 1.5f * u), 0.9f * u)
                 }
             }
+            // La bitácora del batiscafo: tapas de lona con cantoneras, un ojo de buey en la portada y la correa de goma.
+            TemaId.ABISMO -> {
+                tapa(c.x - 17 * u, c.y - 22 * u, c.x + 17 * u, c.y + 22 * u, tono, 3 * u)
+                listOf(Offset(-1f, -1f), Offset(1f, -1f), Offset(-1f, 1f), Offset(1f, 1f)).forEach { d ->
+                    val o = Offset(c.x + d.x * 17 * u, c.y + d.y * 22 * u)
+                    drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x - d.x * 6 * u, o.y); lineTo(o.x, o.y - d.y * 6 * u); close() }, tinta)
+                }
+                drawCircle(tinta, 7 * u, Offset(c.x - 2 * u, c.y - 7 * u)); drawCircle(papel, 4.6f * u, Offset(c.x - 2 * u, c.y - 7 * u))
+                for (k in 0 until 3) fina(tz, papel.copy(alpha = 0.8f), Offset(c.x - 11 * u, c.y + 5 * u + k * 5 * u), Offset(c.x + 7 * u, c.y + 5 * u + k * 5 * u), 0.8f * u)
+                drawRect(tinta, Offset(c.x + 11 * u, c.y - 22 * u), Size(3 * u, 44 * u))
+            }
             TemaId.ANDALUS -> {
                 tapa(c.x - 18 * u, c.y - 22 * u, c.x + 14 * u, c.y + 22 * u, tono, 1 * u)
                 drawRect(papel, Offset(c.x - 16 * u, c.y - 20 * u), Size(28 * u, 40 * u), style = Stroke(0.6f * u))
@@ -1464,6 +1524,21 @@ object PiezasLogro {
                 solapaV(c.x - 22 * u, c.y - 10 * u, c.x + 18 * u, c.y + 5 * u)
                 val o = Offset(c.x + 18 * u, c.y - 10 * u)
                 for (k in 0 until 3) { val rr = (6 + k * 5) * u; drawArc(tono, -80f, 70f, false, Offset(o.x - rr, o.y - rr), Size(2 * rr, 2 * rr), style = tz.st(1.4f * u)) }
+            }
+            // Un mensaje en una botella: el vidrio verde tumbado, el corcho y el papel enrollado dentro.
+            TemaId.ABISMO -> {
+                val botella = Path().apply {
+                    moveTo(c.x - 22 * u, c.y - 9 * u); lineTo(c.x + 8 * u, c.y - 9 * u); quadraticTo(c.x + 14 * u, c.y - 9 * u, c.x + 16 * u, c.y - 4 * u)
+                    lineTo(c.x + 24 * u, c.y - 3 * u); lineTo(c.x + 24 * u, c.y + 3 * u); lineTo(c.x + 16 * u, c.y + 4 * u)
+                    quadraticTo(c.x + 14 * u, c.y + 9 * u, c.x + 8 * u, c.y + 9 * u); lineTo(c.x - 22 * u, c.y + 9 * u)
+                    quadraticTo(c.x - 26 * u, c.y, c.x - 22 * u, c.y - 9 * u); close()
+                }
+                drawPath(botella, tono.copy(alpha = 0.35f))
+                drawRoundRect(papel, Offset(c.x - 16 * u, c.y - 4.5f * u), Size(22 * u, 9 * u), CornerRadius(4.5f * u))
+                fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x - 13 * u, c.y), Offset(c.x + 3 * u, c.y), 0.8f * u)
+                drawRect(Color(0xFFB08A5A), Offset(c.x + 24 * u, c.y - 3 * u), Size(5 * u, 6 * u))
+                contorno(tz, botella, tinta, 1.2f * u)
+                drawLine(Color.White.copy(alpha = 0.6f), Offset(c.x - 18 * u, c.y - 6.5f * u), Offset(c.x + 4 * u, c.y - 6.5f * u), 1.2f * u)
             }
             TemaId.ANDALUS -> {
                 hoja(c.x - 24 * u, c.y - 15 * u, c.x + 24 * u, c.y + 15 * u)

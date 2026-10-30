@@ -327,6 +327,20 @@ object MapasCampana {
                 drawLine(cs.onSurface, Offset(b.x + 14 * d, b.y + 8 * d), Offset(b.x + 14 * d, b.y - 14 * d), 1f * d)
                 drawRect(Color(0xFFE8601C), Offset(b.x + 14 * d, b.y - 14 * d), Size(10 * d, 6 * d))
             }
+            // El fondo de la fosa: el batiscafo posado, el haz de su foco sobre el fango y una medusa que lo ilumina desde arriba.
+            TemaId.ABISMO -> {
+                val b = Offset(m.x, m.y - 10 * d)
+                val laton = Color(0xFFB8913E)
+                drawPath(Path().apply { moveTo(b.x + 4 * d, b.y + 2 * d); lineTo(b.x + 26 * d, b.y + 12 * d); lineTo(b.x + 10 * d, b.y + 12 * d); close() }, Color(0xFFFFF2B0).copy(alpha = 0.35f))
+                drawRoundRect(laton, Offset(b.x - 13 * d, b.y - 12 * d), Size(26 * d, 8 * d), androidx.compose.ui.geometry.CornerRadius(4 * d))
+                drawRect(laton, Offset(b.x - 3 * d, b.y - 16 * d), Size(6 * d, 4 * d))
+                drawCircle(laton, 5 * d, Offset(b.x, b.y + 1 * d))
+                drawCircle(Color(0xFF5CF2C6), 1.8f * d, Offset(b.x - 1 * d, b.y + 0.5f * d))
+                val me = Offset(b.x - 16 * d, b.y - 26 * d)
+                drawCircle(Color(0xFFE29BFF).copy(alpha = 0.2f), 9 * d, me)
+                drawArc(Color(0xFFE29BFF), 180f, 180f, true, Offset(me.x - 5 * d, me.y - 4 * d), Size(10 * d, 8 * d))
+                listOf(-3f, 0f, 3f).forEach { dx -> drawLine(Color(0xFFE29BFF).copy(alpha = 0.8f), Offset(me.x + dx * d, me.y), Offset(me.x + dx * 0.6f * d, me.y + 7 * d), 0.8f * d) }
+            }
             // La gran estrella roja de la llegada a Vladivostok.
             TemaId.URSS -> with(TrofeosTema) {
                 val c = Offset(m.x, m.y - 24 * d)

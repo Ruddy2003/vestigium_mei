@@ -479,6 +479,12 @@ fun FraseDelDia(fecha: String) {
                 .forEach { (o, d) -> drawLine(k, o, o + Offset(d.x * l, 0f), 1.5f * u); drawLine(k, o, o + Offset(0f, d.y * l), 1.5f * u) }
             listOf(0f to 1f, w to -1f).forEach { (x, d) -> drawLine(k.copy(alpha = 0.5f), Offset(x, h / 2), Offset(x + d * 5 * u, h / 2), u) }
         }.padding(horizontal = 16.dp, vertical = 14.dp)) { CuerpoFrase(f, fecha, rotulo, "“", "”") }
+        // La frase entre dos superficies onduladas, con tres burbujas que suben por la izquierda.
+        TemaId.ABISMO -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height; val k = cs.primary.copy(alpha = 0.7f)
+            listOf(0f, h).forEach { y0 -> val p = Path(); var x = 0f; p.moveTo(0f, y0); while (x <= w) { p.lineTo(x, y0 + 2 * u * kotlin.math.sin(x / (9 * u))); x += 3 * u }; drawPath(p, k, style = Stroke(1.2f * u)) }
+            listOf(0.75f to 2.4f, 0.5f to 3.2f, 0.25f to 1.8f).forEach { (fy, r) -> drawCircle(cs.tertiary.copy(alpha = 0.7f), r * u, Offset(6 * u, h * fy), style = Stroke(0.9f * u)) }
+        }.padding(horizontal = 18.dp, vertical = 16.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»") }
         // Arco de herradura con la estrella de ocho puntas en la clave.
         TemaId.ANDALUS -> Surface(shape = RoundedCornerShape(topStart = 36.dp, topEnd = 36.dp, bottomStart = 4.dp, bottomEnd = 4.dp), color = cs.surface,
             border = BorderStroke(1.dp, cs.primary.copy(alpha = 0.6f)), modifier = arriba) {
@@ -797,6 +803,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.SEDA -> c(LetraExtra.almendra, FontWeight.Normal, 24f, 0.3f)
         TemaId.GOTICO -> c(LetraExtra.gotica, FontWeight.SemiBold, 25f, 0.2f)
         TemaId.ESPACIO -> c(LetraExtra.orbita, FontWeight.Medium, 20f, 1.4f)
+        TemaId.ABISMO -> c(LetraExtra.batiscafo, FontWeight.SemiBold, 25f, 0.5f, "tnum")
         TemaId.ANDALUS -> c(LetraExtra.kufi, FontWeight.Medium, 22f, 0.4f)
         TemaId.MONGOL -> c(LetraExtra.filosofo, FontWeight.Bold, 23f, 0.6f)
         TemaId.RENACIMIENTO -> base.copy(fontFamily = LetraExtra.cormorant, fontWeight = FontWeight.Medium, fontSize = 25.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum")
@@ -1121,6 +1128,16 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             pinta(Path().apply { moveTo(bx, h - 2 * u); lineTo(bx, top + nariz); quadraticTo(bx, top + nariz * 0.2f, w / 2, top); quadraticTo(bx + bw, top + nariz * 0.2f, bx + bw, top + nariz); lineTo(bx + bw, h - 2 * u); close() })
                             pinta(Path().apply { moveTo(bx, h - aleta - 2 * u); lineTo(0f, h); lineTo(bx, h); close(); moveTo(bx + bw, h - aleta - 2 * u); lineTo(w, h); lineTo(bx + bw, h); close() })
                             drawCircle(if (color != null) cs.background.copy(alpha = 0.8f) else linea, bw * 0.22f, Offset(w / 2, top + nariz + bw * 0.4f), style = if (color != null) Fill else borde)
+                        }
+                        // Algas gigantes: el tallo que ondula hacia la luz, las vejigas de aire a los lados y la más grande arriba.
+                        TemaId.ABISMO -> {
+                            val tallo = Path(); var y = h
+                            tallo.moveTo(w / 2, h)
+                            while (y > top + w * 0.5f) { y -= 2 * u; tallo.lineTo(w / 2 + w * 0.12f * kotlin.math.sin((h - y) / (7 * u)), y) }
+                            drawPath(tallo, color ?: linea, style = Stroke(1.6f * u))
+                            var yy = h - 9 * u; var lado = 1f
+                            while (yy > top + w * 1.1f) { pinta(Path().apply { addOval(Rect(Offset(w / 2 + lado * w * 0.26f, yy), w * 0.13f)) }); yy -= 10 * u; lado = -lado }
+                            pinta(Path().apply { addOval(Rect(Offset(w / 2, top + w * 0.3f), w * 0.28f)) })
                         }
                         // Arcos de herradura: el círculo de arriba se cierra más allá de las jambas.
                         TemaId.ANDALUS -> {

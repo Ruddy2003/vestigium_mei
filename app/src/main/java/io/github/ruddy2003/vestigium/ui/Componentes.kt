@@ -125,6 +125,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.BOTANICO -> Enredadera(modifier)
         TemaId.GOTICO -> Arqueria(modifier)
         TemaId.ESPACIO -> Orbita(modifier)
+        TemaId.ABISMO -> TrazaSonar(modifier)
         TemaId.ANDALUS -> Lazo(modifier)
         TemaId.MONGOL -> BandaEstepa(modifier)
         TemaId.RENACIMIENTO -> Trazo(modifier)
@@ -960,6 +961,10 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "⊛", igual = "⇒ ", nulo = "sin señal", elegido = "★", riel = RolColor.PRIMARIO, quitar = "⊟", listaVacia = "[ SIN TELEMETRÍA ]", flecha = "⇥",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 2.5f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.PUNTOS,
         guiones = floatArrayOf(0.8f, 2.5f), tamBoton = 14, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1f)
+    TemaId.ABISMO -> PielComponentes(sep = "  ∿  ", cerrada = "◌", abierta = "◍", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
+        aviso = "≋", igual = "∿ ", nulo = "sin eco", elegido = "◍", riel = RolColor.TERCIARIO, quitar = "⊘", listaVacia = "( el sonar no devuelve eco )", flecha = "⤓",
+        sufijo = " ·", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.4f, colorPrefijo = RolColor.TERCIARIO, renglones = true, margen = MargenEditor.BARRA,
+        guiones = floatArrayOf(2.2f, 1f, 0.5f, 1f), tamBoton = 16, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.6f)
     TemaId.ANDALUS -> PielComponentes(sep = "  ❖  ", cerrada = "۞", abierta = "✺", numeral = RolColor.TERCIARIO, centrar = false, rellena = true,
         aviso = "❁", igual = "∷ ", nulo = "لا شيء", elegido = "✹", riel = RolColor.TERCIARIO, quitar = "‹×›", listaVacia = "( sin azulejos )", flecha = "➛",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.5f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.DOBLE,
@@ -1056,6 +1061,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             var x = 1.dp.toPx()
             while (x < size.width) { drawCircle(e.primary.copy(alpha = 0.6f), 1.dp.toPx(), Offset(x, size.height - 1.5.dp.toPx())); x += 6.dp.toPx() }
         }.padding(bottom = 5.dp))
+        // La regla de sondeo debajo: una raya con marcas cada tanto, más largas cada cinco, como el cabo del escandallo.
+        TemaId.ABISMO -> Text(nombre, style = estilo.copy(letterSpacing = 1.2.sp), modifier = peso.drawBehind {
+            val y = size.height - 4.dp.toPx(); val paso = 7.dp.toPx()
+            drawLine(e.primary.copy(alpha = 0.7f), Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
+            var x = 0f; var k = 0
+            while (x < size.width) { drawLine(e.tertiary.copy(alpha = 0.8f), Offset(x, y), Offset(x, y + (if (k % 5 == 0) 4f else 2f).dp.toPx()), 1.dp.toPx()); x += paso; k++ }
+        }.padding(bottom = 8.dp))
         // Remate con el signo de la rub el-hizb, en oro.
         TemaId.ANDALUS -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.tertiary)) { append("  ۞") } }, style = estilo, modifier = peso)
         // Una franja de fieltro azul encima.
@@ -1125,6 +1137,12 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         val w = s.width; val h = s.height
         moveTo(h * 0.2f, 0f); lineTo(w - h * 0.2f, 0f); lineTo(w, h); lineTo(0f, h); close()
     }
+    // El flotador del batiscafo: proa redonda a la izquierda, popa recortada en diagonal a la derecha.
+    TemaId.ABISMO -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val r = h / 2
+        moveTo(r, 0f); lineTo(w - h * 0.25f, 0f); lineTo(w, h * 0.35f); lineTo(w, h); lineTo(r, h)
+        arcTo(Rect(0f, 0f, h, h), 90f, 180f, false); close()
+    }
     // Arco de medio punto.
     TemaId.ANDALUS -> RoundedCornerShape(topStartPercent = 50, topEndPercent = 50, bottomEndPercent = 0, bottomStartPercent = 0)
     TemaId.MONGOL -> RoundedCornerShape(8.dp)
@@ -1170,6 +1188,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.SEDA -> "pincel y tinta · $es"
         TemaId.GOTICO -> "breviario · $es"
         TemaId.ESPACIO -> "BITÁCORA DE MISIÓN · ${es.uppercase()}"
+        TemaId.ABISMO -> "bitácora de inmersión · $es"
         TemaId.ANDALUS -> "cálamo · $es"
         TemaId.MONGOL -> "тэмдэглэл · $es"
         TemaId.RENACIMIENTO -> "taccuino · $es"
@@ -1313,6 +1332,12 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawLine(e.primary, Offset(i, i + u * 1.6f), Offset(i, i), fino * 1.5f)
             drawLine(e.primary, Offset(i, i), Offset(i + u * 1.6f, i), fino * 1.5f)
             drawCircle(e.primary, fino * 1.2f, Offset(i + u * 2.1f, i))
+        }
+        TemaId.ABISMO -> enLasCuatro {
+            // Un cuarto de la brida de un ojo de buey, con su perno de latón.
+            drawArc(e.primary.copy(alpha = 0.7f), 180f, 90f, false, Offset(i, i), Size(u * 3f, u * 3f), style = Stroke(fino * 1.4f))
+            drawCircle(e.secondary, fino * 1.8f, Offset(i + u * 0.55f, i + u * 0.55f))
+            drawCircle(e.surface.copy(alpha = 0.7f), fino * 0.6f, Offset(i + u * 0.45f, i + u * 0.45f))
         }
         TemaId.ANDALUS -> enLasCuatro { estrellaComp(Offset(i + u * 0.7f, i + u * 0.7f), u * 0.7f, e.tertiary, puntas = 8, dentro = 0.6f) }
         TemaId.MONGOL -> enLasCuatro {
@@ -1467,6 +1492,17 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawCircle(a, f(0.1f), Offset(f(0.5f), f(0.5f)), style = tr)
             estrellaComp(Offset(f(0.82f), f(0.16f)), f(0.08f), l, puntas = 4, dentro = 0.35f)
         }
+        TemaId.ABISMO -> {
+            // La pantalla del sonar sin un solo eco: anillos, la cruz y el haz que barre en vano.
+            val c = Offset(f(0.5f), f(0.5f))
+            drawCircle(l, f(0.44f), c, style = tr)
+            drawCircle(l.copy(alpha = 0.5f), f(0.29f), c, style = Stroke(tr.width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(f(0.04f), f(0.04f)))))
+            drawCircle(l.copy(alpha = 0.5f), f(0.14f), c, style = Stroke(tr.width, pathEffect = PathEffect.dashPathEffect(floatArrayOf(f(0.03f), f(0.03f)))))
+            drawLine(l.copy(alpha = 0.4f), Offset(f(0.06f), f(0.5f)), Offset(f(0.94f), f(0.5f)), tr.width * 0.7f)
+            drawLine(l.copy(alpha = 0.4f), Offset(f(0.5f), f(0.06f)), Offset(f(0.5f), f(0.94f)), tr.width * 0.7f)
+            drawLine(a, c, Offset(f(0.81f), f(0.19f)), tr.width * 1.4f)
+            drawCircle(a, f(0.035f), c)
+        }
         TemaId.ANDALUS -> {
             // Arco de herradura sin nadie bajo él.
             drawArc(l, 160f, 220f, false, Offset(f(0.2f), f(0.1f)), Size(f(0.6f), f(0.6f)), style = tr)
@@ -1549,6 +1585,11 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
             quadraticTo(w / 2 + d, h - d * 2.2f, w / 2 + d, h - d * 1.2f); lineTo(w / 2 + d, h); close()
         }, c)
         TemaId.ESPACIO -> estrellaComp(Offset(w / 2, d * 1.5f), d * 0.95f, c, puntas = 4, dentro = 0.35f)
+        // El escandallo: la plomada de sondeo colgada de su cabo.
+        TemaId.ABISMO -> {
+            drawLine(c, Offset(w / 2, 0f), Offset(w / 2, d * 1.2f), d * 0.3f)
+            drawPath(Path().apply { moveTo(w / 2, d * 0.9f); quadraticTo(w / 2 + d * 0.9f, d * 2.2f, w / 2, d * 2.9f); quadraticTo(w / 2 - d * 0.9f, d * 2.2f, w / 2, d * 0.9f); close() }, c)
+        }
         TemaId.ANDALUS -> estrellaComp(Offset(w / 2, h - d * 1.4f), d, c, puntas = 8, dentro = 0.6f)
         TemaId.MONGOL -> drawArc(c, 180f, 180f, true, Offset(w / 2 - d * 1.3f, h - d * 1.3f), Size(d * 2.6f, d * 2.6f))
         TemaId.RENACIMIENTO -> {
@@ -1633,6 +1674,13 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
         TemaId.ESPACIO -> {
             listOf(m * 3f, w - m * 3f).forEach { x -> drawCircle(c, fino * 1.6f, Offset(x, h / 2)) }
             drawLine(c, Offset(w * 0.3f, h - m), Offset(w * 0.7f, h - m), fino)
+        }
+        // Tres burbujas que suben a la derecha y la ola abajo.
+        TemaId.ABISMO -> {
+            listOf(0.72f to 1.2f, 0.5f to 1.7f, 0.28f to 2.2f).forEach { (fy, r) -> drawCircle(c, fino * r, Offset(w - m * (2.2f + (fy * 2f)), h * fy), style = Stroke(fino * 0.8f)) }
+            val ola = Path(); var x = m * 2f; ola.moveTo(x, h - m)
+            while (x < w * 0.6f) { ola.lineTo(x, h - m + fino * 1.2f * sin(x / (m * 0.8f))); x += fino }
+            drawPath(ola, c, style = Stroke(fino))
         }
         // El trasdós del arco, por dentro.
         TemaId.ANDALUS -> {
@@ -1768,6 +1816,15 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawCircle(l, f(0.42f), Offset(f(0.5f), f(0.5f)), style = tr)
             drawCircle(e.error, f(0.2f), Offset(f(0.5f), f(0.5f)))
         }
+        TemaId.ABISMO -> {
+            // La pizarra de buceo con su lápiz atado de un cordón.
+            drawRoundRect(l, Offset(f(0.08f), f(0.12f)), Size(f(0.58f), f(0.8f)), CornerRadius(f(0.08f)), style = tr)
+            for (k in 0 until 3) drawLine(l.copy(alpha = 0.5f), Offset(f(0.18f), f(0.36f + k * 0.16f)), Offset(f(0.56f), f(0.36f + k * 0.16f)), tr.width * 0.7f)
+            drawCircle(l, f(0.04f), Offset(f(0.37f), f(0.2f)), style = tr)
+            drawPath(Path().apply { moveTo(f(0.37f), f(0.24f)); quadraticTo(f(0.7f), f(0.1f), f(0.8f), f(0.3f)) }, l.copy(alpha = 0.6f), style = tr)
+            drawLine(a, Offset(f(0.8f), f(0.3f)), Offset(f(0.9f), f(0.88f)), tr.width * 1.6f)
+            drawLine(l, Offset(f(0.885f), f(0.82f)), Offset(f(0.9f), f(0.96f)), tr.width)
+        }
         TemaId.ANDALUS -> {
             // Cálamo de caña y tintero.
             drawLine(a, Offset(f(0.16f), f(0.94f)), Offset(f(0.84f), f(0.1f)), tr.width * 1.3f)
@@ -1899,6 +1956,13 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
         TemaId.ESPACIO -> {
             var y = 2 * d
             while (y < h) { drawCircle(c, d, Offset(2.5f * d, y)); y += 4 * d }
+        }
+        TemaId.ABISMO -> {
+            // Una corriente: la línea ondula de arriba abajo.
+            val p = Path(); var y = 0f
+            p.moveTo(2.5f * d, 0f)
+            while (y < h) { y += d; p.lineTo(2.5f * d + 1.6f * d * sin(y / (3 * d)), y) }
+            drawPath(p, c, style = Stroke(1.6f * d))
         }
         TemaId.ANDALUS -> {
             // Cinta de lazo en zigzag.

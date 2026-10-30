@@ -295,6 +295,26 @@ def hacer_antiguas():
     P['antiguas'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, 1.0, 0.62, 0.997), [7, 10, 14], 0.12, 1.0))
     ARGS['antiguas'] = (T, pz, ac, mel, kw)
 
+def hacer_abismo():
+    # --- Abismo: Si, tonos enteros. Un órgano lejano que respira, un vibráfono apagado como oído a través del agua,
+    # el ping del sonar cada dos compases, burbujas sueltas y el oleaje que se va quedando arriba.
+    with A.azar_propio('musica_abismo'):
+        T = -10; pz = 0.46
+        def pad(f, d):
+            t = t_(d); return filtro(organo(f, d, 0.5), 'bajo', 1100) * np.sin(np.pi * t / d) ** 1.3
+        vib = lambda f, d: filtro(vibrafono(f, max(d, 0.9)), 'bajo', 2200)
+        ping = lambda n, d=1.0: seno(hz(T + n), d) * env(int(d * SR), 0.002, d * 0.55, 3)
+        burbuja = lambda n, d=0.05: barrido(hz(T + n), hz(T + n) * 1.9, d) * env(int(d * SR), 0.002, d * 0.6, 3)
+        ac = compases([0, 4, 8], [2, 6, 10], [-2, 2, 6], [0, 4, 8], [4, 8, 12], [2, 6, 10], [-2, 4, 8], [0, 4, 8, 12])
+        mel = frase(0, "12:2 10:1 8:1 | 6:2 8:2 | 4:1 6:1 8:2 | 10:4 | 12:1 14:1 12:2 | 10:2 6:2 | 8:1 6:1 4:1 2:1 | 0:4")
+        sonar = [(b, ping(18 + (2 if (b // 8) % 2 else 0)), 0.22) for b in range(0, 32, 8)]
+        burbujas = [(b + 0.3 * k, burbuja(22 + 2 * k), 0.07) for b in (5, 13, 21, 29) for k in range(4)]
+        oleaje = [(b, filtro(ruido(8 * pz), 'bajo', 500) * np.sin(np.pi * t_(8 * pz) / (8 * pz)) ** 2, 0.18) for b in (0, 16)]
+        kw = dict(inst_mel=vib, inst_ac=pad, perc=sonar + burbujas + oleaje, g_ac=0.3, g_mel=0.42, oct_ac=-12, oct_mel=0, cola=2.6, rev=0.4,
+                  bajo=lambda f, d: seno(f, d) * np.sin(np.pi * t_(d) / d), g_bajo=0.2)
+        P['abismo'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: seno(f, d) * env(int(d * SR), 0.002, d * 0.55, 3), [18, 14, 22], 0.22, 0.8, 1.6))
+        ARGS['abismo'] = (T, pz, ac, mel, kw)
+
 def hacer_enriquecidos():
     """Lote 6: la presentación y la música anual de Refugio, Orden, Soviético y Espacio, más ricas. Ocho compases en lugar
     de cuatro o cinco, con más voces (bajo que camina, coro, cuerdas, arpegios) y su percusión. Corre después de [hacer]
@@ -402,6 +422,7 @@ if __name__ == '__main__':
     hacer_revolucion()
     hacer_antiguas()
     hacer_enriquecidos()
+    hacer_abismo()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None
