@@ -23,7 +23,7 @@ import kotlin.math.sin
 /**
  * El motor de rutas: cada campaña es un mapa con su punto de partida, siete paradas con nombre del tema, el trazo del
  * camino (calzada, ruta de caravanas, postas del yam, huellas de carreta…) y el destino. El marcador del tema avanza por
- * la ruta con los días cumplidos. Aquí están los fondos, los caminos, las paradas y el marcador de los 21 temas; la escena
+ * la ruta con los días cumplidos. Aquí están los fondos, los caminos, las paradas y el marcador de todos los temas; la escena
  * de la victoria está en [MapasCampana].
  */
 object MapasMas {

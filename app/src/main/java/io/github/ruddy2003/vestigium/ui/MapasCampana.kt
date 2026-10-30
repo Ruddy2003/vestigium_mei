@@ -17,7 +17,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Los mapas de campaña de los 21 temas. El fondo, el camino y las paradas de cada uno se dibujan en [MapasMas] (el motor
+ * Los mapas de campaña de todos los temas. El fondo, el camino y las paradas de cada uno se dibujan en [MapasMas] (el motor
  * de rutas, con sus siete puntos por tema); aquí está la escena de la victoria: la corona triunfal en Alesia, el sol de
  * Vergina en Babilonia, la cruz de Santiago, las campanas de la catedral, el cuadro enmarcado y firmado, el águila de 1804,
  * la bandera de la Federación, la casa del pueblo nuevo, la flor de la expedición, el árbol de la plaza, los farolillos de

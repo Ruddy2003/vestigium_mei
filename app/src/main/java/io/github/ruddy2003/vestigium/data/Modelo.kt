@@ -680,7 +680,7 @@ data class Config(
     val whatsapp_yo: String = "",
     val escalas_hora: Int = 19,
     val escalas_insistir: Boolean = true,
-    /** Id del tema, uno de los 21 de `TemaId` (romano, ciber, heleno… antiguas). Se guarda como texto: un id desconocido vuelve a romano (el viejo «muertos», a botánico). */
+    /** Id del tema, uno de los de `TemaId` (romano, ciber, neon, heleno… antiguas; la lista completa está ahí). Se guarda como texto: un id desconocido vuelve a romano (el viejo «muertos», a botánico). */
     val tema: String = "romano",
     /** Escala del texto (1 = normal). */
     val letra: Float = 1f,
