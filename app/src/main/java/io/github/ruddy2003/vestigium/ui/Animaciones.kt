@@ -66,7 +66,7 @@ import kotlin.math.sqrt
 /** La forma con que el tema nuevo se abre sobre el anterior. */
 private enum class BarridoTema {
     ARCO, PIXELES, SOL, ROMBO, OJO, ESCOTILLA, ENGRANE, MEMBRANA, COLUMNAS, CORTINA, HOJA,
-    COPO, ABANICO, OJIVA, CIRCULO, OCHO, HORIZONTE, VITRUVIO, ESTRELLA, BANDAS, HEXAGONO
+    COPO, ABANICO, OJIVA, CIRCULO, OCHO, HORIZONTE, VITRUVIO, ROSA, ESTRELLA, BANDAS, HEXAGONO
 }
 
 /**
@@ -122,6 +122,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.MONGOL -> MatizMovimiento(BarridoTema.HORIZONTE, 760, FastOutSlowInEasing, 22f, 0f, 1f, 340, 45, FastOutSlowInEasing, 1.05f, 0.5f, 1100f)
     // Círculo y cuadrado juntos, como el hombre de Vitruvio.
     TemaId.RENACIMIENTO -> MatizMovimiento(BarridoTema.VITRUVIO, 880, CubicBezierEasing(0.35f, 0f, 0.25f, 1f), 0f, 10f, 0.985f, 540, 70, LinearOutSlowInEasing, 0.9f, 0.7f, 600f)
+    // Rosa de los vientos que gira un poco al abrirse; las secciones llegan de costado, como empujadas por la marea, y los botones cabecean.
+    TemaId.PIRATA -> MatizMovimiento(BarridoTema.ROSA, 820, CubicBezierEasing(0.45f, 0f, 0.35f, 1f), -14f, 8f, 0.99f, 480, 60, FastOutSlowInEasing, 1.05f, 0.45f, 520f)
     // Estrella de cinco puntas; las secciones entran en diagonal, como un cartel constructivista.
     TemaId.URSS -> MatizMovimiento(BarridoTema.ESTRELLA, 680, CubicBezierEasing(0.8f, 0f, 0.2f, 1f), 14f, 14f, 1f, 320, 40, FastOutSlowInEasing, 1.15f, 0.9f, 1600f)
     // Tres bandas, azul, blanca y roja, que se abren una tras otra.
@@ -188,7 +190,7 @@ fun contando(valor: String): String {
 internal enum class VivoTema(val periodo: Int) {
     LUCERNA(16000), FOSFORO(5000), OLIVO(30000), RAYO_ORO(26000), CENIZA(28000), VAPOR(18000), FRAGUA(7000),
     BURBUJAS(16000), GACETA(40000), CHARRETERAS(9000), HORMIGAS(70000), LUCIERNAGAS(9000), NIEVE(24000),
-    ARENA(14000), VITRAL(80000), ESTRELLAS(9000), AGUA(14000), NUBES(180000), SAMARAS(24000), ESTRELLAS_ROJAS(36000),
+    ARENA(14000), VITRAL(80000), ESTRELLAS(9000), AGUA(14000), NUBES(180000), SAMARAS(24000), OLEAJE(30000), ESTRELLAS_ROJAS(36000),
     CONFETI(22000), RUNAS(14000)
 }
 
@@ -213,6 +215,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.ANDALUS -> VivoTema.AGUA              // reflejos de alberca
     TemaId.MONGOL -> VivoTema.NUBES              // nubes del Cielo Azul
     TemaId.RENACIMIENTO -> VivoTema.SAMARAS      // semillas aladas que caen girando, como el tornillo aéreo
+    TemaId.PIRATA -> VivoTema.OLEAJE             // gaviotas que planean sobre la mar de fondo
     TemaId.URSS -> VivoTema.ESTRELLAS_ROJAS      // estrellas rojas que suben
     TemaId.REVOLUCION -> VivoTema.CONFETI        // confeti azul, blanco y rojo, tenue
     TemaId.ANTIGUAS -> VivoTema.RUNAS            // runas que brillan y se apagan
@@ -508,6 +511,42 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 drawCircle(al(sepia, 0.2f), l * 0.14f, Offset(x, y))
             }
         }
+        VivoTema.OLEAJE -> {
+            // La mar de fondo abajo: tres líneas de oleaje que avanzan, con borreguitos de espuma en las crestas.
+            val tinta = e.onBackground
+            for (k in 0 until 3) {
+                val y0 = h * (0.8f + k * 0.07f); val largo = (150f + 40f * k) * u; val alto = (4f + 1.5f * k) * u
+                val desliza = t * (k + 1)
+                val p = Path(); var x = -largo
+                p.moveTo(x, y0)
+                while (x <= w + largo) { p.lineTo(x, y0 - alto * senoVuelta(x / largo - desliza)); x += 5f * u }
+                drawPath(p, al(tinta, if (oscuro) 0.07f else 0.08f), style = Stroke((1f + 0.3f * k) * u))
+                var c = fraccionVivo(desliza) * largo - largo
+                while (c < w + largo) {
+                    // Cresta: donde el seno vale 1 (x / largo - desliza = 1/4 + n).
+                    if (c > -largo) {
+                        val cx = c + largo * 0.25f
+                        drawLine(al(tinta, if (oscuro) 0.09f else 0.11f), Offset(cx - 5f * u, y0 - alto + 1.5f * u), Offset(cx + 1f * u, y0 - alto - 1f * u), 0.9f * u, cap = StrokeCap.Round)
+                    }
+                    c += largo
+                }
+            }
+            // Gaviotas que cruzan planeando y a ratos aletean (una «m» abierta, como en los grabados de las cartas).
+            motas.take(7).forEach { m ->
+                val k = 1 + (m.v * 1.99f).toInt()
+                val x = (fraccionVivo(m.x + t * k) * 1.3f - 0.15f) * w
+                val y = h * (0.1f + m.y * 0.55f) + 8f * u * senoVuelta(t * k + m.fase)
+                val ala = 9f * u * m.tam
+                val aleteo = senoVuelta(t * 9 * k + m.fase * 3).let { if (it > 0.4f) 0.5f * it else 0f }
+                val col = al(tinta, if (oscuro) 0.16f else 0.2f)
+                val g = Path().apply {
+                    moveTo(x - ala, y - ala * (0.15f + aleteo))
+                    quadraticTo(x - ala * 0.45f, y - ala * (0.55f + aleteo), x, y)
+                    quadraticTo(x + ala * 0.45f, y - ala * (0.55f + aleteo), x + ala, y - ala * (0.15f + aleteo))
+                }
+                drawPath(g, col, style = Stroke(1.2f * u, cap = StrokeCap.Round))
+            }
+        }
         VivoTema.ESTRELLAS_ROJAS -> motas.take(14).forEach { m ->
             // Estrellas rojas de cinco puntas que suben despacio, meciéndose; algunas solo de contorno.
             val k = vueltas(m)
@@ -669,6 +708,16 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
         BarridoTema.VITRUVIO -> {
             ruta.addOval(Rect(c, r * 1.02f))
             ruta.addRect(Rect(c.x - r * 0.9f, c.y - r * 0.9f, c.x + r * 0.9f, c.y + r * 0.9f))
+        }
+        BarridoTema.ROSA -> {
+            // Rosa de los vientos de ocho puntas: las cuatro cardinales largas, las otras cuatro cortas; gira un poco al abrirse.
+            for (i in 0 until 16) {
+                val rr = when { i % 4 == 0 -> r * 2.5f; i % 2 == 0 -> r * 1.7f; else -> r * 1.05f }
+                val a = Math.toRadians(15.0 * p) - PI / 2 + PI * i / 8
+                val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat()
+                if (i == 0) ruta.moveTo(x, y) else ruta.lineTo(x, y)
+            }
+            ruta.close()
         }
         BarridoTema.PIXELES -> {
             // Celdas de la rejilla que se encienden por distancia al toque, con un poco de desorden.

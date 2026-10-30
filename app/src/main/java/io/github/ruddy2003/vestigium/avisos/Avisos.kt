@@ -55,6 +55,7 @@ object Avisos {
         TemaId.ANDALUS -> R.raw.n_andalus_aviso to R.raw.n_andalus_solemne
         TemaId.MONGOL -> R.raw.n_mongol_aviso to R.raw.n_mongol_solemne
         TemaId.RENACIMIENTO -> R.raw.n_renacimiento_aviso to R.raw.n_renacimiento_solemne
+        TemaId.PIRATA -> R.raw.n_pirata_aviso to R.raw.n_pirata_solemne
         TemaId.REVOLUCION -> R.raw.n_revolucion_aviso to R.raw.n_revolucion_solemne
         TemaId.ANTIGUAS -> R.raw.n_antiguas_aviso to R.raw.n_antiguas_solemne
     }
@@ -303,6 +304,13 @@ object Avisos {
             "❧ Lettera de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Invención lograda", "invenciones nuevas",
             "El cuaderno de %d está listo", "Un año entero en láminas: lo más hecho, lo único, lo curioso.")
+        TemaId.PIRATA -> Voz("✷ Toque de campana · ¿qué cariz trae tu ánimo?", "Dos toques en la carta: cuánta bonanza y cuánto viento en las velas.",
+            "✷ Desde el coy · ¿qué soñaste?", "Asiéntalo antes de saltar a cubierta; el sueño se va como la espuma.",
+            "✷ Fin de la singladura", "Llena la bitácora. Si hubo temporal, basta con un número.",
+            "Singladura con temporal: un número", "Órdenes de esta guardia:",
+            "✷ Una botella llegó a la playa: te escribe tu yo del pasado", "La marea la trajo en la fecha que elegiste.",
+            "Botín a bordo", "botines nuevos",
+            "La bitácora de %d, encuadernada", "Un año entero de travesía: lo más hecho, lo único, lo curioso.")
         TemaId.REVOLUCION -> Voz("✶ Citoyen, ¿cómo te sientes?", "Dos toques, libremente: agrado y energía.",
             "✶ ¿Qué soñaste, ciudadano?", "Anótalo antes de levantarte; el recuerdo se va en minutos.",
             "✶ Cuaderno de quejas del día", "Llena el día. Si fue duro, basta con un número.",
@@ -343,6 +351,7 @@ object Avisos {
         TemaId.ANDALUS -> VozEnfoque("Pausa en el patio", "Levántate, bebe agua de la fuente.", "Terminó la pausa en el patio", "Al alba: hora de despertar", "¡Obra acabada!")
         TemaId.MONGOL -> VozEnfoque("Alto en la estepa", "Levántate, bebe agua.", "A caballo otra vez", "El sol sale sobre la estepa: despierta", "¡Jornada ganada!")
         TemaId.RENACIMIENTO -> VozEnfoque("Pausa", "Lascia il pennello: levántate, toma agua.", "Fine della pausa", "Sveglia: hora de despertar", "Opera compiuta")
+        TemaId.PIRATA -> VozEnfoque("Se volteó la ampolleta", "Estira las piernas en cubierta y bebe agua dulce.", "Otra vuelta de ampolleta", "Toque de diana: a cubierta", "¡Guardia cumplida!")
         TemaId.REVOLUCION -> VozEnfoque("Repos", "Levántate, toma agua, ciudadano.", "Fin du repos", "Réveil: hora de despertar", "Ça ira: terminaste")
         TemaId.ANTIGUAS -> VozEnfoque("Alto en el camino", "Levántate, bebe del odre.", "La compañía sigue", "El alba: hora de despertar", "¡Hazaña cumplida!")
     }

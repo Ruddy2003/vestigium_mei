@@ -415,6 +415,60 @@ def renacimiento(tam):
     capa = a_rgba(rgb, alfa)
     guardar(fondo, capa, 'renacimiento')
 
+
+# ------------------------------------------------------------------ Pirata
+def pirata(tam):
+    """Carta náutica gastada: pergamino con manchas de agua, las 16 líneas de rumbo de una rosa, la costa de una isla,
+    la derrota punteada hasta la «X». La huella, en tinta de brea que se corre un poco con la humedad."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    papel = mezcla(col('#EADFC0'), col('#CDB88A'), ruido(tam, tam / 16, 61) * 0.8)
+    dist = np.sqrt((xx - tam / 2) ** 2 + (yy - tam / 2) ** 2) / (tam / 2)
+    papel = mezcla(papel, col('#8E7448'), np.clip(dist - 0.72, 0, 1) * 1.1)
+    agua = np.clip((ruido(tam, tam / 30, 62) - 0.66) * 5, 0, 1)
+    papel = mezcla(papel, col('#B9A273'), agua * 0.45)
+    papel = papel * (0.95 + 0.08 * ruido(tam, 0.7, 63)[..., None])
+    fondo = a_img(papel).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    tinta = (46, 34, 20, 60)
+    # Las líneas de rumbo salen de una rosa fuera de centro, como en los portulanos.
+    cx, cy = tam * 0.8, tam * 0.18
+    for k in range(16):
+        a = k * math.pi / 8
+        d.line([(cx, cy), (cx + math.cos(a) * tam * 1.6, cy + math.sin(a) * tam * 1.6)], fill=tinta if k % 2 == 0 else (46, 34, 20, 34), width=1)
+    for k in range(8):
+        a = -math.pi / 2 + k * math.pi / 4; l = tam * (0.07 if k % 2 == 0 else 0.045)
+        b1 = a + math.pi / 2; w = tam * 0.012
+        d.polygon([(cx + math.cos(a) * l, cy + math.sin(a) * l), (cx + math.cos(b1) * w, cy + math.sin(b1) * w),
+                   (cx - math.cos(b1) * w, cy - math.sin(b1) * w)], fill=(46, 34, 20, 110 if k % 2 == 0 else 70))
+    # La costa de una isla abajo a la izquierda, con sus rayitas de agua.
+    r = np.random.default_rng(64)
+    ix, iy, ir = tam * 0.22, tam * 0.8, tam * 0.11
+    costa = [(ix + math.cos(t) * ir * (1 + 0.18 * math.sin(3 * t) + 0.08 * r.random()), iy + math.sin(t) * ir * 0.62 * (1 + 0.12 * math.cos(5 * t)))
+             for t in np.linspace(0, 2 * math.pi, 40)]
+    d.polygon(costa, fill=(150, 120, 70, 50), outline=(46, 34, 20, 110))
+    for e in (1.15, 1.32):
+        d.line([(ix + (x - ix) * e, iy + (y - iy) * e) for x, y in costa][::2], fill=(46, 34, 20, 40), width=1)
+    # La derrota punteada hasta la «X», en rojo de almagre.
+    rojo = (140, 40, 26, 120)
+    pts = [(tam * 0.34, tam * 0.83), (tam * 0.5, tam * 0.94), (tam * 0.8, tam * 0.9), (tam * 0.9, tam * 0.7)]
+    for i in range(60):
+        t = i / 60
+        x = (1 - t) ** 3 * pts[0][0] + 3 * (1 - t) ** 2 * t * pts[1][0] + 3 * (1 - t) * t ** 2 * pts[2][0] + t ** 3 * pts[3][0]
+        y = (1 - t) ** 3 * pts[0][1] + 3 * (1 - t) ** 2 * t * pts[1][1] + 3 * (1 - t) * t ** 2 * pts[2][1] + t ** 3 * pts[3][1]
+        if i % 2 == 0: d.ellipse([x - 2, y - 2, x + 2, y + 2], fill=rojo)
+    x, y, s = tam * 0.9, tam * 0.66, tam * 0.025
+    d.line([(x - s, y - s), (x + s, y + s)], fill=(140, 40, 26, 170), width=max(2, tam // 150))
+    d.line([(x - s, y + s), (x + s, y - s)], fill=(140, 40, 26, 170), width=max(2, tam // 150))
+    fondo = fondo.convert('RGB')
+    # Huella en tinta de brea: casi negra, con el borde corrido por la humedad y poros de papel.
+    corrida = np.clip(desenfocar(m.astype(np.float32), tam / 500) * 1.15, 0, 1)
+    grano = ruido(tam, 0.6, 65)
+    alfa = np.clip(corrida * (0.72 + 0.28 * grano), 0, 1) * np.clip(0.85 + 0.25 * ruido(tam, tam / 30, 66), 0, 1)
+    rgb = mezcla(col('#241A10'), col('#4A3420'), ruido(tam, tam / 25, 67))
+    capa = a_rgba(rgb, alfa)
+    guardar(fondo, capa, 'pirata')
+
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
     """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
@@ -647,6 +701,7 @@ SIETE = [
     'andalus',
     'mongol',
     'renacimiento',
+    'pirata',
     'antiguas',
 ]
 ORDEN = [
@@ -668,6 +723,7 @@ ORDEN = [
     'andalus',
     'mongol',
     'renacimiento',
+    'pirata',
     'urss',
     'revolucion',
     'antiguas',

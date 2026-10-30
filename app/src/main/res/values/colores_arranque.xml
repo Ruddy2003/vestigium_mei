@@ -41,6 +41,8 @@
     <color name="arranque_mongol_oscuro">#0A1220</color>
     <color name="arranque_renacimiento">#F0E4C6</color>
     <color name="arranque_renacimiento_oscuro">#1A130C</color>
+    <color name="arranque_pirata">#E6DCBF</color>
+    <color name="arranque_pirata_oscuro">#100E0B</color>
     <color name="arranque_revolucion">#F2ECDD</color>
     <color name="arranque_revolucion_oscuro">#131417</color>
     <color name="arranque_antiguas">#E9E3D4</color>

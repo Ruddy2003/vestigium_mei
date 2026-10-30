@@ -137,6 +137,9 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Renacimiento: mapa dibujado a sanguina; de noche, nogal.
         TemaId.RENACIMIENTO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.85f, 0.68f, 0.5f, 6f, 2f, 0f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.88f, 0.7f, 0f, 0f, 0f)) }
+        // Pirata: carta náutica en sepia sobre pergamino húmedo; de noche, el mar verde oscuro a la luz del farol.
+        TemaId.PIRATA -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.74f, 0.7f, 2f, 6f, 4f)) }
+            else { m.setSaturation(0.2f); m.postConcat(tinte(0.98f, 0.92f, 0.76f, 6f, 4f, 0f)) }
         // Soviético: papel de cartel en blanco y negro con un toque rojo.
         TemaId.URSS -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.95f, 0.78f, 0.74f, 6f, 0f, 0f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(1.0f, 0.93f, 0.84f, 4f, 0f, 0f)) }
@@ -246,6 +249,12 @@ internal object Formas {
             }
             // El cuadrado de Vitruvio con el círculo calado.
             TemaId.RENACIMIENTO -> { p.reset(); p.addRect(x - r, y - r, x + r, y + r, horario); p.addCircle(x, y, r * 0.62f, antihorario) }
+            // La «X» del tesoro: dos barras cruzadas, en el mismo sentido para que se sumen.
+            TemaId.PIRATA -> {
+                p.reset(); val a = r * 1.05f; val e = r * 0.42f
+                p.moveTo(x - a, y - a + e); p.lineTo(x - a + e, y - a); p.lineTo(x + a, y + a - e); p.lineTo(x + a - e, y + a); p.close()
+                p.moveTo(x - a + e, y + a); p.lineTo(x - a, y + a - e); p.lineTo(x + a - e, y - a); p.lineTo(x + a, y - a + e); p.close()
+            }
             // La estrella de cinco puntas.
             TemaId.URSS -> poligono(x, y, r * 1.25f, 5, -90.0, 0.42f)
             TemaId.REVOLUCION -> poligono(x, y, r * 1.12f, 14, -90.0, 0.84f)   // escarapela plisada
@@ -280,6 +289,7 @@ internal object Formas {
             TemaId.RENACIMIENTO -> {   // el círculo que pasa por las esquinas y la retícula de dibujo
                 c.drawCircle(x, y, r * 1.41f, d); raya(c, x, y, r, -1.6f, 0f, 1.6f, 0f, d); raya(c, x, y, r, 0f, -1.6f, 0f, 1.6f, d)
             }
+            TemaId.PIRATA -> c.drawCircle(x, y, r * 0.24f, d)   // el punto donde está enterrado
             TemaId.URSS -> for (i in 0 until 5) {   // las aristas de la estrella facetada
                 val a = Math.toRadians(-90.0 + 72.0 * i)
                 c.drawLine(x, y, x + r * 1.25f * kotlin.math.cos(a).toFloat(), y + r * 1.25f * kotlin.math.sin(a).toFloat(), d)
@@ -864,6 +874,19 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             drawArc(sanguina, 270f, 90f, false, Offset(m - rr, h - m - rr), lado, style = trazo)
             esquinas(m) { o, dx, dy -> drawLine(acento.copy(alpha = 0.5f), o, o + Offset(dx, dy) * (rr * 1.15f), 0.8f * u) }
         }
+        // El borde de las cartas de marear: la escala de grados en franjas claras y oscuras entre dos filetes, un cabo que
+        // corre por dentro y un nudo en cada esquina.
+        TemaId.PIRATA -> {
+            filete(4 * u, tinta.copy(alpha = 0.55f), 1 * u); filete(9 * u, tinta.copy(alpha = 0.45f), 0.8f * u)
+            var x = 4 * u; var k = 0
+            while (x < w - 4 * u) { if (k % 2 == 0) { drawRect(tinta.copy(alpha = 0.4f), Offset(x, 4 * u), Size(minOf(10 * u, w - 4 * u - x), 5 * u)); drawRect(tinta.copy(alpha = 0.4f), Offset(x, h - 9 * u), Size(minOf(10 * u, w - 4 * u - x), 5 * u)) }; x += 10 * u; k++ }
+            var y = 4 * u; k = 0
+            while (y < h - 4 * u) { if (k % 2 == 0) { drawRect(tinta.copy(alpha = 0.4f), Offset(4 * u, y), Size(5 * u, minOf(10 * u, h - 4 * u - y))); drawRect(tinta.copy(alpha = 0.4f), Offset(w - 9 * u, y), Size(5 * u, minOf(10 * u, h - 4 * u - y))) }; y += 10 * u; k++ }
+            val cabo = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.4f * u, 1.2f * u))
+            filete(12 * u, acento.copy(alpha = 0.55f), 1.6f * u)
+            drawRect(fondo.copy(alpha = 0.6f), Offset(12 * u, 12 * u), Size(w - 24 * u, h - 24 * u), style = Stroke(0.6f * u, pathEffect = cabo))
+            esquinas(12 * u) { o, _, _ -> drawCircle(acento.copy(alpha = 0.8f), 3 * u, o); drawCircle(tinta.copy(alpha = 0.6f), 3 * u, o, style = Stroke(0.7f * u)) }
+        }
         // Constructivismo: una barra roja a la izquierda, una negra abajo y una cuña roja en la esquina.
         TemaId.URSS -> {
             drawRect(acento, Offset(0f, 0f), Size(7 * u, h))
@@ -1052,6 +1075,20 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             for (i in 0 until 32) drawLine(tinta.copy(alpha = 0.3f), c, c + rumbo(n + 11.25 * i) * r, 0.6f * u)
             for (i in 0 until 8) punta(n + 45.0 * i, if (i % 2 == 0) r * 0.9f else r * 0.55f, r * 0.1f, if (i == 0) acento else tinta.copy(alpha = 0.75f))
             anillo(r * 0.3f, tinta.copy(alpha = 0.6f), 0.8f * u)
+        }
+        // La rosa de las cartas de marear: dieciséis puntas (las cardinales largas), el anillo graduado en treinta y dos
+        // cuartas, la flor de lis roja al norte y la cruz al este.
+        TemaId.PIRATA -> {
+            anillo(r * 0.98f, tinta.copy(alpha = 0.5f), 0.8f * u)
+            for (i in 0 until 32) drawLine(tinta.copy(alpha = 0.55f), c + rumbo(n + 11.25 * i) * (r * 0.9f), c + rumbo(n + 11.25 * i) * (r * if (i % 4 == 0) 0.98f else 0.94f), 0.7f * u)
+            for (i in 0 until 8) punta(n + 22.5 + 45.0 * i, r * 0.42f, r * 0.07f, secundario.copy(alpha = 0.8f))
+            for (i in 0 until 4) punta(n + 45.0 + 90.0 * i, r * 0.6f, r * 0.1f, tenue)
+            for (i in 0 until 4) punta(n + 90.0 * i, r * 0.86f, r * 0.13f, if (i == 0) acento else tenue)
+            val lis = c + rumbo(n) * (r * 0.9f)
+            drawCircle(acento, r * 0.07f, lis); drawCircle(acento, r * 0.05f, lis + Offset(-r * 0.08f, r * 0.04f)); drawCircle(acento, r * 0.05f, lis + Offset(r * 0.08f, r * 0.04f))
+            val este = c + rumbo(0.0) * (r * 0.92f)
+            drawLine(tinta, este - Offset(0f, r * 0.07f), este + Offset(0f, r * 0.07f), 1 * u); drawLine(tinta, este - Offset(r * 0.05f, 0f), este + Offset(r * 0.05f, 0f), 1 * u)
+            drawCircle(fondo, r * 0.08f, c); drawCircle(tinta, r * 0.08f, c, style = Stroke(0.8f * u))
         }
         // Una cuña al norte y la estrella roja en medio.
         TemaId.URSS -> {

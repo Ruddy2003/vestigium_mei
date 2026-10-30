@@ -35,6 +35,7 @@ object SalonesTema {
             TemaId.MEDIEVAL -> salaGestas(cs, oscuro, n)
             TemaId.GOTICO -> nave(cs, oscuro, n)
             TemaId.RENACIMIENTO -> galeria(cs, oscuro, n)
+            TemaId.PIRATA -> camaraPopa(cs, oscuro, n)
             TemaId.NAPOLEON -> imperial(cs, oscuro, n)
             TemaId.REVOLUCION -> panteon(cs, oscuro, n)
             TemaId.ANDALUS -> with(SalonesMas) { patio(cs, oscuro, n) }
@@ -65,6 +66,17 @@ object SalonesTema {
             TemaId.MEDIEVAL -> { drawRect(piedra(Color(0xFF5A3A22)), Offset(w * 0.12f, h * 0.1f), Size(w * 0.76f, h * 0.35f)); drawRect(Color(0xFF5A3A22), Offset(w * 0.45f, h * 0.45f), Size(w * 0.1f, h * 0.55f)) }
             TemaId.GOTICO -> { drawRect(piedra(Color(0xFF6B6F7A)), Offset(w * 0.18f, 0f), Size(w * 0.64f, h)); for (k in 1..3) drawLine(Color(0xFF3A3E48).copy(alpha = 0.5f), Offset(w * (0.18f + 0.16f * k), 0f), Offset(w * (0.18f + 0.16f * k), h), 1.2f) }
             TemaId.RENACIMIENTO -> { drawRect(piedra(Color(0xFF8C9188)), Offset(w * 0.16f, h * 0.2f), Size(w * 0.68f, h * 0.8f)); drawRect(piedra(Color(0xFFB5B9AE)), Offset(w * 0.1f, 0f), Size(w * 0.8f, h * 0.22f)) }
+            // Un barril de ron puesto de pie: duelas de roble combadas y tres aros de hierro.
+            TemaId.PIRATA -> {
+                val roble = Brush.horizontalGradient(listOf(Color(0xFF4A3220), Color(0xFF8A6440), Color(0xFFA77C52), Color(0xFF8A6440), Color(0xFF4A3220)), w * 0.16f, w * 0.84f)
+                val barril = Path().apply {
+                    moveTo(w * 0.22f, 0f); lineTo(w * 0.78f, 0f); quadraticTo(w * 0.9f, h * 0.5f, w * 0.78f, h); lineTo(w * 0.22f, h); quadraticTo(w * 0.1f, h * 0.5f, w * 0.22f, 0f); close()
+                }
+                drawPath(barril, roble)
+                for (k in 1..4) { val x = w * (0.22f + 0.112f * k); drawLine(Color.Black.copy(alpha = 0.25f), Offset(x, 0f), Offset(x + (x - w / 2) * 0.12f, h * 0.5f), 1f); drawLine(Color.Black.copy(alpha = 0.25f), Offset(x + (x - w / 2) * 0.12f, h * 0.5f), Offset(x, h), 1f) }
+                listOf(0.12f, 0.5f, 0.88f).forEach { y -> val a = if (y == 0.5f) 0.115f else 0.07f; drawRect(Color(0xFF3A3A3A), Offset(w * (0.22f - a), h * y - h * 0.035f), Size(w * (0.56f + 2 * a), h * 0.07f)) }
+                drawLine(metal, Offset(w * 0.3f, h * 0.5f), Offset(w * 0.7f, h * 0.5f), 1.2f)
+            }
             TemaId.NAPOLEON -> { drawRect(piedra(Color(0xFF2F5D4A)), Offset(w * 0.16f, 0f), Size(w * 0.68f, h)); drawRect(Color(0xFFD4AF37), Offset(w * 0.16f, 0f), Size(w * 0.68f, h * 0.12f)); drawRect(Color(0xFFD4AF37), Offset(w * 0.16f, h * 0.88f), Size(w * 0.68f, h * 0.12f)) }
             TemaId.REVOLUCION -> {
                 drawRect(piedra(Color(0xFFD8D1C2)), Offset(w * 0.18f, 0f), Size(w * 0.64f, h))
@@ -282,6 +294,59 @@ object SalonesTema {
         for (k in -10..10) drawLine(tinta, Offset(w / 2 + k * w / 10, h), Offset(w / 2 + k * w / 10 * 0.6f, y0), 1f)
         var yy = y0; var pasoY = 4 * d
         while (yy < h) { drawLine(tinta, Offset(0f, yy), Offset(w, yy), 1f); yy += pasoY; pasoY *= 1.35f }
+    }
+
+    /**
+     * La cámara del capitán, en la popa: arriba, la galería de ventanas con sus vidrios emplomados por donde se ve el mar y
+     * el cielo; tablazón de roble en los costados, un bao curvo (la cuaderna) entre cada columna de piezas con su farol
+     * colgado, un cabo de barandal tendido de bao a bao, y abajo la cubierta de tablones que huyen hacia el fondo.
+     */
+    private fun DrawScope.camaraPopa(cs: ColorScheme, oscuro: Boolean, n: Int) {
+        val w = size.width; val h = size.height; val d = density
+        val roble = (if (oscuro) Color(0xFF3A2A1A) else Color(0xFF8A6440)).copy(alpha = if (oscuro) 0.55f else 0.22f)
+        val junta = Color.Black.copy(alpha = if (oscuro) 0.3f else 0.1f)
+        val laton = Color(0xFFC9A04A).copy(alpha = if (oscuro) 0.55f else 0.5f)
+        val cabo = Color(0xFFB59A62).copy(alpha = if (oscuro) 0.5f else 0.55f)
+        // La tablazón de los costados: tablas verticales con sus juntas de brea.
+        var x = 0f
+        while (x < w) { drawRect(roble, Offset(x, 0f), Size(13 * d, h)); drawLine(junta, Offset(x, 0f), Offset(x, h), 1f); x += 14 * d }
+        // La galería de popa: ventanas de medio punto con el mar al fondo y los vidrios en cuadrícula.
+        val alto = 40 * d; val paso = w / n
+        for (i in 0 until n) {
+            val x0 = i * paso + 12 * d; val x1 = (i + 1) * paso - 12 * d
+            if (x1 - x0 < 20 * d) continue
+            val marco = Rect(x0, 6 * d, x1, alto)
+            val ventana = Path().apply { moveTo(x0, alto); lineTo(x0, 6 * d + (x1 - x0) * 0.25f); quadraticTo((x0 + x1) / 2, 6 * d - (x1 - x0) * 0.1f, x1, 6 * d + (x1 - x0) * 0.25f); lineTo(x1, alto); close() }
+            drawPath(ventana, Brush.verticalGradient(listOf(Color(0xFF8FB7D6).copy(alpha = if (oscuro) 0.16f else 0.28f), Color(0xFF2F5D62).copy(alpha = if (oscuro) 0.3f else 0.35f)), marco.top, marco.bottom))
+            drawLine(Color.White.copy(alpha = if (oscuro) 0.12f else 0.35f), Offset(x0, alto - 10 * d), Offset(x1, alto - 10 * d), 1f)
+            var vx = x0 + (x1 - x0) / 4
+            while (vx < x1 - 1f) { drawLine(laton, Offset(vx, 8 * d), Offset(vx, alto), 1f); vx += (x1 - x0) / 4 }
+            var vy = 14 * d
+            while (vy < alto) { drawLine(laton, Offset(x0, vy), Offset(x1, vy), 1f); vy += 9 * d }
+            drawPath(ventana, laton, style = Stroke(1.6f * d))
+        }
+        drawRect(roble.copy(alpha = roble.alpha * 1.8f), Offset(0f, alto), Size(w, 5 * d))
+        // Los baos curvos entre las piezas, con su farol y el cabo del barandal de uno a otro.
+        val piso = h - 28 * d
+        for (i in 0..n) {
+            val cx = i * paso
+            drawPath(Path().apply { moveTo(cx - 4 * d, alto + 5 * d); quadraticTo(cx - 10 * d, (alto + piso) / 2, cx - 4 * d, piso); lineTo(cx + 4 * d, piso); quadraticTo(cx - 2 * d, (alto + piso) / 2, cx + 4 * d, alto + 5 * d); close() },
+                roble.copy(alpha = roble.alpha * 2.2f))
+            if (i in 1 until n) {
+                val f = Offset(cx, alto + 28 * d)
+                drawLine(laton, Offset(cx, alto + 5 * d), f - Offset(0f, 7 * d), 1f * d)
+                drawRoundRect(laton, f - Offset(5 * d, 7 * d), Size(10 * d, 14 * d), androidx.compose.ui.geometry.CornerRadius(2 * d), style = Stroke(1.2f * d))
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC266).copy(alpha = if (oscuro) 0.3f else 0.18f), Color.Transparent), f, 36 * d), 36 * d, f)
+                drawCircle(Color(0xFFFFC266).copy(alpha = 0.7f), 2.4f * d, f)
+            }
+        }
+        val yb = piso - 34 * d
+        for (i in 0 until n) drawPath(Path().apply { moveTo(i * paso + 4 * d, yb); quadraticTo((i + 0.5f) * paso, yb + 12 * d, (i + 1) * paso - 4 * d, yb) }, cabo, style = Stroke(2 * d))
+        // La cubierta: tablones que huyen hacia el centro y sus juntas, más apretadas al fondo.
+        drawRect(roble.copy(alpha = roble.alpha * 1.4f), Offset(0f, piso), Size(w, h - piso))
+        for (k in -8..8) drawLine(junta, Offset(w / 2 + k * w / 8, h), Offset(w / 2 + k * w / 8 * 0.55f, piso), 1f)
+        var yy = piso; var pasoY = 4 * d
+        while (yy < h) { drawLine(junta, Offset(0f, yy), Offset(w, yy), 1f); yy += pasoY; pasoY *= 1.4f }
     }
 
     /** La galería imperial: pilastras de mármol verde entre las piezas, guirnaldas de laurel en oro y el cortinaje carmesí arriba. */

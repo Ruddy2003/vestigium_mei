@@ -33,6 +33,10 @@ object LetraExtra {
     val filosofo = FontFamily(Font(R.font.philosopher_regular, FontWeight.Normal), Font(R.font.philosopher_bold, FontWeight.Bold), Font(R.font.philosopher_bold, FontWeight.SemiBold))
     val italianno = FontFamily(Font(R.font.italianno, FontWeight.Normal))
     val cormorant = FontFamily(Font(R.font.cormorant_regular, FontWeight.Normal), Font(R.font.cormorant_medium, FontWeight.Medium), Font(R.font.cormorant_medium, FontWeight.SemiBold))
+    /** «Corsario Vestigium» (Pirata One renombrada): la letra negra de las cartas de marear y los avisos de puerto. */
+    val corsario = FontFamily(Font(R.font.corsario_titulo, FontWeight.Normal))
+    /** Libre Caslon Text: el Caslon (h. 1725) de los libros que se imprimían cuando zarpaban los balandros. */
+    val caslon = FontFamily(Font(R.font.caslon_regular, FontWeight.Normal), Font(R.font.caslon_semibold, FontWeight.SemiBold), Font(R.font.caslon_semibold, FontWeight.Bold))
     val fraunces = FontFamily(Font(R.font.fraunces_titulo, FontWeight.Normal), Font(R.font.fraunces_titulo, FontWeight.Medium), Font(R.font.fraunces_negrita, FontWeight.SemiBold), Font(R.font.fraunces_negrita, FontWeight.Bold))
     val cinzelDeco = FontFamily(Font(R.font.cinzel_deco_regular, FontWeight.Normal), Font(R.font.cinzel_deco_bold, FontWeight.Bold))
     val almendra = FontFamily(Font(R.font.almendra_regular, FontWeight.Normal), Font(R.font.almendra_bold, FontWeight.Bold))
@@ -282,6 +286,16 @@ internal val renacimientoOscuro = esquema(true, 0xFF1A130C, 0xFF241A11, 0xFF3023
 internal val tipoRenacimiento = tipografia(LetraExtra.italianno, FontWeight.Normal, 1.78f, 0f, LetraExtra.cormorant, 1.2f, LetraExtra.cormorant, 1.22f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
+//  Pirata: la carta náutica y la bitácora. De día, sepia sobre pergamino húmedo, el verde del mar de las cartas, latón
+//  y el rojo de la bandera; de noche, brea y lona a la luz del farol, con el latón encendido.
+// ---------------------------------------------------------------------
+internal val pirataClaro = esquema(false, 0xFFE6DCBF, 0xFFF0E8D0, 0xFFD9CBA6, 0xFFAD9A70, 0xFF2A1C0F, 0xFF66553C,
+    0xFF1E5157, 0xFFFFFFFF, 0xFFCFE2DC, 0xFF0E2A2D, 0xFF85621A, 0xFFEEDDB4, 0xFF9A2A1C, 0xFF8A1A1A)
+internal val pirataOscuro = esquema(true, 0xFF100E0B, 0xFF1A1712, 0xFF25201A, 0xFF41382A, 0xFFE9DEC3, 0xFFAFA386,
+    0xFFD6AA4C, 0xFF201604, 0xFF3D3015, 0xFFE9DEC3, 0xFF7DBFB6, 0xFF1A3432, 0xFFE47B4E, 0xFFFF8A80)
+internal val tipoPirata = tipografia(LetraExtra.corsario, FontWeight.Normal, 1.14f, 0.4f, LetraExtra.caslon, 0.98f, LetraExtra.caslon, 1.0f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
 //  Revolución francesa: papel de cartel crudo, tinta de imprenta, el azul y el rojo de la escarapela y el verde del
 //  árbol de la libertad; de noche, la plaza a la luz de las antorchas.
 // ---------------------------------------------------------------------
@@ -320,6 +334,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.ANDALUS -> if (oscuro) listOf(0xFFE07A5F, 0xFF18302D, 0xFF4FC1A6, 0xFFE0B65A) else listOf(0xFFB5432A, 0xFFE9DEC6, 0xFF1E6B5C, 0xFF2A4F9E)
     TemaId.MONGOL -> if (oscuro) listOf(0xFFFF7A59, 0xFF18263F, 0xFF6FB1FF, 0xFFF2C14E) else listOf(0xFFC2412D, 0xFFE6DFCF, 0xFF1F5FA8, 0xFFC48A1E)
     TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFFE08A5E, 0xFF302318, 0xFF9EC0E0, 0xFFD9B566) else listOf(0xFF8C3B1E, 0xFFE6D6B0, 0xFF2F4F6F, 0xFF9C7A2E)
+    TemaId.PIRATA -> if (oscuro) listOf(0xFFD6AA4C, 0xFF25201A, 0xFF7DBFB6, 0xFFE47B4E) else listOf(0xFF1E5157, 0xFFD9CBA6, 0xFF85621A, 0xFF9A2A1C)
     TemaId.REVOLUCION -> if (oscuro) listOf(0xFFE5525E, 0xFF25282F, 0xFF8FAEE8, 0xFF8CC08A) else listOf(0xFFB22234, 0xFFE6DDC8, 0xFF1F3A6E, 0xFF3F6B3A)
     TemaId.ANTIGUAS -> if (oscuro) listOf(0xFFE06A72, 0xFF2A2B2F, 0xFF8CC79A, 0xFFD9BC6A) else listOf(0xFF8E1B24, 0xFFDCD5C3, 0xFF2E5A3E, 0xFF9A7B2E)
 }.map { Color(it) }
@@ -346,6 +361,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.ANDALUS -> if (oscuro) listOf(0xFF4FC1A6, 0xFFE0B65A, 0xFFE07A5F) else listOf(0xFF1E6B5C, 0xFF2A4F9E, 0xFFB5432A)
     TemaId.MONGOL -> if (oscuro) listOf(0xFF6FB1FF, 0xFFF2C14E, 0xFFFF7A59) else listOf(0xFF1F5FA8, 0xFFC48A1E, 0xFFC2412D)
     TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFF9EC0E0, 0xFFD9B566, 0xFFE08A5E) else listOf(0xFF2F4F6F, 0xFF9C7A2E, 0xFF8C3B1E)
+    TemaId.PIRATA -> if (oscuro) listOf(0xFF7DBFB6, 0xFFD6AA4C, 0xFFE47B4E) else listOf(0xFF1E5157, 0xFF85621A, 0xFF9A2A1C)
     TemaId.REVOLUCION -> if (oscuro) listOf(0xFF8FAEE8, 0xFF8CC08A, 0xFFE5525E) else listOf(0xFF1F3A6E, 0xFF3F6B3A, 0xFFB22234)
     TemaId.ANTIGUAS -> if (oscuro) listOf(0xFF8CC79A, 0xFFD9BC6A, 0xFFE06A72) else listOf(0xFF2E5A3E, 0xFF9A7B2E, 0xFF8E1B24)
 }.map { Color(it) }

@@ -616,6 +616,46 @@ object Frases {
         f("Tutti gli uomini d'ogni sorte, che hanno fatto qualche cosa che sia virtuosa… doverieno, essendo veritieri e da bene, di lor propia mano descrivere la loro vita; ma non si doverrebbe cominciare una tal bella impresa prima che passato l'età de' quarant'anni.", "Todos los hombres, de cualquier condición, que hayan hecho algo de valor deberían, si son sinceros y de bien, escribir su vida de su propia mano; pero no habría que empezar tan bella empresa antes de pasados los cuarenta años.", "Benvenuto Cellini, Vida I, 1, 1558"),
     )
 
+    /** Del mar y de los piratas: los artículos de Bartholomew Roberts y su lema (en la *Historia general de los piratas*, 1724), Defoe, Espronceda y otros. */
+    val PIRATA = listOf(
+        f(null, "Que es mi barco mi tesoro, que es mi Dios la libertad, mi ley la fuerza y el viento, mi única patria la mar.", "José de Espronceda, «Canción del pirata», 1835"),
+        f(null, "Navega, velero mío, sin temor, que ni enemigo navío ni tormenta, ni bonanza tu rumbo a torcer alcanza, ni a sujetar tu valor.", "José de Espronceda, «Canción del pirata», 1835"),
+        f(null, "La libertad, Sancho, es uno de los más preciosos dones que a los hombres dieron los cielos; con ella no pueden igualarse los tesoros que encierra la tierra ni el mar encubre.",
+            "Miguel de Cervantes, Don Quijote II, 58"),
+        f(null, "Caminante, no hay camino, sino estelas en la mar.", "Antonio Machado, «Proverbios y cantares» XXIX, Campos de Castilla (ed. de 1917)"),
+        f("In an honest Service, there is thin Commons, low Wages, and hard Labour; in this, Plenty and Satiety, Pleasure and Ease, Liberty and Power… No, a merry Life and a short one, shall be my Motto.",
+            "En un servicio honrado hay rancho escaso, paga baja y trabajo duro; en este, abundancia y hartura, placer y holgura, libertad y poder… No: una vida alegre y corta será mi lema.",
+            "Bartholomew Roberts, según Charles Johnson, Historia general de los piratas, 1724"),
+        f("Every Man has a Vote in Affairs of Moment.", "Cada hombre tiene un voto en los asuntos de importancia.", "Artículos de Bartholomew Roberts, art. I, en Charles Johnson, Historia general de los piratas, 1724"),
+        f("The Lights and Candles to be put out at eight o'Clock at Night: If any of the Crew, after that Hour, still remained inclined for Drinking, they were to do it on the open Deck.",
+            "Las luces y las velas se apagan a las ocho de la noche; si alguno de la tripulación, pasada esa hora, aún quiere beber, que lo haga en la cubierta descubierta.",
+            "Artículos de Bartholomew Roberts, art. IV, en Charles Johnson, Historia general de los piratas, 1724"),
+        f("Thus fear of danger is ten thousand times more terrifying than danger itself, when apparent to the eyes.", "Así, el miedo al peligro aterra diez mil veces más que el peligro mismo cuando se tiene delante.",
+            "Daniel Defoe, Robinson Crusoe, 1719"),
+        f("But it is never too late to be wise.", "Pero nunca es tarde para ser sensato.", "Daniel Defoe, Robinson Crusoe, 1719"),
+        f("All our discontents about what we want appeared to me to spring from the want of thankfulness for what we have.",
+            "Todos nuestros descontentos por lo que nos falta me parecieron nacer de la falta de gratitud por lo que tenemos.", "Daniel Defoe, Robinson Crusoe, 1719"),
+        f("Whenever it is a damp, drizzly November in my soul… then, I account it high time to get to sea as soon as I can.",
+            "Cada vez que en mi alma es un noviembre húmedo y lloviznoso… entonces juzgo que ya es hora de hacerme a la mar cuanto antes.", "Herman Melville, Moby Dick, cap. 1, 1851"),
+        f("Better sleep with a sober cannibal than a drunken Christian.", "Mejor dormir con un caníbal sobrio que con un cristiano borracho.", "Herman Melville, Moby Dick, cap. 3, 1851"),
+        f("There is, one knows not what sweet mystery about this sea, whose gently awful stirrings seem to speak of some hidden soul beneath.",
+            "Hay en este mar no se sabe qué dulce misterio, cuyos movimientos, mansos y temibles, parecen hablar de un alma escondida debajo.", "Herman Melville, Moby Dick, cap. 111, 1851"),
+        f("Fifteen men on the dead man's chest— Yo-ho-ho, and a bottle of rum! Drink and the devil had done for the rest.",
+            "Quince hombres sobre el cofre del muerto, ¡yo-jo-jo, y una botella de ron! La bebida y el diablo acabaron con los demás.", "Robert Louis Stevenson, La isla del tesoro, cap. 1, 1883"),
+        f("The sea has never been friendly to man. At most it has been the accomplice of human restlessness.", "El mar nunca ha sido amigo del hombre. A lo sumo, ha sido cómplice de su inquietud.",
+            "Joseph Conrad, El espejo del mar, 1906"),
+        f("Water, water, every where, Nor any drop to drink.", "Agua, agua por todas partes, y ni una gota para beber.", "Samuel Taylor Coleridge, La balada del viejo marinero, 1798"),
+        f("We are such stuff As dreams are made on; and our little life Is rounded with a sleep.", "Somos de la misma materia que los sueños, y nuestra breve vida se cierra con un sueño.",
+            "William Shakespeare, La tempestad IV, 1"),
+        f("Ignoranti quem portum petat nullus suus ventus est.", "Para quien no sabe a qué puerto se dirige, ningún viento es favorable.", "Séneca, Cartas a Lucilio 71"),
+        f("Gubernatorem in tempestate, in acie militem intellegas.", "Al piloto se le conoce en la tempestad; al soldado, en la batalla.", "Séneca, Sobre la providencia 4, 5"),
+        f("Πλεῖν ἀνάγκη, ζῆν οὐκ ἀνάγκη.", "Navegar es necesario; vivir no es necesario.", "Pompeyo, según Plutarco, Vida de Pompeyo 50"),
+        f("No man will be a sailor who has contrivance enough to get himself into a jail; for being in a ship is being in a jail, with the chance of being drowned.",
+            "Nadie que tenga maña para hacerse meter en la cárcel se hará marinero: estar en un barco es estar en la cárcel, con la posibilidad de ahogarse.", "Samuel Johnson, según James Boswell, Vida de Samuel Johnson (1759)"),
+        f(null, "Los que descienden a la mar en navíos, y hacen negocio en las muchas aguas, ellos han visto las obras de Jehová, y sus maravillas en el profundo.",
+            "Salmo 107, 23-24, versión Reina-Valera"),
+    )
+
     val URSS = listOf(
         f("Планета есть колыбель разума, но нельзя вечно жить в колыбели.", "La Tierra es la cuna de la razón, pero no se puede vivir siempre en la cuna.", "Konstantín Tsiolkovski, carta de 1911"),
         f("Поехали!", "¡Vámonos!", "Yuri Gagarin, 12 de abril de 1961"),
@@ -662,6 +702,7 @@ object Frases {
         TemaId.ANDALUS -> ANDALUS
         TemaId.MONGOL -> MONGOL
         TemaId.RENACIMIENTO -> RENACIMIENTO
+        TemaId.PIRATA -> PIRATA
         TemaId.REVOLUCION -> REVOLUCION
         TemaId.ANTIGUAS -> ANTIGUAS
     }
@@ -694,6 +735,7 @@ object Frases {
         TemaId.ANDALUS -> "حكمة اليوم · sentencia del día"
         TemaId.MONGOL -> "ӨНӨӨДРИЙН БИЛИГ · máxima del día"
         TemaId.RENACIMIENTO -> "Dal taccuino"
+        TemaId.PIRATA -> "Escrito en la bitácora"
         TemaId.REVOLUCION -> "CARTEL DEL DÍA"
         TemaId.ANTIGUAS -> "Dicho del camino"
     }

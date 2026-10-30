@@ -295,6 +295,21 @@ object Textos {
         "widget_discreto_momento" to "annota",
     )
 
+    private val PIRATA: Map<String, String> = mapOf(
+        "pestana_dia" to "Singladura",
+        "pestana_diario" to "Bitácora",
+        "pestana_registrar" to "Asentar",
+        "pestana_vida" to "Travesía",
+        "pestana_entender" to "Sondear",
+        "escala_vacia" to "mar sin sondar · toca o desliza",
+        "lista_anadir" to "+ embarcar",
+        "palabras" to "%d palabras en la bitácora",
+        "widget_animo" to "¿qué cariz trae el día?",
+        "widget_momento" to "en esta guardia siento…",
+        "widget_discreto_animo" to "cariz",
+        "widget_discreto_momento" to "al cuaderno",
+    )
+
     private val REVOLUCION: Map<String, String> = mapOf(
         "pestana_dia" to "CAHIER",
         "pestana_diario" to "CUADERNOS",
@@ -346,6 +361,7 @@ object Textos {
         TemaId.ANDALUS -> ANDALUS
         TemaId.MONGOL -> MONGOL
         TemaId.RENACIMIENTO -> RENACIMIENTO
+        TemaId.PIRATA -> PIRATA
         TemaId.REVOLUCION -> REVOLUCION
         TemaId.ANTIGUAS -> ANTIGUAS
     }[clave]

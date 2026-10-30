@@ -177,6 +177,15 @@ internal object Claves {
         "iter" to "itinerario", "orbis" to "territorio", "momenta" to "observaciones", "dies" to "jornadas",
     )
 
+    /** Habla de a bordo. Lo que no está aquí queda en el español común. */
+    val PIRATA: Map<String, String> = mapOf(
+        "somnus" to "coy", "passus" to "trancos", "cor" to "latidos", "animus" to "cariz", "svmptvs" to "doblones", "loca" to "fondeaderos",
+        "personae" to "marinería", "palmae" to "botín", "telephonum" to "catalejo", "telephon" to "catalejo", "iter" to "derrota",
+        "caelum" to "cielo_y_mar", "lux" to "sol_en_cubierta", "aer" to "brisa", "epistulae" to "botellas", "momenta" to "asientos",
+        "orbis" to "siete_mares", "reditus" to "presas", "consuetudo" to "guardias", "cibus" to "rancho", "musica" to "salomas",
+        "imagines" to "bocetos", "dies" to "singladuras", "strepitus" to "oleaje", "vis" to "pólvora", "lectio" to "lecturas_de_litera",
+    )
+
     /** Voz de la casa en Navidad. Lo que no está aquí queda en el español común. */
     val NAVIDAD: Map<String, String> = mapOf(
         "somnus" to "noche_de_paz", "animus" to "sentir", "svmptvs" to "regalos", "personae" to "familia", "palmae" to "estrellas",

@@ -161,6 +161,7 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     TemaId.MONGOL -> Temas.anioMongol(java.time.LocalDate.of(anio, 6, 1)) + " · $anio"
     // «Taccuino»: la libreta de bolsillo en que Leonardo apuntaba todo.
     TemaId.RENACIMIENTO -> "Taccuino dell'anno $anio"
+    TemaId.PIRATA -> "La travesía de $anio, singladura por singladura"
     TemaId.REVOLUCION -> "CAHIER DE L'ANNÉE $anio · ${Temas.anRepublicano(anio, 6).uppercase()}"
     TemaId.ANTIGUAS -> "LAS DOCE LUNAS DEL CAMINO · $anio"
 }

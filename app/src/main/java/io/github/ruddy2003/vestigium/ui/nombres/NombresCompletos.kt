@@ -29,6 +29,7 @@ object NombresCompletos {
         TemaId.ANDALUS -> NombresAndalus.M[titulo]
         TemaId.MONGOL -> NombresMongol.M[titulo]
         TemaId.RENACIMIENTO -> NombresRenacimiento.M[titulo]
+        TemaId.PIRATA -> NombresPirata.M[titulo]
         TemaId.REVOLUCION -> NombresRevolucion.M[titulo]
         TemaId.ANTIGUAS -> NombresAntiguas.M[titulo]
     }

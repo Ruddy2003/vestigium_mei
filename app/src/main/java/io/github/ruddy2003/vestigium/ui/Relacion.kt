@@ -103,6 +103,7 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     TemaId.ANDALUS -> MarcoRecuadro(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp, bottomStart = 4.dp, bottomEnd = 4.dp), 14.dp)
     TemaId.MONGOL -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 6.dp, bottomEnd = 6.dp), 12.dp)
     TemaId.RENACIMIENTO -> MarcoRecuadro(RectangleShape, 10.dp)
+    TemaId.PIRATA -> MarcoRecuadro(CutCornerShape(7.dp), 12.dp)
     TemaId.URSS -> MarcoRecuadro(CutCornerShape(topEnd = 12.dp), 10.dp)
     TemaId.REVOLUCION -> MarcoRecuadro(RoundedCornerShape(2.dp), 12.dp)
     TemaId.ANTIGUAS -> MarcoRecuadro(CutCornerShape(4.dp), 12.dp)
@@ -251,6 +252,13 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
             drawArc(c.copy(alpha = 0.28f), -90f, 90f, false, topLeft = Offset(-r, h - r), size = Size(2 * r, 2 * r), style = Stroke(0.6f * u))
             drawLine(c.copy(alpha = 0.3f), Offset(w / 2 - 3 * u, h / 2), Offset(w / 2 + 3 * u, h / 2), 0.6f * u)
             drawLine(c.copy(alpha = 0.3f), Offset(w / 2, h / 2 - 3 * u), Offset(w / 2, h / 2 + 3 * u), 0.6f * u)
+        }
+        // Las líneas de rumbo que salen de la esquina y la «X» en la otra punta.
+        TemaId.PIRATA -> {
+            val k = c.copy(alpha = 0.16f); val o = Offset(w, 0f); val l = maxOf(w, h) * 1.2f
+            for (i in 0 until 7) { val a = Math.PI / 2 + i * Math.PI / 12; drawLine(k, o, Offset(o.x + (l * kotlin.math.cos(a)).toFloat(), o.y + (l * kotlin.math.sin(a)).toFloat()), 0.6f * u) }
+            val x = Offset(10 * u, h - 10 * u); val s = 3 * u
+            drawLine(e.tertiary.copy(alpha = 0.45f), x - Offset(s, s), x + Offset(s, s), 1.2f * u); drawLine(e.tertiary.copy(alpha = 0.45f), x + Offset(-s, s), x + Offset(s, -s), 1.2f * u)
         }
         // Cuña roja constructivista y una barra negra.
         TemaId.URSS -> {
@@ -502,6 +510,13 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 moveTo(b, y); lineTo(b - f, y - f * 0.45f); lineTo(b - f, y + f * 0.45f); close()
             }, col)
             drawCircle(col.copy(alpha = col.alpha * 0.45f), 5 * u, Offset(w / 2, y), style = Stroke(0.6f * u))
+        }
+        // Un cabo tendido entre los dos: dos cordones que se enroscan y un nudo al medio.
+        TemaId.PIRATA -> {
+            val a = 4 * u; val b = w - 4 * u
+            drawPath(onda(2.2f * u + grosor * 0.2f, (b - a) / (10 * u)), col, style = Stroke(grosor * 0.5f + 0.6f * u))
+            drawPath(onda(2.2f * u + grosor * 0.2f, (b - a) / (10 * u), PI.toFloat()), col.copy(alpha = col.alpha * 0.55f), style = Stroke(grosor * 0.5f + 0.6f * u))
+            drawCircle(col, 3 * u + grosor * 0.3f, Offset(w / 2, y))
         }
         // Viga de celosía constructivista: dos cordones y diagonales en zigzag.
         TemaId.URSS -> {

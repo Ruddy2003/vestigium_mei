@@ -680,6 +680,22 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             drawLine(color, Offset(q.x - 5 * u, q.y), Offset(q.x + 5 * u, q.y), u)
             drawLine(color, Offset(q.x, q.y - 5 * u), Offset(q.x, q.y + 5 * u), u)
         }
+        // La ampolleta de la guardia: un compás náutico graduado en treinta y dos cuartas, con la flor de lis al norte; el
+        // avance es un cabo que da la vuelta y la aguja apunta adonde va.
+        TemaId.PIRATA -> {
+            val tinta = tenue.copy(alpha = 0.4f)
+            drawCircle(tinta, r + 6 * u, c, style = Stroke(0.8f * u))
+            for (k in 0 until 32) {
+                val q0 = en(k / 32f, r - (if (k % 4 == 0) 7 else 3) * u); val q1 = en(k / 32f, r + 2 * u)
+                drawLine(tinta, q0, q1, (if (k % 4 == 0) 1.1f else 0.6f) * u)
+            }
+            val norte = en(0f, r + 12 * u)
+            drawCircle(color.copy(alpha = 0.6f), 2.6f * u, norte); drawCircle(color.copy(alpha = 0.6f), 1.8f * u, norte + Offset(-3 * u, 2 * u)); drawCircle(color.copy(alpha = 0.6f), 1.8f * u, norte + Offset(3 * u, 2 * u))
+            arco(color.copy(alpha = 0.85f), 0f, p, r, 3 * u, StrokeCap.Round)
+            arco(tenue.copy(alpha = 0.5f), 0f, p, r, 1 * u, StrokeCap.Butt)
+            val q = en(p, r)
+            drawCircle(color, 4 * u, q); drawCircle(tenue, 1.5f * u, q)
+        }
         // Cartel constructivista: cuñas del color de la marcha y negras, alternadas; una diagonal en la esquina y la estrella en la punta.
         TemaId.URSS -> {
             drawLine(e.onBackground.copy(alpha = 0.85f), Offset(size.width * 0.72f, 0f), Offset(size.width, size.height * 0.28f), 6 * u)
@@ -847,6 +863,11 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
         TemaId.RENACIMIENTO -> {
             val d = minOf(h * 0.35f, w * 0.25f)
             moveTo(x + d, y); lineTo(x + w - d, y); lineTo(x + w, y + h); lineTo(x, y + h); close()
+        }
+        // Un banderín de cola de golondrina.
+        TemaId.PIRATA -> {
+            val d = minOf(h * 0.5f, w * 0.2f)
+            moveTo(x, y); lineTo(x + w, y); lineTo(x + w - d, y + h / 2); lineTo(x + w, y + h); lineTo(x, y + h); close()
         }
         TemaId.URSS -> {
             val s = minOf(h * 0.5f, w * 0.4f)

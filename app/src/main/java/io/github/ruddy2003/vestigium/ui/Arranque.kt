@@ -39,6 +39,7 @@ object ArranqueTema {
         TemaId.ANDALUS -> if (oscuro) R.style.Theme_Vestigium_Arranque_Andalus_Oscuro else R.style.Theme_Vestigium_Arranque_Andalus
         TemaId.MONGOL -> if (oscuro) R.style.Theme_Vestigium_Arranque_Mongol_Oscuro else R.style.Theme_Vestigium_Arranque_Mongol
         TemaId.RENACIMIENTO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Renacimiento_Oscuro else R.style.Theme_Vestigium_Arranque_Renacimiento
+        TemaId.PIRATA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Pirata_Oscuro else R.style.Theme_Vestigium_Arranque_Pirata
         TemaId.REVOLUCION -> if (oscuro) R.style.Theme_Vestigium_Arranque_Revolucion_Oscuro else R.style.Theme_Vestigium_Arranque_Revolucion
         TemaId.ANTIGUAS -> if (oscuro) R.style.Theme_Vestigium_Arranque_Antiguas_Oscuro else R.style.Theme_Vestigium_Arranque_Antiguas
     }

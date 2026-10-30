@@ -179,6 +179,15 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(TICK, 0.5f), g(TICK, 0.7f, 50)); Evento.ERROR -> listOf(g(BAJA, 0.5f), g(TICK_GRAVE, 0.5f, 60))
             Evento.LOGRO, Evento.TEMA -> listOf(g(SUBE_LENTO, 0.5f), g(TICK, 0.7f, 40), g(TICK, 0.7f, 80), g(TICK, 0.9f, 80))
         }
+        // La campana de a bordo, el oleaje contra el casco y un cañonazo.
+        TemaId.PIRATA -> when (e) {
+            Evento.TOQUE -> listOf(g(THUD, 0.45f)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.3f), g(BAJA, 0.3f, 40))
+            Evento.GUARDAR -> listOf(g(THUD, 0.9f), g(SPIN, 0.3f, 50))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.45f), g(THUD, 0.3f, 50)); Evento.ABRIR -> listOf(g(SPIN, 0.3f), g(THUD, 0.5f, 70))
+            Evento.CAMBIO -> listOf(g(THUD, 0.4f), g(CLICK, 0.6f, 80)); Evento.ERROR -> listOf(g(THUD, 1f), g(TICK_GRAVE, 0.6f, 90), g(BAJA, 0.5f, 60))
+            // Dos y dos campanadas, como al cambiar la guardia, y el cañonazo.
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 60), g(CLICK, 0.8f, 200), g(CLICK, 0.8f, 60), g(THUD, 1f, 200))
+        }
         // Cascabeles.
         TemaId.NAVIDAD -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 0.7f)); Evento.PASAR -> listOf(g(TICK, 0.5f), g(TICK, 0.4f, 30))
@@ -295,6 +304,7 @@ object Sentidos {
         TemaId.ANDALUS -> intArrayOf(R.raw.s_andalus_toque, R.raw.s_andalus_guardar, R.raw.s_andalus_logro, R.raw.s_andalus_pasar, R.raw.s_andalus_elegir, R.raw.s_andalus_abrir, R.raw.s_andalus_tema, R.raw.s_andalus_error, R.raw.s_andalus_cambio, R.raw.s_tecla_andalus, R.raw.s_rascar_andalus)
         TemaId.MONGOL -> intArrayOf(R.raw.s_mongol_toque, R.raw.s_mongol_guardar, R.raw.s_mongol_logro, R.raw.s_mongol_pasar, R.raw.s_mongol_elegir, R.raw.s_mongol_abrir, R.raw.s_mongol_tema, R.raw.s_mongol_error, R.raw.s_mongol_cambio, R.raw.s_tecla_mongol, R.raw.s_rascar_mongol)
         TemaId.RENACIMIENTO -> intArrayOf(R.raw.s_renacimiento_toque, R.raw.s_renacimiento_guardar, R.raw.s_renacimiento_logro, R.raw.s_renacimiento_pasar, R.raw.s_renacimiento_elegir, R.raw.s_renacimiento_abrir, R.raw.s_renacimiento_tema, R.raw.s_renacimiento_error, R.raw.s_renacimiento_cambio, R.raw.s_tecla_renacimiento, R.raw.s_rascar_renacimiento)
+        TemaId.PIRATA -> intArrayOf(R.raw.s_pirata_toque, R.raw.s_pirata_guardar, R.raw.s_pirata_logro, R.raw.s_pirata_pasar, R.raw.s_pirata_elegir, R.raw.s_pirata_abrir, R.raw.s_pirata_tema, R.raw.s_pirata_error, R.raw.s_pirata_cambio, R.raw.s_tecla_pirata, R.raw.s_rascar_pirata)
         TemaId.NAVIDAD -> intArrayOf(R.raw.s_navidad_toque, R.raw.s_navidad_guardar, R.raw.s_navidad_logro, R.raw.s_navidad_pasar, R.raw.s_navidad_elegir, R.raw.s_navidad_abrir, R.raw.s_navidad_tema, R.raw.s_navidad_error, R.raw.s_navidad_cambio, R.raw.s_tecla_navidad, R.raw.s_rascar_navidad)
         TemaId.SEDA -> intArrayOf(R.raw.s_seda_toque, R.raw.s_seda_guardar, R.raw.s_seda_logro, R.raw.s_seda_pasar, R.raw.s_seda_elegir, R.raw.s_seda_abrir, R.raw.s_seda_tema, R.raw.s_seda_error, R.raw.s_seda_cambio, R.raw.s_tecla_seda, R.raw.s_rascar_seda)
         TemaId.URSS -> intArrayOf(R.raw.s_urss_toque, R.raw.s_urss_guardar, R.raw.s_urss_logro, R.raw.s_urss_pasar, R.raw.s_urss_elegir, R.raw.s_urss_abrir, R.raw.s_urss_tema, R.raw.s_urss_error, R.raw.s_urss_cambio, R.raw.s_tecla_urss, R.raw.s_rascar_urss)
@@ -376,6 +386,8 @@ object Sentidos {
         TemaId.MONGOL -> Afinacion(st(-5, -3, 0, 2), st(-5, 0, 2, 4), pasarRuido = true, elegirRuido = false)
         // La mayor; la pluma da pasos de la escala.
         TemaId.RENACIMIENTO -> Afinacion(st(-1, 0, 2, 4), st(-5, 0, 4, 5), pasarRuido = true, elegirRuido = false)
+        // Re mixolidio, el de las salomas; el oleaje es ruido y el cabrestante da pasos del modo.
+        TemaId.PIRATA -> Afinacion(st(-5, -2, 0, 4, 7), st(-7, -2, 0, 4), pasarRuido = true, elegirRuido = false)
         // La mayor: cascabeles en el acorde.
         TemaId.NAVIDAD -> Afinacion(st(-3, 0, 4, 7), st(0, 5, 7, 12), pasarRuido = true, elegirRuido = false)
         // La menor pentatónico; la seda da pasos del modo.
@@ -480,6 +492,7 @@ object Sentidos {
         TemaId.ANDALUS -> pasadas(TICK, 0.6f, 45, 4)   // latón
         TemaId.MONGOL -> pasadas(CLICK, 0.55f, 55, 3)   // plata sobredorada
         TemaId.RENACIMIENTO -> pasadas(TICK, 0.5f, 65, 3)   // bronce de taller
+        TemaId.PIRATA -> pasadas(TICK, 0.65f, 40, 4)   // un doblón de oro
         TemaId.NAVIDAD -> pasadas(TICK, 0.7f, 25, 5)   // plata escarchada
         TemaId.SEDA -> pasadas(TICK, 0.6f, 50, 3)   // bronce de moneda
         TemaId.URSS -> pasadas(CLICK, 0.9f, 40, 3)   // acero ennegrecido

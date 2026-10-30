@@ -116,6 +116,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.MONGOL -> PielCinta(4f, false, RellenoCinta.PUNTADA, floatArrayOf(7f, 3f), StrokeCap.Round)
     // Sombreado a pluma.
     TemaId.RENACIMIENTO -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(10f, 4f), StrokeCap.Round)
+    // Tablones con sus vetas, y las horas menores como un cabo de vueltas cortas.
+    TemaId.PIRATA -> PielCinta(1.5f, true, RellenoCinta.RAYAS, floatArrayOf(2.4f, 1.4f), StrokeCap.Round)
     // Bloques planos de cartel.
     TemaId.URSS -> PielCinta(0f, false, RellenoCinta.LISO, null, StrokeCap.Square)
     // Bandas de cartel con el filo claro.

@@ -36,7 +36,7 @@ object TrofeosMas {
             "Cultura" to "Carrete de seda", "Gente" to "Farolillo", "Constancia" to "Moneda de cobre", "Curiosos" to "Ábaco", "Tuyos" to "Ventana lunar"),
         TemaId.MONGOL to mapOf("Diario" to "Rollo de órdenes", "Mundo" to "Mapa de la estepa", "Cuerpo" to "Estribo", "Mente" to "Tamga",
             "Cultura" to "Yurta", "Gente" to "Placa de mensajero", "Constancia" to "Estandarte de nueve colas", "Curiosos" to "Ovoo", "Tuyos" to "Rueda del techo"),
-        TemaId.COLONOS to mapOf("Diario" to "Diario de a bordo", "Mundo" to "Brújula de bolsillo", "Cuerpo" to "Hacha", "Mente" to "Telar",
+        TemaId.COLONOS to mapOf("Diario" to "Cuaderno del pueblo", "Mundo" to "Brújula de bolsillo", "Cuerpo" to "Hacha", "Mente" to "Telar",
             "Cultura" to "Linterna", "Gente" to "Campana del pueblo", "Constancia" to "Yunque", "Curiosos" to "Barril", "Tuyos" to "Rueda de carreta"),
         TemaId.BOTANICO to mapOf("Diario" to "Lámina botánica", "Mundo" to "Caja de herborizar", "Cuerpo" to "Hoja de roble", "Mente" to "Lupa",
             "Cultura" to "Helecho", "Gente" to "Cerezas", "Constancia" to "Semilla que brota", "Curiosos" to "Campana de cristal", "Tuyos" to "Flor prensada"),
@@ -209,6 +209,7 @@ object TrofeosMas {
             TemaId.MEDIEVAL -> Unit
             TemaId.GOTICO -> Unit
             TemaId.RENACIMIENTO -> Unit
+            TemaId.PIRATA -> Unit
             TemaId.NAPOLEON -> Unit
             TemaId.REVOLUCION -> Unit
         }

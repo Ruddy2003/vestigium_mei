@@ -241,6 +241,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.MONGOL -> LaminaRascar(0xFF6A5030.toInt(), 0xFFC09A68.toInt(), 0xFFF4E2C4.toInt())
     // Bronce de taller, pardo.
     TemaId.RENACIMIENTO -> LaminaRascar(0xFF4E3C24.toInt(), 0xFF96784C.toInt(), 0xFFE2CFA6.toInt())
+    // Latón de instrumento náutico, verdoso por el salitre.
+    TemaId.PIRATA -> LaminaRascar(0xFF4A4224.toInt(), 0xFFA88A3E.toInt(), 0xFFE8D79A.toInt())
     // Acero ennegrecido, para que resalten las estrellas rojas.
     TemaId.URSS -> LaminaRascar(0xFF1C1C1E.toInt(), 0xFF4A4A4E.toInt(), 0xFFA8A8AE.toInt())
     // Estaño de botón de uniforme.
@@ -460,6 +462,14 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawRect(l * 0.25f, l * 0.25f, l * 0.75f, l * 0.75f, linea)
             c.drawLine(l * 0.25f, l * 0.25f, l * 0.75f, l * 0.75f, linea); c.drawLine(l * 0.75f, l * 0.25f, l * 0.25f, l * 0.75f, linea)
             for (x in listOf(0f, l)) for (y in listOf(0f, l)) { c.drawLine(x - l * 0.06f, y, x + l * 0.06f, y, linea); c.drawLine(x, y - l * 0.06f, x, y + l * 0.06f, linea) }
+        }
+        TemaId.PIRATA -> tresbolillo { x, y ->
+            // Una rosa de ocho rumbos pequeña y, a su lado, la «X» del tesoro.
+            for (k in 0 until 8) { val a = Math.toRadians(45.0 * k); val rr = if (k % 2 == 0) l * 0.16f else l * 0.09f
+                c.drawLine(x, y, x + (rr * kotlin.math.cos(a)).toFloat(), y + (rr * kotlin.math.sin(a)).toFloat(), linea) }
+            c.drawCircle(x, y, l * 0.05f, linea)
+            val xx = x + l * 0.24f; val yy = y + l * 0.2f; val s = l * 0.045f
+            c.drawLine(xx - s, yy - s, xx + s, yy + s, linea); c.drawLine(xx + s, yy - s, xx - s, yy + s, linea)
         }
         TemaId.URSS -> tresbolillo { x, y ->
             // Estrellas rojas sobre el acero.

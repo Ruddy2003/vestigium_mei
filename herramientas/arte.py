@@ -58,6 +58,26 @@ def papel_antiguas():
     a = a * (0.96 + 0.06 * ruido_rect(W, H, 0.8, 93)[..., None])
     a_img(a).save(os.path.join(OUT, 'papel_antiguas.jpg'), quality=86)
 
+def papel_pirata():
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    borde = np.clip((np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) / math.sqrt(2) - 0.5) * 2, 0, 1)
+    # Hoja de bitácora: papel de trapo grisáceo, mojado y vuelto a secar; las cercas de sal del agua dejan bordes
+    # más oscuros que el centro de cada mancha, y la brea de las manos tiñe los cantos.
+    a = mezcla(col('#E9E1CB'), col('#D6CBAE'), ruido_rect(W, H, 28, 141) * 0.8)
+    for k, (cx, cy, rad) in enumerate(((0.28, 0.2, 150), (0.8, 0.55, 210), (0.35, 0.86, 120), (0.9, 0.08, 90))):
+        ang = np.arctan2(yy - cy * H, xx - cx * W)
+        dist = np.sqrt((xx - cx * W) ** 2 + (yy - cy * H) ** 2) / (rad * (1 + 0.07 * np.sin(3 * ang + k) + 0.04 * np.sin(7 * ang + 2 * k)))
+        a = mezcla(a, col('#E2D8BD'), np.clip(1 - dist, 0, 1) ** 0.5 * 0.35)
+        a = mezcla(a, col('#A99366'), np.exp(-((dist - 1) * 28) ** 2) * 0.28)
+    a = mezcla(a, col('#6E5A3C'), borde ** 1.5 * 0.7)
+    a = a * (0.95 + 0.07 * ruido_rect(W, H, 0.7, 144)[..., None])
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA'); r = np.random.default_rng(145)
+    for _ in range(220):
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 4 + r.random() * 12
+        d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=(90, 74, 50, 30), width=1)
+    img.save(os.path.join(OUT, 'papel_pirata.jpg'), quality=86)
+
 # ------------------------------------------------------------------ papeles
 def papeles():
     W, H = 720, 1280
@@ -201,6 +221,7 @@ if __name__ == '__main__':
     OUT = sys.argv[1]
     papeles()
     papel_antiguas()
+    papel_pirata()
     papeles_lote7()
     papeles_fuente()
     print('papeles listos')

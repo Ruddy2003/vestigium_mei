@@ -100,6 +100,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.ANDALUS -> Color(0xFF1F7A6B)
     TemaId.MONGOL -> Color(0xFF1E88E5)
     TemaId.RENACIMIENTO -> Color(0xFFB5562F)
+    TemaId.PIRATA -> Color(0xFF2F5D62)
     TemaId.URSS -> Color(0xFFD32F2F)
     TemaId.REVOLUCION -> Color(0xFFF2EFE6)
     TemaId.ANTIGUAS -> Color(0xFF8E7CC3)
@@ -199,6 +200,8 @@ object PiezasLogro {
         TemaId.ANDALUS -> Trazo(u, 1f, StrokeCap.Butt, StrokeJoin.Miter, null, 1f, true, Color(0xFFF1E3C8))
         TemaId.MONGOL -> Trazo(u, 1.3f, StrokeCap.Round, StrokeJoin.Bevel, floatArrayOf(3f, 1.5f), 0f, false, Color(0xFFE8DCC8))
         TemaId.RENACIMIENTO -> Trazo(u, 0.7f, StrokeCap.Round, StrokeJoin.Round, null, 0f, true, Color(0xFFEFD9C0))
+        // Trazo de cabo: grueso, con las vueltas del cordón (raya larga, punto), sobre pergamino húmedo.
+        TemaId.PIRATA -> Trazo(u, 1.15f, StrokeCap.Round, StrokeJoin.Round, floatArrayOf(4f, 1.4f, 0.6f, 1.4f), 1.5f, false, Color(0xFFE6DCBA))
         TemaId.URSS -> Trazo(u, 1.5f, StrokeCap.Butt, StrokeJoin.Miter, null, 0f, false, Color(0xFFEDE3CF))
         TemaId.REVOLUCION -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Round, floatArrayOf(8f, 2f), 0f, false, Color(0xFFF0E8D8))
         TemaId.ANTIGUAS -> Trazo(u, 1.2f, StrokeCap.Round, StrokeJoin.Bevel, null, 3f, false, Color(0xFFD9D2C2))
@@ -317,6 +320,13 @@ object PiezasLogro {
                 for (i in 0 until 4) { val p = en(i * PI / 2, 0.89f); drawPath(Path().apply { moveTo(p.x, p.y - 3.5f * u); lineTo(p.x + 3.5f * u, p.y); lineTo(p.x, p.y + 3.5f * u); lineTo(p.x - 3.5f * u, p.y); close() }, m) }
             }
             TemaId.RENACIMIENTO -> { drawCircle(t, r * 0.95f, c, style = Stroke(0.6f * u)); for (i in 0 until 36) drawLine(t, en(i * PI / 18, if (i % 3 == 0) 0.82f else 0.89f), en(i * PI / 18, 0.95f), 0.6f * u) }
+            // Un cabo de cáñamo que rodea la medalla, con un nudo en cada punto cardinal.
+            TemaId.PIRATA -> {
+                val cabo = Color(0xFFB59A62).copy(alpha = if (hecho) 0.9f else 0.35f)
+                drawCircle(t, r * 0.95f, c, style = Stroke(0.7f * u)); drawCircle(t, r * 0.84f, c, style = Stroke(0.7f * u))
+                for (i in 0 until 40) { val a = i * PI / 20; drawLine(cabo, en(a - 0.06, 0.86f), en(a + 0.06, 0.93f), 1.8f * u, StrokeCap.Round) }
+                for (i in 0 until 4) { val p = en(i * PI / 2 + PI / 4, 0.895f); drawCircle(cabo, 3.2f * u, p); drawCircle(t, 3.2f * u, p, style = Stroke(0.7f * u)) }
+            }
             TemaId.URSS -> for (i in 0 until 5) drawPath(estrellaN(en(-PI / 2 + i * 2 * PI / 5, 0.88f), 3.6f * u, 5), Color(0xFFD32F2F).copy(alpha = if (hecho) 0.9f else 0.35f))
             TemaId.REVOLUCION -> listOf(Color(0xFF1F3A8A), Color.White, Color(0xFFC62828)).forEachIndexed { i, col ->
                 drawArc(col.copy(alpha = if (hecho) 0.85f else 0.3f), -90f + i * 120f, 120f, false, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f), style = Stroke(3 * u))
@@ -389,6 +399,8 @@ object PiezasLogro {
             }
             TemaId.MONGOL -> { drawArc(tinta, 180f, 180f, true, Offset(x, y - an * 0.25f), Size(an, an * 0.5f)); drawCircle(tinta, 1.1f * u, Offset(cx, y - an * 0.25f - 0.6f * u)) }
             TemaId.RENACIMIENTO -> { val d = an - 3 * u; drawArc(tinta, 180f, 180f, true, Offset(cx - d / 2, y - d / 2), Size(d, d)); drawLine(tinta, Offset(cx, y - d / 2), Offset(cx, y - d / 2 - 3 * u), 1 * u) }
+            // Almacén del puerto: tejado a dos aguas y la viga de la polea con su cabo y su gancho.
+            TemaId.PIRATA -> { tri(4 * u); drawLine(tinta, Offset(cx, y - 4 * u), Offset(x + an + 3 * u, y - 4 * u), 1 * u); drawLine(tinta, Offset(x + an + 2.5f * u, y - 4 * u), Offset(x + an + 2.5f * u, y + 2 * u), 0.6f * u); drawCircle(tinta, 0.9f * u, Offset(x + an + 2.5f * u, y + 2.6f * u)) }
             TemaId.URSS -> drawPath(estrellaN(Offset(cx, y - 3 * u), 2.6f * u, 5), Color(0xFFD32F2F))
             TemaId.REVOLUCION -> { drawRect(tinta, Offset(x, y - 2 * u), Size(an, 2 * u)); listOf(0.25f, 0.7f).forEach { f -> drawRect(tinta, Offset(x + an * f, y - 5 * u), Size(1.4f * u, 3 * u)) } }
             TemaId.ANTIGUAS -> {
@@ -469,6 +481,8 @@ object PiezasLogro {
             TemaId.ANDALUS -> traza(estrellaN(c, 31 * u, 8, 0.8f))
             TemaId.MONGOL -> traza(Path().apply { moveTo(c.x, c.y - 32 * u); lineTo(c.x + 32 * u, c.y); lineTo(c.x, c.y + 32 * u); lineTo(c.x - 32 * u, c.y); close() })
             TemaId.RENACIMIENTO -> { traza(caja(c.x - 25 * u, c.y - 25 * u, c.x + 25 * u, c.y + 25 * u)); drawCircle(tinto, 25 * u, c, style = Stroke(0.7f * u)) }
+            // La rueda del timón: el aro y las ocho cabillas que asoman.
+            TemaId.PIRATA -> { traza(circulo(c, 25 * u)); drawCircle(tinto, 21 * u, c, style = Stroke(0.7f * u)); for (i in 0 until 8) { val a = i * PI / 4; drawLine(tinto, Offset(c.x + (25 * u * cos(a)).toFloat(), c.y + (25 * u * sin(a)).toFloat()), Offset(c.x + (31 * u * cos(a)).toFloat(), c.y + (31 * u * sin(a)).toFloat()), 2 * u, StrokeCap.Round) } }
             TemaId.URSS -> traza(Path().apply { moveTo(c.x - 27 * u, c.y - 20 * u); lineTo(c.x + 15 * u, c.y - 20 * u); lineTo(c.x + 27 * u, c.y - 8 * u); lineTo(c.x + 27 * u, c.y + 20 * u); lineTo(c.x - 27 * u, c.y + 20 * u); close() })
             TemaId.REVOLUCION -> traza(Path().apply {
                 moveTo(c.x - 32 * u, c.y - 18 * u); lineTo(c.x + 32 * u, c.y - 18 * u); lineTo(c.x + 26 * u, c.y); lineTo(c.x + 32 * u, c.y + 18 * u)
@@ -766,6 +780,18 @@ object PiezasLogro {
                 listOf(-9f, 0f, 9f).forEach { dx -> drawCircle(hueco, 2 * u, Offset(c.x + dx * u, base - 10 * u)) }
                 suelo()
             }
+            TemaId.PIRATA -> {
+                // El faro sobre su peñasco: la torre que se adelgaza, con sus franjas, la linterna y los dos haces de luz.
+                drawPath(Path().apply { moveTo(c.x - 26 * u, base); quadraticTo(c.x - 18 * u, base - 9 * u, c.x - 8 * u, base - 7 * u); lineTo(c.x + 10 * u, base - 8 * u); quadraticTo(c.x + 20 * u, base - 7 * u, c.x + 26 * u, base); close() }, tinta)
+                val torre = Path().apply { moveTo(c.x - 7 * u, base - 7 * u); lineTo(c.x - 4 * u, base - 36 * u); lineTo(c.x + 4 * u, base - 36 * u); lineTo(c.x + 7 * u, base - 7 * u); close() }
+                drawPath(torre, tinta)
+                listOf(14f, 24f).forEach { k -> drawRect(hueco, Offset(c.x - (6.4f - k * 0.1f) * u, base - (k + 4) * u), Size((12.8f - k * 0.2f) * u, 4 * u)) }
+                drawRect(hueco, Offset(c.x - 3.5f * u, base - 42 * u), Size(7 * u, 6 * u))
+                contorno(tz, caja(c.x - 3.5f * u, c.y + 20 * u - 42 * u, c.x + 3.5f * u, c.y + 20 * u - 36 * u), tinta, 0.8f * u)
+                drawPath(Path().apply { moveTo(c.x - 4.5f * u, base - 42 * u); lineTo(c.x, base - 47 * u); lineTo(c.x + 4.5f * u, base - 42 * u); close() }, tinta)
+                listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(c.x + s * 3.5f * u, base - 39 * u); lineTo(c.x + s * 26 * u, base - 46 * u); lineTo(c.x + s * 26 * u, base - 33 * u); close() }, hueco.copy(alpha = 0.35f)) }
+                suelo()
+            }
             TemaId.URSS -> {
                 listOf(Triple(48f, 0f, 14f), Triple(30f, 14f, 14f), Triple(16f, 28f, 10f)).forEach { (an, y0, alto) -> drawRect(tinta, Offset(c.x - an / 2 * u, base - (y0 + alto) * u), Size(an * u, alto * u)) }
                 raya(tz, tinta, Offset(c.x, base - 38 * u), Offset(c.x, base - 44 * u), 1.4f * u)
@@ -970,6 +996,21 @@ object PiezasLogro {
                 listOf(Offset(-5f, -16f), Offset(5f, -16f), Offset(-7f, -9f), Offset(7f, -9f), Offset(-3f, -2f), Offset(3f, -2f)).forEach { o -> drawCircle(claro, 2.2f * u, Offset(c.x + o.x * u, c.y + o.y * u)) }
                 drawCircle(tinta, 2.4f * u, Offset(c.x, c.y - 31 * u))
             }
+            TemaId.PIRATA -> {
+                // La bandera negra en su asta, ondeando: la calavera y las dos tibias cruzadas, en blanco.
+                val x0 = px; val x1 = c.x + 18 * u
+                asta()
+                val negra = Color(0xFF1B1714).copy(alpha = if (tono == tinta) 0.5f else 0.92f)
+                pano(Path().apply {
+                    moveTo(x0, arriba); quadraticTo((x0 + x1) / 2, arriba - 4 * u, x1, arriba + 1 * u)
+                    quadraticTo(x1 - 3 * u, c.y - 6 * u, x1 + 1 * u, c.y + 4 * u)
+                    quadraticTo((x0 + x1) / 2, c.y + 1 * u, x0, c.y + 4 * u); close()
+                }, negra)
+                val k = Offset((x0 + x1) / 2 + 1 * u, c.y - 13 * u)
+                listOf(-1f, 1f).forEach { s -> raya(tz, claro, Offset(k.x - s * 9 * u, k.y + 11 * u), Offset(k.x + s * 9 * u, k.y + 1 * u), 1.6f * u) }
+                drawCircle(claro, 5.2f * u, k); drawRect(claro, Offset(k.x - 3 * u, k.y + 3 * u), Size(6 * u, 3 * u))
+                drawCircle(negra, 1.4f * u, k + Offset(-2 * u, 0f)); drawCircle(negra, 1.4f * u, k + Offset(2 * u, 0f))
+            }
             TemaId.URSS -> {
                 asta()
                 pano(Path().apply {
@@ -1128,6 +1169,14 @@ object PiezasLogro {
                 listOf(-1f, 1f).forEach { s -> drawPath(Path().apply { moveTo(c.x + s * 1.5f * u, c.y + 1 * u); quadraticTo(c.x + s * 10 * u, c.y - 2 * u, c.x + s * 8 * u, c.y - 9 * u); quadraticTo(c.x + s * 6 * u, c.y - 3 * u, c.x + s * 1.5f * u, c.y + 3 * u); close() }, tinta) }
                 drawRect(tinta, Offset(c.x - 6 * u, c.y + 3 * u), Size(12 * u, 2 * u))
                 drawPath(Path().apply { moveTo(c.x - 1.5f * u, c.y + 5 * u); lineTo(c.x - 4 * u, c.y + 11 * u); lineTo(c.x + 4 * u, c.y + 11 * u); lineTo(c.x + 1.5f * u, c.y + 5 * u); close() }, tinta)
+            }
+            TemaId.PIRATA -> {
+                // El doblón de a ocho, de canto irregular, con la cruz de cuarteles y el «8».
+                forma(irregular(13, 0.07f))
+                contorno(tz, circulo(c, R * 0.74f), tinta, 0.8f * u)
+                raya(tz, tinta, en(-PI / 2, 0.7f), en(PI / 2, 0.7f), 1.4f * u); raya(tz, tinta, en(PI, 0.7f), en(0.0, 0.7f), 1.4f * u)
+                listOf(PI / 4, 3 * PI / 4, 5 * PI / 4, 7 * PI / 4).forEach { a -> drawCircle(tinta, 2 * u, en(a, 0.4f)) }
+                drawCircle(claro.copy(alpha = 0.8f), 3.6f * u, c); letra("8", c, 6 * u, tinta)
             }
             TemaId.URSS -> {
                 disco()
@@ -1313,6 +1362,17 @@ object PiezasLogro {
                 drawCircle(tono, 7 * u, o, style = Stroke(0.8f * u)); drawRect(tono, Offset(o.x - 7 * u, o.y - 7 * u), Size(14 * u, 14 * u), style = Stroke(0.6f * u))
                 drawLine(tono, Offset(o.x - 7 * u, o.y - 7 * u), Offset(o.x + 7 * u, o.y + 7 * u), 0.5f * u); drawLine(tono, Offset(o.x + 7 * u, o.y - 7 * u), Offset(o.x - 7 * u, o.y + 7 * u), 0.5f * u)
             }
+            TemaId.PIRATA -> {
+                // La bitácora cerrada de cuero de brea, atada en cruz con un cabo que remata en nudo.
+                tapa(c.x - 22 * u, c.y - 18 * u, c.x + 22 * u, c.y + 18 * u, Color(0xFF4A3424).copy(alpha = if (tono == tinta) 0.4f else 0.9f), 2 * u)
+                drawRect(papel, Offset(c.x + 22 * u, c.y - 16 * u), Size(2.5f * u, 32 * u))
+                val cabo = Color(0xFFB59A62)
+                raya(tz, cabo, Offset(c.x + 4 * u, c.y - 19 * u), Offset(c.x + 4 * u, c.y + 19 * u), 2 * u)
+                raya(tz, cabo, Offset(c.x - 23 * u, c.y + 4 * u), Offset(c.x + 23 * u, c.y + 4 * u), 2 * u)
+                drawCircle(cabo, 3.2f * u, Offset(c.x + 4 * u, c.y + 4 * u))
+                listOf(-1f, 1f).forEach { s -> fina(tz, cabo, Offset(c.x + 4 * u, c.y + 4 * u), Offset(c.x + (4 + s * 6) * u, c.y + 14 * u), 1.4f * u) }
+                drawCircle(cabo.copy(alpha = 0.6f), 6 * u, Offset(c.x - 9 * u, c.y - 7 * u), style = Stroke(0.8f * u))
+            }
             TemaId.URSS -> rotate(-12f, c) {
                 drawRect(papel, Offset(c.x - 13 * u, c.y - 19 * u), Size(29 * u, 39 * u))
                 tapa(c.x - 15 * u, c.y - 20 * u, c.x + 14 * u, c.y + 20 * u, Color(0xFFB3261E), 1 * u)
@@ -1487,6 +1547,18 @@ object PiezasLogro {
                 fina(tz, tinta.copy(alpha = 0.5f), Offset(c.x - 16 * u, c.y - 12 * u), Offset(c.x - 4 * u, c.y), 0.7f * u); fina(tz, tinta.copy(alpha = 0.5f), Offset(c.x + 16 * u, c.y - 12 * u), Offset(c.x + 4 * u, c.y), 0.7f * u)
                 drawRect(tono.copy(alpha = 0.85f), Offset(c.x - 2 * u, c.y - 18 * u), Size(4 * u, 36 * u))
                 drawCircle(Color(0xFFB0302A), 3.5f * u, Offset(c.x, c.y + 4 * u))
+            }
+            TemaId.PIRATA -> rotate(-24f, c) {
+                // La botella con el mensaje enrollado dentro, tapada con su corcho.
+                val vidrio = Path().apply {
+                    moveTo(c.x - 22 * u, c.y - 9 * u); lineTo(c.x + 8 * u, c.y - 9 * u); quadraticTo(c.x + 13 * u, c.y - 9 * u, c.x + 15 * u, c.y - 4 * u)
+                    lineTo(c.x + 22 * u, c.y - 3 * u); lineTo(c.x + 22 * u, c.y + 3 * u); lineTo(c.x + 15 * u, c.y + 4 * u)
+                    quadraticTo(c.x + 13 * u, c.y + 9 * u, c.x + 8 * u, c.y + 9 * u); lineTo(c.x - 22 * u, c.y + 9 * u); close()
+                }
+                drawPath(vidrio, Color(0xFF5E8F6A).copy(alpha = 0.35f)); contorno(tz, vidrio, tinta, 1.2f * u)
+                hoja(c.x - 16 * u, c.y - 5 * u, c.x + 6 * u, c.y + 5 * u, papel, 3 * u)
+                fina(tz, Color(0xFFB0302A), Offset(c.x - 5 * u, c.y - 5 * u), Offset(c.x - 5 * u, c.y + 5 * u), 1 * u)
+                drawRect(Color(0xFF8A6440), Offset(c.x + 22 * u, c.y - 2.6f * u), Size(4 * u, 5.2f * u))
             }
             TemaId.URSS -> {
                 val t = Path().apply { moveTo(c.x - 24 * u, c.y - 12 * u); lineTo(c.x + 24 * u, c.y - 12 * u); lineTo(c.x, c.y + 18 * u); close() }

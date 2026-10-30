@@ -120,6 +120,13 @@ def construccion(sem):   # Renacimiento: papel con los trazos de construcción d
     d3 = np.abs(X + Y - TAM) < 0.8
     return (d1 | d2 | d3) * -0.7 + ruido(sem, 0.8, 18) + ruido(sem + 1, 0.3)
 
+def carta_nautica(sem):  # Pirata: pergamino húmedo de carta náutica, con líneas de rumbo y manchas de agua
+    cx, cy = TAM * 0.78, TAM * 0.2
+    ang = np.arctan2(Y - cy, X - cx)
+    rumbos = (np.abs(((ang / (2 * math.pi / 16)) + 0.5) % 1 - 0.5) < 0.012) * -0.55
+    manchas = np.clip(ruido(sem + 2, 1.0, 30) - 0.6, 0, 2) * -0.9
+    return rumbos + manchas + ruido(sem, 0.7, 14) + ruido(sem + 1, 0.3)
+
 def cartel(sem):         # Soviético: papel de cartel con una trama de medios tonos muy leve
     trama = (np.sin(X * 0.9) * np.sin(Y * 0.9) > 0.55) * -0.6
     return trama + ruido(sem, 0.7, 12) + ruido(sem + 1, 0.3)
@@ -240,6 +247,16 @@ def _compas(d, c):                    # marcas de compás: cruces en los puntos 
         d.line([_pos(a - 0.05), _pos(a + 0.05)], fill=c, width=int(K * 1.6))
     _marcas(d, c, 72, 3, 6, 6)
 
+def _rosa(d, c):                      # las 32 cuartas de la rosa (las cardinales, largas), la flor de lis al norte y la «X»
+    for i in range(32):
+        a = -math.pi / 2 + 2 * math.pi * i / 32
+        largo = 9 if i % 8 == 0 else (5 if i % 2 == 0 else 3)
+        d.line([_pos(a, RADIO - largo), _pos(a, RADIO + (largo if i % 8 == 0 else 0))], fill=c, width=int(K * (1.8 if i % 8 == 0 else 1.1)))
+    x, y = _pos(-math.pi / 2, RADIO + 9); s = 4.5 * K
+    d.polygon([(x, y - s), (x + s * 0.6, y + s * 0.3), (x, y), (x - s * 0.6, y + s * 0.3)], fill=c)
+    x, y = _pos(math.pi * 0.75, RADIO); s = 4.2 * K
+    d.line([(x - s, y - s), (x + s, y + s)], fill=c, width=int(K * 1.8)); d.line([(x - s, y + s), (x + s, y - s)], fill=c, width=int(K * 1.8))
+
 def _tricolor(d, colores, n=36):
     for i in range(n):
         a0 = 2 * math.pi * i / n; a1 = a0 + 2 * math.pi / n * 0.7
@@ -280,6 +297,7 @@ TEMAS = {
     'andalus':      (lazo,          '#F0ECE4', '#1F3F5C',   6, 5, 'esmalte',     _estrellas),
     'mongol':       (fieltro,       '#EFEBE3', '#1F3D78',   6, 5, 'tinta',       _rombos),
     'renacimiento': (construccion,  '#EAE4D9', '#7C3B23',   8, 5, 'ferrogalica', _compas),
+    'pirata':       (carta_nautica, '#E3D8BB', '#2E2214',   9, 5, 'tinta',       _rosa),
     'urss':         (cartel,        '#ECE7DE', '#8E1D1D',  10, 6, 'tinta',       _estrellas),
     'revolucion':   (verjurado,     '#F1EFEA', '#1F2A5A',  11, 5, 'tinta',       _tricolor),
     'antiguas':     (pizarra,       '#1D1F1E', '#C6A65A',   9, 6, 'dorado',      _runas),

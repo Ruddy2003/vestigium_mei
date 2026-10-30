@@ -40,6 +40,7 @@ object Estilo {
         TemaId.ANDALUS -> "❋ "
         TemaId.MONGOL -> "◆ "
         TemaId.RENACIMIENTO -> "❧ "
+        TemaId.PIRATA -> "✷ "
         TemaId.REVOLUCION -> "✶ "
         TemaId.ANTIGUAS -> "⟡ "
     }
@@ -69,6 +70,7 @@ object Estilo {
         TemaId.ANDALUS -> true         // cúfica de friso
         TemaId.MONGOL -> true          // cirílico de rótulo
         TemaId.RENACIMIENTO -> false   // cancilleresca
+        TemaId.PIRATA -> false         // letra negra de carta de marear
         TemaId.REVOLUCION -> true      // cartel de la Convención
         TemaId.ANTIGUAS -> true        // capitales grabadas
     }
@@ -101,6 +103,7 @@ object Estilo {
             TemaId.ANDALUS -> if (igual) null else "❋ $t ❋"
             TemaId.MONGOL -> if (igual) null else "◆ $t"
             TemaId.RENACIMIENTO -> if (igual) null else "❧ $t"
+            TemaId.PIRATA -> if (igual) null else "✷ $t"
             TemaId.REVOLUCION -> if (igual) null else "✶ $t ✶"
             TemaId.ANTIGUAS -> if (igual) null else "⟡ $t"
         }
@@ -130,6 +133,7 @@ object Estilo {
             TemaId.ANDALUS -> propio(titulo, true)
             TemaId.MONGOL -> propio(titulo, true)
             TemaId.RENACIMIENTO -> propio(titulo, true)
+            TemaId.PIRATA -> propio(titulo, true)
             TemaId.REVOLUCION -> propio(titulo, true)
             TemaId.ANTIGUAS -> propio(titulo, true)
         }
@@ -163,6 +167,7 @@ object Estilo {
         TemaId.ANDALUS -> false
         TemaId.MONGOL -> false
         TemaId.RENACIMIENTO -> false
+        TemaId.PIRATA -> false
         TemaId.REVOLUCION -> false
         TemaId.ANTIGUAS -> false
     }
@@ -203,6 +208,7 @@ object Estilo {
             TemaId.ANDALUS -> propio(titulo, false)
             TemaId.MONGOL -> propio(titulo, false)
             TemaId.RENACIMIENTO -> propio(titulo, false)
+            TemaId.PIRATA -> propio(titulo, false)
             TemaId.REVOLUCION -> propio(titulo, false)
             TemaId.ANTIGUAS -> propio(titulo, false)
         }
@@ -231,6 +237,8 @@ object Estilo {
         TemaId.MONGOL -> Temas.mongol(n)
         // Los numerales entre puntos de los manuscritos italianos: «.xvii.».
         TemaId.RENACIMIENTO -> if (n in 1..3999) "." + Romano.de(n).lowercase() + "." else "$n"
+        // El folio de la bitácora: «f.º 17». Los años, tal cual.
+        TemaId.PIRATA -> if (n in 1..999) "f.º $n" else "$n"
         TemaId.SEDA -> Temas.chino(n)
         TemaId.URSS -> "№ $n"
         TemaId.GOTICO -> if (n in 1..3999) Romano.de(n).lowercase() else "$n"
@@ -274,6 +282,13 @@ object Estilo {
         TemaId.ANDALUS -> runCatching { val d = Fechas.parse(iso); Temas.fechaHegira(d) + " · ${d.dayOfMonth} ${MESES_ANDALUSIES[d.monthValue - 1].lowercase()}" }.getOrDefault(iso)
         TemaId.MONGOL -> runCatching { val d = Fechas.parse(iso); Temas.anioMongol(d) + " · " + Temas.fechaMongol(d) }.getOrDefault(iso)
         TemaId.RENACIMIENTO -> runCatching { Temas.fechaItaliana(Fechas.parse(iso)) }.getOrDefault(iso)
+        // «Singladura 290 · 17 de 8bre de 2026», contada desde el primer registro (o, sin registros, desde el 1 de enero);
+        // hoy, además, la hora en campanadas de guardia.
+        TemaId.PIRATA -> runCatching {
+            val d = Fechas.parse(iso)
+            Temas.fechaPirata(d, diasDesdeInicio(iso)?.takeIf { it > 0 } ?: d.dayOfYear.toLong()) +
+                if (iso == Fechas.diaLogico()) java.time.LocalTime.now().let { " · " + Temas.horaPirata(it.hour, it.minute) } else ""
+        }.getOrDefault(iso)
         TemaId.NAVIDAD -> runCatching { val d = Fechas.parse(iso); "${d.dayOfMonth} de ${MESES_LARGOS[d.monthValue - 1]} · " + Temas.cuentaAtras(d, 12, 25, "Navidad", "Navidad") }.getOrDefault(iso)
         TemaId.SEDA -> runCatching { val d = Fechas.parse(iso); Temas.fechaChina(d.year, d.monthValue, d.dayOfMonth) }.getOrDefault(iso)
         TemaId.URSS -> runCatching {
@@ -311,6 +326,8 @@ object Estilo {
             // Los meses de la estepa se nombran por la estación: primero, medio y último mes del otoño…
             TemaId.MONGOL -> Temas.MESES_MONGOLES[i] + (anio?.let { " · $it" } ?: "")
             TemaId.RENACIMIENTO -> Temas.MESES_ITALIANOS[i].replaceFirstChar { it.uppercase() } + (anio?.let { " $it" } ?: "")
+            // Como en los cuadernos de bitácora del XVIII: de septiembre a diciembre, «7bre», «8bre», «9bre», «Xbre».
+            TemaId.PIRATA -> Temas.MESES_PIRATAS[i] + (anio?.let { " del año $it" } ?: "")
             // El mes republicano que ocupa la mayor parte del mes gregoriano (octubre ≈ vendémiaire).
             TemaId.REVOLUCION -> Temas.mesRepublicano(n).uppercase() + (anio?.let { " " + Temas.anRepublicano(it, n) } ?: "")
             TemaId.ANTIGUAS -> Temas.LUNAS[i] + (anio?.let { " · $it" } ?: "")
@@ -345,6 +362,8 @@ object Estilo {
         TemaId.ANDALUS -> listOf("اثن", "ثلا", "أرب", "خمي", "جمع", "سبت", "أحد")
         TemaId.MONGOL -> listOf("ДА", "МЯ", "ЛХ", "ПҮ", "БА", "БЯ", "НЯ")
         TemaId.RENACIMIENTO -> listOf("Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom")
+        // Abreviados como en las bitácoras de entonces.
+        TemaId.PIRATA -> listOf("Lun.", "Mart.", "Miérc.", "Juev.", "Vier.", "Sáb.", "Dom.")
         TemaId.REVOLUCION -> listOf("lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim.")
         // Los días del camino, de invención propia: de la Luna, de la Forja, del Viento, del Roble, del Hogar, de la Piedra y del Sol.
         TemaId.ANTIGUAS -> listOf("Luna", "Forja", "Viento", "Roble", "Hogar", "Piedra", "Sol")
@@ -372,6 +391,7 @@ object Estilo {
         TemaId.ANDALUS -> semana.map { it.take(2) }
         TemaId.MONGOL -> semana
         TemaId.RENACIMIENTO -> semana.map { it.take(2) }
+        TemaId.PIRATA -> listOf("Lu", "Mt", "Mc", "Ju", "Vi", "Sb", "Do")
         TemaId.REVOLUCION -> semana.map { it.take(2) }
         TemaId.ANTIGUAS -> semana.map { it.take(2) }
     }
@@ -400,6 +420,7 @@ object Estilo {
         TemaId.ANDALUS -> "$n días seguidos · متتالية"
         TemaId.MONGOL -> "$n ӨДӨР ДАРААЛАН"
         TemaId.RENACIMIENTO -> "$n giorni di fila"
+        TemaId.PIRATA -> "$n singladuras sin tocar puerto"
         TemaId.URSS -> "ПЛАН: $n ДНЕЙ ПОДРЯД"
         TemaId.REVOLUCION -> "$n JOURS DE VERTU"
         TemaId.ANTIGUAS -> "$n JORNADAS DE CAMINO"
@@ -426,6 +447,7 @@ object Estilo {
         TemaId.ANDALUS -> "← رجوع"
         TemaId.MONGOL -> "◄ БУЦАХ"
         TemaId.RENACIMIENTO -> "← indietro"
+        TemaId.PIRATA -> "← virar de bordo"
         TemaId.REVOLUCION -> "← retour"
         TemaId.ANTIGUAS -> "← volver al camino"
     }
@@ -450,6 +472,7 @@ object Estilo {
         TemaId.ANDALUS -> "◈ "
         TemaId.MONGOL -> "▹ "
         TemaId.RENACIMIENTO -> "✎ "
+        TemaId.PIRATA -> "➳ "
         TemaId.REVOLUCION -> "• "
         TemaId.ANTIGUAS -> "◆ "
     }
@@ -478,6 +501,7 @@ object Estilo {
         TemaId.ANDALUS -> ""
         TemaId.MONGOL -> ""
         TemaId.RENACIMIENTO -> ""
+        TemaId.PIRATA -> ""
         TemaId.URSS -> ""
         TemaId.REVOLUCION -> ""
         TemaId.ANTIGUAS -> ""
@@ -507,6 +531,7 @@ object Estilo {
         TemaId.ANDALUS -> EstiloFecha(1.06f, 1.0f, peso = 500)
         TemaId.MONGOL -> EstiloFecha(1.1f, 1.8f, peso = 700, abre = "▼")
         TemaId.RENACIMIENTO -> EstiloFecha(1.14f, 0f)
+        TemaId.PIRATA -> EstiloFecha(1.06f, 0.9f, abre = "⇣")
         TemaId.URSS -> EstiloFecha(1.18f, 1.2f, abre = "▼")
         TemaId.REVOLUCION -> EstiloFecha(1.08f, 2.0f, cursiva = true)
         TemaId.ANTIGUAS -> EstiloFecha(1.1f, 2.6f, peso = 600)
@@ -548,6 +573,7 @@ object Estilo {
             TemaId.ANDALUS -> Claves.ARABE[k]
             TemaId.MONGOL -> Claves.MONGOL[k]
             TemaId.RENACIMIENTO -> CLAVES_IT[k]
+            TemaId.PIRATA -> es(Claves.PIRATA)
             TemaId.REVOLUCION -> (Claves.REVOLUCION[k] ?: Claves.FRANCES[k])?.uppercase()
             TemaId.ANTIGUAS -> es(Claves.ANTIGUAS)?.uppercase()
         }

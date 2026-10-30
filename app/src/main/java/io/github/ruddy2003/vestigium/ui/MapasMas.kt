@@ -46,6 +46,8 @@ object MapasMas {
         // Del papel al cuadro: el boceto y el estudio en las hojas de la izquierda, y en el lienzo el cartón, la imprimación,
         // el color, la veladura y la firma en la esquina de abajo.
         TemaId.RENACIMIENTO -> listOf(Offset(0.08f, 0.66f), Offset(0.19f, 0.3f), Offset(0.35f, 0.6f), Offset(0.45f, 0.26f), Offset(0.55f, 0.66f), Offset(0.61f, 0.3f), Offset(0.66f, 0.82f))
+        // El archipiélago: del Puerto de la Brea, a la izquierda, isla por isla en zigzag hasta la Isla de la X.
+        TemaId.PIRATA -> listOf(Offset(0.08f, 0.7f), Offset(0.21f, 0.36f), Offset(0.35f, 0.66f), Offset(0.48f, 0.3f), Offset(0.61f, 0.6f), Offset(0.75f, 0.28f), Offset(0.9f, 0.62f))
         // La campaña de 1805: de Boulogne, junto al canal de la Mancha, se cruza el Rin en Kehl, se baja al Danubio en Ulm,
         // Múnich, Viena (Schönbrunn), y al norte a Brünn y Austerlitz.
         TemaId.NAPOLEON -> listOf(Offset(0.07f, 0.22f), Offset(0.245f, 0.44f), Offset(0.4f, 0.82f), Offset(0.53f, 0.6f), Offset(0.69f, 0.78f), Offset(0.8f, 0.4f), Offset(0.93f, 0.52f))
@@ -375,6 +377,40 @@ object MapasMas {
                 drawCircle(cs.surface, pw * 0.06f, Offset(pc.x - pw * 0.26f, pc.y + pw * 0.08f))
                 colores.forEachIndexed { k, c -> drawCircle(c.copy(alpha = 0.5f), pw * 0.06f, Offset(pc.x - pw * 0.12f + k * pw * 0.12f, pc.y - pw * 0.14f + (k % 2) * pw * 0.06f)) }
             }
+            TemaId.PIRATA -> {
+                // La carta náutica: el mar en verde de carta, la cuadrícula de grados, las líneas de rumbo de una rosa en la
+                // esquina, una isla bajo cada parada con su orilla de arena y, sobre la derrota, el balandro que avanza.
+                drawRect(Color(0xFF2F5D62).copy(alpha = if (oscuro) 0.22f else 0.12f), Offset.Zero, Size(w, h))
+                var gx = w / 8; while (gx < w) { drawLine(tinta.copy(alpha = 0.12f), Offset(gx, 0f), Offset(gx, h), 0.6f * d); gx += w / 8 }
+                var gy = h / 5; while (gy < h) { drawLine(tinta.copy(alpha = 0.12f), Offset(0f, gy), Offset(w, gy), 0.6f * d); gy += h / 5 }
+                val rosa = Offset(w * 0.9f, h * 0.15f)
+                for (k in 0 until 16) { val a = k * PI / 8; drawLine(tinta.copy(alpha = if (k % 4 == 0) 0.3f else 0.14f), rosa, Offset(rosa.x + (w * cos(a)).toFloat(), rosa.y + (w * sin(a)).toFloat()), 0.6f * d) }
+                for (k in 0 until 8) {
+                    val a = -PI / 2 + k * PI / 4; val rr = (if (k % 2 == 0) 13f else 8f) * d
+                    drawLine(tinta.copy(alpha = 0.55f), rosa, Offset(rosa.x + (rr * cos(a)).toFloat(), rosa.y + (rr * sin(a)).toFloat()), 1.4f * d)
+                }
+                val pts = puntos(tema).map { Offset(it.x * w, it.y * h) }
+                val arena = Color(0xFFE6D3A6).copy(alpha = if (oscuro) 0.3f else 0.75f)
+                val monte = Color(0xFF5E7A4A).copy(alpha = if (oscuro) 0.35f else 0.4f)
+                pts.forEachIndexed { i, p ->
+                    val an = (22f + (i * 7) % 12) * d; val al = an * 0.55f
+                    drawOval(Color.White.copy(alpha = if (oscuro) 0.06f else 0.4f), Offset(p.x - an * 0.62f, p.y - al * 0.2f), Size(an * 1.24f, al * 0.9f), style = Stroke(1 * d))
+                    drawOval(arena, Offset(p.x - an / 2, p.y - al * 0.1f), Size(an, al * 0.7f))
+                    drawOval(monte, Offset(p.x - an * 0.3f, p.y - al * 0.02f), Size(an * 0.5f, al * 0.4f))
+                }
+                // Olas sueltas, a pluma.
+                val az = java.util.Random(1718)
+                repeat(14) { val o = Offset(az.nextFloat() * w, az.nextFloat() * h); drawArc(tinta.copy(alpha = 0.3f), 200f, 140f, false, Offset(o.x - 5 * d, o.y - 2 * d), Size(10 * d, 5 * d), style = Stroke(0.9f * d)) }
+                // El balandro sobre la derrota, entre la parada cumplida y la siguiente.
+                val f = (avance.coerceIn(0f, 1f) * 6f); val i0 = f.toInt().coerceAtMost(5); val t = f - i0
+                val b = Offset(pts[i0].x + (pts[i0 + 1].x - pts[i0].x) * t, pts[i0].y + (pts[i0 + 1].y - pts[i0].y) * t - 14 * d)
+                val casco = Color(0xFF4A3424).copy(alpha = if (oscuro) 0.6f else 0.8f)
+                drawPath(Path().apply { moveTo(b.x - 9 * d, b.y); lineTo(b.x + 9 * d, b.y); lineTo(b.x + 6 * d, b.y + 4 * d); lineTo(b.x - 7 * d, b.y + 4 * d); close() }, casco)
+                drawLine(casco, Offset(b.x, b.y), Offset(b.x, b.y - 15 * d), 1 * d)
+                drawPath(Path().apply { moveTo(b.x + 1 * d, b.y - 14 * d); quadraticTo(b.x + 9 * d, b.y - 8 * d, b.x + 1 * d, b.y - 2 * d); close() }, Color(0xFFF1E8CF).copy(alpha = if (oscuro) 0.5f else 0.9f))
+                drawPath(Path().apply { moveTo(b.x - 1 * d, b.y - 12 * d); lineTo(b.x - 8 * d, b.y - 2 * d); lineTo(b.x - 1 * d, b.y - 2 * d); close() }, Color(0xFFF1E8CF).copy(alpha = if (oscuro) 0.4f else 0.8f))
+                drawRect(Color(0xFF1B1714), Offset(b.x, b.y - 18 * d), Size(5 * d, 3 * d))
+            }
             TemaId.NAPOLEON -> {
                 // El canal de la Mancha junto a Boulogne, el Rin y el Danubio, y las fronteras punteadas del teatro de operaciones.
                 drawPath(Path().apply { moveTo(0f, 0f); lineTo(w * 0.14f, 0f); cubicTo(w * 0.1f, h * 0.08f, w * 0.05f, h * 0.12f, 0f, h * 0.18f); close() }, agua)
@@ -490,6 +526,8 @@ object MapasMas {
             TemaId.GOTICO -> drawPath(p, cs.tertiary.copy(alpha = 0.7f), style = Stroke(1.6f * d))
             // Un trazo de sanguina, con el lápiz de la construcción debajo.
             TemaId.RENACIMIENTO -> { drawPath(p, cs.onSurfaceVariant.copy(alpha = 0.25f), style = Stroke(0.8f * d)); drawPath(p, Color(0xFF8C3B1E).copy(alpha = 0.8f), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 3 * d)))) }
+            // La derrota punteada en rojo de las cartas del tesoro.
+            TemaId.PIRATA -> drawPath(p, Color(0xFF9A2A1C).copy(alpha = 0.8f), style = Stroke(1.8f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.1f * d, 5 * d))))
             // La flecha roja de los mapas de campaña.
             TemaId.NAPOLEON -> { drawPath(p, Color(0xFFA3172E).copy(alpha = 0.35f), style = Stroke(7 * d)); drawPath(p, Color(0xFFA3172E), style = Stroke(1.6f * d)) }
             // El cortejo: tres líneas, azul, blanca y roja.
@@ -583,6 +621,16 @@ object MapasMas {
             TemaId.GOTICO -> drawPath(Path().apply { moveTo(c.x - r * 0.8f, c.y + r); lineTo(c.x - r * 0.8f, c.y); quadraticTo(c.x - r * 0.8f, c.y - r * 0.8f, c.x, c.y - r * 1.3f); quadraticTo(c.x + r * 0.8f, c.y - r * 0.8f, c.x + r * 0.8f, c.y); lineTo(c.x + r * 0.8f, c.y + r); close() }, col)
             // Un punto de compás con su cruz de construcción.
             TemaId.RENACIMIENTO -> { drawCircle(col, r, c); drawLine(Color(0xFF3A2614).copy(alpha = 0.5f), Offset(c.x - r * 1.6f, c.y), Offset(c.x + r * 1.6f, c.y), 0.8f * d); drawLine(Color(0xFF3A2614).copy(alpha = 0.5f), Offset(c.x, c.y - r * 1.6f), Offset(c.x, c.y + r * 1.6f), 0.8f * d) }
+            // Una palmera en su isla; en la meta, la «X» roja del tesoro.
+            TemaId.PIRATA -> if (meta) {
+                drawCircle(col.copy(alpha = 0.25f), r * 1.3f, c)
+                drawLine(Color(0xFF9A2A1C), Offset(c.x - r, c.y - r), Offset(c.x + r, c.y + r), r * 0.42f, StrokeCap.Round)
+                drawLine(Color(0xFF9A2A1C), Offset(c.x + r, c.y - r), Offset(c.x - r, c.y + r), r * 0.42f, StrokeCap.Round)
+            } else {
+                drawOval(col, Offset(c.x - r * 1.1f, c.y + r * 0.2f), Size(r * 2.2f, r * 0.8f))
+                drawPath(Path().apply { moveTo(c.x - r * 0.1f, c.y + r * 0.5f); quadraticTo(c.x - r * 0.3f, c.y - r * 0.3f, c.x + r * 0.2f, c.y - r * 1.1f) }, Color(0xFF6B4A2B), style = Stroke(r * 0.22f))
+                listOf(-1f, 1f, 0.2f).forEach { s -> drawPath(Path().apply { moveTo(c.x + r * 0.2f, c.y - r * 1.1f); quadraticTo(c.x + r * (0.2f + s * 0.6f), c.y - r * 1.6f, c.x + r * (0.2f + s * 1.1f), c.y - r * 0.8f) }, Color(0xFF3F6B3A), style = Stroke(r * 0.2f, cap = StrokeCap.Round)) }
+            }
             // El banderín de la división; en la meta, el sol de Austerlitz.
             TemaId.NAPOLEON -> if (meta) {
                 for (k in 0 until 12) { val a = k * PI / 6; drawLine(Color(0xFFD4AF37), Offset(c.x + (r * 1.1f * cos(a)).toFloat(), c.y + (r * 1.1f * sin(a)).toFloat()), Offset(c.x + (r * 1.7f * cos(a)).toFloat(), c.y + (r * 1.7f * sin(a)).toFloat()), 1.2f * d) }
@@ -618,6 +666,7 @@ object MapasMas {
             TemaId.MEDIEVAL -> vela(c, alto)
             TemaId.GOTICO -> peregrino(c, alto)
             TemaId.RENACIMIENTO -> puntaDePlata(c, alto)
+            TemaId.PIRATA -> punal(c, alto)
             // Distopía: no un alfiler, sino el banderín rojo del punto de control.
             TemaId.DISTOPIA -> {
                 val top = c.y - 24 * d - alto
@@ -724,6 +773,26 @@ object MapasMas {
     }
 
     /** La punta de plata: el estilete de madera con su virola, apoyado en la parada, y la línea gris que deja sobre el papel. */
+    /** El puñal clavado en la carta, un poco inclinado: hoja de acero, guarda de latón, empuñadura de cuero y pomo. */
+    private fun DrawScope.punal(c: Offset, alto: Float) {
+        val d = density
+        val punta = Offset(c.x, c.y - 1 * d - alto)
+        drawLine(Color(0xFF2A1C0F).copy(alpha = 0.35f), Offset(punta.x - 4 * d, punta.y + 1 * d), Offset(punta.x + 4 * d, punta.y + 1 * d), 1 * d)
+        val dx = -0.26f; val dy = -0.97f
+        fun en(t: Float) = Offset(punta.x + dx * t * d, punta.y + dy * t * d)
+        val nx = -dy; val ny = dx
+        fun tramo(t0: Float, t1: Float, a0: Float, a1: Float, col: Color) {
+            val p0 = en(t0); val p1 = en(t1)
+            drawPath(Path().apply { moveTo(p0.x + nx * a0 * d, p0.y + ny * a0 * d); lineTo(p1.x + nx * a1 * d, p1.y + ny * a1 * d); lineTo(p1.x - nx * a1 * d, p1.y - ny * a1 * d); lineTo(p0.x - nx * a0 * d, p0.y - ny * a0 * d); close() }, col)
+        }
+        tramo(0f, 16f, 0.1f, 1.7f, Color(0xFFC9CDD3))
+        drawLine(Color.White.copy(alpha = 0.6f), en(2f), en(15f), 0.5f * d)
+        val g = en(16.5f); drawLine(Color(0xFFC9A04A), Offset(g.x + nx * 5 * d, g.y + ny * 5 * d), Offset(g.x - nx * 5 * d, g.y - ny * 5 * d), 1.8f * d, StrokeCap.Round)
+        tramo(17f, 26f, 1.3f, 1.3f, Color(0xFF4A3424))
+        for (k in 0 until 4) { val q = en(18f + k * 2.2f); drawLine(Color(0xFFB59A62), Offset(q.x + nx * 1.3f * d, q.y + ny * 1.3f * d), Offset(q.x - nx * 1.3f * d, q.y - ny * 1.3f * d), 0.6f * d) }
+        drawCircle(Color(0xFFC9A04A), 2.2f * d, en(27.5f))
+    }
+
     private fun DrawScope.puntaDePlata(c: Offset, alto: Float) {
         val d = density
         val punta = Offset(c.x, c.y - 1.5f * d - alto)

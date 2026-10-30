@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- La duela de un barril: madera con sus dos aros. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFD6AA4C"/>
+            <stroke android:width="0.8dp" android:color="#88201604"/>
+            <corners android:radius="3dp"/>
+        </shape>
+    </item>
+    <item android:gravity="left|fill_vertical" android:width="1.2dp" android:left="4dp" android:top="2dp" android:bottom="2dp">
+        <shape android:shape="rectangle"><solid android:color="#66201604"/></shape>
+    </item>
+    <item android:gravity="right|fill_vertical" android:width="1.2dp" android:right="4dp" android:top="2dp" android:bottom="2dp">
+        <shape android:shape="rectangle"><solid android:color="#66201604"/></shape>
+    </item>
+</layer-list>

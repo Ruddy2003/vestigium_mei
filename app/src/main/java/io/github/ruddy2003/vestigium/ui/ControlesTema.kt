@@ -293,6 +293,13 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 10.dp, 0.dp, true, 1.5.dp)
     // Hoja de cuaderno con la esquina doblada.
     TemaId.RENACIMIENTO -> PielDialogo(CutCornerShape(bottomEnd = 26.dp), 0.dp, 0.dp, false, 1.dp)
+    // Una carta de marear: el borde de abajo, rasgado en olas por el uso.
+    TemaId.PIRATA -> PielDialogo(FormaDp { w, h, d ->
+        val f = 5 * d; val n = 6; val paso = w / n
+        moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, h - f)
+        for (i in n - 1 downTo 0) quadraticTo(i * paso + paso / 2, h + f * 0.4f, i * paso, h - f)
+        close()
+    }, 0.dp, 10.dp, false, 1.5.dp)
     // Cartel con una cuña cortada arriba a la derecha.
     TemaId.URSS -> PielDialogo(FormaDp { w, h, d ->
         val c = 30 * d
@@ -512,6 +519,20 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             drawLine(e.primary.copy(alpha = 0.3f), Offset(w - 23 * d, 20 * d), Offset(w - 17 * d, 20 * d), 0.7f * d)
             drawLine(e.primary.copy(alpha = 0.3f), Offset(w - 20 * d, 17 * d), Offset(w - 20 * d, 23 * d), 0.7f * d)
         }
+        TemaId.PIRATA -> {
+            // Un cabo que corre por dentro del borde, las cantoneras de latón y una rosa pequeña arriba a la derecha.
+            val cabo = Color(0xFFB59A62).copy(alpha = 0.6f)
+            drawRect(cabo, Offset(7 * d, 7 * d), Size(w - 14 * d, h - 20 * d), style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.6f * d, 1.4f * d))))
+            val laton = e.secondary.copy(alpha = 0.6f); val l = 14 * d
+            listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f)).forEach { (o, s) ->
+                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + s.x * l, o.y); lineTo(o.x, o.y + s.y * l); close() }, laton)
+            }
+            val rosa = Offset(w - 26 * d, 26 * d)
+            for (k in 0 until 8) {
+                val a = -Math.PI / 2 + k * Math.PI / 4; val rr = (if (k % 2 == 0) 10f else 6f) * d
+                drawLine(if (k == 0) e.tertiary.copy(alpha = 0.7f) else e.primary.copy(alpha = 0.4f), rosa, Offset(rosa.x + (rr * kotlin.math.cos(a)).toFloat(), rosa.y + (rr * kotlin.math.sin(a)).toFloat()), 0.9f * d)
+            }
+        }
         TemaId.URSS -> {
             // Una franja roja paralela al corte y una barra negra abajo.
             val c = 30 * d
@@ -674,6 +695,15 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawLine(e.primary.copy(alpha = 0.7f), Offset(0f, cy + d), Offset(w * 0.92f, cy - 0.5f * d), 0.8f * d)
             drawLine(e.primary.copy(alpha = 0.45f), Offset(w * 0.05f, cy + 2.5f * d), Offset(w * 0.7f, cy + 2 * d), 0.7f * d)
             drawCircle(e.primary.copy(alpha = 0.5f), 3 * d, Offset(w * 0.95f, cy), style = Stroke(0.6f * d))
+        }
+        // Una ola de tinta que termina en la «X» roja.
+        TemaId.PIRATA -> {
+            val p = Path(); var x = 0f; val l = 10 * d; p.moveTo(0f, cy)
+            while (x < w * 0.86f) { p.quadraticTo(x + l / 4, cy - 2 * d, x + l / 2, cy); p.quadraticTo(x + l * 3 / 4, cy + 2 * d, x + l, cy); x += l }
+            drawPath(p, e.primary.copy(alpha = 0.55f), style = Stroke(0.9f * d))
+            val c = Offset(w * 0.94f, cy); val s = 3 * d
+            drawLine(e.tertiary.copy(alpha = 0.8f), c - Offset(s, s), c + Offset(s, s), 1.4f * d, StrokeCap.Round)
+            drawLine(e.tertiary.copy(alpha = 0.8f), c + Offset(-s, s), c + Offset(s, -s), 1.4f * d, StrokeCap.Round)
         }
         // Barra roja de cartel y una línea negra.
         TemaId.URSS -> {
@@ -973,6 +1003,15 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
                 drawLine(activo.copy(alpha = activo.alpha * 0.5f), Offset(g * 0.5f, cy + g * 0.3f), Offset(x * 0.96f, cy + g * 0.2f), g * 0.28f)
             }
         }
+        // Lo que falta, un cabo fino; lo recorrido, un cabo grueso con sus vueltas.
+        TemaId.PIRATA -> {
+            linea(inactivo, x, w, g * 0.22f)
+            if (x > 0f) {
+                linea(activo, 0f, x, g * 0.6f, cap = StrokeCap.Round)
+                var k = g * 0.3f
+                while (k < x - g * 0.3f) { drawLine(inactivo.copy(alpha = 0.6f), Offset(k, cy + g * 0.28f), Offset(k + g * 0.36f, cy - g * 0.28f), g * 0.12f); k += g * 0.55f }
+            }
+        }
         // Barra negra; lo recorrido, rojo con el corte en diagonal.
         TemaId.URSS -> {
             if (x < w) drawRect(e.onSurface.copy(alpha = 0.75f * inactivo.alpha), Offset(x, cy - g * 0.4f), Size(w - x, g * 0.8f))
@@ -1129,6 +1168,16 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawLine(color, cabeza, Offset(c.x + r * 0.55f, c.y + r * 0.9f), r * 0.13f, cap = StrokeCap.Round)
             drawLine(color.copy(alpha = color.alpha * 0.7f), Offset(c.x - r * 0.3f, c.y + r * 0.3f), Offset(c.x + r * 0.3f, c.y + r * 0.3f), r * 0.07f)
             drawCircle(color, r * 0.2f, cabeza)
+        }
+        // La rueda del timón: el aro, el cubo y las ocho cabillas que sobresalen.
+        TemaId.PIRATA -> {
+            for (k in 0 until 8) {
+                val a = k * Math.PI / 4
+                val fin = Offset(c.x + (r * 1.05f * kotlin.math.cos(a)).toFloat(), c.y + (r * 1.05f * kotlin.math.sin(a)).toFloat())
+                drawLine(color, c, fin, r * 0.14f, cap = StrokeCap.Round)
+            }
+            drawCircle(color, r * 0.72f, c, style = Stroke(r * 0.18f))
+            drawCircle(hueco, r * 0.24f, c); drawCircle(color, r * 0.13f, c)
         }
         // Cuña roja de cartel con su barra negra.
         TemaId.URSS -> {

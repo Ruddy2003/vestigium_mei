@@ -168,6 +168,9 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
     TemaId.ANDALUS -> mas(poligono(c, r, 4, 0.0), poligono(c, r, 4, PI / 4))
     TemaId.MONGOL -> mas(estrella(c, r, 8, 0.5f), circulo(c, r * 0.45f))
     TemaId.RENACIMIENTO -> mas(menos(circulo(c, r), circulo(c, r * 0.8f)), poligono(c, r * 0.8f, 4, -PI / 2))
+    // El doblón: la moneda con la cruz calada de sus cuatro cuarteles.
+    TemaId.PIRATA -> menos(menos(poligono(c, r, 12, -PI / 2), Path().apply { addRect(Rect(c.x - r * 0.09f, c.y - r * 0.6f, c.x + r * 0.09f, c.y + r * 0.6f)) }),
+        Path().apply { addRect(Rect(c.x - r * 0.6f, c.y - r * 0.09f, c.x + r * 0.6f, c.y + r * 0.09f)) })
     // La escarapela: borde plisado y el anillo blanco hueco.
     TemaId.REVOLUCION -> menos(estrella(c, r, 18, 0.88f), menos(circulo(c, r * 0.62f), circulo(c, r * 0.4f)))
     // Una gema tallada: seis puntas cortas.

@@ -135,6 +135,12 @@
     <style name="Theme.Vestigium.Arranque.Renacimiento.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_renacimiento_oscuro</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Pirata" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_pirata</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Pirata.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_pirata_oscuro</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Revolucion" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_revolucion</item>
     </style>

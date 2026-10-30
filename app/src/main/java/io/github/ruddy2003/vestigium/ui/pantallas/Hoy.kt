@@ -507,6 +507,18 @@ fun FraseDelDia(fecha: String) {
             }
             Box(Modifier.weight(1f).padding(start = 8.dp)) { CuerpoFrase(f, fecha, rotulo, "“", "”") }
         }
+        // El dicho clavado al palo: un mástil de cabo con su nudo arriba y la frase al lado.
+        TemaId.PIRATA -> Row(arriba.height(IntrinsicSize.Min)) {
+            Canvas(Modifier.width(18.dp).fillMaxHeight()) {
+                val u = 1.dp.toPx(); val k = cs.primary.copy(alpha = 0.6f); val x = size.width / 2
+                drawCircle(cs.secondary.copy(alpha = 0.8f), 4 * u, Offset(x, 6 * u))
+                var y = 12 * u
+                while (y < size.height - 4 * u) { drawLine(k, Offset(x - 2 * u, y + 2 * u), Offset(x + 2 * u, y - 1 * u), 1.2f * u); y += 3 * u }
+                drawLine(cs.tertiary.copy(alpha = 0.8f), Offset(x - 3 * u, size.height - 6 * u), Offset(x + 3 * u, size.height), 1.4f * u)
+                drawLine(cs.tertiary.copy(alpha = 0.8f), Offset(x + 3 * u, size.height - 6 * u), Offset(x - 3 * u, size.height), 1.4f * u)
+            }
+            Box(Modifier.weight(1f).padding(start = 8.dp)) { CuerpoFrase(f, fecha, rotulo, "«", "»") }
+        }
         // Cuña roja constructivista y el rótulo en mayúsculas.
         TemaId.URSS -> Row(arriba.height(IntrinsicSize.Min)) {
             Canvas(Modifier.width(22.dp).fillMaxHeight()) {
@@ -800,6 +812,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.ANDALUS -> c(LetraExtra.kufi, FontWeight.Medium, 22f, 0.4f)
         TemaId.MONGOL -> c(LetraExtra.filosofo, FontWeight.Bold, 23f, 0.6f)
         TemaId.RENACIMIENTO -> base.copy(fontFamily = LetraExtra.cormorant, fontWeight = FontWeight.Medium, fontSize = 25.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum")
+        TemaId.PIRATA -> c(LetraExtra.caslon, FontWeight.SemiBold, 23f, 0.3f, "lnum, tnum")
         TemaId.URSS -> c(LetraExtra.russo, FontWeight.Normal, 22f, 0.5f)
         // Didot en cursiva, como los impresos de 1793; el napoleónico usa la misma casa, derecha y espaciada.
         TemaId.REVOLUCION -> c(LetraExtra.bodoni, FontWeight.Normal, 24f, 0.2f, "lnum", cursiva = true)
@@ -1149,6 +1162,17 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                                 drawPath(r, color.copy(alpha = 0.3f))
                                 clipPath(r) { var k = 0f; while (k < barH + bw) { drawLine(color, Offset(x0, top + k), Offset(x0 + bw, top + k - bw), 0.9f * u); k += 3.5f * u } }
                                 drawPath(r, color, style = borde)
+                            } else drawPath(r, linea, style = borde)
+                        }
+                        // La franja como un tablón de cubierta: sus vetas a lo largo y los dos clavos de los extremos.
+                        TemaId.PIRATA -> {
+                            val x0 = w * 0.08f; val bw = w * 0.84f
+                            val r = caja(x0, top, bw, barH)
+                            if (color != null) {
+                                drawPath(r, color.copy(alpha = 0.32f))
+                                clipPath(r) { var k = 0; var y = top + barH * 0.25f; while (y < top + barH) { drawLine(color.copy(alpha = 0.7f), Offset(x0, y), Offset(x0 + bw, y + (if (k % 2 == 0) 1f else -1f) * u), 0.7f * u); y += barH * 0.25f; k++ } }
+                                drawPath(r, color, style = borde)
+                                listOf(x0 + 3 * u, x0 + bw - 3 * u).forEach { x -> drawCircle(color, 1.2f * u, Offset(x, top + barH / 2)) }
                             } else drawPath(r, linea, style = borde)
                         }
                         // Bloques constructivistas: el corte en diagonal arriba y una base negra.

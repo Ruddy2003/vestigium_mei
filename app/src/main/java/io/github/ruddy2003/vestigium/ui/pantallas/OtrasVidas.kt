@@ -628,6 +628,16 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(0.8f * d))
             }
         }
+        // Un cabo: lo hecho, trenzado y grueso; lo que falta, el cordón fino.
+        TemaId.PIRATA -> {
+            drawLine(pista, Offset(0f, h / 2), Offset(w, h / 2), h * 0.3f, StrokeCap.Round)
+            if (fw > 0f) {
+                drawLine(color, Offset(h / 2, h / 2), Offset(fw - h / 2, h / 2), h * 0.75f, StrokeCap.Round)
+                var x = h * 0.4f
+                while (x < fw - h * 0.4f) { drawLine(oscuro, Offset(x, h * 0.85f), Offset(x + h * 0.45f, h * 0.15f), 0.9f * d); x += h * 0.5f }
+                drawCircle(color, h * 0.5f, Offset(fw - h / 2, h / 2)); drawCircle(claro, h * 0.2f, Offset(fw - h / 2, h / 2))
+            }
+        }
         // Cuña constructivista que crece hacia la punta.
         TemaId.URSS -> {
             drawLine(color.copy(alpha = 0.35f), Offset(0f, h / 2), Offset(w, h / 2), 1.2f * d)
@@ -868,6 +878,17 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawLine(sepia, Offset(c.x - rc, c.y), Offset(c.x + rc, c.y), 0.5f * d); drawLine(sepia, Offset(c.x, c.y - rc), Offset(c.x, c.y + rc), 0.5f * d)
             drawCircle(sepia, 2f * d, c, style = Stroke(0.8f * d))
             for (k in 0 until 4) drawArc(sepia, k * 90f + 30f, 30f, false, Offset(c.x - rc * 1.06f, c.y - rc * 1.06f), Size(rc * 2.12f, rc * 2.12f), style = Stroke(0.6f * d))
+        }
+        // La rosa de los vientos en el centro de la esfera, con sus ocho rumbos, y las horas como campanadas.
+        TemaId.PIRATA -> {
+            val sepia = tinta.copy(alpha = 0.35f)
+            for (k in 0 until 8) {
+                val a = k * 45f - 90f; val largo = if (k % 2 == 0) rc * 0.9f else rc * 0.55f
+                val punta = polarFig(c, largo, a); val i1 = polarFig(c, rc * 0.1f, a - 90f); val i2 = polarFig(c, rc * 0.1f, a + 90f)
+                drawPath(Path().apply { moveTo(i1.x, i1.y); lineTo(punta.x, punta.y); lineTo(i2.x, i2.y); close() }, if (k == 0) cs.tertiary.copy(alpha = 0.5f) else sepia)
+            }
+            drawCircle(sepia, rc * 0.95f, c, style = Stroke(0.6f * d))
+            for (k in 0 until 48) drawCircle(linea.copy(alpha = if (k % 2 == 0) 0.6f else 0.3f), (if (k % 2 == 0) 1.3f else 0.8f) * d, polarFig(c, ro + 3 * d, k * 7.5f - 90f))
         }
         // Estrella roja sobre la barra diagonal.
         TemaId.URSS -> {

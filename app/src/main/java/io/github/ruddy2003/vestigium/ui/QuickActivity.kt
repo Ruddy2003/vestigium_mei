@@ -959,6 +959,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.ANDALUS -> 18.dp
     TemaId.MONGOL -> 14.dp
     TemaId.RENACIMIENTO -> 6.dp
+    TemaId.PIRATA -> 8.dp
     TemaId.URSS -> 20.dp
     TemaId.REVOLUCION -> 9.dp
     TemaId.ANTIGUAS -> 16.dp
@@ -1078,6 +1079,11 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     TemaId.RENACIMIENTO -> formaDp { w, h, u ->
         val d = 14 * u
         moveTo(d, 0f); lineTo(w - d, 0f); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // La lona de una vela tensada: el borde de arriba se comba hacia adentro entre dos ollaos.
+    TemaId.PIRATA -> formaDp { w, h, u ->
+        val f = 8 * u
+        moveTo(0f, 0f); quadraticTo(w / 2, f * 2, w, 0f); lineTo(w, h); lineTo(0f, h); close()
     }
     // Diagonal de cartel: el borde baja de izquierda a derecha.
     TemaId.URSS -> formaDp { w, h, u -> moveTo(0f, 0f); lineTo(w, 20 * u); lineTo(w, h); lineTo(0f, h); close() }
@@ -1234,6 +1240,12 @@ private fun DrawScope.adornoHojaQuick(t: TemaId, e: ColorScheme) {
             drawLine(col, Offset(c.x - 7 * u, c.y), Offset(c.x + 7 * u, c.y), 0.6f * u)
             drawLine(col, Offset(c.x, c.y - 7 * u), Offset(c.x, c.y + 7 * u), 0.6f * u)
         }
+        // Los ollaos de latón de la vela y la relinga (el cabo cosido al borde).
+        TemaId.PIRATA -> {
+            val col = e.secondary.copy(alpha = 0.7f)
+            listOf(10 * u, w - 10 * u).forEach { x -> drawCircle(col, 3.2f * u, Offset(x, 6 * u), style = Stroke(1.4f * u)) }
+            drawPath(Path().apply { moveTo(16 * u, 9 * u); quadraticTo(w / 2, 22 * u, w - 16 * u, 9 * u) }, e.primary.copy(alpha = 0.45f), style = Stroke(1.6f * u, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 1.4f * u))))
+        }
         // Una franja roja y otra negra, paralelas a la diagonal.
         TemaId.URSS -> {
             val k = 20 * u / w
@@ -1344,6 +1356,8 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     }
     // Hoja con la esquina doblada.
     TemaId.RENACIMIENTO -> CutCornerShape(bottomEnd = 12.dp)
+    // La duela del barril: arriba y abajo, un poco combada.
+    TemaId.PIRATA -> formaDp { w, h, u -> val f = 3 * u; moveTo(0f, f); quadraticTo(w / 2, -f, w, f); lineTo(w, h - f); quadraticTo(w / 2, h + f, 0f, h - f); close() }
     // Paralelogramo de cartel.
     TemaId.URSS -> formaDp { w, h, u -> val d = 10 * u; moveTo(d, 0f); lineTo(w, 0f); lineTo(w - d, h); lineTo(0f, h); close() }
     // Banderola con cola de golondrina.
