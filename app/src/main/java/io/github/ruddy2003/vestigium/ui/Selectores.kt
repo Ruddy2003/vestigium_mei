@@ -322,6 +322,11 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
         }
         close()
     }
+    // El bloque de un glifo: cuadro de esquinas muy redondeadas, un poco más ancho que alto.
+    TemaId.MESO -> GenericShape { s, _ ->
+        val r = minOf(s.width, s.height) * 0.3f
+        addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, s.height * 0.06f, s.width, s.height * 0.94f, androidx.compose.ui.geometry.CornerRadius(r, r)))
+    }
     // Cúpula de ger.
     TemaId.MONGOL -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -387,6 +392,12 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
             drawArc(fondo.copy(alpha = 0.55f), 200f, 60f, false, Offset(s.width / 2 - r * 0.7f, s.height / 2 - r * 0.7f), Size(r * 1.4f, r * 1.4f), style = Stroke(r * 0.12f))
         }
         TemaId.ANDALUS -> {}
+        // Un punto y una barra grabados abajo: el seis maya.
+        TemaId.MESO -> {
+            val r = minOf(s.width, s.height) / 2
+            drawRect(fondo.copy(alpha = 0.45f), Offset(s.width / 2 - r * 0.4f, s.height * 0.74f), Size(r * 0.8f, r * 0.12f))
+            drawCircle(fondo.copy(alpha = 0.45f), r * 0.08f, Offset(s.width / 2, s.height * 0.66f))
+        }
         TemaId.MONGOL -> {}
         TemaId.RENACIMIENTO -> {}
         // La cruz de cuarteles del doblón, apenas grabada.

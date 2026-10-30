@@ -180,6 +180,7 @@ object FondosTelefono {
         TemaId.ESPACIO -> "BITÁCORA DE A BORDO · VM-1"
         TemaId.ABISMO -> "BITÁCORA DEL BATISCAFO · INMERSIÓN"
         TemaId.ANDALUS -> "أثري"
+        TemaId.MESO -> "Códice de mis días"
         TemaId.MONGOL -> "МИНИЙ МӨР"
         TemaId.RENACIMIENTO -> "Il mio vestigio"
         TemaId.PIRATA -> "Mi derrota"
@@ -553,6 +554,26 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                 }
                 lobulado(0f, col, 1.3f * u); lobulado(7 * u, tenue, 0.8f * u)
             }
+            TemaId.MESO -> {
+                // La página de un códice: marco rojo doble con las esquinas escalonadas, una greca arriba y otra abajo, y
+                // el número del día en puntos y barras en las esquinas de abajo.
+                fun escalonado(d: Float, c: Color, g: Float) {
+                    val e = 10 * u
+                    drawPath(Path().apply {
+                        moveTo(izq + d + 2 * e, arr + d); lineTo(der - d - 2 * e, arr + d); lineTo(der - d - 2 * e, arr + d + e); lineTo(der - d - e, arr + d + e)
+                        lineTo(der - d - e, arr + d + 2 * e); lineTo(der - d, arr + d + 2 * e); lineTo(der - d, aba - d - 2 * e); lineTo(der - d - e, aba - d - 2 * e)
+                        lineTo(der - d - e, aba - d - e); lineTo(der - d - 2 * e, aba - d - e); lineTo(der - d - 2 * e, aba - d); lineTo(izq + d + 2 * e, aba - d)
+                        lineTo(izq + d + 2 * e, aba - d - e); lineTo(izq + d + e, aba - d - e); lineTo(izq + d + e, aba - d - 2 * e); lineTo(izq + d, aba - d - 2 * e)
+                        lineTo(izq + d, arr + d + 2 * e); lineTo(izq + d + e, arr + d + 2 * e); lineTo(izq + d + e, arr + d + e); lineTo(izq + d + 2 * e, arr + d + e); close()
+                    }, c, style = Stroke(g))
+                }
+                escalonado(0f, col, 1.4f * u); escalonado(6 * u, tenue, 0.8f * u)
+                grecaEscalonada(izq + 34 * u, der - 34 * u, arr + 14 * u, arr + 26 * u, col, 1.2f * u)
+                grecaEscalonada(izq + 34 * u, der - 34 * u, aba - 26 * u, aba - 14 * u, col, 1.2f * u)
+                val (n, _) = Maya.tzolkinPartes(java.time.LocalDate.now())
+                numeralMaya(n, Offset(izq + 26 * u, aba - 46 * u), 14 * u, tenue)
+                numeralMaya(n, Offset(der - 26 * u, aba - 46 * u), 14 * u, tenue)
+            }
             TemaId.MONGOL -> {
                 // Fieltro: esquinas redondeadas, una costura punteada por dentro y botones a la mitad de cada lado.
                 drawRoundRect(col, Offset(izq, arr), Size(der - izq, aba - arr), CornerRadius(26 * u), style = Stroke(2f * u))
@@ -847,6 +868,7 @@ private fun logo(t: TemaId): Int = when (t) {
     TemaId.ESPACIO -> R.drawable.logo_espacio
     TemaId.ABISMO -> R.drawable.logo_abismo
     TemaId.ANDALUS -> R.drawable.logo_andalus
+    TemaId.MESO -> R.drawable.logo_meso
     TemaId.MONGOL -> R.drawable.logo_mongol
     TemaId.RENACIMIENTO -> R.drawable.logo_renacimiento
     TemaId.PIRATA -> R.drawable.logo_pirata

@@ -67,6 +67,8 @@ object MapasMas {
         TemaId.REVOLUCION -> listOf(Offset(0.07f, 0.2f), Offset(0.17f, 0.7f), Offset(0.33f, 0.22f), Offset(0.47f, 0.84f), Offset(0.6f, 0.32f), Offset(0.76f, 0.76f), Offset(0.93f, 0.2f))
         // Toledo → Calatrava → Córdoba → Sevilla → Málaga → Almería → Granada.
         TemaId.ANDALUS -> geo(listOf(-4.02 to 39.86, -3.83 to 38.9, -4.78 to 37.88, -5.98 to 37.39, -4.42 to 36.72, -2.46 to 36.84, -3.6 to 37.18), -6.4, -2.1, 36.4, 40.2)
+        // El sacbé corre casi recto por la selva, de la ciudad del poniente a la del oriente; cada etapa, un punto del camino.
+        TemaId.MESO -> listOf(Offset(0.07f, 0.72f), Offset(0.21f, 0.64f), Offset(0.35f, 0.57f), Offset(0.49f, 0.51f), Offset(0.63f, 0.44f), Offset(0.78f, 0.37f), Offset(0.93f, 0.29f))
         // Chang'an → Dunhuang → Turfán → Kashgar → Samarcanda → Bujará → Antioquía (de oriente a occidente).
         TemaId.SEDA -> geo(listOf(108.9 to 34.3, 94.7 to 40.1, 89.2 to 42.9, 76.0 to 39.5, 66.9 to 39.6, 64.4 to 39.8, 36.2 to 36.2), 112.0, 33.0, 31.0, 45.0)
         // Las postas del yam, de Janbalic a Karakórum.
@@ -128,6 +130,24 @@ object MapasMas {
                 for (k in 0 until 5) monte(w * (0.62f + k * 0.04f), h * 0.86f, 7 * d, tinta)
                 // Un fondo de lazo tenue.
                 with(TrofeosMas) { for (i in 0 until 6) estrellaLazo(Offset(w * (0.1f + i * 0.17f), h * 0.12f), 6 * d, Brush.linearGradient(listOf(tinta.copy(alpha = 0.12f), tinta.copy(alpha = 0.12f))), null, 0f) }
+            }
+            TemaId.MESO -> {
+                // La selva de las tierras bajas, toda copas de árboles; dos cenotes (los pozos de agua dulce), la costa del
+                // Caribe al oriente y, a lo lejos, pirámides que asoman por encima de la selva.
+                val selva = Color(0xFF3F7A4A).copy(alpha = if (oscuro) 0.12f else 0.16f)
+                val azar = java.util.Random(584283)
+                repeat(70) {
+                    val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val r = (5f + azar.nextFloat() * 7f) * d
+                    drawCircle(selva, r, Offset(x, y)); drawCircle(selva, r * 0.7f, Offset(x + r * 0.7f, y - r * 0.3f))
+                }
+                drawPath(Path().apply { moveTo(w, 0f); lineTo(w * 0.86f, 0f); cubicTo(w * 0.9f, h * 0.25f, w * 0.84f, h * 0.5f, w * 0.95f, h * 0.75f); lineTo(w, h * 0.8f); close() }, agua)
+                listOf(Offset(0.28f, 0.82f), Offset(0.6f, 0.2f)).forEach { o ->
+                    drawCircle(agua.copy(alpha = agua.alpha * 2.2f), 7 * d, Offset(w * o.x, h * o.y))
+                    drawCircle(tinta, 9 * d, Offset(w * o.x, h * o.y), style = Stroke(1.2f * d))
+                }
+                listOf(Offset(0.14f, 0.3f), Offset(0.45f, 0.82f), Offset(0.72f, 0.72f)).forEach { o ->
+                    piramideMaya(Offset(w * o.x, h * o.y), 18 * d, 18 * d, tinta, tinta.copy(alpha = tinta.alpha * 1.6f), tinta, gradas = 3)
+                }
             }
             TemaId.SEDA -> {
                 // Dunas del Taklamakán, los montes del Pamir y el oasis.
@@ -624,6 +644,9 @@ object MapasMas {
         when (tema) {
             // Doble filete de oro con puntos de lazo.
             TemaId.ANDALUS -> { drawPath(p, Color(0xFFC9A04A).copy(alpha = 0.7f), style = Stroke(4 * d)); drawPath(p, cs.surface, style = Stroke(2 * d)); drawPath(p, Color(0xFF1E6B5A), style = Stroke(1.4f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.4f * d, 5 * d)))) }
+            // El sacbé: la calzada blanca de estuco, alta sobre la selva, con sus bordes de piedra.
+            TemaId.MESO -> { drawPath(p, Color(0xFF6E5A3E).copy(alpha = 0.55f), style = Stroke(8 * d)); drawPath(p, Color(0xFFF3EEDF), style = Stroke(6 * d))
+                drawPath(p, Color(0xFFA3301E).copy(alpha = 0.45f), style = Stroke(1 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * d, 6 * d)))) }
             // La huella de la caravana en la arena: puntos dobles.
             TemaId.SEDA -> { drawPath(p, Color(0xFFD9B57A).copy(alpha = 0.6f), style = Stroke(5 * d)); drawPath(p, Color(0xFF8E1B1B).copy(alpha = 0.8f), style = Stroke(1.6f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 5 * d)))) }
             // El camino de las postas, en azul de cielo.
@@ -747,6 +770,8 @@ object MapasMas {
         val d = density
         when (tema) {
             TemaId.ANDALUS -> with(TrofeosMas) { estrellaLazo(c, r * 1.2f, Brush.linearGradient(listOf(col, col)), Color(0xFFC9A04A), 0.8f * d) }
+            // Cada ciudad del camino, el cartucho de su glifo.
+            TemaId.MESO -> cartuchoMaya(c, r * 0.95f, col, cs.surface, col, ((c.x + c.y) / r).toInt())
             // Una moneda de cobre con agujero cuadrado.
             TemaId.SEDA -> { drawCircle(col, r, c); drawRect(cs.surface, Offset(c.x - r * 0.3f, c.y - r * 0.3f), Size(r * 0.6f, r * 0.6f)); drawCircle(Color(0xFF8E6A1F), r, c, style = Stroke(0.8f * d)) }
             // Una yurta.
@@ -945,6 +970,7 @@ object MapasMas {
             TemaId.MONGOL -> { alfiler(); drawRoundRect(Color(0xFFD4AF37), Offset(g.x - r * 0.45f, g.y - r * 0.9f), Size(r * 0.9f, r * 1.8f), androidx.compose.ui.geometry.CornerRadius(r * 0.45f)) }
             TemaId.NAVIDAD -> { alfiler(); with(TrofeosTema) { estrella(g, r * 0.9f, r * 0.38f, 5, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37)))) } }
             TemaId.ANDALUS -> { alfiler(); with(TrofeosMas) { estrellaLazo(g, r * 0.85f, Brush.linearGradient(listOf(Color(0xFFD4AF37), Color(0xFFD4AF37))), null, 0f) } }
+            TemaId.MESO -> { alfiler(); cuentaJade(g, r * 0.75f, Color(0xFF2F7D57), Color.White) }
             TemaId.BOTANICO -> { alfiler(); drawPath(Path().apply { moveTo(g.x - r * 0.8f, g.y + r * 0.4f); quadraticTo(g.x - r * 0.4f, g.y - r, g.x + r * 0.8f, g.y - r * 0.5f); quadraticTo(g.x + r * 0.3f, g.y + r * 0.8f, g.x - r * 0.8f, g.y + r * 0.4f); close() }, Color(0xFF3F7A3A)) }
             // Un semáforo diminuto clavado en el plano: el rojo muerto y el verde encendido.
             TemaId.RUINAS -> { alfiler(); drawRect(Color(0xFF2E332E), Offset(g.x - r * 0.4f, g.y - r * 0.8f), Size(r * 0.8f, r * 1.6f)); drawCircle(Color(0xFF8A4A22).copy(alpha = 0.6f), r * 0.2f, Offset(g.x, g.y - r * 0.4f)); drawCircle(Color(0xFF8FCB6A), r * 0.24f, Offset(g.x, g.y + r * 0.35f)) }

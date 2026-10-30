@@ -158,6 +158,8 @@ object LibroDiario {
         TemaId.ESPACIO -> Fuentes(R.font.orbitron_bold, R.font.grotesk_regular)
         TemaId.ABISMO -> Fuentes(R.font.batiscafo_semibold, R.font.atkinson_regular)
         TemaId.ANDALUS -> Fuentes(R.font.kufi_medium, R.font.amiri_regular)
+        // Las versalitas de Alegreya Sans SC y la Alegreya Sans de leer, las dos con los numerales mayas.
+        TemaId.MESO -> Fuentes(R.font.alegreya_sc_bold, R.font.alegreya_sans_regular)
         TemaId.MONGOL -> Fuentes(R.font.philosopher_bold, R.font.fira_regular)
         TemaId.RENACIMIENTO -> Fuentes(R.font.italianno, R.font.cormorant_regular)
         // La letra negra de las cartas de marear y el Caslon de los libros de a bordo.
@@ -247,6 +249,10 @@ object LibroDiario {
                 ".fecha{text-transform:uppercase;letter-spacing:.06em}" + capitular("3em", p)
             TemaId.ANDALUS -> "article{border-top:0}article::before{content:'';display:block;height:10px;margin-bottom:12px;" +
                 "background:conic-gradient(from 45deg,$p 25%,transparent 0 50%,$p 0 75%,transparent 0) 0 0/10px 10px repeat-x}" + capitular("2.6em", p)
+            // Cada día entre dos renglones rojos de códice, con una fila de puntos de jade encima y la fecha en versalitas rojas.
+            TemaId.MESO -> "article{border-top:2px solid $p;border-bottom:1px solid $p;padding:10px 0 12px}" +
+                "article::before{content:'';display:block;height:8px;margin-bottom:10px;background:radial-gradient(circle,$s 2px,transparent 2.6px) 0 0/12px 8px repeat-x}" +
+                ".fecha{font-variant:small-caps;letter-spacing:.05em;color:$p}" + capitular("2.8em", p)
             TemaId.MONGOL -> "article{border:2px dashed $s;border-radius:10px;padding:18px;margin-bottom:18px}" + capitular("2.4em", p)
             TemaId.RENACIMIENTO -> "article{border-top:1px solid $v}article::before{content:'';float:right;width:60px;height:60px;border:1px dashed $v;border-radius:50%;margin:0 0 6px 10px}" + capitular("3.6em", p)
             // Cada asiento entre dos filetes, con la «X» roja del tesoro al margen y la fecha en versalitas de bitácora.
@@ -392,6 +398,7 @@ object LibroDiario {
             TemaId.ESPACIO -> Medidas(11f, aire)
             TemaId.ABISMO -> Medidas(11.5f, aire)
             TemaId.ANDALUS -> Medidas(12.5f, aire)
+            TemaId.MESO -> Medidas(12f, aire)
             TemaId.MONGOL -> Medidas(11f, aire)
             TemaId.RENACIMIENTO -> Medidas(12.5f, aire)
             TemaId.PIRATA -> Medidas(11.5f, aire)
@@ -449,6 +456,8 @@ object LibroDiario {
         // La capitular estrecha de rótulo de instrumento, en el color de la luz del fondo.
         TemaId.ABISMO -> Inicial(R.font.batiscafo_semibold, 2.6f, tinta = true)
         TemaId.ANDALUS -> Inicial(R.font.kufi_bold, 2.2f)
+        // La capitular en versalitas, roja de cinabrio como las cifras del códice.
+        TemaId.MESO -> Inicial(R.font.alegreya_sc_bold, 2.5f)
         TemaId.MONGOL -> Inicial(R.font.philosopher_bold, 2.1f)
         // La inicial a mano, en sanguina.
         TemaId.RENACIMIENTO -> Inicial(R.font.italianno, 3.2f)
@@ -657,6 +666,12 @@ object LibroDiario {
                 cv.save(); cv.rotate(45f, cx, y); cv.drawRect(cx - 4f, y - 4f, cx + 4f, y + 4f, relleno); cv.restore()
                 cv.drawCircle(cx, y, 1.6f, Paint(relleno).apply { color = fondo })
             }
+            TemaId.MESO -> {
+                // El seis maya: un punto sobre una barra.
+                lados(10f)
+                cv.drawRoundRect(cx - 6.5f, y + 0.6f, cx + 6.5f, y + 3.2f, 1.2f, 1.2f, relleno)
+                cv.drawCircle(cx, y - 2.6f, 1.9f, relleno)
+            }
             TemaId.MONGOL -> {
                 // El sol, la luna y la llama, uno sobre otro.
                 lados(10f)
@@ -859,6 +874,16 @@ object LibroDiario {
                 // Doble filete y una estrella de ocho puntas en cada esquina.
                 rect(24f, trazo); rect(29f, fino)
                 esquinas.forEach { (x, y) -> val (sx, sy) = haciaDentro(x, y); cv.drawPath(estrellaPdf(x + sx * 2f, y + sy * 2f, 8f, 5f, 8), relleno) }
+            }
+            TemaId.MESO -> {
+                // El marco rojo de la página del códice y, en cada esquina, un bloque de glifo con un punto y una barra.
+                rect(24f, trazo)
+                val tintaP = Paint(relleno).apply { color = tinta; alpha = 150 }
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y); val cx = x + sx * 8f; val cy = y + sy * 8f
+                    cv.drawRoundRect(cx - 6.5f, cy - 6.5f, cx + 6.5f, cy + 6.5f, 2.6f, 2.6f, relleno)
+                    cv.drawCircle(cx, cy - 2f, 1.4f, tintaP); cv.drawRect(cx - 3.8f, cy + 1.2f, cx + 3.8f, cy + 2.8f, tintaP)
+                }
             }
             TemaId.MONGOL -> {
                 // Doble filete con rombos en las esquinas y al centro de arriba y de abajo.

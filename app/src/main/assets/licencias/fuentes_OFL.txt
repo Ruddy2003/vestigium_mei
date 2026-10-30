@@ -19,6 +19,8 @@ Barlow Condensed (recortada) — Copyright 2017 The Barlow Project Authors (http
 Atkinson Hyperlegible Next (instancias estáticas, recortadas) — Copyright 2020-2024 The Atkinson Hyperlegible Next Project Authors (https://github.com/googlefonts/atkinson-hyperlegible-next)
 Reem Kufi (instancias estáticas) — Copyright 2015-2022 The Reem Kufi Project Authors (https://github.com/aliftype/reem-kufi)
 Amiri — Copyright 2010-2022 The Amiri Project Authors (https://github.com/aliftype/amiri)
+Alegreya Sans y Alegreya Sans SC (recortadas, con los numerales mayas de Noto Sans Mayan Numerals añadidos) — Copyright 2013 The Alegreya Sans Project Authors (https://github.com/huertatipografica/Alegreya-Sans)
+Noto Sans Mayan Numerals (sus 20 numerales, dentro de las dos anteriores) — Copyright 2022 The Noto Project Authors (https://github.com/notofonts/mayan-numerals)
 Philosopher — Copyright 2011 The Philosopher Project Authors (https://github.com/alexeiva/philosopher)
 Italianno — Copyright 2009 The Italianno Project Authors (https://github.com/googlefonts/italianno)
 Cormorant Garamond (instancias estáticas) — Copyright 2015 The Cormorant Project Authors (github.com/CatharsisFonts/Cormorant)

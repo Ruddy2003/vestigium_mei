@@ -131,6 +131,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.ESPACIO -> Orbita(modifier)
         TemaId.ABISMO -> TrazaSonar(modifier)
         TemaId.ANDALUS -> Lazo(modifier)
+        TemaId.MESO -> BandaGreca(modifier)
         TemaId.MONGOL -> BandaEstepa(modifier)
         TemaId.RENACIMIENTO -> Trazo(modifier)
         TemaId.PIRATA -> Cabo(modifier)
@@ -1070,6 +1071,11 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "❁", igual = "∷ ", nulo = "لا شيء", elegido = "✹", riel = RolColor.TERCIARIO, quitar = "‹×›", listaVacia = "( sin azulejos )", flecha = "➛",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.5f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.DOBLE,
         guiones = floatArrayOf(1.2f, 1.2f, 3f, 1.2f), tamBoton = 14, letraBoton = null, borde = RolColor.TERCIARIO, grosor = 1f)
+    // El códice: numerales en rojo de cinabrio, renglones rojos que dividen la página en registros y bloques de glifo.
+    TemaId.MESO -> PielComponentes(sep = "  ⁖  ", cerrada = "⊞", abierta = "⊟", numeral = RolColor.PRIMARIO, centrar = true, rellena = true,
+        aviso = "☼", igual = "⋯ ", nulo = "mix ba'al", elegido = "◆", riel = RolColor.SECUNDARIO, quitar = "⨯", listaVacia = "( página sin glifos )", flecha = "↣",
+        sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.8f, colorPrefijo = RolColor.PRIMARIO, renglones = true, margen = MargenEditor.ROJO,
+        guiones = floatArrayOf(4f, 2f, 1f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1.4f)
     TemaId.MONGOL -> PielComponentes(sep = "  ◆  ", cerrada = "◑", abierta = "◐", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
         aviso = "☾", igual = "⇢ ", nulo = "хоосон", elegido = "◐", riel = RolColor.PRIMARIO, quitar = "x", listaVacia = "( ger vacía )", flecha = "➜",
         sufijo = "", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1.4f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.BARRA,
@@ -1212,6 +1218,12 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
         }.padding(bottom = 8.dp))
         // Remate con el signo de la rub el-hizb, en oro.
         TemaId.ANDALUS -> Text(buildAnnotatedString { append(nombre); withStyle(SpanStyle(color = e.tertiary)) { append("  ۞") } }, style = estilo, modifier = peso)
+        // El renglón rojo del códice debajo y, al final, tres puntos de jade.
+        TemaId.MESO -> Text(nombre, style = estilo, modifier = peso.drawBehind {
+            val y = size.height - 2.dp.toPx()
+            drawLine(e.primary.copy(alpha = 0.8f), Offset(0f, y), Offset(size.width, y), 1.4.dp.toPx())
+            for (k in 0 until 3) drawCircle(e.tertiary, 1.7.dp.toPx(), Offset(size.width - (4 + k * 6).dp.toPx(), y - 4.5.dp.toPx()))
+        }.padding(bottom = 8.dp))
         // Una franja de fieltro azul encima.
         TemaId.MONGOL -> Text(nombre, style = estilo, modifier = peso.drawBehind { drawRect(e.primary, Offset.Zero, Size(minOf(size.width, 72.dp.toPx()), 2.5.dp.toPx())) }.padding(top = 6.dp))
         // Dos trazos de sanguina, a mano alzada.
@@ -1317,6 +1329,8 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     }
     // Arco de medio punto.
     TemaId.ANDALUS -> RoundedCornerShape(topStartPercent = 50, topEndPercent = 50, bottomEndPercent = 0, bottomStartPercent = 0)
+    // La bóveda maya en saledizo: los lados de arriba suben en diagonal hasta la losa.
+    TemaId.MESO -> CutCornerShape(topStart = 12.dp, topEnd = 12.dp, bottomEnd = 0.dp, bottomStart = 0.dp)
     TemaId.MONGOL -> RoundedCornerShape(8.dp)
     // Hoja con la esquina doblada.
     TemaId.RENACIMIENTO -> CutCornerShape(bottomEnd = 12.dp)
@@ -1372,6 +1386,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.ESPACIO -> "BITÁCORA DE MISIÓN · ${es.uppercase()}"
         TemaId.ABISMO -> "bitácora de inmersión · $es"
         TemaId.ANDALUS -> "cálamo · $es"
+        TemaId.MESO -> "códice · $es"
         TemaId.MONGOL -> "тэмдэглэл · $es"
         TemaId.RENACIMIENTO -> "taccuino · $es"
         TemaId.PIRATA -> "bitácora · $es"
@@ -1570,6 +1585,12 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawCircle(e.surface.copy(alpha = 0.7f), fino * 0.6f, Offset(i + u * 0.45f, i + u * 0.45f))
         }
         TemaId.ANDALUS -> enLasCuatro { estrellaComp(Offset(i + u * 0.7f, i + u * 0.7f), u * 0.7f, e.tertiary, puntas = 8, dentro = 0.6f) }
+        // Una esquina escalonada de tres gradas en cinabrio, con un cuadro de jade adentro.
+        TemaId.MESO -> enLasCuatro {
+            val g = u * 0.42f
+            for (k in 0 until 3) drawRect(e.primary.copy(alpha = 0.75f), Offset(i + k * g, i + (2 - k) * g), Size(g, g * (k + 1).toFloat()))
+            drawRect(e.tertiary, Offset(i + g * 1.15f, i + g * 2.15f), Size(g * 0.7f, g * 0.7f))
+        }
         TemaId.MONGOL -> enLasCuatro {
             // Voluta de nube en cada esquina.
             drawArc(e.primary.copy(alpha = 0.8f), 180f, 270f, false, Offset(i, i), Size(u * 1.4f, u * 1.4f), style = Stroke(fino * 1.3f))
@@ -1794,6 +1815,12 @@ private fun DrawScope.dibujoVacio(t: TemaId, e: ColorScheme) {
             drawLine(l, Offset(f(0.78f), f(0.5f)), Offset(f(0.78f), f(0.92f)), tr.width)
             drawLine(a, Offset(f(0.12f), f(0.92f)), Offset(f(0.88f), f(0.92f)), tr.width)
         }
+        TemaId.MESO -> {
+            // El cartucho de un glifo, sobre su pie de tres lóbulos, sin nada pintado adentro.
+            drawRoundRect(l, Offset(f(0.18f), f(0.14f)), Size(f(0.64f), f(0.58f)), CornerRadius(f(0.14f)), style = tr)
+            for (k in -1..1) drawCircle(a, f(0.07f), Offset(f(0.5f + k * 0.15f), f(0.8f)), style = tr)
+            drawLine(l, Offset(f(0.3f), f(0.94f)), Offset(f(0.7f), f(0.94f)), tr.width)
+        }
         TemaId.MONGOL -> {
             // Ger sin fieltro: el muro de celosía y la cúpula.
             drawPath(Path().apply { moveTo(f(0.1f), f(0.86f)); lineTo(f(0.1f), f(0.52f)); quadraticTo(f(0.5f), f(0.08f), f(0.9f), f(0.52f)); lineTo(f(0.9f), f(0.86f)); close() }, l, style = tr)
@@ -1904,6 +1931,8 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
             drawPath(Path().apply { moveTo(w / 2, d * 0.9f); quadraticTo(w / 2 + d * 0.9f, d * 2.2f, w / 2, d * 2.9f); quadraticTo(w / 2 - d * 0.9f, d * 2.2f, w / 2, d * 0.9f); close() }, c)
         }
         TemaId.ANDALUS -> estrellaComp(Offset(w / 2, h - d * 1.4f), d, c, puntas = 8, dentro = 0.6f)
+        // Un punto sobre una barra: el seis maya en pequeño.
+        TemaId.MESO -> { drawRoundRect(c, Offset(w / 2 - d * 1.5f, h - d * 0.8f), Size(d * 3f, d * 0.8f), CornerRadius(d * 0.3f)); drawCircle(c, d * 0.55f, Offset(w / 2, h - d * 1.9f)) }
         TemaId.MONGOL -> drawArc(c, 180f, 180f, true, Offset(w / 2 - d * 1.3f, h - d * 1.3f), Size(d * 2.6f, d * 2.6f))
         TemaId.RENACIMIENTO -> {
             for (n in 0 until 3) {
@@ -2040,6 +2069,13 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
                 lineTo(w - m, h - m)
             }
             drawPath(p, c, style = Stroke(fino))
+        }
+        // El filete interior de la bóveda: sube en diagonal por los dos lados y abajo lleva un renglón de puntos.
+        TemaId.MESO -> {
+            val sube = h * 0.32f
+            val p = Path().apply { moveTo(m, h - m); lineTo(m, m + sube); lineTo(m + sube, m); lineTo(w - m - sube, m); lineTo(w - m, m + sube); lineTo(w - m, h - m) }
+            drawPath(p, c, style = Stroke(fino))
+            var x = m * 3; while (x < w - m * 3) { drawCircle(c, fino * 0.9f, Offset(x, h - m * 1.6f)); x += m * 2 }
         }
         // Costura de fieltro.
         TemaId.MONGOL -> drawRoundRect(c, Offset(m, m), Size(w - 2 * m, h - 2 * m), CornerRadius(m * 1.2f), style = Stroke(fino, pathEffect = PathEffect.dashPathEffect(floatArrayOf(m * 1.5f, m))))
@@ -2223,6 +2259,13 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawPath(Path().apply { moveTo(f(0.84f), f(0.1f)); lineTo(f(0.98f), f(0.02f)); lineTo(f(0.92f), f(0.2f)); close() }, a)
             drawCircle(l, f(0.16f), Offset(f(0.24f), f(0.3f)), style = tr)
         }
+        TemaId.MESO -> {
+            // El pincel de pelo y la concha que hace de tintero, como en las vasijas que pintan a los escribas.
+            drawLine(l, Offset(f(0.2f), f(0.92f)), Offset(f(0.72f), f(0.24f)), tr.width * 1.2f)
+            drawPath(Path().apply { moveTo(f(0.72f), f(0.24f)); quadraticTo(f(0.84f), f(0.04f), f(0.94f), f(0.02f)); quadraticTo(f(0.9f), f(0.16f), f(0.78f), f(0.3f)); close() }, a)
+            drawArc(l, 0f, 180f, true, Offset(f(0.04f), f(0.2f)), Size(f(0.4f), f(0.3f)), style = tr)
+            drawCircle(a, f(0.05f), Offset(f(0.24f), f(0.4f)))
+        }
         TemaId.MONGOL -> {
             // Rollo vertical con la escritura de arriba abajo.
             drawRect(l, Offset(f(0.3f), f(0.02f)), Size(f(0.4f), f(0.96f)), style = tr)
@@ -2403,6 +2446,15 @@ private fun DrawScope.barraAviso(t: TemaId, e: ColorScheme) {
             p.moveTo(0.5f * d, 0f)
             while (y < h) { y += 4 * d; izq = !izq; p.lineTo(if (izq) 0.5f * d else w - 0.5f * d, y) }
             drawPath(p, e.tertiary, style = Stroke(1.4f * d))
+        }
+        TemaId.MESO -> {
+            // Una columna de puntos y barras, como un numeral muy largo, en cinabrio y jade.
+            var y = d; var k = 0
+            while (y < h) {
+                if (k % 3 == 2) { drawRect(e.primary, Offset(0f, y), Size(w, 1.6f * d)); y += 4f * d }
+                else { drawCircle(e.tertiary, minOf(w / 2, 1.6f * d), Offset(w / 2, y + 1.6f * d)); y += 5f * d }
+                k++
+            }
         }
         TemaId.MONGOL -> {
             drawRect(c, Offset.Zero, Size(4.5f * d, h))

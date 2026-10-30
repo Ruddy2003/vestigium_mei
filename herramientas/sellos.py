@@ -532,6 +532,58 @@ def andalus(tam):
     base.alpha_composite(capa)
     guardar(fondo, base, 'andalus')
 
+# ------------------------------------------------------------------ Mesoamérica
+def meso(tam):
+    """Mesoamérica: papel amate de fibras cruzadas, la rueda de los veinte cartuchos de días alrededor, los renglones
+    rojos del códice y, en cada cartucho, un numeral de punto y barra; la huella, en jade pulido."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    a = mezcla(col('#E6D3AE'), col('#D4BC8E'), ruido(tam, tam / 16, 71) * 0.8)
+    r = np.random.default_rng(72)
+    fib = Image.new('L', (tam, tam), 0); df = ImageDraw.Draw(fib)
+    for _ in range(int(tam * 0.9)):
+        x, y = r.random() * tam, r.random() * tam
+        ang = (r.random() - 0.5) * 0.9 + (0 if r.random() < 0.5 else math.pi / 2); l = tam * (0.02 + r.random() * 0.07)
+        df.line([(x, y), (x + math.cos(ang) * l, y + math.sin(ang) * l)], fill=255, width=max(1, tam // 360))
+    fib = np.asarray(fib.filter(ImageFilter.GaussianBlur(0.8)), np.float32) / 255
+    a = a * (1 - 0.07 * fib[..., None])
+    fondo = a_img(a).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    c = tam / 2
+    cinabrio = (163, 48, 30, 255); tinta = (42, 24, 16, 150); azul = (62, 143, 168, 220)
+    # Los renglones rojos del códice, arriba y abajo, que dejan libre el centro.
+    w = max(3, tam // 160)
+    for y in (tam * 0.12, tam * 0.88):
+        d.line([(0, y), (tam, y)], fill=cinabrio[:3] + (170,), width=w)
+    # La rueda de los veinte días: un anillo con veinte cartuchos, uno de cada cuatro en azul maya.
+    r0, r1 = tam * 0.405, tam * 0.475
+    d.ellipse([c - r0, c - r0, c + r0, c + r0], outline=cinabrio, width=w)
+    d.ellipse([c - r1, c - r1, c + r1, c + r1], outline=cinabrio, width=w)
+    for i in range(20):
+        ang = 2 * math.pi * i / 20 - math.pi / 2; rm = (r0 + r1) / 2; q = tam * 0.024
+        x, y = c + rm * math.cos(ang), c + rm * math.sin(ang)
+        d.rounded_rectangle([x - q, y - q, x + q, y + q], radius=int(q * 0.4), outline=tinta, width=max(2, w - 1),
+                            fill=azul if i % 4 == 0 else None)
+        # Dentro de cada cartucho, un numeral pequeño: un punto sobre una barra (el seis).
+        f = (250, 244, 228, 230) if i % 4 == 0 else tinta
+        d.rectangle([x - q * 0.6, y + q * 0.12, x + q * 0.6, y + q * 0.42], fill=f)
+        d.ellipse([x - q * 0.2, y - q * 0.5, x + q * 0.2, y - q * 0.1], fill=f)
+    fondo = fondo.convert('RGB')
+    # La huella en jade pulido: verde con vetas claras y oscuras, y el brillo del pulido.
+    sh = relieve(m, fuerza=1.3)[..., None]
+    vetas = np.sin(xx * 0.03 + ruido(tam, 10, 73) * 3) * 0.5 + 0.5
+    piedra = mezcla(col('#1F6B48'), col('#5FB98A'), np.clip(ruido(tam, tam / 20, 74) * 0.6 + vetas * 0.5, 0, 1))
+    rgb = piedra * (1 + sh * 0.5)
+    brillo = np.clip(1 - np.abs((xx + yy) / tam - 0.75) * 2.4, 0, 1) ** 3
+    rgb = mezcla(rgb, col('#E6FFF0'), brillo * 0.3 * m)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 150))).astype(np.float32) / 255
+    sombra = np.roll(np.roll(sombra, 2, 0), 2, 1) * 0.45
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#2A1810'), sombra)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'meso')
+
+
 # ------------------------------------------------------------------ egipto
 
 def egipto(tam):
@@ -1031,6 +1083,7 @@ SIETE = [
     'abismo',
     'urbe',
     'andalus',
+    'meso',
     'egipto',
     'mongol',
     'renacimiento',
@@ -1062,6 +1115,7 @@ ORDEN = [
     'espacio',
     'abismo',
     'andalus',
+    'meso',
     'mongol',
     'renacimiento',
     'pirata',

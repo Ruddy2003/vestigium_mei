@@ -197,6 +197,7 @@ object TrofeosTema {
                 if (p.hecho) listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, col -> drawRect(col, Offset(w * (0.2f + i * 0.2f), h * 0.79f), Size(w * 0.2f, h * 0.03f)) }
             }
             TemaId.ANDALUS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
+            TemaId.MESO -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.SEDA -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.MONGOL -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
             TemaId.COLONOS -> with(TrofeosMas) { pedestalMas(tema, p, ped) }
@@ -234,6 +235,7 @@ object TrofeosTema {
             TemaId.NAPOLEON -> napoleon(categoria, p)
             TemaId.REVOLUCION -> revolucion(categoria, p)
             TemaId.ANDALUS -> with(TrofeosMas) { andalus(categoria, p) }
+            TemaId.MESO -> with(TrofeosMas) { meso(categoria, p) }
             TemaId.SEDA -> with(TrofeosMas) { seda(categoria, p) }
             TemaId.MONGOL -> with(TrofeosMas) { mongol(categoria, p) }
             TemaId.COLONOS -> with(TrofeosMas) { colonos(categoria, p) }

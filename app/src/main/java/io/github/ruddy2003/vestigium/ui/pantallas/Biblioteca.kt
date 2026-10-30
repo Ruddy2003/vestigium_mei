@@ -80,6 +80,8 @@ import io.github.ruddy2003.vestigium.ui.Clave
 import io.github.ruddy2003.vestigium.ui.Editor
 import io.github.ruddy2003.vestigium.ui.Escala
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.grecaEscalonada
+import io.github.ruddy2003.vestigium.ui.numeralMaya
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.FilaFichas
@@ -361,6 +363,14 @@ private fun DrawScope.adornoPortada(t: TemaId, a: Color, l: Color) {
                     close()
                 }, tenue)
             }
+        }
+        // Un bloque de glifo en cada esquina, con su numeral de punto y barra; arriba, la greca escalonada.
+        TemaId.MESO -> {
+            listOf(Offset(11 * u, 11 * u), Offset(w - 11 * u, 11 * u), Offset(11 * u, h - 11 * u), Offset(w - 11 * u, h - 11 * u)).forEach { o ->
+                drawRoundRect(tenue, Offset(o.x - 5 * u, o.y - 5 * u), Size(10 * u, 10 * u), androidx.compose.ui.geometry.CornerRadius(2.5f * u), style = Stroke(1f * u))
+                numeralMaya(6, o, 6 * u, tenue)
+            }
+            grecaEscalonada(20 * u, w - 20 * u, 6 * u, 12 * u, tenue, 0.8f * u)
         }
         // Cuernos de carnero enroscados en las esquinas de abajo.
         TemaId.MONGOL -> listOf(Offset(13 * u, h - 13 * u), Offset(w - 13 * u, h - 13 * u)).forEach { o ->

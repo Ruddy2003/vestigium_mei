@@ -319,6 +319,45 @@ def papel_egipto():
     a = mezcla(a, col('#B99C5E'), np.clip((dist - 0.55) / 0.45, 0, 1) * 0.45)
     a_img(a).save(os.path.join(OUT, 'papel_egipto.jpg'), quality=86)
 
+def papel_meso():
+    """Mesoamérica: la página de un códice. El papel amate (corteza golpeada: una red de fibras que se cruzan sin orden,
+    más oscuras y torcidas) asoma por debajo del estuco blanco que lo cubre, más gastado hacia los bordes; alguna grieta
+    fina del estuco y motas de corteza."""
+    W, H = 720, 1280
+    r = np.random.default_rng(260)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    amate = mezcla(col('#CDB283'), col('#B99B6A'), ruido_rect(W, H, 50, 261) * 0.8)
+    fib = Image.new('L', (W, H), 0); d = ImageDraw.Draw(fib)
+    for _ in range(2600):
+        x, y = r.random() * W, r.random() * H
+        a = (r.random() - 0.5) * 0.8 + (0 if r.random() < 0.5 else math.pi / 2); l = 20 + r.random() * 90
+        pts = [(x, y)]
+        for k in range(4):
+            a += (r.random() - 0.5) * 0.3; x += math.cos(a) * l / 4; y += math.sin(a) * l / 4; pts.append((x, y))
+        d.line(pts, fill=int(120 + r.random() * 135), width=1 + int(r.random() * 2))
+    fib = np.asarray(fib.filter(ImageFilter.GaussianBlur(0.9)), np.float32) / 255
+    amate = amate * (1 - 0.18 * fib[..., None])
+    # El estuco: cubre casi todo en el centro y se gasta hacia los bordes, dejando ver el amate.
+    dist = np.sqrt(((xx - W / 2) / (W / 2)) ** 2 + ((yy - H / 2) / (H / 2)) ** 2) / math.sqrt(2)
+    capa = np.clip(0.92 - np.clip((dist - 0.5) / 0.5, 0, 1) * 0.55 - (ruido_rect(W, H, 18, 262) - 0.5) * 0.35, 0.25, 0.95)
+    estuco = mezcla(col('#F3EAD4'), col('#E8DCC0'), ruido_rect(W, H, 30, 263) * 0.8)
+    a = mezcla(amate, estuco, capa)
+    a = a * (1 - 0.05 * fib[..., None])
+    # Grietas finas del estuco.
+    gr = Image.new('L', (W, H), 0); dg = ImageDraw.Draw(gr)
+    for _ in range(14):
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi * 2
+        pts = [(x, y)]
+        for k in range(10):
+            ang += (r.random() - 0.5) * 1.1; x += math.cos(ang) * 9; y += math.sin(ang) * 9; pts.append((x, y))
+        dg.line(pts, fill=255, width=1)
+    gr = np.asarray(gr.filter(ImageFilter.GaussianBlur(0.5)), np.float32) / 255
+    a = mezcla(a, col('#8C7350'), gr * 0.35)
+    motas = r.random((H, W)) > 0.9988
+    a[motas] = a[motas] * 0.6 + col('#5A4024') * 0.4
+    a_img(a).save(os.path.join(OUT, 'papel_meso.jpg'), quality=86)
+
+
 def papeles_fuente():
     """Los papeles que vienen de un raster viejo: se copian tal cual desde `fuentes/`."""
     aqui = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fuentes')
@@ -380,6 +419,7 @@ if __name__ == '__main__':
     papel_neon()
     papel_abismo()
     papel_egipto()
+    papel_meso()
     papeles_fuente()
     papel_templario()
     papel_urbe()

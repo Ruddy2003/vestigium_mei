@@ -194,6 +194,9 @@ object Temas {
     private val MARCAS_ABISMO = mapOf("01-23" to "Trieste", "02-17" to "Fumarolas", "09-01" to "Titanic", "03-26" to "Deepsea", "08-15" to "Batisfera",
         "06-08" to "Océanos", "06-11" to "Cousteau")
     private val MARCAS_ANDALUS = mapOf("01-02" to "Granada", "04-30" to "Tariq", "03-30" to "Alhambra")
+    // Los equinoccios (la sombra de la serpiente en la escalinata de Chichén Itzá), el día cero de la cuenta larga
+    // (11 de agosto del 3114 a. C., correlación GMT) y el fin del decimotercer baktún; lo demás lo marca [Maya.marca].
+    private val MARCAS_MESO = mapOf("03-20" to "Kukulkán", "09-22" to "Kukulkán", "08-11" to "Cuenta larga", "12-21" to "13 baktún")
     private val MARCAS_MONGOL = mapOf("07-11" to "Naadam", "07-12" to "Naadam", "07-13" to "Naadam", "12-29" to "Independ.", "11-26" to "Repúbl.")
     private val MARCAS_RENACIMIENTO = mapOf("04-15" to "Leonardo", "05-02" to "Leonardo †", "03-06" to "Michelangelo", "03-25" to "Capodanno", "06-24" to "S. Giovanni", "04-06" to "Rafael")
     private val MARCAS_PIRATA = mapOf("06-07" to "Port Royal", "09-05" to "Indulto", "11-22" to "Barbanegra †", "05-23" to "Kidd †", "02-10" to "Roberts †",
@@ -232,6 +235,7 @@ object Temas {
             TemaId.ESPACIO -> MARCAS_ESPACIO[md]
             TemaId.ABISMO -> MARCAS_ABISMO[md]
             TemaId.ANDALUS -> MARCAS_ANDALUS[md] ?: fiestaHegira(fecha)
+            TemaId.MESO -> MARCAS_MESO[md] ?: Maya.marca(fecha)
             TemaId.MONGOL -> MARCAS_MONGOL[md]
             TemaId.RENACIMIENTO -> MARCAS_RENACIMIENTO[md]
             TemaId.PIRATA -> MARCAS_PIRATA[md]
@@ -405,6 +409,7 @@ object Temas {
         TemaId.ESPACIO -> ESPACIO[titulo]
         TemaId.ABISMO -> ABISMO[titulo]
         TemaId.ANDALUS -> ANDALUS[titulo]
+        TemaId.MESO -> null
         TemaId.MONGOL -> MONGOL[titulo]
         TemaId.RENACIMIENTO -> RENACIMIENTO[titulo]
         TemaId.PIRATA -> PIRATA[titulo]
@@ -438,6 +443,7 @@ object Temas {
             TemaId.ESPACIO -> mapOf("animo" to "ESTADO", "momento" to "EVENTO", "gasto" to "COMBUSTIBLE", "sueno" to "SUEÑO", "habitos" to "RUTINAS", "hoy" to "ÓRBITA", "cifra" to "TELEMETRÍA", "foto" to "IMAGEN", "enfoque" to "CONCENTRACIÓN")
             TemaId.ABISMO -> mapOf("animo" to "SONDEO", "momento" to "AVISTAMIENTO", "gasto" to "LASTRE", "sueno" to "LITERA", "habitos" to "MANIOBRAS", "hoy" to "COTA", "cifra" to "PROFUNDÍMETRO", "foto" to "OJO DE BUEY", "enfoque" to "INMERSIÓN")
             TemaId.ANDALUS -> mapOf("animo" to "الروح", "momento" to "لحظة", "gasto" to "النفقات", "sueno" to "النوم", "habitos" to "العادات", "hoy" to "النهار", "cifra" to "الحساب", "foto" to "صورة", "enfoque" to "دراسة")
+            TemaId.MESO -> mapOf("animo" to "Corazón (óol)", "momento" to "Suceso pintado", "gasto" to "Cacao", "sueno" to "Petate", "habitos" to "Cuenta de costumbres", "hoy" to "K'in", "cifra" to "Puntos y barras", "foto" to "Pintura", "enfoque" to "Pincel")
             TemaId.MONGOL -> mapOf("animo" to "СЭТГЭЛ", "momento" to "АГШИН", "gasto" to "ЗАРДАЛ", "sueno" to "НОЙР", "habitos" to "ЗАНШИЛ", "hoy" to "ӨДӨР", "cifra" to "ТОО", "foto" to "ЗУРАГ", "enfoque" to "СУРАЛЦАХ")
             TemaId.RENACIMIENTO -> mapOf("animo" to "Animo", "momento" to "Nota", "gasto" to "Conti", "sueno" to "Sonno", "habitos" to "Esercizi", "hoy" to "Giornata", "cifra" to "Misura", "foto" to "Ritratto", "enfoque" to "Studio")
             TemaId.PIRATA -> mapOf("animo" to "Cariz", "momento" to "Asiento", "gasto" to "Bolsa", "sueno" to "Coy", "habitos" to "Guardias", "hoy" to "Singladura", "cifra" to "Sonda", "foto" to "Boceto", "enfoque" to "Ampolleta")

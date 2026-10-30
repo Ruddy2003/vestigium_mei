@@ -920,6 +920,41 @@ def andalus():
                tecla=mezclar((0, trazo((2200, 7000), 0.03, 10), 1), (0.035, trazo((2200, 7000), 0.025, 8), 0.7)),
                rascar=rascado((1500, 6500), qanun(9, 0.5), aspereza=90))
 
+def meso():
+    # Sol pentatónico de flauta de barro (sin semitonos; no se sabe cómo afinaban: la escala es propia), el tunkul (el
+    # tambor de tronco hendido, con sus dos lengüetas de madera), la sonaja de semillas, el caparazón de tortuga golpeado
+    # con un asta de venado y la caracola de mar que se sopla como trompeta.
+    T = -2   # Sol4
+    tunkul = lambda n, d=0.45: mezclar((0, marimba(hz(T + n - 12), d), 0.9), (0, tambor(hz(T + n - 24), d * 0.5, 0.08), 0.35))
+    def sonaja(d=0.18, k=5):
+        """La sonaja: semillas secas dentro de un guaje, unas sacudidas cortas y ásperas."""
+        return mezclar(*[(i * d / k, filtro(ruido(0.05), 'banda', (2200, 6500)) * env(int(0.05 * SR), 0.001, 0.025, 5), 0.7 - i * 0.07) for i in range(k)])
+    tortuga = lambda: mezclar((0, clic(0.03, (900, 3200)), 0.8), (0, tambor(hz(T - 7), 0.12, 0.3), 0.5))
+    caracola = lambda n, d: metal(hz(T + n - 12), d, 1500, 0.09)
+    with azar_propio('meso_base'):
+        S['meso'] = dict(
+            toque=tunkul(0, 0.3), elegir=tortuga(), pasar=sonaja(0.16, 4),
+            abrir=mezclar((0, sonaja(0.1, 3), 0.5), (0.04, melodia(flauta, [T + 12, T + 14, T + 17, T + 19], 0.07, 0.25, g=0.5), 0.8)),
+            guardar=mezclar((0, tunkul(-5, 0.5), 0.8), (0.16, tunkul(0, 0.6), 0.7), (0.16, tortuga(), 0.35)),
+            logro=reverb(mezclar((0, caracola(0, 0.9), 0.55), (0.3, melodia(flauta, [T + 12, T + 14, T + 17, T + 19, T + 21, T + 24], 0.12, 0.3, g=0.5), 0.8),
+                                 *[(0.12 * i, tunkul([0, 2, 5, 7, 9, 12][i], 0.4), 0.4) for i in range(6)], (0.75, sonaja(0.3, 6), 0.4)), 1.3, 0.25),
+            tema=reverb(mezclar((0, sonaja(0.18, 4), 0.5), (0.1, melodia(flauta, [T + 17, T + 19, T + 24], 0.13, 0.3, g=0.45), 1), (0.1, tunkul(0, 0.6), 0.5)), 1.1, 0.25),
+            aviso=reverb(mezclar((0, caracola(0, 1.1), 0.5), (0.9, melodia(flauta, [T + 24, T + 21, T + 19, T + 17, T + 19], 0.2, 0.25), 0.8),
+                                 (0.9, tunkul(-5, 0.5), 0.4), (1.3, tunkul(0, 0.5), 0.4)), 1.4, 0.28),
+            solemne=reverb(mezclar((0, caracola(-5, 1.6), 0.55), (1.2, caracola(0, 1.6), 0.5),
+                                   (2.4, melodia(flauta, [T + 12, T + 14, T + 17, T + 14, T + 12, T + 9, T + 12, None, T + 7, T + 12], 0.42, 0.4, g=0.35), 1),
+                                   *[(2.4 + 0.84 * i, tunkul(-5 if i % 2 == 0 else 0, 0.6), 0.45) for i in range(5)],
+                                   *[(2.82 + 0.84 * i, sonaja(0.12, 3), 0.3) for i in range(4)]), 2.0, 0.3))
+
+    # Error: el tunkul que baja y la tortuga sorda. Cambio: una sacudida de la sonaja y la lengüeta aguda del tunkul.
+    # Tecla: el pincel de pelo sobre el estuco. Rascar: el jade pulido, con su eco de piedra.
+    with azar_propio('meso'):
+        nuevos('meso',
+               error=mezclar((0, tunkul(0, 0.2), 0.5), (0.12, tunkul(-5, 0.45), 0.55), (0.12, tortuga(), 0.3)),
+               cambio=mezclar((0, sonaja(0.06, 2), 0.6), (0.06, tunkul(7, 0.25), 0.5)),
+               tecla=trazo((900, 3600), 0.05, 6, 0.032),
+               rascar=rascado((1800, 7200), marimba(hz(T + 29), 0.5), aspereza=60))
+
 def mongol():
     # Mi mayor pentatónico: cascos, morin juur y canto difónico sobre un Mi grave.
     T = -5   # Mi4
@@ -1110,6 +1145,7 @@ if __name__ == '__main__':
         espacio,
         abismo,
         andalus,
+        meso,
         mongol,
         renacimiento,
         pirata,

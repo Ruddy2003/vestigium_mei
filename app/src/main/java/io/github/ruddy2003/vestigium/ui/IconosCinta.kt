@@ -160,6 +160,11 @@ private fun DrawScope.marcoPista(tema: TemaId, c: Color) {
             drawPath(figPoligono(o, w * 0.48f, 4, -90f), c, style = Stroke(g * 0.7f))
             drawPath(figPoligono(o, w * 0.48f, 4, -45f), c, style = Stroke(g * 0.7f))
         }
+        // El cartucho de un glifo de día, con su pie de tres lóbulos.
+        TemaId.MESO -> {
+            drawRoundRect(c, Offset(w * 0.06f, h * 0.04f), Size(w * 0.88f, h * 0.78f), CornerRadius(w * 0.2f), style = Stroke(g * 0.8f))
+            for (k in -1..1) drawCircle(c, w * 0.07f, Offset(o.x + k * w * 0.2f, h * 0.9f), style = Stroke(g * 0.6f))
+        }
         // Fieltro cosido: círculo con su puntada.
         TemaId.MONGOL -> {
             drawCircle(c, w * 0.47f, o, style = Stroke(g))
@@ -415,6 +420,12 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
         TemaId.ANDALUS -> {
             drawPath(figPoligono(c, r, 4, -90f), color); drawPath(figPoligono(c, r, 4, -45f), color)
             drawCircle(hueco.copy(alpha = 0.5f), r * 0.24f, c)
+        }
+        // Una cuenta de jade con un numeral de punto y barra grabado.
+        TemaId.MESO -> {
+            drawCircle(color, r, c)
+            drawRoundRect(hueco.copy(alpha = 0.5f), Offset(c.x - r * 0.5f, c.y + r * 0.08f), Size(r, r * 0.22f), CornerRadius(r * 0.08f))
+            drawCircle(hueco.copy(alpha = 0.5f), r * 0.13f, Offset(c.x, c.y - r * 0.26f))
         }
         // El tono de la yurta: la rueda del techo con sus varas.
         TemaId.MONGOL -> {

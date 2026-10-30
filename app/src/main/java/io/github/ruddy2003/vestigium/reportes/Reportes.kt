@@ -120,6 +120,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.ESPACIO -> R.font.orbitron_bold
     TemaId.ABISMO -> R.font.batiscafo_semibold      // cifras estrechas de manómetro y profundímetro
     TemaId.ANDALUS -> R.font.kufi_medium
+    TemaId.MESO -> R.font.alegreya_sc_bold         // las versalitas del códice (y sus numerales de puntos y barras)
     TemaId.MONGOL -> R.font.philosopher_bold
     TemaId.RENACIMIENTO -> R.font.cormorant_medium  // números de cuaderno, con trazos de pluma
     TemaId.PIRATA -> R.font.caslon_semibold      // números de libro de a bordo, en Caslon
@@ -153,6 +154,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.ESPACIO -> "VESTIGIUM MEI / MISIÓN"
     TemaId.ABISMO -> "BITÁCORA DE INMERSIÓN · VESTIGIUM MEI"
     TemaId.ANDALUS -> "Vestigium Mei · أثري"
+    TemaId.MESO -> "Códice de Vestigium Mei"
     TemaId.MONGOL -> "МИНИЙ МӨР · Vestigium Mei"
     TemaId.RENACIMIENTO -> "Il taccuino di Vestigium Mei"
     TemaId.PIRATA -> "Bitácora de a bordo de Vestigium Mei"
@@ -584,6 +586,25 @@ object Reportes {
                         c.drawCircle(sx, yc, 5f, L.relleno(L.fondo))
                     }
                     y += 52f
+                }
+                TemaId.MESO -> {
+                    // Greca escalonada (xicalcoliuhqui): un escalón que sube tres gradas y remata en un gancho en espiral,
+                    // repetido entre dos cenefas, como en los frisos de piedra de Mitla y Uxmal; puntos de jade en los huecos.
+                    val a = yy + 4f; val b = yy + 34f; val paso = 40f
+                    val greca = L.trazo(L.primario, 2.6f).apply { strokeCap = Paint.Cap.SQUARE; strokeJoin = Paint.Join.MITER }
+                    c.drawLine(M, a - 2f, W - M, a - 2f, L.trazo(L.secundario, 1.4f)); c.drawLine(M, b + 2f, W - M, b + 2f, L.trazo(L.secundario, 1.4f))
+                    val jade = L.relleno(L.terciario)
+                    var x = M
+                    while (x + paso <= W - M) {
+                        val g = (b - a) / 4f; val p = Path()
+                        p.moveTo(x, b); p.lineTo(x + 4f, b); p.lineTo(x + 4f, b - g); p.lineTo(x + 9f, b - g); p.lineTo(x + 9f, b - 2 * g)
+                        p.lineTo(x + 14f, b - 2 * g); p.lineTo(x + 14f, a); p.lineTo(x + 30f, a); p.lineTo(x + 30f, a + 2.4f * g)
+                        p.lineTo(x + 20f, a + 2.4f * g); p.lineTo(x + 20f, a + 1.2f * g); p.lineTo(x + 25f, a + 1.2f * g)
+                        c.drawPath(p, greca)
+                        c.drawCircle(x + 32f, b - 5f, 2.6f, jade)
+                        x += paso
+                    }
+                    y += 50f
                 }
                 TemaId.MONGOL -> {
                     // El enrejado de la pared de una ger: listones cruzados en diagonal entre dos cintas de fieltro.

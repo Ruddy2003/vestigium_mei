@@ -84,6 +84,10 @@ object Marcas {
         HERRADURA,
         /** Dos ondas que se cruzan, como un lazo. */
         TRENZA,
+        /** El bloque de un glifo maya: recuadro redondeado alrededor de la palabra, con su pie de tres lóbulos. */
+        GLIFO,
+        /** Subrayado de puntos y barras, como un numeral maya tendido. */
+        NUMERAL,
         /** Medallón (anillo con su punto) delante de la palabra. */
         MEDALLON,
         /** Paralelogramo lleno, a la manera constructivista. */
@@ -140,6 +144,7 @@ object Marcas {
             TemaId.ESPACIO -> if (persona) Aspecto(t, t, Forma.ESQUINAS, negrita = true) else Aspecto(p, p, Forma.GUIONES)
             TemaId.ABISMO -> if (persona) Aspecto(p, s, Forma.ESCOTILLA, negrita = true) else Aspecto(t, t, Forma.BURBUJAS)
             TemaId.ANDALUS -> if (persona) Aspecto(p, t, Forma.HERRADURA, negrita = true) else Aspecto(s, s, Forma.TRENZA)
+            TemaId.MESO -> if (persona) Aspecto(p, s, Forma.GLIFO, negrita = true) else Aspecto(t, t, Forma.NUMERAL)
             TemaId.MONGOL -> if (persona) Aspecto(p, t, Forma.MEDALLON, negrita = true) else Aspecto(s, s, Forma.MARCADOR)
             TemaId.RENACIMIENTO -> if (persona) Aspecto(p, p, Forma.ONDULADO, cursiva = true) else Aspecto(s, s, Forma.SUBRAYADO, cursiva = true)
             TemaId.PIRATA -> if (persona) Aspecto(p, s, Forma.CABO, negrita = true) else Aspecto(t, t, Forma.PUNTEADO, cursiva = true)
@@ -159,6 +164,8 @@ object Marcas {
         Forma.TRENZA, Forma.MEDALLON, Forma.FLECHA, Forma.TRIPLE, Forma.MUESCAS, Forma.BURBUJAS -> Color.Unspecified
         Forma.CABO -> Color.Unspecified
         Forma.ESCUDETE -> c.copy(alpha = 0.12f)
+        Forma.GLIFO -> c.copy(alpha = 0.12f)
+        Forma.NUMERAL -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -170,6 +177,8 @@ object Marcas {
         Forma.PLACA, Forma.RECORTE, Forma.ETIQUETA, Forma.CINTA, Forma.OJIVA, Forma.ESQUINAS, Forma.HERRADURA, Forma.PARALELO, Forma.PIEDRA, Forma.ESCOTILLA -> false
         Forma.TIZA -> false
         Forma.ESCUDETE -> true
+        Forma.GLIFO -> false
+        Forma.NUMERAL -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -365,6 +374,22 @@ object Marcas {
                 listOf(1f, -1f).forEach { s ->
                     val p = tramo(rr.left, rr.right, 3f * u) { x, nx, k -> if (k == 0) moveTo(x, y); quadraticTo((x + nx) / 2, y + s * (if (k % 2 == 0) -2f else 2f) * u, nx, y) }
                     drawPath(p, c.copy(alpha = 0.8f), style = Stroke(0.9f * u))
+                }
+            }
+            Forma.GLIFO -> {
+                // El recuadro redondeado del bloque de glifo y, debajo, el pie de tres lóbulos.
+                val t = rr.top + h * 0.02f; val b = rr.bottom - h * 0.12f; val iz = rr.left - 3 * u; val de = rr.right + 3 * u
+                drawRoundRect(c.copy(alpha = 0.08f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(4 * u, 4 * u))
+                drawRoundRect(c.copy(alpha = 0.85f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(4 * u, 4 * u), style = Stroke(1.1f * u))
+                for (k in -1..1) drawCircle(c.copy(alpha = 0.85f), 1.3f * u, Offset((iz + de) / 2 + k * 3.4f * u, b + 1.6f * u))
+            }
+            Forma.NUMERAL -> {
+                // Cuatro puntos y una barra, y otra vez, a lo largo de la palabra.
+                var x = rr.left; var k = 0
+                while (x < rr.right) {
+                    if (k % 5 == 4) { drawRect(c.copy(alpha = 0.8f), Offset(x, baja - 0.7f * u), Size(minOf(6 * u, rr.right - x), 1.4f * u)); x += 8 * u }
+                    else { drawCircle(c.copy(alpha = 0.8f), 0.9f * u, Offset(x + 0.9f * u, baja)); x += 3.4f * u }
+                    k++
                 }
             }
             Forma.MEDALLON -> {

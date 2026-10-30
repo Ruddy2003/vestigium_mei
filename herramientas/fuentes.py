@@ -60,6 +60,12 @@ FUENTES = [
     # SED: humanista caligráfica
     ("alegreya/Alegreya[wght].ttf", {"wght": 400}, "alegreya_regular", None, LATINO),
     ("alegreya/Alegreya[wght].ttf", {"wght": 600}, "alegreya_semibold", None, LATINO),
+    # MESO: Alegreya Sans SC (títulos y rótulos) y Alegreya Sans (texto), de Huerta Tipográfica; las dos llevan además los
+    # numerales mayas de puntos y barras (U+1D2E0-1D2F3) de Noto Sans Mayan Numerals (ver CON_MAYAS)
+    ("alegreyasanssc/AlegreyaSansSC-Medium.ttf", None, "alegreya_sc_medium", None, LATINO),
+    ("alegreyasanssc/AlegreyaSansSC-Bold.ttf", None, "alegreya_sc_bold", None, LATINO),
+    ("alegreyasans/AlegreyaSans-Regular.ttf", None, "alegreya_sans_regular", None, LATINO),
+    ("alegreyasans/AlegreyaSans-Bold.ttf", None, "alegreya_sans_bold", None, LATINO),
     # URS: hecha para el ruso
     ("ptsans/PT_Sans-Web-Regular.ttf", None, "obrera_regular", "Obrera Vestigium", CIRILICO),
     ("ptsans/PT_Sans-Web-Bold.ttf", None, "obrera_bold", "Obrera Vestigium", CIRILICO),
@@ -106,6 +112,42 @@ FUENTES = [
 ]
 
 
+# Las salidas que llevan, además, los 20 numerales mayas (0 a 19, de puntos y barras) de Noto Sans Mayan Numerals: Android
+# no trae esa letra, así que el tema Mesoamérica los lleva dentro de las suyas.
+CON_MAYAS = {"alegreya_sc_medium", "alegreya_sc_bold", "alegreya_sans_regular", "alegreya_sans_bold"}
+MAYAS = "notosansmayannumerals/NotoSansMayanNumerals-Regular.ttf"
+
+
+def anadir_mayas(f, cache):
+    """Copia a [f] los glifos de U+1D2E0-1D2F3 (contornos y anchos) y los agrega a su tabla de caracteres."""
+    import copy
+    from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+    m = TTFont(bajar(MAYAS, cache))
+    escala = f["head"].unitsPerEm / m["head"].unitsPerEm
+    cm = m.getBestCmap()
+    orden = list(f.getGlyphOrder())
+    nuevos = {}
+    for cp in range(0x1D2E0, 0x1D2F4):
+        origen = cm[cp]
+        nombre = "maya%02d" % (cp - 0x1D2E0)
+        g = copy.deepcopy(m["glyf"][origen])
+        if escala != 1:
+            g.coordinates.scale((escala, escala))
+        ancho, izq = m["hmtx"][origen]
+        orden.append(nombre)
+        f["glyf"][nombre] = g
+        f["hmtx"][nombre] = (round(ancho * escala), round(izq * escala))
+        nuevos[cp] = nombre
+    f.setGlyphOrder(orden)
+    f["glyf"].glyphOrder = orden
+    base = dict(f.getBestCmap())
+    base.update(nuevos)
+    t12 = CmapSubtable.newSubtable(12)
+    t12.platformID, t12.platEncID, t12.language, t12.cmap = 3, 10, 0, base
+    f["cmap"].tables = [t for t in f["cmap"].tables if not (t.platformID == 3 and t.platEncID == 10)] + [t12]
+    f["maxp"].numGlyphs = len(orden)
+
+
 def bajar(ruta, cache):
     local = os.path.join(cache, ruta.replace("/", "_"))
     if not os.path.exists(local):
@@ -147,6 +189,8 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
     s = subset.Subsetter(op)
     s.populate(unicodes=subset.parse_unicodes(letras))
     s.subset(f)
+    if salida in CON_MAYAS:
+        anadir_mayas(f, cache)
     if nombre:
         peso = salida.split("_")[-1]
         renombrar(f, nombre, {"regular": "Regular", "titulo": "Regular", "medium": "Medium", "semibold": "SemiBold", "bold": "Bold", "negrita": "Bold"}[peso])

@@ -74,6 +74,8 @@ private enum class BarridoTema {
     PERSIANA,
     /** Templario: la cruz patada que crece sobre su disco. */
     CRUZ,
+    /** Mesoamérica: el rombo escalonado de los frisos, que crece grada por grada. */
+    GRADAS,
 }
 
 /**
@@ -138,6 +140,9 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.ABISMO -> MatizMovimiento(BarridoTema.MAREA, 980, CubicBezierEasing(0.3f, 0f, 0.2f, 1f), 0f, -14f, 1f, 620, 75, LinearOutSlowInEasing, 1.15f, 0.45f, 380f)
     // Estrella de ocho puntas de lazo.
     TemaId.ANDALUS -> MatizMovimiento(BarridoTema.OCHO, 840, CubicBezierEasing(0.45f, 0f, 0.25f, 1f), 0f, 12f, 0.99f, 500, 60, FastOutSlowInEasing, 0.95f, 0.7f, 750f)
+    // El rombo escalonado que crece desde el toque; las secciones suben como gradas, una tras otra, y los botones se
+    // asientan firmes, como un sillar sobre otro.
+    TemaId.MESO -> MatizMovimiento(BarridoTema.GRADAS, 900, CubicBezierEasing(0.5f, 0f, 0.3f, 1f), 0f, 20f, 1f, 560, 85, LinearOutSlowInEasing, 0.9f, 0.95f, 700f)
     // El horizonte de la estepa que se ensancha; las secciones llegan al galope.
     TemaId.MONGOL -> MatizMovimiento(BarridoTema.HORIZONTE, 760, FastOutSlowInEasing, 22f, 0f, 1f, 340, 45, FastOutSlowInEasing, 1.05f, 0.5f, 1100f)
     // Círculo y cuadrado juntos, como el hombre de Vitruvio.
@@ -217,6 +222,8 @@ internal enum class VivoTema(val periodo: Int) {
     /** Templario: antorchas en la muralla. */
     ANTORCHAS(8000),
     JEROGLIFOS(20000),
+    /** Mesoamérica: las dos ruedas del tzolk'in (13 números y 20 signos) que avanzan un día por segundo; 260 días = 260 s. */
+    TZOLKIN(260000),
 }
 
 /** El tipo de fondo vivo de cada tema (solo el Botánico cambia entre el día y la noche; el Refugio suma el barrido de noche). */
@@ -244,6 +251,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.ESPACIO -> VivoTema.ESTRELLAS         // estrellas que titilan
     TemaId.ABISMO -> VivoTema.MAR                // nieve marina; de día, haces de sol y un cardumen; de noche, medusas que laten
     TemaId.ANDALUS -> VivoTema.AGUA              // reflejos de alberca
+    TemaId.MESO -> VivoTema.TZOLKIN           // las ruedas de la cuenta de los días, y el humo del copal
     TemaId.MONGOL -> VivoTema.NUBES              // nubes del Cielo Azul
     TemaId.RENACIMIENTO -> VivoTema.SAMARAS      // semillas aladas que caen girando, como el tornillo aéreo
     TemaId.PIRATA -> VivoTema.OLEAJE             // gaviotas que planean sobre la mar de fondo
@@ -884,6 +892,43 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 runaVivo(runa, o, alto, al(luz, (if (oscuro) 0.5f else 0.35f) * brillo), 1.2f * u)
             }
         }
+        VivoTema.TZOLKIN -> {
+            // La cuenta de 260 días como dos ruedas dentadas que engranan: la de los 13 números y la de los 20 signos.
+            // Cada segundo avanzan un diente las dos (un día), con un golpe suave; a los 260 segundos vuelven a empezar
+            // juntas, como el tzolk'in. Abajo a la izquierda, el humo de un brasero de copal.
+            val pasos = 260f * t; val dia = floor(pasos); val f = ((pasos - dia) / 0.35f).coerceIn(0f, 1f)
+            val avance = dia + f * f * (3f - 2f * f)
+            val tinta = al(e.onBackground, if (oscuro) 0.07f else 0.06f)
+            val acento = al(if (oscuro) e.primary else e.secondary, if (oscuro) 0.16f else 0.11f)
+            val r20 = 0.36f * w; val r13 = r20 * 13f / 20f
+            val c20 = Offset(w * 0.86f, h * 0.84f)
+            val ang = Math.toRadians(-128.0)
+            val c13 = Offset(c20.x + (r20 + r13 * 1.02f) * cos(ang).toFloat(), c20.y + (r20 + r13 * 1.02f) * sin(ang).toFloat())
+            fun rueda(c: Offset, r: Float, dientes: Int, giro: Float, numeros: Boolean) {
+                drawCircle(tinta, r * 0.9f, c, style = Stroke(1.4f * u))
+                drawCircle(tinta, r * 0.56f, c, style = Stroke(1f * u))
+                drawCircle(tinta, r * 0.1f, c)
+                val diente = (2f * PI.toFloat() * r / dientes) * 0.5f
+                for (k in 0 until dientes) rotate(giro + k * 360f / dientes, c) {
+                    drawRect(tinta, Offset(c.x - diente / 2, c.y - r * 1.06f), Size(diente, r * 0.16f))
+                    drawLine(tinta, Offset(c.x, c.y - r * 0.9f), Offset(c.x, c.y - r * 0.56f), 0.6f * u)
+                    val m = Offset(c.x, c.y - r * 0.73f); val col = if (k == 0) acento else tinta
+                    rotate(180f / dientes, c) {
+                        if (numeros) numeralMaya(k + 1, m, r * 0.15f, col)
+                        else drawRoundRect(col, Offset(m.x - r * 0.07f, m.y - r * 0.07f), Size(r * 0.14f, r * 0.14f), androidx.compose.ui.geometry.CornerRadius(r * 0.04f), style = Stroke(0.9f * u))
+                    }
+                }
+            }
+            rueda(c20, r20, 20, 18f * avance, false)
+            rueda(c13, r13, 13, -360f / 13f * avance + 180f / 13f, true)
+            motas.take(9).forEach { m ->
+                val vida = fraccionVivo(m.y + t * 40f * vueltas(m))
+                val x = w * 0.12f + 26f * u * senoVuelta(vida * 1.5f + m.fase) * vida
+                val y = h * 0.98f - vida * h * 0.42f
+                val rr = (8f + 26f * vida) * u * m.tam
+                drawCircle(Brush.radialGradient(listOf(al(e.onBackground, (1f - vida) * (if (oscuro) 0.08f else 0.06f)), Color.Transparent), center = Offset(x, y), radius = rr), rr, Offset(x, y))
+            }
+        }
         VivoTema.JEROGLIFOS -> {
             // Un muro de signos en columnas, como se escribe en los templos: la luz de una lámpara pasa despacio de un lado
             // a otro y los signos que alcanza se encienden en oro y vuelven a la sombra.
@@ -1060,6 +1105,23 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
         BarridoTema.PIRAMIDE -> {
             val s = r * 2.05f
             ruta.moveTo(c.x, c.y - s); ruta.lineTo(c.x + s * 0.866f, c.y + s * 0.5f); ruta.lineTo(c.x - s * 0.866f, c.y + s * 0.5f); ruta.close()
+        }
+        BarridoTema.GRADAS -> {
+            // Rombo escalonado: cada lado baja en cinco gradas; las esquinas de adentro quedan sobre el rombo de
+            // semidiagonal d, cuyo círculo inscrito (radio d/√2) cubre al de radio r.
+            val d = r * 1.5f; val n = 5; val g = d / n
+            for (q in 0 until 4) {
+                // (sx, sy): hacia dónde avanza cada cuarto, en el sentido de las agujas del reloj desde arriba.
+                val sx = if (q == 0 || q == 3) 1f else -1f; val sy = if (q < 2) 1f else -1f
+                val x0 = c.x + (if (q == 1) d else if (q == 3) -d else 0f)
+                val y0 = c.y + (if (q == 0) -d else if (q == 2) d else 0f)
+                if (q == 0) ruta.moveTo(x0, y0)
+                for (k in 0 until n) {
+                    if (q % 2 == 0) { ruta.lineTo(x0 + sx * g * (k + 1), y0 + sy * g * k); ruta.lineTo(x0 + sx * g * (k + 1), y0 + sy * g * (k + 1)) }
+                    else { ruta.lineTo(x0 + sx * g * k, y0 + sy * g * (k + 1)); ruta.lineTo(x0 + sx * g * (k + 1), y0 + sy * g * (k + 1)) }
+                }
+            }
+            ruta.close()
         }
         BarridoTema.COPO -> ruta.poligonoBarrido(c, 6, r * 2f, r * 1.25f, 0f)
         BarridoTema.OCHO -> ruta.poligonoBarrido(c, 8, r * 1.75f, r * 1.3f, 22.5f)

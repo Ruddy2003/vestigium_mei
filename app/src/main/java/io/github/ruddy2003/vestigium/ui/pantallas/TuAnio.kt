@@ -167,6 +167,9 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
         val h2 = Temas.hegira(java.time.LocalDate.of(anio, 12, 31))?.third
         "Diwán del año $anio" + (if (h1 != null && h2 != null) " · " + (if (h1 == h2) "$h1 H" else "$h1–$h2 H") else "")
     }
+    // El año como un tramo de la cuenta larga: del primer día al último, en baktunes, katunes, tunes, uinales y kines.
+    TemaId.MESO -> "El códice del año $anio · de " + io.github.ruddy2003.vestigium.ui.Maya.cuentaLarga(java.time.LocalDate.of(anio, 1, 1)) +
+        " a " + io.github.ruddy2003.vestigium.ui.Maya.cuentaLarga(java.time.LocalDate.of(anio, 12, 31))
     TemaId.MONGOL -> Temas.anioMongol(java.time.LocalDate.of(anio, 6, 1)) + " · $anio"
     // «Taccuino»: la libreta de bolsillo en que Leonardo apuntaba todo.
     TemaId.RENACIMIENTO -> "Taccuino dell'anno $anio"

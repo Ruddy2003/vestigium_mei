@@ -757,6 +757,19 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             val punta = en(p, a1); val izq = en(p - 0.012f, R - u); val der = en(p + 0.012f, R - u)
             drawPath(Path().apply { moveTo(punta.x, punta.y); lineTo(izq.x, izq.y); lineTo(der.x, der.y); close() }, e.tertiary)
         }
+        TemaId.MESO -> {
+            // La rueda de los veinte días: veinte cartuchos alrededor que se pintan de cinabrio uno por uno según avanza el
+            // tiempo, y adentro los trece puntos de jade de la otra cuenta. Marca el paso un grano de cacao.
+            drawCircle(pista, r, c, style = Stroke(g))
+            for (k in 0 until 20) {
+                val q = en((k + 0.5f) / 20f, r); val s = g * 0.36f
+                if ((k + 0.5f) / 20f <= p) drawRoundRect(color, Offset(q.x - s, q.y - s), Size(2 * s, 2 * s), androidx.compose.ui.geometry.CornerRadius(s * 0.4f))
+                else drawRoundRect(tenue.copy(alpha = 0.5f), Offset(q.x - s, q.y - s), Size(2 * s, 2 * s), androidx.compose.ui.geometry.CornerRadius(s * 0.4f), style = Stroke(u))
+            }
+            drawCircle(tenue.copy(alpha = 0.45f), r - g * 0.75f, c, style = Stroke(u))
+            for (i in 0 until 13) drawCircle(e.tertiary.copy(alpha = 0.55f), 1.7f * u, en(i / 13f, r - g * 1.15f))
+            granoCacao(en(p, r + g * 0.75f), 3.4f * u, e.secondary, e.surface)
+        }
         // La rueda del techo de la yurta: las varas que salen de ella se tiñen al avanzar; afuera, la costura del fieltro.
         TemaId.MONGOL -> {
             val rIn = r - g * 0.7f; val rOut = r + g * 0.45f
@@ -1000,6 +1013,13 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
                 val cx = x + (i + 0.5f) * paso
                 moveTo(x + i * paso, y + h / 2); lineTo(cx, y); lineTo(x + (i + 1) * paso, y + h / 2); lineTo(cx, y + h); close()
             }
+        }
+        // Un basamento escalonado: dos gradas por lado hasta la plataforma.
+        TemaId.MESO -> {
+            val g = minOf(h * 0.3f, w * 0.15f)
+            moveTo(x, y + h); lineTo(x, y + h * 0.62f); lineTo(x + g, y + h * 0.62f); lineTo(x + g, y + h * 0.3f); lineTo(x + 2 * g, y + h * 0.3f); lineTo(x + 2 * g, y)
+            lineTo(x + w - 2 * g, y); lineTo(x + w - 2 * g, y + h * 0.3f); lineTo(x + w - g, y + h * 0.3f); lineTo(x + w - g, y + h * 0.62f); lineTo(x + w, y + h * 0.62f)
+            lineTo(x + w, y + h); close()
         }
         TemaId.MONGOL -> {
             val d = minOf(h * 0.35f, w * 0.3f)

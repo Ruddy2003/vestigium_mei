@@ -33,6 +33,8 @@ object TrofeosMas {
     val NOMBRES: Map<TemaId, Map<String, String>> = mapOf(
         TemaId.ANDALUS to mapOf("Diario" to "Libro de lacería", "Mundo" to "Astrolabio", "Cuerpo" to "Fuente del patio", "Mente" to "Estrella de ocho puntas",
             "Cultura" to "Arco de herradura", "Gente" to "Azulejo", "Constancia" to "Lámpara de bronce", "Curiosos" to "Celosía", "Tuyos" to "Granada"),
+        TemaId.MESO to mapOf("Diario" to "Códice en biombo", "Mundo" to "Lienzo de los cuatro rumbos", "Cuerpo" to "Anillo del juego de pelota", "Mente" to "Máscara de jade",
+            "Cultura" to "Estela de los glifos", "Gente" to "Vaso del cacao", "Constancia" to "Pirámide de nueve cuerpos", "Curiosos" to "Caracola de mar", "Tuyos" to "Penacho de quetzal"),
         TemaId.SEDA to mapOf("Diario" to "Sello de cinabrio", "Mundo" to "Brújula de cuchara", "Cuerpo" to "Disco de jade", "Mente" to "Porcelana azul",
             "Cultura" to "Carrete de seda", "Gente" to "Farolillo", "Constancia" to "Moneda de cobre", "Curiosos" to "Ábaco", "Tuyos" to "Ventana lunar"),
         TemaId.MONGOL to mapOf("Diario" to "Rollo de órdenes", "Mundo" to "Mapa de la estepa", "Cuerpo" to "Estribo", "Mente" to "Tamga",
@@ -86,6 +88,17 @@ object TrofeosMas {
                     drawPath(Path().apply { moveTo(cx, cy - r); lineTo(cx + r, cy); lineTo(cx, cy + r); lineTo(cx - r, cy); close() }, if (k % 2 == 0) Color(0xFF1E6B5A) else Color(0xFF1E4F8A))
                 }
                 drawRect(piedra(c), Offset(w * 0.13f, h * 0.775f), Size(w * 0.74f, h * 0.02f))
+            }
+            TemaId.MESO -> {
+                // Un altar de piedra estucada en dos gradas, con la franja de cinabrio y el número del logro en puntos y barras.
+                val c = if (p.hecho) Color(0xFFE2D6BC) else ped
+                drawRect(piedra(c), Offset(w * 0.12f, h * 0.86f), Size(w * 0.76f, h * 0.09f))
+                drawRect(piedra(c), Offset(w * 0.2f, h * 0.775f), Size(w * 0.6f, h * 0.09f))
+                if (p.hecho) {
+                    drawRect(Color(0xFFA3301E), Offset(w * 0.2f, h * 0.775f), Size(w * 0.6f, h * 0.018f))
+                    numeralMaya(5 + p.nivel * 2, Offset(w * 0.5f, h * 0.825f), h * 0.055f, Color(0xFF2A1810).copy(alpha = 0.7f))
+                    for (k in 0 until 5) drawCircle(Color(0xFF2F7D57), w * 0.018f, Offset(w * (0.2f + k * 0.15f), h * 0.905f))
+                }
             }
             TemaId.SEDA -> {
                 // Peana de laca roja con patas curvas.
@@ -425,6 +438,135 @@ object TrofeosMas {
     }
 
     // ---------------------------------------------------------------- Ruta de la Seda
+
+    /**
+     * Mesoamérica: el códice plegado en biombo, el lienzo de los cuatro rumbos con la ceiba al centro, el anillo de piedra
+     * del juego de pelota con su pelota de hule, la máscara de jade de un señor, una estela con sus columnas de glifos, el
+     * vaso pintado para el cacao, la pirámide de nueve cuerpos, la caracola de mar que se toca como trompeta y el penacho de
+     * plumas de quetzal.
+     */
+    internal fun DrawScope.meso(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val jade = p.c(Color(0xFF2F8A60)); val cinabrio = p.c(Color(0xFFA3301E)); val estuco = p.c(Color(0xFFF2E8D2))
+        val azul = p.c(Color(0xFF3E8FA8)); val tinta = p.c(Color(0xFF2A1810)); val ocre = p.c(Color(0xFFC9963E))
+        when (cat) {
+            "Diario" -> {
+                // Cuatro páginas del biombo, en zigzag, con el marco rojo, renglones y algún glifo.
+                for (k in 0 until 4) {
+                    val x0 = 0.16f + k * 0.17f; val sube = if (k % 2 == 0) 0f else 0.04f
+                    val pag = Path().apply { moveTo(p.x(x0), p.y(0.16f + sube)); lineTo(p.x(x0 + 0.17f), p.y(0.2f - sube)); lineTo(p.x(x0 + 0.17f), p.y(0.72f - sube)); lineTo(p.x(x0), p.y(0.76f + sube)); close() }
+                    drawPath(pag, if (k % 2 == 0) SolidColor(estuco) else SolidColor(lerp(estuco, Color.Black, 0.12f)))
+                    drawPath(pag, cinabrio, style = Stroke(lw * 0.6f))
+                    if (p.hecho) {
+                        drawLine(cinabrio, Offset(p.x(x0 + 0.01f), p.y(0.46f)), Offset(p.x(x0 + 0.16f), p.y(0.46f)), lw * 0.4f)
+                        numeralMaya(k * 4 + 3, p.o(x0 + 0.085f, 0.33f), p.w * 0.07f, tinta)
+                        drawRoundRect(azul, Offset(p.x(x0 + 0.04f), p.y(0.52f)), Size(p.x(0.09f), p.x(0.09f)), CornerRadius(p.w * 0.02f))
+                    }
+                }
+                caja(p, 0.14f, 0.76f, 0.86f, 0.79f)
+            }
+            "Mundo" -> {
+                // El cosmograma: el cuadro del mundo con sus cuatro rumbos de color (rojo al oriente, blanco al norte, negro al
+                // poniente, amarillo al sur) y la ceiba verde en el centro, que une el cielo con el inframundo.
+                val c = p.o(0.5f, 0.44f); val l = p.w * 0.3f
+                drawRect(p.metal(0.18f, 0.82f), Offset(c.x - l - lw, c.y - l - lw), Size(2 * l + 2 * lw, 2 * l + 2 * lw))
+                listOf(cinabrio to Offset(1f, 0f), estuco to Offset(0f, -1f), tinta to Offset(-1f, 0f), ocre to Offset(0f, 1f)).forEach { (col, dir) ->
+                    val q = Offset(c.x + dir.x * l * 0.62f, c.y + dir.y * l * 0.62f)
+                    drawPath(Path().apply { moveTo(c.x, c.y); lineTo(q.x + dir.y * l * 0.38f + dir.x * l * 0.38f, q.y + dir.x * l * 0.38f + dir.y * l * 0.38f); lineTo(q.x - dir.y * l * 0.38f + dir.x * l * 0.38f, q.y - dir.x * l * 0.38f + dir.y * l * 0.38f); close() }, col)
+                }
+                drawLine(jade, Offset(c.x, c.y + l * 0.3f), Offset(c.x, c.y - l * 0.3f), lw * 1.6f)
+                drawCircle(jade, l * 0.2f, Offset(c.x, c.y - l * 0.32f))
+                caja(p, 0.46f, 0.74f + 0.01f, 0.54f, 0.77f)
+            }
+            "Cuerpo" -> {
+                // El anillo de piedra de la cancha, de canto, con su banda tallada, y la pelota de hule.
+                val c = p.o(0.5f, 0.38f); val R = p.w * 0.27f
+                drawCircle(p.metal(0.23f, 0.77f), R, c)
+                drawCircle(if (p.hecho) SolidColor(lerp(estuco, Color.Black, 0.55f)) else SolidColor(p.sombra), R * 0.42f, c)
+                drawCircle(p.linea, R * 0.72f, c, style = Stroke(lw * 0.6f))
+                if (p.hecho) for (k in 0 until 12) { val a = k * PI / 6; drawCircle(p.linea.copy(alpha = 0.6f), lw, Offset(c.x + (R * 0.86f * cos(a)).toFloat(), c.y + (R * 0.86f * sin(a)).toFloat())) }
+                drawCircle(if (p.hecho) Brush.radialGradient(listOf(Color(0xFF6B5A4A), Color(0xFF2A221C)), p.o(0.68f, 0.62f), p.w * 0.1f) else SolidColor(p.sombra), p.w * 0.09f, p.o(0.7f, 0.66f))
+                caja(p, 0.44f, 0.38f + 0.27f, 0.56f, 0.77f)
+            }
+            "Mente" -> {
+                // La máscara de jade de un señor: el rostro de teselas, los ojos de concha con pupila de obsidiana y las orejeras.
+                val c = p.o(0.5f, 0.42f)
+                val cara = Path().apply {
+                    moveTo(p.x(0.3f), p.y(0.18f)); quadraticTo(p.x(0.5f), p.y(0.1f), p.x(0.7f), p.y(0.18f)); lineTo(p.x(0.72f), p.y(0.5f))
+                    quadraticTo(p.x(0.66f), p.y(0.7f), p.x(0.5f), p.y(0.74f)); quadraticTo(p.x(0.34f), p.y(0.7f), p.x(0.28f), p.y(0.5f)); close()
+                }
+                drawPath(cara, if (p.hecho) Brush.radialGradient(listOf(lerp(jade, Color.White, 0.25f), jade, lerp(jade, Color.Black, 0.3f)), c, p.w * 0.35f) else SolidColor(p.sombra))
+                if (p.hecho) clipPath(cara) {
+                    var y = p.y(0.12f); while (y < p.y(0.76f)) { drawLine(p.linea.copy(alpha = 0.3f), Offset(p.x(0.26f), y), Offset(p.x(0.74f), y), lw * 0.3f); y += p.w * 0.05f }
+                    var x = p.x(0.28f); while (x < p.x(0.74f)) { drawLine(p.linea.copy(alpha = 0.2f), Offset(x, p.y(0.1f)), Offset(x + p.w * 0.02f, p.y(0.76f)), lw * 0.3f); x += p.w * 0.06f }
+                }
+                listOf(0.4f, 0.6f).forEach { x -> drawOval(estuco, Offset(p.x(x - 0.06f), p.y(0.33f)), Size(p.x(0.12f), p.y(0.06f))); drawCircle(tinta, p.w * 0.022f, p.o(x, 0.36f)) }
+                drawPath(Path().apply { moveTo(p.x(0.47f), p.y(0.38f)); lineTo(p.x(0.45f), p.y(0.5f)); lineTo(p.x(0.55f), p.y(0.5f)); lineTo(p.x(0.53f), p.y(0.38f)) }, p.linea, style = Stroke(lw * 0.6f))
+                drawOval(estuco, Offset(p.x(0.42f), p.y(0.56f)), Size(p.x(0.16f), p.y(0.05f)))
+                listOf(0.22f, 0.78f).forEach { x -> drawCircle(p.metal(x - 0.06f, x + 0.06f), p.w * 0.06f, p.o(x, 0.4f)); drawCircle(p.linea, p.w * 0.02f, p.o(x, 0.4f)) }
+                caja(p, 0.44f, 0.74f, 0.56f, 0.77f)
+            }
+            "Cultura" -> {
+                // La estela: la piedra alta de remate redondo con dos columnas de bloques de glifos y su fecha arriba.
+                val piedra = Path().apply { moveTo(p.x(0.3f), p.y(0.77f)); lineTo(p.x(0.3f), p.y(0.2f)); quadraticTo(p.x(0.5f), p.y(0.06f), p.x(0.7f), p.y(0.2f)); lineTo(p.x(0.7f), p.y(0.77f)); close() }
+                drawPath(piedra, p.metal(0.3f, 0.7f))
+                drawPath(piedra, p.linea, style = Stroke(lw * 0.5f))
+                if (p.hecho) {
+                    numeralMaya(9, p.o(0.5f, 0.2f), p.w * 0.06f, p.linea)
+                    for (fila in 0 until 5) for (col in 0 until 2) {
+                        val x = 0.35f + col * 0.155f; val y = 0.28f + fila * 0.095f
+                        drawRoundRect(p.linea, Offset(p.x(x), p.y(y)), Size(p.x(0.14f), p.y(0.08f)), CornerRadius(p.w * 0.02f), style = Stroke(lw * 0.5f))
+                        drawCircle(p.linea.copy(alpha = 0.5f), p.w * 0.012f, Offset(p.x(x + 0.05f), p.y(y + 0.04f)))
+                    }
+                }
+            }
+            "Gente" -> {
+                // El vaso de cacao: cilindro pintado de ocre con el borde rojo, una banda de glifos y dos figuras.
+                val x0 = 0.28f; val x1 = 0.72f
+                drawRect(if (p.hecho) Brush.horizontalGradient(listOf(lerp(ocre, Color.Black, 0.3f), ocre, lerp(ocre, Color.White, 0.2f), ocre, lerp(ocre, Color.Black, 0.3f)), p.x(x0), p.x(x1)) else SolidColor(p.sombra),
+                    Offset(p.x(x0), p.y(0.2f)), Size(p.x(x1 - x0), p.y(0.56f)))
+                drawOval(if (p.hecho) SolidColor(lerp(ocre, Color.Black, 0.5f)) else SolidColor(p.sombra), Offset(p.x(x0), p.y(0.18f)), Size(p.x(x1 - x0), p.y(0.05f)))
+                drawRect(cinabrio, Offset(p.x(x0), p.y(0.22f)), Size(p.x(x1 - x0), p.y(0.04f)))
+                if (p.hecho) {
+                    for (k in 0 until 4) drawRoundRect(tinta, Offset(p.x(x0 + 0.03f + k * 0.105f), p.y(0.29f)), Size(p.x(0.07f), p.y(0.06f)), CornerRadius(p.w * 0.015f), style = Stroke(lw * 0.4f))
+                    listOf(0.4f, 0.6f).forEach { x ->
+                        drawCircle(tinta, p.w * 0.03f, p.o(x, 0.44f)); drawLine(tinta, p.o(x, 0.47f), p.o(x, 0.62f), lw * 1.2f)
+                        drawLine(tinta, p.o(x, 0.52f), p.o(x + (if (x < 0.5f) 0.06f else -0.06f), 0.5f), lw * 0.8f)
+                    }
+                }
+                drawRect(cinabrio, Offset(p.x(x0), p.y(0.72f)), Size(p.x(x1 - x0), p.y(0.04f)))
+            }
+            "Constancia" -> {
+                // La pirámide de nueve cuerpos, con su escalinata y el templo en lo alto.
+                piramideMaya(p.o(0.5f, 0.77f), p.w * 0.66f, p.h * 0.62f, if (p.hecho) lerp(estuco, Color.Black, 0.08f) else p.sombra, p.linea, cinabrio, gradas = 9)
+            }
+            "Curiosos" -> {
+                // La caracola de mar: la espiral de la concha, el labio rosado y la boquilla para tocarla como trompeta.
+                val c = p.o(0.44f, 0.46f)
+                val concha = Path().apply {
+                    moveTo(p.x(0.2f), p.y(0.5f)); quadraticTo(p.x(0.26f), p.y(0.22f), p.x(0.5f), p.y(0.24f)); quadraticTo(p.x(0.74f), p.y(0.28f), p.x(0.8f), p.y(0.42f))
+                    quadraticTo(p.x(0.7f), p.y(0.66f), p.x(0.46f), p.y(0.68f)); quadraticTo(p.x(0.24f), p.y(0.68f), p.x(0.2f), p.y(0.5f)); close()
+                }
+                drawPath(concha, if (p.hecho) Brush.linearGradient(listOf(Color(0xFFF6E7D2), Color(0xFFE8B49A), Color(0xFFC98A6A)), p.o(0.2f, 0.3f), p.o(0.8f, 0.7f)) else SolidColor(p.sombra))
+                if (p.hecho) {
+                    for (k in 1..4) drawArc(p.linea.copy(alpha = 0.5f), 200f, 220f, false, Offset(c.x - p.w * 0.04f * k, c.y - p.w * 0.035f * k), Size(p.w * 0.08f * k, p.w * 0.07f * k), style = Stroke(lw * 0.5f))
+                    for (k in 0 until 5) drawCircle(p.c(Color(0xFFC98A6A)), p.w * 0.018f, p.o(0.36f + k * 0.08f, 0.26f + (if (k % 2 == 0) 0f else -0.02f)))
+                }
+                drawPath(Path().apply { moveTo(p.x(0.8f), p.y(0.42f)); lineTo(p.x(0.88f), p.y(0.36f)); lineTo(p.x(0.88f), p.y(0.44f)); close() }, p.metal(0.8f, 0.88f))
+                caja(p, 0.4f, 0.68f, 0.52f, 0.77f)
+            }
+            else -> {
+                // El penacho: un abanico de plumas largas de quetzal sobre una banda de jade con su cuenta central.
+                for (k in 0 until 9) {
+                    val ang = -90f + (k - 4) * 15f
+                    plumaQuetzal(p.o(0.5f, 0.58f), p.w * (0.44f - kotlin.math.abs(k - 4) * 0.03f), ang, if (p.hecho) lerp(jade, azul, (k % 3) * 0.2f) else p.sombra, if (p.hecho) lerp(jade, Color.Black, 0.35f) else p.sombra)
+                }
+                drawRoundRect(p.metal(0.3f, 0.7f), Offset(p.x(0.3f), p.y(0.56f)), Size(p.x(0.4f), p.y(0.08f)), CornerRadius(p.w * 0.02f))
+                cuentaJade(p.o(0.5f, 0.6f), p.w * 0.045f, jade, Color.White)
+                caja(p, 0.46f, 0.64f, 0.54f, 0.77f)
+            }
+        }
+    }
 
     internal fun DrawScope.seda(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f

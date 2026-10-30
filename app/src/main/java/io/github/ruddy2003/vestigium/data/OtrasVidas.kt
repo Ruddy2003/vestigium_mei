@@ -454,6 +454,29 @@ object OtrasVidas {
                 "alfabetizacion" to e(15), "lectura" to e(0.5)),
             fuentes = listOf("El califato de Córdoba" to "${W}Caliphate_of_C%C3%B3rdoba")),
 
+        // La vida del tema Mesoamérica: un escriba maya del Clásico tardío, de las tierras bajas (no repite a Citlali, la
+        // macehual de Tenochtitlan de las vidas de todos: otra región, otro pueblo y siete siglos antes).
+        Vida("escriba_maya", "K'an", "Escriba y pintor de códices", "Una ciudad maya de las tierras bajas", "hacia el 750", 750, "tema", "meso", edad = 30,
+            historia = listOf(
+                "K'an es un aj tz'ib, «el de la escritura»: uno de los pocos de su ciudad que saben leer y pintar los glifos. Trabaja en una casa de piedra junto a la plaza, con pinceles de pelo y tinta negra y roja guardada en conchas cortadas, sobre tiras de papel amate cubiertas de estuco blanco que luego se doblan como un biombo.",
+                "Su oficio es llevar la cuenta del tiempo: qué día del tzolk'in de 260 días cae con qué día del haab de 365, cuándo se cierra un katún, qué dice el almanaque para la siembra y para los ritos. También pinta escenas y textos en vasos de cerámica para beber cacao, que su señor regala a otros señores; algunos escribas firmaban esos vasos.",
+                "Come sobre todo maíz: atole por la mañana, tamales y tortillas, con frijol, calabaza y chile; el cacao espumoso es bebida de la corte y de las fiestas, y la carne de venado o de pavo llega pocas veces. Su ciudad vive su mejor siglo; en las generaciones siguientes, muchas de estas ciudades se irán vaciando. K'an es un personaje inventado; su oficio, sus herramientas y sus cuentas son reales.",
+            ),
+            dia = listOf(t(21.0, 5.0, Hacer.DORMIR), t(5.0, 6.0, Hacer.COMER, "atole"), t(6.0, 12.0, Hacer.TRABAJO, "pintar glifos en amate"), t(12.0, 13.0, Hacer.COMER),
+                t(13.0, 16.0, Hacer.TRABAJO, "cuentas del calendario"), t(16.0, 18.0, Hacer.REZAR, "ritual en el templo"), t(18.0, 19.0, Hacer.COMER, "tamales y cacao"), t(19.0, 21.0, Hacer.GENTE)),
+            datos = mapOf("pasos" to r(8000, "Casi todo el día sentado ante el papel; camina a la plaza, al templo y a su casa."), "km_anio" to r(1500),
+                "kcal" to r(2500, "El maíz daba quizá dos tercios o más de la energía."), "proteina" to r(60, "Frijol y maíz; carne de venado, pavo o pescado de vez en cuando."),
+                "azucar" to r(8, "Miel de abejas sin aguijón, que se criaban en troncos huecos."), "fibra" to r(55), "alcohol" to r(5, "Balché, una bebida de miel fermentada con corteza, sobre todo en los ritos."),
+                "sueno" to r(8.0), "dormir" to r(21.0), "trabajo" to r(48), "aire_libre" to r(4, "Pinta a la sombra, con la luz del día; el resto, en la plaza y en el templo."), "pantalla" to r(0),
+                "notificaciones" to r(3, "La caracola y los tambores que llaman a los ritos."), "musica" to r(0.5, "Flautas, caracolas, tambores y sonajas en las ceremonias."),
+                "personas_dia" to r(50), "conocidas" to r(1500), "poblacion" to r(40000, "Una ciudad mediana del Clásico tardío; las mayores, como Tikal, pasaban de 50,000."),
+                "lejos" to r(150, "Hasta una ciudad aliada, por los caminos blancos de piedra (sacbeob)."), "estatura" to r(158, "Promedio aproximado de los hombres mayas del Clásico, según sus esqueletos."),
+                "vida" to r(28), "vida_adulto" to r(50), "hijos" to r(5), "alfabetizacion" to r(1, "Leer y escribir era cosa de una minoría de la corte y los sacerdotes."),
+                "lectura" to r(3, "Los códices de almanaques y profecías de su ciudad, que copia y consulta.")),
+            fuentes = listOf("La escritura maya" to "${W}Maya_script", "Los códices mayas" to "${W}Maya_codices", "El calendario maya" to "${W}Maya_calendar",
+                "La cocina maya" to "${W}Maya_cuisine"),
+            inspiracion = "Persona inventada. Su oficio, sus herramientas y su calendario siguen lo que se sabe de los escribas mayas del Clásico; las cifras son reconstrucciones, no registros."),
+
         Vida("pastor_mongol", "Bat", "Pastor nómada", "La estepa mongola", "hacia 1220", 1220, "tema", "mongol", edad = 30,
             historia = listOf(
                 "Bat casi no camina: pasa el día a caballo cuidando ovejas, cabras, yaks y caballos. Su familia muda el ger, la tienda de fieltro, cuatro veces al año, siguiendo los pastos.",

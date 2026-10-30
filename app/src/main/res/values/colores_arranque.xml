@@ -49,6 +49,8 @@
     <color name="arranque_abismo_oscuro">#01060B</color>
     <color name="arranque_andalus">#F3EBDA</color>
     <color name="arranque_andalus_oscuro">#0B1716</color>
+    <color name="arranque_meso">#E9D8B6</color>
+    <color name="arranque_meso_oscuro">#0F1314</color>
     <color name="arranque_mongol">#F1EDE3</color>
     <color name="arranque_mongol_oscuro">#0A1220</color>
     <color name="arranque_renacimiento">#F0E4C6</color>

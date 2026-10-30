@@ -399,6 +399,22 @@ def hacer_egipto():
         P['egipto'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: pluck(f, d, 0.5, 0.9965), [12, 13, 17, 19], 0.1, 0.8))
         ARGS['egipto'] = (T, pz, ac, mel, kw)
 
+def hacer_meso():
+    # --- Mesoamérica: Sol pentatónico (escala propia), la flauta de barro con la melodía, el tunkul (tambor de tronco con
+    # dos lengüetas) que lleva el bajo y los acordes en marimba de madera, y la sonaja y el caparazón de tortuga de
+    # percusión. Ocho compases de melodía propia. Con su propio azar, para no mover el de los temas que van después.
+    with A.azar_propio('musica_meso'):
+        T = -2; pz = 0.42
+        ac = compases([0, 7, 12], [-3, 2, 9], [-5, 2, 7], [0, 7, 12], [5, 9, 12], [2, 7, 9], [-5, 2, 7], [0, 7, 12])
+        mel = frase(0, "12:1 14:1 17:2 | 14:1 12:1 9:2 | 7:1 9:1 12:1 14:1 | 12:4 | 17:1 19:1 21:2 | 19:1 17:1 14:2 | 12:1 9:1 7:1 9:1 | 12:4")
+        sonaja = lambda: mezclar(*[(i * 0.04, filtro(ruido(0.05), 'banda', (2200, 6500)) * env(int(0.05 * SR), 0.001, 0.025, 5), 0.6 - i * 0.12) for i in range(4)])
+        tortuga = lambda: mezclar((0, clic(0.03, (900, 3200)), 0.8), (0, tambor(hz(T - 7), 0.12, 0.3), 0.5))
+        perc = cada(32, lambda: tambor(hz(T - 24), 0.3, 0.1), 0.45, paso=2) + cada(32, sonaja, 0.2, desde=1, paso=2) + cada(32, tortuga, 0.18, desde=1.5, paso=4)
+        kw = dict(inst_mel=flauta, inst_ac=lambda f, d: marimba(f, 0.9), arpegio=True, oct_ac=0, oct_mel=12, perc=perc, g_mel=0.4, g_ac=0.3,
+                  legato=0.92, bajo=lambda f, d: mezclar((0, marimba(f, min(d, 1.2)), 0.8), (0, tambor(f, 0.3, 0.05), 0.4)), g_bajo=0.22)
+        P['meso'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: marimba(f, d), [12, 14, 17, 19, 24], 0.1, 0.8))
+        ARGS['meso'] = (T, pz, ac, mel, kw)
+
 def hacer_ruinas():
     # --- Ciudad verde: Re mixolidio. La flauta en una plaza vacía sobre una kalimba arpegiada; de fondo, gotas que caen del
     # techo roto, el viento entre los edificios y el golpe hueco del hormigón cada dos compases. Con su propio azar.
@@ -550,6 +566,7 @@ if __name__ == '__main__':
     hacer_antiguas()
     hacer_neon()
     hacer_egipto()
+    hacer_meso()
     hacer_ruinas()
     hacer_arcano()
     hacer_enriquecidos()

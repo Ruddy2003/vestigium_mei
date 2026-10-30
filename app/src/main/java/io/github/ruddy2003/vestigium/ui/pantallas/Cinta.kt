@@ -125,6 +125,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.ABISMO -> PielCinta(7f, false, RellenoCinta.PUNTOS, floatArrayOf(0.1f, 3.5f), StrokeCap.Round)
     // Azulejo en chaflán con su punteado.
     TemaId.ANDALUS -> PielCinta(2.5f, true, RellenoCinta.PUNTOS, floatArrayOf(3f, 2f), StrokeCap.Square)
+    // Bloques de glifo redondeados, partidos en segmentos como las cifras de una cuenta, con su línea de puntos.
+    TemaId.MESO -> PielCinta(5f, false, RellenoCinta.SEGMENTOS, floatArrayOf(0.1f, 3f), StrokeCap.Round)
     // Fieltro cosido.
     TemaId.MONGOL -> PielCinta(4f, false, RellenoCinta.PUNTADA, floatArrayOf(7f, 3f), StrokeCap.Round)
     // Sombreado a pluma.

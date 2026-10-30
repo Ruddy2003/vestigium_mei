@@ -249,6 +249,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.ESPACIO -> RoundedCornerShape(3.dp)
     TemaId.ABISMO -> RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomStart = 9.dp, bottomEnd = 9.dp)
     TemaId.ANDALUS -> RectangleShape
+    TemaId.MESO -> RoundedCornerShape(6.dp)          // el bloque de un glifo
     TemaId.MONGOL -> RoundedCornerShape(8.dp)
     TemaId.RENACIMIENTO -> RectangleShape
     TemaId.PIRATA -> CutCornerShape(topStart = 5.dp, bottomEnd = 5.dp)
@@ -489,6 +490,12 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
             contorno(if (hoy) oro else linea, if (hoy) 1.3f else 0.6f)
             drawRect(oro.copy(alpha = 0.5f), Offset(1.8f * s, 1.8f * s), Size(w - 3.6f * s, h - 3.6f * s), style = Stroke(0.5f * s))
             listOf(Offset(w / 2, 0f), Offset(w / 2, h)).forEach { drawPath(figPoligono(it, 2.2f * s, 4, -90f), if (hoy) oro else linea) }
+            if (sellado) sello(oro)
+        }
+        // El bloque de glifo con su renglón rojo arriba y, el día de hoy, el borde en cinabrio.
+        TemaId.MESO -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.4f else 0.6f)
+            drawLine(acento.copy(alpha = if (hoy) 0.8f else 0.35f), Offset(3f * s, 2.6f * s), Offset(w - 3f * s, 2.6f * s), 0.9f * s)
             if (sellado) sello(oro)
         }
         // Fieltro: la franja de cielo arriba y la puntada por dentro.

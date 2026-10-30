@@ -110,6 +110,8 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El casco: arriba casi recto, abajo muy redondeado, como la esfera de la tripulación.
     TemaId.ABISMO -> MarcoRecuadro(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomStart = 26.dp, bottomEnd = 26.dp), 12.dp)
     TemaId.ANDALUS -> MarcoRecuadro(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp, bottomStart = 4.dp, bottomEnd = 4.dp), 14.dp)
+    // La bóveda en saledizo: los lados de arriba suben en diagonal.
+    TemaId.MESO -> MarcoRecuadro(CutCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 0.dp, bottomEnd = 0.dp), 14.dp)
     TemaId.MONGOL -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 6.dp, bottomEnd = 6.dp), 12.dp)
     TemaId.RENACIMIENTO -> MarcoRecuadro(RectangleShape, 10.dp)
     TemaId.PIRATA -> MarcoRecuadro(CutCornerShape(7.dp), 12.dp)
@@ -285,6 +287,8 @@ private fun DrawScope.adorno(tema: TemaId, e: ColorScheme) {
         }
         // Estrella de ocho puntas de los alicatados, bajo el arco.
         TemaId.ANDALUS -> drawPath(estrellaRel(Offset(w / 2, 9 * u), 8, 4.5f * u, 3.45f * u), c.copy(alpha = 0.55f), style = Stroke(0.9f * u))
+        // Una greca escalonada bajo el dintel.
+        TemaId.MESO -> grecaEscalonada(w * 0.3f, w * 0.7f, 4 * u, 12 * u, c.copy(alpha = 0.55f), 0.9f * u)
         // Cuernos de carnero en espiral en las esquinas de arriba, como en el fieltro bordado.
         TemaId.MONGOL -> listOf(7 * u to 1f, w - 7 * u to -1f).forEach { (x, d) ->
             drawPath(espiralRel(Offset(x, 7 * u), 4 * u, d), c.copy(alpha = 0.6f), style = Stroke(u, cap = StrokeCap.Round))
@@ -586,6 +590,12 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
         TemaId.ANDALUS -> {
             drawPath(onda(6 * u, 1f), col, style = Stroke(grosor * 0.75f, pathEffect = punteado))
             drawPath(onda(6 * u, 1f, PI.toFloat()), col, style = Stroke(grosor * 0.75f, pathEffect = punteado))
+        }
+        // Un sartal de cuentas de jade en su cordel: más gruesas cuanto más fuerte es el lazo.
+        TemaId.MESO -> {
+            drawLine(col.copy(alpha = col.alpha * 0.6f), Offset(0f, y), Offset(w, y), 0.9f * u, pathEffect = punteado)
+            var x = 5 * u; val r = grosor * 0.62f + u
+            while (x < w - 3 * u) { drawCircle(col, r, Offset(x, y)); drawCircle(fondo.copy(alpha = 0.45f), r * 0.3f, Offset(x - r * 0.3f, y - r * 0.3f)); x += r * 2.6f + 2 * u }
         }
         // Cuerda trenzada de crin.
         TemaId.MONGOL -> {

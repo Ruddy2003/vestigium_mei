@@ -126,6 +126,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     ESPACIO("espacio", "Espacio", "Estrellas, nebulosas y la sala de control. Fecha en día juliano, como en los observatorios.", Epoca.FUTURO),
     ABISMO("abismo", "Abismo", "La bajada de un batiscafo: de día, el azul de la zona iluminada; de noche, la zona abisal y su luz viva. Sonar, medusas y la racha en metros de profundidad.", Epoca.CONTEMPORANEA),
     ANDALUS("andalus", "Al-Ándalus", "Yeserías, azulejos de lazo y oro de la Alhambra. Títulos en árabe y fecha del calendario hégira.", Epoca.EDAD_MEDIA),
+    MESO("meso", "Mesoamérica", "Un códice pintado en papel amate: jade, cinabrio y azul maya. El glifo del día, la cuenta larga, el tzolk'in y el haab, y números de puntos y barras.", Epoca.ANTIGUEDAD),
     MONGOL("mongol", "Mongol", "El Cielo Azul Eterno, fieltro y oro de la estepa. Títulos en mongol y el año del animal.", Epoca.EDAD_MEDIA),
     RENACIMIENTO("renacimiento", "Renacimiento", "Los cuadernos de Leonardo: tinta sepia, sanguina y trazos de construcción. Títulos en italiano.", Epoca.EDAD_MODERNA),
     PIRATA("pirata", "Pirata", "Carta náutica, brea, lona y latón, en sepia sobre pergamino húmedo. Cada día es una singladura de la bitácora y las horas se cuentan por campanadas.", Epoca.EDAD_MODERNA),
@@ -372,6 +373,7 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.ESPACIO -> if (oscuro) espacioOscuro else espacioClaro
     TemaId.ABISMO -> if (oscuro) abismoOscuro else abismoClaro
     TemaId.ANDALUS -> if (oscuro) andalusOscuro else andalusClaro
+    TemaId.MESO -> if (oscuro) mesoOscuro else mesoClaro
     TemaId.MONGOL -> if (oscuro) mongolOscuro else mongolClaro
     TemaId.RENACIMIENTO -> if (oscuro) renacimientoOscuro else renacimientoClaro
     TemaId.PIRATA -> if (oscuro) pirataOscuro else pirataClaro
@@ -404,6 +406,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.ESPACIO -> if (oscuro) tipoEspacioOscuro else tipoEspacio
     TemaId.ABISMO -> if (oscuro) tipoAbismoOscuro else tipoAbismo
     TemaId.ANDALUS -> tipoAndalus
+    TemaId.MESO -> tipoMeso
     TemaId.MONGOL -> tipoMongol
     TemaId.RENACIMIENTO -> tipoRenacimiento
     TemaId.PIRATA -> tipoPirata
@@ -441,6 +444,7 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.ESPACIO -> 48f to 2f         // Orbitron, ancha y gruesa
     TemaId.ABISMO -> 70f to 0.5f        // Barlow Condensed, angosta como un rótulo de instrumento
     TemaId.ANDALUS -> 60f to 0.5f       // Kufi
+    TemaId.MESO -> 64f to 1.5f          // Alegreya Sans SC: versalitas abiertas, como los glifos pintados
     TemaId.MONGOL -> 62f to 1f          // Filosofo
     TemaId.RENACIMIENTO -> 88f to 0f    // Italianno, caligráfica y chica
     TemaId.PIRATA -> 72f to 1f          // Corsario (Pirata One), letra negra angosta
@@ -479,6 +483,7 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.ESPACIO -> Esquinas(16, Esquina.REDONDA)
     TemaId.ABISMO -> Esquinas(15, Esquina.REDONDA)         // la escotilla del batiscafo
     TemaId.ANDALUS -> Esquinas(12, Esquina.ARCO)           // el arco de herradura
+    TemaId.MESO -> Esquinas(9, Esquina.CORTADA)            // la bóveda maya en saledizo, de lados en diagonal
     TemaId.MONGOL -> Esquinas(9, Esquina.REDONDA)          // la yurta
     TemaId.RENACIMIENTO -> Esquinas(3, Esquina.HOJA)       // la página del cuaderno
     TemaId.PIRATA -> Esquinas(5, Esquina.CORTADA)          // el cofre con cantoneras
@@ -711,6 +716,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ESPACIO -> "ÓRBITA"
         TemaId.ABISMO -> "COTA"
         TemaId.ANDALUS -> "النهار"
+        TemaId.MESO -> "K'in"
         TemaId.MONGOL -> "ӨДӨР"
         TemaId.RENACIMIENTO -> "Giornata"
         TemaId.PIRATA -> "Bitácora"
@@ -742,6 +748,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ESPACIO -> "JD 2461331"
         TemaId.ABISMO -> "−290 m · 30 bar"
         TemaId.ANDALUS -> "1448 H"
+        TemaId.MESO -> "13.0.14.0.8 · 8 Lamat"
         TemaId.MONGOL -> "Морин жил"
         TemaId.RENACIMIENTO -> "addì 17 d'ottobre"
         TemaId.PIRATA -> "singladura 290 · 8bre"
@@ -774,6 +781,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ESPACIO -> 18 to 14
         TemaId.ABISMO -> 20 to 12
         TemaId.ANDALUS -> 22 to 10
+        TemaId.MESO -> 20 to 12
         TemaId.MONGOL -> 14 to 18
         TemaId.RENACIMIENTO -> 16 to 16
         TemaId.PIRATA -> 12 to 20
@@ -806,6 +814,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.ESPACIO -> 10
         TemaId.ABISMO -> 11
         TemaId.ANDALUS -> 12
+        TemaId.MESO -> 11
         TemaId.MONGOL -> 10
         TemaId.RENACIMIENTO -> 16
         TemaId.PIRATA -> 12
@@ -959,6 +968,15 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         moveTo(0f, s.height); lineTo(0f, a); quadraticTo(0f, 0f, s.width / 2, 0f); quadraticTo(s.width, 0f, s.width, a)
         lineTo(s.width, s.height); close()
     }
+    // Pirámide escalonada: el borde de arriba sube en tres gradas por cada lado, como el basamento de un templo.
+    TemaId.MESO -> GenericShape { s, _ ->
+        val g = s.height * 0.055f; val p = s.width * 0.05f
+        moveTo(0f, s.height); lineTo(0f, g * 3)
+        lineTo(p, g * 3); lineTo(p, g * 2); lineTo(p * 2, g * 2); lineTo(p * 2, g); lineTo(p * 3, g); lineTo(p * 3, 0f)
+        lineTo(s.width - p * 3, 0f); lineTo(s.width - p * 3, g); lineTo(s.width - p * 2, g); lineTo(s.width - p * 2, g * 2)
+        lineTo(s.width - p, g * 2); lineTo(s.width - p, g * 3); lineTo(s.width, g * 3)
+        lineTo(s.width, s.height); close()
+    }
     // Fieltro con las esquinas de abajo cortadas.
     TemaId.MONGOL -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 12.dp, bottomStart = 12.dp)
     // Hoja vista en perspectiva: un trapecio.
@@ -1071,6 +1089,13 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         }
         // Estrella de ocho puntas.
         TemaId.ANDALUS -> drawPath(poligono(8, -90f, r * 0.765f), c)
+        // Bloque de glifo: el cuadro redondeado con un numeral de punto y barra.
+        TemaId.MESO -> {
+            drawRoundRect(c, cornerRadius = CornerRadius(w * 0.22f))
+            drawCircle(fondo.copy(alpha = 0.75f), w * 0.1f, Offset(w * 0.34f, h * 0.36f))
+            drawCircle(fondo.copy(alpha = 0.75f), w * 0.1f, Offset(w * 0.66f, h * 0.36f))
+            drawRect(fondo.copy(alpha = 0.75f), Offset(w * 0.2f, h * 0.58f), Size(w * 0.6f, h * 0.14f))
+        }
         // Yurta.
         TemaId.MONGOL -> drawPath(Path().apply { moveTo(0f, h); lineTo(0f, h * 0.5f); cubicTo(w * 0.1f, h * 0.05f, w * 0.9f, h * 0.05f, w, h * 0.5f); lineTo(w, h); close() }, c)
         // Triángulo de construcción.

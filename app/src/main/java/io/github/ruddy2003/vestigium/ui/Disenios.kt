@@ -34,6 +34,10 @@ object LetraExtra {
     val atkinson = FontFamily(Font(R.font.atkinson_regular, FontWeight.Normal), Font(R.font.atkinson_regular, FontWeight.Medium), Font(R.font.atkinson_semibold, FontWeight.SemiBold), Font(R.font.atkinson_semibold, FontWeight.Bold))
     val kufi = FontFamily(Font(R.font.kufi_medium, FontWeight.Normal), Font(R.font.kufi_medium, FontWeight.Medium), Font(R.font.kufi_bold, FontWeight.Bold), Font(R.font.kufi_bold, FontWeight.SemiBold))
     val amiri = FontFamily(Font(R.font.amiri_regular, FontWeight.Normal))
+    /** Alegreya Sans SC, de Huerta Tipográfica: las versalitas de los títulos y rótulos de Mesoamérica, con los numerales mayas dentro. */
+    val codice = FontFamily(Font(R.font.alegreya_sc_medium, FontWeight.Normal), Font(R.font.alegreya_sc_medium, FontWeight.Medium), Font(R.font.alegreya_sc_bold, FontWeight.SemiBold), Font(R.font.alegreya_sc_bold, FontWeight.Bold))
+    /** Alegreya Sans: la letra de leer de Mesoamérica, humanista y abierta, también con los numerales mayas. */
+    val amate = FontFamily(Font(R.font.alegreya_sans_regular, FontWeight.Normal), Font(R.font.alegreya_sans_regular, FontWeight.Medium), Font(R.font.alegreya_sans_bold, FontWeight.SemiBold), Font(R.font.alegreya_sans_bold, FontWeight.Bold))
     val filosofo = FontFamily(Font(R.font.philosopher_regular, FontWeight.Normal), Font(R.font.philosopher_bold, FontWeight.Bold), Font(R.font.philosopher_bold, FontWeight.SemiBold))
     val italianno = FontFamily(Font(R.font.italianno, FontWeight.Normal))
     val cormorant = FontFamily(Font(R.font.cormorant_regular, FontWeight.Normal), Font(R.font.cormorant_medium, FontWeight.Medium), Font(R.font.cormorant_medium, FontWeight.SemiBold))
@@ -321,6 +325,16 @@ internal val andalusOscuro = esquema(true, 0xFF0B1716, 0xFF112220, 0xFF18302D, 0
 internal val tipoAndalus = tipografia(LetraExtra.kufi, FontWeight.Medium, 1.06f, 0.5f, LetraExtra.amiri, 1.08f, LetraExtra.amiri, 1.1f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
+//  Mesoamérica: de día, un códice pintado en papel amate con estuco, cinabrio, azul maya y jade; de noche, la obsidiana
+//  y el humo de copal del templo, con el azul maya encendido.
+// ---------------------------------------------------------------------
+internal val mesoClaro = esquema(false, 0xFFE9D8B6, 0xFFF4E8CF, 0xFFDEC9A2, 0xFFB99A6B, 0xFF2A1810, 0xFF6B5238,
+    0xFFA3301E, 0xFFFFF4E6, 0xFFF2D3C6, 0xFF2A1810, 0xFF2C7F9C, 0xFFCFE6EC, 0xFF2F7D57, 0xFF8E1B12)
+internal val mesoOscuro = esquema(true, 0xFF0F1314, 0xFF161C1D, 0xFF1F2829, 0xFF374446, 0xFFEFE2C6, 0xFFB0A58D,
+    0xFF63C5DD, 0xFF04222B, 0xFF143640, 0xFFEFE2C6, 0xFFE8674D, 0xFF45190F, 0xFF6FCB8F, 0xFFFF8A7A)
+internal val tipoMeso = tipografia(LetraExtra.codice, FontWeight.Medium, 1.08f, 0.7f, LetraExtra.amate, 1.06f, LetraExtra.codice, 1.04f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
 //  Mongol: el Cielo Azul Eterno, fieltro blanco, rojo y oro; de noche, la estepa bajo las estrellas.
 // ---------------------------------------------------------------------
 internal val mongolClaro = esquema(false, 0xFFF1EDE3, 0xFFFAF7F0, 0xFFE6DFCF, 0xFFCCC0A6, 0xFF18202E, 0xFF555D6D,
@@ -393,6 +407,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.ESPACIO -> if (oscuro) listOf(0xFFFF8A65, 0xFF121A31, 0xFF8AB4FF, 0xFFC59BFF) else listOf(0xFFE8601C, 0xFFE1E6EF, 0xFF1B3A8C, 0xFF6B4FD6)
     TemaId.ABISMO -> if (oscuro) listOf(0xFFE29BFF, 0xFF0A1A26, 0xFF5CF2C6, 0xFF3FA9FF) else listOf(0xFFC0563F, 0xFFD3E7EF, 0xFF0A5C8C, 0xFF0F8A86)
     TemaId.ANDALUS -> if (oscuro) listOf(0xFFE07A5F, 0xFF18302D, 0xFF4FC1A6, 0xFFE0B65A) else listOf(0xFFB5432A, 0xFFE9DEC6, 0xFF1E6B5C, 0xFF2A4F9E)
+    TemaId.MESO -> if (oscuro) listOf(0xFFE8674D, 0xFF1F2829, 0xFF63C5DD, 0xFF6FCB8F) else listOf(0xFFA3301E, 0xFFDEC9A2, 0xFF2C7F9C, 0xFF2F7D57)
     TemaId.MONGOL -> if (oscuro) listOf(0xFFFF7A59, 0xFF18263F, 0xFF6FB1FF, 0xFFF2C14E) else listOf(0xFFC2412D, 0xFFE6DFCF, 0xFF1F5FA8, 0xFFC48A1E)
     TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFFE08A5E, 0xFF302318, 0xFF9EC0E0, 0xFFD9B566) else listOf(0xFF8C3B1E, 0xFFE6D6B0, 0xFF2F4F6F, 0xFF9C7A2E)
     TemaId.PIRATA -> if (oscuro) listOf(0xFFD6AA4C, 0xFF25201A, 0xFF7DBFB6, 0xFFE47B4E) else listOf(0xFF1E5157, 0xFFD9CBA6, 0xFF85621A, 0xFF9A2A1C)
@@ -426,6 +441,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.ESPACIO -> if (oscuro) listOf(0xFF8AB4FF, 0xFFC59BFF, 0xFFFFB86B) else listOf(0xFF1B3A8C, 0xFF6B4FD6, 0xFFE8601C)
     TemaId.ABISMO -> if (oscuro) listOf(0xFF3FA9FF, 0xFF5CF2C6, 0xFFE29BFF) else listOf(0xFF0F8A86, 0xFF0A5C8C, 0xFFC0563F)
     TemaId.ANDALUS -> if (oscuro) listOf(0xFF4FC1A6, 0xFFE0B65A, 0xFFE07A5F) else listOf(0xFF1E6B5C, 0xFF2A4F9E, 0xFFB5432A)
+    TemaId.MESO -> if (oscuro) listOf(0xFF63C5DD, 0xFF6FCB8F, 0xFFE8674D) else listOf(0xFF2C7F9C, 0xFF2F7D57, 0xFFA3301E)
     TemaId.MONGOL -> if (oscuro) listOf(0xFF6FB1FF, 0xFFF2C14E, 0xFFFF7A59) else listOf(0xFF1F5FA8, 0xFFC48A1E, 0xFFC2412D)
     TemaId.RENACIMIENTO -> if (oscuro) listOf(0xFF9EC0E0, 0xFFD9B566, 0xFFE08A5E) else listOf(0xFF2F4F6F, 0xFF9C7A2E, 0xFF8C3B1E)
     TemaId.PIRATA -> if (oscuro) listOf(0xFF7DBFB6, 0xFFD6AA4C, 0xFFE47B4E) else listOf(0xFF1E5157, 0xFF85621A, 0xFF9A2A1C)

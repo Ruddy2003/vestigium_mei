@@ -67,6 +67,7 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.Estilo
+import io.github.ruddy2003.vestigium.ui.numeralMaya
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Fiesta
@@ -332,6 +333,13 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawPath(a1, relleno); drawPath(a2, relleno)
             drawPath(a1, canto, style = Stroke(g * 0.7f)); drawPath(a2, canto, style = Stroke(g * 0.7f))
             drawCircle(luz, r * 0.55f, c, style = Stroke(r * 0.05f))
+        }
+        // Un pectoral de jade con la forma de un bloque de glifo, el trece maya grabado y el pie de tres lóbulos.
+        TemaId.MESO -> {
+            forma(Path().apply { addRoundRect(RoundRect(c.x - r * 0.86f, c.y - r * 0.8f, c.x + r * 0.86f, c.y + r * 0.62f, CornerRadius(r * 0.36f))) })
+            for (k in -1..1) forma(disco(Offset(c.x + k * r * 0.36f, c.y + r * 0.8f), r * 0.17f))
+            numeralMaya(13, Offset(c.x, c.y - r * 0.08f), r * 0.86f, sombra)
+            drawArc(luz, 200f, 60f, false, Offset(c.x - r * 0.7f, c.y - r * 0.66f), Size(r * 1.4f, r * 1.2f), style = Stroke(r * 0.06f))
         }
         // Paiza: la tablilla de paso con su agujero para colgarla.
         TemaId.MONGOL -> {

@@ -256,6 +256,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.ABISMO -> BloqueoFicha(TextosBloqueo("VESTIGIUM MEI", "≈ escotilla cerrada a presión", "IGUALAR PRESIÓN Y ABRIR",
             listOf("ESCOTILLA", "ESTANCA", "PRESIÓN", "NIVELADA", "BUZO", "SIN IDENTIFICAR")), reintentar) { cs -> bloqueoOjoDeBuey(cs) }
         TemaId.ANDALUS -> BloqueoMarco(TextosBloqueo("آثاري", "❋ El cofre de los días está cerrado con llave.", "Abrir el cofre"), arriba = 30, reintentar = reintentar) { cs -> bloqueoHerradura(cs) }
+        // La puerta del templo con su bóveda en saledizo: el códice queda adentro, atado.
+        TemaId.MESO -> BloqueoMarco(TextosBloqueo("Códice de mis días", "⁘ El códice está atado y guardado en el templo.", "Desatar el códice"), arriba = 40, reintentar = reintentar) { cs -> bloqueoBoveda(cs) }
         // Bajo el cielo: el sello grande, como el sol sobre la estepa, y el título debajo.
         TemaId.MONGOL -> BloqueoCentrado(TextosBloqueo("МИНИЙ МӨР", "◆ дэвтэр битүүмжлэгдсэн · tu diario está sellado", "НЭЭХ"), tituloArriba = false, sello = 190, reintentar = reintentar)
         TemaId.RENACIMIENTO -> BloqueoCuaderno(TextosBloqueo("Vestigium mei", "❧ Sólo la mano de su autor lo abre.", "Aprire",
@@ -729,6 +731,23 @@ private fun DrawScope.bloqueoHerradura(cs: ColorScheme) {
     drawPath(p, cs.primary, style = Stroke(2f * u))
 }
 
+/** La puerta de un templo maya: la bóveda en saledizo (gradas que se cierran arriba), el dintel con bloques de glifos. */
+private fun DrawScope.bloqueoBoveda(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height
+    drawRect(cs.tertiary, Offset.Zero, size, style = Stroke(1.2f * u))
+    val m = 12 * u; val g = 10 * u
+    val p = Path().apply {
+        moveTo(m, h); lineTo(m, m + 5 * g)
+        for (k in 0 until 4) { lineTo(m + (k + 1) * g, m + (5 - k) * g); lineTo(m + (k + 1) * g, m + (4 - k) * g) }
+        lineTo(w - m - 4 * g, m + g)
+        for (k in 4 downTo 1) { lineTo(w - m - k * g, m + (6 - k) * g); lineTo(w - m - (k - 1) * g, m + (6 - k) * g) }
+        lineTo(w - m, h)
+    }
+    drawPath(p, cs.primary, style = Stroke(2f * u))
+    var x = m + 5 * g
+    while (x + 2 * g < w - m - 4 * g) { drawRoundRect(cs.primary.copy(alpha = 0.5f), Offset(x, m - 4 * u), Size(1.6f * g, 1.6f * g), CornerRadius(3 * u), style = Stroke(u)); x += 2 * g }
+}
+
 /** Puerta de piedra: esquinas cortadas, doble línea, gemas en las esquinas y runas en los dinteles. */
 private fun DrawScope.bloqueoRunico(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height
@@ -885,6 +904,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.ESPACIO -> false
     TemaId.ABISMO -> true            // el agua llena la pestaña activa
     TemaId.ANDALUS -> true
+    TemaId.MESO -> true
     TemaId.MONGOL -> true
     TemaId.RENACIMIENTO -> false
     TemaId.PIRATA -> false           // el gallardete va debajo del ícono
@@ -918,6 +938,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.ESPACIO -> true
     TemaId.ABISMO -> true
     TemaId.ANDALUS -> true
+    TemaId.MESO -> true
     TemaId.MONGOL -> true
     TemaId.RENACIMIENTO -> false
     TemaId.PIRATA -> false
@@ -1107,6 +1128,11 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         }
         // Estrella de ocho puntas (dos cuadrados cruzados).
         TemaId.ANDALUS -> drawPath(barraPoligono(cx, cy, 16 * u, 8, -90f, 16 * u * 0.765f), c)
+        // El cartucho de un glifo de día, con su pie de tres lóbulos.
+        TemaId.MESO -> {
+            drawRoundRect(c, Offset(cx - 15 * u, cy - 13 * u), Size(30 * u, 21 * u), CornerRadius(7 * u))
+            for (k in -1..1) drawCircle(c, 3.4f * u, Offset(cx + k * 7 * u, cy + 10 * u))
+        }
         // Yurta de fieltro con el anillo de la corona.
         TemaId.MONGOL -> {
             drawPath(Path().apply {
@@ -1316,6 +1342,12 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawPath(barraPoligono(cx, cy, 27 * u, 8, -90f, 27 * u * 0.765f), c)
             drawPath(barraPoligono(cx, cy, 17 * u, 8, -67.5f), sobre.copy(alpha = 0.35f), style = Stroke(0.8f * u))
         }
+        // La cruz escalonada de los cuatro rumbos, con el centro marcado.
+        TemaId.MESO -> {
+            drawRect(c, Offset(cx - 9 * u, cy - 26 * u), Size(18 * u, 52 * u)); drawRect(c, Offset(cx - 26 * u, cy - 9 * u), Size(52 * u, 18 * u))
+            drawRect(c, Offset(cx - 18 * u, cy - 18 * u), Size(36 * u, 36 * u))
+            drawCircle(sobre.copy(alpha = 0.4f), 8 * u, Offset(cx, cy), style = Stroke(0.9f * u))
+        }
         // Yurta con su anillo de corona y la puerta.
         TemaId.MONGOL -> {
             drawPath(Path().apply { moveTo(4 * u, h - 3 * u); lineTo(4 * u, 26 * u); cubicTo(8 * u, 6 * u, w - 8 * u, 6 * u, w - 4 * u, 26 * u); lineTo(w - 4 * u, h - 3 * u); close() }, c)
@@ -1457,6 +1489,15 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         TemaId.ANDALUS -> listOf(0f, 4 * u).forEach { fase ->
             val p = Path().apply { var x = -fase; var arriba = true; moveTo(x, 0.8f * u); while (x < w) { x += 4 * u; arriba = !arriba; lineTo(x, (if (arriba) 0.8f else 4.2f) * u) } }
             drawPath(p, acento, style = Stroke(0.7f * u))
+        }
+        // Una cuenta de puntos y barras a lo largo: cuatro puntos y una barra, y otra vez.
+        TemaId.MESO -> {
+            var x = 2 * u; var k = 0
+            while (x < w) {
+                if (k % 5 == 4) { drawRect(acento, Offset(x, 1.6f * u), Size(9 * u, 1.8f * u)); x += 12 * u }
+                else { drawCircle(acento, 1.1f * u, Offset(x + 1.1f * u, 2.5f * u)); x += 5 * u }
+                k++
+            }
         }
         // Alhan: onda cuadrada de fieltro.
         TemaId.MONGOL -> {
@@ -1761,6 +1802,8 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
         TemaId.ABISMO -> (slideInVertically(t(420, frena)) { -it / 6 } + fadeIn(t(380))) togetherWith (slideOutVertically(t(300)) { it / 8 } + fadeOut(t(260)))
         // Puerta de arco que se abre desde el centro hacia los lados.
         TemaId.ANDALUS -> (androidx.compose.animation.expandHorizontally(t(360), expandFrom = Alignment.CenterHorizontally) { it / 3 } + fadeIn(t(300))) togetherWith fadeOut(t(180))
+        // Subir la escalinata: la nueva pantalla sube desde abajo, grada a grada; la anterior se queda arriba y se apaga.
+        TemaId.MESO -> (slideInVertically(t(380, frena)) { it / 5 } + fadeIn(t(320))) togetherWith (slideOutVertically(t(240)) { -it / 12 } + fadeOut(t(200)))
         // Jinete de la estepa: empuja a la anterior; las dos corren juntas de lado.
         TemaId.MONGOL -> (slideInHorizontally(t(260, frena)) { dir * it }) togetherWith (slideOutHorizontally(t(260, frena)) { -dir * it })
         // Hoja de cuaderno que se levanta por su esquina de abajo.

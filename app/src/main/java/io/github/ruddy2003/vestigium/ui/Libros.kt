@@ -128,6 +128,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.GOTICO -> Soporte.LIBRO
     TemaId.ARCANO -> Soporte.LIBRO
     TemaId.ANDALUS -> Soporte.LIBRO
+    TemaId.MESO -> Soporte.LIBRO
     TemaId.RENACIMIENTO -> Soporte.LIBRO
     TemaId.PIRATA -> Soporte.LIBRO
     TemaId.REVOLUCION -> Soporte.LIBRO
@@ -168,6 +169,8 @@ fun materia(t: TemaId): Materia = when (t) {
     // Tela verde gastada, latón oxidado, lacre oscuro, papel de libreta barata y tinta verde-negra; el bramante de extra.
     TemaId.ARCANO -> Materia(c(0xFF2E4A3E), c(0xFF17271F), c(0xFF4A6B5C), c(0xFFB59A5E), c(0xFF5A2A22), c(0xFFE8DDC0), c(0xFF1E3329), extra = c(0xFF8A7A58))
     TemaId.ANDALUS -> Materia(c(0xFF7A3B1E), c(0xFF45200F), c(0xFF9C5530), c(0xFFD9B25B), c(0xFF1E6B5C), c(0xFFF3E7CC), c(0xFF2A1A12), extra = c(0xFF1E6B5C))
+    // Tapas de madera forradas de piel de jaguar, cinabrio, jade, el estuco de las páginas y el azul maya de la fecha.
+    TemaId.MESO -> Materia(c(0xFFB9803A), c(0xFF6E4520), c(0xFFD9A65C), c(0xFFA3301E), c(0xFF2F7D57), c(0xFFF2E8D2), c(0xFF2A1810), extra = c(0xFF2C7F9C))
     TemaId.RENACIMIENTO -> Materia(c(0xFF9A7A50), c(0xFF5E462B), c(0xFFB89466), c(0xFF8C3B1E), c(0xFF3A2614), c(0xFFF0E4C6), c(0xFF3A2614), extra = c(0xFF8C3B1E))
     // Cuero ennegrecido de brea, latón, cabo de cáñamo y pergamino húmedo; la fecha en el rojo de la bandera.
     TemaId.PIRATA -> Materia(c(0xFF4A3424), c(0xFF2A1C12), c(0xFF6B4E36), c(0xFFC9A04A), c(0xFFB59A62), c(0xFFE6DCBA), c(0xFF2A1C0F), extra = c(0xFF9A2A1C))
@@ -254,6 +257,8 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     TemaId.ABISMO -> NocheTema(c(0xFF020A12), c(0xFF5CF2C6), 0.8f, 0.9f, c(0xFFD6F0F2))
     // Las lámparas de la Alhambra en el patio.
     TemaId.ANDALUS -> NocheTema(c(0xFF0A1A1E), c(0xFFF2D27A), 0.63f, 0.81f, c(0xFFF6E8C2))
+    // La noche de obsidiana en el templo, con la brasa del copal.
+    TemaId.MESO -> NocheTema(c(0xFF0C1418), c(0xFFF0B062), 0.66f, 0.8f, c(0xFFF2E6CC))
     // La luz fría de las estrellas sobre la estepa.
     TemaId.MONGOL -> NocheTema(c(0xFF061433), c(0xFFBFD9FF), 0.76f, 0.89f, c(0xFFDCE8FA))
     // La vela del taller, en tono sanguina.
@@ -306,6 +311,7 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.GOTICO -> materiaTenida(m, n)
         TemaId.ARCANO -> materiaTenida(m, n)
         TemaId.ANDALUS -> materiaTenida(m, n)
+        TemaId.MESO -> materiaTenida(m, n)
         TemaId.MONGOL -> materiaTenida(m, n)
         TemaId.RENACIMIENTO -> materiaTenida(m, n)
         TemaId.PIRATA -> materiaTenida(m, n)
@@ -346,6 +352,7 @@ fun paginaNoche(t: TemaId): Pagina {
         TemaId.GOTICO -> paginaTenida(p, n)
         TemaId.ARCANO -> paginaTenida(p, n)
         TemaId.ANDALUS -> paginaTenida(p, n)
+        TemaId.MESO -> paginaTenida(p, n)
         TemaId.MONGOL -> paginaTenida(p, n)
         TemaId.RENACIMIENTO -> paginaTenida(p, n)
         TemaId.PIRATA -> paginaTenida(p, n)
@@ -381,6 +388,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "TRANSMISIÓN NOCTURNA"
     TemaId.ABISMO -> "SUEÑO DE LA LITERA"
     TemaId.ANDALUS -> "حلم · sueño"
+    TemaId.MESO -> "Lo que pintó la noche"
     TemaId.MONGOL -> "ЗҮҮД · sueño"
     TemaId.RENACIMIENTO -> "Sogno"
     TemaId.PIRATA -> "Lo soñado en el coy"
@@ -414,6 +422,7 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "FIN DE LA TRANSMISIÓN NOCTURNA"
     TemaId.ABISMO -> "Y SUBÍ A LA SUPERFICIE."
     TemaId.ANDALUS -> "واستيقظت · y desperté"
+    TemaId.MESO -> "Y salió K'in por el oriente."
     TemaId.MONGOL -> "Сэрлээ · desperté"
     TemaId.RENACIMIENTO -> "E mi destai."
     TemaId.PIRATA -> "Y sonó la campana del alba."
@@ -520,6 +529,8 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             // Plancton con luz propia: un punto y su halo, verde agua, violeta o azul.
             TemaId.ABISMO -> { val luz = listOf(col, Color(0xFF5CF2C6), Color(0xFFE29BFF))[i % 3]; drawCircle(luz.copy(alpha = col.alpha * 0.25f), r * 2.4f, o); drawCircle(luz.copy(alpha = col.alpha), r * 0.8f, o) }
             TemaId.ANDALUS -> estrellaPuntas(o, r * 1.8f, col, 6, 0.55f)
+            // Lamat, el signo de Venus: la estrella de cuatro puntas con un punto en cada hueco.
+            TemaId.MESO -> { estrellaPuntas(o, r * 1.7f, col, 4, 0.3f); for (k in 0 until 4) { val a = Math.toRadians(45.0 + 90.0 * k); drawCircle(col, r * 0.28f, Offset(o.x + r * 1.1f * cos(a).toFloat(), o.y + r * 1.1f * sin(a).toFloat())) } }
             TemaId.MONGOL -> drawCircle(col, r * 1.2f, o, style = Stroke(0.9f))
             TemaId.RENACIMIENTO -> { val l = r * 1.3f; drawLine(col, o + Offset(-l, -l), o + Offset(l, l), 0.9f); drawLine(col, o + Offset(-l, l), o + Offset(l, -l), 0.9f) }
             // Las estrellas de marear de las cartas: cuatro puntas, la vertical más larga.
@@ -689,6 +700,15 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
                 rotate(45f, e) { drawRect(n.luz, Offset(e.x - l, e.y - l), Size(2 * l, 2 * l)) }
             }
         }
+        // La luna y su conejo, el que lleva en brazos la diosa lunar en las vasijas pintadas.
+        TemaId.MESO -> {
+            mediaLuna(ce, r, luna)
+            if (!sola) {
+                val e = ce + Offset(-r * 1.9f, r * 0.55f); val l = r * 0.3f
+                drawOval(n.luz, Offset(e.x - l, e.y - l * 0.6f), Size(2 * l, l * 1.2f)); drawCircle(n.luz, l * 0.45f, e + Offset(l * 0.95f, -l * 0.5f))
+                drawOval(n.luz, Offset(e.x + l * 0.8f, e.y - l * 1.8f), Size(l * 0.28f, l * 1.1f)); drawOval(n.luz, Offset(e.x + l * 1.15f, e.y - l * 1.7f), Size(l * 0.28f, l * 1f))
+            }
+        }
         // El sol y la luna del soyombo: la media luna boca arriba con el disco encima.
         TemaId.MONGOL -> {
             rotate(-90f, ce + Offset(0f, r * 0.3f)) { mediaLuna(ce + Offset(0f, r * 0.3f), r * 0.8f, luna) }
@@ -776,6 +796,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "TRANSMITIR"
     TemaId.ABISMO -> "ANOTAR EN LA BITÁCORA"
     TemaId.ANDALUS -> "guardar · حفظ"
+    TemaId.MESO -> "PINTAR EN EL CÓDICE"
     TemaId.MONGOL -> "ТАМГА · sellar"
     TemaId.RENACIMIENTO -> "annotare"
     TemaId.PIRATA -> "ASENTAR LA SINGLADURA"
@@ -809,6 +830,7 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "FIN DE TRANSMISIÓN"
     TemaId.ABISMO -> "FIN DE LA INMERSIÓN"
     TemaId.ANDALUS -> "تمّ · Se acabó."
+    TemaId.MESO -> "Así quedó pintado."
     TemaId.MONGOL -> "Ингэж бичив · Así quedó escrito."
     TemaId.RENACIMIENTO -> "Finito."
     TemaId.PIRATA -> "Fin de la singladura."
@@ -841,6 +863,7 @@ private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "toca para abrir la bitácora de vuelo"
     TemaId.ABISMO -> "toca para abrir la bitácora del batiscafo"
     TemaId.ANDALUS -> "toca para soltar la solapa y abrir el cuaderno"
+    TemaId.MESO -> "toca para desatar el cordel y desplegar el códice"
     TemaId.MONGOL -> "toca para desenrollar el rollo de la estepa"
     TemaId.RENACIMIENTO -> "toca para desatar el cuaderno de notas"
     TemaId.PIRATA -> "toca para desatar el cabo de la bitácora"
@@ -874,6 +897,7 @@ private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "toca para transmitir el sueño"
     TemaId.ABISMO -> "toca para anotar el sueño de la litera"
     TemaId.ANDALUS -> "toca para escribir el sueño del patio"
+    TemaId.MESO -> "toca para pintar el sueño del petate"
     TemaId.MONGOL -> "toca para contar el sueño de la yurta"
     TemaId.RENACIMIENTO -> "toca para dibujar el sogno con palabras"
     TemaId.PIRATA -> "toca para contar lo que soñaste en el coy"
@@ -907,6 +931,7 @@ private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "SIN TRANSMISIONES EN ESTA FECHA."
     TemaId.ABISMO -> "SIN INMERSIÓN ESTE DÍA: EL SONAR NO DEVUELVE ECO."
     TemaId.ANDALUS -> "Página en blanco: nada escrito este día."
+    TemaId.MESO -> "Página sin pintar: nada en este día de la cuenta."
     TemaId.MONGOL -> "Хоосон · nada escrito este día."
     TemaId.RENACIMIENTO -> "Carta bianca: nada escrito este día."
     TemaId.PIRATA -> "Mar en calma: nada asentado en esta singladura."
@@ -940,6 +965,7 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "SIN TRANSMISIÓN NOCTURNA."
     TemaId.ABISMO -> "NINGÚN SUEÑO SUBIÓ A LA SUPERFICIE ESA NOCHE."
     TemaId.ANDALUS -> "Ningún sueño quedó escrito esa noche."
+    TemaId.MESO -> "Ningún sueño quedó pintado esa noche."
     TemaId.MONGOL -> "Зүүдгүй · no anotaste ningún sueño esa noche."
     TemaId.RENACIMIENTO -> "Nessun sogno: no anotaste nada esa noche."
     TemaId.PIRATA -> "Noche sin sueños en el coy: no anotaste nada."
@@ -973,6 +999,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.ESPACIO -> "ÉXITO — " to "FALLO — "
     TemaId.ABISMO -> "AGUAS CLARAS — " to "MAR DE FONDO — "
     TemaId.ANDALUS -> "Lo mejor · خير — " to "Lo peor · شرّ — "
+    TemaId.MESO -> "Día propicio — " to "Día nefasto — "
     TemaId.MONGOL -> "Сайн · lo bueno — " to "Муу · lo malo — "
     TemaId.RENACIMIENTO -> "Il meglio — " to "Il peggio — "
     TemaId.PIRATA -> "Viento a favor — " to "Mar gruesa — "
@@ -1006,6 +1033,7 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "BITÁCORA: ¿cómo fue la jornada a bordo?"
     TemaId.ABISMO -> "BITÁCORA: ¿qué pasó hoy por el ojo de buey?"
     TemaId.ANDALUS -> "Escribe lo que trajo el día…"
+    TemaId.MESO -> "Pinta lo que trajo este k'in…"
     TemaId.MONGOL -> "Өнөөдөр юу болсон бэ? ¿Qué pasó hoy en la estepa?"
     TemaId.RENACIMIENTO -> "Annota: ¿qué viste y pensaste hoy?"
     TemaId.PIRATA -> "Asienta la singladura: rumbo, viento y lo que pasó a bordo."
@@ -1039,6 +1067,7 @@ private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.ESPACIO -> "TRANSMISIÓN NOCTURNA: ¿qué soñaste?"
     TemaId.ABISMO -> "LITERA: ¿qué soñaste allá abajo?"
     TemaId.ANDALUS -> "¿Qué soñaste? Aunque sean fragmentos."
+    TemaId.MESO -> "¿Qué te mostró la noche? Aunque sean pedazos."
     TemaId.MONGOL -> "Ямар зүүд зүүдлэв? ¿Qué soñaste?"
     TemaId.RENACIMIENTO -> "Il sogno: ¿qué viste dormido?"
     TemaId.PIRATA -> "¿Qué soñaste mecido en el coy?"
@@ -1136,6 +1165,7 @@ private fun formaObjeto(t: TemaId, m: Materia, e: ColorScheme, noche: Boolean, f
         TemaId.GOTICO -> libro({ libroCerrado(m) { g -> tapaGotico(m, g) } }, LetraExtra.textura, 14f)
         TemaId.ARCANO -> libro({ libroCerrado(m) { g -> tapaArcano(m, g) } }, Letra.spectralCursiva, 14f)
         TemaId.ANDALUS -> libro({ libroCerrado(m) { g -> tapaAndalus(m, g) } }, LetraExtra.amiri, 14f)
+        TemaId.MESO -> libro({ libroCerrado(m) { g -> tapaMeso(m, g) } }, LetraExtra.codice, 14f)
         TemaId.REVOLUCION -> libro({ libroCerrado(m) { g -> tapaRevolucion(m, g) } }, LetraExtra.convencion, 13.5f)
         TemaId.ANTIGUAS -> libro({ libroCerrado(m) { g -> tapaAntiguas(m, g) } }, LetraExtra.almendra, 13.5f)
         TemaId.COLONOS -> libro({ libroRegistro(m) }, LetraExtra.oswald, 13f, caja = listOf(0.27f, 0.24f, 0.17f, 0.24f))
@@ -1553,6 +1583,20 @@ private fun DrawScope.tapaAndalus(m: Materia, g: Tapa) {
     val solapa = Path().apply { moveTo(g.ini.x + g.tam.width, g.ini.y + g.tam.height * 0.18f); lineTo(g.ini.x + g.tam.width + w * 0.035f, g.ini.y + g.tam.height * 0.5f); lineTo(g.ini.x + g.tam.width, g.ini.y + g.tam.height * 0.82f); close() }
     drawPath(solapa, m.sombra)
     g.esquinas.forEach { o -> for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento.copy(alpha = 0.8f), o, Offset(o.x + 9f * cos(a).toFloat(), o.y + 9f * sin(a).toFloat()), 1.5f) } }
+}
+
+private fun DrawScope.tapaMeso(m: Materia, g: Tapa) {
+    val w = size.width
+    // Tapa de piel de jaguar: rosetas oscuras sobre el ámbar; en las esquinas, cuentas de jade, y el cordel de henequén.
+    val azar = java.util.Random(819)
+    repeat(26) {
+        val o = Offset(g.ini.x + g.lomo + 6f + azar.nextFloat() * (g.tam.width - g.lomo - 12f), g.ini.y + 6f + azar.nextFloat() * (g.tam.height - 12f))
+        val r = 3f + azar.nextFloat() * 2.4f
+        for (k in 0 until 5) { val a = k * 1.2566f + azar.nextFloat() * 0.5f; drawCircle(m.tinta.copy(alpha = 0.6f), r * 0.33f, Offset(o.x + r * cos(a), o.y + r * sin(a))) }
+    }
+    g.esquinas.forEach { cuentaJade(it, 5f, m.detalle, Color.White) }
+    val y = g.ini.y + g.tam.height * 0.5f
+    listOf(-2.5f, 2.5f).forEach { o -> drawLine(c(0xFFCDB585), Offset(g.ini.x + g.lomo, y + o), Offset(g.ini.x + g.tam.width + w * 0.02f, y + o), 1.8f) }
 }
 
 private fun DrawScope.tapaRevolucion(m: Materia, g: Tapa) {
@@ -2022,6 +2066,12 @@ fun EstanteDiario(entradas: List<Dia>, tema: TemaId = Estilo.tema, noche: Boolea
             val w = size.width
             for (i in 0 until 8) { val a = Math.toRadians(45.0 * i); drawLine(m.acento, o, Offset(o.x + w * 0.22f * cos(a).toFloat(), o.y + w * 0.22f * sin(a).toFloat()), 1.5f) }
         }
+        // Cada lomo lleva su seis maya (una barra y un punto) en cinabrio y jade.
+        TemaId.MESO -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_ESTUCO) { o, _ ->
+            val w = size.width
+            drawRoundRect(m.acento, Offset(o.x - w * 0.24f, o.y + w * 0.04f), Size(w * 0.48f, w * 0.12f), CornerRadius(w * 0.04f))
+            drawCircle(m.detalle, w * 0.08f, Offset(o.x, o.y - w * 0.12f))
+        }
         TemaId.RENACIMIENTO -> Lomos(entradas, tema, m, noche, texto, conSonido, ESTANTE_TALLER) { o, _ ->
             val w = size.width; val hh = size.height
             drawRect(m.detalle.copy(alpha = 0.7f), Offset(0f, o.y - hh * 0.015f), Size(w, hh * 0.03f))
@@ -2210,6 +2260,13 @@ private val ESTANTE_CEDRO = TablaEstante(Color(0xFF9C5A33), Color(0xFF5A2E16)) {
         drawPath(Path().apply { moveTo(x, h * 0.75f); lineTo(x + l / 2, h * 0.25f); lineTo(x + l, h * 0.75f); close() }, if (i % 2 == 0) Color(0xFFF3E7CC).copy(alpha = 0.75f) else Color(0xFF1E6B5C).copy(alpha = 0.8f))
         x += l / 2; i++
     }
+}
+
+/** Una banca de piedra estucada, con la franja roja y la greca escalonada de los frisos mayas en el canto. */
+private val ESTANTE_ESTUCO = TablaEstante(Color(0xFFE2D6BC), Color(0xFF9E8D6A)) {
+    val w = size.width; val h = size.height
+    drawRect(Color(0xFFA3301E).copy(alpha = 0.75f), Offset(0f, 0f), Size(w, h * 0.18f))
+    grecaEscalonada(0f, w, h * 0.32f, h * 0.88f, Color(0xFF7A2A16).copy(alpha = 0.6f), 1f)
 }
 
 /** La madera oscura del taller, con un filete claro y marcas de compás. */
@@ -2516,6 +2573,8 @@ fun pagina(t: TemaId): Pagina = when (t) {
     // El papel impermeable de la bitácora, verdoso, con la letra hecha para leerse con poca luz y la capitular estrecha.
     TemaId.ABISMO -> Pagina(R.drawable.papel_abismo, c(0xFFE9F1F0), c(0xFF0C2430), c(0xFF4B6B78), c(0xFF0A5C8C), c(0xFFB8913E), LetraExtra.atkinson, 16.5f, 26f, false, Rayas.RENGLONES, LetraExtra.batiscafo)
     TemaId.ANDALUS -> Pagina(R.drawable.papel_andalus, c(0xFFF2E6C8), c(0xFF2A1A12), c(0xFF6A5640), c(0xFF1E6B5C), c(0xFFB5432A), LetraExtra.amiri, 18.5f, 28f, false, capitular = LetraExtra.kufi)
+    // La página de estuco del códice, con renglones rojos; la letra de leer y la capitular en versalitas.
+    TemaId.MESO -> Pagina(R.drawable.papel_meso, c(0xFFF2E8D2), c(0xFF2A1810), c(0xFF6B5238), c(0xFFA3301E), c(0xFF2F7D57), LetraExtra.amate, 17.5f, 27f, false, Rayas.RENGLONES, capitular = LetraExtra.codice)
     TemaId.MONGOL -> Pagina(R.drawable.papel_mongol, c(0xFFF1EBDC), c(0xFF18202E), c(0xFF5C6577), c(0xFF1F5FA8), c(0xFFC2412D), LetraExtra.filosofo, 17.5f, 27f, false)
     TemaId.RENACIMIENTO -> Pagina(R.drawable.papel_renacimiento, c(0xFFEEDFBC), c(0xFF3A2614), c(0xFF7A6040), c(0xFF8C3B1E), c(0xFF2F4F6F), LetraExtra.cormorant, 19.5f, 28f, false, capitular = LetraExtra.italianno)
     TemaId.PIRATA -> Pagina(R.drawable.papel_pirata, c(0xFFE6DCBA), c(0xFF2A1C0F), c(0xFF6A5A42), c(0xFF1E5157), c(0xFF9A2A1C), LetraExtra.caslon, 17f, 27f, false, Rayas.RENGLONES, capitular = LetraExtra.corsario)
@@ -2685,6 +2744,11 @@ internal fun FondoPagina(t: TemaId, p: Pagina, modifier: Modifier = Modifier, no
                 TemaId.ANDALUS -> {
                     drawRect(p.acento.copy(alpha = 0.45f), Offset(10.dp.toPx(), 10.dp.toPx()), Size(w - 20.dp.toPx(), h - 20.dp.toPx()), style = Stroke(1.5f))
                     drawRect(p.detalle.copy(alpha = 0.35f), Offset(14.dp.toPx(), 14.dp.toPx()), Size(w - 28.dp.toPx(), h - 28.dp.toPx()), style = Stroke(1f))
+                }
+                TemaId.MESO -> {
+                    // El marco rojo de la página del códice y, abajo, una greca escalonada.
+                    drawRect(p.acento.copy(alpha = 0.5f), Offset(10.dp.toPx(), 10.dp.toPx()), Size(w - 20.dp.toPx(), h - 20.dp.toPx()), style = Stroke(1.6f))
+                    grecaEscalonada(16.dp.toPx(), w - 16.dp.toPx(), h - 26.dp.toPx(), h - 16.dp.toPx(), p.acento.copy(alpha = 0.4f), 1.3f)
                 }
                 TemaId.MONGOL -> listOf(0f, h - 10.dp.toPx()).forEach { y ->
                     drawRect(p.acento.copy(alpha = 0.8f), Offset(0f, y), Size(w, 10.dp.toPx()))
@@ -2870,6 +2934,7 @@ private fun EncabezadoPagina(t: TemaId, p: Pagina, fecha: String, modo: Escrito 
                 }
             }
             TemaId.ANDALUS -> { emblema(); Rubrica("يوميات · Diario", LetraExtra.kufi, 15f, p.acento) }
+            TemaId.MESO -> { emblema(); Rubrica("Códice del día · " + (dia?.let { Maya.tzolkin(it) } ?: "k'in"), LetraExtra.codice, 15f, p.acento, 1.2f) }
             TemaId.MONGOL -> { emblema(); Rubrica("Өдрийн тэмдэглэл · diario", LetraExtra.filosofo, 13f, p.acento, 1.5f) }
             TemaId.RENACIMIENTO -> Row(verticalAlignment = Alignment.CenterVertically) {
                 Emblema(t, 34.dp, MaterialTheme.colorScheme, animado = false)
@@ -2914,6 +2979,7 @@ private fun letraSueno(t: TemaId): Pair<FontFamily, Float> = when (t) {
     TemaId.ESPACIO -> LetraExtra.orbita to 11f
     TemaId.ABISMO -> LetraExtra.batiscafo to 14f
     TemaId.ANDALUS -> LetraExtra.kufi to 14f
+    TemaId.MESO -> LetraExtra.codice to 15f
     TemaId.MONGOL -> LetraExtra.filosofo to 13f
     TemaId.RENACIMIENTO -> LetraExtra.italianno to 26f
     TemaId.PIRATA -> LetraExtra.corsario to 19f

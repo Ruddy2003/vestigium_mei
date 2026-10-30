@@ -281,6 +281,13 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
         }, 1.3f)
         // Estrella de ocho puntas de los alicatados, con el centro abierto.
         TemaId.ANDALUS -> pinta(estrella(12f, 12f, 8, 11f, 8.4f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 3.2f) }, 1.3f)
+        // El cartucho de un glifo con su pie de tres lóbulos y un punto hueco en el centro.
+        TemaId.MESO -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            addRoundRect(androidx.compose.ui.geometry.RoundRect(3f * u, 2.5f * u, 21f * u, 17f * u, androidx.compose.ui.geometry.CornerRadius(4.5f * u, 4.5f * u)))
+            for (k in -1..1) circulo(this, 12f + k * 4.6f, 19.6f, 2.2f)
+            circulo(this, 12f, 9.8f, 2.6f)
+        }, 1.3f)
         // La yurta: cúpula, muro y puerta.
         TemaId.MONGOL -> pinta(Path().apply {
             fillType = PathFillType.EvenOdd

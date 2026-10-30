@@ -130,6 +130,7 @@ object HallImagen {
         TemaId.ESPACIO -> "CONTROL DE MISIÓN · VESTIGIUM MEI" to "Fin de la transmisión"
         TemaId.ABISMO -> "BITÁCORA DEL BATISCAFO · VESTIGIUM MEI" to "Fin de la inmersión"
         TemaId.ANDALUS -> "آثاري · Vestigium Mei" to "تمّ الكتاب"
+        TemaId.MESO -> "Estelas de Vestigium Mei" to "Así quedó tallado en la piedra"
         TemaId.MONGOL -> "Миний мөр · Vestigium Mei" to "Мөнх тэнгэрийн хүчин дор"
         TemaId.RENACIMIENTO -> "Taccuino · Vestigium Mei" to "Fatto di mia mano"
         TemaId.PIRATA -> "Bitácora de Vestigium Mei" to "Escrito a bordo, de mi puño y letra"

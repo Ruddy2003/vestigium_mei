@@ -43,6 +43,7 @@ object SalonesTema {
             TemaId.NAPOLEON -> imperial(cs, oscuro, n)
             TemaId.REVOLUCION -> panteon(cs, oscuro, n)
             TemaId.ANDALUS -> with(SalonesMas) { patio(cs, oscuro, n) }
+            TemaId.MESO -> with(SalonesMas) { plazaMaya(cs, oscuro, n) }
             TemaId.SEDA -> with(SalonesMas) { caravasar(cs, oscuro, n) }
             TemaId.MONGOL -> with(SalonesMas) { yurta(cs, oscuro, n) }
             TemaId.COLONOS -> with(SalonesMas) { almacen(cs, oscuro, n) }
@@ -115,6 +116,7 @@ object SalonesTema {
                 listOf(Color(0xFF1F3A6E), Color.White, Color(0xFFB22234)).forEachIndexed { i, c -> drawRect(c, Offset(w * (0.18f + i * 0.2133f), 0f), Size(w * 0.2133f, h * 0.22f)) }
             }
             TemaId.ANDALUS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.MESO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.SEDA -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.MONGOL -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.COLONOS -> with(SalonesMas) { pedestalMas(tema, cs, metal) }

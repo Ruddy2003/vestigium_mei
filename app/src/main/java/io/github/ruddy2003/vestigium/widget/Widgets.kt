@@ -128,6 +128,11 @@ object Widgets {
             0xFFE0B65A.toInt(), 0xFFF3EAD6.toInt(), 0xFFB4AE9B.toInt(), 0xFF2B4A45.toInt(),
             intArrayOf(0xFFE07A5F.toInt(), 0xFFE39A82.toInt(), 0xFFE5C2AE.toInt(), 0xFFF3EAD6.toInt(), 0xFFA9DCCD.toInt(), 0xFF7CCFB8.toInt(), 0xFF4FC1A6.toInt()),
             0xFF112220.toInt(), 0xFF1A1405.toInt())
+        // La obsidiana con el marco de cinabrio; el azul maya de acento y el ánimo del cinabrio al jade.
+        TemaId.MESO -> Colores(R.drawable.widget_fondo_meso, R.drawable.widget_boton_meso, R.drawable.widget_boton_activo_meso, R.drawable.widget_boton_ambar_meso,
+            0xFF63C5DD.toInt(), 0xFFEFE2C6.toInt(), 0xFFB0A58D.toInt(), 0xFF374446.toInt(),
+            intArrayOf(0xFFE8674D.toInt(), 0xFFE58B6E.toInt(), 0xFFE2B39A.toInt(), 0xFFEFE2C6.toInt(), 0xFFA9DDBE.toInt(), 0xFF8BD3A6.toInt(), 0xFF6FCB8F.toInt()),
+            0xFF161C1D.toInt(), 0xFF04222B.toInt())
         TemaId.MONGOL -> Colores(R.drawable.widget_fondo_mongol, R.drawable.widget_boton_mongol, R.drawable.widget_boton_activo_mongol, R.drawable.widget_boton_ambar_mongol,
             0xFFF2C14E.toInt(), 0xFFF0EBDD.toInt(), 0xFFAAB0BD.toInt(), 0xFF2B3E5E.toInt(),
             intArrayOf(0xFFFF7A59.toInt(), 0xFFF09A80.toInt(), 0xFFE2C3B4.toInt(), 0xFFF0EBDD.toInt(), 0xFFB8D6F5.toInt(), 0xFF93C3FA.toInt(), 0xFF6FB1FF.toInt()),
@@ -192,6 +197,7 @@ object Widgets {
         TemaId.ESPACIO -> "T−0" to "LOG"
         TemaId.ABISMO -> "COTA" to "PIZARRA"
         TemaId.ANDALUS -> "الآن" to "اكتب"
+        TemaId.MESO -> "Este k'in" to "Pintar"
         TemaId.MONGOL -> "ОДОО" to "БИЧИХ"
         TemaId.RENACIMIENTO -> "Ora" to "Scrivere"
         TemaId.PIRATA -> "A esta campanada" to "Asiento"
@@ -229,6 +235,7 @@ object Widgets {
             TemaId.ESPACIO -> R.font.orbitron_medium to 0.88f
             TemaId.ABISMO -> R.font.batiscafo_semibold to 1.0f
             TemaId.ANDALUS -> R.font.kufi_medium to 0.95f
+            TemaId.MESO -> R.font.alegreya_sc_medium to 1.0f
             TemaId.MONGOL -> R.font.philosopher_regular to 1.05f
             TemaId.RENACIMIENTO -> R.font.cormorant_medium to 1.12f
             TemaId.PIRATA -> R.font.caslon_semibold to 1.0f
