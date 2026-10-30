@@ -155,10 +155,7 @@ data class EstiloGrafica(
 
 /** Formas del punto de datos. */
 enum class FormaPunto {
-    CIRCULO, TRIANGULO, CUPOLA, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO,
-    /** Art déco: el abanico solar sobre su base. */
-    ABANICO,
-    HOJA, COPO, MONEDA, SAKURA,
+    CIRCULO, TRIANGULO, CUPOLA, PIXEL, SOL, FLOR, DIANA, CRUZ, ESCUDO, HEXAGONO, CUADRADO, DESTELLO, HOJA, COPO, MONEDA, SAKURA,
     HIEDRA,
     ROMBO, ANILLO, OCTOGRAMA, LUNA, MIRA,
     /** La «X» de las cartas del tesoro. */
@@ -205,10 +202,7 @@ enum class Eje {
 /** La forma de las barras. */
 enum class FormaBarra {
     RECTA, REDONDA, ARCO, PILDORA, BISEL, OJIVA, HERRADURA, TAPA, TORRE, BLOQUES, ROLLO, TANZAKU, BANDERIN, SESGADA, TERCIOS,
-    ESTRIADA, OBELISCO, TABLAS, MARCO,
-    /** Art déco: la torre que se estrecha en tres retranqueos hasta su aguja. */
-    RASCACIELOS,
-    PUNTEADO, LAZO, RAYADA, HUECA, BURBUJAS,
+    ESTRIADA, OBELISCO, TABLAS, MARCO, PUNTEADO, LAZO, RAYADA, HUECA, BURBUJAS,
     /** Mesoamérica: el extremo baja en gradas, como el perfil de un basamento escalonado. */
     GRADAS,
 }
@@ -266,10 +260,6 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Imperio: destello ✦, trazo con filete dorado, cuadrícula de estado mayor, galones y barras con marco.
     TemaId.NAPOLEON -> EstiloGrafica(FormaPunto.DESTELLO, 2.4f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.FILETE, listOf(6f, 2f, 1f, 2f),
         Rejilla.RETICULA, 0.4f, Eje.GALONES, FormaBarra.MARCO, R.font.bodoni_titulo, FontWeight.Normal, "lnum", 0.05f, 1.08f)
-    // Art déco: abanico solar, trazo fino de marquesina con su filete, filetes dobles de fondo, eje con remates y barras
-    // que suben como rascacielos escalonados; cifras en la letra fina de los carteles.
-    TemaId.DECO -> EstiloGrafica(FormaPunto.ABANICO, 1.8f, null, StrokeCap.Butt, StrokeJoin.Miter, AdornoTrazo.FILETE, listOf(10f, 3f),
-        Rejilla.DOBLE, 0.35f, Eje.REMATES, FormaBarra.RASCACIELOS, R.font.poiret_titulo, FontWeight.Normal, "lnum, tnum", 0.12f, 1.1f)
     // Naturalista: hoja, espécimen con sombra, hileras de hormigas, eje con brotes y barras punteadas de grabado.
     TemaId.BOTANICO -> EstiloGrafica(FormaPunto.HOJA, 1.6f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(0.1f, 3f),
         Rejilla.PUNTEADA, 0.6f, Eje.BROTES, FormaBarra.PUNTEADO, R.font.fraunces_titulo, FontWeight.Normal, null, 0f, 1.05f)
@@ -504,19 +494,6 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
         })
         FormaPunto.PATADA -> figura(cruzPatada(c, r * 1.15f, 0.16f, 0.45f))
         FormaPunto.MANO -> figura(manoUnida(c, r * 1.15f))
-        // El abanico solar: medio disco de rayos sobre una base recta.
-        FormaPunto.ABANICO -> {
-            val b = Offset(c.x, c.y + 0.45f * r); val rr = r * 1.3f
-            if (hueco) {
-                drawArc(color, 180f, 180f, true, Offset(b.x - rr, b.y - rr), Size(2 * rr, 2 * rr), style = Stroke(g, join = StrokeJoin.Miter))
-            } else {
-                for (i in 0 until 5) {
-                    val tono = if (i % 2 == 0) color else color.copy(alpha = color.alpha * 0.45f)
-                    drawArc(tono, 180f + i * 36f, 36f, true, Offset(b.x - rr, b.y - rr), Size(2 * rr, 2 * rr))
-                }
-            }
-            drawRect(color, Offset(b.x - rr, b.y), Size(2 * rr, max(g, 0.28f * r)))
-        }
     }
 }
 
@@ -634,13 +611,6 @@ fun DrawScope.barraGrafica(e: EstiloGrafica, arriba: Offset, tam: Size, color: C
             drawPath(silueta, color)
             val pp = min(grosor * 0.6f, largo * 0.4f)
             if (pp >= 1.5f * d) drawPath(t.nueva().also { t.ir(largo - pp, grosor * 0.12f); t.a(largo, grosor / 2); t.a(largo - pp, grosor * 0.88f); t.cerrar() }, tinte)
-        }
-        FormaBarra.RASCACIELOS -> {
-            // La torre con su franja de ventanas por el centro y la aguja de oro en la punta.
-            drawPath(silueta, color)
-            val m = min(grosor * 0.28f, largo * 0.18f)
-            if (grosor >= 5f * d && largo > 4 * m) drawPath(t.nueva().also { t.rect(0f, grosor * 0.44f, largo - 3 * m, grosor * 0.56f) }, tinte)
-            if (m >= 1f * d) drawPath(t.nueva().also { t.rect(largo - m, grosor * 0.42f, largo, grosor * 0.58f) }, tinte)
         }
         FormaBarra.TABLAS -> {
             drawPath(silueta, color)
@@ -810,12 +780,6 @@ private fun egSilueta(forma: FormaBarra, t: EgBarra, d: Float): Path {
             // Se adelgaza un poco hacia la punta y termina en el piramidión.
             val pp = min(g * 0.6f, l * 0.4f)
             t.ir(0f, 0f); t.a(l - pp, g * 0.12f); t.a(l, g / 2); t.a(l - pp, g * 0.88f); t.a(0f, g); t.cerrar()
-        }
-        FormaBarra.RASCACIELOS -> {
-            // Tres retranqueos hacia la punta, cada uno más estrecho, y la aguja.
-            val m = min(g * 0.28f, l * 0.18f)
-            t.rect(0f, 0f, l - 3 * m, g); t.rect(l - 3 * m - 0.5f, g * 0.14f, l - 2 * m, g * 0.86f)
-            t.rect(l - 2 * m - 0.5f, g * 0.28f, l - m, g * 0.72f); t.rect(l - m - 0.5f, g * 0.42f, l, g * 0.58f)
         }
         FormaBarra.TORRE -> {
             val m = min(g * 0.32f, l * 0.4f); val w5 = g / 5

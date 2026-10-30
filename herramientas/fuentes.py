@@ -56,11 +56,6 @@ FUENTES = [
     # COL: la letra de los periódicos del siglo XIX
     ("oldstandardtt/OldStandard-Regular.ttf", None, "oldstandard_regular", None, LATINO),
     ("oldstandardtt/OldStandard-Bold.ttf", None, "oldstandard_bold", None, LATINO),
-    # DECO: los rótulos de línea fina de los carteles de los años veinte (Poiret One) y una geométrica de esa época para
-    # leer (Josefin Sans, que reserva su nombre: se renombra)
-    ("poiretone/PoiretOne-Regular.ttf", None, "poiret_titulo", None, LATINO),
-    ("josefinsans/JosefinSans[wght].ttf", {"wght": 400}, "pasaje_regular", "Pasaje Vestigium", LATINO),
-    ("josefinsans/JosefinSans[wght].ttf", {"wght": 600}, "pasaje_semibold", "Pasaje Vestigium", LATINO),
     # BOT: libro de naturalista
     ("crimsonpro/CrimsonPro[wght].ttf", {"wght": 400}, "crimson_regular", None, LATINO),
     ("crimsonpro/CrimsonPro[wght].ttf", {"wght": 600}, "crimson_semibold", None, LATINO),

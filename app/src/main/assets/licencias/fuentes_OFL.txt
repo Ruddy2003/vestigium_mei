@@ -33,8 +33,6 @@ Cruzada Vestigium — versión reducida y renombrada de MedievalSharp: Copyright
 Barlow (recortada) — Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow)
 Saira (instancias estáticas, recortadas) — Copyright 2020 The Saira Project Authors (https://github.com/Omnibus-Type/Saira)
 Old Standard TT (recortada) — Copyright 2011 The Old Standard Project Authors (amkryukov@gmail.com)
-Poiret One (recortada) — Copyright 2011 The Poiret One Project Authors (https://github.com/alexeiva/poiretone)
-Pasaje Vestigium — instancias estáticas, reducidas y renombradas de Josefin Sans: Copyright 2010 The Josefin Sans Project Authors (https://github.com/ThomasJockin/JosefinSansFont-master), with Reserved Font Name "Josefin Sans".
 Crimson Pro (instancias estáticas, recortadas) — Copyright 2018 The Crimson Pro Project Authors (https://github.com/Fonthausen/CrimsonPro)
 Letrero Vestigium — versión reducida y renombrada de Londrina Solid: Copyright 2011 The Londrina Solid Authors (https://github.com/marcelommp/Londrina-Typeface), with Reserved Font Name "Londrina Solid"
 Overpass (instancias estáticas, recortadas) — Copyright 2021 The Overpass Project Authors (https://github.com/RedHatOfficial/Overpass)

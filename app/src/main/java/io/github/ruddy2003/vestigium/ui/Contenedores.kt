@@ -36,7 +36,6 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     TALLER("Cuaderno de taller", "hoja"),
     SINGLADURAS("Bitácora de a bordo", "singladura"),
     LEGAJO("Legajo de despachos", "despacho"),
-    LACA("Libreta de laca", "página del carnet"),
     CAHIER("Cahier de momentos", "página"),
     MANUSCRITO("Manuscrito de momentos", "folio"),
     BIOMBO("Códice en biombo", "página pintada"),
@@ -72,7 +71,6 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.RENACIMIENTO -> Contenedor.TALLER
     TemaId.PIRATA -> Contenedor.SINGLADURAS
     TemaId.NAPOLEON -> Contenedor.LEGAJO
-    TemaId.DECO -> Contenedor.LACA
     TemaId.REVOLUCION -> Contenedor.CAHIER
     TemaId.ANDALUS -> Contenedor.MANUSCRITO
     TemaId.MESO -> Contenedor.BIOMBO
@@ -142,7 +140,6 @@ object Contenedores {
         Contenedor.TALLER -> if (oscuro) lerp(Color(0xFFEAD9B0), Color.Black, 0.74f) else Color(0xFFEAD9B0)
         Contenedor.SINGLADURAS -> if (oscuro) lerp(PERGAMINO_HUMEDO, Color.Black, 0.76f) else PERGAMINO_HUMEDO
         Contenedor.LEGAJO -> if (oscuro) lerp(Color(0xFFF3EEDF), Color.Black, 0.78f) else Color(0xFFF7F2E4)
-        Contenedor.LACA -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.CAHIER -> if (oscuro) lerp(Color(0xFFF8F6EE), Color.Black, 0.8f) else Color(0xFFF8F6EE)
         Contenedor.BIOMBO -> if (oscuro) lerp(ESTUCO, Color.Black, 0.78f) else ESTUCO
         // Las libretas del lote 2 tienen su papel en [ContenedoresMas].
@@ -170,7 +167,6 @@ object Contenedores {
             Contenedor.TALLER -> tallerCerrado(grosor, d, oscuro)
             Contenedor.SINGLADURAS -> bitacoraCerrada(grosor, d, oscuro)
             Contenedor.LEGAJO -> legajoCerrado(grosor, d, tapa)
-            Contenedor.LACA -> with(ContenedoresMas) { cerradoMas(c, hojas, tapa, oscuro) }
             Contenedor.CAHIER -> cahierCerrado(grosor, d)
             Contenedor.BIOMBO -> biomboCerrado(hojas, d)
             Contenedor.MANUSCRITO, Contenedor.ACORDEON, Contenedor.FUKURO, Contenedor.ORDENES, Contenedor.BITACORA, Contenedor.HERBARIO, Contenedor.ADVIENTO, Contenedor.MAPAS,
@@ -666,7 +662,6 @@ object Contenedores {
                 drawLine(cs.primary.copy(alpha = 0.3f), Offset(margen, 88 * d), Offset(size.width - 12 * d, 88 * d), 0.6f * d)
                 drawLine(cs.primary.copy(alpha = 0.18f), Offset(margen, 0f), Offset(margen, size.height), 0.8f * d)
             }
-            Contenedor.LACA -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.CAHIER -> {
                 // Cuadrícula Seyès: líneas finas cada cuarto y gruesas cada renglón, con el margen rojo.
                 val malva = Color(0xFF8E7CC3)
@@ -762,7 +757,6 @@ object Contenedores {
                 listOf(0.22f, 0.78f).forEach { f -> val y = size.height * f; drawCircle(ORO_OSCURO, 4 * d, Offset(20 * d, y), style = Stroke(1.6f * d)); drawLine(LACRE, Offset(0f, y), Offset(20 * d, y), 3 * d) }
                 drawLine(LACRE, Offset(4 * d, size.height * 0.22f), Offset(4 * d, size.height * 0.78f), 3 * d)
             }
-            Contenedor.LACA -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.CAHIER -> {
                 // El hilo de la costura del cuaderno.
                 var y = 20 * d; while (y < size.height - 20 * d) { drawLine(Color(0xFF1F3A6E).copy(alpha = 0.7f), Offset(16 * d, y), Offset(16 * d, y + 8 * d), 1.4f * d); y += 22 * d }

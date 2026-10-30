@@ -226,17 +226,6 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             }, 1.3f)
             listOf(13.5f, 16.5f).forEach { y -> drawLine(if (lleno) Color.Black.copy(alpha = 0.35f) else color.copy(alpha = 0.7f), p(9.6f, y), p(14.4f, y), 1f * u) }
         }
-        // El abanico solar con su base: lleno, rayos de oro; vacío, el contorno.
-        TemaId.DECO -> {
-            pinta(Path().also { c ->
-                c.moveTo(3f * u, 16f * u); c.arcTo(Rect(3f * u, 7f * u, 21f * u, 25f * u), 180f, 180f, false); c.close()
-                c.addRect(Rect(3f * u, 16f * u, 21f * u, 18.5f * u))
-            }, 1.3f)
-            for (i in 1..4) {
-                val a = Math.PI + i * Math.PI / 5
-                drawLine(if (lleno) Color.Black.copy(alpha = 0.35f) else color.copy(alpha = 0.7f), p(12f, 16f), p(12f + 9f * cos(a).toFloat(), 16f + 9f * sin(a).toFloat()), 1f * u)
-            }
-        }
         // Una hoja de cuaderno de campo, con su nervio.
         TemaId.BOTANICO -> {
             pinta(Path().also { c -> hoja(c, p(5f, 20f), p(19.5f, 3.5f), 3.6f) })

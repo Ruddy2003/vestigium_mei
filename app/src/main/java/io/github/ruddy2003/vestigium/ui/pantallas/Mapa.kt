@@ -124,9 +124,6 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Napoleónico: carta de estado mayor sepia; de noche, azul imperial.
         TemaId.NAPOLEON -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.6f, 0.68f, 0.92f, 2f, 4f, 16f)) }
             else { m.setSaturation(0.25f); m.postConcat(tinte(1.0f, 0.94f, 0.82f, 2f, 0f, 0f)) }
-        // Art déco: grabado en oro sobre laca de noche; de día, marfil de cartel de naviera, casi sin color.
-        TemaId.DECO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.72f, 0.42f, 0f, 0f, 0f)) }
-            else { m.setSaturation(0.08f); m.postConcat(tinte(1.0f, 0.95f, 0.84f, 4f, 2f, 0f)) }
         // Botánico: lámina de atlas en crema y verde; de noche, el bosque.
         TemaId.BOTANICO -> if (oscuro) { m.setSaturation(0.2f); m.postConcat(invertir); m.postConcat(tinte(0.66f, 0.86f, 0.66f, 2f, 8f, 2f)) }
             else { m.setSaturation(0.45f); m.postConcat(tinte(0.97f, 0.97f, 0.86f, 2f, 4f, 0f)) }
@@ -271,12 +268,6 @@ internal object Formas {
             // El bicornio, visto de frente.
             TemaId.NAPOLEON -> { p.reset(); p.moveTo(x - r * 1.4f, y + r * 0.3f); p.quadTo(x - r * 0.9f, y - r * 1.1f, x, y - r * 0.9f)
                 p.quadTo(x + r * 0.9f, y - r * 1.1f, x + r * 1.4f, y + r * 0.3f); p.quadTo(x, y - r * 0.2f, x - r * 1.4f, y + r * 0.3f); p.close() }
-            // El abanico solar sobre su base.
-            TemaId.DECO -> {
-                p.reset(); p.moveTo(x - r * 1.25f, y + r * 0.45f); p.lineTo(x - r * 1.25f, y + r * 0.25f)
-                p.arcTo(android.graphics.RectF(x - r * 1.25f, y - r, x + r * 1.25f, y + r * 1.5f), 180f, 180f, false)
-                p.lineTo(x + r * 1.25f, y + r * 0.45f); p.close()
-            }
             // Una hoja.
             TemaId.BOTANICO -> { p.reset(); p.moveTo(x, y + r * 1.2f); p.quadTo(x + r * 1.3f, y, x, y - r * 1.2f); p.quadTo(x - r * 1.3f, y, x, y + r * 1.2f); p.close() }
             // Una hoja de hiedra de cinco puntas.
@@ -343,7 +334,6 @@ internal object Formas {
             TemaId.LABORATORIO -> c.drawCircle(x, y, r * 0.55f, d)
             TemaId.COLONOS -> c.drawRect(x - r * 0.25f, y + r * 0.25f, x + r * 0.25f, y + r, d)   // la puerta
             TemaId.NAPOLEON -> c.drawCircle(x + r * 0.5f, y - r * 0.38f, r * 0.22f, d)   // la escarapela del sombrero
-            TemaId.DECO -> { raya(c, x, y, r, 0f, 0.25f, -0.85f, -0.35f, d); raya(c, x, y, r, 0f, 0.25f, 0f, -0.75f, d); raya(c, x, y, r, 0f, 0.25f, 0.85f, -0.35f, d) }   // los rayos del abanico
             TemaId.BOTANICO -> { raya(c, x, y, r, 0f, 1.2f, 0f, -0.8f, d); raya(c, x, y, r, 0f, 0.2f, 0.45f, -0.25f, d); raya(c, x, y, r, 0f, 0.2f, -0.45f, -0.25f, d) }
             TemaId.RUINAS -> { raya(c, x, y, r, 0f, 0.8f, 0f, -0.6f, d); raya(c, x, y, r, 0f, 0.2f, -0.5f, -0.05f, d); raya(c, x, y, r, 0f, 0.2f, 0.5f, -0.05f, d) }   // los nervios
             TemaId.NAVIDAD -> { c.drawCircle(x, y - r * 1.35f, r * 0.18f, d); raya(c, x, y, r, -0.6f, 0.55f, 0.45f, 0.1f, d) }   // la estrella y la guirnalda
@@ -896,17 +886,6 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 y += tramo; i++
             }
         }
-        // Doble filete de oro, tres escalones en cada esquina y un abanico arriba y abajo al centro, como en un cartel de naviera.
-        TemaId.DECO -> {
-            filete(4 * u, acento.copy(alpha = 0.75f), 1.2f * u); filete(8 * u, acento.copy(alpha = 0.4f), 0.7f * u)
-            esquinas(8 * u) { o, sx, sy ->
-                for (k in 1..3) drawRect(acento.copy(alpha = 0.7f), Offset(if (sx > 0) o.x else o.x - k * 5 * u, if (sy > 0) o.y else o.y - (4 - k) * 5 * u), Size(k * 5 * u, (4 - k) * 5 * u), style = Stroke(0.8f * u))
-            }
-            listOf(4 * u to 0f, h - 4 * u to 180f).forEach { (y, giro) ->
-                val r = 9 * u
-                for (i in 0 until 7) if (i % 2 == 0) drawArc(acento.copy(alpha = 0.75f), giro + i * 180f / 7, 180f / 7, true, Offset(w / 2 - r, y - r), Size(2 * r, 2 * r))
-            }
-        }
         // Tiras de papel engomado en las esquinas, como en un pliego de herbario.
         TemaId.BOTANICO -> {
             filete(6 * u, tinta.copy(alpha = 0.4f), 1 * u)
@@ -1207,13 +1186,6 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
         TemaId.NAPOLEON -> {
             for (i in 0 until 8) punta(n + 45.0 * i, if (i % 2 == 0) r * 0.78f else r * 0.45f, r * 0.12f, if (i == 0) acento else tenue)
             for (k in 0..10) { val g = 30.0 + 12.0 * k; if (k != 5) drawCircle(secundario.copy(alpha = 0.85f), r * 0.07f, c + rumbo(g) * (r * 0.88f)) }
-        }
-        // Una rosa de sol: dieciséis rayos rectos, largos y cortos, el norte en oro y un anillo escalonado.
-        TemaId.DECO -> {
-            for (i in 0 until 16) drawLine(if (i == 0) acento else tenue, c + rumbo(n + 22.5 * i) * (r * 0.18f), c + rumbo(n + 22.5 * i) * (if (i % 2 == 0) r * 0.85f else r * 0.55f), (if (i % 4 == 0) 2.2f else 1f) * u)
-            punta(n, r * 0.92f, r * 0.1f, acento)
-            drawCircle(tenue, r * 0.62f, c, style = Stroke(0.8f * u)); drawCircle(tenue, r * 0.68f, c, style = Stroke(0.5f * u))
-            drawCircle(secundario.copy(alpha = 0.85f), r * 0.14f, c)
         }
         // Una flor de ocho pétalos.
         TemaId.BOTANICO -> {

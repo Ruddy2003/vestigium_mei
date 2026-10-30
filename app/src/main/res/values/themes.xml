@@ -99,12 +99,6 @@
     <style name="Theme.Vestigium.Arranque.Napoleon.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_napoleon_oscuro</item>
     </style>
-    <style name="Theme.Vestigium.Arranque.Deco" parent="Theme.Vestigium.Arranque">
-        <item name="android:windowBackground">@color/arranque_deco</item>
-    </style>
-    <style name="Theme.Vestigium.Arranque.Deco.Oscuro" parent="Theme.Vestigium.Arranque">
-        <item name="android:windowBackground">@color/arranque_deco_oscuro</item>
-    </style>
     <style name="Theme.Vestigium.Arranque.Botanico" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_botanico</item>
     </style>

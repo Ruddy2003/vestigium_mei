@@ -260,19 +260,6 @@
             </intent-filter>
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
-        <activity-alias
-            android:name=".IconoDeco"
-            android:enabled="false"
-            android:exported="true"
-            android:icon="@mipmap/ic_launcher_deco"
-            android:roundIcon="@mipmap/ic_launcher_deco"
-            android:targetActivity=".ui.MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
-        </activity-alias>
         <!-- Alias de Día de Muertos, tema retirado: se conserva apagado (con el ícono botánico) para no dejar la app sin ícono al actualizar. -->
         <activity-alias
             android:name=".IconoMuertos"

@@ -404,37 +404,6 @@ def papel_templario():
     a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 144)[..., None])
     a_img(a).save(os.path.join(OUT, 'papel_templario.jpg'), quality=86)
 
-def papel_deco():
-    """Art déco: el papel de cartas del salón de escribir de un trasatlántico, marfil y satinado, con el membrete del
-    abanico solar en oro arriba, tres filetes que se acortan en escalones y un doble filete alrededor con las esquinas
-    escalonadas."""
-    W, H = 720, 1280
-    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-    a = mezcla(col('#FBF6EA'), col('#F0E6CF'), ruido_rect(W, H, 60, 151) * 0.55)
-    a = a * (0.985 + 0.02 * ruido_rect(W, H, 0.7, 152)[..., None])
-    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA')
-    oro = (184, 149, 46)
-    # El membrete: el abanico de rayos alternos sobre su base, y los filetes escalonados debajo.
-    cx, cy, r = W / 2, 118, 52
-    for i in range(13):
-        if i % 2 == 0: d.pieslice([cx - r, cy - r, cx + r, cy + r], 180 + i * 180 / 13, 180 + (i + 1) * 180 / 13, fill=oro + (120,))
-    d.pieslice([cx - r * 0.34, cy - r * 0.34, cx + r * 0.34, cy + r * 0.34], 180, 360, fill=(31, 107, 87, 110))
-    d.rectangle([cx - r - 6, cy, cx + r + 6, cy + 3], fill=oro + (130,))
-    for k, f in enumerate((0.62, 0.44, 0.26)):
-        y = cy + 16 + k * 8
-        d.line([(W * (1 - f) / 2, y), (W * (1 + f) / 2, y)], fill=oro + (110 - k * 20,), width=2)
-    # El marco: doble filete y tres escalones en cada esquina.
-    m, paso = 26, 12
-    d.rectangle([m, m, W - m, H - m], outline=oro + (95,), width=2)
-    d.rectangle([m + 7, m + 7, W - m - 7, H - m - 7], outline=oro + (60,), width=1)
-    for (ox, oy, sx, sy) in ((m + 7, m + 7, 1, 1), (W - m - 7, m + 7, -1, 1), (m + 7, H - m - 7, 1, -1), (W - m - 7, H - m - 7, -1, -1)):
-        pts = [(ox, oy + sy * 4 * paso)]
-        for k in range(1, 4):
-            pts += [(ox + sx * k * paso, oy + sy * (5 - k) * paso), (ox + sx * k * paso, oy + sy * (4 - k) * paso)]
-        pts += [(ox + sx * 4 * paso, oy + sy * paso), (ox + sx * 4 * paso, oy)]
-        d.line(pts, fill=oro + (110,), width=2)
-    img.save(os.path.join(OUT, 'papel_deco.jpg'), quality=86)
-
 def papel_urbe():
     """Roma: la hoja de un cuaderno comprado en la papelería del barrio, crema y algo reciclada, con el cerco claro
     que dejó una tazzina de café y el pliegue suave de haberlo llevado en la bolsa."""
@@ -491,7 +460,6 @@ if __name__ == '__main__':
     papel_meso()
     papeles_fuente()
     papel_templario()
-    papel_deco()
     papel_urbe()
     papel_edo()
     print('papeles listos')

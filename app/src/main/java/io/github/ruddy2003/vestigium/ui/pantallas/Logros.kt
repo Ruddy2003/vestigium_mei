@@ -248,16 +248,6 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(if (hecho) Color(0xFFF4EFE3) else apagado, r * 0.44f, c)
             drawCircle(if (hecho) Color(0xFF1F3A93) else borde.copy(alpha = 0.5f), r * 0.44f, c, style = Stroke(r * 0.08f))
         }
-        // Medalla octogonal escalonada con el abanico de rayos sobre esmalte negro y un rombo de jade.
-        TemaId.DECO -> {
-            val oct = Path().apply { for (k in 0 until 8) { val a = Math.toRadians(22.5 + k * 45.0); val q = Offset(c.x + r * 0.96f * kotlin.math.cos(a).toFloat(), c.y + r * 0.96f * kotlin.math.sin(a).toFloat()); if (k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() }
-            forma(oct)
-            drawCircle(if (hecho) Color(0xFF16130E) else apagado, r * 0.66f, c)
-            val b = Offset(c.x, c.y + r * 0.28f); val rr = r * 0.56f
-            for (i in 0 until 9) if (i % 2 == 0) drawArc(if (hecho) metal else borde.copy(alpha = 0.5f), 180f + i * 20f, 20f, true, Offset(b.x - rr, b.y - rr), Size(2 * rr, 2 * rr))
-            drawPath(Path().apply { moveTo(c.x, c.y + r * 0.34f); lineTo(c.x + r * 0.1f, c.y + r * 0.46f); lineTo(c.x, c.y + r * 0.58f); lineTo(c.x - r * 0.1f, c.y + r * 0.46f); close() }, if (hecho) Color(0xFF1F6B57) else borde.copy(alpha = 0.5f))
-            drawCircle(luz, r * 0.8f, c, style = Stroke(r * 0.03f))
-        }
         // Camafeo de herbario: óvalo con una ramita al pie.
         TemaId.BOTANICO -> {
             forma(Path().apply { addOval(Rect(c.x - r * 0.74f, c.y - r * 0.97f, c.x + r * 0.74f, c.y + r * 0.97f)) })

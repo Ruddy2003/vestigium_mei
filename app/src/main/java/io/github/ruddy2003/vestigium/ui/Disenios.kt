@@ -25,10 +25,6 @@ object LetraExtra {
     val fell = FontFamily(Font(R.font.fell, FontWeight.Normal))
     val bodoniTitulo = FontFamily(Font(R.font.bodoni_titulo, FontWeight.Normal), Font(R.font.bodoni_titulo, FontWeight.SemiBold))
     val bodoni = FontFamily(Font(R.font.bodoni_texto, FontWeight.Normal), Font(R.font.bodoni_titulo, FontWeight.SemiBold))
-    /** Poiret One: la línea fina y geométrica de los carteles y las marquesinas de los años veinte (títulos del Art déco). Tiene un solo peso. */
-    val poiret = FontFamily(Font(R.font.poiret_titulo, FontWeight.Normal), Font(R.font.poiret_titulo, FontWeight.Medium), Font(R.font.poiret_titulo, FontWeight.SemiBold), Font(R.font.poiret_titulo, FontWeight.Bold))
-    /** «Pasaje Vestigium» (Josefin Sans renombrada): geométrica de aire años veinte, para leer el texto del Art déco. */
-    val pasaje = FontFamily(Font(R.font.pasaje_regular, FontWeight.Normal), Font(R.font.pasaje_regular, FontWeight.Medium), Font(R.font.pasaje_semibold, FontWeight.SemiBold), Font(R.font.pasaje_semibold, FontWeight.Bold))
     val textura = FontFamily(Font(R.font.gotica_textura, FontWeight.Normal))
     val orbita = FontFamily(Font(R.font.orbitron_medium, FontWeight.Normal), Font(R.font.orbitron_medium, FontWeight.Medium), Font(R.font.orbitron_bold, FontWeight.Bold), Font(R.font.orbitron_bold, FontWeight.SemiBold))
     val grotesk = FontFamily(Font(R.font.grotesk_regular, FontWeight.Normal), Font(R.font.grotesk_medium, FontWeight.Medium), Font(R.font.grotesk_medium, FontWeight.SemiBold))
@@ -241,16 +237,6 @@ internal val napoleonOscuro = esquema(true, 0xFF0B1230, 0xFF121A3D, 0xFF1B2550, 
 internal val tipoNapoleon = tipografia(LetraExtra.bodoniTitulo, FontWeight.Normal, 1.06f, 1.7f, LetraExtra.bodoni, 1.06f, LetraExtra.bodoni, 1.08f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
-//  Art déco: los años veinte. De día, marfil de pasaje de primera clase con laca negra, oro viejo y jade; de noche, la
-//  laca negra de un salón de baile con el oro de las marquesinas, el jade de los ascensores y el coral de los cocteles.
-// ---------------------------------------------------------------------
-internal val decoClaro = esquema(false, 0xFFF3ECDC, 0xFFFBF7EE, 0xFFE8DEC6, 0xFFC7B48A, 0xFF16130E, 0xFF5A5246,
-    0xFF84610F, 0xFFFFFBF0, 0xFFF0E1B8, 0xFF1A1408, 0xFF1F6B57, 0xFFD3E6DD, 0xFFB5523B, 0xFF9A2A1F)
-internal val decoOscuro = esquema(true, 0xFF0D0C0A, 0xFF15130F, 0xFF201C15, 0xFF4A3E24, 0xFFF0E6CC, 0xFFB4A888,
-    0xFFD9B44A, 0xFF161004, 0xFF3A2E12, 0xFFF6E7BE, 0xFF5FB59A, 0xFF16332B, 0xFFE48A6E, 0xFFFF8A7A)
-internal val tipoDeco = tipografia(LetraExtra.poiret, FontWeight.Normal, 1.1f, 2.0f, LetraExtra.pasaje, 1.04f, LetraExtra.pasaje, 1.06f, cifrasAlineadas = true)
-
-// ---------------------------------------------------------------------
 //  Botánico: el cuaderno de un naturalista viajero. Papel envejecido, tinta sepia, verde musgo, óxido de hormiga
 //  y el verde metálico de los escarabajos; de noche, el gabinete de especímenes con luciérnagas.
 // ---------------------------------------------------------------------
@@ -439,7 +425,6 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFFFF7A9A, 0xFF18222F, 0xFF3CD2E5, 0xFF3CD2E5) else listOf(0xFFC0466A, 0xFFE6EDF2, 0xFF0B8FA1, 0xFF0B8FA1)
     TemaId.COLONOS -> if (oscuro) listOf(0xFFE07A62, 0xFF1E2838, 0xFF8FB3E0, 0xFFE3C27A) else listOf(0xFFA23B2A, 0xFFE7DDC8, 0xFF1F3A5F, 0xFF7A5A2E)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFFE05A6A, 0xFF1B2550, 0xFF9DB4FF, 0xFFD9B25B) else listOf(0xFFA3172E, 0xFFEAE1CB, 0xFF1E3A8A, 0xFFB8892B)
-    TemaId.DECO -> if (oscuro) listOf(0xFFE48A6E, 0xFF201C15, 0xFF5FB59A, 0xFFD9B44A) else listOf(0xFFB5523B, 0xFFE8DEC6, 0xFF1F6B57, 0xFF84610F)
     TemaId.BOTANICO -> if (oscuro) listOf(0xFFE09A5E, 0xFF2A251B, 0xFFA9C27A, 0xFF6FC2B0) else listOf(0xFF8C4A22, 0xFFE3D9C0, 0xFF3F5A2C, 0xFF2E5E5A)
     TemaId.RUINAS -> if (oscuro) listOf(0xFFE08A55, 0xFF212923, 0xFF8FCB6A, 0xFFE9C25A) else listOf(0xFFA34A1E, 0xFFD6D6CC, 0xFF3E6B2A, 0xFFB57A0E)
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFFE5484D, 0xFF1C3125, 0xFF66BB6A, 0xFFF2C94C) else listOf(0xFFB71C1C, 0xFFECE4D6, 0xFF1B5E20, 0xFFC9A227)
@@ -476,7 +461,6 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.LABORATORIO -> if (oscuro) listOf(0xFF3CD2E5, 0xFF9D93FF, 0xFFFF7A9A) else listOf(0xFF0B8FA1, 0xFF5E4FD1, 0xFFC0466A)
     TemaId.COLONOS -> if (oscuro) listOf(0xFF8FB3E0, 0xFFE3C27A, 0xFFE07A62) else listOf(0xFF1F3A5F, 0xFF7A5A2E, 0xFFA23B2A)
     TemaId.NAPOLEON -> if (oscuro) listOf(0xFF9DB4FF, 0xFFD9B25B, 0xFFE05A6A) else listOf(0xFF1E3A8A, 0xFFB8892B, 0xFFA3172E)
-    TemaId.DECO -> if (oscuro) listOf(0xFF5FB59A, 0xFFD9B44A, 0xFFE48A6E) else listOf(0xFF1F6B57, 0xFFA8801E, 0xFFB5523B)   // jade, oro, coral
     TemaId.BOTANICO -> if (oscuro) listOf(0xFF6FC2B0, 0xFFA9C27A, 0xFFE09A5E) else listOf(0xFF2E5E5A, 0xFF3F5A2C, 0xFF8C4A22)
     TemaId.RUINAS -> if (oscuro) listOf(0xFF8FCB6A, 0xFFE9C25A, 0xFFE0604A) else listOf(0xFF3E6B2A, 0xFFB57A0E, 0xFFB3261E)   // el semáforo: verde, ámbar, rojo
     TemaId.NAVIDAD -> if (oscuro) listOf(0xFF66BB6A, 0xFFF2C94C, 0xFFE5484D) else listOf(0xFF1B5E20, 0xFFC9A227, 0xFFB71C1C)
