@@ -475,19 +475,19 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.COLONOS -> Esquinas(5, Esquina.REDONDA)
     TemaId.NAPOLEON -> Esquinas(2, Esquina.REDONDA)
     TemaId.BOTANICO -> Esquinas(12, Esquina.HOJA)          // la hoja
-    TemaId.RUINAS -> Esquinas(5, Esquina.CORTADA)        // el bloque de hormigón desportillado
+    TemaId.RUINAS -> Esquinas(3, Esquina.CORTADA)        // el bloque de hormigón desportillado
     TemaId.NAVIDAD -> Esquinas(8, Esquina.REDONDA)
     TemaId.SEDA -> Esquinas(7, Esquina.REDONDA)
     TemaId.EDO -> Esquinas(1, Esquina.CORTADA)             // el bastidor de un shōji, casi en escuadra
     TemaId.URSS -> Esquinas(0, Esquina.REDONDA)
     TemaId.GOTICO -> Esquinas(8, Esquina.ARCO)             // el ventanal
-    TemaId.ARCANO -> Esquinas(5, Esquina.CORTADA)          // la esquina recortada del recorte de periódico
+    TemaId.ARCANO -> Esquinas(8, Esquina.CORTADA)          // la esquina recortada del recorte de periódico
     TemaId.ESPACIO -> Esquinas(16, Esquina.REDONDA)
     TemaId.ABISMO -> Esquinas(15, Esquina.REDONDA)         // la escotilla del batiscafo
     TemaId.ANDALUS -> Esquinas(12, Esquina.ARCO)           // el arco de herradura
     TemaId.MONGOL -> Esquinas(9, Esquina.REDONDA)          // la yurta
     TemaId.RENACIMIENTO -> Esquinas(3, Esquina.HOJA)       // la página del cuaderno
-    TemaId.PIRATA -> Esquinas(5, Esquina.CORTADA)          // el cofre con cantoneras
+    TemaId.PIRATA -> Esquinas(7, Esquina.CORTADA)          // el cofre con cantoneras
     TemaId.REVOLUCION -> Esquinas(2, Esquina.CORTADA)      // el cartel recortado
     TemaId.ANTIGUAS -> Esquinas(4, Esquina.ARCO)           // la puerta de piedra
 }

@@ -164,7 +164,7 @@ internal object NombresEgipto {
         "Medir" to "El codo y la cuerda",
         "Mes por mes" to "Mes por mes del año civil",
         "Metas" to "Lo que se ofrece cumplir",
-        "Momentos" to "Sucesos",
+        "Momentos" to "Hechos del día",
         "Momentos de este día" to "Sucesos de este día",
         "Momentos de la semana" to "Sucesos de la década",
         "Movimiento" to "Andar por la orilla",
