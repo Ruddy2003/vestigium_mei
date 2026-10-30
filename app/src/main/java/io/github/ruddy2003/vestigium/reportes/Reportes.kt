@@ -108,6 +108,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
     TemaId.ORDEN -> R.font.saira_stencil            // estarcido
+    TemaId.VAPOR -> R.font.caldera_titulo           // «fat face» de cartel
     TemaId.LABORATORIO -> R.font.jost_medium
     TemaId.COLONOS -> R.font.garamond_semibold      // el tipo de la gaceta
     TemaId.NAPOLEON -> R.font.bodoni_titulo         // Didot
@@ -145,6 +146,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
     TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
+    TemaId.VAPOR -> "Memoria de la Compañía de Vapor Vestigium Mei"
     TemaId.LABORATORIO -> "Vestigium Mei — cuaderno de laboratorio"
     TemaId.COLONOS -> "La Gaceta de Vestigium Mei"
     TemaId.NAPOLEON -> "BULLETIN DE VESTIGIUM MEI"
@@ -386,6 +388,31 @@ object Reportes {
                     }
                     c.drawCircle(cx, yc, 17f, acero); c.drawCircle(cx, yc, 6f, L.relleno(L.fondo))
                     y += 58f
+                }
+                TemaId.VAPOR -> {
+                    // La vía: dos carriles de hierro sobre sus traviesas y, al centro, el manómetro entre dos engranes de latón.
+                    val yc = yy + 22f
+                    val hierro = L.trazo(L.tinta, 2f); val traviesa = L.relleno(L.mezcla(L.linea, L.tinta, 0.3))
+                    var x = M
+                    while (x < W - M) { if (abs(x + 2.5f - cx) > 46f) c.drawRect(x, yc - 7f, x + 5f, yc + 7f, traviesa); x += 13f }
+                    for (dy in listOf(-4f, 4f)) { c.drawLine(M, yc + dy, cx - 46f, yc + dy, hierro); c.drawLine(cx + 46f, yc + dy, W - M, yc + dy, hierro) }
+                    val laton = L.relleno(L.primario)
+                    for (lado in listOf(-1f, 1f)) {
+                        val gx = cx + lado * 31f
+                        for (k in 0 until 8) { c.save(); c.rotate(k * 45f + 22.5f, gx, yc); c.drawRect(gx - 2.5f, yc - 13f, gx + 2.5f, yc - 8f, laton); c.restore() }
+                        c.drawCircle(gx, yc, 9f, laton); c.drawCircle(gx, yc, 3f, L.relleno(L.fondo))
+                    }
+                    c.drawCircle(cx, yc, 19f, L.relleno(L.mezcla(L.primario, L.tinta, 0.3)))
+                    c.drawCircle(cx, yc, 15f, L.relleno(L.fondo))
+                    val marca = L.trazo(L.tinta, 1f)
+                    for (k in 0..10) {
+                        val a = Math.toRadians(135.0 + 27.0 * k); val r0 = if (k % 5 == 0) 9f else 11.5f
+                        c.drawLine(cx + (r0 * kotlin.math.cos(a)).toFloat(), yc + (r0 * kotlin.math.sin(a)).toFloat(), cx + (14f * kotlin.math.cos(a)).toFloat(), yc + (14f * kotlin.math.sin(a)).toFloat(), marca)
+                    }
+                    val ag = Math.toRadians(135.0 + 270.0 * 0.7)
+                    c.drawLine(cx, yc, cx + (11f * kotlin.math.cos(ag)).toFloat(), yc + (11f * kotlin.math.sin(ag)).toFloat(), L.trazo(L.terciario, 1.8f))
+                    c.drawCircle(cx, yc, 2f, L.relleno(L.tinta))
+                    y += 54f
                 }
                 TemaId.LABORATORIO -> {
                     // Una regla graduada: una marca cada 12 px, más larga cada cinco y numerada cada diez, porque aquí todo se mide.

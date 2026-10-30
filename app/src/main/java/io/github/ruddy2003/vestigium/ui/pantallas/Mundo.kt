@@ -226,6 +226,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.REFUGIO -> LaminaRascar(0xFF4A5560.toInt(), 0xFF98A7B3.toInt(), 0xFFE3EBF0.toInt())
     // Acero pavonado.
     TemaId.ORDEN -> LaminaRascar(0xFF2C3138.toInt(), 0xFF6A747F.toInt(), 0xFFBFC8D2.toInt())
+    // Latón de caldera, ennegrecido por el hollín y bruñido donde se toca.
+    TemaId.VAPOR -> LaminaRascar(0xFF4A3410.toInt(), 0xFFB8862B.toInt(), 0xFFF0D490.toInt())
     // Aluminio de instrumento, casi blanco.
     TemaId.LABORATORIO -> LaminaRascar(0xFF5F6670.toInt(), 0xFFB5BCC4.toInt(), 0xFFF4F6F8.toInt())
     // Cobre.
@@ -420,6 +422,15 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawCircle(cx, cy, r, linea); c.drawCircle(cx, cy, r * 0.38f, linea)
             for (i in 0 until 8) girado(cx, cy, i * 45f) { c.drawRect(-l * 0.035f, -r - l * 0.07f, l * 0.035f, -r, relleno) }
             for (x in listOf(0f, l)) for (y in listOf(0f, l)) c.drawCircle(x, y, l * 0.045f, relleno)
+        }
+        TemaId.VAPOR -> {
+            // La esfera de un manómetro grabada en el centro, con su escala y la aguja, y dos tramos de vía en diagonal.
+            val cx = l / 2; val cy = l / 2; val r = l * 0.2f
+            c.drawCircle(cx, cy, r, linea)
+            for (i in 0..8) girado(cx, cy, 135f + i * 33.75f) { c.drawLine(r * 0.62f, 0f, r * (if (i % 4 == 0) 0.88f else 0.8f), 0f, linea) }
+            girado(cx, cy, 300f) { c.drawLine(0f, 0f, r * 0.7f, 0f, linea) }
+            c.drawCircle(cx, cy, l * 0.02f, relleno)
+            for (k in 0 until 4) { val t = l * (0.06f + 0.06f * k); c.drawLine(t, 0f, 0f, t, linea); c.drawLine(l - t, l, l, l - t, linea) }
         }
         TemaId.LABORATORIO -> tresbolillo { x, y ->
             // Anillos de benceno: el hexágono y su círculo.

@@ -275,6 +275,8 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     TemaId.REFUGIO -> RoundedCornerShape(50)
     // Placa ochavada.
     TemaId.ORDEN -> CutCornerShape(22)
+    // La placa de nombre: remate redondo arriba, base recta.
+    TemaId.VAPOR -> RoundedCornerShape(topStartPercent = 42, topEndPercent = 42, bottomEndPercent = 8, bottomStartPercent = 8)
     // Pocillo de placa de ensayo.
     TemaId.LABORATORIO -> RoundedCornerShape(35)
     // Boleto con una muesca a cada lado.
@@ -397,6 +399,8 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         TemaId.DISTOPIA -> {}
         TemaId.REFUGIO -> {}
         TemaId.ORDEN -> {}
+        // Dos remaches abajo, como en la placa.
+        TemaId.VAPOR -> listOf(0.2f, 0.8f).forEach { fx -> drawCircle(fondo.copy(alpha = 0.6f), minOf(s.width, s.height) * 0.05f, Offset(s.width * fx, s.height * 0.8f)) }
         TemaId.LABORATORIO -> {}
         TemaId.COLONOS -> {}
         TemaId.NAPOLEON -> {}

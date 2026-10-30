@@ -59,6 +59,7 @@ object SalonesTema {
             TemaId.NEON -> with(SalonesMas) { callejon(cs, oscuro, n) }
             TemaId.REFUGIO -> with(SalonesMas) { salaComun(cs, oscuro, n) }
             TemaId.ORDEN -> with(SalonesMas) { salaCapitular(cs, oscuro, n) }
+            TemaId.VAPOR -> with(SalonesMas) { naveExposicion(cs, oscuro, n) }
             TemaId.LABORATORIO -> with(SalonesMas) { laboratorioLimpio(cs, oscuro, n) }
             TemaId.ESPACIO -> with(SalonesMas) { observatorio(cs, oscuro, n) }
             TemaId.ABISMO -> with(SalonesMas) { salaAbisal(cs, oscuro, n) }
@@ -145,6 +146,7 @@ object SalonesTema {
             TemaId.NEON -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.REFUGIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.ORDEN -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
+            TemaId.VAPOR -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.LABORATORIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.ESPACIO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }
             TemaId.ABISMO -> with(SalonesMas) { pedestalMas(tema, cs, metal) }

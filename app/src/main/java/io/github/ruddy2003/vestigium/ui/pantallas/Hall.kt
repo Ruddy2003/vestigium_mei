@@ -99,6 +99,7 @@ private fun matizHall(t: TemaId): Color = when (t) {
     TemaId.DISTOPIA -> Color(0xFF5D6670)
     TemaId.REFUGIO -> Color(0xFF3FA7A0)
     TemaId.ORDEN -> Color(0xFFA07D2E)
+    TemaId.VAPOR -> Color(0xFFB8862B)
     TemaId.LABORATORIO -> Color(0xFF00ACC1)
     TemaId.COLONOS -> Color(0xFF2F4A6E)
     TemaId.NAPOLEON -> Color(0xFF1F3A8A)
@@ -212,6 +213,8 @@ object PiezasLogro {
         TemaId.DISTOPIA -> Trazo(u, 1.1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(5f, 1.6f), 0f, false, Color(0xFFD9D9D4))
         TemaId.REFUGIO -> Trazo(u, 1.05f, StrokeCap.Round, StrokeJoin.Round, null, 2.5f, false, Color(0xFFFFF1CF))
         TemaId.ORDEN -> Trazo(u, 1.3f, StrokeCap.Square, StrokeJoin.Bevel, floatArrayOf(4f, 1.2f), 0f, false, Color(0xFFCFD3D8))
+        // El grabado de una lámina de patente: línea continua y firme, esquinas romas, sobre papel crema.
+        TemaId.VAPOR -> Trazo(u, 1.2f, StrokeCap.Round, StrokeJoin.Round, null, 0.8f, true, Color(0xFFEFE4CB))
         TemaId.LABORATORIO -> Trazo(u, 0.75f, StrokeCap.Round, StrokeJoin.Round, null, 0f, false, Color(0xFFF4FBFC))
         TemaId.COLONOS -> Trazo(u, 1f, StrokeCap.Butt, StrokeJoin.Miter, floatArrayOf(1.2f, 0.8f), 0f, false, Color(0xFFE6DFCC))
         TemaId.NAPOLEON -> Trazo(u, 1.05f, StrokeCap.Butt, StrokeJoin.Miter, null, 0f, true, Color(0xFFF3E6C4))
@@ -333,6 +336,9 @@ object PiezasLogro {
             }
             TemaId.REFUGIO -> { drawCircle(pri, r * 0.9f, c, style = Stroke(3 * u)); for (i in 0 until 8) drawCircle(Color.White.copy(alpha = 0.7f), 1.2f * u, en(i * PI / 4 + PI / 8, 0.9f)) }
             TemaId.ORDEN -> for (i in 0 until 16) { val a = i * PI / 8; val p = en(a, 0.93f); rotate(grados(a) + 90f, p) { drawRect(m, Offset(p.x - 2.5f * u, p.y - 2 * u), Size(5 * u, 4 * u)) } }
+            // El bisel de un manómetro: el aro de latón con la escala de marcas y seis remaches.
+            TemaId.VAPOR -> { drawCircle(m, r * 0.95f, c, style = Stroke(1.6f * u)); for (i in 0 until 36) { val a = i * PI / 18; drawLine(m, en(a, 0.88f), en(a, if (i % 6 == 0) 0.8f else 0.85f), 0.8f * u) }
+                for (i in 0 until 6) drawCircle(pri, 1.4f * u, en(i * PI / 3 + PI / 6, 0.98f)) }
             TemaId.LABORATORIO -> {
                 drawCircle(pri, r * 0.93f, c, style = Stroke(1.6f * u)); drawCircle(cs.primary.copy(alpha = 0.25f), r * 0.86f, c, style = Stroke(0.8f * u))
                 for (i in 0 until 8) drawLine(cs.primary.copy(alpha = 0.5f), en(i * PI / 4, 0.86f), en(i * PI / 4, 0.93f), 0.8f * u)
@@ -458,6 +464,11 @@ object PiezasLogro {
                 drawLine(tinta, Offset(cx, y - 7 * u), Offset(cx, y - 11 * u), 0.8f * u)
                 drawPath(Path().apply { moveTo(cx, y - 11 * u); lineTo(cx + 3 * u, y - 10 * u); lineTo(cx, y - 9 * u); close() }, tinta)
             }
+            // El tejado en diente de sierra de una fábrica, con su chimenea.
+            TemaId.VAPOR -> {
+                drawPath(Path().apply { moveTo(x, y); lineTo(x, y - 4 * u); lineTo(x + an * 0.4f, y); lineTo(x + an * 0.4f, y - 4 * u); lineTo(x + an * 0.8f, y); close() }, tinta)
+                drawRect(tinta, Offset(x + an * 0.82f, y - 9 * u), Size(an * 0.14f, 9 * u))
+            }
             TemaId.LABORATORIO -> { val m = an / 2; for (k in 0 until 2) drawPath(Path().apply { moveTo(x + k * m, y); lineTo(x + k * m, y - 3.5f * u); lineTo(x + (k + 1) * m, y); close() }, tinta) }
             TemaId.COLONOS -> { drawPath(Path().apply { moveTo(x, y); lineTo(x + an * 0.35f, y - 5 * u); lineTo(x + an, y); close() }, tinta); drawRect(tinta, Offset(x + an * 0.65f, y - 5 * u), Size(1.6f * u, 4 * u)) }
             TemaId.NAPOLEON -> drawPath(Path().apply { moveTo(x, y); lineTo(x + 1.5f * u, y - 4 * u); lineTo(x + an - 1.5f * u, y - 4 * u); lineTo(x + an, y); close() }, tinta)
@@ -576,6 +587,16 @@ object PiezasLogro {
             TemaId.DISTOPIA -> rotate(-6f, c) { traza(caja(c.x - 28 * u, c.y - 20 * u, c.x + 28 * u, c.y + 20 * u, 2 * u)); drawRect(tinto, Offset(c.x - 25 * u, c.y - 17 * u), Size(50 * u, 34 * u), style = Stroke(0.8f * u)) }
             TemaId.REFUGIO -> traza(Path().apply { addOval(Rect(c.x - 30 * u, c.y - 20 * u, c.x + 30 * u, c.y + 20 * u)) })
             TemaId.ORDEN -> traza(Path().apply { moveTo(c.x - 26 * u, c.y - 20 * u); lineTo(c.x + 26 * u, c.y - 20 * u); lineTo(c.x + 26 * u, c.y + 8 * u); lineTo(c.x, c.y + 26 * u); lineTo(c.x - 26 * u, c.y + 8 * u); close() })
+            // El billete de tren de cartón: las muescas de los lados, el filete y el agujero del picado.
+            TemaId.VAPOR -> {
+                traza(Path().apply {
+                    val l = c.x - 28 * u; val r = c.x + 28 * u; val t = c.y - 15 * u; val b = c.y + 15 * u; val k = 4 * u
+                    moveTo(l, t); lineTo(r, t); lineTo(r, c.y - k); quadraticTo(r - k, c.y, r, c.y + k); lineTo(r, b); lineTo(l, b); lineTo(l, c.y + k); quadraticTo(l + k, c.y, l, c.y - k); close()
+                })
+                drawLine(tinto, Offset(c.x - 22 * u, c.y - 9 * u), Offset(c.x + 22 * u, c.y - 9 * u), 0.8f * u)
+                drawLine(tinto, Offset(c.x - 22 * u, c.y + 9 * u), Offset(c.x + 22 * u, c.y + 9 * u), 0.8f * u)
+                drawCircle(tinto, 2.4f * u, Offset(c.x + 16 * u, c.y), style = Stroke(1 * u))
+            }
             TemaId.LABORATORIO -> traza(poligono(6, 27 * u, PI / 6))
             TemaId.COLONOS -> {
                 traza(caja(c.x - 26 * u, c.y - 22 * u, c.x + 26 * u, c.y + 22 * u))
@@ -882,6 +903,15 @@ object PiezasLogro {
                 for (k in 0 until 5) { val x = c.x - 16 * u + k * 8 * u; drawPath(Path().apply { moveTo(x - 2.5f * u, base - 32 * u); lineTo(x, base - 37 * u); lineTo(x + 2.5f * u, base - 32 * u); close() }, tinta) }
                 listOf(-8f, 0f, 8f).forEach { dx -> drawRect(hueco, Offset(c.x + dx * u - 0.8f * u, base - 26 * u), Size(1.6f * u, 7 * u)) }
                 arco(c.x - 4 * u, base, 8 * u, 12 * u)
+                suelo()
+            }
+            // La estación terminal: la nave de hierro y vidrio en arco, la fachada de ladrillo con tres puertas y el reloj.
+            TemaId.VAPOR -> {
+                drawArc(tinta, 180f, 180f, true, Offset(c.x - 26 * u, base - 46 * u), Size(52 * u, 40 * u))
+                for (k in 1 until 6) drawLine(hueco, Offset(c.x - 26 * u + k * 52 * u / 6, base - 26 * u), Offset(c.x - 26 * u + k * 52 * u / 6, base - 44 * u + kotlin.math.abs(k - 3) * 4 * u), 0.7f * u)
+                drawRect(tinta, Offset(c.x - 26 * u, base - 26 * u), Size(52 * u, 26 * u))
+                listOf(-14f, 0f, 14f).forEach { dx -> arco(c.x + dx * u - 4 * u, base, 8 * u, 13 * u) }
+                drawCircle(hueco, 4.5f * u, Offset(c.x, base - 20 * u)); drawLine(tinta, Offset(c.x, base - 20 * u), Offset(c.x, base - 23 * u), 0.8f * u)
                 suelo()
             }
             TemaId.LABORATORIO -> {
@@ -1192,6 +1222,17 @@ object PiezasLogro {
                 drawPath(engrane(Offset(c.x, c.y - 9 * u), 7 * u, 5.5f * u, 8), claro); drawCircle(tono, 2.4f * u, Offset(c.x, c.y - 9 * u))
                 drawPath(Path().apply { moveTo(c.x, c.y - 37 * u); lineTo(c.x + 2 * u, c.y - 30 * u); lineTo(c.x - 2 * u, c.y - 30 * u); close() }, tinta)
             }
+            // El semáforo de vía: el mástil, el brazo levantado («vía libre») con su franja y la lámpara de dos cristales.
+            TemaId.VAPOR -> {
+                asta(px, c.y - 30 * u)
+                rotate(-40f, Offset(px, c.y - 22 * u)) {
+                    pano(caja(px, c.y - 25 * u, px + 28 * u, c.y - 19 * u, 1 * u))
+                    drawRect(claro, Offset(px + 18 * u, c.y - 25 * u), Size(3 * u, 6 * u))
+                }
+                drawCircle(tinta, 4 * u, Offset(px, c.y - 14 * u)); drawCircle(Color(0xFF4E8F7E), 1.6f * u, Offset(px - 1.5f * u, c.y - 14 * u)); drawCircle(Color(0xFFC0392B), 1.6f * u, Offset(px + 1.5f * u, c.y - 14 * u))
+                raya(tz, tinta, Offset(px - 8 * u, c.y + 26 * u), Offset(px + 8 * u, c.y + 26 * u), 1.6f * u)
+                drawPath(Path().apply { moveTo(px, c.y - 34 * u); lineTo(px + 2 * u, c.y - 30 * u); lineTo(px - 2 * u, c.y - 30 * u); close() }, tinta)
+            }
             TemaId.LABORATORIO -> {
                 asta()
                 pano(Path().apply { moveTo(px, arriba); lineTo(c.x + 22 * u, arriba + 10 * u); lineTo(px, arriba + 20 * u); close() })
@@ -1469,6 +1510,12 @@ object PiezasLogro {
                 drawCircle(claro, 5 * u, c); drawCircle(tinta, 5 * u, c, style = Stroke(1 * u))
                 for (i in 0 until 4) drawCircle(tinta, 1.3f * u, en(PI / 4 + i * PI / 2, 0.5f))
             }
+            // La ficha de latón del fogonero: el disco con su número troquelado y el agujero para colgarla del tablero.
+            TemaId.VAPOR -> {
+                disco(); drawCircle(tinta, R * 0.82f, c, style = Stroke(0.8f * u))
+                drawCircle(claro, 2.6f * u, en(-PI / 2, 0.62f)); drawCircle(tinta, 2.6f * u, en(-PI / 2, 0.62f), style = Stroke(0.8f * u))
+                letra("47", Offset(c.x, c.y + 4 * u), 11 * u, tinta)
+            }
             TemaId.LABORATORIO -> {
                 disco()
                 drawRect(claro, Offset(c.x - 9 * u, c.y - 9 * u), Size(18 * u, 18 * u)); drawRect(tinta, Offset(c.x - 9 * u, c.y - 9 * u), Size(18 * u, 18 * u), style = Stroke(1 * u))
@@ -1730,6 +1777,16 @@ object PiezasLogro {
                 }
                 drawPath(engrane(Offset(c.x - 1 * u, c.y - 2 * u), 7 * u, 5.5f * u, 8), papel); drawCircle(tono, 2.4f * u, Offset(c.x - 1 * u, c.y - 2 * u))
                 for (k in 0 until 4) drawOval(tinta, Offset(c.x + 14 * u + k * 2.5f * u, c.y + 14 * u + k * 3 * u), Size(4 * u, 2.6f * u), style = Stroke(1 * u))
+            }
+            // La guía de ferrocarriles: la tapa amarilla de papel, el título en dos renglones, la locomotora grabada y la tabla de horarios.
+            TemaId.VAPOR -> {
+                tapa(c.x - 17 * u, c.y - 22 * u, c.x + 17 * u, c.y + 22 * u, Color(0xFFE2BE6A), 1 * u)
+                fina(tz, tinta, Offset(c.x - 12 * u, c.y - 16 * u), Offset(c.x + 12 * u, c.y - 16 * u), 1.4f * u)
+                fina(tz, tinta, Offset(c.x - 8 * u, c.y - 12 * u), Offset(c.x + 8 * u, c.y - 12 * u), 0.9f * u)
+                drawRect(tinta, Offset(c.x - 9 * u, c.y - 6 * u), Size(11 * u, 5 * u)); drawRect(tinta, Offset(c.x + 2 * u, c.y - 8 * u), Size(5 * u, 7 * u)); drawRect(tinta, Offset(c.x - 7 * u, c.y - 9 * u), Size(2 * u, 3 * u))
+                listOf(-6f, -1f, 5f).forEach { dx -> drawCircle(tinta, 1.6f * u, Offset(c.x + dx * u, c.y)) }
+                for (k in 0 until 3) { val y = c.y + 7 * u + k * 4 * u; fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x - 12 * u, y), Offset(c.x + 12 * u, y), 0.7f * u) }
+                fina(tz, tinta.copy(alpha = 0.6f), Offset(c.x, c.y + 5 * u), Offset(c.x, c.y + 17 * u), 0.7f * u)
             }
             TemaId.LABORATORIO -> {
                 paginas(false)
@@ -1998,6 +2055,13 @@ object PiezasLogro {
                 drawPath(tapa, lerp(tono, tinta, 0.3f)); contorno(tz, tapa, tinta, 1 * u)
                 drawRect(tinta, Offset(c.x - 2.5f * u, c.y - 2 * u), Size(5 * u, 16 * u))
                 drawRect(papel, Offset(c.x - 4 * u, c.y + 2 * u), Size(8 * u, 6 * u), style = Stroke(1.2f * u))
+            }
+            // El telegrama: la hoja con la franja impresa de la compañía, la palabra en mayúsculas y las tiras pegadas del texto.
+            TemaId.VAPOR -> {
+                hoja(c.x - 22 * u, c.y - 16 * u, c.x + 22 * u, c.y + 16 * u)
+                drawRect(tono, Offset(c.x - 22 * u, c.y - 16 * u), Size(44 * u, 7 * u))
+                letra("TELEGRAMA", Offset(c.x, c.y - 11.5f * u), 4.6f * u, papel)
+                listOf(-3f, 3f, 9f).forEach { dy -> drawRect(Color(0xFFF2EAC6), Offset(c.x - 17 * u, c.y + dy * u), Size((if (dy > 6f) 22 else 34) * u, 3.4f * u)); drawLine(tinta.copy(alpha = 0.55f), Offset(c.x - 15 * u, c.y + (dy + 1.7f) * u), Offset(c.x + (if (dy > 6f) 3 else 15) * u, c.y + (dy + 1.7f) * u), 0.7f * u) }
             }
             TemaId.LABORATORIO -> {
                 hoja(c.x - 18 * u, c.y - 22 * u, c.x + 18 * u, c.y + 22 * u)

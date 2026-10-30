@@ -558,6 +558,20 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             for (k in 0 until 6) drawCircle(e.secondary, 2.2f * u, en(k / 6f + 1f / 12f, r - 3 * u))
             drawCircle(tenue.copy(alpha = 0.4f), r - 10 * u, c, style = Stroke(u))
         }
+        // La esfera de un manómetro: el bisel de latón con ocho remaches, sesenta marcas que se encienden al pasar, la
+        // zona roja del último décimo y la punta de la aguja que avanza por el borde.
+        TemaId.VAPOR -> {
+            drawCircle(pista, R - 4 * u, c, style = Stroke(6 * u))
+            for (k in 0 until 8) remacheVapor(en(k / 8f + 1f / 16f, R - 4 * u), 1.8f * u, e.primary.copy(alpha = 0.85f))
+            arco(e.tertiary.copy(alpha = 0.4f), 0.9f, 1f, r - 2 * u, 5 * u)
+            arco(color, 0f, p, r - 2 * u, 5 * u)
+            for (k in 0 until 60) {
+                val f = k / 60f; val largo = if (k % 5 == 0) 9 * u else 4 * u
+                drawLine(if (f <= p) color else tenue.copy(alpha = 0.5f), en(f, r - 7 * u), en(f, r - 7 * u - largo), if (k % 5 == 0) 1.6f * u else 0.8f * u)
+            }
+            drawLine(e.tertiary, en(p, r - 30 * u), en(p, r - 6 * u), 2.4f * u, StrokeCap.Round)
+            drawCircle(e.tertiary, 3 * u, en(p, r - 30 * u))
+        }
         // Reloj de agua: un matraz redondo que se llena desde abajo, con su graduación y su cuello.
         TemaId.LABORATORIO -> {
             val rv = r + 4 * u; val dentro = rv - 2 * u
@@ -982,6 +996,11 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
         TemaId.ORDEN -> {
             val k = minOf(h * 0.3f, w / 2)
             moveTo(x + k, y); lineTo(x + w - k, y); lineTo(x + w, y + k); lineTo(x + w, y + h - k); lineTo(x + w - k, y + h); lineTo(x + k, y + h); lineTo(x, y + h - k); lineTo(x, y + k); close()
+        }
+        // La placa de nombre: remate en arco y base recta.
+        TemaId.VAPOR -> {
+            val k = minOf(h * 0.35f, w / 2)
+            moveTo(x, y + h); lineTo(x, y + k); quadraticTo(x + w / 2, y - k * 0.6f, x + w, y + k); lineTo(x + w, y + h); close()
         }
         TemaId.LABORATORIO -> {
             val r = minOf(h / 2, w / 2)

@@ -544,6 +544,13 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 if (fw > h * 3) { drawCircle(oscuro, h * 0.17f, Offset(h * 0.5f, h / 2)); drawCircle(oscuro, h * 0.17f, Offset(fw - h * 0.5f, h / 2)) }
             }
         }
+        // El tubo de nivel de una caldera: la pista de vidrio con sus marcas y el agua (el color) hasta donde llega.
+        TemaId.VAPOR -> {
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(h / 2))
+            if (fw > 0f) { drawRoundRect(color, Offset.Zero, Size(fw, h), CornerRadius(h / 2)); drawLine(claro, Offset(h * 0.4f, h * 0.3f), Offset(maxOf(h * 0.4f, fw - h * 0.4f), h * 0.3f), 1.2f * d) }
+            for (k in 1 until 10) drawLine(oscuro.copy(alpha = 0.18f), Offset(w * k / 10f, h * (if (k == 5) 0.1f else 0.55f)), Offset(w * k / 10f, h * 0.9f), 0.8f * d)
+            listOf(0f, w).forEach { x -> drawRect(oscuro, Offset(x - 1.5f * d, -1 * d), Size(3 * d, h + 2 * d)) }
+        }
         // Regla graduada: la lectura arriba y la marca donde termina.
         TemaId.LABORATORIO -> {
             var x = 0f; var i = 0
@@ -927,6 +934,14 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawPath(figEngrane(c, ro + 3.5f * d, 24, ro / (ro + 3.5f * d) - 0.01f), linea.copy(alpha = 0.6f), style = Stroke(1.2f * d))
             drawCircle(linea.copy(alpha = 0.5f), rc * 0.32f, c, style = Stroke(2f * d))
             for (k in 0 until 6) drawCircle(linea.copy(alpha = 0.5f), 1.5f * d, polarFig(c, rc * 0.2f, k * 60f))
+        }
+        // El reloj de la estación: las doce horas en números de horario por fuera, los minutos marcados y el bisel de latón.
+        TemaId.VAPOR -> {
+            drawCircle(cs.primary.copy(alpha = 0.55f), ro + 4 * d, c, style = Stroke(2.4f * d))
+            marcas(60, 2.5f * d, 0.7f * d, linea.copy(alpha = 0.5f))
+            marcas(12, 5 * d, 1.6f * d, tinta.copy(alpha = 0.7f))
+            drawCircle(linea.copy(alpha = 0.4f), rc * 0.3f, c, style = Stroke(1.2f * d))
+            drawCircle(cs.primary.copy(alpha = 0.6f), 2.4f * d, c)
         }
         // Papel polar: círculos y radios.
         TemaId.LABORATORIO -> {

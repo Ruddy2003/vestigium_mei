@@ -855,6 +855,50 @@ def urbe(tam):
     capa = a_rgba(rgb, alfa)
     guardar(fondo, capa, 'urbe')
 
+
+def vapor(tam):
+    """La puerta de una caldera: chapa de hierro ennegrecida por el hollín, con sus costuras y filas de remaches de latón,
+    el bisel de latón de un manómetro con su escala por el borde y, encima, la huella en latón bruñido, con relieve y algo
+    de cardenillo en los surcos."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    cx = cy = tam / 2
+    dist = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2) / (tam / 2)
+    hierro = mezcla(col('#3A342D'), col('#24201C'), ruido(tam, tam / 18, 141))
+    hierro = hierro * (0.92 + 0.12 * ruido(tam, 1.0, 142)[..., None])
+    hollin = np.clip((ruido(tam, tam / 10, 143) - 0.45) * 2, 0, 1) * 0.5
+    hierro = mezcla(hierro, col('#120F0C'), hollin)
+    for yc in (tam * 0.2, tam * 0.8):
+        hierro = mezcla(hierro, col('#14110E'), (np.abs(yy - yc) < tam / 300).astype(np.float32) * 0.8)
+    fondo = a_img(hierro).convert('RGBA')
+    d = ImageDraw.Draw(fondo, 'RGBA')
+    r0 = tam * 0.475
+    d.ellipse([cx - r0, cy - r0, cx + r0, cy + r0], outline=(201, 160, 74, 255), width=int(tam * 0.024))
+    r1 = r0 - tam * 0.03
+    for k in range(60):
+        a = math.radians(k * 6); l = tam * (0.042 if k % 5 == 0 else 0.022)
+        d.line([(cx + r1 * math.cos(a), cy + r1 * math.sin(a)), (cx + (r1 - l) * math.cos(a), cy + (r1 - l) * math.sin(a))],
+               fill=(201, 160, 74, 210), width=max(1, int(tam * (0.006 if k % 5 == 0 else 0.003))))
+    for yc in (tam * 0.2 - tam * 0.028, tam * 0.2 + tam * 0.028, tam * 0.8 - tam * 0.028, tam * 0.8 + tam * 0.028):
+        for x in np.arange(tam * 0.08, tam * 0.94, tam * 0.06):
+            if math.hypot(x - cx, yc - cy) < r1 - tam * 0.08:
+                rr = tam * 0.011
+                d.ellipse([x - rr, yc - rr, x + rr, yc + rr], fill=(176, 134, 43, 255))
+                d.ellipse([x - rr * 0.85, yc - rr * 0.85, x + rr * 0.15, yc + rr * 0.15], fill=(240, 212, 144, 170))
+    arr = np.array(fondo.convert('RGB')).astype(np.float32)
+    arr = mezcla(arr, col('#0E0C0A'), np.clip((dist - 0.975) * 10, 0, 1))
+    fondo = a_img(arr)
+    sh = relieve(m, fuerza=1.3)[..., None]
+    luz = np.clip(1 - np.abs((xx + yy) / tam - 0.9) * 1.4, 0, 1) ** 2
+    laton = mezcla(col('#8A5A14'), col('#E8C470'), np.clip(luz * 0.8 + ruido(tam, tam / 40, 144) * 0.3, 0, 1))
+    laton = mezcla(laton, col('#4E8F7E'), np.clip((ruido(tam, tam / 60, 145) - 0.72) * 3, 0, 1) * 0.4)
+    rgb = laton * (1 + sh * 0.5)
+    capa = a_rgba(rgb, m)
+    sombra = np.array(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(tam / 120))).astype(np.float32) / 255
+    base = a_rgba(np.zeros((tam, tam, 3)) + col('#0A0806'), np.roll(np.roll(sombra, 4, 0), 4, 1) * 0.6)
+    base.alpha_composite(capa)
+    guardar(fondo, base, 'vapor')
+
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
     """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
@@ -1269,6 +1313,7 @@ SIETE = [
     'antiguas',
     'cueva',
     'templario',
+    'vapor',
 ]
 ORDEN = [
     'romano',
@@ -1282,6 +1327,7 @@ ORDEN = [
     'distopia',
     'refugio',
     'orden',
+    'vapor',
     'laboratorio',
     'colonos',
     'napoleon',

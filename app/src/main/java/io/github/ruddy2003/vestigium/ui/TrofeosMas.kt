@@ -63,6 +63,8 @@ object TrofeosMas {
             "Cultura" to "Disco de vinilo", "Gente" to "Placa de la puerta", "Constancia" to "Engrane de la compuerta", "Curiosos" to "Contador Geiger", "Tuyos" to "Lata de conservas"),
         TemaId.ORDEN to mapOf("Diario" to "Placa del juramento", "Mundo" to "Estandarte de campaña", "Cuerpo" to "Guantelete", "Mente" to "Calibre de acero",
             "Cultura" to "Escudo de la Orden", "Gente" to "Yelmo de visera", "Constancia" to "Martillo de forja", "Curiosos" to "Válvula de vacío", "Tuyos" to "Espada forjada"),
+        TemaId.VAPOR to mapOf("Diario" to "Patente sellada", "Mundo" to "Locomotora de latón", "Cuerpo" to "Pala del fogonero", "Mente" to "Máquina diferencial",
+            "Cultura" to "Gramófono de bocina", "Gente" to "Reloj del andén", "Constancia" to "Manómetro de la caldera", "Curiosos" to "Linterna mágica", "Tuyos" to "Silbato de vapor"),
         TemaId.LABORATORIO to mapOf("Diario" to "Placa de mérito", "Mundo" to "Matraz de fondo redondo", "Cuerpo" to "Probeta graduada", "Mente" to "Microscopio",
             "Cultura" to "Modelo molecular", "Gente" to "Gradilla de tubos", "Constancia" to "Balanza analítica", "Curiosos" to "Matraz Erlenmeyer", "Tuyos" to "Placa de Petri"),
         TemaId.ESPACIO to mapOf("Diario" to "Parche de la misión", "Mundo" to "Sonda planetaria", "Cuerpo" to "Casco presurizado", "Mente" to "Telescopio espacial",
@@ -210,6 +212,22 @@ object TrofeosMas {
                     drawPath(Path().apply { moveTo(w * 0.36f, h * 0.805f); lineTo(w * 0.64f, h * 0.805f); lineTo(w * 0.62f, h * 0.93f); lineTo(w * 0.5f, h * 0.9f); lineTo(w * 0.38f, h * 0.93f); close() }, Color(0xFF9E1B22))
                     drawLine(Color(0xFFD6B25A), Offset(w * 0.36f, h * 0.81f), Offset(w * 0.64f, h * 0.81f), w * 0.01f)
                     listOf(0.21f, 0.28f, 0.72f, 0.79f).forEach { x -> drawCircle(Color(0xFF2A2E33), w * 0.014f, Offset(w * x, h * 0.87f)) }
+                }
+            }
+            TemaId.VAPOR -> {
+                // Un zócalo de ladrillo de fábrica con su cornisa de hierro fundido y, al frente, la placa de latón con dos remaches.
+                val c = if (p.hecho) Color(0xFF9C4A32) else ped
+                drawRect(piedra(c), Offset(w * 0.16f, h * 0.8f), Size(w * 0.68f, h * 0.15f))
+                if (p.hecho) {
+                    val junta = Color(0xFFD9C7A8).copy(alpha = 0.45f)
+                    listOf(0.85f, 0.9f).forEach { f -> drawLine(junta, Offset(w * 0.16f, h * f), Offset(w * 0.84f, h * f), w * 0.004f) }
+                    var x = w * 0.2f; var fila = 0
+                    while (x < w * 0.84f) { drawLine(junta, Offset(x, h * (if (fila % 2 == 0) 0.8f else 0.85f)), Offset(x, h * (if (fila % 2 == 0) 0.85f else 0.9f)), w * 0.004f); x += w * 0.07f; fila++ }
+                }
+                drawRect(piedra(if (p.hecho) Color(0xFF2E2B28) else ped), Offset(w * 0.12f, h * 0.775f), Size(w * 0.76f, h * 0.03f))
+                if (p.hecho) {
+                    drawRect(Color(0xFFC9A04A), Offset(w * 0.36f, h * 0.84f), Size(w * 0.28f, h * 0.07f))
+                    listOf(0.39f, 0.61f).forEach { x -> drawCircle(Color(0xFF5A3F12), w * 0.01f, Offset(w * x, h * 0.875f)) }
                 }
             }
             TemaId.LABORATORIO -> {
@@ -2016,6 +2034,129 @@ object TrofeosMas {
                 caja(p, 0.46f, 0.57f, 0.54f, 0.69f, SolidColor(carmesi))
                 if (p.hecho) for (k in 0 until 4) drawLine(negro.copy(alpha = 0.5f), p.o(0.46f, 0.59f + k * 0.028f), p.o(0.54f, 0.6f + k * 0.028f), lw * 0.4f)
                 engrane(p.o(0.5f, 0.72f), p.w * 0.06f, p.metal(0.44f, 0.56f), carmesi)
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- Vapor victoriano: latón, hierro y vapor
+
+    internal fun DrawScope.vapor(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
+        val lw = p.w * 0.01f
+        val laton = p.c(Color(0xFFB8862B)); val hierro = p.c(Color(0xFF2E2B28)); val ladrillo = p.c(Color(0xFF9C3D24))
+        val cardenillo = p.c(Color(0xFF4E8F7E)); val papel = p.c(Color(0xFFEFE4CB)); val madera = p.c(Color(0xFF6B4423))
+        fun remaches(vararg pts: Pair<Float, Float>) { if (p.hecho) pts.forEach { (x, y) -> drawCircle(p.linea, p.w * 0.013f, p.o(x, y)); drawCircle(p.claro, p.w * 0.005f, p.o(x - 0.004f, y - 0.004f)) } }
+        /** Una esfera de manómetro con la escala de 270°, la zona roja y la aguja en [lectura]. */
+        fun esfera(c: Offset, r: Float, lectura: Float) {
+            drawCircle(p.metal(0.5f - r / p.w, 0.5f + r / p.w), r, c)
+            drawCircle(papel, r * 0.8f, c)
+            if (p.hecho) {
+                drawArc(ladrillo, 351f, 54f, false, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f), style = Stroke(r * 0.1f))
+                for (k in 0..10) { val a = Math.toRadians(135.0 + 27.0 * k); drawLine(hierro, Vapor.en(c, r * 0.74f, a), Vapor.en(c, r * (if (k % 5 == 0) 0.56f else 0.64f), a), lw * 0.5f) }
+                drawLine(ladrillo, c, Vapor.en(c, r * 0.6f, Math.toRadians(135.0 + 270.0 * lectura)), lw * 0.8f, StrokeCap.Round)
+            }
+            drawCircle(hierro, r * 0.1f, c)
+        }
+        when (cat) {
+            "Diario" -> {
+                // La patente sellada: el pliego con el remate en arco, el engrane grabado, los renglones y el lacre con su cinta.
+                val pliego = Path().apply { moveTo(p.x(0.2f), p.y(0.72f)); lineTo(p.x(0.2f), p.y(0.18f)); quadraticTo(p.x(0.5f), p.y(0.02f), p.x(0.8f), p.y(0.18f)); lineTo(p.x(0.8f), p.y(0.72f)); close() }
+                drawPath(pliego, SolidColor(papel)); drawPath(pliego, p.metal(0.2f, 0.8f), style = Stroke(lw * 1.2f))
+                drawPath(Vapor.engrane(p.o(0.5f, 0.24f), p.w * 0.08f, 10, 0.78f), p.metal(0.42f, 0.58f)); drawCircle(papel, p.w * 0.025f, p.o(0.5f, 0.24f))
+                if (p.hecho) for (k in 0 until 4) drawLine(p.linea, p.o(0.28f, 0.38f + k * 0.06f), p.o(if (k == 3) 0.52f else 0.72f, 0.38f + k * 0.06f), lw * 0.5f)
+                drawPath(Path().apply { moveTo(p.x(0.6f), p.y(0.66f)); lineTo(p.x(0.56f), p.y(0.8f)); lineTo(p.x(0.6f), p.y(0.77f)); lineTo(p.x(0.63f), p.y(0.8f)); close() }, SolidColor(cardenillo))
+                drawPath(Path().apply { moveTo(p.x(0.68f), p.y(0.66f)); lineTo(p.x(0.72f), p.y(0.8f)); lineTo(p.x(0.68f), p.y(0.77f)); lineTo(p.x(0.65f), p.y(0.8f)); close() }, SolidColor(cardenillo))
+                drawPath(Vapor.engrane(p.o(0.64f, 0.64f), p.w * 0.065f, 12, 0.88f), SolidColor(ladrillo))
+            }
+            "Mundo" -> {
+                // La locomotora de latón sobre su tramo de vía: caldera, chimenea, domo, cabina, ruedas con biela y el quitapiedras.
+                caja(p, 0.06f, 0.74f, 0.94f, 0.77f, SolidColor(hierro))
+                if (p.hecho) { var x = 0.09f; while (x < 0.94f) { caja(p, x, 0.72f, x + 0.03f, 0.74f, SolidColor(madera)); x += 0.08f } }
+                drawRoundRect(p.metal(0.18f, 0.62f), Offset(p.x(0.18f), p.y(0.42f)), Size(p.x(0.44f), p.y(0.16f)), CornerRadius(p.w * 0.06f))
+                caja(p, 0.24f, 0.24f, 0.31f, 0.42f, SolidColor(hierro)); caja(p, 0.22f, 0.22f, 0.33f, 0.26f, SolidColor(hierro))
+                drawArc(p.metal(0.4f, 0.5f), 180f, 180f, true, Offset(p.x(0.4f), p.y(0.36f)), Size(p.x(0.1f), p.y(0.12f)))
+                caja(p, 0.62f, 0.3f, 0.84f, 0.6f, SolidColor(cardenillo)); caja(p, 0.6f, 0.27f, 0.86f, 0.31f, SolidColor(hierro))
+                caja(p, 0.67f, 0.36f, 0.79f, 0.46f, SolidColor(papel))
+                drawPath(Path().apply { moveTo(p.x(0.18f), p.y(0.58f)); lineTo(p.x(0.1f), p.y(0.72f)); lineTo(p.x(0.2f), p.y(0.72f)); close() }, SolidColor(ladrillo))
+                listOf(0.3f to 0.08f, 0.5f to 0.08f, 0.74f to 0.06f).forEach { (x, r) -> drawCircle(SolidColor(hierro), p.w * r, p.o(x, 0.72f - r * p.w / p.h)); drawCircle(SolidColor(laton), p.w * r * 0.35f, p.o(x, 0.72f - r * p.w / p.h)) }
+                if (p.hecho) drawLine(laton, p.o(0.3f, 0.66f), p.o(0.5f, 0.66f), lw * 1.4f)
+                if (p.hecho) listOf(0.27f to 0.18f, 0.33f to 0.12f, 0.4f to 0.08f).forEachIndexed { i, (x, y) -> drawCircle(Color.White.copy(alpha = 0.5f), p.w * (0.03f + i * 0.012f), p.o(x, y)) }
+            }
+            "Cuerpo" -> {
+                // La pala del fogonero: el mango de fresno con su asa en «D», el cuello de hierro y la hoja con carbón.
+                rotate(-28f, p.o(0.5f, 0.5f)) {
+                    caja(p, 0.47f, 0.12f, 0.53f, 0.56f, SolidColor(madera))
+                    drawPath(Path().apply { moveTo(p.x(0.42f), p.y(0.12f)); lineTo(p.x(0.42f), p.y(0.04f)); lineTo(p.x(0.58f), p.y(0.04f)); lineTo(p.x(0.58f), p.y(0.12f)) }, hierro, style = Stroke(lw * 1.6f))
+                    caja(p, 0.46f, 0.54f, 0.54f, 0.6f, SolidColor(hierro))
+                    drawPath(Path().apply { moveTo(p.x(0.38f), p.y(0.6f)); lineTo(p.x(0.62f), p.y(0.6f)); lineTo(p.x(0.64f), p.y(0.84f)); quadraticTo(p.x(0.5f), p.y(0.9f), p.x(0.36f), p.y(0.84f)); close() }, p.metal(0.36f, 0.64f))
+                    if (p.hecho) listOf(Offset(0.45f, 0.72f), Offset(0.53f, 0.7f), Offset(0.49f, 0.78f), Offset(0.56f, 0.77f)).forEach { o -> drawCircle(Color(0xFF151311), p.w * 0.03f, p.o(o.x, o.y)) }
+                }
+                if (p.hecho) listOf(Offset(0.72f, 0.62f), Offset(0.78f, 0.56f), Offset(0.7f, 0.52f)).forEach { o -> drawCircle(Color(0xFFFFB347), p.w * 0.011f, p.o(o.x, o.y)) }
+            }
+            "Mente" -> {
+                // La máquina diferencial: el bastidor de latón y tres columnas de ruedas con sus cifras.
+                caja(p, 0.14f, 0.1f, 0.86f, 0.14f); caja(p, 0.14f, 0.66f, 0.86f, 0.72f)
+                listOf(0.16f, 0.82f).forEach { x -> caja(p, x, 0.1f, x + 0.03f, 0.72f, SolidColor(hierro)) }
+                for (col in 0 until 3) {
+                    val x = 0.3f + col * 0.2f
+                    caja(p, x - 0.01f, 0.14f, x + 0.01f, 0.66f, SolidColor(hierro))
+                    for (k in 0 until 5) {
+                        val y = 0.19f + k * 0.1f
+                        drawRoundRect(p.metal(x - 0.07f, x + 0.07f), Offset(p.x(x - 0.07f), p.y(y)), Size(p.x(0.14f), p.y(0.06f)), CornerRadius(p.w * 0.02f))
+                        if (p.hecho) for (d in 0 until 4) drawLine(p.linea, p.o(x - 0.05f + d * 0.033f, y + 0.005f), p.o(x - 0.05f + d * 0.033f, y + 0.055f), lw * 0.4f)
+                    }
+                }
+                caja(p, 0.44f, 0.72f, 0.56f, 0.77f, SolidColor(hierro))
+            }
+            "Cultura" -> {
+                // El gramófono de bocina: la caja de madera, el plato con su disco, el brazo y la gran bocina de latón.
+                caja(p, 0.2f, 0.56f, 0.8f, 0.76f, SolidColor(madera))
+                if (p.hecho) drawRect(laton, Offset(p.x(0.22f), p.y(0.58f)), Size(p.x(0.56f), p.y(0.16f)), style = Stroke(lw * 0.6f))
+                drawOval(SolidColor(hierro), Offset(p.x(0.24f), p.y(0.5f)), Size(p.x(0.42f), p.y(0.08f)))
+                if (p.hecho) drawOval(papel, Offset(p.x(0.41f), p.y(0.52f)), Size(p.x(0.08f), p.y(0.03f)))
+                drawLine(laton, p.o(0.72f, 0.54f), p.o(0.62f, 0.38f), lw * 1.4f)
+                val bocina = Path().apply { moveTo(p.x(0.6f), p.y(0.4f)); quadraticTo(p.x(0.5f), p.y(0.3f), p.x(0.36f), p.y(0.06f)); lineTo(p.x(0.14f), p.y(0.24f)); quadraticTo(p.x(0.42f), p.y(0.32f), p.x(0.56f), p.y(0.44f)); close() }
+                drawPath(bocina, p.metal(0.14f, 0.6f))
+                drawPath(bocina, p.linea, style = Stroke(lw * 0.6f))
+                if (p.hecho) drawLine(p.claro, p.o(0.3f, 0.12f), p.o(0.48f, 0.34f), lw * 0.6f)
+            }
+            "Gente" -> {
+                // El reloj del andén, donde se cita todo el mundo: la ménsula de hierro, la caja de doble esfera y el remate.
+                caja(p, 0.08f, 0.1f, 0.14f, 0.5f, SolidColor(hierro))
+                drawPath(Path().apply { moveTo(p.x(0.14f), p.y(0.18f)); lineTo(p.x(0.42f), p.y(0.18f)); lineTo(p.x(0.14f), p.y(0.4f)); close() }, hierro, style = Stroke(lw * 1.2f))
+                drawLine(hierro, p.o(0.42f, 0.18f), p.o(0.5f, 0.24f), lw)
+                drawCircle(p.metal(0.3f, 0.7f), p.w * 0.22f, p.o(0.56f, 0.48f))
+                drawCircle(papel, p.w * 0.18f, p.o(0.56f, 0.48f))
+                if (p.hecho) for (k in 0 until 12) { val a = k * PI / 6; drawLine(hierro, Vapor.en(p.o(0.56f, 0.48f), p.w * 0.165f, a), Vapor.en(p.o(0.56f, 0.48f), p.w * (if (k % 3 == 0) 0.13f else 0.15f), a), lw * 0.5f) }
+                drawLine(hierro, p.o(0.56f, 0.48f), p.o(0.56f, 0.38f), lw * 0.9f); drawLine(hierro, p.o(0.56f, 0.48f), p.o(0.64f, 0.52f), lw * 0.9f)
+                drawCircle(SolidColor(laton), p.w * 0.035f, p.o(0.56f, 0.24f))
+            }
+            "Constancia" -> {
+                // El manómetro de la caldera sobre su tubo, con la llave de paso y la aguja cerca de la raya roja.
+                caja(p, 0.46f, 0.58f, 0.54f, 0.77f, SolidColor(cardenillo))
+                caja(p, 0.36f, 0.66f, 0.64f, 0.7f, SolidColor(cardenillo))
+                drawCircle(SolidColor(ladrillo), p.w * 0.05f, p.o(0.36f, 0.68f)); drawLine(hierro, p.o(0.31f, 0.68f), p.o(0.41f, 0.68f), lw)
+                esfera(p.o(0.5f, 0.36f), p.w * 0.28f, if (p.hecho) 0.82f else 0.1f)
+                remaches(0.3f to 0.18f, 0.7f to 0.18f, 0.3f to 0.54f, 0.7f to 0.54f)
+            }
+            "Curiosos" -> {
+                // La linterna mágica: la caja de chapa con su chimenea, el tubo del objetivo de latón y el haz de luz.
+                caja(p, 0.22f, 0.34f, 0.62f, 0.68f, SolidColor(cardenillo))
+                caja(p, 0.36f, 0.16f, 0.46f, 0.34f, SolidColor(hierro)); caja(p, 0.33f, 0.13f, 0.49f, 0.17f, SolidColor(hierro))
+                caja(p, 0.62f, 0.44f, 0.78f, 0.56f); caja(p, 0.78f, 0.42f, 0.82f, 0.58f, SolidColor(laton))
+                if (p.hecho) drawPath(Path().apply { moveTo(p.x(0.82f), p.y(0.44f)); lineTo(p.x(1f), p.y(0.32f)); lineTo(p.x(1f), p.y(0.68f)); lineTo(p.x(0.82f), p.y(0.56f)); close() }, Color(0xFFF2C46A).copy(alpha = 0.35f))
+                caja(p, 0.26f, 0.68f, 0.3f, 0.77f, SolidColor(hierro)); caja(p, 0.54f, 0.68f, 0.58f, 0.77f, SolidColor(hierro))
+                remaches(0.26f to 0.38f, 0.58f to 0.38f, 0.26f to 0.64f, 0.58f to 0.64f)
+                if (p.hecho) drawCircle(Color(0xFFF2C46A).copy(alpha = 0.7f), p.w * 0.03f, p.o(0.42f, 0.5f))
+            }
+            else -> {
+                // El silbato de vapor: la campana de latón con su ranura, la palanca y el tubo; arriba, el chorro de vapor.
+                caja(p, 0.46f, 0.6f, 0.54f, 0.77f, SolidColor(cardenillo))
+                caja(p, 0.4f, 0.54f, 0.6f, 0.6f, SolidColor(hierro))
+                drawRoundRect(p.metal(0.38f, 0.62f), Offset(p.x(0.38f), p.y(0.18f)), Size(p.x(0.24f), p.y(0.36f)), CornerRadius(p.w * 0.04f))
+                caja(p, 0.38f, 0.44f, 0.62f, 0.47f, SolidColor(hierro))
+                drawCircle(p.metal(0.44f, 0.56f), p.w * 0.04f, p.o(0.5f, 0.15f))
+                drawLine(hierro, p.o(0.6f, 0.57f), p.o(0.82f, 0.5f), lw * 1.4f); drawCircle(SolidColor(madera), p.w * 0.03f, p.o(0.83f, 0.5f))
+                if (p.hecho) listOf(Offset(0.44f, 0.06f) to 0.04f, Offset(0.56f, 0.02f) to 0.05f, Offset(0.36f, 0.0f) to 0.035f).forEach { (o, r) -> drawCircle(Color.White.copy(alpha = 0.55f), p.w * r, p.o(o.x, o.y)) }
             }
         }
     }
