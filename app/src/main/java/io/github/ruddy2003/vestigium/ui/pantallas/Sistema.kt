@@ -473,7 +473,7 @@ fun PantallaReportes(nav: Nav) {
         runCatching { ctx.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)) }
             .onFailure { msg = "Guardado en tu galería (Pictures/VestigiumMei) o en Descargas." }
     }
-    Hoja("Reportes", nav.atras, "Cada lunes llega el de la semana anterior y cada día 1 el del mes anterior. Se guardan en la galería y en Descargas, sin mapas ni direcciones.") {
+    Hoja("Reportes", nav.atras, "Cada lunes llega el de la semana anterior y cada día 1 el del mes anterior. Se guardan en la galería y en Descargas, sin mapas ni direcciones. El de terapia se genera aquí y se comparte.") {
         Seccion("Generar ahora") {
             Tarjeta {
                 val hoy = Fechas.diaLogico()
@@ -485,6 +485,61 @@ fun PantallaReportes(nav: Nav) {
                 Ayuda("Con los colores, letras y nombres del tema que tengas puesto. Para las historias del año, abre «Tu año» en Más.", Modifier.padding(top = 8.dp))
                 msg?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
             }
+        }
+        ReporteTerapiaTarjeta()
+    }
+}
+
+/**
+ * El reporte para terapia: los últimos 7 o 14 días en un PDF para compartir. Las casillas no se guardan: cada vez empiezan
+ * igual, y lo privado siempre empieza apagado.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ReporteTerapiaTarjeta() {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val ayer = remember { Fechas.sumar(Fechas.diaLogico(), -1) }
+    var op by remember { mutableStateOf(io.github.ruddy2003.vestigium.ciencia.Terapia.Opciones(fin = ayer)) }
+    var trabajando by remember { mutableStateOf(false) }
+    var msg by remember { mutableStateOf<String?>(null) }
+    Seccion("Para terapia", "Un PDF con tu ánimo, sueño, cuestionarios, rutina, contacto, gimnasio y alimentación, para compartir con quien te atiende.") {
+        Tarjeta {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(7, 14).forEach { n -> Ficha("$n días", op.dias == n) { op = op.copy(dias = n) } }
+            }
+            Text("Del ${Fechas.larga(op.ini)} al ${Fechas.larga(op.fin)}", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+            TextButton(onClick = {
+                io.github.ruddy2003.vestigium.ui.elegirFecha(ctx, op.fin, maximo = Fechas.parse(Fechas.diaLogico())) { op = op.copy(fin = it) }
+            }) { Text("Cambiar el último día") }
+            Text("Qué sale", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+            Interruptor("Todo", op.todo, "Enciende o apaga todas las secciones a la vez. Cuántos días y avisos tienen datos sale siempre.") { op = op.conTodo(it) }
+            HorizontalDivider(Modifier.padding(vertical = 4.dp))
+            Interruptor("Ánimo y emociones", op.animo, "Ánimo y energía por día, días difíciles, emociones, en qué pensabas, solo o acompañado y tu predicción del día siguiente.") { op = op.copy(animo = it) }
+            Interruptor("Cuestionarios", op.cuestionarios, "Bienestar (WHO-5), estrés (PSS-4) y soledad (UCLA-3), con tus respuestas anteriores.") { op = op.copy(cuestionarios = it) }
+            Interruptor("Sueño", op.sueno, "Horas por noche, horarios y qué tan regulares fueron, calidad, pesadillas (solo cuántas) y pantalla antes de dormir.") { op = op.copy(sueno = it) }
+            Interruptor("Actividad, rutina y contacto", op.rutina, "Pasos, aire libre, tiempo en casa, hábitos, dolor, pantalla, y los días con familia, pareja o amistades (sin nombres).") { op = op.copy(rutina = it) }
+            Interruptor("Gimnasio y alimentación", op.cuerpo, "Días y duración del gimnasio; calorías y proteína contra tu objetivo, nutrientes y horarios de comida.") { op = op.copy(cuerpo = it) }
+            Interruptor("Sustancias", op.sustancias, "Días y cantidad de alcohol, cannabis, tabaco u otras que anotaste.") { op = op.copy(sustancias = it) }
+            Interruptor("Lo mejor y lo peor", op.momentosPeriodo || op.momentosDia, "Lo mejor de tu mejor día y lo peor de tu peor día, tal como lo escribiste (los @nombres salen como iniciales).") {
+                op = op.copy(momentosPeriodo = it, momentosDia = if (it) op.momentosDia else false)
+            }
+            if (op.momentosPeriodo || op.momentosDia) Column(Modifier.padding(start = 16.dp)) {
+                Interruptor("También el de cada día", op.momentosDia, "Lo mejor y lo peor de todos los días del periodo. El diario completo nunca sale.") { op = op.copy(momentosDia = it) }
+            }
+            Interruptor("Seguimiento privado", op.privado, "Impulsos, recaídas, detonantes y medicamentos. Solo en este reporte, y solo si lo marcas ahora.") { op = op.copy(privado = it) }
+            OutlinedButton(enabled = !trabajando && op.alguna, onClick = {
+                trabajando = true; msg = null
+                scope.launch {
+                    val f = withContext(Dispatchers.IO) { runCatching { io.github.ruddy2003.vestigium.reportes.ReporteTerapia.pdf(ctx, op) } }
+                    trabajando = false
+                    f.onSuccess { io.github.ruddy2003.vestigium.ui.LibroDiario.compartir(ctx, it, "application/pdf") }
+                        .onFailure { msg = "No pude generar el reporte: ${it.message ?: it.javaClass.simpleName}" }
+                }
+            }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) { Text(if (trabajando) "Generando…" else "Generar y compartir PDF") }
+            if (!op.alguna) Ayuda("Elige al menos una sección.", Modifier.padding(top = 4.dp))
+            Ayuda("Nunca lleva el diario completo, los sueños, las cartas, las notas, la agenda, los chats, los lugares ni los nombres.", Modifier.padding(top = 8.dp))
+            msg?.let { Ayuda(it, Modifier.padding(top = 8.dp)) }
         }
     }
 }

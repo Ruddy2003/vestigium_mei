@@ -4,6 +4,8 @@ package io.github.ruddy2003.vestigium.data
  * Lo privado, en un solo lugar: impulsos, recaídas, libido, detonantes, medicamentos y el hábito ligado a las recaídas.
  * Se ve solo en la pantalla Privado. No sale en ninguna otra pantalla, reporte, widget, logro, meta, campaña, mapa
  * ni análisis de la app; sí va en la exportación para R y en el respaldo (que, con datos privados, exige contraseña).
+ * La única excepción es el reporte para terapia (`ciencia/Terapia.kt`), y solo si al generarlo marcas su casilla,
+ * que no se guarda y empieza apagada cada vez. Nunca lleva la libido.
  */
 object Privado {
     /** Tipos de momento privados (ver `Momento.privado`). */

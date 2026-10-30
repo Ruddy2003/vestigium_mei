@@ -118,6 +118,54 @@ Dos observaciones:
 - **«La relación del año» es la más fuerte de muchas.** Elegir el máximo |*r*| entre cientos de pares sobrestima su tamaño: es la que tuvo más suerte además de ser real (un sesgo de selección; el método y su criterio para «Tu año» están en el capítulo 6, secciones 6.8 y 6.10). Que pase la corrección por comparaciones múltiples (*q* < 0.05) ayuda, pero el valor de *r* mostrado será, en promedio, más alto que el verdadero. **[Aproximación]**.
 - **Predecir tu ánimo medio en enero** crea una expectativa sobre la variable que luego mides. No hay forma de saber cuánto influye, pero es una forma de reactividad (sección 9.7).
 
+### 9.3.6 El reporte para terapia (desde D.119)
+
+**Qué es.** Un PDF tamaño carta, de varias páginas, que resume los **últimos 7 o 14 días** para llevarlo a una sesión de psicoterapia. A diferencia de los otros reportes, no se genera solo ni se guarda en la galería: se arma en Reportes › «Para terapia» y se abre directo el menú de compartir de Android (el archivo queda en la carpeta interna `cache/export/terapia/`, y cada reporte nuevo borra el anterior). Va en blanco y negro con un solo color de acento, sin los colores ni las letras del tema, para que se pueda imprimir. El cálculo está en `Terapia.calcular` (`ciencia/Terapia.kt`) y el dibujo en `ReporteTerapia.pdf` (`reportes/ReporteTerapia.kt`).
+
+**El periodo.** Por omisión termina **ayer** (el día lógico de hoy menos uno, porque hoy aún no se cierra) y cubre 7 o 14 días hacia atrás (`Opciones.ini = fin − (días − 1)`). Se puede elegir otro último día. Pensado para quien va a terapia en un día fijo: el de 7 días cubre justo de una sesión a otra; el de 14, una sesión quincenal. La comparación con el «periodo anterior» usa los 7 o 14 días inmediatamente antes (la misma regla de la sección 9.3.4, con `Periodo.errorDif`).
+
+**Qué lleva, en este orden** (todo sale de funciones que ya existían; donde hay una regla nueva, se dice). Desde D.122, cada parte es una de **8 secciones** que se encienden o apagan al generar el reporte, más un interruptor «Todo» que las enciende o apaga juntas (`Opciones.conTodo`). La primera fila, «qué tan completo está», sale siempre; la tabla día por día lleva solo las columnas de las secciones encendidas y, si no hay ninguna, no sale. Entre paréntesis, la sección (`Opciones`) y cómo empieza:
+
+| Sección | Qué muestra | De dónde sale |
+|---|---|---|
+| Qué tan completo está (siempre) | Días con diario de *N*; avisos de ánimo respondidos de los mostrados y su tasa; días con ánimo solo en los avisos | `Periodo.diasDiario`, `AvisosAnimo.cifras`, `diasSoloAvisos` |
+| Día por día (columnas según las secciones) | Una tabla: ánimo y energía (1–7), horas de sueño, calidad (1–5), kcal menos el objetivo, minutos de gimnasio; un asterisco en los días marcados como difíciles | `Repo.dias`, `Periodo.activacion` y `suenoPorDia`, `NutricionDia` |
+| Ánimo (1, `animo`, encendida) | Gráfica de ánimo y energía por día; ánimo medio del diario y su cambio; días difíciles; las 5 emociones más nombradas en los registros y qué parte de las nombradas son desagradables; en qué pensabas; qué parte de los avisos estabas con alguien y el ánimo solo frente a acompañado; cómo viviste la exigencia del día (reto, amenaza, pérdida, rutina); el error medio de la predicción del día siguiente | `Periodo`, `Terapia.emociones`, `Catalogo.pensamientoDe`, `Momento.con_quien`, `Dia.apreciacion`, `prediccion_manana` |
+| Cuestionarios (2, `cuestionarios`, encendida) | WHO-5 (0–100), PSS-4 (0–16) y UCLA-3 (3–9) respondidos en el periodo, con el texto de lectura de `Escalas` y hasta 3 respuestas anteriores. El TIPI no entra: la personalidad no cambia en una semana | `Repo.respuestas`, `Instrumento.lectura` |
+| Sueño (3, `sueno`, encendida) | Barras de horas por noche; media y cambio; hora media de dormir y de despertar con su desviación estándar; calidad media; noches con sueño «ansioso o pesadilla» (solo el número); minutos de pantalla en la hora antes de dormir | `Periodo`, `Exportar.horaDecimal`, `Dia.sueno_tipo`, `PantallaDia.cama_min` |
+| Actividad y rutina (4, `rutina`, encendida) | Pasos; minutos de ejercicio del reloj; minutos al aire libre y horas en casa al día; hábitos cumplidos; dolor medio y máximo; días con los contextos «enfermo», «trabajo» y «académico»; pantalla y desbloqueos | `Periodo`, el panel (`aire_libre_min`, `en_casa_min`) |
+| Contacto con otros (4, `rutina`) | Días en que estuviste en persona con familia, pareja, amistades o expareja, y días en que solo pensaste en ellas; llamadas. **Sin nombres** | El panel (`vi_*`, `penso_en_*`), `Periodo.llamadas` |
+| Gimnasio y ejercicio (5, `cuerpo`, encendida) | Días de gimnasio (con series en MacroFactor o con el contexto «gym») y la duración de cada uno; las otras sesiones del reloj por tipo | `EntrenoDia.minutos`; si falta, la sesión de fuerza o pesas del reloj de ese día; `Sesion` |
+| Alimentación (5, `cuerpo`) | Calorías y proteína contra el objetivo de cada día; carbohidratos y grasa contra el suyo; promedio diario de cafeína, alcohol, azúcares añadidos, fibra, omega-3 y agua; hora de la última cafeína; comidas al día y hora de la primera y la última | `NutricionDia` (MacroFactor), `Terapia.contraObjetivo` |
+| Sustancias (6, `sustancias`, encendida) | Por cada sustancia que no ocultaste: días, cantidad total, nivel máximo (0–10), malestar medio del día siguiente (0–5) y los síntomas más frecuentes | `Repo.consumos`, `Sustancias.maximo` |
+| Momentos del periodo (7, `momentosPeriodo`, encendida) | «Lo mejor» de tu mejor día y «lo peor» de tu peor día, tal como los escribiste | `Periodo.mejorDia` y `peorDia` |
+| Lo mejor y lo peor de cada día (dentro de la 7, `momentosDia`, apagada) | Los mismos dos textos de cada día | `Dia.mejor_momento`, `peor_momento` |
+| Seguimiento privado (8, `privado`, apagada) | Impulso medio del día (0–5) y por día en la tabla; impulsos registrados y cuántos no tuvieron una recaída en las 3 h siguientes; días con recaída de los días con respuesta; detonantes más frecuentes; medicamentos anotados | `Dia.impulso`, `recaida`, `detonantes`, `medicamentos`; momentos `impulso` y `recaida`; `Terapia.superados` (la misma regla de `Recaidas.resumen`) |
+
+**Lo que nunca lleva**, aunque exista: el diario completo, los sueños escritos, las cartas, las notas, los títulos de la agenda, el contenido o los nombres de los chats, los lugares y el GPS, los nombres de personas (en los textos de «lo mejor» y «lo peor», cada `@ana_luisa` sale como «A.L.», `Terapia.sinNombres`), el dinero, la música, YouTube, los libros, el volumen y los récords del gimnasio, los alimentos, el peso, la frecuencia cardiaca, la HRV, la SpO₂, el tiempo de reacción y la libido. Tampoco lleva correlaciones, valores *p* ni experimentos: son análisis de una sola persona que, fuera de contexto, se leen como hallazgos firmes. El reporte describe; no interpreta ni etiqueta. **[Diseño propio]**: la selección se hizo pensando en lo que se suele revisar en una sesión (ánimo, sueño, actividad, contacto, consumo, alimentación), no siguiendo un formato clínico validado.
+
+**La regla nueva: calorías contra el objetivo** (`Terapia.contraObjetivo`). Para cada día con registro y con objetivo, la diferencia es *lo que comiste − tu objetivo* y su porcentaje es esa diferencia entre el objetivo. Un día cuenta como «dentro» si el porcentaje está entre −10 % y +10 % (los extremos incluidos), «por encima» si pasa de +10 % y «por debajo» si baja de −10 %. Un día con menos de 300 kcal (`MINIMO_KCAL`, la misma regla de `Periodo`) se toma como **sin registro** (se te olvidó anotar), no como un día de ayuno: no cuenta en los promedios y la nota lo dice. La proteína usa la misma cuenta sobre los días con registro. **[Diseño propio]**: el margen de 10 % es una convención para no marcar como «fallo» variaciones pequeñas; no viene de una guía.
+
+*Ejemplo (inventado).* Tres días con objetivo de 2,000 kcal: comiste 2,300, 1,700 y 2,050. Las diferencias son +300, −300 y +50; la media, **+17 kcal** (+0.8 %). Por porcentaje: +15 % (por encima), −15 % (por debajo) y +2.5 % (dentro). Un cuarto día con 120 kcal anotadas no cuenta. El reporte diría: «2,017 kcal al día contra un objetivo de 2,000: +17 kcal (+0.8 %) · dentro de ±10 %: 1 día · por encima: 1 día · por debajo: 1 día», y la barra de cada día muestra su diferencia.
+
+Esta media esconde los extremos: un día de +300 y otro de −300 se anulan. Por eso el reporte da también el conteo de días fuera del margen y la barra por día.
+
+**Las otras cuentas nuevas:**
+- **Emociones desagradables** (`Terapia.emociones`): de todas las emociones nombradas en los registros de ánimo del periodo, la parte con tono −1 en `Catalogo.SENTIMIENTOS`. Las mixtas (nostalgia, confusión, sorpresa) cuentan en el total; «no sé» y «otro» no, porque no tienen tono. *Ejemplo (inventado)*: ansiedad, ansiedad, calma y nostalgia → 2 de 4 = **50 %**. Es una proporción de **menciones**, no de registros: un registro con tres emociones pesa tres veces. **[Diseño propio]**.
+- **Regularidad del horario**: la desviación estándar muestral (con *n* − 1) de las horas de dormir y de despertar de las noches del reloj con más de 2 h. *Ejemplo (inventado)*: 23:30, 00:30 y 01:30 → media 00:30, desviación **60 min**. No es el índice de regularidad del sueño (*Sleep Regularity Index*), que compara minuto a minuto; es una aproximación más simple. **[Aproximación]**.
+- **Error de predicción**: el promedio, con signo, de *ánimo del día − predicción de la noche anterior*, el mismo `error_prediccion_signo` del panel (capítulo 3). Positivo: los días salieron mejor de lo que predijiste.
+- **Gimnasio**: un día cuenta si MacroFactor tiene series ese día o si marcaste el contexto «gym». La duración es la de MacroFactor (`EntrenoDia.minutos`); si no la hay, la suma de las sesiones del reloj de tipo «fuerza» o «pesas» de ese día. Esas sesiones no se cuentan otra vez entre las «otras sesiones». **[Diseño propio]**.
+
+**Las secciones elegidas no se guardan.** Cada vez que se abre la pantalla empiezan igual: encendido todo lo que el reporte llevaba desde D.119; lo mejor y lo peor de cada día y el seguimiento privado, apagados. «Todo» enciende también esos dos. Así, lo privado solo sale si lo eliges en ese momento, y un reporte compartido con prisa no lo lleva por error (capítulo 10, sección 10.3.4).
+
+**Cuándo falla o engaña:**
+- **Pocos datos.** Con pocos días de diario o pocos avisos respondidos, las medias son inestables. Por eso la primera sección dice cuántos hay; la comparación con el periodo anterior exige al menos 3 días en cada lado (sección 9.3.4).
+- **Avisos que faltan sin azar.** Si dejas de responder los avisos justo en los peores momentos, las emociones y el ánimo «solo o acompañado» se ven mejor de lo que fueron. El reporte no puede saberlo; la tasa de respuesta es la única pista.
+- **Contacto.** Solo cuenta lo que nombraste con `@` y la relación que le diste a cada persona; un día sin nombres no es un día sin contacto (por eso se dice de cuántos días hay datos).
+- **Alimentación.** Depende de que MacroFactor esté importado hasta el último día del periodo; un día a medio anotar (más de 300 kcal pero incompleto) cuenta como «por debajo».
+- **Cuestionarios.** El WHO-5 y el PSS-4 se aplican aquí con un periodo de 7 días en lugar de 2 semanas y un mes (capítulo 3); sus puntos de corte se validaron con el periodo original.
+- **Texto libre.** «Lo mejor» y «lo peor» van tal como se escribieron: aunque los `@nombres` salen como iniciales, un nombre escrito sin `@` sí sale.
+
 ---
 
 ## 9.4 Logros
@@ -240,6 +288,9 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 | Logros que premian valores de la valencia; se quedan por decisión del autor (10f, D.117) | Diseño propio (contrario a la ley de Campbell) | Campbell (1979) |
 | Campañas semanales como retos | Diseño propio | Hamari et al. (2014) sobre gamificación |
 | «Relación del año» = máximo |*r*| con *q* < 0.05 | Aproximación (sobrestima) | — |
+| Reporte para terapia: qué entra y qué no; 8 secciones elegibles que no se guardan, con lo privado apagado | Diseño propio | — |
+| Calorías y proteína contra el objetivo con un margen de ±10 %; menos de 300 kcal = sin registro | Diseño propio | — |
+| Regularidad del horario de sueño como desviación estándar de las horas | Aproximación | — |
 
 ---
 
@@ -251,6 +302,7 @@ Toda la app tiene dos objetivos que tiran en direcciones opuestas:
 4. Los logros premian sobre todo **registrar** y **conductas medidas por sensores**, y prefieren la **constancia** a las rachas: una buena decisión para no abandonar. Dos logros secretos premian valores de la valencia (H-8-6). Desde 10f se quedan como están por decisión del autor (D.117); el riesgo, un incentivo pequeño a sesgar la valencia que desaparece al ganarlos, queda descrito en la sección 9.4.3.
 5. Las campañas son **intervenciones**. Hasta el esquema 12 no quedaban registradas como variable y podían confundir el análisis observacional (H-8-7). Desde el 13 son variables del panel (`campana_<reto>`, `campanas_n`), obvias con lo que cada reto mueve.
 6. La gamificación puede ayudar a no abandonar, pero con efectos dependientes del contexto; las recompensas pueden cambiar la motivación y lo que se mide.
+7. Desde D.119 hay un reporte para terapia de 7 o 14 días, en PDF para compartir (sección 9.3.6). Describe ánimo, cuestionarios, sueño, rutina, contacto, gimnasio, alimentación contra el objetivo y, si se elige al generarlo, sustancias, textos de «lo mejor» y «lo peor» y el seguimiento privado. No lleva nombres, lugares, el diario ni análisis estadísticos.
 
 ---
 

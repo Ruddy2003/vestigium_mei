@@ -739,6 +739,21 @@ class Capturas {
     @Test fun reporteSemanaRomano() = reporte(TemaId.ROMANO, true, 4200, false)
     @Test fun reporteSemanaBotanico() = reporte(TemaId.BOTANICO, false, 4200, false)
     @Test fun reporteAnioGotico() = reporte(TemaId.GOTICO, false, 5200, true)
+    /** La pantalla de Reportes con la sección «Para terapia». */
+    @Test fun reportesBotanico() = pantalla(TemaId.BOTANICO, false, 4600) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaReportes(navVacia) }
+    /** Las páginas del reporte para terapia de 14 días, con todas las secciones (los datos son los inventados de [Ejemplo]). */
+    @Test fun reporteTerapia() = pantalla(TemaId.BOTANICO, false, 8400) {
+        val r = androidx.compose.runtime.remember {
+            runCatching {
+                io.github.ruddy2003.vestigium.reportes.ReporteTerapia.imagenes(io.github.ruddy2003.vestigium.ciencia.Terapia.Opciones(
+                    dias = 14, fin = io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1),
+                ).conTodo(true))
+            }
+        }
+        Column {
+            r.getOrNull()?.forEach { androidx.compose.foundation.Image(it.asImageBitmap(), null, Modifier.fillMaxWidth()) } ?: Text("Falló: ${r.exceptionOrNull()}")
+        }
+    }
     @Test fun epigrafeMedieval() = pantalla(TemaId.MEDIEVAL, false, 2400) {
         val ayer = io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), -1)
         Repo.configEnMemoria(Repo.config.copy(frases_guardadas = listOf(io.github.ruddy2003.vestigium.data.FraseGuardada("Quien no sabe callar, no sabe hablar.", null, "Refrán castellano", "medieval", ayer))))

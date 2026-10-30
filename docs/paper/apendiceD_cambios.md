@@ -323,3 +323,18 @@ Decisión del autor (28 oct 2026), hallazgo por hallazgo: respetar siempre la ho
 **Lo que no se pudo comprobar en la sesión:**
 - Lo de Kotlin se compiló y se probó en GitHub Actions (pruebas JVM); no se probó en un teléfono: ni el aviso `TIMEZONE_CHANGED`, ni la respuesta de `ConnectivityManager` cuando Android esconde el nombre de la red, ni el nombre exacto con que MacroFactor exporta el press inclinado con mancuernas (se reconocen las formas en inglés y en español).
 - Que el archivo de Open-Meteo ya tenga los días de más de 80 días es lo que la app suponía desde antes; no se consultó en la sesión.
+
+## Reporte para terapia (sin cambio de esquema)
+
+Pedido del autor (30 oct 2026): un reporte semanal y quincenal para llevar a terapia. Decisiones del autor: los últimos 7 o 14 días, terminando ayer o en el día que se elija; sustancias y «lo mejor y lo peor del periodo» encendidos por omisión; «lo mejor y lo peor de cada día» y el seguimiento privado apagados; días y duración del gimnasio; alimentación contra el objetivo y los nutrientes de interés. No cambia lo que se guarda (las casillas no se guardan), así que `SCHEMA_V` sigue igual; tampoco cambian la exportación ni `vestigium.R`.
+
+| # | Qué cambió | Dónde | Por qué |
+|---|---|---|---|
+| D.119 | **Reporte para terapia.** Un PDF tamaño carta, de varias páginas y para imprimir, con la cobertura de datos, una tabla día por día, ánimo, cuestionarios, sueño, actividad, contacto sin nombres, gimnasio, alimentación y las secciones opcionales. Se genera en Reportes › «Para terapia» y se comparte con el menú de Android. Lo que lleva, lo que no y sus reglas están en el capítulo 9, sección 9.3.6 | `ciencia/Terapia.kt`, `reportes/ReporteTerapia.kt`, `ui/pantallas/Sistema.kt` | Pedido del autor |
+| D.120 | **Lo privado en el reporte para terapia.** Única excepción a la regla de `Privado`: impulsos, recaídas, detonantes y medicamentos (nunca la libido) entran solo con una casilla que se marca al generarlo, no se guarda y empieza apagada | `ciencia/Terapia.kt` (`Opciones.privado`), `data/Privado.kt` (comentario) | Que salga solo cuando se elige |
+| D.121 | Pruebas JVM: los nombres como iniciales, las calorías contra el objetivo (con días sin registro), la proporción de emociones desagradables, los impulsos superados y que lo privado y los textos de cada día solo salgan con su casilla; captura de la pantalla y de las páginas del reporte con los datos inventados de las capturas | `app/src/test/.../TerapiaPrueba.kt`, `Capturas.kt` (`reportesBotanico`, `reporteTerapia`) | Que cada regla falle en una prueba si se rompe |
+
+| D.122 | **Secciones elegibles.** Pedido del autor: elegir exactamente qué sale. El reporte se divide en 8 secciones (ánimo y emociones; cuestionarios; sueño; actividad, rutina y contacto; gimnasio y alimentación; sustancias; lo mejor y lo peor, con «también el de cada día» dentro; seguimiento privado) y un interruptor «Todo». Empiezan encendidas las que ya salían y apagadas las que estaban apagadas; la cobertura sale siempre y la tabla día por día lleva solo las columnas de lo elegido | `ciencia/Terapia.kt` (`Opciones`), `reportes/ReporteTerapia.kt`, `ui/pantallas/Sistema.kt`, `TerapiaPrueba.kt` (`secciones`) | Pedido del autor |
+
+**Lo que no se pudo comprobar en la sesión:**
+- El código se compila y se prueba en GitHub Actions; no se probó en un teléfono que el menú de compartir reciba el PDF ni cómo se ve impreso.

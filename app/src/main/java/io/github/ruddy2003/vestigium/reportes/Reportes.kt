@@ -170,7 +170,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
 /**
  * Reportes semanal (imagen), mensual (PDF e imagen) y anual, con los colores, letras, nombres y números del tema.
  * Sin calles, direcciones ni nombres de lugares para poder compartirlos (el mapa del mes es solo puntos sobre una cuadrícula);
- * nunca incluyen lo del seguimiento privado ni el texto de las cartas.
+ * nunca incluyen lo del seguimiento privado ni el texto de las cartas. El reporte para terapia va aparte ([ReporteTerapia]).
  */
 object Reportes {
     private const val W = 1080f
